@@ -1,0 +1,10 @@
+- [EPIC] combat? ranged combat?
+- multiplier for skill (and basic attack) scale to what stats?
+- [EPIC] rewind time to specific event: inspec pannel > events > click on event will rewind the world state into that event, the world is stopped at that moment, and user can:
+    - continue from that point, reset all the world state to that point
+    - back to the current time, exist the history view
+- Add more information to the event, but not too much
+- [ADJUST] action speed of specific action is not balanced (maybe), recheck it and ask me for the decision.
+- [BUG] when two entity both HUNT facing in the diagnoal adjacent, one decide to move bottom, other decide to move top, both want to reach with each other, but they result the same distant -> find a way to resolve this, ask me for the decision
+- [ENHANCE] entity's bag should show max capacity
+- [ENHANCE] the simulation maximum tick should extend to 50000 instead of just 1000

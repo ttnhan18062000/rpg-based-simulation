@@ -354,3 +354,82 @@ class TestTrainWithStats:
         train_attributes(attrs, caps, "attack", stats=stats)
         assert attrs.str_ == 6  # incremented
         assert stats.atk > old_atk  # derived stats updated
+
+
+# =====================================================================
+# Speed Delay System (Option D)
+# =====================================================================
+
+class TestSpeedDelay:
+    def test_import(self):
+        from src.core.attributes import speed_delay
+        assert callable(speed_delay)
+
+    def test_spd_1_base_delay(self):
+        from src.core.attributes import speed_delay
+        d = speed_delay(1, "move")
+        assert abs(d - 1.0) < 0.01  # ln(1)=0, so 1/(1+0) = 1.0
+
+    def test_logarithmic_diminishing_returns(self):
+        from src.core.attributes import speed_delay
+        d1 = speed_delay(1, "move")
+        d5 = speed_delay(5, "move")
+        d10 = speed_delay(10, "move")
+        d20 = speed_delay(20, "move")
+        d50 = speed_delay(50, "move")
+        # Must be strictly decreasing
+        assert d1 > d5 > d10 > d20 > d50
+        # Diminishing returns: gap between 1→10 much larger than 10→50
+        assert (d1 - d10) > (d10 - d50)
+
+    def test_action_type_multipliers(self):
+        from src.core.attributes import speed_delay
+        spd = 10
+        move = speed_delay(spd, "move")
+        attack = speed_delay(spd, "attack")
+        skill = speed_delay(spd, "skill")
+        loot = speed_delay(spd, "loot")
+        use_item = speed_delay(spd, "use_item")
+        # Attack faster than move, skill slower, loot/use_item fastest
+        assert attack < move
+        assert skill > move
+        assert loot < move
+        assert use_item < loot
+
+    def test_min_delay_floor(self):
+        from src.core.attributes import speed_delay
+        d = speed_delay(999999, "use_item")
+        assert d >= 0.15  # _MIN_DELAY
+
+    def test_max_delay_ceiling(self):
+        from src.core.attributes import speed_delay
+        d = speed_delay(1, "skill")
+        assert d <= 2.0  # _MAX_DELAY
+
+    def test_interaction_speed_scales_non_combat(self):
+        from src.core.attributes import speed_delay
+        base = speed_delay(10, "loot", interaction_speed=1.0)
+        fast = speed_delay(10, "loot", interaction_speed=1.5)
+        assert fast < base  # higher interaction_speed → lower delay
+
+    def test_interaction_speed_ignored_for_combat(self):
+        from src.core.attributes import speed_delay
+        base = speed_delay(10, "attack", interaction_speed=1.0)
+        fast = speed_delay(10, "attack", interaction_speed=2.0)
+        assert abs(base - fast) < 0.001  # should be identical
+
+
+class TestEngagementLock:
+    def test_engaged_ticks_on_entity(self):
+        e = Entity(id=1, kind="hero", pos=Vector2(0, 0))
+        assert e.engaged_ticks == 0
+        e.engaged_ticks = 3
+        e2 = e.copy()
+        assert e2.engaged_ticks == 3
+
+    def test_last_reason_on_entity(self):
+        e = Entity(id=1, kind="hero", pos=Vector2(0, 0))
+        assert e.last_reason == ""
+        e.last_reason = "Heading to store"
+        e2 = e.copy()
+        assert e2.last_reason == "Heading to store"

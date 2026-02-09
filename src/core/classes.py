@@ -25,17 +25,24 @@ from enum import IntEnum, unique
 
 @unique
 class HeroClass(IntEnum):
-    """Hero class identities."""
+    """Class identities for heroes and mobs (shared enum)."""
     NONE = 0
+    # --- Hero classes ---
     WARRIOR = 1
     RANGER = 2
     MAGE = 3
     ROGUE = 4
-    # Breakthroughs
+    # --- Hero breakthroughs ---
     CHAMPION = 5
     SHARPSHOOTER = 6
     ARCHMAGE = 7
     ASSASSIN = 8
+    # --- Mob archetypes ---
+    BRUTE = 20       # Heavy melee (orcs, warrior goblins) — STR/VIT focus
+    SCOUT = 21       # Fast flanker (wolves, scouts) — AGI/PER focus
+    CASTER = 22      # Magic user (liches, goblin chiefs) — SPI/INT focus
+    TANK = 23        # Durable defender (skeletons, orc warlords) — VIT/END focus
+    BEAST = 24       # Wild creature (wolves, dire wolves) — STR/AGI focus
 
 
 @unique
@@ -459,6 +466,47 @@ CLASS_DEFS: dict[HeroClass, ClassDef] = {
             'target selection and timing. The ultimate single-target killer.'
         ),
     ),
+    # ---- Mob Archetypes ----
+    HeroClass.BRUTE: ClassDef(
+        class_id=HeroClass.BRUTE, name="Brute",
+        description="A heavy melee fighter relying on raw strength and toughness.",
+        str_bonus=3, vit_bonus=2, end_bonus=1,
+        str_cap_bonus=8, vit_cap_bonus=5, end_cap_bonus=3,
+        str_scaling='A', agi_scaling='D', vit_scaling='B', int_scaling='E', spi_scaling='E', wis_scaling='E', end_scaling='B', per_scaling='D', cha_scaling='E',
+        tier=1, role='Melee DPS',
+    ),
+    HeroClass.SCOUT: ClassDef(
+        class_id=HeroClass.SCOUT, name="Scout",
+        description="A fast flanker with sharp senses and quick reflexes.",
+        agi_bonus=3, per_bonus=2, end_bonus=1,
+        agi_cap_bonus=8, per_cap_bonus=5, end_cap_bonus=3,
+        str_scaling='D', agi_scaling='A', vit_scaling='D', int_scaling='D', spi_scaling='E', wis_scaling='C', end_scaling='C', per_scaling='A', cha_scaling='E',
+        tier=1, role='Flanker / Scout',
+    ),
+    HeroClass.CASTER: ClassDef(
+        class_id=HeroClass.CASTER, name="Caster",
+        description="A magic-wielding creature channeling elemental or dark power.",
+        spi_bonus=3, int_bonus=2, wis_bonus=1,
+        spi_cap_bonus=8, int_cap_bonus=5, wis_cap_bonus=3,
+        str_scaling='E', agi_scaling='D', vit_scaling='C', int_scaling='A', spi_scaling='A', wis_scaling='B', end_scaling='C', per_scaling='D', cha_scaling='E',
+        tier=1, role='Ranged DPS',
+    ),
+    HeroClass.TANK: ClassDef(
+        class_id=HeroClass.TANK, name="Tank",
+        description="A durable defender that absorbs punishment and holds ground.",
+        vit_bonus=3, end_bonus=2, str_bonus=1,
+        vit_cap_bonus=8, end_cap_bonus=5, str_cap_bonus=3,
+        str_scaling='C', agi_scaling='E', vit_scaling='A', int_scaling='E', spi_scaling='D', wis_scaling='C', end_scaling='A', per_scaling='D', cha_scaling='E',
+        tier=1, role='Tank',
+    ),
+    HeroClass.BEAST: ClassDef(
+        class_id=HeroClass.BEAST, name="Beast",
+        description="A wild creature with natural agility and ferocious attacks.",
+        str_bonus=2, agi_bonus=2, per_bonus=1, end_bonus=1,
+        str_cap_bonus=5, agi_cap_bonus=5, per_cap_bonus=3, end_cap_bonus=3,
+        str_scaling='B', agi_scaling='B', vit_scaling='C', int_scaling='E', spi_scaling='E', wis_scaling='E', end_scaling='B', per_scaling='B', cha_scaling='E',
+        tier=1, role='Melee DPS / Flanker',
+    ),
 }
 
 # -- Breakthrough Definitions --
@@ -787,3 +835,43 @@ def can_learn_skill(
             prereq_name = prereq_def.name if prereq_def else sdef.mastery_req
             return False, f"Requires {prereq_name} mastery {sdef.mastery_threshold:.0f}+ (current: {prereq.mastery:.0f})"
     return True, ""
+
+
+# ---------------------------------------------------------------------------
+# Race + Tier → Mob class mapping
+# ---------------------------------------------------------------------------
+
+# Maps (race, tier) → HeroClass archetype for mobs.
+# Tier EnemyTier values: BASIC=0, SCOUT=1, WARRIOR=2, ELITE=3
+RACE_CLASS_MAP: dict[tuple[str, int], HeroClass] = {
+    # Goblins — small, cunning; scouts are fast, warriors are brutes, chiefs are casters
+    ("goblin", 0): HeroClass.SCOUT,       # goblin (basic) — nimble raider
+    ("goblin", 1): HeroClass.SCOUT,       # goblin_scout — fast flanker
+    ("goblin", 2): HeroClass.BRUTE,       # goblin_warrior — stronger melee
+    ("goblin", 3): HeroClass.CASTER,      # goblin_chief — shamanic magic
+    # Wolves — natural predators; all BEAST except alpha (BRUTE)
+    ("wolf", 0): HeroClass.BEAST,         # wolf — pack hunter
+    ("wolf", 1): HeroClass.BEAST,         # dire_wolf — bigger, faster
+    ("wolf", 2): HeroClass.BEAST,         # dire_wolf (warrior tier)
+    ("wolf", 3): HeroClass.BRUTE,         # alpha_wolf — pack leader, raw power
+    # Bandits — human rogues; scouts are fast, warriors are brutes, chiefs are tactical
+    ("bandit", 0): HeroClass.SCOUT,       # bandit — agile raider
+    ("bandit", 1): HeroClass.SCOUT,       # bandit_archer — ranged flanker
+    ("bandit", 2): HeroClass.BRUTE,       # bandit (warrior) — heavy hitter
+    ("bandit", 3): HeroClass.BRUTE,       # bandit_chief — brutal leader
+    # Undead — shambling horrors; basic are tanks, higher tiers gain magic
+    ("undead", 0): HeroClass.TANK,        # skeleton — durable, slow
+    ("undead", 1): HeroClass.TANK,        # zombie — tough shambler
+    ("undead", 2): HeroClass.TANK,        # zombie (warrior) — armored dead
+    ("undead", 3): HeroClass.CASTER,      # lich — powerful necromancer
+    # Orcs — brutal warriors; everything is brute or tank
+    ("orc", 0): HeroClass.BRUTE,          # orc — raw muscle
+    ("orc", 1): HeroClass.SCOUT,          # orc (scout) — orc skirmisher
+    ("orc", 2): HeroClass.BRUTE,          # orc_warrior — heavy fighter
+    ("orc", 3): HeroClass.TANK,           # orc_warlord — armored commander
+}
+
+
+def mob_class_for(race: str, tier: int) -> HeroClass:
+    """Look up the mob archetype class for a given race and tier."""
+    return RACE_CLASS_MAP.get((race, tier), HeroClass.BRUTE)

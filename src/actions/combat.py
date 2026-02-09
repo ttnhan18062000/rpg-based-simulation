@@ -78,7 +78,8 @@ class CombatAction:
                 "Tick %d: Entity %d (%s) attack EVADED by Entity %d (%s)",
                 tick, attacker.id, attacker.kind, defender.id, defender.kind,
             )
-            attacker.next_act_at += 1.0 / max(attacker.effective_spd(), 1)
+            from src.core.attributes import speed_delay
+            attacker.next_act_at += speed_delay(attacker.effective_spd(), "attack")
             return
 
         # --- Determine damage type and element from weapon ---
@@ -129,7 +130,8 @@ class CombatAction:
             defender.stats.max_hp,
         )
 
-        attacker.next_act_at += 1.0 / max(attacker.effective_spd(), 1)
+        from src.core.attributes import speed_delay
+        attacker.next_act_at += speed_delay(attacker.effective_spd(), "attack")
 
         # --- Stamina cost for attacking ---
         attacker.stats.stamina = max(0, attacker.stats.stamina - 3)

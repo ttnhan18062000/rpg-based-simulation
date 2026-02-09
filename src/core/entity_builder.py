@@ -28,7 +28,7 @@ from src.core.classes import (
     CLASS_DEFS, RACE_SKILLS, SKILL_DEFS, SkillInstance,
     available_class_skills,
 )
-from src.core.enums import AIState, Domain
+from src.core.enums import AIState, Domain, EntityRole
 from src.core.faction import Faction
 from src.core.items import HomeStorage, Inventory
 from src.core.models import Entity, Stats, Vector2
@@ -47,7 +47,7 @@ class EntityBuilder:
 
     __slots__ = (
         "_rng", "_eid", "_tick",
-        "_kind", "_pos", "_ai_state", "_faction",
+        "_kind", "_pos", "_ai_state", "_faction", "_role",
         "_home_pos", "_tier",
         "_base_hp", "_base_atk", "_base_def", "_base_spd",
         "_luck", "_crit_rate", "_crit_dmg", "_evasion",
@@ -73,6 +73,7 @@ class EntityBuilder:
         self._pos: Vector2 = Vector2(0, 0)
         self._ai_state: AIState = AIState.WANDER
         self._faction: Faction = Faction.HERO_GUILD
+        self._role: EntityRole = EntityRole.MOB
         self._home_pos: Vector2 | None = None
         self._tier: int = 0
 
@@ -120,6 +121,10 @@ class EntityBuilder:
 
     def faction(self, f: Faction) -> EntityBuilder:
         self._faction = f
+        return self
+
+    def role(self, r: EntityRole) -> EntityBuilder:
+        self._role = r
         return self
 
     def tier(self, t: int) -> EntityBuilder:
@@ -192,26 +197,56 @@ class EntityBuilder:
             )
         return self
 
+    def with_mob_class(self, mob_class) -> EntityBuilder:
+        """Set mob archetype class and apply its attribute bonuses."""
+        self._hero_class = int(mob_class)
+        cdef = CLASS_DEFS.get(mob_class)
+        if cdef:
+            self._class_def = cdef
+        return self
+
     def with_mob_attributes(self, attr_base: int, tier: int) -> EntityBuilder:
-        """Generate mob-style attributes scaled by tier."""
+        """Generate mob-style attributes scaled by tier + class bonuses."""
         eid = self._eid
         rng = self._rng
         tick = self._tick
+        # Class bonuses (from with_mob_class or with_hero_class)
+        cd = self._class_def
+        c_str = cd.str_bonus if cd else 0
+        c_agi = cd.agi_bonus if cd else 0
+        c_vit = cd.vit_bonus if cd else 0
+        c_int = cd.int_bonus if cd else 0
+        c_spi = cd.spi_bonus if cd else 0
+        c_wis = cd.wis_bonus if cd else 0
+        c_end = cd.end_bonus if cd else 0
+        c_per = cd.per_bonus if cd else 0
+        c_cha = cd.cha_bonus if cd else 0
         self._attrs = Attributes(
-            str_=attr_base + rng.next_int(Domain.SPAWN, eid, tick + 20, 0, 3),
-            agi=attr_base + rng.next_int(Domain.SPAWN, eid, tick + 21, 0, 3),
-            vit=attr_base + rng.next_int(Domain.SPAWN, eid, tick + 22, 0, 3),
-            int_=max(1, attr_base - 2 + rng.next_int(Domain.SPAWN, eid, tick + 23, 0, 2)),
-            spi=max(1, attr_base - 2 + rng.next_int(Domain.SPAWN, eid, tick + 26, 0, 2)),
-            wis=max(1, attr_base - 2 + rng.next_int(Domain.SPAWN, eid, tick + 24, 0, 2)),
-            end=attr_base + rng.next_int(Domain.SPAWN, eid, tick + 25, 0, 3),
-            per=max(1, attr_base - 1 + rng.next_int(Domain.SPAWN, eid, tick + 27, 0, 2)),
-            cha=max(1, attr_base - 3 + rng.next_int(Domain.SPAWN, eid, tick + 28, 0, 2)),
+            str_=max(1, attr_base + c_str + rng.next_int(Domain.SPAWN, eid, tick + 20, 0, 3)),
+            agi=max(1, attr_base + c_agi + rng.next_int(Domain.SPAWN, eid, tick + 21, 0, 3)),
+            vit=max(1, attr_base + c_vit + rng.next_int(Domain.SPAWN, eid, tick + 22, 0, 3)),
+            int_=max(1, attr_base - 2 + c_int + rng.next_int(Domain.SPAWN, eid, tick + 23, 0, 2)),
+            spi=max(1, attr_base - 2 + c_spi + rng.next_int(Domain.SPAWN, eid, tick + 26, 0, 2)),
+            wis=max(1, attr_base - 2 + c_wis + rng.next_int(Domain.SPAWN, eid, tick + 24, 0, 2)),
+            end=max(1, attr_base + c_end + rng.next_int(Domain.SPAWN, eid, tick + 25, 0, 3)),
+            per=max(1, attr_base - 1 + c_per + rng.next_int(Domain.SPAWN, eid, tick + 27, 0, 2)),
+            cha=max(1, attr_base - 3 + c_cha + rng.next_int(Domain.SPAWN, eid, tick + 28, 0, 2)),
         )
+        cc_str = cd.str_cap_bonus if cd else 0
+        cc_agi = cd.agi_cap_bonus if cd else 0
+        cc_vit = cd.vit_cap_bonus if cd else 0
+        cc_int = cd.int_cap_bonus if cd else 0
+        cc_spi = cd.spi_cap_bonus if cd else 0
+        cc_wis = cd.wis_cap_bonus if cd else 0
+        cc_end = cd.end_cap_bonus if cd else 0
+        cc_per = cd.per_cap_bonus if cd else 0
+        cc_cha = cd.cha_cap_bonus if cd else 0
         self._caps = AttributeCaps(
-            str_cap=15 + tier * 5, agi_cap=15 + tier * 5, vit_cap=15 + tier * 5,
-            int_cap=10 + tier * 3, spi_cap=10 + tier * 3, wis_cap=10 + tier * 3,
-            end_cap=15 + tier * 5, per_cap=10 + tier * 3, cha_cap=8 + tier * 2,
+            str_cap=15 + tier * 5 + cc_str, agi_cap=15 + tier * 5 + cc_agi,
+            vit_cap=15 + tier * 5 + cc_vit, int_cap=10 + tier * 3 + cc_int,
+            spi_cap=10 + tier * 3 + cc_spi, wis_cap=10 + tier * 3 + cc_wis,
+            end_cap=15 + tier * 5 + cc_end, per_cap=10 + tier * 3 + cc_per,
+            cha_cap=8 + tier * 2 + cc_cha,
         )
         return self
 
@@ -220,25 +255,47 @@ class EntityBuilder:
         r_str: int = 0, r_agi: int = 0, r_vit: int = 0,
         r_spi: int = 0, r_per: int = 0, r_cha: int = 0,
     ) -> EntityBuilder:
-        """Generate race-specific attributes with racial modifiers."""
+        """Generate race-specific attributes with racial + class modifiers."""
         eid = self._eid
         rng = self._rng
         tick = self._tick
+        # Class bonuses (from with_mob_class)
+        cd = self._class_def
+        c_str = cd.str_bonus if cd else 0
+        c_agi = cd.agi_bonus if cd else 0
+        c_vit = cd.vit_bonus if cd else 0
+        c_int = cd.int_bonus if cd else 0
+        c_spi = cd.spi_bonus if cd else 0
+        c_wis = cd.wis_bonus if cd else 0
+        c_end = cd.end_bonus if cd else 0
+        c_per = cd.per_bonus if cd else 0
+        c_cha = cd.cha_bonus if cd else 0
         self._attrs = Attributes(
-            str_=max(1, attr_base + r_str + rng.next_int(Domain.SPAWN, eid, tick + 20, 0, 3)),
-            agi=max(1, attr_base + r_agi + rng.next_int(Domain.SPAWN, eid, tick + 21, 0, 3)),
-            vit=max(1, attr_base + r_vit + rng.next_int(Domain.SPAWN, eid, tick + 22, 0, 3)),
-            int_=max(1, attr_base - 2 + rng.next_int(Domain.SPAWN, eid, tick + 23, 0, 2)),
-            spi=max(1, attr_base - 2 + r_spi + rng.next_int(Domain.SPAWN, eid, tick + 26, 0, 2)),
-            wis=max(1, attr_base - 2 + rng.next_int(Domain.SPAWN, eid, tick + 24, 0, 2)),
-            end=max(1, attr_base + rng.next_int(Domain.SPAWN, eid, tick + 25, 0, 3)),
-            per=max(1, attr_base - 1 + r_per + rng.next_int(Domain.SPAWN, eid, tick + 27, 0, 2)),
-            cha=max(1, attr_base - 3 + r_cha + rng.next_int(Domain.SPAWN, eid, tick + 28, 0, 2)),
+            str_=max(1, attr_base + r_str + c_str + rng.next_int(Domain.SPAWN, eid, tick + 20, 0, 3)),
+            agi=max(1, attr_base + r_agi + c_agi + rng.next_int(Domain.SPAWN, eid, tick + 21, 0, 3)),
+            vit=max(1, attr_base + r_vit + c_vit + rng.next_int(Domain.SPAWN, eid, tick + 22, 0, 3)),
+            int_=max(1, attr_base - 2 + c_int + rng.next_int(Domain.SPAWN, eid, tick + 23, 0, 2)),
+            spi=max(1, attr_base - 2 + r_spi + c_spi + rng.next_int(Domain.SPAWN, eid, tick + 26, 0, 2)),
+            wis=max(1, attr_base - 2 + c_wis + rng.next_int(Domain.SPAWN, eid, tick + 24, 0, 2)),
+            end=max(1, attr_base + c_end + rng.next_int(Domain.SPAWN, eid, tick + 25, 0, 3)),
+            per=max(1, attr_base - 1 + r_per + c_per + rng.next_int(Domain.SPAWN, eid, tick + 27, 0, 2)),
+            cha=max(1, attr_base - 3 + r_cha + c_cha + rng.next_int(Domain.SPAWN, eid, tick + 28, 0, 2)),
         )
+        cc_str = cd.str_cap_bonus if cd else 0
+        cc_agi = cd.agi_cap_bonus if cd else 0
+        cc_vit = cd.vit_cap_bonus if cd else 0
+        cc_int = cd.int_cap_bonus if cd else 0
+        cc_spi = cd.spi_cap_bonus if cd else 0
+        cc_wis = cd.wis_cap_bonus if cd else 0
+        cc_end = cd.end_cap_bonus if cd else 0
+        cc_per = cd.per_cap_bonus if cd else 0
+        cc_cha = cd.cha_cap_bonus if cd else 0
         self._caps = AttributeCaps(
-            str_cap=15 + tier * 5, agi_cap=15 + tier * 5, vit_cap=15 + tier * 5,
-            int_cap=10 + tier * 3, spi_cap=10 + tier * 3, wis_cap=10 + tier * 3,
-            end_cap=15 + tier * 5, per_cap=10 + tier * 3, cha_cap=8 + tier * 2,
+            str_cap=15 + tier * 5 + cc_str, agi_cap=15 + tier * 5 + cc_agi,
+            vit_cap=15 + tier * 5 + cc_vit, int_cap=10 + tier * 3 + cc_int,
+            spi_cap=10 + tier * 3 + cc_spi, wis_cap=10 + tier * 3 + cc_wis,
+            end_cap=15 + tier * 5 + cc_end, per_cap=10 + tier * 3 + cc_per,
+            cha_cap=8 + tier * 2 + cc_cha,
         )
         return self
 
@@ -369,6 +426,7 @@ class EntityBuilder:
             stats=stats,
             ai_state=self._ai_state,
             faction=self._faction,
+            role=self._role,
             next_act_at=float(self._tick),
             home_pos=self._home_pos,
             tier=self._tier,

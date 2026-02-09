@@ -83,7 +83,7 @@ class AIBrain:
         new_state, proposal = handler.handle(ctx)
 
         # Update memory: remember visible hostile entities
-        visible = Perception.visible_entities(actor, snapshot, self._config.vision_range)
+        visible = Perception.visible_entities(actor, snapshot, actor.stats.vision_range)
         for e in visible:
             if self._faction_reg.is_hostile(actor.faction, e.faction):
                 actor.memory[e.id] = e.pos

@@ -28,6 +28,7 @@ export interface SimulationState {
   selectEntity: (id: number | null) => void;
   sendControl: (action: string) => Promise<void>;
   setSpeed: (tps: number) => Promise<void>;
+  clearEvents: () => Promise<void>;
 }
 
 export function useSimulation(): SimulationState {
@@ -90,7 +91,12 @@ export function useSimulation(): SimulationState {
         setBuildings(state.buildings || []);
         setResourceNodes(state.resource_nodes || []);
         if (state.events.length > 0) {
-          setEvents(state.events);
+          setEvents(prev => {
+            // Merge: keep all previous events, append only genuinely new ones
+            const existingKeys = new Set(prev.map(e => `${e.tick}:${e.message}`));
+            const fresh = state.events.filter(e => !existingKeys.has(`${e.tick}:${e.message}`));
+            return fresh.length > 0 ? [...prev, ...fresh] : prev;
+          });
         }
         setTotalSpawned(stats.total_spawned);
         setTotalDeaths(stats.total_deaths);
@@ -139,6 +145,15 @@ export function useSimulation(): SimulationState {
     setSelectedEntityId(id);
   }, []);
 
+  const clearEvents = useCallback(async () => {
+    try {
+      await fetch(`${API_BASE}/clear_events`, { method: 'POST' });
+      setEvents([]);
+    } catch (e) {
+      console.error('Clear events error:', e);
+    }
+  }, []);
+
   return {
     mapData,
     entities,
@@ -155,5 +170,6 @@ export function useSimulation(): SimulationState {
     selectEntity,
     sendControl,
     setSpeed,
+    clearEvents,
   };
 }

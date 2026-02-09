@@ -46,14 +46,21 @@ class MoveAction:
     @staticmethod
     def apply(proposal: ActionProposal, world: WorldState) -> None:
         target: Vector2 = proposal.target
+        old_pos = world.entities[proposal.actor_id].pos if proposal.actor_id in world.entities else None
         world.move_entity(proposal.actor_id, target)
         entity = world.entities.get(proposal.actor_id)
         if entity is not None:
-            # Road tiles grant a speed bonus
+            from src.core.attributes import speed_delay
             spd = entity.effective_spd()
+            # Road tiles grant a speed bonus
             if world.grid.is_road(target) or world.grid.is_bridge(target):
                 spd = max(spd, int(spd * 1.3))
-            entity.next_act_at += 1.0 / max(spd, 1)
+            delay = speed_delay(spd, "move", entity.stats.interaction_speed)
+            # Engagement Lock: fleeing from adjacent hostiles costs double delay
+            if entity.engaged_ticks >= 2:
+                delay *= 2.0
+                entity.engaged_ticks = 0  # reset after paying the penalty
+            entity.next_act_at += delay
             # Stamina cost for moving
             entity.stats.stamina = max(0, entity.stats.stamina - 1)
             # Attribute training from movement

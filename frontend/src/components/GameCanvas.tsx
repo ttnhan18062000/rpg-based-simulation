@@ -24,6 +24,7 @@ const BUILDING_COLORS: Record<string, string> = {
   guild: '#818cf8',
   class_hall: '#c084fc',
   inn: '#fb923c',
+  hero_house: '#34d399',
 };
 
 const MIN_ZOOM = 0.5;
@@ -107,11 +108,11 @@ export function GameCanvas({ mapData, entities, groundItems, buildings, resource
     const result: LocationEntry[] = [];
     const bNames: Record<string, string> = {
       store: 'General Store', blacksmith: 'Blacksmith', guild: 'Adventurer Guild',
-      class_hall: 'Class Hall', inn: 'Inn',
+      class_hall: 'Class Hall', inn: 'Inn', hero_house: "Hero's House",
     };
     const bColors: Record<string, string> = {
       store: '#38bdf8', blacksmith: '#f59e0b', guild: '#818cf8',
-      class_hall: '#c084fc', inn: '#fb923c',
+      class_hall: '#c084fc', inn: '#fb923c', hero_house: '#34d399',
     };
     for (const b of buildings) {
       result.push({ name: bNames[b.building_type] || b.name, color: bColors[b.building_type] || '#fff', x: b.x, y: b.y });

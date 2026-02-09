@@ -39,7 +39,7 @@ from src.core.buildings import (
     Building, RECIPES, RECIPE_MAP, SHOP_INVENTORY,
     can_craft, item_sell_price, shop_buy_price,
 )
-from src.core.enums import AIState, ActionType, Domain
+from src.core.enums import AIState, ActionType, Domain, EntityRole
 from src.core.faction import Faction, FactionRegistry
 from src.core.items import ITEM_REGISTRY, ItemType
 from src.core.models import DIRECTION_OFFSETS, Entity, Vector2
@@ -73,7 +73,7 @@ class AIContext:
     def visible(self) -> list[Entity]:
         if self._visible is None:
             self._visible = Perception.visible_entities(
-                self.actor, self.snapshot, self.config.vision_range)
+                self.actor, self.snapshot, self.actor.stats.vision_range)
         return self._visible
 
     def nearest_enemy(self) -> Entity | None:
@@ -137,6 +137,15 @@ def clear_dead_from_memory(actor: Entity, snapshot: Snapshot) -> None:
     dead_ids = [eid for eid in actor.memory if eid not in snapshot.entities or not snapshot.entities[eid].alive]
     for eid in dead_ids:
         del actor.memory[eid]
+
+
+def can_use_buildings(actor: Entity) -> bool:
+    """Return True if the entity's role permits using town buildings.
+
+    Only HERO (and future NPC) roles can use shops, guilds, etc.
+    MOBs are always rejected — this is the single guard for all building handlers.
+    """
+    return actor.role in (EntityRole.HERO, EntityRole.NPC)
 
 
 def can_use_potion(actor: Entity) -> str | None:
@@ -671,6 +680,12 @@ class RestingInTownHandler(StateHandler):
                 actor_id=actor.id, verb=ActionType.REST,
                 reason=f"Resting in town ({actor.stats.hp}/{actor.stats.max_hp})")
 
+        # Only entities with building access (HERO, NPC) use town activities
+        if not can_use_buildings(actor):
+            return AIState.WANDER, ActionProposal(
+                actor_id=actor.id, verb=ActionType.REST,
+                reason="Recovered → resuming patrol")
+
         # Fully healed → consider town activities before leaving
         snapshot = ctx.snapshot
 
@@ -759,7 +774,8 @@ class GuardCampHandler(StateHandler):
                 return AIState.COMBAT, ActionProposal(
                     actor_id=actor.id, verb=ActionType.ATTACK, target=enemy.id,
                     reason=f"Camp guard attacking intruder {enemy.id}")
-            chase_range = max(3, config.vision_range // 2)
+            # Use entity's vision range for chase distance; guards chase aggressively
+            chase_range = max(4, actor.stats.vision_range)
             if actor.pos.manhattan(enemy.pos) <= chase_range:
                 return AIState.HUNT, propose_move_toward(
                     actor, enemy.pos, snapshot, f"Camp guard chasing intruder {enemy.id}")
@@ -845,6 +861,9 @@ class VisitShopHandler(StateHandler):
 
     def handle(self, ctx: AIContext) -> tuple[AIState, ActionProposal]:
         actor, snapshot = ctx.actor, ctx.snapshot
+        if not can_use_buildings(actor):
+            return AIState.WANDER, ActionProposal(
+                actor_id=actor.id, verb=ActionType.REST, reason="Cannot use buildings → wander")
         store = find_building(snapshot, "store")
         if store is None:
             return AIState.WANDER, ActionProposal(
@@ -927,6 +946,9 @@ class VisitBlacksmithHandler(StateHandler):
 
     def handle(self, ctx: AIContext) -> tuple[AIState, ActionProposal]:
         actor, snapshot = ctx.actor, ctx.snapshot
+        if not can_use_buildings(actor):
+            return AIState.WANDER, ActionProposal(
+                actor_id=actor.id, verb=ActionType.REST, reason="Cannot use buildings → wander")
         bs = find_building(snapshot, "blacksmith")
         if bs is None:
             return AIState.WANDER, ActionProposal(
@@ -1014,6 +1036,9 @@ class VisitGuildHandler(StateHandler):
 
     def handle(self, ctx: AIContext) -> tuple[AIState, ActionProposal]:
         actor, snapshot = ctx.actor, ctx.snapshot
+        if not can_use_buildings(actor):
+            return AIState.WANDER, ActionProposal(
+                actor_id=actor.id, verb=ActionType.REST, reason="Cannot use buildings → wander")
         guild = find_building(snapshot, "guild")
         if guild is None:
             return AIState.WANDER, ActionProposal(
@@ -1159,6 +1184,9 @@ class VisitClassHallHandler(StateHandler):
 
     def handle(self, ctx: AIContext) -> tuple[AIState, ActionProposal]:
         actor, snapshot = ctx.actor, ctx.snapshot
+        if not can_use_buildings(actor):
+            return AIState.WANDER, ActionProposal(
+                actor_id=actor.id, verb=ActionType.REST, reason="Cannot use buildings → wander")
         ch = find_building(snapshot, "class_hall")
         if ch is None:
             return AIState.WANDER, ActionProposal(
@@ -1226,6 +1254,9 @@ class VisitInnHandler(StateHandler):
 
     def handle(self, ctx: AIContext) -> tuple[AIState, ActionProposal]:
         actor, snapshot = ctx.actor, ctx.snapshot
+        if not can_use_buildings(actor):
+            return AIState.WANDER, ActionProposal(
+                actor_id=actor.id, verb=ActionType.REST, reason="Cannot use buildings → wander")
         inn = find_building(snapshot, "inn")
         if inn is None:
             return AIState.WANDER, ActionProposal(
@@ -1287,6 +1318,9 @@ class VisitHomeHandler(StateHandler):
 
     def handle(self, ctx: AIContext) -> tuple[AIState, ActionProposal]:
         actor, snapshot = ctx.actor, ctx.snapshot
+        if not can_use_buildings(actor):
+            return AIState.WANDER, ActionProposal(
+                actor_id=actor.id, verb=ActionType.REST, reason="Cannot use buildings → wander")
         if actor.home_pos is None:
             return AIState.WANDER, ActionProposal(
                 actor_id=actor.id, verb=ActionType.REST, reason="No home set")

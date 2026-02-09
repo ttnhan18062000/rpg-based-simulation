@@ -765,3 +765,53 @@ CHEST_LOOT_TABLES[tier] = [
 - `WorldState.treasure_chests` dict
 - `Snapshot.treasure_chests` tuple (immutable copy)
 - API: `TreasureChestSchema` with `chest_id`, position, `tier`, `looted`, `guard_entity_id`
+
+---
+
+## 23. Speed & Action Delay System
+
+Defined in `src/core/attributes.py` via `speed_delay()`. Replaces the old linear `1.0/spd` formula with logarithmic diminishing returns and action-type multipliers.
+
+### 23.1 Formula
+
+```
+delay = action_mult / (1.0 + ln(max(spd, 1)))
+```
+
+Clamped to `[0.15, 2.0]` seconds.
+
+### 23.2 SPD → Delay Table (move action)
+
+| SPD | Delay | Actions/tick |
+|-----|-------|-------------|
+| 1 | 1.00 | 1.0 |
+| 5 | 0.53 | 1.9 |
+| 10 | 0.38 | 2.6 |
+| 15 | 0.34 | 2.9 |
+| 20 | 0.31 | 3.2 |
+| 30 | 0.27 | 3.7 |
+| 50 | 0.24 | 4.2 |
+
+### 23.3 Action-Type Multipliers
+
+| Action | Multiplier | Effect |
+|--------|-----------|--------|
+| **Move** | ×1.0 | Baseline |
+| **Attack** | ×0.9 | Slightly faster than moving |
+| **Skill** | ×1.2 | Slower (powerful abilities have cooldown cost) |
+| **Loot** | ×0.7 | Fast pickup |
+| **Harvest** | ×0.7 | Fast gathering |
+| **Use Item** | ×0.6 | Fastest (potions should be quick) |
+| **Rest** | ×1.0 | Same as baseline |
+
+For non-combat actions (loot, harvest, use_item, rest), the `interaction_speed` derived stat further scales the delay.
+
+### 23.4 Engagement Lock (Anti-Kite)
+
+Tracked via `Entity.engaged_ticks`, incremented each tick an entity is adjacent (Manhattan ≤ 1) to a hostile. Reset to 0 when no hostiles are adjacent.
+
+**Mechanic**: When `engaged_ticks >= 2`, moving away costs **double** the normal delay. This prevents fast entities from trivially escaping melee combat, similar to D&D opportunity attacks.
+
+- Slow tanky builds can pin down fast enemies
+- Fast builds still act more often overall, but can't kite indefinitely
+- The penalty is paid once per disengage, then `engaged_ticks` resets

@@ -109,6 +109,20 @@ class Rarity(IntEnum):
 
 
 @unique
+class EntityRole(IntEnum):
+    """What role an entity plays — determines building access, AI behavior pools, etc.
+
+    HERO:  Can use town buildings (shop, guild, blacksmith, class hall, inn, home).
+    MOB:   Wild creature / enemy. Cannot use buildings. Guards territory.
+    NPC:   Town resident (future). Can use some buildings, trade with heroes.
+    """
+
+    HERO = 0
+    MOB = 1
+    NPC = 2
+
+
+@unique
 class EnemyTier(IntEnum):
     """Enemy difficulty tiers — affects stats, behavior, and loot."""
 

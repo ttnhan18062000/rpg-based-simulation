@@ -1,4 +1,4 @@
-import { X, Store, Hammer, Shield, Bed } from 'lucide-react';
+import { X, Store, Hammer, Shield, Bed, Home } from 'lucide-react';
 import type { Building } from '@/types/api';
 import { itemName, ITEM_STATS, RARITY_COLORS } from '@/constants/colors';
 import { ClassHallPanel } from './ClassHallPanel';
@@ -52,6 +52,7 @@ const BUILDING_ICONS: Record<string, React.ReactNode> = {
   blacksmith: <Hammer className="w-5 h-5 text-[#f59e0b]" />,
   guild: <Shield className="w-5 h-5 text-[#818cf8]" />,
   inn: <Bed className="w-5 h-5 text-[#fb923c]" />,
+  hero_house: <Home className="w-5 h-5 text-[#34d399]" />,
 };
 
 const BUILDING_COLORS: Record<string, string> = {
@@ -59,6 +60,7 @@ const BUILDING_COLORS: Record<string, string> = {
   blacksmith: '#f59e0b',
   guild: '#818cf8',
   inn: '#fb923c',
+  hero_house: '#34d399',
 };
 
 export function BuildingPanel({ building, onClose }: BuildingPanelProps) {
@@ -92,6 +94,7 @@ export function BuildingPanel({ building, onClose }: BuildingPanelProps) {
       {building.building_type === 'blacksmith' && <BlacksmithContent />}
       {building.building_type === 'guild' && <GuildContent />}
       {building.building_type === 'inn' && <InnContent />}
+      {building.building_type === 'hero_house' && <HeroHouseContent building={building} />}
     </div>
   );
 }
@@ -278,6 +281,77 @@ function InnContent() {
         <div className="flex justify-between py-0.5">
           <span className="text-text-secondary">Adventuring</span>
           <span className="font-semibold text-text-primary">1 / tick</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function HeroHouseContent({ building }: { building: Building }) {
+  const items = building.storage_items ?? [];
+  const used = building.storage_used ?? 0;
+  const max = building.storage_max ?? 0;
+  const level = building.storage_level ?? 0;
+  const pct = max > 0 ? Math.round((used / max) * 100) : 0;
+
+  return (
+    <div className="p-3">
+      <div className="text-[11px] text-text-secondary mb-3">
+        The hero's personal dwelling. Items stored here are safe from loss on death and persist
+        between adventures.
+      </div>
+
+      <div className="text-[10px] font-bold uppercase tracking-wider text-text-secondary mb-2">
+        Storage (Lv.{level})
+      </div>
+      <div className="mb-3">
+        <div className="flex items-center justify-between text-[10px] mb-1">
+          <span className="text-text-secondary">{used} / {max} slots</span>
+          <span className="font-semibold" style={{ color: pct > 80 ? '#f87171' : '#34d399' }}>{pct}%</span>
+        </div>
+        <div className="w-full h-1.5 bg-bg-primary rounded-full overflow-hidden">
+          <div
+            className="h-full rounded-full transition-all"
+            style={{ width: `${pct}%`, background: pct > 80 ? '#f87171' : '#34d399' }}
+          />
+        </div>
+      </div>
+
+      {items.length > 0 ? (
+        <div className="flex flex-wrap gap-1">
+          {items.map((iid, i) => {
+            const stats = ITEM_STATS[iid];
+            const rarityColor = stats ? RARITY_COLORS[stats.rarity] || '#9ca3af' : '#9ca3af';
+            return (
+              <span
+                key={i}
+                className="inline-block text-[10px] border rounded px-1.5 py-0.5"
+                style={{ borderColor: rarityColor + '40', color: rarityColor, background: rarityColor + '10' }}
+              >
+                {itemName(iid)}
+              </span>
+            );
+          })}
+        </div>
+      ) : (
+        <div className="text-[11px] text-text-secondary italic">Storage is empty.</div>
+      )}
+
+      <div className="text-[10px] font-bold uppercase tracking-wider text-text-secondary mb-2 mt-4">
+        Features
+      </div>
+      <div className="space-y-1.5 text-[11px]">
+        <div className="p-2 rounded border border-border bg-bg-primary">
+          <div className="font-semibold text-[#34d399] text-xs">Safe Storage</div>
+          <div className="text-text-secondary text-[10px] mt-0.5">
+            Items stored here are never lost, even if the hero falls in battle.
+          </div>
+        </div>
+        <div className="p-2 rounded border border-border bg-bg-primary">
+          <div className="font-semibold text-[#34d399] text-xs">Rest & Recover</div>
+          <div className="text-text-secondary text-[10px] mt-0.5">
+            Heroes can visit home to rest, deposit loot, and retrieve stored items before heading out.
+          </div>
         </div>
       </div>
     </div>

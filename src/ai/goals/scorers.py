@@ -69,6 +69,14 @@ class CombatGoal(GoalScorer):
         if hp_ratio < 0.5:
             base -= 0.3 * (1.0 - hp_ratio)
 
+        # Mobs are more aggressive when defending home territory
+        if not _is_hero(ctx):
+            from src.ai.states import is_on_home_territory
+            if is_on_home_territory(ctx):
+                base += 0.3  # territorial aggression bonus
+            if enemy is not None:
+                base += 0.15  # mobs always eager to fight intruders
+
         base += _trait_utility(ctx).combat
         return base
 
@@ -103,6 +111,12 @@ class FleeGoal(GoalScorer):
 
         if ctx.nearest_enemy() is not None and hp_ratio < 0.6:
             base += 0.2
+
+        # Mobs are less willing to flee on home territory
+        if not _is_hero(ctx):
+            from src.ai.states import is_on_home_territory
+            if is_on_home_territory(ctx):
+                base *= 0.5  # halve flee desire on home turf
 
         base += _trait_utility(ctx).flee
         return base
@@ -156,14 +170,22 @@ class LootGoal(GoalScorer):
         base = 0.0
 
         if _is_hero(ctx):
+            # Don't loot if inventory is full
+            if actor.inventory and actor.inventory.used_slots >= actor.inventory.max_slots:
+                return 0.0
             from src.ai.perception import Perception
             loot_pos = Perception.ground_loot_nearby(actor, ctx.snapshot, radius=5)
             if loot_pos is not None:
                 base = 0.5
                 if actor.pos.manhattan(loot_pos) <= 2:
                     base = 0.7
-            if actor.inventory and actor.inventory.used_slots < actor.inventory.max_slots - 2:
-                base += 0.1
+            # Reduce desire when bag is nearly full
+            if actor.inventory:
+                free = actor.inventory.max_slots - actor.inventory.used_slots
+                if free <= 2:
+                    base *= 0.3  # strongly discourage looting with nearly-full bag
+                elif free > 2:
+                    base += 0.1
 
         base += _trait_utility(ctx).loot
         return base
@@ -191,6 +213,10 @@ class TradeGoal(GoalScorer):
                 base += 0.4
             if hero_wants_to_buy(ctx.actor):
                 base += 0.3
+            # Urgently sell when bag is nearly full
+            inv = ctx.actor.inventory
+            if inv and inv.used_slots >= inv.max_slots - 2:
+                base += 0.4
 
         base += _trait_utility(ctx).trade
         return base
@@ -303,6 +329,9 @@ class GuardGoal(GoalScorer):
         from src.ai.states import is_on_home_territory
         if is_on_home_territory(ctx):
             base = 0.4
+            # Spike urgency if an enemy is visible on our turf
+            if ctx.nearest_enemy() is not None:
+                base = 0.8
         elif actor.home_pos:
             dist_home = actor.pos.manhattan(actor.home_pos)
             if dist_home > 5:

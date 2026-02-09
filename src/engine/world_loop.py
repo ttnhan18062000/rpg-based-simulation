@@ -26,6 +26,7 @@ if TYPE_CHECKING:
     from src.actions.base import ActionProposal
     from src.config import SimulationConfig
     from src.core.world_state import WorldState
+    from src.systems.rng import DeterministicRNG
     from src.utils.replay import ReplayRecorder
 
 logger = logging.getLogger(__name__)
@@ -51,6 +52,7 @@ class WorldLoop:
         "_recorder",
         "_last_applied",
         "_faction_reg",
+        "_rng",
     )
 
     def __init__(
@@ -62,6 +64,7 @@ class WorldLoop:
         generator: EntityGenerator,
         recorder: ReplayRecorder | None = None,
         faction_reg: FactionRegistry | None = None,
+        rng: DeterministicRNG | None = None,
     ) -> None:
         self._config = config
         self._world = world
@@ -72,6 +75,7 @@ class WorldLoop:
         self._recorder = recorder
         self._last_applied: list[ActionProposal] = []
         self._faction_reg = faction_reg or FactionRegistry.default()
+        self._rng = rng
 
     @property
     def world(self) -> WorldState:
@@ -167,6 +171,9 @@ class WorldLoop:
 
         # Tick treasure chest respawns
         self._tick_treasure_chests()
+
+        # Update engagement tracking (for Engagement Lock anti-kite)
+        self._tick_engagement()
 
         # Level-up checks
         self._check_level_ups()
@@ -289,7 +296,8 @@ class WorldLoop:
                             self._world.tick, entity.id, entity.kind,
                             template.name, healed, entity.stats.hp, entity.stats.max_hp,
                         )
-                    entity.next_act_at += 0.5  # small action delay
+                    from src.core.attributes import speed_delay
+                    entity.next_act_at += speed_delay(entity.effective_spd(), "use_item", entity.stats.interaction_speed)
 
             elif proposal.verb == ActionType.LOOT and proposal.target:
                 # Pick up ground loot
@@ -333,7 +341,8 @@ class WorldLoop:
                         self._world.drop_items(pos, items)
                     # Check for treasure chests at this position
                     self._try_loot_chest(entity, pos)
-                    entity.next_act_at += 0.5
+                    from src.core.attributes import speed_delay as _sd
+                    entity.next_act_at += _sd(entity.effective_spd(), "loot", entity.stats.interaction_speed)
                     # Attribute training from looting
                     if entity.attributes and entity.attribute_caps:
                         from src.core.attributes import train_attributes
@@ -442,7 +451,8 @@ class WorldLoop:
                                     self._world.tick, entity.id, sdef.name, skill_range,
                                 )
 
-                            entity.next_act_at += 1.0 / max(entity.effective_spd(), 1)
+                            from src.core.attributes import speed_delay as _sd2
+                            entity.next_act_at += _sd2(entity.effective_spd(), "skill")
                             # Attribute training from skill use
                             if entity.attributes and entity.attribute_caps:
                                 from src.core.attributes import train_attributes
@@ -480,7 +490,8 @@ class WorldLoop:
                         elif item_id:
                             # Can't carry — drop on ground
                             self._world.drop_items(pos, [item_id])
-                    entity.next_act_at += 0.5
+                    from src.core.attributes import speed_delay as _sd3
+                    entity.next_act_at += _sd3(entity.effective_spd(), "harvest", entity.stats.interaction_speed)
                     entity.stats.stamina = max(0, entity.stats.stamina - 2)
                     # Attribute training from harvesting
                     if entity.attributes and entity.attribute_caps:
@@ -541,12 +552,12 @@ class WorldLoop:
 
     def _update_entity_memory(self) -> None:
         """Update terrain_memory and entity_memory for all alive entities based on vision."""
-        vr = self._config.vision_range
         grid = self._world.grid
         tick = self._world.tick
         for entity in self._world.entities.values():
             if not entity.alive or entity.kind == "generator":
                 continue
+            vr = entity.stats.vision_range  # PER-derived per-entity vision
             ex, ey = entity.pos.x, entity.pos.y
             # Record visible tiles into terrain_memory
             from src.core.models import Vector2
@@ -650,6 +661,28 @@ class WorldLoop:
                         "Tick %d: Entity %d (%s) alerted by intruder %d (%s) on %s territory",
                         tick, defender.id, defender.kind, entity.id, entity.kind, tile_owner.name,
                     )
+
+    def _tick_engagement(self) -> None:
+        """Track how many ticks each entity has been adjacent to a hostile.
+
+        Used by the Engagement Lock mechanic: when engaged_ticks >= 2,
+        fleeing (moving away) costs double action delay.
+        """
+        reg = self._faction_reg
+        for entity in self._world.entities.values():
+            if not entity.alive or entity.kind == "generator":
+                continue
+            adjacent_hostile = False
+            for other in self._world.entities.values():
+                if other.id == entity.id or not other.alive or other.kind == "generator":
+                    continue
+                if entity.pos.manhattan(other.pos) <= 1 and reg.is_hostile(entity.faction, other.faction):
+                    adjacent_hostile = True
+                    break
+            if adjacent_hostile:
+                entity.engaged_ticks = min(entity.engaged_ticks + 1, 10)
+            else:
+                entity.engaged_ticks = 0
 
     def _tick_resource_nodes(self) -> None:
         """Tick cooldowns on depleted resource nodes so they respawn."""
@@ -763,75 +796,127 @@ class WorldLoop:
                 continue
             goals: list[str] = []
             hp_ratio = entity.stats.hp_ratio
+            stamina_ratio = entity.stats.stamina_ratio
             is_hero = entity.faction == Faction.HERO_GUILD
+            st = entity.ai_state
 
-            # Territory awareness
+            # --- Current action (from last AI decision reason) ---
+            if entity.last_reason:
+                goals.append(f"[Action] {entity.last_reason}")
+
+            # --- Territory awareness ---
             mat = self._world.grid.get(entity.pos)
             on_enemy_territory = reg.is_enemy_territory(entity.faction, mat)
             if on_enemy_territory:
-                goals.append("Trespassing on enemy territory — stat debuff active!")
-
-            # Active effects awareness
+                goals.append("[Warning] Trespassing on enemy territory — stat debuff active!")
             if entity.has_effect(EffectType.TERRITORY_DEBUFF):
-                goals.append("Weakened by hostile territory")
+                goals.append("[Debuff] Weakened by hostile territory")
 
+            # --- State-specific context ---
             if is_hero:
+                # HP status
                 if hp_ratio < 0.3:
-                    goals.append("Survive — find safety and heal")
+                    goals.append("[Urgent] HP critical — find safety and heal!")
                 elif hp_ratio < 0.6:
-                    goals.append("Find potions or return to town to heal")
+                    goals.append("[Concern] Low HP — consider potions or retreating to town")
+                # Stamina status
+                if stamina_ratio < 0.2:
+                    goals.append("[Stamina] Exhausted — need rest soon")
+                elif stamina_ratio < 0.4:
+                    goals.append("[Stamina] Running low — conserve energy")
+
+                # Long-term goals
                 if entity.stats.level < 5:
-                    goals.append("Grow stronger — gain XP from enemies")
+                    goals.append("[Goal] Grow stronger — gain XP from enemies")
                 elif entity.stats.level < 10:
-                    goals.append("Become powerful enough to raid goblin camps")
+                    goals.append("[Goal] Reach high level to raid enemy camps")
                 else:
-                    goals.append("Dominate the battlefield")
-                if entity.inventory and entity.inventory.used_slots > entity.inventory.max_slots * 0.8:
-                    goals.append("Inventory nearly full — prioritize upgrades")
-                elif entity.inventory and entity.inventory.used_slots < entity.inventory.max_slots * 0.3:
-                    goals.append("Collect more loot and equipment")
-                if entity.inventory and not entity.inventory.weapon:
-                    goals.append("Find a weapon")
-                if entity.inventory and not entity.inventory.armor:
-                    goals.append("Find armor")
+                    goals.append("[Goal] Dominate the battlefield")
+
+                # Equipment needs
+                if entity.inventory:
+                    inv = entity.inventory
+                    if not inv.weapon:
+                        goals.append("[Need] No weapon equipped — find or buy one")
+                    if not inv.armor:
+                        goals.append("[Need] No armor equipped — find or buy one")
+                    slots_used = inv.used_slots
+                    slots_max = inv.max_slots
+                    if slots_used > slots_max * 0.8:
+                        goals.append(f"[Inventory] Nearly full ({slots_used}/{slots_max}) — sell or store items")
+                    elif slots_used < slots_max * 0.3:
+                        goals.append(f"[Inventory] Plenty of space ({slots_used}/{slots_max}) — collect loot")
+
+                # Exploration
                 explored = len(entity.terrain_memory)
                 total_tiles = self._world.grid.width * self._world.grid.height
-                if explored < total_tiles * 0.3:
-                    goals.append("Explore unknown territory")
-                elif explored < total_tiles * 0.7:
-                    goals.append("Continue mapping the world")
+                pct = explored * 100 // total_tiles
+                if pct < 30:
+                    goals.append(f"[Explore] {pct}% mapped — much to discover")
+                elif pct < 70:
+                    goals.append(f"[Explore] {pct}% mapped — continue exploration")
                 else:
-                    goals.append("Most of the world has been explored")
-                if entity.ai_state == AIState.COMBAT:
-                    goals.append("Defeat the current enemy")
-                elif entity.ai_state == AIState.LOOTING:
-                    goals.append("Pick up nearby loot")
-                elif entity.ai_state == AIState.RESTING_IN_TOWN:
-                    goals.append("Rest and recover in town")
-                elif entity.ai_state == AIState.HARVESTING:
-                    goals.append("Harvest nearby resources")
+                    goals.append(f"[Explore] {pct}% mapped — well-traveled")
+
+                # Craft awareness
+                if entity.craft_target:
+                    goals.append(f"[Craft] Working toward: {entity.craft_target}")
+
+                # State-specific
+                if st == AIState.COMBAT:
+                    goals.append("[Focus] Defeat the current enemy!")
+                elif st == AIState.LOOTING:
+                    goals.append("[Focus] Picking up nearby items")
+                elif st == AIState.RESTING_IN_TOWN:
+                    goals.append(f"[Town] Resting — HP {entity.stats.hp}/{entity.stats.max_hp}")
+                elif st == AIState.HARVESTING:
+                    goals.append("[Focus] Harvesting a resource node")
+                elif st == AIState.VISIT_SHOP:
+                    goals.append("[Town] Shopping — buying supplies or selling loot")
+                elif st == AIState.VISIT_BLACKSMITH:
+                    goals.append("[Town] At the Blacksmith — crafting gear")
+                elif st == AIState.VISIT_GUILD:
+                    goals.append("[Town] At the Guild — gathering intel")
+                elif st == AIState.VISIT_CLASS_HALL:
+                    goals.append("[Town] At Class Hall — training skills")
+                elif st == AIState.VISIT_INN:
+                    goals.append(f"[Town] Resting at Inn — STA {entity.stats.stamina}/{entity.stats.max_stamina}")
+                elif st == AIState.VISIT_HOME:
+                    goals.append("[Town] At home — managing storage")
+                elif st == AIState.FLEE:
+                    goals.append("[Urgent] Fleeing from danger!")
+                elif st == AIState.HUNT:
+                    goals.append("[Focus] Hunting a target")
             else:
-                if entity.ai_state == AIState.GUARD_CAMP:
-                    goals.append("Guard the camp from intruders")
-                    goals.append("Patrol the perimeter")
-                elif entity.ai_state == AIState.ALERT:
-                    goals.append("Intruder detected! Engage the threat!")
-                elif entity.ai_state == AIState.RETURN_TO_CAMP:
-                    goals.append("Return to the safety of camp")
-                elif entity.ai_state == AIState.HUNT:
-                    goals.append("Hunt down a nearby target")
-                elif entity.ai_state == AIState.COMBAT:
-                    goals.append("Fight to the death")
-                elif entity.ai_state == AIState.FLEE:
-                    goals.append("Flee — too wounded to fight")
-                elif entity.ai_state == AIState.WANDER:
-                    goals.append("Wander and search for prey")
+                # Non-hero entities
+                if st == AIState.GUARD_CAMP:
+                    goals.append("[Duty] Guarding camp — watching for intruders")
+                elif st == AIState.ALERT:
+                    goals.append("[Alert] Intruder detected! Engaging the threat!")
+                elif st == AIState.RETURN_TO_CAMP:
+                    goals.append("[Movement] Returning to camp")
+                elif st == AIState.HUNT:
+                    goals.append("[Hunt] Pursuing a target")
+                elif st == AIState.COMBAT:
+                    goals.append("[Combat] Fighting an enemy")
+                elif st == AIState.FLEE:
+                    goals.append("[Flee] Too wounded to fight — retreating!")
+                elif st == AIState.WANDER:
+                    goals.append("[Patrol] Wandering and searching for prey")
+                elif st == AIState.RESTING_IN_TOWN:
+                    goals.append(f"[Rest] Recovering HP ({entity.stats.hp}/{entity.stats.max_hp})")
+
                 if hp_ratio < 0.3:
-                    goals.append("Desperate — need to escape")
+                    goals.append("[Urgent] Desperate — need to escape!")
                 elif hp_ratio < 0.6:
-                    goals.append("Wounded — be cautious")
+                    goals.append("[Caution] Wounded — being cautious")
                 else:
-                    goals.append("Feeling strong")
+                    goals.append("[Status] Healthy and ready")
+
+                if entity.home_pos:
+                    dist_home = entity.pos.manhattan(entity.home_pos)
+                    if dist_home > 8:
+                        goals.append(f"[Range] Far from camp ({dist_home} tiles)")
 
             entity.goals = goals
 
@@ -843,6 +928,8 @@ class WorldLoop:
                 continue
             if proposal.new_ai_state is not None:
                 entity.ai_state = AIState(proposal.new_ai_state)
+            if proposal.reason:
+                entity.last_reason = proposal.reason
 
     def _phase_cleanup(self) -> None:
         """Remove dead entities, respawn heroes at town, drop loot, rebuild spatial index."""

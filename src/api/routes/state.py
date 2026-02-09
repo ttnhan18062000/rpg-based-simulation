@@ -72,6 +72,21 @@ _SKILL_ELEMENTS: dict[str, str] = {
 }
 
 
+def _speed_delay(e, action: str) -> float:
+    """Compute speed delay for an entity and action type."""
+    from src.core.attributes import speed_delay
+    isp = e.stats.interaction_speed if action in ("loot", "harvest", "use_item", "rest") else 1.0
+    return round(speed_delay(e.effective_spd(), action, isp), 3)
+
+
+def _elem_dmg(e):
+    """Return aggregated elemental damage multipliers from traits."""
+    from src.core.traits import TraitStatModifiers, aggregate_trait_stats
+    if not e.traits:
+        return TraitStatModifiers()
+    return aggregate_trait_stats(e.traits)
+
+
 def _serialize_skills(e) -> list[SkillSchema]:
     from src.core.classes import SKILL_DEFS
     result = []
@@ -134,7 +149,7 @@ def get_state(
             accessory=e.inventory.accessory if e.inventory else None,
             inventory_count=e.inventory.used_slots if e.inventory else 0,
             inventory_items=list(e.inventory.items) if e.inventory else [],
-            vision_range=manager.config.vision_range,
+            vision_range=e.stats.vision_range,
             terrain_memory={f"{k[0]},{k[1]}": v for k, v in e.terrain_memory.items()},
             entity_memory=list(e.entity_memory),
             goals=list(e.goals),
@@ -177,6 +192,18 @@ def get_state(
             trade_bonus=e.stats.trade_bonus,
             interaction_speed=e.stats.interaction_speed,
             rest_efficiency=e.stats.rest_efficiency,
+            speed_delay_move=_speed_delay(e, "move"),
+            speed_delay_attack=_speed_delay(e, "attack"),
+            speed_delay_skill=_speed_delay(e, "skill"),
+            speed_delay_harvest=_speed_delay(e, "harvest"),
+            fire_dmg_mult=_elem_dmg(e).fire_dmg_mult,
+            ice_dmg_mult=_elem_dmg(e).ice_dmg_mult,
+            lightning_dmg_mult=_elem_dmg(e).lightning_dmg_mult,
+            dark_dmg_mult=_elem_dmg(e).dark_dmg_mult,
+            elem_vuln_fire=e.stats.elem_vuln.get(1, 1.0),
+            elem_vuln_ice=e.stats.elem_vuln.get(2, 1.0),
+            elem_vuln_lightning=e.stats.elem_vuln.get(3, 1.0),
+            elem_vuln_dark=e.stats.elem_vuln.get(4, 1.0),
             traits=list(e.traits),
             home_storage_used=e.home_storage.used_slots if e.home_storage else 0,
             home_storage_max=e.home_storage.max_slots if e.home_storage else 0,
@@ -204,7 +231,8 @@ def get_state(
     ]
 
     events = [
-        EventSchema(tick=ev.tick, category=ev.category, message=ev.message)
+        EventSchema(tick=ev.tick, category=ev.category, message=ev.message,
+                    entity_ids=list(ev.entity_ids))
         for ev in manager.event_log.since_tick(since_tick)
     ]
 
@@ -214,13 +242,30 @@ def get_state(
         if items
     ]
 
-    buildings = [
-        BuildingSchema(
+    buildings = []
+    for b in snapshot.buildings:
+        bs = BuildingSchema(
             building_id=b.building_id, name=b.name,
             x=b.pos.x, y=b.pos.y, building_type=b.building_type,
         )
-        for b in snapshot.buildings
-    ]
+        if b.building_type == "hero_house" and b.building_id.startswith("hero_house_"):
+            try:
+                owner_id = int(b.building_id.split("_")[-1])
+                owner = snapshot.entities.get(owner_id)
+                if owner and owner.home_storage:
+                    hs = owner.home_storage
+                    bs = BuildingSchema(
+                        building_id=b.building_id, name=b.name,
+                        x=b.pos.x, y=b.pos.y, building_type=b.building_type,
+                        owner_entity_id=owner_id,
+                        storage_items=list(hs.items),
+                        storage_used=hs.used_slots,
+                        storage_max=hs.max_slots,
+                        storage_level=hs.level,
+                    )
+            except (ValueError, IndexError):
+                pass
+        buildings.append(bs)
 
     resource_nodes = [
         ResourceNodeSchema(
@@ -255,6 +300,15 @@ def get_state(
         resource_nodes=resource_nodes,
         treasure_chests=treasure_chests,
     )
+
+
+@router.post("/clear_events")
+def clear_events(
+    manager: EngineManager = Depends(get_engine_manager),
+) -> dict:
+    """Clear all stored events."""
+    manager.event_log.clear()
+    return {"status": "ok"}
 
 
 @router.get("/stats", response_model=SimulationStats)

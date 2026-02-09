@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from src.core.classes import mob_class_for
 from src.core.entity_builder import EntityBuilder
 from src.core.enums import AIState, Domain, EnemyTier
 from src.core.faction import Faction
@@ -68,6 +69,7 @@ class EntityGenerator:
         ai_state = self._resolve_ai_state(tier, near_pos)
         inv = self._build_goblin_inventory(eid, tick, tier)
 
+        mob_cls = mob_class_for("goblin", tier)
         return (
             EntityBuilder(self._rng, eid, tick=tick)
             .kind(kind)
@@ -83,6 +85,7 @@ class EntityGenerator:
                 gold=self._rng.next_int(Domain.LOOT, eid, tick, 0, 10 + tier * 10),
             )
             .with_existing_inventory(inv)
+            .with_mob_class(mob_cls)
             .with_mob_attributes(3 + tier * 2, tier)
             .with_race_skills(kind)
             .with_traits(race_prefix="goblin")
@@ -131,6 +134,7 @@ class EntityGenerator:
         r_per = r_spd_mod  # fast races are more perceptive
         r_cha = 0  # monsters generally have low charisma
 
+        mob_cls = mob_class_for(race, tier)
         return (
             EntityBuilder(self._rng, eid, tick=tick)
             .kind(kind)
@@ -148,6 +152,7 @@ class EntityGenerator:
                 gold=self._rng.next_int(Domain.LOOT, eid, tick, 0, 10 + tier * 10),
             )
             .with_existing_inventory(inv)
+            .with_mob_class(mob_cls)
             .with_race_attributes(
                 attr_base, tier,
                 r_str=r_str, r_agi=r_agi, r_vit=r_vit,

@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING
 
 from src.ai.brain import AIBrain
 from src.core.buildings import Building
-from src.core.enums import AIState, Domain, EnemyTier, Material
+from src.core.enums import AIState, Domain, EnemyTier, EntityRole, Material
 from src.core.faction import Faction, FactionRegistry
 from src.core.grid import Grid
 from src.core.items import Inventory, TERRAIN_RACE
@@ -57,7 +57,7 @@ class EngineManager:
         # Thread-safe shared state
         self._snapshot_lock = threading.Lock()
         self._latest_snapshot: Snapshot | None = None
-        self._event_log = EventLog(max_size=1000)
+        self._event_log = EventLog()
 
         # Counters
         self._total_spawned: int = 0
@@ -391,6 +391,7 @@ class EngineManager:
             .at(Vector2(cfg.town_center_x, cfg.town_center_y))
             .home(town_center)
             .faction(Faction.HERO_GUILD)
+            .role(EntityRole.HERO)
             .with_base_stats(hp=50, atk=10, def_=3, spd=10, luck=3,
                              crit_rate=0.08, crit_dmg=1.8, evasion=0.03, gold=50)
             .with_randomized_stats()
@@ -409,6 +410,16 @@ class EngineManager:
         self._total_spawned += 1
         class_def = CLASS_DEFS.get(hero_class)
         logger.info("Spawned hero #%d as %s", hero_eid, class_def.name if class_def else "unknown")
+
+        # --- Register hero house as a building ---
+        hero_house_pos = Vector2(cfg.town_center_x + 1, cfg.town_center_y)
+        world.buildings.append(Building(
+            building_id=f"hero_house_{hero_eid}",
+            name=f"Hero's House",
+            pos=hero_house_pos,
+            building_type="hero_house",
+        ))
+        logger.info("Placed hero house at %s for hero #%d", hero_house_pos, hero_eid)
 
         # --- Spawn initial goblins ---
         for i in range(1, cfg.initial_entity_count):
@@ -495,7 +506,7 @@ class EngineManager:
         self._loop = WorldLoop(
             config=cfg, world=world, worker_pool=self._worker_pool,
             conflict_resolver=conflict_resolver, generator=generator,
-            faction_reg=faction_reg,
+            faction_reg=faction_reg, rng=self._rng,
         )
 
         # Initial snapshot
@@ -553,10 +564,22 @@ class EngineManager:
         tick = self._loop.world.tick
         events: list[SimEvent] = []
         for action in self._loop.last_applied:
+            # Collect all entity IDs referenced in this action
+            involved: list[int] = [action.actor_id]
+            if isinstance(action.target, int):
+                involved.append(action.target)
+            # Map verb to human-readable category
+            cat_map = {
+                "REST": "rest", "MOVE": "movement", "ATTACK": "combat",
+                "USE_ITEM": "item", "LOOT": "loot", "HARVEST": "harvest",
+                "USE_SKILL": "skill",
+            }
+            category = cat_map.get(action.verb.name, action.verb.name.lower())
             events.append(SimEvent(
                 tick=tick,
-                category=action.verb.name,
+                category=category,
                 message=f"Entity {action.actor_id}: {action.verb.name} → {action.reason}",
+                entity_ids=tuple(involved),
             ))
         if events:
             self._event_log.append_many(events)

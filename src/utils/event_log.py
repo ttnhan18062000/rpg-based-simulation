@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import threading
 from collections import deque
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 
 @dataclass(frozen=True, slots=True)
@@ -14,21 +14,22 @@ class SimEvent:
     tick: int
     category: str
     message: str
+    entity_ids: tuple[int, ...] = ()  # IDs of entities involved in this event
 
 
 class EventLog:
-    """Fixed-size ring buffer. Writers append; readers snapshot a slice.
+    """Unbounded event log. Writers append; readers snapshot a slice.
 
+    All events are kept until manually cleared via ``clear()``.
     Thread-safe via a simple lock — writes are rare (once per tick batch)
     and reads are non-blocking copies.
     """
 
-    __slots__ = ("_buffer", "_lock", "_max_size")
+    __slots__ = ("_buffer", "_lock")
 
-    def __init__(self, max_size: int = 500) -> None:
-        self._buffer: deque[SimEvent] = deque(maxlen=max_size)
+    def __init__(self) -> None:
+        self._buffer: deque[SimEvent] = deque()
         self._lock = threading.Lock()
-        self._max_size = max_size
 
     def append(self, event: SimEvent) -> None:
         with self._lock:

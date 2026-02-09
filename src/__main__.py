@@ -57,7 +57,7 @@ def _run_server(args: argparse.Namespace) -> None:
 def _run_cli(args: argparse.Namespace) -> None:
     from src.ai.brain import AIBrain
     from src.config import SimulationConfig
-    from src.core.enums import AIState, Domain, EnemyTier, Material
+    from src.core.enums import AIState, Domain, EnemyTier, EntityRole, Material
     from src.core.grid import Grid
     from src.core.items import Inventory
     from src.core.models import Entity, Stats, Vector2
@@ -140,6 +140,7 @@ def _run_cli(args: argparse.Namespace) -> None:
         .at(Vector2(config.town_center_x, config.town_center_y))
         .home(town_center)
         .faction(Faction.HERO_GUILD)
+        .role(EntityRole.HERO)
         .with_base_stats(hp=50, atk=10, def_=3, spd=10, luck=3,
                          crit_rate=0.08, crit_dmg=1.8, evasion=0.03, gold=50)
         .with_randomized_stats()
@@ -155,6 +156,16 @@ def _run_cli(args: argparse.Namespace) -> None:
         .build()
     )
     world.add_entity(hero)
+
+    # Register hero house as a building
+    from src.core.buildings import Building
+    hero_house_pos = Vector2(config.town_center_x + 1, config.town_center_y)
+    world.buildings.append(Building(
+        building_id=f"hero_house_{hero_eid}",
+        name="Hero's House",
+        pos=hero_house_pos,
+        building_type="hero_house",
+    ))
 
     # Spawn initial goblins (tiered)
     for i in range(1, config.initial_entity_count):
@@ -177,6 +188,7 @@ def _run_cli(args: argparse.Namespace) -> None:
     loop = WorldLoop(
         config=config, world=world, worker_pool=worker_pool,
         conflict_resolver=conflict_resolver, generator=generator, recorder=recorder,
+        rng=rng,
     )
 
     try:

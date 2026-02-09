@@ -54,6 +54,11 @@ class TraitDef:
     vision_bonus: int = 0
     hp_regen_mult: float = 1.0
     interaction_speed_mult: float = 1.0
+    # Elemental damage bonus multipliers (1.0 = no change, >1 = bonus dmg)
+    fire_dmg_mult: float = 1.0
+    ice_dmg_mult: float = 1.0
+    lightning_dmg_mult: float = 1.0
+    dark_dmg_mult: float = 1.0
     # Flee HP threshold modifier (additive; positive = flee sooner)
     flee_threshold_mod: float = 0.0
 
@@ -173,8 +178,10 @@ _reg(TraitDef(
 ))
 _reg(TraitDef(
     TraitType.ELEMENTALIST, "Elementalist",
-    "Affinity for elemental magic.",
+    "Affinity for elemental magic. Bonus damage with all elements.",
     matk_mult=1.05,
+    fire_dmg_mult=1.15, ice_dmg_mult=1.15,
+    lightning_dmg_mult=1.15, dark_dmg_mult=1.10,
 ))
 
 # -- Perception / awareness --
@@ -365,6 +372,10 @@ class TraitStatModifiers:
     vision_bonus: int = 0
     hp_regen_mult: float = 1.0
     interaction_speed_mult: float = 1.0
+    fire_dmg_mult: float = 1.0
+    ice_dmg_mult: float = 1.0
+    lightning_dmg_mult: float = 1.0
+    dark_dmg_mult: float = 1.0
     flee_threshold_mod: float = 0.0
 
 
@@ -406,5 +417,9 @@ def aggregate_trait_stats(traits: list[int]) -> TraitStatModifiers:
         mods.vision_bonus += tdef.vision_bonus
         mods.hp_regen_mult *= tdef.hp_regen_mult
         mods.interaction_speed_mult *= tdef.interaction_speed_mult
+        mods.fire_dmg_mult *= tdef.fire_dmg_mult
+        mods.ice_dmg_mult *= tdef.ice_dmg_mult
+        mods.lightning_dmg_mult *= tdef.lightning_dmg_mult
+        mods.dark_dmg_mult *= tdef.dark_dmg_mult
         mods.flee_threshold_mod += tdef.flee_threshold_mod
     return mods

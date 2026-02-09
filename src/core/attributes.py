@@ -18,6 +18,7 @@ Attributes can be slowly trained through actions.
 
 from __future__ import annotations
 
+import math as _math
 from dataclasses import dataclass, field
 
 
@@ -356,3 +357,53 @@ def level_up_attributes(attrs: Attributes, caps: AttributeCaps) -> None:
     attrs.end = min(attrs.end + 2, caps.end_cap)
     attrs.per = min(attrs.per + 2, caps.per_cap)
     attrs.cha = min(attrs.cha + 2, caps.cha_cap)
+
+
+# ---------------------------------------------------------------------------
+# Speed → action delay (Option D: logarithmic + action-type multipliers)
+# ---------------------------------------------------------------------------
+
+# Action-type delay multipliers (lower = faster for that action type)
+_ACTION_DELAY_MULT: dict[str, float] = {
+    "move": 1.0,
+    "attack": 0.9,
+    "skill": 1.2,
+    "loot": 0.7,
+    "harvest": 0.7,
+    "use_item": 0.6,
+    "rest": 1.0,
+}
+
+# Minimum delay floor (prevents infinitely fast actions)
+_MIN_DELAY = 0.15
+# Maximum delay ceiling
+_MAX_DELAY = 2.0
+
+
+def speed_delay(spd: int, action: str = "move", interaction_speed: float = 1.0) -> float:
+    """Compute action delay from speed stat using logarithmic diminishing returns.
+
+    Formula: delay = action_mult / (1.0 + ln(max(spd, 1)))
+    Then scaled by interaction_speed for loot/harvest/use_item.
+
+    SPD →  delay (move):
+      1  → 1.00
+      5  → 0.53
+     10  → 0.38
+     15  → 0.34
+     20  → 0.31
+     30  → 0.27
+     50  → 0.24
+
+    Returns a float clamped to [_MIN_DELAY, _MAX_DELAY].
+    """
+    s = max(spd, 1)
+    base = 1.0 / (1.0 + _math.log(s))
+    mult = _ACTION_DELAY_MULT.get(action, 1.0)
+    delay = base * mult
+
+    # Apply interaction_speed stat for non-combat actions
+    if action in ("loot", "harvest", "use_item", "rest"):
+        delay /= max(interaction_speed, 0.5)
+
+    return max(_MIN_DELAY, min(_MAX_DELAY, delay))

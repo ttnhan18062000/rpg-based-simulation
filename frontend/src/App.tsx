@@ -63,6 +63,7 @@ function App() {
           onClearLoot={() => setInspectedLoot(null)}
           selectedBuilding={selectedBuilding}
           onClearBuilding={() => setSelectedBuilding(null)}
+          clearEvents={sim.clearEvents}
         />
       </div>
     </div>

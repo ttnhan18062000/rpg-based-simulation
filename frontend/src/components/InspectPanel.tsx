@@ -6,10 +6,12 @@ import { KIND_COLORS, STATE_COLORS, TIER_NAMES, itemName, hpColor, ITEM_STATS, R
 const HERO_CLASS_NAMES: Record<string, string> = {
   none: 'None', warrior: 'Warrior', ranger: 'Ranger', mage: 'Mage', rogue: 'Rogue',
   champion: 'Champion', sharpshooter: 'Sharpshooter', archmage: 'Archmage', assassin: 'Assassin',
+  brute: 'Brute', scout: 'Scout', caster: 'Caster', tank: 'Tank', beast: 'Beast',
 };
 const HERO_CLASS_COLORS: Record<string, string> = {
   none: '#888', warrior: '#f87171', ranger: '#34d399', mage: '#818cf8', rogue: '#fbbf24',
   champion: '#ff4444', sharpshooter: '#22c55e', archmage: '#a78bfa', assassin: '#f59e0b',
+  brute: '#ef4444', scout: '#10b981', caster: '#8b5cf6', tank: '#64748b', beast: '#d97706',
 };
 const HERO_CLASS_DESC: Record<string, string> = {
   none: 'No class assigned.',
@@ -21,6 +23,11 @@ const HERO_CLASS_DESC: Record<string, string> = {
   sharpshooter: 'A legendary marksman with unmatched precision.',
   archmage: 'A supreme mage who commands arcane forces at will.',
   assassin: 'A lethal shadow, striking with perfect precision.',
+  brute: 'A heavy melee fighter relying on raw strength and toughness.',
+  scout: 'A fast flanker with sharp senses and quick reflexes.',
+  caster: 'A magic-wielding creature channeling elemental or dark power.',
+  tank: 'A durable defender that absorbs punishment and holds ground.',
+  beast: 'A wild creature with natural agility and ferocious attacks.',
 };
 
 const MASTERY_TIERS = ['Novice', 'Apprentice', 'Adept', 'Expert', 'Master'];
@@ -48,6 +55,23 @@ const ATTR_DESCRIPTIONS: Record<string, { full: string; scaling: string }> = {
   END: { full: 'Endurance', scaling: 'Stamina +2, HP regen' },
   PER: { full: 'Perception', scaling: 'Vision range, detection, loot quality' },
   CHA: { full: 'Charisma', scaling: 'Trade prices, morale, recruitment' },
+};
+
+const RECIPE_DATA: Record<string, { output: string; gold: number; materials: Record<string, number>; desc: string }> = {
+  craft_steel_sword: { output: 'steel_sword', gold: 60, materials: { iron_ore: 2, wood: 1 }, desc: 'A well-forged steel blade with improved balance.' },
+  craft_battle_axe: { output: 'battle_axe', gold: 90, materials: { iron_ore: 3, steel_bar: 1 }, desc: 'A heavy battle axe that hits hard but swings slow.' },
+  craft_enchanted_blade: { output: 'enchanted_blade', gold: 200, materials: { steel_bar: 2, enchanted_dust: 2 }, desc: 'A blade infused with magical energy.' },
+  craft_iron_plate: { output: 'iron_plate', gold: 70, materials: { iron_ore: 3, leather: 1 }, desc: 'Heavy iron plate armor. Strong defense.' },
+  craft_enchanted_robe: { output: 'enchanted_robe', gold: 150, materials: { leather: 2, enchanted_dust: 1 }, desc: 'A light robe enchanted for agility.' },
+  craft_ring_of_power: { output: 'ring_of_power', gold: 120, materials: { iron_ore: 1, enchanted_dust: 1 }, desc: 'A ring that amplifies attack and defense.' },
+  craft_evasion_amulet: { output: 'evasion_amulet', gold: 80, materials: { leather: 2, wood: 1 }, desc: 'An amulet for enhanced agility.' },
+  craft_wolf_cloak: { output: 'wolf_cloak', gold: 50, materials: { wolf_pelt: 2, leather: 1 }, desc: 'A light cloak sewn from wolf pelts.' },
+  craft_fang_necklace: { output: 'fang_necklace', gold: 45, materials: { wolf_fang: 2, fiber: 1 }, desc: 'A necklace that enhances critical strikes.' },
+  craft_desert_bow: { output: 'desert_bow', gold: 75, materials: { raw_gem: 1, fiber: 2 }, desc: 'A composite bow. Precise and deadly.' },
+  craft_bone_shield: { output: 'bone_shield', gold: 65, materials: { bone_shard: 3, dark_moss: 1 }, desc: 'A shield of fused bones. Sturdy.' },
+  craft_spectral_blade: { output: 'spectral_blade', gold: 180, materials: { ectoplasm: 2, enchanted_dust: 1 }, desc: 'A ghostly blade with ethereal precision.' },
+  craft_mountain_plate: { output: 'mountain_plate', gold: 160, materials: { stone_block: 3, iron_ore: 2 }, desc: 'Massive stone-reinforced plate armor.' },
+  craft_herbal_remedy: { output: 'herbal_remedy', gold: 15, materials: { herb: 3, glowing_mushroom: 1 }, desc: 'A natural healing draught.' },
 };
 
 const ELEMENT_COLORS: Record<string, string> = {
@@ -289,6 +313,29 @@ function StatsTab({ entity, collapsed, toggle }: { entity: Entity; collapsed: Re
         </div>
       </CollapsibleSection>
 
+      {/* Speed Delays */}
+      <CollapsibleSection title="Action Speed" sectionKey="speed_delays" collapsed={collapsed} toggle={toggle}>
+        <div className="space-y-1 text-[10px]">
+          <SpeedDelayRow label="Move" delay={entity.speed_delay_move} color="#34d399" />
+          <SpeedDelayRow label="Attack" delay={entity.speed_delay_attack} color="#f87171" />
+          <SpeedDelayRow label="Skill" delay={entity.speed_delay_skill} color="#a78bfa" />
+          <SpeedDelayRow label="Harvest" delay={entity.speed_delay_harvest} color="#fbbf24" />
+        </div>
+      </CollapsibleSection>
+
+      {/* Elemental Stats */}
+      {(entity.fire_dmg_mult !== 1 || entity.ice_dmg_mult !== 1 || entity.lightning_dmg_mult !== 1 || entity.dark_dmg_mult !== 1
+        || entity.elem_vuln_fire !== 1 || entity.elem_vuln_ice !== 1 || entity.elem_vuln_lightning !== 1 || entity.elem_vuln_dark !== 1) && (
+        <CollapsibleSection title="Elemental" sectionKey="elemental" collapsed={collapsed} toggle={toggle}>
+          <div className="space-y-1 text-[10px]">
+            <ElementalRow label="Fire" dmg={entity.fire_dmg_mult} vuln={entity.elem_vuln_fire} color="#f87171" />
+            <ElementalRow label="Ice" dmg={entity.ice_dmg_mult} vuln={entity.elem_vuln_ice} color="#60a5fa" />
+            <ElementalRow label="Lightning" dmg={entity.lightning_dmg_mult} vuln={entity.elem_vuln_lightning} color="#fbbf24" />
+            <ElementalRow label="Dark" dmg={entity.dark_dmg_mult} vuln={entity.elem_vuln_dark} color="#a78bfa" />
+          </div>
+        </CollapsibleSection>
+      )}
+
       {/* Equipment */}
       <CollapsibleSection title="Equipment" sectionKey="equipment" collapsed={collapsed} toggle={toggle}>
         <EquipSlot label="Weapon" value={entity.weapon} />
@@ -350,6 +397,44 @@ function SecondaryStatRow({ label, value, suffix, color, isLowerBetter, isRaw }:
       <span className="font-semibold" style={{ color: isModified ? color : undefined }}>
         {displayVal}{suffix}
       </span>
+    </div>
+  );
+}
+
+function SpeedDelayRow({ label, delay, color }: { label: string; delay: number; color: string }) {
+  const barPct = Math.min(100, Math.max(0, (1.0 - delay / 2.0) * 100));
+  return (
+    <div className="flex items-center justify-between py-0.5 border-b border-border/30 last:border-0">
+      <span className="text-text-secondary">{label}</span>
+      <div className="flex items-center gap-1.5">
+        <div className="w-14 h-1.5 bg-bg-primary rounded-full overflow-hidden">
+          <div className="h-full rounded-full" style={{ width: `${barPct}%`, background: color }} />
+        </div>
+        <span className="font-semibold tabular-nums w-10 text-right" style={{ color }}>{delay.toFixed(2)}s</span>
+      </div>
+    </div>
+  );
+}
+
+function ElementalRow({ label, dmg, vuln, color }: { label: string; dmg: number; vuln: number; color: string }) {
+  const dmgPct = Math.round((dmg - 1) * 100);
+  const vulnPct = Math.round((vuln - 1) * 100);
+  return (
+    <div className="flex items-center justify-between py-0.5 border-b border-border/30 last:border-0">
+      <span className="font-semibold" style={{ color }}>{label}</span>
+      <div className="flex items-center gap-2">
+        {dmg !== 1 && (
+          <span className={`text-[9px] font-bold ${dmgPct > 0 ? 'text-accent-green' : 'text-accent-red'}`}>
+            DMG {dmgPct > 0 ? '+' : ''}{dmgPct}%
+          </span>
+        )}
+        {vuln !== 1 && (
+          <span className={`text-[9px] font-bold ${vulnPct > 0 ? 'text-accent-red' : 'text-accent-green'}`}>
+            RES {vulnPct > 0 ? '+' : ''}{vulnPct}%
+          </span>
+        )}
+        {dmg === 1 && vuln === 1 && <span className="text-[9px] text-text-secondary">Neutral</span>}
+      </div>
     </div>
   );
 }
@@ -674,17 +759,24 @@ const TRAIT_NAMES: Record<number, { name: string; desc: string; color: string }>
 };
 
 const AI_STATE_DESCRIPTIONS: Record<string, string> = {
-  IDLE: 'Not doing anything. Waiting for the AI evaluator to pick a new goal.',
-  EXPLORING: 'Moving toward unexplored tiles to map the world.',
-  HUNTING: 'Seeking and engaging enemies in combat.',
-  FLEEING: 'Running away from danger due to low HP or overwhelming enemies.',
-  RESTING: 'Recovering HP and stamina at a safe location.',
-  LOOTING: 'Picking up items from the ground.',
-  TRADING: 'Buying or selling items at the shop.',
-  CRAFTING: 'Visiting the blacksmith to craft equipment.',
-  SOCIALIZING: 'Interacting with the guild or class hall.',
-  GUARDING: 'Defending territory or patrolling near home position.',
-  DEAD: 'This entity has been defeated.',
+  IDLE: 'Idle — waiting for the AI evaluator to pick a new goal.',
+  WANDER: 'Exploring and moving toward unexplored tiles to map the world.',
+  HUNT: 'Seeking and chasing enemies to engage in combat.',
+  COMBAT: 'Actively fighting an enemy in melee or ranged combat.',
+  FLEE: 'Fleeing from danger — HP is critically low or enemy is too strong.',
+  RETURN_TO_TOWN: 'Heading back to town to rest, trade, or resupply.',
+  RESTING_IN_TOWN: 'Resting in town — recovering HP and considering town activities.',
+  RETURN_TO_CAMP: 'Returning to camp to resume guard duties.',
+  GUARD_CAMP: 'Guarding the camp perimeter and watching for intruders.',
+  LOOTING: 'Picking up items from the ground or channeling a loot action.',
+  ALERT: 'Alert! An intruder has been detected — seeking and engaging the threat.',
+  VISIT_SHOP: 'Visiting the General Store to sell loot and buy supplies.',
+  VISIT_BLACKSMITH: 'At the Blacksmith — learning recipes or crafting equipment.',
+  VISIT_GUILD: 'At the Adventurer\'s Guild — gathering intel and accepting quests.',
+  HARVESTING: 'Channeling a harvest action on a nearby resource node.',
+  VISIT_CLASS_HALL: 'At the Class Hall — learning skills or attempting a class breakthrough.',
+  VISIT_INN: 'Resting at the Inn for rapid HP and stamina recovery.',
+  VISIT_HOME: 'At home — storing items or upgrading home storage.',
 };
 
 function AITab({ entity, terrainCount, totalTiles, explorePercent, collapsed, toggle }: {
@@ -728,9 +820,9 @@ function AITab({ entity, terrainCount, totalTiles, explorePercent, collapsed, to
 
       {/* Goals & Thoughts */}
       {entity.goals && entity.goals.length > 0 && (
-        <CollapsibleSection title="Goals & Thoughts" sectionKey="goals" collapsed={collapsed} toggle={toggle}>
+        <CollapsibleSection title={`Goals & Thoughts (${entity.goals.length})`} sectionKey="goals" collapsed={collapsed} toggle={toggle}>
           <div className="text-[9px] text-text-secondary mb-1.5">
-            The Utility AI evaluates all goals each tick. Goals are scored based on context, traits, and environment. The highest-scored goal is selected with weighted randomness.
+            Live AI reasoning — updated every tick. Shows current action, situational awareness, and long-term objectives.
           </div>
           {entity.goals.map((g, i) => (
             <GoalRow key={i} goal={g} />
@@ -741,14 +833,7 @@ function AITab({ entity, terrainCount, totalTiles, explorePercent, collapsed, to
       {/* Craft Target */}
       {entity.kind === 'hero' && entity.craft_target && (
         <CollapsibleSection title="Craft Target" sectionKey="craft" collapsed={collapsed} toggle={toggle}>
-          <div className="text-[11px] text-text-primary">
-            Working toward: <span className="font-semibold text-accent-yellow">{itemName(entity.craft_target.replace('craft_', ''))}</span>
-          </div>
-          {entity.known_recipes && entity.known_recipes.length > 0 && (
-            <div className="mt-1 text-[10px] text-text-secondary">
-              Known recipes: {entity.known_recipes.length}
-            </div>
-          )}
+          <CraftTargetDetail entity={entity} />
         </CollapsibleSection>
       )}
 
@@ -789,48 +874,135 @@ function AITab({ entity, terrainCount, totalTiles, explorePercent, collapsed, to
 }
 
 /* ========================================================================= */
+/* Craft Target Detail                                                        */
+/* ========================================================================= */
+
+function CraftTargetDetail({ entity }: { entity: Entity }) {
+  const recipeId = entity.craft_target;
+  if (!recipeId) return null;
+  const recipe = RECIPE_DATA[recipeId];
+  if (!recipe) {
+    return (
+      <div className="text-[11px] text-text-primary">
+        Working toward: <span className="font-semibold text-accent-yellow">{itemName(recipeId.replace('craft_', ''))}</span>
+      </div>
+    );
+  }
+
+  const outputName = itemName(recipe.output);
+  const outputStats = ITEM_STATS[recipe.output];
+  const outputRarity = outputStats ? RARITY_COLORS[outputStats.rarity] || '#9ca3af' : '#fbbf24';
+  const hasGold = entity.gold >= recipe.gold;
+  const invItems = entity.inventory_items || [];
+
+  // Check material availability
+  const matEntries = Object.entries(recipe.materials).map(([matId, needed]) => {
+    const have = invItems.filter(i => i === matId).length;
+    return { matId, needed, have, ok: have >= needed };
+  });
+  const allMatsReady = matEntries.every(m => m.ok) && hasGold;
+
+  return (
+    <div>
+      <div className="flex items-center gap-2 mb-1.5">
+        <span className="text-xs font-bold" style={{ color: outputRarity }}>{outputName}</span>
+        {allMatsReady && (
+          <span className="text-[8px] px-1.5 py-px rounded-full font-bold uppercase border border-accent-green/40 text-accent-green">
+            Ready
+          </span>
+        )}
+      </div>
+      <div className="text-[10px] text-text-secondary mb-2">{recipe.desc}</div>
+
+      {/* Gold cost */}
+      <div className="flex items-center justify-between text-[11px] py-0.5 border-b border-border/30">
+        <span className="text-text-secondary">Gold Cost</span>
+        <span className={`font-semibold ${hasGold ? 'text-accent-yellow' : 'text-accent-red'}`}>
+          {entity.gold} / {recipe.gold}g {hasGold ? '\u2713' : '\u2717'}
+        </span>
+      </div>
+
+      {/* Materials */}
+      <div className="text-[10px] font-bold uppercase tracking-wider text-text-secondary mt-2 mb-1">
+        Materials
+      </div>
+      {matEntries.map(({ matId, needed, have, ok }) => (
+        <div key={matId} className="flex items-center justify-between text-[11px] py-0.5">
+          <span className="text-text-primary">{itemName(matId)}</span>
+          <span className={`font-semibold tabular-nums ${ok ? 'text-accent-green' : 'text-accent-red'}`}>
+            {have} / {needed} {ok ? '\u2713' : '\u2717'}
+          </span>
+        </div>
+      ))}
+
+      {/* Known recipes count */}
+      {entity.known_recipes && entity.known_recipes.length > 0 && (
+        <div className="mt-2 text-[10px] text-text-secondary border-t border-border/30 pt-1.5">
+          Known recipes: {entity.known_recipes.length} total
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ========================================================================= */
 /* Goal row with hover tooltip                                                */
 /* ========================================================================= */
 
-const GOAL_PATTERNS: { pattern: RegExp; category: string; desc: string }[] = [
-  { pattern: /hunt|kill|attack|fight/i, category: 'Combat', desc: 'Seeking enemies to defeat in battle.' },
-  { pattern: /gather|collect|harvest|loot/i, category: 'Gathering', desc: 'Collecting items and resources.' },
-  { pattern: /explore|scout|travel|visit/i, category: 'Exploration', desc: 'Discovering new areas of the world.' },
-  { pattern: /rest|heal|recover|inn/i, category: 'Recovery', desc: 'Resting to restore health and stamina.' },
-  { pattern: /guild|quest/i, category: 'Guild', desc: 'Interacting with the Adventurer\'s Guild.' },
-  { pattern: /shop|buy|sell|trade/i, category: 'Commerce', desc: 'Trading items and equipment.' },
-  { pattern: /craft|forge|blacksmith/i, category: 'Crafting', desc: 'Creating new items at the Blacksmith.' },
-  { pattern: /class|skill|learn|train/i, category: 'Training', desc: 'Improving skills and abilities.' },
-  { pattern: /flee|retreat|escape|danger/i, category: 'Survival', desc: 'Avoiding danger and staying alive.' },
-  { pattern: /guard|patrol|camp/i, category: 'Guarding', desc: 'Defending a position or camp.' },
-  { pattern: /wander|idle|roam/i, category: 'Wandering', desc: 'Moving around without a specific goal.' },
-];
+const TAG_COLORS: Record<string, string> = {
+  Action: '#60a5fa',
+  Warning: '#fb923c',
+  Debuff: '#f87171',
+  Urgent: '#ef4444',
+  Concern: '#fbbf24',
+  Stamina: '#a78bfa',
+  Goal: '#34d399',
+  Need: '#f472b6',
+  Inventory: '#818cf8',
+  Explore: '#60a5fa',
+  Craft: '#fb923c',
+  Focus: '#fbbf24',
+  Town: '#34d399',
+  Duty: '#6b7280',
+  Alert: '#ef4444',
+  Movement: '#60a5fa',
+  Hunt: '#f87171',
+  Combat: '#f87171',
+  Flee: '#fb923c',
+  Patrol: '#9ca3af',
+  Rest: '#34d399',
+  Caution: '#fbbf24',
+  Status: '#9ca3af',
+  Range: '#818cf8',
+};
 
 function GoalRow({ goal }: { goal: string }) {
-  const [hover, setHover] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-  const match = GOAL_PATTERNS.find(p => p.pattern.test(goal));
-  const category = match?.category || 'General';
-  const desc = match?.desc || 'An AI decision or thought.';
-  const catColors: Record<string, string> = {
-    Combat: '#f87171', Gathering: '#34d399', Exploration: '#60a5fa', Recovery: '#fbbf24',
-    Guild: '#a78bfa', Commerce: '#fbbf24', Crafting: '#fb923c', Training: '#c084fc',
-    Survival: '#f87171', Guarding: '#6b7280', Wandering: '#9ca3af', General: '#888',
-  };
+  // Parse [Tag] prefix from goal string
+  const tagMatch = goal.match(/^\[([^\]]+)\]\s*(.*)/);
+  const tag = tagMatch ? tagMatch[1] : null;
+  const text = tagMatch ? tagMatch[2] : goal;
+  const tagColor = tag ? (TAG_COLORS[tag] || '#9ca3af') : '#9ca3af';
+
+  const isAction = tag === 'Action';
+  const isUrgent = tag === 'Urgent' || tag === 'Alert';
 
   return (
     <div
-      ref={ref}
-      className="relative flex items-baseline gap-1.5 py-0.5 text-[11px] text-text-primary cursor-help"
-      onMouseEnter={() => setHover(true)}
-      onMouseLeave={() => setHover(false)}
+      className={`flex items-start gap-1.5 py-0.5 text-[11px] ${isAction ? 'bg-white/[0.03] -mx-1 px-1 rounded' : ''}`}
     >
-      <span className="text-[9px] shrink-0" style={{ color: catColors[category] }}>{'\u25C6'}</span>
-      <span className="leading-relaxed">{goal}</span>
-      <FixedTooltip triggerRef={ref} show={hover} width="208px">
-        <div className="font-bold text-[11px] mb-0.5" style={{ color: catColors[category] }}>{category}</div>
-        <div className="text-text-secondary">{desc}</div>
-      </FixedTooltip>
+      <span className="text-[9px] shrink-0 mt-0.5" style={{ color: tagColor }}>
+        {isUrgent ? '\u26A0' : isAction ? '\u25B6' : '\u25C6'}
+      </span>
+      <div className="flex flex-col leading-relaxed min-w-0">
+        {tag && (
+          <span className="text-[8px] font-bold uppercase tracking-wider" style={{ color: tagColor }}>
+            {tag}
+          </span>
+        )}
+        <span className={`text-text-primary ${isAction ? 'font-semibold' : ''} ${isUrgent ? 'text-accent-red' : ''}`}>
+          {text}
+        </span>
+      </div>
     </div>
   );
 }

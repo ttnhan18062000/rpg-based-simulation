@@ -23,11 +23,12 @@ interface SidebarProps {
   onClearLoot: () => void;
   selectedBuilding: Building | null;
   onClearBuilding: () => void;
+  clearEvents: () => Promise<void>;
 }
 
 export function Sidebar({
   entities, events, mapData, selectedEntityId, onSelectEntity, sendControl, setSpeed,
-  inspectedLoot, onClearLoot, selectedBuilding, onClearBuilding,
+  inspectedLoot, onClearLoot, selectedBuilding, onClearBuilding, clearEvents,
 }: SidebarProps) {
   // Determine mode: building, spectate, or default
   const isSpectating = selectedEntityId !== null;
@@ -51,17 +52,11 @@ export function Sidebar({
 
   const selectedEntity = entities.find(e => e.id === selectedEntityId);
 
-  // Filter events related to the spectated entity
+  // Filter events related to the spectated entity (use entity_ids array)
   const entityEvents = selectedEntityId
-    ? events.filter(ev => {
-        const idStr = `${selectedEntityId}`;
-        return (
-          ev.message.includes(`Entity ${idStr} `) ||
-          ev.message.includes(`Entity ${idStr}(`) ||
-          ev.message.includes(`#${idStr} `) ||
-          ev.message.includes(`#${idStr}(`)
-        );
-      })
+    ? events.filter(ev =>
+        ev.entity_ids?.includes(selectedEntityId) ?? false
+      )
     : [];
 
   // Tab layout depends on mode:
@@ -127,7 +122,7 @@ export function Sidebar({
           )
         )}
         {activeTab === 'events' && (
-          <EventLog events={events} />
+          <EventLog events={events} onClear={clearEvents} />
         )}
       </div>
     </div>

@@ -122,6 +122,21 @@ export interface Entity {
   trade_bonus: number;
   interaction_speed: number;
   rest_efficiency: number;
+  // Speed delay stats
+  speed_delay_move: number;
+  speed_delay_attack: number;
+  speed_delay_skill: number;
+  speed_delay_harvest: number;
+  // Elemental damage multipliers (from traits)
+  fire_dmg_mult: number;
+  ice_dmg_mult: number;
+  lightning_dmg_mult: number;
+  dark_dmg_mult: number;
+  // Elemental vulnerability
+  elem_vuln_fire: number;
+  elem_vuln_ice: number;
+  elem_vuln_lightning: number;
+  elem_vuln_dark: number;
 }
 
 export interface EntityEffect {
@@ -157,6 +172,12 @@ export interface Building {
   x: number;
   y: number;
   building_type: string;
+  // Hero house storage (only populated for hero_house type)
+  owner_entity_id?: number | null;
+  storage_items?: string[];
+  storage_used?: number;
+  storage_max?: number;
+  storage_level?: number;
 }
 
 export interface GroundItem {
@@ -183,6 +204,7 @@ export interface GameEvent {
   tick: number;
   category: string;
   message: string;
+  entity_ids: number[];
 }
 
 export interface WorldState {

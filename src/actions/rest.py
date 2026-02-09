@@ -32,4 +32,5 @@ class RestAction:
         # Minor HP recovery on rest
         if entity.stats.hp < entity.stats.max_hp:
             entity.stats.hp = min(entity.stats.hp + 1, entity.stats.max_hp)
-        entity.next_act_at += 1.0 / max(entity.stats.spd, 1)
+        from src.core.attributes import speed_delay
+        entity.next_act_at += speed_delay(entity.stats.spd, "rest", entity.stats.interaction_speed)

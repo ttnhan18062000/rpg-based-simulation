@@ -149,6 +149,21 @@ class EntitySchema(BaseModel):
     trade_bonus: float = 1.0
     interaction_speed: float = 1.0
     rest_efficiency: float = 1.0
+    # Speed delay stats (computed from SPD + action type)
+    speed_delay_move: float = 1.0
+    speed_delay_attack: float = 0.9
+    speed_delay_skill: float = 1.2
+    speed_delay_harvest: float = 0.7
+    # Elemental damage multipliers (from traits)
+    fire_dmg_mult: float = 1.0
+    ice_dmg_mult: float = 1.0
+    lightning_dmg_mult: float = 1.0
+    dark_dmg_mult: float = 1.0
+    # Elemental vulnerability (from stats)
+    elem_vuln_fire: float = 1.0
+    elem_vuln_ice: float = 1.0
+    elem_vuln_lightning: float = 1.0
+    elem_vuln_dark: float = 1.0
     # Home storage
     home_storage_used: int = 0
     home_storage_max: int = 0
@@ -173,6 +188,7 @@ class EventSchema(BaseModel):
     tick: int
     category: str
     message: str
+    entity_ids: list[int] = Field(default_factory=list)
 
 
 class GroundItemSchema(BaseModel):
@@ -187,6 +203,12 @@ class BuildingSchema(BaseModel):
     x: int
     y: int
     building_type: str
+    # Hero house storage (only populated for hero_house type)
+    owner_entity_id: int | None = None
+    storage_items: list[str] = Field(default_factory=list)
+    storage_used: int = 0
+    storage_max: int = 0
+    storage_level: int = 0
 
 
 class RecipeSchema(BaseModel):

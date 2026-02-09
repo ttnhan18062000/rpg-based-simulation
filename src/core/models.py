@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
-from src.core.enums import AIState, DamageType, Element, EnemyTier, TraitType
+from src.core.enums import AIState, DamageType, Element, EnemyTier, EntityRole, TraitType
 from src.core.faction import Faction
 
 if TYPE_CHECKING:
@@ -131,6 +131,7 @@ class Entity:
     stats: Stats = field(default_factory=Stats)
     ai_state: AIState = AIState.IDLE
     faction: Faction = Faction.HERO_GUILD
+    role: EntityRole = EntityRole.MOB
     next_act_at: float = 0.0
     memory: dict[int, Vector2] = field(default_factory=dict)
     home_pos: Vector2 | None = None
@@ -156,6 +157,10 @@ class Entity:
     traits: list[int] = field(default_factory=list)  # list of TraitType values
     # Home storage (heroes only)
     home_storage: HomeStorage | None = None
+    # Last AI action reason (for goals display)
+    last_reason: str = ""
+    # Engagement lock: ticks spent adjacent to a hostile (for anti-kite)
+    engaged_ticks: int = 0
 
     @property
     def alive(self) -> bool:
@@ -253,6 +258,7 @@ class Entity:
             stats=self.stats.copy(),
             ai_state=self.ai_state,
             faction=self.faction,
+            role=self.role,
             next_act_at=self.next_act_at,
             memory=dict(self.memory),
             home_pos=self.home_pos,
@@ -261,6 +267,8 @@ class Entity:
             terrain_memory=dict(self.terrain_memory),
             entity_memory=[dict(em) for em in self.entity_memory],
             goals=list(self.goals),
+            last_reason=self.last_reason,
+            engaged_ticks=self.engaged_ticks,
             effects=[e.copy() for e in self.effects],
             loot_progress=self.loot_progress,
             known_recipes=list(self.known_recipes),
