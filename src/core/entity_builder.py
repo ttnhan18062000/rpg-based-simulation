@@ -23,14 +23,14 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from src.core.attributes import Attributes, AttributeCaps
+from src.core.attributes import Attributes, AttributeCaps, recalc_derived_stats
 from src.core.classes import (
     CLASS_DEFS, RACE_SKILLS, SKILL_DEFS, SkillInstance,
     available_class_skills,
 )
 from src.core.enums import AIState, Domain
 from src.core.faction import Faction
-from src.core.items import Inventory
+from src.core.items import HomeStorage, Inventory
 from src.core.models import Entity, Stats, Vector2
 from src.core.traits import assign_traits
 
@@ -54,7 +54,7 @@ class EntityBuilder:
         "_level", "_xp", "_xp_to_next", "_gold",
         "_hero_class", "_class_def",
         "_attrs", "_caps",
-        "_skills", "_inventory", "_traits",
+        "_skills", "_inventory", "_home_storage", "_traits",
         "_attr_base", "_attr_randomness",
     )
 
@@ -95,6 +95,7 @@ class EntityBuilder:
         self._caps: AttributeCaps | None = None
         self._skills: list[SkillInstance] = []
         self._inventory: Inventory | None = None
+        self._home_storage: HomeStorage | None = None
         self._traits: list[int] = []
 
     # -------------------------------------------------------------------
@@ -305,6 +306,15 @@ class EntityBuilder:
         return self
 
     # -------------------------------------------------------------------
+    # Home Storage
+    # -------------------------------------------------------------------
+
+    def with_home_storage(self, max_slots: int = 30) -> EntityBuilder:
+        """Create home storage for hero entities."""
+        self._home_storage = HomeStorage(max_slots=max_slots)
+        return self
+
+    # -------------------------------------------------------------------
     # Traits
     # -------------------------------------------------------------------
 
@@ -323,32 +333,40 @@ class EntityBuilder:
     def build(self) -> Entity:
         """Construct and return the final Entity."""
         stamina = 30
-        if self._attrs:
-            stamina += self._attrs.end * 2
         if self._kind == "hero":
-            stamina = max(stamina, 50 + (self._attrs.end * 2 if self._attrs else 0))
+            stamina = 50
+
+        stats = Stats(
+            hp=self._base_hp,
+            max_hp=self._base_hp,
+            atk=self._base_atk,
+            def_=self._base_def,
+            spd=self._base_spd,
+            luck=self._luck,
+            crit_rate=self._crit_rate,
+            crit_dmg=self._crit_dmg,
+            evasion=self._evasion,
+            level=self._level,
+            xp=self._xp,
+            xp_to_next=self._xp_to_next,
+            gold=self._gold,
+            stamina=stamina,
+            max_stamina=stamina,
+        )
+
+        # Apply attribute-derived bonuses on top of base stats
+        if self._attrs:
+            recalc_derived_stats(stats, self._attrs)
+
+        # Set HP/stamina to max after derivation
+        stats.hp = stats.max_hp
+        stats.stamina = stats.max_stamina
 
         return Entity(
             id=self._eid,
             kind=self._kind,
             pos=self._pos,
-            stats=Stats(
-                hp=self._base_hp,
-                max_hp=self._base_hp,
-                atk=self._base_atk,
-                def_=self._base_def,
-                spd=self._base_spd,
-                luck=self._luck,
-                crit_rate=self._crit_rate,
-                crit_dmg=self._crit_dmg,
-                evasion=self._evasion,
-                level=self._level,
-                xp=self._xp,
-                xp_to_next=self._xp_to_next,
-                gold=self._gold,
-                stamina=stamina,
-                max_stamina=stamina,
-            ),
+            stats=stats,
             ai_state=self._ai_state,
             faction=self._faction,
             next_act_at=float(self._tick),
@@ -360,4 +378,5 @@ class EntityBuilder:
             hero_class=self._hero_class or 0,
             skills=self._skills,
             traits=self._traits,
+            home_storage=self._home_storage,
         )

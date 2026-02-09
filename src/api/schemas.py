@@ -149,6 +149,10 @@ class EntitySchema(BaseModel):
     trade_bonus: float = 1.0
     interaction_speed: float = 1.0
     rest_efficiency: float = 1.0
+    # Home storage
+    home_storage_used: int = 0
+    home_storage_max: int = 0
+    home_storage_level: int = 0
 
     class Config:
         frozen = True
@@ -213,6 +217,15 @@ class ResourceNodeSchema(BaseModel):
     harvest_ticks: int
 
 
+class TreasureChestSchema(BaseModel):
+    chest_id: int
+    x: int
+    y: int
+    tier: int
+    looted: bool
+    guard_entity_id: int | None = None
+
+
 class WorldStateResponse(BaseModel):
     tick: int
     alive_count: int
@@ -221,6 +234,7 @@ class WorldStateResponse(BaseModel):
     ground_items: list[GroundItemSchema] = Field(default_factory=list)
     buildings: list[BuildingSchema] = Field(default_factory=list)
     resource_nodes: list[ResourceNodeSchema] = Field(default_factory=list)
+    treasure_chests: list[TreasureChestSchema] = Field(default_factory=list)
 
 
 # --- Control ---

@@ -59,4 +59,4 @@ class MoveAction:
             # Attribute training from movement
             if entity.attributes and entity.attribute_caps:
                 from src.core.attributes import train_attributes
-                train_attributes(entity.attributes, entity.attribute_caps, "move")
+                train_attributes(entity.attributes, entity.attribute_caps, "move", stats=entity.stats)

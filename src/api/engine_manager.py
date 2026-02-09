@@ -332,6 +332,24 @@ class EngineManager:
                     logger.info("Placed dungeon entrance at %s", dpos)
                     break
 
+        # --- Spawn treasure chests near camps ---
+        from src.core.items import TreasureChest
+        chest_tier_cycle = [1, 1, 2, 2, 3]  # Distribute tiers across camps
+        for ci, camp_pos in enumerate(camp_positions):
+            chest_tier = chest_tier_cycle[ci % len(chest_tier_cycle)]
+            # Place chest a few tiles from camp center
+            offset_x = self._rng.next_int(Domain.MAP_GEN, 11000 + ci, 0, -3, 3)
+            offset_y = self._rng.next_int(Domain.MAP_GEN, 11000 + ci, 1, -3, 3)
+            cx = max(1, min(cfg.grid_width - 2, camp_pos.x + offset_x))
+            cy = max(1, min(cfg.grid_height - 2, camp_pos.y + offset_y))
+            chest_pos = Vector2(cx, cy)
+            cid = world._next_chest_id
+            world._next_chest_id += 1
+            chest = TreasureChest(chest_id=cid, pos=chest_pos, tier=chest_tier)
+            world.treasure_chests[cid] = chest
+            logger.info("Placed tier-%d treasure chest #%d at %s (near camp %s)",
+                        chest_tier, cid, chest_pos, camp_pos)
+
         # --- Place town buildings ---
         # Store: top-left of town
         store_pos = Vector2(cfg.town_center_x - cfg.town_radius + 1, cfg.town_center_y - cfg.town_radius + 1)
@@ -383,6 +401,7 @@ class EngineManager:
                             max_weight=cfg.hero_inventory_weight,
                             weapon="iron_sword", armor="leather_vest")
             .with_starting_items(["small_hp_potion"] * 3)
+            .with_home_storage()
             .with_traits(race_prefix="hero")
             .build()
         )

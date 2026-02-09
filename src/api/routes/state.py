@@ -18,6 +18,7 @@ from src.api.schemas import (
     ResourceNodeSchema,
     SimulationStats,
     SkillSchema,
+    TreasureChestSchema,
     WorldStateResponse,
 )
 
@@ -177,6 +178,9 @@ def get_state(
             interaction_speed=e.stats.interaction_speed,
             rest_efficiency=e.stats.rest_efficiency,
             traits=list(e.traits),
+            home_storage_used=e.home_storage.used_slots if e.home_storage else 0,
+            home_storage_max=e.home_storage.max_slots if e.home_storage else 0,
+            home_storage_level=e.home_storage.level if e.home_storage else 0,
             quests=[
                 QuestSchema(
                     quest_id=q.quest_id,
@@ -229,6 +233,17 @@ def get_state(
         for n in snapshot.resource_nodes
     ]
 
+    treasure_chests = []
+    if hasattr(snapshot, 'treasure_chests'):
+        treasure_chests = [
+            TreasureChestSchema(
+                chest_id=c.chest_id, x=c.pos.x, y=c.pos.y,
+                tier=c.tier, looted=c.looted,
+                guard_entity_id=c.guard_entity_id,
+            )
+            for c in snapshot.treasure_chests
+        ]
+
     alive_count = len(entities)
     return WorldStateResponse(
         tick=snapshot.tick,
@@ -238,6 +253,7 @@ def get_state(
         ground_items=ground_items,
         buildings=buildings,
         resource_nodes=resource_nodes,
+        treasure_chests=treasure_chests,
     )
 
 

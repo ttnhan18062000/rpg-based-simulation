@@ -137,10 +137,10 @@ class CombatAction:
         # --- Attribute training from combat ---
         if attacker.attributes and attacker.attribute_caps:
             from src.core.attributes import train_attributes
-            train_attributes(attacker.attributes, attacker.attribute_caps, dmg_ctx.train_action)
+            train_attributes(attacker.attributes, attacker.attribute_caps, dmg_ctx.train_action, stats=attacker.stats)
         if defender.attributes and defender.attribute_caps and defender.alive:
             from src.core.attributes import train_attributes
-            train_attributes(defender.attributes, defender.attribute_caps, "defend")
+            train_attributes(defender.attributes, defender.attribute_caps, "defend", stats=defender.stats)
 
         # --- XP award on kill ---
         if not defender.alive:

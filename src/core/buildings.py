@@ -61,19 +61,43 @@ def item_sell_price(item_id: str) -> int:
 
 # Items available for purchase at the store: (item_id, buy_price)
 SHOP_INVENTORY: list[tuple[str, int]] = [
+    # ---- Healing potions ----
     ("small_hp_potion", 15),
     ("medium_hp_potion", 40),
     ("large_hp_potion", 80),
     ("herbal_remedy", 20),
+    # ---- Buff potions ----
+    ("atk_potion", 25),
+    ("def_potion", 25),
+    ("spd_potion", 25),
+    ("crit_potion", 45),
+    ("antidote", 15),
+    # ---- Weapons (tiered) ----
     ("wooden_club", 20),
-    ("iron_sword", 50),
     ("bandit_dagger", 35),
+    ("iron_sword", 50),
+    ("orc_axe", 65),
+    ("steel_greatsword", 120),
+    # ---- Magic weapons ----
+    ("apprentice_staff", 30),
+    ("fire_staff", 90),
+    # ---- Armor (tiered) ----
     ("leather_vest", 25),
     ("chainmail", 60),
-    ("orc_axe", 65),
     ("orc_shield", 70),
+    ("plate_armor", 150),
+    # ---- Magic armor ----
+    ("cloth_robe", 25),
+    ("silk_robe", 60),
+    # ---- Accessories ----
     ("lucky_charm", 30),
     ("speed_ring", 55),
+    ("mana_crystal", 30),
+    ("spirit_pendant", 55),
+    # ---- Materials ----
+    ("mana_shard", 30),
+    ("silver_ingot", 35),
+    ("phoenix_feather", 60),
 ]
 
 

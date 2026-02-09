@@ -258,29 +258,75 @@ def _item_power(t) -> int:
 
 
 def hero_wants_to_buy(actor: Entity) -> str | None:
-    """Check if hero wants to buy something from the shop. Returns item_id or None."""
+    """Check if hero wants to buy something from the shop.
+
+    Priority order:
+    1. Healing potions if low (< 2)
+    2. Equipment upgrades (best power gain per gold)
+    3. Buff potions if none owned
+    4. Crafting materials for active craft target
+
+    Returns item_id or None.
+    """
     if not actor.inventory:
         return None
     gold = actor.stats.gold
+    inv = actor.inventory
+
+    # --- Priority 1: Healing potions when low ---
+    heal_potions = [
+        ("large_hp_potion", 80), ("medium_hp_potion", 40), ("small_hp_potion", 15),
+    ]
+    total_heals = sum(inv.count_item(pid) for pid, _ in heal_potions)
+    if total_heals < 2:
+        for pid, price in heal_potions:
+            if gold >= price and inv.can_add(pid):
+                return pid
+
+    # --- Priority 2: Equipment upgrades (best upgrade first) ---
+    best_upgrade = None
+    best_upgrade_gain = 0
     for iid, price in SHOP_INVENTORY:
         if gold < price:
             continue
         t = ITEM_REGISTRY.get(iid)
         if t is None:
             continue
-        if t.item_type == ItemType.CONSUMABLE and t.heal_amount > 0:
-            # Buy potions if low on them
-            count = actor.inventory.count_item(iid)
-            if count < 2:
-                return iid
-        elif t.item_type in (ItemType.WEAPON, ItemType.ARMOR, ItemType.ACCESSORY):
-            equipped = _get_equipped_for_type(actor, t.item_type)
-            if equipped:
-                eq_t = ITEM_REGISTRY.get(equipped)
-                if eq_t and _item_power(t) > _item_power(eq_t):
-                    return iid
-            else:
-                return iid
+        if t.item_type not in (ItemType.WEAPON, ItemType.ARMOR, ItemType.ACCESSORY):
+            continue
+        equipped = _get_equipped_for_type(actor, t.item_type)
+        new_power = _item_power(t)
+        cur_power = 0
+        if equipped:
+            eq_t = ITEM_REGISTRY.get(equipped)
+            if eq_t:
+                cur_power = _item_power(eq_t)
+        gain = new_power - cur_power
+        if gain > best_upgrade_gain:
+            best_upgrade_gain = gain
+            best_upgrade = iid
+    if best_upgrade:
+        return best_upgrade
+
+    # --- Priority 3: Buff potions if none owned ---
+    buff_ids = ["atk_potion", "def_potion", "spd_potion"]
+    for bid in buff_ids:
+        if inv.count_item(bid) == 0:
+            price = shop_buy_price(bid)
+            if price and gold >= price and inv.can_add(bid):
+                return bid
+
+    # --- Priority 4: Materials for active craft target ---
+    if actor.craft_target:
+        recipe = RECIPE_MAP.get(actor.craft_target)
+        if recipe:
+            for mat_id, needed in recipe.materials.items():
+                have = inv.items.count(mat_id)
+                if have < needed:
+                    price = shop_buy_price(mat_id)
+                    if price and gold >= price and inv.can_add(mat_id):
+                        return mat_id
+
     return None
 
 
@@ -664,7 +710,13 @@ class RestingInTownHandler(StateHandler):
                 return AIState.VISIT_CLASS_HALL, propose_move_toward(
                     actor, ch.pos, snapshot, "Heading to class hall")
 
-        # 6. Visit inn for stamina recovery
+        # 6. Visit home to store items or upgrade storage
+        if hero_should_visit_home(actor):
+            if actor.home_pos:
+                return AIState.VISIT_HOME, propose_move_toward(
+                    actor, actor.home_pos, snapshot, "Heading home to manage storage")
+
+        # 7. Visit inn for stamina recovery
         if hero_should_visit_inn(actor):
             inn = find_building(snapshot, "inn")
             if inn:
@@ -858,10 +910,8 @@ class VisitShopHandler(StateHandler):
             if price and actor.stats.gold >= price and inv.can_add(want):
                 actor.stats.gold -= price
                 inv.add_item(want)
-                t = ITEM_REGISTRY.get(want)
-                # Auto-equip if better
-                if t and t.item_type in (ItemType.WEAPON, ItemType.ARMOR, ItemType.ACCESSORY):
-                    inv.equip(want)
+                # Auto-equip only if better than current gear
+                inv.auto_equip_best(want)
                 return AIState.VISIT_SHOP, ActionProposal(
                     actor_id=actor.id, verb=ActionType.REST,
                     reason=f"Bought {want} for {price}g")
@@ -1120,7 +1170,7 @@ class VisitClassHallHandler(StateHandler):
                 actor, ch.pos, snapshot, "Walking to class hall")
 
         from src.core.classes import (
-            HeroClass, available_class_skills, can_breakthrough,
+            HeroClass, available_class_skills, can_breakthrough, can_learn_skill,
             SKILL_DEFS, BREAKTHROUGHS, CLASS_DEFS, SkillInstance,
         )
         try:
@@ -1129,13 +1179,17 @@ class VisitClassHallHandler(StateHandler):
             return AIState.RESTING_IN_TOWN, ActionProposal(
                 actor_id=actor.id, verb=ActionType.REST, reason="No class → leaving")
 
-        # Phase 1: Learn new class skills
+        # Phase 1: Learn new class skills (with mastery requirements)
         known_ids = {s.skill_id for s in actor.skills}
         available = available_class_skills(hero_class, actor.stats.level)
         for sid in available:
             if sid not in known_ids:
                 sdef = SKILL_DEFS.get(sid)
                 if sdef and actor.stats.gold >= sdef.gold_cost:
+                    can_learn, reason = can_learn_skill(
+                        sdef, actor.stats.level, actor.skills, actor.class_mastery)
+                    if not can_learn:
+                        continue
                     actor.stats.gold -= sdef.gold_cost
                     actor.skills.append(SkillInstance(skill_id=sid))
                     return AIState.VISIT_CLASS_HALL, ActionProposal(
@@ -1195,7 +1249,7 @@ class VisitInnHandler(StateHandler):
         # Attribute training from resting
         if actor.attributes and actor.attribute_caps:
             from src.core.attributes import train_attributes
-            train_attributes(actor.attributes, actor.attribute_caps, "rest")
+            train_attributes(actor.attributes, actor.attribute_caps, "rest", stats=actor.stats)
 
         if healed:
             return AIState.VISIT_INN, ActionProposal(
@@ -1207,6 +1261,102 @@ class VisitInnHandler(StateHandler):
         return AIState.RESTING_IN_TOWN, ActionProposal(
             actor_id=actor.id, verb=ActionType.REST,
             reason="Fully recovered at inn → checking other activities")
+
+
+# =====================================================================
+# State: VISIT_HOME — hero visits home to store/retrieve items or upgrade
+# =====================================================================
+
+def hero_should_visit_home(actor: Entity) -> bool:
+    """Check if hero has items worth storing at home or wants to upgrade."""
+    if not actor.home_storage or not actor.inventory:
+        return False
+    # Visit home if inventory is nearly full and storage has space
+    if actor.inventory.used_slots >= actor.inventory.max_slots - 2:
+        if not actor.home_storage.is_full:
+            return True
+    # Visit home if hero can afford an upgrade
+    cost = actor.home_storage.upgrade_cost()
+    if cost is not None and actor.stats.gold >= cost:
+        return True
+    return False
+
+
+class VisitHomeHandler(StateHandler):
+    """Hero visits home to store items or upgrade storage."""
+
+    def handle(self, ctx: AIContext) -> tuple[AIState, ActionProposal]:
+        actor, snapshot = ctx.actor, ctx.snapshot
+        if actor.home_pos is None:
+            return AIState.WANDER, ActionProposal(
+                actor_id=actor.id, verb=ActionType.REST, reason="No home set")
+
+        # Move to home if not there
+        if actor.pos.manhattan(actor.home_pos) > 0:
+            return AIState.VISIT_HOME, propose_move_toward(
+                actor, actor.home_pos, snapshot, "Walking home")
+
+        inv = actor.inventory
+        storage = actor.home_storage
+        if inv is None or storage is None:
+            return AIState.RESTING_IN_TOWN, ActionProposal(
+                actor_id=actor.id, verb=ActionType.REST, reason="No inventory/storage")
+
+        # Phase 1: Upgrade storage if affordable
+        cost = storage.upgrade_cost()
+        if cost is not None and actor.stats.gold >= cost:
+            actor.stats.gold -= cost
+            old_max = storage.max_slots
+            storage.upgrade()
+            return AIState.VISIT_HOME, ActionProposal(
+                actor_id=actor.id, verb=ActionType.REST,
+                reason=f"Upgraded home storage {old_max}→{storage.max_slots} slots (-{cost}g)")
+
+        # Phase 2: Store low-priority items (materials, weaker equipment, excess consumables)
+        stored = []
+        for iid in list(inv.items):
+            if storage.is_full:
+                break
+            t = ITEM_REGISTRY.get(iid)
+            if t is None:
+                continue
+            should_store = False
+            # Store materials not needed for current craft
+            if t.item_type == ItemType.MATERIAL:
+                if actor.craft_target:
+                    recipe = RECIPE_MAP.get(actor.craft_target)
+                    if recipe and iid in recipe.materials:
+                        needed = recipe.materials[iid]
+                        have = inv.items.count(iid) - len([x for x in stored if x == iid])
+                        if have <= needed:
+                            continue
+                should_store = True
+            # Store equipment weaker than what's equipped
+            elif t.item_type in (ItemType.WEAPON, ItemType.ARMOR, ItemType.ACCESSORY):
+                equipped = _get_equipped_for_type(actor, t.item_type)
+                if equipped:
+                    eq_t = ITEM_REGISTRY.get(equipped)
+                    if eq_t and _item_power(t) < _item_power(eq_t):
+                        should_store = True
+            # Store excess consumables (keep 2 of each)
+            elif t.item_type == ItemType.CONSUMABLE and t.heal_amount > 0:
+                count_in_inv = inv.items.count(iid) - len([x for x in stored if x == iid])
+                if count_in_inv > 2:
+                    should_store = True
+
+            if should_store:
+                if inv.remove_item(iid) and storage.add_item(iid):
+                    stored.append(iid)
+
+        if stored:
+            return AIState.VISIT_HOME, ActionProposal(
+                actor_id=actor.id, verb=ActionType.REST,
+                reason=f"Stored {len(stored)} items at home ({storage.used_slots}/{storage.max_slots})")
+
+        # Done at home
+        return AIState.RESTING_IN_TOWN, ActionProposal(
+            actor_id=actor.id, verb=ActionType.REST,
+            reason="Done at home → checking other activities")
 
 
 # =====================================================================
@@ -1231,4 +1381,5 @@ STATE_HANDLERS: dict[AIState, StateHandler] = {
     AIState.HARVESTING: HarvestingHandler(),
     AIState.VISIT_CLASS_HALL: VisitClassHallHandler(),
     AIState.VISIT_INN: VisitInnHandler(),
+    AIState.VISIT_HOME: VisitHomeHandler(),
 }

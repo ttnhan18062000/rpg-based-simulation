@@ -12,7 +12,7 @@ if TYPE_CHECKING:
     from src.core.attributes import Attributes, AttributeCaps
     from src.core.classes import HeroClass, SkillInstance
     from src.core.effects import StatusEffect
-    from src.core.items import Inventory
+    from src.core.items import HomeStorage, Inventory
     from src.core.quests import Quest
 
 
@@ -154,6 +154,8 @@ class Entity:
     quests: list[Quest] = field(default_factory=list)
     # Traits (Rimworld-style discrete personality traits)
     traits: list[int] = field(default_factory=list)  # list of TraitType values
+    # Home storage (heroes only)
+    home_storage: HomeStorage | None = None
 
     @property
     def alive(self) -> bool:
@@ -270,4 +272,5 @@ class Entity:
             class_mastery=self.class_mastery,
             quests=[q.copy() for q in self.quests],
             traits=list(self.traits),
+            home_storage=self.home_storage.copy() if self.home_storage else None,
         )

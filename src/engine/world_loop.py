@@ -165,6 +165,9 @@ class WorldLoop:
         # Tick resource node cooldowns (respawn depleted nodes)
         self._tick_resource_nodes()
 
+        # Tick treasure chest respawns
+        self._tick_treasure_chests()
+
         # Level-up checks
         self._check_level_ups()
 
@@ -299,10 +302,8 @@ class WorldLoop:
                         for iid in items:
                             if entity.inventory.add_item(iid):
                                 picked.append(iid)
-                                # Auto-equip if slot is empty
-                                t = ITEM_REGISTRY.get(iid)
-                                if t and t.item_type.value <= 2:  # WEAPON/ARMOR/ACCESSORY
-                                    entity.inventory.equip(iid)
+                                # Auto-equip only if better than current gear
+                                entity.inventory.auto_equip_best(iid)
                             else:
                                 # Can't carry — drop back
                                 self._world.drop_items(pos, [iid])
@@ -330,11 +331,13 @@ class WorldLoop:
                     elif items:
                         # Entity has no inventory, leave items on ground
                         self._world.drop_items(pos, items)
+                    # Check for treasure chests at this position
+                    self._try_loot_chest(entity, pos)
                     entity.next_act_at += 0.5
                     # Attribute training from looting
                     if entity.attributes and entity.attribute_caps:
                         from src.core.attributes import train_attributes
-                        train_attributes(entity.attributes, entity.attribute_caps, "loot")
+                        train_attributes(entity.attributes, entity.attribute_caps, "loot", stats=entity.stats)
 
             elif proposal.verb == ActionType.USE_SKILL and proposal.target:
                 # Use a skill on a target
@@ -443,7 +446,7 @@ class WorldLoop:
                             # Attribute training from skill use
                             if entity.attributes and entity.attribute_caps:
                                 from src.core.attributes import train_attributes
-                                train_attributes(entity.attributes, entity.attribute_caps, "skill")
+                                train_attributes(entity.attributes, entity.attribute_caps, "skill", stats=entity.stats)
 
             elif proposal.verb == ActionType.HARVEST and proposal.target:
                 # Harvest a resource node
@@ -482,7 +485,7 @@ class WorldLoop:
                     # Attribute training from harvesting
                     if entity.attributes and entity.attribute_caps:
                         from src.core.attributes import train_attributes
-                        train_attributes(entity.attributes, entity.attribute_caps, "harvest")
+                        train_attributes(entity.attributes, entity.attribute_caps, "harvest", stats=entity.stats)
 
     def _check_level_ups(self) -> None:
         """Check and apply level-ups for all entities."""
@@ -506,8 +509,10 @@ class WorldLoop:
                 entity.stats.xp_to_next = int(entity.stats.xp_to_next * cfg.xp_per_level_scale)
                 # Attribute level-up gains
                 if entity.attributes and entity.attribute_caps:
-                    from src.core.attributes import level_up_attributes
+                    from src.core.attributes import level_up_attributes, recalc_derived_stats
+                    old_attrs = entity.attributes.copy()
                     level_up_attributes(entity.attributes, entity.attribute_caps)
+                    recalc_derived_stats(entity.stats, entity.attributes, old_attrs=old_attrs)
                 logger.info(
                     "Tick %d: Entity %d (%s) leveled up to Lv%d! [HP: %d/%d ATK: %d DEF: %d SPD: %d]",
                     self._world.tick, entity.id, entity.kind, entity.stats.level,
@@ -650,6 +655,65 @@ class WorldLoop:
         """Tick cooldowns on depleted resource nodes so they respawn."""
         for node in self._world.resource_nodes.values():
             node.tick_cooldown()
+
+    def _tick_treasure_chests(self) -> None:
+        """Respawn looted treasure chests and their guards."""
+        tick = self._world.tick
+        for chest in self._world.treasure_chests.values():
+            if chest.try_respawn(tick):
+                # Respawn guard if it was killed
+                if chest.guard_entity_id is not None:
+                    guard = self._world.entities.get(chest.guard_entity_id)
+                    if guard is None or not guard.alive:
+                        self._spawn_chest_guard(chest)
+                logger.info("Tick %d: Treasure chest %d respawned at %s (tier %d)",
+                            tick, chest.chest_id, chest.pos, chest.tier)
+
+    def _try_loot_chest(self, entity, pos) -> None:
+        """If there's an available treasure chest at pos, loot it."""
+        from src.core.items import CHEST_LOOT_TABLES
+        from src.core.enums import Domain
+        for chest in self._world.treasure_chests.values():
+            if chest.pos == pos and chest.is_available:
+                # Check if guard is still alive — must defeat guard first
+                if chest.guard_entity_id is not None:
+                    guard = self._world.entities.get(chest.guard_entity_id)
+                    if guard and guard.alive:
+                        continue  # Guard still alive, can't loot
+                # Generate loot from chest loot table
+                loot_table = CHEST_LOOT_TABLES.get(chest.tier, [])
+                loot_items: list[str] = []
+                for item_id, chance, min_c, max_c in loot_table:
+                    roll = self._rng.next_float(Domain.LOOT, entity.id, self._world.tick + chest.chest_id)
+                    if roll < chance:
+                        count = self._rng.next_int(
+                            Domain.LOOT, entity.id, self._world.tick + chest.chest_id + 100,
+                            min_c, max_c)
+                        loot_items.extend([item_id] * count)
+                # Drop loot on the ground at chest position
+                if loot_items:
+                    self._world.drop_items(pos, loot_items)
+                # Mark chest as looted
+                chest.loot(self._world.tick, respawn_ticks=150 + chest.tier * 50)
+                logger.info(
+                    "Tick %d: Entity %d looted tier-%d chest #%d at %s → %d items",
+                    self._world.tick, entity.id, chest.tier, chest.chest_id, pos, len(loot_items))
+                break  # Only loot one chest per action
+
+    def _spawn_chest_guard(self, chest) -> None:
+        """Spawn an elite guard entity next to a treasure chest."""
+        from src.core.enums import EnemyTier
+        from src.core.items import TERRAIN_RACE
+        # Determine race from terrain at chest position
+        mat = self._world.grid.material_at(chest.pos.x, chest.pos.y)
+        race = TERRAIN_RACE.get(mat, "goblin")
+        tier = min(chest.tier + 1, EnemyTier.ELITE)  # Chest tier 1→WARRIOR, 2→ELITE, 3→ELITE
+        entity = self._generator.spawn_race(
+            self._world, race=race, tier=tier, near_pos=chest.pos)
+        self._world.add_entity(entity)
+        chest.guard_entity_id = entity.id
+        logger.info("Tick %d: Spawned chest guard %s #%d at %s (tier %d)",
+                    self._world.tick, entity.kind, entity.id, entity.pos, tier)
 
     def _tick_quests(self) -> None:
         """Check EXPLORE quest completion and prune finished quests."""

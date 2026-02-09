@@ -355,7 +355,10 @@ class TestEntityBuilderChaining:
         assert entity.pos.x == 10
         assert entity.home_pos.x == 5
         assert entity.faction == Faction.HERO_GUILD
-        assert entity.stats.hp == 50
+        # Stats should be base + attribute-derived bonuses (higher than raw base)
+        assert entity.stats.hp >= 50
+        assert entity.stats.hp == entity.stats.max_hp
+        assert entity.stats.atk >= 10
         assert entity.hero_class == int(HeroClass.WARRIOR)
         assert entity.attributes is not None
         assert len(entity.skills) >= 2
@@ -364,6 +367,9 @@ class TestEntityBuilderChaining:
         assert len(entity.inventory.items) == 3
         assert len(entity.traits) >= 2
         assert entity.alive
+        # Non-combat derived stats should be > baseline (attributes > 0)
+        assert entity.stats.hp_regen > 1.0
+        assert entity.stats.vision_range >= 6
 
     def test_full_mob_chain(self):
         rng = _FakeRNG()

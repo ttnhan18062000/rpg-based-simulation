@@ -150,6 +150,7 @@ def _run_cli(args: argparse.Namespace) -> None:
                         max_weight=config.hero_inventory_weight,
                         weapon="iron_sword", armor="leather_vest")
         .with_starting_items(["small_hp_potion"] * 3)
+        .with_home_storage()
         .with_traits(race_prefix="hero")
         .build()
     )

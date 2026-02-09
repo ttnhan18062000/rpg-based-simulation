@@ -146,17 +146,27 @@ Breakthrough check: `can_breakthrough(hero_class, level, attributes)`
 
 ### 4.1 Skill Definitions (`SkillDef`)
 
-Each skill has: `name`, `skill_type` (ACTIVE/PASSIVE), `target`, `power`, `stamina_cost`, `cooldown`, `level_req`, `class_req`, `gold_cost`, `description`.
+Each skill has: `name`, `skill_type` (ACTIVE/PASSIVE), `target`, `power`, `stamina_cost`, `cooldown`, `level_req`, `class_req`, `gold_cost`, `description`, `mastery_req`, `mastery_threshold`.
 
-### 4.2 Class Skills
+### 4.2 Skill Learning Requirements
+
+Skills form a **prerequisite chain** within each class. To learn a tier-2 or tier-3 skill, the hero must:
+1. Meet the **level requirement** (`level_req`)
+2. Have sufficient **gold** (`gold_cost`)
+3. **Know** the prerequisite skill (`mastery_req`)
+4. Have the prerequisite skill at **mastery ≥ threshold** (`mastery_threshold`, default 25.0)
+
+The `can_learn_skill(sdef, level, known_skills)` function checks all requirements.
+
+### 4.3 Class Skills
 
 | Warrior | Ranger | Mage | Rogue |
 |---------|--------|------|-------|
 | Power Strike (Lv1) | Quick Shot (Lv1) | Arcane Bolt (Lv1) | Backstab (Lv1) |
-| Shield Wall (Lv3) | Evasive Step (Lv3) | Frost Shield (Lv3) | Shadowstep (Lv3) |
-| Battle Cry (Lv5) | Mark Prey (Lv5) | Mana Surge (Lv5) | Poison Blade (Lv5) |
+| Shield Wall (Lv3, req: Power Strike 25%) | Evasive Step (Lv3, req: Quick Shot 25%) | Frost Shield (Lv3, req: Arcane Bolt 25%) | Shadowstep (Lv3, req: Backstab 25%) |
+| Battle Cry (Lv5, req: Shield Wall 25%) | Mark Prey (Lv5, req: Evasive Step 25%) | Mana Surge (Lv5, req: Frost Shield 25%) | Poison Blade (Lv5, req: Shadowstep 25%) |
 
-### 4.3 Race Skills
+### 4.4 Race Skills
 
 | Race | Skills |
 |------|--------|
@@ -166,14 +176,14 @@ Each skill has: `name`, `skill_type` (ACTIVE/PASSIVE), `target`, `power`, `stami
 | Orc | Berserker Rage, War Cry |
 | Undead | Drain Life |
 
-### 4.4 Skill Instances (`SkillInstance`)
+### 4.5 Skill Instances (`SkillInstance`)
 
 Each entity holds `SkillInstance` objects with runtime state:
 - `cooldown_remaining` — ticks until ready (ticked down each world tick)
 - `mastery` — 0.0 to 100.0, gained by using the skill
 - `times_used` — total use count
 
-### 4.5 Mastery Tiers
+### 4.6 Mastery Tiers
 
 | Tier | Mastery | Power Bonus | Stamina Reduction | Cooldown Reduction |
 |------|---------|-------------|-------------------|--------------------|
@@ -183,7 +193,7 @@ Each entity holds `SkillInstance` objects with runtime state:
 | 3 | 75–99% | +20% | −20% | −1 tick |
 | 4 | 100% | +35% | −25% | −1 tick |
 
-### 4.6 Skill Modifiers & Effects
+### 4.7 Skill Modifiers & Effects
 
 Skills can define stat modifiers that create temporary `StatusEffect`s on use:
 
@@ -614,5 +624,144 @@ hero = (
 | `with_race_skills(race)` / `with_class_skills(cls, lvl)` | Add skills |
 | `with_inventory(...)` / `with_existing_inventory(inv)` | Create or attach inventory |
 | `with_starting_items(list)` | Add items to inventory |
+| `with_home_storage(max_slots)` | Create home storage for hero |
 | `with_traits(race_prefix)` | Assign personality traits |
 | `build()` | Construct final Entity |
+
+On `build()`, `recalc_derived_stats(stats, attrs)` is called to apply all attribute-derived bonuses to the entity's stats. HP and stamina are set to their derived maximums.
+
+---
+
+## 18. Derived Stats System
+
+Defined in `src/core/attributes.py` via `recalc_derived_stats()`.
+
+### 18.1 Modes
+
+| Mode | When Used | Behavior |
+|------|-----------|----------|
+| **Creation** (`old_attrs=None`) | `EntityBuilder.build()` | Adds attribute bonuses on top of raw base stats |
+| **Delta** (`old_attrs` provided) | Level-up, training | Strips old attribute contributions, then applies new ones |
+
+### 18.2 Call Sites
+
+- **`EntityBuilder.build()`** — creation mode, sets initial derived stats
+- **`_check_level_ups()`** — delta mode after `level_up_attributes()`
+- **`train_attributes()`** — delta mode when any attribute actually increments
+
+All `train_attributes()` calls pass the entity's `stats` object so derived stats update automatically.
+
+---
+
+## 19. Item Power & Auto-Equip
+
+### 19.1 Item Power Heuristic
+
+`_item_power(template)` in `src/core/items.py` sums all stat bonuses:
+
+```
+power = atk + def + spd + max_hp + matk + mdef + crit_rate*50 + evasion*50 + luck
+```
+
+### 19.2 Auto-Equip Best
+
+`Inventory.auto_equip_best(item_id)` compares an item's power against the currently equipped item in the same slot:
+- **Empty slot** → always equip
+- **Occupied** → equip only if new item has higher power
+- **Non-equipment items** → ignored
+
+Used during: loot pickup, shop purchases.
+
+---
+
+## 20. Home Storage System
+
+Defined in `src/core/items.py` (`HomeStorage` dataclass). Heroes have persistent storage at their home position.
+
+### 20.1 Storage Tiers
+
+| Level | Max Slots | Upgrade Cost |
+|-------|-----------|-------------|
+| 0 | 30 | Free (starting) |
+| 1 | 50 | 200g |
+| 2 | 80 | 500g |
+
+### 20.2 AI Behavior (`VISIT_HOME` state)
+
+Heroes visit home when:
+- Inventory is nearly full (≥ max - 2) and storage has space
+- They can afford an upgrade
+
+At home, the `VisitHomeHandler` performs:
+1. **Upgrade** storage if affordable
+2. **Store** low-priority items: materials (not needed for crafting), weaker equipment, excess consumables (keep 2)
+
+### 20.3 Integration
+
+- `EntityBuilder.with_home_storage()` creates storage on hero spawn
+- `Entity.home_storage` field, deep-copied in `Entity.copy()`
+- `hero_should_visit_home()` scorer in `states.py`
+- Exposed via API: `home_storage_used`, `home_storage_max`, `home_storage_level`
+
+---
+
+## 21. Expanded Shop
+
+Defined in `src/core/buildings.py` (`SHOP_INVENTORY`).
+
+### 21.1 Shop Categories
+
+| Category | Items |
+|----------|-------|
+| **Healing** | Small/Medium/Large HP Potion, Herbal Remedy |
+| **Buff Potions** | ATK/DEF/SPD Elixir, Critical Elixir, Antidote |
+| **Weapons** | Wooden Club → Bandit Dagger → Iron Sword → Orc Axe → Steel Greatsword |
+| **Magic Weapons** | Apprentice Staff, Fire Staff |
+| **Armor** | Leather Vest → Chainmail → Orc Shield → Plate Armor |
+| **Magic Armor** | Cloth Robe, Silk Robe |
+| **Accessories** | Lucky Charm, Speed Ring, Mana Crystal, Spirit Pendant |
+| **Materials** | Mana Shard, Silver Ingot, Phoenix Feather |
+
+### 21.2 AI Purchase Priorities
+
+`hero_wants_to_buy()` uses a priority system:
+1. **Healing potions** if total < 2 (best tier affordable)
+2. **Equipment upgrades** — best power gain across all slots
+3. **Buff potions** if none owned
+4. **Craft materials** for active craft target
+
+---
+
+## 22. Treasure Chest System
+
+Defined in `src/core/items.py` (`TreasureChest` dataclass). Chests are placed near camps during world generation.
+
+### 22.1 Chest Tiers
+
+| Tier | Loot Quality | Respawn Time | Guard Tier |
+|------|-------------|-------------|------------|
+| 1 (Common) | Basic potions, ore, leather | 200 ticks | WARRIOR |
+| 2 (Rare) | Medium potions, buff elixirs, steel, accessories | 250 ticks | ELITE |
+| 3 (Legendary) | Large potions, rare materials, elite gear | 300 ticks | ELITE |
+
+### 22.2 Mechanics
+
+- **Guards**: Each chest has a guard entity (spawned from local terrain race). Guard must be defeated before looting.
+- **Looting**: When a hero performs a LOOT action at a chest's position and the guard is dead/absent, loot is generated from `CHEST_LOOT_TABLES` and dropped on the ground.
+- **Respawning**: `_tick_treasure_chests()` checks each tick. When `respawn_at` is reached, the chest becomes available again and a new guard is spawned.
+
+### 22.3 Loot Table Format
+
+```python
+CHEST_LOOT_TABLES[tier] = [
+    (item_id, drop_chance, min_count, max_count),
+    ...
+]
+```
+
+### 22.4 Integration
+
+- Spawned in `engine_manager.py` during world init (near each camp)
+- `WorldState.treasure_chests` dict
+- `Snapshot.treasure_chests` tuple (immutable copy)
+- API: `TreasureChestSchema` with `chest_id`, position, `tier`, `looted`, `guard_entity_id`

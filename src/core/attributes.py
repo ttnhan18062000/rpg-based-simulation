@@ -199,6 +199,64 @@ def derive_cooldown_reduction(int_: int, wis: int) -> float:
 
 
 # ---------------------------------------------------------------------------
+# Recalculate all derived stats from attributes
+# ---------------------------------------------------------------------------
+
+def recalc_derived_stats(
+    stats: 'Stats',
+    new_attrs: 'Attributes',
+    old_attrs: 'Attributes | None' = None,
+) -> None:
+    """Recompute all attribute-derived fields on a Stats object.
+
+    Two modes:
+    - **Creation mode** (old_attrs=None): stats contain raw base values,
+      attribute bonuses are added on top.
+    - **Delta mode** (old_attrs provided): strips old attribute contributions
+      then re-applies with new_attrs. Use after level-up or training.
+    """
+    if old_attrs is not None:
+        # Strip old attribute contributions from combat stats
+        stats.max_hp -= derive_max_hp(0, old_attrs.vit, old_attrs.end)
+        stats.atk -= derive_atk(0, old_attrs.str_)
+        stats.def_ -= derive_def(0, old_attrs.vit)
+        stats.spd -= derive_spd(0, old_attrs.agi)
+        stats.crit_rate -= derive_crit_rate(0.0, old_attrs.agi)
+        stats.evasion -= derive_evasion(0.0, old_attrs.agi)
+        stats.luck -= derive_luck(0, old_attrs.wis)
+        stats.max_stamina -= derive_stamina(0, old_attrs.end)
+        stats.matk -= derive_matk(0, old_attrs.spi, old_attrs.int_)
+        stats.mdef -= derive_mdef(0, old_attrs.wis, old_attrs.spi)
+
+    # Add new attribute contributions to combat stats
+    stats.max_hp = derive_max_hp(stats.max_hp, new_attrs.vit, new_attrs.end)
+    stats.atk = derive_atk(stats.atk, new_attrs.str_)
+    stats.def_ = derive_def(stats.def_, new_attrs.vit)
+    stats.spd = derive_spd(stats.spd, new_attrs.agi)
+    stats.crit_rate = derive_crit_rate(stats.crit_rate, new_attrs.agi)
+    stats.evasion = derive_evasion(stats.evasion, new_attrs.agi)
+    stats.luck = derive_luck(stats.luck, new_attrs.wis)
+    stats.max_stamina = derive_stamina(stats.max_stamina, new_attrs.end)
+    stats.matk = derive_matk(stats.matk, new_attrs.spi, new_attrs.int_)
+    stats.mdef = derive_mdef(stats.mdef, new_attrs.wis, new_attrs.spi)
+
+    # Non-combat stats — always derived purely from attributes (fixed base)
+    stats.vision_range = derive_vision(6, new_attrs.per)
+    stats.hp_regen = derive_hp_regen(new_attrs.end, new_attrs.vit)
+    stats.cooldown_reduction = derive_cooldown_reduction(new_attrs.int_, new_attrs.wis)
+    stats.loot_bonus = derive_loot_bonus(new_attrs.per, new_attrs.wis)
+    stats.trade_bonus = derive_trade_bonus(new_attrs.cha)
+    stats.interaction_speed = derive_interaction_speed(new_attrs.cha, new_attrs.int_)
+    stats.rest_efficiency = derive_rest_efficiency(new_attrs.end, new_attrs.wis)
+
+    # Ensure HP/stamina don't exceed new max
+    if stats.hp > stats.max_hp:
+        stats.hp = stats.max_hp
+    if stats.stamina > stats.max_stamina:
+        stats.stamina = stats.max_stamina
+
+
+# ---------------------------------------------------------------------------
 # Training: attribute gain from actions
 # ---------------------------------------------------------------------------
 
@@ -222,15 +280,26 @@ def train_attributes(
     attrs: Attributes,
     caps: AttributeCaps,
     action: str,
+    stats: 'Stats | None' = None,
 ) -> None:
     """Apply fractional training gains from an action.
 
     When fractional accumulator reaches >= 1.0, the integer attribute
     increases by 1 (up to cap). This makes training very slow.
+
+    If *stats* is provided, derived stats are updated when any attribute
+    actually increments (using the delta-mode of recalc_derived_stats).
     """
     rates = TRAIN_RATES.get(action, {})
+    if not rates:
+        return
+    old_snapshot = attrs.copy() if stats is not None else None
+    changed = False
     for attr_key, rate in rates.items():
-        _apply_train(attrs, caps, attr_key, rate)
+        if _apply_train(attrs, caps, attr_key, rate):
+            changed = True
+    if changed and stats is not None and old_snapshot is not None:
+        recalc_derived_stats(stats, attrs, old_attrs=old_snapshot)
 
 
 # Map from train key → (attr_field, frac_field, cap_field)
@@ -247,20 +316,23 @@ _TRAIN_MAP: dict[str, tuple[str, str, str]] = {
 }
 
 
-def _apply_train(attrs: Attributes, caps: AttributeCaps, key: str, rate: float) -> None:
-    """Add fractional training to one attribute."""
+def _apply_train(attrs: Attributes, caps: AttributeCaps, key: str, rate: float) -> bool:
+    """Add fractional training to one attribute. Returns True if attribute incremented."""
     mapping = _TRAIN_MAP.get(key)
     if mapping is None:
-        return
+        return False
     attr_field, frac_field, cap_field = mapping
     cap = getattr(caps, cap_field)
     current = getattr(attrs, attr_field)
     frac = getattr(attrs, frac_field) + rate
+    incremented = False
     if frac >= 1.0 and current < cap:
         gain = int(frac)
         setattr(attrs, attr_field, min(current + gain, cap))
         frac -= gain
+        incremented = True
     setattr(attrs, frac_field, frac)
+    return incremented
 
 
 # ---------------------------------------------------------------------------

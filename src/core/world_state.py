@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 
 from src.core.buildings import Building
 from src.core.grid import Grid
+from src.core.items import TreasureChest
 from src.core.models import Entity, Vector2
 from src.core.resource_nodes import ResourceNode
 
@@ -16,7 +17,7 @@ if TYPE_CHECKING:
 class WorldState:
     """The single source of truth for the simulation."""
 
-    __slots__ = ("tick", "seed", "entities", "grid", "spatial_index", "_next_entity_id", "ground_items", "camps", "buildings", "resource_nodes", "_next_node_id")
+    __slots__ = ("tick", "seed", "entities", "grid", "spatial_index", "_next_entity_id", "ground_items", "camps", "buildings", "resource_nodes", "_next_node_id", "treasure_chests", "_next_chest_id")
 
     def __init__(
         self,
@@ -35,6 +36,8 @@ class WorldState:
         self.buildings: list[Building] = []
         self.resource_nodes: dict[int, ResourceNode] = {}
         self._next_node_id: int = 1
+        self.treasure_chests: dict[int, TreasureChest] = {}
+        self._next_chest_id: int = 1
 
     def allocate_entity_id(self) -> int:
         eid = self._next_entity_id

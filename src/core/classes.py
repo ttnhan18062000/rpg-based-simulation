@@ -76,6 +76,9 @@ class SkillDef:
     power: float = 1.0         # Damage multiplier or heal amount multiplier
     duration: int = 0          # Buff/debuff duration in ticks
     range: int = 1             # Effective range in tiles
+    # Learning prerequisites
+    mastery_req: str = ""       # Prerequisite skill_id that must have mastery >= mastery_threshold
+    mastery_threshold: float = 25.0  # Min mastery on prerequisite skill
     # Stat modifiers (for passive skills)
     atk_mod: float = 0.0
     def_mod: float = 0.0
@@ -510,6 +513,7 @@ _reg_skill(SkillDef(
     "Brace for impact, boosting DEF by 50% for 3 ticks.",
     SkillType.ACTIVE, SkillTarget.SELF, HeroClass.WARRIOR,
     level_req=3, gold_cost=100, cooldown=8, stamina_cost=15,
+    mastery_req="power_strike", mastery_threshold=25.0,
     def_mod=0.5, duration=3,
 ))
 _reg_skill(SkillDef(
@@ -517,6 +521,7 @@ _reg_skill(SkillDef(
     "Boost ATK of nearby allies by 20% for 3 ticks.",
     SkillType.ACTIVE, SkillTarget.AREA_ALLIES, HeroClass.WARRIOR,
     level_req=5, gold_cost=200, cooldown=12, stamina_cost=20,
+    mastery_req="shield_wall", mastery_threshold=25.0,
     atk_mod=0.2, duration=3, range=3,
 ))
 
@@ -533,6 +538,7 @@ _reg_skill(SkillDef(
     "Boost evasion by 30% for 3 ticks.",
     SkillType.ACTIVE, SkillTarget.SELF, HeroClass.RANGER,
     level_req=3, gold_cost=100, cooldown=7, stamina_cost=10,
+    mastery_req="quick_shot", mastery_threshold=25.0,
     evasion_mod=0.30, duration=3,
 ))
 _reg_skill(SkillDef(
@@ -540,6 +546,7 @@ _reg_skill(SkillDef(
     "Mark an enemy, increasing damage taken by 25% for 4 ticks.",
     SkillType.ACTIVE, SkillTarget.SINGLE_ENEMY, HeroClass.RANGER,
     level_req=5, gold_cost=200, cooldown=10, stamina_cost=15,
+    mastery_req="evasive_step", mastery_threshold=25.0,
     def_mod=-0.25, duration=4, range=4,
 ))
 
@@ -556,6 +563,7 @@ _reg_skill(SkillDef(
     "Create an ice barrier boosting DEF by 40% and slowing attackers for 3 ticks.",
     SkillType.ACTIVE, SkillTarget.SELF, HeroClass.MAGE,
     level_req=3, gold_cost=100, cooldown=8, stamina_cost=16,
+    mastery_req="arcane_bolt", mastery_threshold=25.0,
     def_mod=0.4, duration=3,
 ))
 _reg_skill(SkillDef(
@@ -563,6 +571,7 @@ _reg_skill(SkillDef(
     "Channel arcane energy, boosting all skill power by 30% for 4 ticks.",
     SkillType.ACTIVE, SkillTarget.SELF, HeroClass.MAGE,
     level_req=5, gold_cost=200, cooldown=12, stamina_cost=22,
+    mastery_req="frost_shield", mastery_threshold=25.0,
     atk_mod=0.3, duration=4,
 ))
 
@@ -579,6 +588,7 @@ _reg_skill(SkillDef(
     "Vanish briefly, boosting evasion by 40% and SPD by 30% for 2 ticks.",
     SkillType.ACTIVE, SkillTarget.SELF, HeroClass.ROGUE,
     level_req=3, gold_cost=100, cooldown=7, stamina_cost=12,
+    mastery_req="backstab", mastery_threshold=25.0,
     evasion_mod=0.40, spd_mod=0.3, duration=2,
 ))
 _reg_skill(SkillDef(
@@ -586,6 +596,7 @@ _reg_skill(SkillDef(
     "Coat weapon in poison, dealing damage over 4 ticks.",
     SkillType.ACTIVE, SkillTarget.SINGLE_ENEMY, HeroClass.ROGUE,
     level_req=5, gold_cost=200, cooldown=10, stamina_cost=15,
+    mastery_req="shadowstep", mastery_threshold=25.0,
     power=0.5, duration=4, range=1,  # 0.5x ATK per tick for 4 ticks
 ))
 
@@ -739,7 +750,7 @@ def can_breakthrough(hero_class: HeroClass, level: int, attrs) -> bool:
 
 
 def available_class_skills(hero_class: HeroClass, level: int) -> list[str]:
-    """Get skill IDs available for a class at a given level."""
+    """Get skill IDs available for a class at a given level (ignores mastery)."""
     skill_ids = CLASS_SKILLS.get(hero_class, [])
     result = []
     for sid in skill_ids:
@@ -747,3 +758,32 @@ def available_class_skills(hero_class: HeroClass, level: int) -> list[str]:
         if sdef and level >= sdef.level_req:
             result.append(sid)
     return result
+
+
+def can_learn_skill(
+    sdef: SkillDef,
+    level: int,
+    known_skills: list[SkillInstance],
+    class_mastery: float = 0.0,
+) -> tuple[bool, str]:
+    """Check whether a hero meets all requirements to learn a skill.
+
+    Returns (can_learn, reason_if_not).
+    """
+    if level < sdef.level_req:
+        return False, f"Requires level {sdef.level_req} (current: {level})"
+    if sdef.mastery_req:
+        prereq = None
+        for si in known_skills:
+            if si.skill_id == sdef.mastery_req:
+                prereq = si
+                break
+        if prereq is None:
+            prereq_def = SKILL_DEFS.get(sdef.mastery_req)
+            prereq_name = prereq_def.name if prereq_def else sdef.mastery_req
+            return False, f"Requires knowledge of {prereq_name}"
+        if prereq.mastery < sdef.mastery_threshold:
+            prereq_def = SKILL_DEFS.get(sdef.mastery_req)
+            prereq_name = prereq_def.name if prereq_def else sdef.mastery_req
+            return False, f"Requires {prereq_name} mastery {sdef.mastery_threshold:.0f}+ (current: {prereq.mastery:.0f})"
+    return True, ""

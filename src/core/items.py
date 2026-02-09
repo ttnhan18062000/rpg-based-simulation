@@ -106,6 +106,12 @@ _reg(ItemTemplate("ectoplasm",         "Ectoplasm",           ItemType.MATERIAL,
 _reg(ItemTemplate("orc_axe",           "Orc Axe",             ItemType.WEAPON,   Rarity.UNCOMMON, weight=4.0, atk_bonus=7, spd_bonus=-1))
 _reg(ItemTemplate("orc_shield",        "Orc Shield",          ItemType.ARMOR,    Rarity.UNCOMMON, weight=5.0, def_bonus=5, spd_bonus=-1))
 
+# ---- Higher-tier equipment (shop) ----
+_reg(ItemTemplate("steel_greatsword",  "Steel Greatsword",    ItemType.WEAPON,   Rarity.RARE,     weight=5.0, atk_bonus=10, crit_rate_bonus=0.05, spd_bonus=-1))
+_reg(ItemTemplate("plate_armor",       "Plate Armor",         ItemType.ARMOR,    Rarity.RARE,     weight=8.0, def_bonus=8, max_hp_bonus=10, spd_bonus=-2))
+_reg(ItemTemplate("apprentice_staff",  "Apprentice Staff",    ItemType.WEAPON,   Rarity.COMMON,   weight=1.5, matk_bonus=3, spd_bonus=1, damage_type=DamageType.MAGICAL))
+_reg(ItemTemplate("fire_staff",        "Fire Staff",          ItemType.WEAPON,   Rarity.UNCOMMON, weight=2.5, matk_bonus=7, damage_type=DamageType.MAGICAL, element=Element.FIRE))
+
 # ---- Crafted items from race-specific materials ----
 _reg(ItemTemplate("wolf_cloak",        "Wolf Cloak",          ItemType.ARMOR,     Rarity.UNCOMMON, weight=2.5, def_bonus=3, spd_bonus=2, evasion_bonus=0.04))
 _reg(ItemTemplate("fang_necklace",     "Fang Necklace",       ItemType.ACCESSORY, Rarity.UNCOMMON, weight=0.3, atk_bonus=2, crit_rate_bonus=0.08))
@@ -135,10 +141,22 @@ _reg(ItemTemplate("mana_crystal",      "Mana Crystal",        ItemType.ACCESSORY
 _reg(ItemTemplate("spirit_pendant",    "Spirit Pendant",      ItemType.ACCESSORY, Rarity.UNCOMMON, weight=0.3, matk_bonus=3, mdef_bonus=2))
 _reg(ItemTemplate("elemental_ring",    "Elemental Ring",      ItemType.ACCESSORY, Rarity.RARE,     weight=0.3, matk_bonus=4, mdef_bonus=3, spd_bonus=1))
 
-# ---- Consumables ----
+# ---- Consumables (healing) ----
 _reg(ItemTemplate("small_hp_potion",   "Small Health Potion", ItemType.CONSUMABLE, Rarity.COMMON,   weight=0.5, heal_amount=15))
 _reg(ItemTemplate("medium_hp_potion",  "Medium Health Potion",ItemType.CONSUMABLE, Rarity.UNCOMMON, weight=0.5, heal_amount=30))
 _reg(ItemTemplate("large_hp_potion",   "Large Health Potion", ItemType.CONSUMABLE, Rarity.RARE,     weight=1.0, heal_amount=50))
+
+# ---- Consumables (buff potions — stat boost via StatusEffect, applied in world_loop) ----
+_reg(ItemTemplate("atk_potion",        "Attack Elixir",       ItemType.CONSUMABLE, Rarity.UNCOMMON, weight=0.5, sell_value=12))
+_reg(ItemTemplate("def_potion",        "Defense Elixir",      ItemType.CONSUMABLE, Rarity.UNCOMMON, weight=0.5, sell_value=12))
+_reg(ItemTemplate("spd_potion",        "Speed Elixir",        ItemType.CONSUMABLE, Rarity.UNCOMMON, weight=0.5, sell_value=12))
+_reg(ItemTemplate("crit_potion",       "Critical Elixir",     ItemType.CONSUMABLE, Rarity.RARE,     weight=0.5, sell_value=20))
+_reg(ItemTemplate("antidote",          "Antidote",            ItemType.CONSUMABLE, Rarity.COMMON,   weight=0.3, sell_value=8))
+
+# ---- Shop materials (crafting reagents purchasable at store) ----
+_reg(ItemTemplate("mana_shard",        "Mana Shard",          ItemType.MATERIAL, Rarity.UNCOMMON, weight=0.5, sell_value=15))
+_reg(ItemTemplate("silver_ingot",      "Silver Ingot",        ItemType.MATERIAL, Rarity.UNCOMMON, weight=2.0, sell_value=18))
+_reg(ItemTemplate("phoenix_feather",   "Phoenix Feather",     ItemType.MATERIAL, Rarity.RARE,     weight=0.3, sell_value=30))
 
 # ---- Treasure / loot items ----
 _reg(ItemTemplate("gold_pouch_s",      "Small Gold Pouch",    ItemType.CONSUMABLE, Rarity.COMMON,   weight=0.5, gold_value=10))
@@ -149,6 +167,20 @@ _reg(ItemTemplate("camp_treasure",     "Camp Treasure Chest", ItemType.CONSUMABL
 
 def get_item(item_id: str) -> ItemTemplate | None:
     return ITEM_REGISTRY.get(item_id)
+
+
+def _item_power(t: ItemTemplate) -> int:
+    """Simple heuristic for item power (sum of all stat bonuses)."""
+    return (t.atk_bonus + t.def_bonus + t.spd_bonus + t.max_hp_bonus
+            + t.matk_bonus + t.mdef_bonus
+            + int(t.crit_rate_bonus * 50) + int(t.evasion_bonus * 50)
+            + t.luck_bonus)
+
+
+def item_power(item_id: str) -> int:
+    """Public wrapper: returns item power score for an item_id."""
+    t = ITEM_REGISTRY.get(item_id)
+    return _item_power(t) if t else 0
 
 
 # ---------------------------------------------------------------------------
@@ -233,6 +265,40 @@ class Inventory:
         self.items.remove(item_id)
         return True
 
+    def auto_equip_best(self, item_id: str) -> bool:
+        """Equip an item only if it's better than what's currently equipped.
+
+        If the slot is empty, always equip. If occupied, compare total power
+        (sum of all stat bonuses) and only equip if the new item is stronger.
+        Returns True if the item was equipped.
+        """
+        t = ITEM_REGISTRY.get(item_id)
+        if t is None or item_id not in self.items:
+            return False
+        if t.item_type not in (ItemType.WEAPON, ItemType.ARMOR, ItemType.ACCESSORY):
+            return False
+
+        # Determine current equipped item for this slot
+        if t.item_type == ItemType.WEAPON:
+            current_id = self.weapon
+        elif t.item_type == ItemType.ARMOR:
+            current_id = self.armor
+        else:
+            current_id = self.accessory
+
+        if current_id is None:
+            # Slot empty — always equip
+            return self.equip(item_id)
+
+        current_t = ITEM_REGISTRY.get(current_id)
+        if current_t is None:
+            return self.equip(item_id)
+
+        # Compare item power (sum of all stat bonuses)
+        if _item_power(t) > _item_power(current_t):
+            return self.equip(item_id)
+        return False
+
     def equipment_bonus(self, stat: str) -> int | float:
         """Sum a stat bonus across all equipped items."""
         total: int | float = 0
@@ -262,6 +328,73 @@ class Inventory:
             weapon=self.weapon,
             armor=self.armor,
             accessory=self.accessory,
+        )
+
+
+# ---------------------------------------------------------------------------
+# Home Storage — large persistent storage at hero's home
+# ---------------------------------------------------------------------------
+
+HOUSE_UPGRADE_COSTS: list[tuple[int, int]] = [
+    # (max_slots after upgrade, gold cost)
+    (30, 0),     # Level 0: free starting storage
+    (50, 200),   # Level 1 upgrade
+    (80, 500),   # Level 2 upgrade
+]
+
+
+@dataclass(slots=True)
+class HomeStorage:
+    """Large persistent storage at the hero's home building."""
+
+    items: list[str] = field(default_factory=list)
+    max_slots: int = 30
+    level: int = 0  # upgrade tier (0, 1, 2)
+
+    @property
+    def used_slots(self) -> int:
+        return len(self.items)
+
+    @property
+    def is_full(self) -> bool:
+        return self.used_slots >= self.max_slots
+
+    def can_add(self, item_id: str) -> bool:
+        return self.used_slots < self.max_slots
+
+    def add_item(self, item_id: str) -> bool:
+        if not self.can_add(item_id):
+            return False
+        self.items.append(item_id)
+        return True
+
+    def remove_item(self, item_id: str) -> bool:
+        if item_id in self.items:
+            self.items.remove(item_id)
+            return True
+        return False
+
+    def upgrade_cost(self) -> int | None:
+        """Return gold cost for next upgrade, or None if max level."""
+        next_level = self.level + 1
+        if next_level >= len(HOUSE_UPGRADE_COSTS):
+            return None
+        return HOUSE_UPGRADE_COSTS[next_level][1]
+
+    def upgrade(self) -> bool:
+        """Upgrade to next tier. Returns True if successful."""
+        next_level = self.level + 1
+        if next_level >= len(HOUSE_UPGRADE_COSTS):
+            return False
+        self.max_slots = HOUSE_UPGRADE_COSTS[next_level][0]
+        self.level = next_level
+        return True
+
+    def copy(self) -> HomeStorage:
+        return HomeStorage(
+            items=list(self.items),
+            max_slots=self.max_slots,
+            level=self.level,
         )
 
 
@@ -498,4 +631,80 @@ RACE_FACTION: dict[str, Faction] = {
     "bandit": Faction.BANDIT_CLAN,
     "undead": Faction.UNDEAD,
     "orc": Faction.ORC_TRIBE,
+}
+
+
+# ---------------------------------------------------------------------------
+# Treasure Chests — respawning loot containers guarded by elites
+# ---------------------------------------------------------------------------
+
+@dataclass(slots=True)
+class TreasureChest:
+    """A respawning treasure chest placed in the world."""
+
+    chest_id: int
+    pos: Vector2
+    tier: int = 1                  # 1=common, 2=rare, 3=legendary
+    looted: bool = False
+    respawn_at: int = -1           # Tick when chest respawns (-1 = available)
+    guard_entity_id: int | None = None  # Entity ID of the elite guard
+
+    @property
+    def is_available(self) -> bool:
+        return not self.looted
+
+    def loot(self, current_tick: int, respawn_ticks: int = 200) -> None:
+        """Mark as looted and schedule respawn."""
+        self.looted = True
+        self.respawn_at = current_tick + respawn_ticks
+
+    def try_respawn(self, current_tick: int) -> bool:
+        """Check if chest should respawn. Returns True if respawned."""
+        if self.looted and current_tick >= self.respawn_at:
+            self.looted = False
+            self.respawn_at = -1
+            return True
+        return False
+
+    def copy(self) -> TreasureChest:
+        return TreasureChest(
+            chest_id=self.chest_id,
+            pos=self.pos,
+            tier=self.tier,
+            looted=self.looted,
+            respawn_at=self.respawn_at,
+            guard_entity_id=self.guard_entity_id,
+        )
+
+
+# Chest loot tables per tier: (item_id, drop_chance, min_count, max_count)
+CHEST_LOOT_TABLES: dict[int, list[tuple[str, float, int, int]]] = {
+    1: [  # Common chest
+        ("small_hp_potion", 0.8, 1, 2),
+        ("gold_pouch_s", 0.7, 1, 2),
+        ("iron_ore", 0.5, 1, 3),
+        ("leather", 0.5, 1, 2),
+        ("lucky_charm", 0.15, 1, 1),
+    ],
+    2: [  # Rare chest
+        ("medium_hp_potion", 0.8, 1, 2),
+        ("gold_pouch_m", 0.7, 1, 2),
+        ("atk_potion", 0.4, 1, 1),
+        ("def_potion", 0.4, 1, 1),
+        ("steel_bar", 0.4, 1, 2),
+        ("enchanted_dust", 0.3, 1, 1),
+        ("speed_ring", 0.15, 1, 1),
+        ("chainmail", 0.10, 1, 1),
+    ],
+    3: [  # Legendary chest
+        ("large_hp_potion", 0.9, 1, 3),
+        ("gold_pouch_l", 0.8, 1, 2),
+        ("crit_potion", 0.5, 1, 1),
+        ("phoenix_feather", 0.4, 1, 1),
+        ("enchanted_dust", 0.5, 1, 2),
+        ("steel_greatsword", 0.15, 1, 1),
+        ("plate_armor", 0.15, 1, 1),
+        ("elemental_ring", 0.10, 1, 1),
+        ("camp_treasure", 0.30, 1, 1),
+    ],
 }

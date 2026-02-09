@@ -39,6 +39,7 @@ class AIState(IntEnum):
     HARVESTING = 14     # Channeling resource harvest
     VISIT_CLASS_HALL = 15  # Going to / interacting with class building
     VISIT_INN = 16         # Going to / interacting with inn
+    VISIT_HOME = 17        # Going to / interacting with home storage
 
 
 @unique
