@@ -1,8 +1,12 @@
 """CombatAction — validates and resolves attack proposals.
 
-Damage calculation uses effective stats (base + equipment + status effects),
-so territory debuffs and other effects are automatically applied without
-any special-case code here.
+Damage calculation supports dual damage types (Physical / Magical) with
+elemental tags.  The weapon’s damage_type determines which stat pair is
+used (ATK/DEF vs MATK/MDEF).  Elemental tags on weapons apply a
+vulnerability multiplier from the defender’s elem_vuln table.
+
+Effective stats (base + equipment + status effects) are used throughout,
+so territory debuffs and other effects are automatically applied.
 """
 
 from __future__ import annotations
@@ -11,7 +15,9 @@ import logging
 from typing import TYPE_CHECKING
 
 from src.actions.base import ActionProposal
-from src.core.enums import ActionType, Domain
+from src.actions.damage import get_damage_calculator
+from src.core.enums import ActionType, DamageType, Domain, Element
+from src.core.items import ITEM_REGISTRY
 
 if TYPE_CHECKING:
     from src.config import SimulationConfig
@@ -75,25 +81,29 @@ class CombatAction:
             attacker.next_act_at += 1.0 / max(attacker.effective_spd(), 1)
             return
 
-        # --- Damage calculation (attribute-enhanced) ---
-        # effective_atk / effective_def already include equipment AND status effects
-        atk_power = attacker.effective_atk()
-        def_power = defender.effective_def()
+        # --- Determine damage type and element from weapon ---
+        dmg_type = DamageType.PHYSICAL
+        element = Element.NONE
+        if attacker.inventory and attacker.inventory.weapon:
+            weapon_tmpl = ITEM_REGISTRY.get(attacker.inventory.weapon)
+            if weapon_tmpl:
+                dmg_type = weapon_tmpl.damage_type
+                element = weapon_tmpl.element
 
-        # Attribute multipliers (STR boosts attack, VIT boosts defense)
-        str_mult = 1.0
-        vit_mult = 1.0
-        if attacker.attributes:
-            str_mult = 1.0 + attacker.attributes.str_ * 0.02
-        if defender.attributes:
-            vit_mult = 1.0 + defender.attributes.vit * 0.01
+        # --- Damage calculation (strategy pattern) ---
+        calculator = get_damage_calculator(dmg_type)
+        dmg_ctx = calculator.resolve(attacker, defender)
 
-        # Base damage = ATK * str_mult - DEF * vit_mult / 2 (min 1), with variance
         variance = self._rng.next_float(Domain.COMBAT, attacker.id, tick)
-        raw_damage = int(atk_power * str_mult) - int(def_power * vit_mult) // 2
+        raw_damage = int(dmg_ctx.atk_power * dmg_ctx.atk_mult) - int(dmg_ctx.def_power * dmg_ctx.def_mult) // 2
         raw_damage = max(raw_damage, 1)
         damage = int(raw_damage * (1.0 + cfg.damage_variance * (variance - 0.5)))
         damage = max(damage, 1)
+
+        # --- Elemental vulnerability modifier ---
+        if element != Element.NONE:
+            elem_mult = defender.elemental_vulnerability(element)
+            damage = max(1, int(damage * elem_mult))
 
         # --- Crit check ---
         crit_rate = attacker.effective_crit_rate()
@@ -103,12 +113,17 @@ class CombatAction:
             damage = int(damage * attacker.stats.crit_dmg)
 
         defender.stats.hp -= damage
+        # Build damage descriptor
+        dmg_label = "MAG" if dmg_type == DamageType.MAGICAL else "PHY"
+        elem_label = ""
+        if element != Element.NONE:
+            elem_label = f" [{Element(element).name}]"
         logger.info(
-            "Tick %d: Entity %d (%s Lv%d) hits Entity %d (%s Lv%d) for %d%s damage [HP: %d/%d]",
+            "Tick %d: Entity %d (%s Lv%d) hits Entity %d (%s Lv%d) for %d %s%s%s damage [HP: %d/%d]",
             tick,
             attacker.id, attacker.kind, attacker.stats.level,
             defender.id, defender.kind, defender.stats.level,
-            damage,
+            damage, dmg_label, elem_label,
             " CRIT!" if is_crit else "",
             max(defender.stats.hp, 0),
             defender.stats.max_hp,
@@ -122,7 +137,7 @@ class CombatAction:
         # --- Attribute training from combat ---
         if attacker.attributes and attacker.attribute_caps:
             from src.core.attributes import train_attributes
-            train_attributes(attacker.attributes, attacker.attribute_caps, "attack")
+            train_attributes(attacker.attributes, attacker.attribute_caps, dmg_ctx.train_action)
         if defender.attributes and defender.attribute_caps and defender.alive:
             from src.core.attributes import train_attributes
             train_attributes(defender.attributes, defender.attribute_caps, "defend")

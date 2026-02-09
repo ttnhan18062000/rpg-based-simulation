@@ -1,4 +1,4 @@
-"""Tests for the attribute-enhanced combat system."""
+"""Tests for the attribute-enhanced combat system and DamageCalculator strategy."""
 
 import sys
 import os
@@ -6,9 +6,14 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from src.core.attributes import Attributes, AttributeCaps
 from src.core.models import Entity, Stats, Vector2
-from src.core.enums import AIState, EnemyTier
+from src.core.enums import AIState, DamageType, EnemyTier
 from src.core.faction import Faction
 from src.core.items import Inventory
+from src.actions.damage import (
+    DamageCalculator, DamageContext,
+    PhysicalDamageCalculator, MagicalDamageCalculator,
+    get_damage_calculator, DAMAGE_CALCULATORS, DEFAULT_CALCULATOR,
+)
 
 
 def _make_entity(
@@ -275,6 +280,95 @@ class TestSkillUsage:
         defender.stats.hp -= dmg
         assert defender.stats.hp < 100
         assert dmg > 0
+
+
+class TestDamageCalculatorStrategy:
+    """Test the DamageCalculator strategy pattern."""
+
+    def test_registry_has_physical_and_magical(self):
+        assert DamageType.PHYSICAL in DAMAGE_CALCULATORS
+        assert DamageType.MAGICAL in DAMAGE_CALCULATORS
+        assert len(DAMAGE_CALCULATORS) == 2
+
+    def test_get_physical_calculator(self):
+        calc = get_damage_calculator(DamageType.PHYSICAL)
+        assert isinstance(calc, PhysicalDamageCalculator)
+        assert calc.damage_type == DamageType.PHYSICAL
+
+    def test_get_magical_calculator(self):
+        calc = get_damage_calculator(DamageType.MAGICAL)
+        assert isinstance(calc, MagicalDamageCalculator)
+        assert calc.damage_type == DamageType.MAGICAL
+
+    def test_unknown_type_falls_back_to_physical(self):
+        calc = get_damage_calculator(999)
+        assert isinstance(calc, PhysicalDamageCalculator)
+        assert calc is DEFAULT_CALCULATOR
+
+    def test_physical_resolve_uses_atk_def(self):
+        attacker = _make_entity(1, atk=20, str_=10)
+        defender = _make_entity(2, def_=8, vit=10, faction=Faction.GOBLIN_HORDE)
+        calc = PhysicalDamageCalculator()
+        ctx = calc.resolve(attacker, defender)
+        assert isinstance(ctx, DamageContext)
+        assert ctx.atk_power == attacker.effective_atk()
+        assert ctx.def_power == defender.effective_def()
+        assert ctx.train_action == "attack"
+        # STR=10 → 1.0 + 10*0.02 = 1.20
+        assert abs(ctx.atk_mult - 1.20) < 0.001
+        # VIT=10 → 1.0 + 10*0.01 = 1.10
+        assert abs(ctx.def_mult - 1.10) < 0.001
+
+    def test_magical_resolve_uses_matk_mdef(self):
+        attacker = _make_entity(1, atk=10, str_=5)
+        attacker.attributes.spi = 15  # high spirit
+        defender = _make_entity(2, faction=Faction.GOBLIN_HORDE)
+        defender.attributes.wis = 12
+        calc = MagicalDamageCalculator()
+        ctx = calc.resolve(attacker, defender)
+        assert ctx.atk_power == attacker.effective_matk()
+        assert ctx.def_power == defender.effective_mdef()
+        assert ctx.train_action == "magic_attack"
+        # SPI=15 → 1.0 + 15*0.02 = 1.30
+        assert abs(ctx.atk_mult - 1.30) < 0.001
+        # WIS=12 → 1.0 + 12*0.01 = 1.12
+        assert abs(ctx.def_mult - 1.12) < 0.001
+
+    def test_physical_no_attributes_defaults_mult_to_1(self):
+        """Entity without attributes should get 1.0 multipliers."""
+        attacker = _make_entity(1, atk=10)
+        attacker.attributes = None
+        defender = _make_entity(2, faction=Faction.GOBLIN_HORDE)
+        defender.attributes = None
+        calc = PhysicalDamageCalculator()
+        ctx = calc.resolve(attacker, defender)
+        assert ctx.atk_mult == 1.0
+        assert ctx.def_mult == 1.0
+
+    def test_magical_no_attributes_defaults_mult_to_1(self):
+        attacker = _make_entity(1)
+        attacker.attributes = None
+        defender = _make_entity(2, faction=Faction.GOBLIN_HORDE)
+        defender.attributes = None
+        calc = MagicalDamageCalculator()
+        ctx = calc.resolve(attacker, defender)
+        assert ctx.atk_mult == 1.0
+        assert ctx.def_mult == 1.0
+
+    def test_damage_context_dataclass(self):
+        ctx = DamageContext(atk_power=10, def_power=5, atk_mult=1.2, def_mult=1.1, train_action="attack")
+        assert ctx.atk_power == 10
+        assert ctx.def_power == 5
+        assert ctx.train_action == "attack"
+
+    def test_physical_higher_str_higher_atk_mult(self):
+        low_str = _make_entity(1, str_=5)
+        high_str = _make_entity(2, str_=20)
+        defender = _make_entity(3, faction=Faction.GOBLIN_HORDE)
+        calc = PhysicalDamageCalculator()
+        ctx_low = calc.resolve(low_str, defender)
+        ctx_high = calc.resolve(high_str, defender)
+        assert ctx_high.atk_mult > ctx_low.atk_mult
 
 
 class TestSkillEffects:

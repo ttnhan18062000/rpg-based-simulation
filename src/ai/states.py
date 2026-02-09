@@ -252,7 +252,9 @@ def _get_equipped_for_type(actor: Entity, item_type: int) -> str | None:
 
 def _item_power(t) -> int:
     """Simple heuristic for item power (used for comparison)."""
-    return t.atk_bonus + t.def_bonus + t.spd_bonus + t.max_hp_bonus + int(t.crit_rate_bonus * 50) + int(t.evasion_bonus * 50)
+    return (t.atk_bonus + t.def_bonus + t.spd_bonus + t.max_hp_bonus
+            + t.matk_bonus + t.mdef_bonus
+            + int(t.crit_rate_bonus * 50) + int(t.evasion_bonus * 50))
 
 
 def hero_wants_to_buy(actor: Entity) -> str | None:
@@ -1149,8 +1151,11 @@ class VisitClassHallHandler(StateHandler):
                     actor.attribute_caps.agi_cap += new_cdef.agi_cap_bonus
                     actor.attribute_caps.vit_cap += new_cdef.vit_cap_bonus
                     actor.attribute_caps.int_cap += new_cdef.int_cap_bonus
+                    actor.attribute_caps.spi_cap += new_cdef.spi_cap_bonus
                     actor.attribute_caps.wis_cap += new_cdef.wis_cap_bonus
                     actor.attribute_caps.end_cap += new_cdef.end_cap_bonus
+                    actor.attribute_caps.per_cap += new_cdef.per_cap_bonus
+                    actor.attribute_caps.cha_cap += new_cdef.cha_cap_bonus
                 return AIState.VISIT_CLASS_HALL, ActionProposal(
                     actor_id=actor.id, verb=ActionType.REST,
                     reason=f"CLASS BREAKTHROUGH! → {bt.to_class.name} (Talent: {bt.talent})")

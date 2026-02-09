@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
-from src.core.enums import ItemType, Rarity
+from src.core.enums import DamageType, Element, ItemType, Rarity
 
 if TYPE_CHECKING:
     pass
@@ -24,7 +24,7 @@ class ItemTemplate:
     item_type: ItemType
     rarity: Rarity
     weight: float = 1.0
-    # Equipment stat bonuses
+    # Equipment stat bonuses — physical
     atk_bonus: int = 0
     def_bonus: int = 0
     spd_bonus: int = 0
@@ -32,8 +32,15 @@ class ItemTemplate:
     crit_rate_bonus: float = 0.0
     evasion_bonus: float = 0.0
     luck_bonus: int = 0
+    # Equipment stat bonuses — magical
+    matk_bonus: int = 0
+    mdef_bonus: int = 0
+    # Weapon damage type and element
+    damage_type: int = DamageType.PHYSICAL  # DamageType enum
+    element: int = Element.NONE             # Element enum tag
     # Consumable effects
     heal_amount: int = 0
+    mana_restore: int = 0
     # Gold value (for loot/treasure)
     gold_value: int = 0
     # Sell value (gold received when selling to shop; 0 = auto-calc from rarity)
@@ -107,6 +114,26 @@ _reg(ItemTemplate("bone_shield",       "Bone Shield",         ItemType.ARMOR,   
 _reg(ItemTemplate("spectral_blade",    "Spectral Blade",      ItemType.WEAPON,    Rarity.RARE,     weight=2.0, atk_bonus=9, crit_rate_bonus=0.08))
 _reg(ItemTemplate("mountain_plate",    "Mountain Plate",      ItemType.ARMOR,     Rarity.RARE,     weight=7.0, def_bonus=7, spd_bonus=-2, max_hp_bonus=15))
 _reg(ItemTemplate("herbal_remedy",     "Herbal Remedy",       ItemType.CONSUMABLE, Rarity.COMMON,  weight=0.5, heal_amount=25))
+
+# ---- Magic Weapons ----
+_reg(ItemTemplate("wooden_staff",      "Wooden Staff",        ItemType.WEAPON, Rarity.COMMON,   weight=2.0, matk_bonus=3, damage_type=DamageType.MAGICAL))
+_reg(ItemTemplate("iron_wand",         "Iron Wand",           ItemType.WEAPON, Rarity.COMMON,   weight=1.0, matk_bonus=4, spd_bonus=1, damage_type=DamageType.MAGICAL))
+_reg(ItemTemplate("crystal_staff",     "Crystal Staff",       ItemType.WEAPON, Rarity.UNCOMMON, weight=2.5, matk_bonus=7, spd_bonus=1, damage_type=DamageType.MAGICAL))
+_reg(ItemTemplate("fire_rod",          "Fire Rod",            ItemType.WEAPON, Rarity.UNCOMMON, weight=1.5, matk_bonus=6, damage_type=DamageType.MAGICAL, element=Element.FIRE))
+_reg(ItemTemplate("frost_scepter",     "Frost Scepter",       ItemType.WEAPON, Rarity.UNCOMMON, weight=2.0, matk_bonus=6, spd_bonus=-1, damage_type=DamageType.MAGICAL, element=Element.ICE))
+_reg(ItemTemplate("lightning_wand",    "Lightning Wand",      ItemType.WEAPON, Rarity.RARE,     weight=1.0, matk_bonus=9, spd_bonus=2, damage_type=DamageType.MAGICAL, element=Element.LIGHTNING))
+_reg(ItemTemplate("shadow_tome",       "Shadow Tome",         ItemType.WEAPON, Rarity.RARE,     weight=2.0, matk_bonus=11, crit_rate_bonus=0.06, damage_type=DamageType.MAGICAL, element=Element.DARK))
+_reg(ItemTemplate("holy_codex",        "Holy Codex",          ItemType.WEAPON, Rarity.RARE,     weight=2.5, matk_bonus=10, max_hp_bonus=10, damage_type=DamageType.MAGICAL, element=Element.HOLY))
+
+# ---- Magic Armor ----
+_reg(ItemTemplate("cloth_robe",        "Cloth Robe",          ItemType.ARMOR, Rarity.COMMON,   weight=1.5, mdef_bonus=2, spd_bonus=1))
+_reg(ItemTemplate("silk_robe",         "Silk Robe",           ItemType.ARMOR, Rarity.UNCOMMON, weight=1.5, mdef_bonus=4, spd_bonus=1, evasion_bonus=0.03))
+_reg(ItemTemplate("arcane_vestment",   "Arcane Vestment",     ItemType.ARMOR, Rarity.RARE,     weight=2.0, mdef_bonus=6, matk_bonus=3, spd_bonus=1))
+
+# ---- Magic Accessories ----
+_reg(ItemTemplate("mana_crystal",      "Mana Crystal",        ItemType.ACCESSORY, Rarity.COMMON,   weight=0.3, matk_bonus=2, mdef_bonus=1))
+_reg(ItemTemplate("spirit_pendant",    "Spirit Pendant",      ItemType.ACCESSORY, Rarity.UNCOMMON, weight=0.3, matk_bonus=3, mdef_bonus=2))
+_reg(ItemTemplate("elemental_ring",    "Elemental Ring",      ItemType.ACCESSORY, Rarity.RARE,     weight=0.3, matk_bonus=4, mdef_bonus=3, spd_bonus=1))
 
 # ---- Consumables ----
 _reg(ItemTemplate("small_hp_potion",   "Small Health Potion", ItemType.CONSUMABLE, Rarity.COMMON,   weight=0.5, heal_amount=15))

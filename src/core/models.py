@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
-from src.core.enums import AIState, EnemyTier
+from src.core.enums import AIState, DamageType, Element, EnemyTier, TraitType
 from src.core.faction import Faction
 
 if TYPE_CHECKING:
@@ -49,6 +49,7 @@ DIRECTION_OFFSETS: dict[int, Vector2] = {
 class Stats:
     """Mutable combat statistics for an entity."""
 
+    # --- Core combat ---
     hp: int = 20
     max_hp: int = 20
     atk: int = 5
@@ -58,12 +59,37 @@ class Stats:
     crit_rate: float = 0.05
     crit_dmg: float = 1.5
     evasion: float = 0.0
+
+    # --- Magic combat ---
+    matk: int = 0           # Magic attack power
+    mdef: int = 0           # Magic defense
+
+    # --- Elemental vulnerability table ---
+    # Values > 1.0 = weakness, < 1.0 = resistance, 0.0 = immune
+    elem_vuln: dict[int, float] = field(default_factory=lambda: {
+        Element.FIRE: 1.0,
+        Element.ICE: 1.0,
+        Element.LIGHTNING: 1.0,
+        Element.DARK: 1.0,
+        Element.HOLY: 1.0,
+    })
+
+    # --- Progression ---
     level: int = 1
     xp: int = 0
     xp_to_next: int = 100
     gold: int = 0
     stamina: int = 50
     max_stamina: int = 50
+
+    # --- Secondary / non-combat ---
+    vision_range: int = 6       # Effective vision (base + PER derived)
+    loot_bonus: float = 1.0     # Loot drop chance multiplier
+    trade_bonus: float = 1.0    # Buy discount / sell markup
+    interaction_speed: float = 1.0  # Harvest/craft/interact speed mult
+    rest_efficiency: float = 1.0    # Regen speed multiplier
+    hp_regen: float = 1.0       # HP per rest tick
+    cooldown_reduction: float = 1.0  # Skill cooldown mult (lower=faster)
 
     @property
     def alive(self) -> bool:
@@ -81,9 +107,17 @@ class Stats:
         return Stats(
             hp=self.hp, max_hp=self.max_hp, atk=self.atk, def_=self.def_,
             spd=self.spd, luck=self.luck, crit_rate=self.crit_rate,
-            crit_dmg=self.crit_dmg, evasion=self.evasion, level=self.level,
-            xp=self.xp, xp_to_next=self.xp_to_next, gold=self.gold,
-            stamina=self.stamina, max_stamina=self.max_stamina,
+            crit_dmg=self.crit_dmg, evasion=self.evasion,
+            matk=self.matk, mdef=self.mdef,
+            elem_vuln=dict(self.elem_vuln),
+            level=self.level, xp=self.xp, xp_to_next=self.xp_to_next,
+            gold=self.gold, stamina=self.stamina, max_stamina=self.max_stamina,
+            vision_range=self.vision_range, loot_bonus=self.loot_bonus,
+            trade_bonus=self.trade_bonus,
+            interaction_speed=self.interaction_speed,
+            rest_efficiency=self.rest_efficiency,
+            hp_regen=self.hp_regen,
+            cooldown_reduction=self.cooldown_reduction,
         )
 
 
@@ -118,6 +152,8 @@ class Entity:
     class_mastery: float = 0.0          # 0.0 to 100.0
     # Quests
     quests: list[Quest] = field(default_factory=list)
+    # Traits (Rimworld-style discrete personality traits)
+    traits: list[int] = field(default_factory=list)  # list of TraitType values
 
     @property
     def alive(self) -> bool:
@@ -182,6 +218,30 @@ class Entity:
             base += int(self.inventory.equipment_bonus("max_hp_bonus"))
         return max(base, 1)
 
+    def effective_matk(self) -> int:
+        """MATK including equipment bonuses and status effects."""
+        base = self.stats.matk
+        if self.inventory:
+            base += int(self.inventory.equipment_bonus("matk_bonus"))
+        return max(int(base * self._effect_mult("matk_mult")), 0)
+
+    def effective_mdef(self) -> int:
+        """MDEF including equipment bonuses and status effects."""
+        base = self.stats.mdef
+        if self.inventory:
+            base += int(self.inventory.equipment_bonus("mdef_bonus"))
+        return max(int(base * self._effect_mult("mdef_mult")), 0)
+
+    def elemental_vulnerability(self, element: int) -> float:
+        """Get vulnerability multiplier for an element. >1 = weak, <1 = resist."""
+        if element == Element.NONE:
+            return 1.0
+        return self.stats.elem_vuln.get(element, 1.0)
+
+    def has_trait(self, trait: int) -> bool:
+        """Check if entity has a specific TraitType."""
+        return trait in self.traits
+
     def copy(self) -> Entity:
         """Deep copy for snapshot generation."""
         return Entity(
@@ -209,4 +269,5 @@ class Entity:
             skills=[s.copy() for s in self.skills],
             class_mastery=self.class_mastery,
             quests=[q.copy() for q in self.quests],
+            traits=list(self.traits),
         )

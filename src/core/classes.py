@@ -179,15 +179,21 @@ class ClassDef:
     agi_bonus: int = 0
     vit_bonus: int = 0
     int_bonus: int = 0
+    spi_bonus: int = 0
     wis_bonus: int = 0
     end_bonus: int = 0
+    per_bonus: int = 0
+    cha_bonus: int = 0
     # Attribute cap bonuses
     str_cap_bonus: int = 0
     agi_cap_bonus: int = 0
     vit_cap_bonus: int = 0
     int_cap_bonus: int = 0
+    spi_cap_bonus: int = 0
     wis_cap_bonus: int = 0
     end_cap_bonus: int = 0
+    per_cap_bonus: int = 0
+    cha_cap_bonus: int = 0
     # Breakthrough target
     breakthrough_class: HeroClass = HeroClass.NONE
     breakthrough_level: int = 10
@@ -198,8 +204,11 @@ class ClassDef:
     agi_scaling: str = 'E'
     vit_scaling: str = 'E'
     int_scaling: str = 'E'
+    spi_scaling: str = 'E'
     wis_scaling: str = 'E'
     end_scaling: str = 'E'
+    per_scaling: str = 'E'
+    cha_scaling: str = 'E'
     # Lore & identity
     tier: int = 1                    # 1 = base, 2 = breakthrough, 3 = transcendence
     lore: str = ''
@@ -220,14 +229,20 @@ class BreakthroughDef:
     agi_bonus: int = 0
     vit_bonus: int = 0
     int_bonus: int = 0
+    spi_bonus: int = 0
     wis_bonus: int = 0
     end_bonus: int = 0
+    per_bonus: int = 0
+    cha_bonus: int = 0
     str_cap_bonus: int = 0
     agi_cap_bonus: int = 0
     vit_cap_bonus: int = 0
     int_cap_bonus: int = 0
+    spi_cap_bonus: int = 0
     wis_cap_bonus: int = 0
     end_cap_bonus: int = 0
+    per_cap_bonus: int = 0
+    cha_cap_bonus: int = 0
     talent: str = ""           # Special passive ability name
 
 
@@ -246,7 +261,7 @@ CLASS_DEFS: dict[HeroClass, ClassDef] = {
         str_cap_bonus=10, vit_cap_bonus=5, end_cap_bonus=3,
         breakthrough_class=HeroClass.CHAMPION,
         breakthrough_level=10, breakthrough_attr="str", breakthrough_threshold=30,
-        str_scaling='S', agi_scaling='D', vit_scaling='A', int_scaling='E', wis_scaling='D', end_scaling='B',
+        str_scaling='S', agi_scaling='D', vit_scaling='A', int_scaling='E', spi_scaling='E', wis_scaling='D', end_scaling='B', per_scaling='D', cha_scaling='C',
         tier=1, role='Tank / Melee DPS',
         lore=(
             'Warriors are forged in the crucible of battle. They stand where others fall, '
@@ -271,7 +286,9 @@ CLASS_DEFS: dict[HeroClass, ClassDef] = {
         agi_cap_bonus=10, wis_cap_bonus=5, end_cap_bonus=3,
         breakthrough_class=HeroClass.SHARPSHOOTER,
         breakthrough_level=10, breakthrough_attr="agi", breakthrough_threshold=30,
-        str_scaling='D', agi_scaling='S', vit_scaling='D', int_scaling='D', wis_scaling='B', end_scaling='A',
+        per_bonus=1,
+        per_cap_bonus=3,
+        str_scaling='D', agi_scaling='S', vit_scaling='D', int_scaling='D', spi_scaling='E', wis_scaling='B', end_scaling='A', per_scaling='A', cha_scaling='D',
         tier=1, role='Ranged DPS / Scout',
         lore=(
             'Rangers are children of the wilds — trackers, hunters, and silent sentinels '
@@ -291,11 +308,11 @@ CLASS_DEFS: dict[HeroClass, ClassDef] = {
     HeroClass.MAGE: ClassDef(
         class_id=HeroClass.MAGE, name="Mage",
         description="A scholar of arcane arts, wielding intelligence and wisdom.",
-        int_bonus=3, wis_bonus=2, vit_bonus=1,
-        int_cap_bonus=10, wis_cap_bonus=5, vit_cap_bonus=3,
+        int_bonus=2, spi_bonus=3, wis_bonus=2, vit_bonus=1,
+        int_cap_bonus=5, spi_cap_bonus=10, wis_cap_bonus=5, vit_cap_bonus=3,
         breakthrough_class=HeroClass.ARCHMAGE,
-        breakthrough_level=10, breakthrough_attr="int", breakthrough_threshold=30,
-        str_scaling='E', agi_scaling='D', vit_scaling='C', int_scaling='S', wis_scaling='A', end_scaling='C',
+        breakthrough_level=10, breakthrough_attr="spi", breakthrough_threshold=30,
+        str_scaling='E', agi_scaling='D', vit_scaling='C', int_scaling='A', spi_scaling='S', wis_scaling='A', end_scaling='C', per_scaling='D', cha_scaling='D',
         tier=1, role='Ranged DPS / Support',
         lore=(
             'Mages bend the very fabric of reality through years of rigorous study '
@@ -320,7 +337,7 @@ CLASS_DEFS: dict[HeroClass, ClassDef] = {
         agi_cap_bonus=8, str_cap_bonus=5, wis_cap_bonus=3,
         breakthrough_class=HeroClass.ASSASSIN,
         breakthrough_level=10, breakthrough_attr="agi", breakthrough_threshold=25,
-        str_scaling='B', agi_scaling='S', vit_scaling='D', int_scaling='D', wis_scaling='C', end_scaling='C',
+        str_scaling='B', agi_scaling='S', vit_scaling='D', int_scaling='D', spi_scaling='E', wis_scaling='C', end_scaling='C', per_scaling='B', cha_scaling='D',
         tier=1, role='Melee DPS / Assassin',
         lore=(
             'Rogues thrive in the spaces between light and shadow. They are '
@@ -344,7 +361,9 @@ CLASS_DEFS: dict[HeroClass, ClassDef] = {
         description="An elite warrior who has mastered the art of war.",
         str_bonus=6, vit_bonus=4, end_bonus=2,
         str_cap_bonus=20, vit_cap_bonus=10, end_cap_bonus=6,
-        str_scaling='SS', agi_scaling='C', vit_scaling='S', int_scaling='E', wis_scaling='D', end_scaling='A',
+        cha_bonus=1,
+        cha_cap_bonus=3,
+        str_scaling='SS', agi_scaling='C', vit_scaling='S', int_scaling='E', spi_scaling='E', wis_scaling='D', end_scaling='A', per_scaling='D', cha_scaling='B',
         tier=2, role='Tank / Melee DPS',
         lore=(
             'Champions are warriors who have transcended mere skill to embody the '
@@ -368,7 +387,9 @@ CLASS_DEFS: dict[HeroClass, ClassDef] = {
         description="A legendary marksman with unmatched precision.",
         agi_bonus=6, wis_bonus=4, end_bonus=2,
         agi_cap_bonus=20, wis_cap_bonus=10, end_cap_bonus=6,
-        str_scaling='D', agi_scaling='SS', vit_scaling='D', int_scaling='C', wis_scaling='A', end_scaling='S',
+        per_bonus=2,
+        per_cap_bonus=6,
+        str_scaling='D', agi_scaling='SS', vit_scaling='D', int_scaling='C', spi_scaling='E', wis_scaling='A', end_scaling='S', per_scaling='S', cha_scaling='D',
         tier=2, role='Ranged DPS / Scout',
         lore=(
             'Sharpshooters are Rangers who have achieved perfect unity between '
@@ -389,9 +410,9 @@ CLASS_DEFS: dict[HeroClass, ClassDef] = {
     HeroClass.ARCHMAGE: ClassDef(
         class_id=HeroClass.ARCHMAGE, name="Archmage",
         description="A supreme mage who commands arcane forces at will.",
-        int_bonus=6, wis_bonus=4, vit_bonus=2,
-        int_cap_bonus=20, wis_cap_bonus=10, vit_cap_bonus=6,
-        str_scaling='E', agi_scaling='D', vit_scaling='B', int_scaling='SS', wis_scaling='S', end_scaling='B',
+        int_bonus=4, spi_bonus=6, wis_bonus=4, vit_bonus=2,
+        int_cap_bonus=10, spi_cap_bonus=20, wis_cap_bonus=10, vit_cap_bonus=6,
+        str_scaling='E', agi_scaling='D', vit_scaling='B', int_scaling='A', spi_scaling='SS', wis_scaling='S', end_scaling='B', per_scaling='C', cha_scaling='D',
         tier=2, role='Ranged DPS / Support',
         lore=(
             'Archmages have pierced the veil between study and mastery, touching '
@@ -414,7 +435,9 @@ CLASS_DEFS: dict[HeroClass, ClassDef] = {
         description="A lethal shadow, striking with perfect precision.",
         agi_bonus=5, str_bonus=4, wis_bonus=2,
         agi_cap_bonus=16, str_cap_bonus=10, wis_cap_bonus=6,
-        str_scaling='A', agi_scaling='SS', vit_scaling='D', int_scaling='D', wis_scaling='B', end_scaling='B',
+        per_bonus=1,
+        per_cap_bonus=3,
+        str_scaling='A', agi_scaling='SS', vit_scaling='D', int_scaling='D', spi_scaling='E', wis_scaling='B', end_scaling='B', per_scaling='A', cha_scaling='D',
         tier=2, role='Melee DPS / Assassin',
         lore=(
             'Assassins have perfected the Rogue\'s art of the unseen strike, '
@@ -452,8 +475,8 @@ BREAKTHROUGHS: dict[HeroClass, BreakthroughDef] = {
     ),
     HeroClass.MAGE: BreakthroughDef(
         from_class=HeroClass.MAGE, to_class=HeroClass.ARCHMAGE,
-        level_req=10, attr_req="int", attr_threshold=30,
-        int_bonus=3, wis_bonus=2, int_cap_bonus=10, wis_cap_bonus=5,
+        level_req=10, attr_req="spi", attr_threshold=30,
+        spi_bonus=3, int_bonus=2, wis_bonus=2, spi_cap_bonus=10, int_cap_bonus=5, wis_cap_bonus=5,
         talent="Arcane Mastery",
     ),
     HeroClass.ROGUE: BreakthroughDef(
@@ -700,7 +723,8 @@ CLASS_BUILDING_MAP: dict[str, HeroClass] = {
 def get_attr_value(attrs, attr_name: str) -> int:
     """Get attribute value by string name."""
     mapping = {"str": attrs.str_, "agi": attrs.agi, "vit": attrs.vit,
-               "int": attrs.int_, "wis": attrs.wis, "end": attrs.end}
+               "int": attrs.int_, "spi": attrs.spi, "wis": attrs.wis,
+               "end": attrs.end, "per": attrs.per, "cha": attrs.cha}
     return mapping.get(attr_name, 0)
 
 

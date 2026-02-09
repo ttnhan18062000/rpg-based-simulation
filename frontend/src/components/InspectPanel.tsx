@@ -205,8 +205,11 @@ function StatsTab({ entity, collapsed, toggle }: { entity: Entity; collapsed: Re
             <AttrField label="AGI" value={entity.attributes.agi} cap={entity.attribute_caps?.agi_cap} frac={entity.attributes.agi_frac} color="#34d399" />
             <AttrField label="VIT" value={entity.attributes.vit} cap={entity.attribute_caps?.vit_cap} frac={entity.attributes.vit_frac} color="#fb923c" />
             <AttrField label="INT" value={entity.attributes.int} cap={entity.attribute_caps?.int_cap} frac={entity.attributes.int_frac} color="#818cf8" />
+            <AttrField label="SPI" value={entity.attributes.spi} cap={entity.attribute_caps?.spi_cap} frac={entity.attributes.spi_frac} color="#c084fc" />
             <AttrField label="WIS" value={entity.attributes.wis} cap={entity.attribute_caps?.wis_cap} frac={entity.attributes.wis_frac} color="#a78bfa" />
             <AttrField label="END" value={entity.attributes.end} cap={entity.attribute_caps?.end_cap} frac={entity.attributes.end_frac} color="#fbbf24" />
+            <AttrField label="PER" value={entity.attributes.per} cap={entity.attribute_caps?.per_cap} frac={entity.attributes.per_frac} color="#2dd4bf" />
+            <AttrField label="CHA" value={entity.attributes.cha} cap={entity.attribute_caps?.cha_cap} frac={entity.attributes.cha_frac} color="#f472b6" />
           </div>
         </CollapsibleSection>
       )}

@@ -1,6 +1,0 @@
-- make minimap smaller
-- allow maximize and minimize the minimap (dragging the edges)
-- zoom in/out the minimap, separate from the actual world zoom (hover on minimap or world)
-- zoom in/out in world break the hover and click on entities, buildings and loots
-- spectate entity minimap is different from world, should hide all the other entities which is ghosts and not in vision range, not just in the world
-- under the minimap, show a small collapsible panel, showing the location of the places (towns, ruins, etc), click on them will make the camera move to that location

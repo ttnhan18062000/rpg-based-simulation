@@ -16,15 +16,21 @@ export interface EntityAttributes {
   agi: number;
   vit: number;
   int: number;
+  spi: number;
   wis: number;
   end: number;
+  per: number;
+  cha: number;
   // Training progression (0.0 to 1.0 fractional toward next point)
   str_frac: number;
   agi_frac: number;
   vit_frac: number;
   int_frac: number;
+  spi_frac: number;
   wis_frac: number;
   end_frac: number;
+  per_frac: number;
+  cha_frac: number;
 }
 
 export interface EntityAttributeCaps {
@@ -32,8 +38,11 @@ export interface EntityAttributeCaps {
   agi_cap: number;
   vit_cap: number;
   int_cap: number;
+  spi_cap: number;
   wis_cap: number;
   end_cap: number;
+  per_cap: number;
+  cha_cap: number;
 }
 
 export interface EntitySkill {
@@ -63,6 +72,8 @@ export interface Entity {
   luck: number;
   crit_rate: number;
   evasion: number;
+  matk: number;
+  mdef: number;
   level: number;
   xp: number;
   xp_to_next: number;
@@ -93,6 +104,7 @@ export interface Entity {
   skills: EntitySkill[];
   active_effects: EntityEffect[];
   quests: EntityQuest[];
+  traits: number[];
 }
 
 export interface EntityEffect {

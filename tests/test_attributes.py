@@ -116,8 +116,9 @@ class TestAttributeTraining:
     def test_unknown_action_does_nothing(self):
         attrs = Attributes(str_=5, agi=5, vit=5, int_=5, wis=5, end=5)
         caps = AttributeCaps()
+        total_before = attrs.total()
         train_attributes(attrs, caps, "nonexistent")
-        assert attrs.total() == 30
+        assert attrs.total() == total_before
 
 
 class TestLevelUpAttributes:

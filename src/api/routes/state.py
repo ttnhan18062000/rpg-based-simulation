@@ -30,9 +30,11 @@ def _serialize_attrs(e) -> AttributeSchema | None:
     a = e.attributes
     return AttributeSchema(
         str_=a.str_, agi=a.agi, vit=a.vit,
-        int_=a.int_, wis=a.wis, end=a.end,
+        int_=a.int_, spi=a.spi, wis=a.wis,
+        end=a.end, per=a.per, cha=a.cha,
         str_frac=a._str_frac, agi_frac=a._agi_frac, vit_frac=a._vit_frac,
-        int_frac=a._int_frac, wis_frac=a._wis_frac, end_frac=a._end_frac,
+        int_frac=a._int_frac, spi_frac=a._spi_frac, wis_frac=a._wis_frac,
+        end_frac=a._end_frac, per_frac=a._per_frac, cha_frac=a._cha_frac,
     )
 
 
@@ -42,7 +44,8 @@ def _serialize_caps(e) -> AttributeCapSchema | None:
     c = e.attribute_caps
     return AttributeCapSchema(
         str_cap=c.str_cap, agi_cap=c.agi_cap, vit_cap=c.vit_cap,
-        int_cap=c.int_cap, wis_cap=c.wis_cap, end_cap=c.end_cap,
+        int_cap=c.int_cap, spi_cap=c.spi_cap, wis_cap=c.wis_cap,
+        end_cap=c.end_cap, per_cap=c.per_cap, cha_cap=c.cha_cap,
     )
 
 
@@ -98,6 +101,8 @@ def get_state(
             luck=e.stats.luck,
             crit_rate=e.effective_crit_rate(),
             evasion=e.effective_evasion(),
+            matk=e.effective_matk(),
+            mdef=e.effective_mdef(),
             level=e.stats.level,
             xp=e.stats.xp,
             xp_to_next=e.stats.xp_to_next,
@@ -137,6 +142,7 @@ def get_state(
                 for eff in e.effects
                 if not eff.expired
             ],
+            traits=list(e.traits),
             quests=[
                 QuestSchema(
                     quest_id=q.quest_id,

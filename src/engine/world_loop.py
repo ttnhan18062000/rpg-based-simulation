@@ -443,7 +443,7 @@ class WorldLoop:
                             # Attribute training from skill use
                             if entity.attributes and entity.attribute_caps:
                                 from src.core.attributes import train_attributes
-                                train_attributes(entity.attributes, entity.attribute_caps, "cast")
+                                train_attributes(entity.attributes, entity.attribute_caps, "skill")
 
             elif proposal.verb == ActionType.HARVEST and proposal.target:
                 # Harvest a resource node

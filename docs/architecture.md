@@ -260,9 +260,21 @@ See **[docs/buildings_economy.md](buildings_economy.md)** for full details on sh
 | `skeleton` / `zombie` / `lich` | UNDEAD | Tanky (1.3×) | Low (0.8×) | Slow (-2) | Swamp regions |
 | `orc` / `orc_warrior` / `orc_warlord` | ORC_TRIBE | Beefy (1.2×) | Strong (1.2×) | Slow (-1) | Mountain regions |
 
-### AI State Machine
+### AI Architecture (Hybrid: Utility AI + State Machine)
 
-State handlers are class-based (`StateHandler` ABC) and registered in a `STATE_HANDLERS` dict. The `AIBrain` dispatches via `AIContext` — a single dataclass bundling actor, snapshot, config, RNG, and faction registry.
+The AI uses a **two-layer hybrid** architecture:
+
+1. **Goal Evaluation** (Plugin pattern) — `src/ai/goals/`
+   - Each goal is a `GoalScorer` subclass with a `score(ctx) -> float` method
+   - 9 built-in scorers registered in `GOAL_REGISTRY`
+   - `GoalEvaluator` scores all registered goals, selects via weighted random from top 3
+   - Runs only in **decision states** (IDLE, WANDER, RESTING_IN_TOWN, GUARD_CAMP)
+   - Adding a new goal = create a subclass + register it (zero changes to existing code)
+
+2. **State Machine** (Strategy pattern) — `src/ai/states.py`
+   - State handlers are class-based (`StateHandler` ABC) registered in `STATE_HANDLERS` dict
+   - `AIBrain` dispatches via `AIContext` — a single dataclass bundling actor, snapshot, config, RNG, and faction registry
+   - Runs in **execution states** (HUNT, COMBAT, FLEE, LOOTING, VISIT_*, etc.)
 
 ```
          ┌───────────┐
@@ -440,6 +452,8 @@ rpg-based-simulation/
 │   │   ├── schemas.py        #   Pydantic response models
 │   │   └── routes/           #   Versioned REST endpoints
 │   ├── core/                 # Data models, grid, world state, snapshot
+│   │   ├── entity_builder.py #   EntityBuilder fluent API (Builder pattern)
+│   │   ├── traits.py         #   TraitDef, UtilityBonus, TraitStatModifiers, assignment
 │   │   ├── faction.py        #   Faction enum, FactionRelation, FactionRegistry, TerritoryInfo
 │   │   ├── effects.py        #   StatusEffect, EffectType, factory helpers
 │   │   ├── models.py         #   Vector2, Stats, Entity (with faction + effects)
@@ -449,7 +463,15 @@ rpg-based-simulation/
 │   │   └── ...               #   enums, grid, world_state, snapshot
 │   ├── engine/               # WorldLoop, action queue, workers, resolver
 │   ├── actions/              # Action handlers (move, combat, rest)
+│   │   ├── combat.py         #   Combat action (uses DamageCalculator strategy)
+│   │   └── damage.py         #   DamageCalculator ABC + Physical/Magical subclasses
 │   ├── ai/                   # Brain, perception, class-based state handlers
+│   │   ├── brain.py          #   AIBrain: hybrid goal evaluator + state machine
+│   │   ├── goal_evaluator.py #   Backward-compat shim → src/ai/goals/
+│   │   └── goals/            #   Plugin-based goal evaluation
+│   │       ├── base.py       #     GoalScorer ABC, GoalEvaluator, GOAL_REGISTRY
+│   │       ├── scorers.py    #     9 built-in GoalScorer subclasses
+│   │       └── registry.py   #     Registration of all built-in scorers
 │   ├── systems/              # RNG, spatial hash, entity generator
 │   └── utils/                # Logging, event log, replay recorder
 ├── frontend/                 # React + Vite + TypeScript SPA

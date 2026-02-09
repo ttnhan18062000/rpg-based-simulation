@@ -6,16 +6,19 @@ This document describes all RPG mechanics implemented in the deterministic concu
 
 ## 1. Primary Attributes
 
-Every entity can have an `Attributes` dataclass (`src/core/attributes.py`) with 6 primary stats:
+Every entity can have an `Attributes` dataclass (`src/core/attributes.py`) with **9 primary stats**:
 
 | Attribute | Field | Effect |
 |-----------|-------|--------|
-| **STR** | `str_` | Boosts attack damage (+2% per point) |
+| **STR** | `str_` | Boosts physical ATK (+2% per point), carry weight |
 | **AGI** | `agi` | Boosts SPD (+0.4/pt), crit (+0.4%/pt), evasion (+0.3%/pt) |
-| **VIT** | `vit` | Boosts max HP (+2/pt), DEF (+0.3/pt) |
-| **INT** | `int_` | Boosts XP gain (+1%/pt) |
-| **WIS** | `wis` | Boosts XP gain (+0.5%/pt), luck (+0.3/pt) |
-| **END** | `end` | Boosts max stamina (+2/pt), max HP (+0.5/pt) |
+| **VIT** | `vit` | Boosts max HP (+2/pt), physical DEF (+0.3/pt) |
+| **INT** | `int_` | Boosts XP gain (+1%/pt), MATK (+0.2/pt), cooldown reduction |
+| **SPI** | `spi` | Boosts MATK (+0.6/pt), MDEF (+0.15/pt) — primary magic offense |
+| **WIS** | `wis` | Boosts MDEF (+0.4/pt), luck (+0.3/pt), XP gain (+0.5%/pt) |
+| **END** | `end` | Boosts max stamina (+2/pt), max HP (+0.5/pt), HP regen |
+| **PER** | `per` | Boosts vision range (+0.3/pt), loot quality, detection |
+| **CHA** | `cha` | Boosts trade prices (+1%/pt), interaction speed, social influence |
 
 ### 1.1 Attribute Caps
 
@@ -26,40 +29,62 @@ Each attribute has a cap (`AttributeCaps` dataclass) that limits growth:
 
 ### 1.2 Derived Stats
 
-Attributes feed into derived combat stats via formulas in `attributes.py`:
+Attributes feed into derived combat and non-combat stats via formulas in `attributes.py`:
+
+**Combat Stats:**
 
 | Derived Stat | Formula |
-|-------------|---------|
+|-------------|----------|
 | Max HP | `base + VIT×2 + END×0.5` |
 | ATK | `base + STR×0.5` |
 | DEF | `base + VIT×0.3` |
+| MATK | `base + SPI×0.6 + INT×0.2` |
+| MDEF | `base + WIS×0.4 + SPI×0.15` |
 | SPD | `base + AGI×0.4` |
 | Crit Rate | `base + AGI×0.004` |
 | Evasion | `base + AGI×0.003` |
 | Luck | `base + WIS×0.3` |
 | Max Stamina | `base + END×2` |
+| HP Regen | `1.0 + END×0.15 + VIT×0.05` |
+| Cooldown Reduction | `max(0.5, 1.0 - INT×0.005 - WIS×0.003)` |
+
+**Non-Combat Stats:**
+
+| Derived Stat | Formula |
+|-------------|----------|
 | XP Multiplier | `1.0 + INT×0.01 + WIS×0.005` |
+| Vision Range | `base + PER×0.3` |
+| Loot Bonus | `1.0 + PER×0.008 + WIS×0.003` |
+| Trade Bonus | `1.0 + CHA×0.01` |
+| Interaction Speed | `1.0 + CHA×0.005 + INT×0.005` |
+| Rest Efficiency | `1.0 + END×0.008 + WIS×0.004` |
 
 ### 1.3 Attribute Training
 
 Attributes grow fractionally through actions using `train_attributes()`:
 
-| Action | Trained Attributes | Rate |
-|--------|-------------------|------|
-| `attack` | STR +0.015, VIT +0.005 |
-| `move` | AGI +0.008, END +0.005 |
-| `harvest` | STR +0.005, END +0.008 |
-| `loot` | WIS +0.005 |
-| `cast` | INT +0.012, WIS +0.005 |
-| `rest` | END +0.01, WIS +0.003, VIT +0.005 |
+| Action | Trained Attributes |
+|--------|-------------------|
+| `attack` | STR +0.015, AGI +0.008 |
+| `magic_attack` | SPI +0.015, INT +0.008 |
+| `move` | AGI +0.008, END +0.005, PER +0.003 |
+| `harvest` | END +0.010, WIS +0.005, PER +0.004 |
+| `loot` | WIS +0.005, PER +0.006 |
+| `skill` | INT +0.010, WIS +0.005, SPI +0.008 |
+| `rest` | WIS +0.006, END +0.003 |
+| `trade` | CHA +0.012, WIS +0.003 |
+| `explore` | PER +0.010, AGI +0.005 |
+| `interact` | CHA +0.008, INT +0.004 |
+| `defend` | VIT +0.010, END +0.008 |
 
 Fractional accumulation: e.g. 67 attacks → +1 STR. Training never exceeds the cap.
+The `_apply_train()` function uses a data-driven `_TRAIN_MAP` for all 9 attributes.
 
 ### 1.4 Level-Up Attribute Gains
 
 On each level-up (`level_up_attributes()`):
-- All 6 primary attributes: **+2** (capped)
-- All 6 attribute caps: **+5**
+- All **9** primary attributes: **+2** (capped)
+- All **9** attribute caps: **+5**
 
 ---
 
@@ -95,12 +120,12 @@ Defined in `src/core/classes.py`. Each hero is assigned a class at spawn.
 
 ### 3.1 Base Classes
 
-| Class | STR | AGI | VIT | INT | WIS | END | Cap Bonuses | Breakthrough |
-|-------|-----|-----|-----|-----|-----|-----|-------------|-------------|
-| **Warrior** | +3 | +0 | +2 | +0 | +0 | +1 | STR+10, VIT+5 | → Champion |
-| **Ranger** | +0 | +3 | +0 | +0 | +1 | +2 | AGI+10, END+5 | → Sharpshooter |
-| **Mage** | +0 | +0 | +0 | +3 | +2 | +1 | INT+10, WIS+5 | → Archmage |
-| **Rogue** | +1 | +2 | +0 | +0 | +1 | +2 | AGI+5, STR+5, WIS+5 | → Assassin |
+| Class | STR | AGI | VIT | INT | SPI | WIS | END | PER | CHA | Key Caps | Breakthrough |
+|-------|-----|-----|-----|-----|-----|-----|-----|-----|-----|----------|-------------|
+| **Warrior** | +3 | - | +2 | - | - | - | +1 | - | - | STR+10, VIT+5 | → Champion |
+| **Ranger** | - | +3 | - | - | - | +2 | +1 | +1 | - | AGI+10, WIS+5, PER+3 | → Sharpshooter |
+| **Mage** | - | - | +1 | +2 | +3 | +2 | - | - | - | SPI+10, INT+5, WIS+5 | → Archmage |
+| **Rogue** | +2 | +2 | - | - | - | +1 | - | - | - | AGI+8, STR+5, WIS+3 | → Assassin |
 
 ### 3.2 Breakthroughs
 
@@ -109,9 +134,9 @@ When level and attribute thresholds are met, heroes can advance to elite classes
 | From | To | Level Req | Attr Req | Talent |
 |------|----|-----------|----------|--------|
 | Warrior | Champion | 10 | STR ≥ 30 | Unyielding |
-| Ranger | Sharpshooter | 10 | AGI ≥ 30 | Eagle Eye |
-| Mage | Archmage | 10 | INT ≥ 30 | Mana Overflow |
-| Rogue | Assassin | 10 | AGI ≥ 25 | Shadow Dance |
+| Ranger | Sharpshooter | 10 | AGI ≥ 30 | Precision |
+| Mage | Archmage | 10 | SPI ≥ 30 | Arcane Mastery |
+| Rogue | Assassin | 10 | AGI ≥ 25 | Lethal |
 
 Breakthrough check: `can_breakthrough(hero_class, level, attributes)`
 
@@ -404,7 +429,7 @@ New fields on `EntitySchema`:
 - **TypeScript types**: `EntityAttributes`, `EntityAttributeCaps`, `EntitySkill`, `EntityEffect`, `EntityQuest` interfaces
 - **InspectPanel sections**:
   - **Stamina bar** — colored progress bar
-  - **Attributes** — 6-stat grid with caps/bars + class mastery bar
+  - **Attributes** — 9-stat grid with caps/bars + class mastery bar
   - **Skills** — cooldowns, mastery, ready/CD status
   - **Active Effects** — buff (▲ green) / debuff (▼ red) with stat modifiers and remaining ticks
   - **Equipment** — weapon, armor, accessory, inventory bag
@@ -420,28 +445,168 @@ New fields on `EntitySchema`:
 
 | File | Changes |
 |------|---------|
-| `src/core/attributes.py` | **New** — Attributes, AttributeCaps, derived stats, training, level-up gains |
-| `src/core/classes.py` | **New** — HeroClass, SkillDef, SkillInstance, ClassDef, BreakthroughDef, registries |
-| `src/core/enums.py` | Added ROAD/BRIDGE/RUINS/DUNGEON_ENTRANCE/LAVA tiles, USE_SKILL action, VISIT_CLASS_HALL/VISIT_INN states |
-| `src/core/models.py` | Added attributes, attribute_caps, hero_class, skills, class_mastery, stamina/max_stamina to Entity/Stats |
-| `src/core/grid.py` | Updated walkability for new tiles, added is_road/is_bridge/is_ruins/is_dungeon_entrance/is_lava helpers |
-| `src/core/buildings.py` | Updated docs for class_hall and inn building types |
-| `src/config.py` | Added num_ruins, num_dungeon_entrances, road_from_town |
-| `src/core/effects.py` | SKILL_BUFF/SKILL_DEBUFF effect types, `skill_effect()` factory, fixed expiry semantics (`-1`=permanent, `0`=expired) |
-| `src/core/quests.py` | **New** — Quest, QuestType, QuestTemplate, generate_quest(), QUEST_TEMPLATES |
-| `src/actions/combat.py` | Attribute-enhanced damage, stamina cost, attribute training, XP multiplier, HUNT quest progress on kill |
-| `src/actions/move.py` | Road speed bonus, stamina cost, attribute training (AGI/END) |
-| `src/engine/conflict_resolver.py` | Added USE_SKILL action passthrough |
-| `src/engine/world_loop.py` | _tick_stamina_and_skills(), attribute training, level-up gains, USE_SKILL processing (damage+buffs+debuffs), _tick_effects (hp_per_tick), _tick_quests (EXPLORE completion, pruning), GATHER quest progress on loot/harvest |
-| `src/systems/generator.py` | Entities spawn with attributes, caps, stamina, race skills |
-| `src/api/schemas.py` | AttributeSchema, AttributeCapSchema, SkillSchema, EffectSchema, QuestSchema, extended EntitySchema |
-| `src/api/routes/state.py` | Serialization of attributes, skills, class, stamina, active_effects, quests |
-| `src/api/engine_manager.py` | Hero spawn with class/attributes/skills, class hall + inn buildings, roads/ruins/dungeons |
-| `src/__main__.py` | Mirrored hero spawn with class/attributes/skills for CLI mode |
-| `frontend/src/types/api.ts` | EntityAttributes, EntityAttributeCaps, EntitySkill, EntityEffect, EntityQuest interfaces |
-| `frontend/src/constants/colors.ts` | Tile colors for new tiles, state colors for new AI states, legend entries |
-| `frontend/src/components/InspectPanel.tsx` | Stamina bar, Attributes, Skills, Active Effects, Quests, Equipment sections |
-| `tests/test_attributes.py` | **New** — 20 tests for derivation, caps, training, level-up |
-| `tests/test_classes.py` | **New** — 37 tests for skills, classes, breakthroughs, mastery, race skills |
-| `tests/test_combat.py` | **New** — 30 tests for entity attributes, damage formula, stamina mechanics, skill usage, skill effects |
-| `tests/test_quests.py` | **New** — 18 tests for quest model, generation, tracking, completion, entity integration |
+| `src/core/attributes.py` | 9 primary attributes (added SPI, PER, CHA), new derived formulas (MATK, MDEF, vision, loot, trade, etc.), data-driven `_TRAIN_MAP` |
+| `src/core/classes.py` | ClassDef/BreakthroughDef expanded for 9 attrs, scaling grades for all 9, Mage primary attr → SPI |
+| `src/core/enums.py` | Added DamageType, Element, TraitType enums |
+| `src/core/models.py` | Stats: added matk, mdef, elem_vuln, vision_range, loot_bonus, trade_bonus, etc. Entity: added traits list, effective_matk/mdef, elemental_vulnerability, has_trait |
+| `src/core/items.py` | ItemTemplate: added matk_bonus, mdef_bonus, damage_type, element. New magic weapons/armor/accessories |
+| `src/core/traits.py` | **New** — TraitDef, TRAIT_DEFS registry, incompatibility rules, race biases, assign_traits(), aggregate utilities |
+| `src/actions/combat.py` | Dual damage type (PHY/MAG), elemental vulnerability multiplier, weapon-based damage type detection |
+| `src/ai/goal_evaluator.py` | **New** — Utility AI goal scoring (9 goals), weighted random selection, trait-influenced utilities |
+| `src/ai/brain.py` | Hybrid architecture: goal evaluator for decision states, state machine for execution states |
+| `src/ai/states.py` | Updated _item_power for magic stats, breakthrough handler for 9 attribute caps |
+| `src/systems/generator.py` | Spawn with 9 attributes + traits for all entity types |
+| `src/api/schemas.py` | Extended for spi/per/cha, matk/mdef, traits |
+| `src/api/routes/state.py` | Serialization of 9 attrs, matk/mdef, traits |
+| `src/api/engine_manager.py` | Hero spawn with 9 attrs + traits |
+| `src/__main__.py` | Hero spawn with 9 attrs + traits |
+| `src/engine/world_loop.py` | Fixed "cast" → "skill" training action |
+| `frontend/src/types/api.ts` | Added spi/per/cha to EntityAttributes, matk/mdef/traits to Entity |
+| `frontend/src/components/InspectPanel.tsx` | 9-attribute grid display |
+
+---
+
+## 14. Damage Types & Elements
+
+Defined in `src/core/enums.py`.
+
+### 14.1 Damage Types (Strategy Pattern)
+
+Damage calculation uses the **Strategy pattern** (`src/actions/damage.py`).
+Each damage type is a `DamageCalculator` subclass registered in `DAMAGE_CALCULATORS`.
+
+| Type | Calculator Class | Stat Pair | Attribute Scaling |
+|------|-----------------|-----------|-------------------|
+| **PHYSICAL** | `PhysicalDamageCalculator` | ATK vs DEF | STR boosts attack (+2%/pt), VIT boosts defense (+1%/pt) |
+| **MAGICAL** | `MagicalDamageCalculator` | MATK vs MDEF | SPI boosts attack (+2%/pt), WIS boosts defense (+1%/pt) |
+
+The weapon's `damage_type` field selects the calculator via `get_damage_calculator()`. To add a new type (e.g. TRUE damage), create a `DamageCalculator` subclass and register it.
+
+Training action is `attack` for physical, `magic_attack` for magical (resolved by each calculator's `DamageContext`).
+
+### 14.2 Elements
+
+| Element | Value | Notes |
+|---------|-------|-------|
+| NONE | 0 | Default, no modifier |
+| FIRE | 1 | |
+| ICE | 2 | |
+| LIGHTNING | 3 | |
+| DARK | 4 | |
+| HOLY | 5 | |
+
+Each entity has an `elem_vuln` table on `Stats` (dict mapping Element → float). Values > 1.0 = weakness, < 1.0 = resistance, 0.0 = immune. Default is 1.0 for all elements.
+
+---
+
+## 15. Trait System
+
+Defined in `src/core/traits.py`. Rimworld-style discrete personality traits.
+
+### 15.1 Trait Assignment
+
+- Each entity gets **2–4 traits** at spawn via `assign_traits()`
+- Incompatible pairs enforced (e.g. AGGRESSIVE + CAUTIOUS cannot coexist)
+- Race-biased selection: certain races are more likely to get specific traits
+
+### 15.2 Trait Categories
+
+| Category | Traits |
+|----------|--------|
+| **Combat** | Aggressive, Cautious, Brave, Cowardly, Bloodthirsty |
+| **Social** | Greedy, Generous, Charismatic, Loner |
+| **Work Ethic** | Diligent, Lazy, Curious |
+| **Combat Style** | Berserker, Tactical, Resilient |
+| **Magic** | Arcane Gifted, Spirit Touched, Elementalist |
+| **Perception** | Keen-Eyed, Oblivious |
+
+### 15.3 Trait Effects (Typed Dataclasses)
+
+Traits modify two things via **typed dataclasses** (no more string-keyed dicts):
+1. **`UtilityBonus`** — additive bonuses to goal evaluation (`.combat`, `.flee`, `.explore`, `.loot`, `.trade`, `.rest`, `.craft`, `.social`)
+2. **`TraitStatModifiers`** — multiplicative/additive passive stat modifiers (`.atk_mult`, `.def_mult`, `.matk_mult`, `.mdef_mult`, `.crit_bonus`, `.evasion_bonus`, `.vision_bonus`, `.hp_regen_mult`, `.interaction_speed_mult`, `.flee_threshold_mod`)
+
+Aggregation functions:
+- `aggregate_trait_utility(traits) -> UtilityBonus`
+- `aggregate_trait_stats(traits) -> TraitStatModifiers`
+
+---
+
+## 16. Utility AI Goal Evaluation (Plugin Pattern)
+
+Defined in `src/ai/goals/` package. Integrated into `src/ai/brain.py`.
+Legacy shim at `src/ai/goal_evaluator.py` re-exports for backward compatibility.
+
+### 16.1 Architecture (Hybrid)
+
+1. **Decision states** (IDLE, WANDER, RESTING_IN_TOWN, GUARD_CAMP): `GoalEvaluator` iterates all registered `GoalScorer` instances, picks one via weighted random from top 3
+2. **Execution states** (HUNT, COMBAT, FLEE, LOOTING, VISIT_*, etc.): State handler runs directly
+
+### 16.2 Plugin System
+
+Each goal is a `GoalScorer` subclass (`src/ai/goals/scorers.py`) with:
+- `name` — unique goal identifier
+- `target_state` — `AIState` to transition to
+- `score(ctx)` — returns float utility score
+
+Scorers are registered in `GOAL_REGISTRY` via `src/ai/goals/registry.py`.
+To add a new goal: create a subclass, register it in `register_all_goals()`.
+
+### 16.3 Built-in Goals
+
+| Goal | Scorer Class | Maps to AIState | Key Factors |
+|------|-------------|----------------|-------------|
+| COMBAT | `CombatGoal` | HUNT | Enemy proximity, power comparison, HP ratio, traits |
+| FLEE | `FleeGoal` | FLEE | HP ratio vs flee threshold (trait-modified), enemy presence |
+| EXPLORE | `ExploreGoal` | WANDER | HP/stamina health, no enemies, trait curiosity |
+| LOOT | `LootGoal` | LOOTING | Ground items nearby, inventory space |
+| TRADE | `TradeGoal` | VISIT_SHOP | Sellable items, buying needs |
+| REST | `RestGoal` | RESTING_IN_TOWN | Low HP, low stamina |
+| CRAFT | `CraftGoal` | VISIT_BLACKSMITH | Recipes, materials available |
+| SOCIAL | `SocialGoal` | VISIT_GUILD | Intel needs, class hall needs |
+| GUARD | `GuardGoal` | GUARD_CAMP | Non-hero, home territory proximity |
+
+---
+
+## 17. Entity Builder
+
+Defined in `src/core/entity_builder.py`. Fluent builder pattern for entity construction.
+
+### 17.1 Usage
+
+```python
+hero = (
+    EntityBuilder(rng, eid, tick=0)
+    .kind("hero")
+    .at(pos)
+    .home(town_center)
+    .faction(Faction.HERO_GUILD)
+    .with_base_stats(hp=50, atk=10, def_=3, spd=10, luck=3)
+    .with_randomized_stats()
+    .with_hero_class(HeroClass.WARRIOR)
+    .with_race_skills("hero")
+    .with_class_skills(HeroClass.WARRIOR, level=1)
+    .with_inventory(max_slots=20, max_weight=100, weapon="iron_sword")
+    .with_starting_items(["small_hp_potion"] * 3)
+    .with_traits(race_prefix="hero")
+    .build()
+)
+```
+
+### 17.2 Key Methods
+
+| Method | Purpose |
+|--------|---------|
+| `kind(str)` | Set entity kind |
+| `at(Vector2)` / `home(Vector2)` | Set position / home |
+| `faction(Faction)` / `tier(int)` | Set faction / tier |
+| `with_base_stats(...)` | Set HP, ATK, DEF, SPD, etc. |
+| `with_randomized_stats()` | Add RNG variance to base stats |
+| `with_hero_class(HeroClass)` | Set class + derive attributes |
+| `with_mob_attributes(base, tier)` | Generate mob-style attributes |
+| `with_race_attributes(base, tier, ...)` | Generate race-specific attributes |
+| `with_race_skills(race)` / `with_class_skills(cls, lvl)` | Add skills |
+| `with_inventory(...)` / `with_existing_inventory(inv)` | Create or attach inventory |
+| `with_starting_items(list)` | Add items to inventory |
+| `with_traits(race_prefix)` | Assign personality traits |
+| `build()` | Construct final Entity |

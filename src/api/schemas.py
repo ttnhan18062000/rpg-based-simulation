@@ -12,15 +12,21 @@ class AttributeSchema(BaseModel):
     agi: int = 5
     vit: int = 5
     int_: int = Field(5, alias="int")
+    spi: int = 5
     wis: int = 5
     end: int = 5
+    per: int = 5
+    cha: int = 5
     # Training progression (0.0 to 1.0 fractional toward next point)
     str_frac: float = 0.0
     agi_frac: float = 0.0
     vit_frac: float = 0.0
     int_frac: float = 0.0
+    spi_frac: float = 0.0
     wis_frac: float = 0.0
     end_frac: float = 0.0
+    per_frac: float = 0.0
+    cha_frac: float = 0.0
 
     class Config:
         populate_by_name = True
@@ -31,8 +37,11 @@ class AttributeCapSchema(BaseModel):
     agi_cap: int = 15
     vit_cap: int = 15
     int_cap: int = 15
+    spi_cap: int = 15
     wis_cap: int = 15
     end_cap: int = 15
+    per_cap: int = 15
+    cha_cap: int = 15
 
 
 class SkillSchema(BaseModel):
@@ -86,6 +95,8 @@ class EntitySchema(BaseModel):
     luck: int = 0
     crit_rate: float = 0.05
     evasion: float = 0.0
+    matk: int = 0
+    mdef: int = 0
     level: int = 1
     xp: int = 0
     xp_to_next: int = 100
@@ -117,6 +128,7 @@ class EntitySchema(BaseModel):
     class_mastery: float = 0.0
     active_effects: list[EffectSchema] = Field(default_factory=list)
     quests: list[QuestSchema] = Field(default_factory=list)
+    traits: list[int] = Field(default_factory=list)
 
     class Config:
         frozen = True

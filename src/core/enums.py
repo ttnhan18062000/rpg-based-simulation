@@ -115,3 +115,64 @@ class EnemyTier(IntEnum):
     SCOUT = 1
     WARRIOR = 2
     ELITE = 3
+
+
+@unique
+class DamageType(IntEnum):
+    """Core damage categories for attacks and skills."""
+
+    PHYSICAL = 0
+    MAGICAL = 1
+
+
+@unique
+class Element(IntEnum):
+    """Elemental tags applied to skills/weapons for vulnerability modifiers."""
+
+    NONE = 0
+    FIRE = 1
+    ICE = 2
+    LIGHTNING = 3
+    DARK = 4
+    HOLY = 5
+
+
+@unique
+class TraitType(IntEnum):
+    """Discrete personality traits assigned to entities (Rimworld-style).
+
+    Each entity gets 2-4 traits at spawn.  Traits modify utility scores
+    in the goal-evaluation layer and can gate special behaviours.
+    """
+
+    # Combat disposition
+    AGGRESSIVE = 0      # Higher hunt/combat utility, lower flee threshold
+    CAUTIOUS = 1        # Higher flee/retreat utility, prefers safe routes
+    BRAVE = 2           # Resists fleeing even at low HP, bonus morale
+    COWARDLY = 3        # Flees earlier, avoids strong enemies
+    BLOODTHIRSTY = 4    # Seeks combat even when not necessary, bonus crit
+
+    # Social / economic
+    GREEDY = 5          # Prioritises loot/gold, hoards items
+    GENEROUS = 6        # Shares loot, lower sell threshold
+    CHARISMATIC = 7     # Better trade prices, higher recruitment chance
+    LONER = 8           # Avoids allies, prefers solo exploration
+
+    # Work ethic
+    DILIGENT = 9        # Faster interaction/harvest, lower rest need
+    LAZY = 10           # Slower interaction, higher rest utility
+    CURIOUS = 11        # Explores unknown areas, higher frontier utility
+
+    # Combat style
+    BERSERKER = 12      # Bonus damage at low HP, ignores some defense
+    TACTICAL = 13       # Prefers skills over basic attacks, better positioning
+    RESILIENT = 14      # Faster HP regen, higher effective VIT
+
+    # Magical affinity
+    ARCANE_GIFTED = 15  # Bonus MATK, higher skill utility
+    SPIRIT_TOUCHED = 16 # Bonus MDEF, resist dark/holy elements
+    ELEMENTALIST = 17   # Bonus elemental damage, varied element preference
+
+    # Perception / awareness
+    KEEN_EYED = 18      # Bonus vision range, detects hidden enemies
+    OBLIVIOUS = 19      # Reduced vision, but higher focus on current task
