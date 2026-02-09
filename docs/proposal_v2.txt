@@ -1,0 +1,459 @@
+# Improvements Documentation
+
+This document specifies **deep-detail upgrades** to the prototype in three areas:
+
+1. **Randomization** (deterministic, debuggable, reproducible)
+2. **Interaction & NPC thinking** (combat/social/goal-based decisions)
+3. **Optimization** (CPU, memory, scheduling, scalability)
+
+It assumes the core invariant stays: **single-writer WorldLoop**, workers compute intent from **immutable snapshots**.
+
+---
+
+## 1. Randomization Improvements (Deep Detail)
+
+### 1.1 Goals
+
+Randomness must be:
+
+- **Deterministic** across runs given the same seed (replay/debug)
+- **Locally controllable** (a change in one feature doesn’t reshuffle everything)
+- **Auditable** (you can explain why something happened)
+- **Stable under concurrency** (workers can run in any order without changing outcomes)
+
+### 1.2 Rule: WorldLoop owns authoritative randomness
+
+Worker threads must not call global randomness in a way that affects world outcomes.
+
+- Allowed in worker: “tie-breaking” randomness that does **not** change the world outcome, OR must be seeded per-entity-per-tick and logged.
+- Best practice: workers produce **ranked choices**; world chooses with its RNG.
+
+### 1.3 Randomness Domains (separate streams)
+
+Use multiple RNG streams so features don’t interfere:
+
+- `RNG_TERRAIN` (map/material generation)
+- `RNG_SPAWN_PLACEMENT` (where spawns appear)
+- `RNG_SPAWN_STATS` (HP/ATK/Speed distribution)
+- `RNG_LOOT` (drops)
+- `RNG_AI_TIEBREAK` (NPC tie-breaking)
+- `RNG_CRIT/HIT` (combat RNG if used)
+- `RNG_EVENTS` (ambient events)
+
+#### Why separate streams?
+
+If you use one RNG and later add “loot sparkles”, you shift the RNG sequence and the entire simulation changes. Separate streams prevent that.
+
+### 1.4 Deterministic RNG seeding scheme
+
+Define a stable seed derivation function:
+
+- Base seed: `world_seed` (config)
+- Derive per-domain seed: `seed(domain) = hash64(world_seed, domain_name)`
+- Derive per-entity/tick seed: `seed(domain, entity_id, tick) = hash64(seed(domain), entity_id, tick)`
+
+Where `hash64` is a stable 64-bit hash (e.g., xxhash64 style, or a custom FNV-1a 64-bit). The important part: stable across platforms and versions.
+
+#### Example usage rules
+
+- Spawn stats: `rng = RNG(seed("SPAWN_STATS", spawn_id, tick))`
+- Combat roll: `rng = RNG(seed("COMBAT", attacker_id, tick))`
+
+This guarantees:
+
+- Same world seed + same tick + same entity id => same roll
+- Independent from thread scheduling
+
+### 1.5 Random distributions (deep detail)
+
+Avoid uniform random for RPG stats; use controlled distributions.
+
+#### 1.5.1 Spawn stats distribution
+
+For a monster level `L`, define expected stats:
+
+- `E[HP] = HP_base + hp_scale * L`
+- `E[ATK] = ATK_base + atk_scale * L`
+- `E[Speed] = SPD_base + spd_scale * L`
+
+Then apply variance using a distribution:
+
+**Triangular distribution** (simple, bounded, cheap):
+
+- `hp = triangular(min, mode, max)`
+- `atk = triangular(min, mode, max)`
+- `speed = triangular(min, mode, max)`
+
+**Log-normal / Gamma** (heavier tail) for rare elites:
+
+- Use only in WorldLoop, and cap outputs.
+
+#### 1.5.2 Rare modifiers system
+
+Attach modifiers with controlled probabilities:
+
+- Rarity tiers: `common`, `uncommon`, `rare`, `elite`
+- Probability: e.g. `[0.80, 0.15, 0.04, 0.01]` (tunable)
+- Each tier grants:
+  - Stat multipliers (bounded)
+  - Behavior changes (more aggressive, tactical)
+  - Loot table changes
+
+Deterministic selection:
+
+- `tier = weighted_choice(seed("RARITY", entity_id, tick), weights)`
+
+### 1.6 Procedural map randomization (materials)
+
+Instead of independent cell choice (noisy), use **coherent noise** or region-based generation.
+
+#### 1.6.1 Region-based method (deterministic and controllable)
+
+1. Place N biome seeds with RNG stream `RNG_TERRAIN`.
+2. For each cell, assign biome by nearest seed (Voronoi).
+3. Apply biome rules:
+   - forest area density
+   - water clustering
+   - wall border conditions
+
+This creates large contiguous areas without heavy math.
+
+#### 1.6.2 Walkability guarantees
+
+Add constraints:
+
+- Ensure minimum connected walkable region size (e.g., flood fill once at init)
+- Ensure at least K spawnable tiles
+
+If constraints fail, regenerate with derived seed `world_seed+attempt`.
+
+### 1.7 Event randomization
+
+Ambient events should not disrupt core RNG sequences:
+
+- Use `RNG_EVENTS` only
+- Log event triggers `(tick, event_type, params_seed)`
+
+### 1.8 Randomization logging (debug-grade)
+
+For every authoritative random decision, record:
+
+- tick
+- domain
+- entity_id (if any)
+- derived seed
+- chosen outcome
+
+This enables exact replay and “why did it happen?” debugging.
+
+---
+
+## 2. Interaction & NPC Thinking Improvements (Deep Detail)
+
+### 2.1 Goals
+
+NPC thinking must be:
+
+- Modular (add behaviors without rewriting)
+- Stable (doesn’t oscillate randomly)
+- Efficient (100+ entities)
+- Consistent with single-writer world mutation
+
+### 2.2 Separate “Think” from “Act”
+
+Define a two-stage loop:
+
+- **Think stage (workers)**: evaluate snapshot, produce **Intent** with justification/score
+- **Act stage (WorldLoop)**: validate, resolve conflicts, apply
+
+Workers produce:
+
+- `ActionProposal(action, score, reasons, ttl_tick)`
+
+WorldLoop chooses proposals by:
+
+- highest score
+- legality check
+- conflict resolution policy
+
+### 2.3 NPC decision model: Utility + State Machine (hybrid)
+
+A pure FSM becomes brittle; a pure utility model becomes chaotic. Use hybrid:
+
+- **High-level state**: roaming / hunting / fleeing / guarding / assisting / trading
+- **Utility scoring** within the state: choose best action among candidates
+
+#### 2.3.1 State transitions (deterministic)
+
+Transitions triggered by snapshot facts:
+
+- HP < threshold => flee
+- Enemy seen + advantage => hunt
+- Ally in trouble => assist
+- Goal reached => idle/roam
+
+Add hysteresis (stickiness) to prevent flapping:
+
+- Do not switch state unless condition holds for N ticks, or score gap exceeds threshold.
+
+### 2.4 Perception system (what NPCs can “know”)
+
+NPCs shouldn’t have omniscience; define perception:
+
+- Vision radius (tile distance)
+- Line of sight (optional with walls)
+- Hearing events (combat noise within radius)
+- Memory: last seen positions + timestamps
+
+This yields realistic chasing/fleeing.
+
+#### 2.4.1 Memory structure
+
+Per NPC:
+
+- `last_seen[entity_id] = (x, y, tick)`
+- decay after `memory_ttl`
+
+### 2.5 Action set expansion (classic RPG)
+
+Base actions: move, rest, fight
+Add common derived actions (still represented as Actions):
+
+- **Move**
+  - Roam (random walk with bias)
+  - Chase (path toward target)
+  - Flee (maximize distance)
+  - Patrol (follow waypoints)
+  - Kite (maintain distance band)
+
+- **Rest**
+  - Heal
+  - Regenerate stamina/mana (if added)
+  - “Wait” (skip turn deliberately)
+
+- **Fight**
+  - Basic attack
+  - Power attack (cooldown)
+  - Defensive stance
+  - Use item
+  - Target switch logic
+
+Even if you keep Action types small, you can encode variants using `data` fields or separate action classes.
+
+### 2.6 Target selection (deep detail)
+
+Target selection should be explicit and deterministic:
+
+Score each candidate target:
+
+- distance factor
+- threat factor (ATK, level)
+- vulnerability (HP low)
+- priority rules (healer first, ranged first)
+- faction/relationship weights
+
+Example scoring concept:
+
+- `score = w1*threat + w2*vulnerability - w3*distance + w4*goal_priority`
+
+Then tie-break deterministically:
+
+- smallest entity_id
+- or deterministic RNG using per-tick seed
+
+### 2.7 Group behavior (NPCs)
+
+Add simple coordination for NPC mobs:
+
+- Pack leader: nearest highest-level monster
+- Shared target: leader’s selected target
+- Formation: followers try to surround
+
+Implementation:
+
+- WorldLoop computes “group metadata snapshot” each tick and includes it in snapshot.
+
+### 2.8 Social interactions (optional but classic RPG)
+
+If NPCs can talk/trade:
+
+- Add interaction actions: `TalkAction`, `TradeAction`, `AssistAction`
+- Add relationship metrics: reputation/hostility
+
+Keep these as actions processed in WorldLoop.
+
+### 2.9 Conflict resolution in WorldLoop (critical)
+
+When multiple actions conflict (two entities move into same tile, both attack same target, etc.), WorldLoop must define a deterministic policy:
+
+#### 2.9.1 Move conflicts
+
+- If target tile occupied:
+  - either block
+  - or swap allowed only if both move into each other (explicit rule)
+
+- If multiple move into same tile:
+  - pick winner by (speed, then entity_id), losers fail and get rescheduled
+
+#### 2.9.2 Fight resolution
+
+- If target died earlier in same tick:
+  - attack becomes “wasted” or retarget (policy choice)
+
+- Damage stacking order:
+  - order by attacker next_act_at then entity_id (deterministic)
+
+### 2.10 Progression and rewards
+
+Classic loop:
+
+- On kill: attacker gains EXP
+- Level up modifies stats
+- Optional loot drops
+
+Make reward rules purely in WorldLoop:
+
+- `gain_exp` and level-ups happen only at mutation time
+- Loot RNG uses combat domain seed
+
+---
+
+## 3. Optimization Improvements
+
+### 3.1 Performance priorities (don’t lie to yourself)
+
+With 100 entities, you are not CPU-bound unless you:
+
+- pathfind every action with A\*
+- rebuild huge snapshots frequently
+- spam logging
+- run extremely high tick frequency
+
+Optimization should target:
+
+1. snapshot cost
+2. scheduling overhead
+3. AI computation hot spots
+4. memory churn
+
+### 3.2 Snapshot optimization
+
+Current approach copies all characters into a dict each time a snapshot is needed.
+
+Improvements:
+
+#### 3.2.1 Snapshot only once per scheduling batch
+
+In WorldLoop, build one snapshot per loop iteration and reuse for all dispatched entities due at that time window.
+
+#### 3.2.2 Snapshot diffs (advanced)
+
+Keep a base snapshot and a “diff list” per tick; workers read base + diff if necessary. This is more complex but reduces copying.
+
+#### 3.2.3 Slim views
+
+Only include fields AI needs:
+
+- position
+- faction
+- hp
+- atk
+- level
+- speed
+  Exclude anything else.
+
+### 3.3 Scheduling optimization
+
+Current design uses heap of `(next_act_at, entity_id)`.
+
+Improvements:
+
+- Use “calendar queue” / bucketed timing wheel if entity count gets large and action intervals are bounded.
+- For 100–10,000 entities, heap is fine.
+
+### 3.4 AI optimization
+
+#### 3.4.1 Spatial indexing
+
+Target search currently scans all characters → O(N) per decision.
+At 100, fine; at 10,000, not.
+
+Build spatial index in WorldLoop:
+
+- grid buckets: cell -> list of entity_ids
+- or coarse buckets (e.g., 4x4 tiles per bucket)
+
+Include index in snapshot as read-only data for faster nearest searches.
+
+#### 3.4.2 Pathfinding
+
+For chase/flee:
+
+- Use greedy step for short distances (cheap)
+- Use A\* only if blocked and distance > threshold
+- Cache paths for a few ticks (but invalidate if obstacles dynamic)
+
+### 3.5 Reduce contention and overhead in worker system
+
+- Avoid creating futures for trivial decisions; batch compute for multiple entities in one worker call if needed.
+- Use a fixed ThreadPoolExecutor; never create threads per action.
+- Limit inflight per tick to avoid “queue explosion”.
+
+### 3.6 Logging optimization
+
+Logging is often the real bottleneck.
+
+- Buffer logs and flush periodically
+- Or sample logs (every N ticks)
+- Always log random decisions in compact form if you need replay
+
+### 3.7 Data layout
+
+Python dict-heavy world state is flexible but slow at scale.
+If you go beyond prototype:
+
+- store positions in arrays keyed by entity_id index
+- keep component arrays (HP[], ATK[], etc.)
+  This becomes an ECS-like layout.
+
+### 3.8 Deterministic replay mode (performance + debugging)
+
+Record:
+
+- world_seed
+- action stream with timestamps/ticks
+- random decision logs (optional if deterministic seed derivation exists)
+
+Replay runs without workers:
+
+- feed recorded actions to WorldLoop
+  This is the fastest way to debug and benchmark.
+
+---
+
+## Priority Plan
+
+### Mindset changes
+
+- Randomness must be **engineered**, not sprinkled.
+- NPC thinking must be **stateful and stable**, not just “if/else with randomness”.
+- Optimization must follow **profiling**, not vibes.
+
+### Immediate actions
+
+1. Implement RNG domain streams + seed derivation.
+2. Move any outcome-affecting randomness into WorldLoop.
+3. Upgrade NPC logic to state machine + utility scoring with hysteresis.
+4. Add deterministic conflict resolution rules in WorldLoop.
+
+### Stop / eliminate
+
+- Global `random` in worker logic for outcome-affecting decisions.
+- O(N) target scans if you plan to scale beyond a few hundred.
+- Logging everything synchronously to console.
+
+### Consequences if you don’t
+
+- You won’t be able to reproduce bugs (randomness + concurrency chaos).
+- NPC behavior will look “dumb” or unstable (flip-flopping decisions).
+- Scaling will force a rewrite (because you optimized the wrong layer).

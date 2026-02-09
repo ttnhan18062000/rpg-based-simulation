@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.backends._legacy:_Backend"
+
+[project]
+name = "rpg-based-simulation"
+version = "0.1.0"
+description = "Deterministic Concurrent RPG Engine"
+requires-python = ">=3.11"
+dependencies = [
+    "xxhash>=3.4.0",
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.30.0",
+    "pydantic>=2.0.0",
+]
+
+[project.scripts]
+rpg-sim = "src.__main__:main"
+
+[tool.setuptools.packages.find]
+include = ["src*"]

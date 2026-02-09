@@ -1,0 +1,498 @@
+# 1. System Goal and Constraints
+
+## Goal
+
+Simulate a **classic RPG-style 2D world** with:
+
+- A mutable world map (materials, obstacles)
+- Characters with stats, AI, actions
+- Generators that spawn entities over time
+- Concurrent decision-making
+- **Deterministic, consistent world state**
+
+## Hard Constraints (Non-Negotiable)
+
+1. **Single-writer rule**
+   Only one thread mutates world state.
+2. **Multi-threaded decisions only**
+   Threads compute _intent_, never apply effects.
+3. **Time-ordered actions**
+   Entity speed controls scheduling.
+4. **Replayable logic**
+   Same actions → same world outcome.
+
+If any of these are violated, correctness collapses.
+
+---
+
+# 2. High-Level Architecture
+
+```
++---------------------+
+|  Worker Threads     |  (AI / decisions)
+|  decide_action()    |
++----------+----------+
+           |
+           | Action (intent)
+           v
++---------------------+
+|   Action Queue      |  (thread-safe)
++----------+----------+
+           |
+           v
++---------------------+
+|   WorldLoop         |  (SINGLE WRITER)
+|  - scheduling       |
+|  - apply actions    |
+|  - advance time     |
++----------+----------+
+           |
+           v
++---------------------+
+|   World State       |
+|  - map/materials    |
+|  - entities         |
+|  - stats            |
++---------------------+
+```
+
+Key idea: **Concurrency is outside the world. Authority is inside.**
+
+---
+
+# 3. Core Modules Overview
+
+| Module    | Responsibility                         |
+| --------- | -------------------------------------- |
+| World     | Owns all mutable state                 |
+| WorldLoop | Schedules entities and applies actions |
+| Action    | Immutable intent objects               |
+| Snapshot  | Read-only world view for workers       |
+| Worker AI | Decides next action                    |
+| Scheduler | Time-based entity activation           |
+
+---
+
+# 4. World Data Model
+
+## 4.1 Map and Materials
+
+```python
+materials: Tuple[Tuple[Material, ...], ...]
+```
+
+- Immutable 2D grid
+- Accessed read-only by workers
+- Mutated **never** (static terrain)
+
+### Material Semantics
+
+- `"grass"` → walkable
+- `"sand"` → walkable
+- `"forest"` → walkable
+- `"water"` → blocked
+- `"wall"` → blocked
+
+This is deliberately simple; terrain rules belong in `world.apply()`.
+
+---
+
+## 4.2 Entity Identity Model
+
+```python
+EntityId = int
+```
+
+- Monotonically increasing
+- Unique within world lifetime
+- Never reused (important for replay/debug)
+
+---
+
+## 4.3 Entity Base Class
+
+```python
+@dataclass
+class Entity:
+    id: EntityId
+    kind: str
+    x: int
+    y: int
+    next_act_at: float
+    alive: bool
+```
+
+### Meaning
+
+- `x, y` → authoritative position
+- `next_act_at` → absolute monotonic time
+- `alive` → hard gate for scheduling
+
+No entity mutates itself.
+
+---
+
+## 4.4 Character Entity
+
+```python
+@dataclass
+class Character(Entity):
+    name: str
+    faction: str
+    stats: BaseStats
+    ai: str
+```
+
+### Design Rationale
+
+- Characters are **stateful actors**
+- AI string selects behavior strategy
+- Stats encapsulate progression logic
+
+### Stats
+
+```python
+@dataclass
+class BaseStats:
+    hp: int
+    atk: int
+    speed: int
+    level: int
+    exp: int
+```
+
+#### Speed → Action Interval
+
+```python
+action_interval = 100 / speed
+```
+
+- Higher speed → more frequent actions
+- Floating-point scheduling, integer stats
+- WorldLoop owns scheduling correctness
+
+---
+
+## 4.5 Generator Entity
+
+```python
+@dataclass
+class Generator(Entity):
+    spawn_kind: str
+    spawn_rate_sec: float
+    max_spawn: int
+    spawned: int
+```
+
+### Generator Semantics
+
+- Acts **without workers**
+- Spawn timing controlled by WorldLoop
+- Generator logic is deterministic
+
+Generators are world-controlled because:
+
+- They mutate world state
+- They are not “thinking agents”
+
+---
+
+# 5. Action Model (Intent Layer)
+
+## 5.1 Why Actions Exist
+
+Actions separate:
+
+- **Decision** (parallel)
+- **Mutation** (serial)
+
+This prevents race conditions and enforces determinism.
+
+---
+
+## 5.2 Action Types
+
+### MoveAction
+
+```python
+MoveAction(entity_id, dx, dy)
+```
+
+- Relative movement
+- Validated by world bounds + materials
+
+### RestAction
+
+```python
+RestAction(entity_id, heal)
+```
+
+- Simple regeneration
+- No randomness inside mutation
+
+### FightAction
+
+```python
+FightAction(attacker_id, target_id)
+```
+
+- Adjacency enforced in `world.apply`
+- Damage calculation deterministic
+
+### SpawnAction
+
+```python
+SpawnAction(generator_id, spawn_kind)
+```
+
+- WorldLoop-generated
+- Never produced by workers
+
+---
+
+# 6. Immutable Snapshot System
+
+## 6.1 Purpose
+
+Workers must:
+
+- Read world state
+- Never block WorldLoop
+- Never see partial updates
+
+Snapshots provide **point-in-time consistency**.
+
+---
+
+## 6.2 Snapshot Structure
+
+```python
+@dataclass(frozen=True)
+class WorldSnapshot:
+    t: float
+    width: int
+    height: int
+    materials: ...
+    characters: MappingProxyType
+```
+
+### Key Properties
+
+- **Frozen** dataclass
+- `MappingProxyType` prevents mutation
+- Contains only what AI needs
+
+Snapshots are cheap to reason about and safe to share.
+
+---
+
+## 6.3 CharacterView
+
+```python
+@dataclass(frozen=True)
+class CharacterView:
+    id, x, y, hp, atk, speed, level, ai, alive
+```
+
+Workers cannot:
+
+- Modify HP
+- Move entities
+- Kill targets
+
+They can only _observe_.
+
+---
+
+# 7. WorldLoop (Authoritative Engine)
+
+## 7.1 Role
+
+WorldLoop is the **only writer**.
+
+It owns:
+
+- Time
+- Ordering
+- Mutation
+- Conflict resolution
+
+---
+
+## 7.2 Scheduler
+
+```python
+ScheduleItem(next_act_at, entity_id)
+```
+
+- Min-heap (priority queue)
+- Sorted by next action time
+- Prevents starvation
+
+### Why heap, not tick loop?
+
+- Speed ranges from 10 → 10000
+- Sparse, non-uniform action timing
+- Efficient scheduling
+
+---
+
+## 7.3 Execution Phases (Each Loop)
+
+### Phase 1: Apply Completed Actions
+
+- Drain `action_inbox`
+- Call `world.apply(action)`
+- Log results
+- Update `next_act_at`
+
+### Phase 2: Cleanup
+
+- Remove dead characters
+- Ensure no dangling references
+
+### Phase 3: Dispatch Due Entities
+
+- Pop entities whose `next_act_at <= now`
+- Generators → immediate SpawnAction
+- Characters → submit to worker pool
+
+### Phase 4: Collect Worker Results
+
+- Completed futures return `Action`
+- Enqueue action for Phase 1
+
+### Phase 5: Idle Sleep
+
+- Avoid busy spin
+- Maintain CPU sanity
+
+---
+
+## 7.4 Inflight Guard
+
+```python
+self._inflight: Dict[entity_id, Future]
+```
+
+Prevents:
+
+- Double-dispatch
+- Concurrent decisions for same entity
+
+Without this, one entity could act twice in one window.
+
+---
+
+# 8. Worker AI Logic
+
+## 8.1 Responsibilities
+
+Workers:
+
+- Read snapshot
+- Decide intent
+- Return Action or None
+
+They do NOT:
+
+- Modify world
+- Sleep
+- Schedule time
+
+---
+
+## 8.2 Decision Flow
+
+1. If HP low → Rest
+2. Find nearest enemy
+3. If adjacent → Fight
+4. If AI = fleeing → move away
+5. If AI = chasing → move toward
+6. Else → roam randomly
+
+This logic is intentionally simple but extensible.
+
+---
+
+## 9. Mutation Logic (World.apply)
+
+This is the **most critical function**.
+
+### Invariants
+
+- Single-threaded
+- Deterministic
+- Validates every action
+
+---
+
+## 9.1 Movement
+
+- Bounds check
+- Material walkability
+- Update position
+- Schedule next action
+
+---
+
+## 9.2 Combat
+
+- Manhattan adjacency check
+- Damage formula
+- Death handling
+- EXP + level progression
+
+All progression rules live **only here**.
+
+---
+
+## 9.3 Spawning
+
+- Generator-only
+- Randomized stats (seeded RNG)
+- Controlled placement
+- No worker involvement
+
+---
+
+# 10. Consistency Guarantees
+
+This architecture guarantees:
+
+| Property               | Status               |
+| ---------------------- | -------------------- |
+| No data races          | Guaranteed           |
+| Deterministic mutation | Guaranteed           |
+| Safe multithreading    | Guaranteed           |
+| Replayable logic       | Yes (record actions) |
+| Debuggable bugs        | Yes                  |
+| Scalable decisions     | Yes                  |
+
+---
+
+# 11. What This Design Explicitly Rejects
+
+❌ Shared mutable state
+❌ Locks around world data
+❌ Entity self-mutation
+❌ Time managed by threads
+❌ Proxy-based write access
+❌ “Optimistic” updates
+
+All of these break determinism.
+
+---
+
+# 12. Extension Points
+
+Where to extend safely:
+
+| Feature     | Where                    |
+| ----------- | ------------------------ |
+| New actions | Add Action + world.apply |
+| New AI      | Worker logic only        |
+| New stats   | BaseStats + apply        |
+| New terrain | material rules           |
+| Multiplayer | Action source            |
+| Persistence | Snapshot serialization   |

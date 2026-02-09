@@ -1,0 +1,7 @@
+- add more type of tiles in the map, make it rich
+- add more type of resources
+- add more type of buildings
+- add complex structure like ruins, dungeon
+- make the map larger
+- make every places larger
+-> DONE
