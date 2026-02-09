@@ -157,6 +157,17 @@ class SkillInstance:
 # Class definition
 # ---------------------------------------------------------------------------
 
+# Attribute scaling grades — determines how effectively a class
+# benefits from investing in each attribute.  Higher grades yield
+# larger derived-stat bonuses from that attribute.
+SCALING_GRADES = ('E', 'D', 'C', 'B', 'A', 'S', 'SS', 'SSS')
+
+SCALING_MULTIPLIER: dict[str, float] = {
+    'E': 0.60, 'D': 0.75, 'C': 0.90, 'B': 1.00,
+    'A': 1.15, 'S': 1.30, 'SS': 1.50, 'SSS': 1.80,
+}
+
+
 @dataclass(frozen=True, slots=True)
 class ClassDef:
     """Immutable class template."""
@@ -182,6 +193,18 @@ class ClassDef:
     breakthrough_level: int = 10
     breakthrough_attr: str = ""      # e.g. "str" — which attribute must be >= threshold
     breakthrough_threshold: int = 30
+    # Attribute scaling grades (E–SSS)
+    str_scaling: str = 'E'
+    agi_scaling: str = 'E'
+    vit_scaling: str = 'E'
+    int_scaling: str = 'E'
+    wis_scaling: str = 'E'
+    end_scaling: str = 'E'
+    # Lore & identity
+    tier: int = 1                    # 1 = base, 2 = breakthrough, 3 = transcendence
+    lore: str = ''
+    playstyle: str = ''
+    role: str = ''                   # e.g. "DPS", "Tank", "Support"
 
 
 @dataclass(frozen=True, slots=True)
@@ -215,6 +238,7 @@ class BreakthroughDef:
 # -- Class Definitions --
 
 CLASS_DEFS: dict[HeroClass, ClassDef] = {
+    # ---- Tier 1 — Base Classes ----
     HeroClass.WARRIOR: ClassDef(
         class_id=HeroClass.WARRIOR, name="Warrior",
         description="A frontline fighter specializing in strength and vitality.",
@@ -222,6 +246,23 @@ CLASS_DEFS: dict[HeroClass, ClassDef] = {
         str_cap_bonus=10, vit_cap_bonus=5, end_cap_bonus=3,
         breakthrough_class=HeroClass.CHAMPION,
         breakthrough_level=10, breakthrough_attr="str", breakthrough_threshold=30,
+        str_scaling='S', agi_scaling='D', vit_scaling='A', int_scaling='E', wis_scaling='D', end_scaling='B',
+        tier=1, role='Tank / Melee DPS',
+        lore=(
+            'Warriors are forged in the crucible of battle. They stand where others fall, '
+            'trading blows with monstrous foes through sheer grit and iron will. '
+            'From humble militia training to legendary feats of arms, the Warrior\'s '
+            'path is one of relentless perseverance. Ancient war-songs tell of warriors '
+            'who held castle gates alone — their shields dented, their blades notched, '
+            'yet their spirit unbroken.'
+        ),
+        playstyle=(
+            'Warriors excel at sustained melee combat. High STR scaling makes every '
+            'point of Strength hit harder, while strong VIT and END scaling provide '
+            'the survivability to endure prolonged fights. Best paired with heavy '
+            'armor and two-handed weapons. Ideal for players who like to lead the '
+            'charge and control the front line.'
+        ),
     ),
     HeroClass.RANGER: ClassDef(
         class_id=HeroClass.RANGER, name="Ranger",
@@ -230,6 +271,22 @@ CLASS_DEFS: dict[HeroClass, ClassDef] = {
         agi_cap_bonus=10, wis_cap_bonus=5, end_cap_bonus=3,
         breakthrough_class=HeroClass.SHARPSHOOTER,
         breakthrough_level=10, breakthrough_attr="agi", breakthrough_threshold=30,
+        str_scaling='D', agi_scaling='S', vit_scaling='D', int_scaling='D', wis_scaling='B', end_scaling='A',
+        tier=1, role='Ranged DPS / Scout',
+        lore=(
+            'Rangers are children of the wilds — trackers, hunters, and silent sentinels '
+            'who read the land like an open book. They strike from afar with deadly '
+            'accuracy, disappearing into brush before the enemy can react. '
+            'The great Rangers of old could track a shadow across bare stone and pin '
+            'a dragonfly\'s wing at a hundred paces. Their bond with nature grants '
+            'them a preternatural awareness that few can match.'
+        ),
+        playstyle=(
+            'Rangers dominate at range with high AGI scaling boosting speed, crit, and '
+            'evasion. WIS scaling enhances luck and awareness, while END keeps stamina '
+            'high for sustained kiting. Equip bows and light armor for maximum '
+            'mobility. Perfect for hit-and-run tactics and exploration.'
+        ),
     ),
     HeroClass.MAGE: ClassDef(
         class_id=HeroClass.MAGE, name="Mage",
@@ -238,6 +295,23 @@ CLASS_DEFS: dict[HeroClass, ClassDef] = {
         int_cap_bonus=10, wis_cap_bonus=5, vit_cap_bonus=3,
         breakthrough_class=HeroClass.ARCHMAGE,
         breakthrough_level=10, breakthrough_attr="int", breakthrough_threshold=30,
+        str_scaling='E', agi_scaling='D', vit_scaling='C', int_scaling='S', wis_scaling='A', end_scaling='C',
+        tier=1, role='Ranged DPS / Support',
+        lore=(
+            'Mages bend the very fabric of reality through years of rigorous study '
+            'and arcane experimentation. Where warriors trust steel, mages trust '
+            'knowledge — and knowledge, properly applied, can shatter mountains. '
+            'The great academies produce scholars who command fire, frost, and '
+            'lightning, but the truly gifted transcend elemental boundaries to '
+            'touch the raw weave of magic itself.'
+        ),
+        playstyle=(
+            'Mages deliver devastating ranged damage through INT scaling that amplifies '
+            'skill power and XP gain. WIS scaling reduces cooldowns and boosts luck. '
+            'Fragile in melee — rely on crowd control, burst damage, and positioning. '
+            'Enchanted robes and magical accessories complement their playstyle. '
+            'Best suited for calculated, ability-focused combat.'
+        ),
     ),
     HeroClass.ROGUE: ClassDef(
         class_id=HeroClass.ROGUE, name="Rogue",
@@ -246,6 +320,118 @@ CLASS_DEFS: dict[HeroClass, ClassDef] = {
         agi_cap_bonus=8, str_cap_bonus=5, wis_cap_bonus=3,
         breakthrough_class=HeroClass.ASSASSIN,
         breakthrough_level=10, breakthrough_attr="agi", breakthrough_threshold=25,
+        str_scaling='B', agi_scaling='S', vit_scaling='D', int_scaling='D', wis_scaling='C', end_scaling='C',
+        tier=1, role='Melee DPS / Assassin',
+        lore=(
+            'Rogues thrive in the spaces between light and shadow. They are '
+            'opportunists — striking when the moment is perfect, vanishing before '
+            'retaliation arrives. Whether they hail from thieves\' guilds or '
+            'noble spy networks, every Rogue shares an instinct for finding '
+            'weakness. The legendary Rogues could pick a lock, slit a throat, '
+            'and empty a vault before the guards changed shift.'
+        ),
+        playstyle=(
+            'Rogues combine AGI and STR scaling for lethal burst damage. High crit '
+            'rate and evasion from AGI make them slippery in combat, while B-rank '
+            'STR scaling ensures their strikes hit hard. Short cooldowns and low '
+            'stamina costs enable rapid skill chains. Glass cannon playstyle — '
+            'dodge or die. Daggers and light armor recommended.'
+        ),
+    ),
+    # ---- Tier 2 — Breakthrough Classes ----
+    HeroClass.CHAMPION: ClassDef(
+        class_id=HeroClass.CHAMPION, name="Champion",
+        description="An elite warrior who has mastered the art of war.",
+        str_bonus=6, vit_bonus=4, end_bonus=2,
+        str_cap_bonus=20, vit_cap_bonus=10, end_cap_bonus=6,
+        str_scaling='SS', agi_scaling='C', vit_scaling='S', int_scaling='E', wis_scaling='D', end_scaling='A',
+        tier=2, role='Tank / Melee DPS',
+        lore=(
+            'Champions are warriors who have transcended mere skill to embody the '
+            'spirit of battle itself. Their blows carry the weight of a hundred '
+            'campaigns, and their presence on the field inspires allies to fight '
+            'beyond their limits. The title of Champion is earned only through '
+            'trials of blood and iron — where the weak perish, the Champion endures. '
+            'Tales speak of Champions who shattered siege engines with bare fists '
+            'and held bridges against entire armies.'
+        ),
+        playstyle=(
+            'Champions push Warrior strengths to the extreme. SS-rank STR scaling '
+            'makes every Strength point devastatingly effective. S-rank VIT provides '
+            'near-unbreakable durability. The Unyielding talent further cements '
+            'their role as immovable front-liners. Can comfortably solo elite enemies '
+            'that would overwhelm other classes.'
+        ),
+    ),
+    HeroClass.SHARPSHOOTER: ClassDef(
+        class_id=HeroClass.SHARPSHOOTER, name="Sharpshooter",
+        description="A legendary marksman with unmatched precision.",
+        agi_bonus=6, wis_bonus=4, end_bonus=2,
+        agi_cap_bonus=20, wis_cap_bonus=10, end_cap_bonus=6,
+        str_scaling='D', agi_scaling='SS', vit_scaling='D', int_scaling='C', wis_scaling='A', end_scaling='S',
+        tier=2, role='Ranged DPS / Scout',
+        lore=(
+            'Sharpshooters are Rangers who have achieved perfect unity between '
+            'eye, hand, and bow. Every arrow they loose finds its mark with '
+            'supernatural accuracy. They can read wind, distance, and a target\'s '
+            'movement in the span of a heartbeat. The Precision talent grants them '
+            'an almost prophetic ability to predict enemy movement — some say '
+            'they can see the threads of fate themselves.'
+        ),
+        playstyle=(
+            'Sharpshooters elevate the Ranger\'s ranged dominance with SS-rank AGI '
+            'scaling for devastating crit rates and evasion. S-rank END scaling '
+            'ensures they never run out of stamina for kiting. The Precision talent '
+            'provides bonus crit damage. Excels at eliminating high-value targets '
+            'from extreme range before they can close the distance.'
+        ),
+    ),
+    HeroClass.ARCHMAGE: ClassDef(
+        class_id=HeroClass.ARCHMAGE, name="Archmage",
+        description="A supreme mage who commands arcane forces at will.",
+        int_bonus=6, wis_bonus=4, vit_bonus=2,
+        int_cap_bonus=20, wis_cap_bonus=10, vit_cap_bonus=6,
+        str_scaling='E', agi_scaling='D', vit_scaling='B', int_scaling='SS', wis_scaling='S', end_scaling='B',
+        tier=2, role='Ranged DPS / Support',
+        lore=(
+            'Archmages have pierced the veil between study and mastery, touching '
+            'the raw source of magical power. Where a Mage channels spells through '
+            'formulas and incantations, an Archmage shapes reality through pure '
+            'will. The Arcane Mastery talent allows them to weave multiple spell '
+            'effects simultaneously — a feat that would shatter a lesser caster\'s '
+            'mind. Court wizards and war-mages alike bow before an Archmage\'s authority.'
+        ),
+        playstyle=(
+            'Archmages reach SS-rank INT scaling, making their skills devastatingly '
+            'powerful. S-rank WIS dramatically boosts XP gain and luck. Improved VIT '
+            'scaling (B-rank) gives more survivability than base Mages. The Arcane '
+            'Mastery talent enhances all skill effects. The ultimate glass cannon — '
+            'when positioned correctly, an Archmage can end battles before they begin.'
+        ),
+    ),
+    HeroClass.ASSASSIN: ClassDef(
+        class_id=HeroClass.ASSASSIN, name="Assassin",
+        description="A lethal shadow, striking with perfect precision.",
+        agi_bonus=5, str_bonus=4, wis_bonus=2,
+        agi_cap_bonus=16, str_cap_bonus=10, wis_cap_bonus=6,
+        str_scaling='A', agi_scaling='SS', vit_scaling='D', int_scaling='D', wis_scaling='B', end_scaling='B',
+        tier=2, role='Melee DPS / Assassin',
+        lore=(
+            'Assassins have perfected the Rogue\'s art of the unseen strike, '
+            'elevating it from skill to something approaching dark poetry. '
+            'They move through shadows as though the darkness itself is an ally, '
+            'and their blades find gaps in the strongest armor. The Lethal talent '
+            'grants them the ability to strike vital points with terrifying '
+            'consistency. Kingdoms have fallen not to armies, but to a single '
+            'Assassin\'s patience.'
+        ),
+        playstyle=(
+            'Assassins combine SS-rank AGI with A-rank STR for the highest burst '
+            'damage potential of any class. The Lethal talent provides guaranteed '
+            'critical strikes under certain conditions. Extremely deadly in '
+            'one-on-one combat but vulnerable when surrounded. Requires careful '
+            'target selection and timing. The ultimate single-target killer.'
+        ),
     ),
 }
 

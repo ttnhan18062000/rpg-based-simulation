@@ -1,6 +1,7 @@
-import { X, Store, Hammer, Shield } from 'lucide-react';
+import { X, Store, Hammer, Shield, Bed } from 'lucide-react';
 import type { Building } from '@/types/api';
 import { itemName, ITEM_STATS, RARITY_COLORS } from '@/constants/colors';
+import { ClassHallPanel } from './ClassHallPanel';
 
 interface BuildingPanelProps {
   building: Building;
@@ -50,15 +51,22 @@ const BUILDING_ICONS: Record<string, React.ReactNode> = {
   store: <Store className="w-5 h-5 text-[#38bdf8]" />,
   blacksmith: <Hammer className="w-5 h-5 text-[#f59e0b]" />,
   guild: <Shield className="w-5 h-5 text-[#818cf8]" />,
+  inn: <Bed className="w-5 h-5 text-[#fb923c]" />,
 };
 
 const BUILDING_COLORS: Record<string, string> = {
   store: '#38bdf8',
   blacksmith: '#f59e0b',
   guild: '#818cf8',
+  inn: '#fb923c',
 };
 
 export function BuildingPanel({ building, onClose }: BuildingPanelProps) {
+  // Class Hall gets its own dedicated panel
+  if (building.building_type === 'class_hall') {
+    return <ClassHallPanel building={building} onClose={onClose} />;
+  }
+
   return (
     <div className="flex-1 overflow-y-auto min-h-0">
       {/* Header */}
@@ -83,6 +91,7 @@ export function BuildingPanel({ building, onClose }: BuildingPanelProps) {
       {building.building_type === 'store' && <StoreContent />}
       {building.building_type === 'blacksmith' && <BlacksmithContent />}
       {building.building_type === 'guild' && <GuildContent />}
+      {building.building_type === 'inn' && <InnContent />}
     </div>
   );
 }
@@ -215,6 +224,62 @@ function GuildContent() {
           </div>
         );
       })}
+    </div>
+  );
+}
+
+function InnContent() {
+  return (
+    <div className="p-3">
+      <div className="text-[10px] font-bold uppercase tracking-wider text-text-secondary mb-2">
+        Traveler's Inn
+      </div>
+      <div className="text-[11px] text-text-secondary mb-3">
+        A warm hearth and a soft bed. Heroes rest here to rapidly recover HP and stamina before
+        venturing back into the wilds.
+      </div>
+
+      <div className="text-[10px] font-bold uppercase tracking-wider text-text-secondary mb-2 mt-4">
+        Services
+      </div>
+      <div className="space-y-1.5 text-[11px]">
+        <div className="p-2 rounded border border-border bg-bg-primary">
+          <div className="font-semibold text-[#fb923c] text-xs">Rest & Recovery</div>
+          <div className="text-text-secondary text-[10px] mt-0.5">
+            Heroes resting at the Inn regenerate <span className="text-accent-green font-semibold">4 stamina/tick</span> and
+            recover HP faster than resting in the open.
+          </div>
+        </div>
+        <div className="p-2 rounded border border-border bg-bg-primary">
+          <div className="font-semibold text-[#fb923c] text-xs">Safe Haven</div>
+          <div className="text-text-secondary text-[10px] mt-0.5">
+            The Inn is located within town walls. Heroes are completely safe from enemy attacks
+            while resting here.
+          </div>
+        </div>
+      </div>
+
+      <div className="text-[10px] font-bold uppercase tracking-wider text-text-secondary mb-2 mt-4">
+        Stamina Regeneration Rates
+      </div>
+      <div className="space-y-1 text-[10px]">
+        <div className="flex justify-between py-0.5 border-b border-border/30">
+          <span className="text-text-secondary">Resting in Town / Idle</span>
+          <span className="font-semibold text-accent-green">5 / tick</span>
+        </div>
+        <div className="flex justify-between py-0.5 border-b border-border/30">
+          <span className="text-text-secondary font-semibold" style={{ color: '#fb923c' }}>Visiting Inn</span>
+          <span className="font-semibold text-accent-green">4 / tick</span>
+        </div>
+        <div className="flex justify-between py-0.5 border-b border-border/30">
+          <span className="text-text-secondary">Visiting Buildings</span>
+          <span className="font-semibold text-accent-green">4 / tick</span>
+        </div>
+        <div className="flex justify-between py-0.5">
+          <span className="text-text-secondary">Adventuring</span>
+          <span className="font-semibold text-text-primary">1 / tick</span>
+        </div>
+      </div>
     </div>
   );
 }
