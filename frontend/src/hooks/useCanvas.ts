@@ -20,6 +20,7 @@ export function useCanvas(
   onEntityClick: (id: number | null) => void,
   onGroundItemClick?: (x: number, y: number) => void,
   onBuildingClick?: (building: Building) => void,
+  zoom: number = 1.0,
 ) {
   const gridRef = useRef<HTMLCanvasElement>(null);
   const entityRef = useRef<HTMLCanvasElement>(null);
@@ -402,8 +403,9 @@ export function useCanvas(
     const rect = ec.getBoundingClientRect();
     const mx = evt.clientX - rect.left;
     const my = evt.clientY - rect.top;
-    const gx = Math.floor(mx / CELL_SIZE);
-    const gy = Math.floor(my / CELL_SIZE);
+    // Account for CSS scale(zoom) — getBoundingClientRect returns visually scaled rect
+    const gx = Math.floor(mx / (CELL_SIZE * zoom));
+    const gy = Math.floor(my / (CELL_SIZE * zoom));
     const hit = entities.find(e => e.x === gx && e.y === gy);
     if (hit) {
       onEntityClick(hit.id);
@@ -422,7 +424,7 @@ export function useCanvas(
       return;
     }
     onEntityClick(null);
-  }, [entities, groundItems, buildings, onEntityClick, onGroundItemClick, onBuildingClick]);
+  }, [entities, groundItems, buildings, onEntityClick, onGroundItemClick, onBuildingClick, zoom]);
 
   // Hover handler — respects fog of war when spectating
   const handleCanvasHover = useCallback((evt: React.MouseEvent) => {
@@ -431,8 +433,9 @@ export function useCanvas(
     const rect = ec.getBoundingClientRect();
     const mx = evt.clientX - rect.left;
     const my = evt.clientY - rect.top;
-    const gx = Math.floor(mx / CELL_SIZE);
-    const gy = Math.floor(my / CELL_SIZE);
+    // Account for CSS scale(zoom)
+    const gx = Math.floor(mx / (CELL_SIZE * zoom));
+    const gy = Math.floor(my / (CELL_SIZE * zoom));
 
     // Build visible set for spectated entity
     const visibleSet = buildVisibleSet();
@@ -532,7 +535,7 @@ export function useCanvas(
     }
 
     setHoverInfo(null);
-  }, [entities, groundItems, resourceNodes, selectedEntityId, selectedEnt, buildVisibleSet]);
+  }, [entities, groundItems, resourceNodes, selectedEntityId, selectedEnt, buildVisibleSet, zoom]);
 
   const handleCanvasLeave = useCallback(() => {
     setHoverInfo(null);
