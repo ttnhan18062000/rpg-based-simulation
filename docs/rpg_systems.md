@@ -427,14 +427,20 @@ New fields on `EntitySchema`:
 ### 12.2 Frontend Updates
 
 - **TypeScript types**: `EntityAttributes`, `EntityAttributeCaps`, `EntitySkill`, `EntityEffect`, `EntityQuest` interfaces
-- **InspectPanel sections**:
-  - **Stamina bar** — colored progress bar
-  - **Attributes** — 9-stat grid with caps/bars + class mastery bar
-  - **Skills** — cooldowns, mastery, ready/CD status
-  - **Active Effects** — buff (▲ green) / debuff (▼ red) with stat modifiers and remaining ticks
-  - **Equipment** — weapon, armor, accessory, inventory bag
-  - **Quests** — title, type badge, progress bar, gold/XP reward display, completion checkmark
-  - **Goals & Thoughts** — AI decision context
+  - `EntitySkill` extended with `damage_type` and `element` fields
+  - `EntityEffect` extended with `crit_mult`, `evasion_mult`, `hp_per_tick` fields
+  - `Entity` extended with `base_atk`, `base_def`, `base_spd`, `base_matk`, `base_mdef` for stat breakdown
+- **InspectPanel tabs**: stats, class, quests, events, effects, ai
+  - **Header stats** — HP/stamina bars, ATK/DEF/MATK/MDEF/SPD/Gold in colored grid
+  - **Stats tab**:
+    - **Attributes** — 9-stat grid with caps/bars, hover tooltips showing full name, scaling description, and training progress
+    - **Detailed Stats** — base + equipment + buff breakdown for ATK/DEF/SPD/MATK/MDEF, plus CRIT/EVA/LUCK
+    - **Equipment** — weapon, armor, accessory, inventory bag
+  - **Class tab** — class info, skills with damage type (PHY/MAG) and element badges, mastery bars
+  - **Quests tab** — title, type badge, progress bar, gold/XP reward display, completion checkmark
+  - **Events tab** — timestamped event history with category color-coding
+  - **Effects tab** — dedicated buff/debuff display with stat modifier badges (ATK/DEF/SPD/CRIT/EVA), HP per tick, remaining duration
+  - **AI tab** — current AI state with description, personality traits with colors/descriptions, utility AI goals explanation, craft target, memory & vision
 - **Tile colors**: ROAD (#5a5040), BRIDGE (#4a6050), RUINS (#4a4035), DUNGEON_ENTRANCE (#6a3040), LAVA (#8a3000)
 - **State colors**: VISIT_CLASS_HALL (#c084fc), VISIT_INN (#fb923c)
 - **Legend**: Added Class Hall, Inn, Road, Ruins, Dungeon entries
@@ -462,7 +468,7 @@ New fields on `EntitySchema`:
 | `src/__main__.py` | Hero spawn with 9 attrs + traits |
 | `src/engine/world_loop.py` | Fixed "cast" → "skill" training action |
 | `frontend/src/types/api.ts` | Added spi/per/cha to EntityAttributes, matk/mdef/traits to Entity |
-| `frontend/src/components/InspectPanel.tsx` | 9-attribute grid display |
+| `frontend/src/components/InspectPanel.tsx` | 6-tab layout (stats/class/quests/events/effects/ai), detailed stats breakdown, attribute tooltips with scaling, element/damage badges on skills, Effects tab, AI state/traits display |
 
 ---
 

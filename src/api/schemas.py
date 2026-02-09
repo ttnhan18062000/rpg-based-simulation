@@ -56,6 +56,8 @@ class SkillSchema(BaseModel):
     cooldown: int = 0
     power: float = 1.0
     description: str = ""
+    damage_type: str = "physical"   # "physical" | "magical"
+    element: str = "none"           # "none" | "fire" | "ice" | "lightning" | "dark" | "holy"
 
 
 class EffectSchema(BaseModel):
@@ -65,6 +67,9 @@ class EffectSchema(BaseModel):
     atk_mult: float = 1.0
     def_mult: float = 1.0
     spd_mult: float = 1.0
+    crit_mult: float = 1.0
+    evasion_mult: float = 1.0
+    hp_per_tick: int = 0
 
 
 class QuestSchema(BaseModel):
@@ -129,6 +134,21 @@ class EntitySchema(BaseModel):
     active_effects: list[EffectSchema] = Field(default_factory=list)
     quests: list[QuestSchema] = Field(default_factory=list)
     traits: list[int] = Field(default_factory=list)
+    # Base stats (before equipment/effects) for detailed breakdown
+    base_atk: int = 0
+    base_def: int = 0
+    base_spd: int = 0
+    base_matk: int = 0
+    base_mdef: int = 0
+    base_crit_rate: float = 0.05
+    base_evasion: float = 0.0
+    # Secondary / non-combat derived stats
+    hp_regen: float = 1.0
+    cooldown_reduction: float = 1.0
+    loot_bonus: float = 1.0
+    trade_bonus: float = 1.0
+    interaction_speed: float = 1.0
+    rest_efficiency: float = 1.0
 
     class Config:
         frozen = True

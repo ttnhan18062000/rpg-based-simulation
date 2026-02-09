@@ -57,6 +57,8 @@ export interface EntitySkill {
   cooldown: number;
   power: number;
   description: string;
+  damage_type: string;   // "physical" | "magical"
+  element: string;       // "none" | "fire" | "ice" | "lightning" | "dark" | "holy"
 }
 
 export interface Entity {
@@ -105,6 +107,21 @@ export interface Entity {
   active_effects: EntityEffect[];
   quests: EntityQuest[];
   traits: number[];
+  // Base stats (before equipment/effects) for detailed breakdown
+  base_atk: number;
+  base_def: number;
+  base_spd: number;
+  base_matk: number;
+  base_mdef: number;
+  base_crit_rate: number;
+  base_evasion: number;
+  // Secondary / non-combat derived stats
+  hp_regen: number;
+  cooldown_reduction: number;
+  loot_bonus: number;
+  trade_bonus: number;
+  interaction_speed: number;
+  rest_efficiency: number;
 }
 
 export interface EntityEffect {
@@ -114,6 +131,9 @@ export interface EntityEffect {
   atk_mult: number;
   def_mult: number;
   spd_mult: number;
+  crit_mult: number;
+  evasion_mult: number;
+  hp_per_tick: number;
 }
 
 export interface EntityQuest {

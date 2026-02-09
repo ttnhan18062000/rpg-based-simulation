@@ -1018,6 +1018,8 @@ class VisitGuildHandler(StateHandler):
                 hero_level=actor.stats.level,
                 existing_quest_ids=existing_ids,
                 rng=ctx.rng,
+                entity_id=actor.id,
+                tick=snapshot.tick,
                 grid_width=snapshot.grid.width if hasattr(snapshot, 'grid') else 100,
                 grid_height=snapshot.grid.height if hasattr(snapshot, 'grid') else 100,
             )

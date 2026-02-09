@@ -57,11 +57,27 @@ def _serialize_hero_class(e) -> str:
         return "none"
 
 
+# Skills that deal magical damage (use MATK instead of ATK)
+_MAGICAL_SKILLS = frozenset({
+    "arcane_bolt", "frost_shield", "mana_surge", "drain_life",
+})
+
+# Skill → element mapping (skills not listed default to NONE)
+_SKILL_ELEMENTS: dict[str, str] = {
+    "frost_shield": "ice",
+    "arcane_bolt": "none",  # pure arcane, no element
+    "drain_life": "dark",
+    "poison_blade": "dark",
+}
+
+
 def _serialize_skills(e) -> list[SkillSchema]:
     from src.core.classes import SKILL_DEFS
     result = []
     for si in e.skills:
         sdef = SKILL_DEFS.get(si.skill_id)
+        dmg_type = "magical" if si.skill_id in _MAGICAL_SKILLS else "physical"
+        element = _SKILL_ELEMENTS.get(si.skill_id, "none")
         result.append(SkillSchema(
             skill_id=si.skill_id,
             name=sdef.name if sdef else si.skill_id,
@@ -74,6 +90,8 @@ def _serialize_skills(e) -> list[SkillSchema]:
             cooldown=si.effective_cooldown(sdef.cooldown) if sdef else 0,
             power=si.effective_power(sdef.power) if sdef else 1.0,
             description=sdef.description if sdef else "",
+            damage_type=dmg_type,
+            element=element,
         ))
     return result
 
@@ -138,10 +156,26 @@ def get_state(
                     atk_mult=eff.atk_mult,
                     def_mult=eff.def_mult,
                     spd_mult=eff.spd_mult,
+                    crit_mult=eff.crit_mult,
+                    evasion_mult=eff.evasion_mult,
+                    hp_per_tick=eff.hp_per_tick,
                 )
                 for eff in e.effects
                 if not eff.expired
             ],
+            base_atk=e.stats.atk,
+            base_def=e.stats.def_,
+            base_spd=e.stats.spd,
+            base_matk=e.stats.matk,
+            base_mdef=e.stats.mdef,
+            base_crit_rate=e.stats.crit_rate,
+            base_evasion=e.stats.evasion,
+            hp_regen=e.stats.hp_regen,
+            cooldown_reduction=e.stats.cooldown_reduction,
+            loot_bonus=e.stats.loot_bonus,
+            trade_bonus=e.stats.trade_bonus,
+            interaction_speed=e.stats.interaction_speed,
+            rest_efficiency=e.stats.rest_efficiency,
             traits=list(e.traits),
             quests=[
                 QuestSchema(

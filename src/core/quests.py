@@ -203,6 +203,8 @@ def generate_quest(
     hero_level: int,
     existing_quest_ids: set[str],
     rng: DeterministicRNG,
+    entity_id: int = 0,
+    tick: int = 0,
     grid_width: int = 100,
     grid_height: int = 100,
 ) -> Quest | None:
@@ -210,27 +212,35 @@ def generate_quest(
 
     Returns None if no suitable template is available.
     """
+    from src.core.enums import Domain
     from src.core.models import Vector2
 
     eligible = [t for t in QUEST_TEMPLATES if hero_level >= t.min_level]
     if not eligible:
         return None
 
+    # Use tick offsets so each rng call produces a distinct value
+    _seq = 0
+
+    def _rng_int(lo: int, hi: int) -> int:
+        nonlocal _seq
+        _seq += 1
+        return rng.next_int(Domain.AI_DECISION, entity_id, tick * 100 + _seq, lo, hi)
+
     # Shuffle and pick first non-duplicate
-    rng_val = rng.next()
-    idx = rng_val % len(eligible)
+    idx = _rng_int(0, len(eligible) - 1)
     template = eligible[idx]
 
     # Pick target kind
     if template.target_kinds:
-        kind_idx = rng.next() % len(template.target_kinds)
+        kind_idx = _rng_int(0, len(template.target_kinds) - 1)
         target_kind = template.target_kinds[kind_idx]
     else:
         target_kind = ""
 
     # Determine count
     lo, hi = template.count_range
-    count = lo + (rng.next() % max(1, hi - lo + 1))
+    count = _rng_int(lo, hi)
 
     # Build quest ID
     suffix = target_kind or "explore"
@@ -242,11 +252,11 @@ def generate_quest(
 
     # Gold and XP rewards scale with count and level
     g_lo, g_hi = template.gold_range
-    gold = g_lo + (rng.next() % max(1, g_hi - g_lo + 1))
+    gold = _rng_int(g_lo, g_hi)
     gold = int(gold * (1.0 + hero_level * 0.1))
 
     x_lo, x_hi = template.xp_range
-    xp = x_lo + (rng.next() % max(1, x_hi - x_lo + 1))
+    xp = _rng_int(x_lo, x_hi)
     xp = int(xp * (1.0 + hero_level * 0.1))
 
     # Format title and description
@@ -257,8 +267,8 @@ def generate_quest(
     # Target position for EXPLORE quests
     target_pos = None
     if template.quest_type == QuestType.EXPLORE:
-        tx = 5 + (rng.next() % max(1, grid_width - 10))
-        ty = 5 + (rng.next() % max(1, grid_height - 10))
+        tx = _rng_int(5, max(6, grid_width - 5))
+        ty = _rng_int(5, max(6, grid_height - 5))
         target_pos = Vector2(tx, ty)
         title = f"Scout ({tx},{ty})"
         desc = f"Travel to coordinates ({tx},{ty}) and survey the area."

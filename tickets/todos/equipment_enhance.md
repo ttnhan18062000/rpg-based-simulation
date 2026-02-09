@@ -1,0 +1,12 @@
+- all entities should have ability to equip items, with better stats in their inventory
+- the hero have a house, which he can store items in it, have a cap but very large compared to inventory, they consider sell, store or throw away, this should in decision logic (probability) with current logic of thinking
+- the hero have a complex logics of whether they should use the money, they consider the current state of the hero, such as gold, inventory, house, etc.
+- the hero can purchase consumables at shop (add more consumables, potions, buffs, etc.)
+- the hero can purchase equipments at shop (add more equipments, armors, weapons, etc.)
+- the hero can purchase material at shop (add more material, tools, etc.)
+- the hero can learn skill with sufficient requirements (level, mastery, class, etc.)
+- adjust the thinking system of the hero, to justify the new abilities of using money, match with other goals, plans and thinkings (along with the current logic structure)
+- make sure you update the frontend to show the detail of the new logics
+- add treasure chest (different from loots) with rare loot, and it can be found in the world (rare spawn guarded by elite or boss monsters)
+- I think the way entity pick up items is somehow incorrect, revise it
+- I think the derived stats is calculated wrong (mostly about non-combat stats), revise it

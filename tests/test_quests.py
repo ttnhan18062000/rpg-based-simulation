@@ -19,15 +19,15 @@ def _make_entity(eid: int, level: int = 1, kind: str = "hero") -> Entity:
 
 
 class _FakeRNG:
-    """Deterministic fake RNG for testing."""
+    """Deterministic fake RNG for testing — mimics DeterministicRNG interface."""
     def __init__(self, values: list[int] | None = None):
         self._values = values or list(range(100))
         self._idx = 0
 
-    def next(self) -> int:
+    def next_int(self, domain: object, entity_id: int, tick: int, low: int, high: int) -> int:
         val = self._values[self._idx % len(self._values)]
         self._idx += 1
-        return val
+        return low + (val % max(1, high - low + 1))
 
 
 # ---------------------------------------------------------------------------
