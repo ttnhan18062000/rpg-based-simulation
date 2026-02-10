@@ -8,3 +8,7 @@
 - [BUG] when two entity both HUNT facing in the diagnoal adjacent, one decide to move bottom, other decide to move top, both want to reach with each other, but they result the same distant -> find a way to resolve this, ask me for the decision
 - [ENHANCE] entity's bag should show max capacity
 - [ENHANCE] the simulation maximum tick should extend to 50000 instead of just 1000
+- [EPIC] region level, enemy from far away from the town has high difficulty, making progression of the hero
+- [ENHANCE] mobs roaming should not be too far from its camp, not chasing play through the whole map, reference in the popular RPG games
+
+make sure to ask me for the decision
