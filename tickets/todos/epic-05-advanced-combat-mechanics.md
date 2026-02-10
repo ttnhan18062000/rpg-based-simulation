@@ -106,3 +106,11 @@ Inspired by: Final Fantasy Tactics positioning, Dark Souls stamina management, D
 - Backend: ~10 files modified
 - Frontend: ~3 files modified (combat animations, effect indicators)
 - Data: Combo registry, terrain combat mods, new ailment definitions
+
+---
+
+## Dev Notes (from dev_noted_features)
+
+> **[EPIC] combat? ranged combat?**
+
+F4 (Ranged Combat Positioning) is the highest-priority feature from this epic per developer request. Consider implementing F4 as a standalone deliverable before the full epic.

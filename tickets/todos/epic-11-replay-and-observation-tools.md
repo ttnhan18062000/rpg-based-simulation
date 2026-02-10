@@ -97,3 +97,13 @@ Inspired by: StarCraft replay system, League of Legends spectator mode, Factorio
 - Backend: ~6 files new/modified (replay recorder, playback endpoint, replay WorldLoop mode)
 - Frontend: ~8 files new/modified (timeline, graphs, heatmaps, tracking panel)
 - Config: Recording toggle, replay file path, playback speed
+
+---
+
+## Dev Notes (from dev_noted_features)
+
+> **[EPIC] rewind time to specific event:** InspectPanel > Events > click on event will rewind the world state into that event. The world is stopped at that moment, and user can:
+> - Continue from that point, reset all the world state to that point
+> - Back to the current time, exit the history view
+
+This maps to **F3 (Timeline Scrubbing)** + **F6 (Battle Replay)** but with a specific UX: clicking an event in the InspectPanel events tab triggers the rewind. This is a more integrated approach than a standalone timeline bar — the event log itself becomes the navigation. Consider implementing this specific flow as the MVP before the full timeline UI.

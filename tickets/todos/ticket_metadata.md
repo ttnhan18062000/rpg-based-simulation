@@ -1,0 +1,113 @@
+# Ticket Metadata
+
+Master index of all active tickets with priority, effort estimate, dependencies, and status.
+
+**Last updated:** 2025-02-11
+
+---
+
+## Legend
+
+| Column | Values |
+|--------|--------|
+| **Priority** | P0 (critical) · P1 (high) · P2 (medium) · P3 (low) |
+| **Effort** | XS (< 1h) · S (1–4h) · M (4–16h) · L (2–5d) · XL (1–2w) · XXL (2w+) |
+| **Status** | `needs-decision` · `ready` · `in-progress` · `done` |
+| **Type** | bug · enhance · adjust · design · epic |
+
+---
+
+## Bugs
+
+| ID | Ticket | Priority | Effort | Status | Dependencies |
+|----|--------|----------|--------|--------|-------------|
+| bug-01 | [Diagonal Adjacent HUNT Move Conflict](bug-01-diagonal-hunt-move-conflict.md) | P1 | S | needs-decision | — |
+| bug-02 | [Hero Keeps Looting When Full Bag](bug-02-hero-looting-full-bag.md) | P1 | S | needs-decision | — |
+
+## Enhancements
+
+| ID | Ticket | Priority | Effort | Status | Dependencies |
+|----|--------|----------|--------|--------|-------------|
+| enhance-01 | [Enrich Event Information](enhance-01-enrich-event-information.md) | P2 | M | ready | — |
+| enhance-02 | [Bag Max Capacity UI](enhance-02-bag-max-capacity-ui.md) | P3 | XS | ready | bug-02 (related) |
+| enhance-03 | [Extend Max Tick to 50000](enhance-03-extend-max-tick-limit.md) | P3 | XS | ready | epic-16 (verify perf first) |
+| enhance-04 | [Mob Roaming Leash Distance](enhance-04-mob-roaming-leash.md) | P1 | M | needs-decision | — |
+
+## Adjustments
+
+| ID | Ticket | Priority | Effort | Status | Dependencies |
+|----|--------|----------|--------|--------|-------------|
+| adjust-01 | [Action Speed Balance Review](adjust-01-action-speed-balance.md) | P2 | S | needs-decision | design-02 (related) |
+
+## Design Reviews
+
+| ID | Ticket | Priority | Effort | Status | Dependencies |
+|----|--------|----------|--------|--------|-------------|
+| design-01 | [Skill & Basic Attack Stat Scaling](design-01-skill-stat-scaling.md) | P1 | S | needs-decision | — |
+| design-02 | [Revise Ticking Mechanism](design-02-revise-ticking-mechanism.md) | P2 | M | needs-decision | — |
+
+## Epics (New)
+
+| ID | Ticket | Priority | Effort | Status | Dependencies |
+|----|--------|----------|--------|--------|-------------|
+| epic-15 | [Region Difficulty Scaling](epic-15-region-difficulty-scaling.md) | P1 | XL | ready | — |
+| epic-16 | [Performance Audit & Optimization](epic-16-performance-audit.md) | P2 | L | ready | — |
+
+## Epics (Existing — Updated)
+
+| ID | Ticket | Priority | Effort | Status | Dev Note |
+|----|--------|----------|--------|--------|----------|
+| epic-05 | [Advanced Combat Mechanics](epic-05-advanced-combat-mechanics.md) | P1 | XXL | ready | F4 (Ranged Combat) flagged as standalone priority |
+| epic-11 | [Replay & Observation Tools](epic-11-replay-and-observation-tools.md) | P2 | XXL | ready | Rewind-to-event UX added as MVP path |
+
+## Epics (Existing — Unchanged)
+
+| ID | Ticket | Priority | Effort |
+|----|--------|----------|--------|
+| epic-01 | [Dungeon System](epic-01-dungeon-system.md) | P3 | XXL |
+| epic-02 | [NPC & Social System](epic-02-npc-and-social-system.md) | P3 | XXL |
+| epic-03 | [Day/Night & Weather](epic-03-day-night-and-weather.md) | P3 | XL |
+| epic-04 | [Multi-Hero Party System](epic-04-multi-hero-party-system.md) | P2 | XXL |
+| epic-06 | [World Events & Invasions](epic-06-world-events-and-invasions.md) | P3 | XXL |
+| epic-07 | [Reputation & Faction Diplomacy](epic-07-reputation-and-faction-diplomacy.md) | P3 | XL |
+| epic-08 | [Transcendence & Endgame Classes](epic-08-transcendence-and-endgame-classes.md) | P3 | XL |
+| epic-09 | [Improved Pathfinding & Movement](epic-09-improved-pathfinding-and-movement.md) | P2 | XL |
+| epic-10 | [Enchantment & Item Progression](epic-10-enchantment-and-item-progression.md) | P3 | XL |
+| epic-12 | [AI Personality & Emergent Behavior](epic-12-ai-personality-and-emergent-behavior.md) | P2 | XXL |
+| epic-13 | [Ruins Exploration & Lore](epic-13-ruins-exploration-and-lore.md) | P3 | XXL |
+| epic-14 | [Frontend UX Improvements](epic-14-frontend-ux-improvements.md) | P2 | XL |
+
+---
+
+## Recommended Execution Order
+
+Tickets that need developer decision before work can start are marked. Suggested order for actionable items:
+
+### Phase 1 — Bugs & Quick Wins (needs-decision → ready → ship)
+
+1. **bug-01** — Diagonal HUNT conflict *(needs decision on resolution strategy)*
+2. **bug-02** — Looting when full bag *(needs decision on sell/drop behavior)*
+3. **enhance-02** — Bag capacity UI *(XS, can ship with bug-02)*
+4. **enhance-03** — Extend max tick *(XS config change)*
+
+### Phase 2 — Design Decisions (needs-decision)
+
+5. **design-01** — Skill stat scaling *(audit + propose, blocks combat epic)*
+6. **design-02** — Revise ticking mechanism *(audit + propose)*
+7. **adjust-01** — Action speed balance *(audit, related to design-02)*
+
+### Phase 3 — Gameplay Enhancements
+
+8. **enhance-04** — Mob roaming leash *(needs decision on radius values)*
+9. **enhance-01** — Enrich event info *(prerequisite for epic-11 replay)*
+10. **epic-15** — Region difficulty scaling *(core progression system)*
+
+### Phase 4 — Major Features
+
+11. **epic-05 F4** — Ranged combat *(standalone from full epic)*
+12. **epic-16** — Performance audit *(before scaling up)*
+13. **epic-11** — Replay & observation tools *(after enhance-01)*
+
+### Phase 5 — Long-term Epics
+
+14. Remaining epics (01–04, 06–10, 12–14) prioritized by developer preference

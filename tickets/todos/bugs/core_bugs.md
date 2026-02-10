@@ -1,1 +1,0 @@
-- hero keep looting when full bag -> should abaddon the action (goals) of looting and moving on (maybe return house to store or sell items)
