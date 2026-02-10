@@ -10,6 +10,7 @@ Phase cycle:
 from __future__ import annotations
 
 import logging
+import time
 from typing import TYPE_CHECKING
 
 from src.core.effects import EffectType, territory_debuff
@@ -131,6 +132,7 @@ class WorldLoop:
     def _step(self) -> None:
         """Execute one complete tick cycle."""
         tick = self._world.tick
+        t0 = time.perf_counter()
 
         # --- Phase 1: Scheduling ---
         self._phase_generators()
@@ -139,10 +141,14 @@ class WorldLoop:
         if not ready_entities:
             return
 
+        t1 = time.perf_counter()
+
         # --- Phase 2: Wait & Collect ---
         snapshot = Snapshot.from_world(self._world)
         self._worker_pool.dispatch(ready_entities, snapshot, self._action_queue)
         proposals = self._action_queue.drain()
+
+        t2 = time.perf_counter()
 
         # --- Phase 3: Conflict Resolution & Application ---
         applied = self._conflict_resolver.resolve(proposals, self._world)
@@ -156,6 +162,8 @@ class WorldLoop:
 
         # Heal heroes resting in town / camp
         self._heal_home_entities()
+
+        t3 = time.perf_counter()
 
         # --- Phase 4: Cleanup & Advancement ---
         self._phase_cleanup()
@@ -185,6 +193,15 @@ class WorldLoop:
         self._update_entity_memory()
         self._tick_quests()
         self._update_entity_goals()
+
+        t4 = time.perf_counter()
+
+        logger.debug(
+            "Tick %d: schedule=%.4fs collect=%.4fs resolve=%.4fs cleanup=%.4fs total=%.4fs entities=%d proposals=%d applied=%d",
+            tick,
+            t1 - t0, t2 - t1, t3 - t2, t4 - t3, t4 - t0,
+            len(ready_entities), len(proposals), len(applied),
+        )
 
         if self._recorder:
             self._recorder.record_tick(tick, applied, self._world)

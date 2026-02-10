@@ -53,6 +53,28 @@ serve-only: ## Start production server (assumes frontend already built)
 cli: ## Run headless simulation (200 ticks)
 	python -m src cli --ticks 200 --seed 42
 
+# ── Testing ──────────────────────────────────────────────
+
+test: ## Run all Python tests
+	python -m pytest tests/ -v --tb=short
+
+test-quick: ## Run fast tests only (skip slow integration)
+	python -m pytest tests/ -v --tb=short -m "not slow"
+
+test-cov: ## Run tests with coverage report
+	python -m pytest tests/ -v --tb=short --cov=src --cov-report=term-missing
+
+# ── Profiling ────────────────────────────────────────────
+
+profile: ## Run automated performance profile (500 ticks, prints report)
+	python scripts/profile_simulation.py --ticks 500 --seed 42
+
+profile-full: ## Run extended profile (2000 ticks, saves flamegraph-ready output)
+	python scripts/profile_simulation.py --ticks 2000 --seed 42 --cprofile profile_output.prof
+
+profile-memory: ## Run memory profiling (500 ticks)
+	python scripts/profile_simulation.py --ticks 500 --seed 42 --memory
+
 # ── Quality ──────────────────────────────────────────────
 
 lint: ## Run linters (frontend)

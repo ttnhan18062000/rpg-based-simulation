@@ -13,7 +13,7 @@ Master index of all active tickets with priority, effort estimate, dependencies,
 | **Priority** | P0 (critical) · P1 (high) · P2 (medium) · P3 (low) |
 | **Effort** | XS (< 1h) · S (1–4h) · M (4–16h) · L (2–5d) · XL (1–2w) · XXL (2w+) |
 | **Status** | `needs-decision` · `ready` · `in-progress` · `done` |
-| **Type** | bug · enhance · adjust · design · epic |
+| **Type** | bug · enhance · adjust · design · epic · infra |
 
 ---
 
@@ -45,6 +45,24 @@ Master index of all active tickets with priority, effort estimate, dependencies,
 |----|--------|----------|--------|--------|-------------|
 | design-01 | [Skill & Basic Attack Stat Scaling](design-01-skill-stat-scaling.md) | P1 | S | needs-decision | — |
 | design-02 | [Revise Ticking Mechanism](design-02-revise-ticking-mechanism.md) | P2 | M | needs-decision | — |
+
+## Infrastructure (Testing & Profiling)
+
+| ID | Ticket | Priority | Effort | Status | Dependencies |
+|----|--------|----------|--------|--------|-------------|
+| infra-01 | [Automated Testing Infrastructure](infra-01-automated-testing.md) | P0 | S | done | — |
+| infra-02 | [Performance Profiling Infrastructure](infra-02-performance-profiling.md) | P0 | S | done | — |
+
+**Automation commands:**
+
+| Command | What it does |
+|---------|-------------|
+| `make test` | Run all 296+ Python tests |
+| `make test-quick` | Run fast tests only (skip `@slow`) |
+| `make test-cov` | Run tests with coverage report |
+| `make profile` | 500-tick performance report (timing, phases, entity counts) |
+| `make profile-full` | 2000-tick profile + cProfile `.prof` dump |
+| `make profile-memory` | 500-tick profile with tracemalloc memory snapshot |
 
 ## Epics (New)
 
@@ -83,10 +101,15 @@ Master index of all active tickets with priority, effort estimate, dependencies,
 
 Tickets that need developer decision before work can start are marked. Suggested order for actionable items:
 
+### Phase 0 — Infrastructure (DONE)
+
+- ✅ **infra-01** — Automated testing (`make test`, deterministic replay, conflict resolver, inventory goals)
+- ✅ **infra-02** — Performance profiling (`make profile`, per-tick phase timing, memory profiling)
+
 ### Phase 1 — Bugs & Quick Wins (needs-decision → ready → ship)
 
-1. **bug-01** — Diagonal HUNT conflict *(needs decision on resolution strategy)*
-2. **bug-02** — Looting when full bag *(needs decision on sell/drop behavior)*
+1. **bug-01** — Diagonal HUNT conflict *(needs decision on resolution strategy)* — test coverage in `test_conflict_resolver.py`
+2. **bug-02** — Looting when full bag *(needs decision on sell/drop behavior)* — test coverage in `test_inventory_goals.py`
 3. **enhance-02** — Bag capacity UI *(XS, can ship with bug-02)*
 4. **enhance-03** — Extend max tick *(XS config change)*
 
