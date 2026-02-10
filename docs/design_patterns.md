@@ -1,6 +1,12 @@
 # Design Patterns & Extension Guide
 
-This document describes the OOP design patterns used in the RPG simulation engine and how to extend each system.
+Technical documentation for the OOP design patterns used in the simulation engine and how to extend each system.
+
+---
+
+## Overview
+
+The engine uses five core patterns to maintain extensibility and the Open/Closed Principle. Each system can be extended by adding new classes and registering them — without modifying existing code.
 
 ---
 
@@ -37,7 +43,7 @@ GoalScorer (ABC)
 
 ### How to Add a New Goal
 
-1. Create a new `GoalScorer` subclass (in `goals/scorers.py` or a new file):
+1. Create a `GoalScorer` subclass:
 
 ```python
 class QuestGoal(GoalScorer):
@@ -52,25 +58,21 @@ class QuestGoal(GoalScorer):
     def score(self, ctx: AIContext) -> float:
         if not ctx.actor.active_quest:
             return 0.0
-        return 0.6  # high priority when quest is active
+        return 0.6
 ```
 
-2. Register it in `goals/registry.py`:
+2. Register in `goals/registry.py`:
 
 ```python
-from src.ai.goals.scorers import QuestGoal
-
-def register_all_goals() -> None:
-    # ... existing goals ...
-    register_goal(QuestGoal())
+register_goal(QuestGoal())
 ```
 
-3. Add the corresponding `StateHandler` in `ai/states.py` for `AIState.QUEST`.
+3. Add a `StateHandler` in `ai/states.py` for the new state.
 
 ### Design Decisions
 
-- **Why not a dict of functions?** Classes allow properties (`name`, `target_state`), inheritance, and state (e.g., a goal could cache expensive calculations across ticks).
-- **Why a global registry?** Simplicity. For testing, clear and re-register. For mods, just call `register_goal()`.
+- **Classes over functions:** Allow properties (`name`, `target_state`), inheritance, and cached state across ticks.
+- **Global registry:** Simple. For testing, clear and re-register. For mods, call `register_goal()`.
 
 ---
 
@@ -99,43 +101,14 @@ DamageCalculator (ABC)
 
 ### How to Add a New Damage Type
 
-1. Add the enum value in `src/core/enums.py`:
-
-```python
-class DamageType:
-    PHYSICAL = 0
-    MAGICAL = 1
-    TRUE = 2      # new: ignores defense
-```
-
-2. Create the calculator in `src/actions/damage.py`:
-
-```python
-class TrueDamageCalculator(DamageCalculator):
-    @property
-    def damage_type(self) -> int:
-        return DamageType.TRUE
-
-    def resolve(self, attacker, defender):
-        return DamageContext(
-            atk_power=attacker.effective_atk(),
-            def_power=0,        # ignores defense
-            atk_mult=1.0,
-            def_mult=1.0,
-            train_action="attack",
-        )
-```
-
-3. Register it:
-
-```python
-DAMAGE_CALCULATORS[DamageType.TRUE] = TrueDamageCalculator()
-```
+1. Add enum value in `src/core/enums.py`
+2. Create a `DamageCalculator` subclass
+3. Register: `DAMAGE_CALCULATORS[DamageType.TRUE] = TrueDamageCalculator()`
 
 ### Design Decisions
 
-- **Why not a config dict?** Classes can override complex logic (e.g., HYBRID damage that splits PHY/MAG). A flat config can't express that.
-- **`DamageContext` dataclass**: Decouples resolution from application. Combat code only sees the context, not the calculator internals.
+- **Classes over config dicts:** Classes can override complex logic (e.g., HYBRID damage splitting PHY/MAG).
+- **`DamageContext` dataclass:** Decouples resolution from application. Combat code only sees the context.
 
 ---
 
@@ -150,36 +123,21 @@ The `EntityBuilder` provides a fluent API for constructing `Entity` instances. A
 ### Usage
 
 ```python
-# Hero spawn
 hero = (
     EntityBuilder(rng, eid, tick=0)
     .kind("hero")
     .at(pos)
     .home(town_center)
     .faction(Faction.HERO_GUILD)
-    .with_base_stats(hp=50, atk=10, def_=3, spd=10)
+    .with_base_stats(hp=50, atk=10, def_=3, spd=10, luck=3)
     .with_randomized_stats()
     .with_hero_class(HeroClass.WARRIOR)
     .with_race_skills("hero")
     .with_class_skills(HeroClass.WARRIOR, level=1)
-    .with_inventory(max_slots=20, weapon="iron_sword")
+    .with_inventory(max_slots=20, max_weight=100, weapon="iron_sword")
     .with_starting_items(["small_hp_potion"] * 3)
+    .with_home_storage(max_slots=30)
     .with_traits(race_prefix="hero")
-    .build()
-)
-
-# Mob spawn (generator)
-goblin = (
-    EntityBuilder(rng, eid, tick=tick)
-    .kind("goblin")
-    .at(pos)
-    .faction(Faction.GOBLIN_HORDE)
-    .tier(tier)
-    .with_base_stats(hp=base_hp, atk=base_atk, ...)
-    .with_existing_inventory(pre_built_inv)
-    .with_mob_attributes(attr_base, tier)
-    .with_race_skills("goblin")
-    .with_traits(race_prefix="goblin")
     .build()
 )
 ```
@@ -193,19 +151,14 @@ goblin = (
 | **Attributes** | `with_hero_class()`, `with_mob_attributes()`, `with_race_attributes()` |
 | **Skills** | `with_race_skills()`, `with_class_skills()` |
 | **Inventory** | `with_inventory()`, `with_existing_inventory()`, `with_equipment()`, `with_starting_items()` |
+| **Storage** | `with_home_storage()` |
 | **Traits** | `with_traits()` |
-| **Build** | `build()` → `Entity` |
-
-### How to Add a New Entity Type
-
-1. Define its stats, attributes, and skills.
-2. Chain the builder with the appropriate methods.
-3. For complex inventory, build it externally and pass via `with_existing_inventory()`.
+| **Build** | `build()` → `Entity` (calls `recalc_derived_stats`) |
 
 ### Design Decisions
 
-- **Why Builder over Factory?** The builder's fluent API handles the combinatorial explosion of optional features (class, skills, traits, inventory) without a parameter explosion.
-- **`with_existing_inventory()`**: Allows the generator to build complex tier/race-specific inventories externally while still using the builder for everything else.
+- **Builder over Factory:** Handles combinatorial explosion of optional features without parameter explosion.
+- **`with_existing_inventory()`:** Allows generator to build complex inventories externally while still using the builder for everything else.
 
 ---
 
@@ -220,34 +173,23 @@ Trait aggregation uses **typed dataclasses** instead of `dict[str, float]` for t
 | Dataclass | Purpose | Default Strategy |
 |-----------|---------|-----------------|
 | `UtilityBonus` | Additive modifiers for goal scoring | All fields start at `0.0` |
-| `TraitStatModifiers` | Passive stat modifiers | Multipliers start at `1.0`, additive at `0.0` |
+| `TraitStatModifiers` | Passive stat modifiers | Multipliers at `1.0`, additive at `0.0` |
 
 ### Usage
 
 ```python
-from src.core.traits import aggregate_trait_utility, aggregate_trait_stats
-
-# Typed access — IDE autocomplete works
 bonus = aggregate_trait_utility(entity.traits)
-score += bonus.combat  # not bonus.get("combat", 0.0)
+score += bonus.combat  # typed access, IDE autocomplete
 
 mods = aggregate_trait_stats(entity.traits)
-effective_atk = base_atk * mods.atk_mult  # not mods.get("atk_mult", 1.0)
+effective_atk = base_atk * mods.atk_mult
 ```
 
 ### How to Add a New Trait Effect
 
-1. Add the field to the appropriate dataclass:
-
-```python
-@dataclass(slots=True)
-class UtilityBonus:
-    # ... existing fields ...
-    quest: float = 0.0  # new goal bonus
-```
-
-2. Update `aggregate_trait_utility()` to sum the new field.
-3. Add the corresponding field to `TraitDef` and populate it in trait definitions.
+1. Add the field to the appropriate dataclass
+2. Update the aggregation function to sum the new field
+3. Add the field to `TraitDef` and populate in trait definitions
 
 ---
 
@@ -264,27 +206,113 @@ STATE_HANDLERS: dict[AIState, StateHandler] = {
     AIState.IDLE: IdleHandler(),
     AIState.WANDER: WanderHandler(),
     AIState.HUNT: HuntHandler(),
-    # ...
+    AIState.COMBAT: CombatHandler(),
+    # ... 18 total states
 }
 ```
 
 ### How to Add a New AI State
 
-1. Add the enum value in `src/core/enums.py`.
-2. Create a `StateHandler` subclass in `src/ai/states.py`.
-3. Register it in `STATE_HANDLERS`.
-4. (Optional) Create a `GoalScorer` subclass that maps to the new state.
+1. Add the enum value in `src/core/enums.py`
+2. Create a `StateHandler` subclass in `src/ai/states.py`
+3. Register it in `STATE_HANDLERS`
+4. (Optional) Create a `GoalScorer` that maps to the new state
 
 ---
 
-## 6. File Map (Refactored Modules)
+## 6. Pattern Summary
+
+| Pattern | Location | Open/Closed Principle |
+|---------|----------|----------------------|
+| **Plugin** (Goal Scorers) | `ai/goals/` | Add goal = add class + register. No existing code modified. |
+| **Strategy** (Damage Calc) | `actions/damage.py` | Add damage type = add subclass + register. No if/else. |
+| **Strategy** (State Handlers) | `ai/states.py` | Add AI state = add handler + register. |
+| **Builder** (Entity) | `core/entity_builder.py` | Fluent API absorbs new features without parameter explosion. |
+| **Typed Dataclass** (Traits) | `core/traits.py` | Type-safe aggregation. Add field = add to dataclass + aggregator. |
+
+---
+
+## 7. Metadata API — Shared Schemas
+
+**Location:** `src/core/` (shared models), `src/api/routes/metadata.py` (endpoints), `frontend/src/types/metadata.ts`, `frontend/src/contexts/MetadataContext.tsx`
+
+### Shared Pydantic Dataclasses (Single Source of Truth)
+
+Core game definitions are **pydantic dataclasses** (`pydantic.dataclasses.dataclass`) used by both the engine and the API:
+
+| Model | File | Used By |
+|-------|------|---------|
+| `ItemTemplate` | `core/items.py` | Game engine (IntEnum fields), API (serializes enums as strings) |
+| `SkillDef` | `core/classes.py` | Game engine (skill execution), API (skill metadata) |
+| `ClassDef` | `core/classes.py` | Game engine (class assignment), API (class views) |
+| `BreakthroughDef` | `core/classes.py` | Game engine (promotion logic), API (breakthrough data) |
+| `TraitDef` | `core/traits.py` | Game engine (trait effects), API (trait list) |
+
+Enum fields use `Annotated[EnumType, PlainSerializer(...)]` so they remain IntEnums at runtime but serialize as lowercase strings (e.g., `ItemType.WEAPON` → `"weapon"`).
+
+Mutable runtime types (`SkillInstance`, `TreasureChest`, `Building`, etc.) stay as stdlib `dataclass`.
+
+### Endpoints
+
+| Endpoint | Returns | Backend Source |
+|----------|---------|---------------|
+| `GET /metadata/enums` | Materials, AI states, tiers, rarities, item types, damage types, elements, entity roles, factions, entity kinds | `core/enums.py`, `core/faction.py` |
+| `GET /metadata/items` | All item templates — serialized directly from core `ItemTemplate` | `core/items.py` → `ITEM_REGISTRY` |
+| `GET /metadata/classes` | Class views, skills, breakthroughs, scaling grades, mastery tiers, race skills | `core/classes.py` |
+| `GET /metadata/traits` | All trait defs — serialized directly from core `TraitDef` | `core/traits.py` → `TRAIT_DEFS` |
+| `GET /metadata/attributes` | Attribute keys, labels, descriptions | Defined in route (9 core attributes) |
+| `GET /metadata/buildings` | Building type names and descriptions | Defined in route |
+| `GET /metadata/resources` | Resource node types per terrain | `core/resource_nodes.py` → `TERRAIN_RESOURCES` |
+| `GET /metadata/recipes` | Crafting recipes with materials and output | `core/buildings.py` → `RECIPES` |
+
+### Frontend Architecture
+
+```
+MetadataProvider (wraps App)
+  └─ fetches all 8 endpoints in parallel on mount
+  └─ builds derived lookup maps (itemMap, classMap, traitMap, etc.)
+  └─ provides GameMetadata via React context
+
+useMetadata() hook
+  └─ used by InspectPanel, ClassHallPanel, BuildingPanel, LootPanel, etc.
+  └─ returns typed GameMetadata with both raw data and lookup maps
+```
+
+### How to Add New Metadata
+
+1. Define the pydantic dataclass in `src/core/` with `Annotated` serializers for any enum fields
+2. Add a thin endpoint in `src/api/routes/metadata.py` that serializes via `TypeAdapter`
+3. Add the TypeScript type in `frontend/src/types/metadata.ts`
+4. Add the fetch call in `MetadataContext.tsx` and extend `GameMetadata`
+5. Use `useMetadata()` in components that need the data
+
+### Design Decisions
+
+- **Shared schemas** — core pydantic dataclasses are the single source of truth for both engine and API
+- **Annotated enum serializers** — `Annotated[ItemType, PlainSerializer(...)]` keeps IntEnum for game logic, strings for JSON
+- **Colors stay in frontend** — visual presentation is a UI concern, not game data
+- **Multiple small endpoints** — each endpoint is independently cacheable and focused
+- **Derived lookup maps** — `itemMap`, `classMap`, `traitMap` etc. are built once on load for O(1) access
+
+---
+
+## 8. File Map (Refactored Modules)
 
 ```
 src/
 ├── core/
 │   ├── entity_builder.py     # Builder pattern — fluent Entity construction
 │   ├── traits.py             # TraitDef, UtilityBonus, TraitStatModifiers
+│   ├── classes.py            # ClassDef, SkillDef, BreakthroughDef, registries
+│   ├── items.py              # ItemTemplate, ITEM_REGISTRY
+│   ├── buildings.py          # Recipe, RECIPES, building logic
+│   ├── resource_nodes.py     # TERRAIN_RESOURCES
+│   ├── faction.py            # Faction enum, FactionRegistry
 │   └── enums.py              # DamageType, Element, TraitType, AIState
+├── api/
+│   └── routes/
+│       ├── metadata.py       # 8 metadata endpoints (Pydantic schemas + handlers)
+│       └── __init__.py       # Router registration (includes metadata_router)
 ├── actions/
 │   ├── combat.py             # CombatAction (uses DamageCalculator strategy)
 │   └── damage.py             # DamageCalculator ABC + subclasses + registry
@@ -298,16 +326,20 @@ src/
 │       └── registry.py       # register_all_goals() — idempotent registration
 └── systems/
     └── generator.py          # EntityGenerator (uses EntityBuilder)
+
+frontend/src/
+├── types/
+│   ├── api.ts                # Simulation state types (Entity, Building, etc.)
+│   └── metadata.ts           # Metadata response types (GameMetadata, ClassEntry, etc.)
+├── contexts/
+│   └── MetadataContext.tsx    # MetadataProvider + useMetadata() hook
+├── constants/
+│   └── colors.ts             # Visual-only: tile/kind/state/rarity colors, CELL_SIZE
+├── components/
+│   ├── InspectPanel.tsx       # Entity inspector (uses useMetadata for items/classes/traits)
+│   ├── ClassHallPanel.tsx     # Class browser (uses useMetadata for class/skill data)
+│   ├── BuildingPanel.tsx      # Building details (uses useMetadata for items/recipes)
+│   └── LootPanel.tsx          # Loot display (uses useMetadata for item info)
+└── hooks/
+    └── useCanvas.ts           # Canvas rendering (visual colors only)
 ```
-
----
-
-## 7. Pattern Summary
-
-| Pattern | Location | Open/Closed Principle |
-|---------|----------|----------------------|
-| **Plugin** (Goal Scorers) | `ai/goals/` | Add goal = add class + register. No existing code modified. |
-| **Strategy** (Damage Calc) | `actions/damage.py` | Add damage type = add subclass + register. No if/else. |
-| **Strategy** (State Handlers) | `ai/states.py` | Add AI state = add handler + register. |
-| **Builder** (Entity) | `core/entity_builder.py` | Fluent API absorbs new entity features without parameter explosion. |
-| **Typed Dataclass** (Traits) | `core/traits.py` | Type-safe aggregation. Add field = add to dataclass + aggregator. |

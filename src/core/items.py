@@ -3,26 +3,35 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING
+from typing import Annotated, TYPE_CHECKING
+
+from pydantic import PlainSerializer
+from pydantic.dataclasses import dataclass as pydantic_dataclass
 
 from src.core.enums import DamageType, Element, ItemType, Rarity
 
 if TYPE_CHECKING:
     pass
 
+# Serialization helpers — enums serialize as lowercase name strings for the API
+_ItemTypeSer = Annotated[ItemType, PlainSerializer(lambda v: ItemType(v).name.lower(), return_type=str)]
+_RaritySer = Annotated[Rarity, PlainSerializer(lambda v: Rarity(v).name.lower(), return_type=str)]
+_DamageTypeSer = Annotated[int, PlainSerializer(lambda v: DamageType(v).name.lower(), return_type=str)]
+_ElementSer = Annotated[int, PlainSerializer(lambda v: Element(v).name.lower(), return_type=str)]
+
 
 # ---------------------------------------------------------------------------
 # Item template
 # ---------------------------------------------------------------------------
 
-@dataclass(frozen=True, slots=True)
+@pydantic_dataclass(frozen=True)
 class ItemTemplate:
     """Immutable blueprint for an item.  Instances are referenced by item_id."""
 
     item_id: str
     name: str
-    item_type: ItemType
-    rarity: Rarity
+    item_type: _ItemTypeSer
+    rarity: _RaritySer
     weight: float = 1.0
     # Equipment stat bonuses — physical
     atk_bonus: int = 0
@@ -36,8 +45,8 @@ class ItemTemplate:
     matk_bonus: int = 0
     mdef_bonus: int = 0
     # Weapon damage type and element
-    damage_type: int = DamageType.PHYSICAL  # DamageType enum
-    element: int = Element.NONE             # Element enum tag
+    damage_type: _DamageTypeSer = DamageType.PHYSICAL
+    element: _ElementSer = Element.NONE
     # Consumable effects
     heal_amount: int = 0
     mana_restore: int = 0

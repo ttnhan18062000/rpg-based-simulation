@@ -17,6 +17,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import IntEnum, unique
+from typing import Annotated
+
+from pydantic import PlainSerializer
+from pydantic.dataclasses import dataclass as pydantic_dataclass
 
 
 # ---------------------------------------------------------------------------
@@ -66,15 +70,21 @@ class SkillTarget(IntEnum):
 # Skill definition
 # ---------------------------------------------------------------------------
 
-@dataclass(frozen=True, slots=True)
+# Serialization helpers — enums serialize as lowercase name strings for the API
+_SkillTypeSer = Annotated[SkillType, PlainSerializer(lambda v: SkillType(v).name.lower(), return_type=str)]
+_SkillTargetSer = Annotated[SkillTarget, PlainSerializer(lambda v: SkillTarget(v).name.lower(), return_type=str)]
+_HeroClassSer = Annotated[HeroClass, PlainSerializer(lambda v: HeroClass(v).name.lower(), return_type=str)]
+
+
+@pydantic_dataclass(frozen=True)
 class SkillDef:
     """Immutable skill template/definition."""
     skill_id: str
     name: str
     description: str
-    skill_type: SkillType
-    target: SkillTarget
-    class_req: HeroClass       # NONE = race skill (no class required)
+    skill_type: _SkillTypeSer
+    target: _SkillTargetSer
+    class_req: _HeroClassSer       # NONE = race skill (no class required)
     level_req: int = 1
     gold_cost: int = 0         # Cost to learn at building
     cooldown: int = 5          # Ticks between uses
@@ -178,10 +188,10 @@ SCALING_MULTIPLIER: dict[str, float] = {
 }
 
 
-@dataclass(frozen=True, slots=True)
+@pydantic_dataclass(frozen=True)
 class ClassDef:
     """Immutable class template."""
-    class_id: HeroClass
+    class_id: _HeroClassSer
     name: str
     description: str
     # Attribute bonuses applied when class is chosen
@@ -205,7 +215,7 @@ class ClassDef:
     per_cap_bonus: int = 0
     cha_cap_bonus: int = 0
     # Breakthrough target
-    breakthrough_class: HeroClass = HeroClass.NONE
+    breakthrough_class: _HeroClassSer = HeroClass.NONE
     breakthrough_level: int = 10
     breakthrough_attr: str = ""      # e.g. "str" — which attribute must be >= threshold
     breakthrough_threshold: int = 30
@@ -226,11 +236,11 @@ class ClassDef:
     role: str = ''                   # e.g. "DPS", "Tank", "Support"
 
 
-@dataclass(frozen=True, slots=True)
+@pydantic_dataclass(frozen=True)
 class BreakthroughDef:
     """Breakthrough (promotion) definition."""
-    from_class: HeroClass
-    to_class: HeroClass
+    from_class: _HeroClassSer
+    to_class: _HeroClassSer
     level_req: int
     attr_req: str              # e.g. "str"
     attr_threshold: int

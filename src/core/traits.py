@@ -18,6 +18,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field, fields
 from typing import TYPE_CHECKING
 
+from pydantic.dataclasses import dataclass as pydantic_dataclass
+
 from src.core.enums import TraitType
 
 if TYPE_CHECKING:
@@ -28,7 +30,7 @@ if TYPE_CHECKING:
 # Trait definition
 # ---------------------------------------------------------------------------
 
-@dataclass(frozen=True, slots=True)
+@pydantic_dataclass(frozen=True)
 class TraitDef:
     """Immutable blueprint describing one trait's effects."""
 

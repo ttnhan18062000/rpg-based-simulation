@@ -10,6 +10,8 @@ The frontend is a **React 19 + TypeScript** single-page application built with *
 
 The production build is served at `/` by the FastAPI backend from `frontend/dist/`. During development, Vite's dev server proxies API requests to the backend.
 
+**Primary files:** `frontend/src/`
+
 ---
 
 ## Tech Stack
@@ -25,336 +27,315 @@ The production build is served at `/` by the FastAPI backend from `frontend/dist
 
 ---
 
-## Project Structure
+## Component Tree
 
 ```
-frontend/
-├── index.html              # Vite HTML entry point
-├── package.json            # Dependencies and scripts
-├── vite.config.ts          # Vite config (Tailwind plugin, API proxy, path alias)
-├── tsconfig.app.json       # TypeScript config with @/ path alias
-├── src/
-│   ├── main.tsx            # React DOM entry point
-│   ├── App.tsx             # Root layout (Header + Canvas + Sidebar)
-│   ├── index.css           # Tailwind imports + custom theme variables
-│   ├── lib/
-│   │   └── utils.ts        # cn() class-merge utility
-│   ├── types/
-│   │   └── api.ts          # TypeScript interfaces matching Pydantic schemas
-│   ├── constants/
-│   │   └── colors.ts       # Tile, entity, state colors; item stats registry
-│   ├── hooks/
-│   │   ├── useSimulation.ts  # API polling + React state management
-│   │   └── useCanvas.ts      # Canvas rendering (grid, entities, fog overlay)
-│   └── components/
-│       ├── Header.tsx        # Top bar with tick/alive/spawned/deaths/status
-│       ├── GameCanvas.tsx    # Three-layer canvas wrapper + hover tooltip
-│       ├── Sidebar.tsx       # Tab container (Info, Inspect, Events)
-│       ├── ControlPanel.tsx  # Start/Pause/Resume/Step/Reset + speed slider
-│       ├── EntityList.tsx    # Sorted entity list with HP bars
-│       ├── InspectPanel.tsx  # Entity inspector (stats, equip, goals, memory, entity events)
-│       ├── BuildingPanel.tsx # Building info (store inventory, recipes, guild intel)
-│       ├── LootPanel.tsx     # Ground item detail view
-│       ├── EventLog.tsx      # Scrollable combat/event log
-│       └── Legend.tsx        # Tile/entity color legend
+MetadataProvider              # Wraps App — fetches all 8 /metadata/* endpoints on mount
+└── App
+    ├── Header                # Status bar + page toggle (Simulation | API Docs)
+    ├── [Simulation view]
+    │   ├── GameCanvas        # Canvas wrapper + hover tooltip overlay
+    │   │   ├── grid-canvas   # Layer 1 (z-index: 1) — static tiles
+    │   │   ├── entity-canvas # Layer 2 (z-index: 2) — entities, items, buildings, HP bars
+    │   │   ├── overlay-canvas# Layer 3 (z-index: 3) — fog of war, ghost markers
+    │   │   ├── minimap-canvas# Top-left minimap with viewport rect + click-to-jump
+    │   │   ├── Locations     # Collapsible panel under minimap
+    │   │   └── HoverTooltip  # Fixed-position tooltip following cursor
+    │   └── Sidebar
+    │       ├── ControlPanel  # Always visible (start/pause/resume/step/reset + speed slider)
+    │       └── Tabs (context-dependent)
+    │           ├── [Default]     # Info (Legend + EntityList) + Events (EventLog)
+    │           ├── [Spectating]  # Inspect (InspectPanel — 6 tabs, uses useMetadata)
+    │           ├── [Building]    # BuildingPanel / ClassHallPanel (uses useMetadata)
+    │           └── [Loot]        # LootPanel (uses useMetadata)
+    └── [API Docs view]
+        └── ApiDocsPage       # Interactive OpenAPI explorer (fetches /openapi.json)
+            ├── Tag sidebar   # Grouped endpoint navigation + search
+            └── Endpoint cards# Method badge, path, params, schema, Try It Out
 ```
 
 ---
 
-## Architecture
+## Canvas Layers
 
-### Component Tree
-
-```
-App
-├── Header                  # Status bar (tick, alive, spawned, deaths)
-├── GameCanvas              # Canvas wrapper + hover tooltip overlay
-│   ├── grid-canvas         # Layer 1 (z-index: 1) — static tiles
-│   ├── entity-canvas       # Layer 2 (z-index: 2) — entities, ground items, buildings, HP bars
-│   ├── overlay-canvas      # Layer 3 (z-index: 3) — fog of war, ghost markers
-│   ├── minimap-canvas      # Top-left minimap with viewport rect + click-to-jump
-│   └── HoverTooltip        # Fixed-position tooltip following cursor
-└── Sidebar
-    ├── ControlPanel        # Always visible
-    └── Tabs (context-dependent)
-        ├── [Default]       # Info (Legend + EntityList) + Events (EventLog)
-        ├── [Spectating]    # Inspect (InspectPanel with entity events sub-section)
-        ├── [Building]      # Inspect → BuildingPanel (store/blacksmith/guild info)
-        └── [Loot]          # Inspect → LootPanel (ground item details)
-```
-
-### Canvas Layers
-
-Three stacked `<canvas>` elements render the world, managed via React refs in the `useCanvas` hook:
+Three stacked `<canvas>` elements managed via React refs in `useCanvas`:
 
 | Layer | Ref | Z-Index | Purpose |
 |-------|-----|---------|---------|
 | 1 | `gridRef` | 1 | Static tile grid (drawn once on init) |
-| 2 | `entityRef` | 2 | Ground items, entity sprites, HP bars, selection rings (redrawn every poll) |
-| 3 | `overlayRef` | 3 | Vision/memory fog overlay + ghost markers (redrawn when entity selected) |
+| 2 | `entityRef` | 2 | Ground items, resource nodes, entity sprites, HP bars, buildings, selection rings (redrawn every poll) |
+| 3 | `overlayRef` | 3 | Vision/memory fog overlay + ghost markers (redrawn on selection change) |
 
-The overlay canvas uses `pointer-events: none` so clicks pass through to the entity canvas beneath.
-
-### Sidebar Layout
-
-The sidebar uses a **context-dependent tabbed interface**. The **ControlPanel** (start/pause/resume/step/reset + speed slider) is always visible above the tab bar.
-
-| Context | Tabs Shown | Content |
-|---------|------------|--------|
-| **No selection** | Info + Events | Legend + entity list; global event log |
-| **Spectating entity** | Inspect (single tab) | Entity stats, equipment, goals, memory, entity-filtered events |
-| **Clicked building** | Inspect (building name) | BuildingPanel: store inventory / recipes / guild intel |
-| **Clicked loot** | Inspect ("Loot") | LootPanel: item details |
-
-When clicking an entity (on canvas or sidebar list), the tab auto-switches to Inspect. When clicking a building on the map, the tab shows the building's name. When the selection is cleared, tabs revert to Info + Events.
-
-### BuildingPanel
-
-The `BuildingPanel` component renders rich info panels based on building type:
-
-| Building | Panel Content |
-|----------|---------------|
-| **General Store** | Buy inventory with prices, item stats, sell price tiers by rarity |
-| **Blacksmith** | All 7 crafting recipes with materials, gold cost, output item stats |
-| **Adventurer's Guild** | Services (camp intel, material hints), material source guide |
+The overlay uses `pointer-events: none` so clicks pass through.
 
 ---
 
-## Key Hooks
+## Sidebar Layout
 
-### `useSimulation`
+Context-dependent tabbed interface. **ControlPanel** always visible above tab bar.
 
-Central state management hook. Handles:
-- One-time map fetch on mount
-- Polling `/api/v1/state` and `/api/v1/stats` every 80ms
-- Exposing reactive state: `entities`, `events`, `tick`, `aliveCount`, `status`, etc.
-- `sendControl(action)` and `setSpeed(tps)` callbacks
-- `selectEntity(id | null)` for entity selection
-
-```tsx
-const sim = useSimulation();
-// sim.entities, sim.tick, sim.status, sim.selectEntity(id), ...
-```
-
-### `useCanvas`
-
-Canvas rendering hook. Accepts `mapData`, `entities`, `groundItems`, `buildings`, `resourceNodes`, `selectedEntityId`, and `onEntityClick`. Returns refs for the three canvas layers, click/hover handlers, and `hoverInfo` state. Uses `useEffect` to:
-1. Draw the tile grid once when map data arrives
-2. Redraw ground items, resource nodes, and entities every time `entities`, `groundItems`, `resourceNodes`, or `selectedEntityId` changes
-3. Redraw the fog-of-war overlay and ghost markers when selection changes
-
-**Spectate vision**: When an entity is selected, only entities and resource nodes within that entity's vision range are rendered on the entity layer. Entities outside vision are hidden; remembered-but-not-visible entities appear as ghost markers on the overlay.
-
-**Hover detection**: `onMouseMove` resolves the grid cell under the cursor and checks entities first, then ground items, then resource nodes. Returns a `HoverInfo` object with screen coordinates and label text.
+| Context | Tabs | Content |
+|---------|------|---------|
+| No selection | Info + Events | Legend + entity list; global event log with count + clear button |
+| Spectating entity | Inspect (single tab) | 6-tab inspector panel |
+| Clicked building | Inspect (building name) | BuildingPanel or ClassHallPanel |
+| Clicked loot | Inspect ("Loot") | LootPanel with item details |
 
 ---
 
-## Inspect Panel
+## Inspect Panel (6 Tabs)
 
-When an entity is selected, the `InspectPanel` component renders these sections:
+When spectating an entity:
 
-### 1. Header & Stats
-- Entity name with tier badge and level
-- 2-column grid: Position, State, Faction, ATK/DEF, SPD/LUCK, CRIT/EVA, Gold
-- HP bar (color-coded: green > 50%, yellow > 25%, red below)
-- XP bar (purple fill)
+### Stats Tab
+- **Header** — HP/stamina bars, ATK/DEF/MATK/MDEF/SPD/Gold in colored grid
+- **Attributes** — 9-stat grid with caps/bars, hover tooltips showing full name, scaling, training progress
+- **Detailed Stats** — base + equipment + buff breakdown
+- **Equipment** — weapon, armor, accessory slots with item tooltips
+- **Inventory** — bag items as small bordered tags with hover tooltips
 
-### 2. Equipment
-Three equip slots displayed with shorthand unicode strings:
+### Class Tab
+- Class info, skills with damage type (PHY/MAG) and element badges, mastery bars
 
-| Slot | Format |
-|------|--------|
-| Weapon | `⚔ Iron Sword` |
-| Armor | `🛡 Chainmail` |
-| Accessory | `💍 Speed Ring` |
+### Quests Tab
+- Title, type badge, progress bar, gold/XP reward, completion checkmark
 
-Inventory bag items are shown as small bordered tags below equipment slots.
+### Events Tab
+- Timestamped event history filtered to spectated entity, category color-coded
 
-**Item hover tooltips**: Both equipment slots and inventory bag items use the `ItemWithTooltip` component. Hovering over any item shows a floating popup with:
+### Effects Tab
+- Active buffs/debuffs with stat modifier badges, HP per tick, remaining duration
+
+### AI Tab
+- Current AI state with description
+- Personality traits with colors/descriptions
+- Utility AI goals explanation
+- Craft target
+- Memory & vision info
+
+### Item Tooltips
+
+Both equipment slots and inventory items use `ItemWithTooltip`. Hover shows:
 - Item name (color-coded by rarity)
-- Item type and rarity
-- Stat bonuses (ATK, DEF, SPD, CRIT, EVA, LUCK, max HP)
+- Type and rarity
+- Stat bonuses (ATK, DEF, SPD, CRIT, EVA, LUCK, max HP, MATK, MDEF)
 - Consumable effects (heal amount, gold value)
 
-Item stats are defined in `ITEM_STATS` in `constants/colors.ts`, and rarity colors in `RARITY_COLORS`:
-```ts
-export const RARITY_COLORS: Record<string, string> = {
-  common: '#9ca3af',
-  uncommon: '#34d399',
-  rare: '#a78bfa',
-};
-```
-
-### 3. Goals & Thoughts
-Derived behavioral goals shown as a bulleted list with `◆` markers. Goals are computed server-side based on entity state, HP, level, inventory, exploration progress, and territory awareness (e.g. "Trespassing on enemy territory", "Weakened by hostile territory", "Intruder detected!").
-
-### 4. Craft Target (hero only)
-If the hero has a `craft_target`, a collapsible section shows:
-- Current crafting goal item name
-- Number of known recipes
-
-### 5. Memory & Vision
-- **Vision Range**: tiles (Manhattan distance)
-- **Tiles Explored**: count / total (percentage)
-- **Entities Remembered**: count of tracked entities
-- **Remembered entity list**: sorted by recency, showing kind, level, ATK, position, and whether currently visible or stale
-
-### 6. Entity Events (when spectating)
-A collapsible sub-section showing the last 20 events filtered to the spectated entity. Events are matched by entity ID appearing in the event message. This replaces the former separate entity events tab.
+Rarity colors: Common (`#9ca3af`), Uncommon (`#34d399`), Rare (`#a78bfa`).
 
 ---
 
 ## Vision Overlay
 
-The overlay canvas (rendered in `useCanvas`) draws a **fog-of-war** effect when an entity is selected:
-
-### Three Visibility States
+When spectating, the overlay canvas draws fog-of-war:
 
 | State | Visual | Description |
 |-------|--------|-------------|
-| **Visible** | Clear (no overlay) | Within current vision range |
-| **Remembered** | Semi-transparent dark (55% opacity) | Previously seen, stored in `terrain_memory` |
-| **Unknown** | Heavy dark fog (82% opacity) | Never explored |
+| Visible | Clear | Within current vision range |
+| Remembered | Semi-transparent (55% opacity) | Previously seen, in `terrain_memory` |
+| Unknown | Heavy fog (82% opacity) | Never explored |
 
 ### Vision Range Border
-A faint blue (`rgba(74, 158, 255, 0.3)`) outline is drawn around the edges of the visible area by checking each tile's 4 neighbors.
+Faint blue outline (`rgba(74, 158, 255, 0.3)`) around visible area edges.
 
 ### Ghost Entity Markers
-Remembered entities from the spectated entity's `entity_memory` are drawn on the overlay as ghosts, with specific filtering rules:
-- **Skip if currently visible**: If the entity is within the spectated entity's vision and present on the entity layer, no ghost is drawn.
-- **Skip if remembered position is in vision**: If the remembered position is within the current vision cone but the entity has moved away, no ghost is drawn (avoids stale markers in visible tiles).
-- **Skip if position unexplored**: Ghosts only appear on tiles in `terrain_memory`.
-
-Ghost markers render as:
-- Small semi-transparent circle in the entity's kind color
-- Dashed stroke border
-- `?` question mark label
-
-This gives the player an accurate sense of where enemies were **last seen** by the spectated entity.
+Remembered entities from `entity_memory` drawn as ghosts:
+- Skip if currently visible or if remembered position is in vision cone
+- Skip if position unexplored
+- Render: semi-transparent circle, dashed border, `?` label
 
 ---
 
-## Color Palette
+## Minimap
 
-All colors are defined in `src/constants/colors.ts` and the Tailwind theme in `src/index.css`.
+### Features
+- **Size:** `MINIMAP_SCALE = 2` px/tile, default 180×180 px container
+- **Resizable:** Drag bottom-right handle (80–400 px range)
+- **Separate zoom:** Scroll over minimap zooms minimap (1×–5×); scroll over world zooms world (0.5×–3×)
+- **Click to jump:** Click anywhere on minimap moves world camera
+- **Spectate filtering:** When spectating, entities/resources outside vision hidden on minimap
 
-### Tile Colors
-| Material | Value | Color | Hex |
-|----------|-------|-------|-----|
-| Floor | 0 | Dark navy | `#1a1d27` |
-| Wall | 1 | Grey | `#555b73` |
-| Water | 2 | Deep blue | `#1e3a5f` |
-| Town | 3 | Dark green | `#2d4a3e` |
-| Camp | 4 | Dark red | `#4a2d2d` |
-| Sanctuary | 5 | Blue-grey | `#2d3a4a` |
-| Forest | 6 | Dark green | `#1b3a1b` |
-| Desert | 7 | Sandy brown | `#3a3420` |
-| Swamp | 8 | Dark purple-grey | `#2a2a3a` |
-| Mountain | 9 | Stone grey | `#3a3a3a` |
+### Constants
 
-### Entity Colors (by kind)
-| Kind | Color | Hex |
-|------|-------|-----|
-| Hero | Blue | `#4a9eff` |
-| Goblin | Red | `#f87171` |
-| Goblin Scout | Orange | `#fb923c` |
-| Goblin Warrior | Deep Red | `#dc2626` |
-| Goblin Chief | Gold | `#fbbf24` |
-| Wolf | Silver | `#a0a0a0` |
-| Dire Wolf | Dark grey | `#808080` |
-| Alpha Wolf | Light silver | `#c0c0c0` |
-| Bandit | Sandy orange | `#e0a050` |
-| Bandit Archer | Dark sandy | `#d4943c` |
-| Bandit Chief | Bright sandy | `#f0c060` |
-| Skeleton | Bone white | `#b0b8c0` |
-| Zombie | Pale green | `#70a070` |
-| Lich | Purple | `#c080ff` |
-| Orc | Forest green | `#60a060` |
-| Orc Warrior | Dark green | `#408040` |
-| Orc Warlord | Lime green | `#80c040` |
+| Constant | Value | Description |
+|----------|-------|-------------|
+| `MINIMAP_SCALE` | 2 | Pixels per tile |
+| `MM_DEFAULT_W/H` | 180 | Default container size (px) |
+| `MM_MIN_SIZE` / `MM_MAX_SIZE` | 80 / 400 | Resize bounds |
+| `MM_MIN_ZOOM` / `MM_MAX_ZOOM` | 1.0 / 5.0 | Minimap zoom range |
+| `MIN_ZOOM` / `MAX_ZOOM` | 0.5 / 3.0 | World zoom range |
 
-### AI State Colors
-| State | Color | Hex |
-|-------|-------|-----|
-| IDLE | Grey | `#8b8fa8` |
-| WANDER | Green | `#34d399` |
-| HUNT | Yellow | `#fbbf24` |
-| COMBAT | Red | `#f87171` |
-| FLEE | Purple | `#a78bfa` |
-| RETURN_TO_TOWN | Blue | `#60a5fa` |
-| RESTING_IN_TOWN | Cyan | `#22d3ee` |
-| RETURN_TO_CAMP | Orange | `#f97316` |
-| GUARD_CAMP | Bright Red | `#ef4444` |
-| LOOTING | Lime | `#a3e635` |
-| ALERT | Coral Red | `#ff6b6b` |
-| VISIT_SHOP | Sky Blue | `#38bdf8` |
-| VISIT_BLACKSMITH | Amber | `#f59e0b` |
-| VISIT_GUILD | Indigo | `#818cf8` |
-| HARVESTING | Mint green | `#7dd3a0` |
+### Locations Panel
 
----
-
-### Item Types
-
-The `ITEM_STATS` registry in `constants/colors.ts` defines all item metadata for tooltips:
-
-| Type | Examples |
-|------|----------|
-| `weapon` | Wooden Club, Iron Sword, Steel Sword, Battle Axe, Enchanted Blade, Goblin Cleaver |
-| `armor` | Leather Vest, Chainmail, Iron Plate, Enchanted Robe, Goblin Guard |
-| `accessory` | Lucky Charm, Speed Ring, Evasion Amulet, Ring of Power |
-| `consumable` | Health potions (S/M/L), Gold pouches (S/M/L), Camp Treasure |
-| `material` | Wood, Leather, Iron Ore, Steel Bar, Enchanted Dust, Herb, Fiber, Dark Moss, Stone Block, Wolf Pelt, Wolf Fang, Bone Shard, Ectoplasm, Raw Gem, Glowing Mushroom |
-
-Rarity tiers: **Common** (grey), **Uncommon** (green), **Rare** (purple).
-
----
-
-## Ground Items (Loot)
-
-Dropped items appear on the map as green diamonds rendered on the entity canvas layer.
-
-- **Shape**: Small diamond (rotated square, `CELL_SIZE * 0.28`)
-- **Color**: Lime green (`#a3e635`) with a matching glow (`shadowBlur: 4`)
-- **Badge**: If a tile has multiple items, a white count badge is drawn
-- **Visibility**: When spectating, only loot within the selected entity's vision range is shown
-- **Hover**: Hovering shows either the single item name or "Loot bag (N items)"
-
-The API provides ground items via `WorldStateResponse.ground_items[]` as `GroundItemSchema { x, y, items[] }`.
+Collapsible panel under minimap showing:
+- **Buildings:** Store, Blacksmith, Guild, Class Hall, Inn — with position and color
+- **Tile clusters:** Camps, Sanctuaries, Ruins, Dungeons — detected via flood-fill with centroid coordinates
+- Click any entry to jump camera
 
 ---
 
 ## Entity Rendering
 
-Canvas rendering is handled imperatively in the `useCanvas` hook.
-
 ### Hero
-- **Shape**: Diamond (rotated square)
-- **Glow**: Golden shadow blur (`#fbbf24`, blur 6px)
-- **State border**: Colored outline matching AI state
-- **ID label**: Bold white monospace
+- **Shape:** Diamond (rotated square)
+- **Glow:** Golden shadow blur (`#fbbf24`, 6px)
+- **State border:** Colored outline matching AI state
+- **ID label:** Bold white monospace
 
-### Goblins / Mobs
-- **Shape**: Circle
-- **Size**: `CELL_SIZE * 0.35` radius
-- **State border**: Colored ring matching AI state
-- **ID label**: Semi-transparent white monospace
-- **Color**: Kind-specific from `KIND_COLORS` (wolves grey, bandits sandy, undead bone/green/purple, orcs green)
+### Mobs
+- **Shape:** Circle (`CELL_SIZE * 0.35` radius)
+- **Color:** Kind-specific from `KIND_COLORS`
+- **State border:** Colored ring matching AI state
+- **ID label:** Semi-transparent white monospace
+
+### Buildings
+- **Shape:** Colored square markers with letter labels
+- **Store:** S (blue), **Blacksmith:** B (amber), **Guild:** G (purple), **Class Hall:** C (violet), **Inn:** I (orange)
+- Also appear as colored dots on minimap
+
+### Ground Items
+- **Shape:** Small diamond (rotated square, `CELL_SIZE * 0.28`)
+- **Color:** Lime green (`#a3e635`) with glow
+- **Badge:** White count badge if multiple items on tile
 
 ### Resource Nodes
-- **Shape**: Small filled square with 1px border (inset 2px from cell edge)
-- **Available**: 50% opacity fill + solid 1px border in resource-type color
-- **Depleted**: Grey (`#4a5568`) at 30% opacity, no border
-- **Colors**: Each resource type has a unique color in `RESOURCE_COLORS` (e.g. herb_patch=mint, timber=brown, gem_deposit=purple)
-- **Hover**: Shows node name, remaining/max harvests, and yielded item name
-- **Minimap**: Small colored dots (green if available, grey if depleted)
+- **Available:** 50% opacity fill + 1px border in resource-type color
+- **Depleted:** Grey (`#4a5568`) at 30% opacity
+- **Hover:** Node name, remaining/max harvests, yielded item
 
-### Selection
-- White dashed circle ring (`CELL_SIZE * 0.55` radius)
+### Selection Ring
+- White dashed circle (`CELL_SIZE * 0.55` radius)
 
 ### HP Bars
 - 2px tall bar above each entity
 - Green (>50%) → Yellow (>25%) → Red (<25%)
+
+---
+
+## Color Palette
+
+All colors in `src/constants/colors.ts` and Tailwind theme in `src/index.css`.
+
+### Tile Colors
+
+| Material | Hex |
+|----------|-----|
+| Floor | `#1a1d27` |
+| Wall | `#555b73` |
+| Water | `#1e3a5f` |
+| Town | `#2d4a3e` |
+| Camp | `#4a2d2d` |
+| Sanctuary | `#2d3a4a` |
+| Forest | `#1b3a1b` |
+| Desert | `#3a3420` |
+| Swamp | `#2a2a3a` |
+| Mountain | `#3a3a3a` |
+| Road | `#5a5040` |
+| Bridge | `#4a6050` |
+| Ruins | `#4a4035` |
+| Dungeon | `#6a3040` |
+| Lava | `#8a3000` |
+
+### Entity Colors (by kind)
+
+| Kind | Hex |
+|------|-----|
+| Hero | `#4a9eff` |
+| Goblin | `#f87171` |
+| Goblin Scout | `#fb923c` |
+| Goblin Warrior | `#dc2626` |
+| Goblin Chief | `#fbbf24` |
+| Wolf | `#a0a0a0` |
+| Dire Wolf | `#808080` |
+| Alpha Wolf | `#c0c0c0` |
+| Bandit | `#e0a050` |
+| Bandit Archer | `#d4943c` |
+| Bandit Chief | `#f0c060` |
+| Skeleton | `#b0b8c0` |
+| Zombie | `#70a070` |
+| Lich | `#c080ff` |
+| Orc | `#60a060` |
+| Orc Warrior | `#408040` |
+| Orc Warlord | `#80c040` |
+
+### AI State Colors
+
+| State | Hex |
+|-------|-----|
+| IDLE | `#8b8fa8` |
+| WANDER | `#34d399` |
+| HUNT | `#fbbf24` |
+| COMBAT | `#f87171` |
+| FLEE | `#a78bfa` |
+| RETURN_TO_TOWN | `#60a5fa` |
+| RESTING_IN_TOWN | `#22d3ee` |
+| RETURN_TO_CAMP | `#f97316` |
+| GUARD_CAMP | `#ef4444` |
+| LOOTING | `#a3e635` |
+| ALERT | `#ff6b6b` |
+| VISIT_SHOP | `#38bdf8` |
+| VISIT_BLACKSMITH | `#f59e0b` |
+| VISIT_GUILD | `#818cf8` |
+| HARVESTING | `#7dd3a0` |
+| VISIT_CLASS_HALL | `#c084fc` |
+| VISIT_INN | `#fb923c` |
+
+---
+
+## Key Hooks & Contexts
+
+### `MetadataProvider` / `useMetadata()`
+
+**File:** `src/contexts/MetadataContext.tsx`
+
+Fetches all 8 `/api/v1/metadata/*` endpoints in parallel on mount. Builds derived lookup maps for O(1) access. Wraps the entire `App` in `main.tsx`.
+
+**Provided data:**
+- Raw data: `enums`, `items`, `classes`, `traits`, `attributes`, `buildings`, `resources`, `recipes`
+- Lookup maps: `itemMap`, `traitMap`, `skillMap`, `classMap`, `aiStateMap`, `buildingTypeMap`
+- Attribute helpers: `attrKeys`, `attrLabels`
+
+**Used by:** `InspectPanel`, `ClassHallPanel`, `BuildingPanel`, `LootPanel`
+
+### `useSimulation`
+
+Central state management:
+- One-time map fetch on mount
+- Polls `/api/v1/state` and `/api/v1/stats` every 80ms via `setTimeout`
+- Accumulates events (deduplicates by `tick:message` key)
+- Exposes: `entities`, `events`, `tick`, `status`, `buildings`, `resourceNodes`, `groundItems`
+- Callbacks: `sendControl(action)`, `setSpeed(tps)`, `selectEntity(id)`, `clearEvents()`
+
+### `useCanvas`
+
+Canvas rendering:
+- Draws tile grid once when map data arrives
+- Redraws entities/items/resources/buildings every poll cycle
+- Redraws fog overlay + ghosts on selection change
+- Spectate vision filtering: only entities within selected entity's vision rendered
+- Hover detection: resolves grid cell, checks entities → items → resources
+- Zoom-corrected coordinates for click and hover
+
+---
+
+## API Documentation Page
+
+**File:** `src/components/ApiDocsPage.tsx`
+
+An interactive API explorer accessible via the "API Docs" button in the header. Fetches `/openapi.json` from FastAPI and renders a custom UI.
+
+### Features
+
+- **Tag-grouped sidebar** — endpoints grouped by tag (State, Map, Control, Config, Metadata) with search
+- **Endpoint cards** — expandable cards with method badge (color-coded), path, description
+- **Parameter table** — name, location (path/query), type, required flag
+- **Schema viewer** — request body and response schema rendered as typed pseudocode with copy button
+- **Try It Out** — interactive request builder: fill parameters, edit body JSON, send real requests, view formatted response with status and timing
+- **External links** — links to Swagger UI (`/docs`) and ReDoc (`/redoc`) in the sidebar footer
+
+### Navigation
+
+The `Header` component provides a page toggle between `Simulation` and `API Docs` views. The active page is stored in `App` state as `PageView` (`'simulation' | 'api-docs'`).
 
 ---
 
@@ -368,13 +349,44 @@ Backend (WorldLoop) → Snapshot → API /state → useSimulation() hook
                             useCanvas()    InspectPanel         EventLog
                           (3 canvas +      (React +             (React
                            hover tooltip)   item tooltips)       component)
+
+Backend (core/) → /metadata/* → MetadataProvider (once on mount)
+                                       ↓
+                           GameMetadata context (itemMap, classMap, ...)
+                            ↓              ↓                ↓
+                     InspectPanel   ClassHallPanel    BuildingPanel
+
+Backend → /openapi.json → ApiDocsPage (on mount)
+                                ↓
+                    Parsed OpenAPI spec → endpoint cards + Try It Out
 ```
 
-### Polling Strategy
+---
 
-The `useSimulation` hook polls `GET /api/v1/state` and `GET /api/v1/stats` every 80ms using `setTimeout`. The map grid is fetched once on mount since tiles don't change at runtime. Events support delta fetching via `since_tick`.
+## Type Safety
 
-Each entity in the API response carries: stats, equipment, inventory_items, vision_range, terrain_memory, entity_memory, and goals — all needed for the Inspect panel and overlay rendering.
+Two type definition files:
+
+### `src/types/api.ts` — Simulation State
+
+Matches Pydantic schemas for dynamic runtime data:
+- `Entity` — full entity with stats, faction, equipment, memory, goals, skills, traits, quests
+- `Building` — building_id, name, x, y, building_type
+- `GameEvent` — tick + category + message
+- `GroundItem` — x, y, items[]
+- `ResourceNode` — node_id, resource_type, name, position, yields_item, remaining, is_available
+- `WorldState` — tick, alive_count, entities[], events[], ground_items[], buildings[], resource_nodes[]
+- `SimulationStats` — counters + running/paused flags
+- `MapData` — width, height, grid[][]
+
+### `src/types/metadata.ts` — Game Definitions
+
+Mirrors core pydantic dataclass schemas (the single source of truth):
+- `ItemEntry` — mirrors `ItemTemplate` (item_type/rarity/damage_type/element as strings)
+- `SkillDefEntry` — mirrors `SkillDef` (skill_type/target/class_req as strings)
+- `ClassEntry` — mirrors `ClassView` (grouped attr_bonuses, scaling, breakthrough)
+- `TraitEntry` — mirrors `TraitDef` (trait_type as number, all utility/stat fields)
+- `GameMetadata` — aggregated type with raw data + derived lookup maps
 
 ---
 
@@ -388,7 +400,7 @@ npm install
 npm run dev          # Starts Vite on http://localhost:5173
 ```
 
-Vite proxies `/api/*` requests to the backend at `http://127.0.0.1:8000`.
+Vite proxies `/api/*`, `/openapi.json`, `/docs`, and `/redoc` to `http://127.0.0.1:8000`.
 
 ### Production Build
 
@@ -397,16 +409,4 @@ cd frontend
 npm run build        # Outputs to frontend/dist/
 ```
 
-The FastAPI backend serves `frontend/dist/` as static files at `/`.
-
-### Type Safety
-
-All API response shapes are defined in `src/types/api.ts`, matching the Pydantic schemas in `src/api/schemas.py`:
-- `Entity` — full entity with stats, faction, equipment, memory, goals, known_recipes, craft_target
-- `Building` — building_id, name, x, y, building_type
-- `GameEvent` — tick + category + message
-- `GroundItem` — x, y, items[] (dropped loot on the ground)
-- `ResourceNode` — node_id, resource_type, name, x, y, terrain, yields_item, remaining, max_harvests, is_available, harvest_ticks
-- `WorldState` — tick, alive_count, entities[], events[], ground_items[], buildings[], resource_nodes[]
-- `SimulationStats` — counters + running/paused flags
-- `MapData` — width, height, grid[][]
+FastAPI serves `frontend/dist/` at `/`.

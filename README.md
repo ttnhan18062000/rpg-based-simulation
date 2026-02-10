@@ -17,14 +17,18 @@ src/
 │       ├── map.py            #     GET /api/v1/map
 │       ├── state.py          #     GET /api/v1/state, /stats
 │       ├── control.py        #     POST /api/v1/control/{action}, /speed
-│       └── config.py         #     GET /api/v1/config
-├── core/                    # Data models & world representation
+│       ├── config.py         #     GET /api/v1/config
+│       └── metadata.py       #     GET /api/v1/metadata/* (8 endpoints)
+├── core/                    # Data models & world representation (pydantic shared schemas)
 │   ├── enums.py             #   ActionType, AIState, Direction, Domain, Material
 │   ├── models.py            #   Vector2, Stats, Entity (with faction + effects)
 │   ├── faction.py           #   Faction, FactionRelation, FactionRegistry, TerritoryInfo
 │   ├── effects.py           #   StatusEffect, EffectType, factory helpers
 │   ├── buildings.py         #   Building model, shop/recipe/guild config, economy helpers
-│   ├── items.py             #   ItemTemplate, Inventory, ITEM_REGISTRY, LOOT_TABLES
+│   ├── items.py             #   ItemTemplate (pydantic dataclass), Inventory, ITEM_REGISTRY
+│   ├── classes.py           #   ClassDef, SkillDef, BreakthroughDef (pydantic dataclasses)
+│   ├── traits.py            #   TraitDef (pydantic dataclass), UtilityBonus, TraitRegistry
+│   ├── resource_nodes.py    #   ResourceNode, TERRAIN_RESOURCES
 │   ├── grid.py              #   Tile-based map
 │   ├── world_state.py       #   Mutable authoritative state
 │   └── snapshot.py          #   Immutable read-only view for workers
@@ -54,13 +58,20 @@ src/
 frontend/                    # React + Vite + TypeScript SPA
 ├── vite.config.ts           #   Build config + API proxy
 ├── src/
-│   ├── App.tsx              #   Root layout (Header + Canvas + Sidebar)
+│   ├── App.tsx              #   Root layout (Header + Canvas/ApiDocs + Sidebar)
 │   ├── hooks/               #   useSimulation (polling), useCanvas (rendering)
-│   ├── components/          #   Header, GameCanvas, Sidebar, InspectPanel, BuildingPanel, ...
-│   ├── types/               #   TypeScript interfaces for API schemas
-│   └── constants/           #   Colors, item display names, item stats
+│   ├── contexts/            #   MetadataContext (fetches + caches all metadata)
+│   ├── components/
+│   │   ├── ApiDocsPage.tsx  #   Interactive API documentation (OpenAPI explorer)
+│   │   ├── InspectPanel.tsx #   Entity inspector (uses metadata)
+│   │   ├── ClassHallPanel.tsx # Class browser (uses metadata)
+│   │   ├── BuildingPanel.tsx#   Building details (uses metadata)
+│   │   └── ...              #   Header, GameCanvas, Sidebar, LootPanel, etc.
+│   ├── types/
+│   │   ├── api.ts           #   Simulation state types
+│   │   └── metadata.ts      #   Metadata response types (mirrors core schemas)
+│   └── constants/           #   Visual-only: colors, icons, cell size
 └── dist/                    #   Production build output (gitignored)
-```
 
 ## Key Design Principles
 
@@ -193,7 +204,9 @@ See **[docs/faction_system.md](docs/faction_system.md)** for full details.
 
 ## REST API
 
-All endpoints are under `/api/v1/`.
+All endpoints are under `/api/v1/`. Interactive documentation available via the **API Docs** page in the frontend header, or at `/docs` (Swagger UI) and `/redoc` (ReDoc).
+
+### Simulation
 
 | Method | Endpoint                  | Description                                      |
 |--------|---------------------------|--------------------------------------------------|
@@ -204,15 +217,58 @@ All endpoints are under `/api/v1/`.
 | POST   | `/api/v1/control/{action}`| Lifecycle: `start`, `pause`, `resume`, `step`, `reset` |
 | POST   | `/api/v1/speed?tps=N`    | Set simulation speed (ticks per second)          |
 
+### Metadata (Game Definitions)
+
+These endpoints serialize **core pydantic dataclasses** directly — the single source of truth used by both the game engine and the frontend.
+
+| Method | Endpoint                       | Description                                      |
+|--------|--------------------------------|--------------------------------------------------|
+| GET    | `/api/v1/metadata/enums`       | Materials, AI states, tiers, rarities, factions, entity kinds |
+| GET    | `/api/v1/metadata/items`       | All item templates (stats, bonuses, rarity, type) |
+| GET    | `/api/v1/metadata/classes`     | Class defs, skills, breakthroughs, scaling, mastery tiers |
+| GET    | `/api/v1/metadata/traits`      | All personality trait definitions                 |
+| GET    | `/api/v1/metadata/attributes`  | 9 primary attribute definitions with descriptions |
+| GET    | `/api/v1/metadata/buildings`   | Building type names and descriptions              |
+| GET    | `/api/v1/metadata/resources`   | Resource node types per terrain                   |
+| GET    | `/api/v1/metadata/recipes`     | Crafting recipes with materials and output         |
+
+### API Documentation
+
+Three ways to explore the API:
+
+- **In-app API Docs page** — click "API Docs" in the header for a custom interactive explorer with Try It Out
+- **Swagger UI** — visit `/docs` for the standard OpenAPI interactive docs
+- **ReDoc** — visit `/redoc` for a clean read-only reference
+
+## Shared Schema Architecture
+
+Core game definitions are **pydantic dataclasses** that serve as the single source of truth for both the engine and the API:
+
+| Model | File | Purpose |
+|-------|------|--------|
+| `ItemTemplate` | `core/items.py` | All item properties — stats, rarity, type, effects |
+| `SkillDef` | `core/classes.py` | Skill templates — cost, cooldown, power, modifiers |
+| `ClassDef` | `core/classes.py` | Class templates — bonuses, scaling, breakthroughs |
+| `BreakthroughDef` | `core/classes.py` | Class promotions — requirements and bonuses |
+| `TraitDef` | `core/traits.py` | Personality traits — utility modifiers, stat multipliers |
+
+Enum fields use `Annotated[EnumType, PlainSerializer(...)]` — **IntEnums at runtime** for fast game logic, **lowercase strings in JSON** for the API. No duplicate schemas.
+
+See **[docs/design_patterns.md](docs/design_patterns.md)** §7 for full details.
+
 ## Documentation
 
-- **[docs/architecture.md](docs/architecture.md)** — Technical architecture (concurrency model, tick cycle, API layer, frontend)
+- **[docs/architecture.md](docs/architecture.md)** — Technical architecture (concurrency model, tick cycle, API layer)
 - **[docs/frontend.md](docs/frontend.md)** — Frontend tech stack, component tree, hooks, canvas rendering
-- **[docs/api_reference.md](docs/api_reference.md)** — REST API endpoints and schemas
-- **[docs/faction_system.md](docs/faction_system.md)** — Faction system, territory intrusion, status effects
-- **[docs/buildings_economy.md](docs/buildings_economy.md)** — Town buildings, shop, blacksmith, guild, crafting system
-- **[docs/terrains_resources.md](docs/terrains_resources.md)** — Terrain regions, resource nodes, new mob races, harvesting
-- **[docs/visual_proposal.md](docs/visual_proposal.md)** — Original API + visualization proposal
+- **[docs/api_reference.md](docs/api_reference.md)** — REST API endpoints and schemas (including metadata)
+- **[docs/design_patterns.md](docs/design_patterns.md)** — Design patterns, shared schemas, metadata API
+- **[docs/entities_and_factions.md](docs/entities_and_factions.md)** — Faction system, territory intrusion, status effects
+- **[docs/buildings_and_economy.md](docs/buildings_and_economy.md)** — Town buildings, shop, blacksmith, guild, crafting
+- **[docs/world_generation.md](docs/world_generation.md)** — Terrain regions, resource nodes, mob races
+- **[docs/attributes_and_classes.md](docs/attributes_and_classes.md)** — Attributes, classes, skills, breakthroughs
+- **[docs/items_and_inventory.md](docs/items_and_inventory.md)** — Items, equipment, inventory, loot
+- **[docs/combat_and_progression.md](docs/combat_and_progression.md)** — Combat system, leveling, damage
+- **[docs/ai_system.md](docs/ai_system.md)** — AI brain, goal evaluators, state handlers
 
 ## Requirements
 

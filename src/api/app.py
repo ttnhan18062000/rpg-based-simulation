@@ -43,9 +43,24 @@ def create_app(config: SimulationConfig | None = None) -> FastAPI:
 
     app = FastAPI(
         title="RPG Simulation Engine",
-        description="Deterministic Concurrent RPG Engine — Real-Time Visualization API",
+        description=(
+            "Deterministic Concurrent RPG Engine — Real-Time Visualization API.\n\n"
+            "## API Groups\n\n"
+            "- **State** — Live simulation state: entities, events, buildings, ground items\n"
+            "- **Map** — Static grid data (fetch once at startup)\n"
+            "- **Control** — Simulation lifecycle: start, pause, resume, step, reset\n"
+            "- **Config** — Read-only simulation configuration\n"
+            "- **Metadata** — Game definitions (items, classes, traits, skills, etc.) — single source of truth\n"
+        ),
         version="0.1.0",
         lifespan=lifespan,
+        openapi_tags=[
+            {"name": "State", "description": "Live simulation state polled by the frontend: entities, events, buildings, ground items, resource nodes."},
+            {"name": "Map", "description": "Static grid/map data. Fetched once at startup — the tile layout does not change during a run."},
+            {"name": "Control", "description": "Simulation lifecycle controls: start, pause, resume, single-step, and reset."},
+            {"name": "Config", "description": "Read-only simulation configuration parameters (world size, tick rate, hero settings, etc.)."},
+            {"name": "Metadata", "description": "All game definitions — items, classes, skills, traits, attributes, buildings, resources, recipes, enums. These are pydantic dataclasses from src/core/ serialized directly — the single source of truth for both engine and frontend."},
+        ],
     )
 
     # CORS — allow any origin in dev

@@ -1,36 +1,14 @@
 import { useState, useRef } from 'react';
 import { X, ChevronDown, ChevronRight, Swords, BookOpen, ScrollText, Brain, BarChart3, Sparkles } from 'lucide-react';
 import type { Entity, GameEvent, MapData } from '@/types/api';
-import { KIND_COLORS, STATE_COLORS, TIER_NAMES, itemName, hpColor, ITEM_STATS, RARITY_COLORS } from '@/constants/colors';
+import { KIND_COLORS, STATE_COLORS, hpColor, RARITY_COLORS } from '@/constants/colors';
+import { useMetadata } from '@/contexts/MetadataContext';
 
-const HERO_CLASS_NAMES: Record<string, string> = {
-  none: 'None', warrior: 'Warrior', ranger: 'Ranger', mage: 'Mage', rogue: 'Rogue',
-  champion: 'Champion', sharpshooter: 'Sharpshooter', archmage: 'Archmage', assassin: 'Assassin',
-  brute: 'Brute', scout: 'Scout', caster: 'Caster', tank: 'Tank', beast: 'Beast',
-};
 const HERO_CLASS_COLORS: Record<string, string> = {
   none: '#888', warrior: '#f87171', ranger: '#34d399', mage: '#818cf8', rogue: '#fbbf24',
   champion: '#ff4444', sharpshooter: '#22c55e', archmage: '#a78bfa', assassin: '#f59e0b',
   brute: '#ef4444', scout: '#10b981', caster: '#8b5cf6', tank: '#64748b', beast: '#d97706',
 };
-const HERO_CLASS_DESC: Record<string, string> = {
-  none: 'No class assigned.',
-  warrior: 'A frontline fighter specializing in strength and vitality.',
-  ranger: 'A swift scout with deadly precision and keen awareness.',
-  mage: 'A scholar of arcane arts, wielding intelligence and wisdom.',
-  rogue: 'A cunning fighter blending agility and strength for lethal strikes.',
-  champion: 'An elite warrior who has mastered the art of war.',
-  sharpshooter: 'A legendary marksman with unmatched precision.',
-  archmage: 'A supreme mage who commands arcane forces at will.',
-  assassin: 'A lethal shadow, striking with perfect precision.',
-  brute: 'A heavy melee fighter relying on raw strength and toughness.',
-  scout: 'A fast flanker with sharp senses and quick reflexes.',
-  caster: 'A magic-wielding creature channeling elemental or dark power.',
-  tank: 'A durable defender that absorbs punishment and holds ground.',
-  beast: 'A wild creature with natural agility and ferocious attacks.',
-};
-
-const MASTERY_TIERS = ['Novice', 'Apprentice', 'Adept', 'Expert', 'Master'];
 function masteryTier(m: number) {
   if (m >= 100) return 4;
   if (m >= 75) return 3;
@@ -39,40 +17,7 @@ function masteryTier(m: number) {
   return 0;
 }
 
-const SKILL_TARGET_LABELS: Record<string, string> = {
-  self: 'Self', single_enemy: 'Enemy', area_enemies: 'AoE Enemies', single_ally: 'Ally', area_allies: 'AoE Allies',
-};
-
 type InspectTab = 'stats' | 'class' | 'quests' | 'events' | 'ai' | 'effects';
-
-const ATTR_DESCRIPTIONS: Record<string, { full: string; scaling: string }> = {
-  STR: { full: 'Strength', scaling: 'ATK +0.5/pt, carry weight' },
-  AGI: { full: 'Agility', scaling: 'SPD +0.4, Crit +0.4%, Eva +0.3%' },
-  VIT: { full: 'Vitality', scaling: 'HP +2, DEF +0.3/pt' },
-  INT: { full: 'Intelligence', scaling: 'Skill power, XP gain +1%/pt, CD reduction' },
-  SPI: { full: 'Spirit', scaling: 'MATK +0.5/pt, mana scaling' },
-  WIS: { full: 'Wisdom', scaling: 'MDEF +0.3/pt, Luck +0.3, CD reduction' },
-  END: { full: 'Endurance', scaling: 'Stamina +2, HP regen' },
-  PER: { full: 'Perception', scaling: 'Vision range, detection, loot quality' },
-  CHA: { full: 'Charisma', scaling: 'Trade prices, morale, recruitment' },
-};
-
-const RECIPE_DATA: Record<string, { output: string; gold: number; materials: Record<string, number>; desc: string }> = {
-  craft_steel_sword: { output: 'steel_sword', gold: 60, materials: { iron_ore: 2, wood: 1 }, desc: 'A well-forged steel blade with improved balance.' },
-  craft_battle_axe: { output: 'battle_axe', gold: 90, materials: { iron_ore: 3, steel_bar: 1 }, desc: 'A heavy battle axe that hits hard but swings slow.' },
-  craft_enchanted_blade: { output: 'enchanted_blade', gold: 200, materials: { steel_bar: 2, enchanted_dust: 2 }, desc: 'A blade infused with magical energy.' },
-  craft_iron_plate: { output: 'iron_plate', gold: 70, materials: { iron_ore: 3, leather: 1 }, desc: 'Heavy iron plate armor. Strong defense.' },
-  craft_enchanted_robe: { output: 'enchanted_robe', gold: 150, materials: { leather: 2, enchanted_dust: 1 }, desc: 'A light robe enchanted for agility.' },
-  craft_ring_of_power: { output: 'ring_of_power', gold: 120, materials: { iron_ore: 1, enchanted_dust: 1 }, desc: 'A ring that amplifies attack and defense.' },
-  craft_evasion_amulet: { output: 'evasion_amulet', gold: 80, materials: { leather: 2, wood: 1 }, desc: 'An amulet for enhanced agility.' },
-  craft_wolf_cloak: { output: 'wolf_cloak', gold: 50, materials: { wolf_pelt: 2, leather: 1 }, desc: 'A light cloak sewn from wolf pelts.' },
-  craft_fang_necklace: { output: 'fang_necklace', gold: 45, materials: { wolf_fang: 2, fiber: 1 }, desc: 'A necklace that enhances critical strikes.' },
-  craft_desert_bow: { output: 'desert_bow', gold: 75, materials: { raw_gem: 1, fiber: 2 }, desc: 'A composite bow. Precise and deadly.' },
-  craft_bone_shield: { output: 'bone_shield', gold: 65, materials: { bone_shard: 3, dark_moss: 1 }, desc: 'A shield of fused bones. Sturdy.' },
-  craft_spectral_blade: { output: 'spectral_blade', gold: 180, materials: { ectoplasm: 2, enchanted_dust: 1 }, desc: 'A ghostly blade with ethereal precision.' },
-  craft_mountain_plate: { output: 'mountain_plate', gold: 160, materials: { stone_block: 3, iron_ore: 2 }, desc: 'Massive stone-reinforced plate armor.' },
-  craft_herbal_remedy: { output: 'herbal_remedy', gold: 15, materials: { herb: 3, glowing_mushroom: 1 }, desc: 'A natural healing draught.' },
-};
 
 const ELEMENT_COLORS: Record<string, string> = {
   none: '#9ca3af', fire: '#f87171', ice: '#60a5fa', lightning: '#fbbf24', dark: '#a78bfa', holy: '#fde68a',
@@ -94,6 +39,7 @@ interface InspectPanelProps {
 export function InspectPanel({ entity, mapData, events, onClose }: InspectPanelProps) {
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
   const [activeTab, setActiveTab] = useState<InspectTab>('stats');
+  const metadata = useMetadata();
 
   if (!entity) {
     return (
@@ -111,7 +57,8 @@ export function InspectPanel({ entity, mapData, events, onClose }: InspectPanelP
   const hpCol = hpColor(hpRatio);
   const xpRatio = entity.xp_to_next > 0 ? Math.min(1, entity.xp / entity.xp_to_next) : 0;
   const staminaRatio = entity.max_stamina > 0 ? Math.min(1, entity.stamina / entity.max_stamina) : 0;
-  const tierName = entity.kind === 'hero' ? '' : ` [${TIER_NAMES[entity.tier] || 'Basic'}]`;
+  const tierEntry = metadata.enums.tiers.find(t => t.id === entity.tier);
+  const tierName = entity.kind === 'hero' ? '' : ` [${tierEntry?.name ?? 'Basic'}]`;
   const classColor = HERO_CLASS_COLORS[entity.hero_class] || '#888';
   const terrainCount = entity.terrain_memory ? Object.keys(entity.terrain_memory).length : 0;
   const totalTiles = mapData ? mapData.width * mapData.height : 1024;
@@ -247,16 +194,12 @@ export function InspectPanel({ entity, mapData, events, onClose }: InspectPanelP
 /* ========================================================================= */
 
 function StatsTab({ entity, collapsed, toggle }: { entity: Entity; collapsed: Record<string, boolean>; toggle: (k: string) => void }) {
+  const { itemMap } = useMetadata();
   // Compute equipment bonuses from item stats
-  const equipAtk = (entity.weapon ? ITEM_STATS[entity.weapon]?.atk || 0 : 0)
-    + (entity.armor ? ITEM_STATS[entity.armor]?.atk || 0 : 0)
-    + (entity.accessory ? ITEM_STATS[entity.accessory]?.atk || 0 : 0);
-  const equipDef = (entity.weapon ? ITEM_STATS[entity.weapon]?.def || 0 : 0)
-    + (entity.armor ? ITEM_STATS[entity.armor]?.def || 0 : 0)
-    + (entity.accessory ? ITEM_STATS[entity.accessory]?.def || 0 : 0);
-  const equipSpd = (entity.weapon ? ITEM_STATS[entity.weapon]?.spd || 0 : 0)
-    + (entity.armor ? ITEM_STATS[entity.armor]?.spd || 0 : 0)
-    + (entity.accessory ? ITEM_STATS[entity.accessory]?.spd || 0 : 0);
+  const slots = [entity.weapon, entity.armor, entity.accessory];
+  const equipAtk = slots.reduce((s, id) => s + (id ? itemMap[id]?.atk_bonus || 0 : 0), 0);
+  const equipDef = slots.reduce((s, id) => s + (id ? itemMap[id]?.def_bonus || 0 : 0), 0);
+  const equipSpd = slots.reduce((s, id) => s + (id ? itemMap[id]?.spd_bonus || 0 : 0), 0);
 
   return (
     <>
@@ -444,9 +387,12 @@ function ElementalRow({ label, dmg, vuln, color }: { label: string; dmg: number;
 /* ========================================================================= */
 
 function ClassTab({ entity, classColor, collapsed, toggle }: { entity: Entity; classColor: string; collapsed: Record<string, boolean>; toggle: (k: string) => void }) {
-  const className = HERO_CLASS_NAMES[entity.hero_class] || entity.kind;
-  const classDesc = HERO_CLASS_DESC[entity.hero_class] || `A wild ${entity.kind}.`;
+  const { classMap, classes } = useMetadata();
+  const clsDef = classMap[entity.hero_class];
+  const className = clsDef?.name ?? entity.kind;
+  const classDesc = clsDef?.description ?? `A wild ${entity.kind}.`;
   const hasClass = entity.hero_class !== 'none' && !!entity.hero_class;
+  const masteryTierNames = classes.mastery_tiers.map(t => t.name);
 
   return (
     <>
@@ -479,7 +425,7 @@ function ClassTab({ entity, classColor, collapsed, toggle }: { entity: Entity; c
         <CollapsibleSection title={`Skills (${entity.skills.length})`} sectionKey="skills" collapsed={collapsed} toggle={toggle}>
           {entity.skills.map((sk, i) => {
             const tier = masteryTier(sk.mastery);
-            const tierLabel = MASTERY_TIERS[tier];
+            const tierLabel = masteryTierNames[tier] ?? 'Novice';
             const isPassive = sk.skill_type === 'passive';
             return (
               <SkillRow key={i} sk={sk} tier={tier} tierLabel={tierLabel} isPassive={isPassive} />
@@ -552,7 +498,7 @@ function SkillRow({ sk, tier, tierLabel, isPassive }: { sk: Entity['skills'][0];
         <div className="font-bold text-[11px] text-text-primary mb-0.5">{sk.name}</div>
         <div className="text-text-secondary mb-1">{sk.description}</div>
         <div className="flex flex-wrap gap-2 text-text-secondary">
-          <span>Target: {SKILL_TARGET_LABELS[sk.target] || sk.target}</span>
+          <span>Target: {sk.target.replace(/_/g, ' ')}</span>
           {!isPassive && <span>Power: {sk.power.toFixed(1)}x</span>}
           <span style={{ color: dmgColor }}>{sk.damage_type === 'magical' ? 'Magical' : 'Physical'}</span>
           {sk.element !== 'none' && <span style={{ color: elemColor }}>{elemLabel}</span>}
@@ -735,55 +681,21 @@ function EffectsTab({ entity }: { entity: Entity }) {
 /* Tab: AI                                                                    */
 /* ========================================================================= */
 
-const TRAIT_NAMES: Record<number, { name: string; desc: string; color: string }> = {
-  0: { name: 'Aggressive', desc: 'Higher combat utility, lower flee threshold', color: '#f87171' },
-  1: { name: 'Cautious', desc: 'Higher flee utility, prefers safe routes', color: '#60a5fa' },
-  2: { name: 'Brave', desc: 'Resists fleeing even at low HP', color: '#fbbf24' },
-  3: { name: 'Cowardly', desc: 'Flees earlier, avoids strong enemies', color: '#9ca3af' },
-  4: { name: 'Bloodthirsty', desc: 'Seeks combat, bonus crit chance', color: '#dc2626' },
-  5: { name: 'Greedy', desc: 'Prioritises loot and gold', color: '#fbbf24' },
-  6: { name: 'Generous', desc: 'Shares loot, lower sell threshold', color: '#34d399' },
-  7: { name: 'Charismatic', desc: 'Better trade prices, higher recruitment', color: '#f472b6' },
-  8: { name: 'Loner', desc: 'Avoids allies, prefers solo exploration', color: '#6b7280' },
-  9: { name: 'Diligent', desc: 'Faster interactions, lower rest need', color: '#34d399' },
-  10: { name: 'Lazy', desc: 'Slower interaction, higher rest utility', color: '#fb923c' },
-  11: { name: 'Curious', desc: 'Explores unknown areas more eagerly', color: '#60a5fa' },
-  12: { name: 'Berserker', desc: 'Bonus damage at low HP', color: '#dc2626' },
-  13: { name: 'Tactical', desc: 'Prefers skills over basic attacks', color: '#818cf8' },
-  14: { name: 'Resilient', desc: 'Faster HP regen, higher effective VIT', color: '#34d399' },
-  15: { name: 'Arcane Gifted', desc: 'Bonus MATK, higher skill utility', color: '#c084fc' },
-  16: { name: 'Spirit Touched', desc: 'Bonus MDEF, resist dark/holy elements', color: '#a78bfa' },
-  17: { name: 'Elementalist', desc: 'Bonus elemental damage', color: '#fb923c' },
-  18: { name: 'Keen-Eyed', desc: 'Bonus vision range, detects hidden enemies', color: '#2dd4bf' },
-  19: { name: 'Oblivious', desc: 'Reduced vision, higher focus on current task', color: '#9ca3af' },
-};
-
-const AI_STATE_DESCRIPTIONS: Record<string, string> = {
-  IDLE: 'Idle — waiting for the AI evaluator to pick a new goal.',
-  WANDER: 'Exploring and moving toward unexplored tiles to map the world.',
-  HUNT: 'Seeking and chasing enemies to engage in combat.',
-  COMBAT: 'Actively fighting an enemy in melee or ranged combat.',
-  FLEE: 'Fleeing from danger — HP is critically low or enemy is too strong.',
-  RETURN_TO_TOWN: 'Heading back to town to rest, trade, or resupply.',
-  RESTING_IN_TOWN: 'Resting in town — recovering HP and considering town activities.',
-  RETURN_TO_CAMP: 'Returning to camp to resume guard duties.',
-  GUARD_CAMP: 'Guarding the camp perimeter and watching for intruders.',
-  LOOTING: 'Picking up items from the ground or channeling a loot action.',
-  ALERT: 'Alert! An intruder has been detected — seeking and engaging the threat.',
-  VISIT_SHOP: 'Visiting the General Store to sell loot and buy supplies.',
-  VISIT_BLACKSMITH: 'At the Blacksmith — learning recipes or crafting equipment.',
-  VISIT_GUILD: 'At the Adventurer\'s Guild — gathering intel and accepting quests.',
-  HARVESTING: 'Channeling a harvest action on a nearby resource node.',
-  VISIT_CLASS_HALL: 'At the Class Hall — learning skills or attempting a class breakthrough.',
-  VISIT_INN: 'Resting at the Inn for rapid HP and stamina recovery.',
-  VISIT_HOME: 'At home — storing items or upgrading home storage.',
+// Trait colors — visual only, keyed by trait id
+const TRAIT_COLORS: Record<number, string> = {
+  0: '#f87171', 1: '#60a5fa', 2: '#fbbf24', 3: '#9ca3af', 4: '#dc2626',
+  5: '#fbbf24', 6: '#34d399', 7: '#f472b6', 8: '#6b7280', 9: '#34d399',
+  10: '#fb923c', 11: '#60a5fa', 12: '#dc2626', 13: '#818cf8', 14: '#34d399',
+  15: '#c084fc', 16: '#a78bfa', 17: '#fb923c', 18: '#2dd4bf', 19: '#9ca3af',
 };
 
 function AITab({ entity, terrainCount, totalTiles, explorePercent, collapsed, toggle }: {
   entity: Entity; terrainCount: number; totalTiles: number; explorePercent: string;
   collapsed: Record<string, boolean>; toggle: (k: string) => void;
 }) {
-  const stateDesc = AI_STATE_DESCRIPTIONS[entity.state] || 'Unknown AI state.';
+  const { traitMap, aiStateMap } = useMetadata();
+  const stateEntry = aiStateMap[entity.state];
+  const stateDesc = stateEntry?.description || 'Unknown AI state.';
 
   return (
     <>
@@ -804,13 +716,14 @@ function AITab({ entity, terrainCount, totalTiles, explorePercent, collapsed, to
             Personality traits influence AI goal evaluation, modifying how this entity prioritizes different actions.
           </div>
           {entity.traits.map((t, i) => {
-            const info = TRAIT_NAMES[t] || { name: `Trait #${t}`, desc: 'Unknown trait.', color: '#888' };
+            const tDef = traitMap[t];
+            const tColor = TRAIT_COLORS[t] || '#888';
             return (
               <div key={i} className="flex items-center gap-2 py-1 text-[11px] border-b border-border/30 last:border-0">
-                <span className="w-2 h-2 rounded-full shrink-0" style={{ background: info.color }} />
+                <span className="w-2 h-2 rounded-full shrink-0" style={{ background: tColor }} />
                 <div className="flex flex-col">
-                  <span className="font-semibold" style={{ color: info.color }}>{info.name}</span>
-                  <span className="text-[9px] text-text-secondary">{info.desc}</span>
+                  <span className="font-semibold" style={{ color: tColor }}>{tDef?.name ?? `Trait #${t}`}</span>
+                  <span className="text-[9px] text-text-secondary">{tDef?.description ?? 'Unknown trait.'}</span>
                 </div>
               </div>
             );
@@ -878,27 +791,29 @@ function AITab({ entity, terrainCount, totalTiles, explorePercent, collapsed, to
 /* ========================================================================= */
 
 function CraftTargetDetail({ entity }: { entity: Entity }) {
+  const { itemMap, recipes } = useMetadata();
   const recipeId = entity.craft_target;
   if (!recipeId) return null;
-  const recipe = RECIPE_DATA[recipeId];
+  const recipe = recipes.recipes.find(r => r.recipe_id === recipeId);
   if (!recipe) {
+    const fallbackName = itemMap[recipeId.replace('craft_', '')]?.name ?? recipeId;
     return (
       <div className="text-[11px] text-text-primary">
-        Working toward: <span className="font-semibold text-accent-yellow">{itemName(recipeId.replace('craft_', ''))}</span>
+        Working toward: <span className="font-semibold text-accent-yellow">{fallbackName}</span>
       </div>
     );
   }
 
-  const outputName = itemName(recipe.output);
-  const outputStats = ITEM_STATS[recipe.output];
-  const outputRarity = outputStats ? RARITY_COLORS[outputStats.rarity] || '#9ca3af' : '#fbbf24';
-  const hasGold = entity.gold >= recipe.gold;
+  const outputItem = itemMap[recipe.output_item];
+  const outputName = outputItem?.name ?? recipe.output_item;
+  const outputRarity = outputItem ? RARITY_COLORS[outputItem.rarity] || '#9ca3af' : '#fbbf24';
+  const hasGold = entity.gold >= recipe.gold_cost;
   const invItems = entity.inventory_items || [];
 
   // Check material availability
   const matEntries = Object.entries(recipe.materials).map(([matId, needed]) => {
     const have = invItems.filter(i => i === matId).length;
-    return { matId, needed, have, ok: have >= needed };
+    return { matId, needed: needed as number, have, ok: have >= needed };
   });
   const allMatsReady = matEntries.every(m => m.ok) && hasGold;
 
@@ -912,13 +827,12 @@ function CraftTargetDetail({ entity }: { entity: Entity }) {
           </span>
         )}
       </div>
-      <div className="text-[10px] text-text-secondary mb-2">{recipe.desc}</div>
 
       {/* Gold cost */}
       <div className="flex items-center justify-between text-[11px] py-0.5 border-b border-border/30">
         <span className="text-text-secondary">Gold Cost</span>
         <span className={`font-semibold ${hasGold ? 'text-accent-yellow' : 'text-accent-red'}`}>
-          {entity.gold} / {recipe.gold}g {hasGold ? '\u2713' : '\u2717'}
+          {entity.gold} / {recipe.gold_cost}g {hasGold ? '\u2713' : '\u2717'}
         </span>
       </div>
 
@@ -928,7 +842,7 @@ function CraftTargetDetail({ entity }: { entity: Entity }) {
       </div>
       {matEntries.map(({ matId, needed, have, ok }) => (
         <div key={matId} className="flex items-center justify-between text-[11px] py-0.5">
-          <span className="text-text-primary">{itemName(matId)}</span>
+          <span className="text-text-primary">{itemMap[matId]?.name ?? matId}</span>
           <span className={`font-semibold tabular-nums ${ok ? 'text-accent-green' : 'text-accent-red'}`}>
             {have} / {needed} {ok ? '\u2713' : '\u2717'}
           </span>
@@ -1095,8 +1009,9 @@ function EquipSlot({ label, value }: { label: string; value: string | null }) {
 function ItemWithTooltip({ itemId }: { itemId: string }) {
   const [show, setShow] = useState(false);
   const ref = useRef<HTMLSpanElement>(null);
-  const stats = ITEM_STATS[itemId];
-  const rarityColor = stats ? RARITY_COLORS[stats.rarity] || '#9ca3af' : '#9ca3af';
+  const { itemMap } = useMetadata();
+  const item = itemMap[itemId];
+  const rarityColor = item ? RARITY_COLORS[item.rarity] || '#9ca3af' : '#9ca3af';
 
   return (
     <span
@@ -1105,23 +1020,25 @@ function ItemWithTooltip({ itemId }: { itemId: string }) {
       onMouseEnter={() => setShow(true)}
       onMouseLeave={() => setShow(false)}
     >
-      {itemName(itemId)}
-      <FixedTooltip triggerRef={ref} show={show && !!stats} width="192px">
+      {item?.name ?? itemId}
+      <FixedTooltip triggerRef={ref} show={show && !!item} width="192px">
         <span className="block font-bold text-[11px] mb-1" style={{ color: rarityColor }}>
-          {stats?.name}
+          {item?.name}
         </span>
         <span className="block text-text-secondary capitalize mb-1">
-          {stats?.type} &middot; <span style={{ color: rarityColor }}>{stats?.rarity}</span>
+          {item?.item_type} &middot; <span style={{ color: rarityColor }}>{item?.rarity}</span>
         </span>
-        {stats?.atk ? <span className="block text-accent-red">ATK +{stats.atk}</span> : null}
-        {stats?.def ? <span className="block text-accent-blue">DEF +{stats.def}</span> : null}
-        {stats?.spd ? <span className="block text-accent-green">SPD {stats.spd > 0 ? '+' : ''}{stats.spd}</span> : null}
-        {stats?.maxHp ? <span className="block text-accent-green">HP +{stats.maxHp}</span> : null}
-        {stats?.crit ? <span className="block text-accent-yellow">CRIT +{stats.crit}%</span> : null}
-        {stats?.evasion ? <span className="block text-accent-purple">EVA +{stats.evasion}%</span> : null}
-        {stats?.luck ? <span className="block text-accent-yellow">LUCK +{stats.luck}</span> : null}
-        {stats?.heal ? <span className="block text-accent-green">Heals {stats.heal} HP</span> : null}
-        {stats?.gold ? <span className="block text-accent-yellow">Worth {stats.gold} gold</span> : null}
+        {item?.atk_bonus ? <span className="block text-accent-red">ATK +{item.atk_bonus}</span> : null}
+        {item?.def_bonus ? <span className="block text-accent-blue">DEF +{item.def_bonus}</span> : null}
+        {item?.spd_bonus ? <span className="block text-accent-green">SPD {item.spd_bonus > 0 ? '+' : ''}{item.spd_bonus}</span> : null}
+        {item?.max_hp_bonus ? <span className="block text-accent-green">HP +{item.max_hp_bonus}</span> : null}
+        {item?.crit_rate_bonus ? <span className="block text-accent-yellow">CRIT +{(item.crit_rate_bonus * 100).toFixed(0)}%</span> : null}
+        {item?.evasion_bonus ? <span className="block text-accent-purple">EVA +{(item.evasion_bonus * 100).toFixed(0)}%</span> : null}
+        {item?.luck_bonus ? <span className="block text-accent-yellow">LUCK +{item.luck_bonus}</span> : null}
+        {item?.matk_bonus ? <span className="block text-accent-purple">MATK +{item.matk_bonus}</span> : null}
+        {item?.mdef_bonus ? <span className="block text-accent-blue">MDEF +{item.mdef_bonus}</span> : null}
+        {item?.heal_amount ? <span className="block text-accent-green">Heals {item.heal_amount} HP</span> : null}
+        {item?.gold_value ? <span className="block text-accent-yellow">Worth {item.gold_value} gold</span> : null}
       </FixedTooltip>
     </span>
   );
@@ -1130,10 +1047,11 @@ function ItemWithTooltip({ itemId }: { itemId: string }) {
 function AttrField({ label, value, cap, frac, color }: { label: string; value: number; cap?: number; frac?: number; color: string }) {
   const [hover, setHover] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const { attributes } = useMetadata();
   const ratio = cap && cap > 0 ? Math.min(1, value / cap) : 0;
   const fracPct = frac != null ? Math.min(frac, 1.0) * 100 : 0;
   const atCap = cap != null && value >= cap;
-  const attrDesc = ATTR_DESCRIPTIONS[label];
+  const attrDef = attributes.attributes.find(a => a.label === label);
 
   return (
     <div
@@ -1156,10 +1074,10 @@ function AttrField({ label, value, cap, frac, color }: { label: string; value: n
       {/* Hover tooltip showing description and training progression */}
       <FixedTooltip triggerRef={ref} show={hover} width="192px">
         <div className="font-bold text-[11px] mb-0.5" style={{ color }}>
-          {attrDesc ? attrDesc.full : label}
+          {attrDef ? label : label}
         </div>
-        {attrDesc && (
-          <div className="text-[9px] text-accent-blue mb-1">{attrDesc.scaling}</div>
+        {attrDef && (
+          <div className="text-[9px] text-accent-blue mb-1">{attrDef.description}</div>
         )}
         <div className="text-text-secondary mb-1">
           {value}{cap ? ` / ${cap}` : ''} {atCap ? <span className="text-accent-yellow">(MAX)</span> : ''}

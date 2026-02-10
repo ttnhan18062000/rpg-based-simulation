@@ -498,14 +498,10 @@ export function useCanvas(
     // Check buildings
     const bldg = buildings.find(b => b.x === gx && b.y === gy);
     if (bldg) {
-      const bNames: Record<string, string> = {
-        store: 'Store', blacksmith: 'Blacksmith', guild: 'Guild',
-        class_hall: 'Class Hall', inn: 'Inn',
-      };
       setHoverInfo({
         screenX: evt.clientX,
         screenY: evt.clientY,
-        label: `${bNames[bldg.building_type] || bldg.building_type} — ${bldg.name}`,
+        label: `${bldg.name}`,
       });
       return;
     }

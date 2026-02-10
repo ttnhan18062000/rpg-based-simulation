@@ -1,22 +1,14 @@
-# REST API Reference
+# API Reference
 
-Technical documentation for all REST API endpoints, request/response schemas, and data fields.
+Technical documentation for the REST API endpoints, request/response schemas, and data contracts.
 
 ---
 
 ## Overview
 
-The simulation exposes a REST API via FastAPI, served by default at `http://127.0.0.1:8000`. The frontend polls these endpoints to render the simulation. All responses are JSON.
+The backend exposes a REST API via **FastAPI** under the `/api/v1` prefix. The frontend polls state endpoints every ~80ms. Static data (map grid) is fetched once on mount.
 
-**Primary files**: `src/api/routes/state.py`, `src/api/routes/control.py`, `src/api/routes/map.py`, `src/api/schemas.py`
-
----
-
-## Base URL
-
-```
-/api/v1
-```
+**Primary files:** `src/api/routes/state.py`, `src/api/schemas.py`, `src/api/app.py`
 
 ---
 
@@ -24,78 +16,62 @@ The simulation exposes a REST API via FastAPI, served by default at `http://127.
 
 ### GET /api/v1/map
 
-Returns the static tile grid. Called once on frontend init.
+Fetch the static tile grid (called once at startup).
 
-**Response**: `MapResponse`
+**Response:**
 
 ```json
 {
-    "width": 32,
-    "height": 32,
-    "grid": [[0, 0, 1, ...], ...]
+  "width": 128,
+  "height": 128,
+  "grid": [[0, 0, 1, ...], ...]
 }
 ```
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `width` | int | Grid width in tiles |
-| `height` | int | Grid height in tiles |
-| `grid` | int[][] | 2D array of Material enum values (row-major: `grid[y][x]`) |
-
-**Material values**: 0=Floor, 1=Wall, 2=Water, 3=Town, 4=Camp, 5=Sanctuary, 6=Forest, 7=Desert, 8=Swamp, 9=Mountain
+Grid values correspond to `Material` enum (0=FLOOR, 1=WALL, ..., 14=LAVA). See `world_generation.md` for full list.
 
 ---
 
 ### GET /api/v1/state
 
-Returns current world state: entities and events. Polled every ~80ms by the frontend.
+Polled by the UI to get the current simulation state.
 
-**Query Parameters**:
+**Query Parameters:**
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `since_tick` | int | 0 | Only return events since this tick |
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `since_tick` | int (optional) | Only return events newer than this tick |
 
-**Response**: `WorldStateResponse`
+**Response: `WorldStateResponse`**
 
 ```json
 {
-    "tick": 150,
-    "alive_count": 12,
-    "entities": [ ... ],
-    "events": [ ... ],
-    "ground_items": [ ... ],
-    "buildings": [ ... ],
-    "resource_nodes": [ ... ]
+  "tick": 405,
+  "alive_count": 42,
+  "entities": [ EntitySchema, ... ],
+  "events": [ EventSchema, ... ],
+  "ground_items": [ GroundItemSchema, ... ],
+  "buildings": [ BuildingSchema, ... ],
+  "resource_nodes": [ ResourceNodeSchema, ... ],
+  "treasure_chests": [ TreasureChestSchema, ... ]
 }
 ```
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `tick` | int | Current simulation tick |
-| `alive_count` | int | Number of alive entities |
-| `entities` | EntitySchema[] | All alive entities with full data |
-| `events` | EventSchema[] | Events since `since_tick` |
-| `ground_items` | GroundItemSchema[] | Dropped loot on the ground |
-| `buildings` | BuildingSchema[] | Town buildings (store, blacksmith, guild) |
-| `resource_nodes` | ResourceNodeSchema[] | All resource nodes with availability state |
 
 ---
 
 ### GET /api/v1/stats
 
-Returns simulation metadata and control state.
+Simulation-level statistics and counters.
 
-**Response**: `SimulationStats`
+**Response: `SimulationStats`**
 
 ```json
 {
-    "tick": 150,
-    "alive_count": 12,
-    "total_spawned": 25,
-    "total_deaths": 13,
-    "running": true,
-    "paused": false
+  "total_spawned": 150,
+  "total_deaths": 108,
+  "total_kills": 108,
+  "running": true,
+  "paused": false
 }
 ```
 
@@ -103,25 +79,7 @@ Returns simulation metadata and control state.
 
 ### GET /api/v1/config
 
-Returns the simulation configuration parameters.
-
-**Response**: `SimulationConfigResponse`
-
-```json
-{
-    "world_seed": 42,
-    "grid_width": 32,
-    "grid_height": 32,
-    "max_ticks": 1000,
-    "num_workers": 4,
-    "initial_entity_count": 10,
-    "generator_spawn_interval": 20,
-    "generator_max_entities": 30,
-    "vision_range": 6,
-    "flee_hp_threshold": 0.3,
-    "tick_rate": 0.05
-}
-```
+Returns the current `SimulationConfig` values as a flat JSON object.
 
 ---
 
@@ -129,272 +87,454 @@ Returns the simulation configuration parameters.
 
 Control the simulation lifecycle.
 
+**Actions:**
+
 | Action | Description |
 |--------|-------------|
-| `start` | Start the simulation (builds world if needed) |
-| `pause` | Pause the simulation loop |
+| `start` | Begin simulation |
+| `pause` | Pause the loop |
 | `resume` | Resume from pause |
-| `step` | Execute a single tick (while paused) |
-| `reset` | Stop and rebuild the world from scratch |
+| `step` | Advance exactly one tick (while paused) |
+| `reset` | Rebuild world from scratch |
 
-**Response**: `ControlResponse`
+**Response:** `{ "status": "ok" }`
+
+---
+
+### POST /api/v1/speed
+
+Set the simulation speed (ticks per second).
+
+**Request Body:**
+
+```json
+{ "tps": 10 }
+```
+
+**Response:** `{ "status": "ok", "tps": 10 }`
+
+---
+
+### POST /api/v1/clear_events
+
+Clear all stored events from the event log.
+
+**Response:** `{ "status": "ok" }`
+
+---
+
+## Metadata Endpoints
+
+All metadata endpoints are under `/api/v1/metadata/`. They expose **core pydantic dataclasses** directly — the single source of truth used by both the game engine and the frontend. The frontend fetches these once at startup via `MetadataContext`.
+
+### GET /api/v1/metadata/enums
+
+All enum-like definitions used across the engine.
+
+**Response: `EnumsResponse`**
 
 ```json
 {
-    "status": "ok",
-    "message": "Simulation started.",
-    "tick": 0
+  "materials": [{ "id": 0, "name": "Floor", "walkable": true }, ...],
+  "ai_states": [{ "id": 0, "name": "IDLE", "description": "..." }, ...],
+  "tiers": [{ "id": 0, "name": "Normal" }, ...],
+  "rarities": [{ "id": 0, "name": "common" }, ...],
+  "item_types": [{ "id": 0, "name": "weapon" }, ...],
+  "damage_types": [{ "id": 0, "name": "physical" }, ...],
+  "elements": [{ "id": 0, "name": "none" }, ...],
+  "entity_roles": [{ "id": 0, "name": "melee" }, ...],
+  "factions": [{ "id": 0, "name": "Hero Guild" }, ...],
+  "faction_relations": [{ "faction_a": 0, "faction_b": 1, "relation": "hostile" }, ...],
+  "entity_kinds": [{ "kind": "hero", "faction": "Hero Guild" }, ...]
 }
 ```
 
 ---
 
-### POST /api/v1/speed?tps={tps}
+### GET /api/v1/metadata/items
 
-Set the simulation speed in ticks per second.
+All item templates. Serialized directly from core `ItemTemplate` pydantic dataclass.
 
-| Parameter | Type | Range | Description |
-|-----------|------|-------|-------------|
-| `tps` | int | 1–60 | Target ticks per second |
-
----
-
-## Entity Schema
-
-Full schema for each entity in the `/state` response:
+**Response:**
 
 ```json
 {
-    "id": 1,
-    "kind": "hero",
-    "x": 5,
-    "y": 3,
-    "hp": 45,
-    "max_hp": 67,
-    "atk": 19,
-    "def": 9,
-    "spd": 11,
-    "luck": 3,
-    "crit_rate": 0.11,
-    "evasion": 0.05,
-    "level": 2,
-    "xp": 35,
-    "xp_to_next": 150,
-    "gold": 125,
-    "tier": 0,
-    "faction": "hero_guild",
-    "state": "WANDER",
-    "weapon": "iron_sword",
-    "armor": "chainmail",
-    "accessory": null,
-    "inventory_count": 6,
-    "inventory_items": ["small_hp_potion", "small_hp_potion", "medium_hp_potion"],
-    "vision_range": 6,
-    "terrain_memory": {"5,3": 3, "6,3": 0, "4,2": 5, ...},
-    "entity_memory": [
-        {"id": 3, "x": 10, "y": 8, "kind": "goblin", "hp": 15, "max_hp": 21, "tick": 148, "visible": true},
-        {"id": 7, "x": 20, "y": 15, "kind": "goblin_warrior", "hp": 30, "max_hp": 37, "tick": 120, "visible": false}
-    ],
-    "goals": ["Grow stronger — gain XP from enemies", "Explore unknown territory"],
-    "known_recipes": ["craft_steel_sword", "craft_battle_axe"],
-    "craft_target": "craft_enchanted_blade"
+  "items": [
+    {
+      "item_id": "iron_sword",
+      "name": "Iron Sword",
+      "item_type": "weapon",
+      "rarity": "common",
+      "weight": 3.0,
+      "atk_bonus": 4,
+      "def_bonus": 0,
+      "spd_bonus": 0,
+      "max_hp_bonus": 0,
+      "crit_rate_bonus": 0.0,
+      "evasion_bonus": 0.0,
+      "luck_bonus": 0,
+      "matk_bonus": 0,
+      "mdef_bonus": 0,
+      "damage_type": "physical",
+      "element": "none",
+      "heal_amount": 0,
+      "mana_restore": 0,
+      "gold_value": 0,
+      "sell_value": 0
+    },
+    ...
+  ]
 }
 ```
-
-### Field Reference
-
-#### Identity
-| Field | Type | Description |
-|-------|------|-------------|
-| `id` | int | Unique entity identifier |
-| `kind` | str | Entity type: `hero`, `goblin`, `goblin_scout`, `goblin_warrior`, `goblin_chief`, `wolf`, `dire_wolf`, `alpha_wolf`, `bandit`, `bandit_archer`, `bandit_chief`, `skeleton`, `zombie`, `lich`, `orc`, `orc_warrior`, `orc_warlord` |
-| `x`, `y` | int | Grid position |
-| `tier` | int | Enemy tier: 0=Basic, 1=Scout, 2=Warrior, 3=Elite |
-| `faction` | str | Faction identity: `hero_guild`, `goblin_horde`, `wolf_pack`, `bandit_clan`, `undead`, `orc_tribe` |
-| `state` | str | Current AI state (see AI States table below) |
-
-#### Combat Stats
-| Field | Type | Description |
-|-------|------|-------------|
-| `hp` | int | Current health points |
-| `max_hp` | int | Maximum health points |
-| `atk` | int | Effective attack (base + equipment + status effects) |
-| `def` | int | Effective defense (base + equipment + status effects) |
-| `spd` | int | Effective speed (base + equipment + status effects) |
-| `luck` | int | Luck stat (affects crit/evasion bypass) |
-| `crit_rate` | float | Effective critical hit rate (0.0–1.0) |
-| `evasion` | float | Effective evasion rate (0.0–0.75) |
-
-#### Progression
-| Field | Type | Description |
-|-------|------|-------------|
-| `level` | int | Current level (1–50) |
-| `xp` | int | Current experience points |
-| `xp_to_next` | int | XP required for next level |
-| `gold` | int | Gold currency |
-
-#### Equipment
-| Field | Type | Description |
-|-------|------|-------------|
-| `weapon` | str\|null | Equipped weapon item ID |
-| `armor` | str\|null | Equipped armor item ID |
-| `accessory` | str\|null | Equipped accessory item ID |
-| `inventory_count` | int | Number of items in bag |
-| `inventory_items` | str[] | List of item IDs in bag |
-
-#### Vision & Memory
-| Field | Type | Description |
-|-------|------|-------------|
-| `vision_range` | int | Manhattan distance vision range (from config) |
-| `terrain_memory` | dict[str, int] | Remembered tiles: `"x,y"` → Material value |
-| `entity_memory` | dict[] | Remembered entity sightings (see below) |
-| `goals` | str[] | Current behavioral goals (derived server-side) |
-
-#### Economy (hero only)
-| Field | Type | Description |
-|-------|------|-------------|
-| `known_recipes` | str[] | Recipe IDs learned from blacksmith (e.g. `craft_steel_sword`) |
-| `craft_target` | str\|null | Recipe ID the hero is currently working toward |
-
-#### AI States
-| State | Description |
-|-------|-------------|
-| `IDLE` | Default / just spawned |
-| `WANDER` | Exploring (frontier-based) |
-| `HUNT` | Moving toward visible enemy |
-| `COMBAT` | Adjacent to enemy, fighting |
-| `FLEE` | Low HP, retreating |
-| `RETURN_TO_TOWN` | Heading to town to heal |
-| `RESTING_IN_TOWN` | Healing in town |
-| `RETURN_TO_CAMP` | Goblin returning to camp |
-| `GUARD_CAMP` | Goblin guarding camp |
-| `LOOTING` | Channeling loot pickup |
-| `ALERT` | Defender responding to territory intrusion |
-| `VISIT_SHOP` | Hero visiting the General Store |
-| `VISIT_BLACKSMITH` | Hero visiting the Blacksmith |
-| `VISIT_GUILD` | Hero visiting the Adventurer's Guild |
-| `HARVESTING` | Hero channeling a resource harvest or moving to a node |
-
-### Entity Memory Entry
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `id` | int | Remembered entity ID |
-| `x`, `y` | int | Last known position |
-| `kind` | str | Entity kind |
-| `hp` | int | Last known HP |
-| `max_hp` | int | Last known max HP |
-| `tick` | int | Tick when last observed |
-| `visible` | bool | Currently within vision range? |
 
 ---
 
-## Ground Item Schema
+### GET /api/v1/metadata/classes
+
+Class definitions, skills, breakthroughs, scaling grades, mastery tiers, and race skills.
+
+**Response: `ClassesResponse`**
 
 ```json
 {
-    "x": 12,
-    "y": 8,
-    "items": ["iron_sword", "small_hp_potion"]
+  "classes": [
+    {
+      "id": "warrior",
+      "name": "Warrior",
+      "description": "...",
+      "tier": 1,
+      "role": "DPS",
+      "attr_bonuses": { "str": 3, "agi": 0, "vit": 2, ... },
+      "cap_bonuses": { "str": 10, "agi": 0, ... },
+      "scaling": { "str": "S", "agi": "D", ... },
+      "skill_ids": ["power_strike", "shield_wall", "battle_cry"],
+      "breakthrough": {
+        "from_class": "warrior",
+        "to_class": "champion",
+        "level_req": 10,
+        "attr_req": "str",
+        "attr_threshold": 30,
+        "talent": "Unyielding",
+        "bonuses": { ... },
+        "cap_bonuses": { ... }
+      }
+    },
+    ...
+  ],
+  "skills": [
+    {
+      "skill_id": "power_strike",
+      "name": "Power Strike",
+      "description": "A devastating blow dealing 1.8x damage.",
+      "skill_type": "active",
+      "target": "single_enemy",
+      "class_req": "warrior",
+      "level_req": 1,
+      "gold_cost": 50,
+      "cooldown": 4,
+      "stamina_cost": 12,
+      "power": 1.8,
+      "duration": 0,
+      "range": 1,
+      "mastery_req": "",
+      "mastery_threshold": 25.0,
+      "atk_mod": 0.0, "def_mod": 0.0, "spd_mod": 0.0,
+      "crit_mod": 0.0, "evasion_mod": 0.0, "hp_mod": 0.0
+    },
+    ...
+  ],
+  "race_skills": { "hero": ["basic_attack", "first_aid"], ... },
+  "scaling_grades": [{ "grade": "E", "multiplier": 0.6 }, ...],
+  "mastery_tiers": [{ "name": "Novice", "min_mastery": 0, ... }, ...],
+  "skill_targets": [{ "id": 0, "name": "self" }, ...]
 }
 ```
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `x`, `y` | int | Grid position of the loot pile |
-| `items` | str[] | List of item IDs dropped at this position |
-
-Ground items are created when entities die (all inventory + equipment is dropped) and consumed when entities pick them up via the `LOOT` action.
 
 ---
 
-## Building Schema
+### GET /api/v1/metadata/traits
+
+All personality trait definitions. Serialized directly from core `TraitDef` pydantic dataclass.
+
+**Response:**
 
 ```json
 {
-    "building_id": "store",
-    "name": "General Store",
-    "x": 3,
-    "y": 3,
-    "building_type": "store"
+  "traits": [
+    {
+      "trait_type": 0,
+      "name": "Aggressive",
+      "description": "Seeks combat eagerly, lower flee threshold.",
+      "combat_utility": 0.3,
+      "flee_utility": -0.2,
+      "explore_utility": 0.0,
+      "loot_utility": 0.0,
+      "trade_utility": 0.0,
+      "rest_utility": -0.1,
+      "craft_utility": 0.0,
+      "social_utility": 0.0,
+      "atk_mult": 1.1,
+      "def_mult": 0.95,
+      ...
+    },
+    ...
+  ]
 }
 ```
 
+---
+
+### GET /api/v1/metadata/attributes
+
+The 9 primary attribute definitions with effect descriptions.
+
+**Response: `AttributesResponse`**
+
+```json
+{
+  "attributes": [
+    { "key": "str", "label": "STR", "description": "Physical ATK scaling (+2%/pt), carry weight." },
+    { "key": "agi", "label": "AGI", "description": "SPD +0.4/pt, Crit +0.4%/pt, Evasion +0.3%/pt." },
+    ...
+  ]
+}
+```
+
+---
+
+### GET /api/v1/metadata/buildings
+
+Building type names and descriptions.
+
+**Response: `BuildingsResponse`**
+
+```json
+{
+  "building_types": [
+    { "building_type": "store", "name": "General Store", "description": "Buy and sell items..." },
+    { "building_type": "blacksmith", "name": "Blacksmith", "description": "Learn recipes and craft..." },
+    ...
+  ]
+}
+```
+
+---
+
+### GET /api/v1/metadata/resources
+
+Resource node types grouped by terrain.
+
+**Response: `ResourcesResponse`**
+
+```json
+{
+  "resource_types": [
+    {
+      "resource_type": "oak_tree",
+      "name": "Oak Tree",
+      "terrain": "Forest",
+      "yields_item": "wood",
+      "max_harvests": 3,
+      "respawn_cooldown": 30,
+      "harvest_ticks": 4
+    },
+    ...
+  ]
+}
+```
+
+---
+
+### GET /api/v1/metadata/recipes
+
+All crafting recipe definitions.
+
+**Response: `RecipesResponse`**
+
+```json
+{
+  "recipes": [
+    {
+      "recipe_id": "craft_steel_sword",
+      "output_item": "steel_sword",
+      "output_name": "Steel Sword",
+      "gold_cost": 60,
+      "materials": { "iron_ore": 2, "wood": 1 }
+    },
+    ...
+  ]
+}
+```
+
+---
+
+## Schemas
+
+### EntitySchema
+
 | Field | Type | Description |
 |-------|------|-------------|
-| `building_id` | str | Unique identifier (`store`, `blacksmith`, `guild`) |
+| `id` | int | Unique entity ID |
+| `kind` | str | Entity type name |
+| `x` / `y` | int | Grid position |
+| `hp` / `max_hp` | int | Health |
+| `atk` / `def_` / `spd` | int | Base combat stats |
+| `matk` / `mdef` | int | Base magical stats |
+| `base_atk` / `base_def` / `base_spd` | int | Raw base before equipment |
+| `base_matk` / `base_mdef` | int | Raw base magical |
+| `level` / `xp` / `xp_to_next` | int | Leveling |
+| `gold` | int | Currency |
+| `luck` | int | Luck stat |
+| `crit_rate` / `crit_dmg` | float | Critical hit stats |
+| `evasion` | float | Dodge chance |
+| `stamina` / `max_stamina` | int | Action resource |
+| `state` | str | Current AI state name |
+| `faction` | str | Faction name |
+| `tier` | int | Enemy difficulty tier |
+| `alive` | bool | Is alive |
+| `weapon` / `armor` / `accessory` | str \| null | Equipped item IDs |
+| `inventory_items` | str[] | Bag item IDs |
+| `vision_range` | int | Perception radius |
+| `terrain_memory` | [int, int][] | Explored tile coordinates |
+| `entity_memory` | EntityMemoryEntry[] | Last-seen entity data |
+| `goals` | str[] | Current behavioral goal strings |
+| `hero_class` | str | Class name (or "none") |
+| `class_mastery` | float | 0.0–100.0 |
+| `skills` | SkillSchema[] | Learned skills |
+| `known_recipes` | str[] | Recipe IDs known |
+| `craft_target` | str \| null | Current crafting goal |
+| `traits` | str[] | Personality trait names |
+| `attributes` | AttributeSchema \| null | 9 primary attributes |
+| `attribute_caps` | AttributeCapSchema \| null | Attribute growth limits |
+| `active_effects` | EffectSchema[] | Active buffs/debuffs |
+| `quests` | QuestSchema[] | Tracked quests |
+| `home_storage_used` | int | Home storage items count |
+| `home_storage_max` | int | Home storage capacity |
+| `home_storage_level` | int | Home storage upgrade level |
+
+### AttributeSchema
+
+```json
+{
+  "str": 12, "agi": 8, "vit": 10,
+  "int": 6, "spi": 5, "wis": 7,
+  "end": 9, "per": 4, "cha": 3
+}
+```
+
+### AttributeCapSchema
+
+Same shape as `AttributeSchema` but representing caps.
+
+### SkillSchema
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `name` | str | Skill name |
+| `skill_type` | str | "active" or "passive" |
+| `power` | float | Damage multiplier |
+| `stamina_cost` | int | Stamina per use |
+| `cooldown` | int | Base cooldown ticks |
+| `cooldown_remaining` | int | Current cooldown |
+| `mastery` | float | 0.0–100.0 |
+| `times_used` | int | Total uses |
+| `damage_type` | str | "physical" or "magical" |
+| `element` | str | Element name |
+
+### EffectSchema
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `effect_type` | str | Effect type name |
+| `source` | str | Human-readable origin |
+| `remaining_ticks` | int | Duration left |
+| `atk_mult` / `def_mult` / `spd_mult` | float | Stat multipliers |
+| `crit_mult` / `evasion_mult` | float | Crit/evasion multipliers |
+| `hp_per_tick` | int | HP change per tick |
+
+### QuestSchema
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `quest_id` | str | Unique ID |
+| `quest_type` | str | "hunt", "explore", "gather" |
+| `title` / `description` | str | Display text |
+| `progress` | int | Current count |
+| `target_count` | int | Required count |
+| `gold_reward` / `xp_reward` | int | Rewards |
+| `item_reward` | str \| null | Item reward |
+| `completed` | bool | Done flag |
+
+### EventSchema
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `tick` | int | When the event occurred |
+| `category` | str | Event category (combat, loot, level, etc.) |
+| `message` | str | Human-readable event text |
+
+### GroundItemSchema
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `x` / `y` | int | Position |
+| `items` | str[] | Item IDs at this position |
+
+### BuildingSchema
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `building_id` | str | Unique ID |
 | `name` | str | Display name |
-| `x`, `y` | int | Grid position |
-| `building_type` | str | Building category: `store`, `blacksmith`, `guild` |
+| `x` / `y` | int | Position |
+| `building_type` | str | "store", "blacksmith", "guild", "class_hall", "inn" |
 
-Buildings are static — they do not move or change during the simulation. Three buildings are placed in the town at world generation.
-
----
-
-## Resource Node Schema
-
-```json
-{
-    "node_id": 1,
-    "resource_type": "herb_patch",
-    "name": "Herb Patch",
-    "x": 37,
-    "y": 36,
-    "terrain": 6,
-    "yields_item": "herb",
-    "remaining": 3,
-    "max_harvests": 3,
-    "is_available": true,
-    "harvest_ticks": 2
-}
-```
+### ResourceNodeSchema
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `node_id` | int | Unique node identifier |
-| `resource_type` | str | Resource category (e.g. `herb_patch`, `ore_vein`, `timber`) |
+| `node_id` | int | Unique ID |
+| `resource_type` | str | e.g. "herb_patch" |
 | `name` | str | Display name |
-| `x`, `y` | int | Grid position |
-| `terrain` | int | Material enum value of the terrain this node belongs to (6–9) |
-| `yields_item` | str | Item ID produced when harvested |
-| `remaining` | int | Harvests remaining before depletion |
-| `max_harvests` | int | Total harvests when fully grown |
-| `is_available` | bool | `true` if harvestable (not depleted, not on cooldown) |
-| `harvest_ticks` | int | Number of ticks to channel a single harvest |
+| `x` / `y` | int | Position |
+| `terrain` | int | Material value |
+| `yields_item` | str | Item ID produced |
+| `remaining` | int | Harvests left |
+| `max_harvests` | int | Max when fully grown |
+| `is_available` | bool | Can be harvested |
+| `harvest_ticks` | int | Channel duration |
 
-Resource nodes deplete after `max_harvests` harvests, then enter a cooldown period before respawning. See `docs/terrains_resources.md` for full lifecycle details.
-
----
-
-## Event Schema
-
-```json
-{
-    "tick": 42,
-    "category": "ATTACK",
-    "message": "Entity 1 (hero) hits Entity 5 (goblin) for 12 CRIT!! damage [HP: 3/21]"
-}
-```
+### TreasureChestSchema
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `tick` | int | Tick when event occurred |
-| `category` | str | Event type: `ATTACK`, `MOVE`, `REST`, `SPAWN`, `DEATH`, `LEVEL_UP`, `LOOT`, `USE_ITEM` |
-| `message` | str | Human-readable event description |
+| `chest_id` | int | Unique ID |
+| `x` / `y` | int | Position |
+| `tier` | int | Chest tier (1–3) |
+| `looted` | bool | Currently looted |
+| `guard_entity_id` | int \| null | Guard entity ID |
 
 ---
 
 ## Error Responses
 
-| Status | Description |
-|--------|-------------|
-| 503 | No snapshot available yet (simulation not started) |
-| 500 | Internal server error (check server logs) |
+All endpoints return standard HTTP error codes:
+
+| Code | Meaning |
+|------|---------|
+| 200 | Success |
+| 400 | Bad request (invalid action, etc.) |
+| 404 | Not found |
+| 500 | Internal server error |
 
 ---
 
-## CORS & Static Files
+## CORS
 
-- The API serves the frontend as static files from `frontend/` directory at `/`
-- CORS is configured to allow all origins for development
-- The frontend HTML is served at the root path `/`
+CORS is enabled for all origins during development. In production, the frontend is served from the same origin (`frontend/dist/` at `/`).
+
+---
+
+## Static Files
+
+The FastAPI backend mounts `frontend/dist/` as static files at `/` for production serving.
