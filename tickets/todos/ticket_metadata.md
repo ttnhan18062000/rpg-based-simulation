@@ -2,7 +2,7 @@
 
 Master index of all active tickets with priority, effort estimate, dependencies, and status.
 
-**Last updated:** 2025-02-11
+**Last updated:** 2025-02-12
 
 ---
 
@@ -21,15 +21,15 @@ Master index of all active tickets with priority, effort estimate, dependencies,
 
 | ID | Ticket | Priority | Effort | Status | Dependencies |
 |----|--------|----------|--------|--------|-------------|
-| bug-01 | [Diagonal Adjacent HUNT Move Conflict](bug-01-diagonal-hunt-move-conflict.md) | P1 | S | needs-decision | — |
-| bug-02 | [Hero Keeps Looting When Full Bag](bug-02-hero-looting-full-bag.md) | P1 | S | needs-decision | — |
+| bug-01 | [Diagonal Adjacent HUNT Move Conflict](bug-01-diagonal-hunt-move-conflict.md) | P1 | S | done | — |
+| bug-02 | [Hero Keeps Looting When Full Bag](bug-02-hero-looting-full-bag.md) | P1 | S | done | — |
 
 ## Enhancements
 
 | ID | Ticket | Priority | Effort | Status | Dependencies |
 |----|--------|----------|--------|--------|-------------|
 | enhance-01 | [Enrich Event Information](enhance-01-enrich-event-information.md) | P2 | M | ready | — |
-| enhance-02 | [Bag Max Capacity UI](enhance-02-bag-max-capacity-ui.md) | P3 | XS | ready | bug-02 (related) |
+| enhance-02 | [Bag Max Capacity UI](enhance-02-bag-max-capacity-ui.md) | P3 | XS | done | bug-02 (related) |
 | enhance-03 | [Extend Max Tick to 50000](enhance-03-extend-max-tick-limit.md) | P3 | XS | ready | epic-16 (verify perf first) |
 | enhance-04 | [Mob Roaming Leash Distance](enhance-04-mob-roaming-leash.md) | P1 | M | needs-decision | — |
 
@@ -57,7 +57,7 @@ Master index of all active tickets with priority, effort estimate, dependencies,
 
 | Command | What it does |
 |---------|-------------|
-| `make test` | Run all 296+ Python tests |
+| `make test` | Run all 310+ Python tests |
 | `make test-quick` | Run fast tests only (skip `@slow`) |
 | `make test-cov` | Run tests with coverage report |
 | `make profile` | 500-tick performance report (timing, phases, entity counts) |
@@ -108,9 +108,9 @@ Tickets that need developer decision before work can start are marked. Suggested
 
 ### Phase 1 — Bugs & Quick Wins (needs-decision → ready → ship)
 
-1. **bug-01** — Diagonal HUNT conflict *(needs decision on resolution strategy)* — test coverage in `test_conflict_resolver.py`
-2. **bug-02** — Looting when full bag *(needs decision on sell/drop behavior)* — test coverage in `test_inventory_goals.py`
-3. **enhance-02** — Bag capacity UI *(XS, can ship with bug-02)*
+1. ✅ **bug-01** — Diagonal HUNT conflict — higher-ID entity yields at Manhattan 2 — 5 tests in `test_conflict_resolver.py`
+2. ✅ **bug-02** — Looting when full bag — `is_effectively_full` checks slots + weight — 8 tests in `test_inventory_goals.py`
+3. ✅ **enhance-02** — Bag capacity UI — slot + weight bars with color coding in InspectPanel
 4. **enhance-03** — Extend max tick *(XS config change)*
 
 ### Phase 2 — Design Decisions (needs-decision)

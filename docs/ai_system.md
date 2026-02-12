@@ -127,6 +127,7 @@ Each state has a `StateHandler` subclass registered in `STATE_HANDLERS` dict.
 ### HuntHandler
 - Moves toward the nearest hostile entity using greedy pathfinding
 - Transitions to COMBAT when adjacent (Manhattan ≤ 1)
+- **Diagonal deadlock prevention (bug-01):** when two mutually aggressive entities are at Manhattan distance 2, the higher-ID entity yields (rests) so the lower-ID entity can close the gap unimpeded
 - Transitions to FLEE if HP drops below threshold
 - Enemies abort hunts in town at 60% HP
 

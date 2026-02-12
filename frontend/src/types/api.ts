@@ -87,7 +87,10 @@ export interface Entity {
   armor: string | null;
   accessory: string | null;
   inventory_count: number;
+  inventory_max_slots: number;
   inventory_items: string[];
+  inventory_weight: number;
+  inventory_max_weight: number;
   vision_range: number;
   terrain_memory: Record<string, number>;
   entity_memory: EntityMemoryEntry[];

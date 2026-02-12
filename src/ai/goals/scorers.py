@@ -170,8 +170,8 @@ class LootGoal(GoalScorer):
         base = 0.0
 
         if _is_hero(ctx):
-            # Don't loot if inventory is full
-            if actor.inventory and actor.inventory.used_slots >= actor.inventory.max_slots:
+            # Don't loot if inventory is full (slots or weight)
+            if actor.inventory and actor.inventory.is_effectively_full:
                 return 0.0
             from src.ai.perception import Perception
             loot_pos = Perception.ground_loot_nearby(actor, ctx.snapshot, radius=5)
@@ -179,10 +179,11 @@ class LootGoal(GoalScorer):
                 base = 0.5
                 if actor.pos.manhattan(loot_pos) <= 2:
                     base = 0.7
-            # Reduce desire when bag is nearly full
+            # Reduce desire when bag is nearly full (slots or weight)
             if actor.inventory:
                 free = actor.inventory.max_slots - actor.inventory.used_slots
-                if free <= 2:
+                nearly_full = free <= 2 or actor.inventory.weight_ratio >= 0.9
+                if nearly_full:
                     base *= 0.3  # strongly discourage looting with nearly-full bag
                 elif free > 2:
                     base += 0.1
@@ -213,9 +214,9 @@ class TradeGoal(GoalScorer):
                 base += 0.4
             if hero_wants_to_buy(ctx.actor):
                 base += 0.3
-            # Urgently sell when bag is nearly full
+            # Urgently sell when bag is nearly full (slots or weight)
             inv = ctx.actor.inventory
-            if inv and inv.used_slots >= inv.max_slots - 2:
+            if inv and (inv.used_slots >= inv.max_slots - 2 or inv.weight_ratio >= 0.9):
                 base += 0.4
 
         base += _trait_utility(ctx).trade

@@ -226,6 +226,15 @@ class Inventory:
     def used_slots(self) -> int:
         return len(self.items)
 
+    @property
+    def weight_ratio(self) -> float:
+        return self.current_weight / self.max_weight if self.max_weight > 0 else 0.0
+
+    @property
+    def is_effectively_full(self) -> bool:
+        """True when no typical item can be added (slots full OR weight near cap)."""
+        return self.used_slots >= self.max_slots or self.current_weight >= self.max_weight
+
     def can_add(self, item_id: str) -> bool:
         if self.used_slots >= self.max_slots:
             return False

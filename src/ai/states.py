@@ -574,6 +574,17 @@ class HuntHandler(StateHandler):
                 actor_id=actor.id, verb=ActionType.ATTACK, target=enemy.id,
                 reason=f"Adjacent to enemy {enemy.id} → attacking")
 
+        # Diagonal deadlock prevention (bug-01): when two mutually aggressive
+        # entities are at Manhattan distance 2, both moving toward each other
+        # can swap to the same distance. The higher-ID entity yields (rests)
+        # so the lower-ID entity closes the gap unimpeded.
+        if (actor.pos.manhattan(enemy.pos) == 2
+                and enemy.ai_state in (AIState.HUNT, AIState.COMBAT)
+                and actor.id > enemy.id):
+            return AIState.HUNT, ActionProposal(
+                actor_id=actor.id, verb=ActionType.REST,
+                reason=f"Yielding to let enemy {enemy.id} close gap (anti-deadlock)")
+
         return AIState.HUNT, propose_move_toward(
             actor, enemy.pos, snapshot, f"Hunting enemy {enemy.id}")
 
@@ -804,6 +815,13 @@ class LootingHandler(StateHandler):
     def handle(self, ctx: AIContext) -> tuple[AIState, ActionProposal]:
         actor, snapshot, config = ctx.actor, ctx.snapshot, ctx.config
         clear_dead_from_memory(actor, snapshot)
+
+        # Abort looting if inventory is full — slots or weight (bug-02)
+        if actor.inventory and actor.inventory.is_effectively_full:
+            actor.loot_progress = 0
+            return AIState.WANDER, ActionProposal(
+                actor_id=actor.id, verb=ActionType.REST,
+                reason="Bag full → abandoning loot")
 
         key = (actor.pos.x, actor.pos.y)
         if key in snapshot.ground_items and snapshot.ground_items[key]:

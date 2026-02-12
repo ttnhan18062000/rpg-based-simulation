@@ -198,6 +198,137 @@ class TestDiagonalHuntDeadlock:
         assert len(move_applied) == 1, "Only one entity should claim the shared tile"
 
 
+class TestDiagonalHuntYield:
+    """Bug-01 fix: HuntHandler yields for higher-ID entity at Manhattan 2
+    with a mutually aggressive enemy, preventing diagonal deadlock."""
+
+    def _make_hunt_ctx(self, actor, world):
+        """Build an AIContext from entity + world for HuntHandler tests."""
+        from src.ai.states import AIContext
+        from src.core.snapshot import Snapshot
+
+        cfg = SimulationConfig()
+        rng = DeterministicRNG(42)
+        from src.core.faction import FactionRegistry
+        faction_reg = FactionRegistry.default()
+        snapshot = Snapshot.from_world(world)
+        return AIContext(
+            actor=snapshot.entities[actor.id],
+            snapshot=snapshot,
+            config=cfg,
+            rng=rng,
+            faction_reg=faction_reg,
+        )
+
+    def test_higher_id_yields_at_diagonal(self):
+        """Higher-ID entity should REST when at Manhattan 2 with aggressive enemy."""
+        from src.ai.states import HuntHandler
+
+        world = _make_world()
+        hero = _make_entity(1, x=5, y=5, faction=Faction.HERO_GUILD)
+        hero.ai_state = AIState.HUNT
+        goblin = _make_entity(2, x=6, y=6, faction=Faction.GOBLIN_HORDE)
+        goblin.ai_state = AIState.HUNT
+        world.add_entity(hero)
+        world.add_entity(goblin)
+
+        handler = HuntHandler()
+
+        # Goblin (id=2, higher) should yield
+        ctx_goblin = self._make_hunt_ctx(goblin, world)
+        state, proposal = handler.handle(ctx_goblin)
+        assert state == AIState.HUNT
+        assert proposal.verb == ActionType.REST, (
+            f"Higher-ID entity should yield (REST), got {proposal.verb}")
+        assert "Yielding" in proposal.reason
+
+    def test_lower_id_moves_at_diagonal(self):
+        """Lower-ID entity should move normally toward the enemy."""
+        from src.ai.states import HuntHandler
+
+        world = _make_world()
+        hero = _make_entity(1, x=5, y=5, faction=Faction.HERO_GUILD)
+        hero.ai_state = AIState.HUNT
+        goblin = _make_entity(2, x=6, y=6, faction=Faction.GOBLIN_HORDE)
+        goblin.ai_state = AIState.HUNT
+        world.add_entity(hero)
+        world.add_entity(goblin)
+
+        handler = HuntHandler()
+
+        # Hero (id=1, lower) should move toward goblin
+        ctx_hero = self._make_hunt_ctx(hero, world)
+        state, proposal = handler.handle(ctx_hero)
+        assert state == AIState.HUNT
+        assert proposal.verb == ActionType.MOVE, (
+            f"Lower-ID entity should move, got {proposal.verb}")
+
+    def test_no_yield_when_enemy_not_aggressive(self):
+        """No yield if the enemy is not in HUNT/COMBAT state."""
+        from src.ai.states import HuntHandler
+
+        world = _make_world()
+        hero = _make_entity(1, x=5, y=5, faction=Faction.HERO_GUILD)
+        hero.ai_state = AIState.HUNT
+        goblin = _make_entity(2, x=6, y=6, faction=Faction.GOBLIN_HORDE)
+        goblin.ai_state = AIState.WANDER  # Not aggressive
+        world.add_entity(hero)
+        world.add_entity(goblin)
+
+        handler = HuntHandler()
+
+        # Even higher-ID hero hunting a non-aggressive enemy should move
+        ctx_hero = self._make_hunt_ctx(hero, world)
+        state, proposal = handler.handle(ctx_hero)
+        assert proposal.verb == ActionType.MOVE, (
+            f"Should move when enemy is not aggressive, got {proposal.verb}")
+
+    def test_no_yield_at_distance_3(self):
+        """No yield at Manhattan distance > 2."""
+        from src.ai.states import HuntHandler
+
+        world = _make_world()
+        hero = _make_entity(1, x=5, y=5, faction=Faction.HERO_GUILD)
+        hero.ai_state = AIState.HUNT
+        goblin = _make_entity(2, x=7, y=7, faction=Faction.GOBLIN_HORDE)
+        goblin.ai_state = AIState.HUNT
+        world.add_entity(hero)
+        world.add_entity(goblin)
+
+        handler = HuntHandler()
+
+        # Distance 4, should not yield even as higher ID
+        ctx_goblin = self._make_hunt_ctx(goblin, world)
+        state, proposal = handler.handle(ctx_goblin)
+        assert proposal.verb == ActionType.MOVE, (
+            f"Should move at distance > 2, got {proposal.verb}")
+
+    def test_adjacent_still_attacks(self):
+        """At Manhattan 1, should attack regardless of IDs."""
+        from src.ai.states import HuntHandler
+
+        world = _make_world()
+        hero = _make_entity(1, x=5, y=5, faction=Faction.HERO_GUILD)
+        hero.ai_state = AIState.HUNT
+        goblin = _make_entity(2, x=5, y=6, faction=Faction.GOBLIN_HORDE)
+        goblin.ai_state = AIState.HUNT
+        world.add_entity(hero)
+        world.add_entity(goblin)
+
+        handler = HuntHandler()
+
+        # Both should attack (adjacent)
+        ctx_hero = self._make_hunt_ctx(hero, world)
+        state_h, prop_h = handler.handle(ctx_hero)
+        assert state_h == AIState.COMBAT
+        assert prop_h.verb == ActionType.ATTACK
+
+        ctx_goblin = self._make_hunt_ctx(goblin, world)
+        state_g, prop_g = handler.handle(ctx_goblin)
+        assert state_g == AIState.COMBAT
+        assert prop_g.verb == ActionType.ATTACK
+
+
 class TestCombatResolution:
     """Combat proposals resolve in initiative order."""
 

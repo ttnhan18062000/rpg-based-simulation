@@ -60,10 +60,10 @@ class SimulationConfig:
     max_level: int = 20
 
     # Inventory
-    hero_inventory_slots: int = 12
-    hero_inventory_weight: float = 30.0
-    goblin_inventory_slots: int = 4
-    goblin_inventory_weight: float = 10.0
+    hero_inventory_slots: int = 36
+    hero_inventory_weight: float = 90.0
+    goblin_inventory_slots: int = 12
+    goblin_inventory_weight: float = 30.0
 
     # Camps
     num_camps: int = 8

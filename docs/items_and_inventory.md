@@ -145,8 +145,8 @@ class Inventory:
 
 | Entity Type | Max Slots | Max Weight |
 |-------------|-----------|------------|
-| Hero | 12 | 30.0 |
-| Goblin (all tiers) | 4 | 10.0 |
+| Hero | 36 | 90.0 |
+| Goblin (all tiers) | 12 | 30.0 |
 
 Configured in `SimulationConfig` as `hero_inventory_slots`, `hero_inventory_weight`, `goblin_inventory_slots`, `goblin_inventory_weight`.
 
@@ -160,7 +160,9 @@ Configured in `SimulationConfig` as `hero_inventory_slots`, `hero_inventory_weig
 | `equipment_bonus(attr)` | Sum a stat bonus across equipped items. |
 | `get_all_item_ids()` | All items: bag + equipped (for loot drops). |
 | `used_slots` | Property: current item count in bag. |
-| `current_weight` | Property: total weight of bag items. |
+| `current_weight` | Property: total weight of bag + equipped items. |
+| `weight_ratio` | Property: `current_weight / max_weight` (0.0–1.0+). |
+| `is_effectively_full` | Property: `True` when slots full OR weight ≥ max. Used by LootGoal and LootingHandler to abort looting (bug-02). |
 | `auto_equip_best(item_id)` | Equip if better than current gear in that slot. |
 | `copy()` | Deep copy for snapshot generation. |
 

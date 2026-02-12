@@ -51,6 +51,10 @@ export function LootPanel({ loot, onClose }: LootPanelProps) {
                     {item.matk_bonus ? <span className="text-accent-purple">MATK +{item.matk_bonus}</span> : null}
                     {item.mdef_bonus ? <span className="text-accent-blue">MDEF +{item.mdef_bonus}</span> : null}
                   </div>
+                  <div className="mt-1 pt-1 border-t border-border/40 flex justify-between text-text-secondary">
+                    <span>⚖ {item.weight}</span>
+                    {item.sell_value ? <span className="text-accent-yellow">Sell {item.sell_value}g</span> : null}
+                  </div>
                 </div>
               )}
               {!item && (

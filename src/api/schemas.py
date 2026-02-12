@@ -113,7 +113,10 @@ class EntitySchema(BaseModel):
     armor: str | None = None
     accessory: str | None = None
     inventory_count: int = 0
+    inventory_max_slots: int = 0
     inventory_items: list[str] = Field(default_factory=list)
+    inventory_weight: float = 0.0
+    inventory_max_weight: float = 0.0
     vision_range: int = 6
     terrain_memory: dict[str, int] = Field(default_factory=dict)
     entity_memory: list[dict] = Field(default_factory=list)

@@ -9,6 +9,12 @@ const HERO_CLASS_COLORS: Record<string, string> = {
   champion: '#ff4444', sharpshooter: '#22c55e', archmage: '#a78bfa', assassin: '#f59e0b',
   brute: '#ef4444', scout: '#10b981', caster: '#8b5cf6', tank: '#64748b', beast: '#d97706',
 };
+function capacityColor(ratio: number): string {
+  if (ratio > 0.8) return '#f87171';
+  if (ratio > 0.5) return '#fbbf24';
+  return '#34d399';
+}
+
 function masteryTier(m: number) {
   if (m >= 100) return 4;
   if (m >= 75) return 3;
@@ -285,12 +291,43 @@ function StatsTab({ entity, collapsed, toggle }: { entity: Entity; collapsed: Re
         <EquipSlot label="Armor" value={entity.armor} />
         <EquipSlot label="Accessory" value={entity.accessory} />
 
+        {/* Bag capacity indicators */}
+        {entity.inventory_max_slots > 0 && (
+          <div className="mt-2 space-y-1.5">
+            {/* Slot capacity */}
+            <div>
+              <div className="flex justify-between mb-0.5">
+                <span className="text-[10px] uppercase tracking-wider text-text-secondary">Slots</span>
+                <span className="text-[10px] font-semibold tabular-nums">{entity.inventory_count} / {entity.inventory_max_slots}</span>
+              </div>
+              <div className="w-full h-1.5 bg-bg-primary rounded-full overflow-hidden">
+                <div className="h-full rounded-full transition-[width] duration-200" style={{
+                  width: `${Math.min(100, (entity.inventory_count / entity.inventory_max_slots) * 100)}%`,
+                  background: capacityColor(entity.inventory_count / entity.inventory_max_slots),
+                }} />
+              </div>
+            </div>
+            {/* Weight capacity */}
+            {entity.inventory_max_weight > 0 && (
+              <div>
+                <div className="flex justify-between mb-0.5">
+                  <span className="text-[10px] uppercase tracking-wider text-text-secondary">Weight</span>
+                  <span className="text-[10px] font-semibold tabular-nums">{entity.inventory_weight} / {entity.inventory_max_weight}</span>
+                </div>
+                <div className="w-full h-1.5 bg-bg-primary rounded-full overflow-hidden">
+                  <div className="h-full rounded-full transition-[width] duration-200" style={{
+                    width: `${Math.min(100, (entity.inventory_weight / entity.inventory_max_weight) * 100)}%`,
+                    background: capacityColor(entity.inventory_weight / entity.inventory_max_weight),
+                  }} />
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
         {entity.inventory_items && entity.inventory_items.length > 0 ? (
-          <div className="mt-2">
-            <span className="text-[10px] uppercase tracking-wider text-text-secondary">
-              Bag ({entity.inventory_count} items)
-            </span>
-            <div className="mt-1 flex flex-wrap gap-1">
+          <div className="mt-1.5">
+            <div className="flex flex-wrap gap-1">
               {entity.inventory_items.map((iid, i) => (
                 <span key={i} className="inline-block text-[10px] bg-bg-tertiary border border-border rounded px-1.5 py-0.5">
                   <ItemWithTooltip itemId={iid} />
@@ -1039,6 +1076,10 @@ function ItemWithTooltip({ itemId }: { itemId: string }) {
         {item?.mdef_bonus ? <span className="block text-accent-blue">MDEF +{item.mdef_bonus}</span> : null}
         {item?.heal_amount ? <span className="block text-accent-green">Heals {item.heal_amount} HP</span> : null}
         {item?.gold_value ? <span className="block text-accent-yellow">Worth {item.gold_value} gold</span> : null}
+        <span className="block border-t border-border/40 mt-1 pt-1 text-text-secondary flex justify-between gap-3">
+          <span>⚖ {item?.weight ?? 0}</span>
+          {item?.sell_value ? <span className="text-accent-yellow">Sell {item.sell_value}g</span> : null}
+        </span>
       </FixedTooltip>
     </span>
   );
