@@ -7,25 +7,30 @@ interface EventLogProps {
 }
 
 const CATEGORY_COLORS: Record<string, string> = {
-  ATTACK: 'text-accent-red',
-  MOVE: 'text-text-secondary',
-  REST: 'text-accent-green',
-  SPAWN: 'text-accent-blue',
-  DEATH: 'text-accent-red',
-  LEVEL_UP: 'text-accent-purple',
-  LOOT: 'text-accent-yellow',
-  USE_ITEM: 'text-accent-green',
+  combat: 'text-accent-red',
+  movement: 'text-text-secondary',
+  rest: 'text-accent-green',
+  spawn: 'text-accent-blue',
+  death: 'text-accent-red',
+  level_up: 'text-accent-purple',
+  loot: 'text-accent-yellow',
+  item: 'text-accent-green',
+  skill: 'text-accent-purple',
+  harvest: 'text-accent-green',
 };
 
+const NOTABLE = new Set(['combat', 'death', 'level_up', 'loot', 'item', 'skill', 'harvest']);
+
 export function EventLog({ events, onClear }: EventLogProps) {
-  const recent = [...events].reverse();
+  const notable = events.filter(ev => NOTABLE.has(ev.category) || ev.metadata);
+  const recent = [...notable].reverse();
 
   return (
     <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
       {/* Header with count + clear button */}
       <div className="flex items-center justify-between px-3 py-2 border-b border-border bg-bg-tertiary">
         <span className="text-[10px] font-bold uppercase tracking-wider text-text-secondary">
-          Events ({events.length})
+          Events ({notable.length})
         </span>
         <button
           onClick={onClear}

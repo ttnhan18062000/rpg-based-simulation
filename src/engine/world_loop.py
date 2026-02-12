@@ -52,6 +52,7 @@ class WorldLoop:
         "_generator",
         "_recorder",
         "_last_applied",
+        "_tick_events",
         "_faction_reg",
         "_rng",
     )
@@ -75,6 +76,7 @@ class WorldLoop:
         self._generator = generator
         self._recorder = recorder
         self._last_applied: list[ActionProposal] = []
+        self._tick_events: list = []
         self._faction_reg = faction_reg or FactionRegistry.default()
         self._rng = rng
 
@@ -86,6 +88,22 @@ class WorldLoop:
     def last_applied(self) -> list[ActionProposal]:
         """Actions applied during the most recent tick."""
         return self._last_applied
+
+    @property
+    def tick_events(self) -> list:
+        """Enriched events emitted during the most recent tick."""
+        return self._tick_events
+
+    def _emit(self, category: str, message: str,
+              entity_ids: tuple[int, ...] = (), metadata: dict | None = None) -> None:
+        from src.utils.event_log import SimEvent
+        self._tick_events.append(SimEvent(
+            tick=self._world.tick,
+            category=category,
+            message=message,
+            entity_ids=entity_ids,
+            metadata=metadata,
+        ))
 
     def tick_once(self) -> bool:
         """Execute a single tick. Returns False if simulation should stop."""
@@ -131,6 +149,7 @@ class WorldLoop:
 
     def _step(self) -> None:
         """Execute one complete tick cycle."""
+        self._tick_events = []
         tick = self._world.tick
         t0 = time.perf_counter()
 
@@ -153,6 +172,27 @@ class WorldLoop:
         # --- Phase 3: Conflict Resolution & Application ---
         applied = self._conflict_resolver.resolve(proposals, self._world)
         self._last_applied = applied
+
+        # Emit base events for all applied actions
+        _cat_map = {
+            "REST": "rest", "MOVE": "movement", "ATTACK": "combat",
+            "USE_ITEM": "item", "LOOT": "loot", "HARVEST": "harvest",
+            "USE_SKILL": "skill",
+        }
+        for action in applied:
+            involved: list[int] = [action.actor_id]
+            if isinstance(action.target, int):
+                involved.append(action.target)
+            cat = _cat_map.get(action.verb.name, action.verb.name.lower())
+            meta: dict = {"verb": action.verb.name, "actor_id": action.actor_id}
+            if isinstance(action.target, int):
+                meta["target_id"] = action.target
+            self._emit(
+                cat,
+                f"Entity {action.actor_id}: {action.verb.name} → {action.reason}",
+                entity_ids=tuple(involved),
+                metadata=meta,
+            )
 
         # Update AI states from worker results
         self._update_ai_states(applied)
@@ -313,6 +353,11 @@ class WorldLoop:
                             self._world.tick, entity.id, entity.kind,
                             template.name, healed, entity.stats.hp, entity.stats.max_hp,
                         )
+                        self._emit("item", f"{entity.kind} #{entity.id} used {template.name} → healed {healed} HP",
+                                   entity_ids=(entity.id,),
+                                   metadata={"item_id": item_id, "item_name": template.name,
+                                             "healed": healed, "hp_after": entity.stats.hp,
+                                             "max_hp": entity.stats.max_hp})
                     from src.core.attributes import speed_delay
                     entity.next_act_at += speed_delay(entity.effective_spd(), "use_item", entity.stats.interaction_speed)
 
@@ -337,6 +382,10 @@ class WorldLoop:
                                 "Tick %d: Entity %d (%s) looted %d items at %s",
                                 self._world.tick, entity.id, entity.kind, len(picked), pos,
                             )
+                            self._emit("loot", f"{entity.kind} #{entity.id} looted {len(picked)} items",
+                                       entity_ids=(entity.id,),
+                                       metadata={"items": picked, "count": len(picked),
+                                                 "source": "ground", "x": pos.x, "y": pos.y})
                             # Quest progress: GATHER
                             if entity.quests:
                                 from src.core.quests import QuestType
@@ -408,6 +457,12 @@ class WorldLoop:
                                             self._world.tick, entity.id, sdef.name,
                                             eid, dmg, other.stats.hp, other.stats.max_hp,
                                         )
+                                        self._emit("skill", f"{entity.kind} #{entity.id} used {sdef.name} on #{eid} → {dmg} dmg",
+                                                   entity_ids=(entity.id, eid),
+                                                   metadata={"skill_id": skill_id, "skill_name": sdef.name,
+                                                             "damage": dmg, "target_id": eid,
+                                                             "target_hp_after": other.stats.hp,
+                                                             "target_max_hp": other.stats.max_hp})
                                     # Apply debuff if skill has duration + mods
                                     if sdef.duration > 0 and has_mods:
                                         other.effects.append(skill_effect(
@@ -547,6 +602,11 @@ class WorldLoop:
                     entity.stats.hp, entity.stats.max_hp,
                     entity.stats.atk, entity.stats.def_, entity.stats.spd,
                 )
+                self._emit("level_up", f"{entity.kind} #{entity.id} reached Lv{entity.stats.level}!",
+                           entity_ids=(entity.id,),
+                           metadata={"entity_id": entity.id, "new_level": entity.stats.level,
+                                     "max_hp": entity.stats.max_hp, "atk": entity.stats.atk,
+                                     "def": entity.stats.def_, "spd": entity.stats.spd})
 
     def _tick_stamina_and_skills(self) -> None:
         """Regenerate stamina and tick skill cooldowns for all entities."""
@@ -983,7 +1043,19 @@ class WorldLoop:
                     "Tick %d: Hero #%d died → respawning at home %s in %d ticks.",
                     self._world.tick, eid, entity.home_pos, self._config.hero_respawn_ticks,
                 )
+                self._emit("death", f"Hero #{eid} died → respawning in {self._config.hero_respawn_ticks} ticks",
+                           entity_ids=(eid,),
+                           metadata={"entity_id": eid, "kind": entity.kind,
+                                     "level": entity.stats.level,
+                                     "x": old_pos.x, "y": old_pos.y,
+                                     "respawn": True})
             else:
                 removed = self._world.remove_entity(eid)
                 if removed:
                     logger.info("Tick %d: Entity %d (%s Lv%d) died.", self._world.tick, eid, removed.kind, removed.stats.level)
+                    self._emit("death", f"{removed.kind} #{eid} Lv{removed.stats.level} died",
+                               entity_ids=(eid,),
+                               metadata={"entity_id": eid, "kind": removed.kind,
+                                         "level": removed.stats.level,
+                                         "x": removed.pos.x, "y": removed.pos.y,
+                                         "respawn": False})

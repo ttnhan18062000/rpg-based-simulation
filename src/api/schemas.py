@@ -192,6 +192,7 @@ class EventSchema(BaseModel):
     category: str
     message: str
     entity_ids: list[int] = Field(default_factory=list)
+    metadata: dict | None = None
 
 
 class GroundItemSchema(BaseModel):

@@ -561,26 +561,7 @@ class EngineManager:
         with self._snapshot_lock:
             self._latest_snapshot = snap
 
-        tick = self._loop.world.tick
-        events: list[SimEvent] = []
-        for action in self._loop.last_applied:
-            # Collect all entity IDs referenced in this action
-            involved: list[int] = [action.actor_id]
-            if isinstance(action.target, int):
-                involved.append(action.target)
-            # Map verb to human-readable category
-            cat_map = {
-                "REST": "rest", "MOVE": "movement", "ATTACK": "combat",
-                "USE_ITEM": "item", "LOOT": "loot", "HARVEST": "harvest",
-                "USE_SKILL": "skill",
-            }
-            category = cat_map.get(action.verb.name, action.verb.name.lower())
-            events.append(SimEvent(
-                tick=tick,
-                category=category,
-                message=f"Entity {action.actor_id}: {action.verb.name} → {action.reason}",
-                entity_ids=tuple(involved),
-            ))
+        events: list[SimEvent] = self._loop.tick_events
         if events:
             self._event_log.append_many(events)
 

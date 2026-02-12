@@ -208,6 +208,7 @@ export interface GameEvent {
   category: string;
   message: string;
   entity_ids: number[];
+  metadata?: Record<string, unknown>;
 }
 
 export interface WorldState {

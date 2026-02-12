@@ -15,6 +15,7 @@ class SimEvent:
     category: str
     message: str
     entity_ids: tuple[int, ...] = ()  # IDs of entities involved in this event
+    metadata: dict | None = None      # Structured context (enhance-01)
 
 
 class EventLog:

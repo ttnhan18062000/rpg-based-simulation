@@ -235,7 +235,7 @@ def get_state(
 
     events = [
         EventSchema(tick=ev.tick, category=ev.category, message=ev.message,
-                    entity_ids=list(ev.entity_ids))
+                    entity_ids=list(ev.entity_ids), metadata=ev.metadata)
         for ev in manager.event_log.since_tick(since_tick)
     ]
 

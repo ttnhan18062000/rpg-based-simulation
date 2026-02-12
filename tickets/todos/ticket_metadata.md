@@ -28,7 +28,7 @@ Master index of all active tickets with priority, effort estimate, dependencies,
 
 | ID | Ticket | Priority | Effort | Status | Dependencies |
 |----|--------|----------|--------|--------|-------------|
-| enhance-01 | [Enrich Event Information](enhance-01-enrich-event-information.md) | P2 | M | ready | — |
+| enhance-01 | [Enrich Event Information](enhance-01-enrich-event-information.md) | P2 | M | done | — |
 | enhance-02 | [Bag Max Capacity UI](enhance-02-bag-max-capacity-ui.md) | P3 | XS | done | bug-02 (related) |
 | enhance-03 | [Extend Max Tick to 50000](enhance-03-extend-max-tick-limit.md) | P3 | XS | done | epic-16 (verify perf first) |
 | enhance-04 | [Mob Roaming Leash Distance](enhance-04-mob-roaming-leash.md) | P1 | M | done | — |
@@ -57,7 +57,7 @@ Master index of all active tickets with priority, effort estimate, dependencies,
 
 | Command | What it does |
 |---------|-------------|
-| `make test` | Run all 327+ Python tests |
+| `make test` | Run all 336+ Python tests |
 | `make test-quick` | Run fast tests only (skip `@slow`) |
 | `make test-cov` | Run tests with coverage report |
 | `make profile` | 500-tick performance report (timing, phases, entity counts) |
@@ -116,13 +116,13 @@ Tickets that need developer decision before work can start are marked. Suggested
 
 ### Phase 2 — Design Decisions (needs-decision)
 
-5. **design-01** — Skill stat scaling *(audit + propose, blocks combat epic)*
-6. **design-02** — Revise ticking mechanism *(audit + propose)*
-7. **adjust-01** — Action speed balance *(audit, related to design-02)*
+6. **design-01** — Skill stat scaling *(audit + propose, blocks combat epic)*
+7. **design-02** — Revise ticking mechanism *(audit + propose)*
+8. **adjust-01** — Action speed balance *(audit, related to design-02)*
 
 ### Phase 3 — Gameplay Enhancements
 
-8. **enhance-01** — Enrich event info *(prerequisite for epic-11 replay)*
+9. ✅ **enhance-01** — Enrich event info — metadata on SimEvent, enriched combat/loot/death/level_up/skill events — 9 tests in `test_enriched_events.py`
 10. **epic-15** — Region difficulty scaling *(core progression system)*
 
 ### Phase 4 — Major Features
