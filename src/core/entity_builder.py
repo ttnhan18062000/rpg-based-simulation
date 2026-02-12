@@ -48,7 +48,7 @@ class EntityBuilder:
     __slots__ = (
         "_rng", "_eid", "_tick",
         "_kind", "_pos", "_ai_state", "_faction", "_role",
-        "_home_pos", "_tier",
+        "_home_pos", "_leash_radius", "_tier",
         "_base_hp", "_base_atk", "_base_def", "_base_spd",
         "_luck", "_crit_rate", "_crit_dmg", "_evasion",
         "_level", "_xp", "_xp_to_next", "_gold",
@@ -75,6 +75,7 @@ class EntityBuilder:
         self._faction: Faction = Faction.HERO_GUILD
         self._role: EntityRole = EntityRole.MOB
         self._home_pos: Vector2 | None = None
+        self._leash_radius: int = 0
         self._tier: int = 0
 
         self._base_hp: int = 20
@@ -113,6 +114,10 @@ class EntityBuilder:
 
     def home(self, pos: Vector2 | None) -> EntityBuilder:
         self._home_pos = pos
+        return self
+
+    def leash(self, radius: int) -> EntityBuilder:
+        self._leash_radius = radius
         return self
 
     def ai_state(self, state: AIState) -> EntityBuilder:
@@ -429,6 +434,7 @@ class EntityBuilder:
             role=self._role,
             next_act_at=float(self._tick),
             home_pos=self._home_pos,
+            leash_radius=self._leash_radius,
             tier=self._tier,
             inventory=self._inventory,
             attributes=self._attrs,

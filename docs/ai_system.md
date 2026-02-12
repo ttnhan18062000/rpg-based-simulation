@@ -120,6 +120,7 @@ Each state has a `StateHandler` subclass registered in `STATE_HANDLERS` dict.
 
 ### WanderHandler
 - Moves toward unexplored tiles (frontier exploration)
+- **Leash enforcement (enhance-04):** mobs with `leash_radius > 0` return to camp when beyond leash range
 - Checks for nearby loot, resources, and enemies during movement
 - Heroes with inventory space look for resources within 5 tiles → transition to HARVESTING
 - Enemies in town retreat when below 60% HP or no target visible
@@ -128,6 +129,7 @@ Each state has a `StateHandler` subclass registered in `STATE_HANDLERS` dict.
 - Moves toward the nearest hostile entity using greedy pathfinding
 - Transitions to COMBAT when adjacent (Manhattan ≤ 1)
 - **Diagonal deadlock prevention (bug-01):** when two mutually aggressive entities are at Manhattan distance 2, the higher-ID entity yields (rests) so the lower-ID entity can close the gap unimpeded
+- **Leash enforcement (enhance-04):** abandons chase if distance from home > leash_radius × 1.5, or after `mob_chase_give_up_ticks` (20) without engaging
 - Transitions to FLEE if HP drops below threshold
 - Enemies abort hunts in town at 60% HP
 

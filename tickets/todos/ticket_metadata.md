@@ -30,8 +30,8 @@ Master index of all active tickets with priority, effort estimate, dependencies,
 |----|--------|----------|--------|--------|-------------|
 | enhance-01 | [Enrich Event Information](enhance-01-enrich-event-information.md) | P2 | M | ready | — |
 | enhance-02 | [Bag Max Capacity UI](enhance-02-bag-max-capacity-ui.md) | P3 | XS | done | bug-02 (related) |
-| enhance-03 | [Extend Max Tick to 50000](enhance-03-extend-max-tick-limit.md) | P3 | XS | ready | epic-16 (verify perf first) |
-| enhance-04 | [Mob Roaming Leash Distance](enhance-04-mob-roaming-leash.md) | P1 | M | needs-decision | — |
+| enhance-03 | [Extend Max Tick to 50000](enhance-03-extend-max-tick-limit.md) | P3 | XS | done | epic-16 (verify perf first) |
+| enhance-04 | [Mob Roaming Leash Distance](enhance-04-mob-roaming-leash.md) | P1 | M | done | — |
 
 ## Adjustments
 
@@ -57,7 +57,7 @@ Master index of all active tickets with priority, effort estimate, dependencies,
 
 | Command | What it does |
 |---------|-------------|
-| `make test` | Run all 310+ Python tests |
+| `make test` | Run all 327+ Python tests |
 | `make test-quick` | Run fast tests only (skip `@slow`) |
 | `make test-cov` | Run tests with coverage report |
 | `make profile` | 500-tick performance report (timing, phases, entity counts) |
@@ -111,7 +111,8 @@ Tickets that need developer decision before work can start are marked. Suggested
 1. ✅ **bug-01** — Diagonal HUNT conflict — higher-ID entity yields at Manhattan 2 — 5 tests in `test_conflict_resolver.py`
 2. ✅ **bug-02** — Looting when full bag — `is_effectively_full` checks slots + weight — 8 tests in `test_inventory_goals.py`
 3. ✅ **enhance-02** — Bag capacity UI — slot + weight bars with color coding in InspectPanel
-4. **enhance-03** — Extend max tick *(XS config change)*
+4. ✅ **enhance-03** — Extend max tick to 50000 + EventLog ring buffer (10k cap)
+5. ✅ **enhance-04** — Mob roaming leash — radius 15, chase cap 1.5×, give-up 20 ticks, 5% HP/tick heal on return — 17 tests in `test_mob_leash.py`
 
 ### Phase 2 — Design Decisions (needs-decision)
 
@@ -121,8 +122,7 @@ Tickets that need developer decision before work can start are marked. Suggested
 
 ### Phase 3 — Gameplay Enhancements
 
-8. **enhance-04** — Mob roaming leash *(needs decision on radius values)*
-9. **enhance-01** — Enrich event info *(prerequisite for epic-11 replay)*
+8. **enhance-01** — Enrich event info *(prerequisite for epic-11 replay)*
 10. **epic-15** — Region difficulty scaling *(core progression system)*
 
 ### Phase 4 — Major Features

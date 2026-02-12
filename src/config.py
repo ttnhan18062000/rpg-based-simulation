@@ -15,7 +15,7 @@ class SimulationConfig:
     grid_height: int = 128
 
     # Timing
-    max_ticks: int = 1000
+    max_ticks: int = 50000
     worker_timeout_seconds: float = 2.0
 
     # Workers
@@ -64,6 +64,12 @@ class SimulationConfig:
     hero_inventory_weight: float = 90.0
     goblin_inventory_slots: int = 12
     goblin_inventory_weight: float = 30.0
+
+    # Mob leash (enhance-04)
+    mob_leash_radius: int = 15
+    mob_leash_chase_multiplier: float = 1.5
+    mob_chase_give_up_ticks: int = 20
+    mob_return_heal_rate: float = 0.05  # 5% max HP per tick while returning
 
     # Camps
     num_camps: int = 8

@@ -18,17 +18,17 @@ class SimEvent:
 
 
 class EventLog:
-    """Unbounded event log. Writers append; readers snapshot a slice.
+    """Capped ring-buffer event log. Writers append; readers snapshot a slice.
 
-    All events are kept until manually cleared via ``clear()``.
+    Oldest events are evicted when *maxlen* is exceeded.
     Thread-safe via a simple lock — writes are rare (once per tick batch)
     and reads are non-blocking copies.
     """
 
     __slots__ = ("_buffer", "_lock")
 
-    def __init__(self) -> None:
-        self._buffer: deque[SimEvent] = deque()
+    def __init__(self, maxlen: int = 10_000) -> None:
+        self._buffer: deque[SimEvent] = deque(maxlen=maxlen)
         self._lock = threading.Lock()
 
     def append(self, event: SimEvent) -> None:

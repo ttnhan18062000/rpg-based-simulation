@@ -160,6 +160,13 @@ def can_use_potion(actor: Entity) -> str | None:
     return None
 
 
+def beyond_leash(actor: Entity, multiplier: float = 1.0) -> bool:
+    """True if a mob with a leash is beyond its allowed range from home."""
+    if actor.leash_radius <= 0 or actor.home_pos is None:
+        return False
+    return actor.pos.manhattan(actor.home_pos) > int(actor.leash_radius * multiplier)
+
+
 def propose_retreat_home(ctx: AIContext, reason: str) -> tuple[AIState, ActionProposal]:
     """Generic retreat: faction-aware.  Heroes → TOWN, goblins → CAMP."""
     actor = ctx.actor
@@ -457,6 +464,11 @@ class WanderHandler(StateHandler):
         clear_dead_from_memory(actor, snapshot)
         enemy = ctx.nearest_enemy()
 
+        # Leash enforcement (enhance-04): mobs return home when too far
+        if beyond_leash(actor):
+            actor.chase_ticks = 0
+            return propose_retreat_home(ctx, "Beyond leash range → returning home")
+
         # Town aura: hostiles in town take damage — retreat unless they can finish a kill
         if is_in_hostile_town(ctx):
             if actor.stats.hp_ratio < 0.6 or enemy is None:
@@ -542,6 +554,16 @@ class HuntHandler(StateHandler):
         actor, snapshot, config = ctx.actor, ctx.snapshot, ctx.config
         clear_dead_from_memory(actor, snapshot)
 
+        # Leash enforcement (enhance-04): abandon chase if too far from home
+        if beyond_leash(actor, config.mob_leash_chase_multiplier):
+            actor.chase_ticks = 0
+            return propose_retreat_home(ctx, "Chase leash exceeded → returning home")
+
+        # Chase give-up timer (enhance-04): abandon after too many ticks
+        if actor.leash_radius > 0 and actor.chase_ticks >= config.mob_chase_give_up_ticks:
+            actor.chase_ticks = 0
+            return propose_retreat_home(ctx, "Chase timed out → returning home")
+
         # Town aura pressure: retreat at higher HP threshold
         if is_in_hostile_town(ctx) and actor.stats.hp_ratio < 0.6:
             return propose_retreat_home(ctx, "Town aura burning → aborting hunt")
@@ -553,6 +575,7 @@ class HuntHandler(StateHandler):
         enemy = ctx.nearest_enemy()
 
         if enemy is None:
+            actor.chase_ticks = 0
             # Check memory for last known positions
             if actor.memory:
                 last_seen_id = min(actor.memory.keys())
@@ -568,8 +591,9 @@ class HuntHandler(StateHandler):
                 actor_id=actor.id, verb=ActionType.REST,
                 reason="Lost target → back to wander")
 
-        # Adjacent → attack
+        # Adjacent → attack (reset chase counter on engagement)
         if actor.pos.manhattan(enemy.pos) <= 1:
+            actor.chase_ticks = 0
             return AIState.COMBAT, ActionProposal(
                 actor_id=actor.id, verb=ActionType.ATTACK, target=enemy.id,
                 reason=f"Adjacent to enemy {enemy.id} → attacking")
@@ -585,6 +609,7 @@ class HuntHandler(StateHandler):
                 actor_id=actor.id, verb=ActionType.REST,
                 reason=f"Yielding to let enemy {enemy.id} close gap (anti-deadlock)")
 
+        actor.chase_ticks += 1
         return AIState.HUNT, propose_move_toward(
             actor, enemy.pos, snapshot, f"Hunting enemy {enemy.id}")
 
@@ -756,10 +781,16 @@ class RestingInTownHandler(StateHandler):
 
 class ReturnToCampHandler(StateHandler):
     def handle(self, ctx: AIContext) -> tuple[AIState, ActionProposal]:
-        actor, snapshot = ctx.actor, ctx.snapshot
+        actor, snapshot, config = ctx.actor, ctx.snapshot, ctx.config
         clear_dead_from_memory(actor, snapshot)
 
+        # Heal while returning home (enhance-04)
+        if actor.stats.hp < actor.stats.max_hp and config.mob_return_heal_rate > 0:
+            heal = max(1, int(actor.stats.max_hp * config.mob_return_heal_rate))
+            actor.stats.hp = min(actor.stats.max_hp, actor.stats.hp + heal)
+
         if Perception.is_in_camp(actor, snapshot):
+            actor.chase_ticks = 0
             return AIState.GUARD_CAMP, ActionProposal(
                 actor_id=actor.id, verb=ActionType.REST,
                 reason="Arrived at camp → guarding")

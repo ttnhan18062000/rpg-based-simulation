@@ -135,6 +135,8 @@ class Entity:
     next_act_at: float = 0.0
     memory: dict[int, Vector2] = field(default_factory=dict)
     home_pos: Vector2 | None = None
+    leash_radius: int = 0
+    chase_ticks: int = 0
     tier: int = EnemyTier.BASIC
     inventory: Inventory | None = None
     terrain_memory: dict[tuple[int, int], int] = field(default_factory=dict)
@@ -262,6 +264,8 @@ class Entity:
             next_act_at=self.next_act_at,
             memory=dict(self.memory),
             home_pos=self.home_pos,
+            leash_radius=self.leash_radius,
+            chase_ticks=self.chase_ticks,
             tier=self.tier,
             inventory=self.inventory.copy() if self.inventory else None,
             terrain_memory=dict(self.terrain_memory),
