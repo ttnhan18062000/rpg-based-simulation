@@ -43,7 +43,7 @@ Master index of all active tickets with priority, effort estimate, dependencies,
 
 | ID | Ticket | Priority | Effort | Status | Dependencies |
 |----|--------|----------|--------|--------|-------------|
-| design-01 | [Skill & Basic Attack Stat Scaling](design-01-skill-stat-scaling.md) | P1 | S | needs-decision | — |
+| design-01 | [Skill & Basic Attack Stat Scaling](design-01-skill-stat-scaling.md) | P1 | S | done | — |
 | design-02 | [Revise Ticking Mechanism](design-02-revise-ticking-mechanism.md) | P2 | M | needs-decision | — |
 
 ## Infrastructure (Testing & Profiling)
@@ -57,7 +57,7 @@ Master index of all active tickets with priority, effort estimate, dependencies,
 
 | Command | What it does |
 |---------|-------------|
-| `make test` | Run all 336+ Python tests |
+| `make test` | Run all 352+ Python tests |
 | `make test-quick` | Run fast tests only (skip `@slow`) |
 | `make test-cov` | Run tests with coverage report |
 | `make profile` | 500-tick performance report (timing, phases, entity counts) |
@@ -117,7 +117,7 @@ Tickets that need developer decision before work can start are marked. Suggested
 ### Phase 2 — Design Decisions (needs-decision)
 
 6. ✅ **adjust-01** — Action speed balance — doubled all delay multipliers, added building interaction delays — SPD stat now meaningful
-7. **design-01** — Skill stat scaling *(audit + propose, blocks combat epic)*
+7. ✅ **design-01** — Skill stat scaling — damage_type on SkillDef, DamageCalculator routing, crit/variance/evasion on skills — 16 tests in `test_skill_scaling.py`
 8. **design-02** — Revise ticking mechanism *(audit + propose)*
 
 ### Phase 3 — Gameplay Enhancements

@@ -124,6 +124,7 @@ export interface SkillDefEntry {
   crit_mod: number;
   evasion_mod: number;
   hp_mod: number;
+  damage_type: string;
 }
 
 export interface BreakthroughEntry {

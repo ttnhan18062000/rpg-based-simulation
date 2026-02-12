@@ -22,6 +22,8 @@ from typing import Annotated
 from pydantic import PlainSerializer
 from pydantic.dataclasses import dataclass as pydantic_dataclass
 
+from src.core.enums import DamageType
+
 
 # ---------------------------------------------------------------------------
 # Enums
@@ -74,6 +76,7 @@ class SkillTarget(IntEnum):
 _SkillTypeSer = Annotated[SkillType, PlainSerializer(lambda v: SkillType(v).name.lower(), return_type=str)]
 _SkillTargetSer = Annotated[SkillTarget, PlainSerializer(lambda v: SkillTarget(v).name.lower(), return_type=str)]
 _HeroClassSer = Annotated[HeroClass, PlainSerializer(lambda v: HeroClass(v).name.lower(), return_type=str)]
+_DamageTypeSer = Annotated[int, PlainSerializer(lambda v: DamageType(v).name.lower(), return_type=str)]
 
 
 @pydantic_dataclass(frozen=True)
@@ -103,6 +106,8 @@ class SkillDef:
     crit_mod: float = 0.0
     evasion_mod: float = 0.0
     hp_mod: float = 0.0
+    # Damage type: determines which stat pair (ATK/DEF vs MATK/MDEF) is used
+    damage_type: _DamageTypeSer = DamageType.PHYSICAL
 
 
 @dataclass(slots=True)
@@ -614,7 +619,7 @@ _reg_skill(SkillDef(
     "Launch a magical bolt dealing 2.0x damage at range 4.",
     SkillType.ACTIVE, SkillTarget.SINGLE_ENEMY, HeroClass.MAGE,
     level_req=1, gold_cost=50, cooldown=4, stamina_cost=14,
-    power=2.0, range=4,
+    power=2.0, range=4, damage_type=DamageType.MAGICAL,
 ))
 _reg_skill(SkillDef(
     "frost_shield", "Frost Shield",
@@ -720,7 +725,7 @@ _reg_skill(SkillDef(
     "Drain enemy HP, dealing 1.3x damage and healing self for 30% of damage dealt.",
     SkillType.ACTIVE, SkillTarget.SINGLE_ENEMY, HeroClass.NONE,
     level_req=1, gold_cost=0, cooldown=6, stamina_cost=12,
-    power=1.3, hp_mod=0.3, range=1,
+    power=1.3, hp_mod=0.3, range=1, damage_type=DamageType.MAGICAL,
 ))
 
 # Orc race skills

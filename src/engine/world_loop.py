@@ -14,7 +14,7 @@ import time
 from typing import TYPE_CHECKING
 
 from src.core.effects import EffectType, territory_debuff
-from src.core.enums import AIState, ActionType
+from src.core.enums import AIState, ActionType, Domain
 from src.core.faction import Faction, FactionRegistry
 from src.core.items import ITEM_REGISTRY
 from src.core.snapshot import Snapshot
@@ -418,6 +418,7 @@ class WorldLoop:
                 # Use a skill on a target
                 from src.core.classes import SKILL_DEFS, SkillTarget
                 from src.core.effects import skill_effect
+                from src.actions.damage import get_damage_calculator
                 skill_id: str = proposal.target if isinstance(proposal.target, str) else ""
                 # Find the skill instance on the entity
                 skill_inst = None
@@ -439,7 +440,9 @@ class WorldLoop:
                                             sdef.crit_mod, sdef.evasion_mod])
 
                             if sdef.target in (SkillTarget.SINGLE_ENEMY, SkillTarget.AREA_ENEMIES):
-                                # Deal damage + apply debuff to enemies in range
+                                # Resolve damage via DamageCalculator (design-01)
+                                calculator = get_damage_calculator(sdef.damage_type)
+
                                 for eid, other in self._world.entities.items():
                                     if eid == entity.id or not other.alive:
                                         continue
@@ -447,20 +450,53 @@ class WorldLoop:
                                         continue
                                     if not self._faction_reg.is_hostile(entity.faction, other.faction):
                                         continue
-                                    # Damage
+
+                                    # Evasion check
+                                    defender_evasion = other.effective_evasion()
+                                    luck_mod = entity.stats.luck * 0.002
+                                    eff_evasion = max(0.0, defender_evasion - luck_mod)
+                                    if self._rng and self._rng.next_bool(
+                                            Domain.COMBAT, other.id, self._world.tick + 7, eff_evasion):
+                                        logger.info("Tick %d: Entity %d's %s EVADED by %d",
+                                                    self._world.tick, entity.id, sdef.name, eid)
+                                        if sdef.target == SkillTarget.SINGLE_ENEMY:
+                                            break
+                                        continue
+
+                                    # Damage calculation using correct stat pair
                                     if power > 0:
-                                        raw_dmg = int(entity.effective_atk() * power)
-                                        dmg = max(raw_dmg - other.effective_def() // 2, 1)
+                                        dmg_ctx = calculator.resolve(entity, other)
+                                        raw_dmg = int(dmg_ctx.atk_power * dmg_ctx.atk_mult * power)
+                                        raw_dmg = max(raw_dmg - int(dmg_ctx.def_power * dmg_ctx.def_mult) // 2, 1)
+
+                                        # Variance
+                                        if self._rng:
+                                            variance = self._rng.next_float(
+                                                Domain.COMBAT, entity.id, self._world.tick + 5)
+                                            raw_dmg = max(1, int(raw_dmg * (1.0 + self._config.damage_variance * (variance - 0.5))))
+
+                                        # Crit check
+                                        is_crit = False
+                                        crit_rate = entity.effective_crit_rate()
+                                        crit_rate += entity.stats.luck * 0.003
+                                        if self._rng and self._rng.next_bool(
+                                                Domain.COMBAT, entity.id, self._world.tick + 6, min(crit_rate, 0.8)):
+                                            raw_dmg = int(raw_dmg * entity.stats.crit_dmg)
+                                            is_crit = True
+
+                                        dmg = max(raw_dmg, 1)
                                         other.stats.hp -= dmg
                                         logger.info(
-                                            "Tick %d: Entity %d used %s on %d → %d dmg [HP: %d/%d]",
+                                            "Tick %d: Entity %d used %s on %d → %d dmg%s [HP: %d/%d]",
                                             self._world.tick, entity.id, sdef.name,
-                                            eid, dmg, other.stats.hp, other.stats.max_hp,
+                                            eid, dmg, " CRIT!" if is_crit else "",
+                                            other.stats.hp, other.stats.max_hp,
                                         )
                                         self._emit("skill", f"{entity.kind} #{entity.id} used {sdef.name} on #{eid} → {dmg} dmg",
                                                    entity_ids=(entity.id, eid),
                                                    metadata={"skill_id": skill_id, "skill_name": sdef.name,
                                                              "damage": dmg, "target_id": eid,
+                                                             "crit": is_crit,
                                                              "target_hp_after": other.stats.hp,
                                                              "target_max_hp": other.stats.max_hp})
                                     # Apply debuff if skill has duration + mods
