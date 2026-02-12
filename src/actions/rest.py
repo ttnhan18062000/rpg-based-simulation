@@ -6,7 +6,7 @@ import logging
 from typing import TYPE_CHECKING
 
 from src.actions.base import ActionProposal
-from src.core.enums import ActionType
+from src.core.enums import AIState, ActionType
 
 if TYPE_CHECKING:
     from src.core.world_state import WorldState
@@ -24,6 +24,12 @@ class RestAction:
         entity = world.entities.get(proposal.actor_id)
         return entity is not None and entity.alive
 
+    # AI states that represent building interactions (higher delay)
+    _BUILDING_STATES = frozenset({
+        AIState.VISIT_SHOP, AIState.VISIT_BLACKSMITH, AIState.VISIT_GUILD,
+        AIState.VISIT_CLASS_HALL, AIState.VISIT_INN, AIState.VISIT_HOME,
+    })
+
     @staticmethod
     def apply(proposal: ActionProposal, world: WorldState) -> None:
         entity = world.entities.get(proposal.actor_id)
@@ -33,4 +39,5 @@ class RestAction:
         if entity.stats.hp < entity.stats.max_hp:
             entity.stats.hp = min(entity.stats.hp + 1, entity.stats.max_hp)
         from src.core.attributes import speed_delay
-        entity.next_act_at += speed_delay(entity.stats.spd, "rest", entity.stats.interaction_speed)
+        action_type = "building" if entity.ai_state in RestAction._BUILDING_STATES else "rest"
+        entity.next_act_at += speed_delay(entity.stats.spd, action_type, entity.stats.interaction_speed)

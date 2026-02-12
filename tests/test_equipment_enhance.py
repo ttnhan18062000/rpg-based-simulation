@@ -368,7 +368,7 @@ class TestSpeedDelay:
     def test_spd_1_base_delay(self):
         from src.core.attributes import speed_delay
         d = speed_delay(1, "move")
-        assert abs(d - 1.0) < 0.01  # ln(1)=0, so 1/(1+0) = 1.0
+        assert abs(d - 2.0) < 0.01  # ln(1)=0, so 2.0/(1+0) = 2.0 (move mult=2.0)
 
     def test_logarithmic_diminishing_returns(self):
         from src.core.attributes import speed_delay
@@ -399,12 +399,12 @@ class TestSpeedDelay:
     def test_min_delay_floor(self):
         from src.core.attributes import speed_delay
         d = speed_delay(999999, "use_item")
-        assert d >= 0.15  # _MIN_DELAY
+        assert d >= 0.3  # _MIN_DELAY
 
     def test_max_delay_ceiling(self):
         from src.core.attributes import speed_delay
         d = speed_delay(1, "skill")
-        assert d <= 2.0  # _MAX_DELAY
+        assert d <= 4.0  # _MAX_DELAY
 
     def test_interaction_speed_scales_non_combat(self):
         from src.core.attributes import speed_delay

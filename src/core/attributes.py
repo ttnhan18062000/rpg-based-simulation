@@ -365,19 +365,20 @@ def level_up_attributes(attrs: Attributes, caps: AttributeCaps) -> None:
 
 # Action-type delay multipliers (lower = faster for that action type)
 _ACTION_DELAY_MULT: dict[str, float] = {
-    "move": 1.0,
-    "attack": 0.9,
-    "skill": 1.2,
-    "loot": 0.7,
-    "harvest": 0.7,
-    "use_item": 0.6,
-    "rest": 1.0,
+    "move": 2.0,
+    "attack": 1.5,
+    "skill": 2.5,
+    "loot": 1.2,
+    "harvest": 1.2,
+    "use_item": 1.0,
+    "rest": 1.5,
+    "building": 2.0,     # Building visit interactions (shop, blacksmith, guild, etc.)
 }
 
 # Minimum delay floor (prevents infinitely fast actions)
-_MIN_DELAY = 0.15
+_MIN_DELAY = 0.3
 # Maximum delay ceiling
-_MAX_DELAY = 2.0
+_MAX_DELAY = 4.0
 
 
 def speed_delay(spd: int, action: str = "move", interaction_speed: float = 1.0) -> float:
@@ -386,14 +387,14 @@ def speed_delay(spd: int, action: str = "move", interaction_speed: float = 1.0) 
     Formula: delay = action_mult / (1.0 + ln(max(spd, 1)))
     Then scaled by interaction_speed for loot/harvest/use_item.
 
-    SPD →  delay (move):
-      1  → 1.00
-      5  → 0.53
-     10  → 0.38
-     15  → 0.34
-     20  → 0.31
-     30  → 0.27
-     50  → 0.24
+    SPD →  delay (move, mult=2.0):
+      1  → 2.00
+      5  → 0.76
+     10  → 0.60
+     15  → 0.54
+     20  → 0.50
+     30  → 0.45
+     50  → 0.40
 
     Returns a float clamped to [_MIN_DELAY, _MAX_DELAY].
     """

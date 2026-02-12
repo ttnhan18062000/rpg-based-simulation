@@ -37,7 +37,7 @@ Master index of all active tickets with priority, effort estimate, dependencies,
 
 | ID | Ticket | Priority | Effort | Status | Dependencies |
 |----|--------|----------|--------|--------|-------------|
-| adjust-01 | [Action Speed Balance Review](adjust-01-action-speed-balance.md) | P2 | S | needs-decision | design-02 (related) |
+| adjust-01 | [Action Speed Balance Review](adjust-01-action-speed-balance.md) | P2 | S | done | design-02 (related) |
 
 ## Design Reviews
 
@@ -116,9 +116,9 @@ Tickets that need developer decision before work can start are marked. Suggested
 
 ### Phase 2 — Design Decisions (needs-decision)
 
-6. **design-01** — Skill stat scaling *(audit + propose, blocks combat epic)*
-7. **design-02** — Revise ticking mechanism *(audit + propose)*
-8. **adjust-01** — Action speed balance *(audit, related to design-02)*
+6. ✅ **adjust-01** — Action speed balance — doubled all delay multipliers, added building interaction delays — SPD stat now meaningful
+7. **design-01** — Skill stat scaling *(audit + propose, blocks combat epic)*
+8. **design-02** — Revise ticking mechanism *(audit + propose)*
 
 ### Phase 3 — Gameplay Enhancements
 
