@@ -148,7 +148,12 @@ class WorldLoop:
             self._recorder.flush()
 
     def _step(self) -> None:
-        """Execute one complete tick cycle."""
+        """Execute one complete tick cycle.
+
+        Two phases:
+        1. **Action phase** — only when entities are ready (schedule → collect → resolve → apply)
+        2. **Subsystem phase** — always runs, with configurable rate divisors (design-02)
+        """
         self._tick_events = []
         tick = self._world.tick
         t0 = time.perf_counter()
@@ -157,94 +162,98 @@ class WorldLoop:
         self._phase_generators()
         ready_entities = self._phase_scheduling()
 
-        if not ready_entities:
-            return
+        applied: list = []
+        t1 = t2 = t3 = t0
 
-        t1 = time.perf_counter()
+        if ready_entities:
+            t1 = time.perf_counter()
 
-        # --- Phase 2: Wait & Collect ---
-        snapshot = Snapshot.from_world(self._world)
-        self._worker_pool.dispatch(ready_entities, snapshot, self._action_queue)
-        proposals = self._action_queue.drain()
+            # --- Phase 2: Wait & Collect ---
+            snapshot = Snapshot.from_world(self._world)
+            self._worker_pool.dispatch(ready_entities, snapshot, self._action_queue)
+            proposals = self._action_queue.drain()
 
-        t2 = time.perf_counter()
+            t2 = time.perf_counter()
 
-        # --- Phase 3: Conflict Resolution & Application ---
-        applied = self._conflict_resolver.resolve(proposals, self._world)
-        self._last_applied = applied
+            # --- Phase 3: Conflict Resolution & Application ---
+            applied = self._conflict_resolver.resolve(proposals, self._world)
+            self._last_applied = applied
 
-        # Emit base events for all applied actions
-        _cat_map = {
-            "REST": "rest", "MOVE": "movement", "ATTACK": "combat",
-            "USE_ITEM": "item", "LOOT": "loot", "HARVEST": "harvest",
-            "USE_SKILL": "skill",
-        }
-        for action in applied:
-            involved: list[int] = [action.actor_id]
-            if isinstance(action.target, int):
-                involved.append(action.target)
-            cat = _cat_map.get(action.verb.name, action.verb.name.lower())
-            meta: dict = {"verb": action.verb.name, "actor_id": action.actor_id}
-            if isinstance(action.target, int):
-                meta["target_id"] = action.target
-            self._emit(
-                cat,
-                f"Entity {action.actor_id}: {action.verb.name} → {action.reason}",
-                entity_ids=tuple(involved),
-                metadata=meta,
-            )
+            # Emit base events for all applied actions
+            _cat_map = {
+                "REST": "rest", "MOVE": "movement", "ATTACK": "combat",
+                "USE_ITEM": "item", "LOOT": "loot", "HARVEST": "harvest",
+                "USE_SKILL": "skill",
+            }
+            for action in applied:
+                involved: list[int] = [action.actor_id]
+                if isinstance(action.target, int):
+                    involved.append(action.target)
+                cat = _cat_map.get(action.verb.name, action.verb.name.lower())
+                meta: dict = {"verb": action.verb.name, "actor_id": action.actor_id}
+                if isinstance(action.target, int):
+                    meta["target_id"] = action.target
+                self._emit(
+                    cat,
+                    f"Entity {action.actor_id}: {action.verb.name} → {action.reason}",
+                    entity_ids=tuple(involved),
+                    metadata=meta,
+                )
 
-        # Update AI states from worker results
-        self._update_ai_states(applied)
+            # Update AI states from worker results
+            self._update_ai_states(applied)
 
-        # Process USE_ITEM and LOOT actions (state mutations on world loop thread)
-        self._process_item_actions(applied)
+            # Process USE_ITEM and LOOT actions (state mutations on world loop thread)
+            self._process_item_actions(applied)
 
-        # Heal heroes resting in town / camp
-        self._heal_home_entities()
+            t3 = time.perf_counter()
 
-        t3 = time.perf_counter()
-
-        # --- Phase 4: Cleanup & Advancement ---
-        self._phase_cleanup()
-
-        # Territory intrusion: apply debuffs and trigger alerts
-        self._process_territory_effects()
-
-        # Tick down status effects and remove expired ones
-        self._tick_effects()
-
-        # Tick resource node cooldowns (respawn depleted nodes)
-        self._tick_resource_nodes()
-
-        # Tick treasure chest respawns
-        self._tick_treasure_chests()
-
-        # Update engagement tracking (for Engagement Lock anti-kite)
-        self._tick_engagement()
-
-        # Level-up checks
-        self._check_level_ups()
-
-        # Stamina regen and skill cooldown ticking
-        self._tick_stamina_and_skills()
-
-        # Update entity perception memory and goals
-        self._update_entity_memory()
-        self._tick_quests()
-        self._update_entity_goals()
+        # --- Subsystem phase: always runs (design-02) ---
+        self._tick_subsystems(tick)
 
         t4 = time.perf_counter()
 
-        logger.debug(
-            "Tick %d: schedule=%.4fs collect=%.4fs resolve=%.4fs cleanup=%.4fs total=%.4fs entities=%d proposals=%d applied=%d",
-            tick,
-            t1 - t0, t2 - t1, t3 - t2, t4 - t3, t4 - t0,
-            len(ready_entities), len(proposals), len(applied),
-        )
+        if ready_entities:
+            logger.debug(
+                "Tick %d: schedule=%.4fs collect=%.4fs resolve=%.4fs subsys=%.4fs total=%.4fs entities=%d applied=%d",
+                tick,
+                t1 - t0, t2 - t1, t3 - t2, t4 - t3, t4 - t0,
+                len(ready_entities), len(applied),
+            )
 
-        if self._recorder:
+        if self._recorder and applied:
             self._recorder.record_tick(tick, applied, self._world)
+
+    def _tick_subsystems(self, tick: int) -> None:
+        """Run world subsystems with configurable rate divisors (design-02).
+
+        Groups:
+        - **core** (rate=1): cleanup, effects, stamina, cooldowns, engagement
+        - **environment** (rate=2): territory, memory, goals
+        - **economy** (rate=5): resources, chests, healing, quests, level-ups
+        """
+        cfg = self._config
+
+        # Core subsystems — every N ticks (default: every tick)
+        if tick % cfg.subsystem_rate_core == 0:
+            self._phase_cleanup()
+            self._tick_effects()
+            self._tick_stamina_and_skills()
+            self._tick_engagement()
+
+        # Environment subsystems — every N ticks (default: every 2nd tick)
+        if tick % cfg.subsystem_rate_environment == 0:
+            self._process_territory_effects()
+            self._update_entity_memory()
+            self._update_entity_goals()
+
+        # Economy subsystems — every N ticks (default: every 5th tick)
+        if tick % cfg.subsystem_rate_economy == 0:
+            self._tick_resource_nodes()
+            self._tick_treasure_chests()
+            self._heal_home_entities()
+            self._tick_quests()
+            self._check_level_ups()
 
     def _phase_generators(self) -> None:
         """Run generator entities (immediate, no worker dispatch)."""

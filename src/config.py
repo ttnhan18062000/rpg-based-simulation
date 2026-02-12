@@ -107,6 +107,12 @@ class SimulationConfig:
     # Looting
     loot_duration: int = 3                  # Ticks to channel before picking up loot
 
+    # Subsystem tick rates (design-02): how often each subsystem group runs
+    # rate=1 means every tick, rate=2 means every 2nd tick, etc.
+    subsystem_rate_core: int = 1          # Cleanup, effects, stamina, cooldowns, engagement
+    subsystem_rate_environment: int = 2   # Territory effects, entity memory, goals
+    subsystem_rate_economy: int = 5       # Resource respawn, chest respawn, healing, quests
+
     # Logging
     log_level: str = "INFO"
     replay_file: str = "replay.json"
