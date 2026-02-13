@@ -14,7 +14,9 @@ from src.api.schemas import (
     EntitySchema,
     EventSchema,
     GroundItemSchema,
+    LocationSchema,
     QuestSchema,
+    RegionSchema,
     ResourceNodeSchema,
     SimulationStats,
     SkillSchema,
@@ -207,6 +209,9 @@ def get_state(
             elem_vuln_ice=e.stats.elem_vuln.get(2, 1.0),
             elem_vuln_lightning=e.stats.elem_vuln.get(3, 1.0),
             elem_vuln_dark=e.stats.elem_vuln.get(4, 1.0),
+            region_id=e.region_id,
+            difficulty_tier=e.difficulty_tier,
+            current_region_id=e.current_region_id,
             traits=list(e.traits),
             home_storage_used=e.home_storage.used_slots if e.home_storage else 0,
             home_storage_max=e.home_storage.max_slots if e.home_storage else 0,
@@ -292,6 +297,27 @@ def get_state(
             for c in snapshot.treasure_chests
         ]
 
+    regions = []
+    if hasattr(snapshot, 'regions'):
+        regions = [
+            RegionSchema(
+                region_id=r.region_id, name=r.name,
+                terrain=int(r.terrain),
+                center_x=r.center.x, center_y=r.center.y,
+                radius=r.radius, difficulty=r.difficulty,
+                locations=[
+                    LocationSchema(
+                        location_id=loc.location_id, name=loc.name,
+                        location_type=loc.location_type,
+                        x=loc.pos.x, y=loc.pos.y,
+                        region_id=loc.region_id,
+                    )
+                    for loc in r.locations
+                ],
+            )
+            for r in snapshot.regions
+        ]
+
     alive_count = len(entities)
     return WorldStateResponse(
         tick=snapshot.tick,
@@ -302,6 +328,7 @@ def get_state(
         buildings=buildings,
         resource_nodes=resource_nodes,
         treasure_chests=treasure_chests,
+        regions=regions,
     )
 
 

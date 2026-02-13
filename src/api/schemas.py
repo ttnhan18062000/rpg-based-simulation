@@ -167,6 +167,10 @@ class EntitySchema(BaseModel):
     elem_vuln_ice: float = 1.0
     elem_vuln_lightning: float = 1.0
     elem_vuln_dark: float = 1.0
+    # Region (epic-15)
+    region_id: str = ""
+    difficulty_tier: int = 1
+    current_region_id: str = ""
     # Home storage
     home_storage_used: int = 0
     home_storage_max: int = 0
@@ -252,6 +256,26 @@ class TreasureChestSchema(BaseModel):
     guard_entity_id: int | None = None
 
 
+class LocationSchema(BaseModel):
+    location_id: str
+    name: str
+    location_type: str
+    x: int
+    y: int
+    region_id: str
+
+
+class RegionSchema(BaseModel):
+    region_id: str
+    name: str
+    terrain: int
+    center_x: int
+    center_y: int
+    radius: int
+    difficulty: int
+    locations: list[LocationSchema] = Field(default_factory=list)
+
+
 class WorldStateResponse(BaseModel):
     tick: int
     alive_count: int
@@ -261,6 +285,7 @@ class WorldStateResponse(BaseModel):
     buildings: list[BuildingSchema] = Field(default_factory=list)
     resource_nodes: list[ResourceNodeSchema] = Field(default_factory=list)
     treasure_chests: list[TreasureChestSchema] = Field(default_factory=list)
+    regions: list[RegionSchema] = Field(default_factory=list)
 
 
 # --- Control ---

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import type { MapData, WorldState, SimulationStats, Entity, GameEvent, GroundItem, Building, ResourceNode } from '@/types/api';
+import type { MapData, WorldState, SimulationStats, Entity, GameEvent, GroundItem, Building, ResourceNode, Region } from '@/types/api';
 
 const API_BASE = '/api/v1';
 const POLL_MS = 80;
@@ -19,6 +19,7 @@ export interface SimulationState {
   groundItems: GroundItem[];
   buildings: Building[];
   resourceNodes: ResourceNode[];
+  regions: Region[];
   tick: number;
   aliveCount: number;
   totalSpawned: number;
@@ -38,6 +39,7 @@ export function useSimulation(): SimulationState {
   const [groundItems, setGroundItems] = useState<GroundItem[]>([]);
   const [buildings, setBuildings] = useState<Building[]>([]);
   const [resourceNodes, setResourceNodes] = useState<ResourceNode[]>([]);
+  const [regions, setRegions] = useState<Region[]>([]);
   const [tick, setTick] = useState(0);
   const [aliveCount, setAliveCount] = useState(0);
   const [totalSpawned, setTotalSpawned] = useState(0);
@@ -90,6 +92,7 @@ export function useSimulation(): SimulationState {
         setGroundItems(state.ground_items || []);
         setBuildings(state.buildings || []);
         setResourceNodes(state.resource_nodes || []);
+        setRegions(state.regions || []);
         if (state.events.length > 0) {
           setEvents(prev => {
             // Merge: keep all previous events, append only genuinely new ones
@@ -161,6 +164,7 @@ export function useSimulation(): SimulationState {
     groundItems,
     buildings,
     resourceNodes,
+    regions,
     tick,
     aliveCount,
     totalSpawned,

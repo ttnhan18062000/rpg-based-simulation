@@ -163,6 +163,10 @@ class Entity:
     last_reason: str = ""
     # Engagement lock: ticks spent adjacent to a hostile (for anti-kite)
     engaged_ticks: int = 0
+    # Region (epic-15)
+    region_id: str = ""
+    difficulty_tier: int = 1
+    current_region_id: str = ""  # Tracks which region the entity is currently standing in
 
     @property
     def alive(self) -> bool:

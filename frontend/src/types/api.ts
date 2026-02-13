@@ -140,6 +140,10 @@ export interface Entity {
   elem_vuln_ice: number;
   elem_vuln_lightning: number;
   elem_vuln_dark: number;
+  // Region (epic-15)
+  region_id: string;
+  difficulty_tier: number;
+  current_region_id: string;
 }
 
 export interface EntityEffect {
@@ -211,6 +215,35 @@ export interface GameEvent {
   metadata?: Record<string, unknown>;
 }
 
+export interface TreasureChest {
+  chest_id: number;
+  x: number;
+  y: number;
+  tier: number;
+  looted: boolean;
+  guard_entity_id: number | null;
+}
+
+export interface Location {
+  location_id: string;
+  name: string;
+  location_type: string;
+  x: number;
+  y: number;
+  region_id: string;
+}
+
+export interface Region {
+  region_id: string;
+  name: string;
+  terrain: number;
+  center_x: number;
+  center_y: number;
+  radius: number;
+  difficulty: number;
+  locations: Location[];
+}
+
 export interface WorldState {
   tick: number;
   alive_count: number;
@@ -219,6 +252,8 @@ export interface WorldState {
   ground_items: GroundItem[];
   buildings: Building[];
   resource_nodes: ResourceNode[];
+  treasure_chests: TreasureChest[];
+  regions: Region[];
 }
 
 export interface SimulationStats {

@@ -11,8 +11,10 @@ from src.core.faction import Faction
 from src.core.items import (
     Inventory, LOOT_TABLES, TIER_KIND_NAMES, TIER_STARTING_GEAR, ITEM_REGISTRY,
     RACE_TIER_KINDS, RACE_STARTING_GEAR, RACE_STAT_MODS, RACE_LOOT_TABLES, RACE_FACTION,
+    DIFFICULTY_DROP_MULTIPLIER, DIFFICULTY_BONUS_LOOT,
 )
 from src.core.models import Entity, Vector2
+from src.core.regions import DIFFICULTY_TIERS
 
 if TYPE_CHECKING:
     from src.config import SimulationConfig
@@ -45,8 +47,15 @@ class EntityGenerator:
             and alive_count < self._config.generator_max_entities
         )
 
-    def spawn(self, world: WorldState, tier: int | None = None, near_pos: Vector2 | None = None) -> Entity:
-        """Create a new tiered entity with deterministic random stats, equipment, and position."""
+    def spawn(
+        self, world: WorldState, tier: int | None = None,
+        near_pos: Vector2 | None = None, difficulty_tier: int = 1,
+    ) -> Entity:
+        """Create a new tiered entity with deterministic random stats, equipment, and position.
+
+        difficulty_tier (1-4) applies region-based stat multipliers on top of
+        the enemy tier multipliers.
+        """
         eid = world.allocate_entity_id()
         tick = world.tick
 
@@ -54,23 +63,24 @@ class EntityGenerator:
             tier = self._roll_tier(eid, tick)
 
         pos = self._resolve_position(world, eid, tick, near_pos)
+        diff = DIFFICULTY_TIERS.get(difficulty_tier, DIFFICULTY_TIERS[1])
 
         # Base stats with tier multipliers
         hp_m, atk_m, def_base, spd_mod, crit, evasion, luck = _TIER_STATS.get(
             tier, _TIER_STATS[EnemyTier.BASIC])
 
-        base_hp = int((15 + self._rng.next_int(Domain.SPAWN, eid, tick + 2, 0, 10)) * hp_m)
-        base_atk = int((3 + self._rng.next_int(Domain.SPAWN, eid, tick + 3, 0, 4)) * atk_m)
+        base_hp = int((15 + self._rng.next_int(Domain.SPAWN, eid, tick + 2, 0, 10)) * hp_m * diff.hp)
+        base_atk = int((3 + self._rng.next_int(Domain.SPAWN, eid, tick + 3, 0, 4)) * atk_m * diff.atk)
         base_spd = 8 + self._rng.next_int(Domain.SPAWN, eid, tick + 4, 0, 4) + spd_mod
-        base_def = def_base + self._rng.next_int(Domain.SPAWN, eid, tick + 5, 0, 2)
+        base_def = int((def_base + self._rng.next_int(Domain.SPAWN, eid, tick + 5, 0, 2)) * diff.def_)
 
-        level = 1 + tier
+        level = self._rng.next_int(Domain.SPAWN, eid, tick + 6, diff.level_min, diff.level_max)
         kind = TIER_KIND_NAMES.get(tier, "goblin")
         ai_state = self._resolve_ai_state(tier, near_pos)
-        inv = self._build_goblin_inventory(eid, tick, tier)
+        inv = self._build_goblin_inventory(eid, tick, tier, difficulty_tier)
 
         mob_cls = mob_class_for("goblin", tier)
-        return (
+        entity = (
             EntityBuilder(self._rng, eid, tick=tick)
             .kind(kind)
             .at(pos)
@@ -83,7 +93,7 @@ class EntityGenerator:
                 hp=base_hp, atk=base_atk, def_=base_def, spd=max(base_spd, 1),
                 luck=luck, crit_rate=crit, crit_dmg=1.5, evasion=evasion,
                 level=level, xp_to_next=int(100 * (1.5 ** (level - 1))),
-                gold=self._rng.next_int(Domain.LOOT, eid, tick, 0, 10 + tier * 10),
+                gold=int(self._rng.next_int(Domain.LOOT, eid, tick, 0, 10 + tier * 10) * diff.gold),
             )
             .with_existing_inventory(inv)
             .with_mob_class(mob_cls)
@@ -92,12 +102,18 @@ class EntityGenerator:
             .with_traits(race_prefix="goblin")
             .build()
         )
+        entity.difficulty_tier = difficulty_tier
+        return entity
 
     def spawn_race(
         self, world: WorldState, race: str,
         tier: int | None = None, near_pos: Vector2 | None = None,
+        difficulty_tier: int = 1,
     ) -> Entity:
-        """Spawn a race-specific entity (wolf, bandit, undead, orc)."""
+        """Spawn a race-specific entity (wolf, bandit, undead, orc).
+
+        difficulty_tier (1-4) applies region-based stat multipliers.
+        """
         eid = world.allocate_entity_id()
         tick = world.tick
 
@@ -105,6 +121,7 @@ class EntityGenerator:
             tier = self._roll_tier(eid, tick)
 
         pos = self._resolve_position(world, eid, tick, near_pos)
+        diff = DIFFICULTY_TIERS.get(difficulty_tier, DIFFICULTY_TIERS[1])
 
         # Race-specific stats
         race_mods = RACE_STAT_MODS.get(race, (1.0, 1.0, 0, 0, 0.05, 0.0, 0))
@@ -114,17 +131,17 @@ class EntityGenerator:
         hp_m, atk_m, def_base, spd_mod, t_crit, t_evasion, t_luck = _TIER_STATS.get(
             tier, _TIER_STATS[EnemyTier.BASIC])
 
-        base_hp = int((15 + self._rng.next_int(Domain.SPAWN, eid, tick + 2, 0, 10)) * hp_m * r_hp_m)
-        base_atk = int((3 + self._rng.next_int(Domain.SPAWN, eid, tick + 3, 0, 4)) * atk_m * r_atk_m)
+        base_hp = int((15 + self._rng.next_int(Domain.SPAWN, eid, tick + 2, 0, 10)) * hp_m * r_hp_m * diff.hp)
+        base_atk = int((3 + self._rng.next_int(Domain.SPAWN, eid, tick + 3, 0, 4)) * atk_m * r_atk_m * diff.atk)
         base_spd = 8 + self._rng.next_int(Domain.SPAWN, eid, tick + 4, 0, 4) + spd_mod + r_spd_mod
-        base_def = def_base + r_def_mod + self._rng.next_int(Domain.SPAWN, eid, tick + 5, 0, 2)
+        base_def = int((def_base + r_def_mod + self._rng.next_int(Domain.SPAWN, eid, tick + 5, 0, 2)) * diff.def_)
 
-        level = 1 + tier
+        level = self._rng.next_int(Domain.SPAWN, eid, tick + 6, diff.level_min, diff.level_max)
         kind_map = RACE_TIER_KINDS.get(race, {})
         kind = kind_map.get(tier, race)
         faction = RACE_FACTION.get(race, Faction.GOBLIN_HORDE)
         ai_state = self._resolve_ai_state(tier, near_pos)
-        inv = self._build_race_inventory(eid, tick, tier, race, kind)
+        inv = self._build_race_inventory(eid, tick, tier, race, kind, difficulty_tier)
 
         # Race attribute modifiers
         attr_base = 3 + tier * 2
@@ -136,7 +153,7 @@ class EntityGenerator:
         r_cha = 0  # monsters generally have low charisma
 
         mob_cls = mob_class_for(race, tier)
-        return (
+        entity = (
             EntityBuilder(self._rng, eid, tick=tick)
             .kind(kind)
             .at(pos)
@@ -151,7 +168,7 @@ class EntityGenerator:
                 luck=r_luck + t_luck, crit_rate=r_crit + t_crit, crit_dmg=1.5,
                 evasion=r_evasion + t_evasion, level=level,
                 xp_to_next=int(100 * (1.5 ** (level - 1))),
-                gold=self._rng.next_int(Domain.LOOT, eid, tick, 0, 10 + tier * 10),
+                gold=int(self._rng.next_int(Domain.LOOT, eid, tick, 0, 10 + tier * 10) * diff.gold),
             )
             .with_existing_inventory(inv)
             .with_mob_class(mob_cls)
@@ -164,6 +181,8 @@ class EntityGenerator:
             .with_traits(race_prefix=race)
             .build()
         )
+        entity.difficulty_tier = difficulty_tier
+        return entity
 
     # -------------------------------------------------------------------
     # Shared helpers
@@ -193,7 +212,7 @@ class EntityGenerator:
             return AIState.GUARD_CAMP
         return AIState.WANDER
 
-    def _build_goblin_inventory(self, eid: int, tick: int, tier: int) -> Inventory:
+    def _build_goblin_inventory(self, eid: int, tick: int, tier: int, difficulty_tier: int = 1) -> Inventory:
         """Build inventory with tier-based starting gear, potions, and loot."""
         inv = Inventory(
             items=[],
@@ -214,16 +233,24 @@ class EntityGenerator:
         for _ in range(potion_count):
             inv.add_item(potion_type)
 
-        # Random extra loot
+        # Random extra loot — drop chances scaled by difficulty tier
+        drop_mult = DIFFICULTY_DROP_MULTIPLIER.get(difficulty_tier, 1.0)
         loot_table = LOOT_TABLES.get(tier, [])
         for item_id, chance in loot_table:
-            if self._rng.next_bool(Domain.LOOT, eid, tick + 10 + hash(item_id) % 100, chance * 0.3):
+            if self._rng.next_bool(Domain.LOOT, eid, tick + 10 + hash(item_id) % 100, min(chance * 0.3 * drop_mult, 1.0)):
+                inv.add_item(item_id)
+
+        # Bonus loot from difficulty tier
+        bonus_loot = DIFFICULTY_BONUS_LOOT.get(difficulty_tier, [])
+        for item_id, chance in bonus_loot:
+            if self._rng.next_bool(Domain.LOOT, eid, tick + 50 + hash(item_id) % 100, chance):
                 inv.add_item(item_id)
 
         return inv
 
     def _build_race_inventory(
         self, eid: int, tick: int, tier: int, race: str, kind: str,
+        difficulty_tier: int = 1,
     ) -> Inventory:
         """Build inventory with race-specific starting gear and loot."""
         inv = Inventory(
@@ -239,9 +266,17 @@ class EntityGenerator:
             if item_id and item_id in ITEM_REGISTRY:
                 setattr(inv, slot, item_id)
 
+        # Race loot — drop chances scaled by difficulty tier
+        drop_mult = DIFFICULTY_DROP_MULTIPLIER.get(difficulty_tier, 1.0)
         loot_table = RACE_LOOT_TABLES.get(kind, [])
         for item_id, chance in loot_table:
-            if self._rng.next_bool(Domain.LOOT, eid, tick + 10 + hash(item_id) % 100, chance * 0.3):
+            if self._rng.next_bool(Domain.LOOT, eid, tick + 10 + hash(item_id) % 100, min(chance * 0.3 * drop_mult, 1.0)):
+                inv.add_item(item_id)
+
+        # Bonus loot from difficulty tier
+        bonus_loot = DIFFICULTY_BONUS_LOOT.get(difficulty_tier, [])
+        for item_id, chance in bonus_loot:
+            if self._rng.next_bool(Domain.LOOT, eid, tick + 50 + hash(item_id) % 100, chance):
                 inv.add_item(item_id)
 
         return inv

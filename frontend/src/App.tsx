@@ -51,6 +51,7 @@ function App() {
             groundItems={sim.groundItems}
             buildings={sim.buildings}
             resourceNodes={sim.resourceNodes}
+            regions={sim.regions}
             selectedEntityId={sim.selectedEntityId}
             onEntityClick={handleSelectEntity}
             onGroundItemClick={handleGroundItemClick}

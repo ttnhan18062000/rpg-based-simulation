@@ -11,8 +11,8 @@ class SimulationConfig:
 
     # World
     world_seed: int = 42
-    grid_width: int = 128
-    grid_height: int = 128
+    grid_width: int = 192
+    grid_height: int = 192
 
     # Timing
     max_ticks: int = 50000
@@ -76,19 +76,25 @@ class SimulationConfig:
     camp_radius: int = 2
     camp_spawn_interval: int = 20
     camp_max_guards: int = 5
-    camp_min_distance_from_town: int = 25
+    camp_min_distance_from_town: int = 30
 
     # Sanctuary (buffer zone around town)
     sanctuary_radius: int = 7
 
-    # Regions
-    num_forest_regions: int = 4
-    num_desert_regions: int = 3
-    num_swamp_regions: int = 3
-    num_mountain_regions: int = 3
-    region_min_radius: int = 6
-    region_max_radius: int = 12
-    region_min_distance: int = 8
+    # Regions (epic-15)
+    num_forest_regions: int = 2
+    num_desert_regions: int = 2
+    num_swamp_regions: int = 2
+    num_mountain_regions: int = 2
+    region_min_radius: int = 15
+    region_max_radius: int = 25
+    region_min_distance: int = 20
+    # Difficulty zone boundaries: (max_manhattan_distance_from_town, tier)
+    difficulty_zones: tuple = ((35, 1), (60, 2), (90, 3), (999, 4))
+    # Sub-locations per region
+    min_locations_per_region: int = 3
+    max_locations_per_region: int = 6
+    location_min_spacing: int = 5
 
     # Roads & structures
     num_ruins: int = 4                         # Scattered ruins on the map

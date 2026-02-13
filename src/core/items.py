@@ -167,6 +167,18 @@ _reg(ItemTemplate("mana_shard",        "Mana Shard",          ItemType.MATERIAL,
 _reg(ItemTemplate("silver_ingot",      "Silver Ingot",        ItemType.MATERIAL, Rarity.UNCOMMON, weight=2.0, sell_value=18))
 _reg(ItemTemplate("phoenix_feather",   "Phoenix Feather",     ItemType.MATERIAL, Rarity.RARE,     weight=0.3, sell_value=30))
 
+# ---- Epic-tier equipment ----
+_reg(ItemTemplate("dragonbane",        "Dragonbane",          ItemType.WEAPON,    Rarity.EPIC, weight=4.0, atk_bonus=16, crit_rate_bonus=0.10, spd_bonus=1))
+_reg(ItemTemplate("void_edge",         "Void Edge",           ItemType.WEAPON,    Rarity.EPIC, weight=3.0, atk_bonus=14, crit_rate_bonus=0.08, crit_dmg_bonus=0.3))
+_reg(ItemTemplate("stormcaller",       "Stormcaller",         ItemType.WEAPON,    Rarity.EPIC, weight=2.5, matk_bonus=15, spd_bonus=2, damage_type=DamageType.MAGICAL, element=Element.LIGHTNING))
+_reg(ItemTemplate("abyssal_plate",     "Abyssal Plate",       ItemType.ARMOR,     Rarity.EPIC, weight=7.0, def_bonus=12, mdef_bonus=4, max_hp_bonus=20, spd_bonus=-1))
+_reg(ItemTemplate("celestial_robe",    "Celestial Robe",      ItemType.ARMOR,     Rarity.EPIC, weight=2.0, mdef_bonus=10, matk_bonus=5, evasion_bonus=0.06, spd_bonus=2))
+_reg(ItemTemplate("crown_of_ruin",     "Crown of Ruin",       ItemType.ACCESSORY, Rarity.EPIC, weight=0.5, atk_bonus=5, matk_bonus=5, crit_rate_bonus=0.06))
+_reg(ItemTemplate("heart_of_valor",    "Heart of Valor",      ItemType.ACCESSORY, Rarity.EPIC, weight=0.5, def_bonus=4, mdef_bonus=4, max_hp_bonus=15))
+_reg(ItemTemplate("epic_hp_potion",    "Superior Health Potion", ItemType.CONSUMABLE, Rarity.EPIC, weight=1.0, heal_amount=80))
+_reg(ItemTemplate("gold_pouch_xl",     "Overflowing Gold Pouch", ItemType.CONSUMABLE, Rarity.EPIC, weight=2.0, gold_value=100))
+_reg(ItemTemplate("dragon_scale",      "Dragon Scale",        ItemType.MATERIAL,  Rarity.EPIC, weight=1.0, sell_value=50))
+
 # ---- Treasure / loot items ----
 _reg(ItemTemplate("gold_pouch_s",      "Small Gold Pouch",    ItemType.CONSUMABLE, Rarity.COMMON,   weight=0.5, gold_value=10))
 _reg(ItemTemplate("gold_pouch_m",      "Gold Pouch",          ItemType.CONSUMABLE, Rarity.UNCOMMON, weight=1.0, gold_value=25))
@@ -724,5 +736,60 @@ CHEST_LOOT_TABLES: dict[int, list[tuple[str, float, int, int]]] = {
         ("plate_armor", 0.15, 1, 1),
         ("elemental_ring", 0.10, 1, 1),
         ("camp_treasure", 0.30, 1, 1),
+    ],
+    4: [  # Epic chest (difficulty tier 4 regions)
+        ("epic_hp_potion", 0.9, 1, 2),
+        ("gold_pouch_xl", 0.8, 1, 2),
+        ("crit_potion", 0.6, 1, 2),
+        ("phoenix_feather", 0.5, 1, 2),
+        ("enchanted_dust", 0.7, 1, 3),
+        ("dragon_scale", 0.4, 1, 2),
+        ("dragonbane", 0.08, 1, 1),
+        ("void_edge", 0.08, 1, 1),
+        ("abyssal_plate", 0.08, 1, 1),
+        ("celestial_robe", 0.08, 1, 1),
+        ("crown_of_ruin", 0.06, 1, 1),
+        ("heart_of_valor", 0.06, 1, 1),
+        ("camp_treasure", 0.50, 1, 1),
+    ],
+}
+
+# ---------------------------------------------------------------------------
+# Difficulty-based loot scaling (epic-15 F4)
+# ---------------------------------------------------------------------------
+
+# Drop chance multiplier per difficulty tier — applied to base loot table chances
+DIFFICULTY_DROP_MULTIPLIER: dict[int, float] = {
+    1: 1.0,
+    2: 1.3,
+    3: 1.6,
+    4: 2.0,
+}
+
+# Bonus loot items added on top of base loot for higher difficulty tiers
+# Maps difficulty_tier -> list of (item_id, drop_chance)
+DIFFICULTY_BONUS_LOOT: dict[int, list[tuple[str, float]]] = {
+    1: [],  # No bonus
+    2: [
+        ("gold_pouch_m", 0.20),
+        ("medium_hp_potion", 0.15),
+        ("iron_ore", 0.15),
+    ],
+    3: [
+        ("gold_pouch_l", 0.25),
+        ("large_hp_potion", 0.20),
+        ("enchanted_dust", 0.15),
+        ("steel_greatsword", 0.05),
+        ("plate_armor", 0.05),
+    ],
+    4: [
+        ("gold_pouch_xl", 0.30),
+        ("epic_hp_potion", 0.20),
+        ("dragon_scale", 0.15),
+        ("enchanted_dust", 0.25),
+        ("dragonbane", 0.03),
+        ("void_edge", 0.03),
+        ("abyssal_plate", 0.03),
+        ("crown_of_ruin", 0.02),
     ],
 }

@@ -34,6 +34,34 @@ def _is_hero(ctx: AIContext) -> bool:
     return ctx.actor.faction == Faction.HERO_GUILD
 
 
+def _current_region_difficulty(ctx: AIContext) -> int:
+    """Return difficulty tier of the region the actor is currently standing in (0 if none)."""
+    rid = ctx.actor.current_region_id
+    if not rid:
+        return 0
+    for r in ctx.snapshot.regions:
+        if r.region_id == rid:
+            return r.difficulty
+    return 0
+
+
+def _region_danger_penalty(ctx: AIContext) -> float:
+    """Penalty when hero is in a region too dangerous for their level.
+
+    Rule: region is dangerous when difficulty * 3 > hero_level + 3.
+    Returns a value >= 0 (0 = no penalty, higher = more dangerous).
+    """
+    diff = _current_region_difficulty(ctx)
+    if diff <= 0:
+        return 0.0
+    level = ctx.actor.stats.level
+    danger_threshold = diff * 3
+    comfort_ceiling = level + 3
+    if danger_threshold <= comfort_ceiling:
+        return 0.0
+    return min((danger_threshold - comfort_ceiling) * 0.05, 0.4)
+
+
 # ---------------------------------------------------------------------------
 # Combat — seek and fight enemies
 # ---------------------------------------------------------------------------
@@ -76,6 +104,9 @@ class CombatGoal(GoalScorer):
                 base += 0.3  # territorial aggression bonus
             if enemy is not None:
                 base += 0.15  # mobs always eager to fight intruders
+        else:
+            # Heroes are less eager to fight in regions above their level
+            base -= _region_danger_penalty(ctx)
 
         base += _trait_utility(ctx).combat
         return base
@@ -101,6 +132,13 @@ class FleeGoal(GoalScorer):
 
         flee_threshold = ctx.config.flee_hp_threshold
         flee_threshold += _trait_stats(ctx).flee_threshold_mod
+        # Heroes flee earlier in regions above their comfort zone (epic-15 F8)
+        if _is_hero(ctx):
+            diff = _current_region_difficulty(ctx)
+            if diff > 0:
+                comfort = actor.stats.level + 3
+                excess = max(diff * 3 - comfort, 0)
+                flee_threshold += excess * 0.03  # +3% per excess danger point
         flee_threshold = max(0.05, min(0.8, flee_threshold))
 
         base = 0.0
@@ -146,6 +184,17 @@ class ExploreGoal(GoalScorer):
             base += 0.2
         if ctx.nearest_enemy() is None:
             base += 0.15
+
+        # Heroes prefer exploring regions near their power level (epic-15 F8)
+        if _is_hero(ctx):
+            penalty = _region_danger_penalty(ctx)
+            base -= penalty
+            # Slight bonus for being in a region that matches hero level
+            diff = _current_region_difficulty(ctx)
+            if diff > 0:
+                level = actor.stats.level
+                if diff * 3 <= level + 3:  # comfortable
+                    base += 0.1
 
         base += _trait_utility(ctx).explore
         return base

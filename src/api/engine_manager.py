@@ -16,8 +16,12 @@ from src.core.buildings import Building
 from src.core.enums import AIState, Domain, EnemyTier, EntityRole, Material
 from src.core.faction import Faction, FactionRegistry
 from src.core.grid import Grid
-from src.core.items import Inventory, TERRAIN_RACE
+from src.core.items import Inventory, TERRAIN_RACE, RACE_FACTION
 from src.core.models import Entity, Stats, Vector2
+from src.core.regions import (
+    Region, Location, LOCATION_NAME_TEMPLATES, TERRAIN_RACE_LABEL,
+    difficulty_for_distance, pick_region_name, reset_name_counters,
+)
 from src.core.resource_nodes import ResourceNode, TERRAIN_RESOURCES
 from src.core.snapshot import Snapshot
 from src.core.world_state import WorldState
@@ -189,91 +193,184 @@ class EngineManager:
                 if grid.in_bounds(pos) and grid.get(pos) == Material.FLOOR:
                     grid.set(pos, Material.SANCTUARY)
 
-        # --- Place terrain regions (forest, desert, swamp, mountain) ---
+        # --- Create named regions with sub-locations (epic-15) ---
+        # Voronoi tessellation: place region centers, then assign every
+        # non-town tile to its nearest center so regions border each other
+        # like countries on a continent — no empty gaps.
+        reset_name_counters()
+        generator = EntityGenerator(cfg, self._rng)
+        from src.core.items import TreasureChest
+
+        TOWN_TILES = frozenset({Material.TOWN, Material.SANCTUARY})
+
         region_specs = [
             (Material.FOREST, cfg.num_forest_regions),
             (Material.DESERT, cfg.num_desert_regions),
             (Material.SWAMP, cfg.num_swamp_regions),
             (Material.MOUNTAIN, cfg.num_mountain_regions),
         ]
-        region_centers: list[Vector2] = []  # track all region centers for spacing
-        terrain_region_centers: dict[int, list[Vector2]] = {}  # Material -> list of centers
+        camp_positions: list[Vector2] = []
+        zone_bounds = list(cfg.difficulty_zones)
 
+        # ---- Step 1: Place region centers (seeds) ----
+        region_seeds: list[tuple[Vector2, Material]] = []  # (center, terrain)
         for mat, count in region_specs:
-            terrain_region_centers[mat] = []
             for ri in range(count):
                 seed_key = mat * 100 + ri
-                for attempt in range(80):
-                    rx = self._rng.next_int(Domain.MAP_GEN, seed_key, attempt, 4, cfg.grid_width - 5)
-                    ry = self._rng.next_int(Domain.MAP_GEN, seed_key, attempt + 200, 4, cfg.grid_height - 5)
+                for attempt in range(120):
+                    rx = self._rng.next_int(Domain.MAP_GEN, seed_key, attempt, 6, cfg.grid_width - 7)
+                    ry = self._rng.next_int(Domain.MAP_GEN, seed_key, attempt + 200, 6, cfg.grid_height - 7)
                     rpos = Vector2(rx, ry)
                     if rpos.manhattan(town_center) < cfg.camp_min_distance_from_town:
                         continue
-                    too_close = any(rpos.manhattan(rc) < cfg.region_min_distance for rc in region_centers)
+                    too_close = any(rpos.manhattan(s[0]) < cfg.region_min_distance for s in region_seeds)
                     if too_close:
                         continue
-                    # Place region tiles with organic shape
-                    radius = self._rng.next_int(Domain.MAP_GEN, seed_key, attempt + 400,
-                                                cfg.region_min_radius, cfg.region_max_radius)
-                    for dy in range(-radius, radius + 1):
-                        for dx in range(-radius, radius + 1):
-                            # Use Manhattan distance with some noise for organic shape
-                            dist = abs(dx) + abs(dy)
-                            if dist > radius:
-                                continue
-                            # Noise: skip some edge tiles for organic feel
-                            if dist > radius - 2:
-                                noise = self._rng.next_float(Domain.MAP_GEN, seed_key + dx * 31 + dy * 17, attempt)
-                                if noise < 0.3:
-                                    continue
-                            tp = Vector2(rx + dx, ry + dy)
-                            if grid.in_bounds(tp) and grid.get(tp) == Material.FLOOR:
-                                grid.set(tp, mat)
-                    region_centers.append(rpos)
-                    terrain_region_centers[mat].append(rpos)
-                    logger.info("Placed %s region at %s (r=%d)", mat.name, rpos, radius)
+                    region_seeds.append((rpos, mat))
+                    break
+                else:
+                    logger.warning("Failed to place %s region #%d center", mat.name, ri)
+
+        # ---- Step 2: Voronoi assignment — paint every non-town tile ----
+        # For each tile, find nearest region center and paint with that region's terrain.
+        # Also track max distance per region for effective radius.
+        region_max_dist: dict[int, int] = {i: 0 for i in range(len(region_seeds))}
+        for y in range(cfg.grid_height):
+            for x in range(cfg.grid_width):
+                pos = Vector2(x, y)
+                if grid.get(pos) in TOWN_TILES:
+                    continue
+                # Find nearest region center
+                best_idx = -1
+                best_dist = float("inf")
+                for idx, (center, _mat) in enumerate(region_seeds):
+                    d = center.manhattan(pos)
+                    if d < best_dist:
+                        best_dist = d
+                        best_idx = idx
+                if best_idx >= 0:
+                    _center, r_mat = region_seeds[best_idx]
+                    grid.set(pos, r_mat)
+                    d_int = int(best_dist)
+                    if d_int > region_max_dist[best_idx]:
+                        region_max_dist[best_idx] = d_int
+
+        # ---- Step 3: Create Region objects with computed radius ----
+        region_centers: list[Vector2] = []
+        for idx, (rpos, mat) in enumerate(region_seeds):
+            dist_to_town = rpos.manhattan(town_center)
+            difficulty = difficulty_for_distance(dist_to_town, zone_bounds)
+            region_name = pick_region_name(mat)
+            region_id = region_name.lower().replace(" ", "_").replace("'", "")
+            effective_radius = region_max_dist.get(idx, cfg.region_max_radius)
+            region = Region(
+                region_id=region_id, name=region_name,
+                terrain=mat, center=rpos, radius=effective_radius,
+                difficulty=difficulty,
+            )
+
+            # ---- Step 4: Generate sub-locations within this region ----
+            seed_key = mat * 100 + (idx % 10)
+            num_locs = self._rng.next_int(Domain.MAP_GEN, seed_key, 500 + idx,
+                                          cfg.min_locations_per_region, cfg.max_locations_per_region)
+            loc_positions: list[Vector2] = []
+            race_label = TERRAIN_RACE_LABEL.get(int(mat), "Goblin")
+
+            # Location type budget per region
+            loc_types: list[str] = ["enemy_camp", "resource_grove"]
+            if difficulty >= 3:
+                loc_types.append("dungeon_entrance")
+                loc_types.append("boss_arena")
+            else:
+                loc_types.append("shrine")
+            loc_types.append("ruins")
+            while len(loc_types) < num_locs:
+                extra = ["enemy_camp", "resource_grove", "ruins"]
+                pick = self._rng.next_int(Domain.MAP_GEN, seed_key + len(loc_types), 600 + idx,
+                                          0, len(extra) - 1)
+                loc_types.append(extra[pick])
+
+            # Use half the effective radius as placement range (locations stay in core)
+            loc_range = max(effective_radius // 2, 8)
+            for li, loc_type in enumerate(loc_types[:num_locs]):
+                loc_placed = False
+                for loc_attempt in range(60):
+                    ox = self._rng.next_int(Domain.MAP_GEN, seed_key + li * 100, loc_attempt + 700,
+                                            -loc_range, loc_range)
+                    oy = self._rng.next_int(Domain.MAP_GEN, seed_key + li * 100, loc_attempt + 800,
+                                            -loc_range, loc_range)
+                    lpos = Vector2(rpos.x + ox, rpos.y + oy)
+                    if not grid.in_bounds(lpos):
+                        continue
+                    # Must be on this region's terrain (Voronoi guarantees nearby tiles are ours)
+                    tile_at = grid.get(lpos)
+                    if tile_at != mat:
+                        continue
+                    too_close_loc = any(lpos.manhattan(lp) < cfg.location_min_spacing for lp in loc_positions)
+                    if too_close_loc:
+                        continue
+
+                    # Pick a name
+                    templates = LOCATION_NAME_TEMPLATES.get(loc_type, ["{race} Place"])
+                    tpl_idx = self._rng.next_int(Domain.MAP_GEN, seed_key + li, loc_attempt + 900,
+                                                 0, len(templates) - 1)
+                    loc_name = templates[tpl_idx].format(race=race_label)
+                    loc_id = f"{region_id}_{loc_type}_{li}"
+
+                    loc = Location(
+                        location_id=loc_id, name=loc_name,
+                        location_type=loc_type, pos=lpos, region_id=region_id,
+                    )
+                    region.locations.append(loc)
+                    loc_positions.append(lpos)
+
+                    # Paint location-specific tiles
+                    if loc_type == "enemy_camp":
+                        for cdy in range(-cfg.camp_radius, cfg.camp_radius + 1):
+                            for cdx in range(-cfg.camp_radius, cfg.camp_radius + 1):
+                                cp = Vector2(lpos.x + cdx, lpos.y + cdy)
+                                if grid.in_bounds(cp) and grid.get(cp) == mat:
+                                    grid.set(cp, Material.CAMP)
+                        camp_positions.append(lpos)
+                        world.camps.append(lpos)
+                    elif loc_type == "ruins":
+                        for rdy in range(-1, 2):
+                            for rdx in range(-1, 2):
+                                rtp = Vector2(lpos.x + rdx, lpos.y + rdy)
+                                if grid.in_bounds(rtp) and grid.get(rtp) == mat:
+                                    grid.set(rtp, Material.RUINS)
+                    elif loc_type == "dungeon_entrance":
+                        grid.set(lpos, Material.DUNGEON_ENTRANCE)
+                    elif loc_type == "resource_grove":
+                        pass  # Nodes placed later; terrain stays as region material
+                    elif loc_type == "shrine":
+                        pass  # Shrine is a gameplay marker, no special tile yet
+                    elif loc_type == "boss_arena":
+                        pass  # Boss arena uses region terrain
+
+                    # Spawn treasure chest at ruins/dungeon locations
+                    if loc_type in ("ruins", "dungeon_entrance"):
+                        cid = world._next_chest_id
+                        world._next_chest_id += 1
+                        chest = TreasureChest(chest_id=cid, pos=lpos, tier=min(difficulty, 4))
+                        world.treasure_chests[cid] = chest
+
+                    loc_placed = True
                     break
 
-        # --- Place goblin camps (on FLOOR tiles) ---
-        generator = EntityGenerator(cfg, self._rng)
-        camp_positions: list[Vector2] = []
-        for camp_idx in range(cfg.num_camps):
-            for attempt in range(80):
-                cx = self._rng.next_int(Domain.SPAWN, 9000 + camp_idx, attempt, 0, cfg.grid_width - 1)
-                cy = self._rng.next_int(Domain.SPAWN, 9000 + camp_idx, attempt + 100, 0, cfg.grid_height - 1)
-                camp_pos = Vector2(cx, cy)
-                if camp_pos.manhattan(town_center) < cfg.camp_min_distance_from_town:
-                    continue
-                too_close = any(camp_pos.manhattan(ex) < cfg.camp_radius * 4 for ex in camp_positions)
-                if too_close:
-                    continue
-                if not grid.in_bounds(camp_pos):
-                    continue
-                # Place camp tiles
-                for cty in range(cy - cfg.camp_radius, cy + cfg.camp_radius + 1):
-                    for ctx_val in range(cx - cfg.camp_radius, cx + cfg.camp_radius + 1):
-                        cp = Vector2(ctx_val, cty)
-                        if grid.in_bounds(cp) and grid.get(cp) in (Material.FLOOR, Material.FOREST, Material.DESERT, Material.SWAMP, Material.MOUNTAIN):
-                            grid.set(cp, Material.CAMP)
-                camp_positions.append(camp_pos)
-                world.camps.append(camp_pos)
-                logger.info("Placed goblin camp at %s", camp_pos)
-                break
+            world.regions.append(region)
+            region_centers.append(rpos)
+            logger.info("Created region '%s' (%s, tier %d) at %s r=%d with %d locations",
+                        region.name, mat.name, difficulty, rpos, effective_radius, len(region.locations))
 
-        # --- Generate roads from town to nearby camps/regions ---
+        # --- Generate roads from town to nearest regions ---
         if cfg.road_from_town:
             road_targets: list[Vector2] = []
-            # Pick the 3 closest camps
-            sorted_camps = sorted(camp_positions, key=lambda c: c.manhattan(town_center))
-            road_targets.extend(sorted_camps[:3])
-            # Pick the 2 closest region centers
             sorted_regions = sorted(region_centers, key=lambda r: r.manhattan(town_center))
-            road_targets.extend(sorted_regions[:2])
+            road_targets.extend(sorted_regions[:4])
             for rt in road_targets:
-                # Simple axis-aligned road: walk X first, then Y
                 cx, cy = town_center.x, town_center.y
                 tx, ty = rt.x, rt.y
-                # Horizontal segment
                 step_x = 1 if tx > cx else -1
                 x = cx
                 while x != tx:
@@ -281,7 +378,6 @@ class EngineManager:
                     rp = Vector2(x, cy)
                     if grid.in_bounds(rp) and grid.get(rp) == Material.FLOOR:
                         grid.set(rp, Material.ROAD)
-                # Vertical segment
                 step_y = 1 if ty > cy else -1
                 y = cy
                 while y != ty:
@@ -289,66 +385,7 @@ class EngineManager:
                     rp = Vector2(tx, y)
                     if grid.in_bounds(rp) and grid.get(rp) == Material.FLOOR:
                         grid.set(rp, Material.ROAD)
-            logger.info("Generated roads to %d targets", len(road_targets))
-
-        # --- Place ruins ---
-        ruin_positions: list[Vector2] = []
-        for ri in range(cfg.num_ruins):
-            for attempt in range(60):
-                rx = self._rng.next_int(Domain.MAP_GEN, 7000 + ri, attempt, 4, cfg.grid_width - 5)
-                ry = self._rng.next_int(Domain.MAP_GEN, 7000 + ri, attempt + 100, 4, cfg.grid_height - 5)
-                rpos = Vector2(rx, ry)
-                if rpos.manhattan(town_center) < cfg.camp_min_distance_from_town // 2:
-                    continue
-                too_close = any(rpos.manhattan(rp) < 8 for rp in ruin_positions)
-                if too_close:
-                    continue
-                if grid.in_bounds(rpos) and grid.get(rpos) in (Material.FLOOR, Material.ROAD):
-                    # Place a small 3x3 ruin patch
-                    for dy in range(-1, 2):
-                        for dx in range(-1, 2):
-                            tp = Vector2(rx + dx, ry + dy)
-                            if grid.in_bounds(tp) and grid.get(tp) in (Material.FLOOR, Material.ROAD):
-                                grid.set(tp, Material.RUINS)
-                    ruin_positions.append(rpos)
-                    logger.info("Placed ruins at %s", rpos)
-                    break
-
-        # --- Place dungeon entrances ---
-        dungeon_positions: list[Vector2] = []
-        for di in range(cfg.num_dungeon_entrances):
-            for attempt in range(80):
-                dx = self._rng.next_int(Domain.MAP_GEN, 8000 + di, attempt, 4, cfg.grid_width - 5)
-                dy = self._rng.next_int(Domain.MAP_GEN, 8000 + di, attempt + 100, 4, cfg.grid_height - 5)
-                dpos = Vector2(dx, dy)
-                if dpos.manhattan(town_center) < cfg.camp_min_distance_from_town:
-                    continue
-                too_close = any(dpos.manhattan(dp) < 15 for dp in dungeon_positions)
-                if too_close:
-                    continue
-                if grid.in_bounds(dpos) and grid.get(dpos) in (Material.FLOOR, Material.MOUNTAIN, Material.FOREST):
-                    grid.set(dpos, Material.DUNGEON_ENTRANCE)
-                    dungeon_positions.append(dpos)
-                    logger.info("Placed dungeon entrance at %s", dpos)
-                    break
-
-        # --- Spawn treasure chests near camps ---
-        from src.core.items import TreasureChest
-        chest_tier_cycle = [1, 1, 2, 2, 3]  # Distribute tiers across camps
-        for ci, camp_pos in enumerate(camp_positions):
-            chest_tier = chest_tier_cycle[ci % len(chest_tier_cycle)]
-            # Place chest a few tiles from camp center
-            offset_x = self._rng.next_int(Domain.MAP_GEN, 11000 + ci, 0, -3, 3)
-            offset_y = self._rng.next_int(Domain.MAP_GEN, 11000 + ci, 1, -3, 3)
-            cx = max(1, min(cfg.grid_width - 2, camp_pos.x + offset_x))
-            cy = max(1, min(cfg.grid_height - 2, camp_pos.y + offset_y))
-            chest_pos = Vector2(cx, cy)
-            cid = world._next_chest_id
-            world._next_chest_id += 1
-            chest = TreasureChest(chest_id=cid, pos=chest_pos, tier=chest_tier)
-            world.treasure_chests[cid] = chest
-            logger.info("Placed tier-%d treasure chest #%d at %s (near camp %s)",
-                        chest_tier, cid, chest_pos, camp_pos)
+            logger.info("Generated roads to %d regions", len(road_targets))
 
         # --- Place town buildings ---
         # Store: top-left of town
@@ -421,68 +458,99 @@ class EngineManager:
         ))
         logger.info("Placed hero house at %s for hero #%d", hero_house_pos, hero_eid)
 
-        # --- Spawn initial goblins ---
+        # --- Spawn initial goblins (wanderers, not tied to a region) ---
         for i in range(1, cfg.initial_entity_count):
             entity = generator.spawn(world)
             world.add_entity(entity)
             self._total_spawned += 1
 
-        # --- Spawn camp guards (chief + guards at each camp) ---
-        for camp_pos in camp_positions:
-            chief = generator.spawn(world, tier=EnemyTier.ELITE, near_pos=camp_pos)
-            world.add_entity(chief)
-            self._total_spawned += 1
-            logger.info("Spawned %s #%d (chief) at camp %s", chief.kind, chief.id, camp_pos)
-
-            for g in range(min(cfg.camp_max_guards, 3)):
-                guard = generator.spawn(world, tier=EnemyTier.WARRIOR, near_pos=camp_pos)
-                world.add_entity(guard)
-                self._total_spawned += 1
-
-        # --- Spawn race-specific mobs in terrain regions ---
-        for mat, centers in terrain_region_centers.items():
+        # --- Spawn entities + resources at region locations (epic-15) ---
+        for region in world.regions:
+            mat = region.terrain
             race = TERRAIN_RACE.get(int(mat))
-            if not race:
-                continue
-            for center in centers:
-                # Spawn 2-4 mobs per region
-                mob_count = self._rng.next_int(Domain.SPAWN, int(mat) * 1000 + center.x, center.y, 2, 4)
-                for mi in range(mob_count):
-                    ent = generator.spawn_race(world, race, near_pos=center)
+
+            for loc in region.locations:
+                if loc.location_type == "enemy_camp":
+                    # Chief + guards at camp
+                    chief = generator.spawn(world, tier=EnemyTier.ELITE, near_pos=loc.pos, difficulty_tier=region.difficulty)
+                    chief.region_id = region.region_id
+                    world.add_entity(chief)
+                    self._total_spawned += 1
+                    for g in range(min(cfg.camp_max_guards, 3)):
+                        guard = generator.spawn(world, tier=EnemyTier.WARRIOR, near_pos=loc.pos, difficulty_tier=region.difficulty)
+                        guard.region_id = region.region_id
+                        world.add_entity(guard)
+                        self._total_spawned += 1
+                    # Also spawn race-specific mobs if terrain has a race
+                    if race:
+                        mob_count = self._rng.next_int(
+                            Domain.SPAWN, int(mat) * 1000 + loc.pos.x, loc.pos.y, 2, 4)
+                        for mi in range(mob_count):
+                            ent = generator.spawn_race(world, race, near_pos=loc.pos, difficulty_tier=region.difficulty)
+                            ent.region_id = region.region_id
+                            world.add_entity(ent)
+                            self._total_spawned += 1
+                    logger.info("Spawned camp mobs at '%s' in %s (tier %d)", loc.name, region.name, region.difficulty)
+
+                elif loc.location_type == "boss_arena":
+                    # Elite boss + a few guards — boss arenas get +1 effective difficulty
+                    boss_diff = min(region.difficulty + 1, 4)
+                    boss = generator.spawn(world, tier=EnemyTier.ELITE, near_pos=loc.pos, difficulty_tier=boss_diff)
+                    boss.region_id = region.region_id
+                    world.add_entity(boss)
+                    self._total_spawned += 1
+                    if race:
+                        elite = generator.spawn_race(world, race, tier=EnemyTier.ELITE, near_pos=loc.pos, difficulty_tier=boss_diff)
+                        elite.region_id = region.region_id
+                        world.add_entity(elite)
+                        self._total_spawned += 1
+                    logger.info("Spawned boss at '%s' in %s (tier %d)", loc.name, region.name, boss_diff)
+
+                elif loc.location_type == "resource_grove":
+                    # Cluster of 3-5 resource nodes
+                    resource_defs = TERRAIN_RESOURCES.get(int(mat), [])
+                    if resource_defs:
+                        node_count = self._rng.next_int(
+                            Domain.HARVEST, loc.pos.x * 100, loc.pos.y, 3, 5)
+                        for ni in range(node_count):
+                            rtype, rname, yields, max_h, respawn, h_ticks = resource_defs[
+                                ni % len(resource_defs)]
+                            for attempt in range(30):
+                                ox = self._rng.next_int(Domain.HARVEST, loc.pos.x * 10 + ni, attempt, -4, 4)
+                                oy = self._rng.next_int(Domain.HARVEST, loc.pos.y * 10 + ni, attempt + 50, -4, 4)
+                                npos = Vector2(loc.pos.x + ox, loc.pos.y + oy)
+                                if grid.in_bounds(npos) and grid.get(npos) in (mat, Material.FLOOR):
+                                    nid = world.allocate_node_id()
+                                    node = ResourceNode(
+                                        node_id=nid, resource_type=rtype, name=rname,
+                                        pos=npos, terrain=mat, yields_item=yields,
+                                        remaining=max_h, max_harvests=max_h,
+                                        respawn_cooldown=respawn, harvest_ticks=h_ticks,
+                                    )
+                                    world.add_resource_node(node)
+                                    break
+
+                elif loc.location_type == "dungeon_entrance":
+                    # Elite guards at dungeon
+                    if race:
+                        for di in range(2):
+                            guard = generator.spawn_race(world, race, tier=EnemyTier.ELITE, near_pos=loc.pos, difficulty_tier=region.difficulty)
+                            guard.region_id = region.region_id
+                            world.add_entity(guard)
+                            self._total_spawned += 1
+
+            # Also spawn some roaming race mobs throughout the region
+            if race:
+                roam_count = self._rng.next_int(
+                    Domain.SPAWN, int(mat) * 500 + region.center.x, region.center.y, 2, 4)
+                for mi in range(roam_count):
+                    ent = generator.spawn_race(world, race, near_pos=region.center, difficulty_tier=region.difficulty)
+                    ent.region_id = region.region_id
                     world.add_entity(ent)
                     self._total_spawned += 1
-                # Spawn 1 elite per region
-                elite = generator.spawn_race(world, race, tier=EnemyTier.ELITE, near_pos=center)
-                world.add_entity(elite)
-                self._total_spawned += 1
-                logger.info("Spawned %s pack at %s region %s", race, mat.name, center)
 
-        # --- Spawn resource nodes in terrain regions ---
-        for mat, centers in terrain_region_centers.items():
-            resource_defs = TERRAIN_RESOURCES.get(int(mat), [])
-            if not resource_defs:
-                continue
-            for center in centers:
-                for ri in range(cfg.resources_per_region):
-                    rtype, rname, yields, max_h, respawn, h_ticks = resource_defs[
-                        ri % len(resource_defs)]
-                    # Random position near region center
-                    for attempt in range(30):
-                        ox = self._rng.next_int(Domain.HARVEST, center.x * 100 + ri, attempt, -6, 6)
-                        oy = self._rng.next_int(Domain.HARVEST, center.y * 100 + ri, attempt + 50, -6, 6)
-                        npos = Vector2(center.x + ox, center.y + oy)
-                        if grid.in_bounds(npos) and grid.get(npos) == mat:
-                            nid = world.allocate_node_id()
-                            node = ResourceNode(
-                                node_id=nid, resource_type=rtype, name=rname,
-                                pos=npos, terrain=mat, yields_item=yields,
-                                remaining=max_h, max_harvests=max_h,
-                                respawn_cooldown=respawn, harvest_ticks=h_ticks,
-                            )
-                            world.add_resource_node(node)
-                            break
-        # Also spawn some berry bushes on FLOOR tiles
-        for bi in range(8):
+        # Also spawn some berry bushes on FLOOR tiles (wilds resources)
+        for bi in range(12):
             for attempt in range(30):
                 bx = self._rng.next_int(Domain.HARVEST, 5000 + bi, attempt, 0, cfg.grid_width - 1)
                 by = self._rng.next_int(Domain.HARVEST, 5000 + bi, attempt + 50, 0, cfg.grid_height - 1)
@@ -496,7 +564,9 @@ class EngineManager:
                     )
                     world.add_resource_node(node)
                     break
-        logger.info("Placed %d resource nodes", len(world.resource_nodes))
+        logger.info("Placed %d resource nodes, %d regions with %d total locations",
+                     len(world.resource_nodes), len(world.regions),
+                     sum(len(r.locations) for r in world.regions))
 
         faction_reg = FactionRegistry.default()
         brain = AIBrain(cfg, self._rng, faction_reg)

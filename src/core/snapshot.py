@@ -10,6 +10,7 @@ from src.core.buildings import Building
 from src.core.grid import Grid
 from src.core.items import TreasureChest
 from src.core.models import Entity
+from src.core.regions import Region
 from src.core.resource_nodes import ResourceNode
 from src.core.world_state import WorldState
 
@@ -31,6 +32,7 @@ class Snapshot:
     buildings: tuple[Building, ...]
     resource_nodes: tuple[ResourceNode, ...]
     treasure_chests: tuple[TreasureChest, ...]
+    regions: tuple[Region, ...]
 
     @classmethod
     def from_world(cls, world: WorldState) -> Snapshot:
@@ -46,4 +48,5 @@ class Snapshot:
             buildings=tuple(world.buildings),
             resource_nodes=tuple(n.copy() for n in world.resource_nodes.values()),
             treasure_chests=tuple(c.copy() for c in world.treasure_chests.values()),
+            regions=tuple(r.copy() for r in world.regions),
         )

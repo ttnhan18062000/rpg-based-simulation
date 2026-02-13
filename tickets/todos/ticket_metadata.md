@@ -57,7 +57,7 @@ Master index of all active tickets with priority, effort estimate, dependencies,
 
 | Command | What it does |
 |---------|-------------|
-| `make test` | Run all 363+ Python tests |
+| `make test` | Run all 440+ Python tests |
 | `make test-quick` | Run fast tests only (skip `@slow`) |
 | `make test-cov` | Run tests with coverage report |
 | `make profile` | 500-tick performance report (timing, phases, entity counts) |
@@ -68,7 +68,7 @@ Master index of all active tickets with priority, effort estimate, dependencies,
 
 | ID | Ticket | Priority | Effort | Status | Dependencies |
 |----|--------|----------|--------|--------|-------------|
-| epic-15 | [Region Difficulty Scaling](epic-15-region-difficulty-scaling.md) | P1 | XL | ready | — |
+| epic-15 | [Region & World Overhaul](epic-15-region-difficulty-scaling.md) | P1 | XL | in-progress | — |
 | epic-16 | [Performance Audit & Optimization](epic-16-performance-audit.md) | P2 | L | ready | — |
 
 ## Epics (Existing — Updated)
@@ -123,7 +123,7 @@ Tickets that need developer decision before work can start are marked. Suggested
 ### Phase 3 — Gameplay Enhancements
 
 9. ✅ **enhance-01** — Enrich event info — metadata on SimEvent, enriched combat/loot/death/level_up/skill events — 9 tests in `test_enriched_events.py`
-10. **epic-15** — Region difficulty scaling *(core progression system)*
+10. 🔧 **epic-15** — Region & World Overhaul — Phase A–D done: Region/Location dataclasses, 192×192 map, sub-locations, difficulty stat scaling (HP/ATK/DEF/gold/level by tier 1–4), boss arena +1 difficulty, minimap labels, locations panel, EPIC rarity + items, loot quality scaling by difficulty tier (F4), tier 4 chests, region enter/leave events (F9), hero AI difficulty awareness (F8) — 30 tests in `test_regions.py`, 13 in `test_difficulty_scaling.py`, 14 in `test_loot_scaling.py`, 12 in `test_region_events.py`
 
 ### Phase 4 — Major Features
 

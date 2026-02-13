@@ -246,6 +246,7 @@ class WorldLoop:
             self._process_territory_effects()
             self._update_entity_memory()
             self._update_entity_goals()
+            self._track_region_transitions()
 
         # Economy subsystems — every N ticks (default: every 5th tick)
         if tick % cfg.subsystem_rate_economy == 0:
@@ -783,6 +784,47 @@ class WorldLoop:
                         "Tick %d: Entity %d (%s) alerted by intruder %d (%s) on %s territory",
                         tick, defender.id, defender.kind, entity.id, entity.kind, tile_owner.name,
                     )
+
+    def _track_region_transitions(self) -> None:
+        """Check entity positions against regions and emit enter/leave events for heroes."""
+        from src.core.regions import find_region_at
+
+        regions = self._world.regions
+        if not regions:
+            return
+
+        for entity in self._world.entities.values():
+            if not entity.alive or entity.kind == "generator":
+                continue
+
+            # Determine which region entity is currently in (Voronoi nearest-center)
+            region = find_region_at(entity.pos, regions)
+            new_region_id = region.region_id if region else ""
+            new_region_name = region.name if region else ""
+            new_difficulty = region.difficulty if region else 0
+
+            old_region_id = entity.current_region_id
+            if new_region_id == old_region_id:
+                continue
+
+            entity.current_region_id = new_region_id
+
+            # Only emit events for heroes
+            if entity.faction != Faction.HERO_GUILD:
+                continue
+
+            if old_region_id:
+                self._emit("region_leave",
+                           f"Hero #{entity.id} left region",
+                           entity_ids=(entity.id,),
+                           metadata={"entity_id": entity.id, "region_id": old_region_id})
+
+            if new_region_id:
+                self._emit("region_enter",
+                           f"Hero #{entity.id} entered {new_region_name} (tier {new_difficulty})",
+                           entity_ids=(entity.id,),
+                           metadata={"entity_id": entity.id, "region_id": new_region_id,
+                                     "region_name": new_region_name, "difficulty": new_difficulty})
 
     def _tick_engagement(self) -> None:
         """Track how many ticks each entity has been adjacent to a hostile.

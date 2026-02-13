@@ -1,6 +1,6 @@
 import { useRef, useState, useCallback, useEffect, useMemo } from 'react';
 import { ZoomIn, ZoomOut, Maximize2, ChevronDown, ChevronRight, MapPin } from 'lucide-react';
-import type { MapData, Entity, GroundItem, Building, ResourceNode } from '@/types/api';
+import type { MapData, Entity, GroundItem, Building, ResourceNode, Region } from '@/types/api';
 import { useCanvas } from '@/hooks/useCanvas';
 import { CELL_SIZE, TILE_COLORS, TILE_COLORS_DIM, KIND_COLORS } from '@/constants/colors';
 
@@ -10,6 +10,7 @@ interface GameCanvasProps {
   groundItems: GroundItem[];
   buildings: Building[];
   resourceNodes: ResourceNode[];
+  regions: Region[];
   selectedEntityId: number | null;
   onEntityClick: (id: number | null) => void;
   onGroundItemClick?: (x: number, y: number) => void;
@@ -53,7 +54,30 @@ interface LocationEntry {
   y: number;
 }
 
-export function GameCanvas({ mapData, entities, groundItems, buildings, resourceNodes, selectedEntityId, onEntityClick, onGroundItemClick, onBuildingClick }: GameCanvasProps) {
+const TERRAIN_COLORS: Record<number, string> = {
+  6: '#4ade80',  // FOREST
+  7: '#fbbf24',  // DESERT
+  8: '#a78bfa',  // SWAMP
+  9: '#94a3b8',  // MOUNTAIN
+};
+
+const DIFFICULTY_BADGES: Record<number, { label: string; color: string }> = {
+  1: { label: 'Easy', color: '#4ade80' },
+  2: { label: 'Medium', color: '#fbbf24' },
+  3: { label: 'Hard', color: '#f97316' },
+  4: { label: 'Deadly', color: '#ef4444' },
+};
+
+const LOCATION_TYPE_ICONS: Record<string, { label: string; color: string }> = {
+  enemy_camp: { label: '⚔', color: '#f87171' },
+  resource_grove: { label: '🌿', color: '#4ade80' },
+  ruins: { label: '🏛', color: '#a0906a' },
+  dungeon_entrance: { label: '🚪', color: '#e06080' },
+  shrine: { label: '✦', color: '#60a5fa' },
+  boss_arena: { label: '💀', color: '#f59e0b' },
+};
+
+export function GameCanvas({ mapData, entities, groundItems, buildings, resourceNodes, regions, selectedEntityId, onEntityClick, onGroundItemClick, onBuildingClick }: GameCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const minimapRef = useRef<HTMLCanvasElement>(null);
   const mmContainerRef = useRef<HTMLDivElement>(null);
@@ -296,6 +320,26 @@ export function GameCanvas({ mapData, entities, groundItems, buildings, resource
       ctx.fillRect(b.x * MINIMAP_SCALE, b.y * MINIMAP_SCALE, MINIMAP_SCALE, MINIMAP_SCALE);
     }
 
+    // Region labels on minimap (low opacity)
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    for (const region of regions) {
+      const rx = region.center_x * MINIMAP_SCALE;
+      const ry = region.center_y * MINIMAP_SCALE;
+      const tColor = TERRAIN_COLORS[region.terrain] || '#ccc';
+      // Region name
+      ctx.font = `bold ${Math.max(8, Math.round(region.radius * MINIMAP_SCALE * 0.18))}px sans-serif`;
+      ctx.fillStyle = tColor + '60';
+      ctx.fillText(region.name, rx, ry);
+      // Difficulty badge
+      const badge = DIFFICULTY_BADGES[region.difficulty];
+      if (badge) {
+        ctx.font = `bold ${Math.max(6, Math.round(region.radius * MINIMAP_SCALE * 0.12))}px sans-serif`;
+        ctx.fillStyle = badge.color + '50';
+        ctx.fillText(`Tier ${region.difficulty}`, rx, ry + Math.max(8, Math.round(region.radius * MINIMAP_SCALE * 0.18)));
+      }
+    }
+
     // Viewport rectangle
     const outer = containerRef.current;
     if (outer) {
@@ -309,7 +353,7 @@ export function GameCanvas({ mapData, entities, groundItems, buildings, resource
       ctx.lineWidth = 1;
       ctx.strokeRect(vx, vy, vWidth, vHeight);
     }
-  }, [mapData, entities, buildings, resourceNodes, selectedEnt, selectedEntityId, pan, zoom, mmW, mmH]);
+  }, [mapData, entities, buildings, resourceNodes, regions, selectedEnt, selectedEntityId, pan, zoom, mmW, mmH]);
 
   // Minimap click → jump to location (accounts for minimap zoom + pan offset)
   const handleMinimapClick = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
@@ -400,7 +444,7 @@ export function GameCanvas({ mapData, entities, groundItems, buildings, resource
             )}
           </div>
 
-          {/* Locations panel */}
+          {/* Locations panel — regions + sub-locations + buildings */}
           <div className="mt-1 rounded border border-border/40 bg-bg-tertiary/90 shadow-lg" style={{ width: mmSize.w }}>
             <button
               onClick={() => setLocationsOpen(prev => !prev)}
@@ -409,13 +453,17 @@ export function GameCanvas({ mapData, entities, groundItems, buildings, resource
             >
               {locationsOpen ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
               <MapPin className="w-3 h-3" />
-              Locations ({locations.length})
+              Regions & Locations ({regions.length} regions)
             </button>
             {locationsOpen && (
-              <div className="max-h-40 overflow-y-auto border-t border-border/30">
-                {locations.map((loc, i) => (
+              <div className="max-h-52 overflow-y-auto border-t border-border/30">
+                {/* Town buildings */}
+                <div className="px-2 py-0.5 text-[8px] font-bold uppercase tracking-wider text-text-secondary border-b border-border/20">
+                  Town
+                </div>
+                {locations.filter(l => !regions.some(r => r.locations.some(rl => rl.name === l.name))).map((loc, i) => (
                   <button
-                    key={i}
+                    key={`town-${i}`}
                     onClick={() => jumpToLocation(loc.x, loc.y)}
                     className="w-full flex items-center justify-between px-2 py-0.5 text-[9px] text-left
                                hover:bg-white/[0.04] transition-colors cursor-pointer"
@@ -424,6 +472,42 @@ export function GameCanvas({ mapData, entities, groundItems, buildings, resource
                     <span className="text-text-secondary">({loc.x}, {loc.y})</span>
                   </button>
                 ))}
+                {/* Regions */}
+                {regions.map(region => {
+                  const badge = DIFFICULTY_BADGES[region.difficulty] || DIFFICULTY_BADGES[1];
+                  const tColor = TERRAIN_COLORS[region.terrain] || '#ccc';
+                  return (
+                    <div key={region.region_id}>
+                      <button
+                        onClick={() => jumpToLocation(region.center_x, region.center_y)}
+                        className="w-full flex items-center gap-1 px-2 py-0.5 text-[9px] text-left
+                                   hover:bg-white/[0.04] transition-colors cursor-pointer border-t border-border/20"
+                      >
+                        <span className="font-bold" style={{ color: tColor }}>{region.name}</span>
+                        <span className="ml-auto px-1 rounded text-[7px] font-bold" style={{ color: badge.color, background: badge.color + '18' }}>
+                          {badge.label}
+                        </span>
+                      </button>
+                      {region.locations.map(loc => {
+                        const typeInfo = LOCATION_TYPE_ICONS[loc.location_type] || { label: '•', color: '#aaa' };
+                        return (
+                          <button
+                            key={loc.location_id}
+                            onClick={() => jumpToLocation(loc.x, loc.y)}
+                            className="w-full flex items-center justify-between pl-4 pr-2 py-px text-[8px] text-left
+                                       hover:bg-white/[0.04] transition-colors cursor-pointer"
+                          >
+                            <span>
+                              <span className="mr-1">{typeInfo.label}</span>
+                              <span style={{ color: typeInfo.color }}>{loc.name}</span>
+                            </span>
+                            <span className="text-text-secondary">({loc.x}, {loc.y})</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>
