@@ -70,6 +70,12 @@ class SimulationConfig:
     opportunity_attack_damage_mult: float = 0.5   # Damage mult for free hit on melee disengage
     chase_spd_closing_base: int = 6              # Base ticks between bonus closing moves (lower = faster)
 
+    # Aggro / threat system (epic-05 F3)
+    threat_decay_rate: float = 0.10              # 10% threat decay per tick
+    threat_damage_mult: float = 1.0              # Threat per point of damage dealt
+    threat_heal_mult: float = 0.5                # Threat per point of healing done (on healer)
+    threat_tank_class_mult: float = 1.5          # Threat multiplier for tank classes (Warrior/Champion)
+
     # Mob leash (enhance-04)
     mob_leash_radius: int = 15
     mob_leash_chase_multiplier: float = 1.5

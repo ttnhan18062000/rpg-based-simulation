@@ -363,6 +363,12 @@ class EngineManager:
             logger.info("Created region '%s' (%s, tier %d) at %s r=%d with %d locations",
                         region.name, mat.name, difficulty, rpos, effective_radius, len(region.locations))
 
+        # --- Terrain detail: add intra-region variety (epic-09) ---
+        from src.systems.terrain_detail import TerrainDetailGenerator
+        terrain_gen = TerrainDetailGenerator(grid, self._rng)
+        terrain_gen.generate_all(world.regions)
+        logger.info("Generated terrain detail for %d regions", len(world.regions))
+
         # --- Generate roads from town to nearest regions ---
         if cfg.road_from_town:
             road_targets: list[Vector2] = []

@@ -144,6 +144,13 @@ class CombatAction:
             defender.stats.max_hp,
         )
 
+        # --- Threat generation (epic-05 F3) ---
+        threat = damage * cfg.threat_damage_mult
+        from src.core.classes import HeroClass
+        if attacker.hero_class in (HeroClass.WARRIOR, HeroClass.CHAMPION):
+            threat *= cfg.threat_tank_class_mult
+        defender.threat_table[attacker.id] = defender.threat_table.get(attacker.id, 0.0) + threat
+
         from src.core.attributes import speed_delay
         attacker.next_act_at += speed_delay(attacker.effective_spd(), "attack")
 

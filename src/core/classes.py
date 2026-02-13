@@ -95,7 +95,10 @@ class SkillDef:
     # Effects
     power: float = 1.0         # Damage multiplier or heal amount multiplier
     duration: int = 0          # Buff/debuff duration in ticks
-    range: int = 1             # Effective range in tiles
+    range: int = 1             # Cast distance in tiles (how far you can use it)
+    # AoE (epic-05 F1)
+    radius: int = 0            # AoE spread from impact point (0 = single target)
+    aoe_falloff: float = 0.15  # Damage reduction per tile from center (0.15 = -15%/tile)
     # Learning prerequisites
     mastery_req: str = ""       # Prerequisite skill_id that must have mastery >= mastery_threshold
     mastery_threshold: float = 25.0  # Min mastery on prerequisite skill
@@ -580,12 +583,12 @@ _reg_skill(SkillDef(
     def_mod=0.5, duration=3,
 ))
 _reg_skill(SkillDef(
-    "battle_cry", "Battle Cry",
-    "Boost ATK of nearby allies by 20% for 3 ticks.",
-    SkillType.ACTIVE, SkillTarget.AREA_ALLIES, HeroClass.WARRIOR,
-    level_req=5, gold_cost=200, cooldown=12, stamina_cost=20,
+    "whirlwind", "Whirlwind",
+    "Spin with weapon extended, dealing 1.5x damage to all enemies within radius 1.",
+    SkillType.ACTIVE, SkillTarget.AREA_ENEMIES, HeroClass.WARRIOR,
+    level_req=5, gold_cost=200, cooldown=8, stamina_cost=20,
     mastery_req="shield_wall", mastery_threshold=25.0,
-    atk_mod=0.2, duration=3, range=3,
+    power=1.5, range=1, radius=1, aoe_falloff=0.0,
 ))
 
 # ---- Ranger class skills ----
@@ -605,12 +608,12 @@ _reg_skill(SkillDef(
     evasion_mod=0.30, duration=3,
 ))
 _reg_skill(SkillDef(
-    "mark_prey", "Mark Prey",
-    "Mark an enemy, increasing damage taken by 25% for 4 ticks.",
-    SkillType.ACTIVE, SkillTarget.SINGLE_ENEMY, HeroClass.RANGER,
-    level_req=5, gold_cost=200, cooldown=10, stamina_cost=15,
+    "rain_of_arrows", "Rain of Arrows",
+    "Launch a volley of arrows into an area, dealing 1.4x damage in radius 2.",
+    SkillType.ACTIVE, SkillTarget.AREA_ENEMIES, HeroClass.RANGER,
+    level_req=5, gold_cost=200, cooldown=10, stamina_cost=18,
     mastery_req="evasive_step", mastery_threshold=25.0,
-    def_mod=-0.25, duration=4, range=4,
+    power=1.4, range=4, radius=2, aoe_falloff=0.15,
 ))
 
 # ---- Mage class skills ----
@@ -630,12 +633,13 @@ _reg_skill(SkillDef(
     def_mod=0.4, duration=3,
 ))
 _reg_skill(SkillDef(
-    "mana_surge", "Mana Surge",
-    "Channel arcane energy, boosting all skill power by 30% for 4 ticks.",
-    SkillType.ACTIVE, SkillTarget.SELF, HeroClass.MAGE,
-    level_req=5, gold_cost=200, cooldown=12, stamina_cost=22,
+    "fireball", "Fireball",
+    "Hurl a ball of fire that explodes on impact, dealing 1.8x magical damage in radius 2.",
+    SkillType.ACTIVE, SkillTarget.AREA_ENEMIES, HeroClass.MAGE,
+    level_req=5, gold_cost=200, cooldown=8, stamina_cost=22,
     mastery_req="frost_shield", mastery_threshold=25.0,
-    atk_mod=0.3, duration=4,
+    power=1.8, range=4, radius=2, aoe_falloff=0.20,
+    damage_type=DamageType.MAGICAL,
 ))
 
 # ---- Rogue class skills ----
@@ -769,14 +773,14 @@ RACE_SKILLS: dict[str, list[str]] = {
 
 # Class → available class skills mapping
 CLASS_SKILLS: dict[HeroClass, list[str]] = {
-    HeroClass.WARRIOR: ["power_strike", "shield_wall", "battle_cry"],
-    HeroClass.RANGER:  ["quick_shot", "evasive_step", "mark_prey"],
-    HeroClass.MAGE:    ["arcane_bolt", "frost_shield", "mana_surge"],
+    HeroClass.WARRIOR: ["power_strike", "shield_wall", "whirlwind"],
+    HeroClass.RANGER:  ["quick_shot", "evasive_step", "rain_of_arrows"],
+    HeroClass.MAGE:    ["arcane_bolt", "frost_shield", "fireball"],
     HeroClass.ROGUE:   ["backstab", "shadowstep", "poison_blade"],
     # Breakthroughs inherit parent class skills
-    HeroClass.CHAMPION:    ["power_strike", "shield_wall", "battle_cry"],
-    HeroClass.SHARPSHOOTER: ["quick_shot", "evasive_step", "mark_prey"],
-    HeroClass.ARCHMAGE:    ["arcane_bolt", "frost_shield", "mana_surge"],
+    HeroClass.CHAMPION:    ["power_strike", "shield_wall", "whirlwind"],
+    HeroClass.SHARPSHOOTER: ["quick_shot", "evasive_step", "rain_of_arrows"],
+    HeroClass.ARCHMAGE:    ["arcane_bolt", "frost_shield", "fireball"],
     HeroClass.ASSASSIN:    ["backstab", "shadowstep", "poison_blade"],
 }
 

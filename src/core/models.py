@@ -168,6 +168,11 @@ class Entity:
     difficulty_tier: int = 1
     current_region_id: str = ""  # Tracks which region the entity is currently standing in
     combat_target_id: int | None = None  # Current combat target for visualization
+    # Aggro / threat system (epic-05 F3)
+    threat_table: dict[int, float] = field(default_factory=dict)  # attacker_id → threat score
+    # A* path cache (epic-09)
+    cached_path: list | None = field(default=None, repr=False)
+    cached_path_target: object | None = field(default=None, repr=False)
 
     @property
     def alive(self) -> bool:
@@ -291,4 +296,5 @@ class Entity:
             traits=list(self.traits),
             home_storage=self.home_storage.copy() if self.home_storage else None,
             combat_target_id=self.combat_target_id,
+            threat_table=dict(self.threat_table),
         )

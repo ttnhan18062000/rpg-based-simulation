@@ -77,6 +77,9 @@ class AIContext:
         return self._visible
 
     def nearest_enemy(self) -> Entity | None:
+        """Return best combat target. Mobs use threat-based targeting; heroes use nearest."""
+        if self.actor.faction != Faction.HERO_GUILD and self.actor.threat_table:
+            return Perception.highest_threat_enemy(self.actor, self.visible, self.faction_reg)
         return Perception.nearest_enemy(self.actor, self.visible, self.faction_reg)
 
     def nearest_ally(self) -> Entity | None:
@@ -97,8 +100,8 @@ def is_tile_passable(actor: Entity, pos: Vector2, snapshot: Snapshot) -> bool:
     return snapshot.grid.is_walkable(pos)
 
 
-def propose_move_toward(actor: Entity, target_pos: Vector2, snapshot: Snapshot, reason: str) -> ActionProposal:
-    """Propose a MOVE one step toward *target_pos*, with perpendicular fallback."""
+def _greedy_move_toward(actor: Entity, target_pos: Vector2, snapshot: Snapshot, reason: str) -> ActionProposal:
+    """Greedy single-step move toward *target_pos*, with perpendicular fallback."""
     direction = Perception.direction_toward(actor.pos, target_pos)
     dest = actor.pos + direction
     if is_tile_passable(actor, dest, snapshot):
@@ -111,6 +114,47 @@ def propose_move_toward(actor: Entity, target_pos: Vector2, snapshot: Snapshot, 
         if is_tile_passable(actor, alt_dest, snapshot):
             return ActionProposal(actor_id=actor.id, verb=ActionType.MOVE, target=alt_dest, reason=f"{reason} (detour)")
     return ActionProposal(actor_id=actor.id, verb=ActionType.REST, reason=f"{reason} (path blocked)")
+
+
+def propose_move_toward(actor: Entity, target_pos: Vector2, snapshot: Snapshot, reason: str) -> ActionProposal:
+    """Propose a MOVE one step toward *target_pos* using A* pathfinding.
+
+    For short distances (≤2) or if A* fails, falls back to greedy movement.
+    Caches the computed path on the entity for reuse across ticks.
+    """
+    dist = actor.pos.manhattan(target_pos)
+    if dist <= 2:
+        return _greedy_move_toward(actor, target_pos, snapshot, reason)
+
+    # Check cached path
+    cached = getattr(actor, 'cached_path', None)
+    cached_target = getattr(actor, 'cached_path_target', None)
+    if (cached and cached_target
+            and cached_target == target_pos
+            and len(cached) > 0
+            and cached[0] == actor.pos):
+        # Advance: pop current pos, use next step
+        cached.pop(0)
+        if cached and is_tile_passable(actor, cached[0], snapshot):
+            return ActionProposal(actor_id=actor.id, verb=ActionType.MOVE,
+                                  target=cached[0], reason=f"{reason} (A* cached)")
+
+    # Compute A* path
+    from src.ai.pathfinding import Pathfinder
+    pf = Pathfinder(snapshot.grid)
+    path = pf.find_path(actor.pos, target_pos)
+
+    if path and len(path) > 0:
+        # Cache the full path on the entity
+        actor.cached_path = path
+        actor.cached_path_target = target_pos
+        step = path[0]
+        if is_tile_passable(actor, step, snapshot):
+            return ActionProposal(actor_id=actor.id, verb=ActionType.MOVE,
+                                  target=step, reason=f"{reason} (A*)")
+
+    # Fallback to greedy
+    return _greedy_move_toward(actor, target_pos, snapshot, reason)
 
 
 def propose_move_away(actor: Entity, threat_pos: Vector2, snapshot: Snapshot, reason: str) -> ActionProposal:
@@ -384,15 +428,16 @@ def get_weapon_range(actor: Entity) -> int:
     return 1
 
 
-def best_ready_skill(actor: Entity, dist_to_enemy: int = 1) -> str | None:
+def best_ready_skill(actor: Entity, dist_to_enemy: int = 1, nearby_enemies: int = 1) -> str | None:
     """Return the skill_id of the best ready active combat skill, or None.
 
     When *dist_to_enemy* > 1 (ranged), only considers skills whose range
     can reach the enemy.  Self/ally buffs are always considered.
+    AoE skills get a scoring bonus when *nearby_enemies* > 1.
     """
     from src.core.classes import SKILL_DEFS, SkillTarget, SkillType
     best_id = None
-    best_power = 0.0
+    best_score = 0.0
     for si in actor.skills:
         if not si.is_ready():
             continue
@@ -411,8 +456,14 @@ def best_ready_skill(actor: Entity, dist_to_enemy: int = 1) -> str | None:
         if actor.stats.stamina < cost:
             continue
         power = si.effective_power(sdef.power)
-        if power > best_power:
-            best_power = power
+        # AoE bonus: multiply score by number of nearby enemies that could be hit
+        aoe_radius = getattr(sdef, 'radius', 0) or 0
+        if aoe_radius > 0 and nearby_enemies > 1:
+            score = power * nearby_enemies
+        else:
+            score = power
+        if score > best_score:
+            best_score = score
             best_id = si.skill_id
     return best_id
 
@@ -666,8 +717,13 @@ class CombatHandler(StateHandler):
 
         # Can we attack from here? (within weapon range)
         if dist <= weapon_rng:
-            # Try to use a skill first (pass distance for range-aware selection)
-            skill_id = best_ready_skill(actor, dist)
+            # Count nearby enemies for AoE skill preference
+            nearby_count = sum(
+                1 for v in ctx.visible if ctx.faction_reg.is_hostile(actor.faction, v.faction)
+                and v.alive and actor.pos.manhattan(v.pos) <= max(weapon_rng, 4)
+            )
+            # Try to use a skill first (pass distance + nearby count for AoE awareness)
+            skill_id = best_ready_skill(actor, dist, nearby_count)
             if skill_id:
                 return AIState.COMBAT, ActionProposal(
                     actor_id=actor.id, verb=ActionType.USE_SKILL, target=skill_id,

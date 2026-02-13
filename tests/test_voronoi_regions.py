@@ -15,6 +15,8 @@ TOWN_TILES = frozenset({Material.TOWN, Material.SANCTUARY})
 # Tiles that are painted over region terrain for specific locations
 OVERLAY_TILES = frozenset({Material.CAMP, Material.RUINS, Material.DUNGEON_ENTRANCE, Material.ROAD})
 TERRAIN_TILES = frozenset({Material.FOREST, Material.DESERT, Material.SWAMP, Material.MOUNTAIN})
+# Tiles placed by terrain detail generator within regions (epic-09)
+DETAIL_TILES = frozenset({Material.FLOOR, Material.WALL, Material.WATER, Material.LAVA, Material.BRIDGE})
 
 
 class TestVoronoiTessellation(unittest.TestCase):
@@ -29,7 +31,7 @@ class TestVoronoiTessellation(unittest.TestCase):
         cls.cfg = cfg
 
     def test_no_floor_tiles_outside_town(self):
-        """Every tile outside town/sanctuary should belong to a region (no FLOOR gaps)."""
+        """FLOOR tiles outside town should be limited to terrain detail (clearings/valleys)."""
         grid = self.snap.grid
         floor_count = 0
         for y in range(self.cfg.grid_height):
@@ -38,20 +40,20 @@ class TestVoronoiTessellation(unittest.TestCase):
                 tile = grid.get(pos)
                 if tile == Material.FLOOR:
                     floor_count += 1
-        # Allow a tiny tolerance for edge cases, but should be ~0
+        # Terrain detail adds clearings/valleys — allow up to 40%
         total_tiles = self.cfg.grid_width * self.cfg.grid_height
         floor_pct = floor_count / total_tiles * 100
-        self.assertLess(floor_pct, 1.0,
-                        f"{floor_count} FLOOR tiles ({floor_pct:.1f}%) — should be <1%")
+        self.assertLess(floor_pct, 40.0,
+                        f"{floor_count} FLOOR tiles ({floor_pct:.1f}%) — should be <40%")
 
     def test_regions_cover_map(self):
-        """Region terrain + overlays + town should account for nearly all tiles."""
+        """Region terrain + overlays + detail + town should account for nearly all tiles."""
         grid = self.snap.grid
         categorized = 0
         for y in range(self.cfg.grid_height):
             for x in range(self.cfg.grid_width):
                 tile = grid.get(Vector2(x, y))
-                if tile in TOWN_TILES or tile in TERRAIN_TILES or tile in OVERLAY_TILES:
+                if tile in TOWN_TILES or tile in TERRAIN_TILES or tile in OVERLAY_TILES or tile in DETAIL_TILES:
                     categorized += 1
         total = self.cfg.grid_width * self.cfg.grid_height
         coverage = categorized / total * 100
@@ -92,9 +94,9 @@ class TestVoronoiTessellation(unittest.TestCase):
             # Check center tile is the region's terrain
             center_tile = grid.get(region.center)
             self.assertIn(center_tile,
-                          {region.terrain} | OVERLAY_TILES,
+                          {region.terrain} | OVERLAY_TILES | DETAIL_TILES,
                           f"Region '{region.name}' center at {region.center} has "
-                          f"tile {center_tile}, expected {region.terrain}")
+                          f"tile {center_tile}, expected {region.terrain} or detail")
 
 
 class TestFindRegionAt(unittest.TestCase):

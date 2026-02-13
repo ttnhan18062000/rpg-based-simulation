@@ -210,6 +210,152 @@ Skill damage uses `power` multiplier on base damage, skill-specific `damage_type
 
 ---
 
+## Ranged Combat (epic-05 F4)
+
+Ranged weapons and skills can hit targets beyond melee range, with line-of-sight and cover mechanics.
+
+**Primary files:** `src/core/items.py`, `src/core/grid.py`, `src/actions/combat.py`, `src/ai/states.py`
+
+### Weapon Range
+
+Each weapon has a `weapon_range` field on `ItemTemplate` (default 1 = melee). Ranged weapons:
+
+| Weapon | Range | Type |
+|--------|-------|------|
+| Swords/Daggers | 1 | Melee |
+| Shortbow | 3 | Ranged |
+| Longbow/Hunting Bow | 4 | Ranged |
+| Staves/Wands | 3 | Ranged (magical) |
+| Windpiercer | 5 | Ranged |
+
+### Line of Sight
+
+Ranged attacks require clear LoS via Bresenham's line algorithm (`Grid.has_line_of_sight()`). Any WALL tile between attacker and defender blocks the attack.
+
+### Cover System
+
+Defenders adjacent to a WALL tile get **+10% evasion** against ranged attacks. Checked via `Grid.has_adjacent_wall()`.
+
+### AI Kiting
+
+Ranged entities (weapon_range ≥ 3) kite when:
+- Adjacent to enemy (dist ≤ 1)
+- HP > 60%
+- Propose `MOVE` away instead of attacking
+
+---
+
+## AoE Attacks & Skills (epic-05 F1)
+
+Skills with `AREA_ENEMIES` or `AREA_ALLIES` target types hit multiple entities in a radius.
+
+**Primary files:** `src/core/classes.py` (SkillDef), `src/engine/world_loop.py` (resolution)
+
+### SkillDef Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `radius` | int | AoE spread from impact point (0 = single target) |
+| `aoe_falloff` | float | Damage reduction per tile from center (default 0.15) |
+
+### AoE Skills
+
+| Skill | Class | Range | Radius | Falloff | Power | Type |
+|-------|-------|-------|--------|---------|-------|------|
+| Whirlwind | Warrior | 1 | 1 | 0.0 | 1.5 | Physical |
+| Rain of Arrows | Ranger | 4 | 2 | 0.15 | 1.4 | Physical |
+| Fireball | Mage | 4 | 2 | 0.20 | 1.8 | Magical |
+
+### AoE Resolution
+
+1. Impact point = nearest hostile within cast range
+2. Collect all valid targets within `radius` of impact point
+3. Per target: `damage *= max(0, 1.0 - dist_from_center * aoe_falloff)`
+4. Crits only on center target (`dist_from_center == 0`)
+5. Damage variance uses unique seed per target (`tick + 5 + eid`)
+
+### AI AoE Preference
+
+`best_ready_skill()` scores AoE skills as `power * nearby_enemies` when multiple enemies are clustered (nearby_enemies > 1), preferring AoE over single-target.
+
+---
+
+## Aggro & Threat System (epic-05 F3)
+
+Enemies track threat per attacker and target the highest-threat entity instead of nearest.
+
+**Primary files:** `src/core/models.py`, `src/actions/combat.py`, `src/engine/world_loop.py`, `src/ai/perception.py`, `src/ai/states.py`
+
+### Threat Table
+
+Each entity has `threat_table: dict[int, float]` mapping attacker IDs to accumulated threat scores.
+
+### Threat Generation
+
+| Source | Formula |
+|--------|---------|
+| Basic attack damage | `damage * threat_damage_mult` (1.0) |
+| Skill damage | `damage * threat_damage_mult` (1.0) |
+| Opportunity attack | `damage * threat_damage_mult` (1.0) |
+| Tank class bonus | Warrior/Champion get `threat_tank_class_mult` (1.5×) |
+
+### Threat Decay
+
+`_tick_threat_decay()` runs every core tick:
+- All threat entries decay by `threat_decay_rate` (10%) per tick
+- Entries below 1.0 are pruned
+- Dead attacker entries removed
+
+### AI Targeting
+
+- **Mobs** (non-HERO_GUILD): use `highest_threat_enemy()` — target visible hostile with highest threat score, fallback to nearest
+- **Heroes**: always use `nearest_enemy()` for intuitive behavior
+
+### Configuration
+
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `threat_decay_rate` | 0.10 | 10% decay per tick |
+| `threat_damage_mult` | 1.0 | Threat per point of damage |
+| `threat_heal_mult` | 0.5 | Threat per point of healing (future) |
+| `threat_tank_class_mult` | 1.5 | Multiplier for Warrior/Champion |
+
+---
+
+## Chase Mechanics (epic-05)
+
+Two systems that add depth to melee engagement and pursuit.
+
+**Primary files:** `src/engine/world_loop.py`
+
+### Opportunity Attacks
+
+When an entity moves away from an adjacent hostile (Manhattan distance increases), the hostile gets a free reduced-damage hit:
+
+```
+damage = max(1, int(attacker_atk * opportunity_attack_damage_mult) - defender_def // 2)
+```
+
+- `opportunity_attack_damage_mult`: 0.5 (half-damage)
+- No crit, no evasion check
+- Generates threat on the mover
+- Emits `"combat"` event with `verb=OPPORTUNITY_ATTACK`
+
+### SPD-Based Chase Closing
+
+Faster hunters periodically gain a bonus tile of movement when chasing slower prey:
+
+```
+interval = ceil(chase_spd_closing_base * target_spd / hunter_spd)
+if chase_ticks % interval == 0 → bonus move toward target
+```
+
+- `chase_spd_closing_base`: 6
+- Only triggers for HUNT-state entities with higher SPD than target
+- Emits `"movement"` event with `verb=CHASE_SPRINT`
+
+---
+
 ## Speed & Action Delay System
 
 Defined in `src/core/attributes.py` via `speed_delay()`. Uses logarithmic diminishing returns with action-type multipliers.

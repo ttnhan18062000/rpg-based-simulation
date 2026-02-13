@@ -126,17 +126,18 @@ Each state has a `StateHandler` subclass registered in `STATE_HANDLERS` dict.
 - Enemies in town retreat when below 60% HP or no target visible
 
 ### HuntHandler
-- Moves toward the nearest hostile entity using greedy pathfinding
-- Transitions to COMBAT when adjacent (Manhattan ≤ 1)
+- Moves toward target using **A* pathfinding** for distances > 2 tiles, greedy fallback for short distances
+- Transitions to COMBAT when within weapon range (melee: Manhattan ≤ 1, ranged: ≤ weapon_range)
 - **Diagonal deadlock prevention (bug-01):** when two mutually aggressive entities are at Manhattan distance 2, the higher-ID entity yields (rests) so the lower-ID entity can close the gap unimpeded
 - **Leash enforcement (enhance-04):** abandons chase if distance from home > leash_radius × 1.5, or after `mob_chase_give_up_ticks` (20) without engaging
 - Transitions to FLEE if HP drops below threshold
 - Enemies abort hunts in town at 60% HP
 
 ### CombatHandler
-- Proposes ATTACK or USE_SKILL actions against adjacent enemies
+- Proposes ATTACK or USE_SKILL actions against enemies within weapon range
+- **Skill selection:** `best_ready_skill()` considers distance, range, and nearby enemy count (AoE preference)
+- **Kiting:** Ranged entities (weapon_range ≥ 3) move away when adjacent and HP > 60%
 - Uses potions when HP < 50%
-- Skill usage: checks cooldowns, stamina, and range
 - Transitions to FLEE if HP below flee threshold
 - Enemies disengage in town at 50% HP (higher than normal 30%)
 - On target death: re-evaluates for new targets or transitions
@@ -224,13 +225,20 @@ Each state has a `StateHandler` subclass registered in `STATE_HANDLERS` dict.
 
 | Method | Description |
 |--------|-------------|
-| `nearest_enemy(actor, visible, faction_reg)` | Closest hostile entity |
+| `nearest_enemy(actor, visible, faction_reg)` | Closest hostile entity (tie-break: lowest ID) |
+| `highest_threat_enemy(actor, visible, faction_reg)` | Visible hostile with highest threat score; falls back to nearest |
 | `nearest_ally(actor, visible, faction_reg)` | Closest allied entity |
 | `ground_loot_nearby(actor, snapshot, radius)` | Nearest ground loot position |
 | `is_on_enemy_territory(actor, snapshot, reg)` | True if on hostile tile |
 | `is_on_home_territory(actor, snapshot, reg)` | True if on own faction's tile |
 
 All perception is limited to the entity's `vision_range` (Manhattan distance).
+
+### Threat-Based Targeting (epic-05 F3)
+
+`AIContext.nearest_enemy()` dispatches based on faction:
+- **Mobs** (non-HERO_GUILD) with threat entries → `highest_threat_enemy()`
+- **Heroes** and mobs without threat data → `nearest_enemy()`
 
 ---
 
@@ -292,7 +300,46 @@ mods = aggregate_trait_stats(entity.traits)       # → TraitStatModifiers
 
 ---
 
-## 8. Thread Safety
+## 8. A* Pathfinding (epic-09)
+
+**Primary file:** `src/ai/pathfinding.py`
+
+### Pathfinder Class
+
+`Pathfinder(grid, max_nodes=200)` computes optimal paths using A* with Manhattan heuristic.
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `find_path(start, goal, occupied)` | `list[Vector2] \| None` | Full path excluding start, including goal |
+| `next_step(start, goal, occupied)` | `Vector2 \| None` | First step of the path |
+
+### Terrain Cost Weights
+
+`TERRAIN_MOVE_COST` registry determines step cost per tile type:
+
+| Tile | Cost | Effect |
+|------|------|--------|
+| ROAD / BRIDGE | 0.7 | Preferred routes |
+| FLOOR / TOWN / SANCTUARY | 1.0 | Baseline |
+| DESERT | 1.2 | Slightly slower |
+| FOREST | 1.3 | Slower |
+| MOUNTAIN | 1.4 | Rocky terrain |
+| SWAMP | 1.5 | Difficult terrain |
+
+### Integration
+
+`propose_move_toward()` in `src/ai/states.py`:
+- **Distance ≤ 2:** greedy movement (fast, no pathfinding overhead)
+- **Distance > 2:** A* pathfinding with terrain cost awareness
+- **A* fails:** falls back to greedy movement with perpendicular fallback
+
+### Path Caching
+
+Entity fields `cached_path` and `cached_path_target` store the last computed A* path. Cache is reused when the target hasn't changed and the entity is at the expected position.
+
+---
+
+## 9. Thread Safety
 
 - AI logic runs in worker threads, reading only immutable `Snapshot` data
 - Workers produce `ActionProposal` objects pushed to a thread-safe `ActionQueue`

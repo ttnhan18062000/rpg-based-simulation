@@ -20,62 +20,61 @@ Inspired by: Warcraft III unit pathing, Rimworld pawn movement, StarCraft pathfi
 
 ## Features
 
-### F1: A* Pathfinding
-- Implement `Pathfinder` class in `src/ai/pathfinding.py`
-- A* algorithm with Manhattan distance heuristic
-- Path computed from current position to target, cached for N ticks
-- Path invalidated when: target moves, obstacle changes, entity gets attacked
-- Fallback to greedy movement if A* fails (timeout or no path)
-- **Extensibility:** `Pathfinder` is a pluggable strategy — swap algorithms without changing AI code
+### F1: A* Pathfinding ✅ DONE
+- `Pathfinder` class in `src/ai/pathfinding.py`
+- A* algorithm with Manhattan distance heuristic, performance-bounded (`max_nodes=200`)
+- `find_path(start, goal, occupied)` → `list[Vector2] | None`
+- `next_step(start, goal, occupied)` → `Vector2 | None`
+- Goal tile excluded from occupied check (entity moving toward it)
+- Fallback to `_greedy_move_toward()` if A* fails or distance ≤ 2
+- **Integration:** `propose_move_toward()` in `src/ai/states.py` uses A* for dist > 2
+- **Files:** `src/ai/pathfinding.py` (new), `src/ai/states.py`
 
-### F2: Terrain Cost Weights
-- Different tile types have different movement costs:
-  - FLOOR/TOWN/SANCTUARY: 1.0 (baseline)
-  - ROAD/BRIDGE: 0.7 (faster — preferred)
-  - FOREST: 1.3 (slightly slower)
-  - SWAMP: 1.5 (slow, difficult terrain)
-  - MOUNTAIN: 1.4 (rocky, slower)
-  - DESERT: 1.2 (sand, slightly slower)
-- A* uses tile cost in its heuristic — entities naturally prefer roads
-- **Extensibility:** Tile costs defined in a `TERRAIN_MOVE_COST` registry, not in the pathfinder code
+### F2: Terrain Cost Weights ✅ DONE
+- `TERRAIN_MOVE_COST` registry in `src/ai/pathfinding.py`:
+  - FLOOR/TOWN/SANCTUARY/RUINS/DUNGEON_ENTRANCE: 1.0
+  - ROAD/BRIDGE: 0.7 (preferred)
+  - DESERT: 1.2
+  - FOREST: 1.3
+  - MOUNTAIN: 1.4
+  - SWAMP: 1.5
+- `tile_cost(grid, pos)` helper used by A* step cost calculation
+- A* naturally routes through roads and avoids expensive terrain
 
-### F3: Hazard Avoidance
-- Entities consider territory debuffs when routing
-- Heroes avoid enemy territory when a safer path exists (cost penalty for hostile tiles)
-- Enemies avoid sanctuary/town tiles unless specifically hunting
-- Avoidance weight configurable (0.0 = ignore hazards, 1.0 = strongly avoid)
-- **Extensibility:** Hazard costs layered on top of terrain costs via faction-aware cost function
+### F3: Hazard Avoidance ⏸️ DEFERRED
+- Faction-aware cost penalties for hostile territory
 
-### F4: Path Caching
-- Computed paths stored in entity memory for reuse
-- Cache key: `(start_pos, target_pos, tick)`
-- Cache invalidation: target moved > 3 tiles, path blocked, N ticks elapsed
-- Shared path cache per snapshot tick for entities moving to the same target
-- **Extensibility:** Cache strategy is pluggable (LRU, tick-based, etc.)
+### F4: Path Caching ✅ DONE
+- `cached_path: list | None` and `cached_path_target: object | None` on Entity model
+- Cache hit: target unchanged and entity at expected position → reuse path
+- Cache miss: recompute A* and store new path
+- **Files:** `src/core/models.py`, `src/ai/states.py`
 
-### F5: Movement Formations
-- Groups of allied entities moving together maintain formation spacing
-- Formation types: Line, Wedge, Circle (defensive)
-- Leader entity computes path; followers offset their target position
-- Formation breaks when under attack (entities scatter to fight)
-- **Extensibility:** Formation patterns defined as offset arrays, not hard-coded positions
+### F5: Movement Formations ⏸️ DEFERRED
+- Line, Wedge, Circle formations for allied groups
 
-### F6: Perpendicular Obstacle Avoidance
-- When the direct path is blocked (wall, water), try perpendicular steps first
-- Preference order: toward target → perpendicular (random left/right) → away from target
-- Prevents entities from getting stuck at concave wall corners
+### F6: Perpendicular Obstacle Avoidance ✅ DONE (pre-existing)
+- Already implemented in `_greedy_move_toward()` (perpendicular fallback)
+- A* now handles complex obstacle navigation natively
 
-### F7: Movement Speed Modifiers
-- Road tiles grant +30% movement speed (already partially implemented)
-- Swamp tiles apply -20% movement speed
-- Rain weather applies -10% movement speed on open terrain
-- SPD attribute and status effects affect movement delay
-- **Extensibility:** Speed modifiers stack multiplicatively from: base SPD, terrain, weather, effects
+### F7: Movement Speed Modifiers ⏸️ DEFERRED
+- Road +30% already exists in `MoveAction.apply()`; swamp/weather penalties pending
 
-### F8: Frontend Visualization
-- When spectating, draw the entity's computed path as a dotted line on the overlay canvas
-- Path color: green (safe), yellow (through neutral territory), red (through hostile territory)
-- Path updates in real-time as the entity moves
+### F8: Frontend Visualization ⏸️ DEFERRED
+- Path overlay on canvas
+
+### F9: Intra-Region Terrain Detail ✅ DONE (new, not in original spec)
+- `TerrainDetailGenerator` class in `src/systems/terrain_detail.py`
+- Per-biome features after Voronoi assignment:
+  - **Forest:** Clearings (FLOOR), dense groves (WALL), streams (WATER + BRIDGE), forest paths (ROAD)
+  - **Desert:** Rocky ridges (WALL), oases (WATER), hard-packed ground (FLOOR), caravan routes (ROAD)
+  - **Swamp:** Stagnant pools (WATER), dead tree thickets (WALL), mudflats (FLOOR), bog paths (ROAD/BRIDGE)
+  - **Mountain:** Cliff faces (WALL), valleys (FLOOR), lava vents (LAVA, difficulty≥3 only), mountain passes (ROAD)
+- Scatter-based cluster placement (deterministic via RNG)
+- River generation with winding paths and bridge crossings
+- Road networks connecting locations within each region (MST-like)
+- Difficulty-gated features (lava only in high-difficulty mountains)
+- **Files:** `src/systems/terrain_detail.py` (new), `src/api/engine_manager.py`
 
 ---
 

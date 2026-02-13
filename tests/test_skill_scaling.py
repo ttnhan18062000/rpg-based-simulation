@@ -58,8 +58,8 @@ class TestSkillDefDamageType:
 
     def test_buff_skills_default_physical(self):
         """Buff/debuff skills without power don't deal damage, but default to PHYSICAL."""
-        for sid in ("shield_wall", "battle_cry", "evasive_step", "frost_shield",
-                    "mana_surge", "shadowstep", "rally", "berserker_rage", "war_cry"):
+        for sid in ("shield_wall", "evasive_step", "frost_shield",
+                    "shadowstep", "rally", "berserker_rage", "war_cry"):
             sdef = SKILL_DEFS[sid]
             assert sdef.damage_type == DamageType.PHYSICAL, f"{sid} should default to PHYSICAL"
 

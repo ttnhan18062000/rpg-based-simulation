@@ -22,17 +22,17 @@ class TestSkillDef:
     def test_warrior_skills_exist(self):
         assert "power_strike" in SKILL_DEFS
         assert "shield_wall" in SKILL_DEFS
-        assert "battle_cry" in SKILL_DEFS
+        assert "whirlwind" in SKILL_DEFS
 
     def test_ranger_skills_exist(self):
         assert "quick_shot" in SKILL_DEFS
         assert "evasive_step" in SKILL_DEFS
-        assert "mark_prey" in SKILL_DEFS
+        assert "rain_of_arrows" in SKILL_DEFS
 
     def test_mage_skills_exist(self):
         assert "arcane_bolt" in SKILL_DEFS
         assert "frost_shield" in SKILL_DEFS
-        assert "mana_surge" in SKILL_DEFS
+        assert "fireball" in SKILL_DEFS
 
     def test_rogue_skills_exist(self):
         assert "backstab" in SKILL_DEFS
@@ -220,7 +220,7 @@ class TestAvailableClassSkills:
         skills = available_class_skills(HeroClass.WARRIOR, 5)
         assert "power_strike" in skills
         assert "shield_wall" in skills
-        assert "battle_cry" in skills
+        assert "whirlwind" in skills
 
     def test_no_class(self):
         skills = available_class_skills(HeroClass.NONE, 10)

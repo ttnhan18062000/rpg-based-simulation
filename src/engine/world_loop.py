@@ -251,6 +251,7 @@ class WorldLoop:
             self._tick_effects()
             self._tick_stamina_and_skills()
             self._tick_engagement()
+            self._tick_threat_decay()
 
         # Environment subsystems — every N ticks (default: every 2nd tick)
         if tick % cfg.subsystem_rate_environment == 0:
@@ -463,15 +464,45 @@ class WorldLoop:
                             if sdef.target in (SkillTarget.SINGLE_ENEMY, SkillTarget.AREA_ENEMIES):
                                 # Resolve damage via DamageCalculator (design-01)
                                 calculator = get_damage_calculator(sdef.damage_type)
+                                aoe_radius = getattr(sdef, 'radius', 0) or 0
+                                aoe_falloff = getattr(sdef, 'aoe_falloff', 0.15)
 
+                                # Determine impact point for AoE skills
+                                # For AoE: find nearest hostile within cast range as impact center
+                                impact_pos = entity.pos
+                                if sdef.target == SkillTarget.AREA_ENEMIES and aoe_radius > 0:
+                                    best_dist = 999
+                                    for eid_scan, e_scan in self._world.entities.items():
+                                        if eid_scan == entity.id or not e_scan.alive:
+                                            continue
+                                        if not self._faction_reg.is_hostile(entity.faction, e_scan.faction):
+                                            continue
+                                        d = entity.pos.manhattan(e_scan.pos)
+                                        if d <= skill_range and d < best_dist:
+                                            best_dist = d
+                                            impact_pos = e_scan.pos
+
+                                # Collect targets within effective area
+                                targets: list[tuple[int, Entity, int]] = []  # (eid, entity, dist_from_impact)
                                 for eid, other in self._world.entities.items():
                                     if eid == entity.id or not other.alive:
                                         continue
-                                    if entity.pos.manhattan(other.pos) > skill_range:
-                                        continue
                                     if not self._faction_reg.is_hostile(entity.faction, other.faction):
                                         continue
+                                    if aoe_radius > 0:
+                                        # AoE: check distance from impact point
+                                        dist_impact = impact_pos.manhattan(other.pos)
+                                        if dist_impact > aoe_radius:
+                                            continue
+                                        targets.append((eid, other, dist_impact))
+                                    else:
+                                        # Single-target or range-only: check distance from caster
+                                        if entity.pos.manhattan(other.pos) > skill_range:
+                                            continue
+                                        targets.append((eid, other, 0))
 
+                                hit_count = 0
+                                for eid, other, dist_from_center in targets:
                                     # Evasion check
                                     defender_evasion = other.effective_evasion()
                                     luck_mod = entity.stats.luck * 0.002
@@ -490,34 +521,49 @@ class WorldLoop:
                                         raw_dmg = int(dmg_ctx.atk_power * dmg_ctx.atk_mult * power)
                                         raw_dmg = max(raw_dmg - int(dmg_ctx.def_power * dmg_ctx.def_mult) // 2, 1)
 
+                                        # AoE falloff: reduce damage by distance from center
+                                        if dist_from_center > 0 and aoe_falloff > 0:
+                                            falloff_mult = max(0.0, 1.0 - dist_from_center * aoe_falloff)
+                                            raw_dmg = max(1, int(raw_dmg * falloff_mult))
+
                                         # Variance
                                         if self._rng:
                                             variance = self._rng.next_float(
-                                                Domain.COMBAT, entity.id, self._world.tick + 5)
+                                                Domain.COMBAT, entity.id, self._world.tick + 5 + eid)
                                             raw_dmg = max(1, int(raw_dmg * (1.0 + self._config.damage_variance * (variance - 0.5))))
 
-                                        # Crit check
+                                        # Crit check (only for center target in AoE)
                                         is_crit = False
-                                        crit_rate = entity.effective_crit_rate()
-                                        crit_rate += entity.stats.luck * 0.003
-                                        if self._rng and self._rng.next_bool(
-                                                Domain.COMBAT, entity.id, self._world.tick + 6, min(crit_rate, 0.8)):
-                                            raw_dmg = int(raw_dmg * entity.stats.crit_dmg)
-                                            is_crit = True
+                                        if dist_from_center == 0:
+                                            crit_rate = entity.effective_crit_rate()
+                                            crit_rate += entity.stats.luck * 0.003
+                                            if self._rng and self._rng.next_bool(
+                                                    Domain.COMBAT, entity.id, self._world.tick + 6, min(crit_rate, 0.8)):
+                                                raw_dmg = int(raw_dmg * entity.stats.crit_dmg)
+                                                is_crit = True
 
                                         dmg = max(raw_dmg, 1)
                                         other.stats.hp -= dmg
+                                        hit_count += 1
+                                        # Threat from skill damage (epic-05 F3)
+                                        sk_threat = dmg * self._config.threat_damage_mult
+                                        from src.core.classes import HeroClass as _HC
+                                        if entity.hero_class in (_HC.WARRIOR, _HC.CHAMPION):
+                                            sk_threat *= self._config.threat_tank_class_mult
+                                        other.threat_table[entity.id] = other.threat_table.get(entity.id, 0.0) + sk_threat
+                                        aoe_tag = f" (AoE d={dist_from_center})" if aoe_radius > 0 else ""
                                         logger.info(
-                                            "Tick %d: Entity %d used %s on %d → %d dmg%s [HP: %d/%d]",
+                                            "Tick %d: Entity %d used %s on %d → %d dmg%s%s [HP: %d/%d]",
                                             self._world.tick, entity.id, sdef.name,
-                                            eid, dmg, " CRIT!" if is_crit else "",
-                                            other.stats.hp, other.stats.max_hp,
+                                            eid, dmg, " CRIT!" if is_crit else "", aoe_tag,
+                                            max(other.stats.hp, 0), other.stats.max_hp,
                                         )
-                                        self._emit("skill", f"{entity.kind} #{entity.id} used {sdef.name} on #{eid} → {dmg} dmg",
+                                        self._emit("skill", f"{entity.kind} #{entity.id} used {sdef.name} on #{eid} → {dmg} dmg{aoe_tag}",
                                                    entity_ids=(entity.id, eid),
                                                    metadata={"skill_id": skill_id, "skill_name": sdef.name,
                                                              "damage": dmg, "target_id": eid,
-                                                             "crit": is_crit,
+                                                             "crit": is_crit, "aoe": aoe_radius > 0,
+                                                             "dist_from_center": dist_from_center,
                                                              "target_hp_after": other.stats.hp,
                                                              "target_max_hp": other.stats.max_hp})
                                     # Apply debuff if skill has duration + mods
@@ -884,6 +930,33 @@ class WorldLoop:
             else:
                 entity.engaged_ticks = 0
 
+    def _tick_threat_decay(self) -> None:
+        """Decay threat values over time (epic-05 F3).
+
+        Each tick, all threat entries decay by threat_decay_rate %.
+        Entries below 1.0 are pruned to keep tables clean.
+        Dead attacker entries are also removed.
+        """
+        decay = 1.0 - self._config.threat_decay_rate
+        entities = self._world.entities
+        for entity in entities.values():
+            if not entity.alive or not entity.threat_table:
+                continue
+            to_remove: list[int] = []
+            for attacker_id, threat in entity.threat_table.items():
+                # Remove threat from dead/removed attackers
+                attacker = entities.get(attacker_id)
+                if attacker is None or not attacker.alive:
+                    to_remove.append(attacker_id)
+                    continue
+                new_threat = threat * decay
+                if new_threat < 1.0:
+                    to_remove.append(attacker_id)
+                else:
+                    entity.threat_table[attacker_id] = new_threat
+            for aid in to_remove:
+                del entity.threat_table[aid]
+
     def _tick_resource_nodes(self) -> None:
         """Tick cooldowns on depleted resource nodes so they respawn."""
         for node in self._world.resource_nodes.values():
@@ -1166,6 +1239,9 @@ class WorldLoop:
                 def_ = mover.effective_def()
                 raw = max(1, int(atk * mult) - def_ // 2)
                 mover.stats.hp -= raw
+                # Threat from opportunity attack (epic-05 F3)
+                oa_threat = raw * cfg.threat_damage_mult
+                mover.threat_table[ent.id] = mover.threat_table.get(ent.id, 0.0) + oa_threat
                 logger.info(
                     "Tick %d: Entity %d (%s) opportunity attack on %d (%s) for %d damage [HP: %d/%d]",
                     tick, ent.id, ent.kind, mover.id, mover.kind,

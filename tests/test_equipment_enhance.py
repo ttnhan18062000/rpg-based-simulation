@@ -251,7 +251,7 @@ class TestSkillLearningRequirements:
         assert "level" in reason.lower()
 
     def test_tier3_chain(self):
-        sdef = SKILL_DEFS["battle_cry"]
+        sdef = SKILL_DEFS["whirlwind"]
         # Need shield_wall mastery >= 25
         s1 = SkillInstance(skill_id="power_strike", mastery=50.0)
         s2 = SkillInstance(skill_id="shield_wall", mastery=30.0)

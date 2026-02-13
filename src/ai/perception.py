@@ -71,6 +71,36 @@ class Perception:
         return min(enemies, key=lambda e: (actor.pos.manhattan(e.pos), e.id))
 
     @staticmethod
+    def highest_threat_enemy(
+        actor: Entity,
+        visible: list[Entity],
+        faction_reg: FactionRegistry | None = None,
+    ) -> Entity | None:
+        """Return the visible hostile with the highest threat score on *actor*.
+
+        Falls back to nearest enemy if no threat data exists.
+        Tie-broken by distance then lowest ID.
+        """
+        if faction_reg is not None:
+            enemies = [
+                e for e in visible
+                if e.alive and faction_reg.is_hostile(actor.faction, e.faction)
+            ]
+        else:
+            enemies = [e for e in visible if e.alive and e.faction != actor.faction]
+        if not enemies:
+            return None
+        # Check threat table for entries
+        if actor.threat_table:
+            # Filter to visible enemies that have threat entries
+            threatened = [e for e in enemies if e.id in actor.threat_table]
+            if threatened:
+                return max(threatened, key=lambda e: (
+                    actor.threat_table[e.id], -actor.pos.manhattan(e.pos), -e.id))
+        # Fallback: nearest enemy
+        return min(enemies, key=lambda e: (actor.pos.manhattan(e.pos), e.id))
+
+    @staticmethod
     def nearest_ally(
         actor: Entity,
         visible: list[Entity],
