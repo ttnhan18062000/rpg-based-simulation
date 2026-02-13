@@ -414,7 +414,7 @@ class EngineManager:
         )
 
         # --- Spawn hero via EntityBuilder ---
-        from src.core.classes import HeroClass, CLASS_DEFS
+        from src.core.classes import HeroClass, CLASS_DEFS, HERO_STARTING_GEAR
         from src.core.entity_builder import EntityBuilder
 
         hero_eid = world.allocate_entity_id()
@@ -422,6 +422,7 @@ class EngineManager:
         class_roll = self._rng.next_int(Domain.SPAWN, hero_eid, 6, 0, len(class_choices) - 1)
         hero_class = class_choices[class_roll]
 
+        gear = HERO_STARTING_GEAR.get(hero_class, {})
         hero = (
             EntityBuilder(self._rng, hero_eid, tick=0)
             .kind("hero")
@@ -437,7 +438,9 @@ class EngineManager:
             .with_class_skills(hero_class, level=1)
             .with_inventory(max_slots=cfg.hero_inventory_slots,
                             max_weight=cfg.hero_inventory_weight,
-                            weapon="iron_sword", armor="leather_vest")
+                            weapon=gear.get("weapon", "iron_sword"),
+                            armor=gear.get("armor", "leather_vest"),
+                            accessory=gear.get("accessory"))
             .with_starting_items(["small_hp_potion"] * 3)
             .with_home_storage()
             .with_traits(race_prefix="hero")

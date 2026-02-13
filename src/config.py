@@ -55,6 +55,7 @@ class SimulationConfig:
     xp_per_level_scale: float = 1.5
     stat_growth_hp: int = 5
     stat_growth_atk: int = 1
+    stat_growth_matk: int = 1
     stat_growth_def: int = 1
     stat_growth_spd: int = 1
     max_level: int = 20
@@ -64,6 +65,10 @@ class SimulationConfig:
     hero_inventory_weight: float = 90.0
     goblin_inventory_slots: int = 12
     goblin_inventory_weight: float = 30.0
+
+    # Chase mechanics (epic-05)
+    opportunity_attack_damage_mult: float = 0.5   # Damage mult for free hit on melee disengage
+    chase_spd_closing_base: int = 6              # Base ticks between bonus closing moves (lower = faster)
 
     # Mob leash (enhance-04)
     mob_leash_radius: int = 15

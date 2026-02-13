@@ -61,7 +61,7 @@ class Stats:
     evasion: float = 0.0
 
     # --- Magic combat ---
-    matk: int = 0           # Magic attack power
+    matk: int = 5           # Magic attack power
     mdef: int = 0           # Magic defense
 
     # --- Elemental vulnerability table ---
@@ -167,6 +167,7 @@ class Entity:
     region_id: str = ""
     difficulty_tier: int = 1
     current_region_id: str = ""  # Tracks which region the entity is currently standing in
+    combat_target_id: int | None = None  # Current combat target for visualization
 
     @property
     def alive(self) -> bool:
@@ -289,4 +290,5 @@ class Entity:
             quests=[q.copy() for q in self.quests],
             traits=list(self.traits),
             home_storage=self.home_storage.copy() if self.home_storage else None,
+            combat_target_id=self.combat_target_id,
         )

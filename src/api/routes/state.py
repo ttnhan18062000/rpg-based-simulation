@@ -89,6 +89,16 @@ def _elem_dmg(e):
     return aggregate_trait_stats(e.traits)
 
 
+def _get_weapon_range(e) -> int:
+    """Get weapon range from entity's equipped weapon. Default 1 (melee)."""
+    from src.core.items import ITEM_REGISTRY
+    if e.inventory and e.inventory.weapon:
+        tmpl = ITEM_REGISTRY.get(e.inventory.weapon)
+        if tmpl:
+            return tmpl.weapon_range
+    return 1
+
+
 def _serialize_skills(e) -> list[SkillSchema]:
     from src.core.classes import SKILL_DEFS
     result = []
@@ -212,6 +222,8 @@ def get_state(
             region_id=e.region_id,
             difficulty_tier=e.difficulty_tier,
             current_region_id=e.current_region_id,
+            weapon_range=_get_weapon_range(e),
+            combat_target_id=e.combat_target_id,
             traits=list(e.traits),
             home_storage_used=e.home_storage.used_slots if e.home_storage else 0,
             home_storage_max=e.home_storage.max_slots if e.home_storage else 0,

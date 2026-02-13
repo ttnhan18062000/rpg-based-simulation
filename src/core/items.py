@@ -44,9 +44,10 @@ class ItemTemplate:
     # Equipment stat bonuses — magical
     matk_bonus: int = 0
     mdef_bonus: int = 0
-    # Weapon damage type and element
+    # Weapon damage type, element, and range
     damage_type: _DamageTypeSer = DamageType.PHYSICAL
     element: _ElementSer = Element.NONE
+    weapon_range: int = 1  # 1 = melee, 2+ = ranged (Manhattan distance)
     # Consumable effects
     heal_amount: int = 0
     mana_restore: int = 0
@@ -75,6 +76,12 @@ _reg(ItemTemplate("steel_sword",       "Steel Sword",         ItemType.WEAPON, R
 _reg(ItemTemplate("battle_axe",        "Battle Axe",          ItemType.WEAPON, Rarity.UNCOMMON, weight=4.0, atk_bonus=8, spd_bonus=-1))
 _reg(ItemTemplate("enchanted_blade",   "Enchanted Blade",     ItemType.WEAPON, Rarity.RARE,     weight=2.5, atk_bonus=10, spd_bonus=2, crit_rate_bonus=0.05))
 _reg(ItemTemplate("goblin_cleaver",    "Goblin Chief Cleaver",ItemType.WEAPON, Rarity.RARE,     weight=3.5, atk_bonus=12, crit_rate_bonus=0.10))
+
+# ---- Ranged Weapons (bows) ----
+_reg(ItemTemplate("shortbow",          "Shortbow",            ItemType.WEAPON, Rarity.COMMON,   weight=1.5, atk_bonus=3, spd_bonus=1, weapon_range=3))
+_reg(ItemTemplate("longbow",           "Longbow",             ItemType.WEAPON, Rarity.UNCOMMON, weight=2.5, atk_bonus=5, crit_rate_bonus=0.04, weapon_range=4))
+_reg(ItemTemplate("hunting_bow",       "Hunting Bow",         ItemType.WEAPON, Rarity.RARE,     weight=2.0, atk_bonus=8, spd_bonus=1, crit_rate_bonus=0.06, weapon_range=4))
+_reg(ItemTemplate("windpiercer",       "Windpiercer",         ItemType.WEAPON, Rarity.EPIC,     weight=2.0, atk_bonus=13, spd_bonus=2, crit_rate_bonus=0.08, weapon_range=5))
 
 # ---- Armor ----
 _reg(ItemTemplate("leather_vest",      "Leather Vest",        ItemType.ARMOR, Rarity.COMMON,   weight=3.0, def_bonus=2))
@@ -109,7 +116,7 @@ _reg(ItemTemplate("stone_block",       "Stone Block",         ItemType.MATERIAL,
 _reg(ItemTemplate("wolf_pelt",         "Wolf Pelt",           ItemType.MATERIAL, Rarity.COMMON,   weight=1.5, sell_value=10))
 _reg(ItemTemplate("wolf_fang",         "Wolf Fang",           ItemType.MATERIAL, Rarity.UNCOMMON, weight=0.3, sell_value=14))
 _reg(ItemTemplate("bandit_dagger",     "Bandit Dagger",       ItemType.WEAPON,   Rarity.COMMON,   weight=1.5, atk_bonus=3, spd_bonus=2))
-_reg(ItemTemplate("bandit_bow",        "Bandit Bow",          ItemType.WEAPON,   Rarity.UNCOMMON, weight=2.0, atk_bonus=5, crit_rate_bonus=0.05))
+_reg(ItemTemplate("bandit_bow",        "Bandit Bow",          ItemType.WEAPON,   Rarity.UNCOMMON, weight=2.0, atk_bonus=5, crit_rate_bonus=0.05, weapon_range=3))
 _reg(ItemTemplate("bone_shard",        "Bone Shard",          ItemType.MATERIAL, Rarity.COMMON,   weight=0.5, sell_value=6))
 _reg(ItemTemplate("ectoplasm",         "Ectoplasm",           ItemType.MATERIAL, Rarity.UNCOMMON, weight=0.3, sell_value=16))
 _reg(ItemTemplate("orc_axe",           "Orc Axe",             ItemType.WEAPON,   Rarity.UNCOMMON, weight=4.0, atk_bonus=7, spd_bonus=-1))
@@ -118,27 +125,27 @@ _reg(ItemTemplate("orc_shield",        "Orc Shield",          ItemType.ARMOR,   
 # ---- Higher-tier equipment (shop) ----
 _reg(ItemTemplate("steel_greatsword",  "Steel Greatsword",    ItemType.WEAPON,   Rarity.RARE,     weight=5.0, atk_bonus=10, crit_rate_bonus=0.05, spd_bonus=-1))
 _reg(ItemTemplate("plate_armor",       "Plate Armor",         ItemType.ARMOR,    Rarity.RARE,     weight=8.0, def_bonus=8, max_hp_bonus=10, spd_bonus=-2))
-_reg(ItemTemplate("apprentice_staff",  "Apprentice Staff",    ItemType.WEAPON,   Rarity.COMMON,   weight=1.5, matk_bonus=3, spd_bonus=1, damage_type=DamageType.MAGICAL))
-_reg(ItemTemplate("fire_staff",        "Fire Staff",          ItemType.WEAPON,   Rarity.UNCOMMON, weight=2.5, matk_bonus=7, damage_type=DamageType.MAGICAL, element=Element.FIRE))
+_reg(ItemTemplate("apprentice_staff",  "Apprentice Staff",    ItemType.WEAPON,   Rarity.COMMON,   weight=1.5, matk_bonus=3, spd_bonus=1, damage_type=DamageType.MAGICAL, weapon_range=3))
+_reg(ItemTemplate("fire_staff",        "Fire Staff",          ItemType.WEAPON,   Rarity.UNCOMMON, weight=2.5, matk_bonus=7, damage_type=DamageType.MAGICAL, element=Element.FIRE, weapon_range=3))
 
 # ---- Crafted items from race-specific materials ----
 _reg(ItemTemplate("wolf_cloak",        "Wolf Cloak",          ItemType.ARMOR,     Rarity.UNCOMMON, weight=2.5, def_bonus=3, spd_bonus=2, evasion_bonus=0.04))
 _reg(ItemTemplate("fang_necklace",     "Fang Necklace",       ItemType.ACCESSORY, Rarity.UNCOMMON, weight=0.3, atk_bonus=2, crit_rate_bonus=0.08))
-_reg(ItemTemplate("desert_bow",        "Desert Composite Bow",ItemType.WEAPON,    Rarity.UNCOMMON, weight=2.0, atk_bonus=6, spd_bonus=1, crit_rate_bonus=0.06))
+_reg(ItemTemplate("desert_bow",        "Desert Composite Bow",ItemType.WEAPON,    Rarity.UNCOMMON, weight=2.0, atk_bonus=6, spd_bonus=1, crit_rate_bonus=0.06, weapon_range=3))
 _reg(ItemTemplate("bone_shield",       "Bone Shield",         ItemType.ARMOR,     Rarity.UNCOMMON, weight=4.0, def_bonus=5, max_hp_bonus=10))
 _reg(ItemTemplate("spectral_blade",    "Spectral Blade",      ItemType.WEAPON,    Rarity.RARE,     weight=2.0, atk_bonus=9, crit_rate_bonus=0.08))
 _reg(ItemTemplate("mountain_plate",    "Mountain Plate",      ItemType.ARMOR,     Rarity.RARE,     weight=7.0, def_bonus=7, spd_bonus=-2, max_hp_bonus=15))
 _reg(ItemTemplate("herbal_remedy",     "Herbal Remedy",       ItemType.CONSUMABLE, Rarity.COMMON,  weight=0.5, heal_amount=25))
 
 # ---- Magic Weapons ----
-_reg(ItemTemplate("wooden_staff",      "Wooden Staff",        ItemType.WEAPON, Rarity.COMMON,   weight=2.0, matk_bonus=3, damage_type=DamageType.MAGICAL))
-_reg(ItemTemplate("iron_wand",         "Iron Wand",           ItemType.WEAPON, Rarity.COMMON,   weight=1.0, matk_bonus=4, spd_bonus=1, damage_type=DamageType.MAGICAL))
-_reg(ItemTemplate("crystal_staff",     "Crystal Staff",       ItemType.WEAPON, Rarity.UNCOMMON, weight=2.5, matk_bonus=7, spd_bonus=1, damage_type=DamageType.MAGICAL))
-_reg(ItemTemplate("fire_rod",          "Fire Rod",            ItemType.WEAPON, Rarity.UNCOMMON, weight=1.5, matk_bonus=6, damage_type=DamageType.MAGICAL, element=Element.FIRE))
-_reg(ItemTemplate("frost_scepter",     "Frost Scepter",       ItemType.WEAPON, Rarity.UNCOMMON, weight=2.0, matk_bonus=6, spd_bonus=-1, damage_type=DamageType.MAGICAL, element=Element.ICE))
-_reg(ItemTemplate("lightning_wand",    "Lightning Wand",      ItemType.WEAPON, Rarity.RARE,     weight=1.0, matk_bonus=9, spd_bonus=2, damage_type=DamageType.MAGICAL, element=Element.LIGHTNING))
-_reg(ItemTemplate("shadow_tome",       "Shadow Tome",         ItemType.WEAPON, Rarity.RARE,     weight=2.0, matk_bonus=11, crit_rate_bonus=0.06, damage_type=DamageType.MAGICAL, element=Element.DARK))
-_reg(ItemTemplate("holy_codex",        "Holy Codex",          ItemType.WEAPON, Rarity.RARE,     weight=2.5, matk_bonus=10, max_hp_bonus=10, damage_type=DamageType.MAGICAL, element=Element.HOLY))
+_reg(ItemTemplate("wooden_staff",      "Wooden Staff",        ItemType.WEAPON, Rarity.COMMON,   weight=2.0, matk_bonus=3, damage_type=DamageType.MAGICAL, weapon_range=3))
+_reg(ItemTemplate("iron_wand",         "Iron Wand",           ItemType.WEAPON, Rarity.COMMON,   weight=1.0, matk_bonus=4, spd_bonus=1, damage_type=DamageType.MAGICAL, weapon_range=3))
+_reg(ItemTemplate("crystal_staff",     "Crystal Staff",       ItemType.WEAPON, Rarity.UNCOMMON, weight=2.5, matk_bonus=7, spd_bonus=1, damage_type=DamageType.MAGICAL, weapon_range=4))
+_reg(ItemTemplate("fire_rod",          "Fire Rod",            ItemType.WEAPON, Rarity.UNCOMMON, weight=1.5, matk_bonus=6, damage_type=DamageType.MAGICAL, element=Element.FIRE, weapon_range=3))
+_reg(ItemTemplate("frost_scepter",     "Frost Scepter",       ItemType.WEAPON, Rarity.UNCOMMON, weight=2.0, matk_bonus=6, spd_bonus=-1, damage_type=DamageType.MAGICAL, element=Element.ICE, weapon_range=3))
+_reg(ItemTemplate("lightning_wand",    "Lightning Wand",      ItemType.WEAPON, Rarity.RARE,     weight=1.0, matk_bonus=9, spd_bonus=2, damage_type=DamageType.MAGICAL, element=Element.LIGHTNING, weapon_range=4))
+_reg(ItemTemplate("shadow_tome",       "Shadow Tome",         ItemType.WEAPON, Rarity.RARE,     weight=2.0, matk_bonus=11, crit_rate_bonus=0.06, damage_type=DamageType.MAGICAL, element=Element.DARK, weapon_range=4))
+_reg(ItemTemplate("holy_codex",        "Holy Codex",          ItemType.WEAPON, Rarity.RARE,     weight=2.5, matk_bonus=10, max_hp_bonus=10, damage_type=DamageType.MAGICAL, element=Element.HOLY, weapon_range=4))
 
 # ---- Magic Armor ----
 _reg(ItemTemplate("cloth_robe",        "Cloth Robe",          ItemType.ARMOR, Rarity.COMMON,   weight=1.5, mdef_bonus=2, spd_bonus=1))
@@ -170,7 +177,7 @@ _reg(ItemTemplate("phoenix_feather",   "Phoenix Feather",     ItemType.MATERIAL,
 # ---- Epic-tier equipment ----
 _reg(ItemTemplate("dragonbane",        "Dragonbane",          ItemType.WEAPON,    Rarity.EPIC, weight=4.0, atk_bonus=16, crit_rate_bonus=0.10, spd_bonus=1))
 _reg(ItemTemplate("void_edge",         "Void Edge",           ItemType.WEAPON,    Rarity.EPIC, weight=3.0, atk_bonus=14, crit_rate_bonus=0.08, crit_dmg_bonus=0.3))
-_reg(ItemTemplate("stormcaller",       "Stormcaller",         ItemType.WEAPON,    Rarity.EPIC, weight=2.5, matk_bonus=15, spd_bonus=2, damage_type=DamageType.MAGICAL, element=Element.LIGHTNING))
+_reg(ItemTemplate("stormcaller",       "Stormcaller",         ItemType.WEAPON,    Rarity.EPIC, weight=2.5, matk_bonus=15, spd_bonus=2, damage_type=DamageType.MAGICAL, element=Element.LIGHTNING, weapon_range=4))
 _reg(ItemTemplate("abyssal_plate",     "Abyssal Plate",       ItemType.ARMOR,     Rarity.EPIC, weight=7.0, def_bonus=12, mdef_bonus=4, max_hp_bonus=20, spd_bonus=-1))
 _reg(ItemTemplate("celestial_robe",    "Celestial Robe",      ItemType.ARMOR,     Rarity.EPIC, weight=2.0, mdef_bonus=10, matk_bonus=5, evasion_bonus=0.06, spd_bonus=2))
 _reg(ItemTemplate("crown_of_ruin",     "Crown of Ruin",       ItemType.ACCESSORY, Rarity.EPIC, weight=0.5, atk_bonus=5, matk_bonus=5, crit_rate_bonus=0.06))
@@ -571,7 +578,7 @@ TIER_STARTING_GEAR: dict[int, dict[str, str | None]] = {
     EnemyTier.BASIC: {"weapon": "wooden_club", "armor": None, "accessory": None},
     EnemyTier.SCOUT: {"weapon": None, "armor": None, "accessory": "lucky_charm"},
     EnemyTier.WARRIOR: {"weapon": "iron_sword", "armor": "chainmail", "accessory": None},
-    EnemyTier.ELITE: {"weapon": "goblin_cleaver", "armor": "goblin_guard", "accessory": "ring_of_power"},
+    EnemyTier.ELITE: {"weapon": "fire_rod", "armor": "goblin_guard", "accessory": "ring_of_power"},
 }
 
 # Maps enemy tier -> kind string for display
@@ -598,7 +605,7 @@ RACE_TIER_KINDS: dict[str, dict[int, str]] = {
     },
     "undead": {
         EnemyTier.BASIC: "skeleton",
-        EnemyTier.SCOUT: "skeleton",
+        EnemyTier.SCOUT: "skeleton_mage",
         EnemyTier.WARRIOR: "zombie",
         EnemyTier.ELITE: "lich",
     },
@@ -626,9 +633,9 @@ RACE_STARTING_GEAR: dict[str, dict[int, dict[str, str | None]]] = {
     },
     "undead": {
         EnemyTier.BASIC:   {"weapon": "wooden_club", "armor": None, "accessory": None},
-        EnemyTier.SCOUT:   {"weapon": "wooden_club", "armor": None, "accessory": None},
+        EnemyTier.SCOUT:   {"weapon": "wooden_staff", "armor": None, "accessory": None},
         EnemyTier.WARRIOR: {"weapon": "iron_sword", "armor": "leather_vest", "accessory": None},
-        EnemyTier.ELITE:   {"weapon": "enchanted_blade", "armor": "enchanted_robe", "accessory": "ring_of_power"},
+        EnemyTier.ELITE:   {"weapon": "crystal_staff", "armor": "enchanted_robe", "accessory": "ring_of_power"},
     },
     "orc": {
         EnemyTier.BASIC:   {"weapon": "orc_axe", "armor": None, "accessory": None},

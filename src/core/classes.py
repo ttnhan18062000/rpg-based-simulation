@@ -791,6 +791,18 @@ CLASS_BUILDING_MAP: dict[str, HeroClass] = {
 
 
 # ---------------------------------------------------------------------------
+# Hero Starting Gear — class-based starting equipment
+# ---------------------------------------------------------------------------
+
+HERO_STARTING_GEAR: dict[HeroClass, dict[str, str | None]] = {
+    HeroClass.WARRIOR: {"weapon": "iron_sword",       "armor": "leather_vest", "accessory": None},
+    HeroClass.RANGER:  {"weapon": "shortbow",         "armor": "leather_vest", "accessory": None},
+    HeroClass.MAGE:    {"weapon": "apprentice_staff",  "armor": "cloth_robe",   "accessory": None},
+    HeroClass.ROGUE:   {"weapon": "bandit_dagger",     "armor": "leather_vest", "accessory": None},
+}
+
+
+# ---------------------------------------------------------------------------
 # Helper functions
 # ---------------------------------------------------------------------------
 
@@ -876,7 +888,7 @@ RACE_CLASS_MAP: dict[tuple[str, int], HeroClass] = {
     ("bandit", 3): HeroClass.BRUTE,       # bandit_chief — brutal leader
     # Undead — shambling horrors; basic are tanks, higher tiers gain magic
     ("undead", 0): HeroClass.TANK,        # skeleton — durable, slow
-    ("undead", 1): HeroClass.TANK,        # zombie — tough shambler
+    ("undead", 1): HeroClass.CASTER,      # skeleton_mage — ranged dark magic
     ("undead", 2): HeroClass.TANK,        # zombie (warrior) — armored dead
     ("undead", 3): HeroClass.CASTER,      # lich — powerful necromancer
     # Orcs — brutal warriors; everything is brute or tank

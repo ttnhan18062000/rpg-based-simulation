@@ -73,6 +73,44 @@ class Grid:
     def is_lava(self, pos: Vector2) -> bool:
         return self.get(pos) == Material.LAVA
 
+    # -- line-of-sight (Bresenham) --
+
+    def has_line_of_sight(self, x0: int, y0: int, x1: int, y1: int) -> bool:
+        """Check if there is a clear line of sight between two positions.
+
+        Uses Bresenham's line algorithm. Returns False if any WALL tile
+        lies on the line between (x0,y0) and (x1,y1), exclusive of endpoints.
+        """
+        dx = abs(x1 - x0)
+        dy = abs(y1 - y0)
+        sx = 1 if x0 < x1 else -1
+        sy = 1 if y0 < y1 else -1
+        err = dx - dy
+        cx, cy = x0, y0
+        while True:
+            if cx == x1 and cy == y1:
+                return True
+            e2 = 2 * err
+            if e2 > -dy:
+                err -= dy
+                cx += sx
+            if e2 < dx:
+                err += dx
+                cy += sy
+            # Check intermediate tile (skip start and end)
+            if (cx != x1 or cy != y1) and self.get_xy(cx, cy) == Material.WALL:
+                return False
+        return True
+
+    def has_adjacent_wall(self, x: int, y: int) -> bool:
+        """Check if any of the 4 cardinal neighbors is a WALL tile (for cover)."""
+        return (
+            self.get_xy(x - 1, y) == Material.WALL
+            or self.get_xy(x + 1, y) == Material.WALL
+            or self.get_xy(x, y - 1) == Material.WALL
+            or self.get_xy(x, y + 1) == Material.WALL
+        )
+
     # -- fast raw-coordinate access (no Vector2 alloc, for hot loops) --
 
     def in_bounds_xy(self, x: int, y: int) -> bool:

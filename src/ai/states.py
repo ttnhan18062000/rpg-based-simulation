@@ -375,8 +375,21 @@ def hero_should_visit_guild(actor: Entity) -> bool:
     return not has_any_enemy_knowledge
 
 
-def best_ready_skill(actor: Entity) -> str | None:
-    """Return the skill_id of the best ready active combat skill, or None."""
+def get_weapon_range(actor: Entity) -> int:
+    """Return the weapon range of the entity's equipped weapon (default 1 = melee)."""
+    if actor.inventory and actor.inventory.weapon:
+        weapon_tmpl = ITEM_REGISTRY.get(actor.inventory.weapon)
+        if weapon_tmpl:
+            return weapon_tmpl.weapon_range
+    return 1
+
+
+def best_ready_skill(actor: Entity, dist_to_enemy: int = 1) -> str | None:
+    """Return the skill_id of the best ready active combat skill, or None.
+
+    When *dist_to_enemy* > 1 (ranged), only considers skills whose range
+    can reach the enemy.  Self/ally buffs are always considered.
+    """
     from src.core.classes import SKILL_DEFS, SkillTarget, SkillType
     best_id = None
     best_power = 0.0
@@ -389,6 +402,11 @@ def best_ready_skill(actor: Entity) -> str | None:
         if sdef.target not in (SkillTarget.SINGLE_ENEMY, SkillTarget.AREA_ENEMIES,
                                SkillTarget.SELF, SkillTarget.AREA_ALLIES):
             continue
+        # Range check: offensive skills must reach the enemy
+        if sdef.target in (SkillTarget.SINGLE_ENEMY, SkillTarget.AREA_ENEMIES):
+            skill_range = getattr(sdef, 'range', 1) or 1
+            if skill_range < dist_to_enemy:
+                continue
         cost = si.effective_stamina_cost(sdef.stamina_cost)
         if actor.stats.stamina < cost:
             continue
@@ -591,12 +609,14 @@ class HuntHandler(StateHandler):
                 actor_id=actor.id, verb=ActionType.REST,
                 reason="Lost target → back to wander")
 
-        # Adjacent → attack (reset chase counter on engagement)
-        if actor.pos.manhattan(enemy.pos) <= 1:
+        # Within weapon range → switch to combat (reset chase counter)
+        weapon_rng = get_weapon_range(actor)
+        dist = actor.pos.manhattan(enemy.pos)
+        if dist <= weapon_rng:
             actor.chase_ticks = 0
             return AIState.COMBAT, ActionProposal(
                 actor_id=actor.id, verb=ActionType.ATTACK, target=enemy.id,
-                reason=f"Adjacent to enemy {enemy.id} → attacking")
+                reason=f"In range of enemy {enemy.id} (dist={dist}, range={weapon_rng}) → attacking")
 
         # Diagonal deadlock prevention (bug-01): when two mutually aggressive
         # entities are at Manhattan distance 2, both moving toward each other
@@ -641,19 +661,32 @@ class CombatHandler(StateHandler):
                 actor_id=actor.id, verb=ActionType.REST,
                 reason="Enemy vanished → returning to wander")
 
-        if actor.pos.manhattan(enemy.pos) <= 1:
-            # Try to use a skill before falling back to basic attack
-            skill_id = best_ready_skill(actor)
+        dist = actor.pos.manhattan(enemy.pos)
+        weapon_rng = get_weapon_range(actor)
+
+        # Can we attack from here? (within weapon range)
+        if dist <= weapon_rng:
+            # Try to use a skill first (pass distance for range-aware selection)
+            skill_id = best_ready_skill(actor, dist)
             if skill_id:
                 return AIState.COMBAT, ActionProposal(
                     actor_id=actor.id, verb=ActionType.USE_SKILL, target=skill_id,
-                    reason=f"Using skill {skill_id} on enemy {enemy.id}")
+                    reason=f"Using skill {skill_id} on enemy {enemy.id} (dist={dist})")
+
+            # Ranged kiting: if we're a ranged attacker and enemy is adjacent,
+            # try to back away to maintain distance (only if HP is okay)
+            if weapon_rng >= 3 and dist <= 1 and actor.stats.hp_ratio > 0.6:
+                return AIState.COMBAT, propose_move_away(
+                    actor, enemy.pos, snapshot, f"Kiting enemy {enemy.id} → maintaining range")
+
+            # Basic attack (melee or ranged)
             return AIState.COMBAT, ActionProposal(
                 actor_id=actor.id, verb=ActionType.ATTACK, target=enemy.id,
-                reason=f"Attacking enemy {enemy.id}")
+                reason=f"Attacking enemy {enemy.id} (dist={dist}, range={weapon_rng})")
 
+        # Out of weapon range — close the gap
         return AIState.HUNT, propose_move_toward(
-            actor, enemy.pos, snapshot, f"Enemy {enemy.id} retreated → chasing")
+            actor, enemy.pos, snapshot, f"Enemy {enemy.id} out of range → closing distance")
 
 
 class FleeHandler(StateHandler):

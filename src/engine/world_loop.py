@@ -176,8 +176,16 @@ class WorldLoop:
             t2 = time.perf_counter()
 
             # --- Phase 3: Conflict Resolution & Application ---
+            # Capture positions before resolution for opportunity attack detection
+            pre_positions = {e.id: (e.pos.x, e.pos.y) for e in self._world.entities.values()}
             applied = self._conflict_resolver.resolve(proposals, self._world)
             self._last_applied = applied
+
+            # Opportunity attacks on melee disengage (epic-05)
+            self._process_opportunity_attacks(applied, pre_positions)
+
+            # SPD-based chase closing (epic-05)
+            self._process_chase_closing()
 
             # Emit base events for all applied actions
             _cat_map = {
@@ -199,6 +207,9 @@ class WorldLoop:
                     entity_ids=tuple(involved),
                     metadata=meta,
                 )
+
+            # Update combat_target_id for visualization
+            self._update_combat_targets(applied)
 
             # Update AI states from worker results
             self._update_ai_states(applied)
@@ -632,6 +643,7 @@ class WorldLoop:
                 entity.stats.max_hp += cfg.stat_growth_hp
                 entity.stats.hp = min(entity.stats.hp + cfg.stat_growth_hp, entity.stats.max_hp)
                 entity.stats.atk += cfg.stat_growth_atk
+                entity.stats.matk += cfg.stat_growth_matk
                 entity.stats.def_ += cfg.stat_growth_def
                 entity.stats.spd += cfg.stat_growth_spd
                 # XP curve: each level needs more XP
@@ -1107,6 +1119,158 @@ class WorldLoop:
                         goals.append(f"[Range] Far from camp ({dist_home} tiles)")
 
             entity.goals = goals
+
+    def _process_opportunity_attacks(
+        self, applied: list[ActionProposal], pre_positions: dict[int, tuple[int, int]]
+    ) -> None:
+        """Free hit from adjacent hostiles when an entity moves away (epic-05).
+
+        For each applied MOVE, check if the entity was at Manhattan distance 1
+        from any hostile before moving. If the move increased distance (disengaging),
+        each such hostile deals a reduced-damage hit.
+        """
+        cfg = self._config
+        reg = self._faction_reg
+        entities = self._world.entities
+        mult = cfg.opportunity_attack_damage_mult
+        tick = self._world.tick
+
+        for proposal in applied:
+            if proposal.verb != ActionType.MOVE:
+                continue
+            mover = entities.get(proposal.actor_id)
+            if mover is None or not mover.alive:
+                continue
+            old_pos = pre_positions.get(proposal.actor_id)
+            if old_pos is None:
+                continue
+            ox, oy = old_pos
+            new_pos = mover.pos  # already moved
+
+            # Find hostiles that were adjacent (dist=1) to old position
+            for eid, ent in entities.items():
+                if eid == mover.id or not ent.alive or ent.kind == "generator":
+                    continue
+                if not reg.is_hostile(mover.faction, ent.faction):
+                    continue
+                # Was this hostile adjacent to mover's OLD position?
+                old_dist = abs(ent.pos.x - ox) + abs(ent.pos.y - oy)
+                if old_dist != 1:
+                    continue
+                # Did the move INCREASE distance from this hostile?
+                new_dist = abs(ent.pos.x - new_pos.x) + abs(ent.pos.y - new_pos.y)
+                if new_dist <= old_dist:
+                    continue
+                # Opportunity attack: simplified damage (no crit, no evasion)
+                atk = ent.effective_atk()
+                def_ = mover.effective_def()
+                raw = max(1, int(atk * mult) - def_ // 2)
+                mover.stats.hp -= raw
+                logger.info(
+                    "Tick %d: Entity %d (%s) opportunity attack on %d (%s) for %d damage [HP: %d/%d]",
+                    tick, ent.id, ent.kind, mover.id, mover.kind,
+                    raw, max(mover.stats.hp, 0), mover.stats.max_hp,
+                )
+                self._emit(
+                    "combat",
+                    f"Entity {ent.id} opportunity attack → {mover.id} for {raw} damage",
+                    entity_ids=(ent.id, mover.id),
+                    metadata={"verb": "OPPORTUNITY_ATTACK", "actor_id": ent.id,
+                              "target_id": mover.id, "damage": raw},
+                )
+
+    def _process_chase_closing(self) -> None:
+        """SPD-based chase closing: faster hunters periodically gain a bonus tile (epic-05).
+
+        When a HUNT entity has higher SPD than its chase target, it periodically
+        gets moved 1 bonus tile closer — closing the gap over time.
+        """
+        import math
+        cfg = self._config
+        reg = self._faction_reg
+        entities = self._world.entities
+        spatial = self._world.spatial_index
+
+        for entity in list(entities.values()):
+            if not entity.alive or entity.ai_state != AIState.HUNT:
+                continue
+            if entity.chase_ticks < 2:
+                continue
+
+            # Find chase target: nearest visible hostile
+            hunter_spd = entity.effective_spd()
+            ex, ey = entity.pos.x, entity.pos.y
+            best_target = None
+            best_dist = 999
+            for oid in spatial.query_radius(entity.pos, entity.stats.vision_range):
+                if oid == entity.id:
+                    continue
+                other = entities.get(oid)
+                if other is None or not other.alive or other.kind == "generator":
+                    continue
+                if not reg.is_hostile(entity.faction, other.faction):
+                    continue
+                d = abs(ex - other.pos.x) + abs(ey - other.pos.y)
+                if d < best_dist:
+                    best_dist = d
+                    best_target = other
+            if best_target is None:
+                continue
+
+            target_spd = best_target.effective_spd()
+            if hunter_spd <= target_spd:
+                continue
+
+            # Closing interval: lower = more frequent bonus moves
+            interval = max(1, math.ceil(cfg.chase_spd_closing_base * target_spd / hunter_spd))
+            if entity.chase_ticks % interval != 0:
+                continue
+
+            # Bonus move: 1 tile closer to target
+            from src.ai.perception import Perception
+            direction = Perception.direction_toward(entity.pos, best_target.pos)
+            new_pos = entity.pos + direction
+            # Check passability (walkable + not occupied)
+            if not self._world.grid.is_walkable(new_pos):
+                continue
+            occupied = any(
+                e.id != entity.id and e.pos.x == new_pos.x and e.pos.y == new_pos.y
+                for e in entities.values() if e.alive
+            )
+            if occupied:
+                continue
+
+            self._world.move_entity(entity.id, new_pos)
+            logger.info(
+                "Tick %d: Entity %d (%s) sprint-closes on %d (%s) (SPD %d vs %d, chase_ticks=%d)",
+                self._world.tick, entity.id, entity.kind,
+                best_target.id, best_target.kind,
+                hunter_spd, target_spd, entity.chase_ticks,
+            )
+            self._emit(
+                "movement",
+                f"Entity {entity.id} sprints closer to {best_target.id} (SPD advantage)",
+                entity_ids=(entity.id,),
+                metadata={"verb": "CHASE_SPRINT", "actor_id": entity.id,
+                          "target_id": best_target.id},
+            )
+
+    def _update_combat_targets(self, applied: list[ActionProposal]) -> None:
+        """Set combat_target_id on entities for frontend visualization."""
+        acted: set[int] = set()
+        for proposal in applied:
+            entity = self._world.entities.get(proposal.actor_id)
+            if entity is None:
+                continue
+            acted.add(proposal.actor_id)
+            if proposal.verb in (ActionType.ATTACK, ActionType.USE_SKILL) and isinstance(proposal.target, int):
+                entity.combat_target_id = proposal.target
+            else:
+                entity.combat_target_id = None
+        # Clear target for entities that didn't act this tick but are no longer in combat
+        for entity in self._world.entities.values():
+            if entity.id not in acted and entity.ai_state not in (AIState.COMBAT, AIState.HUNT):
+                entity.combat_target_id = None
 
     def _update_ai_states(self, applied: list[ActionProposal]) -> None:
         """Propagate new AI states from brain decisions after action resolution."""

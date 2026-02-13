@@ -27,6 +27,7 @@ export function useCanvas(
   const overlayRef = useRef<HTMLCanvasElement>(null);
   const gridDrawnRef = useRef(false);
   const [hoverInfo, setHoverInfo] = useState<HoverInfo | null>(null);
+  const hoveredEntityIdRef = useRef<number | null>(null);
 
   // Build selected entity's visible set (reused across effects)
   const selectedEnt = entities.find(e => e.id === selectedEntityId) ?? null;
@@ -182,6 +183,60 @@ export function useCanvas(
         ctx.globalAlpha = 0.3;
         ctx.fillRect(rx + 3, ry + 3, CELL_SIZE - 6, CELL_SIZE - 6);
         ctx.globalAlpha = 1.0;
+      }
+    }
+
+    // Draw combat engagement lines (only for spectated or hovered entity)
+    const entityMap = new Map(entities.map(e => [e.id, e]));
+    const focusId = selectedEntityId ?? hoveredEntityIdRef.current;
+    if (focusId != null) {
+      // Collect lines: from focused entity to its target + from any entity targeting focused entity
+      const linePairs: { from: Entity; to: Entity }[] = [];
+      for (const ent of entities) {
+        if (ent.combat_target_id == null) continue;
+        const target = entityMap.get(ent.combat_target_id);
+        if (!target) continue;
+        // Show if this entity IS the focused entity, or targets the focused entity
+        if (ent.id !== focusId && ent.combat_target_id !== focusId) continue;
+        // Fog-of-war: both must be visible when spectating
+        if (visibleSet) {
+          const entVis = ent.id === selectedEntityId || visibleSet.has(`${ent.x},${ent.y}`);
+          const tgtVis = target.id === selectedEntityId || visibleSet.has(`${target.x},${target.y}`);
+          if (!entVis || !tgtVis) continue;
+        }
+        linePairs.push({ from: ent, to: target });
+      }
+      for (const { from: ent, to: target } of linePairs) {
+        const ax = ent.x * CELL_SIZE + CELL_SIZE / 2;
+        const ay = ent.y * CELL_SIZE + CELL_SIZE / 2;
+        const tx = target.x * CELL_SIZE + CELL_SIZE / 2;
+        const ty = target.y * CELL_SIZE + CELL_SIZE / 2;
+        const angle = Math.atan2(ty - ay, tx - ax);
+        const isRanged = (ent.weapon_range || 1) > 1;
+        // Offset endpoints away from entity centers so melee lines are visible
+        const inset = CELL_SIZE * 0.4;
+        const sx = ax + inset * Math.cos(angle);
+        const sy = ay + inset * Math.sin(angle);
+        const ex = tx - inset * Math.cos(angle);
+        const ey = ty - inset * Math.sin(angle);
+        ctx.beginPath();
+        ctx.moveTo(sx, sy);
+        ctx.lineTo(ex, ey);
+        ctx.strokeStyle = isRanged ? 'rgba(96, 165, 250, 0.6)' : 'rgba(248, 113, 113, 0.6)';
+        ctx.lineWidth = isRanged ? 1.5 : 1;
+        ctx.setLineDash(isRanged ? [4, 3] : []);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        // Arrowhead at target end
+        const headLen = 5;
+        ctx.beginPath();
+        ctx.moveTo(ex, ey);
+        ctx.lineTo(ex - headLen * Math.cos(angle - 0.4), ey - headLen * Math.sin(angle - 0.4));
+        ctx.moveTo(ex, ey);
+        ctx.lineTo(ex - headLen * Math.cos(angle + 0.4), ey - headLen * Math.sin(angle + 0.4));
+        ctx.strokeStyle = isRanged ? 'rgba(96, 165, 250, 0.8)' : 'rgba(248, 113, 113, 0.8)';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
       }
     }
 
@@ -342,6 +397,28 @@ export function useCanvas(
       if (!visibleSet.has(`${vx + 1},${vy}`)) { ctx.beginPath(); ctx.moveTo(px + CELL_SIZE, py); ctx.lineTo(px + CELL_SIZE, py + CELL_SIZE); ctx.stroke(); }
     }
 
+    // Weapon range ring (shown for all entities when spectating)
+    const wRange = selectedEnt.weapon_range || 1;
+    const rangeSet = new Set<string>();
+    for (let dy = -wRange; dy <= wRange; dy++) {
+      for (let dx = -wRange; dx <= wRange; dx++) {
+        if (Math.abs(dx) + Math.abs(dy) <= wRange) {
+          rangeSet.add(`${selectedEnt.x + dx},${selectedEnt.y + dy}`);
+        }
+      }
+    }
+    ctx.strokeStyle = wRange > 1 ? 'rgba(251, 146, 60, 0.45)' : 'rgba(248, 113, 113, 0.4)';
+    ctx.lineWidth = 1.5;
+    for (const key of rangeSet) {
+      const [rx, ry] = key.split(',').map(Number);
+      const px = rx * CELL_SIZE;
+      const py = ry * CELL_SIZE;
+      if (!rangeSet.has(`${rx},${ry - 1}`)) { ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(px + CELL_SIZE, py); ctx.stroke(); }
+      if (!rangeSet.has(`${rx},${ry + 1}`)) { ctx.beginPath(); ctx.moveTo(px, py + CELL_SIZE); ctx.lineTo(px + CELL_SIZE, py + CELL_SIZE); ctx.stroke(); }
+      if (!rangeSet.has(`${rx - 1},${ry}`)) { ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(px, py + CELL_SIZE); ctx.stroke(); }
+      if (!rangeSet.has(`${rx + 1},${ry}`)) { ctx.beginPath(); ctx.moveTo(px + CELL_SIZE, py); ctx.lineTo(px + CELL_SIZE, py + CELL_SIZE); ctx.stroke(); }
+    }
+
     // Ghost entity markers — only from entity_memory, not visible ones
     if (selectedEnt.entity_memory) {
       // Build a set of entity IDs that are currently visible on the entity layer
@@ -442,6 +519,7 @@ export function useCanvas(
 
     // Check entities — skip if hidden by fog of war
     const ent = entities.find(e => e.x === gx && e.y === gy);
+    hoveredEntityIdRef.current = ent?.id ?? null;
     if (ent) {
       // If spectating, only show hover for the spectated entity or those within vision
       if (visibleSet && ent.id !== selectedEntityId && !visibleSet.has(`${gx},${gy}`)) {
@@ -534,6 +612,7 @@ export function useCanvas(
   }, [entities, groundItems, resourceNodes, selectedEntityId, selectedEnt, buildVisibleSet, zoom]);
 
   const handleCanvasLeave = useCallback(() => {
+    hoveredEntityIdRef.current = null;
     setHoverInfo(null);
   }, []);
 

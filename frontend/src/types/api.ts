@@ -144,6 +144,9 @@ export interface Entity {
   region_id: string;
   difficulty_tier: number;
   current_region_id: string;
+  // Combat visualization (epic-05)
+  weapon_range: number;
+  combat_target_id: number | null;
 }
 
 export interface EntityEffect {

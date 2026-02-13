@@ -52,9 +52,19 @@ class CombatAction:
             )
             return False
 
-        # Must be adjacent (Manhattan distance 1)
-        if attacker.pos.manhattan(defender.pos) > 1:
-            logger.debug("Entity %d attack on %d failed — out of range", proposal.actor_id, target_id)
+        # Range check — use weapon range (default 1 for melee)
+        weapon_range = self._get_weapon_range(attacker)
+        dist = attacker.pos.manhattan(defender.pos)
+        if dist > weapon_range:
+            logger.debug("Entity %d attack on %d failed — out of range (%d > %d)",
+                         proposal.actor_id, target_id, dist, weapon_range)
+            return False
+
+        # Line-of-sight check for ranged attacks (distance > 1)
+        if dist > 1 and not world.grid.has_line_of_sight(
+                attacker.pos.x, attacker.pos.y, defender.pos.x, defender.pos.y):
+            logger.debug("Entity %d ranged attack on %d blocked — no line of sight",
+                         proposal.actor_id, target_id)
             return False
 
         return True
@@ -68,9 +78,13 @@ class CombatAction:
 
         tick = world.tick
         cfg = self._config
+        dist = attacker.pos.manhattan(defender.pos)
 
         # --- Evasion check ---
         defender_evasion = defender.effective_evasion()
+        # Cover bonus: +10% evasion when defender is adjacent to a WALL and attack is ranged
+        if dist > 1 and world.grid.has_adjacent_wall(defender.pos.x, defender.pos.y):
+            defender_evasion += 0.10
         luck_mod = attacker.stats.luck * 0.002
         effective_evasion = max(0.0, defender_evasion - luck_mod)
         if self._rng.next_bool(Domain.COMBAT, defender.id, tick + 3, effective_evasion):
@@ -176,6 +190,15 @@ class CombatAction:
                                     tick, attacker.id, q.title,
                                     q.gold_reward, q.xp_reward,
                                 )
+
+    @staticmethod
+    def _get_weapon_range(entity) -> int:
+        """Return the weapon range of the entity's equipped weapon (default 1 = melee)."""
+        if entity.inventory and entity.inventory.weapon:
+            weapon_tmpl = ITEM_REGISTRY.get(entity.inventory.weapon)
+            if weapon_tmpl:
+                return weapon_tmpl.weapon_range
+        return 1
 
     @staticmethod
     def _calculate_xp(attacker, defender, cfg) -> int:

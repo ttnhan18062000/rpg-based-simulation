@@ -171,6 +171,9 @@ class EntitySchema(BaseModel):
     region_id: str = ""
     difficulty_tier: int = 1
     current_region_id: str = ""
+    # Combat visualization (epic-05)
+    weapon_range: int = 1
+    combat_target_id: int | None = None
     # Home storage
     home_storage_used: int = 0
     home_storage_max: int = 0
