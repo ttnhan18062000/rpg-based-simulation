@@ -676,57 +676,75 @@ class WorldLoop:
     def _update_entity_memory(self) -> None:
         """Update terrain_memory and entity_memory for all alive entities based on vision."""
         grid = self._world.grid
+        spatial = self._world.spatial_index
+        entities = self._world.entities
         tick = self._world.tick
-        for entity in self._world.entities.values():
+        grid_w = grid.width
+        grid_h = grid.height
+        tiles = grid._tiles  # direct array access — skip method + enum overhead
+
+        for entity in entities.values():
             if not entity.alive or entity.kind == "generator":
                 continue
-            vr = entity.stats.vision_range  # PER-derived per-entity vision
+            vr = entity.stats.vision_range
             ex, ey = entity.pos.x, entity.pos.y
-            # Record visible tiles into terrain_memory
-            from src.core.models import Vector2
+            tmem = entity.terrain_memory
+
+            # Record visible tiles — direct array access, no method/enum overhead
             for dy in range(-vr, vr + 1):
-                for dx in range(-vr, vr + 1):
-                    if abs(dx) + abs(dy) > vr:
-                        continue
-                    tx, ty = ex + dx, ey + dy
-                    tp = Vector2(tx, ty)
-                    if grid.in_bounds(tp):
-                        entity.terrain_memory[(tx, ty)] = grid.get(tp).value
-            # Record visible entities into entity_memory (keep latest per id)
-            seen_ids = set()
-            for other in self._world.entities.values():
-                if other.id == entity.id or not other.alive or other.kind == "generator":
+                ty = ey + dy
+                if ty < 0 or ty >= grid_h:
                     continue
-                if entity.pos.manhattan(other.pos) <= vr:
-                    seen_ids.add(other.id)
-                    # Update or add memory entry
-                    found = False
-                    for em in entity.entity_memory:
-                        if em["id"] == other.id:
-                            em["x"] = other.pos.x
-                            em["y"] = other.pos.y
-                            em["kind"] = other.kind
-                            em["hp"] = other.stats.hp
-                            em["max_hp"] = other.stats.max_hp
-                            em["atk"] = other.effective_atk()
-                            em["level"] = other.stats.level
-                            em["tick"] = tick
-                            em["visible"] = True
-                            found = True
-                            break
-                    if not found:
-                        entity.entity_memory.append({
-                            "id": other.id, "x": other.pos.x, "y": other.pos.y,
-                            "kind": other.kind, "hp": other.stats.hp,
-                            "max_hp": other.stats.max_hp, "atk": other.effective_atk(),
-                            "level": other.stats.level, "tick": tick, "visible": True,
-                        })
-            # Mark unseen entities as not visible, prune dead/removed + very old (>200 ticks)
+                remaining = vr - abs(dy)
+                x_lo = max(0, ex - remaining)
+                x_hi = min(grid_w - 1, ex + remaining)
+                row_base = ty * grid_w
+                for tx in range(x_lo, x_hi + 1):
+                    tmem[(tx, ty)] = tiles[row_base + tx].value
+
+            # Record visible entities — use spatial hash instead of full scan
+            nearby_ids = spatial.query_radius(entity.pos, vr)
+            nearby_ids.discard(entity.id)
+            seen_ids: set[int] = set()
+
+            # Build dict index of existing memory for O(1) lookup
+            mem_index: dict[int, dict] = {}
+            for em in entity.entity_memory:
+                mem_index[em["id"]] = em
+
+            for oid in nearby_ids:
+                other = entities.get(oid)
+                if other is None or not other.alive or other.kind == "generator":
+                    continue
+                if abs(ex - other.pos.x) + abs(ey - other.pos.y) > vr:
+                    continue  # spatial hash is coarse — verify exact distance
+                seen_ids.add(oid)
+                existing = mem_index.get(oid)
+                if existing is not None:
+                    existing["x"] = other.pos.x
+                    existing["y"] = other.pos.y
+                    existing["kind"] = other.kind
+                    existing["hp"] = other.stats.hp
+                    existing["max_hp"] = other.stats.max_hp
+                    existing["atk"] = other.effective_atk()
+                    existing["level"] = other.stats.level
+                    existing["tick"] = tick
+                    existing["visible"] = True
+                else:
+                    new_em = {
+                        "id": oid, "x": other.pos.x, "y": other.pos.y,
+                        "kind": other.kind, "hp": other.stats.hp,
+                        "max_hp": other.stats.max_hp, "atk": other.effective_atk(),
+                        "level": other.stats.level, "tick": tick, "visible": True,
+                    }
+                    entity.entity_memory.append(new_em)
+                    mem_index[oid] = new_em
+
+            # Mark unseen as not visible, prune dead/removed + old (>200 ticks)
             pruned = []
             for em in entity.entity_memory:
                 eid = em["id"]
-                # Remove entries for entities that no longer exist (defeated/removed)
-                if eid not in self._world.entities or not self._world.entities[eid].alive:
+                if eid not in entities or not entities[eid].alive:
                     continue
                 if eid not in seen_ids:
                     em["visible"] = False
@@ -833,14 +851,20 @@ class WorldLoop:
         fleeing (moving away) costs double action delay.
         """
         reg = self._faction_reg
-        for entity in self._world.entities.values():
+        spatial = self._world.spatial_index
+        entities = self._world.entities
+        for entity in entities.values():
             if not entity.alive or entity.kind == "generator":
                 continue
             adjacent_hostile = False
-            for other in self._world.entities.values():
-                if other.id == entity.id or not other.alive or other.kind == "generator":
+            ex, ey = entity.pos.x, entity.pos.y
+            for oid in spatial.query_radius(entity.pos, 1):
+                if oid == entity.id:
                     continue
-                if entity.pos.manhattan(other.pos) <= 1 and reg.is_hostile(entity.faction, other.faction):
+                other = entities.get(oid)
+                if other is None or not other.alive or other.kind == "generator":
+                    continue
+                if abs(ex - other.pos.x) + abs(ey - other.pos.y) <= 1 and reg.is_hostile(entity.faction, other.faction):
                     adjacent_hostile = True
                     break
             if adjacent_hostile:

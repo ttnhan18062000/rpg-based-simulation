@@ -97,10 +97,30 @@ Potential optimizations (implement only if profiling confirms need):
 
 ---
 
+## Implementation Status
+
+### F1: Backend Profiling — ✅ DONE
+- Baseline: 49.8ms/tick, 20 ticks/sec (192×192, 156 entities)
+- cProfile identified 9 hotspots, top being `_update_entity_memory` (50% of time)
+
+### F2: Memory Profiling — ✅ DONE
+- Peak: 14.1 MB, Current: 374.7 KB after 500 ticks
+- No unbounded growth, no leaks detected
+
+### F4: Optimizations — ✅ DONE
+- 8 optimizations applied (see `docs/performance-report-epic16.md`)
+- Result: **28.4ms/tick, 34.9 ticks/sec** — 43% faster, 77% lower max spike
+- Function calls reduced 159M → 47M (70%)
+
+### F3: Frontend Performance — deferred
+### F5: Performance Dashboard — deferred
+
+---
+
 ## Notes
 
 > **Report findings to developer** before implementing any optimizations. This is primarily an audit ticket — implementation follows developer approval.
 
 ## Labels
 
-`epic`, `performance`, `audit`, `needs-decision`
+`epic`, `performance`, `audit`, `done`

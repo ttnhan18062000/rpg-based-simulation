@@ -45,8 +45,19 @@ class WorkerPool:
         """Submit AI tasks for all *entities* and collect results into *action_queue*.
 
         Blocks until all workers finish or timeout.
+        Uses inline execution when num_workers == 1 to avoid threading overhead.
         """
         if not entities:
+            return
+
+        # Fast path: single-worker mode — run inline, no thread overhead
+        if self._config.num_workers <= 1:
+            for entity in entities:
+                try:
+                    _eid, new_state, proposal = self._think(entity, snapshot)
+                    action_queue.push(proposal)
+                except Exception:
+                    logger.exception("AI failed for entity %d — skipping turn", entity.id)
             return
 
         futures: dict[Future[tuple[int, AIState, ActionProposal]], int] = {}

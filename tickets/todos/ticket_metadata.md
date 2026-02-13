@@ -57,7 +57,7 @@ Master index of all active tickets with priority, effort estimate, dependencies,
 
 | Command | What it does |
 |---------|-------------|
-| `make test` | Run all 440+ Python tests |
+| `make test` | Run all 440+ Python tests (3.4s) |
 | `make test-quick` | Run fast tests only (skip `@slow`) |
 | `make test-cov` | Run tests with coverage report |
 | `make profile` | 500-tick performance report (timing, phases, entity counts) |
@@ -68,8 +68,8 @@ Master index of all active tickets with priority, effort estimate, dependencies,
 
 | ID | Ticket | Priority | Effort | Status | Dependencies |
 |----|--------|----------|--------|--------|-------------|
-| epic-15 | [Region & World Overhaul](epic-15-region-difficulty-scaling.md) | P1 | XL | in-progress | — |
-| epic-16 | [Performance Audit & Optimization](epic-16-performance-audit.md) | P2 | L | ready | — |
+| epic-15 | [Region & World Overhaul](epic-15-region-difficulty-scaling.md) | P1 | XL | done | — |
+| epic-16 | [Performance Audit & Optimization](epic-16-performance-audit.md) | P2 | L | done | — |
 
 ## Epics (Existing — Updated)
 
@@ -123,12 +123,12 @@ Tickets that need developer decision before work can start are marked. Suggested
 ### Phase 3 — Gameplay Enhancements
 
 9. ✅ **enhance-01** — Enrich event info — metadata on SimEvent, enriched combat/loot/death/level_up/skill events — 9 tests in `test_enriched_events.py`
-10. 🔧 **epic-15** — Region & World Overhaul — Phase A–D done: Region/Location dataclasses, 192×192 map, sub-locations, difficulty stat scaling (HP/ATK/DEF/gold/level by tier 1–4), boss arena +1 difficulty, minimap labels, locations panel, EPIC rarity + items, loot quality scaling by difficulty tier (F4), tier 4 chests, region enter/leave events (F9), hero AI difficulty awareness (F8) — 30 tests in `test_regions.py`, 13 in `test_difficulty_scaling.py`, 14 in `test_loot_scaling.py`, 12 in `test_region_events.py`
+10. ✅ **epic-15** — Region & World Overhaul — Voronoi tessellation (<1% empty floor), Region/Location dataclasses, 192×192 map, sub-locations, difficulty stat scaling (tier 1–4), loot quality scaling, EPIC rarity, region events, hero AI difficulty awareness — 30 tests in `test_regions.py`, 13 in `test_difficulty_scaling.py`, 14 in `test_loot_scaling.py`, 12 in `test_region_events.py`, 8 in `test_voronoi_regions.py`
 
 ### Phase 4 — Major Features
 
 11. **epic-05 F4** — Ranged combat *(standalone from full epic)*
-12. **epic-16** — Performance audit *(before scaling up)*
+12. ✅ **epic-16** — Performance audit — 43% faster ticks (49.8ms→28.4ms), 70% fewer function calls, 8 optimizations, no memory leaks
 13. **epic-11** — Replay & observation tools *(after enhance-01)*
 
 ### Phase 5 — Long-term Epics

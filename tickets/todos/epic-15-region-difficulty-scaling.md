@@ -14,10 +14,10 @@ Inspired by: WoW's named zones, Diablo region tiers, Skyrim holds, Terraria biom
 |---------|--------------|
 | **Map is mostly empty** | ~70% FLOOR tiles, regions are tiny blobs (radius 6–12) — FIXED: Voronoi fills 99%+ |
 | **Regions have no identity** | Just terrain paint — no names, no data model, no structure — FIXED |
-| **No locations within regions** | Camps, ruins, dungeons are placed independently of regions |
-| **No difficulty progression** | A goblin near town = a goblin at the map edge |
-| **No reason to explore** | No content gradient, no reward for venturing further |
-| **Minimap shows no region info** | No labels, no named areas, just colored tiles |
+| **No locations within regions** | Camps, ruins, dungeons are placed independently of regions — FIXED |
+| **No difficulty progression** | A goblin near town = a goblin at the map edge — FIXED |
+| **No reason to explore** | No content gradient, no reward for venturing further — FIXED |
+| **Minimap shows no region info** | No labels, no named areas, just colored tiles — FIXED |
 
 ---
 

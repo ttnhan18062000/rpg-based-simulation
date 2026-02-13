@@ -73,6 +73,16 @@ class Grid:
     def is_lava(self, pos: Vector2) -> bool:
         return self.get(pos) == Material.LAVA
 
+    # -- fast raw-coordinate access (no Vector2 alloc, for hot loops) --
+
+    def in_bounds_xy(self, x: int, y: int) -> bool:
+        return 0 <= x < self.width and 0 <= y < self.height
+
+    def get_xy(self, x: int, y: int) -> Material:
+        if 0 <= x < self.width and 0 <= y < self.height:
+            return self._tiles[y * self.width + x]
+        return Material.WALL
+
     # -- copy --
 
     def copy(self) -> Grid:

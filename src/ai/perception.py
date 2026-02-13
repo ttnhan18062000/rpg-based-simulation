@@ -32,11 +32,18 @@ class Perception:
         vision_range: int,
     ) -> list[Entity]:
         """Return entities within Manhattan distance *vision_range* of *actor*."""
-        return [
-            e
-            for e in snapshot.entities.values()
-            if e.id != actor.id and e.alive and actor.pos.manhattan(e.pos) <= vision_range
-        ]
+        ax, ay = actor.pos.x, actor.pos.y
+        aid = actor.id
+        vr = vision_range
+        entities = snapshot.entities
+        result: list[Entity] = []
+        for eid in snapshot.nearby_entity_ids(ax, ay, vr):
+            if eid == aid:
+                continue
+            e = entities[eid]
+            if abs(ax - e.pos.x) + abs(ay - e.pos.y) <= vr:
+                result.append(e)
+        return result
 
     # ------------------------------------------------------------------
     # Faction-aware target selection
@@ -192,27 +199,50 @@ class Perception:
 
         Returns a walkable unexplored tile near the actor, biased by *rng_val*
         to avoid all entities converging on the same spot.
+
+        Optimized: only scans a bounded neighborhood around the actor instead
+        of iterating all explored tiles (which grows with the map).
         """
         explored = actor.terrain_memory
         grid = snapshot.grid
-        # Gather frontier tiles: unexplored + adjacent to at least one explored tile
-        frontier: list[Vector2] = []
-        checked: set[tuple[int, int]] = set()
-        for (ex, ey) in explored:
-            for dx, dy in ((0, -1), (1, 0), (0, 1), (-1, 0)):
-                nx, ny = ex + dx, ey + dy
-                if (nx, ny) in checked or (nx, ny) in explored:
+        ax, ay = actor.pos.x, actor.pos.y
+        # Search in expanding rings up to a max scan radius
+        scan_radius = min(actor.stats.vision_range * 4, 40)
+        frontier: list[tuple[int, Vector2]] = []  # (distance, pos)
+
+        grid_w, grid_h = grid.width, grid.height
+        for dy in range(-scan_radius, scan_radius + 1):
+            ty = ay + dy
+            if ty < 0 or ty >= grid_h:
+                continue
+            remaining = scan_radius - abs(dy)
+            for dx in range(-remaining, remaining + 1):
+                tx = ax + dx
+                if tx < 0 or tx >= grid_w:
                     continue
-                checked.add((nx, ny))
-                candidate = Vector2(nx, ny)
-                if grid.in_bounds(candidate) and grid.is_walkable(candidate):
-                    frontier.append(candidate)
+                if (tx, ty) in explored:
+                    continue
+                # Check if adjacent to an explored tile (frontier condition)
+                is_frontier = (
+                    (tx - 1, ty) in explored or (tx + 1, ty) in explored
+                    or (tx, ty - 1) in explored or (tx, ty + 1) in explored
+                )
+                if not is_frontier:
+                    continue
+                candidate = Vector2(tx, ty)
+                if grid.is_walkable(candidate):
+                    dist = abs(dx) + abs(dy)
+                    frontier.append((dist, candidate))
+                    if len(frontier) >= 32:
+                        break
+            if len(frontier) >= 32:
+                break
+
         if not frontier:
             return None
-        # Sort by distance to actor, then pick from the closest cluster with some randomness
-        frontier.sort(key=lambda p: actor.pos.manhattan(p))
-        # Pick from the closest ~8 candidates using rng_val for variety
-        pool = frontier[:min(8, len(frontier))]
+        # Sort by distance, pick from closest candidates with randomness
+        frontier.sort(key=lambda t: t[0])
+        pool = [p for _, p in frontier[:min(8, len(frontier))]]
         return pool[rng_val % len(pool)]
 
     @staticmethod
