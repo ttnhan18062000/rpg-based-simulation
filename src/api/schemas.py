@@ -87,6 +87,27 @@ class QuestSchema(BaseModel):
     xp_reward: int = 0
 
 
+class EntitySlimSchema(BaseModel):
+    """Minimal entity data for rendering (non-selected entities)."""
+    id: int
+    kind: str
+    x: int
+    y: int
+    hp: int
+    max_hp: int
+    state: str
+    level: int = 1
+    tier: int = 0
+    faction: str = "hero_guild"
+    weapon_range: int = 1
+    combat_target_id: int | None = None
+    loot_progress: int = 0
+    loot_duration: int = 3
+
+    class Config:
+        frozen = True
+
+
 class EntitySchema(BaseModel):
     id: int
     kind: str
@@ -189,7 +210,7 @@ class EntitySchema(BaseModel):
 class MapResponse(BaseModel):
     width: int
     height: int
-    grid: list[list[int]] = Field(description="2D array of Material enum values (0=Floor,1=Wall,2=Water)")
+    grid: list[int] = Field(description="RLE-encoded flat grid: [value, count, value, count, ...]")
 
 
 # --- World State ---
@@ -282,9 +303,14 @@ class RegionSchema(BaseModel):
 class WorldStateResponse(BaseModel):
     tick: int
     alive_count: int
-    entities: list[EntitySchema]
+    entities: list[EntitySlimSchema] = Field(default_factory=list)
+    selected_entity: EntitySchema | None = None
     events: list[EventSchema] = Field(default_factory=list)
     ground_items: list[GroundItemSchema] = Field(default_factory=list)
+
+
+class StaticDataResponse(BaseModel):
+    """Static world data fetched once after map load."""
     buildings: list[BuildingSchema] = Field(default_factory=list)
     resource_nodes: list[ResourceNodeSchema] = Field(default_factory=list)
     treasure_chests: list[TreasureChestSchema] = Field(default_factory=list)

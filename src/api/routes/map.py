@@ -17,9 +17,23 @@ def get_map(manager: EngineManager = Depends(get_engine_manager)) -> MapResponse
     if grid is None:
         raise HTTPException(status_code=503, detail="Simulation not initialized yet.")
 
-    grid_2d: list[list[int]] = []
-    for y in range(grid.height):
-        row = [int(grid._tiles[y * grid.width + x]) for x in range(grid.width)]
-        grid_2d.append(row)
+    # RLE encode: [value, count, value, count, ...]
+    tiles = grid._tiles
+    total = grid.width * grid.height
+    rle: list[int] = []
+    if total > 0:
+        cur_val = int(tiles[0])
+        cur_count = 1
+        for i in range(1, total):
+            v = int(tiles[i])
+            if v == cur_val:
+                cur_count += 1
+            else:
+                rle.append(cur_val)
+                rle.append(cur_count)
+                cur_val = v
+                cur_count = 1
+        rle.append(cur_val)
+        rle.append(cur_count)
 
-    return MapResponse(width=grid.width, height=grid.height, grid=grid_2d)
+    return MapResponse(width=grid.width, height=grid.height, grid=rle)

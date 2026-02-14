@@ -61,6 +61,25 @@ export interface EntitySkill {
   element: string;       // "none" | "fire" | "ice" | "lightning" | "dark" | "holy"
 }
 
+// Slim entity for rendering (sent for all alive entities)
+export interface EntitySlim {
+  id: number;
+  kind: string;
+  x: number;
+  y: number;
+  hp: number;
+  max_hp: number;
+  state: string;
+  level: number;
+  tier: number;
+  faction: string;
+  weapon_range: number;
+  combat_target_id: number | null;
+  loot_progress: number;
+  loot_duration: number;
+}
+
+// Full entity (only sent for the selected/inspected entity)
 export interface Entity {
   id: number;
   kind: string;
@@ -250,9 +269,13 @@ export interface Region {
 export interface WorldState {
   tick: number;
   alive_count: number;
-  entities: Entity[];
+  entities: EntitySlim[];
+  selected_entity: Entity | null;
   events: GameEvent[];
   ground_items: GroundItem[];
+}
+
+export interface StaticData {
   buildings: Building[];
   resource_nodes: ResourceNode[];
   treasure_chests: TreasureChest[];
@@ -271,7 +294,7 @@ export interface SimulationStats {
 export interface MapData {
   width: number;
   height: number;
-  grid: number[][];
+  grid: number[];  // RLE-encoded: [value, count, value, count, ...]
 }
 
 export interface SimulationConfig {

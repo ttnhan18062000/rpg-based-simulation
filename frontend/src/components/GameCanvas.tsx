@@ -1,12 +1,14 @@
 import { useRef, useState, useCallback, useEffect, useMemo } from 'react';
 import { ZoomIn, ZoomOut, Maximize2, ChevronDown, ChevronRight, MapPin } from 'lucide-react';
-import type { MapData, Entity, GroundItem, Building, ResourceNode, Region } from '@/types/api';
+import type { Entity, EntitySlim, GroundItem, Building, ResourceNode, Region } from '@/types/api';
+import type { DecodedMapData } from '@/hooks/useSimulation';
 import { useCanvas } from '@/hooks/useCanvas';
 import { CELL_SIZE, TILE_COLORS, TILE_COLORS_DIM, KIND_COLORS } from '@/constants/colors';
 
 interface GameCanvasProps {
-  mapData: MapData | null;
-  entities: Entity[];
+  mapData: DecodedMapData | null;
+  entities: EntitySlim[];
+  selectedEntity: Entity | null;
   groundItems: GroundItem[];
   buildings: Building[];
   resourceNodes: ResourceNode[];
@@ -77,10 +79,13 @@ const LOCATION_TYPE_ICONS: Record<string, { label: string; color: string }> = {
   boss_arena: { label: '💀', color: '#f59e0b' },
 };
 
-export function GameCanvas({ mapData, entities, groundItems, buildings, resourceNodes, regions, selectedEntityId, onEntityClick, onGroundItemClick, onBuildingClick }: GameCanvasProps) {
+export function GameCanvas({ mapData, entities, selectedEntity, groundItems, buildings, resourceNodes, regions, selectedEntityId, onEntityClick, onGroundItemClick, onBuildingClick }: GameCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const minimapRef = useRef<HTMLCanvasElement>(null);
   const mmContainerRef = useRef<HTMLDivElement>(null);
+  const mmTerrainCacheRef = useRef<HTMLCanvasElement | null>(null);
+  const selectedEntRef = useRef(selectedEntity);
+  selectedEntRef.current = selectedEntity;
 
   // State — zoom declared before useCanvas so it can be passed
   const [pan, setPan] = useState({ x: 0, y: 0 });
@@ -89,23 +94,27 @@ export function GameCanvas({ mapData, entities, groundItems, buildings, resource
   const [mmSize, setMmSize] = useState({ w: MM_DEFAULT_W, h: MM_DEFAULT_H });
   const [locationsOpen, setLocationsOpen] = useState(false);
 
+  const dragRef = useRef<{ startX: number; startY: number; panX: number; panY: number } | null>(null);
+  const isDraggingRef = useRef(false);
+  const mmResizeRef = useRef<{ startX: number; startY: number; startW: number; startH: number } | null>(null);
+
   const {
     gridRef, entityRef, overlayRef,
     handleCanvasClick, handleCanvasHover, handleCanvasLeave,
     hoverInfo,
-  } = useCanvas(mapData, entities, groundItems, buildings, resourceNodes, selectedEntityId, onEntityClick, onGroundItemClick, onBuildingClick, zoom);
-
-  const dragRef = useRef<{ startX: number; startY: number; panX: number; panY: number } | null>(null);
-  const isDraggingRef = useRef(false);
-  const mmResizeRef = useRef<{ startX: number; startY: number; startW: number; startH: number } | null>(null);
+  } = useCanvas(mapData, entities, selectedEntity, groundItems, buildings, resourceNodes, selectedEntityId, onEntityClick, onGroundItemClick, onBuildingClick, zoom, isDraggingRef);
 
   const width = mapData ? mapData.width * CELL_SIZE : 0;
   const height = mapData ? mapData.height * CELL_SIZE : 0;
   const mmW = mapData ? mapData.width * MINIMAP_SCALE : 0;
   const mmH = mapData ? mapData.height * MINIMAP_SCALE : 0;
 
-  // Find selected entity for minimap fog
-  const selectedEnt = entities.find(e => e.id === selectedEntityId) ?? null;
+  // Memoize minimap terrain cache key — only changes when terrain_memory size changes or selection changes
+  const mmTerrainKey = useMemo(() => {
+    if (!selectedEntity) return 'no-spectate';
+    const memSize = selectedEntity.terrain_memory ? Object.keys(selectedEntity.terrain_memory).length : 0;
+    return `spectate-${selectedEntity.id}-${memSize}`;
+  }, [selectedEntity]);
 
   // Fit scale: CSS-scale minimap canvas to fit in the container
   const mmFitScale = mmW > 0 && mmH > 0 ? Math.min(mmSize.w / mmW, mmSize.h / mmH) : 1;
@@ -241,49 +250,93 @@ export function GameCanvas({ mapData, entities, groundItems, buildings, resource
     };
   }, []);
 
-  // Draw minimap
+  // Build minimap terrain cache (expensive 262K tiles — only redrawn when terrain_memory size changes)
   useEffect(() => {
-    const mc = minimapRef.current;
-    if (!mc || !mapData) return;
-    const ctx = mc.getContext('2d');
-    if (!ctx) return;
-    mc.width = mmW;
-    mc.height = mmH;
-    ctx.clearRect(0, 0, mmW, mmH);
-
-    // Build explored set from selected entity's terrain memory
-    const exploredSet = selectedEnt?.terrain_memory ? new Set(Object.keys(selectedEnt.terrain_memory)) : null;
-
-    // Build visible set for entity filtering on minimap
-    let visibleSet: Set<string> | null = null;
-    if (selectedEnt) {
-      visibleSet = new Set<string>();
-      const vr = selectedEnt.vision_range || 6;
-      for (let dy = -vr; dy <= vr; dy++) {
-        for (let dx = -vr; dx <= vr; dx++) {
-          if (Math.abs(dx) + Math.abs(dy) > vr) continue;
-          visibleSet.add(`${selectedEnt.x + dx},${selectedEnt.y + dy}`);
-        }
-      }
+    if (isDraggingRef.current) return; // Skip during drag — catches up on next poll after drag ends
+    if (!mapData || mmW === 0 || mmH === 0) return;
+    if (!mmTerrainCacheRef.current) {
+      mmTerrainCacheRef.current = document.createElement('canvas');
     }
+    const tc = mmTerrainCacheRef.current;
+    tc.width = mmW;
+    tc.height = mmH;
+    const tctx = tc.getContext('2d');
+    if (!tctx) return;
+    tctx.clearRect(0, 0, mmW, mmH);
 
-    // Tiles with fog-of-war
+    const ent = selectedEntRef.current;
+    const exploredSet = ent?.terrain_memory ? new Set(Object.keys(ent.terrain_memory)) : null;
+
+    // Draw all terrain tiles with fog-of-war (262K fillRects — cached)
+    // Three levels: unseen = black, explored = dim, visible = full brightness
     for (let y = 0; y < mapData.height; y++) {
       for (let x = 0; x < mapData.width; x++) {
         const tile = mapData.grid[y][x];
         if (exploredSet && !exploredSet.has(`${x},${y}`)) {
-          ctx.fillStyle = '#0a0b10';
+          tctx.fillStyle = '#000000'; // unseen — completely dark
         } else if (exploredSet) {
-          ctx.fillStyle = TILE_COLORS_DIM[tile] || TILE_COLORS_DIM[0];
+          tctx.fillStyle = TILE_COLORS_DIM[tile] || TILE_COLORS_DIM[0]; // explored fog — dimmed
         } else {
-          ctx.fillStyle = TILE_COLORS[tile] || TILE_COLORS[0];
+          tctx.fillStyle = TILE_COLORS[tile] || TILE_COLORS[0]; // no spectating — full brightness
         }
-        ctx.fillRect(x * MINIMAP_SCALE, y * MINIMAP_SCALE, MINIMAP_SCALE, MINIMAP_SCALE);
+        tctx.fillRect(x * MINIMAP_SCALE, y * MINIMAP_SCALE, MINIMAP_SCALE, MINIMAP_SCALE);
       }
     }
 
-    // Bright overlay for currently visible area
-    if (selectedEnt && visibleSet) {
+    // Static overlays: buildings + region labels (drawn into cache)
+    for (const b of buildings) {
+      tctx.fillStyle = BUILDING_COLORS[b.building_type] || '#fff';
+      tctx.fillRect(b.x * MINIMAP_SCALE, b.y * MINIMAP_SCALE, MINIMAP_SCALE, MINIMAP_SCALE);
+    }
+    tctx.textAlign = 'center';
+    tctx.textBaseline = 'middle';
+    for (const region of regions) {
+      const rx = region.center_x * MINIMAP_SCALE;
+      const ry = region.center_y * MINIMAP_SCALE;
+      const tColor = TERRAIN_COLORS[region.terrain] || '#ccc';
+      tctx.font = `bold ${Math.max(8, Math.round(region.radius * MINIMAP_SCALE * 0.18))}px sans-serif`;
+      tctx.fillStyle = tColor + '60';
+      tctx.fillText(region.name, rx, ry);
+      const badge = DIFFICULTY_BADGES[region.difficulty];
+      if (badge) {
+        tctx.font = `bold ${Math.max(6, Math.round(region.radius * MINIMAP_SCALE * 0.12))}px sans-serif`;
+        tctx.fillStyle = badge.color + '50';
+        tctx.fillText(`Tier ${region.difficulty}`, rx, ry + Math.max(8, Math.round(region.radius * MINIMAP_SCALE * 0.18)));
+      }
+    }
+  }, [mapData, mmTerrainKey, mmW, mmH, buildings, regions]);
+
+  // Draw dynamic minimap content (cheap: blit cached terrain + entity dots + viewport)
+  useEffect(() => {
+    if (isDraggingRef.current) return; // Skip during drag — catches up on next poll after drag ends
+    const mc = minimapRef.current;
+    if (!mc || !mapData || !mmTerrainCacheRef.current) return;
+    const ctx = mc.getContext('2d');
+    if (!ctx) return;
+    // Only resize if dimensions actually changed (avoids GPU reallocation every frame)
+    if (mc.width !== mmW) mc.width = mmW;
+    if (mc.height !== mmH) mc.height = mmH;
+    ctx.clearRect(0, 0, mmW, mmH);
+
+    // Blit cached terrain (1 drawImage instead of 262K fillRects)
+    ctx.drawImage(mmTerrainCacheRef.current, 0, 0);
+
+    // Build visible set for spectated entity filtering
+    const ent = selectedEntRef.current;
+    let visibleSet: Set<string> | null = null;
+    if (ent) {
+      visibleSet = new Set<string>();
+      const vr = ent.vision_range ?? 6;
+      for (let dy = -vr; dy <= vr; dy++) {
+        for (let dx = -vr; dx <= vr; dx++) {
+          if (Math.abs(dx) + Math.abs(dy) > vr) continue;
+          visibleSet.add(`${ent.x + dx},${ent.y + dy}`);
+        }
+      }
+    }
+
+    // Bright overlay for currently visible area (~100 tiles)
+    if (ent && visibleSet) {
       for (const key of visibleSet) {
         const [vx, vy] = key.split(',').map(Number);
         if (vx >= 0 && vx < mapData.width && vy >= 0 && vy < mapData.height) {
@@ -294,19 +347,6 @@ export function GameCanvas({ mapData, entities, groundItems, buildings, resource
       }
     }
 
-    // Entities as dots — filter by vision when spectating
-    for (const ent of entities) {
-      if (visibleSet && ent.id !== selectedEntityId && !visibleSet.has(`${ent.x},${ent.y}`)) continue;
-      const color = KIND_COLORS[ent.kind] || '#888';
-      ctx.fillStyle = color;
-      const s = ent.kind === 'hero' ? MINIMAP_SCALE : Math.max(1, MINIMAP_SCALE - 1);
-      ctx.fillRect(
-        ent.x * MINIMAP_SCALE + (MINIMAP_SCALE - s) / 2,
-        ent.y * MINIMAP_SCALE + (MINIMAP_SCALE - s) / 2,
-        s, s,
-      );
-    }
-
     // Resource node markers — filter by vision when spectating
     for (const rn of resourceNodes) {
       if (visibleSet && !visibleSet.has(`${rn.x},${rn.y}`)) continue;
@@ -314,30 +354,17 @@ export function GameCanvas({ mapData, entities, groundItems, buildings, resource
       ctx.fillRect(rn.x * MINIMAP_SCALE, rn.y * MINIMAP_SCALE, MINIMAP_SCALE - 1, MINIMAP_SCALE - 1);
     }
 
-    // Building markers on minimap
-    for (const b of buildings) {
-      ctx.fillStyle = BUILDING_COLORS[b.building_type] || '#fff';
-      ctx.fillRect(b.x * MINIMAP_SCALE, b.y * MINIMAP_SCALE, MINIMAP_SCALE, MINIMAP_SCALE);
-    }
-
-    // Region labels on minimap (low opacity)
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    for (const region of regions) {
-      const rx = region.center_x * MINIMAP_SCALE;
-      const ry = region.center_y * MINIMAP_SCALE;
-      const tColor = TERRAIN_COLORS[region.terrain] || '#ccc';
-      // Region name
-      ctx.font = `bold ${Math.max(8, Math.round(region.radius * MINIMAP_SCALE * 0.18))}px sans-serif`;
-      ctx.fillStyle = tColor + '60';
-      ctx.fillText(region.name, rx, ry);
-      // Difficulty badge
-      const badge = DIFFICULTY_BADGES[region.difficulty];
-      if (badge) {
-        ctx.font = `bold ${Math.max(6, Math.round(region.radius * MINIMAP_SCALE * 0.12))}px sans-serif`;
-        ctx.fillStyle = badge.color + '50';
-        ctx.fillText(`Tier ${region.difficulty}`, rx, ry + Math.max(8, Math.round(region.radius * MINIMAP_SCALE * 0.18)));
-      }
+    // Entities as dots — filter by vision when spectating
+    for (const e of entities) {
+      if (visibleSet && e.id !== selectedEntityId && !visibleSet.has(`${e.x},${e.y}`)) continue;
+      const color = KIND_COLORS[e.kind] || '#888';
+      ctx.fillStyle = color;
+      const s = e.kind === 'hero' ? MINIMAP_SCALE : Math.max(1, MINIMAP_SCALE - 1);
+      ctx.fillRect(
+        e.x * MINIMAP_SCALE + (MINIMAP_SCALE - s) / 2,
+        e.y * MINIMAP_SCALE + (MINIMAP_SCALE - s) / 2,
+        s, s,
+      );
     }
 
     // Viewport rectangle
@@ -353,7 +380,7 @@ export function GameCanvas({ mapData, entities, groundItems, buildings, resource
       ctx.lineWidth = 1;
       ctx.strokeRect(vx, vy, vWidth, vHeight);
     }
-  }, [mapData, entities, buildings, resourceNodes, regions, selectedEnt, selectedEntityId, pan, zoom, mmW, mmH]);
+  }, [mapData, entities, resourceNodes, selectedEntityId, pan, zoom, mmW, mmH]);
 
   // Minimap click → jump to location (accounts for minimap zoom + pan offset)
   const handleMinimapClick = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
@@ -406,7 +433,7 @@ export function GameCanvas({ mapData, entities, groundItems, buildings, resource
         >
           <canvas ref={gridRef} className="absolute top-0 left-0" style={{ zIndex: 1, transform: `scale(${zoom})`, transformOrigin: 'top left' }} />
           <canvas ref={entityRef} className="absolute top-0 left-0" style={{ zIndex: 2, transform: `scale(${zoom})`, transformOrigin: 'top left' }} />
-          <canvas ref={overlayRef} className="absolute top-0 left-0" style={{ zIndex: 3, pointerEvents: 'none', transform: `scale(${zoom})`, transformOrigin: 'top left' }} />
+          <canvas ref={overlayRef} className="absolute top-0 left-0" style={{ zIndex: 3, pointerEvents: 'none', transform: `scale(${CELL_SIZE * zoom})`, transformOrigin: 'top left', imageRendering: 'pixelated' }} />
         </div>
       )}
 

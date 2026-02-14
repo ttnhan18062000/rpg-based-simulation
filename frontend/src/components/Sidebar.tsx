@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Info, Search, ScrollText } from 'lucide-react';
-import type { Entity, GameEvent, GroundItem, Building, MapData } from '@/types/api';
+import type { Entity, EntitySlim, GameEvent, GroundItem, Building } from '@/types/api';
+import type { DecodedMapData } from '@/hooks/useSimulation';
 import { ControlPanel } from './ControlPanel';
 import { Legend } from './Legend';
 import { EntityList } from './EntityList';
@@ -12,9 +13,10 @@ import { BuildingPanel } from './BuildingPanel';
 type TabId = 'info' | 'inspect' | 'events';
 
 interface SidebarProps {
-  entities: Entity[];
+  entities: EntitySlim[];
+  selectedEntity: Entity | null;
   events: GameEvent[];
-  mapData: MapData | null;
+  mapData: DecodedMapData | null;
   selectedEntityId: number | null;
   onSelectEntity: (id: number | null) => void;
   sendControl: (action: string) => Promise<void>;
@@ -27,7 +29,7 @@ interface SidebarProps {
 }
 
 export function Sidebar({
-  entities, events, mapData, selectedEntityId, onSelectEntity, sendControl, setSpeed,
+  entities, selectedEntity, events, mapData, selectedEntityId, onSelectEntity, sendControl, setSpeed,
   inspectedLoot, onClearLoot, selectedBuilding, onClearBuilding, clearEvents,
 }: SidebarProps) {
   // Determine mode: building, spectate, or default
@@ -50,7 +52,7 @@ export function Sidebar({
     onSelectEntity(id);
   };
 
-  const selectedEntity = entities.find(e => e.id === selectedEntityId);
+  // selectedEntity is passed directly from parent (full Entity from API)
 
   // Filter events related to the spectated entity (use entity_ids array)
   const entityEvents = selectedEntityId
@@ -114,7 +116,7 @@ export function Sidebar({
             <LootPanel loot={inspectedLoot!} onClose={onClearLoot} />
           ) : (
             <InspectPanel
-              entity={selectedEntity}
+              entity={selectedEntity ?? undefined}
               mapData={mapData}
               events={entityEvents}
               onClose={() => onSelectEntity(null)}

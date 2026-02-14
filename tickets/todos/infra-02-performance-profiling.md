@@ -1,10 +1,10 @@
 # Infra 02: Performance Profiling Infrastructure
 
-## Status: DONE
+## Status: DONE (updated with API payload profiler)
 
 ## Summary
 
-Add automated performance profiling tools to measure tick timing, phase breakdown, entity scaling, and memory usage — all runnable via a single `make` command.
+Automated performance profiling tools covering both **engine tick timing** and **API payload sizes**.
 
 ## Deliverables
 
@@ -15,8 +15,9 @@ Add automated performance profiling tools to measure tick timing, phase breakdow
 | `make profile` | Run 500-tick profile, print timing report |
 | `make profile-full` | Run 2000-tick profile, save cProfile `.prof` file |
 | `make profile-memory` | Run 500-tick profile with tracemalloc memory snapshot |
+| `make profile-api` | Measure API payload sizes (map, static, state) |
 
-### Profiling Script
+### Engine Profiling Script
 
 **File:** `scripts/profile_simulation.py`
 
@@ -28,6 +29,19 @@ Features:
 - Optional `--cprofile FILE` to save cProfile output (viewable with `snakeviz` or `pstats`)
 - Optional `--memory` flag for tracemalloc top-15 allocations + peak memory
 - Configurable: `--ticks`, `--seed`, `--entities`, `--grid`, `--workers`
+
+### API Payload Profiling Script
+
+**File:** `scripts/profile_api_payload.py`
+
+Features:
+- Measures JSON payload sizes for all API endpoints: `/map`, `/static`, `/state`
+- Compares RLE-compressed vs raw 2D grid sizes
+- Breaks down `/state` payload: slim entities, selected entity, terrain_memory, entity_memory
+- Shows per-entity average size
+- Estimates pre-optimization sizes for comparison
+- Reports bandwidth at 80ms poll interval
+- Configurable: `--ticks` (run N ticks before measuring), `--seed`
 
 ### Per-Tick Phase Timing (in engine)
 
@@ -56,12 +70,23 @@ Tick 42: schedule=0.0001s collect=0.0080s resolve=0.0007s cleanup=0.0120s total=
 ## How to Run
 
 ```bash
+# Engine tick profiling
 make profile                    # Quick 500-tick report
 make profile-full               # 2000 ticks + cProfile dump
 make profile-memory             # Memory profiling
 python scripts/profile_simulation.py --ticks 1000 --entities 50 --grid 256  # Custom
+
+# API payload profiling
+make profile-api                # Measure all endpoint payload sizes
+python scripts/profile_api_payload.py --ticks 50   # More ticks = more entity memory accumulated
 ```
+
+## Related Documents
+
+- `docs/performance-report-epic16.md` — Engine tick optimization report
+- `docs/performance-report-api-payload.md` — API payload optimization report
+- `tests/test_api_payload.py` — 8 payload size regression tests
 
 ## Labels
 
-`infra`, `performance`, `profiling`, `automation`, `done`
+`infra`, `performance`, `profiling`, `automation`, `api`, `done`

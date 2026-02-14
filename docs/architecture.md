@@ -174,8 +174,9 @@ All under `/api/v1/`. See `api_reference.md` for full specification.
 
 | Group | Routes | Purpose |
 |-------|--------|---------|
-| **State** | `/state`, `/stats` | Live simulation state (polled every ~80ms) |
-| **Map** | `/map` | Static grid data (fetched once) |
+| **State** | `/state`, `/stats` | Live simulation state (polled every ~80ms). `/state` returns slim entities + optional full selected entity |
+| **Static** | `/static` | Buildings, regions, resources, chests (fetched once) |
+| **Map** | `/map` | RLE-compressed tile grid (fetched once) |
 | **Control** | `/control/{action}`, `/speed` | Simulation lifecycle |
 | **Config** | `/config` | Read-only simulation config |
 | **Metadata** | `/metadata/*` (8 endpoints) | Game definitions — serialized core pydantic dataclasses |
@@ -217,16 +218,16 @@ Three views available:
 
 | Category | Parameter | Default |
 |----------|-----------|---------|
-| World | `grid_width` / `grid_height` | 128 × 128 |
+| World | `grid_width` / `grid_height` | 512 × 512 |
 | World | `world_seed` | 42 |
 | Timing | `max_ticks` | 1000 |
 | Workers | `num_workers` | 4 |
 | Workers | `worker_timeout_seconds` | 2.0 |
-| Entities | `initial_entity_count` | 25 |
-| Entities | `generator_max_entities` | 80 |
-| Town | `town_center_x/y` | 12, 12 |
-| Town | `town_radius` | 4 |
-| Camps | `num_camps` | 8 |
+| Entities | `initial_entity_count` | 40 |
+| Entities | `generator_max_entities` | 200 |
+| Town | `town_center_x/y` | 256, 256 |
+| Town | `town_radius` | 6 |
+| Camps | `camp_min_distance` | 60 |
 | AI | `vision_range` | 6 |
 | Combat | `max_level` | 20 |
 
@@ -283,8 +284,8 @@ src/
     ├── schemas.py               # Pydantic response models (state endpoints)
     └── routes/
         ├── __init__.py          # Router registration (api_router)
-        ├── state.py             # GET /state, /stats
-        ├── map.py               # GET /map
+        ├── state.py             # GET /state, /stats, /static
+        ├── map.py               # GET /map (RLE-compressed)
         ├── control.py           # POST /control/{action}, /speed
         ├── config.py            # GET /config
         └── metadata.py          # GET /metadata/* (8 endpoints, uses core schemas)

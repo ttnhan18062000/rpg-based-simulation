@@ -1,7 +1,8 @@
-import { useRef, useEffect, useCallback, useState } from 'react';
-import type { MapData, Entity, GroundItem, Building, ResourceNode } from '@/types/api';
+import { useRef, useEffect, useCallback, useState, useMemo } from 'react';
+import type { Entity, EntitySlim, GroundItem, Building, ResourceNode } from '@/types/api';
+import type { DecodedMapData } from '@/hooks/useSimulation';
 import {
-  TILE_COLORS, TILE_COLORS_DIM, KIND_COLORS, STATE_COLORS, CELL_SIZE, LOOT_COLOR, RESOURCE_COLORS, TILE_NAMES,
+  TILE_COLORS, KIND_COLORS, STATE_COLORS, CELL_SIZE, LOOT_COLOR, RESOURCE_COLORS, TILE_NAMES,
 } from '@/constants/colors';
 
 export interface HoverInfo {
@@ -11,8 +12,9 @@ export interface HoverInfo {
 }
 
 export function useCanvas(
-  mapData: MapData | null,
-  entities: Entity[],
+  mapData: DecodedMapData | null,
+  entities: EntitySlim[],
+  selectedEntity: Entity | null,
   groundItems: GroundItem[],
   buildings: Building[],
   resourceNodes: ResourceNode[],
@@ -21,6 +23,7 @@ export function useCanvas(
   onGroundItemClick?: (x: number, y: number) => void,
   onBuildingClick?: (building: Building) => void,
   zoom: number = 1.0,
+  isDraggingRef?: React.RefObject<boolean>,
 ) {
   const gridRef = useRef<HTMLCanvasElement>(null);
   const entityRef = useRef<HTMLCanvasElement>(null);
@@ -28,9 +31,12 @@ export function useCanvas(
   const gridDrawnRef = useRef(false);
   const [hoverInfo, setHoverInfo] = useState<HoverInfo | null>(null);
   const hoveredEntityIdRef = useRef<number | null>(null);
+  const lastOverlayKeyRef = useRef('');
+  const selectedEntRef = useRef(selectedEntity);
+  selectedEntRef.current = selectedEntity;
 
-  // Build selected entity's visible set (reused across effects)
-  const selectedEnt = entities.find(e => e.id === selectedEntityId) ?? null;
+  // The full selected entity (with terrain_memory, entity_memory, vision_range)
+  const selectedEnt = selectedEntity;
 
   // Draw grid once
   useEffect(() => {
@@ -50,9 +56,10 @@ export function useCanvas(
       entityRef.current.width = w;
       entityRef.current.height = h;
     }
+    // Overlay canvas is tile-resolution (512×512), CSS-scaled to match grid
     if (overlayRef.current) {
-      overlayRef.current.width = w;
-      overlayRef.current.height = h;
+      overlayRef.current.width = mapData.width;
+      overlayRef.current.height = mapData.height;
     }
 
     ctx.clearRect(0, 0, w, h);
@@ -86,6 +93,8 @@ export function useCanvas(
 
   // Draw entities + ground items every update
   useEffect(() => {
+    // Skip expensive redraw while user is dragging — next poll after drag ends will catch up
+    if (isDraggingRef?.current) return;
     const ec = entityRef.current;
     if (!ec) return;
     const ctx = ec.getContext('2d');
@@ -99,7 +108,7 @@ export function useCanvas(
     let visibleSet: Set<string> | null = null;
     if (selectedEnt) {
       visibleSet = new Set<string>();
-      const vr = selectedEnt.vision_range || 6;
+      const vr = selectedEnt.vision_range ?? 6;
       for (let dy = -vr; dy <= vr; dy++) {
         for (let dx = -vr; dx <= vr; dx++) {
           if (Math.abs(dx) + Math.abs(dy) > vr) continue;
@@ -108,6 +117,9 @@ export function useCanvas(
           visibleSet.add(`${tx},${ty}`);
         }
       }
+    } else if (selectedEntityId != null) {
+      // Entity selected but full data not yet received — hide all (fog covers everything)
+      visibleSet = new Set<string>();
     }
 
     // Draw ground items
@@ -187,11 +199,11 @@ export function useCanvas(
     }
 
     // Draw combat engagement lines (only for spectated or hovered entity)
-    const entityMap = new Map(entities.map(e => [e.id, e]));
+    const entityMap = new Map<number, EntitySlim>(entities.map(e => [e.id, e]));
     const focusId = selectedEntityId ?? hoveredEntityIdRef.current;
     if (focusId != null) {
       // Collect lines: from focused entity to its target + from any entity targeting focused entity
-      const linePairs: { from: Entity; to: Entity }[] = [];
+      const linePairs: { from: EntitySlim; to: EntitySlim }[] = [];
       for (const ent of entities) {
         if (ent.combat_target_id == null) continue;
         const target = entityMap.get(ent.combat_target_id);
@@ -332,20 +344,137 @@ export function useCanvas(
         ctx.fillRect(lpBarX, lpBarY, lpBarW * lpRatio, lpBarH);
       }
     }
-  }, [entities, groundItems, buildings, resourceNodes, selectedEntityId, selectedEnt]);
 
-  // Draw overlay (fog of war + ghost markers)
+    // --- Vision border, weapon range ring, ghost markers (drawn on entity canvas) ---
+    if (selectedEnt) {
+      const vr2 = selectedEnt.vision_range || 6;
+      const visSet2 = new Set<string>();
+      for (let dy = -vr2; dy <= vr2; dy++) {
+        for (let dx = -vr2; dx <= vr2; dx++) {
+          if (Math.abs(dx) + Math.abs(dy) > vr2) continue;
+          visSet2.add(`${selectedEnt.x + dx},${selectedEnt.y + dy}`);
+        }
+      }
+
+      // Vision border
+      ctx.strokeStyle = 'rgba(74, 158, 255, 0.3)';
+      ctx.lineWidth = 1;
+      for (const key of visSet2) {
+        const [vx, vy] = key.split(',').map(Number);
+        const px = vx * CELL_SIZE;
+        const py = vy * CELL_SIZE;
+        if (!visSet2.has(`${vx},${vy - 1}`)) { ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(px + CELL_SIZE, py); ctx.stroke(); }
+        if (!visSet2.has(`${vx},${vy + 1}`)) { ctx.beginPath(); ctx.moveTo(px, py + CELL_SIZE); ctx.lineTo(px + CELL_SIZE, py + CELL_SIZE); ctx.stroke(); }
+        if (!visSet2.has(`${vx - 1},${vy}`)) { ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(px, py + CELL_SIZE); ctx.stroke(); }
+        if (!visSet2.has(`${vx + 1},${vy}`)) { ctx.beginPath(); ctx.moveTo(px + CELL_SIZE, py); ctx.lineTo(px + CELL_SIZE, py + CELL_SIZE); ctx.stroke(); }
+      }
+
+      // Weapon range ring
+      const wRange = selectedEnt.weapon_range || 1;
+      const rangeSet = new Set<string>();
+      for (let dy = -wRange; dy <= wRange; dy++) {
+        for (let dx = -wRange; dx <= wRange; dx++) {
+          if (Math.abs(dx) + Math.abs(dy) <= wRange) {
+            rangeSet.add(`${selectedEnt.x + dx},${selectedEnt.y + dy}`);
+          }
+        }
+      }
+      ctx.strokeStyle = wRange > 1 ? 'rgba(251, 146, 60, 0.45)' : 'rgba(248, 113, 113, 0.4)';
+      ctx.lineWidth = 1.5;
+      for (const key of rangeSet) {
+        const [rx, ry] = key.split(',').map(Number);
+        const px = rx * CELL_SIZE;
+        const py = ry * CELL_SIZE;
+        if (!rangeSet.has(`${rx},${ry - 1}`)) { ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(px + CELL_SIZE, py); ctx.stroke(); }
+        if (!rangeSet.has(`${rx},${ry + 1}`)) { ctx.beginPath(); ctx.moveTo(px, py + CELL_SIZE); ctx.lineTo(px + CELL_SIZE, py + CELL_SIZE); ctx.stroke(); }
+        if (!rangeSet.has(`${rx - 1},${ry}`)) { ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(px, py + CELL_SIZE); ctx.stroke(); }
+        if (!rangeSet.has(`${rx + 1},${ry}`)) { ctx.beginPath(); ctx.moveTo(px + CELL_SIZE, py); ctx.lineTo(px + CELL_SIZE, py + CELL_SIZE); ctx.stroke(); }
+      }
+
+      // Ghost entity markers
+      if (selectedEnt.entity_memory) {
+        const memSet2 = new Set(Object.keys(selectedEnt.terrain_memory || {}));
+        const visEntIds = new Set<number>();
+        for (const e of entities) {
+          if (e.id === selectedEntityId) continue;
+          if (visSet2.has(`${e.x},${e.y}`)) visEntIds.add(e.id);
+        }
+        for (const em of selectedEnt.entity_memory) {
+          if (visEntIds.has(em.id)) continue;
+          if (visSet2.has(`${em.x},${em.y}`)) continue;
+          if (!memSet2.has(`${em.x},${em.y}`)) continue;
+          const ecx = em.x * CELL_SIZE + CELL_SIZE / 2;
+          const ecy = em.y * CELL_SIZE + CELL_SIZE / 2;
+          const emColor = KIND_COLORS[em.kind] || '#888';
+          ctx.beginPath();
+          ctx.arc(ecx, ecy, CELL_SIZE * 0.25, 0, Math.PI * 2);
+          ctx.fillStyle = emColor + '55';
+          ctx.fill();
+          ctx.strokeStyle = emColor + '88';
+          ctx.lineWidth = 1;
+          ctx.setLineDash([2, 2]);
+          ctx.stroke();
+          ctx.setLineDash([]);
+          ctx.fillStyle = emColor + 'aa';
+          ctx.font = '7px monospace';
+          ctx.textAlign = 'center';
+          ctx.fillText('?', ecx, ecy + 2.5);
+        }
+      }
+    }
+  }, [entities, groundItems, buildings, resourceNodes, selectedEntityId, selectedEntity]);
+
+  // Stable overlay key — memoized to avoid O(n) Object.keys on every render
+  const overlayKey = useMemo(() => {
+    if (selectedEnt) {
+      const memSize = selectedEnt.terrain_memory ? Object.keys(selectedEnt.terrain_memory).length : 0;
+      const emSize = selectedEnt.entity_memory ? selectedEnt.entity_memory.length : 0;
+      return `${selectedEnt.id}_${selectedEnt.x}_${selectedEnt.y}_${memSize}_${emSize}`;
+    }
+    if (selectedEntityId != null) return `pending_${selectedEntityId}`;
+    return '';
+  }, [selectedEnt, selectedEntityId]);
+
+  // Draw fog overlay (tile-resolution 512×512 canvas, CSS-scaled to match grid)
   useEffect(() => {
+    if (isDraggingRef?.current) return; // Skip during drag — catches up on next poll after drag ends
     const oc = overlayRef.current;
     if (!oc || !mapData) return;
     const ctx = oc.getContext('2d');
     if (!ctx) return;
 
-    const w = oc.width;
-    const h = oc.height;
-    ctx.clearRect(0, 0, w, h);
+    const tw = mapData.width;
+    const th = mapData.height;
 
-    if (!selectedEnt) return;
+    // Ensure overlay is tile-resolution
+    if (oc.width !== tw) oc.width = tw;
+    if (oc.height !== th) oc.height = th;
+
+    // No entity selected — clear fog overlay
+    if (!selectedEntityId) {
+      if (lastOverlayKeyRef.current !== '') {
+        ctx.clearRect(0, 0, tw, th);
+        lastOverlayKeyRef.current = '';
+      }
+      return;
+    }
+
+    // Entity selected but full data not yet received — show full fog
+    if (!selectedEnt) {
+      if (lastOverlayKeyRef.current !== overlayKey) {
+        ctx.clearRect(0, 0, tw, th);
+        ctx.fillStyle = 'rgba(0, 0, 0, 1.0)'; // fully opaque until data arrives
+        ctx.fillRect(0, 0, tw, th);
+        lastOverlayKeyRef.current = overlayKey;
+      }
+      return;
+    }
+
+    // Skip redraw if position and memory haven't changed
+    if (overlayKey === lastOverlayKeyRef.current) return;
+    lastOverlayKeyRef.current = overlayKey;
+
+    ctx.clearRect(0, 0, tw, th);
 
     const vr = selectedEnt.vision_range || 6;
     const mem = selectedEnt.terrain_memory || {};
@@ -357,7 +486,7 @@ export function useCanvas(
         if (Math.abs(dx) + Math.abs(dy) > vr) continue;
         const tx = selectedEnt.x + dx;
         const ty = selectedEnt.y + dy;
-        if (tx >= 0 && tx < mapData.width && ty >= 0 && ty < mapData.height) {
+        if (tx >= 0 && tx < tw && ty >= 0 && ty < th) {
           visibleSet.add(`${tx},${ty}`);
         }
       }
@@ -365,105 +494,30 @@ export function useCanvas(
 
     const memSet = new Set(Object.keys(mem));
 
-    for (let y = 0; y < mapData.height; y++) {
-      for (let x = 0; x < mapData.width; x++) {
+    // Draw fog at 1px per tile (canvas is 512×512, CSS-scaled to 8192×8192)
+    // Three fog levels: visible=clear, explored=50% dim, unseen=fully black
+    for (let y = 0; y < th; y++) {
+      for (let x = 0; x < tw; x++) {
         const key = `${x},${y}`;
         if (visibleSet.has(key)) {
-          continue;
+          continue; // brightness 100%
         } else if (memSet.has(key)) {
-          ctx.fillStyle = 'rgba(0, 0, 0, 0.55)';
-          ctx.fillRect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
-          const tile = mem[key];
-          const dimColor = TILE_COLORS_DIM[tile] || TILE_COLORS_DIM[0];
-          ctx.fillStyle = dimColor + '40';
-          ctx.fillRect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+          ctx.fillStyle = 'rgba(0, 0, 0, 0.5)'; // explored fog — 50% brightness
+          ctx.fillRect(x, y, 1, 1);
         } else {
-          ctx.fillStyle = 'rgba(0, 0, 0, 0.82)';
-          ctx.fillRect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+          ctx.fillStyle = 'rgba(0, 0, 0, 1.0)'; // unseen — completely dark
+          ctx.fillRect(x, y, 1, 1);
         }
       }
     }
-
-    // Vision border
-    ctx.strokeStyle = 'rgba(74, 158, 255, 0.3)';
-    ctx.lineWidth = 1;
-    for (const key of visibleSet) {
-      const [vx, vy] = key.split(',').map(Number);
-      const px = vx * CELL_SIZE;
-      const py = vy * CELL_SIZE;
-      if (!visibleSet.has(`${vx},${vy - 1}`)) { ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(px + CELL_SIZE, py); ctx.stroke(); }
-      if (!visibleSet.has(`${vx},${vy + 1}`)) { ctx.beginPath(); ctx.moveTo(px, py + CELL_SIZE); ctx.lineTo(px + CELL_SIZE, py + CELL_SIZE); ctx.stroke(); }
-      if (!visibleSet.has(`${vx - 1},${vy}`)) { ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(px, py + CELL_SIZE); ctx.stroke(); }
-      if (!visibleSet.has(`${vx + 1},${vy}`)) { ctx.beginPath(); ctx.moveTo(px + CELL_SIZE, py); ctx.lineTo(px + CELL_SIZE, py + CELL_SIZE); ctx.stroke(); }
-    }
-
-    // Weapon range ring (shown for all entities when spectating)
-    const wRange = selectedEnt.weapon_range || 1;
-    const rangeSet = new Set<string>();
-    for (let dy = -wRange; dy <= wRange; dy++) {
-      for (let dx = -wRange; dx <= wRange; dx++) {
-        if (Math.abs(dx) + Math.abs(dy) <= wRange) {
-          rangeSet.add(`${selectedEnt.x + dx},${selectedEnt.y + dy}`);
-        }
-      }
-    }
-    ctx.strokeStyle = wRange > 1 ? 'rgba(251, 146, 60, 0.45)' : 'rgba(248, 113, 113, 0.4)';
-    ctx.lineWidth = 1.5;
-    for (const key of rangeSet) {
-      const [rx, ry] = key.split(',').map(Number);
-      const px = rx * CELL_SIZE;
-      const py = ry * CELL_SIZE;
-      if (!rangeSet.has(`${rx},${ry - 1}`)) { ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(px + CELL_SIZE, py); ctx.stroke(); }
-      if (!rangeSet.has(`${rx},${ry + 1}`)) { ctx.beginPath(); ctx.moveTo(px, py + CELL_SIZE); ctx.lineTo(px + CELL_SIZE, py + CELL_SIZE); ctx.stroke(); }
-      if (!rangeSet.has(`${rx - 1},${ry}`)) { ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(px, py + CELL_SIZE); ctx.stroke(); }
-      if (!rangeSet.has(`${rx + 1},${ry}`)) { ctx.beginPath(); ctx.moveTo(px + CELL_SIZE, py); ctx.lineTo(px + CELL_SIZE, py + CELL_SIZE); ctx.stroke(); }
-    }
-
-    // Ghost entity markers — only from entity_memory, not visible ones
-    if (selectedEnt.entity_memory) {
-      // Build a set of entity IDs that are currently visible on the entity layer
-      const visibleEntityIds = new Set<number>();
-      for (const e of entities) {
-        if (e.id === selectedEntityId) continue;
-        if (visibleSet.has(`${e.x},${e.y}`)) {
-          visibleEntityIds.add(e.id);
-        }
-      }
-
-      for (const em of selectedEnt.entity_memory) {
-        // Skip if this entity is currently visible in vision
-        if (visibleEntityIds.has(em.id)) continue;
-        // Skip if the remembered position is within vision (entity moved away)
-        if (visibleSet.has(`${em.x},${em.y}`)) continue;
-        // Only show ghost in remembered (explored) tiles
-        const memKey = `${em.x},${em.y}`;
-        if (!memSet.has(memKey)) continue;
-
-        const ecx = em.x * CELL_SIZE + CELL_SIZE / 2;
-        const ecy = em.y * CELL_SIZE + CELL_SIZE / 2;
-        const emColor = KIND_COLORS[em.kind] || '#888';
-        ctx.beginPath();
-        ctx.arc(ecx, ecy, CELL_SIZE * 0.25, 0, Math.PI * 2);
-        ctx.fillStyle = emColor + '55';
-        ctx.fill();
-        ctx.strokeStyle = emColor + '88';
-        ctx.lineWidth = 1;
-        ctx.setLineDash([2, 2]);
-        ctx.stroke();
-        ctx.setLineDash([]);
-        ctx.fillStyle = emColor + 'aa';
-        ctx.font = '7px monospace';
-        ctx.textAlign = 'center';
-        ctx.fillText('?', ecx, ecy + 2.5);
-      }
-    }
-  }, [mapData, entities, selectedEntityId, selectedEnt]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mapData, overlayKey, selectedEntityId]);
 
   // Helper: build visible set for spectated entity
   const buildVisibleSet = useCallback(() => {
     if (!selectedEnt) return null;
     const vs = new Set<string>();
-    const vr = selectedEnt.vision_range || 6;
+    const vr = selectedEnt.vision_range ?? 6;
     for (let dy = -vr; dy <= vr; dy++) {
       for (let dx = -vr; dx <= vr; dx++) {
         if (Math.abs(dx) + Math.abs(dy) > vr) continue;
@@ -483,25 +537,28 @@ export function useCanvas(
     // Account for CSS scale(zoom) — getBoundingClientRect returns visually scaled rect
     const gx = Math.floor(mx / (CELL_SIZE * zoom));
     const gy = Math.floor(my / (CELL_SIZE * zoom));
+    // Fog-of-war gating: only allow clicks on visible tiles when spectating
+    const visibleSet = buildVisibleSet();
+    const tileVisible = !visibleSet || visibleSet.has(`${gx},${gy}`);
     const hit = entities.find(e => e.x === gx && e.y === gy);
-    if (hit) {
+    if (hit && tileVisible) {
       onEntityClick(hit.id);
       return;
     }
     // Check building click (priority over ground items)
     const bldg = buildings.find(b => b.x === gx && b.y === gy);
-    if (bldg && onBuildingClick) {
+    if (bldg && onBuildingClick && tileVisible) {
       onBuildingClick(bldg);
       return;
     }
     // Check ground item click
     const gi = groundItems.find(g => g.x === gx && g.y === gy);
-    if (gi && onGroundItemClick) {
+    if (gi && onGroundItemClick && tileVisible) {
       onGroundItemClick(gx, gy);
       return;
     }
     onEntityClick(null);
-  }, [entities, groundItems, buildings, onEntityClick, onGroundItemClick, onBuildingClick, zoom]);
+  }, [entities, groundItems, buildings, onEntityClick, onGroundItemClick, onBuildingClick, zoom, buildVisibleSet]);
 
   // Hover handler — collects ALL info on the hovered tile (terrain + entities + buildings + loot + resources)
   const handleCanvasHover = useCallback((evt: React.MouseEvent) => {
@@ -517,9 +574,18 @@ export function useCanvas(
     // Build visible set for spectated entity
     const visibleSet = buildVisibleSet();
     const tileVisible = !visibleSet || visibleSet.has(`${gx},${gy}`);
+    const memSet = selectedEnt?.terrain_memory ? new Set(Object.keys(selectedEnt.terrain_memory)) : null;
+    const tileExplored = !memSet || memSet.has(`${gx},${gy}`);
 
     // Collect all tooltip lines for this tile
     const lines: string[] = [];
+
+    // Unseen tiles — show nothing except coordinates
+    if (!tileVisible && !tileExplored) {
+      lines.push(`🗺 Unexplored (${gx}, ${gy})`);
+      setHoverInfo({ screenX: evt.clientX, screenY: evt.clientY, label: lines.join('\n') });
+      return;
+    }
 
     // --- Terrain ---
     if (mapData && gx >= 0 && gx < mapData.width && gy >= 0 && gy < mapData.height) {
@@ -537,12 +603,17 @@ export function useCanvas(
       // Fog check: skip hidden entities (unless it's the spectated one)
       if (visibleSet && ent.id !== selectedEntityId && !tileVisible) continue;
       const parts = [`#${ent.id} ${ent.kind} Lv${ent.level}`];
-      if (ent.hero_class && ent.hero_class !== 'none') {
-        parts[0] += ` (${ent.hero_class})`;
-      }
-      parts.push(`HP:${ent.hp}/${ent.max_hp}`);
-      if (ent.max_stamina > 0) {
-        parts.push(`STA:${ent.stamina}/${ent.max_stamina}`);
+      // Show class/stamina from full entity if this is the selected entity
+      if (selectedEnt && ent.id === selectedEntityId) {
+        if (selectedEnt.hero_class && selectedEnt.hero_class !== 'none') {
+          parts[0] += ` (${selectedEnt.hero_class})`;
+        }
+        parts.push(`HP:${ent.hp}/${ent.max_hp}`);
+        if (selectedEnt.max_stamina > 0) {
+          parts.push(`STA:${selectedEnt.stamina}/${selectedEnt.max_stamina}`);
+        }
+      } else {
+        parts.push(`HP:${ent.hp}/${ent.max_hp}`);
       }
       parts.push(ent.state);
       lines.push(`⚔ ${parts.join(' | ')}`);
@@ -560,9 +631,11 @@ export function useCanvas(
     }
 
     // --- Buildings ---
-    const tileBuildings = buildings.filter(b => b.x === gx && b.y === gy);
-    for (const bldg of tileBuildings) {
-      lines.push(`🏛 ${bldg.name}`);
+    if (tileVisible) {
+      const tileBuildings = buildings.filter(b => b.x === gx && b.y === gy);
+      for (const bldg of tileBuildings) {
+        lines.push(`🏛 ${bldg.name}`);
+      }
     }
 
     // --- Ground items ---

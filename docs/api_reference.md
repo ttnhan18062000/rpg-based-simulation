@@ -6,9 +6,21 @@ Technical documentation for the REST API endpoints, request/response schemas, an
 
 ## Overview
 
-The backend exposes a REST API via **FastAPI** under the `/api/v1` prefix. The frontend polls state endpoints every ~80ms. Static data (map grid) is fetched once on mount.
+The backend exposes a REST API via **FastAPI** under the `/api/v1` prefix. The frontend polls `/state` every ~80ms for dynamic data. Static data (`/map` grid + `/static` world data) is fetched once on mount.
 
-**Primary files:** `src/api/routes/state.py`, `src/api/schemas.py`, `src/api/app.py`
+**Primary files:** `src/api/routes/state.py`, `src/api/routes/map.py`, `src/api/schemas.py`, `src/api/app.py`
+
+### Payload Optimization
+
+The API is optimized to minimize recurring payload size:
+
+| Endpoint | Frequency | Typical Size | Strategy |
+|----------|-----------|--------------|----------|
+| `/map` | Once | ~270 KB | RLE-compressed grid |
+| `/static` | Once | ~47 KB | Buildings, regions, resources, chests |
+| `/state` | Every 80ms | ~75 KB | Slim entities + optional full selected entity |
+
+Pre-optimization `/state` was ~1.6 MB per poll. Current design achieves **~90% reduction**.
 
 ---
 
@@ -16,31 +28,32 @@ The backend exposes a REST API via **FastAPI** under the `/api/v1` prefix. The f
 
 ### GET /api/v1/map
 
-Fetch the static tile grid (called once at startup).
+Fetch the static tile grid (called once at startup). The grid is **RLE-compressed** as a flat array.
 
 **Response:**
 
 ```json
 {
-  "width": 128,
-  "height": 128,
-  "grid": [[0, 0, 1, ...], ...]
+  "width": 512,
+  "height": 512,
+  "grid": [0, 5, 1, 3, 6, 120, ...]
 }
 ```
 
-Grid values correspond to `Material` enum (0=FLOOR, 1=WALL, ..., 14=LAVA). See `world_generation.md` for full list.
+`grid` is a flat RLE-encoded array: `[value, count, value, count, ...]`. The frontend decodes this into a 2D `number[][]` on load via `decodeRLE()`. Grid values correspond to `Material` enum (0=FLOOR, 1=WALL, ..., 22=GRAVEYARD). See `world_generation.md` for full list.
 
 ---
 
 ### GET /api/v1/state
 
-Polled by the UI to get the current simulation state.
+Polled by the UI every ~80ms for dynamic simulation state. Returns **slim entities** for all alive entities, plus an optional **full entity** for the selected/inspected entity.
 
 **Query Parameters:**
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
 | `since_tick` | int (optional) | Only return events newer than this tick |
+| `selected` | int (optional) | Entity ID to include full details for (-1 or omitted = none) |
 
 **Response: `WorldStateResponse`**
 
@@ -48,12 +61,29 @@ Polled by the UI to get the current simulation state.
 {
   "tick": 405,
   "alive_count": 42,
-  "entities": [ EntitySchema, ... ],
+  "entities": [ EntitySlimSchema, ... ],
+  "selected_entity": EntitySchema | null,
   "events": [ EventSchema, ... ],
-  "ground_items": [ GroundItemSchema, ... ],
+  "ground_items": [ GroundItemSchema, ... ]
+}
+```
+
+> **Note:** Buildings, resource nodes, regions, and treasure chests are **not** included here. They are served by `/static` and fetched once.
+
+---
+
+### GET /api/v1/static
+
+Static world data — fetched once after map load. Contains buildings, resource nodes, treasure chests, and regions.
+
+**Response: `StaticDataResponse`**
+
+```json
+{
   "buildings": [ BuildingSchema, ... ],
   "resource_nodes": [ ResourceNodeSchema, ... ],
-  "treasure_chests": [ TreasureChestSchema, ... ]
+  "treasure_chests": [ TreasureChestSchema, ... ],
+  "regions": [ RegionSchema, ... ]
 }
 ```
 
@@ -370,7 +400,9 @@ All crafting recipe definitions.
 
 ## Schemas
 
-### EntitySchema
+### EntitySlimSchema
+
+Minimal entity data sent for **all alive entities** in every `/state` poll. Used for map rendering.
 
 | Field | Type | Description |
 |-------|------|-------------|
@@ -378,24 +410,39 @@ All crafting recipe definitions.
 | `kind` | str | Entity type name |
 | `x` / `y` | int | Grid position |
 | `hp` / `max_hp` | int | Health |
-| `atk` / `def_` / `spd` | int | Base combat stats |
-| `matk` / `mdef` | int | Base magical stats |
+| `state` | str | Current AI state name |
+| `level` | int | Entity level |
+| `tier` | int | Enemy difficulty tier |
+| `faction` | str | Faction name |
+| `weapon_range` | int | Attack range (for combat line rendering) |
+| `combat_target_id` | int \| null | Current combat target |
+| `loot_progress` | int | Loot channel progress |
+| `loot_duration` | int | Loot channel total |
+
+~200 bytes per entity in JSON.
+
+### EntitySchema
+
+Full entity data — only sent for the **selected/inspected entity** (via `?selected=<id>` on `/state`).
+
+Includes all `EntitySlimSchema` fields plus:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `atk` / `def_` / `spd` | int | Effective combat stats |
+| `matk` / `mdef` | int | Effective magical stats |
 | `base_atk` / `base_def` / `base_spd` | int | Raw base before equipment |
 | `base_matk` / `base_mdef` | int | Raw base magical |
-| `level` / `xp` / `xp_to_next` | int | Leveling |
+| `xp` / `xp_to_next` | int | Leveling progress |
 | `gold` | int | Currency |
 | `luck` | int | Luck stat |
-| `crit_rate` / `crit_dmg` | float | Critical hit stats |
+| `crit_rate` | float | Critical hit chance |
 | `evasion` | float | Dodge chance |
 | `stamina` / `max_stamina` | int | Action resource |
-| `state` | str | Current AI state name |
-| `faction` | str | Faction name |
-| `tier` | int | Enemy difficulty tier |
-| `alive` | bool | Is alive |
 | `weapon` / `armor` / `accessory` | str \| null | Equipped item IDs |
 | `inventory_items` | str[] | Bag item IDs |
 | `vision_range` | int | Perception radius |
-| `terrain_memory` | [int, int][] | Explored tile coordinates |
+| `terrain_memory` | dict\<str, int\> | Explored tiles (`"x,y"` → material) |
 | `entity_memory` | EntityMemoryEntry[] | Last-seen entity data |
 | `goals` | str[] | Current behavioral goal strings |
 | `hero_class` | str | Class name (or "none") |
@@ -403,7 +450,7 @@ All crafting recipe definitions.
 | `skills` | SkillSchema[] | Learned skills |
 | `known_recipes` | str[] | Recipe IDs known |
 | `craft_target` | str \| null | Current crafting goal |
-| `traits` | str[] | Personality trait names |
+| `traits` | int[] | Personality trait type IDs |
 | `attributes` | AttributeSchema \| null | 9 primary attributes |
 | `attribute_caps` | AttributeCapSchema \| null | Attribute growth limits |
 | `active_effects` | EffectSchema[] | Active buffs/debuffs |

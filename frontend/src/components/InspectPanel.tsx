@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
 import { X, ChevronDown, ChevronRight, Swords, BookOpen, ScrollText, Brain, BarChart3, Sparkles } from 'lucide-react';
-import type { Entity, GameEvent, MapData } from '@/types/api';
+import type { Entity, GameEvent } from '@/types/api';
+import type { DecodedMapData } from '@/hooks/useSimulation';
 import { KIND_COLORS, STATE_COLORS, hpColor, RARITY_COLORS } from '@/constants/colors';
 import { useMetadata } from '@/contexts/MetadataContext';
 
@@ -37,7 +38,7 @@ const DMG_TYPE_COLORS: Record<string, string> = {
 
 interface InspectPanelProps {
   entity: Entity | undefined;
-  mapData: MapData | null;
+  mapData: DecodedMapData | null;
   events?: GameEvent[];
   onClose: () => void;
 }

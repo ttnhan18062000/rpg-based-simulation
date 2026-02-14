@@ -12,6 +12,7 @@ from src.api.schemas import (
     BuildingSchema,
     EffectSchema,
     EntitySchema,
+    EntitySlimSchema,
     EventSchema,
     GroundItemSchema,
     LocationSchema,
@@ -20,6 +21,7 @@ from src.api.schemas import (
     ResourceNodeSchema,
     SimulationStats,
     SkillSchema,
+    StaticDataResponse,
     TreasureChestSchema,
     WorldStateResponse,
 )
@@ -124,131 +126,158 @@ def _serialize_skills(e) -> list[SkillSchema]:
     return result
 
 
+def _serialize_full_entity(e, manager: EngineManager) -> EntitySchema:
+    """Full entity serialization for the selected/inspected entity."""
+    return EntitySchema(
+        id=e.id,
+        kind=e.kind,
+        x=e.pos.x,
+        y=e.pos.y,
+        hp=e.stats.hp,
+        max_hp=e.stats.max_hp,
+        atk=e.effective_atk(),
+        def_=e.effective_def(),
+        spd=e.effective_spd(),
+        luck=e.stats.luck,
+        crit_rate=e.effective_crit_rate(),
+        evasion=e.effective_evasion(),
+        matk=e.effective_matk(),
+        mdef=e.effective_mdef(),
+        level=e.stats.level,
+        xp=e.stats.xp,
+        xp_to_next=e.stats.xp_to_next,
+        gold=e.stats.gold,
+        tier=e.tier,
+        faction=e.faction.name.lower(),
+        state=e.ai_state.name,
+        weapon=e.inventory.weapon if e.inventory else None,
+        armor=e.inventory.armor if e.inventory else None,
+        accessory=e.inventory.accessory if e.inventory else None,
+        inventory_count=e.inventory.used_slots if e.inventory else 0,
+        inventory_max_slots=e.inventory.max_slots if e.inventory else 0,
+        inventory_items=list(e.inventory.items) if e.inventory else [],
+        inventory_weight=round(e.inventory.current_weight, 1) if e.inventory else 0.0,
+        inventory_max_weight=e.inventory.max_weight if e.inventory else 0.0,
+        vision_range=e.stats.vision_range,
+        terrain_memory={f"{k[0]},{k[1]}": v for k, v in e.terrain_memory.items()},
+        entity_memory=list(e.entity_memory),
+        goals=list(e.goals),
+        loot_progress=e.loot_progress,
+        loot_duration=manager.config.loot_duration,
+        known_recipes=list(e.known_recipes),
+        craft_target=e.craft_target,
+        stamina=e.stats.stamina,
+        max_stamina=e.stats.max_stamina,
+        attributes=_serialize_attrs(e),
+        attribute_caps=_serialize_caps(e),
+        hero_class=_serialize_hero_class(e),
+        skills=_serialize_skills(e),
+        class_mastery=e.class_mastery,
+        active_effects=[
+            EffectSchema(
+                effect_type=eff.effect_type.name,
+                source=eff.source,
+                remaining_ticks=eff.remaining_ticks,
+                atk_mult=eff.atk_mult,
+                def_mult=eff.def_mult,
+                spd_mult=eff.spd_mult,
+                crit_mult=eff.crit_mult,
+                evasion_mult=eff.evasion_mult,
+                hp_per_tick=eff.hp_per_tick,
+            )
+            for eff in e.effects
+            if not eff.expired
+        ],
+        base_atk=e.stats.atk,
+        base_def=e.stats.def_,
+        base_spd=e.stats.spd,
+        base_matk=e.stats.matk,
+        base_mdef=e.stats.mdef,
+        base_crit_rate=e.stats.crit_rate,
+        base_evasion=e.stats.evasion,
+        hp_regen=e.stats.hp_regen,
+        cooldown_reduction=e.stats.cooldown_reduction,
+        loot_bonus=e.stats.loot_bonus,
+        trade_bonus=e.stats.trade_bonus,
+        interaction_speed=e.stats.interaction_speed,
+        rest_efficiency=e.stats.rest_efficiency,
+        speed_delay_move=_speed_delay(e, "move"),
+        speed_delay_attack=_speed_delay(e, "attack"),
+        speed_delay_skill=_speed_delay(e, "skill"),
+        speed_delay_harvest=_speed_delay(e, "harvest"),
+        fire_dmg_mult=_elem_dmg(e).fire_dmg_mult,
+        ice_dmg_mult=_elem_dmg(e).ice_dmg_mult,
+        lightning_dmg_mult=_elem_dmg(e).lightning_dmg_mult,
+        dark_dmg_mult=_elem_dmg(e).dark_dmg_mult,
+        elem_vuln_fire=e.stats.elem_vuln.get(1, 1.0),
+        elem_vuln_ice=e.stats.elem_vuln.get(2, 1.0),
+        elem_vuln_lightning=e.stats.elem_vuln.get(3, 1.0),
+        elem_vuln_dark=e.stats.elem_vuln.get(4, 1.0),
+        region_id=e.region_id,
+        difficulty_tier=e.difficulty_tier,
+        current_region_id=e.current_region_id,
+        weapon_range=_get_weapon_range(e),
+        combat_target_id=e.combat_target_id,
+        traits=list(e.traits),
+        home_storage_used=e.home_storage.used_slots if e.home_storage else 0,
+        home_storage_max=e.home_storage.max_slots if e.home_storage else 0,
+        home_storage_level=e.home_storage.level if e.home_storage else 0,
+        quests=[
+            QuestSchema(
+                quest_id=q.quest_id,
+                quest_type=q.quest_type.name,
+                title=q.title,
+                description=q.description,
+                target_kind=q.target_kind,
+                target_x=q.target_pos.x if q.target_pos else None,
+                target_y=q.target_pos.y if q.target_pos else None,
+                target_count=q.target_count,
+                progress=q.progress,
+                completed=q.completed,
+                gold_reward=q.gold_reward,
+                xp_reward=q.xp_reward,
+            )
+            for q in e.quests
+        ],
+    )
+
+
 @router.get("/state", response_model=WorldStateResponse)
 def get_state(
     since_tick: int = Query(0, ge=0, description="Only return events since this tick"),
+    selected: int = Query(-1, description="Entity ID to get full details for (-1 = none)"),
     manager: EngineManager = Depends(get_engine_manager),
 ) -> WorldStateResponse:
     snapshot = manager.get_snapshot()
     if snapshot is None:
         raise HTTPException(status_code=503, detail="No snapshot available yet.")
 
-    entities = [
-        EntitySchema(
+    # Slim entities for all alive entities (minimal fields for rendering)
+    slim_entities: list[EntitySlimSchema] = []
+    selected_entity: EntitySchema | None = None
+
+    for e in snapshot.entities.values():
+        if not e.alive:
+            continue
+        slim_entities.append(EntitySlimSchema(
             id=e.id,
             kind=e.kind,
             x=e.pos.x,
             y=e.pos.y,
             hp=e.stats.hp,
             max_hp=e.stats.max_hp,
-            atk=e.effective_atk(),
-            def_=e.effective_def(),
-            spd=e.effective_spd(),
-            luck=e.stats.luck,
-            crit_rate=e.effective_crit_rate(),
-            evasion=e.effective_evasion(),
-            matk=e.effective_matk(),
-            mdef=e.effective_mdef(),
+            state=e.ai_state.name,
             level=e.stats.level,
-            xp=e.stats.xp,
-            xp_to_next=e.stats.xp_to_next,
-            gold=e.stats.gold,
             tier=e.tier,
             faction=e.faction.name.lower(),
-            state=e.ai_state.name,
-            weapon=e.inventory.weapon if e.inventory else None,
-            armor=e.inventory.armor if e.inventory else None,
-            accessory=e.inventory.accessory if e.inventory else None,
-            inventory_count=e.inventory.used_slots if e.inventory else 0,
-            inventory_max_slots=e.inventory.max_slots if e.inventory else 0,
-            inventory_items=list(e.inventory.items) if e.inventory else [],
-            inventory_weight=round(e.inventory.current_weight, 1) if e.inventory else 0.0,
-            inventory_max_weight=e.inventory.max_weight if e.inventory else 0.0,
-            vision_range=e.stats.vision_range,
-            terrain_memory={f"{k[0]},{k[1]}": v for k, v in e.terrain_memory.items()},
-            entity_memory=list(e.entity_memory),
-            goals=list(e.goals),
-            loot_progress=e.loot_progress,
-            loot_duration=manager.config.loot_duration,
-            known_recipes=list(e.known_recipes),
-            craft_target=e.craft_target,
-            stamina=e.stats.stamina,
-            max_stamina=e.stats.max_stamina,
-            attributes=_serialize_attrs(e),
-            attribute_caps=_serialize_caps(e),
-            hero_class=_serialize_hero_class(e),
-            skills=_serialize_skills(e),
-            class_mastery=e.class_mastery,
-            active_effects=[
-                EffectSchema(
-                    effect_type=eff.effect_type.name,
-                    source=eff.source,
-                    remaining_ticks=eff.remaining_ticks,
-                    atk_mult=eff.atk_mult,
-                    def_mult=eff.def_mult,
-                    spd_mult=eff.spd_mult,
-                    crit_mult=eff.crit_mult,
-                    evasion_mult=eff.evasion_mult,
-                    hp_per_tick=eff.hp_per_tick,
-                )
-                for eff in e.effects
-                if not eff.expired
-            ],
-            base_atk=e.stats.atk,
-            base_def=e.stats.def_,
-            base_spd=e.stats.spd,
-            base_matk=e.stats.matk,
-            base_mdef=e.stats.mdef,
-            base_crit_rate=e.stats.crit_rate,
-            base_evasion=e.stats.evasion,
-            hp_regen=e.stats.hp_regen,
-            cooldown_reduction=e.stats.cooldown_reduction,
-            loot_bonus=e.stats.loot_bonus,
-            trade_bonus=e.stats.trade_bonus,
-            interaction_speed=e.stats.interaction_speed,
-            rest_efficiency=e.stats.rest_efficiency,
-            speed_delay_move=_speed_delay(e, "move"),
-            speed_delay_attack=_speed_delay(e, "attack"),
-            speed_delay_skill=_speed_delay(e, "skill"),
-            speed_delay_harvest=_speed_delay(e, "harvest"),
-            fire_dmg_mult=_elem_dmg(e).fire_dmg_mult,
-            ice_dmg_mult=_elem_dmg(e).ice_dmg_mult,
-            lightning_dmg_mult=_elem_dmg(e).lightning_dmg_mult,
-            dark_dmg_mult=_elem_dmg(e).dark_dmg_mult,
-            elem_vuln_fire=e.stats.elem_vuln.get(1, 1.0),
-            elem_vuln_ice=e.stats.elem_vuln.get(2, 1.0),
-            elem_vuln_lightning=e.stats.elem_vuln.get(3, 1.0),
-            elem_vuln_dark=e.stats.elem_vuln.get(4, 1.0),
-            region_id=e.region_id,
-            difficulty_tier=e.difficulty_tier,
-            current_region_id=e.current_region_id,
             weapon_range=_get_weapon_range(e),
             combat_target_id=e.combat_target_id,
-            traits=list(e.traits),
-            home_storage_used=e.home_storage.used_slots if e.home_storage else 0,
-            home_storage_max=e.home_storage.max_slots if e.home_storage else 0,
-            home_storage_level=e.home_storage.level if e.home_storage else 0,
-            quests=[
-                QuestSchema(
-                    quest_id=q.quest_id,
-                    quest_type=q.quest_type.name,
-                    title=q.title,
-                    description=q.description,
-                    target_kind=q.target_kind,
-                    target_x=q.target_pos.x if q.target_pos else None,
-                    target_y=q.target_pos.y if q.target_pos else None,
-                    target_count=q.target_count,
-                    progress=q.progress,
-                    completed=q.completed,
-                    gold_reward=q.gold_reward,
-                    xp_reward=q.xp_reward,
-                )
-                for q in e.quests
-            ],
-        )
-        for e in snapshot.entities.values()
-        if e.alive
-    ]
+            loot_progress=e.loot_progress,
+            loot_duration=manager.config.loot_duration,
+        ))
+        # Full details only for the selected entity
+        if e.id == selected:
+            selected_entity = _serialize_full_entity(e, manager)
 
     events = [
         EventSchema(tick=ev.tick, category=ev.category, message=ev.message,
@@ -261,6 +290,25 @@ def get_state(
         for (x, y), items in snapshot.ground_items.items()
         if items
     ]
+
+    return WorldStateResponse(
+        tick=snapshot.tick,
+        alive_count=len(slim_entities),
+        entities=slim_entities,
+        selected_entity=selected_entity,
+        events=events,
+        ground_items=ground_items,
+    )
+
+
+@router.get("/static", response_model=StaticDataResponse)
+def get_static(
+    manager: EngineManager = Depends(get_engine_manager),
+) -> StaticDataResponse:
+    """Static world data — buildings, resource nodes, regions, chests. Fetch once."""
+    snapshot = manager.get_snapshot()
+    if snapshot is None:
+        raise HTTPException(status_code=503, detail="No snapshot available yet.")
 
     buildings = []
     for b in snapshot.buildings:
@@ -330,13 +378,7 @@ def get_state(
             for r in snapshot.regions
         ]
 
-    alive_count = len(entities)
-    return WorldStateResponse(
-        tick=snapshot.tick,
-        alive_count=alive_count,
-        entities=entities,
-        events=events,
-        ground_items=ground_items,
+    return StaticDataResponse(
         buildings=buildings,
         resource_nodes=resource_nodes,
         treasure_chests=treasure_chests,

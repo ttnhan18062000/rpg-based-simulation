@@ -48,6 +48,7 @@ function App() {
           <GameCanvas
             mapData={sim.mapData}
             entities={sim.entities}
+            selectedEntity={sim.selectedEntity}
             groundItems={sim.groundItems}
             buildings={sim.buildings}
             resourceNodes={sim.resourceNodes}
@@ -59,6 +60,7 @@ function App() {
           />
           <Sidebar
             entities={sim.entities}
+            selectedEntity={sim.selectedEntity}
             events={sim.events}
             mapData={sim.mapData}
             selectedEntityId={sim.selectedEntityId}

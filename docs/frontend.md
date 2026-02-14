@@ -60,13 +60,34 @@ MetadataProvider              # Wraps App — fetches all 8 /metadata/* endpoint
 
 Three stacked `<canvas>` elements managed via React refs in `useCanvas`:
 
-| Layer | Ref | Z-Index | Purpose |
-|-------|-----|---------|---------|
-| 1 | `gridRef` | 1 | Static tile grid (drawn once on init) |
-| 2 | `entityRef` | 2 | Ground items, resource nodes, entity sprites, HP bars, buildings, selection rings (redrawn every poll) |
-| 3 | `overlayRef` | 3 | Vision/memory fog overlay + ghost markers (redrawn on selection change) |
+| Layer | Ref | Z-Index | Resolution | Purpose |
+|-------|-----|---------|------------|----------|
+| 1 | `gridRef` | 1 | 8192×8192 (full) | Static tile grid (drawn once on init) |
+| 2 | `entityRef` | 2 | 8192×8192 (full) | Ground items, resources, entity sprites, HP bars, buildings, selection rings, vision border, weapon range ring, ghost markers (redrawn every poll) |
+| 3 | `overlayRef` | 3 | 512×512 (tile-res) | Fog-of-war only — CSS-scaled via `scale(CELL_SIZE × zoom)` with `imageRendering: pixelated` (redrawn on entity move/memory change) |
 
 The overlay uses `pointer-events: none` so clicks pass through.
+
+### Performance Notes
+
+- **Overlay canvas** is 512×512 (1 pixel per tile), **256× smaller** than full resolution. During dragging, the GPU composites a 262K-pixel texture instead of a 67M-pixel texture.
+- **Vision border, weapon range ring, and ghost markers** are drawn on the entity canvas (full resolution) instead of the overlay, since they need sub-tile precision.
+- **Minimap terrain** is cached to an offscreen `<canvas>` and blitted via `drawImage()` — avoids 262K `fillRect` calls per frame.
+
+### Drag-Skip Optimization
+
+When the user drags (pans) the canvas, all expensive canvas effects are **paused** via `isDraggingRef`. Only the CSS `transform: translate()` updates during drag, which is handled entirely by the GPU compositor at no CPU cost. All effects catch up automatically on the next poll (~80ms) after the mouse is released.
+
+| Effect | Location | Skipped During Drag | Cost if Not Skipped |
+|--------|----------|-------------------|---------------------|
+| Entity canvas redraw | `useCanvas.ts` | ✅ | ~300 entities + vision border + ghosts on 8192×8192 |
+| Fog overlay redraw | `useCanvas.ts` | ✅ | 262K tile iterations on 512×512 |
+| Minimap terrain cache | `GameCanvas.tsx` | ✅ | 262K `fillRect` calls (rebuilds when `terrain_memory` grows) |
+| Minimap dynamic layer | `GameCanvas.tsx` | ✅ | `drawImage` + entity dots + viewport rect |
+
+**Why this matters:** Without the skip, polling (every 80ms) triggers `setState` → React re-renders → all effects fire. The minimap terrain cache is the worst offender: when spectating a running entity, `terrain_memory` grows each tick as the entity explores, causing a full 262K-tile cache rebuild every 80ms *during* drag.
+
+**Trade-off:** The entity positions, fog overlay, and minimap freeze momentarily while dragging. This is imperceptible since drag typically lasts <1 second, and updates resume within 80ms of release.
 
 ---
 
@@ -125,21 +146,30 @@ Rarity colors: Common (`#9ca3af`), Uncommon (`#34d399`), Rare (`#a78bfa`).
 
 ---
 
-## Vision Overlay
+## Vision Overlay (Fog of War)
 
-When spectating, the overlay canvas draws fog-of-war:
+When spectating, the overlay canvas (512×512, 1px/tile) draws three fog levels:
 
-| State | Visual | Description |
-|-------|--------|-------------|
-| Visible | Clear | Within current vision range |
-| Remembered | Semi-transparent (55% opacity) | Previously seen, in `terrain_memory` |
-| Unknown | Heavy fog (82% opacity) | Never explored |
+| State | Overlay Fill | Effective Brightness | Description |
+|-------|-------------|---------------------|-------------|
+| **In vision** | Clear (no fill) | 100% | Within current vision range |
+| **Explored (fog)** | `rgba(0, 0, 0, 0.5)` | ~50% | Previously seen, in `terrain_memory` |
+| **Unseen** | `rgba(0, 0, 0, 1.0)` | 0% (fully black) | Never explored — completely hidden |
+
+The overlay is drawn at tile resolution and CSS-scaled with `imageRendering: pixelated` for crisp tile edges.
+
+### Overlay Key Caching
+
+The fog is only redrawn when the entity moves or memory changes. A memoized `overlayKey` string (`id_x_y_memSize_emSize`) is compared to avoid expensive 262K-tile iterations.
 
 ### Vision Range Border
-Faint blue outline (`rgba(74, 158, 255, 0.3)`) around visible area edges.
+Faint blue outline (`rgba(74, 158, 255, 0.3)`) around visible area edges. Drawn on the **entity canvas** (full resolution) for sub-tile precision.
+
+### Weapon Range Ring
+Colored outline around weapon range area. Orange for ranged (`weapon_range > 1`), red for melee. Drawn on the **entity canvas**.
 
 ### Ghost Entity Markers
-Remembered entities from `entity_memory` drawn as ghosts:
+Remembered entities from `entity_memory` drawn as ghosts on the **entity canvas**:
 - Skip if currently visible or if remembered position is in vision cone
 - Skip if position unexplored
 - Render: semi-transparent circle, dashed border, `?` label
@@ -154,6 +184,17 @@ Remembered entities from `entity_memory` drawn as ghosts:
 - **Separate zoom:** Scroll over minimap zooms minimap (1×–5×); scroll over world zooms world (0.5×–3×)
 - **Click to jump:** Click anywhere on minimap moves world camera
 - **Spectate filtering:** When spectating, entities/resources outside vision hidden on minimap
+- **Terrain caching:** Terrain tiles cached to an offscreen canvas (`mmTerrainCacheRef`) — only rebuilt when `terrain_memory` size changes. Dynamic elements (entity dots, viewport rect) blit the cache via `drawImage()` then overdraw.
+
+### Minimap Fog of War
+
+When spectating, minimap terrain uses three levels matching the main canvas:
+
+| State | Color | Description |
+|-------|-------|-------------|
+| **Unseen** | `#000000` | Completely black |
+| **Explored** | `TILE_COLORS_DIM[tile]` | Dimmed tile color |
+| **In vision** | `TILE_COLORS[tile]` | Full brightness (bright overlay drawn per frame) |
 
 ### Constants
 
@@ -342,21 +383,39 @@ Fetches all 8 `/api/v1/metadata/*` endpoints in parallel on mount. Builds derive
 
 ### `useSimulation`
 
-Central state management:
-- One-time map fetch on mount
-- Polls `/api/v1/state` and `/api/v1/stats` every 80ms via `setTimeout`
-- Accumulates events (deduplicates by `tick:message` key)
-- Exposes: `entities`, `events`, `tick`, `status`, `buildings`, `resourceNodes`, `groundItems`
-- Callbacks: `sendControl(action)`, `setSpeed(tps)`, `selectEntity(id)`, `clearEvents()`
+Central state management with payload-optimized data fetching:
+
+**One-time loads (on mount):**
+- `GET /map` — RLE-compressed grid decoded via `decodeRLE()` into `DecodedMapData` (`grid: number[][]`)
+- `GET /static` — buildings, resource nodes, treasure chests, regions
+
+**Polling (every 80ms via `setTimeout`):**
+- `GET /state?since_tick=N&selected=ID` — slim entities + optional full selected entity
+- `GET /stats` — simulation counters
+
+**State exposed:**
+- `mapData: DecodedMapData | null` — decoded 2D grid
+- `entities: EntitySlim[]` — all alive entities (slim ~200 B each)
+- `selectedEntity: Entity | null` — full entity for inspected entity (includes terrain_memory, entity_memory, skills, etc.)
+- `buildings`, `resourceNodes`, `regions` — static data (fetched once)
+- `events`, `groundItems`, `tick`, `status`, `aliveCount`, etc.
+
+**Callbacks:** `sendControl(action)`, `setSpeed(tps)`, `selectEntity(id)`, `clearEvents()`
+
+**Key implementation details:**
+- `selectedIdRef` synced **immediately** in `selectEntity()` callback (not via `useEffect`) so the very next poll includes `?selected=`
+- `selectedEntity` updates tracked via `lastSelKeyRef` (`responseEntityId_tick`) — skips redundant `setState` calls when data hasn't changed
+- `entities` / `groundItems` only update when tick advances (`lastTickRef`) — eliminates re-renders when paused or polling within the same tick
+- Simulation status (`running`/`paused`/`stopped`) always updates regardless of tick
 
 ### `useCanvas`
 
-Canvas rendering:
-- Draws tile grid once when map data arrives
-- Redraws entities/items/resources/buildings every poll cycle
-- Redraws fog overlay + ghosts on selection change
-- Spectate vision filtering: only entities within selected entity's vision rendered
-- Hover detection: resolves grid cell, collects ALL info (terrain + entities + buildings + loot + resources) into multi-line tooltip
+Canvas rendering — accepts `EntitySlim[]` for all entities and `Entity | null` for the full selected entity:
+- **Grid canvas:** Draws tile grid once when `DecodedMapData` arrives (8192×8192)
+- **Entity canvas:** Redraws entities/items/resources/buildings every poll cycle, plus vision border, weapon range ring, and ghost markers when spectating
+- **Overlay canvas:** Tile-resolution (512×512) fog-of-war only — CSS-scaled to match grid. Redrawn only when `overlayKey` changes (entity position or memory size). Three levels: unseen=opaque black, explored=50% dim, visible=clear
+- **Spectate vision filtering:** When `selectedEntityId` is set but `selectedEntity` is null (data pending), entity canvas uses empty `visibleSet` (hides everything) and overlay shows full fog
+- Hover detection: resolves grid cell, collects ALL info (terrain + entities + buildings + loot + resources) into multi-line tooltip. Shows class/stamina from full entity for selected entity only.
 - Zoom-corrected coordinates for click and hover
 
 ---
@@ -385,23 +444,30 @@ The `Header` component provides a page toggle between `Simulation` and `API Docs
 ## Data Flow
 
 ```
-Backend (WorldLoop) → Snapshot → API /state → useSimulation() hook
-                                                    ↓
-                                  React state (entities, groundItems, events, ...)
-                                   ↓              ↓                ↓
-                            useCanvas()    InspectPanel         EventLog
-                          (3 canvas +      (React +             (React
-                           hover tooltip)   item tooltips)       component)
+── ONE-TIME LOADS (on mount) ──────────────────────────────────────────
 
-Backend (core/) → /metadata/* → MetadataProvider (once on mount)
-                                       ↓
-                           GameMetadata context (itemMap, classMap, ...)
-                            ↓              ↓                ↓
-                     InspectPanel   ClassHallPanel    BuildingPanel
+Backend → /map (RLE grid)   → decodeRLE() → DecodedMapData (grid[][])
+Backend → /static           → buildings, resourceNodes, regions
+Backend → /metadata/*       → MetadataProvider (itemMap, classMap, ...)
+Backend → /openapi.json     → ApiDocsPage (endpoint cards + Try It Out)
 
-Backend → /openapi.json → ApiDocsPage (on mount)
-                                ↓
-                    Parsed OpenAPI spec → endpoint cards + Try It Out
+── POLLING (every 80ms) ───────────────────────────────────────────────
+
+Backend (WorldLoop) → Snapshot → /state?selected=ID → useSimulation()
+                                                          ↓
+                                        entities: EntitySlim[]     (~75 KB)
+                                        selectedEntity: Entity     (~3 KB)
+                                        events, groundItems
+                                           ↓              ↓               ↓
+                                    useCanvas()    InspectPanel       EventLog
+                                  (3 canvas +      (full entity       (React
+                                   hover tooltip)   with memory)       component)
+
+── CONTEXT CONSUMERS ──────────────────────────────────────────────────
+
+MetadataProvider → GameMetadata context
+                     ↓              ↓                ↓
+              InspectPanel   ClassHallPanel    BuildingPanel
 ```
 
 ---
@@ -413,14 +479,20 @@ Two type definition files:
 ### `src/types/api.ts` — Simulation State
 
 Matches Pydantic schemas for dynamic runtime data:
-- `Entity` — full entity with stats, faction, equipment, memory, goals, skills, traits, quests
+- `EntitySlim` — minimal entity for rendering (id, kind, x, y, hp, max_hp, state, level, tier, faction, weapon_range, combat_target_id, loot_progress, loot_duration)
+- `Entity` — full entity with stats, equipment, memory, goals, skills, traits, quests (only for selected entity)
 - `Building` — building_id, name, x, y, building_type
 - `GameEvent` — tick + category + message
 - `GroundItem` — x, y, items[]
 - `ResourceNode` — node_id, resource_type, name, position, yields_item, remaining, is_available
-- `WorldState` — tick, alive_count, entities[], events[], ground_items[], buildings[], resource_nodes[]
+- `WorldState` — tick, alive_count, entities: EntitySlim[], selected_entity: Entity | null, events[], ground_items[]
+- `StaticData` — buildings[], resource_nodes[], treasure_chests[], regions[]
 - `SimulationStats` — counters + running/paused flags
-- `MapData` — width, height, grid[][]
+- `MapData` — width, height, grid: number[] (RLE-encoded flat array)
+
+### `src/hooks/useSimulation.ts` — Decoded Types
+
+- `DecodedMapData` — width, height, grid: number[][] (decoded from RLE on load)
 
 ### `src/types/metadata.ts` — Game Definitions
 

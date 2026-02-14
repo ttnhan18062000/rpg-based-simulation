@@ -1,8 +1,8 @@
-import type { Entity } from '@/types/api';
+import type { EntitySlim } from '@/types/api';
 import { KIND_COLORS, hpColor } from '@/constants/colors';
 
 interface EntityListProps {
-  entities: Entity[];
+  entities: EntitySlim[];
   selectedEntityId: number | null;
   onSelect: (id: number) => void;
 }

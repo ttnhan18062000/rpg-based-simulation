@@ -1,4 +1,4 @@
-.PHONY: help install install-py install-fe build dev serve stop clean lint
+.PHONY: help install install-py install-fe build dev serve stop clean lint profile-api
 
 # Default
 help: ## Show available commands
@@ -74,6 +74,9 @@ profile-full: ## Run extended profile (2000 ticks, saves flamegraph-ready output
 
 profile-memory: ## Run memory profiling (500 ticks)
 	python scripts/profile_simulation.py --ticks 500 --seed 42 --memory
+
+profile-api: ## Measure API payload sizes (map, static, state endpoints)
+	python scripts/profile_api_payload.py --ticks 10 --seed 42
 
 # ── Quality ──────────────────────────────────────────────
 
