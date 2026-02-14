@@ -34,6 +34,10 @@ class Faction(IntEnum):
     BANDIT_CLAN = 3
     UNDEAD = 4
     ORC_TRIBE = 5
+    CENTAUR_HERD = 6
+    FROST_KIN = 7
+    LIZARDFOLK = 8
+    DEMON_HORDE = 9
 
 
 # ---------------------------------------------------------------------------
@@ -154,7 +158,8 @@ class FactionRegistry:
         # --- Relations: hero vs all hostile; most factions hostile to each other ---
         all_hostile = [
             Faction.GOBLIN_HORDE, Faction.WOLF_PACK, Faction.BANDIT_CLAN,
-            Faction.UNDEAD, Faction.ORC_TRIBE,
+            Faction.UNDEAD, Faction.ORC_TRIBE, Faction.CENTAUR_HERD,
+            Faction.FROST_KIN, Faction.LIZARDFOLK, Faction.DEMON_HORDE,
         ]
         for fac in all_hostile:
             reg.set_relation(Faction.HERO_GUILD, fac, FactionRelation.HOSTILE)
@@ -190,6 +195,22 @@ class FactionRegistry:
             tile=Material.MOUNTAIN,
             atk_debuff=0.75, def_debuff=0.75, spd_debuff=0.85, alert_radius=6,
         ))
+        reg.set_territory(Faction.CENTAUR_HERD, TerritoryInfo(
+            tile=Material.GRASSLAND,
+            atk_debuff=0.8, def_debuff=0.8, spd_debuff=0.9, alert_radius=8,
+        ))
+        reg.set_territory(Faction.FROST_KIN, TerritoryInfo(
+            tile=Material.SNOW,
+            atk_debuff=0.7, def_debuff=0.7, spd_debuff=0.8, alert_radius=6,
+        ))
+        reg.set_territory(Faction.LIZARDFOLK, TerritoryInfo(
+            tile=Material.JUNGLE,
+            atk_debuff=0.75, def_debuff=0.75, spd_debuff=0.85, alert_radius=5,
+        ))
+        reg.set_territory(Faction.DEMON_HORDE, TerritoryInfo(
+            tile=Material.VOLCANIC,
+            atk_debuff=0.65, def_debuff=0.65, spd_debuff=0.75, alert_radius=7,
+        ))
 
         # --- Kind → faction mapping ---
         reg.register_kind("hero", Faction.HERO_GUILD)
@@ -214,5 +235,21 @@ class FactionRegistry:
         reg.register_kind("orc", Faction.ORC_TRIBE)
         reg.register_kind("orc_warrior", Faction.ORC_TRIBE)
         reg.register_kind("orc_warlord", Faction.ORC_TRIBE)
+        # Centaurs (grassland)
+        reg.register_kind("centaur", Faction.CENTAUR_HERD)
+        reg.register_kind("centaur_lancer", Faction.CENTAUR_HERD)
+        reg.register_kind("centaur_elder", Faction.CENTAUR_HERD)
+        # Frost kin (snow)
+        reg.register_kind("frost_wolf", Faction.FROST_KIN)
+        reg.register_kind("frost_giant", Faction.FROST_KIN)
+        reg.register_kind("frost_shaman", Faction.FROST_KIN)
+        # Lizardfolk (jungle)
+        reg.register_kind("lizard", Faction.LIZARDFOLK)
+        reg.register_kind("lizard_warrior", Faction.LIZARDFOLK)
+        reg.register_kind("lizard_chief", Faction.LIZARDFOLK)
+        # Demons (volcanic)
+        reg.register_kind("imp", Faction.DEMON_HORDE)
+        reg.register_kind("hellhound", Faction.DEMON_HORDE)
+        reg.register_kind("demon_lord", Faction.DEMON_HORDE)
 
         return reg

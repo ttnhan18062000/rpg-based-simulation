@@ -14,9 +14,15 @@ from src.core.regions import Region, find_region_at
 TOWN_TILES = frozenset({Material.TOWN, Material.SANCTUARY})
 # Tiles that are painted over region terrain for specific locations
 OVERLAY_TILES = frozenset({Material.CAMP, Material.RUINS, Material.DUNGEON_ENTRANCE, Material.ROAD})
-TERRAIN_TILES = frozenset({Material.FOREST, Material.DESERT, Material.SWAMP, Material.MOUNTAIN})
+TERRAIN_TILES = frozenset({
+    Material.FOREST, Material.DESERT, Material.SWAMP, Material.MOUNTAIN,
+    Material.GRASSLAND, Material.SNOW, Material.JUNGLE, Material.VOLCANIC,
+})
 # Tiles placed by terrain detail generator within regions (epic-09)
-DETAIL_TILES = frozenset({Material.FLOOR, Material.WALL, Material.WATER, Material.LAVA, Material.BRIDGE})
+DETAIL_TILES = frozenset({
+    Material.FLOOR, Material.WALL, Material.WATER, Material.LAVA, Material.BRIDGE,
+    Material.SHALLOW_WATER, Material.FARMLAND, Material.CAVE,
+})
 
 
 class TestVoronoiTessellation(unittest.TestCase):

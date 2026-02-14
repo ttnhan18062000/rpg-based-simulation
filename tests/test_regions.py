@@ -169,29 +169,36 @@ class TestLocationTypes(unittest.TestCase):
             self.assertGreater(len(LOCATION_NAME_TEMPLATES[lt]), 0)
 
     def test_expected_types_present(self):
-        expected = {"enemy_camp", "resource_grove", "ruins", "dungeon_entrance", "shrine", "boss_arena"}
+        expected = {
+            "enemy_camp", "resource_grove", "ruins", "dungeon_entrance", "shrine", "boss_arena",
+            "outpost", "watchtower", "portal", "fishing_spot", "graveyard", "obelisk",
+        }
         self.assertEqual(set(LOCATION_TYPES), expected)
 
 
 class TestConfigDefaults(unittest.TestCase):
     """Test that config has the new region parameters."""
 
-    def test_map_192(self):
+    def test_map_512(self):
         cfg = SimulationConfig()
-        self.assertEqual(cfg.grid_width, 192)
-        self.assertEqual(cfg.grid_height, 192)
+        self.assertEqual(cfg.grid_width, 512)
+        self.assertEqual(cfg.grid_height, 512)
 
     def test_region_counts(self):
         cfg = SimulationConfig()
-        self.assertEqual(cfg.num_forest_regions, 2)
-        self.assertEqual(cfg.num_desert_regions, 2)
-        self.assertEqual(cfg.num_swamp_regions, 2)
-        self.assertEqual(cfg.num_mountain_regions, 2)
+        self.assertEqual(cfg.num_forest_regions, 4)
+        self.assertEqual(cfg.num_desert_regions, 3)
+        self.assertEqual(cfg.num_swamp_regions, 3)
+        self.assertEqual(cfg.num_mountain_regions, 3)
+        self.assertEqual(cfg.num_grassland_regions, 4)
+        self.assertEqual(cfg.num_snow_regions, 3)
+        self.assertEqual(cfg.num_jungle_regions, 3)
+        self.assertEqual(cfg.num_volcanic_regions, 2)
 
     def test_region_radius_range(self):
         cfg = SimulationConfig()
-        self.assertGreaterEqual(cfg.region_min_radius, 15)
-        self.assertLessEqual(cfg.region_max_radius, 25)
+        self.assertGreaterEqual(cfg.region_min_radius, 30)
+        self.assertLessEqual(cfg.region_max_radius, 60)
 
     def test_difficulty_zones_defined(self):
         cfg = SimulationConfig()

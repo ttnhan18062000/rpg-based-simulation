@@ -39,6 +39,14 @@ TERRAIN_MOVE_COST: dict[Material, float] = {
     Material.DESERT:            1.2,
     Material.SWAMP:             1.5,
     Material.MOUNTAIN:          1.4,
+    Material.GRASSLAND:         0.9,
+    Material.SNOW:              1.4,
+    Material.JUNGLE:            1.6,
+    Material.SHALLOW_WATER:     1.5,
+    Material.FARMLAND:          0.9,
+    Material.CAVE:              1.1,
+    Material.VOLCANIC:          1.3,
+    Material.GRAVEYARD:         1.1,
 }
 
 # Cardinal directions (no diagonals — Manhattan grid)

@@ -11,8 +11,8 @@ class SimulationConfig:
 
     # World
     world_seed: int = 42
-    grid_width: int = 192
-    grid_height: int = 192
+    grid_width: int = 512
+    grid_height: int = 512
 
     # Timing
     max_ticks: int = 50000
@@ -22,9 +22,9 @@ class SimulationConfig:
     num_workers: int = 4
 
     # Entities
-    initial_entity_count: int = 25
+    initial_entity_count: int = 40
     generator_spawn_interval: int = 10
-    generator_max_entities: int = 80
+    generator_max_entities: int = 200
 
     # Spatial hash
     spatial_cell_size: int = 8
@@ -34,9 +34,9 @@ class SimulationConfig:
     flee_hp_threshold: float = 0.3
 
     # Town
-    town_center_x: int = 12
-    town_center_y: int = 12
-    town_radius: int = 4
+    town_center_x: int = 256
+    town_center_y: int = 256
+    town_radius: int = 6
     town_aura_damage: int = 2              # HP lost per tick by hostile entities in town
     town_passive_heal: int = 1             # HP regained per tick by heroes in town (even outside rest)
 
@@ -87,21 +87,25 @@ class SimulationConfig:
     camp_radius: int = 2
     camp_spawn_interval: int = 20
     camp_max_guards: int = 5
-    camp_min_distance_from_town: int = 30
+    camp_min_distance_from_town: int = 60
 
     # Sanctuary (buffer zone around town)
-    sanctuary_radius: int = 7
+    sanctuary_radius: int = 12
 
     # Regions (epic-15)
-    num_forest_regions: int = 2
-    num_desert_regions: int = 2
-    num_swamp_regions: int = 2
-    num_mountain_regions: int = 2
-    region_min_radius: int = 15
-    region_max_radius: int = 25
-    region_min_distance: int = 20
+    num_forest_regions: int = 4
+    num_desert_regions: int = 3
+    num_swamp_regions: int = 3
+    num_mountain_regions: int = 3
+    num_grassland_regions: int = 4
+    num_snow_regions: int = 3
+    num_jungle_regions: int = 3
+    num_volcanic_regions: int = 2
+    region_min_radius: int = 30
+    region_max_radius: int = 60
+    region_min_distance: int = 40
     # Difficulty zone boundaries: (max_manhattan_distance_from_town, tier)
-    difficulty_zones: tuple = ((35, 1), (60, 2), (90, 3), (999, 4))
+    difficulty_zones: tuple = ((80, 1), (150, 2), (220, 3), (999, 4))
     # Sub-locations per region
     min_locations_per_region: int = 3
     max_locations_per_region: int = 6

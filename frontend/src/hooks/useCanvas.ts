@@ -1,7 +1,7 @@
 import { useRef, useEffect, useCallback, useState } from 'react';
 import type { MapData, Entity, GroundItem, Building, ResourceNode } from '@/types/api';
 import {
-  TILE_COLORS, TILE_COLORS_DIM, KIND_COLORS, STATE_COLORS, CELL_SIZE, LOOT_COLOR, RESOURCE_COLORS,
+  TILE_COLORS, TILE_COLORS_DIM, KIND_COLORS, STATE_COLORS, CELL_SIZE, LOOT_COLOR, RESOURCE_COLORS, TILE_NAMES,
 } from '@/constants/colors';
 
 export interface HoverInfo {
@@ -503,7 +503,7 @@ export function useCanvas(
     onEntityClick(null);
   }, [entities, groundItems, buildings, onEntityClick, onGroundItemClick, onBuildingClick, zoom]);
 
-  // Hover handler — respects fog of war when spectating
+  // Hover handler — collects ALL info on the hovered tile (terrain + entities + buildings + loot + resources)
   const handleCanvasHover = useCallback((evt: React.MouseEvent) => {
     const ec = entityRef.current;
     if (!ec) return;
@@ -516,28 +516,26 @@ export function useCanvas(
 
     // Build visible set for spectated entity
     const visibleSet = buildVisibleSet();
+    const tileVisible = !visibleSet || visibleSet.has(`${gx},${gy}`);
 
-    // Check entities — skip if hidden by fog of war
-    const ent = entities.find(e => e.x === gx && e.y === gy);
-    hoveredEntityIdRef.current = ent?.id ?? null;
-    if (ent) {
-      // If spectating, only show hover for the spectated entity or those within vision
-      if (visibleSet && ent.id !== selectedEntityId && !visibleSet.has(`${gx},${gy}`)) {
-        // Entity is in fog — check if it's a ghost in memory
-        if (selectedEnt?.entity_memory) {
-          const mem = selectedEnt.entity_memory.find(m => m.x === gx && m.y === gy && !m.visible);
-          if (mem) {
-            setHoverInfo({
-              screenX: evt.clientX,
-              screenY: evt.clientY,
-              label: `Ghost: #${mem.id} ${mem.kind} Lv${mem.level || '?'} (ATK:${mem.atk || '?'}) — last seen tick ${mem.tick}`,
-            });
-            return;
-          }
-        }
-        setHoverInfo(null);
-        return;
+    // Collect all tooltip lines for this tile
+    const lines: string[] = [];
+
+    // --- Terrain ---
+    if (mapData && gx >= 0 && gx < mapData.width && gy >= 0 && gy < mapData.height) {
+      const tile = mapData.grid[gy]?.[gx];
+      if (tile != null) {
+        const tileName = TILE_NAMES[tile] || `Tile ${tile}`;
+        lines.push(`🗺 ${tileName} (${gx}, ${gy})`);
       }
+    }
+
+    // --- Entities (all on this tile) ---
+    const tileEntities = entities.filter(e => e.x === gx && e.y === gy);
+    hoveredEntityIdRef.current = tileEntities[0]?.id ?? null;
+    for (const ent of tileEntities) {
+      // Fog check: skip hidden entities (unless it's the spectated one)
+      if (visibleSet && ent.id !== selectedEntityId && !tileVisible) continue;
       const parts = [`#${ent.id} ${ent.kind} Lv${ent.level}`];
       if (ent.hero_class && ent.hero_class !== 'none') {
         parts[0] += ` (${ent.hero_class})`;
@@ -547,69 +545,58 @@ export function useCanvas(
         parts.push(`STA:${ent.stamina}/${ent.max_stamina}`);
       }
       parts.push(ent.state);
-      setHoverInfo({
-        screenX: evt.clientX,
-        screenY: evt.clientY,
-        label: parts.join(' | '),
-      });
-      return;
+      lines.push(`⚔ ${parts.join(' | ')}`);
     }
 
-    // Check ghost markers on overlay (remembered entities in fog)
-    if (selectedEnt?.entity_memory && visibleSet) {
-      const mem = selectedEnt.entity_memory.find(
-        m => m.x === gx && m.y === gy && !visibleSet.has(`${m.x},${m.y}`)
+    // --- Ghost markers (remembered entities in fog) ---
+    if (selectedEnt?.entity_memory && visibleSet && !tileVisible) {
+      const memSet = new Set(Object.keys(selectedEnt.terrain_memory || {}));
+      const ghosts = selectedEnt.entity_memory.filter(
+        m => m.x === gx && m.y === gy && !visibleSet.has(`${m.x},${m.y}`) && memSet.has(`${gx},${gy}`)
       );
-      if (mem) {
-        const memSet = new Set(Object.keys(selectedEnt.terrain_memory || {}));
-        if (memSet.has(`${gx},${gy}`)) {
-          setHoverInfo({
-            screenX: evt.clientX,
-            screenY: evt.clientY,
-            label: `Ghost: #${mem.id} ${mem.kind} Lv${mem.level || '?'} (ATK:${mem.atk || '?'} HP:${mem.hp}/${mem.max_hp}) — tick ${mem.tick}`,
-          });
-          return;
+      for (const mem of ghosts) {
+        lines.push(`👻 Ghost: #${mem.id} ${mem.kind} Lv${mem.level || '?'} (ATK:${mem.atk || '?'} HP:${mem.hp}/${mem.max_hp}) — tick ${mem.tick}`);
+      }
+    }
+
+    // --- Buildings ---
+    const tileBuildings = buildings.filter(b => b.x === gx && b.y === gy);
+    for (const bldg of tileBuildings) {
+      lines.push(`🏛 ${bldg.name}`);
+    }
+
+    // --- Ground items ---
+    if (tileVisible) {
+      const tileLoots = groundItems.filter(g => g.x === gx && g.y === gy);
+      for (const gi of tileLoots) {
+        const count = gi.items.length;
+        if (count === 1) {
+          lines.push(`💎 Loot: ${gi.items[0].replace(/_/g, ' ')}`);
+        } else {
+          lines.push(`💎 Loot bag (${count} items)`);
         }
       }
     }
 
-    // Check buildings
-    const bldg = buildings.find(b => b.x === gx && b.y === gy);
-    if (bldg) {
+    // --- Resource nodes ---
+    if (tileVisible) {
+      const tileNodes = resourceNodes.filter(r => r.x === gx && r.y === gy);
+      for (const rn of tileNodes) {
+        const status = rn.is_available ? `${rn.remaining}/${rn.max_harvests}` : 'depleted';
+        lines.push(`🌿 ${rn.name} (${status}) → ${rn.yields_item.replace(/_/g, ' ')}`);
+      }
+    }
+
+    if (lines.length > 0) {
       setHoverInfo({
         screenX: evt.clientX,
         screenY: evt.clientY,
-        label: `${bldg.name}`,
+        label: lines.join('\n'),
       });
-      return;
+    } else {
+      setHoverInfo(null);
     }
-
-    // Check ground items — also respect fog
-    const gi = groundItems.find(g => g.x === gx && g.y === gy);
-    if (gi && (!visibleSet || visibleSet.has(`${gx},${gy}`))) {
-      const count = gi.items.length;
-      setHoverInfo({
-        screenX: evt.clientX,
-        screenY: evt.clientY,
-        label: count === 1 ? `Loot: ${gi.items[0].replace(/_/g, ' ')}` : `Loot bag (${count} items)`,
-      });
-      return;
-    }
-
-    // Check resource nodes
-    const rn = resourceNodes.find(r => r.x === gx && r.y === gy);
-    if (rn && (!visibleSet || visibleSet.has(`${gx},${gy}`))) {
-      const status = rn.is_available ? `${rn.remaining}/${rn.max_harvests}` : 'depleted';
-      setHoverInfo({
-        screenX: evt.clientX,
-        screenY: evt.clientY,
-        label: `${rn.name} (${status}) → ${rn.yields_item.replace(/_/g, ' ')}`,
-      });
-      return;
-    }
-
-    setHoverInfo(null);
-  }, [entities, groundItems, resourceNodes, selectedEntityId, selectedEnt, buildVisibleSet, zoom]);
+  }, [entities, groundItems, resourceNodes, buildings, mapData, selectedEntityId, selectedEnt, buildVisibleSet, zoom]);
 
   const handleCanvasLeave = useCallback(() => {
     hoveredEntityIdRef.current = null;

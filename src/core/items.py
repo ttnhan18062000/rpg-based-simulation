@@ -615,6 +615,30 @@ RACE_TIER_KINDS: dict[str, dict[int, str]] = {
         EnemyTier.WARRIOR: "orc_warrior",
         EnemyTier.ELITE: "orc_warlord",
     },
+    "centaur": {
+        EnemyTier.BASIC: "centaur",
+        EnemyTier.SCOUT: "centaur",
+        EnemyTier.WARRIOR: "centaur_lancer",
+        EnemyTier.ELITE: "centaur_elder",
+    },
+    "frost": {
+        EnemyTier.BASIC: "frost_wolf",
+        EnemyTier.SCOUT: "frost_wolf",
+        EnemyTier.WARRIOR: "frost_giant",
+        EnemyTier.ELITE: "frost_shaman",
+    },
+    "lizard": {
+        EnemyTier.BASIC: "lizard",
+        EnemyTier.SCOUT: "lizard",
+        EnemyTier.WARRIOR: "lizard_warrior",
+        EnemyTier.ELITE: "lizard_chief",
+    },
+    "demon": {
+        EnemyTier.BASIC: "imp",
+        EnemyTier.SCOUT: "imp",
+        EnemyTier.WARRIOR: "hellhound",
+        EnemyTier.ELITE: "demon_lord",
+    },
 }
 
 # Race-specific starting gear
@@ -643,22 +667,54 @@ RACE_STARTING_GEAR: dict[str, dict[int, dict[str, str | None]]] = {
         EnemyTier.WARRIOR: {"weapon": "orc_axe", "armor": "orc_shield", "accessory": None},
         EnemyTier.ELITE:   {"weapon": "orc_axe", "armor": "orc_shield", "accessory": "ring_of_power"},
     },
+    "centaur": {
+        EnemyTier.BASIC:   {"weapon": "iron_sword", "armor": None, "accessory": None},
+        EnemyTier.SCOUT:   {"weapon": "iron_sword", "armor": None, "accessory": None},
+        EnemyTier.WARRIOR: {"weapon": "iron_sword", "armor": "leather_vest", "accessory": "speed_ring"},
+        EnemyTier.ELITE:   {"weapon": "iron_sword", "armor": "chainmail", "accessory": "speed_ring"},
+    },
+    "frost": {
+        EnemyTier.BASIC:   {"weapon": None, "armor": None, "accessory": None},
+        EnemyTier.SCOUT:   {"weapon": None, "armor": None, "accessory": None},
+        EnemyTier.WARRIOR: {"weapon": "orc_axe", "armor": "chainmail", "accessory": None},
+        EnemyTier.ELITE:   {"weapon": "crystal_staff", "armor": "enchanted_robe", "accessory": "ring_of_power"},
+    },
+    "lizard": {
+        EnemyTier.BASIC:   {"weapon": "bandit_dagger", "armor": None, "accessory": None},
+        EnemyTier.SCOUT:   {"weapon": "bandit_dagger", "armor": None, "accessory": None},
+        EnemyTier.WARRIOR: {"weapon": "iron_sword", "armor": "leather_vest", "accessory": None},
+        EnemyTier.ELITE:   {"weapon": "iron_sword", "armor": "chainmail", "accessory": "lucky_charm"},
+    },
+    "demon": {
+        EnemyTier.BASIC:   {"weapon": None, "armor": None, "accessory": None},
+        EnemyTier.SCOUT:   {"weapon": None, "armor": None, "accessory": None},
+        EnemyTier.WARRIOR: {"weapon": None, "armor": None, "accessory": None},
+        EnemyTier.ELITE:   {"weapon": "crystal_staff", "armor": "enchanted_robe", "accessory": "ring_of_power"},
+    },
 }
 
 # Stat adjustments per race (hp_mult, atk_mult, def_mod, spd_mod, crit, evasion, luck)
 RACE_STAT_MODS: dict[str, tuple[float, float, int, int, float, float, int]] = {
-    "wolf":   (0.8,  1.1, -1, 3,  0.08, 0.06, 1),  # fast, fragile, high crit
-    "bandit": (1.0,  1.0,  1, 1,  0.10, 0.04, 3),  # balanced, lucky
-    "undead": (1.3,  0.9,  2, -2, 0.04, 0.00, 0),  # tanky, slow
-    "orc":    (1.4,  1.2,  3, -1, 0.06, 0.02, 1),  # strong, tanky
+    "wolf":    (0.8,  1.1, -1, 3,  0.08, 0.06, 1),  # fast, fragile, high crit
+    "bandit":  (1.0,  1.0,  1, 1,  0.10, 0.04, 3),  # balanced, lucky
+    "undead":  (1.3,  0.9,  2, -2, 0.04, 0.00, 0),  # tanky, slow
+    "orc":     (1.4,  1.2,  3, -1, 0.06, 0.02, 1),  # strong, tanky
+    "centaur": (1.1,  1.1,  0, 4,  0.06, 0.08, 2),  # fast, balanced, evasive
+    "frost":   (1.6,  1.0,  4, -3, 0.03, 0.00, 0),  # very tanky, very slow
+    "lizard":  (0.9,  1.0,  0, 2,  0.12, 0.10, 2),  # agile, high crit/evasion
+    "demon":   (1.2,  1.3, -1, 1,  0.08, 0.04, 1),  # glass cannon, high ATK
 }
 
 # Map terrain Material -> race string
 TERRAIN_RACE: dict[int, str] = {
-    6: "wolf",    # Material.FOREST
-    7: "bandit",  # Material.DESERT
-    8: "undead",  # Material.SWAMP
-    9: "orc",     # Material.MOUNTAIN
+    6: "wolf",      # Material.FOREST
+    7: "bandit",    # Material.DESERT
+    8: "undead",    # Material.SWAMP
+    9: "orc",       # Material.MOUNTAIN
+    15: "centaur",  # Material.GRASSLAND
+    16: "frost",    # Material.SNOW
+    17: "lizard",   # Material.JUNGLE
+    21: "demon",    # Material.VOLCANIC
 }
 
 # Map race -> Faction
@@ -668,6 +724,10 @@ RACE_FACTION: dict[str, Faction] = {
     "bandit": Faction.BANDIT_CLAN,
     "undead": Faction.UNDEAD,
     "orc": Faction.ORC_TRIBE,
+    "centaur": Faction.CENTAUR_HERD,
+    "frost": Faction.FROST_KIN,
+    "lizard": Faction.LIZARDFOLK,
+    "demon": Faction.DEMON_HORDE,
 }
 
 

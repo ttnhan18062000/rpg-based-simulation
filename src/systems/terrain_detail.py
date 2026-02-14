@@ -29,55 +29,82 @@ if TYPE_CHECKING:
 
 _BIOME_FEATURES: dict[int, list[dict]] = {
     Material.FOREST: [
-        # Clearings (open floor areas amid dense forest)
-        {"name": "clearing", "mat": Material.FLOOR, "chance": 0.06,
-         "cluster_min": 2, "cluster_max": 5},
-        # Dense groves (impassable thick trees)
-        {"name": "dense_grove", "mat": Material.WALL, "chance": 0.03,
-         "cluster_min": 1, "cluster_max": 3},
-        # Forest streams (narrow water lines)
+        {"name": "clearing", "mat": Material.FLOOR, "chance": 0.04,
+         "cluster_min": 2, "cluster_max": 4},
+        {"name": "dense_grove", "mat": Material.WALL, "chance": 0.01,
+         "cluster_min": 1, "cluster_max": 2},
         {"name": "stream", "type": "river", "width": 1, "count_min": 1, "count_max": 2},
-        # Forest paths connecting locations
         {"name": "path", "type": "road_network"},
     ],
     Material.DESERT: [
-        # Rocky ridges (impassable stone outcrops)
-        {"name": "ridge", "mat": Material.WALL, "chance": 0.04,
-         "cluster_min": 2, "cluster_max": 4},
-        # Oases (rare water patches)
-        {"name": "oasis", "mat": Material.WATER, "chance": 0.008,
-         "cluster_min": 2, "cluster_max": 4},
-        # Hard-packed ground (walkable floor patches)
-        {"name": "hard_ground", "mat": Material.FLOOR, "chance": 0.05,
+        {"name": "ridge", "mat": Material.WALL, "chance": 0.015,
+         "cluster_min": 1, "cluster_max": 2},
+        {"name": "oasis", "mat": Material.WATER, "chance": 0.005,
+         "cluster_min": 2, "cluster_max": 3},
+        {"name": "hard_ground", "mat": Material.FLOOR, "chance": 0.03,
          "cluster_min": 1, "cluster_max": 3},
-        # Caravan routes
         {"name": "caravan_route", "type": "road_network"},
     ],
     Material.SWAMP: [
-        # Stagnant pools (impassable water)
-        {"name": "pool", "mat": Material.WATER, "chance": 0.12,
-         "cluster_min": 2, "cluster_max": 5},
-        # Dead trees / thickets (impassable)
-        {"name": "thicket", "mat": Material.WALL, "chance": 0.03,
-         "cluster_min": 1, "cluster_max": 2},
-        # Mudflats (walkable clearings)
-        {"name": "mudflat", "mat": Material.FLOOR, "chance": 0.04,
+        {"name": "pool", "mat": Material.WATER, "chance": 0.06,
+         "cluster_min": 2, "cluster_max": 3},
+        {"name": "shallow", "mat": Material.SHALLOW_WATER, "chance": 0.04,
          "cluster_min": 1, "cluster_max": 3},
-        # Bog paths with bridges over water
+        {"name": "thicket", "mat": Material.WALL, "chance": 0.01,
+         "cluster_min": 1, "cluster_max": 2},
+        {"name": "mudflat", "mat": Material.FLOOR, "chance": 0.03,
+         "cluster_min": 1, "cluster_max": 2},
         {"name": "bog_path", "type": "road_network"},
     ],
     Material.MOUNTAIN: [
-        # Cliff faces (impassable rock walls)
-        {"name": "cliff", "mat": Material.WALL, "chance": 0.08,
-         "cluster_min": 2, "cluster_max": 5},
-        # Valleys (open floor areas between peaks)
-        {"name": "valley", "mat": Material.FLOOR, "chance": 0.06,
-         "cluster_min": 2, "cluster_max": 4},
-        # Lava vents (high difficulty only, rare)
-        {"name": "lava_vent", "mat": Material.LAVA, "chance": 0.015,
+        {"name": "cliff", "mat": Material.WALL, "chance": 0.02,
+         "cluster_min": 1, "cluster_max": 2},
+        {"name": "valley", "mat": Material.FLOOR, "chance": 0.04,
+         "cluster_min": 2, "cluster_max": 3},
+        {"name": "lava_vent", "mat": Material.LAVA, "chance": 0.008,
          "cluster_min": 1, "cluster_max": 2, "min_difficulty": 3},
-        # Mountain passes
+        {"name": "cave", "mat": Material.CAVE, "chance": 0.005,
+         "cluster_min": 1, "cluster_max": 2},
         {"name": "pass", "type": "road_network"},
+    ],
+    Material.GRASSLAND: [
+        {"name": "wildflower", "mat": Material.FLOOR, "chance": 0.03,
+         "cluster_min": 2, "cluster_max": 4},
+        {"name": "pond", "mat": Material.SHALLOW_WATER, "chance": 0.008,
+         "cluster_min": 2, "cluster_max": 3},
+        {"name": "farmland", "mat": Material.FARMLAND, "chance": 0.02,
+         "cluster_min": 2, "cluster_max": 4},
+        {"name": "trail", "type": "road_network"},
+    ],
+    Material.SNOW: [
+        {"name": "ice_sheet", "mat": Material.WATER, "chance": 0.03,
+         "cluster_min": 2, "cluster_max": 3},
+        {"name": "frozen_ridge", "mat": Material.WALL, "chance": 0.015,
+         "cluster_min": 1, "cluster_max": 2},
+        {"name": "tundra_clearing", "mat": Material.FLOOR, "chance": 0.03,
+         "cluster_min": 2, "cluster_max": 3},
+        {"name": "frost_path", "type": "road_network"},
+    ],
+    Material.JUNGLE: [
+        {"name": "canopy_gap", "mat": Material.FLOOR, "chance": 0.03,
+         "cluster_min": 2, "cluster_max": 3},
+        {"name": "dense_undergrowth", "mat": Material.WALL, "chance": 0.015,
+         "cluster_min": 1, "cluster_max": 2},
+        {"name": "jungle_stream", "type": "river", "width": 1, "count_min": 1, "count_max": 2},
+        {"name": "shallow_marsh", "mat": Material.SHALLOW_WATER, "chance": 0.02,
+         "cluster_min": 1, "cluster_max": 3},
+        {"name": "jungle_trail", "type": "road_network"},
+    ],
+    Material.VOLCANIC: [
+        {"name": "lava_flow", "mat": Material.LAVA, "chance": 0.02,
+         "cluster_min": 1, "cluster_max": 2},
+        {"name": "obsidian_wall", "mat": Material.WALL, "chance": 0.015,
+         "cluster_min": 1, "cluster_max": 2},
+        {"name": "ash_field", "mat": Material.FLOOR, "chance": 0.04,
+         "cluster_min": 2, "cluster_max": 3},
+        {"name": "volcanic_cave", "mat": Material.CAVE, "chance": 0.005,
+         "cluster_min": 1, "cluster_max": 2},
+        {"name": "magma_path", "type": "road_network"},
     ],
 }
 

@@ -320,11 +320,14 @@ mods = aggregate_trait_stats(entity.traits)       # → TraitStatModifiers
 | Tile | Cost | Effect |
 |------|------|--------|
 | ROAD / BRIDGE | 0.7 | Preferred routes |
+| GRASSLAND / FARMLAND | 0.9 | Open terrain, fast |
 | FLOOR / TOWN / SANCTUARY | 1.0 | Baseline |
-| DESERT | 1.2 | Slightly slower |
-| FOREST | 1.3 | Slower |
-| MOUNTAIN | 1.4 | Rocky terrain |
-| SWAMP | 1.5 | Difficult terrain |
+| CAVE / GRAVEYARD | 1.1 | Slightly slower |
+| DESERT | 1.2 | Arid terrain |
+| FOREST / VOLCANIC | 1.3 | Dense/rough terrain |
+| MOUNTAIN / SNOW | 1.4 | Rocky/icy terrain |
+| SWAMP / SHALLOW_WATER | 1.5 | Difficult terrain |
+| JUNGLE | 1.6 | Very dense terrain |
 
 ### Integration
 

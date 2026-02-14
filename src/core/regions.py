@@ -28,6 +28,12 @@ LOCATION_TYPES = (
     "dungeon_entrance",
     "shrine",
     "boss_arena",
+    "outpost",
+    "watchtower",
+    "portal",
+    "fishing_spot",
+    "graveyard",
+    "obelisk",
 )
 
 
@@ -116,6 +122,38 @@ REGION_NAMES: dict[int, list[str]] = {
         "Granite Pass",
         "Windshear Cliffs",
     ],
+    Material.GRASSLAND: [
+        "Sunlit Meadows",
+        "Windswept Plains",
+        "Golden Steppe",
+        "Rider's Expanse",
+        "Verdant Prairie",
+        "Wildflower Fields",
+    ],
+    Material.SNOW: [
+        "Frostfang Tundra",
+        "Blizzard Wastes",
+        "Icebound Reaches",
+        "Frozen Hollow",
+        "Snowdrift Expanse",
+        "Pale Summit",
+    ],
+    Material.JUNGLE: [
+        "Serpent's Canopy",
+        "Tanglewood Depths",
+        "Emerald Wilds",
+        "Venomthorn Jungle",
+        "Muggy Thicket",
+        "Primal Basin",
+    ],
+    Material.VOLCANIC: [
+        "Cinderfall Caldera",
+        "Magma Rift",
+        "Obsidian Wastes",
+        "Scorchstone Basin",
+        "Hellfire Crater",
+        "Sulfur Peaks",
+    ],
 }
 
 # Name index counters (reset per world build)
@@ -181,6 +219,42 @@ LOCATION_NAME_TEMPLATES: dict[str, list[str]] = {
         "Proving Ground",
         "Warlord's Domain",
     ],
+    "outpost": [
+        "Frontier Outpost",
+        "Border Station",
+        "Ranger Outpost",
+        "Scout Camp",
+    ],
+    "watchtower": [
+        "Watchtower",
+        "Lookout Tower",
+        "Signal Tower",
+        "Sentinel Spire",
+    ],
+    "portal": [
+        "Ancient Portal",
+        "Rift Gate",
+        "Waystone",
+        "Teleport Circle",
+    ],
+    "fishing_spot": [
+        "Fishing Spot",
+        "Angler's Cove",
+        "Still Pond",
+        "River Bend",
+    ],
+    "graveyard": [
+        "Forgotten Graveyard",
+        "Haunted Cemetery",
+        "Bone Field",
+        "Tomb of the Fallen",
+    ],
+    "obelisk": [
+        "Ancient Obelisk",
+        "Runic Monolith",
+        "Eldritch Pillar",
+        "Mystic Spire",
+    ],
 }
 
 # Race labels for location names
@@ -189,6 +263,10 @@ TERRAIN_RACE_LABEL: dict[int, str] = {
     Material.DESERT: "Bandit",
     Material.SWAMP: "Undead",
     Material.MOUNTAIN: "Orc",
+    Material.GRASSLAND: "Centaur",
+    Material.SNOW: "Frost Giant",
+    Material.JUNGLE: "Lizardfolk",
+    Material.VOLCANIC: "Demon",
 }
 
 

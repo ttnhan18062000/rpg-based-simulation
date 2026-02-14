@@ -208,6 +208,10 @@ class EngineManager:
             (Material.DESERT, cfg.num_desert_regions),
             (Material.SWAMP, cfg.num_swamp_regions),
             (Material.MOUNTAIN, cfg.num_mountain_regions),
+            (Material.GRASSLAND, cfg.num_grassland_regions),
+            (Material.SNOW, cfg.num_snow_regions),
+            (Material.JUNGLE, cfg.num_jungle_regions),
+            (Material.VOLCANIC, cfg.num_volcanic_regions),
         ]
         camp_positions: list[Vector2] = []
         zone_bounds = list(cfg.difficulty_zones)
@@ -281,11 +285,20 @@ class EngineManager:
             if difficulty >= 3:
                 loc_types.append("dungeon_entrance")
                 loc_types.append("boss_arena")
+                loc_types.append("portal")
             else:
                 loc_types.append("shrine")
+                loc_types.append("outpost")
             loc_types.append("ruins")
+            # Biome-specific structures
+            if mat in (Material.SWAMP, Material.SNOW, Material.GRAVEYARD):
+                loc_types.append("graveyard")
+            if mat in (Material.GRASSLAND, Material.JUNGLE, Material.FOREST):
+                loc_types.append("watchtower")
+            if mat in (Material.DESERT, Material.VOLCANIC, Material.MOUNTAIN):
+                loc_types.append("obelisk")
             while len(loc_types) < num_locs:
-                extra = ["enemy_camp", "resource_grove", "ruins"]
+                extra = ["enemy_camp", "resource_grove", "ruins", "fishing_spot"]
                 pick = self._rng.next_int(Domain.MAP_GEN, seed_key + len(loc_types), 600 + idx,
                                           0, len(extra) - 1)
                 loc_types.append(extra[pick])
@@ -347,6 +360,32 @@ class EngineManager:
                         pass  # Shrine is a gameplay marker, no special tile yet
                     elif loc_type == "boss_arena":
                         pass  # Boss arena uses region terrain
+                    elif loc_type == "graveyard":
+                        for gdy in range(-2, 3):
+                            for gdx in range(-2, 3):
+                                gp = Vector2(lpos.x + gdx, lpos.y + gdy)
+                                if grid.in_bounds(gp) and grid.get(gp) == mat:
+                                    grid.set(gp, Material.GRAVEYARD)
+                    elif loc_type == "outpost":
+                        world.buildings.append(Building(
+                            building_id=loc_id, name=loc_name,
+                            pos=lpos, building_type="outpost"))
+                    elif loc_type == "watchtower":
+                        world.buildings.append(Building(
+                            building_id=loc_id, name=loc_name,
+                            pos=lpos, building_type="watchtower"))
+                    elif loc_type == "portal":
+                        world.buildings.append(Building(
+                            building_id=loc_id, name=loc_name,
+                            pos=lpos, building_type="portal"))
+                    elif loc_type == "fishing_spot":
+                        world.buildings.append(Building(
+                            building_id=loc_id, name=loc_name,
+                            pos=lpos, building_type="fishing_spot"))
+                    elif loc_type == "obelisk":
+                        world.buildings.append(Building(
+                            building_id=loc_id, name=loc_name,
+                            pos=lpos, building_type="obelisk"))
 
                     # Spawn treasure chest at ruins/dungeon locations
                     if loc_type in ("ruins", "dungeon_entrance"):
@@ -370,10 +409,15 @@ class EngineManager:
         logger.info("Generated terrain detail for %d regions", len(world.regions))
 
         # --- Generate roads from town to nearest regions ---
+        ROAD_PAINTABLE = frozenset({
+            Material.FLOOR, Material.FOREST, Material.DESERT, Material.SWAMP,
+            Material.MOUNTAIN, Material.GRASSLAND, Material.SNOW, Material.JUNGLE,
+            Material.VOLCANIC, Material.FARMLAND, Material.GRAVEYARD,
+        })
         if cfg.road_from_town:
             road_targets: list[Vector2] = []
             sorted_regions = sorted(region_centers, key=lambda r: r.manhattan(town_center))
-            road_targets.extend(sorted_regions[:4])
+            road_targets.extend(sorted_regions[:8])
             for rt in road_targets:
                 cx, cy = town_center.x, town_center.y
                 tx, ty = rt.x, rt.y
@@ -382,15 +426,23 @@ class EngineManager:
                 while x != tx:
                     x += step_x
                     rp = Vector2(x, cy)
-                    if grid.in_bounds(rp) and grid.get(rp) == Material.FLOOR:
-                        grid.set(rp, Material.ROAD)
+                    if grid.in_bounds(rp):
+                        tile = grid.get(rp)
+                        if tile in ROAD_PAINTABLE:
+                            grid.set(rp, Material.ROAD)
+                        elif tile == Material.WATER:
+                            grid.set(rp, Material.BRIDGE)
                 step_y = 1 if ty > cy else -1
                 y = cy
                 while y != ty:
                     y += step_y
                     rp = Vector2(tx, y)
-                    if grid.in_bounds(rp) and grid.get(rp) == Material.FLOOR:
-                        grid.set(rp, Material.ROAD)
+                    if grid.in_bounds(rp):
+                        tile = grid.get(rp)
+                        if tile in ROAD_PAINTABLE:
+                            grid.set(rp, Material.ROAD)
+                        elif tile == Material.WATER:
+                            grid.set(rp, Material.BRIDGE)
             logger.info("Generated roads to %d regions", len(road_targets))
 
         # --- Place town buildings ---

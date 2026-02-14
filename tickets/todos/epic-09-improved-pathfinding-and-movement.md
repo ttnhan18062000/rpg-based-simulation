@@ -61,7 +61,7 @@ Inspired by: Warcraft III unit pathing, Rimworld pawn movement, StarCraft pathfi
 - Road +30% already exists in `MoveAction.apply()`; swamp/weather penalties pending
 
 ### F8: Frontend Visualization ⏸️ DEFERRED
-- Path overlay on canvas
+- Path overlay on canvas (dotted line showing A* route)
 
 ### F9: Intra-Region Terrain Detail ✅ DONE (new, not in original spec)
 - `TerrainDetailGenerator` class in `src/systems/terrain_detail.py`
@@ -75,6 +75,17 @@ Inspired by: Warcraft III unit pathing, Rimworld pawn movement, StarCraft pathfi
 - Road networks connecting locations within each region (MST-like)
 - Difficulty-gated features (lava only in high-difficulty mountains)
 - **Files:** `src/systems/terrain_detail.py` (new), `src/api/engine_manager.py`
+
+### F10: Tile Hover Tooltip ✅ DONE (new, not in original spec)
+- Hover any tile to see **all** information on that tile in a multi-line tooltip
+- **Terrain type** shown with coordinates (e.g. "🗺 Forest (42, 67)")
+- **All entities** on the tile (kind, level, HP, stamina, state) — not just the first
+- **Ghost markers** for remembered entities in fog
+- **Buildings** on the tile
+- **Ground loot** piles on the tile
+- **Resource nodes** on the tile (name, remaining harvests, yields)
+- Added `TILE_NAMES` map in `frontend/src/constants/colors.ts`
+- **Files:** `frontend/src/hooks/useCanvas.ts`, `frontend/src/components/GameCanvas.tsx`, `frontend/src/constants/colors.ts`
 
 ---
 

@@ -201,7 +201,6 @@ Collapsible panel under minimap showing:
 ### Resource Nodes
 - **Available:** 50% opacity fill + 1px border in resource-type color
 - **Depleted:** Grey (`#4a5568`) at 30% opacity
-- **Hover:** Node name, remaining/max harvests, yielded item
 
 ### Selection Ring
 - White dashed circle (`CELL_SIZE * 0.55` radius)
@@ -209,6 +208,30 @@ Collapsible panel under minimap showing:
 ### HP Bars
 - 2px tall bar above each entity
 - Green (>50%) → Yellow (>25%) → Red (<25%)
+
+---
+
+## Tile Hover Tooltip (epic-09 F10)
+
+Hovering any tile shows a multi-line tooltip with **all** information on that tile. No early-return — every layer is collected and displayed.
+
+### Tooltip Lines
+
+| Icon | Category | Content |
+|------|----------|--------|
+| 🗺 | **Terrain** | Tile type name + grid coordinates, always shown |
+| ⚔ | **Entities** | All entities on tile: `#id kind Lv# (class) \| HP \| STA \| state` |
+| 👻 | **Ghosts** | Remembered entities in fog: id, kind, level, ATK, HP, last-seen tick |
+| 🏛 | **Buildings** | Building name |
+| 💎 | **Loot** | Item name or bag count |
+| 🌿 | **Resources** | Node name, remaining/max harvests, yields item |
+
+### Implementation
+
+- `TILE_NAMES` map in `src/constants/colors.ts` — maps `Material` enum values (0–22) to display names
+- `handleCanvasHover` in `useCanvas.ts` collects all lines, joins with `\n`
+- Tooltip rendered with `whitespace-pre-line max-w-xs` in `GameCanvas.tsx`
+- Fog-of-war respected: entities/loot/resources hidden outside vision when spectating
 
 ---
 
@@ -235,6 +258,14 @@ All colors in `src/constants/colors.ts` and Tailwind theme in `src/index.css`.
 | Ruins | `#4a4035` |
 | Dungeon | `#6a3040` |
 | Lava | `#8a3000` |
+| Grassland | `#4a6030` |
+| Snow | `#c8d8e8` |
+| Jungle | `#0a4a0a` |
+| Shallow Water | `#2a5070` |
+| Farmland | `#6a7a40` |
+| Cave | `#3a3040` |
+| Volcanic | `#5a2a1a` |
+| Graveyard | `#4a4050` |
 
 ### Entity Colors (by kind)
 
@@ -257,6 +288,18 @@ All colors in `src/constants/colors.ts` and Tailwind theme in `src/index.css`.
 | Orc | `#60a060` |
 | Orc Warrior | `#408040` |
 | Orc Warlord | `#80c040` |
+| Centaur | `#b0a060` |
+| Centaur Lancer | `#c0b070` |
+| Centaur Elder | `#d0c080` |
+| Frost Wolf | `#90b0d0` |
+| Frost Giant | `#7090b0` |
+| Frost Shaman | `#a0c0e0` |
+| Imp | `#e06040` |
+| Hellhound | `#c04020` |
+| Demon Lord | `#ff5030` |
+| Lizard | `#40a080` |
+| Lizard Warrior | `#308060` |
+| Lizard Chief | `#50c0a0` |
 
 ### AI State Colors
 
@@ -313,7 +356,7 @@ Canvas rendering:
 - Redraws entities/items/resources/buildings every poll cycle
 - Redraws fog overlay + ghosts on selection change
 - Spectate vision filtering: only entities within selected entity's vision rendered
-- Hover detection: resolves grid cell, checks entities → items → resources
+- Hover detection: resolves grid cell, collects ALL info (terrain + entities + buildings + loot + resources) into multi-line tooltip
 - Zoom-corrected coordinates for click and hover
 
 ---

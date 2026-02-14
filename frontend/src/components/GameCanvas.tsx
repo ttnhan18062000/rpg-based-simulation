@@ -550,7 +550,7 @@ export function GameCanvas({ mapData, entities, groundItems, buildings, resource
       {hoverInfo && (
         <div
           className="fixed z-50 pointer-events-none px-2 py-1 rounded text-[11px] font-semibold
-                     bg-bg-tertiary border border-border text-text-primary shadow-lg whitespace-nowrap"
+                     bg-bg-tertiary border border-border text-text-primary shadow-lg whitespace-pre-line max-w-xs"
           style={{ left: hoverInfo.screenX + 12, top: hoverInfo.screenY - 8 }}
         >
           {hoverInfo.label}

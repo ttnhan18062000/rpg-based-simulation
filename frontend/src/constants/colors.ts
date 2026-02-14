@@ -14,6 +14,14 @@ export const TILE_COLORS: Record<number, string> = {
   12: '#4a4035', // RUINS
   13: '#6a3040', // DUNGEON_ENTRANCE
   14: '#8a3000', // LAVA
+  15: '#4a6030', // GRASSLAND
+  16: '#c8d8e8', // SNOW
+  17: '#0a4a0a', // JUNGLE
+  18: '#2a5070', // SHALLOW_WATER
+  19: '#6a7a40', // FARMLAND
+  20: '#3a3040', // CAVE
+  21: '#5a2a1a', // VOLCANIC
+  22: '#4a4050', // GRAVEYARD
 };
 
 export const TILE_COLORS_DIM: Record<number, string> = {
@@ -32,6 +40,14 @@ export const TILE_COLORS_DIM: Record<number, string> = {
   12: '#352e25',
   13: '#4a2030',
   14: '#602000',
+  15: '#354520',
+  16: '#8a98a8',
+  17: '#073507',
+  18: '#1e3a50',
+  19: '#4a5530',
+  20: '#28222e',
+  21: '#401e12',
+  22: '#352e38',
 };
 
 export const KIND_COLORS: Record<string, string> = {
@@ -52,6 +68,18 @@ export const KIND_COLORS: Record<string, string> = {
   orc: '#60a060',
   orc_warrior: '#408040',
   orc_warlord: '#80c040',
+  centaur: '#b0a060',
+  centaur_lancer: '#c0b070',
+  centaur_elder: '#d0c080',
+  frost_wolf: '#90b0d0',
+  frost_giant: '#7090b0',
+  frost_shaman: '#a0c0e0',
+  imp: '#e06040',
+  hellhound: '#c04020',
+  demon_lord: '#ff5030',
+  lizard: '#40a080',
+  lizard_warrior: '#308060',
+  lizard_chief: '#50c0a0',
 };
 
 export const STATE_COLORS: Record<string, string> = {
@@ -103,6 +131,41 @@ export const RESOURCE_COLORS: Record<string, string> = {
   ore_vein: '#9ca3af',
   crystal_node: '#93c5fd',
   granite_quarry: '#78716c',
+  wheat_field: '#d4b060',
+  ice_crystal: '#a0d0f0',
+  mammoth_bone: '#c8b8a0',
+  frozen_herb: '#80b8a0',
+  exotic_plant: '#40c080',
+  venom_gland: '#a060c0',
+  obsidian_vein: '#404050',
+  sulfur_pit: '#c0c040',
+  fire_crystal: '#f09040',
+};
+
+export const TILE_NAMES: Record<number, string> = {
+  0: 'Floor',
+  1: 'Wall',
+  2: 'Water',
+  3: 'Town',
+  4: 'Camp',
+  5: 'Sanctuary',
+  6: 'Forest',
+  7: 'Desert',
+  8: 'Swamp',
+  9: 'Mountain',
+  10: 'Road',
+  11: 'Bridge',
+  12: 'Ruins',
+  13: 'Dungeon Entrance',
+  14: 'Lava',
+  15: 'Grassland',
+  16: 'Snow',
+  17: 'Jungle',
+  18: 'Shallow Water',
+  19: 'Farmland',
+  20: 'Cave',
+  21: 'Volcanic',
+  22: 'Graveyard',
 };
 
 export const LEGEND_ITEMS = [
@@ -128,4 +191,14 @@ export const LEGEND_ITEMS = [
   { label: 'Road', color: '#5a5040' },
   { label: 'Ruins', color: '#4a4035' },
   { label: 'Dungeon', color: '#6a3040' },
+  { label: 'Grassland', color: '#4a6030' },
+  { label: 'Snow', color: '#c8d8e8' },
+  { label: 'Jungle', color: '#0a4a0a' },
+  { label: 'Volcanic', color: '#5a2a1a' },
+  { label: 'Cave', color: '#3a3040' },
+  { label: 'Graveyard', color: '#4a4050' },
+  { label: 'Centaur', color: '#b0a060' },
+  { label: 'Frost Kin', color: '#90b0d0' },
+  { label: 'Lizardfolk', color: '#40a080' },
+  { label: 'Demon', color: '#e06040' },
 ];

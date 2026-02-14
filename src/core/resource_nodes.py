@@ -94,6 +94,26 @@ TERRAIN_RESOURCES: dict[int, list[tuple[str, str, str, int, int, int]]] = {
         ("crystal_node", "Crystal Node",     "enchanted_dust", 2, 40, 4),
         ("granite_quarry", "Granite Quarry", "stone_block",    3, 35, 3),
     ],
+    Material.GRASSLAND: [
+        ("wheat_field",   "Wheat Field",      "wheat",          4, 20, 2),
+        ("herb_patch",    "Wild Herbs",        "herb",           3, 25, 2),
+        ("berry_bush",    "Berry Bush",        "wild_berries",   2, 20, 1),
+    ],
+    Material.SNOW: [
+        ("ice_crystal",   "Ice Crystal",       "frost_shard",    2, 40, 3),
+        ("frozen_herb",   "Frost Herb",        "herb",           2, 30, 3),
+        ("mammoth_bone",  "Mammoth Bone",      "bone",           3, 35, 3),
+    ],
+    Material.JUNGLE: [
+        ("exotic_plant",  "Exotic Plant",      "herb",           3, 25, 2),
+        ("venom_gland",   "Venom Sac",         "venom",          2, 30, 2),
+        ("timber",        "Jungle Hardwood",   "wood",           4, 30, 3),
+    ],
+    Material.VOLCANIC: [
+        ("obsidian_vein", "Obsidian Vein",     "obsidian",       3, 35, 3),
+        ("sulfur_pit",    "Sulfur Pit",        "sulfur",         2, 30, 2),
+        ("fire_crystal",  "Fire Crystal",      "enchanted_dust", 2, 40, 4),
+    ],
     Material.FLOOR: [
         ("berry_bush",   "Wild Berry Bush",  "wild_berries",   2, 25, 1),
     ],

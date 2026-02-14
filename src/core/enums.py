@@ -86,6 +86,14 @@ class Material(IntEnum):
     RUINS = 12
     DUNGEON_ENTRANCE = 13
     LAVA = 14
+    GRASSLAND = 15
+    SNOW = 16
+    JUNGLE = 17
+    SHALLOW_WATER = 18
+    FARMLAND = 19
+    CAVE = 20
+    VOLCANIC = 21
+    GRAVEYARD = 22
 
 
 @unique
