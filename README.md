@@ -139,9 +139,9 @@ The frontend is a **React 19 + TypeScript** SPA built with **Vite** and **Tailwi
 - **Triple-layer canvas** — Layer 1 (grid, drawn once) + Layer 2 (entities + ground loot, redrawn every 80ms) + Layer 3 (fog-of-war overlay)
 - **Hero** rendered as a **diamond** with golden glow; goblins as circles; **loot bags** as green diamonds
 - **Click-to-inspect** — click any entity on the canvas or sidebar to open the Inspect Panel showing full stats, equipment (with item hover tooltips), goals, and memory
-- **Hover tooltips** — hovering over entities or loot on the canvas shows a floating name tooltip
+- **Tile tooltips** — hovering any tile shows all info: terrain type, entities (with stats), buildings, loot, resources, ghost markers — fog-gated when spectating
 - **Spectate vision** — selecting an entity shows only what it can see; entities outside its vision are hidden, with ghost markers for remembered-but-not-visible entities
-- **Fog of war** — selecting an entity shows its vision range, explored tiles, and filtered ghost markers
+- **Three-level fog of war** — visible (clear), explored (50% dimmed), unseen (completely dark) — on both main canvas and minimap
 - **AI state ring** — each entity has a colored ring indicating its state (green=wander, yellow=hunt, red=combat, purple=flee, coral=alert)
 - **Faction markers** — entities display faction symbols (e.g., HERO_GUILD, GOBLIN_HORDE)
 - **Sidebar** — context-dependent tabs: Info+Events (default), Inspect (spectating entity with entity events sub-section), BuildingPanel (clicked building), LootPanel (clicked loot)
@@ -177,7 +177,7 @@ See **[docs/buildings_economy.md](docs/buildings_economy.md)** for full details.
 
 ## Faction System
 
-Every entity belongs to a **Faction** (`HERO_GUILD`, `GOBLIN_HORDE`). Faction relationships (`HOSTILE`, `NEUTRAL`, `ALLIED`) are stored in a data-driven `FactionRegistry`.
+Every entity belongs to one of **9+ Factions** (HERO_GUILD, GOBLIN_HORDE, WOLF_PACK, BANDIT_CLAN, UNDEAD, ORC_TRIBE, CENTAUR_HERD, FROST_KIN, LIZARDFOLK, DEMON_HORDE). Faction relationships (`HOSTILE`, `NEUTRAL`, `ALLIED`) are stored in a data-driven `FactionRegistry`.
 
 - **Territory intrusion** — entities can enter any tile, but stepping on hostile territory applies stat debuffs (ATK/DEF/SPD) and alerts nearby defenders
 - **Town aura** — hostile entities in town take gradual HP damage each tick, preventing spawn camping; enemies retreat when HP gets low
@@ -201,6 +201,10 @@ See **[docs/faction_system.md](docs/faction_system.md)** for full details.
 | `bandit` / `bandit_archer` / `bandit_chief` | BANDIT_CLAN | Race-scaled | Race-scaled | Agile (+1) | Desert regions |
 | `skeleton` / `zombie` / `lich` | UNDEAD | Tanky (1.3×) | Low (0.8×) | Slow (-2) | Swamp regions |
 | `orc` / `orc_warrior` / `orc_warlord` | ORC_TRIBE | Beefy (1.2×) | Strong (1.2×) | Slow (-1) | Mountain regions |
+| `centaur` / `centaur_warrior` / `centaur_chief` | CENTAUR_HERD | Race-scaled | Race-scaled | Fast (+2) | Grassland regions |
+| `frost_wolf` / `frost_giant` / `frost_shaman` | FROST_KIN | Race-scaled | Race-scaled | Race-scaled | Snow regions |
+| `lizard` / `lizard_warrior` / `lizard_chief` | LIZARDFOLK | Race-scaled | Race-scaled | Race-scaled | Jungle regions |
+| `imp` / `hellhound` / `demon_lord` | DEMON_HORDE | Race-scaled | Race-scaled | Race-scaled | Volcanic regions |
 
 ## REST API
 
@@ -258,6 +262,7 @@ See **[docs/design_patterns.md](docs/design_patterns.md)** §7 for full details.
 
 ## Documentation
 
+- **[docs/pitch.md](docs/pitch.md)** — Project pitch, vision, and roadmap
 - **[docs/architecture.md](docs/architecture.md)** — Technical architecture (concurrency model, tick cycle, API layer)
 - **[docs/frontend.md](docs/frontend.md)** — Frontend tech stack, component tree, hooks, canvas rendering
 - **[docs/api_reference.md](docs/api_reference.md)** — REST API endpoints and schemas (including metadata)

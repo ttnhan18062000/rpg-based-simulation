@@ -243,7 +243,7 @@ src/
 ├── config.py                    # SimulationConfig dataclass
 ├── core/                        # Data models (pydantic shared schemas)
 │   ├── enums.py                 # ActionType, AIState, Material, Domain, etc.
-│   ├── grid.py                  # 2D tile grid with walkability
+│   ├── grid.py                  # 2D tile grid with walkability + LoS (Bresenham)
 │   ├── models.py                # Entity dataclass
 │   ├── world_state.py           # Mutable world state
 │   ├── snapshot.py              # Immutable snapshot for workers
@@ -251,23 +251,29 @@ src/
 │   ├── classes.py               # ClassDef, SkillDef, BreakthroughDef (pydantic)
 │   ├── traits.py                # TraitDef (pydantic), UtilityBonus, TraitRegistry
 │   ├── buildings.py             # Building, Recipe, shop config
-│   ├── faction.py               # Faction, FactionRelation, FactionRegistry
+│   ├── faction.py               # Faction, FactionRelation, FactionRegistry (10 factions)
 │   ├── effects.py               # StatusEffect, EffectType
 │   ├── attributes.py            # Attributes, derived stats, training
 │   ├── quests.py                # Quest, QuestType, templates
-│   ├── resource_nodes.py        # ResourceNode, TERRAIN_RESOURCES
-│   ├── entity_builder.py        # Fluent builder for Entity construction
-│   └── vector2.py               # Vector2 position type
+│   ├── resource_nodes.py        # ResourceNode, TERRAIN_RESOURCES (8 biomes)
+│   ├── regions.py               # Region, Location dataclasses, name tables, difficulty config
+│   └── entity_builder.py        # Fluent builder for Entity construction
 ├── engine/
 │   ├── world_loop.py            # 4-phase tick cycle (the engine core)
+│   ├── action_queue.py          # Thread-safe MPSC queue
+│   ├── worker_pool.py           # ThreadPoolExecutor for AI workers
 │   └── conflict_resolver.py     # Deterministic conflict resolution
 ├── actions/
-│   ├── combat.py                # CombatAction (damage pipeline)
-│   └── damage.py                # DamageCalculator strategy pattern
+│   ├── base.py                  # ActionProposal dataclass
+│   ├── combat.py                # CombatAction (damage pipeline, AoE, ranged, cover)
+│   ├── damage.py                # DamageCalculator strategy pattern
+│   ├── move.py                  # MoveAction (validate + apply)
+│   └── rest.py                  # RestAction
 ├── ai/
 │   ├── brain.py                 # AIBrain (hybrid: goals + state machine)
 │   ├── states.py                # StateHandler subclasses (18 states)
 │   ├── perception.py            # Vision, memory, faction-aware queries
+│   ├── pathfinding.py           # A* pathfinder, terrain costs, path caching
 │   ├── goal_evaluator.py        # Backward-compat shim
 │   └── goals/
 │       ├── base.py              # GoalScorer ABC, GoalEvaluator, registry
@@ -275,13 +281,18 @@ src/
 │       └── registry.py          # register_all_goals()
 ├── systems/
 │   ├── rng.py                   # DeterministicRNG (domain-separated hashing)
-│   └── generator.py             # EntityGenerator (spawn, spawn_race)
+│   ├── spatial_hash.py          # O(1) spatial neighbor lookups
+│   ├── generator.py             # EntityGenerator (spawn, spawn_race)
+│   └── terrain_detail.py        # Intra-region terrain features (per-biome)
 ├── utils/
-│   └── event_log.py             # Unbounded EventLog
+│   ├── event_log.py             # Ring-buffer EventLog (10k cap)
+│   ├── logging.py               # Structured logging setup
+│   └── replay.py                # JSON replay recorder
 └── api/
     ├── app.py                   # FastAPI app factory (OpenAPI tags, CORS)
     ├── engine_manager.py        # World builder + background thread manager
-    ├── schemas.py               # Pydantic response models (state endpoints)
+    ├── dependencies.py          # FastAPI dependency injection
+    ├── schemas.py               # Pydantic response models (EntitySlim, RLE map)
     └── routes/
         ├── __init__.py          # Router registration (api_router)
         ├── state.py             # GET /state, /stats, /static

@@ -2,7 +2,7 @@
 
 Master index of all active tickets with priority, effort estimate, dependencies, and status.
 
-**Last updated:** 2025-02-12
+**Last updated:** 2026-02-28
 
 ---
 
@@ -17,120 +17,108 @@ Master index of all active tickets with priority, effort estimate, dependencies,
 
 ---
 
-## Bugs
+## Completed Work
 
-| ID | Ticket | Priority | Effort | Status | Dependencies |
-|----|--------|----------|--------|--------|-------------|
-| bug-01 | [Diagonal Adjacent HUNT Move Conflict](bug-01-diagonal-hunt-move-conflict.md) | P1 | S | done | — |
-| bug-02 | [Hero Keeps Looting When Full Bag](bug-02-hero-looting-full-bag.md) | P1 | S | done | — |
+All bugs, enhancements, adjustments, design reviews, and infrastructure tickets are **done**.
 
-## Enhancements
-
-| ID | Ticket | Priority | Effort | Status | Dependencies |
-|----|--------|----------|--------|--------|-------------|
-| enhance-01 | [Enrich Event Information](enhance-01-enrich-event-information.md) | P2 | M | done | — |
-| enhance-02 | [Bag Max Capacity UI](enhance-02-bag-max-capacity-ui.md) | P3 | XS | done | bug-02 (related) |
-| enhance-03 | [Extend Max Tick to 50000](enhance-03-extend-max-tick-limit.md) | P3 | XS | done | epic-16 (verify perf first) |
-| enhance-04 | [Mob Roaming Leash Distance](enhance-04-mob-roaming-leash.md) | P1 | M | done | — |
-
-## Adjustments
-
-| ID | Ticket | Priority | Effort | Status | Dependencies |
-|----|--------|----------|--------|--------|-------------|
-| adjust-01 | [Action Speed Balance Review](adjust-01-action-speed-balance.md) | P2 | S | done | design-02 (related) |
-
-## Design Reviews
-
-| ID | Ticket | Priority | Effort | Status | Dependencies |
-|----|--------|----------|--------|--------|-------------|
-| design-01 | [Skill & Basic Attack Stat Scaling](design-01-skill-stat-scaling.md) | P1 | S | done | — |
-| design-02 | [Revise Ticking Mechanism](design-02-revise-ticking-mechanism.md) | P2 | M | done | — |
-
-## Infrastructure (Testing & Profiling)
-
-| ID | Ticket | Priority | Effort | Status | Dependencies |
-|----|--------|----------|--------|--------|-------------|
-| infra-01 | [Automated Testing Infrastructure](infra-01-automated-testing.md) | P0 | S | done | — |
-| infra-02 | [Performance Profiling Infrastructure](infra-02-performance-profiling.md) | P0 | S | done | — |
+| ID | Ticket | Type | Summary |
+|----|--------|------|---------|
+| bug-01 | Diagonal HUNT Move Conflict | bug | Higher-ID entity yields at Manhattan 2 |
+| bug-02 | Hero Looting Full Bag | bug | `is_effectively_full` checks slots + weight |
+| enhance-01 | Enrich Event Information | enhance | Metadata on SimEvent, enriched combat/loot/death/level_up/skill events |
+| enhance-02 | Bag Max Capacity UI | enhance | Slot + weight bars with color coding |
+| enhance-03 | Extend Max Tick to 50000 | enhance | EventLog ring buffer (10k cap) |
+| enhance-04 | Mob Roaming Leash | enhance | Radius 15, chase cap 1.5×, give-up 20 ticks, 5% HP/tick heal on return |
+| adjust-01 | Action Speed Balance | adjust | Doubled delay multipliers, SPD stat meaningful |
+| design-01 | Skill Stat Scaling | design | DamageCalculator routing, crit/variance/evasion on skills |
+| design-02 | Revise Ticking Mechanism | design | Fixed empty-tick stall, subsystem rate divisors |
+| infra-01 | Automated Testing | infra | `make test`, deterministic replay, 575+ tests |
+| infra-02 | Performance Profiling | infra | `make profile`, per-tick timing, memory profiling |
 
 **Automation commands:**
 
 | Command | What it does |
 |---------|-------------|
-| `make test` | Run all 440+ Python tests (3.4s) |
+| `make test` | Run all 575+ Python tests |
 | `make test-quick` | Run fast tests only (skip `@slow`) |
 | `make test-cov` | Run tests with coverage report |
 | `make profile` | 500-tick performance report (timing, phases, entity counts) |
 | `make profile-full` | 2000-tick profile + cProfile `.prof` dump |
 | `make profile-memory` | 500-tick profile with tracemalloc memory snapshot |
 
-## Epics (New)
+---
 
-| ID | Ticket | Priority | Effort | Status | Dependencies |
-|----|--------|----------|--------|--------|-------------|
-| epic-15 | [Region & World Overhaul](epic-15-region-difficulty-scaling.md) | P1 | XL | done | — |
-| epic-16 | [Performance Audit & Optimization](epic-16-performance-audit.md) | P2 | L | done | — |
+## Completed Epics
 
-## Epics (Existing — Updated)
+| ID | Ticket | Effort | Summary |
+|----|--------|--------|---------|
+| epic-15 | Region & World Overhaul | XL | Voronoi tessellation, 512×512 map, 8 biomes, 9 factions, tier 1–4 difficulty, loot scaling, region events, hero AI awareness |
+| epic-16 | Performance Audit | L | Backend: 43% faster ticks (49.8ms→28.4ms), 70% fewer function calls. Frontend: 256× smaller overlay, drag-skip, minimap caching, 98% API payload reduction |
 
-| ID | Ticket | Priority | Effort | Status | Dev Note |
-|----|--------|----------|--------|--------|----------|
-| epic-05 | [Advanced Combat Mechanics](epic-05-advanced-combat-mechanics.md) | P1 | XXL | ready | F4 (Ranged Combat) flagged as standalone priority |
-| epic-11 | [Replay & Observation Tools](epic-11-replay-and-observation-tools.md) | P2 | XXL | ready | Rewind-to-event UX added as MVP path |
+## Partially Completed Epics
 
-## Epics (Existing — Unchanged)
-
-| ID | Ticket | Priority | Effort |
-|----|--------|----------|--------|
-| epic-01 | [Dungeon System](epic-01-dungeon-system.md) | P3 | XXL |
-| epic-02 | [NPC & Social System](epic-02-npc-and-social-system.md) | P3 | XXL |
-| epic-03 | [Day/Night & Weather](epic-03-day-night-and-weather.md) | P3 | XL |
-| epic-04 | [Multi-Hero Party System](epic-04-multi-hero-party-system.md) | P2 | XXL |
-| epic-06 | [World Events & Invasions](epic-06-world-events-and-invasions.md) | P3 | XXL |
-| epic-07 | [Reputation & Faction Diplomacy](epic-07-reputation-and-faction-diplomacy.md) | P3 | XL |
-| epic-08 | [Transcendence & Endgame Classes](epic-08-transcendence-and-endgame-classes.md) | P3 | XL |
-| epic-09 | [Improved Pathfinding & Movement](epic-09-improved-pathfinding-and-movement.md) | P2 | XL |
-| epic-10 | [Enchantment & Item Progression](epic-10-enchantment-and-item-progression.md) | P3 | XL |
-| epic-12 | [AI Personality & Emergent Behavior](epic-12-ai-personality-and-emergent-behavior.md) | P2 | XXL |
-| epic-13 | [Ruins Exploration & Lore](epic-13-ruins-exploration-and-lore.md) | P3 | XXL |
-| epic-14 | [Frontend UX Improvements](epic-14-frontend-ux-improvements.md) | P2 | XL |
+| ID | Ticket | Done | Remaining | Status |
+|----|--------|------|-----------|--------|
+| epic-05 | [Advanced Combat](epic-05-advanced-combat-mechanics.md) | F1 (AoE), F3 (Aggro/Threat), F4 (Ranged), Chase Mechanics | F2 (Combos), F5 (Environmental), F6 (Status Ailments), F7 (Formations) | partial — core combat is deep, remaining features are additive |
+| epic-09 | [Pathfinding & Movement](epic-09-improved-pathfinding-and-movement.md) | F1 (A*), F2 (Terrain Costs), F4 (Path Cache), F6 (Obstacle Avoidance), F9 (Terrain Detail), F10 (Tile Tooltip) | F3 (Hazard Avoidance), F5 (Formations), F7 (Speed Mods), F8 (Path Viz) | partial — core pathfinding complete, remaining features are polish |
 
 ---
 
-## Recommended Execution Order
+## Open Epics — Prioritized by Emergent Storytelling Impact
 
-Tickets that need developer decision before work can start are marked. Suggested order for actionable items:
+Epics re-ordered by how much they contribute to **emergent narrative moments** — the core vision of the project.
 
-### Phase 0 — Infrastructure (DONE)
+### Priority 0 — Progression Spine (build this first)
 
-- ✅ **infra-01** — Automated testing (`make test`, deterministic replay, conflict resolver, inventory goals)
-- ✅ **infra-02** — Performance profiling (`make profile`, per-tick phase timing, memory profiling)
+| ID | Ticket | Priority | Effort | Why |
+|----|--------|----------|--------|-----|
+| epic-17 | [Long-Story Progression Spine](epic-17-long-story-progression.md) | **P0** | XXL | Fixes the level-20 ceiling. Multi-hero, death stakes, world evolution, raids, world boss, dungeon, transcendence, hall of fame. Subsumes slimmed-down parts of E01, E04, E06, E08. Without this, the simulation stalls at tick 10,000. |
+| epic-18 | [Entity Progression Depth](epic-18-entity-progression-depth.md) | **P0** | XL | Deepens micro-level growth for ALL entities. Veterancy, evolution, innate talent, toughness, revised leveling curve, skill discovery, attribute milestones, racial growth profiles, battle marks. Every living thing in the world grows through experience. |
 
-### Phase 1 — Bugs & Quick Wins (needs-decision → ready → ship)
+### Tier 1 — High-Impact Narrative
 
-1. ✅ **bug-01** — Diagonal HUNT conflict — higher-ID entity yields at Manhattan 2 — 5 tests in `test_conflict_resolver.py`
-2. ✅ **bug-02** — Looting when full bag — `is_effectively_full` checks slots + weight — 8 tests in `test_inventory_goals.py`
-3. ✅ **enhance-02** — Bag capacity UI — slot + weight bars with color coding in InspectPanel
-4. ✅ **enhance-03** — Extend max tick to 50000 + EventLog ring buffer (10k cap)
-5. ✅ **enhance-04** — Mob roaming leash — radius 15, chase cap 1.5×, give-up 20 ticks, 5% HP/tick heal on return — 17 tests in `test_mob_leash.py`
+| ID | Ticket | Priority | Effort | Why |
+|----|--------|----------|--------|-----|
+| epic-12 | [AI Personality & Emergent Behavior](epic-12-ai-personality-and-emergent-behavior.md) | **P1** | XXL | Nemesis system, grudges, confidence, mood — turns entities into *individuals* whose history shapes decisions. Highest storytelling ROI. |
+| epic-07 | [Reputation & Faction Diplomacy](epic-07-reputation-and-faction-diplomacy.md) | **P1** | XL | Shifting alliances and faction wars — the political map evolves, creating geopolitical narrative. |
 
-### Phase 2 — Design Decisions (needs-decision)
+### Tier 2 — World Richness (deepen the world)
 
-6. ✅ **adjust-01** — Action speed balance — doubled all delay multipliers, added building interaction delays — SPD stat now meaningful
-7. ✅ **design-01** — Skill stat scaling — damage_type on SkillDef, DamageCalculator routing, crit/variance/evasion on skills — 16 tests in `test_skill_scaling.py`
-8. ✅ **design-02** — Revise ticking mechanism — fixed empty-tick stall bug, subsystem rate divisors (core/env/economy) — 11 tests in `test_subsystem_ticks.py`
+| ID | Ticket | Priority | Effort | Why |
+|----|--------|----------|--------|-----|
+| epic-03 | [Day/Night & Weather](epic-03-day-night-and-weather.md) | **P2** | XL | Natural rhythm drives behavior cycles — night raids, storm shelter, visibility tension. |
+| epic-02 | [NPC & Social System](epic-02-npc-and-social-system.md) | **P2** | XXL | Living town with schedules, relationships — the town becomes a character in the story. |
+| epic-13 | [Ruins Exploration & Lore](epic-13-ruins-exploration-and-lore.md) | **P3** | XXL | Discovery and world history — rewards curiosity, adds narrative depth. |
 
-### Phase 3 — Gameplay Enhancements
+### Tier 3 — Depth & Polish (enrich existing systems)
 
-9. ✅ **enhance-01** — Enrich event info — metadata on SimEvent, enriched combat/loot/death/level_up/skill events — 9 tests in `test_enriched_events.py`
-10. ✅ **epic-15** — Region & World Overhaul — Voronoi tessellation (<1% empty floor), Region/Location dataclasses, 192×192 map, sub-locations, difficulty stat scaling (tier 1–4), loot quality scaling, EPIC rarity, region events, hero AI difficulty awareness — 30 tests in `test_regions.py`, 13 in `test_difficulty_scaling.py`, 14 in `test_loot_scaling.py`, 12 in `test_region_events.py`, 8 in `test_voronoi_regions.py`
+| ID | Ticket | Priority | Effort | Why |
+|----|--------|----------|--------|-----|
+| epic-05 | [Advanced Combat (remaining)](epic-05-advanced-combat-mechanics.md) | **P2** | L | Status ailments, combos, environmental combat — richer tactical combat moments. |
+| epic-10 | [Enchantment & Item Progression](epic-10-enchantment-and-item-progression.md) | **P3** | XL | Gear becomes meaningful and personal — socketing, enhancement, item sets. |
+| epic-14 | [Frontend UX Improvements](epic-14-frontend-ux-improvements.md) | **P2** | XL | Smooth animations, combat numbers, keyboard shortcuts — better watching experience. |
+| epic-11 | [Replay & Observation Tools](epic-11-replay-and-observation-tools.md) | **P2** | XXL | Timeline scrubbing, heatmaps, stat graphs — tools for studying emergent behavior. |
+| epic-09 | [Pathfinding (remaining)](epic-09-improved-pathfinding-and-movement.md) | **P3** | M | Hazard avoidance, formations, speed modifiers, path visualization — polish. |
 
-### Phase 4 — Major Features
+### Subsumed by Epic-17 (slimmed-down versions included)
 
-11. **epic-05 F4** — Ranged combat *(standalone from full epic)*
-12. ✅ **epic-16** — Performance audit — 43% faster ticks (49.8ms→28.4ms), 70% fewer function calls, 8 optimizations, no memory leaks
-13. **epic-11** — Replay & observation tools *(after enhance-01)*
+| ID | Ticket | What E17 Takes | What Remains |
+|----|--------|----------------|-------------|
+| epic-04 | [Multi-Hero Party System](epic-04-multi-hero-party-system.md) | Multi-hero spawning, naming, familiarity | Full party formation, shared XP/loot, coordinated tactics |
+| epic-06 | [World Events & Invasions](epic-06-world-events-and-invasions.md) | Faction raids, wandering world boss | Event framework, resource events, environmental disasters |
+| epic-08 | [Transcendence & Endgame Classes](epic-08-transcendence-and-endgame-classes.md) | Tier 3 classes, ultimate skills | Trial quests, visual identity, post-transcendence growth |
+| epic-01 | [Dungeon System](epic-01-dungeon-system.md) | Single dungeon instance | Full dungeon generation, traps, loot tables, cooldowns |
 
-### Phase 5 — Long-term Epics
+---
 
-14. Remaining epics (01–04, 06–10, 12–14) prioritized by developer preference
+## Recommended Next Steps
+
+1. **epic-18 Phase A** (Leveling Curve + Racial Profiles) — fix the flat growth first; every entity benefits immediately
+2. **epic-18 Phase B** (Veterancy + Talent) — make every entity an individual that grows through combat
+3. **epic-17 Phase 1** (Multi-Hero + Death Stakes) — multiple heroes with the new progression = divergent stories
+4. **epic-18 Phase C+D** (Toughness + Evolution) — mobs evolve organically; the world grows alongside heroes
+5. **epic-17 Phase 2** (World Evolution) — world age, raids, world boss, camp reinforcement
+6. **epic-18 Phase E+F** (Skill Discovery + Milestones + Marks) — entities earn identity through experience
+7. **epic-12** (AI Personality) — nemesis system on top of marked, veteran, evolved entities = rich stories
+8. **epic-17 Phase 3** (Endgame) — level cap 30, transcendence, dungeon, legendary items, hall of fame
+9. **epic-07** (Faction Diplomacy) — dynamic alliances make the faction map a living story

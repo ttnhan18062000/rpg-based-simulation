@@ -87,6 +87,10 @@ entity.effective_mdef()      # magical defense
 | BANDIT_CLAN | 3 | DESERT |
 | UNDEAD | 4 | SWAMP |
 | ORC_TRIBE | 5 | MOUNTAIN |
+| CENTAUR_HERD | 6 | GRASSLAND |
+| FROST_KIN | 7 | SNOW |
+| LIZARDFOLK | 8 | JUNGLE |
+| DEMON_HORDE | 9 | VOLCANIC |
 
 ### Faction Relations
 
@@ -121,6 +125,10 @@ Entity `kind` strings are registered to factions:
 | `bandit`, `bandit_archer`, `bandit_chief` | BANDIT_CLAN |
 | `skeleton`, `zombie`, `lich` | UNDEAD |
 | `orc`, `orc_warrior`, `orc_warlord` | ORC_TRIBE |
+| `centaur`, `centaur_warrior`, `centaur_chief` | CENTAUR_HERD |
+| `frost_wolf`, `frost_giant`, `frost_shaman` | FROST_KIN |
+| `lizard`, `lizard_warrior`, `lizard_chief` | LIZARDFOLK |
+| `imp`, `hellhound`, `demon_lord` | DEMON_HORDE |
 
 ---
 
@@ -146,6 +154,10 @@ Each faction owns a tile type via `TerritoryInfo`:
 | BANDIT_CLAN | DESERT | 0.7× | 0.7× | 0.85× | 6 |
 | UNDEAD | SWAMP | 0.7× | 0.7× | 0.85× | 6 |
 | ORC_TRIBE | MOUNTAIN | 0.7× | 0.7× | 0.85× | 6 |
+| CENTAUR_HERD | GRASSLAND | 0.7× | 0.7× | 0.85× | 6 |
+| FROST_KIN | SNOW | 0.7× | 0.7× | 0.85× | 6 |
+| LIZARDFOLK | JUNGLE | 0.7× | 0.7× | 0.85× | 6 |
+| DEMON_HORDE | VOLCANIC | 0.7× | 0.7× | 0.85× | 6 |
 
 ### Territory Intrusion
 
