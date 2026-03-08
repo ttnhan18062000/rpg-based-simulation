@@ -58,6 +58,7 @@ def _run_cli(args: argparse.Namespace) -> None:
     from src.ai.brain import AIBrain
     from src.config import SimulationConfig
     from src.core.enums import AIState, Domain, EnemyTier, EntityRole, Material
+    from src.core.faction import Faction
     from src.core.grid import Grid
     from src.core.items import Inventory
     from src.core.models import Entity, Stats, Vector2
@@ -81,6 +82,9 @@ def _run_cli(args: argparse.Namespace) -> None:
     )
 
     setup_logging(config.log_level)
+
+    from src.core.registry_loader import load_all_registries
+    load_all_registries()
 
     rng = DeterministicRNG(config.world_seed)
     grid = Grid(config.grid_width, config.grid_height)

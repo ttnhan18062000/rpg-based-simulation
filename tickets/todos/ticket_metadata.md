@@ -111,6 +111,19 @@ Epics re-ordered by how much they contribute to **emergent narrative moments** â
 
 ---
 
+## Open Architecture & Tech Stack Improvements
+
+| ID | Ticket | Priority | Effort | Why |
+|----|--------|----------|--------|-----|
+| design-03 | [Data-Driven Registries](design-03-data-driven-registries.md) | **P1** | M | Foundation for Epic-18; decouples configs from Python logic. |
+| infra-03 | [Telemetry & Observability](infra-03-telemetry-and-observability.md) | **P2** | M | OpenTelemetry + Prometheus to catch performance stalls early. |
+| infra-04 | [Realtime State Streaming](infra-04-realtime-state-streaming.md) | **P2** | M | Replace 80ms `/state` polling with WebSockets/SSE delta updates. |
+| infra-05 | [Multiprocessing AI Workers](infra-05-multiprocessing-ai-workers.md) | **P3** | L | Shared-memory process pool to break GIL limits for heavy pathfinding/AI. |
+| epic-19 | [Database Event-Sourcing](epic-19-event-sourcing-persistence.md) | **P2** | XL | Long-term durability via PostgreSQL; essential for Epic-17 months-long persistence. |
+| infra-06 | [Hardening & Chaos Testing](infra-06-hardening-and-chaos-testing.md) | **P3** | M | Property-Based Testing (Hypothesis) and fault injection. |
+
+---
+
 ## Recommended Next Steps
 
 1. **epic-18 Phase A** (Leveling Curve + Racial Profiles) â€” fix the flat growth first; every entity benefits immediately

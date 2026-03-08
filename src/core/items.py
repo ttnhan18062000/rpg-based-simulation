@@ -13,11 +13,25 @@ from src.core.enums import DamageType, Element, ItemType, Rarity
 if TYPE_CHECKING:
     pass
 
+from pydantic import PlainSerializer, BeforeValidator
+
+def _parse_enum(cls):
+    def _parse(v):
+        if isinstance(v, cls): return v
+        if isinstance(v, int):
+            try: return cls(v)
+            except ValueError: return v
+        if isinstance(v, str):
+            try: return cls[v.upper()]
+            except KeyError: pass
+        return v
+    return _parse
+
 # Serialization helpers — enums serialize as lowercase name strings for the API
-_ItemTypeSer = Annotated[ItemType, PlainSerializer(lambda v: ItemType(v).name.lower(), return_type=str)]
-_RaritySer = Annotated[Rarity, PlainSerializer(lambda v: Rarity(v).name.lower(), return_type=str)]
-_DamageTypeSer = Annotated[int, PlainSerializer(lambda v: DamageType(v).name.lower(), return_type=str)]
-_ElementSer = Annotated[int, PlainSerializer(lambda v: Element(v).name.lower(), return_type=str)]
+_ItemTypeSer = Annotated[ItemType, BeforeValidator(_parse_enum(ItemType)), PlainSerializer(lambda v: ItemType(v).name.lower(), return_type=str)]
+_RaritySer = Annotated[Rarity, BeforeValidator(_parse_enum(Rarity)), PlainSerializer(lambda v: Rarity(v).name.lower(), return_type=str)]
+_DamageTypeSer = Annotated[int, BeforeValidator(_parse_enum(DamageType)), PlainSerializer(lambda v: DamageType(v).name.lower(), return_type=str)]
+_ElementSer = Annotated[int, BeforeValidator(_parse_enum(Element)), PlainSerializer(lambda v: Element(v).name.lower(), return_type=str)]
 
 
 # ---------------------------------------------------------------------------
@@ -64,133 +78,41 @@ class ItemTemplate:
 ITEM_REGISTRY: dict[str, ItemTemplate] = {}
 
 
-def _reg(t: ItemTemplate) -> ItemTemplate:
-    ITEM_REGISTRY[t.item_id] = t
-    return t
 
 
 # ---- Weapons ----
-_reg(ItemTemplate("wooden_club",       "Wooden Club",         ItemType.WEAPON, Rarity.COMMON,   weight=2.0, atk_bonus=2))
-_reg(ItemTemplate("iron_sword",        "Iron Sword",          ItemType.WEAPON, Rarity.COMMON,   weight=3.0, atk_bonus=4))
-_reg(ItemTemplate("steel_sword",       "Steel Sword",         ItemType.WEAPON, Rarity.UNCOMMON, weight=3.0, atk_bonus=6, spd_bonus=1))
-_reg(ItemTemplate("battle_axe",        "Battle Axe",          ItemType.WEAPON, Rarity.UNCOMMON, weight=4.0, atk_bonus=8, spd_bonus=-1))
-_reg(ItemTemplate("enchanted_blade",   "Enchanted Blade",     ItemType.WEAPON, Rarity.RARE,     weight=2.5, atk_bonus=10, spd_bonus=2, crit_rate_bonus=0.05))
-_reg(ItemTemplate("goblin_cleaver",    "Goblin Chief Cleaver",ItemType.WEAPON, Rarity.RARE,     weight=3.5, atk_bonus=12, crit_rate_bonus=0.10))
 
 # ---- Ranged Weapons (bows) ----
-_reg(ItemTemplate("shortbow",          "Shortbow",            ItemType.WEAPON, Rarity.COMMON,   weight=1.5, atk_bonus=3, spd_bonus=1, weapon_range=3))
-_reg(ItemTemplate("longbow",           "Longbow",             ItemType.WEAPON, Rarity.UNCOMMON, weight=2.5, atk_bonus=5, crit_rate_bonus=0.04, weapon_range=4))
-_reg(ItemTemplate("hunting_bow",       "Hunting Bow",         ItemType.WEAPON, Rarity.RARE,     weight=2.0, atk_bonus=8, spd_bonus=1, crit_rate_bonus=0.06, weapon_range=4))
-_reg(ItemTemplate("windpiercer",       "Windpiercer",         ItemType.WEAPON, Rarity.EPIC,     weight=2.0, atk_bonus=13, spd_bonus=2, crit_rate_bonus=0.08, weapon_range=5))
 
 # ---- Armor ----
-_reg(ItemTemplate("leather_vest",      "Leather Vest",        ItemType.ARMOR, Rarity.COMMON,   weight=3.0, def_bonus=2))
-_reg(ItemTemplate("chainmail",         "Chainmail",           ItemType.ARMOR, Rarity.UNCOMMON, weight=5.0, def_bonus=4, spd_bonus=-1))
-_reg(ItemTemplate("iron_plate",        "Iron Plate",          ItemType.ARMOR, Rarity.UNCOMMON, weight=6.0, def_bonus=6, spd_bonus=-2))
-_reg(ItemTemplate("enchanted_robe",    "Enchanted Robe",      ItemType.ARMOR, Rarity.RARE,     weight=2.0, def_bonus=4, spd_bonus=2, evasion_bonus=0.05))
-_reg(ItemTemplate("goblin_guard",      "Goblin Chief Guard",  ItemType.ARMOR, Rarity.RARE,     weight=4.0, def_bonus=8, evasion_bonus=0.05))
 
 # ---- Accessories ----
-_reg(ItemTemplate("lucky_charm",       "Lucky Charm",         ItemType.ACCESSORY, Rarity.COMMON,   weight=0.5, crit_rate_bonus=0.03, luck_bonus=3))
-_reg(ItemTemplate("speed_ring",        "Speed Ring",          ItemType.ACCESSORY, Rarity.UNCOMMON, weight=0.3, spd_bonus=3))
-_reg(ItemTemplate("evasion_amulet",    "Amulet of Evasion",   ItemType.ACCESSORY, Rarity.UNCOMMON, weight=0.5, evasion_bonus=0.08))
-_reg(ItemTemplate("ring_of_power",     "Ring of Power",       ItemType.ACCESSORY, Rarity.RARE,     weight=0.3, atk_bonus=3, def_bonus=3))
 
 # ---- Materials (original) ----
-_reg(ItemTemplate("wood",              "Wood",                ItemType.MATERIAL, Rarity.COMMON,   weight=1.0, sell_value=5))
-_reg(ItemTemplate("iron_ore",          "Iron Ore",            ItemType.MATERIAL, Rarity.UNCOMMON, weight=2.0, sell_value=10))
-_reg(ItemTemplate("steel_bar",         "Steel Bar",           ItemType.MATERIAL, Rarity.UNCOMMON, weight=3.0, sell_value=15))
-_reg(ItemTemplate("leather",           "Leather",             ItemType.MATERIAL, Rarity.COMMON,   weight=1.5, sell_value=8))
-_reg(ItemTemplate("enchanted_dust",    "Enchanted Dust",      ItemType.MATERIAL, Rarity.RARE,     weight=0.5, sell_value=20))
 
 # ---- Materials (harvestable resources) ----
-_reg(ItemTemplate("herb",              "Herb",                ItemType.MATERIAL, Rarity.COMMON,   weight=0.3, sell_value=4))
-_reg(ItemTemplate("wild_berries",      "Wild Berries",        ItemType.CONSUMABLE, Rarity.COMMON, weight=0.3, heal_amount=8))
-_reg(ItemTemplate("raw_gem",           "Raw Gem",             ItemType.MATERIAL, Rarity.UNCOMMON, weight=0.5, sell_value=18))
-_reg(ItemTemplate("fiber",             "Fiber",               ItemType.MATERIAL, Rarity.COMMON,   weight=0.5, sell_value=4))
-_reg(ItemTemplate("glowing_mushroom",  "Glowing Mushroom",    ItemType.MATERIAL, Rarity.UNCOMMON, weight=0.3, sell_value=12))
-_reg(ItemTemplate("dark_moss",         "Dark Moss",           ItemType.MATERIAL, Rarity.COMMON,   weight=0.3, sell_value=6))
-_reg(ItemTemplate("stone_block",       "Stone Block",         ItemType.MATERIAL, Rarity.COMMON,   weight=4.0, sell_value=7))
 
 # ---- Mob-specific drops ----
-_reg(ItemTemplate("wolf_pelt",         "Wolf Pelt",           ItemType.MATERIAL, Rarity.COMMON,   weight=1.5, sell_value=10))
-_reg(ItemTemplate("wolf_fang",         "Wolf Fang",           ItemType.MATERIAL, Rarity.UNCOMMON, weight=0.3, sell_value=14))
-_reg(ItemTemplate("bandit_dagger",     "Bandit Dagger",       ItemType.WEAPON,   Rarity.COMMON,   weight=1.5, atk_bonus=3, spd_bonus=2))
-_reg(ItemTemplate("bandit_bow",        "Bandit Bow",          ItemType.WEAPON,   Rarity.UNCOMMON, weight=2.0, atk_bonus=5, crit_rate_bonus=0.05, weapon_range=3))
-_reg(ItemTemplate("bone_shard",        "Bone Shard",          ItemType.MATERIAL, Rarity.COMMON,   weight=0.5, sell_value=6))
-_reg(ItemTemplate("ectoplasm",         "Ectoplasm",           ItemType.MATERIAL, Rarity.UNCOMMON, weight=0.3, sell_value=16))
-_reg(ItemTemplate("orc_axe",           "Orc Axe",             ItemType.WEAPON,   Rarity.UNCOMMON, weight=4.0, atk_bonus=7, spd_bonus=-1))
-_reg(ItemTemplate("orc_shield",        "Orc Shield",          ItemType.ARMOR,    Rarity.UNCOMMON, weight=5.0, def_bonus=5, spd_bonus=-1))
 
 # ---- Higher-tier equipment (shop) ----
-_reg(ItemTemplate("steel_greatsword",  "Steel Greatsword",    ItemType.WEAPON,   Rarity.RARE,     weight=5.0, atk_bonus=10, crit_rate_bonus=0.05, spd_bonus=-1))
-_reg(ItemTemplate("plate_armor",       "Plate Armor",         ItemType.ARMOR,    Rarity.RARE,     weight=8.0, def_bonus=8, max_hp_bonus=10, spd_bonus=-2))
-_reg(ItemTemplate("apprentice_staff",  "Apprentice Staff",    ItemType.WEAPON,   Rarity.COMMON,   weight=1.5, matk_bonus=3, spd_bonus=1, damage_type=DamageType.MAGICAL, weapon_range=3))
-_reg(ItemTemplate("fire_staff",        "Fire Staff",          ItemType.WEAPON,   Rarity.UNCOMMON, weight=2.5, matk_bonus=7, damage_type=DamageType.MAGICAL, element=Element.FIRE, weapon_range=3))
 
 # ---- Crafted items from race-specific materials ----
-_reg(ItemTemplate("wolf_cloak",        "Wolf Cloak",          ItemType.ARMOR,     Rarity.UNCOMMON, weight=2.5, def_bonus=3, spd_bonus=2, evasion_bonus=0.04))
-_reg(ItemTemplate("fang_necklace",     "Fang Necklace",       ItemType.ACCESSORY, Rarity.UNCOMMON, weight=0.3, atk_bonus=2, crit_rate_bonus=0.08))
-_reg(ItemTemplate("desert_bow",        "Desert Composite Bow",ItemType.WEAPON,    Rarity.UNCOMMON, weight=2.0, atk_bonus=6, spd_bonus=1, crit_rate_bonus=0.06, weapon_range=3))
-_reg(ItemTemplate("bone_shield",       "Bone Shield",         ItemType.ARMOR,     Rarity.UNCOMMON, weight=4.0, def_bonus=5, max_hp_bonus=10))
-_reg(ItemTemplate("spectral_blade",    "Spectral Blade",      ItemType.WEAPON,    Rarity.RARE,     weight=2.0, atk_bonus=9, crit_rate_bonus=0.08))
-_reg(ItemTemplate("mountain_plate",    "Mountain Plate",      ItemType.ARMOR,     Rarity.RARE,     weight=7.0, def_bonus=7, spd_bonus=-2, max_hp_bonus=15))
-_reg(ItemTemplate("herbal_remedy",     "Herbal Remedy",       ItemType.CONSUMABLE, Rarity.COMMON,  weight=0.5, heal_amount=25))
 
 # ---- Magic Weapons ----
-_reg(ItemTemplate("wooden_staff",      "Wooden Staff",        ItemType.WEAPON, Rarity.COMMON,   weight=2.0, matk_bonus=3, damage_type=DamageType.MAGICAL, weapon_range=3))
-_reg(ItemTemplate("iron_wand",         "Iron Wand",           ItemType.WEAPON, Rarity.COMMON,   weight=1.0, matk_bonus=4, spd_bonus=1, damage_type=DamageType.MAGICAL, weapon_range=3))
-_reg(ItemTemplate("crystal_staff",     "Crystal Staff",       ItemType.WEAPON, Rarity.UNCOMMON, weight=2.5, matk_bonus=7, spd_bonus=1, damage_type=DamageType.MAGICAL, weapon_range=4))
-_reg(ItemTemplate("fire_rod",          "Fire Rod",            ItemType.WEAPON, Rarity.UNCOMMON, weight=1.5, matk_bonus=6, damage_type=DamageType.MAGICAL, element=Element.FIRE, weapon_range=3))
-_reg(ItemTemplate("frost_scepter",     "Frost Scepter",       ItemType.WEAPON, Rarity.UNCOMMON, weight=2.0, matk_bonus=6, spd_bonus=-1, damage_type=DamageType.MAGICAL, element=Element.ICE, weapon_range=3))
-_reg(ItemTemplate("lightning_wand",    "Lightning Wand",      ItemType.WEAPON, Rarity.RARE,     weight=1.0, matk_bonus=9, spd_bonus=2, damage_type=DamageType.MAGICAL, element=Element.LIGHTNING, weapon_range=4))
-_reg(ItemTemplate("shadow_tome",       "Shadow Tome",         ItemType.WEAPON, Rarity.RARE,     weight=2.0, matk_bonus=11, crit_rate_bonus=0.06, damage_type=DamageType.MAGICAL, element=Element.DARK, weapon_range=4))
-_reg(ItemTemplate("holy_codex",        "Holy Codex",          ItemType.WEAPON, Rarity.RARE,     weight=2.5, matk_bonus=10, max_hp_bonus=10, damage_type=DamageType.MAGICAL, element=Element.HOLY, weapon_range=4))
 
 # ---- Magic Armor ----
-_reg(ItemTemplate("cloth_robe",        "Cloth Robe",          ItemType.ARMOR, Rarity.COMMON,   weight=1.5, mdef_bonus=2, spd_bonus=1))
-_reg(ItemTemplate("silk_robe",         "Silk Robe",           ItemType.ARMOR, Rarity.UNCOMMON, weight=1.5, mdef_bonus=4, spd_bonus=1, evasion_bonus=0.03))
-_reg(ItemTemplate("arcane_vestment",   "Arcane Vestment",     ItemType.ARMOR, Rarity.RARE,     weight=2.0, mdef_bonus=6, matk_bonus=3, spd_bonus=1))
 
 # ---- Magic Accessories ----
-_reg(ItemTemplate("mana_crystal",      "Mana Crystal",        ItemType.ACCESSORY, Rarity.COMMON,   weight=0.3, matk_bonus=2, mdef_bonus=1))
-_reg(ItemTemplate("spirit_pendant",    "Spirit Pendant",      ItemType.ACCESSORY, Rarity.UNCOMMON, weight=0.3, matk_bonus=3, mdef_bonus=2))
-_reg(ItemTemplate("elemental_ring",    "Elemental Ring",      ItemType.ACCESSORY, Rarity.RARE,     weight=0.3, matk_bonus=4, mdef_bonus=3, spd_bonus=1))
 
 # ---- Consumables (healing) ----
-_reg(ItemTemplate("small_hp_potion",   "Small Health Potion", ItemType.CONSUMABLE, Rarity.COMMON,   weight=0.5, heal_amount=15))
-_reg(ItemTemplate("medium_hp_potion",  "Medium Health Potion",ItemType.CONSUMABLE, Rarity.UNCOMMON, weight=0.5, heal_amount=30))
-_reg(ItemTemplate("large_hp_potion",   "Large Health Potion", ItemType.CONSUMABLE, Rarity.RARE,     weight=1.0, heal_amount=50))
 
 # ---- Consumables (buff potions — stat boost via StatusEffect, applied in world_loop) ----
-_reg(ItemTemplate("atk_potion",        "Attack Elixir",       ItemType.CONSUMABLE, Rarity.UNCOMMON, weight=0.5, sell_value=12))
-_reg(ItemTemplate("def_potion",        "Defense Elixir",      ItemType.CONSUMABLE, Rarity.UNCOMMON, weight=0.5, sell_value=12))
-_reg(ItemTemplate("spd_potion",        "Speed Elixir",        ItemType.CONSUMABLE, Rarity.UNCOMMON, weight=0.5, sell_value=12))
-_reg(ItemTemplate("crit_potion",       "Critical Elixir",     ItemType.CONSUMABLE, Rarity.RARE,     weight=0.5, sell_value=20))
-_reg(ItemTemplate("antidote",          "Antidote",            ItemType.CONSUMABLE, Rarity.COMMON,   weight=0.3, sell_value=8))
 
 # ---- Shop materials (crafting reagents purchasable at store) ----
-_reg(ItemTemplate("mana_shard",        "Mana Shard",          ItemType.MATERIAL, Rarity.UNCOMMON, weight=0.5, sell_value=15))
-_reg(ItemTemplate("silver_ingot",      "Silver Ingot",        ItemType.MATERIAL, Rarity.UNCOMMON, weight=2.0, sell_value=18))
-_reg(ItemTemplate("phoenix_feather",   "Phoenix Feather",     ItemType.MATERIAL, Rarity.RARE,     weight=0.3, sell_value=30))
 
 # ---- Epic-tier equipment ----
-_reg(ItemTemplate("dragonbane",        "Dragonbane",          ItemType.WEAPON,    Rarity.EPIC, weight=4.0, atk_bonus=16, crit_rate_bonus=0.10, spd_bonus=1))
-_reg(ItemTemplate("void_edge",         "Void Edge",           ItemType.WEAPON,    Rarity.EPIC, weight=3.0, atk_bonus=14, crit_rate_bonus=0.08, crit_dmg_bonus=0.3))
-_reg(ItemTemplate("stormcaller",       "Stormcaller",         ItemType.WEAPON,    Rarity.EPIC, weight=2.5, matk_bonus=15, spd_bonus=2, damage_type=DamageType.MAGICAL, element=Element.LIGHTNING, weapon_range=4))
-_reg(ItemTemplate("abyssal_plate",     "Abyssal Plate",       ItemType.ARMOR,     Rarity.EPIC, weight=7.0, def_bonus=12, mdef_bonus=4, max_hp_bonus=20, spd_bonus=-1))
-_reg(ItemTemplate("celestial_robe",    "Celestial Robe",      ItemType.ARMOR,     Rarity.EPIC, weight=2.0, mdef_bonus=10, matk_bonus=5, evasion_bonus=0.06, spd_bonus=2))
-_reg(ItemTemplate("crown_of_ruin",     "Crown of Ruin",       ItemType.ACCESSORY, Rarity.EPIC, weight=0.5, atk_bonus=5, matk_bonus=5, crit_rate_bonus=0.06))
-_reg(ItemTemplate("heart_of_valor",    "Heart of Valor",      ItemType.ACCESSORY, Rarity.EPIC, weight=0.5, def_bonus=4, mdef_bonus=4, max_hp_bonus=15))
-_reg(ItemTemplate("epic_hp_potion",    "Superior Health Potion", ItemType.CONSUMABLE, Rarity.EPIC, weight=1.0, heal_amount=80))
-_reg(ItemTemplate("gold_pouch_xl",     "Overflowing Gold Pouch", ItemType.CONSUMABLE, Rarity.EPIC, weight=2.0, gold_value=100))
-_reg(ItemTemplate("dragon_scale",      "Dragon Scale",        ItemType.MATERIAL,  Rarity.EPIC, weight=1.0, sell_value=50))
 
 # ---- Treasure / loot items ----
-_reg(ItemTemplate("gold_pouch_s",      "Small Gold Pouch",    ItemType.CONSUMABLE, Rarity.COMMON,   weight=0.5, gold_value=10))
-_reg(ItemTemplate("gold_pouch_m",      "Gold Pouch",          ItemType.CONSUMABLE, Rarity.UNCOMMON, weight=1.0, gold_value=25))
-_reg(ItemTemplate("gold_pouch_l",      "Large Gold Pouch",    ItemType.CONSUMABLE, Rarity.RARE,     weight=1.5, gold_value=50))
-_reg(ItemTemplate("camp_treasure",     "Camp Treasure Chest", ItemType.CONSUMABLE, Rarity.RARE,     weight=3.0, gold_value=100))
 
 
 def get_item(item_id: str) -> ItemTemplate | None:

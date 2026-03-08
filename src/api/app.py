@@ -32,7 +32,9 @@ def create_app(config: SimulationConfig | None = None) -> FastAPI:
 
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+        from src.core.registry_loader import load_all_registries
         setup_logging(_config.log_level)
+        load_all_registries()
         manager = EngineManager(_config)
         set_engine_manager(manager)
         manager.start()
@@ -40,6 +42,7 @@ def create_app(config: SimulationConfig | None = None) -> FastAPI:
         yield
         manager.stop()
         logger.info("API server shutting down.")
+
 
     app = FastAPI(
         title="RPG Simulation Engine",
