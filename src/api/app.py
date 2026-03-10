@@ -2,14 +2,16 @@
 
 from __future__ import annotations
 
+import time
 import logging
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import AsyncIterator
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from prometheus_client import make_asgi_app
 
 from src.api.dependencies import set_engine_manager
 from src.api.engine_manager import EngineManager
@@ -74,6 +76,25 @@ def create_app(config: SimulationConfig | None = None) -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+
+    from src.utils.metrics import API_REQUEST_DURATION
+
+    @app.middleware("http")
+    async def metrics_middleware(request: Request, call_next):
+        start_time = time.perf_counter()
+        response = await call_next(request)
+        duration = time.perf_counter() - start_time
+        
+        # We don't want to track the intense /stream or /metrics polling endpoint itself as heavily
+        path = request.url.path
+        if path not in ("/metrics", "/api/v1/stream"):
+            API_REQUEST_DURATION.labels(method=request.method, endpoint=path).observe(duration)
+            
+        return response
+
+    # Mount Prometheus metrics
+    metrics_app = make_asgi_app()
+    app.mount("/metrics", metrics_app)
 
     # API routes
     app.include_router(api_router)

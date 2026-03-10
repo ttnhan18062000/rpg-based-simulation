@@ -1,4 +1,4 @@
-# infra-04: Realtime State Streaming (WebSockets / SSE)
+# [DONE] infra-04: Realtime State Streaming (WebSockets / SSE)
 
 ## Objective
 Replace the `/api/v1/state` HTTP polling mechanism with a persistent streaming connection that pushes delta updates to the frontend.

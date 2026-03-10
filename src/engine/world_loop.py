@@ -22,6 +22,7 @@ from src.engine.action_queue import ActionQueue
 from src.engine.conflict_resolver import ConflictResolver
 from src.engine.worker_pool import WorkerPool
 from src.systems.generator import EntityGenerator
+from src.utils.metrics import SIM_TICK_DURATION
 
 if TYPE_CHECKING:
     from src.actions.base import ActionProposal
@@ -160,7 +161,9 @@ class WorldLoop:
 
         # --- Phase 1: Scheduling ---
         self._phase_generators()
-        ready_entities = self._phase_scheduling()
+        
+        with SIM_TICK_DURATION.labels(phase="scheduling").time():
+            ready_entities = self._phase_scheduling()
 
         applied: list = []
         t1 = t2 = t3 = t0
@@ -169,68 +172,74 @@ class WorldLoop:
             t1 = time.perf_counter()
 
             # --- Phase 2: Wait & Collect ---
-            snapshot = Snapshot.from_world(self._world)
-            self._worker_pool.dispatch(ready_entities, snapshot, self._action_queue)
-            proposals = self._action_queue.drain()
+            with SIM_TICK_DURATION.labels(phase="collect").time():
+                snapshot = Snapshot.from_world(self._world)
+                self._worker_pool.dispatch(ready_entities, snapshot, self._action_queue)
+                proposals = self._action_queue.drain()
 
             t2 = time.perf_counter()
 
             # --- Phase 3: Conflict Resolution & Application ---
-            # Capture positions before resolution for opportunity attack detection
-            pre_positions = {e.id: (e.pos.x, e.pos.y) for e in self._world.entities.values()}
-            applied = self._conflict_resolver.resolve(proposals, self._world)
-            self._last_applied = applied
+            with SIM_TICK_DURATION.labels(phase="resolve").time():
+                # Capture positions before resolution for opportunity attack detection
+                pre_positions = {e.id: (e.pos.x, e.pos.y) for e in self._world.entities.values()}
+                applied = self._conflict_resolver.resolve(proposals, self._world)
+                self._last_applied = applied
 
-            # Opportunity attacks on melee disengage (epic-05)
-            self._process_opportunity_attacks(applied, pre_positions)
+                # Opportunity attacks on melee disengage (epic-05)
+                self._process_opportunity_attacks(applied, pre_positions)
 
-            # SPD-based chase closing (epic-05)
-            self._process_chase_closing()
+                # SPD-based chase closing (epic-05)
+                self._process_chase_closing()
 
-            # Emit base events for all applied actions
-            _cat_map = {
-                "REST": "rest", "MOVE": "movement", "ATTACK": "combat",
-                "USE_ITEM": "item", "LOOT": "loot", "HARVEST": "harvest",
-                "USE_SKILL": "skill",
-            }
-            for action in applied:
-                involved: list[int] = [action.actor_id]
-                if isinstance(action.target, int):
-                    involved.append(action.target)
-                cat = _cat_map.get(action.verb.name, action.verb.name.lower())
-                meta: dict = {"verb": action.verb.name, "actor_id": action.actor_id}
-                if isinstance(action.target, int):
-                    meta["target_id"] = action.target
-                self._emit(
-                    cat,
-                    f"Entity {action.actor_id}: {action.verb.name} → {action.reason}",
-                    entity_ids=tuple(involved),
-                    metadata=meta,
-                )
+                # Emit base events for all applied actions
+                _cat_map = {
+                    "REST": "rest", "MOVE": "movement", "ATTACK": "combat",
+                    "USE_ITEM": "item", "LOOT": "loot", "HARVEST": "harvest",
+                    "USE_SKILL": "skill",
+                }
+                for action in applied:
+                    involved: list[int] = [action.actor_id]
+                    if isinstance(action.target, int):
+                        involved.append(action.target)
+                    cat = _cat_map.get(action.verb.name, action.verb.name.lower())
+                    meta: dict = {"verb": action.verb.name, "actor_id": action.actor_id}
+                    if isinstance(action.target, int):
+                        meta["target_id"] = action.target
+                    self._emit(
+                        cat,
+                        f"Entity {action.actor_id}: {action.verb.name} → {action.reason}",
+                        entity_ids=tuple(involved),
+                        metadata=meta,
+                    )
 
-            # Update combat_target_id for visualization
-            self._update_combat_targets(applied)
+                # Update combat_target_id for visualization
+                self._update_combat_targets(applied)
 
-            # Update AI states from worker results
-            self._update_ai_states(applied)
+                # Update AI states from worker results
+                self._update_ai_states(applied)
 
-            # Process USE_ITEM and LOOT actions (state mutations on world loop thread)
-            self._process_item_actions(applied)
+                # Process USE_ITEM and LOOT actions (state mutations on world loop thread)
+                self._process_item_actions(applied)
 
             t3 = time.perf_counter()
 
         # --- Subsystem phase: always runs (design-02) ---
-        self._tick_subsystems(tick)
+        with SIM_TICK_DURATION.labels(phase="subsystems").time():
+            self._tick_subsystems(tick)
 
         t4 = time.perf_counter()
 
         if ready_entities:
+            SIM_TICK_DURATION.labels(phase="total_active").observe(t4 - t0)
             logger.debug(
                 "Tick %d: schedule=%.4fs collect=%.4fs resolve=%.4fs subsys=%.4fs total=%.4fs entities=%d applied=%d",
                 tick,
                 t1 - t0, t2 - t1, t3 - t2, t4 - t3, t4 - t0,
                 len(ready_entities), len(applied),
             )
+        else:
+            SIM_TICK_DURATION.labels(phase="total_idle").observe(t4 - t0)
 
         if self._recorder and applied:
             self._recorder.record_tick(tick, applied, self._world)

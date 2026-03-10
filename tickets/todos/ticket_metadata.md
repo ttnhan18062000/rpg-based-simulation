@@ -34,6 +34,8 @@ All bugs, enhancements, adjustments, design reviews, and infrastructure tickets 
 | design-02 | Revise Ticking Mechanism | design | Fixed empty-tick stall, subsystem rate divisors |
 | infra-01 | Automated Testing | infra | `make test`, deterministic replay, 575+ tests |
 | infra-02 | Performance Profiling | infra | `make profile`, per-tick timing, memory profiling |
+| infra-03 | Telemetry & Observability | infra | Prometheus mapping, automated docker deployment, Grafana dashboards via containerized stack, test automation |
+| infra-04 | Realtime State Streaming | infra | Shifted 80ms HTTP polling to highly optimized unidirectional SSE delta payloads, heavily reducing network burden |
 
 **Automation commands:**
 
@@ -116,10 +118,9 @@ Epics re-ordered by how much they contribute to **emergent narrative moments** â
 | ID | Ticket | Priority | Effort | Why |
 |----|--------|----------|--------|-----|
 | design-03 | [Data-Driven Registries](design-03-data-driven-registries.md) | **P1** | M | Foundation for Epic-18; decouples configs from Python logic. |
-| infra-03 | [Telemetry & Observability](infra-03-telemetry-and-observability.md) | **P2** | M | OpenTelemetry + Prometheus to catch performance stalls early. |
-| infra-04 | [Realtime State Streaming](infra-04-realtime-state-streaming.md) | **P2** | M | Replace 80ms `/state` polling with WebSockets/SSE delta updates. |
-| infra-05 | [Multiprocessing AI Workers](infra-05-multiprocessing-ai-workers.md) | **P3** | L | Shared-memory process pool to break GIL limits for heavy pathfinding/AI. |
-| epic-19 | [Database Event-Sourcing](epic-19-event-sourcing-persistence.md) | **P2** | XL | Long-term durability via PostgreSQL; essential for Epic-17 months-long persistence. |
+| infra-07 | [Redis Streams Event Bus](infra-07-redis-event-bus.md) | **P1** | M | Replace in-memory `asyncio.Queue` with Redis Streams for horizontally scalable SSE. |
+| infra-05 | [Distributed AI Workers (RabbitMQ)](infra-05-multiprocessing-ai-workers.md) | **P3** | L | Use RabbitMQ as a Task Queue to distribute A* pathfinding across a container cluster, bypassing the GIL completely. |
+| epic-19 | [Kafka Event-Sourcing](epic-19-event-sourcing-persistence.md) | **P2** | XL | Long-term durability via Apache Kafka; append-only event-sourcing allows infinite rewinds and ML data pipelines. |
 | infra-06 | [Hardening & Chaos Testing](infra-06-hardening-and-chaos-testing.md) | **P3** | M | Property-Based Testing (Hypothesis) and fault injection. |
 
 ---

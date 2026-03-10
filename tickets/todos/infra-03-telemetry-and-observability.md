@@ -1,4 +1,4 @@
-# infra-03: Production Telemetry and Observability
+# [DONE] infra-03: Production Telemetry and Observability
 
 ## Objective
 Instrument the `WorldLoop` and FastAPI layer with OpenTelemetry traces and Prometheus metrics to eliminate performance guesswork.

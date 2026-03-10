@@ -2,7 +2,6 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import type { MapData, WorldState, SimulationStats, Entity, EntitySlim, GameEvent, GroundItem, Building, ResourceNode, Region, StaticData } from '@/types/api';
 
 const API_BASE = '/api/v1';
-const POLL_MS = 80;
 
 async function fetchJSON<T>(path: string): Promise<T> {
   const res = await fetch(API_BASE + path);
@@ -71,7 +70,6 @@ export function useSimulation(): SimulationState {
   const [selectedEntityId, setSelectedEntityId] = useState<number | null>(null);
 
   const lastTickRef = useRef(0);
-  const pollingRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const mapLoadedRef = useRef(false);
   const staticLoadedRef = useRef(false);
   const selectedIdRef = useRef<number | null>(null);
@@ -110,25 +108,77 @@ export function useSimulation(): SimulationState {
     return () => { cancelled = true; };
   }, []);
 
-  // Poll loop
+  // EventSource stream loop
   useEffect(() => {
     if (!mapLoadedRef.current && !mapData) return;
 
-    let cancelled = false;
+    let evtSource: EventSource | null = null;
+    let pollInterval: ReturnType<typeof setInterval> | null = null;
+    let pollingStatus = false;
 
-    const poll = async () => {
-      if (cancelled) return;
+    const connectStream = () => {
+      evtSource = new EventSource(`${API_BASE}/stream`);
+      
+      evtSource.onmessage = (event) => {
+        try {
+          const delta = JSON.parse(event.data);
+          
+          if (delta.error) {
+            console.error('Stream error:', delta.error);
+            return;
+          }
+
+          setTick(delta.tick);
+
+          setEntities((prev) => {
+            // Convert array to map for fast updates
+            const entMap = new Map(prev.map(e => [e.id, e]));
+
+            // Remove dead
+            for (const id of delta.removed) {
+              entMap.delete(id);
+            }
+
+            // Upsert changed
+            for (const upd of delta.changed) {
+              entMap.set(upd.id, upd);
+            }
+
+            const next = Array.from(entMap.values());
+            setAliveCount(next.length);
+            return next;
+          });
+
+          if (delta.events && delta.events.length > 0) {
+            setEvents(prev => {
+              const existingKeys = new Set(prev.map(e => `${e.tick}:${e.message}`));
+              const fresh = delta.events.filter((e: GameEvent) => !existingKeys.has(`${e.tick}:${e.message}`));
+              return fresh.length > 0 ? [...prev, ...fresh] : prev;
+            });
+          }
+        } catch (err) {
+          console.error('Failed to parse SSE payload:', err);
+        }
+      };
+
+      evtSource.onerror = () => {
+        evtSource?.close();
+        setTimeout(connectStream, 2000); // Reconnect on failure
+      };
+    };
+
+    connectStream();
+
+    // Secondary slow-poll: 1) fetches full selected_entity data, 2) fetches stats (total spawns, status)
+    // Runs every 500ms instead of 80ms
+    const fallbackPoll = async () => {
+      if (pollingStatus) return;
+      pollingStatus = true;
       try {
-        const selId = selectedIdRef.current;
-        const selParam = selId != null ? `&selected=${selId}` : '';
-        const [state, stats] = await Promise.all([
-          fetchJSON<WorldState>(`/state?since_tick=${Math.max(0, lastTickRef.current - 5)}${selParam}`),
+        const [stats] = await Promise.all([
           fetchJSON<SimulationStats>('/stats'),
         ]);
 
-        if (cancelled) return;
-
-        // Always update simulation status (running/paused)
         setTotalSpawned(stats.total_spawned);
         setTotalDeaths(stats.total_deaths);
         if (!stats.running) {
@@ -139,47 +189,36 @@ export function useSimulation(): SimulationState {
           setStatus('RUNNING');
         }
 
-        // Update selected entity when response content changes (avoids re-renders on same data)
-        // Use response entity ID (not requested ID) to correctly handle in-flight poll transitions
-        const responseSelId = state.selected_entity?.id ?? null;
-        const selKey = `${responseSelId}_${state.tick}`;
-        if (selKey !== lastSelKeyRef.current) {
-          lastSelKeyRef.current = selKey;
-          setSelectedEntity(state.selected_entity ?? null);
+        const selId = selectedIdRef.current;
+        if (selId !== null) {
+            const state = await fetchJSON<WorldState>(`/state?since_tick=${Math.max(0, lastTickRef.current - 5)}&selected=${selId}`);
+            const responseSelId = state.selected_entity?.id ?? null;
+            const selKey = `${responseSelId}_${state.tick}`;
+            if (selKey !== lastSelKeyRef.current) {
+                lastSelKeyRef.current = selKey;
+                setSelectedEntity(state.selected_entity ?? null);
+            }
+            // Ground items only come from the massive dump currently
+            setGroundItems(state.ground_items || []);
+        } else {
+            setSelectedEntity(null);
+            
+            // Still need to get ground items periodically if no selection
+             const state = await fetchJSON<WorldState>(`/state?since_tick=${Math.max(0, lastTickRef.current - 5)}`);
+             setGroundItems(state.ground_items || []);
         }
-
-        // Skip bulk entity/groundItem updates if tick hasn't advanced (avoids re-renders when paused)
-        const tickChanged = state.tick !== lastTickRef.current;
-        lastTickRef.current = state.tick;
-
-        if (tickChanged) {
-          setTick(state.tick);
-          setAliveCount(state.alive_count);
-          setEntities(state.entities);
-          setGroundItems(state.ground_items || []);
-        }
-
-        if (state.events.length > 0) {
-          setEvents(prev => {
-            const existingKeys = new Set(prev.map(e => `${e.tick}:${e.message}`));
-            const fresh = state.events.filter(e => !existingKeys.has(`${e.tick}:${e.message}`));
-            return fresh.length > 0 ? [...prev, ...fresh] : prev;
-          });
-        }
-      } catch {
-        // server gone — keep retrying
-      }
-
-      if (!cancelled) {
-        pollingRef.current = setTimeout(poll, POLL_MS);
+      } catch (err) {
+        // quiet fail
+      } finally {
+        pollingStatus = false;
       }
     };
-
-    poll();
+    
+    pollInterval = setInterval(fallbackPoll, 500);
 
     return () => {
-      cancelled = true;
-      if (pollingRef.current) clearTimeout(pollingRef.current);
+      if (evtSource) evtSource.close();
+      if (pollInterval) clearInterval(pollInterval);
     };
   }, [mapData]);
 

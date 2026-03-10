@@ -9,6 +9,7 @@ from __future__ import annotations
 import logging
 import threading
 import time
+import typing
 from typing import TYPE_CHECKING
 
 from src.ai.brain import AIBrain
@@ -105,6 +106,18 @@ class EngineManager:
     @property
     def total_deaths(self) -> int:
         return self._total_deaths
+
+    # -- listeners --
+
+    def add_tick_listener(self, cb: typing.Callable[[Snapshot, list[SimEvent]], None]) -> None:
+        with self._listeners_lock:
+            if cb not in self._listeners:
+                self._listeners.append(cb)
+
+    def remove_tick_listener(self, cb: typing.Callable[[Snapshot, list[SimEvent]], None]) -> None:
+        with self._listeners_lock:
+            if cb in self._listeners:
+                self._listeners.remove(cb)
 
     # -- snapshot access --
 
@@ -676,6 +689,14 @@ class EngineManager:
             self._total_spawned += len(new_ids)
             self._total_deaths += len(dead_ids)
 
+            from src.utils.metrics import ACTIVE_ENTITIES, TOTAL_SPAWNS, TOTAL_DEATHS
+
+            ACTIVE_ENTITIES.set(len(alive_after))
+            if new_ids:
+                TOTAL_SPAWNS.inc(len(new_ids))
+            if dead_ids:
+                TOTAL_DEATHS.inc(len(dead_ids))
+
             self._publish_snapshot_and_events()
 
             # Rate limiting
@@ -686,7 +707,7 @@ class EngineManager:
         logger.info("Engine thread exited.")
 
     def _publish_snapshot_and_events(self) -> None:
-        """Swap snapshot + push events from last_applied."""
+        """Swap snapshot + push events to Redis Stream."""
         assert self._loop is not None
         snap = self._loop.create_snapshot()
         with self._snapshot_lock:
@@ -695,6 +716,36 @@ class EngineManager:
         events: list[SimEvent] = self._loop.tick_events
         if events:
             self._event_log.append_many(events)
+
+        # Publish the state delta to Redis Streams (infra-07)
+        try:
+            from src.api.redis_client import get_sync_redis
+            r = get_sync_redis()
+            
+            # Compute delta from the PREVIOUS snapshot
+            import json
+            from src.api.routes.stream import compute_delta
+            
+            # We need to maintain a reference to the 'last_published_snapshot' to diff against.
+            # But wait, compute_delta requires (old_snap, new_snap).
+            old_snap = getattr(self, "_last_published_snapshot", None)
+            changed, removed = compute_delta(old_snap, snap)
+            
+            payload = {
+                "tick": snap.tick,
+                "changed": changed,
+                "removed": removed,
+                "events": [e.to_dict() for e in events]
+            }
+            
+            # XADD to "sim:stream". Using "*" for auto-generated Redis Stream ID.
+            r.xadd("sim:stream", {"payload": json.dumps(payload)})
+            
+            # Save this snapshot for the NEXT tick's diff
+            self._last_published_snapshot = snap
+            
+        except Exception:
+            logger.exception("Failed to publish tick %d to Redis", self._loop.world.tick)
 
     def _current_tick(self) -> int:
         if self._loop:
