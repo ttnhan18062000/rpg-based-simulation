@@ -2,7 +2,7 @@
 
 Master index of all active tickets with priority, effort estimate, dependencies, and status.
 
-**Last updated:** 2026-02-28
+**Last updated:** 2026-03-11
 
 ---
 
@@ -36,6 +36,8 @@ All bugs, enhancements, adjustments, design reviews, and infrastructure tickets 
 | infra-02 | Performance Profiling | infra | `make profile`, per-tick timing, memory profiling |
 | infra-03 | Telemetry & Observability | infra | Prometheus mapping, automated docker deployment, Grafana dashboards via containerized stack, test automation |
 | infra-04 | Realtime State Streaming | infra | Shifted 80ms HTTP polling to highly optimized unidirectional SSE delta payloads, heavily reducing network burden |
+| infra-05 | Distributed AI Workers | infra | Integrated RabbitMQ to distribute AI evaluations to scalable daemon processes bypassing the GIL |
+| infra-07 | Redis Streams Event Bus | infra | Replaced local asyncio.Queues with a Redis Stream for system-wide event broadcasting and delta state distribution |
 
 **Automation commands:**
 
@@ -56,6 +58,7 @@ All bugs, enhancements, adjustments, design reviews, and infrastructure tickets 
 |----|--------|--------|---------|
 | epic-15 | Region & World Overhaul | XL | Voronoi tessellation, 512×512 map, 8 biomes, 9 factions, tier 1–4 difficulty, loot scaling, region events, hero AI awareness |
 | epic-16 | Performance Audit | L | Backend: 43% faster ticks (49.8ms→28.4ms), 70% fewer function calls. Frontend: 256× smaller overlay, drag-skip, minimap caching, 98% API payload reduction |
+| epic-19 | [Kafka Event-Sourcing](epic-19-event-sourcing-persistence.md) | XL | Long-term durability via Apache Kafka; append-only event-sourcing allows infinite rewinds and ML data pipelines. |
 
 ## Partially Completed Epics
 
@@ -118,9 +121,6 @@ Epics re-ordered by how much they contribute to **emergent narrative moments** �
 | ID | Ticket | Priority | Effort | Why |
 |----|--------|----------|--------|-----|
 | design-03 | [Data-Driven Registries](design-03-data-driven-registries.md) | **P1** | M | Foundation for Epic-18; decouples configs from Python logic. |
-| infra-07 | [Redis Streams Event Bus](infra-07-redis-event-bus.md) | **P1** | M | Replace in-memory `asyncio.Queue` with Redis Streams for horizontally scalable SSE. |
-| infra-05 | [Distributed AI Workers (RabbitMQ)](infra-05-multiprocessing-ai-workers.md) | **P3** | L | Use RabbitMQ as a Task Queue to distribute A* pathfinding across a container cluster, bypassing the GIL completely. |
-| epic-19 | [Kafka Event-Sourcing](epic-19-event-sourcing-persistence.md) | **P2** | XL | Long-term durability via Apache Kafka; append-only event-sourcing allows infinite rewinds and ML data pipelines. |
 | infra-06 | [Hardening & Chaos Testing](infra-06-hardening-and-chaos-testing.md) | **P3** | M | Property-Based Testing (Hypothesis) and fault injection. |
 
 ---

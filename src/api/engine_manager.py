@@ -186,6 +186,15 @@ class EngineManager:
         """Construct all simulation components from config."""
         cfg = self._config
         self._rng = DeterministicRNG(cfg.world_seed)
+        
+        # --- KAFKA RECOVERY ---
+        world = self._try_recover_world(cfg)
+        if world is not None:
+            generator = EntityGenerator(cfg, self._rng)
+            self._finalize_build(world, cfg, generator)
+            return
+            
+        # --- GENERATE NEW WORLD ---
         grid = Grid(cfg.grid_width, cfg.grid_height)
         spatial = SpatialHash(cfg.spatial_cell_size)
         world = WorldState(seed=cfg.world_seed, grid=grid, spatial_index=spatial)
@@ -642,6 +651,10 @@ class EngineManager:
                      len(world.resource_nodes), len(world.regions),
                      sum(len(r.locations) for r in world.regions))
 
+        self._finalize_build(world, cfg, generator)
+
+    def _finalize_build(self, world: WorldState, cfg: SimulationConfig, generator: EntityGenerator) -> None:
+        """Finalize engine setup: create loop, brain, worker pool, and initial snapshot."""
         faction_reg = FactionRegistry.default()
         brain = AIBrain(cfg, self._rng, faction_reg)
         self._worker_pool = WorkerPool(cfg, brain)
@@ -657,6 +670,96 @@ class EngineManager:
         snap = self._loop.create_snapshot()
         with self._snapshot_lock:
             self._latest_snapshot = snap
+
+    def _try_recover_world(self, cfg: SimulationConfig) -> WorldState | None:
+        """Attempt to recover the simulation state from Kafka."""
+        import pickle
+        import uuid
+        from src.api.kafka_client import create_kafka_consumer, KAFKA_TOPIC_SNAPSHOTS, KAFKA_TOPIC_EVENTS
+        from confluent_kafka import TopicPartition, OFFSET_BEGINNING
+        
+        # Unique consumer group for startup so it doesn't mess with other readers
+        consumer = create_kafka_consumer(f"sim_startup_{uuid.uuid4().hex}")
+        if not consumer:
+            return None
+            
+        try:
+            # 1. Recover latest Compacted Snapshot
+            consumer.assign([TopicPartition(KAFKA_TOPIC_SNAPSHOTS, 0)])
+            consumer.seek(TopicPartition(KAFKA_TOPIC_SNAPSHOTS, 0, OFFSET_BEGINNING))
+            
+            latest_snap = None
+            timeout_strikes = 0
+            # Read until we hit EOF for the partition
+            while timeout_strikes < 3:
+                msg = consumer.poll(0.5)
+                if msg is None:
+                    timeout_strikes += 1
+                    continue
+                timeout_strikes = 0  # reset on active read
+                
+                if msg.error():
+                    break
+                    
+                try:
+                    obj = pickle.loads(msg.value())
+                    if obj and hasattr(obj, 'tick'):
+                        latest_snap = obj
+                except Exception as e:
+                    logger.debug("Failed to deserialize snapshot: %s", e)
+                    
+            if not latest_snap:
+                logger.debug("Kafka Setup: No snapshot found on sim.snapshots")
+                return None
+                
+            logger.info("Kafka Setup: Recovered snapshot at tick %d", latest_snap.tick)
+            
+            spatial = SpatialHash(cfg.spatial_cell_size)
+            world = WorldState.from_snapshot(latest_snap, spatial)
+            
+            # 2. Replay subsequent Events
+            consumer.assign([TopicPartition(KAFKA_TOPIC_EVENTS, 0)])
+            consumer.seek(TopicPartition(KAFKA_TOPIC_EVENTS, 0, OFFSET_BEGINNING))
+            
+            resolver = ConflictResolver(cfg, DeterministicRNG(cfg.world_seed))
+            replayed_ticks = 0
+            timeout_strikes = 0
+            
+            while timeout_strikes < 3:
+                msg = consumer.poll(0.5)
+                if msg is None:
+                    timeout_strikes += 1
+                    continue
+                timeout_strikes = 0
+                
+                if msg.error():
+                    break
+                    
+                try:
+                    payload = pickle.loads(msg.value())
+                    tick = payload.get("tick")
+                    proposals = payload.get("proposals", [])
+                    
+                    # Log compaction guarantees ordered snapshots, but we must strictly ensure
+                    # we only apply events that happened AFTER this snapshot's tick
+                    if tick and tick > world.tick:
+                        resolver.resolve(proposals, world)
+                        world.tick = tick
+                        replayed_ticks += 1
+                except Exception as e:
+                    logger.debug("Failed to deserialize event: %s", e)
+                    
+            if replayed_ticks > 0:
+                logger.info("Kafka Setup: Replayed %d ticks of events. Current synchronized tick: %d", 
+                            replayed_ticks, world.tick)
+                            
+            return world
+            
+        except Exception as e:
+            logger.error("Failed to recover world from Kafka: %s", e)
+            return None
+        finally:
+            consumer.close()
 
     def _run_loop(self) -> None:
         """Background thread main loop."""

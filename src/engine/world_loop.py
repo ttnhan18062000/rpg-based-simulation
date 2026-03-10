@@ -24,6 +24,9 @@ from src.engine.worker_pool import WorkerPool
 from src.systems.generator import EntityGenerator
 from src.utils.metrics import SIM_TICK_DURATION
 
+import pickle
+from src.api.kafka_client import get_kafka_producer, KAFKA_TOPIC_EVENTS, KAFKA_TOPIC_SNAPSHOTS
+
 if TYPE_CHECKING:
     from src.actions.base import ActionProposal
     from src.config import SimulationConfig
@@ -243,6 +246,39 @@ class WorldLoop:
 
         if self._recorder and applied:
             self._recorder.record_tick(tick, applied, self._world)
+            
+        # publish immutable snapshot to Kafka every 1000 ticks for compaction
+        if tick % 1000 == 0:
+            producer = get_kafka_producer()
+            if producer:
+                try:
+                    snap = Snapshot.from_world(self._world)
+                    producer.produce(
+                        KAFKA_TOPIC_SNAPSHOTS,
+                        key="latest", # use static key for log compaction
+                        value=pickle.dumps(snap)
+                    )
+                    producer.poll(0)
+                except Exception as e:
+                    logger.error("Failed to publish snapshot to Kafka: %s", e)
+                    
+        # publish deterministic tick events
+        if applied:
+            producer = get_kafka_producer()
+            if producer:
+                try:
+                    payload = {
+                        "tick": tick,
+                        "proposals": applied
+                    }
+                    producer.produce(
+                        KAFKA_TOPIC_EVENTS,
+                        key=str(tick),
+                        value=pickle.dumps(payload)
+                    )
+                    producer.poll(0)
+                except Exception as e:
+                    logger.error("Failed to publish events to Kafka: %s", e)
 
     def _tick_subsystems(self, tick: int) -> None:
         """Run world subsystems with configurable rate divisors (design-02).

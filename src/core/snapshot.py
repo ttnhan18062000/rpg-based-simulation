@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections import defaultdict
 from dataclasses import dataclass, field
-from types import MappingProxyType
 from typing import Mapping
 
 from src.core.buildings import Building
@@ -50,9 +49,9 @@ class Snapshot:
         return cls(
             tick=world.tick,
             seed=world.seed,
-            entities=MappingProxyType(copied_entities),
+            entities=copied_entities,
             grid=world.grid,  # grid is immutable during tick processing
-            ground_items=MappingProxyType(copied_ground),
+            ground_items=copied_ground,
             camps=tuple((c.x, c.y) for c in world.camps),
             buildings=tuple(world.buildings),
             resource_nodes=tuple(n.copy() for n in world.resource_nodes.values()),
