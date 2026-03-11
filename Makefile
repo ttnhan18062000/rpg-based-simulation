@@ -48,6 +48,23 @@ serve: build ## Build frontend + start production server
 serve-only: ## Start production server (assumes frontend already built)
 	python -m src serve --port 8000
 
+# ── Infrastructure & Testing ─────────────────────────────
+
+docker-up: ## Start all infrastructure components via Docker Compose
+	docker compose up -d
+
+docker-down: ## Stop and remove all Docker Compose containers
+	docker compose down
+
+docker-logs: ## Tail logs for all Docker Compose containers
+	docker compose logs -f
+
+run-worker: ## Start the AI Worker Daemon locally
+	uv run python -m src.workers.ai_worker_daemon
+
+run-engine: ## Start the Backend Engine locally
+	uv run python -m src serve --host 0.0.0.0 --port 8000
+
 # ── CLI ──────────────────────────────────────────────────
 
 cli: ## Run headless simulation (200 ticks)

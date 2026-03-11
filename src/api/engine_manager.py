@@ -140,6 +140,12 @@ class EngineManager:
         self._running.set()
         self._thread = threading.Thread(target=self._run_loop, name="engine-loop", daemon=True)
         self._thread.start()
+        # Start resource metrics collector
+        try:
+            from src.utils.resource_collector import start_resource_collector
+            start_resource_collector()
+        except Exception:
+            logger.debug("Resource collector not started", exc_info=True)
         logger.info("EngineManager started (tick_rate=%.3fs)", self._tick_rate)
 
     def pause(self) -> None:
@@ -777,6 +783,7 @@ class EngineManager:
                 self._step_requested.clear()
 
             # Execute one tick
+            _tick_start = time.perf_counter()
             alive_before = set(self._loop.world.entities.keys())
             can_continue = self._loop.tick_once()
 
@@ -792,13 +799,31 @@ class EngineManager:
             self._total_spawned += len(new_ids)
             self._total_deaths += len(dead_ids)
 
-            from src.utils.metrics import ACTIVE_ENTITIES, TOTAL_SPAWNS, TOTAL_DEATHS
+            from src.utils.metrics import (
+                ACTIVE_ENTITIES, TOTAL_SPAWNS, TOTAL_DEATHS,
+                SIM_CURRENT_TICK, SIM_TICKS_PER_SECOND,
+                SIM_COMBAT_EVENTS, SIM_SKILL_EVENTS,
+            )
 
+            current_tick = self._loop.world.tick
             ACTIVE_ENTITIES.set(len(alive_after))
+            SIM_CURRENT_TICK.set(current_tick)
             if new_ids:
                 TOTAL_SPAWNS.inc(len(new_ids))
             if dead_ids:
                 TOTAL_DEATHS.inc(len(dead_ids))
+
+            # Count combat and skill events
+            for ev in self._loop.tick_events:
+                if ev.category == "combat":
+                    SIM_COMBAT_EVENTS.inc()
+                elif ev.category == "skill":
+                    SIM_SKILL_EVENTS.inc()
+
+            # Throughput
+            tick_elapsed = time.perf_counter() - _tick_start
+            if tick_elapsed > 0:
+                SIM_TICKS_PER_SECOND.set(1.0 / tick_elapsed)
 
             self._publish_snapshot_and_events()
 
@@ -823,30 +848,27 @@ class EngineManager:
         # Publish the state delta to Redis Streams (infra-07)
         try:
             from src.api.redis_client import get_sync_redis
+            from src.api.routes.stream import compute_delta, _snapshot_to_slim_dict
+            from src.utils.metrics import SIM_REDIS_PUBLISH_DURATION
             r = get_sync_redis()
-            
-            # Compute delta from the PREVIOUS snapshot
-            import json
-            from src.api.routes.stream import compute_delta
-            
-            # We need to maintain a reference to the 'last_published_snapshot' to diff against.
-            # But wait, compute_delta requires (old_snap, new_snap).
-            old_snap = getattr(self, "_last_published_snapshot", None)
-            changed, removed = compute_delta(old_snap, snap)
-            
-            payload = {
-                "tick": snap.tick,
-                "changed": changed,
-                "removed": removed,
-                "events": [e.to_dict() for e in events]
-            }
-            
-            # XADD to "sim:stream". Using "*" for auto-generated Redis Stream ID.
-            r.xadd("sim:stream", {"payload": json.dumps(payload)})
-            
-            # Save this snapshot for the NEXT tick's diff
-            self._last_published_snapshot = snap
-            
+
+            _t0 = time.perf_counter()
+
+            # Convert snapshots to slim entity dicts for diffing
+            loot_duration = self.config.loot_duration
+            new_slim = _snapshot_to_slim_dict(snap, loot_duration)
+            old_slim = getattr(self, "_last_published_slim", {})
+
+            payload_json = compute_delta(old_slim, new_slim, snap.tick, events)
+
+            if payload_json:
+                r.xadd("sim:stream", {"payload": payload_json})
+
+            SIM_REDIS_PUBLISH_DURATION.observe(time.perf_counter() - _t0)
+
+            # Save slim dict for the NEXT tick's diff
+            self._last_published_slim = new_slim
+
         except Exception:
             logger.exception("Failed to publish tick %d to Redis", self._loop.world.tick)
 

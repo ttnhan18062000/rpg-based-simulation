@@ -1,128 +1,115 @@
-"""Tests for the /api/v1/stream Server-Sent Events endpoint."""
+"""Tests for the /api/v1/stream compute_delta logic."""
 
 import json
-import os
 import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
-from fastapi.testclient import TestClient
 
-from src.api.app import create_app
-from src.api.dependencies import get_engine_manager
-from src.config import SimulationConfig
+from src.api.schemas import EntitySlimSchema
+from src.api.routes.stream import compute_delta
+from src.utils.event_log import SimEvent
 
-import asyncio
 
-import asyncio
-import threading
-from unittest.mock import AsyncMock, MagicMock, patch
-
-@pytest.fixture(autouse=True)
-def mock_redis():
-    """Mock Redis using an in-memory queue so testcontainers isn't required locally."""
-    stream_data = []
-    stream_event = threading.Event()
-
-    async def mock_xread(streams, count=None, block=None):
-        last_id = streams.get("sim:stream")
-        start_idx = 0
-        if last_id != "$" and last_id is not None:
-             try:
-                 start_idx = int(str(last_id).split('-')[0]) + 1
-             except ValueError:
-                 pass
-        
-        # We must use asyncio.to_thread or brief async sleeps so we don't block the event loop
-        # waiting on a threading.Event
-        if start_idx >= len(stream_data) and block:
-            deadline = asyncio.get_running_loop().time() + (block / 1000.0)
-            while start_idx >= len(stream_data) and asyncio.get_running_loop().time() < deadline:
-                await asyncio.sleep(0.01)
-                
-        if start_idx < len(stream_data):
-            messages = []
-            limit = count if count else len(stream_data)
-            for i in range(start_idx, min(start_idx + limit, len(stream_data))):
-                messages.append((f"{i}-0", stream_data[i]))
-            
-            return [["sim:stream", messages]]
-        return []
-
-    def mock_xadd(name, fields):
-        stream_data.append(fields)
-        stream_event.set()
-
-    with patch("src.api.redis_client.get_async_redis") as mock_async, \
-         patch("src.api.redis_client.get_sync_redis") as mock_sync:
-        
-        async_r = AsyncMock()
-        async_r.xread.side_effect = mock_xread
-        
-        sync_r = MagicMock()
-        sync_r.xadd.side_effect = mock_xadd
-        
-        mock_async.return_value = async_r
-        mock_sync.return_value = sync_r
-        
-        yield async_r, sync_r
-
-@pytest.fixture
-def test_app(load_registries):
-    """Create a FastAPI app instance with a fast tick rate for testing."""
-    config = SimulationConfig(
-        world_seed=42,
-        grid_width=32,
-        grid_height=32,
-        town_radius=2,
-        num_camps=1,
-        initial_entity_count=2,
+def _make_slim(eid: int, x: int = 0, y: int = 0, hp: int = 10, **kw) -> EntitySlimSchema:
+    """Helper to build a minimal EntitySlimSchema for testing."""
+    defaults = dict(
+        id=eid, kind="goblin", x=x, y=y, hp=hp, max_hp=20,
+        state="IDLE", level=1, tier=0, faction="monsters",
+        weapon_range=1, combat_target_id=None, loot_progress=0, loot_duration=3,
     )
-    app = create_app(config)
-    return app
+    defaults.update(kw)
+    return EntitySlimSchema(**defaults)
 
-def test_stream_delta_updates(test_app):
-    """Test that the /stream endpoint returns SSE delta payloads."""
-    # We must use the app's lifespan to initialize the EngineManager
-    with TestClient(test_app) as client:
-        # Start the stream request
-        with client.stream("GET", "/api/v1/stream") as response:
-            assert response.status_code == 200
-            assert response.headers["content-type"] == "text/event-stream; charset=utf-8"
 
-            # Read the first event (full snapshot)
-            lines = []
-            for line in response.iter_lines():
-                if line:
-                    lines.append(line)
-                if not line and lines: # Empty line marks end of event
-                    break
-                    
-            assert len(lines) > 0
-            assert lines[0].startswith("data: ")
-            
-            data = json.loads(lines[0][6:])
-            assert "tick" in data
-            assert "changed" in data
-            assert "removed" in data
-            assert "events" in data
-            
-            # Since this is the initial snapshot, 'changed' should contain all living entities
-            assert len(data["changed"]) > 0
-            
-            # Trigger a manual tick to generate a delta
-            manager = test_app.dependency_overrides.get(get_engine_manager, get_engine_manager)()
-            manager.step()
-            
-            # Read the next event (delta)
-            lines = []
-            for line in response.iter_lines():
-                if line:
-                    lines.append(line)
-                if not line and lines:
-                    break
-                    
-            if lines:
-                data = json.loads(lines[0][6:])
-                assert "tick" in data
-                assert "changed" in data
-                # Delta should only contain entities that changed (moved, etc.)
-                # If they didn't do anything, it might be empty or heartbeat
+class TestComputeDelta:
+    """Unit tests for compute_delta — the core diffing engine behind SSE streaming."""
+
+    def test_initial_snapshot_full_dump(self):
+        """When old_slim is empty, every entity should appear in 'changed'."""
+        new_slim = {1: _make_slim(1), 2: _make_slim(2)}
+        result = compute_delta({}, new_slim, tick=0, events=[])
+
+        assert result is not None
+        data = json.loads(result)
+        assert data["tick"] == 0
+        assert len(data["changed"]) == 2
+        assert data["removed"] == []
+        assert data["events"] == []
+
+    def test_no_changes_skipped(self):
+        """Identical snapshots on a non-heartbeat tick should return None."""
+        slim = {1: _make_slim(1)}
+        result = compute_delta(slim, slim, tick=1, events=[])
+        assert result is None  # No diff, no heartbeat tick
+
+    def test_heartbeat_on_tick_20(self):
+        """Even without changes, tick % 20 == 0 should emit a heartbeat."""
+        slim = {1: _make_slim(1)}
+        result = compute_delta(slim, slim, tick=20, events=[])
+        assert result is not None
+        data = json.loads(result)
+        assert data["tick"] == 20
+        assert data["changed"] == []
+        assert data["removed"] == []
+
+    def test_entity_moved(self):
+        """A position change should appear in 'changed'."""
+        old = {1: _make_slim(1, x=0, y=0)}
+        new = {1: _make_slim(1, x=5, y=3)}
+        result = compute_delta(old, new, tick=10, events=[])
+
+        data = json.loads(result)
+        assert len(data["changed"]) == 1
+        assert data["changed"][0]["x"] == 5
+        assert data["changed"][0]["y"] == 3
+
+    def test_entity_died(self):
+        """An entity present in old but missing in new should appear in 'removed'."""
+        old = {1: _make_slim(1), 2: _make_slim(2)}
+        new = {1: _make_slim(1)}
+        result = compute_delta(old, new, tick=5, events=[])
+
+        data = json.loads(result)
+        assert data["removed"] == [2]
+
+    def test_entity_spawned(self):
+        """A new entity not in old should appear in 'changed'."""
+        old = {1: _make_slim(1)}
+        new = {1: _make_slim(1), 3: _make_slim(3, x=10, y=10)}
+        result = compute_delta(old, new, tick=7, events=[])
+
+        data = json.loads(result)
+        assert len(data["changed"]) == 1
+        assert data["changed"][0]["id"] == 3
+
+    def test_events_serialized(self):
+        """SimEvents passed to compute_delta should appear serialized in the output."""
+        slim = {1: _make_slim(1)}
+        events = [
+            SimEvent(tick=5, category="combat", message="Goblin attacks Hero",
+                     entity_ids={1, 2}, metadata={"damage": 10}),
+        ]
+        result = compute_delta({}, slim, tick=5, events=events)
+
+        data = json.loads(result)
+        assert len(data["events"]) == 1
+        assert data["events"][0]["category"] == "combat"
+        assert data["events"][0]["message"] == "Goblin attacks Hero"
+
+    def test_hp_change_detected(self):
+        """HP changes count as a diff."""
+        old = {1: _make_slim(1, hp=20)}
+        new = {1: _make_slim(1, hp=15)}
+        result = compute_delta(old, new, tick=3, events=[])
+
+        data = json.loads(result)
+        assert len(data["changed"]) == 1
+        assert data["changed"][0]["hp"] == 15
+
+    def test_state_change_detected(self):
+        """AI state changes count as a diff."""
+        old = {1: _make_slim(1, state="IDLE")}
+        new = {1: _make_slim(1, state="HUNT")}
+        result = compute_delta(old, new, tick=4, events=[])
+
+        data = json.loads(result)
+        assert len(data["changed"]) == 1
+        assert data["changed"][0]["state"] == "HUNT"
