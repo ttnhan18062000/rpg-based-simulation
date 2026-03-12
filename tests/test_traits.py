@@ -206,6 +206,9 @@ class _FakeRNG:
         self._counter += 1
         return (self._counter % 100) / 100.0 < probability
 
+    def weighted_choice(self, domain, eid, tick, items, weights):
+        return items[0]
+
 
 class TestTraitAssignment:
     """Test trait assignment logic."""

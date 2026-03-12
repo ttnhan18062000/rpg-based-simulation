@@ -2471,14 +2471,17 @@ Combat trains STR (+0.015/action) and AGI (+0.008/action) for physical attacks, 
 
 ---
 
-## Leveling System
+## Leveling System (epic-18 Phase A)
 
 Level-ups checked each tick in `WorldLoop._check_level_ups()`.
 
 ### Level-Up Condition
 
-```
-while entity.stats.xp >= entity.stats.xp_to_next and level < max_level:
+Each entity is bound to a specific `RACE_PROFILE` defining their `train_rate`, `level_cap`, and `evolves` logic.
+- Entities without a profile or a `train_rate=0.0` (like `skeleton`) earn 0 XP.
+
+```python
+while entity.stats.xp >= entity.stats.xp_to_next and level < profile.level_cap:
     level up
 ```
 
@@ -2486,14 +2489,13 @@ Excess XP carries over.
 
 ### Stat Growth Per Level
 
-| Stat | Growth | Config Key |
-|------|--------|------------|
-| Max HP | +5 | `stat_growth_hp` |
-| ATK | +1 | `stat_growth_atk` |
-| DEF | +1 | `stat_growth_def` |
-| SPD | +1 | `stat_growth_spd` |
+Base dimishing returns stat growth based on the current level bracket:
+- Levels 1-10: HP +5, ATK/DEF/SPD +1
+- Levels 11-20: HP +3, ATK/DEF/SPD +1
+- Levels 21-30: HP +2, ATK/DEF/SPD +0
 
-Current HP also increases by `stat_growth_hp` (capped at new max).
+**Milestone Levels (5, 10, 15, 20, 25, 30)**:
+Whenever these levels are crossed, instead of base growth, the entity receives roughly **3x massive stat spikes** (+15 HP, +3 ATK/DEF/SPD). An event is emitted highlighting the milestone.
 
 ### Attribute Growth Per Level
 
@@ -2503,15 +2505,29 @@ On each level-up, `level_up_attributes()` is called:
 
 ### XP Curve
 
-```
-xp_to_next = int(xp_to_next * xp_per_level_scale)
-```
+XP to next level dynamically scales by the current level:
 
-| Config | Default |
-|--------|---------|
-| `xp_per_kill_base` | 30 |
-| `xp_per_level_scale` | 1.5 |
-| `max_level` | 20 |
+- Levels 1-10: `xp_to_next *= 1.4`
+- Levels 11-20: `xp_to_next *= 1.6`
+- Levels 21-30: `xp_to_next *= 2.0`
+
+---
+
+## Veterancy & Innate Talents (epic-18 Phase B)
+
+### Veterancy Ranks
+Entities earn veterancy points in combat (+1 per hit dealt, +1 survived hit, +5 to +10 per kill). This grants multiplier bonuses over time.
+- **GREEN**: 1.0x (0 points)
+- **BLOODED**: 1.03x ATK/DEF (25 points)
+- **VETERAN**: 1.06x ATK/DEF, 1.05x HP (80 points)
+- **ELITE**: 1.1x ATK/DEF/HP, 1.05x SPD (200 points)
+- **LEGEND**: 1.15x All Stats (500 points)
+
+### Innate Talents
+Every entity generates with 2 random `talents` and 1 `weakness` across the 9 core attributes.  
+- Attacking, taking damage, and working adds fractional EXP to `attributes`.
+- **Talented** attributes train at `2.0x` speed.
+- **Weaknesses** train at `0.5x` speed.
 
 ---
 

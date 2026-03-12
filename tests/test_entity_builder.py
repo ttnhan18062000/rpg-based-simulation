@@ -31,6 +31,9 @@ class _FakeRNG:
     def next_bool(self, domain, eid, tick, probability):
         return self._float_val < probability
 
+    def weighted_choice(self, domain, eid, tick, items, weights):
+        return items[0]
+
 
 # ---------------------------------------------------------------------------
 # Basic construction tests

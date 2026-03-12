@@ -160,6 +160,7 @@ def _run_cli(args: argparse.Namespace) -> None:
         .with_starting_items(["small_hp_potion"] * 3)
         .with_home_storage()
         .with_traits(race_prefix="hero")
+        .with_talents(race="hero")
         .build()
     )
     world.add_entity(hero)

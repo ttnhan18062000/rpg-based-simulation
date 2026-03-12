@@ -282,9 +282,13 @@ def train_attributes(
     caps: AttributeCaps,
     action: str,
     stats: 'Stats | None' = None,
+    race: str = "hero",
+    talents: list[str] | None = None,
+    weakness: str = "",
 ) -> None:
     """Apply fractional training gains from an action.
 
+    Applies racial `train_rate`, `2.0x` for talents, and `0.5x` for weakness.
     When fractional accumulator reaches >= 1.0, the integer attribute
     increases by 1 (up to cap). This makes training very slow.
 
@@ -294,11 +298,32 @@ def train_attributes(
     rates = TRAIN_RATES.get(action, {})
     if not rates:
         return
+        
+    from src.core.enums import RACE_PROFILES
+    profile = RACE_PROFILES.get(race)
+    if not profile:
+        base_race = race.split('_')[0]
+        profile = RACE_PROFILES.get(base_race)
+        
+    train_rate_mult = profile.train_rate if profile else 1.0
+    if train_rate_mult == 0.0:
+        return  # e.g., Undead don't train
+        
+    talents = talents or []
     old_snapshot = attrs.copy() if stats is not None else None
     changed = False
-    for attr_key, rate in rates.items():
+    
+    for attr_key, base_rate in rates.items():
+        # Apply multipliers
+        rate = base_rate * train_rate_mult
+        if attr_key in talents:
+            rate *= 2.0
+        elif attr_key == weakness:
+            rate *= 0.5
+            
         if _apply_train(attrs, caps, attr_key, rate):
             changed = True
+            
     if changed and stats is not None and old_snapshot is not None:
         recalc_derived_stats(stats, attrs, old_attrs=old_snapshot)
 

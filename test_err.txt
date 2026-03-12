@@ -1,0 +1,89 @@
+﻿============================= test session starts =============================
+platform win32 -- Python 3.14.3, pytest-9.0.2, pluggy-1.6.0 -- C:\Users\tnhan\AppData\Local\Programs\Python\Python314\python.exe
+cachedir: .pytest_cache
+rootdir: D:\Projects\rpg-based-simulation
+configfile: pyproject.toml
+plugins: anyio-4.12.1
+collecting ... collected 5 items
+
+tests/test_leveling_progression.py::test_undead_no_level_up PASSED       [ 20%]
+tests/test_leveling_progression.py::test_milestone_level_up FAILED       [ 40%]
+tests/test_leveling_progression.py::test_veterancy_multipliers FAILED    [ 60%]
+tests/test_leveling_progression.py::test_innate_talents_training PASSED  [ 80%]
+tests/test_leveling_progression.py::test_combat_veterancy_points FAILED  [100%]
+
+================================== FAILURES ===================================
+___________________________ test_milestone_level_up ___________________________
+
+    def test_milestone_level_up():
+        """Reaching a milestone like level 5 grants 3x stats."""
+        cfg = SimulationConfig()
+        e1 = _make_entity(1, kind="hero")
+        e1.stats.level = 4
+        e1.stats.xp = 1000
+        e1.stats.xp_to_next = 100
+    
+        loop = MockWorldLoop(cfg, {1: e1})
+        loop._check_level_ups()
+    
+>       assert e1.stats.level == 5
+E       AssertionError: assert 8 == 5
+E        +  where 8 = Stats(hp=80, max_hp=80, atk=16, def_=10, spd=15, luck=0, crit_rate=0.05, crit_dmg=1.5, evasion=0.0, matk=11, mdef=0, elem_vuln={<Element.FIRE: 1>: 1.0, <Element.ICE: 2>: 1.0, <Element.LIGHTNING: 3>: 1.0, <Element.DARK: 4>: 1.0, <Element.HOLY: 5>: 1.0}, level=8, xp=290, xp_to_next=383, gold=0, stamina=50, max_stamina=50, vision_range=6, loot_bonus=1.0, trade_bonus=1.0, interaction_speed=1.0, rest_efficiency=1.0, hp_regen=1.0, cooldown_reduction=1.0).level
+E        +    where Stats(hp=80, max_hp=80, atk=16, def_=10, spd=15, luck=0, crit_rate=0.05, crit_dmg=1.5, evasion=0.0, matk=11, mdef=0, elem_vuln={<Element.FIRE: 1>: 1.0, <Element.ICE: 2>: 1.0, <Element.LIGHTNING: 3>: 1.0, <Element.DARK: 4>: 1.0, <Element.HOLY: 5>: 1.0}, level=8, xp=290, xp_to_next=383, gold=0, stamina=50, max_stamina=50, vision_range=6, loot_bonus=1.0, trade_bonus=1.0, interaction_speed=1.0, rest_efficiency=1.0, hp_regen=1.0, cooldown_reduction=1.0) = Entity(id=1, kind='hero', pos=(5, 5), stats=Stats(hp=80, max_hp=80, atk=16, def_=10, spd=15, luck=0, crit_rate=0.05, crit_dmg=1.5, evasion=0.0, matk=11, mdef=0, elem_vuln={<Element.FIRE: 1>: 1.0, <Element.ICE: 2>: 1.0, <Element.LIGHTNING: 3>: 1.0, <Element.DARK: 4>: 1.0, <Element.HOLY: 5>: 1.0}, level=8, xp=290, xp_to_next=383, gold=0, stamina=50, max_stamina=50, vision_range=6, loot_bonus=1.0, trade_bonus=1.0, interaction_speed=1.0, rest_efficiency=1.0, hp_regen=1.0, cooldown_reduction=1.0), ai_state=<AIState.IDLE: 0>, faction=<Faction.HERO_GUILD: 0>, role=<EntityRole.MOB: 1>, next_act_at=0.0, memory={}, home_pos=None, leash_radius=0, chase_ticks=0, tier=<EnemyTier.BASIC: 0>, inventory=None, terrain_memory={}, entity_memory=[], goals=[], effects=[], loot_progress=0, known_recipes=[], craft_target=None, attributes=None, attribute_caps=None, hero_class=0, skills=[], class_mastery=0.0, veterancy_points=0, veterancy_rank=0, talents=[], weakness='', quests=[], traits=[], home_storage=None, last_reason='', engaged_ticks=0, region_id='', difficulty_tier=1, current_region_id='', combat_target_id=None, threat_table={}).stats
+
+tests\test_leveling_progression.py:90: AssertionError
+_________________________ test_veterancy_multipliers __________________________
+
+    def test_veterancy_multipliers():
+        """Veterancy Ranks should boost effective stats."""
+        e1 = _make_entity(1)
+        e1.stats.atk = 100
+    
+        e1.veterancy_rank = VeterancyRank.GREEN
+        assert e1.effective_atk() == 100
+    
+        e1.veterancy_rank = VeterancyRank.VETERAN
+        # Veteran is 1.06x Atk for our implementation
+        assert e1.effective_atk() == 106
+    
+        e1.veterancy_rank = VeterancyRank.LEGEND
+        # Legend is 1.15x Atk
+>       assert e1.effective_atk() == 115
+E       AssertionError: assert 114 == 115
+E        +  where 114 = effective_atk()
+E        +    where effective_atk = Entity(id=1, kind='hero', pos=(5, 5), stats=Stats(hp=50, max_hp=50, atk=100, def_=5, spd=10, luck=0, crit_rate=0.05, crit_dmg=1.5, evasion=0.0, matk=5, mdef=0, elem_vuln={<Element.FIRE: 1>: 1.0, <Element.ICE: 2>: 1.0, <Element.LIGHTNING: 3>: 1.0, <Element.DARK: 4>: 1.0, <Element.HOLY: 5>: 1.0}, level=1, xp=0, xp_to_next=100, gold=0, stamina=50, max_stamina=50, vision_range=6, loot_bonus=1.0, trade_bonus=1.0, interaction_speed=1.0, rest_efficiency=1.0, hp_regen=1.0, cooldown_reduction=1.0), ai_state=<AIState.IDLE: 0>, faction=<Faction.HERO_GUILD: 0>, role=<EntityRole.MOB: 1>, next_act_at=0.0, memory={}, home_pos=None, leash_radius=0, chase_ticks=0, tier=<EnemyTier.BASIC: 0>, inventory=None, terrain_memory={}, entity_memory=[], goals=[], effects=[], loot_progress=0, known_recipes=[], craft_target=None, attributes=None, attribute_caps=None, hero_class=0, skills=[], class_mastery=0.0, veterancy_points=0, veterancy_rank=<VeterancyRank.LEGEND: 4>, talents=[], weakness='', quests=[], traits=[], home_storage=None, last_reason='', engaged_ticks=0, region_id='', difficulty_tier=1, current_region_id='', combat_target_id=None, threat_table={}).effective_atk
+
+tests\test_leveling_progression.py:109: AssertionError
+________________________ test_combat_veterancy_points _________________________
+
+    def test_combat_veterancy_points():
+        """Combat yields veterancy points."""
+        e1 = _make_entity(1, hp=50) # Attacker
+        e1.attributes = Attributes() # Need this for combat
+        e1.attribute_caps = AttributeCaps()
+    
+        e2 = _make_entity(2, hp=1) # Defender, low HP to die immediately
+        e2.attributes = Attributes()
+        e2.attribute_caps = AttributeCaps()
+    
+        cfg = SimulationConfig()
+        rng = _FakeRNG()
+    
+        action = CombatAction(cfg, rng)
+        world = MockWorld({1: e1, 2: e2})
+        world.spatial.add(e1)
+        world.spatial.add(e2)
+    
+        proposal = ActionProposal(actor_id=1, verb=ActionType.ATTACK, target=2)
+    
+        # Execute should deal damage and kill e2
+>       events = action.execute(proposal, world)
+                 ^^^^^^^^^^^^^^
+E       AttributeError: 'CombatAction' object has no attribute 'execute'
+
+tests\test_leveling_progression.py:151: AttributeError
+=========================== short test summary info ===========================
+FAILED tests/test_leveling_progression.py::test_milestone_level_up - Assertio...
+FAILED tests/test_leveling_progression.py::test_veterancy_multipliers - Asser...
+FAILED tests/test_leveling_progression.py::test_combat_veterancy_points - Att...
+========================= 3 failed, 2 passed in 0.27s =========================

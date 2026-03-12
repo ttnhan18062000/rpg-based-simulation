@@ -721,30 +721,77 @@ class WorldLoop:
     def _check_level_ups(self) -> None:
         """Check and apply level-ups for all entities."""
         cfg = self._config
+        from src.core.enums import RACE_PROFILES
+
         for entity in self._world.entities.values():
             if not entity.alive or entity.kind == "generator":
                 continue
+            
+            # Look up racial profile
+            profile = RACE_PROFILES.get(entity.kind, None)
+            # Find base race if exact kind doesn't match
+            if not profile:
+                base_race = entity.kind.split('_')[0]
+                profile = RACE_PROFILES.get(base_race)
+            
+            # Undead and undefined races (train_rate=0.0) cannot level up
+            if not profile or profile.train_rate == 0.0:
+                continue
+
+            max_level = min(cfg.max_level, profile.level_cap)
+
             while (
                 entity.stats.xp >= entity.stats.xp_to_next
-                and entity.stats.level < cfg.max_level
+                and entity.stats.level < max_level
             ):
                 entity.stats.xp -= entity.stats.xp_to_next
                 entity.stats.level += 1
-                # Stat growth
-                entity.stats.max_hp += cfg.stat_growth_hp
-                entity.stats.hp = min(entity.stats.hp + cfg.stat_growth_hp, entity.stats.max_hp)
-                entity.stats.atk += cfg.stat_growth_atk
-                entity.stats.matk += cfg.stat_growth_matk
-                entity.stats.def_ += cfg.stat_growth_def
-                entity.stats.spd += cfg.stat_growth_spd
-                # XP curve: each level needs more XP
-                entity.stats.xp_to_next = int(entity.stats.xp_to_next * cfg.xp_per_level_scale)
+                new_level = entity.stats.level
+                
+                # Check if milestone level
+                milestone = cfg.milestone_levels.get(new_level)
+                
+                if milestone:
+                    hp_growth, atk_growth, def_growth, spd_growth = milestone
+                    entity.stats.max_hp += hp_growth
+                    entity.stats.hp = min(entity.stats.hp + hp_growth, entity.stats.max_hp)
+                    entity.stats.atk += atk_growth
+                    entity.stats.matk += atk_growth
+                    entity.stats.def_ += def_growth
+                    entity.stats.spd += spd_growth
+                else:
+                    # Normal diminishing returns stat growth based on level range
+                    if new_level <= 10:
+                        hp_growth, atk_growth, def_growth, spd_growth = 5, 1, 1, 1
+                    elif new_level <= 20:
+                        hp_growth, atk_growth, def_growth, spd_growth = 3, 1, 1, 1
+                    else:
+                        hp_growth, atk_growth, def_growth, spd_growth = 2, 0, 0, 0
+
+                    entity.stats.max_hp += hp_growth
+                    entity.stats.hp = min(entity.stats.hp + hp_growth, entity.stats.max_hp)
+                    entity.stats.atk += atk_growth
+                    entity.stats.matk += atk_growth
+                    entity.stats.def_ += def_growth
+                    entity.stats.spd += spd_growth
+
+                # Bracketed XP curve
+                if new_level < 10:
+                    scale = 1.4
+                elif new_level < 20:
+                    scale = 1.6
+                else:
+                    scale = 2.0
+                    
+                entity.stats.xp_to_next = int(entity.stats.xp_to_next * scale)
+                
                 # Attribute level-up gains
                 if entity.attributes and entity.attribute_caps:
                     from src.core.attributes import level_up_attributes, recalc_derived_stats
                     old_attrs = entity.attributes.copy()
                     level_up_attributes(entity.attributes, entity.attribute_caps)
                     recalc_derived_stats(entity.stats, entity.attributes, old_attrs=old_attrs)
+                    
                 logger.info(
                     "Tick %d: Entity %d (%s) leveled up to Lv%d! [HP: %d/%d ATK: %d DEF: %d SPD: %d]",
                     self._world.tick, entity.id, entity.kind, entity.stats.level,
@@ -755,7 +802,12 @@ class WorldLoop:
                            entity_ids=(entity.id,),
                            metadata={"entity_id": entity.id, "new_level": entity.stats.level,
                                      "max_hp": entity.stats.max_hp, "atk": entity.stats.atk,
-                                     "def": entity.stats.def_, "spd": entity.stats.spd})
+                                     "def": entity.stats.def_, "spd": entity.stats.spd,
+                                     "is_milestone": bool(milestone)})
+                
+                if milestone:
+                    self._emit("milestone", f"{entity.kind} #{entity.id} hit Milestone Level {new_level} (Huge stat boost)!",
+                               entity_ids=(entity.id,))
 
     def _tick_stamina_and_skills(self) -> None:
         """Regenerate stamina and tick skill cooldowns for all entities."""

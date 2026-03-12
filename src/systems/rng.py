@@ -45,3 +45,14 @@ class DeterministicRNG:
     def next_bool(self, domain: Domain, entity_id: int, tick: int, probability: float = 0.5) -> bool:
         """Return True with the given probability."""
         return self.next_float(domain, entity_id, tick) < probability
+
+    def weighted_choice(self, domain: Domain, entity_id: int, tick: int, items: list[Any], weights: list[float]) -> Any:
+        """ deterministic weighted choice based on float roll. """
+        total = sum(weights)
+        roll = self.next_float(domain, entity_id, tick) * total
+        accum = 0.0
+        for item, weight in zip(items, weights):
+            accum += weight
+            if roll < accum:
+                return item
+        return items[-1]

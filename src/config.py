@@ -51,14 +51,19 @@ class SimulationConfig:
     crit_multiplier: float = 2.0
 
     # Leveling
-    xp_per_kill_base: int = 30
-    xp_per_level_scale: float = 1.5
-    stat_growth_hp: int = 5
-    stat_growth_atk: int = 1
-    stat_growth_matk: int = 1
-    stat_growth_def: int = 1
-    stat_growth_spd: int = 1
-    max_level: int = 20
+    xp_per_kill_base: int = 80
+    
+    # Milestone levels mapping (Level -> (Bonus HP, Bonus ATK, Bonus DEF, Bonus SPD))
+    milestone_levels: dict[int, tuple[int, int, int, int]] = field(default_factory=lambda: {
+        5:  (15, 3, 2, 2),
+        10: (20, 4, 3, 3),
+        15: (15, 3, 2, 2),
+        20: (20, 4, 3, 2),
+        25: (15, 3, 2, 2),
+        30: (10, 2, 1, 1),
+    })
+
+    max_level: int = 30
 
     # Inventory
     hero_inventory_slots: int = 36

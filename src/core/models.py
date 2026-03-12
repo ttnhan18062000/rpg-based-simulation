@@ -153,6 +153,11 @@ class Entity:
     hero_class: int = 0                 # HeroClass enum value (0 = NONE)
     skills: list[SkillInstance] = field(default_factory=list)
     class_mastery: float = 0.0          # 0.0 to 100.0
+    # Progression Depth (epic-18)
+    veterancy_points: int = 0
+    veterancy_rank: int = 0  # VeterancyRank.GREEN
+    talents: list[str] = field(default_factory=list)
+    weakness: str = ""
     # Quests
     quests: list[Quest] = field(default_factory=list)
     # Traits (Rimworld-style discrete personality traits)
@@ -194,27 +199,45 @@ class Entity:
         self.effects = [e for e in self.effects if e.effect_type != effect_type]
 
     # -- effective stats (equipment + effects) --
+    
+    def _veterancy_mult(self, stat: str) -> float:
+        """Multiplier based on veterancy rank (0=Green to 4=Legend)."""
+        if self.veterancy_rank == 0:  # GREEN
+            return 1.0
+        elif self.veterancy_rank == 1:  # BLOODED
+            if stat in ("atk", "def"): return 1.03
+            return 1.0
+        elif self.veterancy_rank == 2:  # VETERAN
+            if stat in ("atk", "def"): return 1.06
+            if stat == "hp": return 1.05
+            return 1.0
+        elif self.veterancy_rank == 3:  # ELITE
+            if stat in ("atk", "def", "hp"): return 1.10
+            if stat == "spd": return 1.05
+            return 1.0
+        else:  # LEGEND
+            return 1.15
 
     def effective_atk(self) -> int:
-        """ATK including equipment bonuses and status effects."""
+        """ATK including equipment bonuses, effects, and veterancy."""
         base = self.stats.atk
         if self.inventory:
             base += int(self.inventory.equipment_bonus("atk_bonus"))
-        return max(int(base * self._effect_mult("atk_mult")), 1)
+        return max(int(base * self._effect_mult("atk_mult") * self._veterancy_mult("atk")), 1)
 
     def effective_def(self) -> int:
-        """DEF including equipment bonuses and status effects."""
+        """DEF including equipment bonuses, effects, and veterancy."""
         base = self.stats.def_
         if self.inventory:
             base += int(self.inventory.equipment_bonus("def_bonus"))
-        return max(int(base * self._effect_mult("def_mult")), 0)
+        return max(int(base * self._effect_mult("def_mult") * self._veterancy_mult("def")), 0)
 
     def effective_spd(self) -> int:
-        """SPD including equipment bonuses and status effects."""
+        """SPD including equipment bonuses, effects, and veterancy."""
         base = self.stats.spd
         if self.inventory:
             base += int(self.inventory.equipment_bonus("spd_bonus"))
-        return max(int(base * self._effect_mult("spd_mult")), 1)
+        return max(int(base * self._effect_mult("spd_mult") * self._veterancy_mult("spd")), 1)
 
     def effective_crit_rate(self) -> float:
         """Crit rate including equipment bonuses and status effects."""
@@ -231,11 +254,11 @@ class Entity:
         return min(base * self._effect_mult("evasion_mult"), 0.75)
 
     def effective_max_hp(self) -> int:
-        """Max HP including equipment bonuses."""
+        """Max HP including equipment bonuses and veterancy."""
         base = self.stats.max_hp
         if self.inventory:
             base += int(self.inventory.equipment_bonus("max_hp_bonus"))
-        return max(base, 1)
+        return max(int(base * self._veterancy_mult("hp")), 1)
 
     def effective_matk(self) -> int:
         """MATK including equipment bonuses and status effects."""
