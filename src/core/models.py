@@ -97,7 +97,9 @@ class Stats:
 
     @property
     def hp_ratio(self) -> float:
-        return self.hp / self.max_hp if self.max_hp > 0 else 0.0
+        if self.max_hp <= 0:
+            return 0.0
+        return max(0.0, min(1.0, self.hp / self.max_hp))
 
     @property
     def stamina_ratio(self) -> float:
@@ -128,6 +130,10 @@ class Entity:
     id: int
     kind: str
     pos: Vector2
+    display_name: str = ""
+    death_count: int = 0
+    generation: int = 1
+    hero_familiarity: dict[int, float] = field(default_factory=dict)
     stats: Stats = field(default_factory=Stats)
     ai_state: AIState = AIState.IDLE
     faction: Faction = Faction.HERO_GUILD
@@ -156,6 +162,9 @@ class Entity:
     # Progression Depth (epic-18)
     veterancy_points: int = 0
     veterancy_rank: int = 0  # VeterancyRank.GREEN
+    # Heuristics (epic-18 phase G/C)
+    boredom_multipliers: dict[str, float] = field(default_factory=dict)
+    consecutive_idle_ticks: int = 0
     talents: list[str] = field(default_factory=list)
     weakness: str = ""
     # Quests

@@ -342,6 +342,53 @@ _TRAIN_MAP: dict[str, tuple[str, str, str]] = {
 }
 
 
+def decay_attributes(
+    attrs: Attributes,
+    stats: 'Stats',
+    rng: 'DeterministicRNG',
+    entity_id: int,
+    tick: int,
+    decay_amount: float = 0.1,
+) -> bool:
+    """Fractionally reduce a random primary attribute.
+    
+    If fractional reaches negative and integer attribute is > 5,
+    reduce the integer attribute. Returns True if attribute was reduced.
+    """
+    from src.core.enums import Domain
+    # Pick a random attribute to decay
+    attr_keys = list(_TRAIN_MAP.keys())
+    # Deterministic choice
+    idx = rng.next_int(Domain.AI_DECISION, entity_id, tick + 99, 0, len(attr_keys) - 1)
+    key = attr_keys[idx]
+    
+    mapping = _TRAIN_MAP.get(key)
+    if mapping is None:
+        return False
+        
+    attr_field, frac_field, _ = mapping
+    old_snapshot = attrs.copy()
+    
+    current = getattr(attrs, attr_field)
+    frac = getattr(attrs, frac_field) - decay_amount
+    
+    changed = False
+    if frac < 0.0:
+        if current > 5: # Don't decay below base starting value
+            setattr(attrs, attr_field, current - 1)
+            frac += 1.0
+            changed = True
+        else:
+            frac = 0.0 # Clamp at 0.0 if we can't reduce integer
+            
+    setattr(attrs, frac_field, frac)
+    
+    if changed:
+        recalc_derived_stats(stats, attrs, old_attrs=old_snapshot)
+        
+    return changed
+
+
 def _apply_train(attrs: Attributes, caps: AttributeCaps, key: str, rate: float) -> bool:
     """Add fractional training to one attribute. Returns True if attribute incremented."""
     mapping = _TRAIN_MAP.get(key)

@@ -183,8 +183,6 @@ class CombatAction:
                 entity.veterancy_rank = new_rank
                 rank_name = VeterancyRank(new_rank).name.title()
                 logger.info("Tick %d: Entity %d (%s) promoted to %s!", tick, entity.id, entity.kind, rank_name)
-                world_ref.events.emit("veterancy_up", f"{entity.kind} #{entity.id} has become {rank_name}", 
-                                      entity_ids=(entity.id,), metadata={"entity_id": entity.id, "new_rank": new_rank, "rank_name": rank_name})
 
         # +1 pt per hit dealt
         attacker.veterancy_points += 1
@@ -196,6 +194,13 @@ class CombatAction:
             # Near death survival +3 pt
             if defender.stats.hp_ratio < 0.25:
                 defender.veterancy_points += 3
+            
+            # Phase C: Near-Death Hardening
+            if defender.stats.hp_ratio < 0.15:
+                defender.stats.max_hp += 1
+                logger.info("Tick %d: Entity %d (%s) hardened by survival! Max HP +1 (New Max: %d)", 
+                            tick, defender.id, defender.kind, defender.stats.max_hp)
+                
             check_veterancy_rank_up(defender, world)
 
         # --- XP award on kill ---

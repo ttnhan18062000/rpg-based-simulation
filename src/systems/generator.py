@@ -207,7 +207,7 @@ class EntityGenerator:
             pos = self._find_nearest_walkable_non_town(world, pos)
         return pos
 
-    def _resolve_ai_state(tier: int, near_pos: Vector2 | None) -> AIState:
+    def _resolve_ai_state(self, tier: int, near_pos: Vector2 | None) -> AIState:
         """Determine initial AI state based on tier and spawn location."""
         if tier == EnemyTier.ELITE or near_pos is not None:
             return AIState.GUARD_CAMP

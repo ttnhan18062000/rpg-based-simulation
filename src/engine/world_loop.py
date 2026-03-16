@@ -59,6 +59,7 @@ class WorldLoop:
         "_tick_events",
         "_faction_reg",
         "_rng",
+        "_pending_hero_replacements",
     )
 
     def __init__(
@@ -83,6 +84,7 @@ class WorldLoop:
         self._tick_events: list = []
         self._faction_reg = faction_reg or FactionRegistry.default()
         self._rng = rng
+        self._pending_hero_replacements: list[dict] = []
 
     @property
     def world(self) -> WorldState:
@@ -179,6 +181,23 @@ class WorldLoop:
                 snapshot = Snapshot.from_world(self._world)
                 self._worker_pool.dispatch(ready_entities, snapshot, self._action_queue)
                 proposals = self._action_queue.drain()
+
+                # --- Chaos Resilience: Inject Idle for missing proposals ---
+                if len(proposals) < len(ready_entities):
+                    acted_ids = {p.actor_id for p in proposals}
+                    for entity in ready_entities:
+                        if entity.id not in acted_ids:
+                            from src.actions.base import ActionProposal
+                            from src.core.enums import ActionType
+                            idle_proposal = ActionProposal(
+                                actor_id=entity.id,
+                                verb=ActionType.REST,  # default idle action
+                                target=None,
+                                reason="Chaos Drop / Worker Timeout",
+                                new_ai_state=int(entity.ai_state)
+                            )
+                            proposals.append(idle_proposal)
+                            logger.warning("Tick %d: Injected IDLE proposal for entity %d (missing AI result)", tick, entity.id)
 
             t2 = time.perf_counter()
 
@@ -297,6 +316,9 @@ class WorldLoop:
             self._tick_stamina_and_skills()
             self._tick_engagement()
             self._tick_threat_decay()
+            
+            if tick % 100 == 0:
+                self._process_stat_decay(tick)
 
         # Environment subsystems — every N ticks (default: every 2nd tick)
         if tick % cfg.subsystem_rate_environment == 0:
@@ -304,6 +326,7 @@ class WorldLoop:
             self._update_entity_memory()
             self._update_entity_goals()
             self._track_region_transitions()
+            self._tick_proximity_familiarity()
 
         # Economy subsystems — every N ticks (default: every 5th tick)
         if tick % cfg.subsystem_rate_economy == 0:
@@ -312,6 +335,7 @@ class WorldLoop:
             self._heal_home_entities()
             self._tick_quests()
             self._check_level_ups()
+            self._process_hero_replacements()
 
     def _phase_generators(self) -> None:
         """Run generator entities (immediate, no worker dispatch)."""
@@ -809,6 +833,81 @@ class WorldLoop:
                     self._emit("milestone", f"{entity.kind} #{entity.id} hit Milestone Level {new_level} (Huge stat boost)!",
                                entity_ids=(entity.id,))
 
+            # --- Phase D: Entity Evolution ---
+            if (
+                profile.evolves 
+                and entity.stats.level >= profile.level_cap
+                and entity.tier < 3 # max tier is ELITE (3)
+            ):
+                self._evolve_entity(entity, profile)
+
+    def _evolve_entity(self, entity: Entity, profile: 'RaceProfile') -> None:
+        """Transform an entity into its next tier (Phase D)."""
+        from src.core.enums import EnemyTier, Domain
+        from src.core.items import RACE_TIER_KINDS, RACE_STARTING_GEAR, ITEM_REGISTRY, Inventory, TIER_KIND_NAMES
+        from src.core.attributes import recalc_derived_stats
+        
+        base_race = entity.kind.split('_')[0]
+        next_tier = entity.tier + 1
+        
+        # Determine new kind
+        tier_kinds = RACE_TIER_KINDS.get(base_race)
+        if tier_kinds:
+            new_kind = tier_kinds.get(next_tier)
+            if not new_kind or new_kind == entity.kind and next_tier < 3:
+                # try next-next tier if names are identical (e.g. wolf BASIC/SCOUT are both 'wolf')
+                next_tier += 1
+                new_kind = tier_kinds.get(next_tier)
+        else:
+            # Fallback to generic tier kinds (e.g. for goblins)
+            new_kind = TIER_KIND_NAMES.get(next_tier)
+            
+        if not new_kind:
+            return
+
+        old_kind = entity.kind
+        entity.kind = new_kind
+        entity.tier = next_tier
+        
+        # Reset level and scale stats
+        entity.stats.level = 1
+        entity.stats.xp = 0
+        entity.stats.xp_to_next = 100 # Reset XP curve base
+        
+        # Evolution Bonus
+        entity.stats.max_hp += 30
+        entity.stats.hp = entity.stats.max_hp
+        entity.stats.atk += 8
+        entity.stats.def_ += 3
+        entity.stats.spd += 2
+        
+        # Attribute cap boost
+        if entity.attribute_caps:
+            entity.attribute_caps.increase_all(10)
+            
+        # Recalculate everything
+        if entity.attributes:
+            recalc_derived_stats(entity.stats, entity.attributes)
+
+        # Refresh equipment for new tier
+        from src.core.items import TIER_STARTING_GEAR
+        race_gear = RACE_STARTING_GEAR.get(base_race, {}).get(next_tier)
+        if not race_gear:
+            race_gear = TIER_STARTING_GEAR.get(next_tier)
+            
+        if race_gear and entity.inventory:
+            for slot, item_id in race_gear.items():
+                if item_id:
+                    # Give item and auto-equip if better
+                    entity.inventory.add_item(item_id)
+                    entity.inventory.auto_equip_best(item_id)
+
+        logger.info("Tick %d: Entity %d (%s) evolved into %s (Tier %d)!", 
+                    self._world.tick, entity.id, old_kind, new_kind, next_tier)
+        self._emit("evolution", f"Entity {entity.id}: {old_kind} → {new_kind}!",
+                   entity_ids=(entity.id,),
+                   metadata={"entity_id": entity.id, "old_kind": old_kind, "new_kind": new_kind, "tier": next_tier})
+
     def _tick_stamina_and_skills(self) -> None:
         """Regenerate stamina and tick skill cooldowns for all entities."""
         for entity in self._world.entities.values():
@@ -1140,6 +1239,28 @@ class WorldLoop:
                         )
             # Prune completed quests older than 50 ticks (keep for display briefly)
             entity.quests = [q for q in entity.quests if not q.completed or tick % 50 != 0]
+
+    def _process_stat_decay(self, tick: int) -> None:
+        """Apply passive attribute decay for entities idling for too long (Phase C)."""
+        from src.core.attributes import decay_attributes
+        
+        for entity in self._world.entities.values():
+            if not entity.alive or entity.kind == "generator":
+                continue
+                
+            # If idle for more than 1000 ticks, decay a random attribute
+            if entity.consecutive_idle_ticks > 1000:
+                decayed = decay_attributes(
+                    entity.attributes, 
+                    entity.stats, 
+                    self._rng, 
+                    entity.id, 
+                    tick,
+                    decay_amount=0.1
+                )
+                if decayed:
+                    logger.info("Tick %d: Entity #%d (%s) suffered stat decay due to inactivity", 
+                                tick, entity.id, entity.kind)
 
     def _tick_effects(self) -> None:
         """Tick down status effect durations, apply hp_per_tick, and remove expired."""
@@ -1475,28 +1596,75 @@ class WorldLoop:
                     )
 
             if entity.faction == Faction.HERO_GUILD and entity.home_pos is not None:
-                # Hero respawn: restore HP, teleport home, cooldown
+                # Hero death: increment death_count
+                entity.death_count += 1
+                
+                # Permadeath check
+                is_permadeath = entity.death_count >= self._config.death_tier_max
+                
+                if is_permadeath:
+                    # Drop ALL equipment and inventory
+                    if entity.inventory:
+                        dropped = entity.inventory.get_all_item_ids()
+                        if dropped:
+                            self._world.drop_items(entity.pos, dropped)
+                    
+                    # Log permadeath
+                    logger.info("Tick %d: Hero %s (%s Lv%d) has DIED PERMANENTLY (deaths=%d).", 
+                                self._world.tick, (entity.display_name or f"#{eid}"), entity.kind, 
+                                entity.stats.level, entity.death_count)
+                    
+                    self._emit("death", f"Hero {entity.display_name or f'#{eid}'} DIED PERMANENTLY.",
+                               entity_ids=(eid,),
+                               metadata={"entity_id": eid, "kind": entity.kind, "name": entity.display_name,
+                                         "level": entity.stats.level, "permadeath": True})
+                    
+                    # Remove from world and schedule replacement
+                    removed = self._world.remove_entity(eid)
+                    self._schedule_hero_replacement(removed)
+                    continue
+
+                # Normal respawn: restore HP, teleport home, cooldown
                 entity.stats.hp = entity.stats.max_hp
                 old_pos = entity.pos
                 entity.pos = entity.home_pos
                 entity.ai_state = AIState.RESTING_IN_TOWN
+                self._world.spatial_index.move(eid, old_pos, entity.home_pos)
                 entity.next_act_at = float(self._world.tick + self._config.hero_respawn_ticks)
                 entity.memory.clear()
                 entity.effects.clear()
-                # Reset inventory (hero loses carried items on death, keeps equipment)
+                
+                # Tiered drops (not permadeath)
                 if entity.inventory:
+                    dropped_ids = []
+                    # 1st death: bag only. 2nd: bag+acc. 3rd: bag+acc+arm. (Weapon never drops till permadeath?)
+                    # Wait, the plan says: 1st: Bag, 2nd: Bag+acc, 3rd: Bag+acc+armor.
+                    # Bag items (always dropped)
+                    dropped_ids.extend(entity.inventory.items)
                     entity.inventory.items.clear()
-                self._world.spatial_index.move(eid, old_pos, entity.home_pos)
+                    
+                    # Escalated equipment drops
+                    if entity.death_count >= 2 and entity.inventory.accessory:
+                        dropped_ids.append(entity.inventory.accessory)
+                        entity.inventory.accessory = None
+                    if entity.death_count >= 3 and entity.inventory.armor:
+                        dropped_ids.append(entity.inventory.armor)
+                        entity.inventory.armor = None
+                        
+                    if dropped_ids:
+                        self._world.drop_items(old_pos, dropped_ids)
+                        logger.info("Tick %d: Hero #%d dropped %d items on death tier %d",
+                                    self._world.tick, eid, len(dropped_ids), entity.death_count)
+                
                 logger.info(
-                    "Tick %d: Hero #%d died → respawning at home %s in %d ticks.",
-                    self._world.tick, eid, entity.home_pos, self._config.hero_respawn_ticks,
+                    "Tick %d: Hero %s died → respawning at home %s.",
+                    self._world.tick, (entity.display_name or f"#{eid}"), entity.home_pos,
                 )
-                self._emit("death", f"Hero #{eid} died → respawning in {self._config.hero_respawn_ticks} ticks",
+                self._emit("death", f"Hero {entity.display_name or f'#{eid}'} died → respawning",
                            entity_ids=(eid,),
-                           metadata={"entity_id": eid, "kind": entity.kind,
-                                     "level": entity.stats.level,
-                                     "x": old_pos.x, "y": old_pos.y,
-                                     "respawn": True})
+                           metadata={"entity_id": eid, "kind": entity.kind, "name": entity.display_name,
+                                     "level": entity.stats.level, "respawn": True, 
+                                     "death_count": entity.death_count})
             else:
                 removed = self._world.remove_entity(eid)
                 if removed:
@@ -1507,3 +1675,109 @@ class WorldLoop:
                                          "level": removed.stats.level,
                                          "x": removed.pos.x, "y": removed.pos.y,
                                          "respawn": False})
+
+    def _schedule_hero_replacement(self, dead_hero) -> None:
+        """Schedule a new hero to spawn after a delay to replace a permadead one."""
+        spawn_tick = self._world.tick + 50
+        # Store necessary info to respawn at the same house/spot
+        self._pending_hero_replacements.append({
+            "tick": spawn_tick,
+            "generation": dead_hero.generation + 1,
+            "home_pos": dead_hero.home_pos,
+        })
+        logger.info("Tick %d: Hero replacement scheduled for tick %d (Gen %d)", 
+                    self._world.tick, spawn_tick, dead_hero.generation + 1)
+
+    def _process_hero_replacements(self) -> None:
+        """Spawn replacements for permadead heroes after their countdown."""
+        from src.core.classes import HeroClass, HERO_STARTING_GEAR
+        from src.core.entity_builder import EntityBuilder
+        from src.core.hero_names import generate_hero_name
+        from src.core.enums import Domain, EntityRole
+        
+        tick = self._world.tick
+        still_pending = []
+        class_choices = [HeroClass.WARRIOR, HeroClass.RANGER, HeroClass.MAGE, HeroClass.ROGUE]
+
+        for rep in self._pending_hero_replacements:
+            if tick >= rep["tick"]:
+                new_eid = self._world.allocate_entity_id()
+                # Round-robin or random class based on ID
+                h_class = class_choices[new_eid % len(class_choices)]
+                gear = HERO_STARTING_GEAR.get(h_class, {})
+                home_pos = rep["home_pos"]
+
+                builder = (
+                    EntityBuilder(self._rng, new_eid, tick=tick)
+                    .kind("hero")
+                    .at(home_pos)
+                    .home(home_pos)
+                    .faction(Faction.HERO_GUILD)
+                    .role(EntityRole.HERO)
+                )
+                builder.with_traits(race_prefix="hero")
+                hero_name = generate_hero_name(self._rng, new_eid, tick, builder._traits)
+
+                hero = (
+                    builder
+                    .with_identity(display_name=hero_name, generation=rep["generation"])
+                    .with_base_stats(hp=50, atk=10, def_=3, spd=10, luck=3,
+                                     crit_rate=0.08, crit_dmg=1.8, evasion=0.03, gold=50)
+                    .with_hero_class(h_class)
+                    .with_race_skills("hero")
+                    .with_class_skills(h_class, level=1)
+                    .with_inventory(max_slots=self._config.hero_inventory_slots,
+                                    max_weight=self._config.hero_inventory_weight,
+                                    weapon=gear.get("weapon", "iron_sword"),
+                                    armor=gear.get("armor", "leather_vest"),
+                                    accessory=gear.get("accessory"))
+                    .with_starting_items(["small_hp_potion"] * 3)
+                    .with_home_storage()
+                    .with_talents(race="hero")
+                    .build()
+                )
+                self._world.add_entity(hero)
+
+                # Fix house names in buildings
+                for b in self._world.buildings:
+                    if b.pos == home_pos and b.building_type == "hero_house":
+                        b.name = f"{hero_name}'s House"
+                
+                logger.info("Tick %d: New hero %s (Gen %d) has arrived!", 
+                            tick, hero_name, hero.generation)
+                self._emit("hero_arrival", f"Hero {hero_name} arrives (Gen {hero.generation})",
+                           entity_ids=(new_eid,),
+                           metadata={"entity_id": new_eid, "name": hero_name, "generation": hero.generation})
+            else:
+                still_pending.append(rep)
+        self._pending_hero_replacements = still_pending
+
+    def _tick_proximity_familiarity(self) -> None:
+        """Increment familiarity for heroes in proximity, decay for those apart."""
+        heroes = [e for e in self._world.entities.values() if e.alive and e.faction == Faction.HERO_GUILD]
+        if len(heroes) < 2:
+            return
+            
+        tick = self._world.tick
+        v_range = self._config.vision_range
+        
+        for i, h1 in enumerate(heroes):
+            for h2 in heroes[i+1:]:
+                dist = h1.pos.manhattan(h2.pos)
+                if dist <= v_range:
+                    # Near: +0.002
+                    old1 = h1.hero_familiarity.get(h2.id, 0.0)
+                    new1 = min(1.0, old1 + 0.002)
+                    h1.hero_familiarity[h2.id] = new1
+                    h2.hero_familiarity[h1.id] = new1 # Symmetric
+                    
+                    if old1 < 0.5 <= new1:
+                        logger.info("Tick %d: %s and %s are now Allies!", tick, h1.display_name, h2.display_name)
+                        self._emit("alliance", f"{h1.display_name} and {h2.display_name} are now Allies",
+                                   entity_ids=(h1.id, h2.id),
+                                   metadata={"hero1_id": h1.id, "hero2_id": h2.id, "score": new1})
+                else:
+                    # Apart: -0.0005 decay
+                    if h2.id in h1.hero_familiarity:
+                        h1.hero_familiarity[h2.id] = max(0.0, h1.hero_familiarity[h2.id] - 0.0005)
+                        h2.hero_familiarity[h1.id] = h1.hero_familiarity[h2.id]

@@ -41,8 +41,10 @@ class SimulationConfig:
     town_passive_heal: int = 1             # HP regained per tick by heroes in town (even outside rest)
 
     # Hero
+    hero_count: int = 4
     hero_respawn_ticks: int = 10
     hero_heal_per_tick: int = 3
+    death_tier_max: int = 4                # Lives before permadeath
 
     # Combat
     base_damage: int = 5
@@ -142,3 +144,7 @@ class SimulationConfig:
     # Logging
     log_level: str = "INFO"
     replay_file: str = "replay.json"
+
+    # Chaos Mode (infra-06)
+    chaos_enabled: bool = False
+    chaos_drop_rate: float = 0.05        # Probability to drop an AI result

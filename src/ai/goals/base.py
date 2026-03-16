@@ -100,9 +100,41 @@ class GoalEvaluator:
     def evaluate(self, ctx: AIContext) -> list[GoalScore]:
         """Score all registered goals, filter non-viable, sort descending."""
         scores = [scorer.evaluate(ctx) for scorer in GOAL_REGISTRY]
+        
+        # Apply heuristics (Phase G: Boredom & Life-Cycle)
+        for s in scores:
+            # 1. Boredom multiplier
+            b_mult = ctx.actor.boredom_multipliers.get(s.goal, 1.0)
+            s.score *= b_mult
+            
+            # 2. Life-cycle multiplier
+            l_mult = self._get_life_stage_multiplier(ctx, s.goal)
+            s.score *= l_mult
+            
         scores = [s for s in scores if s.score > 0.0]
         scores.sort(key=lambda g: g.score, reverse=True)
         return scores
+
+    def _get_life_stage_multiplier(self, ctx: AIContext, goal_name: str) -> float:
+        """Heuristic based on level brackets to differentiate progression focus."""
+        level = ctx.actor.stats.level
+        
+        # Early Stage (1-10): Focus on survival and learning
+        if level <= 10:
+            if goal_name in ("explore", "rest"): return 1.3
+            if goal_name in ("trade", "combat"): return 0.8
+            
+        # Mid Stage (11-20): Focus on growth and combat
+        elif level <= 20:
+            if goal_name in ("combat", "loot"): return 1.2
+            if goal_name == "rest": return 0.9
+            
+        # Late Stage (21+): Focus on community and mastery
+        else:
+            if goal_name in ("social", "trade", "craft"): return 1.4
+            if goal_name == "explore": return 0.7
+            
+        return 1.0
 
     @staticmethod
     def select(

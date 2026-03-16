@@ -499,53 +499,69 @@ class EngineManager:
             store_pos, bs_pos, guild_pos, class_hall_pos, inn_pos,
         )
 
-        # --- Spawn hero via EntityBuilder ---
+        # --- Spawn heroes via EntityBuilder ---
         from src.core.classes import HeroClass, CLASS_DEFS, HERO_STARTING_GEAR
         from src.core.entity_builder import EntityBuilder
+        from src.core.hero_names import generate_hero_name
 
-        hero_eid = world.allocate_entity_id()
         class_choices = [HeroClass.WARRIOR, HeroClass.RANGER, HeroClass.MAGE, HeroClass.ROGUE]
-        class_roll = self._rng.next_int(Domain.SPAWN, hero_eid, 6, 0, len(class_choices) - 1)
-        hero_class = class_choices[class_roll]
-
-        gear = HERO_STARTING_GEAR.get(hero_class, {})
-        hero = (
-            EntityBuilder(self._rng, hero_eid, tick=0)
-            .kind("hero")
-            .at(Vector2(cfg.town_center_x, cfg.town_center_y))
-            .home(town_center)
-            .faction(Faction.HERO_GUILD)
-            .role(EntityRole.HERO)
-            .with_base_stats(hp=50, atk=10, def_=3, spd=10, luck=3,
-                             crit_rate=0.08, crit_dmg=1.8, evasion=0.03, gold=50)
-            .with_randomized_stats()
-            .with_hero_class(hero_class)
-            .with_race_skills("hero")
-            .with_class_skills(hero_class, level=1)
-            .with_inventory(max_slots=cfg.hero_inventory_slots,
-                            max_weight=cfg.hero_inventory_weight,
-                            weapon=gear.get("weapon", "iron_sword"),
-                            armor=gear.get("armor", "leather_vest"),
-                            accessory=gear.get("accessory"))
-            .with_starting_items(["small_hp_potion"] * 3)
-            .with_home_storage()
-            .with_traits(race_prefix="hero")
-            .build()
-        )
-        world.add_entity(hero)
-        self._total_spawned += 1
-        class_def = CLASS_DEFS.get(hero_class)
-        logger.info("Spawned hero #%d as %s", hero_eid, class_def.name if class_def else "unknown")
-
-        # --- Register hero house as a building ---
-        hero_house_pos = Vector2(cfg.town_center_x + 1, cfg.town_center_y)
-        world.buildings.append(Building(
-            building_id=f"hero_house_{hero_eid}",
-            name=f"Hero's House",
-            pos=hero_house_pos,
-            building_type="hero_house",
-        ))
-        logger.info("Placed hero house at %s for hero #%d", hero_house_pos, hero_eid)
+        
+        for h_idx in range(cfg.hero_count):
+            hero_eid = world.allocate_entity_id()
+            hero_class = class_choices[h_idx % len(class_choices)]
+            
+            gear = HERO_STARTING_GEAR.get(hero_class, {})
+            
+            builder = (
+                EntityBuilder(self._rng, hero_eid, tick=0)
+                .kind("hero")
+                .at(Vector2(cfg.town_center_x, cfg.town_center_y))
+                .home(town_center)
+                .faction(Faction.HERO_GUILD)
+                .role(EntityRole.HERO)
+            )
+            # Assign traits first for naming
+            builder.with_traits(race_prefix="hero")
+            hero_name = generate_hero_name(self._rng, hero_eid, 0, builder._traits)
+            
+            hero = (
+                builder
+                .with_identity(display_name=hero_name, generation=1)
+                .with_base_stats(hp=50, atk=10, def_=3, spd=10, luck=3,
+                                 crit_rate=0.08, crit_dmg=1.8, evasion=0.03, gold=50)
+                .with_randomized_stats()
+                .with_hero_class(hero_class)
+                .with_race_skills("hero")
+                .with_class_skills(hero_class, level=1)
+                .with_inventory(max_slots=cfg.hero_inventory_slots,
+                                max_weight=cfg.hero_inventory_weight,
+                                weapon=gear.get("weapon", "iron_sword"),
+                                armor=gear.get("armor", "leather_vest"),
+                                accessory=gear.get("accessory"))
+                .with_starting_items(["small_hp_potion"] * 3)
+                .with_home_storage()
+                .with_talents(race="hero")
+                .build()
+            )
+            world.add_entity(hero)
+            self._total_spawned += 1
+            
+            # --- Register hero house as a building ---
+            # Offset each house slightly
+            house_offset_x = (h_idx % 3) - 1
+            house_offset_y = (h_idx // 3) + 1
+            hero_house_pos = Vector2(cfg.town_center_x + house_offset_x, cfg.town_center_y + house_offset_y)
+            
+            world.buildings.append(Building(
+                building_id=f"hero_house_{hero_eid}",
+                name=f"{hero_name}'s House",
+                pos=hero_house_pos,
+                building_type="hero_house",
+            ))
+            
+            class_def = CLASS_DEFS.get(hero_class)
+            logger.info("Spawned hero #%d (%s) as %s at house %s", 
+                        hero_eid, hero_name, class_def.name if class_def else "unknown", hero_house_pos)
 
         # --- Spawn initial goblins (wanderers, not tied to a region) ---
         for i in range(1, cfg.initial_entity_count):
@@ -663,7 +679,8 @@ class EngineManager:
         """Finalize engine setup: create loop, brain, worker pool, and initial snapshot."""
         faction_reg = FactionRegistry.default()
         brain = AIBrain(cfg, self._rng, faction_reg)
-        self._worker_pool = WorkerPool(cfg, brain)
+        assert self._rng is not None
+        self._worker_pool = WorkerPool(cfg, brain, self._rng)
         conflict_resolver = ConflictResolver(cfg, self._rng)
 
         self._loop = WorldLoop(

@@ -57,6 +57,7 @@ class EntityBuilder:
         "_skills", "_inventory", "_home_storage", "_traits",
         "_attr_base", "_attr_randomness",
         "_talents", "_weakness",
+        "_display_name", "_generation", "_death_count",
     )
 
     def __init__(
@@ -102,6 +103,9 @@ class EntityBuilder:
         self._traits: list[int] = []
         self._talents: list[str] | None = None
         self._weakness: str | None = None
+        self._display_name: str = ""
+        self._generation: int = 1
+        self._death_count: int = 0
 
     # -------------------------------------------------------------------
     # Identity
@@ -109,6 +113,12 @@ class EntityBuilder:
 
     def kind(self, kind: str) -> EntityBuilder:
         self._kind = kind
+        return self
+
+    def with_identity(self, display_name: str = "", generation: int = 1, death_count: int = 0) -> EntityBuilder:
+        self._display_name = display_name
+        self._generation = generation
+        self._death_count = death_count
         return self
 
     def at(self, pos: Vector2) -> EntityBuilder:
@@ -480,4 +490,7 @@ class EntityBuilder:
             home_storage=self._home_storage,
             talents=self._talents,
             weakness=self._weakness,
+            display_name=self._display_name,
+            generation=self._generation,
+            death_count=self._death_count,
         )

@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING, Any
 import pika
 from pika.exceptions import AMQPError
 
-from src.core.enums import AIState
+from src.core.enums import AIState, Domain
 from src.api.rabbitmq_client import get_rabbitmq
 
 if TYPE_CHECKING:
@@ -32,11 +32,12 @@ class WorkerPool:
     round-robin work queue, and consumes the resulting ActionProposals.
     """
 
-    __slots__ = ("_config", "_brain", "_channel", "_snapshot_exchange", "_tasks_queue", "_results_queue")
+    __slots__ = ("_config", "_brain", "_rng", "_channel", "_snapshot_exchange", "_tasks_queue", "_results_queue")
 
-    def __init__(self, config: SimulationConfig, brain: AIBrain) -> None:
+    def __init__(self, config: SimulationConfig, brain: AIBrain, rng: DeterministicRNG) -> None:
         self._config = config
         self._brain = brain
+        self._rng = rng
         
         # We only use RabbitMQ if num_workers > 1
         self._channel: pika.adapters.blocking_connection.BlockingChannel | None = None
@@ -93,6 +94,11 @@ class WorkerPool:
     ) -> None:
         """Fallback inline execution loop (No GIL workaround)."""
         for entity in entities:
+            # --- Chaos Mode: Fault Injection ---
+            if self._config.chaos_enabled and self._rng.next_float(Domain.AI_DECISION, entity.id, snapshot.tick + 77) < self._config.chaos_drop_rate:
+                logger.warning("Chaos Mode (Inline): Dropping AI result for entity %d", entity.id)
+                continue
+
             try:
                 _eid, new_state, proposal = self._think(entity, snapshot)
                 action_queue.push(proposal)
@@ -144,6 +150,13 @@ class WorkerPool:
                     tick = result.get("tick")
                     
                     if tick == snapshot.tick:
+                        # --- Chaos Mode: Fault Injection ---
+                        # Use Domain.AI_DECISION or a dedicated one for chaos
+                        if self._config.chaos_enabled and self._rng.next_float(Domain.AI_DECISION, result.get("entity_id", 0), tick + 99) < self._config.chaos_drop_rate:
+                            logger.warning("Chaos Mode: Dropping AI result for entity %d", result.get("entity_id", -1))
+                            collected += 1 # Count as "responded" but don't push the proposal
+                            continue
+
                         proposal = result.get("proposal")
                         if proposal:
                             action_queue.push(proposal)

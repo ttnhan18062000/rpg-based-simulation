@@ -130,50 +130,65 @@ def _run_cli(args: argparse.Namespace) -> None:
             logger.info("Placed goblin camp at %s", camp_pos)
             break
 
-    # Spawn hero via EntityBuilder
+    # Spawn heroes via EntityBuilder
     from src.core.classes import HeroClass, HERO_STARTING_GEAR
     from src.core.entity_builder import EntityBuilder
-
-    hero_eid = world.allocate_entity_id()
-    class_choices = [HeroClass.WARRIOR, HeroClass.RANGER, HeroClass.MAGE, HeroClass.ROGUE]
-    hero_class = class_choices[rng.next_int(Domain.SPAWN, hero_eid, 6, 0, 3)]
-
-    gear = HERO_STARTING_GEAR.get(hero_class, {})
-    hero = (
-        EntityBuilder(rng, hero_eid, tick=0)
-        .kind("hero")
-        .at(Vector2(config.town_center_x, config.town_center_y))
-        .home(town_center)
-        .faction(Faction.HERO_GUILD)
-        .role(EntityRole.HERO)
-        .with_base_stats(hp=50, atk=10, def_=3, spd=10, luck=3,
-                         crit_rate=0.08, crit_dmg=1.8, evasion=0.03, gold=50)
-        .with_randomized_stats()
-        .with_hero_class(hero_class)
-        .with_race_skills("hero")
-        .with_class_skills(hero_class, level=1)
-        .with_inventory(max_slots=config.hero_inventory_slots,
-                        max_weight=config.hero_inventory_weight,
-                        weapon=gear.get("weapon", "iron_sword"),
-                        armor=gear.get("armor", "leather_vest"),
-                        accessory=gear.get("accessory"))
-        .with_starting_items(["small_hp_potion"] * 3)
-        .with_home_storage()
-        .with_traits(race_prefix="hero")
-        .with_talents(race="hero")
-        .build()
-    )
-    world.add_entity(hero)
-
-    # Register hero house as a building
+    from src.core.hero_names import generate_hero_name
     from src.core.buildings import Building
-    hero_house_pos = Vector2(config.town_center_x + 1, config.town_center_y)
-    world.buildings.append(Building(
-        building_id=f"hero_house_{hero_eid}",
-        name="Hero's House",
-        pos=hero_house_pos,
-        building_type="hero_house",
-    ))
+
+    class_choices = [HeroClass.WARRIOR, HeroClass.RANGER, HeroClass.MAGE, HeroClass.ROGUE]
+    
+    for h_idx in range(config.hero_count):
+        hero_eid = world.allocate_entity_id()
+        # Round-robin class selection
+        hero_class = class_choices[h_idx % len(class_choices)]
+        
+        gear = HERO_STARTING_GEAR.get(hero_class, {})
+        
+        builder = (
+            EntityBuilder(rng, hero_eid, tick=0)
+            .kind("hero")
+            .at(Vector2(config.town_center_x, config.town_center_y))
+            .home(town_center)
+            .faction(Faction.HERO_GUILD)
+            .role(EntityRole.HERO)
+        )
+        # Assign traits first to generate name
+        builder.with_traits(race_prefix="hero")
+        hero_name = generate_hero_name(rng, hero_eid, 0, builder._traits)
+        
+        hero = (
+            builder
+            .with_identity(display_name=hero_name, generation=1)
+            .with_base_stats(hp=50, atk=10, def_=3, spd=10, luck=3,
+                             crit_rate=0.08, crit_dmg=1.8, evasion=0.03, gold=50)
+            .with_randomized_stats()
+            .with_hero_class(hero_class)
+            .with_race_skills("hero")
+            .with_class_skills(hero_class, level=1)
+            .with_inventory(max_slots=config.hero_inventory_slots,
+                            max_weight=config.hero_inventory_weight,
+                            weapon=gear.get("weapon", "iron_sword"),
+                            armor=gear.get("armor", "leather_vest"),
+                            accessory=gear.get("accessory"))
+            .with_starting_items(["small_hp_potion"] * 3)
+            .with_home_storage()
+            .with_talents(race="hero")
+            .build()
+        )
+        world.add_entity(hero)
+
+        # Register hero house as a building
+        # Offset house positions to avoid stacking
+        off_x = (h_idx % 3) - 1
+        off_y = (h_idx // 3)
+        hero_house_pos = Vector2(config.town_center_x + off_x, config.town_center_y + off_y + 1)
+        world.buildings.append(Building(
+            building_id=f"hero_house_{hero_eid}",
+            name=f"{hero_name}'s House",
+            pos=hero_house_pos,
+            building_type="hero_house",
+        ))
 
     # Spawn initial goblins (tiered)
     for i in range(1, config.initial_entity_count):
