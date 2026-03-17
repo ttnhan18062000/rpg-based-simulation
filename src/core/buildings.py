@@ -33,6 +33,19 @@ class Building:
     name: str
     pos: Vector2
     building_type: str        # "store" | "blacksmith" | "guild"
+    durability: float = 100.0
+    max_durability: float = 100.0
+    is_functional: bool = True
+
+    def take_damage(self, amount: float) -> None:
+        self.durability = max(0.0, self.durability - amount)
+        if self.durability <= 0:
+            self.is_functional = False
+
+    def repair(self, amount: float) -> None:
+        self.durability = min(self.max_durability, self.durability + amount)
+        if self.durability > 0:
+            self.is_functional = True
 
 
 # ---------------------------------------------------------------------------

@@ -37,6 +37,9 @@ Every agent in the simulation is an `Entity`. Each entity belongs to exactly one
 | `home_storage` | HomeStorage \| None | Hero's persistent home storage |
 | `attributes` | Attributes \| None | 9 primary attributes (STR, AGI, etc.) |
 | `attribute_caps` | AttributeCaps \| None | Attribute growth limits |
+| `death_count` | int | Incremented on respawn (perm-death at limit) |
+| `generation` | int | Sequence number for replacements (1, 2, 3...) |
+| `hero_familiarity` | dict[int, float] | Proximity-based bond scoring (0.0–1.0) |
 | `hero_class` | int | HeroClass enum value (0=NONE) |
 | `skills` | list[SkillInstance] | Learned skills with runtime state |
 | `class_mastery` | float | 0.0–100.0 |
@@ -129,6 +132,20 @@ Entity `kind` strings are registered to factions:
 | `frost_wolf`, `frost_giant`, `frost_shaman` | FROST_KIN |
 | `lizard`, `lizard_warrior`, `lizard_chief` | LIZARDFOLK |
 | `imp`, `hellhound`, `demon_lord` | DEMON_HORDE |
+
+---
+
+## Hero Familiarity & Alliances
+
+Heroes track social bonds with each other based on co-presence in the world.
+
+### Mechanics
+- **Proximity Bond**: When two heroes are within vision range, they gain `+0.002` familiarity per tick.
+- **Decay**: If apart (out of vision), familiarity decays by `-0.0005` per tick.
+- **Alliance Threshold**: Once familiarity reaches `0.5`, the heroes are considered **Allies**. An event is emitted notification of the alliance.
+- **Limit**: Familiarity is capped at `1.0`.
+
+This system influences AI behaviors such as choosing to aid an ally in combat or sharing information.
 
 ---
 

@@ -42,6 +42,17 @@ class CombatAction:
         if attacker is None or not attacker.alive:
             return False
 
+        if isinstance(proposal.target, str) and proposal.target.startswith("BUILDING:"):
+            bid = proposal.target.split(":")[1]
+            target_b = next((b for b in world.buildings if b.building_id == bid), None)
+            if not target_b or not target_b.is_functional:
+                return False
+            # Range check
+            dist = attacker.pos.manhattan(target_b.pos)
+            if dist > self._get_weapon_range(attacker):
+                return False
+            return True
+
         target_id: int = proposal.target
         defender = world.entities.get(target_id)
         if defender is None or not defender.alive:
@@ -71,9 +82,25 @@ class CombatAction:
 
     def apply(self, proposal: ActionProposal, world: WorldState) -> None:
         attacker = world.entities.get(proposal.actor_id)
+        if attacker is None:
+            return
+
+        if isinstance(proposal.target, str) and proposal.target.startswith("BUILDING:"):
+            bid = proposal.target.split(":")[1]
+            target_b = next((b for b in world.buildings if b.building_id == bid), None)
+            if target_b:
+                # Buildings take 50% damage from basic attacks
+                dmg = attacker.stats.atk * 0.5
+                target_b.take_damage(dmg)
+                logger.info(f"Tick {world.tick}: {attacker.kind} #{attacker.id} damaged {target_b.name} for {dmg:.1f}")
+                attacker.stats.stamina = max(0, attacker.stats.stamina - 5)
+                from src.core.attributes import speed_delay
+                attacker.next_act_at += speed_delay(attacker.effective_spd(), "attack")
+            return
+
         target_id: int = proposal.target
         defender = world.entities.get(target_id)
-        if attacker is None or defender is None:
+        if defender is None:
             return
 
         tick = world.tick
