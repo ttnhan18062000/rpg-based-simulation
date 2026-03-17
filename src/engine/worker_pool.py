@@ -15,11 +15,13 @@ from src.api.rabbitmq_client import get_rabbitmq
 
 if TYPE_CHECKING:
     from src.actions.base import ActionProposal
-    from src.ai.brain import AIBrain
     from src.config import SimulationConfig
     from src.core.models import Entity
     from src.core.snapshot import Snapshot
     from src.engine.action_queue import ActionQueue
+
+from src.ai.brain import AIBrain
+from src.systems.rng import DeterministicRNG
 
 logger = logging.getLogger(__name__)
 

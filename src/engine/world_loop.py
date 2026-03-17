@@ -336,6 +336,8 @@ class WorldLoop:
             self._tick_quests()
             self._check_level_ups()
             self._process_hero_replacements()
+        self._update_world_evolution()
+        self._check_endgame_conditions()
 
     def _phase_generators(self) -> None:
         """Run generator entities (immediate, no worker dispatch)."""
@@ -1619,6 +1621,24 @@ class WorldLoop:
                                metadata={"entity_id": eid, "kind": entity.kind, "name": entity.display_name,
                                          "level": entity.stats.level, "permadeath": True})
                     
+                    # NEW: Monument spawning
+                    if entity.stats.level >= 15:
+                        m_id = f"monument_{entity.id}_{self._world.tick}"
+                        from src.core.monuments import Monument
+                        from src.core.enums import HeroClass
+                        # In world_loop, HeroClass and Faction are already in the scope or can be imported.
+                        # Let's ensure they are available.
+                        hc = getattr(entity, 'hero_class', None)
+                        bt = "hp"
+                        if hc == HeroClass.WARRIOR: bt = "hp"
+                        elif hc == HeroClass.MAGE: bt = "atk"
+                        elif hc == HeroClass.RANGER: bt = "atk" # For now
+                        
+                        monument = Monument(m_id, entity.display_name or f"#{entity.id}", 
+                                            hc.name if hc else "NONE", 
+                                            entity.stats.level, entity.home_pos, bt, 0.1)
+                        self._world.monuments.append(monument)
+
                     # Remove from world and schedule replacement
                     removed = self._world.remove_entity(eid)
                     self._schedule_hero_replacement(removed)
@@ -1781,3 +1801,26 @@ class WorldLoop:
                     if h2.id in h1.hero_familiarity:
                         h1.hero_familiarity[h2.id] = max(0.0, h1.hero_familiarity[h2.id] - 0.0005)
                         h2.hero_familiarity[h1.id] = h1.hero_familiarity[h2.id]
+
+    def _update_world_evolution(self) -> None:
+        self._world.world_age += 1
+        self._world.difficulty_modifier = 1.0 + (self._world.world_age // 10000) * 0.1
+        for f in [1, 2, 3]:
+            agg = self._world.faction_aggression.get(f, 0.0)
+            self._world.faction_aggression[f] = min(100.0, agg + 0.001)
+
+    def _check_endgame_conditions(self) -> bool:
+        if self._world.world_age < 50000: return True
+        func = sum(1 for b in self._world.buildings if b.is_functional and b.durability > b.max_durability * 0.8)
+        if func == len(self._world.buildings): return False
+        dest = sum(1 for b in self._world.buildings if not b.is_functional)
+        if dest >= 3: return False
+        return True
+
+    def _apply_monument_buffs(self, hero) -> None:
+        for m in self._world.monuments:
+            if m.buff_type == "hp":
+                hero.stats.max_hp = int(hero.stats.max_hp * 1.1)
+                hero.stats.hp = hero.stats.max_hp
+            elif m.buff_type == "atk":
+                hero.stats.atk = int(hero.stats.atk * 1.1)

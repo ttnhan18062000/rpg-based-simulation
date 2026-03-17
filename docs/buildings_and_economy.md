@@ -23,7 +23,12 @@ class Building:
     name: str
     pos: Vector2
     building_type: str
+    durability: float
+    max_durability: float
+    is_functional: bool
 ```
+
+Buildings have a health system. When `durability` reaches 0, the building is no longer functional. See [World Evolution & Resilience](file:///d:/Projects/rpg-based-simulation/docs/world_evolution_and_resilience.md) for details on repair and sabotage.
 
 Buildings are static locations stored in `WorldState.buildings` and exposed in the API as `BuildingSchema`.
 

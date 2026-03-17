@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 class WorldState:
     """The single source of truth for the simulation."""
 
-    __slots__ = ("tick", "seed", "entities", "grid", "spatial_index", "_next_entity_id", "ground_items", "camps", "buildings", "resource_nodes", "_next_node_id", "treasure_chests", "_next_chest_id", "regions")
+    __slots__ = ("world_age", "faction_aggression", "difficulty_modifier", "monuments", "tick", "seed", "entities", "grid", "spatial_index", "_next_entity_id", "ground_items", "camps", "buildings", "resource_nodes", "_next_node_id", "treasure_chests", "_next_chest_id", "regions")
 
     def __init__(
         self,
@@ -28,6 +28,10 @@ class WorldState:
     ) -> None:
         self.tick: int = 0
         self.seed: int = seed
+        self.world_age: int = 0
+        self.faction_aggression: dict[int, float] = {}
+        self.difficulty_modifier: float = 1.0
+        self.monuments: list[Monument] = []
         self.entities: dict[int, Entity] = {}
         self.grid: Grid = grid
         self.spatial_index: SpatialHash = spatial_index

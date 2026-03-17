@@ -8,7 +8,10 @@ Technical documentation for combat formulas, damage types, elements, leveling, d
 
 Combat is resolved deterministically using effective stats (base + equipment + attribute bonuses + status effects). The system supports dual damage types (physical/magical), elemental vulnerabilities, evasion, critical hits, potion use, and skill-based attacks. Killing enemies awards XP and gold, with level-ups granting permanent stat and attribute growth.
 
-**Primary files:** `src/actions/combat.py`, `src/actions/damage.py`, `src/engine/world_loop.py`
+**Primary files:** `src/actions/combat.py`, `src/actions/damage.py`, `src/engine/world_loop.py`, `src/systems/generator.py`
+
+### Global Scaling
+As the world ages, the difficulty scales globally. All spawned entities receive a stat multiplier based on the current world age. See [World Evolution & Resilience](file:///d:/Projects/rpg-based-simulation/docs/world_evolution_and_resilience.md) for the scaling formula.
 
 ---
 

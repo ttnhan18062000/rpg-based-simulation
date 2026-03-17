@@ -9,6 +9,7 @@ from src.actions.base import ActionProposal
 from src.actions.combat import CombatAction
 from src.actions.move import MoveAction
 from src.actions.rest import RestAction
+from src.actions.repair import RepairAction
 from src.core.enums import ActionType
 from src.core.models import Vector2
 
@@ -73,6 +74,10 @@ class ConflictResolver:
         occupied: set[tuple[int, int]],
     ) -> bool:
         match proposal.verb:
+            case ActionType.REPAIR:
+                if RepairAction.validate(proposal, world):
+                    RepairAction.apply(proposal, world)
+                    return True
             case ActionType.REST:
                 if RestAction.validate(proposal, world):
                     RestAction.apply(proposal, world)

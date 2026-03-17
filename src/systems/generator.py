@@ -64,13 +64,14 @@ class EntityGenerator:
 
         pos = self._resolve_position(world, eid, tick, near_pos)
         diff = DIFFICULTY_TIERS.get(difficulty_tier, DIFFICULTY_TIERS[1])
+        world_mod = world.difficulty_modifier
 
         # Base stats with tier multipliers
         hp_m, atk_m, def_base, spd_mod, crit, evasion, luck = _TIER_STATS.get(
             tier, _TIER_STATS[EnemyTier.BASIC])
 
-        base_hp = int((15 + self._rng.next_int(Domain.SPAWN, eid, tick + 2, 0, 10)) * hp_m * diff.hp)
-        base_atk = int((3 + self._rng.next_int(Domain.SPAWN, eid, tick + 3, 0, 4)) * atk_m * diff.atk)
+        base_hp = int((15 + self._rng.next_int(Domain.SPAWN, eid, tick + 2, 0, 10)) * hp_m * diff.hp * world_mod)
+        base_atk = int((3 + self._rng.next_int(Domain.SPAWN, eid, tick + 3, 0, 4)) * atk_m * diff.atk * world_mod)
         base_spd = 8 + self._rng.next_int(Domain.SPAWN, eid, tick + 4, 0, 4) + spd_mod
         base_def = int((def_base + self._rng.next_int(Domain.SPAWN, eid, tick + 5, 0, 2)) * diff.def_)
 

@@ -1,4 +1,10 @@
-"""Enumerations."""
+import os
+
+# I will write the files and then I will update the content in the next step to not have massive write_to_file calls.
+# Actually I'll just write the critical ones now.
+
+FILES = {
+    "src/core/enums.py": r'''"""Enumerations."""
 from __future__ import annotations
 from enum import IntEnum, unique
 
@@ -29,36 +35,13 @@ class Rarity(IntEnum): COMMON = 0; UNCOMMON = 1; RARE = 2; EPIC = 3
 class EntityRole(IntEnum): HERO = 0; MOB = 1; NPC = 2
 
 @unique
-class EnemyTier(IntEnum):
-    """Enemy difficulty tiers — affects stats, behavior, and loot."""
-
-    BASIC = 0
-    SCOUT = 1
-    WARRIOR = 2
-    ELITE = 3
+class EnemyTier(IntEnum): BASIC = 0; SCOUT = 1; WARRIOR = 2; ELITE = 3
 
 @unique
-class HeroClass(IntEnum):
-    """Available classes for hero entities."""
-    WARRIOR = 0
-    RANGER = 1
-    MAGE = 2
-    ROGUE = 3
-    CHAMPION = 4
-    ELITE_ARCHER = 5
-    ARCHMAGE = 6
-    ASSASSIN = 7
+class HeroClass(IntEnum): WARRIOR = 0; RANGER = 1; MAGE = 2; ROGUE = 3; CHAMPION = 4; ELITE_ARCHER = 5; ARCHMAGE = 6; ASSASSIN = 7
 
 @unique
-class Faction(IntEnum):
-    """World factions for alignment and aggression."""
-    HERO_GUILD = 0
-    GOBLIN_TRIBE = 1
-    WOLF_PACK = 2
-    BANDIT_GANG = 3
-    UNDEAD_HORDE = 4
-    ORC_CLAN = 5
-    GOBLIN_HORDE = 6
+class Faction(IntEnum): HERO_GUILD = 0; GOBLIN_TRIBE = 1; WOLF_PACK = 2; BANDIT_GANG = 3; UNDEAD_HORDE = 4; ORC_CLAN = 5; GOBLIN_HORDE = 6
 
 @unique
 class DamageType(IntEnum): PHYSICAL = 0; MAGICAL = 1
@@ -77,3 +60,11 @@ from dataclasses import dataclass
 class RaceProfile: train_rate: float; level_cap: int; evolves: bool
 
 RACE_PROFILES = {"hero": RaceProfile(1.0, 30, False), "goblin": RaceProfile(1.3, 12, True)} # truncated
+''',
+}
+
+for path, content in FILES.items():
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, 'w', encoding='utf-8') as f:
+        f.write(content)
+    print(f"Restored {path}")
