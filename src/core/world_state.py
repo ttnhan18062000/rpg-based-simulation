@@ -92,3 +92,29 @@ class WorldState:
             if node.pos == pos:
                 return node
         return None
+
+    @classmethod
+    def from_snapshot(cls, snap: 'Snapshot', spatial_index: SpatialHash) -> WorldState:
+        """Reconstruct a mutable WorldState from a serialized Snapshot."""
+        world = cls(seed=snap.seed, grid=snap.grid, spatial_index=spatial_index)
+        world.tick = snap.tick
+        
+        for eid, entity in snap.entities.items():
+            world.add_entity(entity.copy())
+            world._next_entity_id = max(world._next_entity_id, eid + 1)
+            
+        world.ground_items = {k: list(v) for k, v in snap.ground_items.items()}
+        world.camps = [Vector2(x, y) for x, y in snap.camps]
+        world.buildings = list(snap.buildings)
+        
+        for node in snap.resource_nodes:
+            world.add_resource_node(node.copy())
+            world._next_node_id = max(world._next_node_id, node.node_id + 1)
+            
+        for chest in snap.treasure_chests:
+            world.treasure_chests[chest.chest_id] = chest.copy()
+            world._next_chest_id = max(world._next_chest_id, chest.chest_id + 1)
+            
+        world.regions = [r.copy() for r in snap.regions]
+        
+        return world

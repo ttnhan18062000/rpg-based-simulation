@@ -29,6 +29,9 @@ class _FakeRNG:
         self._idx += 1
         return low + (val % max(1, high - low + 1))
 
+    def weighted_choice(self, domain, eid, tick, items, weights):
+        return items[0]
+
 
 # ---------------------------------------------------------------------------
 # Quest model tests

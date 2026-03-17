@@ -15,6 +15,11 @@ if "%~1"=="dev-backend" goto dev-backend
 if "%~1"=="dev-frontend" goto dev-frontend
 if "%~1"=="serve" goto serve
 if "%~1"=="serve-only" goto serve-only
+if "%~1"=="docker-up" goto docker-up
+if "%~1"=="docker-down" goto docker-down
+if "%~1"=="docker-logs" goto docker-logs
+if "%~1"=="run-worker" goto run-worker
+if "%~1"=="run-engine" goto run-engine
 if "%~1"=="cli" goto cli
 if "%~1"=="lint" goto lint
 if "%~1"=="typecheck" goto typecheck
@@ -38,6 +43,11 @@ echo   dev-backend      Start only the backend server
 echo   dev-frontend     Start only the frontend dev server
 echo   serve            Build frontend + start production server
 echo   serve-only       Start production server (assumes frontend already built)
+echo   docker-up        Start all infrastructure components via Docker Compose
+echo   docker-down      Stop and remove all Docker Compose containers
+echo   docker-logs      Tail logs for all Docker Compose containers
+echo   run-worker       Start the AI Worker Daemon locally
+echo   run-engine       Start the Backend Engine locally
 echo   cli              Run headless simulation (200 ticks)
 echo   lint             Run linters (frontend)
 echo   typecheck        Run TypeScript type checking
@@ -103,6 +113,28 @@ exit /b %errorlevel%
 :serve-only
 echo Starting production server...
 python -m src serve --port 8000
+exit /b %errorlevel%
+
+:docker-up
+docker compose up -d
+exit /b %errorlevel%
+
+:docker-down
+docker compose down
+exit /b %errorlevel%
+
+:docker-logs
+docker compose logs -f
+exit /b %errorlevel%
+
+:run-worker
+echo Starting the AI Worker Daemon locally...
+uv run python -m src.workers.ai_worker_daemon
+exit /b %errorlevel%
+
+:run-engine
+echo Starting the Backend Engine locally...
+uv run python -m src serve --host 0.0.0.0 --port 8000
 exit /b %errorlevel%
 
 :cli

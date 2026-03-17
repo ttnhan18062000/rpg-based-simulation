@@ -41,8 +41,10 @@ class SimulationConfig:
     town_passive_heal: int = 1             # HP regained per tick by heroes in town (even outside rest)
 
     # Hero
+    hero_count: int = 4
     hero_respawn_ticks: int = 10
     hero_heal_per_tick: int = 3
+    death_tier_max: int = 4                # Lives before permadeath
 
     # Combat
     base_damage: int = 5
@@ -51,14 +53,19 @@ class SimulationConfig:
     crit_multiplier: float = 2.0
 
     # Leveling
-    xp_per_kill_base: int = 30
-    xp_per_level_scale: float = 1.5
-    stat_growth_hp: int = 5
-    stat_growth_atk: int = 1
-    stat_growth_matk: int = 1
-    stat_growth_def: int = 1
-    stat_growth_spd: int = 1
-    max_level: int = 20
+    xp_per_kill_base: int = 80
+    
+    # Milestone levels mapping (Level -> (Bonus HP, Bonus ATK, Bonus DEF, Bonus SPD))
+    milestone_levels: dict[int, tuple[int, int, int, int]] = field(default_factory=lambda: {
+        5:  (15, 3, 2, 2),
+        10: (20, 4, 3, 3),
+        15: (15, 3, 2, 2),
+        20: (20, 4, 3, 2),
+        25: (15, 3, 2, 2),
+        30: (10, 2, 1, 1),
+    })
+
+    max_level: int = 30
 
     # Inventory
     hero_inventory_slots: int = 36
@@ -137,3 +144,7 @@ class SimulationConfig:
     # Logging
     log_level: str = "INFO"
     replay_file: str = "replay.json"
+
+    # Chaos Mode (infra-06)
+    chaos_enabled: bool = False
+    chaos_drop_rate: float = 0.05        # Probability to drop an AI result

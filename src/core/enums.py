@@ -200,3 +200,47 @@ class TraitType(IntEnum):
     # Perception / awareness
     KEEN_EYED = 18      # Bonus vision range, detects hidden enemies
     OBLIVIOUS = 19      # Reduced vision, but higher focus on current task
+
+
+@unique
+class VeterancyRank(IntEnum):
+    """Combat experience ranks for entities."""
+
+    GREEN = 0
+    BLOODED = 1
+    VETERAN = 2
+    ELITE = 3
+    LEGEND = 4
+
+
+from dataclasses import dataclass
+
+@dataclass(frozen=True)
+class RaceProfile:
+    """Racial growth profile determining how an entity levels up."""
+    train_rate: float
+    level_cap: int
+    evolves: bool
+
+
+RACE_PROFILES: dict[str, RaceProfile] = {
+    "hero": RaceProfile(1.0, 30, False),
+    "goblin": RaceProfile(1.3, 12, True),
+    "goblin_scout": RaceProfile(1.3, 12, True),
+    "goblin_warrior": RaceProfile(1.3, 12, True),
+    "goblin_chief": RaceProfile(1.3, 12, False),
+    "wolf": RaceProfile(0.7, 8, True),
+    "dire_wolf": RaceProfile(0.7, 8, True),
+    "alpha_wolf": RaceProfile(0.7, 8, False),
+    "bandit": RaceProfile(1.0, 15, True),
+    "bandit_archer": RaceProfile(1.0, 15, True),
+    "bandit_chief": RaceProfile(1.0, 15, False),
+    "undead": RaceProfile(0.0, 1, False),  # Cannot level up
+    "skeleton": RaceProfile(0.0, 1, False),
+    "skeleton_mage": RaceProfile(0.0, 1, False),
+    "zombie": RaceProfile(0.0, 1, False),
+    "lich": RaceProfile(0.0, 1, False),
+    "orc": RaceProfile(0.6, 15, True),
+    "orc_warrior": RaceProfile(0.6, 15, True),
+    "orc_warlord": RaceProfile(0.6, 15, False),
+}

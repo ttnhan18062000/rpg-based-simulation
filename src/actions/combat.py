@@ -160,13 +160,58 @@ class CombatAction:
         # --- Attribute training from combat ---
         if attacker.attributes and attacker.attribute_caps:
             from src.core.attributes import train_attributes
-            train_attributes(attacker.attributes, attacker.attribute_caps, dmg_ctx.train_action, stats=attacker.stats)
+            train_attributes(attacker.attributes, attacker.attribute_caps, dmg_ctx.train_action, stats=attacker.stats, race=attacker.kind, talents=attacker.talents, weakness=attacker.weakness)
         if defender.attributes and defender.attribute_caps and defender.alive:
             from src.core.attributes import train_attributes
-            train_attributes(defender.attributes, defender.attribute_caps, "defend", stats=defender.stats)
+            train_attributes(defender.attributes, defender.attribute_caps, "defend", stats=defender.stats, race=defender.kind, talents=defender.talents, weakness=defender.weakness)
+
+        # --- Veterancy (epic-18 F1) ---
+        from src.core.enums import VeterancyRank
+
+        def check_veterancy_rank_up(entity, world_ref) -> None:
+            """Check and apply veterancy rank ups."""
+            old_rank = entity.veterancy_rank
+            new_rank = old_rank
+            pts = entity.veterancy_points
+            
+            if pts >= 500: new_rank = VeterancyRank.LEGEND
+            elif pts >= 200: new_rank = VeterancyRank.ELITE
+            elif pts >= 80: new_rank = VeterancyRank.VETERAN
+            elif pts >= 25: new_rank = VeterancyRank.BLOODED
+            
+            if new_rank > old_rank:
+                entity.veterancy_rank = new_rank
+                rank_name = VeterancyRank(new_rank).name.title()
+                logger.info("Tick %d: Entity %d (%s) promoted to %s!", tick, entity.id, entity.kind, rank_name)
+
+        # +1 pt per hit dealt
+        attacker.veterancy_points += 1
+        check_veterancy_rank_up(attacker, world)
+        
+        # +1 pt per hit taken and survived
+        if defender.alive:
+            defender.veterancy_points += 1
+            # Near death survival +3 pt
+            if defender.stats.hp_ratio < 0.25:
+                defender.veterancy_points += 3
+            
+            # Phase C: Near-Death Hardening
+            if defender.stats.hp_ratio < 0.15:
+                defender.stats.max_hp += 1
+                logger.info("Tick %d: Entity %d (%s) hardened by survival! Max HP +1 (New Max: %d)", 
+                            tick, defender.id, defender.kind, defender.stats.max_hp)
+                
+            check_veterancy_rank_up(defender, world)
 
         # --- XP award on kill ---
         if not defender.alive:
+            # +5 points for a kill (+10 if higher level)
+            if defender.stats.level > attacker.stats.level:
+                attacker.veterancy_points += 10
+            else:
+                attacker.veterancy_points += 5
+            check_veterancy_rank_up(attacker, world)
+            
             xp_gain = self._calculate_xp(attacker, defender, cfg)
             # Apply XP multiplier from INT/WIS
             if attacker.attributes:
@@ -209,9 +254,15 @@ class CombatAction:
 
     @staticmethod
     def _calculate_xp(attacker, defender, cfg) -> int:
-        """XP = base * defender_level * scale, bonus for higher-tier enemies."""
+        """XP = base * defender_level * scale, bonus for higher-tier enemies.
+        Mobs learn at half the rate of heroes."""
         base = cfg.xp_per_kill_base
         level_mult = max(1, defender.stats.level)
         tier_bonus = 1.0 + defender.tier * 0.5
         xp = int(base * level_mult * tier_bonus)
+        
+        from src.core.enums import EntityRole
+        if attacker.role == EntityRole.MOB:
+            xp = int(xp * 0.5)
+            
         return max(xp, 1)

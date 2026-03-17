@@ -208,3 +208,7 @@ __marimo__/
 # Frontend build artifacts
 frontend/dist/
 frontend/node_modules/
+
+# Profiling and test logs
+*.prof
+pytest*.txt

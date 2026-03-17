@@ -2,7 +2,7 @@
 
 **Priority:** P0 (implement alongside or before epic-17)  
 **Effort:** XL  
-**Status:** design  
+**Status:** in progress  
 **Dependencies:** None  
 **Applies to:** ALL entities (heroes, goblins, wolves, orcs, undead, bandits, centaurs, demons — everyone)
 
@@ -227,8 +227,8 @@ Attributes slowly decay without use — an idle blade grows dull.
 
 | Phase | Features | Effort |
 |-------|----------|--------|
-| **A** | F5 (leveling curve) + F8 (racial profiles) | M |
-| **B** | F1 (veterancy) + F3 (talent) | M |
+| **A** | F5 (leveling curve) + F8 (racial profiles) | M (DONE) |
+| **B** | F1 (veterancy) + F3 (talent) | M (DONE) |
 | **C** | F4 (toughness) + F10 (decay) | S |
 | **D** | F2 (evolution) | L |
 | **E** | F6 (skill discovery) + F7 (attribute milestones) | L |

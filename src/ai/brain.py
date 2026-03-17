@@ -68,6 +68,13 @@ class AIBrain:
             faction_reg=self._faction_reg,
         )
 
+        # --- Boredom recovery ---
+        # Slowly recover all multipliers back to 1.0 every tick
+        for gname in list(actor.boredom_multipliers.keys()):
+            val = actor.boredom_multipliers[gname]
+            if val < 1.0:
+                actor.boredom_multipliers[gname] = min(1.0, val + 0.02)
+
         # --- Goal evaluation for decision states ---
         if actor.ai_state in self._DECISION_STATES:
             goal_scores = self._goal_evaluator.evaluate(ctx)
@@ -78,6 +85,10 @@ class AIBrain:
                 if selected:
                     # Transition actor to the goal's state before handler runs
                     actor.ai_state = selected.target_state
+                    
+                    # Apply boredom penalty to selected goal
+                    current = actor.boredom_multipliers.get(selected.goal, 1.0)
+                    actor.boredom_multipliers[selected.goal] = max(0.1, current * 0.8)
 
         handler = STATE_HANDLERS.get(actor.ai_state, _FALLBACK)
         new_state, proposal = handler.handle(ctx)
@@ -87,5 +98,12 @@ class AIBrain:
         for e in visible:
             if self._faction_reg.is_hostile(actor.faction, e.faction):
                 actor.memory[e.id] = e.pos
+
+        # Update heuristics: consecutive idle ticks (Phase C)
+        from src.core.enums import ActionType
+        if proposal.verb == ActionType.REST:
+            actor.consecutive_idle_ticks += 1
+        else:
+            actor.consecutive_idle_ticks = 0
 
         return new_state, proposal

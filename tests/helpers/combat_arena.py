@@ -58,6 +58,7 @@ class CombatArena:
             generator_max_entities=0,
             num_camps=0,
             hero_respawn_ticks=9999,
+            num_workers=1,  # Inline AI — skip RabbitMQ connection
         )
         defaults.update(config_overrides)
         self.config = SimulationConfig(**defaults)

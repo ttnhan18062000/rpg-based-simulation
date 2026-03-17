@@ -1,0 +1,24 @@
+﻿============================= test session starts =============================
+platform win32 -- Python 3.14.3, pytest-9.0.2, pluggy-1.6.0
+rootdir: D:\Projects\rpg-based-simulation
+configfile: pyproject.toml
+plugins: anyio-4.12.1
+collected 30 items
+
+tests\test_entity_builder.py F
+
+================================== FAILURES ===================================
+______________ TestEntityBuilderBasic.test_build_returns_entity _______________
+tests\test_entity_builder.py:47: in test_build_returns_entity
+    entity = EntityBuilder(rng, 1).kind("test").build()
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src\core\entity_builder.py:456: in build
+    self.with_talents()
+src\core\entity_builder.py:413: in with_talents
+    self._talents = [t1, t2]
+    ^^^^^^^^^^^^^
+E   AttributeError: 'EntityBuilder' object has no attribute '_talents' and no __dict__ for setting new attributes
+=========================== short test summary info ===========================
+FAILED tests/test_entity_builder.py::TestEntityBuilderBasic::test_build_returns_entity
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!
+============================== 1 failed in 0.16s ==============================

@@ -9,6 +9,7 @@ from __future__ import annotations
 import logging
 import threading
 import time
+import typing
 from typing import TYPE_CHECKING
 
 from src.ai.brain import AIBrain
@@ -106,6 +107,18 @@ class EngineManager:
     def total_deaths(self) -> int:
         return self._total_deaths
 
+    # -- listeners --
+
+    def add_tick_listener(self, cb: typing.Callable[[Snapshot, list[SimEvent]], None]) -> None:
+        with self._listeners_lock:
+            if cb not in self._listeners:
+                self._listeners.append(cb)
+
+    def remove_tick_listener(self, cb: typing.Callable[[Snapshot, list[SimEvent]], None]) -> None:
+        with self._listeners_lock:
+            if cb in self._listeners:
+                self._listeners.remove(cb)
+
     # -- snapshot access --
 
     def get_snapshot(self) -> Snapshot | None:
@@ -127,6 +140,12 @@ class EngineManager:
         self._running.set()
         self._thread = threading.Thread(target=self._run_loop, name="engine-loop", daemon=True)
         self._thread.start()
+        # Start resource metrics collector
+        try:
+            from src.utils.resource_collector import start_resource_collector
+            start_resource_collector()
+        except Exception:
+            logger.debug("Resource collector not started", exc_info=True)
         logger.info("EngineManager started (tick_rate=%.3fs)", self._tick_rate)
 
     def pause(self) -> None:
@@ -173,6 +192,15 @@ class EngineManager:
         """Construct all simulation components from config."""
         cfg = self._config
         self._rng = DeterministicRNG(cfg.world_seed)
+        
+        # --- KAFKA RECOVERY ---
+        world = self._try_recover_world(cfg)
+        if world is not None:
+            generator = EntityGenerator(cfg, self._rng)
+            self._finalize_build(world, cfg, generator)
+            return
+            
+        # --- GENERATE NEW WORLD ---
         grid = Grid(cfg.grid_width, cfg.grid_height)
         spatial = SpatialHash(cfg.spatial_cell_size)
         world = WorldState(seed=cfg.world_seed, grid=grid, spatial_index=spatial)
@@ -471,53 +499,69 @@ class EngineManager:
             store_pos, bs_pos, guild_pos, class_hall_pos, inn_pos,
         )
 
-        # --- Spawn hero via EntityBuilder ---
+        # --- Spawn heroes via EntityBuilder ---
         from src.core.classes import HeroClass, CLASS_DEFS, HERO_STARTING_GEAR
         from src.core.entity_builder import EntityBuilder
+        from src.core.hero_names import generate_hero_name
 
-        hero_eid = world.allocate_entity_id()
         class_choices = [HeroClass.WARRIOR, HeroClass.RANGER, HeroClass.MAGE, HeroClass.ROGUE]
-        class_roll = self._rng.next_int(Domain.SPAWN, hero_eid, 6, 0, len(class_choices) - 1)
-        hero_class = class_choices[class_roll]
-
-        gear = HERO_STARTING_GEAR.get(hero_class, {})
-        hero = (
-            EntityBuilder(self._rng, hero_eid, tick=0)
-            .kind("hero")
-            .at(Vector2(cfg.town_center_x, cfg.town_center_y))
-            .home(town_center)
-            .faction(Faction.HERO_GUILD)
-            .role(EntityRole.HERO)
-            .with_base_stats(hp=50, atk=10, def_=3, spd=10, luck=3,
-                             crit_rate=0.08, crit_dmg=1.8, evasion=0.03, gold=50)
-            .with_randomized_stats()
-            .with_hero_class(hero_class)
-            .with_race_skills("hero")
-            .with_class_skills(hero_class, level=1)
-            .with_inventory(max_slots=cfg.hero_inventory_slots,
-                            max_weight=cfg.hero_inventory_weight,
-                            weapon=gear.get("weapon", "iron_sword"),
-                            armor=gear.get("armor", "leather_vest"),
-                            accessory=gear.get("accessory"))
-            .with_starting_items(["small_hp_potion"] * 3)
-            .with_home_storage()
-            .with_traits(race_prefix="hero")
-            .build()
-        )
-        world.add_entity(hero)
-        self._total_spawned += 1
-        class_def = CLASS_DEFS.get(hero_class)
-        logger.info("Spawned hero #%d as %s", hero_eid, class_def.name if class_def else "unknown")
-
-        # --- Register hero house as a building ---
-        hero_house_pos = Vector2(cfg.town_center_x + 1, cfg.town_center_y)
-        world.buildings.append(Building(
-            building_id=f"hero_house_{hero_eid}",
-            name=f"Hero's House",
-            pos=hero_house_pos,
-            building_type="hero_house",
-        ))
-        logger.info("Placed hero house at %s for hero #%d", hero_house_pos, hero_eid)
+        
+        for h_idx in range(cfg.hero_count):
+            hero_eid = world.allocate_entity_id()
+            hero_class = class_choices[h_idx % len(class_choices)]
+            
+            gear = HERO_STARTING_GEAR.get(hero_class, {})
+            
+            builder = (
+                EntityBuilder(self._rng, hero_eid, tick=0)
+                .kind("hero")
+                .at(Vector2(cfg.town_center_x, cfg.town_center_y))
+                .home(town_center)
+                .faction(Faction.HERO_GUILD)
+                .role(EntityRole.HERO)
+            )
+            # Assign traits first for naming
+            builder.with_traits(race_prefix="hero")
+            hero_name = generate_hero_name(self._rng, hero_eid, 0, builder._traits)
+            
+            hero = (
+                builder
+                .with_identity(display_name=hero_name, generation=1)
+                .with_base_stats(hp=50, atk=10, def_=3, spd=10, luck=3,
+                                 crit_rate=0.08, crit_dmg=1.8, evasion=0.03, gold=50)
+                .with_randomized_stats()
+                .with_hero_class(hero_class)
+                .with_race_skills("hero")
+                .with_class_skills(hero_class, level=1)
+                .with_inventory(max_slots=cfg.hero_inventory_slots,
+                                max_weight=cfg.hero_inventory_weight,
+                                weapon=gear.get("weapon", "iron_sword"),
+                                armor=gear.get("armor", "leather_vest"),
+                                accessory=gear.get("accessory"))
+                .with_starting_items(["small_hp_potion"] * 3)
+                .with_home_storage()
+                .with_talents(race="hero")
+                .build()
+            )
+            world.add_entity(hero)
+            self._total_spawned += 1
+            
+            # --- Register hero house as a building ---
+            # Offset each house slightly
+            house_offset_x = (h_idx % 3) - 1
+            house_offset_y = (h_idx // 3) + 1
+            hero_house_pos = Vector2(cfg.town_center_x + house_offset_x, cfg.town_center_y + house_offset_y)
+            
+            world.buildings.append(Building(
+                building_id=f"hero_house_{hero_eid}",
+                name=f"{hero_name}'s House",
+                pos=hero_house_pos,
+                building_type="hero_house",
+            ))
+            
+            class_def = CLASS_DEFS.get(hero_class)
+            logger.info("Spawned hero #%d (%s) as %s at house %s", 
+                        hero_eid, hero_name, class_def.name if class_def else "unknown", hero_house_pos)
 
         # --- Spawn initial goblins (wanderers, not tied to a region) ---
         for i in range(1, cfg.initial_entity_count):
@@ -629,9 +673,14 @@ class EngineManager:
                      len(world.resource_nodes), len(world.regions),
                      sum(len(r.locations) for r in world.regions))
 
+        self._finalize_build(world, cfg, generator)
+
+    def _finalize_build(self, world: WorldState, cfg: SimulationConfig, generator: EntityGenerator) -> None:
+        """Finalize engine setup: create loop, brain, worker pool, and initial snapshot."""
         faction_reg = FactionRegistry.default()
         brain = AIBrain(cfg, self._rng, faction_reg)
-        self._worker_pool = WorkerPool(cfg, brain)
+        assert self._rng is not None
+        self._worker_pool = WorkerPool(cfg, brain, self._rng)
         conflict_resolver = ConflictResolver(cfg, self._rng)
 
         self._loop = WorldLoop(
@@ -644,6 +693,96 @@ class EngineManager:
         snap = self._loop.create_snapshot()
         with self._snapshot_lock:
             self._latest_snapshot = snap
+
+    def _try_recover_world(self, cfg: SimulationConfig) -> WorldState | None:
+        """Attempt to recover the simulation state from Kafka."""
+        import pickle
+        import uuid
+        from src.api.kafka_client import create_kafka_consumer, KAFKA_TOPIC_SNAPSHOTS, KAFKA_TOPIC_EVENTS
+        from confluent_kafka import TopicPartition, OFFSET_BEGINNING
+        
+        # Unique consumer group for startup so it doesn't mess with other readers
+        consumer = create_kafka_consumer(f"sim_startup_{uuid.uuid4().hex}")
+        if not consumer:
+            return None
+            
+        try:
+            # 1. Recover latest Compacted Snapshot
+            consumer.assign([TopicPartition(KAFKA_TOPIC_SNAPSHOTS, 0)])
+            consumer.seek(TopicPartition(KAFKA_TOPIC_SNAPSHOTS, 0, OFFSET_BEGINNING))
+            
+            latest_snap = None
+            timeout_strikes = 0
+            # Read until we hit EOF for the partition
+            while timeout_strikes < 3:
+                msg = consumer.poll(0.5)
+                if msg is None:
+                    timeout_strikes += 1
+                    continue
+                timeout_strikes = 0  # reset on active read
+                
+                if msg.error():
+                    break
+                    
+                try:
+                    obj = pickle.loads(msg.value())
+                    if obj and hasattr(obj, 'tick'):
+                        latest_snap = obj
+                except Exception as e:
+                    logger.debug("Failed to deserialize snapshot: %s", e)
+                    
+            if not latest_snap:
+                logger.debug("Kafka Setup: No snapshot found on sim.snapshots")
+                return None
+                
+            logger.info("Kafka Setup: Recovered snapshot at tick %d", latest_snap.tick)
+            
+            spatial = SpatialHash(cfg.spatial_cell_size)
+            world = WorldState.from_snapshot(latest_snap, spatial)
+            
+            # 2. Replay subsequent Events
+            consumer.assign([TopicPartition(KAFKA_TOPIC_EVENTS, 0)])
+            consumer.seek(TopicPartition(KAFKA_TOPIC_EVENTS, 0, OFFSET_BEGINNING))
+            
+            resolver = ConflictResolver(cfg, DeterministicRNG(cfg.world_seed))
+            replayed_ticks = 0
+            timeout_strikes = 0
+            
+            while timeout_strikes < 3:
+                msg = consumer.poll(0.5)
+                if msg is None:
+                    timeout_strikes += 1
+                    continue
+                timeout_strikes = 0
+                
+                if msg.error():
+                    break
+                    
+                try:
+                    payload = pickle.loads(msg.value())
+                    tick = payload.get("tick")
+                    proposals = payload.get("proposals", [])
+                    
+                    # Log compaction guarantees ordered snapshots, but we must strictly ensure
+                    # we only apply events that happened AFTER this snapshot's tick
+                    if tick and tick > world.tick:
+                        resolver.resolve(proposals, world)
+                        world.tick = tick
+                        replayed_ticks += 1
+                except Exception as e:
+                    logger.debug("Failed to deserialize event: %s", e)
+                    
+            if replayed_ticks > 0:
+                logger.info("Kafka Setup: Replayed %d ticks of events. Current synchronized tick: %d", 
+                            replayed_ticks, world.tick)
+                            
+            return world
+            
+        except Exception as e:
+            logger.error("Failed to recover world from Kafka: %s", e)
+            return None
+        finally:
+            consumer.close()
 
     def _run_loop(self) -> None:
         """Background thread main loop."""
@@ -661,6 +800,7 @@ class EngineManager:
                 self._step_requested.clear()
 
             # Execute one tick
+            _tick_start = time.perf_counter()
             alive_before = set(self._loop.world.entities.keys())
             can_continue = self._loop.tick_once()
 
@@ -676,6 +816,32 @@ class EngineManager:
             self._total_spawned += len(new_ids)
             self._total_deaths += len(dead_ids)
 
+            from src.utils.metrics import (
+                ACTIVE_ENTITIES, TOTAL_SPAWNS, TOTAL_DEATHS,
+                SIM_CURRENT_TICK, SIM_TICKS_PER_SECOND,
+                SIM_COMBAT_EVENTS, SIM_SKILL_EVENTS,
+            )
+
+            current_tick = self._loop.world.tick
+            ACTIVE_ENTITIES.set(len(alive_after))
+            SIM_CURRENT_TICK.set(current_tick)
+            if new_ids:
+                TOTAL_SPAWNS.inc(len(new_ids))
+            if dead_ids:
+                TOTAL_DEATHS.inc(len(dead_ids))
+
+            # Count combat and skill events
+            for ev in self._loop.tick_events:
+                if ev.category == "combat":
+                    SIM_COMBAT_EVENTS.inc()
+                elif ev.category == "skill":
+                    SIM_SKILL_EVENTS.inc()
+
+            # Throughput
+            tick_elapsed = time.perf_counter() - _tick_start
+            if tick_elapsed > 0:
+                SIM_TICKS_PER_SECOND.set(1.0 / tick_elapsed)
+
             self._publish_snapshot_and_events()
 
             # Rate limiting
@@ -686,7 +852,7 @@ class EngineManager:
         logger.info("Engine thread exited.")
 
     def _publish_snapshot_and_events(self) -> None:
-        """Swap snapshot + push events from last_applied."""
+        """Swap snapshot + push events to Redis Stream."""
         assert self._loop is not None
         snap = self._loop.create_snapshot()
         with self._snapshot_lock:
@@ -695,6 +861,33 @@ class EngineManager:
         events: list[SimEvent] = self._loop.tick_events
         if events:
             self._event_log.append_many(events)
+
+        # Publish the state delta to Redis Streams (infra-07)
+        try:
+            from src.api.redis_client import get_sync_redis
+            from src.api.routes.stream import compute_delta, _snapshot_to_slim_dict
+            from src.utils.metrics import SIM_REDIS_PUBLISH_DURATION
+            r = get_sync_redis()
+
+            _t0 = time.perf_counter()
+
+            # Convert snapshots to slim entity dicts for diffing
+            loot_duration = self.config.loot_duration
+            new_slim = _snapshot_to_slim_dict(snap, loot_duration)
+            old_slim = getattr(self, "_last_published_slim", {})
+
+            payload_json = compute_delta(old_slim, new_slim, snap.tick, events)
+
+            if payload_json:
+                r.xadd("sim:stream", {"payload": payload_json})
+
+            SIM_REDIS_PUBLISH_DURATION.observe(time.perf_counter() - _t0)
+
+            # Save slim dict for the NEXT tick's diff
+            self._last_published_slim = new_slim
+
+        except Exception:
+            logger.exception("Failed to publish tick %d to Redis", self._loop.world.tick)
 
     def _current_tick(self) -> int:
         if self._loop:

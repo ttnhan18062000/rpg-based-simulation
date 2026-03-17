@@ -100,6 +100,7 @@ class EntityGenerator:
             .with_mob_attributes(3 + tier * 2, tier)
             .with_race_skills(kind)
             .with_traits(race_prefix="goblin")
+            .with_talents(race="goblin")
             .build()
         )
         entity.difficulty_tier = difficulty_tier
@@ -179,6 +180,7 @@ class EntityGenerator:
             )
             .with_race_skills(kind)
             .with_traits(race_prefix=race)
+            .with_talents(race=race)
             .build()
         )
         entity.difficulty_tier = difficulty_tier
@@ -205,8 +207,7 @@ class EntityGenerator:
             pos = self._find_nearest_walkable_non_town(world, pos)
         return pos
 
-    @staticmethod
-    def _resolve_ai_state(tier: int, near_pos: Vector2 | None) -> AIState:
+    def _resolve_ai_state(self, tier: int, near_pos: Vector2 | None) -> AIState:
         """Determine initial AI state based on tier and spawn location."""
         if tier == EnemyTier.ELITE or near_pos is not None:
             return AIState.GUARD_CAMP
