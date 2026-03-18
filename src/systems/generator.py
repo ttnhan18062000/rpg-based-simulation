@@ -8,8 +8,9 @@ from src.core.classes import mob_class_for
 from src.core.entity_builder import EntityBuilder
 from src.core.enums import AIState, Domain, EnemyTier
 from src.core.faction import Faction
+from src.core.item_registry import ITEM_REGISTRY, ItemTemplate
 from src.core.items import (
-    Inventory, LOOT_TABLES, TIER_KIND_NAMES, TIER_STARTING_GEAR, ITEM_REGISTRY,
+    Inventory, LOOT_TABLES, TIER_KIND_NAMES, TIER_STARTING_GEAR,
     RACE_TIER_KINDS, RACE_STARTING_GEAR, RACE_STAT_MODS, RACE_LOOT_TABLES, RACE_FACTION,
     DIFFICULTY_DROP_MULTIPLIER, DIFFICULTY_BONUS_LOOT,
 )
@@ -47,15 +48,68 @@ class EntityGenerator:
             and alive_count < self._config.generator_max_entities
         )
 
+    def spawn_calamity(self, world: WorldState, template_id: str) -> Entity:
+        """Spawn a unique World Boss (Calamity)."""
+        from src.core.calamities import CALAMITY_TEMPLATES
+        from src.core.enums import Domain, EntityRole
+
+        template = CALAMITY_TEMPLATES.get(template_id)
+        if not template:
+            raise ValueError(f"Unknown calamity template: {template_id}")
+
+        eid = world.allocate_entity_id()
+        tick = world.tick
+
+        # Calamity stats are significantly higher than Elites
+        mult = template.stat_multiplier
+        world_mod = world.difficulty_modifier
+        
+        # Scale stats
+        base_hp = int(100 * mult * world_mod)
+        base_atk = int(20 * mult * world_mod)
+        base_def = int(10 * mult)
+        
+        # Debugging log
+        import logging
+        logging.error(f"DEBUG_GEN[{eid}]: template={template_id}, hp={base_hp}, mult={mult}, mod={world_mod}")
+        
+        base_spd = 12 + self._rng.next_int(Domain.SPAWN, eid, tick, 0, 4)
+        pos = self._resolve_position(world, eid, tick, None)
+        
+        inv = Inventory(items=[], max_slots=20, max_weight=100.0)
+        for item_id in template.legendary_loot:
+            inv.add_item(item_id)
+            inv.auto_equip_best(item_id)
+
+        builder = EntityBuilder(self._rng, eid, tick=tick)
+        entity = (
+            builder
+            .kind(template_id)
+            .with_identity(display_name=template.name)
+            .at(pos)
+            .ai_state(AIState.WANDER)
+            .faction(template.faction)
+            .role(EntityRole.WORLD_BOSS)
+            .with_base_stats(
+                hp=base_hp, atk=base_atk, def_=base_def, spd=base_spd,
+                luck=20, crit_rate=0.2, crit_dmg=2.0, evasion=0.1,
+                level=30, xp_to_next=999999,
+                gold=5000,
+            )
+            .with_existing_inventory(inv)
+            .with_mob_class(template.archetype)
+            .with_mob_attributes(50, 4)
+            .with_traits(trait_ids=template.traits)
+            .is_world_boss(True)
+            .build()
+        )
+        return entity
+
     def spawn(
         self, world: WorldState, tier: int | None = None,
         near_pos: Vector2 | None = None, difficulty_tier: int = 1,
     ) -> Entity:
-        """Create a new tiered entity with deterministic random stats, equipment, and position.
-
-        difficulty_tier (1-4) applies region-based stat multipliers on top of
-        the enemy tier multipliers.
-        """
+        """Create a new tiered entity."""
         eid = world.allocate_entity_id()
         tick = world.tick
 
@@ -66,7 +120,6 @@ class EntityGenerator:
         diff = DIFFICULTY_TIERS.get(difficulty_tier, DIFFICULTY_TIERS[1])
         world_mod = world.difficulty_modifier
 
-        # Base stats with tier multipliers
         hp_m, atk_m, def_base, spd_mod, crit, evasion, luck = _TIER_STATS.get(
             tier, _TIER_STATS[EnemyTier.BASIC])
 
@@ -112,10 +165,7 @@ class EntityGenerator:
         tier: int | None = None, near_pos: Vector2 | None = None,
         difficulty_tier: int = 1,
     ) -> Entity:
-        """Spawn a race-specific entity (wolf, bandit, undead, orc).
-
-        difficulty_tier (1-4) applies region-based stat multipliers.
-        """
+        """Spawn a race-specific entity."""
         eid = world.allocate_entity_id()
         tick = world.tick
 
@@ -125,11 +175,9 @@ class EntityGenerator:
         pos = self._resolve_position(world, eid, tick, near_pos)
         diff = DIFFICULTY_TIERS.get(difficulty_tier, DIFFICULTY_TIERS[1])
 
-        # Race-specific stats
         race_mods = RACE_STAT_MODS.get(race, (1.0, 1.0, 0, 0, 0.05, 0.0, 0))
         r_hp_m, r_atk_m, r_def_mod, r_spd_mod, r_crit, r_evasion, r_luck = race_mods
 
-        # Tier multipliers on top of race
         hp_m, atk_m, def_base, spd_mod, t_crit, t_evasion, t_luck = _TIER_STATS.get(
             tier, _TIER_STATS[EnemyTier.BASIC])
 
@@ -145,14 +193,13 @@ class EntityGenerator:
         ai_state = self._resolve_ai_state(tier, near_pos)
         inv = self._build_race_inventory(eid, tick, tier, race, kind, difficulty_tier)
 
-        # Race attribute modifiers
         attr_base = 3 + tier * 2
-        r_str = int(r_atk_m * 3)  # races with high ATK get more STR
-        r_agi = r_spd_mod          # races with high SPD get more AGI
-        r_vit = int(r_hp_m * 3)    # races with high HP get more VIT
-        r_spi = int(r_hp_m * 2) if race == "undead" else 0  # undead have more spirit
-        r_per = r_spd_mod  # fast races are more perceptive
-        r_cha = 0  # monsters generally have low charisma
+        r_str = int(r_atk_m * 3)
+        r_agi = r_spd_mod
+        r_vit = int(r_hp_m * 3)
+        r_spi = int(r_hp_m * 2) if race == "undead" else 0
+        r_per = r_spd_mod
+        r_cha = 0
 
         mob_cls = mob_class_for(race, tier)
         entity = (
@@ -187,14 +234,9 @@ class EntityGenerator:
         entity.difficulty_tier = difficulty_tier
         return entity
 
-    # -------------------------------------------------------------------
-    # Shared helpers
-    # -------------------------------------------------------------------
-
     def _resolve_position(
         self, world: WorldState, eid: int, tick: int, near_pos: Vector2 | None,
     ) -> Vector2:
-        """Calculate a valid spawn position, ensuring walkability."""
         if near_pos is not None:
             ox = self._rng.next_int(Domain.SPAWN, eid, tick, -3, 3)
             oy = self._rng.next_int(Domain.SPAWN, eid, tick + 1, -3, 3)
@@ -209,40 +251,33 @@ class EntityGenerator:
         return pos
 
     def _resolve_ai_state(self, tier: int, near_pos: Vector2 | None) -> AIState:
-        """Determine initial AI state based on tier and spawn location."""
         if tier == EnemyTier.ELITE or near_pos is not None:
             return AIState.GUARD_CAMP
         return AIState.WANDER
 
     def _build_goblin_inventory(self, eid: int, tick: int, tier: int, difficulty_tier: int = 1) -> Inventory:
-        """Build inventory with tier-based starting gear, potions, and loot."""
         inv = Inventory(
             items=[],
             max_slots=self._config.goblin_inventory_slots + tier,
             max_weight=self._config.goblin_inventory_weight + tier * 3.0,
         )
-
-        # Starting equipment from tier template
         gear = TIER_STARTING_GEAR.get(tier, {})
         for slot in ("weapon", "armor", "accessory"):
             item_id = gear.get(slot)
             if item_id and item_id in ITEM_REGISTRY:
                 setattr(inv, slot, item_id)
 
-        # Potions based on tier
         potion_count = self._rng.next_int(Domain.ITEM, eid, tick, 0, 1 + tier)
         potion_type = "medium_hp_potion" if tier >= EnemyTier.WARRIOR else "small_hp_potion"
         for _ in range(potion_count):
             inv.add_item(potion_type)
 
-        # Random extra loot — drop chances scaled by difficulty tier
         drop_mult = DIFFICULTY_DROP_MULTIPLIER.get(difficulty_tier, 1.0)
         loot_table = LOOT_TABLES.get(tier, [])
         for item_id, chance in loot_table:
             if self._rng.next_bool(Domain.LOOT, eid, tick + 10 + hash(item_id) % 100, min(chance * 0.3 * drop_mult, 1.0)):
                 inv.add_item(item_id)
 
-        # Bonus loot from difficulty tier
         bonus_loot = DIFFICULTY_BONUS_LOOT.get(difficulty_tier, [])
         for item_id, chance in bonus_loot:
             if self._rng.next_bool(Domain.LOOT, eid, tick + 50 + hash(item_id) % 100, chance):
@@ -254,13 +289,11 @@ class EntityGenerator:
         self, eid: int, tick: int, tier: int, race: str, kind: str,
         difficulty_tier: int = 1,
     ) -> Inventory:
-        """Build inventory with race-specific starting gear and loot."""
         inv = Inventory(
             items=[],
             max_slots=self._config.goblin_inventory_slots + tier,
             max_weight=self._config.goblin_inventory_weight + tier * 3.0,
         )
-
         race_gear = RACE_STARTING_GEAR.get(race, {})
         gear = race_gear.get(tier, {})
         for slot in ("weapon", "armor", "accessory"):
@@ -268,14 +301,12 @@ class EntityGenerator:
             if item_id and item_id in ITEM_REGISTRY:
                 setattr(inv, slot, item_id)
 
-        # Race loot — drop chances scaled by difficulty tier
         drop_mult = DIFFICULTY_DROP_MULTIPLIER.get(difficulty_tier, 1.0)
         loot_table = RACE_LOOT_TABLES.get(kind, [])
         for item_id, chance in loot_table:
             if self._rng.next_bool(Domain.LOOT, eid, tick + 10 + hash(item_id) % 100, min(chance * 0.3 * drop_mult, 1.0)):
                 inv.add_item(item_id)
 
-        # Bonus loot from difficulty tier
         bonus_loot = DIFFICULTY_BONUS_LOOT.get(difficulty_tier, [])
         for item_id, chance in bonus_loot:
             if self._rng.next_bool(Domain.LOOT, eid, tick + 50 + hash(item_id) % 100, chance):
@@ -284,7 +315,6 @@ class EntityGenerator:
         return inv
 
     def _roll_tier(self, eid: int, tick: int) -> int:
-        """Deterministic tier roll: mostly BASIC, occasionally higher."""
         roll = self._rng.next_float(Domain.SPAWN, eid, tick + 10)
         if roll < 0.55:
             return EnemyTier.BASIC
@@ -295,29 +325,8 @@ class EntityGenerator:
         return EnemyTier.ELITE
 
     @staticmethod
-    def _find_nearest_walkable(world: WorldState, origin: Vector2) -> Vector2:
-        """BFS spiral out from origin to find the nearest walkable tile."""
-        from collections import deque
-
-        visited: set[tuple[int, int]] = set()
-        queue: deque[Vector2] = deque([origin])
-        while queue:
-            pos = queue.popleft()
-            if world.grid.is_walkable(pos):
-                return pos
-            for dx, dy in ((0, -1), (1, 0), (0, 1), (-1, 0)):
-                npos = Vector2(pos.x + dx, pos.y + dy)
-                key = (npos.x, npos.y)
-                if key not in visited and world.grid.in_bounds(npos):
-                    visited.add(key)
-                    queue.append(npos)
-        return origin
-
-    @staticmethod
     def _find_nearest_walkable_non_town(world: WorldState, origin: Vector2) -> Vector2:
-        """BFS to find the nearest walkable non-TOWN tile (for goblin spawns)."""
         from collections import deque
-
         visited: set[tuple[int, int]] = set()
         queue: deque[Vector2] = deque([origin])
         while queue:

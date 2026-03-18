@@ -17,8 +17,8 @@ from src.core.buildings import Building
 from src.core.enums import AIState, Domain, EnemyTier, EntityRole, Material
 from src.core.faction import Faction, FactionRegistry
 from src.core.grid import Grid
-from src.core.items import Inventory, TERRAIN_RACE, RACE_FACTION
-from src.core.models import Entity, Stats, Vector2
+from src.core.items import TERRAIN_RACE, RACE_FACTION
+from src.core.models import Entity, Stats, Vector2, Inventory
 from src.core.regions import (
     Region, Location, LOCATION_NAME_TEMPLATES, TERRAIN_RACE_LABEL,
     difficulty_for_distance, pick_region_name, reset_name_counters,
@@ -227,7 +227,8 @@ class EngineManager:
         # like countries on a continent — no empty gaps.
         reset_name_counters()
         generator = EntityGenerator(cfg, self._rng)
-        from src.core.items import TreasureChest
+        from src.core.item_registry import ITEM_REGISTRY, ItemTemplate
+        from src.core.models import TreasureChest
 
         TOWN_TILES = frozenset({Material.TOWN, Material.SANCTUARY})
 

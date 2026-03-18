@@ -10,7 +10,7 @@ import pytest
 from pydantic import TypeAdapter
 
 from src.core.enums import DamageType, Element, ItemType, Rarity
-from src.core.items import ITEM_REGISTRY, ItemTemplate
+from src.core.item_registry import ITEM_REGISTRY, ItemTemplate
 from src.core.classes import (
     CLASS_DEFS, SKILL_DEFS, BREAKTHROUGHS, RACE_SKILLS,
     HeroClass, SkillType, SkillTarget,

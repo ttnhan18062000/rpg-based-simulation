@@ -10,9 +10,8 @@ from src.core.faction import Faction
 
 if TYPE_CHECKING:
     from src.core.attributes import Attributes, AttributeCaps
-    from src.core.classes import HeroClass, SkillInstance
+    from src.core.classes import SkillInstance
     from src.core.effects import StatusEffect
-    from src.core.items import HomeStorage, Inventory
     from src.core.quests import Quest
 
 
@@ -79,6 +78,7 @@ class Stats:
     xp: int = 0
     xp_to_next: int = 100
     gold: int = 0
+    fame: int = 0           # NEW: Hero prestige
     stamina: int = 50
     max_stamina: int = 50
 
@@ -113,7 +113,8 @@ class Stats:
             matk=self.matk, mdef=self.mdef,
             elem_vuln=dict(self.elem_vuln),
             level=self.level, xp=self.xp, xp_to_next=self.xp_to_next,
-            gold=self.gold, stamina=self.stamina, max_stamina=self.max_stamina,
+            gold=self.gold, fame=self.fame, 
+            stamina=self.stamina, max_stamina=self.max_stamina,
             vision_range=self.vision_range, loot_bonus=self.loot_bonus,
             trade_bonus=self.trade_bonus,
             interaction_speed=self.interaction_speed,
@@ -166,6 +167,8 @@ class Entity:
     boredom_multipliers: dict[str, float] = field(default_factory=dict)
     consecutive_idle_ticks: int = 0
     talents: list[str] = field(default_factory=list)
+    titles: list[str] = field(default_factory=list)  # NEW: Hero titles
+    is_world_boss: bool = False                      # NEW: Boss flag
     weakness: str = ""
     # Quests
     quests: list[Quest] = field(default_factory=list)
@@ -329,4 +332,136 @@ class Entity:
             home_storage=self.home_storage.copy() if self.home_storage else None,
             combat_target_id=self.combat_target_id,
             threat_table=dict(self.threat_table),
+        )
+
+@dataclass(slots=True)
+class Inventory:
+    """Mutable item container with slot and weight limits."""
+    items: list[str] = field(default_factory=list)
+    max_slots: int = 8
+    max_weight: float = 20.0
+    weapon: str | None = None
+    armor: str | None = None
+    accessory: str | None = None
+
+    @property
+    def current_weight(self) -> float:
+        total = 0.0
+        from src.core.item_registry import ITEM_REGISTRY
+        for iid in self.items:
+            t = ITEM_REGISTRY.get(iid)
+            if t: total += t.weight
+        for slot_id in (self.weapon, self.armor, self.accessory):
+            if slot_id:
+                t = ITEM_REGISTRY.get(slot_id)
+                if t: total += t.weight
+        return total
+
+    @property
+    def used_slots(self) -> int: return len(self.items)
+    
+    def can_add(self, item_id: str) -> bool:
+        if self.used_slots >= self.max_slots: return False
+        from src.core.item_registry import ITEM_REGISTRY
+        t = ITEM_REGISTRY.get(item_id)
+        if t is None: return False
+        return self.current_weight + t.weight <= self.max_weight
+
+    def add_item(self, item_id: str) -> bool:
+        if not self.can_add(item_id): return False
+        self.items.append(item_id)
+        return True
+
+    def remove_item(self, item_id: str) -> bool:
+        if item_id in self.items:
+            self.items.remove(item_id)
+            return True
+        return False
+
+    def equip(self, item_id: str) -> bool:
+        from src.core.item_registry import ITEM_REGISTRY
+        from src.core.items import ItemType
+        t = ITEM_REGISTRY.get(item_id)
+        if t is None or item_id not in self.items: return False
+        if t.item_type == ItemType.WEAPON:
+            if self.weapon: self.items.append(self.weapon)
+            self.weapon = item_id
+        elif t.item_type == ItemType.ARMOR:
+            if self.armor: self.items.append(self.armor)
+            self.armor = item_id
+        elif t.item_type == ItemType.ACCESSORY:
+            if self.accessory: self.items.append(self.accessory)
+            self.accessory = item_id
+        else: return False
+        self.items.remove(item_id)
+        return True
+
+    def auto_equip_best(self, item_id: str) -> bool:
+        from src.core.item_registry import ITEM_REGISTRY
+        from src.core.items import ItemType, _item_power
+        t = ITEM_REGISTRY.get(item_id)
+        if t is None or item_id not in self.items: return False
+        if t.item_type not in (ItemType.WEAPON, ItemType.ARMOR, ItemType.ACCESSORY): return False
+        if t.item_type == ItemType.WEAPON: current_id = self.weapon
+        elif t.item_type == ItemType.ARMOR: current_id = self.armor
+        else: current_id = self.accessory
+        if current_id is None: return self.equip(item_id)
+        current_t = ITEM_REGISTRY.get(current_id)
+        if current_t is None or _item_power(t) > _item_power(current_t):
+            return self.equip(item_id)
+        return False
+
+    def copy(self) -> Inventory:
+        return Inventory(items=list(self.items), max_slots=self.max_slots, max_weight=self.max_weight, weapon=self.weapon, armor=self.armor, accessory=self.accessory)
+
+    def equipment_bonus(self, stat: str) -> int | float:
+        total = 0
+        from src.core.items import ITEM_REGISTRY
+        for slot_id in (self.weapon, self.armor, self.accessory):
+            if slot_id:
+                t = ITEM_REGISTRY.get(slot_id)
+                if t: total += getattr(t, stat, 0)
+        return total
+
+    def get_all_item_ids(self) -> list[str]:
+        result = list(self.items)
+        if self.weapon: result.append(self.weapon)
+        if self.armor: result.append(self.armor)
+        if self.accessory: result.append(self.accessory)
+        return result
+
+
+@dataclass(slots=True)
+class HomeStorage:
+    """Large persistent storage at the hero's home building."""
+    items: list[str] = field(default_factory=list)
+    max_slots: int = 30
+    level: int = 0  # upgrade tier (0, 1, 2)
+
+    def copy(self) -> HomeStorage:
+        return HomeStorage(
+            items=list(self.items),
+            max_slots=self.max_slots,
+            level=self.level,
+        )
+
+
+@dataclass(slots=True)
+class TreasureChest:
+    """A respawning treasure chest placed in the world."""
+    chest_id: int
+    pos: Vector2
+    tier: int = 1
+    looted: bool = False
+    respawn_at: int = -1
+    guard_entity_id: int | None = None
+
+    def copy(self) -> TreasureChest:
+        return TreasureChest(
+            chest_id=self.chest_id,
+            pos=self.pos,
+            tier=self.tier,
+            looted=self.looted,
+            respawn_at=self.respawn_at,
+            guard_entity_id=self.guard_entity_id,
         )

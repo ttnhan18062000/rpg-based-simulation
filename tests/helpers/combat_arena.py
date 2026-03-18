@@ -26,7 +26,8 @@ from src.core.effects import StatusEffect
 from src.core.enums import AIState, EnemyTier, Material
 from src.core.faction import Faction, FactionRegistry
 from src.core.grid import Grid
-from src.core.items import Inventory, ITEM_REGISTRY
+from src.core.item_registry import ITEM_REGISTRY
+from src.core.items import Inventory
 from src.core.models import Entity, Stats, Vector2
 from src.core.world_state import WorldState
 from src.engine.conflict_resolver import ConflictResolver

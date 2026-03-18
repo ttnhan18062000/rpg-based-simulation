@@ -12,7 +12,8 @@ from src.engine.worker_pool import WorkerPool
 from src.systems.generator import EntityGenerator
 from src.core.grid import Grid
 from src.systems.spatial_hash import SpatialHash
-from src.core.items import ItemTemplate, ItemType, ITEM_REGISTRY
+from src.core.item_registry import ITEM_REGISTRY
+from src.core.items import ItemTemplate, ItemType
 
 # Register some dummy items for testing
 ITEM_REGISTRY["lucky_charm"] = ItemTemplate(

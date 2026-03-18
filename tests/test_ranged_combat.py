@@ -19,8 +19,9 @@ from src.core.attributes import Attributes, AttributeCaps
 from src.core.enums import AIState, ActionType, DamageType, EnemyTier
 from src.core.faction import Faction
 from src.core.grid import Grid, Material
+from src.core.item_registry import ITEM_REGISTRY, ItemTemplate
 from src.core.items import (
-    ITEM_REGISTRY, ItemTemplate, Inventory,
+    Inventory,
     RACE_STARTING_GEAR, RACE_TIER_KINDS, TIER_STARTING_GEAR,
 )
 from src.core.models import Entity, Stats, Vector2

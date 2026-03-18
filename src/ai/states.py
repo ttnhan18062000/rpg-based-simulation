@@ -41,7 +41,8 @@ from src.core.buildings import (
 )
 from src.core.enums import AIState, ActionType, Domain, EntityRole
 from src.core.faction import Faction, FactionRegistry
-from src.core.items import ITEM_REGISTRY, ItemType
+from src.core.item_registry import ITEM_REGISTRY
+from src.core.items import ItemType
 from src.core.models import DIRECTION_OFFSETS, Entity, Vector2
 
 if TYPE_CHECKING:

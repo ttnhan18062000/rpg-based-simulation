@@ -30,8 +30,8 @@ from src.core.classes import (
 )
 from src.core.enums import AIState, Domain, EntityRole
 from src.core.faction import Faction
-from src.core.items import HomeStorage, Inventory
-from src.core.models import Entity, Stats, Vector2
+from src.core.items import HomeStorage
+from src.core.models import Entity, Stats, Vector2, Inventory
 from src.core.traits import assign_traits
 
 if TYPE_CHECKING:
@@ -58,6 +58,7 @@ class EntityBuilder:
         "_attr_base", "_attr_randomness",
         "_talents", "_weakness",
         "_display_name", "_generation", "_death_count",
+        "_fame", "_titles", "_is_world_boss",
     )
 
     def __init__(
@@ -73,7 +74,7 @@ class EntityBuilder:
         # Defaults
         self._kind: str = "unknown"
         self._pos: Vector2 = Vector2(0, 0)
-        self._ai_state: AIState = AIState.WANDER
+        self._ai_state: AIState = AIState.IDLE
         self._faction: Faction = Faction.HERO_GUILD
         self._role: EntityRole = EntityRole.MOB
         self._home_pos: Vector2 | None = None
@@ -92,6 +93,9 @@ class EntityBuilder:
         self._xp: int = 0
         self._xp_to_next: int = 100
         self._gold: int = 0
+        self._fame: int = 0
+        self._titles: list[str] = []
+        self._is_world_boss: bool = False
 
         self._hero_class: int | None = None
         self._class_def = None
@@ -111,8 +115,8 @@ class EntityBuilder:
     # Identity
     # -------------------------------------------------------------------
 
-    def kind(self, kind: str) -> EntityBuilder:
-        self._kind = kind
+    def kind(self, kind_str: str) -> EntityBuilder:
+        self._kind = kind_str
         return self
 
     def with_identity(self, display_name: str = "", generation: int = 1, death_count: int = 0) -> EntityBuilder:
@@ -149,6 +153,10 @@ class EntityBuilder:
         self._tier = t
         return self
 
+    def is_world_boss(self, val: bool) -> EntityBuilder:
+        self._is_world_boss = val
+        return self
+
     # -------------------------------------------------------------------
     # Base stats
     # -------------------------------------------------------------------
@@ -158,7 +166,7 @@ class EntityBuilder:
         hp: int = 20, atk: int = 5, def_: int = 0, spd: int = 10,
         luck: int = 0, crit_rate: float = 0.05, crit_dmg: float = 1.5,
         evasion: float = 0.0, level: int = 1, xp_to_next: int = 100,
-        gold: int = 0,
+        gold: int = 0, fame: int = 0,
     ) -> EntityBuilder:
         self._base_hp = hp
         self._base_atk = atk
@@ -171,6 +179,11 @@ class EntityBuilder:
         self._level = level
         self._xp_to_next = xp_to_next
         self._gold = gold
+        self._fame = fame
+        return self
+
+    def titles(self, t_list: list[str]) -> EntityBuilder:
+        self._titles = list(t_list)
         return self
 
     def with_randomized_stats(self) -> EntityBuilder:
@@ -216,11 +229,9 @@ class EntityBuilder:
         return self
 
     def with_mob_class(self, mob_class) -> EntityBuilder:
-        """Set mob archetype class and apply its attribute bonuses."""
+        """Set mob archetype class."""
         self._hero_class = int(mob_class)
-        cdef = CLASS_DEFS.get(mob_class)
-        if cdef:
-            self._class_def = cdef
+        self._class_def = CLASS_DEFS.get(mob_class)
         return self
 
     def with_mob_attributes(self, attr_base: int, tier: int) -> EntityBuilder:
@@ -228,7 +239,6 @@ class EntityBuilder:
         eid = self._eid
         rng = self._rng
         tick = self._tick
-        # Class bonuses (from with_mob_class or with_hero_class)
         cd = self._class_def
         c_str = cd.str_bonus if cd else 0
         c_agi = cd.agi_bonus if cd else 0
@@ -277,7 +287,6 @@ class EntityBuilder:
         eid = self._eid
         rng = self._rng
         tick = self._tick
-        # Class bonuses (from with_mob_class)
         cd = self._class_def
         c_str = cd.str_bonus if cd else 0
         c_agi = cd.agi_bonus if cd else 0
@@ -353,14 +362,13 @@ class EntityBuilder:
         return self
 
     def with_starting_items(self, item_ids: list[str]) -> EntityBuilder:
-        """Add starting items to inventory (must call with_inventory first)."""
+        """Add starting items."""
         if self._inventory:
             for item_id in item_ids:
                 self._inventory.add_item(item_id)
         return self
 
     def with_existing_inventory(self, inv: Inventory) -> EntityBuilder:
-        """Attach a pre-built Inventory (for complex inventory setups)."""
         self._inventory = inv
         return self
 
@@ -370,7 +378,6 @@ class EntityBuilder:
         armor: str | None = None,
         accessory: str | None = None,
     ) -> EntityBuilder:
-        """Set equipment slots on the current inventory."""
         if self._inventory:
             if weapon:
                 self._inventory.weapon = weapon
@@ -381,63 +388,51 @@ class EntityBuilder:
         return self
 
     # -------------------------------------------------------------------
-    # Home Storage
+    # Traits + Talents
     # -------------------------------------------------------------------
 
     def with_home_storage(self, max_slots: int = 30) -> EntityBuilder:
-        """Create home storage for hero entities."""
         self._home_storage = HomeStorage(max_slots=max_slots)
         return self
 
-    # -------------------------------------------------------------------
-    # Traits
-    # -------------------------------------------------------------------
-
-    def with_traits(self, race_prefix: str = "") -> EntityBuilder:
-        """Assign personality traits using weighted random selection."""
-        self._traits = assign_traits(
-            self._rng, Domain.SPAWN, self._eid, self._tick,
-            race_prefix=race_prefix,
-        )
+    def with_traits(self, race_prefix: str = "", trait_ids: list[int] | None = None) -> EntityBuilder:
+        if trait_ids is not None:
+            self._traits = trait_ids
+        else:
+            self._traits = assign_traits(
+                self._rng, Domain.SPAWN, self._eid, self._tick,
+                race_prefix=race_prefix,
+            )
         return self
 
-    # -------------------------------------------------------------------
-    # Build
-    # -------------------------------------------------------------------
-
     def with_talents(self, race: str = "") -> EntityBuilder:
-        """Assign 2 random talents and 1 weakness based on race/traits."""
+        """Assign 2 random talents and 1 weakness."""
         race = race or self._kind
         attributes = ["str", "agi", "vit", "int", "spi", "wis", "end", "per", "cha"]
-        
-        # Heavy weighting based on race
         weights = [1.0] * 9
-        if "hero" in race: pass # Balanced
-        elif "orc" in race: weights[0] = 5.0; weights[2] = 5.0 # STR/VIT
-        elif "wolf" in race: weights[1] = 5.0; weights[7] = 3.0 # AGI/PER
-        elif "goblin" in race: weights[1] = 3.0; weights[7] = 3.0 # AGI/PER
-        elif "bandit" in race: weights[1] = 3.0; weights[8] = 3.0 # AGI/CHA
-        elif "undead" in race: weights[2] = 5.0; weights[4] = 3.0 # VIT/SPI
+        if "orc" in race: weights[0] = 5.0; weights[2] = 5.0
+        elif "wolf" in race: weights[1] = 5.0; weights[7] = 3.0
+        elif "undead" in race: weights[2] = 5.0; weights[4] = 3.0
         
-        # Pick 2 talents
         t1 = self._rng.weighted_choice(Domain.SPAWN, self._eid, self._tick + 30, attributes, weights)
         remaining = [a for a in attributes if a != t1]
         rem_weights = [weights[attributes.index(a)] for a in remaining]
         t2 = self._rng.weighted_choice(Domain.SPAWN, self._eid, self._tick + 31, remaining, rem_weights)
         self._talents = [t1, t2]
         
-        # Pick 1 weakness from the rest (inverse weights)
         remaining_weak = [a for a in attributes if a not in self._talents]
         inv_weights = [1.0 / weights[attributes.index(a)] for a in remaining_weak]
         self._weakness = self._rng.weighted_choice(Domain.SPAWN, self._eid, self._tick + 32, remaining_weak, inv_weights)
         
         return self
 
+    # -------------------------------------------------------------------
+    # Build
+    # -------------------------------------------------------------------
+
     def build(self) -> Entity:
         """Construct and return the final Entity."""
-        stamina = 30
-        if self._kind == "hero":
-            stamina = 50
+        stamina = 50 if self._kind == "hero" else 30
 
         stats = Stats(
             hp=self._base_hp,
@@ -453,19 +448,17 @@ class EntityBuilder:
             xp=self._xp,
             xp_to_next=self._xp_to_next,
             gold=self._gold,
+            fame=self._fame,
             stamina=stamina,
             max_stamina=stamina,
         )
 
-        # Apply attribute-derived bonuses on top of base stats
         if self._attrs:
             recalc_derived_stats(stats, self._attrs)
 
-        # Set HP/stamina to max after derivation
         stats.hp = stats.max_hp
         stats.stamina = stats.max_stamina
 
-        # Talents default setup if not set
         if self._talents is None:
             self.with_talents()
 
@@ -473,6 +466,9 @@ class EntityBuilder:
             id=self._eid,
             kind=self._kind,
             pos=self._pos,
+            display_name=self._display_name,
+            death_count=self._death_count,
+            generation=self._generation,
             stats=stats,
             ai_state=self._ai_state,
             faction=self._faction,
@@ -487,10 +483,9 @@ class EntityBuilder:
             hero_class=self._hero_class or 0,
             skills=self._skills,
             traits=self._traits,
+            titles=self._titles,
+            is_world_boss=self._is_world_boss,
             home_storage=self._home_storage,
             talents=self._talents,
             weakness=self._weakness,
-            display_name=self._display_name,
-            generation=self._generation,
-            death_count=self._death_count,
         )

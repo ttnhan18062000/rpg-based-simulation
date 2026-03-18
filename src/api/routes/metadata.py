@@ -17,7 +17,7 @@ from src.core.enums import (
     ItemType, Material, Rarity,
 )
 from src.core.faction import Faction, FactionRelation, FactionRegistry
-from src.core.items import ITEM_REGISTRY, ItemTemplate
+from src.core.item_registry import ITEM_REGISTRY, ItemTemplate
 from src.core.classes import (
     CLASS_DEFS, CLASS_SKILLS, BREAKTHROUGHS, SKILL_DEFS, RACE_SKILLS,
     SCALING_GRADES, SCALING_MULTIPLIER,

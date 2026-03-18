@@ -205,14 +205,14 @@ class TestWeaponRangeE2E:
     def test_melee_weapon_range_1(self):
         arena = CombatArena()
         arena.add_hero(1, pos=(5, 5), weapon="iron_sword")
-        from src.core.items import ITEM_REGISTRY
+        from src.core.item_registry import ITEM_REGISTRY
         tmpl = ITEM_REGISTRY.get("iron_sword")
         assert tmpl.weapon_range == 1
 
     def test_shortbow_range_3(self):
         arena = CombatArena()
         arena.add_hero(1, pos=(5, 5), weapon="shortbow")
-        from src.core.items import ITEM_REGISTRY
+        from src.core.item_registry import ITEM_REGISTRY
         tmpl = ITEM_REGISTRY.get("shortbow")
         assert tmpl.weapon_range == 3
 

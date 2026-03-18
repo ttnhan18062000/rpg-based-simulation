@@ -43,6 +43,11 @@ class HeroClass(IntEnum):
     SHARPSHOOTER = 6
     ARCHMAGE = 7
     ASSASSIN = 8
+    # --- Tier 3 Transcendence classes ---
+    WARLORD = 9
+    STORM_CALLER = 10
+    GHOST_STALKER = 11
+    NIGHTSHADE = 12
     # --- Mob archetypes ---
     BRUTE = 20       # Heavy melee (orcs, warrior goblins) — STR/VIT focus
     SCOUT = 21       # Fast flanker (wolves, scouts) — AGI/PER focus
@@ -298,7 +303,29 @@ CLASS_DEFS: dict[HeroClass, ClassDef] = {}
 
 SKILL_DEFS: dict[str, SkillDef] = {}
 
+SKILL_DEFS: dict[str, SkillDef] = {}
+
 BREAKTHROUGHS: dict[HeroClass, BreakthroughDef] = {}
+
+# --- Tier 2 Breakthroughs (Already existing in simulation logic) ---
+BREAKTHROUGHS[HeroClass.WARRIOR] = BreakthroughDef(HeroClass.WARRIOR, HeroClass.CHAMPION, 10, "str", 30)
+BREAKTHROUGHS[HeroClass.RANGER] = BreakthroughDef(HeroClass.RANGER, HeroClass.SHARPSHOOTER, 10, "agi", 30)
+BREAKTHROUGHS[HeroClass.MAGE] = BreakthroughDef(HeroClass.MAGE, HeroClass.ARCHMAGE, 10, "int", 30)
+BREAKTHROUGHS[HeroClass.ROGUE] = BreakthroughDef(HeroClass.ROGUE, HeroClass.ASSASSIN, 10, "agi", 30)
+
+# --- Tier 3 Transcendence (New Calamity-locked classes) ---
+BREAKTHROUGHS[HeroClass.CHAMPION] = BreakthroughDef(
+    HeroClass.CHAMPION, HeroClass.WARLORD, 20, "str", 50, str_bonus=10, vit_bonus=10, talent="Indomitable"
+)
+BREAKTHROUGHS[HeroClass.ARCHMAGE] = BreakthroughDef(
+    HeroClass.ARCHMAGE, HeroClass.STORM_CALLER, 20, "int", 50, int_bonus=10, spi_bonus=10, talent="Storm Soul"
+)
+BREAKTHROUGHS[HeroClass.SHARPSHOOTER] = BreakthroughDef(
+    HeroClass.SHARPSHOOTER, HeroClass.GHOST_STALKER, 20, "agi", 50, agi_bonus=10, per_bonus=10, talent="Untraceable"
+)
+BREAKTHROUGHS[HeroClass.ASSASSIN] = BreakthroughDef(
+    HeroClass.ASSASSIN, HeroClass.NIGHTSHADE, 20, "agi", 50, agi_bonus=10, cha_bonus=10, talent="Void Veil"
+)
 
 # Race → default race skills mapping
 RACE_SKILLS: dict[str, list[str]] = {

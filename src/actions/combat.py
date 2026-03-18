@@ -17,7 +17,7 @@ from typing import TYPE_CHECKING
 from src.actions.base import ActionProposal
 from src.actions.damage import get_damage_calculator
 from src.core.enums import ActionType, DamageType, Domain, Element
-from src.core.items import ITEM_REGISTRY
+from src.core.item_registry import ITEM_REGISTRY
 
 if TYPE_CHECKING:
     from src.config import SimulationConfig
@@ -269,6 +269,32 @@ class CombatAction:
                                     tick, attacker.id, q.title,
                                     q.gold_reward, q.xp_reward,
                                 )
+                    elif q.quest_type == QuestType.BOUNTY and not q.completed:
+                        # Bounty completion check: kind matches boss display name or kind
+                        if defender.is_world_boss and (q.target_kind == defender.display_name or q.target_kind == defender.kind):
+                            just_done = q.advance()
+                            if just_done:
+                                attacker.stats.gold += q.gold_reward
+                                attacker.stats.xp += q.xp_reward
+                                # Bounties grant 100 Fame (enough for T3 breakthrough)
+                                attacker.stats.fame += 100
+                                logger.info(
+                                    "Tick %d: Entity %d completed BOUNTY '%s' → +%d gold, +%d XP, +100 Fame",
+                                    tick, attacker.id, q.title,
+                                    q.gold_reward, q.xp_reward,
+                                )
+
+            # --- Calamity-Specific Rewards (Titles) ---
+            if defender.is_world_boss:
+                title = f"Slayer of {defender.display_name}"
+                if title not in attacker.titles:
+                    attacker.titles.append(title)
+                    # Titles grant a permanent 5% ATK boost (simplified as flat addition for now)
+                    # In a full rebuild, this should be handled in Entity.effective_atk()
+                    attacker.stats.atk = int(attacker.stats.atk * 1.05)
+                    logger.info("Tick %d: Hero %d earned Title: %s! Permanent +5%% ATK bonus applied.",
+                                tick, attacker.id, title)
+                    # Note: World events for titles are handled in WorldLoop or via logging
 
     @staticmethod
     def _get_weapon_range(entity) -> int:

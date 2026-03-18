@@ -29,6 +29,7 @@ class QuestType(IntEnum):
     HUNT = 0       # Kill N enemies of a kind
     EXPLORE = 1    # Visit a map tile
     GATHER = 2     # Collect N items
+    BOUNTY = 3     # NEW: Kill a world boss
 
 
 # ---------------------------------------------------------------------------
@@ -187,6 +188,13 @@ QUEST_TEMPLATES: list[QuestTemplate] = [
         [],
         count_range=(1, 1), gold_range=(20, 60), xp_range=(30, 80),
     ),
+    QuestTemplate(
+        "calamity_hunter", QuestType.BOUNTY,
+        "Calamity: {kind}", "The world trembles. Slay {kind} and restore peace to the realm.",
+        ["Gorath the World-Breaker", "Vexira the Soul-Weaver"],
+        count_range=(1, 1), gold_range=(1000, 2000), xp_range=(1500, 3000),
+        min_level=15,
+    ),
 ]
 
 TEMPLATE_MAP: dict[str, QuestTemplate] = {t.template_id: t for t in QUEST_TEMPLATES}
@@ -207,17 +215,15 @@ def generate_quest(
     tick: int = 0,
     grid_width: int = 100,
     grid_height: int = 100,
+    force_template_id: str | None = None,
 ) -> Quest | None:
     """Generate a random quest appropriate for the hero's level.
 
+    If force_template_id is provided, tries to use that specific template regardless of random chance.
     Returns None if no suitable template is available.
     """
     from src.core.enums import Domain
     from src.core.models import Vector2
-
-    eligible = [t for t in QUEST_TEMPLATES if hero_level >= t.min_level]
-    if not eligible:
-        return None
 
     # Use tick offsets so each rng call produces a distinct value
     _seq = 0
@@ -227,9 +233,18 @@ def generate_quest(
         _seq += 1
         return rng.next_int(Domain.AI_DECISION, entity_id, tick * 100 + _seq, lo, hi)
 
-    # Shuffle and pick first non-duplicate
-    idx = _rng_int(0, len(eligible) - 1)
-    template = eligible[idx]
+    if force_template_id:
+        template = TEMPLATE_MAP.get(force_template_id)
+        if not template:
+            return None
+    else:
+        eligible = [t for t in QUEST_TEMPLATES if hero_level >= t.min_level]
+        if not eligible:
+            return None
+
+        # Shuffle and pick first non-duplicate
+        idx = _rng_int(0, len(eligible) - 1)
+        template = eligible[idx]
 
     # Pick target kind
     if template.target_kinds:

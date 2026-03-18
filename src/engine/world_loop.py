@@ -10,13 +10,15 @@ Phase cycle:
 from __future__ import annotations
 
 import logging
+import random
 import time
 from typing import TYPE_CHECKING
 
 from src.core.effects import EffectType, territory_debuff
 from src.core.enums import AIState, ActionType, Domain
+from src.core.models import Entity, Stats, Vector2, Inventory
 from src.core.faction import Faction, FactionRegistry
-from src.core.items import ITEM_REGISTRY
+from src.core.item_registry import ITEM_REGISTRY
 from src.core.snapshot import Snapshot
 from src.engine.action_queue import ActionQueue
 from src.engine.conflict_resolver import ConflictResolver
@@ -164,7 +166,12 @@ class WorldLoop:
         tick = self._world.tick
         t0 = time.perf_counter()
 
-        # --- Phase 1: Scheduling ---
+        # --- Phase 2: World Evolution & Calamities ---
+        self._update_world_evolution()
+        self._check_calamity_spawns()
+        self._apply_calamity_auras()
+        
+        # --- Phase 3: Action Resolution ---
         self._phase_generators()
         
         with SIM_TICK_DURATION.labels(phase="scheduling").time():
@@ -1412,6 +1419,64 @@ class WorldLoop:
                         goals.append(f"[Range] Far from camp ({dist_home} tiles)")
 
             entity.goals = goals
+
+    def _check_calamity_spawns(self) -> None:
+        """Periodic check for World Boss spawning."""
+        # Spawn every 5,000 ticks if no world boss is currently alive
+        if self._world.tick > 0 and self._world.tick % 5000 == 0:
+            active_bosses = [e for e in self._world.entities.values() if e.alive and e.is_world_boss]
+            if not active_bosses:
+                from src.core.calamities import CALAMITY_TEMPLATES
+                import random
+                # Select a random template
+                tid = random.choice(list(CALAMITY_TEMPLATES.keys()))
+                boss = self._generator.spawn_calamity(self._world, tid)
+                self._world.add_entity(boss)
+                
+                # Broadcast event
+                self._emit("world_event", f"A great calamity has appeared: {boss.display_name}!",
+                           entity_ids=(boss.id,),
+                           metadata={"type": "calamity_spawn", "boss_name": boss.display_name})
+                
+                # Generate bounties for all heroes
+                from src.core.quests import TEMPLATE_MAP, generate_quest
+                bounty_tpl = TEMPLATE_MAP.get("calamity_hunter")
+                if bounty_tpl:
+                    for hero in [e for e in self._world.entities.values() if e.alive and e.faction == Faction.HERO_GUILD]:
+                        # Use the quest template ID to find the right one
+                        q = generate_quest(hero.stats.level, {q.quest_id for q in hero.quests}, self._rng, hero.id, self._world.tick, force_template_id="calamity_hunter")
+                        if q:
+                            # Override type and content for bounty
+                            q.title = f"Bounty: {boss.display_name}"
+                            q.description = f"The world trembles. Slay {boss.display_name} and restore peace to the realm."
+                            q.target_kind = boss.display_name
+                            q.gold_reward = 2000
+                            q.xp_reward = 3000
+                            hero.quests.append(q)
+
+    def _apply_calamity_auras(self) -> None:
+        """Apply regional debuffs/buffs near active World Bosses."""
+        active_bosses = [e for e in self._world.entities.values() if e.alive and e.is_world_boss]
+        if not active_bosses:
+            return
+
+        for boss in active_bosses:
+            # Use spatial index for efficient range query instead of O(N) scan
+            nearby_ids = self._world.spatial_index.query_radius(boss.pos, 15)
+            for eid in nearby_ids:
+                ent = self._world.entities.get(eid)
+                if not ent or not ent.alive or ent.id == boss.id:
+                    continue
+                
+                # Apply Aura effects
+                if ent.faction == Faction.HERO_GUILD:
+                    # Debuff heroes: -10% Evasion (multiplicative, will bottom out at 0.0)
+                    ent.stats.evasion *= 0.9
+                elif ent.faction == boss.faction:
+                    # Buff minions: +5% ATK, capped at 3x base to prevent integer explosion
+                    # We use a simple cap here since we don't have a status effect system for these auras yet
+                    if ent.stats.atk < ent.stats.max_hp * 3: # Arbitrary cap based on HP
+                        ent.stats.atk = int(ent.stats.atk * 1.05)
 
     def _process_opportunity_attacks(
         self, applied: list[ActionProposal], pre_positions: dict[int, tuple[int, int]]

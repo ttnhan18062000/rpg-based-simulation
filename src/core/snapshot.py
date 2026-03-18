@@ -8,8 +8,7 @@ from typing import Mapping
 
 from src.core.buildings import Building
 from src.core.grid import Grid
-from src.core.items import TreasureChest
-from src.core.models import Entity
+from src.core.models import Entity, TreasureChest
 from src.core.regions import Region
 from src.core.resource_nodes import ResourceNode
 from src.core.world_state import WorldState

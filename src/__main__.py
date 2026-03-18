@@ -60,8 +60,7 @@ def _run_cli(args: argparse.Namespace) -> None:
     from src.core.enums import AIState, Domain, EnemyTier, EntityRole, Material
     from src.core.faction import Faction
     from src.core.grid import Grid
-    from src.core.items import Inventory
-    from src.core.models import Entity, Stats, Vector2
+    from src.core.models import Entity, Stats, Vector2, Inventory
     from src.core.world_state import WorldState
     from src.engine.conflict_resolver import ConflictResolver
     from src.engine.worker_pool import WorkerPool

@@ -14,7 +14,7 @@ class AIState(IntEnum):
 class Direction(IntEnum): NORTH = 0; EAST = 1; SOUTH = 2; WEST = 3
 
 @unique
-class Domain(IntEnum): COMBAT = 0; LOOT = 1; AI_DECISION = 2; SPAWN = 3; WEATHER = 4; LEVEL_UP = 5; ITEM = 6; HARVEST = 7; MAP_GEN = 8
+class Domain(IntEnum): COMBAT = 0; LOOT = 1; AI_DECISION = 2; SPAWN = 3; WEATHER = 4; LEVEL_UP = 5; ITEM = 6; HARVEST = 7; MAP_GEN = 8; CALAMITY = 9
 
 @unique
 class Material(IntEnum): FLOOR = 0; WALL = 1; WATER = 2; TOWN = 3; CAMP = 4; SANCTUARY = 5; FOREST = 6; DESERT = 7; SWAMP = 8; MOUNTAIN = 9; ROAD = 10; BRIDGE = 11; RUINS = 12; DUNGEON_ENTRANCE = 13; LAVA = 14; GRASSLAND = 15; SNOW = 16; JUNGLE = 17; SHALLOW_WATER = 18; FARMLAND = 19; CAVE = 20; VOLCANIC = 21; GRAVEYARD = 22
@@ -23,10 +23,10 @@ class Material(IntEnum): FLOOR = 0; WALL = 1; WATER = 2; TOWN = 3; CAMP = 4; SAN
 class ItemType(IntEnum): WEAPON = 0; ARMOR = 1; ACCESSORY = 2; CONSUMABLE = 3; MATERIAL = 4
 
 @unique
-class Rarity(IntEnum): COMMON = 0; UNCOMMON = 1; RARE = 2; EPIC = 3
+class Rarity(IntEnum): COMMON = 0; UNCOMMON = 1; RARE = 2; EPIC = 3; LEGENDARY = 4
 
 @unique
-class EntityRole(IntEnum): HERO = 0; MOB = 1; NPC = 2
+class EntityRole(IntEnum): HERO = 0; MOB = 1; NPC = 2; WORLD_BOSS = 3
 
 @unique
 class EnemyTier(IntEnum):

@@ -3,7 +3,7 @@ import logging
 from pathlib import Path
 from pydantic import TypeAdapter
 
-from src.core.items import ItemTemplate, ITEM_REGISTRY
+from src.core.item_registry import ItemTemplate, ITEM_REGISTRY
 from src.core.classes import ClassDef, BreakthroughDef, SkillDef, CLASS_DEFS, BREAKTHROUGHS, SKILL_DEFS
 from src.core.traits import TraitDef, TRAIT_DEFS
 

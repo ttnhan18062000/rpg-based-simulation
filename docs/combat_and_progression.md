@@ -141,6 +141,14 @@ Combat trains STR (+0.015/action) and AGI (+0.008/action) for physical attacks, 
 
 ---
 
+## Fame & Reputation (Epic 19)
+
+Fame tracks a hero's prestige across the world. It is primarily earned by completing **Calamity Bounties**.
+- **Bounty Completion**: +100 Fame.
+- **Usage**: Required for Tier 3 Breakthroughs (Level 20 + 100 Fame).
+
+---
+
 ## Leveling System (epic-18 Phase A)
 
 Level-ups checked each tick in `WorldLoop._check_level_ups()`.
@@ -180,6 +188,24 @@ XP to next level dynamically scales by the current level:
 - Levels 1-10: `xp_to_next *= 1.4`
 - Levels 11-20: `xp_to_next *= 1.6`
 - Levels 21-30: `xp_to_next *= 2.0`
+
+---
+
+## Class Breakthroughs & Tier 3 (Transcendence)
+
+Heroes can evolve into more powerful classes once they hit level and stat thresholds.
+
+### Tier 2 (Mastery)
+- **Requirement**: Level 10 + Primary Stat 30+.
+- **Examples**: Warrior -> Champion, Mage -> Archmage.
+
+### Tier 3 (Transcendence) - Locked by Calamity
+- **Requirement**: Level 20 + Primary Stat 50+ + **100 Fame** + **Calamity Remnant** (Legendary material).
+- **Classes**:
+  - **WARLORD** (from Champion): Focus on massive HP and ATK.
+  - **STORM_CALLER** (from Archmage): Massive AoE magical damage.
+  - **GHOST_STALKER** (from Sharpshooter): Ultimate ranged precision and speed.
+  - **NIGHTSHADE** (from Assassin): High crit and evasion.
 
 ---
 

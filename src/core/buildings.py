@@ -15,7 +15,7 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
 from src.core.enums import ItemType, Rarity
-from src.core.items import ITEM_REGISTRY, ItemTemplate
+from src.core.item_registry import ItemTemplate
 
 if TYPE_CHECKING:
     from src.core.models import Vector2
@@ -62,6 +62,7 @@ SELL_PRICES: dict[int, int] = {
 
 def item_sell_price(item_id: str) -> int:
     """Calculate how much gold a hero gets for selling an item."""
+    from src.core.item_registry import ITEM_REGISTRY
     t = ITEM_REGISTRY.get(item_id)
     if t is None:
         return 0
@@ -137,6 +138,7 @@ class Recipe:
     description: str = ""
 
     def to_dict(self) -> dict:
+        from src.core.item_registry import ITEM_REGISTRY
         t = ITEM_REGISTRY.get(self.output_item)
         return {
             "recipe_id": self.recipe_id,

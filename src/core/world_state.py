@@ -6,8 +6,7 @@ from typing import TYPE_CHECKING
 
 from src.core.buildings import Building
 from src.core.grid import Grid
-from src.core.items import TreasureChest
-from src.core.models import Entity, Vector2
+from src.core.models import Entity, Vector2, TreasureChest
 from src.core.regions import Region
 from src.core.resource_nodes import ResourceNode
 
@@ -31,7 +30,7 @@ class WorldState:
         self.world_age: int = 0
         self.faction_aggression: dict[int, float] = {}
         self.difficulty_modifier: float = 1.0
-        self.monuments: list[Monument] = []
+        self.monuments: list = []
         self.entities: dict[int, Entity] = {}
         self.grid: Grid = grid
         self.spatial_index: SpatialHash = spatial_index

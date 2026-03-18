@@ -93,7 +93,7 @@ def _elem_dmg(e):
 
 def _get_weapon_range(e) -> int:
     """Get weapon range from entity's equipped weapon. Default 1 (melee)."""
-    from src.core.items import ITEM_REGISTRY
+    from src.core.item_registry import ITEM_REGISTRY
     if e.inventory and e.inventory.weapon:
         tmpl = ITEM_REGISTRY.get(e.inventory.weapon)
         if tmpl:

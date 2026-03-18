@@ -208,6 +208,8 @@ def recalc_derived_stats(
     new_attrs: 'Attributes',
     old_attrs: 'Attributes | None' = None,
 ) -> None:
+    import logging
+    logging.error(f"DEBUG_RDS: Before: hp={stats.hp}, max_hp={stats.max_hp}")
     """Recompute all attribute-derived fields on a Stats object.
 
     Two modes:
@@ -255,6 +257,8 @@ def recalc_derived_stats(
         stats.hp = stats.max_hp
     if stats.stamina > stats.max_stamina:
         stats.stamina = stats.max_stamina
+        
+    logging.error(f"DEBUG_RDS: After: hp={stats.hp}, max_hp={stats.max_hp}")
 
 
 # ---------------------------------------------------------------------------
