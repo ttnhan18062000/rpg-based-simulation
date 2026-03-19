@@ -52,7 +52,7 @@ def _make_loop(config=None, world=None) -> WorldLoop:
     world = world or _make_world(config)
     rng = DeterministicRNG(seed=42)
     brain = AIBrain(config, rng)
-    pool = WorkerPool(config, brain)
+    pool = WorkerPool(config, brain, rng)
     resolver = ConflictResolver(config, rng)
     gen = EntityGenerator(config, rng)
     loop = WorldLoop(config, world, pool, resolver, gen, rng=rng)

@@ -36,7 +36,7 @@ Each attack is processed in `CombatAction.apply()`:
 
 ```
 effective_evasion = defender.effective_evasion() - attacker.stats.luck * 0.002
-evasion_chance = clamp(effective_evasion, 0.0, 0.75)
+evasion_chance = max(0.0, effective_evasion)
 if random_roll < evasion_chance → MISS (no damage)
 ```
 
@@ -200,12 +200,43 @@ Heroes can evolve into more powerful classes once they hit level and stat thresh
 - **Examples**: Warrior -> Champion, Mage -> Archmage.
 
 ### Tier 3 (Transcendence) - Locked by Calamity
+
 - **Requirement**: Level 20 + Primary Stat 50+ + **100 Fame** + **Calamity Remnant** (Legendary material).
+- **Process**: Visit the Class Hall with a `Calamity Remnant` in inventory to transcend.
 - **Classes**:
-  - **WARLORD** (from Champion): Focus on massive HP and ATK.
-  - **STORM_CALLER** (from Archmage): Massive AoE magical damage.
-  - **GHOST_STALKER** (from Sharpshooter): Ultimate ranged precision and speed.
-  - **NIGHTSHADE** (from Assassin): High crit and evasion.
+    - **WARLORD** (from Champion): Focus on massive HP and ATK. Indomitable passive grants CC immunity.
+    - **STORM_CALLER** (from Archmage): Massive AoE magical damage. Tempest passive allows dual-casting.
+    - **GHOST_STALKER** (from Sharpshooter): Ultimate ranged precision. Ethereal passive provides high evasion.
+    - **NIGHTSHADE** (from Assassin): High crit and poison utility. Venomous passive adds DoT to all hits.
+
+---
+
+## 7. World Boss (Calamity) Combat
+
+Calamities are regional threats that spawn via `world_loop._check_calamity_spawns()`. They require multiple heroes to defeat and use unique mechanics.
+
+### Calamity Auras
+
+Live Calamities apply a **Calamity Aura** within a 15-tile radius via `world_loop._apply_calamity_auras()`.
+
+| Target | Effect | Description |
+|--------|--------|-------------|
+| **Heroes** | -10% Evasion | Multiplicative debuff for any hero within the radius. |
+| **Minions** | +5% ATK | Flat attack boost for allied mobs in range (capped at 3x base). |
+
+*Note: The planned "Void Fluctuations" (Mana Static, Terror, etc.) are currently slated for future enhancement.*
+
+### Combat Mechanics
+
+- **Massive HP**: Calamities have `stat_multiplier` (5.0x - 15.0x) and ignore standard execution thresholds.
+- **Regional Lock**: Calamities will not leave their home region and will rapidly heal if kited to a boundary.
+- **Final Blow**: The hero who deals the killing blow to a Calamity receives a massive Fame bonus (+100) and the title "Calamity Slayer".
+
+### Loot & Rewards
+
+- **Calamity Remnant**: A mandatory material for Tier 3 Transcendence. Guaranteed drop (1-2 per boss).
+- **Legendary Gear**: Unique items (`gorath_cleaver`, `vexira_staff`) with special modifiers.
+- **Calamity Essence**: Used for high-tier crafting at the Blacksmith.
 
 ---
 
@@ -224,6 +255,12 @@ Every entity generates with 2 random `talents` and 1 `weakness` across the 9 cor
 - Attacking, taking damage, and working adds fractional EXP to `attributes`.
 - **Talented** attributes train at `2.0x` speed.
 - **Weaknesses** train at `0.5x` speed.
+
+### Near-Death Hardening (Epic 18 Phase C)
+When an entity survives a hit with **HP ratio < 0.15**:
+- **Max HP permanently increases by +1**.
+- This simulates "hardening" through combat survival.
+- Veteran NPCs and long-lived heroes often have significantly boosted Max HP from this mechanic.
 
 ---
 
@@ -367,37 +404,26 @@ Each entity has `threat_table: dict[int, float]` mapping attacker IDs to accumul
 
 ---
 
+---
+
 ## Chase Mechanics (epic-05)
 
 Two systems that add depth to melee engagement and pursuit.
 
-**Primary files:** `src/engine/world_loop.py`
-
 ### Opportunity Attacks
 
-When an entity moves away from an adjacent hostile (Manhattan distance increases), the hostile gets a free reduced-damage hit:
-
-```
-damage = max(1, int(attacker_atk * opportunity_attack_damage_mult) - defender_def // 2)
-```
-
-- `opportunity_attack_damage_mult`: 0.5 (half-damage)
-- No crit, no evasion check
-- Generates threat on the mover
-- Emits `"combat"` event with `verb=OPPORTUNITY_ATTACK`
+When an entity moves away from an adjacent hostile (Manhattan distance increases), the hostile gets a free reduced-damage hit via `_process_opportunity_attacks`:
+- **Damage**: `max(1, int(attacker_atk * 0.5) - defender_def // 2)`
+- **Properties**: No crit, no evasion check.
+- **Threat**: Generates threat on the mover.
+- **Event**: Emits `"combat"` with `verb=OPPORTUNITY_ATTACK`.
 
 ### SPD-Based Chase Closing
 
-Faster hunters periodically gain a bonus tile of movement when chasing slower prey:
-
-```
-interval = ceil(chase_spd_closing_base * target_spd / hunter_spd)
-if chase_ticks % interval == 0 → bonus move toward target
-```
-
-- `chase_spd_closing_base`: 6
-- Only triggers for HUNT-state entities with higher SPD than target
-- Emits `"movement"` event with `verb=CHASE_SPRINT`
+Faster hunters periodically gain a "sprint" move when chasing slower prey via `_process_chase_closing`:
+- **Calculated Interval**: `ceil(6.0 * target_spd / hunter_spd)`
+- **Effect**: Gains 1 bonus tile of movement toward the target every `interval` ticks.
+- **Requirement**: Hunter SPD > Target SPD.
 
 ---
 
@@ -411,7 +437,7 @@ Defined in `src/core/attributes.py` via `speed_delay()`. Uses logarithmic dimini
 delay = action_mult / (1.0 + ln(max(spd, 1)))
 ```
 
-Clamped to `[0.15, 2.0]` seconds.
+Clamped to `[0.3, 4.0]` ticks.
 
 ### SPD → Delay Table (move action)
 
@@ -427,13 +453,13 @@ Clamped to `[0.15, 2.0]` seconds.
 
 | Action | Multiplier | Effect |
 |--------|-----------|--------|
-| Move | ×1.0 | Baseline |
-| Attack | ×0.9 | Slightly faster than moving |
-| Skill | ×1.2 | Slower (powerful abilities) |
-| Loot | ×0.7 | Fast pickup |
-| Harvest | ×0.7 | Fast gathering |
-| Use Item | ×0.6 | Fastest (potions should be quick) |
-| Rest | ×1.0 | Same as baseline |
+| Move | ×2.0 | Baseline |
+| Attack | ×1.5 | Slightly faster than moving |
+| Skill | ×2.5 | Slower (powerful abilities) |
+| Loot | ×1.2 | Standard interaction |
+| Harvest | ×1.2 | Standard interaction |
+| Use Item | ×1.0 | Fastest (potions should be quick) |
+| Rest | ×1.5 | Same as attack |
 
 For non-combat actions, the `interaction_speed` derived stat further scales delay.
 
@@ -450,15 +476,21 @@ When `engaged_ticks >= 2`, moving away costs **double** the normal delay:
 
 ## Death & Respawn
 
-### Hero Death
+### Hero Death & Permadeath (The Death Tier System)
 
-1. All **bag items** dropped as ground loot at death position
-2. **Equipment** preserved (weapon, armor, accessory stay)
-3. HP restored to `max_hp`
-4. Teleported to `home_pos` (town center)
-5. AI state set to `RESTING_IN_TOWN`
-6. Action cooldown: `hero_respawn_ticks` (10 ticks)
-7. Combat memory cleared
+Heroes follow a tiered death system that escalates with each subsequent defeat.
+
+| Death Count | Consequences |
+|-------------|--------------|
+| **1st Death** | Drops **Bag Items** only. Respawn at home. |
+| **2nd Death** | Drops **Bag Items + Accessory**. Respawn at home. |
+| **3rd Death** | Drops **Bag Items + Accessory + Armor**. Respawn at home. |
+| **Permadeath** | `death_count >= max`. Drops **ALL gear**. Removed from world. |
+
+**Permadeath Details**:
+- **Monuments**: If a hero is Level 15+ upon permadeath, a **Monument** is spawned at their home position, providing localized buffs (+10% HP/ATK) to passing heroes.
+- **Generational Replacement**: A new hero of the same generation + 1 is scheduled to spawn at the same house after 50 ticks.
+- **Cleanup**: AI memory and active effects are cleared upon every death.
 
 ### Enemy Death
 

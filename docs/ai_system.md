@@ -8,7 +8,7 @@ Technical documentation for the hybrid AI architecture, goal evaluation, state m
 
 Entity AI uses a **hybrid architecture** combining **Utility AI** for goal evaluation with a **State Machine** for execution. The goal evaluator picks *what* to do; the state handler executes *how* to do it.
 
-**Primary files:** `src/ai/brain.py`, `src/ai/goals/`, `src/ai/states.py`, `src/ai/perception.py`, `src/core/traits.py`
+**Primary files:** `src/ai/brain.py`, `src/ai/goals/`, `src/ai/states.py`, `src/ai/perception.py`, `src/engine/worker_pool.py`, `src/core/traits.py`
 
 ---
 
@@ -34,10 +34,6 @@ AIBrain.decide(ctx: AIContext) → (AIState, ActionProposal)
         STATE_HANDLERS[ai_state].handle(ctx) → (new_state, ActionProposal)
 ```
 
-### AIContext
-
-All AI logic receives an `AIContext` dataclass:
-
 ```python
 @dataclass(slots=True)
 class AIContext:
@@ -47,6 +43,14 @@ class AIContext:
     rng: DeterministicRNG
     faction_reg: FactionRegistry
 ```
+
+### 1.1 Parallel Execution (The Worker Pool)
+
+To prevent the AI from slowing down the global tick, evaluations are offloaded to a **WorkerPool** (`src/engine/worker_pool.py`):
+
+-   **Inline Mode**: If `num_workers <= 1`, AI runs on the engine thread (useful for debugging).
+-   **Distributed Mode**: Tasks are serialized via `pickle` and sent to **RabbitMQ**. External worker nodes (Docker) pick up the task, run `AIBrain.decide()`, and return the `ActionProposal`.
+-   **Fault Tolerance**: If a worker crashes or timeouts, the engine falls back to a **REST (Stationary)** action to ensure the tick completes.
 
 ---
 
@@ -109,6 +113,13 @@ Each entity's traits add `UtilityBonus` values to goal scores. See section 7.
 | VISIT_HOME | 17 | Storing items at home |
 
 Each state has a `StateHandler` subclass registered in `STATE_HANDLERS` dict.
+
+### 3.1 Boredom Multipliers
+
+To prevent entities from getting "stuck" in a state (e.g., repeatedly wandering the same corner), the brain applies a **Boredom Penalty**:
+-   When a goal is selected, its multiplier in `actor.boredom_multipliers` drops to `0.8` (cumulative).
+-   Every tick, all multipliers slowly recover by `+0.02` toward `1.0`.
+-   This ensures that even a high-scoring goal like "REST" eventually yields to "EXPLORE" once the hero is healthy.
 
 ---
 
@@ -181,6 +192,12 @@ Each state has a `StateHandler` subclass registered in `STATE_HANDLERS` dict.
 - Seeks and engages the intruder
 - Returns to GUARD_CAMP or retreats if no enemy visible
 
+### 4.1 Specialized Boss AI (Calamities)
+
+World Bosses use the same state machine but with template-level overrides:
+-   **Ability Rotation**: Instead of simple attacks, `CombatHandler` for bosses executes a `behavior_rotation` (e.g., `[SummonAdds, AoE_Slam, Melee_Strike]`).
+-   **Regional Auras**: Bosses emit passive debuffs to all heroes in their region via a recurring `AURA_PULSE` scheduled in the **Schedule** phase.
+
 ### VisitShopHandler
 - Walks to General Store
 - Sells: gold pouches, excess materials, inferior equipment
@@ -218,6 +235,20 @@ Each state has a `StateHandler` subclass registered in `STATE_HANDLERS` dict.
 - Interrupts: flee if low HP, engage if enemy within 3 tiles
 
 ---
+
+## 5. Social & Perception
+
+### Hero Proximity Familiarity
+
+Heroes develop relationships over time by spending time in vision range of each other (`_tick_proximity_familiarity`):
+- **Gain Rate**: +0.002 per tick when in proximity (vision range).
+- **Decay Rate**: -0.0005 per tick when apart.
+- **Alliance Status**: When familiarity reaches **0.5**, the heroes are marked as **Allies**.
+- **Symmetry**: Familiarity gains are symmetric between both heroes.
+
+### Dynamic Goal Selection
+
+While goal scoring is handled by Utility AI, the `WorldLoop` thread translates these into visible goals for the frontend by tracking `last_reason` and the current `AIState`.
 
 ## 5. Perception (`src/ai/perception.py`)
 
@@ -258,7 +289,11 @@ Each entity tracks last-seen positions of other entities in `entity_memory: dict
 - Ghost markers on the frontend overlay
 - Territory awareness
 
----
+### Memory Persistence & Pruning
+
+To maintain simulation performance, memory is periodically pruned:
+- **Terrain Memory**: Persistent for heroes; mobs may forget remote tiles if memory size exceeds 1000 nodes.
+- **Entity Memory**: Entries expire if the entity hasn't been seen for **200 ticks**.
 
 ## 7. Personality Traits (`src/core/traits.py`)
 
@@ -348,3 +383,14 @@ Entity fields `cached_path` and `cached_path_target` store the last computed A* 
 - Workers produce `ActionProposal` objects pushed to a thread-safe `ActionQueue`
 - No shared mutable state between AI workers
 - Entity memory is updated only by the `WorldLoop` thread after actions are applied
+
+---
+
+## 10. Debugging AI
+
+For developers trying to tune behavior or root-cause a logic loop:
+
+1.  **AI Visualizer (Frontend)**: Toggle `Debug > Show AI Goals` in the Sidebar. This draws lines to the entity's current `move_target` and overlays the active `AIState` above their head.
+2.  **Goal Inspector**: Click an entity and open the `AI` tab in the Inspector. It shows a real-time table of all goals and their raw utility scores.
+3.  **Logs**: Set `LOG_LEVEL=DEBUG` and grep for the entity's ID to see their state transitions and pathfinding failures.
+4.  **Deterministic Replay**: If an AI bug is found, use the `world_seed` and `tick` from the error report to reproduce the exact decision sequence locally.

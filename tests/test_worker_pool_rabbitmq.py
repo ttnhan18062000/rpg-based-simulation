@@ -21,7 +21,9 @@ def test_worker_pool_rabbitmq_dispatch(monkeypatch):
     
     # Need to simulate the connection return
     with patch("src.engine.worker_pool.get_rabbitmq", return_value=mock_conn):
-        pool = WorkerPool(config, mock_brain)
+        from src.systems.rng import DeterministicRNG
+        rng = DeterministicRNG(seed=42)
+        pool = WorkerPool(config, mock_brain, rng)
         
         assert pool._channel == mock_channel
         

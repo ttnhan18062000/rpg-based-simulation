@@ -54,18 +54,34 @@ The engine is built with the rigor of production systems software:
 - **Single-writer concurrency** — AI workers run in parallel on immutable `Snapshot` objects. Only the `WorldLoop` thread mutates `WorldState`. No locks on the hot path.
 - **Shared schemas** — core data models (`ItemTemplate`, `SkillDef`, `ClassDef`, `TraitDef`) are `pydantic_dataclass(frozen=True)` — the single source of truth for both the game engine and the REST API. No duplicate schemas.
 - **575+ automated tests** — combat, AI, pathfinding, inventory, economy, deterministic replay verification, API payload tests.
-- **Performance-optimized** — backend: 28ms/tick for 200 entities on 512×512 (43% improvement after audit). Frontend: 256× smaller fog overlay, offscreen minimap caching, drag-skip rendering, 98% API payload reduction.
+-   **Absolute determinism** — all randomness via `Hash(Seed, Domain, EntityID, Tick)` using xxhash. Same seed = same world = same story, on any machine, every run.
+-   **Single-writer concurrency** — AI workers run in parallel on immutable `Snapshot` objects. Only the `WorldLoop` thread mutates `WorldState`. No locks on the hot path.
+-   **Shared schemas** — core data models (`ItemTemplate`, `SkillDef`, `ClassDef`, `TraitDef`) are `pydantic_dataclass(frozen=True)` — the single source of truth for both the game engine and the REST API. No duplicate schemas.
+-   **575+ automated tests** — combat, AI, pathfinding, inventory, economy, deterministic replay verification, API payload tests.
+-   **Performance-optimized** — backend: 28ms/tick for 200 entities on 512×512 (43% improvement after audit). Frontend: 256× smaller fog overlay, offscreen minimap caching, drag-skip rendering, 98% API payload reduction.
 
-### 🔭 Built to Watch
+## Key Features
+
+-   **Deep Character Progression**: 12 hero classes across 3 tiers, with a 9-primary attribute system and fractional training.
+-   **Life Simulation**: Entities have needs, moods, and relationships.
+-   **World Evolution**: Entities evolve through tiers (Basic → Scout → Warrior → Elite) dynamically as they level up.
+-   **Dynamic World**: The world state changes based on entity actions.
+-   **World Bosses (Calamities)**: Massive, regional threats that alter the simulation rules with powerful auras.
+-   **Persistence**: Durable event-sourcing and project-wide state snapshots powered by Kafka for reliability.
+-   **Procedural Content**: Maps, items, and quests are generated on the fly.
+
+---
+
+## The Viewer
 
 The web-based viewer isn't an afterthought — it's designed for observation:
 
-- **Spectate any entity** — see the world through its eyes with fog of war, vision range, and ghost markers for remembered enemies
-- **Three fog levels** — visible (clear), explored (dimmed), and unseen (completely dark)
-- **Rich tooltips** — hover any tile to see terrain, entities, buildings, loot, and resources — fog-gated when spectating
-- **Minimap** with terrain caching, entity dots, and viewport indicator
-- **Event log** tracking combat, deaths, level-ups, loot, and skill usage
-- **6-tab inspector** showing stats, equipment, skills, AI goals, memory, and events for any entity
+-   **Spectate any entity** — see the world through its eyes with fog of war, vision range, and ghost markers for remembered enemies
+-   **Three fog levels** — visible (clear), explored (dimmed), and unseen (completely dark)
+-   **Rich tooltips** — hover any tile to see terrain, entities, buildings, loot, and resources — fog-gated when spectating
+-   **Minimap** with terrain caching, entity dots, and viewport indicator
+-   **Event log** tracking combat, deaths, level-ups, loot, and skill usage
+-   **6-tab inspector** showing stats, equipment, skills, AI goals, memory, and events for any entity
 
 ---
 
@@ -95,12 +111,12 @@ Workers never see partial updates. The `ActionQueue` is the only shared mutable 
 
 Adding content means adding data, not code:
 
-- **Items** → register in `ITEM_REGISTRY`
-- **Skills** → add `SkillDef` to class definition
-- **Factions** → extend `Faction` enum + register relationships
-- **Terrain costs** → add entry to `TERRAIN_MOVE_COST`
-- **Traits** → register `TraitDef` with utility bonuses
-- **Races** → add to `RACE_TIER_KINDS` + `RACE_STAT_MODS`
+-   **Items** → register in `ITEM_REGISTRY`
+-   **Skills** → add `SkillDef` to class definition
+-   **Factions** → extend `Faction` enum + register relationships
+-   **Terrain costs** → add entry to `TERRAIN_MOVE_COST`
+-   **Traits** → register `TraitDef` with utility bonuses
+-   **Races** → add to `RACE_TIER_KINDS` + `RACE_STAT_MODS`
 
 All game definitions are pydantic dataclasses — `IntEnum` at runtime for fast logic, lowercase strings in JSON for the API.
 
@@ -143,8 +159,8 @@ Epics are ordered by **impact across all three pillars** — emergent storytelli
 |------|------|--------|
 | **E12** | AI Personality & Emergent Behavior | Nemesis system, grudges, confidence, mood — entities become *individuals* with history. Highest storytelling ROI. |
 | **E04** | Multi-Hero Party System | Multiple autonomous heroes cooperating and competing — multiplies narrative surface area and AI complexity. |
-| **E06** | World Events & Invasions | Goblin raids, wandering bosses, plagues — external pressure creates dramatic stakes. New event scheduling subsystem. |
-| **E07** | Reputation & Faction Diplomacy | Shifting alliances, cease-fires, faction wars — the political landscape evolves at runtime. |
+| **E06** | World Events & Invasions | Plagues, territory wars, and merchant caravans — external pressure creates dramatic stakes. |
+| **E07** | Faction Diplomacy | Cease-fires, trade pacts, and political shifts — the landscape evolves at runtime. |
 
 ### Tier 2 — World Richness
 
@@ -160,11 +176,9 @@ Epics are ordered by **impact across all three pillars** — emergent storytelli
 | Epic | Name | Impact |
 |------|------|--------|
 | **E05** | Advanced Combat (remaining) | Status ailments, combos, environmental combat, formations — tactical depth. |
-| **E08** | Transcendence & Endgame Classes | Tier 3 class advancement, ultimate skills — late-game power fantasy. |
-| **E10** | Enchantment & Item Progression | Gem socketing, +1–+10 enhancement, item sets — gear investment. |
+| **E10** | Item Socketing & Enhancement | Gem socketing, +1–+10 enhancement, item sets — gear investment. |
 | **E14** | Frontend UX Improvements | Smooth interpolation, damage numbers, keyboard shortcuts, camera follow. |
 | **E11** | Replay & Observation Tools | Timeline scrubbing, heatmaps, stat graphs — tools for studying emergent behavior. |
-| **E09** | Pathfinding (remaining) | Hazard avoidance, formations, speed modifiers, path visualization. |
 
 ---
 

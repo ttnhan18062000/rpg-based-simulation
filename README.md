@@ -177,7 +177,7 @@ See **[docs/buildings_economy.md](docs/buildings_economy.md)** for full details.
 
 ## Faction System
 
-Every entity belongs to one of **9+ Factions** (HERO_GUILD, GOBLIN_HORDE, WOLF_PACK, BANDIT_CLAN, UNDEAD, ORC_TRIBE, CENTAUR_HERD, FROST_KIN, LIZARDFOLK, DEMON_HORDE). Faction relationships (`HOSTILE`, `NEUTRAL`, `ALLIED`) are stored in a data-driven `FactionRegistry`.
+Every entity belongs to one of **10 Factions** (HERO_GUILD, GOBLIN_HORDE, WOLF_PACK, BANDIT_CLAN, UNDEAD, ORC_TRIBE, CENTAUR_HERD, FROST_KIN, LIZARDFOLK, DEMON_HORDE). Faction relationships (`HOSTILE`, `NEUTRAL`, `ALLIED`) are stored in a data-driven `FactionRegistry`.
 
 - **Territory intrusion** — entities can enter any tile, but stepping on hostile territory applies stat debuffs (ATK/DEF/SPD) and alerts nearby defenders
 - **Town aura** — hostile entities in town take gradual HP damage each tick, preventing spawn camping; enemies retreat when HP gets low
@@ -205,6 +205,7 @@ See **[docs/faction_system.md](docs/faction_system.md)** for full details.
 | `frost_wolf` / `frost_giant` / `frost_shaman` | FROST_KIN | Race-scaled | Race-scaled | Race-scaled | Snow regions |
 | `lizard` / `lizard_warrior` / `lizard_chief` | LIZARDFOLK | Race-scaled | Race-scaled | Race-scaled | Jungle regions |
 | `imp` / `hellhound` / `demon_lord` | DEMON_HORDE | Race-scaled | Race-scaled | Race-scaled | Volcanic regions |
+| `gorath` / `vexira` / `morgul` | (Various) | Boss-scaled | Boss-scaled | Boss-scaled | **Calamity World Bosses** |
 
 ## REST API
 

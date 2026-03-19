@@ -1,0 +1,53 @@
+........................................................................ [ 11%]
+.....................................................F...........FFF..F. [ 23%]
+.F....F.F.F..F............................................F......... [ 34%]
+............................................F...............F........... [ 46%]
+.....................................FFFFF......FF................F..F.. [ 57%]
+......................F................................................. [ 69%]
+.......................................................F..F.FFF......... [ 81%]
+........................................................................ [ 92%]
+.............................................                            [100%]
+============================== warnings summary ===============================
+src\api\schemas.py:10
+  D:\Projects\rpg-based-simulation\src\api\schemas.py:10: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class AttributeSchema(BaseModel):
+
+src\api\schemas.py:90
+  D:\Projects\rpg-based-simulation\src\api\schemas.py:90: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class EntitySlimSchema(BaseModel):
+
+src\api\schemas.py:111
+  D:\Projects\rpg-based-simulation\src\api\schemas.py:111: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class EntitySchema(BaseModel):
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/test_combat_arena_e2e.py::TestBasicCombatE2E::test_melee_fight_one_entity_dies
+FAILED tests/test_combat_arena_e2e.py::TestMultiEntityCombatE2E::test_two_heroes_vs_one_mob
+FAILED tests/test_combat_arena_e2e.py::TestMultiEntityCombatE2E::test_ranged_and_melee_hero_vs_mob
+FAILED tests/test_combat_arena_e2e.py::TestOpportunityAttackE2E::test_fleeing_mob_takes_opportunity_damage
+FAILED tests/test_combat_arena_e2e.py::TestChaseClosingE2E::test_faster_hunter_catches_slower_prey
+FAILED tests/test_combat_arena_e2e.py::TestThreatSystemE2E::test_damage_generates_threat
+FAILED tests/test_combat_arena_e2e.py::TestAoESkillsE2E::test_fireball_hits_multiple_enemies
+FAILED tests/test_combat_arena_e2e.py::TestAoESkillsE2E::test_whirlwind_melee_aoe
+FAILED tests/test_combat_arena_e2e.py::TestAoESkillsE2E::test_rain_of_arrows_ranged_aoe
+FAILED tests/test_combat_arena_e2e.py::TestEventCollectionE2E::test_death_event_has_entity_id
+FAILED tests/test_entity_builder.py::TestEntityBuilderBasic::test_default_values
+FAILED tests/test_equipment_enhance.py::TestHomeStorage::test_upgrade - asser...
+FAILED tests/test_equipment_enhance.py::TestTreasureChest::test_loot_table_items_exist_in_registry
+FAILED tests/test_inventory_goals.py::TestLootGoalInventoryCheck::test_nearly_full_bag_penalized
+FAILED tests/test_inventory_goals.py::TestLootGoalInventoryCheck::test_empty_bag_with_nearby_loot_scores_positive
+FAILED tests/test_inventory_goals.py::TestLootGoalInventoryCheck::test_no_nearby_loot_low_score
+FAILED tests/test_inventory_goals.py::TestTradeGoalFullBag::test_nearly_full_bag_boosts_trade
+FAILED tests/test_inventory_goals.py::TestTradeGoalFullBag::test_full_bag_trade_outscores_loot
+FAILED tests/test_inventory_goals.py::TestWeightBasedInventoryChecks::test_near_weight_limit_penalizes_loot
+FAILED tests/test_inventory_goals.py::TestWeightBasedInventoryChecks::test_overweight_boosts_trade
+FAILED tests/test_loot_scaling.py::TestChestLootTier4::test_tier4_items_exist_in_registry
+FAILED tests/test_loot_scaling.py::TestLootScalingInGenerator::test_tier4_has_more_items_on_average
+FAILED tests/test_metadata.py::TestRegistryCompleteness::test_breakthroughs_exist
+FAILED tests/test_ranged_combat.py::TestRangedMobVariants::test_bandit_scout_has_bow
+FAILED tests/test_ranged_combat.py::TestRangedMobVariants::test_skeleton_mage_has_staff
+FAILED tests/test_ranged_combat.py::TestRangedMobVariants::test_goblin_chief_has_ranged_weapon
+FAILED tests/test_ranged_combat.py::TestRangedMobVariants::test_skeleton_mage_is_caster_class
+FAILED tests/test_ranged_combat.py::TestRangedMobVariants::test_all_race_gear_weapons_exist
+28 failed, 589 passed, 3 warnings, 4 subtests passed in 112.91s (0:01:52)

@@ -61,6 +61,40 @@ grid.is_mountain(pos)    # MOUNTAIN only
 
 ---
 
+## World Evolution
+
+The simulation world evolves over time, becoming increasingly dangerous as it ages.
+
+### Difficulty Scaling
+
+The global `difficulty_modifier` increases every 10,000 ticks:
+- **Formula**: `modifier = 1.0 + (world_age // 10000) * 0.1`
+- **Effect**: This modifier directly scales the stats of newly spawned mobs and World Bosses.
+
+### Faction Aggression
+
+Non-hero factions grow more aggressive over time:
+- **Rate**: `aggression += 0.001` per tick.
+- **Cap**: 100.0.
+- **Effect**: Influences AI decision-making, making entities more likely to engage in combat or raid territory.
+
+---
+
+## Endgame Conditions
+
+The simulation reaches an "Endgame" state once the world age exceeds a specific threshold, triggering stability or collapse checks.
+
+### The 50,000 Tick Threshold
+
+Once `world_age >= 50,000`, the engine periodically checks `_check_endgame_conditions()`:
+
+1. **Stabilization (Simulation Stop)**: 
+   - If **all** buildings are functional and at >80% durability, the world is considered "Stabilized" and the simulation ends.
+2. **Collapse (Simulation Stop)**: 
+   - If **3 or more** buildings are destroyed (not functional), the world is considered "Collapsed" under the weight of the Calamity/mobs, and the simulation ends.
+
+---
+
 ## Generation Order
 
 World generation in `EngineManager._build()`:
@@ -178,13 +212,6 @@ This ensures 100% terrain coverage — no FLOOR gaps between regions.
 
 ### Sub-Locations (3–6 per region)
 
-| Type | Description | Spawns / Tiles |
-|------|-------------|--------|
-| `enemy_camp` | CAMP tiles, guards | Chief + warriors + race mobs |
-| `resource_grove` | Resource nodes cluster | 3–5 harvestable nodes |
-| `ruins` | RUINS tiles | Treasure chest |
-| `dungeon_entrance` | DUNGEON_ENTRANCE tile | Elite guards, treasure chest |
-| `shrine` | Gameplay marker | (future) |
 | `boss_arena` | Boss fight area | Elite boss + guards (difficulty+1) |
 | `outpost` | Safe zone building | Placed at difficulty < 3 |
 | `watchtower` | Scouting structure | Forest, grassland, jungle biomes |
@@ -207,6 +234,7 @@ This ensures 100% terrain coverage — no FLOOR gaps between regions.
 | `num_volcanic_regions` | 2 | Volcanic region count |
 | `region_min_radius` | 30 | Minimum effective radius |
 | `region_max_radius` | 60 | Maximum effective radius |
+| `region_min_distance` | 40 | Minimum distance between centers |
 | `region_min_distance` | 40 | Minimum distance between centers |
 | `min_locations_per_region` | 3 | Min sub-locations per region |
 | `max_locations_per_region` | 6 | Max sub-locations per region |
@@ -246,6 +274,26 @@ This ensures 100% terrain coverage — no FLOOR gaps between regions.
 | Frost | 1.6× | 1.0× | +4 | -3 | 3% | 0% | 0 |
 | Lizard | 0.9× | 1.0× | 0 | +2 | 12% | 10% | 2 |
 | Demon | 1.2× | 1.3× | -1 | +1 | 8% | 4% | 1 |
+
+---
+
+## World Boss (Calamity) Spawning
+
+Calamities are unique, one-off boss spawns triggered by the engine. They use a specialized template-based generation logic in `EntityGenerator.spawn_calamity()`.
+
+### Stat Scaling
+
+Calamity stats are derived from their `CalamityTemplate` multiplier, scaled by the overall world difficulty modifier:
+
+-   **Formula**: `base_stat = template_multiplier * world_difficulty_modifier`.
+-   **HP**: Base 100 × Scaler (e.g., Gorath with 15.0 mult × 1.0 mod = 1500 HP).
+-   **ATK**: Base 20 × Scaler.
+-   **Loot**: Automatically equipped with legendary items from their `legendary_loot` list.
+
+### Spawning Constraints
+
+-   **Position**: Always spawned in a non-town, non-sanctuary walkable tile.
+-   **Role**: Assigned the `WORLD_BOSS` role, which enables specialized UI treatment and global event announcements.
 
 ---
 

@@ -74,7 +74,8 @@ entity.effective_mdef()      # magical defense
 |------|-------|-------------|
 | HERO | 0 | Can use town buildings, AI goal-driven |
 | MOB | 1 | Wild creature/enemy, guards territory |
-| NPC | 2 | Town resident (future) |
+| CALAMITY | 2 | World boss, massive HP, unique auras |
+| NPC | 3 | Town resident (future) |
 
 ---
 
@@ -132,6 +133,7 @@ Entity `kind` strings are registered to factions:
 | `frost_wolf`, `frost_giant`, `frost_shaman` | FROST_KIN |
 | `lizard`, `lizard_warrior`, `lizard_chief` | LIZARDFOLK |
 | `imp`, `hellhound`, `demon_lord` | DEMON_HORDE |
+| `gorath`, `vexira`, `morgul` | (Various) - Calamity Bosses |
 
 ---
 
@@ -146,6 +148,15 @@ Heroes track social bonds with each other based on co-presence in the world.
 - **Limit**: Familiarity is capped at `1.0`.
 
 This system influences AI behaviors such as choosing to aid an ally in combat or sharing information.
+
+---
+
+## Faction Aggression Scaling
+
+Except for the `HERO_GUILD`, all factions grow more aggressive over time:
+- **Rate**: `+0.001` per tick via `WorldLoop._update_world_evolution()`.
+- **Cap**: 100.0.
+- **Effect**: This value is tracked globally per faction in `WorldState` and influences tactical AI aggression thresholds.
 
 ---
 
@@ -167,14 +178,14 @@ Each faction owns a tile type via `TerritoryInfo`:
 |---------|------|-----------|-----------|-----------|-------------|
 | HERO_GUILD | TOWN | 0.6× | 0.6× | 0.8× | 6 |
 | GOBLIN_HORDE | CAMP | 0.7× | 0.7× | 0.85× | 6 |
-| WOLF_PACK | FOREST | 0.7× | 0.7× | 0.85× | 6 |
-| BANDIT_CLAN | DESERT | 0.7× | 0.7× | 0.85× | 6 |
-| UNDEAD | SWAMP | 0.7× | 0.7× | 0.85× | 6 |
-| ORC_TRIBE | MOUNTAIN | 0.7× | 0.7× | 0.85× | 6 |
-| CENTAUR_HERD | GRASSLAND | 0.7× | 0.7× | 0.85× | 6 |
-| FROST_KIN | SNOW | 0.7× | 0.7× | 0.85× | 6 |
-| LIZARDFOLK | JUNGLE | 0.7× | 0.7× | 0.85× | 6 |
-| DEMON_HORDE | VOLCANIC | 0.7× | 0.7× | 0.85× | 6 |
+| WOLF_PACK | FOREST | 0.8× | 0.8× | 0.9× | 5 |
+| BANDIT_CLAN | DESERT | 0.75× | 0.75× | 0.85× | 6 |
+| UNDEAD | SWAMP | 0.7× | 0.7× | 0.8× | 7 |
+| ORC_TRIBE | MOUNTAIN | 0.75× | 0.75× | 0.85× | 6 |
+| CENTAUR_HERD | GRASSLAND | 0.8× | 0.8× | 0.9× | 8 |
+| FROST_KIN | SNOW | 0.7× | 0.7× | 0.8× | 6 |
+| LIZARDFOLK | JUNGLE | 0.75× | 0.75× | 0.85× | 5 |
+| DEMON_HORDE | VOLCANIC | 0.65× | 0.65× | 0.75× | 7 |
 
 ### Territory Intrusion
 
@@ -267,10 +278,10 @@ Applied on top of tier multipliers:
 
 | Race | HP Mult | ATK Mult | DEF Mod | SPD Mod | Crit | Evasion | Luck |
 |------|---------|----------|---------|---------|------|---------|------|
-| Wolf | 0.8× | 1.0× | +0 | +2 | 10% | 10% | 0 |
-| Bandit | 1.0× | 0.9× | +1 | +1 | 8% | 5% | 2 |
-| Undead | 1.3× | 0.8× | +3 | -2 | 3% | 0% | 0 |
-| Orc | 1.2× | 1.2× | +2 | -1 | 5% | 2% | 1 |
+| Wolf | 0.9× | 1.0× | -2 | +4 | 10% | 10% | 0 |
+| Bandit | 1.0× | 1.1× | +0 | +2 | 7% | 8% | 2 |
+| Undead | 1.2× | 0.9× | +2 | -2 | 2% | 10% | 0 |
+| Orc | 1.5× | 1.4× | +3 | -1 | 5% | 2% | 1 |
 
 ### Spawning
 

@@ -6,15 +6,11 @@ from typing import TYPE_CHECKING
 
 from src.core.classes import mob_class_for
 from src.core.entity_builder import EntityBuilder
-from src.core.enums import AIState, Domain, EnemyTier
+from src.core.enums import AIState, Domain, EnemyTier, RACE_PROFILES
 from src.core.faction import Faction
 from src.core.item_registry import ITEM_REGISTRY, ItemTemplate
-from src.core.items import (
-    Inventory, LOOT_TABLES, TIER_KIND_NAMES, TIER_STARTING_GEAR,
-    RACE_TIER_KINDS, RACE_STARTING_GEAR, RACE_STAT_MODS, RACE_LOOT_TABLES, RACE_FACTION,
-    DIFFICULTY_DROP_MULTIPLIER, DIFFICULTY_BONUS_LOOT,
-)
-from src.core.models import Entity, Vector2
+from src.core.spawn_config import SPAWN_CONFIGS, LOOT_CONFIGS
+from src.core.models import Entity, Vector2, Inventory
 from src.core.regions import DIFFICULTY_TIERS
 
 if TYPE_CHECKING:
@@ -109,7 +105,7 @@ class EntityGenerator:
         self, world: WorldState, tier: int | None = None,
         near_pos: Vector2 | None = None, difficulty_tier: int = 1,
     ) -> Entity:
-        """Create a new tiered entity."""
+        """Create a new tiered entity, picking race based on terrain."""
         eid = world.allocate_entity_id()
         tick = world.tick
 
@@ -117,48 +113,13 @@ class EntityGenerator:
             tier = self._roll_tier(eid, tick)
 
         pos = self._resolve_position(world, eid, tick, near_pos)
-        diff = DIFFICULTY_TIERS.get(difficulty_tier, DIFFICULTY_TIERS[1])
-        world_mod = world.difficulty_modifier
-
-        hp_m, atk_m, def_base, spd_mod, crit, evasion, luck = _TIER_STATS.get(
-            tier, _TIER_STATS[EnemyTier.BASIC])
-
-        base_hp = int((15 + self._rng.next_int(Domain.SPAWN, eid, tick + 2, 0, 10)) * hp_m * diff.hp * world_mod)
-        base_atk = int((3 + self._rng.next_int(Domain.SPAWN, eid, tick + 3, 0, 4)) * atk_m * diff.atk * world_mod)
-        base_spd = 8 + self._rng.next_int(Domain.SPAWN, eid, tick + 4, 0, 4) + spd_mod
-        base_def = int((def_base + self._rng.next_int(Domain.SPAWN, eid, tick + 5, 0, 2)) * diff.def_)
-
-        level = self._rng.next_int(Domain.SPAWN, eid, tick + 6, diff.level_min, diff.level_max)
-        kind = TIER_KIND_NAMES.get(tier, "goblin")
-        ai_state = self._resolve_ai_state(tier, near_pos)
-        inv = self._build_goblin_inventory(eid, tick, tier, difficulty_tier)
-
-        mob_cls = mob_class_for("goblin", tier)
-        entity = (
-            EntityBuilder(self._rng, eid, tick=tick)
-            .kind(kind)
-            .at(pos)
-            .home(near_pos)
-            .leash(self._config.mob_leash_radius)
-            .ai_state(ai_state)
-            .faction(Faction.GOBLIN_HORDE)
-            .tier(tier)
-            .with_base_stats(
-                hp=base_hp, atk=base_atk, def_=base_def, spd=max(base_spd, 1),
-                luck=luck, crit_rate=crit, crit_dmg=1.5, evasion=evasion,
-                level=level, xp_to_next=int(100 * (1.5 ** (level - 1))),
-                gold=int(self._rng.next_int(Domain.LOOT, eid, tick, 0, 10 + tier * 10) * diff.gold),
-            )
-            .with_existing_inventory(inv)
-            .with_mob_class(mob_cls)
-            .with_mob_attributes(3 + tier * 2, tier)
-            .with_race_skills(kind)
-            .with_traits(race_prefix="goblin")
-            .with_talents(race="goblin")
-            .build()
-        )
-        entity.difficulty_tier = difficulty_tier
-        return entity
+        
+        # Terrain-based race lookup (using fallback to goblin)
+        terrain_type = int(world.grid.get(pos)) if hasattr(world, "grid") else 1
+        from src.core.items import TERRAIN_RACE
+        race = TERRAIN_RACE.get(terrain_type, "goblin")
+        
+        return self.spawn_race(world, race, tier=tier, near_pos=pos, difficulty_tier=difficulty_tier)
 
     def spawn_race(
         self, world: WorldState, race: str,
@@ -175,7 +136,8 @@ class EntityGenerator:
         pos = self._resolve_position(world, eid, tick, near_pos)
         diff = DIFFICULTY_TIERS.get(difficulty_tier, DIFFICULTY_TIERS[1])
 
-        race_mods = RACE_STAT_MODS.get(race, (1.0, 1.0, 0, 0, 0.05, 0.0, 0))
+        profile = RACE_PROFILES.get(race)
+        race_mods = profile.stat_mods if profile else [1.0, 1.0, 0, 0, 0.05, 0.0, 0]
         r_hp_m, r_atk_m, r_def_mod, r_spd_mod, r_crit, r_evasion, r_luck = race_mods
 
         hp_m, atk_m, def_base, spd_mod, t_crit, t_evasion, t_luck = _TIER_STATS.get(
@@ -187,9 +149,12 @@ class EntityGenerator:
         base_def = int((def_base + r_def_mod + self._rng.next_int(Domain.SPAWN, eid, tick + 5, 0, 2)) * diff.def_)
 
         level = self._rng.next_int(Domain.SPAWN, eid, tick + 6, diff.level_min, diff.level_max)
-        kind_map = RACE_TIER_KINDS.get(race, {})
-        kind = kind_map.get(tier, race)
-        faction = RACE_FACTION.get(race, Faction.GOBLIN_HORDE)
+        
+        spawn_cfg = SPAWN_CONFIGS.get((race, EnemyTier(tier)))
+        kind = spawn_cfg.kind if spawn_cfg else race
+        
+        # Factions are now in RaceProfile
+        faction = profile.factions[0] if profile and profile.factions else Faction.GOBLIN_HORDE
         ai_state = self._resolve_ai_state(tier, near_pos)
         inv = self._build_race_inventory(eid, tick, tier, race, kind, difficulty_tier)
 
@@ -255,62 +220,36 @@ class EntityGenerator:
             return AIState.GUARD_CAMP
         return AIState.WANDER
 
-    def _build_goblin_inventory(self, eid: int, tick: int, tier: int, difficulty_tier: int = 1) -> Inventory:
-        inv = Inventory(
-            items=[],
-            max_slots=self._config.goblin_inventory_slots + tier,
-            max_weight=self._config.goblin_inventory_weight + tier * 3.0,
-        )
-        gear = TIER_STARTING_GEAR.get(tier, {})
-        for slot in ("weapon", "armor", "accessory"):
-            item_id = gear.get(slot)
-            if item_id and item_id in ITEM_REGISTRY:
-                setattr(inv, slot, item_id)
-
-        potion_count = self._rng.next_int(Domain.ITEM, eid, tick, 0, 1 + tier)
-        potion_type = "medium_hp_potion" if tier >= EnemyTier.WARRIOR else "small_hp_potion"
-        for _ in range(potion_count):
-            inv.add_item(potion_type)
-
-        drop_mult = DIFFICULTY_DROP_MULTIPLIER.get(difficulty_tier, 1.0)
-        loot_table = LOOT_TABLES.get(tier, [])
-        for item_id, chance in loot_table:
-            if self._rng.next_bool(Domain.LOOT, eid, tick + 10 + hash(item_id) % 100, min(chance * 0.3 * drop_mult, 1.0)):
-                inv.add_item(item_id)
-
-        bonus_loot = DIFFICULTY_BONUS_LOOT.get(difficulty_tier, [])
-        for item_id, chance in bonus_loot:
-            if self._rng.next_bool(Domain.LOOT, eid, tick + 50 + hash(item_id) % 100, chance):
-                inv.add_item(item_id)
-
-        return inv
-
     def _build_race_inventory(
         self, eid: int, tick: int, tier: int, race: str, kind: str,
         difficulty_tier: int = 1,
     ) -> Inventory:
+        from src.core.items import Inventory
         inv = Inventory(
             items=[],
             max_slots=self._config.goblin_inventory_slots + tier,
             max_weight=self._config.goblin_inventory_weight + tier * 3.0,
         )
-        race_gear = RACE_STARTING_GEAR.get(race, {})
-        gear = race_gear.get(tier, {})
-        for slot in ("weapon", "armor", "accessory"):
-            item_id = gear.get(slot)
-            if item_id and item_id in ITEM_REGISTRY:
-                setattr(inv, slot, item_id)
+        
+        spawn_cfg = SPAWN_CONFIGS.get((race, EnemyTier(tier)))
+        if spawn_cfg:
+            for item_id in spawn_cfg.starting_gear:
+                if item_id in ITEM_REGISTRY:
+                    inv.add_item(item_id)
+                    inv.auto_equip_best(item_id)
 
-        drop_mult = DIFFICULTY_DROP_MULTIPLIER.get(difficulty_tier, 1.0)
-        loot_table = RACE_LOOT_TABLES.get(kind, [])
-        for item_id, chance in loot_table:
-            if self._rng.next_bool(Domain.LOOT, eid, tick + 10 + hash(item_id) % 100, min(chance * 0.3 * drop_mult, 1.0)):
-                inv.add_item(item_id)
-
-        bonus_loot = DIFFICULTY_BONUS_LOOT.get(difficulty_tier, [])
-        for item_id, chance in bonus_loot:
-            if self._rng.next_bool(Domain.LOOT, eid, tick + 50 + hash(item_id) % 100, chance):
-                inv.add_item(item_id)
+        # Loot from LootConfig
+        loot_cfg = LOOT_CONFIGS.get(kind)
+        if loot_cfg:
+            # Check for loot
+            if self._rng.next_bool(Domain.LOOT, eid, tick, loot_cfg.drop_chance):
+                for item_id in loot_cfg.guaranteed_items:
+                    inv.add_item(item_id)
+                
+                # Roll for random pool
+                for item_id in loot_cfg.random_pool:
+                    if self._rng.next_bool(Domain.LOOT, eid, tick + hash(item_id) % 100, 0.2):
+                         inv.add_item(item_id)
 
         return inv
 

@@ -151,26 +151,55 @@ Capped at `max_stamina`.
 |-------|----------------|---------|-------------|-------------|
 | **Warrior** | STR=S, VIT=A | STR+3, VIT+2, END+1 | STR+10, VIT+5 | → Champion (Lv10, STR≥30) |
 | **Ranger** | AGI=S, END=A | AGI+3, WIS+2, END+1 | AGI+10, WIS+5, PER+3 | → Sharpshooter (Lv10, AGI≥30) |
-| **Mage** | SPI=S, WIS=A | INT+2, SPI+3, WIS+2 | SPI+10, INT+5, WIS+5 | → Archmage (Lv10, SPI≥30) |
-| **Rogue** | AGI=S, STR=B | STR+2, AGI+2, WIS+1 | AGI+8, STR+5, WIS+3 | → Assassin (Lv10, AGI≥25) |
+| **Mage** | SPI=S, WIS=A | INT+2, SPI+3, WIS+2 | SPI+10, INT+5, WIS+5 | → Archmage (Lv10, INT≥30) |
+| **Rogue** | AGI=S, STR=B | STR+2, AGI+2, WIS+1 | AGI+8, STR+5, WIS+3 | → Assassin (Lv10, AGI≥30) |
 
 ### Breakthrough Classes (Tier 2)
 
-| Class | From | Talent |
-|-------|------|--------|
-| **Champion** | Warrior | Unyielding — Below 25% HP → +30% DEF, +20% ATK for 5 ticks |
-| **Sharpshooter** | Ranger | Precision — Crits deal +25% damage; Quick Shot range +1 |
-| **Archmage** | Mage | Arcane Mastery — Skill durations +1 tick; cooldowns −1 tick |
-| **Assassin** | Rogue | Lethal — Guaranteed crit vs targets below 30% HP; Backstab → 2.8× |
+| Class | From | Talent | Req |
+|-------|------|--------|-----|
+| **Champion** | Warrior | Unyielding | Level 10, STR 30+ |
+| **Sharpshooter** | Ranger | Precision | Level 10, AGI 30+ |
+| **Archmage** | Mage | Arcane Mastery | Level 10, INT 30+ |
+| **Assassin** | Rogue | Lethal | Level 10, AGI 30+ |
+
+### Transcendence Classes (Tier 3)
+
+| Class | From | Talent | Req |
+|-------|------|--------|-----|
+| **Warlord** | Champion | Indomitable | Level 20, STR 50+ |
+| **Storm Caller** | Archmage | Storm Soul | Level 20, INT 50+ |
+| **Ghost Stalker** | Sharpshooter | Untraceable | Level 20, AGI 50+ |
+| **Nightshade** | Assassin | Void Veil | Level 20, AGI 50+ |
 
 ### Progression Tiers
 
+```mermaid
+graph TD
+    A[Warrior] --> B[Champion]
+    B --> C[Warlord]
+    D[Ranger] --> E[Sharpshooter]
+    E --> F[Storm Caller]
+    G[Mage] --> H[Archmage]
+    H --> I[Ghost Stalker]
+    J[Rogue] --> K[Assassin]
+    K --> L[Nightshade]
 ```
-Warrior  → Champion      → [Transcendence] (future)
-Ranger   → Sharpshooter  → [Transcendence]
-Mage     → Archmage      → [Transcendence]
-Rogue    → Assassin      → [Transcendence]
-```
+
+---
+
+## 5.5 Mob Archetypes
+
+Non-playable entities use archetypes to determine stat bias and behavior:
+
+| Archetype | Focus | Typical Factions |
+|-----------|-------|------------------|
+| **BRUTE** | STR / VIT | Orcs, Warrior Goblins |
+| **SCOUT** | AGI / PER | Wolves, Bandits |
+| **CASTER** | SPI / INT | Liches, Shamans |
+| **TANK** | VIT / END | Skeletons, Golems |
+| **BEAST** | STR / AGI | Wild Creatures |
+
 
 ---
 

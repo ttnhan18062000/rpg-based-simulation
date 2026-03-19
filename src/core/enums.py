@@ -7,6 +7,21 @@ class ActionType(IntEnum):
     REST = 0; MOVE = 1; ATTACK = 2; USE_ITEM = 3; LOOT = 4; HARVEST = 5; USE_SKILL = 6; REPAIR = 7
 
 @unique
+class SkillType(IntEnum):
+    """Skill categories."""
+    ACTIVE = 0
+    PASSIVE = 1
+
+@unique
+class SkillTarget(IntEnum):
+    """Who a skill targets."""
+    SELF = 0
+    SINGLE_ENEMY = 1
+    AREA_ENEMIES = 2
+    SINGLE_ALLY = 3
+    AREA_ALLIES = 4
+
+@unique
 class AIState(IntEnum):
     IDLE = 0; WANDER = 1; HUNT = 2; COMBAT = 3; FLEE = 4; RETURN_TO_TOWN = 5; RESTING_IN_TOWN = 6; RETURN_TO_CAMP = 7; GUARD_CAMP = 8; LOOTING = 9; ALERT = 10; VISIT_SHOP = 11; VISIT_BLACKSMITH = 12; VISIT_GUILD = 13; HARVESTING = 14; VISIT_CLASS_HALL = 15; VISIT_INN = 16; VISIT_HOME = 17
 
@@ -39,26 +54,47 @@ class EnemyTier(IntEnum):
 
 @unique
 class HeroClass(IntEnum):
-    """Available classes for hero entities."""
-    WARRIOR = 0
-    RANGER = 1
-    MAGE = 2
-    ROGUE = 3
-    CHAMPION = 4
-    ELITE_ARCHER = 5
-    ARCHMAGE = 6
-    ASSASSIN = 7
+    """Available classes for hero entities and mob archetypes."""
+    NONE = 0
+    # --- Primary Hero Classes ---
+    WARRIOR = 1
+    RANGER = 2
+    MAGE = 3
+    ROGUE = 4
+    # --- Breakthrough Classes (Tier 2) ---
+    CHAMPION = 5
+    SHARPSHOOTER = 6
+    ARCHMAGE = 7
+    ASSASSIN = 8
+    # --- Transcendence Classes (Tier 3) ---
+    WARLORD = 9
+    STORM_CALLER = 10
+    GHOST_STALKER = 11
+    NIGHTSHADE = 12
+    # --- Mob Archetypes ---
+    BRUTE = 20
+    SCOUT = 21
+    CASTER = 22
+    TANK = 23
+    BEAST = 24
 
-@unique
 class Faction(IntEnum):
-    """World factions for alignment and aggression."""
+    """World factions for alignment, territory, and aggression."""
     HERO_GUILD = 0
-    GOBLIN_TRIBE = 1
+    GOBLIN_HORDE = 1
     WOLF_PACK = 2
+    BANDIT_CLAN = 3
+    UNDEAD = 4
+    ORC_TRIBE = 5
+    CENTAUR_HERD = 6
+    FROST_KIN = 7
+    LIZARDFOLK = 8
+    DEMON_HORDE = 9
+    # Legacy aliases (to be removed in future refactor)
+    GOBLIN_TRIBE = 1
     BANDIT_GANG = 3
     UNDEAD_HORDE = 4
     ORC_CLAN = 5
-    GOBLIN_HORDE = 6
 
 @unique
 class DamageType(IntEnum): PHYSICAL = 0; MAGICAL = 1
@@ -72,8 +108,37 @@ class TraitType(IntEnum): AGGRESSIVE = 0; CAUTIOUS = 1; BRAVE = 2; COWARDLY = 3;
 @unique
 class VeterancyRank(IntEnum): GREEN = 0; BLOODED = 1; VETERAN = 2; ELITE = 3; LEGEND = 4
 
-from dataclasses import dataclass
-@dataclass(frozen=True)
-class RaceProfile: train_rate: float; level_cap: int; evolves: bool
+from typing import Annotated
+from pydantic import BeforeValidator, PlainSerializer
 
-RACE_PROFILES = {"hero": RaceProfile(1.0, 30, False), "goblin": RaceProfile(1.3, 12, True)} # truncated
+def _parse_enum(cls):
+    def _parse(v):
+        if isinstance(v, cls): return v
+        if isinstance(v, int):
+            try: return cls(v)
+            except ValueError: return v
+        if isinstance(v, str):
+            try: return cls[v.upper()]
+            except (KeyError, ValueError): pass
+        return v
+    return _parse
+
+FactionSer = Annotated[Faction, BeforeValidator(_parse_enum(Faction)), PlainSerializer(lambda v: Faction(v).name.lower(), return_type=str)]
+HeroClassSer = Annotated[HeroClass, BeforeValidator(_parse_enum(HeroClass)), PlainSerializer(lambda v: HeroClass(v).name.lower(), return_type=str)]
+EnemyTierSer = Annotated[EnemyTier, BeforeValidator(_parse_enum(EnemyTier)), PlainSerializer(lambda v: EnemyTier(v).name.lower(), return_type=str)]
+ItemTypeSer = Annotated[ItemType, BeforeValidator(_parse_enum(ItemType)), PlainSerializer(lambda v: ItemType(v).name.lower(), return_type=str)]
+SkillTypeSer = Annotated[SkillType, BeforeValidator(_parse_enum(SkillType)), PlainSerializer(lambda v: SkillType(v).name.lower(), return_type=str)]
+SkillTargetSer = Annotated[SkillTarget, BeforeValidator(_parse_enum(SkillTarget)), PlainSerializer(lambda v: SkillTarget(v).name.lower(), return_type=str)]
+DamageTypeSer = Annotated[int, BeforeValidator(_parse_enum(DamageType)), PlainSerializer(lambda v: DamageType(v).name.lower(), return_type=str)]
+
+from dataclasses import dataclass, field
+@dataclass(frozen=True)
+class RaceProfile:
+    train_rate: float
+    level_cap: int
+    evolves: bool
+    starting_skills: list[str] = field(default_factory=list)
+    factions: list[FactionSer] = field(default_factory=list)
+    stat_mods: list[float] = field(default_factory=lambda: [1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0])
+
+RACE_PROFILES: dict[str, RaceProfile] = {}

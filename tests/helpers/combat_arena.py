@@ -71,7 +71,7 @@ class CombatArena:
 
         brain_mod = __import__("src.ai.brain", fromlist=["AIBrain"])
         brain = brain_mod.AIBrain(self.config, self.rng)
-        pool = WorkerPool(self.config, brain)
+        pool = WorkerPool(self.config, brain, self.rng)
         resolver = ConflictResolver(self.config, self.rng)
         gen = EntityGenerator(self.config, self.rng)
         faction_reg = FactionRegistry.default()

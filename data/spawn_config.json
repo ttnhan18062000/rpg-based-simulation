@@ -1,0 +1,26 @@
+[
+  { "race": "goblin", "tier": "basic",   "kind": "goblin",          "archetype": "scout",  "starting_gear": ["wooden_club"] },
+  { "race": "goblin", "tier": "scout",   "kind": "goblin_scout",    "archetype": "scout",  "starting_gear": ["wooden_club", "leather_cap"] },
+  { "race": "goblin", "tier": "warrior", "kind": "goblin_warrior",  "archetype": "brute",  "starting_gear": ["iron_dagger", "leather_vest"] },
+  { "race": "goblin", "tier": "elite",   "kind": "goblin_elite",    "archetype": "caster", "starting_gear": ["apprentice_staff", "cloth_robe"] },
+  
+  { "race": "wolf",   "tier": "basic",   "kind": "wolf",            "archetype": "beast", "starting_gear": [] },
+  { "race": "wolf",   "tier": "scout",   "kind": "dire_wolf",       "archetype": "beast", "starting_gear": [] },
+  { "race": "wolf",   "tier": "warrior", "kind": "alpha_wolf",      "archetype": "beast", "starting_gear": [] },
+  { "race": "wolf",   "tier": "elite",   "kind": "warg",            "archetype": "brute", "starting_gear": [] },
+
+  { "race": "bandit", "tier": "basic",   "kind": "bandit",          "archetype": "scout",  "starting_gear": ["bandit_dagger"] },
+  { "race": "bandit", "tier": "scout",   "kind": "bandit_archer",   "archetype": "scout",  "starting_gear": ["shortbow"] },
+  { "race": "bandit", "tier": "warrior", "kind": "bandit_warrior",  "archetype": "brute",  "starting_gear": ["iron_sword", "leather_vest"] },
+  { "race": "bandit", "tier": "elite",   "kind": "bandit_chief",    "archetype": "brute",  "starting_gear": ["iron_sword", "chainmail"] },
+
+  { "race": "undead", "tier": "basic",   "kind": "skeleton",        "archetype": "tank",   "starting_gear": ["rusty_sword"] },
+  { "race": "undead", "tier": "scout",   "kind": "skeleton_mage",   "archetype": "caster", "starting_gear": ["apprentice_staff"] },
+  { "race": "undead", "tier": "warrior", "kind": "lich",            "archetype": "tank",   "starting_gear": ["iron_sword", "cloth_robe"] },
+  { "race": "undead", "tier": "elite",   "kind": "wraith",          "archetype": "caster", "starting_gear": ["apprentice_staff"] },
+
+  { "race": "orc",    "tier": "basic",   "kind": "orc",             "archetype": "brute",  "starting_gear": ["orc_axe"] },
+  { "race": "orc",    "tier": "scout",   "kind": "orc_scout",       "archetype": "scout",  "starting_gear": ["orc_axe", "leather_vest"] },
+  { "race": "orc",    "tier": "warrior", "kind": "orc_warrior",     "archetype": "brute",  "starting_gear": ["orc_axe", "chainmail"] },
+  { "race": "orc",    "tier": "elite",   "kind": "orc_warlord",     "archetype": "tank",   "starting_gear": ["orc_axe", "plate_armor"] }
+]

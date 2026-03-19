@@ -91,6 +91,23 @@ All items are defined as `ItemTemplate` dataclass instances registered in the gl
 | `mana_crystal` | Mana Crystal | +3 MATK | Uncommon |
 | `spirit_pendant` | Spirit Pendant | +2 MDEF, +2 MATK | Uncommon |
 
+### Legendary Items
+
+The pinnacle of gear, primarily obtained from World Boss kills.
+
+| ID | Name | ATK | SPD | Crit | Other |
+|----|------|-----|-----|------|-------|
+| `gorath_cleaver` | Gorath's Cleaver | +50 | -2 | +15% | +10 DEF, +100 Max HP, Range 2 |
+| `vexira_fang` | Vexira's Shadow Fang | +40 | +10 | +25% | +20% Evasion, +20 MATK, Dark |
+
+### Special Materials
+
+| ID | Name | Rarity | Sell | Source |
+|----|------|--------|------|--------|
+| `calamity_remnant` | Calamity Remnant | Legendary | 0g | World Bosses (Breakthrough Material) |
+| `calamity_essence` | Calamity Essence | Epic | 100g | Difficulty 4+ Bonus Loot |
+| `enchanted_dust` | Enchanted Dust | Rare | 40g | Difficulty 3+ Bonus Loot |
+
 ### Consumables
 
 | ID | Name | Effect | Rarity |
@@ -228,6 +245,17 @@ Each mob kind has drops with probabilities (see `entities_and_factions.md` for f
 | `bandit_chief` | Bandit Bow (60%), Gold Pouch M (50%), Speed Ring (20%) |
 | `lich` | Ectoplasm (60%), Enchanted Dust (40%), Large HP Potion (30%) |
 | `orc_warlord` | Orc Axe (60%), Orc Shield (50%), Iron Ore (40%) |
+
+### Difficulty Scaling & Bonus Loot
+
+The game scales loot quantity and quality based on the region's difficulty tier.
+
+| Difficulty | Drop Mult | Bonus Loot Pool |
+|------------|-----------|-----------------|
+| Tier 1 | 1.0x | Standard |
+| Tier 2 | 1.2x | Standard |
+| Tier 3 | 1.5x | Enchanted Dust (10%) |
+| Tier 4+ | 2.0x | Calamity Essence (5%), Calamity Remnant (2%) |
 
 ### Starting Gear by Tier (`TIER_STARTING_GEAR`)
 

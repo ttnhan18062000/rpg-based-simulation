@@ -20,7 +20,7 @@ CALAMITY_TEMPLATES: dict[str, CalamityTemplate] = {
     "gorath": CalamityTemplate(
         template_id="gorath",
         name="Gorath the World-Breaker",
-        faction=Faction.ORC_CLAN,
+        faction=Faction.ORC_TRIBE,
         archetype=HeroClass.CHAMPION,
         stat_multiplier=6.0,
         legendary_loot=["gorath_cleaver", "calamity_remnant"],
@@ -30,7 +30,7 @@ CALAMITY_TEMPLATES: dict[str, CalamityTemplate] = {
     "vexira": CalamityTemplate(
         template_id="vexira",
         name="Vexira the Soul-Weaver",
-        faction=Faction.UNDEAD_HORDE,
+        faction=Faction.UNDEAD,
         archetype=HeroClass.ARCHMAGE,
         stat_multiplier=5.0,
         legendary_loot=["vexira_fang", "calamity_remnant"],

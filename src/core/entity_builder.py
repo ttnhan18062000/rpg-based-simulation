@@ -74,7 +74,7 @@ class EntityBuilder:
         # Defaults
         self._kind: str = "unknown"
         self._pos: Vector2 = Vector2(0, 0)
-        self._ai_state: AIState = AIState.IDLE
+        self._ai_state: AIState = AIState.WANDER
         self._faction: Faction = Faction.HERO_GUILD
         self._role: EntityRole = EntityRole.MOB
         self._home_pos: Vector2 | None = None

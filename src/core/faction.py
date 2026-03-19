@@ -14,30 +14,7 @@ from dataclasses import dataclass, field
 from enum import IntEnum, unique
 from typing import TYPE_CHECKING
 
-from src.core.enums import Material
-
-if TYPE_CHECKING:
-    pass
-
-
-# ---------------------------------------------------------------------------
-# Faction identity
-# ---------------------------------------------------------------------------
-
-@unique
-class Faction(IntEnum):
-    """Named factions.  Extend this enum to add new groups."""
-
-    HERO_GUILD = 0
-    GOBLIN_HORDE = 1
-    WOLF_PACK = 2
-    BANDIT_CLAN = 3
-    UNDEAD = 4
-    ORC_TRIBE = 5
-    CENTAUR_HERD = 6
-    FROST_KIN = 7
-    LIZARDFOLK = 8
-    DEMON_HORDE = 9
+from src.core.enums import Material, Faction
 
 
 # ---------------------------------------------------------------------------

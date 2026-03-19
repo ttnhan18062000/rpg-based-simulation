@@ -22,80 +22,14 @@ from typing import Annotated
 from pydantic import PlainSerializer
 from pydantic.dataclasses import dataclass as pydantic_dataclass
 
-from src.core.enums import DamageType
-
-
-# ---------------------------------------------------------------------------
-# Enums
-# ---------------------------------------------------------------------------
-
-@unique
-class HeroClass(IntEnum):
-    """Class identities for heroes and mobs (shared enum)."""
-    NONE = 0
-    # --- Hero classes ---
-    WARRIOR = 1
-    RANGER = 2
-    MAGE = 3
-    ROGUE = 4
-    # --- Hero breakthroughs ---
-    CHAMPION = 5
-    SHARPSHOOTER = 6
-    ARCHMAGE = 7
-    ASSASSIN = 8
-    # --- Tier 3 Transcendence classes ---
-    WARLORD = 9
-    STORM_CALLER = 10
-    GHOST_STALKER = 11
-    NIGHTSHADE = 12
-    # --- Mob archetypes ---
-    BRUTE = 20       # Heavy melee (orcs, warrior goblins) — STR/VIT focus
-    SCOUT = 21       # Fast flanker (wolves, scouts) — AGI/PER focus
-    CASTER = 22      # Magic user (liches, goblin chiefs) — SPI/INT focus
-    TANK = 23        # Durable defender (skeletons, orc warlords) — VIT/END focus
-    BEAST = 24       # Wild creature (wolves, dire wolves) — STR/AGI focus
-
-
-@unique
-class SkillType(IntEnum):
-    """Skill categories."""
-    ACTIVE = 0
-    PASSIVE = 1
-
-
-@unique
-class SkillTarget(IntEnum):
-    """Who a skill targets."""
-    SELF = 0
-    SINGLE_ENEMY = 1
-    AREA_ENEMIES = 2
-    SINGLE_ALLY = 3
-    AREA_ALLIES = 4
-
+from src.core.enums import (
+    DamageType, HeroClass, SkillType, SkillTarget,
+    SkillTypeSer, SkillTargetSer, HeroClassSer, DamageTypeSer
+)
 
 # ---------------------------------------------------------------------------
 # Skill definition
 # ---------------------------------------------------------------------------
-
-from pydantic import PlainSerializer, BeforeValidator
-
-def _parse_enum(cls):
-    def _parse(v):
-        if isinstance(v, cls): return v
-        if isinstance(v, int):
-            try: return cls(v)
-            except ValueError: return v
-        if isinstance(v, str):
-            try: return cls[v.upper()]
-            except KeyError: pass
-        return v
-    return _parse
-
-# Serialization helpers — enums serialize as lowercase name strings for the API
-_SkillTypeSer = Annotated[SkillType, BeforeValidator(_parse_enum(SkillType)), PlainSerializer(lambda v: SkillType(v).name.lower(), return_type=str)]
-_SkillTargetSer = Annotated[SkillTarget, BeforeValidator(_parse_enum(SkillTarget)), PlainSerializer(lambda v: SkillTarget(v).name.lower(), return_type=str)]
-_HeroClassSer = Annotated[HeroClass, BeforeValidator(_parse_enum(HeroClass)), PlainSerializer(lambda v: HeroClass(v).name.lower(), return_type=str)]
-_DamageTypeSer = Annotated[int, BeforeValidator(_parse_enum(DamageType)), PlainSerializer(lambda v: DamageType(v).name.lower(), return_type=str)]
 
 
 @pydantic_dataclass(frozen=True)
@@ -104,9 +38,9 @@ class SkillDef:
     skill_id: str
     name: str
     description: str
-    skill_type: _SkillTypeSer
-    target: _SkillTargetSer
-    class_req: _HeroClassSer       # NONE = race skill (no class required)
+    skill_type: SkillTypeSer
+    target: SkillTargetSer
+    class_req: HeroClassSer       # NONE = race skill (no class required)
     level_req: int = 1
     gold_cost: int = 0         # Cost to learn at building
     cooldown: int = 5          # Ticks between uses
@@ -129,7 +63,7 @@ class SkillDef:
     evasion_mod: float = 0.0
     hp_mod: float = 0.0
     # Damage type: determines which stat pair (ATK/DEF vs MATK/MDEF) is used
-    damage_type: _DamageTypeSer = DamageType.PHYSICAL
+    damage_type: DamageTypeSer = DamageType.PHYSICAL
 
 
 @dataclass(slots=True)
@@ -218,7 +152,7 @@ SCALING_MULTIPLIER: dict[str, float] = {
 @pydantic_dataclass(frozen=True)
 class ClassDef:
     """Immutable class template."""
-    class_id: _HeroClassSer
+    class_id: HeroClassSer
     name: str
     description: str
     # Attribute bonuses applied when class is chosen
@@ -242,7 +176,7 @@ class ClassDef:
     per_cap_bonus: int = 0
     cha_cap_bonus: int = 0
     # Breakthrough target
-    breakthrough_class: _HeroClassSer = HeroClass.NONE
+    breakthrough_class: HeroClassSer = HeroClass.NONE
     breakthrough_level: int = 10
     breakthrough_attr: str = ""      # e.g. "str" — which attribute must be >= threshold
     breakthrough_threshold: int = 30
@@ -261,13 +195,16 @@ class ClassDef:
     lore: str = ''
     playstyle: str = ''
     role: str = ''                   # e.g. "DPS", "Tank", "Support"
+    # Starting gear & Skills
+    starting_gear: dict[str, str | None] = field(default_factory=dict)
+    class_skills: list[str] = field(default_factory=list)
 
 
 @pydantic_dataclass(frozen=True)
 class BreakthroughDef:
     """Breakthrough (promotion) definition."""
-    from_class: _HeroClassSer
-    to_class: _HeroClassSer
+    from_class: HeroClassSer
+    to_class: HeroClassSer
     level_req: int
     attr_req: str              # e.g. "str"
     attr_threshold: int
@@ -300,87 +237,66 @@ class BreakthroughDef:
 # -- Class Definitions --
 
 CLASS_DEFS: dict[HeroClass, ClassDef] = {}
-
 SKILL_DEFS: dict[str, SkillDef] = {}
-
-SKILL_DEFS: dict[str, SkillDef] = {}
-
 BREAKTHROUGHS: dict[HeroClass, BreakthroughDef] = {}
 
-# --- Tier 2 Breakthroughs (Already existing in simulation logic) ---
-BREAKTHROUGHS[HeroClass.WARRIOR] = BreakthroughDef(HeroClass.WARRIOR, HeroClass.CHAMPION, 10, "str", 30)
-BREAKTHROUGHS[HeroClass.RANGER] = BreakthroughDef(HeroClass.RANGER, HeroClass.SHARPSHOOTER, 10, "agi", 30)
-BREAKTHROUGHS[HeroClass.MAGE] = BreakthroughDef(HeroClass.MAGE, HeroClass.ARCHMAGE, 10, "int", 30)
-BREAKTHROUGHS[HeroClass.ROGUE] = BreakthroughDef(HeroClass.ROGUE, HeroClass.ASSASSIN, 10, "agi", 30)
+# ---------------------------------------------------------------------------
+# Backward-compatible computed shims
+# ---------------------------------------------------------------------------
+# These properties let old consumer code (entity_builder, __main__, etc.)
+# continue to reference RACE_SKILLS / CLASS_SKILLS / HERO_STARTING_GEAR
+# while the actual data lives in RACE_PROFILES and CLASS_DEFS.
 
-# --- Tier 3 Transcendence (New Calamity-locked classes) ---
-BREAKTHROUGHS[HeroClass.CHAMPION] = BreakthroughDef(
-    HeroClass.CHAMPION, HeroClass.WARLORD, 20, "str", 50, str_bonus=10, vit_bonus=10, talent="Indomitable"
-)
-BREAKTHROUGHS[HeroClass.ARCHMAGE] = BreakthroughDef(
-    HeroClass.ARCHMAGE, HeroClass.STORM_CALLER, 20, "int", 50, int_bonus=10, spi_bonus=10, talent="Storm Soul"
-)
-BREAKTHROUGHS[HeroClass.SHARPSHOOTER] = BreakthroughDef(
-    HeroClass.SHARPSHOOTER, HeroClass.GHOST_STALKER, 20, "agi", 50, agi_bonus=10, per_bonus=10, talent="Untraceable"
-)
-BREAKTHROUGHS[HeroClass.ASSASSIN] = BreakthroughDef(
-    HeroClass.ASSASSIN, HeroClass.NIGHTSHADE, 20, "agi", 50, agi_bonus=10, cha_bonus=10, talent="Void Veil"
-)
+class _DictShim(dict):
+    """Dict-like wrapper that lazily computes values from a registry."""
+    def __init__(self, compute_fn, keys_fn=None):
+        super().__init__()
+        self._compute_fn = compute_fn
+        self._keys_fn = keys_fn
+    def __getitem__(self, key):
+        return self._compute_fn(key)
+    def get(self, key, default=None):
+        val = self._compute_fn(key)
+        return val if val is not None else default
+    def __contains__(self, key):
+        val = self._compute_fn(key)
+        return val is not None and val != []
+    def __iter__(self):
+        if self._keys_fn:
+            return iter(self._keys_fn())
+        return super().__iter__()
+    def __len__(self):
+        if self._keys_fn:
+            return len(self._keys_fn())
+        return super().__len__()
+    def items(self):
+        if self._keys_fn:
+            return [(k, self._compute_fn(k)) for k in self._keys_fn()]
+        return super().items()
 
-# Race → default race skills mapping
-RACE_SKILLS: dict[str, list[str]] = {
-    "hero":           ["rally", "second_wind"],
-    "goblin":         ["ambush", "scavenge"],
-    "goblin_scout":   ["ambush", "scavenge"],
-    "goblin_warrior": ["ambush"],
-    "goblin_chief":   ["ambush", "scavenge"],
-    "wolf":           ["pack_hunt", "feral_bite"],
-    "dire_wolf":      ["pack_hunt", "feral_bite"],
-    "alpha_wolf":     ["pack_hunt", "feral_bite"],
-    "bandit":         ["quickdraw"],
-    "bandit_archer":  ["quickdraw"],
-    "bandit_chief":   ["quickdraw"],
-    "skeleton":       ["drain_life"],
-    "zombie":         ["drain_life"],
-    "lich":           ["drain_life"],
-    "orc":            ["berserker_rage", "war_cry"],
-    "orc_warrior":    ["berserker_rage", "war_cry"],
-    "orc_warlord":    ["berserker_rage", "war_cry"],
-}
+def _race_skills_lookup(race: str) -> list[str]:
+    from src.core.enums import RACE_PROFILES
+    profile = RACE_PROFILES.get(race)
+    return list(profile.starting_skills) if profile else []
 
+def _class_skills_lookup(hero_class) -> list[str]:
+    cdef = CLASS_DEFS.get(hero_class)
+    return list(cdef.class_skills) if cdef else []
 
-# Class → available class skills mapping
-CLASS_SKILLS: dict[HeroClass, list[str]] = {
-    HeroClass.WARRIOR: ["power_strike", "shield_wall", "whirlwind"],
-    HeroClass.RANGER:  ["quick_shot", "evasive_step", "rain_of_arrows"],
-    HeroClass.MAGE:    ["arcane_bolt", "frost_shield", "fireball"],
-    HeroClass.ROGUE:   ["backstab", "shadowstep", "poison_blade"],
-    # Breakthroughs inherit parent class skills
-    HeroClass.CHAMPION:    ["power_strike", "shield_wall", "whirlwind"],
-    HeroClass.SHARPSHOOTER: ["quick_shot", "evasive_step", "rain_of_arrows"],
-    HeroClass.ARCHMAGE:    ["arcane_bolt", "frost_shield", "fireball"],
-    HeroClass.ASSASSIN:    ["backstab", "shadowstep", "poison_blade"],
-}
+def _hero_starting_gear_lookup(hero_class) -> dict[str, str | None]:
+    cdef = CLASS_DEFS.get(hero_class)
+    return dict(cdef.starting_gear) if cdef else {}
 
+RACE_SKILLS = _DictShim(_race_skills_lookup)
+CLASS_SKILLS = _DictShim(_class_skills_lookup)
+HERO_STARTING_GEAR = _DictShim(_hero_starting_gear_lookup)
 
-# Class building type → class mapping
+# --- Building mapping remains as it's static meta ---
 CLASS_BUILDING_MAP: dict[str, HeroClass] = {
     "warrior_hall":  HeroClass.WARRIOR,
     "ranger_lodge":  HeroClass.RANGER,
     "mage_tower":    HeroClass.MAGE,
     "rogue_den":     HeroClass.ROGUE,
-}
-
-
-# ---------------------------------------------------------------------------
-# Hero Starting Gear — class-based starting equipment
-# ---------------------------------------------------------------------------
-
-HERO_STARTING_GEAR: dict[HeroClass, dict[str, str | None]] = {
-    HeroClass.WARRIOR: {"weapon": "iron_sword",       "armor": "leather_vest", "accessory": None},
-    HeroClass.RANGER:  {"weapon": "shortbow",         "armor": "leather_vest", "accessory": None},
-    HeroClass.MAGE:    {"weapon": "apprentice_staff",  "armor": "cloth_robe",   "accessory": None},
-    HeroClass.ROGUE:   {"weapon": "bandit_dagger",     "armor": "leather_vest", "accessory": None},
 }
 
 
@@ -408,7 +324,11 @@ def can_breakthrough(hero_class: HeroClass, level: int, attrs) -> bool:
 
 def available_class_skills(hero_class: HeroClass, level: int) -> list[str]:
     """Get skill IDs available for a class at a given level (ignores mastery)."""
-    skill_ids = CLASS_SKILLS.get(hero_class, [])
+    cdef = CLASS_DEFS.get(hero_class)
+    if not cdef:
+        return []
+    
+    skill_ids = cdef.class_skills
     result = []
     for sid in skill_ids:
         sdef = SKILL_DEFS.get(sid)
@@ -450,37 +370,10 @@ def can_learn_skill(
 # Race + Tier → Mob class mapping
 # ---------------------------------------------------------------------------
 
-# Maps (race, tier) → HeroClass archetype for mobs.
-# Tier EnemyTier values: BASIC=0, SCOUT=1, WARRIOR=2, ELITE=3
-RACE_CLASS_MAP: dict[tuple[str, int], HeroClass] = {
-    # Goblins — small, cunning; scouts are fast, warriors are brutes, chiefs are casters
-    ("goblin", 0): HeroClass.SCOUT,       # goblin (basic) — nimble raider
-    ("goblin", 1): HeroClass.SCOUT,       # goblin_scout — fast flanker
-    ("goblin", 2): HeroClass.BRUTE,       # goblin_warrior — stronger melee
-    ("goblin", 3): HeroClass.CASTER,      # goblin_chief — shamanic magic
-    # Wolves — natural predators; all BEAST except alpha (BRUTE)
-    ("wolf", 0): HeroClass.BEAST,         # wolf — pack hunter
-    ("wolf", 1): HeroClass.BEAST,         # dire_wolf — bigger, faster
-    ("wolf", 2): HeroClass.BEAST,         # dire_wolf (warrior tier)
-    ("wolf", 3): HeroClass.BRUTE,         # alpha_wolf — pack leader, raw power
-    # Bandits — human rogues; scouts are fast, warriors are brutes, chiefs are tactical
-    ("bandit", 0): HeroClass.SCOUT,       # bandit — agile raider
-    ("bandit", 1): HeroClass.SCOUT,       # bandit_archer — ranged flanker
-    ("bandit", 2): HeroClass.BRUTE,       # bandit (warrior) — heavy hitter
-    ("bandit", 3): HeroClass.BRUTE,       # bandit_chief — brutal leader
-    # Undead — shambling horrors; basic are tanks, higher tiers gain magic
-    ("undead", 0): HeroClass.TANK,        # skeleton — durable, slow
-    ("undead", 1): HeroClass.CASTER,      # skeleton_mage — ranged dark magic
-    ("undead", 2): HeroClass.TANK,        # zombie (warrior) — armored dead
-    ("undead", 3): HeroClass.CASTER,      # lich — powerful necromancer
-    # Orcs — brutal warriors; everything is brute or tank
-    ("orc", 0): HeroClass.BRUTE,          # orc — raw muscle
-    ("orc", 1): HeroClass.SCOUT,          # orc (scout) — orc skirmisher
-    ("orc", 2): HeroClass.BRUTE,          # orc_warrior — heavy fighter
-    ("orc", 3): HeroClass.TANK,           # orc_warlord — armored commander
-}
-
-
 def mob_class_for(race: str, tier: int) -> HeroClass:
     """Look up the mob archetype class for a given race and tier."""
-    return RACE_CLASS_MAP.get((race, tier), HeroClass.BRUTE)
+    from src.core.spawn_config import SPAWN_CONFIGS
+    from src.core.enums import EnemyTier
+    
+    cfg = SPAWN_CONFIGS.get((race, EnemyTier(tier)))
+    return cfg.archetype if cfg else HeroClass.BRUTE

@@ -358,7 +358,31 @@ class Inventory:
         return total
 
     @property
+    def total_weight(self) -> float:
+        return self.current_weight
+
+    @property
     def used_slots(self) -> int: return len(self.items)
+
+    @property
+    def is_full(self) -> bool:
+        return self.used_slots >= self.max_slots
+
+    @property
+    def is_effectively_full(self) -> bool:
+        """True if inventory is full by slots or near weight limit."""
+        return self.is_full or (self.current_weight >= self.max_weight * 0.9)
+
+    @property
+    def weight_ratio(self) -> float:
+        """Ratio of current weight to max weight (0.0 to 1.0+)."""
+        if self.max_weight <= 0:
+            return 1.0
+        return self.current_weight / self.max_weight
+
+    def count_item(self, item_id: str) -> int:
+        """Count how many copies of item_id are in the bag."""
+        return self.items.count(item_id)
     
     def can_add(self, item_id: str) -> bool:
         if self.used_slots >= self.max_slots: return False
@@ -438,6 +462,39 @@ class HomeStorage:
     max_slots: int = 30
     level: int = 0  # upgrade tier (0, 1, 2)
 
+    @property
+    def used_slots(self) -> int:
+        return len(self.items)
+
+    @property
+    def is_full(self) -> bool:
+        return self.used_slots >= self.max_slots
+
+    def add_item(self, item_id: str) -> bool:
+        if self.is_full:
+            return False
+        self.items.append(item_id)
+        return True
+
+    def remove_item(self, item_id: str) -> bool:
+        if item_id in self.items:
+            self.items.remove(item_id)
+            return True
+        return False
+
+    def upgrade_cost(self) -> int | None:
+        from src.core.items import HOUSE_UPGRADE_COSTS
+        return HOUSE_UPGRADE_COSTS.get(self.level)
+
+    def upgrade(self) -> bool:
+        cost = self.upgrade_cost()
+        if cost is None:
+            return False
+        slots_added = 20 + self.level * 10
+        self.level += 1
+        self.max_slots += slots_added
+        return True
+
     def copy(self) -> HomeStorage:
         return HomeStorage(
             items=list(self.items),
@@ -453,8 +510,25 @@ class TreasureChest:
     pos: Vector2
     tier: int = 1
     looted: bool = False
-    respawn_at: int = -1
+    respawn_at: int | None = None
     guard_entity_id: int | None = None
+
+    @property
+    def is_available(self) -> bool:
+        return not self.looted
+
+    def loot(self, current_tick: int, respawn_ticks: int = 50) -> None:
+        self.looted = True
+        self.respawn_at = current_tick + respawn_ticks
+
+    def try_respawn(self, current_tick: int) -> bool:
+        if not self.looted or self.respawn_at is None:
+            return False
+        if current_tick >= self.respawn_at:
+            self.looted = False
+            self.respawn_at = None
+            return True
+        return False
 
     def copy(self) -> TreasureChest:
         return TreasureChest(

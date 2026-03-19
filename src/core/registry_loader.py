@@ -6,6 +6,8 @@ from pydantic import TypeAdapter
 from src.core.item_registry import ItemTemplate, ITEM_REGISTRY
 from src.core.classes import ClassDef, BreakthroughDef, SkillDef, CLASS_DEFS, BREAKTHROUGHS, SKILL_DEFS
 from src.core.traits import TraitDef, TRAIT_DEFS
+from src.core.enums import RaceProfile, RACE_PROFILES
+from src.core.spawn_config import SpawnConfig, LootConfig, SPAWN_CONFIGS, LOOT_CONFIGS
 
 logger = logging.getLogger(__name__)
 
@@ -19,8 +21,61 @@ def load_all_registries(data_dir: Path | str = "data") -> None:
     _load_skills(data_path / "skills.json")
     _load_breakthroughs(data_path / "breakthroughs.json")
     _load_traits(data_path / "traits.json")
+    _load_races(data_path / "races.json")
+    _load_spawn_configs(data_path / "spawn_config.json")
+    _load_loot_configs(data_path / "loot_config.json")
     
     logger.info("Successfully loaded all registries.")
+
+def _load_races(path: Path) -> None:
+    if not path.exists():
+        logger.warning("Race definitions not found at %s", path)
+        return
+        
+    with open(path, "r", encoding="utf-8") as f:
+        data = json.load(f)
+        
+    adapter = TypeAdapter(dict[str, RaceProfile])
+    races = adapter.validate_python(data)
+    
+    RACE_PROFILES.clear()
+    RACE_PROFILES.update(races)
+    
+    logger.info("Loaded %d races.", len(RACE_PROFILES))
+
+def _load_spawn_configs(path: Path) -> None:
+    if not path.exists():
+        logger.warning("Spawn configuration not found at %s", path)
+        return
+        
+    with open(path, "r", encoding="utf-8") as f:
+        data = json.load(f)
+        
+    adapter = TypeAdapter(list[SpawnConfig])
+    configs = adapter.validate_python(data)
+    
+    SPAWN_CONFIGS.clear()
+    for cfg in configs:
+        SPAWN_CONFIGS[(cfg.race, cfg.tier)] = cfg
+        
+    logger.info("Loaded %d spawn configurations.", len(SPAWN_CONFIGS))
+
+def _load_loot_configs(path: Path) -> None:
+    if not path.exists():
+        logger.warning("Loot configuration not found at %s", path)
+        return
+        
+    with open(path, "r", encoding="utf-8") as f:
+        data = json.load(f)
+        
+    adapter = TypeAdapter(list[LootConfig])
+    configs = adapter.validate_python(data)
+    
+    LOOT_CONFIGS.clear()
+    for cfg in configs:
+        LOOT_CONFIGS[cfg.kind] = cfg
+        
+    logger.info("Loaded %d loot configurations.", len(LOOT_CONFIGS))
 
 def _load_items(path: Path) -> None:
     if not path.exists():
