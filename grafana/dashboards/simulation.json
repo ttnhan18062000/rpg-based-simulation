@@ -1,0 +1,531 @@
+{
+  "title": "RPG Simulation: Analytics & Diagnostics",
+  "uid": "sim-v2",
+  "refresh": "5s",
+  "time": {
+    "from": "now-30m",
+    "to": "now"
+  },
+  "templating": {
+    "list": [
+      {
+        "name": "interval",
+        "type": "interval",
+        "query": "1m,5m,15m,1h,6h",
+        "current": {
+          "text": "5m",
+          "value": "5m"
+        }
+      },
+      {
+        "name": "faction",
+        "type": "query",
+        "query": "label_values(sim_faction_population, faction)",
+        "includeAll": true,
+        "multi": true,
+        "allValue": ".*"
+      },
+      {
+        "name": "view_preset",
+        "type": "custom",
+        "query": "Overview,Economy,Tactical,Admin,Events",
+        "multi": true,
+        "includeAll": true,
+        "current": {
+          "text": "All",
+          "value": [
+            "$__all"
+          ]
+        }
+      }
+    ]
+  },
+  "panels": [
+    {
+      "type": "row",
+      "title": "Simulation Pulse (Always Visible)",
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 24,
+        "h": 1
+      },
+      "collapsed": false
+    },
+    {
+      "type": "stat",
+      "title": "World Age (Ticks)",
+      "gridPos": {
+        "x": 0,
+        "y": 1,
+        "w": 4,
+        "h": 4
+      },
+      "targets": [
+        {
+          "expr": "sim_current_tick"
+        }
+      ],
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none"
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Difficulty Mult",
+      "gridPos": {
+        "x": 4,
+        "y": 1,
+        "w": 4,
+        "h": 4
+      },
+      "targets": [
+        {
+          "expr": "sim_world_difficulty_mult"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 2,
+          "color": {
+            "mode": "continuous-GrYlRd"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 1.5
+              },
+              {
+                "color": "red",
+                "value": 2.5
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Active Entities",
+      "gridPos": {
+        "x": 8,
+        "y": 1,
+        "w": 4,
+        "h": 4
+      },
+      "targets": [
+        {
+          "expr": "sim_active_entities"
+        }
+      ],
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area"
+      }
+    },
+    {
+      "type": "stat",
+      "title": "TPS (Stability)",
+      "gridPos": {
+        "x": 12,
+        "y": 1,
+        "w": 4,
+        "h": 4
+      },
+      "targets": [
+        {
+          "expr": "sim_ticks_per_second"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 10
+              },
+              {
+                "color": "green",
+                "value": 18
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "type": "gauge",
+      "title": "Calamity Status",
+      "gridPos": {
+        "x": 16,
+        "y": 1,
+        "w": 8,
+        "h": 4
+      },
+      "targets": [
+        {
+          "expr": "max(sim_calamity_active) or vector(0)"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "min": 0,
+          "max": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 0.5
+              }
+            ]
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "Peaceful",
+                  "color": "green"
+                },
+                "1": {
+                  "text": "EMERGENCY",
+                  "color": "red"
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "row",
+      "title": "Overview: Factions & Demographics",
+      "gridPos": {
+        "x": 0,
+        "y": 5,
+        "w": 24,
+        "h": 1
+      },
+      "collapsed": false
+    },
+    {
+      "type": "timeseries",
+      "title": "Faction Populations",
+      "gridPos": {
+        "x": 0,
+        "y": 6,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "expr": "sim_faction_population{faction=~\"$faction\"}",
+          "legendFormat": "{{faction}}"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Entity Level Distribution",
+      "gridPos": {
+        "x": 12,
+        "y": 6,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "expr": "sum(sim_entity_level_distribution) by (level_bracket)",
+          "legendFormat": "Lvl {{level_bracket}}"
+        }
+      ]
+    },
+    {
+      "type": "row",
+      "title": "Economy & Item Flow",
+      "gridPos": {
+        "x": 0,
+        "y": 14,
+        "w": 24,
+        "h": 1
+      },
+      "collapsed": false
+    },
+    {
+      "type": "timeseries",
+      "title": "Global Gold Circulation",
+      "gridPos": {
+        "x": 0,
+        "y": 15,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "expr": "sim_gold_circulation_total{faction=~\"$faction\"}",
+          "legendFormat": "{{faction}} gold"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Blacksmith & Shop Volume",
+      "gridPos": {
+        "x": 12,
+        "y": 15,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "expr": "rate(sim_items_crafted_total[$interval]) * 60",
+          "legendFormat": "Craft: {{item_id}}"
+        },
+        {
+          "expr": "rate(sim_shop_transactions_total[$interval]) * 60",
+          "legendFormat": "Shop: {{type}}"
+        }
+      ]
+    },
+    {
+      "type": "row",
+      "title": "Tactical: Combat & Violence",
+      "gridPos": {
+        "x": 0,
+        "y": 23,
+        "w": 24,
+        "h": 1
+      },
+      "collapsed": false
+    },
+    {
+      "type": "timeseries",
+      "title": "Total Combat Casualties",
+      "gridPos": {
+        "x": 0,
+        "y": 24,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "expr": "rate(sim_total_deaths_total[$interval]) * 60",
+          "legendFormat": "Deaths/min"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Raw Events (Combat & Skill)",
+      "gridPos": {
+        "x": 12,
+        "y": 24,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "expr": "sum(rate(sim_combat_events_total[$interval]) * 60) by (attacker_faction)",
+          "legendFormat": "Combat Initiated ({{attacker_faction}})"
+        },
+        {
+          "expr": "sum(rate(sim_skill_events_total[$interval]) * 60) by (skill_name)",
+          "legendFormat": "Skill Usage ({{skill_name}})"
+        }
+      ]
+    },
+    {
+      "type": "row",
+      "title": "Admin: Infrastructure & Health",
+      "gridPos": {
+        "x": 0,
+        "y": 32,
+        "w": 24,
+        "h": 1
+      },
+      "collapsed": false
+    },
+    {
+      "type": "timeseries",
+      "title": "Detailed Phase Profiling",
+      "gridPos": {
+        "x": 0,
+        "y": 33,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "expr": "rate(sim_tick_duration_seconds_sum[$interval]) / rate(sim_tick_duration_seconds_count[$interval])",
+          "legendFormat": "{{phase}}"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "right"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      }
+    },
+    {
+      "type": "heatmap",
+      "title": "Redis & Kafka Latency Distribution",
+      "gridPos": {
+        "x": 12,
+        "y": 33,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "expr": "rate(sim_redis_latency_seconds_bucket[$interval])",
+          "legendFormat": "Redis {{op}}"
+        },
+        {
+          "expr": "rate(sim_kafka_publish_seconds_bucket[$interval])",
+          "legendFormat": "Kafka {{type}}"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Worker Health & Concurrency",
+      "gridPos": {
+        "x": 0,
+        "y": 41,
+        "w": 24,
+        "h": 8
+      },
+      "targets": [
+        {
+          "expr": "sim_worker_health",
+          "legendFormat": "Worker {{worker_id}} state:{{state}}"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Technical Errors & Invalid Actions",
+      "gridPos": {
+        "x": 0,
+        "y": 49,
+        "w": 24,
+        "h": 8
+      },
+      "targets": [
+        {
+          "expr": "rate(sim_errors_total[$interval]) * 60",
+          "legendFormat": "Err: {{component}} ({{exception_type}})"
+        },
+        {
+          "expr": "rate(sim_invalid_actions_total[$interval]) * 60",
+          "legendFormat": "Invalid: {{action_type}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "bars",
+            "fillOpacity": 80
+          }
+        }
+      }
+    },
+    {
+      "type": "logs",
+      "title": "Centralized Simulation Logs (Loki)",
+      "gridPos": {
+        "x": 0,
+        "y": 57,
+        "w": 24,
+        "h": 10
+      },
+      "targets": [
+        {
+          "expr": "{container=~\"backend|ai_worker\"} | json",
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          }
+        }
+      ],
+      "options": {
+        "showTime": true,
+        "showLabels": true,
+        "showCommonLabels": false,
+        "wrapLogLines": true,
+        "sortOrder": "Descending"
+      },
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      }
+    },
+    {
+      "type": "row",
+      "title": "Events: Stats & Information",
+      "gridPos": {
+        "x": 0,
+        "y": 67,
+        "w": 24,
+        "h": 1
+      },
+      "collapsed": false
+    },
+    {
+      "type": "logs",
+      "title": "Raw Simulation Event Stream",
+      "gridPos": {
+        "x": 0,
+        "y": 68,
+        "w": 24,
+        "h": 10
+      },
+      "targets": [
+        {
+          "expr": "{job=\"varlogs\"} | json | component=~\"src.engine.world_loop|src.actions.*\" | msg!~\"Failed to publish.*|Tick.*|World.*|Worker.*\"",
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          }
+        }
+      ],
+      "options": {
+        "showTime": true,
+        "showLabels": false,
+        "showCommonLabels": false,
+        "wrapLogLines": true,
+        "sortOrder": "Descending"
+      },
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      }
+    }
+  ]
+}

@@ -1,0 +1,1070 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RPG Simulation Engine</title>
+    <style>
+        :root {
+            --bg-primary: #0f1117;
+            --bg-secondary: #1a1d27;
+            --bg-tertiary: #242835;
+            --border: #2e3347;
+            --text-primary: #e4e6f0;
+            --text-secondary: #8b8fa8;
+            --accent-blue: #4a9eff;
+            --accent-green: #34d399;
+            --accent-red: #f87171;
+            --accent-yellow: #fbbf24;
+            --accent-purple: #a78bfa;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .app {
+            display: grid;
+            grid-template-columns: 1fr 360px;
+            grid-template-rows: 56px 1fr;
+            height: 100vh;
+            gap: 0;
+        }
+
+        /* --- Header --- */
+        .header {
+            grid-column: 1 / -1;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+        }
+
+        .header h1 { font-size: 16px; font-weight: 600; letter-spacing: 0.5px; }
+        .header h1 span { color: var(--accent-blue); }
+
+        .header-stats {
+            display: flex;
+            gap: 24px;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .header-stats .value {
+            color: var(--text-primary);
+            font-weight: 600;
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* --- Canvas Area --- */
+        .canvas-container {
+            position: relative;
+            background: var(--bg-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .canvas-wrapper { position: relative; }
+
+        canvas {
+            position: absolute;
+            top: 0; left: 0;
+            image-rendering: pixelated;
+        }
+
+        #grid-canvas { z-index: 1; }
+        #entity-canvas { z-index: 2; }
+        #overlay-canvas { z-index: 3; pointer-events: none; }
+
+        /* --- Sidebar --- */
+        .sidebar {
+            background: var(--bg-secondary);
+            border-left: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .panel { border-bottom: 1px solid var(--border); }
+
+        .panel-header {
+            padding: 10px 16px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-secondary);
+            background: var(--bg-tertiary);
+        }
+
+        .panel-body { padding: 10px 16px; }
+
+        /* Controls */
+        .controls { display: flex; gap: 6px; flex-wrap: wrap; }
+
+        .btn {
+            padding: 5px 12px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        .btn:hover { background: var(--border); }
+        .btn.primary { background: var(--accent-blue); border-color: var(--accent-blue); color: #fff; }
+        .btn.primary:hover { background: #3b87e0; }
+        .btn.danger { border-color: var(--accent-red); color: var(--accent-red); }
+        .btn.danger:hover { background: rgba(248, 113, 113, 0.15); }
+
+        .speed-control { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+        .speed-control label { font-size: 12px; color: var(--text-secondary); white-space: nowrap; }
+        .speed-control input[type="range"] { flex: 1; accent-color: var(--accent-blue); }
+        .speed-value { font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; min-width: 48px; text-align: right; }
+
+        /* --- Tabs --- */
+        .tab-bar {
+            display: flex;
+            background: var(--bg-tertiary);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 9px 8px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-secondary);
+            background: none;
+            border: none;
+            border-bottom: 2px solid transparent;
+            cursor: pointer;
+            transition: all 0.15s;
+            text-align: center;
+        }
+        .tab-btn:hover { color: var(--text-primary); background: rgba(255,255,255,0.03); }
+        .tab-btn.active { color: var(--accent-blue); border-bottom-color: var(--accent-blue); }
+
+        .tab-content {
+            display: none;
+            flex: 1;
+            overflow-y: auto;
+            min-height: 0;
+        }
+        .tab-content.active { display: flex; flex-direction: column; }
+
+        .tab-content::-webkit-scrollbar { width: 4px; }
+        .tab-content::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+        /* --- Entity list --- */
+        .entity-list { flex: 1; overflow-y: auto; min-height: 0; }
+        .entity-list::-webkit-scrollbar { width: 4px; }
+        .entity-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+        .entity-item {
+            display: grid;
+            grid-template-columns: 10px 1fr auto;
+            align-items: center;
+            gap: 8px;
+            padding: 5px 16px;
+            font-size: 12px;
+            border-bottom: 1px solid var(--bg-primary);
+            cursor: pointer;
+        }
+        .entity-item:hover { background: var(--bg-tertiary); }
+        .entity-item.selected { background: var(--bg-tertiary); border-left: 2px solid var(--accent-blue); }
+
+        .entity-dot { width: 10px; height: 10px; border-radius: 50%; }
+        .entity-info { display: flex; flex-direction: column; gap: 1px; }
+        .entity-name { font-weight: 600; font-size: 12px; }
+        .entity-detail { font-size: 10px; color: var(--text-secondary); }
+        .entity-hp { font-variant-numeric: tabular-nums; font-size: 11px; }
+
+        .hp-bar-container { width: 60px; display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
+        .hp-bar { width: 100%; height: 4px; background: var(--bg-primary); border-radius: 2px; overflow: hidden; }
+        .hp-bar-fill { height: 100%; border-radius: 2px; transition: width 0.2s ease; }
+
+        /* --- Inspect Sections --- */
+        .inspect-section {
+            padding: 10px 16px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .inspect-section-title {
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .inspect-header-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 6px;
+        }
+
+        .inspect-title { font-size: 14px; font-weight: 700; }
+
+        .inspect-close {
+            background: none; border: none;
+            color: var(--text-secondary);
+            cursor: pointer; font-size: 16px; padding: 0 4px;
+        }
+        .inspect-close:hover { color: var(--text-primary); }
+
+        .inspect-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 5px 14px;
+        }
+
+        .inspect-field { display: flex; flex-direction: column; gap: 1px; }
+        .inspect-label {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-secondary);
+        }
+        .inspect-value {
+            font-size: 12px;
+            font-weight: 600;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .inspect-hp-bar { grid-column: 1 / -1; margin-top: 4px; }
+        .inspect-hp-bar .hp-bar { height: 6px; }
+
+        /* Equipment display */
+        .equip-slot {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 4px 0;
+            font-size: 12px;
+        }
+        .equip-slot-label {
+            width: 60px;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-secondary);
+            flex-shrink: 0;
+        }
+        .equip-slot-value {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        .equip-slot-value.empty { color: var(--text-secondary); font-style: italic; font-weight: 400; }
+
+        /* Inventory items */
+        .inv-item {
+            display: inline-block;
+            padding: 2px 6px;
+            margin: 2px;
+            font-size: 10px;
+            font-weight: 500;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 3px;
+            color: var(--text-secondary);
+        }
+
+        /* Goals */
+        .goal-item {
+            padding: 3px 0;
+            font-size: 11px;
+            color: var(--text-primary);
+            display: flex;
+            align-items: baseline;
+            gap: 6px;
+        }
+        .goal-bullet {
+            color: var(--accent-yellow);
+            font-size: 9px;
+            flex-shrink: 0;
+        }
+
+        /* Memory stats */
+        .memory-stat {
+            display: flex;
+            justify-content: space-between;
+            padding: 3px 0;
+            font-size: 11px;
+        }
+        .memory-stat-label { color: var(--text-secondary); }
+        .memory-stat-value { font-weight: 600; font-variant-numeric: tabular-nums; }
+
+        /* Remembered entities */
+        .mem-entity {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 3px 0;
+            font-size: 11px;
+        }
+        .mem-entity-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+        .mem-entity.stale { opacity: 0.5; }
+
+        /* No selection placeholder */
+        .no-selection {
+            padding: 30px 16px;
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 12px;
+        }
+
+        /* Event log */
+        .event-log { flex: 1; overflow-y: auto; min-height: 0; }
+        .event-log::-webkit-scrollbar { width: 4px; }
+        .event-log::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+        .event-item {
+            padding: 3px 16px;
+            font-size: 11px;
+            font-family: 'Cascadia Code', 'Fira Code', monospace;
+            color: var(--text-secondary);
+            border-bottom: 1px solid var(--bg-primary);
+            line-height: 1.4;
+        }
+        .event-item .tick-badge { color: var(--accent-blue); font-weight: 600; }
+        .event-item.ATTACK { color: var(--accent-red); }
+        .event-item.MOVE { color: var(--text-secondary); }
+        .event-item.REST { color: var(--accent-green); }
+
+        /* Legend */
+        .legend { display: flex; gap: 12px; flex-wrap: wrap; padding: 8px 16px; }
+        .legend-item { display: flex; align-items: center; gap: 5px; font-size: 10px; color: var(--text-secondary); }
+        .legend-color { width: 10px; height: 10px; border-radius: 3px; }
+
+        /* XP bar */
+        .xp-bar { width: 100%; height: 4px; background: var(--bg-primary); border-radius: 2px; overflow: hidden; margin-top: 2px; }
+        .xp-bar-fill { height: 100%; border-radius: 2px; background: var(--accent-purple); }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <!-- Header -->
+        <header class="header">
+            <h1><span>&#9876;</span> RPG Simulation Engine</h1>
+            <div class="header-stats">
+                <div>Tick: <span class="value" id="hud-tick">0</span></div>
+                <div>Alive: <span class="value" id="hud-alive">0</span></div>
+                <div>Spawned: <span class="value" id="hud-spawned">0</span></div>
+                <div>Deaths: <span class="value" id="hud-deaths">0</span></div>
+                <div id="hud-status" style="color: var(--accent-yellow);">CONNECTING</div>
+            </div>
+        </header>
+
+        <!-- Canvas -->
+        <div class="canvas-container" id="canvas-container">
+            <div class="canvas-wrapper" id="canvas-wrapper">
+                <canvas id="grid-canvas"></canvas>
+                <canvas id="entity-canvas"></canvas>
+                <canvas id="overlay-canvas"></canvas>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <!-- Controls (always visible) -->
+            <div class="panel">
+                <div class="panel-body" style="padding:8px 16px;">
+                    <div class="controls">
+                        <button class="btn primary" id="btn-start" onclick="api('start')">Start</button>
+                        <button class="btn" id="btn-pause" onclick="api('pause')">Pause</button>
+                        <button class="btn" id="btn-resume" onclick="api('resume')">Resume</button>
+                        <button class="btn" id="btn-step" onclick="api('step')">Step</button>
+                        <button class="btn danger" id="btn-reset" onclick="api('reset')">Reset</button>
+                    </div>
+                    <div class="speed-control">
+                        <label>Speed</label>
+                        <input type="range" id="speed-slider" min="1" max="60" value="20" step="1">
+                        <span class="speed-value" id="speed-label">20 tps</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab Bar -->
+            <div class="tab-bar">
+                <button class="tab-btn active" data-tab="tab-info" onclick="switchTab('tab-info', this)">Info</button>
+                <button class="tab-btn" data-tab="tab-inspect" onclick="switchTab('tab-inspect', this)">Inspect</button>
+                <button class="tab-btn" data-tab="tab-events" onclick="switchTab('tab-events', this)">Events</button>
+            </div>
+
+            <!-- Tab: Info -->
+            <div class="tab-content active" id="tab-info">
+                <!-- Legend -->
+                <div class="legend">
+                    <div class="legend-item"><div class="legend-color" style="background:#4a9eff"></div>Hero</div>
+                    <div class="legend-item"><div class="legend-color" style="background:#f87171"></div>Goblin</div>
+                    <div class="legend-item"><div class="legend-color" style="background:#fb923c"></div>Scout</div>
+                    <div class="legend-item"><div class="legend-color" style="background:#dc2626"></div>Warrior</div>
+                    <div class="legend-item"><div class="legend-color" style="background:#fbbf24"></div>Chief</div>
+                    <div class="legend-item"><div class="legend-color" style="background:#2d4a3e"></div>Town</div>
+                    <div class="legend-item"><div class="legend-color" style="background:#2d3a4a"></div>Sanctuary</div>
+                    <div class="legend-item"><div class="legend-color" style="background:#4a2d2d"></div>Camp</div>
+                </div>
+                <!-- Entity List -->
+                <div class="panel-header">Entities (<span id="entity-count">0</span>)</div>
+                <div class="entity-list" id="entity-list"></div>
+            </div>
+
+            <!-- Tab: Inspect -->
+            <div class="tab-content" id="tab-inspect">
+                <div id="inspect-content">
+                    <div class="no-selection" id="inspect-placeholder">Click an entity on the map or list to inspect it</div>
+                </div>
+            </div>
+
+            <!-- Tab: Events -->
+            <div class="tab-content" id="tab-events">
+                <div class="event-log" id="event-log"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================
+        // Configuration
+        // ============================
+        const API_BASE = '/api/v1';
+        const POLL_MS = 80;
+        const CELL_SIZE = 16;
+
+        // ============================
+        // State
+        // ============================
+        let mapData = null;
+        let lastTick = 0;
+        let gridDrawn = false;
+        let currentEntities = [];
+        let selectedEntityId = null;
+
+        // ============================
+        // Canvas setup
+        // ============================
+        const gridCanvas = document.getElementById('grid-canvas');
+        const entityCanvas = document.getElementById('entity-canvas');
+        const overlayCanvas = document.getElementById('overlay-canvas');
+        const gridCtx = gridCanvas.getContext('2d');
+        const entityCtx = entityCanvas.getContext('2d');
+        const overlayCtx = overlayCanvas.getContext('2d');
+
+        // ============================
+        // Color palette
+        // ============================
+        const TILE_COLORS = {
+            0: '#1a1d27', // FLOOR
+            1: '#555b73', // WALL
+            2: '#1e3a5f', // WATER
+            3: '#2d4a3e', // TOWN
+            4: '#4a2d2d', // CAMP
+            5: '#2d3a4a', // SANCTUARY
+        };
+
+        const TILE_COLORS_DIM = {
+            0: '#12141b', 1: '#3a3e50', 2: '#162a42',
+            3: '#1f3329', 4: '#331f1f', 5: '#1f2833',
+        };
+
+        const KIND_COLORS = {
+            hero: '#4a9eff',
+            goblin: '#f87171',
+            goblin_scout: '#fb923c',
+            goblin_warrior: '#dc2626',
+            goblin_chief: '#fbbf24',
+        };
+
+        const STATE_COLORS = {
+            IDLE: '#8b8fa8', WANDER: '#34d399', HUNT: '#fbbf24',
+            COMBAT: '#f87171', FLEE: '#a78bfa', RETURN_TO_TOWN: '#60a5fa',
+            RESTING_IN_TOWN: '#22d3ee', RETURN_TO_CAMP: '#f97316',
+            GUARD_CAMP: '#ef4444', LOOTING: '#a3e635',
+        };
+
+        const TIER_NAMES = ['Basic', 'Scout', 'Warrior', 'Elite'];
+
+        const ITEM_DISPLAY = {
+            rusty_dagger: '\u2694 Rusty Dagger', iron_sword: '\u2694 Iron Sword',
+            goblin_blade: '\u2694 Goblin Blade', chief_axe: '\u2694 Chief Axe',
+            leather_vest: '\u{1F6E1} Leather Vest', chainmail: '\u{1F6E1} Chainmail',
+            goblin_shield: '\u{1F6E1} Goblin Shield', chief_plate: '\u{1F6E1} Chief Plate',
+            speed_ring: '\u{1F48D} Speed Ring', lucky_charm: '\u{1F48E} Lucky Charm',
+            small_hp_potion: '\u2764 Small Potion', medium_hp_potion: '\u2764 Med Potion',
+            large_hp_potion: '\u2764 Large Potion',
+        };
+
+        function itemName(id) { return ITEM_DISPLAY[id] || id; }
+
+        // ============================
+        // Tab system
+        // ============================
+        function switchTab(tabId, btn) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            btn.classList.add('active');
+        }
+
+        // ============================
+        // API helpers
+        // ============================
+        async function fetchJSON(path) {
+            const res = await fetch(API_BASE + path);
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            return res.json();
+        }
+
+        async function api(action) {
+            try { await fetch(`${API_BASE}/control/${action}`, { method: 'POST' }); }
+            catch (e) { console.error('Control error:', e); }
+        }
+
+        // Speed slider
+        const speedSlider = document.getElementById('speed-slider');
+        const speedLabel = document.getElementById('speed-label');
+        speedSlider.addEventListener('input', async () => {
+            const tps = parseInt(speedSlider.value);
+            speedLabel.textContent = `${tps} tps`;
+            try { await fetch(`${API_BASE}/speed?tps=${tps}`, { method: 'POST' }); }
+            catch (e) { /* ignore */ }
+        });
+
+        // ============================
+        // Click-to-inspect (canvas)
+        // ============================
+        entityCanvas.addEventListener('click', (evt) => {
+            const rect = entityCanvas.getBoundingClientRect();
+            const mx = evt.clientX - rect.left;
+            const my = evt.clientY - rect.top;
+            const gx = Math.floor(mx / CELL_SIZE);
+            const gy = Math.floor(my / CELL_SIZE);
+            const hit = currentEntities.find(e => e.x === gx && e.y === gy);
+            if (hit) { selectEntity(hit.id); } else { deselectEntity(); }
+        });
+
+        function selectEntity(id) {
+            selectedEntityId = id;
+            // Auto-switch to inspect tab
+            switchTab('tab-inspect', document.querySelector('[data-tab="tab-inspect"]'));
+            updateInspectPanel();
+            drawOverlay();
+        }
+
+        function deselectEntity() {
+            selectedEntityId = null;
+            document.getElementById('inspect-content').innerHTML =
+                '<div class="no-selection">Click an entity on the map or list to inspect it</div>';
+            clearOverlay();
+        }
+
+        // ============================
+        // Inspect panel (dynamic HTML)
+        // ============================
+        function updateInspectPanel() {
+            const container = document.getElementById('inspect-content');
+            if (selectedEntityId === null) {
+                container.innerHTML = '<div class="no-selection">Click an entity on the map or list to inspect it</div>';
+                return;
+            }
+            const ent = currentEntities.find(e => e.id === selectedEntityId);
+            if (!ent) {
+                deselectEntity();
+                return;
+            }
+
+            const color = KIND_COLORS[ent.kind] || '#888';
+            const stateColor = STATE_COLORS[ent.state] || '#888';
+            const hpRatio = Math.max(0, ent.hp / ent.max_hp);
+            const hpColor = hpRatio > 0.5 ? '#34d399' : hpRatio > 0.25 ? '#fbbf24' : '#f87171';
+            const xpRatio = ent.xp_to_next > 0 ? Math.min(1, ent.xp / ent.xp_to_next) : 0;
+            const tierName = ent.kind === 'hero' ? '' : ` [${TIER_NAMES[ent.tier] || 'Basic'}]`;
+            const terrainCount = ent.terrain_memory ? Object.keys(ent.terrain_memory).length : 0;
+            const totalTiles = mapData ? mapData.width * mapData.height : 1024;
+            const explorePercent = ((terrainCount / totalTiles) * 100).toFixed(1);
+
+            let html = '';
+
+            // === Header ===
+            html += `<div class="inspect-section">
+                <div class="inspect-header-row">
+                    <span class="inspect-title">
+                        <span style="color:${color}">#${ent.id}</span> ${ent.kind}${tierName}
+                        <span style="color:#aaa;font-size:12px">Lv${ent.level}</span>
+                    </span>
+                    <button class="inspect-close" onclick="deselectEntity()">&times;</button>
+                </div>
+                <div class="inspect-grid">
+                    <div class="inspect-field">
+                        <span class="inspect-label">Position</span>
+                        <span class="inspect-value">(${ent.x}, ${ent.y})</span>
+                    </div>
+                    <div class="inspect-field">
+                        <span class="inspect-label">State</span>
+                        <span class="inspect-value" style="color:${stateColor}">${ent.state}</span>
+                    </div>
+                    <div class="inspect-field">
+                        <span class="inspect-label">ATK / DEF</span>
+                        <span class="inspect-value">${ent.atk} / ${ent.def || 0}</span>
+                    </div>
+                    <div class="inspect-field">
+                        <span class="inspect-label">SPD / LUCK</span>
+                        <span class="inspect-value">${ent.spd} / ${ent.luck}</span>
+                    </div>
+                    <div class="inspect-field">
+                        <span class="inspect-label">CRIT / EVA</span>
+                        <span class="inspect-value">${(ent.crit_rate*100).toFixed(0)}% / ${(ent.evasion*100).toFixed(0)}%</span>
+                    </div>
+                    <div class="inspect-field">
+                        <span class="inspect-label">Gold</span>
+                        <span class="inspect-value" style="color:var(--accent-yellow)">${ent.gold}</span>
+                    </div>
+                    <div class="inspect-hp-bar">
+                        <div style="display:flex;justify-content:space-between;margin-bottom:2px">
+                            <span class="inspect-label">HP</span>
+                            <span class="inspect-value" style="font-size:11px">${ent.hp} / ${ent.max_hp}</span>
+                        </div>
+                        <div class="hp-bar"><div class="hp-bar-fill" style="width:${hpRatio*100}%;background:${hpColor}"></div></div>
+                    </div>
+                    <div class="inspect-hp-bar">
+                        <div style="display:flex;justify-content:space-between;margin-bottom:2px">
+                            <span class="inspect-label">XP</span>
+                            <span class="inspect-value" style="font-size:11px">${ent.xp} / ${ent.xp_to_next}</span>
+                        </div>
+                        <div class="xp-bar"><div class="xp-bar-fill" style="width:${xpRatio*100}%"></div></div>
+                    </div>
+                </div>
+            </div>`;
+
+            // === Equipment ===
+            html += `<div class="inspect-section">
+                <div class="inspect-section-title">Equipment</div>
+                <div class="equip-slot">
+                    <span class="equip-slot-label">Weapon</span>
+                    <span class="equip-slot-value ${ent.weapon ? '' : 'empty'}">${ent.weapon ? itemName(ent.weapon) : '-- empty --'}</span>
+                </div>
+                <div class="equip-slot">
+                    <span class="equip-slot-label">Armor</span>
+                    <span class="equip-slot-value ${ent.armor ? '' : 'empty'}">${ent.armor ? itemName(ent.armor) : '-- empty --'}</span>
+                </div>
+                <div class="equip-slot">
+                    <span class="equip-slot-label">Accessory</span>
+                    <span class="equip-slot-value ${ent.accessory ? '' : 'empty'}">${ent.accessory ? itemName(ent.accessory) : '-- empty --'}</span>
+                </div>`;
+            // Inventory items
+            if (ent.inventory_items && ent.inventory_items.length > 0) {
+                html += `<div style="margin-top:6px"><span class="inspect-label">Bag (${ent.inventory_count} items)</span><div style="margin-top:4px">`;
+                for (const iid of ent.inventory_items) {
+                    html += `<span class="inv-item">${itemName(iid)}</span>`;
+                }
+                html += `</div></div>`;
+            } else {
+                html += `<div style="margin-top:4px;font-size:11px;color:var(--text-secondary)">Bag is empty</div>`;
+            }
+            html += `</div>`;
+
+            // === Goals ===
+            if (ent.goals && ent.goals.length > 0) {
+                html += `<div class="inspect-section">
+                    <div class="inspect-section-title">Goals & Thoughts</div>`;
+                for (const g of ent.goals) {
+                    html += `<div class="goal-item"><span class="goal-bullet">\u25C6</span> ${g}</div>`;
+                }
+                html += `</div>`;
+            }
+
+            // === Memory ===
+            html += `<div class="inspect-section">
+                <div class="inspect-section-title">Memory & Vision</div>
+                <div class="memory-stat">
+                    <span class="memory-stat-label">Vision Range</span>
+                    <span class="memory-stat-value">${ent.vision_range} tiles</span>
+                </div>
+                <div class="memory-stat">
+                    <span class="memory-stat-label">Tiles Explored</span>
+                    <span class="memory-stat-value">${terrainCount} / ${totalTiles} (${explorePercent}%)</span>
+                </div>
+                <div class="memory-stat">
+                    <span class="memory-stat-label">Entities Remembered</span>
+                    <span class="memory-stat-value">${ent.entity_memory ? ent.entity_memory.length : 0}</span>
+                </div>`;
+            // Remembered entities list
+            if (ent.entity_memory && ent.entity_memory.length > 0) {
+                html += `<div style="margin-top:6px">`;
+                const sorted = [...ent.entity_memory].sort((a, b) => b.tick - a.tick);
+                for (const em of sorted.slice(0, 8)) {
+                    const emColor = KIND_COLORS[em.kind] || '#888';
+                    const stale = !em.visible ? ' stale' : '';
+                    const vis = em.visible ? 'visible' : 'last seen';
+                    html += `<div class="mem-entity${stale}">
+                        <div class="mem-entity-dot" style="background:${emColor}"></div>
+                        <span>#${em.id} ${em.kind} (${em.x},${em.y})</span>
+                        <span style="color:var(--text-secondary);font-size:10px;margin-left:auto">${vis}</span>
+                    </div>`;
+                }
+                if (sorted.length > 8) {
+                    html += `<div style="font-size:10px;color:var(--text-secondary);padding:2px 0">...and ${sorted.length - 8} more</div>`;
+                }
+                html += `</div>`;
+            }
+            html += `</div>`;
+
+            container.innerHTML = html;
+        }
+
+        // ============================
+        // Vision & Memory overlay (Layer 3)
+        // ============================
+        function clearOverlay() {
+            if (overlayCanvas.width > 0) {
+                overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+            }
+        }
+
+        function drawOverlay() {
+            if (!mapData) return;
+            const ent = currentEntities.find(e => e.id === selectedEntityId);
+            if (!ent) { clearOverlay(); return; }
+
+            const w = overlayCanvas.width;
+            const h = overlayCanvas.height;
+            overlayCtx.clearRect(0, 0, w, h);
+
+            const vr = ent.vision_range || 6;
+            const mem = ent.terrain_memory || {};
+
+            // Build sets for fast lookup
+            const visibleSet = new Set();
+            for (let dy = -vr; dy <= vr; dy++) {
+                for (let dx = -vr; dx <= vr; dx++) {
+                    if (Math.abs(dx) + Math.abs(dy) > vr) continue;
+                    const tx = ent.x + dx;
+                    const ty = ent.y + dy;
+                    if (tx >= 0 && tx < mapData.width && ty >= 0 && ty < mapData.height) {
+                        visibleSet.add(`${tx},${ty}`);
+                    }
+                }
+            }
+
+            const memSet = new Set(Object.keys(mem));
+
+            // Draw overlay: darken tiles not in vision, dim tiles in memory, dark for unknown
+            for (let y = 0; y < mapData.height; y++) {
+                for (let x = 0; x < mapData.width; x++) {
+                    const key = `${x},${y}`;
+                    if (visibleSet.has(key)) {
+                        // In vision — no overlay (clear/bright)
+                        continue;
+                    } else if (memSet.has(key)) {
+                        // In memory but not visible — dim overlay
+                        overlayCtx.fillStyle = 'rgba(0, 0, 0, 0.55)';
+                        overlayCtx.fillRect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+                        // Draw remembered tile tint
+                        const tile = mem[key];
+                        const dimColor = TILE_COLORS_DIM[tile] || TILE_COLORS_DIM[0];
+                        overlayCtx.fillStyle = dimColor + '40';
+                        overlayCtx.fillRect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+                    } else {
+                        // Unknown — dark fog
+                        overlayCtx.fillStyle = 'rgba(0, 0, 0, 0.82)';
+                        overlayCtx.fillRect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+                    }
+                }
+            }
+
+            // Draw vision range border (faint blue outline around visible area)
+            overlayCtx.strokeStyle = 'rgba(74, 158, 255, 0.3)';
+            overlayCtx.lineWidth = 1;
+            for (const key of visibleSet) {
+                const [vx, vy] = key.split(',').map(Number);
+                const px = vx * CELL_SIZE;
+                const py = vy * CELL_SIZE;
+                // Check each edge: if neighbor is not visible, draw border
+                if (!visibleSet.has(`${vx},${vy-1}`)) { overlayCtx.beginPath(); overlayCtx.moveTo(px, py); overlayCtx.lineTo(px+CELL_SIZE, py); overlayCtx.stroke(); }
+                if (!visibleSet.has(`${vx},${vy+1}`)) { overlayCtx.beginPath(); overlayCtx.moveTo(px, py+CELL_SIZE); overlayCtx.lineTo(px+CELL_SIZE, py+CELL_SIZE); overlayCtx.stroke(); }
+                if (!visibleSet.has(`${vx-1},${vy}`)) { overlayCtx.beginPath(); overlayCtx.moveTo(px, py); overlayCtx.lineTo(px, py+CELL_SIZE); overlayCtx.stroke(); }
+                if (!visibleSet.has(`${vx+1},${vy}`)) { overlayCtx.beginPath(); overlayCtx.moveTo(px+CELL_SIZE, py); overlayCtx.lineTo(px+CELL_SIZE, py+CELL_SIZE); overlayCtx.stroke(); }
+            }
+
+            // Draw remembered entities that are NOT currently visible (ghost markers)
+            if (ent.entity_memory) {
+                for (const em of ent.entity_memory) {
+                    if (em.visible) continue; // currently visible entities are drawn normally
+                    const ecx = em.x * CELL_SIZE + CELL_SIZE / 2;
+                    const ecy = em.y * CELL_SIZE + CELL_SIZE / 2;
+                    const emColor = KIND_COLORS[em.kind] || '#888';
+                    overlayCtx.beginPath();
+                    overlayCtx.arc(ecx, ecy, CELL_SIZE * 0.25, 0, Math.PI * 2);
+                    overlayCtx.fillStyle = emColor + '55';
+                    overlayCtx.fill();
+                    overlayCtx.strokeStyle = emColor + '88';
+                    overlayCtx.lineWidth = 1;
+                    overlayCtx.setLineDash([2, 2]);
+                    overlayCtx.stroke();
+                    overlayCtx.setLineDash([]);
+                    // Question mark
+                    overlayCtx.fillStyle = emColor + 'aa';
+                    overlayCtx.font = '7px monospace';
+                    overlayCtx.textAlign = 'center';
+                    overlayCtx.fillText('?', ecx, ecy + 2.5);
+                }
+            }
+        }
+
+        // ============================
+        // Draw grid (Layer 1 — once)
+        // ============================
+        function drawGrid(map) {
+            const w = map.width * CELL_SIZE;
+            const h = map.height * CELL_SIZE;
+
+            gridCanvas.width = w;
+            gridCanvas.height = h;
+            entityCanvas.width = w;
+            entityCanvas.height = h;
+            overlayCanvas.width = w;
+            overlayCanvas.height = h;
+
+            const wrapper = document.getElementById('canvas-wrapper');
+            wrapper.style.width = w + 'px';
+            wrapper.style.height = h + 'px';
+
+            gridCtx.clearRect(0, 0, w, h);
+
+            for (let y = 0; y < map.height; y++) {
+                for (let x = 0; x < map.width; x++) {
+                    const tile = map.grid[y][x];
+                    gridCtx.fillStyle = TILE_COLORS[tile] || TILE_COLORS[0];
+                    gridCtx.fillRect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+                }
+            }
+
+            // Grid lines (subtle)
+            gridCtx.strokeStyle = 'rgba(255,255,255,0.03)';
+            gridCtx.lineWidth = 0.5;
+            for (let x = 0; x <= map.width; x++) {
+                gridCtx.beginPath();
+                gridCtx.moveTo(x * CELL_SIZE, 0);
+                gridCtx.lineTo(x * CELL_SIZE, h);
+                gridCtx.stroke();
+            }
+            for (let y = 0; y <= map.height; y++) {
+                gridCtx.beginPath();
+                gridCtx.moveTo(0, y * CELL_SIZE);
+                gridCtx.lineTo(w, y * CELL_SIZE);
+                gridCtx.stroke();
+            }
+        }
+
+        // ============================
+        // Draw entities (Layer 2 — every poll)
+        // ============================
+        function drawEntities(entities) {
+            const w = entityCanvas.width;
+            const h = entityCanvas.height;
+            entityCtx.clearRect(0, 0, w, h);
+
+            for (const ent of entities) {
+                const cx = ent.x * CELL_SIZE + CELL_SIZE / 2;
+                const cy = ent.y * CELL_SIZE + CELL_SIZE / 2;
+                const isHero = ent.kind === 'hero';
+                const isSelected = ent.id === selectedEntityId;
+                const color = KIND_COLORS[ent.kind] || '#888';
+                const stateColor = STATE_COLORS[ent.state] || '#888';
+
+                if (isHero) {
+                    const size = CELL_SIZE * 0.45;
+                    entityCtx.save();
+                    entityCtx.shadowColor = '#fbbf24';
+                    entityCtx.shadowBlur = 6;
+                    entityCtx.beginPath();
+                    entityCtx.moveTo(cx, cy - size);
+                    entityCtx.lineTo(cx + size, cy);
+                    entityCtx.lineTo(cx, cy + size);
+                    entityCtx.lineTo(cx - size, cy);
+                    entityCtx.closePath();
+                    entityCtx.fillStyle = color;
+                    entityCtx.fill();
+                    entityCtx.restore();
+
+                    entityCtx.beginPath();
+                    entityCtx.moveTo(cx, cy - size - 1.5);
+                    entityCtx.lineTo(cx + size + 1.5, cy);
+                    entityCtx.lineTo(cx, cy + size + 1.5);
+                    entityCtx.lineTo(cx - size - 1.5, cy);
+                    entityCtx.closePath();
+                    entityCtx.strokeStyle = stateColor;
+                    entityCtx.lineWidth = 1.5;
+                    entityCtx.stroke();
+                } else {
+                    const radius = CELL_SIZE * 0.35;
+                    entityCtx.beginPath();
+                    entityCtx.arc(cx, cy, radius, 0, Math.PI * 2);
+                    entityCtx.fillStyle = color;
+                    entityCtx.fill();
+                    entityCtx.beginPath();
+                    entityCtx.arc(cx, cy, radius + 1.5, 0, Math.PI * 2);
+                    entityCtx.strokeStyle = stateColor;
+                    entityCtx.lineWidth = 1.5;
+                    entityCtx.stroke();
+                }
+
+                if (isSelected) {
+                    entityCtx.beginPath();
+                    entityCtx.arc(cx, cy, CELL_SIZE * 0.55, 0, Math.PI * 2);
+                    entityCtx.strokeStyle = '#fff';
+                    entityCtx.lineWidth = 2;
+                    entityCtx.setLineDash([3, 3]);
+                    entityCtx.stroke();
+                    entityCtx.setLineDash([]);
+                }
+
+                // HP bar
+                const barW = CELL_SIZE - 2;
+                const barH = 2;
+                const barX = ent.x * CELL_SIZE + 1;
+                const barY = ent.y * CELL_SIZE - 4;
+                const hpRatio = Math.max(0, ent.hp / ent.max_hp);
+                entityCtx.fillStyle = 'rgba(0,0,0,0.6)';
+                entityCtx.fillRect(barX, barY, barW, barH);
+                const hpColor = hpRatio > 0.5 ? '#34d399' : hpRatio > 0.25 ? '#fbbf24' : '#f87171';
+                entityCtx.fillStyle = hpColor;
+                entityCtx.fillRect(barX, barY, barW * hpRatio, barH);
+
+                // ID label
+                entityCtx.fillStyle = isHero ? '#fff' : 'rgba(255,255,255,0.7)';
+                entityCtx.font = isHero ? 'bold 8px monospace' : '8px monospace';
+                entityCtx.textAlign = 'center';
+                entityCtx.fillText(`${ent.id}`, cx, cy + 3);
+            }
+        }
+
+        // ============================
+        // Update sidebar lists
+        // ============================
+        function updateEntityList(entities) {
+            const list = document.getElementById('entity-list');
+            document.getElementById('entity-count').textContent = entities.length;
+
+            const sorted = [...entities].sort((a, b) => {
+                if (a.kind === 'hero' && b.kind !== 'hero') return -1;
+                if (a.kind !== 'hero' && b.kind === 'hero') return 1;
+                return a.id - b.id;
+            });
+            let html = '';
+            for (const e of sorted) {
+                const color = KIND_COLORS[e.kind] || '#888';
+                const hpRatio = Math.max(0, e.hp / e.max_hp);
+                const hpColor = hpRatio > 0.5 ? 'var(--accent-green)' : hpRatio > 0.25 ? 'var(--accent-yellow)' : 'var(--accent-red)';
+                const sel = e.id === selectedEntityId ? ' selected' : '';
+                html += `<div class="entity-item${sel}" onclick="selectEntity(${e.id})">
+                    <div class="entity-dot" style="background:${color}"></div>
+                    <div class="entity-info">
+                        <div class="entity-name">#${e.id} ${e.kind} <span style="color:var(--text-secondary);font-size:10px">Lv${e.level}</span></div>
+                        <div class="entity-detail">(${e.x},${e.y}) ${e.state}</div>
+                    </div>
+                    <div class="hp-bar-container">
+                        <span class="entity-hp">${e.hp}/${e.max_hp}</span>
+                        <div class="hp-bar"><div class="hp-bar-fill" style="width:${hpRatio*100}%;background:${hpColor}"></div></div>
+                    </div>
+                </div>`;
+            }
+            list.innerHTML = html;
+        }
+
+        function updateEventLog(events) {
+            const log = document.getElementById('event-log');
+            const recent = events.slice(-100);
+            let html = '';
+            for (let i = recent.length - 1; i >= 0; i--) {
+                const ev = recent[i];
+                html += `<div class="event-item ${ev.category}">
+                    <span class="tick-badge">[${ev.tick}]</span> ${ev.message}
+                </div>`;
+            }
+            log.innerHTML = html;
+        }
+
+        // ============================
+        // Main poll loop
+        // ============================
+        async function init() {
+            try {
+                mapData = await fetchJSON('/map');
+                drawGrid(mapData);
+                gridDrawn = true;
+                document.getElementById('hud-status').textContent = 'RUNNING';
+                document.getElementById('hud-status').style.color = 'var(--accent-green)';
+            } catch (e) {
+                console.error('Failed to fetch map:', e);
+                setTimeout(init, 1000);
+                return;
+            }
+            pollLoop();
+        }
+
+        async function pollLoop() {
+            try {
+                const [state, stats] = await Promise.all([
+                    fetchJSON(`/state?since_tick=${Math.max(0, lastTick - 5)}`),
+                    fetchJSON('/stats'),
+                ]);
+
+                lastTick = state.tick;
+                currentEntities = state.entities;
+
+                // HUD
+                document.getElementById('hud-tick').textContent = state.tick;
+                document.getElementById('hud-alive').textContent = state.alive_count;
+                document.getElementById('hud-spawned').textContent = stats.total_spawned;
+                document.getElementById('hud-deaths').textContent = stats.total_deaths;
+
+                const statusEl = document.getElementById('hud-status');
+                if (!stats.running) {
+                    statusEl.textContent = 'STOPPED';
+                    statusEl.style.color = 'var(--accent-red)';
+                } else if (stats.paused) {
+                    statusEl.textContent = 'PAUSED';
+                    statusEl.style.color = 'var(--accent-yellow)';
+                } else {
+                    statusEl.textContent = 'RUNNING';
+                    statusEl.style.color = 'var(--accent-green)';
+                }
+
+                // Draw
+                drawEntities(currentEntities);
+                updateEntityList(currentEntities);
+                updateInspectPanel();
+                drawOverlay();
+                if (state.events.length > 0) {
+                    updateEventLog(state.events);
+                }
+            } catch (e) {
+                // server gone — keep retrying
+            }
+
+            setTimeout(pollLoop, POLL_MS);
+        }
+
+        // Boot
+        init();
+    </script>
+</body>
+</html>
