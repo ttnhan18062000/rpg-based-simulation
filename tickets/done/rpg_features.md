@@ -1,0 +1,15 @@
+- add RPG attributes like STR, DEF, AGI, INT, etc. (deep), and make it affect the damage and defense (fomulas)
+- level up now is based on experience, make it affect the attributes (attribute cap, which is max value of attribute can increase in base, not count from external sources like equipments or potions)
+- level up also gain minor increase in base attributes instantly, but much less than the attribute cap (i.e., 5 attributes directly but 30 in cap, so it can be used to train)
+- entities gain attribute score when acts (moving increase attributes related to speed and endurance, attacking increase attributes related to strength and agility, etc.) but at very very slow.
+- add more stats like hp, stamina and update the current actions based on it
+- speed should affect how often an entity acts
+- add damage formulas (complex)
+- add classes and skills for all entities, think deep about this, an entities have two different kind of skills: class skills and race skills
+- skills can learn by spending (huge) money at the classes' buildings in the town.
+- entity may breakthough at enough mastery (main), attributes, levels and material (i.e., swordman -> swordmaster)
+- mastery can be both mastery on the class, and master on the skill, both increase things related to it (more effective of the skill, or unlock new skills), gain when using the skill
+- classes provide different kind of attributes (cap) and talents (at breakthough levels)
+- make enemy stronger, stats generation formulas
+- also add all the neccessary sub-tabs in the inspect panel for these features
+-> DONE

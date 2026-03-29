@@ -1,0 +1,79 @@
+# Epic 17: Multi-Hero & Permadeath (Phase 2)
+- [x] Implement `world_day` properties natively mapping scaled formulas into `models/schemas`.
+- [x] Add `raid_interval_days` & `raid_base_strength` parameters to configuration constants.
+- [x] Modify `generator.py::spawn_race` to inject `world_age_mult` scalars derived from `world_day`.
+- [x] Build a Camp Reinforcement routine iterating local instances on a 500-tick loop.
+- [x] Hook Faction `RaidAI` into `CalamitySystem` dispatchers on interval thresholds.
+- [x] Verify test suite correctly calculates Day 400 2x stats and automated raid spawning logic.
+
+# Regression Fixes (TCK-20260321-FIXTESTS)
+- [x] Fix `Entity.copy()` shallow copy bug (AssertionError in `test_equipment_enhance`).
+- [x] Add missing `logging` import in `src/systems/generator.py` (NameError in `test_calamity_system`).
+- [x] Stabilize `test_chaos_mode_resilience` termination conditions.
+- [x] Initialize E2E production stack (RabbitMQ/Kafka) via Docker and verify `test_message_reliability`.
+- [x] Confirm 100% green pass on `pytest tests/ -v`.
+- [x] Fix Phase 1 `AttributeError` regressions by updating integration suite accessors.
+- [x] Harden RabbitMQ client with 20-attempt connection retry logic (127.0.0.1).
+- [x] Harden Kafka client with 20-attempt connection retry logic (127.0.0.1).
+- [x] Inject `job: docker` labels in `promtail-config.yml` for unified LogQL queries.
+- [x] Inject `job: docker` labels in `promtail-config.yml` for unified LogQL queries.
+- [x] Investigate Performance Bottleneck (100% CPU, 0.4 TPS)
+    - [x] Profile simulation tick phases using Prometheus metrics
+    - [x] Pinpoint `collect` phase and worker dispatch as the bottleneck
+    - [x] Audit `Entity.copy()` and `AIBrain.decide` for O(N) complexity issues
+    - [x] Benchmark grid serialization and frontier scanning
+- [x] Restore Simulation Performance (Restoring TPS > 10)
+    - [x] Profile performance using `cProfile` and `profile_tick.py`
+    - [x] Identify root causes of 100% CPU usage
+    - [x] Implement Grid data structure optimization (`bytearray` + `Material` cache)
+    - [x] Implement Entity state copy optimization (`model_copy(deep=False)`)
+    - [x] Implement AI Task Batching (Engine <-> Worker communication)
+    - [x] Optimize AI Perception scan radius for non-heroes
+    - [x] Verify performance restoration using benchmarks and stats
+- [x] Verify Performance Restoration
+    - [x] Run simulation and monitor TPS (target > 10)
+    - [x] Verify CPU usage reduction in `backend` container
+    - [x] Ensure AI behavior remains correct after optimizations
+- [x] Binary WebSocket Protocol (BWS) Implementation
+    - [x] Implement High-Performance Binary WebSocket Protocol (BWS)
+    - [x] Research & Design Binary Protocol (MessagePack + Positional Arrays)
+    - [x] Implement `WorldStateEncoder` and `stream_ws.py` WebSocket endpoint
+    - [x] Enable `GZipMiddleware` for REST API optimization
+    - [x] Update Metadata API with `/protocol` endpoint
+    - [x] Regression Testing (verify legacy REST/SSE remains functional)
+    - [x] Benchmark Payload Reduction (Confirmed 95.3% gain)
+- [x] Infrastructure & Documentation
+    - [x] Update README with BWS and Troubleshooting guides
+    - [x] Investigate and solve Kafka `InconsistentClusterIdException`
+    - [x] Document Centralized Logging (Loki/Grafana)
+- [x] Optimize `test_production_stack.py` with Loki readiness probes and 50s indexing wait.
+- [x] Fix directory-agnostic E2E setup in `conftest.py`
+- [x] Restore 10MB Kafka message limit and fix `kafka_client.py` syntax
+- [x] Resolve `ValueError: 4` in `CalamitySystem` by capping EnemyTier
+- [x] Correct `world_day` calculation in backend `/stats` endpoint
+- [x] Fix Watchdog recursive failure loop in `watchdog.py`
+- [x] Resolve Loki 400 Bad Request by optimizing LogQL matchers
+- [x] Verify stable 100% pass rate on core E2E subset
+- [x] Unify E2E infrastructure in `conftest.py` with 120s stabilization and directory-agnostic paths.
+- [x] Add `docker` stage to Promtail and unify pipelines for `varlogs`.
+- [x] Resolve Kafka `InconsistentClusterIdException` in `conftest.py`
+- [x] Increase RabbitMQ/Kafka retry windows to 120s for host-side resilience.
+- [x] Achieve 100% Green Suite Pass.
+
+# Phase 3: Production Stability & Logging (TCK-20260322-STABILITY)
+- [x] Diagnose and Resolve System "Freeze"
+    - [x] Identify corrupted `nginx.conf` in frontend container
+    - [x] Implement dynamic WebSocket/HTTP `Connection` mapping in Nginx
+    - [x] Perform scorched-earth rebuild of frontend with `--no-cache`
+    - [x] Remap host port 80 -> 8080 to avoid host-side conflicts
+- [x] Upgrade Centralized Logging Stack (Loki / Promtail)
+    - [x] Identify version mismatch between Promtail and Docker host (1.44)
+    - [x] Upgrade Loki and Promtail to `v3.0.0` in `docker-compose.yml`
+    - [x] Fix missing `promtail-config.yml` mount in `docker-compose.yml`
+    - [x] Sync Promtail labels (`job="varlogs"`) with Grafana dashboard LogQL
+    - [x] Exempt `/metrics` from GZip compression in `app.py`
+    - [x] Verify log tailing and Grafana metric ingestion
+- [/] Final System Verification
+    - [ ] Verify Frontend Accessibility via API Health Check
+    - [ ] Verify BWS Protocol Handshake via CLI
+    - [ ] Finalize Documentation & Working Log
