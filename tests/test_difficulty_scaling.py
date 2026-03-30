@@ -5,12 +5,12 @@ from __future__ import annotations
 import unittest
 
 from src.config import SimulationConfig
-from src.core.enums import EnemyTier, Material
-from src.core.grid import Grid
-from src.core.models import Vector2
-from src.core.regions import DIFFICULTY_TIERS
-from src.core.world_state import WorldState
-from src.systems.generator import EntityGenerator
+from src.core.models.enums import EnemyTier, Material
+from src.core.world.grid import Grid
+from src.core.models.vectors import Vector2
+from src.core.world.regions import DIFFICULTY_TIERS
+from src.core.models.world_state import WorldState
+from src.systems.world.generator import EntityGenerator
 from src.systems.rng import DeterministicRNG
 from src.systems.spatial_hash import SpatialHash
 

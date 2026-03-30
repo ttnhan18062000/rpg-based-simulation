@@ -13,13 +13,14 @@ import os
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from src.core.classes import SKILL_DEFS, SkillDef, SkillType, SkillTarget, HeroClass
-from src.core.enums import DamageType
+from src.core.gameplay.classes import SKILL_DEFS, SkillDef, SkillType, SkillTarget, HeroClass
+from src.core.models.enums import DamageType
 from src.actions.damage import get_damage_calculator, DamageContext
-from src.core.models import Entity, Stats, Vector2
-from src.core.faction import Faction
-from src.core.items import Inventory
-from src.core.attributes import Attributes
+from src.core.entities.entity import Entity
+from src.core.models.vectors import Vector2
+from src.core.gameplay.faction import Faction
+from src.core.gameplay.items.items import Inventory
+from src.core.gameplay.attributes import Attributes
 
 
 class TestSkillDefDamageType:

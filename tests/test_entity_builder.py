@@ -4,12 +4,12 @@ import sys
 import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from src.core.entity_builder import EntityBuilder
-from src.core.enums import AIState, Domain
-from src.core.faction import Faction
-from src.core.items import Inventory
-from src.core.models import Entity, Vector2
-from src.core.classes import HeroClass
+from src.core.entities.entity_builder import EntityBuilder
+from src.core.models.enums import AIState, Domain
+from src.core.gameplay.faction import Faction
+from src.core.gameplay.items.items import Inventory
+from src.core.models.vectors import Vector2
+from src.core.gameplay.classes import HeroClass
 
 
 # ---------------------------------------------------------------------------
@@ -171,7 +171,7 @@ class TestEntityBuilderHeroClass:
             .build()
         )
         # Mage should have higher INT bonus
-        from src.core.classes import CLASS_DEFS
+        from src.core.gameplay.classes import CLASS_DEFS
         mage_def = CLASS_DEFS[HeroClass.MAGE]
         assert entity.attributes is not None
         # Base 5 + class bonus + rng(0,2) where rng returns 1

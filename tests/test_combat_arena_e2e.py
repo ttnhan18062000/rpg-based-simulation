@@ -10,10 +10,10 @@ import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from tests.helpers.combat_arena import CombatArena
-from src.core.classes import HeroClass
-from src.core.enums import AIState, EnemyTier, Material
-from src.core.faction import Faction
-from src.core.models import Vector2
+from src.core.gameplay.classes import HeroClass
+from src.core.models.enums import AIState, EnemyTier, Material
+from src.core.gameplay.faction import Faction
+from src.core.models.vectors import Vector2
 
 
 # ---------------------------------------------------------------------------
@@ -205,21 +205,21 @@ class TestWeaponRangeE2E:
     def test_melee_weapon_range_1(self):
         arena = CombatArena()
         arena.add_hero(1, pos=(5, 5), weapon="iron_sword")
-        from src.core.items import ITEM_REGISTRY
+        from src.core.gameplay.items.items import ITEM_REGISTRY
         tmpl = ITEM_REGISTRY.get("iron_sword")
         assert tmpl.weapon_range == 1
 
     def test_shortbow_range_3(self):
         arena = CombatArena()
         arena.add_hero(1, pos=(5, 5), weapon="shortbow")
-        from src.core.items import ITEM_REGISTRY
+        from src.core.gameplay.items.items import ITEM_REGISTRY
         tmpl = ITEM_REGISTRY.get("shortbow")
         assert tmpl.weapon_range == 3
 
     def test_staff_range_3(self):
         arena = CombatArena()
         arena.add_hero(1, pos=(5, 5), weapon="apprentice_staff")
-        from src.core.items import ITEM_REGISTRY
+        from src.core.gameplay.items.items import ITEM_REGISTRY
         tmpl = ITEM_REGISTRY.get("apprentice_staff")
         assert tmpl.weapon_range == 3
 

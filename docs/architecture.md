@@ -19,6 +19,19 @@ The RPG simulation engine is a **deterministic concurrent system** that simulate
 
 ---
 
+## Modular Evolution (Restructure in Progress)
+
+The system is currently undergoing a structural migration (see [RESTRUCTURE-01](../tickets/inprogress/RESTRUCTURE-01.md)) to transition from this layered approach to a **Feature-Based Aspect-Oriented Architecture**.
+
+### Core Concepts:
+- **Aspect-Oriented Entities**: Instead of a monolithic `Entity` class, entities will be lightweight containers for `Aspect` components (Combat, Economy, AI).
+- **Feature Folders**: All logic for a domain (e.g., Combat) will be co-located in `src/features/combat/`, including its own actions, AI states, and models.
+- **Micro-Engine**: The core `WorldLoop` will be decomposed into smaller, specialized systems (TickRegistry, SnapshotManager, EntityProcessor).
+
+---
+
+---
+
 ## Concurrency Model
 
 ### Thread Layout
@@ -53,38 +66,32 @@ Workers never see partial updates. The `ActionQueue` is the only shared mutable 
 
 ## Tick Cycle (4 Phases)
 
-Each tick in `WorldLoop._step()` executes:
+Each tick in `WorldLoop._step()` executes an orchestrated sequence of global systems and entity actions.
 
-### Phase 1: Scheduling
+### Phase 1: Pre-Action Systems (`SystemManager.tick`)
+Global logic modules process the current world state before entities decide their next move.
+- **`StrategySystem`**: Shift regional influence based on recent deaths; declare WAR/PEACE.
+- **`QuestSystem`**: Tick active quest timers and completion logic.
+- **`EnvironmentSystem`**: Process tile-based effects and climate shifts.
+- **`CalamitySystem`**: Evaluate boss spawn triggers and phase transitions.
 
-- Identify entities whose `next_act_at <= current_tick`
-- Generators execute immediately (spawn actions)
-- Characters are dispatched to the worker pool with an immutable `Snapshot`
+### Phase 2: Action Generation & Collect
+- **Scheduling**: Identify entities whose `next_act_at <= current_tick`.
+- **`EntityGenerator`**: Spawn new entities at camps or in the world.
+- **AI Dispatch**: Characters are sent to the `WorkerPool` with an immutable `Snapshot`.
+- **Collect**: Drain the `ActionQueue`. Workers push `ActionProposal` concurrently.
 
-### Phase 2: Wait & Collect
+### Phase 3: Conflict Resolution & Tactical Hooks
+- **`ConflictResolver`**: Validates and applies proposals deterministically.
+- **`ActionSystem`**: Executes post-resolution hooks (Tactical Maneuvers, Skill effects).
+- **Tactical Intent Propagation**: Updates the `AIContext` with `tactical_hints` (Skirmish, Flank, Support) to be consumed by state handlers in the next cycle.
+- **State Propagation**: Update `ai_state`, `combat_target_id`, and `last_reason` for UI and persistence.
 
-- Workers compute `ActionProposal` from the snapshot and push to `ActionQueue`
-- Hard timeout (`worker_timeout_seconds`, default 2s) prevents engine stalls — late entities miss their turn
-
-### Phase 3: Conflict Resolution & Application
-
-- Sort proposals deterministically (by `next_act_at`, then `entity_id`)
-- Validate each proposal (bounds, adjacency, alive checks)
-- Apply valid actions to `WorldState` (move, attack, loot, harvest, use_skill, use_item)
-- Reject invalid actions with logged reasons
-
-### Phase 4: Cleanup & Effects
-
-- Remove dead entities, drop loot
-- Process territory effects (debuffs, alerts, aura damage)
-- Tick status effects (decrement durations, apply hp_per_tick, prune expired)
-- Tick resource node cooldowns
-- Check level-ups (stat growth + attribute gains)
-- Regenerate stamina, tick skill cooldowns
-- Update entity memory (terrain + entity)
-- Tick quests (EXPLORE completion, pruning)
-- Update entity goals (display text)
-- Advance tick counter
+### Phase 4: Post-Action Cleanup & Advancement
+- **`HeroLifecycleSystem`**: Handle hero deaths, respawns, and tombstone logic.
+- **`HistorySystem`**: Record significant events for world lore.
+- **State Step**: Increment `world_age`, tick status effects, and regenerate stamina.
+- **Metrics**: Update Grafana/Prometheus telemetry (population, gold, durability).
 
 ---
 
@@ -279,11 +286,16 @@ src/
 │       ├── base.py              # GoalScorer ABC, GoalEvaluator, registry
 │       ├── scorers.py           # 9 built-in goal scorers
 │       └── registry.py          # register_all_goals()
-├── systems/
-│   ├── rng.py                   # DeterministicRNG (domain-separated hashing)
-│   ├── spatial_hash.py          # O(1) spatial neighbor lookups
-│   ├── generator.py             # EntityGenerator (spawn, spawn_race)
-│   └── terrain_detail.py        # Intra-region terrain features (per-biome)
+├── systems/                     # Global logic modules (SystemManager)
+│   ├── base.py                  # System base class & context
+│   ├── manager.py               # SystemManager orchestrator
+│   ├── strategy_system.py       # Territory conquest & war (Milestone 11)
+│   ├── combat_system.py         # Global combat modifiers & debuffs
+│   ├── quest_system.py          # Quest lifecycle & tracking
+│   ├── environment_system.py    # Tile-based world effects
+│   ├── calamity_system.py       # World Boss spawning & phases
+│   ├── generator.py             # EntityGenerator (spawn logic)
+│   └── hero_lifecycle_system.py # Hero respawns & permadeath (Milestone 8)
 ├── utils/
 │   ├── event_log.py             # Ring-buffer EventLog (10k cap)
 │   ├── logging.py               # Structured logging setup

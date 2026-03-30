@@ -18,12 +18,17 @@ dependencies = [
     "pika>=1.3.2",
     "confluent-kafka>=2.6.0",
     "psutil>=5.9.0",
+    "python-json-logger>=2.0.7",
+    "requests>=2.31.0",
+    "msgpack>=1.0.0",
 ]
 
 [project.optional-dependencies]
 dev = [
     "pytest>=8.0.0",
     "testcontainers[redis]>=4.0.0",
+    "httpx>=0.27.0",
+    "hypothesis>=6.0.0",
 ]
 
 [project.scripts]

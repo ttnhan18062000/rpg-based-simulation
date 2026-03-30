@@ -1,8 +1,9 @@
 from hypothesis import given, strategies as st
-from src.core.models import Entity, Stats, Vector2
-from src.core.attributes import Attributes, AttributeCaps, recalc_derived_stats, speed_delay
-from src.core.enums import AIState, EntityRole, RACE_PROFILES
-from src.core.faction import Faction
+from src.core.entities.entity import Entity
+from src.core.models.vectors import Vector2
+from src.core.gameplay.attributes import Attributes, AttributeCaps, recalc_derived_stats, speed_delay
+from src.core.models.enums import AIState, EntityRole, RACE_PROFILES
+from src.core.gameplay.faction import Faction
 
 def test_speed_delay_invariants():
     # Test that speed_delay never returns NaN or out-of-bounds values

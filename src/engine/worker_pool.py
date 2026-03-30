@@ -10,16 +10,18 @@ from typing import TYPE_CHECKING, Any
 import pika
 from pika.exceptions import AMQPError
 
-from src.core.enums import AIState, Domain
+from src.core.models.enums import AIState, Domain
 from src.api.rabbitmq_client import get_rabbitmq
 
 if TYPE_CHECKING:
     from src.actions.base import ActionProposal
-    from src.ai.brain import AIBrain
     from src.config import SimulationConfig
-    from src.core.models import Entity
-    from src.core.snapshot import Snapshot
+    from src.core.entities.entity import Entity
+    from src.core.models.snapshot import Snapshot
     from src.engine.action_queue import ActionQueue
+
+from src.ai.brain import AIBrain
+from src.platform.rng import DeterministicRNG
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +34,7 @@ class WorkerPool:
     round-robin work queue, and consumes the resulting ActionProposals.
     """
 
-    __slots__ = ("_config", "_brain", "_rng", "_channel", "_snapshot_exchange", "_tasks_queue", "_results_queue")
+    __slots__ = ("_config", "_brain", "_rng", "_channel", "_snapshot_exchange", "_tasks_queue", "_results_queue", "_logger")
 
     def __init__(self, config: SimulationConfig, brain: AIBrain, rng: DeterministicRNG) -> None:
         self._config = config
@@ -47,17 +49,27 @@ class WorkerPool:
 
         if self._config.num_workers > 1:
             self._init_rabbitmq()
+            
+        # Wrapped logger (Phase L3 Logging)
+        from src.utils.logging import RobustLoggerAdapter
+        self._logger = RobustLoggerAdapter(logger, {'component': 'worker_pool', 'worker_id': 'master', 'tick': 0})
 
     def _init_rabbitmq(self) -> None:
         try:
             conn = get_rabbitmq()
-            self._channel = conn.channel()
-            # Declare infrastructure
-            self._channel.exchange_declare(exchange=self._snapshot_exchange, exchange_type='fanout')
-            self._channel.queue_declare(queue=self._tasks_queue, durable=False)
-            self._channel.queue_declare(queue=self._results_queue, durable=False)
-            logger.info("WorkerPool initialized RabbitMQ connection.")
+            if conn is not None:
+                self._channel = conn.channel()
+                # Declare infrastructure
+                self._channel.exchange_declare(exchange=self._snapshot_exchange, exchange_type='fanout')
+                self._channel.queue_declare(queue=self._tasks_queue, durable=False)
+                self._channel.queue_declare(queue=self._results_queue, durable=False)
+                logger.info("WorkerPool initialized RabbitMQ connection.")
+            else:
+                logger.warning("WorkerPool: RabbitMQ connection unavailable. Falling back to inline.")
+                self._channel = None
         except Exception as e:
+            from src.utils.metrics import SIM_ERRORS_TOTAL
+            SIM_ERRORS_TOTAL.labels(exception_type=type(e).__name__, component="worker_pool").inc()
             logger.error("WorkerPool failed to connect to RabbitMQ: %s. Falling back to inline execution.", e)
             self._channel = None
 
@@ -73,14 +85,25 @@ class WorkerPool:
 
         # Fast path: single-worker mode or unrecoverable RMQ error — run inline
         if self._config.num_workers <= 1 or not self._channel:
+            from src.utils.metrics import SIM_WORKER_HEALTH
+            SIM_WORKER_HEALTH.labels(worker_id="inline", state="busy").set(1)
             self._dispatch_inline(entities, snapshot, action_queue)
+            SIM_WORKER_HEALTH.labels(worker_id="inline", state="busy").set(0)
             return
 
         # Distributed path
         try:
+            from src.utils.metrics import SIM_WORKER_HEALTH
+            SIM_WORKER_HEALTH.labels(worker_id="rabbitmq", state="busy").set(1)
             self._dispatch_rabbitmq(entities, snapshot, action_queue)
+            SIM_WORKER_HEALTH.labels(worker_id="rabbitmq", state="busy").set(0)
+            SIM_WORKER_HEALTH.labels(worker_id="rabbitmq", state="error").set(0)
         except Exception as e:
-            logger.exception("RabbitMQ dispatch crashed for tick %d, falling back to inline.", snapshot.tick)
+            from src.utils.metrics import SIM_ERRORS_TOTAL, SIM_WORKER_HEALTH
+            SIM_ERRORS_TOTAL.labels(exception_type=type(e).__name__, component="rabbitmq_dispatch").inc()
+            SIM_WORKER_HEALTH.labels(worker_id="rabbitmq", state="busy").set(0)
+            SIM_WORKER_HEALTH.labels(worker_id="rabbitmq", state="error").set(1)
+            self._logger.exception("RabbitMQ dispatch crashed, falling back to inline.", extra={'tick': snapshot.tick})
             # Reconnect for next tick
             self._channel = None
             self._init_rabbitmq()
@@ -99,19 +122,27 @@ class WorkerPool:
                 logger.warning("Chaos Mode (Inline): Dropping AI result for entity %d", entity.id)
                 continue
 
-            try:
-                _eid, new_state, proposal = self._think(entity, snapshot)
-                action_queue.push(proposal)
-            except Exception:
-                logger.exception("AI failed for entity %d", entity.id)
+            # AOA PILLAR: Resolve acting entity from the snapshot to ensure absolute isolation.
+            # This prevents any accidental mutation of the live WorldState during the decision phase.
+            snapshot_actor = snapshot.entities.get(entity.id)
+            if not snapshot_actor:
+                logger.debug("Entity %d not found in snapshot, skipping decision.", entity.id)
+                continue
 
+            try:
+                _eid, new_state, proposal = self._think(snapshot_actor, snapshot)
+                action_queue.push(proposal)
+            except Exception as e:
+                from src.utils.metrics import SIM_ERRORS_TOTAL
+                SIM_ERRORS_TOTAL.labels(exception_type=type(e).__name__, component="ai_think_inline").inc()
+                logger.exception("AI failed for entity %d", entity.id)
     def _dispatch_rabbitmq(
         self,
         entities: list[Entity],
         snapshot: Snapshot,
         action_queue: ActionQueue,
     ) -> None:
-        """Distribute workloads across RabbitMQ nodes."""
+        """Distribute workloads across RabbitMQ nodes using batching."""
         assert self._channel is not None
         
         # 1. Broadcast the tick's snapshot to all workers
@@ -122,54 +153,68 @@ class WorkerPool:
             body=snapshot_bytes,
         )
 
-        # 2. Publish all tasks
-        for entity in entities:
-            task = {"tick": snapshot.tick, "entity_id": entity.id}
+        # 2. Publish batches to parallelize deliberation (AOA Phase 6)
+        batch_size = self._config.ai_batch_size if hasattr(self._config, "ai_batch_size") else 20
+        entity_ids = [e.id for e in entities]
+        batches_sent = 0
+        
+        for i in range(0, len(entity_ids), batch_size):
+            chunk = entity_ids[i:i + batch_size]
+            batch_task = {"tick": snapshot.tick, "entity_ids": chunk, "batch_id": batches_sent}
+            
             self._channel.basic_publish(
                 exchange='',
                 routing_key=self._tasks_queue,
-                body=pickle.dumps(task),
+                body=pickle.dumps(batch_task),
             )
+            batches_sent += 1
 
-        # 3. Synchronously wait and collect results
-        expected_responses = len(entities)
-        collected = 0
+        logger.info("WorkerPool dispatched %d batches for tick %d (%d entities total)", batches_sent, snapshot.tick, len(entity_ids))
+
+        # 3. Synchronously collect all batches
+        batches_received = 0
         timeout = float(self._config.worker_timeout_seconds)
         start_time = time.time()
         
-        # We manually poll the results queue so we don't block forever
-        while collected < expected_responses:
+        while batches_received < batches_sent:
             if time.time() - start_time > timeout:
-                logger.warning("WorkerPool timed out waiting for AI workers. Collected %d/%d", collected, expected_responses)
+                from src.utils.metrics import SIM_ERRORS_TOTAL
+                SIM_ERRORS_TOTAL.labels(exception_type="TimeoutError", component="worker_pool_multi_batch").inc()
+                logger.warning("WorkerPool timed out! Received %d/%d batches. Tick: %d", batches_received, batches_sent, snapshot.tick)
                 break
                 
             method_frame, header_frame, body = self._channel.basic_get(queue=self._results_queue, auto_ack=True)
             if method_frame:
                 try:
-                    result = pickle.loads(body)
-                    tick = result.get("tick")
+                    result_batch = pickle.loads(body)
+                    tick = result_batch.get("tick")
                     
                     if tick == snapshot.tick:
-                        # --- Chaos Mode: Fault Injection ---
-                        # Use Domain.AI_DECISION or a dedicated one for chaos
-                        if self._config.chaos_enabled and self._rng.next_float(Domain.AI_DECISION, result.get("entity_id", 0), tick + 99) < self._config.chaos_drop_rate:
-                            logger.warning("Chaos Mode: Dropping AI result for entity %d", result.get("entity_id", -1))
-                            collected += 1 # Count as "responded" but don't push the proposal
-                            continue
+                        results = result_batch.get("results", [])
+                        for res in results:
+                            eid = res.get("entity_id")
+                            proposal = res.get("proposal")
+                            
+                            # --- Chaos Mode: Fault Injection ---
+                            if self._config.chaos_enabled and self._rng.next_float(Domain.AI_DECISION, eid or 0, tick + 99) < self._config.chaos_drop_rate:
+                                continue
 
-                        proposal = result.get("proposal")
-                        if proposal:
-                            action_queue.push(proposal)
-                        collected += 1
+                            if proposal:
+                                action_queue.push(proposal)
+                        
+                        batches_received += 1
                     else:
-                        # Stale result from previous timeout
-                        pass
+                        # Stale result from a previous timed-out tick, keep looking
+                        continue
                 except Exception as e:
-                    logger.error("Failed to unpickle worker response: %s", e)
-                    collected += 1 # Avoid infinite looping on bad payloads
+                    from src.utils.metrics import SIM_ERRORS_TOTAL
+                    SIM_ERRORS_TOTAL.labels(exception_type=type(e).__name__, component="worker_unpickle_batch").inc()
+                    logger.error("Failed to unpickle worker batch response: %s", e)
+                    break 
             else:
-                # Slight sleep to yield CPU while waiting
-                time.sleep(0.005)
+                # Polling interval - slightly more aggressive wait than 5ms if we know we are waiting for a big batch
+                time.sleep(0.002)
+
 
     def _think(self, entity: Entity, snapshot: Snapshot) -> tuple[int, AIState, ActionProposal]:
         """Run AI for a single entity (executed inline)."""

@@ -57,20 +57,23 @@ def _run_server(args: argparse.Namespace) -> None:
 def _run_cli(args: argparse.Namespace) -> None:
     from src.ai.brain import AIBrain
     from src.config import SimulationConfig
-    from src.core.enums import AIState, Domain, EnemyTier, EntityRole, Material
-    from src.core.faction import Faction
-    from src.core.grid import Grid
-    from src.core.items import Inventory
-    from src.core.models import Entity, Stats, Vector2
-    from src.core.world_state import WorldState
+    from src.core.models.enums import AIState, Domain, EnemyTier, EntityRole, Material
+    from src.core.gameplay.faction import Faction, FactionRegistry
+    from src.core.world.grid import Grid
+    from src.core.entities.entity import Entity
+    from src.core.models.vectors import Vector2
+    from src.core.models.world_state import WorldState
+    from src.core.aspects.inventory import InventoryAspect
     from src.engine.conflict_resolver import ConflictResolver
     from src.engine.worker_pool import WorkerPool
     from src.engine.world_loop import WorldLoop
-    from src.systems.generator import EntityGenerator
-    from src.systems.rng import DeterministicRNG
-    from src.systems.spatial_hash import SpatialHash
+    from src.systems.world.generator import EntityGenerator
+    from src.platform.rng import DeterministicRNG
+    from src.platform.spatial_hash import SpatialHash
     from src.utils.logging import setup_logging
     from src.utils.replay import ReplayRecorder
+    
+    setup_logging(args.log_level)
 
     config = SimulationConfig(
         world_seed=args.seed,
@@ -83,7 +86,7 @@ def _run_cli(args: argparse.Namespace) -> None:
 
     setup_logging(config.log_level)
 
-    from src.core.registry_loader import load_all_registries
+    from src.core.registry.registry_loader import load_all_registries
     load_all_registries()
 
     rng = DeterministicRNG(config.world_seed)
@@ -131,10 +134,10 @@ def _run_cli(args: argparse.Namespace) -> None:
             break
 
     # Spawn heroes via EntityBuilder
-    from src.core.classes import HeroClass, HERO_STARTING_GEAR
-    from src.core.entity_builder import EntityBuilder
-    from src.core.hero_names import generate_hero_name
-    from src.core.buildings import Building
+    from src.core.gameplay.classes import HeroClass, HERO_STARTING_GEAR
+    from src.core.entities.entity_builder import EntityBuilder
+    from src.core.data.hero_names import generate_hero_name
+    from src.core.gameplay.buildings import Building
 
     class_choices = [HeroClass.WARRIOR, HeroClass.RANGER, HeroClass.MAGE, HeroClass.ROGUE]
     
@@ -203,8 +206,9 @@ def _run_cli(args: argparse.Namespace) -> None:
             guard = generator.spawn(world, tier=EnemyTier.WARRIOR, near_pos=camp_pos)
             world.add_entity(guard)
 
-    brain = AIBrain(config, rng)
-    worker_pool = WorkerPool(config, brain)
+    faction_reg = FactionRegistry.default()
+    brain = AIBrain(config, rng, faction_reg)
+    worker_pool = WorkerPool(config, brain, rng)
     conflict_resolver = ConflictResolver(config, rng)
     recorder = ReplayRecorder(config.replay_file, config.world_seed)
 
@@ -216,6 +220,11 @@ def _run_cli(args: argparse.Namespace) -> None:
 
     try:
         loop.run()
+    except Exception as e:
+        from src.utils.metrics import SIM_ERRORS_TOTAL
+        SIM_ERRORS_TOTAL.labels(exception_type=type(e).__name__, component="cli_main").inc()
+        logger.exception("CLI Simulation crashed", extra={'component': 'cli_main'})
+        raise
     finally:
         worker_pool.shutdown()
 

@@ -8,35 +8,35 @@ Technical documentation for the hybrid AI architecture, goal evaluation, state m
 
 Entity AI uses a **hybrid architecture** combining **Utility AI** for goal evaluation with a **State Machine** for execution. The goal evaluator picks *what* to do; the state handler executes *how* to do it.
 
-**Primary files:** `src/ai/brain.py`, `src/ai/goals/`, `src/ai/states.py`, `src/ai/perception.py`, `src/core/traits.py`
+**Primary files:** `src/ai/brain.py`, `src/ai/goals/`, `src/ai/states.py`, `src/ai/perception.py`, `src/engine/worker_pool.py`, `src/core/traits.py`
 
 ---
 
-## 1. Hybrid Architecture
+## 1. Hybrid Architecture (The 7-Phase Cognitive Pipeline)
+
+The `AIBrain` has evolved from a reactive state-machine into a **proactive cognitive engine**. Instead of simple state-checks, every entity processes their surroundings through a 7-step pipeline every tick.
 
 ### Decision Flow
 
-```
-AIBrain.decide(ctx: AIContext) → (AIState, ActionProposal)
-    │
-    ├── Entity in DECISION state? (IDLE, WANDER, RESTING_IN_TOWN, GUARD_CAMP)
-    │       │
-    │       ▼
-    │   GoalEvaluator.evaluate(ctx) → sorted GoalScore list
-    │   GoalEvaluator.select(scores, rng) → winning GoalScore
-    │       │
-    │       ▼
-    │   Transition to winner's target_state
-    │
-    └── Entity in EXECUTION state? (HUNT, COMBAT, FLEE, LOOTING, VISIT_*, HARVESTING, ALERT)
-            │
-            ▼
-        STATE_HANDLERS[ai_state].handle(ctx) → (new_state, ActionProposal)
+```mermaid
+graph TD
+    A["[Phase 1] Sensory: Gather data & Selective Attention"] --> B["[Phase 2] Perception: Nearest enemy & highest threat"]
+    B --> C["[Phase 3] Memory: Discovery, Survival, Trauma/Glory logs"]
+    C --> D["[Phase 4] Appraisal: Mood, Bravery & Emotional States (Panic/Boredom)"]
+    D --> E["[Phase 5] Deliberation: Goal Evaluation with Personality Modifiers"]
+    E --> F["[Phase 6] Selection: Goal selection with Temperature (Softmax)"]
+    F --> G["[Phase 7] Output: Action Proposal + Tactical Intent (Kiting/Support)"]
 ```
 
-### AIContext
+### 1.1 Phase Breakdown
 
-All AI logic receives an `AIContext` dataclass:
+1.  **Sensory (The Focus)**: Gathers visible entities and applies **Selective Attention** (Pillar 1: Soul). Entities only "see" a limited number of targets (default 5) based on saliency (distance, faction, rarity), simulating "tunnel vision" in dense combat.
+2.  **Perception (The Data)**: Computes spatial relationships (nearest enemy/ally) and faction-aware threat.
+3.  **Memory (The History)**: Records high-impact events as narrative memories (`GLORY`, `TRAUMA`, `DISCOVERY`). 
+4.  **Appraisal (The Feeling)**: Derives `mood` and `bravery` from memory clusters. Identifies emotional states like `panic` (from trauma or low HP) or `stuck` (from navigation loops).
+5.  **Deliberation (The Planning)**: `GoalEvaluator` scores all viable goals (EXPLORE, COMBAT, etc.). Personality traits (Openness, Agreeableness) apply dynamic weight modifiers.
+6.  **Selection (The Choice)**: A winning goal is picked via weighted random. `temperature` is derived from **Openness**—higher openness leads to more creative/random choices.
+7.  **Output (The Action)**: Generates an `ActionProposal` and attaches **Tactical Intents** (Pillar 3: Action) to the context (e.g., "skirmish" or "support_target_id").
 
 ```python
 @dataclass(slots=True)
@@ -47,6 +47,14 @@ class AIContext:
     rng: DeterministicRNG
     faction_reg: FactionRegistry
 ```
+
+### 1.1 Parallel Execution (The Worker Pool)
+
+To prevent the AI from slowing down the global tick, evaluations are offloaded to a **WorkerPool** (`src/engine/worker_pool.py`):
+
+-   **Inline Mode**: If `num_workers <= 1`, AI runs on the engine thread (useful for debugging).
+-   **Distributed Mode**: Tasks are serialized via `pickle` and sent to **RabbitMQ**. External worker nodes (Docker) pick up the task, run `AIBrain.decide()`, and return the `ActionProposal`.
+-   **Fault Tolerance**: If a worker crashes or timeouts, the engine falls back to a **REST (Stationary)** action to ensure the tick completes.
 
 ---
 
@@ -79,6 +87,12 @@ Scorers are registered in `GOAL_REGISTRY` via `register_all_goals()` in `src/ai/
 | SOCIAL | `SocialGoal` | VISIT_GUILD | Intel needs, class hall needs |
 | GUARD | `GuardGoal` | GUARD_CAMP | Non-hero, home territory proximity |
 
+### 2.1 Score Modifiers (Milestone 4/5)
+Goal scores are further influenced by a pipeline of `ScoreModifier` objects in `GoalEvaluator`:
+- **SocialModifier**: Boosts social goals if "lonely".
+- **SkirmishModifier**: Boosts `FLEE` or `MOVE` goals for ranged entities when an enemy is adjacent (Kiting).
+- **EconomicModifier**: Boosts trading goals when gold is high or inventory is full.
+
 ### Trait Influence
 
 Each entity's traits add `UtilityBonus` values to goal scores. See section 7.
@@ -110,6 +124,12 @@ Each entity's traits add `UtilityBonus` values to goal scores. See section 7.
 
 Each state has a `StateHandler` subclass registered in `STATE_HANDLERS` dict.
 
+### 3.1 Boredom & Decision Inertia (Pillar 3: Action)
+
+To prevent behavioral jitter, the brain applies **Decision Inertia** (Goal Locking) and **Boredom Penalties**:
+-   **Goal Locking (Hysteresis)**: High-tier entities (Heroes/Elites) commit to their goal for `GOAL_LOCK_TICKS` (default 5). They will not re-evaluate their state unless their HP drops into critical danger.
+-   **Boredom Penalty**: When a goal is selected, its multiplier in `actor.mind.boredom_multipliers` drops (e.g., to `0.8`). This decays over time, encouraging character diversity.
+
 ---
 
 ## 4. State Handlers
@@ -119,11 +139,9 @@ Each state has a `StateHandler` subclass registered in `STATE_HANDLERS` dict.
 - Transitions to the winning goal's target state
 
 ### WanderHandler
-- Moves toward unexplored tiles (frontier exploration)
-- **Leash enforcement (enhance-04):** mobs with `leash_radius > 0` return to camp when beyond leash range
-- Checks for nearby loot, resources, and enemies during movement
-- Heroes with inventory space look for resources within 5 tiles → transition to HARVESTING
-- Enemies in town retreat when below 60% HP or no target visible
+- Moves toward unexplored tiles (frontier exploration).
+- **Sensory Awareness:** Now uses the `attention_pool` to prioritize targets.
+- **Leash enforcement:** mobs with `leash_radius > 0` return to camp when beyond leash range.
 
 ### HuntHandler
 - Moves toward target using **A* pathfinding** for distances > 2 tiles, greedy fallback for short distances
@@ -134,13 +152,12 @@ Each state has a `StateHandler` subclass registered in `STATE_HANDLERS` dict.
 - Enemies abort hunts in town at 60% HP
 
 ### CombatHandler
-- Proposes ATTACK or USE_SKILL actions against enemies within weapon range
-- **Skill selection:** `best_ready_skill()` considers distance, range, and nearby enemy count (AoE preference)
-- **Kiting:** Ranged entities (weapon_range ≥ 3) move away when adjacent and HP > 60%
-- Uses potions when HP < 50%
-- Transitions to FLEE if HP below flee threshold
-- Enemies disengage in town at 50% HP (higher than normal 30%)
-- On target death: re-evaluates for new targets or transitions
+- Proposes ATTACK or USE_SKILL actions against enemies within weapon range.
+- **Tactical Hints (Pillar 3: Action):** Now respects hints generated during Phase 7.
+    - **Skirmishing (Kiting):** Ranged classes (Mage, Ranger) maintain a minimum distance from hostiles, repositioning if approached.
+    - **Support Intent:** Agreeable entities prioritize aiding allies tagged in the tactical context.
+- **Skill selection:** `best_ready_skill()` considers distance, range, and nearby enemy count (AoE preference).
+- Uses potions when HP < 50%.
 
 ### FleeHandler
 - Moves away from the nearest threat (maximizes distance)
@@ -181,6 +198,12 @@ Each state has a `StateHandler` subclass registered in `STATE_HANDLERS` dict.
 - Seeks and engages the intruder
 - Returns to GUARD_CAMP or retreats if no enemy visible
 
+### 4.1 Specialized Boss AI (Calamities)
+
+World Bosses use the same state machine but with template-level overrides:
+-   **Ability Rotation**: Instead of simple attacks, `CombatHandler` for bosses executes a `behavior_rotation` (e.g., `[SummonAdds, AoE_Slam, Melee_Strike]`).
+-   **Regional Auras**: Bosses emit passive debuffs to all heroes in their region via a recurring `AURA_PULSE` scheduled in the **Schedule** phase.
+
 ### VisitShopHandler
 - Walks to General Store
 - Sells: gold pouches, excess materials, inferior equipment
@@ -218,6 +241,20 @@ Each state has a `StateHandler` subclass registered in `STATE_HANDLERS` dict.
 - Interrupts: flee if low HP, engage if enemy within 3 tiles
 
 ---
+
+## 5. Social & Perception
+
+### Hero Proximity Familiarity
+
+Heroes develop relationships over time by spending time in vision range of each other (`_tick_proximity_familiarity`):
+- **Gain Rate**: +0.002 per tick when in proximity (vision range).
+- **Decay Rate**: -0.0005 per tick when apart.
+- **Alliance Status**: When familiarity reaches **0.5**, the heroes are marked as **Allies**.
+- **Symmetry**: Familiarity gains are symmetric between both heroes.
+
+### Dynamic Goal Selection
+
+While goal scoring is handled by Utility AI, the `WorldLoop` thread translates these into visible goals for the frontend by tracking `last_reason` and the current `AIState`.
 
 ## 5. Perception (`src/ai/perception.py`)
 
@@ -258,9 +295,59 @@ Each entity tracks last-seen positions of other entities in `entity_memory: dict
 - Ghost markers on the frontend overlay
 - Territory awareness
 
+### Memory Persistence & Pruning
+
+To maintain simulation performance, memory is periodically pruned:
+- **Terrain Memory**: Persistent for heroes; mobs may forget remote tiles if memory size exceeds 1000 nodes.
+- **Entity Memory**: Entries expire if the entity hasn't been seen for **200 ticks**.
+
 ---
 
-## 7. Personality Traits (`src/core/traits.py`)
+## 7. Individual Spirit (AI Personality)
+
+Milestone 10 introduces a persistent personality layer that influences targeting and survival decisions.
+
+### 7.1 Nemesis System (Persistent Grudges)
+Entities track animosity toward specific individuals who have caused them harm.
+- **Grudge Gain**: Damage taken increases a "grudge" value against the attacker, scaled by the percentage of max HP lost.
+- **Vengeful Targeting**: `AIContext.nearest_enemy()` prioritizes targets with a grudge > 50.0 as "Nemeses," overriding standard proximity or threat-based targeting.
+
+### 7.2 Emotional Mood & Confidence
+Entity state is modulated by a `mood` value (0.0 to 1.0).
+- **Mood Dynamics**: Mood drops when taking damage (fear/despair) and recovery is handled post-respawn.
+- **Survival Thresholds**: `should_flee()` uses mood to adjust the HP ratio threshold:
+  - **Low Mood (Despair)**: Increases the threshold (flee earlier, up to 30% HP).
+  - **High Mood (Fury)**: Decreases the threshold (stay in the fight longer, down to 10% HP).
+
+### 7.3 Locational Memory (Bad Memories)
+Regions carry emotional weight based on an entity's past experiences.
+- **Trauma Recording**: Upon defeat, the region where death occurred is marked with negative sentiment in `memory_locations`.
+- **Exploration Bias**: `find_frontier_target()` in `Perception` penalizes "dangerous" regions by increasing their effective distance, causing entities to naturally avoid areas where they have previously died.
+
+---
+
+## 8. Strategic Awareness (Milestone 11)
+
+The global strategic state of the world filters down to individual AI decisions through status effects and environmental awareness.
+
+### 8.1 Conquered Region Behavior
+In regions where monster influence is high (`influence < -80`) and a **Stronghold** is present:
+- **`CONQUERED_DEBUFF`**: Applied to all `HERO_GUILD` entities, reducing ATK, DEF, and SPD.
+- **Avoidance**: Heroes are less likely to `EXPLORE` or `HUNT` in conquered regions as the `ExploreGoal` and `CombatGoal` receive a danger penalty proportional to the control gap.
+
+### 8.2 War Readiness
+When a faction's aggression triggers a `WarEvent` (`aggression > 80`):
+- **Increased Aggression**: Non-hero entities gain a `+0.3` flat bonus to `CombatGoal` scores.
+- **Tier Escalation**: The `EntityGenerator` prioritizes spawning higher-tier elites to press the offensive against the town.
+
+### 8.3 Renown-Based Fear
+AI entities (mobs) evaluate a hero's `fame` during goal scoring:
+- **Intimidation**: High-renown heroes (`fame > 50`) reduce the `CombatGoal` score of nearby mobs, causing them to hesitate or prioritize other targets.
+- **Legendary Status**: At `fame > 100`, most standard mobs will actively prioritize `FLEE` over `HUNT` unless they are part of a World Boss pack.
+
+---
+
+## 8. Personality Traits (`src/core/traits.py`)
 
 Rimworld-style discrete personality traits assigned at spawn.
 
@@ -348,3 +435,14 @@ Entity fields `cached_path` and `cached_path_target` store the last computed A* 
 - Workers produce `ActionProposal` objects pushed to a thread-safe `ActionQueue`
 - No shared mutable state between AI workers
 - Entity memory is updated only by the `WorldLoop` thread after actions are applied
+
+---
+
+## 10. Debugging AI
+
+For developers trying to tune behavior or root-cause a logic loop:
+
+1.  **AI Visualizer (Frontend)**: Toggle `Debug > Show AI Goals` in the Sidebar. This draws lines to the entity's current `move_target` and overlays the active `AIState` above their head.
+2.  **Goal Inspector**: Click an entity and open the `AI` tab in the Inspector. It shows a real-time table of all goals and their raw utility scores.
+3.  **Logs**: Set `LOG_LEVEL=DEBUG` and grep for the entity's ID to see their state transitions and pathfinding failures.
+4.  **Deterministic Replay**: If an AI bug is found, use the `world_seed` and `tick` from the error report to reproduce the exact decision sequence locally.

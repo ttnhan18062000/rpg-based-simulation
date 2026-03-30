@@ -1,0 +1,5 @@
+{
+  "artifactType": "ARTIFACT_TYPE_IMPLEMENTATION_PLAN",
+  "summary": "Implementation plan to fix 8 failing tests and address 51 skipped tests in the RPG simulation engine. Focuses on proper mocking of entity attributes and resolving scoping issues in quest generation.",
+  "updatedAt": "2026-03-23T23:08:42.088765600Z"
+}

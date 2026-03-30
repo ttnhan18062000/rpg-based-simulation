@@ -6,9 +6,9 @@ import unittest
 
 from src.api.engine_manager import EngineManager
 from src.config import SimulationConfig
-from src.core.enums import Material
-from src.core.models import Vector2
-from src.core.regions import Region, find_region_at
+from src.core.models.enums import Material
+from src.core.models.vectors import Vector2
+from src.core.world.regions import Region, find_region_at
 
 
 TOWN_TILES = frozenset({Material.TOWN, Material.SANCTUARY})

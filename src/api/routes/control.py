@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from enum import Enum
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -11,6 +12,7 @@ from src.api.engine_manager import EngineManager
 from src.api.schemas import ControlResponse
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 
 class ControlAction(str, Enum):
@@ -71,3 +73,11 @@ def set_speed(
     snapshot = manager.get_snapshot()
     tick = snapshot.tick if snapshot else 0
     return ControlResponse(status="ok", message=f"Speed set to {tps:.1f} tps.", tick=tick)
+
+
+@router.post("/debug/log")
+async def debug_log(data: dict):
+    """Explicitly emit a log message for E2E trace verification."""
+    msg = data.get("message", "No message provided")
+    logger.info("E2E-TRACE: %s", msg)
+    return {"status": "ok", "emitted": msg}

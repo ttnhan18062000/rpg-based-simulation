@@ -61,6 +61,18 @@ grid.is_mountain(pos)    # MOUNTAIN only
 
 ---
 
+---
+
+## 2. World Dynamics & Aging
+
+While the map starts as a static grid, it evolves through two primary systems:
+1.  **Global Scaling**: Stats and difficulty increase with world age.
+2.  **Strategic Shift**: Factions conquer/liberate regions based on combat deaths.
+
+For detailed formulas on difficulty scaling, aggression, and regional conquest, see [World Evolution & Resilience](file:///d:/Projects/rpg-based-simulation/docs/world_evolution_and_resilience.md).
+
+---
+
 ## Generation Order
 
 World generation in `EngineManager._build()`:
@@ -169,22 +181,16 @@ This ensures 100% terrain coverage — no FLOOR gaps between regions.
 | Field | Type | Description |
 |-------|------|-------------|
 | `region_id` | str | Unique slug |
-| `name` | str | Display name (from name tables) |
-| `terrain` | Material | FOREST, DESERT, SWAMP, MOUNTAIN, GRASSLAND, SNOW, JUNGLE, or VOLCANIC |
-| `center` | Vector2 | Voronoi seed position |
-| `radius` | int | Effective radius (max tile distance) |
-| `difficulty` | int | 1–4 (based on distance from town) |
-| `locations` | list[Location] | Sub-locations within region |
+| `name` | str | Display name (unique per terrain) |
+| `terrain` | Material | Primary biome terrain |
+| `owner_faction` | Faction | Current strategic owner (None if contested or Hero-held) |
+| `center` | Vector2 | Voronoi seed position (Home of the **Stronghold**) |
+| `radius` | int | Effective radius for influence calculation |
+| `difficulty` | int | 1–4 (proportional to distance from Town) |
+| `locations` | list[Location] | Sub-locations (camps, ruins, etc.) |
 
 ### Sub-Locations (3–6 per region)
 
-| Type | Description | Spawns / Tiles |
-|------|-------------|--------|
-| `enemy_camp` | CAMP tiles, guards | Chief + warriors + race mobs |
-| `resource_grove` | Resource nodes cluster | 3–5 harvestable nodes |
-| `ruins` | RUINS tiles | Treasure chest |
-| `dungeon_entrance` | DUNGEON_ENTRANCE tile | Elite guards, treasure chest |
-| `shrine` | Gameplay marker | (future) |
 | `boss_arena` | Boss fight area | Elite boss + guards (difficulty+1) |
 | `outpost` | Safe zone building | Placed at difficulty < 3 |
 | `watchtower` | Scouting structure | Forest, grassland, jungle biomes |
@@ -207,6 +213,7 @@ This ensures 100% terrain coverage — no FLOOR gaps between regions.
 | `num_volcanic_regions` | 2 | Volcanic region count |
 | `region_min_radius` | 30 | Minimum effective radius |
 | `region_max_radius` | 60 | Maximum effective radius |
+| `region_min_distance` | 40 | Minimum distance between centers |
 | `region_min_distance` | 40 | Minimum distance between centers |
 | `min_locations_per_region` | 3 | Min sub-locations per region |
 | `max_locations_per_region` | 6 | Max sub-locations per region |
@@ -246,6 +253,26 @@ This ensures 100% terrain coverage — no FLOOR gaps between regions.
 | Frost | 1.6× | 1.0× | +4 | -3 | 3% | 0% | 0 |
 | Lizard | 0.9× | 1.0× | 0 | +2 | 12% | 10% | 2 |
 | Demon | 1.2× | 1.3× | -1 | +1 | 8% | 4% | 1 |
+
+---
+
+## World Boss (Calamity) Spawning
+
+Calamities are unique, one-off boss spawns triggered by the engine. They use a specialized template-based generation logic in `EntityGenerator.spawn_calamity()`.
+
+### Stat Scaling
+
+Calamity stats are derived from their `CalamityTemplate` multiplier, scaled by the overall world difficulty modifier:
+
+-   **Formula**: `base_stat = template_multiplier * world_difficulty_modifier`.
+-   **HP**: Base 100 × Scaler (e.g., Gorath with 15.0 mult × 1.0 mod = 1500 HP).
+-   **ATK**: Base 20 × Scaler.
+-   **Loot**: Automatically equipped with legendary items from their `legendary_loot` list.
+
+### Spawning Constraints
+
+-   **Position**: Always spawned in a non-town, non-sanctuary walkable tile.
+-   **Role**: Assigned the `WORLD_BOSS` role, which enables specialized UI treatment and global event announcements.
 
 ---
 

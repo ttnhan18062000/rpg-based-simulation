@@ -5,9 +5,9 @@ from __future__ import annotations
 import unittest
 
 from src.config import SimulationConfig
-from src.core.enums import Material
-from src.core.models import Vector2
-from src.core.regions import (
+from src.core.models.enums import Material
+from src.core.models.vectors import Vector2
+from src.core.world.regions import (
     DIFFICULTY_TIERS,
     LOCATION_NAME_TEMPLATES,
     LOCATION_TYPES,
@@ -232,8 +232,8 @@ class TestWorldStateRegions(unittest.TestCase):
     """Test that WorldState holds regions."""
 
     def test_world_has_regions_list(self):
-        from src.core.grid import Grid
-        from src.core.world_state import WorldState
+        from src.core.world.grid import Grid
+        from src.core.models.world_state import WorldState
         from src.systems.spatial_hash import SpatialHash
         grid = Grid(32, 32)
         spatial = SpatialHash(8)
@@ -242,8 +242,8 @@ class TestWorldStateRegions(unittest.TestCase):
         self.assertEqual(len(world.regions), 0)
 
     def test_add_region(self):
-        from src.core.grid import Grid
-        from src.core.world_state import WorldState
+        from src.core.world.grid import Grid
+        from src.core.models.world_state import WorldState
         from src.systems.spatial_hash import SpatialHash
         grid = Grid(32, 32)
         spatial = SpatialHash(8)
@@ -260,9 +260,9 @@ class TestSnapshotRegions(unittest.TestCase):
     """Test that Snapshot includes regions."""
 
     def test_snapshot_contains_regions(self):
-        from src.core.grid import Grid
-        from src.core.snapshot import Snapshot
-        from src.core.world_state import WorldState
+        from src.core.world.grid import Grid
+        from src.core.models.snapshot import Snapshot
+        from src.core.models.world_state import WorldState
         from src.systems.spatial_hash import SpatialHash
         grid = Grid(32, 32)
         spatial = SpatialHash(8)

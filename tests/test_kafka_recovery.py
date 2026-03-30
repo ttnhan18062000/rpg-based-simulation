@@ -1,15 +1,15 @@
 import pickle
 from unittest.mock import MagicMock, patch
 
-from src.core.enums import AIState, ActionType, Domain
-from src.core.models import Entity, Vector2
-from src.core.grid import Grid
+from src.core.models.enums import AIState, ActionType, Domain
+from src.core.models.vectors import Vector2
+from src.core.world.grid import Grid
 from src.config import SimulationConfig
-from src.core.snapshot import Snapshot
+from src.core.models.snapshot import Snapshot
 from src.api.engine_manager import EngineManager
 from src.actions.base import ActionProposal
 from src.systems.spatial_hash import SpatialHash
-from src.core.world_state import WorldState
+from src.core.models.world_state import WorldState
 
 @patch("src.api.kafka_client.create_kafka_consumer")
 def test_engine_manager_kafka_recovery(mock_create_consumer, monkeypatch):

@@ -6,9 +6,9 @@ import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from src.ai.pathfinding import Pathfinder, TERRAIN_MOVE_COST, tile_cost
-from src.core.enums import Material
-from src.core.grid import Grid
-from src.core.models import Vector2
+from src.core.models.enums import Material
+from src.core.world.grid import Grid
+from src.core.models.vectors import Vector2
 
 
 def _grid(w: int = 10, h: int = 10) -> Grid:

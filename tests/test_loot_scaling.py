@@ -5,15 +5,15 @@ from __future__ import annotations
 import unittest
 
 from src.config import SimulationConfig
-from src.core.enums import EnemyTier, Rarity
-from src.core.grid import Grid
-from src.core.items import (
+from src.core.models.enums import EnemyTier, Rarity
+from src.core.world.grid import Grid
+from src.core.gameplay.items.items import (
     CHEST_LOOT_TABLES, DIFFICULTY_BONUS_LOOT, DIFFICULTY_DROP_MULTIPLIER,
     ITEM_REGISTRY,
 )
-from src.core.models import Vector2
-from src.core.world_state import WorldState
-from src.systems.generator import EntityGenerator
+from src.core.models.vectors import Vector2
+from src.core.models.world_state import WorldState
+from src.systems.world.generator import EntityGenerator
 from src.systems.rng import DeterministicRNG
 from src.systems.spatial_hash import SpatialHash
 

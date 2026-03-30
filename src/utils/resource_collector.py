@@ -38,7 +38,7 @@ def start_resource_collector(interval: float = 2.0) -> None:
         while True:
             try:
                 PROCESS_CPU_PERCENT.set(proc.cpu_percent(interval=None))
-                mem = proc.memory_info()
+                mem = proc.mind.memory_info()
                 PROCESS_MEMORY_RSS.set(mem.rss)
                 PROCESS_MEMORY_VMS.set(mem.vms)
                 PROCESS_THREAD_COUNT.set(proc.num_threads())

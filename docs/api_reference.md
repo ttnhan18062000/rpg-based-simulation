@@ -8,7 +8,7 @@ Technical documentation for the REST API endpoints, request/response schemas, an
 
 The backend exposes a REST API via **FastAPI** under the `/api/v1` prefix. The frontend polls `/state` every ~80ms for dynamic data. Static data (`/map` grid + `/static` world data) is fetched once on mount.
 
-**Primary files:** `src/api/routes/state.py`, `src/api/routes/map.py`, `src/api/schemas.py`, `src/api/app.py`
+**Primary files:** `src/api/routes/state.py`, `src/api/routes/stream.py`, `src/api/routes/map.py`, `src/api/schemas.py`, `src/api/app.py`
 
 ### Payload Optimization
 
@@ -17,8 +17,11 @@ The API is optimized to minimize recurring payload size:
 | Endpoint | Frequency | Typical Size | Strategy |
 |----------|-----------|--------------|----------|
 | `/map` | Once | ~270 KB | RLE-compressed grid |
-| `/static` | Once | ~47 KB | Buildings, regions, resources, chests |
-| `/state` | Every 80ms | ~75 KB | Slim entities + optional full selected entity |
+| `/static` | Once | ~65 KB | Regions, Buildings, Nodes, Chests |
+| `/stream` | Real-time | **~2 KB/tick** | **SSE Deltas (JSON)** |
+| `/state` | On Demand | ~4 KB | Inspection (targeted full serialization) |
+
+By moving from full-state polling to **SSE Deltas**, recurring bandwidth per client dropped from ~1.6 MB/s to **< 20 KB/s**.
 
 Pre-optimization `/state` was ~1.6 MB per poll. Current design achieves **~90% reduction**.
 
@@ -44,15 +47,33 @@ Fetch the static tile grid (called once at startup). The grid is **RLE-compresse
 
 ---
 
+### GET /api/v1/stream (Real-time)
+
+The primary data source for the frontend. A **Server-Sent Events (SSE)** stream that pushes incremental updates (deltas) every tick.
+
+**Response Event (`data` field):**
+
+```json
+{
+  "tick": 405,
+  "changed": [ EntitySlimSchema, ... ],
+  "removed": [ entity_id, ... ],
+  "events": [ EventSchema, ... ]
+}
+```
+
+-   **`changed`**: Only entities that moved, changed state, or took damage since the last tick.
+-   **`removed`**: IDs of entities that died or were despawned.
+-   **Heartbeat**: A minimal update (tick only) is sent every 20 ticks if no data changes.
+
 ### GET /api/v1/state
 
-Polled by the UI every ~80ms for dynamic simulation state. Returns **slim entities** for all alive entities, plus an optional **full entity** for the selected/inspected entity.
+Available for manual polling or **Inspection**. returns the specified entity's full data.
 
 **Query Parameters:**
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| `since_tick` | int (optional) | Only return events newer than this tick |
 | `selected` | int (optional) | Entity ID to include full details for (-1 or omitted = none) |
 
 **Response: `WorldStateResponse`**
@@ -64,7 +85,9 @@ Polled by the UI every ~80ms for dynamic simulation state. Returns **slim entiti
   "entities": [ EntitySlimSchema, ... ],
   "selected_entity": EntitySchema | null,
   "events": [ EventSchema, ... ],
-  "ground_items": [ GroundItemSchema, ... ]
+  "ground_items": [ GroundItemSchema, ... ],
+  "war_status": { "1": true, "3": false, ... },
+  "faction_aggression": { "1": 85.5, "3": 12.0, ... }
 }
 ```
 
@@ -97,9 +120,10 @@ Simulation-level statistics and counters.
 
 ```json
 {
+  "tick": 405,
+  "alive_count": 42,
   "total_spawned": 150,
   "total_deaths": 108,
-  "total_kills": 108,
   "running": true,
   "paused": false
 }
@@ -560,6 +584,37 @@ Same shape as `AttributeSchema` but representing caps.
 | `tier` | int | Chest tier (1–3) |
 | `looted` | bool | Currently looted |
 | `guard_entity_id` | int \| null | Guard entity ID |
+
+### RegionSchema
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `region_id` | str | Unique ID |
+| `name` | str | Display name |
+| `terrain` | int | Material value |
+| `center_x` / `center_y` | int | Region center |
+| `radius` | int | Influence radius |
+| `difficulty` | int | Region difficulty (1–10) |
+| `owner_faction` | str \| null | Current owner faction name (Milestone 11) |
+| `influence` | float | Strategic control (-100 to 100) (Milestone 11) |
+| `locations` | LocationSchema[] | Points of interest in the region |
+
+### LocationSchema
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `location_id` | str | Unique ID |
+| `name` | str | Display name |
+| `location_type` | str | "town", "camp", "dungeon", etc. |
+| `x` / `y` | int | Position |
+
+### EntityMemoryEntry
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `entity_id` | int | Remembered entity |
+| `last_seen_tick` | int | When last seen |
+| `pos_x` / `pos_y` | int | Last known position |
 
 ---
 

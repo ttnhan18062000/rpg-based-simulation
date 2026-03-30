@@ -15,12 +15,13 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from src.actions.base import ActionProposal
 from src.config import SimulationConfig
-from src.core.enums import ActionType, AIState
-from src.core.faction import Faction
-from src.core.grid import Grid
-from src.core.items import Inventory
-from src.core.models import Entity, Stats, Vector2
-from src.core.world_state import WorldState
+from src.core.models.enums import ActionType, AIState
+from src.core.gameplay.faction import Faction
+from src.core.world.grid import Grid
+from src.core.gameplay.items.items import Inventory
+from src.core.entities.entity import Entity
+from src.core.models.vectors import Vector2
+from src.core.models.world_state import WorldState
 from src.engine.conflict_resolver import ConflictResolver
 from src.systems.rng import DeterministicRNG
 from src.systems.spatial_hash import SpatialHash
@@ -118,7 +119,7 @@ class TestMoveConflicts:
         e = _make_entity(1, x=3, y=3)
         world.add_entity(e)
 
-        from src.core.enums import Material
+        from src.core.models.enums import Material
         world.grid.set(Vector2(4, 3), Material.WALL)
 
         p = ActionProposal(actor_id=1, verb=ActionType.MOVE, target=Vector2(4, 3), reason="walk")
@@ -205,11 +206,11 @@ class TestDiagonalHuntYield:
     def _make_hunt_ctx(self, actor, world):
         """Build an AIContext from entity + world for HuntHandler tests."""
         from src.ai.states import AIContext
-        from src.core.snapshot import Snapshot
+        from src.core.models.snapshot import Snapshot
 
         cfg = SimulationConfig()
         rng = DeterministicRNG(42)
-        from src.core.faction import FactionRegistry
+        from src.core.gameplay.faction import FactionRegistry
         faction_reg = FactionRegistry.default()
         snapshot = Snapshot.from_world(world)
         return AIContext(

@@ -4,9 +4,10 @@ import sys
 import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from src.core.models import Entity, Stats, Vector2
-from src.core.enums import AIState
-from src.core.faction import Faction
+from src.core.entities.entity import Entity
+from src.core.models.vectors import Vector2
+from src.core.models.enums import AIState
+from src.core.gameplay.faction import Faction
 from src.core.quests import (
     Quest, QuestType, QuestTemplate, generate_quest, MAX_ACTIVE_QUESTS,
     QUEST_TEMPLATES, TEMPLATE_MAP,

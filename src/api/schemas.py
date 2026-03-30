@@ -28,8 +28,9 @@ class AttributeSchema(BaseModel):
     per_frac: float = 0.0
     cha_frac: float = 0.0
 
-    class Config:
-        populate_by_name = True
+    model_config = {
+        "populate_by_name": True
+    }
 
 
 class AttributeCapSchema(BaseModel):
@@ -91,6 +92,7 @@ class EntitySlimSchema(BaseModel):
     """Minimal entity data for rendering (non-selected entities)."""
     id: int
     kind: str
+    display_name: str = ""
     x: int
     y: int
     hp: int
@@ -104,13 +106,15 @@ class EntitySlimSchema(BaseModel):
     loot_progress: int = 0
     loot_duration: int = 3
 
-    class Config:
-        frozen = True
+    model_config = {
+        "frozen": True
+    }
 
 
 class EntitySchema(BaseModel):
     id: int
     kind: str
+    display_name: str = ""
     x: int
     y: int
     hp: int
@@ -200,9 +204,56 @@ class EntitySchema(BaseModel):
     home_storage_max: int = 0
     home_storage_level: int = 0
 
-    class Config:
-        frozen = True
-        populate_by_name = True
+# --- Introspection (Phase 4) ---
+
+class StatSourceSchema(BaseModel):
+    source_name: str
+    flat_bonus: int = 0
+    mult_bonus: float = 1.0
+
+class StatBreakdownSchema(BaseModel):
+    stat_name: str
+    final_value: float
+    base_value: float
+    sources: list[StatSourceSchema] = Field(default_factory=list)
+
+class CombatTraceSchema(BaseModel):
+    tick: int
+    attacker_id: int
+    defender_id: int
+    skill_used: str
+    raw_damage: int
+    mitigation: int
+    elemental_mult: float = 1.0
+    is_crit: bool = False
+    is_evasion: bool = False
+    explanation: str = ""
+
+class GoalScoreSchema(BaseModel):
+    goal_name: str
+    score: float
+    status: str = "considering" # "executing" | "considering"
+
+class AIDecisionSchema(BaseModel):
+    entity_id: int
+    current_state: str
+    winning_goal: str
+    goal_scores: list[GoalScoreSchema] = Field(default_factory=list)
+    nearest_enemy_dist: float | None = None
+    nearest_target_id: int | None = None
+
+class SchedulerTimelineItemSchema(BaseModel):
+    entity_id: int
+    display_name: str
+    next_act_tick: int
+    wait_ticks: int
+    action_type: str = "unknown"
+
+class EntityInspectionSchema(BaseModel):
+    entity: EntitySchema
+    stat_breakdowns: dict[str, StatBreakdownSchema] = Field(default_factory=dict)
+    combat_history: list[CombatTraceSchema] = Field(default_factory=list)
+    ai_explanation: AIDecisionSchema | None = None
 
 
 # --- Map ---
@@ -235,8 +286,11 @@ class BuildingSchema(BaseModel):
     x: int
     y: int
     building_type: str
-    # Hero house storage (only populated for hero_house type)
     owner_entity_id: int | None = None
+
+
+class BuildingStateSchema(BaseModel):
+    building_id: str
     storage_items: list[str] = Field(default_factory=list)
     storage_used: int = 0
     storage_max: int = 0
@@ -265,10 +319,15 @@ class ResourceNodeSchema(BaseModel):
     y: int
     terrain: int
     yields_item: str
-    remaining: int
     max_harvests: int
-    is_available: bool
+    respawn_cooldown: int
     harvest_ticks: int
+
+
+class ResourceNodeStateSchema(BaseModel):
+    node_id: int
+    remaining: int
+    is_available: bool
 
 
 class TreasureChestSchema(BaseModel):
@@ -276,6 +335,10 @@ class TreasureChestSchema(BaseModel):
     x: int
     y: int
     tier: int
+
+
+class TreasureChestStateSchema(BaseModel):
+    chest_id: int
     looted: bool
     guard_entity_id: int | None = None
 
@@ -297,6 +360,8 @@ class RegionSchema(BaseModel):
     center_y: int
     radius: int
     difficulty: int
+    owner_faction: str | None = None
+    influence: float = 0.0
     locations: list[LocationSchema] = Field(default_factory=list)
 
 
@@ -307,6 +372,13 @@ class WorldStateResponse(BaseModel):
     selected_entity: EntitySchema | None = None
     events: list[EventSchema] = Field(default_factory=list)
     ground_items: list[GroundItemSchema] = Field(default_factory=list)
+    # Dynamic world object state (Audit Point 3 follow-up)
+    resource_nodes: list[ResourceNodeStateSchema] = Field(default_factory=list)
+    treasure_chests: list[TreasureChestStateSchema] = Field(default_factory=list)
+    buildings: list[BuildingStateSchema] = Field(default_factory=list)
+    # Strategic State (Milestone 11)
+    war_status: dict[str, bool] = Field(default_factory=dict)
+    faction_aggression: dict[str, float] = Field(default_factory=dict)
 
 
 class StaticDataResponse(BaseModel):
@@ -345,6 +417,7 @@ class SimulationConfigResponse(BaseModel):
 
 class SimulationStats(BaseModel):
     tick: int
+    world_day: int
     alive_count: int
     total_spawned: int
     total_deaths: int

@@ -1,16 +1,16 @@
 import pytest
 import logging
-from src.core.world_state import WorldState
+from src.core.models.world_state import WorldState
 from src.engine.world_loop import WorldLoop
 from src.config import SimulationConfig
 from src.engine.worker_pool import WorkerPool
 from src.engine.conflict_resolver import ConflictResolver
-from src.systems.generator import EntityGenerator
+from src.systems.world.generator import EntityGenerator
 from src.systems.rng import DeterministicRNG
-from src.core.enums import Domain, AIState
-from src.core.models import Vector2
-from src.core.faction import Faction
-from src.core.entity_builder import EntityBuilder
+from src.core.models.enums import Domain, AIState
+from src.core.models.vectors import Vector2
+from src.core.gameplay.faction import Faction
+from src.core.entities.entity_builder import EntityBuilder
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -23,7 +23,7 @@ def basic_setup():
         hero_respawn_ticks=10
     )
     
-    from src.core.grid import Grid
+    from src.core.world.grid import Grid
     from src.systems.spatial_hash import SpatialHash
     
     grid = Grid(config.grid_width, config.grid_height)
@@ -45,7 +45,7 @@ def test_multi_hero_spawning(basic_setup):
     world = loop.world
     
     # Simulate the spawning logic from __main__.py
-    from src.core.classes import HeroClass
+    from src.core.gameplay.classes import HeroClass
     from src.core.hero_names import generate_hero_name
     
     town_center = Vector2(config.town_center_x, config.town_center_y)

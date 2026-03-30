@@ -11,7 +11,7 @@ from src.ai.goals.scorers import (
     CombatGoal, FleeGoal, ExploreGoal, LootGoal,
     TradeGoal, RestGoal, CraftGoal, SocialGoal, GuardGoal,
 )
-from src.core.enums import AIState
+from src.core.models.enums import AIState
 
 
 # ---------------------------------------------------------------------------

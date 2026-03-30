@@ -20,13 +20,14 @@ from src.ai.states import (
     AIContext, HuntHandler, WanderHandler, ReturnToCampHandler, beyond_leash,
 )
 from src.config import SimulationConfig
-from src.core.enums import ActionType, AIState
-from src.core.faction import Faction, FactionRegistry
-from src.core.grid import Grid
-from src.core.items import Inventory
-from src.core.models import Entity, Stats, Vector2
-from src.core.snapshot import Snapshot
-from src.core.world_state import WorldState
+from src.core.models.enums import ActionType, AIState
+from src.core.gameplay.faction import Faction, FactionRegistry
+from src.core.world.grid import Grid
+from src.core.gameplay.items.items import Inventory
+from src.core.entities.entity import Entity
+from src.core.models.vectors import Vector2
+from src.core.models.snapshot import Snapshot
+from src.core.models.world_state import WorldState
 from src.systems.rng import DeterministicRNG
 from src.systems.spatial_hash import SpatialHash
 

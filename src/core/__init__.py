@@ -1,21 +1,11 @@
-"""Core data models and world representation."""
+"""Core simulation models and logic following Aspect-Oriented Architecture (AOA).
 
-from src.core.enums import AIState, ActionType, Direction, Domain, Material
-from src.core.models import Entity, Stats, Vector2
-from src.core.grid import Grid
-from src.core.world_state import WorldState
-from src.core.snapshot import Snapshot
+This package is a structured container for:
+- aspects/     — Discrete, side-effect-free data components (Combat, Inventory, etc.)
+- entities/    — Composition-based actors and entity builders.
+- models/      — Core data classes (Vector2, WorldState, Snapshot) and enums.
+- gameplay/    — Higher-level simulation logic (Attributes, Classes, Quests).
+- world/       — Grid, Regions, Spawn configuration.
 
-__all__ = [
-    "AIState",
-    "ActionType",
-    "Direction",
-    "Domain",
-    "Entity",
-    "Grid",
-    "Material",
-    "Snapshot",
-    "Stats",
-    "Vector2",
-    "WorldState",
-]
+Explicit imports should be used for all core components.
+"""

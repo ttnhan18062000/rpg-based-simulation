@@ -9,7 +9,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from src.config import SimulationConfig
 from src.api.engine_manager import EngineManager
-from src.core.enums import ActionType, Domain
+from src.core.models.enums import ActionType, Domain
 
 def _state_fingerprint(mgr: EngineManager) -> str:
     snap = mgr.get_snapshot()

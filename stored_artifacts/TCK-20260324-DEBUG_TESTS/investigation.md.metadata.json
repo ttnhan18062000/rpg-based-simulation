@@ -1,0 +1,5 @@
+{
+  "artifactType": "ARTIFACT_TYPE_OTHER",
+  "summary": "Investigation report for the test suite failures and skips. Includes root causes for TypeErrors, AttributeErrors, and the UnboundLocalError in quest generation.",
+  "updatedAt": "2026-03-23T23:08:27.614928400Z"
+}

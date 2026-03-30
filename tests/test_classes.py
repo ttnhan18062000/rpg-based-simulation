@@ -4,13 +4,13 @@ import sys
 import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from src.core.classes import (
+from src.core.gameplay.classes import (
     HeroClass, SkillType, SkillTarget, SkillDef, SkillInstance,
     ClassDef, BreakthroughDef, CLASS_DEFS, BREAKTHROUGHS, SKILL_DEFS,
     RACE_SKILLS, CLASS_SKILLS, can_breakthrough, available_class_skills,
     get_attr_value,
 )
-from src.core.attributes import Attributes
+from src.core.gameplay.attributes import Attributes
 
 
 class TestSkillDef:

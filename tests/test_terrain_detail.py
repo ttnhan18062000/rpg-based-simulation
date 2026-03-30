@@ -5,10 +5,10 @@ import os
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from src.core.enums import Material
-from src.core.grid import Grid
-from src.core.models import Vector2
-from src.core.regions import Region
+from src.core.models.enums import Material
+from src.core.world.grid import Grid
+from src.core.models.vectors import Vector2
+from src.core.world.regions import Region
 from src.systems.rng import DeterministicRNG
 from src.systems.terrain_detail import TerrainDetailGenerator, _BIOME_FEATURES
 
@@ -208,7 +208,7 @@ class TestMountainDetail:
 class TestRoadNetwork:
     def test_road_connects_locations(self):
         """Regions with locations should have ROAD tiles connecting them."""
-        from src.core.regions import Location
+        from src.core.world.regions import Location
         grid, gen, _ = _make_grid_and_gen(terrain=Material.FOREST)
         region = _make_region(Material.FOREST)
         region.locations = [

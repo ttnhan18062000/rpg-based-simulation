@@ -9,11 +9,11 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from src.core.faction import FactionRegistry
-from src.core.models import Entity, Vector2
+from src.core.gameplay.faction import FactionRegistry
+from src.core.entities.entity import Entity, Vector2
 
 if TYPE_CHECKING:
-    from src.core.snapshot import Snapshot
+    from src.core.models.snapshot import Snapshot
 
 
 class Perception:
@@ -32,17 +32,29 @@ class Perception:
         vision_range: int,
     ) -> list[Entity]:
         """Return entities within Manhattan distance *vision_range* of *actor*."""
-        ax, ay = actor.pos.x, actor.pos.y
+        ax, ay = actor.spatial.pos.x, actor.spatial.pos.y
         aid = actor.id
         vr = vision_range
         entities = snapshot.entities
         result: list[Entity] = []
-        for eid in snapshot.nearby_entity_ids(ax, ay, vr):
+        nearby = snapshot.nearby_entity_ids(ax, ay, vr)
+        for eid in nearby:
             if eid == aid:
                 continue
             e = entities[eid]
-            if abs(ax - e.pos.x) + abs(ay - e.pos.y) <= vr:
-                result.append(e)
+            
+            # Pillar 7: PER-based Hidden Discovery
+            if getattr(e, "is_hidden", False):
+                # Hidden entities (traps, caches, stealthed units) 
+                # require PER >= 20 to see at all
+                per = 5
+                if actor.progression and actor.progression.attributes:
+                    per = getattr(actor.progression.attributes, "per", 5)
+                if per < 20:
+                    continue
+            
+            result.append(e)
+        
         return result
 
     # ------------------------------------------------------------------
@@ -57,18 +69,19 @@ class Perception:
     ) -> Entity | None:
         """Return the closest visible hostile entity, tie-broken by lowest ID.
 
-        Uses the FactionRegistry when provided; falls back to faction != actor.faction.
+        Uses the FactionRegistry when provided; falls back to faction != actor.identity.faction.
         """
         if faction_reg is not None:
             enemies = [
                 e for e in visible
-                if e.alive and faction_reg.is_hostile(actor.faction, e.faction)
+                if e.combat.alive and faction_reg.is_hostile(actor.identity.faction, e.identity.faction)
             ]
         else:
-            enemies = [e for e in visible if e.alive and e.faction != actor.faction]
+            enemies = [e for e in visible if e.combat.alive and e.identity.faction != actor.identity.faction]
+        
         if not enemies:
             return None
-        return min(enemies, key=lambda e: (actor.pos.manhattan(e.pos), e.id))
+        return min(enemies, key=lambda e: (actor.spatial.pos.manhattan(e.spatial.pos), e.id))
 
     @staticmethod
     def highest_threat_enemy(
@@ -84,21 +97,22 @@ class Perception:
         if faction_reg is not None:
             enemies = [
                 e for e in visible
-                if e.alive and faction_reg.is_hostile(actor.faction, e.faction)
+                if e.combat.alive and faction_reg.is_hostile(actor.identity.faction, e.identity.faction)
             ]
         else:
-            enemies = [e for e in visible if e.alive and e.faction != actor.faction]
+            enemies = [e for e in visible if e.combat.alive and e.identity.faction != actor.identity.faction]
         if not enemies:
             return None
         # Check threat table for entries
-        if actor.threat_table:
+        threat_table = actor.mind.perception.threat_table
+        if threat_table:
             # Filter to visible enemies that have threat entries
-            threatened = [e for e in enemies if e.id in actor.threat_table]
+            threatened = [e for e in enemies if e.id in threat_table]
             if threatened:
                 return max(threatened, key=lambda e: (
-                    actor.threat_table[e.id], -actor.pos.manhattan(e.pos), -e.id))
+                    threat_table[e.id], -actor.spatial.pos.manhattan(e.spatial.pos), -e.id))
         # Fallback: nearest enemy
-        return min(enemies, key=lambda e: (actor.pos.manhattan(e.pos), e.id))
+        return min(enemies, key=lambda e: (actor.spatial.pos.manhattan(e.spatial.pos), e.id))
 
     @staticmethod
     def nearest_ally(
@@ -110,16 +124,16 @@ class Perception:
         if faction_reg is not None:
             allies = [
                 e for e in visible
-                if e.alive and e.id != actor.id and faction_reg.is_allied(actor.faction, e.faction)
+                if e.combat.alive and e.id != actor.id and faction_reg.is_allied(actor.identity.faction, e.identity.faction)
             ]
         else:
             allies = [
                 e for e in visible
-                if e.alive and e.id != actor.id and e.faction == actor.faction
+                if e.combat.alive and e.id != actor.id and e.identity.faction == actor.identity.faction
             ]
         if not allies:
             return None
-        return min(allies, key=lambda e: (actor.pos.manhattan(e.pos), e.id))
+        return min(allies, key=lambda e: (actor.spatial.pos.manhattan(e.spatial.pos), e.id))
 
     @staticmethod
     def count_nearby_allies(
@@ -131,11 +145,11 @@ class Perception:
         if faction_reg is not None:
             return sum(
                 1 for e in visible
-                if e.alive and e.id != actor.id and faction_reg.is_allied(actor.faction, e.faction)
+                if e.combat.alive and e.id != actor.id and faction_reg.is_allied(actor.identity.faction, e.identity.faction)
             )
         return sum(
             1 for e in visible
-            if e.alive and e.id != actor.id and e.faction == actor.faction
+            if e.combat.alive and e.id != actor.id and e.identity.faction == actor.identity.faction
         )
 
     # ------------------------------------------------------------------
@@ -169,17 +183,17 @@ class Perception:
     @staticmethod
     def is_in_town(actor: Entity, snapshot: Snapshot) -> bool:
         """Return True if the actor is standing on a TOWN tile."""
-        return snapshot.grid.is_town(actor.pos)
+        return snapshot.grid.is_town(actor.spatial.pos)
 
     @staticmethod
     def is_in_sanctuary(actor: Entity, snapshot: Snapshot) -> bool:
         """Return True if the actor is standing on a SANCTUARY tile."""
-        return snapshot.grid.is_sanctuary(actor.pos)
+        return snapshot.grid.is_sanctuary(actor.spatial.pos)
 
     @staticmethod
     def is_in_camp(actor: Entity, snapshot: Snapshot) -> bool:
         """Return True if the actor is standing on a CAMP tile."""
-        return snapshot.grid.is_camp(actor.pos)
+        return snapshot.grid.is_camp(actor.spatial.pos)
 
     @staticmethod
     def is_on_home_territory(
@@ -188,8 +202,8 @@ class Perception:
         faction_reg: FactionRegistry,
     ) -> bool:
         """Return True if the actor is standing on its own faction's territory."""
-        mat = snapshot.grid.get(actor.pos)
-        return faction_reg.is_home_territory(actor.faction, mat)
+        mat = snapshot.grid.get(actor.spatial.pos)
+        return faction_reg.is_home_territory(actor.identity.faction, mat)
 
     @staticmethod
     def is_on_enemy_territory(
@@ -198,8 +212,8 @@ class Perception:
         faction_reg: FactionRegistry,
     ) -> bool:
         """Return True if the actor is standing on a hostile faction's territory."""
-        mat = snapshot.grid.get(actor.pos)
-        return faction_reg.is_enemy_territory(actor.faction, mat)
+        mat = snapshot.grid.get(actor.spatial.pos)
+        return faction_reg.is_enemy_territory(actor.identity.faction, mat)
 
     # ------------------------------------------------------------------
     # Loot & camps
@@ -207,13 +221,20 @@ class Perception:
 
     @staticmethod
     def ground_loot_nearby(actor: Entity, snapshot: Snapshot, radius: int = 3) -> Vector2 | None:
-        """Return the position of the nearest ground loot pile within radius, or None."""
+        """Return the position of the nearest ground loot pile within radius, or None.
+        
+        Optimized: uses spatial index for O(1) cell lookup.
+        """
         best_pos: Vector2 | None = None
         best_dist = radius + 1
-        for (gx, gy), items in snapshot.ground_items.items():
+        ax, ay = actor.spatial.pos.x, actor.spatial.pos.y
+        
+        # Use spatial index to only check nearby cells
+        for gx, gy in snapshot.nearby_ground_positions(ax, ay, radius):
+            items = snapshot.ground_items.get((gx, gy))
             if not items:
                 continue
-            dist = abs(actor.pos.x - gx) + abs(actor.pos.y - gy)
+            dist = abs(ax - gx) + abs(ay - gy)
             if dist <= radius and dist < best_dist:
                 best_dist = dist
                 best_pos = Vector2(gx, gy)
@@ -233,11 +254,13 @@ class Perception:
         Optimized: only scans a bounded neighborhood around the actor instead
         of iterating all explored tiles (which grows with the map).
         """
-        explored = actor.terrain_memory
+        explored = actor.mind.perception.terrain_memory
         grid = snapshot.grid
-        ax, ay = actor.pos.x, actor.pos.y
+        ax, ay = actor.spatial.pos.x, actor.spatial.pos.y
         # Search in expanding rings up to a max scan radius
-        scan_radius = min(actor.stats.vision_range * 4, 40)
+        # Heroes scan further, others scan less to save CPU
+        max_r = 40 if actor.kind == "hero" else 15
+        scan_radius = min(actor.spatial.vision_range * 4, max_r)
         frontier: list[tuple[int, Vector2]] = []  # (distance, pos)
 
         grid_w, grid_h = grid.width, grid.height
@@ -270,6 +293,22 @@ class Perception:
 
         if not frontier:
             return None
+            
+        # Nemesis System: Penalize regions with bad sentiment
+        memory_locations = actor.mind.narrative.memory_locations
+        if hasattr(actor, "mind") and memory_locations:
+            from src.core.world.regions import find_region_at
+            sentiment_frontier = []
+            for dist, pos in frontier:
+                region = find_region_at(pos, snapshot.regions)
+                region_id = region.region_id if region else None
+                sentiment = memory_locations.get(region_id, 0.0) if region_id else 0.0
+                # If sentiment is negative, increase the effective distance (make it less attractive)
+                # sentiment -1.0 adds 100 to distance
+                effective_dist = dist + (abs(min(0, sentiment)) * 100)
+                sentiment_frontier.append((effective_dist, pos))
+            frontier = sentiment_frontier
+
         # Sort by distance, pick from closest candidates with randomness
         frontier.sort(key=lambda t: t[0])
         pool = [p for _, p in frontier[:min(8, len(frontier))]]
@@ -278,15 +317,13 @@ class Perception:
     @staticmethod
     def remembered_enemy_strength(actor: Entity, target_id: int) -> dict | None:
         """Return the remembered entity_memory entry for a specific entity, or None."""
-        for em in actor.entity_memory:
-            if em["id"] == target_id:
-                return em
-        return None
+        return actor.mind.perception.entity_memory.get(target_id)
 
     @staticmethod
     def strongest_remembered_enemy(actor: Entity) -> dict | None:
         """Return the remembered enemy with the highest ATK, or None."""
-        enemies = [em for em in actor.entity_memory if em.get("atk", 0) > 0]
+        memory = actor.mind.perception.entity_memory
+        enemies = [em for em in memory.values() if isinstance(em, dict) and em.get("atk", 0) > 0]
         if not enemies:
             return None
         return max(enemies, key=lambda em: em.get("atk", 0))
@@ -299,7 +336,7 @@ class Perception:
         best: tuple[int, int] | None = None
         best_dist = 9999
         for cx, cy in snapshot.camps:
-            d = abs(actor.pos.x - cx) + abs(actor.pos.y - cy)
+            d = abs(actor.spatial.pos.x - cx) + abs(actor.spatial.pos.y - cy)
             if d < best_dist:
                 best_dist = d
                 best = (cx, cy)

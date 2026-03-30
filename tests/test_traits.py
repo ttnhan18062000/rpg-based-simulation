@@ -4,7 +4,7 @@ import sys
 import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from src.core.enums import TraitType
+from src.core.models.enums import TraitType
 from src.core.traits import (
     TraitDef, UtilityBonus, TraitStatModifiers,
     TRAIT_DEFS, INCOMPATIBLE_PAIRS,
@@ -215,13 +215,13 @@ class TestTraitAssignment:
 
     def test_assigns_between_2_and_4_traits(self):
         rng = _FakeRNG()
-        from src.core.enums import Domain
+        from src.core.models.enums import Domain
         traits = assign_traits(rng, Domain.SPAWN, 1, 0)
         assert 2 <= len(traits) <= 4
 
     def test_no_incompatible_pairs_in_result(self):
         rng = _FakeRNG()
-        from src.core.enums import Domain
+        from src.core.models.enums import Domain
         for eid in range(20):  # test multiple spawns
             traits = assign_traits(rng, Domain.SPAWN, eid, 0)
             for i, a in enumerate(traits):
@@ -232,14 +232,14 @@ class TestTraitAssignment:
 
     def test_all_assigned_traits_are_valid(self):
         rng = _FakeRNG()
-        from src.core.enums import Domain
+        from src.core.models.enums import Domain
         traits = assign_traits(rng, Domain.SPAWN, 1, 0)
         for t in traits:
             assert t in TRAIT_DEFS, f"Unknown trait {t} assigned"
 
     def test_race_prefix_accepted(self):
         rng = _FakeRNG()
-        from src.core.enums import Domain
+        from src.core.models.enums import Domain
         hero_traits = assign_traits(rng, Domain.SPAWN, 1, 0, race_prefix="hero")
         assert 2 <= len(hero_traits) <= 4
         goblin_traits = assign_traits(rng, Domain.SPAWN, 2, 0, race_prefix="goblin")

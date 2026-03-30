@@ -13,8 +13,7 @@ from sse_starlette.sse import EventSourceResponse
 from src.api.dependencies import get_engine_manager
 from src.api.engine_manager import EngineManager
 from src.api.schemas import EntitySlimSchema, EventSchema
-from src.api.routes.state import _get_weapon_range
-from src.core.snapshot import Snapshot
+from src.core.models.snapshot import Snapshot
 from src.utils.event_log import SimEvent
 
 router = APIRouter()
@@ -23,26 +22,12 @@ logger = logging.getLogger(__name__)
 
 def _snapshot_to_slim_dict(snapshot: Snapshot, loot_duration: int) -> dict[int, EntitySlimSchema]:
     """Convert snapshot entities to a dict of fast serializable SlimSchemas."""
+    from src.api.presenters.entity_presenter import EntityPresenter
     res = {}
     for eid, e in snapshot.entities.items():
-        if not e.alive:
+        if not e.combat.alive:
             continue
-        res[eid] = EntitySlimSchema(
-            id=e.id,
-            kind=e.kind,
-            x=e.pos.x,
-            y=e.pos.y,
-            hp=e.stats.hp,
-            max_hp=e.stats.max_hp,
-            state=e.ai_state.name,
-            level=e.stats.level,
-            tier=e.tier,
-            faction=e.faction.name.lower(),
-            weapon_range=_get_weapon_range(e),
-            combat_target_id=e.combat_target_id,
-            loot_progress=e.loot_progress,
-            loot_duration=loot_duration,
-        )
+        res[eid] = EntityPresenter.to_slim_schema(e, loot_duration=loot_duration)
     return res
 
 

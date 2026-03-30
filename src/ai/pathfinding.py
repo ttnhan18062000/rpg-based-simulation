@@ -14,11 +14,11 @@ from __future__ import annotations
 import heapq
 from typing import TYPE_CHECKING
 
-from src.core.enums import Material
+from src.core.models.enums import Material
 from src.core.models import Vector2
 
 if TYPE_CHECKING:
-    from src.core.grid import Grid
+    from src.core.world.grid import Grid
 
 # ---------------------------------------------------------------------------
 # Terrain movement cost registry (F2)

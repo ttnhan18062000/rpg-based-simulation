@@ -1,6 +1,6 @@
 # Entities & Factions
 
-Technical documentation for the entity model, faction system, races, tiers, territory intrusion, and status effects.
+Technical documentation for the entity model, faction system, races, tiers, territory intrusion, and status effects. For the macroscopic faction simulation, see [Grand Strategy](file:///d:/Projects/rpg-based-simulation/docs/grand_strategy.md).
 
 ---
 
@@ -37,6 +37,9 @@ Every agent in the simulation is an `Entity`. Each entity belongs to exactly one
 | `home_storage` | HomeStorage \| None | Hero's persistent home storage |
 | `attributes` | Attributes \| None | 9 primary attributes (STR, AGI, etc.) |
 | `attribute_caps` | AttributeCaps \| None | Attribute growth limits |
+| `death_count` | int | Incremented on respawn (perm-death at limit) |
+| `generation` | int | Sequence number for replacements (1, 2, 3...) |
+| `hero_familiarity` | dict[int, float] | Proximity-based bond scoring (0.0–1.0) |
 | `hero_class` | int | HeroClass enum value (0=NONE) |
 | `skills` | list[SkillInstance] | Learned skills with runtime state |
 | `class_mastery` | float | 0.0–100.0 |
@@ -47,22 +50,24 @@ Every agent in the simulation is an `Entity`. Each entity belongs to exactly one
 | `craft_target` | str \| None | Current crafting goal |
 | `terrain_memory` | set[tuple] | Explored tile positions |
 | `entity_memory` | dict | Last-seen positions of other entities |
+| `reputation` | float | Hero's world prestige (0.0–1.0+) |
+| `facing` | Vector2 | Last movement direction (for Flanking) |
 | `vision_range` | int | Perception radius (Manhattan distance) |
 | `engaged_ticks` | int | Consecutive ticks adjacent to a hostile |
 
 ### Effective Stat Methods
 
-Equipment bonuses and status effects flow through `effective_*()` methods:
+Equipment bonuses and status effects are calculated dynamically via the **StatsProxy** delegation:
 
 ```python
-entity.effective_atk()       # base + equipment + effects
-entity.effective_def()
-entity.effective_spd()
-entity.effective_max_hp()
-entity.effective_crit_rate()
-entity.effective_evasion()
-entity.effective_matk()      # magical attack
-entity.effective_mdef()      # magical defense
+entity.stats.atk             # base + equipment + effects + veterancy + bravery
+entity.stats.def_            # (trailing underscore for def keyword)
+entity.stats.spd
+entity.stats.max_hp
+entity.stats.crit_rate
+entity.stats.evasion
+entity.stats.matk            # magical attack
+entity.stats.mdef            # magical defense
 ```
 
 ### EntityRole
@@ -71,7 +76,8 @@ entity.effective_mdef()      # magical defense
 |------|-------|-------------|
 | HERO | 0 | Can use town buildings, AI goal-driven |
 | MOB | 1 | Wild creature/enemy, guards territory |
-| NPC | 2 | Town resident (future) |
+| CALAMITY | 2 | World boss, massive HP, unique auras |
+| NPC | 3 | Town resident (future) |
 
 ---
 
@@ -129,6 +135,41 @@ Entity `kind` strings are registered to factions:
 | `frost_wolf`, `frost_giant`, `frost_shaman` | FROST_KIN |
 | `lizard`, `lizard_warrior`, `lizard_chief` | LIZARDFOLK |
 | `imp`, `hellhound`, `demon_lord` | DEMON_HORDE |
+| `gorath`, `vexira`, `morgul` | (Various) - Calamity Bosses |
+
+---
+
+## Hero Familiarity & Alliances
+
+Heroes track social bonds with each other based on co-presence in the world.
+
+### Mechanics
+- **Proximity Bond**: When two heroes are within vision range, they gain `+0.002` familiarity per tick.
+- **Decay**: If apart (out of vision), familiarity decays by `-0.0005` per tick.
+- **Alliance Threshold**: Once familiarity reaches `0.5`, the heroes are considered **Allies**. An event is emitted notification of the alliance.
+- **Limit**: Familiarity is capped at `1.0`.
+
+This system influences AI behaviors such as choosing to aid an ally in combat or sharing information.
+
+---
+
+## Faction War & Strategy (Milestone 11)
+
+Except for the `HERO_GUILD`, all factions grow more hostile based on their proximity and history with the town.
+
+### Aggression & War
+- **Rate**: `+0.001` per tick base. Attacks on faction members cause immediate spikes.
+- **Aggression Threshold**: At **80.0**, the faction declares **WAR**.
+- **War Behavior**: 
+  - **Aggression Bonus**: Entities gain a `+0.3` bonus to their `CombatGoal` utility score.
+  - **Tier Escalation**: Higher probability of **WARRIOR** and **ELITE** spawns.
+- **Truce**: War only ends if aggression drops below **50.0**.
+
+### Strategic Ownership
+Regions (biomes) are dynamically conquered or liberated:
+- **Conquest**: If Monster influence reachs **-80.0**, the region is assigned to the dominant Monster faction.
+- **Strongholds**: A static fortification spawns at the region center, providing a staging ground for raids.
+- **Liberation**: If Hero influence reaches **50.0**, the region is liberated, and the stronghold is destroyed.
 
 ---
 
@@ -150,14 +191,14 @@ Each faction owns a tile type via `TerritoryInfo`:
 |---------|------|-----------|-----------|-----------|-------------|
 | HERO_GUILD | TOWN | 0.6× | 0.6× | 0.8× | 6 |
 | GOBLIN_HORDE | CAMP | 0.7× | 0.7× | 0.85× | 6 |
-| WOLF_PACK | FOREST | 0.7× | 0.7× | 0.85× | 6 |
-| BANDIT_CLAN | DESERT | 0.7× | 0.7× | 0.85× | 6 |
-| UNDEAD | SWAMP | 0.7× | 0.7× | 0.85× | 6 |
-| ORC_TRIBE | MOUNTAIN | 0.7× | 0.7× | 0.85× | 6 |
-| CENTAUR_HERD | GRASSLAND | 0.7× | 0.7× | 0.85× | 6 |
-| FROST_KIN | SNOW | 0.7× | 0.7× | 0.85× | 6 |
-| LIZARDFOLK | JUNGLE | 0.7× | 0.7× | 0.85× | 6 |
-| DEMON_HORDE | VOLCANIC | 0.7× | 0.7× | 0.85× | 6 |
+| WOLF_PACK | FOREST | 0.8× | 0.8× | 0.9× | 5 |
+| BANDIT_CLAN | DESERT | 0.75× | 0.75× | 0.85× | 6 |
+| UNDEAD | SWAMP | 0.7× | 0.7× | 0.8× | 7 |
+| ORC_TRIBE | MOUNTAIN | 0.75× | 0.75× | 0.85× | 6 |
+| CENTAUR_HERD | GRASSLAND | 0.8× | 0.8× | 0.9× | 8 |
+| FROST_KIN | SNOW | 0.7× | 0.7× | 0.8× | 6 |
+| LIZARDFOLK | JUNGLE | 0.75× | 0.75× | 0.85× | 5 |
+| DEMON_HORDE | VOLCANIC | 0.65× | 0.65× | 0.75× | 7 |
 
 ### Territory Intrusion
 
@@ -195,13 +236,19 @@ Generic system for temporary stat modifiers tracked on each entity.
 |------|-------|-------|
 | TERRITORY_DEBUFF | 0 | Stat penalty for hostile territory |
 | TERRITORY_BUFF | 1 | Stat bonus for home territory |
-| POISON | 2 | DoT |
+| POISON | 2 | Damage Over Time |
 | BERSERK | 3 | ATK up, DEF down |
 | SHIELD | 4 | Temporary DEF boost |
 | HASTE | 5 | SPD boost |
 | SLOW | 6 | SPD penalty |
 | SKILL_BUFF | 7 | Buff from skill use |
 | SKILL_DEBUFF | 8 | Debuff from enemy skill |
+| FROZEN | 10 | Stunned, 3.0x Physical Vulnerability |
+| WET | 11 | 2.0x Magical Vulnerability |
+| SHOCKED | 12 | SPD penalty, chain damage |
+| BURNED | 13 | Damage Over Time (Fire) |
+| SUPPRESSION | 14 | Regional fear (after many deaths) |
+| CONQUERED_DEBUFF | 15 | Heavy penalty in regions with strongholds |
 
 ### Effect Lifecycle
 
@@ -250,10 +297,10 @@ Applied on top of tier multipliers:
 
 | Race | HP Mult | ATK Mult | DEF Mod | SPD Mod | Crit | Evasion | Luck |
 |------|---------|----------|---------|---------|------|---------|------|
-| Wolf | 0.8× | 1.0× | +0 | +2 | 10% | 10% | 0 |
-| Bandit | 1.0× | 0.9× | +1 | +1 | 8% | 5% | 2 |
-| Undead | 1.3× | 0.8× | +3 | -2 | 3% | 0% | 0 |
-| Orc | 1.2× | 1.2× | +2 | -1 | 5% | 2% | 1 |
+| Wolf | 0.9× | 1.0× | -2 | +4 | 10% | 10% | 0 |
+| Bandit | 1.0× | 1.1× | +0 | +2 | 7% | 8% | 2 |
+| Undead | 1.2× | 0.9× | +2 | -2 | 2% | 10% | 0 |
+| Orc | 1.5× | 1.4× | +3 | -1 | 5% | 2% | 1 |
 
 ### Spawning
 

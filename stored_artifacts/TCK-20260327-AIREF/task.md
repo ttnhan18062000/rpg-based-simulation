@@ -1,0 +1,14 @@
+- [x] Initial Research and Analysis
+- [x] Stabilization Phase 1: Cognitive Pipeline
+    - [x] Refine Hysteresis locking in AIBrain
+    - [x] Fix ActionProposal state propagation
+- [x] Stabilization Phase 2: Soul & Personality
+    - [x] Remove redundant guards in state handlers
+    - [x] Recalibrate Flee/Combat goal curves (0.6 gate)
+- [x] Stabilization Phase 3: Memory & Nemesis
+    - [x] Implement MemoryModifier for Nemesis fear (30.0 threshold)
+    - [x] Ensure Trauma logic is correctly triggered in combat
+- [x] Verification & Documentation
+    - [x] Achieve 100% pass rate in TestAIRefinementE2E
+    - [x] Update walkthrough with final results
+- [x] Cleanup debug artifacts

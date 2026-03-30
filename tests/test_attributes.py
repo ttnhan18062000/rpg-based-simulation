@@ -4,7 +4,7 @@ import sys
 import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from src.core.attributes import (
+from src.core.gameplay.attributes import (
     Attributes, AttributeCaps,
     derive_max_hp, derive_atk, derive_def, derive_spd,
     derive_crit_rate, derive_evasion, derive_luck, derive_stamina,

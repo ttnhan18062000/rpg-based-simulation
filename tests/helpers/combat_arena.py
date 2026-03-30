@@ -8,33 +8,36 @@ Usage:
     arena.add_melee_hero(1, pos=(5, 5))
     arena.add_mob(2, pos=(6, 5), weapon="rusty_sword")
     events = arena.run_ticks(10)
-    assert arena.entity(2).stats.hp < arena.entity(2).stats.max_hp
+    assert arena.entity(2).combat.hp < arena.entity(2).combat.max_hp
 """
 
 from __future__ import annotations
 
-import sys
-import os
-from typing import Callable
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 
 from src.config import SimulationConfig
-from src.core.attributes import Attributes, AttributeCaps, recalc_derived_stats
-from src.core.classes import HeroClass, SkillInstance
-from src.core.effects import StatusEffect
-from src.core.enums import AIState, EnemyTier, Material
-from src.core.faction import Faction, FactionRegistry
-from src.core.grid import Grid
-from src.core.items import Inventory, ITEM_REGISTRY
-from src.core.models import Entity, Stats, Vector2
-from src.core.world_state import WorldState
+from src.core.gameplay.attributes import Attributes, AttributeCaps, recalc_derived_stats
+from src.core.gameplay.classes import HeroClass, SkillInstance, SKILL_DEFS
+from src.core.gameplay.effects import StatusEffect
+from src.core.models.enums import AIState, EnemyTier, Material, EntityRole
+from src.core.gameplay.faction import Faction, FactionRegistry
+from src.core.world.grid import Grid
+from src.core.gameplay.items.item_registry import ITEM_REGISTRY
+from src.core.aspects.identity import IdentityAspect
+from src.core.aspects.spatial import SpatialAspect
+from src.core.aspects.combat import CombatAspect
+from src.core.aspects.inventory import InventoryAspect
+from src.core.aspects.progression import ProgressionAspect
+from src.core.aspects.mind import MindAspect
+from src.core.aspects.interaction import InteractionAspect
+from src.core.entities.entity import Entity, Vector2
+from src.core.models.world_state import WorldState
 from src.engine.conflict_resolver import ConflictResolver
 from src.engine.worker_pool import WorkerPool
 from src.engine.world_loop import WorldLoop
-from src.systems.generator import EntityGenerator
-from src.systems.rng import DeterministicRNG
-from src.systems.spatial_hash import SpatialHash
+from src.systems.world.generator import EntityGenerator
+from src.platform.rng import DeterministicRNG
+from src.platform.spatial_hash import SpatialHash
 from src.utils.event_log import SimEvent
 
 
@@ -68,11 +71,15 @@ class CombatArena:
         spatial = SpatialHash(self.config.spatial_cell_size)
         self.world = WorldState(seed=seed, grid=grid, spatial_index=spatial)
 
+        from src.core.registry.registry_loader import load_all_registries
+        load_all_registries()
+        
         brain_mod = __import__("src.ai.brain", fromlist=["AIBrain"])
         brain = brain_mod.AIBrain(self.config, self.rng)
-        pool = WorkerPool(self.config, brain)
+        pool = WorkerPool(self.config, brain, self.rng)
         resolver = ConflictResolver(self.config, self.rng)
         gen = EntityGenerator(self.config, self.rng)
+        from src.core.gameplay.faction import Faction, FactionRegistry
         faction_reg = FactionRegistry.default()
 
         self.loop = WorldLoop(
@@ -83,12 +90,13 @@ class CombatArena:
 
     # -- Entity builders --
 
-    def _make_inventory(self, weapon: str | None = None, armor: str | None = None) -> Inventory:
-        inv = Inventory(items=[], max_slots=12, max_weight=50.0)
+    def _make_inventory(self, weapon: str | None = None, armor: str | None = None) -> InventoryAspect:
+        inv = InventoryAspect(items=[], max_slots=12, max_weight=50.0)
         if weapon:
             inv.weapon = weapon
-            if weapon not in inv.items:
-                inv.items.append(weapon)
+            if item_id := weapon: # handle potential None if needed, but here we assume it's an ID
+                if weapon not in inv.items:
+                    inv.items.append(weapon)
         if armor:
             inv.armor = armor
             if armor not in inv.items:
@@ -118,41 +126,58 @@ class CombatArena:
         tier: int = EnemyTier.BASIC,
         home_pos: tuple[int, int] | None = None,
         next_act_at: float = 0.0,
+        level: int = 1,
+        xp: int = 0,
+        mastery: dict[str, float] | None = None,
     ) -> Entity:
         """Add a fully customizable entity to the arena."""
-        stats = Stats(
-            hp=hp, max_hp=hp, atk=atk, matk=matk, def_=def_, mdef=mdef,
-            spd=spd, stamina=100, max_stamina=100,
-        )
+        identity = IdentityAspect(display_name=kind, faction=faction)
+        spatial = SpatialAspect(pos=Vector2(*pos), home_pos=Vector2(*home_pos) if home_pos else None)
+        combat = CombatAspect(hp=hp, max_hp=hp, atk=atk, matk=matk, def_=def_, mdef=mdef, spd=spd)
+        mind = MindAspect()
+        mind.decision.ai_state = ai_state
+        interaction = InteractionAspect()
+        
         attrs = attributes or Attributes(
             str_=5, agi=5, vit=5, int_=5, spi=5, wis=5, end=5, per=5, cha=5,
         )
         caps = AttributeCaps()
+        
+        prog = ProgressionAspect(
+            level=level, xp=xp,
+            attributes=attrs,
+            attribute_caps=caps,
+            hero_class=hero_class,
+        )
+        if effects:
+            combat.effects = list(effects)
+            
         inv = self._make_inventory(weapon, armor)
         skill_list = []
         if skills:
-            for sid in skills:
-                skill_list.append(SkillInstance(skill_id=sid, cooldown_remaining=0))
+            for sname in skills:
+                sdef = SKILL_DEFS.get(sname)
+                if sdef:
+                    m_val = mastery.get(sname, 0.0) if mastery else 0.0
+                    skill_list.append(SkillInstance(skill_id=sname, cooldown_remaining=0, mastery=m_val))
+                else:
+                    print(f"ERROR_SETUP: Skill {sname} not found in registry!")
+        prog.skills = skill_list
 
         entity = Entity(
             id=eid,
             kind=kind,
-            pos=Vector2(*pos),
-            stats=stats,
-            faction=faction,
-            ai_state=ai_state,
-            hero_class=hero_class,
-            inventory=inv,
-            attributes=attrs,
-            attribute_caps=caps,
-            skills=skill_list,
-            effects=list(effects or []),
-            tier=tier,
-            home_pos=Vector2(*home_pos) if home_pos else None,
             next_act_at=next_act_at,
+            identity=identity,
+            spatial=spatial,
+            combat=combat,
+            progression=prog,
+            mind=mind,
+            interaction=interaction,
+            inventory=inv,
         )
         # Apply attribute-derived stat bonuses
-        recalc_derived_stats(entity.stats, entity.attributes)
+        recalc_derived_stats(entity, attrs)
         self.world.add_entity(entity)
         return entity
 
@@ -164,14 +189,18 @@ class CombatArena:
         hero_class: int = HeroClass.WARRIOR,
         weapon: str | None = "iron_sword",
         armor: str | None = "leather_vest",
+        home_pos: tuple[int, int] | None = None,
         **kwargs,
     ) -> Entity:
         """Convenience: add a hero entity with sensible defaults."""
         kwargs.setdefault("faction", Faction.HERO_GUILD)
         kwargs.setdefault("ai_state", AIState.WANDER)
+        # Heroes need a home_pos to respawn correctly in the lifecycle system
+        h_pos = home_pos or pos
         return self.add_entity(
             eid, kind="hero", pos=pos,
             hero_class=hero_class, weapon=weapon, armor=armor,
+            home_pos=h_pos,
             **kwargs,
         )
 
@@ -210,7 +239,10 @@ class CombatArena:
         events: list[SimEvent] = []
         for _ in range(n):
             self.loop.tick_once()
-            events.extend(self.loop.tick_events)
+            tick_events = self.loop.tick_events
+            for evt in tick_events:
+                print(f"DEBUG_EMIT: {evt.category} {evt.message} metadata={evt.metadata}")
+            events.extend(tick_events)
         self._all_events.extend(events)
         return events
 
@@ -239,7 +271,7 @@ class CombatArena:
     def entity_alive(self, eid: int) -> bool:
         """Check if entity exists and is alive."""
         e = self.world.entities.get(eid)
-        return e is not None and e.alive
+        return e is not None and e.combat.alive
 
     def all_events(self) -> list[SimEvent]:
         """All events collected across all run calls."""

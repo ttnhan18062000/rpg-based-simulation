@@ -1,18 +1,19 @@
 from __future__ import annotations
 import pytest
 from src.config import SimulationConfig
-from src.core.models import Entity, Vector2, Stats
-from src.core.attributes import Attributes, AttributeCaps
-from src.core.enums import AIState, ActionType, Domain, EnemyTier, RACE_PROFILES
-from src.core.world_state import WorldState
+from src.core.entities.entity import Entity
+from src.core.models.vectors import Vector2
+from src.core.gameplay.attributes import Attributes, AttributeCaps
+from src.core.models.enums import AIState, ActionType, Domain, EnemyTier, RACE_PROFILES
+from src.core.models.world_state import WorldState
 from src.systems.rng import DeterministicRNG
 from src.engine.world_loop import WorldLoop
 from src.engine.conflict_resolver import ConflictResolver
 from src.engine.worker_pool import WorkerPool
-from src.systems.generator import EntityGenerator
-from src.core.grid import Grid
+from src.systems.world.generator import EntityGenerator
+from src.core.world.grid import Grid
 from src.systems.spatial_hash import SpatialHash
-from src.core.items import ItemTemplate, ItemType, ITEM_REGISTRY
+from src.core.gameplay.items.items import ItemTemplate, ItemType, ITEM_REGISTRY
 
 # Register some dummy items for testing
 ITEM_REGISTRY["lucky_charm"] = ItemTemplate(
@@ -71,7 +72,7 @@ def test_evolution_equipment_refresh():
     cfg = SimulationConfig(world_seed=42)
     rng = DeterministicRNG(cfg.world_seed)
     
-    from src.core.items import Inventory
+    from src.core.gameplay.items.items import Inventory
     actor = Entity(id=1, kind="goblin", pos=Vector2(10, 10))
     actor.tier = EnemyTier.BASIC
     actor.stats = Stats(level=12, hp=50, max_hp=50, xp=0, xp_to_next=1000)

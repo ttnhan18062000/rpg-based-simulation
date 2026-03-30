@@ -64,7 +64,7 @@ All bugs, enhancements, adjustments, design reviews, and infrastructure tickets 
 
 | ID | Ticket | Done | Remaining | Status |
 |----|--------|------|-----------|--------|
-| epic-05 | [Advanced Combat](epic-05-advanced-combat-mechanics.md) | F1 (AoE), F3 (Aggro/Threat), F4 (Ranged), Chase Mechanics | F2 (Combos), F5 (Environmental), F6 (Status Ailments), F7 (Formations) | partial — core combat is deep, remaining features are additive |
+| epic-18 | [Entity Progression Depth](epic-18-entity-progression-depth.md) | Leveling Curve, Racial Profiles, Phase D Evolution, Veterancy | Skill Discovery, Milestones, Battle Marks | partial — core evolution and veterancy are functional |
 | epic-09 | [Pathfinding & Movement](epic-09-improved-pathfinding-and-movement.md) | F1 (A*), F2 (Terrain Costs), F4 (Path Cache), F6 (Obstacle Avoidance), F9 (Terrain Detail), F10 (Tile Tooltip) | F3 (Hazard Avoidance), F5 (Formations), F7 (Speed Mods), F8 (Path Viz) | partial — core pathfinding complete, remaining features are polish |
 
 ---
@@ -86,6 +86,7 @@ Epics re-ordered by how much they contribute to **emergent narrative moments** �
 |----|--------|----------|--------|-----|
 | epic-12 | [AI Personality & Emergent Behavior](epic-12-ai-personality-and-emergent-behavior.md) | **P1** | XXL | Nemesis system, grudges, confidence, mood — turns entities into *individuals* whose history shapes decisions. Highest storytelling ROI. |
 | epic-07 | [Reputation & Faction Diplomacy](epic-07-reputation-and-faction-diplomacy.md) | **P1** | XL | Shifting alliances and faction wars — the political map evolves, creating geopolitical narrative. |
+| epic-20 | [Calamity (World Boss) System](epic-20-calamity-system.md) | **P1** | XL | Prototype with auras and spawning integrated; full randomized spec in progress. |
 
 ### Tier 2 — World Richness (deepen the world)
 
@@ -111,7 +112,7 @@ Epics re-ordered by how much they contribute to **emergent narrative moments** �
 |----|--------|----------------|-------------|
 | epic-04 | [Multi-Hero Party System](epic-04-multi-hero-party-system.md) | Multi-hero spawning, naming, familiarity | Full party formation, shared XP/loot, coordinated tactics |
 | epic-06 | [World Events & Invasions](epic-06-world-events-and-invasions.md) | Faction raids, wandering world boss | Event framework, resource events, environmental disasters |
-| epic-08 | [Transcendence & Endgame Classes](epic-08-transcendence-and-endgame-classes.md) | Tier 3 classes, ultimate skills | Trial quests, visual identity, post-transcendence growth |
+| epic-08 | [Transcendence & Endgame Classes](epic-08-transcendence-and-endgame-classes.md) | **P4 of Epic-20** | Trial quests, visual identity, post-transcendence growth |
 | epic-01 | [Dungeon System](epic-01-dungeon-system.md) | Single dungeon instance | Full dungeon generation, traps, loot tables, cooldowns |
 
 ---

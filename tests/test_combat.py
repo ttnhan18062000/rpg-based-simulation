@@ -4,11 +4,12 @@ import sys
 import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from src.core.attributes import Attributes, AttributeCaps
-from src.core.models import Entity, Stats, Vector2
-from src.core.enums import AIState, DamageType, EnemyTier
-from src.core.faction import Faction
-from src.core.items import Inventory
+from src.core.gameplay.attributes import Attributes, AttributeCaps
+from src.core.entities.entity import Entity
+from src.core.models.vectors import Vector2
+from src.core.models.enums import AIState, DamageType, EnemyTier
+from src.core.gameplay.faction import Faction
+from src.core.gameplay.items.items import Inventory
 from src.actions.damage import (
     DamageCalculator, DamageContext,
     PhysicalDamageCalculator, MagicalDamageCalculator,
@@ -73,7 +74,7 @@ class TestEntityWithAttributes:
         assert e.attributes.str_ == 15
 
     def test_entity_copy_preserves_skills(self):
-        from src.core.classes import SkillInstance
+        from src.core.gameplay.classes import SkillInstance
         e = _make_entity(1)
         e.skills = [SkillInstance(skill_id="power_strike", mastery=50.0)]
         copy = e.copy()
@@ -182,7 +183,7 @@ class TestSkillUsage:
     """Test skill usage in combat (best_ready_skill helper + USE_SKILL processing)."""
 
     def test_best_ready_skill_returns_highest_power(self):
-        from src.core.classes import SkillInstance
+        from src.core.gameplay.classes import SkillInstance
         from src.ai.states import best_ready_skill
         e = _make_entity(1, stamina=50)
         e.skills = [
@@ -193,7 +194,7 @@ class TestSkillUsage:
         assert result == "power_strike"
 
     def test_best_ready_skill_skips_on_cooldown(self):
-        from src.core.classes import SkillInstance
+        from src.core.gameplay.classes import SkillInstance
         from src.ai.states import best_ready_skill
         e = _make_entity(1, stamina=50)
         si = SkillInstance(skill_id="power_strike")
@@ -203,7 +204,7 @@ class TestSkillUsage:
         assert result == "ambush"
 
     def test_best_ready_skill_skips_insufficient_stamina(self):
-        from src.core.classes import SkillInstance
+        from src.core.gameplay.classes import SkillInstance
         from src.ai.states import best_ready_skill
         e = _make_entity(1, stamina=5)
         e.stats.stamina = 5
@@ -222,14 +223,14 @@ class TestSkillUsage:
         assert best_ready_skill(e) is None
 
     def test_best_ready_skill_ignores_passive(self):
-        from src.core.classes import SkillInstance
+        from src.core.gameplay.classes import SkillInstance
         from src.ai.states import best_ready_skill
         e = _make_entity(1, stamina=50)
         e.skills = [SkillInstance(skill_id="scavenge")]  # passive skill
         assert best_ready_skill(e) is None
 
     def test_skill_use_costs_stamina(self):
-        from src.core.classes import SkillInstance, SKILL_DEFS
+        from src.core.gameplay.classes import SkillInstance, SKILL_DEFS
         e = _make_entity(1, stamina=50)
         si = SkillInstance(skill_id="power_strike")
         sdef = SKILL_DEFS["power_strike"]
@@ -239,7 +240,7 @@ class TestSkillUsage:
         assert e.stats.stamina < 50
 
     def test_skill_use_sets_cooldown(self):
-        from src.core.classes import SkillInstance, SKILL_DEFS
+        from src.core.gameplay.classes import SkillInstance, SKILL_DEFS
         si = SkillInstance(skill_id="power_strike")
         sdef = SKILL_DEFS["power_strike"]
         assert si.is_ready()
@@ -249,7 +250,7 @@ class TestSkillUsage:
         assert si.cooldown_remaining == cd
 
     def test_skill_use_increases_mastery(self):
-        from src.core.classes import SkillInstance, SKILL_DEFS
+        from src.core.gameplay.classes import SkillInstance, SKILL_DEFS
         si = SkillInstance(skill_id="power_strike")
         assert si.mastery == 0.0
         sdef = SKILL_DEFS["power_strike"]
@@ -258,7 +259,7 @@ class TestSkillUsage:
         assert si.times_used == 1
 
     def test_self_skill_heals(self):
-        from src.core.classes import SkillInstance, SKILL_DEFS
+        from src.core.gameplay.classes import SkillInstance, SKILL_DEFS
         e = _make_entity(1, hp=100, stamina=50)
         e.stats.hp = 50  # half HP
         sdef = SKILL_DEFS.get("second_wind")
@@ -269,7 +270,7 @@ class TestSkillUsage:
         assert e.stats.hp > 50  # healed some
 
     def test_skill_damage_formula(self):
-        from src.core.classes import SkillInstance, SKILL_DEFS
+        from src.core.gameplay.classes import SkillInstance, SKILL_DEFS
         attacker = _make_entity(1, atk=20, str_=10, stamina=50)
         defender = _make_entity(2, hp=100, def_=5, vit=5, faction=Faction.GOBLIN_HORDE)
         si = SkillInstance(skill_id="power_strike")

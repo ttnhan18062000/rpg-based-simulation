@@ -1,0 +1,42 @@
+[
+  {
+    "kind": "goblin",
+    "drop_chance": 0.4,
+    "guaranteed_items": ["small_hp_potion"],
+    "random_pool": ["wood", "leather", "iron_ore"],
+    "gold_min": 5,
+    "gold_max": 20
+  },
+  {
+    "kind": "bandit",
+    "drop_chance": 0.5,
+    "guaranteed_items": ["small_hp_potion"],
+    "random_pool": ["fiber", "raw_gem"],
+    "gold_min": 10,
+    "gold_max": 35
+  },
+  {
+    "kind": "wolf",
+    "drop_chance": 0.3,
+    "guaranteed_items": ["wolf_pelt"],
+    "random_pool": ["wolf_fang"],
+    "gold_min": 0,
+    "gold_max": 0
+  },
+  {
+    "kind": "undead",
+    "drop_chance": 0.4,
+    "guaranteed_items": ["bone_shard"],
+    "random_pool": ["ectoplasm"],
+    "gold_min": 2,
+    "gold_max": 15
+  },
+  {
+    "kind": "orc",
+    "drop_chance": 0.6,
+    "guaranteed_items": ["orc_axe"],
+    "random_pool": ["stone_block", "silver_ingot"],
+    "gold_min": 20,
+    "gold_max": 50
+  }
+]

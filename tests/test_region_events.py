@@ -10,13 +10,14 @@ from src.ai.goals.scorers import (
 )
 from src.ai.states import AIContext
 from src.config import SimulationConfig
-from src.core.enums import Material
-from src.core.faction import Faction, FactionRegistry
-from src.core.grid import Grid
-from src.core.models import Entity, Stats, Vector2
-from src.core.regions import Region
-from src.core.snapshot import Snapshot
-from src.core.world_state import WorldState
+from src.core.models.enums import Material
+from src.core.gameplay.faction import Faction, FactionRegistry
+from src.core.world.grid import Grid
+from src.core.entities.entity import Entity
+from src.core.models.vectors import Vector2
+from src.core.world.regions import Region
+from src.core.models.snapshot import Snapshot
+from src.core.models.world_state import WorldState
 from src.systems.rng import DeterministicRNG
 from src.systems.spatial_hash import SpatialHash
 

@@ -23,7 +23,12 @@ class Building:
     name: str
     pos: Vector2
     building_type: str
+    durability: float
+    max_durability: float
+    is_functional: bool
 ```
+
+Buildings have a health system. When `durability` reaches 0, the building is no longer functional. See [World Evolution & Resilience](file:///d:/Projects/rpg-based-simulation/docs/world_evolution_and_resilience.md) for details on repair and sabotage.
 
 Buildings are static locations stored in `WorldState.buildings` and exposed in the API as `BuildingSchema`.
 
@@ -35,7 +40,7 @@ Buildings are static locations stored in `WorldState.buildings` and exposed in t
 | Blacksmith | `blacksmith` | Top-right of town | VISIT_BLACKSMITH | Learn recipes, craft items |
 | Adventurer's Guild | `guild` | Bottom-center of town | VISIT_GUILD | Intel, quests, tips |
 | Class Hall | `class_hall` | Bottom-left of town | VISIT_CLASS_HALL | Learn skills, breakthroughs |
-| Traveler's Inn | `inn` | Bottom-right of town | VISIT_INN | Rapid HP/stamina recovery |
+| Traveler's Inn | `inn` | Bottom-right of town | VISIT_INN | Rapid HP/stamina recovery, Gossip |
 | Hero's House | `hero_house` | Near town center | VISIT_HOME | Store/retrieve items |
 
 ---
@@ -50,6 +55,23 @@ Heroes sell items they don't need:
 - **Inferior equipment** — sold if hero has better gear equipped
 
 Sell prices: Common 5g, Uncommon 15g, Rare 40g. Materials use their explicit `sell_value`.
+
+### Reputation-Based Pricing
+
+A hero's `reputation` (earned from quests, world bosses, and calamities) directly impacts shop prices:
+- **Buying Discount**: `-1%` cost per point of reputation (max **30%** at 30 rep).
+- **Selling Bonus**: `+0.5%` gold per point of reputation (max **20%** at 40 rep).
+- **Calculation**: Final price = `BasePrice * Multiplier`.
+
+### Item Sell Logic
+
+Gold received is determined in `src/core/buildings.py`:
+1.  **Explicit `sell_value`**: Used if defined in `ItemTemplate`.
+2.  **Explicit `gold_value`**: Fallback if `sell_value` is 0.
+3.  **Rarity Base**: Fallback if both are 0:
+    - `COMMON`: 5g
+    - `UNCOMMON`: 15g
+    - `RARE`: 40g
 
 ### Buying
 
@@ -280,4 +302,16 @@ After fully healing in town (`RestingInTownHandler`):
 5. **Visit class hall** → can learn skills or breakthrough → `VISIT_CLASS_HALL`
 6. **Leave town** → nothing to do → `WANDER`
 
-Each handler moves the hero to the building, then performs the interaction when adjacent.
+### 8.2 Hero Trading (Milestone 5)
+Heroes resting in Town (Inn or Guild) will gift "spare" items to nearby allies.
+- **Spare Item**: An items in inventory that is objectively worse than the hero's current equipment.
+- **Recipient**: A nearby hero who would gain a significant stat upgrade from the item.
+- **Logic**: Processed in `HeroLifecycleSystem._tick_hero_trading()`.
+
+Each handler moves the hero to the building, then performs the interaction when adjacent (**Manhattan distance ≤ 1**).
+
+### 8.5 Building Functionality & Durability
+
+Buildings can be damaged by world events (Calamities) or enemy raids.
+- **`is_functional`**: If `durability` hits 0, the building is disabled. Heroes will skip visiting disabled buildings unless they are performing a repair action.
+- **Repairing**: Heroes with high `END` or specific traits may occasionally perform a repair service during `RESTING_IN_TOWN` to restore building durability.

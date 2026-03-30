@@ -11,22 +11,23 @@ from __future__ import annotations
 from pydantic import BaseModel, ConfigDict, Field, TypeAdapter
 
 from fastapi import APIRouter
+from src.api.encoder import ENTITY_KEY_MAP, STATE_ENUM_MAP
 
-from src.core.enums import (
+from src.core.models.enums import (
     AIState, DamageType, Element, EnemyTier, EntityRole,
     ItemType, Material, Rarity,
 )
-from src.core.faction import Faction, FactionRelation, FactionRegistry
-from src.core.items import ITEM_REGISTRY, ItemTemplate
-from src.core.classes import (
+from src.core.gameplay.faction import Faction, FactionRelation, FactionRegistry
+from src.core.gameplay.items.item_registry import ITEM_REGISTRY, ItemTemplate
+from src.core.gameplay.classes import (
     CLASS_DEFS, CLASS_SKILLS, BREAKTHROUGHS, SKILL_DEFS, RACE_SKILLS,
     SCALING_GRADES, SCALING_MULTIPLIER,
     HeroClass, SkillDef, ClassDef, BreakthroughDef,
     SkillTarget,
 )
-from src.core.traits import TRAIT_DEFS, TraitDef
-from src.core.buildings import RECIPES
-from src.core.resource_nodes import TERRAIN_RESOURCES
+from src.core.entities.traits import TRAIT_DEFS, TraitDef
+from src.core.gameplay.buildings import RECIPES
+from src.core.world.resource_nodes import TERRAIN_RESOURCES
 
 router = APIRouter(prefix="/metadata", tags=["Metadata"])
 
@@ -507,3 +508,12 @@ def get_recipes() -> RecipesResponse:
             materials=dict(recipe.materials),
         ))
     return RecipesResponse(recipes=entries)
+
+
+@router.get("/protocol")
+def get_protocol_metadata() -> dict:
+    """Metadata for the High-Performance Binary WebSocket Protocol (BWS)."""
+    return {
+        "entity_key_map": ENTITY_KEY_MAP,
+        "state_enum_map": STATE_ENUM_MAP
+    }
