@@ -48,6 +48,7 @@ class TestAIHeuristics(unittest.TestCase):
         
         # Run brain multiple times. Initially, it might favor WANDER.
         # We want to see it eventually pick something else after boredom sets in.
+        from src.actions.base import MindUpdate
         for t in range(1, 21):
             snap = Snapshot(
                 tick=t, 
@@ -61,7 +62,18 @@ class TestAIHeuristics(unittest.TestCase):
                 treasure_chests=(), 
                 regions=()
             )
-            brain.decide(actor, snap)
+            state, proposal = brain.decide(actor, snap)
+            
+            # Manually apply MindUpdates (AOA side-effects) in this isolated test
+            for up in proposal.updates:
+                if isinstance(up, MindUpdate):
+                    if up.boredom_delta:
+                        actor.mind.decision.boredom_multipliers.update(up.boredom_delta)
+                    if up.last_goal:
+                        actor.mind.decision.last_goal = up.last_goal
+                    if up.goal_committed_at is not None:
+                        actor.mind.decision.goal_committed_at = up.goal_committed_at
+            
             actor.mind.decision.ai_state = AIState.IDLE # Force back to decision state for next tick
             
         # Verify that boredom multipliers were initialized and modified

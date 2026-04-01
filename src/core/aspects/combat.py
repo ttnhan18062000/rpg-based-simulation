@@ -1,17 +1,38 @@
 from __future__ import annotations
-from typing import Any
-from pydantic import Field
-from src.core.models.base import Aspect
+from typing import Any, TYPE_CHECKING
+from pydantic import Field, ConfigDict
+from src.core.models.base import Aspect, SimulationModel
 from src.core.models.enums import Element
 
+if TYPE_CHECKING:
+    from src.actions.base import CombatTraceDetails
+
+class CombatTraceRecord(SimulationModel):
+    """Authoritative record of a combat exchange. [AOA STABILIZATION]"""
+    model_config = ConfigDict(extra='forbid')
+    
+    tick: int
+    attacker_id: int
+    defender_id: int
+    damage: int
+    is_crit: bool
+    is_evasion: bool
+    skill_used: str = "attack"
+    details: Any = None # CombatTraceDetails (Deferred)
+
 class CombatAspect(Aspect):
-    """Aspect handling health, attack power, defense, and elemental vulnerabilities."""
+    """Aspect handling health, attack power, defense, and elemental vulnerabilities. [AOA STABILIZATION]
+    
+    Pillar 1: Domain-Driven Separation. Combat state is isolated here
+    to ensure clear mutation boundaries and deterministic resolution.
+    """
+    model_config = ConfigDict(extra='forbid')
     hp: int = 20
     max_hp: int = 20
     # Base Stats
-    atk_base: int = Field(default=5, alias="atk")
-    def_base: int = Field(default=0, alias="def_")
-    spd_base: int = Field(default=10, alias="spd")
+    atk_base: int = 5
+    def_base: int = 0
+    spd_base: int = 10
     
     luck: int = 0
     crit_rate: float = 0.05
@@ -59,8 +80,20 @@ class CombatAspect(Aspect):
     effects: list[Any] = Field(default_factory=list)
     combat_target_id: int | None = None
     
-    # Introspection: recent combat traces (ring buffer)
-    traces: list[dict] = Field(default_factory=list)
+    # Introspection: recent combat traces (ring buffer) [AOA STABILIZATION]
+    traces: list[CombatTraceRecord] = Field(default_factory=list)
+
+    def add_effect(self, effect: Any) -> None:
+        """Add a StatusEffect to the entity."""
+        self.effects.append(effect)
+
+    def remove_effect(self, identifier: str) -> None:
+        """Remove effects by effect_id or source."""
+        self.effects = [
+            e for e in self.effects 
+            if getattr(e, "effect_id", None) != identifier 
+            and getattr(e, "source", None) != identifier
+        ]
 
     @property
     def alive(self) -> bool:

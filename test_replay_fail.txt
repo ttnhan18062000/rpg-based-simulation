@@ -1,0 +1,200 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.7, pytest-9.0.2, pluggy-1.6.0 -- /home/vboxuser/Work/rpg-based-simulation/.venv/bin/python
+cachedir: .pytest_cache
+hypothesis profile 'default'
+rootdir: /home/vboxuser/Work/rpg-based-simulation
+configfile: pyproject.toml
+plugins: anyio-4.12.1, hypothesis-6.151.10
+collecting ... collected 4 items
+
+tests/e2e/test_deterministic_replay.py::TestDeterministicReplay::test_initial_state_identical FAILED [ 25%]
+tests/e2e/test_deterministic_replay.py::TestDeterministicReplay::test_10_ticks_identical FAILED [ 50%]
+tests/e2e/test_deterministic_replay.py::TestDeterministicReplay::test_50_ticks_identical FAILED [ 75%]
+tests/e2e/test_deterministic_replay.py::TestDeterministicReplay::test_different_seeds_diverge FAILED [100%]
+
+=================================== FAILURES ===================================
+_____________ TestDeterministicReplay.test_initial_state_identical _____________
+
+self = <test_deterministic_replay.TestDeterministicReplay object at 0x7238c3dc2710>
+
+    def test_initial_state_identical(self):
+        """Tick 0 (after build, before any ticks) must match."""
+>       fp_a = _run_n_ticks(seed=42, ticks=0)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/e2e/test_deterministic_replay.py:90: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/e2e/test_deterministic_replay.py:64: in _run_n_ticks
+    fingerprints: list[str] = [_state_fingerprint(mgr)]
+                               ^^^^^^^^^^^^^^^^^^^^^^^
+tests/e2e/test_deterministic_replay.py:30: in _state_fingerprint
+    f"|hp={e.stats.combat.hp}/{e.stats.combat.max_hp}"
+           ^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = CombatAspect(hp=82, max_hp=82, atk_base=9, def_base=2, spd_base=12, luck=5, crit_rate=0.17400000000000002, crit_dmg=1....4>: 1.0, <Element.HOLY: 5>: 1.0}, hp_regen=2.6, cooldown_reduction=0.944, effects=[], combat_target_id=None, traces=[])
+item = 'combat'
+
+    def __getattr__(self, item: str) -> Any:
+        private_attributes = object.__getattribute__(self, '__private_attributes__')
+        if item in private_attributes:
+            attribute = private_attributes[item]
+            if hasattr(attribute, '__get__'):
+                return attribute.__get__(self, type(self))  # type: ignore
+    
+            try:
+                # Note: self.__pydantic_private__ cannot be None if self.__private_attributes__ has items
+                return self.__pydantic_private__[item]  # type: ignore
+            except KeyError as exc:
+                raise AttributeError(f'{type(self).__name__!r} object has no attribute {item!r}') from exc
+        else:
+            # `__pydantic_extra__` can fail to be set if the model is not yet fully initialized.
+            # See `BaseModel.__repr_args__` for more details
+            try:
+                pydantic_extra = object.__getattribute__(self, '__pydantic_extra__')
+            except AttributeError:
+                pydantic_extra = None
+    
+            if pydantic_extra and item in pydantic_extra:
+                return pydantic_extra[item]
+            else:
+                if hasattr(self.__class__, item):
+                    return super().__getattribute__(item)  # Raises AttributeError if appropriate
+                else:
+                    # this is the current error
+>                   raise AttributeError(f'{type(self).__name__!r} object has no attribute {item!r}')
+E                   AttributeError: 'CombatAspect' object has no attribute 'combat'
+
+.venv/lib/python3.13/site-packages/pydantic/main.py:1026: AttributeError
+_______________ TestDeterministicReplay.test_10_ticks_identical ________________
+
+self = <test_deterministic_replay.TestDeterministicReplay object at 0x7238c3dc2c10>
+
+    def test_10_ticks_identical(self):
+        """10 ticks with seed=42 must produce identical fingerprints."""
+>       fp_a = _run_n_ticks(seed=42, ticks=10, entities=5)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/e2e/test_deterministic_replay.py:96: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/e2e/test_deterministic_replay.py:64: in _run_n_ticks
+    fingerprints: list[str] = [_state_fingerprint(mgr)]
+                               ^^^^^^^^^^^^^^^^^^^^^^^
+tests/e2e/test_deterministic_replay.py:30: in _state_fingerprint
+    f"|hp={e.stats.combat.hp}/{e.stats.combat.max_hp}"
+           ^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = CombatAspect(hp=82, max_hp=82, atk_base=9, def_base=2, spd_base=12, luck=5, crit_rate=0.17400000000000002, crit_dmg=1....4>: 1.0, <Element.HOLY: 5>: 1.0}, hp_regen=2.6, cooldown_reduction=0.944, effects=[], combat_target_id=None, traces=[])
+item = 'combat'
+
+    def __getattr__(self, item: str) -> Any:
+        private_attributes = object.__getattribute__(self, '__private_attributes__')
+        if item in private_attributes:
+            attribute = private_attributes[item]
+            if hasattr(attribute, '__get__'):
+                return attribute.__get__(self, type(self))  # type: ignore
+    
+            try:
+                # Note: self.__pydantic_private__ cannot be None if self.__private_attributes__ has items
+                return self.__pydantic_private__[item]  # type: ignore
+            except KeyError as exc:
+                raise AttributeError(f'{type(self).__name__!r} object has no attribute {item!r}') from exc
+        else:
+            # `__pydantic_extra__` can fail to be set if the model is not yet fully initialized.
+            # See `BaseModel.__repr_args__` for more details
+            try:
+                pydantic_extra = object.__getattribute__(self, '__pydantic_extra__')
+            except AttributeError:
+                pydantic_extra = None
+    
+            if pydantic_extra and item in pydantic_extra:
+                return pydantic_extra[item]
+            else:
+                if hasattr(self.__class__, item):
+                    return super().__getattribute__(item)  # Raises AttributeError if appropriate
+                else:
+                    # this is the current error
+>                   raise AttributeError(f'{type(self).__name__!r} object has no attribute {item!r}')
+E                   AttributeError: 'CombatAspect' object has no attribute 'combat'
+
+.venv/lib/python3.13/site-packages/pydantic/main.py:1026: AttributeError
+_______________ TestDeterministicReplay.test_50_ticks_identical ________________
+
+self = <test_deterministic_replay.TestDeterministicReplay object at 0x7238c3da68b0>
+
+    @pytest.mark.slow
+    def test_50_ticks_identical(self):
+        """50 ticks — longer run catches late-tick drift."""
+>       fp_a = _run_n_ticks(seed=99, ticks=50, entities=8)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/e2e/test_deterministic_replay.py:105: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/e2e/test_deterministic_replay.py:64: in _run_n_ticks
+    fingerprints: list[str] = [_state_fingerprint(mgr)]
+                               ^^^^^^^^^^^^^^^^^^^^^^^
+tests/e2e/test_deterministic_replay.py:30: in _state_fingerprint
+    f"|hp={e.stats.combat.hp}/{e.stats.combat.max_hp}"
+           ^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = CombatAspect(hp=82, max_hp=82, atk_base=9, def_base=2, spd_base=12, luck=4, crit_rate=0.164, crit_dmg=1.8, evasion=0.0...4>: 1.0, <Element.HOLY: 5>: 1.0}, hp_regen=2.4, cooldown_reduction=0.952, effects=[], combat_target_id=None, traces=[])
+item = 'combat'
+
+    def __getattr__(self, item: str) -> Any:
+        private_attributes = object.__getattribute__(self, '__private_attributes__')
+        if item in private_attributes:
+            attribute = private_attributes[item]
+            if hasattr(attribute, '__get__'):
+                return attribute.__get__(self, type(self))  # type: ignore
+    
+            try:
+                # Note: self.__pydantic_private__ cannot be None if self.__private_attributes__ has items
+                return self.__pydantic_private__[item]  # type: ignore
+            except KeyError as exc:
+                raise AttributeError(f'{type(self).__name__!r} object has no attribute {item!r}') from exc
+        else:
+            # `__pydantic_extra__` can fail to be set if the model is not yet fully initialized.
+            # See `BaseModel.__repr_args__` for more details
+            try:
+                pydantic_extra = object.__getattribute__(self, '__pydantic_extra__')
+            except AttributeError:
+                pydantic_extra = None
+    
+            if pydantic_extra and item in pydantic_extra:
+                return pydantic_extra[item]
+            else:
+                if hasattr(self.__class__, item):
+                    return super().__getattribute__(item)  # Raises AttributeError if appropriate
+                else:
+                    # this is the current error
+>                   raise AttributeError(f'{type(self).__name__!r} object has no attribute {item!r}')
+E                   AttributeError: 'CombatAspect' object has no attribute 'combat'
+
+.venv/lib/python3.13/site-packages/pydantic/main.py:1026: AttributeError
+_____________ TestDeterministicReplay.test_different_seeds_diverge _____________
+
+self = <test_deterministic_replay.TestDeterministicReplay object at 0x7238c3da6b10>
+
+    def test_different_seeds_diverge(self):
+        """Different seeds must produce different state."""
+>       fp_a = _run_n_ticks(seed=42, ticks=5, entities=5)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/e2e/test_deterministic_replay.py:113: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/e2e/test_deterministic_replay.py:64: in _run_n_ticks
+    fingerprints: list[str] = [_state_fingerprint(mgr)]
+                               ^^^^^^^^^^^^^^^^^^^^^^^
+tests/e2e/test_deterministic_replay.py:30: in _state_fingerprint
+    f"|hp={e.stats.combat.hp}/{e.stats.combat.max_hp}"
+           ^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = CombatAspect(hp=82, max_hp=82, atk_base=9, def_base=2, spd_base=12, luck=5, crit_rate=0.17400000000000002, crit_dmg=1....4>: 1.0, <Element.HOLY: 5>: 1.0}, hp_regen=2.6, cooldown_reduction=0.944, effects=[], combat_target_id=None, traces=[])
+item = 'combat'
+
+    def __getattr__(self, item: str) -> Any:
+        private_attributes = object.__getattribute__(self, '__private_attributes__')
+        if item in private_attributes:

@@ -71,6 +71,10 @@ class EngineManager:
         self._paused = threading.Event()
         self._step_requested = threading.Event()
         self._stop_requested = threading.Event()
+        
+        # Caching (Infrastructure Hardening)
+        self._static_data_cache: typing.Any | None = None
+        self._static_data_lock = threading.Lock()
 
         self._build()
         
@@ -131,6 +135,23 @@ class EngineManager:
         snap = self.get_snapshot()
         return snap.grid if snap else None
 
+    def get_static_data(self) -> typing.Any | None:
+        """Return cached static world data or generate it if missing."""
+        snap = self.get_snapshot()
+        if snap is None:
+            return None
+            
+        with self._static_data_lock:
+            if self._static_data_cache is None:
+                from src.api.presenters.world_presenter import WorldPresenter
+                self._static_data_cache = WorldPresenter.to_static_data_response(snap)
+            return self._static_data_cache
+
+    def clear_static_cache(self) -> None:
+        """Invalidate the static data cache."""
+        with self._static_data_lock:
+            self._static_data_cache = None
+
     # -- lifecycle --
 
     def start(self) -> None:
@@ -179,6 +200,7 @@ class EngineManager:
         self._event_log.clear()
         self._total_spawned = 0
         self._total_deaths = 0
+        self.clear_static_cache()
         self._build()
         # Take initial snapshot
         if self._loop:
@@ -193,6 +215,7 @@ class EngineManager:
         """Construct all simulation components from config."""
         cfg = self._config
         self._rng = DeterministicRNG(cfg.world_seed)
+        self.clear_static_cache()
         
         # --- KAFKA RECOVERY ---
         world = self._try_recover_world(cfg)
@@ -298,9 +321,15 @@ class EngineManager:
                     # Log compaction guarantees ordered snapshots, but we must strictly ensure
                     # we only apply events that happened AFTER this snapshot's tick
                     if tick and tick > world.tick:
-                        resolver.resolve(proposals, world)
+                        applied = resolver.resolve(proposals, world)
+                        
+                        # Unified Phase: Apply deferred side-effects (LOOT, HARVEST, Skill damage)
+                        from src.systems.gameplay.action_system import ActionSystem
+                        ActionSystem.apply_action_state_transitions(world, cfg, applied)
+                        
                         world.tick = tick
                         replayed_ticks += 1
+
                 except Exception as e:
                     logger.debug("Failed to deserialize event: %s", e)
                     

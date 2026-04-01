@@ -1,0 +1,54 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.7, pytest-9.0.2, pluggy-1.6.0 -- /home/vboxuser/Work/rpg-based-simulation/.venv/bin/python
+cachedir: .pytest_cache
+hypothesis profile 'default'
+rootdir: /home/vboxuser/Work/rpg-based-simulation
+configfile: pyproject.toml
+plugins: anyio-4.12.1, hypothesis-6.151.10
+collecting ... collected 43 items
+
+tests/test_combat.py::TestEntityWithAttributes::test_entity_has_attributes PASSED [  2%]
+tests/test_combat.py::TestEntityWithAttributes::test_entity_has_stamina PASSED [  4%]
+tests/test_combat.py::TestEntityWithAttributes::test_stamina_ratio_partial PASSED [  6%]
+tests/test_combat.py::TestEntityWithAttributes::test_entity_copy_preserves_attributes PASSED [  9%]
+tests/test_combat.py::TestEntityWithAttributes::test_entity_copy_preserves_skills PASSED [ 11%]
+tests/test_combat.py::TestDamageFormula::test_higher_str_more_damage PASSED [ 13%]
+tests/test_combat.py::TestDamageFormula::test_higher_vit_less_damage_taken PASSED [ 16%]
+tests/test_combat.py::TestDamageFormula::test_minimum_damage_is_one PASSED [ 18%]
+tests/test_combat.py::TestStaminaMechanics::test_stamina_decreases_on_attack PASSED [ 20%]
+tests/test_combat.py::TestStaminaMechanics::test_stamina_decreases_on_move PASSED [ 23%]
+tests/test_combat.py::TestStaminaMechanics::test_stamina_decreases_on_harvest PASSED [ 25%]
+tests/test_combat.py::TestStaminaMechanics::test_stamina_cannot_go_below_zero PASSED [ 27%]
+tests/test_combat.py::TestStaminaMechanics::test_stamina_regen_resting PASSED [ 30%]
+tests/test_combat.py::TestStaminaMechanics::test_stamina_regen_active PASSED [ 32%]
+tests/test_combat.py::TestStaminaMechanics::test_stamina_regen_capped PASSED [ 34%]
+tests/test_combat.py::TestSkillUsage::test_best_ready_skill_returns_highest_power PASSED [ 37%]
+tests/test_combat.py::TestSkillUsage::test_best_ready_skill_skips_on_cooldown PASSED [ 39%]
+tests/test_combat.py::TestSkillUsage::test_best_ready_skill_skips_insufficient_stamina PASSED [ 41%]
+tests/test_combat.py::TestSkillUsage::test_best_ready_skill_none_when_no_skills PASSED [ 44%]
+tests/test_combat.py::TestSkillUsage::test_best_ready_skill_ignores_passive PASSED [ 46%]
+tests/test_combat.py::TestSkillUsage::test_skill_use_costs_stamina PASSED [ 48%]
+tests/test_combat.py::TestSkillUsage::test_skill_use_sets_cooldown PASSED [ 51%]
+tests/test_combat.py::TestSkillUsage::test_skill_use_increases_mastery PASSED [ 53%]
+tests/test_combat.py::TestSkillUsage::test_self_skill_heals PASSED       [ 55%]
+tests/test_combat.py::TestSkillUsage::test_skill_damage_formula PASSED   [ 58%]
+tests/test_combat.py::TestDamageCalculatorStrategy::test_registry_has_physical_and_magical PASSED [ 60%]
+tests/test_combat.py::TestDamageCalculatorStrategy::test_get_physical_calculator PASSED [ 62%]
+tests/test_combat.py::TestDamageCalculatorStrategy::test_get_magical_calculator PASSED [ 65%]
+tests/test_combat.py::TestDamageCalculatorStrategy::test_unknown_type_falls_back_to_physical PASSED [ 67%]
+tests/test_combat.py::TestDamageCalculatorStrategy::test_physical_resolve_uses_atk_def PASSED [ 69%]
+tests/test_combat.py::TestDamageCalculatorStrategy::test_magical_resolve_uses_matk_mdef PASSED [ 72%]
+tests/test_combat.py::TestDamageCalculatorStrategy::test_physical_no_attributes_defaults_mult_to_1 PASSED [ 74%]
+tests/test_combat.py::TestDamageCalculatorStrategy::test_magical_no_attributes_defaults_mult_to_1 PASSED [ 76%]
+tests/test_combat.py::TestDamageCalculatorStrategy::test_damage_context_dataclass PASSED [ 79%]
+tests/test_combat.py::TestDamageCalculatorStrategy::test_physical_higher_str_higher_atk_mult PASSED [ 81%]
+tests/test_combat.py::TestSkillEffects::test_self_buff_applies_effect PASSED [ 83%]
+tests/test_combat.py::TestSkillEffects::test_buff_modifies_effective_stats PASSED [ 86%]
+tests/test_combat.py::TestSkillEffects::test_debuff_reduces_effective_stats PASSED [ 88%]
+tests/test_combat.py::TestSkillEffects::test_effect_expires_after_ticks PASSED [ 90%]
+tests/test_combat.py::TestSkillEffects::test_hp_per_tick_dot PASSED      [ 93%]
+tests/test_combat.py::TestSkillEffects::test_hp_per_tick_regen PASSED    [ 95%]
+tests/test_combat.py::TestSkillEffects::test_multiple_effects_stack PASSED [ 97%]
+tests/test_combat.py::TestSkillEffects::test_skill_effect_factory_debuff_type PASSED [100%]
+
+============================== 43 passed in 0.29s ==============================

@@ -50,7 +50,11 @@ class Snapshot:
 
     @classmethod
     def from_world(cls, world: WorldState) -> Snapshot:
-        copied_entities = {eid: e.copy() for eid, e in world.entities.items()}
+        copied_entities = {}
+        for eid, e in world.entities.items():
+            ent = e.copy()
+            ent.freeze()
+            copied_entities[eid] = ent
         copied_ground = {k: list(v) for k, v in world.ground_items.items()}
         
         # Build lightweight spatial index for fast neighbor queries
@@ -73,7 +77,7 @@ class Snapshot:
             grid=world.grid,
             ground_items=copied_ground,
             camps=tuple((c.x, c.y) for c in world.camps),
-            buildings=tuple(world.buildings),
+            buildings=tuple(b.copy() for b in world.buildings), # Needs copy if Building is mutable
             resource_nodes=tuple(n.copy() for n in world.resource_nodes.values()),
             treasure_chests=tuple(c.copy() for c in world.treasure_chests.values()),
             regions=tuple(r.copy() for r in world.regions),
@@ -83,6 +87,18 @@ class Snapshot:
             _spatial=dict(spatial),
             _spatial_ground=dict(spatial_ground),
         )
+        
+        # Final Deep Freeze for all collections
+        for b in snap.buildings:
+            if hasattr(b, "freeze"): b.freeze()
+        for n in snap.resource_nodes:
+            if hasattr(n, "freeze"): n.freeze()
+        for c in snap.treasure_chests:
+            if hasattr(c, "freeze"): c.freeze()
+        for r in snap.regions:
+            if hasattr(r, "freeze"): r.freeze()
+            
+        return snap
 
     def __post_init__(self):
         """Finalize immutability by wrapping collections (AOA Phase 5)."""

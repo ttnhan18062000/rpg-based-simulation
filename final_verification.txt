@@ -1,0 +1,135 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.7, pytest-9.0.2, pluggy-1.6.0 -- /home/vboxuser/Work/rpg-based-simulation/.venv/bin/python
+cachedir: .pytest_cache
+hypothesis profile 'default'
+rootdir: /home/vboxuser/Work/rpg-based-simulation
+configfile: pyproject.toml
+plugins: anyio-4.12.1, hypothesis-6.151.10
+collecting ... collected 38 items
+
+tests/test_combat_arena_e2e.py::TestBasicCombatE2E::test_adjacent_melee_fight_produces_combat_events PASSED [  2%]
+tests/test_combat_arena_e2e.py::TestBasicCombatE2E::test_melee_fight_one_entity_dies PASSED [  5%]
+tests/test_combat_arena_e2e.py::TestBasicCombatE2E::test_combat_target_id_set_during_combat PASSED [  7%]
+tests/test_combat_arena_e2e.py::TestRangedCombatE2E::test_ranged_hero_attacks_from_distance PASSED [ 10%]
+tests/test_combat_arena_e2e.py::TestRangedCombatE2E::test_ranged_mob_attacks_hero PASSED [ 13%]
+tests/test_combat_arena_e2e.py::TestRangedCombatE2E::test_mage_uses_matk_for_damage PASSED [ 15%]
+tests/test_combat_arena_e2e.py::TestLineOfSightE2E::test_wall_blocks_ranged_attack PASSED [ 18%]
+tests/test_combat_arena_e2e.py::TestCoverE2E::test_cover_reduces_ranged_damage FAILED [ 21%]
+tests/test_combat_arena_e2e.py::TestKitingE2E::test_ranged_hero_kites_when_adjacent PASSED [ 23%]
+tests/test_combat_arena_e2e.py::TestKitingE2E::test_low_hp_ranged_does_not_kite PASSED [ 26%]
+tests/test_combat_arena_e2e.py::TestWeaponRangeE2E::test_melee_weapon_range_1 PASSED [ 28%]
+tests/test_combat_arena_e2e.py::TestWeaponRangeE2E::test_shortbow_range_3 PASSED [ 31%]
+tests/test_combat_arena_e2e.py::TestWeaponRangeE2E::test_staff_range_3 PASSED [ 34%]
+tests/test_combat_arena_e2e.py::TestMultiEntityCombatE2E::test_two_heroes_vs_one_mob PASSED [ 36%]
+tests/test_combat_arena_e2e.py::TestMultiEntityCombatE2E::test_ranged_and_melee_hero_vs_mob PASSED [ 39%]
+tests/test_combat_arena_e2e.py::TestOpportunityAttackE2E::test_fleeing_mob_takes_opportunity_damage PASSED [ 42%]
+tests/test_combat_arena_e2e.py::TestOpportunityAttackE2E::test_fleeing_hero_takes_opportunity_damage PASSED [ 44%]
+tests/test_combat_arena_e2e.py::TestOpportunityAttackE2E::test_no_opportunity_attack_when_moving_toward PASSED [ 47%]
+tests/test_combat_arena_e2e.py::TestChaseClosingE2E::test_faster_hunter_catches_slower_prey PASSED [ 50%]
+tests/test_combat_arena_e2e.py::TestChaseClosingE2E::test_equal_speed_stalemate PASSED [ 52%]
+tests/test_combat_arena_e2e.py::TestChaseClosingE2E::test_slower_hunter_cannot_close PASSED [ 55%]
+tests/test_combat_arena_e2e.py::TestThreatSystemE2E::test_damage_generates_threat PASSED [ 57%]
+tests/test_combat_arena_e2e.py::TestThreatSystemE2E::test_mob_targets_highest_threat PASSED [ 60%]
+tests/test_combat_arena_e2e.py::TestThreatSystemE2E::test_tank_class_generates_bonus_threat PASSED [ 63%]
+tests/test_combat_arena_e2e.py::TestThreatSystemE2E::test_threat_decays_over_time PASSED [ 65%]
+tests/test_combat_arena_e2e.py::TestThreatSystemE2E::test_dead_attacker_threat_removed PASSED [ 68%]
+tests/test_combat_arena_e2e.py::TestAoESkillsE2E::test_fireball_hits_multiple_enemies PASSED [ 71%]
+tests/test_combat_arena_e2e.py::TestAoESkillsE2E::test_aoe_falloff_reduces_edge_damage PASSED [ 73%]
+tests/test_combat_arena_e2e.py::TestAoESkillsE2E::test_whirlwind_melee_aoe PASSED [ 76%]
+tests/test_combat_arena_e2e.py::TestAoESkillsE2E::test_single_target_skill_does_not_aoe PASSED [ 78%]
+tests/test_combat_arena_e2e.py::TestAoESkillsE2E::test_rain_of_arrows_ranged_aoe PASSED [ 81%]
+tests/test_combat_arena_e2e.py::TestAoESkillsE2E::test_ai_prefers_aoe_when_clustered PASSED [ 84%]
+tests/test_combat_arena_e2e.py::TestEventCollectionE2E::test_events_have_correct_structure PASSED [ 86%]
+tests/test_combat_arena_e2e.py::TestEventCollectionE2E::test_death_event_has_entity_id PASSED [ 89%]
+tests/test_combat_arena_e2e.py::TestEventCollectionE2E::test_events_for_entity_filters_correctly PASSED [ 92%]
+tests/component/systems/test_calamity_system.py::test_calamity_spawning PASSED [ 94%]
+tests/component/systems/test_calamity_system.py::test_calamity_bounty_generation PASSED [ 97%]
+tests/component/systems/test_calamity_system.py::test_calamity_kill_rewards PASSED [100%]
+
+=================================== FAILURES ===================================
+________________ TestCoverE2E.test_cover_reduces_ranged_damage _________________
+
+self = <tests.test_combat_arena_e2e.TestCoverE2E object at 0x7b506141e490>
+
+    def test_cover_reduces_ranged_damage(self):
+        """Entity behind cover should evade more ranged attacks."""
+        # Run two scenarios and compare damage taken
+        # Scenario A: no cover
+        arena_a = CombatArena(seed=42)
+        arena_a.add_hero(1, pos=(5, 5), weapon="shortbow", hp=200, atk=15)
+        arena_a.add_mob(2, pos=(8, 5), weapon="rusty_sword", hp=200, atk=5,
+                        spd=1)  # Low SPD so mob doesn't move
+        arena_a.run_ticks(30)
+    
+        # Scenario B: wall next to defender
+        arena_b = CombatArena(seed=42)
+        arena_b.add_hero(1, pos=(5, 5), weapon="shortbow", hp=200, atk=15)
+        arena_b.add_mob(2, pos=(8, 5), weapon="rusty_sword", hp=200, atk=5,
+                        spd=1)
+        arena_b.set_wall(8, 6)  # Wall adjacent to mob
+        arena_b.run_ticks(30)
+    
+        mob_a = arena_b.entity(2)
+        mob_b = arena_b.entity(2)
+        # Can't guarantee exact damage difference due to RNG, but the
+        # cover system is exercised. Just verify both scenarios run.
+>       assert mob_a is not None
+E       assert None is not None
+
+tests/test_combat_arena_e2e.py:156: AssertionError
+----------------------------- Captured stdout call -----------------------------
+DEBUG_EMIT: combat hero hit goblin for 10 damage metadata={'attacker_id': 1, 'defender_id': 2, 'damage': 10, 'is_crit': False, 'is_evasion': False, 'skill_used': 'OPPORTUNITY_ATTACK', 'attacker_hp': 200, 'defender_hp': 190, 'verb': 'OPPORTUNITY_ATTACK'}
+DEBUG_EMIT: combat hero hit goblin for 10 damage metadata={'attacker_id': 1, 'defender_id': 2, 'damage': 10, 'is_crit': False, 'is_evasion': False, 'skill_used': 'attack', 'attacker_hp': 200, 'defender_hp': 180, 'verb': 'attack'}
+DEBUG_EMIT: combat hero hit goblin for 10 damage metadata={'attacker_id': 1, 'defender_id': 2, 'damage': 10, 'is_crit': False, 'is_evasion': False, 'skill_used': 'attack', 'attacker_hp': 200, 'defender_hp': 170, 'verb': 'attack'}
+DEBUG_EMIT: combat hero hit goblin for 10 damage metadata={'attacker_id': 1, 'defender_id': 2, 'damage': 10, 'is_crit': False, 'is_evasion': False, 'skill_used': 'attack', 'attacker_hp': 200, 'defender_hp': 160, 'verb': 'attack'}
+DEBUG_EMIT: combat hero hit goblin for 8 damage metadata={'attacker_id': 1, 'defender_id': 2, 'damage': 8, 'is_crit': False, 'is_evasion': False, 'skill_used': 'attack', 'attacker_hp': 200, 'defender_hp': 152, 'verb': 'attack'}
+DEBUG_EMIT: combat hero hit goblin for 16 damage (CRIT!) metadata={'attacker_id': 1, 'defender_id': 2, 'damage': 16, 'is_crit': True, 'is_evasion': False, 'skill_used': 'attack', 'attacker_hp': 200, 'defender_hp': 136, 'verb': 'attack'}
+DEBUG_EMIT: combat hero hit goblin for 10 damage metadata={'attacker_id': 1, 'defender_id': 2, 'damage': 10, 'is_crit': False, 'is_evasion': False, 'skill_used': 'attack', 'attacker_hp': 200, 'defender_hp': 127.0, 'verb': 'attack'}
+DEBUG_EMIT: combat hero hit goblin for 10 damage metadata={'attacker_id': 1, 'defender_id': 2, 'damage': 10, 'is_crit': False, 'is_evasion': False, 'skill_used': 'attack', 'attacker_hp': 200, 'defender_hp': 117.0, 'verb': 'attack'}
+DEBUG_EMIT: combat hero hit goblin for 9 damage metadata={'attacker_id': 1, 'defender_id': 2, 'damage': 9, 'is_crit': False, 'is_evasion': False, 'skill_used': 'attack', 'attacker_hp': 200, 'defender_hp': 108.0, 'verb': 'attack'}
+DEBUG_EMIT: combat hero hit goblin for 10 damage metadata={'attacker_id': 1, 'defender_id': 2, 'damage': 10, 'is_crit': False, 'is_evasion': False, 'skill_used': 'attack', 'attacker_hp': 200, 'defender_hp': 99.0, 'verb': 'attack'}
+DEBUG_EMIT: combat hero hit goblin for 10 damage metadata={'attacker_id': 1, 'defender_id': 2, 'damage': 10, 'is_crit': False, 'is_evasion': False, 'skill_used': 'attack', 'attacker_hp': 200, 'defender_hp': 89.0, 'verb': 'attack'}
+DEBUG_EMIT: combat hero hit goblin for 10 damage metadata={'attacker_id': 1, 'defender_id': 2, 'damage': 10, 'is_crit': False, 'is_evasion': False, 'skill_used': 'attack', 'attacker_hp': 200, 'defender_hp': 79.0, 'verb': 'attack'}
+DEBUG_EMIT: combat hero hit goblin for 9 damage metadata={'attacker_id': 1, 'defender_id': 2, 'damage': 9, 'is_crit': False, 'is_evasion': False, 'skill_used': 'attack', 'attacker_hp': 200, 'defender_hp': 71.0, 'verb': 'attack'}
+DEBUG_EMIT: combat hero hit goblin for 9 damage metadata={'attacker_id': 1, 'defender_id': 2, 'damage': 9, 'is_crit': False, 'is_evasion': False, 'skill_used': 'attack', 'attacker_hp': 200, 'defender_hp': 62.0, 'verb': 'attack'}
+DEBUG_EMIT: combat hero hit goblin for 9 damage metadata={'attacker_id': 1, 'defender_id': 2, 'damage': 9, 'is_crit': False, 'is_evasion': False, 'skill_used': 'attack', 'attacker_hp': 200, 'defender_hp': 53.0, 'verb': 'attack'}
+DEBUG_EMIT: combat hero hit goblin for 8 damage metadata={'attacker_id': 1, 'defender_id': 2, 'damage': 8, 'is_crit': False, 'is_evasion': False, 'skill_used': 'OPPORTUNITY_ATTACK', 'attacker_hp': 200, 'defender_hp': 45.0, 'verb': 'OPPORTUNITY_ATTACK'}
+DEBUG_EMIT: combat hero hit goblin for 13 damage (CRIT!) metadata={'attacker_id': 1, 'defender_id': 2, 'damage': 13, 'is_crit': True, 'is_evasion': False, 'skill_used': 'attack', 'attacker_hp': 201.0, 'defender_hp': 32.0, 'verb': 'attack'}
+DEBUG_EMIT: combat hero hit goblin for 11 damage metadata={'attacker_id': 1, 'defender_id': 2, 'damage': 11, 'is_crit': False, 'is_evasion': False, 'skill_used': 'attack', 'attacker_hp': 201.0, 'defender_hp': 21.0, 'verb': 'attack'}
+DEBUG_EMIT: combat hero hit goblin for 11 damage metadata={'attacker_id': 1, 'defender_id': 2, 'damage': 11, 'is_crit': False, 'is_evasion': False, 'skill_used': 'OPPORTUNITY_ATTACK', 'attacker_hp': 201.0, 'defender_hp': 10.0, 'verb': 'OPPORTUNITY_ATTACK'}
+DEBUG_EMIT: combat hero hit goblin for 9 damage metadata={'attacker_id': 1, 'defender_id': 2, 'damage': 9, 'is_crit': False, 'is_evasion': False, 'skill_used': 'attack', 'attacker_hp': 201.0, 'defender_hp': 1.0, 'verb': 'attack'}
+DEBUG_EMIT: combat hero hit goblin for 10 damage metadata={'attacker_id': 1, 'defender_id': 2, 'damage': 10, 'is_crit': False, 'is_evasion': False, 'skill_used': 'OPPORTUNITY_ATTACK', 'attacker_hp': 201.0, 'defender_hp': -9.0, 'verb': 'OPPORTUNITY_ATTACK'}
+DEBUG_EMIT: death goblin died at level 1. metadata={'entity_id': 2, 'killer_id': 1, 'x': 9, 'y': 5, 'level_at_death': 1, 'is_permadeath': False}
+DEBUG_EMIT: death #2 DIED PERMANENTLY at level 1. metadata={'entity_id': 2, 'killer_id': None, 'x': 10, 'y': 5, 'level_at_death': 1, 'is_permadeath': True}
+DEBUG_EMIT: combat hero hit goblin for 10 damage metadata={'attacker_id': 1, 'defender_id': 2, 'damage': 10, 'is_crit': False, 'is_evasion': False, 'skill_used': 'OPPORTUNITY_ATTACK', 'attacker_hp': 200, 'defender_hp': 190, 'verb': 'OPPORTUNITY_ATTACK'}
+DEBUG_EMIT: combat hero hit goblin for 10 damage metadata={'attacker_id': 1, 'defender_id': 2, 'damage': 10, 'is_crit': False, 'is_evasion': False, 'skill_used': 'attack', 'attacker_hp': 200, 'defender_hp': 180, 'verb': 'attack'}
+DEBUG_EMIT: combat hero hit goblin for 10 damage metadata={'attacker_id': 1, 'defender_id': 2, 'damage': 10, 'is_crit': False, 'is_evasion': False, 'skill_used': 'attack', 'attacker_hp': 200, 'defender_hp': 170, 'verb': 'attack'}
+DEBUG_EMIT: combat hero hit goblin for 10 damage metadata={'attacker_id': 1, 'defender_id': 2, 'damage': 10, 'is_crit': False, 'is_evasion': False, 'skill_used': 'attack', 'attacker_hp': 200, 'defender_hp': 160, 'verb': 'attack'}
+DEBUG_EMIT: combat hero hit goblin for 8 damage metadata={'attacker_id': 1, 'defender_id': 2, 'damage': 8, 'is_crit': False, 'is_evasion': False, 'skill_used': 'attack', 'attacker_hp': 200, 'defender_hp': 152, 'verb': 'attack'}
+DEBUG_EMIT: combat hero hit goblin for 16 damage (CRIT!) metadata={'attacker_id': 1, 'defender_id': 2, 'damage': 16, 'is_crit': True, 'is_evasion': False, 'skill_used': 'attack', 'attacker_hp': 200, 'defender_hp': 136, 'verb': 'attack'}
+DEBUG_EMIT: combat hero hit goblin for 10 damage metadata={'attacker_id': 1, 'defender_id': 2, 'damage': 10, 'is_crit': False, 'is_evasion': False, 'skill_used': 'attack', 'attacker_hp': 200, 'defender_hp': 127.0, 'verb': 'attack'}
+DEBUG_EMIT: combat hero hit goblin for 10 damage metadata={'attacker_id': 1, 'defender_id': 2, 'damage': 10, 'is_crit': False, 'is_evasion': False, 'skill_used': 'attack', 'attacker_hp': 200, 'defender_hp': 117.0, 'verb': 'attack'}
+DEBUG_EMIT: combat hero hit goblin for 9 damage metadata={'attacker_id': 1, 'defender_id': 2, 'damage': 9, 'is_crit': False, 'is_evasion': False, 'skill_used': 'attack', 'attacker_hp': 200, 'defender_hp': 108.0, 'verb': 'attack'}
+DEBUG_EMIT: combat hero hit goblin for 10 damage metadata={'attacker_id': 1, 'defender_id': 2, 'damage': 10, 'is_crit': False, 'is_evasion': False, 'skill_used': 'attack', 'attacker_hp': 200, 'defender_hp': 99.0, 'verb': 'attack'}
+DEBUG_EMIT: combat hero hit goblin for 10 damage metadata={'attacker_id': 1, 'defender_id': 2, 'damage': 10, 'is_crit': False, 'is_evasion': False, 'skill_used': 'attack', 'attacker_hp': 200, 'defender_hp': 89.0, 'verb': 'attack'}
+DEBUG_EMIT: combat hero hit goblin for 10 damage metadata={'attacker_id': 1, 'defender_id': 2, 'damage': 10, 'is_crit': False, 'is_evasion': False, 'skill_used': 'attack', 'attacker_hp': 200, 'defender_hp': 79.0, 'verb': 'attack'}
+DEBUG_EMIT: combat hero hit goblin for 9 damage metadata={'attacker_id': 1, 'defender_id': 2, 'damage': 9, 'is_crit': False, 'is_evasion': False, 'skill_used': 'attack', 'attacker_hp': 200, 'defender_hp': 71.0, 'verb': 'attack'}
+DEBUG_EMIT: combat hero hit goblin for 9 damage metadata={'attacker_id': 1, 'defender_id': 2, 'damage': 9, 'is_crit': False, 'is_evasion': False, 'skill_used': 'attack', 'attacker_hp': 200, 'defender_hp': 62.0, 'verb': 'attack'}
+DEBUG_EMIT: combat hero hit goblin for 9 damage metadata={'attacker_id': 1, 'defender_id': 2, 'damage': 9, 'is_crit': False, 'is_evasion': False, 'skill_used': 'attack', 'attacker_hp': 200, 'defender_hp': 53.0, 'verb': 'attack'}
+DEBUG_EMIT: combat hero hit goblin for 8 damage metadata={'attacker_id': 1, 'defender_id': 2, 'damage': 8, 'is_crit': False, 'is_evasion': False, 'skill_used': 'OPPORTUNITY_ATTACK', 'attacker_hp': 200, 'defender_hp': 45.0, 'verb': 'OPPORTUNITY_ATTACK'}
+DEBUG_EMIT: combat hero hit goblin for 13 damage (CRIT!) metadata={'attacker_id': 1, 'defender_id': 2, 'damage': 13, 'is_crit': True, 'is_evasion': False, 'skill_used': 'attack', 'attacker_hp': 201.0, 'defender_hp': 32.0, 'verb': 'attack'}
+DEBUG_EMIT: combat hero hit goblin for 11 damage metadata={'attacker_id': 1, 'defender_id': 2, 'damage': 11, 'is_crit': False, 'is_evasion': False, 'skill_used': 'attack', 'attacker_hp': 201.0, 'defender_hp': 21.0, 'verb': 'attack'}
+DEBUG_EMIT: combat hero hit goblin for 11 damage metadata={'attacker_id': 1, 'defender_id': 2, 'damage': 11, 'is_crit': False, 'is_evasion': False, 'skill_used': 'OPPORTUNITY_ATTACK', 'attacker_hp': 201.0, 'defender_hp': 10.0, 'verb': 'OPPORTUNITY_ATTACK'}
+DEBUG_EMIT: combat hero hit goblin for 9 damage metadata={'attacker_id': 1, 'defender_id': 2, 'damage': 9, 'is_crit': False, 'is_evasion': False, 'skill_used': 'attack', 'attacker_hp': 201.0, 'defender_hp': 1.0, 'verb': 'attack'}
+DEBUG_EMIT: combat hero hit goblin for 10 damage metadata={'attacker_id': 1, 'defender_id': 2, 'damage': 10, 'is_crit': False, 'is_evasion': False, 'skill_used': 'OPPORTUNITY_ATTACK', 'attacker_hp': 201.0, 'defender_hp': -9.0, 'verb': 'OPPORTUNITY_ATTACK'}
+DEBUG_EMIT: death goblin died at level 1. metadata={'entity_id': 2, 'killer_id': 1, 'x': 9, 'y': 5, 'level_at_death': 1, 'is_permadeath': False}
+DEBUG_EMIT: death #2 DIED PERMANENTLY at level 1. metadata={'entity_id': 2, 'killer_id': None, 'x': 10, 'y': 5, 'level_at_death': 1, 'is_permadeath': True}
+=============================== warnings summary ===============================
+tests/test_combat_arena_e2e.py::TestBasicCombatE2E::test_adjacent_melee_fight_produces_combat_events
+  /home/vboxuser/Work/rpg-based-simulation/.venv/lib/python3.13/site-packages/pythonjsonlogger/jsonlogger.py:11: DeprecationWarning: pythonjsonlogger.jsonlogger has been moved to pythonjsonlogger.json
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_combat_arena_e2e.py::TestCoverE2E::test_cover_reduces_ranged_damage - assert None is not None
+=================== 1 failed, 37 passed, 1 warning in 2.06s ====================

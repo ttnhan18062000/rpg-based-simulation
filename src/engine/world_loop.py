@@ -251,7 +251,7 @@ class WorldLoop:
             try:
                 phase.execute(ctx)
             except Exception as e:
-                self._logger.error("Phase %s failed: %s", phase.__class__.__name__, e)
+                self._logger.error("Phase %s failed: %s", phase.__class__.__name__, e, exc_info=True)
 
         # Sync results for legacy API/Recorder
         self._last_applied = ctx.tick_applied

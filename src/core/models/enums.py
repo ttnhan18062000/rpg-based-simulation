@@ -108,6 +108,27 @@ class TraitType(IntEnum): AGGRESSIVE = 0; CAUTIOUS = 1; BRAVE = 2; COWARDLY = 3;
 @unique
 class VeterancyRank(IntEnum): GREEN = 0; BLOODED = 1; VETERAN = 2; ELITE = 3; LEGEND = 4
 
+@unique
+class GoalType(IntEnum):
+    """Specific AI goals for utility selection."""
+    COMBAT = 0
+    FLEE = 1
+    EXPLORE = 2
+    LOOT = 3
+    TRADE = 4
+    REST = 5
+    CRAFT = 6
+    SOCIAL = 7
+    GUARD = 8
+    CORPSE_RUN = 9
+
+@unique
+class EmotionType(IntEnum):
+    """Emotional dimensions for AI appraisal."""
+    BRAVERY = 0
+    PANIC = 1
+    STUCK = 2
+
 from typing import Annotated
 from pydantic import BeforeValidator, PlainSerializer
 

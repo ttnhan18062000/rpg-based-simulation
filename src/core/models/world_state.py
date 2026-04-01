@@ -4,22 +4,23 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from src.core.gameplay.buildings import Building
-from src.core.world.grid import Grid
-from src.core.entities.entity import Entity
 from .vectors import Vector2
 from .world_objects import TreasureChest, CorpseNode
-from src.core.world.regions import Region
-from src.core.world.resource_nodes import ResourceNode
 
 if TYPE_CHECKING:
+    from src.core.entities.entity import Entity
+    from src.core.gameplay.buildings import Building
+    from src.core.world.grid import Grid
+    from src.core.world.regions import Region
+    from src.core.world.resource_nodes import ResourceNode
     from src.platform.spatial_hash import SpatialHash
+    from .snapshot import Snapshot
 
 
 class WorldState:
     """The single source of truth for the simulation."""
 
-    __slots__ = ("world_age", "faction_aggression", "difficulty_modifier", "monuments", "tick", "seed", "entities", "grid", "spatial_index", "_next_entity_id", "ground_items", "camps", "buildings", "resource_nodes", "_next_node_id", "treasure_chests", "_next_chest_id", "regions", "maturity", "last_calamity_tick", "event_bus", "faction_deaths_per_region", "region_control", "war_status", "history", "_history_subscribed", "town_treasury", "corpse_nodes", "_next_corpse_id")
+    __slots__ = ("world_age", "faction_aggression", "difficulty_modifier", "monuments", "tick", "seed", "entities", "grid", "spatial_index", "_next_entity_id", "ground_items", "camps", "buildings", "resource_nodes", "_next_node_id", "treasure_chests", "_next_chest_id", "regions", "maturity", "last_calamity_tick", "event_bus", "faction_deaths_per_region", "region_control", "war_status", "history", "_history_subscribed", "town_treasury", "corpse_nodes", "_next_corpse_id", "_frozen")
 
     def __init__(
         self,
@@ -56,8 +57,31 @@ class WorldState:
         self.corpse_nodes: dict[int, CorpseNode] = {}
         self._next_corpse_id: int = 1
         self.event_bus = None
+        self._frozen: bool = False
+
+    def _check_frozen(self, method_name: str) -> None:
+        if self._frozen:
+            raise RuntimeError(f"Cannot call {method_name} on frozen WorldState. Simulation is in a read-only phase.")
+
+    def freeze(self) -> None:
+        """Lock the world state and all its contents (Recursive)."""
+        if self._frozen: return
+        self._frozen = True
+        for entity in self.entities.values():
+            if hasattr(entity, "freeze"):
+                entity.freeze()
+        for node in self.resource_nodes.values():
+            if hasattr(node, "freeze"):
+                node.freeze()
+        for chest in self.treasure_chests.values():
+            if hasattr(chest, "freeze"):
+                chest.freeze()
+        for corpse in self.corpse_nodes.values():
+            if hasattr(corpse, "freeze"):
+                corpse.freeze()
 
     def allocate_entity_id(self) -> int:
+        self._check_frozen("allocate_entity_id")
         eid = self._next_entity_id
         self._next_entity_id += 1
         return eid
@@ -67,16 +91,19 @@ class WorldState:
         return self.tick // 100
 
     def add_entity(self, entity: Entity) -> None:
+        self._check_frozen("add_entity")
         self.entities[entity.id] = entity
         self.spatial_index.insert(entity.id, entity.spatial.pos)
 
     def remove_entity(self, entity_id: int) -> Entity | None:
+        self._check_frozen("remove_entity")
         entity = self.entities.pop(entity_id, None)
         if entity is not None:
             self.spatial_index.remove(entity_id, entity.spatial.pos)
         return entity
 
     def move_entity(self, entity_id: int, new_pos: Vector2) -> None:
+        self._check_frozen("move_entity")
         entity = self.entities.get(entity_id)
         if entity is None:
             return
@@ -100,6 +127,7 @@ class WorldState:
         return False
 
     def drop_items(self, pos: Vector2, item_ids: list[str]) -> None:
+        self._check_frozen("drop_items")
         """Place items on the ground at *pos*."""
         if not item_ids:
             return
@@ -109,6 +137,7 @@ class WorldState:
         self.ground_items[key].extend(item_ids)
 
     def pickup_items(self, pos: Vector2) -> list[str]:
+        self._check_frozen("pickup_items")
         """Remove and return all ground items at *pos*."""
         key = (pos.x, pos.y)
         return self.ground_items.pop(key, [])
@@ -129,7 +158,7 @@ class WorldState:
         return None
 
     @classmethod
-    def from_snapshot(cls, snap: 'Snapshot', spatial_index: SpatialHash) -> WorldState:
+    def from_snapshot(cls, snap: Snapshot, spatial_index: SpatialHash) -> WorldState:
         """Reconstruct a mutable WorldState from a serialized Snapshot."""
         world = cls(seed=snap.seed, grid=snap.grid, spatial_index=spatial_index)
         world.tick = snap.tick

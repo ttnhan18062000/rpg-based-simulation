@@ -8,7 +8,7 @@ Refactored for AOA Stabilization:
 
 from __future__ import annotations
 from typing import TYPE_CHECKING, Any
-from pydantic import BaseModel, Field, ConfigDict, model_validator
+from pydantic import BaseModel, Field, ConfigDict, model_validator, PrivateAttr
 
 # Import aspects directly to avoid forward reference issues during rebuild
 from src.core.aspects.identity import IdentityAspect
@@ -61,6 +61,9 @@ class Entity(BaseModel):
     mind: MindAspect = Field(default_factory=lambda: MindAspect())
     interaction: InteractionAspect = Field(default_factory=lambda: InteractionAspect())
     inventory: InventoryAspect | None = None
+    
+    # Internal immutability (Phase-Boundary Enforcement)
+    _frozen: bool = PrivateAttr(default=False)
 
     @model_validator(mode="before")
     @classmethod
@@ -135,6 +138,23 @@ class Entity(BaseModel):
         new_ent = self.model_copy(deep=True)
         new_ent.model_post_init(None)
         return new_ent
+
+    def freeze(self) -> None:
+        """Lock the entity for read-only access (e.g. in Snapshot)."""
+        self._frozen = True
+        # Recursive freeze on aspects
+        aspect_fields = ["identity", "spatial", "combat", "progression", "mind", "interaction"]
+        if self.inventory:
+            aspect_fields.append("inventory")
+        for f in aspect_fields:
+            asp = getattr(self, f)
+            if hasattr(asp, "freeze"):
+                asp.freeze()
+
+    def __setattr__(self, name: str, value: Any) -> None:
+        if getattr(self, "_frozen", False) and not name.startswith("_"):
+            raise RuntimeError(f"Cannot mutate frozen Entity {self.id} (Field: {name})")
+        super().__setattr__(name, value)
 
 # Rebuild models to finalize Pydantic setup
 Entity.model_rebuild()

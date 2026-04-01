@@ -1,0 +1,43 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.7, pytest-9.0.2, pluggy-1.6.0 -- /home/vboxuser/Work/rpg-based-simulation/.venv/bin/python
+cachedir: .pytest_cache
+hypothesis profile 'default'
+rootdir: /home/vboxuser/Work/rpg-based-simulation
+configfile: pyproject.toml
+plugins: anyio-4.12.1, hypothesis-6.151.10
+collecting ... collected 2 items
+
+tests/test_combat_arena_e2e.py::TestMultiEntityCombatE2E::test_two_heroes_vs_one_mob PASSED [ 50%]
+tests/test_combat_arena_e2e.py::TestMultiEntityCombatE2E::test_ranged_and_melee_hero_vs_mob FAILED [100%]
+
+=================================== FAILURES ===================================
+__________ TestMultiEntityCombatE2E.test_ranged_and_melee_hero_vs_mob __________
+
+self = <tests.test_combat_arena_e2e.TestMultiEntityCombatE2E object at 0x7c5d3d235e50>
+
+    def test_ranged_and_melee_hero_vs_mob(self):
+        """Melee hero engages mob, ranged hero attacks from distance."""
+        arena = CombatArena()
+        arena.add_hero(1, pos=(5, 5), weapon="iron_sword", hp=100, atk=15)
+        arena.add_hero(2, pos=(2, 5), weapon="shortbow", hp=80, atk=12,
+                       hero_class=HeroClass.RANGER)
+        arena.add_mob(3, pos=(6, 5), weapon="rusty_sword", hp=80, atk=8)
+        arena.run_until(lambda a: not a.entity_alive(3), max_ticks=100)
+        # Mob should eventually die
+>       assert not arena.entity_alive(3)
+E       assert not True
+E        +  where True = entity_alive(3)
+E        +    where entity_alive = <tests.helpers.combat_arena.CombatArena object at 0x7c5d3d2360d0>.entity_alive
+
+tests/test_combat_arena_e2e.py:254: AssertionError
+=============================== warnings summary ===============================
+tests/test_combat_arena_e2e.py::TestMultiEntityCombatE2E::test_two_heroes_vs_one_mob
+  /home/vboxuser/Work/rpg-based-simulation/.venv/lib/python3.13/site-packages/pythonjsonlogger/jsonlogger.py:11: DeprecationWarning: pythonjsonlogger.jsonlogger has been moved to pythonjsonlogger.json
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_combat_arena_e2e.py::TestMultiEntityCombatE2E::test_ranged_and_melee_hero_vs_mob - assert not True
+ +  where True = entity_alive(3)
+ +    where entity_alive = <tests.helpers.combat_arena.CombatArena object at 0x7c5d3d2360d0>.entity_alive
+==================== 1 failed, 1 passed, 1 warning in 0.83s ====================

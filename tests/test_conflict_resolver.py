@@ -18,13 +18,19 @@ from src.config import SimulationConfig
 from src.core.models.enums import ActionType, AIState
 from src.core.gameplay.faction import Faction
 from src.core.world.grid import Grid
-from src.core.gameplay.items.items import Inventory
 from src.core.entities.entity import Entity
 from src.core.models.vectors import Vector2
 from src.core.models.world_state import WorldState
 from src.engine.conflict_resolver import ConflictResolver
-from src.systems.rng import DeterministicRNG
-from src.systems.spatial_hash import SpatialHash
+from src.platform.rng import DeterministicRNG
+from src.platform.spatial_hash import SpatialHash
+from src.core.aspects.identity import IdentityAspect
+from src.core.aspects.spatial import SpatialAspect
+from src.core.aspects.combat import CombatAspect
+from src.core.aspects.inventory import InventoryAspect
+from src.core.aspects.mind import MindAspect
+from src.core.aspects.interaction import InteractionAspect
+from src.core.aspects.progression import ProgressionAspect
 
 
 def _make_world(width: int = 16, height: int = 16) -> WorldState:
@@ -43,10 +49,26 @@ def _make_entity(
     spd: int = 10,
     next_act_at: float = 0.0,
 ) -> Entity:
-    stats = Stats(hp=hp, max_hp=hp, atk=atk, def_=5, spd=spd)
-    inv = Inventory(items=[], max_slots=12, max_weight=30.0)
-    e = Entity(id=eid, kind=kind, pos=Vector2(x, y), stats=stats, faction=faction, inventory=inv)
-    e.next_act_at = next_act_at
+    identity = IdentityAspect(display_name=f"{kind}_{eid}", kind=kind, faction=faction)
+    spatial = SpatialAspect(pos=Vector2(x, y))
+    combat = CombatAspect(hp=hp, max_hp=hp, atk_base=atk, def_base=5, spd_base=spd)
+    mind = MindAspect()
+    prog = ProgressionAspect()
+    inv = InventoryAspect(items=[], max_slots=12, max_weight=30.0)
+    inter = InteractionAspect()
+    
+    e = Entity(
+        id=eid,
+        kind=kind,
+        next_act_at=next_act_at,
+        identity=identity,
+        spatial=spatial,
+        combat=combat,
+        mind=mind,
+        progression=prog,
+        inventory=inv,
+        interaction=inter
+    )
     return e
 
 
@@ -227,9 +249,9 @@ class TestDiagonalHuntYield:
 
         world = _make_world()
         hero = _make_entity(1, x=5, y=5, faction=Faction.HERO_GUILD)
-        hero.ai_state = AIState.HUNT
+        hero.mind.decision.ai_state = AIState.HUNT
         goblin = _make_entity(2, x=6, y=6, faction=Faction.GOBLIN_HORDE)
-        goblin.ai_state = AIState.HUNT
+        goblin.mind.decision.ai_state = AIState.HUNT
         world.add_entity(hero)
         world.add_entity(goblin)
 
@@ -249,9 +271,9 @@ class TestDiagonalHuntYield:
 
         world = _make_world()
         hero = _make_entity(1, x=5, y=5, faction=Faction.HERO_GUILD)
-        hero.ai_state = AIState.HUNT
+        hero.mind.decision.ai_state = AIState.HUNT
         goblin = _make_entity(2, x=6, y=6, faction=Faction.GOBLIN_HORDE)
-        goblin.ai_state = AIState.HUNT
+        goblin.mind.decision.ai_state = AIState.HUNT
         world.add_entity(hero)
         world.add_entity(goblin)
 
@@ -270,9 +292,9 @@ class TestDiagonalHuntYield:
 
         world = _make_world()
         hero = _make_entity(1, x=5, y=5, faction=Faction.HERO_GUILD)
-        hero.ai_state = AIState.HUNT
+        hero.mind.decision.ai_state = AIState.HUNT
         goblin = _make_entity(2, x=6, y=6, faction=Faction.GOBLIN_HORDE)
-        goblin.ai_state = AIState.WANDER  # Not aggressive
+        goblin.mind.decision.ai_state = AIState.WANDER  # Not aggressive
         world.add_entity(hero)
         world.add_entity(goblin)
 
@@ -290,9 +312,9 @@ class TestDiagonalHuntYield:
 
         world = _make_world()
         hero = _make_entity(1, x=5, y=5, faction=Faction.HERO_GUILD)
-        hero.ai_state = AIState.HUNT
+        hero.mind.decision.ai_state = AIState.HUNT
         goblin = _make_entity(2, x=7, y=7, faction=Faction.GOBLIN_HORDE)
-        goblin.ai_state = AIState.HUNT
+        goblin.mind.decision.ai_state = AIState.HUNT
         world.add_entity(hero)
         world.add_entity(goblin)
 
@@ -310,9 +332,9 @@ class TestDiagonalHuntYield:
 
         world = _make_world()
         hero = _make_entity(1, x=5, y=5, faction=Faction.HERO_GUILD)
-        hero.ai_state = AIState.HUNT
+        hero.mind.decision.ai_state = AIState.HUNT
         goblin = _make_entity(2, x=5, y=6, faction=Faction.GOBLIN_HORDE)
-        goblin.ai_state = AIState.HUNT
+        goblin.mind.decision.ai_state = AIState.HUNT
         world.add_entity(hero)
         world.add_entity(goblin)
 

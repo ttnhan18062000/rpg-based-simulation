@@ -9,7 +9,7 @@ Refactored for AOA Stabilization:
 from __future__ import annotations
 from typing import TYPE_CHECKING
 from src.ai.goals.base import GoalScorer
-from src.core.models.enums import AIState
+from src.core.models.enums import AIState, GoalType, EmotionType
 from src.core.gameplay.faction import Faction
 from src.core.entities.traits import aggregate_trait_stats, aggregate_trait_utility
 
@@ -57,7 +57,7 @@ def _region_danger_penalty(ctx: AIContext) -> float:
 
 class CombatGoal(GoalScorer):
     @property
-    def name(self) -> str: return "combat"
+    def name(self) -> GoalType: return GoalType.COMBAT
 
     @property
     def target_state(self) -> AIState: return AIState.HUNT
@@ -97,7 +97,7 @@ class CombatGoal(GoalScorer):
             base -= 0.2 * (1.0 - hp_ratio)
 
         # Brave heroes are significantly more aggressive
-        bravery = actor.mind.emotion.emotional_state.get("bravery", 0.5)
+        bravery = actor.mind.emotion.bravery
         neuroticism = actor.identity.neuroticism
         
         from src.core.entities.traits import TraitType
@@ -127,7 +127,7 @@ class CombatGoal(GoalScorer):
 
 class FleeGoal(GoalScorer):
     @property
-    def name(self) -> str: return "flee"
+    def name(self) -> GoalType: return GoalType.FLEE
 
     @property
     def target_state(self) -> AIState: return AIState.FLEE
@@ -148,7 +148,7 @@ class FleeGoal(GoalScorer):
             return 0.1 + _trait_utility(ctx).flee
 
         enemy = ctx.nearest_enemy()
-        if enemy and mind.emotion.grudges.get(enemy.id, 0.0) > 30.0 and hp_ratio < 0.6:
+        if enemy and mind.emotion.grudges.get(enemy.id, 0.0) >= 30.0 and hp_ratio < 0.6:
             return 2.0 + _trait_utility(ctx).flee
         
         flee_threshold = ctx.config.flee_hp_threshold + _trait_stats(ctx).flee_threshold_mod
@@ -159,7 +159,7 @@ class FleeGoal(GoalScorer):
                 excess = max(diff * 3 - comfort, 0)
                 flee_threshold += excess * 0.03
         
-        bravery = mind.emotion.emotional_state.get("bravery", 0.5)
+        bravery = mind.emotion.bravery
         flee_threshold = max(0.05, min(0.9, flee_threshold + (0.5 - bravery) * 0.4))
 
         base = 0.0
@@ -191,7 +191,7 @@ class FleeGoal(GoalScorer):
 
 class ExploreGoal(GoalScorer):
     @property
-    def name(self) -> str: return "explore"
+    def name(self) -> GoalType: return GoalType.EXPLORE
 
     @property
     def target_state(self) -> AIState: return AIState.WANDER
@@ -221,7 +221,7 @@ class ExploreGoal(GoalScorer):
 
 class LootGoal(GoalScorer):
     @property
-    def name(self) -> str: return "loot"
+    def name(self) -> GoalType: return GoalType.LOOT
 
     @property
     def target_state(self) -> AIState: return AIState.LOOTING
@@ -255,7 +255,7 @@ class LootGoal(GoalScorer):
 
 class TradeGoal(GoalScorer):
     @property
-    def name(self) -> str: return "trade"
+    def name(self) -> GoalType: return GoalType.TRADE
 
     @property
     def target_state(self) -> AIState: return AIState.VISIT_SHOP
@@ -282,7 +282,7 @@ class TradeGoal(GoalScorer):
 
 class RestGoal(GoalScorer):
     @property
-    def name(self) -> str: return "rest"
+    def name(self) -> GoalType: return GoalType.REST
 
     @property
     def target_state(self) -> AIState: return AIState.RESTING_IN_TOWN
@@ -310,7 +310,7 @@ class RestGoal(GoalScorer):
 
 class CraftGoal(GoalScorer):
     @property
-    def name(self) -> str: return "craft"
+    def name(self) -> GoalType: return GoalType.CRAFT
 
     @property
     def target_state(self) -> AIState: return AIState.VISIT_BLACKSMITH
@@ -332,7 +332,7 @@ class CraftGoal(GoalScorer):
 
 class SocialGoal(GoalScorer):
     @property
-    def name(self) -> str: return "social"
+    def name(self) -> GoalType: return GoalType.SOCIAL
 
     @property
     def target_state(self) -> AIState: return AIState.VISIT_GUILD
@@ -356,7 +356,7 @@ class SocialGoal(GoalScorer):
 
 class GuardGoal(GoalScorer):
     @property
-    def name(self) -> str: return "guard"
+    def name(self) -> GoalType: return GoalType.GUARD
 
     @property
     def target_state(self) -> AIState: return AIState.GUARD_CAMP
@@ -384,7 +384,7 @@ class GuardGoal(GoalScorer):
 
 class CorpseScorer(GoalScorer):
     @property
-    def name(self) -> str: return "corpse_run"
+    def name(self) -> GoalType: return GoalType.CORPSE_RUN
 
     @property
     def target_state(self) -> AIState: return AIState.RECOVER_CORPSE

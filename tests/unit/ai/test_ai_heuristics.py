@@ -2,8 +2,9 @@ from __future__ import annotations
 import pytest
 from src.config import SimulationConfig
 from src.ai.brain import AIBrain
+from src.actions.base import MindUpdate
 from src.core.entities.entity import Entity, Vector2
-from src.core.models.enums import AIState, Domain
+from src.core.models.enums import AIState, Domain, GoalType
 from src.platform.rng import DeterministicRNG
 from src.core.models.snapshot import Snapshot
 from src.core.gameplay.faction import FactionRegistry
@@ -58,8 +59,9 @@ def test_ai_boredom_diversification():
         new_state, proposal = brain.decide(actor, snap)
         actor.mind.decision.ai_state = AIState.IDLE # Force back to decision state for next tick
         goals_picked.append(new_state)
-        if proposal.intent_metadata and "boredom_update" in proposal.intent_metadata:
-            actor.mind.decision.boredom_multipliers.update(proposal.intent_metadata["boredom_update"])
+        mind_up = next((u for u in proposal.updates if isinstance(u, MindUpdate) and u.boredom_delta), None)
+        if mind_up and mind_up.boredom_delta:
+            actor.mind.decision.boredom_multipliers.update(mind_up.boredom_delta)
         
     # Verify that boredom multipliers were initialized and modified
     assert len(actor.mind.decision.boredom_multipliers) > 0
@@ -109,25 +111,26 @@ def test_life_stage_priority_shift():
     young_scores = brain._goal_evaluator.evaluate(ctx_young)
     veteran_scores = brain._goal_evaluator.evaluate(ctx_veteran)
     
-    def get_score(scores, name):
+    def get_score(scores, goal_type):
         for s in scores:
-            if s.goal == name: return s.score
+            if s.goal == goal_type: return s.score
         return 0.0
 
     # Young heroes should favor explore/rest
     # Veteran heroes should favor social/trade/craft
     
-    young_explore = get_score(young_scores, "explore")
-    veteran_explore = get_score(veteran_scores, "explore")
+    young_explore = get_score(young_scores, GoalType.EXPLORE)
+    veteran_explore = get_score(veteran_scores, GoalType.EXPLORE)
     
-    young_social = get_score(young_scores, "social")
-    veteran_social = get_score(veteran_scores, "social")
+    young_social = get_score(young_scores, GoalType.SOCIAL)
+    veteran_social = get_score(veteran_scores, GoalType.SOCIAL)
     
-    # Multipliers: Explore (Young 1.3, Veteran 0.7) -> Young should be higher relative to base
-    # Social (Young 1.0, Veteran 1.4) -> Veteran should be higher relative to base
-    
-    assert young_explore > 0
-    assert veteran_social > 0
+    # Debug print to see what's happening
+    print(f"DEBUG: young_scores={[ (s.goal.name, s.score) for s in young_scores ]}")
+    print(f"DEBUG: veteran_scores={[ (s.goal.name, s.score) for s in veteran_scores ]}")
+
+    assert young_explore > 0, f"Young explore score should be > 0, got {young_explore}"
+    assert veteran_social > 0, f"Veteran social score should be > 0, got {veteran_social}"
     
     # Check that ratios shift as expected
     # (This is a bit tricky since base scores also depend on stats, but level is the main differentiator here)

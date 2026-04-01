@@ -1,0 +1,19 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.7, pytest-9.0.2, pluggy-1.6.0 -- /home/vboxuser/Work/rpg-based-simulation/.venv/bin/python
+cachedir: .pytest_cache
+hypothesis profile 'default'
+rootdir: /home/vboxuser/Work/rpg-based-simulation
+configfile: pyproject.toml
+plugins: anyio-4.12.1, hypothesis-6.151.10
+collecting ... collected 2 items
+
+tests/test_combat_arena_e2e.py::TestMultiEntityCombatE2E::test_two_heroes_vs_one_mob PASSED [ 50%]
+tests/test_combat_arena_e2e.py::TestMultiEntityCombatE2E::test_ranged_and_melee_hero_vs_mob PASSED [100%]
+
+=============================== warnings summary ===============================
+tests/test_combat_arena_e2e.py::TestMultiEntityCombatE2E::test_two_heroes_vs_one_mob
+  /home/vboxuser/Work/rpg-based-simulation/.venv/lib/python3.13/site-packages/pythonjsonlogger/jsonlogger.py:11: DeprecationWarning: pythonjsonlogger.jsonlogger has been moved to pythonjsonlogger.json
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+========================= 2 passed, 1 warning in 0.31s =========================

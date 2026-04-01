@@ -112,8 +112,8 @@ class TestSlimEntities(unittest.TestCase):
         e = list(self.snap.entities.values())[0]
         slim = EntitySlimSchema(
             id=e.id, kind=e.kind, x=e.spatial.pos.x, y=e.spatial.pos.y,
-            hp=e.stats.combat.hp, max_hp=e.stats.combat.max_hp,
-            state=e.mind.ai_state.name, level=e.stats.progression.level,
+            hp=e.combat.hp, max_hp=e.combat.max_hp,
+            state=e.mind.decision.ai_state.name, level=e.progression.level,
             tier=e.identity.tier, faction=e.identity.faction.name.lower(),
         )
         js = slim.model_dump_json()
@@ -125,8 +125,8 @@ class TestSlimEntities(unittest.TestCase):
         slim_list = [
             EntitySlimSchema(
                 id=e.id, kind=e.kind, x=e.spatial.pos.x, y=e.spatial.pos.y,
-                hp=e.stats.combat.hp, max_hp=e.stats.combat.max_hp,
-                state=e.mind.ai_state.name, level=e.stats.progression.level,
+                hp=e.combat.hp, max_hp=e.combat.max_hp,
+                state=e.mind.decision.ai_state.name, level=e.progression.level,
                 tier=e.identity.tier, faction=e.identity.faction.name.lower(),
             )
             for e in entities

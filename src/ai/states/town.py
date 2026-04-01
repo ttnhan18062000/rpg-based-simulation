@@ -1,6 +1,9 @@
 from __future__ import annotations
 
-from src.actions.base import ActionType, ActionProposal
+from src.actions.base import (
+    ActionType, ActionProposal, IntentUpdate, ProgressionUpdate, 
+    IdentityUpdate, InteractionUpdate, PerceptionUpdate, MindUpdate
+)
 from src.core.gameplay.buildings import (
     Building, RECIPES, RECIPE_MAP, SHOP_INVENTORY,
     can_craft, item_sell_price, shop_buy_price,
@@ -10,7 +13,7 @@ from src.core.gameplay.items.item_registry import ITEM_REGISTRY
 from src.core.entities.entity import Entity
 from src.core.gameplay.items.items import ItemType, _item_power
 from src.ai.states.base import (
-    AIContext, StateHandler, clear_dead_from_memory, 
+    AIContext, StateHandler, get_dead_memory_ids, get_perception_cleanup_update,
     propose_move_toward
 )
 
@@ -206,12 +209,14 @@ def hero_should_visit_home(actor: Entity) -> bool:
 class RestingInTownHandler(StateHandler):
     def handle(self, ctx: AIContext) -> tuple[AIState, ActionProposal]:
         actor, snapshot = ctx.actor, ctx.snapshot
-        clear_dead_from_memory(actor, snapshot)
+        cleanup = get_perception_cleanup_update(actor, snapshot)
+        final_updates = [cleanup] if cleanup else []
 
         if actor.combat.hp < actor.combat.max_hp:
             return AIState.RESTING_IN_TOWN, ActionProposal(
                 actor_id=actor.id, verb=ActionType.REST,
-                reason="Resting in town (healing)")
+                reason="Resting in town (healing)",
+                updates=final_updates)
 
         want_buy = hero_wants_to_buy(actor)
         if want_buy:
@@ -314,7 +319,7 @@ class VisitShopHandler(StateHandler):
             return AIState.VISIT_SHOP, ActionProposal(
                 actor_id=actor.id, verb=ActionType.REST,
                 reason=f"Selling {len(removals)} items for {total_gold}g",
-                intent_metadata={"inventory_remove": removals, "gold_add": total_gold})
+                updates=[ProgressionUpdate(inventory_remove=removals, gold_delta=total_gold)])
 
         want = hero_wants_to_buy(actor)
         if want:
@@ -323,7 +328,7 @@ class VisitShopHandler(StateHandler):
                 return AIState.VISIT_SHOP, ActionProposal(
                     actor_id=actor.id, verb=ActionType.REST,
                     reason=f"Buying {want} for {price}g",
-                    intent_metadata={"gold_remove": price, "inventory_add": [want]})
+                    updates=[ProgressionUpdate(gold_delta=-price, inventory_add=[want])])
 
         return AIState.RESTING_IN_TOWN, ActionProposal(
             actor_id=actor.id, verb=ActionType.REST,
@@ -354,7 +359,7 @@ class VisitBlacksmithHandler(StateHandler):
             return AIState.VISIT_BLACKSMITH, ActionProposal(
                 actor_id=actor.id, verb=ActionType.REST,
                 reason="Learning recipes from blacksmith",
-                intent_metadata={"recipe_learn": [r.recipe_id for r in RECIPES]})
+                updates=[IdentityUpdate(recipes_learn=[r.recipe_id for r in RECIPES])])
 
         if actor.identity.craft_target:
             recipe = RECIPE_MAP.get(actor.identity.craft_target)
@@ -366,18 +371,13 @@ class VisitBlacksmithHandler(StateHandler):
                 return AIState.VISIT_BLACKSMITH, ActionProposal(
                     actor_id=actor.id, verb=ActionType.REST,
                     reason=f"Crafting {recipe.output_item}",
-                    intent_metadata={
-                        "inventory_remove": mats,
-                        "gold_remove": recipe.gold_cost,
-                        "inventory_add": [recipe.output_item],
-                        "craft_target_set": None
-                    })
-                return AIState.VISIT_BLACKSMITH, ActionProposal(
-                    actor_id=actor.id, verb=ActionType.REST,
-                    reason=f"Crafted {recipe.output_item}!")
+                    updates=[
+                        ProgressionUpdate(inventory_remove=mats, gold_delta=-recipe.gold_cost, inventory_add=[recipe.output_item]),
+                        IdentityUpdate(craft_target=None)
+                    ])
 
-        if actor.craft_target:
-            recipe = RECIPE_MAP.get(actor.craft_target)
+        if actor.identity.craft_target:
+            recipe = RECIPE_MAP.get(actor.identity.craft_target)
             if recipe:
                 missing = []
                 for mat_id, qty in recipe.materials.items():
@@ -432,7 +432,7 @@ class VisitGuildHandler(StateHandler):
             return AIState.VISIT_GUILD, ActionProposal(
                 actor_id=actor.id, verb=ActionType.REST,
                 reason=f"Guild revealed {len(revealed)} locations!",
-                intent_metadata={"terrain_memory_update": revealed})
+                updates=[PerceptionUpdate(terrain_memory=revealed)])
 
         from src.core.gameplay.quests import generate_quest, MAX_ACTIVE_QUESTS
         active_quests = [q for q in actor.progression.quests if not q.completed]
@@ -452,7 +452,7 @@ class VisitGuildHandler(StateHandler):
                 return AIState.VISIT_GUILD, ActionProposal(
                     actor_id=actor.id, verb=ActionType.REST,
                     reason=f"Accepted quest: {new_quest.title}",
-                    intent_metadata={"quest_add": [new_quest]})
+                    updates=[ProgressionUpdate(quest_add=[new_quest])])
 
         from src.core.gameplay.buildings import MATERIAL_HINTS
         new_goals = []
@@ -476,14 +476,14 @@ class VisitGuildHandler(StateHandler):
                 new_goals.append(goal_text)
 
         if new_goals or revealed:
-            metadata = {}
-            if revealed: metadata["terrain_memory_update"] = revealed
-            if new_goals: metadata["goals_add"] = new_goals
+            final_updates = []
+            if revealed: final_updates.append(PerceptionUpdate(terrain_memory=revealed))
+            if new_goals: final_updates.append(MindUpdate(goals_add=new_goals))
             
             return AIState.VISIT_GUILD, ActionProposal(
                 actor_id=actor.id, verb=ActionType.REST,
                 reason=f"Got intel from guild hall",
-                intent_metadata=metadata)
+                updates=final_updates)
 
         return AIState.RESTING_IN_TOWN, ActionProposal(
             actor_id=actor.id, verb=ActionType.REST,
@@ -531,7 +531,7 @@ class VisitClassHallHandler(StateHandler):
                 return AIState.VISIT_CLASS_HALL, ActionProposal(
                     actor_id=actor.id, verb=ActionType.REST, 
                     reason=f"Learning skill: {sdef.name}",
-                    intent_metadata={"gold_remove": sdef.gold_cost, "skills_add": [sid]})
+                    updates=[ProgressionUpdate(gold_delta=-sdef.gold_cost, skills_add=[sid])])
 
         if actor.progression.attributes and can_breakthrough(hero_class, actor.progression.level, actor.progression.attributes):
             bt = BREAKTHROUGHS.get(hero_class)
@@ -539,7 +539,10 @@ class VisitClassHallHandler(StateHandler):
                 return AIState.VISIT_CLASS_HALL, ActionProposal(
                     actor_id=actor.id, verb=ActionType.REST,
                     reason=f"CLASS BREAKTHROUGH! → {bt.to_class.name}",
-                    intent_metadata={"hero_class_set": int(bt.to_class), "attribute_cap_add": {"str_cap": 5, "agi_cap": 5, "vit_cap": 5, "int_cap": 5, "spi_cap": 5, "wis_cap": 5, "end_cap": 5, "per_cap": 5, "cha_cap": 5}})
+                    updates=[
+                        IdentityUpdate(hero_class=int(bt.to_class)),
+                        ProgressionUpdate(attribute_cap_delta={"str_cap": 5, "agi_cap": 5, "vit_cap": 5, "int_cap": 5, "spi_cap": 5, "wis_cap": 5, "end_cap": 5, "per_cap": 5, "cha_cap": 5})
+                    ])
 
         return AIState.RESTING_IN_TOWN, ActionProposal(
             actor_id=actor.id, verb=ActionType.REST,
@@ -568,13 +571,13 @@ class VisitInnHandler(StateHandler):
             return AIState.VISIT_INN, ActionProposal(
                 actor_id=actor.id, verb=ActionType.REST,
                 reason="Resting at inn",
-                intent_metadata={"hp_add": 10, "stamina_add": 10})
+                updates=[ProgressionUpdate(hp_delta=10, stamina_delta=10)])
 
         from src.core.gameplay.effects import well_rested_effect
         return AIState.RESTING_IN_TOWN, ActionProposal(
             actor_id=actor.id, verb=ActionType.REST,
             reason="Fully recovered at inn + Well-Rested! → checking other activities",
-            intent_metadata={"effects_add": [well_rested_effect()]})
+            updates=[ProgressionUpdate(effects_add=[well_rested_effect()])])
 
 
 class VisitHomeHandler(StateHandler):
@@ -602,7 +605,10 @@ class VisitHomeHandler(StateHandler):
             return AIState.VISIT_HOME, ActionProposal(
                 actor_id=actor.id, verb=ActionType.REST,
                 reason=f"Upgrading home storage",
-                intent_metadata={"gold_remove": cost, "home_storage_upgrade": True})
+                updates=[
+                    ProgressionUpdate(gold_delta=-cost),
+                    InteractionUpdate(home_storage_upgrade=True)
+                ])
 
         stored = []
         for iid in list(inv.items):
@@ -639,7 +645,10 @@ class VisitHomeHandler(StateHandler):
             return AIState.VISIT_HOME, ActionProposal(
                 actor_id=actor.id, verb=ActionType.REST,
                 reason=f"Storing {len(stored)} items at home",
-                intent_metadata={"inventory_remove": stored, "home_storage_add": stored})
+                updates=[
+                    ProgressionUpdate(inventory_remove=stored),
+                    InteractionUpdate(home_storage_add=stored)
+                ])
 
         return AIState.RESTING_IN_TOWN, ActionProposal(
             actor_id=actor.id, verb=ActionType.REST,

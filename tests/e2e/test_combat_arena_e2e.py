@@ -655,7 +655,7 @@ class TestAIRefinementE2E:
         hero = arena.entity(1)
         assert hero.combat.hp <= 1012, f"Boss should damage hero or stay at max, got {hero.combat.hp}"
         assert 2 in hero.mind.emotion.grudges, f"Hero should have grudge for boss (2), got {hero.mind.emotion.grudges}"
-        assert any(m["type"] == "TRAUMA" for m in arena.entity(1).mind.narrative.memory_log)
+        assert any(m.type == "TRAUMA" for m in arena.entity(1).mind.narrative.memory_log)
         
         # 2. Hero flees: Teleport away IMMEDIATELY to avoid the follow-up hits
         arena.entity(1).spatial.pos = Vector2(15, 15)

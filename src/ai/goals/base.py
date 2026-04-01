@@ -12,7 +12,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
-from src.core.models.enums import AIState
+from src.core.models.enums import AIState, GoalType
 
 if TYPE_CHECKING:
     from src.ai.states import AIContext
@@ -25,7 +25,7 @@ if TYPE_CHECKING:
 @dataclass(slots=True)
 class GoalScore:
     """A scored goal ready for selection."""
-    goal: str
+    goal: GoalType
     score: float
     target_state: AIState
 
@@ -45,7 +45,7 @@ class GoalScorer(ABC):
 
     @property
     @abstractmethod
-    def name(self) -> str:
+    def name(self) -> GoalType:
         """Unique goal identifier (e.g. 'combat', 'flee')."""
 
     @property
@@ -107,16 +107,16 @@ class LifeStageModifier(ScoreModifier):
         
         # Early Stage (1-10)
         if level <= 10:
-            if goal in ("explore", "rest"): score.score *= 1.3
-            if goal in ("trade", "combat"): score.score *= 0.8
+            if goal in (GoalType.EXPLORE, GoalType.REST): score.score *= 1.3
+            if goal in (GoalType.TRADE, GoalType.COMBAT): score.score *= 0.8
         # Mid Stage (11-20)
         elif level <= 20:
-            if goal in ("combat", "loot"): score.score *= 1.2
-            if goal == "rest": score.score *= 0.9
+            if goal in (GoalType.COMBAT, GoalType.LOOT): score.score *= 1.2
+            if goal == GoalType.REST: score.score *= 0.9
         # Late Stage (21+)
         else:
-            if goal in ("social", "trade", "craft"): score.score *= 1.4
-            if goal == "explore": score.score *= 0.7
+            if goal in (GoalType.SOCIAL, GoalType.TRADE, GoalType.CRAFT): score.score *= 1.4
+            if goal == GoalType.EXPLORE: score.score *= 0.7
 
 class PersonalityModifier(ScoreModifier):
     """Biases scores based on OCEAN personality traits."""
@@ -124,28 +124,28 @@ class PersonalityModifier(ScoreModifier):
         identity = ctx.actor.identity
         goal = score.goal
         
-        if goal == "explore":
+        if goal == GoalType.EXPLORE:
             score.score *= (0.5 + identity.openness)
-        elif goal in ("rest", "craft"):
+        elif goal in (GoalType.REST, GoalType.CRAFT):
             score.score *= (0.5 + identity.conscientiousness)
-        elif goal == "social":
+        elif goal == GoalType.SOCIAL:
             score.score *= (0.5 + identity.extraversion)
-        elif goal == "trade":
+        elif goal == GoalType.TRADE:
             # Agreeableness might affect likelihood to visit shops (better deals or social interaction)
             score.score *= (0.5 + identity.agreeableness)
-        elif score.goal == "flee":
+        elif score.goal == GoalType.FLEE:
             score.score *= (0.5 + identity.neuroticism)
-        elif goal == "combat":
+        elif goal == GoalType.COMBAT:
             # Anxious entities are less aggressive
             score.score *= (1.2 - identity.neuroticism)
 
 class StuckModifier(ScoreModifier):
     """Encourages resting/idling if the entity is stuck (emotional state)."""
     def modify(self, score: GoalScore, ctx: AIContext) -> None:
-        if ctx.actor.mind.emotion.emotional_state.get("stuck", 0.0) > 0:
-            if score.goal in ("rest", "social"):
+        if ctx.actor.mind.emotion.stuck > 0:
+            if score.goal in (GoalType.REST, GoalType.SOCIAL):
                 score.score *= 2.0
-            if score.goal in ("explore", "combat", "loot"):
+            if score.goal in (GoalType.EXPLORE, GoalType.COMBAT, GoalType.LOOT):
                 score.score *= 0.5
 
 class HysteresisModifier(ScoreModifier):
@@ -158,9 +158,9 @@ class HysteresisModifier(ScoreModifier):
         mind_dec = ctx.actor.mind.decision
         if mind_dec.last_goal == score.goal:
             ticks_held = max(0, ctx.snapshot.tick - mind_dec.goal_committed_at)
-            # AOA Stabilization: Cooler hysteresis (1.1 instead of 1.25)
+            # AOA Stabilization: Cooler hysteresis (1.05 instead of 1.25)
             # to allow high-utility transitions to win after lock expires.
-            boost = 1.1 + 0.05 * min(ticks_held, 10)
+            boost = 1.05 + 0.02 * min(ticks_held, 10)
             score.score *= boost
 
 
@@ -196,20 +196,21 @@ class MemoryModifier(ScoreModifier):
             
             # Nemesis fear: discourage fighting a high-grudge rival directly (0.1x penalty)
             enemy = ctx.nearest_enemy()
-            if enemy and mind.emotion.grudges.get(enemy.id, 0.0) > 30.0:
+            if enemy and mind.emotion.grudges.get(enemy.id, 0.0) >= 30.0:
                 score.score *= 0.1
-        elif goal == "flee":
+        elif goal == GoalType.FLEE:
             trauma = mind.total_trauma()
             if trauma < 0:
                 score.score *= 1.0 + abs(trauma) / 100.0
             
             # Nemesis bias: if a known nemesis is visible, EXTREME boost to flee (10.0x)
             enemy = ctx.nearest_enemy()
-            if enemy and mind.emotion.grudges.get(enemy.id, 0.0) > 30.0:
+            if enemy and mind.emotion.grudges.get(enemy.id, 0.0) >= 30.0:
                 score.score *= 10.0
-        elif goal == "explore":
+        if goal == GoalType.EXPLORE:
             discoveries = sum(
-                1 for e in mind.narrative.memory_log if e.get("type") == "DISCOVERY"
+                1 for e in mind.narrative.memory_log
+                if (e.type if hasattr(e, "type") else e.get("type")) == "DISCOVERY"
             )
             if discoveries > 0:
                 score.score *= 1.0 + discoveries / 20.0
@@ -218,14 +219,14 @@ class MemoryModifier(ScoreModifier):
 class EmotionalModifier(ScoreModifier):
     """Biases scores based on short-term emotional states (Panic, etc.)."""
     def modify(self, score: GoalScore, ctx: AIContext) -> None:
-        emotions = ctx.actor.mind.emotion.emotional_state
+        emotion = ctx.actor.mind.emotion
         goal = score.goal
         
-        panic = emotions.get("panic", 0.0)
+        panic = emotion.panic
         if panic > 0:
-            if goal == "flee":
+            if goal == GoalType.FLEE:
                 score.score *= (1.0 + panic * 5.0)
-            if goal in ("combat", "loot", "trade"):
+            if goal in (GoalType.COMBAT, GoalType.LOOT, GoalType.TRADE):
                 score.score *= max(0.0, 1.0 - panic)
 
 class SkirmishModifier(ScoreModifier):
@@ -237,13 +238,13 @@ class SkirmishModifier(ScoreModifier):
         if ctx.actor.progression.hero_class in ranged_classes:
             goal = score.goal
             # If a hostile is adjacent, boost flee or move_away
-            if goal in ("flee", "move"):
+            if goal in (GoalType.FLEE, GoalType.EXPLORE): # Use EXPLORE as proxy for generic move
                 target_id = ctx.actor.combat.combat_target_id
                 if target_id:
                     mem = ctx.actor.mind.perception.entity_memory.get(target_id)
                     if mem:
-                        # Extract position from memory entry (could be a dict or object)
-                        t_pos = mem.get("pos") if isinstance(mem, dict) else getattr(mem, "pos", mem)
+                        # MemoryRecord is a Pydantic model
+                        t_pos = getattr(mem, "pos", None)
                         if t_pos:
                             from src.core.models.vectors import Vector2
                             v_target = Vector2.from_any(t_pos)
@@ -262,20 +263,20 @@ class AmbitionModifier(ScoreModifier):
         goal = score.goal
         # Pillar 6: Narrative Biases
         if directive == "DRAGON_SLAYER":
-            if goal == "combat": score.score *= 1.5
-            if goal == "explore": score.score *= 1.2
+            if goal == GoalType.COMBAT: score.score *= 1.5
+            if goal == GoalType.EXPLORE: score.score *= 1.2
         elif directive == "CRAFTER":
-            if goal == "craft": score.score *= 1.7
-            if goal == "loot": score.score *= 1.3
+            if goal == GoalType.CRAFT: score.score *= 1.7
+            if goal == GoalType.LOOT: score.score *= 1.3
         elif directive == "MERCHANT":
-            if goal == "trade": score.score *= 1.6
-            if goal == "social": score.score *= 1.3
+            if goal == GoalType.TRADE: score.score *= 1.6
+            if goal == GoalType.SOCIAL: score.score *= 1.3
         elif directive == "COLLECTOR":
-            if goal == "loot": score.score *= 1.7
-            if goal == "explore": score.score *= 1.2
+            if goal == GoalType.LOOT: score.score *= 1.7
+            if goal == GoalType.EXPLORE: score.score *= 1.2
         elif directive == "EXPLORATION":
-            if goal == "explore": score.score *= 1.6
-            if goal == "loot": score.score *= 1.2
+            if goal == GoalType.EXPLORE: score.score *= 1.6
+            if goal == GoalType.LOOT: score.score *= 1.2
 
 class FatigueModifier(ScoreModifier):
     """Penalty for goals that stay in the same region too long (Anti-Loop)."""
@@ -287,7 +288,7 @@ class FatigueModifier(ScoreModifier):
         fatigue = ctx.actor.mind.narrative.region_fatigue.get(rid, 0.0)
         if fatigue > 0:
             # Penalize the goals that keep us in the current region
-            if score.goal in ("explore", "combat", "loot"):
+            if score.goal in (GoalType.EXPLORE, GoalType.COMBAT, GoalType.LOOT):
                 score.score *= (1.0 - fatigue * 0.5)
 
 # ---------------------------------------------------------------------------
@@ -321,6 +322,11 @@ class GoalEvaluator:
 
     def evaluate(self, ctx: AIContext) -> list[GoalScore]:
         """Score all registered goals, filter non-viable, sort descending."""
+        if not GOAL_REGISTRY:
+            # Emergency fallback: if registry is empty in this process, try to force it
+            from src.ai.goals.registry import register_all_goals
+            register_all_goals()
+            
         scores = [scorer.evaluate(ctx) for scorer in GOAL_REGISTRY]
         
         # Apply modifiers (Boredom, Personality, Life-Cycle, etc.)
@@ -337,9 +343,9 @@ class GoalEvaluator:
         committed_at = ctx.actor.mind.decision.goal_committed_at
         ticks_held = ctx.snapshot.tick - committed_at
 
-        if ticks_held < min_ticks:
+        if 0 <= ticks_held < min_ticks:
             # Soul/Personality override: fear breaks the lock early
-            panic = ctx.actor.mind.emotion.emotional_state.get("panic", 0.0)
+            panic = ctx.actor.mind.emotion.panic
             if ctx.actor.combat.hp_ratio < 0.5 and (ctx.actor.identity.neuroticism > 0.5 or panic > 0.5):
                 return False
             # Critical override for all: near death breaks the lock

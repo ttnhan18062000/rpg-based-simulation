@@ -11,8 +11,10 @@ import logging
 from dataclasses import replace
 from typing import Any, TYPE_CHECKING
 
-from src.core.models.enums import AIState, Domain, ActionType
-from src.actions.base import ActionProposal, MindUpdate
+from src.core.models.enums import AIState, ActionType, GoalType, EmotionType
+from src.actions.base import (
+    ActionProposal, IntentUpdate, MindUpdate, NavigationUpdate, PerceptionUpdate
+)
 from src.ai.goals import GoalEvaluator
 from src.ai.perception import Perception
 from src.ai.states import AIContext, STATE_HANDLERS, IdleHandler
@@ -44,6 +46,10 @@ class AIBrain:
         self._config = config
         self._rng = rng
         self._faction_reg = faction_reg or FactionRegistry.default()
+        
+        from src.ai.goals.registry import register_all_goals
+        register_all_goals()
+        
         self._goal_evaluator = GoalEvaluator()
 
     _DECISION_STATES = frozenset({
@@ -54,39 +60,26 @@ class AIBrain:
 
     def decide(self, actor: Entity, snapshot: Snapshot) -> tuple[AIState, ActionProposal]:
         """Run the AI Cognitive Pipeline for *actor*."""
-        mind_updates: dict[str, Any] = {}
+        typed_updates: list[IntentUpdate] = []
         
         # --- Phase 1: Input (Sensory & Perception) ---
-        ctx = self._sensory_perception_phase(actor, snapshot, mind_updates)
+        ctx = self._sensory_perception_phase(actor, snapshot, typed_updates)
         
         # --- Phase 2: Internal State (Memory & Appraisal) ---
-        self._memory_appraisal_phase(ctx, mind_updates)
+        self._memory_appraisal_phase(ctx, typed_updates)
         
         # --- Phase 3: Deliberation (Planning) ---
-        selected_state = self._deliberation_tactical_phase(ctx, mind_updates)
+        selected_state = self._deliberation_tactical_phase(ctx, typed_updates)
         
         # --- Phase 4: Output (Proposal) ---
-        return self._finalization_phase(ctx, selected_state, mind_updates)
+        return self._finalization_phase(ctx, selected_state, typed_updates)
 
-    def _sensory_perception_phase(self, actor: Entity, snapshot: Snapshot, updates: dict[str, Any]) -> AIContext:
+    def _sensory_perception_phase(self, actor: Entity, snapshot: Snapshot, updates: list[IntentUpdate]) -> AIContext:
         """Phase 1: Input. Gather raw data and apply selective attention."""
-        ctx = AIContext(
-            actor=actor,
-            snapshot=snapshot,
-            config=self._config,
-            rng=self._rng,
-            faction_reg=self._faction_reg,
-        )
+        # 1. Gather all currently visible entities (Lazy)
+        all_visible = Perception.visible_entities(actor, snapshot, actor.spatial.vision_range)
         
-        # 1. Update Position History (Proposed)
-        history = list(actor.mind.navigation.pos_history)
-        history.append(actor.spatial.pos)
-        if len(history) > 5:
-            history.pop(0)
-        updates["pos_history"] = history
-            
         # 2. Selective Attention
-        visible = ctx.visible
         def get_saliency(e):
             dist = actor.spatial.pos.manhattan(e.spatial.pos)
             is_hostile = self._faction_reg.is_hostile(actor.identity.faction, e.identity.faction)
@@ -96,26 +89,43 @@ class AIBrain:
                 weight *= (1.0 + tier)
             return weight / (dist + 1)
             
-        ranked = sorted(visible, key=get_saliency, reverse=True)
+        ranked = sorted(all_visible, key=get_saliency, reverse=True)
         attention_pool = [e.id for e in ranked[:actor.mind.perception.max_attention_slots]]
-        updates["attention_pool"] = attention_pool
-        
-        # Filter ctx.visible for this tick's cognitive pipeline
         attention_set = set(attention_pool)
-        ctx._visible = [e for e in visible if e.id in attention_set]
+        filtered_visible = [e for e in all_visible if e.id in attention_set]
+        
+        # 3. Create Context with filtered visibility
+        ctx = AIContext(
+            actor=actor,
+            snapshot=snapshot,
+            config=self._config,
+            rng=self._rng,
+            faction_reg=self._faction_reg,
+            _visible_override=filtered_visible
+        )
+        
+        # 4. Propose Perception & Navigation Updates
+        history = list(actor.mind.navigation.pos_history)
+        history.append(actor.spatial.pos)
+        if len(history) > 10:
+            history.pop(0)
+            
+        updates.append(PerceptionUpdate(attention_pool=attention_pool))
+        updates.append(NavigationUpdate(pos_history=history))
                 
         return ctx
 
-    def _memory_appraisal_phase(self, ctx: AIContext, updates: dict[str, Any]) -> None:
+    def _memory_appraisal_phase(self, ctx: AIContext, updates: list[IntentUpdate]) -> None:
         """Phase 2: Internal State. Project-specific appraisal and Emotional influence."""
         actor = ctx.actor
         mind = actor.mind
         snapshot = ctx.snapshot
         
         # 1. Memory Management (Forgotten dead and stale entries)
-        proposed_memory_updates = {}
-        stale_updates = {}
-        memory_remove = []
+        from src.core.aspects.mind import MemoryRecord
+        proposed_memory_updates: dict[int, MemoryRecord] = {}
+        stale_updates: dict[int, int] = {}
+        memory_remove: list[int] = []
         
         # Current memory and visibility
         current_memory = mind.perception.entity_memory
@@ -125,7 +135,14 @@ class AIBrain:
         
         # visibility: items we see now are updated in memory and reset stale ticks
         for e in ctx.visible:
-            proposed_memory_updates[e.id] = e.spatial.pos
+            proposed_memory_updates[e.id] = MemoryRecord(
+                entity_id=e.id,
+                pos=e.spatial.pos,
+                kind=e.kind,
+                faction=e.identity.faction.name if hasattr(e.identity.faction, "name") else str(e.identity.faction),
+                last_seen_tick=snapshot.tick,
+                threat_level=1.0 if self._faction_reg.is_hostile(actor.identity.faction, e.identity.faction) else 0.0
+            )
             stale_updates[e.id] = 0
             
         # identifying stale and dead entries
@@ -142,9 +159,8 @@ class AIBrain:
             new_stale = current_stale.get(eid, 0) + 1
             
             # If too stale, forget it (Threshold: 15 ticks)
-            # Higher threshold for important entities (like heroes if the actor is a boss)
             threshold = 15
-            if eid in attention_set: # if it was in attention, keep it longer
+            if eid in attention_set:
                 threshold = 30
                 
             if new_stale >= threshold:
@@ -152,38 +168,42 @@ class AIBrain:
             else:
                 stale_updates[eid] = new_stale
         
-        updates["memory_update"] = proposed_memory_updates
-        updates["memory_stale_update"] = stale_updates
-        updates["memory_remove"] = memory_remove
+        if proposed_memory_updates or stale_updates or memory_remove:
+            updates.append(PerceptionUpdate(
+                entity_memory=proposed_memory_updates if proposed_memory_updates else None,
+                memory_stale_delta=stale_updates if stale_updates else None,
+                memory_remove=memory_remove if memory_remove else None
+            ))
 
         # 2. Stuck detection
-        history = updates.get("pos_history", mind.navigation.pos_history)
+        nav_up = next((u for u in updates if isinstance(u, NavigationUpdate)), None)
+        history = nav_up.pos_history if nav_up else mind.navigation.pos_history
+        
+        emotion_set = {}
         if len(history) >= 5 and all(p == history[0] for p in history):
-            updates["emotion_stuck"] = 1.0
+            emotion_set[EmotionType.STUCK] = 1.0
         else:
-            updates["emotion_stuck"] = 0.0
+            emotion_set[EmotionType.STUCK] = 0.0
 
         # 3. Trauma Zone Dread (Sentiment influence on Panic)
         rid = actor.spatial.current_region_id
         if rid:
             sentiment = mind.narrative.memory_locations.get(rid, 0.0)
             if sentiment < -0.5:
-                # Feeling dread in bad regions: +0.05 panic per tick
-                current_panic = mind.emotion.emotional_state.get("panic", 0.0)
-                updates["emotion_panic"] = min(1.0, current_panic + 0.05)
+                # Additive panic
+                updates.append(MindUpdate(emotion_delta={EmotionType.PANIC: 0.05}))
 
-        # Physical Maintenance (Aging)
-        updates["age_increment"] = 1
+        if emotion_set:
+            updates.append(MindUpdate(emotion_set=emotion_set))
 
-
-    def _deliberation_tactical_phase(self, ctx: AIContext, updates: dict[str, Any]) -> AIState:
+    def _deliberation_tactical_phase(self, ctx: AIContext, updates: list[IntentUpdate]) -> AIState:
         """Phase 3: Deliberation. Choose the next state."""
         actor = ctx.actor
         
         if actor.mind.decision.ai_state not in self._DECISION_STATES:
             return actor.mind.decision.ai_state
 
-        # Use GoalEvaluator (which should also be read-only)
+        # Use GoalEvaluator
         if self._goal_evaluator.is_goal_locked(ctx):
             self._generate_tactical_hints(ctx, actor.mind.decision.ai_state)
             return actor.mind.decision.ai_state
@@ -198,9 +218,10 @@ class AIBrain:
         goal_scores = self._goal_evaluator.evaluate(ctx)
         if not goal_scores:
             if boredom_updates:
-                updates["boredom_update"] = boredom_updates
+                updates.append(MindUpdate(boredom_delta=boredom_updates))
             return actor.mind.decision.ai_state
             
+        from src.core.models.enums import Domain
         rng_val = self._rng.next_float(Domain.AI_DECISION, actor.id, ctx.snapshot.tick + 50)
         temp = 0.05 + actor.identity.openness * 0.3
         selected = self._goal_evaluator.select(goal_scores, rng_val, temperature=temp)
@@ -210,32 +231,27 @@ class AIBrain:
             current_val = boredom_updates.get(selected.goal, current_boredom.get(selected.goal, 1.0))
             boredom_updates[selected.goal] = max(0.1, current_val * 0.8)
             
-            # Phase 5: Emit typed MindUpdate
-            updates["updates"] = [MindUpdate(
+            updates.append(MindUpdate(
                 goal_scores={s.goal: s.score for s in goal_scores},
                 last_goal=selected.goal,
+                goal_committed_at=ctx.snapshot.tick if selected.goal != actor.mind.decision.last_goal else None,
                 boredom_delta=boredom_updates,
                 new_ai_state=int(selected.target_state)
-            )]
+            ))
             
-            # Legacy fields for backward compatibility (optional but keeping for now)
-            updates["boredom_update"] = boredom_updates
-            updates["selected_goal"] = selected.goal
-            updates["last_goal"] = selected.goal
-            updates["goal_scores"] = {s.goal: s.score for s in goal_scores}
-            updates["target_ai_state"] = selected.target_state
-            
-            self._generate_tactical_hints(ctx, selected.target_state)
+            # Generate hints for the final destination
+            hints = self._generate_tactical_hints(ctx, selected.target_state)
+            ctx.tactical_hints.update(hints) # Still minor mutation, but isolated to Brain finalization
             return selected.target_state
             
         if boredom_updates:
-            updates["boredom_update"] = boredom_updates
+            updates.append(MindUpdate(boredom_delta=boredom_updates))
         return actor.mind.decision.ai_state
 
-    def _generate_tactical_hints(self, ctx: AIContext, state: AIState) -> None:
-        """Pillar 3: Attach tactical guidance to the context."""
+    def _generate_tactical_hints(self, ctx: AIContext, state: AIState) -> dict[str, Any]:
+        """Pillar 3: Produce tactical guidance for the selected state."""
         actor = ctx.actor
-        hints = ctx.tactical_hints
+        hints = {}
         
         from src.core.models.enums import HeroClass
         ranged_classes = (HeroClass.RANGER, HeroClass.MAGE, HeroClass.SHARPSHOOTER, HeroClass.ARCHMAGE, HeroClass.CASTER)
@@ -247,35 +263,36 @@ class AIBrain:
              low_hp_ally = next((a for a in ctx.visible if a.identity.faction == actor.identity.faction and a.combat.hp_ratio < 0.6), None)
              if low_hp_ally:
                  hints["support_target_id"] = low_hp_ally.id
+        return hints
 
-    def _finalization_phase(self, ctx: AIContext, state: AIState, updates: dict[str, Any]) -> tuple[AIState, ActionProposal]:
+    def _finalization_phase(self, ctx: AIContext, state: AIState, updates: list[IntentUpdate]) -> tuple[AIState, ActionProposal]:
         """Phase 4: Output. Proposal generation."""
         actor = ctx.actor
         handler = STATE_HANDLERS.get(state, _FALLBACK)
             
         try:
-            # The handler itself must also be side-effect free (AOA Stabilization)
             new_state, proposal = handler.handle(ctx)
             
             if self._goal_evaluator.is_goal_locked(ctx):
                 new_state = state 
-                
-            # Merge context updates into proposal metadata
-            final_metadata = dict(updates)
-            typed_updates = final_metadata.pop("updates", [])
             
-            if proposal.intent_metadata:
-                final_metadata.update(proposal.intent_metadata)
-            
-            # Merge typed updates
-            final_typed = list(typed_updates)
+            # Combined typed updates
+            final_typed = list(updates)
             if proposal.updates:
                 final_typed.extend(proposal.updates)
+            
+            # Update consecutive_idle_ticks heuristic (authoritative proposal)
+            if proposal.verb == ActionType.REST:
+                new_idle = actor.mind.decision.consecutive_idle_ticks + 1
+            else:
+                new_idle = 0
+            final_typed.append(MindUpdate(consecutive_idle_ticks=new_idle))
                 
+            # Finalize proposal AI state via replace (ActionProposal is frozen)
             proposal = replace(proposal, 
-                               new_ai_state=final_metadata.get("target_ai_state") or int(new_state), 
-                               intent_metadata=final_metadata,
+                               new_ai_state=int(new_state), 
                                updates=final_typed)
+            
             return new_state, proposal
                 
         except Exception as e:

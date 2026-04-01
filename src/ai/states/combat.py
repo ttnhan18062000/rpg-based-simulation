@@ -6,9 +6,13 @@ from src.core.models.enums import AIState
 from src.core.gameplay.items.item_registry import ITEM_REGISTRY
 from src.core.entities.entity import Entity
 from src.ai.states.base import (
-    AIContext, StateHandler, clear_dead_from_memory, 
+    AIContext, StateHandler, get_dead_memory_ids, get_perception_cleanup_update,
     propose_move_toward, propose_move_away, propose_retreat_home,
     is_in_hostile_town, should_flee
+)
+from src.actions.base import (
+    ActionType, ActionProposal, IntentUpdate, 
+    NavigationUpdate, PerceptionUpdate, ProgressionUpdate
 )
 
 
@@ -80,12 +84,13 @@ def can_use_potion(actor: Entity) -> str | None:
 class HuntHandler(StateHandler):
     def handle(self, ctx: AIContext) -> tuple[AIState, ActionProposal]:
         actor, snapshot, config = ctx.actor, ctx.snapshot, ctx.config
-        clear_dead_from_memory(actor, snapshot)
+        cleanup = get_perception_cleanup_update(actor, snapshot)
+        final_updates = [cleanup] if cleanup else []
 
         # Leash enforcement
         from src.ai.states.base import beyond_leash
         if beyond_leash(actor, config.mob_leash_chase_multiplier):
-            return propose_retreat_home(ctx, "Chase leash exceeded → returning home")
+            return propose_retreat_home(ctx, "Chase leash exceeded → returning home") # Note: propose_retreat_home adds its own updates
 
         if actor.spatial.leash_radius > 0 and actor.mind.navigation.chase_ticks >= config.mob_chase_give_up_ticks:
             return propose_retreat_home(ctx, "Chase timed out → returning home")
@@ -107,14 +112,14 @@ class HuntHandler(StateHandler):
                     return AIState.WANDER, ActionProposal(
                         actor_id=actor.id, verb=ActionType.REST,
                         reason="Reached last known position, target gone → wander",
-                        intent_metadata={"chase_ticks": 0, "memory_remove": [last_seen_id]})
+                        updates=[NavigationUpdate(chase_ticks=0), PerceptionUpdate(memory_remove=[last_seen_id])])
                 return AIState.HUNT, propose_move_toward(
                     actor, target_pos, snapshot, "Hunting from memory",
-                    intent_metadata={"chase_ticks": actor.mind.navigation.chase_ticks + 1})
+                    updates=[NavigationUpdate(chase_ticks=actor.mind.navigation.chase_ticks + 1)])
             return AIState.WANDER, ActionProposal(
                 actor_id=actor.id, verb=ActionType.REST,
                 reason="Lost target → back to wander",
-                intent_metadata={"chase_ticks": 0})
+                updates=[NavigationUpdate(chase_ticks=0)])
 
         weapon_rng = get_weapon_range(actor)
         dist = actor.spatial.pos.manhattan(enemy.spatial.pos)
@@ -129,14 +134,14 @@ class HuntHandler(StateHandler):
             return AIState.COMBAT, ActionProposal(
                 actor_id=actor.id, verb=ActionType.USE_SKILL, target=(skill_id, enemy.id),
                 reason=f"Using skill {skill_id} on enemy {enemy.id} (dist={dist})",
-                intent_metadata={"chase_ticks": 0})
+                updates=[NavigationUpdate(chase_ticks=0)])
 
         # 2. Basic Attack
         if dist <= weapon_rng:
             return AIState.COMBAT, ActionProposal(
                 actor_id=actor.id, verb=ActionType.ATTACK, target=enemy.id,
                 reason=f"In range of enemy {enemy.id} (dist={dist}, range={weapon_rng}) → attacking",
-                intent_metadata={"chase_ticks": 0})
+                updates=[NavigationUpdate(chase_ticks=0)])
 
         # 3. Handle deadlocks (yielding)
         if (dist == 2
@@ -148,18 +153,19 @@ class HuntHandler(StateHandler):
 
         # 4. Tactical Intent: Skirmish (Kiting)
         if ctx.tactical_hints.get("skirmish") and dist < ctx.tactical_hints.get("min_dist", 3):
-            return AIState.HUNT, propose_move_away(actor, enemy.spatial.pos, snapshot, "Skirmishing (kiting) to maintain distance", intent_metadata={"chase_ticks": actor.mind.navigation.chase_ticks + 1})
+            return AIState.HUNT, propose_move_away(actor, enemy.spatial.pos, snapshot, "Skirmishing (kiting) to maintain distance", updates=[NavigationUpdate(chase_ticks=actor.mind.navigation.chase_ticks + 1)])
 
         # 5. Move closer
         return AIState.HUNT, propose_move_toward(
             actor, enemy.spatial.pos, snapshot, f"Hunting enemy {enemy.id}",
-            intent_metadata={"chase_ticks": actor.mind.navigation.chase_ticks + 1})
+            updates=[NavigationUpdate(chase_ticks=actor.mind.navigation.chase_ticks + 1)])
 
 
 class CombatHandler(StateHandler):
     def handle(self, ctx: AIContext) -> tuple[AIState, ActionProposal]:
         actor, snapshot, config = ctx.actor, ctx.snapshot, ctx.config
-        clear_dead_from_memory(actor, snapshot)
+        cleanup = get_perception_cleanup_update(actor, snapshot)
+        final_updates = [cleanup] if cleanup else []
 
         if is_in_hostile_town(ctx) and actor.combat.hp_ratio < 0.5:
             return propose_retreat_home(ctx, "Town aura burning → disengaging from combat")
@@ -170,7 +176,7 @@ class CombatHandler(StateHandler):
                 return AIState.COMBAT, ActionProposal(
                     actor_id=actor.id, verb=ActionType.USE_ITEM, target=potion_id,
                     reason=f"Low HP → using {potion_id}",
-                    intent_metadata={"chase_ticks": 0})
+                    updates=[NavigationUpdate(chase_ticks=0)])
 
         # Note: Brain handles state transitions
 
@@ -192,7 +198,8 @@ class CombatHandler(StateHandler):
         if skill_id:
             return AIState.COMBAT, ActionProposal(
                 actor_id=actor.id, verb=ActionType.USE_SKILL, target=(skill_id, enemy.id),
-                reason=f"Using skill {skill_id} on enemy {enemy.id} (dist={dist})")
+                reason=f"Using skill {skill_id} on enemy {enemy.id} (dist={dist})",
+                updates=final_updates)
 
         # 2. Tactical Intent: Support / Healing
         support_id = ctx.tactical_hints.get("support_target_id")
@@ -205,7 +212,7 @@ class CombatHandler(StateHandler):
                     return AIState.COMBAT, ActionProposal(
                         actor_id=actor.id, verb=ActionType.USE_SKILL, target=(support_skill, target.id),
                         reason=f"Supporting ally {target.id}")
-                return AIState.COMBAT, propose_move_toward(actor, target.spatial.pos, snapshot, f"Moving to support {target.id}", intent_metadata={"chase_ticks": 0})
+                return AIState.COMBAT, propose_move_toward(actor, target.spatial.pos, snapshot, f"Moving to support {target.id}", updates=[NavigationUpdate(chase_ticks=0)])
 
         # 3. Distance-based decision
         if dist <= weapon_rng:
@@ -216,7 +223,7 @@ class CombatHandler(StateHandler):
             return AIState.COMBAT, ActionProposal(
                 actor_id=actor.id, verb=ActionType.ATTACK, target=enemy.id,
                 reason=f"Attacking enemy {enemy.id} (dist={dist}, range={weapon_rng})",
-                intent_metadata={"chase_ticks": 0})
+                updates=[NavigationUpdate(chase_ticks=0)])
 
         return AIState.HUNT, propose_move_toward(
             actor, enemy.spatial.pos, snapshot, f"Enemy {enemy.id} out of range ({dist} > {weapon_rng}) → closing distance")
@@ -225,24 +232,26 @@ class CombatHandler(StateHandler):
 class FleeHandler(StateHandler):
     def handle(self, ctx: AIContext) -> tuple[AIState, ActionProposal]:
         actor, snapshot = ctx.actor, ctx.snapshot
-        clear_dead_from_memory(actor, snapshot)
+        cleanup = get_perception_cleanup_update(actor, snapshot)
+        final_updates = [cleanup] if cleanup else []
         enemy = ctx.nearest_enemy()
 
         if enemy is None:
             return AIState.WANDER, ActionProposal(
                 actor_id=actor.id, verb=ActionType.REST,
                 reason="Safe or recovered → stop fleeing",
-                intent_metadata={"chase_ticks": 0})
+                updates=[NavigationUpdate(chase_ticks=0)])
 
         return AIState.FLEE, propose_move_away(
             actor, enemy.spatial.pos, snapshot, f"Fleeing from enemy {enemy.id}",
-            intent_metadata={"chase_ticks": 0})
+            updates=final_updates + [NavigationUpdate(chase_ticks=0)])
 
 
 class AlertHandler(StateHandler):
     def handle(self, ctx: AIContext) -> tuple[AIState, ActionProposal]:
         actor, snapshot = ctx.actor, ctx.snapshot
-        clear_dead_from_memory(actor, snapshot)
+        cleanup = get_perception_cleanup_update(actor, snapshot)
+        final_updates = [cleanup] if cleanup else []
         enemy = ctx.nearest_enemy()
 
         if enemy is not None:
@@ -250,7 +259,7 @@ class AlertHandler(StateHandler):
                 return AIState.COMBAT, ActionProposal(
                     actor_id=actor.id, verb=ActionType.ATTACK, target=enemy.id,
                     reason=f"Alert! Attacking intruder {enemy.id}",
-                intent_metadata={"chase_ticks": 0})
+                updates=[NavigationUpdate(chase_ticks=0)])
             return AIState.HUNT, propose_move_toward(
                 actor, enemy.spatial.pos, snapshot, f"Alert! Chasing intruder {enemy.id}")
 

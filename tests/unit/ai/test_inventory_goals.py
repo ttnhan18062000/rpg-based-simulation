@@ -16,6 +16,7 @@ from src.core.world.grid import Grid
 from src.core.aspects.inventory import InventoryAspect
 from src.core.entities.entity import Entity, Vector2
 from src.core.models.snapshot import Snapshot
+from src.actions.base import InteractionUpdate
 from src.core.models.world_state import WorldState
 from src.platform.rng import DeterministicRNG
 from src.platform.spatial_hash import SpatialHash
@@ -216,8 +217,9 @@ class TestLootingHandlerFullBag:
         handler = LootingHandler()
         _, proposal = handler.handle(ctx)
 
-        assert proposal.intent_metadata.get("loot_progress_reset") == 0, (
-            f"Loot progress reset intent should be 0, got {proposal.intent_metadata.get('loot_progress_reset')}")
+        inter_up = next((u for u in proposal.updates if isinstance(u, InteractionUpdate)), None)
+        assert inter_up and inter_up.loot_progress_set == 0, (
+            f"Loot progress reset intent should be 0 in updates, got {inter_up}")
 
     def test_not_full_bag_continues_looting(self):
         """LootingHandler should continue normally when bag has space."""

@@ -9,10 +9,11 @@ from typing import Any
 from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect
 from src.api.dependencies import get_engine_manager
 from src.api.engine_manager import EngineManager
-from src.api.encoder import WorldStateEncoder
+from src.api.presenters.world_presenter import WorldPresenter
 from src.api.redis_client import get_async_redis
 from src.core.models.snapshot import Snapshot
-from src.utils.event_log import SimEvent
+import msgpack
+import json
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -56,11 +57,12 @@ async def stream_ws(
     if initial_snap:
         # We don't have events for the initial dump, or we could fetch them.
         # For simplicity, just send the entities.
-        initial_payload = WorldStateEncoder.encode_tick(initial_snap, [], mode=mode)
-        serialized = WorldStateEncoder.serialize(initial_payload, format=fmt)
+        initial_payload = WorldPresenter.to_compact_tick(initial_snap, [], mode=mode)
         if fmt == "msgpack":
+            serialized = msgpack.packb(initial_payload, use_bin_type=True)
             await websocket.send_bytes(serialized)
         else:
+            serialized = json.dumps(initial_payload)
             await websocket.send_text(serialized)
 
     try:
@@ -85,12 +87,13 @@ async def stream_ws(
                     # EngineManager.event_log contains recent events.
                     events = manager.event_log.since_tick(snap.tick)
                     
-                    payload = WorldStateEncoder.encode_tick(snap, events, mode=mode)
-                    serialized = WorldStateEncoder.serialize(payload, format=fmt)
+                    payload = WorldPresenter.to_compact_tick(snap, events, mode=mode)
                     
                     if fmt == "msgpack":
+                        serialized = msgpack.packb(payload, use_bin_type=True)
                         await websocket.send_bytes(serialized)
                     else:
+                        serialized = json.dumps(payload)
                         await websocket.send_text(serialized)
                         
     except WebSocketDisconnect:

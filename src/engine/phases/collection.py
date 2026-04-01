@@ -5,6 +5,7 @@ from src.engine.phases.base import EnginePhase
 from src.actions.base import ActionProposal
 from src.core.models.enums import ActionType
 from src.core.models.snapshot import Snapshot
+from src.engine.phase_guard import ActionProposalGuard
 
 if TYPE_CHECKING:
     from src.engine.phases.context import EngineContext
@@ -22,9 +23,10 @@ class CollectionPhase(EnginePhase):
         # Snapshot for AI decisions
         snapshot = Snapshot.from_world(ctx.world)
         
-        # Dispatch to workers
-        ctx.worker_pool.dispatch(ctx.tick_ready_entities, snapshot, ctx.action_queue)
-        proposals = ctx.action_queue.drain()
+        # Dispatch to workers with Phase Boundary Protection
+        with ActionProposalGuard(snapshot):
+            ctx.worker_pool.dispatch(ctx.tick_ready_entities, snapshot, ctx.action_queue)
+            proposals = ctx.action_queue.drain()
 
         # Chaos Resilience (Identify and handle worker timeouts/dropouts)
         if len(proposals) < len(ctx.tick_ready_entities):

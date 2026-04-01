@@ -106,28 +106,24 @@ class ConflictResolver:
                         # If the entity was engaged (adjacent to hostiles), they get to strike
                         old_pos = entity.spatial.pos
                         # Opportunity Attack Check: Is anyone adjacent and hostile?
-                        for oid in world.spatial_index.query_radius(old_pos, 1):
-                            if oid == entity.id: continue
-                            other = world.entities.get(oid)
-                            if other and other.combat.alive and other.identity.faction != entity.identity.faction:
+                        for other in world.entities_at_radius(old_pos, 1):
+                            if other.id == entity.id or not other.combat.alive: continue
+                            if other.identity.faction != entity.identity.faction:
                                 # Trigger free Opportunity Attack
                                 opp_prop = ActionProposal(actor_id=other.id, verb=ActionType.ATTACK, target=entity.id, reason="Opportunity Attack")
                                 if self._combat_action.validate(opp_prop, world):
                                     self._combat_action.apply(opp_prop, world)
+                                else:
+                                    logger.debug("OA_VALIDATE_FAIL: %d -> %d", other.id, entity.id)
 
                         # Free old position (if it was claimed this tick)
                         occupied.discard((entity.spatial.pos.x, entity.spatial.pos.y))
-                    MoveAction.apply(proposal, world)
-                    target: Vector2 = proposal.target
-                    if not world.grid.is_walkable(target): return False
-                    
-                    # O(1) Check: Is anyone already there?
-                    if world.is_occupied(target): return False
-                    
-                    # Set Check: Did anyone ELSE move there this tick?
-                    if (target.x, target.y) in occupied: return False
-                    
+                    # Claim target position for this tick's resolution (prevent collisions)
+                    target = proposal.target
                     occupied.add((target.x, target.y))
+                    
+                    # Apply the move immediately so subsequent actions in this tick see the new pos
+                    MoveAction.apply(proposal, world)
                     return True
 
             case ActionType.ATTACK:
@@ -142,7 +138,8 @@ class ConflictResolver:
                     return True
 
         from src.utils.metrics import SIM_INVALID_ACTIONS_TOTAL
-        SIM_INVALID_ACTIONS_TOTAL.labels(action_type=proposal.verb.name.lower(), reason="validation_failed").inc()
+        verb_name = proposal.verb.name if hasattr(proposal.verb, "name") else ActionType(proposal.verb).name
+        SIM_INVALID_ACTIONS_TOTAL.labels(action_type=verb_name.lower(), reason="validation_failed").inc()
         
         logger.debug("Rejected: %s", proposal)
         return False

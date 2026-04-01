@@ -10,9 +10,12 @@ from __future__ import annotations
 import logging
 import math
 from typing import TYPE_CHECKING, Any
-from src.core.models.enums import AIState, ActionType, Element
+from src.core.models.enums import AIState, ActionType, Element, GoalType, EmotionType
 from src.core.entities.entity import Entity
-from src.actions.base import ActionProposal, IntentUpdate, MindUpdate, NavigationUpdate, CombatTraceUpdate
+from src.actions.base import (
+    ActionProposal, IntentUpdate, MindUpdate, NavigationUpdate, CombatTraceUpdate,
+    PerceptionUpdate, ProgressionUpdate, IdentityUpdate, InteractionUpdate
+)
 from src.core.gameplay.items.item_registry import ITEM_REGISTRY
 from src.core.gameplay.classes import SKILL_DEFS
 from src.systems.infrastructure.base import System
@@ -28,343 +31,349 @@ class ActionSystem(System):
 
     def process_applied_actions(self, context: SystemContext, applied: list[ActionProposal]) -> None:
         """Process state mutations and intent metadata for all ready entities."""
-        world = context.world
+        # 1. Authoritative State Application (Unified Pipeline)
+        self.apply_action_state_transitions(
+            context.world, 
+            context.config, 
+            applied, 
+            emit=context.emit,
+            faction_reg=context.faction_reg
+        )
+
+        # 2. Tactical & Visualization Updates (Context Dependent)
+        self._update_ai_derived_states(context, applied)
+        self._update_combat_visualization(context, applied)
+
+    @classmethod
+    def apply_action_state_transitions(
+        cls, 
+        world: WorldState, 
+        config: SimulationConfig, 
+        applied: list[ActionProposal],
+        emit: Callable | None = None,
+        faction_reg: FactionRegistry | None = None
+    ) -> None:
+        """Core side-effects that MUST be applied identically in live and replay/recovery."""
         for proposal in applied:
             entity = world.entities.get(proposal.actor_id)
             if entity is None or not entity.combat.alive:
                 continue
 
-            # 1. Apply State Transitions
+            # Unified Update Collection
+            all_updates: list[IntentUpdate] = []
+            if proposal.updates:
+                all_updates.extend(proposal.updates)
+
+            # 1. State Transitions (AI Internal)
             if proposal.new_ai_state is not None:
                 new_state = AIState(proposal.new_ai_state)
                 if new_state != entity.mind.decision.ai_state:
                     entity.mind.decision.ai_state = new_state
-                    # Only reset commitment if it's currently 0 (initial goal selection)
                     if entity.mind.decision.goal_committed_at == 0:
                          entity.mind.decision.goal_committed_at = world.tick
             if proposal.reason:
                 entity.mind.decision.last_reason = proposal.reason
 
-            # 2. Apply Intent Updates (Phase 5)
-            if proposal.updates:
-                self._apply_updates(entity, proposal.updates)
-
-            # 2.1 Legacy Metadata Bucket (Compatibility)
-            if proposal.intent_metadata:
-                self._apply_intent_metadata(entity, proposal.intent_metadata)
-
-            # 2.5 Authoritative Attribute Training
-            from src.core.gameplay.attributes import train_attributes
-            train_attributes(entity, proposal.verb.name.lower())
-
-            # 3. Handle Verb-Specific Logic
+            # 2. Verb-Specific Logic (Update Generation)
             if proposal.verb == ActionType.USE_ITEM and proposal.target:
-                self._handle_use_item(context, entity, proposal.target)
+                all_updates.extend(cls._get_use_item_updates(world, config, entity, proposal.target))
             elif proposal.verb == ActionType.LOOT:
-                self._handle_looting(context, entity, proposal.target)
+                all_updates.extend(cls._get_looting_updates(world, entity, proposal.target))
             elif proposal.verb == ActionType.HARVEST and proposal.target:
-                self._handle_harvesting(context, entity, proposal.target)
+                all_updates.extend(cls._get_harvesting_updates(world, entity, proposal.target))
             elif proposal.verb == ActionType.USE_SKILL and proposal.target:
                 target_data = proposal.target if isinstance(proposal.target, tuple) else (proposal.target, None)
-                self._handle_use_skill(context, entity, target_data[0], target_data[1])
+                all_updates.extend(cls._get_use_skill_updates(world, config, faction_reg, entity, target_data[0], target_data[1]))
 
-        # 4. Tactical & Visualization Updates
-        self._update_ai_derived_states(context, applied)
-        self._update_combat_visualization(context, applied)
+            # 3. Final Application (Unambiguous Entry Point)
+            if all_updates:
+                cls._apply_updates(world, entity, all_updates)
 
-    def _apply_updates(self, entity: Entity, updates: list[IntentUpdate]) -> None:
+            # 4. Attribute Training
+            from src.core.gameplay.attributes import train_attributes
+            verb_name = proposal.verb.name if hasattr(proposal.verb, "name") else ActionType(proposal.verb).name
+            train_attributes(entity, verb_name.lower())
+
+            # 5. Cooldown Management
+            speed = entity.combat.spd
+            entity.next_act_at += 1.0 / max(0.1, speed / 10.0)
+
+
+    @staticmethod
+    def _apply_updates(world: WorldState, entity: Entity, updates: list[IntentUpdate]) -> None:
         """Apply typed simulation side-effects (AOA Phase 5)."""
+
         for up in updates:
             if isinstance(up, MindUpdate):
+                decision = entity.mind.decision
                 if up.goal_scores:
-                    entity.mind.decision.goal_scores = up.goal_scores
+                    decision.goal_scores = up.goal_scores
                 if up.last_goal:
-                    entity.mind.decision.last_goal = up.last_goal
+                    decision.last_goal = up.last_goal
+                if up.goal_committed_at is not None:
+                    decision.goal_committed_at = up.goal_committed_at
                 if up.boredom_delta:
-                    entity.mind.decision.boredom_multipliers.update(up.boredom_delta)
+                    decision.boredom_multipliers.update(up.boredom_delta)
                 if up.new_ai_state is not None:
-                    entity.mind.decision.ai_state = AIState(up.new_ai_state)
+                    decision.ai_state = AIState(up.new_ai_state)
+                if up.consecutive_idle_ticks is not None:
+                    decision.consecutive_idle_ticks = up.consecutive_idle_ticks
+                if up.goals_add:
+                    for g in up.goals_add:
+                        if g not in decision.goals:
+                            decision.goals.append(g)
+                if up.goals_remove:
+                    for g in up.goals_remove:
+                        if g in decision.goals:
+                            decision.goals.remove(g)
+                
+                emotion = entity.mind.emotion
+                if up.emotion_delta:
+                    for k, v in up.emotion_delta.items():
+                        if k == EmotionType.PANIC: emotion.panic = max(0.0, min(1.0, emotion.panic + v))
+                        elif k == EmotionType.STUCK: emotion.stuck = max(0.0, min(1.0, emotion.stuck + v))
+                        elif k == EmotionType.BRAVERY: emotion.bravery = max(0.0, min(1.0, emotion.bravery + v))
+                if up.emotion_set:
+                    for k, v in up.emotion_set.items():
+                        if k == EmotionType.PANIC: emotion.panic = v
+                        elif k == EmotionType.STUCK: emotion.stuck = v
+                        elif k == EmotionType.BRAVERY: emotion.bravery = v
+                if up.mood is not None:
+                    emotion.mood = up.mood
+                if up.grudge_delta:
+                    for eid, delta in up.grudge_delta.items():
+                        emotion.grudges[eid] = emotion.grudges.get(eid, 0.0) + delta
+            
+            elif isinstance(up, PerceptionUpdate):
+                perc = entity.mind.perception
+                if up.entity_memory:
+                    perc.entity_memory.update(up.entity_memory)
+                if up.memory_stale_delta:
+                    for eid, delta in up.memory_stale_delta.items():
+                        perc.memory_stale_ticks[eid] = perc.memory_stale_ticks.get(eid, 0) + delta
+                if up.memory_remove:
+                    for eid in up.memory_remove:
+                        perc.entity_memory.pop(eid, None)
+                        perc.memory_stale_ticks.pop(eid, None)
+                if up.attention_pool is not None:
+                    perc.attention_pool = up.attention_pool
+                if up.terrain_memory:
+                    perc.terrain_memory.update(up.terrain_memory)
+                if up.memory_log_add:
+                    entity.mind.narrative.memory_log.extend(up.memory_log_add)
+                if up.threat_table_delta:
+                    for eid, delta in up.threat_table_delta.items():
+                        perc.threat_table[eid] = perc.threat_table.get(eid, 0.0) + delta
             
             elif isinstance(up, NavigationUpdate):
+                nav = entity.mind.navigation
                 if up.pos_history:
-                    entity.mind.navigation.pos_history = up.pos_history
-                if up.cached_path:
-                    entity.mind.navigation.cached_path = up.cached_path
+                    nav.pos_history = up.pos_history
+                if up.cached_path is not None:
+                    nav.cached_path = up.cached_path
                 if up.target_pos:
-                    entity.mind.navigation.cached_path_target = up.target_pos
+                    nav.cached_path_target = up.target_pos
+                if up.chase_ticks is not None:
+                    nav.chase_ticks = up.chase_ticks
+            
+            elif isinstance(up, ProgressionUpdate):
+                prog = entity.progression
+                if up.gold_delta:
+                    prog.gold = max(0, prog.gold + up.gold_delta)
+                if up.xp_delta:
+                    prog.xp += up.xp_delta
+                if up.hp_delta:
+                    entity.combat.hp = max(0, min(entity.combat.max_hp, entity.combat.hp + up.hp_delta))
+                if up.stamina_delta:
+                    prog.stamina = max(0, min(prog.max_stamina, prog.stamina + up.stamina_delta))
+                
+                if entity.inventory:
+                    for iid in up.inventory_add:
+                        entity.inventory.add_item(iid)
+                    for iid in up.inventory_remove:
+                        entity.inventory.remove_item(iid)
+                
+                if up.skills_add:
+                    from src.core.gameplay.classes import SkillInstance
+                    for s in up.skills_add:
+                        prog.skills.append(s if isinstance(s, SkillInstance) else SkillInstance(skill_id=s))
+                        
+                if up.attribute_cap_delta:
+                    for k, v in up.attribute_cap_delta.items():
+                        setattr(prog.attribute_caps, k, getattr(prog.attribute_caps, k) + v)
+                        
+                if up.quest_add:
+                    prog.quests.extend(up.quest_add)
+                
+                if up.effects_add:
+                    for ef in up.effects_add:
+                        entity.combat.add_effect(ef)
+                if up.effects_remove:
+                    for ident in up.effects_remove:
+                        entity.combat.remove_effect(ident)
+
+            elif isinstance(up, IdentityUpdate):
+                ident = entity.identity
+                if up.recipes_learn:
+                    ident.known_recipes.update(up.recipes_learn)
+                if up.craft_target is not None:
+                    ident.craft_target = up.craft_target
+                if up.hero_class is not None:
+                    ident.hero_class = up.hero_class
+                if up.reputation_delta:
+                    ident.reputation += up.reputation_delta
+
+            elif isinstance(up, InteractionUpdate):
+                inter = entity.interaction
+                if up.loot_progress_delta:
+                    inter.loot_progress += up.loot_progress_delta
+                if up.loot_progress_set is not None:
+                    inter.loot_progress = up.loot_progress_set
+                
+                if entity.inventory:
+                    if up.home_storage_upgrade:
+                        entity.inventory.home_storage.upgrade()
+                    if up.home_storage_add:
+                        for iid in up.home_storage_add:
+                            entity.inventory.home_storage.add_item(iid)
+                    if up.home_storage_remove:
+                        for iid in up.home_storage_remove:
+                            entity.inventory.home_storage.remove_item(iid)
+                
+                if up.corpse_id_to_remove is not None:
+                    # Authoritative Corpse Recovery (AOA Final Convergence)
+                    nodes = getattr(world, "corpse_nodes", {})
+                    corpse = nodes.get(up.corpse_id_to_remove)
+                    if corpse:
+                        # 1. Gain Items/Gold
+                        entity.progression.gold += getattr(corpse, "gold", 0)
+                        if entity.inventory:
+                            for iid in getattr(corpse, "items", []):
+                                entity.inventory.add_item(iid)
+                        # 2. Cleanup (Direct authoritative removal)
+                        world.corpse_nodes.pop(up.corpse_id_to_remove, None)
             
             elif isinstance(up, CombatTraceUpdate):
                 if hasattr(entity.combat, "traces"):
-                    entity.combat.traces.append({
-                        "tick": up.tick,
-                        "attacker_id": up.attacker_id,
-                        "defender_id": up.defender_id,
-                        "damage": up.damage,
-                        "is_crit": up.is_crit,
-                        "is_evasion": up.is_evasion,
-                        "skill_used": up.skill_used,
-                        **up.details
-                    })
+                    # Convert trace updates to records (AOA Stabilization)
+                    from src.core.aspects.combat import CombatTraceRecord
+                    trace = CombatTraceRecord(
+                        tick=up.tick,
+                        attacker_id=up.attacker_id,
+                        defender_id=up.defender_id,
+                        damage=up.damage,
+                        is_crit=up.is_crit,
+                        is_evasion=up.is_evasion,
+                        skill_used=up.skill_used,
+                        raw_damage=up.details.raw_damage,
+                        mitigated_damage=up.details.mitigated_damage,
+                        absorbed_damage=up.details.absorbed_damage,
+                        crit_multiplier=up.details.crit_multiplier,
+                        evasion_chance=up.details.evasion_chance,
+                        elemental_mult=up.details.elemental_mult
+                    )
+                    entity.combat.traces.append(trace)
 
-    def _apply_intent_metadata(self, entity: Any, metadata: dict[str, Any]) -> None:
-        """Apply side-effects proposed by the AI during the decision phase."""
-        mind = entity.mind
-        
-        # Decision updates
-        if "boredom_update" in metadata:
-            mind.decision.boredom_multipliers.update(metadata["boredom_update"])
-        if "goal_scores" in metadata:
-            mind.decision.goal_scores = dict(metadata["goal_scores"])
-        if "last_goal" in metadata:
-            mind.decision.last_goal = metadata["last_goal"]
-        
-        # Navigation updates
-        if "pos_history" in metadata:
-            mind.navigation.pos_history = list(metadata["pos_history"])
-        if "cached_path" in metadata:
-            mind.navigation.cached_path = list(metadata["cached_path"])
-        if "cached_path_target" in metadata:
-            mind.navigation.cached_path_target = metadata["cached_path_target"]
-            
-        # Perception updates
-        if "attention_pool" in metadata:
-            mind.perception.attention_pool = list(metadata["attention_pool"])
-        if "memory_update" in metadata:
-            # Atomic update or merge
-            mind.perception.entity_memory.update(metadata["memory_update"])
-        if "memory_stale_update" in metadata:
-            mind.perception.memory_stale_ticks.update(metadata["memory_stale_update"])
-        if "memory_remove" in metadata:
-            for rid in metadata["memory_remove"]:
-                mind.perception.entity_memory.pop(rid, None)
-                mind.perception.memory_stale_ticks.pop(rid, None)
-            
-        # Emotion updates
-        if "emotion_stuck" in metadata:
-            mind.emotion.emotional_state["stuck"] = metadata["emotion_stuck"]
-        if "emotion_panic" in metadata:
-            mind.emotion.emotional_state["panic"] = metadata["emotion_panic"]
 
-        # Interaction / AOA Stabilization updates
-        if "loot_progress_inc" in metadata:
-            entity.interaction.loot_progress += metadata["loot_progress_inc"]
-        if "loot_progress_reset" in metadata:
-            entity.interaction.loot_progress = metadata["loot_progress_reset"]
-            
-        if "recover_gold" in metadata:
-            entity.progression.gold += metadata["recover_gold"]
-        if "gold_add" in metadata:
-            entity.progression.gold += metadata["gold_add"]
-        if "gold_remove" in metadata:
-            entity.progression.gold = max(0, entity.progression.gold - metadata["gold_remove"])
-            
-        if "recover_items" in metadata:
-            if entity.inventory:
-                for iid in metadata["recover_items"]:
-                    entity.inventory.add_item(iid)
-        if "inventory_add" in metadata:
-            if entity.inventory:
-                for iid in metadata["inventory_add"]:
-                    entity.inventory.add_item(iid)
-        if "inventory_remove" in metadata:
-            if entity.inventory:
-                for iid in metadata["inventory_remove"]:
-                    entity.inventory.remove_item(iid)
-                    
-        if "hp_add" in metadata:
-            entity.combat.hp = min(entity.combat.max_hp, entity.combat.hp + metadata["hp_add"])
-        if "stamina_add" in metadata:
-            entity.progression.stamina = min(entity.progression.max_stamina, entity.progression.stamina + metadata["stamina_add"])
-            
-        if "recipe_learn" in metadata:
-            for rid in metadata["recipe_learn"]:
-                if rid not in entity.identity.known_recipes:
-                    entity.identity.known_recipes.append(rid)
-        if "craft_target_set" in metadata:
-            entity.identity.craft_target = metadata["craft_target_set"]
-            
-        if "hero_class_set" in metadata:
-            entity.identity.hero_class = metadata["hero_class_set"]
-        if "attribute_cap_add" in metadata:
-            caps = entity.progression.attribute_caps
-            bonus = metadata["attribute_cap_add"]
-            if caps and bonus:
-                for field, val in bonus.items():
-                    if hasattr(caps, field):
-                        setattr(caps, field, getattr(caps, field) + val)
-        
-        if "quest_add" in metadata:
-            # Quests live in ProgressionAspect
-            for q in metadata["quest_add"]:
-                entity.progression.quests.append(q)
-                
-        if "goals_add" in metadata:
-            for goal in metadata["goals_add"]:
-                if goal not in mind.decision.goals:
-                    mind.decision.goals.append(goal)
-                    
-        if "terrain_memory_update" in metadata:
-            entity.mind.perception.terrain_memory.update(metadata["terrain_memory_update"])
-            
-        if "home_storage_upgrade" in metadata:
-            if entity.inventory and entity.inventory.home_storage:
-                entity.inventory.home_storage.upgrade()
-        if "home_storage_add" in metadata:
-            if entity.inventory and entity.inventory.home_storage:
-                for iid in metadata["home_storage_add"]:
-                    entity.inventory.home_storage.add_item(iid)
-
-        if "skills_add" in metadata:
-            # metadata["skills_add"] should be a list of SkillInstance or IDs
-            from src.core.gameplay.classes import SkillInstance
-            for s in metadata["skills_add"]:
-                inst = s if isinstance(s, SkillInstance) else SkillInstance(skill_id=s)
-                entity.progression.skills.append(inst)
-
-        if "corpse_pop" in metadata:
-            from src.systems.infrastructure.base import SystemContext
-            context: SystemContext = getattr(self, "_context", None)
-            if context:
-                context.world.corpse_nodes.pop(metadata["corpse_pop"], None)
-
-        if "chase_ticks" in metadata:
-            if entity.mind and entity.mind.navigation:
-                entity.mind.navigation.chase_ticks = metadata["chase_ticks"]
-        if "loot_progress_inc" in metadata:
-            if entity.interaction:
-                entity.interaction.loot_progress += metadata["loot_progress_inc"]
-        if "loot_progress_reset" in metadata:
-            if entity.interaction:
-                entity.interaction.loot_progress = metadata["loot_progress_reset"]
-        if "memory_remove" in metadata:
-            if entity.mind and entity.mind.perception:
-                for eid in metadata["memory_remove"]:
-                    entity.mind.perception.entity_memory.pop(eid, None)
-
-    def _handle_use_item(self, context: SystemContext, entity: Any, item_id: str) -> None:
-        if entity.inventory and entity.inventory.remove_item(item_id):
+    @staticmethod
+    def _get_use_item_updates(world: WorldState, config: SimulationConfig, entity: Entity, item_id: str) -> list[IntentUpdate]:
+        """Generate updates for using an item (AOA Convergence)."""
+        updates: list[IntentUpdate] = []
+        if entity.inventory and entity.inventory.has_item(item_id):
             template = ITEM_REGISTRY.get(item_id)
-            if template and template.heal_amount > 0:
-                old_hp = entity.combat.hp
-                entity.combat.hp = min(entity.combat.hp + template.heal_amount, entity.combat.max_hp)
-                healed = entity.combat.hp - old_hp
-                if context.emit:
-                    context.emit("item", f"Entity {entity.id} used {item_id} healed {healed}", (entity.id,), {"item_id": item_id})
-            
-            from src.core.gameplay.attributes import speed_delay
-            entity.next_act_at += speed_delay(entity.combat.spd, "use_item")
+            if template:
+                # 1. Removal
+                updates.append(ProgressionUpdate(inventory_remove=[item_id]))
+                # 2. Heal
+                if template.heal_amount > 0:
+                    updates.append(ProgressionUpdate(hp_delta=template.heal_amount))
+                
+                from src.core.gameplay.attributes import speed_delay
+                entity.next_act_at += speed_delay(entity.combat.spd, "use_item")
+        return updates
 
-    def _handle_looting(self, context: SystemContext, entity: Any, pos: Any) -> None:
-        world = context.world
-        items = world.pickup_items(pos)
-        if items and entity.inventory:
-            for iid in items:
-                if not entity.inventory.add_item(iid):
-                    world.drop_items(pos, [iid])
-                else:
-                    entity.inventory.auto_equip_best(iid)
+    @staticmethod
+    def _get_looting_updates(world: WorldState, entity: Entity, pos: Any) -> list[IntentUpdate]:
+        """Generate updates for looting from the ground (AOA Convergence)."""
+        updates: list[IntentUpdate] = []
+        items = world.pickup_items(pos) # Authoritative removal from world
+        if items:
+            # Check if this proposal already has these items (Duplicate Item Fix)
+            # Actually, standard LOOT proposals SHOULD NOT have inventory_add.
+            updates.append(ProgressionUpdate(inventory_add=items))
+            updates.append(InteractionUpdate(loot_progress_set=0))
         
-        entity.interaction.loot_progress = 0
         from src.core.gameplay.attributes import speed_delay
         entity.next_act_at += speed_delay(entity.combat.spd, "loot")
+        return updates
 
-    def _handle_harvesting(self, context: SystemContext, entity: Any, pos: Any) -> None:
-        node = context.world.resource_at(pos)
-        if node and node.is_available and entity.inventory:
-            item_id = node.harvest()
-            if item_id and entity.inventory.add_item(item_id):
-                entity.progression.stamina = max(0, entity.progression.stamina - 2)
+    @staticmethod
+    def _get_harvesting_updates(world: WorldState, entity: Entity, pos: Any) -> list[IntentUpdate]:
+        """Generate updates for harvesting a resource (AOA Convergence)."""
+        updates: list[IntentUpdate] = []
+        node = world.resource_at(pos)
+        if node and node.is_available:
+            item_id = node.harvest() # Authoritative harvest
+            if item_id:
+                updates.append(ProgressionUpdate(inventory_add=[item_id], stamina_delta=-2))
+                updates.append(InteractionUpdate(loot_progress_set=0))
         
-        entity.interaction.loot_progress = 0
         from src.core.gameplay.attributes import speed_delay
         entity.next_act_at += speed_delay(entity.combat.spd, "harvest")
+        return updates
 
-    def _handle_use_skill(self, context: SystemContext, entity: Any, skill_id: str, target_id: int | None = None) -> None:
+    @staticmethod
+    def _get_use_skill_updates(world: WorldState, config: SimulationConfig, faction_reg: FactionRegistry | None, entity: Entity, skill_id: str, target_id: int | None = None) -> list[IntentUpdate]:
+        """Generate updates for using a skill (AOA Convergence)."""
+        updates: list[IntentUpdate] = []
         sdef = SKILL_DEFS.get(skill_id)
-        if not sdef: return
+        if not sdef: return updates
         
-        # Check skill instance
         instance = next((si for si in entity.progression.skills if si.skill_id == skill_id), None)
-        if not instance or not instance.is_ready(): return
+        if not instance or not instance.is_ready(): return updates
         
         cost = instance.effective_stamina_cost(sdef.stamina_cost)
-        if entity.progression.stamina < cost: return
+        if entity.progression.stamina < cost: return updates
         
+        # 1. Authoritative Cooldown/Stamina Side-Effects
+        # Wait! These are currently in-place mutations in the static handler.
+        # We'll convert them to IntentUpdates if possible, but SkillInstance is tricky.
+        # For now, we'll keep the skill and cooldown logic in-place but move damage to updates.
         entity.progression.stamina -= cost
         instance.use(sdef.cooldown)
         
-        # Skill effects (AOA Stabilization)
-        world = context.world
         targets: list[Entity] = []
-        
+        center = entity.spatial.pos
         if sdef.radius > 0:
-            # AoE Skill: Find targets in radius
-            center = entity.spatial.pos
             if target_id and world.entities.get(target_id):
                  center = world.entities[target_id].spatial.pos
-            
-            # Use high-level WorldState API for nearby entities
             potential = world.entities_at_radius(center, sdef.radius)
             for target in potential:
-                if not target or not target.combat.alive or target.id == entity.id:
-                    continue
-                if context.faction_reg.is_hostile(entity.identity.faction, target.identity.faction):
+                if not target or not target.combat.alive or target.id == entity.id: continue
+                if faction_reg and faction_reg.is_hostile(entity.identity.faction, target.identity.faction):
                     targets.append(target)
-            
-            if not targets:
-                # AOA Pillar 3: Deterministic Brute-force Fallback for minimal test arenas
-                # If high-level spatial query fails, we scan all entities as a last resort
-                # but only for small radii (to avoid O(N^2) explosion in large worlds)
-                if sdef.radius <= 3:
-                    for target in world.entities.values():
-                        if not target or not target.combat.alive or target.id == entity.id:
-                            continue
-                        if center.manhattan(target.spatial.pos) <= sdef.radius:
-                            if context.faction_reg.is_hostile(entity.identity.faction, target.identity.faction):
-                                targets.append(target)
-                
-                if not targets:
-                    logger.warning("SKILL_EXEC: %s used %s at %s, but found 0 targets in radius %d", 
-                                   entity.identity.display_name, skill_id, center, sdef.radius)
         elif target_id:
-            # Single Target
             t = world.entities.get(target_id)
-            if t and t.combat.alive:
-                targets.append(t)
+            if t and t.combat.alive: targets.append(t)
         
-        # Apply damage/effects
         for target in targets:
             power = instance.effective_power(sdef.power)
-            
-            # Simple physical damage for now
             raw = int(entity.combat.atk * power)
             mitigation = target.combat.def_ // 2
             damage = max(1, raw - mitigation)
             
+            # Use ProgressionUpdate(hp_delta) for the target!
+            # Wait! We need a way to target another entity in the update list.
+            # Currently IntentUpdate only targets the actor.
+            # AOA Phase 5.1: Cross-Entity Updates are usually handled by the Resolver,
+            # but for skills we'll apply them immediately here to avoid adding complexity to IntentUpdate.
+            # ONLY the HP mutation is in-place here.
             target.combat.hp -= damage
             
-            # Emit skill event for monitoring and E2E tests
-            skill_name = skill_id.replace("_", " ").title()
-            if skill_id == "rain_of_arrows":
-                skill_name = "Rain of Arrows"
-            context.emit("skill", f"{entity.identity.display_name} hit {target.identity.display_name} with {skill_id} for {damage} damage", 
-                         entity_ids=(entity.id, target.id), 
-                         metadata={
-                             "verb": "USE_SKILL",
-                             "damage": damage, 
-                             "skill_id": skill_id, 
-                             "skill_name": skill_name, 
-                             "aoe": sdef.radius > 0,
-                             "is_aoe": sdef.radius > 0,
-                             "type": "skill_hit"
-                         })
-            
-            if not target.combat.alive:
-                 context.emit("death", f"{target.identity.display_name} killed by {entity.identity.display_name}'s {skill_id}", 
-                              entity_ids=(target.id, entity.id))
-
         from src.core.gameplay.attributes import speed_delay
         entity.next_act_at += speed_delay(entity.combat.spd, "use_skill")
+        return updates
+
 
     def handle_tactical_maneuvers(self, context: SystemContext, applied: list[ActionProposal], pre_positions: dict) -> None:
         """Process opportunity attacks and chase closing."""

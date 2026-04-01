@@ -315,20 +315,6 @@ class Perception:
         return pool[rng_val % len(pool)]
 
     @staticmethod
-    def remembered_enemy_strength(actor: Entity, target_id: int) -> dict | None:
-        """Return the remembered entity_memory entry for a specific entity, or None."""
-        return actor.mind.perception.entity_memory.get(target_id)
-
-    @staticmethod
-    def strongest_remembered_enemy(actor: Entity) -> dict | None:
-        """Return the remembered enemy with the highest ATK, or None."""
-        memory = actor.mind.perception.entity_memory
-        enemies = [em for em in memory.values() if isinstance(em, dict) and em.get("atk", 0) > 0]
-        if not enemies:
-            return None
-        return max(enemies, key=lambda em: em.get("atk", 0))
-
-    @staticmethod
     def nearest_camp(actor: Entity, snapshot: Snapshot) -> Vector2 | None:
         """Return the nearest camp center from the snapshot."""
         if not snapshot.camps:

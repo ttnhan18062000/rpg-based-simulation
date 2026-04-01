@@ -6,6 +6,7 @@ from src.core.world.grid import Grid
 from src.platform.spatial_hash import SpatialHash
 from src.platform.rng import DeterministicRNG
 from src.config import SimulationConfig
+from src.actions.base import MindUpdate
 
 @pytest.fixture
 def world():
@@ -71,8 +72,8 @@ def test_ai_explainability_persistence(world, rng):
     snapshot = Snapshot.from_world(world)
     new_state, proposal = brain.decide(hero, snapshot)
     
-    # DEBUG: Check if proposal has the metadata
-    print(f"PROPOSAL METADATA: {proposal.intent_metadata}")
+    # DEBUG: Check if proposal has the updates
+    print(f"PROPOSAL UPDATES: {proposal.updates}")
     
     # Apply via ActionSystem
     action_sys = ActionSystem(config, rng)
@@ -81,10 +82,11 @@ def test_ai_explainability_persistence(world, rng):
     
     # Check persistence
     print(f"ENTITY GOAL SCORES: {hero.mind.decision.goal_scores}")
-    assert "goal_scores" in proposal.intent_metadata, "Proposal missing goal_scores metadata"
-    assert len(proposal.intent_metadata["goal_scores"]) > 0, "Goal scores dict is empty in metadata"
-    assert len(hero.mind.decision.goal_scores) > 0, f"Entity goal_scores empty after application. Metadata was: {proposal.intent_metadata.get('goal_scores')}"
-    assert hero.mind.decision.last_goal == proposal.intent_metadata.get("selected_goal")
+    mind_up = next((u for u in proposal.updates if isinstance(u, MindUpdate) and u.goal_scores), None)
+    assert mind_up and mind_up.goal_scores, f"Proposal missing goal_scores in any MindUpdate. Updates: {proposal.updates}"
+    assert len(mind_up.goal_scores) > 0, "Goal scores dict is empty in updates"
+    assert len(hero.mind.decision.goal_scores) > 0, f"Entity goal_scores empty after application. Update was: {mind_up.goal_scores}"
+    assert hero.mind.decision.last_goal == mind_up.last_goal
 
 def test_scheduler_timeline(world, rng):
     from src.api.presenters.scheduler_presenter import SchedulerPresenter

@@ -39,5 +39,3 @@ class RepairAction:
             target_b.repair(50.0)
             logger.info(f"Tick {world.tick}: {actor.kind} #{actor.id} repaired {target_b.name}")
             actor.progression.stamina = max(0, actor.progression.stamina - 5)
-            from src.core.gameplay.attributes import speed_delay
-            actor.next_act_at += speed_delay(actor.combat.spd, "building")

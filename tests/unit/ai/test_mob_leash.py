@@ -12,7 +12,9 @@ Covers:
 
 
 
-from src.actions.base import ActionProposal
+from src.actions.base import (
+    ActionProposal, NavigationUpdate, ProgressionUpdate,
+)
 from src.ai.states import (
     AIContext, HuntHandler, WanderHandler, ReturnToCampHandler, beyond_leash,
 )
@@ -242,8 +244,9 @@ class TestHuntLeash:
         state, proposal = handler.handle(ctx)
 
         assert state == AIState.HUNT
-        assert proposal.intent_metadata.get("chase_ticks") == 6, (
-            f"chase_ticks should increment to 6 in metadata, got {proposal.intent_metadata.get('chase_ticks')}")
+        chase_up = next((u for u in proposal.updates if isinstance(u, NavigationUpdate)), None)
+        assert chase_up and chase_up.chase_ticks == 6, (
+            f"chase_ticks should increment to 6 in updates, got {chase_up}")
 
     def test_chase_ticks_resets_on_combat(self):
         """chase_ticks should reset when mob engages in combat."""
@@ -259,8 +262,9 @@ class TestHuntLeash:
         state, proposal = handler.handle(ctx)
 
         assert state == AIState.COMBAT
-        assert proposal.intent_metadata.get("chase_ticks") == 0, (
-            f"chase_ticks should reset on combat, got {proposal.intent_metadata.get('chase_ticks')}")
+        chase_up = next((u for u in proposal.updates if isinstance(u, NavigationUpdate)), None)
+        assert chase_up and chase_up.chase_ticks == 0, (
+            f"chase_ticks should reset on combat in updates, got {chase_up}")
 
     def test_no_leash_mob_hunts_freely(self):
         """Mob without leash should hunt without restrictions."""
@@ -297,8 +301,9 @@ class TestReturnToCampHeal:
         handler = ReturnToCampHandler()
         state, proposal = handler.handle(ctx)
         # 5% of 100 max_hp = 5 hp healed
-        assert proposal.intent_metadata.get("hp_add") == 5, (
-            f"Heal intent should be 5, got {proposal.intent_metadata.get('hp_add')}")
+        hp_up = next((u for u in proposal.updates if isinstance(u, ProgressionUpdate)), None)
+        assert hp_up and hp_up.hp_delta == 5, (
+            f"Heal intent should be 5 in updates, got {hp_up}")
 
     def test_does_not_overheal(self):
         """Healing should not exceed max HP."""
@@ -311,8 +316,9 @@ class TestReturnToCampHeal:
         handler = ReturnToCampHandler()
         state, proposal = handler.handle(ctx)
  
-        assert proposal.intent_metadata.get("hp_add") == 2, (
-            f"Should heal only 2 to hit cap, got {proposal.intent_metadata.get('hp_add')}")
+        hp_up = next((u for u in proposal.updates if isinstance(u, ProgressionUpdate)), None)
+        assert hp_up and hp_up.hp_delta == 2, (
+            f"Should heal only 2 to hit cap in updates, got {hp_up}")
 
     def test_full_hp_no_change(self):
         """Already full HP should not change."""
@@ -325,5 +331,6 @@ class TestReturnToCampHeal:
         handler = ReturnToCampHandler()
         state, proposal = handler.handle(ctx)
  
-        assert proposal.intent_metadata.get("hp_add") is None, (
-            "Mob should NOT heal when at full HP")
+        hp_up = next((u for u in proposal.updates if isinstance(u, ProgressionUpdate)), None)
+        assert hp_up is None or hp_up.hp_delta == 0, (
+            f"Mob should NOT heal when at full HP, got {hp_up}")

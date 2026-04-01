@@ -36,7 +36,7 @@ class ReplayRecorder:
                 "kind": e.kind,
                 "pos": [e.spatial.pos.x, e.spatial.pos.y],
                 "hp": e.combat.hp,
-                "state": e.mind.decision.ai_state.name,
+                "state": e.mind.decision.ai_state.name if hasattr(e.mind.decision.ai_state, "name") else AIState(e.mind.decision.ai_state).name,
             }
             for e in world.entities.values()
             if e.combat.alive
@@ -44,7 +44,7 @@ class ReplayRecorder:
         actions_log = [
             {
                 "actor": a.actor_id,
-                "verb": a.verb.name,
+                "verb": a.verb.name if hasattr(a.verb, "name") else ActionType(a.verb).name,
                 "target": (
                     [a.target.x, a.target.y]
                     if hasattr(a.target, "x")

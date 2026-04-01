@@ -6,25 +6,33 @@ from src.core.models.enums import AIState, Domain
 from src.core.gameplay.faction import Faction
 from src.core.models import DIRECTION_OFFSETS, Vector2
 from src.ai.states.base import (
-    AIContext, StateHandler, clear_dead_from_memory, 
+    AIContext, StateHandler, get_dead_memory_ids, get_perception_cleanup_update, 
     propose_move_toward, beyond_leash, propose_retreat_home,
     is_in_hostile_town, is_on_enemy_territory, is_tile_passable,
     should_flee
+)
+from src.actions.base import (
+    ActionType, ActionProposal, IntentUpdate, 
+    InteractionUpdate, ProgressionUpdate, NavigationUpdate
 )
 
 
 class IdleHandler(StateHandler):
     def handle(self, ctx: AIContext) -> tuple[AIState, ActionProposal]:
-        clear_dead_from_memory(ctx.actor, ctx.snapshot)
+        actor, snapshot = ctx.actor, ctx.snapshot
+        cleanup = get_perception_cleanup_update(actor, snapshot)
+        final_updates = [cleanup] if cleanup else []
         return AIState.WANDER, ActionProposal(
             actor_id=ctx.actor.id, verb=ActionType.REST,
-            reason="Idle → transitioning to wander")
+            reason="Idle → transitioning to wander",
+            updates=final_updates)
 
 
 class WanderHandler(StateHandler):
     def handle(self, ctx: AIContext) -> tuple[AIState, ActionProposal]:
         actor, snapshot, config, rng = ctx.actor, ctx.snapshot, ctx.config, ctx.rng
-        clear_dead_from_memory(actor, snapshot)
+        cleanup = get_perception_cleanup_update(actor, snapshot)
+        final_updates = [cleanup] if cleanup else []
         enemy = ctx.nearest_enemy()
 
         if beyond_leash(actor):
@@ -46,9 +54,11 @@ class WanderHandler(StateHandler):
                 if actor.spatial.pos.manhattan(loot_pos) == 0:
                     return AIState.LOOTING, ActionProposal(
                         actor_id=actor.id, verb=ActionType.LOOT, target=loot_pos,
-                        reason="Standing on loot → picking up")
+                        reason="Standing on loot → picking up",
+                        updates=final_updates)
                 return AIState.LOOTING, propose_move_toward(
-                    actor, loot_pos, snapshot, "Loot nearby → moving to pick up")
+                    actor, loot_pos, snapshot, "Loot nearby → moving to pick up",
+                    updates=final_updates)
 
             if actor.inventory and actor.inventory.used_slots < actor.inventory.max_slots - 1:
                 # find_nearby_resource is in town.py (or shared)
@@ -61,10 +71,11 @@ class WanderHandler(StateHandler):
                             actor_id=actor.id, verb=ActionType.HARVEST,
                             target=res.spatial.pos,
                             reason=f"Harvesting {res.name}",
-                            intent_metadata={"loot_progress": 0})
+                            updates=[InteractionUpdate(loot_progress_set=0)])
                     return AIState.HARVESTING, propose_move_toward(
                         actor, res.spatial.pos, snapshot,
-                        f"Resource nearby → moving to {res.name}")
+                        f"Resource nearby → moving to {res.name}",
+                        updates=final_updates)
 
         if enemy is not None:
             if should_flee(actor, config):
@@ -78,10 +89,12 @@ class WanderHandler(StateHandler):
             if dist <= weapon_rng:
                 return AIState.COMBAT, ActionProposal(
                     actor_id=actor.id, verb=ActionType.ATTACK, target=enemy.id,
-                    reason=f"Engaging enemy {enemy.id} in range {dist}")
+                    reason=f"Engaging enemy {enemy.id} in range {dist}",
+                    updates=final_updates)
 
             return AIState.HUNT, propose_move_toward(
-                actor, enemy.spatial.pos, snapshot, "Spotted enemy → hunting")
+                actor, enemy.spatial.pos, snapshot, "Spotted enemy → hunting",
+                updates=final_updates)
 
         if actor.identity.faction == Faction.HERO_GUILD and actor.progression.level >= 3:
             for em_id, em_pos in actor.mind.perception.entity_memory.items():
@@ -89,13 +102,15 @@ class WanderHandler(StateHandler):
                 if actor.spatial.pos.manhattan(em_pos) > 3:
                      return AIState.HUNT, propose_move_toward(
                         actor, em_pos, snapshot,
-                        f"Returning to fight remembered enemy #{em_id}")
+                        f"Returning to fight remembered enemy #{em_id}",
+                        updates=final_updates)
 
         rng_val = rng.next_int(Domain.AI_DECISION, actor.id, snapshot.tick, 0, 999)
         frontier = Perception.find_frontier_target(actor, snapshot, rng_val)
         if frontier is not None:
             return AIState.WANDER, propose_move_toward(
-                actor, frontier, snapshot, "Exploring unknown territory")
+                actor, frontier, snapshot, "Exploring unknown territory",
+                updates=final_updates)
 
         direction_idx = rng.next_int(Domain.AI_DECISION, actor.id, snapshot.tick, 0, 3)
         offset = DIRECTION_OFFSETS[direction_idx]
@@ -103,82 +118,95 @@ class WanderHandler(StateHandler):
         if is_tile_passable(actor, target, snapshot):
             return AIState.WANDER, ActionProposal(
                 actor_id=actor.id, verb=ActionType.MOVE, target=target,
-                reason="Wandering randomly")
+                reason="Wandering randomly",
+                updates=final_updates)
         return AIState.WANDER, ActionProposal(
             actor_id=actor.id, verb=ActionType.REST,
-            reason="Wander blocked → resting")
+            reason="Wander blocked → resting",
+            updates=final_updates)
 
 
 class ReturnToTownHandler(StateHandler):
     def handle(self, ctx: AIContext) -> tuple[AIState, ActionProposal]:
         actor, snapshot = ctx.actor, ctx.snapshot
-        clear_dead_from_memory(actor, snapshot)
+        cleanup = get_perception_cleanup_update(actor, snapshot)
+        final_updates = [cleanup] if cleanup else []
 
         if Perception.is_in_town(actor, snapshot):
             return AIState.RESTING_IN_TOWN, ActionProposal(
                 actor_id=actor.id, verb=ActionType.REST,
-                reason="Arrived at town → resting")
+                reason="Arrived at town → resting",
+                updates=final_updates)
 
         if actor.spatial.home_pos:
             return AIState.RETURN_TO_TOWN, propose_move_toward(
-                actor, actor.spatial.home_pos, snapshot, "Heading to town")
+                actor, actor.spatial.home_pos, snapshot, "Heading to town",
+                updates=final_updates)
 
         return AIState.WANDER, ActionProposal(
             actor_id=actor.id, verb=ActionType.REST,
-            reason="No town to return to → wander")
+            reason="No town to return to → wander",
+            updates=final_updates)
 
 
 class ReturnToCampHandler(StateHandler):
     def handle(self, ctx: AIContext) -> tuple[AIState, ActionProposal]:
         actor, snapshot, config = ctx.actor, ctx.snapshot, ctx.config
-        clear_dead_from_memory(actor, snapshot)
+        cleanup = get_perception_cleanup_update(actor, snapshot)
+        final_updates = [cleanup] if cleanup else []
 
-        if actor.combat.hp < actor.combat.max_hp and config.mob_return_heal_rate > 0:
-            # Healing must be proposed via metadata
-            heal = max(1, int(actor.combat.max_hp * config.mob_return_heal_rate))
-            heal = min(heal, actor.combat.max_hp - actor.combat.hp)
-            heal_meta = {"hp_add": heal}
+        heal_rate = config.mob_return_heal_rate
+        if actor.combat.hp < actor.combat.max_hp and heal_rate > 0:
+            needed = actor.combat.max_hp - actor.combat.hp
+            abs_heal = min(needed, max(1.0, actor.combat.max_hp * heal_rate))
+            heal_meta = [ProgressionUpdate(hp_delta=abs_heal)]
         else:
-            heal_meta = {}
+            heal_meta = []
 
         if Perception.is_in_camp(actor, snapshot):
             return AIState.GUARD_CAMP, ActionProposal(
                 actor_id=actor.id, verb=ActionType.REST,
                 reason="Arrived at camp → guarding",
-                intent_metadata={**heal_meta, "chase_ticks": 0})
+                updates=final_updates + heal_meta + [NavigationUpdate(chase_ticks=0)])
 
         camp = Perception.nearest_camp(actor, snapshot)
         if camp:
             return AIState.RETURN_TO_CAMP, propose_move_toward(
-                actor, camp, snapshot, "Heading to camp", intent_metadata=heal_meta)
+                actor, camp, snapshot, "Heading to camp", 
+                updates=final_updates + heal_meta)
 
         return AIState.WANDER, ActionProposal(
             actor_id=actor.id, verb=ActionType.REST,
-            reason="No camp to return to → wander")
+            reason="No camp to return to → wander",
+            updates=final_updates)
 
 
 class GuardCampHandler(StateHandler):
     def handle(self, ctx: AIContext) -> tuple[AIState, ActionProposal]:
         actor, snapshot, config, rng = ctx.actor, ctx.snapshot, ctx.config, ctx.rng
-        clear_dead_from_memory(actor, snapshot)
+        cleanup = get_perception_cleanup_update(actor, snapshot)
+        final_updates = [cleanup] if cleanup else []
         enemy = ctx.nearest_enemy()
 
         if enemy is not None:
             if actor.spatial.pos.manhattan(enemy.spatial.pos) <= 1:
                 return AIState.COMBAT, ActionProposal(
                     actor_id=actor.id, verb=ActionType.ATTACK, target=enemy.id,
-                    reason=f"Camp guard attacking intruder {enemy.id}")
+                    reason=f"Camp guard attacking intruder {enemy.id}",
+                    updates=final_updates)
             chase_range = max(4, actor.spatial.vision_range)
             if actor.spatial.pos.manhattan(enemy.spatial.pos) <= chase_range:
                 return AIState.HUNT, propose_move_toward(
-                    actor, enemy.spatial.pos, snapshot, f"Camp guard chasing intruder {enemy.id}")
+                    actor, enemy.spatial.pos, snapshot, f"Camp guard chasing intruder {enemy.id}",
+                    updates=final_updates)
 
         camp = Perception.nearest_camp(actor, snapshot)
         if camp:
             dist_to_camp = actor.spatial.pos.manhattan(camp)
             if dist_to_camp > config.camp_radius + 1:
                 return AIState.GUARD_CAMP, propose_move_toward(
-                    actor, camp, snapshot, "Patrol → returning closer to camp")
+                    actor, camp, snapshot, "Patrol → returning closer to camp",
+                    updates=final_updates)
 
         direction_idx = rng.next_int(Domain.AI_DECISION, actor.id, snapshot.tick, 0, 3)
         offset = DIRECTION_OFFSETS[direction_idx]
@@ -186,10 +214,12 @@ class GuardCampHandler(StateHandler):
         if is_tile_passable(actor, target, snapshot):
             return AIState.GUARD_CAMP, ActionProposal(
                 actor_id=actor.id, verb=ActionType.MOVE, target=target,
-                reason="Patrolling camp")
+                reason="Patrolling camp",
+                updates=final_updates)
         return AIState.GUARD_CAMP, ActionProposal(
             actor_id=actor.id, verb=ActionType.REST,
-            reason="Camp patrol blocked → resting")
+            reason="Camp patrol blocked → resting",
+            updates=final_updates)
 
 
 class ExhaustedHandler(StateHandler):

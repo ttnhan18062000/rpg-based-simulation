@@ -47,11 +47,5 @@ class RestAction:
         action_type = "building" if current_state in RestAction._BUILDING_STATES else "rest"
         
         delay = speed_delay(entity.combat.spd, action_type, entity.interaction.interaction_speed)
-        entity.next_act_at += delay
-        
         # Recovery (Stamina)
         entity.progression.stamina = min(entity.progression.stamina + 2.0, entity.progression.max_stamina)
-        
-        # Attribute training
-        from src.core.gameplay.attributes import train_attributes
-        train_attributes(entity, "rest")

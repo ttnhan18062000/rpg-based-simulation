@@ -275,7 +275,17 @@ class EntityBuilder:
             is_world_boss=self._is_world_boss
         )
         entity.spatial = SpatialAspect(pos=self._pos, home_pos=self._home_pos, leash_radius=self._leash_radius)
-        entity.combat = CombatAspect(hp=self._hp, max_hp=self._hp, atk=self._atk, def_=self._def, spd=self._spd, luck=self._luck, crit_rate=self._crit_rate, crit_dmg=self._crit_dmg, evasion=self._evasion)
+        entity.combat = CombatAspect(
+            hp=self._hp,
+            max_hp=self._hp,
+            atk_base=self._atk,
+            def_base=self._def,
+            spd_base=self._spd,
+            luck=self._luck,
+            crit_rate=self._crit_rate,
+            crit_dmg=self._crit_dmg,
+            evasion=self._evasion
+        )
         entity.progression = ProgressionAspect(level=self._level, xp_to_next=self._xp_to_next, gold=self._gold, fame=self._fame, hero_class=self._hero_class, stamina=self._stamina, max_stamina=self._stamina, skills=self._skills, attributes=self._attrs or Attributes(), attribute_caps=self._caps or AttributeCaps())
         entity.mind = MindAspect()
         entity.mind.decision.ai_state = self._ai_state

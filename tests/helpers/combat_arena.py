@@ -133,7 +133,15 @@ class CombatArena:
         """Add a fully customizable entity to the arena."""
         identity = IdentityAspect(display_name=kind, faction=faction)
         spatial = SpatialAspect(pos=Vector2(*pos), home_pos=Vector2(*home_pos) if home_pos else None)
-        combat = CombatAspect(hp=hp, max_hp=hp, atk=atk, matk=matk, def_=def_, mdef=mdef, spd=spd)
+        combat = CombatAspect(
+            hp=hp,
+            max_hp=hp,
+            atk_base=atk,
+            matk=matk,
+            def_base=def_,
+            mdef=mdef,
+            spd_base=spd
+        )
         mind = MindAspect()
         mind.decision.ai_state = ai_state
         interaction = InteractionAspect()

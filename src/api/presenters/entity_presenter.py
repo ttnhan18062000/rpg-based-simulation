@@ -75,6 +75,30 @@ class EntityPresenter:
         )
 
     @staticmethod
+    def to_compact_list(entity: "Entity") -> list[Any]:
+        """
+        Ordered list for high-performance WebSocket streaming.
+        Order must match ENTITY_KEY_MAP in legacy encoder/frontend.
+        """
+        # [id, x, y, hp, state_id, target_id, loot_progress]
+        STATE_ENUM_MAP = {
+            "IDLE": 0, "MOVE": 1, "COMBAT": 2, "LOOT": 3, "HARVEST": 4,
+            "CRAFT": 5, "REST": 6, "DEAD": 7, "FLEE": 8, "WANDER": 9
+        }
+        state_name = entity.mind.decision.ai_state.name.upper()
+        state_id = STATE_ENUM_MAP.get(state_name, 0)
+        
+        return [
+            entity.id,
+            int(entity.spatial.pos.x),
+            int(entity.spatial.pos.y),
+            entity.combat.hp,
+            state_id,
+            entity.combat.combat_target_id,
+            entity.interaction.loot_progress
+        ]
+
+    @staticmethod
     def to_full_schema(entity: "Entity", loot_duration: int = 3) -> "EntitySchema":
         from src.api.schemas import EntitySchema, EffectSchema, QuestSchema
         from src.core.models.enums import Element

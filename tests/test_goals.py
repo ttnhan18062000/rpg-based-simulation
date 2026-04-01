@@ -78,8 +78,8 @@ class TestGoalScorerSubclasses:
 class TestGoalRegistry:
     """Test the global goal registry."""
 
-    def test_registry_has_9_goals(self):
-        assert len(GOAL_REGISTRY) == 9
+    def test_registry_has_10_goals(self):
+        assert len(GOAL_REGISTRY) == 10
 
     def test_registry_names_unique(self):
         names = [g.name for g in GOAL_REGISTRY]
@@ -87,7 +87,7 @@ class TestGoalRegistry:
 
     def test_registry_contains_all_expected_goals(self):
         names = {g.name for g in GOAL_REGISTRY}
-        expected = {"combat", "flee", "explore", "loot", "trade", "rest", "craft", "social", "guard"}
+        expected = {"combat", "flee", "explore", "loot", "trade", "rest", "craft", "social", "guard", "corpse_run"}
         assert names == expected
 
     def test_all_goals_have_valid_target_states(self):
@@ -229,4 +229,4 @@ class TestBackwardCompat:
     def test_shim_exports_registry(self):
         from src.ai.goal_evaluator import GOAL_REGISTRY as LegacyRegistry
         assert LegacyRegistry is GOAL_REGISTRY
-        assert len(LegacyRegistry) == 9
+        assert len(LegacyRegistry) == 10
