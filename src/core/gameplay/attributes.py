@@ -8,15 +8,10 @@ Refactored for AOA Stabilization:
 
 from __future__ import annotations
 import math as _math
-from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any
+from src.core.models.base import SimulationModel
+from pydantic import Field, PrivateAttr
 
-if TYPE_CHECKING:
-    from src.core.entities.entity import Entity
-    from src.platform.rng import DeterministicRNG
-
-@dataclass(slots=True)
-class Attributes:
+class Attributes(SimulationModel):
     """Primary RPG attributes for an entity (9 attributes)."""
     str_: int = 5      # Strength
     agi: int = 5        # Agility
@@ -28,35 +23,37 @@ class Attributes:
     per: int = 5        # Perception
     cha: int = 5        # Charisma
 
-    # Fractional training accumulator
-    _str_frac: float = 0.0
-    _agi_frac: float = 0.0
-    _vit_frac: float = 0.0
-    _int_frac: float = 0.0
-    _spi_frac: float = 0.0
-    _wis_frac: float = 0.0
-    _end_frac: float = 0.0
-    _per_frac: float = 0.0
-    _cha_frac: float = 0.0
+    # Fractional training accumulator (Private)
+    _str_frac: float = PrivateAttr(default=0.0)
+    _agi_frac: float = PrivateAttr(default=0.0)
+    _vit_frac: float = PrivateAttr(default=0.0)
+    _int_frac: float = PrivateAttr(default=0.0)
+    _spi_frac: float = PrivateAttr(default=0.0)
+    _wis_frac: float = PrivateAttr(default=0.0)
+    _end_frac: float = PrivateAttr(default=0.0)
+    _per_frac: float = PrivateAttr(default=0.0)
+    _cha_frac: float = PrivateAttr(default=0.0)
 
     def copy(self) -> Attributes:
-        return Attributes(
-            str_=self.str_, agi=self.agi, vit=self.vit,
-            int_=self.int_, spi=self.spi, wis=self.wis,
-            end=self.end, per=self.per, cha=self.cha,
-            _str_frac=self._str_frac, _agi_frac=self._agi_frac,
-            _vit_frac=self._vit_frac, _int_frac=self._int_frac,
-            _spi_frac=self._spi_frac, _wis_frac=self._wis_frac,
-            _end_frac=self._end_frac, _per_frac=self._per_frac,
-            _cha_frac=self._cha_frac,
-        )
+        return Attributes(**self.model_dump())
 
     def total(self) -> int:
         return (self.str_ + self.agi + self.vit + self.int_ + self.spi
                 + self.wis + self.end + self.per + self.cha)
 
-@dataclass(slots=True)
-class AttributeCaps:
+    def validate(self) -> None:
+        """Ensure attributes stay within reasonable bounds."""
+        self.str_ = max(1, self.str_)
+        self.agi = max(1, self.agi)
+        self.vit = max(1, self.vit)
+        self.int_ = max(1, self.int_)
+        self.spi = max(1, self.spi)
+        self.wis = max(1, self.wis)
+        self.end = max(1, self.end)
+        self.per = max(1, self.per)
+        self.cha = max(1, self.cha)
+
+class AttributeCaps(SimulationModel):
     """Maximum trainable values for each attribute."""
     str_cap: int = 15
     agi_cap: int = 15
@@ -69,11 +66,7 @@ class AttributeCaps:
     cha_cap: int = 15
 
     def copy(self) -> AttributeCaps:
-        return AttributeCaps(
-            str_cap=self.str_cap, agi_cap=self.agi_cap, vit_cap=self.vit_cap,
-            int_cap=self.int_cap, spi_cap=self.spi_cap, wis_cap=self.wis_cap,
-            end_cap=self.end_cap, per_cap=self.per_cap, cha_cap=self.cha_cap,
-        )
+        return AttributeCaps(**self.model_dump())
 
     def increase_all(self, amount: int) -> None:
         self.str_cap += amount
@@ -85,6 +78,18 @@ class AttributeCaps:
         self.end_cap += amount
         self.per_cap += amount
         self.cha_cap += amount
+
+    def validate(self) -> None:
+        """Ensure caps stay positive."""
+        self.str_cap = max(1, self.str_cap)
+        self.agi_cap = max(1, self.agi_cap)
+        self.vit_cap = max(1, self.vit_cap)
+        self.int_cap = max(1, self.int_cap)
+        self.spi_cap = max(1, self.spi_cap)
+        self.wis_cap = max(1, self.wis_cap)
+        self.end_cap = max(1, self.end_cap)
+        self.per_cap = max(1, self.per_cap)
+        self.cha_cap = max(1, self.cha_cap)
 
 # ---------------------------------------------------------------------------
 # Attribute → derived stat formulas

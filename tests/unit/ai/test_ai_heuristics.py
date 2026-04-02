@@ -19,10 +19,10 @@ def test_ai_boredom_diversification():
     
     # Create an entity in a decision state (IDLE)
     actor = Entity(id=1, kind="hero")
-    actor.spatial.pos = Vector2(10, 10)
-    actor.progression.level = 1
-    actor.combat.hp = 20
-    actor.combat.max_hp = 20
+    actor.spatial.spatial.pos = Vector2(10, 10)
+    actor.progression.progression.level = 1
+    actor.combat.combat.hp = 20
+    actor.combat.combat.max_hp = 20
     actor.mind.decision.ai_state = AIState.IDLE
     
     # Mocked snapshot with all required fields
@@ -75,18 +75,18 @@ def test_life_stage_priority_shift():
     
     # Level 1 Hero
     young_actor = Entity(id=1, kind="hero")
-    young_actor.spatial.pos = Vector2(10, 10)
-    young_actor.progression.level = 1
-    young_actor.combat.hp = 20
-    young_actor.combat.max_hp = 20
+    young_actor.spatial.spatial.pos = Vector2(10, 10)
+    young_actor.progression.progression.level = 1
+    young_actor.combat.combat.hp = 20
+    young_actor.combat.combat.max_hp = 20
     young_actor.mind.decision.ai_state = AIState.IDLE
     
     # Level 25 Hero
     veteran_actor = Entity(id=2, kind="hero")
-    veteran_actor.spatial.pos = Vector2(10, 10)
-    veteran_actor.progression.level = 25
-    veteran_actor.combat.hp = 100
-    veteran_actor.combat.max_hp = 100
+    veteran_actor.spatial.spatial.pos = Vector2(10, 10)
+    veteran_actor.progression.progression.level = 25
+    veteran_actor.combat.combat.hp = 100
+    veteran_actor.combat.combat.max_hp = 100
     veteran_actor.mind.decision.ai_state = AIState.IDLE
     
     dummy_grid = Grid(20, 20)

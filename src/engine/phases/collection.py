@@ -9,12 +9,30 @@ from src.engine.phase_guard import ActionProposalGuard
 
 if TYPE_CHECKING:
     from src.engine.phases.context import EngineContext
+    from src.engine.phases.contract import PhaseContract
 
 logger = logging.getLogger(__name__)
 
 class CollectionPhase(EnginePhase):
     """Wait and collect action proposals from identifying workers."""
     
+    @property
+    def contract(self) -> PhaseContract:
+        from src.engine.phases.contract import PhaseContract, PhaseAccess
+        return PhaseContract(
+            name="Collection",
+            description="Collecting AI proposals from workers.",
+            permissions={
+                "world": PhaseAccess.READ,
+                "config": PhaseAccess.READ,
+                "worker_pool": PhaseAccess.READ_WRITE,
+                "action_queue": PhaseAccess.READ_WRITE,
+                "tick_ready_entities": PhaseAccess.READ,
+                "tick_proposals": PhaseAccess.MUTATE,
+                "emit": PhaseAccess.READ
+            }
+        )
+
     def execute(self, ctx: EngineContext) -> None:
         if not ctx.tick_ready_entities:
             ctx.tick_proposals = []

@@ -81,7 +81,7 @@ class TestSubsystemsAlwaysRun(unittest.TestCase):
             .with_base_stats(hp=50)
             .build()
         )
-        entity.identity.faction = Faction.HERO_GUILD
+        entity.identity.identity.faction = Faction.HERO_GUILD
         entity.next_act_at = 999.0
         
         from src.core.gameplay.effects import StatusEffect, EffectType
@@ -106,16 +106,16 @@ class TestSubsystemsAlwaysRun(unittest.TestCase):
             .with_base_stats(hp=100)
             .build()
         )
-        entity.identity.faction = Faction.HERO_GUILD
-        entity.progression.stamina = 50
+        entity.identity.identity.faction = Faction.HERO_GUILD
+        entity.progression.progression.stamina = 50
         entity.progression.max_stamina = 100
         entity.mind.decision.ai_state = AIState.WANDER
         entity.next_act_at = 999.0
         loop.world.add_entity(entity)
 
-        old_stamina = entity.progression.stamina
+        old_stamina = entity.progression.progression.stamina
         loop.tick_once()
-        assert loop.world.entities[1].progression.stamina > old_stamina
+        assert loop.world.entities[1].progression.progression.stamina > old_stamina
 
 
 class TestSubsystemRateDivisors(unittest.TestCase):

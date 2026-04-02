@@ -11,7 +11,7 @@ import logging
 from typing import TYPE_CHECKING
 from src.actions.base import ActionProposal
 from src.actions.damage import get_damage_calculator
-from src.core.models.enums import ActionType, DamageType, Domain, Element
+from src.core.models.enums import ActionType, DamageType, Domain, Element, EmotionType
 from src.core.gameplay.faction import Faction, FactionRegistry
 from src.core.gameplay.items.item_registry import ITEM_REGISTRY
 
@@ -209,13 +209,23 @@ class CombatAction:
         attacker = world.entities.get(proposal.actor_id)
         if not attacker or not attacker.combat.alive: return False
         
-        # ... simplified range/LoS logic ...
         target_id: int = proposal.target
         defender = world.entities.get(target_id)
         if not defender or not defender.combat.alive: return False
         
+        # 1. Distance check
         dist = attacker.spatial.pos.manhattan(defender.spatial.pos)
-        if dist > self._get_weapon_range(attacker): return False
+        weapon_range = self._get_weapon_range(attacker)
+        if dist > weapon_range: return False
+        
+        # 2. Line of Sight check for ranged attacks (range > 1)
+        if weapon_range > 1 and dist > 1:
+            if not world.grid.has_line_of_sight(
+                int(attacker.spatial.pos.x), int(attacker.spatial.pos.y),
+                int(defender.spatial.pos.x), int(defender.spatial.pos.y)
+            ):
+                return False
+                
         return True
 
     def apply(self, proposal: ActionProposal, world: WorldState) -> None:
@@ -231,6 +241,7 @@ class CombatAction:
         # APPLY STATE CHANGES
         if not is_evasion:
             defender.combat.hp -= damage
+            defender.combat.validate()
         
         # AFTERMATH (Memory, Grudges, Threat)
         CombatAftermathService.process(attacker, defender, world, damage, is_crit, is_evasion, self._config, proposal, trace_details)
@@ -239,6 +250,7 @@ class CombatAction:
         if not is_evasion and defender.combat.alive:
             if defender.combat.hp / defender.combat.max_hp < 0.15:
                 defender.combat.max_hp += 1
+                defender.combat.validate()
 
         # KILL RESOLUTION
         if not defender.combat.alive:

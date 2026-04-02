@@ -66,7 +66,7 @@ class TestCurrentRegionDifficulty(unittest.TestCase):
 
     def test_in_region_returns_difficulty(self):
         hero = _make_hero(pos=Vector2(50, 50))
-        hero.current_region_id = "test_region"
+        hero.spatial.current_region_id = "test_region"
         region = Region(
             region_id="test_region", name="Test", terrain=Material.FOREST,
             center=Vector2(50, 50), radius=20, difficulty=3,
@@ -76,7 +76,7 @@ class TestCurrentRegionDifficulty(unittest.TestCase):
 
     def test_unknown_region_returns_0(self):
         hero = _make_hero()
-        hero.current_region_id = "nonexistent"
+        hero.spatial.current_region_id = "nonexistent"
         ctx = _make_ctx(hero)
         self.assertEqual(_current_region_difficulty(ctx), 0)
 
@@ -92,7 +92,7 @@ class TestRegionDangerPenalty(unittest.TestCase):
     def test_safe_region_no_penalty(self):
         """Level 5 hero in tier 1 region: 1*3=3 <= 5+3=8, no penalty."""
         hero = _make_hero(level=5, pos=Vector2(50, 50))
-        hero.current_region_id = "safe"
+        hero.spatial.current_region_id = "safe"
         region = Region(
             region_id="safe", name="Safe", terrain=Material.FOREST,
             center=Vector2(50, 50), radius=20, difficulty=1,
@@ -103,7 +103,7 @@ class TestRegionDangerPenalty(unittest.TestCase):
     def test_dangerous_region_has_penalty(self):
         """Level 1 hero in tier 4 region: 4*3=12 > 1+3=4, excess=8, penalty=0.4 (capped)."""
         hero = _make_hero(level=1, pos=Vector2(50, 50))
-        hero.current_region_id = "deadly"
+        hero.spatial.current_region_id = "deadly"
         region = Region(
             region_id="deadly", name="Deadly", terrain=Material.MOUNTAIN,
             center=Vector2(50, 50), radius=20, difficulty=4,
@@ -116,7 +116,7 @@ class TestRegionDangerPenalty(unittest.TestCase):
     def test_marginal_danger(self):
         """Level 3 hero in tier 3 region: 3*3=9 > 3+3=6, excess=3, penalty=0.15."""
         hero = _make_hero(level=3, pos=Vector2(50, 50))
-        hero.current_region_id = "wilds"
+        hero.spatial.current_region_id = "wilds"
         region = Region(
             region_id="wilds", name="Wilds", terrain=Material.SWAMP,
             center=Vector2(50, 50), radius=20, difficulty=3,
@@ -131,12 +131,12 @@ class TestRegionTrackingOnEntity(unittest.TestCase):
 
     def test_default_empty(self):
         hero = _make_hero()
-        self.assertEqual(hero.current_region_id, "")
+        self.assertEqual(hero.spatial.current_region_id, "")
 
     def test_settable(self):
         hero = _make_hero()
-        hero.current_region_id = "whispering_woods"
-        self.assertEqual(hero.current_region_id, "whispering_woods")
+        hero.spatial.current_region_id = "whispering_woods"
+        self.assertEqual(hero.spatial.current_region_id, "whispering_woods")
 
 
 class TestRegionContains(unittest.TestCase):

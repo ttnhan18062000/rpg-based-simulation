@@ -70,27 +70,27 @@ def test_should_flee_logic():
     
     # Threshold is base 0.3 (from SimulationConfig)
     # Case 1: Neutral mood (0.5) -> should flee at 30%
-    actor.combat.max_hp = 100
+    actor.combat.combat.max_hp = 100
     actor.mind.mood = 0.5
-    actor.combat.hp = 35 # 35% > 30% -> Should NOT flee
+    actor.combat.combat.hp = 35 # 35% > 30% -> Should NOT flee
     assert not should_flee(actor, config)
-    actor.combat.hp = 25 # 25% < 30% -> Should flee
+    actor.combat.combat.hp = 25 # 25% < 30% -> Should flee
     assert should_flee(actor, config)
     
     # Case 2: Despair (0.0) -> should flee earlier (higher threshold)
     # mod = (0.5 - 0.0) * 0.2 = 0.1. Effective threshold = 0.3 + 0.1 = 0.4
     actor.mind.mood = 0.0
-    actor.combat.hp = 45 # 45% > 40% -> Should NOT flee
+    actor.combat.combat.hp = 45 # 45% > 40% -> Should NOT flee
     assert not should_flee(actor, config)
-    actor.combat.hp = 35 # 35% < 40% -> Should flee
+    actor.combat.combat.hp = 35 # 35% < 40% -> Should flee
     assert should_flee(actor, config)
     
     # Case 3: Fury (1.0) -> should flee later (lower threshold)
     # mod = (0.5 - 1.0) * 0.2 = -0.1. Effective threshold = 0.3 - 0.1 = 0.2
     actor.mind.mood = 1.0
-    actor.combat.hp = 25 # 25% > 20% -> Should NOT flee
+    actor.combat.combat.hp = 25 # 25% > 20% -> Should NOT flee
     assert not should_flee(actor, config)
-    actor.combat.hp = 15 # 15% < 20% -> Should flee
+    actor.combat.combat.hp = 15 # 15% < 20% -> Should flee
     assert should_flee(actor, config)
 
 def test_locational_memory_on_death():
@@ -120,16 +120,16 @@ def test_locational_memory_on_death():
     combat = CombatAction(config, rng)
     
     # Victim is alive
-    assert victim.combat.alive
+    assert victim.combat.combat.alive
     
     # Force a kill
-    victim.combat.hp = 1
-    attacker.combat.atk = 100
+    victim.combat.combat.hp = 1
+    attacker.combat.combat.atk_base = 100
     
     proposal = ActionProposal(actor_id=1, verb=ActionType.ATTACK, target=2)
     combat.apply(proposal, world)
     
-    if not victim.combat.alive:
+    if not victim.combat.combat.alive:
         # Region should be marked as dangerous
         assert victim.mind.memory_locations.get("deadly_forest", 0) < 0
         # Killer should be remembered

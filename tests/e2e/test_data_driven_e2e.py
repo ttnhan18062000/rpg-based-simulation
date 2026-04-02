@@ -22,7 +22,7 @@ def test_registry_driven_spawning_e2e():
     mob = arena.add_mob(2, pos=(5, 5), kind="goblin", tier=EnemyTier.BASIC)
     assert mob.kind == "goblin"
     assert mob.identity.tier == EnemyTier.BASIC
-    assert mob.stats.combat.max_hp > 0
+    assert mob.stats.combat.combat.max_hp > 0
 
 def test_item_registry_lookup_e2e():
     """Verify that items in ITEM_REGISTRY are accessible and have correct attributes."""

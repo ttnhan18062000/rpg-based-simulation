@@ -59,11 +59,21 @@ class ProgressionAspect(Aspect):
         copy_obj.quests = [q.copy() if hasattr(q, "copy") else q for q in self.quests]
         copy_obj.aptitudes = dict(self.aptitudes)
         
-        if self.attributes and hasattr(self.attributes, "copy"):
-            copy_obj.attributes = self.attributes.copy()
         if self.attribute_caps and hasattr(self.attribute_caps, "copy"):
             copy_obj.attribute_caps = self.attribute_caps.copy()
         return copy_obj
+
+    def validate(self) -> None:
+        """Enforce stamina clamping and progression bounds."""
+        if self.stamina > self.max_stamina:
+            self.stamina = self.max_stamina
+        if self.stamina < 0:
+            self.stamina = 0
+            
+        self.gold = max(0, self.gold)
+        self.xp = max(0, self.xp)
+        self.level = max(1, self.level)
+        self.max_stamina = max(1, self.max_stamina)
 
     def on_attach(self, owner: Any) -> None:
         """Called when the aspect is attached to an Entity."""
@@ -78,3 +88,7 @@ class ProgressionAspect(Aspect):
         attrs = ["str", "agi", "vit", "int", "spi", "wis", "end", "per", "cha"]
         self.aptitudes = {a: rng.uniform(0.8, 1.25) for a in attrs}
         self.longevity_limit = rng.randint(50000, 150000)
+
+
+# Rebuild Model to finalize Pydantic setup
+ProgressionAspect.model_rebuild()

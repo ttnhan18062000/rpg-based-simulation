@@ -192,7 +192,7 @@ class HeroLifecycleSystem(System):
                             # Trade!
                             h1.inventory.remove_item(iid)
                             h2.inventory.add_item(iid)
-                            h2.inventory.auto_equip_best(iid, getattr(h2, "hero_class", 0))
+                            h2.inventory.auto_equip_best(iid, getattr(h2.progression, "hero_class", 0))
                             if ctx.emit:
                                 ctx.emit("social", f"{h1.identity.display_name} gifted {t.name} to {h2.identity.display_name}",
                                            entity_ids=(h1.id, h2.id),
@@ -206,7 +206,7 @@ class HeroLifecycleSystem(System):
         """Handle dropping bags and tracking permadeath strikes.
         Returns False if generic handling is sufficient, True if this handler fully resolved removal.
         """
-        if entity.identity.faction != Faction.HERO_GUILD or entity.home_pos is None:
+        if entity.identity.faction != Faction.HERO_GUILD or entity.spatial.home_pos is None:
             return False
 
         entity.identity.death_count += 1
@@ -234,9 +234,8 @@ class HeroLifecycleSystem(System):
             # Monument spawning
             if entity.progression.level >= 15:
                 m_id = f"monument_{entity.id}_{tick}"
-                from src.core.world.monuments import Monument
                 from src.core.models.enums import HeroClass
-                hc = getattr(entity, 'hero_class', None)
+                hc = getattr(entity.progression, 'hero_class', None)
                 bt = "hp"
                 if hc == HeroClass.WARRIOR: bt = "hp"
                 elif hc == HeroClass.MAGE: bt = "atk"
@@ -244,21 +243,20 @@ class HeroLifecycleSystem(System):
                 
                 monument = Monument(m_id, entity.identity.display_name or f"#{entity.id}", 
                                     hc.name if hc else "NONE", 
-                                    entity.progression.level, entity.home_pos, bt, 0.1)
+                                    entity.progression.level, entity.spatial.home_pos, bt, 0.1)
                 ctx.world.monuments.append(monument)
 
             ctx.world.remove_entity(entity.id)
             self._schedule_hero_replacement(entity, tick)
             return True
 
-        # Normal respawn
         entity.combat.hp = entity.combat.max_hp
         old_pos = entity.spatial.pos
-        entity.spatial.pos = entity.home_pos
+        entity.spatial.pos = entity.spatial.home_pos
         entity.mind.decision.ai_state = AIState.RESTING_IN_TOWN
-        ctx.world.spatial_index.move(entity.id, old_pos, entity.home_pos)
+        ctx.world.spatial_index.move(entity.id, old_pos, entity.spatial.home_pos)
         entity.next_act_at = float(tick + self.config.hero_respawn_ticks)
-        entity.mind.memory.clear()
+        entity.mind.perception.entity_memory.clear()
         entity.combat.effects.clear()
         
         # Tiered drop algorithm
@@ -280,7 +278,7 @@ class HeroLifecycleSystem(System):
                             tick, entity.id, len(dropped_ids), entity.identity.death_count)
         
         logger.info("Tick %d: Hero %s died → respawning at home %s.",
-                    tick, (entity.identity.display_name or f"#{entity.id}"), entity.home_pos)
+                    tick, (entity.identity.display_name or f"#{entity.id}"), entity.spatial.home_pos)
         
         if hasattr(ctx.world, "event_bus") and ctx.world.event_bus:
             from src.core.data.events import DeathEvent
@@ -300,7 +298,7 @@ class HeroLifecycleSystem(System):
         self._pending_hero_replacements.append({
             "tick": spawn_tick,
             "generation": dead_hero.identity.generation + 1,
-            "home_pos": dead_hero.home_pos,
+            "home_pos": dead_hero.spatial.home_pos,
         })
         logger.info("Tick %d: Hero replacement scheduled for tick %d (Gen %d)", 
                     tick, spawn_tick, dead_hero.identity.generation + 1)

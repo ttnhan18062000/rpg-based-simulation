@@ -11,7 +11,7 @@ from src.platform.rng import DeterministicRNG
 def test_cha_impacts_familiarity_gain():
     """Verify that a hero with higher CHA gains familiarity faster."""
     config = MagicMock()
-    config.vision_range = 5
+    config.spatial.vision_range = 5
     rng = MagicMock()
     drng = DeterministicRNG(42)
     

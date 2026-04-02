@@ -1,11 +1,13 @@
 from __future__ import annotations
-from dataclasses import dataclass, field
+from src.core.models.base import SimulationModel
+from pydantic import ConfigDict, Field
 from src.core.models.vectors import Vector2
 
-@dataclass(slots=True)
-class HomeStorage:
-    """Persistent storage located at the hero's home."""
-    items: list[str] = field(default_factory=list)
+class HomeStorage(SimulationModel):
+    """Persistent storage located at the hero's home. [AOA STABILIZATION]"""
+    model_config = ConfigDict(arbitrary_types_allowed=True, extra="forbid")
+
+    items: list[str] = Field(default_factory=list)
     max_slots: int = 20
     level: int = 0
 
@@ -43,16 +45,13 @@ class HomeStorage:
         return True
 
     def copy(self) -> HomeStorage:
-        return HomeStorage(
-            items=list(self.items),
-            max_slots=self.max_slots,
-            level=self.level,
-        )
+        return self.model_copy(deep=True)
 
 
-@dataclass(slots=True)
-class TreasureChest:
-    """A respawning treasure chest placed in the world."""
+class TreasureChest(SimulationModel):
+    """A respawning treasure chest placed in the world. [AOA STABILIZATION]"""
+    model_config = ConfigDict(arbitrary_types_allowed=True, extra="forbid")
+
     chest_id: int
     pos: Vector2
     tier: int = 1
@@ -78,29 +77,18 @@ class TreasureChest:
         return False
 
     def copy(self) -> TreasureChest:
-        return TreasureChest(
-            chest_id=self.chest_id,
-            pos=self.pos,
-            tier=self.tier,
-            looted=self.looted,
-        )
+        return self.model_copy(deep=True)
 
-@dataclass(slots=True)
-class CorpseNode:
-    """A retrievable 'grave' left by a deceased entity (Hero/Boss)."""
+class CorpseNode(SimulationModel):
+    """A retrievable 'grave' left by a deceased entity (Hero/Boss). [AOA STABILIZATION]"""
+    model_config = ConfigDict(arbitrary_types_allowed=True, extra="forbid")
+
     node_id: int
     entity_id: int
     pos: Vector2
-    items: list[str] = field(default_factory=list)
+    items: list[str] = Field(default_factory=list)
     gold: int = 0
     created_tick: int = 0
 
     def copy(self) -> CorpseNode:
-        return CorpseNode(
-            node_id=self.node_id,
-            entity_id=self.entity_id,
-            pos=self.pos,
-            items=list(self.items),
-            gold=self.gold,
-            created_tick=self.created_tick
-        )
+        return self.model_copy(deep=True)

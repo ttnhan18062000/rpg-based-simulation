@@ -251,9 +251,10 @@ class EngineManager:
 
     def _try_recover_world(self, cfg: SimulationConfig) -> WorldState | None:
         """Attempt to recover the simulation state from Kafka."""
-        import pickle
         import uuid
         from src.api.kafka_client import create_kafka_consumer, KAFKA_TOPIC_SNAPSHOTS, KAFKA_TOPIC_EVENTS
+        from src.utils.serialization import SimulationSerializer
+        from src.core.models.snapshot import Snapshot
         from confluent_kafka import TopicPartition, OFFSET_BEGINNING
         
         # Unique consumer group for startup so it doesn't mess with other readers
@@ -270,18 +271,19 @@ class EngineManager:
             timeout_strikes = 0
             # Read until we hit EOF for the partition
             while timeout_strikes < 3:
-                msg = consumer.poll(0.5)
+                msg = consumer.poll(1.0)
                 if msg is None:
                     timeout_strikes += 1
                     continue
-                timeout_strikes = 0  # reset on active read
+                timeout_strikes = 0  # Reset on successful poll (AOA stabilization)
                 
                 if msg.error():
                     break
                     
                 try:
-                    obj = pickle.loads(msg.value())
-                    if obj and hasattr(obj, 'tick'):
+                    obj = SimulationSerializer.loads(msg.value(), Snapshot)
+                    if obj and hasattr(obj, "tick"):
+                        # Keep the latest one we find (compacted topics)
                         latest_snap = obj
                 except Exception as e:
                     logger.debug("Failed to deserialize snapshot: %s", e)
@@ -314,7 +316,7 @@ class EngineManager:
                     break
                     
                 try:
-                    payload = pickle.loads(msg.value())
+                    payload = SimulationSerializer.loads(msg.value(), dict)
                     tick = payload.get("tick")
                     proposals = payload.get("proposals", [])
                     

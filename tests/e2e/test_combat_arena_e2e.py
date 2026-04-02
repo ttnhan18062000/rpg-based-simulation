@@ -47,9 +47,9 @@ class TestBasicCombatE2E:
         hero = arena.entity(1)
         mob = arena.entity(2)
         # At least one should have a combat target after engaging
-        has_target = (hero and hero.combat.combat_target_id is not None) or \
-                     (mob and mob.combat.combat_target_id is not None)
-        assert has_target, "Entities in combat should have combat.combat_target_id set"
+        has_target = (hero and hero.combat.combat.combat_target_id is not None) or \
+                     (mob and mob.combat.combat.combat_target_id is not None)
+        assert has_target, "Entities in combat should have combat.combat.combat_target_id set"
 
 
 # ---------------------------------------------------------------------------
@@ -68,7 +68,7 @@ class TestRangedCombatE2E:
         arena.run_ticks(20)
         mob = arena.entity(2)
         if mob:
-            assert mob.combat.hp < mob.combat.max_hp, \
+            assert mob.combat.combat.hp < mob.combat.combat.max_hp, \
                 "Ranged hero should damage mob from distance 3"
 
     def test_ranged_mob_attacks_hero(self):
@@ -80,7 +80,7 @@ class TestRangedCombatE2E:
         hero = arena.entity(1)
         # Either mob damaged hero or hero killed mob — both prove combat happened
         combat = arena.combat_events()
-        assert len(combat) > 0 or hero.combat.hp < hero.combat.max_hp, \
+        assert len(combat) > 0 or hero.combat.combat.hp < hero.combat.combat.max_hp, \
             "Combat should have occurred between hero and ranged mob"
 
     def test_mage_uses_matk_for_damage(self):
@@ -94,7 +94,7 @@ class TestRangedCombatE2E:
         mob = arena.entity(2)
         if mob:
             # Mage should deal decent damage via MATK even with low ATK
-            assert mob.combat.hp < mob.combat.max_hp, \
+            assert mob.combat.combat.hp < mob.combat.combat.max_hp, \
                 "Mage should deal damage via MATK"
 
 
@@ -167,10 +167,10 @@ class TestKitingE2E:
         arena.add_hero(1, pos=(10, 10), weapon="shortbow", hp=100, atk=12,
                        hero_class=HeroClass.RANGER, ai_state=AIState.COMBAT)
         arena.add_mob(2, pos=(11, 10), weapon="rusty_sword", hp=200, atk=8)
-        initial_pos = (arena.entity(1).spatial.pos.x, arena.entity(1).spatial.pos.y)
+        initial_pos = (arena.entity(1).spatial.spatial.pos.x, arena.entity(1).spatial.spatial.pos.y)
         arena.run_ticks(5)
         hero = arena.entity(1)
-        new_pos = (hero.spatial.pos.x, hero.spatial.pos.y)
+        new_pos = (hero.spatial.spatial.pos.x, hero.spatial.spatial.pos.y)
         # Hero should have moved away from the mob (kiting)
         # Distance should increase or hero attacked then moved
         combat = arena.combat_events()
@@ -184,14 +184,14 @@ class TestKitingE2E:
         arena.add_hero(1, pos=(10, 10), weapon="shortbow", hp=100, atk=12,
                        hero_class=HeroClass.RANGER, ai_state=AIState.COMBAT)
         # Set HP below 60%
-        arena.entity(1).combat.hp = 50
+        arena.entity(1).combat.combat.hp = 50
         arena.add_mob(2, pos=(11, 10), weapon="rusty_sword", hp=200, atk=8)
         arena.run_ticks(5)
         # At low HP, hero should flee, not kite
         hero = arena.entity(1)
         assert hero is not None  # Hero should still exist
         # Verify hero is moving away or in flee state
-        assert hero.mind.decision.ai_state == AIState.FLEE or hero.spatial.pos != (21, 20)
+        assert hero.mind.decision.ai_state == AIState.FLEE or hero.spatial.spatial.pos != (21, 20)
 
 
 # ---------------------------------------------------------------------------
@@ -359,7 +359,7 @@ class TestThreatSystemE2E:
         arena.add_mob(10, pos=(6, 5), weapon="rusty_sword", hp=500, atk=10)
         arena.run_ticks(10)
         mob = arena.entity(10)
-        if mob and mob.combat.alive and mob.mind.perception.threat_table:
+        if mob and mob.combat.combat.alive and mob.mind.perception.threat_table:
             # Hero 1 should have higher threat than hero 2
             h1_threat = mob.mind.perception.threat_table.get(1, 0)
             h2_threat = mob.mind.perception.threat_table.get(2, 0)
@@ -487,7 +487,7 @@ class TestAoESkillsE2E:
                     and e.metadata.get('damage', 0) > 0]
         
         if len(aoe_hits) < 2:
-            print(f"DEBUG_WHIRLWIND_FAIL: Center={arena.world.entities[1].combat.combat_target_id}")
+            print(f"DEBUG_WHIRLWIND_FAIL: Center={arena.world.entities[1].combat.combat.combat_target_id}")
             for e in arena.all_events():
                 print(f"  Event: {e.category} | {e.message} | {e.metadata}")
 
@@ -496,7 +496,7 @@ class TestAoESkillsE2E:
         for eid in (10, 11):
             mob = arena.world.entities.get(eid)
             if mob is not None:
-                assert mob.combat.hp < 200, f"Mob {eid} should have taken damage, hp={mob.combat.hp}"
+                assert mob.combat.combat.hp < 200, f"Mob {eid} should have taken damage, hp={mob.combat.combat.hp}"
 
     def test_single_target_skill_does_not_aoe(self):
         """Single-target skills like Power Strike should only hit one enemy."""
@@ -536,7 +536,7 @@ class TestAoESkillsE2E:
         for eid in (10, 11, 12):
             mob = arena.world.entities.get(eid)
             if mob is not None:
-                assert mob.combat.hp < 200, f"Mob {eid} should have taken damage, hp={mob.combat.hp}"
+                assert mob.combat.combat.hp < 200, f"Mob {eid} should have taken damage, hp={mob.combat.combat.hp}"
 
     def test_ai_prefers_aoe_when_clustered(self):
         """AI should use AoE skill when multiple enemies are nearby."""
@@ -636,14 +636,14 @@ class TestAIRefinementE2E:
         # 1. Setup: Boss acts first by scheduling Hero in the future
         hero = arena.add_hero(1, pos=(2, 2), hp=1000, spd=1, next_act_at=5.0)
         # Prevent passive healing from confusing the assertion by starting at max_hp
-        hero.combat.hp = hero.combat.max_hp 
+        hero.combat.combat.hp = hero.combat.combat.max_hp 
         
         # Boss at distance 1 ensures immediate hit. Luck=1000 eliminates hero evasion.
         boss = arena.add_mob(2, pos=(3, 2), atk=120, spd=40, 
                              attributes=Attributes(str_=5, agi=5, vit=5, int_=5, spi=5, wis=5, end=5, per=5, cha=5))
         boss.combat.luck = 1000
         boss.mind.decision.ai_state = AIState.COMBAT
-        boss.combat.combat_target_id = 1
+        boss.combat.combat.combat_target_id = 1
         
         # Cautious hero (high neuroticism) should flee earlier
         hero.identity.neuroticism = 0.8
@@ -653,21 +653,21 @@ class TestAIRefinementE2E:
         events = arena.run_ticks(5)
         # Verify boss hit hero
         hero = arena.entity(1)
-        assert hero.combat.hp <= 1012, f"Boss should damage hero or stay at max, got {hero.combat.hp}"
+        assert hero.combat.combat.hp <= 1012, f"Boss should damage hero or stay at max, got {hero.combat.combat.hp}"
         assert 2 in hero.mind.emotion.grudges, f"Hero should have grudge for boss (2), got {hero.mind.emotion.grudges}"
         assert any(m.type == "TRAUMA" for m in arena.entity(1).mind.narrative.memory_log)
         
         # 2. Hero flees: Teleport away IMMEDIATELY to avoid the follow-up hits
-        arena.entity(1).spatial.pos = Vector2(15, 15)
+        arena.entity(1).spatial.spatial.pos = Vector2(15, 15)
         arena.entity(1).mind.decision.ai_state = AIState.WANDER
         arena.run_ticks(5)
         
         # 3. Second Encounter: Force re-engagement
         # Move hero back near the boss
-        arena.entity(1).spatial.pos = Vector2(4, 2)
+        arena.entity(1).spatial.spatial.pos = Vector2(4, 2)
         # Set hero HP to 40% (Normally they wouldn't flee until 20%)
         # At 40%, base flee score is calculated but usually too low to win
-        arena.entity(1).combat.hp = 400
+        arena.entity(1).combat.combat.hp = 400
         
         # Run 5 ticks for re-appraisal (bypass Hysteresis lock of 3 ticks)
         arena.run_ticks(5)
@@ -696,14 +696,14 @@ class TestAIRefinementE2E:
             
         # 1. Run 5 ticks
         # Initial distances
-        init_dists = {i: arena.entity(i).spatial.pos.manhattan(town_pos) for i in range(10, 30)}
+        init_dists = {i: arena.entity(i).spatial.spatial.pos.manhattan(town_pos) for i in range(10, 30)}
         
         arena.run_ticks(5)
         
         # 2. Verify all are closer
         for i in range(10, 30):
             e = arena.entity(i)
-            new_dist = e.spatial.pos.manhattan(town_pos)
+            new_dist = e.spatial.spatial.pos.manhattan(town_pos)
             assert new_dist < init_dists[i], \
                 f"Hero #{i} should be closer to town after 5 ticks (dist {init_dists[i]} -> {new_dist})"
             # Log check for 'Flow Field' reason in events
@@ -723,7 +723,7 @@ class TestAIRefinementE2E:
             terrain=Material.SWAMP, center=Vector2(5, 5), radius=10, difficulty=2
         )
         arena.world.regions = [region]
-        hero.spatial.current_region_id = "gloomfen"
+        hero.spatial.spatial.current_region_id = "gloomfen"
         
         # Mark Gloomfen as a "Trauma Zone" (-0.8 sentiment)
         hero.mind.narrative.memory_locations["gloomfen"] = -0.8
@@ -776,8 +776,8 @@ class TestAIRefinementE2E:
         mob.mind.decision.ai_state = AIState.IDLE
         
         # 2. Set both to 40% HP (where flee scoring begins)
-        cautious.combat.hp = 40
-        brave.combat.hp = 40
+        cautious.combat.combat.hp = 40
+        brave.combat.combat.hp = 40
         
         # 3. Running ticks
         # Cautious hero should have a much higher Flee score due to PersonalityModifier

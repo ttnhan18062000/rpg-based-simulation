@@ -122,28 +122,28 @@ class TestSlimEntities(unittest.TestCase):
             id=e.id, 
             kind=e.kind, 
             display_name=e.identity.display_name,
-            x=int(e.spatial.pos.x), 
-            y=int(e.spatial.pos.y),
-            hp=int(e.combat.hp), 
-            max_hp=int(e.combat.max_hp),
+            x=int(e.spatial.spatial.pos.x), 
+            y=int(e.spatial.spatial.pos.y),
+            hp=int(e.combat.combat.hp), 
+            max_hp=int(e.combat.combat.max_hp),
             state=e.mind.decision.ai_state.name, 
-            level=e.progression.level,
+            level=e.progression.progression.level,
             tier=e.identity.tier, 
-            faction=e.identity.faction.name.lower(),
+            faction=e.identity.identity.faction.name.lower(),
         )
         js = slim.model_dump_json()
         self.assertLess(len(js), 400, f"Slim entity too large: {len(js)} bytes")
 
     def test_state_payload_without_selection(self):
         """Without selection, state should have no selected_entity and small payload."""
-        entities = [e for e in self.snap.entities.values() if e.combat.alive]
+        entities = [e for e in self.snap.entities.values() if e.combat.combat.alive]
         slim_list = [
             EntitySlimSchema(
                 id=e.id, kind=e.kind, display_name=e.identity.display_name,
-                x=int(e.spatial.pos.x), y=int(e.spatial.pos.y),
-                hp=int(e.combat.hp), max_hp=int(e.combat.max_hp),
-                state=e.mind.decision.ai_state.name, level=e.progression.level,
-                tier=e.identity.tier, faction=e.identity.faction.name.lower(),
+                x=int(e.spatial.spatial.pos.x), y=int(e.spatial.spatial.pos.y),
+                hp=int(e.combat.combat.hp), max_hp=int(e.combat.combat.max_hp),
+                state=e.mind.decision.ai_state.name, level=e.progression.progression.level,
+                tier=e.identity.tier, faction=e.identity.identity.faction.name.lower(),
             )
             for e in entities
         ]

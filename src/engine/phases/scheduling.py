@@ -5,12 +5,27 @@ from src.engine.phases.base import EnginePhase
 
 if TYPE_CHECKING:
     from src.engine.phases.context import EngineContext
+    from src.engine.phases.contract import PhaseContract
 
 logger = logging.getLogger(__name__)
 
 class SchedulingPhase(EnginePhase):
     """Identify entities ready to act and run immediate generators."""
     
+    @property
+    def contract(self) -> PhaseContract:
+        from src.engine.phases.contract import PhaseContract, PhaseAccess
+        return PhaseContract(
+            name="Scheduling",
+            description="Identifying ready entities and spawning new ones.",
+            permissions={
+                "world": PhaseAccess.READ_WRITE, # Spawning mutates world entities
+                "generator": PhaseAccess.READ_WRITE,
+                "tick_ready_entities": PhaseAccess.MUTATE,
+                "emit": PhaseAccess.READ
+            }
+        )
+
     def execute(self, ctx: EngineContext) -> None:
         # 1. Generators (Immediate, no worker dispatch)
         if ctx.generator.should_spawn(ctx.world):

@@ -195,16 +195,16 @@ class TestQuestTracking:
                   description="", target_kind="goblin", target_count=1,
                   gold_reward=50, xp_reward=80)
         e.quests.append(q)
-        initial_gold = e.stats.gold
-        initial_xp = e.stats.xp
+        initial_gold = e.stats.progression.gold
+        initial_xp = e.stats.progression.xp
         # Simulate kill quest completion
         just_done = q.advance()
         if just_done:
-            e.stats.gold += q.gold_reward
-            e.stats.xp += q.xp_reward
+            e.stats.progression.gold += q.gold_reward
+            e.stats.progression.xp += q.xp_reward
         assert q.completed
-        assert e.stats.gold == initial_gold + 50
-        assert e.stats.xp == initial_xp + 80
+        assert e.stats.progression.gold == initial_gold + 50
+        assert e.stats.progression.xp == initial_xp + 80
 
     def test_explore_quest_completes_near_target(self):
         e = _make_entity(1)
@@ -213,11 +213,11 @@ class TestQuestTracking:
                   description="", target_pos=target, target_count=1)
         e.quests.append(q)
         # Hero is at (5,5), target at (7,7) → manhattan = 4, too far
-        assert e.pos.manhattan(target) == 4
+        assert e.spatial.pos.manhattan(target) == 4
         assert not q.completed
         # Move hero closer
-        e.pos = Vector2(6, 7)  # manhattan = 1
-        assert e.pos.manhattan(target) <= 2
+        e.spatial.pos = Vector2(6, 7)  # manhattan = 1
+        assert e.spatial.pos.manhattan(target) <= 2
         q.advance()
         assert q.completed
 

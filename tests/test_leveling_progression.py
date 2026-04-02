@@ -74,30 +74,30 @@ def test_undead_no_level_up():
     """Undead should have a train_rate of 0.0 and never level up."""
     cfg = SimulationConfig()
     e1 = _make_entity(1, kind="skeleton") 
-    e1.progression.xp = 9999
+    e1.progression.progression.xp = 9999
     
     world = MockWorld({1: e1})
     system = ProgressionSystem(cfg, DeterministicRNG(42))
     system._check_level_ups(_get_context(cfg, world))
     
-    assert e1.progression.level == 1
-    assert e1.progression.xp == 9999
+    assert e1.progression.progression.level == 1
+    assert e1.progression.progression.xp == 9999
 
 def test_milestone_level_up():
     """Reaching a milestone like level 5 grants specific stat boosts."""
     cfg = SimulationConfig()
     # Ensure level 5 is a milestone in config or check normal growth
     e1 = _make_entity(1, kind="hero")
-    e1.progression.level = 4
-    e1.progression.xp = 100
+    e1.progression.progression.level = 4
+    e1.progression.progression.xp = 100
     e1.progression.xp_to_next = 100
     
     world = MockWorld({1: e1})
     system = ProgressionSystem(cfg, DeterministicRNG(42))
     system._check_level_ups(_get_context(cfg, world))
     
-    assert e1.progression.level == 5
-    assert e1.combat.max_hp > 50
+    assert e1.progression.progression.level == 5
+    assert e1.combat.combat.max_hp > 50
 
 def test_veterancy_multipliers():
     """Veterancy Ranks should boost effective stats."""
@@ -105,7 +105,7 @@ def test_veterancy_multipliers():
     e1.combat.atk_base = 100
     
     e1.progression.veterancy_rank = VeterancyRank.GREEN
-    assert e1.combat.atk == 100
+    assert e1.combat.combat.atk_base == 100
     
     e1.progression.veterancy_rank = VeterancyRank.VETERAN
     assert e1.progression.veterancy_rank == VeterancyRank.VETERAN

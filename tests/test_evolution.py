@@ -61,11 +61,11 @@ def test_entity_evolution_transformation():
     # Note: _check_level_ups loop runs while xp >= xp_to_next. 
     # 999 >= 100 -> level becomes 12. Then loop ends. Then evolution check happens.
     
-    assert actor.stats.level == 1
+    assert actor.stats.progression.level == 1
     assert actor.tier > EnemyTier.BASIC
     assert actor.kind != "goblin"
     assert "goblin" in actor.kind
-    assert actor.stats.max_hp > 50
+    assert actor.stats.combat.max_hp > 50
 
 def test_evolution_equipment_refresh():
     """Verify that evolution provides new equipment."""

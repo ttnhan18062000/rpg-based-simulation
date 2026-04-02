@@ -107,7 +107,8 @@ class HuntHandler(StateHandler):
             memory = actor.mind.perception.entity_memory
             if memory:
                 last_seen_id = min(memory.keys())
-                target_pos = memory[last_seen_id]
+                memory_rec = memory[last_seen_id]
+                target_pos = memory_rec.pos
                 if actor.spatial.pos.manhattan(target_pos) <= 1:
                     return AIState.WANDER, ActionProposal(
                         actor_id=actor.id, verb=ActionType.REST,

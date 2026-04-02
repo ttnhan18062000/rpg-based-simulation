@@ -108,7 +108,8 @@ def test_conquered_region_triggers_stronghold(mock_context):
 
 
 def test_stronghold_debuff_application(mock_context):
-    from src.core.entities.entity import Entity, Stats
+    from tests.helpers.legacy_stats import Stats
+    from src.core.entities.entity import Entity
     from src.core.models.enums import Faction as FactionEnum
     from src.core.models.enums import EntityRole
     system = StrategySystem(mock_context.config, mock_context.rng)

@@ -50,8 +50,8 @@ class TestBasicCombatE2E:
         hero = arena.entity(1)
         mob = arena.entity(2)
         # At least one should have a combat target after engaging
-        has_target = (hero and hero.combat_target_id is not None) or \
-                     (mob and mob.combat_target_id is not None)
+        has_target = (hero and hero.combat.combat_target_id is not None) or \
+                     (mob and mob.combat.combat_target_id is not None)
         assert has_target, "Entities in combat should have combat_target_id set"
 
 
@@ -71,8 +71,8 @@ class TestRangedCombatE2E:
         arena.run_ticks(20)
         mob = arena.entity(2)
         if mob:
-            assert mob.stats.hp < mob.stats.max_hp, \
-                "Ranged hero should damage mob from distance 3"
+            assert mob.combat.hp < mob.combat.max_hp, \
+                 "Ranged hero should damage mob from distance 3"
 
     def test_ranged_mob_attacks_hero(self):
         arena = CombatArena()
@@ -83,7 +83,7 @@ class TestRangedCombatE2E:
         hero = arena.entity(1)
         # Either mob damaged hero or hero killed mob — both prove combat happened
         combat = arena.combat_events()
-        assert len(combat) > 0 or hero.stats.hp < hero.stats.max_hp, \
+        assert len(combat) > 0 or hero.combat.hp < hero.combat.max_hp, \
             "Combat should have occurred between hero and ranged mob"
 
     def test_mage_uses_matk_for_damage(self):
@@ -97,7 +97,7 @@ class TestRangedCombatE2E:
         mob = arena.entity(2)
         if mob:
             # Mage should deal decent damage via MATK even with low ATK
-            assert mob.stats.hp < mob.stats.max_hp, \
+            assert mob.combat.hp < mob.combat.max_hp, \
                 "Mage should deal damage via MATK"
 
 
@@ -156,7 +156,7 @@ class TestCoverE2E:
         assert mob_a is not None
         assert mob_b is not None
         # Verify cover had some effect or at least didn't crash
-        # (Optional: assert mob_b.combat.hp >= mob_a.combat.hp)
+        # (Optional: assert mob_b.combat.combat.hp >= mob_a.combat.combat.hp)
 
 
 # ---------------------------------------------------------------------------
@@ -172,10 +172,10 @@ class TestKitingE2E:
         arena.add_hero(1, pos=(10, 10), weapon="shortbow", hp=100, atk=12,
                        hero_class=HeroClass.RANGER, ai_state=AIState.COMBAT)
         arena.add_mob(2, pos=(11, 10), weapon="rusty_sword", hp=200, atk=8)
-        initial_pos = (arena.entity(1).pos.x, arena.entity(1).pos.y)
+        initial_pos = (arena.entity(1).spatial.pos.x, arena.entity(1).spatial.pos.y)
         arena.run_ticks(5)
         hero = arena.entity(1)
-        new_pos = (hero.pos.x, hero.pos.y)
+        new_pos = (hero.spatial.pos.x, hero.spatial.pos.y)
         # Hero should have moved away from the mob (kiting)
         # Distance should increase or hero attacked then moved
         combat = arena.combat_events()
@@ -189,7 +189,7 @@ class TestKitingE2E:
         arena.add_hero(1, pos=(10, 10), weapon="shortbow", hp=100, atk=12,
                        hero_class=HeroClass.RANGER, ai_state=AIState.COMBAT)
         # Set HP below 60%
-        arena.entity(1).stats.hp = 50
+        arena.entity(1).combat.hp = 50
         arena.add_mob(2, pos=(11, 10), weapon="rusty_sword", hp=200, atk=8)
         arena.run_ticks(5)
         # At low HP, hero should flee, not kite
@@ -348,8 +348,8 @@ class TestThreatSystemE2E:
         arena.run_ticks(3)
         mob = arena.entity(10)
         assert mob is not None
-        assert 1 in mob.threat_table, "Mob should have threat entry for hero"
-        assert mob.threat_table[1] > 0, "Threat should be positive"
+        assert 1 in mob.mind.perception.threat_table, "Mob should have threat entry for hero"
+        assert mob.mind.perception.threat_table[1] > 0, "Threat should be positive"
 
     def test_mob_targets_highest_threat(self):
         """Mob should target the hero who dealt more damage (higher threat)."""
@@ -362,10 +362,10 @@ class TestThreatSystemE2E:
         arena.add_mob(10, pos=(6, 5), weapon="rusty_sword", hp=500, atk=10)
         arena.run_ticks(10)
         mob = arena.entity(10)
-        if mob and mob.alive and mob.threat_table:
+        if mob and mob.combat.alive and mob.mind.perception.threat_table:
             # Hero 1 should have higher threat than hero 2
-            h1_threat = mob.threat_table.get(1, 0)
-            h2_threat = mob.threat_table.get(2, 0)
+            h1_threat = mob.mind.perception.threat_table.get(1, 0)
+            h2_threat = mob.mind.perception.threat_table.get(2, 0)
             assert h1_threat > h2_threat, \
                 f"Hero 1 (atk=30) should have more threat than Hero 2 (atk=5): {h1_threat} vs {h2_threat}"
 
@@ -378,7 +378,7 @@ class TestThreatSystemE2E:
         arena.add_mob(10, pos=(6, 5), weapon="rusty_sword", hp=500, atk=5)
         arena.run_ticks(3)
         mob = arena.entity(10)
-        warrior_threat = mob.threat_table.get(1, 0) if mob else 0
+        warrior_threat = mob.mind.perception.threat_table.get(1, 0) if mob else 0
 
         # Same setup but with non-tank (RANGER)
         arena2 = CombatArena(seed=42)
@@ -387,7 +387,7 @@ class TestThreatSystemE2E:
         arena2.add_mob(10, pos=(6, 5), weapon="rusty_sword", hp=500, atk=5)
         arena2.run_ticks(3)
         mob2 = arena2.entity(10)
-        ranger_threat = mob2.threat_table.get(1, 0) if mob2 else 0
+        ranger_threat = mob2.mind.perception.threat_table.get(1, 0) if mob2 else 0
 
         if warrior_threat > 0 and ranger_threat > 0:
             assert warrior_threat > ranger_threat, \
@@ -401,13 +401,13 @@ class TestThreatSystemE2E:
         arena.add_mob(10, pos=(18, 18), weapon="rusty_sword", hp=500, atk=5)
         # Manually inject threat
         mob = arena.entity(10)
-        mob.threat_table[1] = 100.0
+        mob.mind.perception.threat_table[1] = 100.0
         initial_threat = 100.0
         # Run ticks — threat should decay (10% per tick)
         arena.run_ticks(5)
         mob = arena.entity(10)
-        if mob and 1 in mob.threat_table:
-            assert mob.threat_table[1] < initial_threat, \
+        if mob and 1 in mob.mind.perception.threat_table:
+            assert mob.mind.perception.threat_table[1] < initial_threat, \
                 "Threat should decay when no new damage is dealt"
         else:
             # Threat decayed below threshold and was pruned — also valid
@@ -422,7 +422,7 @@ class TestThreatSystemE2E:
         mob = arena.entity(10)
         # Hero should be dead, threat entry should be removed
         if mob and not arena.entity_alive(1):
-            assert 1 not in mob.threat_table, \
+            assert 1 not in mob.mind.perception.threat_table, \
                 "Dead hero's threat entry should be pruned"
 
 

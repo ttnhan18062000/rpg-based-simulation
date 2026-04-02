@@ -35,9 +35,9 @@ def test_aging_and_death():
     actor = MagicMock()
     actor.progression.age_ticks = 999
     actor.progression.longevity_limit = 1000
-    actor.stats.combat.hp = 10
+    actor.stats.combat.combat.hp = 10
     actor.stats.combat.hp_ratio = 1.0 # Added to handle perception phase prints if any
-    actor.stats.vision_range = 10
+    actor.stats.spatial.vision_range = 10
     actor.mind.max_attention_slots = 5
     actor.mind.spatial.pos_history = []
     actor.mind.emotional_state = {}
@@ -46,7 +46,7 @@ def test_aging_and_death():
     # Mock faction registry to allow check
     brain._faction_reg = MagicMock()
     brain._faction_reg.is_hostile.return_value = False
-    actor.spatial.pos.manhattan.return_value = 1
+    actor.spatial.spatial.pos.manhattan.return_value = 1
     
     # Mocking Perception.visible_entities as it's called in perception phase
     with patch('src.ai.brain.Perception.visible_entities', return_value=[]):
@@ -54,4 +54,4 @@ def test_aging_and_death():
         brain._memory_appraisal_phase(ctx)
         
         assert actor.progression.age_ticks == 1000
-        assert actor.stats.combat.hp == 0
+        assert actor.stats.combat.combat.hp == 0

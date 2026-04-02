@@ -24,7 +24,7 @@ def test_entity_to_full_schema_no_crash():
     assert schema.fire_dmg_mult == 1.2  # Base 1.0 + ELEMENTALIST 0.2
     assert schema.dark_dmg_mult == 1.2   # Base 1.0 + ARCANE_GIFTED 0.2
     assert schema.hero_class == "warrior"
-    assert schema.level == 5
+    assert schema.progression.level == 5
 
 def test_entity_to_full_schema_minimal():
     rng = DeterministicRNG(42)

@@ -34,7 +34,7 @@ class TestRegionDataclass(unittest.TestCase):
             radius=20,
             difficulty=2,
         )
-        self.assertEqual(r.region_id, "test_forest")
+        self.assertEqual(r.spatial.region_id, "test_forest")
         self.assertEqual(r.name, "Test Forest")
         self.assertEqual(r.terrain, Material.FOREST)
         self.assertEqual(r.radius, 20)
@@ -61,7 +61,7 @@ class TestRegionDataclass(unittest.TestCase):
             locations=[loc],
         )
         c = r.copy()
-        self.assertEqual(c.region_id, r.region_id)
+        self.assertEqual(c.spatial.region_id, r.spatial.region_id)
         self.assertEqual(len(c.locations), 1)
         self.assertEqual(c.locations[0].name, "Camp")
         # Verify it's a deep copy
@@ -75,7 +75,7 @@ class TestRegionDataclass(unittest.TestCase):
         )
         self.assertEqual(loc.location_id, "loc1")
         self.assertEqual(loc.location_type, "enemy_camp")
-        self.assertEqual(loc.pos.x, 10)
+        self.assertEqual(loc.spatial.pos.x, 10)
 
 
 class TestDifficultyZones(unittest.TestCase):
@@ -149,15 +149,15 @@ class TestDifficultyTiers(unittest.TestCase):
         for tier in range(1, 4):
             lower = DIFFICULTY_TIERS[tier]
             upper = DIFFICULTY_TIERS[tier + 1]
-            self.assertGreater(upper.hp, lower.hp)
-            self.assertGreater(upper.atk, lower.atk)
-            self.assertGreater(upper.xp, lower.xp)
+            self.assertGreater(upper.combat.hp, lower.combat.hp)
+            self.assertGreater(upper.combat.atk_base, lower.combat.atk_base)
+            self.assertGreater(upper.progression.xp, lower.progression.xp)
 
     def test_tier_1_is_baseline(self):
         t = DIFFICULTY_TIERS[1]
-        self.assertEqual(t.hp, 1.0)
-        self.assertEqual(t.atk, 1.0)
-        self.assertEqual(t.def_, 1.0)
+        self.assertEqual(t.combat.hp, 1.0)
+        self.assertEqual(t.combat.atk_base, 1.0)
+        self.assertEqual(t.combat.def_base, 1.0)
 
 
 class TestLocationTypes(unittest.TestCase):
@@ -214,18 +214,20 @@ class TestEntityRegionFields(unittest.TestCase):
     """Test that Entity has region_id and difficulty_tier fields."""
 
     def test_default_region_id(self):
-        from src.core.entities.entity import Entity, Stats
-        e = Entity(id=1, kind="test", pos=Vector2(0, 0), stats=Stats())
-        self.assertEqual(e.region_id, "")
-        self.assertEqual(e.difficulty_tier, 1)
+        from src.core.entities.entity import Entity
+        from src.core.aspects.combat import CombatAspect
+        e = Entity(id=1, kind="test", spatial=SpatialAspect(pos=Vector2(0, 0)), combat=CombatAspect())
+        self.assertEqual(e.spatial.region_id, "")
+        self.assertEqual(e.spatial.difficulty_tier, 1)
 
     def test_region_id_settable(self):
-        from src.core.entities.entity import Entity, Stats
-        e = Entity(id=1, kind="test", pos=Vector2(0, 0), stats=Stats())
-        e.region_id = "whispering_woods"
-        e.difficulty_tier = 3
-        self.assertEqual(e.region_id, "whispering_woods")
-        self.assertEqual(e.difficulty_tier, 3)
+        from src.core.entities.entity import Entity
+        from src.core.aspects.combat import CombatAspect
+        e = Entity(id=1, kind="test", spatial=SpatialAspect(pos=Vector2(0, 0)), combat=CombatAspect())
+        e.spatial.region_id = "whispering_woods"
+        e.spatial.difficulty_tier = 3
+        self.assertEqual(e.spatial.region_id, "whispering_woods")
+        self.assertEqual(e.spatial.difficulty_tier, 3)
 
 
 class TestWorldStateRegions(unittest.TestCase):

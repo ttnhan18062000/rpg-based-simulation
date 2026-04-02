@@ -1,6 +1,6 @@
 from __future__ import annotations
 from typing import Any, TYPE_CHECKING
-from pydantic import Field, ConfigDict
+from pydantic import Field, ConfigDict, model_validator
 from src.core.models.base import Aspect, SimulationModel
 from src.core.models.enums import Element
 
@@ -18,7 +18,16 @@ class CombatTraceRecord(SimulationModel):
     is_crit: bool
     is_evasion: bool
     skill_used: str = "attack"
-    details: Any = None # CombatTraceDetails (Deferred)
+    
+    # Detailed Metrics (AOA Convergence)
+    raw_damage: int = 0
+    mitigated_damage: int = 0
+    absorbed_damage: int = 0
+    crit_multiplier: float = 1.0
+    evasion_chance: float = 0.0
+    elemental_mult: float = 1.0
+    
+    details: Any = None # Reference to full CombatTraceUpdate if needed
 
 class CombatAspect(Aspect):
     """Aspect handling health, attack power, defense, and elemental vulnerabilities. [AOA STABILIZATION]
@@ -27,6 +36,25 @@ class CombatAspect(Aspect):
     to ensure clear mutation boundaries and deterministic resolution.
     """
     model_config = ConfigDict(extra='forbid')
+    
+    @model_validator(mode='before')
+    @classmethod
+    def _map_legacy_stats(cls, data: Any) -> Any:
+        """AOA Stabilization: Maps legacy 'atk' / 'def_' / 'spd' labels to authoritative 'base' fields."""
+        if not isinstance(data, dict):
+            return data
+            
+        # Re-mapping (Legacy Shim)
+        if "atk" in data and "atk_base" not in data:
+            data["atk_base"] = data.pop("atk")
+        if "def_" in data and "def_base" not in data:
+            data["def_base"] = data.pop("def_")
+        if "spd" in data and "spd_base" not in data:
+            data["spd_base"] = data.pop("spd")
+            
+        # Ensure we don't leak properties back into input
+        return data
+
     hp: int = 20
     max_hp: int = 20
     # Base Stats
@@ -110,6 +138,20 @@ class CombatAspect(Aspect):
         copy_obj.effects = list(self.effects)
         return copy_obj
 
+    def validate(self) -> None:
+        """Enforce HP clamping and attribute bounds."""
+        # 1. HP Clamping
+        if self.hp > self.max_hp:
+            self.hp = self.max_hp
+        if self.hp < 0:
+            self.hp = 0
+            
+        # 2. Base Attribute Bounds
+        self.atk_base = max(1, self.atk_base)
+        self.def_base = max(0, self.def_base)
+        self.spd_base = max(1, self.spd_base)
+        self.max_hp = max(1, self.max_hp)
+
     @property
     def hp_ratio(self) -> float:
         if self.max_hp <= 0:
@@ -120,3 +162,8 @@ class CombatAspect(Aspect):
         """Equivalent to the old Stats.copy()."""
         return CombatAspect(**self.model_dump())
 
+
+
+# Rebuild Model to finalize Pydantic setup
+CombatTraceRecord.model_rebuild()
+CombatAspect.model_rebuild()

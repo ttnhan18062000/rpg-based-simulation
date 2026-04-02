@@ -2,7 +2,11 @@
 
 
 
-from src.core.entities.entity import Entity, Stats, Vector2
+from src.core.entities.entity import Entity, Vector2
+from src.core.aspects.combat import CombatAspect
+from src.core.aspects.progression import ProgressionAspect
+from src.core.aspects.spatial import SpatialAspect
+from src.core.aspects.identity import IdentityAspect
 from src.core.models.enums import AIState
 from src.core.gameplay.faction import Faction
 from src.core.gameplay.quests import (
@@ -12,8 +16,13 @@ from src.core.gameplay.quests import (
 
 
 def _make_entity(eid: int, level: int = 1, kind: str = "hero") -> Entity:
-    stats = Stats(hp=50, max_hp=50, atk=10, def_=5, spd=10, level=level, gold=0, xp=0)
-    return Entity(id=eid, kind=kind, pos=Vector2(5, 5), stats=stats, faction=Faction.HERO_GUILD)
+    return Entity(
+        id=eid, kind=kind,
+        spatial=SpatialAspect(pos=Vector2(5, 5)),
+        combat=CombatAspect(hp=50, max_hp=50, atk=10, def_=5, spd=10),
+        progression=ProgressionAspect(level=level),
+        identity=IdentityAspect(faction=Faction.HERO_GUILD)
+    )
 
 
 class _FakeRNG:

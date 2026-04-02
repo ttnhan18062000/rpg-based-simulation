@@ -4,7 +4,8 @@ from src.core.models.world_state import WorldState
 from src.core.world.grid import Grid
 from src.platform.spatial_hash import SpatialHash
 from src.platform.rng import DeterministicRNG
-from src.core.entities.entity import Entity, Inventory, Vector2
+from src.core.entities.entity import Entity, Vector2
+from src.core.models import Inventory
 from src.core.models.enums import Faction
 from src.systems.lifecycle.hero_lifecycle_system import HeroLifecycleSystem
 from src.systems.infrastructure.base import SystemContext
@@ -33,9 +34,9 @@ def mock_ctx():
 
 def _create_mock_hero(eid: int, pos: Vector2) -> Entity:
     ent = Entity(id=eid, kind="hero")
-    ent.identity.faction = Faction.HERO_GUILD
-    ent.spatial.pos = pos
-    ent.home_pos = Vector2(0, 0)
+    ent.identity.identity.faction = Faction.HERO_GUILD
+    ent.spatial.spatial.pos = pos
+    ent.spatial.home_pos = Vector2(0, 0)
     ent.identity.display_name = f"Hero {eid}"
     ent.inventory = Inventory(max_slots=10)
     ent.hero_familiarity = {}

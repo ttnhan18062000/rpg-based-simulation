@@ -158,7 +158,10 @@ class TestMemoryRecording:
     def test_survival_event_recorded_on_near_death(self):
         """ActionSystem should record SURVIVAL when defender has < 20% HP."""
         from src.systems.gameplay.action_system import ActionSystem
-        from src.core.entities.entity import Entity, Stats, Vector2
+        from src.core.entities.entity import Entity, Vector2
+        from src.core.aspects.combat import CombatAspect
+        from src.core.aspects.spatial import SpatialAspect
+        from src.core.aspects.identity import IdentityAspect
         from src.core.gameplay.faction import Faction
 
         # Setup
@@ -170,8 +173,18 @@ class TestMemoryRecording:
         context.config.threat_damage_mult = 1.0
         context.config.threat_tank_class_mult = 1.5
 
-        attacker = Entity(id=1, kind="hero", pos=Vector2(0,0), stats=Stats(hp=100, max_hp=100), faction=Faction.HERO_GUILD)
-        defender = Entity(id=2, kind="goblin", pos=Vector2(1,1), stats=Stats(hp=20, max_hp=100), faction=Faction.GOBLIN_HORDE)
+        attacker = Entity(
+            id=1, kind="hero",
+            spatial=SpatialAspect(pos=Vector2(0,0)),
+            combat=CombatAspect(hp=100, max_hp=100),
+            identity=IdentityAspect(faction=Faction.HERO_GUILD)
+        )
+        defender = Entity(
+            id=2, kind="goblin",
+            spatial=SpatialAspect(pos=Vector2(1,1)),
+            combat=CombatAspect(hp=20, max_hp=100),
+            identity=IdentityAspect(faction=Faction.GOBLIN_HORDE)
+        )
         # mind is already initialized by model_post_init
 
         from src.core.models.enums import SkillType, DamageType
@@ -203,7 +216,10 @@ class TestMemoryRecording:
         """AIBrain should record DISCOVERY when entering a brand new region."""
         from src.ai.brain import AIBrain
         from src.ai.states import AIContext
-        from src.core.entities.entity import Entity, Stats, Vector2
+        from src.core.entities.entity import Entity, Vector2
+        from src.core.aspects.combat import CombatAspect
+        from src.core.aspects.spatial import SpatialAspect
+        from src.core.aspects.identity import IdentityAspect
         from src.core.gameplay.faction import Faction
 
         # Setup
@@ -211,8 +227,13 @@ class TestMemoryRecording:
         rng = MagicMock()
         brain = AIBrain(config, rng)
 
-        actor = Entity(id=1, kind="hero", pos=Vector2(0,0), stats=Stats(hp=100, max_hp=100), faction=Faction.HERO_GUILD)
-        actor.current_region_id = "region_1"
+        actor = Entity(
+            id=1, kind="hero",
+            spatial=SpatialAspect(pos=Vector2(0,0)),
+            combat=CombatAspect(hp=100, max_hp=100),
+            identity=IdentityAspect(faction=Faction.HERO_GUILD)
+        )
+        actor.spatial.current_region_id = "region_1"
         # mind is already initialized
 
         snapshot = MagicMock()
@@ -231,20 +252,28 @@ class TestMemoryRecording:
         """AIBrain should trigger prune_memories during appraisal."""
         from src.ai.brain import AIBrain
         from src.ai.states import AIContext
-        from src.core.entities.entity import Entity, Stats, Vector2
+        from src.core.entities.entity import Entity, Vector2
+        from src.core.aspects.combat import CombatAspect
+        from src.core.aspects.spatial import SpatialAspect
+        from src.core.aspects.identity import IdentityAspect
         from src.core.gameplay.faction import Faction
 
         config = MagicMock()
         rng = MagicMock()
         brain = AIBrain(config, rng)
 
-        actor = Entity(id=1, kind="hero", pos=Vector2(0,0), stats=Stats(hp=100, max_hp=100), faction=Faction.HERO_GUILD)
+        actor = Entity(
+            id=1, kind="hero",
+            spatial=SpatialAspect(pos=Vector2(0,0)),
+            combat=CombatAspect(hp=100, max_hp=100),
+            identity=IdentityAspect(faction=Faction.HERO_GUILD)
+        )
         # Add 60 entries
         actor.mind.memory_log = [{"tick":1, "type":"GLORY", "impact":1.0}] * 60
 
         snapshot = MagicMock()
         snapshot.tick = 200
-        actor.stats.combat.hp = actor.stats.combat.max_hp
+        actor.combat.hp = actor.combat.max_hp
         ctx = AIContext(actor=actor, snapshot=snapshot, config=config, rng=rng, faction_reg=MagicMock())
 
         brain._memory_appraisal_phase(ctx)

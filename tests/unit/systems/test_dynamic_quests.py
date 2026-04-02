@@ -43,7 +43,7 @@ def test_dynamic_liberate_quest(context):
     
     # 1. Conquer the region
     region.owner_faction = Faction.GOBLIN_HORDE
-    world.region_control[region.region_id] = -60.0 # Conquered
+    world.region_control[region.spatial.region_id] = -60.0 # Conquered
     
     # 2. Generate quest
     quest = generate_quest(

@@ -1,6 +1,5 @@
 import logging
 import os
-import pickle
 import time
 from typing import Any
 
@@ -10,6 +9,8 @@ from src.ai.brain import AIBrain
 from src.config import SimulationConfig
 from src.core.gameplay.faction import FactionRegistry
 from src.platform.rng import DeterministicRNG
+from src.utils.serialization import SimulationSerializer
+from src.core.models.snapshot import Snapshot
 
 from src.utils.logging import setup_logging
 setup_logging(os.environ.get("LOG_LEVEL", "INFO"))
@@ -68,19 +69,19 @@ class AIWorkerDaemon:
         self.channel.queue_declare(queue='ai_results_test', durable=False)
 
     def on_snapshot(self, ch, method, properties, body):
-        """Receive pickled snapshot from main engine."""
+        """Receive serialized snapshot from main engine."""
         try:
-            snapshot = pickle.loads(body)
+            snapshot = SimulationSerializer.loads(body, Snapshot)
             self.current_snapshot = snapshot
             self.current_tick = snapshot.tick
             self._logger.debug("Worker received Snapshot for tick %d", snapshot.tick, extra={'tick': snapshot.tick})
         except Exception as e:
-            self._logger.error("Failed to unpickle snapshot: %s", e)
+            self._logger.error("Failed to deserialize snapshot: %s", e)
 
     def on_task(self, ch, method, properties, body):
         """Receive a batch of entity tasks."""
         try:
-            batch = pickle.loads(body)
+            batch = SimulationSerializer.loads(body, dict)
             tick = batch["tick"]
             entity_ids = batch["entity_ids"]
             self._logger.info("Worker received Batch for tick %d (%d entities)", tick, len(entity_ids))
@@ -117,9 +118,8 @@ class AIWorkerDaemon:
             return {"entity_id": entity_id, "new_state": None, "proposal": None}
             
         try:
-            from dataclasses import replace
             new_state, proposal = self.brain.decide(entity, self.current_snapshot)
-            proposal = replace(proposal, new_ai_state=int(new_state))
+            proposal = proposal.model_copy(update={"new_ai_state": int(new_state)})
             return {
                 "entity_id": entity_id,
                 "new_state": int(new_state),
@@ -138,7 +138,7 @@ class AIWorkerDaemon:
         self.channel.basic_publish(
             exchange='',
             routing_key='ai_results',
-            body=pickle.dumps(payload)
+            body=SimulationSerializer.dumps(payload)
         )
 
     def on_test_task(self, ch, method, properties, body):

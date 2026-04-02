@@ -21,3 +21,7 @@ class InteractionAspect(Aspect):
     def on_tick(self, tick: int) -> None:
         """Lifecycle hook (could be used for automatic cooldowns or decay)."""
         pass
+
+
+# Rebuild Model to finalize Pydantic setup
+InteractionAspect.model_rebuild()

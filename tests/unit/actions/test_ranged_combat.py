@@ -22,7 +22,8 @@ from src.core.gameplay.items.items import (
     Inventory,
     RACE_STARTING_GEAR, RACE_TIER_KINDS, TIER_STARTING_GEAR,
 )
-from src.core.entities.entity import Entity, Stats, Vector2
+from tests.helpers.legacy_stats import Stats
+from src.core.entities.entity import Entity, Vector2
 
 
 def _make_entity(

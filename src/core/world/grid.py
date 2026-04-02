@@ -12,15 +12,24 @@ for m in Material:
     _MATERIAL_CACHE[int(m)] = m
 
 
-class Grid:
+from src.core.models.base import SimulationModel
+from pydantic import ConfigDict
+
+class Grid(SimulationModel):
     """2D tile grid backed by a flat list for cache-friendly access."""
+    model_config = ConfigDict(arbitrary_types_allowed=True, extra="forbid")
 
-    __slots__ = ("width", "height", "_tiles")
+    width: int
+    height: int
+    tiles: bytearray | bytes
 
-    def __init__(self, width: int, height: int, default: Material = Material.FLOOR) -> None:
-        self.width = width
-        self.height = height
-        self._tiles = bytearray([int(default)]) * (width * height)
+    def __init__(self, width: int = 0, height: int = 0, default: Material = Material.FLOOR, **data: Any) -> None:
+        """AOA Hardened: Support both manual and Pydantic initialization."""
+        if "width" not in data and width > 0: data["width"] = width
+        if "height" not in data and height > 0: data["height"] = height
+        if "tiles" not in data and "width" in data and "height" in data:
+            data["tiles"] = bytearray([int(default)]) * (data["width"] * data["height"])
+        super().__init__(**data)
 
     # -- access --
 
@@ -33,12 +42,12 @@ class Grid:
     def get(self, pos: Vector2) -> Material:
         if not self.in_bounds(pos):
             return Material.WALL
-        val = self._tiles[self._idx(pos.x, pos.y)]
+        val = self.tiles[self._idx(pos.x, pos.y)]
         return _MATERIAL_CACHE[val]
 
     def set(self, pos: Vector2, material: Material) -> None:
         if self.in_bounds(pos):
-            self._tiles[self._idx(pos.x, pos.y)] = int(material)
+            self.tiles[self._idx(pos.x, pos.y)] = int(material)
 
     def is_walkable(self, pos: Vector2) -> bool:
         mat = self.get(pos)
@@ -125,15 +134,16 @@ class Grid:
 
     def get_xy(self, x: int, y: int) -> Material:
         if 0 <= x < self.width and 0 <= y < self.height:
-            val = self._tiles[y * self.width + x]
+            val = self.tiles[y * self.width + x]
             return _MATERIAL_CACHE[val]
         return Material.WALL
 
     # -- copy --
 
     def copy(self) -> Grid:
-        new = Grid.__new__(Grid)
-        new.width = self.width
-        new.height = self.height
-        new._tiles = bytearray(self._tiles)
-        return new
+        """Standard deep copy for snapshots."""
+        return Grid(
+            width=self.width,
+            height=self.height,
+            tiles=bytearray(self.tiles)
+        )

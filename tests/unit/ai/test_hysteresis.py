@@ -45,10 +45,10 @@ def _make_hero(
     goal_committed_at: int = 0,
 ) -> Entity:
     hero = Entity(id=eid, kind="hero")
-    hero.spatial.pos = Vector2(5, 5)
-    hero.identity.faction = Faction.HERO_GUILD
-    hero.combat.hp = hp
-    hero.combat.max_hp = max_hp
+    hero.spatial.spatial.pos = Vector2(5, 5)
+    hero.identity.identity.faction = Faction.HERO_GUILD
+    hero.combat.combat.hp = hp
+    hero.combat.combat.max_hp = max_hp
     hero.combat.atk_base = 10
     hero.combat.def_base = 5
     hero.combat.spd_base = 10

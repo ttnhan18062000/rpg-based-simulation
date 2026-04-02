@@ -1,6 +1,6 @@
 import pytest
 from src.core.models.world_state import WorldState
-from src.core.models import Vector2, Entity
+from src.core.entities.entity import Vector2, Entity
 from src.core.models.enums import Faction, Material, EnemyTier
 from src.systems.world.strategy_system import StrategySystem
 from src.systems.infrastructure.base import SystemContext
@@ -64,7 +64,7 @@ def test_territory_conquest(context):
     # Verify stronghold spawn
     strongholds = [e for e in context.world.entities.values() if e.kind == "stronghold"]
     assert len(strongholds) == 1
-    assert strongholds[0].spatial.pos == region.center
+    assert strongholds[0].spatial.spatial.pos == region.center
 
 def test_territory_liberation(context):
     system = StrategySystem(context.config, context.rng)

@@ -1,7 +1,15 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
     from src.core.entities.entity import Entity
     from src.api.schemas import EntitySlimSchema, EntitySchema, EntityInspectionSchema, CombatTraceSchema, AIDecisionSchema, StatBreakdownSchema
+
+# Order must match legacy encoder/frontend expectations for the binary protocol
+ENTITY_KEY_MAP = ["id", "x", "y", "hp", "state_id", "target_id", "loot_progress"]
+
+STATE_ENUM_MAP = {
+    "IDLE": 0, "MOVE": 1, "COMBAT": 2, "LOOT": 3, "HARVEST": 4,
+    "CRAFT": 5, "REST": 6, "DEAD": 7, "FLEE": 8, "WANDER": 9
+}
 
 class EntityPresenter:
     """Separation of concerns: Domain models should not know about API schemas."""
@@ -78,13 +86,8 @@ class EntityPresenter:
     def to_compact_list(entity: "Entity") -> list[Any]:
         """
         Ordered list for high-performance WebSocket streaming.
-        Order must match ENTITY_KEY_MAP in legacy encoder/frontend.
+        Order matches ENTITY_KEY_MAP above.
         """
-        # [id, x, y, hp, state_id, target_id, loot_progress]
-        STATE_ENUM_MAP = {
-            "IDLE": 0, "MOVE": 1, "COMBAT": 2, "LOOT": 3, "HARVEST": 4,
-            "CRAFT": 5, "REST": 6, "DEAD": 7, "FLEE": 8, "WANDER": 9
-        }
         state_name = entity.mind.decision.ai_state.name.upper()
         state_id = STATE_ENUM_MAP.get(state_name, 0)
         

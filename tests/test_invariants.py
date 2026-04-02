@@ -25,7 +25,7 @@ def test_stats_invariants(hp, max_hp, atk, def_, crit_rate):
     
     # We expect hp_ratio to be clamped between 0 and 1 for safety
     assert isinstance(stats.hp_ratio, float)
-    if stats.max_hp > 0:
+    if stats.combat.max_hp > 0:
         assert 0.0 <= stats.hp_ratio <= 1.0
     else:
         assert stats.hp_ratio == 0.0
@@ -54,8 +54,8 @@ def test_recalc_level_consistency(level):
     stats = Stats(level=level)
     attrs = Attributes(vit=5, end=5, str_=5, agi=5)
     recalc_derived_stats(stats, attrs)
-    assert stats.level == level
-    assert stats.max_hp > 0
+    assert stats.progression.level == level
+    assert stats.combat.max_hp > 0
 
 @given(
     st.integers(min_value=0, max_value=1000), # current_hp

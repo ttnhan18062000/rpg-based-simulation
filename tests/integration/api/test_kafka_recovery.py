@@ -115,6 +115,6 @@ def test_engine_manager_kafka_recovery(mock_create_consumer, monkeypatch):
     # Verify the dummy entity is present and has moved
     assert 99 in recovered_world.entities, "Entity 99 should exist"
     recovered_dummy = recovered_world.entities[99]
-    assert recovered_dummy.spatial.pos.x == 6, "Entity should have moved to x=6"
-    assert recovered_dummy.spatial.pos.y == 6, "Entity should have moved to y=6"
+    assert recovered_dummy.spatial.spatial.pos.x == 6, "Entity should have moved to x=6"
+    assert recovered_dummy.spatial.spatial.pos.y == 6, "Entity should have moved to y=6"
     

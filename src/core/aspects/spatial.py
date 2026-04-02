@@ -16,3 +16,7 @@ class SpatialAspect(Aspect):
     
     # Sensory limits
     vision_range: int = 6
+
+
+# Rebuild Model to finalize Pydantic setup
+SpatialAspect.model_rebuild()

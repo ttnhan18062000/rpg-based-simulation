@@ -3,7 +3,11 @@
 import pytest
 
 
-from src.core.entities.entity import Entity, Stats, Vector2
+from src.core.entities.entity import Entity, Vector2
+from src.core.aspects.combat import CombatAspect
+from src.core.aspects.progression import ProgressionAspect
+from src.core.aspects.spatial import SpatialAspect
+from src.core.aspects.identity import IdentityAspect
 from src.core.gameplay.attributes import Attributes, AttributeCaps, train_attributes
 from src.core.models.enums import AIState, Domain, VeterancyRank, ActionType
 from src.core.gameplay.faction import Faction
@@ -46,7 +50,7 @@ class MockWorld:
     
     def kill_entity(self, eid: int, reason: str = ""):
         if eid in self.entities:
-            self.entities[eid].stats.combat.alive = False
+            self.entities[eid].combat.alive = False
 
 from src.systems.lifecycle.progression_system import ProgressionSystem
 from src.systems.infrastructure.base import SystemContext
@@ -77,13 +81,13 @@ class MockWorldLoop:
         self._system._check_level_ups(self._context)
 
 def _make_entity(eid: int, level: int = 1, kind: str = "hero", hp: int = 50) -> Entity:
-    from src.core.aspects.combat import CombatAspect
-    from src.core.aspects.progression import ProgressionAspect
-    e = Entity(id=eid, kind=kind, pos=Vector2(5, 5), faction=Faction.HERO_GUILD)
-    e.combat.max_hp = hp
-    e.combat.hp = hp
-    e.progression.level = level
-    return e
+    return Entity(
+        id=eid, kind=kind,
+        spatial=SpatialAspect(pos=Vector2(5, 5)),
+        combat=CombatAspect(hp=hp, max_hp=hp),
+        progression=ProgressionAspect(level=level),
+        identity=IdentityAspect(faction=Faction.HERO_GUILD)
+    )
 
 def test_undead_no_level_up():
     """Undead should have a train_rate of 0.0 and never level up."""
@@ -115,18 +119,18 @@ def test_milestone_level_up():
 def test_veterancy_multipliers():
     """Veterancy Ranks should boost stats via StatsProxy."""
     e1 = _make_entity(1)
-    e1.combat.atk = 100
+    e1.combat.atk_base = 100
     
-    e1.veterancy_rank = VeterancyRank.GREEN
-    assert e1.stats.combat.atk == 100
+    e1.progression.veterancy_rank = VeterancyRank.GREEN
+    assert e1.combat.atk_base == 100
     
-    e1.veterancy_rank = VeterancyRank.VETERAN
-    # Veteran is 1.06x Atk for our implementation
-    assert e1.stats.combat.atk == 106
+    e1.progression.veterancy_rank = VeterancyRank.VETERAN
+    # Veteran is 1.06x Atk for our implementation (Calculated via CombatAspect property)
+    assert e1.combat.atk_base == 106
     
-    e1.veterancy_rank = VeterancyRank.LEGEND
+    e1.progression.veterancy_rank = VeterancyRank.LEGEND
     # Legend is 1.15x Atk
-    assert e1.stats.combat.atk == 114
+    assert e1.combat.atk_base == 114
 
 def test_innate_talents_training():
     """Talented attributes gain 2x points, weak attributes gain 0.5x."""
@@ -139,8 +143,8 @@ def test_innate_talents_training():
     # Train attributes directly
     # Call the modified train_attributes
     try:
-        train_attributes(e1.attributes, e1.attribute_caps, "run", stats=e1, race=e1.kind, talents=e1.talents, weakness=e1.weakness)
-        train_attributes(e1.attributes, e1.attribute_caps, "defend", stats=e1, race=e1.kind, talents=e1.talents, weakness=e1.weakness)
+        train_attributes(e1.progression.attributes, e1.progression.attribute_caps, "run", stats=e1, race=e1.kind, talents=e1.progression.talents, weakness=e1.progression.weakness)
+        train_attributes(e1.progression.attributes, e1.progression.attribute_caps, "defend", stats=e1, race=e1.kind, talents=e1.progression.talents, weakness=e1.progression.weakness)
     except Exception as e:
         pytest.fail(f"train_attributes raised an exception: {e}")
     # Since we passed FakeRNG... wait train_attributes internally uses python random? No!
@@ -150,12 +154,12 @@ def test_innate_talents_training():
 def test_combat_veterancy_points():
     """Combat yields veterancy points."""
     e1 = _make_entity(1, hp=50) # Attacker
-    e1.attributes = Attributes() # Need this for combat
-    e1.attribute_caps = AttributeCaps()
+    e1.progression.attributes = Attributes() # Need this for combat
+    e1.progression.attribute_caps = AttributeCaps()
     
     e2 = _make_entity(2, hp=1) # Defender, low HP to die immediately
-    e2.attributes = Attributes()
-    e2.attribute_caps = AttributeCaps()
+    e2.progression.attributes = Attributes()
+    e2.progression.attribute_caps = AttributeCaps()
     
     cfg = SimulationConfig()
     rng = _FakeRNG()
@@ -171,8 +175,8 @@ def test_combat_veterancy_points():
     events = action.apply(proposal, world)
     
     # +1 hit dealt
-    assert e1.veterancy_points >= 1
+    assert e1.progression.veterancy_points >= 1
     # Check if target died (should have +5 or +10 for kill)
     if not e2.combat.alive:
         # 1 hit + 5 kill
-        assert e1.veterancy_points >= 6
+        assert e1.progression.veterancy_points >= 6

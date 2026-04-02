@@ -12,9 +12,12 @@ if TYPE_CHECKING:
     pass
 
 
-@dataclass(slots=True)
-class ResourceNode:
+from src.core.models.base import SimulationModel
+from pydantic import ConfigDict
+
+class ResourceNode(SimulationModel):
     """A harvestable resource on the map."""
+    model_config = ConfigDict(arbitrary_types_allowed=True, extra="forbid")
 
     node_id: int
     resource_type: str          # e.g. "herb_patch", "ore_vein", "timber"
@@ -27,6 +30,11 @@ class ResourceNode:
     respawn_cooldown: int = 30  # ticks to respawn after depletion
     cooldown_remaining: int = 0 # 0 = harvestable; >0 = depleted, counting down
     harvest_ticks: int = 2      # ticks to channel harvest
+
+    @property
+    def spatial(self) -> ResourceNode:
+        """AOA Shim: allow AI to access .spatial.pos"""
+        return self
 
     @property
     def is_depleted(self) -> bool:
@@ -51,21 +59,6 @@ class ResourceNode:
             self.cooldown_remaining -= 1
             if self.cooldown_remaining <= 0:
                 self.remaining = self.max_harvests
-
-    def copy(self) -> ResourceNode:
-        return ResourceNode(
-            node_id=self.node_id,
-            resource_type=self.resource_type,
-            name=self.name,
-            pos=self.pos,
-            terrain=self.terrain,
-            yields_item=self.yields_item,
-            remaining=self.remaining,
-            max_harvests=self.max_harvests,
-            respawn_cooldown=self.respawn_cooldown,
-            cooldown_remaining=self.cooldown_remaining,
-            harvest_ticks=self.harvest_ticks,
-        )
 
 
 # ---------------------------------------------------------------------------

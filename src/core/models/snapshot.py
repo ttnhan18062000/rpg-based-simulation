@@ -1,11 +1,8 @@
-"""Immutable snapshot of the world state for worker threads."""
-
 from __future__ import annotations
 
 from collections import defaultdict
-from types import MappingProxyType
-from dataclasses import dataclass, field
-from typing import Mapping, TYPE_CHECKING
+from typing import Mapping, TYPE_CHECKING, Any
+from pydantic import Field, PrivateAttr
 
 if TYPE_CHECKING:
     from src.core.gameplay.buildings import Building
@@ -16,15 +13,14 @@ if TYPE_CHECKING:
     from src.core.world.resource_nodes import ResourceNode
     from src.core.models.world_state import WorldState
 
+from src.core.models.base import SimulationModel
+
 _SPATIAL_CELL = 16  # cell size for snapshot spatial index
 
-
-@dataclass(frozen=True, slots=True)
-class Snapshot:
+class Snapshot(SimulationModel):
     """Read-only view of the world, safe to share across threads.
 
-    Uses deep-copied entities and a MappingProxyType for the entity dict
-    to enforce immutability at runtime.
+    Enforces immutability at runtime through the SimulationModel base.
     """
 
     tick: int
@@ -37,12 +33,15 @@ class Snapshot:
     resource_nodes: tuple[ResourceNode, ...]
     treasure_chests: tuple[TreasureChest, ...]
     regions: tuple[Region, ...]
-    # Strategic State (Milestone 11)
-    region_control: Mapping[str, float] = field(default_factory=dict)
-    war_status: Mapping[int, bool] = field(default_factory=dict)
-    faction_aggression: Mapping[int, float] = field(default_factory=dict)
-    _spatial: dict = field(default_factory=dict, repr=False, compare=False)
-    _spatial_ground: dict = field(default_factory=dict, repr=False, compare=False)
+    
+    # Strategic State
+    region_control: Mapping[str, float] = Field(default_factory=dict)
+    war_status: Mapping[int, bool] = Field(default_factory=dict)
+    faction_aggression: Mapping[int, float] = Field(default_factory=dict)
+    
+    # Internal spatial caches (not serialized)
+    _spatial: dict = PrivateAttr(default_factory=dict)
+    _spatial_ground: dict = PrivateAttr(default_factory=dict)
 
     @property
     def world_day(self) -> int:
@@ -55,58 +54,41 @@ class Snapshot:
             ent = e.copy()
             ent.freeze()
             copied_entities[eid] = ent
-        copied_ground = {k: list(v) for k, v in world.ground_items.items()}
         
-        # Build lightweight spatial index for fast neighbor queries
-        spatial: dict[tuple[int, int], list[int]] = defaultdict(list)
+        # Build spatial index
+        spatial = defaultdict(list)
         for eid, e in copied_entities.items():
             if e.combat.hp > 0 and e.kind != "generator":
                 spatial[(e.spatial.pos.x // _SPATIAL_CELL, e.spatial.pos.y // _SPATIAL_CELL)].append(eid)
                 
-        # NEW: Spatial index for ground items to avoid O(N_ground) scans
-        spatial_ground: dict[tuple[int, int], list[tuple[int, int]]] = defaultdict(list)
-        for pos_key, items in copied_ground.items():
+        spatial_ground = defaultdict(list)
+        for pos_key, items in world.ground_items.items():
             if items:
-                # Key is (gx, gy)
                 spatial_ground[(pos_key[0] // _SPATIAL_CELL, pos_key[1] // _SPATIAL_CELL)].append(pos_key)
                 
-        return cls(
+        snap = cls(
             tick=world.tick,
             seed=world.seed,
             entities=copied_entities,
             grid=world.grid,
-            ground_items=copied_ground,
+            ground_items={k: list(v) for k, v in world.ground_items.items()},
             camps=tuple((c.x, c.y) for c in world.camps),
-            buildings=tuple(b.copy() for b in world.buildings), # Needs copy if Building is mutable
+            buildings=tuple(b.copy() for b in world.buildings),
             resource_nodes=tuple(n.copy() for n in world.resource_nodes.values()),
             treasure_chests=tuple(c.copy() for c in world.treasure_chests.values()),
             regions=tuple(r.copy() for r in world.regions),
             region_control=dict(world.region_control),
             war_status=dict(world.war_status),
             faction_aggression=dict(world.faction_aggression),
-            _spatial=dict(spatial),
-            _spatial_ground=dict(spatial_ground),
         )
         
-        # Final Deep Freeze for all collections
-        for b in snap.buildings:
-            if hasattr(b, "freeze"): b.freeze()
-        for n in snap.resource_nodes:
-            if hasattr(n, "freeze"): n.freeze()
-        for c in snap.treasure_chests:
-            if hasattr(c, "freeze"): c.freeze()
-        for r in snap.regions:
-            if hasattr(r, "freeze"): r.freeze()
-            
+        # Manually set private attrs
+        snap._spatial = dict(spatial)
+        snap._spatial_ground = dict(spatial_ground)
+        
+        # Recursive freeze
+        snap.freeze()
         return snap
-
-    def __post_init__(self):
-        """Finalize immutability by wrapping collections (AOA Phase 5)."""
-        object.__setattr__(self, 'entities', MappingProxyType(dict(self.entities)))
-        object.__setattr__(self, 'ground_items', MappingProxyType(dict(self.ground_items)))
-        object.__setattr__(self, 'region_control', MappingProxyType(dict(self.region_control)))
-        object.__setattr__(self, 'war_status', MappingProxyType(dict(self.war_status)))
-        object.__setattr__(self, 'faction_aggression', MappingProxyType(dict(self.faction_aggression)))
 
     def nearby_entity_ids(self, x: int, y: int, radius: int) -> list[int]:
         """Return entity IDs in cells overlapping the Manhattan-radius neighborhood."""
@@ -131,3 +113,17 @@ class Snapshot:
                 if bucket:
                     result.extend(bucket)
         return result
+
+
+# --- AOA Stabilization: Pydantic Rebuild ---
+# Resolve forward references for Snapshot once dependencies are defined.
+from src.core.entities.entity import Entity
+from src.core.world.grid import Grid
+from src.core.gameplay.buildings import Building
+from src.core.models.world_objects import TreasureChest
+from src.core.world.resource_nodes import ResourceNode
+from src.core.world.regions import Region
+from src.core.models.vectors import Vector2, FloatVector2
+from src.core.models.enums import Faction, HeroClass, AIState, ActionType, EmotionType, GoalType
+
+Snapshot.model_rebuild()

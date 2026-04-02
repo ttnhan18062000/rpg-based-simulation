@@ -45,16 +45,16 @@ class TestRecalcDerivedStats:
         attrs = self._make_attrs(str_=10, vit=8, agi=6)
         recalc_derived_stats(stats, attrs)
         # ATK should be base + derive_atk(0, str_)
-        assert stats.atk == 10 + derive_atk(0, 10)
-        assert stats.max_hp > 50  # VIT and END contribute
-        assert stats.vision_range >= 6  # PER contributes
+        assert stats.combat.atk_base == 10 + derive_atk(0, 10)
+        assert stats.combat.max_hp > 50  # VIT and END contribute
+        assert stats.spatial.vision_range >= 6  # PER contributes
 
     def test_creation_mode_noncombat(self):
         from src.core.aspects.combat import CombatAspect
         stats = CombatAspect()
         attrs = self._make_attrs(per=10, wis=8, cha=7, end=6)
         recalc_derived_stats(stats, attrs)
-        assert stats.vision_range == derive_vision(6, 10)
+        assert stats.spatial.vision_range == derive_vision(6, 10)
         assert stats.hp_regen > 1.0
         assert stats.trade_bonus > 1.0
         assert stats.loot_bonus > 1.0
@@ -66,19 +66,19 @@ class TestRecalcDerivedStats:
         new_attrs = self._make_attrs(str_=10)
         # First apply old
         recalc_derived_stats(stats, old_attrs)
-        atk_after_old = stats.atk
+        atk_after_old = stats.combat.atk_base
         # Now delta: strip old, apply new
         recalc_derived_stats(stats, new_attrs, old_attrs=old_attrs)
         # ATK should increase by the diff in attribute contribution
         expected_delta = derive_atk(0, 10) - derive_atk(0, 5)
-        assert stats.atk == atk_after_old + expected_delta
+        assert stats.combat.atk_base == atk_after_old + expected_delta
 
     def test_hp_clamped_after_recalc(self):
         from src.core.aspects.combat import CombatAspect
         stats = CombatAspect(max_hp=100, hp=100)
         attrs = self._make_attrs(vit=1, end=1)
         recalc_derived_stats(stats, attrs)
-        assert stats.hp <= stats.max_hp
+        assert stats.combat.hp <= stats.combat.max_hp
 
     def test_default_attrs_add_bonuses(self):
         from src.core.aspects.combat import CombatAspect
@@ -86,8 +86,8 @@ class TestRecalcDerivedStats:
         attrs = Attributes()  # defaults are 5 each
         recalc_derived_stats(stats, attrs)
         # Stats should have base + attribute contribution from str_=5
-        assert stats.atk == 5 + derive_atk(0, 5)
-        assert stats.vision_range == derive_vision(6, 5)
+        assert stats.combat.atk_base == 5 + derive_atk(0, 5)
+        assert stats.spatial.vision_range == derive_vision(6, 5)
 
 
 # =====================================================================
@@ -174,11 +174,11 @@ class TestHomeStorage:
         hs = HomeStorage(max_slots=30, level=0)
         assert hs.upgrade_cost() == 200
         assert hs.upgrade()
-        assert hs.level == 1
+        assert hs.progression.level == 1
         assert hs.max_slots == 50
         assert hs.upgrade_cost() == 500
         assert hs.upgrade()
-        assert hs.level == 2
+        assert hs.progression.level == 2
         assert hs.max_slots == 80
         # No more upgrades
         assert hs.upgrade_cost() is None
@@ -189,7 +189,7 @@ class TestHomeStorage:
         hs2 = hs.copy()
         assert hs2.items == ["iron_ore"]
         assert hs2.max_slots == 50
-        assert hs2.level == 1
+        assert hs2.progression.level == 1
         hs2.add_item("wood")
         assert hs.used_slots == 1  # original unchanged
 
@@ -362,12 +362,12 @@ class TestTrainWithStats:
         caps = entity.attribute_caps # uses shim
         
         recalc_derived_stats(entity, attrs)  # initial derivation
-        old_atk = entity.combat.atk
+        old_atk = entity.combat.combat.atk_base
         
         # Train attack — str rate is 0.015, frac was 0.99 → 1.005 → increment
         train_attributes(attrs, caps, "attack", stats=entity)
         assert attrs.str_ == 6  # incremented
-        assert entity.combat.atk > old_atk  # derived stats updated
+        assert entity.combat.combat.atk_base > old_atk  # derived stats updated
 
 
 # =====================================================================

@@ -41,14 +41,14 @@ def _make_hero(
 ) -> Entity:
     """Create a hero entity with configurable inventory fill level."""
     hero = Entity(id=eid, kind="hero")
-    hero.spatial.pos = Vector2(x, y)
-    hero.identity.faction = Faction.HERO_GUILD
-    hero.combat.hp = 50
-    hero.combat.max_hp = 50
+    hero.spatial.spatial.pos = Vector2(x, y)
+    hero.identity.identity.faction = Faction.HERO_GUILD
+    hero.combat.combat.hp = 50
+    hero.combat.combat.max_hp = 50
     hero.combat.atk_base = 10
     hero.combat.def_base = 5
     hero.combat.spd_base = 10
-    hero.progression.gold = gold
+    hero.progression.progression.gold = gold
     
     from src.core.aspects.inventory import InventoryAspect
     items = ["iron_sword"] * filled_slots
@@ -245,10 +245,10 @@ class TestLootingHandlerFullBag:
         loot_pos = Vector2(5, 5)
         world = _make_world_with_loot(loot_pos)
         hero = Entity(id=1, kind="hero")
-        hero.spatial.pos = Vector2(5, 5)
-        hero.identity.faction = Faction.HERO_GUILD
-        hero.combat.hp = 50
-        hero.combat.max_hp = 50
+        hero.spatial.spatial.pos = Vector2(5, 5)
+        hero.identity.identity.faction = Faction.HERO_GUILD
+        hero.combat.combat.hp = 50
+        hero.combat.combat.max_hp = 50
         hero.combat.atk_base = 10
         hero.combat.def_base = 5
         hero.combat.spd_base = 10
@@ -276,14 +276,14 @@ class TestWeightBasedInventoryChecks:
     ) -> Entity:
         """Hero with lots of slots but very low weight cap — will hit weight limit first."""
         hero = Entity(id=eid, kind="hero")
-        hero.spatial.pos = Vector2(x, y)
-        hero.identity.faction = Faction.HERO_GUILD
-        hero.combat.hp = 50
-        hero.combat.max_hp = 50
+        hero.spatial.spatial.pos = Vector2(x, y)
+        hero.identity.identity.faction = Faction.HERO_GUILD
+        hero.combat.combat.hp = 50
+        hero.combat.combat.max_hp = 50
         hero.combat.atk_base = 10
         hero.combat.def_base = 5
         hero.combat.spd_base = 10
-        hero.progression.gold = 100
+        hero.progression.progression.gold = 100
         
         # Fill with heavy items: iron_sword weighs ~3.0
         items = ["iron_sword", "iron_sword"]  # 2 slots used, ~6.0 weight → over cap
@@ -329,11 +329,11 @@ class TestWeightBasedInventoryChecks:
         # Hero near weight cap (small_hp_potion weighs 0.5; 0.5/0.55 ≈ 0.91 ratio)
         world1 = _make_world_with_loot(loot_pos)
         hero1 = Entity(id=1, kind="hero")
-        hero1.spatial.pos = Vector2(5, 5)
-        hero1.identity.faction = Faction.HERO_GUILD
-        hero1.combat.hp = 50
-        hero1.combat.max_hp = 50
-        hero1.progression.gold = 100
+        hero1.spatial.spatial.pos = Vector2(5, 5)
+        hero1.identity.identity.faction = Faction.HERO_GUILD
+        hero1.combat.combat.hp = 50
+        hero1.combat.combat.max_hp = 50
+        hero1.progression.progression.gold = 100
         hero1.inventory = InventoryAspect(items=["small_hp_potion"], max_slots=12, max_weight=0.55)
         world1.add_entity(hero1)
         ctx1 = _make_ctx(hero1, world1)
@@ -341,11 +341,11 @@ class TestWeightBasedInventoryChecks:
         # Hero with lots of weight room
         world2 = _make_world_with_loot(loot_pos)
         hero2 = Entity(id=1, kind="hero")
-        hero2.spatial.pos = Vector2(5, 5)
-        hero2.identity.faction = Faction.HERO_GUILD
-        hero2.combat.hp = 50
-        hero2.combat.max_hp = 50
-        hero2.progression.gold = 100
+        hero2.spatial.spatial.pos = Vector2(5, 5)
+        hero2.identity.identity.faction = Faction.HERO_GUILD
+        hero2.combat.combat.hp = 50
+        hero2.combat.combat.max_hp = 50
+        hero2.progression.progression.gold = 100
         hero2.inventory = InventoryAspect(items=["small_hp_potion"], max_slots=12, max_weight=100.0)
         world2.add_entity(hero2)
         ctx2 = _make_ctx(hero2, world2)
@@ -366,11 +366,11 @@ class TestWeightBasedInventoryChecks:
 
         world2 = _make_world_with_loot(loot_pos=None)
         hero_light = Entity(id=1, kind="hero")
-        hero_light.spatial.pos = Vector2(5, 5)
-        hero_light.identity.faction = Faction.HERO_GUILD
-        hero_light.combat.hp = 50
-        hero_light.combat.max_hp = 50
-        hero_light.progression.gold = 100
+        hero_light.spatial.spatial.pos = Vector2(5, 5)
+        hero_light.identity.identity.faction = Faction.HERO_GUILD
+        hero_light.combat.combat.hp = 50
+        hero_light.combat.combat.max_hp = 50
+        hero_light.progression.progression.gold = 100
         hero_light.inventory = InventoryAspect(items=[], max_slots=12, max_weight=100.0)
         world2.add_entity(hero_light)
         ctx_light = _make_ctx(hero_light, world2)

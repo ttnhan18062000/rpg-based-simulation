@@ -1,35 +1,26 @@
-"""Town buildings — Shop, Blacksmith, Guild Hall, Class Hall, Inn.
-
-Buildings are fixed locations in town that heroes can interact with.
-Each building type provides different services:
-  - Store: buy/sell items
-  - Blacksmith: craft powerful items from materials + gold
-  - Guild: get intel about enemy camps and material sources
-  - Class Hall: learn new class skills, attempt breakthroughs
-  - Inn: rest to recover HP and stamina quickly
-"""
-
 from __future__ import annotations
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING
-from src.core.models.enums import ItemType, Rarity
+from typing import Any, TYPE_CHECKING
+from src.core.models.enums import Rarity
+from src.core.models.base import SimulationModel
+from pydantic import ConfigDict
 
 if TYPE_CHECKING:
-    from src.core.models import Vector2
+    from src.core.models.vectors import Vector2
     from src.core.gameplay.items.item_registry import ItemTemplate
 
-
-# ---------------------------------------------------------------------------
-# Building data model
-# ---------------------------------------------------------------------------
-
-@dataclass(slots=True)
-class Building:
+class Building(SimulationModel):
     """A fixed building in the town."""
+    model_config = ConfigDict(arbitrary_types_allowed=True, extra="forbid")
 
     building_id: str          # "store", "blacksmith", "guild"
     name: str
-    pos: Vector2
+    pos: Any                  # Vector2
+
+    @property
+    def spatial(self) -> Building:
+        """AOA Shim: allow AI to access .spatial.pos"""
+        return self
     building_type: str        # "store" | "blacksmith" | "guild"
     durability: float = 100.0
     max_durability: float = 100.0

@@ -7,12 +7,29 @@ from src.systems.infrastructure.base import SystemContext
 
 if TYPE_CHECKING:
     from src.engine.phases.context import EngineContext
+    from src.engine.phases.contract import PhaseContract
 
 logger = logging.getLogger(__name__)
 
 class CleanupPhase(EnginePhase):
     """Remove dead entities, drop loot, and handle hero respawns."""
     
+    @property
+    def contract(self) -> PhaseContract:
+        from src.engine.phases.contract import PhaseContract, PhaseAccess
+        return PhaseContract(
+            name="Cleanup",
+            description="Removing dead entities and handling respawns.",
+            permissions={
+                "world": PhaseAccess.READ_WRITE, # Removing entities mutates world
+                "config": PhaseAccess.READ,
+                "generator": PhaseAccess.READ,
+                "faction_reg": PhaseAccess.READ,
+                "hero_lifecycle": PhaseAccess.READ_WRITE,
+                "emit": PhaseAccess.READ_WRITE
+            }
+        )
+
     def execute(self, ctx: EngineContext) -> None:
         tick = ctx.world.tick
         dead_ids = sorted([eid for eid, e in ctx.world.entities.items() if not e.combat.alive])

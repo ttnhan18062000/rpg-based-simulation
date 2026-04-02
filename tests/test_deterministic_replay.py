@@ -27,11 +27,11 @@ def _state_fingerprint(mgr: EngineManager) -> str:
     for eid in sorted(snap.entities):
         e = snap.entities[eid]
         parts.append(
-            f"e{eid}:{e.kind}@{e.pos.x},{e.pos.y}"
-            f"|hp={e.stats.hp}/{e.stats.max_hp}"
-            f"|atk={e.stats.atk}|def={e.stats.def_}|spd={e.stats.spd}"
-            f"|xp={e.stats.xp}|lvl={e.stats.level}|gold={e.stats.gold}"
-            f"|alive={e.alive}|state={e.ai_state}"
+            f"e{eid}:{e.kind}@{e.spatial.pos.x},{e.spatial.pos.y}"
+            f"|hp={e.stats.combat.hp}/{e.stats.combat.max_hp}"
+            f"|atk={e.stats.combat.atk_base}|def={e.stats.combat.def_base}|spd={e.stats.combat.spd_base}"
+            f"|xp={e.stats.progression.xp}|lvl={e.stats.progression.level}|gold={e.stats.progression.gold}"
+            f"|alive={e.combat.alive}|state={e.ai_state}"
         )
 
     # Ground items — sorted by position

@@ -13,9 +13,17 @@ class SimulationModel(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
     _frozen: bool = PrivateAttr(default=False)
 
+    def copy(self: T) -> T:
+        """Deep copy for snapshot isolation."""
+        return self.model_copy(deep=True)
+
     def freeze(self) -> None:
         """Lock the model for read-only access (Recursive). top-level and nested collections."""
         if self._frozen: return # Avoid redundant work or loops
+        
+        # Run validation before freezing to ensure data integrity
+        self.validate()
+        
         self._frozen = True
         
         # 1. Recursive freeze for nested SimulationModels
@@ -31,6 +39,13 @@ class SimulationModel(BaseModel):
             elif isinstance(val, dict):
                 # Wrap in MappingProxyType (cannot __setitem__)
                 super().__setattr__(name, MappingProxyType(val))
+            elif isinstance(val, (bytearray, memoryview)):
+                # Convert to immutable bytes
+                super().__setattr__(name, bytes(val))
+
+    def validate(self) -> None:
+        """Domain-specific invariant validation. Subclasses should override."""
+        pass
 
     def __setattr__(self, name: str, value: Any) -> None:
         if getattr(self, "_frozen", False) and not name.startswith("_"):

@@ -1,20 +1,31 @@
 from __future__ import annotations
-from dataclasses import dataclass
+from typing import Any
+from src.core.models.base import SimulationModel
+from pydantic import ConfigDict
 
-@dataclass(frozen=True, slots=True)
-class Vector2:
-    """Immutable 2D integer coordinate."""
+class Vector2(SimulationModel):
+    """Immutable 2D integer coordinate (AOA Hardened)."""
+    model_config = ConfigDict(frozen=True, slots=True)
 
     x: int = 0
     y: int = 0
 
+    def __init__(self, x: int = 0, y: int = 0, **data: Any):
+        """Allow positional initialization for backward compatibility."""
+        if "x" not in data: data["x"] = x
+        if "y" not in data: data["y"] = y
+        super().__init__(**data)
+
     def __add__(self, other: Vector2) -> Vector2:
-        return Vector2(self.x + other.x, self.y + other.y)
+        return Vector2(x=self.x + other.x, y=self.y + other.y)
 
     def __sub__(self, other: Vector2) -> Vector2:
-        return Vector2(self.x - other.x, self.y - other.y)
+        return Vector2(x=self.x - other.x, y=self.y - other.y)
 
-    def manhattan(self, other: Vector2) -> int:
+    def manhattan(self, other: Any) -> int:
+        """Robust manhattan distance (AOA Hardened for dict-coercion)."""
+        if not isinstance(other, Vector2):
+            other = Vector2.from_any(other)
         return abs(self.x - other.x) + abs(self.y - other.y)
 
     @staticmethod
@@ -23,26 +34,41 @@ class Vector2:
         if isinstance(val, Vector2):
             return val
         if isinstance(val, (tuple, list)) and len(val) >= 2:
-            return Vector2(int(val[0]), int(val[1]))
+            return Vector2(x=int(val[0]), y=int(val[1]))
         if isinstance(val, dict):
-            return Vector2(int(val.get('x', 0)), int(val.get('y', 0)))
-        return Vector2(0, 0)
+            return Vector2(x=int(val.get('x', 0)), y=int(val.get('y', 0)))
+        return Vector2(x=0, y=0)
 
     def __repr__(self) -> str:
         return f"({self.x}, {self.y})"
 
+    def __eq__(self, other: Any) -> bool:
+        if not isinstance(other, Vector2):
+            other = Vector2.from_any(other)
+        return self.x == other.x and self.y == other.y
 
-@dataclass(frozen=True, slots=True)
-class FloatVector2:
-    """Immutable 2D float coordinate for physics and smoothing."""
+    def __hash__(self) -> int:
+        return hash((self.x, self.y))
+
+
+class FloatVector2(SimulationModel):
+    """Immutable 2D float coordinate (AOA Hardened)."""
+    model_config = ConfigDict(frozen=True, slots=True)
+
     x: float = 0.0
     y: float = 0.0
 
+    def __init__(self, x: float = 0.0, y: float = 0.0, **data: Any):
+        """Allow positional initialization for backward compatibility."""
+        if "x" not in data: data["x"] = x
+        if "y" not in data: data["y"] = y
+        super().__init__(**data)
+
     def __add__(self, other: FloatVector2) -> FloatVector2:
-        return FloatVector2(self.x + other.x, self.y + other.y)
+        return FloatVector2(x=self.x + other.x, y=self.y + other.y)
 
     def __sub__(self, other: FloatVector2) -> FloatVector2:
-        return FloatVector2(self.x - other.x, self.y - other.y)
+        return FloatVector2(x=self.x - other.x, y=self.y - other.y)
 
     def length(self) -> float:
         import math
@@ -50,8 +76,8 @@ class FloatVector2:
 
     def normalize(self) -> FloatVector2:
         L = self.length()
-        if L < 1e-6: return FloatVector2(0, 0)
-        return FloatVector2(self.x / L, self.y / L)
+        if L < 1e-6: return FloatVector2(x=0.0, y=0.0)
+        return FloatVector2(x=self.x / L, y=self.y / L)
 
     def __repr__(self) -> str:
         return f"f({self.x:.2f}, {self.y:.2f})"
@@ -59,8 +85,8 @@ class FloatVector2:
 
 # Direction offsets mapped to Direction enum values
 DIRECTION_OFFSETS: dict[int, Vector2] = {
-    0: Vector2(0, -1),  # NORTH
-    1: Vector2(1, 0),   # EAST
-    2: Vector2(0, 1),   # SOUTH
-    3: Vector2(-1, 0),  # WEST
+    0: Vector2(x=0, y=-1),  # NORTH
+    1: Vector2(x=1, y=0),   # EAST
+    2: Vector2(x=0, y=1),   # SOUTH
+    3: Vector2(x=-1, y=0),  # WEST
 }

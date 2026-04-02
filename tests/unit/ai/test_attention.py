@@ -13,11 +13,11 @@ def brain():
 def test_perception_phase_populates_attention_pool(brain):
     # Setup
     actor = MagicMock()
-    actor.spatial.pos = Vector2(0, 0)
-    actor.stats.vision_range = 10
+    actor.spatial.spatial.pos = Vector2(0, 0)
+    actor.stats.spatial.vision_range = 10
     actor.mind.max_attention_slots = 3
     actor.mind.attention_pool = []
-    actor.identity.faction = Faction.HERO_GUILD
+    actor.identity.identity.faction = Faction.HERO_GUILD
     
     # Mock snapshot with many entities
     snapshot = MagicMock()

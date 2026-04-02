@@ -3,7 +3,8 @@ import logging
 from src.core.models.enums import Domain, EnemyTier, EntityRole, Material
 from src.core.gameplay.faction import Faction
 from src.core.world.grid import Grid
-from src.core.models import Vector2, TreasureChest
+from src.core.models.vectors import Vector2
+from src.core.models.world_objects import TreasureChest
 from src.core.gameplay.buildings import Building
 from src.core.models.world_state import WorldState
 from src.core.world.regions import (

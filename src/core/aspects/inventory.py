@@ -150,3 +150,7 @@ class InventoryAspect(Aspect):
     def copy_inventory(self) -> "InventoryAspect":
         """Compatibility for old inventory.copy() calls."""
         return InventoryAspect(**self.model_dump())
+
+
+# Rebuild Model to finalize Pydantic setup
+InventoryAspect.model_rebuild()

@@ -40,6 +40,7 @@ class RestAction:
         # Minor HP recovery on rest
         if entity.combat.hp < entity.combat.max_hp:
             entity.combat.hp = min(entity.combat.hp + 1.0, entity.combat.max_hp)
+            entity.combat.validate() # AOA HARDENING
             
         from src.core.gameplay.attributes import speed_delay
         # Check current AI state from mind.decision aspect
@@ -49,3 +50,4 @@ class RestAction:
         delay = speed_delay(entity.combat.spd, action_type, entity.interaction.interaction_speed)
         # Recovery (Stamina)
         entity.progression.stamina = min(entity.progression.stamina + 2.0, entity.progression.max_stamina)
+        entity.progression.validate() # AOA HARDENING

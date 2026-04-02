@@ -195,8 +195,8 @@ class TestIntegration:
         arena.run_ticks(30)
         hero = arena.entity(1)
         mob = arena.entity(2)
-        if hero and mob and mob.combat.alive:
-            dist = hero.spatial.pos.manhattan(mob.spatial.pos)
+        if hero and mob and mob.combat.combat.alive:
+            dist = hero.spatial.spatial.pos.manhattan(mob.spatial.spatial.pos)
             # Hero should have closed distance (not stuck at wall)
             assert dist < 10, f"Hero should navigate around wall, dist={dist}"
 
@@ -230,6 +230,6 @@ class TestIntegration:
         arena.run_ticks(50)
         hero = arena.entity(1)
         mob = arena.entity(2)
-        if hero and mob and mob.combat.alive:
-            dist = hero.spatial.pos.manhattan(mob.spatial.pos)
+        if hero and mob and mob.combat.combat.alive:
+            dist = hero.spatial.spatial.pos.manhattan(mob.spatial.spatial.pos)
             assert dist < 8, f"Hero should navigate through maze gap, dist={dist}"

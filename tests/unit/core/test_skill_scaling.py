@@ -11,9 +11,12 @@ Covers:
 from src.core.gameplay.classes import SKILL_DEFS, SkillDef, SkillType, SkillTarget, HeroClass
 from src.core.models.enums import DamageType
 from src.actions.damage import get_damage_calculator, DamageContext
-from src.core.entities.entity import Entity, Stats, Vector2
+from src.core.entities.entity import Entity, Vector2
+from src.core.aspects.combat import CombatAspect
+from src.core.aspects.progression import ProgressionAspect
+from src.core.aspects.spatial import SpatialAspect
+from src.core.aspects.identity import IdentityAspect
 from src.core.gameplay.faction import Faction
-from src.core.gameplay.items.items import Inventory
 from src.core.gameplay.attributes import Attributes
 
 
@@ -63,27 +66,30 @@ class TestDamageCalculatorRouting:
     """DamageCalculator uses correct stat pair based on damage_type."""
 
     def _make_entity(self, atk=20, def_=10, matk=30, mdef=15, str_=10, spi=12, vit=8, wis=6):
-        stats = Stats(hp=100, max_hp=100, atk=atk, def_=def_, spd=10, matk=matk, mdef=mdef)
-        e = Entity(id=1, kind="hero", pos=Vector2(5, 5), stats=stats, faction=Faction.HERO_GUILD)
-        e.attributes = Attributes(str_=str_, spi=spi, vit=vit, wis=wis)
-        return e
+        return Entity(
+            id=1, kind="hero",
+            spatial=SpatialAspect(pos=Vector2(5, 5)),
+            combat=CombatAspect(hp=100, max_hp=100, atk=atk, def_=def_, matk=matk, mdef=mdef, spd=10),
+            progression=ProgressionAspect(attributes=Attributes(str_=str_, spi=spi, vit=vit, wis=wis)),
+            identity=IdentityAspect(faction=Faction.HERO_GUILD)
+        )
 
     def test_physical_uses_atk_def(self):
         attacker = self._make_entity(atk=20, def_=5, matk=50, mdef=50)
         defender = self._make_entity(atk=5, def_=15, matk=5, mdef=5)
         calc = get_damage_calculator(DamageType.PHYSICAL)
         ctx = calc.resolve(attacker, defender)
-        # Physical should use stats.combat.atk (base ATK) and stats.combat.def_ (base DEF)
-        assert ctx.atk_power == attacker.stats.combat.atk
-        assert ctx.def_power == defender.stats.combat.def_
+        # Physical should use combat.atk_base and combat.def_base
+        assert ctx.atk_power == attacker.combat.atk_base
+        assert ctx.def_power == defender.combat.def_base
 
     def test_magical_uses_matk_mdef(self):
         attacker = self._make_entity(atk=5, def_=5, matk=30, mdef=5)
         defender = self._make_entity(atk=5, def_=5, matk=5, mdef=20)
         calc = get_damage_calculator(DamageType.MAGICAL)
         ctx = calc.resolve(attacker, defender)
-        assert ctx.atk_power == attacker.stats.combat.matk
-        assert ctx.def_power == defender.stats.combat.mdef
+        assert ctx.atk_power == attacker.combat.matk
+        assert ctx.def_power == defender.combat.mdef
 
     def test_physical_atk_mult_scales_with_str(self):
         attacker = self._make_entity(str_=20)
@@ -126,11 +132,19 @@ class TestSkillDamageTypeIntegration:
         calc_phys = get_damage_calculator(DamageType.PHYSICAL)
         calc_mag = get_damage_calculator(DamageType.MAGICAL)
 
-        stats = Stats(hp=100, max_hp=100, atk=5, def_=10, spd=10, matk=30, mdef=5)
-        attacker = Entity(id=1, kind="mage", pos=Vector2(0, 0), stats=stats, faction=Faction.HERO_GUILD)
+        attacker = Entity(
+            id=1, kind="mage",
+            spatial=SpatialAspect(pos=Vector2(0, 0)),
+            combat=CombatAspect(hp=100, max_hp=100, atk=5, def_=10, spd=10, matk=30, mdef=5),
+            identity=IdentityAspect(faction=Faction.HERO_GUILD)
+        )
 
-        stats2 = Stats(hp=100, max_hp=100, atk=10, def_=10, spd=10, matk=5, mdef=10)
-        defender = Entity(id=2, kind="goblin", pos=Vector2(1, 0), stats=stats2, faction=Faction.GOBLIN_HORDE)
+        defender = Entity(
+            id=2, kind="goblin",
+            spatial=SpatialAspect(pos=Vector2(1, 0)),
+            combat=CombatAspect(hp=100, max_hp=100, atk=10, def_=10, spd=10, matk=5, mdef=10),
+            identity=IdentityAspect(faction=Faction.GOBLIN_HORDE)
+        )
 
         phys_ctx = calc_phys.resolve(attacker, defender)
         mag_ctx = calc_mag.resolve(attacker, defender)

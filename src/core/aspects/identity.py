@@ -1,11 +1,12 @@
 from __future__ import annotations
+from typing import Any
 from pydantic import Field
 from src.core.models.base import Aspect
 from src.core.models.enums import EntityRole
 from src.core.gameplay.faction import Faction
 
 class IdentityAspect(Aspect):
-    """Aspect handling entity name, faction, role, and tiering."""
+    """Aspect handling entity name, faction, role, and tiering. [AOA STABILIZATION]"""
     display_name: str = ""
     faction: Any = Faction.HERO_GUILD
     role: Any = EntityRole.MOB
@@ -35,3 +36,7 @@ class IdentityAspect(Aspect):
     extraversion: float = 0.5
     agreeableness: float = 0.5
     neuroticism: float = 0.5
+
+# Rebuild Model to finalize Pydantic setup
+IdentityAspect.model_rebuild()
+

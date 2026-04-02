@@ -97,8 +97,9 @@ class WanderHandler(StateHandler):
                 updates=final_updates)
 
         if actor.identity.faction == Faction.HERO_GUILD and actor.progression.level >= 3:
-            for em_id, em_pos in actor.mind.perception.entity_memory.items():
+            for em_id, em_rec in actor.mind.perception.entity_memory.items():
                 # Simplified check for now (needs more robust memory data)
+                em_pos = em_rec.pos
                 if actor.spatial.pos.manhattan(em_pos) > 3:
                      return AIState.HUNT, propose_move_toward(
                         actor, em_pos, snapshot,

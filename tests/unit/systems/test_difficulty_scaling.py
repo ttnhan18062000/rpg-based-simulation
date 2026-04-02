@@ -35,9 +35,9 @@ class TestSpawnDifficultyScaling(unittest.TestCase):
         gen, _ = _make_generator(seed=100)
         world = _make_world(seed=100)
         e = gen.spawn(world, tier=EnemyTier.BASIC, difficulty_tier=1)
-        self.assertEqual(e.difficulty_tier, 1)
-        self.assertGreater(e.stats.combat.hp, 0)
-        self.assertGreater(e.stats.combat.atk, 0)
+        self.assertEqual(e.spatial.difficulty_tier, 1)
+        self.assertGreater(e.stats.combat.combat.hp, 0)
+        self.assertGreater(e.stats.combat.combat.atk_base, 0)
 
     def test_tier4_has_higher_stats_than_tier1(self):
         """Same seed, same enemy tier — tier 4 difficulty should have higher HP/ATK."""
@@ -49,9 +49,9 @@ class TestSpawnDifficultyScaling(unittest.TestCase):
         world4 = _make_world(seed=200)
         e4 = gen4.spawn(world4, tier=EnemyTier.BASIC, difficulty_tier=4)
 
-        self.assertGreater(e4.stats.combat.max_hp, e1.stats.combat.max_hp)
-        self.assertGreater(e4.stats.combat.atk, e1.stats.combat.atk)
-        self.assertEqual(e4.difficulty_tier, 4)
+        self.assertGreater(e4.stats.combat.combat.max_hp, e1.stats.combat.combat.max_hp)
+        self.assertGreater(e4.stats.combat.combat.atk_base, e1.stats.combat.combat.atk_base)
+        self.assertEqual(e4.spatial.difficulty_tier, 4)
 
     def test_tier4_hp_significantly_higher(self):
         """Tier 4 HP multiplier is 4.0× on base stats; with flat bonuses from
@@ -64,7 +64,7 @@ class TestSpawnDifficultyScaling(unittest.TestCase):
         world4 = _make_world(seed=300)
         e4 = gen4.spawn(world4, tier=EnemyTier.BASIC, difficulty_tier=4)
 
-        ratio = e4.stats.combat.max_hp / e1.stats.combat.max_hp
+        ratio = e4.stats.combat.combat.max_hp / e1.stats.combat.combat.max_hp
         self.assertGreaterEqual(ratio, 2.0, "Tier 4 HP should be at least 2× tier 1")
         self.assertLessEqual(ratio, 5.0)
 
@@ -74,8 +74,8 @@ class TestSpawnDifficultyScaling(unittest.TestCase):
         world = _make_world(seed=400)
         e = gen.spawn(world, tier=EnemyTier.BASIC, difficulty_tier=3)
         diff = DIFFICULTY_TIERS[3]
-        self.assertGreaterEqual(e.stats.progression.level, diff.level_min)
-        self.assertLessEqual(e.stats.progression.level, diff.level_max)
+        self.assertGreaterEqual(e.stats.progression.progression.level, diff.level_min)
+        self.assertLessEqual(e.stats.progression.progression.level, diff.level_max)
 
     def test_gold_scales_with_difficulty(self):
         """Tier 4 gold multiplier is 4.0×."""
@@ -88,7 +88,7 @@ class TestSpawnDifficultyScaling(unittest.TestCase):
         e4 = gen4.spawn(world4, tier=EnemyTier.WARRIOR, difficulty_tier=4)
 
         # Gold is randomized but tier 4 should have higher gold (or equal if base was 0)
-        self.assertGreaterEqual(e4.stats.progression.gold, e1.stats.progression.gold)
+        self.assertGreaterEqual(e4.stats.progression.progression.gold, e1.stats.progression.progression.gold)
 
 
 class TestSpawnRaceDifficultyScaling(unittest.TestCase):
@@ -103,22 +103,22 @@ class TestSpawnRaceDifficultyScaling(unittest.TestCase):
         world4 = _make_world(seed=600)
         e4 = gen4.spawn_race(world4, "wolf", difficulty_tier=4)
 
-        self.assertGreater(e4.stats.combat.max_hp, e1.stats.combat.max_hp)
-        self.assertGreater(e4.stats.combat.atk, e1.stats.combat.atk)
+        self.assertGreater(e4.stats.combat.combat.max_hp, e1.stats.combat.combat.max_hp)
+        self.assertGreater(e4.stats.combat.combat.atk_base, e1.stats.combat.combat.atk_base)
 
     def test_race_difficulty_tier_set(self):
         gen, _ = _make_generator(seed=700)
         world = _make_world(seed=700)
         e = gen.spawn_race(world, "bandit", difficulty_tier=2)
-        self.assertEqual(e.difficulty_tier, 2)
+        self.assertEqual(e.spatial.difficulty_tier, 2)
 
     def test_race_level_in_range(self):
         gen, _ = _make_generator(seed=800)
         world = _make_world(seed=800)
         e = gen.spawn_race(world, "undead", difficulty_tier=2)
         diff = DIFFICULTY_TIERS[2]
-        self.assertGreaterEqual(e.stats.progression.level, diff.level_min)
-        self.assertLessEqual(e.stats.progression.level, diff.level_max)
+        self.assertGreaterEqual(e.stats.progression.progression.level, diff.level_min)
+        self.assertLessEqual(e.stats.progression.progression.level, diff.level_max)
 
     def test_all_races_scale(self):
         """All four races should scale with difficulty."""
@@ -132,7 +132,7 @@ class TestSpawnRaceDifficultyScaling(unittest.TestCase):
             e3 = gen3.spawn_race(world3, race, tier=EnemyTier.BASIC, difficulty_tier=3)
 
             with self.subTest(race=race):
-                self.assertGreater(e3.stats.combat.max_hp, e1.stats.combat.max_hp,
+                self.assertGreater(e3.stats.combat.combat.max_hp, e1.stats.combat.combat.max_hp,
                                    f"{race} tier 3 HP should exceed tier 1")
 
 
@@ -155,13 +155,13 @@ class TestDefaultDifficultyBackwardCompat(unittest.TestCase):
         gen, _ = _make_generator(seed=1000)
         world = _make_world(seed=1000)
         e = gen.spawn(world)
-        self.assertEqual(e.difficulty_tier, 1)
+        self.assertEqual(e.spatial.difficulty_tier, 1)
 
     def test_spawn_race_default_is_tier1(self):
         gen, _ = _make_generator(seed=1001)
         world = _make_world(seed=1001)
         e = gen.spawn_race(world, "wolf")
-        self.assertEqual(e.difficulty_tier, 1)
+        self.assertEqual(e.spatial.difficulty_tier, 1)
 
 
 if __name__ == "__main__":

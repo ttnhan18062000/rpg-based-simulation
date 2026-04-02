@@ -22,25 +22,6 @@ from src.core.aspects.interaction import InteractionAspect
 from src.core.models.vectors import Vector2
 from dataclasses import dataclass
 
-@dataclass
-class Stats:
-    """DEPRECATED: Legacy stats shim for test compatibility."""
-    level: int = 1
-    xp: int = 0
-    hp: int = 100
-    max_hp: int = 100
-    atk: int = 10
-    def_: int = 5
-    spd: int = 5
-    stamina: int = 50
-    max_stamina: int = 50
-    luck: int = 0
-    crit_rate: float = 0.05
-    crit_dmg: float = 1.5
-    evasion: float = 0.02
-    vision: int = 6
-    matk: int = 0
-    mdef: int = 0
 
 class Entity(BaseModel):
     """A simulation entity — character, generator, or any world actor.
@@ -68,12 +49,67 @@ class Entity(BaseModel):
     @model_validator(mode="before")
     @classmethod
     def _validate_before(cls, data: Any) -> Any:
-        """Ensure core fields have correct types before Pydantic validation."""
-        if isinstance(data, dict):
-            if "id" in data and isinstance(data["id"], (float, str)):
-                data["id"] = int(data["id"])
-            if "next_act_at" in data and isinstance(data["next_act_at"], (int, str)):
-                data["next_act_at"] = float(data["next_act_at"])
+        """AOA Stabilization: Maps legacy fields to authoritative Aspects."""
+        if not isinstance(data, dict):
+            return data
+
+        # 1. Identity Mapping (faction -> identity)
+        if "faction" in data and "identity" not in data:
+            data["identity"] = {"faction": data.pop("faction")}
+            
+        # 2. Spatial Mapping (pos -> spatial)
+        if "pos" in data and "spatial" not in data:
+            pos = data.pop("pos")
+            if not isinstance(pos, Vector2):
+                pos = Vector2(*pos) if isinstance(pos, (tuple, list)) else Vector2.from_any(pos)
+            data["spatial"] = {"pos": pos}
+            
+        # 3. Combat Mapping (stats -> combat)
+        if "stats" in data and "combat" not in data:
+            stats = data.pop("stats")
+            stats_dict = {}
+            if hasattr(stats, "__dict__"):
+                stats_dict = dict(stats.__dict__)
+            elif isinstance(stats, dict):
+                stats_dict = stats
+                
+            if stats_dict:
+                # Split fields between combat and progression
+                combat_fields = ["hp", "max_hp", "atk", "def_", "spd", "luck", "crit_rate", "crit_dmg", "evasion", "matk", "mdef"]
+                prog_fields = ["level", "xp", "stamina", "max_stamina", "vision"]
+                
+                combat_data = {k: stats_dict.pop(k) for k in combat_fields if k in stats_dict}
+                data["combat"] = combat_data
+                
+                if any(k in stats_dict for k in prog_fields):
+                    prog = data.get("progression", {})
+                    if isinstance(prog, dict):
+                        for k in prog_fields:
+                            if k in stats_dict: prog[k] = stats_dict.pop(k)
+                        data["progression"] = prog
+                
+        # 4. Progression Mapping (attributes, attribute_caps -> progression)
+        if "attributes" in data or "attribute_caps" in data:
+            prog = data.get("progression", {})
+            if isinstance(prog, dict):
+                if "attributes" in data: prog["attributes"] = data.pop("attributes")
+                if "attribute_caps" in data: prog["attribute_caps"] = data.pop("attribute_caps")
+                data["progression"] = prog
+                
+        # 5. Inventory Mapping
+        if "inventory" in data:
+            inv = data["inventory"]
+            from dataclasses import is_dataclass, asdict
+            if is_dataclass(inv) and not isinstance(inv, (dict, list, InventoryAspect)):
+                # Handle legacy Inventory dataclass (even with slots)
+                data["inventory"] = asdict(inv)
+                
+        # 5. Core Type Enforcement
+        if "id" in data and isinstance(data["id"], (float, str)):
+            data["id"] = int(data["id"])
+        if "next_act_at" in data and isinstance(data["next_act_at"], (int, str)):
+            data["next_act_at"] = float(data["next_act_at"])
+            
         return data
 
     def model_post_init(self, __context: Any) -> None:
@@ -98,34 +134,11 @@ class Entity(BaseModel):
         if self.inventory:
             self.inventory.on_tick(tick)
 
+    # --- Traits & Helpers ---
+
     def has_trait(self, trait: Any) -> bool:
         """Check if entity has a specific TraitType via its identity aspect."""
         return trait in self.identity.traits
-
-    @property
-    def threat_table(self) -> dict[int, float]:
-        """Compatibility shim for legacy threat system tests."""
-        return self.mind.perception.threat_table
-
-    @property
-    def pos(self) -> Vector2:
-        """Compatibility shim for legacy spatial tests."""
-        return self.spatial.pos
-
-    @property
-    def stats(self) -> CombatAspect:
-        """Compatibility shim for legacy combat stats tests."""
-        return self.combat
-
-    @property
-    def alive(self) -> bool:
-        """Compatibility shim for legacy life-state tests."""
-        return self.combat.alive
-
-    @property
-    def combat_target_id(self) -> int | None:
-        """Compatibility shim for legacy targeting tests."""
-        return self.combat.combat_target_id
 
     # --- Copying ---
 

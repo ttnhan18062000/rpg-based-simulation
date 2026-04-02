@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import pickle
 import logging
 import time
 import random
@@ -39,6 +38,7 @@ from src.engine.phases.scheduling import SchedulingPhase
 from src.engine.phases.collection import CollectionPhase
 from src.engine.phases.resolution import ResolutionPhase
 from src.engine.phases.cleanup import CleanupPhase
+from src.engine.phases.finalization import FinalizationPhase
 from src.engine.phases.persistence import PersistencePhase
 
 if TYPE_CHECKING:
@@ -148,6 +148,7 @@ class WorldLoop:
             CollectionPhase(),
             ResolutionPhase(),
             CleanupPhase(),
+            FinalizationPhase(),
             PersistencePhase()
         ]
         
@@ -247,11 +248,16 @@ class WorldLoop:
         )
 
         # Run Phase Sequence
+        from src.engine.phase_guard import PhaseGuard
         for phase in self._phases:
             try:
-                phase.execute(ctx)
+                with PhaseGuard(ctx, phase.contract):
+                    phase.execute(ctx)
             except Exception as e:
-                self._logger.error("Phase %s failed: %s", phase.__class__.__name__, e, exc_info=True)
+                self._logger.error("Phase %s failed: %s", phase.contract.name, e, exc_info=True)
+                # If a phase fails, we might want to halt the tick or continue depending on config
+                if not self._config.ignore_phase_errors:
+                    raise
 
         # Sync results for legacy API/Recorder
         self._last_applied = ctx.tick_applied

@@ -1,5 +1,6 @@
 from hypothesis import given, strategies as st
-from src.core.entities.entity import Entity, Stats, Vector2
+from tests.helpers.legacy_stats import Stats
+from src.core.entities.entity import Entity, Vector2
 from src.core.gameplay.attributes import Attributes, AttributeCaps, recalc_derived_stats, speed_delay
 from src.core.models.enums import AIState, EntityRole, RACE_PROFILES
 from src.core.gameplay.faction import Faction
@@ -24,7 +25,7 @@ def test_stats_invariants(hp, max_hp, atk, def_, crit_rate):
     
     # We expect hp_ratio to be clamped between 0 and 1 for safety
     assert isinstance(stats.combat.hp_ratio, float)
-    if stats.combat.max_hp > 0:
+    if stats.combat.combat.max_hp > 0:
         assert 0.0 <= stats.combat.hp_ratio <= 1.0
     else:
         assert stats.combat.hp_ratio == 0.0
@@ -53,8 +54,8 @@ def test_recalc_level_consistency(level):
     stats = Stats(level=level)
     attrs = Attributes(vit=5, end=5, str_=5, agi=5)
     recalc_derived_stats(stats, attrs)
-    assert stats.progression.level == level
-    assert stats.combat.max_hp > 0
+    assert stats.progression.progression.level == level
+    assert stats.combat.combat.max_hp > 0
 
 @given(
     st.integers(min_value=0, max_value=1000), # current_hp

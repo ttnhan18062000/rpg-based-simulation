@@ -21,16 +21,23 @@ def world():
 def entity(world):
     from src.core.aspects.inventory import InventoryAspect
     from src.core.aspects.progression import ProgressionAspect
+    from src.core.aspects.spatial import SpatialAspect
+    from src.core.aspects.combat import CombatAspect
+    from src.core.aspects.identity import IdentityAspect
     from src.core.gameplay.attributes import Attributes, AttributeCaps
+    from src.core.gameplay.faction import Faction
+    
     e = Entity(
         id=1, kind="hero", 
+        spatial=SpatialAspect(pos=Vector2(5, 5)),
         inventory=InventoryAspect(),
+        combat=CombatAspect(),
+        identity=IdentityAspect(faction=Faction.HERO_GUILD),
         progression=ProgressionAspect(
             attributes=Attributes(),
             attribute_caps=AttributeCaps()
         )
     )
-    e.spatial.pos = Vector2(5, 5)
     world.entities[1] = e
     return e
 
@@ -58,31 +65,24 @@ def test_loot_no_duplication(world, entity):
     assert entity.inventory.items[0] == "iron_ore"
 
 def test_corpse_loot_convergence(world, entity):
-    """Verify that corpse recovery uses the system updates exclusively."""
+    """Verify that corpse recovery is authoritatively handled by ActionSystem."""
     from src.core.models.world_objects import CorpseNode
     pos = Vector2(5, 5)
     node = CorpseNode(node_id=101, entity_id=entity.id, pos=pos, items=["sword_of_justice"], gold=100)
     world.corpse_nodes[101] = node
     
-    # AI just says "I'm looting this corpse"
+    # AI proposes LOOT without pre-calculated updates (Native Convergence)
     proposal = ActionProposal(
         actor_id=entity.id,
         verb=ActionType.LOOT,
         target=pos,
-        updates=[InteractionUpdate(corpse_id_to_remove=101)]
+        updates=[] 
     )
     
-    # Let's verify and then fix if needed.
     config = SimulationConfig()
     ActionSystem.apply_action_state_transitions(world, config, [proposal])
     
-    # Verification
-    # If the logic is converged, the ActionSystem should have seen the corpse at (5,5) 
-    # and either handled it via world.pickup_items or specialized corpse logic.
-    # (Checking current ActionSystem implementation...)
-    
-    # Wait! ActionSystem uses world.pickup_items(pos). 
-    # Does WorldState.pickup_items handle corpses? No, it handles ground_items.
-    
-    # This indicates a GAP in my convergence refactor for corpses.
-    # I need to add corpse item recovery to ActionSystem.
+    # Verification (Authoritative Handling)
+    assert 101 not in world.corpse_nodes
+    assert entity.progression.gold == 100
+    assert "sword_of_justice" in entity.inventory.items

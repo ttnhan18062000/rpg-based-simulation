@@ -11,7 +11,7 @@ from __future__ import annotations
 from pydantic import BaseModel, ConfigDict, Field, TypeAdapter
 
 from fastapi import APIRouter
-from src.api.encoder import ENTITY_KEY_MAP, STATE_ENUM_MAP
+from src.api.presenters.entity_presenter import ENTITY_KEY_MAP, STATE_ENUM_MAP
 
 from src.core.models.enums import (
     AIState, DamageType, Element, EnemyTier, EntityRole,

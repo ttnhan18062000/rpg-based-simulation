@@ -15,15 +15,15 @@ def test_breakthrough_applies_bonus():
     # Ensure identity is a mock and has traits
     entity.identity = MagicMock()
     entity.identity.traits = ["str_25"]
-    entity.progression.stamina = 100
+    entity.progression.progression.stamina = 100
     entity.progression.max_stamina = 100
     
     stats = CombatAspect()
     stats.on_attach(entity)
-    stats.atk = 100
+    stats.combat.atk_base = 100
     
     attrs = Attributes(str_=25)
     recalc_derived_stats(stats, attrs)
     
     # Base 112 * 1.1 = 123
-    assert stats.atk >= 123
+    assert stats.combat.atk_base >= 123

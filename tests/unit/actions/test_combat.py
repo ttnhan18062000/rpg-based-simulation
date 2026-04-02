@@ -68,25 +68,25 @@ class TestEntityWithAttributes:
 
     def test_entity_has_stamina(self):
         e = _make_entity(1, stamina=60)
-        assert e.progression.stamina == 60
+        assert e.progression.progression.stamina == 60
         assert e.progression.max_stamina == 60
         assert e.progression.stamina_ratio == 1.0
 
     def test_stamina_ratio_partial(self):
         e = _make_entity(1, stamina=50)
-        e.progression.stamina = 25
+        e.progression.progression.stamina = 25
         assert abs(e.progression.stamina_ratio - 0.5) < 0.01
 
     def test_entity_copy_preserves_attributes(self):
         e = _make_entity(1, str_=15, agi=12)
         e.progression.hero_class = 1  # WARRIOR
-        e.progression.xp = 25.0
+        e.progression.progression.xp = 25.0
         copy = e.copy()
         assert copy.progression.attributes.str_ == 15
         assert copy.progression.attributes.agi == 12
         assert copy.progression.attribute_caps is not None
         assert copy.progression.hero_class == 1
-        assert copy.progression.xp == 25.0
+        assert copy.progression.progression.xp == 25.0
         # Ensure deep copy
         copy.progression.attributes.str_ = 99
         assert e.progression.attributes.str_ == 15
@@ -155,46 +155,46 @@ class TestStaminaMechanics:
     def test_stamina_decreases_on_attack(self):
         e = _make_entity(1, stamina=50)
         # Simulate attack stamina cost
-        e.progression.stamina = max(0, e.progression.stamina - 3)
-        assert e.progression.stamina == 47
+        e.progression.progression.stamina = max(0, e.progression.progression.stamina - 3)
+        assert e.progression.progression.stamina == 47
 
     def test_stamina_decreases_on_move(self):
         e = _make_entity(1, stamina=50)
-        e.progression.stamina = max(0, e.progression.stamina - 1)
-        assert e.progression.stamina == 49
+        e.progression.progression.stamina = max(0, e.progression.progression.stamina - 1)
+        assert e.progression.progression.stamina == 49
 
     def test_stamina_decreases_on_harvest(self):
         e = _make_entity(1, stamina=50)
-        e.progression.stamina = max(0, e.progression.stamina - 2)
-        assert e.progression.stamina == 48
+        e.progression.progression.stamina = max(0, e.progression.progression.stamina - 2)
+        assert e.progression.progression.stamina == 48
 
     def test_stamina_cannot_go_below_zero(self):
         e = _make_entity(1, stamina=1)
-        e.progression.stamina = max(0, e.progression.stamina - 5)
-        assert e.progression.stamina == 0
+        e.progression.progression.stamina = max(0, e.progression.progression.stamina - 5)
+        assert e.progression.progression.stamina == 0
 
     def test_stamina_regen_resting(self):
         e = _make_entity(1, stamina=50)
-        e.progression.stamina = 20
+        e.progression.progression.stamina = 20
         # Resting regen: +5 per tick
         regen = 5
-        e.progression.stamina = min(e.progression.stamina + regen, e.progression.max_stamina)
-        assert e.progression.stamina == 25
+        e.progression.progression.stamina = min(e.progression.progression.stamina + regen, e.progression.max_stamina)
+        assert e.progression.progression.stamina == 25
 
     def test_stamina_regen_active(self):
         e = _make_entity(1, stamina=50)
-        e.progression.stamina = 20
+        e.progression.progression.stamina = 20
         # Active regen: +1 per tick
         regen = 1
-        e.progression.stamina = min(e.progression.stamina + regen, e.progression.max_stamina)
-        assert e.progression.stamina == 21
+        e.progression.progression.stamina = min(e.progression.progression.stamina + regen, e.progression.max_stamina)
+        assert e.progression.progression.stamina == 21
 
     def test_stamina_regen_capped(self):
         e = _make_entity(1, stamina=50)
-        e.progression.stamina = 49
+        e.progression.progression.stamina = 49
         regen = 5
-        e.progression.stamina = min(e.progression.stamina + regen, e.progression.max_stamina)
-        assert e.progression.stamina == 50
+        e.progression.progression.stamina = min(e.progression.progression.stamina + regen, e.progression.max_stamina)
+        assert e.progression.progression.stamina == 50
 
 
 class TestSkillUsage:
@@ -225,7 +225,7 @@ class TestSkillUsage:
         from src.core.gameplay.classes import SkillInstance
         from src.ai.states import best_ready_skill
         e = _make_entity(1, stamina=5)
-        e.progression.stamina = 5
+        e.progression.progression.stamina = 5
         # power_strike costs 12 stamina, ambush costs 8 — both too expensive
         e.progression.skills = [
             SkillInstance(skill_id="power_strike"),
@@ -253,9 +253,9 @@ class TestSkillUsage:
         si = SkillInstance(skill_id="power_strike")
         sdef = SKILL_DEFS["power_strike"]
         cost = si.effective_stamina_cost(sdef.stamina_cost)
-        e.progression.stamina -= cost
-        assert e.progression.stamina == 50 - cost
-        assert e.progression.stamina < 50
+        e.progression.progression.stamina -= cost
+        assert e.progression.progression.stamina == 50 - cost
+        assert e.progression.progression.stamina < 50
 
     def test_skill_use_sets_cooldown(self):
         from src.core.gameplay.classes import SkillInstance, SKILL_DEFS
@@ -279,13 +279,13 @@ class TestSkillUsage:
     def test_self_skill_heals(self):
         from src.core.gameplay.classes import SkillInstance, SKILL_DEFS
         e = _make_entity(1, hp=100, stamina=50)
-        e.combat.hp = 50  # half HP
+        e.combat.combat.hp = 50  # half HP
         sdef = SKILL_DEFS.get("second_wind")
         assert sdef is not None
         hp_mod = getattr(sdef, 'hp_mod', 0.0) or 0.0
-        heal = int(e.combat.max_hp * hp_mod) if hp_mod > 0 else 0
-        e.combat.hp = min(e.combat.hp + heal, e.combat.max_hp)
-        assert e.combat.hp > 50  # healed some
+        heal = int(e.combat.combat.max_hp * hp_mod) if hp_mod > 0 else 0
+        e.combat.combat.hp = min(e.combat.combat.hp + heal, e.combat.combat.max_hp)
+        assert e.combat.combat.hp > 50  # healed some
 
     def test_skill_damage_formula(self):
         from src.core.gameplay.classes import SkillInstance, SKILL_DEFS
@@ -294,10 +294,10 @@ class TestSkillUsage:
         si = SkillInstance(skill_id="power_strike")
         sdef = SKILL_DEFS["power_strike"]
         power = si.effective_power(sdef.power)
-        raw_dmg = int(attacker.combat.atk * power)
-        dmg = max(raw_dmg - defender.combat.def_ // 2, 1)
-        defender.combat.hp -= dmg
-        assert defender.combat.hp < 100
+        raw_dmg = int(attacker.combat.combat.atk_base * power)
+        dmg = max(raw_dmg - defender.combat.combat.def_base // 2, 1)
+        defender.combat.combat.hp -= dmg
+        assert defender.combat.combat.hp < 100
         assert dmg > 0
 
 
@@ -330,8 +330,8 @@ class TestDamageCalculatorStrategy:
         calc = PhysicalDamageCalculator()
         ctx = calc.resolve(attacker, defender)
         assert isinstance(ctx, DamageContext)
-        assert ctx.atk_power == attacker.combat.atk
-        assert ctx.def_power == defender.combat.def_
+        assert ctx.atk_power == attacker.combat.combat.atk_base
+        assert ctx.def_power == defender.combat.combat.def_base
         assert ctx.train_action == "attack"
         # STR=10 → 1.0 + 10*0.02 = 1.20
         assert abs(ctx.atk_mult - 1.20) < 0.001
@@ -407,18 +407,18 @@ class TestSkillEffects:
     def test_buff_modifies_effective_stats(self):
         from src.core.gameplay.effects import skill_effect
         e = _make_entity(1, atk=10, def_=10)
-        base_atk = e.combat.atk
-        base_def = e.combat.def_
+        base_atk = e.combat.combat.atk_base
+        base_def = e.combat.combat.def_base
         e.combat.effects.append(skill_effect(atk_mod=0.3, def_mod=0.4, duration=3))
-        assert e.combat.atk > base_atk
-        assert e.combat.def_ > base_def
+        assert e.combat.combat.atk_base > base_atk
+        assert e.combat.combat.def_base > base_def
 
     def test_debuff_reduces_effective_stats(self):
         from src.core.gameplay.effects import skill_effect
         e = _make_entity(1, atk=20, def_=10)
-        base_atk = e.combat.atk
+        base_atk = e.combat.combat.atk_base
         e.combat.effects.append(skill_effect(atk_mod=-0.15, duration=3, is_debuff=True))
-        assert e.combat.atk < base_atk
+        assert e.combat.combat.atk_base < base_atk
 
     def test_effect_expires_after_ticks(self):
         from src.core.gameplay.effects import skill_effect
@@ -442,17 +442,17 @@ class TestSkillEffects:
         eff = skill_effect(hp_per_tick=-5, duration=3, is_debuff=True, source="poison")
         e.combat.effects.append(eff)
         # Simulate tick: apply hp_per_tick then tick
-        e.combat.hp = max(0, e.combat.hp + eff.hp_per_tick)
-        assert e.combat.hp == 45
+        e.combat.combat.hp = max(0, e.combat.combat.hp + eff.hp_per_tick)
+        assert e.combat.combat.hp == 45
 
     def test_hp_per_tick_regen(self):
         from src.core.gameplay.effects import skill_effect
         e = _make_entity(1, hp=50)
-        e.combat.hp = 30
+        e.combat.combat.hp = 30
         eff = skill_effect(hp_per_tick=10, duration=3, source="regen")
         e.combat.effects.append(eff)
-        e.combat.hp = min(e.combat.hp + eff.hp_per_tick, e.combat.max_hp)
-        assert e.combat.hp == 40
+        e.combat.combat.hp = min(e.combat.combat.hp + eff.hp_per_tick, e.combat.combat.max_hp)
+        assert e.combat.combat.hp == 40
 
     def test_multiple_effects_stack(self):
         from src.core.gameplay.effects import skill_effect
@@ -460,7 +460,7 @@ class TestSkillEffects:
         e.combat.effects.append(skill_effect(atk_mod=0.2, duration=3))
         e.combat.effects.append(skill_effect(atk_mod=0.3, duration=3))
         # Multiplicative: 10 * 1.2 * 1.3 = 15.6 -> 15
-        assert e.combat.atk == int(10 * 1.2 * 1.3)
+        assert e.combat.combat.atk_base == int(10 * 1.2 * 1.3)
 
     def test_skill_effect_factory_debuff_type(self):
         from src.core.gameplay.effects import skill_effect, EffectType

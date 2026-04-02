@@ -8,7 +8,6 @@ Pillar-Oriented Architecture (AOA Stabilization):
 
 from __future__ import annotations
 import logging
-from dataclasses import replace
 from typing import Any, TYPE_CHECKING
 
 from src.core.models.enums import AIState, ActionType, GoalType, EmotionType
@@ -288,10 +287,11 @@ class AIBrain:
                 new_idle = 0
             final_typed.append(MindUpdate(consecutive_idle_ticks=new_idle))
                 
-            # Finalize proposal AI state via replace (ActionProposal is frozen)
-            proposal = replace(proposal, 
-                               new_ai_state=int(new_state), 
-                               updates=final_typed)
+            # Finalize proposal AI state via model_copy (ActionProposal is a SimulationModel)
+            proposal = proposal.model_copy(update={
+                "new_ai_state": int(new_state),
+                "updates": final_typed
+            })
             
             return new_state, proposal
                 

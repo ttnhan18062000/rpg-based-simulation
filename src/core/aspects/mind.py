@@ -24,7 +24,7 @@ class DecisionState(SimulationModel):
 
 class MemoryRecord(SimulationModel):
     """A single record of a seen entity or landmark."""
-    model_config = ConfigDict(extra='forbid', arbitrary_types_allowed=True)
+    model_config = ConfigDict(extra='forbid')
     
     entity_id: int
     pos: Vector2
@@ -33,13 +33,24 @@ class MemoryRecord(SimulationModel):
     last_seen_tick: int = 0
     threat_level: float = 0.0
 
+from pydantic import model_validator
+
 class PerceptionMemory(SimulationModel):
-    """Short-term sensory memory and threat tracking."""
+    """Short-term sensory memory and threat tracking. [AOA STABILIZATION]"""
     model_config = ConfigDict(extra='forbid')
     
     threat_table: dict[int, float] = Field(default_factory=dict)
     terrain_memory: dict[tuple[int, int], int] = Field(default_factory=dict)
     entity_memory: dict[int, MemoryRecord] = Field(default_factory=dict)
+    
+    @model_validator(mode="after")
+    def _validate_memory(self) -> "PerceptionMemory":
+        """Force coercion of memory records if they came in as dicts."""
+        for eid, rec in self.entity_memory.items():
+            if isinstance(rec, dict):
+                self.entity_memory[eid] = MemoryRecord.model_validate(rec)
+        return self
+
     memory_stale_ticks: dict[int, int] = Field(default_factory=dict)
     attention_pool: list[int] = Field(default_factory=list)
     max_attention_slots: int = 5
@@ -59,7 +70,7 @@ class EmotionState(SimulationModel):
 
 class NavigationState(SimulationModel):
     """Pathfinding and movement history."""
-    model_config = ConfigDict(extra='forbid', arbitrary_types_allowed=True)
+    model_config = ConfigDict(extra='forbid')
     
     cached_path: list[Vector2] | None = Field(default=None, repr=False)
     cached_path_target: Vector2 | None = Field(default=None, repr=False)
@@ -133,6 +144,26 @@ class MindAspect(Aspect):
     
     bonuses: dict[str, Any] = Field(default_factory=dict)
 
+    @property
+    def ai_state(self) -> AIState:
+        """AOA Shim: Redirects to decision.ai_state for legacy systems."""
+        return self.decision.ai_state
+
+    @ai_state.setter
+    def ai_state(self, value: AIState) -> None:
+        """AOA Shim: Redirects mutation to decision.ai_state."""
+        self.decision.ai_state = value
+
+    @property
+    def memory(self) -> dict[int, Any]:
+        """AOA Shim: Redirects to perception.entity_memory for legacy systems."""
+        return self.perception.entity_memory
+
+    @memory.setter
+    def memory(self, value: dict[int, Any]) -> None:
+        """AOA Shim: Redirects mutation to perception.entity_memory."""
+        self.perception.entity_memory = value
+
     def total_glory(self) -> float:
         return sum(
             (e.impact if hasattr(e, "impact") else e.get("impact", 0.0))
@@ -146,3 +177,15 @@ class MindAspect(Aspect):
             for e in self.narrative.memory_log
             if e.type == "trauma"
         )
+
+MemoryRecord.model_rebuild()
+PerceptionMemory.model_rebuild()
+EmotionState.model_rebuild()
+NavigationState.model_rebuild()
+NarrativeDetail.model_rebuild()
+CombatNarrative.model_rebuild()
+LootNarrative.model_rebuild()
+DiscoveryNarrative.model_rebuild()
+MemoryLogEntry.model_rebuild()
+NarrativeMemory.model_rebuild()
+MindAspect.model_rebuild()

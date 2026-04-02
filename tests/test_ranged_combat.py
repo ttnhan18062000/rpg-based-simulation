@@ -144,7 +144,7 @@ class TestRangeAwareSkillSelection(unittest.TestCase):
         from src.core.gameplay.classes import SkillInstance
         from src.ai.states import best_ready_skill
         e = _make_entity(1)
-        e.progression.stamina = 50
+        e.progression.progression.stamina = 50
         e.progression.skills = [SkillInstance(skill_id="quick_shot")]  # range=3
         result = best_ready_skill(e, dist_to_enemy=3)
         assert result == "quick_shot"
@@ -153,7 +153,7 @@ class TestRangeAwareSkillSelection(unittest.TestCase):
         from src.core.gameplay.classes import SkillInstance
         from src.ai.states import best_ready_skill
         e = _make_entity(1)
-        e.progression.stamina = 50
+        e.progression.progression.stamina = 50
         e.progression.skills = [SkillInstance(skill_id="power_strike")]  # range=1
         result = best_ready_skill(e, dist_to_enemy=3)
         assert result is None

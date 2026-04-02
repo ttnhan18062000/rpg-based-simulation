@@ -1,13 +1,51 @@
-"""Phase boundary enforcement: Runtime guards for AOA simulation phases."""
-
 from __future__ import annotations
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, TypeVar, Generic
 import logging
 
 if TYPE_CHECKING:
     from src.core.models.world_state import WorldState
+    from src.engine.phases.context import EngineContext
+    from src.engine.phases.contract import PhaseContract
 
 logger = logging.getLogger(__name__)
+
+T = TypeVar("T")
+
+class EngineContextProxy(Generic[T]):
+    """A non-invasive proxy for EngineContext that enforces PhaseContract permissions."""
+    
+    def __init__(self, ctx: EngineContext, contract: PhaseContract):
+        # We use object.__setattr__ to avoid triggering our own __setattr__ during init
+        object.__setattr__(self, "_ctx", ctx)
+        object.__setattr__(self, "_contract", contract)
+        from src.engine.phases.contract import PhaseAccess
+        object.__setattr__(self, "_PhaseAccess", PhaseAccess)
+
+    def __getattr__(self, name: str) -> Any:
+        if name.startswith("_"):
+            return getattr(self._ctx, name)
+            
+        permission = self._contract.permissions.get(name, self._PhaseAccess.NONE)
+        if not (permission & self._PhaseAccess.READ):
+            # For now, we still log a warning to catch edge cases, but plan to raise RuntimeError later.
+            logger.warning(
+                "Phase '%s' attempted to READ unauthorized field '%s'", 
+                self._contract.name, name
+            )
+        
+        return getattr(self._ctx, name)
+
+    def __setattr__(self, name: str, value: Any) -> None:
+        permission = self._contract.permissions.get(name, self._PhaseAccess.NONE)
+        if not (permission & self._PhaseAccess.MUTATE):
+            raise RuntimeError(
+                f"Phase '{self._contract.name}' attempted to MUTATE unauthorized field '{name}'"
+            )
+        
+        setattr(self._ctx, name, value)
+
+    def __repr__(self) -> str:
+        return f"EngineContextProxy(phase={self._contract.name}, target={self._ctx})"
 
 class ActionProposalGuard:
     """Context manager to enforce read-only world state during Action Proposal phase.
@@ -20,12 +58,33 @@ class ActionProposalGuard:
         self.world = world
 
     def __enter__(self):
-        # Lock the world state
+        # Lock the world state if supported (Snapshot support)
         if hasattr(self.world, "freeze"):
             self.world.freeze()
         return self.world
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        # We don't un-freeze here because snapshots should stay frozen.
-        # This guard is purely for runtime detection of illegal mutations.
+        # Snapshot stays frozen for downstream verification.
         pass
+
+class PhaseGuard:
+    """Enforces EnginePhase contracts at runtime using an EngineContextProxy.
+    
+    Intercepts access to EngineContext for the duration of a phase without
+    modifying the underlying class structure.
+    """
+    
+    def __init__(self, ctx: EngineContext, contract: PhaseContract):
+        self._ctx = ctx
+        self._contract = contract
+        self._proxy = None
+
+    def __enter__(self) -> EngineContext:
+        """Return the guarded context proxy."""
+        self._proxy = EngineContextProxy(self._ctx, self._contract)
+        # We cast to Any to satisfy static type checkers that expect an EngineContext
+        return self._proxy # type: ignore
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        # Clearance of proxy references
+        self._proxy = None

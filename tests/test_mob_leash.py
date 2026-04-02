@@ -292,8 +292,8 @@ class TestReturnToCampHeal:
         handler.handle(ctx)
 
         # 5% of 100 max_hp = 5 hp healed → 30 + 5 = 35
-        assert ctx.actor.stats.hp == 35, (
-            f"Mob should heal to 35, got {ctx.actor.stats.hp}")
+        assert ctx.actor.stats.combat.hp == 35, (
+            f"Mob should heal to 35, got {ctx.actor.stats.combat.hp}")
 
     def test_does_not_overheal(self):
         """Healing should not exceed max HP."""
@@ -306,8 +306,8 @@ class TestReturnToCampHeal:
         handler = ReturnToCampHandler()
         handler.handle(ctx)
 
-        assert ctx.actor.stats.hp == 100, (
-            f"Mob should cap at max HP 100, got {ctx.actor.stats.hp}")
+        assert ctx.actor.stats.combat.hp == 100, (
+            f"Mob should cap at max HP 100, got {ctx.actor.stats.combat.hp}")
 
     def test_full_hp_no_change(self):
         """Already full HP should not change."""
@@ -320,4 +320,4 @@ class TestReturnToCampHeal:
         handler = ReturnToCampHandler()
         handler.handle(ctx)
 
-        assert ctx.actor.stats.hp == 100
+        assert ctx.actor.stats.combat.hp == 100

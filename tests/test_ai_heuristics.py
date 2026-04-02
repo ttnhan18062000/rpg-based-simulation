@@ -95,7 +95,7 @@ class TestAIHeuristics(unittest.TestCase):
             .with_base_stats(hp=20, atk=5, def_=0, spd=10)
             .build()
         )
-        young_actor.progression.level = 1
+        young_actor.progression.progression.level = 1
         young_actor.mind.decision.ai_state = AIState.IDLE
         
         # Level 25 Hero
@@ -106,7 +106,7 @@ class TestAIHeuristics(unittest.TestCase):
             .with_base_stats(hp=100, atk=20, def_=10, spd=15)
             .build()
         )
-        veteran_actor.progression.level = 25
+        veteran_actor.progression.progression.level = 25
         veteran_actor.mind.decision.ai_state = AIState.IDLE
         
         dummy_grid = Grid(20, 20)

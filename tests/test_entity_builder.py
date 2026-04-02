@@ -55,8 +55,8 @@ class TestEntityBuilderBasic:
         assert entity.id == 42
         assert entity.kind == "unknown"
         assert entity.ai_state == AIState.WANDER
-        assert entity.faction == Faction.HERO_GUILD
-        assert entity.alive
+        assert entity.identity.faction == Faction.HERO_GUILD
+        assert entity.combat.alive
 
     def test_kind_sets_kind(self):
         rng = _FakeRNG()
@@ -67,15 +67,15 @@ class TestEntityBuilderBasic:
         rng = _FakeRNG()
         pos = Vector2(10, 20)
         entity = EntityBuilder(rng, 1).at(pos).build()
-        assert entity.pos.x == 10
-        assert entity.pos.y == 20
+        assert entity.spatial.pos.x == 10
+        assert entity.spatial.pos.y == 20
 
     def test_home_sets_home_pos(self):
         rng = _FakeRNG()
         home = Vector2(5, 5)
         entity = EntityBuilder(rng, 1).home(home).build()
-        assert entity.home_pos is not None
-        assert entity.home_pos.x == 5
+        assert entity.spatial.home_pos is not None
+        assert entity.spatial.home_pos.x == 5
 
     def test_ai_state_sets_state(self):
         rng = _FakeRNG()
@@ -85,7 +85,7 @@ class TestEntityBuilderBasic:
     def test_faction_sets_faction(self):
         rng = _FakeRNG()
         entity = EntityBuilder(rng, 1).faction(Faction.GOBLIN_HORDE).build()
-        assert entity.faction == Faction.GOBLIN_HORDE
+        assert entity.identity.faction == Faction.GOBLIN_HORDE
 
     def test_tier_sets_tier(self):
         rng = _FakeRNG()
@@ -109,16 +109,16 @@ class TestEntityBuilderStats:
                              level=3, xp_to_next=300, gold=200)
             .build()
         )
-        assert entity.stats.hp == 100
-        assert entity.stats.max_hp == 100
-        assert entity.stats.atk == 20
-        assert entity.stats.def_ == 10
-        assert entity.stats.spd == 15
+        assert entity.stats.combat.hp == 100
+        assert entity.stats.combat.max_hp == 100
+        assert entity.stats.combat.atk_base == 20
+        assert entity.stats.combat.def_base == 10
+        assert entity.stats.combat.spd_base == 15
         assert entity.stats.luck == 5
         assert abs(entity.stats.crit_rate - 0.1) < 0.001
-        assert entity.stats.level == 3
+        assert entity.stats.progression.level == 3
         assert entity.stats.xp_to_next == 300
-        assert entity.stats.gold == 200
+        assert entity.stats.progression.gold == 200
 
     def test_with_randomized_stats_adds_variance(self):
         rng = _FakeRNG(int_val=5)  # always returns 5 (within bounds)
@@ -129,8 +129,8 @@ class TestEntityBuilderStats:
             .build()
         )
         # RNG returns min(5, hi) for each stat randomization
-        assert entity.stats.hp > 50  # added some variance
-        assert entity.stats.atk > 10
+        assert entity.stats.combat.hp > 50  # added some variance
+        assert entity.stats.combat.atk_base > 10
 
     def test_hero_stamina_minimum_50(self):
         rng = _FakeRNG()
@@ -140,7 +140,7 @@ class TestEntityBuilderStats:
             .with_base_stats(hp=50, atk=10, def_=3, spd=10)
             .build()
         )
-        assert entity.stats.stamina >= 50
+        assert entity.stats.progression.stamina >= 50
 
 
 # ---------------------------------------------------------------------------
@@ -355,13 +355,13 @@ class TestEntityBuilderChaining:
             .build()
         )
         assert entity.kind == "hero"
-        assert entity.pos.x == 10
-        assert entity.home_pos.x == 5
-        assert entity.faction == Faction.HERO_GUILD
+        assert entity.spatial.pos.x == 10
+        assert entity.spatial.home_pos.x == 5
+        assert entity.identity.faction == Faction.HERO_GUILD
         # Stats should be base + attribute-derived bonuses (higher than raw base)
-        assert entity.stats.hp >= 50
-        assert entity.stats.hp == entity.stats.max_hp
-        assert entity.stats.atk >= 10
+        assert entity.stats.combat.hp >= 50
+        assert entity.stats.combat.hp == entity.stats.combat.max_hp
+        assert entity.stats.combat.atk_base >= 10
         assert entity.hero_class == int(HeroClass.WARRIOR)
         assert entity.attributes is not None
         assert len(entity.skills) >= 2
@@ -369,10 +369,10 @@ class TestEntityBuilderChaining:
         assert entity.inventory.weapon == "iron_sword"
         assert len(entity.inventory.items) == 3
         assert len(entity.traits) >= 2
-        assert entity.alive
+        assert entity.combat.alive
         # Non-combat derived stats should be > baseline (attributes > 0)
         assert entity.stats.hp_regen > 1.0
-        assert entity.stats.vision_range >= 6
+        assert entity.stats.spatial.vision_range >= 6
 
     def test_full_mob_chain(self):
         rng = _FakeRNG()
@@ -394,9 +394,9 @@ class TestEntityBuilderChaining:
             .build()
         )
         assert entity.kind == "goblin"
-        assert entity.faction == Faction.GOBLIN_HORDE
+        assert entity.identity.faction == Faction.GOBLIN_HORDE
         assert entity.tier == 2
-        assert entity.stats.level == 3
+        assert entity.stats.progression.level == 3
         assert entity.attributes is not None
         assert entity.inventory is inv
         assert len(entity.traits) >= 2

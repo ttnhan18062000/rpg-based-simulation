@@ -38,7 +38,7 @@ def test_appraisal_phase_triggers_panic_on_low_hp():
     actor.mind.memory_locations = {}
     actor.mind.region_fatigue = {}
     actor.mind.spatial.pos_history = []
-    actor.stats.vision_range = 10
+    actor.stats.spatial.vision_range = 10
     actor.progression.age_ticks = 0
     actor.progression.longevity_limit = 100
     

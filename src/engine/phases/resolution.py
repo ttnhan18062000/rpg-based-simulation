@@ -6,12 +6,31 @@ from src.systems.infrastructure.base import SystemContext
 
 if TYPE_CHECKING:
     from src.engine.phases.context import EngineContext
+    from src.engine.phases.contract import PhaseContract
 
 logger = logging.getLogger(__name__)
 
 class ResolutionPhase(EnginePhase):
     """Resolve action conflicts and apply definitive state changes."""
     
+    @property
+    def contract(self) -> PhaseContract:
+        from src.engine.phases.contract import PhaseContract, PhaseAccess
+        return PhaseContract(
+            name="Resolution",
+            description="Resolving conflicts and applying authoritative state changes.",
+            permissions={
+                "world": PhaseAccess.READ_WRITE, # Actions mutate world state
+                "config": PhaseAccess.READ,
+                "conflict_resolver": PhaseAccess.READ_WRITE,
+                "action_system": PhaseAccess.READ_WRITE,
+                "hero_lifecycle": PhaseAccess.READ_WRITE,
+                "tick_proposals": PhaseAccess.READ,
+                "tick_applied": PhaseAccess.MUTATE,
+                "emit": PhaseAccess.READ_WRITE
+            }
+        )
+
     def execute(self, ctx: EngineContext) -> None:
         if not ctx.tick_proposals:
             ctx.tick_applied = []

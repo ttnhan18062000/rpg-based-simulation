@@ -3,7 +3,7 @@
 import pytest
 from unittest.mock import MagicMock
 from src.core.models.enums import AIState, EnemyTier, EntityRole, Faction, HeroClass, Rarity, Domain, ActionType
-from src.core.models import Vector2, Entity
+from src.core.entities.entity import Vector2, Entity
 from src.core.world.grid import Grid
 from src.platform.spatial_hash import SpatialHash
 from src.core.models.world_state import WorldState
@@ -41,14 +41,14 @@ def test_calamity_spawning(basic_setup):
     boss = gen.spawn_calamity(world, "gorath")
     
     print(f"DEBUG: boss.identity.is_world_boss={boss.identity.is_world_boss}")
-    print(f"DEBUG: boss.combat.hp={boss.combat.hp}")
+    print(f"DEBUG: boss.combat.combat.hp={boss.combat.combat.hp}")
     print(f"DEBUG: boss.kind={boss.kind}")
     
     assert boss.identity.is_world_boss is True
     assert boss.identity.role == EntityRole.WORLD_BOSS
     assert boss.identity.display_name == "Gorath the World-Breaker"
-    assert boss.combat.hp >= 500, f"Boss stats too low: {boss.combat.hp}. Kind: {boss.kind}, BossFlag: {boss.identity.is_world_boss}"
-    assert boss.combat.atk >= 100 # 20 base * 5x mult
+    assert boss.combat.combat.hp >= 500, f"Boss stats too low: {boss.combat.combat.hp}. Kind: {boss.kind}, BossFlag: {boss.identity.is_world_boss}"
+    assert boss.combat.combat.atk_base >= 100 # 20 base * 5x mult
     
     # Check legendary loot
     assert boss.inventory.weapon is not None
@@ -60,11 +60,11 @@ def test_calamity_bounty_generation(basic_setup):
     
     # Create a hero using the constructor directly
     hero = Entity(id=world.allocate_entity_id(), kind="hero")
-    hero.spatial.pos = Vector2(10, 10)
-    hero.identity.faction = Faction.HERO_GUILD
+    hero.spatial.spatial.pos = Vector2(10, 10)
+    hero.identity.identity.faction = Faction.HERO_GUILD
     hero.identity.role = EntityRole.HERO
     hero.identity.display_name = "Test Hero"
-    hero.progression.level = 20  # Minimum for calamity_hunter quest
+    hero.progression.progression.level = 20  # Minimum for calamity_hunter quest
     world.add_entity(hero)
     
     # Trigger spawn tick (5000)
@@ -88,15 +88,15 @@ def test_calamity_kill_rewards(basic_setup):
     
     # Setup hero and boss
     hero = Entity(id=world.allocate_entity_id(), kind="hero")
-    hero.spatial.pos = Vector2(10, 10)
-    hero.identity.faction = Faction.HERO_GUILD
+    hero.spatial.spatial.pos = Vector2(10, 10)
+    hero.identity.identity.faction = Faction.HERO_GUILD
     hero.identity.display_name = "DragonSlayer"
-    hero.progression.level = 20
+    hero.progression.progression.level = 20
     world.add_entity(hero)
     
     boss = gen.spawn_calamity(world, "gorath")
-    boss.spatial.pos = Vector2(10, 11)
-    boss.combat.hp = 1 # One-shot for testing
+    boss.spatial.spatial.pos = Vector2(10, 11)
+    boss.combat.combat.hp = 1 # One-shot for testing
     world.add_entity(boss)
     
     # Force a bounty quest to the hero to test fame gain
@@ -117,7 +117,7 @@ def test_calamity_kill_rewards(basic_setup):
     proposal = ActionProposal(hero.id, ActionType.ATTACK, boss.id)
     combat.apply(proposal, world)
     
-    assert not boss.combat.alive
+    assert not boss.combat.combat.alive
     assert hero.progression.fame >= 100
     assert any("Slayer of" in t for t in hero.identity.titles)
-    assert hero.combat.atk > 0 
+    assert hero.combat.combat.atk_base > 0 

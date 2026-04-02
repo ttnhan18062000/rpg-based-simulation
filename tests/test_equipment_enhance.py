@@ -72,8 +72,8 @@ class TestRecalcDerivedStats(unittest.TestCase):
         
         # ATK should be 10 + derive_atk(0, 10)
         assert entity.combat.atk_base == 10 + derive_atk(0, 10)
-        assert entity.combat.max_hp > 50
-        assert entity.spatial.vision_range >= 6
+        assert entity.combat.combat.max_hp > 50
+        assert entity.spatial.spatial.vision_range >= 6
 
     def test_hp_clamped_after_recalc(self):
         entity = (
@@ -81,10 +81,10 @@ class TestRecalcDerivedStats(unittest.TestCase):
             .with_base_stats(hp=100)
             .build()
         )
-        entity.combat.hp = 100
+        entity.combat.combat.hp = 100
         attrs = self._make_attrs(vit=1, end=1)
         recalc_derived_stats(entity, attrs)
-        assert entity.combat.hp <= entity.combat.max_hp
+        assert entity.combat.combat.hp <= entity.combat.combat.max_hp
 
 
 class TestAutoEquipBest(unittest.TestCase):

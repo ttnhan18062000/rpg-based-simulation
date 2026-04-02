@@ -115,10 +115,10 @@ class TestFindRegionAt(unittest.TestCase):
                      center=Vector2(100, 100), radius=50, difficulty=2)
         # Point closer to r1
         result = find_region_at(Vector2(40, 40), [r1, r2])
-        self.assertEqual(result.region_id, "r1")
+        self.assertEqual(result.spatial.region_id, "r1")
         # Point closer to r2
         result = find_region_at(Vector2(90, 90), [r1, r2])
-        self.assertEqual(result.region_id, "r2")
+        self.assertEqual(result.spatial.region_id, "r2")
 
     def test_empty_regions_returns_none(self):
         result = find_region_at(Vector2(50, 50), [])
@@ -131,14 +131,14 @@ class TestFindRegionAt(unittest.TestCase):
                      center=Vector2(10, 0), radius=50, difficulty=2)
         # Exactly equidistant at (5, 0): manhattan to r1=5, to r2=5 → first wins
         result = find_region_at(Vector2(5, 0), [r1, r2])
-        self.assertEqual(result.region_id, "r1")
+        self.assertEqual(result.spatial.region_id, "r1")
 
     def test_single_region_always_matches(self):
         r = Region(region_id="r1", name="R1", terrain=Material.FOREST,
                    center=Vector2(50, 50), radius=10, difficulty=1)
         # Even far away, single region always matches
         result = find_region_at(Vector2(180, 180), [r])
-        self.assertEqual(result.region_id, "r1")
+        self.assertEqual(result.spatial.region_id, "r1")
 
 
 if __name__ == "__main__":

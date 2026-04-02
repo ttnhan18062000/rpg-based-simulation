@@ -10,7 +10,7 @@ from __future__ import annotations
 import logging
 import math
 from typing import TYPE_CHECKING, Any
-from src.core.models.enums import AIState, ActionType, Element, GoalType, EmotionType
+from src.core.models.enums import AIState, ActionType, Element, GoalType, EmotionType, HeroClass
 from src.core.entities.entity import Entity
 from src.actions.base import (
     ActionProposal, IntentUpdate, MindUpdate, NavigationUpdate, CombatTraceUpdate,
@@ -75,6 +75,18 @@ class ActionSystem(System):
                 entity.mind.decision.last_reason = proposal.reason
 
             # 2. Verb-Specific Logic (Update Generation)
+            if proposal.verb == ActionType.ATTACK and isinstance(proposal.target, int):
+                target = world.entities.get(proposal.target)
+                if target and target.combat.alive:
+                    damage = 0
+                    for up in proposal.updates:
+                        if isinstance(up, CombatTraceUpdate):
+                            damage = up.damage
+                            break
+                    if damage > 0:
+                        mult = 1.5 if entity.progression.hero_class == HeroClass.WARRIOR else 1.0
+                        target.mind.perception.threat_table[entity.id] = target.mind.perception.threat_table.get(entity.id, 0.0) + damage * mult
+
             if proposal.verb == ActionType.USE_ITEM and proposal.target:
                 all_updates.extend(cls._get_use_item_updates(world, config, entity, proposal.target))
             elif proposal.verb == ActionType.LOOT:
@@ -83,7 +95,7 @@ class ActionSystem(System):
                 all_updates.extend(cls._get_harvesting_updates(world, entity, proposal.target))
             elif proposal.verb == ActionType.USE_SKILL and proposal.target:
                 target_data = proposal.target if isinstance(proposal.target, tuple) else (proposal.target, None)
-                all_updates.extend(cls._get_use_skill_updates(world, config, faction_reg, entity, target_data[0], target_data[1]))
+                all_updates.extend(cls._get_use_skill_updates(world, config, faction_reg, entity, target_data[0], target_data[1], emit=emit))
 
             # 3. Final Application (Unambiguous Entry Point)
             if all_updates:
@@ -147,7 +159,14 @@ class ActionSystem(System):
             elif isinstance(up, PerceptionUpdate):
                 perc = entity.mind.perception
                 if up.entity_memory:
-                    perc.entity_memory.update(up.entity_memory)
+                    # Force coercion of dicts to MemoryRecord (AOA Stabilization)
+                    from src.core.aspects.mind import MemoryRecord
+                    for eid, rec in up.entity_memory.items():
+                        if isinstance(rec, dict):
+                            perc.entity_memory[eid] = MemoryRecord.model_validate(rec)
+                        else:
+                            perc.entity_memory[eid] = rec
+                
                 if up.memory_stale_delta:
                     for eid, delta in up.memory_stale_delta.items():
                         perc.memory_stale_ticks[eid] = perc.memory_stale_ticks.get(eid, 0) + delta
@@ -167,12 +186,21 @@ class ActionSystem(System):
             
             elif isinstance(up, NavigationUpdate):
                 nav = entity.mind.navigation
+                # Force coercion of Vector2 (AOA Stabilization)
+                from src.core.models.vectors import Vector2
+                
                 if up.pos_history:
-                    nav.pos_history = up.pos_history
+                    nav.pos_history = [
+                        Vector2.model_validate(p) if isinstance(p, dict) else p 
+                        for p in up.pos_history
+                    ]
                 if up.cached_path is not None:
-                    nav.cached_path = up.cached_path
+                    nav.cached_path = [
+                        Vector2.model_validate(p) if isinstance(p, dict) else p 
+                        for p in up.cached_path
+                    ]
                 if up.target_pos:
-                    nav.cached_path_target = up.target_pos
+                    nav.cached_path_target = Vector2.model_validate(up.target_pos) if isinstance(up.target_pos, dict) else up.target_pos
                 if up.chase_ticks is not None:
                     nav.chase_ticks = up.chase_ticks
             
@@ -296,13 +324,21 @@ class ActionSystem(System):
     def _get_looting_updates(world: WorldState, entity: Entity, pos: Any) -> list[IntentUpdate]:
         """Generate updates for looting from the ground (AOA Convergence)."""
         updates: list[IntentUpdate] = []
+        
+        # 1. Standard Ground Items
         items = world.pickup_items(pos) # Authoritative removal from world
         if items:
-            # Check if this proposal already has these items (Duplicate Item Fix)
-            # Actually, standard LOOT proposals SHOULD NOT have inventory_add.
             updates.append(ProgressionUpdate(inventory_add=items))
             updates.append(InteractionUpdate(loot_progress_set=0))
         
+        # 2. Corpse Containers (AOA Convergence Patch)
+        nodes = getattr(world, "corpse_nodes", {})
+        for cid, node in list(nodes.items()): # Use list to avoid mutation during iteration
+             # pos is usually a Vector2 or tuple (x, y)
+             node_pos = getattr(node, "pos", None)
+             if node_pos and node_pos == pos:
+                 updates.append(InteractionUpdate(corpse_id_to_remove=cid))
+
         from src.core.gameplay.attributes import speed_delay
         entity.next_act_at += speed_delay(entity.combat.spd, "loot")
         return updates
@@ -322,8 +358,8 @@ class ActionSystem(System):
         entity.next_act_at += speed_delay(entity.combat.spd, "harvest")
         return updates
 
-    @staticmethod
-    def _get_use_skill_updates(world: WorldState, config: SimulationConfig, faction_reg: FactionRegistry | None, entity: Entity, skill_id: str, target_id: int | None = None) -> list[IntentUpdate]:
+    @classmethod
+    def _get_use_skill_updates(cls, world: WorldState, config: SimulationConfig, faction_reg: FactionRegistry | None, entity: Entity, skill_id: str, target_id: int | None = None, emit: Callable | None = None) -> list[IntentUpdate]:
         """Generate updates for using a skill (AOA Convergence)."""
         updates: list[IntentUpdate] = []
         sdef = SKILL_DEFS.get(skill_id)
@@ -336,13 +372,10 @@ class ActionSystem(System):
         if entity.progression.stamina < cost: return updates
         
         # 1. Authoritative Cooldown/Stamina Side-Effects
-        # Wait! These are currently in-place mutations in the static handler.
-        # We'll convert them to IntentUpdates if possible, but SkillInstance is tricky.
-        # For now, we'll keep the skill and cooldown logic in-place but move damage to updates.
         entity.progression.stamina -= cost
         instance.use(sdef.cooldown)
         
-        targets: list[Entity] = []
+        targets: list[tuple[Entity, int]] = [] # (Target, distance from center)
         center = entity.spatial.pos
         if sdef.radius > 0:
             if target_id and world.entities.get(target_id):
@@ -351,24 +384,42 @@ class ActionSystem(System):
             for target in potential:
                 if not target or not target.combat.alive or target.id == entity.id: continue
                 if faction_reg and faction_reg.is_hostile(entity.identity.faction, target.identity.faction):
-                    targets.append(target)
+                    dist = int(math.sqrt((target.spatial.pos.x - center.x)**2 + (target.spatial.pos.y - center.y)**2))
+                    targets.append((target, dist))
         elif target_id:
             t = world.entities.get(target_id)
-            if t and t.combat.alive: targets.append(t)
+            if t and t.combat.alive: 
+                targets.append((t, 0))
         
-        for target in targets:
+        for target, dist in targets:
             power = instance.effective_power(sdef.power)
-            raw = int(entity.combat.atk * power)
+            # AoE Falloff: 100% at center, 50% at edge (linear)
+            falloff = 1.0
+            if sdef.radius > 0:
+                falloff = max(0.5, 1.0 - (dist / (sdef.radius + 1)) * 0.5)
+            
+            raw = int(entity.combat.atk * power * falloff)
             mitigation = target.combat.def_ // 2
             damage = max(1, raw - mitigation)
             
-            # Use ProgressionUpdate(hp_delta) for the target!
-            # Wait! We need a way to target another entity in the update list.
-            # Currently IntentUpdate only targets the actor.
-            # AOA Phase 5.1: Cross-Entity Updates are usually handled by the Resolver,
-            # but for skills we'll apply them immediately here to avoid adding complexity to IntentUpdate.
-            # ONLY the HP mutation is in-place here.
             target.combat.hp -= damage
+            
+            # Threat Generation (AOA Convergence)
+            # Warrior threat multiplier (1.5x)
+            mult = 1.5 if entity.progression.hero_class == HeroClass.WARRIOR else 1.0
+            target.mind.perception.threat_table[entity.id] = target.mind.perception.threat_table.get(entity.id, 0.0) + damage * mult
+
+            if emit:
+                emit("skill", f"{entity.kind} hit {target.kind} with {sdef.name} for {damage} damage",
+                     entity_ids=(entity.id, target.id),
+                     metadata={
+                         "skill_name": sdef.name,
+                         "damage": damage,
+                         "aoe": sdef.radius > 0,
+                         "dist_from_center": dist,
+                         "actor_id": entity.id,
+                         "target_id": target.id
+                     })
             
         from src.core.gameplay.attributes import speed_delay
         entity.next_act_at += speed_delay(entity.combat.spd, "use_skill")

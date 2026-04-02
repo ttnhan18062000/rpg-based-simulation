@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-import pickle
 import time
 from typing import TYPE_CHECKING, Any
 
@@ -12,6 +11,7 @@ from pika.exceptions import AMQPError
 
 from src.core.models.enums import AIState, Domain
 from src.api.rabbitmq_client import get_rabbitmq
+from src.utils.serialization import SimulationSerializer
 
 if TYPE_CHECKING:
     from src.actions.base import ActionProposal
@@ -146,7 +146,7 @@ class WorkerPool:
         assert self._channel is not None
         
         # 1. Broadcast the tick's snapshot to all workers
-        snapshot_bytes = pickle.dumps(snapshot)
+        snapshot_bytes = SimulationSerializer.dumps(snapshot)
         self._channel.basic_publish(
             exchange=self._snapshot_exchange,
             routing_key='',
@@ -165,7 +165,7 @@ class WorkerPool:
             self._channel.basic_publish(
                 exchange='',
                 routing_key=self._tasks_queue,
-                body=pickle.dumps(batch_task),
+                body=SimulationSerializer.dumps(batch_task),
             )
             batches_sent += 1
 
@@ -186,14 +186,18 @@ class WorkerPool:
             method_frame, header_frame, body = self._channel.basic_get(queue=self._results_queue, auto_ack=True)
             if method_frame:
                 try:
-                    result_batch = pickle.loads(body)
+                    result_batch = SimulationSerializer.loads(body, dict)
                     tick = result_batch.get("tick")
                     
                     if tick == snapshot.tick:
                         results = result_batch.get("results", [])
                         for res in results:
                             eid = res.get("entity_id")
-                            proposal = res.get("proposal")
+                            proposal_data = res.get("proposal")
+                            
+                            # Reconstruct ActionProposal from dict if serialized as one
+                            from src.actions.base import ActionProposal
+                            proposal = ActionProposal.model_validate(proposal_data) if proposal_data else None
                             
                             # --- Chaos Mode: Fault Injection ---
                             if self._config.chaos_enabled and self._rng.next_float(Domain.AI_DECISION, eid or 0, tick + 99) < self._config.chaos_drop_rate:
@@ -209,7 +213,7 @@ class WorkerPool:
                 except Exception as e:
                     from src.utils.metrics import SIM_ERRORS_TOTAL
                     SIM_ERRORS_TOTAL.labels(exception_type=type(e).__name__, component="worker_unpickle_batch").inc()
-                    logger.error("Failed to unpickle worker batch response: %s", e)
+                    logger.error("Failed to deserialize worker batch response: %s", e)
                     break 
             else:
                 # Polling interval - slightly more aggressive wait than 5ms if we know we are waiting for a big batch
@@ -218,10 +222,8 @@ class WorkerPool:
 
     def _think(self, entity: Entity, snapshot: Snapshot) -> tuple[int, AIState, ActionProposal]:
         """Run AI for a single entity (executed inline)."""
-        from dataclasses import replace
-
         new_state, proposal = self._brain.decide(entity, snapshot)
-        proposal = replace(proposal, new_ai_state=int(new_state))
+        proposal = proposal.model_copy(update={"new_ai_state": int(new_state)})
         return entity.id, new_state, proposal
 
     def shutdown(self) -> None:

@@ -159,3 +159,6 @@ class SimulationConfig:
 
     # Performance (AOA Phase 6)
     ai_batch_size: int = 20              # Number of entities per RabbitMQ task batch
+
+    # Debug / Stability (AOA Phase 5)
+    ignore_phase_errors: bool = False    # Whether to suppress exceptions in engine phases

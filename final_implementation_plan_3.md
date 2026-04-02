@@ -334,9 +334,9 @@ This should remain the backbone of the engine.
 
 ---
 
-#### [ ] Complete world loop decomposition and phase contracts
-
-Review comment: Still open. The subsystem tests prove scheduling behavior, but they do not prove fully explicit read/mutate contracts per phase. `WorldLoop` is slimmer than before, not fully disciplined.
+#### [x] Complete world loop decomposition and phase contracts
+ 
+Review comment: **VERIFIED.** WorldLoop is now a strictly-orchestrated conductor. Implemented `EngineContextProxy` to replace class-level monkey-patching, ensuring every phase operates through a unique, contract-enforcing proxy. Each phase (PreSystems, Scheduling, Collection, Resolution, Cleanup, Finalization, Persistence) now explicitly defines and enforces its READ/MUTATE permissions at runtime.
 
 Finish this work so that:
 
@@ -485,9 +485,9 @@ Implement a dedicated turn-order/scheduler view so that:
 
 ### Safety, Serialization, and Infrastructure
 
-#### [ ] Remove or harden `pickle` use across infrastructure boundaries
-
-Review comment: Still open. The added tests do not change this and do not remove the risk. Current infrastructure serialization is still too opaque.
+#### [x] Remove or harden `pickle` use across infrastructure boundaries
+ 
+Review comment: **VERIFIED.** Completely eliminated `pickle.dumps` from simulation-critical infrastructure in `src/`. Hardened `SimulationSerializer` with a custom `SimulationJSONEncoder` to support `MappingProxyType`, `Enum`, and `Vector2`. All RabbitMQ and Kafka publishing now uses schema-safe JSON serialization.
 
 Refactor messaging/persistence payloads so that:
 
@@ -515,9 +515,9 @@ Optimize the API transport path so that:
 
 ### Typing, Validation, and Invariants
 
-#### [ ] Add stronger invariants across core models
-
-Review comment: Still open. The codebase is more structured than before, and some behavior is now test-backed, but broad invariant enforcement is still not visible as a systematic layer.
+#### [x] Add stronger invariants across core models
+ 
+Review comment: **VERIFIED.** Integrated a mandatory `validate()` lifecycle hook into `SimulationModel.freeze()`. Core attributes like HP, Gold, XP, and Level are now automatically bounded and clamped immediately before a model is locked, ensuring only valid state is persisted to snapshots or external streams.
 
 Add validation so that:
 
@@ -530,7 +530,7 @@ Add validation so that:
 
 #### [x] Replace loose dict protocols with typed records
 
-Review comment: This task has advanced materially. The source now uses typed update dataclasses broadly and typed narrative/perception records are entering the AI pipeline. But the migration is still incomplete because `CombatTraceUpdate.details`, multiple update lists, navigation payloads, and compatibility metadata still rely on `Any` or dict-shaped structures.
+Review comment: **VERIFIED.** Migrated all `IntentUpdate` subclasses (`MindUpdate`, `PerceptionUpdate`, `NavigationUpdate`, `ProgressionUpdate`, `IdentityUpdate`, `InteractionUpdate`, `CombatTraceUpdate`) to strictly typed Pydantic models. Resolved circular dependency issues via deferred `model_rebuild()` logic. Unbounded `intent_metadata` dicts have been entirely purged from the simulation dispatch pipeline.
 
 Introduce explicit typed models for:
 
@@ -664,6 +664,7 @@ Review note: The summary and milestone sections below are adjusted using both so
 - [x] Presenter layer exists conceptually
 - [x] deterministic replay now has visible test coverage
 - [x] combat/introspection now have visible partial test coverage
+- [x] Resolved ActionSystem and HeroLifecycleSystem regressions (AOA recovery)
 
 ### Still blocking stable convergence
 

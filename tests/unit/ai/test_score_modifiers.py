@@ -38,7 +38,7 @@ def test_life_stage_modifier_early_bracket():
     
     # Setup: Level 5 (Early stage <= 10)
     ctx = MagicMock()
-    ctx.actor.progression.level = 5
+    ctx.actor.progression.progression.level = 5
     
     modifier = LifeStageModifier()
     
@@ -67,7 +67,7 @@ def test_goal_evaluator_uses_modifiers():
     
     # Mock context and registry
     ctx = MagicMock()
-    ctx.actor.progression.level = 10
+    ctx.actor.progression.progression.level = 10
     ctx.actor.boredom_multipliers = {}
     
     from src.ai.goals import base

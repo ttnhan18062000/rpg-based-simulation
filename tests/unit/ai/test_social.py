@@ -33,18 +33,18 @@ def test_inn_gossip(system, context):
     # Setup two heroes at the same position in VISIT_INN state
     h1 = MagicMock()
     h1.id = 1
-    h1.spatial.pos = Vector2(10, 10)
+    h1.spatial.spatial.pos = Vector2(10, 10)
     h1.kind = "hero"
-    h1.combat.alive = True
+    h1.combat.combat.alive = True
     h1.mind.ai_state = AIState.VISIT_INN
     h1.identity.display_name = "Hero1"
     h1.mind.entity_memory = [{"id": 99, "pos": (50, 50), "kind": "boss"}]
     
     h2 = MagicMock()
     h2.id = 2
-    h2.spatial.pos = Vector2(10, 10)
+    h2.spatial.spatial.pos = Vector2(10, 10)
     h2.kind = "hero"
-    h2.combat.alive = True
+    h2.combat.combat.alive = True
     h2.mind.ai_state = AIState.VISIT_INN
     h2.identity.display_name = "Hero2"
     h2.mind.entity_memory = []
@@ -62,9 +62,9 @@ def test_hero_trading(system, context):
     # Setup two heroes at the same position
     h1 = MagicMock()
     h1.id = 1
-    h1.spatial.pos = Vector2(10, 10)
+    h1.spatial.spatial.pos = Vector2(10, 10)
     h1.kind = "hero"
-    h1.combat.alive = True
+    h1.combat.combat.alive = True
     h1.mind.ai_state = AIState.VISIT_INN
     h1.identity.display_name = "Donor"
     h1.inventory.items = ["iron_sword"] # Spare item
@@ -73,9 +73,9 @@ def test_hero_trading(system, context):
     
     h2 = MagicMock()
     h2.id = 2
-    h2.spatial.pos = Vector2(10, 10)
+    h2.spatial.spatial.pos = Vector2(10, 10)
     h2.kind = "hero"
-    h2.combat.alive = True
+    h2.combat.combat.alive = True
     h2.mind.ai_state = AIState.VISIT_INN
     h2.identity.display_name = "Recipient"
     h2.inventory.items = []
