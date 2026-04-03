@@ -1,3 +1,7 @@
+import os
+import sys
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", ".."))
+
 import unittest
 from src.platform.rng import DeterministicRNG
 from src.core.models.enums import Domain

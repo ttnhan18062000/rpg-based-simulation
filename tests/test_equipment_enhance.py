@@ -1,3 +1,8 @@
+from __future__ import annotations
+import os
+import sys
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+
 """Tests for equipment_enhance features.
 
 Refactored for AOA Stabilization:
@@ -7,13 +12,10 @@ Refactored for AOA Stabilization:
 - Unified Inventory tests with InventoryAspect.
 """
 
-from __future__ import annotations
 import unittest
 from pathlib import Path
-import sys
 
 # Ensure the src directory is in the python path
-sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from src.core.gameplay.attributes import (
     Attributes, AttributeCaps, recalc_derived_stats,

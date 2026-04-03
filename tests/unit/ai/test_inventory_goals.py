@@ -1,3 +1,7 @@
+import os
+import sys
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", ".."))
+
 """Tests for inventory-aware goal scoring — verifies bug-02 scenarios.
 
 Bug-02: Hero keeps looting when bag is full. The LootGoal scorer should

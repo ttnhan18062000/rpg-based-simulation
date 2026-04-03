@@ -1,8 +1,10 @@
+import os
+import sys
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
+
 import subprocess
 import json
 import pytest
-import sys
-import os
 
 @pytest.mark.e2e
 def test_cli_logging_json_format():

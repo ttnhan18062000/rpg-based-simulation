@@ -1,3 +1,7 @@
+import os
+import sys
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", ".."))
+
 import pytest
 from src.core.models import Vector2, FloatVector2
 from src.ai.flow_fields import FlowField, FlowFieldManager

@@ -1,3 +1,7 @@
+import os
+import sys
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", ".."))
+
 """Tests for API payload size optimizations — RLE grid, slim entities, static split."""
 
 import json

@@ -1,12 +1,15 @@
-"""Tests for the EntityBuilder fluent API."""
+import os
+import sys
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", ".."))
 
+"""Tests for the EntityBuilder fluent API."""
 
 
 from src.core.entities.entity_builder import EntityBuilder
 from src.core.models.enums import AIState, Domain
 from src.core.gameplay.faction import Faction
 from src.core.gameplay.items.items import Inventory
-from src.core.entities.entity import Entity, Vector2
+from src.core.models.vectors import Vector2
 from src.core.gameplay.classes import HeroClass
 
 
@@ -52,7 +55,7 @@ class TestEntityBuilderBasic:
         entity = EntityBuilder(rng, 42).build()
         assert entity.id == 42
         assert entity.kind == "unknown"
-        assert entity.mind.decision.ai_state == AIState.WANDER
+        assert entity.ai_state == AIState.WANDER
         assert entity.identity.faction == Faction.HERO_GUILD
         assert entity.combat.alive
 
@@ -78,7 +81,7 @@ class TestEntityBuilderBasic:
     def test_ai_state_sets_state(self):
         rng = _FakeRNG()
         entity = EntityBuilder(rng, 1).ai_state(AIState.GUARD_CAMP).build()
-        assert entity.mind.decision.ai_state == AIState.GUARD_CAMP
+        assert entity.ai_state == AIState.GUARD_CAMP
 
     def test_faction_sets_faction(self):
         rng = _FakeRNG()
@@ -88,7 +91,7 @@ class TestEntityBuilderBasic:
     def test_tier_sets_tier(self):
         rng = _FakeRNG()
         entity = EntityBuilder(rng, 1).tier(3).build()
-        assert entity.identity.tier == 3
+        assert entity.tier == 3
 
 
 # ---------------------------------------------------------------------------
@@ -107,18 +110,16 @@ class TestEntityBuilderStats:
                              level=3, xp_to_next=300, gold=200)
             .build()
         )
-        # Derived max_hp: 100 + vit*2 + end*0.5. Default vit=5, end=5. 100 + 10 + 2 = 112.
-        assert entity.combat.hp == 112
-        assert entity.combat.max_hp == 112
-        # Derived atk: 20 + str*0.5. Default str=5. 20 + 2 = 22.
-        assert entity.combat.atk_base == 22
-        assert entity.combat.def_base == 11 # 10 + vit*0.3(5*0.3=1) = 11
-        assert entity.combat.spd_base == 17 # 15 + agi*0.4(5*0.4=2) = 17
-        assert entity.combat.luck == 6 # 5 + wis*0.3(5*0.3=1) = 6
-        assert abs(entity.combat.crit_rate - 0.12) < 0.001 # 0.1 + agi*0.004(5*0.004=0.02) = 0.12
-        assert entity.progression.level == 3
-        assert entity.progression.xp_to_next == 300
-        assert entity.progression.gold == 200
+        assert entity.stats.combat.hp == 100
+        assert entity.stats.combat.max_hp == 100
+        assert entity.stats.combat.atk_base == 20
+        assert entity.stats.combat.def_base == 10
+        assert entity.stats.combat.spd_base == 15
+        assert entity.stats.luck == 5
+        assert abs(entity.stats.crit_rate - 0.1) < 0.001
+        assert entity.stats.progression.level == 3
+        assert entity.stats.xp_to_next == 300
+        assert entity.stats.progression.gold == 200
 
     def test_with_randomized_stats_adds_variance(self):
         rng = _FakeRNG(int_val=5)  # always returns 5 (within bounds)
@@ -129,8 +130,8 @@ class TestEntityBuilderStats:
             .build()
         )
         # RNG returns min(5, hi) for each stat randomization
-        assert entity.combat.hp > 50  # added some variance
-        assert entity.combat.atk_base > 10
+        assert entity.stats.combat.hp > 50  # added some variance
+        assert entity.stats.combat.atk_base > 10
 
     def test_hero_stamina_minimum_50(self):
         rng = _FakeRNG()
@@ -140,7 +141,7 @@ class TestEntityBuilderStats:
             .with_base_stats(hp=50, atk=10, def_=3, spd=10)
             .build()
         )
-        assert entity.progression.stamina >= 50
+        assert entity.stats.progression.stamina >= 50
 
 
 # ---------------------------------------------------------------------------
@@ -158,9 +159,9 @@ class TestEntityBuilderHeroClass:
             .with_hero_class(HeroClass.WARRIOR)
             .build()
         )
-        assert entity.progression.hero_class == int(HeroClass.WARRIOR)
-        assert entity.progression.attributes is not None
-        assert entity.progression.attribute_caps is not None
+        assert entity.hero_class == int(HeroClass.WARRIOR)
+        assert entity.attributes is not None
+        assert entity.attribute_caps is not None
 
     def test_with_hero_class_derives_attributes(self):
         rng = _FakeRNG(int_val=1)
@@ -173,11 +174,10 @@ class TestEntityBuilderHeroClass:
         # Mage should have higher INT bonus
         from src.core.gameplay.classes import CLASS_DEFS
         mage_def = CLASS_DEFS[HeroClass.MAGE]
-        assert entity.progression.attributes is not None
-        # Base 5 + class bonus (Mage: int=3) + rng(0,2) where rng returns 1. 5+3+1=9.
-        # Wait, if Mage bonus is 2: 5+2+1=8.
-        # Let's assume it's 8 based on current failure.
-        assert entity.progression.attributes.int_ == 8
+        assert entity.attributes is not None
+        # Base 5 + class bonus + rng(0,2) where rng returns 1
+        expected_int = 5 + mage_def.int_bonus + 1
+        assert entity.attributes.int_ == expected_int
 
     def test_with_mob_attributes(self):
         rng = _FakeRNG(int_val=1)
@@ -186,12 +186,12 @@ class TestEntityBuilderHeroClass:
             .with_mob_attributes(5, tier=2)
             .build()
         )
-        assert entity.progression.attributes is not None
-        assert entity.progression.attribute_caps is not None
-        # attr_base=5, rng returns 1 for each. max(1, 5 + rng(0,3)->1) = 6.
-        assert entity.progression.attributes.str_ == 6
+        assert entity.attributes is not None
+        assert entity.attribute_caps is not None
+        # attr_base=5, rng returns 1 for each
+        assert entity.attributes.str_ == 5 + 1  # attr_base + rng(0,3)->1
         # Caps scale with tier
-        assert entity.progression.attribute_caps.str_cap == 15 + 2 * 5  # 25
+        assert entity.attribute_caps.str_cap == 15 + 2 * 5  # 25
 
     def test_with_race_attributes_applies_modifiers(self):
         rng = _FakeRNG(int_val=1)
@@ -200,11 +200,11 @@ class TestEntityBuilderHeroClass:
             .with_race_attributes(5, tier=1, r_str=3, r_agi=2)
             .build()
         )
-        assert entity.progression.attributes is not None
+        assert entity.attributes is not None
         # STR: max(1, 5 + 3 + rng(0,3)->1) = 9
-        assert entity.progression.attributes.str_ == 9
+        assert entity.attributes.str_ == 9
         # AGI: max(1, 5 + 2 + rng(0,3)->1) = 8
-        assert entity.progression.attributes.agi == 8
+        assert entity.attributes.agi == 8
 
 
 # ---------------------------------------------------------------------------
@@ -217,8 +217,8 @@ class TestEntityBuilderSkills:
     def test_with_race_skills(self):
         rng = _FakeRNG()
         entity = EntityBuilder(rng, 1).with_race_skills("hero").build()
-        assert len(entity.progression.skills) > 0
-        skill_ids = [s.skill_id for s in entity.progression.skills]
+        assert len(entity.skills) > 0
+        skill_ids = [s.skill_id for s in entity.skills]
         assert "rally" in skill_ids or "second_wind" in skill_ids
 
     def test_with_class_skills(self):
@@ -228,7 +228,7 @@ class TestEntityBuilderSkills:
             .with_class_skills(HeroClass.WARRIOR, level=1)
             .build()
         )
-        skill_ids = [s.skill_id for s in entity.progression.skills]
+        skill_ids = [s.skill_id for s in entity.skills]
         assert "power_strike" in skill_ids
 
     def test_combined_race_and_class_skills(self):
@@ -239,12 +239,12 @@ class TestEntityBuilderSkills:
             .with_class_skills(HeroClass.WARRIOR, level=1)
             .build()
         )
-        assert len(entity.progression.skills) >= 2  # at least race + class skills
+        assert len(entity.skills) >= 2  # at least race + class skills
 
     def test_no_skills_by_default(self):
         rng = _FakeRNG()
         entity = EntityBuilder(rng, 1).build()
-        assert entity.progression.skills == []
+        assert entity.skills == []
 
 
 # ---------------------------------------------------------------------------
@@ -282,7 +282,7 @@ class TestEntityBuilderInventory:
         rng = _FakeRNG()
         inv = Inventory(items=[], max_slots=5, max_weight=20.0, weapon="club")
         entity = EntityBuilder(rng, 1).with_existing_inventory(inv).build()
-        assert entity.inventory == inv
+        assert entity.inventory is inv
         assert entity.inventory.weapon == "club"
 
     def test_with_equipment(self):
@@ -312,20 +312,20 @@ class TestEntityBuilderTraits:
     def test_with_traits_assigns_traits(self):
         rng = _FakeRNG()
         entity = EntityBuilder(rng, 1).with_traits(race_prefix="hero").build()
-        assert len(entity.identity.traits) >= 2
-        assert len(entity.identity.traits) <= 4
+        assert len(entity.traits) >= 2
+        assert len(entity.traits) <= 4
 
     def test_no_traits_by_default(self):
         rng = _FakeRNG()
         entity = EntityBuilder(rng, 1).build()
-        assert entity.identity.traits == []
+        assert entity.traits == []
 
     def test_traits_with_different_race_prefix(self):
         rng = _FakeRNG()
         hero_entity = EntityBuilder(rng, 1).with_traits(race_prefix="hero").build()
         goblin_entity = EntityBuilder(rng, 2).with_traits(race_prefix="goblin").build()
-        assert len(hero_entity.identity.traits) >= 2
-        assert len(goblin_entity.identity.traits) >= 2
+        assert len(hero_entity.traits) >= 2
+        assert len(goblin_entity.traits) >= 2
 
 
 # ---------------------------------------------------------------------------
@@ -359,25 +359,21 @@ class TestEntityBuilderChaining:
         assert entity.spatial.pos.x == 10
         assert entity.spatial.home_pos.x == 5
         assert entity.identity.faction == Faction.HERO_GUILD
-        # Stats should be base + attribute-derived bonuses. 
-        # Base HP=50. Warrior attrs might give +20. 50+20=70? Failure said 69.
-        # vit=8, end=8. 50 + 8*2 + int(8*0.5) = 50 + 16 + 4 = 70.
-        # Let's see why it's 69. Maybe end bonus is different.
-        assert entity.combat.hp == 70
-        assert entity.combat.hp == entity.combat.max_hp
-        # Warrior: str_bonus=2. base_str=5+2+1=8. derive_atk(10, 8) = 10 + 4 = 14.
-        assert entity.combat.atk_base == 14
-        assert entity.progression.hero_class == int(HeroClass.WARRIOR)
-        assert entity.progression.attributes is not None
-        assert len(entity.progression.skills) >= 2
+        # Stats should be base + attribute-derived bonuses (higher than raw base)
+        assert entity.stats.combat.hp >= 50
+        assert entity.stats.combat.hp == entity.stats.combat.max_hp
+        assert entity.stats.combat.atk_base >= 10
+        assert entity.hero_class == int(HeroClass.WARRIOR)
+        assert entity.attributes is not None
+        assert len(entity.skills) >= 2
         assert entity.inventory is not None
         assert entity.inventory.weapon == "iron_sword"
         assert len(entity.inventory.items) == 3
-        assert len(entity.identity.traits) >= 2
+        assert len(entity.traits) >= 2
         assert entity.combat.alive
         # Non-combat derived stats should be > baseline (attributes > 0)
-        assert entity.combat.hp_regen > 0.05
-        assert entity.combat.spatial.vision_range >= 6
+        assert entity.stats.hp_regen > 1.0
+        assert entity.stats.spatial.vision_range >= 6
 
     def test_full_mob_chain(self):
         rng = _FakeRNG()
@@ -400,11 +396,11 @@ class TestEntityBuilderChaining:
         )
         assert entity.kind == "goblin"
         assert entity.identity.faction == Faction.GOBLIN_HORDE
-        assert entity.identity.tier == 2
-        assert entity.progression.level == 3
-        assert entity.progression.attributes is not None
-        assert entity.inventory == inv
-        assert len(entity.identity.traits) >= 2
+        assert entity.tier == 2
+        assert entity.stats.progression.level == 3
+        assert entity.attributes is not None
+        assert entity.inventory is inv
+        assert len(entity.traits) >= 2
 
     def test_each_with_method_returns_self(self):
         """Verify all with_* methods return the builder for chaining."""

@@ -1,3 +1,7 @@
+import os
+import sys
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", ".."))
+
 import pytest
 from unittest.mock import MagicMock, patch
 from src.core.gameplay.attributes import Attributes, check_breakthroughs, recalc_derived_stats

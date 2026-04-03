@@ -9,7 +9,7 @@ Refactored for AOA Stabilization:
 from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING
-from src.actions.base import ActionProposal
+from src.actions.base import ActionProposal, CombatTraceUpdate
 from src.actions.damage import get_damage_calculator
 from src.core.models.enums import ActionType, DamageType, Domain, Element, EmotionType
 from src.core.gameplay.faction import Faction, FactionRegistry
@@ -101,15 +101,21 @@ class CombatAftermathService:
             ))
 
         # Rich Trace Generation (AOA Phase 5)
-        from src.actions.base import CombatTraceUpdate, CombatTraceDetails
+        from src.core.models.combat import CombatTraceRecord, CombatTraceDetails
         trace = CombatTraceUpdate(
-            tick=tick, attacker_id=attacker.id, defender_id=defender.id,
-            damage=damage, is_crit=is_crit, is_evasion=is_evasion,
-            skill_used=skill_label,
-            details=CombatTraceDetails(
-                raw_damage=trace_details.get("raw_damage", 0) if trace_details else 0,
-                mitigated_damage=trace_details.get("mitigation", 0) if trace_details else 0,
-                elemental_mult=trace_details.get("elemental_mult", 1.0) if trace_details else 1.0
+            result=CombatTraceRecord(
+                tick=tick, 
+                attacker_id=attacker.id, 
+                defender_id=defender.id,
+                damage=damage, 
+                skill_name=skill_label,
+                details=CombatTraceDetails(
+                    raw_damage=trace_details.get("raw_damage", 0) if trace_details else 0,
+                    mitigated_damage=trace_details.get("mitigation", 0) if trace_details else 0,
+                    elemental_mult=trace_details.get("elemental_mult", 1.0) if trace_details else 1.0,
+                    is_crit=is_crit,
+                    is_evaded=is_evasion
+                )
             )
         )
         proposal.updates.append(trace)
@@ -265,10 +271,9 @@ class CombatAction:
             attacker, defender, world, self._config, self._rng
         )
 
-        # APPLY STATE CHANGES
-        if not is_evasion:
-            defender.combat.hp -= damage
-            defender.combat.validate()
+        # APPLY STATE CHANGES (DEFERRED to ActionSystem._apply_updates)
+        # Authoritative state transition is now handled via the CombatTraceUpdate
+        # which is appended to proposal.updates in CombatAftermathService.process.
         
         # AFTERMATH (Memory, Grudges, Threat)
         CombatAftermathService.process(attacker, defender, world, damage, is_crit, is_evasion, self._config, proposal, trace_details)

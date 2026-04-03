@@ -1,3 +1,7 @@
+import os
+import sys
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", ".."))
+
 """Tests for equipment_enhance features:
 - Derived stats (recalc_derived_stats)
 - Item pickup / auto_equip_best
@@ -25,7 +29,6 @@ from src.core.gameplay.items.items import (
     item_power, _item_power,
 )
 from src.core.entities.entity import Entity, Vector2
-from src.core.entities.stats import Stats
 from src.core.entities.entity_builder import EntityBuilder
 
 

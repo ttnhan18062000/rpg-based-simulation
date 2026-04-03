@@ -1,3 +1,7 @@
+import os
+import sys
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", ".."))
+
 from src.utils.serialization import SimulationSerializer
 from src.core.models.snapshot import Snapshot
 import json
@@ -45,9 +49,10 @@ def test_worker_pool_rabbitmq_dispatch(monkeypatch):
         # The pool now expects 1 response (BATCH) containing all results.
         mock_method_frame = MagicMock()
         
+        from src.core.models.enums import ActionType
         # Fake Action Proposals for results
-        fake_proposal_1 = "prop_101"
-        fake_proposal_2 = "prop_202"
+        fake_proposal_1 = {"actor_id": 101, "verb": ActionType.MOVE, "reason": "test"}
+        fake_proposal_2 = {"actor_id": 202, "verb": ActionType.ATTACK, "reason": "test"}
         
         def side_effect_basic_get(*args, **kwargs):
             results = [

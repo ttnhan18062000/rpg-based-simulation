@@ -78,57 +78,10 @@ class ActionSystem(System):
             if proposal.verb == ActionType.ATTACK and isinstance(proposal.target, int):
                 target = world.entities.get(proposal.target)
                 if target and target.combat.alive:
-                    damage = 0
-                    for up in proposal.updates:
-                        if isinstance(up, CombatTraceUpdate):
-                            damage = up.damage
-                            break
-                    if damage > 0:
-                        # 1. Threat Generation
-                        mult = 1.5 if entity.progression.hero_class == HeroClass.WARRIOR else 1.0
-                        target.mind.perception.threat_table[entity.id] = target.mind.perception.threat_table.get(entity.id, 0.0) + damage * mult
-                        
-                        # 2. Emotion & Memory Generation (AOA Pillar 2: Phased Appraisal)
-                        # High-tier enemies (tier > 0) generate grudges and trauma
-                        if entity.identity.tier > 0 or "boss" in entity.kind.lower():
-                            # Grudge update
-                            target.mind.emotion.grudges[entity.id] = target.mind.emotion.grudges.get(entity.id, 0.0) + (damage / 10.0)
-                            
-                            # Trauma Memory Log (if damage is significant > 5% max HP)
-                            if damage > (target.combat.max_hp * 0.05):
-                                from src.core.aspects.mind import MemoryLogEntry, CombatNarrative
-                                trauma_entry = MemoryLogEntry(
-                                    tick=world.tick,
-                                    type="trauma",
-                                    impact=-0.2, # Negative impact
-                                    details=CombatNarrative(
-                                        target_id=entity.id,
-                                        target_kind=entity.kind,
-                                        damage_dealt=damage,
-                                        was_fatal=not target.combat.alive
-                                    )
-                                )
-                                target.mind.narrative.memory_log.append(trauma_entry)
-                        
-                        # 3. Combat Trace Recording (Target side)
-                        for up in proposal.updates:
-                            if isinstance(up, CombatTraceUpdate) and target.combat:
-                                from src.core.aspects.combat import CombatTraceRecord
-                                target.combat.traces.append(CombatTraceRecord(
-                                    tick=up.tick,
-                                    attacker_id=up.attacker_id,
-                                    defender_id=up.defender_id,
-                                    damage=up.damage,
-                                    is_crit=up.is_crit,
-                                    is_evasion=up.is_evasion,
-                                    skill_used=up.skill_used,
-                                    raw_damage=up.details.raw_damage,
-                                    mitigated_damage=up.details.mitigated_damage,
-                                    absorbed_damage=up.details.absorbed_damage,
-                                    crit_multiplier=up.details.crit_multiplier,
-                                    evasion_chance=up.details.evasion_chance,
-                                    elemental_mult=up.details.elemental_mult
-                                ))
+                    # CombatAction.apply was called earlier in ConflictResolver (AOA Phase 5)
+                    # and it correctly appended a CombatTraceUpdate to proposal.updates.
+                    # No additional logic needed here.
+                    pass
 
             if proposal.verb == ActionType.USE_ITEM and proposal.target:
                 all_updates.extend(cls._get_use_item_updates(world, config, entity, proposal.target))
@@ -333,25 +286,52 @@ class ActionSystem(System):
                         world.corpse_nodes.pop(up.corpse_id_to_remove, None)
             
             elif isinstance(up, CombatTraceUpdate):
-                if hasattr(entity.combat, "traces"):
-                    # Convert trace updates to records (AOA Stabilization)
-                    from src.core.aspects.combat import CombatTraceRecord
-                    trace = CombatTraceRecord(
-                        tick=up.tick,
-                        attacker_id=up.attacker_id,
-                        defender_id=up.defender_id,
-                        damage=up.damage,
-                        is_crit=up.is_crit,
-                        is_evasion=up.is_evasion,
-                        skill_used=up.skill_used,
-                        raw_damage=up.details.raw_damage,
-                        mitigated_damage=up.details.mitigated_damage,
-                        absorbed_damage=up.details.absorbed_damage,
-                        crit_multiplier=up.details.crit_multiplier,
-                        evasion_chance=up.details.evasion_chance,
-                        elemental_mult=up.details.elemental_mult
-                    )
-                    entity.combat.traces.append(trace)
+                # Authoritative Combat Result Application (AOA Final Convergence)
+                res = up.result
+                target = world.entities.get(res.defender_id)
+                if target and target.combat:
+                    from src.core.gameplay.classes import HeroClass
+                    damage = res.damage
+                    
+                    # 1. HP Reduction (Phase 5: Authoritative Application)
+                    if not res.details.is_evaded and damage > 0:
+                        target.combat.hp = max(0, target.combat.hp - damage)
+                        target.combat.validate()
+                    
+                    # 2. Behavioral side-effects (Phase 2: Appraisal)
+                    if damage > 0:
+                        # Threat Generation
+                        mult = 1.5 if entity.progression.hero_class == HeroClass.WARRIOR else 1.0
+                        target.mind.perception.threat_table[entity.id] = target.mind.perception.threat_table.get(entity.id, 0.0) + damage * mult
+                        
+                        # Grudges & Memory (for bosses/elites or significant damage)
+                        if entity.identity.tier > 0 or "boss" in entity.kind.lower():
+                            # Grudge update
+                            target.mind.emotion.grudges[entity.id] = target.mind.emotion.grudges.get(entity.id, 0.0) + (damage / 10.0)
+                            
+                            # Trauma Memory (if damage > 5% max HP)
+                            if damage > (target.combat.max_hp * 0.05):
+                                from src.core.aspects.mind import MemoryLogEntry, CombatNarrative
+                                trauma_entry = MemoryLogEntry(
+                                    tick=world.tick,
+                                    type="trauma",
+                                    impact=-0.2,
+                                    details=CombatNarrative(
+                                        target_id=entity.id,
+                                        target_kind=entity.kind,
+                                        damage_dealt=damage,
+                                        was_fatal=not target.combat.alive
+                                    )
+                                )
+                                target.mind.narrative.memory_log.append(trauma_entry)
+
+                    # 3. Trace Record Cleanup (Ensure target has the record too)
+                    if hasattr(target.combat, "traces"):
+                        target.combat.traces.append(res)
+                    
+                    # Also append to attacker trace log (AOA Pillar 2: Introspection)
+                    if hasattr(entity.combat, "traces"):
+                        entity.combat.traces.append(res)
 
 
     @staticmethod
@@ -454,12 +434,23 @@ class ActionSystem(System):
             damage = max(1, raw - mitigation)
             
             # --- SIDE-EFFECTS (Targets) ---
-            # HP Damage (Direct mutation on target aspect)
-            target.combat.hp = max(0, target.combat.hp - damage)
-            
-            # Threat Generation (Direct mutation on target mind)
-            mult = 1.5 if entity.progression.hero_class == HeroClass.WARRIOR else 1.0
-            target.mind.perception.threat_table[entity.id] = target.mind.perception.threat_table.get(entity.id, 0.0) + damage * mult
+            # Instead of direct mutation, we emit a CombatTraceUpdate (AOA Stabilization)
+            from src.core.models.combat import CombatTraceRecord, CombatTraceDetails
+            updates.append(CombatTraceUpdate(
+                result=CombatTraceRecord(
+                    tick=world.tick,
+                    attacker_id=entity.id,
+                    defender_id=target.id,
+                    damage=damage,
+                    details=CombatTraceDetails(
+                        raw_damage=raw,
+                        mitigated_damage=mitigation,
+                        elemental_mult=1.0, # TODO: Add elemental mult to skills
+                        is_crit=False, # Skills have custom crit logic, default False for now
+                        is_evaded=False
+                    )
+                )
+            ))
 
             if emit:
                 emit("skill", f"{entity.kind} hit {target.kind} with {sdef.name} for {damage} damage",

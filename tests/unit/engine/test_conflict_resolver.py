@@ -1,3 +1,7 @@
+import os
+import sys
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", ".."))
+
 """Tests for the ConflictResolver — deterministic move/combat resolution.
 
 Covers:
@@ -8,10 +12,7 @@ Covers:
 - Dead target rejection
 """
 
-import sys
-import os
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from src.actions.base import ActionProposal
 from src.config import SimulationConfig

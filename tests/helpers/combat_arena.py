@@ -1,3 +1,8 @@
+from __future__ import annotations
+import os
+import sys
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
+
 """CombatArena — E2E test fixture for combat mechanics.
 
 Creates a minimal but fully-functional WorldLoop with controllable entities,
@@ -10,8 +15,6 @@ Usage:
     events = arena.run_ticks(10)
     assert arena.entity(2).combat.hp < arena.entity(2).combat.max_hp
 """
-
-from __future__ import annotations
 
 
 

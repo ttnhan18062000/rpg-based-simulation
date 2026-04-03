@@ -1,3 +1,7 @@
+import os
+import sys
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+
 """Tests for deterministic simulation replay.
 
 The engine uses domain-separated xxhash RNG, so two runs with the same seed
@@ -5,8 +9,6 @@ and config MUST produce identical world states at every tick. This test
 runs the full engine twice and compares state hashes.
 """
 
-import sys
-import os
 import hashlib
 import pytest
 
@@ -14,7 +16,6 @@ import pytest
 os.environ["DISABLE_KAFKA"] = "1"
 os.environ["RABBITMQ_URL"] = "localhost" # Just mock
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from src.config import SimulationConfig
 from src.core.models.world_state import WorldState

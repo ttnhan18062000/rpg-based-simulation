@@ -117,6 +117,7 @@ class Snapshot(SimulationModel):
 
 # --- AOA Stabilization: Pydantic Rebuild ---
 # Resolve forward references for Snapshot once dependencies are defined.
+# Restore eager rebuild now that circular dependency is broken.
 from src.core.entities.entity import Entity
 from src.core.world.grid import Grid
 from src.core.gameplay.buildings import Building

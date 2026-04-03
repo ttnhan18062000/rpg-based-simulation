@@ -59,6 +59,9 @@ class EngineManager:
         
         self._tick_payloads: dict[str, Any] = {}
         self._payload_lock = threading.Lock()
+        
+        # AOA Phase 6: Unified Transport State (Infrastructure Hardening)
+        self._last_published_slim: dict[int, Any] = {}
 
         # Thread-safe shared state
         self._snapshot_lock = threading.Lock()
@@ -417,42 +420,40 @@ class EngineManager:
         logger.info("Engine thread exited.")
 
     def _publish_snapshot_and_events(self) -> None:
-        """Swap snapshot + push events to Redis Stream."""
+        """Atomic snapshot swap + outbound transport publication (AOA Pillar 1/3)."""
         assert self._loop is not None
+        
+        # 1. Atomic Snapshot & Event Swap (Master State)
         snap = self._loop.create_snapshot()
+        events = list(self._loop.tick_events)
+        
         with self._snapshot_lock:
             self._latest_snapshot = snap
-
-        events: list[SimEvent] = self._loop.tick_events
         if events:
             self._event_log.append_many(events)
 
-        # Publish the state delta to Redis Streams (infra-07)
+        # 2. External Transport Publication (Kafka/Redis/Websocket)
+        # These are isolated from the core simulation loop but use the thread-safe snap.
         try:
             from src.api.redis_client import get_sync_redis
             from src.api.routes.stream import compute_delta, _snapshot_to_slim_dict
-            from src.utils.metrics import SIM_REDIS_PUBLISH_DURATION
+            from src.api.presenters.world_presenter import WorldPresenter
+            from src.utils.metrics import SIM_REDIS_PUBLISH_DURATION, SIM_REDIS_LATENCY
+            
             r = get_sync_redis()
-
             _t0 = time.perf_counter()
 
-            # Convert snapshots to slim entity dicts for diffing
-            loot_duration = self.config.loot_duration
+            # A. Redis Streams: Delta Frame (Client Recovery)
+            loot_duration = self._config.loot_duration if hasattr(self._config, "loot_duration") else 10.0
             new_slim = _snapshot_to_slim_dict(snap, loot_duration)
-            old_slim = getattr(self, "_last_published_slim", {})
+            delta_json = compute_delta(self._last_published_slim, new_slim, snap.tick, events)
 
-            payload_json = compute_delta(old_slim, new_slim, snap.tick, events)
+            if delta_json:
+                 r.xadd("sim:stream", {"payload": delta_json})
+            
+            self._last_published_slim = new_slim
 
-            if payload_json:
-                r.xadd("sim:stream", {"payload": payload_json})
-
-            duration = time.perf_counter() - _t0
-            SIM_REDIS_PUBLISH_DURATION.observe(duration)
-            from src.utils.metrics import SIM_REDIS_LATENCY
-            SIM_REDIS_LATENCY.labels(op="stream_publish").observe(duration)
-
-            # 3. Pre-compute and cache WebSocket payloads (AOA Final Convergence)
-            from src.api.presenters.world_presenter import WorldPresenter
+            # B. WebSocket Cache: Pre-compute Rich/Compact Payloads
             compact = WorldPresenter.to_compact_tick(snap, events, mode="compact")
             rich = WorldPresenter.to_compact_tick(snap, events, mode="rich")
             
@@ -460,11 +461,12 @@ class EngineManager:
                 self._tick_payloads["compact"] = compact
                 self._tick_payloads["rich"] = rich
 
-            # Save slim dict for the NEXT tick's diff
-            self._last_published_slim = new_slim
+            duration = time.perf_counter() - _t0
+            SIM_REDIS_PUBLISH_DURATION.observe(duration)
+            SIM_REDIS_LATENCY.labels(op="stream_publish").observe(duration)
 
         except Exception:
-            logger.exception("Failed to publish tick %d to Redis", self._loop.world.tick)
+            self._logger.exception("Infrastructure: Failed to publish tick %d to transports", snap.tick)
 
     def _current_tick(self) -> int:
         if self._loop:

@@ -1,7 +1,8 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING, TypeVar, Type, Any
-from pydantic import BaseModel, ConfigDict, Field, PrivateAttr
+from pydantic import BaseModel, ConfigDict, Field, PrivateAttr, model_serializer
 from types import MappingProxyType
+import typing
 
 if TYPE_CHECKING:
     from src.core.entities.entity import Entity
@@ -38,16 +39,45 @@ class SimulationModel(BaseModel):
 
     def _unfreeze_recursive(self, val: Any) -> Any:
         """Inverts _freeze_recursive: converts tuples back to lists and MappingProxyType to dicts."""
+        if isinstance(val, MappingProxyType):
+            return {k: self._unfreeze_recursive(v) for k, v in val.items()}
+            
         if hasattr(val, "model_copy") and callable(val.model_copy):
             # If it's a SimulationModel, use its (now overridden) model_copy
             return val.model_copy(deep=True)
             
         if isinstance(val, (tuple, list)):
+            # Always return a list for mutability in isolation
             return [self._unfreeze_recursive(item) for item in val]
             
         if isinstance(val, (frozenset, set)):
             return set(self._unfreeze_recursive(item) for item in val)
             
+        if isinstance(val, dict):
+            # Also handle normal dicts that might contain nested frozen models
+            return {k: self._unfreeze_recursive(v) for k, v in val.items()}
+            
+        return val
+
+    @model_serializer(mode='plain')
+    def _serialize_aoa(self) -> dict[str, Any]:
+        """AOA Phase 6: Custom serialization for frozen models.
+        
+        Converts MappingProxyType and deep tuples back to standard JSON-friendly 
+        types without triggering Pydantic validation warnings.
+        """
+        # Internal state without private attributes
+        data = {k: v for k, v in self.__dict__.items() if not k.startswith("_")}
+        return self._serialize_recursive(data)
+
+    def _serialize_recursive(self, val: Any) -> Any:
+        """Helper for _serialize_aoa to deep-convert AOA types for the wire."""
+        if isinstance(val, (MappingProxyType, dict)):
+            return {str(k): self._serialize_recursive(v) for k, v in val.items()}
+        if isinstance(val, (tuple, list, set, frozenset)):
+            return [self._serialize_recursive(v) for v in val]
+        if isinstance(val, SimulationModel):
+            return val.model_dump()
         return val
 
 
@@ -72,7 +102,8 @@ class SimulationModel(BaseModel):
             val.freeze()
             return val
             
-        if isinstance(val, list):
+        if isinstance(val, (list, tuple)):
+            # Handle both lists and tuples to ensure deep immutability
             return tuple(self._freeze_recursive(item) for item in val)
             
         if isinstance(val, dict):

@@ -171,6 +171,8 @@ class Entity(SimulationModel):
         super().__setattr__(name, value)
 
 # Rebuild models to finalize Pydantic setup
+# AOA Final Convergence: Restore eager model_rebuild now that circular 
+# dependency is broken.
 Entity.model_rebuild()
 IdentityAspect.model_rebuild()
 SpatialAspect.model_rebuild()

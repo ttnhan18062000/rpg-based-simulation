@@ -21,6 +21,7 @@ if TYPE_CHECKING:
 from pydantic import Field, model_validator
 from src.core.models.base import SimulationModel
 from src.core.models.types import TargetUnion, BuildingTarget
+from src.core.models.combat import CombatTraceRecord, CombatTraceDetails
 
 class ActionBatch(SimulationModel):
     """A batch of action proposals for a specific tick, used for Kafka/Persistence."""
@@ -208,61 +209,51 @@ class InteractionUpdate(IntentUpdate):
     
     corpse_id_to_remove: int | None = None
 
-class CombatTraceDetails(SimulationModel):
-    """Structured detail for combat exchanges. [AOA STABILIZATION]"""
-    raw_damage: int = 0
-    mitigated_damage: int = 0
-    absorbed_damage: int = 0
-    
-    crit_multiplier: float = 1.0
-    evasion_chance: float = 0.0
-    
-    effect_triggers: list[str] = Field(default_factory=list)
-    elemental_mult: float = 1.0
-
 class CombatTraceUpdate(IntentUpdate):
-    """Rich trace data for introspection. [AOA STABILIZATION]
-    
-    Pillar 2: Introspection & Rendering. Traces provide the explainability
-    needed for the frontend to render detailed combat logs.
-    """
-    tick: int
-    attacker_id: int
-    defender_id: int
-    damage: int
-    is_crit: bool
-    is_evasion: bool
-    skill_used: str = "attack"
-    details: CombatTraceDetails = Field(default_factory=CombatTraceDetails)
+    """Refined trace wrapper to provide a unified combat result to the engine. [AOA STABILIZATION]"""
+    result: CombatTraceRecord = Field(default_factory=lambda: CombatTraceRecord(tick=0, attacker_id=0, defender_id=0, damage=0))
 
 # --- AOA Stabilization: Deferred Model Rebuild for Circular Dependencies ---
 # These types are needed at runtime for validation but cause circular imports 
 # if imported at the top level.
 
 def _rebuild_action_models():
-    from src.core.aspects.mind import MemoryRecord, MemoryLogEntry
-    from src.core.models.vectors import Vector2
+    """Centrally orchestrate Pydantic model rebuilds to resolve circular dependencies."""
+    # Domain Aspects & Models
+    from src.core.aspects.mind import MemoryRecord, MemoryLogEntry, CombatNarrative, LootNarrative, DiscoveryNarrative
+    from src.core.aspects.combat import CombatAspect
+    from src.core.models.combat import CombatTraceRecord, CombatTraceDetails
+    from src.core.entities.entity import Entity
+    from src.core.models.snapshot import Snapshot
+    
+    # Gameplay Components (needed for ProgressionUpdate)
     from src.core.gameplay.classes import SkillInstance
     from src.core.quests import Quest
     from src.core.effects import StatusEffect
-
-    # Rebuild all update models to pick up the actual types
-    ActionProposal.model_rebuild()
-    MindUpdate.model_rebuild()
-    PerceptionUpdate.model_rebuild()
-    NavigationUpdate.model_rebuild()
-    ProgressionUpdate.model_rebuild()
-    IdentityUpdate.model_rebuild()
-    InteractionUpdate.model_rebuild()
-    CombatTraceUpdate.model_rebuild()
     
-    # Rebuild proposal, batch and TargetUnion
-    ActionProposal.model_rebuild()
-    ActionBatch.model_rebuild()
+    # Create a unified namespace for Pydantic to resolve string forward references
+    ns = locals().copy()
+    # Also include the module's own globals for things like ActionProposal, etc.
+    ns.update(globals())
+    
+    # 1. Rebuild Intent Update Models (AOA Stabilization)
+    MindUpdate.model_rebuild(_types_namespace=ns)
+    PerceptionUpdate.model_rebuild(_types_namespace=ns)
+    NavigationUpdate.model_rebuild(_types_namespace=ns)
+    ProgressionUpdate.model_rebuild(_types_namespace=ns)
+    IdentityUpdate.model_rebuild(_types_namespace=ns)
+    InteractionUpdate.model_rebuild(_types_namespace=ns)
+    CombatTraceUpdate.model_rebuild(_types_namespace=ns)
+    
+    # 2. Finalize Aggregate Models
+    ActionProposal.model_rebuild(_types_namespace=ns)
+    ActionBatch.model_rebuild(_types_namespace=ns)
 
 try:
     _rebuild_action_models()
-except (ImportError, NameError):
-    # This might happen during initial bootstrap, the orchestrator 
-    # will call it again if needed.
-    pass
+except Exception as e:
+    # Fail loudly in development/test if rebuild fails
+    import os, logging
+    if os.getenv("PYTEST_CURRENT_TEST") or os.getenv("CI"):
+        raise e
+    logging.getLogger(__name__).debug("Deferred model rebuild skipped: %s", e)

@@ -1,11 +1,12 @@
 import os
 import sys
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+
 from pathlib import Path
 
 import pytest
 
 # Ensure the src directory is in the python path
-sys.path.insert(0, str(Path(__file__).parent.parent))
 
 # Disable external infrastructure for tests by default
 os.environ["DISABLE_KAFKA"] = "1"

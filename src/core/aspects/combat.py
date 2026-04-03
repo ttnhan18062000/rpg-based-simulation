@@ -1,35 +1,15 @@
 from __future__ import annotations
-from typing import Any, TYPE_CHECKING
+from typing import Any, TYPE_CHECKING, Union
 from pydantic import Field, ConfigDict, model_validator
 from src.core.models.base import Aspect, SimulationModel
 from src.core.models.enums import Element
 
-if TYPE_CHECKING:
-    from src.actions.base import CombatTraceDetails
-
+from src.core.models.combat import CombatTraceRecord, CombatTraceDetails
 from src.core.models.types import TargetUnion
 
-class CombatTraceRecord(SimulationModel):
-    """Authoritative record of a combat exchange. [AOA STABILIZATION]"""
-    model_config = ConfigDict(extra='forbid')
-    
-    tick: int
-    attacker_id: int
-    defender_id: int
-    damage: int
-    is_crit: bool
-    is_evasion: bool
-    skill_used: str = "attack"
-    
-    # Detailed Metrics (AOA Convergence)
-    raw_damage: int = 0
-    mitigated_damage: int = 0
-    absorbed_damage: int = 0
-    crit_multiplier: float = 1.0
-    evasion_chance: float = 0.0
-    elemental_mult: float = 1.0
-    
-    details: Any = None # Reference to full CombatTraceUpdate if needed
+if TYPE_CHECKING:
+    from src.actions.base import CombatTraceUpdate
+    from src.core.effects import StatusEffect
 
 class CombatAspect(Aspect):
     """Aspect handling health, attack power, defense, and elemental vulnerabilities. [AOA STABILIZATION]
@@ -107,8 +87,8 @@ class CombatAspect(Aspect):
     cooldown_reduction: float = 1.0
     
     # State & Targeting
-    effects: list[Any] = Field(default_factory=list)
-    combat_target_id: TargetUnion = None
+    effects: list["StatusEffect"] = Field(default_factory=list)
+    combat_target_id: TargetUnion = Field(default=None)
     
     # Introspection: recent combat traces (ring buffer) [AOA STABILIZATION]
     traces: list[CombatTraceRecord] = Field(default_factory=list)
@@ -167,5 +147,7 @@ class CombatAspect(Aspect):
 
 
 # Rebuild Model to finalize Pydantic setup
-CombatTraceRecord.model_rebuild()
+# AOA Final Convergence: Restore eager model_rebuild now that circular 
+# dependency is broken.
+from src.core.effects import StatusEffect
 CombatAspect.model_rebuild()

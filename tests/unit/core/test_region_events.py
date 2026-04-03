@@ -1,6 +1,10 @@
+from __future__ import annotations
+import os
+import sys
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", ".."))
+
 """Tests for region enter/leave events and AI difficulty awareness (epic-15 Phase C+D)."""
 
-from __future__ import annotations
 
 import unittest
 

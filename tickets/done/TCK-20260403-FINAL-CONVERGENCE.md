@@ -11,7 +11,8 @@ Complete the remaining open items in `final_implementation_plan_3.md` to achieve
 3.  **Cleanup**: Remove leftover compatibility shims and dual serialization paths if any.
 4.  **Serialization**: Ensure no `pickle` usage in infrastructure and audit `SimulationJSONEncoder`.
 5.  **Payload Caching**: Finalize transport payload caching in `EngineManager`.
-6.  **Integration Test Stabilization**: Resolve 26 failures across `test_hero_lifecycle.py`, `test_invariants.py`, `test_snapshot_safety.py`, and infrastructure-dependent tests.
+6.  **Integration Test Stabilization**: Resolve 26 failures by breaking the circular dependency between logic and state.
+7.  **Architectural Pivot**: Move combat trace records to core models to decouple domain aspects from action intents.
 
 ## Acceptance Criteria
 - [ ] `freeze()` is proven deep across nested collections in unit tests.
