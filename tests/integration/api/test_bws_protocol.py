@@ -8,7 +8,14 @@ from src.config import SimulationConfig
 
 @pytest.fixture
 def client():
-    config = SimulationConfig()
+    # Use a small world for speed in integration tests
+    config = SimulationConfig(
+        grid_width=64, 
+        grid_height=64,
+        hero_count=1,
+        initial_entity_count=5,
+        num_camps=1
+    )
     app = create_app(config)
     with TestClient(app) as c:
         yield c

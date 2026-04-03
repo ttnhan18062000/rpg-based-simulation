@@ -14,6 +14,7 @@ from src.api.redis_client import get_async_redis
 from src.core.models.snapshot import Snapshot
 import msgpack
 import json
+from fastapi.encoders import jsonable_encoder
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -59,10 +60,10 @@ async def stream_ws(
         # For simplicity, just send the entities.
         initial_payload = WorldPresenter.to_compact_tick(initial_snap, [], mode=mode)
         if fmt == "msgpack":
-            serialized = msgpack.packb(initial_payload, use_bin_type=True)
+            serialized = msgpack.packb(jsonable_encoder(initial_payload), use_bin_type=True)
             await websocket.send_bytes(serialized)
         else:
-            serialized = json.dumps(initial_payload)
+            serialized = json.dumps(jsonable_encoder(initial_payload))
             await websocket.send_text(serialized)
 
     try:
@@ -83,17 +84,18 @@ async def stream_ws(
                 # because the Redis payload is just a JSON string of a delta.
                 snap = manager.get_snapshot()
                 if snap and snap.tick > initial_snap.tick:
-                    # We need the events for this tick too.
-                    # EngineManager.event_log contains recent events.
-                    events = manager.event_log.since_tick(snap.tick)
-                    
-                    payload = WorldPresenter.to_compact_tick(snap, events, mode=mode)
+                    # Use pre-computed payload from manager (AOA Final Convergence)
+                    payload = manager.get_tick_payload(mode)
+                    if not payload:
+                        # Fallback if cache not ready or mismatch
+                        events = manager.event_log.since_tick(snap.tick)
+                        payload = WorldPresenter.to_compact_tick(snap, events, mode=mode)
                     
                     if fmt == "msgpack":
-                        serialized = msgpack.packb(payload, use_bin_type=True)
+                        serialized = msgpack.packb(jsonable_encoder(payload), use_bin_type=True)
                         await websocket.send_bytes(serialized)
                     else:
-                        serialized = json.dumps(payload)
+                        serialized = json.dumps(jsonable_encoder(payload))
                         await websocket.send_text(serialized)
                         
     except WebSocketDisconnect:

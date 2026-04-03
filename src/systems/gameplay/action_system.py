@@ -2,7 +2,7 @@
 
 Refactored for AOA Stabilization:
 - Direct aspect access (spatial, combat, mind, progression).
-- Explicit application of 'intent_metadata' from side-effect-free AI decisions.
+- Explicit application of typed IntentUpdate records from side-effect-free AI decisions.
 - Standardized state transitions and derived counter updates.
 """
 
@@ -84,8 +84,51 @@ class ActionSystem(System):
                             damage = up.damage
                             break
                     if damage > 0:
+                        # 1. Threat Generation
                         mult = 1.5 if entity.progression.hero_class == HeroClass.WARRIOR else 1.0
                         target.mind.perception.threat_table[entity.id] = target.mind.perception.threat_table.get(entity.id, 0.0) + damage * mult
+                        
+                        # 2. Emotion & Memory Generation (AOA Pillar 2: Phased Appraisal)
+                        # High-tier enemies (tier > 0) generate grudges and trauma
+                        if entity.identity.tier > 0 or "boss" in entity.kind.lower():
+                            # Grudge update
+                            target.mind.emotion.grudges[entity.id] = target.mind.emotion.grudges.get(entity.id, 0.0) + (damage / 10.0)
+                            
+                            # Trauma Memory Log (if damage is significant > 5% max HP)
+                            if damage > (target.combat.max_hp * 0.05):
+                                from src.core.aspects.mind import MemoryLogEntry, CombatNarrative
+                                trauma_entry = MemoryLogEntry(
+                                    tick=world.tick,
+                                    type="trauma",
+                                    impact=-0.2, # Negative impact
+                                    details=CombatNarrative(
+                                        target_id=entity.id,
+                                        target_kind=entity.kind,
+                                        damage_dealt=damage,
+                                        was_fatal=not target.combat.alive
+                                    )
+                                )
+                                target.mind.narrative.memory_log.append(trauma_entry)
+                        
+                        # 3. Combat Trace Recording (Target side)
+                        for up in proposal.updates:
+                            if isinstance(up, CombatTraceUpdate) and target.combat:
+                                from src.core.aspects.combat import CombatTraceRecord
+                                target.combat.traces.append(CombatTraceRecord(
+                                    tick=up.tick,
+                                    attacker_id=up.attacker_id,
+                                    defender_id=up.defender_id,
+                                    damage=up.damage,
+                                    is_crit=up.is_crit,
+                                    is_evasion=up.is_evasion,
+                                    skill_used=up.skill_used,
+                                    raw_damage=up.details.raw_damage,
+                                    mitigated_damage=up.details.mitigated_damage,
+                                    absorbed_damage=up.details.absorbed_damage,
+                                    crit_multiplier=up.details.crit_multiplier,
+                                    evasion_chance=up.details.evasion_chance,
+                                    elemental_mult=up.details.elemental_mult
+                                ))
 
             if proposal.verb == ActionType.USE_ITEM and proposal.target:
                 all_updates.extend(cls._get_use_item_updates(world, config, entity, proposal.target))
@@ -210,6 +253,8 @@ class ActionSystem(System):
                     prog.gold = max(0, prog.gold + up.gold_delta)
                 if up.xp_delta:
                     prog.xp += up.xp_delta
+                if up.veterancy_points_delta:
+                    prog.veterancy_points += up.veterancy_points_delta
                 if up.hp_delta:
                     entity.combat.hp = max(0, min(entity.combat.max_hp, entity.combat.hp + up.hp_delta))
                 if up.stamina_delta:
@@ -307,7 +352,7 @@ class ActionSystem(System):
     def _get_use_item_updates(world: WorldState, config: SimulationConfig, entity: Entity, item_id: str) -> list[IntentUpdate]:
         """Generate updates for using an item (AOA Convergence)."""
         updates: list[IntentUpdate] = []
-        if entity.inventory and entity.inventory.has_item(item_id):
+        if entity.inventory and item_id in entity.inventory.items:
             template = ITEM_REGISTRY.get(item_id)
             if template:
                 # 1. Removal
@@ -464,7 +509,7 @@ class ActionSystem(System):
             if not actor: continue
             acted.add(actor.id)
             if proposal.verb in (ActionType.ATTACK, ActionType.USE_SKILL):
-                actor.combat.combat_target_id = proposal.target if isinstance(proposal.target, int) else None
+                actor.combat.combat_target_id = proposal.target
         
         for entity in world.entities.values():
             if entity.id in acted: continue

@@ -362,12 +362,12 @@ class TestTrainWithStats:
         caps = entity.attribute_caps # uses shim
         
         recalc_derived_stats(entity, attrs)  # initial derivation
-        old_atk = entity.combat.combat.atk_base
+        old_atk = entity.combat.atk_base
         
         # Train attack — str rate is 0.015, frac was 0.99 → 1.005 → increment
         train_attributes(attrs, caps, "attack", stats=entity)
         assert attrs.str_ == 6  # incremented
-        assert entity.combat.combat.atk_base > old_atk  # derived stats updated
+        assert entity.combat.atk_base > old_atk  # derived stats updated
 
 
 # =====================================================================

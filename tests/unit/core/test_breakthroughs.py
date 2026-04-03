@@ -15,7 +15,7 @@ def test_breakthrough_applies_bonus():
     # Ensure identity is a mock and has traits
     entity.identity = MagicMock()
     entity.identity.traits = ["str_25"]
-    entity.progression.progression.stamina = 100
+    entity.progression.stamina = 100
     entity.progression.max_stamina = 100
     
     stats = CombatAspect()

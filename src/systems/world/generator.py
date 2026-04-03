@@ -55,7 +55,7 @@ class EntityGenerator:
             return
 
         base_race = entity.kind.split('_')[0]
-        tier = entity.tier
+        tier = entity.identity.tier
         
         gear = RACE_STARTING_GEAR.get(base_race, {}).get(tier)
         if not gear:

@@ -21,14 +21,16 @@ def test_speed_delay_invariants():
     st.floats(min_value=-0.5, max_value=1.5),  # crit_rate
 )
 def test_stats_invariants(hp, max_hp, atk, def_, crit_rate):
-    stats = Stats(hp=hp, max_hp=max_hp, atk=atk, def_=def_, crit_rate=crit_rate)
+    from src.core.aspects.combat import CombatAspect
+    combat = CombatAspect(hp=hp, max_hp=max_hp, atk_base=atk, def_base=def_, crit_rate=crit_rate)
+    combat.validate()
     
     # We expect hp_ratio to be clamped between 0 and 1 for safety
-    assert isinstance(stats.combat.hp_ratio, float)
-    if stats.combat.combat.max_hp > 0:
-        assert 0.0 <= stats.combat.hp_ratio <= 1.0
+    assert isinstance(combat.hp_ratio, float)
+    if combat.max_hp > 0:
+        assert 0.0 <= combat.hp_ratio <= 1.0
     else:
-        assert stats.combat.hp_ratio == 0.0
+        assert combat.hp_ratio == 0.0
 
 @given(
     st.integers(min_value=1, max_value=1000), # atk
@@ -51,11 +53,15 @@ def test_damage_calc_math(atk, def_, variance):
 @given(st.integers(min_value=1, max_value=100)) # level
 def test_recalc_level_consistency(level):
     # Ensure level doesn't break recalc
-    stats = Stats(level=level)
+    entity = Entity(id=1, kind="hero")
+    entity.progression.level = level
+    
+    from src.core.gameplay.attributes import Attributes, recalc_derived_stats
     attrs = Attributes(vit=5, end=5, str_=5, agi=5)
-    recalc_derived_stats(stats, attrs)
-    assert stats.progression.progression.level == level
-    assert stats.combat.combat.max_hp > 0
+    recalc_derived_stats(entity, attrs)
+    
+    assert entity.progression.level == level
+    assert entity.combat.max_hp > 0
 
 @given(
     st.integers(min_value=0, max_value=1000), # current_hp

@@ -6,6 +6,7 @@ from src.core.models.enums import Material
 from src.core.entities.entity import Entity, Vector2
 from src.workers.ai_worker_daemon import AIWorkerDaemon
 from src.core.models.snapshot import Snapshot
+from src.utils.serialization import SimulationSerializer
 
 def test_grid_bytearray_correctness():
     """Verify Grid correctly stores and retrieves materials using bytearray and cache."""
@@ -45,27 +46,25 @@ def test_grid_copy_is_not_shared():
 def test_entity_copy_shallow_vs_refs():
     """Verify Entity.copy() is shallow for aspects but produces a new Entity object."""
     e1 = Entity(id=1, kind="hero")
-    e1.spatial.spatial.pos = Vector2(x=10, y=10)
+    e1.spatial.pos = Vector2(x=10, y=10)
     
     e2 = e1.copy()
     assert e2.id == e1.id
     assert e2 is not e1
     
     # Post-optimization: aspects are shallow copied (references remain same)
-    # BUT wait! If I modify e2.spatial.spatial.pos, does it affect e1.spatial.spatial.pos?
-    # e1.spatial.spatial.pos is a Vector2 (Pydantic model). 
+    # BUT wait! If I modify e2.spatial.pos, does it affect e1.spatial.pos?
+    # e1.spatial.pos is a Vector2 (Pydantic model). 
     # model_copy(deep=False) copies the reference to the Vector2 object.
     
-    e2.spatial.spatial.pos = Vector2(x=20, y=20)
-    assert e1.spatial.spatial.pos.x == 10  # e1 remains at (10,10) because we REPLACED the reference in e2
+    e2.spatial.pos = Vector2(x=20, y=20)
+    assert e1.spatial.pos.x == 10  # e1 remains at (10,10) because we REPLACED the reference in e2
     
-    # Test aspect nested mutation (if any)
-    # e1.mind.terrain_memory is a dict. Shallow copy means they share the SAME dict!
-    e1.mind.terrain_memory[(0,0)] = 1
-    assert (0,0) in e2.mind.terrain_memory # They share the SAME mind object (shallow copy)
+    # AOA Stabilization: Aspect copies are now DEEP to ensure state isolation.
+    e1.mind.perception.terrain_memory[(0,0)] = 1
+    assert (0,0) not in e2.mind.perception.terrain_memory 
     
-    # This confirms it's a shallow copy as intended for the Snapshot performance.
-    # Snapshots are immediate-pickle-and-discard, so shared refs are fine.
+    # This confirms deep isolation as intended for AOA Pillar 1.
 
 def test_ai_worker_batch_processing_logic():
     """Verify AIWorkerDaemon correctly handles a batch of tasks."""
@@ -94,7 +93,7 @@ def test_ai_worker_batch_processing_logic():
         "tick": 10,
         "entity_ids": [1, 2]
     }
-    body = pickle.dumps(batch_task)
+    body = SimulationSerializer.dumps(batch_task)
     
     # Mock _send_batch_result
     daemon._send_batch_result = MagicMock()

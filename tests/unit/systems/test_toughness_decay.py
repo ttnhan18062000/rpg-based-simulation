@@ -38,17 +38,17 @@ def test_near_death_hardening():
     
     # Force a hit of 10 damage.
     # We need to mock some parts or just rely on the luck of the seed.
-    # attacker.stats.combat.combat.atk_base = 10, defender.stats.def = 0. Damage roughly 10.
+    # attacker.combat.atk_base = 10, defender.stats.def = 0. Damage roughly 10.
     # 12 - 10 = 2 (which is 10% of 20).
     
     from src.actions.base import ActionProposal
     proposal = ActionProposal(actor_id=attacker.id, verb=ActionType.ATTACK, target=defender.id, reason="Test")
     
-    old_max_hp = defender.stats.combat.combat.max_hp
+    old_max_hp = defender.combat.max_hp
     combat.apply(proposal, world)
     
-    assert defender.stats.combat.combat.hp == 2 or True # exact value depends on variance but it should be low
-    assert defender.stats.combat.combat.max_hp == old_max_hp + 1
+    assert defender.combat.hp == 2 or True # exact value depends on variance but it should be low
+    assert defender.combat.max_hp == old_max_hp + 1
 
 def test_stat_decay_inactivity():
     """Verify that idling for 1000+ ticks triggers stat decay."""

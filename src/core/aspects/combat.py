@@ -7,6 +7,8 @@ from src.core.models.enums import Element
 if TYPE_CHECKING:
     from src.actions.base import CombatTraceDetails
 
+from src.core.models.types import TargetUnion
+
 class CombatTraceRecord(SimulationModel):
     """Authoritative record of a combat exchange. [AOA STABILIZATION]"""
     model_config = ConfigDict(extra='forbid')
@@ -106,7 +108,7 @@ class CombatAspect(Aspect):
     
     # State & Targeting
     effects: list[Any] = Field(default_factory=list)
-    combat_target_id: int | None = None
+    combat_target_id: TargetUnion = None
     
     # Introspection: recent combat traces (ring buffer) [AOA STABILIZATION]
     traces: list[CombatTraceRecord] = Field(default_factory=list)

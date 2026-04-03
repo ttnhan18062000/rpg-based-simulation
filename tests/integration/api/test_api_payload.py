@@ -27,7 +27,7 @@ class TestRLEMapGrid(unittest.TestCase):
 
     def test_rle_encodes_correctly(self):
         grid = self.mgr.get_grid()
-        tiles = grid._tiles
+        tiles = grid.tiles
         total = grid.width * grid.height
 
         # Build RLE the same way the endpoint does
@@ -59,7 +59,7 @@ class TestRLEMapGrid(unittest.TestCase):
 
     def test_rle_decodes_to_original(self):
         grid = self.mgr.get_grid()
-        tiles = grid._tiles
+        tiles = grid.tiles
         total = grid.width * grid.height
 
         rle: list[int] = []
@@ -111,23 +111,23 @@ class TestSlimEntities(unittest.TestCase):
         """Each slim entity should serialize to < 300 bytes."""
         e = list(self.snap.entities.values())[0]
         slim = EntitySlimSchema(
-            id=e.id, kind=e.kind, x=e.spatial.spatial.pos.x, y=e.spatial.spatial.pos.y,
-            hp=e.combat.combat.hp, max_hp=e.combat.combat.max_hp,
-            state=e.mind.decision.ai_state.name, level=e.progression.progression.level,
-            tier=e.identity.tier, faction=e.identity.identity.faction.name.lower(),
+            id=e.id, kind=e.kind, x=e.spatial.pos.x, y=e.spatial.pos.y,
+            hp=e.combat.hp, max_hp=e.combat.max_hp,
+            state=e.mind.decision.ai_state.name, level=e.progression.level,
+            tier=e.identity.tier, faction=e.identity.faction.name.lower(),
         )
         js = slim.model_dump_json()
         self.assertLess(len(js), 300, f"Slim entity too large: {len(js)} bytes")
 
     def test_state_payload_without_selection(self):
         """Without selection, state should have no selected_entity and small payload."""
-        entities = [e for e in self.snap.entities.values() if e.combat.combat.alive]
+        entities = [e for e in self.snap.entities.values() if e.combat.alive]
         slim_list = [
             EntitySlimSchema(
-                id=e.id, kind=e.kind, x=e.spatial.spatial.pos.x, y=e.spatial.spatial.pos.y,
-                hp=e.combat.combat.hp, max_hp=e.combat.combat.max_hp,
-                state=e.mind.decision.ai_state.name, level=e.progression.progression.level,
-                tier=e.identity.tier, faction=e.identity.identity.faction.name.lower(),
+                id=e.id, kind=e.kind, x=e.spatial.pos.x, y=e.spatial.pos.y,
+                hp=e.combat.hp, max_hp=e.combat.max_hp,
+                state=e.mind.decision.ai_state.name, level=e.progression.level,
+                tier=e.identity.tier, faction=e.identity.faction.name.lower(),
             )
             for e in entities
         ]

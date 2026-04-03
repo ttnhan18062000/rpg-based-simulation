@@ -274,7 +274,7 @@ def is_in_hostile_town(ctx: AIContext) -> bool:
     # Simplified: for now, all towns are assumed hostile to 'mob' factions
     # or we could check a town faction registry if it existed.
     # In WorldLoop, monsters are generally burned by town auras.
-    return ctx.actor.identity.faction not in (Faction.HERO_GUILD, Faction.TOWN_GUARD)
+    return ctx.actor.identity.faction != Faction.HERO_GUILD
 
 
 def should_flee(actor: Entity, config: SimulationConfig) -> bool:

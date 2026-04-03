@@ -1,4 +1,4 @@
-import pickle
+from src.utils.serialization import SimulationSerializer
 from unittest.mock import MagicMock, patch
 
 from src.core.models.enums import AIState, ActionType, Domain
@@ -34,7 +34,7 @@ def test_engine_manager_kafka_recovery(mock_create_consumer, monkeypatch):
     world.add_entity(dummy)
     
     snap = Snapshot.from_world(world)
-    pickled_snap = pickle.dumps(snap)
+    serialized_snap = SimulationSerializer.dumps(snap)
     
     # 3. Build fake event payload (tick 401)
     # A MOVE proposal for the dummy entity
@@ -48,7 +48,7 @@ def test_engine_manager_kafka_recovery(mock_create_consumer, monkeypatch):
         "tick": 401,
         "proposals": [proposal]
     }
-    pickled_event = pickle.dumps(payload)
+    serialized_event = SimulationSerializer.dumps(payload)
     
     # 4. Mock the Kafka Consumer behavior
     # We need to simulate two reads: one for the Snapshot topic, one for Events.
@@ -85,7 +85,7 @@ def test_engine_manager_kafka_recovery(mock_create_consumer, monkeypatch):
                 poll_counts[current_topic] += 1
                 msg = MagicMock()
                 msg.error.return_value = False
-                msg.value.return_value = pickled_snap
+                msg.value.return_value = serialized_snap
                 return msg
             else:
                 return None # EOF timeout
@@ -95,7 +95,7 @@ def test_engine_manager_kafka_recovery(mock_create_consumer, monkeypatch):
                 poll_counts[current_topic] += 1
                 msg = MagicMock()
                 msg.error.return_value = False
-                msg.value.return_value = pickled_event
+                msg.value.return_value = serialized_event
                 return msg
             else:
                 return None # EOF timeout
@@ -115,6 +115,6 @@ def test_engine_manager_kafka_recovery(mock_create_consumer, monkeypatch):
     # Verify the dummy entity is present and has moved
     assert 99 in recovered_world.entities, "Entity 99 should exist"
     recovered_dummy = recovered_world.entities[99]
-    assert recovered_dummy.spatial.spatial.pos.x == 6, "Entity should have moved to x=6"
-    assert recovered_dummy.spatial.spatial.pos.y == 6, "Entity should have moved to y=6"
+    assert recovered_dummy.spatial.pos.x == 6, "Entity should have moved to x=6"
+    assert recovered_dummy.spatial.pos.y == 6, "Entity should have moved to y=6"
     

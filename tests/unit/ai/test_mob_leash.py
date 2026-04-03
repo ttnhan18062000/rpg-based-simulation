@@ -48,14 +48,14 @@ def _make_mob(
     ai_state: AIState = AIState.WANDER,
 ) -> Entity:
     e = Entity(id=eid, kind="goblin")
-    e.identity.identity.faction = Faction.GOBLIN_HORDE
-    e.spatial.spatial.pos = Vector2(x, y)
+    e.identity.faction = Faction.GOBLIN_HORDE
+    e.spatial.pos = Vector2(x, y)
     from src.core.aspects.inventory import InventoryAspect
     e.inventory = InventoryAspect(items=[], max_slots=12, max_weight=30.0)
-    e.spatial.spatial.home_pos = Vector2(home_x, home_y)
+    e.spatial.home_pos = Vector2(home_x, home_y)
     e.spatial.leash_radius = leash_radius
-    e.combat.combat.hp = hp
-    e.combat.combat.max_hp = max_hp
+    e.combat.hp = hp
+    e.combat.max_hp = max_hp
     e.combat.atk_base = 10
     e.combat.def_base = 5
     e.combat.spd_base = 10
@@ -66,12 +66,12 @@ def _make_mob(
 
 def _make_hero(eid: int, x: int, y: int) -> Entity:
     hero = Entity(id=eid, kind="hero")
-    hero.identity.identity.faction = Faction.HERO_GUILD
-    hero.spatial.spatial.pos = Vector2(x, y)
+    hero.identity.faction = Faction.HERO_GUILD
+    hero.spatial.pos = Vector2(x, y)
     from src.core.aspects.inventory import InventoryAspect
     hero.inventory = InventoryAspect(items=[], max_slots=36, max_weight=90.0)
-    hero.combat.combat.hp = 100
-    hero.combat.combat.max_hp = 100
+    hero.combat.hp = 100
+    hero.combat.max_hp = 100
     hero.combat.atk_base = 15
     hero.combat.def_base = 5
     hero.combat.spd_base = 10
@@ -105,9 +105,9 @@ class TestBeyondLeash:
 
     def test_no_home_returns_false(self):
         e = Entity(id=1, kind="goblin")
-        e.identity.identity.faction = Faction.GOBLIN_HORDE
-        e.spatial.spatial.pos = Vector2(50, 50)
-        e.spatial.spatial.home_pos = None
+        e.identity.faction = Faction.GOBLIN_HORDE
+        e.spatial.pos = Vector2(50, 50)
+        e.spatial.home_pos = None
         e.spatial.leash_radius = 15
         assert beyond_leash(e) is False
 

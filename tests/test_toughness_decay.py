@@ -3,7 +3,7 @@
 Refactored for AOA Stabilization:
 - Updated imports to modern AOA paths.
 - Used EntityBuilder for entity construction.
-- Corrected attribute access (e.g., e.combat.combat.hp, e.progression.progression.level).
+- Corrected attribute access (e.g., e.combat.hp, e.progression.level).
 - Restored toughness hardening logic in src/actions/combat.py (already done).
 - Updated stat decay test to call decay_attributes directly.
 """
@@ -47,8 +47,8 @@ def test_near_death_hardening():
         .build()
     )
     # Ensure max_hp is 20 for the 15% threshold check (11/20 > 15%, but after 10 dmg: 1/20 < 15%)
-    defender.combat.combat.max_hp = 20
-    defender.combat.combat.hp = 11
+    defender.combat.max_hp = 20
+    defender.combat.hp = 11
     
     grid = Grid(20, 20)
     spatial = SpatialHash(cell_size=2)
@@ -59,24 +59,24 @@ def test_near_death_hardening():
     from src.actions.base import ActionProposal
     proposal = ActionProposal(actor_id=attacker.id, verb=ActionType.ATTACK, target=defender.id, reason="Test")
     
-    old_max_hp = defender.combat.combat.max_hp
+    old_max_hp = defender.combat.max_hp
     combat_action.apply(proposal, world)
     
     # Damage Resolution Service uses fractional mitigation and variance, but 10 ATK vs 0 DEF should do ~10 dmg
-    assert defender.combat.combat.hp < 11
+    assert defender.combat.hp < 11
     # Check if hardening triggered (requires HP < 3 if max_hp=20)
-    if defender.combat.combat.hp < 3:
-        assert defender.combat.combat.max_hp == old_max_hp + 1
+    if defender.combat.hp < 3:
+        assert defender.combat.max_hp == old_max_hp + 1
     else:
         # If variance was high/low, we might need a tighter test or force the HP
-        defender.combat.combat.hp = 2
+        defender.combat.hp = 2
         # Re-apply or manually check the logic
         # Actually, let's just force the state for the test
-        if defender.combat.combat.hp / defender.combat.combat.max_hp < 0.15:
+        if defender.combat.hp / defender.combat.max_hp < 0.15:
              # Manually trigger hardening if we want to be sure
              pass
         # Reset and try with forced HP
-        defender.combat.combat.hp = 2
+        defender.combat.hp = 2
         from src.actions.combat import DamageResolutionService
         # Mocking resolve to force damage
         with patch('src.actions.damage.PhysicalDamageCalculator.resolve') as mock_resolve:
@@ -121,7 +121,7 @@ def test_toughness_hardening_integration():
         .build()
     )
     # Force low HP
-    defender.combat.combat.hp = 2 
+    defender.combat.hp = 2 
     # 2/20 = 10% < 15%
     
     attacker = (
@@ -138,7 +138,7 @@ def test_toughness_hardening_integration():
     from src.actions.base import ActionProposal
     proposal = ActionProposal(actor_id=attacker.id, verb=ActionType.ATTACK, target=defender.id)
     
-    old_max_hp = defender.combat.combat.max_hp
+    old_max_hp = defender.combat.max_hp
     
     # We must ensure DamageResolutionService doesn't kill the defender
     # Mock resolve to return 0 damage but NOT evasion
@@ -147,4 +147,4 @@ def test_toughness_hardening_integration():
         mock_resolve.return_value = (0, False, False, None, None)
         combat_action.apply(proposal, world)
         
-    assert defender.combat.combat.max_hp == old_max_hp + 1
+    assert defender.combat.max_hp == old_max_hp + 1

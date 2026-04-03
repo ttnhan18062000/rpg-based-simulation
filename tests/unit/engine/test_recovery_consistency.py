@@ -36,7 +36,7 @@ def test_loot_recovery_consistency():
     entity.inventory = InventoryAspect()
     entity.progression.attributes = Attributes() 
     entity.progression.attribute_caps = AttributeCaps()
-    entity.spatial.spatial.pos = Vector2(5, 5)
+    entity.spatial.pos = Vector2(5, 5)
     world.add_entity(entity)
     
     item_id = "potion_health"
@@ -75,7 +75,7 @@ def test_loot_recovery_consistency():
     entity_rec.inventory = InventoryAspect()
     entity_rec.progression.attributes = Attributes()
     entity_rec.progression.attribute_caps = AttributeCaps()
-    entity_rec.spatial.spatial.pos = Vector2(5, 5)
+    entity_rec.spatial.pos = Vector2(5, 5)
     world_recovery.add_entity(entity_rec)
     world_recovery.drop_items(Vector2(5, 5), [item_id])
     

@@ -22,6 +22,7 @@ from src.core.world.regions import Region, Location
 from src.core.world.resource_nodes import ResourceNode
 from src.core.models.snapshot import Snapshot
 from src.core.models.world_state import WorldState
+from src.actions.base import ActionBatch
 from src.engine.conflict_resolver import ConflictResolver
 from src.engine.worker_pool import WorkerPool
 from src.engine.world_loop import WorldLoop
@@ -55,6 +56,9 @@ class EngineManager:
         self._rng: DeterministicRNG | None = None
         self._loop: WorldLoop | None = None
         self._worker_pool: WorkerPool | None = None
+        
+        self._tick_payloads: dict[str, Any] = {}
+        self._payload_lock = threading.Lock()
 
         # Thread-safe shared state
         self._snapshot_lock = threading.Lock()
@@ -151,6 +155,11 @@ class EngineManager:
         """Invalidate the static data cache."""
         with self._static_data_lock:
             self._static_data_cache = None
+
+    def get_tick_payload(self, mode: str) -> typing.Any | None:
+        """Return the pre-computed payload for the latest tick in the given mode."""
+        with self._payload_lock:
+            return self._tick_payloads.get(mode)
 
     # -- lifecycle --
 
@@ -316,20 +325,15 @@ class EngineManager:
                     break
                     
                 try:
-                    payload = SimulationSerializer.loads(msg.value(), dict)
-                    tick = payload.get("tick")
-                    proposals = payload.get("proposals", [])
-                    
-                    # Log compaction guarantees ordered snapshots, but we must strictly ensure
-                    # we only apply events that happened AFTER this snapshot's tick
-                    if tick and tick > world.tick:
-                        applied = resolver.resolve(proposals, world)
+                    batch = SimulationSerializer.loads(msg.value(), ActionBatch)
+                    if batch and batch.tick > world.tick:
+                        applied = resolver.resolve(batch.proposals, world)
                         
                         # Unified Phase: Apply deferred side-effects (LOOT, HARVEST, Skill damage)
                         from src.systems.gameplay.action_system import ActionSystem
                         ActionSystem.apply_action_state_transitions(world, cfg, applied)
                         
-                        world.tick = tick
+                        world.tick = batch.tick
                         replayed_ticks += 1
 
                 except Exception as e:
@@ -444,6 +448,15 @@ class EngineManager:
             SIM_REDIS_PUBLISH_DURATION.observe(duration)
             from src.utils.metrics import SIM_REDIS_LATENCY
             SIM_REDIS_LATENCY.labels(op="stream_publish").observe(duration)
+
+            # 3. Pre-compute and cache WebSocket payloads (AOA Final Convergence)
+            from src.api.presenters.world_presenter import WorldPresenter
+            compact = WorldPresenter.to_compact_tick(snap, events, mode="compact")
+            rich = WorldPresenter.to_compact_tick(snap, events, mode="rich")
+            
+            with self._payload_lock:
+                self._tick_payloads["compact"] = compact
+                self._tick_payloads["rich"] = rich
 
             # Save slim dict for the NEXT tick's diff
             self._last_published_slim = new_slim

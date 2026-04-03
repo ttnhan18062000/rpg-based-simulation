@@ -24,7 +24,7 @@ def test_well_rested_effect_application():
     })
     
     # 1. Base state
-    assert e.stats.combat.combat.max_hp == 100
+    assert e.combat.max_hp == 100
     assert abs(e.stats.progression.xp_mult - 1.0) < 0.001
     
     # 2. Add Well-Rested buff
@@ -32,7 +32,7 @@ def test_well_rested_effect_application():
     e.effects.append(buff)
     
     # Well-Rested gives +10% Max HP and +20% XP mult
-    assert e.stats.combat.combat.max_hp == 110
+    assert e.combat.max_hp == 110
     assert abs(e.stats.progression.xp_mult - 1.2) < 0.001
 
 def test_attribute_synergy_xp_mult():

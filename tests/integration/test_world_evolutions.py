@@ -87,7 +87,7 @@ def test_camp_reinforcements(mock_ctx):
         guard = Entity(id=world.allocate_entity_id(), kind="goblin")
         guard.identity.role = EntityRole.MOB
         guard.spatial.home_pos = camp_pos
-        guard.spatial.spatial.pos = camp_pos
+        guard.spatial.pos = camp_pos
         world.add_entity(guard)
         
     world.tick = 1000
@@ -113,12 +113,12 @@ def test_generator_scaling(mock_ctx):
     world.tick = 0
     # Day 0 mob
     mob_day_0 = gen.spawn_race(world, "goblin", tier=0, difficulty_tier=1)
-    base_hp_day_0 = mob_day_0.stats.combat.combat.max_hp
+    base_hp_day_0 = mob_day_0.combat.max_hp
     
     world.tick = 400 * 100 # Day 400
     # Day 400 mob
     mob_day_400 = gen.spawn_race(world, "goblin", tier=0, difficulty_tier=1)
-    base_hp_day_400 = mob_day_400.stats.combat.combat.max_hp
+    base_hp_day_400 = mob_day_400.combat.max_hp
     
     # HP multiplier is 1.0 + (400/200)*0.5 = 2.0. Base stats also have some randomness, but day 400 should be ~2x
     # Allow some leeway for the + randomness (15-25 base range) -> 1.5x to 3x increase

@@ -16,11 +16,11 @@ def test_eb_stats_scaling():
     entity = eb.build()
     
     print(f"DEBUG: entity.kind={entity.kind}")
-    print(f"DEBUG: entity.stats.combat.combat.hp={entity.stats.combat.combat.hp}")
+    print(f"DEBUG: entity.combat.hp={entity.combat.hp}")
     print(f"DEBUG: entity.identity.is_world_boss={entity.identity.is_world_boss}")
     
     assert entity.kind == "boss"
-    assert entity.stats.combat.combat.hp >= 600
+    assert entity.combat.hp >= 600
     assert entity.identity.is_world_boss is True
 
 if __name__ == "__main__":

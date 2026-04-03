@@ -8,7 +8,7 @@ Usage:
     arena.add_melee_hero(1, pos=(5, 5))
     arena.add_mob(2, pos=(6, 5), weapon="rusty_sword")
     events = arena.run_ticks(10)
-    assert arena.entity(2).combat.combat.hp < arena.entity(2).combat.combat.max_hp
+    assert arena.entity(2).combat.hp < arena.entity(2).combat.max_hp
 """
 
 from __future__ import annotations
@@ -131,7 +131,12 @@ class CombatArena:
         mastery: dict[str, float] | None = None,
     ) -> Entity:
         """Add a fully customizable entity to the arena."""
-        identity = IdentityAspect(display_name=kind, faction=faction)
+        identity = IdentityAspect(
+            display_name=kind, 
+            faction=faction, 
+            tier=tier,
+            is_world_boss="boss" in kind.lower() or tier >= 2 # Tier 2+ is usually boss
+        )
         spatial = SpatialAspect(pos=Vector2(*pos), home_pos=Vector2(*home_pos) if home_pos else None)
         combat = CombatAspect(
             hp=hp,

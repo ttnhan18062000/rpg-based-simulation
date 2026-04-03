@@ -90,20 +90,20 @@ def test_death_escalation_and_replacement(basic_setup):
     world.add_entity(hero)
     
     # 1st death: should drop bag items, keep equipment
-    hero.stats.combat.combat.hp = 0
+    hero.combat.hp = 0
     loop._phase_cleanup()
     
-    assert hero.combat.combat.alive == True # Respawned
+    assert hero.combat.alive == True # Respawned
     assert hero.identity.death_count == 1
-    assert hero.spatial.spatial.pos == home
+    assert hero.spatial.pos == home
     assert "potion" not in hero.inventory.items
     assert hero.inventory.weapon == "iron_sword"
     assert hero.inventory.armor == "leather_vest"
     assert hero.inventory.accessory == "luck_charm"
     
     # 2nd death: should drop accessory
-    hero.stats.combat.combat.hp = 0
-    hero.spatial.spatial.pos = Vector2(10, 10)
+    hero.combat.hp = 0
+    hero.spatial.pos = Vector2(10, 10)
     loop._phase_cleanup()
     
     assert hero.identity.death_count == 2
@@ -111,7 +111,7 @@ def test_death_escalation_and_replacement(basic_setup):
     assert hero.inventory.armor == "leather_vest"
     
     # 3rd death: should drop armor
-    hero.stats.combat.combat.hp = 0
+    hero.combat.hp = 0
     loop._phase_cleanup()
     
     assert hero.identity.death_count == 3
@@ -119,7 +119,7 @@ def test_death_escalation_and_replacement(basic_setup):
     assert hero.inventory.weapon == "iron_sword"
     
     # 4th death: Permadeath!
-    hero.stats.combat.combat.hp = 0
+    hero.combat.hp = 0
     loop._phase_cleanup()
     
     assert eid not in world.entities
@@ -167,6 +167,6 @@ def test_hero_familiarity(basic_setup):
     assert h1.hero_familiarity[h2.id] > 0.5
     # Should have emitted alliance event (we can check logs or just assume it reached the threshold)
 
-    h1.spatial.spatial.pos = Vector2(0, 0)
+    h1.spatial.pos = Vector2(0, 0)
     loop._hero_lifecycle._tick_proximity_familiarity(ctx, 251)
     assert h1.hero_familiarity[h2.id] < 0.53 # Decayed from > 0.5 + small change

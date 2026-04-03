@@ -181,34 +181,34 @@ class TestQuestGeneration:
 class TestQuestTracking:
     def test_entity_starts_with_no_quests(self):
         e = _make_entity(1)
-        assert e.quests == []
+        assert e.progression.quests == []
 
     def test_entity_can_hold_quests(self):
         e = _make_entity(1)
         q = Quest(quest_id="h1", quest_type=QuestType.HUNT, title="Hunt",
                   description="", target_kind="goblin", target_count=3)
-        e.quests.append(q)
-        assert len(e.quests) == 1
+        e.progression.quests.append(q)
+        assert len(e.progression.quests) == 1
 
     def test_entity_copy_preserves_quests(self):
         e = _make_entity(1)
         q = Quest(quest_id="h1", quest_type=QuestType.HUNT, title="Hunt",
                   description="", target_kind="goblin", target_count=3, progress=1)
-        e.quests.append(q)
+        e.progression.quests.append(q)
         c = e.copy()
-        assert len(c.quests) == 1
-        assert c.quests[0].progress == 1
+        assert len(c.progression.quests) == 1
+        assert c.progression.quests[0].progress == 1
         # Deep copy — modifying copy shouldn't affect original
-        c.quests[0].advance()
-        assert c.quests[0].progress == 2
-        assert e.quests[0].progress == 1
+        c.progression.quests[0].advance()
+        assert c.progression.quests[0].progress == 2
+        assert e.progression.quests[0].progress == 1
 
     def test_hunt_quest_completion_awards_rewards(self):
         e = _make_entity(1)
         q = Quest(quest_id="h1", quest_type=QuestType.HUNT, title="Hunt",
                   description="", target_kind="goblin", target_count=1,
                   gold_reward=50, xp_reward=80)
-        e.quests.append(q)
+        e.progression.quests.append(q)
         initial_gold = e.progression.gold
         initial_xp = e.progression.xp
         # Simulate kill quest completion
@@ -225,7 +225,7 @@ class TestQuestTracking:
         target = Vector2(7, 7)
         q = Quest(quest_id="e1", quest_type=QuestType.EXPLORE, title="Scout",
                   description="", target_pos=target, target_count=1)
-        e.quests.append(q)
+        e.progression.quests.append(q)
         # Hero is at (5,5), target at (7,7) → manhattan = 4, too far
         assert e.spatial.pos.manhattan(target) == 4
         assert not q.completed

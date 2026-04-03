@@ -11,8 +11,8 @@ def test_perception_tracks_position_history():
     
     actor = MagicMock()
     actor.id = 1
-    actor.spatial.spatial.pos = Vector2(1, 1)
-    actor.identity.identity.faction = "player"
+    actor.spatial.pos = Vector2(1, 1)
+    actor.identity.faction = "player"
     actor.stats.spatial.vision_range = 10
     actor.mind.max_attention_slots = 5
     actor.mind.pos_history = []

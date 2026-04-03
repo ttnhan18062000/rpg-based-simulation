@@ -160,7 +160,7 @@ class ReturnToCampHandler(StateHandler):
         if actor.combat.hp < actor.combat.max_hp and heal_rate > 0:
             needed = actor.combat.max_hp - actor.combat.hp
             abs_heal = min(needed, max(1.0, actor.combat.max_hp * heal_rate))
-            heal_meta = [ProgressionUpdate(hp_delta=abs_heal)]
+            heal_meta = [ProgressionUpdate(hp_delta=int(abs_heal))]
         else:
             heal_meta = []
 

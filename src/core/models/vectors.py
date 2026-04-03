@@ -5,16 +5,18 @@ from pydantic import ConfigDict
 
 class Vector2(SimulationModel):
     """Immutable 2D integer coordinate (AOA Hardened)."""
-    model_config = ConfigDict(frozen=True, slots=True)
+    model_config = ConfigDict(frozen=True, slots=True, extra="ignore")
 
     x: int = 0
     y: int = 0
 
-    def __init__(self, x: int = 0, y: int = 0, **data: Any):
-        """Allow positional initialization for backward compatibility."""
-        if "x" not in data: data["x"] = x
-        if "y" not in data: data["y"] = y
-        super().__init__(**data)
+    def __init__(self, x: int = 0, y: int = 0, **kwargs: Any):
+        """Supported positional and keyword initialization."""
+        # Prioritize keyword args if present, otherwise use positional
+        # This avoiding 'multiple values for argument' errors
+        x_val = kwargs.pop("x", x)
+        y_val = kwargs.pop("y", y)
+        super().__init__(x=x_val, y=y_val, **kwargs)
 
     def __add__(self, other: Vector2) -> Vector2:
         return Vector2(x=self.x + other.x, y=self.y + other.y)
@@ -53,16 +55,16 @@ class Vector2(SimulationModel):
 
 class FloatVector2(SimulationModel):
     """Immutable 2D float coordinate (AOA Hardened)."""
-    model_config = ConfigDict(frozen=True, slots=True)
+    model_config = ConfigDict(frozen=True, slots=True, extra="ignore")
 
     x: float = 0.0
     y: float = 0.0
 
-    def __init__(self, x: float = 0.0, y: float = 0.0, **data: Any):
-        """Allow positional initialization for backward compatibility."""
-        if "x" not in data: data["x"] = x
-        if "y" not in data: data["y"] = y
-        super().__init__(**data)
+    def __init__(self, x: float = 0.0, y: float = 0.0, **kwargs: Any):
+        """Supported positional and keyword initialization."""
+        x_val = kwargs.pop("x", x)
+        y_val = kwargs.pop("y", y)
+        super().__init__(x=x_val, y=y_val, **kwargs)
 
     def __add__(self, other: FloatVector2) -> FloatVector2:
         return FloatVector2(x=self.x + other.x, y=self.y + other.y)

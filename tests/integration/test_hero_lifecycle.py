@@ -7,6 +7,7 @@ from src.platform.rng import DeterministicRNG
 from src.core.entities.entity import Entity, Vector2
 from src.core.models import Inventory
 from src.core.models.enums import Faction
+from src.core.aspects.inventory import InventoryAspect
 from src.systems.lifecycle.hero_lifecycle_system import HeroLifecycleSystem
 from src.systems.infrastructure.base import SystemContext
 
@@ -34,12 +35,12 @@ def mock_ctx():
 
 def _create_mock_hero(eid: int, pos: Vector2) -> Entity:
     ent = Entity(id=eid, kind="hero")
-    ent.identity.identity.faction = Faction.HERO_GUILD
-    ent.spatial.spatial.pos = pos
+    ent.identity.faction = Faction.HERO_GUILD
+    ent.spatial.pos = pos
     ent.spatial.home_pos = Vector2(0, 0)
     ent.identity.display_name = f"Hero {eid}"
-    ent.inventory = Inventory(max_slots=10)
-    ent.hero_familiarity = {}
+    ent.inventory = InventoryAspect(max_slots=10) # Using InventoryAspect instead of Inventory
+    ent.identity.hero_familiarity = {}
     return ent
 
 def test_hero_lifecycle_system_permadeath(mock_ctx):
@@ -94,6 +95,6 @@ def test_hero_lifecycle_system_familiarity(mock_ctx):
     # Simulate a tick
     sys.on_tick(mock_ctx, 100)
     
-    assert h1.hero_familiarity[2] > 0.0
-    assert h2.hero_familiarity[1] > 0.0
-    assert h1.hero_familiarity[2] == h2.hero_familiarity[1]
+    assert h1.identity.hero_familiarity[2] > 0.0
+    assert h2.identity.hero_familiarity[1] > 0.0
+    assert h1.identity.hero_familiarity[2] == h2.identity.hero_familiarity[1]

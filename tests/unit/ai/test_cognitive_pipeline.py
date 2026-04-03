@@ -20,7 +20,7 @@ def test_decide_produces_consistent_result(mock_brain):
     actor = MagicMock()
     actor.mind.ai_state = AIState.IDLE
     actor.id = 1
-    actor.identity.identity.faction = "player"
+    actor.identity.faction = "player"
     actor.stats = MagicMock()
     actor.stats.spatial.vision_range = 10
     actor.stats.combat.hp_ratio = 1.0
@@ -62,7 +62,7 @@ def test_decide_increments_idle_ticks_on_rest(mock_brain):
     actor = MagicMock()
     actor.mind.ai_state = AIState.IDLE
     actor.id = 1
-    actor.identity.identity.faction = "player"
+    actor.identity.faction = "player"
     actor.consecutive_idle_ticks = 5
     actor.stats = MagicMock()
     actor.stats.spatial.vision_range = 10
@@ -115,7 +115,7 @@ def test_perception_phase_appraisal_sync(mock_brain):
     actor.mind.memory_locations = {}
     actor.mind.region_fatigue = {}
     actor.boredom_multipliers = {}
-    actor.identity.identity.faction = "player"
+    actor.identity.faction = "player"
     actor.progression = MagicMock()
     actor.progression.age_ticks = 10
     actor.progression.longevity_limit = 1000

@@ -282,7 +282,7 @@ class TestRangeAwareSkillSelection:
         from src.core.gameplay.classes import SkillInstance
         from src.ai.states import best_ready_skill
         e = _make_entity(1, stamina=50)
-        e.skills = [SkillInstance(skill_id="quick_shot")]  # range=3
+        e.progression.skills = [SkillInstance(skill_id="quick_shot")]  # range=3
         result = best_ready_skill(e, dist_to_enemy=3)
         assert result == "quick_shot"
 
@@ -290,7 +290,7 @@ class TestRangeAwareSkillSelection:
         from src.core.gameplay.classes import SkillInstance
         from src.ai.states import best_ready_skill
         e = _make_entity(1, stamina=50)
-        e.skills = [SkillInstance(skill_id="power_strike")]  # range=1
+        e.progression.skills = [SkillInstance(skill_id="power_strike")]  # range=1
         result = best_ready_skill(e, dist_to_enemy=3)
         assert result is None
 
@@ -298,7 +298,7 @@ class TestRangeAwareSkillSelection:
         from src.core.gameplay.classes import SkillInstance
         from src.ai.states import best_ready_skill
         e = _make_entity(1, stamina=50)
-        e.skills = [SkillInstance(skill_id="power_strike")]  # range=1
+        e.progression.skills = [SkillInstance(skill_id="power_strike")]  # range=1
         result = best_ready_skill(e, dist_to_enemy=1)
         assert result == "power_strike"
 
@@ -306,7 +306,7 @@ class TestRangeAwareSkillSelection:
         from src.core.gameplay.classes import SkillInstance
         from src.ai.states import best_ready_skill
         e = _make_entity(1, stamina=50)
-        e.skills = [SkillInstance(skill_id="shield_wall")]  # SELF target
+        e.progression.skills = [SkillInstance(skill_id="shield_wall")]  # SELF target
         result = best_ready_skill(e, dist_to_enemy=5)
         # shield_wall is a self-buff with def_mod, power=0 → won't be selected
         # because power is 0 and best_power starts at 0.0
@@ -317,7 +317,7 @@ class TestRangeAwareSkillSelection:
         from src.core.gameplay.classes import SkillInstance
         from src.ai.states import best_ready_skill
         e = _make_entity(1, stamina=50)
-        e.skills = [
+        e.progression.skills = [
             SkillInstance(skill_id="quick_shot"),    # power=1.5, range=3
             SkillInstance(skill_id="arcane_bolt"),    # power=2.0, range=4
         ]

@@ -621,7 +621,7 @@ This is the main convergence task. Until it is done, the codebase remains struct
 
 ---
 
-#### [ ] Remove duplicate legacy modules and compatibility shims once migration is complete
+#### [/] Remove duplicate legacy modules and compatibility shims once migration is complete
 
 Review comment: Still open. The repo still carries compatibility concepts that should be deleted only after typed and canonical paths fully replace them.
 
@@ -634,7 +634,7 @@ Clean up:
 
 ---
 
-#### [ ] Reduce hidden coupling introduced by the rework itself
+#### [/] Reduce hidden coupling introduced by the rework itself
 
 Review comment: Still open. The rework improved structure, but it also introduced new hidden coupling through `intent_metadata`, mixed presenter/encoder serialization, and partially duplicated update pathways. The tests even reinforce the compatibility dependency by asserting metadata-backed explainability persistence. That is useful, but it also proves the shadow contract is still alive.
 
@@ -685,7 +685,7 @@ Review note: The summary and milestone sections below are adjusted using both so
 - [x] eliminate major legacy entity/mind/stats access in hot paths
 - [x] fix inline worker execution to use snapshot entities
 - [ ] finish migration integrity verification
-- [ ] make snapshot immutability truthful at deep boundaries
+- [/] make snapshot immutability truthful at deep boundaries
 
 ### 2. Converge the action/application pipeline
 
@@ -693,7 +693,7 @@ Review note: The summary and milestone sections below are adjusted using both so
 - [x] expand typed updates beyond minimal mind/navigation coverage
 - [x] kill `intent_metadata` as a behavior channel
 
-- [ ] replace `Any`-shaped update fields with real typed records
+- [/] replace `Any`-shaped update fields with real typed records
 
 ### 3. Finish API/introspection convergence
 
@@ -704,9 +704,9 @@ Review note: The summary and milestone sections below are adjusted using both so
 
 ### 4. Tighten safety and performance
 
-- [ ] harden or replace unsafe infrastructure serialization
-- [ ] unify transport payload caching across protocols
-- [ ] keep rich rendering demand-driven
+- [/] harden or replace unsafe infrastructure serialization
+- [/] unify transport payload caching across protocols
+- [/] keep rich rendering demand-driven
 
 ---
 

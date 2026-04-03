@@ -73,6 +73,9 @@ def _run_cli(args: argparse.Namespace) -> None:
     from src.utils.logging import setup_logging
     from src.utils.replay import ReplayRecorder
     
+    import os
+    if "DISABLE_RABBITMQ" not in os.environ:
+        os.environ["DISABLE_RABBITMQ"] = "1"
     setup_logging(args.log_level)
 
     config = SimulationConfig(

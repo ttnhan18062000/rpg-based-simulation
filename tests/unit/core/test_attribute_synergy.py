@@ -32,21 +32,21 @@ def test_per_based_hidden_discovery():
 
     # Actor with low PER (5)
     actor_low = MagicMock()
-    actor_low.spatial.spatial.pos = Vector2(0, 0)
+    actor_low.spatial.pos = Vector2(0, 0)
     actor_low.id = 1
     actor_low.stats.per = 5
     actor_low.stats.spatial.vision_range = 10
 
     # Actor with high PER (25)
     actor_high = MagicMock()
-    actor_high.spatial.spatial.pos = Vector2(0, 0)
+    actor_high.spatial.pos = Vector2(0, 0)
     actor_high.id = 2
     actor_high.stats.per = 25
     actor_high.stats.spatial.vision_range = 10
 
     # Hidden entity
     hidden_e = MagicMock()
-    hidden_e.spatial.spatial.pos = Vector2(1, 1)
+    hidden_e.spatial.pos = Vector2(1, 1)
     hidden_e.id = 3
     # We will add is_hidden to the actual implementation, for now mock it
     hidden_e.spatial.is_hidden = True 

@@ -3,22 +3,28 @@ from __future__ import annotations
 import logging
 import warnings
 from dataclasses import dataclass, field
-from typing import Any, TYPE_CHECKING, TypeVar, Generic
+from typing import Any, TYPE_CHECKING, TypeVar, Generic, Union
 
 from pydantic import Field
 
 from src.core.models.enums import ActionType, GoalType, EmotionType
 
+from src.core.models.vectors import Vector2
 if TYPE_CHECKING:
     from src.core.aspects.mind import MemoryRecord, MemoryLogEntry
     from src.core.aspects.combat import CombatTraceRecord
-    from src.core.models.vectors import Vector2
     from src.core.gameplay.classes import SkillInstance
     from src.core.quests import Quest
     from src.core.effects import StatusEffect
 
 
 from src.core.models.base import SimulationModel
+from src.core.models.types import TargetUnion, BuildingTarget
+
+class ActionBatch(SimulationModel):
+    """A batch of action proposals for a specific tick, used for Kafka/Persistence."""
+    tick: int
+    proposals: list[ActionProposal] = Field(default_factory=list)
 
 class ActionProposal(SimulationModel):
     """An intent produced by a worker thread. [AOA STABILIZATION]
@@ -29,21 +35,17 @@ class ActionProposal(SimulationModel):
 
     actor_id: int
     verb: ActionType
-    target: Any = None
+    target: TargetUnion = None
     reason: str = ""
     new_ai_state: int | None = None
     
     # Typed updates for state synchronization (AOA Phase 5)
     updates: list[IntentUpdate] = Field(default_factory=list)
-    
-    # Legacy metadata bucket (DEPRECATED: Use typed 'updates' instead)
-    intent_metadata: dict[str, Any] = Field(default_factory=dict)
 
     def __repr__(self) -> str:
-        meta_count = len(self.intent_metadata) + len(self.updates)
-        meta_str = f" meta={meta_count}" if meta_count else ""
+        count = len(self.updates)
         verb_name = self.verb.name if hasattr(self.verb, "name") else ActionType(self.verb).name
-        return f"Proposal(entity={self.actor_id}, {verb_name}{meta_str}, target={self.target}, reason={self.reason!r})"
+        return f"Proposal(entity={self.actor_id}, {verb_name} updates={count}, target={self.target}, reason={self.reason!r})"
 
 class IntentUpdate(SimulationModel):
     """Base for all typed simulation side-effects."""
@@ -109,7 +111,7 @@ class NavigationUpdate(IntentUpdate):
     """Updates to pathfinding memory and history. [AOA STABILIZATION]"""
     pos_history: list[Vector2] | None = None
     cached_path: list[Vector2] | None = None
-    target_pos: Any | None = None # Vector2
+    target_pos: Vector2 | None = None
     chase_ticks: int | None = None
 
     @model_validator(mode="after")
@@ -133,6 +135,7 @@ class ProgressionUpdate(IntentUpdate):
     """Updates to gold, stats, level, and skills."""
     gold_delta: int = 0
     xp_delta: int = 0
+    veterancy_points_delta: int = 0
     hp_delta: int = 0
     stamina_delta: int = 0
     
@@ -238,6 +241,10 @@ def _rebuild_action_models():
     IdentityUpdate.model_rebuild()
     InteractionUpdate.model_rebuild()
     CombatTraceUpdate.model_rebuild()
+    
+    # Rebuild proposal, batch and TargetUnion
+    ActionProposal.model_rebuild()
+    ActionBatch.model_rebuild()
 
 try:
     _rebuild_action_models()

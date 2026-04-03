@@ -46,22 +46,22 @@ def test_narrative_memory_logging(context):
 
 def test_bravery_modifiers(context):
     hero = Entity(id=1, kind="hero", faction=Faction.HERO_GUILD)
-    hero.stats.combat.combat.atk_base = 10
-    hero.stats.combat.combat.spd_base = 10
+    hero.combat.atk_base = 10
+    hero.combat.spd_base = 10
     
     # Default bravery 0.5 -> mult 1.0
-    assert hero.stats.combat.combat.atk_base == 10
+    assert hero.combat.atk_base == 10
     
     # Brave Bonus (> 0.8)
     hero.mind.emotional_state["bravery"] = 0.9
-    assert hero.stats.combat.combat.atk_base == 11 # 10 * 1.1
-    assert hero.stats.combat.combat.spd_base == 11
+    assert hero.combat.atk_base == 11 # 10 * 1.1
+    assert hero.combat.spd_base == 11
     
     # Fear Factor (< 0.3)
     hero.mind.emotional_state["bravery"] = 0.2
-    assert hero.stats.combat.combat.atk_base == 9 # 10 * 0.9
-    assert hero.stats.combat.combat.spd_base == 9
-    assert hero.stats.combat.combat.def_base == 0 # 0 * 0.9 = 0
+    assert hero.combat.atk_base == 9 # 10 * 0.9
+    assert hero.combat.spd_base == 9
+    assert hero.combat.def_base == 0 # 0 * 0.9 = 0
 
 def test_regional_suppression(context):
     hero = Entity(id=1, kind="hero", faction=Faction.HERO_GUILD)
@@ -77,6 +77,6 @@ def test_regional_suppression(context):
     effect = suppression_effect(duration=10)
     hero.effects.append(effect)
     
-    hero.stats.combat.combat.atk_base = 100
+    hero.combat.atk_base = 100
     # atk should be 100 * 0.8 = 80
-    assert hero.stats.combat.combat.atk_base == 80
+    assert hero.combat.atk_base == 80

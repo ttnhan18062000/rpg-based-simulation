@@ -38,9 +38,9 @@ class RaidAI:
             if functional:
                 functional.sort(key=lambda b: b.spatial.pos.manhattan(entity.spatial.pos))
                 target_b = functional[0]
-                
                 if entity.spatial.pos.manhattan(target_b.spatial.pos) <= 1:
-                    return ActionProposal(entity.id, ActionType.ATTACK, target=f"BUILDING:{target_b.building_id}", reason="Raid: Sabotage building")
+                    from src.actions.base import BuildingTarget
+                    return ActionProposal(entity.id, ActionType.ATTACK, target=BuildingTarget(building_id=target_b.building_id), reason="Raid: Sabotage building")
                 else:
                     return ActionProposal(entity.id, ActionType.MOVE, target=target_b.spatial.pos, reason="Raid: Move to building")
 

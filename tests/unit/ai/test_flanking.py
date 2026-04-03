@@ -7,14 +7,14 @@ def test_flanking_bonus():
     calc = PhysicalDamageCalculator()
     
     attacker = MagicMock(spec=Entity)
-    attacker.spatial.spatial.pos = Vector2(0, 0)
-    attacker.stats.combat.combat.atk_base = 10
+    attacker.spatial.pos = Vector2(0, 0)
+    attacker.combat.atk_base = 10
     attacker.attributes = None
     
     defender = MagicMock(spec=Entity)
-    defender.spatial.spatial.pos = Vector2(0, 1)
-    defender.spatial.spatial.facing = Vector2(0, 1) # Facing South
-    defender.stats.combat.combat.def_base = 0
+    defender.spatial.pos = Vector2(0, 1)
+    defender.spatial.facing = Vector2(0, 1) # Facing South
+    defender.combat.def_base = 0
     defender.attributes = None
     
     # Attacker is at (0,0), Defender at (0,1).
@@ -30,14 +30,14 @@ def test_no_flanking_bonus_when_facing_attacker():
     calc = PhysicalDamageCalculator()
     
     attacker = MagicMock(spec=Entity)
-    attacker.spatial.spatial.pos = Vector2(0, 0)
-    attacker.stats.combat.combat.atk_base = 10
+    attacker.spatial.pos = Vector2(0, 0)
+    attacker.combat.atk_base = 10
     attacker.attributes = None
     
     defender = MagicMock(spec=Entity)
-    defender.spatial.spatial.pos = Vector2(0, 1)
-    defender.spatial.spatial.facing = Vector2(0, -1) # Facing North (toward attacker)
-    defender.stats.combat.combat.def_base = 0
+    defender.spatial.pos = Vector2(0, 1)
+    defender.spatial.facing = Vector2(0, -1) # Facing North (toward attacker)
+    defender.combat.def_base = 0
     defender.attributes = None
     
     ctx = calc.resolve(attacker, defender)

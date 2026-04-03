@@ -19,29 +19,41 @@ class SimulationModel(BaseModel):
 
     def freeze(self) -> None:
         """Lock the model for read-only access (Recursive). top-level and nested collections."""
-        if self._frozen: return # Avoid redundant work or loops
+        if self._frozen: return 
         
         # Run validation before freezing to ensure data integrity
         self.validate()
         
         self._frozen = True
         
-        # 1. Recursive freeze for nested SimulationModels
-        # 2. Immutable conversion for collections
+        # 1. Recursive freeze for nested SimulationModels and collections
         for name in type(self).model_fields:
             val = getattr(self, name)
-            if hasattr(val, "freeze"):
-                val.freeze()
-            elif isinstance(val, list):
-                # Convert to tuple (cannot append/remove)
-                # We bypass __setattr__ since we are freezing
-                super().__setattr__(name, tuple(val))
-            elif isinstance(val, dict):
-                # Wrap in MappingProxyType (cannot __setitem__)
-                super().__setattr__(name, MappingProxyType(val))
-            elif isinstance(val, (bytearray, memoryview)):
-                # Convert to immutable bytes
-                super().__setattr__(name, bytes(val))
+            if val is not None:
+                super().__setattr__(name, self._freeze_recursive(val))
+
+    def _freeze_recursive(self, val: Any) -> Any:
+        """Recursively freeze models and convert collections to immutable equivalents."""
+        if hasattr(val, "freeze") and callable(val.freeze):
+            val.freeze()
+            return val
+            
+        if isinstance(val, list):
+            return tuple(self._freeze_recursive(item) for item in val)
+            
+        if isinstance(val, dict):
+            # Recursively freeze values and wrap in MappingProxyType
+            frozen_dict = {k: self._freeze_recursive(v) for k, v in val.items()}
+            return MappingProxyType(frozen_dict)
+            
+        if isinstance(val, (bytearray, memoryview)):
+            return bytes(val)
+            
+        # For tuples, we still need to recursively check items
+        if isinstance(val, tuple):
+            return tuple(self._freeze_recursive(item) for item in val)
+
+        return val
 
     def validate(self) -> None:
         """Domain-specific invariant validation. Subclasses should override."""
@@ -49,8 +61,23 @@ class SimulationModel(BaseModel):
 
     def __setattr__(self, name: str, value: Any) -> None:
         if getattr(self, "_frozen", False) and not name.startswith("_"):
+            # Use self.__class__.__name__ for consistency with line 64
             raise RuntimeError(f"Cannot mutate frozen {self.__class__.__name__} (Field: {name})")
         super().__setattr__(name, value)
+
+    def __getstate__(self) -> dict[str, Any]:
+        """Custom pickle state to handle MappingProxyType."""
+        state = self.__dict__.copy()
+        # MappingProxyType is not picklable; convert back to dict for the wire
+        for key, val in state.items():
+            if isinstance(val, MappingProxyType):
+                state[key] = dict(val)
+        return state
+
+    def __setstate__(self, state: dict[str, Any]) -> None:
+        """Custom pickle restoration."""
+        for key, val in state.items():
+            super().__setattr__(key, val)
 
 class Aspect(SimulationModel):
     """Base class for all entity functional modules (Aspects/Components).

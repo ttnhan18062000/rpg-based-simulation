@@ -47,8 +47,8 @@ def test_entity_evolution_transformation():
         .build()
     )
     actor.identity.tier = EnemyTier.BASIC
-    actor.progression.progression.level = 11
-    actor.progression.progression.xp = 999
+    actor.progression.level = 11
+    actor.progression.xp = 999
     actor.progression.xp_to_next = 100
     
     grid = Grid(20, 20)
@@ -72,11 +72,11 @@ def test_entity_evolution_transformation():
     # Level it up to 12 and trigger evolution
     system._check_level_ups(context)
     
-    assert actor.progression.progression.level == 1
+    assert actor.progression.level == 1
     assert actor.identity.tier > EnemyTier.BASIC
     assert actor.kind != "goblin"
     assert "goblin" in actor.kind
-    assert actor.combat.combat.max_hp > 50
+    assert actor.combat.max_hp > 50
 
 def test_evolution_equipment_refresh():
     """Verify that evolution provides new equipment."""
@@ -91,8 +91,8 @@ def test_evolution_equipment_refresh():
         .build()
     )
     actor.identity.tier = EnemyTier.BASIC
-    actor.progression.progression.level = 12
-    actor.progression.progression.xp = 0
+    actor.progression.level = 12
+    actor.progression.xp = 0
     actor.progression.xp_to_next = 1000
     
     grid = Grid(20, 20)

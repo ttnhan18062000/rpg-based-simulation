@@ -49,16 +49,16 @@ def test_snapshot_actor_isolation():
 def test_aspect_model_rebuild_integrity():
     """Ensure that deep copies correctly initialize models and don't lose data."""
     ent = Entity(id=5, kind="monster")
-    ent.combat.combat.hp = 50
-    ent.combat.combat.max_hp = 100
+    ent.combat.hp = 50
+    ent.combat.max_hp = 100
     
     ent_copy = ent.copy()
     
     assert ent_copy.id == 5
     assert ent_copy.kind == "monster"
-    assert ent_copy.combat.combat.hp == 50
-    assert ent_copy.combat.combat.max_hp == 100
+    assert ent_copy.combat.hp == 50
+    assert ent_copy.combat.max_hp == 100
     
     # Modify copy
-    ent_copy.combat.combat.hp = 20
-    assert ent.combat.combat.hp == 50, "Direct attribute mutation leaked!"
+    ent_copy.combat.hp = 20
+    assert ent.combat.hp == 50, "Direct attribute mutation leaked!"

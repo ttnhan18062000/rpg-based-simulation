@@ -20,6 +20,8 @@ class SimulationJSONEncoder(json.JSONEncoder):
         if is_dataclass(obj):
             return asdict(obj)
         # Handle specialized types if needed (e.g. Vector2 if not Pydantic)
+        if isinstance(obj, bytes):
+            return obj.hex()
         return super().default(obj)
 
 class SimulationSerializer:
@@ -30,10 +32,12 @@ class SimulationSerializer:
         """Serialize an object to bytes (UTF-8 JSON) using CustomJSONEncoder."""
         # For pure Pydantic models, use their optimized JSON method
         if isinstance(obj, BaseModel):
-            return obj.model_dump_json().encode("utf-8")
+            # AOA Stabilization: Use custom encoder to handle MappingProxyType inside models
+            return json.dumps(obj.model_dump(), cls=SimulationJSONEncoder, separators=(',', ':')).encode("utf-8")
         
         # For containers (list/dict) that might have nested frozen models
-        return json.dumps(obj, cls=SimulationJSONEncoder).encode("utf-8")
+        # Use separators=(',', ':') for compact JSON (Pydantic style)
+        return json.dumps(obj, cls=SimulationJSONEncoder, separators=(',', ':')).encode("utf-8")
 
     @staticmethod
     def loads(data: bytes, target_cls: Type[T] | None = None) -> T | Any:

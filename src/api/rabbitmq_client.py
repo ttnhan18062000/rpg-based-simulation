@@ -27,18 +27,19 @@ def get_rabbitmq() -> pika.BlockingConnection | None:
         parameters.blocked_connection_timeout = 300
         
         import time
-        for i in range(40): # Increased to 40 attempts (120s) for slow Docker bootstrap on Windows
+        max_retries = int(os.environ.get("RABBITMQ_RETRIES", "3"))
+        for i in range(max_retries):
             try:
                 _connection = pika.BlockingConnection(parameters)
                 logger.info("Successfully connected to RabbitMQ at %s", url)
                 return _connection
             except Exception as e:
-                if i == 39:
+                if i == max_retries - 1:
                     from src.utils.metrics import SIM_ERRORS_TOTAL
                     SIM_ERRORS_TOTAL.labels(exception_type=type(e).__name__, component="rabbitmq_client").inc()
-                    logger.error("Final attempt (40) failed to connect to RabbitMQ at %s: %s", url, e)
+                    logger.error("Final attempt (%d) failed to connect to RabbitMQ at %s: %s", max_retries, url, e)
                     raise
-                logger.warning("Attempt %d/40: RabbitMQ not ready at %s, retrying in 3s...", i+1, url)
+                logger.warning("Attempt %d/%d: RabbitMQ not ready at %s, retrying in 3s...", i+1, max_retries, url)
                 time.sleep(3)
     
     return _connection

@@ -64,7 +64,7 @@ def test_territory_conquest(context):
     # Verify stronghold spawn
     strongholds = [e for e in context.world.entities.values() if e.kind == "stronghold"]
     assert len(strongholds) == 1
-    assert strongholds[0].spatial.spatial.pos == region.center
+    assert strongholds[0].spatial.pos == region.center
 
 def test_territory_liberation(context):
     system = StrategySystem(context.config, context.rng)

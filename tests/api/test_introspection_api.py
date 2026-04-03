@@ -45,16 +45,19 @@ def test_combat_trace_recording(world, rng):
     world.add_entity(defender)
     
     action = CombatAction(SimulationConfig(), rng)
-    prop = ActionProposal(actor_id=1, verb="attack", target=2)
+    from src.core.models.enums import ActionType
+    prop = ActionProposal(actor_id=1, verb=ActionType.ATTACK, target=2)
     
     # Apply attack
     action.apply(prop, world)
+    from src.systems.gameplay.action_system import ActionSystem
+    ActionSystem.apply_action_state_transitions(world, SimulationConfig(), [prop])
     
     # Defender should have a trace
     assert len(defender.combat.traces) > 0
     trace = defender.combat.traces[0]
-    assert trace["attacker_id"] == 1
-    assert "raw_damage" in trace
+    assert trace.attacker_id == 1
+    assert trace.raw_damage > 0
 
 def test_ai_explainability_persistence(world, rng):
     from src.ai.brain import AIBrain

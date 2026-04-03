@@ -20,7 +20,13 @@ def get_async_redis() -> aioredis.Redis:
     if _async_redis_client is None:
         url = get_redis_url()
         logger.info(f"Connecting to async Redis at {url}")
-        _async_redis_client = aioredis.from_url(url, decode_responses=True)
+        # Add timeouts to prevent indefinite hangs
+        _async_redis_client = aioredis.from_url(
+            url, 
+            decode_responses=True, 
+            socket_timeout=5.0, 
+            socket_connect_timeout=5.0
+        )
     return _async_redis_client
 
 def get_sync_redis() -> syncredis.Redis:
@@ -31,7 +37,13 @@ def get_sync_redis() -> syncredis.Redis:
     if _sync_redis_client is None:
         url = get_redis_url()
         logger.info(f"Connecting to sync Redis at {url}")
-        _sync_redis_client = syncredis.from_url(url, decode_responses=True)
+        # Add timeouts to prevent indefinite hangs
+        _sync_redis_client = syncredis.from_url(
+            url, 
+            decode_responses=True, 
+            socket_timeout=5.0, 
+            socket_connect_timeout=5.0
+        )
     return _sync_redis_client
 
 async def close_redis_connections():

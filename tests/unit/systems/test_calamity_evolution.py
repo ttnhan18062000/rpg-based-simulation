@@ -49,6 +49,6 @@ def test_calamity_evolution(context):
     
     # Verify evolution
     assert boss.mind.memory.get("evolution_level") == 1
-    assert boss.combat.combat.max_hp == 1200 # +20%
-    assert boss.combat.combat.atk_base == 60 # +20%
+    assert boss.combat.max_hp == 1200 # +20%
+    assert boss.combat.atk_base == 60 # +20%
     assert "Evolved" in boss.identity.display_name

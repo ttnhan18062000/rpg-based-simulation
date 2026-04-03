@@ -65,8 +65,8 @@ class TestSubsystemsAlwaysRun:
         loop = _make_loop()
         entity = Entity(id=1, kind="hero")
         # Initialize core aspects
-        entity.combat.combat.hp = 50
-        entity.combat.combat.max_hp = 100
+        entity.combat.hp = 50
+        entity.combat.max_hp = 100
         
         entity.next_act_at = 999  # Won't be ready for a long time
         from src.core.gameplay.effects import StatusEffect, EffectType
@@ -85,16 +85,16 @@ class TestSubsystemsAlwaysRun:
         """Stamina should regen even when no entities are ready to act."""
         loop = _make_loop()
         entity = Entity(id=1, kind="hero")
-        entity.progression.progression.stamina = 50
+        entity.progression.stamina = 50
         entity.progression.max_stamina = 100
         entity.mind.decision.ai_state = AIState.WANDER
         entity.next_act_at = 999
         loop.world.add_entity(entity)
 
-        old_stamina = entity.progression.progression.stamina
+        old_stamina = entity.progression.stamina
         loop.tick_once()
         # Stamina is in ProgressionSystem now
-        assert loop.world.entities[1].progression.progression.stamina > old_stamina
+        assert loop.world.entities[1].progression.stamina > old_stamina
 
     def test_skill_cooldowns_tick_on_empty_tick(self):
         """Skill cooldowns should count down even on empty ticks."""

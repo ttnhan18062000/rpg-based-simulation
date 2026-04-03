@@ -212,7 +212,7 @@ class WorkerPool:
                         continue
                 except Exception as e:
                     from src.utils.metrics import SIM_ERRORS_TOTAL
-                    SIM_ERRORS_TOTAL.labels(exception_type=type(e).__name__, component="worker_unpickle_batch").inc()
+                    SIM_ERRORS_TOTAL.labels(exception_type=type(e).__name__, component="worker_deserialize_batch").inc()
                     logger.error("Failed to deserialize worker batch response: %s", e)
                     break 
             else:

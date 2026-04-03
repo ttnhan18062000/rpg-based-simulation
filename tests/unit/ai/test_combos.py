@@ -12,13 +12,13 @@ def test_shatter_combo():
     
     attacker = MagicMock(spec=Entity)
     attacker.id = 1
-    attacker.combat.combat.hp = 100
+    attacker.combat.hp = 100
     
     defender = MagicMock(spec=Entity)
     defender.id = 2
-    defender.stats.combat.combat.hp = 100
+    defender.combat.hp = 100
     defender.stats.combat.hp_ratio = 1.0
-    defender.combat.combat.alive = True
+    defender.combat.alive = True
     # Add Frozen effect
     frozen = StatusEffect(effect_type=EffectType.FROZEN, remaining_ticks=5)
     defender.combat.effects = [frozen]
@@ -49,6 +49,6 @@ def test_shatter_combo():
         
         # Base damage = 10. Shatter = 1.5x -> 15.
         # 100 - 15 = 85
-        assert defender.stats.combat.combat.hp == 85
+        assert defender.combat.hp == 85
         # Frozen should be expired (ticks=0)
         assert frozen.remaining_ticks == 0

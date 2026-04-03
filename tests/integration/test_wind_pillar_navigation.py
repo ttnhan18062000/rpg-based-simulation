@@ -22,7 +22,7 @@ class MockSnapshot:
 
 def test_navigation_uses_flow_field_for_far_town():
     actor = Entity(id=1, kind="hero")
-    actor.spatial.spatial.pos = Vector2(10, 10)
+    actor.spatial.pos = Vector2(10, 10)
     target = Vector2(90, 90) # Far town
     
     snapshot = MockSnapshot()
@@ -42,7 +42,7 @@ def test_navigation_uses_flow_field_for_far_town():
 
 def test_navigation_uses_astar_for_near_target():
     actor = Entity(id=2, kind="hero")
-    actor.spatial.spatial.pos = Vector2(10, 10)
+    actor.spatial.pos = Vector2(10, 10)
     target = Vector2(15, 15) # Near target (dist = 10)
     
     snapshot = MockSnapshot()
@@ -62,7 +62,7 @@ def test_navigation_uses_astar_for_near_target():
 
 def test_navigation_uses_flow_field_for_world_boss():
     actor = Entity(id=3, kind="hero")
-    actor.spatial.spatial.pos = Vector2(10, 10)
+    actor.spatial.pos = Vector2(10, 10)
     target = Vector2(90, 90) # Far world boss
     
     snapshot = MockSnapshot()
@@ -70,7 +70,7 @@ def test_navigation_uses_flow_field_for_world_boss():
     
     # Mock World Boss entity at target
     boss = Entity(id=999, kind="boss")
-    boss.spatial.spatial.pos = target
+    boss.spatial.pos = target
     boss.identity.role = EntityRole.WORLD_BOSS
     snapshot.entities[999] = boss
     snapshot.nearby_entity_ids = lambda x, y, r: [999]

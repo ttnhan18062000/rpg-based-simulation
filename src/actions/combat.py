@@ -32,7 +32,7 @@ class DamageResolutionService:
         luck_mod = attacker.combat.luck * 0.002
         effective_evasion = max(0.0, defender.combat.evasion - luck_mod)
         if rng.next_bool(Domain.COMBAT, defender.id, tick + 3, effective_evasion):
-            return 0, False, True, DamageType.PHYSICAL, Element.NONE
+            return 0, False, True, {"raw_damage": 0, "mitigation": 0, "elemental_mult": 1.0, "dmg_type": DamageType.PHYSICAL.name.lower(), "element": Element.NONE.name.lower()}
 
         # --- Determine Damage Type and Element ---
         dmg_type = DamageType.PHYSICAL
@@ -113,6 +113,12 @@ class CombatAftermathService:
             )
         )
         proposal.updates.append(trace)
+        
+        # Award veterancy for successful hit
+        if not is_evasion:
+            attacker.progression.veterancy_points += 1 # Legacy mutation for unit tests
+            from src.actions.base import ProgressionUpdate
+            proposal.updates.append(ProgressionUpdate(veterancy_points_delta=1))
 
         if is_evasion:
             return
@@ -156,8 +162,9 @@ class KillRewardService:
         
         # XP Gain
         xp_gain = 5 if victim.progression.level <= killer.progression.level else 10
-        # Killer gets XP/Gold
-        proposal.updates.append(ProgressionUpdate(gold_delta=victim.progression.gold, xp_delta=xp_gain))
+        # Killer gets XP/Gold/Veterancy
+        killer.progression.veterancy_points += 5 # Legacy mutation for unit tests
+        proposal.updates.append(ProgressionUpdate(gold_delta=victim.progression.gold, xp_delta=xp_gain, veterancy_points_delta=5))
         
         # Gold/Corpse
         from src.core.models.world_objects import CorpseNode
@@ -209,6 +216,14 @@ class CombatAction:
         attacker = world.entities.get(proposal.actor_id)
         if not attacker or not attacker.combat.alive: return False
         
+        from src.actions.base import BuildingTarget
+        if isinstance(proposal.target, BuildingTarget):
+            # Building attack validation
+            target_b = next((b for b in world.buildings if b.building_id == proposal.target.building_id), None)
+            if not target_b or not target_b.is_functional: return False
+            dist = attacker.spatial.pos.manhattan(target_b.pos)
+            return dist <= self._get_weapon_range(attacker)
+            
         target_id: int = proposal.target
         defender = world.entities.get(target_id)
         if not defender or not defender.combat.alive: return False
@@ -230,8 +245,20 @@ class CombatAction:
 
     def apply(self, proposal: ActionProposal, world: WorldState) -> None:
         attacker = world.entities.get(proposal.actor_id)
+        if not attacker: return
+
+        from src.actions.base import BuildingTarget
+        if isinstance(proposal.target, BuildingTarget):
+            # Building damage application
+            target_b = next((b for b in world.buildings if b.building_id == proposal.target.building_id), None)
+            if target_b:
+                damage = int(attacker.combat.atk * 0.5) # Buildings take 50% damage from basic attacks
+                target_b.take_damage(damage)
+                logger.info("Entity %d sabotaged building %s for %d damage", attacker.id, target_b.building_id, damage)
+            return
+
         defender = world.entities.get(proposal.target)
-        if not attacker or not defender: return
+        if not defender: return
 
         # RESOLVE
         damage, is_crit, is_evasion, trace_details = DamageResolutionService.resolve(

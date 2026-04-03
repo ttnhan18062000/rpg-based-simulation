@@ -15,7 +15,7 @@ def _state_fingerprint(mgr: EngineManager) -> str:
     for eid in sorted(snap.entities):
         e = snap.entities[eid]
         # Core stats
-        parts.append(f"e{eid}:{e.kind}@{e.spatial.spatial.pos.x},{e.spatial.spatial.pos.y}|hp={e.stats.combat.combat.hp}/{e.stats.combat.combat.max_hp}")
+        parts.append(f"e{eid}:{e.kind}@{e.spatial.pos.x},{e.spatial.pos.y}|hp={e.combat.hp}/{e.combat.max_hp}")
         # Epic 17 fields
         parts.append(f"e{eid}:gen={e.identity.generation}|deaths={e.identity.death_count}")
         if e.hero_familiarity:
