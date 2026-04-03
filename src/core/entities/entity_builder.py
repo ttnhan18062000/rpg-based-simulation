@@ -47,6 +47,7 @@ class EntityBuilder:
         self._faction: Faction = Faction.HERO_GUILD
         self._role: EntityRole = EntityRole.MOB
         self._tier: int = 0
+        self._generation: int = 1
         # Initialize _is_world_boss
         self._is_world_boss: bool = False
         
@@ -165,7 +166,7 @@ class EntityBuilder:
 
     def with_identity(self, display_name: str = "", generation: int = 1) -> EntityBuilder:
         self._display_name = display_name
-        # Note: generation is ignored for now as AOA IdentityAspect doesn't use it yet
+        self._generation = generation
         return self
 
     def with_mob_attributes(self, attr_base: int, tier: int) -> EntityBuilder:
@@ -271,6 +272,7 @@ class EntityBuilder:
             faction=self._faction,
             role=self._role,
             tier=self._tier,
+            generation=self._generation,
             traits=self._traits,
             is_world_boss=self._is_world_boss
         )

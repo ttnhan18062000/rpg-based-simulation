@@ -18,6 +18,7 @@ if TYPE_CHECKING:
     from src.core.effects import StatusEffect
 
 
+from pydantic import Field, model_validator
 from src.core.models.base import SimulationModel
 from src.core.models.types import TargetUnion, BuildingTarget
 
@@ -41,6 +42,19 @@ class ActionProposal(SimulationModel):
     
     # Typed updates for state synchronization (AOA Phase 5)
     updates: list[IntentUpdate] = Field(default_factory=list)
+    
+    @model_validator(mode='before')
+    @classmethod
+    def _validate_target(cls, data: Any) -> Any:
+        """AOA Stabilization: Ensure target is correctly coerced from dict to Vector2."""
+        if not isinstance(data, dict):
+            return data
+        target = data.get("target")
+        if isinstance(target, dict) and "x" in target and "y" in target:
+            # Import Vector2 here to avoid circular dependencies
+            from src.core.models.vectors import Vector2
+            data["target"] = Vector2.model_validate(target)
+        return data
 
     def __repr__(self) -> str:
         count = len(self.updates)

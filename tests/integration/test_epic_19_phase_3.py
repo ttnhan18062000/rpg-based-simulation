@@ -60,8 +60,8 @@ def test_repair_action(basic_setup):
     loop, world, config = basic_setup
     from src.actions.repair import RepairAction
     
-    hero = Entity(1, kind="hero", pos=Vector2(5, 6))
-    hero.stats.progression.gold = 20.0
+    hero = Entity(id=1, kind="hero", pos=Vector2(5, 6))
+    hero.progression.gold = 20.0
     world.add_entity(hero)
     
     b = world.buildings[0] # at (5,5)
@@ -73,14 +73,14 @@ def test_repair_action(basic_setup):
     RepairAction.apply(proposal, world)
     
     assert b.durability == 100.0
-    assert hero.stats.progression.gold == 10.0
+    assert hero.progression.gold == 10.0
 
 def test_monument_spawning_on_permadeath(basic_setup):
     loop, world, config = basic_setup
     # Mock a hero dying permanently
-    hero = Entity(1, kind="hero", pos=Vector2(5, 5))
+    hero = Entity(id=1, kind="hero", pos=Vector2(5, 5))
     hero.identity.display_name = "Legend"
-    hero.stats.progression.level = 20
+    hero.progression.level = 20
     hero.progression.hero_class = HeroClass.WARRIOR
     hero.identity.death_count = config.death_tier_max - 1
     hero.spatial.home_pos = Vector2(0, 0)
@@ -100,7 +100,7 @@ def test_monument_buff_application(basic_setup):
     world.monuments.append(m)
     
     # Spawn new hero
-    new_hero = Entity(2, kind="hero", pos=Vector2(0,0))
+    new_hero = Entity(id=2, kind="hero", pos=Vector2(0,0))
     new_hero.combat.atk_base = 10
     
     loop._apply_monument_buffs(new_hero)

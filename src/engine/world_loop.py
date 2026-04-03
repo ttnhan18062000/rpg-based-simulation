@@ -268,6 +268,28 @@ class WorldLoop:
         # This is a shim for legacy tests that mock this method.
         pass
 
+    def _phase_cleanup(self) -> None:
+        """AOA Shim: Manually triggers the CleanupPhase for integration tests."""
+        from src.engine.phases.cleanup import CleanupPhase
+        from src.engine.phases.context import EngineContext
+        
+        ctx = EngineContext(
+            config=self._config,
+            world=self._world,
+            action_queue=self._action_queue,
+            worker_pool=self._worker_pool,
+            conflict_resolver=self._conflict_resolver,
+            generator=self._generator,
+            rng=self._rng,
+            faction_reg=self._faction_reg,
+            system_manager=self._system_manager,
+            action_system=self._action_system,
+            hero_lifecycle=self._hero_lifecycle,
+            emit=self._emit,
+            tick_start_time=time.perf_counter()
+        )
+        CleanupPhase().execute(ctx)
+
     def _check_endgame_conditions(self) -> bool:
         if self._world.world_age < 50000: return True
         func = sum(1 for b in self._world.buildings if b.is_functional and b.durability > b.max_durability * 0.8)
@@ -282,4 +304,5 @@ class WorldLoop:
                 hero.combat.max_hp = int(hero.combat.max_hp * 1.1)
                 hero.combat.hp = hero.combat.max_hp
             elif m.buff_type == "atk":
-                hero.combat.atk = int(hero.combat.atk * 1.1)
+                # AOA Stabilization: Use atk_base as atk is a read-only property
+                hero.combat.atk_base = int(hero.combat.atk_base * 1.1)

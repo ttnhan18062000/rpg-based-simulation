@@ -308,7 +308,9 @@ class EngineManager:
             
             # 2. Replay subsequent Events
             consumer.assign([TopicPartition(KAFKA_TOPIC_EVENTS, 0)])
-            consumer.seek(TopicPartition(KAFKA_TOPIC_EVENTS, 0, OFFSET_BEGINNING))
+            logger.critical("="*80)
+            logger.critical("SIMULATION_REPLAYER_ACTIVE tick=%d", world.tick)
+            logger.critical("="*80)
             
             resolver = ConflictResolver(cfg, DeterministicRNG(cfg.world_seed))
             replayed_ticks = 0
@@ -337,7 +339,7 @@ class EngineManager:
                         replayed_ticks += 1
 
                 except Exception as e:
-                    logger.debug("Failed to deserialize event: %s", e)
+                    logger.warning("Failed to deserialize event: %s", e)
                     
             if replayed_ticks > 0:
                 logger.info("Kafka Setup: Replayed %d ticks of events. Current synchronized tick: %d", 

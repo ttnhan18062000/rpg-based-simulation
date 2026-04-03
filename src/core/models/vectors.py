@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import Any
 from src.core.models.base import SimulationModel
-from pydantic import ConfigDict
+from pydantic import ConfigDict, model_validator
 
 class Vector2(SimulationModel):
     """Immutable 2D integer coordinate (AOA Hardened)."""
@@ -10,13 +10,21 @@ class Vector2(SimulationModel):
     x: int = 0
     y: int = 0
 
-    def __init__(self, x: int = 0, y: int = 0, **kwargs: Any):
-        """Supported positional and keyword initialization."""
-        # Prioritize keyword args if present, otherwise use positional
-        # This avoiding 'multiple values for argument' errors
-        x_val = kwargs.pop("x", x)
-        y_val = kwargs.pop("y", y)
-        super().__init__(x=x_val, y=y_val, **kwargs)
+    @model_validator(mode='before')
+    @classmethod
+    def handle_any(cls, data: Any) -> Any:
+        """Support from_any() style reconstruction."""
+        if isinstance(data, (tuple, list)) and len(data) >= 2:
+            return {"x": data[0], "y": data[1]}
+        return data
+
+    def __init__(self, x: int | dict = 0, y: int = 0, **kwargs: Any) -> None:
+        """AOA Hardened: Support both positional and keyword initialization."""
+        if isinstance(x, dict):
+            # Probably Pydantic internal call
+            super().__init__(**x)
+        else:
+            super().__init__(x=x, y=y, **kwargs)
 
     def __add__(self, other: Vector2) -> Vector2:
         return Vector2(x=self.x + other.x, y=self.y + other.y)

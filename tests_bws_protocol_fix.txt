@@ -1,0 +1,25 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.7, pytest-9.0.2, pluggy-1.6.0 -- /home/vboxuser/Work/rpg-based-simulation/.venv/bin/python
+cachedir: .pytest_cache
+hypothesis profile 'default'
+rootdir: /home/vboxuser/Work/rpg-based-simulation
+configfile: pyproject.toml
+plugins: anyio-4.12.1, hypothesis-6.151.10
+collecting ... collected 4 items
+
+tests/integration/api/test_bws_protocol.py::test_protocol_metadata PASSED [ 25%]
+tests/integration/api/test_bws_protocol.py::test_websocket_handshake_json PASSED [ 50%]
+tests/integration/api/test_bws_protocol.py::test_websocket_handshake_msgpack PASSED [ 75%]
+tests/integration/api/test_bws_protocol.py::test_gzip_compression PASSED [100%]
+
+=============================== warnings summary ===============================
+.venv/lib/python3.13/site-packages/pythonjsonlogger/jsonlogger.py:11
+  /home/vboxuser/Work/rpg-based-simulation/.venv/lib/python3.13/site-packages/pythonjsonlogger/jsonlogger.py:11: DeprecationWarning: pythonjsonlogger.jsonlogger has been moved to pythonjsonlogger.json
+    warnings.warn(
+
+tests/integration/api/test_bws_protocol.py: 149 warnings
+  /home/vboxuser/Work/rpg-based-simulation/src/utils/logging.py:55: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    now = datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S.%fZ')
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+======================= 4 passed, 150 warnings in 4.24s ========================

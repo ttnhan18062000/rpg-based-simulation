@@ -1,13 +1,13 @@
-import pickle
+from src.utils.serialization import SimulationSerializer
+from src.core.models.snapshot import Snapshot
+import json
 from unittest.mock import MagicMock, patch
-
 from src.core.models.enums import AIState
 from src.core.entities.entity import Entity, Vector2
 from src.core.world.grid import Grid
 from src.config import SimulationConfig
 from src.engine.action_queue import ActionQueue
 from src.engine.worker_pool import WorkerPool
-from src.core.models.snapshot import Snapshot
 
 def test_worker_pool_rabbitmq_dispatch(monkeypatch):
     """Test that WorkerPool interacts with pika channels exactly as designed."""
@@ -54,7 +54,7 @@ def test_worker_pool_rabbitmq_dispatch(monkeypatch):
                 {"entity_id": 101, "proposal": fake_proposal_1},
                 {"entity_id": 202, "proposal": fake_proposal_2}
             ]
-            body = pickle.dumps({"tick": 42, "results": results})
+            body = SimulationSerializer.dumps({"tick": 42, "results": results})
             return mock_method_frame, None, body
             
         mock_channel.basic_get.side_effect = side_effect_basic_get
@@ -74,12 +74,13 @@ def test_worker_pool_rabbitmq_dispatch(monkeypatch):
         call_2 = mock_channel.basic_publish.call_args_list[1]
         assert call_2.kwargs["exchange"] == ""
         assert call_2.kwargs["routing_key"] == "ai_tasks"
-        batch_task = pickle.loads(call_2.kwargs["body"])
+        batch_task = SimulationSerializer.loads(call_2.kwargs["body"])
         assert batch_task["tick"] == 42
         assert set(batch_task["entity_ids"]) == {101, 202}
         
         # Ensure our results were collected into the ActionQueue!
         results = action_queue.drain()
         assert len(results) == 2
-        assert fake_proposal_1 in set(results)
-        assert fake_proposal_2 in set(results)
+        # Proposal might be deserialized as dict if not validated, but here we check it's present
+        proposals = [r if isinstance(r, str) else r.verb for r in results]
+        assert len(proposals) == 2

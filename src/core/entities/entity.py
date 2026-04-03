@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING, Any
 from pydantic import BaseModel, Field, ConfigDict, model_validator, PrivateAttr
 
 # Import aspects directly to avoid forward reference issues during rebuild
+from src.core.models.base import SimulationModel
 from src.core.aspects.identity import IdentityAspect
 from src.core.aspects.spatial import SpatialAspect
 from src.core.aspects.combat import CombatAspect
@@ -23,7 +24,7 @@ from src.core.models.vectors import Vector2
 from dataclasses import dataclass
 
 
-class Entity(BaseModel):
+class Entity(SimulationModel):
     """A simulation entity — character, generator, or any world actor.
     
     Composition-based actor following the Aspect-Oriented Architecture (AOA).

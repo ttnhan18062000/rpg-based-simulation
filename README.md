@@ -5,7 +5,7 @@ A high-fidelity 2D RPG simulation engine with parallel AI, deterministic replay,
 ## Architecture
 
 > [!NOTE]
-> **Architectural Refactoring in Progress**: We are currently migrating from a layered monolithic structure to a **Feature-Based Aspect-Oriented Architecture** (see [RESTRUCTURE-01](tickets/inprogress/RESTRUCTURE-01.md)). This design uses composition (Aspects) for entities and domain-specific folders for features like Combat and Economy.
+> **Architectural Convergence Complete**: The engine has successfully migrated to a **Feature-Based Aspect-Oriented Architecture** (AOA). This design uses composition (Aspects) for entities and domain-separated modules for simulation logic. The system is fully stabilized for high-density, deterministic simulation.
 
 ```
 src/

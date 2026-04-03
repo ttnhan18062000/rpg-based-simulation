@@ -14,8 +14,42 @@ class SimulationModel(BaseModel):
     _frozen: bool = PrivateAttr(default=False)
 
     def copy(self: T) -> T:
-        """Deep copy for snapshot isolation."""
+        """Deep copy for snapshot isolation or recovery. 
+        
+        AOA Pillar 1: Isolation. Copies are always unfrozen and mutable by default.
+        """
         return self.model_copy(deep=True)
+
+    def model_copy(self: T, **kwargs: Any) -> T:
+        """Override Pydantic's model_copy to ensure private state reset and collection mutability."""
+        # Call super().model_copy first
+        copy_obj = super().model_copy(**kwargs)
+        
+        # Reset frozen state (private attribute)
+        object.__setattr__(copy_obj, "_frozen", False)
+        
+        # Recursively restore mutability for any field that was converted during freeze()
+        for name in type(copy_obj).model_fields:
+            val = getattr(copy_obj, name)
+            if val is not None:
+                object.__setattr__(copy_obj, name, self._unfreeze_recursive(val))
+        
+        return copy_obj
+
+    def _unfreeze_recursive(self, val: Any) -> Any:
+        """Inverts _freeze_recursive: converts tuples back to lists and MappingProxyType to dicts."""
+        if hasattr(val, "model_copy") and callable(val.model_copy):
+            # If it's a SimulationModel, use its (now overridden) model_copy
+            return val.model_copy(deep=True)
+            
+        if isinstance(val, (tuple, list)):
+            return [self._unfreeze_recursive(item) for item in val]
+            
+        if isinstance(val, (frozenset, set)):
+            return set(self._unfreeze_recursive(item) for item in val)
+            
+        return val
+
 
     def freeze(self) -> None:
         """Lock the model for read-only access (Recursive). top-level and nested collections."""
@@ -30,7 +64,7 @@ class SimulationModel(BaseModel):
         for name in type(self).model_fields:
             val = getattr(self, name)
             if val is not None:
-                super().__setattr__(name, self._freeze_recursive(val))
+                object.__setattr__(self, name, self._freeze_recursive(val))
 
     def _freeze_recursive(self, val: Any) -> Any:
         """Recursively freeze models and convert collections to immutable equivalents."""
@@ -49,10 +83,9 @@ class SimulationModel(BaseModel):
         if isinstance(val, (bytearray, memoryview)):
             return bytes(val)
             
-        # For tuples, we still need to recursively check items
-        if isinstance(val, tuple):
-            return tuple(self._freeze_recursive(item) for item in val)
-
+        if isinstance(val, set):
+            return frozenset(self._freeze_recursive(item) for item in val)
+            
         return val
 
     def validate(self) -> None:
@@ -63,7 +96,7 @@ class SimulationModel(BaseModel):
         if getattr(self, "_frozen", False) and not name.startswith("_"):
             # Use self.__class__.__name__ for consistency with line 64
             raise RuntimeError(f"Cannot mutate frozen {self.__class__.__name__} (Field: {name})")
-        super().__setattr__(name, value)
+        object.__setattr__(self, name, value)
 
     def __getstate__(self) -> dict[str, Any]:
         """Custom pickle state to handle MappingProxyType."""
@@ -77,7 +110,7 @@ class SimulationModel(BaseModel):
     def __setstate__(self, state: dict[str, Any]) -> None:
         """Custom pickle restoration."""
         for key, val in state.items():
-            super().__setattr__(key, val)
+            object.__setattr__(self, key, val)
 
 class Aspect(SimulationModel):
     """Base class for all entity functional modules (Aspects/Components).

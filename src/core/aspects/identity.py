@@ -27,7 +27,7 @@ class IdentityAspect(Aspect):
     titles: list[str] = Field(default_factory=list)
     weakness: str = ""
     hero_familiarity: dict[int, float] = Field(default_factory=dict)
-    known_recipes: list[str] = Field(default_factory=list)
+    known_recipes: set[str] = Field(default_factory=set)
     craft_target: str | None = None
     
     # Personality (OCEAN model, 0.0 - 1.0)

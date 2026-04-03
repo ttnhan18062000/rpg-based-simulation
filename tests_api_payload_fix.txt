@@ -5,8 +5,8 @@ hypothesis profile 'default'
 rootdir: /home/vboxuser/Work/rpg-based-simulation
 configfile: pyproject.toml
 plugins: anyio-4.12.1, hypothesis-6.151.10
-collecting ... ERROR: file or directory not found: tests/integration/test_combat_e2e.py
+collecting ... collected 8 items
 
-collected 0 items
-
-============================ no tests ran in 0.16s =============================
+tests/integration/api/test_api_payload.py::TestRLEMapGrid::test_rle_decodes_to_original PASSED [ 12%]
+tests/integration/api/test_api_payload.py::TestRLEMapGrid::test_rle_encodes_correctly PASSED [ 25%]
+tests/integration/api/test_api_payload.py::TestSlimEntities::test_slim_entity_json_size 

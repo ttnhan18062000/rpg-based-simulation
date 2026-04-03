@@ -156,17 +156,17 @@ def test_hero_familiarity(basic_setup):
     ctx = SystemContext(config, world, rng, loop._generator, loop._faction_reg, loop._emit)
     loop._hero_lifecycle._tick_proximity_familiarity(ctx, 0)
     
-    assert h1.hero_familiarity[h2.id] == pytest.approx(0.002, abs=0.001)
-    assert h2.hero_familiarity[h1.id] == pytest.approx(0.002, abs=0.001)
-    assert h1.hero_familiarity.get(h3.id, 0) == 0
+    assert h1.identity.hero_familiarity[h2.id] == pytest.approx(0.002, abs=0.001)
+    assert h2.identity.hero_familiarity[h1.id] == pytest.approx(0.002, abs=0.001)
+    assert h1.identity.hero_familiarity.get(h3.id, 0) == 0
     
     # Simulate many ticks
     for i in range(250):
         loop._hero_lifecycle._tick_proximity_familiarity(ctx, i)
         
-    assert h1.hero_familiarity[h2.id] > 0.5
+    assert h1.identity.hero_familiarity[h2.id] > 0.5
     # Should have emitted alliance event (we can check logs or just assume it reached the threshold)
 
     h1.spatial.pos = Vector2(0, 0)
     loop._hero_lifecycle._tick_proximity_familiarity(ctx, 251)
-    assert h1.hero_familiarity[h2.id] < 0.53 # Decayed from > 0.5 + small change
+    assert h1.identity.hero_familiarity[h2.id] < 0.53 # Decayed from > 0.5 + small change

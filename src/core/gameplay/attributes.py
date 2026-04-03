@@ -250,6 +250,9 @@ def train_attributes(entity: Any, action: str, bucket: Any = None) -> None:
     attrs = prog.attributes
     caps = prog.attribute_caps
     
+    if attrs is None or caps is None:
+        return
+        
     old_snapshot = attrs.copy()
     changed = False
     

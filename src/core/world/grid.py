@@ -13,7 +13,7 @@ for m in Material:
 
 
 from src.core.models.base import SimulationModel
-from pydantic import ConfigDict
+from pydantic import ConfigDict, model_validator
 
 class Grid(SimulationModel):
     """2D tile grid backed by a flat list for cache-friendly access."""
@@ -23,12 +23,31 @@ class Grid(SimulationModel):
     height: int
     tiles: bytearray | bytes
 
+    @model_validator(mode='before')
+    @classmethod
+    def _coerce_tiles(cls, data: Any) -> Any:
+        """Support deserialization from hex string or list (AOA Stabilization)."""
+        if not isinstance(data, dict):
+            return data
+        tiles = data.get("tiles")
+        if isinstance(tiles, str):
+            # Decode hex
+            data["tiles"] = bytearray.fromhex(tiles)
+        elif isinstance(tiles, (list, tuple)):
+            data["tiles"] = bytearray(tiles)
+        return data
+
     def __init__(self, width: int = 0, height: int = 0, default: Material = Material.FLOOR, **data: Any) -> None:
         """AOA Hardened: Support both manual and Pydantic initialization."""
         if "width" not in data and width > 0: data["width"] = width
         if "height" not in data and height > 0: data["height"] = height
         if "tiles" not in data and "width" in data and "height" in data:
             data["tiles"] = bytearray([int(default)]) * (data["width"] * data["height"])
+        
+        # Ensure tiles is bytearray if passed via data
+        if "tiles" in data and isinstance(data["tiles"], (bytes, list, tuple)):
+            data["tiles"] = bytearray(data["tiles"])
+            
         super().__init__(**data)
 
     # -- access --

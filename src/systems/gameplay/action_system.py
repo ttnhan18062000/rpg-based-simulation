@@ -137,8 +137,14 @@ class ActionSystem(System):
             elif proposal.verb == ActionType.HARVEST and proposal.target:
                 all_updates.extend(cls._get_harvesting_updates(world, entity, proposal.target))
             elif proposal.verb == ActionType.USE_SKILL and proposal.target:
-                target_data = proposal.target if isinstance(proposal.target, tuple) else (proposal.target, None)
-                all_updates.extend(cls._get_use_skill_updates(world, config, faction_reg, entity, target_data[0], target_data[1], emit=emit))
+                # Handle both single target_id and [skill_id, target_id] tuple/list
+                t = proposal.target
+                if isinstance(t, (list, tuple)) and len(t) == 2:
+                    sid, tid = t
+                else:
+                    sid, tid = t, None # Fallback (should be handled by callers)
+                
+                all_updates.extend(cls._get_use_skill_updates(world, config, faction_reg, entity, sid, tid, emit=emit))
 
             # 3. Final Application (Unambiguous Entry Point)
             if all_updates:
@@ -447,10 +453,11 @@ class ActionSystem(System):
             mitigation = target.combat.def_ // 2
             damage = max(1, raw - mitigation)
             
-            target.combat.hp -= damage
+            # --- SIDE-EFFECTS (Targets) ---
+            # HP Damage (Direct mutation on target aspect)
+            target.combat.hp = max(0, target.combat.hp - damage)
             
-            # Threat Generation (AOA Convergence)
-            # Warrior threat multiplier (1.5x)
+            # Threat Generation (Direct mutation on target mind)
             mult = 1.5 if entity.progression.hero_class == HeroClass.WARRIOR else 1.0
             target.mind.perception.threat_table[entity.id] = target.mind.perception.threat_table.get(entity.id, 0.0) + damage * mult
 

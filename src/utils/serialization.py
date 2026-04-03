@@ -17,10 +17,9 @@ class SimulationJSONEncoder(json.JSONEncoder):
             return obj.value
         if isinstance(obj, BaseModel):
             return obj.model_dump()
-        if is_dataclass(obj):
-            return asdict(obj)
-        # Handle specialized types if needed (e.g. Vector2 if not Pydantic)
-        if isinstance(obj, bytes):
+        if isinstance(obj, (set, frozenset)):
+            return list(obj)
+        if isinstance(obj, (bytes, bytearray)):
             return obj.hex()
         return super().default(obj)
 

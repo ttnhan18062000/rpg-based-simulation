@@ -57,10 +57,14 @@ class ConflictResolver:
         # Track positions claimed DURING this resolution tick (AOA Phase 6)
         resolution_occupied: set[tuple[int, int]] = set()
 
+        sorted_proposals = self._sort(proposals, world)
+        
         for p in sorted_proposals:
-            if self._apply_one(p, world, resolution_occupied):
+            res = self._apply_one(p, world, resolution_occupied)
+            if res:
                 applied.append(p)
 
+        print(f"DEBUG: RESOLVE_END: Applied={len(applied)}")
         return applied
 
     # -- internals --

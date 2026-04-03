@@ -5,6 +5,7 @@ from src.systems.infrastructure.base import System, SystemContext
 from src.core.models.world_state import WorldState
 from src.core.models.enums import AIState, ItemType, Domain
 from src.core.gameplay.faction import Faction
+from src.core.world.monuments import Monument
 
 logger = logging.getLogger(__name__)
 

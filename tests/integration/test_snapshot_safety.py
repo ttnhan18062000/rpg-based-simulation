@@ -39,12 +39,17 @@ def test_snapshot_actor_isolation():
     # Resolve actor from snapshot
     snapshot_actor = snapshot.entities.get(1)
     
-    # Mutate snapshot actor
-    snapshot_actor.mind.navigation.pos_history.append((1, 1))
+    # 1. Verify mutation safety via RuntimeError (SimModel protection)
+    with pytest.raises(RuntimeError, match="Cannot mutate frozen"):
+        snapshot_actor.kind = "mutated"
+        
+    # 2. Verify collection immutability (tuple conversion)
+    with pytest.raises(AttributeError, match="'tuple' object has no attribute 'append'"):
+        snapshot_actor.mind.navigation.pos_history.append((1, 1))
     
-    # Verify live entity is untouched
+    # 3. Verify live entity is untouched
     assert len(world.entities[1].mind.navigation.pos_history) == 1, "Live world entity was mutated via the snapshot actor!"
-    assert len(snapshot_actor.mind.navigation.pos_history) == 2
+    assert snapshot_actor.mind.navigation.pos_history[0] == (0,0)
 
 def test_aspect_model_rebuild_integrity():
     """Ensure that deep copies correctly initialize models and don't lose data."""

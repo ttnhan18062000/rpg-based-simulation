@@ -50,8 +50,8 @@ class TestBasicCombatE2E:
         hero = arena.entity(1)
         mob = arena.entity(2)
         # At least one should have a combat target after engaging
-        has_target = (hero and hero.combat_target_id is not None) or \
-                     (mob and mob.combat_target_id is not None)
+        has_target = (hero and hero.combat.combat_target_id is not None) or \
+                     (mob and mob.combat.combat_target_id is not None)
         assert has_target, "Entities in combat should have combat_target_id set"
 
 
