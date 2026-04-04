@@ -34,20 +34,23 @@ class RestAction:
 
     @staticmethod
     def apply(proposal: ActionProposal, world: WorldState) -> None:
+        """AOA Stabilization: Emit intentional updates for authoritative application."""
         entity = world.entities.get(proposal.actor_id)
         if not entity: return
         
-        # Minor HP recovery on rest
-        if entity.combat.hp < entity.combat.max_hp:
-            entity.combat.hp = min(entity.combat.hp + 1.0, entity.combat.max_hp)
-            entity.combat.validate() # AOA HARDENING
-            
+        # 1. Recovery Logic (Side-Effects)
+        hp_reco = 1.0 if entity.combat.hp < entity.combat.max_hp else 0.0
+        stamina_reco = 2.0 if entity.progression.stamina < entity.progression.max_stamina else 0.0
+        
+        # 2. Delay Calculation
         from src.core.gameplay.attributes import speed_delay
-        # Check current AI state from mind.decision aspect
         current_state = entity.mind.decision.ai_state
         action_type = "building" if current_state in RestAction._BUILDING_STATES else "rest"
-        
         delay = speed_delay(entity.combat.spd, action_type, entity.interaction.interaction_speed)
-        # Recovery (Stamina)
-        entity.progression.stamina = min(entity.progression.stamina + 2.0, entity.progression.max_stamina)
-        entity.progression.validate() # AOA HARDENING
+        
+        # 3. Emit Updates
+        from src.actions.base import ProgressionUpdate
+        proposal.updates.append(ProgressionUpdate(
+            hp_delta=int(hp_reco), # Simple integer recovery for now
+            stamina_delta=int(stamina_reco)
+        ))

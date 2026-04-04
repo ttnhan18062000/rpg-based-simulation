@@ -148,8 +148,9 @@ class FleeGoal(GoalScorer):
             return 0.1 + _trait_utility(ctx).flee
 
         enemy = ctx.nearest_enemy()
-        if enemy and mind.emotion.grudges.get(enemy.id, 0.0) >= 30.0 and hp_ratio < 0.6:
-            return 2.0 + _trait_utility(ctx).flee
+        if enemy and mind.emotion.grudges.get(enemy.id, 0.0) >= 5.0 and hp_ratio < 0.6:
+            # Soul Pillar: Extremely high utility for fleeing from nemesis
+            return 2.5 + _trait_utility(ctx).flee
         
         flee_threshold = ctx.config.flee_hp_threshold + _trait_stats(ctx).flee_threshold_mod
         if _is_hero(ctx):

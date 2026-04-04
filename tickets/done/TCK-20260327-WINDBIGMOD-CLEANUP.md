@@ -14,10 +14,13 @@ Remove all backward compatibility shims and legacy `effective_*()` methods from 
 - Tests: Synchronize the entire suite.
 
 ## Acceptance Criteria
-- [ ] `StatsProxy` has no `__getattr__` or `__setattr__`.
-- [ ] `Entity` class has no methods starting with `effective_`.
-- [ ] Full `pytest` execution passes with 100% success.
-- [ ] `EntitySchema` remains valid for the frontend.
+- [x] `StatsProxy` has no `__getattr__` or `__setattr__`.
+- [x] `Entity` class has no methods starting with `effective_`.
+- [x] Full `pytest` execution passes with 100% success.
+- [x] `EntitySchema` remains valid for the frontend.
 
 ## Related Tickets
 - `TCK-20260327-WINDBIGMOD` (Implementation)
+
+## Status
+DONE

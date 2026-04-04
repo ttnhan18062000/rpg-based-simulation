@@ -56,7 +56,7 @@
     "name": "Whirlwind",
     "description": "Spin with weapon extended, dealing 1.5x damage to all enemies within radius 1.",
     "skill_type": "active",
-    "target": "area_enemies",
+    "target": "self",
     "class_req": "warrior",
     "level_req": 5,
     "gold_cost": 200,
@@ -179,7 +179,8 @@
     "crit_mod": 0.0,
     "evasion_mod": 0.0,
     "hp_mod": 0.0,
-    "damage_type": "magical"
+    "damage_type": "magical",
+    "element": "none"
   },
   {
     "skill_id": "frost_shield",
@@ -231,7 +232,8 @@
     "crit_mod": 0.0,
     "evasion_mod": 0.0,
     "hp_mod": 0.0,
-    "damage_type": "magical"
+    "damage_type": "magical",
+    "element": "fire"
   },
   {
     "skill_id": "backstab",
@@ -517,7 +519,8 @@
     "crit_mod": 0.0,
     "evasion_mod": 0.0,
     "hp_mod": 0.3,
-    "damage_type": "magical"
+    "damage_type": "magical",
+    "element": "dark"
   },
   {
     "skill_id": "berserker_rage",

@@ -2,6 +2,7 @@ import os
 import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", ".."))
 
+
 """Tests for the GoalScorer plugin system and GoalEvaluator."""
 
 
@@ -12,7 +13,7 @@ from src.ai.goals.scorers import (
     CombatGoal, FleeGoal, ExploreGoal, LootGoal,
     TradeGoal, RestGoal, CraftGoal, SocialGoal, GuardGoal,
 )
-from src.core.models.enums import AIState
+from src.core.models.enums import AIState, GoalType
 
 
 # ---------------------------------------------------------------------------
@@ -24,47 +25,47 @@ class TestGoalScorerSubclasses:
 
     def test_combat_goal_properties(self):
         g = CombatGoal()
-        assert g.name == "combat"
+        assert g.name == GoalType.COMBAT
         assert g.target_state == AIState.HUNT
 
     def test_flee_goal_properties(self):
         g = FleeGoal()
-        assert g.name == "flee"
+        assert g.name == GoalType.FLEE
         assert g.target_state == AIState.FLEE
 
     def test_explore_goal_properties(self):
         g = ExploreGoal()
-        assert g.name == "explore"
+        assert g.name == GoalType.EXPLORE
         assert g.target_state == AIState.WANDER
 
     def test_loot_goal_properties(self):
         g = LootGoal()
-        assert g.name == "loot"
+        assert g.name == GoalType.LOOT
         assert g.target_state == AIState.LOOTING
 
     def test_trade_goal_properties(self):
         g = TradeGoal()
-        assert g.name == "trade"
+        assert g.name == GoalType.TRADE
         assert g.target_state == AIState.VISIT_SHOP
 
     def test_rest_goal_properties(self):
         g = RestGoal()
-        assert g.name == "rest"
+        assert g.name == GoalType.REST
         assert g.target_state == AIState.RESTING_IN_TOWN
 
     def test_craft_goal_properties(self):
         g = CraftGoal()
-        assert g.name == "craft"
+        assert g.name == GoalType.CRAFT
         assert g.target_state == AIState.VISIT_BLACKSMITH
 
     def test_social_goal_properties(self):
         g = SocialGoal()
-        assert g.name == "social"
+        assert g.name == GoalType.SOCIAL
         assert g.target_state == AIState.VISIT_GUILD
 
     def test_guard_goal_properties(self):
         g = GuardGoal()
-        assert g.name == "guard"
+        assert g.name == GoalType.GUARD
         assert g.target_state == AIState.GUARD_CAMP
 
     def test_all_scorers_are_goal_scorer_subclasses(self):
@@ -88,7 +89,11 @@ class TestGoalRegistry:
 
     def test_registry_contains_all_expected_goals(self):
         names = {g.name for g in GOAL_REGISTRY}
-        expected = {"combat", "flee", "explore", "loot", "trade", "rest", "craft", "social", "guard", "corpse_run"}
+        expected = {
+            GoalType.COMBAT, GoalType.FLEE, GoalType.EXPLORE, GoalType.LOOT, 
+            GoalType.TRADE, GoalType.REST, GoalType.CRAFT, GoalType.SOCIAL, 
+            GoalType.GUARD, GoalType.CORPSE_RUN
+        }
         assert names == expected
 
     def test_all_goals_have_valid_target_states(self):
@@ -104,8 +109,8 @@ class TestGoalScore:
     """Test the GoalScore dataclass."""
 
     def test_goal_score_creation(self):
-        gs = GoalScore(goal="combat", score=0.8, target_state=AIState.HUNT)
-        assert gs.goal == "combat"
+        gs = GoalScore(goal=GoalType.COMBAT, score=0.8, target_state=AIState.HUNT)
+        assert gs.goal == GoalType.COMBAT
         assert gs.score == 0.8
         assert gs.target_state == AIState.HUNT
 
@@ -133,10 +138,10 @@ class TestGoalEvaluatorSelect:
         assert result is None
 
     def test_select_single_candidate(self):
-        scores = [GoalScore("combat", 0.8, AIState.HUNT)]
+        scores = [GoalScore(GoalType.COMBAT, 0.8, AIState.HUNT)]
         result = GoalEvaluator.select(scores, rng_value=0.5)
         assert result is not None
-        assert result.goal == "combat"
+        assert result.goal == GoalType.COMBAT
 
     def test_select_returns_goal_score(self):
         scores = [
@@ -207,8 +212,8 @@ class TestGoalScorerEvaluate:
         """The evaluate() method should produce a GoalScore with the scorer's name and target_state."""
         # We can't easily call score() without a full AIContext, but we can verify
         # that the GoalScore produced has the right name and target_state
-        gs = GoalScore(goal="combat", score=0.5, target_state=AIState.HUNT)
-        assert gs.goal == "combat"
+        gs = GoalScore(goal=GoalType.COMBAT, score=0.5, target_state=AIState.HUNT)
+        assert gs.goal == GoalType.COMBAT
         assert gs.target_state == AIState.HUNT
 
 

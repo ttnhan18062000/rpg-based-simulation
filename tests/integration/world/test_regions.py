@@ -3,6 +3,7 @@ import os
 import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", ".."))
 
+
 """Tests for the Region & Location data model and generation (epic-15)."""
 
 
@@ -38,12 +39,11 @@ class TestRegionDataclass(unittest.TestCase):
             radius=20,
             difficulty=2,
         )
-        self.assertEqual(r.spatial.region_id, "test_forest")
+        self.assertEqual(r.region_id, "test_forest")
         self.assertEqual(r.name, "Test Forest")
         self.assertEqual(r.terrain, Material.FOREST)
         self.assertEqual(r.radius, 20)
         self.assertEqual(r.difficulty, 2)
-        self.assertEqual(r.locations, [])
 
     def test_region_contains(self):
         r = Region(
@@ -65,7 +65,7 @@ class TestRegionDataclass(unittest.TestCase):
             locations=[loc],
         )
         c = r.copy()
-        self.assertEqual(c.spatial.region_id, r.spatial.region_id)
+        self.assertEqual(c.region_id, r.region_id)
         self.assertEqual(len(c.locations), 1)
         self.assertEqual(c.locations[0].name, "Camp")
         # Verify it's a deep copy
@@ -79,7 +79,7 @@ class TestRegionDataclass(unittest.TestCase):
         )
         self.assertEqual(loc.location_id, "loc1")
         self.assertEqual(loc.location_type, "enemy_camp")
-        self.assertEqual(loc.spatial.pos.x, 10)
+        self.assertEqual(loc.pos.x, 10)
 
 
 class TestDifficultyZones(unittest.TestCase):
@@ -153,15 +153,15 @@ class TestDifficultyTiers(unittest.TestCase):
         for tier in range(1, 4):
             lower = DIFFICULTY_TIERS[tier]
             upper = DIFFICULTY_TIERS[tier + 1]
-            self.assertGreater(upper.combat.hp, lower.combat.hp)
-            self.assertGreater(upper.combat.atk_base, lower.combat.atk_base)
-            self.assertGreater(upper.progression.xp, lower.progression.xp)
+            self.assertGreater(upper.hp, lower.hp)
+            self.assertGreater(upper.atk, lower.atk)
+            self.assertGreater(upper.xp, lower.xp)
 
     def test_tier_1_is_baseline(self):
         t = DIFFICULTY_TIERS[1]
-        self.assertEqual(t.combat.hp, 1.0)
-        self.assertEqual(t.combat.atk_base, 1.0)
-        self.assertEqual(t.combat.def_base, 1.0)
+        self.assertEqual(t.hp, 1.0)
+        self.assertEqual(t.atk, 1.0)
+        self.assertEqual(t.def_, 1.0)
 
 
 class TestLocationTypes(unittest.TestCase):

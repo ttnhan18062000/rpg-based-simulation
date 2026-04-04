@@ -315,7 +315,8 @@ class EngineManager:
             logger.critical("SIMULATION_REPLAYER_ACTIVE tick=%d", world.tick)
             logger.critical("="*80)
             
-            resolver = ConflictResolver(cfg, DeterministicRNG(cfg.world_seed))
+            recovery_rng = DeterministicRNG(cfg.world_seed)
+            resolver = ConflictResolver(cfg, recovery_rng)
             replayed_ticks = 0
             timeout_strikes = 0
             
@@ -336,7 +337,7 @@ class EngineManager:
                         
                         # Unified Phase: Apply deferred side-effects (LOOT, HARVEST, Skill damage)
                         from src.systems.gameplay.action_system import ActionSystem
-                        ActionSystem.apply_action_state_transitions(world, cfg, applied)
+                        ActionSystem.apply_action_state_transitions(world, cfg, applied, recovery_rng)
                         
                         world.tick = batch.tick
                         replayed_ticks += 1

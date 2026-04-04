@@ -158,9 +158,7 @@ class HysteresisModifier(ScoreModifier):
         mind_dec = ctx.actor.mind.decision
         if mind_dec.last_goal == score.goal:
             ticks_held = max(0, ctx.snapshot.tick - mind_dec.goal_committed_at)
-            # AOA Stabilization: Cooler hysteresis (1.05 instead of 1.25)
-            # to allow high-utility transitions to win after lock expires.
-            boost = 1.05 + 0.02 * min(ticks_held, 10)
+            boost = 1.25 + 0.05 * min(ticks_held, 10)
             score.score *= boost
 
 
@@ -189,14 +187,15 @@ class MemoryModifier(ScoreModifier):
         mind = ctx.actor.mind
         goal = score.goal
 
-        if goal == "combat":
+        if goal == GoalType.COMBAT:
             glory = mind.total_glory()
             if glory > 0:
                 score.score *= 1.0 + glory / 100.0
             
             # Nemesis fear: discourage fighting a high-grudge rival directly (0.1x penalty)
+            # Soul Pillar: Lower threshold (5.0) to capture early grudge generation
             enemy = ctx.nearest_enemy()
-            if enemy and mind.emotion.grudges.get(enemy.id, 0.0) >= 30.0:
+            if enemy and mind.emotion.grudges.get(enemy.id, 0.0) >= 5.0:
                 score.score *= 0.1
         elif goal == GoalType.FLEE:
             trauma = mind.total_trauma()
@@ -204,13 +203,14 @@ class MemoryModifier(ScoreModifier):
                 score.score *= 1.0 + abs(trauma) / 100.0
             
             # Nemesis bias: if a known nemesis is visible, EXTREME boost to flee (10.0x)
+            # Soul Pillar: Lower threshold (5.0) to capture early grudge generation
             enemy = ctx.nearest_enemy()
-            if enemy and mind.emotion.grudges.get(enemy.id, 0.0) >= 30.0:
+            if enemy and mind.emotion.grudges.get(enemy.id, 0.0) >= 5.0:
                 score.score *= 10.0
         if goal == GoalType.EXPLORE:
             discoveries = sum(
                 1 for e in mind.narrative.memory_log
-                if (e.type if hasattr(e, "type") else e.get("type")) == "DISCOVERY"
+                if (e.type if hasattr(e, "type") else e.get("type", "")) == "discovery"
             )
             if discoveries > 0:
                 score.score *= 1.0 + discoveries / 20.0

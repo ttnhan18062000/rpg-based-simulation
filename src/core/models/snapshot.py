@@ -51,6 +51,8 @@ class Snapshot(SimulationModel):
     def from_world(cls, world: WorldState) -> Snapshot:
         copied_entities = {}
         for eid, e in world.entities.items():
+            # AOA Pillar 1: Isolation. Each entity in the snapshot must be 
+            # a deep copy of the live state to ensure thread-safety and zero-mutation.
             ent = e.copy()
             ent.freeze()
             copied_entities[eid] = ent
@@ -70,7 +72,8 @@ class Snapshot(SimulationModel):
             tick=world.tick,
             seed=world.seed,
             entities=copied_entities,
-            grid=world.grid,
+            # CRITICAL: Must copy the grid! Otherwise snap.freeze() will freeze the live world grid.
+            grid=world.grid.copy(),
             ground_items={k: list(v) for k, v in world.ground_items.items()},
             camps=tuple((c.x, c.y) for c in world.camps),
             buildings=tuple(b.copy() for b in world.buildings),

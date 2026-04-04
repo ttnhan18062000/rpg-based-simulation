@@ -2,6 +2,7 @@ import os
 import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", ".."))
 
+
 """Tests for Architectural Integrity (AOA Pillar 1 & 2).
 
 These tests ensure that the core Entity model and AI handlers stay strictly compositional

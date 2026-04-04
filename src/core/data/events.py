@@ -15,6 +15,7 @@ class CombatEvent(DomainEvent):
     skill_used: str
     attacker_hp: int
     defender_hp: int
+    is_aoe: bool = False
 
 @dataclass
 class DeathEvent(DomainEvent):

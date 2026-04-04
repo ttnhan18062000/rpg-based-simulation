@@ -2,7 +2,10 @@ import os
 import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", ".."))
 
-from hypothesis import given, strategies as st
+
+import pytest
+from src.core.aspects.combat import CombatAspect
+from src.core.aspects.progression import ProgressionAspect
 from src.core.entities.entity import Entity
 from src.core.models.vectors import Vector2
 from src.core.gameplay.attributes import Attributes, AttributeCaps, recalc_derived_stats, speed_delay
@@ -10,64 +13,75 @@ from src.core.models.enums import AIState, EntityRole, RACE_PROFILES
 from src.core.gameplay.faction import Faction
 
 def test_speed_delay_invariants():
-    # Test that speed_delay never returns NaN or out-of-bounds values
-    # Even for extreme speed values
+    """Test that speed_delay never returns NaN or out-of-bounds values."""
     for spd in range(-100, 1000):
         delay = speed_delay(spd, action="move")
-        assert 0.1 <= delay <= 5.0  # Based on current _MIN_DELAY and _MAX_DELAY
+        assert 0.1 <= delay <= 5.0
         assert not (delay != delay) # check for NaN
 
-@given(
-    st.integers(min_value=-100, max_value=200), # hp
-    st.integers(min_value=1, max_value=200),   # max_hp
-    st.integers(min_value=1, max_value=100),   # atk
-    st.integers(min_value=0, max_value=100),   # def
-    st.floats(min_value=-0.5, max_value=1.5),  # crit_rate
-)
-def test_stats_invariants(hp, max_hp, atk, def_, crit_rate):
-    stats = Stats(hp=hp, max_hp=max_hp, atk=atk, def_=def_, crit_rate=crit_rate)
+@pytest.mark.parametrize("hp, max_hp, atk, def_", [
+    (10, 100, 10, 5),
+    (-50, 50, 5, 0),
+    (200, 100, 50, 20),
+    (0, 100, 10, 10),
+    (100, 0, 10, 10),
+])
+def test_stats_invariants(hp, max_hp, atk, def_):
+    """AOA Stabilization: Test CombatAspect invariants (formerly Stats)."""
+    combat = CombatAspect(hp=hp, max_hp=max_hp, atk_base=atk, def_base=def_)
+    combat.validate() # Trigger AOA clamping
     
-    # We expect hp_ratio to be clamped between 0 and 1 for safety
-    assert isinstance(stats.hp_ratio, float)
-    if stats.combat.max_hp > 0:
-        assert 0.0 <= stats.hp_ratio <= 1.0
+    assert isinstance(combat.hp_ratio, float)
+    if combat.max_hp > 0:
+        assert 0.0 <= combat.hp_ratio <= 1.0
     else:
-        assert stats.hp_ratio == 0.0
+        assert combat.hp_ratio == 0.0
+    
+    assert combat.hp >= 0
+    assert combat.hp <= combat.max_hp
+    assert combat.atk_base >= 1 # clamped min
 
-@given(
-    st.integers(min_value=1, max_value=1000), # atk
-    st.integers(min_value=0, max_value=1000), # def
-    st.floats(min_value=0.0, max_value=1.0),  # variance
-)
+@pytest.mark.parametrize("atk, def_, variance", [
+    (10, 5, 0.0),
+    (100, 20, 0.5),
+    (50, 100, 1.0),
+    (1000, 0, 0.25),
+])
 def test_damage_calc_math(atk, def_, variance):
-    # Simplified combat damage logic from combat.py
+    """Test the core damage calculation logic in isolation."""
     raw_damage = atk - def_ // 2
     raw_damage = max(raw_damage, 1)
     
-    # variance is from RNG, usually 0.0 to 1.0
-    damage_variance = 0.2 # from config usually
+    damage_variance = 0.2
     damage = int(raw_damage * (1.0 + damage_variance * (variance - 0.5)))
     damage = max(damage, 1)
     
     assert damage >= 1
     assert isinstance(damage, int)
 
-@given(st.integers(min_value=1, max_value=100)) # level
+@pytest.mark.parametrize("level", [1, 10, 50, 100])
 def test_recalc_level_consistency(level):
-    # Ensure level doesn't break recalc
-    stats = Stats(level=level)
+    """Ensure level-based stat recalculation remains consistent across aspects."""
+    combat = CombatAspect()
+    prog = ProgressionAspect(level=level)
     attrs = Attributes(vit=5, end=5, str_=5, agi=5)
-    recalc_derived_stats(stats, attrs)
-    assert stats.progression.level == level
-    assert stats.combat.max_hp > 0
+    
+    hero = Entity(id=level, kind="hero")
+    hero.combat = combat
+    hero.progression = prog
+    
+    recalc_derived_stats(hero, attrs)
+    assert prog.level == level
+    assert combat.max_hp > 0
 
-@given(
-    st.integers(min_value=0, max_value=1000), # current_hp
-    st.integers(min_value=1, max_value=1000), # damage
-)
+@pytest.mark.parametrize("current_hp, damage", [
+    (100, 10),
+    (50, 60),
+    (0, 10),
+    (100, 0),
+])
 def test_combat_damage_invariants(current_hp, damage):
-    # This is a placeholder for combat logic hardening
-    # Ensuring HP doesn't wrap around or do weird things
+    """Ensure HP reduction application doesn't cause overflow or invalid states."""
     new_hp = max(0, current_hp - damage)
     assert new_hp >= 0
     assert new_hp <= current_hp

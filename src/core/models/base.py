@@ -23,39 +23,65 @@ class SimulationModel(BaseModel):
 
     def model_copy(self: T, **kwargs: Any) -> T:
         """Override Pydantic's model_copy to ensure private state reset and collection mutability."""
-        # Call super().model_copy first
+        # Call super().model_copy first. If deep=True (default/typical), it deep-copies all fields.
         copy_obj = super().model_copy(**kwargs)
         
-        # Reset frozen state (private attribute)
-        object.__setattr__(copy_obj, "_frozen", False)
-        
-        # Recursively restore mutability for any field that was converted during freeze()
-        for name in type(copy_obj).model_fields:
-            val = getattr(copy_obj, name)
-            if val is not None:
-                object.__setattr__(copy_obj, name, self._unfreeze_recursive(val))
+        # AOA Pillar 1: Isolation. The new copy must be unfrozen and mutable.
+        # We recursively unfreeze the copy_obj IN-PLACE (since it's a fresh copy).
+        self._unfreeze_inplace(copy_obj)
         
         return copy_obj
 
-    def _unfreeze_recursive(self, val: Any) -> Any:
-        """Inverts _freeze_recursive: converts tuples back to lists and MappingProxyType to dicts."""
-        if isinstance(val, MappingProxyType):
-            return {k: self._unfreeze_recursive(v) for k, v in val.items()}
+    def _unfreeze_inplace(self, obj: Any) -> None:
+        """Recursively resets _frozen and converts collections to mutable types in-place."""
+        if isinstance(obj, SimulationModel):
+            # AOA Stabilization: If it's already unfrozen, skip recursion
+            # Unless we are doing this on a fresh deepcopy which might have 
+            # inherited the 'True' flag but contains immutable collection types.
+            if getattr(obj, "_frozen", False) is False:
+                # Optimized Path: Check if it has any collections that need unfreezing
+                # For now, we still need to check nested models, but we can skip
+                # the flag setting and most of the overhead.
+                pass 
+
+            # Reset frozen flag on this model
+            object.__setattr__(obj, "_frozen", False)
             
-        if hasattr(val, "model_copy") and callable(val.model_copy):
-            # If it's a SimulationModel, use its (now overridden) model_copy
-            return val.model_copy(deep=True)
+            # Recurse into all fields
+            fields = getattr(type(obj), "model_fields", None)
+            if fields:
+                for name in fields:
+                    val = getattr(obj, name)
+                    if val is not None:
+                        # Process the value and set it back on the object
+                        new_val = self._unfreeze_val_recursive(val)
+                        if new_val is not val:
+                            object.__setattr__(obj, name, new_val)
+            elif hasattr(obj, "__dict__"):
+                for name, val in obj.__dict__.items():
+                    if not name.startswith("_"):
+                        new_val = self._unfreeze_val_recursive(val)
+                        if new_val is not val:
+                            object.__setattr__(obj, name, new_val)
+
+    def _unfreeze_val_recursive(self, val: Any) -> Any:
+        """Helper to process values during in-place unfreezing."""
+        if isinstance(val, MappingProxyType):
+            return {k: self._unfreeze_val_recursive(v) for k, v in val.items()}
             
         if isinstance(val, (tuple, list)):
-            # Always return a list for mutability in isolation
-            return [self._unfreeze_recursive(item) for item in val]
+            return [self._unfreeze_val_recursive(item) for item in val]
             
         if isinstance(val, (frozenset, set)):
-            return set(self._unfreeze_recursive(item) for item in val)
+            return set(self._unfreeze_val_recursive(item) for item in val)
             
         if isinstance(val, dict):
-            # Also handle normal dicts that might contain nested frozen models
-            return {k: self._unfreeze_recursive(v) for k, v in val.items()}
+            return {k: self._unfreeze_val_recursive(v) for k, v in val.items()}
+
+        if isinstance(val, SimulationModel):
+            # If it's a model, it was already deep-copied by super().model_copy(deep=True).
+            self._unfreeze_inplace(val)
+            return val
             
         return val
 
@@ -83,30 +109,55 @@ class SimulationModel(BaseModel):
 
     def freeze(self) -> None:
         """Lock the model for read-only access (Recursive). top-level and nested collections."""
-        if self._frozen: return 
+        # Use getattr to safely check _frozen even if it's in slots or __dict__
+        if getattr(self, "_frozen", False):
+            return 
         
         # Run validation before freezing to ensure data integrity
         self.validate()
         
-        self._frozen = True
+        # Use object.__setattr__ to bypass Pydantic's frozen check for initial flag
+        object.__setattr__(self, "_frozen", True)
         
         # 1. Recursive freeze for nested SimulationModels and collections
-        for name in type(self).model_fields:
-            val = getattr(self, name)
-            if val is not None:
-                object.__setattr__(self, name, self._freeze_recursive(val))
+        # Pydantic models have model_fields; if it's a standard dataclass or slotted object, 
+        # we might need to use __slots__ or __dict__.
+        fields = getattr(type(self), "model_fields", None)
+        if fields:
+            for name in fields:
+                val = getattr(self, name)
+                if val is not None:
+                    # Always use object.__setattr__ during internal AOA freeze
+                    object.__setattr__(self, name, self._freeze_recursive(val))
+        elif hasattr(self, "__dict__"):
+            for name, val in self.__dict__.items():
+                if not name.startswith("_"):
+                    object.__setattr__(self, name, self._freeze_recursive(val))
+        elif hasattr(self, "__slots__"):
+            for name in self.__slots__:
+                if not name.startswith("_"):
+                    val = getattr(self, name)
+                    object.__setattr__(self, name, self._freeze_recursive(val))
 
     def _freeze_recursive(self, val: Any) -> Any:
-        """Recursively freeze models and convert collections to immutable equivalents."""
+        """Recursively freeze models and convert collections to immutable equivalents.
+        
+        Optimized to skip already frozen objects to avoid re-validation overhead.
+        """
+        # Pillar 1 & 2: AOA Immutability
+        # If it has a freeze method, it's likely a SimulationModel or Aspect
         if hasattr(val, "freeze") and callable(val.freeze):
-            val.freeze()
+            if not getattr(val, "_frozen", False):
+                val.freeze()
             return val
             
         if isinstance(val, (list, tuple)):
             # Handle both lists and tuples to ensure deep immutability
+            # Only convert if not already a tuple of non-mutable items
             return tuple(self._freeze_recursive(item) for item in val)
             
-        if isinstance(val, dict):
+        if isinstance(val, (dict, MappingProxyType)):
+            # If it's already a MappingProxyType, it might still have nested mutable items
             # Recursively freeze values and wrap in MappingProxyType
             frozen_dict = {k: self._freeze_recursive(v) for k, v in val.items()}
             return MappingProxyType(frozen_dict)

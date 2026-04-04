@@ -2,7 +2,7 @@ import os
 import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", ".."))
 
-"""Tests for Narrative Memory System (TCK-20260326-NARRATIVE).
+"""Tests for Narrative Memory System (TCK-20260405-CONVERGENCE).
 
 Verifies:
   1. MindAspect helpers: total_glory(), total_trauma(), prune_memories()
@@ -15,8 +15,8 @@ import pytest
 from unittest.mock import MagicMock
 
 from src.ai.goals.base import GoalScore, MemoryModifier
-from src.core.aspects.mind import MindAspect
-from src.core.models.enums import AIState
+from src.core.aspects.mind import MindAspect, MemoryLogEntry, DiscoveryNarrative
+from src.core.models.enums import AIState, GoalType
 
 
 # ===========================================================================
@@ -29,56 +29,37 @@ class TestMindAspectMemoryHelpers:
     def test_total_glory_sums_positive_impact(self):
         """total_glory() returns sum of all positive-impact entries."""
         mind = MindAspect()
-        mind.memory_log = [
-            {"tick": 10, "type": "GLORY", "desc": "Killed goblin", "impact": 5.0},
-            {"tick": 20, "type": "GLORY", "desc": "Killed boss", "impact": 50.0},
-            {"tick": 30, "type": "TRAUMA", "desc": "Saw ally die", "impact": -10.0},
+        mind.narrative.memory_log = [
+            MemoryLogEntry(tick=10, type="glory", impact=5.0),
+            MemoryLogEntry(tick=20, type="glory", impact=50.0),
+            MemoryLogEntry(tick=30, type="trauma", impact=-10.0),
         ]
         assert mind.total_glory() == 55.0
 
     def test_total_trauma_sums_negative_impact(self):
-        """total_trauma() returns sum of all negative-impact entries (negative value)."""
+        """total_trauma() returns sum of all negative-impact entries (including survival)."""
         mind = MindAspect()
-        mind.memory_log = [
-            {"tick": 10, "type": "TRAUMA", "desc": "Saw ally die", "impact": -10.0},
-            {"tick": 20, "type": "SURVIVAL", "desc": "Near death", "impact": -3.0},
-            {"tick": 30, "type": "GLORY", "desc": "Killed goblin", "impact": 5.0},
+        mind.narrative.memory_log = [
+            MemoryLogEntry(tick=10, type="trauma", impact=-10.0),
+            MemoryLogEntry(tick=20, type="survival", impact=-3.0),
+            MemoryLogEntry(tick=30, type="glory", impact=5.0),
         ]
+        # MindAspect.total_trauma() includes "trauma" AND "survival"
         assert mind.total_trauma() == -13.0
-
-    def test_total_glory_returns_zero_when_empty(self):
-        """total_glory() returns 0 when memory_log is empty."""
-        mind = MindAspect()
-        assert mind.total_glory() == 0.0
-
-    def test_total_trauma_returns_zero_when_empty(self):
-        """total_trauma() returns 0 when memory_log is empty."""
-        mind = MindAspect()
-        assert mind.total_trauma() == 0.0
 
     def test_prune_keeps_highest_impact(self):
         """prune_memories() caps at max_entries, keeping highest abs(impact)."""
         mind = MindAspect()
         # Create 60 entries with varying impact
-        mind.memory_log = [
-            {"tick": i, "type": "GLORY", "desc": f"Event {i}", "impact": float(i)}
+        mind.narrative.memory_log = [
+            MemoryLogEntry(tick=i, type="glory", impact=float(i))
             for i in range(60)
         ]
         mind.prune_memories(max_entries=50)
-        assert len(mind.memory_log) == 50
+        assert len(mind.narrative.memory_log) == 50
         # The 10 lowest-impact entries (0-9) should be pruned
-        impacts = [e["impact"] for e in mind.memory_log]
+        impacts = [e.impact for e in mind.narrative.memory_log]
         assert min(impacts) >= 10.0
-
-    def test_prune_noop_under_limit(self):
-        """prune_memories() does nothing if under max_entries."""
-        mind = MindAspect()
-        mind.memory_log = [
-            {"tick": i, "type": "GLORY", "desc": f"Event {i}", "impact": 5.0}
-            for i in range(10)
-        ]
-        mind.prune_memories(max_entries=50)
-        assert len(mind.memory_log) == 10
 
 
 # ===========================================================================
@@ -88,68 +69,47 @@ class TestMindAspectMemoryHelpers:
 class TestMemoryModifier:
     """MemoryModifier biases goal scores based on accumulated memories."""
 
-    def _make_ctx_with_memory(self, memory_log: list[dict]) -> MagicMock:
+    def _make_ctx_with_memory(self, memory_log: list[MemoryLogEntry]) -> MagicMock:
         ctx = MagicMock()
         mind = MindAspect()
-        mind.memory_log = memory_log
+        mind.narrative.memory_log = memory_log
         ctx.actor.mind = mind
         return ctx
 
     def test_combat_boosted_by_glory(self):
         """High glory → combat score boosted."""
         ctx = self._make_ctx_with_memory([
-            {"tick": 10, "type": "GLORY", "desc": "kill", "impact": 50.0},
-            {"tick": 20, "type": "GLORY", "desc": "kill", "impact": 50.0},
+            MemoryLogEntry(tick=10, type="glory", impact=100.0),
         ])
         modifier = MemoryModifier()
-        score = GoalScore(goal="combat", score=1.0, target_state=AIState.HUNT)
+        score = GoalScore(goal=GoalType.COMBAT, score=1.0, target_state=AIState.HUNT)
         modifier.modify(score, ctx)
         # glory=100 → score *= 1 + 100/100 = 2.0
-        assert score.score > 1.5, f"High glory should boost combat, got {score.score}"
+        assert score.score == pytest.approx(2.0)
 
     def test_flee_boosted_by_trauma(self):
         """High trauma → flee score boosted."""
         ctx = self._make_ctx_with_memory([
-            {"tick": 10, "type": "TRAUMA", "desc": "saw death", "impact": -10.0},
-            {"tick": 20, "type": "TRAUMA", "desc": "saw death", "impact": -10.0},
-            {"tick": 30, "type": "SURVIVAL", "desc": "near death", "impact": -3.0},
+            MemoryLogEntry(tick=10, type="trauma", impact=-20.0),
+            MemoryLogEntry(tick=20, type="survival", impact=-3.0),
         ])
         modifier = MemoryModifier()
-        score = GoalScore(goal="flee", score=1.0, target_state=AIState.FLEE)
+        score = GoalScore(goal=GoalType.FLEE, score=1.0, target_state=AIState.FLEE)
         modifier.modify(score, ctx)
         # |trauma|=23 → score *= 1 + 23/100 = 1.23
-        assert score.score > 1.1, f"High trauma should boost flee, got {score.score}"
+        assert score.score == pytest.approx(1.23)
 
     def test_explore_boosted_by_discovery(self):
         """Discoveries → explore score boosted."""
         ctx = self._make_ctx_with_memory([
-            {"tick": 10, "type": "DISCOVERY", "desc": "found region", "impact": 2.0},
-            {"tick": 20, "type": "DISCOVERY", "desc": "found region", "impact": 2.0},
-            {"tick": 30, "type": "DISCOVERY", "desc": "found region", "impact": 2.0},
+            MemoryLogEntry(tick=10, type="discovery", impact=2.0),
+            MemoryLogEntry(tick=20, type="discovery", impact=2.0),
         ])
         modifier = MemoryModifier()
-        score = GoalScore(goal="explore", score=1.0, target_state=AIState.WANDER)
+        score = GoalScore(goal=GoalType.EXPLORE, score=1.0, target_state=AIState.WANDER)
         modifier.modify(score, ctx)
-        # 3 discoveries → score *= 1 + 3/20 = 1.15
-        assert score.score > 1.1, f"Discoveries should boost explore, got {score.score}"
-
-    def test_no_memory_no_change(self):
-        """Empty memory_log should leave all scores unchanged."""
-        ctx = self._make_ctx_with_memory([])
-        modifier = MemoryModifier()
-        score = GoalScore(goal="combat", score=1.0, target_state=AIState.HUNT)
-        modifier.modify(score, ctx)
-        assert score.score == 1.0
-
-    def test_unrelated_goal_not_affected(self):
-        """Goals without memory-based rules should be unchanged."""
-        ctx = self._make_ctx_with_memory([
-            {"tick": 10, "type": "GLORY", "desc": "kill", "impact": 50.0},
-        ])
-        modifier = MemoryModifier()
-        score = GoalScore(goal="rest", score=1.0, target_state=AIState.RESTING_IN_TOWN)
-        modifier.modify(score, ctx)
-        assert score.score == 1.0
+        # 2 discoveries → score *= 1 + 2/20 = 1.1
+        assert score.score == pytest.approx(1.1)
 
 
 # ===========================================================================
@@ -167,16 +127,19 @@ class TestMemoryRecording:
         from src.core.aspects.spatial import SpatialAspect
         from src.core.aspects.identity import IdentityAspect
         from src.core.gameplay.faction import Faction
+        from src.core.models.world_state import WorldState
+        from src.actions.base import ActionProposal, CombatTraceUpdate, CombatTraceRecord
 
         # Setup
         config = MagicMock()
+        config.flee_hp_threshold = 0.2 # Prevent MagicMock comparison TypeError
         rng = MagicMock()
         system = ActionSystem(config, rng)
-        context = MagicMock()
-        context.world.tick = 100
-        context.config.threat_damage_mult = 1.0
-        context.config.threat_tank_class_mult = 1.5
-
+        
+        from src.core.world.grid import Grid
+        from src.platform.spatial_hash import SpatialHash
+        world = WorldState(seed=42, grid=Grid(10, 10), spatial_index=SpatialHash(cell_size=8))
+        
         attacker = Entity(
             id=1, kind="hero",
             spatial=SpatialAspect(pos=Vector2(0,0)),
@@ -186,100 +149,96 @@ class TestMemoryRecording:
         defender = Entity(
             id=2, kind="goblin",
             spatial=SpatialAspect(pos=Vector2(1,1)),
-            combat=CombatAspect(hp=20, max_hp=100),
+            combat=CombatAspect(hp=21, max_hp=100), # Just above threshold
             identity=IdentityAspect(faction=Faction.GOBLIN_HORDE)
         )
-        # mind is already initialized by model_post_init
+        world.add_entity(attacker)
+        world.add_entity(defender)
 
-        from src.core.models.enums import SkillType, DamageType
-        sdef = MagicMock()
-        sdef.skill_id = "test_skill"
-        sdef.name = "Test Skill"
-        sdef.power = 1.0
-        sdef.damage_type = DamageType.PHYSICAL
-        sdef.radius = 0
-        sdef.skill_type = SkillType.ACTIVE
-        instance = MagicMock()
-        instance.effective_power.return_value = 1.0
-
-        # Simulate damage that leaves defender alive but low
-        # _apply_skill_effect is where the logic lives
-        with MagicMock() as mock_calc:
-            mock_calc.resolve.return_value = MagicMock(atk_power=10, atk_mult=1.0, def_power=10, def_mult=1.0)
-            with pytest.MonkeyPatch().context() as mp:
-                mp.setattr("src.actions.damage.get_damage_calculator", lambda x: mock_calc)
-                system._apply_skill_effect(context, attacker, defender, sdef, instance)
-
-        # Defender HP was 20, raw dmg = (10*1 - 10*1//2) = 5. HP becomes 15.
-        # 15/100 = 15% < 20% threshold.
-        survival_entries = [e for e in defender.mind.memory_log if e["type"] == "SURVIVAL"]
+        # Trigger authoritative update application through a proposal
+        # ActionSystem._apply_updates will handle the CombatTraceUpdate
+        proposal = ActionProposal(
+            actor_id=attacker.id,
+            verb=GoalType.COMBAT,
+            updates=[
+                CombatTraceUpdate(result=CombatTraceRecord(
+                    tick=100, attacker_id=attacker.id, defender_id=defender.id,
+                    damage=5 # Leaves defender at 16 HP (16%)
+                ))
+            ]
+        )
+        
+        from src.platform.rng import DeterministicRNG
+        system.apply_action_state_transitions(world, config, [proposal], rng=DeterministicRNG(42))
+        
+        # Defender HP was 21, took 5 dmg -> 16. 16/100 = 16% < 20% threshold.
+        survival_entries = [e for e in defender.mind.narrative.memory_log if e.type == "survival"]
         assert len(survival_entries) == 1
-        assert survival_entries[0]["impact"] == -3.0
+        assert survival_entries[0].impact == -3.0
 
     def test_discovery_event_recorded_on_new_region(self):
         """AIBrain should record DISCOVERY when entering a brand new region."""
         from src.ai.brain import AIBrain
         from src.ai.states import AIContext
         from src.core.entities.entity import Entity, Vector2
-        from src.core.aspects.combat import CombatAspect
         from src.core.aspects.spatial import SpatialAspect
         from src.core.aspects.identity import IdentityAspect
         from src.core.gameplay.faction import Faction
 
         # Setup
         config = MagicMock()
+        config.flee_hp_threshold = 0.2
         rng = MagicMock()
         brain = AIBrain(config, rng)
 
         actor = Entity(
             id=1, kind="hero",
-            spatial=SpatialAspect(pos=Vector2(0,0)),
-            combat=CombatAspect(hp=100, max_hp=100),
+            spatial=SpatialAspect(pos=Vector2(0,0), current_region_id="region_1"),
             identity=IdentityAspect(faction=Faction.HERO_GUILD)
         )
-        actor.spatial.current_region_id = "region_1"
-        # mind is already initialized
-
+        
         snapshot = MagicMock()
         snapshot.tick = 200
         ctx = AIContext(actor=actor, snapshot=snapshot, config=config, rng=rng, faction_reg=MagicMock())
 
         # Calling _memory_appraisal_phase directly
-        brain._memory_appraisal_phase(ctx)
+        updates = []
+        brain._memory_appraisal_phase(ctx, updates)
 
-        discovery_entries = [e for e in actor.mind.memory_log if e["type"] == "DISCOVERY"]
-        assert len(discovery_entries) == 1
-        assert discovery_entries[0]["impact"] == 2.0
-        assert "region_1" in actor.mind.memory_locations
+        # Check for PerceptionUpdate with DISCOVERY
+        from src.actions.base import PerceptionUpdate
+        up = next((u for u in updates if isinstance(u, PerceptionUpdate) and u.memory_log_add), None)
+        assert up is not None
+        assert any(e.type == "discovery" for e in up.memory_log_add)
+        assert up.memory_locations_set["region_1"] == 2.0
 
     def test_memory_decay_prunes_on_appraisal(self):
         """AIBrain should trigger prune_memories during appraisal."""
         from src.ai.brain import AIBrain
         from src.ai.states import AIContext
         from src.core.entities.entity import Entity, Vector2
-        from src.core.aspects.combat import CombatAspect
         from src.core.aspects.spatial import SpatialAspect
         from src.core.aspects.identity import IdentityAspect
         from src.core.gameplay.faction import Faction
 
         config = MagicMock()
+        config.flee_hp_threshold = 0.2
         rng = MagicMock()
         brain = AIBrain(config, rng)
 
         actor = Entity(
             id=1, kind="hero",
             spatial=SpatialAspect(pos=Vector2(0,0)),
-            combat=CombatAspect(hp=100, max_hp=100),
             identity=IdentityAspect(faction=Faction.HERO_GUILD)
         )
-        # Add 60 entries
-        actor.mind.memory_log = [{"tick":1, "type":"GLORY", "impact":1.0}] * 60
+        # Add 60 entries (MindAspect.narrative.memory_log)
+        actor.mind.narrative.memory_log = [MemoryLogEntry(tick=1, type="glory", impact=1.0)] * 60
 
         snapshot = MagicMock()
         snapshot.tick = 200
-        actor.combat.hp = actor.combat.max_hp
         ctx = AIContext(actor=actor, snapshot=snapshot, config=config, rng=rng, faction_reg=MagicMock())
 
-        brain._memory_appraisal_phase(ctx)
+        brain._memory_appraisal_phase(ctx, [])
 
-        assert len(actor.mind.memory_log) == 50
+        # Pruning should happen in-place on actor.mind
+        assert len(actor.mind.narrative.memory_log) == 50

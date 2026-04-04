@@ -2,6 +2,7 @@ import os
 import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", ".."))
 
+
 import pytest
 from src.core.entities.entity import Vector2
 from src.ai.states import AIContext, should_flee
@@ -62,9 +63,9 @@ def test_grudge_accumulation():
     world.add_entity(attacker)
     world.add_entity(defender)
     
-    # ... test logic (grudges are part of mind aspect)
-    defender.mind.grudges[attacker.id] = 5.0
-    assert defender.mind.grudges[1] == 5.0
+    # ... test logic (grudges are part of mind.emotion aspect)
+    defender.mind.emotion.grudges[attacker.id] = 5.0
+    assert defender.mind.emotion.grudges[1] == 5.0
 
 def test_should_flee_logic():
     config = SimulationConfig()
@@ -75,7 +76,8 @@ def test_should_flee_logic():
     # Threshold is base 0.3 (from SimulationConfig)
     # Case 1: Neutral mood (0.5) -> should flee at 30%
     actor.combat.max_hp = 100
-    actor.mind.mood = 0.5
+    actor.combat.hp = 100
+    actor.mind.emotion.mood = 0.5
     actor.combat.hp = 35 # 35% > 30% -> Should NOT flee
     assert not should_flee(actor, config)
     actor.combat.hp = 25 # 25% < 30% -> Should flee
@@ -83,7 +85,7 @@ def test_should_flee_logic():
     
     # Case 2: Despair (0.0) -> should flee earlier (higher threshold)
     # mod = (0.5 - 0.0) * 0.2 = 0.1. Effective threshold = 0.3 + 0.1 = 0.4
-    actor.mind.mood = 0.0
+    actor.mind.emotion.mood = 0.0
     actor.combat.hp = 45 # 45% > 40% -> Should NOT flee
     assert not should_flee(actor, config)
     actor.combat.hp = 35 # 35% < 40% -> Should flee
@@ -91,7 +93,7 @@ def test_should_flee_logic():
     
     # Case 3: Fury (1.0) -> should flee later (lower threshold)
     # mod = (0.5 - 1.0) * 0.2 = -0.1. Effective threshold = 0.3 - 0.1 = 0.2
-    actor.mind.mood = 1.0
+    actor.mind.emotion.mood = 1.0
     actor.combat.hp = 25 # 25% > 20% -> Should NOT flee
     assert not should_flee(actor, config)
     actor.combat.hp = 15 # 15% < 20% -> Should flee
@@ -135,11 +137,11 @@ def test_locational_memory_on_death():
     
     if not victim.combat.alive:
         # Region should be marked as dangerous
-        assert victim.mind.memory_locations.get("deadly_forest", 0) < 0
-        # Killer should be remembered
-        assert victim.mind.memory.get("last_killer_id") == attacker.id
+        assert victim.mind.narrative.memory_locations.get("deadly_forest", 0) < 0
+        # Killer should be remembered (in perception memory)
+        assert victim.mind.perception.entity_memory.get("last_killer_id") == attacker.id
         # Mood should be low
-        assert victim.mind.mood == 0.2
+        assert victim.mind.emotion.mood == 0.2
 
 def test_frontier_locational_penalty():
     rng = DeterministicRNG(42)
@@ -149,15 +151,13 @@ def test_frontier_locational_penalty():
         .faction(FactionEnum.HERO_GUILD)
         .build()
     )
-    hero.mind.terrain_memory[(5, 5)] = 1
-    
     from src.ai.perception import Perception
     from src.core.world.regions import Region
     from src.core.world.grid import Grid
-    
     region1 = Region(region_id="safe", name="Safe", terrain=0, center=Vector2(5, 5), radius=10, difficulty=1)
     region2 = Region(region_id="trauma", name="Trauma", terrain=0, center=Vector2(50, 50), radius=10, difficulty=1)
-    hero.mind.memory_locations["trauma"] = -1.0
+    hero.mind.narrative.memory_locations["trauma"] = -1.0
+    hero.mind.perception.terrain_memory[(5, 5)] = 1
     
     grid = Grid(100, 100)
     snapshot = Snapshot(

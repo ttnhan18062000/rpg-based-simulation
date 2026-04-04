@@ -3,6 +3,7 @@ import os
 import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", ".."))
 
+
 """Tests for AI heuristics — boredom, life stages, priority shifts.
 
 Refactored for AOA Stabilization:
@@ -20,7 +21,7 @@ from src.config import SimulationConfig
 from src.ai.brain import AIBrain
 from src.core.entities.entity import Entity
 from src.core.models.vectors import Vector2
-from src.core.models.enums import AIState, Domain
+from src.core.models.enums import AIState, GoalType, Domain
 from src.platform.rng import DeterministicRNG
 from src.core.models.snapshot import Snapshot
 from src.core.gameplay.faction import FactionRegistry
@@ -138,8 +139,8 @@ class TestAIHeuristics(unittest.TestCase):
                 if s.goal == name: return s.score
             return 0.0
 
-        young_explore = get_score(young_scores, "explore")
-        veteran_social = get_score(veteran_scores, "social")
+        young_explore = get_score(young_scores, GoalType.EXPLORE)
+        veteran_social = get_score(veteran_scores, GoalType.SOCIAL)
         
         assert young_explore > 0
         assert veteran_social > 0

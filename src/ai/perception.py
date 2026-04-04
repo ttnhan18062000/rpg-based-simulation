@@ -52,7 +52,11 @@ class Perception:
                     per = getattr(actor.progression.attributes, "per", 5)
                 if per < 20:
                     continue
-            
+
+            # Pillar 4: Strict Manhattan Distance filtering for sensory accuracy
+            if actor.spatial.pos.manhattan(e.spatial.pos) > vision_range:
+                continue
+                
             result.append(e)
         
         return result

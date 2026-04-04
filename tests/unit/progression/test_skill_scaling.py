@@ -1,28 +1,25 @@
-import os
-import sys
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", ".."))
-
-"""Tests for skill stat scaling (design-01).
-
-Covers:
-- SkillDef damage_type field exists and defaults to PHYSICAL
-- Magical skills (arcane_bolt, drain_life) use DamageType.MAGICAL
-- Physical skills use DamageType.PHYSICAL
-- DamageCalculator routing: physical uses ATK/DEF, magical uses MATK/MDEF
-- Skill damage uses attribute multipliers from DamageCalculator
-"""
-
-
-
+import pytest
 from src.core.gameplay.classes import SKILL_DEFS, SkillDef, SkillType, SkillTarget, HeroClass
-from src.core.models.enums import DamageType
+from src.core.models.enums import DamageType, Faction
 from src.actions.damage import get_damage_calculator, DamageContext
 from src.core.entities.entity import Entity
 from src.core.models.vectors import Vector2
-from src.core.gameplay.faction import Faction
-from src.core.gameplay.items.items import Inventory
 from src.core.gameplay.attributes import Attributes
+from src.core.aspects.identity import IdentityAspect
+from src.core.aspects.spatial import SpatialAspect
+from src.core.aspects.combat import CombatAspect
+from src.core.aspects.progression import ProgressionAspect
+from src.core.aspects.mind import MindAspect
+from src.core.registry.registry_loader import load_all_registries
 
+@pytest.fixture(scope="module", autouse=True)
+def setup_registries():
+    # Load from the project root data directory
+    import os
+    from src.core.gameplay.classes import SKILL_DEFS
+    project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
+    data_dir = os.path.join(project_root, "data")
+    load_all_registries(data_dir)
 
 class TestSkillDefDamageType:
     """SkillDef has a damage_type field routing to correct stat pair."""
@@ -70,27 +67,33 @@ class TestDamageCalculatorRouting:
     """DamageCalculator uses correct stat pair based on damage_type."""
 
     def _make_entity(self, atk=20, def_=10, matk=30, mdef=15, str_=10, spi=12, vit=8, wis=6):
-        stats = Stats(hp=100, max_hp=100, atk=atk, def_=def_, spd=10, matk=matk, mdef=mdef)
-        e = Entity(id=1, kind="hero", pos=Vector2(5, 5), stats=stats, faction=Faction.HERO_GUILD)
-        e.attributes = Attributes(str_=str_, spi=spi, vit=vit, wis=wis)
-        return e
+        return Entity(
+            id=1, kind="hero",
+            identity=IdentityAspect(name="TestHero", faction=Faction.HERO_GUILD),
+            spatial=SpatialAspect(pos=Vector2(5, 5)),
+            combat=CombatAspect(hp=100, max_hp=100, atk_base=atk, def_base=def_, spd_base=10, matk=matk, mdef=mdef),
+            progression=ProgressionAspect(
+                attributes=Attributes(str_=str_, spi=spi, vit=vit, wis=wis)
+            ),
+            mind=MindAspect()
+        )
 
     def test_physical_uses_atk_def(self):
         attacker = self._make_entity(atk=20, def_=5, matk=50, mdef=50)
         defender = self._make_entity(atk=5, def_=15, matk=5, mdef=5)
         calc = get_damage_calculator(DamageType.PHYSICAL)
         ctx = calc.resolve(attacker, defender)
-        # Physical should use effective_atk (base ATK) and effective_def (base DEF)
-        assert ctx.atk_power == attacker.effective_atk()
-        assert ctx.def_power == defender.effective_def()
+        # Physical should use combatAspect atk and def_
+        assert ctx.atk_power == attacker.combat.atk
+        assert ctx.def_power == defender.combat.def_
 
     def test_magical_uses_matk_mdef(self):
         attacker = self._make_entity(atk=5, def_=5, matk=30, mdef=5)
         defender = self._make_entity(atk=5, def_=5, matk=5, mdef=20)
         calc = get_damage_calculator(DamageType.MAGICAL)
         ctx = calc.resolve(attacker, defender)
-        assert ctx.atk_power == attacker.effective_matk()
-        assert ctx.def_power == defender.effective_mdef()
+        assert ctx.atk_power == attacker.combat.matk
+        assert ctx.def_power == defender.combat.mdef
 
     def test_physical_atk_mult_scales_with_str(self):
         attacker = self._make_entity(str_=20)
@@ -133,11 +136,21 @@ class TestSkillDamageTypeIntegration:
         calc_phys = get_damage_calculator(DamageType.PHYSICAL)
         calc_mag = get_damage_calculator(DamageType.MAGICAL)
 
-        stats = Stats(hp=100, max_hp=100, atk=5, def_=10, spd=10, matk=30, mdef=5)
-        attacker = Entity(id=1, kind="mage", pos=Vector2(0, 0), stats=stats, faction=Faction.HERO_GUILD)
+        attacker = Entity(
+            id=1, kind="mage",
+            identity=IdentityAspect(faction=Faction.HERO_GUILD),
+            spatial=SpatialAspect(pos=Vector2(0, 0)),
+            combat=CombatAspect(hp=100, max_hp=100, atk_base=5, def_base=10, spd_base=10, matk=30, mdef=5),
+            progression=ProgressionAspect(level=1)
+        )
 
-        stats2 = Stats(hp=100, max_hp=100, atk=10, def_=10, spd=10, matk=5, mdef=10)
-        defender = Entity(id=2, kind="goblin", pos=Vector2(1, 0), stats=stats2, faction=Faction.GOBLIN_HORDE)
+        defender = Entity(
+            id=2, kind="goblin",
+            identity=IdentityAspect(faction=Faction.GOBLIN_HORDE),
+            spatial=SpatialAspect(pos=Vector2(1, 0)),
+            combat=CombatAspect(hp=100, max_hp=100, atk_base=10, def_base=10, spd_base=10, matk=5, mdef=10),
+            progression=ProgressionAspect(level=1)
+        )
 
         phys_ctx = calc_phys.resolve(attacker, defender)
         mag_ctx = calc_mag.resolve(attacker, defender)

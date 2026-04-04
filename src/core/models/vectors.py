@@ -15,16 +15,22 @@ class Vector2(SimulationModel):
     def handle_any(cls, data: Any) -> Any:
         """Support from_any() style reconstruction."""
         if isinstance(data, (tuple, list)) and len(data) >= 2:
-            return {"x": data[0], "y": data[1]}
+            return {"x": int(data[0]), "y": int(data[1])}
+        if isinstance(data, dict):
+            # Coerce any numeric fields to int to avoid strict Pydantic failures
+            if 'x' in data: data['x'] = int(data['x'])
+            if 'y' in data: data['y'] = int(data['y'])
         return data
 
-    def __init__(self, x: int | dict = 0, y: int = 0, **kwargs: Any) -> None:
+    def __init__(self, x: int | float | dict = 0, y: int | float = 0, **kwargs: Any) -> None:
         """AOA Hardened: Support both positional and keyword initialization."""
         if isinstance(x, dict):
-            # Probably Pydantic internal call
-            super().__init__(**x)
+            # Probably Pydantic internal call - ensure values are ints
+            x_val = int(x.get('x', 0))
+            y_val = int(x.get('y', 0))
+            super().__init__(x=x_val, y=y_val)
         else:
-            super().__init__(x=x, y=y, **kwargs)
+            super().__init__(x=int(x), y=int(y), **kwargs)
 
     def __add__(self, other: Vector2) -> Vector2:
         return Vector2(x=self.x + other.x, y=self.y + other.y)

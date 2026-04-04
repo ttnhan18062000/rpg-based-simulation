@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 
 class DamageResolutionService:
     @staticmethod
-    def resolve(attacker: Entity, defender: Entity, world: WorldState, config: SimulationConfig, rng: DeterministicRNG) -> tuple[int, bool, bool, dict]:
+    def resolve(attacker: Entity, defender: Entity, world: WorldState, config: SimulationConfig, rng: DeterministicRNG, skill_power: float = 1.0, override_damage_type: DamageType | None = None, override_element: Element | None = None) -> tuple[int, bool, bool, dict]:
         tick = world.tick
         
         # --- Evasion Check ---
@@ -35,19 +35,25 @@ class DamageResolutionService:
             return 0, False, True, {"raw_damage": 0, "mitigation": 0, "elemental_mult": 1.0, "dmg_type": DamageType.PHYSICAL.name.lower(), "element": Element.NONE.name.lower()}
 
         # --- Determine Damage Type and Element ---
-        dmg_type = DamageType.PHYSICAL
-        element = Element.NONE
-        if attacker.inventory and attacker.inventory.weapon:
-            weapon_tmpl = ITEM_REGISTRY.get(attacker.inventory.weapon)
-            if weapon_tmpl:
-                dmg_type = weapon_tmpl.damage_type
-                element = weapon_tmpl.element
+        dmg_type = override_damage_type
+        element = override_element
+        
+        if dmg_type is None or element is None:
+            if attacker.inventory and attacker.inventory.weapon:
+                weapon_tmpl = ITEM_REGISTRY.get(attacker.inventory.weapon)
+                if weapon_tmpl:
+                    if dmg_type is None: dmg_type = weapon_tmpl.damage_type
+                    if element is None: element = weapon_tmpl.element
+        
+        # Fallbacks
+        if dmg_type is None: dmg_type = DamageType.PHYSICAL
+        if element is None: element = Element.NONE
 
         # --- Base Damage Calculation ---
         calculator = get_damage_calculator(dmg_type)
         dmg_ctx = calculator.resolve(attacker, defender)
         
-        atk_final = int(dmg_ctx.atk_power * dmg_ctx.atk_mult)
+        atk_final = int(dmg_ctx.atk_power * dmg_ctx.atk_mult * skill_power)
         def_final = int(dmg_ctx.def_power * dmg_ctx.def_mult)
         
         # Pillar 3: Fractional Armor Mitigation
@@ -69,13 +75,20 @@ class DamageResolutionService:
         if is_crit:
             damage = int(damage * attacker.combat.crit_dmg)
 
+        # Pillar 3: Status Combinations (Shatter — Frozen targets take extra damage)
+        from src.core.gameplay.effects import EffectType
+        has_frozen = any(e.effect_type == EffectType.FROZEN for e in defender.combat.effects)
+        if has_frozen:
+            damage = int(damage * 1.5)
+
         # Return rich detail for traces
         return max(damage, 1), is_crit, False, {
             "raw_damage": raw_damage,
             "mitigation": int(atk_final - raw_damage),
             "elemental_mult": elem_mult if element != Element.NONE else 1.0,
             "dmg_type": dmg_type.name.lower() if hasattr(dmg_type, "name") else DamageType(dmg_type).name.lower(),
-            "element": element.name.lower() if hasattr(element, "name") else Element(element).name.lower()
+            "element": element.name.lower() if hasattr(element, "name") else Element(element).name.lower(),
+            "has_shattered": has_frozen
         }
 
 class CombatAftermathService:
@@ -97,7 +110,8 @@ class CombatAftermathService:
                 attacker_id=attacker.id, defender_id=defender.id,
                 damage=damage, is_crit=is_crit, is_evasion=is_evasion,
                 skill_used=skill_label,
-                attacker_hp=attacker.combat.hp, defender_hp=defender.combat.hp
+                attacker_hp=attacker.combat.hp, defender_hp=defender.combat.hp,
+                is_aoe=getattr(proposal, "is_aoe", False)
             ))
 
         # Rich Trace Generation (AOA Phase 5)
@@ -114,17 +128,21 @@ class CombatAftermathService:
                     mitigated_damage=trace_details.get("mitigation", 0) if trace_details else 0,
                     elemental_mult=trace_details.get("elemental_mult", 1.0) if trace_details else 1.0,
                     is_crit=is_crit,
-                    is_evaded=is_evasion
+                    is_evaded=is_evasion,
+                    is_shattered=trace_details.get("has_shattered", False) if trace_details else False
                 )
             )
         )
-        proposal.updates.append(trace)
-        
-        # Award veterancy for successful hit
+        # awarding veterancy for hit
         if not is_evasion:
             attacker.progression.veterancy_points += 1 # Legacy mutation for unit tests
             from src.actions.base import ProgressionUpdate
             proposal.updates.append(ProgressionUpdate(veterancy_points_delta=1))
+        
+        proposal.updates.append(trace)
+
+        # Handle Shattered (Frozen) expiration
+        # Handled in ActionSystem via is_shattered flag in CombatTraceUpdate
 
         if is_evasion:
             return
@@ -140,25 +158,26 @@ class CombatAftermathService:
         ))
         
         if hp_lost_ratio > 0.15:
-            from src.core.aspects.mind import MemoryLogEntry
-            proposal.updates.append(PerceptionUpdate(
-                memory_log_add=[MemoryLogEntry(
-                    tick=tick, type="TRAUMA", impact=-hp_lost_ratio * 100.0,
-                    details={"desc": f"Took massive damage ({damage}) from {attacker.identity.display_name} #{attacker.id}", "source_id": attacker.id}
-                )]
-            ))
+            trace.result.metadata["trauma"] = hp_lost_ratio * 100.0
             
         # Threat Table (PerceptionUpdate)
         base_threat = damage * config.threat_damage_mult
+        
+        # AOA Stabilization: Robust HeroClass check using Enum values
         from src.core.models.enums import HeroClass
-        hclass = getattr(attacker.progression, "hero_class", None)
-        hclass_name = hclass.name if hasattr(hclass, "name") else (HeroClass(hclass).name if hclass is not None else "")
-        if hclass_name == "WARRIOR": base_threat *= 1.5
-        elif hclass_name in ("PALADIN", "GUARDIAN", "TANK"): base_threat *= 2.0
+        
+        # AOA Stabilization: Robust check for HeroClass (Pillar 1 Identity)
+        hclass = getattr(attacker.progression, "hero_class", HeroClass.NONE)
+        if hclass == HeroClass.NONE:
+            hclass = getattr(attacker.identity, "hero_class", HeroClass.NONE)
             
-        proposal.updates.append(PerceptionUpdate(
-            threat_table_delta={attacker.id: base_threat} # We need this in PerceptionUpdate!
-        ))
+        hclass_val = int(hclass)
+        if hclass_val == int(HeroClass.WARRIOR): 
+            base_threat *= 1.5
+        elif hclass_val == int(HeroClass.TANK):
+            base_threat *= 2.0
+            
+        trace.result.metadata["threat"] = base_threat
 
 class KillRewardService:
     @staticmethod
@@ -280,13 +299,10 @@ class CombatAction:
 
         # TOUGHNESS HARDENING (design-04)
         if not is_evasion and defender.combat.alive:
-            if defender.combat.hp / defender.combat.max_hp < 0.15:
+            # Check threshold against predicted HP after damage is applied
+            if (defender.combat.hp - damage) / defender.combat.max_hp < 0.15:
                 defender.combat.max_hp += 1
                 defender.combat.validate()
-
-        # KILL RESOLUTION
-        if not defender.combat.alive:
-            KillRewardService.resolve_kill(attacker, defender, world, proposal)
 
     @staticmethod
     def _get_weapon_range(entity: Entity) -> int:

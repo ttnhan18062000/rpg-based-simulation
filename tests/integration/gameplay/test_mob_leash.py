@@ -2,6 +2,7 @@ import os
 import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", ".."))
 
+
 """Tests for mob roaming leash mechanic (enhance-04).
 
 Covers:
@@ -16,7 +17,7 @@ Covers:
 
 
 
-from src.actions.base import ActionProposal
+from src.actions.base import ActionProposal, NavigationUpdate, ProgressionUpdate
 from src.ai.states import (
     AIContext, HuntHandler, WanderHandler, ReturnToCampHandler, beyond_leash,
 )
@@ -26,16 +27,21 @@ from src.core.gameplay.faction import Faction, FactionRegistry
 from src.core.world.grid import Grid
 from src.core.gameplay.items.items import Inventory
 from src.core.entities.entity import Entity
+from src.core.aspects.identity import IdentityAspect
+from src.core.aspects.spatial import SpatialAspect
+from src.core.aspects.combat import CombatAspect
+from src.core.aspects.progression import ProgressionAspect
+from src.core.aspects.mind import MindAspect
 from src.core.models.vectors import Vector2
 from src.core.models.snapshot import Snapshot
 from src.core.models.world_state import WorldState
-from src.systems.rng import DeterministicRNG
-from src.systems.spatial_hash import SpatialHash
+from src.platform.rng import DeterministicRNG
+from src.platform.spatial_hash import SpatialHash
 
 
 def _make_world(width: int = 64, height: int = 64, camp_pos: Vector2 | None = None) -> WorldState:
     grid = Grid(width, height)
-    spatial = SpatialHash(8)
+    spatial = SpatialHash(cell_size=8)
     w = WorldState(seed=42, grid=grid, spatial_index=spatial)
     if camp_pos is not None:
         w.camps.append(camp_pos)
@@ -50,25 +56,38 @@ def _make_mob(
     hp: int = 50, max_hp: int = 50,
     ai_state: AIState = AIState.WANDER,
 ) -> Entity:
-    stats = Stats(hp=hp, max_hp=max_hp, atk=10, def_=5, spd=10)
-    inv = Inventory(items=[], max_slots=12, max_weight=30.0)
-    e = Entity(
-        id=eid, kind="goblin", pos=Vector2(x, y),
-        stats=stats, faction=Faction.GOBLIN_HORDE, inventory=inv,
-        home_pos=Vector2(home_x, home_y),
-        leash_radius=leash_radius,
+    from src.core.gameplay.faction import Faction
+    from src.core.aspects.mind import DecisionState, PerceptionMemory, EmotionState, NavigationState, NarrativeMemory
+    combat = CombatAspect(hp=hp, max_hp=max_hp, atk_base=10, def_base=5, spd_base=10)
+    identity = IdentityAspect(display_name="goblin", faction=Faction.GOBLIN_HORDE)
+    spatial = SpatialAspect(pos=Vector2(x, y), home_pos=Vector2(home_x, home_y), leash_radius=leash_radius)
+    mind = MindAspect(
+        decision=DecisionState(ai_state=ai_state),
+        navigation=NavigationState(chase_ticks=chase_ticks)
     )
-    e.ai_state = ai_state
-    e.chase_ticks = chase_ticks
+    e = Entity(
+        id=eid, kind="goblin",
+        identity=identity,
+        spatial=spatial,
+        combat=combat,
+        mind=mind,
+        progression=ProgressionAspect()
+    )
     return e
 
 
 def _make_hero(eid: int, x: int, y: int) -> Entity:
-    stats = Stats(hp=100, max_hp=100, atk=15, def_=5, spd=10)
-    inv = Inventory(items=[], max_slots=36, max_weight=90.0)
+    from src.core.gameplay.faction import Faction
+    combat = CombatAspect(hp=100, max_hp=100, atk_base=15, def_base=5, spd_base=10)
+    identity = IdentityAspect(display_name="hero", faction=Faction.HERO_GUILD)
+    spatial = SpatialAspect(pos=Vector2(x, y))
     return Entity(
-        id=eid, kind="hero", pos=Vector2(x, y),
-        stats=stats, faction=Faction.HERO_GUILD, inventory=inv,
+        id=eid, kind="hero",
+        identity=identity,
+        spatial=spatial,
+        combat=combat,
+        mind=MindAspect(),
+        progression=ProgressionAspect()
     )
 
 
@@ -98,10 +117,11 @@ class TestBeyondLeash:
         assert beyond_leash(mob) is False
 
     def test_no_home_returns_false(self):
-        stats = Stats(hp=50, max_hp=50, atk=10, def_=5, spd=10)
-        e = Entity(id=1, kind="goblin", pos=Vector2(50, 50),
-                   stats=stats, faction=Faction.GOBLIN_HORDE,
-                   home_pos=None, leash_radius=15)
+        combat = CombatAspect(hp=50, max_hp=50, atk_base=10, def_base=5, spd_base=10)
+        e = Entity(id=1, kind="goblin",
+                   identity=IdentityAspect(faction=Faction.GOBLIN_HORDE),
+                   spatial=SpatialAspect(pos=Vector2(50, 50), home_pos=None, leash_radius=15),
+                   combat=combat, mind=MindAspect(), progression=ProgressionAspect())
         assert beyond_leash(e) is False
 
     def test_within_radius_returns_false(self):
@@ -237,8 +257,10 @@ class TestHuntLeash:
         state, proposal = handler.handle(ctx)
 
         assert state == AIState.HUNT
-        assert ctx.actor.chase_ticks == 6, (
-            f"chase_ticks should increment to 6, got {ctx.actor.chase_ticks}")
+        # In AOA, handlers propose updates, they don't mutate ctx.actor directly
+        nav_update = next((u for u in proposal.updates if isinstance(u, NavigationUpdate)), None)
+        assert nav_update is not None and nav_update.chase_ticks == 6, (
+            f"chase_ticks should be proposed as 6, got {nav_update}")
 
     def test_chase_ticks_resets_on_combat(self):
         """chase_ticks should reset when mob engages in combat."""
@@ -254,8 +276,9 @@ class TestHuntLeash:
         state, proposal = handler.handle(ctx)
 
         assert state == AIState.COMBAT
-        assert ctx.actor.chase_ticks == 0, (
-            f"chase_ticks should reset on combat, got {ctx.actor.chase_ticks}")
+        nav_update = next((u for u in proposal.updates if isinstance(u, NavigationUpdate)), None)
+        assert nav_update is not None and nav_update.chase_ticks == 0, (
+            f"chase_ticks should be reset (proposed as 0), got {nav_update}")
 
     def test_no_leash_mob_hunts_freely(self):
         """Mob without leash should hunt without restrictions."""
@@ -283,42 +306,47 @@ class TestReturnToCampHeal:
 
     def test_heals_while_returning(self):
         """Mob should regen HP each tick while returning to camp."""
-        world = _make_world()
+        world = _make_world(camp_pos=Vector2(5, 5))
         mob = _make_mob(1, x=20, y=5, hp=30, max_hp=100)
         mob.ai_state = AIState.RETURN_TO_CAMP
         world.add_entity(mob)
 
         ctx = _make_ctx(mob, world)
         handler = ReturnToCampHandler()
-        handler.handle(ctx)
+        state, proposal = handler.handle(ctx)
 
         # 5% of 100 max_hp = 5 hp healed → 30 + 5 = 35
-        assert ctx.actor.stats.combat.hp == 35, (
-            f"Mob should heal to 35, got {ctx.actor.stats.combat.hp}")
+        # Handler proposes a ProgressionUpdate with hp_delta
+        prog_update = next((u for u in proposal.updates if isinstance(u, ProgressionUpdate)), None)
+        assert prog_update is not None and prog_update.hp_delta == 5, (
+            f"Mob should propose 5 hp heal, got {prog_update}")
 
     def test_does_not_overheal(self):
         """Healing should not exceed max HP."""
-        world = _make_world()
+        world = _make_world(camp_pos=Vector2(5, 5))
         mob = _make_mob(1, x=20, y=5, hp=98, max_hp=100)
         mob.ai_state = AIState.RETURN_TO_CAMP
         world.add_entity(mob)
 
         ctx = _make_ctx(mob, world)
         handler = ReturnToCampHandler()
-        handler.handle(ctx)
+        state, proposal = handler.handle(ctx)
 
-        assert ctx.actor.stats.combat.hp == 100, (
-            f"Mob should cap at max HP 100, got {ctx.actor.stats.combat.hp}")
+        prog_update = next((u for u in proposal.updates if isinstance(u, ProgressionUpdate)), None)
+        # 98 hp, max 100. heal_rate 0.05 -> adds 5 but capped to 2
+        assert prog_update is not None and prog_update.hp_delta == 2, (
+            f"Mob should propose 2 hp heal (cap at max), got {prog_update}")
 
     def test_full_hp_no_change(self):
         """Already full HP should not change."""
-        world = _make_world()
+        world = _make_world(camp_pos=Vector2(5, 5))
         mob = _make_mob(1, x=20, y=5, hp=100, max_hp=100)
         mob.ai_state = AIState.RETURN_TO_CAMP
         world.add_entity(mob)
 
         ctx = _make_ctx(mob, world)
         handler = ReturnToCampHandler()
-        handler.handle(ctx)
+        state, proposal = handler.handle(ctx)
 
-        assert ctx.actor.stats.combat.hp == 100
+        prog_update = next((u for u in proposal.updates if isinstance(u, ProgressionUpdate)), None)
+        assert prog_update is None or prog_update.hp_delta == 0

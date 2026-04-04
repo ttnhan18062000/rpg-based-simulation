@@ -33,7 +33,6 @@ def best_ready_skill(actor: Entity, dist_to_enemy: int = 1, nearby_enemies: int 
     
     best_id = None
     best_score = 0.0
-    # print(f"DEBUG_SKILL: Entity {actor.id} checking {len(actor.progression.skills)} skills. Dist={dist_to_enemy}, Nearby={nearby_enemies}")
     for si in actor.progression.skills:
         sdef = SKILL_DEFS.get(si.skill_id)
         if sdef is None:
@@ -56,16 +55,17 @@ def best_ready_skill(actor: Entity, dist_to_enemy: int = 1, nearby_enemies: int 
         
         # Scoring
         power = si.effective_power(sdef.power)
-        aoe_radius = getattr(sdef, 'radius', 0) or 0
-        score = power * (nearby_enemies if aoe_radius > 0 and nearby_enemies > 1 else 1)
-        # print(f"  Skill {si.skill_id} SCORE={score} (power={power}, aoe={aoe_radius})")
+        radius = getattr(sdef, "radius", 0)
+        
+        # Scoring: power * multiplier (if AoE and multiple targets hit)
+        score = power * (nearby_enemies if radius > 0 and nearby_enemies > 1 else 1)
             
         if score > best_score:
             best_score = score
             best_id = si.skill_id
             
     if best_id:
-        print(f"DEBUG_SKILL_PICK: Entity {actor.id} picked {best_id} (score={best_score})")
+        pass
     return best_id
 
 
@@ -139,6 +139,24 @@ class HuntHandler(StateHandler):
 
         # 2. Basic Attack
         if dist <= weapon_rng:
+            # Use spatial index for O(1) cell lookup
+            potential_ids = snapshot.nearby_entity_ids(actor.spatial.pos.x, actor.spatial.pos.y, 4)
+            nearby_count = 0
+            for eid in potential_ids:
+                if eid == actor.id: continue
+                e = snapshot.entities.get(eid)
+                if not e or not e.combat.alive: continue
+                if ctx.faction_reg.is_hostile(actor.identity.faction, e.identity.faction):
+                    if e.spatial.pos.manhattan(actor.spatial.pos) <= 4:
+                        nearby_count += 1
+            
+            skill_id = best_ready_skill(actor, dist, nearby_count)
+            if skill_id:
+                return AIState.COMBAT, ActionProposal(
+                    actor_id=actor.id, verb=ActionType.USE_SKILL, target=(skill_id, enemy.id),
+                    reason=f"Skill {skill_id} ready during hunt → using on {enemy.id}",
+                    updates=[NavigationUpdate(chase_ticks=0)])
+                    
             return AIState.COMBAT, ActionProposal(
                 actor_id=actor.id, verb=ActionType.ATTACK, target=enemy.id,
                 reason=f"In range of enemy {enemy.id} (dist={dist}, range={weapon_rng}) → attacking",

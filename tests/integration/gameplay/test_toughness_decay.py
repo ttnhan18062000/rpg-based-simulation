@@ -3,6 +3,7 @@ import os
 import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", ".."))
 
+
 """Tests for toughness hardening and stat decay systems.
 
 Refactored for AOA Stabilization:
@@ -64,29 +65,14 @@ def test_near_death_hardening():
     proposal = ActionProposal(actor_id=attacker.id, verb=ActionType.ATTACK, target=defender.id, reason="Test")
     
     old_max_hp = defender.combat.max_hp
-    combat_action.apply(proposal, world)
+    # Force damage to trigger hardening
+    with patch('src.actions.combat.DamageResolutionService.resolve', return_value=(10, False, False, {"raw_damage": 10, "mitigation": 0})):
+        combat_action.apply(proposal, world)
     
-    # Damage Resolution Service uses fractional mitigation and variance, but 10 ATK vs 0 DEF should do ~10 dmg
-    assert defender.combat.hp < 11
-    # Check if hardening triggered (requires HP < 3 if max_hp=20)
-    if defender.combat.hp < 3:
-        assert defender.combat.max_hp == old_max_hp + 1
-    else:
-        # If variance was high/low, we might need a tighter test or force the HP
-        defender.combat.hp = 2
-        # Re-apply or manually check the logic
-        # Actually, let's just force the state for the test
-        if defender.combat.hp / defender.combat.max_hp < 0.15:
-             # Manually trigger hardening if we want to be sure
-             pass
-        # Reset and try with forced HP
-        defender.combat.hp = 2
-        from src.actions.combat import DamageResolutionService
-        # Mocking resolve to force damage
-        with patch('src.actions.damage.PhysicalDamageCalculator.resolve') as mock_resolve:
-             mock_resolve.return_value = MagicMock(atk_power=10, atk_mult=1.0, def_power=0, def_mult=1.0)
-             # The actual hardening happens in apply()
-             pass
+    # In AOA, CombatAction.apply DOES NOT mutate defender.combat.hp directly.
+    # It appends updates to the proposal.
+    # However, it SHOULD still update max_hp if the threshold is met by predicted damage.
+    assert defender.combat.max_hp == old_max_hp + 1
 
 def test_stat_decay_inactivity():
     """Verify that stat decay can be triggered."""
@@ -104,13 +90,14 @@ def test_stat_decay_inactivity():
     actor.progression.attribute_caps = AttributeCaps(str_cap=20)
     actor.mind.decision.consecutive_idle_ticks = 1001
     
-    # Call decay directly since WorldLoopinternal methods are gone
+    # Call decay directly since WorldLoop internal methods are gone
     # decay_attributes picks a random attribute to decay
-    # We'll run it a few times to ensure we hit something that's not at the floor
-    # Or just mock the random choice
     with patch('src.platform.rng.DeterministicRNG.next_int', return_value=0): # 0 is str
-        decay_attributes(actor, rng, decay_amount=0.1)
-        assert actor.progression.attributes._str_frac < 0.5
+        # Force decay by providing a larger amount than 0.5 to trigger integer decay
+        decay_attributes(actor, rng, decay_amount=0.6)
+        # Should have triggered 0.5 - 0.6 = -0.1 < 0, so str_ becomes 9 and _str_frac becomes 0.9
+        assert actor.progression.attributes.str_ == 9
+        assert actor.progression.attributes._str_frac == 0.9
 
 def test_toughness_hardening_integration():
     """Integration test for the restored hardening logic in CombatAction."""
@@ -146,9 +133,9 @@ def test_toughness_hardening_integration():
     
     # We must ensure DamageResolutionService doesn't kill the defender
     # Mock resolve to return 0 damage but NOT evasion
-    from unittest.mock import MagicMock, patch
+    # AOA FIX: resolve returns 4 items: (damage, is_crit, is_evasion, details)
     with patch('src.actions.combat.DamageResolutionService.resolve') as mock_resolve:
-        mock_resolve.return_value = (0, False, False, None, None)
+        mock_resolve.return_value = (0, False, False, {"raw_damage": 0, "mitigation": 0})
         combat_action.apply(proposal, world)
         
     assert defender.combat.max_hp == old_max_hp + 1

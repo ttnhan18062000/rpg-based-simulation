@@ -40,8 +40,13 @@ class MoveAction:
 
     @staticmethod
     def apply(proposal: ActionProposal, world: WorldState) -> None:
+        """AOA Stabilization: Emit NavigationUpdate for authoritative application."""
         entity = world.entities.get(proposal.actor_id)
         if not entity: return
         
         target: Vector2 = proposal.target
-        world.move_entity(proposal.actor_id, target)
+        # world.move_entity(proposal.actor_id, target) # DEPRECATED: Direct Mutation
+        
+        from src.actions.base import NavigationUpdate, SpatialUpdate
+        proposal.updates.append(NavigationUpdate(target_pos=target))
+        proposal.updates.append(SpatialUpdate(new_pos=target))

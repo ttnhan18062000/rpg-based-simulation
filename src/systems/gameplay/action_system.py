@@ -9,19 +9,21 @@ Refactored for AOA Stabilization:
 from __future__ import annotations
 import logging
 import math
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Callable
 from src.core.models.enums import AIState, ActionType, Element, GoalType, EmotionType, HeroClass
 from src.core.entities.entity import Entity
 from src.actions.base import (
     ActionProposal, IntentUpdate, MindUpdate, NavigationUpdate, CombatTraceUpdate,
-    PerceptionUpdate, ProgressionUpdate, IdentityUpdate, InteractionUpdate
+    PerceptionUpdate, ProgressionUpdate, IdentityUpdate, InteractionUpdate, SpatialUpdate
 )
 from src.core.gameplay.items.item_registry import ITEM_REGISTRY
 from src.core.gameplay.classes import SKILL_DEFS
 from src.systems.infrastructure.base import System
 
 if TYPE_CHECKING:
-    from src.actions.base import ActionProposal
+    from src.core.models.world_state import WorldState
+    from src.core.models.config import SimulationConfig
+    from src.core.world.factions import FactionRegistry
     from src.systems.infrastructure.base import SystemContext
 
 logger = logging.getLogger(__name__)
@@ -36,6 +38,7 @@ class ActionSystem(System):
             context.world, 
             context.config, 
             applied, 
+            context.rng,
             emit=context.emit,
             faction_reg=context.faction_reg
         )
@@ -50,10 +53,11 @@ class ActionSystem(System):
         world: WorldState, 
         config: SimulationConfig, 
         applied: list[ActionProposal],
+        rng: DeterministicRNG,
         emit: Callable | None = None,
         faction_reg: FactionRegistry | None = None
     ) -> None:
-        """Core side-effects that MUST be applied identically in live and replay/recovery."""
+        """Core side-effects applied identically in live and replay/recovery."""
         for proposal in applied:
             entity = world.entities.get(proposal.actor_id)
             if entity is None or not entity.combat.alive:
@@ -64,7 +68,7 @@ class ActionSystem(System):
             if proposal.updates:
                 all_updates.extend(proposal.updates)
 
-            # 1. State Transitions (AI Internal)
+            # 1. Direct State Transitions (AI Internal)
             if proposal.new_ai_state is not None:
                 new_state = AIState(proposal.new_ai_state)
                 if new_state != entity.mind.decision.ai_state:
@@ -74,34 +78,33 @@ class ActionSystem(System):
             if proposal.reason:
                 entity.mind.decision.last_reason = proposal.reason
 
-            # 2. Verb-Specific Logic (Update Generation)
-            if proposal.verb == ActionType.ATTACK and isinstance(proposal.target, int):
-                target = world.entities.get(proposal.target)
-                if target and target.combat.alive:
-                    # CombatAction.apply was called earlier in ConflictResolver (AOA Phase 5)
-                    # and it correctly appended a CombatTraceUpdate to proposal.updates.
-                    # No additional logic needed here.
-                    pass
-
+            # 2. Update Generation (Functional Side-Effects)
             if proposal.verb == ActionType.USE_ITEM and proposal.target:
                 all_updates.extend(cls._get_use_item_updates(world, config, entity, proposal.target))
             elif proposal.verb == ActionType.LOOT:
                 all_updates.extend(cls._get_looting_updates(world, entity, proposal.target))
             elif proposal.verb == ActionType.HARVEST and proposal.target:
                 all_updates.extend(cls._get_harvesting_updates(world, entity, proposal.target))
-            elif proposal.verb == ActionType.USE_SKILL and proposal.target:
-                # Handle both single target_id and [skill_id, target_id] tuple/list
-                t = proposal.target
-                if isinstance(t, (list, tuple)) and len(t) == 2:
-                    sid, tid = t
-                else:
-                    sid, tid = t, None # Fallback (should be handled by callers)
+            elif proposal.verb == ActionType.USE_SKILL:
+                skill_id = proposal.metadata.get("skill_id")
+                target_id = proposal.metadata.get("target_id")
                 
-                all_updates.extend(cls._get_use_skill_updates(world, config, faction_reg, entity, sid, tid, emit=emit))
+                # AOA Stabilization: Robust extraction of skill info from AI proposals
+                # AI proposals use target=(skill_id, enemy_id) for skills
+                if isinstance(proposal.target, (tuple, list)) and len(proposal.target) == 2:
+                    skill_id = proposal.target[0]
+                    target_id = proposal.target[1]
+                elif isinstance(proposal.target, int):
+                    target_id = proposal.target
+                
+                if skill_id:
+                    all_updates.extend(cls._get_use_skill_updates(world, config, rng, faction_reg, entity, skill_id, target_id, proposal=proposal, emit=emit))
+                else:
+                    logger.warning("Entity %d proposed USE_SKILL but no skill_id found in target or metadata", entity.id)
 
-            # 3. Final Application (Unambiguous Entry Point)
+            # 3. Final Application (Authoritative Pipeline)
             if all_updates:
-                cls._apply_updates(world, entity, all_updates)
+                cls._apply_updates(world, entity, all_updates, proposal)
 
             # 4. Attribute Training
             from src.core.gameplay.attributes import train_attributes
@@ -112,286 +115,187 @@ class ActionSystem(System):
             speed = entity.combat.spd
             entity.next_act_at += 1.0 / max(0.1, speed / 10.0)
 
-
-    @staticmethod
-    def _apply_updates(world: WorldState, entity: Entity, updates: list[IntentUpdate]) -> None:
+    @classmethod
+    def _apply_updates(cls, world: WorldState, entity: Entity, updates: list[IntentUpdate], proposal: ActionProposal) -> None:
         """Apply typed simulation side-effects (AOA Phase 5)."""
-
+        from src.actions.base import MindUpdate, PerceptionUpdate, ProgressionUpdate, NavigationUpdate
+        
         for up in updates:
             if isinstance(up, MindUpdate):
                 decision = entity.mind.decision
+                if up.new_ai_state is not None:
+                    decision.ai_state = up.new_ai_state
                 if up.goal_scores:
                     decision.goal_scores = up.goal_scores
                 if up.last_goal:
                     decision.last_goal = up.last_goal
-                if up.goal_committed_at is not None:
-                    decision.goal_committed_at = up.goal_committed_at
-                if up.boredom_delta:
-                    decision.boredom_multipliers.update(up.boredom_delta)
-                if up.new_ai_state is not None:
-                    decision.ai_state = AIState(up.new_ai_state)
-                if up.consecutive_idle_ticks is not None:
-                    decision.consecutive_idle_ticks = up.consecutive_idle_ticks
-                if up.goals_add:
-                    for g in up.goals_add:
-                        if g not in decision.goals:
-                            decision.goals.append(g)
-                if up.goals_remove:
-                    for g in up.goals_remove:
-                        if g in decision.goals:
-                            decision.goals.remove(g)
                 
-                emotion = entity.mind.emotion
-                if up.emotion_delta:
-                    for k, v in up.emotion_delta.items():
-                        if k == EmotionType.PANIC: emotion.panic = max(0.0, min(1.0, emotion.panic + v))
-                        elif k == EmotionType.STUCK: emotion.stuck = max(0.0, min(1.0, emotion.stuck + v))
-                        elif k == EmotionType.BRAVERY: emotion.bravery = max(0.0, min(1.0, emotion.bravery + v))
-                if up.emotion_set:
-                    for k, v in up.emotion_set.items():
-                        if k == EmotionType.PANIC: emotion.panic = v
-                        elif k == EmotionType.STUCK: emotion.stuck = v
-                        elif k == EmotionType.BRAVERY: emotion.bravery = v
-                if up.mood is not None:
-                    emotion.mood = up.mood
+                # Grudge / Emotion handling
                 if up.grudge_delta:
-                    for eid, delta in up.grudge_delta.items():
-                        emotion.grudges[eid] = emotion.grudges.get(eid, 0.0) + delta
-            
-            elif isinstance(up, PerceptionUpdate):
-                perc = entity.mind.perception
-                if up.entity_memory:
-                    # Force coercion of dicts to MemoryRecord (AOA Stabilization)
-                    from src.core.aspects.mind import MemoryRecord
-                    for eid, rec in up.entity_memory.items():
-                        if isinstance(rec, dict):
-                            perc.entity_memory[eid] = MemoryRecord.model_validate(rec)
-                        else:
-                            perc.entity_memory[eid] = rec
+                    for tid, delta in up.grudge_delta.items():
+                        entity.mind.emotion.grudges[tid] = entity.mind.emotion.grudges.get(tid, 0.0) + delta
                 
-                if up.memory_stale_delta:
-                    for eid, delta in up.memory_stale_delta.items():
-                        perc.memory_stale_ticks[eid] = perc.memory_stale_ticks.get(eid, 0) + delta
-                if up.memory_remove:
-                    for eid in up.memory_remove:
-                        perc.entity_memory.pop(eid, None)
-                        perc.memory_stale_ticks.pop(eid, None)
-                if up.attention_pool is not None:
-                    perc.attention_pool = up.attention_pool
-                if up.terrain_memory:
-                    perc.terrain_memory.update(up.terrain_memory)
+                if up.emotion_delta:
+                    for em, delta in up.emotion_delta.items():
+                        field_name = em.name.lower()
+                        current = getattr(entity.mind.emotion, field_name, 0.0)
+                        setattr(entity.mind.emotion, field_name, max(0.0, min(1.0, current + delta)))
+                
+                if up.emotion_set:
+                    for em, val in up.emotion_set.items():
+                        field_name = em.name.lower()
+                        setattr(entity.mind.emotion, field_name, max(0.0, min(1.0, val)))
+
+            elif isinstance(up, PerceptionUpdate):
+                if up.threat_delta:
+                    for tid, delta in up.threat_delta.items():
+                        entity.mind.perception.threat_table[tid] = entity.mind.perception.threat_table.get(tid, 0.0) + delta
+                if up.entity_memory:
+                    entity.mind.perception.entity_memory.update(up.entity_memory)
                 if up.memory_log_add:
-                    entity.mind.narrative.memory_log.extend(up.memory_log_add)
-                if up.threat_table_delta:
-                    for eid, delta in up.threat_table_delta.items():
-                        perc.threat_table[eid] = perc.threat_table.get(eid, 0.0) + delta
-            
+                    log = entity.mind.narrative.memory_log
+                    log.extend(up.memory_log_add)
+                    # Capping memory log to prevent O(T^2) deep-copy bloat (AOA Stabilization)
+                    if len(log) > 50:
+                        entity.mind.narrative.memory_log = log[-50:]
+                
+                if up.memory_locations_set:
+                    entity.mind.narrative.memory_locations.update(up.memory_locations_set)
+
             elif isinstance(up, NavigationUpdate):
                 nav = entity.mind.navigation
-                # Force coercion of Vector2 (AOA Stabilization)
-                from src.core.models.vectors import Vector2
-                
                 if up.pos_history:
-                    nav.pos_history = [
-                        Vector2.model_validate(p) if isinstance(p, dict) else p 
-                        for p in up.pos_history
-                    ]
+                    # AOA Stabilization: Replace history instead of extending to prevent bloat.
+                    # The AI sends the full intended history (usually last 20 ticks).
+                    nav.pos_history = up.pos_history[-20:]
                 if up.cached_path is not None:
-                    nav.cached_path = [
-                        Vector2.model_validate(p) if isinstance(p, dict) else p 
-                        for p in up.cached_path
-                    ]
-                if up.target_pos:
-                    nav.cached_path_target = Vector2.model_validate(up.target_pos) if isinstance(up.target_pos, dict) else up.target_pos
+                    nav.cached_path = up.cached_path
+                if up.target_pos is not None:
+                    nav.cached_path_target = up.target_pos
                 if up.chase_ticks is not None:
                     nav.chase_ticks = up.chase_ticks
-            
+
             elif isinstance(up, ProgressionUpdate):
-                prog = entity.progression
-                if up.gold_delta:
-                    prog.gold = max(0, prog.gold + up.gold_delta)
-                if up.xp_delta:
-                    prog.xp += up.xp_delta
-                if up.veterancy_points_delta:
-                    prog.veterancy_points += up.veterancy_points_delta
                 if up.hp_delta:
                     entity.combat.hp = max(0, min(entity.combat.max_hp, entity.combat.hp + up.hp_delta))
-                if up.stamina_delta:
-                    prog.stamina = max(0, min(prog.max_stamina, prog.stamina + up.stamina_delta))
                 
-                if entity.inventory:
-                    for iid in up.inventory_add:
-                        entity.inventory.add_item(iid)
-                    for iid in up.inventory_remove:
-                        entity.inventory.remove_item(iid)
+                if up.stamina_delta:
+                    entity.progression.stamina = max(0, min(entity.progression.max_stamina, entity.progression.stamina + up.stamina_delta))
+                
+                if up.gold_delta: entity.progression.gold += up.gold_delta
+                if up.xp_delta: entity.progression.xp += up.xp_delta
+                
+                if up.skill_cooldowns:
+                    for sid, cd in up.skill_cooldowns.items():
+                        si = next((s for s in entity.progression.skills if s.skill_id == sid), None)
+                        if si:
+                            si.cooldown_remaining = cd
                 
                 if up.skills_add:
                     from src.core.gameplay.classes import SkillInstance
                     for s in up.skills_add:
-                        prog.skills.append(s if isinstance(s, SkillInstance) else SkillInstance(skill_id=s))
-                        
-                if up.attribute_cap_delta:
-                    for k, v in up.attribute_cap_delta.items():
-                        setattr(prog.attribute_caps, k, getattr(prog.attribute_caps, k) + v)
-                        
-                if up.quest_add:
-                    prog.quests.extend(up.quest_add)
+                        if isinstance(s, str):
+                             entity.progression.skills.append(SkillInstance(skill_id=s))
+                        else:
+                             entity.progression.skills.append(s)
                 
-                if up.effects_add:
-                    for ef in up.effects_add:
-                        entity.combat.add_effect(ef)
-                if up.effects_remove:
-                    for ident in up.effects_remove:
-                        entity.combat.remove_effect(ident)
+                if up.inventory_add:
+                    if entity.inventory:
+                        entity.inventory.items.extend(up.inventory_add)
+                
+                if up.inventory_remove:
+                    if entity.inventory:
+                        for item in up.inventory_remove:
+                            if item in entity.inventory.items:
+                                entity.inventory.items.remove(item)
 
-            elif isinstance(up, IdentityUpdate):
-                ident = entity.identity
-                if up.recipes_learn:
-                    ident.known_recipes.update(up.recipes_learn)
-                if up.craft_target is not None:
-                    ident.craft_target = up.craft_target
-                if up.hero_class is not None:
-                    ident.hero_class = up.hero_class
-                if up.reputation_delta:
-                    ident.reputation += up.reputation_delta
+                if up.effects_expire_all:
+                    for etype in up.effects_expire_all:
+                        for eff in entity.combat.effects:
+                            if eff.effect_type == etype:
+                                eff.remaining_ticks = 0
 
-            elif isinstance(up, InteractionUpdate):
-                inter = entity.interaction
-                if up.loot_progress_delta:
-                    inter.loot_progress += up.loot_progress_delta
-                if up.loot_progress_set is not None:
-                    inter.loot_progress = up.loot_progress_set
-                
-                if entity.inventory:
-                    if up.home_storage_upgrade:
-                        entity.inventory.home_storage.upgrade()
-                    if up.home_storage_add:
-                        for iid in up.home_storage_add:
-                            entity.inventory.home_storage.add_item(iid)
-                    if up.home_storage_remove:
-                        for iid in up.home_storage_remove:
-                            entity.inventory.home_storage.remove_item(iid)
-                
-                if up.corpse_id_to_remove is not None:
-                    # Authoritative Corpse Recovery (AOA Final Convergence)
-                    nodes = getattr(world, "corpse_nodes", {})
-                    corpse = nodes.get(up.corpse_id_to_remove)
-                    if corpse:
-                        # 1. Gain Items/Gold
-                        entity.progression.gold += getattr(corpse, "gold", 0)
-                        if entity.inventory:
-                            for iid in getattr(corpse, "items", []):
-                                entity.inventory.add_item(iid)
-                        # 2. Cleanup (Direct authoritative removal)
-                        world.corpse_nodes.pop(up.corpse_id_to_remove, None)
-            
+            elif isinstance(up, SpatialUpdate):
+                # AOA Stabilization: Authoritative position update via WorldState
+                # This ensures the spatial index is updated for AoE and navigation.
+                world.move_entity(entity.id, up.new_pos)
+                if up.facing:
+                    entity.spatial.facing = up.facing
+                if up.region_id:
+                    entity.spatial.region_id = up.region_id
+
             elif isinstance(up, CombatTraceUpdate):
-                # Authoritative Combat Result Application (AOA Final Convergence)
+                # Authoritative Combat Result Application
                 res = up.result
                 target = world.entities.get(res.defender_id)
-                if target and target.combat:
-                    from src.core.gameplay.classes import HeroClass
-                    damage = res.damage
+                if target and target.combat.alive:
+                    target.combat.hp = max(0, target.combat.hp - res.damage)
                     
-                    # 1. HP Reduction (Phase 5: Authoritative Application)
-                    if not res.details.is_evaded and damage > 0:
-                        target.combat.hp = max(0, target.combat.hp - damage)
-                        target.combat.validate()
+                    # AOA Stabilization: Handle Shattered (Frozen) expiration on target
+                    if res.details and getattr(res.details, "is_shattered", False):
+                        from src.core.gameplay.effects import EffectType
+                        for eff in target.combat.effects:
+                            if eff.effect_type == EffectType.FROZEN:
+                                eff.remaining_ticks = 0
                     
-                    # 2. Behavioral side-effects (Phase 2: Appraisal)
-                    if damage > 0:
-                        # Threat Generation
-                        mult = 1.5 if entity.progression.hero_class == HeroClass.WARRIOR else 1.0
-                        target.mind.perception.threat_table[entity.id] = target.mind.perception.threat_table.get(entity.id, 0.0) + damage * mult
-                        
-                        # Grudges & Memory (for bosses/elites or significant damage)
-                        if entity.identity.tier > 0 or "boss" in entity.kind.lower():
-                            # Grudge update
-                            target.mind.emotion.grudges[entity.id] = target.mind.emotion.grudges.get(entity.id, 0.0) + (damage / 10.0)
-                            
-                            # Trauma Memory (if damage > 5% max HP)
-                            if damage > (target.combat.max_hp * 0.05):
-                                from src.core.aspects.mind import MemoryLogEntry, CombatNarrative
-                                trauma_entry = MemoryLogEntry(
-                                    tick=world.tick,
-                                    type="trauma",
-                                    impact=-0.2,
-                                    details=CombatNarrative(
-                                        target_id=entity.id,
-                                        target_kind=entity.kind,
-                                        damage_dealt=damage,
-                                        was_fatal=not target.combat.alive
-                                    )
-                                )
-                                target.mind.narrative.memory_log.append(trauma_entry)
-
-                    # 3. Trace Record Cleanup (Ensure target has the record too)
-                    if hasattr(target.combat, "traces"):
-                        target.combat.traces.append(res)
+                    # Generate Threat and Grudge on target (Defender)
+                    # AOA Stabilization: Use threat from metadata (which includes class multipliers)
+                    threat_val = res.metadata.get("threat", float(res.damage))
+                    target.mind.perception.threat_table[entity.id] = target.mind.perception.threat_table.get(entity.id, 0.0) + threat_val
                     
-                    # Also append to attacker trace log (AOA Pillar 2: Introspection)
-                    if hasattr(entity.combat, "traces"):
-                        entity.combat.traces.append(res)
+                    grudge_val = res.metadata.get("grudge", float(res.damage) / 10.0)
+                    target.mind.emotion.grudges[entity.id] = target.mind.emotion.grudges.get(entity.id, 0.0) + grudge_val
+                    
+                    # Store trace for introspection (ring buffer)
+                    target.combat.traces.append(res)
+                    if len(target.combat.traces) > 20:
+                        target.combat.traces = target.combat.traces[-20:]
+                    
+                    # Handle Trauma log if massive damage occurred
+                    if "trauma" in res.metadata:
+                        from src.core.aspects.mind import MemoryLogEntry
+                        trauma_impact = res.metadata["trauma"]
+                        target.mind.narrative.memory_log.append(MemoryLogEntry(
+                            tick=world.tick, type="trauma", impact=-trauma_impact,
+                            details={"desc": f"Took massive damage ({res.damage}) from {entity.identity.display_name} #{entity.id}", "source_id": entity.id}
+                        ))
+                    
+                    # AOA Stabilization: Record Survival memory when hanging on by a thread (<20% HP)
+                    # This drives the "survival" bias in flee/prevention scores.
+                    hp_ratio = target.combat.hp / max(1, target.combat.max_hp)
+                    if target.combat.hp > 0 and hp_ratio < 0.2:
+                        from src.core.aspects.mind import MemoryLogEntry
+                        # Check if we already recorded a survival event this tick or recently
+                        recent_survival = any(m.type == "survival" and m.tick > world.tick - 5 for m in target.mind.narrative.memory_log)
+                        if not recent_survival:
+                            target.mind.narrative.memory_log.append(MemoryLogEntry(
+                                tick=world.tick, type="survival", impact=-3.0,
+                                details={"desc": f"Nearly killed by {entity.identity.display_name} #{entity.id} (HP: {int(hp_ratio*100)}%)", "source_id": entity.id}
+                            ))
 
+                    if len(target.mind.narrative.memory_log) > 50:
+                        target.mind.narrative.memory_log = target.mind.narrative.memory_log[-50:]
+                    
+                    # AOA Stabilization: Authoritative Kill Recognition
+                    # Triggered only when HP reaches 0 during a CombatTraceUpdate (Pillar 3/Pillar 5 convergence)
+                    if not target.combat.alive:
+                        from src.actions.combat import KillRewardService
+                        KillRewardService.resolve_kill(entity, target, world, proposal)
 
-    @staticmethod
-    def _get_use_item_updates(world: WorldState, config: SimulationConfig, entity: Entity, item_id: str) -> list[IntentUpdate]:
-        """Generate updates for using an item (AOA Convergence)."""
-        updates: list[IntentUpdate] = []
-        if entity.inventory and item_id in entity.inventory.items:
-            template = ITEM_REGISTRY.get(item_id)
-            if template:
-                # 1. Removal
-                updates.append(ProgressionUpdate(inventory_remove=[item_id]))
-                # 2. Heal
-                if template.heal_amount > 0:
-                    updates.append(ProgressionUpdate(hp_delta=template.heal_amount))
+            elif isinstance(up, InteractionUpdate):
+                # AOA Stabilization: Authoritative interaction side-effects
+                if up.corpse_id_to_remove is not None:
+                    world.corpse_nodes.pop(up.corpse_id_to_remove, None)
                 
-                from src.core.gameplay.attributes import speed_delay
-                entity.next_act_at += speed_delay(entity.combat.spd, "use_item")
-        return updates
-
-    @staticmethod
-    def _get_looting_updates(world: WorldState, entity: Entity, pos: Any) -> list[IntentUpdate]:
-        """Generate updates for looting from the ground (AOA Convergence)."""
-        updates: list[IntentUpdate] = []
-        
-        # 1. Standard Ground Items
-        items = world.pickup_items(pos) # Authoritative removal from world
-        if items:
-            updates.append(ProgressionUpdate(inventory_add=items))
-            updates.append(InteractionUpdate(loot_progress_set=0))
-        
-        # 2. Corpse Containers (AOA Convergence Patch)
-        nodes = getattr(world, "corpse_nodes", {})
-        for cid, node in list(nodes.items()): # Use list to avoid mutation during iteration
-             # pos is usually a Vector2 or tuple (x, y)
-             node_pos = getattr(node, "pos", None)
-             if node_pos and node_pos == pos:
-                 updates.append(InteractionUpdate(corpse_id_to_remove=cid))
-
-        from src.core.gameplay.attributes import speed_delay
-        entity.next_act_at += speed_delay(entity.combat.spd, "loot")
-        return updates
-
-    @staticmethod
-    def _get_harvesting_updates(world: WorldState, entity: Entity, pos: Any) -> list[IntentUpdate]:
-        """Generate updates for harvesting a resource (AOA Convergence)."""
-        updates: list[IntentUpdate] = []
-        node = world.resource_at(pos)
-        if node and node.is_available:
-            item_id = node.harvest() # Authoritative harvest
-            if item_id:
-                updates.append(ProgressionUpdate(inventory_add=[item_id], stamina_delta=-2))
-                updates.append(InteractionUpdate(loot_progress_set=0))
-        
-        from src.core.gameplay.attributes import speed_delay
-        entity.next_act_at += speed_delay(entity.combat.spd, "harvest")
-        return updates
+                if up.home_storage_add:
+                    # Logic for home storage if entity has one (standardizing update pattern)
+                    pass
+                if up.home_storage_remove:
+                    pass
 
     @classmethod
-    def _get_use_skill_updates(cls, world: WorldState, config: SimulationConfig, faction_reg: FactionRegistry | None, entity: Entity, skill_id: str, target_id: int | None = None, emit: Callable | None = None) -> list[IntentUpdate]:
-        """Generate updates for using a skill (AOA Convergence)."""
+    def _get_use_skill_updates(cls, world: WorldState, config: SimulationConfig, rng: DeterministicRNG, faction_reg: FactionRegistry | None, entity: Entity, skill_id: str, target_id: int | None = None, proposal: ActionProposal | None = None, emit: Callable | None = None) -> list[IntentUpdate]:
+        """Functional side-effects for skill usage. [AOA STABILIZATION]"""
         updates: list[IntentUpdate] = []
         sdef = SKILL_DEFS.get(skill_id)
         if not sdef: return updates
@@ -399,85 +303,147 @@ class ActionSystem(System):
         instance = next((si for si in entity.progression.skills if si.skill_id == skill_id), None)
         if not instance or not instance.is_ready(): return updates
         
+        # 1. Cooldown/Stamina
         cost = instance.effective_stamina_cost(sdef.stamina_cost)
         if entity.progression.stamina < cost: return updates
         
-        # 1. Authoritative Cooldown/Stamina Side-Effects
-        entity.progression.stamina -= cost
-        instance.use(sdef.cooldown)
+        updates.append(ProgressionUpdate(
+            stamina_delta=-cost,
+            skill_cooldowns={skill_id: sdef.cooldown}
+        ))
         
-        targets: list[tuple[Entity, int]] = [] # (Target, distance from center)
-        center = entity.spatial.pos
+        # 2. Target Selection (AoE or Single)
+        targets: list[Entity] = []
         if sdef.radius > 0:
+            # AOA Pillar 4: Spatial Query Logic
+            # Use target entity's pos, or proposal.target (landing spot), or default to self.
+            from src.core.models.vectors import Vector2
+            center = entity.spatial.pos
             if target_id and world.entities.get(target_id):
-                 center = world.entities[target_id].spatial.pos
+                center = world.entities[target_id].spatial.pos
+            elif proposal and isinstance(proposal.target, Vector2):
+                center = proposal.target
             potential = world.entities_at_radius(center, sdef.radius)
-            for target in potential:
-                if not target or not target.combat.alive or target.id == entity.id: continue
-                if faction_reg and faction_reg.is_hostile(entity.identity.faction, target.identity.faction):
-                    dist = int(math.sqrt((target.spatial.pos.x - center.x)**2 + (target.spatial.pos.y - center.y)**2))
-                    targets.append((target, dist))
+            for t in potential:
+                if t.id != entity.id and t.combat.alive:
+                    # AOA Stabilization: Robust hostile check with fallback
+                    is_hostile = True
+                    if faction_reg:
+                        is_hostile = faction_reg.is_hostile(entity.identity.faction, t.identity.faction)
+                    else:
+                        is_hostile = (entity.identity.faction != t.identity.faction)
+                        
+                    if is_hostile:
+                        targets.append(t)
         elif target_id:
             t = world.entities.get(target_id)
-            if t and t.combat.alive: 
-                targets.append((t, 0))
-        
-        for target, dist in targets:
-            power = instance.effective_power(sdef.power)
-            # AoE Falloff: 100% at center, 50% at edge (linear)
-            falloff = 1.0
-            if sdef.radius > 0:
-                falloff = max(0.5, 1.0 - (dist / (sdef.radius + 1)) * 0.5)
+            if t and t.combat.alive: targets.append(t)
             
-            raw = int(entity.combat.atk * power * falloff)
-            mitigation = target.combat.def_ // 2
-            damage = max(1, raw - mitigation)
+        # 3. Apply Damage and generate TraceUpdates
+        power = instance.effective_power(sdef.power)
+        from src.actions.combat import DamageResolutionService, CombatAftermathService
+        for t in targets:
+            damage, is_crit, is_evaded, trace_details = DamageResolutionService.resolve(
+                attacker=entity,
+                defender=t,
+                world=world,
+                config=config,
+                rng=rng,
+                skill_power=power,
+                override_damage_type=sdef.damage_type,
+                override_element=sdef.element
+            )
             
-            # --- SIDE-EFFECTS (Targets) ---
-            # Instead of direct mutation, we emit a CombatTraceUpdate (AOA Stabilization)
-            from src.core.models.combat import CombatTraceRecord, CombatTraceDetails
-            updates.append(CombatTraceUpdate(
-                result=CombatTraceRecord(
-                    tick=world.tick,
-                    attacker_id=entity.id,
-                    defender_id=target.id,
-                    damage=damage,
-                    details=CombatTraceDetails(
-                        raw_damage=raw,
-                        mitigated_damage=mitigation,
-                        elemental_mult=1.0, # TODO: Add elemental mult to skills
-                        is_crit=False, # Skills have custom crit logic, default False for now
-                        is_evaded=False
-                    )
-                )
-            ))
-
+            # AFTERMATH (Memory, Grudges, Threat, Trace Update Generation)
+            # In AOA, CombatAftermathService.process appends the CombatTraceUpdate to proposal.updates
+            CombatAftermathService.process(
+                attacker=entity,
+                defender=t,
+                world=world,
+                damage=damage,
+                is_crit=is_crit,
+                is_evasion=is_evaded,
+                config=config,
+                proposal=proposal,
+                trace_details=trace_details
+            )
+            
+            # Update trace with skill-specific metadata
+            for up in proposal.updates:
+                if isinstance(up, CombatTraceUpdate) and (up.result.skill_name == "SKILL" or up.result.skill_name is None):
+                    up.result.skill_name = sdef.name
+                    up.result.metadata["aoe"] = sdef.radius > 0
+                    up.result.metadata["power"] = power
+            
+            # Synchronize proposal updates into local returns
+            if proposal and proposal.updates:
+                for up in proposal.updates:
+                    if up not in updates:
+                        updates.append(up)
+                        
             if emit:
-                emit("skill", f"{entity.kind} hit {target.kind} with {sdef.name} for {damage} damage",
-                     entity_ids=(entity.id, target.id),
-                     metadata={
-                         "skill_name": sdef.name,
-                         "damage": damage,
-                         "aoe": sdef.radius > 0,
-                         "dist_from_center": dist,
-                         "actor_id": entity.id,
-                         "target_id": target.id
-                     })
-            
-        from src.core.gameplay.attributes import speed_delay
-        entity.next_act_at += speed_delay(entity.combat.spd, "use_skill")
+                emit("combat", f"{entity.kind} hit {t.kind} with {sdef.name}",
+                     (entity.id, t.id),
+                     {"skill_id": skill_id, "skill_name": sdef.name, "damage": damage, "verb": "skill", "aoe": sdef.radius > 0})
+
         return updates
 
+    @staticmethod
+    def _get_use_item_updates(world: WorldState, config: SimulationConfig, entity: Entity, item_id: str) -> list[IntentUpdate]:
+        updates: list[IntentUpdate] = []
+        if entity.inventory and item_id in entity.inventory.items:
+            template = ITEM_REGISTRY.get(item_id)
+            if template:
+                updates.append(ProgressionUpdate(inventory_remove=[item_id]))
+                if template.heal_amount > 0:
+                    updates.append(ProgressionUpdate(hp_delta=template.heal_amount))
+        return updates
+
+    @staticmethod
+    def _get_looting_updates(world: WorldState, entity: Entity, pos: Any) -> list[IntentUpdate]:
+        updates: list[IntentUpdate] = []
+        
+        # 1. Ground Items
+        items = world.pickup_items(pos)
+        if items:
+            updates.append(ProgressionUpdate(inventory_add=items))
+            
+        # 2. Corpse Nodes (AOA Stabilization: Unified Looting)
+        # Search for corpse nodes at this position
+        for nid, node in list(world.corpse_nodes.items()):
+            if node.pos == pos:
+                corpse_items = node.items or []
+                corpse_gold = node.gold or 0
+                
+                if corpse_items or corpse_gold > 0:
+                    updates.append(ProgressionUpdate(
+                        inventory_add=corpse_items,
+                        gold_delta=corpse_gold
+                    ))
+                
+                # Mark for removal in the authoritative pipeline
+                updates.append(InteractionUpdate(corpse_id_to_remove=nid))
+                
+        return updates
+
+    @staticmethod
+    def _get_harvesting_updates(world: WorldState, entity: Entity, pos: Any) -> list[IntentUpdate]:
+        updates: list[IntentUpdate] = []
+        node = world.resource_at(pos)
+        if node and node.is_available:
+            item_id = node.harvest()
+            if item_id:
+                updates.append(ProgressionUpdate(inventory_add=[item_id], stamina_delta=-2))
+        return updates
 
     def handle_tactical_maneuvers(self, context: SystemContext, applied: list[ActionProposal], pre_positions: dict) -> None:
-        """Process opportunity attacks and chase closing."""
+        """Process opportunity attacks."""
         self._process_opportunity_attacks(context, applied, pre_positions)
 
     def _process_opportunity_attacks(self, context: SystemContext, applied: list[ActionProposal], pre_positions: dict) -> None:
-        cfg = context.config
         world = context.world
         reg = context.faction_reg
-        mult = cfg.opportunity_attack_damage_mult
+        mult = context.config.opportunity_attack_damage_mult
         
         for proposal in applied:
             if proposal.verb != ActionType.MOVE: continue
@@ -486,38 +452,36 @@ class ActionSystem(System):
             old_pos = pre_positions.get(proposal.actor_id)
             if not old_pos: continue
             
-            for eid in sorted(world.entities.keys()):
-                ent = world.entities[eid]
+            for eid, ent in world.entities.items():
                 if eid == mover.id or not ent.combat.alive: continue
                 if not reg.is_hostile(mover.identity.faction, ent.identity.faction): continue
                 
-                # Simple adjacency check
-                dx = abs(ent.spatial.pos.x - old_pos[0])
-                dy = abs(ent.spatial.pos.y - old_pos[1])
-                if dx + dy == 1:
-                    # Opportunity Attack
+                # Manhattan adjacency to old position
+                if abs(ent.spatial.pos.x - old_pos.x) + abs(ent.spatial.pos.y - old_pos.y) == 1:
                     raw = max(1, int(ent.combat.atk * mult) - mover.combat.def_ // 2)
-                    mover.combat.hp -= raw
+                    mover.combat.hp = max(0, mover.combat.hp - raw)
+                    
+                    context.emit("combat", f"{ent.id} used opportunity attack on {mover.id}",
+                                 (ent.id, mover.id),
+                                 {"attacker_id": ent.id, "damage": raw, "skill_id": "OPPORTUNITY_ATTACK"})
 
     def _update_combat_visualization(self, context: SystemContext, applied: list[ActionProposal]) -> None:
         world = context.world
-        acted: set[int] = set()
-        for proposal in applied:
-            actor = world.entities.get(proposal.actor_id)
-            if not actor: continue
-            acted.add(actor.id)
-            if proposal.verb in (ActionType.ATTACK, ActionType.USE_SKILL):
-                actor.combat.combat_target_id = proposal.target
+        acted = {p.actor_id for p in applied}
+        for p in applied:
+            actor = world.entities.get(p.actor_id)
+            if actor and p.verb in (ActionType.ATTACK, ActionType.USE_SKILL):
+                actor.combat.combat_target_id = p.target
         
         for entity in world.entities.values():
-            if entity.id in acted: continue
-            if entity.mind.decision.ai_state not in (AIState.COMBAT, AIState.HUNT):
-                entity.combat.combat_target_id = None
+            if entity.id not in acted:
+                if entity.mind.decision.ai_state not in (AIState.COMBAT, AIState.HUNT):
+                    entity.combat.combat_target_id = None
 
     def _update_ai_derived_states(self, context: SystemContext, applied: list[ActionProposal]) -> None:
         world = context.world
-        for proposal in applied:
-            entity = world.entities.get(proposal.actor_id)
+        for p in applied:
+            entity = world.entities.get(p.actor_id)
             if not entity or not entity.combat.alive: continue
             
             state = entity.mind.decision.ai_state
@@ -525,7 +489,7 @@ class ActionSystem(System):
                 entity.mind.navigation.chase_ticks += 1
             else:
                 entity.mind.navigation.chase_ticks = 0
-                
+            
             if state == AIState.IDLE:
                 entity.mind.decision.consecutive_idle_ticks += 1
             else:

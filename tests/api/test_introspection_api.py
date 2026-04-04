@@ -2,6 +2,7 @@ import os
 import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 
+
 import pytest
 from src.api.schemas import EntityInspectionSchema, SchedulerTimelineItemSchema
 from src.core.entities.entity_builder import EntityBuilder
@@ -55,13 +56,14 @@ def test_combat_trace_recording(world, rng):
     # Apply attack
     action.apply(prop, world)
     from src.systems.gameplay.action_system import ActionSystem
-    ActionSystem.apply_action_state_transitions(world, SimulationConfig(), [prop])
+    ActionSystem.apply_action_state_transitions(world, SimulationConfig(), [prop], rng=rng)
     
     # Defender should have a trace
     assert len(defender.combat.traces) > 0
     trace = defender.combat.traces[0]
     assert trace.attacker_id == 1
-    assert trace.raw_damage > 0
+    assert trace.details.raw_damage > 0
+    assert trace.damage > 0
 
 def test_ai_explainability_persistence(world, rng):
     from src.ai.brain import AIBrain

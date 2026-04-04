@@ -116,6 +116,9 @@ class AIBrain:
 
     def _memory_appraisal_phase(self, ctx: AIContext, updates: list[IntentUpdate]) -> None:
         """Phase 2: Internal State. Project-specific appraisal and Emotional influence."""
+        from src.actions.base import (
+            PerceptionUpdate, MindUpdate, NavigationUpdate, ProgressionUpdate
+        )
         actor = ctx.actor
         mind = actor.mind
         snapshot = ctx.snapshot
@@ -144,7 +147,14 @@ class AIBrain:
             )
             stale_updates[e.id] = 0
             
-        # identifying stale and dead entries
+        # 2. Aging and Mortality (Genetics)
+        prog = actor.progression
+        updates.append(ProgressionUpdate(age_ticks_delta=1))
+        if prog.age_ticks + 1 >= prog.longevity_limit:
+            # Mortal coil reached. Propose immediate death.
+            updates.append(ProgressionUpdate(hp_delta=-actor.combat.hp))
+            
+        # 3. identifying stale and dead entries
         from src.ai.states.base import get_dead_memory_ids
         dead_ids = get_dead_memory_ids(actor, snapshot)
         memory_remove.extend(dead_ids)
@@ -187,10 +197,38 @@ class AIBrain:
         # 3. Trauma Zone Dread (Sentiment influence on Panic)
         rid = actor.spatial.current_region_id
         if rid:
+            # Discovery logic: first time in a region awards a discovery memory log
+            if rid not in mind.narrative.memory_locations:
+                from src.core.aspects.mind import MemoryLogEntry, DiscoveryNarrative
+                discovery = MemoryLogEntry(
+                    tick=snapshot.tick,
+                    type="discovery",
+                    impact=2.0,
+                    details=DiscoveryNarrative(
+                        location_id=rid,
+                        location_name=rid, # Best effort mapping
+                        rarity="common"
+                    )
+                )
+                updates.append(PerceptionUpdate(
+                    memory_log_add=[discovery],
+                    memory_locations_set={rid: 2.0} # Sentiment boost for discovery
+                ))
+                
+            # AOA Phase 7: Locational sentiment influence on Panic
             sentiment = mind.narrative.memory_locations.get(rid, 0.0)
             if sentiment < -0.5:
-                # Additive panic
+                # Additive panic for high-trauma regions
                 updates.append(MindUpdate(emotion_delta={EmotionType.PANIC: 0.05}))
+
+        # 4. HP-Based Appraisal (Panic Increment)
+        from src.ai.states.base import should_flee
+        if should_flee(actor, ctx.config):
+            updates.append(MindUpdate(emotion_delta={EmotionType.PANIC: 0.1}))
+
+        # 5. Memory Pruning (Heuristic management)
+        # Note: we call it here to keep the context clean; ActionSystem will apply final limit.
+        actor.mind.prune_memories()
 
         if emotion_set:
             updates.append(MindUpdate(emotion_set=emotion_set))
@@ -287,10 +325,17 @@ class AIBrain:
                 new_idle = 0
             final_typed.append(MindUpdate(consecutive_idle_ticks=new_idle))
                 
+            # 3. Apply Action Style influence (AOA Stabilization: Tactical flavoring)
+            final_reason = proposal.reason
+            style = actor.mind.decision.action_style
+            if style and style != "balanced":
+                final_reason = f"[{style.upper()}] {final_reason}"
+                
             # Finalize proposal AI state via model_copy (ActionProposal is a SimulationModel)
             proposal = proposal.model_copy(update={
                 "new_ai_state": int(new_state),
-                "updates": final_typed
+                "updates": final_typed,
+                "reason": final_reason
             })
             
             return new_state, proposal

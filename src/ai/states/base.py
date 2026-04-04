@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING
 
 from src.actions.base import ActionProposal, IntentUpdate
 from src.ai.perception import Perception
-from src.core.models.enums import AIState, ActionType, Domain
+from src.core.models.enums import AIState, ActionType, Domain, HeroClass
 from src.core.gameplay.faction import Faction, FactionRegistry
 from src.core.entities.entity import Entity, Vector2
 
@@ -277,25 +277,44 @@ def is_in_hostile_town(ctx: AIContext) -> bool:
     return ctx.actor.identity.faction != Faction.HERO_GUILD
 
 
-def should_flee(actor: Entity, config: SimulationConfig) -> bool:
+def should_flee(actor: Entity, config: SimulationConfig, enemy: Entity | None = None) -> bool:
     """Return True if the entity's HP is below its flee threshold.
     
     Adjusted by mood: Despair (0.0) causes earlier fleeing, 
     Fury (1.0) causes staying longer.
+    
+    Soul Pillar: Nemesis Fear Bias
+    Facing an enemy with a significant grudge increases the flee threshold.
     """
-    base_threshold = config.flee_hp_threshold
+    base_threshold = getattr(config, "flee_hp_threshold", 0.2)
     
     # Mood modifier derived from EmotionState in MindAspect
     mood = actor.mind.emotion.mood
     threshold_mod = (0.5 - mood) * 0.2
     
-    threshold = base_threshold + threshold_mod
+    # Nemesis Bias: increase threshold if facing a nemesis
+    if enemy and enemy.id in actor.mind.emotion.grudges:
+        grudge = actor.mind.emotion.grudges[enemy.id]
+        if grudge > 5.0:
+            threshold_mod += 0.25 # Flee much earlier (e.g. at 45% HP)
     
-    # Heroes might have different base thresholds if not provided by config
-    if actor.identity.faction == Faction.HERO_GUILD and base_threshold <= 0:
-        threshold = 0.2 + threshold_mod
-        
-    return actor.combat.hp_ratio < threshold
+    
+    # print(f"DEBUG_FLEE: Actor {actor.id} HP {actor.combat.hp_ratio:.2f} Threshold {base_threshold + threshold_mod:.2f} (Mod {threshold_mod:.2f})")
+    # Ranged Bias: Ranged units should flee earlier (e.g. at 50% HP) to maintain safety
+    if _is_ranged(actor):
+        threshold_mod += 0.2
+    
+    return actor.combat.hp_ratio < (base_threshold + threshold_mod)
+
+def _is_ranged(actor: Entity) -> bool:
+    """Helper to detect if an entity is a ranged unit."""
+    if actor.identity.hero_class == HeroClass.RANGER:
+        return True
+    # Check weapon (AOA: moved to inventory aspect)
+    weapon = ""
+    if actor.inventory:
+        weapon = actor.inventory.weapon or ""
+    return "bow" in weapon.lower() or "staff" in weapon.lower()
 
 
 def is_on_home_territory(ctx: AIContext) -> bool:

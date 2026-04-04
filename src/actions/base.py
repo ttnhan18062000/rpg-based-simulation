@@ -16,6 +16,7 @@ if TYPE_CHECKING:
     from src.core.gameplay.classes import SkillInstance
     from src.core.quests import Quest
     from src.core.effects import StatusEffect
+    from src.core.gameplay.effects import EffectType
 
 
 from pydantic import Field, model_validator
@@ -43,6 +44,7 @@ class ActionProposal(SimulationModel):
     
     # Typed updates for state synchronization (AOA Phase 5)
     updates: list[IntentUpdate] = Field(default_factory=list)
+    metadata: dict[str, Any] = Field(default_factory=dict)
     
     @model_validator(mode='before')
     @classmethod
@@ -102,9 +104,10 @@ class PerceptionUpdate(IntentUpdate):
     
     # Narrative
     memory_log_add: list[MemoryLogEntry] | None = None
+    memory_locations_set: dict[str, float] | None = None
     
     # Tactical
-    threat_table_delta: dict[int, float] | None = None
+    threat_delta: dict[int, float] | None = None
 
     @model_validator(mode="after")
     def _coerce_memory(self) -> "PerceptionUpdate":
@@ -150,6 +153,7 @@ class ProgressionUpdate(IntentUpdate):
     """Updates to gold, stats, level, and skills."""
     gold_delta: int = 0
     xp_delta: int = 0
+    age_ticks_delta: int = 0
     veterancy_points_delta: int = 0
     hp_delta: int = 0
     stamina_delta: int = 0
@@ -158,6 +162,7 @@ class ProgressionUpdate(IntentUpdate):
     inventory_remove: list[str] = Field(default_factory=list)
     
     skills_add: list[SkillInstance] = Field(default_factory=list)
+    skill_cooldowns: dict[str, int] | None = None
     attribute_cap_delta: dict[str, int] | None = None
     
     quest_add: list[Quest] = Field(default_factory=list)
@@ -165,6 +170,7 @@ class ProgressionUpdate(IntentUpdate):
     # Status Effects (CombatAspect)
     effects_add: list[StatusEffect] = Field(default_factory=list)
     effects_remove: list[str] = Field(default_factory=list) # by effect_id or source
+    effects_expire_all: list[EffectType] = Field(default_factory=list)
 
     @model_validator(mode="after")
     def _coerce_progression(self) -> "ProgressionUpdate":
@@ -173,6 +179,8 @@ class ProgressionUpdate(IntentUpdate):
         from src.core.gameplay.classes import SkillInstance
         from src.core.quests import Quest
         from src.core.effects import StatusEffect
+        from src.core.gameplay.effects import EffectType
+        from src.core.gameplay.effects import EffectType
         
         if self.skills_add:
             self.skills_add = [
@@ -209,6 +217,27 @@ class InteractionUpdate(IntentUpdate):
     
     corpse_id_to_remove: int | None = None
 
+class SpatialUpdate(IntentUpdate):
+    """Updates to physical position and spatial index. [AOA STABILIZATION]"""
+    new_pos: Vector2
+    facing: Vector2 | None = None
+    region_id: str | None = None
+
+    @model_validator(mode="after")
+    def _coerce_spatial(self) -> "SpatialUpdate":
+        from src.core.models.vectors import Vector2
+        if isinstance(self.new_pos, dict):
+            self.new_pos = Vector2.model_validate(self.new_pos)
+        if isinstance(self.facing, dict):
+            self.facing = Vector2.model_validate(self.facing)
+        return self
+
+class BuildingUpdate(IntentUpdate):
+    """Updates to building durability or state."""
+    building_id: str
+    repair_amount: float = 0.0
+    is_destroyed: bool = False
+
 class CombatTraceUpdate(IntentUpdate):
     """Refined trace wrapper to provide a unified combat result to the engine. [AOA STABILIZATION]"""
     result: CombatTraceRecord = Field(default_factory=lambda: CombatTraceRecord(tick=0, attacker_id=0, defender_id=0, damage=0))
@@ -230,6 +259,7 @@ def _rebuild_action_models():
     from src.core.gameplay.classes import SkillInstance
     from src.core.quests import Quest
     from src.core.effects import StatusEffect
+    from src.core.gameplay.effects import EffectType
     
     # Create a unified namespace for Pydantic to resolve string forward references
     ns = locals().copy()
@@ -243,6 +273,8 @@ def _rebuild_action_models():
     ProgressionUpdate.model_rebuild(_types_namespace=ns)
     IdentityUpdate.model_rebuild(_types_namespace=ns)
     InteractionUpdate.model_rebuild(_types_namespace=ns)
+    SpatialUpdate.model_rebuild(_types_namespace=ns)
+    BuildingUpdate.model_rebuild(_types_namespace=ns)
     CombatTraceUpdate.model_rebuild(_types_namespace=ns)
     
     # 2. Finalize Aggregate Models

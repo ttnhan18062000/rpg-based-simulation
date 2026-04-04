@@ -21,6 +21,7 @@ class CombatTraceDetails(SimulationModel):
     is_evaded: bool = False
     is_parried: bool = False
     overkill: int = 0
+    is_shattered: bool = False
     effect_triggers: list[str] = Field(default_factory=list)
 
 class CombatTraceRecord(SimulationModel):

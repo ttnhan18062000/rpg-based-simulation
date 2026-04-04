@@ -2,6 +2,7 @@ import os
 import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", ".."))
 
+
 import unittest
 from src.platform.spatial_hash import SpatialHash
 from src.core.models import Vector2

@@ -2,6 +2,7 @@ import os
 import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 
+
 import subprocess
 import json
 import pytest
@@ -12,7 +13,7 @@ def test_cli_logging_json_format():
     # Ensure we are in the project root
     cwd = os.getcwd()
     
-    cmd = [sys.executable, "-m", "src", "cli", "--ticks", "2"]
+    cmd = [sys.executable, "-m", "src", "cli", "--ticks", "2", "--entities", "2", "--grid-width", "64", "--grid-height", "64", "--workers", "1"]
     result = subprocess.run(cmd, capture_output=True, text=True, timeout=60, cwd=cwd)
     
     # Filter out empty lines
@@ -34,7 +35,7 @@ def test_cli_logging_json_format():
 def test_logging_context_injection():
     """Verify that specific components inject their expected context labels."""
     cwd = os.getcwd()
-    cmd = [sys.executable, "-m", "src", "cli", "--ticks", "5"]
+    cmd = [sys.executable, "-m", "src", "cli", "--ticks", "5", "--entities", "2", "--grid-width", "64", "--grid-height", "64", "--workers", "1"]
     result = subprocess.run(cmd, capture_output=True, text=True, timeout=60, cwd=cwd)
     
     lines = []

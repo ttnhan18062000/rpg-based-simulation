@@ -42,6 +42,22 @@ class ProgressionAspect(Aspect):
     quests: list[Any] = Field(default_factory=list)
 
     @property
+    def xp_mult(self) -> float:
+        """Dynamic XP multiplier combining attributes and active effects. [AOA STABILIZATION]"""
+        base = 1.0
+        if self.attributes:
+            # Formula: 1.0 + wis*0.01 + int*0.005
+            w = getattr(self.attributes, "wis", 5)
+            i = getattr(self.attributes, "int_", 5)
+            base = 1.0 + w * 0.01 + i * 0.005
+            
+        # Apply multipliers from combat effects
+        if self._entity and hasattr(self._entity, "combat"):
+            for eff in self._entity.combat.effects:
+                base *= getattr(eff, "xp_mult", 1.0)
+        return base
+
+    @property
     def stamina_ratio(self) -> float:
         return self.stamina / self.max_stamina if self.max_stamina > 0 else 0.0
 

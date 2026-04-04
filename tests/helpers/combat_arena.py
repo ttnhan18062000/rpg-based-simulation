@@ -3,6 +3,7 @@ import os
 import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 
+
 """CombatArena — E2E test fixture for combat mechanics.
 
 Creates a minimal but fully-functional WorldLoop with controllable entities,
@@ -138,6 +139,7 @@ class CombatArena:
             display_name=kind, 
             faction=faction, 
             tier=tier,
+            hero_class=hero_class,
             is_world_boss="boss" in kind.lower() or tier >= 2 # Tier 2+ is usually boss
         )
         spatial = SpatialAspect(pos=Vector2(*pos), home_pos=Vector2(*home_pos) if home_pos else None)
@@ -251,13 +253,15 @@ class CombatArena:
     # -- Running --
 
     def run_ticks(self, n: int) -> list[SimEvent]:
-        """Run n ticks and return all events emitted during those ticks."""
+        """Run n ticks. Fail if execution exceeds 60s (Watchdog for hangs)."""
+        import time
+        start = time.time()
         events: list[SimEvent] = []
-        for _ in range(n):
+        for i in range(n):
+            if time.time() - start > 60.0:
+                raise RuntimeError(f"CombatArena: run_ticks timeout at tick {i}/{n}")
             self.loop.tick_once()
             tick_events = self.loop.tick_events
-            for evt in tick_events:
-                print(f"DEBUG_EMIT: {evt.category} {evt.message} metadata={evt.metadata}")
             events.extend(tick_events)
         self._all_events.extend(events)
         return events
@@ -267,9 +271,15 @@ class CombatArena:
         predicate: Callable[[CombatArena], bool],
         max_ticks: int = 100,
     ) -> list[SimEvent]:
-        """Run ticks until predicate(arena) returns True or max_ticks reached."""
+        """Run ticks until predicate(arena) returns True or max_ticks reached. 
+        Fail if execution exceeds 60s.
+        """
+        import time
+        start = time.time()
         events: list[SimEvent] = []
-        for _ in range(max_ticks):
+        for i in range(max_ticks):
+            if time.time() - start > 60.0:
+                raise RuntimeError(f"CombatArena: run_until watchdog timeout at tick {i}/{max_ticks}")
             self.loop.tick_once()
             tick_evts = self.loop.tick_events
             events.extend(tick_evts)

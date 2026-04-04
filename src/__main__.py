@@ -32,6 +32,8 @@ def _build_parser() -> argparse.ArgumentParser:
     cli.add_argument("--ticks", type=int, default=200)
     cli.add_argument("--entities", type=int, default=10)
     cli.add_argument("--workers", type=int, default=4)
+    cli.add_argument("--grid-width", type=int, default=512)
+    cli.add_argument("--grid-height", type=int, default=512)
     cli.add_argument("--replay", type=str, default="replay.json")
     cli.add_argument("--log-level", type=str, default="INFO", choices=["DEBUG", "INFO", "WARNING"])
 
@@ -76,6 +78,8 @@ def _run_cli(args: argparse.Namespace) -> None:
     import os
     if "DISABLE_RABBITMQ" not in os.environ:
         os.environ["DISABLE_RABBITMQ"] = "1"
+    if "DISABLE_KAFKA" not in os.environ:
+        os.environ["DISABLE_KAFKA"] = "1"
     setup_logging(args.log_level)
 
     config = SimulationConfig(
@@ -85,6 +89,8 @@ def _run_cli(args: argparse.Namespace) -> None:
         num_workers=args.workers,
         replay_file=args.replay,
         log_level=args.log_level,
+        grid_width=args.grid_width,
+        grid_height=args.grid_height,
     )
 
     setup_logging(config.log_level)

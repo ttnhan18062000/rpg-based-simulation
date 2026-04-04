@@ -3,6 +3,7 @@ import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", ".."))
 
 
+
 import pytest
 from src.config import SimulationConfig
 from src.core.models.world_state import WorldState
@@ -90,7 +91,8 @@ def test_loot_recovery_consistency():
     ActionSystem.apply_action_state_transitions(
         world_recovery, 
         config, 
-        applied_rec
+        applied_rec,
+        rng=rng
     )
     
     # ASSERTION: In recovery, the item should now be looted!

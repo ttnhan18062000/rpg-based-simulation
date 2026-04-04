@@ -2,6 +2,7 @@ import os
 import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 
+
 """E2E tests using CombatArena fixture.
 
 Validates the full pipeline: AI decides → proposal → resolve → apply → events.

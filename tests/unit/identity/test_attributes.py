@@ -2,6 +2,7 @@ import os
 import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", ".."))
 
+
 """Tests for the RPG attribute system."""
 
 
@@ -146,7 +147,8 @@ class TestLevelUpAttributes:
         assert caps.str_cap == 20
 
     def test_attributes_copy(self):
-        attrs = Attributes(str_=10, agi=8, _str_frac=0.5)
+        attrs = Attributes(str_=10, agi=8)
+        attrs._str_frac = 0.5
         copy = attrs.copy()
         assert copy.str_ == 10
         assert copy._str_frac == 0.5

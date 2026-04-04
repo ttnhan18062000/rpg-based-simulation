@@ -2,6 +2,7 @@ import os
 import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", ".."))
 
+
 """Tests for familiarity scaling based on Charisma."""
 
 import pytest
@@ -15,7 +16,7 @@ from src.platform.rng import DeterministicRNG
 def test_cha_impacts_familiarity_gain():
     """Verify that a hero with higher CHA gains familiarity faster."""
     config = MagicMock()
-    config.spatial.vision_range = 5
+    config.vision_range = 5
     rng = MagicMock()
     drng = DeterministicRNG(42)
     

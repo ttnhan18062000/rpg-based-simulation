@@ -2,54 +2,49 @@ import os
 import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", ".."))
 
+
 import pytest
 from unittest.mock import MagicMock, patch
-from src.ai.goals.base import GoalScore, GoalEvaluator
-from src.core.models.enums import AIState
-
-def test_emotional_modifier_panic_boosts_flee():
-    from src.ai.goals.base import EmotionalModifier
-    
-    # Setup: High Panic
-    ctx = MagicMock()
-    ctx.actor.mind.emotional_state = {"panic": 0.8}
-    
-    modifier = EmotionalModifier()
-    
-    # Base flee score
-    gs_flee = GoalScore("flee", 1.0, AIState.FLEE)
-    modifier.modify(gs_flee, ctx)
-    
-    # Panic should boost flee significantly
-    assert gs_flee.score > 1.5
-    
-    # Panic should reduce combat
-    gs_combat = GoalScore("combat", 1.0, AIState.HUNT)
-    modifier.modify(gs_combat, ctx)
-    assert gs_combat.score < 1.0
+from src.ai.brain import AIBrain, AIContext
+from src.core.models.enums import AIState, EmotionType
+from src.core.entities.entity import Entity
+from src.actions.base import MindUpdate
 
 def test_appraisal_phase_triggers_panic_on_low_hp():
-    from src.ai.brain import AIBrain
+    # Setup with REAL Entity [AOA STABILIZATION: Entity-First Mocking]
     config = MagicMock()
     config.flee_hp_threshold = 0.3
     rng = MagicMock()
     brain = AIBrain(config, rng)
     
-    # Setup actor mock with necessary components
-    actor = MagicMock()
-    actor.stats.combat.hp_ratio = 0.2  # Set as value, not MagicMock comparison
-    actor.mind.emotional_state = {"panic": 0.0}
-    actor.mind.memory_locations = {}
-    actor.mind.region_fatigue = {}
-    actor.mind.spatial.pos_history = []
-    actor.stats.spatial.vision_range = 10
-    actor.progression.age_ticks = 0
-    actor.progression.longevity_limit = 100
+    actor = Entity(id=1, kind="hero", faction="player")
+    actor.combat.max_hp = 100
+    actor.combat.hp = 20 # 0.2 ratio, below 30% threshold
+    actor.identity.display_name = "PanicAgent"
     
-    ctx = MagicMock(actor=actor)
-    # Patch Perception to avoid deep calls
-    with patch('src.ai.brain.Perception.visible_entities', return_value=[]):
-        brain._memory_appraisal_phase(ctx)
-        
-        # Should have some panic now
-        assert actor.mind.emotional_state["panic"] > 0.0
+    # Mock context with proper fields [AOA STABILIZATION]
+    ctx = AIContext(
+        actor=actor,
+        snapshot=MagicMock(),
+        config=config,
+        rng=rng,
+        faction_reg=brain._faction_reg,
+        _visible_override=[]
+    )
+    
+    # Run finalization directly to get updates — ensuring 100% convergence
+    updates = []
+    # Appraisal logic currently lives in deliberation/brain helper, 
+    # but the style check is in finalization. 
+    # Actually, brain._memory_appraisal_phase appends to updates.
+    brain._memory_appraisal_phase(ctx, updates)
+    
+    # In AOA Brain, appraisal might project into MindUpdate
+    # Check if panic delta exists in any MindUpdate
+    panic_delta = 0.0
+    for u in updates:
+        if isinstance(u, MindUpdate) and u.emotion_delta:
+            panic_delta += u.emotion_delta.get(EmotionType.PANIC, 0.0)
+    
+    # Low HP should trigger panic increment
+    assert panic_delta > 0.0

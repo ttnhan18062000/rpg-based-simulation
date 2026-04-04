@@ -2,6 +2,7 @@ import os
 import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", ".."))
 
+
 import pickle
 from unittest.mock import MagicMock, patch
 
@@ -11,8 +12,10 @@ from src.core.world.grid import Grid
 from src.config import SimulationConfig
 from src.core.models.snapshot import Snapshot
 from src.api.engine_manager import EngineManager
-from src.actions.base import ActionProposal
+from src.actions.base import ActionProposal, ActionBatch
+from src.utils.serialization import SimulationSerializer
 from src.systems.spatial_hash import SpatialHash
+from src.core.entities.entity import Entity
 from src.core.models.world_state import WorldState
 
 @patch("src.api.kafka_client.create_kafka_consumer")
@@ -32,12 +35,13 @@ def test_engine_manager_kafka_recovery(mock_create_consumer, monkeypatch):
     world = WorldState(seed=42, grid=grid, spatial_index=spatial)
     world.tick = 400
     
-    dummy = Entity(id=99, kind="goblin", pos=Vector2(5, 5))
-    dummy.ai_state = AIState.COMBAT
+    dummy = Entity(id=99, kind="goblin")
+    dummy.spatial.pos = Vector2(5, 5)
+    dummy.mind.decision.ai_state = AIState.COMBAT
     world.add_entity(dummy)
     
     snap = Snapshot.from_world(world)
-    pickled_snap = pickle.dumps(snap)
+    pickled_snap = SimulationSerializer.dumps(snap)
     
     # 3. Build fake event payload (tick 401)
     # A MOVE proposal for the dummy entity
@@ -47,11 +51,8 @@ def test_engine_manager_kafka_recovery(mock_create_consumer, monkeypatch):
         target=Vector2(6, 6),
         reason="Testing move"
     )
-    payload = {
-        "tick": 401,
-        "proposals": [proposal]
-    }
-    pickled_event = pickle.dumps(payload)
+    batch = ActionBatch(tick=401, proposals=[proposal])
+    pickled_event = SimulationSerializer.dumps(batch)
     
     # 4. Mock the Kafka Consumer behavior
     # We need to simulate two reads: one for the Snapshot topic, one for Events.

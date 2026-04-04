@@ -2,6 +2,7 @@ import os
 import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", ".."))
 
+
 import pytest
 from tests.helpers.legacy_stats import Stats
 from src.core.entities.entity import Entity, Vector2
@@ -41,31 +42,32 @@ def test_narrative_memory_logging(context):
     
     # Manually trigger the logic for testing
     # Glory for attacker
-    glory_event = {"tick": 0, "type": "GLORY", "description": "Slayed goblin"}
-    attacker.mind.memory_log.append(glory_event)
-    attacker.mind.emotional_state["bravery"] = 0.6
+    from src.core.aspects.mind import MemoryLogEntry
+    glory_event = MemoryLogEntry(tick=0, type="glory", impact=5.0, details={"desc": "Slayed goblin"})
+    attacker.mind.narrative.memory_log.append(glory_event)
+    attacker.mind.emotion.bravery = 0.6
     
-    assert len(attacker.mind.memory_log) == 1
-    assert attacker.mind.memory_log[0]["type"] == "GLORY"
+    assert len(attacker.mind.narrative.memory_log) == 1
+    assert attacker.mind.narrative.memory_log[0].type == "glory"
 
 def test_bravery_modifiers(context):
     hero = Entity(id=1, kind="hero", faction=Faction.HERO_GUILD)
     hero.combat.atk_base = 10
     hero.combat.spd_base = 10
     
-    # Default bravery 0.5 -> mult 1.0
-    assert hero.combat.atk_base == 10
+    # Default bravery 0.5 -> mult 1.0 (Shim in CombatAspect)
+    assert hero.combat.atk == 10
     
     # Brave Bonus (> 0.8)
-    hero.mind.emotional_state["bravery"] = 0.9
-    assert hero.combat.atk_base == 11 # 10 * 1.1
-    assert hero.combat.spd_base == 11
+    hero.mind.emotion.bravery = 0.9
+    assert hero.combat.atk == 11 # 10 * 1.1
+    assert hero.combat.spd == 11
     
     # Fear Factor (< 0.3)
-    hero.mind.emotional_state["bravery"] = 0.2
-    assert hero.combat.atk_base == 9 # 10 * 0.9
-    assert hero.combat.spd_base == 9
-    assert hero.combat.def_base == 0 # 0 * 0.9 = 0
+    hero.mind.emotion.bravery = 0.2
+    assert hero.combat.atk == 9 # 10 * 0.9
+    assert hero.combat.spd == 9
+    assert hero.combat.def_ == 0 # 0 * 0.9 = 0
 
 def test_regional_suppression(context):
     hero = Entity(id=1, kind="hero", faction=Faction.HERO_GUILD)
@@ -79,8 +81,8 @@ def test_regional_suppression(context):
     # Suppression logic is in WorldLoop._update_world_evolution
     # We'll just verify the suppression_effect stat penalty
     effect = suppression_effect(duration=10)
-    hero.effects.append(effect)
+    hero.combat.effects.append(effect)
     
     hero.combat.atk_base = 100
     # atk should be 100 * 0.8 = 80
-    assert hero.combat.atk_base == 80
+    assert hero.combat.atk == 80

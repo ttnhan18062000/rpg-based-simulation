@@ -2,6 +2,7 @@ import os
 import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", ".."))
 
+
 """Tests for API payload size optimizations — RLE grid, slim entities, static split."""
 
 import json
@@ -115,7 +116,7 @@ class TestSlimEntities(unittest.TestCase):
         """Each slim entity should serialize to < 300 bytes."""
         e = list(self.snap.entities.values())[0]
         slim = EntitySlimSchema(
-            id=e.id, kind=e.kind, x=e.spatial.pos.x, y=e.spatial.pos.y,
+            id=e.id, kind=e.kind, x=int(e.spatial.pos.x), y=int(e.spatial.pos.y),
             hp=e.combat.hp, max_hp=e.combat.max_hp,
             state=e.mind.decision.ai_state.name, level=e.progression.level,
             tier=e.identity.tier, faction=e.identity.faction.name.lower(),
@@ -128,7 +129,7 @@ class TestSlimEntities(unittest.TestCase):
         entities = [e for e in self.snap.entities.values() if e.combat.alive]
         slim_list = [
             EntitySlimSchema(
-                id=e.id, kind=e.kind, x=e.spatial.pos.x, y=e.spatial.pos.y,
+                id=e.id, kind=e.kind, x=int(e.spatial.pos.x), y=int(e.spatial.pos.y),
                 hp=e.combat.hp, max_hp=e.combat.max_hp,
                 state=e.mind.decision.ai_state.name, level=e.progression.level,
                 tier=e.identity.tier, faction=e.identity.faction.name.lower(),

@@ -1,6 +1,6 @@
 # TCK-20260402-VALIDATION: Post-Hardening Validation & Performance Benchmarking
 
-## Status: INPROGRESS
+## Status: DONE
 
 ## Goal
 Validate the stability, deterministic integrity, and performance characteristics of the hardened AOA engine.
@@ -12,9 +12,9 @@ Validate the stability, deterministic integrity, and performance characteristics
 4.  **Final Documentation**: Update architecture docs to reflect the new hardened boundaries.
 
 ## Acceptance Criteria
-- [ ] 100% test pass rate for all collected tests (excluding environment-blocked ones).
-- [ ] Profiling report shows < 1ms overhead for property shim access in simulation hot-loops.
-- [ ] `Stats` dataclass removed from `entity.py` without breaking external fixtures.
+- [x] 100% test pass rate for all collected tests (excluding environment-blocked ones).
+- [x] Profiling report shows < 1ms overhead for property shim access in simulation hot-loops.
+- [x] `Stats` dataclass removed from `entity.py` without breaking external fixtures.
 
 ## Related Tickets
 - TCK-20260402-HARDENING

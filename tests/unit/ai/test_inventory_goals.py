@@ -2,6 +2,7 @@ import os
 import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", ".."))
 
+
 """Tests for inventory-aware goal scoring — verifies bug-02 scenarios.
 
 Bug-02: Hero keeps looting when bag is full. The LootGoal scorer should
@@ -23,7 +24,10 @@ from src.core.models.snapshot import Snapshot
 from src.actions.base import InteractionUpdate
 from src.core.models.world_state import WorldState
 from src.platform.rng import DeterministicRNG
-from src.platform.spatial_hash import SpatialHash
+from src.systems.spatial_hash import SpatialHash
+from src.core.registry.registry_loader import load_all_registries
+
+load_all_registries()
 
 
 def _make_world_with_loot(loot_pos: Vector2 | None = None) -> WorldState:

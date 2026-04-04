@@ -2,6 +2,7 @@ import os
 import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", ".."))
 
+
 import pytest
 from src.core.models.world_state import WorldState
 from src.core.models import Vector2
@@ -47,7 +48,7 @@ def test_dynamic_liberate_quest(context):
     
     # 1. Conquer the region
     region.owner_faction = Faction.GOBLIN_HORDE
-    world.region_control[region.spatial.region_id] = -60.0 # Conquered
+    world.region_control[region.region_id] = -60.0 # Conquered
     
     # 2. Generate quest
     quest = generate_quest(

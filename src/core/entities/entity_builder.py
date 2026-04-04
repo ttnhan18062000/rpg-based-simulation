@@ -50,6 +50,7 @@ class EntityBuilder:
         self._generation: int = 1
         # Initialize _is_world_boss
         self._is_world_boss: bool = False
+        self._difficulty_tier: int = 1
         
         # Combat stats
         self._hp: float = 20.0
@@ -111,6 +112,10 @@ class EntityBuilder:
         self._tier = t
         return self
 
+    def difficulty_tier(self, t: int) -> EntityBuilder:
+        self._difficulty_tier = t
+        return self
+
     def with_base_stats(self, hp: float = 20.0, atk: int = 5, def_: int = 0, spd: int = 10,
                         luck: int = 0, crit_rate: float = 0.05, crit_dmg: float = 1.5,
                         evasion: float = 0.0, level: int = 1, xp_to_next: int = 100, gold: float = 0.0) -> EntityBuilder:
@@ -159,6 +164,31 @@ class EntityBuilder:
                 end_cap=15 + cdef.end_cap_bonus, per_cap=15 + cdef.per_cap_bonus,
                 cha_cap=15 + cdef.cha_cap_bonus,
             )
+        return self
+
+    def with_attributes(self, **kwargs) -> EntityBuilder:
+        """Manually set specific attribute values."""
+        if self._attrs is None:
+            self._attrs = Attributes()
+        for k, v in kwargs.items():
+            # Handle keywords likely to be passed in tests
+            key = k
+            if key == "str": key = "str_"
+            if key == "int": key = "int_"
+            if hasattr(self._attrs, key):
+                setattr(self._attrs, key, int(v))
+        return self
+
+    def with_caps(self, **kwargs) -> EntityBuilder:
+        """Manually set specific attribute cap values."""
+        if self._caps is None:
+            self._caps = AttributeCaps()
+        for k, v in kwargs.items():
+            key = k
+            if not key.endswith("_cap"):
+                key = f"{key}_cap"
+            if hasattr(self._caps, key):
+                setattr(self._caps, key, int(v))
         return self
 
     def with_mob_class(self, mob_class: int) -> EntityBuilder:
@@ -272,11 +302,17 @@ class EntityBuilder:
             faction=self._faction,
             role=self._role,
             tier=self._tier,
+            difficulty_tier=self._difficulty_tier,
             generation=self._generation,
             traits=self._traits,
             is_world_boss=self._is_world_boss
         )
-        entity.spatial = SpatialAspect(pos=self._pos, home_pos=self._home_pos, leash_radius=self._leash_radius)
+        entity.spatial = SpatialAspect(
+            pos=self._pos,
+            home_pos=self._home_pos,
+            leash_radius=self._leash_radius,
+            difficulty_tier=self._difficulty_tier
+        )
         entity.combat = CombatAspect(
             hp=self._hp,
             max_hp=self._hp,

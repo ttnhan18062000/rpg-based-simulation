@@ -2,11 +2,13 @@ import os
 import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", ".."))
 
+
 import pytest
 from unittest.mock import MagicMock, patch
 from src.ai.brain import AIBrain
 from src.core.models.enums import AIState, Faction
 from src.core.models import Vector2
+from src.core.entities.entity import Entity
 
 @pytest.fixture
 def brain():
@@ -15,37 +17,49 @@ def brain():
     return AIBrain(config, rng)
 
 def test_perception_phase_populates_attention_pool(brain):
-    # Setup
-    actor = MagicMock()
+    # Setup with REAL Entities [AOA STABILIZATION]
+    actor = Entity(id=1, kind="hero", faction=Faction.HERO_GUILD)
     actor.spatial.pos = Vector2(0, 0)
-    actor.stats.spatial.vision_range = 10
-    actor.mind.max_attention_slots = 3
-    actor.mind.attention_pool = []
-    actor.identity.faction = Faction.HERO_GUILD
+    actor.spatial.vision_range = 10
+    actor.mind.perception.max_attention_slots = 3
+    actor.mind.perception.attention_pool = []
     
-    # Mock snapshot with many entities
-    snapshot = MagicMock()
+    # Mock entities with REAL Entity objects for distance/salience comparisons
+    def make_ent(eid, pos, faction):
+        e = Entity(id=eid, kind="creature", faction=faction)
+        e.spatial.pos = pos
+        e.combat.hp = 100
+        e.combat.max_hp = 100
+        return e
+
+    # 4 Entities within vision
+    e1 = make_ent(101, Vector2(1, 0), Faction.GOBLIN_HORDE)
+    e2 = make_ent(102, Vector2(2, 0), Faction.GOBLIN_HORDE)
+    e3 = make_ent(103, Vector2(5, 0), Faction.HERO_GUILD)
+    e4 = make_ent(104, Vector2(10, 0), Faction.GOBLIN_HORDE)
     
-    # 5 Entities at different distances
-    # Dist 1 (High priority)
-    e1 = MagicMock(id=101, pos=Vector2(1, 0), faction=Faction.GOBLIN_HORDE)
-    # Dist 2 (Hostile)
-    e2 = MagicMock(id=102, pos=Vector2(2, 0), faction=Faction.GOBLIN_HORDE)
-    # Dist 5 (Neutral)
-    e3 = MagicMock(id=103, pos=Vector2(5, 0), faction=Faction.HERO_GUILD)
-    # Dist 10 (Edge of vision)
-    e4 = MagicMock(id=104, pos=Vector2(10, 0), faction=Faction.GOBLIN_HORDE)
-    # Dist 20 (Outside vision)
-    e5 = MagicMock(id=105, pos=Vector2(20, 0), faction=Faction.GOBLIN_HORDE)
+    # Configure faction hostility for salience [AOA STABILIZATION]
+    from src.core.gameplay.faction import FactionRelation
+    brain._faction_reg.set_relation(Faction.HERO_GUILD, Faction.GOBLIN_HORDE, FactionRelation.HOSTILE)
     
-    with patch('src.ai.perception.Perception.visible_entities', return_value=[e1, e2, e3, e4]):
+    with patch('src.ai.brain.Perception.visible_entities', return_value=[e1, e2, e3, e4]):
         # Run perception
-        brain._sensory_perception_phase(actor, snapshot)
+        updates = []
+        brain._sensory_perception_phase(actor, MagicMock(), updates)
         
-        # Should have exactly 3 slots (max_attention_slots)
-        assert len(actor.mind.attention_pool) == 3
-        
-        # Highly salient entities should be first (e1, e2)
-        assert 101 in actor.mind.attention_pool
-        assert 102 in actor.mind.attention_pool
-        # e4 should be excluded as it's the furthest  goblin
+        # Check updates instead of actor (AOA is pure)
+        from src.actions.base import PerceptionUpdate
+        p_up = next(u for u in updates if isinstance(u, PerceptionUpdate))
+        assert len(p_up.attention_pool) == 3
+        # e3 (Hero) should be EXCLUDED if salience is lower, or e4 if e3 is priority.
+        # Actually salience = weight / (dist + 1). 
+        # e1: 2.0 / (1+1) = 1.0
+        # e2: 2.0 / (2+1) = 0.66
+        # e3: 1.0 / (5+1) = 0.16
+        # e4: 2.0 / (10+1) = 0.18
+        # Pool (3 slots): [e1, e2, e4] -> e3 excluded.
+        assert 103 not in p_up.attention_pool
+            
+        # Highly salient entities (hostile and close) should be first (e1, e2)
+        assert 101 in p_up.attention_pool
+        assert 102 in p_up.attention_pool

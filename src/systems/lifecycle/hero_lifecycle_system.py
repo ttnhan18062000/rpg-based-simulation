@@ -124,9 +124,10 @@ class HeroLifecycleSystem(System):
                 
                 # Check if h2 already knows this
                 if mem_id not in h2.mind.perception.entity_memory:
-                    h2.mind.perception.entity_memory[mem_id] = mem.copy()
+                    h2.mind.perception.entity_memory[mem_id] = mem.model_copy(deep=True)
                     if ctx.emit:
-                        ctx.emit("social", f"{h1.identity.display_name} shared rumors about {mem.get('kind', 'something')} with {h2.identity.display_name}",
+                        kind = getattr(mem, 'kind', 'something')
+                        ctx.emit("social", f"{h1.identity.display_name} shared rumors about {kind} with {h2.identity.display_name}",
                                    entity_ids=(h1.id, h2.id),
                                    metadata={"rumor_id": mem_id})
 

@@ -3,6 +3,7 @@ import os
 import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", ".."))
 
+
 """Tests for region enter/leave events and AI difficulty awareness (epic-15 Phase C+D)."""
 
 
@@ -36,11 +37,14 @@ def _make_world(seed: int = 42) -> WorldState:
 def _make_hero(eid: int = 1, level: int = 1, pos: Vector2 = None) -> Entity:
     if pos is None:
         pos = Vector2(50, 50)
-    return Entity(
-        id=eid, kind="hero", pos=pos,
-        stats=Stats(level=level, hp=100, max_hp=100),
-        faction=Faction.HERO_GUILD,
-    )
+    from src.core.aspects.spatial import SpatialAspect
+    from src.core.aspects.combat import CombatAspect
+    from src.core.aspects.progression import ProgressionAspect
+    e = Entity(id=eid, kind="hero", faction=Faction.HERO_GUILD)
+    e.spatial = SpatialAspect(pos=pos)
+    e.combat = CombatAspect(hp=100, max_hp=100)
+    e.progression = ProgressionAspect(level=level)
+    return e
 
 
 def _make_ctx(hero: Entity, regions: list[Region] | None = None) -> AIContext:

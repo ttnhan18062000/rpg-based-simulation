@@ -112,6 +112,7 @@ class EntityGenerator:
             .ai_state(AIState.WANDER)
             .faction(template.faction)
             .role(EntityRole.WORLD_BOSS)
+            .is_world_boss(True)
             .with_base_stats(
                 hp=base_hp, atk=base_atk, def_=base_def, spd=base_spd,
                 luck=20, crit_rate=0.2, crit_dmg=2.0, evasion=0.1,
@@ -227,6 +228,7 @@ class EntityGenerator:
             .ai_state(ai_state)
             .faction(faction)
             .tier(tier)
+            .difficulty_tier(difficulty_tier)
             .with_base_stats(
                 hp=max(base_hp, 5), atk=max(base_atk, 1),
                 def_=max(base_def, 0), spd=max(base_spd, 1),
@@ -247,7 +249,6 @@ class EntityGenerator:
             .with_talents(race=race)
             .build()
         )
-        entity.identity.difficulty_tier = difficulty_tier
         return entity
 
     def _resolve_position(

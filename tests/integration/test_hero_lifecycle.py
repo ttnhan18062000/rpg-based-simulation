@@ -2,6 +2,7 @@ import os
 import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 
+
 import pytest
 from src.config import SimulationConfig
 from src.core.models.world_state import WorldState

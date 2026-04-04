@@ -35,7 +35,19 @@ class Attributes(SimulationModel):
     _cha_frac: float = PrivateAttr(default=0.0)
 
     def copy(self) -> Attributes:
-        return Attributes(**self.model_dump())
+        """Absolute deep copy that preserves private fractional training progress."""
+        new_obj = self.model_copy(deep=True)
+        # Manually copy private progress attributes
+        new_obj._str_frac = self._str_frac
+        new_obj._agi_frac = self._agi_frac
+        new_obj._vit_frac = self._vit_frac
+        new_obj._int_frac = self._int_frac
+        new_obj._spi_frac = self._spi_frac
+        new_obj._wis_frac = self._wis_frac
+        new_obj._end_frac = self._end_frac
+        new_obj._per_frac = self._per_frac
+        new_obj._cha_frac = self._cha_frac
+        return new_obj
 
     def total(self) -> int:
         return (self.str_ + self.agi + self.vit + self.int_ + self.spi
@@ -66,7 +78,7 @@ class AttributeCaps(SimulationModel):
     cha_cap: int = 15
 
     def copy(self) -> AttributeCaps:
-        return AttributeCaps(**self.model_dump())
+        return self.model_copy(deep=True)
 
     def increase_all(self, amount: int) -> None:
         self.str_cap += amount
@@ -231,14 +243,14 @@ TRAIN_RATES: dict[str, dict[str, float]] = {
     "explore":  {"per": 0.010, "agi": 0.005},
 }
 
-def train_attributes(entity: Any, action: str, bucket: Any = None) -> None:
+def train_attributes(entity: Any, action: str, bucket: Any = None, aptitudes: dict[str, float] | None = None) -> None:
     """Apply fractional training gains from an action.
     
     Legacy Support: Supports both (entity, action) and (attrs, caps, action).
     """
     if isinstance(entity, Attributes) and isinstance(action, AttributeCaps):
         # Legacy call: train_attributes(attrs, caps, action_str)
-        _train_attributes_legacy(entity, action, bucket)
+        _train_attributes_legacy(entity, action, bucket, aptitudes=aptitudes)
         return
 
     # Modern AOA call: train_attributes(entity, action_str)
@@ -257,18 +269,22 @@ def train_attributes(entity: Any, action: str, bucket: Any = None) -> None:
     changed = False
     
     soft_cap_limit = prog.level * 5 + 15
+    aptitudes = aptitudes or prog.aptitudes
     
     for attr_key, base_rate in rates.items():
-        if _apply_train(attrs, caps, attr_key, base_rate):
+        rate = base_rate * aptitudes.get(attr_key, 1.0)
+        if _apply_train(attrs, caps, attr_key, rate):
             changed = True
             
     if changed:
         recalc_derived_stats(ent, attrs, old_attrs=old_snapshot)
 
-def _train_attributes_legacy(attrs: Attributes, caps: AttributeCaps, action: str) -> None:
+def _train_attributes_legacy(attrs: Attributes, caps: AttributeCaps, action: str, aptitudes: dict[str, float] | None = None) -> None:
     rates = TRAIN_RATES.get(action, {})
+    aptitudes = aptitudes or {}
     for attr_key, rate in rates.items():
-        _apply_train(attrs, caps, attr_key, rate)
+        final_rate = rate * aptitudes.get(attr_key, 1.0)
+        _apply_train(attrs, caps, attr_key, final_rate)
 
 def level_up_attributes(attrs: Attributes, caps: AttributeCaps) -> None:
     """Standard level-up gain: increase all attributes and caps."""
@@ -290,10 +306,10 @@ def check_breakthroughs(entity: Entity) -> list[str]:
     new_breakthroughs = []
     
     if attrs.str_ >= 25 and "str_25" not in traits:
-        traits.add("str_25")
+        traits.append("str_25")
         new_breakthroughs.append("str_25")
     if attrs.vit >= 25 and "vit_25" not in traits:
-        traits.add("vit_25")
+        traits.append("vit_25")
         new_breakthroughs.append("vit_25")
     # ... add others as needed
     return new_breakthroughs

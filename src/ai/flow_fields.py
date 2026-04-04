@@ -78,8 +78,8 @@ class FlowFieldManager:
     _instance: FlowFieldManager | None = None
     
     def __init__(self):
-        # target_pos_tuple -> FlowField
-        self._cache: dict[tuple[int, int], FlowField] = {}
+        # target_pos_tuple -> FlowField (AOA Stabilization: instance-local cache)
+        self._cache: dict[tuple[int, int, int, int], FlowField] = {}
         self.default_ttl = 5
 
     @classmethod
@@ -88,9 +88,14 @@ class FlowFieldManager:
             cls._instance = FlowFieldManager()
         return cls._instance
 
+    @classmethod
+    def reset_instance(cls) -> None:
+        """Resets the singleton for test isolation (AOA Stabilization)."""
+        cls._instance = None
+
     def get_flow_field(self, target: Vector2, grid: SnapshotGrid, current_tick: int = 0) -> FlowField:
         """Returns a cached flow field for the target, or generates a new one."""
-        key = (target.x, target.y)
+        key = (target.x, target.y, grid.width, grid.height)
         if key in self._cache:
             ff = self._cache[key]
             if self._is_static_target(target, grid) or (current_tick - ff.created_at < self.default_ttl):

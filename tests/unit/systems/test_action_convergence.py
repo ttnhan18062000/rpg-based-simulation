@@ -2,6 +2,7 @@ import os
 import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", ".."))
 
+
 import pytest
 from unittest.mock import MagicMock
 from src.core.models.world_state import WorldState
@@ -61,7 +62,8 @@ def test_loot_no_duplication(world, entity):
     
     # 3. Process action through ActionSystem
     config = SimulationConfig()
-    ActionSystem.apply_action_state_transitions(world, config, [proposal])
+    from src.platform.rng import DeterministicRNG
+    ActionSystem.apply_action_state_transitions(world, config, [proposal], rng=DeterministicRNG(42))
     
     # 4. Verification
     assert "iron_ore" not in world.ground_items.get((5, 5), [])
@@ -84,7 +86,8 @@ def test_corpse_loot_convergence(world, entity):
     )
     
     config = SimulationConfig()
-    ActionSystem.apply_action_state_transitions(world, config, [proposal])
+    from src.platform.rng import DeterministicRNG
+    ActionSystem.apply_action_state_transitions(world, config, [proposal], rng=DeterministicRNG(42))
     
     # Verification (Authoritative Handling)
     assert 101 not in world.corpse_nodes

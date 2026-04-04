@@ -2,6 +2,7 @@ import os
 import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", ".."))
 
+
 """Tests for the quest system — model, generation, tracking, and completion."""
 
 
@@ -23,7 +24,7 @@ def _make_entity(eid: int, level: int = 1, kind: str = "hero") -> Entity:
     return Entity(
         id=eid, kind=kind,
         spatial=SpatialAspect(pos=Vector2(5, 5)),
-        combat=CombatAspect(hp=50, max_hp=50, atk=10, def_=5, spd=10),
+        combat=CombatAspect(hp=50, max_hp_base=50, atk_base=10, def_base=5, spd_base=10),
         progression=ProgressionAspect(level=level),
         identity=IdentityAspect(faction=Faction.HERO_GUILD)
     )

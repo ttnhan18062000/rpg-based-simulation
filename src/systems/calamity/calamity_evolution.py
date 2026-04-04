@@ -48,7 +48,7 @@ class CalamityEvolutionSystem(System):
         boost_factor = 1.0 + (0.2 * levels_gained)
         entity.combat.max_hp = int(entity.combat.max_hp * boost_factor)
         entity.combat.hp = entity.combat.max_hp
-        entity.combat.atk = int(entity.combat.atk * boost_factor)
+        entity.combat.atk_base = int(entity.combat.atk_base * boost_factor)
         
         # Evolution title update
         entity.identity.display_name = f"Evolved {entity.identity.display_name}"

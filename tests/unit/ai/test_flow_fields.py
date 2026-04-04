@@ -2,6 +2,7 @@ import os
 import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", ".."))
 
+
 import pytest
 from unittest.mock import MagicMock
 from src.core.models import Vector2, FloatVector2
@@ -86,8 +87,8 @@ def test_flow_field_smoothing():
     ff.vectors[2*5 + 1] = (1, 1) # (1,2)
     ff.vectors[2*5 + 2] = (-1, 0) # (2,2)
     
-    # Use off-grid position to trigger bilinear interpolation
-    v = ff.get_vector(Vector2(1.5, 1.5))
+    # Use off-grid position with FloatVector2 to trigger bilinear interpolation
+    v = ff.get_vector(FloatVector2(1.5, 1.5))
     assert isinstance(v, FloatVector2)
     # v should be an average of several vectors, then normalized
     assert abs(v.length() - 1.0) < 0.001

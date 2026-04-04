@@ -32,10 +32,23 @@ class RepairAction:
 
     @staticmethod
     def apply(proposal: ActionProposal, world: WorldState) -> None:
+        """AOA Stabilization: Emit intentional updates for authoritative application."""
         actor = world.entities.get(proposal.actor_id)
         target_b = next((b for b in world.buildings if b.building_id == proposal.target), None)
         if actor and target_b:
-            actor.progression.gold -= 10.0
-            target_b.repair(50.0)
-            logger.info(f"Tick {world.tick}: {actor.kind} #{actor.id} repaired {target_b.name}")
-            actor.progression.stamina = max(0, actor.progression.stamina - 5)
+            # Emit Intent Updates instead of direct mutation
+            from src.actions.base import ProgressionUpdate, BuildingUpdate
+            
+            # 1. Cost & Exhaustion
+            proposal.updates.append(ProgressionUpdate(
+                gold_delta=-10,
+                stamina_delta=-5
+            ))
+            
+            # 2. Building HP Recovery
+            proposal.updates.append(BuildingUpdate(
+                building_id=target_b.building_id,
+                repair_amount=50.0
+            ))
+            
+            logger.info(f"Tick {world.tick}: {actor.kind} #{actor.id} proposed repair for {target_b.name}")

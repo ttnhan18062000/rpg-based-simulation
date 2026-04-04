@@ -3,6 +3,7 @@ import os
 import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", ".."))
 
+
 """Tests for Voronoi region tessellation — regions border each other with no gaps."""
 
 
@@ -17,7 +18,7 @@ from src.core.world.regions import Region, find_region_at
 
 TOWN_TILES = frozenset({Material.TOWN, Material.SANCTUARY})
 # Tiles that are painted over region terrain for specific locations
-OVERLAY_TILES = frozenset({Material.CAMP, Material.RUINS, Material.DUNGEON_ENTRANCE, Material.ROAD})
+OVERLAY_TILES = frozenset({Material.CAMP, Material.RUINS, Material.DUNGEON_ENTRANCE, Material.ROAD, Material.GRAVEYARD})
 TERRAIN_TILES = frozenset({
     Material.FOREST, Material.DESERT, Material.SWAMP, Material.MOUNTAIN,
     Material.GRASSLAND, Material.SNOW, Material.JUNGLE, Material.VOLCANIC,

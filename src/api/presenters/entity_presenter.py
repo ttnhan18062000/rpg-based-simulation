@@ -112,6 +112,7 @@ class EntityPresenter:
         mind = entity.mind
         progression = entity.progression
         inventory = entity.inventory
+        interaction = entity.interaction
         
         elem = EntityPresenter._elem_dmg(entity)
         
@@ -185,10 +186,10 @@ class EntityPresenter:
             base_evasion=combat.evasion,
             hp_regen=combat.hp_regen,
             cooldown_reduction=combat.cooldown_reduction,
-            loot_bonus=combat.loot_bonus,
-            trade_bonus=combat.trade_bonus,
-            interaction_speed=combat.interaction_speed,
-            rest_efficiency=combat.rest_efficiency,
+            loot_bonus=interaction.loot_bonus,
+            trade_bonus=interaction.trade_bonus,
+            interaction_speed=interaction.interaction_speed,
+            rest_efficiency=interaction.rest_efficiency,
             speed_delay_move=round(1.0 * (10.0 / combat.spd), 2) if combat.spd > 0 else 5.0,
             speed_delay_attack=round(0.9 * (10.0 / combat.spd), 2) if combat.spd > 0 else 5.0,
             speed_delay_skill=round(1.2 * (10.0 / combat.spd), 2) if combat.spd > 0 else 5.0,

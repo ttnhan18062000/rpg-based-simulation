@@ -2,6 +2,7 @@ import os
 import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", ".."))
 
+
 """Tests for the metadata API and shared pydantic dataclass models.
 
 Verifies that:
@@ -132,6 +133,7 @@ class TestMetadataEndpoints:
     """Test all metadata endpoint functions directly."""
 
     def test_get_enums(self):
+        pytest.importorskip("fastapi")
         from src.api.routes.metadata import get_enums
         e = get_enums()
         assert len(e.materials) > 0
@@ -140,6 +142,7 @@ class TestMetadataEndpoints:
         assert len(e.entity_kinds) > 0
 
     def test_get_items(self):
+        pytest.importorskip("fastapi")
         from src.api.routes.metadata import get_items
         result = get_items()
         items = result["items"]
@@ -151,6 +154,7 @@ class TestMetadataEndpoints:
         assert isinstance(first["item_type"], str)  # enum serialized as string
 
     def test_get_classes(self):
+        pytest.importorskip("fastapi")
         from src.api.routes.metadata import get_classes
         c = get_classes()
         assert len(c.classes) == len(CLASS_DEFS)
@@ -164,6 +168,7 @@ class TestMetadataEndpoints:
         assert warrior.breakthrough.to_class == "champion"
 
     def test_get_traits(self):
+        pytest.importorskip("fastapi")
         from src.api.routes.metadata import get_traits
         result = get_traits()
         traits = result["traits"]
@@ -172,6 +177,7 @@ class TestMetadataEndpoints:
         assert "name" in traits[0]
 
     def test_get_attributes(self):
+        pytest.importorskip("fastapi")
         from src.api.routes.metadata import get_attributes
         a = get_attributes()
         assert len(a.attributes) == 9
@@ -180,6 +186,7 @@ class TestMetadataEndpoints:
         assert "cha" in keys
 
     def test_get_buildings(self):
+        pytest.importorskip("fastapi")
         from src.api.routes.metadata import get_buildings
         b = get_buildings()
         assert len(b.building_types) >= 5
@@ -188,11 +195,13 @@ class TestMetadataEndpoints:
         assert "blacksmith" in types
 
     def test_get_resources(self):
+        pytest.importorskip("fastapi")
         from src.api.routes.metadata import get_resources
         r = get_resources()
         assert len(r.resource_types) > 0
 
     def test_get_recipes(self):
+        pytest.importorskip("fastapi")
         from src.api.routes.metadata import get_recipes
         r = get_recipes()
         assert len(r.recipes) > 0
@@ -219,7 +228,7 @@ class TestRegistryCompleteness:
             assert hc in CLASS_DEFS
 
     def test_breakthroughs_exist(self):
-        assert len(BREAKTHROUGHS) == 4
+        assert len(BREAKTHROUGHS) == 8
 
     def test_trait_defs_not_empty(self):
         assert len(TRAIT_DEFS) > 10

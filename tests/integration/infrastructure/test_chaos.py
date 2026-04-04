@@ -3,6 +3,7 @@ import os
 import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", ".."))
 
+
 import pytest
 import hashlib
 import pickle
@@ -18,13 +19,15 @@ def _state_fingerprint(mgr: EngineManager) -> str:
     parts: list[str] = [f"tick={snap.tick}", f"seed={snap.seed}"]
     for eid in sorted(snap.entities):
         e = snap.entities[eid]
-        # Core stats
-        parts.append(f"e{eid}:{e.kind}@{e.spatial.pos.x},{e.spatial.pos.y}|hp={e.stats.combat.hp}/{e.stats.combat.max_hp}")
-        # Epic 17 fields
-        parts.append(f"e{eid}:gen={e.generation}|deaths={e.death_count}")
-        if e.hero_familiarity:
+        # Core stats (AOA authorative paths)
+        hp = e.combat.hp
+        mhp = e.combat.max_hp
+        parts.append(f"e{eid}:{e.kind}@{e.spatial.pos.x:.2f},{e.spatial.pos.y:.2f}|hp={hp}/{mhp}")
+        # Epic 17 / Genetic Pillar
+        parts.append(f"e{eid}:gen={e.identity.generation}|deaths={e.identity.death_count}")
+        if hasattr(e.mind, "perception") and e.mind.perception.hero_familiarity:
             # Sort keys for deterministic string representation
-            fam = ",".join(f"{k}:{v:.4f}" for k, v in sorted(e.hero_familiarity.items()))
+            fam = ",".join(f"{k}:{v:.4f}" for k, v in sorted(e.mind.perception.hero_familiarity.items()))
             parts.append(f"e{eid}:fam={fam}")
     return hashlib.sha256("\n".join(parts).encode()).hexdigest()
 

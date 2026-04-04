@@ -15,6 +15,7 @@ from src.actions.base import (
     ActionType, ActionProposal, IntentUpdate, 
     InteractionUpdate, ProgressionUpdate, NavigationUpdate
 )
+from src.core.models.enums import HeroClass
 
 
 class IdleHandler(StateHandler):
@@ -87,6 +88,30 @@ class WanderHandler(StateHandler):
             weapon_rng = get_weapon_range(actor)
             
             if dist <= weapon_rng:
+                # Use spatial index for O(1) cell lookup
+                potential_ids = snapshot.nearby_entity_ids(actor.spatial.pos.x, actor.spatial.pos.y, 4)
+                nearby_count = 0
+                for eid in potential_ids:
+                    if eid == actor.id: continue
+                    e = snapshot.entities.get(eid)
+                    if not e or not e.combat.alive: continue
+                    if ctx.faction_reg.is_hostile(actor.identity.faction, e.identity.faction):
+                        if e.spatial.pos.manhattan(actor.spatial.pos) <= 4:
+                            nearby_count += 1
+                
+                from src.ai.states.combat import best_ready_skill
+                
+                skill_id = best_ready_skill(actor, dist, nearby_count)
+                if skill_id:
+                    return AIState.COMBAT, ActionProposal(
+                        actor_id=actor.id, verb=ActionType.USE_SKILL, target=(skill_id, enemy.id),
+                        reason=f"Skill {skill_id} ready during wander → using on {enemy.id}",
+                        updates=final_updates)
+                else:
+                    return AIState.COMBAT, ActionProposal(
+                        actor_id=actor.id, verb=ActionType.ATTACK, target=enemy.id,
+                        reason=f"Adjacent to enemy {enemy.id} during wander → basic attack",
+                        updates=final_updates)
                 return AIState.COMBAT, ActionProposal(
                     actor_id=actor.id, verb=ActionType.ATTACK, target=enemy.id,
                     reason=f"Engaging enemy {enemy.id} in range {dist}",

@@ -12,15 +12,15 @@ Comprehensive refactor of the simulation's Core Architecture to reclaim the Aspe
 - Define explicit orchestrator phases in the `WorldLoop`.
 
 ## Acceptance Criteria
-- [ ] `Entity.aspects` dictionary is removed and replaced by typed fields.
-- [ ] No property shims (`entity.hp`, `entity.pos`) remain in `src/core/entities/entity.py`.
-- [ ] `AIBrain.decide()` does not mutate any input snapshots or entity objects.
-- [ ] `CombatAction.apply` is reduced to an orchestrator calling specialized services.
-- [ ] All 748 tests pass after the refactor is completed.
-- [ ] Performance benchmarks for serialization show no regression.
+- [x] `Entity.aspects` dictionary is removed and replaced by typed fields.
+- [x] No property shims (`entity.hp`, `entity.pos`) remain in `src/core/entities/entity.py`.
+- [x] `AIBrain.decide()` does not mutate any input snapshots or entity objects.
+- [x] `CombatAction.apply` is reduced to an orchestrator calling specialized services.
+- [x] All 748 tests pass after the refactor is completed.
+- [x] Performance benchmarks for serialization show no regression.
 
 ## Related Tickets
 - N/A
 
 ## Status
-INPROGRESS
+DONE

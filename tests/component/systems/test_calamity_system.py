@@ -2,6 +2,7 @@ import os
 import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", ".."))
 
+
 """Integration tests for the Calamity (World Boss) system."""
 
 import pytest
@@ -19,10 +20,13 @@ from src.ai.brain import AIBrain
 from src.engine.worker_pool import WorkerPool
 from src.engine.conflict_resolver import ConflictResolver
 
+@pytest.fixture(autouse=True)
+def setup_registries():
+    from src.core.registry.registry_loader import load_all_registries
+    load_all_registries()
+
 @pytest.fixture
 def basic_setup():
-    import src
-    print(f"DEBUG_PATH: {src.__file__}")
     config = SimulationConfig()
     grid = Grid(100, 100)
     spatial = SpatialHash(5)
@@ -121,7 +125,10 @@ def test_calamity_kill_rewards(basic_setup):
     proposal = ActionProposal(actor_id=hero.id, verb=ActionType.ATTACK, target=boss.id)
     combat.apply(proposal, world)
     
+    # Authoritative application of trace results (AOA PHASE 5)
+    loop._action_system.apply_action_state_transitions(world, config, [proposal], rng=rng)
+    
     assert not boss.combat.alive
     assert hero.progression.fame >= 100
     assert any("Slayer of" in t for t in hero.identity.titles)
-    assert hero.combat.atk_base > 0 
+    assert hero.combat.atk_base > 0

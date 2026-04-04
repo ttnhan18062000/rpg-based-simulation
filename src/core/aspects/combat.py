@@ -34,11 +34,28 @@ class CombatAspect(Aspect):
         if "spd" in data and "spd_base" not in data:
             data["spd_base"] = data.pop("spd")
             
-        # Ensure we don't leak properties back into input
+        if "max_hp" in data and "max_hp_base" not in data:
+            data["max_hp_base"] = data.pop("max_hp")
+        if "matk" in data and "matk_base" not in data:
+            data["matk_base"] = data.pop("matk")
+        if "mdef" in data and "mdef_base" not in data:
+            data["mdef_base"] = data.pop("mdef")
+            
         return data
 
     hp: int = 20
-    max_hp: int = 20
+    max_hp_base: int = 20
+    
+    @property
+    def max_hp(self) -> int:
+        mult = 1.0
+        for eff in self.effects:
+            mult *= getattr(eff, "max_hp_mult", 1.0)
+        return int(self.max_hp_base * mult)
+
+    @max_hp.setter
+    def max_hp(self, value: int) -> None:
+        self.max_hp_base = value
     # Base Stats
     atk_base: int = 5
     def_base: int = 0
@@ -50,29 +67,64 @@ class CombatAspect(Aspect):
     evasion: float = 0.0
 
     @property
+    def _bravery_mult(self) -> float:
+        """AOA Stabilization Shim: Legacy emotional impact on stats."""
+        # We look up the parent entity's mind aspect
+        # In AOA, aspects should ideally be decoupled, but for legacy test compatibility
+        # we allow this back-reference or assume the property is only called when attached.
+        if not hasattr(self, "_entity") or not self._entity or not self._entity.mind:
+            return 1.0
+        bravery = self._entity.mind.emotion.bravery
+        if bravery > 0.8: return 1.1
+        if bravery < 0.3: return 0.9
+        return 1.0
+
+    @property
     def atk(self) -> int:
-        mult = 1.0
+        mult = self._bravery_mult
         for eff in self.effects:
             mult *= getattr(eff, "atk_mult", 1.0)
         return int(self.atk_base * mult)
 
     @property
     def def_(self) -> int:
-        mult = 1.0
+        mult = self._bravery_mult
         for eff in self.effects:
             mult *= getattr(eff, "def_mult", 1.0)
         return int(self.def_base * mult)
 
     @property
     def spd(self) -> int:
-        mult = 1.0
+        mult = self._bravery_mult
         for eff in self.effects:
             mult *= getattr(eff, "spd_mult", 1.0)
         return int(self.spd_base * mult)
 
     # Magic combat
-    matk: int = 5
-    mdef: int = 0
+    matk_base: int = 5
+    mdef_base: int = 0
+
+    @property
+    def matk(self) -> int:
+        mult = self._bravery_mult
+        for eff in self.effects:
+            mult *= getattr(eff, "matk_mult", 1.0)
+        return int(self.matk_base * mult)
+    
+    @matk.setter
+    def matk(self, value: int) -> None:
+        self.matk_base = value
+
+    @property
+    def mdef(self) -> int:
+        mult = self._bravery_mult
+        for eff in self.effects:
+            mult *= getattr(eff, "mdef_mult", 1.0)
+        return int(self.mdef_base * mult)
+    
+    @mdef.setter
+    def mdef(self, value: int) -> None:
+        self.mdef_base = value
 
     # Elemental vulnerability table
     elem_vuln: dict[int, float] = Field(default_factory=lambda: {
@@ -132,7 +184,9 @@ class CombatAspect(Aspect):
         self.atk_base = max(1, self.atk_base)
         self.def_base = max(0, self.def_base)
         self.spd_base = max(1, self.spd_base)
-        self.max_hp = max(1, self.max_hp)
+        self.max_hp_base = max(1, self.max_hp_base)
+        self.matk_base = max(0, self.matk_base)
+        self.mdef_base = max(0, self.mdef_base)
 
     @property
     def hp_ratio(self) -> float:

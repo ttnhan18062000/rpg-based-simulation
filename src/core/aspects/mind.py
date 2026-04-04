@@ -21,6 +21,7 @@ class DecisionState(SimulationModel):
     goal_scores: dict[GoalType, float] = Field(default_factory=dict)
     boredom_multipliers: dict[GoalType, float] = Field(default_factory=dict)
     consecutive_idle_ticks: int = 0
+    action_style: str = "balanced" # aggressive, evasive, balanced
 
 class MemoryRecord(SimulationModel):
     """A single record of a seen entity or landmark."""
@@ -166,17 +167,28 @@ class MindAspect(Aspect):
 
     def total_glory(self) -> float:
         return sum(
-            (e.impact if hasattr(e, "impact") else e.get("impact", 0.0))
-            for e in self.narrative.memory_log
-            if e.type == "glory"
+            e.impact for e in self.narrative.memory_log
+            if e.type.lower() == "glory"
         )
 
     def total_trauma(self) -> float:
+        # Includes specialized survival trauma
         return sum(
-            (e.impact if hasattr(e, "impact") else e.get("impact", 0.0))
-            for e in self.narrative.memory_log
-            if e.type == "trauma"
+            e.impact for e in self.narrative.memory_log
+            if e.type.lower() in ("trauma", "survival")
         )
+    
+    def prune_memories(self, max_entries: int = 50) -> None:
+        """Keeps highest impact memories when over limit."""
+        log = self.narrative.memory_log
+        if len(log) <= max_entries:
+            return
+        
+        # Sort by absolute impact descending
+        sorted_log = sorted(log, key=lambda e: abs(e.impact), reverse=True)
+        self.narrative.memory_log = sorted_log[:max_entries]
+        # Re-sort by tick for chronological order
+        self.narrative.memory_log.sort(key=lambda e: e.tick)
 
 MemoryRecord.model_rebuild()
 PerceptionMemory.model_rebuild()
