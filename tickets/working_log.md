@@ -41,3 +41,9 @@ timestamp,ticket_id,title,status,summary,artifacts_path
 2026-04-05T16:10:00Z,TCK-20260405-B,Final AOA Test Stabilization,DONE,Fixed RabbitMQ batching and AI mock TypeErrors,stored_artifacts/TCK-20260405-B/
 2026-04-05T16:39:00Z,TCK-20260405-LOGFIX,Fix E2E Logging Timeouts,DONE,Disabled Kafka and added CLI grid scaling to resolve timeouts in test_logging_structure.py.,stored_artifacts/TCK-20260405-LOGFIX/
 2026-04-05T16:54:00Z,TCK-20260405-DOCS,Comprehensive Documentation Update (AOA Pivot),DONE,Restructured docs/ into domain-driven modular guides (architecture, entities, ai_system, mechanics, world, api_reference, frontend),docs/
+2026-04-05T17:16:00Z,enhance-03,Extend Simulation Maximum Tick to 50000,DONE,Extended the default simulation maximum tick limit to 50000 in config.py.,tickets/done/enhance-03-extend-max-tick-limit.md
+2026-04-05T17:16:00Z,enhance-04,Mob Roaming Leash Distance,DONE,Implemented home-based leashing and return-home logic for mobs.,tickets/done/enhance-04-mob-roaming-leash.md
+2026-04-05T17:16:00Z,design-02,Revise Ticking Mechanism,DONE,Implemented variable subsystem tick rates for core/env/economy systems.,tickets/done/design-02-revise-ticking-mechanism.md
+2026-04-05T17:16:00Z,design-03,Data-Driven Content Registries,DONE,Externalized item/class/skill definitions into JSON via registry_loader.py.,tickets/done/design-03-data-driven-registries.md
+2026-04-04T12:00:00Z,infra-06,Hardening and Chaos Testing,DONE,Implemented Chaos Mode fault injection and invariant property-based testing.,stored_artifacts/infra_06/
+2026-04-01T10:00:00Z,TCK-20260401-AOA-STABILIZE,AOA Integrity & Performance,DONE,Implemented recursive freeze guards and StaticData payload caching.,stored_artifacts/TCK-20260401-AOA-STABILIZE/

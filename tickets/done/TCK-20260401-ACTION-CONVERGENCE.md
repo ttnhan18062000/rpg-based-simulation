@@ -10,13 +10,16 @@ This ticket addresses the second priority of the `final_implementation_plan.md`.
 - **Building Sabotage**: Refactor building attack targeting to use a proper typed model instead of string-keyed hacks.
 
 ## Acceptance Criteria
-- [ ] Refactor `ConflictResolver` to share logic with the authoritative application loop.
-- [ ] No unbounded dicts used for AI deferred updates.
-- [ ] Replay recovery produces bit-identical matching world state to the original live tick.
-- [ ] Building attack logic uses a typed `BuildingTarget` model.
+- [x] Refactor `ConflictResolver` to share logic with the authoritative application loop.
+- [x] No unbounded dicts used for AI deferred updates.
+- [x] Replay recovery produces bit-identical matching world state to the original live tick.
+- [x] Building attack logic uses a typed `BuildingTarget` model.
 
 ## Related Tickets
 - [TCK-20260331-RUNTIME-INTEGRITY](file:///home/vboxuser/Work/rpg-based-simulation/tickets/inprogress/TCK-20260331-RUNTIME-INTEGRITY.md)
 
 ## Status
-TODO
+DONE
+
+## Final Status
+**DONE**: Unified resolver/action system/replay via authoritative update-driven pipeline. Verified replay consistency and implemented typed update models for AI-generated intents and building sabotage targeting.
