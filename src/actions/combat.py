@@ -140,6 +140,14 @@ class CombatAftermathService:
             
         proposal.updates.append(trace)
 
+        # Phase 1: Relationship/Social Awareness Integration
+        from src.core.logic.social_interpretation import SocialInterpretationService
+        # Calculate impact ratio (normalized damage)
+        hp_lost_ratio = damage / max(1, defender.combat.max_hp)
+        if not is_evasion and hp_lost_ratio > 0.0:
+             social_up = SocialInterpretationService.get_harm_deltas(attacker, defender, hp_lost_ratio)
+             proposal.updates.append(social_up)
+
         if is_evasion:
             return
         

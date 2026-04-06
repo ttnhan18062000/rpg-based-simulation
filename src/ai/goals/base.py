@@ -118,26 +118,16 @@ class LifeStageModifier(ScoreModifier):
             if goal in (GoalType.SOCIAL, GoalType.TRADE, GoalType.CRAFT): score.score *= 1.4
             if goal == GoalType.EXPLORE: score.score *= 0.7
 
-class PersonalityModifier(ScoreModifier):
-    """Biases scores based on OCEAN personality traits."""
+class MotiveModifier(ScoreModifier):
+    """Applies pre-calculated Phase 1 motives (Social + Personality) to goal scores.
+    
+    This replaces the ad-hoc Personality/Social modifiers with the 
+    authoritative appraisal results from MindAspect.decision.motives.
+    """
     def modify(self, score: GoalScore, ctx: AIContext) -> None:
-        identity = ctx.actor.identity
-        goal = score.goal
-        
-        if goal == GoalType.EXPLORE:
-            score.score *= (0.5 + identity.openness)
-        elif goal in (GoalType.REST, GoalType.CRAFT):
-            score.score *= (0.5 + identity.conscientiousness)
-        elif goal == GoalType.SOCIAL:
-            score.score *= (0.5 + identity.extraversion)
-        elif goal == GoalType.TRADE:
-            # Agreeableness might affect likelihood to visit shops (better deals or social interaction)
-            score.score *= (0.5 + identity.agreeableness)
-        elif score.goal == GoalType.FLEE:
-            score.score *= (0.5 + identity.neuroticism)
-        elif goal == GoalType.COMBAT:
-            # Anxious entities are less aggressive
-            score.score *= (1.2 - identity.neuroticism)
+        # Use the motive calculated in the Appraisal phase
+        motive_bias = ctx.actor.mind.decision.motives.get(score.goal, 1.0)
+        score.score *= motive_bias
 
 class StuckModifier(ScoreModifier):
     """Encourages resting/idling if the entity is stuck (emotional state)."""
@@ -291,6 +281,31 @@ class FatigueModifier(ScoreModifier):
             if score.goal in (GoalType.EXPLORE, GoalType.COMBAT, GoalType.LOOT):
                 score.score *= (1.0 - fatigue * 0.5)
 
+class SocialModifier(ScoreModifier):
+    """Biases scores based on global SocialRegistry bonds (Trust, Fear, Rivalry). [PHASE 1]"""
+    def modify(self, score: GoalScore, ctx: AIContext) -> None:
+        actor = ctx.actor
+        goal = score.goal
+        
+class RoutineModifier(ScoreModifier):
+    """Applies Archetype-specific time biases to all goals. [PHASE 3]"""
+    def modify(self, score: GoalScore, ctx: AIContext) -> None:
+        hour = (ctx.snapshot.tick % 240) // 10
+        is_night = hour >= 20 or hour <= 5
+        arch = ctx.actor.identity.archetype
+        
+        from src.core.models.enums import Archetype, GoalType
+        
+        if arch == Archetype.BLOODTHIRSTY_SLAYER and is_night:
+            if score.goal == GoalType.COMBAT:
+                score.score *= 1.5
+            if score.goal == GoalType.SLEEP:
+                score.score *= 0.5 # Resist sleep at night
+                
+        if arch == Archetype.HONORABLE_DEFENDER and not is_night:
+            if score.goal == GoalType.GUARD:
+                score.score *= 1.4
+
 # ---------------------------------------------------------------------------
 # Evaluator
 # ---------------------------------------------------------------------------
@@ -309,7 +324,7 @@ class GoalEvaluator:
         self.modifiers = modifiers if modifiers is not None else [
             BoredomModifier(),
             LifeStageModifier(),
-            PersonalityModifier(),
+            MotiveModifier(),
             EmotionalModifier(),
             HysteresisModifier(),
             CooldownModifier(),
@@ -318,6 +333,7 @@ class GoalEvaluator:
             SkirmishModifier(),
             AmbitionModifier(),
             FatigueModifier(),
+            RoutineModifier(),
         ]
 
     def evaluate(self, ctx: AIContext) -> list[GoalScore]:

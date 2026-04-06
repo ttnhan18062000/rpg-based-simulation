@@ -16,6 +16,7 @@ if TYPE_CHECKING:
     from src.systems.lifecycle.hero_lifecycle_system import HeroLifecycleSystem
     from src.actions.base import ActionProposal
     from src.utils.event_log import SimEvent
+    from src.core.models.social import SocialRegistry
 
 @dataclass
 class EngineContext:
@@ -31,6 +32,7 @@ class EngineContext:
     system_manager: SystemManager
     action_system: ActionSystem
     hero_lifecycle: HeroLifecycleSystem
+    social_registry: SocialRegistry
     emit: Callable[[str, str, tuple[int, ...], dict | None], None]
     
     # State passed between phases during a single tick

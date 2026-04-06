@@ -61,7 +61,8 @@ def inspect_entity(
         raise HTTPException(status_code=404, detail=f"Entity {entity_id} not found.")
         
     from src.api.presenters.entity_presenter import EntityPresenter
-    return EntityPresenter.to_inspection_schema(entity, manager.config.loot_duration)
+    registry = getattr(snapshot, "social_registry", None)
+    return EntityPresenter.to_inspection_schema(entity, manager.config.loot_duration, registry)
 
 @router.get("/timeline", response_model=list[SchedulerTimelineItemSchema])
 def get_timeline(

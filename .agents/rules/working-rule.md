@@ -2,340 +2,366 @@
 trigger: always_on
 ---
 
-## 🧠 AI Agent Working Progress Rule (Production-Grade)
+# AI Agent Working Rule
 
-### 0. Guiding Principles
+## 0. Core Principles
 
-* **No blind execution** — always validate context before acting
-* **Traceability first** — every action must leave artifacts
-* **Single source of truth** — tickets + docs define reality
-* **Fail loudly on ambiguity** — never silently assume
-
----
-
-## 1. Pre-Request Phase (Context Validation)
-
-### 1.1 Ticket Conflict Scan
-
-* Scan all files under `tickets/`:
-
-  * `tickets/inprogress/`
-  * `tickets/done/`
-* Detect:
-
-  * Duplicate requests (same intent / feature / bug)
-  * Conflicting requirements (different expected behaviors)
-
-#### If conflict found:
-
-* **DO NOT proceed**
-* Respond with:
-
-  * List of conflicting ticket IDs
-  * Summary of conflict
-  * Suggested resolution options
-
-#### If no conflict:
-
-* Create new ticket:
-
-  ```
-  tickets/inprogress/{ticket_id}.md
-  ```
-* Ticket must include:
-
-  * Title
-  * Description
-  * Scope
-  * Acceptance Criteria
-  * Related tickets (if any)
+- **No blind execution** — always validate context before acting
+- **Traceability first** — every meaningful action must be captured in tickets or artifacts
+- **Single source of truth** — tickets, docs, and stored artifacts define working reality
+- **Do not silently assume** — ask when missing information would change implementation
+- **Do not ask trivial questions** — make small local decisions using existing patterns
 
 ---
 
-### 1.2 Documentation Review
+## 1. Before Work
 
-* Read all relevant files in `docs/`
+### 1.1 Context Scan is Mandatory
 
-#### Must check:
+Before creating or changing anything, the agent must scan all relevant sources:
 
-* Concept alignment
-* Terminology consistency
-* Architectural constraints
+- `tickets/inprogress/`
+- `tickets/done/`
+- `docs/`
+- `stored_artifacts/`
+  - especially prior plans, investigations, design notes, and test plans related to similar work
 
-#### If issues found:
+The goal is to detect:
 
-* Explicitly report:
+- duplicate requests
+- overlapping scope
+- conflicting requirements
+- prior work that already solved the problem
+- architectural or terminology mismatch
 
-  * Conflict with docs
-  * Missing definitions
-  * Misconceptions in request
+### 1.2 Conflict / Duplication Rule
 
-#### Rule:
+If duplication or conflict is found, the agent must **not proceed silently**.
 
-* **Docs override request unless explicitly stated**
+The agent must report:
 
----
+- conflicting ticket IDs or artifact paths
+- what overlaps or conflicts
+- whether the issue is:
+  - duplicate
+  - partial overlap
+  - direct contradiction
+  - unclear ownership
+- suggested resolution options
 
-### 1.3 Scope Clarification
+### 1.3 Clarification Rule
 
-* Break request into:
+The agent must ask the user for clarification when:
 
-  * Functional requirements
-  * Non-functional requirements
-* Identify:
+- the request is not fully understood
+- multiple materially different implementations are possible
+- acceptance criteria are unclear
+- there is a direct conflict between request and existing docs/tickets/artifacts
+- missing information would change behavior, architecture, or scope
 
-  * Edge cases
-  * Dependencies
-  * Unknowns
+The agent must **not** ask for clarification on trivial decisions such as:
 
-If unclear → **pause and ask**
-
----
-
-## 2. Planning & Staging Phase (Before Coding)
-
-### 2.1 Artifact Creation
-
-Create directory:
-
-```
-staging_artifacts/{ticket_id}/
-```
-
-### 2.2 Required Artifacts
-
-Minimum required:
-
-#### 1. `plan.md`
-
-* Step-by-step implementation plan
-* Components affected
-* Data flow / architecture
-
-#### 2. `investigation.md`
-
-* Findings from codebase/docs
-* Existing patterns to reuse
-* Risks & assumptions
-
-#### 3. `test_plan.md`
-
-* What to test
-* Test cases (happy + edge)
-* Regression surface
-
-#### Optional:
-
-* `design.md` (if complex feature)
-* `api_contract.md` (if API involved)
-
----
-
-### 2.3 Plan Validation Rule
-
-* Ensure:
-
-  * No contradiction with docs
-  * No duplication of existing logic
-  * Fits system architecture
-
----
-
-## 3. Implementation Phase
-
-### 3.1 Coding Rules
-
-* Follow existing code style & patterns
-* Avoid introducing:
-
-  * Dead code
-  * Unused abstractions
-* Prefer:
-
-  * Reuse over rewrite
-  * Simplicity over cleverness
-
----
-
-### 3.2 Continuous Validation
-
-* While coding:
-
-  * Cross-check with plan.md
-  * Update artifacts if deviation occurs
-
----
-
-## 4. Testing & Verification Phase
-
-### 4.1 Run Existing Tests
-
-* Execute all tests under `tests/`
-
-#### If regression occurs:
-
-* **STOP**
-* Fix before proceeding
-
----
-
-### 4.2 Add New Tests
-
-* Mandatory if feature not covered
-
-#### Requirements:
-
-* Cover:
-
-  * Core functionality
-  * Edge cases
-  * Failure scenarios
-
----
-
-### 4.3 Test Quality Rule
-
-* Tests must be:
-
-  * Deterministic
-  * Isolated
-  * Readable
-
----
-
-## 5. Completion Phase
-
-### 5.1 Ticket Finalization
-
-Update working_log.md
-
-Move:
-
-```
-tickets/inprogress/{ticket_id}.md → tickets/done/{ticket_id}.md
-```
-
-Update ticket:
-
-* Final status
-* Summary of changes
-* Test coverage
-* Notes / limitations
-
----
-
-### 5.2 Working Log Update
-
-File:
-
-```
-tickets/working_log.md
-```
-
-Use CSV format:
-
-```csv
-timestamp,ticket_id,title,status,summary,artifacts_path
-2026-03-21T10:30:00Z,TCK-001,Add user API,DONE,Implemented CRUD + tests,stored_artifacts/TCK-001/
-```
-
-#### Fields explained:
-
-* `timestamp` — completion time
-* `ticket_id` — unique ID
-* `title` — short description
-* `status` — DONE / BLOCKED / CANCELLED
-* `summary` — concise outcome
-* `artifacts_path` — traceability
-
----
-
-### 5.3 Artifact Migration
-
-Move:
-
-```
-staging_artifacts/{ticket_id}/ → stored_artifacts/{ticket_id}/
-```
+- naming that follows existing conventions
+- local refactor style
+- obvious file placement
+- small implementation details already implied by patterns in the repo
 
 Rule:
 
-* **Artifacts must remain immutable after this point**
+- **Ask only when the uncertainty is meaningful**
+- **Do not block work for trivial choices**
+
+### 1.4 Ticket Creation Rule
+
+If no blocking conflict exists, create a new in-progress ticket before implementation: `tickets/inprogress/{ticket_id}.md`
+
+Ticket must include at minimum:
+
+- Ticket ID
+- Title
+- Request summary
+- Scope
+- Out of scope
+- Acceptance criteria
+- Related tickets
+- Related docs
+- Related stored artifacts
+- Open questions or assumptions
+- Current status
+
+Suggested ticket status lifecycle:
+OPEN → INPROGRESS → BLOCKED → DONE
 
 ---
 
-### 5.4 Documentation Update
+## 2. Planning and Staging
 
-Update:
+### 2.1 Staging Directory is Mandatory
 
-* `docs/`
-* `README.md`
-* Any API specs / architecture docs
+Create: `staging_artifacts/{ticket_id}/`
 
-#### Must reflect:
+No implementation should begin before this exists.
 
-* New behavior
-* Updated flows
-* Any breaking changes
+### 2.2 Required Artifacts
+
+At minimum, create and maintain:
+
+#### `plan.md`
+
+- implementation steps
+- affected files/modules
+- intended behavior
+- architecture/data-flow notes
+- rollback or risk notes if needed
+
+#### `investigation.md`
+
+- findings from codebase, docs, tickets, and stored artifacts
+- duplication/conflict scan results
+- reused patterns
+- assumptions
+- known risks
+
+#### `test_plan.md`
+
+- existing tests to run
+- new tests to add
+- core scenarios
+- edge cases
+- regression surface
+
+### 2.3 Optional Artifacts
+
+Create when relevant:
+
+- `design.md`
+- `api_contract.md`
+- `migration.md`
+- `notes.md`
+- `decision_log.md`
+
+### 2.4 Artifact Completeness Rule
+
+All necessary working information must be written into the ticket or staging artifacts.
+
+Do not keep critical context only in temporary reasoning.
+
+If the implementation direction changes, artifacts must be updated to reflect the new reality.
+
+---
+
+## 3. During Work
+
+### 3.1 Implementation Rule
+
+During implementation, the agent must:
+
+- follow existing code style and architecture
+- reuse existing patterns before inventing new ones
+- avoid dead code, placeholder abstractions, and speculative structures
+- keep ticket and artifacts aligned with actual work
+
+### 3.2 Continuous Validation Rule
+
+While working, continuously check:
+
+- implementation still matches `plan.md`
+- no newly discovered duplication/conflict exists
+- assumptions are still valid
+- acceptance criteria are still being satisfied
+
+If reality changes, update:
+
+- `tickets/inprogress/{ticket_id}.md`
+- `staging_artifacts/{ticket_id}/plan.md`
+- `staging_artifacts/{ticket_id}/investigation.md`
+- `staging_artifacts/{ticket_id}/test_plan.md`
+
+### 3.3 Test Update Rule
+
+During work, the agent must:
+
+- run relevant existing tests
+- add or update tests for new behavior
+- keep test coverage aligned with the actual implementation
+- record test changes in `test_plan.md`
+
+Do not leave testing as a final afterthought.
+
+---
+
+## 4. Testing and Verification
+
+### 4.1 Existing Test Check
+
+Run all relevant existing tests before completion.
+
+If regressions appear:
+
+- stop
+- fix them before closing the ticket
+- record the issue and fix in artifacts if significant
+
+### 4.2 New Test Requirement
+
+Add new tests when behavior changes or new functionality is introduced.
+
+Tests should cover:
+
+- normal flow
+- edge cases
+- failure scenarios
+- regressions likely to recur
+
+### 4.3 Test Quality Rule
+
+Tests must be:
+
+- deterministic
+- isolated
+- readable
+- actually meaningful
+
+Do not add superficial tests that only inflate coverage.
+
+---
+
+## 5. After Work
+
+### 5.1 Final Completeness Check
+
+Before closing the ticket, verify:
+
+- ticket is complete
+- artifacts are complete
+- tests are updated
+- no important decisions remain undocumented
+- no known missing information is left unstated
+- all related documents are updated
+
+### 5.2 Move Ticket to Done
+
+Move: `tickets/inprogress/{ticket_id}.md` to `tickets/done/{ticket_id}.md`
+
+Before moving, update the ticket with:
+
+- final status
+- implementation summary
+- files changed
+- tests added/updated
+- docs updated
+- limitations or follow-up notes
+- final artifact location
+
+### 5.3 Working Log Update
+
+Append a new row to: `tickets/working_log.md`
+
+Recommended CSV format:
+
+```csv
+timestamp,ticket_id,title,status,summary,artifacts_path
+2026-03-21T10:30:00Z,TCK-20260321-USERAPI,Add user API,DONE,Implemented CRUD + tests,stored_artifacts/TCK-20260321-USERAPI/
+```
+
+### 5.4 Artifact Migration
+
+Move:
+
+```text
+staging_artifacts/{ticket_id}/ → stored_artifacts/{ticket_id}/
+```
+
+After migration:
+
+- artifacts are treated as immutable historical record
+- do not silently rewrite stored artifacts
+- any later correction must create a new ticket or explicit follow-up artifact
+
+### 5.5 Documentation Update Rule
+
+Update all related documents, not just code.
+
+This includes any relevant:
+
+- `docs/`
+- `README.md`
+- architecture notes
+- API contracts
+- setup or operational docs
+- ticket cross-references if needed
+
+Documentation must reflect:
+
+- new behavior
+- changed behavior
+- removed behavior
+- breaking changes
+- new limitations or constraints
 
 ---
 
 ## 6. Post-Completion Validation
 
-* Ensure:
-  * No temporary files like logs, all must removed
-  * No dangling inprogress
-  * No broken references
-  * System still consistent
+After ticket closure, verify:
+
+- no dangling ticket remains in `tickets/inprogress/`
+- no staging directory was left behind
+- no temporary files or throwaway logs remain
+- no broken references exist
+- working log row was added
+- stored artifacts are present and complete
+- related docs are updated
+- system state is consistent
 
 ---
 
-## 7. Failure & Escalation Rules
+## 7. Stop / Escalation Conditions
 
-### Must STOP and report if:
+The agent must stop and report when any of the following occurs:
 
-* Conflicting requirements
-* Missing critical context
-* Architecture violation risk
-* Test failures that cannot be resolved
+- conflicting requirements
+- duplicate active work
+- missing critical context
+- architecture violation risk
+- tests fail and cannot be resolved safely
+- docs, tickets, and artifacts disagree on expected behavior
+- the user request is materially ambiguous
 
----
-
-## 8. Suggested Ticket ID Format
-
-```
-TCK-{YYYYMMDD}-{short-id}
-```
-
-Example:
-
-```
-TCK-20260321-USERAPI
-```
+Do not continue by guessing.
 
 ---
 
-## 9. Optional (But High-Impact Additions)
+## 8. Ticket ID Format
 
-If you want this system to feel *next-level*, add:
+Use: `TCK-{YYYYMMDD}-{short-id}`
 
-### 🔥 Priority System
+Example: `TCK-20260321-USERAPI`
 
-* P0: Critical
-* P1: High
-* P2: Normal
-* P3: Low
+---
 
-### 🔥 Status Lifecycle
+## 9. Operational Summary
 
-```
-OPEN → INPROGRESS → BLOCKED → DONE
-```
+### Before Work
 
-### 🔥 Auto-Linking
+- scan tickets, docs, and stored artifacts
+- detect duplication or conflict
+- ask for clarification only when the uncertainty is meaningful
+- create in-progress ticket
 
-* Tickets reference:
+### During Work
 
-  * Related tickets
-  * Artifacts
-  * PRs (if applicable)
+- create `staging_artifacts/{ticket_id}/`
+- keep all necessary information in ticket and artifacts
+- update plan/investigation/test artifacts as work evolves
+- run and update tests continuously
+
+### After Work
+
+- verify completeness of ticket and artifacts
+- move ticket to done
+- append row to `tickets/working_log.md`
+- move staging artifacts to stored artifacts
+- check for missing information
+- update all related documents
+- confirm repo state is consistent

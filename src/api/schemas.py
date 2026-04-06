@@ -88,6 +88,32 @@ class QuestSchema(BaseModel):
     xp_reward: int = 0
 
 
+class SocialBondSchema(BaseModel):
+    """Visual representation of a directed social bond. [PHASE 1]"""
+    target_id: int
+    target_name: str
+    trust: float
+    fear: float
+    rivalry: float
+
+
+class RoutineStateSchema(BaseModel):
+    """Current biological needs and schedule. [PHASE 3]"""
+    sleep_debt: float
+    hunger_level: float
+    is_sleeping: bool
+    active_hours: str  # e.g. "06:00 - 22:00"
+
+
+class MemoryLogSchema(BaseModel):
+    """A single high-salience narrative event. [PHASE 2]"""
+    tick: int
+    type: str
+    impact: float
+    message: str
+    details: dict = Field(default_factory=dict)
+
+
 class EntitySlimSchema(BaseModel):
     """Minimal entity data for rendering (non-selected entities)."""
     id: int
@@ -203,6 +229,9 @@ class EntitySchema(BaseModel):
     home_storage_used: int = 0
     home_storage_max: int = 0
     home_storage_level: int = 0
+    # Macro-Interest (Phase 4 Integration)
+    routine: RoutineStateSchema | None = None
+    social_bonds: list[SocialBondSchema] = Field(default_factory=list)
 
 # --- Introspection (Phase 4) ---
 
@@ -256,6 +285,7 @@ class EntityInspectionSchema(BaseModel):
     stat_breakdowns: dict[str, StatBreakdownSchema] = Field(default_factory=dict)
     combat_history: list[CombatTraceSchema] = Field(default_factory=list)
     ai_explanation: AIDecisionSchema | None = None
+    narrative_history: list[MemoryLogSchema] = Field(default_factory=list)
 
 
 # --- Map ---

@@ -15,13 +15,13 @@ class EntityPresenter:
     """Separation of concerns: Domain models should not know about API schemas."""
 
     @staticmethod
-    def to_inspection_schema(entity: "Entity", loot_duration: int = 3) -> "EntityInspectionSchema":
-        from src.api.schemas import EntityInspectionSchema, CombatTraceSchema
+    def to_inspection_schema(entity: "Entity", loot_duration: int = 3, registry: Any = None) -> "EntityInspectionSchema":
+        from src.api.schemas import EntityInspectionSchema, CombatTraceSchema, MemoryLogSchema
         from src.api.presenters.stat_breakdown import StatBreakdownService
         from src.api.presenters.ai_presenter import AIPresenter
         
-        # 1. Full Entity Data
-        full = EntityPresenter.to_full_schema(entity, loot_duration)
+        # 1. Full Entity Data (including routine)
+        full = EntityPresenter.to_full_schema(entity, loot_duration, registry)
         
         # 2. Stat Breakdowns
         breakdowns = StatBreakdownService.get_all_breakdowns(entity)
@@ -45,14 +45,27 @@ class EntityPresenter:
             for t in entity.combat.traces
         ]
         
-        # 4. AI Explanation
+        # 4. Narrative History (Phase 2 & 3 Integration)
+        narrative = [
+            MemoryLogSchema(
+                tick=log.tick,
+                type=log.type,
+                impact=log.impact,
+                message=f"{log.type.title()} event detected", # Basic fallback
+                details=log.details if isinstance(log.details, dict) else log.details.model_dump() if hasattr(log.details, "model_dump") else {}
+            )
+            for log in entity.mind.narrative.memory_log
+        ]
+        
+        # 5. AI Explanation
         ai_exp = AIPresenter.get_explanation(entity)
         
         return EntityInspectionSchema(
             entity=full,
             stat_breakdowns=breakdowns,
             combat_history=history,
-            ai_explanation=ai_exp
+            ai_explanation=ai_exp,
+            narrative_history=narrative
         )
 
     @staticmethod
@@ -104,8 +117,8 @@ class EntityPresenter:
         ]
 
     @staticmethod
-    def to_full_schema(entity: "Entity", loot_duration: int = 3) -> "EntitySchema":
-        from src.api.schemas import EntitySchema, EffectSchema, QuestSchema
+    def to_full_schema(entity: "Entity", loot_duration: int = 3, registry: Any = None) -> "EntitySchema":
+        from src.api.schemas import EntitySchema, EffectSchema, QuestSchema, RoutineStateSchema, SocialBondSchema
         from src.core.models.enums import Element
 
         identity = entity.identity
@@ -230,6 +243,14 @@ class EntityPresenter:
                 )
                 for q in progression.quests
             ],
+            # Routine & Social (Phase 4)
+            routine=RoutineStateSchema(
+                sleep_debt=mind.routine.sleep_debt,
+                hunger_level=mind.routine.hunger_level,
+                is_sleeping=mind.routine.is_sleeping,
+                active_hours=f"{mind.routine.active_start_hour:02d}:00 - {mind.routine.active_end_hour:02d}:00"
+            ),
+            social_bonds=EntityPresenter._serialize_social_bonds(entity, registry) if registry else []
         )
 
     @staticmethod
@@ -324,3 +345,22 @@ class EntityPresenter:
             return HeroClass(entity.progression.hero_class).name.lower()
         except (ValueError, TypeError, AttributeError):
             return "none"
+
+    @staticmethod
+    def _serialize_social_bonds(entity: "Entity", registry: Any) -> list["SocialBondSchema"]:
+        from src.api.schemas import SocialBondSchema
+        bonds = []
+        for key, bond in registry.bonds.items():
+            if bond.source_id == entity.id:
+                # We need some way to get the target name, but presenters don't have all entities.
+                # In most cases, the frontend will map target_id to known names.
+                # We'll just provide the ID and a placeholder or look it up if possible.
+                # For now, let's keep it simple.
+                bonds.append(SocialBondSchema(
+                    target_id=bond.target_id,
+                    target_name=f"Entity {bond.target_id}",
+                    trust=bond.trust,
+                    fear=bond.fear,
+                    rivalry=bond.rivalry
+                ))
+        return sorted(bonds, key=lambda b: (abs(b.trust) + abs(b.fear) + abs(b.rivalry)), reverse=True)

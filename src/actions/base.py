@@ -78,6 +78,8 @@ if TYPE_CHECKING:
 class MindUpdate(IntentUpdate):
     """Updates to the entity's Decision, Perception, or Emotion state."""
     goal_scores: dict[GoalType, float] | None = None
+    motives: dict[GoalType, float] | None = None # [PHASE 1]
+    last_appraisal_tick: int | None = None        # [PHASE 1]
     last_goal: GoalType | None = None
     goal_committed_at: int | None = None
     boredom_delta: dict[GoalType, float] | None = None
@@ -244,6 +246,20 @@ class BuildingUpdate(IntentUpdate):
     damage_amount: float = 0.0
     is_destroyed: bool = False
 
+class SocialUpdate(IntentUpdate):
+    """Updates to systemic social bonds. [PHASE 1]"""
+    source_id: int
+    target_id: int
+    trust_delta: float = 0.0
+    fear_delta: float = 0.0
+    rivalry_delta: float = 0.0
+
+class RoutineUpdate(IntentUpdate):
+    """Updates to biological needs and schedules. [PHASE 3]"""
+    sleep_delta: float = 0.0
+    hunger_delta: float = 0.0
+    is_sleeping: bool | None = None
+
 class WorldUpdate(IntentUpdate):
     """Authoritative updates to global world state (Corpses, Idents, Spawns). [AOA STABILIZATION]"""
     # Pillar 1 fix: mutations must be authoritative.
@@ -288,6 +304,8 @@ def _rebuild_action_models():
     InteractionUpdate.model_rebuild(_types_namespace=ns)
     SpatialUpdate.model_rebuild(_types_namespace=ns)
     BuildingUpdate.model_rebuild(_types_namespace=ns)
+    SocialUpdate.model_rebuild(_types_namespace=ns)
+    RoutineUpdate.model_rebuild(_types_namespace=ns)
     CombatTraceUpdate.model_rebuild(_types_namespace=ns)
     
     # 2. Finalize Aggregate Models

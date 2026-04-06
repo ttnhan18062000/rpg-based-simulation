@@ -59,6 +59,9 @@ class ActionSystem(System):
         faction_reg: FactionRegistry | None = None
     ) -> None:
         """Core side-effects applied identically in live and replay/recovery."""
+        # 0. Global Biological Decay (Authoritative State)
+        cls._apply_biological_decay(world)
+        
         for proposal in applied:
             entity = world.entities.get(proposal.actor_id)
             if entity is None or not entity.combat.alive:
@@ -119,7 +122,7 @@ class ActionSystem(System):
     @classmethod
     def _apply_updates(cls, world: WorldState, entity: Entity, updates: list[IntentUpdate], proposal: ActionProposal) -> None:
         """Apply typed simulation side-effects (AOA Phase 5)."""
-        from src.actions.base import MindUpdate, PerceptionUpdate, ProgressionUpdate, NavigationUpdate
+        from src.actions.base import MindUpdate, PerceptionUpdate, ProgressionUpdate, NavigationUpdate, SocialUpdate, RoutineUpdate
         
         for up in updates:
             if isinstance(up, MindUpdate):
@@ -156,9 +159,10 @@ class ActionSystem(System):
                 if up.memory_log_add:
                     log = entity.mind.narrative.memory_log
                     log.extend(up.memory_log_add)
-                    # Capping memory log to prevent O(T^2) deep-copy bloat (AOA Stabilization)
-                    if len(log) > 50:
-                        entity.mind.narrative.memory_log = log[-50:]
+                    
+                    # Phase 2: Intelligent Salience Pruning
+                    from src.core.logic.memory_salience import MemorySalienceService
+                    MemorySalienceService.prune(entity, world.tick, max_entries=50)
                 
                 if up.memory_locations_set:
                     entity.mind.narrative.memory_locations.update(up.memory_locations_set)
@@ -262,28 +266,34 @@ class ActionSystem(System):
                     if len(target.combat.traces) > 20:
                         target.combat.traces = target.combat.traces[-20:]
                     
-                    # Handle Trauma log if massive damage occurred (Use typed trauma field)
+                    # Handle Trauma log if massive damage occurred (Use PerceptionUpdate)
                     if res.trauma > 0:
-                        from src.core.aspects.mind import MemoryLogEntry
-                        target.mind.narrative.memory_log.append(MemoryLogEntry(
-                            tick=world.tick, type="trauma", impact=-res.trauma,
-                            details={"desc": f"Took massive damage ({res.damage}) from {entity.identity.display_name} #{entity.id}", "source_id": entity.id}
-                        ))
+                        from src.core.aspects.mind import InterpretedEvent
+                        from src.actions.base import PerceptionUpdate
+                        cls._apply_updates(world, target, [PerceptionUpdate(
+                            memory_log_add=[InterpretedEvent(
+                                tick=world.tick, type="trauma", impact=-res.trauma,
+                                details={"desc": f"Took massive damage ({res.damage}) from {entity.identity.display_name} #{entity.id}", "source_id": entity.id}
+                            )]
+                        )], proposal)
                     
                     # AOA Stabilization: Record Survival memory when hanging on by a thread
                     hp_ratio = target.combat.hp / max(1, target.combat.max_hp)
                     if target.combat.hp > 0 and hp_ratio < 0.2:
-                        from src.core.aspects.mind import MemoryLogEntry
+                        from src.core.aspects.mind import InterpretedEvent
+                        from src.actions.base import PerceptionUpdate
+                        
                         # Check local recent survival to prevent log spam
                         recent_survival = any(m.type == "survival" and m.tick > world.tick - 5 for m in target.mind.narrative.memory_log)
                         if not recent_survival:
-                            target.mind.narrative.memory_log.append(MemoryLogEntry(
-                                tick=world.tick, type="survival", impact=-3.0,
-                                details={"desc": f"Nearly killed by {entity.identity.display_name} #{entity.id} (HP: {int(hp_ratio*100)}%)", "source_id": entity.id}
-                            ))
+                            cls._apply_updates(world, target, [PerceptionUpdate(
+                                memory_log_add=[InterpretedEvent(
+                                    tick=world.tick, type="survival", impact=-3.0,
+                                    details={"desc": f"Nearly killed by {entity.identity.display_name} #{entity.id} (HP: {int(hp_ratio*100)}%)", "source_id": entity.id}
+                                )]
+                            )], proposal)
 
-                    if len(target.mind.narrative.memory_log) > 50:
-                        target.mind.narrative.memory_log = target.mind.narrative.memory_log[-50:]
+                    # NOTE: Memory pruning is already handled inside cls._apply_updates(PerceptionUpdate)
                     
                     # NOTE: Kill Recognition (Corpses, Rewards) moved to the proposal phase 
                     # for better visibility and deterministic capture.
@@ -325,8 +335,80 @@ class ActionSystem(System):
                     pass
                 if up.home_storage_remove:
                     pass
+                
+            elif isinstance(up, SocialUpdate):
+                # Phase 1: Authoritative Social Registry Mutation
+                # Note: world.social_registry handles existence checks
+                old_vals, new_vals = world.social_registry.update_bond(
+                    source_id=up.source_id,
+                    target_id=up.target_id,
+                    trust_delta=up.trust_delta,
+                    fear_delta=up.fear_delta,
+                    rivalry_delta=up.rivalry_delta,
+                    tick=world.tick
+                )
+                
+                # Phase 2: Narrative Milestone Detection
+                from src.core.aspects.mind import SocialNarrative, InterpretedEvent
+                from src.actions.base import PerceptionUpdate
+                
+                milestones = []
+                # Trust Milestones
+                for threshold, label in [(0.5, "ally"), (0.2, "friendly"), (-0.2, "distrust"), (-0.5, "hostile")]:
+                     # Check if we crossed the threshold (in either direction)
+                     if (old_vals["trust"] < threshold <= new_vals["trust"]) or (old_vals["trust"] >= threshold > new_vals["trust"]):
+                         milestones.append(("trust", label, old_vals["trust"], new_vals["trust"]))
+                
+                # Rivalry Milestones
+                if old_vals["rivalry"] < 0.8 <= new_vals["rivalry"]:
+                    milestones.append(("rivalry", "nemesis", old_vals["rivalry"], new_vals["rivalry"]))
+                
+                if milestones:
+                    for bond_type, label, old_v, new_v in milestones:
+                        narrative = SocialNarrative(
+                            target_id=up.target_id,
+                            change_type=f"milestone_{label}",
+                            bond_type=bond_type,
+                            old_value=old_v,
+                            new_value=new_v
+                        )
+                        entry = InterpretedEvent(
+                            tick=world.tick,
+                            type="social",
+                            impact=abs(new_v - old_v) + 0.5, # Base narrative impact
+                            details=narrative
+                        )
+                        # Emit a NEW update to the same entity (the one perceiving the change)
+                        # Note: We append to 'updates' so the current loop picks it up immediately.
+                        updates.append(PerceptionUpdate(memory_log_add=[entry]))
+
+            elif isinstance(up, RoutineUpdate):
+                # Phase 3: Biological State Transitions
+                routine = entity.mind.routine
+                if up.sleep_delta:
+                    routine.sleep_debt = max(0.0, min(1.0, routine.sleep_debt + up.sleep_delta))
+                if up.hunger_delta:
+                    routine.hunger_level = max(0.0, min(1.0, routine.hunger_level + up.hunger_delta))
+                if up.is_sleeping is not None:
+                    routine.is_sleeping = up.is_sleeping
 
     @classmethod
+    def _apply_biological_decay(cls, world: WorldState) -> None:
+        """Authoritative time-based needs increment. [PHASE 3]"""
+        for entity in world.entities.values():
+            if not entity.combat.alive:
+                continue
+                
+            routine = entity.mind.routine
+            # 1. Steady accumulation
+            routine.sleep_debt = max(0.0, min(1.0, routine.sleep_debt + 0.002))
+            routine.hunger_level = max(0.0, min(1.0, routine.hunger_level + 0.001))
+            
+            # 2. Recovery if sleeping
+            if routine.is_sleeping:
+                routine.sleep_debt = max(0.0, routine.sleep_debt - 0.02)
+                if routine.sleep_debt == 0.0:
+                    routine.is_sleeping = False
     def _get_use_skill_updates(cls, world: WorldState, config: SimulationConfig, rng: DeterministicRNG, faction_reg: FactionRegistry | None, entity: Entity, skill_id: str, target_id: int | None = None, proposal: ActionProposal | None = None, emit: Callable | None = None) -> list[IntentUpdate]:
         """Functional side-effects for skill usage. [AOA STABILIZATION]"""
         updates: list[IntentUpdate] = []

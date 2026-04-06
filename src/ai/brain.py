@@ -226,9 +226,33 @@ class AIBrain:
         if should_flee(actor, ctx.config):
             updates.append(MindUpdate(emotion_delta={EmotionType.PANIC: 0.1}))
 
-        # 5. Memory Pruning (Heuristic management)
-        # Note: we call it here to keep the context clean; ActionSystem will apply final limit.
-        actor.mind.prune_memories()
+        # 5. [PHASE 1] Motive Appraisal (Subjective Personality & Social Bias)
+        last_appraisal = mind.decision.last_appraisal_tick
+        # Appraisal threshold: every 5 ticks or if important things happened (e.g. visible changes)
+        if snapshot.tick - last_appraisal >= 5 or visible_ids:
+            from src.core.logic.social_appraisal import SocialAppraisalService
+            from src.core.logic.personality import PersonalityLogic
+            
+            social_registry = getattr(snapshot, "social_registry", None)
+            if social_registry:
+                # 1. Social Appraisal
+                social_motives = SocialAppraisalService.calculate_social_motives(actor, ctx.visible, social_registry)
+                
+                # 2. Personality Bias (Apply to each combined motive)
+                final_motives = {}
+                for gtype in GoalType:
+                    # Base motive from social bias + 1.0 (neutral starting point)
+                    base_motive = 1.0 + social_motives.get(gtype, 0.0)
+                    # Apply OCEAN personality multipliers
+                    final_motives[gtype] = PersonalityLogic.apply_motive_biases(gtype, base_motive, actor.identity)
+                
+                updates.append(MindUpdate(
+                    motives=final_motives,
+                    last_appraisal_tick=snapshot.tick
+                ))
+
+        # 6. Memory Pruning (Heuristic management)
+        # Note: This is now handled authoritatively in ActionSystem post-resolution.
 
         if emotion_set:
             updates.append(MindUpdate(emotion_set=emotion_set))

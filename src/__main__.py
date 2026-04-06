@@ -26,16 +26,14 @@ def _build_parser() -> argparse.ArgumentParser:
     srv.add_argument("--workers", type=int, default=4)
     srv.add_argument("--log-level", type=str, default="INFO", choices=["DEBUG", "INFO", "WARNING"])
 
-    # --- Headless CLI mode ---
-    cli = sub.add_parser("cli", help="Run headless CLI simulation")
-    cli.add_argument("--seed", type=int, default=42)
-    cli.add_argument("--ticks", type=int, default=200)
-    cli.add_argument("--entities", type=int, default=10)
-    cli.add_argument("--workers", type=int, default=4)
-    cli.add_argument("--grid-width", type=int, default=512)
-    cli.add_argument("--grid-height", type=int, default=512)
-    cli.add_argument("--replay", type=str, default="replay.json")
-    cli.add_argument("--log-level", type=str, default="INFO", choices=["DEBUG", "INFO", "WARNING"])
+    # --- Inspect mode ---
+    insp = sub.add_parser("inspect", help="Inspect a specific entity's Macro-Interest data")
+    insp.add_argument("--id", type=int, required=True, help="Entity ID to inspect")
+    insp.add_argument("--seed", type=int, default=42)
+    insp.add_argument("--ticks", type=int, default=50)
+    insp.add_argument("--entities", type=int, default=10)
+    insp.add_argument("--workers", type=int, default=4)
+    insp.add_argument("--log-level", type=str, default="WARNING", choices=["DEBUG", "INFO", "WARNING"])
 
     return parser
 
@@ -240,6 +238,76 @@ def _run_cli(args: argparse.Namespace) -> None:
     logger.info("Done. Replay written to %s", config.replay_file)
 
 
+def _run_inspect(args: argparse.Namespace) -> None:
+    from src.ai.brain import AIBrain
+    from src.config import SimulationConfig
+    from src.core.gameplay.faction import Faction, FactionRegistry
+    from src.core.world.grid import Grid
+    from src.core.models.world_state import WorldState
+    from src.engine.conflict_resolver import ConflictResolver
+    from src.engine.worker_pool import WorkerPool
+    from src.engine.world_loop import WorldLoop
+    from src.systems.world.generator import EntityGenerator
+    from src.platform.rng import DeterministicRNG
+    from src.platform.spatial_hash import SpatialHash
+    from src.utils.logging import setup_logging
+    from src.ui.cli.inspector import EntityInspector
+    from src.core.models.social import SocialRegistry
+    
+    import os
+    os.environ["DISABLE_RABBITMQ"] = "1"
+    os.environ["DISABLE_KAFKA"] = "1"
+    setup_logging(args.log_level)
+
+    config = SimulationConfig(
+        world_seed=args.seed,
+        max_ticks=args.ticks,
+        initial_entity_count=args.entities,
+        num_workers=args.workers,
+    )
+
+    from src.core.registry.registry_loader import load_all_registries
+    load_all_registries()
+
+    rng = DeterministicRNG(config.world_seed)
+    grid = Grid(config.grid_width, config.grid_height)
+    spatial = SpatialHash(config.spatial_cell_size)
+    world = WorldState(seed=config.world_seed, grid=grid, spatial_index=spatial)
+    
+    # Initialize registries
+    social_reg = SocialRegistry()
+    faction_reg = FactionRegistry.default()
+
+    generator = EntityGenerator(config, rng)
+    # Spawn initial entities
+    for i in range(config.initial_entity_count):
+        entity = generator.spawn(world)
+        world.add_entity(entity)
+
+    brain = AIBrain(config, rng, faction_reg)
+    worker_pool = WorkerPool(config, brain, rng)
+    conflict_resolver = ConflictResolver(config, rng)
+
+    loop = WorldLoop(
+        config=config, world=world, worker_pool=worker_pool,
+        conflict_resolver=conflict_resolver, generator=generator,
+        rng=rng, social_registry=social_reg
+    )
+
+    print(f"Running simulation for {args.ticks} ticks to populate data...")
+    loop.run()
+    
+    worker_pool.shutdown()
+
+    target = world.get_entity(args.id)
+    if not target:
+        print(f"\033[91mError: Entity ID {args.id} not found in simulation.\033[0m")
+        print(f"Available IDs: {list(world.entities.keys())[:20]}...")
+        return
+
+    EntityInspector.inspect_full(target, social_reg)
+
+
 def main() -> None:
     parser = _build_parser()
     args = parser.parse_args()
@@ -252,6 +320,8 @@ def main() -> None:
         _run_server(args)
     elif args.command == "cli":
         _run_cli(args)
+    elif args.command == "inspect":
+        _run_inspect(args)
 
 
 if __name__ == "__main__":

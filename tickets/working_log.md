@@ -50,3 +50,7 @@ timestamp,ticket_id,title,status,summary,artifacts_path
 2026-04-04T12:00:00Z,infra-06,Hardening and Chaos Testing,DONE,Implemented Chaos Mode fault injection and invariant property-based testing.,stored_artifacts/infra_06/
 2026-04-01T10:00:00Z,TCK-20260401-AOA-STABILIZE,AOA Integrity & Performance,DONE,Implemented recursive freeze guards and StaticData payload caching.,stored_artifacts/TCK-20260401-AOA-STABILIZE/
 2026-04-06T11:28:29Z,TCK-20260405-PROD-STACK-STABILIZE,E2E Production Stack Stabilization,DONE,Restored full production test suite; fixed ActionSystem and EventPresenter regressions,stored_artifacts/TCK-20260405-PROD-STACK-STABILIZE/
+2026-04-06T16:22:30Z,TCK-20260406-PHASE0,Archetype & Ownership Phase 0,DONE,Locked foundational constraints/vocabulary and consolidated identity/mind state.,stored_artifacts/TCK-20260406-PHASE0/
+2026-04-07T01:45:00Z,TCK-20260407-PHASE0-CONTINUE,Phase 0 Foundations Alignment,DONE,Aligned IdentityAspect, MindAspect, and SocialRegistry; Unified Social models.,stored_artifacts/TCK-20260407-PHASE0-CONTINUE/
+2026-04-07T02:00:00Z,TCK-20260407-PHASE1-PERSONALITY,Phase 1: Personality & Relationships,DONE,Implemented OCEAN traits, Motive Appraisal pipeline, and behavioral divergence logic.,stored_artifacts/TCK-20260407-PHASE1-PERSONALITY/
+2026-04-07T12:59:46Z,TCK-20260407-PH0-FIX,Corrective Alignment & Misdirection Fix,DONE,Implemented authoritative memory salience and curated inspector lens,stored_artifacts/TCK-20260407-PH0-FIX

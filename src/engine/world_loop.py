@@ -77,6 +77,7 @@ class WorldLoop:
         "_logger",
         "_telemetry_bridge",
         "_history_system",
+        "_social_registry",
         "_phases"
     )
 
@@ -90,6 +91,7 @@ class WorldLoop:
         recorder: ReplayRecorder | None = None,
         faction_reg: FactionRegistry | None = None,
         rng: DeterministicRNG | None = None,
+        social_registry: SocialRegistry | None = None,
     ) -> None:
         self._config = config
         self._world = world
@@ -102,6 +104,10 @@ class WorldLoop:
         self._tick_events: list = []
         self._faction_reg = faction_reg or FactionRegistry.default()
         self._rng = rng
+        
+        from src.core.models.social import SocialRegistry
+        self._social_registry = social_registry or SocialRegistry()
+        self._world.social_registry = self._social_registry
         
         # Wrapped logger for automatic context (Phase L3 Logging)
         from src.utils.logging import RobustLoggerAdapter

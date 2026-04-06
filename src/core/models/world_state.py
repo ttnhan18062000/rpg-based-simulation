@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 
 from .vectors import Vector2
 from .world_objects import TreasureChest, CorpseNode
+from .social import SocialRegistry
 
 if TYPE_CHECKING:
     from src.core.entities.entity import Entity
@@ -20,7 +21,7 @@ if TYPE_CHECKING:
 class WorldState:
     """The single source of truth for the simulation."""
 
-    __slots__ = ("world_age", "faction_aggression", "difficulty_modifier", "monuments", "tick", "seed", "entities", "grid", "spatial_index", "_next_entity_id", "ground_items", "camps", "buildings", "resource_nodes", "_next_node_id", "treasure_chests", "_next_chest_id", "regions", "maturity", "last_calamity_tick", "event_bus", "faction_deaths_per_region", "region_control", "war_status", "history", "_history_subscribed", "town_treasury", "corpse_nodes", "_next_corpse_id", "_frozen")
+    __slots__ = ("world_age", "faction_aggression", "difficulty_modifier", "monuments", "tick", "seed", "entities", "grid", "spatial_index", "_next_entity_id", "ground_items", "camps", "buildings", "resource_nodes", "_next_node_id", "treasure_chests", "_next_chest_id", "regions", "maturity", "last_calamity_tick", "event_bus", "faction_deaths_per_region", "region_control", "war_status", "history", "_history_subscribed", "town_treasury", "corpse_nodes", "_next_corpse_id", "social_registry", "_frozen")
 
     def __init__(
         self,
@@ -56,6 +57,7 @@ class WorldState:
         self.town_treasury: int = 0
         self.corpse_nodes: dict[int, CorpseNode] = {}
         self._next_corpse_id: int = 1
+        self.social_registry: SocialRegistry = SocialRegistry()
         self.event_bus = None
         self._frozen: bool = False
 
@@ -180,6 +182,7 @@ class WorldState:
             world._next_chest_id = max(world._next_chest_id, chest.chest_id + 1)
             
         world.regions = [r.copy() for r in snap.regions]
+        world.social_registry = snap.social_registry.copy()
         world.event_bus = None
         
         return world

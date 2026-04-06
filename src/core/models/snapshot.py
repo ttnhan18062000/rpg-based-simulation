@@ -14,6 +14,7 @@ if TYPE_CHECKING:
     from src.core.models.world_state import WorldState
 
 from src.core.models.base import SimulationModel
+from src.core.models.social import SocialRegistry
 
 _SPATIAL_CELL = 16  # cell size for snapshot spatial index
 
@@ -38,6 +39,9 @@ class Snapshot(SimulationModel):
     region_control: Mapping[str, float] = Field(default_factory=dict)
     war_status: Mapping[int, bool] = Field(default_factory=dict)
     faction_aggression: Mapping[int, float] = Field(default_factory=dict)
+    
+    # Phase 0: Social Registry
+    social_registry: SocialRegistry = Field(default_factory=SocialRegistry)
     
     # Internal spatial caches (not serialized)
     _spatial: dict = PrivateAttr(default_factory=dict)
@@ -83,6 +87,7 @@ class Snapshot(SimulationModel):
             region_control=dict(world.region_control),
             war_status=dict(world.war_status),
             faction_aggression=dict(world.faction_aggression),
+            social_registry=world.social_registry.copy(),
         )
         
         # Manually set private attrs

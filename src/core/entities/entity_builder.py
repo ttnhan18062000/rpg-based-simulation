@@ -11,7 +11,7 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 from src.core.models.vectors import Vector2
-from src.core.models.enums import AIState, EntityRole, Domain
+from src.core.models.enums import AIState, EntityRole, Domain, Archetype
 from src.core.gameplay.faction import Faction
 from src.core.entities.entity import Entity
 from src.core.aspects.identity import IdentityAspect
@@ -36,6 +36,7 @@ class EntityBuilder:
         self._rng = rng
         self._eid = entity_id
         self._tick = tick
+        self._archetype: Archetype | None = None
 
         # Default data for aspects
         self._kind: str = "unknown"
@@ -78,6 +79,13 @@ class EntityBuilder:
         self._skills: list[SkillInstance] = []
         self._inventory: InventoryAspect | None = None
         self._traits: list[int] = []
+        
+        # Personality (OCEAN) [PHASE 1]
+        self._openness: float | None = None
+        self._conscientiousness: float | None = None
+        self._extraversion: float | None = None
+        self._agreeableness: float | None = None
+        self._neuroticism: float | None = None
 
     def kind(self, k: str) -> EntityBuilder:
         self._kind = k
@@ -283,8 +291,21 @@ class EntityBuilder:
             self._traits = assign_traits(self._rng, Domain.SPAWN, self._eid, self._tick, race_prefix=race_prefix)
         return self
 
+    def with_archetype(self, arch: Archetype) -> EntityBuilder:
+        self._archetype = arch
+        return self
+
     def with_talents(self, race: str = "") -> EntityBuilder:
         # AOA MindAspect for now handles behavior, talents might be traits
+        return self
+
+    def with_personality(self, o: float | None = None, c: float | None = None, e: float | None = None, a: float | None = None, n: float | None = None) -> EntityBuilder:
+        """Manually set OCEAN personality traits."""
+        if o is not None: self._openness = o
+        if c is not None: self._conscientiousness = c
+        if e is not None: self._extraversion = e
+        if a is not None: self._agreeableness = a
+        if n is not None: self._neuroticism = n
         return self
 
     def with_home_storage(self) -> EntityBuilder:
@@ -305,8 +326,21 @@ class EntityBuilder:
             difficulty_tier=self._difficulty_tier,
             generation=self._generation,
             traits=self._traits,
-            is_world_boss=self._is_world_boss
+            is_world_boss=self._is_world_boss,
+            archetype=self._archetype or Archetype.BALANCED
         )
+        
+        # Initialize Personality [PHASE 1]
+        # First, apply template based on Archetype (currently default in IdentityAspect)
+        entity.identity.apply_archetype_template()
+        
+        # Then, override with manual values if provided
+        if self._openness is not None: entity.identity.openness = self._openness
+        if self._conscientiousness is not None: entity.identity.conscientiousness = self._conscientiousness
+        if self._extraversion is not None: entity.identity.extraversion = self._extraversion
+        if self._agreeableness is not None: entity.identity.agreeableness = self._agreeableness
+        if self._neuroticism is not None: entity.identity.neuroticism = self._neuroticism
+
         entity.spatial = SpatialAspect(
             pos=self._pos,
             home_pos=self._home_pos,

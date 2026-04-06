@@ -4,7 +4,7 @@ from enum import IntEnum, unique
 
 @unique
 class ActionType(IntEnum):
-    REST = 0; MOVE = 1; ATTACK = 2; USE_ITEM = 3; LOOT = 4; HARVEST = 5; USE_SKILL = 6; REPAIR = 7
+    REST = 0; MOVE = 1; ATTACK = 2; USE_ITEM = 3; LOOT = 4; HARVEST = 5; USE_SKILL = 6; REPAIR = 7; SLEEP = 8; EAT = 9
 
 @unique
 class SkillType(IntEnum):
@@ -23,7 +23,7 @@ class SkillTarget(IntEnum):
 
 @unique
 class AIState(IntEnum):
-    IDLE = 0; WANDER = 1; HUNT = 2; COMBAT = 3; FLEE = 4; RETURN_TO_TOWN = 5; RESTING_IN_TOWN = 6; RETURN_TO_CAMP = 7; GUARD_CAMP = 8; LOOTING = 9; ALERT = 10; VISIT_SHOP = 11; VISIT_BLACKSMITH = 12; VISIT_GUILD = 13; HARVESTING = 14; VISIT_CLASS_HALL = 15; VISIT_INN = 16; VISIT_HOME = 17; RAID = 18; EXHAUSTED = 19; RECOVER_CORPSE = 20
+    IDLE = 0; WANDER = 1; HUNT = 2; COMBAT = 3; FLEE = 4; RETURN_TO_TOWN = 5; RESTING_IN_TOWN = 6; RETURN_TO_CAMP = 7; GUARD_CAMP = 8; LOOTING = 9; ALERT = 10; VISIT_SHOP = 11; VISIT_BLACKSMITH = 12; VISIT_GUILD = 13; HARVESTING = 14; VISIT_CLASS_HALL = 15; VISIT_INN = 16; VISIT_HOME = 17; RAID = 18; EXHAUSTED = 19; RECOVER_CORPSE = 20; SLEEPING = 21; EATING = 22
 
 @unique
 class Direction(IntEnum): NORTH = 0; EAST = 1; SOUTH = 2; WEST = 3
@@ -121,6 +121,8 @@ class GoalType(IntEnum):
     SOCIAL = 7
     GUARD = 8
     CORPSE_RUN = 9
+    SLEEP = 10
+    EAT = 11
 
 @unique
 class EmotionType(IntEnum):
@@ -128,6 +130,17 @@ class EmotionType(IntEnum):
     BRAVERY = 0
     PANIC = 1
     STUCK = 2
+
+@unique
+class Archetype(IntEnum):
+    """Static behavioral templates for entities."""
+    BALANCED = 0
+    CAUTIOUS_OPPORTUNIST = 1
+    GLORY_SEEKER = 2
+    HONORABLE_DEFENDER = 3
+    GREEDY_SCAVENGER = 4
+    BLOODTHIRSTY_SLAYER = 5
+    COWARDLY_SURVIVOR = 6
 
 from typing import Annotated
 from pydantic import BeforeValidator, PlainSerializer
@@ -153,6 +166,7 @@ SkillTypeSer = Annotated[SkillType, BeforeValidator(_parse_enum(SkillType)), Pla
 SkillTargetSer = Annotated[SkillTarget, BeforeValidator(_parse_enum(SkillTarget)), PlainSerializer(lambda v: SkillTarget(v).name.lower(), return_type=str)]
 DamageTypeSer = Annotated[int, BeforeValidator(_parse_enum(DamageType)), PlainSerializer(lambda v: DamageType(v).name.lower(), return_type=str)]
 ElementSer = Annotated[int, BeforeValidator(_parse_enum(Element)), PlainSerializer(lambda v: Element(v).name.lower(), return_type=str)]
+ArchetypeSer = Annotated[Archetype, BeforeValidator(_parse_enum(Archetype)), PlainSerializer(lambda v: Archetype(v).name.lower(), return_type=str)]
 
 from dataclasses import dataclass, field
 @dataclass(frozen=True)

@@ -8,7 +8,31 @@ export interface EntityMemoryEntry {
   atk: number;
   level: number;
   tick: number;
+  tick: number;
   visible: boolean;
+}
+
+export interface SocialBond {
+  target_id: number;
+  target_name: string;
+  trust: number;
+  fear: number;
+  rivalry: number;
+}
+
+export interface RoutineState {
+  sleep_debt: number;
+  hunger_level: number;
+  is_sleeping: boolean;
+  active_hours: string;
+}
+
+export interface MemoryLog {
+  tick: number;
+  type: string;
+  impact: number;
+  message: string;
+  details: Record<string, unknown>;
 }
 
 export interface EntityAttributes {
@@ -166,6 +190,10 @@ export interface Entity {
   // Combat visualization (epic-05)
   weapon_range: number;
   combat_target_id: number | null;
+  // Macro-Interest (Phase 4)
+  routine?: RoutineState | null;
+  social_bonds?: SocialBond[];
+  narrative_history?: MemoryLog[];
 }
 
 export interface EntityEffect {

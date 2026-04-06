@@ -19,6 +19,8 @@ class DecisionState(SimulationModel):
     goal_switch_count: int = 0
     goal_cooldowns: dict[GoalType, int] = Field(default_factory=dict)
     goal_scores: dict[GoalType, float] = Field(default_factory=dict)
+    motives: dict[GoalType, float] = Field(default_factory=dict) # Subjective motive weights [PHASE 1]
+    last_appraisal_tick: int = 0                                 # For throttled motive calculation
     boredom_multipliers: dict[GoalType, float] = Field(default_factory=dict)
     consecutive_idle_ticks: int = 0
     action_style: str = "balanced" # aggressive, evasive, balanced
@@ -106,7 +108,16 @@ class DiscoveryNarrative(NarrativeDetail):
     location_name: str
     rarity: str = "common"
 
-class MemoryLogEntry(SimulationModel):
+class SocialNarrative(NarrativeDetail):
+    """Details for major social shifts (Nemesis declaration, betrayal). [PHASE 2]"""
+    type: Literal["social"] = "social"
+    target_id: int
+    change_type: str = "interaction" # interaction, milestone, nemesis, ally
+    bond_type: str = "trust" # trust, fear, rivalry
+    old_value: float = 0.0
+    new_value: float = 0.0
+
+class InterpretedEvent(SimulationModel):
     """A single entry in the narrative memory log. [AOA STABILIZATION]
     
     Pillar 2: Rendering & Explainability. All entries must use typed details
@@ -115,18 +126,31 @@ class MemoryLogEntry(SimulationModel):
     model_config = ConfigDict(extra='forbid')
     
     tick: int
-    type: str # e.g. "glory", "trauma", "discovery"
-    impact: float = 0.0
-    details: Union[CombatNarrative, LootNarrative, DiscoveryNarrative, dict[str, Any]] = Field(default_factory=dict)
+    type: str # e.g. "glory", "trauma", "discovery", "social"
+    impact: float = 0.0 # Salience/Importance score
+    details: Union[CombatNarrative, LootNarrative, DiscoveryNarrative, SocialNarrative, dict[str, Any]] = Field(default_factory=dict)
+
+MemoryLogEntry = InterpretedEvent # Backward compatibility alias
 
 class NarrativeMemory(SimulationModel):
     """Long-term history and narrative directives. [AOA STABILIZATION]"""
     model_config = ConfigDict(extra='forbid')
     
-    memory_log: list[MemoryLogEntry] = Field(default_factory=list)
-    life_directive: str | None = None
+    memory_log: list[InterpretedEvent] = Field(default_factory=list)
     memory_locations: dict[str, float] = Field(default_factory=dict)
     region_fatigue: dict[str, float] = Field(default_factory=dict)
+
+class RoutineState(SimulationModel):
+    """Biological needs and daily schedule state. [PHASE 3]"""
+    model_config = ConfigDict(extra='forbid')
+    
+    sleep_debt: float = Field(default=0.0, ge=0.0, le=1.0)
+    hunger_level: float = Field(default=0.0, ge=0.0, le=1.0)
+    is_sleeping: bool = False
+    
+    # Schedule (Expressed in hours: 0-23, where 1 hour = 10 ticks)
+    active_start_hour: int = 6
+    active_end_hour: int = 22
 
 class MindAspect(Aspect):
     """Decomposed Mind Aspect using specialized sub-models. [AOA STABILIZATION]
@@ -142,6 +166,10 @@ class MindAspect(Aspect):
     emotion: EmotionState = Field(default_factory=EmotionState)
     navigation: NavigationState = Field(default_factory=NavigationState)
     narrative: NarrativeMemory = Field(default_factory=NarrativeMemory)
+    routine: RoutineState = Field(default_factory=RoutineState)
+    
+    # Phase 0: Placeholders for Macro-Interest systems
+    social: dict[str, Any] = Field(default_factory=dict) # To be replaced by SocialRegistry links
     
     bonuses: dict[str, Any] = Field(default_factory=dict)
 
@@ -178,17 +206,7 @@ class MindAspect(Aspect):
             if e.type.lower() in ("trauma", "survival")
         )
     
-    def prune_memories(self, max_entries: int = 50) -> None:
-        """Keeps highest impact memories when over limit."""
-        log = self.narrative.memory_log
-        if len(log) <= max_entries:
-            return
-        
-        # Sort by absolute impact descending
-        sorted_log = sorted(log, key=lambda e: abs(e.impact), reverse=True)
-        self.narrative.memory_log = sorted_log[:max_entries]
-        # Re-sort by tick for chronological order
-        self.narrative.memory_log.sort(key=lambda e: e.tick)
+    # Memory pruning is now handled authoritatively in ActionSystem [PHASE 0 FIX]
 
 MemoryRecord.model_rebuild()
 PerceptionMemory.model_rebuild()
@@ -198,6 +216,8 @@ NarrativeDetail.model_rebuild()
 CombatNarrative.model_rebuild()
 LootNarrative.model_rebuild()
 DiscoveryNarrative.model_rebuild()
+SocialNarrative.model_rebuild()
 MemoryLogEntry.model_rebuild()
 NarrativeMemory.model_rebuild()
+RoutineState.model_rebuild()
 MindAspect.model_rebuild()
