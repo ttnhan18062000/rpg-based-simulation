@@ -137,35 +137,30 @@ class CombatAftermathService:
         if not is_evasion:
             from src.actions.base import ProgressionUpdate
             proposal.updates.append(ProgressionUpdate(veterancy_points_delta=1))
-        
+            
         proposal.updates.append(trace)
-
-        # Handle Shattered (Frozen) expiration
-        # Handled in ActionSystem via is_shattered flag in CombatTraceUpdate
 
         if is_evasion:
             return
-
-        # Nemesis & Memory (Emotion/Narrative)
+        
+        # --- Nemesis & Memory (Emotion/Narrative) ---
         hp_lost_ratio = damage / max(1, defender.combat.max_hp)
         
         # Updates instead of direct mutation
-        from src.actions.base import MindUpdate, PerceptionUpdate
+        from src.actions.base import MindUpdate
         proposal.updates.append(MindUpdate(
-            emotion_delta={EmotionType.PANIC: hp_lost_ratio * 0.5}, # Dummy logic for example
+            emotion_delta={EmotionType.PANIC: hp_lost_ratio * 0.5},
             mood=-hp_lost_ratio * 0.2
         ))
         
+        # AOA Stabilization: Fully normalize all combat side-effects into the trace object
+        # This allows the applicator to be a simple, 'dumb' value-pusher.
         if hp_lost_ratio > 0.15:
-            trace.result.metadata["trauma"] = hp_lost_ratio * 100.0
+            trace.result.trauma = hp_lost_ratio * 100.0
             
-        # Threat Table (PerceptionUpdate)
+        # Threat Table (Includes class multipliers calculated inside this service)
         base_threat = damage * config.threat_damage_mult
-        
-        # AOA Stabilization: Robust HeroClass check using Enum values
         from src.core.models.enums import HeroClass
-        
-        # AOA Stabilization: Robust check for HeroClass (Pillar 1 Identity)
         hclass = getattr(attacker.progression, "hero_class", HeroClass.NONE)
         if hclass == HeroClass.NONE:
             hclass = getattr(attacker.identity, "hero_class", HeroClass.NONE)
@@ -176,7 +171,10 @@ class CombatAftermathService:
         elif hclass_val == int(HeroClass.TANK):
             base_threat *= 2.0
             
-        trace.result.metadata["threat"] = base_threat
+        trace.result.threat = base_threat
+        
+        # Grudge generation normalized
+        trace.result.grudge = float(damage) / 10.0
 
 class KillRewardService:
     @staticmethod
@@ -189,34 +187,33 @@ class KillRewardService:
         # Killer gets XP/Gold/Veterancy
         proposal.updates.append(ProgressionUpdate(gold_delta=victim.progression.gold, xp_delta=xp_gain, veterancy_points_delta=5))
         
-        # Gold/Corpse
+        # Gold/Corpse (AOA Stabilization: Authoritative World Update)
         from src.core.models.world_objects import CorpseNode
         if victim.identity.faction == Faction.HERO_GUILD:
-            node_id = world._next_corpse_id
-            world._next_corpse_id += 1
-            
             gold_to_corpse = int(victim.progression.gold * 0.8)
             # Re-adjust killer gold (we already added full gold above, so remove the corpse portion)
             proposal.updates.append(ProgressionUpdate(gold_delta=-gold_to_corpse))
             
+            # Instead of mutating world directly, we emit a WorldUpdate
+            from src.actions.base import WorldUpdate
             node = CorpseNode(
-                node_id=node_id, entity_id=victim.id, pos=victim.spatial.pos,
+                node_id=0, # To be determined by resolver/ActionSystem
+                entity_id=victim.id, 
+                pos=victim.spatial.pos,
                 items=list(victim.inventory.items) if victim.inventory else [],
-                gold=gold_to_corpse, created_tick=tick
+                gold=gold_to_corpse, 
+                created_tick=tick
             )
-            world.corpse_nodes[node_id] = node
-        else:
-            # Victim loses gold (already given to killer)
-            # In AOA, we assume victim will be removed or reset soon.
-            pass
-            
-        # World Boss Rewards (AOA Hardening)
+            proposal.updates.append(WorldUpdate(new_corpse=node, increment_corpse_id=True))
+        
+        # World Boss Rewards (AOA Stabilization: Authoritative Progression Update)
         if victim.identity.is_world_boss:
-            killer.progression.fame += 100
             title = f"Slayer of {victim.identity.display_name}"
-            if title not in killer.identity.titles:
-                killer.identity.titles.append(title)
-            logger.info("Entity %d earned 'World Boss Slayer' rewards for killing %d", killer.id, victim.id)
+            proposal.updates.append(ProgressionUpdate(
+                fame_delta=100,
+                titles_add=[title] if title not in killer.identity.titles else []
+            ))
+            logger.info("Tasking authoritative rewards for kill on %d", victim.id)
             
         # Death Event
         if hasattr(world, "event_bus") and world.event_bus:
@@ -272,16 +269,23 @@ class CombatAction:
 
         from src.actions.base import BuildingTarget
         if isinstance(proposal.target, BuildingTarget):
-            # Building damage application
+            # Authoritative Building Mutation (AOA Stabilization)
             target_b = next((b for b in world.buildings if b.building_id == proposal.target.building_id), None)
             if target_b:
                 damage = int(attacker.combat.atk * 0.5) # Buildings take 50% damage from basic attacks
-                target_b.take_damage(damage)
-                logger.info("Entity %d sabotaged building %s for %d damage", attacker.id, target_b.building_id, damage)
+                from src.actions.base import BuildingUpdate
+                proposal.updates.append(BuildingUpdate(building_id=target_b.building_id, damage_amount=damage))
+                logger.info("Entity %d tasked sabotage on building %s for %d", attacker.id, target_b.building_id, damage)
             return
 
         defender = world.entities.get(proposal.target)
         if not defender: return
+
+        # AOA Stabilization: Explicit combat target synchronization
+        # Required for AI tactical focus and skirmish logic.
+        attacker.combat.combat_target_id = defender.id
+        if defender.combat.alive:
+            defender.combat.combat_target_id = attacker.id
 
         # RESOLVE
         damage, is_crit, is_evasion, trace_details = DamageResolutionService.resolve(
@@ -295,8 +299,13 @@ class CombatAction:
         # AFTERMATH (Memory, Grudges, Threat)
         CombatAftermathService.process(attacker, defender, world, damage, is_crit, is_evasion, self._config, proposal, trace_details)
 
+        # KILL RECOGNITION (Pillar 1 Convergence: Proposed in Apply Phase)
+        # We predict the death here so that rewards are recorded in the proposal updates.
+        if not is_evasion and (defender.combat.hp - damage) <= 0:
+            KillRewardService.resolve_kill(attacker, defender, world, proposal)
+
         # TOUGHNESS HARDENING (design-04)
-        if not is_evasion and defender.combat.alive:
+        if not is_evasion and (defender.combat.hp - damage) > 0:
             # Check threshold against predicted HP after damage is applied
             if (defender.combat.hp - damage) / defender.combat.max_hp < 0.15:
                 from src.actions.base import ProgressionUpdate

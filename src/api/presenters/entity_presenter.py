@@ -35,10 +35,12 @@ class EntityPresenter:
                 skill_used=t.get("skill_used", "attack"),
                 raw_damage=t.get("raw_damage", 0),
                 mitigation=t.get("mitigation", 0),
-                elemental_mult=t.get("elemental_mult", 1.0),
-                is_crit=t.get("is_crit", False),
-                is_evasion=t.get("is_evasion", False),
-                explanation=f"Damage: {t.get('damage', 0)}"
+                elemental_mult=t.get("elemental_mult", 1.0) if isinstance(t, dict) else getattr(t, "elemental_mult", 1.0),
+                is_crit=t.get("is_crit", False) if isinstance(t, dict) else getattr(t, "is_crit", False),
+                is_evasion=t.get("is_evasion", False) if isinstance(t, dict) else getattr(t, "is_evasion", False),
+                trauma=t.get("trauma", 0.0) if isinstance(t, dict) else getattr(t, "trauma", 0.0),
+                threat=t.get("threat", 0.0) if isinstance(t, dict) else getattr(t, "threat", 0.0),
+                explanation=f"Damage: {t.get('damage', 0) if isinstance(t, dict) else getattr(t, 'damage', 0)}"
             )
             for t in entity.combat.traces
         ]

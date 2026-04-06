@@ -14,7 +14,8 @@ from src.core.models.enums import AIState, ActionType, Element, GoalType, Emotio
 from src.core.entities.entity import Entity
 from src.actions.base import (
     ActionProposal, IntentUpdate, MindUpdate, NavigationUpdate, CombatTraceUpdate,
-    PerceptionUpdate, ProgressionUpdate, IdentityUpdate, InteractionUpdate, SpatialUpdate
+    PerceptionUpdate, ProgressionUpdate, IdentityUpdate, InteractionUpdate, SpatialUpdate,
+    WorldUpdate, BuildingUpdate
 )
 from src.core.gameplay.items.item_registry import ITEM_REGISTRY
 from src.core.gameplay.classes import SKILL_DEFS
@@ -189,6 +190,11 @@ class ActionSystem(System):
                 if up.gold_delta: entity.progression.gold += up.gold_delta
                 if up.xp_delta: entity.progression.xp += up.xp_delta
                 if up.veterancy_points_delta: entity.progression.veterancy_points += up.veterancy_points_delta
+                if up.fame_delta: entity.progression.fame += up.fame_delta
+                if up.titles_add:
+                    for title in up.titles_add:
+                        if title not in entity.identity.titles:
+                            entity.identity.titles.append(title)
                 
                 if up.skill_cooldowns:
                     for sid, cd in up.skill_cooldowns.items():
@@ -230,7 +236,7 @@ class ActionSystem(System):
                     entity.spatial.region_id = up.region_id
 
             elif isinstance(up, CombatTraceUpdate):
-                # Authoritative Combat Result Application
+                # Authoritative Combat Result Application (Refactored for Mutation Purity)
                 res = up.result
                 target = world.entities.get(res.defender_id)
                 if target and target.combat.alive:
@@ -244,11 +250,11 @@ class ActionSystem(System):
                                 eff.remaining_ticks = 0
                     
                     # Generate Threat and Grudge on target (Defender)
-                    # AOA Stabilization: Use threat from metadata (which includes class multipliers)
-                    threat_val = res.metadata.get("threat", float(res.damage))
+                    # Use normalized fields from the proposal phase
+                    threat_val = res.threat if res.threat > 0 else float(res.damage)
                     target.mind.perception.threat_table[entity.id] = target.mind.perception.threat_table.get(entity.id, 0.0) + threat_val
                     
-                    grudge_val = res.metadata.get("grudge", float(res.damage) / 10.0)
+                    grudge_val = res.grudge if res.grudge > 0 else float(res.damage) / 10.0
                     target.mind.emotion.grudges[entity.id] = target.mind.emotion.grudges.get(entity.id, 0.0) + grudge_val
                     
                     # Store trace for introspection (ring buffer)
@@ -256,21 +262,19 @@ class ActionSystem(System):
                     if len(target.combat.traces) > 20:
                         target.combat.traces = target.combat.traces[-20:]
                     
-                    # Handle Trauma log if massive damage occurred
-                    if "trauma" in res.metadata:
+                    # Handle Trauma log if massive damage occurred (Use typed trauma field)
+                    if res.trauma > 0:
                         from src.core.aspects.mind import MemoryLogEntry
-                        trauma_impact = res.metadata["trauma"]
                         target.mind.narrative.memory_log.append(MemoryLogEntry(
-                            tick=world.tick, type="trauma", impact=-trauma_impact,
+                            tick=world.tick, type="trauma", impact=-res.trauma,
                             details={"desc": f"Took massive damage ({res.damage}) from {entity.identity.display_name} #{entity.id}", "source_id": entity.id}
                         ))
                     
-                    # AOA Stabilization: Record Survival memory when hanging on by a thread (<20% HP)
-                    # This drives the "survival" bias in flee/prevention scores.
+                    # AOA Stabilization: Record Survival memory when hanging on by a thread
                     hp_ratio = target.combat.hp / max(1, target.combat.max_hp)
                     if target.combat.hp > 0 and hp_ratio < 0.2:
                         from src.core.aspects.mind import MemoryLogEntry
-                        # Check if we already recorded a survival event this tick or recently
+                        # Check local recent survival to prevent log spam
                         recent_survival = any(m.type == "survival" and m.tick > world.tick - 5 for m in target.mind.narrative.memory_log)
                         if not recent_survival:
                             target.mind.narrative.memory_log.append(MemoryLogEntry(
@@ -281,11 +285,35 @@ class ActionSystem(System):
                     if len(target.mind.narrative.memory_log) > 50:
                         target.mind.narrative.memory_log = target.mind.narrative.memory_log[-50:]
                     
-                    # AOA Stabilization: Authoritative Kill Recognition
-                    # Triggered only when HP reaches 0 during a CombatTraceUpdate (Pillar 3/Pillar 5 convergence)
-                    if not target.combat.alive:
-                        from src.actions.combat import KillRewardService
-                        KillRewardService.resolve_kill(entity, target, world, proposal)
+                    # NOTE: Kill Recognition (Corpses, Rewards) moved to the proposal phase 
+                    # for better visibility and deterministic capture.
+
+            elif isinstance(up, WorldUpdate):
+                # Authoritative World Mutation (Pillar 1 Stabilization)
+                if up.new_corpse:
+                    # Resolve ID if not already set (e.g. from workers)
+                    node = up.new_corpse
+                    if node.node_id == 0 and up.increment_corpse_id:
+                        node.node_id = world._next_corpse_id
+                        world._next_corpse_id += 1
+                    
+                    # Add to world state and spatial index
+                    world.corpse_nodes[node.node_id] = node
+                    # (Spatial index for nodes if applicable, but usually they are just static objects)
+                    logger.info("Authoritatively created corpse node %d at %s", node.node_id, node.pos)
+
+            elif isinstance(up, BuildingUpdate):
+                # Authoritative Building Mutation (Pillar 1 Stabilization)
+                target_b = next((b for b in world.buildings if b.building_id == up.building_id), None)
+                if target_b:
+                    if up.damage_amount > 0:
+                        target_b.take_damage(up.damage_amount)
+                        logger.info("Authoritative damage on building %s: %d", up.building_id, up.damage_amount)
+                    if up.repair_amount > 0:
+                        target_b.repair(up.repair_amount)
+                        logger.info("Authoritative repair on building %s: %d", up.building_id, up.repair_amount)
+                    if up.is_destroyed:
+                        target_b.is_functional = False
 
             elif isinstance(up, InteractionUpdate):
                 # AOA Stabilization: Authoritative interaction side-effects

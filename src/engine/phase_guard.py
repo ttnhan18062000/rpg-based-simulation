@@ -25,19 +25,29 @@ class EngineContextProxy(Generic[T]):
         if name.startswith("_"):
             return getattr(self._ctx, name)
             
-        permission = self._contract.permissions.get(name, self._PhaseAccess.NONE)
-        if not (permission & self._PhaseAccess.READ):
-            # For now, we still log a warning to catch edge cases, but plan to raise RuntimeError later.
-            logger.warning(
-                "Phase '%s' attempted to READ unauthorized field '%s'", 
-                self._contract.name, name
+        # Special handling for emission based on contract
+        if name == "emit":
+            if not self._contract.allow_emit:
+                raise RuntimeError(f"Phase '{self._contract.name}' attempted to EMIT but 'allow_emit' is False.")
+            return getattr(self._ctx, name)
+
+        from src.engine.phases.contract import PhaseAccess
+        permission = self._contract.permissions.get(name, PhaseAccess.NONE)
+        
+        # AOA Stabilization: Strict Enforcement of READ permissions
+        if not (permission & PhaseAccess.READ):
+            raise RuntimeError(
+                f"Phase '{self._contract.name}' attempted to READ unauthorized field '{name}'"
             )
         
         return getattr(self._ctx, name)
 
     def __setattr__(self, name: str, value: Any) -> None:
-        permission = self._contract.permissions.get(name, self._PhaseAccess.NONE)
-        if not (permission & self._PhaseAccess.MUTATE):
+        from src.engine.phases.contract import PhaseAccess
+        permission = self._contract.permissions.get(name, PhaseAccess.NONE)
+        
+        # AOA Stabilization: Strict Enforcement of MUTATE permissions
+        if not (permission & PhaseAccess.MUTATE):
             raise RuntimeError(
                 f"Phase '{self._contract.name}' attempted to MUTATE unauthorized field '{name}'"
             )

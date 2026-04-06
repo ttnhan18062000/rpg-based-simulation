@@ -23,6 +23,7 @@ class CleanupPhase(EnginePhase):
             permissions={
                 "world": PhaseAccess.READ_WRITE, # Removing entities mutates world
                 "config": PhaseAccess.READ,
+                "rng": PhaseAccess.READ,         # Needed for SystemContext
                 "generator": PhaseAccess.READ,
                 "faction_reg": PhaseAccess.READ,
                 "hero_lifecycle": PhaseAccess.READ_WRITE,

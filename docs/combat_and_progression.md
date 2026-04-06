@@ -6,9 +6,9 @@ Technical documentation for combat formulas, damage types, elements, leveling, d
 
 ## Overview
 
-Combat is resolved deterministically using effective stats (base + equipment + attribute bonuses + status effects). The system supports dual damage types (physical/magical), elemental vulnerabilities, evasion, critical hits, potion use, and skill-based attacks. Killing enemies awards XP and gold, with level-ups granting permanent stat and attribute growth. All stat lookups are delegated via the `StatsProxy` on `entity.stats`.
+Combat is resolved deterministically using effective stats (base + equipment + attribute bonuses + status effects). The system supports dual damage types (physical/magical), elemental vulnerabilities, evasion, critical hits, potion use, and skill-based attacks. Killing enemies awards XP and gold, with level-ups granting permanent stat and attribute growth. All logic is encapsulated in **Aspects** (`CombatAspect`, `ProgressionAspect`, `MindAspect`).
 
-**Primary files:** `src/actions/combat.py`, `src/actions/damage.py`, `src/engine/world_loop.py`, `src/systems/generator.py`
+**Primary files:** `src/actions/combat.py`, `src/actions/damage.py`, `src/engine/world_loop.py`, `src/actions/base.py` (Proposals)
 
 ### Global Scaling
 As the world ages, the difficulty scales globally. All spawned entities receive a stat multiplier based on the current world age. See [World Evolution & Resilience](file:///d:/Projects/rpg-based-simulation/docs/world_evolution_and_resilience.md) for the scaling formula.
@@ -57,17 +57,16 @@ if random_roll < evasion_chance → MISS (no damage)
 - Attacker's `luck` reduces defender's evasion
 - Evasion capped at 75%
 
-### Step 2: Base Damage (Attribute-Enhanced)
+### Step 2: Base Damage Calculation
+Damage is calculated using the **Fractional Armor Mitigation** formula (Pillar 3):
 
 ```
-atk_power = attacker.effective_atk() * sanctuary_atk_mult    # or effective_matk()
-def_power = defender.effective_def() * sanctuary_def_mult     # or effective_mdef()
+atk_final = attacker.combat.atk * attacker_primary_mult * skill_power
+def_final = defender.combat.def * defender_primary_mult
 
-atk_mult = 1.0 + attacker_primary_attr * 0.02
-def_mult = 1.0 + defender_primary_attr * 0.01
-
-damage = int(atk_power * atk_mult) - int(def_power * def_mult) // 2
-damage = max(damage, 1)
+# Pillar 3: Non-linear mitigation
+raw_damage = int(atk_final * (atk_final / (atk_final + def_final * 2.0 + 1.0)))
+damage = max(raw_damage, 1)
 ```
 
 - Minimum 1 damage guaranteed
@@ -114,12 +113,22 @@ damage = damage * vulnerability
 
 - Values > 1.0 = weakness, < 1.0 = resistance, 0.0 = immune
 
-### Step 6: Apply Damage
+### Step 6: Authoritative Application
+Since the **AOA Stabilization**, the engine does not mutate HP directly in the resolution service. Instead, it emits a **`CombatTraceUpdate`**:
 
+```python
+# In CombatAction.apply()
+proposal.updates.append(CombatTraceUpdate(
+    result=CombatTraceRecord(
+        attacker_id=attacker.id, 
+        defender_id=defender.id,
+        damage=damage,
+        details=CombatTraceDetails(is_crit=is_crit, ...)
+    )
+))
 ```
-defender.stats.hp -= int(damage)
-attacker.next_act_at += speed_delay(attacker.stats.spd, "attack")
-```
+
+The **`ActionSystem`** later processes these updates authoritatively, applying the damage, generating threat/grudges, and recording the memory log in the same tick.
 
 ---
 
@@ -138,7 +147,9 @@ Each entity has an `elem_vuln` table on `Stats` (dict mapping Element → float)
 
 ---
 
-## On-Kill Rewards
+## On-Kill Rewards (Pillar 1 Stabilization)
+
+Reward logic is precomputed in the **`KillRewardService`** but applied authoritatively.
 
 ### XP Award
 

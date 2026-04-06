@@ -227,6 +227,8 @@ class CombatTraceSchema(BaseModel):
     elemental_mult: float = 1.0
     is_crit: bool = False
     is_evasion: bool = False
+    trauma: float = 0.0
+    threat: float = 0.0
     explanation: str = ""
 
 class GoalScoreSchema(BaseModel):

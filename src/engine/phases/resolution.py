@@ -22,11 +22,15 @@ class ResolutionPhase(EnginePhase):
             permissions={
                 "world": PhaseAccess.READ_WRITE, # Actions mutate world state
                 "config": PhaseAccess.READ,
+                "rng": PhaseAccess.READ,        # Needed for SystemContext
+                "generator": PhaseAccess.READ,  # Needed for SystemContext
+                "faction_reg": PhaseAccess.READ, # Needed for SystemContext
                 "conflict_resolver": PhaseAccess.READ_WRITE,
                 "action_system": PhaseAccess.READ_WRITE,
                 "hero_lifecycle": PhaseAccess.READ_WRITE,
                 "tick_proposals": PhaseAccess.READ,
                 "tick_applied": PhaseAccess.MUTATE,
+                "tick_events": PhaseAccess.READ_WRITE,
                 "emit": PhaseAccess.READ_WRITE
             }
         )

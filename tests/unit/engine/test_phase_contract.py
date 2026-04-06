@@ -31,10 +31,10 @@ def test_phase_guard_read_unauthorized(engine_context, caplog):
         # Authorized READ
         assert guarded.world == "world_data"
         
-        # Unauthorized READ (should log warning for now)
-        data = guarded.config
-        assert data == "config_data"
-        assert "Phase 'TestRead' attempted to READ unauthorized field 'config'" in caplog.text
+        # Unauthorized READ (AOA Stabilization: Now raises RuntimeError)
+        with pytest.raises(RuntimeError) as excinfo:
+            _ = guarded.config
+        assert "attempted to READ unauthorized field 'config'" in str(excinfo.value)
 
 def test_phase_guard_mutate_unauthorized(engine_context):
     contract = PhaseContract(

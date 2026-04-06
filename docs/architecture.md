@@ -44,14 +44,14 @@ Every tick (default 50ms) executes exactly seven phases in a strict, contract-en
 | :--- | :--- | :--- |
 | **1. PreSystems** | Global clock, age multipliers, environmental shifts. | `world.clock`, `world.config` / `world.environment` |
 | **2. Scheduling** | Identify entities due to act, reset per-tick temporary state. | `world.entities` / `tick_ready_entities` |
-| **3. Collection** | Fan-out AI tasks to `WorkerPool`, collect `ActionProposal` list. | `world.entities` / `tick_proposals` |
-| **4. Resolution** | **Authorization Phase**. Conflict resolution, damage math, collisions. | `tick_proposals` / `world.entities`, `world.event_bus` |
-| **5. Cleanup** | Remove dead entities, cleanup spatial index, TTL for ground items. | `world.entities` / `world.entities` (DELETE) |
-| **6. Finalization** | Sync state for API, calculate tick-duration metrics. | `world` / `tick_applied`, `tick_metrics` |
-| **7. Persistence** | **Side-Effect Phase**. Kafka event emission, snapshot archival. | `world`, `tick_applied` / NONE (I/O only) |
+| **3. Collection** | Fan-out AI tasks to `WorkerPool`, collect `ActionProposal` list. | `world.entities`, `action_queue` / `tick_proposals` |
+| **4. Resolution** | **Conflict & Update Phase**. Resolution, authoritative reward proposals. | `tick_proposals` / `tick_applied`, `world.entities` |
+| **5. Cleanup** | Remove dead entities, drop items, and handle hero respawns. | `world.entities`, `rng` / `world.entities` (DELETE) |
+| **6. Finalization** | **Metric Phase**. Calculate tick-duration and performance metrics. | `world`, `tick_applied` / `tick_metrics` |
+| **7. Persistence** | **External Phase**. Kafka/Redis publication and stream canonicalization. | `world`, `tick_applied`, `tick_events` / NONE (I/O only) |
 
 ### Phase Governance (`PhaseGuard`)
-Runtime integrity is enforced by the `PhaseGuard` and `EngineContextProxy`. If a phase attempts to mutate a field it doesn't own (e.g., `SchedulingPhase` attempting to deal damage), a `RuntimeError` is raised.
+Runtime integrity is enforced by the `PhaseGuard` and `EngineContextProxy`. Since the **RPG Core Stabilization (2026-04-06)**, the guard is in **Strict Mode**: any attempt to access or mutate a field not explicitly declared in the `PhaseContract` will raise a `RuntimeError` and halt execution. This ensures 100% architectural compliance.
 
 ---
 

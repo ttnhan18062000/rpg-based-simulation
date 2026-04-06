@@ -168,6 +168,10 @@ class ProgressionUpdate(IntentUpdate):
     
     quest_add: list[Quest] = Field(default_factory=list)
     
+    # [AOA STABILIZATION] Fame & Narrative Titles
+    fame_delta: int = 0
+    titles_add: list[str] = Field(default_factory=list)
+    
     # Status Effects (CombatAspect)
     effects_add: list[StatusEffect] = Field(default_factory=list)
     effects_remove: list[str] = Field(default_factory=list) # by effect_id or source
@@ -237,7 +241,15 @@ class BuildingUpdate(IntentUpdate):
     """Updates to building durability or state."""
     building_id: str
     repair_amount: float = 0.0
+    damage_amount: float = 0.0
     is_destroyed: bool = False
+
+class WorldUpdate(IntentUpdate):
+    """Authoritative updates to global world state (Corpses, Idents, Spawns). [AOA STABILIZATION]"""
+    # Pillar 1 fix: mutations must be authoritative.
+    new_corpse: Any | None = None # Avoiding circular import with CorpseNode
+    increment_corpse_id: bool = False
+    new_entity: Any | None = None # Avoiding circular import with Entity
 
 class CombatTraceUpdate(IntentUpdate):
     """Refined trace wrapper to provide a unified combat result to the engine. [AOA STABILIZATION]"""

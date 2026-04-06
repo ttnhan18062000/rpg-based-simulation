@@ -27,19 +27,10 @@ class FinalizationPhase(EnginePhase):
         )
 
     def execute(self, ctx: EngineContext) -> None:
-        tick = ctx.world.tick
-        applied = ctx.tick_applied
+        """Finalization phase now focuses on non-mutating cleanup and notification.
         
-        # Propagate AI State changes from authoritative decisions
-        for proposal in applied:
-            entity = ctx.world.entities.get(proposal.actor_id)
-            if entity is None: 
-                continue
-            
-            # Sync AI State (Decision Aspect)
-            if proposal.new_ai_state is not None:
-                entity.mind.decision.ai_state = AIState(proposal.new_ai_state)
-            
-            # Sync Reasoning for Introspection
-            if proposal.reason:
-                entity.mind.decision.last_reason = proposal.reason
+        AOA Hardening: AI State and Reasoning are authoritatively applied during 
+        the Resolution phase (via ActionSystem). Redundant application here is 
+        removed to prevent future divergence.
+        """
+        pass

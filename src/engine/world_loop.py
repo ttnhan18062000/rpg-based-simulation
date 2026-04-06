@@ -243,7 +243,7 @@ class WorldLoop:
             system_manager=self._system_manager,
             action_system=self._action_system,
             hero_lifecycle=self._hero_lifecycle,
-            emit=self._emit,
+            emit=self._emit, tick_events=self._tick_events,
             tick_start_time=time.perf_counter()
         )
 
@@ -251,13 +251,20 @@ class WorldLoop:
         from src.engine.phase_guard import PhaseGuard
         for phase in self._phases:
             try:
-                with PhaseGuard(ctx, phase.contract):
-                    phase.execute(ctx)
+                with PhaseGuard(ctx, phase.contract) as guarded_ctx:
+                    phase.execute(guarded_ctx)
             except Exception as e:
                 self._logger.error("Phase %s failed: %s", phase.contract.name, e, exc_info=True)
                 # If a phase fails, we might want to halt the tick or continue depending on config
                 if not self._config.ignore_phase_errors:
                     raise
+            
+            # Post-Phase Infrastructure Sync (Pillar 1 Stabilization)
+            if ctx.tick_new_entities:
+                for entity in ctx.tick_new_entities:
+                    self._world.add_entity(entity)
+                # Clear the queue to prevent double-application in later phases (context is shared)
+                ctx.tick_new_entities = []
 
         # Sync results for legacy API/Recorder
         self._last_applied = ctx.tick_applied
@@ -285,7 +292,7 @@ class WorldLoop:
             system_manager=self._system_manager,
             action_system=self._action_system,
             hero_lifecycle=self._hero_lifecycle,
-            emit=self._emit,
+            emit=self._emit, tick_events=self._tick_events,
             tick_start_time=time.perf_counter()
         )
         CleanupPhase().execute(ctx)

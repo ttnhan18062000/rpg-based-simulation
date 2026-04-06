@@ -76,27 +76,22 @@ async def stream_ws(
                 msg_id, msg_data = messages[0]
                 last_id = msg_id
                 
-                # We could use the payload_json pre-computed in EngineManager,
-                # but if the client wants MSGPack or Compact mode, we re-encode here.
-                # In a high-scale production env, we'd pre-publish both to Redis.
+                # Canonicalization: Consume pre-computed payloads from Redis (Pillar 5)
+                # These are produced by the engine's PersistencePhase.
+                raw_payload = msg_data.get(mode)
                 
-                # For now, we rebuild from the latest snapshot in EngineManager
-                # because the Redis payload is just a JSON string of a delta.
-                snap = manager.get_snapshot()
-                if snap and snap.tick > initial_snap.tick:
-                    # Use pre-computed payload from manager (AOA Final Convergence)
-                    payload = manager.get_tick_payload(mode)
-                    if not payload:
-                        # Fallback if cache not ready or mismatch
-                        events = manager.event_log.since_tick(snap.tick)
-                        payload = WorldPresenter.to_compact_tick(snap, events, mode=mode)
+                if raw_payload:
+                    # Redis fields are strings, but we need to (re)encode for BWS/JSON
+                    # In a true high-perf scenario, we'd store pre-baked msgpack in Redis.
+                    # For now, we take the JSON dict and encode.
+                    payload = json.loads(raw_payload)
                     
                     if fmt == "msgpack":
                         serialized = msgpack.packb(jsonable_encoder(payload), use_bin_type=True)
                         await websocket.send_bytes(serialized)
                     else:
-                        serialized = json.dumps(jsonable_encoder(payload))
-                        await websocket.send_text(serialized)
+                        # Optimization: since it's already JSON from Redis, just send it!
+                        await websocket.send_text(raw_payload)
                         
     except WebSocketDisconnect:
         logger.info("WebSocket client disconnected")

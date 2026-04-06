@@ -10,10 +10,16 @@ The `tests/e2e/test_production_stack.py` which verifies the full Docker-Compose 
 - Harden the `engine_stack` fixture in `conftest.py`.
 
 ## Acceptance Criteria
-- [ ] `tests/e2e/test_production_stack.py` passes 100%.
-- [ ] Loki ingestion verified with trace-backed logs.
-- [ ] Prometheus metrics verified with simulation gauges.
-- [ ] No residual containers or volumes left after cleanup.
+- [x] `tests/e2e/test_production_stack.py` passes 100%.
+- [x] Loki ingestion verified with trace-backed logs.
+- [x] Prometheus metrics verified with simulation gauges.
+- [x] No residual containers or volumes left after cleanup.
+
+## Completion Notes
+- **ActionSystem Fix**: Restored missing `_update_combat_visualization` method that was accidentally removed during RPG logic audit.
+- **EventPresenter Fix**: Handled `SimEvent` object serialization for compact WebSocket/Kafka payloads.
+- **Infrastructure Hardening**: Increased RabbitMQ/Kafka healthcheck tolerances in `docker-compose.yml` to prevent premature failures on slow test environments.
+- **Verified**: 5/5 E2E tests passed in production-grade stack.
 
 ## Status
-INPROGRESS
+DONE

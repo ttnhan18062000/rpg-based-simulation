@@ -40,5 +40,10 @@ class CombatTraceRecord(SimulationModel):
     
     details: CombatTraceDetails = Field(default_factory=CombatTraceDetails)
     
+    # [AOA STABILIZATION] Normalized combat results
+    trauma: float = 0.0
+    threat: float = 0.0
+    grudge: float = 0.0
+    
     # Metadata for enriched events (e.g. coordinates, weapon kind)
     metadata: Mapping[str, Any] = Field(default_factory=dict)

@@ -15,6 +15,7 @@ if TYPE_CHECKING:
     from src.systems.gameplay.action_system import ActionSystem
     from src.systems.lifecycle.hero_lifecycle_system import HeroLifecycleSystem
     from src.actions.base import ActionProposal
+    from src.utils.event_log import SimEvent
 
 @dataclass
 class EngineContext:
@@ -34,6 +35,8 @@ class EngineContext:
     
     # State passed between phases during a single tick
     tick_ready_entities: list = field(default_factory=list)
+    tick_new_entities: list = field(default_factory=list)
     tick_proposals: list[ActionProposal] = field(default_factory=list)
     tick_applied: list[ActionProposal] = field(default_factory=list)
+    tick_events: list[SimEvent] = field(default_factory=list)
     tick_start_time: float = 0.0
