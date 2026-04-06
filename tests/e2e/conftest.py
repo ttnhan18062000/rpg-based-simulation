@@ -119,7 +119,16 @@ def engine_stack() -> Generator:
             
         time.sleep(5)
     else:
-        print("WARNING: E2E Stack did not fully stabilize within 120s, tests may fail.")
+        # Final fail-over check for backend via its specific health endpoint
+        try:
+            backend_port = os.environ.get("BACKEND_PORT", "8000")
+            resp = requests.get(f"http://localhost:{backend_port}/health", timeout=2)
+            if resp.status_code == 200:
+                print("LATE-SUCCESS: Backend is healthy, proceeding.")
+            else:
+                print("WARNING: E2E Stack did not fully stabilize within 120s, tests may fail.")
+        except:
+            print("WARNING: E2E Stack stabilization failed, tests likely to fail.")
     
     # Extra buffer for indexing
     print("Stack up. Cooling down for 10s for log indexing...")
@@ -127,6 +136,7 @@ def engine_stack() -> Generator:
     
     yield
     
-    # Temporarily disabled for debugging
-    # print("\n--- [Cleanup] Tearing down Production Stack ---")
-    # run_command(f"docker compose -f {DOCKER_COMPOSE_FILE} -p {PROJECT_NAME} down -v")
+    # Pillar 6: Isolation & Cleanup. 
+    # Mandatory to prevent volume leakage (e.g. Kafka Cluster ID mismatch)
+    print("\n--- [Cleanup] Tearing down Production Stack ---")
+    run_command(f"docker compose -f {DOCKER_COMPOSE_FILE} -p {PROJECT_NAME} down -v")

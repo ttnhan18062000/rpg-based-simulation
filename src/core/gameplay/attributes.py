@@ -8,8 +8,13 @@ Refactored for AOA Stabilization:
 
 from __future__ import annotations
 import math as _math
+from typing import TYPE_CHECKING, Any
 from src.core.models.base import SimulationModel
 from pydantic import Field, PrivateAttr
+
+if TYPE_CHECKING:
+    from src.core.entities.entity import Entity
+    from src.platform.rng import DeterministicRNG
 
 class Attributes(SimulationModel):
     """Primary RPG attributes for an entity (9 attributes)."""
@@ -165,8 +170,8 @@ def derive_cooldown_reduction(int_: int, wis: int) -> float:
 # Recalculate derived stats
 # ---------------------------------------------------------------------------
 
-def recalc_derived_stats(entity: Entity, new_attrs: Attributes, old_attrs: Attributes | None = None) -> None:
-    """Recompute all attribute-derived fields for the given Entity."""
+def recalc_derived_stats(entity: "Entity", new_attrs: Attributes, old_attrs: Attributes | None = None) -> None:
+    """Recompute all attribute-derived fields for the given Entity. [AOA STABILIZATION]"""
     combat = entity.combat
     prog = entity.progression
     
@@ -273,6 +278,12 @@ def train_attributes(entity: Any, action: str, bucket: Any = None, aptitudes: di
     
     for attr_key, base_rate in rates.items():
         rate = base_rate * aptitudes.get(attr_key, 1.0)
+        
+        # Pillar 3: Soft Cap Diminishing Returns
+        current_val = getattr(attrs, _TRAIN_MAP[attr_key][0])
+        if current_val >= soft_cap_limit:
+            rate *= 0.1 # 90% reduction beyond soft cap
+            
         if _apply_train(attrs, caps, attr_key, rate):
             changed = True
             

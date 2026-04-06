@@ -156,6 +156,7 @@ class ProgressionUpdate(IntentUpdate):
     age_ticks_delta: int = 0
     veterancy_points_delta: int = 0
     hp_delta: int = 0
+    max_hp_delta: int = 0
     stamina_delta: int = 0
     
     inventory_add: list[str] = Field(default_factory=list)

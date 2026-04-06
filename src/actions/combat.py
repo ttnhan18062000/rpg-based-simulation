@@ -135,7 +135,6 @@ class CombatAftermathService:
         )
         # awarding veterancy for hit
         if not is_evasion:
-            attacker.progression.veterancy_points += 1 # Legacy mutation for unit tests
             from src.actions.base import ProgressionUpdate
             proposal.updates.append(ProgressionUpdate(veterancy_points_delta=1))
         
@@ -188,7 +187,6 @@ class KillRewardService:
         # XP Gain
         xp_gain = 5 if victim.progression.level <= killer.progression.level else 10
         # Killer gets XP/Gold/Veterancy
-        killer.progression.veterancy_points += 5 # Legacy mutation for unit tests
         proposal.updates.append(ProgressionUpdate(gold_delta=victim.progression.gold, xp_delta=xp_gain, veterancy_points_delta=5))
         
         # Gold/Corpse
@@ -301,8 +299,8 @@ class CombatAction:
         if not is_evasion and defender.combat.alive:
             # Check threshold against predicted HP after damage is applied
             if (defender.combat.hp - damage) / defender.combat.max_hp < 0.15:
-                defender.combat.max_hp += 1
-                defender.combat.validate()
+                from src.actions.base import ProgressionUpdate
+                proposal.updates.append(ProgressionUpdate(max_hp_delta=1))
 
     @staticmethod
     def _get_weapon_range(entity: Entity) -> int:

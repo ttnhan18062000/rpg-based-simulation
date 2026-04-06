@@ -179,11 +179,16 @@ class ActionSystem(System):
                 if up.hp_delta:
                     entity.combat.hp = max(0, min(entity.combat.max_hp, entity.combat.hp + up.hp_delta))
                 
+                if up.max_hp_delta:
+                    entity.combat.max_hp_base += up.max_hp_delta
+                    entity.combat.hp = max(0, min(entity.combat.max_hp, entity.combat.hp + up.max_hp_delta))
+                
                 if up.stamina_delta:
                     entity.progression.stamina = max(0, min(entity.progression.max_stamina, entity.progression.stamina + up.stamina_delta))
                 
                 if up.gold_delta: entity.progression.gold += up.gold_delta
                 if up.xp_delta: entity.progression.xp += up.xp_delta
+                if up.veterancy_points_delta: entity.progression.veterancy_points += up.veterancy_points_delta
                 
                 if up.skill_cooldowns:
                     for sid, cd in up.skill_cooldowns.items():
@@ -436,48 +441,6 @@ class ActionSystem(System):
                 updates.append(ProgressionUpdate(inventory_add=[item_id], stamina_delta=-2))
         return updates
 
-    def handle_tactical_maneuvers(self, context: SystemContext, applied: list[ActionProposal], pre_positions: dict) -> None:
-        """Process opportunity attacks."""
-        self._process_opportunity_attacks(context, applied, pre_positions)
-
-    def _process_opportunity_attacks(self, context: SystemContext, applied: list[ActionProposal], pre_positions: dict) -> None:
-        world = context.world
-        reg = context.faction_reg
-        mult = context.config.opportunity_attack_damage_mult
-        
-        for proposal in applied:
-            if proposal.verb != ActionType.MOVE: continue
-            mover = world.entities.get(proposal.actor_id)
-            if not mover or not mover.combat.alive: continue
-            old_pos = pre_positions.get(proposal.actor_id)
-            if not old_pos: continue
-            
-            for eid, ent in world.entities.items():
-                if eid == mover.id or not ent.combat.alive: continue
-                if not reg.is_hostile(mover.identity.faction, ent.identity.faction): continue
-                
-                # Manhattan adjacency to old position
-                if abs(ent.spatial.pos.x - old_pos.x) + abs(ent.spatial.pos.y - old_pos.y) == 1:
-                    raw = max(1, int(ent.combat.atk * mult) - mover.combat.def_ // 2)
-                    mover.combat.hp = max(0, mover.combat.hp - raw)
-                    
-                    context.emit("combat", f"{ent.id} used opportunity attack on {mover.id}",
-                                 (ent.id, mover.id),
-                                 {"attacker_id": ent.id, "damage": raw, "skill_id": "OPPORTUNITY_ATTACK"})
-
-    def _update_combat_visualization(self, context: SystemContext, applied: list[ActionProposal]) -> None:
-        world = context.world
-        acted = {p.actor_id for p in applied}
-        for p in applied:
-            actor = world.entities.get(p.actor_id)
-            if actor and p.verb in (ActionType.ATTACK, ActionType.USE_SKILL):
-                actor.combat.combat_target_id = p.target
-        
-        for entity in world.entities.values():
-            if entity.id not in acted:
-                if entity.mind.decision.ai_state not in (AIState.COMBAT, AIState.HUNT):
-                    entity.combat.combat_target_id = None
-
     def _update_ai_derived_states(self, context: SystemContext, applied: list[ActionProposal]) -> None:
         world = context.world
         for p in applied:
@@ -494,3 +457,10 @@ class ActionSystem(System):
                 entity.mind.decision.consecutive_idle_ticks += 1
             else:
                 entity.mind.decision.consecutive_idle_ticks = 0
+
+    def _update_combat_visualization(self, context: SystemContext, applied: list[ActionProposal]) -> None:
+        """Placeholder for visualization-specific side effects (e.g. particle emissions).
+        
+        Currently, most combat events are emitted directly via CombatAftermathService.
+        """
+        pass

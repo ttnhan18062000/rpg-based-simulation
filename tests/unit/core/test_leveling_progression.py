@@ -183,11 +183,15 @@ def test_combat_veterancy_points():
     proposal = ActionProposal(actor_id=1, verb=ActionType.ATTACK, target=2)
     
     # Execute should deal damage and kill e2
-    events = action.apply(proposal, world)
+    action.apply(proposal, world)
+    
+    # AOA Stabilization: Verifying updates in proposal instead of direct mutation
+    from src.actions.base import ProgressionUpdate
+    v_points = sum(u.veterancy_points_delta for u in proposal.updates if isinstance(u, ProgressionUpdate))
     
     # +1 hit dealt
-    assert e1.progression.veterancy_points >= 1
+    assert v_points >= 1
     # Check if target died (should have +5 or +10 for kill)
     if not e2.combat.alive:
         # 1 hit + 5 kill
-        assert e1.progression.veterancy_points >= 6
+        assert v_points >= 6
