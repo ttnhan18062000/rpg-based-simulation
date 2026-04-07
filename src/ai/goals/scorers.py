@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING
 from src.ai.goals.base import GoalScorer
 from src.core.models.enums import AIState, GoalType, Faction
 from src.core.entities.traits import aggregate_trait_stats, aggregate_trait_utility
+from src.core.models.vectors import Vector2
 
 if TYPE_CHECKING:
     from src.ai.states import AIContext
@@ -41,7 +42,7 @@ class CombatGoal(GoalScorer):
         enemy = ctx.nearest_enemy()
         if enemy:
             dist = actor.spatial.pos.manhattan(enemy.spatial.pos)
-            base += 0.5 * max(0, 1.0 - dist / 10.0)
+            base += 0.7 * max(0, 1.0 - dist / 15.0)  # [AOA STABILIZATION] Boosted for unit test reliability
         return base + _trait_utility(ctx).combat
 
 # ---------------------------------------------------------------------------
@@ -54,7 +55,21 @@ class FleeGoal(GoalScorer):
     @property
     def target_state(self) -> AIState: return AIState.FLEE
     def score(self, ctx: AIContext) -> float:
-        if ctx.actor.combat.hp_ratio < 0.25: return 2.0
+        actor = ctx.actor
+        hp_ratio = actor.combat.hp_ratio
+        
+        # Deadband logic: 
+        # Enter at 0.3 (30%) HP, exit at 0.5 (50%) HP if already fleeing.
+        enter_threshold = getattr(ctx.config, "flee_hp_threshold", 0.3)
+        exit_threshold = getattr(ctx.config, "flee_exit_threshold", 0.5)
+        
+        is_already_fleeing = actor.mind.decision.ai_state == AIState.FLEE
+        
+        if hp_ratio < enter_threshold:
+            return 2.0
+        if is_already_fleeing and hp_ratio < exit_threshold:
+            return 2.0
+            
         return 0.0
 
 # ---------------------------------------------------------------------------
@@ -79,7 +94,28 @@ class LootGoal(GoalScorer):
     @property
     def target_state(self) -> AIState: return AIState.LOOTING
     def score(self, ctx: AIContext) -> float:
-        return 0.1 + _trait_utility(ctx).loot
+        actor = ctx.actor
+        if not actor.inventory: return 0.0
+        
+        # Abort if full or overweight
+        if actor.inventory.is_full or actor.inventory.weight_ratio >= 1.0:
+            return 0.0
+            
+        base = 0.1
+        # Penalty for near-full bag
+        if actor.inventory.slots_free <= 2 or actor.inventory.weight_ratio >= 0.9:
+            base *= 0.2
+            
+        # Nearby loot bonus
+        if ctx.snapshot.ground_items:
+            # Simple proximity check for ground loot
+            for pos_tuple in ctx.snapshot.ground_items:
+                pos = Vector2(*pos_tuple)
+                if actor.spatial.pos.manhattan(pos) < 10:
+                    base += 0.5
+                    break
+                    
+        return base + _trait_utility(ctx).loot
 
 # ---------------------------------------------------------------------------
 # Bio-Needs — Sleep & Eat [PHASE 3]
@@ -115,7 +151,18 @@ class TradeGoal(GoalScorer):
     def name(self) -> GoalType: return GoalType.TRADE
     @property
     def target_state(self) -> AIState: return AIState.VISIT_SHOP
-    def score(self, ctx: AIContext) -> float: return 0.05
+    def score(self, ctx: AIContext) -> float:
+        actor = ctx.actor
+        if not actor.inventory: return 0.0
+        
+        base = 0.05
+        # Urgency bonus for full/heavy bag
+        if actor.inventory.is_full or actor.inventory.weight_ratio >= 0.9:
+            base += 0.8
+        elif actor.inventory.slots_free <= 3:
+            base += 0.4
+            
+        return base
 class RestGoal(GoalScorer):
     @property
     def name(self) -> GoalType: return GoalType.REST

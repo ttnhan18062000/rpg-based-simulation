@@ -165,6 +165,10 @@ class EntityPresenter:
             vision_range=entity.spatial.vision_range,
             terrain_memory={f"{k[0]},{k[1]}": v for k, v in mind.perception.terrain_memory.items()}, # Using PerceptionMemory sub-model
             entity_memory=list(mind.perception.entity_memory),
+            personality=mind.decision.personality,
+            motives=list(mind.decision.motives),
+            motive_utility_biases={g.name.lower(): v for g, v in mind.decision.motive_utility_biases.items()},
+            decision_drivers=list(mind.decision.decision_drivers) if mind.decision.decision_drivers else [],
             goals=list(mind.decision.goals),
             loot_progress=entity.interaction.loot_progress,
             loot_duration=loot_duration,

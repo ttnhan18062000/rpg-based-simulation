@@ -1,34 +1,38 @@
-# Plan: Phase 1 DS Implementation
+# Plan: TCK-20260407-PHASE1-DS
 
-## Phase 1: Foundations of Behavioral Realism
+## Goal
+Implement Phase 1 of Behavioral Realism (Design Shift). 
+This involves migrating from the generic OCEAN personality model to a more RPG-flavored one, adding long-term motives, and shifting perception to a belief-based system.
 
-### Part 1: Data Models (Foundations)
-- [ ] Define `PersonalityProfile` in `src/core/aspects/mind.py`.
-- [ ] Define `PersonalMotive` in `src/core/aspects/mind.py`.
-- [ ] Define `ThreatEstimate` and `BeliefRecord` in `src/core/aspects/mind.py`.
-- [ ] Update `MindAspect` to include these new models.
-- [ ] Update `IdentityAspect` to remove OCEAN traits and keep `Archetype`.
+## Proposed Changes
 
-### Part 2: Seeding & Infrastructure
-- [ ] Update `EntityBuilder` with fluent methods for the new personality/motives.
-- [ ] Update `EntityBuilder.build()` to handle trait initialization from Archetype templates.
-- [ ] Update `generator.py` to seed initial motives and trait variations.
+### 1. Data Models (`src/core/aspects/mind.py`)
+- [ ] Add `PersonalityProfile` to `MindAspect` (or `IdentityAspect`).
+    - Traits: `aggression`, `greed`, `caution`, `loyalty`, `ambition`, `curiosity`.
+- [ ] Add `PersonalMotive` to `MindAspect`.
+    - Fields: `motive_id`, `kind`, `priority`, `progress`, `frustration`, `active`.
+- [ ] Upgrade `MemoryRecord` to `BeliefRecord`.
+    - Fields: `last_seen_pos`, `apparent_kind`, `apparent_faction`, `threat_estimate`, `confidence`.
+- [ ] Add `ThreatEstimate` sub-model.
 
-### Part 3: AI Cognitive Pipeline
-- [ ] Implement `BeliefRefreshService` in `src/ai/beliefs.py`.
-- [ ] Update `AIBrain._sensory_perception_phase` to call belief refresh.
-- [ ] Update `AIBrain._memory_appraisal_phase` to age/decay beliefs.
-- [ ] Update `GoalEvaluator` (or `PersonalityLogic`) to use the new 6-axis personality traits.
-- [ ] Implement motive-based utility modifiers in `AIBrain`.
+### 2. Seeding Logic (`src/core/entities/entity_builder.py`)
+- [ ] Seed personality and motives at spawn/creation.
+- [ ] Bias by archetype/faction/class.
 
-### Part 4: Migration of decision paths
-- [ ] Update `FleeHandler` or `CombatHandler` to use `belief.threat_estimate` instead of direct target HP/stats.
+### 3. Belief Service (`src/ai/beliefs.py`)
+- [ ] Create `BeliefService`.
+- [ ] Implement `refresh_belief_from_observation`.
+- [ ] Implement `decay_stale_beliefs`.
 
-### Part 5: Visibility & Inspection
-- [ ] Update `src/api/schemas.py` and `presenters/entity_presenter.py` to expose the new state.
-- [ ] Add `DecisionDriver` metadata to `ActionProposal` for explainability.
+### 4. AI Pipeline Integration (`src/ai/brain.py`)
+- [ ] Call `BeliefService` in `_sensory_perception_phase`.
+- [ ] Implement motive/personality bias in `_deliberation_tactical_phase`.
+- [ ] Use beliefs (not truth) in chosen decision paths (e.g., Flee/Hunt).
 
-### Part 6: Verification
-- [ ] Run behavioral divergence tests.
-- [ ] Run belief update/decay tests.
-- [ ] Verify inspection payloads in a local run.
+### 5. API / Inspection
+- [ ] Extend `EntityInspectionSchema` and `AIDecisionSchema` in `src/api/schemas.py`.
+- [ ] Update `entity_presenter.py` and `ai_presenter.py`.
+
+## Rollback / Risk
+- **Risk**: Breaking existing `SocialAppraisalService` which depends on OCEAN/SocialBonds.
+- **Rollback**: Keep OCEAN traits as a "legacy" layer for a transition period if needed, or fully migrate `PersonalityLogic`.

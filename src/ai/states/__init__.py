@@ -15,6 +15,7 @@ from src.ai.states.town import (
     VisitGuildHandler, VisitClassHallHandler, VisitInnHandler,
     VisitHomeHandler
 )
+from src.ai.states.routine import SleepingHandler, EatingHandler
 
 STATE_HANDLERS: dict[AIState, StateHandler] = {
     AIState.IDLE: IdleHandler(),
@@ -35,8 +36,8 @@ STATE_HANDLERS: dict[AIState, StateHandler] = {
     AIState.VISIT_CLASS_HALL: VisitClassHallHandler(),
     AIState.VISIT_INN: VisitInnHandler(),
     AIState.VISIT_HOME: VisitHomeHandler(),
-    AIState.EXHAUSTED: ExhaustedHandler(),
-    AIState.RECOVER_CORPSE: CorpseRunHandler(),
+    AIState.SLEEPING: SleepingHandler(),
+    AIState.EATING: EatingHandler(),
 }
 
 __all__ = [

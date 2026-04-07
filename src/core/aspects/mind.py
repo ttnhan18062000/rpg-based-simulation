@@ -7,6 +7,40 @@ from src.core.models.vectors import Vector2
 if TYPE_CHECKING:
     from src.core.entities.entity import Entity
 
+class DecisionDriver(SimulationModel):
+    """A structured record explaining a bias or decision driver. [STAGE 1]"""
+    model_config = ConfigDict(extra='forbid')
+    
+    kind: str # 'motive', 'personality', 'emotion', 'belief', 'social', 'biological'
+    label: str
+    weight: float
+    description: str | None = None
+
+class PersonalityProfile(SimulationModel):
+    """RPG-focused behavioral traits that bias Utility AI scoring. [PHASE 1]"""
+    model_config = ConfigDict(extra='forbid')
+    
+    archetype: str = "balanced"
+    aggression: float = Field(default=0.5, ge=0.0, le=1.0) # Combat weight
+    greed: float = Field(default=0.5, ge=0.0, le=1.0)      # Loot weight
+    caution: float = Field(default=0.5, ge=0.0, le=1.0)    # Flee/Rest weight
+    neuroticism: float = Field(default=0.5, ge=0.0, le=1.0) # Emotional volatility
+    loyalty: float = Field(default=0.5, ge=0.0, le=1.0)    # Social/Protect weight
+    ambition: float = Field(default=0.5, ge=0.0, le=1.0)   # Level-up/Quest weight
+    curiosity: float = Field(default=0.5, ge=0.0, le=1.0)  # Exploration weight
+
+class PersonalMotive(SimulationModel):
+    """Long-term persistence motive that biases goal selection over time. [PHASE 1]"""
+    model_config = ConfigDict(extra='forbid')
+    
+    motive_id: str
+    kind: str # e.g. "build_wealth", "seek_safety", "prove_strength"
+    priority: float = Field(default=1.0, ge=0.0, le=5.0)
+    progress: float = Field(default=0.0, ge=0.0, le=1.0)
+    frustration: float = Field(default=0.0, ge=0.0, le=1.0)
+    active: bool = True
+    target_id: int | None = None
+
 class DecisionState(SimulationModel):
     """Internal state for AI goal selection and commitment."""
     model_config = ConfigDict(extra='forbid', use_enum_values=True)
@@ -19,22 +53,51 @@ class DecisionState(SimulationModel):
     goal_switch_count: int = 0
     goal_cooldowns: dict[GoalType, int] = Field(default_factory=dict)
     goal_scores: dict[GoalType, float] = Field(default_factory=dict)
-    motives: dict[GoalType, float] = Field(default_factory=dict) # Subjective motive weights [PHASE 1]
+    
+    # Subjective motive weights and personality [PHASE 1]
+    personality: PersonalityProfile = Field(default_factory=PersonalityProfile)
+    motives: list[PersonalMotive] = Field(default_factory=list)
+    motive_utility_biases: dict[GoalType, float] = Field(default_factory=dict) # Calculated from motives
+    
     last_appraisal_tick: int = 0                                 # For throttled motive calculation
     boredom_multipliers: dict[GoalType, float] = Field(default_factory=dict)
     consecutive_idle_ticks: int = 0
     action_style: str = "balanced" # aggressive, evasive, balanced
+    decision_drivers: list[str] = Field(default_factory=list)
+    driver_details: list[DecisionDriver] = Field(default_factory=list)
 
-class MemoryRecord(SimulationModel):
-    """A single record of a seen entity or landmark."""
+class ThreatEstimate(SimulationModel):
+    """Subjective assessment of another entity's power. [PHASE 1]"""
+    model_config = ConfigDict(extra='forbid')
+    
+    overall: float = 0.0      # 0.0 to 1.0 logic threshold
+    survivability: float = 0.5 # Estimated how hard they are to kill
+    confidence: float = 0.5    # How certain we are of this estimate (0.0 to 1.0)
+    melee_threat: float = 0.0
+    ranged_threat: float = 0.0
+
+class BeliefRecord(SimulationModel):
+    """A subjective record of what an entity thinks it knows about another. [PHASE 1]"""
     model_config = ConfigDict(extra='forbid')
     
     entity_id: int
     pos: Vector2
-    kind: str = ""
-    faction: str = ""
     last_seen_tick: int = 0
-    threat_level: float = 0.0
+    stale_ticks: int = 0
+    
+    # Apparent state (Subjective)
+    apparent_kind: str = ""
+    apparent_faction: str = ""
+    apparent_role: str = ""
+    apparent_class: str | None = None
+    visible_weapon: str | None = None
+    visible_injury: float = 0.0 # 0.0 to 1.0 (apparent damage)
+    
+    threat: ThreatEstimate = Field(default_factory=ThreatEstimate)
+    observed_skills: set[str] = Field(default_factory=set)
+    confidence: float = 0.5
+
+MemoryRecord = BeliefRecord # Alias for backward compatibility during transition
 
 from pydantic import model_validator
 
@@ -67,6 +130,8 @@ class EmotionState(SimulationModel):
     panic: float = Field(default=0.0, ge=0.0, le=1.0)
     stuck: float = Field(default=0.0, ge=0.0, le=1.0)
     bravery: float = Field(default=0.5, ge=0.0, le=1.0)
+    dread: float = Field(default=0.0, ge=0.0, le=1.0)
+    joy: float = Field(default=0.0, ge=0.0, le=1.0)
     
     mood: float = Field(default=0.5, ge=0.0, le=1.0)
     grudges: dict[int, float] = Field(default_factory=dict)
@@ -80,6 +145,27 @@ class NavigationState(SimulationModel):
     pos_history: list[Vector2] = Field(default_factory=list)
     chase_ticks: int = 0
     engaged_ticks: int = 0
+
+class SocialBondPerception(SimulationModel):
+    """A subjective view of a social bond. [PHASE 2]"""
+    model_config = ConfigDict(extra='forbid')
+    
+    target_id: int
+    trust: float = 0.0
+    fear: float = 0.0
+    rivalry: float = 0.0
+    familiarity: float = 0.0
+    last_interaction_tick: int = 0
+
+class SocialStance(SimulationModel):
+    """Subjective relationship mapping and faction standings. [PHASE 2]"""
+    model_config = ConfigDict(extra='forbid')
+    
+    known_bonds: dict[int, SocialBondPerception] = Field(default_factory=dict)
+    faction_standing: dict[str, float] = Field(default_factory=dict) # FactionID -> Affinity
+    
+    # [PHASE 2] Influence on decision making
+    social_utility_biases: dict[GoalType, float] = Field(default_factory=dict)
 
 
 class NarrativeDetail(SimulationModel):
@@ -167,9 +253,7 @@ class MindAspect(Aspect):
     navigation: NavigationState = Field(default_factory=NavigationState)
     narrative: NarrativeMemory = Field(default_factory=NarrativeMemory)
     routine: RoutineState = Field(default_factory=RoutineState)
-    
-    # Phase 0: Placeholders for Macro-Interest systems
-    social: dict[str, Any] = Field(default_factory=dict) # To be replaced by SocialRegistry links
+    social: SocialStance = Field(default_factory=SocialStance)
     
     bonuses: dict[str, Any] = Field(default_factory=dict)
 
@@ -208,6 +292,10 @@ class MindAspect(Aspect):
     
     # Memory pruning is now handled authoritatively in ActionSystem [PHASE 0 FIX]
 
+PersonalityProfile.model_rebuild()
+PersonalMotive.model_rebuild()
+ThreatEstimate.model_rebuild()
+BeliefRecord.model_rebuild()
 MemoryRecord.model_rebuild()
 PerceptionMemory.model_rebuild()
 EmotionState.model_rebuild()

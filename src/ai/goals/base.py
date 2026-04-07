@@ -119,14 +119,14 @@ class LifeStageModifier(ScoreModifier):
             if goal == GoalType.EXPLORE: score.score *= 0.7
 
 class MotiveModifier(ScoreModifier):
-    """Applies pre-calculated Phase 1 motives (Social + Personality) to goal scores.
+    """Applies pre-calculated Phase 1 motives (Subjective Biases) to goal scores. [PHASE 1]
     
     This replaces the ad-hoc Personality/Social modifiers with the 
-    authoritative appraisal results from MindAspect.decision.motives.
+    authoritative appraisal results from MindAspect.decision.motive_utility_biases.
     """
     def modify(self, score: GoalScore, ctx: AIContext) -> None:
-        # Use the motive calculated in the Appraisal phase
-        motive_bias = ctx.actor.mind.decision.motives.get(score.goal, 1.0)
+        # Use the motive bias calculated in the Appraisal phase
+        motive_bias = ctx.actor.mind.decision.motive_utility_biases.get(score.goal, 1.0)
         score.score *= motive_bias
 
 class StuckModifier(ScoreModifier):
@@ -362,7 +362,8 @@ class GoalEvaluator:
         if 0 <= ticks_held < min_ticks:
             # Soul/Personality override: fear breaks the lock early
             panic = ctx.actor.mind.emotion.panic
-            if ctx.actor.combat.hp_ratio < 0.5 and (ctx.actor.identity.neuroticism > 0.5 or panic > 0.5):
+            personality = ctx.actor.mind.decision.personality
+            if ctx.actor.combat.hp_ratio < 0.5 and (personality.neuroticism > 0.5 or panic > 0.5):
                 return False
             # Critical override for all: near death breaks the lock
             if ctx.actor.combat.hp_ratio < 0.15:

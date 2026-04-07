@@ -29,31 +29,9 @@ class IdentityAspect(Aspect):
     known_recipes: set[str] = Field(default_factory=set)
     craft_target: str | None = None
     
-    # Pillar 1: Behavioral Personality (OCEAN) [PHASE 1]
-    openness: float = 0.5          # 0.0 (Routine) to 1.0 (Explorative)
-    conscientiousness: float = 0.5 # 0.0 (Impulsive) to 1.0 (Dutiful)
-    extraversion: float = 0.5      # 0.0 (Loner) to 1.0 (Social)
-    agreeableness: float = 0.5     # 0.0 (Selfish) to 1.0 (Altruistic)
-    neuroticism: float = 0.5       # 0.0 (Resilient) to 1.0 (Sensitive)
+    # Personality traits removed [PHASE 1] - Moved to MindAspect.decision.personality
 
-    def apply_archetype_template(self):
-        """Seeds personality traits based on the chosen Archetype template."""
-        from src.core.models.enums import Archetype
-        
-        if self.archetype == Archetype.BALANCED:
-            self.openness, self.conscientiousness, self.extraversion, self.agreeableness, self.neuroticism = 0.5, 0.5, 0.5, 0.5, 0.5
-        elif self.archetype == Archetype.CAUTIOUS_OPPORTUNIST:
-            self.openness, self.conscientiousness, self.extraversion, self.agreeableness, self.neuroticism = 0.4, 0.7, 0.3, 0.4, 0.6
-        elif self.archetype == Archetype.GLORY_SEEKER:
-            self.openness, self.conscientiousness, self.extraversion, self.agreeableness, self.neuroticism = 0.8, 0.4, 0.9, 0.5, 0.2
-        elif self.archetype == Archetype.HONORABLE_DEFENDER:
-            self.openness, self.conscientiousness, self.extraversion, self.agreeableness, self.neuroticism = 0.3, 0.9, 0.6, 0.8, 0.3
-        elif self.archetype == Archetype.GREEDY_SCAVENGER:
-            self.openness, self.conscientiousness, self.extraversion, self.agreeableness, self.neuroticism = 0.6, 0.5, 0.4, 0.2, 0.4
-        elif self.archetype == Archetype.BLOODTHIRSTY_SLAYER:
-            self.openness, self.conscientiousness, self.extraversion, self.agreeableness, self.neuroticism = 0.5, 0.3, 0.4, 0.1, 0.3
-        elif self.archetype == Archetype.COWARDLY_SURVIVOR:
-            self.openness, self.conscientiousness, self.extraversion, self.agreeableness, self.neuroticism = 0.2, 0.6, 0.2, 0.4, 0.9
+    # Archetype template logic moved to PersonalityService/Builder [PHASE 1]
 
 # Rebuild Model to finalize Pydantic setup
 IdentityAspect.model_rebuild()

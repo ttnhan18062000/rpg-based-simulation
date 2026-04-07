@@ -39,6 +39,10 @@ class InventoryAspect(Aspect):
         return len(self.items)
 
     @property
+    def slots_free(self) -> int:
+        return max(0, self.max_slots - self.used_slots)
+
+    @property
     def is_full(self) -> bool:
         return self.used_slots >= self.max_slots
 

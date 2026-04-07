@@ -90,65 +90,49 @@ class HuntHandler(StateHandler):
         # Leash enforcement
         from src.ai.states.base import beyond_leash
         if beyond_leash(actor, config.mob_leash_chase_multiplier):
-            return propose_retreat_home(ctx, "Chase leash exceeded → returning home") # Note: propose_retreat_home adds its own updates
+            return propose_retreat_home(ctx, "Chase leash exceeded → returning home")
 
         if actor.spatial.leash_radius > 0 and actor.mind.navigation.chase_ticks >= config.mob_chase_give_up_ticks:
             return propose_retreat_home(ctx, "Chase timed out → returning home")
 
-        if is_in_hostile_town(ctx) and actor.combat.hp_ratio < 0.6:
-            return propose_retreat_home(ctx, "Town aura burning → aborting hunt")
-
-        # Note: High-level brain (GoalEvaluator) already handles state transitions
-        # We only keep critical overrides like Leash here.
-
         enemy = ctx.nearest_enemy()
-
         if enemy is None:
-            memory = actor.mind.perception.entity_memory
+            # Memory-based hunt
+            memory = ctx.entity_memory
             if memory:
-                last_seen_id = min(memory.keys())
-                memory_rec = memory[last_seen_id]
-                target_pos = memory_rec.pos
+                # Target oldest memory for now
+                eid = next(iter(memory))
+                target_pos = memory[eid].pos
                 if actor.spatial.pos.manhattan(target_pos) <= 1:
                     return AIState.WANDER, ActionProposal(
                         actor_id=actor.id, verb=ActionType.REST,
                         reason="Reached last known position, target gone → wander",
-                        updates=[NavigationUpdate(chase_ticks=0), PerceptionUpdate(memory_remove=[last_seen_id])])
+                        updates=[NavigationUpdate(chase_ticks=0), PerceptionUpdate(memory_remove=[eid])])
                 return AIState.HUNT, propose_move_toward(
                     actor, target_pos, snapshot, "Hunting from memory",
                     updates=[NavigationUpdate(chase_ticks=actor.mind.navigation.chase_ticks + 1)])
+            
             return AIState.WANDER, ActionProposal(
                 actor_id=actor.id, verb=ActionType.REST,
                 reason="Lost target → back to wander",
                 updates=[NavigationUpdate(chase_ticks=0)])
 
-        weapon_rng = get_weapon_range(actor)
+        if should_flee(actor, config, enemy):
+            return propose_retreat_home(ctx, f"Target {enemy.id} too dangerous → aborting hunt")
+
         dist = actor.spatial.pos.manhattan(enemy.spatial.pos)
+        weapon_rng = get_weapon_range(actor)
 
-        # 1. Action Preference: Skill > Attack
-        nearby_count = sum(
-            1 for v in ctx.visible if ctx.faction_reg.is_hostile(actor.identity.faction, v.identity.faction)
-            and v.combat.alive and actor.spatial.pos.manhattan(v.spatial.pos) <= 4
-        )
-        skill_id = best_ready_skill(actor, dist, nearby_count)
-        if skill_id:
-            return AIState.COMBAT, ActionProposal(
-                actor_id=actor.id, verb=ActionType.USE_SKILL, target=(skill_id, enemy.id),
-                reason=f"Using skill {skill_id} on enemy {enemy.id} (dist={dist})",
-                updates=[NavigationUpdate(chase_ticks=0)])
-
-        # 2. Basic Attack
-        if dist <= weapon_rng:
-            # Use spatial index for O(1) cell lookup
-            potential_ids = snapshot.nearby_entity_ids(actor.spatial.pos.x, actor.spatial.pos.y, 4)
+        # 2. Can we use a skill now?
+        if dist <= weapon_rng + 2:
             nearby_count = 0
-            for eid in potential_ids:
-                if eid == actor.id: continue
-                e = snapshot.entities.get(eid)
-                if not e or not e.combat.alive: continue
-                if ctx.faction_reg.is_hostile(actor.identity.faction, e.identity.faction):
-                    if e.spatial.pos.manhattan(actor.spatial.pos) <= 4:
-                        nearby_count += 1
+            for v in ctx.visible:
+                if ctx.faction_reg.is_hostile(actor.identity.faction, v.identity.faction):
+                    belief = ctx.get_belief(v.id)
+                    # If we believe they are alive (injury < 1.0)
+                    if belief and (belief.visible_injury < 1.0 or belief.visible_injury == -1.0):
+                        if actor.spatial.pos.manhattan(v.spatial.pos) <= 4:
+                            nearby_count += 1
             
             skill_id = best_ready_skill(actor, dist, nearby_count)
             if skill_id:
@@ -156,13 +140,15 @@ class HuntHandler(StateHandler):
                     actor_id=actor.id, verb=ActionType.USE_SKILL, target=(skill_id, enemy.id),
                     reason=f"Skill {skill_id} ready during hunt → using on {enemy.id}",
                     updates=[NavigationUpdate(chase_ticks=0)])
-                    
+
+        # 3. Distance-based transition
+        if dist <= weapon_rng:
             return AIState.COMBAT, ActionProposal(
                 actor_id=actor.id, verb=ActionType.ATTACK, target=enemy.id,
                 reason=f"In range of enemy {enemy.id} (dist={dist}, range={weapon_rng}) → attacking",
                 updates=[NavigationUpdate(chase_ticks=0)])
 
-        # 3. Handle deadlocks (yielding)
+        # 4. Handle deadlocks (yielding)
         if (dist == 2
                 and enemy.mind.decision.ai_state in (AIState.HUNT, AIState.COMBAT)
                 and actor.id > enemy.id):
@@ -170,11 +156,11 @@ class HuntHandler(StateHandler):
                 actor_id=actor.id, verb=ActionType.REST,
                 reason=f"Yielding to let enemy {enemy.id} close gap (anti-deadlock)")
 
-        # 4. Tactical Intent: Skirmish (Kiting)
+        # 5. Tactical Intent: Skirmish (Kiting)
         if ctx.tactical_hints.get("skirmish") and dist < ctx.tactical_hints.get("min_dist", 3):
             return AIState.HUNT, propose_move_away(actor, enemy.spatial.pos, snapshot, "Skirmishing (kiting) to maintain distance", updates=[NavigationUpdate(chase_ticks=actor.mind.navigation.chase_ticks + 1)])
 
-        # 5. Move closer
+        # 6. Move closer
         return AIState.HUNT, propose_move_toward(
             actor, enemy.spatial.pos, snapshot, f"Hunting enemy {enemy.id}",
             updates=[NavigationUpdate(chase_ticks=actor.mind.navigation.chase_ticks + 1)])
@@ -186,33 +172,33 @@ class CombatHandler(StateHandler):
         cleanup = get_perception_cleanup_update(actor, snapshot)
         final_updates = [cleanup] if cleanup else []
 
-        if is_in_hostile_town(ctx) and actor.combat.hp_ratio < 0.5:
-            return propose_retreat_home(ctx, "Town aura burning → disengaging from combat")
-
-        if actor.combat.hp_ratio < 0.5:
-            potion_id = can_use_potion(actor)
-            if potion_id:
-                return AIState.COMBAT, ActionProposal(
-                    actor_id=actor.id, verb=ActionType.USE_ITEM, target=potion_id,
-                    reason=f"Low HP → using {potion_id}",
-                    updates=[NavigationUpdate(chase_ticks=0)])
-
-        # Note: Brain handles state transitions
-
         enemy = ctx.nearest_enemy()
         if enemy is None:
             return AIState.WANDER, ActionProposal(
                 actor_id=actor.id, verb=ActionType.REST,
-                reason="Enemy vanished → returning to wander")
+                reason="Combat target lost → returning to wander")
+
+        if should_flee(actor, config, enemy):
+            potion_id = can_use_potion(actor)
+            if potion_id:
+                return AIState.COMBAT, ActionProposal(
+                    actor_id=actor.id, verb=ActionType.USE_ITEM, target=potion_id,
+                    reason=f"Subjective threat high (Feeling unsafe) → using {potion_id}",
+                    updates=[NavigationUpdate(chase_ticks=0)])
+            return propose_retreat_home(ctx, "Low HP / High Threat → Retreating")
 
         dist = actor.spatial.pos.manhattan(enemy.spatial.pos)
         weapon_rng = get_weapon_range(actor)
 
         # 1. Action Preference: Skill > Attack
-        nearby_count = sum(
-            1 for v in ctx.visible if ctx.faction_reg.is_hostile(actor.identity.faction, v.identity.faction)
-            and v.combat.alive and actor.spatial.pos.manhattan(v.spatial.pos) <= 4
-        )
+        nearby_count = 0
+        for v in ctx.visible:
+            if ctx.faction_reg.is_hostile(actor.identity.faction, v.identity.faction):
+                belief = ctx.get_belief(v.id)
+                if belief and (belief.visible_injury < 1.0 or belief.visible_injury == -1.0):
+                    if actor.spatial.pos.manhattan(v.spatial.pos) <= 4:
+                        nearby_count += 1
+        
         skill_id = best_ready_skill(actor, dist, nearby_count)
         if skill_id:
             return AIState.COMBAT, ActionProposal(
@@ -224,14 +210,17 @@ class CombatHandler(StateHandler):
         support_id = ctx.tactical_hints.get("support_target_id")
         if support_id:
             target = snapshot.entities.get(support_id)
-            if target and target.combat.alive:
-                # Prioritize support skill or move toward ally
-                support_skill = best_ready_skill(actor, actor.spatial.pos.manhattan(target.spatial.pos), 0)
-                if support_skill:
-                    return AIState.COMBAT, ActionProposal(
-                        actor_id=actor.id, verb=ActionType.USE_SKILL, target=(support_skill, target.id),
-                        reason=f"Supporting ally {target.id}")
-                return AIState.COMBAT, propose_move_toward(actor, target.spatial.pos, snapshot, f"Moving to support {target.id}", updates=[NavigationUpdate(chase_ticks=0)])
+            if target:
+                # Use belief for ally health if possible
+                ally_belief = ctx.get_belief(target.id)
+                # If we believe they are alive
+                if ally_belief and ally_belief.visible_injury < 1.0:
+                    support_skill = best_ready_skill(actor, actor.spatial.pos.manhattan(target.spatial.pos), 0)
+                    if support_skill:
+                        return AIState.COMBAT, ActionProposal(
+                            actor_id=actor.id, verb=ActionType.USE_SKILL, target=(support_skill, target.id),
+                            reason=f"Supporting ally {target.id}")
+                    return AIState.COMBAT, propose_move_toward(actor, target.spatial.pos, snapshot, f"Moving to support {target.id}", updates=[NavigationUpdate(chase_ticks=0)])
 
         # 3. Distance-based decision
         if dist <= weapon_rng:

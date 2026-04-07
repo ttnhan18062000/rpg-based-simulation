@@ -35,6 +35,14 @@ class AIContext:
     _visible_override: list[Entity] | None = field(default=None, repr=False)
     tactical_hints: dict[str, Any] = field(default_factory=dict)
 
+    # -- subjective helper --
+    @property
+    def entity_memory(self) -> dict[int, BeliefRecord]:
+        return self.actor.mind.perception.entity_memory
+
+    def get_belief(self, entity_id: int) -> BeliefRecord | None:
+        return self.entity_memory.get(entity_id)
+
     # -- cached helpers (lazily populated) --
     _visible_cache: list[Entity] | None = field(init=False, default=None)
 
@@ -48,34 +56,63 @@ class AIContext:
         return self._visible_cache
 
     def nearest_enemy(self) -> Entity | None:
-        """Return best combat target."""
-        if self.actor.mind.emotion.grudges:
-            visible_targets = [v for v in self.visible if self.faction_reg.is_hostile(self.actor.identity.faction, v.identity.faction)]
+        """Return the most 'salient' combat target based on beliefs and presence."""
+        visible_enemies = [v for v in self.visible if self.faction_reg.is_hostile(self.actor.identity.faction, v.identity.faction)]
+        if not visible_enemies and not self.actor.mind.perception.entity_memory:
+            return None
+
+        # 1. Nemesis/Grudge Logic (Subjective Priority)
+        grudges = self.actor.mind.emotion.grudges
+        if grudges:
             nemesis = None
-            max_grudge = 0.0
-            for v in visible_targets:
-                g = self.actor.mind.emotion.grudges.get(v.id, 0.0)
-                # Lower threshold for immediate recognition
+            max_grudge = -1.0
+            for v in visible_enemies:
+                g = grudges.get(v.id, 0.0)
                 if g >= 15.0 and g > max_grudge:
                     max_grudge = g
                     nemesis = v
             if nemesis:
                 return nemesis
 
-        nearest = Perception.nearest_enemy(self.actor, self.visible, self.faction_reg)
-        if nearest:
-            return nearest
+        # 2. Saliency-Based Selection [STAGE 1]
+        # We value: Distance (proximity), Threat (belief), and Personality (aggression)
+        best_target = None
+        max_saliency = -1.0
+        
+        aggression = self.actor.mind.decision.personality.aggression
+        memory = self.actor.mind.perception.entity_memory
+
+        for v in visible_enemies:
+            dist = self.actor.spatial.pos.manhattan(v.spatial.pos)
+            prox_weight = 1.0 / (dist + 1.0)
             
-        # Pillar 3: Memory-Aware Nemesis Focus
-        # If no visible enemies, check memory for a known nemesis (grudge >= 15.0)
-        grudges = self.actor.mind.emotion.grudges
+            # Belief weight
+            threat_weight = 0.5 # Default for unknown
+            belief = memory.get(v.id)
+            if belief:
+                # If we have a belief, use its threat estimate
+                # High aggression makes high-threat targets more salient (challenge)
+                # Low aggression (cautious) makes them less salient (avoidance)
+                threat_weight = belief.threat.overall * (0.5 + aggression)
+            
+            saliency = (prox_weight * 0.7) + (threat_weight * 0.3)
+            
+            if saliency > max_saliency:
+                max_saliency = saliency
+                best_target = v
+
+        if best_target:
+            return best_target
+            
+        # 3. Off-screen Memory Focus (Nemeses only)
         if grudges:
-            memory = self.actor.mind.perception.entity_memory
-            for eid in memory.keys():
-                if grudges.get(eid, 0.0) >= 15.0:
-                    ent = self.snapshot.entities.get(eid)
-                    if ent and ent.combat.alive:
-                        return ent
+            for eid, g in grudges.items():
+                if g >= 20.0: # Significant grudge
+                    belief = memory.get(eid)
+                    if belief:
+                         ent = self.snapshot.entities.get(eid)
+                         if ent and ent.combat.alive:
+                             return ent
                     
         return None
 
@@ -280,31 +317,52 @@ def is_in_hostile_town(ctx: AIContext) -> bool:
 def should_flee(actor: Entity, config: SimulationConfig, enemy: Entity | None = None) -> bool:
     """Return True if the entity's HP is below its flee threshold.
     
-    Adjusted by mood: Despair (0.0) causes earlier fleeing, 
-    Fury (1.0) causes staying longer.
-    
-    Soul Pillar: Nemesis Fear Bias
-    Facing an enemy with a significant grudge increases the flee threshold.
+    Adjusted by:
+    - Personality: Caution increases the threshold.
+    - Mood: Despair increases it, Fury decreases it.
+    - Beliefs: Threat estimates from memory increase it.
     """
     base_threshold = getattr(config, "flee_hp_threshold", 0.2)
     
-    # Mood modifier derived from EmotionState in MindAspect
-    mood = actor.mind.emotion.mood
-    threshold_mod = (0.5 - mood) * 0.2
+    # 1. Personality Influence [STAGE 1]
+    pers = actor.mind.decision.personality
+    caution_bias = (pers.caution - 0.5) * 0.2 # -0.1 to +0.1
     
-    # Nemesis Bias: increase threshold if facing a nemesis
-    if enemy and enemy.id in actor.mind.emotion.grudges:
-        grudge = actor.mind.emotion.grudges[enemy.id]
-        if grudge > 5.0:
-            threshold_mod += 0.25 # Flee much earlier (e.g. at 45% HP)
+    # 2. Mood modifier
+    emo = actor.mind.emotion
+    mood_mod = (0.5 - emo.mood) * 0.2 # -0.1 to +0.1
     
+    # [PHASE 1] Panic bias
+    panic_bias = emo.panic * 0.3 # High panic makes you much more likely to flee
     
-    # print(f"DEBUG_FLEE: Actor {actor.id} HP {actor.combat.hp_ratio:.2f} Threshold {base_threshold + threshold_mod:.2f} (Mod {threshold_mod:.2f})")
-    # Ranged Bias: Ranged units should flee earlier (e.g. at 50% HP) to maintain safety
-    if _is_ranged(actor):
-        threshold_mod += 0.2
+    # 3. Belief/Threat Bias [STAGE 1]
+    threat_mod = 0.0
+    memory = actor.mind.perception.entity_memory
+    if enemy:
+        # Check subjective belief for this specific enemy
+        belief = memory.get(enemy.id)
+        if belief:
+            # Use threat estimate if confidence is high enough
+            if belief.threat.confidence > 0.3:
+                threat_mod += (belief.threat.overall * 0.4)
+            # Factor in visible injury (subjective)
+            if belief.visible_injury >= 0: # -1 = Unknown
+                threat_mod *= (1.0 - (belief.visible_injury * 0.5))
+    else:
+        # Scan all known beliefs for high-threat nearby entities
+        for eid, belief in memory.items():
+            if belief.threat.overall > 0.6 and belief.threat.confidence > 0.4:
+                # Use belief pos (might be stale!)
+                d = actor.spatial.pos.manhattan(belief.pos)
+                if d <= 5: # Within immediate danger zone
+                    threat_mod += 0.15
+                    break
+
+    # 4. Ranged Bias
+    ranged_bias = 0.2 if _is_ranged(actor) else 0.0
     
-    return actor.combat.hp_ratio < (base_threshold + threshold_mod)
+    final_threshold = base_threshold + caution_bias + mood_mod + threat_mod + ranged_bias
+    return actor.combat.hp_ratio < final_threshold
 
 def _is_ranged(actor: Entity) -> bool:
     """Helper to detect if an entity is a ranged unit."""

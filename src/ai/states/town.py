@@ -2,7 +2,8 @@ from __future__ import annotations
 
 from src.actions.base import (
     ActionType, ActionProposal, IntentUpdate, ProgressionUpdate, 
-    IdentityUpdate, InteractionUpdate, PerceptionUpdate, MindUpdate
+    IdentityUpdate, InteractionUpdate, PerceptionUpdate, MindUpdate,
+    RoutineUpdate
 )
 from src.core.gameplay.buildings import (
     Building, RECIPES, RECIPE_MAP, SHOP_INVENTORY,
@@ -190,7 +191,8 @@ def hero_should_visit_class_hall(actor: Entity) -> bool:
 def hero_should_visit_inn(actor: Entity) -> bool:
     if actor.progression.max_stamina <= 0:
         return False
-    return actor.progression.stamina < actor.progression.max_stamina * 0.4
+    # Stage 4: Routine Integration
+    return actor.progression.stamina < actor.progression.max_stamina * 0.4 or actor.mind.routine.sleep_debt > 0.6
 
 
 def hero_should_visit_home(actor: Entity) -> bool:
@@ -567,11 +569,11 @@ class VisitInnHandler(StateHandler):
         hp_needed = actor.combat.max_hp - actor.combat.hp
         sta_needed = actor.progression.max_stamina - actor.progression.stamina
         
-        if hp_needed > 0 or sta_needed > 0:
-            return AIState.VISIT_INN, ActionProposal(
-                actor_id=actor.id, verb=ActionType.REST,
-                reason="Resting at inn",
-                updates=[ProgressionUpdate(hp_delta=10, stamina_delta=10)])
+        if hp_needed > 0 or sta_needed > 0 or actor.mind.routine.sleep_debt > 0.1:
+            return AIState.SLEEPING, ActionProposal(
+                actor_id=actor.id, verb=ActionType.SLEEP,
+                reason="Checking into inn to sleep",
+                updates=[RoutineUpdate(is_sleeping=True)])
 
         from src.core.gameplay.effects import well_rested_effect
         return AIState.RESTING_IN_TOWN, ActionProposal(
@@ -649,6 +651,12 @@ class VisitHomeHandler(StateHandler):
                     ProgressionUpdate(inventory_remove=stored),
                     InteractionUpdate(home_storage_add=stored)
                 ])
+
+        if actor.mind.routine.hunger_level > 0.5:
+             return AIState.EATING, ActionProposal(
+                actor_id=actor.id, verb=ActionType.EAT,
+                reason="Eating at home",
+                updates=[RoutineUpdate(hunger_delta=-0.2)])
 
         return AIState.RESTING_IN_TOWN, ActionProposal(
             actor_id=actor.id, verb=ActionType.REST,

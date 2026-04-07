@@ -1,35 +1,26 @@
-# Test Plan: Phase 1 Behavioral Realism
+# Test Plan: TCK-20260407-PHASE1-DS
 
 ## Existing Tests to Run
-- `pytest tests/unit/ai/`: Ensure current AI baseline still works (despite OCEAN/Motive transition).
-- `pytest tests/api/test_introspection_api.py`: Ensure current entity inspection doesn't break.
+- `pytest tests/unit/ai/`: Ensure basic AI loops don't break.
+- `pytest tests/unit/core/aspects/`: Ensure Mind aspect serializes.
 
 ## New Tests to Add
-### Behavioral Divergence
-- `tests/unit/ai/test_personality_divergence.py`:
-  - Scenario: A "Greedy" entity and a "Cautious" entity see a loot chest guarded by a strong mob.
-  - Expected: Cautious entity flees/avoids; Greedy entity attempts to loot or approaches.
-  - Scenario: Two entities with different "Aggression" levels see a weak mob.
-  - Expected: Higher aggression entity attacks; Lower aggression entity might wander or wait.
 
-### Belief System
-- `tests/unit/ai/test_belief_system.py`:
-  - Test belief creation on first sight.
-  - Test confidence increase on subsequent sights.
-  - Test stale tick increment and confidence decay when target is out of sight.
-  - Test belief-based decision: AI chooses to FLEE from a "High Threat" belief even if the target is actually low HP (but hasn't been seen recently).
+### 1. Personality Divergence
+- **File**: `tests/unit/ai/test_personality_divergence.py`
+- **Scenario**: Two same-class heroes (e.g., Rangers) in same position with same HP, but one is `aggressive: 0.9, caution: 0.1` and other is `aggressive: 0.1, caution: 0.9`.
+- **Assertion**: Aggressive ranger chooses HUNT/ATTACK, Cautious ranger chooses FLEE/WANDER.
 
-### Inspection Schema
-- `tests/api/test_phase1_inspection.py`:
-  - Assert that `PersonalityProfile` and `PersonalMotive` list are present in the entity payload.
-  - Assert that `entity_memory` uses the new `BeliefRecord` structure.
+### 2. Belief vs Truth
+- **File**: `tests/unit/ai/test_belief_based_decisions.py`
+- **Scenario**: Entity observes a high-threat enemy, then enemy goes into fog/out of sight and heals.
+- **Assertion**: Entity still "believes" enemy is high-threat until next observation or enough staleness decay occurs.
 
-## Core Scenarios
-1. **The Brave Hero**: Hero with high "Loyalty" and low "Caution" stays to defend an ally even when at low HP.
-2. **The Smart Coward**: Mob with high "Caution" avoids the player after seeing them kill a nearby ally (high threat estimate).
-3. **The Persistent Loot**: Scavenger with high "Greed" keeps returning to a loot source even after being attacked.
+### 3. Motive Influence
+- **File**: `tests/unit/ai/test_motive_influence.py`
+- **Scenario**: Entity has `build_wealth` motive vs `seek_safety` motive.
+- **Assertion**: Wealth seeker prioritizes LOOT even with moderate threat; Safety seeker prioritizes FLEE.
 
-## Regression Surface
-- AI "Locked" states (Combat/Flee).
-- Pydantic model serialization/rebuild.
-- Entity generation in `generator.py`.
+### 4. Inspection Schema
+- **File**: `tests/api/test_behavioral_inspection.py`
+- **Assertion**: API payload for entity inspection contains `personality`, `motives`, and `beliefs` sub-sections.

@@ -1,7 +1,6 @@
 """Pydantic response models for the REST API."""
 
-from __future__ import annotations
-
+from typing import Any, Union, Optional
 from pydantic import BaseModel, Field
 
 
@@ -114,6 +113,44 @@ class MemoryLogSchema(BaseModel):
     details: dict = Field(default_factory=dict)
 
 
+# --- Behavioral Realism [PHASE 1] ---
+
+class PersonalityProfileSchema(BaseModel):
+    aggression: float
+    greed: float
+    caution: float
+    loyalty: float
+    ambition: float
+    curiosity: float
+
+class PersonalMotiveSchema(BaseModel):
+    kind: str
+    priority: float
+    progress: float
+    frustration: float
+    active: bool
+
+class ThreatEstimateSchema(BaseModel):
+    overall: float
+    melee_threat: float
+    ranged_threat: float
+    survivability: float
+    confidence: float
+
+class BeliefRecordSchema(BaseModel):
+    entity_id: int
+    pos: tuple[int, int]
+    last_seen_tick: int
+    stale_ticks: int
+    confidence: float
+    apparent_faction: str | None = None
+    apparent_role: str | None = None
+    apparent_class: str | None = None
+    visible_weapon: str | None = None
+    visible_injury: float = 0.0
+    threat: ThreatEstimateSchema
+
+
 class EntitySlimSchema(BaseModel):
     """Minimal entity data for rendering (non-selected entities)."""
     id: int
@@ -170,7 +207,11 @@ class EntitySchema(BaseModel):
     inventory_max_weight: float = 0.0
     vision_range: int = 6
     terrain_memory: dict[str, int] = Field(default_factory=dict)
-    entity_memory: list[dict] = Field(default_factory=list)
+    entity_memory: list[BeliefRecordSchema] = Field(default_factory=list)
+    personality: PersonalityProfileSchema | None = None
+    motives: list[PersonalMotiveSchema] = Field(default_factory=list)
+    motive_utility_biases: dict[str, float] = Field(default_factory=dict)
+    decision_drivers: list[str] = Field(default_factory=list)
     goals: list[str] = Field(default_factory=list)
     loot_progress: int = 0
     loot_duration: int = 3
@@ -265,11 +306,31 @@ class GoalScoreSchema(BaseModel):
     score: float
     status: str = "considering" # "executing" | "considering"
 
+class SocialBondSchema(BaseModel):
+    target_id: int
+    trust: float
+    fear: float
+    rivalry: float
+    familiarity: float
+
+class DecisionDriverSchema(BaseModel):
+    kind: str
+    label: str
+    weight: float
+
 class AIDecisionSchema(BaseModel):
     entity_id: int
     current_state: str
     winning_goal: str
     goal_scores: list[GoalScoreSchema] = Field(default_factory=list)
+    personality: dict[str, float] | None = None
+    motives: list[dict[str, Any]] = Field(default_factory=list)
+    beliefs: list[dict[str, Any]] = Field(default_factory=list)
+    social_bonds: list[SocialBondSchema] = Field(default_factory=list) # [PHASE 2]
+    faction_standing: dict[str, float] = Field(default_factory=dict) # [PHASE 2]
+    motive_biases: dict[str, float] = Field(default_factory=dict)
+    decision_drivers: list[str] = Field(default_factory=list) # [STAGE 1/2] Legacy string list
+    driver_details: list[DecisionDriverSchema] = Field(default_factory=list) # [PHASE 1] New structured list
     nearest_enemy_dist: float | None = None
     nearest_target_id: int | None = None
 

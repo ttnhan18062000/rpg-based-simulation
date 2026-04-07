@@ -7,7 +7,7 @@ from typing import Any, TYPE_CHECKING, TypeVar, Generic, Union
 
 from pydantic import Field
 
-from src.core.models.enums import ActionType, GoalType, EmotionType
+from src.core.models.enums import ActionType, GoalType, EmotionType, PersonalMotiveType
 
 from src.core.models.vectors import Vector2
 if TYPE_CHECKING:
@@ -66,7 +66,7 @@ class ActionProposal(SimulationModel):
 
 class IntentUpdate(SimulationModel):
     """Base for all typed simulation side-effects."""
-    pass
+    target_id: int | None = None
 
 from pydantic import model_validator
 from typing import TYPE_CHECKING, Any
@@ -78,9 +78,12 @@ if TYPE_CHECKING:
 class MindUpdate(IntentUpdate):
     """Updates to the entity's Decision, Perception, or Emotion state."""
     goal_scores: dict[GoalType, float] | None = None
-    motives: dict[GoalType, float] | None = None # [PHASE 1]
-    last_appraisal_tick: int | None = None        # [PHASE 1]
+    motives: list[PersonalMotive] | None = None # [PHASE 1]
+    motive_utility_biases: dict[GoalType, float] | None = None # [PHASE 1]
+    last_appraisal_tick: int | None = None        # [STAGE 1]
     last_goal: GoalType | None = None
+    decision_drivers: list[str] | None = None      # [STAGE 1] Legacy prose
+    driver_details: list[DecisionDriver] | None = None # [STAGE 1] Structured records
     goal_committed_at: int | None = None
     boredom_delta: dict[GoalType, float] | None = None
     new_ai_state: int | None = None
@@ -95,6 +98,9 @@ class MindUpdate(IntentUpdate):
     emotion_set: dict[EmotionType, float] | None = None
     mood: float | None = None
     grudge_delta: dict[int, float] | None = None
+    
+    # Social Integration [STAGE 2]
+    social_update: Any | None = None
 
 class PerceptionUpdate(IntentUpdate):
     """Updates to sensory memory and spatial awareness. [AOA STABILIZATION]"""
@@ -160,6 +166,7 @@ class ProgressionUpdate(IntentUpdate):
     hp_delta: int = 0
     max_hp_delta: int = 0
     stamina_delta: int = 0
+    combat_target_id: int | None = None
     
     inventory_add: list[str] = Field(default_factory=list)
     inventory_remove: list[str] = Field(default_factory=list)
@@ -213,6 +220,12 @@ class IdentityUpdate(IntentUpdate):
     hero_class: int | None = None
     reputation_delta: float = 0.0
 
+class RoutineUpdate(IntentUpdate):
+    """Updates to biological needs and routine state. [STAGE 4]"""
+    sleep_delta: float | None = None
+    hunger_delta: float | None = None
+    is_sleeping: bool | None = None
+
 class InteractionUpdate(IntentUpdate):
     """Updates to temporary interaction state or storage."""
     loot_progress_delta: float = 0.0
@@ -254,11 +267,6 @@ class SocialUpdate(IntentUpdate):
     fear_delta: float = 0.0
     rivalry_delta: float = 0.0
 
-class RoutineUpdate(IntentUpdate):
-    """Updates to biological needs and schedules. [PHASE 3]"""
-    sleep_delta: float = 0.0
-    hunger_delta: float = 0.0
-    is_sleeping: bool | None = None
 
 class WorldUpdate(IntentUpdate):
     """Authoritative updates to global world state (Corpses, Idents, Spawns). [AOA STABILIZATION]"""
@@ -278,7 +286,11 @@ class CombatTraceUpdate(IntentUpdate):
 def _rebuild_action_models():
     """Centrally orchestrate Pydantic model rebuilds to resolve circular dependencies."""
     # Domain Aspects & Models
-    from src.core.aspects.mind import MemoryRecord, MemoryLogEntry, CombatNarrative, LootNarrative, DiscoveryNarrative
+    # Domain Aspects & Models
+    from src.core.aspects.mind import (
+        MemoryRecord, MemoryLogEntry, CombatNarrative, LootNarrative, 
+        DiscoveryNarrative, PersonalMotive, DecisionDriver
+    )
     from src.core.aspects.combat import CombatAspect
     from src.core.models.combat import CombatTraceRecord, CombatTraceDetails
     from src.core.entities.entity import Entity
@@ -320,3 +332,4 @@ except Exception as e:
     if os.getenv("PYTEST_CURRENT_TEST") or os.getenv("CI"):
         raise e
     logging.getLogger(__name__).debug("Deferred model rebuild skipped: %s", e)
+

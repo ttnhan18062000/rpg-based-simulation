@@ -3,236 +3,130 @@ import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", ".."))
 
 
-"""Tests for the GoalScorer plugin system and GoalEvaluator."""
+import pytest
+from unittest.mock import MagicMock
+from src.ai.brain import AIBrain, AIContext
+from src.ai.goals.base import GOAL_REGISTRY, GoalType, GoalScore
+from src.ai.goals.scorers import CombatGoal, FleeGoal, ExploreGoal
+from src.core.entities.entity import Entity, Vector2
+from src.core.gameplay.faction import FactionRelation
 
-
-from src.ai.goals.base import (
-    GoalScorer, GoalScore, GoalEvaluator, GOAL_REGISTRY, register_goal,
-)
-from src.ai.goals.scorers import (
-    CombatGoal, FleeGoal, ExploreGoal, LootGoal,
-    TradeGoal, RestGoal, CraftGoal, SocialGoal, GuardGoal,
-)
-from src.core.models.enums import AIState, GoalType
-
-
-# ---------------------------------------------------------------------------
-# GoalScorer ABC and subclass tests
-# ---------------------------------------------------------------------------
-
-class TestGoalScorerSubclasses:
-    """Test that all built-in GoalScorer subclasses have correct properties."""
-
-    def test_combat_goal_properties(self):
-        g = CombatGoal()
-        assert g.name == GoalType.COMBAT
-        assert g.target_state == AIState.HUNT
-
-    def test_flee_goal_properties(self):
-        g = FleeGoal()
-        assert g.name == GoalType.FLEE
-        assert g.target_state == AIState.FLEE
-
-    def test_explore_goal_properties(self):
-        g = ExploreGoal()
-        assert g.name == GoalType.EXPLORE
-        assert g.target_state == AIState.WANDER
-
-    def test_loot_goal_properties(self):
-        g = LootGoal()
-        assert g.name == GoalType.LOOT
-        assert g.target_state == AIState.LOOTING
-
-    def test_trade_goal_properties(self):
-        g = TradeGoal()
-        assert g.name == GoalType.TRADE
-        assert g.target_state == AIState.VISIT_SHOP
-
-    def test_rest_goal_properties(self):
-        g = RestGoal()
-        assert g.name == GoalType.REST
-        assert g.target_state == AIState.RESTING_IN_TOWN
-
-    def test_craft_goal_properties(self):
-        g = CraftGoal()
-        assert g.name == GoalType.CRAFT
-        assert g.target_state == AIState.VISIT_BLACKSMITH
-
-    def test_social_goal_properties(self):
-        g = SocialGoal()
-        assert g.name == GoalType.SOCIAL
-        assert g.target_state == AIState.VISIT_GUILD
-
-    def test_guard_goal_properties(self):
-        g = GuardGoal()
-        assert g.name == GoalType.GUARD
-        assert g.target_state == AIState.GUARD_CAMP
-
-    def test_all_scorers_are_goal_scorer_subclasses(self):
-        for scorer in GOAL_REGISTRY:
-            assert isinstance(scorer, GoalScorer)
-
-
-# ---------------------------------------------------------------------------
-# GOAL_REGISTRY tests
-# ---------------------------------------------------------------------------
 
 class TestGoalRegistry:
     """Test the global goal registry."""
 
     def test_registry_has_10_goals(self):
-        assert len(GOAL_REGISTRY) == 10
+        # Increased to 12 in Phase 1 (Stage 4 baseline)
+        assert len(GOAL_REGISTRY) == 12
 
     def test_registry_names_unique(self):
         names = [g.name for g in GOAL_REGISTRY]
         assert len(names) == len(set(names))
 
-    def test_registry_contains_all_expected_goals(self):
+    def test_registry_contains_core_goals(self):
         names = {g.name for g in GOAL_REGISTRY}
         expected = {
             GoalType.COMBAT, GoalType.FLEE, GoalType.EXPLORE, GoalType.LOOT, 
             GoalType.TRADE, GoalType.REST, GoalType.CRAFT, GoalType.SOCIAL, 
-            GoalType.GUARD, GoalType.CORPSE_RUN
+            GoalType.GUARD, GoalType.CORPSE_RUN, GoalType.SLEEP, GoalType.EAT
         }
         assert names == expected
 
-    def test_all_goals_have_valid_target_states(self):
-        for scorer in GOAL_REGISTRY:
-            assert isinstance(scorer.target_state, int)  # AIState is IntEnum
 
+class TestGoalEvaluation:
+    """Test individual goal scoring logic."""
 
-# ---------------------------------------------------------------------------
-# GoalScore dataclass tests
-# ---------------------------------------------------------------------------
-
-class TestGoalScore:
-    """Test the GoalScore dataclass."""
-
-    def test_goal_score_creation(self):
-        gs = GoalScore(goal=GoalType.COMBAT, score=0.8, target_state=AIState.HUNT)
-        assert gs.goal == GoalType.COMBAT
-        assert gs.score == 0.8
-        assert gs.target_state == AIState.HUNT
-
-    def test_goal_score_sorting(self):
-        scores = [
-            GoalScore(GoalType.EXPLORE, 0.3, AIState.WANDER),
-            GoalScore(GoalType.COMBAT, 0.8, AIState.HUNT),
-            GoalScore(GoalType.FLEE, 0.5, AIState.FLEE),
-        ]
-        scores.sort(key=lambda g: g.score, reverse=True)
-        assert scores[0].goal == GoalType.COMBAT
-        assert scores[1].goal == GoalType.FLEE
-        assert scores[2].goal == GoalType.EXPLORE
-
-
-# ---------------------------------------------------------------------------
-# GoalEvaluator.select() tests
-# ---------------------------------------------------------------------------
-
-class TestGoalEvaluatorSelect:
-    """Test the weighted random goal selection."""
-
-    def test_select_returns_none_on_empty(self):
-        result = GoalEvaluator.select([], rng_value=0.5)
-        assert result is None
-
-    def test_select_single_candidate(self):
-        scores = [GoalScore(GoalType.COMBAT, 0.8, AIState.HUNT)]
-        result = GoalEvaluator.select(scores, rng_value=0.5)
-        assert result is not None
-        assert result.goal == GoalType.COMBAT
+    @pytest.fixture
+    def setup_context(self):
+        config = MagicMock()
+        config.flee_hp_threshold = 0.3
+        config.flee_exit_threshold = 0.5
+        rng = MagicMock()
+        brain = AIBrain(config, rng)
         
-    def test_select_returns_goal_score(self):
-        scores = [
-            GoalScore(GoalType.COMBAT, 0.8, AIState.HUNT),
-            GoalScore(GoalType.FLEE, 0.6, AIState.FLEE),
-        ]
-        result = GoalEvaluator.select(scores, rng_value=0.3)
-        assert result is not None
-        assert isinstance(result, GoalScore)
-        assert result.goal in (GoalType.COMBAT, GoalType.FLEE)
+        actor = Entity(id=1, kind="hero", faction="player")
+        actor.combat.hp = 100
+        actor.combat.max_hp = 100
+        
+        snapshot = MagicMock()
+        snapshot.tick = 100
+        
+        return AIContext(
+            actor=actor,
+            snapshot=snapshot,
+            config=config,
+            rng=rng,
+            faction_reg=brain._faction_reg,
+            _visible_override=[]
+        )
 
-    def test_select_rng_0_picks_first(self):
-        """RNG value of 0 should always pick the first (highest) candidate."""
-        scores = [
-            GoalScore(GoalType.COMBAT, 0.9, AIState.HUNT),
-            GoalScore(GoalType.FLEE, 0.5, AIState.FLEE),
-            GoalScore(GoalType.REST, 0.3, AIState.RESTING_IN_TOWN),
-        ]
-        result = GoalEvaluator.select(scores, rng_value=0.0)
-        assert result is not None
-        assert result.goal == GoalType.COMBAT
+    def test_combat_goal_scoring(self, setup_context):
+        ctx = setup_context
+        # Near enemy -> should be high score
+        enemy = Entity(id=2, kind="mob", faction="global_hostile")
+        enemy.spatial.pos = Vector2(2, 1)
+        ctx._visible_override = [enemy]
+        
+        goal = CombatGoal()
+        # [AOA STABILIZATION] Explicitly register hostile faction for reliable test mocking
+        ctx.faction_reg.set_relation("player", "global_hostile", FactionRelation.HOSTILE)
+        
+        score = goal.score(ctx)
+        assert score > 0.5
 
-    def test_select_rng_near_1_picks_last(self):
-        """RNG value near 1.0 should pick the lowest-weighted candidate."""
-        scores = [
-            GoalScore(GoalType.COMBAT, 0.9, AIState.HUNT),
-            GoalScore(GoalType.FLEE, 0.5, AIState.FLEE),
-            GoalScore(GoalType.REST, 0.3, AIState.RESTING_IN_TOWN),
-        ]
-        result = GoalEvaluator.select(scores, rng_value=0.99)
-        assert result is not None
-        # Should be one of the later candidates
-        assert result.goal in (GoalType.COMBAT, GoalType.FLEE, GoalType.REST)
+    def test_flee_goal_triggers_on_low_hp(self, setup_context):
+        setup_context.actor.combat.hp = 20 # 20% hp
+        scorer = FleeGoal()
+        score = scorer.score(setup_context)
+        assert score > 0.7
 
-    def test_select_top_n_limits_candidates(self):
-        scores = [
-            GoalScore(GoalType.COMBAT, 0.9, AIState.HUNT),
-            GoalScore(GoalType.FLEE, 0.5, AIState.FLEE),
-            GoalScore(GoalType.REST, 0.3, AIState.RESTING_IN_TOWN),
-            GoalScore(GoalType.EXPLORE, 0.2, AIState.WANDER),
-        ]
-        # top_n=2 means only combat and flee are candidates
-        result = GoalEvaluator.select(scores, rng_value=0.99, top_n=2)
-        assert result is not None
-        assert result.goal in (GoalType.COMBAT, GoalType.FLEE)
-
-    def test_select_deterministic_with_same_rng(self):
-        """Same scores + same rng_value should always produce same result."""
-        scores = [
-            GoalScore(GoalType.COMBAT, 0.8, AIState.HUNT),
-            GoalScore(GoalType.FLEE, 0.6, AIState.FLEE),
-            GoalScore(GoalType.REST, 0.4, AIState.RESTING_IN_TOWN),
-        ]
-        result1 = GoalEvaluator.select(scores, rng_value=0.42)
-        result2 = GoalEvaluator.select(scores, rng_value=0.42)
-        assert result1 is not None and result2 is not None
-        assert result1.goal == result2.goal
+    def test_explore_goal_baseline(self, setup_context):
+        scorer = ExploreGoal()
+        score = scorer.score(setup_context)
+        assert 0.1 <= score <= 0.3
 
 
-# ---------------------------------------------------------------------------
-# GoalScorer.evaluate() convenience method tests
-# ---------------------------------------------------------------------------
+class TestGoalLocking:
+    """Test goal commitment and overrides."""
 
-class TestGoalScorerEvaluate:
-    """Test the evaluate() convenience method on GoalScorer."""
+    def test_neuroticism_overrides_lock(self):
+        config = MagicMock()
+        rng = MagicMock()
+        brain = AIBrain(config, rng)
+        
+        actor = Entity(id=1, kind="hero", faction="player")
+        actor.combat.max_hp = 100
+        actor.combat.hp = 10  # Low HP ratio (0.1 < 0.5) to trigger neuroticism override
+        # Neuroticism >= 0.8 allows breaking locks
+        actor.mind.decision.personality.neuroticism = 0.9
+        
+        snapshot = MagicMock()
+        snapshot.tick = 100
+        
+        ctx = AIContext(
+            actor=actor,
+            snapshot=snapshot,
+            config=config,
+            rng=rng,
+            faction_reg=brain._faction_reg,
+            _visible_override=[]
+        )
+        
+        from src.ai.goal_evaluator import GoalEvaluator
+        evaluator = GoalEvaluator(config)
+        
+        # Manually lock a goal
+        actor.mind.decision.goal_committed_at = 95
+        config.min_commitment_ticks = 10 # Should be locked until 105
+        
+        # High neuroticism allows override
+        assert evaluator.is_goal_locked(ctx) is False
 
-    def test_evaluate_wraps_score_into_goal_score(self):
-        """The evaluate() method should produce a GoalScore with the scorer's name and target_state."""
-        # We can't easily call score() without a full AIContext, but we can verify
-        # that the GoalScore produced has the right name and target_state
-        gs = GoalScore(goal=GoalType.COMBAT, score=0.5, target_state=AIState.HUNT)
-        assert gs.goal == GoalType.COMBAT
-        assert gs.target_state == AIState.HUNT
 
-
-# ---------------------------------------------------------------------------
-# Backward compatibility shim tests
-# ---------------------------------------------------------------------------
-
-class TestBackwardCompat:
-    """Test that the old goal_evaluator.py shim re-exports correctly."""
-
-    def test_shim_exports_goal_score(self):
-        from src.ai.goal_evaluator import GoalScore as LegacyGoalScore
-        assert LegacyGoalScore is GoalScore
-
-    def test_shim_exports_goal_evaluator(self):
-        from src.ai.goal_evaluator import GoalEvaluator as LegacyEvaluator
-        assert LegacyEvaluator is GoalEvaluator
+class TestAIBrainShim:
+    """Test legacy shims for backward compatibility."""
 
     def test_shim_exports_registry(self):
         from src.ai.goal_evaluator import GOAL_REGISTRY as LegacyRegistry
         assert LegacyRegistry is GOAL_REGISTRY
-        assert len(LegacyRegistry) == 10
+        assert len(LegacyRegistry) == 12

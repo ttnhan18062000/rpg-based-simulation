@@ -249,7 +249,7 @@ class WorldLoop:
             system_manager=self._system_manager,
             action_system=self._action_system,
             hero_lifecycle=self._hero_lifecycle,
-            emit=self._emit, tick_events=self._tick_events,
+            emit=self._emit, social_registry=self._social_registry, tick_events=self._tick_events,
             tick_start_time=time.perf_counter()
         )
 
@@ -298,7 +298,7 @@ class WorldLoop:
             system_manager=self._system_manager,
             action_system=self._action_system,
             hero_lifecycle=self._hero_lifecycle,
-            emit=self._emit, tick_events=self._tick_events,
+            emit=self._emit, social_registry=self._social_registry, tick_events=self._tick_events,
             tick_start_time=time.perf_counter()
         )
         CleanupPhase().execute(ctx)

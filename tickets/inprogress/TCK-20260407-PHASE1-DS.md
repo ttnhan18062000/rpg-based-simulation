@@ -1,33 +1,33 @@
-# Ticket: TCK-20260407-PHASE1-DS
-## Phase 1 - Design Shift Implementation: Behavioral Realism
+# Ticket: TCK-20260407-STAGE1-DS
+## Stage 1 - Design Shift Implementation: Behavioral Realism
 
 ### Request Summary
-Implementation of Phase 1 of the RPG Macro-Interest and Behavioral Realism Plan. This phase focuses on establishing recognizable individuals through personality traits, long-term motives, and subjective belief-based perception.
+Implementation of Stage 1 of the RPG Macro-Interest and Behavioral Realism Plan. This Stage focuses on establishing recognizable individuals through personality traits, long-term motives, and subjective belief-based perception.
 
 ### Scope
-- [ ] Establish the Phase 1 implementation boundary.
-- [ ] Add a typed `PersonalityProfile` model under the `mind` layer.
-- [ ] Seed personality and archetype at entity creation time.
-- [ ] Add a typed `PersonalMotive` model under the `mind/narrative` layer.
-- [ ] Seed initial motives at entity creation time.
-- [ ] Add a typed `BeliefRecord` model for other entities.
-- [ ] Add a typed `ThreatEstimate` submodel with explicit confidence handling.
-- [ ] Add a belief-refresh service for observation-to-belief updates.
-- [ ] Wire personality bias into goal scoring.
-- [ ] Wire long-term motives into goal scoring.
-- [ ] Refresh belief records during the sensory/perception phase.
-- [ ] Age and degrade beliefs during appraisal/memory maintenance.
-- [ ] Replace selected omniscient decision paths with belief-based decision inputs.
-- [ ] Extend entity inspection schemas with personality, motives, and important beliefs.
-- [ ] Add decision-driver explanation fields for personality, motives, and beliefs.
-- [ ] Add behavioral divergence tests.
-- [ ] Add belief-update and belief-decay tests.
-- [ ] Add inspection-schema tests.
+- [x] Establish the Stage 1 implementation boundary.
+- [x] Add a typed `PersonalityProfile` model under the `mind` layer.
+- [x] Seed personality and archetype at entity creation time.
+- [x] Add a typed `PersonalMotive` model under the `mind/narrative` layer.
+- [x] Seed initial motives at entity creation time.
+- [x] Add a typed `BeliefRecord` model for other entities.
+- [x] Add a typed `ThreatEstimate` submodel with explicit confidence handling.
+- [x] Add a belief-refresh service for observation-to-belief updates.
+- [x] Wire personality bias into goal scoring.
+- [x] Wire long-term motives into goal scoring.
+- [x] Refresh belief records during the sensory/perception stage.
+- [x] Age and degrade beliefs during appraisal/memory maintenance.
+- [/] Replace selected omniscient decision paths with belief-based decision inputs.
+- [x] Extend entity inspection schemas with personality, motives, and important beliefs.
+- [/] Add decision-driver explanation fields for personality, motives, and beliefs.
+- [x] Add behavioral divergence tests.
+- [/] Add belief-update and belief-decay tests.
+- [/] Add inspection-schema tests.
 
 ### Out of Scope
-- Relationships (deferred to Phase 2).
+- Relationships (deferred to Stage 2).
 - Rumors or shared-knowledge systems.
-- Daily/weekly routine systems (deferred to Phase 3).
+- Daily/weekly routine systems (deferred to Stage 3).
 - Public reputation systems.
 - Inheritance/successor systems.
 - Regional consequence simulation.

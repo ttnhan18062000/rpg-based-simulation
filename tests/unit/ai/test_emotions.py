@@ -23,9 +23,11 @@ def test_appraisal_phase_triggers_panic_on_low_hp():
     actor.identity.display_name = "PanicAgent"
     
     # Mock context with proper fields [AOA STABILIZATION]
+    snapshot = MagicMock()
+    snapshot.tick = 100 # Ensure appraisal throttle is bypassed
     ctx = AIContext(
         actor=actor,
-        snapshot=MagicMock(),
+        snapshot=snapshot,
         config=config,
         rng=rng,
         faction_reg=brain._faction_reg,

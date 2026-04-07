@@ -80,12 +80,13 @@ class EntityBuilder:
         self._inventory: InventoryAspect | None = None
         self._traits: list[int] = []
         
-        # Personality (OCEAN) [PHASE 1]
-        self._openness: float | None = None
-        self._conscientiousness: float | None = None
-        self._extraversion: float | None = None
-        self._agreeableness: float | None = None
-        self._neuroticism: float | None = None
+        # Personality (RPG Traits) [PHASE 1]
+        self._aggression: float | None = None
+        self._greed: float | None = None
+        self._caution: float | None = None
+        self._loyalty: float | None = None
+        self._ambition: float | None = None
+        self._curiosity: float | None = None
 
     def kind(self, k: str) -> EntityBuilder:
         self._kind = k
@@ -299,13 +300,16 @@ class EntityBuilder:
         # AOA MindAspect for now handles behavior, talents might be traits
         return self
 
-    def with_personality(self, o: float | None = None, c: float | None = None, e: float | None = None, a: float | None = None, n: float | None = None) -> EntityBuilder:
-        """Manually set OCEAN personality traits."""
-        if o is not None: self._openness = o
-        if c is not None: self._conscientiousness = c
-        if e is not None: self._extraversion = e
-        if a is not None: self._agreeableness = a
-        if n is not None: self._neuroticism = n
+    def with_personality(self, aggression: float | None = None, greed: float | None = None, 
+                         caution: float | None = None, loyalty: float | None = None, 
+                         ambition: float | None = None, curiosity: float | None = None) -> EntityBuilder:
+        """Manually set RPG personality traits."""
+        if aggression is not None: self._aggression = aggression
+        if greed is not None: self._greed = greed
+        if caution is not None: self._caution = caution
+        if loyalty is not None: self._loyalty = loyalty
+        if ambition is not None: self._ambition = ambition
+        if curiosity is not None: self._curiosity = curiosity
         return self
 
     def with_home_storage(self) -> EntityBuilder:
@@ -315,6 +319,50 @@ class EntityBuilder:
     def is_world_boss(self, boss: bool) -> EntityBuilder:
         self._is_world_boss = boss
         return self
+
+    def _apply_archetype_to_personality(self, entity: Entity, mind: MindAspect):
+        """Seeds personality traits based on the Identity archetype."""
+        arch = entity.identity.archetype
+        pers = mind.decision.personality
+        pers.archetype = arch.name if hasattr(arch, "name") else str(arch)
+        
+        if arch == Archetype.BALANCED:
+            pass # Default 0.5 for all
+        elif arch == Archetype.CAUTIOUS_OPPORTUNIST:
+            pers.caution, pers.greed, pers.aggression = 0.8, 0.7, 0.3
+        elif arch == Archetype.GLORY_SEEKER:
+            pers.ambition, pers.aggression, pers.caution = 0.9, 0.8, 0.2
+        elif arch == Archetype.HONORABLE_DEFENDER:
+            pers.loyalty, pers.caution, pers.aggression = 0.9, 0.6, 0.4
+        elif arch == Archetype.GREEDY_SCAVENGER:
+            pers.greed, pers.curiosity, pers.caution = 0.9, 0.7, 0.4
+        elif arch == Archetype.BLOODTHIRSTY_SLAYER:
+            pers.aggression, pers.ambition, pers.loyalty = 0.9, 0.7, 0.1
+        elif arch == Archetype.COWARDLY_SURVIVOR:
+            pers.caution, pers.aggression, pers.loyalty = 0.95, 0.1, 0.2
+
+    def _seed_initial_motives(self, entity: Entity, mind: MindAspect):
+        """Seeds 1-2 long-term motives based on archetype and role."""
+        from src.core.aspects.mind import PersonalMotive
+        arch = entity.identity.archetype
+        
+        motives = []
+        if arch == Archetype.GREEDY_SCAVENGER:
+            motives.append(PersonalMotive(motive_id="init_wealth", kind="build_wealth", priority=2.0))
+        elif arch == Archetype.BLOODTHIRSTY_SLAYER:
+            motives.append(PersonalMotive(motive_id="init_strength", kind="prove_strength", priority=2.5))
+        elif arch == Archetype.HONORABLE_DEFENDER:
+            motives.append(PersonalMotive(motive_id="init_faction", kind="serve_faction", priority=2.0))
+        elif arch == Archetype.COWARDLY_SURVIVOR:
+            motives.append(PersonalMotive(motive_id="init_safety", kind="seek_safety", priority=3.0))
+        else:
+            # Default for balanced/others
+            if entity.kind == "hero":
+                motives.append(PersonalMotive(motive_id="init_explore", kind="explore", priority=1.5))
+            else:
+                motives.append(PersonalMotive(motive_id="init_safety", kind="seek_safety", priority=1.0))
+        
+        mind.decision.motives = motives
 
     def build(self) -> Entity:
         entity = Entity(id=self._eid, kind=self._kind, next_act_at=float(self._tick))
@@ -330,16 +378,24 @@ class EntityBuilder:
             archetype=self._archetype or Archetype.BALANCED
         )
         
-        # Initialize Personality [PHASE 1]
-        # First, apply template based on Archetype (currently default in IdentityAspect)
-        entity.identity.apply_archetype_template()
+        # Initialize Personality & Motives [PHASE 1]
+        mind = MindAspect()
+        entity.mind = mind
         
-        # Then, override with manual values if provided
-        if self._openness is not None: entity.identity.openness = self._openness
-        if self._conscientiousness is not None: entity.identity.conscientiousness = self._conscientiousness
-        if self._extraversion is not None: entity.identity.extraversion = self._extraversion
-        if self._agreeableness is not None: entity.identity.agreeableness = self._agreeableness
-        if self._neuroticism is not None: entity.identity.neuroticism = self._neuroticism
+        # Apply Archetype Bias to Personality
+        self._apply_archetype_to_personality(entity, mind)
+        
+        # Override with manual values if provided
+        pers = mind.decision.personality
+        if self._aggression is not None: pers.aggression = self._aggression
+        if self._greed is not None: pers.greed = self._greed
+        if self._caution is not None: pers.caution = self._caution
+        if self._loyalty is not None: pers.loyalty = self._loyalty
+        if self._ambition is not None: pers.ambition = self._ambition
+        if self._curiosity is not None: pers.curiosity = self._curiosity
+        
+        # Seed Initial Motives
+        self._seed_initial_motives(entity, mind)
 
         entity.spatial = SpatialAspect(
             pos=self._pos,
@@ -359,7 +415,7 @@ class EntityBuilder:
             evasion=self._evasion
         )
         entity.progression = ProgressionAspect(level=self._level, xp_to_next=self._xp_to_next, gold=self._gold, fame=self._fame, hero_class=self._hero_class, stamina=self._stamina, max_stamina=self._stamina, skills=self._skills, attributes=self._attrs or Attributes(), attribute_caps=self._caps or AttributeCaps())
-        entity.mind = MindAspect()
+        entity.mind = mind
         entity.mind.decision.ai_state = self._ai_state
         entity.interaction = InteractionAspect()
         if self._inventory: entity.inventory = self._inventory

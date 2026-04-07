@@ -44,7 +44,7 @@ def test_inn_gossip(system, context):
     h1.mind.decision.ai_state = AIState.VISIT_INN
     h1.identity.display_name = "Hero1"
     
-    mem = MemoryRecord(entity_id=99, pos=Vector2(50, 50), kind="boss")
+    mem = MemoryRecord(entity_id=99, pos=Vector2(50, 50), apparent_kind="boss")
     h1.mind.perception.entity_memory = {99: mem}
     
     h2 = MagicMock()

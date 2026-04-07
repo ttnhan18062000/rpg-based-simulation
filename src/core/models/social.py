@@ -36,6 +36,16 @@ class SocialRegistry(SimulationModel):
             self.bonds[key] = SocialBond(source_id=source_id, target_id=target_id)
         return self.bonds[key]
 
+    def get_bond_or_none(self, source_id: int, target_id: int) -> SocialBond | None:
+        """Read-only bond lookup — safe on frozen snapshots. Returns None if no bond exists."""
+        key = f"{source_id}:{target_id}"
+        bonds = self.bonds
+        if isinstance(bonds, dict):
+            return bonds.get(key)
+        # MappingProxyType (frozen)
+        return bonds.get(key) if hasattr(bonds, 'get') else None
+
+
     def _ensure_bond_capacity(self, source_id: int):
         """Prunes least relevant bonds if over limit."""
         prefix = f"{source_id}:"

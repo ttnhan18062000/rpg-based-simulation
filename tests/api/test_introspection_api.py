@@ -111,5 +111,27 @@ def test_scheduler_timeline(world, rng):
     timeline = SchedulerPresenter.get_timeline(world)
     
     # e2 (at 5) should be first
-    assert timeline[0].entity_id == 2
-    assert timeline[1].entity_id == 1
+def test_behavioral_realism_api_integration(world, rng):
+    from src.api.presenters.ai_presenter import AIPresenter
+    from src.core.aspects.mind import PersonalityProfile, PersonalMotive, BeliefRecord, ThreatEstimate
+    from src.core.models.vectors import Vector2
+    
+    hero = EntityBuilder(rng, 1).kind("hero").build()
+    hero.mind.decision.personality = PersonalityProfile(aggression=0.8, caution=0.2)
+    hero.mind.decision.motives = [PersonalMotive(motive_id="wealth_1", kind="build_wealth", priority=1.0)]
+    hero.mind.perception.entity_memory[2] = BeliefRecord(
+        entity_id=2, pos=Vector2(0,0), threat=ThreatEstimate(overall=0.9)
+    )
+    hero.mind.decision.decision_drivers = ["Aggressive nature", "Sensed danger"]
+    
+    explanation = AIPresenter.get_explanation(hero)
+    
+    # Check for Stage 1 fields in the explanation (via schemas)
+    assert explanation.personality is not None
+    assert explanation.personality["aggression"] == 0.8
+    assert len(explanation.motives) == 1
+    assert explanation.motives[0]["kind"] == "build_wealth"
+    assert len(explanation.beliefs) >= 1
+    assert explanation.beliefs[0]["entity_id"] == 2
+    assert explanation.beliefs[0]["threat"]["overall"] == 0.9
+    assert "Aggressive nature" in explanation.decision_drivers

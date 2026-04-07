@@ -106,6 +106,13 @@ class ActionSystem(System):
                 else:
                     logger.warning("Entity %d proposed USE_SKILL but no skill_id found in target or metadata", entity.id)
 
+            elif proposal.verb == ActionType.ATTACK and isinstance(proposal.target, int):
+                # AOA Pillar 1: Basic Attack Fallback
+                # Map to 'Basic Attack' skill logic without requiring explicit SkillInstance
+                # This ensures entities in simple tests can still fight.
+                target_id = proposal.target
+                all_updates.extend(cls._get_use_skill_updates(world, config, rng, faction_reg, entity, "Attack", target_id, proposal=proposal, emit=emit, ignore_skill_check=True))
+
             # 3. Final Application (Authoritative Pipeline)
             if all_updates:
                 cls._apply_updates(world, entity, all_updates, proposal)
@@ -120,11 +127,21 @@ class ActionSystem(System):
             entity.next_act_at += 1.0 / max(0.1, speed / 10.0)
 
     @classmethod
-    def _apply_updates(cls, world: WorldState, entity: Entity, updates: list[IntentUpdate], proposal: ActionProposal) -> None:
+    def _apply_updates(cls, world: WorldState, actor: Entity, updates: list[IntentUpdate], proposal: ActionProposal) -> None:
         """Apply typed simulation side-effects (AOA Phase 5)."""
         from src.actions.base import MindUpdate, PerceptionUpdate, ProgressionUpdate, NavigationUpdate, SocialUpdate, RoutineUpdate
         
         for up in updates:
+            # Stage 5: Multi-entity update support
+            entity = actor
+            if up.target_id is not None:
+                target = world.entities.get(up.target_id)
+                if target:
+                    entity = target
+                else:
+                    logger.warning("IntentUpdate specified target_id %d but entity not found", up.target_id)
+                    continue
+
             if isinstance(up, MindUpdate):
                 decision = entity.mind.decision
                 if up.new_ai_state is not None:
@@ -133,6 +150,8 @@ class ActionSystem(System):
                     decision.goal_scores = up.goal_scores
                 if up.last_goal:
                     decision.last_goal = up.last_goal
+                if up.driver_details is not None:
+                    decision.driver_details = up.driver_details
                 
                 # Grudge / Emotion handling
                 if up.grudge_delta:
@@ -190,6 +209,9 @@ class ActionSystem(System):
                 
                 if up.stamina_delta:
                     entity.progression.stamina = max(0, min(entity.progression.max_stamina, entity.progression.stamina + up.stamina_delta))
+                
+                if up.combat_target_id is not None:
+                    entity.combat.combat_target_id = up.combat_target_id
                 
                 if up.gold_delta: entity.progression.gold += up.gold_delta
                 if up.xp_delta: entity.progression.xp += up.xp_delta
@@ -409,24 +431,42 @@ class ActionSystem(System):
                 routine.sleep_debt = max(0.0, routine.sleep_debt - 0.02)
                 if routine.sleep_debt == 0.0:
                     routine.is_sleeping = False
-    def _get_use_skill_updates(cls, world: WorldState, config: SimulationConfig, rng: DeterministicRNG, faction_reg: FactionRegistry | None, entity: Entity, skill_id: str, target_id: int | None = None, proposal: ActionProposal | None = None, emit: Callable | None = None) -> list[IntentUpdate]:
+                    
+            # 3. [STAGE 5] Region Fatigue and Territory accumulation
+            rid = entity.spatial.current_region_id
+            if rid:
+                current_fatigue = entity.mind.narrative.region_fatigue.get(rid, 0.0)
+                # Increments slowly (0.01 per tick = 1.0 in 100 ticks)
+                # Increments slowly (0.01 per tick = 1.0 in 100 ticks)
+                entity.mind.narrative.region_fatigue[rid] = min(1.0, current_fatigue + 0.005)
+    
+    @classmethod
+    def _get_use_skill_updates(cls, world: WorldState, config: SimulationConfig, rng: DeterministicRNG, faction_reg: FactionRegistry | None, entity: Entity, skill_id: str, target_id: int | None = None, proposal: ActionProposal | None = None, emit: Callable | None = None, ignore_skill_check: bool = False) -> list[IntentUpdate]:
         """Functional side-effects for skill usage. [AOA STABILIZATION]"""
         updates: list[IntentUpdate] = []
+        # Support both 'Attack' and 'Basic Attack' as aliases for the fallback
+        if skill_id == "Attack": skill_id = "Basic Attack"
+        
         sdef = SKILL_DEFS.get(skill_id)
         if not sdef: return updates
         
-        instance = next((si for si in entity.progression.skills if si.skill_id == skill_id), None)
-        if not instance or not instance.is_ready(): return updates
-        
-        # 1. Cooldown/Stamina
-        cost = instance.effective_stamina_cost(sdef.stamina_cost)
-        if entity.progression.stamina < cost: return updates
-        
-        updates.append(ProgressionUpdate(
-            stamina_delta=-cost,
-            skill_cooldowns={skill_id: sdef.cooldown}
-        ))
-        
+        # 0. Basic Attack / Action check bypass [AOA STABILIZATION]
+        if not ignore_skill_check:
+            instance = next((si for si in entity.progression.skills if si.skill_id == skill_id), None)
+            if not instance or not instance.is_ready(): return updates
+            
+            # 1. Cooldown/Stamina
+            cost = instance.effective_stamina_cost(sdef.stamina_cost)
+            if entity.progression.stamina < cost: return updates
+            
+            updates.append(ProgressionUpdate(
+                stamina_delta=-cost,
+                skill_cooldowns={skill_id: sdef.cooldown}
+            ))
+            power = instance.effective_power(sdef.power)
+        else:
+            # Fallback for entities without explicit skill instance (e.g. mobs or test entities)
+            power = sdef.power
         # 2. Target Selection (AoE or Single)
         targets: list[Entity] = []
         if sdef.radius > 0:
@@ -455,7 +495,6 @@ class ActionSystem(System):
             if t and t.combat.alive: targets.append(t)
             
         # 3. Apply Damage and generate TraceUpdates
-        power = instance.effective_power(sdef.power)
         from src.actions.combat import DamageResolutionService, CombatAftermathService
         for t in targets:
             damage, is_crit, is_evaded, trace_details = DamageResolutionService.resolve(
@@ -463,8 +502,10 @@ class ActionSystem(System):
                 defender=t,
                 world=world,
                 config=config,
+                skill_id=skill_id,
+                power=power,
                 rng=rng,
-                skill_power=power,
+                faction_reg=faction_reg,
                 override_damage_type=sdef.damage_type,
                 override_element=sdef.element
             )
@@ -538,6 +579,19 @@ class ActionSystem(System):
                 
                 # Mark for removal in the authoritative pipeline
                 updates.append(InteractionUpdate(corpse_id_to_remove=nid))
+                
+                # [STAGE 5] Loot Narrative
+                from src.core.aspects.mind import InterpretedEvent, LootNarrative
+                loot_event = InterpretedEvent(
+                    tick=world.tick,
+                    type="loot",
+                    impact=0.2 + (corpse_gold * 0.01),
+                    details=LootNarrative(
+                        gold_amount=corpse_gold,
+                        source=f"corpse_{node.entity_id}"
+                    )
+                )
+                updates.append(PerceptionUpdate(memory_log_add=[loot_event]))
                 
         return updates
 

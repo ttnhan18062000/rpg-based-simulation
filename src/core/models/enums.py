@@ -130,6 +130,8 @@ class EmotionType(IntEnum):
     BRAVERY = 0
     PANIC = 1
     STUCK = 2
+    DREAD = 3
+    JOY = 4
 
 @unique
 class Archetype(IntEnum):
@@ -141,6 +143,15 @@ class Archetype(IntEnum):
     GREEDY_SCAVENGER = 4
     BLOODTHIRSTY_SLAYER = 5
     COWARDLY_SURVIVOR = 6
+
+@unique
+class PersonalMotiveType(IntEnum):
+    """Broad categories for AI long-term motives. [STAGE 1]"""
+    BUILD_WEALTH = 0
+    SEEK_SAFETY = 1
+    PROVE_STRENGTH = 2
+    EXPLORE_WORLD = 3
+    SOCIAL_STATUS = 4
 
 from typing import Annotated
 from pydantic import BeforeValidator, PlainSerializer

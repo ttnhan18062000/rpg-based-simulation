@@ -9,7 +9,7 @@ Refactored for AOA Stabilization:
 from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING
-from src.actions.base import ActionProposal, CombatTraceUpdate
+from src.actions.base import ActionProposal, CombatTraceUpdate, PerceptionUpdate, MindUpdate, ProgressionUpdate, SocialUpdate
 from src.actions.damage import get_damage_calculator
 from src.core.models.enums import ActionType, DamageType, Domain, Element, EmotionType
 from src.core.gameplay.faction import Faction, FactionRegistry
@@ -25,7 +25,18 @@ logger = logging.getLogger(__name__)
 
 class DamageResolutionService:
     @staticmethod
-    def resolve(attacker: Entity, defender: Entity, world: WorldState, config: SimulationConfig, rng: DeterministicRNG, skill_power: float = 1.0, override_damage_type: DamageType | None = None, override_element: Element | None = None) -> tuple[int, bool, bool, dict]:
+    def resolve(
+        attacker: Entity, 
+        defender: Entity, 
+        world: WorldState, 
+        config: SimulationConfig, 
+        rng: DeterministicRNG, 
+        skill_id: str | None = None,
+        power: float = 1.0, 
+        faction_reg: FactionRegistry | None = None,
+        override_damage_type: DamageType | None = None, 
+        override_element: Element | None = None
+    ) -> tuple[int, bool, bool, dict]:
         tick = world.tick
         
         # --- Evasion Check ---
@@ -53,7 +64,7 @@ class DamageResolutionService:
         calculator = get_damage_calculator(dmg_type)
         dmg_ctx = calculator.resolve(attacker, defender)
         
-        atk_final = int(dmg_ctx.atk_power * dmg_ctx.atk_mult * skill_power)
+        atk_final = int(dmg_ctx.atk_power * dmg_ctx.atk_mult * power)
         def_final = int(dmg_ctx.def_power * dmg_ctx.def_mult)
         
         # Pillar 3: Fractional Armor Mitigation
@@ -65,6 +76,7 @@ class DamageResolutionService:
         damage = int(raw_damage * (1.0 + config.damage_variance * (variance - 0.5)))
         
         # Elemental vulnerability
+        elem_mult = 1.0
         if element != Element.NONE:
             elem_mult = defender.combat.elemental_vulnerability(element)
             damage = int(damage * elem_mult)
@@ -85,7 +97,7 @@ class DamageResolutionService:
         return max(damage, 1), is_crit, False, {
             "raw_damage": raw_damage,
             "mitigation": int(atk_final - raw_damage),
-            "elemental_mult": elem_mult if element != Element.NONE else 1.0,
+            "elemental_mult": elem_mult,
             "dmg_type": dmg_type.name.lower() if hasattr(dmg_type, "name") else DamageType(dmg_type).name.lower(),
             "element": element.name.lower() if hasattr(element, "name") else Element(element).name.lower(),
             "has_shattered": has_frozen
@@ -100,8 +112,7 @@ class CombatAftermathService:
         skill_label = "attack"
         if proposal.reason == "Opportunity Attack":
             skill_label = "OPPORTUNITY_ATTACK"
-        elif proposal.verb.name == "USE_SKILL" if hasattr(proposal.verb, "name") else proposal.verb == 40: # 40 is USE_SKILL
-            # In AOA, skills are usually handled via ActionSystem, but we keep this for consistency if called here
+        elif (hasattr(proposal.verb, "name") and proposal.verb.name == "USE_SKILL") or (not hasattr(proposal.verb, "name") and proposal.verb == 40): # 40 is USE_SKILL
             skill_label = "SKILL"
 
         if hasattr(world, "event_bus") and world.event_bus:
@@ -135,38 +146,38 @@ class CombatAftermathService:
         )
         # awarding veterancy for hit
         if not is_evasion:
-            from src.actions.base import ProgressionUpdate
             proposal.updates.append(ProgressionUpdate(veterancy_points_delta=1))
             
         proposal.updates.append(trace)
-
-        # Phase 1: Relationship/Social Awareness Integration
-        from src.core.logic.social_interpretation import SocialInterpretationService
-        # Calculate impact ratio (normalized damage)
-        hp_lost_ratio = damage / max(1, defender.combat.max_hp)
-        if not is_evasion and hp_lost_ratio > 0.0:
-             social_up = SocialInterpretationService.get_harm_deltas(attacker, defender, hp_lost_ratio)
-             proposal.updates.append(social_up)
+        
+        # AOA Phase 1 Recovery: Propose actual HP reduction for the defender
+        if damage > 0:
+            proposal.updates.append(ProgressionUpdate(
+                target_id=defender.id,
+                hp_delta=-damage
+            ))
 
         if is_evasion:
             return
+
+        # Phase 1: Relationship/Social Awareness Integration
+        from src.core.logic.social_interpretation import SocialInterpretationService
+        hp_lost_ratio = damage / max(1, defender.combat.max_hp)
+        if hp_lost_ratio > 0.0:
+             social_up = SocialInterpretationService.get_harm_deltas(attacker, defender, hp_lost_ratio)
+             proposal.updates.append(social_up)
         
         # --- Nemesis & Memory (Emotion/Narrative) ---
-        hp_lost_ratio = damage / max(1, defender.combat.max_hp)
-        
-        # Updates instead of direct mutation
-        from src.actions.base import MindUpdate
         proposal.updates.append(MindUpdate(
             emotion_delta={EmotionType.PANIC: hp_lost_ratio * 0.5},
             mood=-hp_lost_ratio * 0.2
         ))
         
         # AOA Stabilization: Fully normalize all combat side-effects into the trace object
-        # This allows the applicator to be a simple, 'dumb' value-pusher.
         if hp_lost_ratio > 0.15:
             trace.result.trauma = hp_lost_ratio * 100.0
             
-        # Threat Table (Includes class multipliers calculated inside this service)
+        # Threat Table
         base_threat = damage * config.threat_damage_mult
         from src.core.models.enums import HeroClass
         hclass = getattr(attacker.progression, "hero_class", HeroClass.NONE)
@@ -181,14 +192,46 @@ class CombatAftermathService:
             
         trace.result.threat = base_threat
         
-        # Grudge generation normalized
+        # Grudge generation
         trace.result.grudge = float(damage) / 10.0
+
+        # Phase 5: Narrative Memory Generation [STAGE 5]
+        from src.core.aspects.mind import InterpretedEvent, CombatNarrative
+        
+        # Narrative for Attacker (The Glory)
+        attacker_narrative = InterpretedEvent(
+            tick=tick,
+            type="combat",
+            impact=0.5 + (hp_lost_ratio * 2.0),
+            details=CombatNarrative(
+                target_id=defender.id,
+                target_kind=defender.kind,
+                damage_dealt=damage,
+                was_fatal=(defender.combat.hp - damage) <= 0
+            )
+        )
+        proposal.updates.append(PerceptionUpdate(memory_log_add=[attacker_narrative]))
+        
+        # Narrative for Defender (The Trauma)
+        defender_narrative = InterpretedEvent(
+            tick=tick,
+            type="trauma",
+            impact=1.0 + (hp_lost_ratio * 3.0),
+            details=CombatNarrative(
+                target_id=attacker.id,
+                target_kind=attacker.kind,
+                damage_dealt=damage,
+                was_fatal=(defender.combat.hp - damage) <= 0
+            )
+        )
+        # Note: In AOA, defender updates must be explicitly routed in ActionSystem.
+        # But for now, we append them to proposal.updates; ActionSystem handles routing by target_id.
+        proposal.updates.append(PerceptionUpdate(target_id=defender.id, memory_log_add=[defender_narrative]))
 
 class KillRewardService:
     @staticmethod
     def resolve_kill(killer: Entity, victim: Entity, world: WorldState, proposal: ActionProposal):
         tick = world.tick
-        from src.actions.base import ProgressionUpdate
         
         # XP Gain
         xp_gain = 5 if victim.progression.level <= killer.progression.level else 10
@@ -297,18 +340,17 @@ class CombatAction:
 
         # RESOLVE
         damage, is_crit, is_evasion, trace_details = DamageResolutionService.resolve(
-            attacker, defender, world, self._config, self._rng
+            attacker=attacker, 
+            defender=defender, 
+            world=world, 
+            config=self._config, 
+            rng=self._rng
         )
 
-        # APPLY STATE CHANGES (DEFERRED to ActionSystem._apply_updates)
-        # Authoritative state transition is now handled via the CombatTraceUpdate
-        # which is appended to proposal.updates in CombatAftermathService.process.
-        
         # AFTERMATH (Memory, Grudges, Threat)
         CombatAftermathService.process(attacker, defender, world, damage, is_crit, is_evasion, self._config, proposal, trace_details)
 
         # KILL RECOGNITION (Pillar 1 Convergence: Proposed in Apply Phase)
-        # We predict the death here so that rewards are recorded in the proposal updates.
         if not is_evasion and (defender.combat.hp - damage) <= 0:
             KillRewardService.resolve_kill(attacker, defender, world, proposal)
 
@@ -316,7 +358,6 @@ class CombatAction:
         if not is_evasion and (defender.combat.hp - damage) > 0:
             # Check threshold against predicted HP after damage is applied
             if (defender.combat.hp - damage) / defender.combat.max_hp < 0.15:
-                from src.actions.base import ProgressionUpdate
                 proposal.updates.append(ProgressionUpdate(max_hp_delta=1))
 
     @staticmethod

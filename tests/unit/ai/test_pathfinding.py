@@ -211,6 +211,11 @@ class TestIntegration:
         arena = CombatArena(min_commitment_ticks=0)
         arena.add_hero(1, pos=(5, 5), weapon="iron_sword", hp=200, atk=15)
         arena.add_mob(2, pos=(6, 5), weapon="rusty_sword", hp=200, atk=5)
+        
+        # [AOA STABILIZATION] Explicitly register hostility for the arena factions
+        from src.core.gameplay.faction import Faction, FactionRelation
+        arena.loop._faction_reg.set_relation(Faction.HERO_GUILD, Faction.GOBLIN_HORDE, FactionRelation.HOSTILE)
+        
         arena.run_ticks(3)
         # Should produce combat events (got close enough to fight)
         combat = arena.combat_events()

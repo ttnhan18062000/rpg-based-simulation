@@ -1,46 +1,46 @@
-## WorldLoop RPG Macro-Interest and Behavioral Realism Plan — Phase 1
+## WorldLoop RPG Macro-Interest and Behavioral Realism Plan — Stage 1
 
-This phase turns the design shift into an actual implementation slice. The goal is not to build the full living-world stack yet. The goal is narrower: make entities observably different, make them reason from belief instead of hidden truth in selected decision paths, and make that visible when inspecting a chosen entity. The current codebase already has the right structural footholds for this: nested mind state, typed updates, phased AI, and presenter/introspection support.
+This stage turns the design shift into an actual implementation slice. The goal is not to build the full living-world stack yet. The goal is narrower: make entities observably different, make them reason from belief instead of hidden truth in selected decision paths, and make that visible when inspecting a chosen entity. The current codebase already has the right structural footholds for this: nested mind state, typed updates, staged AI, and presenter/introspection support.
 
 ---
 
 ## Proposed Changes
 
-### Phase 1 Objective and Scope
+### Stage 1 Objective and Scope
 
-#### [ ] Establish the Phase 1 implementation boundary
+#### [x] Establish the Stage 1 implementation boundary
 
-Review comment: Phase 1 will fail if it tries to absorb relationships, rumors, routines, inheritance, and regional consequence all at once. The correct first slice is: personality/archetype, long-term motives, belief-based target knowledge, and chosen-entity inspection. Everything else is deferred.
+Review comment: Stage 1 will fail if it tries to absorb relationships, rumors, routines, inheritance, and regional consequence all at once. The correct first slice is: personality/archetype, long-term motives, belief-based target knowledge, and chosen-entity inspection. Everything else is deferred.
 
 Technical implementation:
 
-- define the Phase 1 scope in `phase_1_implementation_plan.md`
+- define the Stage 1 scope in `stage_1_implementation_plan.md`
 - add a short internal design note near the AI/mind modules describing the four new responsibilities:
   - personality
   - motives
   - beliefs
   - chosen-entity inspection
 
-- explicitly mark out-of-scope systems as deferred in the plan so they do not creep into this phase
+- explicitly mark out-of-scope systems as deferred in the plan so they do not creep into this stage
 
 Files affected:
 
-- `phase_1_implementation_plan.md`
+- `stage_1_implementation_plan.md`
 - likely a small module-level docstring or comment block in:
   - `src/ai/brain.py`
   - `src/core/aspects/mind.py`
 
 Important notes:
 
-- do not create placeholder models for future relationship or rumor systems in this phase
-- do not let Phase 1 become “macro systems lite”
+- do not create placeholder models for future relationship or rumor systems in this stage
+- do not let Stage 1 become “macro systems lite”
 - success for this task is clean boundaries, not code volume
 
 ---
 
 ### Personality and Archetype Foundations
 
-#### [ ] Add a typed personality profile model under the mind layer
+#### [x] Add a typed personality profile model under the mind layer
 
 Review comment: The simulation currently has class, faction, role, AI state, and emotion, but still lacks a stable behavioral identity layer that explains why similar entities choose differently. This belongs under mind, not objective identity.
 
@@ -56,7 +56,7 @@ Technical implementation:
   - `ambition`
   - `curiosity`
 
-- attach it under `mind.narrative` unless you want a clean new submodel like `mind.identity_model`; for Phase 1, extending `narrative` is lower-risk
+- attach it under `mind.narrative` unless you want a clean new submodel like `mind.identity_model`; for Stage 1, extending `narrative` is lower-risk
 - add validators/clamps for scalar values so the profile cannot drift into nonsense ranges
 - ensure the model participates in Pydantic rebuild if needed by the existing circular rebuild flow
 
@@ -75,7 +75,7 @@ Important notes:
 
 ---
 
-#### [ ] Seed personality and archetype at entity creation time
+#### [x] Seed personality and archetype at entity creation time
 
 Review comment: Personality must exist before the first decision tick. If it is invented later by AI code, it becomes fake retrospective flavor instead of a life-shaping seed.
 
@@ -112,9 +112,9 @@ Important notes:
 
 ### Long-Term Motive Foundations
 
-#### [ ] Add a typed long-term motive model under the mind/narrative layer
+#### [x] Add a typed long-term motive model under the mind/narrative layer
 
-Review comment: Current goals are too transient and `life_directive`-style state is too thin. Phase 1 needs a persistent motive model that survives across many ticks and biases short-term choices.
+Review comment: Current goals are too transient and `life_directive`-style state is too thin. Stage 1 needs a persistent motive model that survives across many ticks and biases short-term choices.
 
 Technical implementation:
 
@@ -137,7 +137,7 @@ Technical implementation:
 Files affected:
 
 - `src/core/aspects/mind.py`
-- possibly `src/actions/base.py` if motive-updating transport is added later in Phase 1
+- possibly `src/actions/base.py` if motive-updating transport is added later in Stage 1
 - any AI explanation schema that will expose motives
 
 Important notes:
@@ -145,11 +145,11 @@ Important notes:
 - hard-cap active motives at 2 to 4
 - motives are not the same as per-tick goals
 - do not allow free-form strings here; typed motive kinds matter for later scoring and inspection
-- frustration exists so later phases can change behavior when motives are blocked
+- frustration exists so later stages can change behavior when motives are blocked
 
 ---
 
-#### [ ] Seed initial motives at entity creation time
+#### [x] Seed initial motives at entity creation time
 
 Review comment: Motives must exist from the beginning or entities still start as generic tactical shells. Spawn-time motive seeding is what creates early divergence in life direction.
 
@@ -184,9 +184,9 @@ Important notes:
 
 ### Belief-Based Perception Foundations
 
-#### [ ] Add a typed belief record model for other entities
+#### [x] Add a typed belief record model for other entities
 
-Review comment: Existing memory/perception is useful, but it still trends too close to fact cache rather than actor belief. Phase 1 needs a first-class subjective record of what an entity thinks it knows about another entity.
+Review comment: Existing memory/perception is useful, but it still trends too close to fact cache rather than actor belief. Stage 1 needs a first-class subjective record of what an entity thinks it knows about another entity.
 
 Technical implementation:
 
@@ -221,11 +221,11 @@ Important notes:
 
 - this model stores beliefs, not truth
 - do not expose exact HP, exact stats, or full skill lists here
-- keep this bounded by remembered-entity count if necessary later; Phase 1 can start with current storage behavior if it is already bounded enough
+- keep this bounded by remembered-entity count if necessary later; Stage 1 can start with current storage behavior if it is already bounded enough
 
 ---
 
-#### [ ] Add a typed threat-estimate submodel with explicit confidence handling
+#### [x] Add a typed threat-estimate submodel with explicit confidence handling
 
 Review comment: A single vague threat number is not enough. The actor needs a structured estimate and an explicit measure of certainty. Otherwise the AI will either ignore the uncertainty or treat guesses like truth.
 
@@ -234,7 +234,7 @@ Technical implementation:
 - add a `ThreatEstimate` submodel with at least:
   - `overall`
   - `survivability`
-  - optional `melee` / `ranged` in Phase 1 if cheap enough
+  - optional `melee` / `ranged` in Stage 1 if cheap enough
   - `confidence` or a separate scalar confidence field
 
 - use a simple enum or scalar banding for confidence:
@@ -258,9 +258,9 @@ Important notes:
 
 ---
 
-#### [ ] Add a belief-refresh service for observation-to-belief updates
+#### [x] Add a belief-refresh service for observation-to-belief updates
 
-Review comment: Belief mutation logic will become unmaintainable if scattered across brain phases and state handlers. Phase 1 needs one dedicated place that transforms observation into updated belief.
+Review comment: Belief mutation logic will become unmaintainable if scattered across brain stages and state handlers. Stage 1 needs one dedicated place that transforms observation into updated belief.
 
 Technical implementation:
 
@@ -297,7 +297,7 @@ Important notes:
 
 ### AI Integration for Personality, Motives, and Beliefs
 
-#### [ ] Wire personality bias into goal scoring
+#### [x] Wire personality bias into goal scoring
 
 Review comment: Personality is worthless if it only appears in inspection. The current AI already computes goal scores, so that is the right place to apply bounded personality bias.
 
@@ -332,7 +332,7 @@ Important notes:
 
 ---
 
-#### [ ] Wire long-term motives into goal scoring
+#### [x] Wire long-term motives into goal scoring
 
 Review comment: Motives must bend short-term decision-making or they are just labels. They should bias current goal selection, not replace it.
 
@@ -363,13 +363,13 @@ Important notes:
 
 ---
 
-#### [ ] Refresh belief records during the sensory/perception phase
+#### [x] Refresh belief records during the sensory/perception stage
 
 Review comment: The belief system must start where the actor sees the world. The current perception pass should stop behaving like a simple fact refresh and instead update subjective belief state.
 
 Technical implementation:
 
-- in the perception phase of `AIBrain`:
+- in the perception stage of `AIBrain`:
   - iterate visible/attended actors
   - call the new belief-refresh service
   - write updated belief records into `PerceptionUpdate.entity_memory`
@@ -394,17 +394,17 @@ Important notes:
 
 - refresh beliefs only from actual observation, not hidden state leakage
 - if an entity is not currently observed, do not silently refresh its record with current truth
-- do not overcomplicate visibility logic in Phase 1; use existing visibility/perception flow
+- do not overcomplicate visibility logic in Stage 1; use existing visibility/perception flow
 
 ---
 
-#### [ ] Age and degrade beliefs during appraisal/memory maintenance
+#### [x] Age and degrade beliefs during appraisal/memory maintenance
 
 Review comment: Beliefs that never decay become delayed omniscience. Uncertainty has to return when the actor stops seeing the target.
 
 Technical implementation:
 
-- in the memory/appraisal phase:
+- in the memory/appraisal stage:
   - increment staleness
   - lower confidence on stale records
   - degrade visible condition certainty
@@ -426,9 +426,9 @@ Important notes:
 
 ---
 
-#### [ ] Replace selected omniscient decision paths with belief-based decision inputs
+#### [x] Replace selected omniscient decision paths with belief-based decision inputs
 
-Review comment: This is the integrity test of the phase. If the AI still reads exact hidden target state everywhere that matters, the whole belief system is a cosmetic fraud. Phase 1 does not need total migration, but it needs a few visible end-to-end paths.
+Review comment: This is the integrity test of the stage. If the AI still reads exact hidden target state everywhere that matters, the whole belief system is a cosmetic fraud. Stage 1 does not need total migration, but it needs a few visible end-to-end paths.
 
 Technical implementation:
 
@@ -454,7 +454,7 @@ Files affected:
 
 Important notes:
 
-- do not try to purge all truth-based reads in Phase 1
+- do not try to purge all truth-based reads in Stage 1
 - choose a few important decisions and make those honest
 - this task is more important than adding extra data fields
 
@@ -462,7 +462,7 @@ Important notes:
 
 ### Chosen-Entity Inspection and Explainability
 
-#### [ ] Extend entity inspection schemas with personality, motives, and important beliefs
+#### [x] Extend entity inspection schemas with personality, motives, and important beliefs
 
 Review comment: If the chosen-entity view does not show the new subjective state, there is no product payoff. Existing inspection/presenter infrastructure is already the correct place to extend.
 
@@ -495,7 +495,7 @@ Important notes:
 
 ---
 
-#### [ ] Add decision-driver explanation fields for personality, motives, and beliefs
+#### [x] Add decision-driver explanation fields for personality, motives, and beliefs
 
 Review comment: The chosen-entity view must not only show state. It must show why that state mattered to the current decision. Otherwise the observer still sees data without narrative logic.
 
@@ -521,7 +521,7 @@ Files affected:
 
 Important notes:
 
-- do not generate prose in Phase 1
+- do not generate prose in Stage 1
 - structured driver records are enough
 - this is explainability, not storytelling yet
 
@@ -529,7 +529,7 @@ Important notes:
 
 ### Testing and Validation
 
-#### [ ] Add behavioral divergence tests for same-class entities with different personalities
+#### [x] Add behavioral divergence tests for same-class entities with different personalities
 
 Review comment: The first real proof of value is visible divergence, not richer data models. Two same-class entities in the same scenario should not always make the same choice once personality exists.
 
@@ -557,7 +557,7 @@ Important notes:
 
 ---
 
-#### [ ] Add belief-update and belief-decay tests
+#### [x] Add belief-update and belief-decay tests
 
 Review comment: The belief system is only credible if it updates when entities observe things and decays when they stop.
 
@@ -582,7 +582,7 @@ Important notes:
 
 ---
 
-#### [ ] Add inspection-schema tests for personality, motives, beliefs, and decision drivers
+#### [x] Add inspection-schema tests for personality, motives, beliefs, and decision drivers
 
 Review comment: The chosen-entity view is part of the actual product goal, so its schema and presence should be tested as a stable contract.
 
@@ -608,18 +608,25 @@ Important notes:
 
 ---
 
-### Scope-Control Restraints for Phase 1
+### Scope-Control Restraints for Stage 1
 
-#### [ ] Explicitly defer relationships, rumors, routines, inheritance, and regional consequence from Phase 1
+#### [x] Explicitly defer relationships, rumors, routines, inheritance, and regional consequence from Stage 1
 
-Review comment: This is a planning task, but it is necessary. The main technical threat to Phase 1 is scope dilution. These systems matter, but not yet.
+Review comment: This is a planning task, but it is necessary. The main technical threat to Stage 1 is scope dilution. These systems matter, but not yet.
 
 Technical implementation:
 
 - document these as explicit non-goals in the plan
 - reject model additions that are only placeholders for later systems
 - reject AI wiring that depends on unfinished relationship or rumor infrastructure
-- keep Phase 1 focused on subjective individual state and selected decision integration
+- keep Stage 1 focused on subjective individual state and selected decision integration
+
+- **Deferred Systems**:
+  - `Relationships`: No complex social graph or kinship tracked yet.
+  - `Rumors`: No propagation of second-hand information; entities only believe what they've seen.
+  - `Routines`: No daily cycles or sleep/hunger simulation in Stage 1.
+  - `Inheritance`: No lineage or successor logic.
+  - `Regional Consequence`: No global map influence or town-wide impact tracking.
 
 Files affected:
 
@@ -628,7 +635,7 @@ Files affected:
 Important notes:
 
 - placeholder complexity is still complexity
-- Phase 1 should ship observable individuality first, not future architecture hints
+- Stage 1 should ship observable individuality first, not future architecture hints
 
 ---
 
@@ -636,7 +643,7 @@ Important notes:
 
 ### Priority 1 — Foundation Models
 
-1. Establish the Phase 1 implementation boundary
+1. Establish the Stage 1 implementation boundary
 2. Add a typed personality profile model under the mind layer
 3. Seed personality and archetype at entity creation time
 4. Add a typed long-term motive model under the mind/narrative layer
@@ -649,7 +656,7 @@ Important notes:
 
 9. Wire personality bias into goal scoring
 10. Wire long-term motives into goal scoring
-11. Refresh belief records during the sensory/perception phase
+11. Refresh belief records during the sensory/perception stage
 12. Age and degrade beliefs during appraisal/memory maintenance
 13. Replace selected omniscient decision paths with belief-based decision inputs
 
@@ -663,7 +670,7 @@ Important notes:
 16. Add behavioral divergence tests for same-class entities with different personalities
 17. Add belief-update and belief-decay tests
 18. Add inspection-schema tests for personality, motives, beliefs, and decision drivers
-19. Explicitly defer relationships, rumors, routines, inheritance, and regional consequence from Phase 1
+19. Explicitly defer relationships, rumors, routines, inheritance, and regional consequence from Stage 1
 
 ---
 
@@ -681,8 +688,8 @@ Important notes:
 ### Pass 2 — Belief update mechanics
 
 - belief-refresh service
-- perception-phase belief refresh
-- appraisal-phase stale decay
+- perception-stage belief refresh
+- appraisal-stage stale decay
 
 ### Pass 3 — Decision integration
 
@@ -699,9 +706,9 @@ Important notes:
 
 ---
 
-## Success Criteria for Phase 1
+## Success Criteria for Stage 1
 
-Phase 1 is successful when:
+Stage 1 is successful when:
 
 - same-class entities can behave differently under the same conditions because personality and motives differ
 - entities use belief rather than exact hidden truth in at least a few important decision paths
@@ -711,7 +718,7 @@ Phase 1 is successful when:
 
 ---
 
-## Non-Goals for Phase 1
+## Non-Goals for Stage 1
 
 The following are explicitly deferred:
 
@@ -729,13 +736,13 @@ The following are explicitly deferred:
 ## Priority Plan
 
 What you must change in mindset or assumptions:
-Phase 1 is not about adding more lore-shaped data. It is about adding persistent subjective state that actually changes decisions and becomes visible in inspection.
+Stage 1 is not about adding more lore-shaped data. It is about adding persistent subjective state that actually changes decisions and becomes visible in inspection.
 
 What actions you must take immediately:
 Implement typed personality, motive, belief, and threat models first; seed them at spawn; add a dedicated belief-refresh service; migrate a few important decision paths to beliefs; expose all of that in chosen-entity inspection; then prove it with behavior and inspection tests.
 
 What you must stop or eliminate:
-Stop letting AI silently reason from exact hidden truth in the exact places where this phase claims to add perceptual realism. Stop adding future-phase placeholder systems. Stop treating inspect-only flavor as completed behavior work.
+Stop letting AI silently reason from exact hidden truth in the exact places where this stage claims to add perceptual realism. Stop adding future-stage placeholder systems. Stop treating inspect-only flavor as completed behavior work.
 
 The consequences and opportunity cost if you fail to change:
 You will get a richer schema and the same old simulation. The entity panel will look more sophisticated, but the world will still feel fake because the actors will remain interchangeable and secretly omniscient.

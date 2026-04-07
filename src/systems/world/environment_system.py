@@ -62,13 +62,10 @@ class EnvironmentSystem(System):
                         mat = grid.get_xy(tx, ty)
                         entity.mind.perception.terrain_memory[(tx, ty)] = mat
             
-            # Entity awareness
-            nearby = world.entities_at_radius(entity.spatial.pos, vr)
-            # Filter and store (could be expanded for more complex AI)
-            entity.mind.perception.entity_memory = {
-                other.id: {"id": other.id, "kind": other.kind, "pos": (other.spatial.pos.x, other.spatial.pos.y)}
-                for other in nearby if other.id != entity.id and other.combat.alive
-            }
+            # Entity awareness: REMOVED [PHASE 1]
+            # Entity perception is now handled by BeliefService in AIBrain._sensory_perception_phase.
+            # The legacy dict-based entity_memory was incompatible with typed BeliefRecord objects.
+
 
     def _update_entity_goals(self, context: SystemContext) -> None:
         """Re-evaluate goals for all entities if needed."""
