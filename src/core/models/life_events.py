@@ -76,7 +76,7 @@ class ReputationProfile(SimulationModel):
     cowardice_score: float = Field(default=0.0, ge=-10.0, le=10.0)
     greed_score: float = Field(default=0.0, ge=-10.0, le=10.0)
     defender_score: float = Field(default=0.0, ge=-10.0, le=10.0)
-    trustworthiness: float = Field(default=5.0, ge=-10.0, le=10.0)
+    trustworthiness: float = Field(default=0.0, ge=-10.0, le=10.0)
     threat_notoriety: float = Field(default=0.0, ge=-10.0, le=10.0)
     
     reputation_tags: list[str] = Field(default_factory=list)

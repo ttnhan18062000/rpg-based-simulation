@@ -110,6 +110,15 @@ class RoutineStateSchema(BaseModel):
     is_sleeping: bool
     active_hours: str  # e.g. "06:00 - 22:00"
 
+class PlaceAttachmentSchema(BaseModel):
+    """Subjective importance of a world location. [PHASE 3]"""
+    place_id: str | int | None = None
+    place_type: str  # "home", "work", etc.
+    x: int
+    y: int
+    importance: float
+    attachment_kind: str
+
 
 class MemoryLogSchema(BaseModel):
     """A single high-salience narrative event. [PHASE 2]"""
@@ -134,6 +143,26 @@ class ReputationProfileSchema(BaseModel):
     threat_notoriety: float
     trustworthiness: float
     tags: list[str] = Field(default_factory=list)
+
+
+# --- Continuity and Inheritance [PHASE 4] ---
+
+class SuccessorSummarySchema(BaseModel):
+    """Bridge data showing legacy transfer from a predecessor. [PHASE 4]"""
+    source_entity_id: int
+    predecessor_name: str = ""
+    legacy_level: int = 1
+    inherited_motive_count: int = 0
+    tick: int
+
+class HouseholdSummarySchema(BaseModel):
+    """Group continuity data for a shared home. [PHASE 4]"""
+    household_id: str
+    reputation: float
+    member_count: int
+    former_member_count: int
+    heirloom_count: int
+    legacy_tags: list[str] = Field(default_factory=list)
 
 
 # --- Behavioral Realism [PHASE 1] ---
@@ -254,6 +283,11 @@ class EntitySchema(BaseModel):
     
     # Social & Routine [PHASE 2 & 3]
     routine: RoutineStateSchema | None = None
+    social_bonds: list[SocialBondSchema] = Field(default_factory=list)
+    world_role: str = "none"
+    cluster_id: str | None = None
+    group_id: str | None = None
+    place_attachments: list[PlaceAttachmentSchema] = Field(default_factory=list)
     reputation: ReputationProfileSchema | None = None
     turning_points: list[TurningPointSchema] = Field(default_factory=list)
     memory_log: list[MemoryLogSchema] = Field(default_factory=list)
@@ -300,8 +334,9 @@ class EntitySchema(BaseModel):
     home_storage_max: int = 0
     home_storage_level: int = 0
     # Macro-Interest (Phase 4 Integration)
-    routine: RoutineStateSchema | None = None
-    social_bonds: list[SocialBondSchema] = Field(default_factory=list)
+    generation: int = 1
+    household_id: str | None = None
+    traits: list[int] = Field(default_factory=list)
 
 # --- Introspection (Phase 4) ---
 
@@ -357,6 +392,8 @@ class AIDecisionSchema(BaseModel):
     driver_details: list[DecisionDriverSchema] = Field(default_factory=list) # [PHASE 1] New structured list
     nearest_enemy_dist: float | None = None
     nearest_target_id: int | None = None
+    group_id: str | None = None
+    active_routine_id: str | None = None
     narrative_impacts: list[str] = Field(default_factory=list) # [PHASE 2] Global recent life shifts
 
 class SchedulerTimelineItemSchema(BaseModel):
@@ -375,6 +412,8 @@ class EntityInspectionSchema(BaseModel):
     ai_explanation: AIDecisionSchema | None = None
     narrative_history: list[MemoryLogSchema] = Field(default_factory=list)
     turning_points: list[TurningPointSchema] = Field(default_factory=list)
+    successor_record: SuccessorSummarySchema | None = None # [PHASE 4]
+    household_record: HouseholdSummarySchema | None = None # [PHASE 4]
 
 
 # --- Map ---

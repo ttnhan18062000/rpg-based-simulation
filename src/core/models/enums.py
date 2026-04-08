@@ -44,6 +44,21 @@ class Rarity(IntEnum): COMMON = 0; UNCOMMON = 1; RARE = 2; EPIC = 3; LEGENDARY =
 class EntityRole(IntEnum): HERO = 0; MOB = 1; NPC = 2; WORLD_BOSS = 3; STRONGHOLD = 4
 
 @unique
+class LifeRole(IntEnum):
+    """Lived-world roles separate from combat class. [PHASE 3]"""
+    NONE = 0; GUARD = 1; SCOUT = 2; RAIDER = 3; CRAFTER = 4; HOUSEHOLDER = 5; SENTRY = 6; HEALER = 7; APPRENTICE = 8; HERO = 9; MERCHANT = 10; BLACKSMITH = 11
+
+@unique
+class GroupKind(IntEnum):
+    """Small-group coordination types. [PHASE 3]"""
+    SOCIAL_CLIQUE = 0; PATROL = 1; RAID_PACK = 2; ESCORT = 3; HOUSEHOLD = 4
+
+@unique
+class AttachmentKind(IntEnum):
+    """Types of location-based sentiment. [PHASE 3]"""
+    HOME = 0; WORKPLACE = 1; TRAINING_GROUND = 2; MARKET = 3; FAVORITE_SPOT = 4; SHRINE = 5
+
+@unique
 class EnemyTier(IntEnum):
     """Enemy difficulty tiers — affects stats, behavior, and loot."""
 
@@ -205,6 +220,10 @@ SkillTypeSer = Annotated[SkillType, BeforeValidator(_parse_enum(SkillType)), Pla
 SkillTargetSer = Annotated[SkillTarget, BeforeValidator(_parse_enum(SkillTarget)), PlainSerializer(lambda v: SkillTarget(v).name.lower(), return_type=str)]
 DamageTypeSer = Annotated[int, BeforeValidator(_parse_enum(DamageType)), PlainSerializer(lambda v: DamageType(v).name.lower(), return_type=str)]
 ElementSer = Annotated[int, BeforeValidator(_parse_enum(Element)), PlainSerializer(lambda v: Element(v).name.lower(), return_type=str)]
+VetryRankSer = Annotated[int, BeforeValidator(_parse_enum(VeterancyRank)), PlainSerializer(lambda v: VeterancyRank(v).name.lower(), return_type=str)] # Standardizing formatting
+LifeRoleSer = Annotated[LifeRole, BeforeValidator(_parse_enum(LifeRole)), PlainSerializer(lambda v: LifeRole(v).name.lower(), return_type=str)]
+GroupKindSer = Annotated[GroupKind, BeforeValidator(_parse_enum(GroupKind)), PlainSerializer(lambda v: GroupKind(v).name.lower(), return_type=str)]
+AttachmentKindSer = Annotated[AttachmentKind, BeforeValidator(_parse_enum(AttachmentKind)), PlainSerializer(lambda v: AttachmentKind(v).name.lower(), return_type=str)]
 ArchetypeSer = Annotated[Archetype, BeforeValidator(_parse_enum(Archetype)), PlainSerializer(lambda v: Archetype(v).name.lower(), return_type=str)]
 
 from dataclasses import dataclass, field

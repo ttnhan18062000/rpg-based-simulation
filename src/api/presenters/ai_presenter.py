@@ -34,8 +34,8 @@ class AIPresenter:
         if perception.entity_memory:
             # Find nearest recorded entity
             min_d = 999
-            for oid, pos in perception.entity_memory.items():
-                d = entity.spatial.pos.manhattan(pos)
+            for oid, belief in perception.entity_memory.items():
+                d = entity.spatial.pos.manhattan(belief.pos)
                 if d < min_d:
                     min_d = d
                     nearest_id = oid
@@ -134,5 +134,7 @@ class AIPresenter:
             ],
             nearest_enemy_dist=nearest_dist,
             nearest_target_id=nearest_id,
+            group_id=entity.identity.group_id,
+            active_routine_id=mind.routine.active_routine_id,
             narrative_impacts=narrative_impacts
         )

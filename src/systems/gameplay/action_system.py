@@ -112,6 +112,12 @@ class ActionSystem(System):
                 target_id = proposal.target
                 all_updates.extend(cls._get_use_skill_updates(world, config, rng, faction_reg, entity, "Attack", target_id, proposal=proposal, emit=emit, ignore_skill_check=True))
 
+            # Phase 2: Social Interpretation Pass
+            cls._process_social_interpretation(world, entity, all_updates, proposal)
+            
+            # Phase 2: Social Convergence (Gossip)
+            cls._process_proximity_gossip(world, entity, all_updates)
+
             # 3. Final Application (Authoritative Pipeline)
             if all_updates:
                 cls._apply_updates(world, entity, all_updates, proposal)
@@ -132,11 +138,6 @@ class ActionSystem(System):
             if proposal.reason:
                 entity.mind.decision.last_reason = proposal.reason
 
-            # Phase 2: Social Interpretation Pass
-            cls._process_social_interpretation(world, entity, all_updates, proposal)
-            
-            # Phase 2: Social Convergence (Gossip)
-            cls._process_proximity_gossip(world, entity, all_updates)
 
             # 5. Attribute Training
             from src.core.gameplay.attributes import train_attributes

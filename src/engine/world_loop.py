@@ -126,8 +126,12 @@ class WorldLoop:
         
         from src.systems.world.strategy_system import StrategySystem
         from src.systems.calamity.calamity_evolution import CalamityEvolutionSystem
+        from src.systems.social.knowledge_propagation_system import KnowledgePropagationSystem
+        from src.systems.social.group_system import GroupSystem
         from src.systems.infrastructure.history_system import HistorySystem
         self._system_manager.register(StrategySystem(config, self._rng), config.subsystem_rate_environment)
+        self._system_manager.register(KnowledgePropagationSystem(config, self._rng), config.subsystem_rate_environment)
+        self._system_manager.register(GroupSystem(config, self._rng), config.subsystem_rate_core)
         self._system_manager.register(CalamityEvolutionSystem(config, self._rng), config.subsystem_rate_environment)
         self._history_system = HistorySystem(config, self._rng)
         self._system_manager.register(self._history_system, config.subsystem_rate_environment)
@@ -143,6 +147,9 @@ class WorldLoop:
         self._system_manager.register(WorldEvolutionSystem(config, self._rng), config.subsystem_rate_environment)
         self._system_manager.register(TelemetrySystem(config, self._rng), config.subsystem_rate_economy)
         self._system_manager.register(KnowledgePropagationSystem(config, self._rng), config.subsystem_rate_environment)
+        
+        from src.systems.world.regional_consequence_system import RegionalConsequenceSystem
+        self._system_manager.register(RegionalConsequenceSystem(config, self._rng), config.subsystem_rate_environment)
         
         from src.systems.infrastructure.event_system import EventBus, TelemetryBridge
         self._world.event_bus = EventBus()

@@ -9,6 +9,9 @@ from src.core.models.snapshot import Snapshot
 from src.core.models.world_state import WorldState
 from src.core.world.grid import Grid
 from src.core.aspects.mind import MindAspect
+from src.core.models.lived_structure import RoutineProfile, PlaceAttachment # [PHASE 3]
+from src.core.models.enums import LifeRole, AttachmentKind # [PHASE 3]
+
 
 def test_entity_deep_copy_isolation():
     """Verify that Entity.copy() provides absolute isolation for nested mutable structures."""
@@ -72,3 +75,31 @@ def test_aspect_model_rebuild_integrity():
     # Modify copy
     ent_copy.combat.hp = 20
     assert ent.combat.hp == 50, "Direct attribute mutation leaked!"
+
+def test_lived_structure_isolation():
+    """Verify isolation for Phase 3 routine and attachment structures."""
+    ent = Entity(id=7, kind="hero")
+    ent.identity.world_role = LifeRole.HERO
+    
+    # Add a mock routine
+    ent.mind.routine_profiles = [
+        RoutineProfile(routine_id="test", routine_type="test", anchor_type="home", schedule_window=(0, 1))
+    ]
+    # Add a mock attachment
+    ent.mind.place_attachments = [
+        PlaceAttachment(location_pos=(0, 0), kind=AttachmentKind.HOME, importance=1.0)
+    ]
+    
+    ent_copy = ent.copy()
+    
+    # Mutate the copy
+    ent_copy.mind.routine_profiles.append(
+        RoutineProfile(routine_id="new", routine_type="new", anchor_type="work", schedule_window=(2, 3))
+    )
+    ent_copy.mind.place_attachments[0].importance = 0.5
+    
+    # Assert isolation
+    assert len(ent.mind.routine_profiles) == 1, "Original routine list mutated!"
+    assert ent.mind.place_attachments[0].importance == 1.0, "Original attachment mutated!"
+    assert ent_copy.identity.world_role == LifeRole.HERO
+

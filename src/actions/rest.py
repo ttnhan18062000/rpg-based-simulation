@@ -48,9 +48,17 @@ class RestAction:
         action_type = "building" if current_state in RestAction._BUILDING_STATES else "rest"
         delay = speed_delay(entity.combat.spd, action_type, entity.interaction.interaction_speed)
         
-        # 3. Emit Updates
+        # 3. State Transition (Routine Logic)
+        # If resting at home/inn and stamina is critically low, transition to SLEEPING
+        if current_state in {AIState.VISIT_HOME, AIState.VISIT_INN} and entity.progression.stamina < entity.progression.max_stamina * 0.2:
+             proposal.new_ai_state = AIState.SLEEPING
+             from src.actions.base import RoutineUpdate
+             proposal.updates.append(RoutineUpdate(is_sleeping=True))
+             logger.info(f"Entity {entity.id} falling asleep during rest at {current_state.name}")
+
+        # 4. Emit Updates
         from src.actions.base import ProgressionUpdate
         proposal.updates.append(ProgressionUpdate(
-            hp_delta=int(hp_reco), # Simple integer recovery for now
+            hp_delta=int(hp_reco),
             stamina_delta=int(stamina_reco)
         ))

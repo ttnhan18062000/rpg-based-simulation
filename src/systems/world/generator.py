@@ -14,6 +14,8 @@ from src.core.world.spawn_config import SPAWN_CONFIGS, LOOT_CONFIGS
 from src.core.aspects.inventory import InventoryAspect
 from src.core.entities.entity import Entity, Vector2
 from src.core.world.regions import DIFFICULTY_TIERS
+from src.core.models.enums import LifeRole # [PHASE 3]
+
 
 if TYPE_CHECKING:
     from src.config import SimulationConfig
@@ -219,6 +221,31 @@ class EntityGenerator:
         r_cha = 0
 
         mob_cls = mob_class_for(race, tier)
+        # Diverse archetype seeding [PHASE 1-2 REMEDIATION]
+        from src.core.models.enums import Archetype
+        # Exclude BALANCED from the random pool to force diversity, or keep it as 1/N
+        arch_pool = [
+            Archetype.BALANCED,
+            Archetype.CAUTIOUS_OPPORTUNIST,
+            Archetype.GLORY_SEEKER,
+            Archetype.HONORABLE_DEFENDER,
+            Archetype.GREEDY_SCAVENGER,
+            Archetype.BLOODTHIRSTY_SLAYER,
+            Archetype.COWARDLY_SURVIVOR
+        ]
+        # Deterministic but varied archetype pick
+        arch_idx = self._rng.next_int(Domain.SPAWN, eid, tick + 50, 0, len(arch_pool) - 1)
+        archetype = arch_pool[arch_idx]
+
+        # Resolve World Role [PHASE 3]
+        world_role = self._resolve_world_role(faction, tier, kind)
+
+        # Assign Clique/Cluster ID [PHASE 3]
+        # Entities spawned near each other in the same tick band share a cluster
+        cluster_id = None
+        if near_pos:
+            cluster_id = f"clique_{faction}_{int(near_pos.x)}_{int(near_pos.y)}"
+
         entity = (
             EntityBuilder(self._rng, eid, tick=tick)
             .kind(kind)
@@ -229,6 +256,10 @@ class EntityGenerator:
             .faction(faction)
             .tier(tier)
             .difficulty_tier(difficulty_tier)
+            .world_role(world_role)
+            .clique(cluster_id)
+            .with_archetype(archetype)
+
             .with_base_stats(
                 hp=max(base_hp, 5), atk=max(base_atk, 1),
                 def_=max(base_def, 0), spd=max(base_spd, 1),
@@ -251,7 +282,33 @@ class EntityGenerator:
         )
         return entity
 
+    def _resolve_world_role(self, faction: Faction, tier: EnemyTier, kind: str) -> LifeRole:
+        """Determines the world role for a newly spawned entity. [PHASE 3]"""
+        if faction == Faction.HERO_GUILD:
+            return LifeRole.HERO
+        
+        # Priority 1: Elite mobs are usually guards or sentries
+        if tier == EnemyTier.ELITE:
+            return LifeRole.GUARD
+            
+        # Priority 2: Scouts
+        if tier == EnemyTier.SCOUT:
+            return LifeRole.SCOUT
+            
+        # Priority 3: Name-based hints
+        k_lower = kind.lower()
+        if "raider" in k_lower or "bandit" in k_lower:
+            return LifeRole.RAIDER
+        if "guard" in k_lower or "sentry" in k_lower:
+            return LifeRole.GUARD
+        if "worker" in k_lower or "crafter" in k_lower:
+            return LifeRole.CRAFTER
+            
+        # Fallback
+        return LifeRole.HOUSEHOLDER
+
     def _resolve_position(
+
         self, world: WorldState, eid: int, tick: int, near_pos: Vector2 | None,
     ) -> Vector2:
         if near_pos is not None:

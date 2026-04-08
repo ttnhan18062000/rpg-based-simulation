@@ -60,7 +60,8 @@ class BeliefService:
         threat = BeliefService._build_threat_estimate(observer, observed)
 
         # Perceived Reputation [PHASE 2]
-        rep = observed.reputation
+        rep = observed.identity.reputation
+
         apparent_rep_tags = list(rep.reputation_tags)
         
         return BeliefRecord(

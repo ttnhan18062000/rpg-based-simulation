@@ -22,4 +22,4 @@ Implement the foundational data structures and services for managing Households 
 - Integrated test `test_household_assignment.py` passes.
 
 ## Status
-INPROGRESS
+DONE (SUPERSEDED by TCK-20260408-PH3-PASS1-LIVED-MODELS)

@@ -299,10 +299,36 @@ class WorldGenerator:
             hero_eid = world.allocate_entity_id()
             hero_class = class_choices[h_idx % len(class_choices)]
             gear = HERO_STARTING_GEAR.get(hero_class, {})
-            builder = (EntityBuilder(rng, hero_eid, tick=0).kind("hero").at(Vector2(cfg.town_center_x, cfg.town_center_y)).home(town_center).faction(Faction.HERO_GUILD).role(EntityRole.HERO))
+            from src.core.models.enums import Archetype
+            # Diverse archetype seeding [PHASE 1-2 REMEDIATION]
+            hero_arch = [
+                Archetype.BALANCED, 
+                Archetype.GLORY_SEEKER, 
+                Archetype.HONORABLE_DEFENDER, 
+                Archetype.CAUTIOUS_OPPORTUNIST
+            ][h_idx % 4]
+            
+            builder = (EntityBuilder(rng, hero_eid, tick=0)
+                       .kind("hero")
+                       .at(Vector2(cfg.town_center_x, cfg.town_center_y))
+                       .home(town_center)
+                       .faction(Faction.HERO_GUILD)
+                       .role(EntityRole.HERO)
+                       .with_archetype(hero_arch))
+            
             builder.with_traits(race_prefix="hero")
             hero_name = generate_hero_name(rng, hero_eid, 0, builder._traits)
-            hero = (builder.with_identity(display_name=hero_name, generation=1).with_base_stats(hp=50, atk=10, def_=3, spd=10, luck=3, crit_rate=0.08, crit_dmg=1.8, evasion=0.03, gold=50).with_randomized_stats().with_hero_class(hero_class).with_race_skills("hero").with_class_skills(hero_class, level=1).with_inventory(max_slots=cfg.hero_inventory_slots, max_weight=cfg.hero_inventory_weight, weapon=gear.get("weapon", "iron_sword"), armor=gear.get("armor", "leather_vest"), accessory=gear.get("accessory")).with_starting_items(["small_hp_potion"] * 3).with_home_storage().with_talents(race="hero").build())
+            hero = (builder.with_identity(display_name=hero_name, generation=1)
+                    .with_base_stats(hp=50, atk=10, def_=3, spd=10, luck=3, crit_rate=0.08, crit_dmg=1.8, evasion=0.03, gold=50)
+                    .with_randomized_stats()
+                    .with_hero_class(hero_class)
+                    .with_race_skills("hero")
+                    .with_class_skills(hero_class, level=1)
+                    .with_inventory(max_slots=cfg.hero_inventory_slots, max_weight=cfg.hero_inventory_weight, weapon=gear.get("weapon", "iron_sword"), armor=gear.get("armor", "leather_vest"), accessory=gear.get("accessory"))
+                    .with_starting_items(["small_hp_potion"] * 3)
+                    .with_home_storage()
+                    .with_talents(race="hero")
+                    .build())
             world.add_entity(hero)
             self.total_spawned += 1
             

@@ -75,6 +75,8 @@ class CombatSystem(System):
                     
             if adjacent_hostile:
                 entity.mind.navigation.engaged_ticks = min(entity.mind.navigation.engaged_ticks + 1, 10)
+                # Disrupt routine patterns for 50 ticks (5 hours) after contact [PHASE 3]
+                entity.mind.routine.disrupted_until_tick = context.world.tick + 50
             else:
                 entity.mind.navigation.engaged_ticks = 0
 

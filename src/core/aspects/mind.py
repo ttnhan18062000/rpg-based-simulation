@@ -3,6 +3,7 @@ from pydantic import BaseModel, Field, ConfigDict
 from src.core.models.base import Aspect, SimulationModel
 from src.core.models.enums import AIState, GoalType, EmotionType
 from src.core.models.vectors import Vector2
+from src.core.models.lived_structure import RoutineProfile, PlaceAttachment # [PHASE 3]
 
 if TYPE_CHECKING:
     from src.core.entities.entity import Entity
@@ -256,6 +257,10 @@ class RoutineState(SimulationModel):
     hunger_level: float = Field(default=0.0, ge=0.0, le=1.0)
     is_sleeping: bool = False
     
+    # Pillar 2: Activity tracking [PHASE 3]
+    active_routine_id: str | None = None
+    disrupted_until_tick: int = 0
+    
     # Schedule (Expressed in hours: 0-23, where 1 hour = 10 ticks)
     active_start_hour: int = 6
     active_end_hour: int = 22
@@ -276,6 +281,10 @@ class MindAspect(Aspect):
     narrative: NarrativeMemory = Field(default_factory=NarrativeMemory)
     routine: RoutineState = Field(default_factory=RoutineState)
     social: SocialStance = Field(default_factory=SocialStance)
+    
+    # Pillar 2: Lived Structure [PHASE 3]
+    routine_profiles: list[RoutineProfile] = Field(default_factory=list)
+    place_attachments: list[PlaceAttachment] = Field(default_factory=list)
     
     bonuses: dict[str, Any] = Field(default_factory=dict)
 

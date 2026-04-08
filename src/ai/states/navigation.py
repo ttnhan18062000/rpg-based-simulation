@@ -175,6 +175,31 @@ class ReturnToTownHandler(StateHandler):
             updates=final_updates)
 
 
+def propose_retreat_home(ctx: AIContext, reason: str) -> tuple[AIState, ActionProposal]:
+    """Propose moving toward the actor's authoritative home or nearest generic camp."""
+    actor = ctx.actor
+    # Heroes go to TOWN, others go to CAMP
+    state = AIState.RETURN_TO_TOWN if actor.identity.faction == Faction.HERO_GUILD else AIState.RETURN_TO_CAMP
+    
+    # 1. Authoritative Home Position [AOA AUTHORITATIVE]
+    if actor.spatial.home_pos:
+        return state, propose_move_toward(
+            actor, actor.spatial.home_pos, ctx.snapshot, reason)
+    
+    # 2. Legacy Fallback: Nearest known camp [SUBJECTIVE RISK]
+    camp = Perception.nearest_camp(actor, ctx.snapshot)
+    if camp:
+        return AIState.RETURN_TO_CAMP, propose_move_toward(
+            actor, camp, ctx.snapshot, reason)
+            
+    enemy = ctx.nearest_enemy()
+    if enemy:
+        return AIState.FLEE, propose_move_away(actor, enemy.spatial.pos, ctx.snapshot, reason)
+        
+    return AIState.WANDER, ActionProposal(
+        actor_id=actor.id, verb=ActionType.REST, reason=f"{reason} (nowhere to go)")
+
+
 class ReturnToCampHandler(StateHandler):
     def handle(self, ctx: AIContext) -> tuple[AIState, ActionProposal]:
         actor, snapshot, config = ctx.actor, ctx.snapshot, ctx.config

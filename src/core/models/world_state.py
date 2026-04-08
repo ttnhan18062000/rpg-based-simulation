@@ -7,6 +7,12 @@ from typing import TYPE_CHECKING
 from .vectors import Vector2
 from .world_objects import TreasureChest, CorpseNode
 from .social import SocialRegistry
+from .lived_structure import GroupRecord # [PHASE 3]
+from .history import WorldHistoryRegistry # [PHASE 4]
+from .households import HouseholdRecord # [PHASE 4]
+from .local_scars import LocalScarRecord # [PHASE 4]
+from .regions import RegionConsequenceRecord # [PHASE 4]
+from .continuity import SuccessorRecord # [PHASE 4]
 
 if TYPE_CHECKING:
     from src.core.entities.entity import Entity
@@ -21,7 +27,7 @@ if TYPE_CHECKING:
 class WorldState:
     """The single source of truth for the simulation."""
 
-    __slots__ = ("world_age", "faction_aggression", "difficulty_modifier", "monuments", "tick", "seed", "entities", "grid", "spatial_index", "_next_entity_id", "ground_items", "camps", "buildings", "resource_nodes", "_next_node_id", "treasure_chests", "_next_chest_id", "regions", "maturity", "last_calamity_tick", "event_bus", "faction_deaths_per_region", "region_control", "war_status", "history", "_history_subscribed", "town_treasury", "corpse_nodes", "_next_corpse_id", "social_registry", "_frozen")
+    __slots__ = ("world_age", "faction_aggression", "difficulty_modifier", "monuments", "tick", "seed", "entities", "grid", "spatial_index", "_next_entity_id", "ground_items", "camps", "buildings", "resource_nodes", "_next_node_id", "treasure_chests", "_next_chest_id", "regions", "maturity", "last_calamity_tick", "event_bus", "faction_deaths_per_region", "region_control", "war_status", "history", "_history_subscribed", "town_treasury", "corpse_nodes", "_next_corpse_id", "social_registry", "group_registry", "world_history", "household_registry", "scar_registry", "region_consequence_registry", "successor_registry", "_frozen")
 
     def __init__(
         self,
@@ -58,6 +64,12 @@ class WorldState:
         self.corpse_nodes: dict[int, CorpseNode] = {}
         self._next_corpse_id: int = 1
         self.social_registry: SocialRegistry = SocialRegistry()
+        self.group_registry: dict[str, GroupRecord] = {} # [PHASE 3]
+        self.world_history: WorldHistoryRegistry = WorldHistoryRegistry() # [PHASE 4]
+        self.household_registry: dict[str, HouseholdRecord] = {} # [PHASE 4]
+        self.scar_registry: list[LocalScarRecord] = [] # [PHASE 4]
+        self.region_consequence_registry: dict[str, RegionConsequenceRecord] = {} # [PHASE 4]
+        self.successor_registry: dict[int, SuccessorRecord] = {} # [PHASE 4] Entity ID -> Record
         self.event_bus = None
         self._frozen: bool = False
 
@@ -81,6 +93,17 @@ class WorldState:
         for corpse in self.corpse_nodes.values():
             if hasattr(corpse, "freeze"):
                 corpse.freeze()
+        
+        # Phase 4 registries
+        self.world_history.freeze()
+        for household in self.household_registry.values():
+            household.freeze()
+        for scar in self.scar_registry:
+            scar.freeze()
+        for region_con in self.region_consequence_registry.values():
+            region_con.freeze()
+        for successor in self.successor_registry.values():
+            successor.freeze()
 
     def allocate_entity_id(self) -> int:
         self._check_frozen("allocate_entity_id")
@@ -187,6 +210,21 @@ class WorldState:
             
         world.regions = [r.copy() for r in snap.regions]
         world.social_registry = snap.social_registry.copy()
+        if hasattr(snap, "group_registry"):
+             world.group_registry = {k: v.model_copy(deep=True) for k, v in snap.group_registry.items()}
+        
+        # Phase 4 registries recovery
+        if hasattr(snap, "world_history"):
+            world.world_history = snap.world_history.copy()
+        if hasattr(snap, "household_registry"):
+            world.household_registry = {k: v.model_copy(deep=True) for k, v in snap.household_registry.items()}
+        if hasattr(snap, "scar_registry"):
+            world.scar_registry = [v.model_copy(deep=True) for v in snap.scar_registry]
+        if hasattr(snap, "region_consequence_registry"):
+            world.region_consequence_registry = {k: v.model_copy(deep=True) for k, v in snap.region_consequence_registry.items()}
+        if hasattr(snap, "successor_registry"):
+            world.successor_registry = {k: v.model_copy(deep=True) for k, v in snap.successor_registry.items()}
+            
         world.event_bus = None
         
         return world

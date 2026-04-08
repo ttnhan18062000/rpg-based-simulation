@@ -1,11 +1,16 @@
 """Hero Lifecycle System — Manages hero specific progression events like familiarity and permadeath."""
-
+from __future__ import annotations
 import logging
+from typing import TYPE_CHECKING, Any
+if TYPE_CHECKING:
+    from src.core.entities.entity import Entity
 from src.systems.infrastructure.base import System, SystemContext
 from src.core.models.world_state import WorldState
 from src.core.models.enums import AIState, ItemType, Domain
 from src.core.gameplay.faction import Faction
 from src.core.world.monuments import Monument
+from src.core.models.history import HistoricalEvent, EventKind # [PHASE 4]
+from src.core.models.continuity import SuccessorRecord # [PHASE 4]
 
 logger = logging.getLogger(__name__)
 
@@ -213,40 +218,83 @@ class HeroLifecycleSystem(System):
 
         entity.identity.death_count += 1
         is_permadeath = entity.identity.death_count >= self.config.death_tier_max
-        
         if is_permadeath:
-            if entity.inventory:
-                dropped = entity.inventory.get_all_item_ids()
-                if dropped:
-                    ctx.world.drop_items(entity.spatial.pos, dropped)
+            # Phase 4: History and Succession
+            event_id = f"death_{entity.id}_{tick}"
+            death_event = HistoricalEvent(
+                event_id=event_id,
+                tick=tick,
+                kind=EventKind.DEATH,
+                location=entity.spatial.pos,
+                description=f"Hero {entity.identity.display_name} has fallen permanently.",
+                involved_ids={entity.id},
+                summary=f"The legend of {entity.identity.display_name} ends at tick {tick}."
+            )
+            ctx.world.world_history.add_event(death_event)
             
-            logger.info("Tick %d: Hero %s (%s Lv%d) has DIED PERMANENTLY (deaths=%d).", 
-                        tick, (entity.identity.display_name or f"#{entity.id}"), entity.kind, 
-                        entity.progression.level, entity.identity.death_count)
+            # Find/Ensure Household
+            h_id = entity.identity.household_id
+            if not h_id and entity.spatial.home_pos:
+                # Try to find by home_pos
+                h_id = f"house_{entity.spatial.home_pos.x}_{entity.spatial.home_pos.y}"
+                entity.identity.household_id = h_id
             
-            if hasattr(ctx.world, "event_bus") and ctx.world.event_bus:
-                from src.core.data.events import DeathEvent
-                ctx.world.event_bus.publish(DeathEvent(
-                    entity_id=entity.id, killer_id=None,
-                    x=entity.spatial.pos.x, y=entity.spatial.pos.y,
-                    level_at_death=entity.progression.level,
-                    is_permadeath=True
-                ))
+            household = None
+            if h_id:
+                if h_id not in ctx.world.household_registry:
+                    # Create household record on the fly if missing (migration/first-death case)
+                    from src.core.models.households import HouseholdRecord
+                    ctx.world.household_registry[h_id] = HouseholdRecord(
+                        household_id=h_id,
+                        home_building_id=0 # TODO: find building ID if needed
+                    )
+                household = ctx.world.household_registry[h_id]
+                household.former_member_ids.append(entity.id)
+                household.related_event_ids.append(event_id)
             
-            # Monument spawning
-            if entity.progression.level >= 15:
-                m_id = f"monument_{entity.id}_{tick}"
-                from src.core.models.enums import HeroClass
-                hc = getattr(entity.progression, 'hero_class', None)
-                bt = "hp"
-                if hc == HeroClass.WARRIOR: bt = "hp"
-                elif hc == HeroClass.MAGE: bt = "atk"
-                elif hc == HeroClass.RANGER: bt = "atk"
+            # Create Successor Record
+            successor_rec = SuccessorRecord(
+                source_entity_id=entity.id,
+                household_id=h_id,
+                death_event_id=event_id,
+                tick=tick,
+                motive_fragments={
+                    "legacy_level": entity.progression.level,
+                    "predecessor_name": entity.identity.display_name
+                }
+            )
+            ctx.world.successor_registry[entity.id] = successor_rec
+            
+            # Heirloom Transfer
+            if entity.inventory and household:
+                # Rule: Weapon, Armor, and RARE items are Heirlooms
+                heirlooms = []
+                remaining = []
+                from src.core.gameplay.items.item_registry import ITEM_REGISTRY, Rarity
                 
-                monument = Monument(m_id, entity.identity.display_name or f"#{entity.id}", 
-                                    hc.name if hc else "NONE", 
-                                    entity.progression.level, entity.spatial.home_pos, bt, 0.1)
-                ctx.world.monuments.append(monument)
+                # Check equipped
+                for slot in ["weapon", "armor"]:
+                    iid = getattr(entity.inventory, slot)
+                    if iid:
+                        heirlooms.append(iid)
+                        setattr(entity.inventory, slot, None)
+                
+                # Check bag
+                for iid in list(entity.inventory.items):
+                    t = ITEM_REGISTRY.get(iid)
+                    if t and (t.rarity >= Rarity.RARE):
+                        heirlooms.append(iid)
+                        entity.inventory.items.remove(iid)
+                    else:
+                        remaining.append(iid)
+                
+                if heirlooms:
+                    household.heirloom_ids.extend(heirlooms)
+                    logger.info("Tick %d: %d heirlooms transferred to Household %s", 
+                                tick, len(heirlooms), h_id)
+                
+                if remaining:
+                    ctx.world.drop_items(entity.spatial.pos, remaining)
 
             ctx.world.remove_entity(entity.id)
             self._schedule_hero_replacement(entity, tick)
@@ -294,13 +342,15 @@ class HeroLifecycleSystem(System):
         # Returning True skips standard mob death procedures.
         return True
 
-    def _schedule_hero_replacement(self, dead_hero, tick: int) -> None:
+    def _schedule_hero_replacement(self, dead_hero: Entity, tick: int) -> None:
         """Schedule a new hero to spawn after a delay to replace a permadead one."""
-        spawn_tick = tick + 50
+        spawn_tick = tick + self.config.hero_respawn_ticks
         self._pending_hero_replacements.append({
             "tick": spawn_tick,
             "generation": dead_hero.identity.generation + 1,
             "home_pos": dead_hero.spatial.home_pos,
+            "predecessor_id": dead_hero.id,
+            "household_id": dead_hero.identity.household_id,
         })
         logger.info("Tick %d: Hero replacement scheduled for tick %d (Gen %d)", 
                     tick, spawn_tick, dead_hero.identity.generation + 1)
@@ -333,6 +383,18 @@ class HeroLifecycleSystem(System):
                 builder.with_traits(race_prefix="hero")
                 hero_name = generate_hero_name(self.rng, new_eid, tick, builder._traits)
 
+                # Phase 4: Consumption of Succession Record
+                household_id = rep.get("household_id")
+                motive_frags = {}
+                predecessor_id = rep.get("predecessor_id")
+                
+                if predecessor_id and predecessor_id in ctx.world.successor_registry:
+                    rec = ctx.world.successor_registry[predecessor_id]
+                    household_id = rec.household_id
+                    motive_frags = rec.motive_fragments
+                    # Cleanup record
+                    del ctx.world.successor_registry[predecessor_id]
+
                 hero = (
                     builder
                     .with_identity(display_name=hero_name, generation=rep["generation"])
@@ -351,6 +413,27 @@ class HeroLifecycleSystem(System):
                     .with_talents(race="hero")
                     .build()
                 )
+                
+                # Apply inherited data
+                hero.identity.household_id = household_id
+                if motive_frags:
+                    # Transfer motives (Pillar 1)
+                    hero.identity.titles.append(f"Heir of {motive_frags.get('predecessor_name')}")
+                
+                # Assign to household member list
+                if household_id and household_id in ctx.world.household_registry:
+                    ctx.world.household_registry[household_id].member_ids.add(new_eid)
+                    # Inherit heirlooms
+                    heirlooms = ctx.world.household_registry[household_id].heirloom_ids
+                    if heirlooms:
+                        # Add first 2 heirlooms to inventory if there is room
+                        for hid in heirlooms[:2]:
+                            if hero.inventory.can_add(hid):
+                                hero.inventory.add_item(hid)
+                                hero.inventory.auto_equip_best(hid, h_class)
+                        # Remove from household storage (consumed by heir)
+                        ctx.world.household_registry[household_id].heirloom_ids = heirlooms[2:]
+
                 ctx.world.add_entity(hero)
                 hero.inventory.auto_equip_best(gear.get("weapon"), hero.progression.hero_class)
                 hero.inventory.auto_equip_best(gear.get("armor"), hero.progression.hero_class)

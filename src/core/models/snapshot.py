@@ -43,6 +43,16 @@ class Snapshot(SimulationModel):
     # Phase 0: Social Registry
     social_registry: SocialRegistry = Field(default_factory=SocialRegistry)
     
+    # Phase 3 Stage 4: Group Registry
+    group_registry: Mapping[str, GroupRecord] = Field(default_factory=dict)
+
+    # Phase 4 Stage 1-3: World State Registries
+    world_history: "WorldHistoryRegistry" = Field(default_factory=lambda: WorldHistoryRegistry())
+    household_registry: Mapping[str, "HouseholdRecord"] = Field(default_factory=dict)
+    scar_registry: tuple["LocalScarRecord", ...] = Field(default_factory=tuple)
+    region_consequence_registry: Mapping[str, "RegionConsequenceRecord"] = Field(default_factory=dict)
+    successor_registry: Mapping[int, "SuccessorRecord"] = Field(default_factory=dict)
+    
     # Internal spatial caches (not serialized)
     _spatial: dict = PrivateAttr(default_factory=dict)
     _spatial_ground: dict = PrivateAttr(default_factory=dict)
@@ -93,6 +103,13 @@ class Snapshot(SimulationModel):
             war_status=dict(world.war_status),
             faction_aggression=dict(world.faction_aggression),
             social_registry=world.social_registry.copy(),
+            group_registry={k: v.model_copy(deep=True) for k, v in world.group_registry.items()},
+            # Phase 4 Propagation
+            world_history=world.world_history.copy(),
+            household_registry={k: v.model_copy(deep=True) for k, v in world.household_registry.items()},
+            scar_registry=tuple(s.model_copy(deep=True) for s in world.scar_registry),
+            region_consequence_registry={k: v.model_copy(deep=True) for k, v in world.region_consequence_registry.items()},
+            successor_registry={k: v.model_copy(deep=True) for k, v in world.successor_registry.items()},
         )
         
         # Manually set private attrs
@@ -138,6 +155,12 @@ from src.core.models.world_objects import TreasureChest
 from src.core.world.resource_nodes import ResourceNode
 from src.core.world.regions import Region
 from src.core.models.vectors import Vector2, FloatVector2
+from src.core.models.lived_structure import GroupRecord
+from src.core.models.history import WorldHistoryRegistry
+from src.core.models.households import HouseholdRecord
+from src.core.models.local_scars import LocalScarRecord
+from src.core.models.regions import RegionConsequenceRecord
+from src.core.models.continuity import SuccessorRecord
 from src.core.models.enums import Faction, HeroClass, AIState, ActionType, EmotionType, GoalType
 
 Snapshot.model_rebuild()

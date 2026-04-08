@@ -34,6 +34,29 @@ The `WorldGenerator` uses a **Voronoi-based Region Model** to partition the wild
 
 ---
 
+### Historical Consequences and Scars [PHASE 4]
+
+The WorldLoop simulation engine ensures that major events leave legible traces through the **RegionalConsequenceSystem**.
+
+#### Local Scars
+- **Persistence**: Authoritative actions like hero deaths or building sabotage generate `LocalScarRecord` entries.
+- **Typing**: Scars are categorized into kinds like `BATTLE_FIELD` (high-casualty zones) or `RAID_DAMAGE`.
+- **Decay**: Scars represent medium-term trauma. They decay over hundreds of ticks, reflecting natural recovery or restoration.
+- **Behavioral Impact**: Entities can perceive nearby scars, inducing caution or panic (e.g., non-combatants fleeing battlefield zones).
+
+#### Regional Danger and Stability
+Each region tracks macro-tier metrics that influence long-term AI strategy:
+- **Danger Level**: Aggregated from recent calamity, boss activity, and local casualties.
+- **Stability**: A measure of institutional or social order, reflecting the success of local defenses.
+- **Macro-Biases**: Regional danger shifts the "fleeing threshold" for all entities in the zone, making them more reactive to situational threats.
+
+#### Recovery Mechanics
+The world does not reset after each life. Recovery is a stateful process:
+- **Repair**: Damaged buildings move through distinct recovery stages.
+- **Normalization**: Regional danger slowly returns to base values if no new trauma is recorded, allowing for historical ebbs and flows.
+
+---
+
 ## 3. Difficulty Zoning
 
 Difficulty is determined by the **Manhattan Distance** from the town center (Primary Safe Zone).
@@ -57,6 +80,12 @@ The Town center contains essential services for Hero progression.
 - **Class Hall**: Facilitates **Evolution** and skill training.
 - **Traveler's Inn**: The primary `REST` location for Heroes after long expeditions.
 - **Hero Houses**: Private residences where Heroes store excess items (`home_storage`).
+
+- **Regions and Biomes**: Typed zones with distinct resource types, difficulty tiers, and macro-consequence layers.
+- **Grids and Navigation**: Authoritative coordinate resolution and Bilinear Flow Field pathfinding.
+- **World Objects**: Interactive nodes (Nodes, Chests, Buildings) with stateful persistence.
+- **World Eras and Seasons**: Time-based difficulty scaling and event-driven day/night cycles.
+- **Historical Consequences [PHASE 4]**: Persistent scars and regional danger levels that outlast single episodes.
 
 ---
 

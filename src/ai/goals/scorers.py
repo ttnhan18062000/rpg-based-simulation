@@ -63,13 +63,33 @@ class FleeGoal(GoalScorer):
         enter_threshold = getattr(ctx.config, "flee_hp_threshold", 0.3)
         exit_threshold = getattr(ctx.config, "flee_exit_threshold", 0.5)
         
+        # [PHASE 4 STAGE 3] Regional Danger Bias
+        # --- Regional Consequence Bias [PHASE 4] ---
+        # Situational danger from LocalScars and Macro Regional Danger layers
+        # shift the fleeing threshold upward.
+        rid = actor.spatial.current_region_id
+        danger_bias = 0.0
+        if rid:
+            region_metric = ctx.snapshot.region_consequence_registry.get(rid)
+            if region_metric:
+                # High danger regions lower the "enter" threshold (make you flee earlier)
+                danger_bias = region_metric.danger_level * 0.2
+        
         is_already_fleeing = actor.mind.decision.ai_state == AIState.FLEE
         
-        if hp_ratio < enter_threshold:
+        if hp_ratio < (enter_threshold + danger_bias):
             return 2.0
-        if is_already_fleeing and hp_ratio < exit_threshold:
+        if is_already_fleeing and hp_ratio < (exit_threshold + danger_bias):
             return 2.0
             
+        # Situational Panic: Even if HP is high, extreme local trauma might trigger a retreat
+        from src.ai.perception import Perception
+        nearby_scars = Perception.visible_scars(actor, ctx.snapshot, scan_range=5)
+        if nearby_scars:
+            max_severity = max(s.severity for s in nearby_scars)
+            if max_severity > 0.9 and actor.mind.emotion.panic > 0.7:
+                return 1.5 # Panic flight
+                
         return 0.0
 
 # ---------------------------------------------------------------------------
@@ -82,7 +102,15 @@ class ExploreGoal(GoalScorer):
     @property
     def target_state(self) -> AIState: return AIState.WANDER
     def score(self, ctx: AIContext) -> float:
-        return 0.2 + _trait_utility(ctx).explore
+        # [PHASE 4 STAGE 3] Suppress exploration in dangerous zones
+        rid = ctx.actor.spatial.current_region_id
+        penalty = 0.0
+        if rid:
+            region_metric = ctx.snapshot.region_consequence_registry.get(rid)
+            if region_metric:
+                penalty = region_metric.danger_level * 0.5
+        
+        return max(0.0, 0.2 + _trait_utility(ctx).explore - penalty)
 
 # ---------------------------------------------------------------------------
 # Loot — pick up items

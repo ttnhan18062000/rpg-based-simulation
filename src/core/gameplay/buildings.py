@@ -8,6 +8,7 @@ from pydantic import ConfigDict
 if TYPE_CHECKING:
     from src.core.models.vectors import Vector2
     from src.core.gameplay.items.item_registry import ItemTemplate
+    from src.core.models.life_events import ReputationProfile
 
 class Building(SimulationModel):
     """A fixed building in the town."""
@@ -49,7 +50,7 @@ SELL_PRICES: dict[int, int] = {
 }
 
 
-def item_sell_price(item_id: str, reputation: float = 0.0) -> int:
+def item_sell_price(item_id: str, reputation: ReputationProfile | None = None) -> int:
     """Calculate how much gold a hero gets for selling an item."""
     from src.core.gameplay.items.item_registry import ITEM_REGISTRY
     t = ITEM_REGISTRY.get(item_id)
@@ -64,8 +65,13 @@ def item_sell_price(item_id: str, reputation: float = 0.0) -> int:
     else:
         base = SELL_PRICES.get(t.rarity, 3)
         
-    # Reputation bonus: up to +20% at 40 rep
-    bonus = 1.0 + min(0.2, reputation * 0.005)
+    # Reputation bonus: up to +20% based on heroism and trustworthiness
+    score = 0.0
+    if reputation:
+        score = max(0.0, (reputation.heroism_score + reputation.trustworthiness) / 2.0)
+    
+    # Scale: score of 10.0 gives 20% bonus
+    bonus = 1.0 + min(0.2, score * 0.02)
     return int(base * bonus)
 
 
@@ -111,12 +117,17 @@ SHOP_INVENTORY: list[tuple[str, int]] = [
 ]
 
 
-def shop_buy_price(item_id: str, reputation: float = 0.0) -> int | None:
+def shop_buy_price(item_id: str, reputation: ReputationProfile | None = None) -> int | None:
     """Return the buy price for an item, or None if not sold at shop."""
     for iid, price in SHOP_INVENTORY:
         if iid == item_id:
-            # Reputation discount: up to 30% at 30 rep
-            discount = 1.0 - min(0.3, reputation * 0.01)
+            # Reputation discount: up to 30% based on trustworthiness
+            score = 0.0
+            if reputation:
+                score = max(0.0, reputation.trustworthiness)
+            
+            # Scale: score of 10.0 gives 30% discount
+            discount = 1.0 - min(0.3, score * 0.03)
             return int(price * discount)
     return None
 

@@ -196,15 +196,19 @@ def hero_should_visit_inn(actor: Entity) -> bool:
 
 
 def hero_should_visit_home(actor: Entity) -> bool:
+    """True if hero should go home to store items or upgrade."""
+    # If we have items to store, we want to go home
+    if actor.inventory and actor.inventory.used_slots >= actor.inventory.max_slots - 1:
+        return True
+        
     if not actor.inventory or not actor.inventory.home_storage:
         return False
+        
     storage = actor.inventory.home_storage
-    if actor.inventory.used_slots >= actor.inventory.max_slots - 2:
-        if not storage.is_full:
-            return True
     cost = storage.upgrade_cost()
     if cost is not None and actor.progression.gold >= cost:
         return True
+        
     return False
 
 
@@ -588,13 +592,22 @@ class VisitHomeHandler(StateHandler):
         if not can_use_buildings(actor):
             return AIState.WANDER, ActionProposal(
                 actor_id=actor.id, verb=ActionType.REST, reason="Cannot use buildings → wander")
-        if actor.spatial.home_pos is None:
+        
+        # Resolve home position: 1. spatial.home_pos, 2. PlaceAttachment(HOME)
+        target_pos = actor.spatial.home_pos
+        if not target_pos:
+            from src.core.models.enums import AttachmentKind
+            attachment = next((a for a in actor.mind.place_attachments if a.kind == AttachmentKind.HOME), None)
+            if attachment:
+                target_pos = attachment.location_pos
+        
+        if not target_pos:
             return AIState.WANDER, ActionProposal(
-                actor_id=actor.id, verb=ActionType.REST, reason="No home set")
+                actor_id=actor.id, verb=ActionType.REST, reason="No home or HOME attachment set")
 
-        if actor.spatial.pos.manhattan(actor.spatial.home_pos) > 0:
+        if actor.spatial.pos.manhattan(target_pos) > 0:
             return AIState.VISIT_HOME, propose_move_toward(
-                actor, actor.spatial.home_pos, snapshot, "Walking home")
+                actor, target_pos, snapshot, "Walking home")
 
         inv = actor.inventory
         storage = actor.inventory.home_storage if inv else None

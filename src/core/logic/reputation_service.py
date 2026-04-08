@@ -21,7 +21,7 @@ class ReputationService:
     @classmethod
     def apply_update(cls, entity: Entity, update: ReputationUpdate) -> None:
         """Apply a ReputationUpdate intent to an entity's reputation profile."""
-        rep = entity.reputation
+        rep = entity.identity.reputation
         
         # Apply score deltas with clamping
         rep.defender_score = max(-10.0, min(10.0, rep.defender_score + update.defender_delta))
@@ -52,7 +52,7 @@ class ReputationService:
     @classmethod
     def _refresh_dynamic_tags(cls, entity: Entity) -> None:
         """Internal title management based on score thresholds."""
-        rep = entity.reputation
+        rep = entity.identity.reputation
         tags = set(rep.reputation_tags)
 
         # Heroism thresholds

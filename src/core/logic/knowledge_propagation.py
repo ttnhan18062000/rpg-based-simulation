@@ -34,27 +34,38 @@ class KnowledgePropagationService:
         from src.actions.base import PerceptionUpdate
         
         # 1. Identify high-salience targets in sharer's memory
-        # Salience based on fame, threat, or personal bond importance
         sharer_memory = sharer.mind.perception.entity_memory
         if not sharer_memory:
             return None
             
         # Select top 3 most salient/recent beliefs to share
-        targets_to_share = sorted(
+        potential_targets = sorted(
             sharer_memory.keys(),
             key=lambda eid: sharer_memory[eid].confidence * sharer_memory[eid].directness,
             reverse=True
-        )[:3]
+        )[:5] # Check a few more to filter by distance
         
         updates = {}
-        for target_id in targets_to_share:
-            # Don't share info about the recipient with the recipient
+        for target_id in potential_targets:
             if target_id == recipient.id:
                 continue
-                
+            
+            belief = sharer_memory[target_id]
+            # Regional Bound: Only share if target is within 50 units of the interaction 
+            # OR if it's very salient (e.g. World Boss or Hero) [PHASE 2]
+            dist = sharer.spatial.pos.manhattan(belief.pos)
+            if dist > 50:
+                # Calculate "fame" / "salience" factor
+                is_hero = belief.apparent_role == "hero"
+                is_boss = belief.apparent_role == "world_boss"
+                if not (is_hero or is_boss):
+                    continue
+
             indirect_belief = BeliefService.share_knowledge(sharer, recipient, target_id, world.tick)
             if indirect_belief:
                 updates[target_id] = indirect_belief
+                if len(updates) >= 3:
+                     break
                 
         if not updates:
             return None

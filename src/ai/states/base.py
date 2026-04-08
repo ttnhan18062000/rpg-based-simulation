@@ -263,17 +263,25 @@ def propose_move_away(actor: Entity, threat_pos: Vector2, snapshot: Snapshot, re
 
 
 def propose_retreat_home(ctx: AIContext, reason: str) -> tuple[AIState, ActionProposal]:
+    """Propose moving toward the actor's authoritative home or nearest generic camp."""
     actor = ctx.actor
-    if actor.identity.faction == Faction.HERO_GUILD and actor.spatial.home_pos:
-        return AIState.RETURN_TO_TOWN, propose_move_toward(
+    # Heroes go to TOWN, others go to CAMP
+    state = AIState.RETURN_TO_TOWN if actor.identity.faction == Faction.HERO_GUILD else AIState.RETURN_TO_CAMP
+    
+    # [PHASE 2 REMEDIATION] Prioritize authoritative home_pos if it exists
+    if actor.spatial.home_pos:
+        return state, propose_move_toward(
             actor, actor.spatial.home_pos, ctx.snapshot, reason)
+            
     camp = Perception.nearest_camp(actor, ctx.snapshot)
     if camp:
-        return AIState.RETURN_TO_CAMP, propose_move_toward(
+        return state, propose_move_toward(
             actor, camp, ctx.snapshot, reason)
+            
     enemy = ctx.nearest_enemy()
     if enemy:
         return AIState.FLEE, propose_move_away(actor, enemy.spatial.pos, ctx.snapshot, reason)
+        
     return AIState.WANDER, ActionProposal(
         actor_id=actor.id, verb=ActionType.REST, reason=f"{reason} (nowhere to go)")
 

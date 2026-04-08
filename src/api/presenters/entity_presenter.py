@@ -1,7 +1,11 @@
 from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
     from src.core.entities.entity import Entity
-    from src.api.schemas import EntitySlimSchema, EntitySchema, EntityInspectionSchema, CombatTraceSchema, AIDecisionSchema, StatBreakdownSchema
+    from src.api.schemas import (
+        EntitySlimSchema, EntitySchema, EntityInspectionSchema, 
+        CombatTraceSchema, AIDecisionSchema, StatBreakdownSchema,
+        SuccessorSummarySchema, HouseholdSummarySchema
+    )
 
 # Order must match legacy encoder/frontend expectations for the binary protocol
 ENTITY_KEY_MAP = ["id", "x", "y", "hp", "state_id", "target_id", "loot_progress"]
@@ -16,7 +20,10 @@ class EntityPresenter:
 
     @staticmethod
     def to_inspection_schema(entity: "Entity", loot_duration: int = 3, registry: Any = None, world: Any = None) -> "EntityInspectionSchema":
-        from src.api.schemas import EntityInspectionSchema, CombatTraceSchema, MemoryLogSchema
+        from src.api.schemas import (
+            EntityInspectionSchema, CombatTraceSchema, MemoryLogSchema,
+            SuccessorSummarySchema, HouseholdSummarySchema
+        )
         from src.api.presenters.stat_breakdown import StatBreakdownService
         from src.api.presenters.ai_presenter import AIPresenter
         
@@ -60,13 +67,54 @@ class EntityPresenter:
         # 5. AI Explanation
         ai_exp = AIPresenter.get_explanation(entity)
         
+        # 6. Continuity & Inheritance [PHASE 4]
+        successor_sum = None
+        household_sum = None
+        
+        if world:
+            # Successor records are keyed by PREDECESSOR ID
+            # If this entity is an heir, we find the record where it is the successor
+            rec = world.successor_registry.get(entity.id)
+            if not rec:
+                # Check if this entity was the target successor of another record
+                for r in world.successor_registry.values():
+                    if r.successor_entity_id == entity.id:
+                        rec = r
+                        break
+            
+            if rec:
+                successor_sum = SuccessorSummarySchema(
+                    source_entity_id=rec.source_entity_id,
+                    predecessor_name=rec.motive_fragments.get("predecessor_name", "Unknown Legend"),
+                    legacy_level=rec.motive_fragments.get("legacy_level", 1),
+                    inherited_motive_count=len(rec.motive_fragments),
+                    tick=rec.tick
+                )
+            
+            # Household lookup
+            h_id = entity.identity.household_id
+            if h_id and h_id in world.household_registry:
+                h_rec = world.household_registry[h_id]
+                household_sum = HouseholdSummarySchema(
+                    household_id=h_id,
+                    reputation=h_rec.reputation,
+                    member_count=len(h_rec.member_ids),
+                    former_member_count=len(h_rec.former_member_ids),
+                    heirloom_count=len(h_rec.heirloom_ids),
+                    legacy_tags=h_rec.legacy_tags
+                )
+
         return EntityInspectionSchema(
             entity=full,
-            routine=full.routine, # Reuse the one already built in to_full_schema
+            routine=full.routine,
+            reputation=full.reputation,
             stat_breakdowns=breakdowns,
             combat_history=history,
             ai_explanation=ai_exp,
-            narrative_history=narrative
+            narrative_history=narrative,
+            turning_points=full.turning_points,
+            successor_record=successor_sum,
+            household_record=household_sum
         )
 
     @staticmethod
@@ -120,10 +168,13 @@ class EntityPresenter:
     @staticmethod
     def to_full_schema(entity: "Entity", loot_duration: int = 3, registry: Any = None, world: Any = None) -> "EntitySchema":
         from src.api.schemas import (
-            EntitySchema, EffectSchema, QuestSchema, RoutineStateSchema, 
-            SocialBondSchema, ReputationProfileSchema, TurningPointSchema, MemoryLogSchema
+            EntitySchema, EffectSchema, QuestSchema, RoutineStateSchema,
+            SocialBondSchema, ReputationProfileSchema, TurningPointSchema, MemoryLogSchema,
+            BeliefRecordSchema, ThreatEstimateSchema, PersonalityProfileSchema, PersonalMotiveSchema,
+            SuccessorSummarySchema, HouseholdSummarySchema
         )
-        from src.core.models.enums import Element
+        from src.core.models.enums import Element, LifeRole
+        from src.api.schemas import PlaceAttachmentSchema
 
         identity = entity.identity
         spatial = entity.spatial
@@ -168,9 +219,33 @@ class EntityPresenter:
             inventory_max_weight=inventory.max_weight if inventory else 0.0,
             vision_range=entity.spatial.vision_range,
             terrain_memory={f"{k[0]},{k[1]}": v for k, v in mind.perception.terrain_memory.items()}, # Using PerceptionMemory sub-model
-            entity_memory=list(mind.perception.entity_memory),
-            personality=mind.decision.personality,
-            motives=list(mind.decision.motives),
+            entity_memory=[
+                BeliefRecordSchema(
+                    entity_id=eid,
+                    pos=(belief.pos.x, belief.pos.y),
+                    last_seen_tick=belief.last_seen_tick,
+                    stale_ticks=belief.stale_ticks,
+                    confidence=belief.confidence,
+                    apparent_faction=belief.apparent_faction,
+                    apparent_role=belief.apparent_role,
+                    apparent_class=belief.apparent_class,
+                    visible_weapon=belief.visible_weapon,
+                    visible_injury=belief.visible_injury,
+                    threat=ThreatEstimateSchema(
+                        overall=belief.threat.overall,
+                        melee_threat=belief.threat.melee_threat,
+                        ranged_threat=belief.threat.ranged_threat,
+                        survivability=belief.threat.survivability,
+                        confidence=belief.threat.confidence
+                    )
+                )
+                for eid, belief in mind.perception.entity_memory.items()
+            ],
+            personality=PersonalityProfileSchema.model_validate(mind.decision.personality.model_dump()) if mind.decision.personality else None,
+            motives=[
+                PersonalMotiveSchema.model_validate(m.model_dump())
+                for m in mind.decision.motives
+            ],
             motive_utility_biases={g.name.lower(): v for g, v in mind.decision.motive_utility_biases.items()},
             decision_drivers=list(mind.decision.decision_drivers) if mind.decision.decision_drivers else [],
             goals=list(mind.decision.goals),
@@ -231,6 +306,22 @@ class EntityPresenter:
             weapon_range=EntityPresenter._get_weapon_range(entity),
             combat_target_id=combat.combat_target_id,
             traits=list(identity.traits),
+            generation=identity.generation, # [PHASE 4]
+            household_id=identity.household_id, # [PHASE 4]
+            world_role=LifeRole(identity.world_role).name.lower() if hasattr(LifeRole(identity.world_role), "name") else str(identity.world_role).lower(),
+            cluster_id=identity.cluster_id,
+            group_id=identity.group_id,
+            place_attachments=[
+                PlaceAttachmentSchema(
+                    place_id=pa.building_id if pa.building_id else None,
+                    place_type=pa.kind.name.lower() if hasattr(pa.kind, "name") else str(pa.kind).lower(),
+                    x=int(pa.location_pos.x),
+                    y=int(pa.location_pos.y),
+                    importance=round(pa.importance, 2),
+                    attachment_kind=pa.kind.name.lower() if hasattr(pa.kind, "name") else str(pa.kind).lower()
+                )
+                for pa in mind.place_attachments
+            ],
             home_storage_used=inventory.home_storage.used_slots if inventory and inventory.home_storage else 0,
             home_storage_max=inventory.home_storage.max_slots if inventory and inventory.home_storage else 0,
             home_storage_level=inventory.home_storage.level if inventory and inventory.home_storage else 0,

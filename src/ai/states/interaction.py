@@ -15,14 +15,17 @@ from src.actions.base import (
 
 
 def find_nearby_resource(actor: Entity, snapshot, radius: int = 6):
-    """Find the nearest available resource node within radius."""
+    """Find the nearest available resource node within vision range."""
     best = None
-    best_dist = radius + 1
+    # Strictly respect actor's vision range [PHASE 1]
+    effective_radius = min(radius, actor.spatial.vision_range)
+    best_dist = effective_radius + 1
+    
     for node in snapshot.resource_nodes:
         if not node.is_available:
             continue
         dist = actor.spatial.pos.manhattan(node.spatial.pos)
-        if dist < best_dist:
+        if dist <= effective_radius and dist < best_dist:
             best_dist = dist
             best = node
     return best

@@ -11,7 +11,7 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 from src.core.models.vectors import Vector2
-from src.core.models.enums import AIState, EntityRole, Domain, Archetype
+from src.core.models.enums import AIState, EntityRole, Domain, Archetype, LifeRole # [PHASE 3]
 from src.core.gameplay.faction import Faction
 from src.core.entities.entity import Entity
 from src.core.aspects.identity import IdentityAspect
@@ -23,6 +23,8 @@ from src.core.aspects.mind import MindAspect
 from src.core.aspects.interaction import InteractionAspect
 from src.core.gameplay.attributes import Attributes, AttributeCaps, recalc_derived_stats
 from src.core.gameplay.classes import CLASS_DEFS, RACE_SKILLS, SkillInstance, available_class_skills, SKILL_DEFS
+
+
 
 if TYPE_CHECKING:
     from src.platform.rng import DeterministicRNG
@@ -52,6 +54,12 @@ class EntityBuilder:
         # Initialize _is_world_boss
         self._is_world_boss: bool = False
         self._difficulty_tier: int = 1
+        
+        # Pillar 2: Lived Structure [PHASE 3]
+        self._world_role: LifeRole = LifeRole.NONE
+        self._cluster_id: str | None = None
+        self._household_id: str | None = None
+        self._home_building_id: int | None = None
         
         # Combat stats
         self._hp: float = 20.0
@@ -95,6 +103,22 @@ class EntityBuilder:
 
     def role(self, r: EntityRole) -> EntityBuilder:
         self._role = r
+        return self
+
+    def world_role(self, r: LifeRole) -> EntityBuilder:
+        self._world_role = r
+        return self
+
+    def clique(self, cid: str) -> EntityBuilder:
+        self._cluster_id = cid
+        return self
+
+    def household(self, hid: str) -> EntityBuilder:
+        self._household_id = hid
+        return self
+        
+    def home_building(self, bid: int) -> EntityBuilder:
+        self._home_building_id = bid
         return self
 
     def leash(self, radius: int) -> EntityBuilder:
@@ -364,7 +388,42 @@ class EntityBuilder:
         
         mind.decision.motives = motives
 
+    def _seed_lived_structures(self, entity: Entity, mind: MindAspect):
+        """Seeds initial roles, routines, and place attachments. [PHASE 3]"""
+        from src.systems.social.lived_structure_service import LivedStructureService
+        role = entity.identity.world_role
+        if role == LifeRole.NONE:
+            # Fallback based on EntityRole
+            if entity.identity.role == EntityRole.HERO:
+                role = LifeRole.HERO
+            elif entity.identity.role == EntityRole.WORLD_BOSS:
+                role = LifeRole.GUARD # Bosses usually guard their Lair
+            else:
+                role = LifeRole.HOUSEHOLDER
+            entity.identity.world_role = role
+
+        # Seed Routines
+        mind.routine_profiles = LivedStructureService.get_default_routines(
+            role, entity.identity.archetype, entity.identity.faction
+        )
+
+        # Seed Place Attachments
+        attachments = LivedStructureService.get_initial_attachments(
+            entity.id, entity.spatial.pos, role, entity.identity.home_building_id
+        )
+        mind.place_attachments = attachments
+        
+        # Synchronize spatial.home_pos with seeded attachments [PHASE 3]
+        if entity.spatial.home_pos is None:
+            from src.core.models.enums import AttachmentKind
+            for att in mind.place_attachments:
+                if att.kind == AttachmentKind.HOME and att.location_pos:
+                    entity.spatial.home_pos = att.location_pos
+                    break
+
+
     def build(self) -> Entity:
+
         entity = Entity(id=self._eid, kind=self._kind, next_act_at=float(self._tick))
         entity.identity = IdentityAspect(
             display_name=self._display_name or self._kind,
@@ -375,7 +434,11 @@ class EntityBuilder:
             generation=self._generation,
             traits=self._traits,
             is_world_boss=self._is_world_boss,
-            archetype=self._archetype or Archetype.BALANCED
+            archetype=self._archetype or Archetype.BALANCED,
+            world_role=self._world_role,
+            cluster_id=self._cluster_id,
+            household_id=self._household_id,
+            home_building_id=self._home_building_id
         )
         
         # Initialize Personality & Motives [PHASE 1]
@@ -403,7 +466,12 @@ class EntityBuilder:
             leash_radius=self._leash_radius,
             difficulty_tier=self._difficulty_tier
         )
+        
+        # Seed Lived Structures [PHASE 3]
+        self._seed_lived_structures(entity, mind)
+
         entity.combat = CombatAspect(
+
             hp=self._hp,
             max_hp=self._hp,
             atk_base=self._atk,

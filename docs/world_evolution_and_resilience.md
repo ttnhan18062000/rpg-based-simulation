@@ -93,6 +93,27 @@ In `WorldLoop._phase_cleanup()`, when a hero suffers **Permanent Death**:
 
 ---
 
+## 3.5 The Legend's Legacy: Succession and Inheritance [PHASE 4]
+
+While Monuments provide global stat buffs, Phase 4 introduces **Direct Continuity** between specific individuals and their homes.
+
+### Successor and Heirloom Transfer
+- **Successor Assignment**: Upon the permanent death of a "Legend" (Tier 2 or Level 15+), a successor may be designated.
+- **Inheritance Records**: The `SuccessorRecord` maps the authoritative transfer of identity fragments.
+- **Transfer Channels**:
+    - **Gear**: Heirlooms and legendary equipment can be recovered by the designated heir.
+    - **Reputation**: A portion of the predecessor's public standing (Heroism/Notoriety) is carried over.
+    - **Motive Fragments**: Unresolved long-term goals or grudges are inherited, driving multi-generational storylines.
+
+### Household and Home Continuity
+- **Persistent Anchors**: The `HouseholdRecord` ties entities to a shared home building (`home_building_id`).
+- **Group Memory**: Households retain collective reputation and storage levels, ensuring that a home remains a sanctuary even as its occupants change.
+- **Generational Tracking**: The `generation` field on entities tracks their ancestral depth within a specific household or lineage.
+
+---
+
+---
+
 ## 4. Endgame Convergence
 
 The simulation identifies clear win/loss states based on the town's survival.

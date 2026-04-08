@@ -16,6 +16,13 @@ class IdentityAspect(Aspect):
     is_world_boss: bool = False
     hero_class: Any = 0 # HeroClass.NONE
     
+    # Pillar 2: Roles & Social Anchoring [PHASE 3]
+    world_role: Any = 0 # LifeRole.NONE
+    cluster_id: str | None = None
+    household_id: str | None = None
+    home_building_id: int | None = None
+    group_id: str | None = None
+    
     # Pillar 1 & 5: Soul & Evolution
     archetype: ArchetypeSer = Archetype.BALANCED
     life_directive: str = "EXPLORATION" # e.g. "CRAFTER", "MONSTER_HUNTER", "GOBLIN_BANE"

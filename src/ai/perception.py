@@ -14,6 +14,7 @@ from src.core.entities.entity import Entity, Vector2
 
 if TYPE_CHECKING:
     from src.core.models.snapshot import Snapshot
+    from src.core.models.local_scars import LocalScarRecord
 
 
 class Perception:
@@ -21,43 +22,21 @@ class Perception:
 
     __slots__ = ()
 
-    # ------------------------------------------------------------------
-    # Vision
-    # ------------------------------------------------------------------
-
     @staticmethod
-    def visible_entities(
+    def visible_scars(
         actor: Entity,
         snapshot: Snapshot,
-        vision_range: int,
-    ) -> list[Entity]:
-        """Return entities within Manhattan distance *vision_range* of *actor*."""
+        scan_range: int,
+    ) -> list[LocalScarRecord]:
+        """Return localized scars within Manhattan distance *scan_range* of *actor*."""
         ax, ay = actor.spatial.pos.x, actor.spatial.pos.y
-        aid = actor.id
-        vr = vision_range
-        entities = snapshot.entities
-        result: list[Entity] = []
-        nearby = snapshot.nearby_entity_ids(ax, ay, vr)
-        for eid in nearby:
-            if eid == aid:
-                continue
-            e = entities[eid]
-            
-            # Pillar 7: PER-based Hidden Discovery
-            if getattr(e, "is_hidden", False):
-                # Hidden entities (traps, caches, stealthed units) 
-                # require PER >= 20 to see at all
-                per = 5
-                if actor.progression and actor.progression.attributes:
-                    per = getattr(actor.progression.attributes, "per", 5)
-                if per < 20:
-                    continue
-
-            # Pillar 4: Strict Manhattan Distance filtering for sensory accuracy
-            if actor.spatial.pos.manhattan(e.spatial.pos) > vision_range:
-                continue
-                
-            result.append(e)
+        scars = snapshot.scar_registry  # Already a list in WorldState
+        result: list[LocalScarRecord] = []
+        
+        for scar in scars:
+            dist = actor.spatial.pos.manhattan(scar.location_pos)
+            if dist <= scan_range:
+                result.append(scar)
         
         return result
 
