@@ -51,6 +51,11 @@ class Snapshot(SimulationModel):
     def world_day(self) -> int:
         return self.tick // 100
 
+    @property
+    def hour(self) -> int:
+        """Current hour of the day (0-23). Assuming 100 ticks per day."""
+        return (self.tick % 100) * 24 // 100
+
     @classmethod
     def from_world(cls, world: WorldState) -> Snapshot:
         copied_entities = {}

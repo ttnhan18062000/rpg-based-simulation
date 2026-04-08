@@ -29,7 +29,7 @@ class AIState(IntEnum):
 class Direction(IntEnum): NORTH = 0; EAST = 1; SOUTH = 2; WEST = 3
 
 @unique
-class Domain(IntEnum): COMBAT = 0; LOOT = 1; AI_DECISION = 2; SPAWN = 3; WEATHER = 4; LEVEL_UP = 5; ITEM = 6; HARVEST = 7; MAP_GEN = 8; CALAMITY = 9
+class Domain(IntEnum): COMBAT = 0; LOOT = 1; AI_DECISION = 2; SPAWN = 3; WEATHER = 4; LEVEL_UP = 5; ITEM = 6; HARVEST = 7; MAP_GEN = 8; CALAMITY = 9; SOCIAL = 10
 
 @unique
 class Material(IntEnum): FLOOR = 0; WALL = 1; WATER = 2; TOWN = 3; CAMP = 4; SANCTUARY = 5; FOREST = 6; DESERT = 7; SWAMP = 8; MOUNTAIN = 9; ROAD = 10; BRIDGE = 11; RUINS = 12; DUNGEON_ENTRANCE = 13; LAVA = 14; GRASSLAND = 15; SNOW = 16; JUNGLE = 17; SHALLOW_WATER = 18; FARMLAND = 19; CAVE = 20; VOLCANIC = 21; GRAVEYARD = 22
@@ -152,6 +152,34 @@ class PersonalMotiveType(IntEnum):
     PROVE_STRENGTH = 2
     EXPLORE_WORLD = 3
     SOCIAL_STATUS = 4
+
+@unique
+class TurningPointKind(IntEnum):
+    """Categories for life-defining moments. [PHASE 2]"""
+    NEAR_DEATH = 0
+    ALLY_DIED = 1
+    AVENGED_ALLY = 2
+    BETRAYAL = 3
+    RESCUE = 4
+    DISGRACE = 5
+    REVENGE = 6
+    HOME_LOST = 7
+    BOSS_ENCOUNTER = 8
+    FIRST_KILL = 9
+
+@unique
+class InterpretedLifeEventKind(IntEnum):
+    """Semantic tags for socially meaningful event interpretations. [PHASE 2]"""
+    NEAR_DEATH = 0
+    ALLY_DIED_NEARBY = 1
+    AVENGED_ALLY = 2
+    FLED_FROM_THREAT = 3
+    HELD_POSITION = 4
+    LOOTED_DURING_DANGER = 5
+    FIRST_BOSS_ENCOUNTER = 6
+    BETRAYAL = 7
+    FIRST_KILL = 8
+    SLAY_FOE = 9
 
 from typing import Annotated
 from pydantic import BeforeValidator, PlainSerializer

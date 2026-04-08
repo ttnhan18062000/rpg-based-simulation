@@ -96,6 +96,17 @@ class BeliefRecord(SimulationModel):
     threat: ThreatEstimate = Field(default_factory=ThreatEstimate)
     observed_skills: set[str] = Field(default_factory=set)
     confidence: float = 0.5
+    
+    # [PHASE 2] Knowledge source quality — differentiates direct vs indirect knowledge
+    knowledge_source: str = "direct"  # "direct" or "indirect"
+    directness: float = Field(default=1.0, ge=0.0, le=1.0)
+    source_confidence: float = Field(default=1.0, ge=0.0, le=1.0)
+    
+    # Perceived reputation metrics [PHASE 2]
+    apparent_reputation_tags: list[str] = Field(default_factory=list)
+    apparent_trustworthiness: float = 0.0
+    apparent_heroism: float = 0.0
+    apparent_threat_notoriety: float = 0.0
 
 MemoryRecord = BeliefRecord # Alias for backward compatibility during transition
 
@@ -146,22 +157,13 @@ class NavigationState(SimulationModel):
     chase_ticks: int = 0
     engaged_ticks: int = 0
 
-class SocialBondPerception(SimulationModel):
-    """A subjective view of a social bond. [PHASE 2]"""
-    model_config = ConfigDict(extra='forbid')
-    
-    target_id: int
-    trust: float = 0.0
-    fear: float = 0.0
-    rivalry: float = 0.0
-    familiarity: float = 0.0
-    last_interaction_tick: int = 0
+# SocialBondPerception merged into SocialBondRecord in life_events.py [PHASE 2]
 
 class SocialStance(SimulationModel):
     """Subjective relationship mapping and faction standings. [PHASE 2]"""
     model_config = ConfigDict(extra='forbid')
     
-    known_bonds: dict[int, SocialBondPerception] = Field(default_factory=dict)
+    known_bonds: dict[int, "SocialBondRecord"] = Field(default_factory=dict)
     faction_standing: dict[str, float] = Field(default_factory=dict) # FactionID -> Affinity
     
     # [PHASE 2] Influence on decision making
@@ -225,6 +227,26 @@ class NarrativeMemory(SimulationModel):
     memory_log: list[InterpretedEvent] = Field(default_factory=list)
     memory_locations: dict[str, float] = Field(default_factory=dict)
     region_fatigue: dict[str, float] = Field(default_factory=dict)
+    
+    # [PHASE 2] Durable turning-point memories — capped at 20
+    turning_points: list["TurningPointRecord"] = Field(default_factory=list)
+
+    def add_turning_point(self, record: "TurningPointRecord", max_records: int = 20) -> None:
+        """Add a new turning point with salience-based eviction. [PHASE 2]"""
+        # Ensure we don't already have this exact event
+        if any(tp.event_id == record.event_id for tp in self.turning_points):
+            return
+            
+        self.turning_points.append(record)
+        
+        # Prune if over capacity
+        if len(self.turning_points) > max_records:
+            # Sort by salience (lowest first) and then by tick (oldest first)
+            self.turning_points.sort(key=lambda x: (x.salience_score, x.tick))
+            # Remove the least salient item
+            self.turning_points.pop(0)
+            # Re-sort by tick for chronological order
+            self.turning_points.sort(key=lambda x: x.tick)
 
 class RoutineState(SimulationModel):
     """Biological needs and daily schedule state. [PHASE 3]"""
@@ -292,6 +314,9 @@ class MindAspect(Aspect):
     
     # Memory pruning is now handled authoritatively in ActionSystem [PHASE 0 FIX]
 
+# [PHASE 2] Import for forward reference resolution
+from src.core.models.life_events import TurningPointRecord, SocialBondRecord, ReputationProfile  # noqa: E402
+
 PersonalityProfile.model_rebuild()
 PersonalMotive.model_rebuild()
 ThreatEstimate.model_rebuild()
@@ -308,4 +333,6 @@ SocialNarrative.model_rebuild()
 MemoryLogEntry.model_rebuild()
 NarrativeMemory.model_rebuild()
 RoutineState.model_rebuild()
+SocialBondRecord.model_rebuild()
+SocialStance.model_rebuild()
 MindAspect.model_rebuild()

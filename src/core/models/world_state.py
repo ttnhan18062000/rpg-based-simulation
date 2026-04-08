@@ -113,6 +113,10 @@ class WorldState:
         entity.spatial.pos = new_pos
         self.spatial_index.move(entity_id, old_pos, new_pos)
 
+    def get_entity(self, entity_id: int) -> Entity | None:
+        """Safe entity lookup by ID."""
+        return self.entities.get(entity_id)
+
     def entities_at_radius(self, pos: Vector2, radius: int) -> list[Entity]:
         """Return all entities within *radius* of *pos*."""
         ids = self.spatial_index.query_radius(pos, radius)

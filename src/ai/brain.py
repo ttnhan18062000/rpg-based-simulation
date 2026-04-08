@@ -302,19 +302,15 @@ class AIBrain:
                 biases[GoalType.FLEE] *= 2.0
                 driver_details.append(DecisionDriver(kind="emotion", label="Panic", weight=2.0))
             
-            # [PHASE 4] Biological Need Biases
-            rou = mind.routine
-            if rou.sleep_debt > 0.7:
-                weight = 1.0 + (rou.sleep_debt * 2.0)
-                biases[GoalType.SLEEP] *= weight
-                biases[GoalType.REST] *= (1.0 + rou.sleep_debt)
-                biases[GoalType.EXPLORE] *= (1.0 - (rou.sleep_debt * 0.5))
-                driver_details.append(DecisionDriver(kind="biological", label="Exhaustion", weight=weight))
-            if rou.hunger_level > 0.7:
-                weight = 1.0 + (rou.hunger_level * 2.0)
-                biases[GoalType.EAT] *= weight
-                biases[GoalType.EXPLORE] *= (1.0 - (rou.hunger_level * 0.3))
-                driver_details.append(DecisionDriver(kind="biological", label="Hunger", weight=weight))
+            # [PHASE 3] Biological Need Biases (Authoritative)
+            from src.core.logic.routine_service import RoutineService
+            routine_biases = RoutineService.calculate_routine_biases(actor, snapshot.hour)
+            for gtype, weight in routine_biases.items():
+                biases[gtype] *= weight
+                if weight > 1.2:
+                    driver_details.append(DecisionDriver(kind="biological", label=f"Routine: {gtype.name}", weight=weight))
+                elif weight < 0.8:
+                    driver_details.append(DecisionDriver(kind="biological", label=f"Routine Penalty: {gtype.name}", weight=weight))
             
             # [STAGE 5] Long-Term Memory and Narrative Biasing
             log = mind.narrative.memory_log
@@ -368,11 +364,14 @@ class AIBrain:
             # Emotional State and Stress Influence
             if emo.dread > 0.6: driver_details.append(DecisionDriver(kind="emotion", label="Traumatized by area / Lingering dread", weight=1.4))
             if emo.joy > 0.6: driver_details.append(DecisionDriver(kind="emotion", label="Feeling joyful / Safe haven", weight=1.1))
-            
-            # Physiological Needs and Biological Drivers
-            if rou.sleep_debt > 0.8: driver_details.append(DecisionDriver(kind="biological", label="Exhausted", weight=2.0))
-            if rou.hunger_level > 0.8: driver_details.append(DecisionDriver(kind="biological", label="Starving", weight=2.0))
             if emo.panic > 0.7: driver_details.append(DecisionDriver(kind="emotion", label="Blind panic", weight=2.0))
+
+            # Physiological Needs and Biological Drivers
+            for gtype, weight in routine_biases.items():
+                if weight > 1.2:
+                    driver_details.append(DecisionDriver(kind="biological", label=f"Routine: {gtype.name}", weight=weight))
+                elif weight < 0.8:
+                    driver_details.append(DecisionDriver(kind="biological", label=f"Routine Penalty: {gtype.name}", weight=weight))
 
             for m in updated_motives:
                 if m.active and m.frustration > 0.5:

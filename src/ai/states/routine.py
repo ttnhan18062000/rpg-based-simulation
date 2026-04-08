@@ -33,7 +33,7 @@ class EatingHandler(StateHandler):
         actor = ctx.actor
         rou = actor.mind.routine
         
-        # If no longer hungry, stop eating
+        # 1. Check if satiated
         if rou.hunger_level <= 0.1:
             return AIState.IDLE, ActionProposal(
                 actor_id=actor.id,
@@ -42,10 +42,29 @@ class EatingHandler(StateHandler):
                 updates=[]
             )
         
-        # Propose immediate hunger reduction (eating is faster than sleeping)
+        # 2. Find food in inventory
+        from src.core.gameplay.items.item_registry import ITEM_REGISTRY
+        food_item = None
+        for item_id in actor.inventory.items:
+            template = ITEM_REGISTRY.get(item_id)
+            if template and template.hunger_reduction > 0:
+                food_item = item_id
+                break
+        
+        if not food_item:
+            return AIState.IDLE, ActionProposal(
+                actor_id=actor.id,
+                verb=ActionType.REST,
+                reason="No more food in inventory",
+                updates=[]
+            )
+
+        # 3. Propose EAT action
+        # Note: Hunger reduction value is fetched from the item template inside EatAction.apply
         return AIState.EATING, ActionProposal(
             actor_id=actor.id,
             verb=ActionType.EAT,
-            reason="Eating...",
-            updates=[RoutineUpdate(hunger_delta=-0.3)]
+            reason=f"Eating {food_item}",
+            metadata={"item_id": food_item},
+            updates=[] # Hunger reduction is handled by EatAction.apply emitting RoutineUpdate
         )

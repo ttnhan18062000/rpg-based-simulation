@@ -162,3 +162,10 @@ class SimulationConfig:
 
     # Debug / Stability (AOA Phase 5)
     ignore_phase_errors: bool = False    # Whether to suppress exceptions in engine phases
+
+    # Biological Needs [PHASE 3]
+    sleep_decay_rate: float = 0.002      # Debt increase per tick
+    hunger_decay_rate: float = 0.001     # Hunger increase per tick
+    sleep_recovery_rate: float = 0.02    # Debt decrease per tick while sleeping
+    active_start_hour: int = 6           # Default start of daily activity
+    active_end_hour: int = 22            # Default end of daily activity

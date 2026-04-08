@@ -103,23 +103,25 @@ class EntityInspector:
         # Sort by total emotional intensity
         bonds.sort(key=lambda b: (abs(b.trust) + abs(b.fear) + abs(b.rivalry)), reverse=True)
         
-        print(f"{'Target ID':<10} | {'Trust':<6} | {'Fear':<6} | {'Rivalry':<7} | {'Dynamics'}")
-        print("-" * 60)
+        print(f"{'Target ID':<10} | {'Trust':<6} | {'Loyalty':<7} | {'Resent':<6} | {'Dynamics'}")
+        print("-" * 65)
         for b in bonds:
             dynamics = []
             if b.trust > 0.5: dynamics.append("Ally")
+            if b.loyalty > 0.6: dynamics.append("Devoted")
+            if b.resentment > 0.6: dynamics.append("Bitter")
             if b.fear > 0.5: dynamics.append("Intimidated")
             if b.rivalry > 0.5: dynamics.append("Rival")
             if not dynamics: dynamics.append("Neutral")
             
             trust_color = "\033[92m" if b.trust > 0 else "\033[91m"
-            fear_color = "\033[93m" if b.fear > 0 else "\033[92m"
-            rival_color = "\033[95m" if b.rivalry > 0 else "\033[92m"
+            loyalty_color = "\033[96m" if b.loyalty > 0.4 else "\033[0m"
+            resent_color = "\033[91m" if b.resentment > 0.4 else "\033[0m"
             
             print(f"{b.target_id:<10} | "
                   f"{trust_color}{b.trust:>6.2f}\033[0m | "
-                  f"{fear_color}{b.fear:>6.2f}\033[0m | "
-                  f"{rival_color}{b.rivalry:>7.2f}\033[0m | "
+                  f"{loyalty_color}{b.loyalty:>7.2f}\033[0m | "
+                  f"{resent_color}{b.resentment:>6.2f}\033[0m | "
                   f"{', '.join(dynamics)}")
 
     @staticmethod
@@ -171,6 +173,40 @@ class EntityInspector:
             print(f"{log.tick:<6} | {tag:<15} | {impact_color}{log.impact:>6.2f}\033[0m | {message}")
 
     @staticmethod
+    def render_public_reputation(entity: "Entity"):
+        """Display the public-facing reputation profile. [PHASE 2]"""
+        rep = entity.reputation
+        EntityInspector.print_header("PUBLIC REPUTATION")
+        
+        # Tags with colorized chips
+        tags_str = ", ".join([f"\033[95m[{t}]\033[0m" for t in rep.reputation_tags])
+        EntityInspector.print_field("Titles/Tags", tags_str if tags_str else "None")
+        
+        # Multi-dimensional scores
+        print(f"  ◈ Defender: {rep.defender_score:>5.1f} | Heroism: {rep.heroism_score:>5.1f}")
+        print(f"  ◈ Trust:    {rep.trustworthiness:>5.1f} | Greed:   {rep.greed_score:>5.1f}")
+        print(f"  ◈ Threat:   {rep.threat_notoriety:>5.1f} | Coward:  {rep.cowardice_score:>5.1f}")
+
+    @staticmethod
+    def render_turning_points(entity: "Entity"):
+        """Display high-salience durable memories (The Soul). [PHASE 2]"""
+        EntityInspector.print_header("DURABLE TURNING POINTS")
+        
+        tps = entity.mind.narrative.turning_points
+        if not tps:
+            print("No life-defining events recorded yet.")
+            return
+            
+        # Top 5 by salience
+        sorted_tps = sorted(tps, key=lambda x: x.salience_score, reverse=True)[:5]
+        
+        print(f"{'Tick':<6} | {'Kind':<15} | {'Salience':<8} | {'Impact'}")
+        print("-" * 60)
+        for tp in sorted_tps:
+            kind_name = tp.kind.name if hasattr(tp.kind, "name") else str(tp.kind)
+            print(f"{tp.tick:<6} | {kind_name:<15} | {tp.salience_score:>8.2f} | {tp.emotional_impact:>6.2f}")
+
+    @staticmethod
     def inspect_full(entity: "Entity", registry: "SocialRegistry"):
         """Run all inspection modules."""
         print("\033[1m" + "="*80)
@@ -185,7 +221,9 @@ class EntityInspector:
         
         EntityInspector.render_biological_needs(entity)
         EntityInspector.render_personality(entity)
+        EntityInspector.render_public_reputation(entity)
         EntityInspector.render_likely_choices(entity)
         EntityInspector.render_social_bonds(entity, registry)
-        EntityInspector.render_ongoing_arc(entity, getattr(registry, "_current_tick", 0)) # Fallback if tick not passed
+        EntityInspector.render_turning_points(entity)
+        EntityInspector.render_ongoing_arc(entity, getattr(registry, "_current_tick", 0))
         print("\n" + "="*80)

@@ -59,6 +59,10 @@ class BeliefService:
         # Build fresh threat estimate
         threat = BeliefService._build_threat_estimate(observer, observed)
 
+        # Perceived Reputation [PHASE 2]
+        rep = observed.reputation
+        apparent_rep_tags = list(rep.reputation_tags)
+        
         return BeliefRecord(
             entity_id=observed.id,
             pos=observed.spatial.pos,
@@ -73,7 +77,56 @@ class BeliefService:
             threat=threat,
             observed_skills=observed_skills,
             confidence=1.0,
+            # Phase 2 Social extension
+            apparent_reputation_tags=apparent_rep_tags,
+            apparent_trustworthiness=rep.trustworthiness,
+            apparent_heroism=rep.heroism_score,
+            apparent_threat_notoriety=rep.threat_notoriety,
+            knowledge_source="direct",
+            directness=1.0,
+            source_confidence=1.0
         )
+
+    @staticmethod
+    def share_knowledge(sharer: Entity, recipient: Entity, target_id: int, tick: int) -> BeliefRecord | None:
+        """Propagates a belief from one entity to another (Indirect Knowledge). [PHASE 2]
+        
+        Represents gossip, rumors, or tactical sharing. The directness of the knowledge
+        decreases as it is shared.
+        """
+        belief = sharer.mind.perception.entity_memory.get(target_id)
+        if not belief:
+            return None
+            
+        # Create an indirect copy
+        new_directness = belief.directness * 0.7 # Knowledge degrades per "hop"
+        # Sharer's trustworthiness affects recipient's initial source_confidence
+        sharer_trust = recipient.mind.perception.entity_memory.get(sharer.id)
+        trust_factor = sharer_trust.apparent_trustworthiness if sharer_trust else 0.5
+        
+        return belief.model_copy(update={
+            "knowledge_source": "indirect",
+            "directness": new_directness,
+            "source_confidence": trust_factor,
+            "confidence": belief.confidence * 0.8 # Overall confidence hit
+        })
+
+    @staticmethod
+    def merge_indirect_belief(owner: Entity, new_belief: BeliefRecord):
+        """Merges a new indirect belief into existing memory. [PHASE 2]"""
+        existing = owner.mind.perception.entity_memory.get(new_belief.entity_id)
+        if not existing:
+            owner.mind.perception.entity_memory[new_belief.entity_id] = new_belief
+            return
+
+        # Keep the one with higher combined confidence/directness
+        existing_val = existing.confidence * existing.directness
+        new_val = new_belief.confidence * new_belief.directness
+        
+        if new_val > existing_val:
+            owner.mind.perception.entity_memory[new_belief.entity_id] = new_belief
+            # If we already knew skills, carry them forward even if indirect
+            owner.mind.perception.entity_memory[new_belief.entity_id].observed_skills.update(existing.observed_skills)
 
     @staticmethod
     def _build_threat_estimate(observer: Entity, observed: Entity) -> ThreatEstimate:

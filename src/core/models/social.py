@@ -15,6 +15,12 @@ class SocialBond(SimulationModel):
     rivalry: float = Field(default=0.0, ge=-1.0, le=1.0)
     familiarity: float = Field(default=0.0, ge=0.0, le=1.0) # [PHASE 1]
     
+    # [PHASE 2] Extended relationship dimensions
+    loyalty: float = Field(default=0.0, ge=-1.0, le=1.0)
+    resentment: float = Field(default=0.0, ge=0.0, le=1.0)
+    admiration: float = Field(default=0.0, ge=0.0, le=1.0)
+    debt: float = Field(default=0.0, ge=-1.0, le=1.0)
+    
     # Metadata
     last_interaction_tick: int = 0
     interaction_count: int = 0
@@ -55,7 +61,7 @@ class SocialRegistry(SimulationModel):
             source_bonds.sort(key=lambda x: x[1].last_interaction_tick)
             del self.bonds[source_bonds[0][0]]
 
-    def update_bond(self, source_id: int, target_id: int, trust_delta: float = 0.0, fear_delta: float = 0.0, rivalry_delta: float = 0.0, familiarity_delta: float = 0.0, tick: int = 0) -> tuple[dict[str, float], dict[str, float]]:
+    def update_bond(self, source_id: int, target_id: int, trust_delta: float = 0.0, fear_delta: float = 0.0, rivalry_delta: float = 0.0, familiarity_delta: float = 0.0, loyalty_delta: float = 0.0, resentment_delta: float = 0.0, admiration_delta: float = 0.0, debt_delta: float = 0.0, tick: int = 0) -> tuple[dict[str, float], dict[str, float]]:
         """Update emotional stance and last interaction tick."""
         bond = self.get_bond(source_id, target_id)
         
@@ -63,13 +69,21 @@ class SocialRegistry(SimulationModel):
             "trust": bond.trust,
             "fear": bond.fear,
             "rivalry": bond.rivalry,
-            "familiarity": bond.familiarity
+            "familiarity": bond.familiarity,
+            "loyalty": bond.loyalty,
+            "resentment": bond.resentment,
+            "admiration": bond.admiration,
+            "debt": bond.debt,
         }
         
         bond.trust = max(-1.0, min(1.0, bond.trust + trust_delta))
         bond.fear = max(0.0, min(1.0, bond.fear + fear_delta))
         bond.rivalry = max(0.0, min(1.0, bond.rivalry + rivalry_delta))
         bond.familiarity = max(0.0, min(1.0, bond.familiarity + familiarity_delta))
+        bond.loyalty = max(-1.0, min(1.0, bond.loyalty + loyalty_delta))
+        bond.resentment = max(0.0, min(1.0, bond.resentment + resentment_delta))
+        bond.admiration = max(0.0, min(1.0, bond.admiration + admiration_delta))
+        bond.debt = max(-1.0, min(1.0, bond.debt + debt_delta))
         bond.last_interaction_tick = tick
         bond.interaction_count += 1
         
@@ -77,7 +91,11 @@ class SocialRegistry(SimulationModel):
             "trust": bond.trust,
             "fear": bond.fear,
             "rivalry": bond.rivalry,
-            "familiarity": bond.familiarity
+            "familiarity": bond.familiarity,
+            "loyalty": bond.loyalty,
+            "resentment": bond.resentment,
+            "admiration": bond.admiration,
+            "debt": bond.debt,
         }
         return old_vals, new_vals
 

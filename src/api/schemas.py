@@ -88,12 +88,19 @@ class QuestSchema(BaseModel):
 
 
 class SocialBondSchema(BaseModel):
-    """Visual representation of a directed social bond. [PHASE 1]"""
+    """Visual representation of a directed social bond. [PHASE 2]"""
     target_id: int
     target_name: str
     trust: float
     fear: float
     rivalry: float
+    familiarity: float = 0.0
+    loyalty: float = 0.0
+    resentment: float = 0.0
+    admiration: float = 0.0
+    debt: float = 0.0
+    narrative_summary: str | None = None
+    social_impacts: list[str] = Field(default_factory=list) # [PHASE 2] High-level "why" bullets
 
 
 class RoutineStateSchema(BaseModel):
@@ -111,6 +118,22 @@ class MemoryLogSchema(BaseModel):
     impact: float
     message: str
     details: dict = Field(default_factory=dict)
+
+class TurningPointSchema(BaseModel):
+    """A durable record of a life-defining moment. [PHASE 2]"""
+    kind: str
+    tick: int
+    impact: float
+    summary: str
+    involved_names: list[str] = Field(default_factory=list)
+
+class ReputationProfileSchema(BaseModel):
+    """Authoritative public scores and tags. [PHASE 2]"""
+    heroism: float
+    cowardice: float
+    threat_notoriety: float
+    trustworthiness: float
+    tags: list[str] = Field(default_factory=list)
 
 
 # --- Behavioral Realism [PHASE 1] ---
@@ -228,6 +251,12 @@ class EntitySchema(BaseModel):
     class_mastery: float = 0.0
     active_effects: list[EffectSchema] = Field(default_factory=list)
     quests: list[QuestSchema] = Field(default_factory=list)
+    
+    # Social & Routine [PHASE 2 & 3]
+    routine: RoutineStateSchema | None = None
+    reputation: ReputationProfileSchema | None = None
+    turning_points: list[TurningPointSchema] = Field(default_factory=list)
+    memory_log: list[MemoryLogSchema] = Field(default_factory=list)
     traits: list[int] = Field(default_factory=list)
     # Base stats (before equipment/effects) for detailed breakdown
     base_atk: int = 0
@@ -306,12 +335,7 @@ class GoalScoreSchema(BaseModel):
     score: float
     status: str = "considering" # "executing" | "considering"
 
-class SocialBondSchema(BaseModel):
-    target_id: int
-    trust: float
-    fear: float
-    rivalry: float
-    familiarity: float
+# SocialBondSchema merged above
 
 class DecisionDriverSchema(BaseModel):
     kind: str
@@ -333,6 +357,7 @@ class AIDecisionSchema(BaseModel):
     driver_details: list[DecisionDriverSchema] = Field(default_factory=list) # [PHASE 1] New structured list
     nearest_enemy_dist: float | None = None
     nearest_target_id: int | None = None
+    narrative_impacts: list[str] = Field(default_factory=list) # [PHASE 2] Global recent life shifts
 
 class SchedulerTimelineItemSchema(BaseModel):
     entity_id: int
@@ -343,10 +368,13 @@ class SchedulerTimelineItemSchema(BaseModel):
 
 class EntityInspectionSchema(BaseModel):
     entity: EntitySchema
+    routine: RoutineStateSchema | None = None
+    reputation: ReputationProfileSchema | None = None
     stat_breakdowns: dict[str, StatBreakdownSchema] = Field(default_factory=dict)
     combat_history: list[CombatTraceSchema] = Field(default_factory=list)
     ai_explanation: AIDecisionSchema | None = None
     narrative_history: list[MemoryLogSchema] = Field(default_factory=list)
+    turning_points: list[TurningPointSchema] = Field(default_factory=list)
 
 
 # --- Map ---

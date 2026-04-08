@@ -43,7 +43,7 @@ class WorldPresenter:
             sel_entity = world.entities.get(selected_id)
             if sel_entity:
                 registry = getattr(world, "social_registry", None)
-                selected_full = EntityPresenter.to_full_schema(sel_entity, loot_duration, registry)
+                selected_full = EntityPresenter.to_full_schema(sel_entity, loot_duration, registry, world)
 
         # 4. Filter and Present Events
         presented_events = [

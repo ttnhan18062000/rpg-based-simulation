@@ -266,6 +266,22 @@ class SocialUpdate(IntentUpdate):
     trust_delta: float = 0.0
     fear_delta: float = 0.0
     rivalry_delta: float = 0.0
+    familiarity_delta: float = 0.0
+    loyalty_delta: float = 0.0
+    resentment_delta: float = 0.0
+    admiration_delta: float = 0.0
+    debt_delta: float = 0.0
+
+class ReputationUpdate(IntentUpdate):
+    """Updates to an entity's public reputation profile. [PHASE 2]"""
+    defender_delta: float = 0.0
+    cowardice_delta: float = 0.0
+    greed_delta: float = 0.0
+    heroism_delta: float = 0.0
+    threat_notoriety_delta: float = 0.0
+    trustworthiness_delta: float = 0.0
+    tags_add: list[str] = Field(default_factory=list)
+    tags_remove: list[str] = Field(default_factory=list)
 
 
 class WorldUpdate(IntentUpdate):
@@ -317,6 +333,7 @@ def _rebuild_action_models():
     SpatialUpdate.model_rebuild(_types_namespace=ns)
     BuildingUpdate.model_rebuild(_types_namespace=ns)
     SocialUpdate.model_rebuild(_types_namespace=ns)
+    ReputationUpdate.model_rebuild(_types_namespace=ns)
     RoutineUpdate.model_rebuild(_types_namespace=ns)
     CombatTraceUpdate.model_rebuild(_types_namespace=ns)
     

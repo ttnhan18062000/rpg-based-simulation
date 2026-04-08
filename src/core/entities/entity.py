@@ -21,6 +21,7 @@ from src.core.aspects.progression import ProgressionAspect
 from src.core.aspects.mind import MindAspect
 from src.core.aspects.interaction import InteractionAspect
 from src.core.models.vectors import Vector2
+from src.core.models.reputation import ReputationProfile
 from dataclasses import dataclass
 
 
@@ -43,6 +44,9 @@ class Entity(SimulationModel):
     mind: MindAspect = Field(default_factory=lambda: MindAspect())
     interaction: InteractionAspect = Field(default_factory=lambda: InteractionAspect())
     inventory: InventoryAspect | None = None
+    
+    # [PHASE 2] Public-facing social memory
+    reputation: ReputationProfile = Field(default_factory=lambda: ReputationProfile())
     
     # Internal immutability (Phase-Boundary Enforcement)
     _frozen: bool = PrivateAttr(default=False)

@@ -15,10 +15,15 @@ from src.core.entities.entity import Entity
 from src.actions.base import (
     ActionProposal, IntentUpdate, MindUpdate, NavigationUpdate, CombatTraceUpdate,
     PerceptionUpdate, ProgressionUpdate, IdentityUpdate, InteractionUpdate, SpatialUpdate,
-    WorldUpdate, BuildingUpdate
+    WorldUpdate, BuildingUpdate, RoutineUpdate, ReputationUpdate
 )
 from src.core.gameplay.items.item_registry import ITEM_REGISTRY
 from src.core.gameplay.classes import SKILL_DEFS
+from src.core.logic.event_interpreter import EventInterpreterService
+from src.core.logic.social_state_applicator import SocialStateApplicator
+from src.core.logic.knowledge_propagation import KnowledgePropagationService
+from src.actions.eat import EatAction
+from src.actions.sleep import SleepAction
 from src.systems.infrastructure.base import System
 
 if TYPE_CHECKING:
@@ -60,7 +65,7 @@ class ActionSystem(System):
     ) -> None:
         """Core side-effects applied identically in live and replay/recovery."""
         # 0. Global Biological Decay (Authoritative State)
-        cls._apply_biological_decay(world)
+        cls._apply_biological_decay(world, config)
         
         for proposal in applied:
             entity = world.entities.get(proposal.actor_id)
@@ -72,16 +77,6 @@ class ActionSystem(System):
             if proposal.updates:
                 all_updates.extend(proposal.updates)
 
-            # 1. Direct State Transitions (AI Internal)
-            if proposal.new_ai_state is not None:
-                new_state = AIState(proposal.new_ai_state)
-                if new_state != entity.mind.decision.ai_state:
-                    entity.mind.decision.ai_state = new_state
-                    if entity.mind.decision.goal_committed_at == 0:
-                         entity.mind.decision.goal_committed_at = world.tick
-            if proposal.reason:
-                entity.mind.decision.last_reason = proposal.reason
-
             # 2. Update Generation (Functional Side-Effects)
             if proposal.verb == ActionType.USE_ITEM and proposal.target:
                 all_updates.extend(cls._get_use_item_updates(world, config, entity, proposal.target))
@@ -89,6 +84,10 @@ class ActionSystem(System):
                 all_updates.extend(cls._get_looting_updates(world, entity, proposal.target))
             elif proposal.verb == ActionType.HARVEST and proposal.target:
                 all_updates.extend(cls._get_harvesting_updates(world, entity, proposal.target))
+            elif proposal.verb == ActionType.EAT:
+                all_updates.extend(EatAction.get_updates(proposal, world))
+            elif proposal.verb == ActionType.SLEEP:
+                all_updates.extend(SleepAction.get_updates(proposal, world))
             elif proposal.verb == ActionType.USE_SKILL:
                 skill_id = proposal.metadata.get("skill_id")
                 target_id = proposal.metadata.get("target_id")
@@ -117,12 +116,34 @@ class ActionSystem(System):
             if all_updates:
                 cls._apply_updates(world, entity, all_updates, proposal)
 
-            # 4. Attribute Training
+            # 4. Direct State Transitions (AI Internal) - Apply AFTER updates possibly modify it
+            if proposal.new_ai_state is not None:
+                new_state = AIState(proposal.new_ai_state)
+                if new_state != entity.mind.decision.ai_state:
+                    # Authoritative Biological State Management [PHASE 3]
+                    if new_state == AIState.SLEEPING:
+                        entity.mind.routine.is_sleeping = True
+                    elif entity.mind.routine.is_sleeping and new_state != AIState.SLEEPING:
+                        entity.mind.routine.is_sleeping = False
+                        
+                    entity.mind.decision.ai_state = new_state
+                    if entity.mind.decision.goal_committed_at == 0:
+                         entity.mind.decision.goal_committed_at = world.tick
+            if proposal.reason:
+                entity.mind.decision.last_reason = proposal.reason
+
+            # Phase 2: Social Interpretation Pass
+            cls._process_social_interpretation(world, entity, all_updates, proposal)
+            
+            # Phase 2: Social Convergence (Gossip)
+            cls._process_proximity_gossip(world, entity, all_updates)
+
+            # 5. Attribute Training
             from src.core.gameplay.attributes import train_attributes
             verb_name = proposal.verb.name if hasattr(proposal.verb, "name") else ActionType(proposal.verb).name
             train_attributes(entity, verb_name.lower())
 
-            # 5. Cooldown Management
+            # 6. Cooldown Management
             speed = entity.combat.spd
             entity.next_act_at += 1.0 / max(0.1, speed / 10.0)
 
@@ -174,7 +195,9 @@ class ActionSystem(System):
                     for tid, delta in up.threat_delta.items():
                         entity.mind.perception.threat_table[tid] = entity.mind.perception.threat_table.get(tid, 0.0) + delta
                 if up.entity_memory:
-                    entity.mind.perception.entity_memory.update(up.entity_memory)
+                    from src.ai.beliefs import BeliefService
+                    for target_id, new_belief in up.entity_memory.items():
+                        BeliefService.merge_indirect_belief(entity, new_belief)
                 if up.memory_log_add:
                     log = entity.mind.narrative.memory_log
                     log.extend(up.memory_log_add)
@@ -251,6 +274,15 @@ class ActionSystem(System):
                         for eff in entity.combat.effects:
                             if eff.effect_type == etype:
                                 eff.remaining_ticks = 0
+
+            elif isinstance(up, RoutineUpdate):
+                # Phase 2 Stage 3: Authoritative biological state update
+                if up.hunger_delta:
+                    entity.mind.routine.hunger_level = max(0.0, min(1.0, entity.mind.routine.hunger_level + up.hunger_delta))
+                if up.sleep_delta:
+                    entity.mind.routine.sleep_debt = max(0.0, min(1.0, entity.mind.routine.sleep_debt + up.sleep_delta))
+                if up.is_sleeping is not None:
+                    entity.mind.routine.is_sleeping = up.is_sleeping
 
             elif isinstance(up, SpatialUpdate):
                 # AOA Stabilization: Authoritative position update via WorldState
@@ -334,6 +366,11 @@ class ActionSystem(System):
                     # (Spatial index for nodes if applicable, but usually they are just static objects)
                     logger.info("Authoritatively created corpse node %d at %s", node.node_id, node.pos)
 
+            elif isinstance(up, ReputationUpdate):
+                # Phase 2: Authoritative Reputation Profile Mutation
+                from src.core.logic.reputation_service import ReputationService
+                ReputationService.apply_update(entity, up)
+
             elif isinstance(up, BuildingUpdate):
                 # Authoritative Building Mutation (Pillar 1 Stabilization)
                 target_b = next((b for b in world.buildings if b.building_id == up.building_id), None)
@@ -359,16 +396,24 @@ class ActionSystem(System):
                     pass
                 
             elif isinstance(up, SocialUpdate):
-                # Phase 1: Authoritative Social Registry Mutation
-                # Note: world.social_registry handles existence checks
-                old_vals, new_vals = world.social_registry.update_bond(
-                    source_id=up.source_id,
-                    target_id=up.target_id,
-                    trust_delta=up.trust_delta,
-                    fear_delta=up.fear_delta,
-                    rivalry_delta=up.rivalry_delta,
-                    tick=world.tick
-                )
+                # Phase 2: Authoritative Social Registry Mutation
+                from src.core.logic.relationship_service import RelationshipService
+                RelationshipService.apply_update(world.social_registry, up, world.tick)
+                
+                # Fetch bond for milestone detection (simplified for transition)
+                bond = world.social_registry.get_bond(up.source_id, up.target_id)
+                old_vals = {
+                    "trust": bond.trust - up.trust_delta,
+                    "fear": bond.fear - up.fear_delta,
+                    "rivalry": bond.rivalry - up.rivalry_delta,
+                    "loyalty": bond.loyalty - up.loyalty_delta
+                }
+                new_vals = {
+                    "trust": bond.trust,
+                    "fear": bond.fear,
+                    "rivalry": bond.rivalry,
+                    "loyalty": bond.loyalty
+                }
                 
                 # Phase 2: Narrative Milestone Detection
                 from src.core.aspects.mind import SocialNarrative, InterpretedEvent
@@ -415,7 +460,7 @@ class ActionSystem(System):
                     routine.is_sleeping = up.is_sleeping
 
     @classmethod
-    def _apply_biological_decay(cls, world: WorldState) -> None:
+    def _apply_biological_decay(cls, world: WorldState, config: SimulationConfig) -> None:
         """Authoritative time-based needs increment. [PHASE 3]"""
         for entity in world.entities.values():
             if not entity.combat.alive:
@@ -423,13 +468,17 @@ class ActionSystem(System):
                 
             routine = entity.mind.routine
             # 1. Steady accumulation
-            routine.sleep_debt = max(0.0, min(1.0, routine.sleep_debt + 0.002))
-            routine.hunger_level = max(0.0, min(1.0, routine.hunger_level + 0.001))
+            routine.sleep_debt = max(0.0, min(1.0, routine.sleep_debt + config.sleep_decay_rate))
+            routine.hunger_level = max(0.0, min(1.0, routine.hunger_level + config.hunger_decay_rate))
             
-            # 2. Recovery if sleeping
+            # 2. Forced Sleep (Pass out if debt is critical)
+            if routine.sleep_debt >= 1.0 and not routine.is_sleeping:
+                routine.is_sleeping = True
+
+            # 3. Recovery if sleeping
             if routine.is_sleeping:
-                routine.sleep_debt = max(0.0, routine.sleep_debt - 0.02)
-                if routine.sleep_debt == 0.0:
+                routine.sleep_debt = max(0.0, routine.sleep_debt - config.sleep_recovery_rate)
+                if routine.sleep_debt <= 0.0:
                     routine.is_sleeping = False
                     
             # 3. [STAGE 5] Region Fatigue and Territory accumulation
@@ -553,6 +602,8 @@ class ActionSystem(System):
                 updates.append(ProgressionUpdate(inventory_remove=[item_id]))
                 if template.heal_amount > 0:
                     updates.append(ProgressionUpdate(hp_delta=template.heal_amount))
+                if template.hunger_reduction > 0:
+                    updates.append(RoutineUpdate(hunger_delta=-template.hunger_reduction))
         return updates
 
     @staticmethod
@@ -604,6 +655,53 @@ class ActionSystem(System):
             if item_id:
                 updates.append(ProgressionUpdate(inventory_add=[item_id], stamina_delta=-2))
         return updates
+
+    @classmethod
+    def _process_social_interpretation(
+        cls, 
+        world: WorldState, 
+        actor: Entity, 
+        updates: list[IntentUpdate], 
+        proposal: ActionProposal
+    ) -> None:
+        """Analyze applied updates to detect and apply social life events."""
+        from src.actions.base import CombatTraceUpdate, SpatialUpdate
+        
+        # 1. Combat Events (Aftermath)
+        for up in updates:
+            if isinstance(up, CombatTraceUpdate):
+                defender = world.get_entity(up.result.defender_id)
+                if defender:
+                    events = EventInterpreterService.interpret_combat_aftermath(actor, defender, up.result, world)
+                    for event in events:
+                        SocialStateApplicator.apply_interpreted_event(event, world)
+
+        # 2. Positional/Tactical Events
+        spatial_up = next((u for u in updates if isinstance(u, SpatialUpdate)), None)
+        if spatial_up:
+            event = EventInterpreterService.interpret_tactical_outcome(world, actor, spatial_up)
+            if event:
+                SocialStateApplicator.apply_interpreted_event(event, world)
+
+    @classmethod
+    def _process_proximity_gossip(cls, world: WorldState, actor: Entity, updates: list[IntentUpdate]) -> None:
+        """Triggers gossip between actor and nearby entities if they have proximity history."""
+        # Simple proximity check: entities within 5 range
+        for other in world.entities.values():
+            if other.id == actor.id or not other.combat.alive:
+                continue
+            
+            dist = actor.spatial.pos.manhattan(other.spatial.pos)
+            if dist <= 5:
+                # Proximity exists — trigger gossip from actor to other
+                up = KnowledgePropagationService.propagate_gossip(actor, other, world)
+                if up:
+                    updates.append(up)
+                    
+                # Reciprocal gossip (Other to Actor)
+                up_back = KnowledgePropagationService.propagate_gossip(other, actor, world)
+                if up_back:
+                    updates.append(up_back)
 
     def _update_ai_derived_states(self, context: SystemContext, applied: list[ActionProposal]) -> None:
         world = context.world

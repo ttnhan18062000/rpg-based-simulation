@@ -47,6 +47,7 @@ class ItemTemplate:
     element: ElementSer = Element.NONE
     weapon_range: int = 1
     heal_amount: int = 0
+    hunger_reduction: float = 0.0
     mana_restore: int = 0
     gold_value: int = 0
     sell_value: int = 0

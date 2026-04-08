@@ -15,13 +15,13 @@ class EntityPresenter:
     """Separation of concerns: Domain models should not know about API schemas."""
 
     @staticmethod
-    def to_inspection_schema(entity: "Entity", loot_duration: int = 3, registry: Any = None) -> "EntityInspectionSchema":
+    def to_inspection_schema(entity: "Entity", loot_duration: int = 3, registry: Any = None, world: Any = None) -> "EntityInspectionSchema":
         from src.api.schemas import EntityInspectionSchema, CombatTraceSchema, MemoryLogSchema
         from src.api.presenters.stat_breakdown import StatBreakdownService
         from src.api.presenters.ai_presenter import AIPresenter
         
         # 1. Full Entity Data (including routine)
-        full = EntityPresenter.to_full_schema(entity, loot_duration, registry)
+        full = EntityPresenter.to_full_schema(entity, loot_duration, registry, world)
         
         # 2. Stat Breakdowns
         breakdowns = StatBreakdownService.get_all_breakdowns(entity)
@@ -51,7 +51,7 @@ class EntityPresenter:
                 tick=log.tick,
                 type=log.type,
                 impact=log.impact,
-                message=f"{log.type.title()} event detected", # Basic fallback
+                message=EntityPresenter._generate_narrative_message(log, world),
                 details=log.details if isinstance(log.details, dict) else log.details.model_dump() if hasattr(log.details, "model_dump") else {}
             )
             for log in entity.mind.narrative.memory_log
@@ -62,6 +62,7 @@ class EntityPresenter:
         
         return EntityInspectionSchema(
             entity=full,
+            routine=full.routine, # Reuse the one already built in to_full_schema
             stat_breakdowns=breakdowns,
             combat_history=history,
             ai_explanation=ai_exp,
@@ -117,8 +118,11 @@ class EntityPresenter:
         ]
 
     @staticmethod
-    def to_full_schema(entity: "Entity", loot_duration: int = 3, registry: Any = None) -> "EntitySchema":
-        from src.api.schemas import EntitySchema, EffectSchema, QuestSchema, RoutineStateSchema, SocialBondSchema
+    def to_full_schema(entity: "Entity", loot_duration: int = 3, registry: Any = None, world: Any = None) -> "EntitySchema":
+        from src.api.schemas import (
+            EntitySchema, EffectSchema, QuestSchema, RoutineStateSchema, 
+            SocialBondSchema, ReputationProfileSchema, TurningPointSchema, MemoryLogSchema
+        )
         from src.core.models.enums import Element
 
         identity = entity.identity
@@ -247,14 +251,40 @@ class EntityPresenter:
                 )
                 for q in progression.quests
             ],
-            # Routine & Social (Phase 4)
             routine=RoutineStateSchema(
                 sleep_debt=mind.routine.sleep_debt,
                 hunger_level=mind.routine.hunger_level,
                 is_sleeping=mind.routine.is_sleeping,
                 active_hours=f"{mind.routine.active_start_hour:02d}:00 - {mind.routine.active_end_hour:02d}:00"
             ),
-            social_bonds=EntityPresenter._serialize_social_bonds(entity, registry) if registry else []
+            reputation=ReputationProfileSchema(
+                heroism=identity.reputation.heroism_score,
+                cowardice=identity.reputation.cowardice_score,
+                threat_notoriety=identity.reputation.threat_notoriety,
+                trustworthiness=identity.reputation.trustworthiness,
+                tags=identity.reputation.reputation_tags
+            ),
+            turning_points=[
+                TurningPointSchema(
+                    kind=tp.kind.name.lower() if hasattr(tp.kind, "name") else str(tp.kind).lower(),
+                    tick=tp.tick,
+                    impact=tp.emotional_impact,
+                    summary=tp.summary_tag or f"Moment of {tp.kind.name.lower()}",
+                    involved_names=[str(eid) for eid in tp.involved_entity_ids]
+                )
+                for tp in mind.narrative.turning_points
+            ],
+            memory_log=[
+                MemoryLogSchema(
+                    tick=log.tick,
+                    type=log.type,
+                    impact=log.impact,
+                    message=EntityPresenter._generate_narrative_message(log, world),
+                    details=log.details if isinstance(log.details, dict) else log.details.model_dump() if hasattr(log.details, "model_dump") else {}
+                )
+                for log in mind.narrative.memory_log
+            ],
+            social_bonds=EntityPresenter._serialize_social_bonds(entity, registry, world) if registry else []
         )
 
     @staticmethod
@@ -351,20 +381,71 @@ class EntityPresenter:
             return "none"
 
     @staticmethod
-    def _serialize_social_bonds(entity: "Entity", registry: Any) -> list["SocialBondSchema"]:
+    def _serialize_social_bonds(entity: "Entity", registry: Any, world: Any = None) -> list["SocialBondSchema"]:
         from src.api.schemas import SocialBondSchema
         bonds = []
+        name_map = {}
+        if world:
+            name_map = {e.id: e.identity.display_name for e in world.entities.values()}
+            
         for key, bond in registry.bonds.items():
             if bond.source_id == entity.id:
-                # We need some way to get the target name, but presenters don't have all entities.
-                # In most cases, the frontend will map target_id to known names.
-                # We'll just provide the ID and a placeholder or look it up if possible.
-                # For now, let's keep it simple.
+                target_name = name_map.get(bond.target_id, f"Entity {bond.target_id}")
+                
+                # Derive narrative summary from memory logs if available
+                narrative = None
+                if entity.mind.narrative.memory_log:
+                    # Find the most recent social event involving this target
+                    recent_events = [
+                        log for log in entity.mind.narrative.memory_log
+                        if log.type == "social" and log.details.get("target_id") == bond.target_id
+                    ]
+                    if recent_events:
+                        last_event = recent_events[-1]
+                        narrative = EntityPresenter._generate_narrative_message(last_event, world)
+                
                 bonds.append(SocialBondSchema(
                     target_id=bond.target_id,
-                    target_name=f"Entity {bond.target_id}",
+                    target_name=target_name,
                     trust=bond.trust,
                     fear=bond.fear,
-                    rivalry=bond.rivalry
+                    rivalry=bond.rivalry,
+                    familiarity=bond.familiarity,
+                    loyalty=bond.loyalty,
+                    resentment=bond.resentment,
+                    admiration=bond.admiration,
+                    debt=bond.debt,
+                    narrative_summary=narrative
                 ))
         return sorted(bonds, key=lambda b: (abs(b.trust) + abs(b.fear) + abs(b.rivalry)), reverse=True)
+
+    @staticmethod
+    def _generate_narrative_message(log: Any, world: Any = None) -> str:
+        """Generates a human-readable summary of a memory log event."""
+        log_type = log.type.lower()
+        details = log.details
+        
+        name_map = {}
+        if world:
+            name_map = {e.id: e.identity.display_name for e in world.entities.values()}
+            
+        target_id = details.get("target_id")
+        target_name = name_map.get(target_id, f"entity {target_id}") if target_id else "unknown"
+        
+        if log_type == "combat":
+            skill = details.get("skill", "attack")
+            dmg = details.get("damage", 0)
+            if details.get("is_attacker"):
+                 return f"Attacked {target_name} with {skill} for {dmg} damage."
+            return f"Attacked by {target_name} with {skill} for {dmg} damage."
+            
+        if log_type == "social":
+            event_kind = details.get("event_kind", "interaction")
+            return f"Experienced {event_kind} involving {target_name}."
+            
+        if log_type == "turning_point":
+            kind = details.get("kind", "milestone")
+            summary = details.get("summary_tag", f"a major {kind}")
+            return f"Reached a turning point: {summary}."
+
+        return f"{log.type.title()} event detected."

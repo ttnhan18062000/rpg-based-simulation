@@ -62,7 +62,7 @@ def inspect_entity(
         
     from src.api.presenters.entity_presenter import EntityPresenter
     registry = getattr(snapshot, "social_registry", None)
-    return EntityPresenter.to_inspection_schema(entity, manager.config.loot_duration, registry)
+    return EntityPresenter.to_inspection_schema(entity, manager.config.loot_duration, registry, snapshot)
 
 @router.get("/timeline", response_model=list[SchedulerTimelineItemSchema])
 def get_timeline(

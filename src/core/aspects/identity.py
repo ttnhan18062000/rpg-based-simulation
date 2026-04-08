@@ -4,6 +4,7 @@ from pydantic import Field
 from src.core.models.base import Aspect
 from src.core.models.enums import EntityRole, Archetype, ArchetypeSer
 from src.core.gameplay.faction import Faction
+from src.core.models.life_events import ReputationProfile
 
 class IdentityAspect(Aspect):
     """Aspect handling entity name, faction, role, and tiering. [AOA STABILIZATION]"""
@@ -19,6 +20,9 @@ class IdentityAspect(Aspect):
     archetype: ArchetypeSer = Archetype.BALANCED
     life_directive: str = "EXPLORATION" # e.g. "CRAFTER", "MONSTER_HUNTER", "GOBLIN_BANE"
     kill_count: int = 0
+    
+    # Public reputation system [PHASE 2]
+    reputation: ReputationProfile = Field(default_factory=ReputationProfile)
     
     # Metadata & Traits
     death_count: int = 0

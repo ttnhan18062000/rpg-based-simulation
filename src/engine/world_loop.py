@@ -28,6 +28,7 @@ from src.systems.lifecycle.hero_lifecycle_system import HeroLifecycleSystem
 from src.systems.lifecycle.world_evolution_system import WorldEvolutionSystem
 from src.systems.infrastructure.telemetry_system import TelemetrySystem
 from src.systems.world.generator import EntityGenerator
+from src.systems.social.knowledge_propagation_system import KnowledgePropagationSystem
 from src.platform.rng import DeterministicRNG
 from src.utils.metrics import SIM_TICK_DURATION
 
@@ -141,6 +142,7 @@ class WorldLoop:
         # New decoupled systems (Phase 2)
         self._system_manager.register(WorldEvolutionSystem(config, self._rng), config.subsystem_rate_environment)
         self._system_manager.register(TelemetrySystem(config, self._rng), config.subsystem_rate_economy)
+        self._system_manager.register(KnowledgePropagationSystem(config, self._rng), config.subsystem_rate_environment)
         
         from src.systems.infrastructure.event_system import EventBus, TelemetryBridge
         self._world.event_bus = EventBus()

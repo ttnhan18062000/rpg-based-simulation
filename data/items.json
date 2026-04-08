@@ -570,6 +570,7 @@
     "element": "none",
     "weapon_range": 1,
     "heal_amount": 0,
+    "hunger_reduction": 0.1,
     "mana_restore": 0,
     "gold_value": 0,
     "sell_value": 4
@@ -593,6 +594,7 @@
     "element": "none",
     "weapon_range": 1,
     "heal_amount": 8,
+    "hunger_reduction": 0.3,
     "mana_restore": 0,
     "gold_value": 0,
     "sell_value": 0
