@@ -23,6 +23,24 @@ class Perception:
     __slots__ = ()
 
     @staticmethod
+    def visible_entities(
+        actor: Entity,
+        snapshot: Snapshot,
+        vision_range: int,
+    ) -> list[Entity]:
+        """Return all entities within Manhattan vision range of actor."""
+        nearby_ids = snapshot.nearby_entity_ids(
+            actor.spatial.pos.x, actor.spatial.pos.y, vision_range)
+        
+        result: list[Entity] = []
+        for eid in nearby_ids:
+            e = snapshot.entities.get(eid)
+            if e and e.id != actor.id:
+                if actor.spatial.pos.manhattan(e.spatial.pos) <= vision_range:
+                    result.append(e)
+        return result
+
+    @staticmethod
     def visible_scars(
         actor: Entity,
         snapshot: Snapshot,

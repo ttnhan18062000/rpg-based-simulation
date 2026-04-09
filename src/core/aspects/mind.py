@@ -4,6 +4,7 @@ from src.core.models.base import Aspect, SimulationModel
 from src.core.models.enums import AIState, GoalType, EmotionType
 from src.core.models.vectors import Vector2
 from src.core.models.lived_structure import RoutineProfile, PlaceAttachment # [PHASE 3]
+from src.core.models.strategy import StrategicState  # [PHASE 1]
 
 if TYPE_CHECKING:
     from src.core.entities.entity import Entity
@@ -282,6 +283,9 @@ class MindAspect(Aspect):
     routine: RoutineState = Field(default_factory=RoutineState)
     social: SocialStance = Field(default_factory=SocialStance)
     
+    # Fundamental continuity stratum [PHASE 1]
+    strategic: StrategicState = Field(default_factory=StrategicState)
+    
     # Pillar 2: Lived Structure [PHASE 3]
     routine_profiles: list[RoutineProfile] = Field(default_factory=list)
     place_attachments: list[PlaceAttachment] = Field(default_factory=list)
@@ -344,4 +348,5 @@ NarrativeMemory.model_rebuild()
 RoutineState.model_rebuild()
 SocialBondRecord.model_rebuild()
 SocialStance.model_rebuild()
+StrategicState.model_rebuild()
 MindAspect.model_rebuild()

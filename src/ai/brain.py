@@ -12,7 +12,8 @@ from typing import Any, TYPE_CHECKING
 
 from src.core.models.enums import AIState, ActionType, GoalType, EmotionType, Domain
 from src.actions.base import (
-    ActionProposal, IntentUpdate, MindUpdate, NavigationUpdate, PerceptionUpdate, ProgressionUpdate
+    ActionProposal, IntentUpdate, MindUpdate, NavigationUpdate, PerceptionUpdate, 
+    ProgressionUpdate, StrategicUpdate
 )
 from src.core.aspects.mind import DecisionDriver, MemoryRecord, MemoryLogEntry
 from src.ai.goals import GoalEvaluator
@@ -20,6 +21,8 @@ from src.ai.perception import Perception
 from src.ai.states import AIContext, STATE_HANDLERS, IdleHandler
 from src.ai.beliefs import BeliefService
 from src.core.gameplay.faction import FactionRegistry
+from src.core.logic.strategic_evaluator import StrategicEvaluatorService
+from src.core.models.strategy import ObjectiveKind # [PHASE 3]
 
 if TYPE_CHECKING:
     from src.config import SimulationConfig
@@ -66,13 +69,16 @@ class AIBrain:
         # --- Phase 1: Input (Sensory & Perception) ---
         ctx, social_biases = self._sensory_perception_phase(actor, snapshot, typed_updates)
         
-        # --- Phase 2: Internal State (Memory & Appraisal) ---
-        self._memory_appraisal_phase(ctx, typed_updates, social_biases)
+        # --- Phase 2: Strategic Appraisal (Macro-Interest) ---
+        strategic_objective = self._strategic_appraisal_phase(actor, snapshot, typed_updates)
         
-        # --- Phase 3: Deliberation (Planning) ---
+        # --- Phase 3: Internal State (Memory & Appraisal) ---
+        self._memory_appraisal_phase(ctx, typed_updates, social_biases, strategic_objective)
+        
+        # --- Phase 4: Deliberation (Planning) ---
         selected_state = self._deliberation_tactical_phase(ctx, typed_updates)
         
-        # --- Phase 4: Output (Proposal) ---
+        # --- Phase 5: Output (Proposal) ---
         return self._finalization_phase(ctx, selected_state, typed_updates)
 
     def _sensory_perception_phase(self, actor: Entity, snapshot: Snapshot, updates: list[IntentUpdate]) -> tuple[AIContext, dict[GoalType, float]]:
@@ -159,8 +165,19 @@ class AIBrain:
                 
         return ctx, social_biases
 
-    def _memory_appraisal_phase(self, ctx: AIContext, updates: list[IntentUpdate], social_biases: dict[GoalType, float]) -> None:
-        """Phase 2: Internal State. Project-specific appraisal and Emotional influence."""
+    def _strategic_appraisal_phase(self, actor: Entity, snapshot: Snapshot, updates: list[IntentUpdate]) -> str | None:
+        """Phase 1 Stage 7: Macro-Interest (Strategic). Evaluate durable projects and high-salience concerns."""
+        strat_up = StrategicEvaluatorService.evaluate(actor, snapshot, snapshot.tick)
+        
+        if strat_up:
+            updates.append(strat_up)
+            # Use the new objective if specified, else stick with current
+            return strat_up.current_objective_id or actor.mind.strategic.current_objective_id
+            
+        return actor.mind.strategic.current_objective_id
+
+    def _memory_appraisal_phase(self, ctx: AIContext, updates: list[IntentUpdate], social_biases: dict[GoalType, float], strategic_objective_id: str | None = None) -> None:
+        """Phase 1 Stage 8: Internal State (Strategic Knowledge). Project-specific appraisal and Emotional influence."""
         from src.actions.base import (
             PerceptionUpdate, MindUpdate, NavigationUpdate, ProgressionUpdate
         )
@@ -323,11 +340,6 @@ class AIBrain:
             # Biological/Routine Biases
             from src.core.logic.routine_service import RoutineService
             routine_biases = RoutineService.calculate_routine_biases(actor, snapshot.hour, snapshot.tick)
-            for gtype, weight in routine_biases.items():
-                biases[gtype] *= weight
-                if weight > 1.2:
-                    driver_details.append(DecisionDriver(kind="biological", label=f"Routine: {gtype.name}", weight=weight))
-            
             # 10. Group Coordination Biases (Phase 3 Stage 4)
             for gid, group in snapshot.group_registry.items():
                 if actor.id in group.member_ids:
@@ -356,6 +368,40 @@ class AIBrain:
                                 ))
                     break
             
+            # 11. Strategic Objective Biasing (Phase 2 Stage 4)
+            if strategic_objective_id:
+                # Find the objective record in the actor's strategic state
+                # Note: This is an authoritative bias. If an objective is chosen, 
+                # we strongly push the utility toward resolving it.
+                strat = actor.mind.strategic
+                
+                # Biasing logic: Map ObjectiveID keywords to GoalType
+                # This is a simplified keyword-based mapping for Stage 4
+                obj_label = strategic_objective_id.lower()
+                
+                if "food" in obj_label or "eat" in obj_label or "needs" in obj_label:
+                    biases[GoalType.EAT] *= 5.0
+                    biases[GoalType.SLEEP] *= 5.0
+                    biases[GoalType.REST] *= 5.0
+                    driver_details.append(DecisionDriver(
+                        kind="strategic", label=f"Objective: {strategic_objective_id}", weight=5.0
+                    ))
+                elif "clear" in obj_label or "kill" in obj_label:
+                    biases[GoalType.COMBAT] *= 3.0
+                    driver_details.append(DecisionDriver(
+                        kind="strategic", label=f"Objective: {strategic_objective_id}", weight=3.0
+                    ))
+                elif "explore" in obj_label or "visit" in obj_label:
+                    biases[GoalType.EXPLORE] *= 2.5
+                    driver_details.append(DecisionDriver(
+                        kind="strategic", label=f"Objective: {strategic_objective_id}", weight=2.5
+                    ))
+                elif "investigate" in obj_label or (strat.current_objective and strat.current_objective.kind == ObjectiveKind.INVESTIGATE):
+                    biases[GoalType.INVESTIGATE] *= 4.0
+                    driver_details.append(DecisionDriver(
+                        kind="strategic", label=f"Objective: {strategic_objective_id}", weight=4.0
+                    ))
+
             updates.append(MindUpdate(
                 motives=updated_motives,
                 motive_utility_biases=biases,

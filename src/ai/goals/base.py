@@ -355,6 +355,11 @@ class GoalEvaluator:
         return scores
 
     def is_goal_locked(self, ctx: AIContext) -> bool:
+        """Check if the current goal should be held to prevent flip-flopping."""
+        # Never lock IDLE state; we always want to find a goal.
+        if ctx.actor.mind.decision.ai_state == AIState.IDLE:
+            return False
+
         min_ticks = getattr(ctx.config, 'min_commitment_ticks', 3)
         committed_at = ctx.actor.mind.decision.goal_committed_at
         ticks_held = ctx.snapshot.tick - committed_at

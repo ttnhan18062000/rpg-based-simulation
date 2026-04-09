@@ -283,6 +283,51 @@ class ReputationUpdate(IntentUpdate):
     tags_add: list[str] = Field(default_factory=list)
     tags_remove: list[str] = Field(default_factory=list)
 
+class StrategicUpdate(IntentUpdate):
+    """Updates to the entity's Strategic stratum. [PHASE 1]"""
+    directives_add: list[DirectiveRecord] = Field(default_factory=list)
+    directives_remove: list[str] = Field(default_factory=list)
+    
+    projects_add_or_update: list[ProjectRecord] = Field(default_factory=list)
+    projects_remove: list[str] = Field(default_factory=list)
+    
+    concerns_add_or_update: list[ConcernRecord] = Field(default_factory=list)
+    concerns_remove: list[str] = Field(default_factory=list)
+    
+    obligations_add_or_update: list[ObligationRecord] = Field(default_factory=list)
+    obligations_remove: list[str] = Field(default_factory=list)
+    
+    contracts_add_or_update: list[SocialContractRecord] = Field(default_factory=list)
+    contracts_remove: list[str] = Field(default_factory=list)
+    
+    leads_add_or_update: list[LeadRecord] = Field(default_factory=list)
+    leads_remove: list[str] = Field(default_factory=list)
+    
+    current_project_id: str | None = None
+    current_objective_id: str | None = None
+    interrupted_project_id: str | None = None
+
+    @model_validator(mode="after")
+    def _coerce_strategic(self) -> "StrategicUpdate":
+        """Force coercion of strategic records if they came in as dicts."""
+        from src.core.models.strategy import (
+            DirectiveRecord, ProjectRecord, ConcernRecord, 
+            ObligationRecord, SocialContractRecord, LeadRecord
+        )
+        if self.directives_add:
+            self.directives_add = [DirectiveRecord.model_validate(d) if isinstance(d, dict) else d for d in self.directives_add]
+        if self.projects_add_or_update:
+            self.projects_add_or_update = [ProjectRecord.model_validate(p) if isinstance(p, dict) else p for p in self.projects_add_or_update]
+        if self.concerns_add_or_update:
+            self.concerns_add_or_update = [ConcernRecord.model_validate(c) if isinstance(c, dict) else c for c in self.concerns_add_or_update]
+        if self.obligations_add_or_update:
+            self.obligations_add_or_update = [ObligationRecord.model_validate(o) if isinstance(o, dict) else o for o in self.obligations_add_or_update]
+        if self.contracts_add_or_update:
+            self.contracts_add_or_update = [SocialContractRecord.model_validate(s) if isinstance(s, dict) else s for s in self.contracts_add_or_update]
+        if self.leads_add_or_update:
+            self.leads_add_or_update = [LeadRecord.model_validate(l) if isinstance(l, dict) else l for l in self.leads_add_or_update]
+        return self
+
 
 class WorldUpdate(IntentUpdate):
     """Authoritative updates to global world state (Corpses, Idents, Spawns). [AOA STABILIZATION]"""
@@ -318,6 +363,12 @@ def _rebuild_action_models():
     from src.core.effects import StatusEffect
     from src.core.gameplay.effects import EffectType
     
+    # Strategic Components (needed for StrategicUpdate) [PHASE 1]
+    from src.core.models.strategy import (
+        DirectiveRecord, ProjectRecord, ConcernRecord, 
+        ObligationRecord, SocialContractRecord, LeadRecord
+    )
+    
     # Create a unified namespace for Pydantic to resolve string forward references
     ns = locals().copy()
     # Also include the module's own globals for things like ActionProposal, etc.
@@ -335,6 +386,7 @@ def _rebuild_action_models():
     SocialUpdate.model_rebuild(_types_namespace=ns)
     ReputationUpdate.model_rebuild(_types_namespace=ns)
     RoutineUpdate.model_rebuild(_types_namespace=ns)
+    StrategicUpdate.model_rebuild(_types_namespace=ns)
     CombatTraceUpdate.model_rebuild(_types_namespace=ns)
     
     # 2. Finalize Aggregate Models

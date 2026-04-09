@@ -151,7 +151,10 @@ class ActionSystem(System):
     @classmethod
     def _apply_updates(cls, world: WorldState, actor: Entity, updates: list[IntentUpdate], proposal: ActionProposal) -> None:
         """Apply typed simulation side-effects (AOA Phase 5)."""
-        from src.actions.base import MindUpdate, PerceptionUpdate, ProgressionUpdate, NavigationUpdate, SocialUpdate, RoutineUpdate
+        from src.actions.base import (
+            MindUpdate, PerceptionUpdate, ProgressionUpdate, NavigationUpdate, 
+            SocialUpdate, RoutineUpdate, StrategicUpdate
+        )
         
         for up in updates:
             # Stage 5: Multi-entity update support
@@ -449,6 +452,84 @@ class ActionSystem(System):
                         # Emit a NEW update to the same entity (the one perceiving the change)
                         # Note: We append to 'updates' so the current loop picks it up immediately.
                         updates.append(PerceptionUpdate(memory_log_add=[entry]))
+
+            elif isinstance(up, StrategicUpdate):
+                strat = entity.mind.strategic
+                
+                # Phase 1 Stage 4: Deterministic Merging by ID
+                if up.directives_add:
+                    for d in up.directives_add:
+                        found = False
+                        for i, existing in enumerate(strat.directives):
+                            if existing.directive_id == d.directive_id:
+                                strat.directives[i] = d
+                                found = True
+                                break
+                        if not found:
+                            strat.directives.append(d)
+                if up.directives_remove:
+                    strat.directives = [d for d in strat.directives if d.directive_id not in up.directives_remove]
+                
+                if up.projects_add_or_update:
+                    for prj in up.projects_add_or_update:
+                        found = False
+                        for i, existing in enumerate(strat.projects):
+                            if existing.project_id == prj.project_id:
+                                strat.projects[i] = prj
+                                found = True
+                                break
+                        if not found:
+                            strat.projects.append(prj)
+                if up.projects_remove:
+                    strat.projects = [prj for prj in strat.projects if prj.project_id not in up.projects_remove]
+                
+                if up.concerns_add_or_update:
+                    for c in up.concerns_add_or_update:
+                        found = False
+                        for i, existing in enumerate(strat.concerns):
+                            if existing.concern_id == c.concern_id:
+                                strat.concerns[i] = c
+                                found = True
+                                break
+                        if not found:
+                            strat.concerns.append(c)
+                if up.concerns_remove:
+                    strat.concerns = [c for c in strat.concerns if c.concern_id not in up.concerns_remove]
+                
+                if up.obligations_add_or_update:
+                    for o in up.obligations_add_or_update:
+                        found = False
+                        for i, existing in enumerate(strat.obligations):
+                            if existing.obligation_id == o.obligation_id:
+                                strat.obligations[i] = o
+                                found = True
+                                break
+                        if not found:
+                            strat.obligations.append(o)
+                if up.obligations_remove:
+                    strat.obligations = [o for o in strat.obligations if o.obligation_id not in up.obligations_remove]
+                
+                if up.contracts_add_or_update:
+                    for ct in up.contracts_add_or_update:
+                        found = False
+                        for i, existing in enumerate(strat.contracts):
+                            if existing.contract_id == ct.contract_id:
+                                strat.contracts[i] = ct
+                                found = True
+                                break
+                        if not found:
+                            strat.contracts.append(ct)
+                if up.contracts_remove:
+                    strat.contracts = [ct for ct in strat.contracts if ct.contract_id not in up.contracts_remove]
+                
+                if up.current_project_id is not None:
+                    strat.current_project_id = up.current_project_id
+                if up.current_objective_id is not None:
+                    strat.current_objective_id = up.current_objective_id
+                if up.interrupted_project_id is not None:
+                    strat.interrupted_project_id = up.interrupted_project_id
+                
+                strat.last_strategic_tick = world.tick
 
             elif isinstance(up, RoutineUpdate):
                 # Phase 3: Biological State Transitions

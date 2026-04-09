@@ -280,3 +280,42 @@ class ExhaustedHandler(StateHandler):
             verb=ActionType.REST,
             reason="EXHAUSTED: Recovering stamina..."
         )
+
+
+class InvestigateHandler(StateHandler):
+    """Handles movement toward a strategic lead. [PHASE 3]
+    
+    If the target is reached, the lead is 'resolved' (clearing the objective).
+    """
+    def handle(self, ctx: AIContext) -> tuple[AIState, ActionProposal]:
+        from src.core.models.strategy import ObjectiveKind
+        from src.actions.base import StrategicUpdate
+        
+        actor, snapshot = ctx.actor, ctx.snapshot
+        cleanup = get_perception_cleanup_update(actor, snapshot)
+        final_updates = [cleanup] if cleanup else []
+
+        obj = actor.mind.strategic.current_objective
+        if not obj or obj.kind != ObjectiveKind.INVESTIGATE or not obj.target_pos:
+            return AIState.WANDER, ActionProposal(
+                actor_id=actor.id, verb=ActionType.REST,
+                reason="No valid investigation objective → wander",
+                updates=final_updates)
+
+        target = Vector2(x=obj.target_pos.x, y=obj.target_pos.y)
+        dist = actor.spatial.pos.manhattan(target)
+
+        # 1. Resolve Lead on arrival
+        if dist == 0:
+            # Authoritatively clear the objective via StrategicUpdate
+            final_updates.append(StrategicUpdate(current_objective_id="")) 
+            
+            return AIState.WANDER, ActionProposal(
+                actor_id=actor.id, verb=ActionType.REST,
+                reason="Strategic lead investigated → clearing objective",
+                updates=final_updates)
+
+        # 2. Tactical Movement
+        return AIState.INVESTIGATING, propose_move_toward(
+            actor, target, snapshot, "Moving to investigate strategic lead",
+            updates=final_updates)

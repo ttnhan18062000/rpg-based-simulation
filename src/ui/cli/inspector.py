@@ -207,6 +207,66 @@ class EntityInspector:
             print(f"{tp.tick:<6} | {kind_name:<15} | {tp.salience_score:>8.2f} | {tp.emotional_impact:>6.2f}")
 
     @staticmethod
+    def render_strategic_domain(entity: "Entity"):
+        """Display long-term intent, directives, and ongoing projects. [PHASE 1-2 UPDATED]"""
+        strat = entity.mind.strategic
+        EntityInspector.print_header("STRATEGIC DOMAIN (PLAN & COMMITMENT)")
+        
+        # 1. Active Objective (The Bridge)
+        obj_id = strat.current_objective_id or "NONE"
+        obj_color = "\033[92m" # Default Green
+        interruption_tag = ""
+        
+        # Heuristic for interruption (Phase 2)
+        if obj_id == "obj_satisfy_needs":
+            obj_color = "\033[91m" # Red for interruption
+            interruption_tag = " \033[1;91m[INTERRUPTION]\033[0m"
+        
+        print(f"  \033[1mCurrent Objective\033[0m: {obj_color}{obj_id}\033[0m{interruption_tag}")
+        
+        # 2. Projects
+        if strat.projects:
+            print(f"\n  \033[96m◈ Active Projects ({len(strat.projects)})\033[0m")
+            current_id = strat.current_project_id
+            for p in strat.projects:
+                status_chip = "\033[92m[ACTIVE]\033[0m" if p.project_id == current_id else "[IDLE]"
+                project_name = f"\033[1m{p.label}\033[0m"
+                reason = p.metadata.get("reason", "")
+                reason_str = f" \033[90m({reason})\033[0m" if reason else ""
+                print(f"    {status_chip} {p.project_id:20} | {project_name}{reason_str}")
+                if p.project_id == current_id:
+                    # Find the active objective label
+                    obj_label = "No labeled objective"
+                    for obj in p.objectives:
+                        if obj.objective_id == strat.current_objective_id:
+                            obj_label = obj.label
+                            break
+                    print(f"      \033[90m↳ Objective: {strat.current_objective_id} ({obj_label})\033[0m")
+        else:
+            print("\n  - No active projects.")
+            
+        # 3. Directives
+        if strat.directives:
+            print(f"\n  \033[93m◈ Directives ({len(strat.directives)})\033[0m")
+            for d in strat.directives:
+                kind_str = f"[{d.kind.name}]"
+                print(f"    - {kind_str:15} | {d.label}")
+        else:
+            print("\n  - No active directives.")
+            
+        # 4. Concerns/Blockers
+        if strat.concerns:
+            print(f"\n  \033[91m◈ Active Concerns ({len(strat.concerns)})\033[0m")
+            for c in strat.concerns:
+                urgency = "\033[91m(!)\033[0m" if c.priority > 4.0 else "   "
+                print(f"    {urgency} {c.label:30} | Priority: {c.priority:.2f}")
+        
+        # 5. Obligations/Contracts (Summary)
+        total_obs = len(strat.obligations) + len(strat.contracts)
+        if total_obs > 0:
+            print(f"\n  ◈ Obligations: {len(strat.obligations)} | Contracts: {len(strat.contracts)}")
+
+    @staticmethod
     def inspect_full(entity: "Entity", registry: "SocialRegistry"):
         """Run all inspection modules."""
         print("\033[1m" + "="*80)
@@ -217,10 +277,11 @@ class EntityInspector:
         EntityInspector.print_field("Level", f"{entity.progression.level} {entity.identity.tier}")
         EntityInspector.print_field("Position", f"X:{entity.spatial.pos.x:.1f}, Y:{entity.spatial.pos.y:.1f}")
         EntityInspector.print_field("HP", f"{entity.combat.hp}/{entity.combat.max_hp}")
-        EntityInspector.print_field("AI State", entity.mind.decision.ai_state.name)
+        EntityInspector.print_field("AI State", f"{entity.mind.decision.ai_state.name} \033[90m({entity.mind.strategic.current_objective_id or 'No Objective'})\033[0m")
         
         EntityInspector.render_biological_needs(entity)
         EntityInspector.render_personality(entity)
+        EntityInspector.render_strategic_domain(entity)
         EntityInspector.render_public_reputation(entity)
         EntityInspector.render_likely_choices(entity)
         EntityInspector.render_social_bonds(entity, registry)

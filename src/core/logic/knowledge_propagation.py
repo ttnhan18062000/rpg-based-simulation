@@ -25,52 +25,69 @@ class KnowledgePropagationService:
         sharer: Entity, 
         recipient: Entity, 
         world: WorldState
-    ) -> PerceptionUpdate | None:
-        """Shares high-salience beliefs from sharer to recipient.
+    ) -> tuple[PerceptionUpdate | None, StrategicUpdate | None]:
+        """Shares high-salience beliefs and strategic leads from sharer to recipient.
         
-        AOA: Returns a PerceptionUpdate for the recipient. 
-        Higher trust between sharer/recipient increases the confidence of shared info.
+        AOA: Returns updates for the recipient. 
         """
-        from src.actions.base import PerceptionUpdate
+        from src.actions.base import PerceptionUpdate, StrategicUpdate
         
-        # 1. Identify high-salience targets in sharer's memory
-        sharer_memory = sharer.mind.perception.entity_memory
-        if not sharer_memory:
-            return None
-            
-        # Select top 3 most salient/recent beliefs to share
-        potential_targets = sorted(
-            sharer_memory.keys(),
-            key=lambda eid: sharer_memory[eid].confidence * sharer_memory[eid].directness,
-            reverse=True
-        )[:5] # Check a few more to filter by distance
-        
-        updates = {}
-        for target_id in potential_targets:
-            if target_id == recipient.id:
-                continue
-            
-            belief = sharer_memory[target_id]
-            # Regional Bound: Only share if target is within 50 units of the interaction 
-            # OR if it's very salient (e.g. World Boss or Hero) [PHASE 2]
-            dist = sharer.spatial.pos.manhattan(belief.pos)
-            if dist > 50:
-                # Calculate "fame" / "salience" factor
-                is_hero = belief.apparent_role == "hero"
-                is_boss = belief.apparent_role == "world_boss"
-                if not (is_hero or is_boss):
-                    continue
+        perception_up = None
+        strategic_up = None
 
-            indirect_belief = BeliefService.share_knowledge(sharer, recipient, target_id, world.tick)
-            if indirect_belief:
-                updates[target_id] = indirect_belief
-                if len(updates) >= 3:
-                     break
-                
-        if not updates:
-            return None
+        # 1. Share entity beliefs (Existing)
+        sharer_memory = sharer.mind.perception.entity_memory
+        if sharer_memory:
+            potential_targets = sorted(
+                sharer_memory.keys(),
+                key=lambda eid: sharer_memory[eid].confidence * sharer_memory[eid].directness,
+                reverse=True
+            )[:5]
             
-        return PerceptionUpdate(target_id=recipient.id, entity_memory=updates)
+            p_updates = {}
+            for target_id in potential_targets:
+                if target_id == recipient.id:
+                    continue
+                
+                belief = sharer_memory[target_id]
+                dist = sharer.spatial.pos.manhattan(belief.pos)
+                if dist > 50:
+                    is_hero = belief.apparent_role == "hero"
+                    is_boss = belief.apparent_role == "world_boss"
+                    if not (is_hero or is_boss):
+                        continue
+
+                indirect_belief = BeliefService.share_knowledge(sharer, recipient, target_id, world.tick)
+                if indirect_belief:
+                    p_updates[target_id] = indirect_belief
+                    if len(p_updates) >= 3:
+                         break
+            
+            if p_updates:
+                perception_up = PerceptionUpdate(target_id=recipient.id, entity_memory=p_updates)
+
+        # 2. Share Strategic Leads (Phase 3)
+        sharer_leads = sharer.mind.strategic.leads
+        if sharer_leads:
+            # Pick a lead to share if it matches the recipient's need or is generally interesting
+            # (Heuristic: Share the highest confidence lead that isn't exhausted)
+            potential_leads = sorted(
+                [l for l in sharer_leads if not l.is_exhausted],
+                key=lambda l: l.confidence,
+                reverse=True
+            )
+            
+            if potential_leads:
+                lead_to_share = potential_leads[0]
+                # Filter leads already known by recipient
+                existing = next((l for l in recipient.mind.strategic.leads if l.label == lead_to_share.label), None)
+                if not existing or (lead_to_share.confidence > existing.confidence):
+                    strategic_up = StrategicUpdate(
+                        target_id=recipient.id,
+                        leads_add_or_update=[lead_to_share]
+                    )
+
+        return perception_up, strategic_up
 
     @staticmethod
     def sync_faction_standing(

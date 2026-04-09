@@ -11,6 +11,7 @@ from src.core.gameplay.faction import Faction
 from src.core.world.monuments import Monument
 from src.core.models.history import HistoricalEvent, EventKind # [PHASE 4]
 from src.core.models.continuity import SuccessorRecord # [PHASE 4]
+from src.core.models.strategy import DirectiveKind # [PHASE 1 STAGE 13]
 
 logger = logging.getLogger(__name__)
 
@@ -253,6 +254,10 @@ class HeroLifecycleSystem(System):
                 household.related_event_ids.append(event_id)
             
             # Create Successor Record
+            legacy_directives = [
+                d.model_dump() for d in entity.mind.strategic.directives 
+                if d.kind in (DirectiveKind.PERSONAL, DirectiveKind.FACTIONAL)
+            ]
             successor_rec = SuccessorRecord(
                 source_entity_id=entity.id,
                 household_id=h_id,
@@ -260,7 +265,8 @@ class HeroLifecycleSystem(System):
                 tick=tick,
                 motive_fragments={
                     "legacy_level": entity.progression.level,
-                    "predecessor_name": entity.identity.display_name
+                    "predecessor_name": entity.identity.display_name,
+                    "directives": legacy_directives # [PHASE 1 STAGE 13]
                 }
             )
             ctx.world.successor_registry[entity.id] = successor_rec
@@ -292,6 +298,15 @@ class HeroLifecycleSystem(System):
                     household.heirloom_ids.extend(heirlooms)
                     logger.info("Tick %d: %d heirlooms transferred to Household %s", 
                                 tick, len(heirlooms), h_id)
+                
+                # Wealth Transfer [PHASE 1 STAGE 13]
+                gold = getattr(entity.progression, "gold", 0)
+                if gold > 0:
+                    legacy_contribution = int(gold * 0.5) # 50% goes to the family
+                    household.legacy_gold += legacy_contribution
+                    entity.progression.gold -= legacy_contribution
+                    logger.info("Tick %d: %d gold moved to Household %s legacy fund.", 
+                                tick, legacy_contribution, h_id)
                 
                 if remaining:
                     ctx.world.drop_items(entity.spatial.pos, remaining)
@@ -423,16 +438,34 @@ class HeroLifecycleSystem(System):
                 # Assign to household member list
                 if household_id and household_id in ctx.world.household_registry:
                     ctx.world.household_registry[household_id].member_ids.add(new_eid)
+                    
+                    # Apply Inherited Directives [PHASE 1 STAGE 13]
+                    inherited_directives = motive_frags.get("directives", [])
+                    if inherited_directives:
+                        from src.core.models.strategy import DirectiveRecord
+                        for d_dict in inherited_directives:
+                            # Soften/Prefix legacy directives
+                            d_dict["label"] = f"Legacy: {d_dict['label']}"
+                            hero.mind.strategic.directives.append(DirectiveRecord.model_validate(d_dict))
+
                     # Inherit heirlooms
                     heirlooms = ctx.world.household_registry[household_id].heirloom_ids
                     if heirlooms:
-                        # Add first 2 heirlooms to inventory if there is room
-                        for hid in heirlooms[:2]:
-                            if hero.inventory.can_add(hid):
-                                hero.inventory.add_item(hid)
-                                hero.inventory.auto_equip_best(hid, h_class)
-                        # Remove from household storage (consumed by heir)
-                        ctx.world.household_registry[household_id].heirloom_ids = heirlooms[2:]
+                        for iid in list(heirlooms):
+                            hero.inventory.add_item(iid)
+                            hero.inventory.auto_equip_best(iid, getattr(hero.progression, "hero_class", 0))
+                        # Note: heirlooms remain in the 'registry' as historical markers but 
+                        # are removed from active household storage once claimed by the heir.
+                        ctx.world.household_registry[household_id].heirloom_ids = []
+
+                    # Starting Stipend from Legacy Wealth [PHASE 1 STAGE 13]
+                    household = ctx.world.household_registry[household_id]
+                    if household.legacy_gold > 100:
+                        stipend = int(household.legacy_gold * 0.1) # 10% of family wealth
+                        household.legacy_gold -= stipend
+                        hero.progression.gold += stipend
+                        logger.info("Tick %d: Successor %d received %d gold legacy stipend.", 
+                                    tick, new_eid, stipend)
 
                 ctx.world.add_entity(hero)
                 hero.inventory.auto_equip_best(gear.get("weapon"), hero.progression.hero_class)

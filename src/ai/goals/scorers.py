@@ -10,6 +10,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 from src.ai.goals.base import GoalScorer
 from src.core.models.enums import AIState, GoalType, Faction
+from src.core.models.strategy import ObjectiveKind
 from src.core.entities.traits import aggregate_trait_stats, aggregate_trait_utility
 from src.core.models.vectors import Vector2
 
@@ -221,3 +222,20 @@ class CorpseScorer(GoalScorer):
     @property
     def target_state(self) -> AIState: return AIState.RECOVER_CORPSE
     def score(self, ctx: AIContext) -> float: return 0.0
+
+# ---------------------------------------------------------------------------
+# Investigation detours [PHASE 3]
+# ---------------------------------------------------------------------------
+
+class InvestigateGoal(GoalScorer):
+    """Utility based on having an active strategic lead/investigation objective."""
+    @property
+    def name(self) -> GoalType: return GoalType.INVESTIGATE
+    @property
+    def target_state(self) -> AIState: return AIState.INVESTIGATING
+    def score(self, ctx: AIContext) -> float:
+        obj = ctx.actor.mind.strategic.current_objective
+        if obj and obj.kind == ObjectiveKind.INVESTIGATE:
+            # High priority detour to resolve uncertainty
+            return 2.5 
+        return 0.0
