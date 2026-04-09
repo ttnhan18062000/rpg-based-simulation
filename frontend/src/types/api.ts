@@ -8,7 +8,31 @@ export interface EntityMemoryEntry {
   atk: number;
   level: number;
   tick: number;
+  tick: number;
   visible: boolean;
+}
+
+export interface SocialBond {
+  target_id: number;
+  target_name: string;
+  trust: number;
+  fear: number;
+  rivalry: number;
+}
+
+export interface RoutineState {
+  sleep_debt: number;
+  hunger_level: number;
+  is_sleeping: boolean;
+  active_hours: string;
+}
+
+export interface MemoryLog {
+  tick: number;
+  type: string;
+  impact: number;
+  message: string;
+  details: Record<string, unknown>;
 }
 
 export interface EntityAttributes {
@@ -166,6 +190,10 @@ export interface Entity {
   // Combat visualization (epic-05)
   weapon_range: number;
   combat_target_id: number | null;
+  // Macro-Interest (Phase 4)
+  routine?: RoutineState | null;
+  social_bonds?: SocialBond[];
+  narrative_history?: MemoryLog[];
 }
 
 export interface EntityEffect {
@@ -201,12 +229,20 @@ export interface Building {
   x: number;
   y: number;
   building_type: string;
-  // Hero house storage (only populated for hero_house type)
   owner_entity_id?: number | null;
+  // Merged dynamic state
   storage_items?: string[];
   storage_used?: number;
   storage_max?: number;
   storage_level?: number;
+}
+
+export interface BuildingState {
+  building_id: string;
+  storage_items: string[];
+  storage_used: number;
+  storage_max: number;
+  storage_level: number;
 }
 
 export interface GroundItem {
@@ -223,10 +259,18 @@ export interface ResourceNode {
   y: number;
   terrain: number;
   yields_item: string;
-  remaining: number;
   max_harvests: number;
-  is_available: boolean;
+  respawn_cooldown: number;
   harvest_ticks: number;
+  // Merged dynamic state
+  remaining?: number;
+  is_available?: boolean;
+}
+
+export interface ResourceNodeState {
+  node_id: number;
+  remaining: number;
+  is_available: boolean;
 }
 
 export interface GameEvent {
@@ -242,6 +286,13 @@ export interface TreasureChest {
   x: number;
   y: number;
   tier: number;
+  // Merged dynamic state
+  looted?: boolean;
+  guard_entity_id?: number | null;
+}
+
+export interface TreasureChestState {
+  chest_id: number;
   looted: boolean;
   guard_entity_id: number | null;
 }
@@ -273,6 +324,10 @@ export interface WorldState {
   selected_entity: Entity | null;
   events: GameEvent[];
   ground_items: GroundItem[];
+  // Dynamic world object state (Audit Point 3)
+  resource_nodes?: ResourceNodeState[];
+  treasure_chests?: TreasureChestState[];
+  buildings?: BuildingState[];
 }
 
 export interface StaticData {

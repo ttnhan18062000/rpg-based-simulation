@@ -7,239 +7,22 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from src.api.dependencies import get_engine_manager
 from src.api.engine_manager import EngineManager
 from src.api.schemas import (
-    AttributeCapSchema,
-    AttributeSchema,
-    BuildingSchema,
-    EffectSchema,
-    EntitySchema,
-    EntitySlimSchema,
-    EventSchema,
-    GroundItemSchema,
-    LocationSchema,
-    QuestSchema,
-    RegionSchema,
-    ResourceNodeSchema,
-    SimulationStats,
-    SkillSchema,
     StaticDataResponse,
-    TreasureChestSchema,
     WorldStateResponse,
+    EntityInspectionSchema,
+    SchedulerTimelineItemSchema,
+    SimulationStats
 )
+from src.api.presenters.world_presenter import WorldPresenter
+
 
 router = APIRouter()
 
 
-def _serialize_attrs(e) -> AttributeSchema | None:
-    if e.attributes is None:
-        return None
-    a = e.attributes
-    return AttributeSchema(
-        str_=a.str_, agi=a.agi, vit=a.vit,
-        int_=a.int_, spi=a.spi, wis=a.wis,
-        end=a.end, per=a.per, cha=a.cha,
-        str_frac=a._str_frac, agi_frac=a._agi_frac, vit_frac=a._vit_frac,
-        int_frac=a._int_frac, spi_frac=a._spi_frac, wis_frac=a._wis_frac,
-        end_frac=a._end_frac, per_frac=a._per_frac, cha_frac=a._cha_frac,
-    )
+
+# --- Standardized serialization logic moved to src.core.models.Entity (epic-05) ---
 
 
-def _serialize_caps(e) -> AttributeCapSchema | None:
-    if e.attribute_caps is None:
-        return None
-    c = e.attribute_caps
-    return AttributeCapSchema(
-        str_cap=c.str_cap, agi_cap=c.agi_cap, vit_cap=c.vit_cap,
-        int_cap=c.int_cap, spi_cap=c.spi_cap, wis_cap=c.wis_cap,
-        end_cap=c.end_cap, per_cap=c.per_cap, cha_cap=c.cha_cap,
-    )
-
-
-def _serialize_hero_class(e) -> str:
-    from src.core.classes import HeroClass
-    try:
-        return HeroClass(e.hero_class).name.lower()
-    except (ValueError, KeyError):
-        return "none"
-
-
-# Skills that deal magical damage (use MATK instead of ATK)
-_MAGICAL_SKILLS = frozenset({
-    "arcane_bolt", "frost_shield", "mana_surge", "drain_life",
-})
-
-# Skill → element mapping (skills not listed default to NONE)
-_SKILL_ELEMENTS: dict[str, str] = {
-    "frost_shield": "ice",
-    "arcane_bolt": "none",  # pure arcane, no element
-    "drain_life": "dark",
-    "poison_blade": "dark",
-}
-
-
-def _speed_delay(e, action: str) -> float:
-    """Compute speed delay for an entity and action type."""
-    from src.core.attributes import speed_delay
-    isp = e.stats.interaction_speed if action in ("loot", "harvest", "use_item", "rest") else 1.0
-    return round(speed_delay(e.effective_spd(), action, isp), 3)
-
-
-def _elem_dmg(e):
-    """Return aggregated elemental damage multipliers from traits."""
-    from src.core.traits import TraitStatModifiers, aggregate_trait_stats
-    if not e.traits:
-        return TraitStatModifiers()
-    return aggregate_trait_stats(e.traits)
-
-
-def _get_weapon_range(e) -> int:
-    """Get weapon range from entity's equipped weapon. Default 1 (melee)."""
-    from src.core.items import ITEM_REGISTRY
-    if e.inventory and e.inventory.weapon:
-        tmpl = ITEM_REGISTRY.get(e.inventory.weapon)
-        if tmpl:
-            return tmpl.weapon_range
-    return 1
-
-
-def _serialize_skills(e) -> list[SkillSchema]:
-    from src.core.classes import SKILL_DEFS
-    result = []
-    for si in e.skills:
-        sdef = SKILL_DEFS.get(si.skill_id)
-        dmg_type = "magical" if si.skill_id in _MAGICAL_SKILLS else "physical"
-        element = _SKILL_ELEMENTS.get(si.skill_id, "none")
-        result.append(SkillSchema(
-            skill_id=si.skill_id,
-            name=sdef.name if sdef else si.skill_id,
-            cooldown_remaining=si.cooldown_remaining,
-            mastery=si.mastery,
-            times_used=si.times_used,
-            skill_type=sdef.skill_type.name.lower() if sdef else "active",
-            target=sdef.target.name.lower() if sdef else "self",
-            stamina_cost=si.effective_stamina_cost(sdef.stamina_cost) if sdef else 0,
-            cooldown=si.effective_cooldown(sdef.cooldown) if sdef else 0,
-            power=si.effective_power(sdef.power) if sdef else 1.0,
-            description=sdef.description if sdef else "",
-            damage_type=dmg_type,
-            element=element,
-        ))
-    return result
-
-
-def _serialize_full_entity(e, manager: EngineManager) -> EntitySchema:
-    """Full entity serialization for the selected/inspected entity."""
-    return EntitySchema(
-        id=e.id,
-        kind=e.kind,
-        x=e.pos.x,
-        y=e.pos.y,
-        hp=e.stats.hp,
-        max_hp=e.stats.max_hp,
-        atk=e.effective_atk(),
-        def_=e.effective_def(),
-        spd=e.effective_spd(),
-        luck=e.stats.luck,
-        crit_rate=e.effective_crit_rate(),
-        evasion=e.effective_evasion(),
-        matk=e.effective_matk(),
-        mdef=e.effective_mdef(),
-        level=e.stats.level,
-        xp=e.stats.xp,
-        xp_to_next=e.stats.xp_to_next,
-        gold=e.stats.gold,
-        tier=e.tier,
-        faction=e.faction.name.lower(),
-        state=e.ai_state.name,
-        weapon=e.inventory.weapon if e.inventory else None,
-        armor=e.inventory.armor if e.inventory else None,
-        accessory=e.inventory.accessory if e.inventory else None,
-        inventory_count=e.inventory.used_slots if e.inventory else 0,
-        inventory_max_slots=e.inventory.max_slots if e.inventory else 0,
-        inventory_items=list(e.inventory.items) if e.inventory else [],
-        inventory_weight=round(e.inventory.current_weight, 1) if e.inventory else 0.0,
-        inventory_max_weight=e.inventory.max_weight if e.inventory else 0.0,
-        vision_range=e.stats.vision_range,
-        terrain_memory={f"{k[0]},{k[1]}": v for k, v in e.terrain_memory.items()},
-        entity_memory=list(e.entity_memory),
-        goals=list(e.goals),
-        loot_progress=e.loot_progress,
-        loot_duration=manager.config.loot_duration,
-        known_recipes=list(e.known_recipes),
-        craft_target=e.craft_target,
-        stamina=e.stats.stamina,
-        max_stamina=e.stats.max_stamina,
-        attributes=_serialize_attrs(e),
-        attribute_caps=_serialize_caps(e),
-        hero_class=_serialize_hero_class(e),
-        skills=_serialize_skills(e),
-        class_mastery=e.class_mastery,
-        active_effects=[
-            EffectSchema(
-                effect_type=eff.effect_type.name,
-                source=eff.source,
-                remaining_ticks=eff.remaining_ticks,
-                atk_mult=eff.atk_mult,
-                def_mult=eff.def_mult,
-                spd_mult=eff.spd_mult,
-                crit_mult=eff.crit_mult,
-                evasion_mult=eff.evasion_mult,
-                hp_per_tick=eff.hp_per_tick,
-            )
-            for eff in e.effects
-            if not eff.expired
-        ],
-        base_atk=e.stats.atk,
-        base_def=e.stats.def_,
-        base_spd=e.stats.spd,
-        base_matk=e.stats.matk,
-        base_mdef=e.stats.mdef,
-        base_crit_rate=e.stats.crit_rate,
-        base_evasion=e.stats.evasion,
-        hp_regen=e.stats.hp_regen,
-        cooldown_reduction=e.stats.cooldown_reduction,
-        loot_bonus=e.stats.loot_bonus,
-        trade_bonus=e.stats.trade_bonus,
-        interaction_speed=e.stats.interaction_speed,
-        rest_efficiency=e.stats.rest_efficiency,
-        speed_delay_move=_speed_delay(e, "move"),
-        speed_delay_attack=_speed_delay(e, "attack"),
-        speed_delay_skill=_speed_delay(e, "skill"),
-        speed_delay_harvest=_speed_delay(e, "harvest"),
-        fire_dmg_mult=_elem_dmg(e).fire_dmg_mult,
-        ice_dmg_mult=_elem_dmg(e).ice_dmg_mult,
-        lightning_dmg_mult=_elem_dmg(e).lightning_dmg_mult,
-        dark_dmg_mult=_elem_dmg(e).dark_dmg_mult,
-        elem_vuln_fire=e.stats.elem_vuln.get(1, 1.0),
-        elem_vuln_ice=e.stats.elem_vuln.get(2, 1.0),
-        elem_vuln_lightning=e.stats.elem_vuln.get(3, 1.0),
-        elem_vuln_dark=e.stats.elem_vuln.get(4, 1.0),
-        region_id=e.region_id,
-        difficulty_tier=e.difficulty_tier,
-        current_region_id=e.current_region_id,
-        weapon_range=_get_weapon_range(e),
-        combat_target_id=e.combat_target_id,
-        traits=list(e.traits),
-        home_storage_used=e.home_storage.used_slots if e.home_storage else 0,
-        home_storage_max=e.home_storage.max_slots if e.home_storage else 0,
-        home_storage_level=e.home_storage.level if e.home_storage else 0,
-        quests=[
-            QuestSchema(
-                quest_id=q.quest_id,
-                quest_type=q.quest_type.name,
-                title=q.title,
-                description=q.description,
-                target_kind=q.target_kind,
-                target_x=q.target_pos.x if q.target_pos else None,
-                target_y=q.target_pos.y if q.target_pos else None,
-                target_count=q.target_count,
-                progress=q.progress,
-                completed=q.completed,
-                gold_reward=q.gold_reward,
-                xp_reward=q.xp_reward,
-            )
-            for q in e.quests
-        ],
-    )
 
 
 @router.get("/state", response_model=WorldStateResponse)
@@ -252,139 +35,56 @@ def get_state(
     if snapshot is None:
         raise HTTPException(status_code=503, detail="No snapshot available yet.")
 
-    # Slim entities for all alive entities (minimal fields for rendering)
-    slim_entities: list[EntitySlimSchema] = []
-    selected_entity: EntitySchema | None = None
+    # 1. Fetch relevant events
+    events = manager.event_log.since_tick(since_tick)
 
-    for e in snapshot.entities.values():
-        if not e.alive:
-            continue
-        slim_entities.append(EntitySlimSchema(
-            id=e.id,
-            kind=e.kind,
-            x=e.pos.x,
-            y=e.pos.y,
-            hp=e.stats.hp,
-            max_hp=e.stats.max_hp,
-            state=e.ai_state.name,
-            level=e.stats.level,
-            tier=e.tier,
-            faction=e.faction.name.lower(),
-            weapon_range=_get_weapon_range(e),
-            combat_target_id=e.combat_target_id,
-            loot_progress=e.loot_progress,
-            loot_duration=manager.config.loot_duration,
-        ))
-        # Full details only for the selected entity
-        if e.id == selected:
-            selected_entity = _serialize_full_entity(e, manager)
-
-    events = [
-        EventSchema(tick=ev.tick, category=ev.category, message=ev.message,
-                    entity_ids=list(ev.entity_ids), metadata=ev.metadata)
-        for ev in manager.event_log.since_tick(since_tick)
-    ]
-
-    ground_items = [
-        GroundItemSchema(x=x, y=y, items=list(items))
-        for (x, y), items in snapshot.ground_items.items()
-        if items
-    ]
-
-    return WorldStateResponse(
-        tick=snapshot.tick,
-        alive_count=len(slim_entities),
-        entities=slim_entities,
-        selected_entity=selected_entity,
-        events=events,
-        ground_items=ground_items,
+    # 2. Present World State (Unified Presentation Layer)
+    return WorldPresenter.to_world_state_response(
+        snapshot, 
+        events, 
+        selected_id=selected if selected != -1 else None,
+        loot_duration=manager.config.loot_duration
     )
 
+
+@router.get("/inspect/{entity_id}", response_model=EntityInspectionSchema)
+def inspect_entity(
+    entity_id: int,
+    manager: EngineManager = Depends(get_engine_manager),
+) -> EntityInspectionSchema:
+    snapshot = manager.get_snapshot()
+    if snapshot is None:
+        raise HTTPException(status_code=503, detail="No snapshot available yet.")
+    
+    entity = snapshot.entities.get(entity_id)
+    if not entity:
+        raise HTTPException(status_code=404, detail=f"Entity {entity_id} not found.")
+        
+    from src.api.presenters.entity_presenter import EntityPresenter
+    registry = getattr(snapshot, "social_registry", None)
+    return EntityPresenter.to_inspection_schema(entity, manager.config.loot_duration, registry, snapshot)
+
+@router.get("/timeline", response_model=list[SchedulerTimelineItemSchema])
+def get_timeline(
+    limit: int = Query(20, ge=1, le=100),
+    manager: EngineManager = Depends(get_engine_manager),
+) -> list[SchedulerTimelineItemSchema]:
+    snapshot = manager.get_snapshot()
+    if snapshot is None:
+        return []
+        
+    from src.api.presenters.scheduler_presenter import SchedulerPresenter
+    return SchedulerPresenter.get_timeline(snapshot, limit)
 
 @router.get("/static", response_model=StaticDataResponse)
 def get_static(
     manager: EngineManager = Depends(get_engine_manager),
 ) -> StaticDataResponse:
     """Static world data — buildings, resource nodes, regions, chests. Fetch once."""
-    snapshot = manager.get_snapshot()
-    if snapshot is None:
-        raise HTTPException(status_code=503, detail="No snapshot available yet.")
-
-    buildings = []
-    for b in snapshot.buildings:
-        bs = BuildingSchema(
-            building_id=b.building_id, name=b.name,
-            x=b.pos.x, y=b.pos.y, building_type=b.building_type,
-        )
-        if b.building_type == "hero_house" and b.building_id.startswith("hero_house_"):
-            try:
-                owner_id = int(b.building_id.split("_")[-1])
-                owner = snapshot.entities.get(owner_id)
-                if owner and owner.home_storage:
-                    hs = owner.home_storage
-                    bs = BuildingSchema(
-                        building_id=b.building_id, name=b.name,
-                        x=b.pos.x, y=b.pos.y, building_type=b.building_type,
-                        owner_entity_id=owner_id,
-                        storage_items=list(hs.items),
-                        storage_used=hs.used_slots,
-                        storage_max=hs.max_slots,
-                        storage_level=hs.level,
-                    )
-            except (ValueError, IndexError):
-                pass
-        buildings.append(bs)
-
-    resource_nodes = [
-        ResourceNodeSchema(
-            node_id=n.node_id, resource_type=n.resource_type, name=n.name,
-            x=n.pos.x, y=n.pos.y, terrain=int(n.terrain),
-            yields_item=n.yields_item, remaining=n.remaining,
-            max_harvests=n.max_harvests, is_available=n.is_available,
-            harvest_ticks=n.harvest_ticks,
-        )
-        for n in snapshot.resource_nodes
-    ]
-
-    treasure_chests = []
-    if hasattr(snapshot, 'treasure_chests'):
-        treasure_chests = [
-            TreasureChestSchema(
-                chest_id=c.chest_id, x=c.pos.x, y=c.pos.y,
-                tier=c.tier, looted=c.looted,
-                guard_entity_id=c.guard_entity_id,
-            )
-            for c in snapshot.treasure_chests
-        ]
-
-    regions = []
-    if hasattr(snapshot, 'regions'):
-        regions = [
-            RegionSchema(
-                region_id=r.region_id, name=r.name,
-                terrain=int(r.terrain),
-                center_x=r.center.x, center_y=r.center.y,
-                radius=r.radius, difficulty=r.difficulty,
-                locations=[
-                    LocationSchema(
-                        location_id=loc.location_id, name=loc.name,
-                        location_type=loc.location_type,
-                        x=loc.pos.x, y=loc.pos.y,
-                        region_id=loc.region_id,
-                    )
-                    for loc in r.locations
-                ],
-            )
-            for r in snapshot.regions
-        ]
-
-    return StaticDataResponse(
-        buildings=buildings,
-        resource_nodes=resource_nodes,
-        treasure_chests=treasure_chests,
-        regions=regions,
-    )
-
+    static_data = manager.get_static_data()
+    if static_data is None:
+        raise HTTPException(status_code=503, detail="Static data not generated yet.")
+    return static_data
 
 @router.post("/clear_events")
 def clear_events(
@@ -401,10 +101,11 @@ def get_stats(
 ) -> SimulationStats:
     snapshot = manager.get_snapshot()
     tick = snapshot.tick if snapshot else 0
-    alive = sum(1 for e in snapshot.entities.values() if e.alive) if snapshot else 0
+    alive = sum(1 for e in snapshot.entities.values() if e.combat.alive) if snapshot else 0
 
     return SimulationStats(
         tick=tick,
+        world_day=tick // 100,
         alive_count=alive,
         total_spawned=manager.total_spawned,
         total_deaths=manager.total_deaths,

@@ -1,28 +1,30 @@
-"""RestAction — entity idles and recovers slightly."""
+"""RestAction — entity idles and recovers slightly.
+
+Refactored for AOA Stabilization:
+- Direct aspect access (combat, mind, progression).
+- Removed legacy property shims and StatsProxy dependencies.
+- Standardized action delay and HP recovery.
+"""
 
 from __future__ import annotations
-
 import logging
 from typing import TYPE_CHECKING
-
 from src.actions.base import ActionProposal
-from src.core.enums import AIState, ActionType
+from src.core.models.enums import AIState, ActionType
 
 if TYPE_CHECKING:
-    from src.core.world_state import WorldState
+    from src.core.models.world_state import WorldState
 
 logger = logging.getLogger(__name__)
-
 
 class RestAction:
     """Stateless handler for REST proposals."""
 
     @staticmethod
     def validate(proposal: ActionProposal, world: WorldState) -> bool:
-        if proposal.verb != ActionType.REST:
-            return False
+        if proposal.verb != ActionType.REST: return False
         entity = world.entities.get(proposal.actor_id)
-        return entity is not None and entity.alive
+        return entity is not None and entity.combat.alive
 
     # AI states that represent building interactions (higher delay)
     _BUILDING_STATES = frozenset({
@@ -32,12 +34,31 @@ class RestAction:
 
     @staticmethod
     def apply(proposal: ActionProposal, world: WorldState) -> None:
+        """AOA Stabilization: Emit intentional updates for authoritative application."""
         entity = world.entities.get(proposal.actor_id)
-        if entity is None:
-            return
-        # Minor HP recovery on rest
-        if entity.stats.hp < entity.stats.max_hp:
-            entity.stats.hp = min(entity.stats.hp + 1, entity.stats.max_hp)
-        from src.core.attributes import speed_delay
-        action_type = "building" if entity.ai_state in RestAction._BUILDING_STATES else "rest"
-        entity.next_act_at += speed_delay(entity.stats.spd, action_type, entity.stats.interaction_speed)
+        if not entity: return
+        
+        # 1. Recovery Logic (Side-Effects)
+        hp_reco = 1.0 if entity.combat.hp < entity.combat.max_hp else 0.0
+        stamina_reco = 2.0 if entity.progression.stamina < entity.progression.max_stamina else 0.0
+        
+        # 2. Delay Calculation
+        from src.core.gameplay.attributes import speed_delay
+        current_state = entity.mind.decision.ai_state
+        action_type = "building" if current_state in RestAction._BUILDING_STATES else "rest"
+        delay = speed_delay(entity.combat.spd, action_type, entity.interaction.interaction_speed)
+        
+        # 3. State Transition (Routine Logic)
+        # If resting at home/inn and stamina is critically low, transition to SLEEPING
+        if current_state in {AIState.VISIT_HOME, AIState.VISIT_INN} and entity.progression.stamina < entity.progression.max_stamina * 0.2:
+             proposal.new_ai_state = AIState.SLEEPING
+             from src.actions.base import RoutineUpdate
+             proposal.updates.append(RoutineUpdate(is_sleeping=True))
+             logger.info(f"Entity {entity.id} falling asleep during rest at {current_state.name}")
+
+        # 4. Emit Updates
+        from src.actions.base import ProgressionUpdate
+        proposal.updates.append(ProgressionUpdate(
+            hp_delta=int(hp_reco),
+            stamina_delta=int(stamina_reco)
+        ))

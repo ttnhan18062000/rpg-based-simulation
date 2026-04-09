@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import type { MapData, WorldState, SimulationStats, Entity, EntitySlim, GameEvent, GroundItem, Building, ResourceNode, Region, StaticData } from '@/types/api';
+import type { MapData, WorldState, SimulationStats, Entity, EntitySlim, GameEvent, GroundItem, Building, ResourceNode, TreasureChest, Region, StaticData } from '@/types/api';
 
 const API_BASE = '/api/v1';
 
@@ -26,6 +26,7 @@ export interface SimulationState {
   groundItems: GroundItem[];
   buildings: Building[];
   resourceNodes: ResourceNode[];
+  treasureChests: TreasureChest[];
   regions: Region[];
   tick: number;
   aliveCount: number;
@@ -61,6 +62,7 @@ export function useSimulation(): SimulationState {
   const [groundItems, setGroundItems] = useState<GroundItem[]>([]);
   const [buildings, setBuildings] = useState<Building[]>([]);
   const [resourceNodes, setResourceNodes] = useState<ResourceNode[]>([]);
+  const [treasureChests, setTreasureChests] = useState<TreasureChest[]>([]);
   const [regions, setRegions] = useState<Region[]>([]);
   const [tick, setTick] = useState(0);
   const [aliveCount, setAliveCount] = useState(0);
@@ -96,6 +98,7 @@ export function useSimulation(): SimulationState {
           setMapData(decoded);
           setBuildings(staticData.buildings || []);
           setResourceNodes(staticData.resource_nodes || []);
+          setTreasureChests(staticData.treasure_chests || []);
           setRegions(staticData.regions || []);
           mapLoadedRef.current = true;
           staticLoadedRef.current = true;
@@ -130,7 +133,7 @@ export function useSimulation(): SimulationState {
 
           setTick(delta.tick);
 
-          setEntities((prev) => {
+          setEntities((prev: EntitySlim[]) => {
             // Convert array to map for fast updates
             const entMap = new Map(prev.map(e => [e.id, e]));
 
@@ -150,7 +153,7 @@ export function useSimulation(): SimulationState {
           });
 
           if (delta.events && delta.events.length > 0) {
-            setEvents(prev => {
+            setEvents((prev: GameEvent[]) => {
               const existingKeys = new Set(prev.map(e => `${e.tick}:${e.message}`));
               const fresh = delta.events.filter((e: GameEvent) => !existingKeys.has(`${e.tick}:${e.message}`));
               return fresh.length > 0 ? [...prev, ...fresh] : prev;
@@ -206,7 +209,45 @@ export function useSimulation(): SimulationState {
             // Still need to get ground items periodically if no selection
              const state = await fetchJSON<WorldState>(`/state?since_tick=${Math.max(0, lastTickRef.current - 5)}`);
              setGroundItems(state.ground_items || []);
-        }
+             
+             // Merge dynamic world object states (Audit Point 3)
+             if (state.resource_nodes) {
+                 setResourceNodes((prev: ResourceNode[]) => {
+                     const nodeMap = new Map(state.resource_nodes!.map(n => [n.node_id, n]));
+                     return prev.map(node => {
+                         const dyn = nodeMap.get(node.node_id);
+                         if (dyn) return { ...node, remaining: dyn.remaining, is_available: dyn.is_available };
+                         return node;
+                     });
+                 });
+             }
+             if (state.treasure_chests) {
+                 setTreasureChests((prev: TreasureChest[]) => {
+                     const chestMap = new Map(state.treasure_chests!.map(c => [c.chest_id, c]));
+                     return prev.map(chest => {
+                         const dyn = chestMap.get(chest.chest_id);
+                         if (dyn) return { ...chest, looted: dyn.looted, guard_entity_id: dyn.guard_entity_id };
+                         return chest;
+                     });
+                 });
+             }
+             if (state.buildings) {
+                 setBuildings((prev: Building[]) => {
+                     const bldMap = new Map(state.buildings!.map(b => [b.building_id, b]));
+                     return prev.map(bld => {
+                        const dyn = bldMap.get(bld.building_id);
+                        if (dyn) return { 
+                            ...bld, 
+                            storage_items: dyn.storage_items,
+                            storage_used: dyn.storage_used,
+                            storage_max: dyn.storage_max,
+                            storage_level: dyn.storage_level
+                        };
+                        return bld;
+                     });
+                 });
+             }
+         }
       } catch (err) {
         // quiet fail
       } finally {
@@ -260,6 +301,7 @@ export function useSimulation(): SimulationState {
     groundItems,
     buildings,
     resourceNodes,
+    treasureChests,
     regions,
     tick,
     aliveCount,

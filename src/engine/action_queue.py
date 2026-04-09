@@ -34,6 +34,10 @@ class ActionQueue:
                 break
         return proposals
 
+    def size(self) -> int:
+        """Return the approximate size of the queue (not guaranteed exact across threads)."""
+        return self._queue.qsize()
+
     @property
     def empty(self) -> bool:
         return self._queue.empty()

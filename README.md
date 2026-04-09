@@ -4,6 +4,9 @@ A high-fidelity 2D RPG simulation engine with parallel AI, deterministic replay,
 
 ## Architecture
 
+> [!NOTE]
+> **Architectural Convergence Complete**: The engine has successfully migrated to a **Feature-Based Aspect-Oriented Architecture** (AOA). This design uses composition (Aspects) for entities and domain-separated modules for simulation logic. The system is fully stabilized for high-density, deterministic simulation.
+
 ```
 src/
 ├── __main__.py              # Entry point — serve (default) or cli mode
@@ -78,6 +81,7 @@ frontend/                    # React + Vite + TypeScript SPA
 - **Single-Writer / Multi-Reader** — Only the WorldLoop mutates state; AI workers and the API read immutable snapshots.
 - **Absolute Determinism** — All randomness via `Hash(WorldSeed, Domain, EntityID, Tick)` using xxhash.
 - **Intent vs. Effect** — Workers produce proposals; the world validates and applies them.
+- **Emotional Intelligence** — Entities track persistent grudges (Nemesis system), emotional mood, and locational trauma (memory biasing).
 - **Atomic Ticks** — All actions for tick N resolve before tick N+1 begins.
 - **Atomic Snapshot Swap** — The API layer reads from an atomically-swapped immutable snapshot; the engine thread is never blocked by HTTP requests.
 
@@ -177,13 +181,13 @@ See **[docs/buildings_economy.md](docs/buildings_economy.md)** for full details.
 
 ## Faction System
 
-Every entity belongs to one of **9+ Factions** (HERO_GUILD, GOBLIN_HORDE, WOLF_PACK, BANDIT_CLAN, UNDEAD, ORC_TRIBE, CENTAUR_HERD, FROST_KIN, LIZARDFOLK, DEMON_HORDE). Faction relationships (`HOSTILE`, `NEUTRAL`, `ALLIED`) are stored in a data-driven `FactionRegistry`.
+Every entity belongs to one of **10 Factions** (HERO_GUILD, GOBLIN_HORDE, WOLF_PACK, BANDIT_CLAN, UNDEAD, ORC_TRIBE, CENTAUR_HERD, FROST_KIN, LIZARDFOLK, DEMON_HORDE). Faction relationships (`HOSTILE`, `NEUTRAL`, `ALLIED`) are stored in a data-driven `FactionRegistry`.
 
 - **Territory intrusion** — entities can enter any tile, but stepping on hostile territory applies stat debuffs (ATK/DEF/SPD) and alerts nearby defenders
 - **Town aura** — hostile entities in town take gradual HP damage each tick, preventing spawn camping; enemies retreat when HP gets low
 - **Passive town heal** — heroes in town regen HP passively (blocked when adjacent hostile is fighting them)
 - **ALERT state** — defenders switch to ALERT when an intruder is detected, hunting them down before returning to guard duty
-- **Status effects** — generic buff/debuff system with duration; territory debuffs are automatically applied via `Entity.effective_*()` methods
+- **Status effects** — generic buff/debuff system with duration; territory debuffs are automatically applied via `Entity.stats.atk` etc.
 - **Extensible** — add new factions by extending the `Faction` enum and registering relationships; zero AI or combat code changes needed
 
 See **[docs/faction_system.md](docs/faction_system.md)** for full details.
@@ -205,6 +209,7 @@ See **[docs/faction_system.md](docs/faction_system.md)** for full details.
 | `frost_wolf` / `frost_giant` / `frost_shaman` | FROST_KIN | Race-scaled | Race-scaled | Race-scaled | Snow regions |
 | `lizard` / `lizard_warrior` / `lizard_chief` | LIZARDFOLK | Race-scaled | Race-scaled | Race-scaled | Jungle regions |
 | `imp` / `hellhound` / `demon_lord` | DEMON_HORDE | Race-scaled | Race-scaled | Race-scaled | Volcanic regions |
+| `gorath` / `vexira` / `morgul` | (Various) | Boss-scaled | Boss-scaled | Boss-scaled | **Calamity World Bosses** |
 
 ## REST API
 
@@ -235,6 +240,17 @@ These endpoints serialize **core pydantic dataclasses** directly — the single 
 | GET    | `/api/v1/metadata/buildings`   | Building type names and descriptions              |
 | GET    | `/api/v1/metadata/resources`   | Resource node types per terrain                   |
 | GET    | `/api/v1/metadata/recipes`     | Crafting recipes with materials and output         |
+| GET    | `/api/v1/metadata/protocol`    | **[NEW]** BWS Protocol KeyMap & Enum indices        |
+
+### High-Performance Binary Protocol (BWS)
+
+For real-time frontend synchronization with high entity counts, use the **Binary WebSocket Protocol**:
+
+- **Endpoint**: `ws://localhost:8000/api/v1/ws`
+- **Protocol**: MessagePack over WebSockets with Positional Arrays.
+- **Payload**: ~95% smaller than standard REST JSON.
+- **Handshake**: Clients must send `{"type": "handshake", "format": "msgpack"}` upon connection.
+- **Metadata**: Fetch the transposition rules from `/api/v1/metadata/protocol`.
 
 ### API Documentation
 
@@ -279,6 +295,7 @@ See **[docs/design_patterns.md](docs/design_patterns.md)** §7 for full details.
 
 ### Backend
 - Python ≥ 3.11
+- msgpack ≥ 1.0.0
 - xxhash ≥ 3.4.0
 - fastapi ≥ 0.115.0
 - uvicorn ≥ 0.30.0
@@ -287,3 +304,24 @@ See **[docs/design_patterns.md](docs/design_patterns.md)** §7 for full details.
 ### Frontend
 - Node.js ≥ 18
 - npm ≥ 9
+
+## Infrastructure & Troubleshooting
+
+The simulation uses **Docker Compose** for a production-grade stack (Redis, RabbitMQ, Kafka, Zookeeper, Loki, Grafana).
+
+### Centralized Logging
+
+All service logs are aggregated into **Loki** and can be explored via **Grafana**:
+- **Grafana URL**: `http://localhost:3000` (User: `admin`, Pass: `admin`)
+- **Direct Command**: `docker compose logs -f` (to see all service logs in one stream)
+- **Service Logs**: `docker compose logs -f [service_name]` (e.g. `sim_kafka`, `backend`)
+
+### Troubleshooting Kafka Startup
+
+If Kafka fails with an `InconsistentClusterIdException`, it is likely due to a mismatch between the persistent volumes and a new container recreation. To fix:
+
+```bash
+# Total Wipe (Removes all volumes for Redis, RabbitMQ, Kafka, etc.)
+docker compose down -v
+docker compose up -d --build
+```

@@ -24,7 +24,7 @@ function masteryTier(m: number) {
   return 0;
 }
 
-type InspectTab = 'stats' | 'class' | 'quests' | 'events' | 'ai' | 'effects';
+type InspectTab = 'stats' | 'narrative' | 'class' | 'quests' | 'events' | 'ai' | 'effects';
 
 const ELEMENT_COLORS: Record<string, string> = {
   none: '#9ca3af', fire: '#f87171', ice: '#60a5fa', lightning: '#fbbf24', dark: '#a78bfa', holy: '#fde68a',
@@ -78,6 +78,7 @@ export function InspectPanel({ entity, mapData, events, onClose }: InspectPanelP
 
   const tabs: { id: InspectTab; label: string; icon: React.ReactNode; badge?: number }[] = [
     { id: 'stats', label: 'Stats', icon: <BarChart3 className="w-3.5 h-3.5" /> },
+    { id: 'narrative', label: 'Narrative', icon: <Sparkles className="w-3.5 h-3.5" /> },
     { id: 'class', label: 'Class', icon: <Swords className="w-3.5 h-3.5" /> },
     { id: 'effects', label: 'Effects', icon: <Sparkles className="w-3.5 h-3.5" />, badge: effectCount },
     { id: 'quests', label: 'Quests', icon: <BookOpen className="w-3.5 h-3.5" />, badge: activeQuestCount },
@@ -186,6 +187,7 @@ export function InspectPanel({ entity, mapData, events, onClose }: InspectPanelP
       {/* Tab Content */}
       <div className="flex-1 overflow-y-auto min-h-0">
         {activeTab === 'stats' && <StatsTab entity={entity} collapsed={collapsed} toggle={toggle} />}
+        {activeTab === 'narrative' && <NarrativeTab entity={entity} collapsed={collapsed} toggle={toggle} />}
         {activeTab === 'class' && <ClassTab entity={entity} classColor={classColor} collapsed={collapsed} toggle={toggle} />}
         {activeTab === 'effects' && <EffectsTab entity={entity} />}
         {activeTab === 'quests' && <QuestsTab entity={entity} />}
@@ -210,6 +212,44 @@ function StatsTab({ entity, collapsed, toggle }: { entity: Entity; collapsed: Re
 
   return (
     <>
+      {/* Biological Needs (Phase 4) */}
+      {entity.routine && (
+        <CollapsibleSection title="Biological Needs" sectionKey="biological" collapsed={collapsed} toggle={toggle}>
+          <div className="space-y-2 mt-1 mb-2">
+            <div>
+              <div className="flex justify-between mb-0.5">
+                <span className="text-[10px] uppercase tracking-wider text-text-secondary">Sleep Debt</span>
+                <span className="text-[10px] font-semibold tabular-nums">{entity.routine.sleep_debt.toFixed(2)}</span>
+              </div>
+              <div className="w-full h-1.5 bg-bg-primary rounded-full overflow-hidden">
+                <div className="h-full rounded-full transition-[width] duration-200" style={{
+                  width: `${Math.min(100, (entity.routine.sleep_debt / 1.0) * 100)}%`,
+                  background: entity.routine.sleep_debt > 0.8 ? '#f87171' : '#60a5fa',
+                }} />
+              </div>
+            </div>
+            <div>
+              <div className="flex justify-between mb-0.5">
+                <span className="text-[10px] uppercase tracking-wider text-text-secondary">Hunger Level</span>
+                <span className="text-[10px] font-semibold tabular-nums">{entity.routine.hunger_level.toFixed(2)}</span>
+              </div>
+              <div className="w-full h-1.5 bg-bg-primary rounded-full overflow-hidden">
+                <div className="h-full rounded-full transition-[width] duration-200" style={{
+                  width: `${Math.min(100, (entity.routine.hunger_level / 1.0) * 100)}%`,
+                  background: entity.routine.hunger_level > 0.7 ? '#fbbf24' : '#34d399',
+                }} />
+              </div>
+            </div>
+            <div className="flex justify-between items-center text-[10px] text-text-secondary">
+              <span>Schedule: {entity.routine.active_hours}</span>
+              <span className={entity.routine.is_sleeping ? 'text-accent-blue font-bold' : 'text-accent-green'}>
+                {entity.routine.is_sleeping ? 'Currently Sleeping' : 'Awake'}
+              </span>
+            </div>
+          </div>
+        </CollapsibleSection>
+      )}
+
       {/* Attributes */}
       {entity.attributes && (
         <CollapsibleSection title="Attributes" sectionKey="attributes" collapsed={collapsed} toggle={toggle}>
@@ -1145,6 +1185,94 @@ function MemoryStat({ label, value }: { label: string; value: string }) {
     <div className="flex justify-between py-0.5 text-[11px]">
       <span className="text-text-secondary">{label}</span>
       <span className="font-semibold tabular-nums">{value}</span>
+    </div>
+  );
+}
+/* ========================================================================= */
+/* Tab: Narrative & Social (Phase 4)                                          */
+/* ========================================================================= */
+
+function NarrativeTab({ entity, collapsed, toggle }: { entity: Entity; collapsed: Record<string, boolean>; toggle: (k: string) => void }) {
+  const bonds = entity.social_bonds || [];
+  const narrative = entity.narrative_history || [];
+
+  return (
+    <div className="p-3">
+      {/* Social Bonds */}
+      <CollapsibleSection title={`Social Bonds (${bonds.length})`} sectionKey="social_bonds" collapsed={collapsed} toggle={toggle}>
+        {bonds.length === 0 ? (
+          <div className="text-[10px] text-text-secondary italic">No social bonds formed yet. Interactions with other entities drive social growth.</div>
+        ) : (
+          <div className="space-y-2 mt-1">
+            {bonds.map((bond, i) => (
+              <div key={i} className="p-2 rounded bg-bg-tertiary border border-border/40">
+                <div className="flex justify-between items-center mb-1.5">
+                  <span className="text-[11px] font-bold text-text-primary">{bond.target_name}</span>
+                  <span className="text-[9px] text-text-secondary font-mono">ID: {bond.target_id}</span>
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  <BondStat label="Trust" value={bond.trust} color="#60a5fa" />
+                  <BondStat label="Fear" value={bond.fear} color="#a78bfa" />
+                  <BondStat label="Rivalry" value={bond.rivalry} color="#f87171" />
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </CollapsibleSection>
+
+      {/* Narrative History (Memory) */}
+      <CollapsibleSection title={`Narrative Memory (${narrative.length})`} sectionKey="narrative_memory" collapsed={collapsed} toggle={toggle}>
+        {narrative.length === 0 ? (
+          <div className="text-[10px] text-text-secondary italic">No significant narrative events recorded. High-impact interactions create long-term memories.</div>
+        ) : (
+          <div className="space-y-2 mt-1">
+            {[...narrative].reverse().map((log, i) => (
+              <div key={i} className="py-1.5 border-b border-border/30 last:border-0">
+                <div className="flex justify-between items-center mb-0.5">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[8px] font-mono text-text-secondary">T{log.tick}</span>
+                    <span className="text-[9px] font-bold uppercase" style={{ 
+                      color: log.impact > 0.5 ? '#f87171' : log.impact < -0.5 ? '#60a5fa' : '#fbbf24'
+                    }}>
+                      {log.type}
+                    </span>
+                  </div>
+                  <span className="text-[9px] font-semibold text-text-secondary">Salience: {log.impact.toFixed(2)}</span>
+                </div>
+                <div className="text-[10px] text-text-primary leading-relaxed">{log.message || `${log.type} event detected.`}</div>
+                {log.details && Object.keys(log.details).length > 0 && (
+                  <div className="mt-1 flex flex-wrap gap-1">
+                    {Object.entries(log.details).map(([k, v]) => (
+                      <span key={k} className="text-[7px] px-1 bg-bg-primary text-text-secondary rounded">{k}: {String(v)}</span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </CollapsibleSection>
+    </div>
+  );
+}
+
+function BondStat({ label, value, color }: { label: string; value: number; color: string }) {
+  const barPct = ((value + 1) / 2) * 100;
+  return (
+    <div>
+      <div className="flex justify-between mb-0.5">
+        <span className="text-[8px] uppercase font-bold text-text-secondary">{label}</span>
+        <span className="text-[9px] font-bold" style={{ color }}>{value > 0 ? '+' : ''}{value.toFixed(2)}</span>
+      </div>
+      <div className="w-full h-1 bg-bg-primary rounded-full overflow-hidden">
+        <div className="h-full rounded-full" style={{ width: `${barPct}%`, background: color }} />
+      </div>
+      <div className="flex justify-between mt-0.5 text-[6px] text-text-secondary/50">
+        <span>-1.0</span>
+        <span>0</span>
+        <span>1.0</span>
+      </div>
     </div>
   );
 }

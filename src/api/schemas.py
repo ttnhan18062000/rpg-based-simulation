@@ -1,7 +1,6 @@
 """Pydantic response models for the REST API."""
 
-from __future__ import annotations
-
+from typing import Any, Union, Optional
 from pydantic import BaseModel, Field
 
 
@@ -28,8 +27,9 @@ class AttributeSchema(BaseModel):
     per_frac: float = 0.0
     cha_frac: float = 0.0
 
-    class Config:
-        populate_by_name = True
+    model_config = {
+        "populate_by_name": True
+    }
 
 
 class AttributeCapSchema(BaseModel):
@@ -87,10 +87,127 @@ class QuestSchema(BaseModel):
     xp_reward: int = 0
 
 
+class SocialBondSchema(BaseModel):
+    """Visual representation of a directed social bond. [PHASE 2]"""
+    target_id: int
+    target_name: str
+    trust: float
+    fear: float
+    rivalry: float
+    familiarity: float = 0.0
+    loyalty: float = 0.0
+    resentment: float = 0.0
+    admiration: float = 0.0
+    debt: float = 0.0
+    narrative_summary: str | None = None
+    social_impacts: list[str] = Field(default_factory=list) # [PHASE 2] High-level "why" bullets
+
+
+class RoutineStateSchema(BaseModel):
+    """Current biological needs and schedule. [PHASE 3]"""
+    sleep_debt: float
+    hunger_level: float
+    is_sleeping: bool
+    active_hours: str  # e.g. "06:00 - 22:00"
+
+class PlaceAttachmentSchema(BaseModel):
+    """Subjective importance of a world location. [PHASE 3]"""
+    place_id: str | int | None = None
+    place_type: str  # "home", "work", etc.
+    x: int
+    y: int
+    importance: float
+    attachment_kind: str
+
+
+class MemoryLogSchema(BaseModel):
+    """A single high-salience narrative event. [PHASE 2]"""
+    tick: int
+    type: str
+    impact: float
+    message: str
+    details: dict = Field(default_factory=dict)
+
+class TurningPointSchema(BaseModel):
+    """A durable record of a life-defining moment. [PHASE 2]"""
+    kind: str
+    tick: int
+    impact: float
+    summary: str
+    involved_names: list[str] = Field(default_factory=list)
+
+class ReputationProfileSchema(BaseModel):
+    """Authoritative public scores and tags. [PHASE 2]"""
+    heroism: float
+    cowardice: float
+    threat_notoriety: float
+    trustworthiness: float
+    tags: list[str] = Field(default_factory=list)
+
+
+# --- Continuity and Inheritance [PHASE 4] ---
+
+class SuccessorSummarySchema(BaseModel):
+    """Bridge data showing legacy transfer from a predecessor. [PHASE 4]"""
+    source_entity_id: int
+    predecessor_name: str = ""
+    legacy_level: int = 1
+    inherited_motive_count: int = 0
+    tick: int
+
+class HouseholdSummarySchema(BaseModel):
+    """Group continuity data for a shared home. [PHASE 4]"""
+    household_id: str
+    reputation: float
+    member_count: int
+    former_member_count: int
+    heirloom_count: int
+    legacy_tags: list[str] = Field(default_factory=list)
+
+
+# --- Behavioral Realism [PHASE 1] ---
+
+class PersonalityProfileSchema(BaseModel):
+    aggression: float
+    greed: float
+    caution: float
+    loyalty: float
+    ambition: float
+    curiosity: float
+
+class PersonalMotiveSchema(BaseModel):
+    kind: str
+    priority: float
+    progress: float
+    frustration: float
+    active: bool
+
+class ThreatEstimateSchema(BaseModel):
+    overall: float
+    melee_threat: float
+    ranged_threat: float
+    survivability: float
+    confidence: float
+
+class BeliefRecordSchema(BaseModel):
+    entity_id: int
+    pos: tuple[int, int]
+    last_seen_tick: int
+    stale_ticks: int
+    confidence: float
+    apparent_faction: str | None = None
+    apparent_role: str | None = None
+    apparent_class: str | None = None
+    visible_weapon: str | None = None
+    visible_injury: float = 0.0
+    threat: ThreatEstimateSchema
+
+
 class EntitySlimSchema(BaseModel):
     """Minimal entity data for rendering (non-selected entities)."""
     id: int
     kind: str
+    display_name: str = ""
     x: int
     y: int
     hp: int
@@ -104,13 +221,15 @@ class EntitySlimSchema(BaseModel):
     loot_progress: int = 0
     loot_duration: int = 3
 
-    class Config:
-        frozen = True
+    model_config = {
+        "frozen": True
+    }
 
 
 class EntitySchema(BaseModel):
     id: int
     kind: str
+    display_name: str = ""
     x: int
     y: int
     hp: int
@@ -140,7 +259,11 @@ class EntitySchema(BaseModel):
     inventory_max_weight: float = 0.0
     vision_range: int = 6
     terrain_memory: dict[str, int] = Field(default_factory=dict)
-    entity_memory: list[dict] = Field(default_factory=list)
+    entity_memory: list[BeliefRecordSchema] = Field(default_factory=list)
+    personality: PersonalityProfileSchema | None = None
+    motives: list[PersonalMotiveSchema] = Field(default_factory=list)
+    motive_utility_biases: dict[str, float] = Field(default_factory=dict)
+    decision_drivers: list[str] = Field(default_factory=list)
     goals: list[str] = Field(default_factory=list)
     loot_progress: int = 0
     loot_duration: int = 3
@@ -157,6 +280,17 @@ class EntitySchema(BaseModel):
     class_mastery: float = 0.0
     active_effects: list[EffectSchema] = Field(default_factory=list)
     quests: list[QuestSchema] = Field(default_factory=list)
+    
+    # Social & Routine [PHASE 2 & 3]
+    routine: RoutineStateSchema | None = None
+    social_bonds: list[SocialBondSchema] = Field(default_factory=list)
+    world_role: str = "none"
+    cluster_id: str | None = None
+    group_id: str | None = None
+    place_attachments: list[PlaceAttachmentSchema] = Field(default_factory=list)
+    reputation: ReputationProfileSchema | None = None
+    turning_points: list[TurningPointSchema] = Field(default_factory=list)
+    memory_log: list[MemoryLogSchema] = Field(default_factory=list)
     traits: list[int] = Field(default_factory=list)
     # Base stats (before equipment/effects) for detailed breakdown
     base_atk: int = 0
@@ -199,10 +333,87 @@ class EntitySchema(BaseModel):
     home_storage_used: int = 0
     home_storage_max: int = 0
     home_storage_level: int = 0
+    # Macro-Interest (Phase 4 Integration)
+    generation: int = 1
+    household_id: str | None = None
+    traits: list[int] = Field(default_factory=list)
 
-    class Config:
-        frozen = True
-        populate_by_name = True
+# --- Introspection (Phase 4) ---
+
+class StatSourceSchema(BaseModel):
+    source_name: str
+    flat_bonus: int = 0
+    mult_bonus: float = 1.0
+
+class StatBreakdownSchema(BaseModel):
+    stat_name: str
+    final_value: float
+    base_value: float
+    sources: list[StatSourceSchema] = Field(default_factory=list)
+
+class CombatTraceSchema(BaseModel):
+    tick: int
+    attacker_id: int
+    defender_id: int
+    skill_used: str
+    raw_damage: int
+    mitigation: int
+    elemental_mult: float = 1.0
+    is_crit: bool = False
+    is_evasion: bool = False
+    trauma: float = 0.0
+    threat: float = 0.0
+    explanation: str = ""
+
+class GoalScoreSchema(BaseModel):
+    goal_name: str
+    score: float
+    status: str = "considering" # "executing" | "considering"
+
+# SocialBondSchema merged above
+
+class DecisionDriverSchema(BaseModel):
+    kind: str
+    label: str
+    weight: float
+
+class AIDecisionSchema(BaseModel):
+    entity_id: int
+    current_state: str
+    winning_goal: str
+    goal_scores: list[GoalScoreSchema] = Field(default_factory=list)
+    personality: dict[str, float] | None = None
+    motives: list[dict[str, Any]] = Field(default_factory=list)
+    beliefs: list[dict[str, Any]] = Field(default_factory=list)
+    social_bonds: list[SocialBondSchema] = Field(default_factory=list) # [PHASE 2]
+    faction_standing: dict[str, float] = Field(default_factory=dict) # [PHASE 2]
+    motive_biases: dict[str, float] = Field(default_factory=dict)
+    decision_drivers: list[str] = Field(default_factory=list) # [STAGE 1/2] Legacy string list
+    driver_details: list[DecisionDriverSchema] = Field(default_factory=list) # [PHASE 1] New structured list
+    nearest_enemy_dist: float | None = None
+    nearest_target_id: int | None = None
+    group_id: str | None = None
+    active_routine_id: str | None = None
+    narrative_impacts: list[str] = Field(default_factory=list) # [PHASE 2] Global recent life shifts
+
+class SchedulerTimelineItemSchema(BaseModel):
+    entity_id: int
+    display_name: str
+    next_act_tick: int
+    wait_ticks: int
+    action_type: str = "unknown"
+
+class EntityInspectionSchema(BaseModel):
+    entity: EntitySchema
+    routine: RoutineStateSchema | None = None
+    reputation: ReputationProfileSchema | None = None
+    stat_breakdowns: dict[str, StatBreakdownSchema] = Field(default_factory=dict)
+    combat_history: list[CombatTraceSchema] = Field(default_factory=list)
+    ai_explanation: AIDecisionSchema | None = None
+    narrative_history: list[MemoryLogSchema] = Field(default_factory=list)
+    turning_points: list[TurningPointSchema] = Field(default_factory=list)
+    successor_record: SuccessorSummarySchema | None = None # [PHASE 4]
+    household_record: HouseholdSummarySchema | None = None # [PHASE 4]
 
 
 # --- Map ---
@@ -235,8 +446,11 @@ class BuildingSchema(BaseModel):
     x: int
     y: int
     building_type: str
-    # Hero house storage (only populated for hero_house type)
     owner_entity_id: int | None = None
+
+
+class BuildingStateSchema(BaseModel):
+    building_id: str
     storage_items: list[str] = Field(default_factory=list)
     storage_used: int = 0
     storage_max: int = 0
@@ -265,10 +479,15 @@ class ResourceNodeSchema(BaseModel):
     y: int
     terrain: int
     yields_item: str
-    remaining: int
     max_harvests: int
-    is_available: bool
+    respawn_cooldown: int
     harvest_ticks: int
+
+
+class ResourceNodeStateSchema(BaseModel):
+    node_id: int
+    remaining: int
+    is_available: bool
 
 
 class TreasureChestSchema(BaseModel):
@@ -276,6 +495,10 @@ class TreasureChestSchema(BaseModel):
     x: int
     y: int
     tier: int
+
+
+class TreasureChestStateSchema(BaseModel):
+    chest_id: int
     looted: bool
     guard_entity_id: int | None = None
 
@@ -297,6 +520,8 @@ class RegionSchema(BaseModel):
     center_y: int
     radius: int
     difficulty: int
+    owner_faction: str | None = None
+    influence: float = 0.0
     locations: list[LocationSchema] = Field(default_factory=list)
 
 
@@ -307,6 +532,13 @@ class WorldStateResponse(BaseModel):
     selected_entity: EntitySchema | None = None
     events: list[EventSchema] = Field(default_factory=list)
     ground_items: list[GroundItemSchema] = Field(default_factory=list)
+    # Dynamic world object state (Audit Point 3 follow-up)
+    resource_nodes: list[ResourceNodeStateSchema] = Field(default_factory=list)
+    treasure_chests: list[TreasureChestStateSchema] = Field(default_factory=list)
+    buildings: list[BuildingStateSchema] = Field(default_factory=list)
+    # Strategic State (Milestone 11)
+    war_status: dict[str, bool] = Field(default_factory=dict)
+    faction_aggression: dict[str, float] = Field(default_factory=dict)
 
 
 class StaticDataResponse(BaseModel):
@@ -345,6 +577,7 @@ class SimulationConfigResponse(BaseModel):
 
 class SimulationStats(BaseModel):
     tick: int
+    world_day: int
     alive_count: int
     total_spawned: int
     total_deaths: int

@@ -6,9 +6,12 @@ Technical documentation for combat formulas, damage types, elements, leveling, d
 
 ## Overview
 
-Combat is resolved deterministically using effective stats (base + equipment + attribute bonuses + status effects). The system supports dual damage types (physical/magical), elemental vulnerabilities, evasion, critical hits, potion use, and skill-based attacks. Killing enemies awards XP and gold, with level-ups granting permanent stat and attribute growth.
+Combat is resolved deterministically using effective stats (base + equipment + attribute bonuses + status effects). The system supports dual damage types (physical/magical), elemental vulnerabilities, evasion, critical hits, potion use, and skill-based attacks. Killing enemies awards XP and gold, with level-ups granting permanent stat and attribute growth. All logic is encapsulated in **Aspects** (`CombatAspect`, `ProgressionAspect`, `MindAspect`).
 
-**Primary files:** `src/actions/combat.py`, `src/actions/damage.py`, `src/engine/world_loop.py`
+**Primary files:** `src/actions/combat.py`, `src/actions/damage.py`, `src/engine/world_loop.py`, `src/actions/base.py` (Proposals)
+
+### Global Scaling
+As the world ages, the difficulty scales globally. All spawned entities receive a stat multiplier based on the current world age. See [World Evolution & Resilience](file:///d:/Projects/rpg-based-simulation/docs/world_evolution_and_resilience.md) for the scaling formula.
 
 ---
 
@@ -25,6 +28,20 @@ The weapon's `damage_type` field selects the calculator. Training action is `att
 
 ---
 
+## 2.5 Regional Conquest Debuffs (Milestone 11)
+
+Strategic control of a region directly impacts combat efficacy through the **Regional Conquest** system.
+
+| Condition | Effect | Multipliers |
+|-----------|--------|-------------|
+| **Safe Zone** (`influence > 80`) | **Resource Bounty** | `+10%` Loot/Harvest speed |
+| **Conquered** (`influence < -80`) | **`CONQUERED_DEBUFF`** | `0.8x` ATK, `0.8x` DEF, `0.9x` SPD |
+
+- **Stronghold Requirement**: The debuff is only active in a conquered region if a monster **Stronghold** entity is present.
+- **Application**: Applied to all `HERO_GUILD` entities in the region during the world tick.
+
+---
+
 ## Combat Resolution Pipeline
 
 Each attack is processed in `CombatAction.apply()`:
@@ -33,28 +50,32 @@ Each attack is processed in `CombatAction.apply()`:
 
 ```
 effective_evasion = defender.effective_evasion() - attacker.stats.luck * 0.002
-evasion_chance = clamp(effective_evasion, 0.0, 0.75)
+evasion_chance = max(0.0, effective_evasion)
 if random_roll < evasion_chance → MISS (no damage)
 ```
 
 - Attacker's `luck` reduces defender's evasion
 - Evasion capped at 75%
 
-### Step 2: Base Damage (Attribute-Enhanced)
+### Step 2: Base Damage Calculation
+Damage is calculated using the **Fractional Armor Mitigation** formula (Pillar 3):
 
 ```
-atk_power = attacker.effective_atk() * sanctuary_atk_mult    # or effective_matk()
-def_power = defender.effective_def() * sanctuary_def_mult     # or effective_mdef()
+atk_final = attacker.combat.atk * attacker_primary_mult * skill_power
+def_final = defender.combat.def * defender_primary_mult
 
-atk_mult = 1.0 + attacker_primary_attr * 0.02
-def_mult = 1.0 + defender_primary_attr * 0.01
-
-damage = int(atk_power * atk_mult) - int(def_power * def_mult) // 2
-damage = max(damage, 1)
+# Pillar 3: Non-linear mitigation
+raw_damage = int(atk_final * (atk_final / (atk_final + def_final * 2.0 + 1.0)))
+damage = max(raw_damage, 1)
 ```
 
 - Minimum 1 damage guaranteed
 - Sanctuary multipliers apply to non-hero entities on sanctuary tiles (default 0.5×)
+
+### Step 2c: Flanking Bonus
+If the attacker is behind the defender (attacker.pos is opposite to defender.facing), a **1.5x damage multiplier** is applied.
+- Calculated in `PhysicalDamageCalculator.resolve()`.
+- Facing is based on the target's last movement direction.
 
 ### Step 2b: Stamina Cost
 
@@ -92,12 +113,22 @@ damage = damage * vulnerability
 
 - Values > 1.0 = weakness, < 1.0 = resistance, 0.0 = immune
 
-### Step 6: Apply Damage
+### Step 6: Authoritative Application
+Since the **AOA Stabilization**, the engine does not mutate HP directly in the resolution service. Instead, it emits a **`CombatTraceUpdate`**:
 
+```python
+# In CombatAction.apply()
+proposal.updates.append(CombatTraceUpdate(
+    result=CombatTraceRecord(
+        attacker_id=attacker.id, 
+        defender_id=defender.id,
+        damage=damage,
+        details=CombatTraceDetails(is_crit=is_crit, ...)
+    )
+))
 ```
-defender.stats.hp -= int(damage)
-attacker.next_act_at += speed_delay(attacker.effective_spd(), "attack")
-```
+
+The **`ActionSystem`** later processes these updates authoritatively, applying the damage, generating threat/grudges, and recording the memory log in the same tick.
 
 ---
 
@@ -116,7 +147,9 @@ Each entity has an `elem_vuln` table on `Stats` (dict mapping Element → float)
 
 ---
 
-## On-Kill Rewards
+## On-Kill Rewards (Pillar 1 Stabilization)
+
+Reward logic is precomputed in the **`KillRewardService`** but applied authoritatively.
 
 ### XP Award
 
@@ -134,7 +167,63 @@ All of the defender's gold is transferred to the attacker.
 
 ### Attribute Training
 
-Combat trains STR (+0.015/action) and AGI (+0.008/action) for physical attacks, SPI (+0.015) and INT (+0.008) for magical attacks.
+Combat trains STR (+0.015/action) and AGI (+0.008/action) for physical attacks, SPI (+0.015) and INT (+0.008) for magical attacks. 
+- **Stamina Requirement**: If an entity's stamina is **0**, they can still attack but receive **no attribute training**.
+
+---
+
+## 4. Tactical AI Logic
+
+Combat behavior is driven by state-based logic in `src/ai/states.py`.
+
+### 4.1 Target Prioritization
+Entities select targets using a hierarchical priority:
+1.  **Personal Nemesis**: Visible hostile with `grudge > 50.0` (highest grudge wins).
+2.  **Highest Threat**: Non-hero mobs target whoever has the highest value in their `threat_table`.
+3.  **Nearest Enemy**: Heroes and mobs without threat/grudges target the closest hostile.
+
+### 4.2 Mood & Fleeing
+The decision to retreat (`should_flee`) is sensitive to the entity's **Mood** (Milestone 10):
+- **Base Threshold**: 15% - 20% HP.
+- **Despair (Low Mood)**: Threshold shifts **up** (retreats at ~30% HP).
+- **Fury (High Mood)**: Threshold shifts **down** (stays until ~5% HP).
+
+### 4.3 Tactical Maneuvers (Pillar 3: Action)
+- **Decision Inertia (Hysteresis):** Entities commit to their current goal for `GOAL_LOCK_TICKS` (5) to prevent behavioral jitter between two high-utility options.
+- **Ranged Skirmishing:** Ranged classes maintain a `min_dist` (3 tiles) and will reposition if hostiles close in, utilizing tactical hints from the AI context.
+- **Support Priorities:** Agreeable entities (Agreeableness > 0.7) prioritize assisting allies who are at low HP or requested support via the tactical intent phase.
+
+## 5. Nemesis System & Emotional Combat
+
+Milestone 10 introduces persistent psychological effects triggered by combat.
+
+### 5.1 Grudges
+
+Every hit received in combat generates a **Grudge** against the attacker.
+- **Formula**: `grudge_gain = (damage / max_hp) * 50.0`
+- **Effect**: Grudges are stored in the defender's `MindAspect`. If a grudge exceeds **50.0**, the attacker is marked as a **Nemesis**.
+- **Behavior**: AI will prioritize targeting their Nemesis even if other closer or higher-threat enemies are visible.
+
+### 5.2 Emotional Mood
+
+Entities possess a dynamic `mood` value (0.2 to 1.0) that reflects their current morale.
+- **Morale Loss**: Each hit taken reduces mood: `mood_drop = (damage / max_hp) * 0.2`.
+- **Combat Efficacy**: Low mood increases the likelihood of fleeing. At minimum mood (0.2), an entity may flee at **30% HP** (compared to the baseline 15-20%).
+- **Recovery**: Mood is reset to a baseline of 0.2 upon respawn.
+
+### 5.3 Bad Memories
+
+When an entity dies, it records a "Bad Memory" of the current region.
+- **Sentiment**: A negative sentiment (-1.0) is stored for the region in `memory_locations`.
+- **Avoidance**: During future exploration, the entity will treat tiles in "Bad Memory" regions as being much further away, naturally biasing them to explore elsewhere.
+
+---
+
+## 6. Fame & Reputation (Epic 19)
+
+Fame tracks a hero's prestige across the world. It is primarily earned by completing **Calamity Bounties**.
+- **Bounty Completion**: +100 Fame.
+- **Usage**: Required for Tier 3 Breakthroughs (Level 20 + 100 Fame).
 
 ---
 
@@ -164,11 +253,24 @@ Base dimishing returns stat growth based on the current level bracket:
 **Milestone Levels (5, 10, 15, 20, 25, 30)**:
 Whenever these levels are crossed, instead of base growth, the entity receives roughly **3x massive stat spikes** (+15 HP, +3 ATK/DEF/SPD). An event is emitted highlighting the milestone.
 
-### Attribute Growth Per Level
+### Attribute Growth & Genetic Evolution (Pillar 2: Body)
 
-On each level-up, `level_up_attributes()` is called:
-- All **9** primary attributes: **+2** (capped at current cap)
-- All **9** attribute caps: **+5**
+On each level-up, attributes grow based on the entity's **Genetic Aptitudes**:
+- **Aptitudes:** Every entity spawns with unique multipliers (e.g., `str_aptitude: 1.2`) for each attribute.
+- **Growth Formula:** `attribute += 2 * aptitude`. This ensures that two entities of the same class can develop significantly different power levels over time.
+- **Caps:** Attribute caps increase by **+5** per level.
+
+### 2.2 Breakthrough Milestones & Pillar Traits
+
+When an entity crosses major level thresholds, they unlock **Pillar Traits**—massive global multipliers that define their late-game role:
+
+| Level | Milestone | Trait Example | Effect |
+| :--- | :--- | :--- | :--- |
+| **50** | **Ascension** | **Colossus** | `+50% HP`, `+20% DEF` |
+| **75** | **Mastery** | **Archmage** | `+40% MATK`, `-20% Mana Cost` |
+| **100** | **Divinity** | **Juggernaut**| `+100% HP`, `CC Immunity` |
+
+These milestones trigger unique world-events and are color-coded in the simulation UI.
 
 ### XP Curve
 
@@ -177,6 +279,55 @@ XP to next level dynamically scales by the current level:
 - Levels 1-10: `xp_to_next *= 1.4`
 - Levels 11-20: `xp_to_next *= 1.6`
 - Levels 21-30: `xp_to_next *= 2.0`
+
+---
+
+## Class Breakthroughs & Tier 3 (Transcendence)
+
+Heroes can evolve into more powerful classes once they hit level and stat thresholds.
+
+### Tier 2 (Mastery)
+- **Requirement**: Level 10 + Primary Stat 30+.
+- **Examples**: Warrior -> Champion, Mage -> Archmage.
+
+### Tier 3 (Transcendence) - Locked by Calamity
+
+- **Requirement**: Level 20 + Primary Stat 50+ + **100 Fame** + **Calamity Remnant** (Legendary material).
+- **Process**: Visit the Class Hall with a `Calamity Remnant` in inventory to transcend.
+- **Classes**:
+    - **WARLORD** (from Champion): Focus on massive HP and ATK. Indomitable passive grants CC immunity.
+    - **STORM_CALLER** (from Archmage): Massive AoE magical damage. Tempest passive allows dual-casting.
+    - **GHOST_STALKER** (from Sharpshooter): Ultimate ranged precision. Ethereal passive provides high evasion.
+    - **NIGHTSHADE** (from Assassin): High crit and poison utility. Venomous passive adds DoT to all hits.
+
+---
+
+## 7. World Boss (Calamity) Combat
+
+Calamities are regional threats that spawn via `world_loop._check_calamity_spawns()`. They require multiple heroes to defeat and use unique mechanics.
+
+### Calamity Auras
+
+Live Calamities apply a **Calamity Aura** within a 15-tile radius via `world_loop._apply_calamity_auras()`.
+
+| Target | Effect | Description |
+|--------|--------|-------------|
+| **Heroes** | -10% Evasion | Multiplicative debuff for any hero within the radius. |
+| **Minions** | +5% ATK | Flat attack boost for allied mobs in range (capped at 3x base). |
+
+*Note: The planned "Void Fluctuations" (Mana Static, Terror, etc.) are currently slated for future enhancement.*
+
+### Combat Mechanics
+
+- **Massive HP**: Calamities have `stat_multiplier` (5.0x - 15.0x) and ignore standard execution thresholds.
+- **Regional Lock**: Calamities will not leave their home region and will rapidly heal if kited to a boundary.
+- **Final Blow**: The hero who deals the killing blow to a Calamity receives a massive Fame bonus (+100) and the title "Calamity Slayer".
+
+### Loot & Rewards
+
+- **Calamity Remnant**: A mandatory material for Tier 3 Transcendence. Guaranteed drop (1-2 per boss).
+- **Legendary Gear**: Unique items (`gorath_cleaver`, `vexira_staff`) with special modifiers.
+- **Calamity Essence**: Used for high-tier crafting at the Blacksmith.
 
 ---
 
@@ -195,6 +346,12 @@ Every entity generates with 2 random `talents` and 1 `weakness` across the 9 cor
 - Attacking, taking damage, and working adds fractional EXP to `attributes`.
 - **Talented** attributes train at `2.0x` speed.
 - **Weaknesses** train at `0.5x` speed.
+
+### Near-Death Hardening (Epic 18 Phase C)
+When an entity survives a hit with **HP ratio < 0.15**:
+- **Max HP permanently increases by +1**.
+- This simulates "hardening" through combat survival.
+- Veteran NPCs and long-lived heroes often have significantly boosted Max HP from this mechanic.
 
 ---
 
@@ -223,6 +380,17 @@ Skills are used via `USE_SKILL` action when:
 - Target is in range
 
 Skill damage uses `power` multiplier on base damage, skill-specific `damage_type` and `element`, and applies buff/debuff effects based on skill modifiers. See `attributes_and_classes.md` for skill details.
+
+### Status Effect Combos (Milestone 5)
+Certain status effect combinations trigger reactive "Combos" when damage is applied:
+
+| Combo | Requirements | Effect |
+|-------|--------------|--------|
+| **SHATTER** | Frozen + Physical Damage | **3.0x Damage** + Consumes Frozen effect |
+| **OVERLOAD**| Wet + Magical Damage | **2.0x Damage** + Applies Shocked effect |
+
+- Combos are processed in `ActionSystem._apply_skill_effect()`.
+- They reward tactical positioning and skill sequencing.
 
 ---
 
@@ -338,37 +506,26 @@ Each entity has `threat_table: dict[int, float]` mapping attacker IDs to accumul
 
 ---
 
+---
+
 ## Chase Mechanics (epic-05)
 
 Two systems that add depth to melee engagement and pursuit.
 
-**Primary files:** `src/engine/world_loop.py`
-
 ### Opportunity Attacks
 
-When an entity moves away from an adjacent hostile (Manhattan distance increases), the hostile gets a free reduced-damage hit:
-
-```
-damage = max(1, int(attacker_atk * opportunity_attack_damage_mult) - defender_def // 2)
-```
-
-- `opportunity_attack_damage_mult`: 0.5 (half-damage)
-- No crit, no evasion check
-- Generates threat on the mover
-- Emits `"combat"` event with `verb=OPPORTUNITY_ATTACK`
+When an entity moves away from an adjacent hostile (Manhattan distance increases), the hostile gets a free reduced-damage hit via `_process_opportunity_attacks`:
+- **Damage**: `max(1, int(attacker_atk * 0.5) - defender_def // 2)`
+- **Properties**: No crit, no evasion check.
+- **Threat**: Generates threat on the mover.
+- **Event**: Emits `"combat"` with `verb=OPPORTUNITY_ATTACK`.
 
 ### SPD-Based Chase Closing
 
-Faster hunters periodically gain a bonus tile of movement when chasing slower prey:
-
-```
-interval = ceil(chase_spd_closing_base * target_spd / hunter_spd)
-if chase_ticks % interval == 0 → bonus move toward target
-```
-
-- `chase_spd_closing_base`: 6
-- Only triggers for HUNT-state entities with higher SPD than target
-- Emits `"movement"` event with `verb=CHASE_SPRINT`
+Faster hunters periodically gain a "sprint" move when chasing slower prey via `_process_chase_closing`:
+- **Calculated Interval**: `ceil(6.0 * target_spd / hunter_spd)`
+- **Effect**: Gains 1 bonus tile of movement toward the target every `interval` ticks.
+- **Requirement**: Hunter SPD > Target SPD.
 
 ---
 
@@ -382,7 +539,7 @@ Defined in `src/core/attributes.py` via `speed_delay()`. Uses logarithmic dimini
 delay = action_mult / (1.0 + ln(max(spd, 1)))
 ```
 
-Clamped to `[0.15, 2.0]` seconds.
+Clamped to `[0.3, 4.0]` ticks.
 
 ### SPD → Delay Table (move action)
 
@@ -398,13 +555,13 @@ Clamped to `[0.15, 2.0]` seconds.
 
 | Action | Multiplier | Effect |
 |--------|-----------|--------|
-| Move | ×1.0 | Baseline |
-| Attack | ×0.9 | Slightly faster than moving |
-| Skill | ×1.2 | Slower (powerful abilities) |
-| Loot | ×0.7 | Fast pickup |
-| Harvest | ×0.7 | Fast gathering |
-| Use Item | ×0.6 | Fastest (potions should be quick) |
-| Rest | ×1.0 | Same as baseline |
+| Move | ×2.0 | Baseline |
+| Attack | ×1.5 | Slightly faster than moving |
+| Skill | ×2.5 | Slower (powerful abilities) |
+| Loot | ×1.2 | Standard interaction |
+| Harvest | ×1.2 | Standard interaction |
+| Use Item | ×1.0 | Fastest (potions should be quick) |
+| Rest | ×1.5 | Same as attack |
 
 For non-combat actions, the `interaction_speed` derived stat further scales delay.
 
@@ -421,15 +578,21 @@ When `engaged_ticks >= 2`, moving away costs **double** the normal delay:
 
 ## Death & Respawn
 
-### Hero Death
+### Hero Death & Permadeath (The Death Tier System)
 
-1. All **bag items** dropped as ground loot at death position
-2. **Equipment** preserved (weapon, armor, accessory stay)
-3. HP restored to `max_hp`
-4. Teleported to `home_pos` (town center)
-5. AI state set to `RESTING_IN_TOWN`
-6. Action cooldown: `hero_respawn_ticks` (10 ticks)
-7. Combat memory cleared
+Heroes follow a tiered death system that escalates with each subsequent defeat.
+
+| Death Count | Consequences |
+|-------------|--------------|
+| **1st Death** | Drops **Bag Items** only. Respawn at home. |
+| **2nd Death** | Drops **Bag Items + Accessory**. Respawn at home. |
+| **3rd Death** | Drops **Bag Items + Accessory + Armor**. Respawn at home. |
+| **Permadeath** | `death_count >= max`. Drops **ALL gear**. Removed from world. |
+
+**Permadeath Details**:
+- **Monuments**: If a hero is Level 15+ upon permadeath, a **Monument** is spawned at their home position, providing localized buffs (+10% HP/ATK) to passing heroes.
+- **Generational Replacement**: A new hero of the same generation + 1 is scheduled to spawn at the same house after 50 ticks.
+- **Cleanup**: AI memory and active effects are cleared upon every death.
 
 ### Enemy Death
 

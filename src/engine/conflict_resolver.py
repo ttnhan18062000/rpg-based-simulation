@@ -5,17 +5,19 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING
 
-from src.actions.base import ActionProposal
+from src.actions.base import ActionProposal, BuildingUpdate
 from src.actions.combat import CombatAction
 from src.actions.move import MoveAction
 from src.actions.rest import RestAction
-from src.core.enums import ActionType
+from src.actions.repair import RepairAction
+from src.systems.gameplay.action_system import ActionSystem
+from src.core.models.enums import ActionType
 from src.core.models import Vector2
 
 if TYPE_CHECKING:
     from src.config import SimulationConfig
-    from src.core.world_state import WorldState
-    from src.systems.rng import DeterministicRNG
+    from src.core.models.world_state import WorldState
+    from src.platform.rng import DeterministicRNG
 
 logger = logging.getLogger(__name__)
 
@@ -28,11 +30,23 @@ class ConflictResolver:
     - Combat: processed sequentially by initiative (speed); dead targets fail validation.
     """
 
-    __slots__ = ("_config", "_combat_action")
+    __slots__ = ("_config", "_combat_action", "_action_system")
+
+    PRIORITY_MAP: dict[ActionType, int] = {
+        ActionType.USE_ITEM: 10,
+        ActionType.MOVE: 20,
+        ActionType.ATTACK: 30,
+        ActionType.USE_SKILL: 40,
+        ActionType.LOOT: 50,
+        ActionType.HARVEST: 60,
+        ActionType.REPAIR: 70,
+        ActionType.REST: 80,
+    }
 
     def __init__(self, config: SimulationConfig, rng: DeterministicRNG) -> None:
         self._config = config
         self._combat_action = CombatAction(config, rng)
+        self._action_system = ActionSystem(config, rng)
 
     def resolve(self, proposals: list[ActionProposal], world: WorldState) -> list[ActionProposal]:
         """Validate and apply proposals. Returns the list of *applied* proposals."""
@@ -41,64 +55,103 @@ class ConflictResolver:
 
         sorted_proposals = self._sort(proposals, world)
         applied: list[ActionProposal] = []
-        occupied = self._build_occupied_set(world)
+        
+        # Track positions claimed DURING this resolution tick (AOA Phase 6)
+        resolution_occupied: set[tuple[int, int]] = set()
 
-        for proposal in sorted_proposals:
-            if self._apply_one(proposal, world, occupied):
-                applied.append(proposal)
+        sorted_proposals = self._sort(proposals, world)
+        
+        for p in sorted_proposals:
+            res = self._apply_one(p, world, resolution_occupied, applied)
 
         return applied
 
     # -- internals --
 
-    @staticmethod
-    def _sort(proposals: list[ActionProposal], world: WorldState) -> list[ActionProposal]:
-        """Deterministic sort: action type priority, then next_act_at, then entity ID."""
+    @classmethod
+    def _sort(cls, proposals: list[ActionProposal], world: WorldState) -> list[ActionProposal]:
+        """Deterministic sort: explicit action priority, then next_act_at, then entity ID."""
 
         def sort_key(p: ActionProposal) -> tuple[int, float, int]:
             entity = world.entities.get(p.actor_id)
             next_act = entity.next_act_at if entity else float("inf")
-            return (p.verb.value, next_act, p.actor_id)
+            priority = cls.PRIORITY_MAP.get(ActionType(p.verb), 100)
+            return (priority, next_act, p.actor_id)
 
         return sorted(proposals, key=sort_key)
 
     @staticmethod
     def _build_occupied_set(world: WorldState) -> set[tuple[int, int]]:
-        return {(e.pos.x, e.pos.y) for e in world.entities.values() if e.alive}
+        """DEPRECATED (AOA Phase 6): Use world.is_occupied() for O(1) lookups."""
+        return set()
 
     def _apply_one(
         self,
         proposal: ActionProposal,
         world: WorldState,
         occupied: set[tuple[int, int]],
+        all_applied: list[ActionProposal],
     ) -> bool:
         match proposal.verb:
+            case ActionType.REPAIR:
+                if RepairAction.validate(proposal, world):
+                    RepairAction.apply(proposal, world)
+                    all_applied.append(proposal)
+                    return True
             case ActionType.REST:
                 if RestAction.validate(proposal, world):
                     RestAction.apply(proposal, world)
+                    all_applied.append(proposal)
                     return True
 
             case ActionType.MOVE:
                 if MoveAction.validate(proposal, world, occupied):
                     entity = world.entities.get(proposal.actor_id)
                     if entity:
-                        # Free old position, claim new
-                        occupied.discard((entity.pos.x, entity.pos.y))
-                    MoveAction.apply(proposal, world)
-                    target: Vector2 = proposal.target
+                        # -- Opportunity Attack Logic --
+                        # If the entity was engaged (adjacent to hostiles), they get to strike
+                        old_pos = entity.spatial.pos
+                        # Opportunity Attack Check: Is anyone adjacent and hostile?
+                        for other in world.entities_at_radius(old_pos, 1):
+                            if other.id == entity.id or not other.combat.alive: continue
+                            if other.identity.faction != entity.identity.faction:
+                                # Trigger free Opportunity Attack
+                                opp_prop = ActionProposal(actor_id=other.id, verb=ActionType.ATTACK, target=entity.id, reason="Opportunity Attack")
+                                if self._combat_action.validate(opp_prop, world):
+                                    self._combat_action.apply(opp_prop, world)
+                                    all_applied.append(opp_prop)
+                                    # OA results will be applied later in ActionSystem.process_applied_actions
+                                else:
+                                    logger.debug("OA_VALIDATE_FAIL: %d -> %d", other.id, entity.id)
+
+                        # Free old position (if it was claimed this tick)
+                        occupied.discard((entity.spatial.pos.x, entity.spatial.pos.y))
+                    
+                    # Claim target position for this tick's resolution (prevent collisions)
+                    target = proposal.target
                     occupied.add((target.x, target.y))
+                    
+                    # Apply it!
+                    MoveAction.apply(proposal, world)
+                    all_applied.append(proposal)
                     return True
 
             case ActionType.ATTACK:
                 if self._combat_action.validate(proposal, world):
                     self._combat_action.apply(proposal, world)
+                    all_applied.append(proposal)
                     return True
 
             case ActionType.USE_ITEM | ActionType.LOOT | ActionType.HARVEST | ActionType.USE_SKILL:
                 # Validated and applied later in WorldLoop
                 entity = world.entities.get(proposal.actor_id)
-                if entity and entity.alive:
+                if entity and entity.combat.alive:
+                    all_applied.append(proposal)
                     return True
 
+        from src.utils.metrics import SIM_INVALID_ACTIONS_TOTAL
+        verb_name = proposal.verb.name if hasattr(proposal.verb, "name") else ActionType(proposal.verb).name
+        SIM_INVALID_ACTIONS_TOTAL.labels(action_type=verb_name.lower(), reason="validation_failed").inc()
+        
         logger.debug("Rejected: %s", proposal)
         return False

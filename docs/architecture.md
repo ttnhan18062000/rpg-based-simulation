@@ -1,332 +1,121 @@
-# System Architecture
+# Project Architecture: The Orchestrated Conductor (AOA)
 
-Technical documentation for the runtime architecture, concurrency model, and project structure.
-
----
-
-## Overview
-
-The RPG simulation engine is a **deterministic concurrent system** that simulates a living 2D world with autonomous entities. The core principle: heavy AI logic runs in parallel threads while world mutation is strictly single-threaded.
-
-**Key guarantees:**
-
-1. **Single-Writer / Multi-Reader** — Only `WorldLoop` mutates `WorldState`; workers read immutable snapshots
-2. **Absolute Determinism** — Given a `WorldSeed`, the simulation reproduces the exact same state on any machine
-3. **Intent vs Effect** — Workers produce `ActionProposal` (intent); `WorldLoop` resolves and applies effects
-4. **Atomic Ticks** — All actions for tick N are resolved before tick N+1 begins
-
-**Primary files:** `src/engine/world_loop.py`, `src/core/world_state.py`, `src/core/snapshot.py`, `src/api/engine_manager.py`
+This document provides a deep technical overview of the **Aspect-Oriented Architecture (AOA)** at the heart of the WorldLoop RPG simulation. It is the primary guide for developers to understand the engine's "plumbing," concurrency model, and strict execution guarantees.
 
 ---
 
-## Concurrency Model
+## 1. High-Level Architecture
 
-### Thread Layout
+The simulation is built on a **Deterministic Orchestrated Engine** where the `WorldLoop` acts as a central conductor, coordinating decoupled systems and maintaining a single source of truth through immutable snapshots.
 
-| Thread | Role | Reads | Writes |
-|--------|------|-------|--------|
-| **Main** (uvicorn) | HTTP request handling | `latest_snapshot`, `EventLog` | Control signals |
-| **Engine** (`WorldLoop`) | Tick cycle, mutation | `WorldState` | `WorldState`, `Snapshot` |
-| **Workers** (ThreadPool) | AI computation | `Snapshot` (immutable) | `ActionQueue` (thread-safe) |
+### System Context Diagram
 
-### Data Flow
-
-```
-WorldLoop ──1. creates──▶ Snapshot (immutable)
-                              │
-                    ┌─────────┼─────────┐
-                    ▼         ▼         ▼
-                Worker 1   Worker 2   Worker 3
-                    │         │         │
-                    └─────────┼─────────┘
-                              ▼
-                     ActionQueue (thread-safe)
-                              │
-                    ◀─2. consumed by── WorldLoop
-                              │
-                    3. mutates ──▶ WorldState
+```mermaid
+graph TD
+    Client["Browser (React + Canvas)"] -- REST/Polling --> API["FastAPI (Web Thread)"]
+    API -- "ReadOnly Snapshots" --> Client
+    
+    API -- Controls --> Engine["WorldLoop (Simulation Thread)"]
+    Engine -- Snapshots --> API
+    
+    Engine -- Events --> Kafka["Apache Kafka (Event Sourcing)"]
+    Engine -- AI Tasks --> WorkerPool["WorkerPool (Concurrent AI)"]
+    WorkerPool -- "ActionProposals" --> Engine
 ```
 
-Workers never see partial updates. The `ActionQueue` is the only shared mutable structure between workers and the engine thread.
+### The Threaded Concurrency Model
+
+WorldLoop strictly isolates **Mutation** from **Reading** to avoid race conditions and GIL contention:
+
+1.  **Web Thread (FastAPI)**: Serves the REST API and handles user I/O. It **only** reads immutable `Snapshot` copies of the world.
+2.  **Simulation Thread (`WorldLoop`)**: The **Single-Writer**. Only this thread is allowed to mutate the `WorldState`.
+3.  **Worker Pool**: AI brain computations are offloaded to background threads. They receive a `freeze()` frozen snapshot and return an `ActionProposal`. They cannot change the state directly.
+4.  **Snapshots**: At the end of every tick, the engine creates a `Snapshot` (a deep-copy processed by the `WorldPresenter`) and performs an atomic swap.
 
 ---
 
-## Tick Cycle (4 Phases)
+## 2. The 7-Phase Orchestration Cycle
 
-Each tick in `WorldLoop._step()` executes:
+Every tick (default 50ms) executes exactly seven phases in a strict, contract-enforced sequence defined in `src/engine/world_loop.py`.
 
-### Phase 1: Scheduling
+### Phase Sequence & Contracts
 
-- Identify entities whose `next_act_at <= current_tick`
-- Generators execute immediately (spawn actions)
-- Characters are dispatched to the worker pool with an immutable `Snapshot`
+| Phase | Responsibility | Permissions (READ / MUTATE) |
+| :--- | :--- | :--- |
+| **1. PreSystems** | Global clock, age multipliers, environmental shifts. | `world.clock`, `world.config` / `world.environment` |
+| **2. Scheduling** | Identify entities due to act, reset per-tick temporary state. | `world.entities` / `tick_ready_entities` |
+| **3. Collection** | Fan-out AI tasks to `WorkerPool`, collect `ActionProposal` list. | `world.entities`, `action_queue` / `tick_proposals` |
+| **4. Resolution** | **Conflict & Update Phase**. Resolution, authoritative reward proposals. | `tick_proposals` / `tick_applied`, `world.entities` |
+| **5. Cleanup** | Remove dead entities, drop items, and handle hero respawns. | `world.entities`, `rng` / `world.entities` (DELETE) |
+| **6. Finalization** | **Metric Phase**. Calculate tick-duration and performance metrics. | `world`, `tick_applied` / `tick_metrics` |
+| **7. Persistence** | **External Phase**. Kafka/Redis publication and stream canonicalization. | `world`, `tick_applied`, `tick_events` / NONE (I/O only) |
 
-### Phase 2: Wait & Collect
-
-- Workers compute `ActionProposal` from the snapshot and push to `ActionQueue`
-- Hard timeout (`worker_timeout_seconds`, default 2s) prevents engine stalls — late entities miss their turn
-
-### Phase 3: Conflict Resolution & Application
-
-- Sort proposals deterministically (by `next_act_at`, then `entity_id`)
-- Validate each proposal (bounds, adjacency, alive checks)
-- Apply valid actions to `WorldState` (move, attack, loot, harvest, use_skill, use_item)
-- Reject invalid actions with logged reasons
-
-### Phase 4: Cleanup & Effects
-
-- Remove dead entities, drop loot
-- Process territory effects (debuffs, alerts, aura damage)
-- Tick status effects (decrement durations, apply hp_per_tick, prune expired)
-- Tick resource node cooldowns
-- Check level-ups (stat growth + attribute gains)
-- Regenerate stamina, tick skill cooldowns
-- Update entity memory (terrain + entity)
-- Tick quests (EXPLORE completion, pruning)
-- Update entity goals (display text)
-- Advance tick counter
+### Phase Governance (`PhaseGuard`)
+Runtime integrity is enforced by the `PhaseGuard` and `EngineContextProxy`. Since the **RPG Core Stabilization (2026-04-06)**, the guard is in **Strict Mode**: any attempt to access or mutate a field not explicitly declared in the `PhaseContract` will raise a `RuntimeError` and halt execution. This ensures 100% architectural compliance.
 
 ---
 
-## Core Data Structures
+## 3. Aspect-Oriented Entity Model
 
-### WorldState (Mutable, Private)
+Entities are no longer "flat" data objects. They are composed of domain-specific **Aspects** that encapsulate logic and state.
 
-The authoritative "truth". Never exposed directly to workers.
+### Core Aspect Container
+```python
+class Entity(SimulationModel):
+    identity: IdentityAspect    # Name, kind, faction, role
+    spatial: SpatialAspect      # Position, facing, vision_range
+    combat: CombatAspect        # HP, ATK/DEF properties, alive status
+    progression: ProgressionAspect # Level, XP, stat training accumulators
+    mind: MindAspect            # AI state, perception, emotion, memories
+    interaction: InteractionAspect # Reputation, familiarity, active interaction state
+    inventory: InventoryAspect  # Equipment slots, bag items, gold
+```
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `tick` | int | Current simulation tick |
-| `entities` | dict[int, Entity] | All living entities by ID |
-| `grid` | Grid | 2D tile grid |
-| `ground_items` | dict[tuple, list[str]] | Dropped loot by position |
-| `buildings` | list[Building] | Town buildings |
-| `camps` | list[Vector2] | Camp center positions |
-| `resource_nodes` | dict[int, ResourceNode] | Harvestable nodes by ID |
-| `treasure_chests` | dict[int, TreasureChest] | Lootable chests by ID |
+### Snapshot Immutability (`freeze()`)
+Before being passed to the `WorkerPool`, every `Entity` and `WorldState` is put through a `freeze()` process. This recursively converts Pydantic models into `MappingProxyType` or tuple-backed structures, making them functionally immutable. This ensures that AI logic remains a purely functional mapping from `WorldState -> ActionProposal`.
 
-### Snapshot (Immutable, Public)
+---
 
-Point-in-time read-only view for workers and the API layer. Created at the start of each tick.
+## 4. Deterministic Determinism
 
-Uses `MappingProxyType` for entity dict and tuples for lists to prevent mutation. Contains only what AI needs: entities, grid, camps, buildings, resource nodes, treasure chests.
+WorldLoop uses the **Seed-Domain-Identity** formula to ensure perfect replayability.
 
-### ActionProposal
+### The RNG Formula
+The `DeterministicRNG` (using `xxhash`) generates seeds based on:
+1.  **World Seed**: Global simulation seed.
+2.  **Domain**: (e.g., `Domain.COMBAT`, `Domain.AI_WANDER`).
+3.  **Entity ID**: Ensures different entities don't "sync" their random rolls.
+4.  **Tick**: Ensures rolls change every frame.
 
 ```python
-@dataclass
-class ActionProposal:
-    actor_id: int
-    verb: ActionType      # MOVE, ATTACK, REST, USE_ITEM, LOOT, HARVEST, USE_SKILL
-    target: Any           # Coordinates, EntityID, or item ID
-    reason: str           # Debug string
+# Canonical way to roll for crit
+roll = ctx.rng.next_float(Domain.COMBAT, attacker.id, ctx.world.tick)
+is_crit = roll < attacker.combat.crit_rate
 ```
 
 ---
 
-## Deterministic RNG
+## 5. Persistence & Event Sourcing (Kafka)
 
-All randomness uses `DeterministicRNG` (`src/systems/rng.py`) with **domain-separated hashing**.
+Instead of a traditional CRUD database, the engine uses **Event Sourcing**:
 
-**Formula:** `value = hash64(world_seed, domain, entity_id, tick)`
-
-### RNG Domains
-
-| Domain | Value | Usage |
-|--------|-------|-------|
-| COMBAT | 0 | Damage variance, crit rolls, evasion rolls |
-| LOOT | 1 | Item drops, chest loot |
-| AI_DECISION | 2 | Goal tie-breaking |
-| SPAWN | 3 | Entity stat rolls, tier selection |
-| WEATHER | 4 | (Reserved) |
-| LEVEL_UP | 5 | Level-up variance |
-| ITEM | 6 | Item-related rolls |
-| HARVEST | 7 | Harvest-related rolls |
-| MAP_GEN | 8 | World generation |
-
-**Key benefit:** Adding a new feature with a new domain does not change existing RNG sequences.
+-   **Snapshots**: Compacted world state saved to `sim.snapshots` every 100 ticks.
+-   **Events**: Granular `SimEvent` logs (Combat, Loot, Level-up) saved to `sim.events`.
+-   **Recovery**: On boot, the engine fetches the latest snapshot and "replays" the Kafka event stream until it reaches the desired tick.
 
 ---
 
-## API Layer
+## 6. The Presenter Boundary
 
-The FastAPI backend (`src/api/`) bridges the simulation to HTTP clients.
-
-### EngineManager
-
-Singleton wrapper that:
-1. Builds the world (grid, zones, buildings, entities) during startup
-2. Runs `WorldLoop` in a background daemon thread
-3. Holds a thread-safe `latest_snapshot` reference (atomic swap after each tick)
-4. Manages an unbounded `EventLog` for simulation events
-5. Exposes control signals (start, pause, resume, step, reset)
-
-### Lifespan
-
-```
-FastAPI startup → EngineManager._build() → WorldLoop thread starts
-FastAPI shutdown → WorldLoop thread joins
-```
-
-### Endpoints
-
-All under `/api/v1/`. See `api_reference.md` for full specification.
-
-| Group | Routes | Purpose |
-|-------|--------|---------|
-| **State** | `/state`, `/stats` | Live simulation state (polled every ~80ms). `/state` returns slim entities + optional full selected entity |
-| **Static** | `/static` | Buildings, regions, resources, chests (fetched once) |
-| **Map** | `/map` | RLE-compressed tile grid (fetched once) |
-| **Control** | `/control/{action}`, `/speed` | Simulation lifecycle |
-| **Config** | `/config` | Read-only simulation config |
-| **Metadata** | `/metadata/*` (8 endpoints) | Game definitions — serialized core pydantic dataclasses |
-
-### Shared Schema Architecture
-
-Core game definitions (`ItemTemplate`, `SkillDef`, `ClassDef`, `BreakthroughDef`, `TraitDef`) are **pydantic dataclasses** that serve as the single source of truth for both the engine and the API:
-
-- **Runtime:** Fields like `item_type: ItemType` remain `IntEnum` for fast game logic comparisons
-- **Serialization:** `Annotated[EnumType, PlainSerializer(...)]` converts enums to lowercase strings in JSON
-- **No duplication:** `metadata.py` uses `TypeAdapter(CoreModel).dump_python()` to serialize core objects directly
-- **Mutable types stay stdlib:** `SkillInstance`, `TreasureChest`, `Building` use standard `dataclasses.dataclass`
-
-See `docs/design_patterns.md` §7 for full details.
-
-### API Documentation
-
-Three views available:
-- **In-app API Docs** — custom React page in the frontend (fetches `/openapi.json`)
-- **Swagger UI** — `/docs`
-- **ReDoc** — `/redoc`
+The API does not serve the raw `WorldState`. It uses the `WorldPresenter` to:
+1.  **Slimming**: Reduce 1MB+ entity objects to ~200B "Slim" versions for map rendering.
+2.  **Mapping**: Convert internal Python enums/IDs into developer-friendly string keys for the frontend.
+3.  **Introspection**: Inject derived stats (like `StatBreakdown`) only when a specific entity is inspected.
 
 ---
 
-## Event System
-
-`EventLog` (`src/utils/event_log.py`) stores `SimEvent` records. Thread-safe via a simple lock.
-
-- **Unbounded** — all events kept since simulation start
-- **Writers** append batches (once per tick)
-- **Readers** snapshot slices (non-blocking copies)
-- **Manual clear** via `POST /api/v1/clear_events`
-
----
-
-## Configuration
-
-`SimulationConfig` (`src/config.py`) is a frozen dataclass with all tunable parameters. Key defaults:
-
-| Category | Parameter | Default |
-|----------|-----------|---------|
-| World | `grid_width` / `grid_height` | 512 × 512 |
-| World | `world_seed` | 42 |
-| Timing | `max_ticks` | 1000 |
-| Workers | `num_workers` | 4 |
-| Workers | `worker_timeout_seconds` | 2.0 |
-| Entities | `initial_entity_count` | 40 |
-| Entities | `generator_max_entities` | 200 |
-| Town | `town_center_x/y` | 256, 256 |
-| Town | `town_radius` | 6 |
-| Camps | `camp_min_distance` | 60 |
-| AI | `vision_range` | 6 |
-| Combat | `max_level` | 20 |
-
-Full parameter list in `src/config.py`.
-
----
-
-## Project File Map
-
-```
-src/
-├── __main__.py                  # CLI entry point
-├── config.py                    # SimulationConfig dataclass
-├── core/                        # Data models (pydantic shared schemas)
-│   ├── enums.py                 # ActionType, AIState, Material, Domain, etc.
-│   ├── grid.py                  # 2D tile grid with walkability + LoS (Bresenham)
-│   ├── models.py                # Entity dataclass
-│   ├── world_state.py           # Mutable world state
-│   ├── snapshot.py              # Immutable snapshot for workers
-│   ├── items.py                 # ItemTemplate (pydantic), Inventory, ITEM_REGISTRY
-│   ├── classes.py               # ClassDef, SkillDef, BreakthroughDef (pydantic)
-│   ├── traits.py                # TraitDef (pydantic), UtilityBonus, TraitRegistry
-│   ├── buildings.py             # Building, Recipe, shop config
-│   ├── faction.py               # Faction, FactionRelation, FactionRegistry (10 factions)
-│   ├── effects.py               # StatusEffect, EffectType
-│   ├── attributes.py            # Attributes, derived stats, training
-│   ├── quests.py                # Quest, QuestType, templates
-│   ├── resource_nodes.py        # ResourceNode, TERRAIN_RESOURCES (8 biomes)
-│   ├── regions.py               # Region, Location dataclasses, name tables, difficulty config
-│   └── entity_builder.py        # Fluent builder for Entity construction
-├── engine/
-│   ├── world_loop.py            # 4-phase tick cycle (the engine core)
-│   ├── action_queue.py          # Thread-safe MPSC queue
-│   ├── worker_pool.py           # ThreadPoolExecutor for AI workers
-│   └── conflict_resolver.py     # Deterministic conflict resolution
-├── actions/
-│   ├── base.py                  # ActionProposal dataclass
-│   ├── combat.py                # CombatAction (damage pipeline, AoE, ranged, cover)
-│   ├── damage.py                # DamageCalculator strategy pattern
-│   ├── move.py                  # MoveAction (validate + apply)
-│   └── rest.py                  # RestAction
-├── ai/
-│   ├── brain.py                 # AIBrain (hybrid: goals + state machine)
-│   ├── states.py                # StateHandler subclasses (18 states)
-│   ├── perception.py            # Vision, memory, faction-aware queries
-│   ├── pathfinding.py           # A* pathfinder, terrain costs, path caching
-│   ├── goal_evaluator.py        # Backward-compat shim
-│   └── goals/
-│       ├── base.py              # GoalScorer ABC, GoalEvaluator, registry
-│       ├── scorers.py           # 9 built-in goal scorers
-│       └── registry.py          # register_all_goals()
-├── systems/
-│   ├── rng.py                   # DeterministicRNG (domain-separated hashing)
-│   ├── spatial_hash.py          # O(1) spatial neighbor lookups
-│   ├── generator.py             # EntityGenerator (spawn, spawn_race)
-│   └── terrain_detail.py        # Intra-region terrain features (per-biome)
-├── utils/
-│   ├── event_log.py             # Ring-buffer EventLog (10k cap)
-│   ├── logging.py               # Structured logging setup
-│   └── replay.py                # JSON replay recorder
-└── api/
-    ├── app.py                   # FastAPI app factory (OpenAPI tags, CORS)
-    ├── engine_manager.py        # World builder + background thread manager
-    ├── dependencies.py          # FastAPI dependency injection
-    ├── schemas.py               # Pydantic response models (EntitySlim, RLE map)
-    └── routes/
-        ├── __init__.py          # Router registration (api_router)
-        ├── state.py             # GET /state, /stats, /static
-        ├── map.py               # GET /map (RLE-compressed)
-        ├── control.py           # POST /control/{action}, /speed
-        ├── config.py            # GET /config
-        └── metadata.py          # GET /metadata/* (8 endpoints, uses core schemas)
-
-frontend/
-├── src/
-│   ├── App.tsx                  # Root layout + page toggle (Simulation | API Docs)
-│   ├── main.tsx                 # Entry point (wraps App with MetadataProvider)
-│   ├── types/
-│   │   ├── api.ts               # Simulation state types
-│   │   └── metadata.ts          # Metadata types (mirrors core pydantic schemas)
-│   ├── contexts/
-│   │   └── MetadataContext.tsx   # MetadataProvider + useMetadata() hook
-│   ├── constants/
-│   │   └── colors.ts            # Visual-only: colors, icons, cell size
-│   ├── hooks/
-│   │   ├── useSimulation.ts     # API polling + state management
-│   │   └── useCanvas.ts         # Canvas rendering
-│   └── components/
-│       ├── Header.tsx           # Status bar + Simulation/API Docs nav toggle
-│       ├── ApiDocsPage.tsx      # Interactive API docs (OpenAPI explorer + Try It)
-│       ├── GameCanvas.tsx       # 3-layer canvas + minimap
-│       ├── Sidebar.tsx          # Tab container
-│       ├── ControlPanel.tsx     # Simulation controls
-│       ├── InspectPanel.tsx     # Entity inspector (6 tabs, uses useMetadata)
-│       ├── BuildingPanel.tsx    # Building info (uses useMetadata)
-│       ├── ClassHallPanel.tsx   # Class browser (uses useMetadata)
-│       ├── LootPanel.tsx        # Ground item detail (uses useMetadata)
-│       ├── EventLog.tsx         # Event history with clear button
-│       ├── EntityList.tsx       # Sorted entity list
-│       └── Legend.tsx           # Tile/entity color legend
-└── ...
-```
+## 7. Performance Benchmarks
+-   **Tick Budget**: 50ms (20 TPS).
+-   **Resolution Target**: ~2ms for 200 entities.
+-   **API Loop**: ~80ms polling cycle.
+-   **SSE Stream**: Delta-compression for large world changes.

@@ -212,3 +212,7 @@ frontend/node_modules/
 # Profiling and test logs
 *.prof
 pytest*.txt
+
+tmp/*
+reviews/*
+!reviews/code_exporter.py

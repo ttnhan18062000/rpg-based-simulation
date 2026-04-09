@@ -17,10 +17,18 @@ _PRODUCER_INSTANCE: Producer | None = None
 
 def get_kafka_url() -> str:
     """Return the configured Kafka bootstrap servers."""
-    return os.environ.get("KAFKA_URL", "localhost:9092")
+    return os.environ.get("KAFKA_URL", "127.0.0.1:9092")
+
+def is_kafka_disabled() -> bool:
+    """Return True if Kafka integration is explicitly disabled."""
+    return os.environ.get("DISABLE_KAFKA", "0").lower() in ("1", "true", "yes")
 
 def init_kafka_topics() -> None:
     """Idempotently create exactly the required topics with appropriate configurations."""
+    if is_kafka_disabled():
+        logger.info("Kafka integration disabled via environment variable.")
+        return
+        
     admin_client = AdminClient({"bootstrap.servers": get_kafka_url()})
     
     # 1. Events Topic: We want this to be an immutable append-only log of deltas,
@@ -61,24 +69,40 @@ def get_kafka_producer() -> Producer | None:
     """Return a singleton, highly-durable Kafka Producer."""
     global _PRODUCER_INSTANCE
     
+    if is_kafka_disabled():
+        return None
+        
     if _PRODUCER_INSTANCE is not None:
         return _PRODUCER_INSTANCE
         
     bootstrap_servers = get_kafka_url()
-    try:
-        # We need strong durability for event sourcing
-        conf = {
-            'bootstrap.servers': bootstrap_servers,
-            'acks': 'all',  # Wait for leader and all replicas
-            'enable.idempotence': True, # Prevent duplicate messages on network retry
-            'compression.type': 'lz4', # Heavy JSON payloads compress well
-        }
-        _PRODUCER_INSTANCE = Producer(conf)
-        logger.info("Kafka Producer initialized at %s", bootstrap_servers)
-        return _PRODUCER_INSTANCE
-    except Exception as e:
-        logger.error("Failed to initialize Kafka Producer: %s", e)
-        return None
+    
+    import time
+    for i in range(40): # Increased to 40 attempts (120s) for slow Docker bootstrap on Windows
+        try:
+            conf = {
+                'bootstrap.servers': bootstrap_servers,
+                'client.id': 'sim-engine-producer',
+                'message.max.bytes': 10000000, # 10MB to match broker
+                'acks': 'all',
+                'retries': 5,
+                'retry.backoff.ms': 500
+            }
+            _PRODUCER_INSTANCE = Producer(conf)
+            # Confirm connectivity by fetching metadata
+            _PRODUCER_INSTANCE.list_topics(timeout=2.0)
+            logger.info("Successfully connected to Kafka producer at %s", bootstrap_servers)
+            return _PRODUCER_INSTANCE
+        except Exception as e:
+            if i == 39:
+                from src.utils.metrics import SIM_ERRORS_TOTAL
+                SIM_ERRORS_TOTAL.labels(exception_type=type(e).__name__, component="kafka_producer_init").inc()
+                logger.error("Final attempt (40) failed to connect to Kafka at %s: %s", bootstrap_servers, e)
+                raise # Re-raise the exception on final failure
+            logger.warning("Attempt %d/40: Kafka not ready at %s, retrying in 3s...", i+1, bootstrap_servers)
+            time.sleep(3)
+    
+    return None
 
 def flush_producer() -> None:
     """Wait for all messages in the Producer queue to be delivered."""
@@ -88,6 +112,9 @@ def flush_producer() -> None:
 
 def create_kafka_consumer(group_id: str = "sim_engine_recovery") -> Consumer | None:
     """Return a new Kafka Consumer configured for reading from the beginning."""
+    if is_kafka_disabled():
+        return None
+        
     bootstrap_servers = get_kafka_url()
     try:
         conf = {
@@ -101,5 +128,7 @@ def create_kafka_consumer(group_id: str = "sim_engine_recovery") -> Consumer | N
         logger.info("Kafka Consumer initialized at %s", bootstrap_servers)
         return consumer
     except Exception as e:
+        from src.utils.metrics import SIM_ERRORS_TOTAL
+        SIM_ERRORS_TOTAL.labels(exception_type=type(e).__name__, component="kafka_consumer_init").inc()
         logger.error("Failed to initialize Kafka Consumer: %s", e)
         return None

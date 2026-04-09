@@ -101,8 +101,18 @@ Fractional accumulation (e.g. 67 attacks → +1 STR). Training never exceeds the
 ### Level-Up Attribute Gains
 
 On each level-up (`level_up_attributes()`):
-- All **9** primary attributes: **+2** (capped)
+- All **9** primary attributes: **+2** (modified by **Aptitudes**; capped)
 - All **9** attribute caps: **+5**
+
+### 3.5 Attribute Decay & Aptitudes
+
+Attributes are dynamic and can fluctuate based on world events or character traits.
+
+| Mechanism | Effect |
+|-----------|--------|
+| **Aptitude** | `2.0x` training rate and `+2` level-up gain for a favored attribute. |
+| **Weakness** | `0.5x` training rate and `+1` level-up gain for a hindered attribute. |
+| **Decay** | A random attribute may fractionally decrease (`-0.1`) periodically. It won't decay below its starting value (usually 5). |
 
 ---
 
@@ -130,6 +140,26 @@ Capped at `max_stamina`.
 
 ---
 
+## 4.5 Action Delay (Speed Formula)
+
+The time between actions is determined by the `spd` stat using a logarithmic diminishing returns formula in `attributes.py`.
+
+**Formula:** `delay = action_mult / (1.0 + ln(max(spd, 1)))`
+
+| Action | `action_mult` | Default Delay (at 10 SPD) |
+|--------|---------------|---------------------------|
+| Use Item | 1.0 | 0.30s |
+| Loot / Harvest | 1.2 | 0.36s |
+| Attack / Rest | 1.5 | 0.45s |
+| Move / Buildings | 2.0 | 0.60s |
+| Skill | 2.5 | 0.76s |
+
+- **Minimum Delay:** 0.3s (Floor)
+- **Maximum Delay:** 4.0s (Ceiling)
+- **Interaction Speed:** Non-combat delays (loot/harvest/rest) are further divided by the entity's `interaction_speed` stat.
+
+---
+
 ## 5. Hero Classes
 
 ### Scaling Grades
@@ -151,26 +181,72 @@ Capped at `max_stamina`.
 |-------|----------------|---------|-------------|-------------|
 | **Warrior** | STR=S, VIT=A | STR+3, VIT+2, END+1 | STR+10, VIT+5 | → Champion (Lv10, STR≥30) |
 | **Ranger** | AGI=S, END=A | AGI+3, WIS+2, END+1 | AGI+10, WIS+5, PER+3 | → Sharpshooter (Lv10, AGI≥30) |
-| **Mage** | SPI=S, WIS=A | INT+2, SPI+3, WIS+2 | SPI+10, INT+5, WIS+5 | → Archmage (Lv10, SPI≥30) |
-| **Rogue** | AGI=S, STR=B | STR+2, AGI+2, WIS+1 | AGI+8, STR+5, WIS+3 | → Assassin (Lv10, AGI≥25) |
+| **Mage** | SPI=S, WIS=A | INT+2, SPI+3, WIS+2 | SPI+10, INT+5, WIS+5 | → Archmage (Lv10, INT≥30) |
+| **Rogue** | AGI=S, STR=B | STR+2, AGI+2, WIS+1 | AGI+8, STR+5, WIS+3 | → Assassin (Lv10, AGI≥30) |
 
 ### Breakthrough Classes (Tier 2)
 
-| Class | From | Talent |
-|-------|------|--------|
-| **Champion** | Warrior | Unyielding — Below 25% HP → +30% DEF, +20% ATK for 5 ticks |
-| **Sharpshooter** | Ranger | Precision — Crits deal +25% damage; Quick Shot range +1 |
-| **Archmage** | Mage | Arcane Mastery — Skill durations +1 tick; cooldowns −1 tick |
-| **Assassin** | Rogue | Lethal — Guaranteed crit vs targets below 30% HP; Backstab → 2.8× |
+| Class | From | Talent | Req |
+|-------|------|--------|-----|
+| **Champion** | Warrior | Unyielding | Level 10, STR 30+ |
+| **Sharpshooter** | Ranger | Precision | Level 10, AGI 30+ |
+| **Archmage** | Mage | Arcane Mastery | Level 10, INT 30+ |
+| **Assassin** | Rogue | Lethal | Level 10, AGI 30+ |
+
+### Transcendence Classes (Tier 3)
+
+| Class | From | Talent | Req |
+|-------|------|--------|-----|
+| **Warlord** | Champion | Indomitable | Level 20, STR 50+ |
+| **Storm Caller** | Archmage | Storm Soul | Level 20, INT 50+ |
+| **Ghost Stalker** | Sharpshooter | Untraceable | Level 20, AGI 50+ |
+| **Nightshade** | Assassin | Void Veil | Level 20, AGI 50+ |
 
 ### Progression Tiers
 
+```mermaid
+graph TD
+    A[Warrior] --> B[Champion]
+    B --> C[Warlord]
+    D[Ranger] --> E[Sharpshooter]
+    E --> F[Storm Caller]
+    G[Mage] --> H[Archmage]
+    H --> I[Ghost Stalker]
+    J[Rogue] --> K[Assassin]
+    K --> L[Nightshade]
 ```
-Warrior  → Champion      → [Transcendence] (future)
-Ranger   → Sharpshooter  → [Transcendence]
-Mage     → Archmage      → [Transcendence]
-Rogue    → Assassin      → [Transcendence]
-```
+
+---
+
+## 5.5 Mob Archetypes
+
+Non-playable entities use archetypes to determine stat bias and behavior:
+
+| Archetype | Focus | Typical Factions |
+|-----------|-------|------------------|
+| **BRUTE** | STR / VIT | Orcs, Warrior Goblins |
+| **SCOUT** | AGI / PER | Wolves, Bandits |
+| **CASTER** | SPI / INT | Liches, Shamans |
+| **TANK** | VIT / END | Skeletons, Golems |
+| **BEAST** | STR / AGI | Wild Creatures |
+
+
+---
+
+## 5.7 Attribute Breakthrough Traits
+
+Reaching specific milestones in primary attributes grants permanent passive traits that provide percentage bonuses to effective stats.
+
+| Attribute Milestone | Trait ID | Bonus Effect |
+|---------------------|----------|--------------|
+| **STR 25** | `str_25` | `+10%` ATK multiplier |
+| **VIT 25** | `vit_25` | `+10%` Max HP multiplier |
+| **AGI 25** | `agi_25` | `+10%` SPD multiplier |
+| **INT 25** | `int_25` | `10%` Cooldown Reduction (0.9x mult) |
+| **PER 25** | `per_25` | `+2` Vision Range (flat) |
+
+Checked on level-up and attribute training via `check_breakthroughs()`.
+
 
 ---
 
@@ -219,9 +295,9 @@ Runtime state per entity:
 |------|---------|-------------|-------------------|--------------------|
 | Novice | 0–24% | — | — | — |
 | Apprentice | 25–49% | — | −10% | — |
-| Adept | 50–74% | +20% | −10% | — |
-| Expert | 75–99% | +20% | −20% | −1 tick |
-| Master | 100% | +35% | −25% | −1 tick |
+| Adept | 50–74% | +20% | −10% | −10% |
+| Expert | 75–99% | +20% | −20% | −10% |
+| Master | 100% | +35% | −20% | −20% |
 
 ### Skill Modifiers & Effects
 

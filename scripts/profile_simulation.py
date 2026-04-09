@@ -32,72 +32,57 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from src.api.engine_manager import EngineManager
 from src.config import SimulationConfig
-from src.core.snapshot import Snapshot
+from src.core.models.snapshot import Snapshot
 
 
 def _run_simulation(cfg: SimulationConfig, num_ticks: int) -> dict:
-    """Run simulation and collect per-tick timing data."""
+    """Run simulation and collect per-tick timing data using AOA Phases."""
+    from src.engine.phases.context import EngineContext
+    
     mgr = EngineManager(cfg)
     loop = mgr._loop
     assert loop is not None
 
     tick_times: list[float] = []
-    phase_times: list[tuple[float, float, float, float]] = []
+    # (Pre, Schedule, Collect, Resolve, Cleanup, Persistence)
+    phase_stats: list[list[float]] = [[] for _ in range(6)]
     entity_counts: list[int] = []
 
     for i in range(num_ticks):
         t_start = time.perf_counter()
+        
+        # Replicate WorldLoop._step logic with timing
+        ctx = EngineContext(
+            config=loop._config,
+            world=loop._world,
+            action_queue=loop._action_queue,
+            worker_pool=loop._worker_pool,
+            conflict_resolver=loop._conflict_resolver,
+            generator=loop._generator,
+            rng=loop._rng,
+            faction_reg=loop._faction_reg,
+            system_manager=loop._system_manager,
+            action_system=loop._action_system,
+            hero_lifecycle=loop._hero_lifecycle,
+            emit=loop._emit,
+            tick_start_time=t_start
+        )
 
-        # --- Phase 1: Scheduling ---
-        loop._phase_generators()
-        ready = loop._phase_scheduling()
-        t1 = time.perf_counter()
+        for idx, phase in enumerate(loop._phases):
+            p_start = time.perf_counter()
+            phase.execute(ctx)
+            p_end = time.perf_counter()
+            phase_stats[idx].append(p_end - p_start)
 
-        if not ready:
-            tick_times.append(t1 - t_start)
-            phase_times.append((t1 - t_start, 0.0, 0.0, 0.0))
-            entity_counts.append(sum(1 for e in loop.world.entities.values() if e.alive and e.kind != "generator"))
-            loop.world.tick += 1
-            continue
-
-        # --- Phase 2: Collect ---
-        snapshot = Snapshot.from_world(loop.world)
-        loop._worker_pool.dispatch(ready, snapshot, loop._action_queue)
-        proposals = loop._action_queue.drain()
-        t2 = time.perf_counter()
-
-        # --- Phase 3: Resolve ---
-        applied = loop._conflict_resolver.resolve(proposals, loop.world)
-        loop._last_applied = applied
-        loop._update_ai_states(applied)
-        loop._process_item_actions(applied)
-        loop._heal_home_entities()
-        t3 = time.perf_counter()
-
-        # --- Phase 4: Cleanup ---
-        loop._phase_cleanup()
-        loop._process_territory_effects()
-        loop._tick_effects()
-        loop._tick_resource_nodes()
-        loop._tick_treasure_chests()
-        loop._tick_engagement()
-        loop._check_level_ups()
-        loop._tick_stamina_and_skills()
-        loop._update_entity_memory()
-        loop._tick_quests()
-        loop._update_entity_goals()
-        t4 = time.perf_counter()
-
-        total = t4 - t_start
-        tick_times.append(total)
-        phase_times.append((t1 - t_start, t2 - t1, t3 - t2, t4 - t3))
-
-        alive = sum(1 for e in loop.world.entities.values() if e.alive and e.kind != "generator")
-        entity_counts.append(alive)
-
+        # Post-tick maintenance
+        loop._last_applied = ctx.tick_applied
         loop.world.tick += 1
 
-        if alive == 0:
+        t_end = time.perf_counter()
+        tick_times.append(t_end - t_start)
+        entity_counts.append(sum(1 for e in loop.world.entities.values() if e.combat.alive and e.kind != "generator"))
+
+        if entity_counts[-1] == 0 and loop.world.tick > 0:
             break
 
     # Shutdown worker pool
@@ -106,7 +91,7 @@ def _run_simulation(cfg: SimulationConfig, num_ticks: int) -> dict:
 
     return {
         "tick_times": tick_times,
-        "phase_times": phase_times,
+        "phase_stats": phase_stats,
         "entity_counts": entity_counts,
         "final_tick": loop.world.tick,
     }
@@ -128,7 +113,7 @@ def _percentile(data: list[float], p: float) -> float:
 def _print_report(data: dict, wall_time: float) -> None:
     """Print a formatted performance report."""
     tick_times = data["tick_times"]
-    phase_times = data["phase_times"]
+    phase_stats = data["phase_stats"]
     entity_counts = data["entity_counts"]
     num_ticks = len(tick_times)
 
@@ -137,7 +122,7 @@ def _print_report(data: dict, wall_time: float) -> None:
         return
 
     print("\n" + "=" * 70)
-    print("  SIMULATION PERFORMANCE REPORT")
+    print("  SIMULATION PERFORMANCE REPORT (AOA HARDENED)")
     print("=" * 70)
 
     # --- Overview ---
@@ -163,15 +148,13 @@ def _print_report(data: dict, wall_time: float) -> None:
     print(f"  {'StdDev':<16} {statistics.stdev(tick_times) * 1000:>10.3f}" if num_ticks > 1 else "")
 
     # --- Phase breakdown ---
-    sched = [p[0] for p in phase_times]
-    collect = [p[1] for p in phase_times]
-    resolve = [p[2] for p in phase_times]
-    cleanup = [p[3] for p in phase_times]
     total_sum = sum(tick_times)
+    phase_names = ["Pre-Systems", "Scheduling", "Collection", "Resolution", "Cleanup", "Persistence"]
 
     print(f"\n  {'Phase':<16} {'Avg (ms)':>10} {'P95 (ms)':>10} {'% Total':>10}")
     print(f"  {'-' * 16} {'-' * 10} {'-' * 10} {'-' * 10}")
-    for name, times in [("Schedule", sched), ("Collect", collect), ("Resolve", resolve), ("Cleanup", cleanup)]:
+    for idx, name in enumerate(phase_names):
+        times = phase_stats[idx]
         avg_ms = statistics.mean(times) * 1000 if times else 0
         p95_ms = _percentile(times, 95) * 1000 if times else 0
         pct = (sum(times) / total_sum * 100) if total_sum > 0 else 0

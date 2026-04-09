@@ -1,0 +1,22 @@
+# Task: Debug and Fix WorldLoop Tests
+
+- [x] Investigation phase
+    - [x] Analyze `TCK-20260324-DEBUG_TESTS`
+    - [/] Identify root cause for 8 failing tests
+    - [/] Determine reason for 51 skipped tests
+- [x] Planning phase
+    - [x] Create `implementation_plan.md`
+    - [ ] Create `test_plan.md`
+    - [x] Ensure Docker port isolation for E2E tests
+- [x] Execution phase
+    - [x] Fix `TypeError: '>=' not supported between instances of 'MagicMock'` in AI/Core tests
+    - [x] Fix `AttributeError: 'method' object has no attribute 'return_value'` in AI/Core tests
+    - [x] Fix `UnboundLocalError: target_pos` in Quest tests
+    - [x] Address skipped tests (enable or document)
+    - [x] Implement Docker port isolation for E2E tests
+- [x] Verification phase
+    - [x] Run all unit tests
+    - [x] Verify 100% pass rate (or explained skips)
+- [ ] Completion phase
+    - [ ] Update `working_log.md`
+    - [ ] Finalize ticket

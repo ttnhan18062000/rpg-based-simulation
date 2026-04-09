@@ -32,6 +32,10 @@ class SimulationConfig:
     # AI
     vision_range: int = 6
     flee_hp_threshold: float = 0.3
+    flee_exit_threshold: float = 0.5         # HP ratio to stop fleeing (deadband)
+    min_commitment_ticks: int = 3            # minimum ticks before goal re-evaluation
+    goal_cooldown_ticks: int = 5             # ticks abandoned goals are penalized
+    goal_cooldown_penalty: float = 0.5       # score multiplier during cooldown
 
     # Town
     town_center_x: int = 256
@@ -99,6 +103,10 @@ class SimulationConfig:
     # Sanctuary (buffer zone around town)
     sanctuary_radius: int = 12
 
+    # Calamity & Faction Raids (epic-17)
+    raid_interval_days: int = 20
+    raid_base_strength: int = 5
+
     # Regions (epic-15)
     num_forest_regions: int = 4
     num_desert_regions: int = 3
@@ -148,3 +156,16 @@ class SimulationConfig:
     # Chaos Mode (infra-06)
     chaos_enabled: bool = False
     chaos_drop_rate: float = 0.05        # Probability to drop an AI result
+
+    # Performance (AOA Phase 6)
+    ai_batch_size: int = 20              # Number of entities per RabbitMQ task batch
+
+    # Debug / Stability (AOA Phase 5)
+    ignore_phase_errors: bool = False    # Whether to suppress exceptions in engine phases
+
+    # Biological Needs [PHASE 3]
+    sleep_decay_rate: float = 0.002      # Debt increase per tick
+    hunger_decay_rate: float = 0.001     # Hunger increase per tick
+    sleep_recovery_rate: float = 0.02    # Debt decrease per tick while sleeping
+    active_start_hour: int = 6           # Default start of daily activity
+    active_end_hour: int = 22            # Default end of daily activity

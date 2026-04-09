@@ -1,0 +1,21 @@
+# RPG Simulation - Metrics Overhaul (METRICS-01)
+
+- [x] Debug and Pass E2E Combat Tests
+- [x] Fix Docker System Failure & API Crashes
+- [x] Debug "Empty Inspect Panel"
+- [x] Optimize Slow Tick Rate
+- [ ] Ticket METRICS-01: Grafana Dashboard & Metrics Overhaul
+    - [x] Design Specification ([2026-03-20-grafana-metrics-overhaul-design.md](file:///d:/Projects/rpg-based-simulation/docs/superpowers/specs/2026-03-20-grafana-metrics-overhaul-design.md))
+    - [ ] Phase 1: Implement New Prometheus Metrics in `src/utils/metrics.py`
+    - [ ] Phase 2: Instrument Simulation Systems
+        - [ ] World Loop (Population, Gold, Faction stats)
+        - [ ] Combat Actions (Deaths, Faction kills, Skill usage)
+        - [ ] Building/Economy (Durability, Shop transactions, Crafting)
+    - [ ] Phase 3: Instrument Admin Diagnostics
+        - [ ] Error tracking (Unhandled exceptions, Invalid actions)
+        - [ ] Performance profiling (Tick phase breakdown)
+        - [ ] Infrastructure health (Worker/Redis/KAFKA status)
+    - [ ] Phase 4: Create Information-Rich Grafana Dashboard
+        - [ ] Update `grafana/dashboards/simulation.json`
+        - [ ] Implement "Preset View" variables
+    - [ ] Phase 5: Verification & Customization Presets

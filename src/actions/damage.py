@@ -1,26 +1,18 @@
 """Damage calculation strategy pattern.
 
-Abstract DamageCalculator with concrete subclasses for each damage type.
-To add a new damage type (e.g. TRUE, HYBRID):
-  1. Create a new DamageCalculator subclass.
-  2. Register it in DAMAGE_CALCULATORS.
+Refactored for AOA Stabilization:
+- Direct aspect access (combat, progression, attributes).
+- Removed legacy StatsProxy dependency.
 """
 
 from __future__ import annotations
-
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
-
-from src.core.enums import DamageType
+from src.core.models.enums import DamageType
 
 if TYPE_CHECKING:
-    from src.core.models import Entity
-
-
-# ---------------------------------------------------------------------------
-# Result dataclass
-# ---------------------------------------------------------------------------
+    from src.core.entities.entity import Entity
 
 @dataclass(slots=True)
 class DamageContext:
@@ -31,49 +23,41 @@ class DamageContext:
     def_mult: float
     train_action: str
 
-
-# ---------------------------------------------------------------------------
-# Abstract calculator
-# ---------------------------------------------------------------------------
-
 class DamageCalculator(ABC):
-    """Base class for damage type calculators.
-
-    Subclass and implement:
-      - damage_type: the DamageType enum value this handles
-      - resolve(): extract atk/def power and attribute multipliers
-    """
+    """Base class for damage type calculators."""
 
     @property
     @abstractmethod
-    def damage_type(self) -> int:
+    def damage_type(self) -> DamageType:
         """The DamageType this calculator handles."""
 
     @abstractmethod
     def resolve(self, attacker: Entity, defender: Entity) -> DamageContext:
         """Resolve attack/defense power and multipliers for this damage type."""
 
-
-# ---------------------------------------------------------------------------
-# Physical damage
-# ---------------------------------------------------------------------------
-
 class PhysicalDamageCalculator(DamageCalculator):
-
     @property
-    def damage_type(self) -> int:
+    def damage_type(self) -> DamageType:
         return DamageType.PHYSICAL
 
     def resolve(self, attacker: Entity, defender: Entity) -> DamageContext:
-        atk_power = attacker.effective_atk()
-        def_power = defender.effective_def()
+        # Direct Aspect Access
+        atk_power = attacker.combat.atk
+        def_power = defender.combat.def_
 
         atk_mult = 1.0
         def_mult = 1.0
-        if attacker.attributes:
-            atk_mult = 1.0 + attacker.attributes.str_ * 0.02
-        if defender.attributes:
-            def_mult = 1.0 + defender.attributes.vit * 0.01
+        
+        # Flanking check
+        diff = attacker.spatial.pos - defender.spatial.pos
+        facing = defender.spatial.facing
+        if (diff.x * facing.x + diff.y * facing.y) < 0:
+            atk_mult *= 1.3
+
+        if attacker.progression.attributes:
+            atk_mult *= (1.0 + attacker.progression.attributes.str_ * 0.02)
+        if defender.progression.attributes:
+            def_mult *= (1.0 + defender.progression.attributes.vit * 0.01)
 
         return DamageContext(
             atk_power=atk_power,
@@ -83,27 +67,22 @@ class PhysicalDamageCalculator(DamageCalculator):
             train_action="attack",
         )
 
-
-# ---------------------------------------------------------------------------
-# Magical damage
-# ---------------------------------------------------------------------------
-
 class MagicalDamageCalculator(DamageCalculator):
-
     @property
-    def damage_type(self) -> int:
+    def damage_type(self) -> DamageType:
         return DamageType.MAGICAL
 
     def resolve(self, attacker: Entity, defender: Entity) -> DamageContext:
-        atk_power = attacker.effective_matk()
-        def_power = defender.effective_mdef()
+        # Direct Aspect Access
+        atk_power = attacker.combat.matk
+        def_power = defender.combat.mdef
 
         atk_mult = 1.0
         def_mult = 1.0
-        if attacker.attributes:
-            atk_mult = 1.0 + attacker.attributes.spi * 0.02
-        if defender.attributes:
-            def_mult = 1.0 + defender.attributes.wis * 0.01
+        if attacker.progression.attributes:
+            atk_mult = 1.0 + attacker.progression.attributes.spi * 0.02
+        if defender.progression.attributes:
+            def_mult = 1.0 + defender.progression.attributes.wis * 0.01
 
         return DamageContext(
             atk_power=atk_power,
@@ -113,23 +92,20 @@ class MagicalDamageCalculator(DamageCalculator):
             train_action="magic_attack",
         )
 
-
-# ---------------------------------------------------------------------------
-# Registry — maps DamageType -> calculator instance
-# ---------------------------------------------------------------------------
-
-DAMAGE_CALCULATORS: dict[int, DamageCalculator] = {}
-
+DAMAGE_CALCULATORS: dict[DamageType, DamageCalculator] = {}
 _physical = PhysicalDamageCalculator()
 _magical = MagicalDamageCalculator()
 
 DAMAGE_CALCULATORS[DamageType.PHYSICAL] = _physical
 DAMAGE_CALCULATORS[DamageType.MAGICAL] = _magical
 
-# Fallback for unknown types
 DEFAULT_CALCULATOR: DamageCalculator = _physical
 
-
-def get_damage_calculator(damage_type: int) -> DamageCalculator:
+def get_damage_calculator(damage_type: DamageType) -> DamageCalculator:
     """Look up the calculator for a damage type, falling back to physical."""
+    if not isinstance(damage_type, DamageType):
+        try:
+            damage_type = DamageType(damage_type)
+        except ValueError:
+            return DEFAULT_CALCULATOR
     return DAMAGE_CALCULATORS.get(damage_type, DEFAULT_CALCULATOR)

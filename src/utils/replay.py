@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from src.actions.base import ActionProposal
-    from src.core.world_state import WorldState
+    from src.core.models.world_state import WorldState
 
 logger = logging.getLogger(__name__)
 
@@ -34,17 +34,17 @@ class ReplayRecorder:
             {
                 "id": e.id,
                 "kind": e.kind,
-                "pos": [e.pos.x, e.pos.y],
-                "hp": e.stats.hp,
-                "state": e.ai_state.name,
+                "pos": [e.spatial.pos.x, e.spatial.pos.y],
+                "hp": e.combat.hp,
+                "state": e.mind.decision.ai_state.name if hasattr(e.mind.decision.ai_state, "name") else AIState(e.mind.decision.ai_state).name,
             }
             for e in world.entities.values()
-            if e.alive
+            if e.combat.alive
         ]
         actions_log = [
             {
                 "actor": a.actor_id,
-                "verb": a.verb.name,
+                "verb": a.verb.name if hasattr(a.verb, "name") else ActionType(a.verb).name,
                 "target": (
                     [a.target.x, a.target.y]
                     if hasattr(a.target, "x")
