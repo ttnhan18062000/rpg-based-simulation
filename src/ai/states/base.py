@@ -18,6 +18,12 @@ if TYPE_CHECKING:
     from src.config import SimulationConfig
     from src.core.models.snapshot import Snapshot
     from src.platform.rng import DeterministicRNG
+    from src.core.models.strategy import (
+        StrategicState, ProjectRecord, ObjectiveRecord, DirectiveRecord,
+        ConcernRecord, LeadRecord, ObligationRecord, SocialContractRecord,
+        StrategicStatus
+    )
+    from src.core.aspects.mind import BeliefRecord, InterpretedEvent
 
 
 @dataclass(slots=True)
@@ -42,6 +48,72 @@ class AIContext:
 
     def get_belief(self, entity_id: int) -> BeliefRecord | None:
         return self.entity_memory.get(entity_id)
+
+    # -- strategic helpers (authoritative commitments) --
+
+    @property
+    def strategic(self) -> StrategicState:
+        """Access the actor's strategic stratum."""
+        return self.actor.mind.strategic
+
+    @property
+    def current_project(self) -> ProjectRecord | None:
+        """The currently active strategic project."""
+        return self.strategic.current_project
+
+    @property
+    def current_objective(self) -> ObjectiveRecord | None:
+        """The specific objective being pursued within the current project."""
+        return self.strategic.current_objective
+
+    @property
+    def active_directives(self) -> list[DirectiveRecord]:
+        """Enduring orientations filtered by priority."""
+        return sorted(self.strategic.directives, key=lambda d: d.priority, reverse=True)
+
+    @property
+    def active_concerns(self) -> list[ConcernRecord]:
+        """Active interrupts (Threats, Opportunities) not yet resolved."""
+        return [c for c in self.strategic.concerns if c.resolved_tick is None]
+
+    @property
+    def active_leads(self) -> list[LeadRecord]:
+        """Available clues for investigation that are not exhausted."""
+        return [l for l in self.strategic.leads if not l.is_exhausted]
+
+    @property
+    def active_obligations(self) -> list[ObligationRecord]:
+        """Unresolved social or professional duties."""
+        return [o for o in self.strategic.obligations if o.resolved_tick is None]
+
+    @property
+    def active_contracts(self) -> list[SocialContractRecord]:
+        """Active social contracts or party commitments."""
+        return [c for c in self.strategic.contracts if c.status == StrategicStatus.ACTIVE]
+
+    @property
+    def attachment_pressure(self) -> dict[str, float]:
+        """Summarized emotional/strategic pressure from place attachments."""
+        # Simple heuristic: prioritize based on attachment level
+        return {a.location_id: a.attachment_level for a in self.actor.mind.place_attachments}
+
+    @property
+    def recent_salient_events(self) -> list[InterpretedEvent]:
+        """High-impact narrative events from recent memory."""
+        # Return last 5 events with impact > 1.0
+        return [e for e in self.actor.mind.narrative.memory_log if abs(e.impact) > 1.0][-5:]
+
+    @property
+    def social_support_surface(self) -> list[int]:
+        """IDs of visible allies or candidates for social support."""
+        # Entities with positive bonds in our social stance
+        bonds = self.actor.mind.social.known_bonds
+        candidates = []
+        for v in self.visible:
+            bond = bonds.get(v.id)
+            if bond and bond.trust > 0.3:
+                candidates.append(v.id)
+        return candidates
 
     # -- cached helpers (lazily populated) --
     _visible_cache: list[Entity] | None = field(init=False, default=None)

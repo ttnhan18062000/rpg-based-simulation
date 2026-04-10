@@ -10,8 +10,10 @@ from src.core.models.world_state import WorldState
 from src.core.entities.entity import Entity
 from src.core.models.vectors import Vector2
 from src.core.models.strategy import StrategicStatus, ConcernKind, ProjectKind
-from src.actions.base import StrategicUpdate
-from src.core.logic.strategic_evaluator import StrategicEvaluatorService
+from src.ai.brain import AIBrain
+from src.core.models.snapshot import Snapshot
+from src.platform.rng import DeterministicRNG
+from src.config import SimulationConfig
 from src.core.world.grid import Grid
 from src.platform.spatial_hash import SpatialHash
 from src.core.world.regions import Region
@@ -56,6 +58,10 @@ def test_strategic_pivot_on_regional_danger(mock_world):
     # 1. Setup Hero in Forest
     hero = Entity(id=1, kind="hero")
     hero.spatial.pos = Vector2(25, 25)
+    hero.spatial.region_id = "forest"
+    
+    config = SimulationConfig()
+    brain = AIBrain(config, DeterministicRNG(0))
     
     # Seed a default project
     from src.core.models.strategy import ProjectRecord, ObjectiveRecord, ObjectiveKind
@@ -66,7 +72,11 @@ def test_strategic_pivot_on_regional_danger(mock_world):
     hero.mind.strategic.current_project_id = "quest_1"
     
     # 2. Initial Evaluation (Safe)
-    update = StrategicEvaluatorService.evaluate(hero, mock_world, 100)
+    snapshot = Snapshot.from_world(mock_world)
+    state, proposal = brain.decide(hero, snapshot)
+    
+    update = next((u for u in proposal.updates if hasattr(u, 'concerns_add_or_update')), None)
+    
     # Baseline check: no threat concern added
     if update:
         assert not any(c.concern_id == "concern_regional_threat" for c in update.concerns_add_or_update)
@@ -76,7 +86,9 @@ def test_strategic_pivot_on_regional_danger(mock_world):
     mock_world.region_consequence_registry["forest"].stability = 0.2
     
     # 4. Crisis Evaluation
-    update = StrategicEvaluatorService.evaluate(hero, mock_world, 101)
+    snapshot = Snapshot.from_world(mock_world)
+    state, proposal = brain.decide(hero, snapshot)
+    update = next((u for u in proposal.updates if hasattr(u, 'concerns_add_or_update')), None)
     
     assert update is not None
     # Verify Concern added
@@ -112,13 +124,19 @@ def test_recovery_hysteresis(mock_world):
     ))
     hero.mind.strategic.current_project_id = "project_stabilization"
     hero.mind.strategic.interrupted_project_id = "quest_1"
+    hero.spatial.region_id = "forest"
+    
+    config = SimulationConfig()
+    brain = AIBrain(config, DeterministicRNG(0))
     
     # Danger is now low
     mock_world.region_consequence_registry["forest"].danger_level = 0.1
     mock_world.region_consequence_registry["forest"].stability = 0.9
     
     # 2. Recovery Evaluation
-    update = StrategicEvaluatorService.evaluate(hero, mock_world, 200)
+    snapshot = Snapshot.from_world(mock_world)
+    state, proposal = brain.decide(hero, snapshot)
+    update = next((u for u in proposal.updates if hasattr(u, 'concerns_remove')), None)
     
     assert update is not None
     # Verify Concern REMOVED
@@ -145,7 +163,12 @@ def test_scar_detection(mock_world):
         )
     ]
     
-    update = StrategicEvaluatorService.evaluate(hero, mock_world, 100)
+    config = SimulationConfig()
+    brain = AIBrain(config, DeterministicRNG(0))
+    
+    snapshot = Snapshot.from_world(mock_world)
+    state, proposal = brain.decide(hero, snapshot)
+    update = next((u for u in proposal.updates if hasattr(u, 'concerns_add_or_update')), None)
     assert update is not None
     scar_c = next((c for c in update.concerns_add_or_update if c.concern_id == "concern_nearby_scar"), None)
     assert scar_c is not None

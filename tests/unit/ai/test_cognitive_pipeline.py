@@ -33,6 +33,7 @@ def test_decide_produces_consistent_result(mock_brain):
     snapshot.nearby_entity_ids.return_value = []
     snapshot.entities = {}
     snapshot.tick = 100
+    snapshot.hour = 12
     
     mock_proposal = ActionProposal(actor_id=1, verb=ActionType.MOVE)
     with patch('src.ai.brain.STATE_HANDLERS') as mock_handlers:
@@ -58,6 +59,7 @@ def test_decide_increments_idle_ticks_on_rest(mock_brain):
     snapshot.nearby_entity_ids.return_value = []
     snapshot.entities = {}
     snapshot.tick = 100
+    snapshot.hour = 12
     
     # Force a REST proposal from AI logic
     mock_proposal = ActionProposal(actor_id=2, verb=ActionType.REST)
@@ -93,6 +95,7 @@ def test_perception_phase_appraisal_sync(mock_brain):
     snapshot.nearby_entity_ids.return_value = []
     snapshot.entities = {}
     snapshot.tick = 100
+    snapshot.hour = 12
     
     # Initial decide (appraisal)
     mock_brain.decide(actor, snapshot)

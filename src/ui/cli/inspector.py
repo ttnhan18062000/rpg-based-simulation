@@ -207,7 +207,7 @@ class EntityInspector:
             print(f"{tp.tick:<6} | {kind_name:<15} | {tp.salience_score:>8.2f} | {tp.emotional_impact:>6.2f}")
 
     @staticmethod
-    def render_strategic_domain(entity: "Entity"):
+    def render_strategic_domain(entity: "Entity", current_tick: int = 0):
         """Display long-term intent, directives, and ongoing projects. [PHASE 1-2 UPDATED]"""
         strat = entity.mind.strategic
         EntityInspector.print_header("STRATEGIC DOMAIN (PLAN & COMMITMENT)")
@@ -224,7 +224,23 @@ class EntityInspector:
         
         print(f"  \033[1mCurrent Objective\033[0m: {obj_color}{obj_id}\033[0m{interruption_tag}")
         
-        # 2. Projects
+        # 2. Commitment & Continuity [PHASE 2]
+        current_prj = strat.current_project
+        if current_prj:
+            # We use 'committed_at' to show duration
+            duration = current_tick - current_prj.committed_at
+            lock_rem = max(0, strat.project_lock_until - current_tick)
+            lock_str = f" \033[93m(LOCKED {lock_rem}t)\033[0m" if lock_rem > 0 else ""
+            print(f"  \033[1mCommitted\033[0m: {duration} ticks ago{lock_str}")
+            print(f"  \033[1mThreshold\033[0m: {current_prj.interruption_threshold:.2f} | Cost: {current_prj.abandonment_cost:.2f}")
+
+        # 3. Drivers [PHASE 2]
+        if strat.recent_drivers:
+            print(f"\n  \033[94m◈ Strategic Reasoning\033[0m")
+            for d in strat.recent_drivers:
+                print(f"    - {d.label:25} | {d.description}")
+
+        # 4. Projects
         if strat.projects:
             print(f"\n  \033[96m◈ Active Projects ({len(strat.projects)})\033[0m")
             current_id = strat.current_project_id
@@ -281,7 +297,7 @@ class EntityInspector:
         
         EntityInspector.render_biological_needs(entity)
         EntityInspector.render_personality(entity)
-        EntityInspector.render_strategic_domain(entity)
+        EntityInspector.render_strategic_domain(entity, getattr(registry, "_current_tick", 0))
         EntityInspector.render_public_reputation(entity)
         EntityInspector.render_likely_choices(entity)
         EntityInspector.render_social_bonds(entity, registry)

@@ -21,7 +21,9 @@ from src.ai.perception import Perception
 from src.ai.states import AIContext, STATE_HANDLERS, IdleHandler
 from src.ai.beliefs import BeliefService
 from src.core.gameplay.faction import FactionRegistry
-from src.core.logic.strategic_evaluator import StrategicEvaluatorService
+from src.ai.strategy.candidate_builder import StrategicCandidateBuilder
+from src.ai.strategy.strategic_evaluator import StrategicEvaluator
+from src.ai.strategy.objective_to_goal_mapper import ObjectiveToGoalMapper
 from src.core.models.strategy import ObjectiveKind # [PHASE 3]
 
 if TYPE_CHECKING:
@@ -39,7 +41,10 @@ class AIBrain:
     Stateless and Side-Effect Free — safe to parallelize.
     """
 
-    __slots__ = ("_config", "_rng", "_faction_reg", "_goal_evaluator")
+    __slots__ = (
+        "_config", "_rng", "_faction_reg", "_goal_evaluator",
+        "_strat_builder", "_strat_evaluator", "_obj_mapper"
+    )
 
     def __init__(
         self,
@@ -55,6 +60,9 @@ class AIBrain:
         register_all_goals()
         
         self._goal_evaluator = GoalEvaluator()
+        self._strat_builder = StrategicCandidateBuilder()
+        self._strat_evaluator = StrategicEvaluator()
+        self._obj_mapper = ObjectiveToGoalMapper()
 
     _DECISION_STATES = frozenset({
         AIState.IDLE, AIState.WANDER,
@@ -69,8 +77,8 @@ class AIBrain:
         # --- Phase 1: Input (Sensory & Perception) ---
         ctx, social_biases = self._sensory_perception_phase(actor, snapshot, typed_updates)
         
-        # --- Phase 2: Strategic Appraisal (Macro-Interest) ---
-        strategic_objective = self._strategic_appraisal_phase(actor, snapshot, typed_updates)
+        # --- Phase 2: Strategic Appraisal (Macro-Interest) [phase_2_stage_1-5] ---
+        strategic_objective = self._strategic_appraisal_phase(actor, snapshot, typed_updates, ctx)
         
         # --- Phase 3: Internal State (Memory & Appraisal) ---
         self._memory_appraisal_phase(ctx, typed_updates, social_biases, strategic_objective)
@@ -165,16 +173,44 @@ class AIBrain:
                 
         return ctx, social_biases
 
-    def _strategic_appraisal_phase(self, actor: Entity, snapshot: Snapshot, updates: list[IntentUpdate]) -> str | None:
-        """Phase 1 Stage 7: Macro-Interest (Strategic). Evaluate durable projects and high-salience concerns."""
-        strat_up = StrategicEvaluatorService.evaluate(actor, snapshot, snapshot.tick)
+    def _strategic_appraisal_phase(self, actor: Entity, snapshot: Snapshot, updates: list[IntentUpdate], ctx: AIContext) -> str | None:
+        """Phase 2: Strategic Appraisal. Select core commitment and derive objectives."""
+        # 1. Slice [phase_2_stage_4]
+        candidates = self._strat_builder.build_decision_slice(ctx)
         
-        if strat_up:
-            updates.append(strat_up)
-            # Use the new objective if specified, else stick with current
-            return strat_up.current_objective_id or actor.mind.strategic.current_objective_id
-            
-        return actor.mind.strategic.current_objective_id
+        # 2. Evaluate [phase_2_stage_2, phase_2_stage_3, phase_2_stage_7]
+        decision = self._strat_evaluator.evaluate(ctx, candidates)
+        
+        # 3. Apply updates if any changes occurred [phase_2_stage_8]
+        up = decision.updates
+        
+        # 4. Attach drivers for observability [phase_2_stage_9]
+        if decision.selected_id:
+             up.strategic_drivers.append(DecisionDriver(
+                 kind="strategic",
+                 label=f"Commitment: {decision.selected_kind}",
+                 weight=1.0, # Placeholder for ranking score
+                 description=decision.reason
+             ))
+             
+        has_changes = any([
+            up.directives_add, up.directives_remove,
+            up.projects_add_or_update, up.projects_remove,
+            up.concerns_add_or_update, up.concerns_remove,
+            up.obligations_add_or_update, up.obligations_remove,
+            up.contracts_add_or_update, up.contracts_remove,
+            up.leads_add_or_update, up.leads_remove,
+            up.current_project_id is not None,
+            up.current_objective_id is not None,
+            up.interrupted_project_id is not None,
+            up.strategic_drivers
+        ])
+        
+        if has_changes:
+             updates.append(up)
+             
+        # Return objective ID (could be empty string if none)
+        return up.current_objective_id or actor.mind.strategic.current_objective_id
 
     def _memory_appraisal_phase(self, ctx: AIContext, updates: list[IntentUpdate], social_biases: dict[GoalType, float], strategic_objective_id: str | None = None) -> None:
         """Phase 1 Stage 8: Internal State (Strategic Knowledge). Project-specific appraisal and Emotional influence."""
@@ -368,38 +404,34 @@ class AIBrain:
                                 ))
                     break
             
-            # 11. Strategic Objective Biasing (Phase 2 Stage 4)
+            # 2. Map Strategic Intent to Tactical Biases [phase_2_stage_6]
+            # We need the ObjectiveRecord to pass to the mapper. 
+            # It might be in the entity's state OR just proposed in self._strategic_appraisal_phase.
+            target_obj = None
             if strategic_objective_id:
-                # Find the objective record in the actor's strategic state
-                # Note: This is an authoritative bias. If an objective is chosen, 
-                # we strongly push the utility toward resolving it.
-                strat = actor.mind.strategic
-                
-                # Biasing logic: Map ObjectiveID keywords to GoalType
-                # This is a simplified keyword-based mapping for Stage 4
-                obj_label = strategic_objective_id.lower()
-                
-                if "food" in obj_label or "eat" in obj_label or "needs" in obj_label:
-                    biases[GoalType.EAT] *= 5.0
-                    biases[GoalType.SLEEP] *= 5.0
-                    biases[GoalType.REST] *= 5.0
+                 strat_up = next((u for u in updates if isinstance(u, StrategicUpdate)), None)
+                 if strat_up:
+                      # Check newly proposed projects
+                      for p in strat_up.projects_add_or_update:
+                           target_obj = next((o for o in p.objectives if o.objective_id == strategic_objective_id), None)
+                           if target_obj: break
+                 
+                 if not target_obj:
+                      # Check existing projects in entity state
+                      for p in actor.mind.strategic.projects:
+                           target_obj = next((o for o in p.objectives if o.objective_id == strategic_objective_id), None)
+                           if target_obj: break
+
+            strategic_biases = self._obj_mapper.get_tactical_biases(ctx, target_obj)
+            
+            # Apply Strategic Biases to the existing tactical map [phase_2_stage_6]
+            for gt, st_bias in strategic_biases.items():
+                biases[gt] *= st_bias
+                if st_bias != 1.0:
                     driver_details.append(DecisionDriver(
-                        kind="strategic", label=f"Objective: {strategic_objective_id}", weight=5.0
-                    ))
-                elif "clear" in obj_label or "kill" in obj_label:
-                    biases[GoalType.COMBAT] *= 3.0
-                    driver_details.append(DecisionDriver(
-                        kind="strategic", label=f"Objective: {strategic_objective_id}", weight=3.0
-                    ))
-                elif "explore" in obj_label or "visit" in obj_label:
-                    biases[GoalType.EXPLORE] *= 2.5
-                    driver_details.append(DecisionDriver(
-                        kind="strategic", label=f"Objective: {strategic_objective_id}", weight=2.5
-                    ))
-                elif "investigate" in obj_label or (strat.current_objective and strat.current_objective.kind == ObjectiveKind.INVESTIGATE):
-                    biases[GoalType.INVESTIGATE] *= 4.0
-                    driver_details.append(DecisionDriver(
-                        kind="strategic", label=f"Objective: {strategic_objective_id}", weight=4.0
+                        kind="strategic", 
+                        label=f"Strategic Alignment [{target_obj.objective_id if target_obj else 'None'}]: {gt.name}", 
+                        weight=float(st_bias)
                     ))
 
             updates.append(MindUpdate(

@@ -529,6 +529,11 @@ class ActionSystem(System):
                 if up.interrupted_project_id is not None:
                     strat.interrupted_project_id = up.interrupted_project_id
                 
+                if up.project_lock_until is not None:
+                    strat.project_lock_until = up.project_lock_until
+                if up.strategic_drivers:
+                    strat.recent_drivers = up.strategic_drivers
+                
                 strat.last_strategic_tick = world.tick
 
             elif isinstance(up, RoutineUpdate):

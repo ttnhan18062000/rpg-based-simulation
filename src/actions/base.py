@@ -306,6 +306,10 @@ class StrategicUpdate(IntentUpdate):
     current_project_id: str | None = None
     current_objective_id: str | None = None
     interrupted_project_id: str | None = None
+    project_lock_until: int | None = None
+    
+    # Traceability [PHASE 2]
+    strategic_drivers: list[DecisionDriver] = Field(default_factory=list)
 
     @model_validator(mode="after")
     def _coerce_strategic(self) -> "StrategicUpdate":

@@ -108,8 +108,31 @@ def test_strategic_bias_impact_on_selection():
     actor.identity.faction = 0
     
     # Mocking strategic state directly
-    from src.core.models.strategy import ObjectiveRecord, ObjectiveKind
-    actor.mind.strategic.current_objective_id = "obj_explore_surroundings"
+    from src.core.models.strategy import ObjectiveRecord, ObjectiveKind, ProjectRecord, ProjectKind, StrategicStatus
+    
+    obj_id = "obj_explore_surroundings"
+    project_id = "project_exploration"
+    
+    obj = ObjectiveRecord(
+        objective_id=obj_id,
+        project_id=project_id,
+        kind=ObjectiveKind.VISIT, # Using VISIT for EXPLORE bias in mapper
+        label="Explore the region",
+        status=StrategicStatus.ACTIVE,
+        priority=4.0
+    )
+    
+    prj = ProjectRecord(
+        project_id=project_id,
+        kind=ProjectKind.EXPLORATION,
+        label="Wilderness Exploration",
+        objectives=[obj],
+        active_objective_id=obj_id
+    )
+    
+    actor.mind.strategic.projects = [prj]
+    actor.mind.strategic.current_project_id = project_id
+    actor.mind.strategic.current_objective_id = obj_id
     
     # Manual setup of World so enemy is visible
     enemy = Entity(id=99, kind="mob")

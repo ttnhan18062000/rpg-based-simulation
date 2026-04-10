@@ -4,19 +4,12 @@ from src.core.models.base import Aspect, SimulationModel
 from src.core.models.enums import AIState, GoalType, EmotionType
 from src.core.models.vectors import Vector2
 from src.core.models.lived_structure import RoutineProfile, PlaceAttachment # [PHASE 3]
-from src.core.models.strategy import StrategicState  # [PHASE 1]
+from src.core.models.strategy import StrategicState, DecisionDriver  # [PHASE 1]
 
 if TYPE_CHECKING:
     from src.core.entities.entity import Entity
 
-class DecisionDriver(SimulationModel):
-    """A structured record explaining a bias or decision driver. [STAGE 1]"""
-    model_config = ConfigDict(extra='forbid')
-    
-    kind: str # 'motive', 'personality', 'emotion', 'belief', 'social', 'biological'
-    label: str
-    weight: float
-    description: str | None = None
+
 
 class PersonalityProfile(SimulationModel):
     """RPG-focused behavioral traits that bias Utility AI scoring. [PHASE 1]"""

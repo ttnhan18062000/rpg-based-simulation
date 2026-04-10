@@ -12,6 +12,15 @@ from pydantic import Field, ConfigDict
 from src.core.models.base import SimulationModel
 from src.core.models.vectors import Vector2
 
+class DecisionDriver(SimulationModel):
+    """A structured record explaining a bias or decision driver. [phase_2_stage_9]"""
+    model_config = ConfigDict(extra='forbid')
+    
+    kind: str # 'motive', 'personality', 'emotion', 'belief', 'social', 'biological'
+    label: str
+    weight: float
+    description: str | None = None
+
 @unique
 class StrategicStatus(IntEnum):
     """Lifecycle status for projects and objectives."""
@@ -149,6 +158,12 @@ class ProjectRecord(SimulationModel):
     emotional_weight: float = Field(default=0.5, ge=0.0, le=1.0)
     reversibility: float = Field(default=1.0, ge=0.0, le=1.0)
     
+    # Continuity & Commitment [phase_2_stage_3]
+    committed_at: int = 0
+    abandonment_cost: float = Field(default=0.5, ge=0.0, le=1.0)
+    interruption_threshold: float = Field(default=0.4, ge=0.0, le=1.0)
+    interruption_policy: str = "default" # "ignore_minor", "ignore_all", "default"
+    
     objectives: list[ObjectiveRecord] = Field(default_factory=list)
     active_objective_id: str | None = None
     
@@ -209,6 +224,12 @@ class StrategicState(SimulationModel):
     current_project_id: str | None = None
     current_objective_id: str | None = None
     interrupted_project_id: str | None = None
+    
+    # Continuity [phase_2_stage_3]
+    project_lock_until: int = 0
+    
+    # Observability [phase_2_stage_9]
+    recent_drivers: list[DecisionDriver] = Field(default_factory=list)
     
     last_strategic_tick: int = 0
 
