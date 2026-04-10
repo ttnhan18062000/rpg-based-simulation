@@ -300,8 +300,18 @@ class StrategicUpdate(IntentUpdate):
     contracts_add_or_update: list[SocialContractRecord] = Field(default_factory=list)
     contracts_remove: list[str] = Field(default_factory=list)
     
+    offers_add_or_update: list[RecruitmentOfferRecord] = Field(default_factory=list)
+    offers_remove: list[str] = Field(default_factory=list)
+    
     leads_add_or_update: list[LeadRecord] = Field(default_factory=list)
     leads_remove: list[str] = Field(default_factory=list)
+    
+    # [phase_3_task_3]
+    candidate_zones_add_or_update: list[CandidateZoneRecord] = Field(default_factory=list)
+    candidate_zones_remove: list[str] = Field(default_factory=list)
+    
+    hypotheses_add_or_update: list[HypothesisRecord] = Field(default_factory=list)
+    hypotheses_remove: list[str] = Field(default_factory=list)
     
     current_project_id: str | None = None
     current_objective_id: str | None = None
@@ -316,7 +326,8 @@ class StrategicUpdate(IntentUpdate):
         """Force coercion of strategic records if they came in as dicts."""
         from src.core.models.strategy import (
             DirectiveRecord, ProjectRecord, ConcernRecord, 
-            ObligationRecord, SocialContractRecord, LeadRecord
+            ObligationRecord, SocialContractRecord, LeadRecord,
+            CandidateZoneRecord, HypothesisRecord
         )
         if self.directives_add:
             self.directives_add = [DirectiveRecord.model_validate(d) if isinstance(d, dict) else d for d in self.directives_add]
@@ -328,6 +339,8 @@ class StrategicUpdate(IntentUpdate):
             self.obligations_add_or_update = [ObligationRecord.model_validate(o) if isinstance(o, dict) else o for o in self.obligations_add_or_update]
         if self.contracts_add_or_update:
             self.contracts_add_or_update = [SocialContractRecord.model_validate(s) if isinstance(s, dict) else s for s in self.contracts_add_or_update]
+        if self.offers_add_or_update:
+            self.offers_add_or_update = [RecruitmentOfferRecord.model_validate(o) if isinstance(o, dict) else o for o in self.offers_add_or_update]
         if self.leads_add_or_update:
             self.leads_add_or_update = [LeadRecord.model_validate(l) if isinstance(l, dict) else l for l in self.leads_add_or_update]
         return self
@@ -370,7 +383,8 @@ def _rebuild_action_models():
     # Strategic Components (needed for StrategicUpdate) [PHASE 1]
     from src.core.models.strategy import (
         DirectiveRecord, ProjectRecord, ConcernRecord, 
-        ObligationRecord, SocialContractRecord, LeadRecord
+        ObligationRecord, SocialContractRecord, RecruitmentOfferRecord,
+        ContractTermRecord, LeadRecord, CandidateZoneRecord, HypothesisRecord
     )
     
     # Create a unified namespace for Pydantic to resolve string forward references

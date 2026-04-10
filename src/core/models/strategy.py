@@ -11,6 +11,7 @@ from typing import Any
 from pydantic import Field, ConfigDict
 from src.core.models.base import SimulationModel
 from src.core.models.vectors import Vector2
+from src.core.models.enums import ContractKind, OfferStatus
 
 class DecisionDriver(SimulationModel):
     """A structured record explaining a bias or decision driver. [phase_2_stage_9]"""
@@ -55,6 +56,8 @@ class ObjectiveKind(IntEnum):
     INTERACT = 3
     WAIT = 4
     INVESTIGATE = 5
+    SCOUT = 6
+    TRAIN = 7
 
 @unique
 class ConcernKind(IntEnum):
@@ -73,12 +76,16 @@ class LeadKind(IntEnum):
 
 @unique
 class BlockerKind(IntEnum):
-    """Reasons why a project or objective cannot proceed."""
-    CAPABILITY = 0
-    KNOWLEDGE = 1
-    SOCIAL = 2
-    MATERIAL = 3
-    REPUTATION = 4
+    """Reasons why a project or objective cannot proceed. [phase_3_task_2]"""
+    KNOWLEDGE = 0 # Location or identity unknown
+    CAPABILITY = 1 # Strength, skill, or level too low
+    ACCESS = 2 # Route blocked, key missing
+    SOCIAL = 3 # Trust too low, reputation insufficient
+    MATERIAL = 4 # Missing gold or materials
+    TIMING = 5 # Event not active, deadline missed
+    OBLIGATION = 6 # Conflicting commitment
+    ENVIRONMENTAL = 7 # Weather, danger, or terrain too harsh
+    CONFIDENCE = 8 # Evidence contradictory or risky
 
 class DirectiveRecord(SimulationModel):
     """Enduring orientations rooted in identity or role. [PHASE 1]"""
@@ -92,35 +99,97 @@ class DirectiveRecord(SimulationModel):
     created_tick: int = 0
 
 class BlockerRecord(SimulationModel):
-    """Explicit reason for strategic stalling. [PHASE 1]"""
+    """Explicit reason for strategic stalling. [phase_3_task_2]"""
     model_config = ConfigDict(extra='forbid')
     
     blocker_id: str
     kind: BlockerKind
     label: str
-    description: str = ""
+    subject_ref: str | int | None = None # e.g. "iron_ore", entity_id
+    
+    severity: float = Field(default=0.5, ge=0.0, le=1.0)
+    confidence: float = Field(default=1.0, ge=0.0, le=1.0)
+    
+    # Traceability [phase_3_task_2]
+    evidence_refs: list[str] = Field(default_factory=list) # lead_ids or event_ids
+    spawned_from_id: str | None = None # project_id or objective_id
+    
+    # Detour logic [phase_3_task_2]
+    suggested_detour_types: list[ObjectiveKind] = Field(default_factory=list)
+    
+    resolved: bool = False
+    superseded_by_id: str | None = None # successor blocker_id
+    
     discovered_tick: int = 0
 
 class LeadRecord(SimulationModel):
-    """Uncertain clue or pointer to a strategic opportunity. [PHASE 1]"""
+    """Uncertain clue or pointer to a strategic opportunity. [phase_3_task_1]"""
     model_config = ConfigDict(extra='forbid')
     
     lead_id: str
     kind: LeadKind
     label: str
-    description: str = ""
-    source_id: int | None = None
+    subject: str = "" # [phase_3_task_1]
     
-    # [PHASE 3] Spatial Uncertainty
+    # Optional Exact Targets (for precise leads/verified outcomes)
     target_coords: Vector2 | None = None
-    candidate_regions: list[str] = Field(default_factory=list)
+    target_entity_id: int | None = None
     
-    confidence: float = Field(default=0.5, ge=0.0, le=1.0)
-    reliability: float = Field(default=1.0, ge=0.0, le=1.0) # Source quality
+    source_type: str = "" # e.g. "guild", "gossip", "observation"
+    source_entity_id: int | None = None
     
+    # Uncertainty & Provenance [phase_3_task_1]
+    certainty: float = Field(default=0.5, ge=0.0, le=1.0)
+    directness: float = Field(default=1.0, ge=0.0, le=1.0) # 1.0 = direct, <1.0 = gossiped
+    source_confidence: float = Field(default=1.0, ge=0.0, le=1.0)
+    
+    freshness_tick: int = 0
     discovered_tick: int = 0
+    
+    # Semantic Context [phase_3_task_1]
+    semantic_tags: list[str] = Field(default_factory=list)
+    interpreted_meaning: str = ""
+    related_project_ids: list[str] = Field(default_factory=list)
+    
+    # Status & Hypothesis Links [phase_3_task_1]
+    tested: bool = False
+    contradiction_count: int = 0
+    
+    candidate_zone_ids: list[str] = Field(default_factory=list)
+    candidate_entity_ids: list[int] = Field(default_factory=list)
+    candidate_topic_ids: list[str] = Field(default_factory=list)
+    
     last_search_tick: int = 0
     is_exhausted: bool = False
+
+class CandidateZoneRecord(SimulationModel):
+    """Represented hypothesized region or site of interest. [phase_3_task_1]"""
+    model_config = ConfigDict(extra='forbid')
+    
+    zone_id: str
+    region_id: str | None = None # Anchor region
+    region_tags: list[str] = Field(default_factory=list) # e.g. "mountain", "swamp"
+    
+    confidence: float = Field(default=0.5, ge=0.0, le=1.0)
+    supporting_lead_ids: list[str] = Field(default_factory=list)
+    contradiction_count: int = 0
+    
+    last_search_tick: int = 0
+    search_outcome: str = "" # "empty", "evidence_found", "danger_high"
+    visited_tiles: list[tuple[int, int]] = Field(default_factory=list) # [phase_3_task_8]
+
+class HypothesisRecord(SimulationModel):
+    """Narrowed interpretation of multiple leads. [phase_3_task_1]"""
+    model_config = ConfigDict(extra='forbid')
+    
+    hypothesis_id: str
+    label: str
+    confidence: float = Field(default=0.5, ge=0.0, le=1.0)
+    supporting_lead_ids: list[str] = Field(default_factory=list)
+    contradicted_by_lead_ids: list[str] = Field(default_factory=list)
+    
+    is_active: bool = True
+    resolved_tick: int | None = None
 
 class ObjectiveRecord(SimulationModel):
     """Concrete sub-task within a project. [PHASE 1]"""
@@ -140,6 +209,10 @@ class ObjectiveRecord(SimulationModel):
     
     blockers: list[BlockerRecord] = Field(default_factory=list)
     leads: list[LeadRecord] = Field(default_factory=list)
+    
+    # Traceability [phase_3_task_2]
+    evidence_refs: list[str] = Field(default_factory=list) # lead_ids or event_ids
+    spawned_from_id: str | None = None # blocker_id or project_id
     
     created_tick: int = 0
     resolved_tick: int | None = None
@@ -197,18 +270,61 @@ class ObligationRecord(SimulationModel):
     created_tick: int = 0
     resolved_tick: int | None = None
 
+class ContractTermRecord(SimulationModel):
+    """Specific clause within a social contract. [PHASE 4]"""
+    model_config = ConfigDict(extra='forbid')
+    
+    term_type: str # 'payout', 'protection', 'duration', 'behavior'
+    label: str
+    params: dict[str, Any] = Field(default_factory=dict)
+
 class SocialContractRecord(SimulationModel):
-    """Mutual agreement or party-based commitment. [PHASE 1]"""
+    """Mutual agreement or party-based commitment. [PHASE 4]"""
     model_config = ConfigDict(extra='forbid')
     
     contract_id: str
-    party_id: str | None = None
+    kind: ContractKind
     purpose: str
-    terms: dict[str, Any] = Field(default_factory=dict)
-    members: list[int] = Field(default_factory=list)
+    formation_reason: str = ""
+    
+    project_id: str | None = None # The underlying strategic project
+    party_id: str | None = None # Linked tactical GroupRecord ID
+    
+    founder_id: int
+    member_ids: list[int] = Field(default_factory=list)
+    invited_ids: list[int] = Field(default_factory=list)
+    
+    required_roles: dict[str, int] = Field(default_factory=dict) # role_name -> count
+    reward_logic: str = "equal_split" # 'fixed', 'equal_split', 'performance'
+    
+    terms: list[ContractTermRecord] = Field(default_factory=list)
+    fallback_conditions: list[str] = Field(default_factory=list)
+    dissolution_conditions: list[str] = Field(default_factory=list)
+    
     status: StrategicStatus = StrategicStatus.ACTIVE
     created_tick: int = 0
+    expires_tick: int | None = None
+    
+    breach_history: list[dict[str, Any]] = Field(default_factory=list)
+    visibility: str = "party" # 'public', 'party', 'private'
+    
     resolved_tick: int | None = None
+
+class RecruitmentOfferRecord(SimulationModel):
+    """A proposal for cooperation between entities. [PHASE 4]"""
+    model_config = ConfigDict(extra='forbid')
+    
+    offer_id: str
+    recruiter_id: int
+    candidate_id: int
+    contract_kind: ContractKind
+    project_id: str | None = None
+    
+    proposed_terms: list[ContractTermRecord] = Field(default_factory=list)
+    
+    status: OfferStatus = OfferStatus.PENDING
+    created_tick: int = 0
+    expires_tick: int | None = None
 
 class StrategicState(SimulationModel):
     """Aggregate strategic stratum attached to MindAspect. [PHASE 1]"""
@@ -219,7 +335,10 @@ class StrategicState(SimulationModel):
     concerns: list[ConcernRecord] = Field(default_factory=list)
     obligations: list[ObligationRecord] = Field(default_factory=list)
     contracts: list[SocialContractRecord] = Field(default_factory=list)
-    leads: list[LeadRecord] = Field(default_factory=list) # [PHASE 3]
+    offers: list[RecruitmentOfferRecord] = Field(default_factory=list) # [PHASE 4]
+    leads: list[LeadRecord] = Field(default_factory=list)
+    candidate_zones: list[CandidateZoneRecord] = Field(default_factory=list) # [phase_3_task_1]
+    hypotheses: list[HypothesisRecord] = Field(default_factory=list) # [phase_3_task_1]
     
     current_project_id: str | None = None
     current_objective_id: str | None = None
@@ -254,11 +373,15 @@ def rebuild_strategic_models():
     DirectiveRecord.model_rebuild()
     BlockerRecord.model_rebuild()
     LeadRecord.model_rebuild()
+    CandidateZoneRecord.model_rebuild()
+    HypothesisRecord.model_rebuild()
     ObjectiveRecord.model_rebuild()
     ProjectRecord.model_rebuild()
     ConcernRecord.model_rebuild()
     ObligationRecord.model_rebuild()
+    ContractTermRecord.model_rebuild()
     SocialContractRecord.model_rebuild()
+    RecruitmentOfferRecord.model_rebuild()
     StrategicState.model_rebuild()
 
 rebuild_strategic_models()

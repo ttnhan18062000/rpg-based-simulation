@@ -82,9 +82,25 @@ class KnowledgePropagationService:
                 # Filter leads already known by recipient
                 existing = next((l for l in recipient.mind.strategic.leads if l.label == lead_to_share.label), None)
                 if not existing or (lead_to_share.confidence > existing.confidence):
+                    # [phase_3_task_6] Rumor Degradation
+                    # Create an indirect copy with reduced confidence and directness
+                    new_lead = lead_to_share.model_copy(update={
+                        "source_type": "gossip",
+                        "source_entity_id": sharer.id,
+                        "directness": lead_to_share.directness * 0.8,
+                        "confidence": lead_to_share.confidence * 0.9,
+                        "freshness_tick": world.tick
+                    })
+                    
+                    # Recipient's trust in sharer affects initial source_confidence
+                    sharer_belief = recipient.mind.perception.entity_memory.get(sharer.id)
+                    if sharer_belief:
+                        # If known, use recipient's subjective trust in sharer
+                        new_lead.source_confidence = sharer_belief.apparent_trustworthiness
+                    
                     strategic_up = StrategicUpdate(
                         target_id=recipient.id,
-                        leads_add_or_update=[lead_to_share]
+                        leads_add_or_update=[new_lead]
                     )
 
         return perception_up, strategic_up

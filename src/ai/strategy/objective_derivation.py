@@ -10,15 +10,17 @@ from src.core.models.strategy import (
 if TYPE_CHECKING:
     from src.ai.states.base import AIContext
     from src.ai.strategy.strategic_evaluator import StrategicDecision
+    from src.ai.strategy.blocker_inference import BlockerInferenceService
+    from src.ai.strategy.detour_suggestion import DetourSuggestionService
 
 logger = logging.getLogger(__name__)
 
 class ObjectiveDerivationService:
-    """Derives actionable objectives from projects and handles concern promotion.
-    
-    This implements phase_2_stage_5. It ensures the strategic layer always
-    outputs something the tactical layer can understand.
-    """
+    """Derives actionable objectives from projects and handles concern promotion. [phase_2_stage_5]"""
+
+    def __init__(self, blocker_inference: BlockerInferenceService, detour_suggestion: DetourSuggestionService):
+        self.blocker_inference = blocker_inference
+        self.detour_suggestion = detour_suggestion
 
     def apply_derivation(self, ctx: AIContext, winner: ProjectRecord | ConcernRecord, decision: StrategicDecision):
         """Ensures the selected commitment is actionable."""
@@ -64,8 +66,6 @@ class ObjectiveDerivationService:
                 
             decision.updates.current_project_id = prj_id
             decision.updates.current_objective_id = "obj_satisfy_needs"
-            # Note: We let _handle_project_objectives handle the active_objective_id if prj already exists
-            # but for a new one we set it here.
             
         # Regional Threat
         elif "regional_threat" in concern.concern_id:
@@ -104,16 +104,10 @@ class ObjectiveDerivationService:
         # 1. Update project selection in strat state if needed
         if ctx.strategic.current_project_id != prj.project_id:
             decision.updates.current_project_id = prj.project_id
-            
-            # Start continuity lock [phase_2_stage_3]
-            # Lock the project for 50 ticks to prevent flip-flopping
             decision.updates.project_lock_until = current_tick + 50
-            
-            # Record that we interrupted something if applicable
             if ctx.strategic.current_project_id:
                 decision.updates.interrupted_project_id = ctx.strategic.current_project_id
             
-            # Initialize commitment timestamp
             decision.updates.projects_add_or_update.append(prj.model_copy(update={
                 "committed_at": current_tick
             }))
@@ -123,19 +117,55 @@ class ObjectiveDerivationService:
         if prj.active_objective_id:
             active_obj = next((o for o in prj.objectives if o.objective_id == prj.active_objective_id), None)
             
-        # 2.5 Detour Logic [phase_2_stage_5]
-        # If the active objective is blocked, we might need a detour.
+        # 2.5 Automated Blocker Inference & Detour Spawning [phase_3_task_7]
         if active_obj and active_obj.status == StrategicStatus.ACTIVE:
-            blocker = next((b for b in active_obj.blockers), None)
-            if blocker:
-                # If blocked by knowledge, look for a lead (rumor/hint)
-                from src.core.models.strategy import BlockerKind
-                if blocker.kind == BlockerKind.KNOWLEDGE:
-                    best_lead = self._find_best_lead(ctx)
-                    if best_lead:
-                        # Found a lead! Propose a detour investigation objective.
-                        self._create_investigation_detour(ctx, prj, best_lead, decision)
-                        return # Detour created, we are done for this tick
+            # Check for structural blockers (Knowledge, Capability, etc.)
+            inferred = self.blocker_inference.infer_blockers(ctx, active_obj)
+            
+            # Combine with existing blockers in the objective
+            all_blockers = list(active_obj.blockers)
+            was_updated = False
+            for b in inferred:
+                 if not any(eb.kind == b.kind for eb in all_blockers):
+                      all_blockers.append(b)
+                      was_updated = True
+            
+            if was_updated:
+                 # Proactively update the objective with new blockers
+                 active_obj = active_obj.model_copy(update={"blockers": all_blockers})
+            
+            # Check if any blocker needs a detour (newly found or existing)
+            for blocker in all_blockers:
+                 if blocker.resolved: continue
+                 
+                 detours = self.detour_suggestion.suggest_detours(ctx, blocker, prj.project_id)
+                 if detours:
+                      # We found a detour! Check if it's already in the project and active.
+                      detour = detours[0]
+                      existing_detour = next((o for o in prj.objectives if o.objective_id == detour.objective_id), None)
+                      
+                      if existing_detour and existing_detour.status == StrategicStatus.ACTIVE:
+                           # Already pursuing this detour. Just make sure it's current.
+                           if ctx.strategic.current_objective_id != existing_detour.objective_id:
+                                decision.updates.current_objective_id = existing_detour.objective_id
+                           return
+                      
+                      # Propose project update with new/reactivated detour
+                      updated_prj = prj.model_copy()
+                      # Synch the blocked objective (if it was updated)
+                      for i, o in enumerate(updated_prj.objectives):
+                           if o.objective_id == active_obj.objective_id:
+                                updated_prj.objectives[i] = active_obj
+                                break
+                      
+                      # Add/Reactivate the detour
+                      updated_prj.objectives = [o for o in updated_prj.objectives if o.objective_id != detour.objective_id]
+                      updated_prj.objectives.append(detour)
+                      updated_prj.active_objective_id = detour.objective_id
+                      
+                      decision.updates.projects_add_or_update.append(updated_prj)
+                      decision.updates.current_objective_id = detour.objective_id
+                      return # Detour created, move to next tick
 
         # If no active objective or the active one is resolved/abandoned, find the next one
         if not active_obj or active_obj.status != StrategicStatus.ACTIVE:
@@ -144,55 +174,9 @@ class ObjectiveDerivationService:
             if next_obj:
                 decision.updates.current_objective_id = next_obj.objective_id
             else:
-                # Task 5: Fallback objective derivation
-                # If project is empty, we must resolve it or add a generic objective
-                # For now, let's just log it and potentially resolve the project
                 if prj.status == StrategicStatus.ACTIVE:
-                     # This is where we would add logical next steps (VISIT town, etc.)
-                     # For now, we'll just keep it simple.
+                     # Project cleanup/fallback could go here
                      pass
         else:
-            # Objective exists and is active. Ensure the brain knows about it.
             if ctx.strategic.current_objective_id != active_obj.objective_id:
                  decision.updates.current_objective_id = active_obj.objective_id
-
-    def _find_best_lead(self, ctx: AIContext):
-        """Finds the most salient lead available. [phase_2_stage_5]"""
-        leads = [l for l in ctx.strategic.leads if not l.is_exhausted]
-        if not leads:
-            return None
-        # Simply pick the newest or highest priority
-        return sorted(leads, key=lambda l: l.discovered_tick, reverse=True)[0]
-
-    def _create_investigation_detour(self, ctx: AIContext, prj: ProjectRecord, lead: LeadRecord, decision: StrategicDecision):
-        """Spawns an investigative detour objective. [phase_2_stage_5]"""
-        current_tick = ctx.snapshot.tick
-        detour_id = f"detour_investigate_{lead.lead_id}"
-        
-        # Check if already exists in project
-        existing = next((o for o in prj.objectives if o.objective_id == detour_id), None)
-        if existing:
-            if existing.status != StrategicStatus.ACTIVE:
-                 # Reactivate if needed
-                 existing.status = StrategicStatus.ACTIVE
-            decision.updates.current_objective_id = detour_id
-            return
-
-        # Create new detour objective
-        detour = ObjectiveRecord(
-            objective_id=detour_id,
-            project_id=prj.project_id,
-            kind=ObjectiveKind.INVESTIGATE,
-            label=f"Investigate Lead: {lead.label}",
-            priority=prj.priority + 1.0,
-            target_pos=lead.target_coords,
-            created_tick=current_tick
-        )
-        
-        # Clone project to add objective (AOA Authoritative Update pattern)
-        new_prj = prj.model_copy()
-        new_prj.objectives.append(detour)
-        new_prj.active_objective_id = detour_id
-        
-        decision.updates.projects_add_or_update.append(new_prj)
-        decision.updates.current_objective_id = detour_id

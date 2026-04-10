@@ -511,6 +511,11 @@ class ActionSystem(System):
                 
                 if up.contracts_add_or_update:
                     for ct in up.contracts_add_or_update:
+                        # Phase 4: Trigger social/reputation consequences on resolution or failure
+                        if ct.status in (StrategicStatus.RESOLVED, StrategicStatus.ABANDONED):
+                             from src.ai.strategy.contract_outcome import ContractOutcomeService
+                             ContractOutcomeService.resolve_contract(world, ct, ct.status)
+
                         found = False
                         for i, existing in enumerate(strat.contracts):
                             if existing.contract_id == ct.contract_id:
@@ -521,6 +526,58 @@ class ActionSystem(System):
                             strat.contracts.append(ct)
                 if up.contracts_remove:
                     strat.contracts = [ct for ct in strat.contracts if ct.contract_id not in up.contracts_remove]
+                
+                if up.offers_add_or_update:
+                    for off in up.offers_add_or_update:
+                        found = False
+                        for i, existing in enumerate(strat.offers):
+                            if existing.offer_id == off.offer_id:
+                                strat.offers[i] = off
+                                found = True
+                                break
+                        if not found:
+                            strat.offers.append(off)
+                if up.offers_remove:
+                    strat.offers = [off for off in strat.offers if off.offer_id not in up.offers_remove]
+                
+                if up.leads_add_or_update:
+                    for ld in up.leads_add_or_update:
+                        found = False
+                        for i, existing in enumerate(strat.leads):
+                            if existing.lead_id == ld.lead_id:
+                                strat.leads[i] = ld
+                                found = True
+                                break
+                        if not found:
+                            strat.leads.append(ld)
+                if up.leads_remove:
+                    strat.leads = [ld for ld in strat.leads if ld.lead_id not in up.leads_remove]
+                
+                if up.candidate_zones_add_or_update:
+                    for cz in up.candidate_zones_add_or_update:
+                        found = False
+                        for i, existing in enumerate(strat.candidate_zones):
+                            if existing.zone_id == cz.zone_id:
+                                strat.candidate_zones[i] = cz
+                                found = True
+                                break
+                        if not found:
+                            strat.candidate_zones.append(cz)
+                if up.candidate_zones_remove:
+                    strat.candidate_zones = [cz for cz in strat.candidate_zones if cz.zone_id not in up.candidate_zones_remove]
+                
+                if up.hypotheses_add_or_update:
+                    for hy in up.hypotheses_add_or_update:
+                        found = False
+                        for i, existing in enumerate(strat.hypotheses):
+                            if existing.hypothesis_id == hy.hypothesis_id:
+                                strat.hypotheses[i] = hy
+                                found = True
+                                break
+                        if not found:
+                            strat.hypotheses.append(hy)
+                if up.hypotheses_remove:
+                    strat.hypotheses = [hy for hy in strat.hypotheses if hy.hypothesis_id not in up.hypotheses_remove]
                 
                 if up.current_project_id is not None:
                     strat.current_project_id = up.current_project_id

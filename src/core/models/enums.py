@@ -51,12 +51,30 @@ class LifeRole(IntEnum):
 @unique
 class GroupKind(IntEnum):
     """Small-group coordination types. [PHASE 3]"""
-    SOCIAL_CLIQUE = 0; PATROL = 1; RAID_PACK = 2; ESCORT = 3; HOUSEHOLD = 4
+    SOCIAL_CLIQUE = 0; PATROL = 1; RAID_PACK = 2; ESCORT = 3; HOUSEHOLD = 4; PARTY = 5
 
 @unique
 class AttachmentKind(IntEnum):
     """Types of location-based sentiment. [PHASE 3]"""
     HOME = 0; WORKPLACE = 1; TRAINING_GROUND = 2; MARKET = 3; FAVORITE_SPOT = 4; SHRINE = 5
+
+@unique
+class ContractKind(IntEnum):
+    """Categories for negotiated social agreements. [PHASE 4]"""
+    EXPEDITION = 0 # Objective-driven travel
+    ESCORT = 1 # Protection-driven movement
+    MILITIA = 2 # Collective defense
+    MERCENARY = 3 # Paid combat/service
+    REVENGE_PACT = 4 # Vendetta-driven cooperation
+
+@unique
+class OfferStatus(IntEnum):
+    """Lifecycle of a recruitment or social proposal. [PHASE 4]"""
+    PENDING = 0
+    ACCEPTED = 1
+    DECLINED = 2
+    EXPIRED = 3
+    CANCELLED = 4
 
 @unique
 class EnemyTier(IntEnum):
@@ -225,6 +243,8 @@ VetryRankSer = Annotated[int, BeforeValidator(_parse_enum(VeterancyRank)), Plain
 LifeRoleSer = Annotated[LifeRole, BeforeValidator(_parse_enum(LifeRole)), PlainSerializer(lambda v: LifeRole(v).name.lower(), return_type=str)]
 GroupKindSer = Annotated[GroupKind, BeforeValidator(_parse_enum(GroupKind)), PlainSerializer(lambda v: GroupKind(v).name.lower(), return_type=str)]
 AttachmentKindSer = Annotated[AttachmentKind, BeforeValidator(_parse_enum(AttachmentKind)), PlainSerializer(lambda v: AttachmentKind(v).name.lower(), return_type=str)]
+ContractKindSer = Annotated[ContractKind, BeforeValidator(_parse_enum(ContractKind)), PlainSerializer(lambda v: ContractKind(v).name.lower(), return_type=str)]
+OfferStatusSer = Annotated[OfferStatus, BeforeValidator(_parse_enum(OfferStatus)), PlainSerializer(lambda v: OfferStatus(v).name.lower(), return_type=str)]
 ArchetypeSer = Annotated[Archetype, BeforeValidator(_parse_enum(Archetype)), PlainSerializer(lambda v: Archetype(v).name.lower(), return_type=str)]
 
 from dataclasses import dataclass, field

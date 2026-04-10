@@ -35,9 +35,16 @@ class StrategicEvaluator:
         # We will inject these or instantiate them as needed [phase_2_stage_2]
         from src.ai.strategy.interruption import StrategicInterruptionService
         from src.ai.strategy.objective_derivation import ObjectiveDerivationService
+        from src.ai.strategy.blocker_inference import BlockerInferenceService
+        from src.ai.strategy.detour_suggestion import DetourSuggestionService
         
         self.interruption_service = StrategicInterruptionService()
-        self.objective_service = ObjectiveDerivationService()
+        self.blocker_inference = BlockerInferenceService()
+        self.detour_suggestion = DetourSuggestionService()
+        self.objective_service = ObjectiveDerivationService(
+            self.blocker_inference, 
+            self.detour_suggestion
+        )
 
     def evaluate(self, ctx: AIContext, candidates: list[StrategicCandidate]) -> StrategicDecision:
         """Evaluate the active decision slice and determine the core commitment."""

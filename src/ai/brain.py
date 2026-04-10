@@ -492,6 +492,10 @@ class AIBrain:
     def _finalization_phase(self, ctx: AIContext, state: AIState, updates: list[IntentUpdate]) -> tuple[AIState, ActionProposal]:
         """Phase 4: Output. Proposal generation."""
         actor = ctx.actor
+        
+        # Phase 2 Stage 6: Role-aware tactical coordination hints
+        self._populate_role_tactical_hints(ctx)
+        
         handler = STATE_HANDLERS.get(state, _FALLBACK)
         try:
             new_state, proposal = handler.handle(ctx)
@@ -511,5 +515,57 @@ class AIBrain:
             })
             return new_state, proposal
         except Exception as e:
-            logger.error("AI Error for %s: %s", actor.id, e, exc_info=True)
-            return state, ActionProposal(actor_id=actor.id, verb=ActionType.REST, reason="Error Fallback")
+            logger.error("Error in AI handler %s for entity %d: %s", state, actor.id, e, exc_info=True)
+            return state, ActionProposal(actor_id=actor.id, verb=ActionType.REST, reason="internal_error", updates=updates)
+
+    def _populate_role_tactical_hints(self, ctx: AIContext) -> None:
+        """Inject coordination hints into AIContext based on active social contracts."""
+        actor = ctx.actor
+        strat = actor.mind.strategic
+        
+        # Find active contract
+        active_ct = next((c for c in strat.contracts if c.status == StrategicStatus.ACTIVE), None)
+        if not active_ct:
+            return
+            
+        role = active_ct.member_roles.get(actor.id)
+        if not role:
+            return
+            
+        # Role-specific hints
+        if role == "vanguard":
+            # Vanguard stays at the front
+            ctx.tactical_hints["aggressive"] = True
+        elif role == "support":
+            # Support kites and stays behind vanguard
+            ctx.tactical_hints["skirmish"] = True
+            ctx.tactical_hints["min_dist"] = 3
+            
+            # Find the vanguard to stay near
+            vanguard_id = next((eid for eid, r in active_ct.member_roles.items() if r == "vanguard"), active_ct.founder_id)
+            if vanguard_id != actor.id:
+                ctx.tactical_hints["follow_target_id"] = vanguard_id
+        elif role == "healer":
+            # Healer stays far and targets injured allies
+            ctx.tactical_hints["skirmish"] = True
+            ctx.tactical_hints["min_dist"] = 5
+            
+            # Identify most injured ally in party
+            most_injured_id = None
+            min_hp_ratio = 1.0
+            for mid in active_ct.member_ids:
+                if mid == actor.id: continue
+                m_ent = ctx.snapshot.entities.get(mid)
+                if m_ent and m_ent.combat.alive:
+                    hp_ratio = m_ent.combat.hp / max(1, m_ent.combat.max_hp)
+                    if hp_ratio < min_hp_ratio:
+                        min_hp_ratio = hp_ratio
+                        most_injured_id = mid
+            
+            if most_injured_id and min_hp_ratio < 0.8:
+                ctx.tactical_hints["support_target_id"] = most_injured_id
+            else:
+                # Default to following vanguard
+                vanguard_id = next((eid for eid, r in active_ct.member_roles.items() if r == "vanguard"), active_ct.founder_id)
+                if vanguard_id != actor.id:
+                    ctx.tactical_hints["follow_target_id"] = vanguard_id
