@@ -15,6 +15,7 @@ from src.core.logic.relationship_service import RelationshipService
 from src.core.logic.reputation_service import ReputationService
 from src.core.models.life_events import TurningPointRecord
 from src.core.models.enums import TurningPointKind
+from src.core.logic.strategic_consequence_service import StrategicConsequenceService
 
 if TYPE_CHECKING:
     from src.core.entities.entity import Entity
@@ -25,24 +26,28 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 class SocialStateApplicator:
-    """Orchestrates social state updates from interpreted events."""
+    """Orchestrates social state updates from interpreted events. [PHASE 1 REFACTOR]
+    
+    AOA Pillar 2: Pure interpretation and intent emission.
+    """
 
     @classmethod
     def apply_interpreted_event(
         cls, 
         event: InterpretedLifeEvent, 
-        world: WorldState,
-        updates: Optional[List[IntentUpdate]] = None
-    ) -> None:
-        """Apply an interpreted event to the world and involved entities."""
+        world: WorldState
+    ) -> list[IntentUpdate]:
+        """Apply an interpreted event by generating intent updates.
+        
+        AOA Pillar 2: Services return intent. No direct mutations allowed here.
+        """
+        updates: list[IntentUpdate] = []
         tick = world.tick
         actor = world.get_entity(event.actor_id)
         if not actor:
-            return
+            return []
 
-        tp_record: Optional[TurningPointRecord] = None
-
-        # 1. Handle Turning Point Candidates
+        # 1. Handle Turning Point Candidates (Functional prepare)
         if event.turning_point_candidate:
             tp_record = TurningPointRecord(
                 event_id=event.event_id,
@@ -55,53 +60,54 @@ class SocialStateApplicator:
                 reputation_effects=event.reputation_deltas,
                 tags_add=event.tags_add,
                 tags_remove=event.tags_remove,
-                salience_score=0.0 # Will be calc'd in insert
+                salience_score=0.0 
             )
-            # Mutation (Direct)
-            TurningPointService.insert(actor, tp_record, tick)
+            tp_up = TurningPointService.prepare_insertion(actor, tp_record, tick)
+            if tp_up:
+                updates.append(tp_up)
 
-        # 2. Apply Reputation Deltas (Authoritative)
+        # 2. Apply Reputation Deltas (Refactor to emit ReputationUpdate)
         if event.reputation_deltas:
             from src.actions.base import ReputationUpdate
-            # Ensure keys match ReputationUpdate fields (e.g. 'heroism_score' -> 'heroism_delta')
+            # Mapping keys to ReputationUpdate fields
             rep_data = {}
             for k, v in event.reputation_deltas.items():
                 field_name = k.replace('_score', '') + '_delta'
                 if field_name == 'notoriety_delta': field_name = 'threat_notoriety_delta'
                 rep_data[field_name] = v
             
-            rep_update = ReputationUpdate(
+            updates.append(ReputationUpdate(
+                target_id=event.actor_id, # The one whose reputation is changing
                 tags_add=event.tags_add,
                 tags_remove=event.tags_remove,
                 **rep_data
-            )
-            ReputationService.apply_update(actor, rep_update)
+            ))
 
-        # 3. Apply Relationship Deltas
+        # 3. Apply Relationship Deltas (Refactor to emit SocialUpdate)
         for subject_id, deltas in event.relationship_deltas.items():
             from src.actions.base import SocialUpdate
-            # Mapping short names to delta fields (e.g. 'trust' -> 'trust_delta')
             social_data = {f"{k}_delta": v for k, v in deltas.items()}
             
-            # Authoritative choice: Subject's view of Actor changes based on Actor's action
-            social_update = SocialUpdate(
-                source_id=subject_id, # The perceiver
-                target_id=event.actor_id, # The perceived
+            updates.append(SocialUpdate(
+                source_id=event.actor_id, # The perceiver (The one who experiences the event)
+                target_id=subject_id,    # The perceived (The one the sentiment is about)
                 **social_data
-            )
-            RelationshipService.apply_update(world.social_registry, social_update, tick)
+            ))
 
-        # 4. Strategic Consequences [PHASE 5]
-        if updates is not None:
-            from src.core.logic.strategic_consequence_service import StrategicConsequenceService
-            strat_up = StrategicConsequenceService.process_consequences(world, actor, event, tp_record)
-            if strat_up:
-                updates.append(strat_up)
+        # 4. Chain to StrategicConsequenceService [PHASE 5]
+        # We find the TurningPointRecord if it was created
+        tp_up = next((u for u in updates if hasattr(u, 'turning_points_add') and u.turning_points_add), None)
+        tp_record = tp_up.turning_points_add[0] if tp_up else None
+        
+        strat_up = StrategicConsequenceService.process_consequences(world, actor, event, tp_record)
+        if strat_up:
+            updates.append(strat_up)
+
+        return updates
 
     @staticmethod
     def _map_event_to_tp_kind(event_kind: int) -> TurningPointKind:
         """Internal mapping from interpretation kind to durable turning point kind."""
-        # Simple mapping for Phase 2 Stage 4
         from src.core.models.enums import InterpretedLifeEventKind
         
         mapping = {
@@ -112,4 +118,5 @@ class SocialStateApplicator:
             InterpretedLifeEventKind.BETRAYAL: TurningPointKind.BETRAYAL,
             InterpretedLifeEventKind.FIRST_KILL: TurningPointKind.FIRST_KILL,
         }
-        return mapping.get(event_kind, TurningPointKind.NEAR_DEATH) # Default to near death if unknown
+        return mapping.get(event_kind, TurningPointKind.NEAR_DEATH)
+

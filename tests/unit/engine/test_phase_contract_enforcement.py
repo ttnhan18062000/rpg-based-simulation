@@ -38,6 +38,7 @@ def base_ctx():
         system_manager=MagicMock(),
         action_system=MagicMock(),
         hero_lifecycle=MagicMock(),
+        social_registry=MagicMock(),
         emit=MagicMock()
     )
 

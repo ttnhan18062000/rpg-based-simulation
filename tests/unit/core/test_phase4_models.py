@@ -80,7 +80,7 @@ def test_world_state_integration_phase4():
     
     # Test Freeze & Copy
     world.freeze()
-    snapshot = WorldState.from_snapshot(world)
+    snapshot = WorldState.from_snapshot(world, world.spatial_index)
     
     assert snapshot.world_history.get_event("e1").event_id == "e1"
     assert snapshot.household_registry["h1"].household_id == "h1"

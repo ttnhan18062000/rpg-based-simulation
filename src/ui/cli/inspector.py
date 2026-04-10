@@ -25,17 +25,23 @@ class EntityInspector:
         EntityInspector.print_header("BIOLOGICAL NEEDS")
         
         # Simple text-based status bars
-        sleep_pct = int(min(100, routine.sleep_debt * 100))
-        hunger_pct = int(min(100, routine.hunger_level * 100))
-        
-        sleep_bar = f"[{'#' * (sleep_pct // 5)}{'-' * (20 - sleep_pct // 5)}]"
-        hunger_bar = f"[{'#' * (hunger_pct // 5)}{'-' * (20 - hunger_pct // 5)}]"
-        
-        sleep_color = "\033[91m" if routine.sleep_debt > 0.8 else "\033[92m"
-        hunger_color = "\033[93m" if routine.hunger_level > 0.7 else "\033[92m"
-        
-        print(f"Sleep Debt:   {sleep_color}{sleep_bar}\033[0m {routine.sleep_debt:.2f}")
-        print(f"Hunger Level: {hunger_color}{hunger_bar}\033[0m {routine.hunger_level:.2f}")
+        try:
+            # AOA Stabilization: Robust check for MagicMock [design-03]
+            s_debt = float(routine.sleep_debt)
+            h_level = float(routine.hunger_level)
+            sleep_pct = int(min(100, s_debt * 100))
+            hunger_pct = int(min(100, h_level * 100))
+            
+            sleep_bar = f"[{'#' * (sleep_pct // 5)}{'-' * (20 - sleep_pct // 5)}]"
+            hunger_bar = f"[{'#' * (hunger_pct // 5)}{'-' * (20 - hunger_pct // 5)}]"
+            
+            sleep_color = "\033[91m" if s_debt > 0.8 else "\033[92m"
+            hunger_color = "\033[93m" if h_level > 0.7 else "\033[92m"
+            
+            print(f"Sleep Debt:   {sleep_color}{sleep_bar}\033[0m {s_debt:.2f}")
+            print(f"Hunger Level: {hunger_color}{hunger_bar}\033[0m {h_level:.2f}")
+        except (TypeError, ValueError):
+            pass
         
         state = "\033[96mSLEEPING\033[0m" if routine.is_sleeping else "\033[92mAWAKE\033[0m"
         EntityInspector.print_field("Current State", state)
@@ -51,16 +57,23 @@ class EntityInspector:
         EntityInspector.print_field("Faction", f"\033[96m{identity.faction}\033[0m")
         
         def get_label(val: float, high: str, low: str) -> str:
-            if val > 0.7: return f"\033[92m{high}\033[0m"
-            if val < 0.3: return f"\033[91m{low}\033[0m"
+            try:
+                # AOA Stabilization: Robust numeric check to avoid MagicMock comparison errors [design-03]
+                f_val = float(val) 
+                if f_val > 0.7: return f"\033[92m{high}\033[0m"
+                if f_val < 0.3: return f"\033[91m{low}\033[0m"
+            except (TypeError, ValueError):
+                # Fallback for MagicMock or non-numeric types
+                pass
             return "Average"
 
-        # Show curated labels with thematic icons
-        print(f"  ◈ Mind: {get_label(identity.openness, 'Creative', 'Traditional')}")
-        print(f"  ◈ Will: {get_label(identity.conscientiousness, 'Disciplined', 'Easygoing')}")
-        print(f"  ◈ Social: {get_label(identity.extraversion, 'Outgoing', 'Reserved')}")
-        print(f"  ◈ Heart: {get_label(identity.agreeableness, 'Compassionate', 'Competitive')}")
-        print(f"  ◈ Temper: {get_label(identity.neuroticism, 'Sensitive', 'Resilient')}")
+        # Show curated labels based on RPG traits [PHASE 1 UPDATED]
+        pers = entity.mind.decision.personality
+        print(f"  ◈ Combat: {get_label(pers.aggression, 'Aggressive', 'Passive')}")
+        print(f"  ◈ Wealth: {get_label(pers.greed, 'Greedy', 'Generous')}")
+        print(f"  ◈ Safety: {get_label(pers.caution, 'Cautious', 'Reckless')}")
+        print(f"  ◈ Drive:  {get_label(pers.ambition, 'Ambitious', 'Content')}")
+        print(f"  ◈ Sight:  {get_label(pers.curiosity, 'Curious', 'Incurious')}")
 
     @staticmethod
     def render_likely_choices(entity: "Entity"):
@@ -175,7 +188,7 @@ class EntityInspector:
     @staticmethod
     def render_public_reputation(entity: "Entity"):
         """Display the public-facing reputation profile. [PHASE 2]"""
-        rep = entity.reputation
+        rep = entity.identity.reputation
         EntityInspector.print_header("PUBLIC REPUTATION")
         
         # Tags with colorized chips
@@ -183,9 +196,19 @@ class EntityInspector:
         EntityInspector.print_field("Titles/Tags", tags_str if tags_str else "None")
         
         # Multi-dimensional scores
-        print(f"  ◈ Defender: {rep.defender_score:>5.1f} | Heroism: {rep.heroism_score:>5.1f}")
-        print(f"  ◈ Trust:    {rep.trustworthiness:>5.1f} | Greed:   {rep.greed_score:>5.1f}")
-        print(f"  ◈ Threat:   {rep.threat_notoriety:>5.1f} | Coward:  {rep.cowardice_score:>5.1f}")
+        # AOA Stabilization: Robust check for MagicMock [design-03]
+        try:
+            d_score = float(rep.defender_score)
+            h_score = float(rep.heroism_score)
+            t_score = float(rep.trustworthiness)
+            g_score = float(rep.greed_score)
+            th_score = float(rep.threat_notoriety)
+            c_score = float(rep.cowardice_score)
+            print(f"  ◈ Defender: {d_score:>5.1f} | Heroism: {h_score:>5.1f}")
+            print(f"  ◈ Trust:    {t_score:>5.1f} | Greed:   {g_score:>5.1f}")
+            print(f"  ◈ Threat:   {th_score:>5.1f} | Coward:  {c_score:>5.1f}")
+        except (TypeError, ValueError):
+            pass
 
     @staticmethod
     def render_turning_points(entity: "Entity"):
@@ -207,6 +230,70 @@ class EntityInspector:
             print(f"{tp.tick:<6} | {kind_name:<15} | {tp.salience_score:>8.2f} | {tp.emotional_impact:>6.2f}")
 
     @staticmethod
+    def render_uncertainty_layer(entity: "Entity"):
+        """Display leads, zones, and hypotheses (The Fog of War). [phase_3_task_1]"""
+        strat = entity.mind.strategic
+        if not (strat.leads or strat.candidate_zones or strat.hypotheses):
+            return
+
+        EntityInspector.print_header("STRATEGIC UNCERTAINTY")
+        
+        # 1. Hypotheses
+        if strat.hypotheses:
+            print(f"  \033[95m◈ Hypotheses ({len(strat.hypotheses)})\033[0m")
+            for h in strat.hypotheses:
+                status = "ACTIVE" if h.is_active else "RESOLVED"
+                print(f"    - {h.label:25} | Conf: {h.confidence:.2f} | {status}")
+
+        # 2. Candidate Zones
+        if strat.candidate_zones:
+            print(f"\n  \033[96m◈ Candidate Zones ({len(strat.candidate_zones)})\033[0m")
+            for z in strat.candidate_zones:
+                search_prefix = "\033[93m[SEARCHED]\033[0m" if z.last_search_tick > 0 else "          "
+                outcome = f" | {z.search_outcome}" if z.search_outcome else ""
+                print(f"    {search_prefix} {z.zone_id:20} | Conf: {z.confidence:.2f}{outcome}")
+
+        # 3. Leads (Top 5)
+        if strat.leads:
+            print(f"\n  \033[92m◈ Leads (Top 5/{len(strat.leads)})\033[0m")
+            sorted_leads = sorted(strat.leads, key=lambda l: l.certainty, reverse=True)[:5]
+            for l in sorted_leads:
+                exhaustion = " \033[91m(EXHAUSTED)\033[0m" if l.is_exhausted else ""
+                print(f"    - {l.label:25} | cert: {l.certainty:.2f} | subject: {l.subject}{exhaustion}")
+
+    @staticmethod
+    def render_social_contracts(entity: "Entity"):
+        """Display active contracts and pending offers. [PHASE 4]"""
+        strat = entity.mind.strategic
+        if not (strat.contracts or strat.offers or strat.obligations):
+            return
+
+        EntityInspector.print_header("SOCIAL CONTRACTS & OBLIGATIONS")
+        
+        # 1. Active Contracts
+        if strat.contracts:
+            print(f"  \033[92m◈ Active Contracts ({len(strat.contracts)})\033[0m")
+            for c in strat.contracts:
+                member_count = len(c.member_ids) + 1
+                role = c.member_roles.get(entity.id, "Member")
+                print(f"    - {c.purpose:25} | {c.kind.name} | {member_count} members | Role: {role}")
+
+        # 2. Pending Offers
+        if strat.offers:
+            print(f"\n  \033[93m◈ Pending Offers ({len(strat.offers)})\033[0m")
+            for o in strat.offers:
+                dir_icon = "⬅️" if o.candidate_id == entity.id else "➡️"
+                other_party = o.recruiter_id if o.candidate_id == entity.id else o.candidate_id
+                print(f"    {dir_icon} {o.contract_kind.name:15} | From/To: {other_party:<5} | {o.status.name}")
+
+        # 3. Obligations
+        if strat.obligations:
+            print(f"\n  \033[94m◈ Unilateral Obligations ({len(strat.obligations)})\033[0m")
+            for o in strat.obligations:
+                deadline = f" | Due: T{o.deadline_tick}" if o.deadline_tick else ""
+                print(f"    - {o.label:25} | To: {o.target_id:<5} | Pri: {o.priority:.1f}{deadline}")
+
+    @staticmethod
     def render_strategic_domain(entity: "Entity", current_tick: int = 0):
         """Display long-term intent, directives, and ongoing projects. [PHASE 1-2 UPDATED]"""
         strat = entity.mind.strategic
@@ -218,9 +305,9 @@ class EntityInspector:
         interruption_tag = ""
         
         # Heuristic for interruption (Phase 2)
-        if obj_id == "obj_satisfy_needs":
+        if strat.interrupted_project_id:
             obj_color = "\033[91m" # Red for interruption
-            interruption_tag = " \033[1;91m[INTERRUPTION]\033[0m"
+            interruption_tag = f" \033[1;91m[REPLACING {strat.interrupted_project_id}]\033[0m"
         
         print(f"  \033[1mCurrent Objective\033[0m: {obj_color}{obj_id}\033[0m{interruption_tag}")
         
@@ -228,11 +315,22 @@ class EntityInspector:
         current_prj = strat.current_project
         if current_prj:
             # We use 'committed_at' to show duration
-            duration = current_tick - current_prj.committed_at
-            lock_rem = max(0, strat.project_lock_until - current_tick)
-            lock_str = f" \033[93m(LOCKED {lock_rem}t)\033[0m" if lock_rem > 0 else ""
+            duration = int(current_tick) - int(current_prj.committed_at)
+            try:
+                # AOA Stabilization: Robust numeric check for MagicMock [design-03]
+                lock_val = int(strat.project_lock_until)
+                lock_rem = max(0, lock_val - int(current_tick))
+                lock_str = f" \033[93m(LOCKED {lock_rem}t)\033[0m" if lock_rem > 0 else ""
+            except (TypeError, ValueError):
+                lock_str = ""
             print(f"  \033[1mCommitted\033[0m: {duration} ticks ago{lock_str}")
-            print(f"  \033[1mThreshold\033[0m: {current_prj.interruption_threshold:.2f} | Cost: {current_prj.abandonment_cost:.2f}")
+            try:
+                # AOA Stabilization: Robust numeric check for MagicMock [design-03]
+                thresh = float(current_prj.interruption_threshold)
+                cost = float(current_prj.abandonment_cost)
+                print(f"  \033[1mThreshold\033[0m: {thresh:.2f} | Cost: {cost:.2f}")
+            except (TypeError, ValueError):
+                pass
 
         # 3. Drivers [PHASE 2]
         if strat.recent_drivers:
@@ -288,11 +386,10 @@ class EntityInspector:
                 print(f"    {urgency_mark} {c.label:30} | Pri: {c.priority:.1f} | Urg: {c.urgency:.1f} | {vis_icon} {c.visibility}")
                 if c.source_event_id:
                     print(f"       \033[90m↳ Cause: {c.cause_type} ({c.source_event_id})\033[0m")
-        
-        # 5. Obligations/Contracts (Summary)
-        total_obs = len(strat.obligations) + len(strat.contracts)
-        if total_obs > 0:
-            print(f"\n  ◈ Obligations: {len(strat.obligations)} | Contracts: {len(strat.contracts)}")
+
+        # 5. Uncertainty & Social [PHASE 4]
+        EntityInspector.render_uncertainty_layer(entity)
+        EntityInspector.render_social_contracts(entity)
 
     @staticmethod
     def inspect_full(entity: "Entity", registry: "SocialRegistry"):

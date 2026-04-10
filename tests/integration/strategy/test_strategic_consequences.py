@@ -54,8 +54,7 @@ def test_near_death_triggers_survival_consequences(base_world):
     
     # 3. Apply via SocialStateApplicator (which now chains StrategicConsequenceService)
     from src.core.logic.social_state_applicator import SocialStateApplicator
-    updates = [] # To collect generated IntentUpdates
-    SocialStateApplicator.apply_interpreted_event(event, base_world, updates=updates)
+    updates = SocialStateApplicator.apply_interpreted_event(event, base_world)
     
     # 4. Verify Updates
     assert len(updates) > 0
@@ -96,8 +95,7 @@ def test_betrayal_mutates_directives(base_world):
     
     # 2. Apply
     from src.core.logic.social_state_applicator import SocialStateApplicator
-    updates = []
-    SocialStateApplicator.apply_interpreted_event(event, base_world, updates=updates)
+    updates = SocialStateApplicator.apply_interpreted_event(event, base_world)
     
     # 3. Verify Directive Acquisition
     strat_up = next((u for u in updates if hasattr(u, 'directives_add')), None)
@@ -137,8 +135,7 @@ def test_home_threat_appraisal(base_world):
     
     # Apply
     from src.core.logic.social_state_applicator import SocialStateApplicator
-    updates = []
-    SocialStateApplicator.apply_interpreted_event(event, base_world, updates=updates)
+    updates = SocialStateApplicator.apply_interpreted_event(event, base_world)
     
     # Verify Concern
     strat_up = next((u for u in updates if hasattr(u, 'concerns_add_or_update')), None)

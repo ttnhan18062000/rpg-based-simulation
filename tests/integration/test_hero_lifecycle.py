@@ -22,7 +22,7 @@ class MockEmit:
 
 @pytest.fixture
 def mock_ctx():
-    cfg = SimulationConfig(grid_width=50, grid_height=50, death_tier_max=4)
+    cfg = SimulationConfig(grid_width=50, grid_height=50, death_tier_max=4, hero_respawn_ticks=50)
     rng = DeterministicRNG(seed=123)
     grid = Grid(cfg.grid_width, cfg.grid_height)
     spatial = SpatialHash(cfg.spatial_cell_size)
@@ -45,7 +45,6 @@ def _create_mock_hero(eid: int, pos: Vector2) -> Entity:
     ent.spatial.home_pos = Vector2(0, 0)
     ent.identity.display_name = f"Hero {eid}"
     ent.inventory = InventoryAspect(max_slots=10) # Using InventoryAspect instead of Inventory
-    ent.identity.hero_familiarity = {}
     return ent
 
 def test_hero_lifecycle_system_permadeath(mock_ctx):
@@ -100,6 +99,9 @@ def test_hero_lifecycle_system_familiarity(mock_ctx):
     # Simulate a tick
     sys.on_tick(mock_ctx, 100)
     
-    assert h1.identity.hero_familiarity[2] > 0.0
-    assert h2.identity.hero_familiarity[1] > 0.0
-    assert h1.identity.hero_familiarity[2] == h2.identity.hero_familiarity[1]
+    bond1 = mock_ctx.world.social_registry.get_bond(1, 2)
+    bond2 = mock_ctx.world.social_registry.get_bond(2, 1)
+    
+    assert bond1.familiarity > 0.0
+    assert bond2.familiarity > 0.0
+    assert bond1.familiarity == bond2.familiarity

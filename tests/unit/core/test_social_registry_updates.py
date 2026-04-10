@@ -15,6 +15,9 @@ def mock_config():
     class MockConfig:
         threat_damage_mult = 1.0
         threat_heal_mult = 1.0
+        # Biological needs decay rates
+        sleep_decay_rate = 0.002
+        hunger_decay_rate = 0.001
     return MockConfig()
 
 @pytest.fixture
@@ -68,7 +71,7 @@ def test_combat_updates_social_registry(world, attacker, defender, mock_config):
     # 3. Apply updates via ActionSystem
     ActionSystem.apply_action_state_transitions(
         world=world,
-        config=None,
+        config=mock_config,
         applied=[proposal],
         rng=None
     )

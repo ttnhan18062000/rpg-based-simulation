@@ -133,8 +133,13 @@ class CombatArena:
         level: int = 1,
         xp: int = 0,
         mastery: dict[str, float] | None = None,
+        objective_kind: ObjectiveKind | None = None,
+        vision_range: int = 6,
     ) -> Entity:
         """Add a fully customizable entity to the arena."""
+        from src.core.models.strategy import StrategicState, ProjectRecord, ObjectiveRecord, ProjectKind, StrategicStatus
+        from src.core.models.enums import ObjectiveKind as ObjKind
+        
         identity = IdentityAspect(
             display_name=kind, 
             faction=faction, 
@@ -142,7 +147,11 @@ class CombatArena:
             hero_class=hero_class,
             is_world_boss="boss" in kind.lower() or tier >= 2 # Tier 2+ is usually boss
         )
-        spatial = SpatialAspect(pos=Vector2(*pos), home_pos=Vector2(*home_pos) if home_pos else None)
+        spatial = SpatialAspect(
+            pos=Vector2(*pos), 
+            home_pos=Vector2(*home_pos) if home_pos else None,
+            vision_range=vision_range
+        )
         combat = CombatAspect(
             hp=hp,
             max_hp=hp,
@@ -154,6 +163,32 @@ class CombatArena:
         )
         mind = MindAspect()
         mind.decision.ai_state = ai_state
+        
+        # AOA Phase 1: Strategic State Initialization [STABILIZATION]
+        if objective_kind:
+            obj = ObjectiveRecord(
+                objective_id=f"test_obj_{eid}",
+                project_id=f"test_prj_{eid}",
+                kind=objective_kind,
+                label=f"Test Objective: {objective_kind.name}",
+                priority=5.0
+            )
+            prj = ProjectRecord(
+                project_id=f"test_prj_{eid}",
+                kind=ProjectKind.QUEST, # Default for tests
+                label=f"Test Project for {eid}",
+                status=StrategicStatus.ACTIVE,
+                objectives=[obj],
+                active_objective_id=obj.objective_id,
+                priority=5.0
+            )
+            mind.strategic = StrategicState(
+                projects=[prj],
+                current_project_id=prj.project_id,
+                current_objective_id=obj.objective_id,
+                project_lock_until=9999
+            )
+
         interaction = InteractionAspect()
         
         attrs = attributes or Attributes(
@@ -196,6 +231,14 @@ class CombatArena:
         )
         # Apply attribute-derived stat bonuses
         recalc_derived_stats(entity, attrs)
+
+        # AOA Phase 5 Stabilization: Routine Hardening
+        # Prevent entities from falling asleep or searching for food mid-combat-test
+        if entity.mind.routine:
+            entity.mind.routine.sleep_debt = 0.0
+            entity.mind.routine.hunger_level = 0.0
+            entity.mind.routine.disrupted_until_tick = 9999
+            
         self.world.add_entity(entity)
         return entity
 

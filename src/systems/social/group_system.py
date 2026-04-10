@@ -7,6 +7,10 @@ from src.core.models.lived_structure import GroupRecord
 from src.core.models.enums import GroupKind, GoalType, ContractKind
 from src.core.models.strategy import StrategicStatus
 from src.ai.strategy.contract_outcome import ContractOutcomeService
+from src.actions.base import SocialUpdate, ReputationUpdate, StrategicUpdate
+from src.core.logic.relationship_service import RelationshipService
+from src.core.logic.reputation_service import ReputationService
+from src.core.logic.contract_consequence_service import ContractConsequenceService
 
 if TYPE_CHECKING:
     from src.systems.infrastructure.base import SystemContext
@@ -35,15 +39,12 @@ class GroupSystem(System):
         for group in context.world.group_registry.values():
             all_member_ids.update(group.member_ids)
 
-        print(f"DEBUG: Found {len(context.world.entities)} total entities in world")
         for ent in context.world.entities.values():
-            print(f"DEBUG: Checking entity {ent.id}: alive={ent.combat.alive}, cluster={ent.identity.cluster_id}, faction={ent.identity.faction}")
             if not ent.combat.alive: continue
             if not ent.identity.cluster_id: continue
             if ent.id in all_member_ids: continue
             eligible.append(ent)
 
-        print(f"DEBUG: Eligible entities: {[e.id for e in eligible]}")
         # Cluster them by (faction, cluster_id)
         clusters = {}
         for ent in eligible:
@@ -126,6 +127,7 @@ class GroupSystem(System):
                     kind=GroupKind.PARTY,
                     shared_goal=shared_goal,
                     member_ids=member_ids,
+                    member_roles=ct.member_roles, # [phase_3_task_3]
                     anchor_pos=None, # Will be set in maintenance
                     cohesion_level=1.2
                 )
@@ -148,6 +150,7 @@ class GroupSystem(System):
             else:
                 # Refresh member IDs and ensure linkage
                 existing_group.member_ids = member_ids
+                existing_group.member_roles = ct.member_roles # [phase_3_task_3]
                 for mid in member_ids:
                     m_ent = context.world.get_entity(mid)
                     if m_ent and m_ent.identity.group_id != existing_group.group_id:
@@ -190,14 +193,14 @@ class GroupSystem(System):
             
             # Phase 4: Handle Contract Failure on group dissolution
             if group.kind == GroupKind.PARTY:
-                # Find the associated contract (search all member strategic states)
-                # Optimization: check the leader first
                 leader = context.world.get_entity(group.leader_id)
                 if leader:
                     for ct in leader.mind.strategic.contracts:
                         if ct.party_id == gid and ct.status == StrategicStatus.ACTIVE:
-                            # Apply consequences
-                            ContractOutcomeService.resolve_contract(context.world, ct, StrategicStatus.ABANDONED, emit=context.emit)
+                            # Apply all social, reputational, and strategic consequences [phase_3_task_2]
+                            ContractConsequenceService.apply_resolution(
+                                context.world, ct, StrategicStatus.ABANDONED, context.world.tick
+                            )
                             break
 
             for mid in group.member_ids:

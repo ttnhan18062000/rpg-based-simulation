@@ -17,7 +17,7 @@ def test_execution_phase_modifies_proposal_with_aggressive_style():
     rng = MagicMock()
     brain = AIBrain(config, rng)
     
-    actor = Entity(id=1, kind="hero", faction="player")
+    actor = Entity(id=1, kind="hero", faction=0)
     actor.identity.display_name = "AggressiveAgent"
     actor.mind.decision.action_style = "aggressive"
     
@@ -52,7 +52,7 @@ def test_execution_phase_modifies_proposal_with_evasive_style():
     rng = MagicMock()
     brain = AIBrain(config, rng)
     
-    actor = Entity(id=2, kind="hero", faction="player")
+    actor = Entity(id=2, kind="hero", faction=0)
     actor.identity.display_name = "EvasiveAgent"
     actor.mind.decision.action_style = "evasive"
     

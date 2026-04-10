@@ -131,8 +131,7 @@ def test_life_stage_priority_shift():
     veteran_social = get_score(veteran_scores, GoalType.SOCIAL)
     
     # Debug print to see what's happening
-    print(f"DEBUG: young_scores={[ (s.goal.name, s.score) for s in young_scores ]}")
-    print(f"DEBUG: veteran_scores={[ (s.goal.name, s.score) for s in veteran_scores ]}")
+
 
     assert young_explore > 0, f"Young explore score should be > 0, got {young_explore}"
     assert veteran_social > 0, f"Veteran social score should be > 0, got {veteran_social}"

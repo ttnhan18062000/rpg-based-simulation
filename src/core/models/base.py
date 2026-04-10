@@ -14,12 +14,13 @@ class SimulationModel(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
     _frozen: bool = PrivateAttr(default=False)
 
-    def copy(self: T) -> T:
-        """Deep copy for snapshot isolation or recovery. 
+    def copy(self: T, deep: bool = True) -> T:
+        """Copy for snapshot isolation or recovery. 
         
         AOA Pillar 1: Isolation. Copies are always unfrozen and mutable by default.
+        By default, it uses deepcopy (deep=True). Use deep=False for shallow model-only copy.
         """
-        return self.model_copy(deep=True)
+        return self.model_copy(deep=deep)
 
     def model_copy(self: T, **kwargs: Any) -> T:
         """Override Pydantic's model_copy to ensure private state reset and collection mutability."""

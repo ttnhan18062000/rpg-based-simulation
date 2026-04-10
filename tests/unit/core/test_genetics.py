@@ -41,7 +41,7 @@ def test_aging_and_death():
     actor = MagicMock()
     actor.id = 1
     actor.kind = "hero"
-    actor.identity.faction = "hero_guild"
+    actor.identity.faction=0
     from src.core.aspects.progression import ProgressionAspect
     from src.core.aspects.combat import CombatAspect
     from src.core.aspects.mind import MindAspect
@@ -62,6 +62,7 @@ def test_aging_and_death():
     ctx = MagicMock(actor=actor, config=config)
     ctx.visible = []
     ctx.snapshot.tick = 100
+    ctx.snapshot.hour = 12
     
     # AI Brain phases
     updates = []
@@ -70,7 +71,7 @@ def test_aging_and_death():
     # Mocking Perception.visible_entities as it's called in perception phase
     with patch('src.ai.brain.Perception.visible_entities', return_value=[]):
         brain._sensory_perception_phase(actor, snapshot, updates)
-        brain._memory_appraisal_phase(ctx, updates)
+        brain._memory_appraisal_phase(ctx, updates, {})
         
         from src.actions.base import ProgressionUpdate
         prog_ups = [u for u in updates if isinstance(u, ProgressionUpdate)]

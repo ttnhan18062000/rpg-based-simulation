@@ -14,7 +14,8 @@ class ObjectiveToGoalMapper:
     is 'bossed' by the strategic layer's current commitments.
     """
 
-    def get_tactical_biases(self, ctx: AIContext, objective_override: ObjectiveRecord | None = None) -> dict[GoalType, float]:
+    @classmethod
+    def get_tactical_biases(cls, ctx: AIContext, objective_override: ObjectiveRecord | None = None) -> dict[GoalType, float]:
         """Calculates utility multipliers for goal types based on strategic intent."""
         biases = {gt: 1.0 for gt in GoalType}
 
@@ -29,7 +30,7 @@ class ObjectiveToGoalMapper:
         confidence = 1.0
         if obj.leads:
             # Take strongest lead as the driver
-            confidence = max(l.certainty for l in obj.leads)
+            confidence = max((l.certainty for l in obj.leads), default=1.0)
         
         # Scale: [0.5, 1.0]. Even a 0 certainty lead (which shouldn't exist) 
         # gives a 50% dampening rather than 0.
@@ -44,7 +45,6 @@ class ObjectiveToGoalMapper:
         elif obj.kind == ObjectiveKind.KILL:
             # Combat focus
             biases[GoalType.COMBAT] = 1.0 + (1.0 * scale)
-            biases[GoalType.HUNT] = 1.0 + (1.0 * scale)
             biases[GoalType.FLEE] = 1.0 - (0.2 * scale)
             
         elif obj.kind == ObjectiveKind.COLLECT or obj.kind == ObjectiveKind.INVESTIGATE:
@@ -67,10 +67,44 @@ class ObjectiveToGoalMapper:
             biases[GoalType.SOCIAL] = 1.0 + (1.0 * scale)
             biases[GoalType.REST] = 1.0 + (0.2 * scale)
             
-            # Survival needs are special: almost always treated as 1.0 confidence
+            # Survival needs are special: usually treated as higher priority but shouldn't blackout tactics
             if "needs" in obj.objective_id or "survival" in obj.project_id:
-                biases[GoalType.EAT] = 5.0
-                biases[GoalType.SLEEP] = 5.0
-                biases[GoalType.REST] = 5.0
+                biases[GoalType.EAT] = 2.5
+                biases[GoalType.SLEEP] = 2.5
+                biases[GoalType.REST] = 2.5
             
+        # 3. Apply role-based biases [phase_3_task_3]
+        group_id = ctx.actor.identity.group_id
+        group = ctx.snapshot.group_registry.get(group_id) if group_id else None
+        if group and ctx.actor.id in group.member_ids:
+            role = group.member_roles.get(ctx.actor.id, "none").lower()
+            
+            if role == "vanguard":
+                # Frontline: aggressive combat focus
+                biases[GoalType.COMBAT] *= 1.5
+                biases[GoalType.FLEE] *= 0.8
+            elif role == "support":
+                # Support: prioritize group and self-preservation
+                biases[GoalType.SOCIAL] *= 1.3
+                biases[GoalType.REST] *= 1.2
+                biases[GoalType.FLEE] *= 1.2
+            elif role == "scout":
+                # Scout: prioritize information and stealth
+                biases[GoalType.INVESTIGATE] *= 1.2
+                biases[GoalType.FLEE] *= 1.3
+            elif role == "protector":
+                # Protector: stay very close to group, high combat readiness
+                biases[GoalType.SOCIAL] *= 1.6
+                biases[GoalType.COMBAT] *= 1.3
+                biases[GoalType.REST] *= 0.8
+            elif role == "raider":
+                # Raider: aggressive combat and looting focus
+                biases[GoalType.COMBAT] *= 1.4
+                biases[GoalType.LOOT] *= 1.5
+                biases[GoalType.FLEE] *= 0.7
+            elif role == "militia":
+                # Militia: defensive focus
+                biases[GoalType.COMBAT] *= 1.2
+                biases[GoalType.SOCIAL] *= 1.2
+
         return biases

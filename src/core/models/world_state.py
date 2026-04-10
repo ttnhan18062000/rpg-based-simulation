@@ -214,19 +214,20 @@ class WorldState:
         world.regions = [r.copy() for r in snap.regions]
         world.social_registry = snap.social_registry.copy()
         if hasattr(snap, "group_registry"):
-             world.group_registry = {k: v.model_copy(deep=True) for k, v in snap.group_registry.items()}
+             world.group_registry = {k: v.copy(deep=False) for k, v in snap.group_registry.items()}
         
         # Phase 4 registries recovery
         if hasattr(snap, "world_history"):
             world.world_history = snap.world_history.copy()
         if hasattr(snap, "household_registry"):
-            world.household_registry = {k: v.model_copy(deep=True) for k, v in snap.household_registry.items()}
+            world.household_registry = {k: v.copy(deep=False) for k, v in snap.household_registry.items()}
         if hasattr(snap, "scar_registry"):
-            world.scar_registry = [v.model_copy(deep=True) for v in snap.scar_registry]
+            # AOA Stabilization: Shallow copy instead of deepcopy to avoid mappingproxy pickling errors [design-03]
+            world.scar_registry = [v.copy(deep=False) for v in snap.scar_registry]
         if hasattr(snap, "region_consequence_registry"):
-            world.region_consequence_registry = {k: v.model_copy(deep=True) for k, v in snap.region_consequence_registry.items()}
+            world.region_consequence_registry = {k: v.copy(deep=False) for k, v in snap.region_consequence_registry.items()}
         if hasattr(snap, "successor_registry"):
-            world.successor_registry = {k: v.model_copy(deep=True) for k, v in snap.successor_registry.items()}
+            world.successor_registry = {k: v.copy(deep=False) for k, v in snap.successor_registry.items()}
         if hasattr(snap, "strategic_registry"):
             world.strategic_registry = snap.strategic_registry.copy()
             

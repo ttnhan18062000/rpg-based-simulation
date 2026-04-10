@@ -59,6 +59,8 @@ class PersistencePhase(EnginePhase):
             from src.api.presenters.entity_presenter import EntityPresenter
             from src.api.presenters.world_presenter import WorldPresenter
             r = get_sync_redis()
+            if r is None:
+                return
             
             # Convert to Slim Schema (Filtered for performance/isolation)
             from src.core.models.snapshot import Snapshot

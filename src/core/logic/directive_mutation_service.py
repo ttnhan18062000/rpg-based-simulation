@@ -40,9 +40,22 @@ class DirectiveMutationService:
         elif tp.kind == TurningPointKind.BETRAYAL or tp.kind == TurningPointKind.ALLY_DIED:
             cls._ensure_directive(entity, updates, "Avenge Betrayal/Loss", DirectiveKind.PERSONAL, 3.0, "trauma")
             
-        elif tp.kind == TurningPointKind.BOSS_ENCOUNTER and tp.emotional_impact < 0:
-            # Failed boss encounter
-            cls._ensure_directive(entity, updates, "Ascend/Become Stronger", DirectiveKind.PROFESSIONAL, 3.0, "defeat")
+        elif tp.kind == TurningPointKind.BOSS_ENCOUNTER:
+            if tp.emotional_impact < 0:
+                # Failed boss encounter
+                cls._ensure_directive(entity, updates, "Ascend/Become Stronger", DirectiveKind.PROFESSIONAL, 3.0, "defeat")
+            else:
+                # Successful boss encounter
+                cls._ensure_directive(entity, updates, "Legendary Ambition", DirectiveKind.PROFESSIONAL, 4.0, "glory")
+
+        elif tp.kind == TurningPointKind.AVENGED_ALLY:
+            cls._ensure_directive(entity, updates, "Guardian of the Guild", DirectiveKind.FACTIONAL, 3.5, "loyalty")
+
+        elif tp.kind == TurningPointKind.RESCUE:
+            cls._ensure_directive(entity, updates, "Heroic Altruism", DirectiveKind.IDEOLOGICAL, 3.2, "social")
+
+        elif tp.kind == TurningPointKind.FIRST_KILL:
+            cls._ensure_directive(entity, updates, "Lethal Resolve", DirectiveKind.PERSONAL, 2.5, "bloodshed")
 
     @staticmethod
     def _ensure_directive(

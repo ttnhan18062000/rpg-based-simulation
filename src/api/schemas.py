@@ -162,6 +162,21 @@ class LeadSchema(BaseModel):
     certainty: float
     source_type: str = ""
     discovered_tick: int
+    directness: float = 1.0
+    is_exhausted: bool = False
+
+class CandidateZoneSchema(BaseModel):
+    zone_id: str
+    region_id: str | None = None
+    confidence: float
+    search_outcome: str = ""
+    last_search_tick: int = 0
+
+class HypothesisSchema(BaseModel):
+    hypothesis_id: str
+    label: str
+    confidence: float
+    is_active: bool = True
 
 class ObjectiveSchema(BaseModel):
     objective_id: str
@@ -170,7 +185,7 @@ class ObjectiveSchema(BaseModel):
     status: str
     priority: float
     progress: float
-    blockers: list[BlockerSchema] = Field(default_factory=list)
+    blocker_ids: list[str] = Field(default_factory=list)
     leads: list[LeadSchema] = Field(default_factory=list)
 
 class ProjectSchema(BaseModel):
@@ -183,6 +198,10 @@ class ProjectSchema(BaseModel):
     objectives: list[ObjectiveSchema] = Field(default_factory=list)
     active_objective_id: str | None = None
     suspension_reason: str = ""
+    committed_at: int = 0
+    abandonment_cost: float = 0.0
+    interruption_threshold: float = 0.4
+    emotional_weight: float = 0.5
 
 class ConcernSchema(BaseModel):
     concern_id: str
@@ -198,12 +217,55 @@ class DirectiveSchema(BaseModel):
     label: str
     priority: float
 
+class ObligationSchema(BaseModel):
+    obligation_id: str
+    target_id: int
+    label: str
+    priority: float
+    deadline_tick: int | None = None
+
+class ContractTermSchema(BaseModel):
+    term_type: str
+    label: str
+    params: dict = Field(default_factory=dict)
+
+class SocialContractSchema(BaseModel):
+    contract_id: str
+    kind: str
+    purpose: str
+    founder_id: int
+    member_ids: list[int] = Field(default_factory=list)
+    member_roles: dict[int, str] = Field(default_factory=dict)
+    status: str
+    created_tick: int = 0
+    expires_tick: int | None = None
+    breach_count: int = 0
+
+class RecruitmentOfferSchema(BaseModel):
+    offer_id: str
+    recruiter_id: int
+    candidate_id: int
+    contract_kind: str
+    status: str
+    negotiation_count: int = 0
+    expires_tick: int | None = None
+
 class StrategicStateSchema(BaseModel):
     directives: list[DirectiveSchema] = Field(default_factory=list)
+    blockers: list[BlockerSchema] = Field(default_factory=list)
     projects: list[ProjectSchema] = Field(default_factory=list)
     concerns: list[ConcernSchema] = Field(default_factory=list)
+    leads: list[LeadSchema] = Field(default_factory=list)
+    zones: list[CandidateZoneSchema] = Field(default_factory=list)
+    hypotheses: list[HypothesisSchema] = Field(default_factory=list)
+    obligations: list[ObligationSchema] = Field(default_factory=list)
+    contracts: list[SocialContractSchema] = Field(default_factory=list)
+    offers: list[RecruitmentOfferSchema] = Field(default_factory=list)
     current_project_id: str | None = None
+    current_objective_id: str | None = None
+    interrupted_project_id: str | None = None
     project_lock_until: int = 0
+    recent_driver_labels: list[str] = Field(default_factory=list)
 
 
 # --- Continuity and Inheritance [PHASE 4] ---
@@ -457,6 +519,7 @@ class AIDecisionSchema(BaseModel):
     nearest_target_id: int | None = None
     group_id: str | None = None
     active_routine_id: str | None = None
+    strategy: Optional[StrategicStateSchema] = None # [PHASE 4]
     narrative_impacts: list[str] = Field(default_factory=list) # [PHASE 2] Global recent life shifts
 
 class SchedulerTimelineItemSchema(BaseModel):

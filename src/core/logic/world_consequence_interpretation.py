@@ -31,7 +31,7 @@ class WorldConsequenceInterpretationService:
         if region_consequence and region_consequence.danger_level > 0.5:
             # Dangerous Homeland Concern
             # Only if entity has Home attachment here
-            attachment = next((a for a in entity.mind.routine.place_attachments if a.region_id == rid), None)
+            attachment = next((a for a in entity.mind.place_attachments if a.region_id == rid), None)
             if attachment and attachment.kind.name == "HOME":
                 cls._ensure_regional_concern(entity, updates, rid, region_consequence.danger_level, world.tick)
 

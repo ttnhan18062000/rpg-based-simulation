@@ -39,8 +39,9 @@ class ReplayRecorder:
                 "hp": e.combat.hp,
                 "state": e.mind.decision.ai_state.name if hasattr(e.mind.decision.ai_state, "name") else str(e.mind.decision.ai_state),
                 "strategy": {
-                    "project": e.mind.strategic.current_project.label if e.mind.strategic.current_project else None,
-                    "objective": e.mind.strategic.current_objective.label if e.mind.strategic.current_objective else None,
+                    "project_id": e.mind.strategic.current_project_id,
+                    "objective_id": e.mind.strategic.current_objective_id,
+                    "interrupted_by": e.mind.strategic.interrupted_project_id,
                     "concern_count": len(e.mind.strategic.concerns)
                 }
             }

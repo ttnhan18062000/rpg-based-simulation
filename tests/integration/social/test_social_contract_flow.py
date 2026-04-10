@@ -90,8 +90,8 @@ def test_full_contract_lifecycle(social_setup):
         rng=rng,
         faction_reg=ctx.faction_reg
     )
-    is_accepted = RecruitmentNegotiationService.evaluate_offer(cand_ctx, offer)
-    assert is_accepted is True # Should be true given default neutral bond
+    appraisal = RecruitmentNegotiationService.evaluate_offer(cand_ctx, offer)
+    assert appraisal.status == OfferStatus.ACCEPTED # Should be true given default neutral bond
     
     # 5. ACTIVATION: (Simulated recruitment finalization)
     offer.status = OfferStatus.ACCEPTED
@@ -136,7 +136,22 @@ def test_full_contract_lifecycle(social_setup):
     
     # 8. RESOLUTION: Success consequences
     from src.ai.strategy.contract_outcome import ContractOutcomeService
-    ContractOutcomeService.resolve_contract(world, contract, StrategicStatus.RESOLVED, emit=ctx.emit)
+    
+    # ContractOutcomeService now returns IntentUpdates instead of mutating
+    updates_batch = ContractOutcomeService.resolve_contract(contract, StrategicStatus.RESOLVED, tick=world.tick)
+    
+    # Apply updates authoritatively (GroupSystem or specific applicator)
+    # In this test, we can manually apply them to verify logic
+    for actor_id, updates in updates_batch.items():
+        actor = world.entities[actor_id]
+        for u in updates:
+            from src.actions.base import SocialUpdate, ReputationUpdate
+            from src.core.logic.relationship_service import RelationshipService
+            from src.core.logic.reputation_service import ReputationService
+            if isinstance(u, SocialUpdate):
+                RelationshipService.apply_update(world.social_registry, u, world.tick)
+            elif isinstance(u, ReputationUpdate):
+                ReputationService.apply_update(actor, u)
     
     # Verify bond improvement in global registry
     bond = world.social_registry.get_bond_or_none(candidate.id, founder.id)

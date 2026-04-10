@@ -90,44 +90,87 @@ class BeliefService:
 
     @staticmethod
     def share_knowledge(sharer: Entity, recipient: Entity, target_id: int, tick: int) -> BeliefRecord | None:
-        """Propagates a belief from one entity to another (Indirect Knowledge). [PHASE 2]
-        
-        Represents gossip, rumors, or tactical sharing. The directness of the knowledge
-        decreases as it is shared.
-        """
+        """Propagates a belief from one entity to another (Indirect Knowledge). [PHASE 2]"""
         belief = sharer.mind.perception.entity_memory.get(target_id)
         if not belief:
             return None
             
         # Create an indirect copy
-        new_directness = belief.directness * 0.7 # Knowledge degrades per "hop"
-        # Sharer's trustworthiness affects recipient's initial source_confidence
-        sharer_trust = recipient.mind.perception.entity_memory.get(sharer.id)
-        trust_factor = sharer_trust.apparent_trustworthiness if sharer_trust else 0.5
+        new_directness = belief.directness * 0.7 
+        sharer_trust_rec = recipient.mind.perception.entity_memory.get(sharer.id)
+        trust_factor = sharer_trust_rec.apparent_trustworthiness if sharer_trust_rec else 0.5
         
         return belief.model_copy(update={
             "knowledge_source": "indirect",
             "directness": new_directness,
             "source_confidence": trust_factor,
-            "confidence": belief.confidence * 0.8 # Overall confidence hit
+            "confidence": belief.confidence * 0.8
         })
 
     @staticmethod
-    def merge_indirect_belief(owner: Entity, new_belief: BeliefRecord):
-        """Merges a new indirect belief into existing memory. [PHASE 2]"""
+    def merge_indirect_belief(owner: Entity, new_belief: BeliefRecord) -> PerceptionUpdate | None:
+        """Determines if a new indirect belief should be merged. Returns PerceptionUpdate if yes. [PHASE 1 REFACTOR]"""
+        from src.actions.base import PerceptionUpdate
         existing = owner.mind.perception.entity_memory.get(new_belief.entity_id)
         if not existing:
-            owner.mind.perception.entity_memory[new_belief.entity_id] = new_belief
-            return
+            return PerceptionUpdate(entity_memory={new_belief.entity_id: new_belief})
 
-        # Keep the one with higher combined confidence/directness
         existing_val = existing.confidence * existing.directness
         new_val = new_belief.confidence * new_belief.directness
         
         if new_val > existing_val:
-            owner.mind.perception.entity_memory[new_belief.entity_id] = new_belief
-            # If we already knew skills, carry them forward even if indirect
-            owner.mind.perception.entity_memory[new_belief.entity_id].observed_skills.update(existing.observed_skills)
+            # Carry forward observed skills
+            merged_belief = new_belief.model_copy()
+            merged_belief.observed_skills.update(existing.observed_skills)
+            return PerceptionUpdate(entity_memory={new_belief.entity_id: merged_belief})
+        
+        return None
+
+    @staticmethod
+    def decay_stale_beliefs(actor: Entity, current_tick: int, decay_rate: float = 0.02) -> PerceptionUpdate | None:
+        """Generates a PerceptionUpdate for staleness and confidence reduction. [PHASE 1 REFACTOR]"""
+        from src.actions.base import PerceptionUpdate
+        memory = actor.mind.perception.entity_memory
+        if not memory:
+            return None
+
+        updates: dict[int, BeliefRecord] = {}
+        decayed_found = False
+        for eid, belief in memory.items():
+            if belief.last_seen_tick < current_tick:
+                # Create a NEW record for the update (AOA isolation)
+                new_belief = belief.model_copy()
+                new_belief.stale_ticks = current_tick - belief.last_seen_tick
+                new_belief.confidence = max(0.0, 1.0 - (new_belief.stale_ticks * decay_rate))
+                
+                # Threat also decays
+                if hasattr(new_belief.threat, 'model_copy'):
+                    new_threat = new_belief.threat.model_copy()
+                else:
+                    # Defensive Recovery: If somehow stored as dict, coerce back to model
+                    from src.core.aspects.mind import ThreatEstimate
+                    new_threat = ThreatEstimate.model_validate(new_belief.threat)
+                
+                new_threat.confidence = new_belief.confidence
+                new_belief.threat = new_threat
+
+                if new_belief.confidence < 0.5:
+                    new_belief.visible_injury = -1.0
+                if new_belief.confidence < 0.2:
+                    new_belief.apparent_faction = "Unknown"
+                
+                updates[eid] = new_belief
+                decayed_found = True
+
+        if not decayed_found:
+            return None
+            
+        return PerceptionUpdate(entity_memory=updates)
+
+    @staticmethod
+    def calculate_threat_estimate(observer: Entity, observed: Entity) -> ThreatEstimate:
+        """Purely functional threat calculation. [PHASE 1 REFACTOR]"""
+        return BeliefService._build_threat_estimate(observer, observed)
 
     @staticmethod
     def _build_threat_estimate(observer: Entity, observed: Entity) -> ThreatEstimate:
@@ -144,15 +187,22 @@ class BeliefService:
             
         # Role modifiers
         role_mod = 0.0
-        if "BOSS" in str(observed.identity.role):
+        role_str = str(observed.identity.role)
+        if "BOSS" in role_str.upper():
             role_mod += 0.4
             
         overall = max(0.0, min(1.0, threat_base + gear_mod + role_mod))
         survivability = 0.5 + (observed.progression.level * 0.02)
         
         # Melee/Ranged specialization check (naive)
-        melee_threat = overall if observed.progression.hero_class in (1, 2, 4) else 0.0
-        ranged_threat = 0.0 if observed.progression.hero_class in (1, 2, 4) else overall
+        hero_class = observed.progression.hero_class
+        try:
+             class_val = int(hero_class)
+        except (ValueError, TypeError):
+             class_val = 1
+             
+        melee_threat = overall if class_val in (1, 2, 4) else 0.0
+        ranged_threat = 0.0 if class_val in (1, 2, 4) else overall
 
         return ThreatEstimate(
             overall=overall,
@@ -162,33 +212,3 @@ class BeliefService:
             ranged_threat=ranged_threat,
         )
 
-    @staticmethod
-    def update_threat_estimate(observer: Entity, observed: Entity, estimate: ThreatEstimate):
-        """Legacy in-place update — kept for backward compat with mutable contexts only."""
-        new_est = BeliefService._build_threat_estimate(observer, observed)
-        estimate.overall = new_est.overall
-        estimate.survivability = new_est.survivability
-        estimate.confidence = new_est.confidence
-        estimate.melee_threat = new_est.melee_threat
-        estimate.ranged_threat = new_est.ranged_threat
-
-    @staticmethod
-    def decay_stale_beliefs(actor: Entity, current_tick: int, decay_rate: float = 0.02):
-        """Increments staleness and reduces confidence of unobserved entities.
-        
-        Note: This operates on the actor's LIVE (mutable) entity_memory, not the
-        snapshot's frozen copy. The actor passed here is the mutable entity from
-        the WorldState, not the snapshot.
-        """
-        memory = actor.mind.perception.entity_memory
-        # Guard against frozen dictionaries (MappingProxyType from snapshot)
-        if isinstance(memory, dict):
-            for belief in memory.values():
-                if belief.last_seen_tick < current_tick:
-                    belief.stale_ticks = current_tick - belief.last_seen_tick
-                    belief.confidence = max(0.0, 1.0 - (belief.stale_ticks * decay_rate))
-                    belief.threat.confidence = belief.confidence
-                    if belief.confidence < 0.5:
-                        belief.visible_injury = -1.0
-                    if belief.confidence < 0.2:
-                        belief.apparent_faction = "Unknown"

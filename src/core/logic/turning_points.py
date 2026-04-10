@@ -71,55 +71,43 @@ class TurningPointService:
         return (base + motive_bonus + entity_bonus) * recency_mult * resolution_mult
 
     @classmethod
-    def insert(cls, entity: "Entity", turning_point: TurningPointRecord, current_tick: int) -> bool:
-        """Insert a turning point, respecting the cap. Returns True if inserted.
-
-        If at capacity, the lowest-salience entry is evicted to make room,
-        but only if the new entry has higher salience than the weakest existing one.
+    def prepare_insertion(cls, entity: "Entity", turning_point: TurningPointRecord, current_tick: int) -> PerceptionUpdate | None:
+        """Evaluates a turning point for insertion. Returns PerceptionUpdate if it should be added.
+        
+        AOA Pillar 2: Services return intent. Mutation is handled authoritatively.
         """
-        tp_list = entity.mind.narrative.turning_points
+        from src.actions.base import PerceptionUpdate
+        
+        # 1. Deduplication
+        if any(tp.event_id == turning_point.event_id for tp in entity.mind.narrative.turning_points):
+            return None
 
-        # Generate event_id if not set
-        if not turning_point.event_id:
-            turning_point.event_id = f"tp-{uuid.uuid4().hex[:8]}"
-
-        # Score the candidate
+        # 2. Score the candidate
         motives = getattr(entity.mind.decision, 'motives', [])
         candidate_salience = cls.calculate_salience(turning_point, current_tick, motives)
-        turning_point.salience_score = candidate_salience
+        
+        # Score the turning point
+        turning_point = turning_point.model_copy(update={
+            "salience_score": candidate_salience,
+            "event_id": turning_point.event_id or f"tp-{uuid.uuid4().hex[:8]}"
+        })
 
+        # 3. Decision to insert
+        tp_list = entity.mind.narrative.turning_points
         if len(tp_list) < MAX_TURNING_POINTS:
-            tp_list.append(turning_point)
-            logger.debug(
-                "Inserted turning point %s (kind=%s, salience=%.2f) for entity %d.",
-                turning_point.event_id, turning_point.kind.name, candidate_salience, entity.id
-            )
-            return True
+            return PerceptionUpdate(turning_points_add=[turning_point])
 
         # At capacity — find weakest existing entry
-        weakest_idx = 0
-        weakest_salience = cls.calculate_salience(tp_list[0], current_tick, motives)
-        for i, tp in enumerate(tp_list[1:], 1):
+        weakest_salience = candidate_salience
+        for tp in tp_list:
             s = cls.calculate_salience(tp, current_tick, motives)
             if s < weakest_salience:
                 weakest_salience = s
-                weakest_idx = i
 
         if candidate_salience > weakest_salience:
-            evicted = tp_list[weakest_idx]
-            tp_list[weakest_idx] = turning_point
-            logger.debug(
-                "Evicted TP %s (salience=%.2f) to insert %s (salience=%.2f) for entity %d.",
-                evicted.event_id, weakest_salience, turning_point.event_id,
-                candidate_salience, entity.id
-            )
-            return True
+             return PerceptionUpdate(turning_points_add=[turning_point])
 
-        logger.debug(
-            "Rejected TP %s (salience=%.2f < weakest=%.2f) for entity %d.",
-            turning_point.event_id, candidate_salience, weakest_salience, entity.id
-        )
-        return False
+        return None
 
     @classmethod
     def prune(cls, entity: "Entity", current_tick: int) -> None:

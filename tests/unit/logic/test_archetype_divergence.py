@@ -47,8 +47,9 @@ def test_archetype_behavioral_divergence(config, rng):
     
     def get_motives(actor):
         updates = []
-        ctx = brain._sensory_perception_phase(actor, snapshot, updates)
-        brain._memory_appraisal_phase(ctx, updates)
+        # _sensory_perception_phase returns (ctx, social_biases)
+        ctx, biases = brain._sensory_perception_phase(actor, snapshot, updates)
+        brain._memory_appraisal_phase(ctx, updates, biases)
         return next(u for u in updates if hasattr(u, "motives") and u.motives)
 
     # Slayer appraisal
@@ -65,7 +66,7 @@ def test_archetype_behavioral_divergence(config, rng):
     # Honorable Defender has low Neuroticism (0.2) -> even lower FLEE utility multiplier
     # But Slayer has high rivalry/aggressive archetypal traits.
     
-    # The test should check if motives exist and are different
-    assert GoalType.FLEE in motive_update_slayer.motives
-    assert GoalType.COMBAT in motive_update_slayer.motives
-    assert motive_update_slayer.motives != motive_update_defender.motives
+    # The test should check if biases exist and are different
+    assert GoalType.FLEE in motive_update_slayer.motive_utility_biases
+    assert GoalType.COMBAT in motive_update_slayer.motive_utility_biases
+    assert motive_update_slayer.motive_utility_biases != motive_update_defender.motive_utility_biases

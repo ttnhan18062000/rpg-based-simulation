@@ -1,31 +1,33 @@
-# Design Spec: Phase 1 — Personality & Relationships (OCEAN & Motives)
+# Design Spec: Phase 1 — Personality & Relationships (RPG Traits & Motives)
 
 ## Goal
 Transform simulation entities into recognizable individuals with stable identities and evolving relationships. This is the first "behavioral" phase of the Macro-Interest redesign.
 
 ## Architecture & Data Flow
 
-### 1. Identity Reconstruction (OCEAN)
-The `IdentityAspect` will store the **OCEAN** (Five Factor Model) personality traits as floating-point values (0.0 to 1.0).
+### 1. Mind Reconstruction (RPG Traits)
+The `MindAspect.decision.personality` stores the **RPG Traits** as floating-point values (0.0 to 1.0).
 
 | Trait | Behavioral Impact |
 | :--- | :--- |
-| **Openness** | Biases toward `EXPLORE` and non-routine pathfinding. |
-| **Conscientiousness** | Biases toward `ROUTINE`, `REST`, and "Duty" goals. |
-| **Extraversion** | Increases utility for `SOCIAL` and clustering with others. |
-| **Agreeableness** | Increases `HELP` utility and reduces selfish `LOOT` priority. |
-| **Neuroticism** | Sensitivity to `Fear` and `Trauma` (multiplies negative emotional spikes). |
+| **Aggression** | Biases toward `COMBAT` and `HUNT` goals. |
+| **Greed** | Biases toward `LOOT` and `TRADE` goals. |
+| **Caution** | Biases toward `REST`, `FLEE`, and safety. |
+| **Neuroticism** | Multiplier for `Fear` and `Panic` interrupts. |
+| **Loyalty** | Biases toward `SOCIAL` and protection of allies. |
+| **Ambition** | Biases toward `TRAIN` and progression. |
+| **Curiosity** | Biases toward `EXPLORE` and discovery. |
 
 **Archetype Templates:**
-Entities will be seeded with traits based on their `Archetype` (e.g., `GLORY_SEEKER` starts with High Extraversion and Low Neuroticism).
+Entities are seeded with traits based on their `Archetype`. For example, a `GLORY_SEEKER` starts with High Aggression and Low Caution.
 
 ### 2. Social Appraisal & Motive Generation
-The **Motive Appraisal** logic sits in the `MindAspect` and converts raw simulation state + personality + bonds into **Subjective Motives**.
+The **Motive Appraisal** logic sits in the `SocialAppraisalService` and converts raw simulation state + personality + bonds into **Subjective Motives**.
 
 ```mermaid
 graph TD
     A[Perceived World State] --> D[Motive Appraisal]
-    B[OCEAN Traits] --> D
+    B[RPG Traits] --> D
     C[Social Bonds - Trust/Fear/Rivalry] --> D
     D --> E[Motive Scores]
     E --> F[Highest Utility Goal]
@@ -35,35 +37,29 @@ graph TD
 **Motive Logic Example:**
 - **Objective Fact**: A nearby Orc is attacking an ally.
 - **Subjective Appraisal**:
-    - If `Trust(Ally) > 0.8` AND `Agreeableness > 0.5` → **HELP** becomes the highest motive.
+    - If `Trust(Ally) > 0.8` AND `Loyalty > 0.5` → **HELP** becomes the highest motive.
     - If `Fear(Orc) > 0.8` AND `Neuroticism > 0.7` → **FLEE** becomes the highest motive (overrides loyalty).
     - If `Rivalry(Orc) > 0.5` → **REVENGE** motive increases combat aggression.
 
-## Proposed Changes
+## Core Components
 
-### [NEW] `src/core/logic/personality.py`
-A stateless service to calculate utility multipliers based on OCEAN traits.
+### `src/core/logic/personality.py` [STABILIZED]
+A service to calculate utility multipliers based on RPG traits.
 
-### [NEW] `src/core/logic/social_appraisal.py`
+### `src/core/logic/social_appraisal.py` [STABILIZED]
 A service to transform perceived entities into motive impulses using the `SocialRegistry`.
 
-### [MODIFY] `IdentityAspect` (`src/core/aspects/identity.py`)
-- Add `openness`, `conscientiousness`, `extraversion`, `agreeableness`, `neuroticism` fields.
-- Add `apply_archetype_template()` method.
-
-### [MODIFY] `MindAspect` (`src/core/aspects/mind.py`)
-- Update `DecisionModel` to track `motives` (dict of `GoalType: float`).
-- Add `last_appraisal_tick` field.
-
-### [MODIFY] `EntityBuilder` (`src/core/entities/entity_builder.py`)
-- Update construction logic to initialize OCEAN traits.
+### `MindAspect` (`src/core/aspects/mind.py`) [STABILIZED]
+- `decision.personality`: Holds the `PersonalityProfile` RPG traits.
+- `last_appraisal_tick`: Tracks temporal decay of motives.
 
 ## Verification Plan
 
 ### Automated Tests
-- **Unit Test**: `tests/unit/logic/test_motive_appraisal.py`
+- **Unit Test**: `tests/unit/logic/test_person_logic.py`
   - Ensure different personalities produce different motives for the same world state.
-- **Regression**: Ensure combat math and basic movement still function normally.
+- **Regression**: `tests/unit/core/test_region_events.py`
+  - Ensure regional awareness and difficulty penalties function correctly.
 
 ### Manual Verification
-- Observe two entities with identical stats but different archetypes (e.g., `COWARDLY_SURVIVOR` vs `HONORABLE_DEFENDER`) and confirm their survival/help strategies diverge visibly.
+- Observe two entities with identical stats but different archetypes (e.g., `COWARDLY_SURVIVOR` vs `HONORABLE_DEFENDER`) and confirm their survival/help strategies diverge visibly in the CLI Inspector.

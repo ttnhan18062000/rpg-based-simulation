@@ -65,34 +65,48 @@ class HeroLifecycleSystem(System):
                 if pair not in nearby_pairs:
                     nearby_pairs.add(pair)
                     
-                    old1 = h1.identity.hero_familiarity.get(h2.id, 0.0)
+                    # Authoritative bond lookup from registry
+                    bond = ctx.world.social_registry.get_bond(h1.id, h2.id)
+                    old_score = bond.familiarity
+
                     # Pillar 7: CHA-based Familiarity (Charisma impact)
                     # Base gain 0.002, scales with CHA (1% per point)
-                    # Using interaction.trade_bonus which is (1.0 + cha * 0.01)
                     gain = 0.002 * h1.interaction.trade_bonus
-                    new1 = min(1.0, old1 + gain)
-                    h1.identity.hero_familiarity[h2.id] = new1
-                    h2.identity.hero_familiarity[h1.id] = new1 # Symmetric
                     
-                    if old1 < 0.5 <= new1:
+                    # Update both directions for symmetry
+                    ctx.world.social_registry.update_bond(h1.id, h2.id, familiarity_delta=gain, tick=tick)
+                    ctx.world.social_registry.update_bond(h2.id, h1.id, familiarity_delta=gain, tick=tick)
+                    
+                    new_score = ctx.world.social_registry.get_bond(h1.id, h2.id).familiarity
+                    
+                    if old_score < 0.5 <= new_score:
                         logger.info("Tick %d: %s and %s are now Allies!", tick, h1.identity.display_name, h2.identity.display_name)
                         if ctx.emit:
                             ctx.emit("alliance", f"{h1.identity.display_name} and {h2.identity.display_name} are now Allies",
                                        entity_ids=(h1.id, h2.id),
-                                       metadata={"hero1_id": h1.id, "hero2_id": h2.id, "score": new1})
+                                       metadata={"hero1_id": h1.id, "hero2_id": h2.id, "score": new_score})
                                    
         # 2. Decay for everyone else who has a familiarity entry
-        for h1 in heroes:
-            for h2_id in list(h1.identity.hero_familiarity.keys()):
-                pair = tuple(sorted((h1.id, h2_id)))
-                if pair in nearby_pairs:
-                    continue
+        # Note: In the authoritative registry, we only decay bonds that exist and are > 0
+        all_bonds = list(ctx.world.social_registry.bonds.items())
+        for key, bond in all_bonds:
+            if bond.familiarity <= 0:
+                continue
+            
+            # Key format: f"{source_id}:{target_id}"
+            src_id, tgt_id = map(int, key.split(":"))
+            
+            # Check if source is one of our active heroes
+            hero_ids = [h.id for h in heroes]
+            if src_id not in hero_ids:
+                continue
                 
-                # Decay Apart: -0.0005
-                h1.identity.hero_familiarity[h2_id] = max(0.0, h1.identity.hero_familiarity[h2_id] - 0.0005)
-                # Symmetric decay for the other hero
-                if h2_id in ctx.world.entities and ctx.world.entities[h2_id].kind == "hero":
-                    ctx.world.entities[h2_id].identity.hero_familiarity[h1.id] = h1.identity.hero_familiarity[h2_id]
+            pair = tuple(sorted((src_id, tgt_id)))
+            if pair in nearby_pairs:
+                continue
+            
+            # Decay Apart: -0.0005
+            ctx.world.social_registry.update_bond(src_id, tgt_id, familiarity_delta=-0.0005, tick=tick)
 
     def _tick_inn_gossip(self, ctx: SystemContext, tick: int) -> None:
         """Heroes at the same Inn share random entity memories."""

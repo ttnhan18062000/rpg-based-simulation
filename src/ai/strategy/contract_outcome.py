@@ -12,77 +12,70 @@ if TYPE_CHECKING:
     from src.core.entities.entity import Entity
     from src.core.models.world_state import WorldState
     from src.core.models.strategy import SocialContractRecord
+    from src.actions.base import IntentUpdate
 
 class ContractOutcomeService:
-    """Applies consequences to bonds and reputation based on contract success/failure."""
+    """Side-effect-free service for generating consequences of contract success/failure."""
 
     @classmethod
     def resolve_contract(
         cls, 
-        world: WorldState, 
         contract: SocialContractRecord, 
         outcome: StrategicStatus,
-        emit: Any = None
-    ) -> None:
-        """Process the final outcome of a social contract."""
+        tick: int
+    ) -> dict[int, list[IntentUpdate]]:
+        """Process the final outcome of a social contract and yield intent updates. [phase_3_task_2]"""
+        from src.actions.base import SocialUpdate, ReputationUpdate, StrategicUpdate
+        
+        updates: dict[int, list[IntentUpdate]] = {}
         if outcome not in (StrategicStatus.RESOLVED, StrategicStatus.ABANDONED):
-            return
-
-        founder = world.entities.get(contract.founder_id)
-        if not founder: return
+            return {}
 
         # 1. Reputation Consequences for Founder
+        founder_updates = updates.setdefault(contract.founder_id, [])
+        
         if outcome == StrategicStatus.RESOLVED:
-            # Succesful founder gains trust and heroism
-            rep_update = ReputationUpdate(
+            # Successful founder gains trust and heroism
+            founder_updates.append(ReputationUpdate(
                 trustworthiness_delta=0.8,
                 heroism_delta=0.5,
                 tags_add=["Reliable"]
-            )
-            ReputationService.apply_update(founder, rep_update)
+            ))
         else:
             # Failed founder loses trust
-            rep_update = ReputationUpdate(
+            founder_updates.append(ReputationUpdate(
                 trustworthiness_delta=-1.2,
                 tags_add=["Unreliable"]
-            )
-            ReputationService.apply_update(founder, rep_update)
+            ))
 
         # 2. Relationship Consequences between Members
+        # All members (including founder) evaluate each other
         for mid in contract.member_ids:
+            member_updates = updates.setdefault(mid, [])
+            
+            # Semantic Strategic Update (Mark contract as resolved in their mind)
+            member_updates.append(StrategicUpdate(
+                contracts_add_or_update=[contract.model_copy(update={"status": outcome, "party_id": None, "resolved_tick": tick})]
+            ))
+            
             for other_id in contract.member_ids:
                 if mid == other_id: continue
                 
                 if outcome == StrategicStatus.RESOLVED:
                     # Mutual success builds trust and loyalty
-                    social_update = SocialUpdate(
+                    member_updates.append(SocialUpdate(
                         source_id=mid,
                         target_id=other_id,
                         trust_delta=0.6,
                         loyalty_delta=0.4
-                    )
+                    ))
                 else:
                     # Failure breeds resentment and breaks trust
-                    social_update = SocialUpdate(
+                    member_updates.append(SocialUpdate(
                         source_id=mid,
                         target_id=other_id,
                         trust_delta=-0.8,
                         resentment_delta=0.5
-                    )
-                
-                RelationshipService.apply_update(world.social_registry, social_update, world.tick)
-        
-        # 3. Update Contract State for all members
-        for mid in contract.member_ids:
-            m_ent = world.entities.get(mid)
-            if m_ent:
-                for m_ct in m_ent.mind.strategic.contracts:
-                    if m_ct.contract_id == contract.contract_id:
-                        m_ct.status = outcome
-                        # Clear group linkage
-                        m_ct.party_id = None
-                        
-        if emit:
-            label = "COMPLETED" if outcome == StrategicStatus.RESOLVED else "FAILED"
-            emit("social", f"Contract {contract.contract_id} {label}", 
-                       entity_ids=tuple(contract.member_ids))
+                    ))
+
+        return updates

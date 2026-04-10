@@ -75,6 +75,7 @@ class OfferStatus(IntEnum):
     DECLINED = 2
     EXPIRED = 3
     CANCELLED = 4
+    COUNTERED = 5
 
 @unique
 class StrategicStatus(IntEnum):
@@ -282,8 +283,9 @@ class InterpretedLifeEventKind(IntEnum):
     REPEATED_FAILED_ATTEMPT = 16
     PUBLIC_DISGRACE = 17
     WARNING_IGNORED = 18
-    BODY_RECOVERED = 19
-    BODY_ABANDONED = 20
+    TRESPASS = 19
+    BODY_RECOVERED = 20
+    BODY_ABANDONED = 21
 
 from typing import Annotated
 from pydantic import BeforeValidator, PlainSerializer

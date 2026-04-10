@@ -21,10 +21,12 @@ def _state_fingerprint(mgr: EngineManager) -> str:
         parts.append(f"e{eid}:{e.kind}@{e.spatial.pos.x},{e.spatial.pos.y}|hp={e.combat.hp}/{e.combat.max_hp}")
         # Epic 17 fields
         parts.append(f"e{eid}:gen={e.identity.generation}|deaths={e.identity.death_count}")
-        if e.identity.hero_familiarity:
-            # Sort keys for deterministic string representation
-            fam = ",".join(f"{k}:{v:.4f}" for k, v in sorted(e.identity.hero_familiarity.items()))
-            parts.append(f"e{eid}:fam={fam}")
+        
+    # Social state (Global)
+    for key in sorted(snap.social_registry.bonds):
+        bond = snap.social_registry.bonds[key]
+        parts.append(f"bond:{key}:trust={bond.trust:.3f}|fam={bond.familiarity:.3f}")
+        
     return hashlib.sha256("\n".join(parts).encode()).hexdigest()
 
 def test_chaos_mode_resilience():

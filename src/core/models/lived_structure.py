@@ -75,6 +75,7 @@ class GroupRecord(SimulationModel):
     target_id: int | None = None # Subject of the group's intent
     
     member_ids: set[int] = Field(default_factory=set)
+    member_roles: dict[int, str] = Field(default_factory=dict) # entity_id -> role_name [phase_3_task_3]
     anchor_pos: Vector2 | None = None # Rally point or center of activity
     
     # Cohesion Bonuses

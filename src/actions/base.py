@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     from src.core.aspects.mind import MemoryRecord, MemoryLogEntry
     from src.core.aspects.combat import CombatTraceRecord
     from src.core.gameplay.classes import SkillInstance
-    from src.core.quests import Quest
+    from src.core.gameplay.quests import Quest
     from src.core.effects import StatusEffect
     from src.core.gameplay.effects import EffectType
 
@@ -89,10 +89,6 @@ class MindUpdate(IntentUpdate):
     new_ai_state: int | None = None
     consecutive_idle_ticks: int | None = None
     
-    # AI Goals
-    goals_add: list[str] | None = None
-    goals_remove: list[str] | None = None
-    
     # Emotion
     emotion_delta: dict[EmotionType, float] | None = None
     emotion_set: dict[EmotionType, float] | None = None
@@ -112,6 +108,7 @@ class PerceptionUpdate(IntentUpdate):
     
     # Narrative
     memory_log_add: list[MemoryLogEntry] | None = None
+    turning_points_add: list[TurningPointRecord] | None = None
     memory_locations_set: dict[str, float] | None = None
     
     # Tactical
@@ -131,6 +128,17 @@ class PerceptionUpdate(IntentUpdate):
                 MemoryLogEntry.model_validate(m) if isinstance(m, dict) else m 
                 for m in self.memory_log_add
             ]
+            
+        if self.turning_points_add:
+            from src.core.models.life_events import TurningPointRecord
+            self.turning_points_add = [
+                TurningPointRecord.model_validate(t) if isinstance(t, dict) else t 
+                for t in self.turning_points_add
+            ]
+            
+        if isinstance(self.memory_locations_set, list):
+            self.memory_locations_set = dict(self.memory_locations_set)
+            
         return self
 
 class NavigationUpdate(IntentUpdate):
@@ -139,6 +147,7 @@ class NavigationUpdate(IntentUpdate):
     cached_path: list[Vector2] | None = None
     target_pos: Vector2 | None = None
     chase_ticks: int | None = None
+    engaged_ticks: int | None = None
 
     @model_validator(mode="after")
     def _coerce_navigation(self) -> "NavigationUpdate":
@@ -191,7 +200,7 @@ class ProgressionUpdate(IntentUpdate):
         # Pydantic dataclasses (SkillInstance, Quest, StatusEffect) 
         # might need coercion if they come from loose dicts (e.g. from workers)
         from src.core.gameplay.classes import SkillInstance
-        from src.core.quests import Quest
+        from src.core.gameplay.quests import Quest
         from src.core.effects import StatusEffect
         from src.core.gameplay.effects import EffectType
         from src.core.gameplay.effects import EffectType
@@ -288,6 +297,9 @@ class StrategicUpdate(IntentUpdate):
     directives_add: list[DirectiveRecord] = Field(default_factory=list)
     directives_remove: list[str] = Field(default_factory=list)
     
+    blockers_add_or_update: list[BlockerRecord] = Field(default_factory=list)
+    blockers_remove: list[str] = Field(default_factory=list)
+    
     projects_add_or_update: list[ProjectRecord] = Field(default_factory=list)
     projects_remove: list[str] = Field(default_factory=list)
     
@@ -317,6 +329,7 @@ class StrategicUpdate(IntentUpdate):
     current_objective_id: str | None = None
     interrupted_project_id: str | None = None
     project_lock_until: int | None = None
+    engaged_ticks: int | None = None
     
     # Traceability [PHASE 2]
     strategic_drivers: list[DecisionDriver] = Field(default_factory=list)
@@ -369,6 +382,9 @@ def _rebuild_action_models():
         MemoryRecord, MemoryLogEntry, CombatNarrative, LootNarrative, 
         DiscoveryNarrative, PersonalMotive, DecisionDriver
     )
+    from src.core.models.life_events import (
+        TurningPointRecord
+    )
     from src.core.aspects.combat import CombatAspect
     from src.core.models.combat import CombatTraceRecord, CombatTraceDetails
     from src.core.entities.entity import Entity
@@ -376,7 +392,7 @@ def _rebuild_action_models():
     
     # Gameplay Components (needed for ProgressionUpdate)
     from src.core.gameplay.classes import SkillInstance
-    from src.core.quests import Quest
+    from src.core.gameplay.quests import Quest
     from src.core.effects import StatusEffect
     from src.core.gameplay.effects import EffectType
     
@@ -384,7 +400,8 @@ def _rebuild_action_models():
     from src.core.models.strategy import (
         DirectiveRecord, ProjectRecord, ConcernRecord, 
         ObligationRecord, SocialContractRecord, RecruitmentOfferRecord,
-        ContractTermRecord, LeadRecord, CandidateZoneRecord, HypothesisRecord
+        ContractTermRecord, LeadRecord, CandidateZoneRecord, HypothesisRecord,
+        BlockerRecord
     )
     
     # Create a unified namespace for Pydantic to resolve string forward references

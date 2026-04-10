@@ -33,7 +33,7 @@ class KnowledgePropagationSystem(System):
         # 2. Identify potential sharing pairs (nearby allies)
         for sharer in entities:
             # Random chance to share if not busy
-            if ctx.rng.next_bool(Domain.SOCIAL, sharer.id, tick, 0.3): # ~30% chance to attempt sharing
+            if not ctx.rng.next_bool(Domain.SOCIAL, sharer.id, tick, 0.4): # ~40% chance to attempt sharing
                 continue
                 
             # Get nearby entities in vision range
@@ -51,7 +51,9 @@ class KnowledgePropagationSystem(System):
                         # Apply entity memory (Authoritative transition)
                         for eid, belief in p_update.entity_memory.items():
                             from src.ai.beliefs import BeliefService
-                            BeliefService.merge_indirect_belief(recipient, belief)
+                            up = BeliefService.merge_indirect_belief(recipient, belief)
+                            if up and up.entity_memory:
+                                recipient.mind.perception.entity_memory.update(up.entity_memory)
                             
                     if s_update:
                         # Apply strategic leads (Authoritative transition)

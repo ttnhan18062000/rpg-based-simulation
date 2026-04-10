@@ -62,8 +62,13 @@ def test_belief_sharing_propagation(base_world):
     system = KnowledgePropagationSystem(config, rng)
     ctx = SystemContext(config, world, rng, None, faction_reg, lambda c, m, e=(), mt=None: None)
     
-    # Force sharing by calling the service
-    KnowledgePropagationService.propagate_gossip(witness, recipient, world)
+    # Force sharing by calling the service and applying updates
+    p_up, _ = KnowledgePropagationService.propagate_gossip(witness, recipient, world)
+    if p_up:
+        for eid, b_rec in p_up.entity_memory.items():
+            up = BeliefService.merge_indirect_belief(recipient, b_rec)
+            if up:
+                recipient.mind.perception.entity_memory.update(up.entity_memory)
     
     # Authoritative application (in a real tick, the system does this)
     # The KnowledgePropagationService.propagate_gossip returns a PerceptionUpdate.
@@ -101,9 +106,12 @@ def test_belief_conflict_resolution(base_world):
     # update = KnowledgePropagationService.propagate_gossip(sharer, recipient, world)
     # BeliefService.merge_indirect_belief(recipient, belief)
     
-    update = KnowledgePropagationService.propagate_gossip(witness, recipient, world)
-    for eid, belief in update.entity_memory.items():
-        BeliefService.merge_indirect_belief(recipient, belief)
+    p_up, _ = KnowledgePropagationService.propagate_gossip(witness, recipient, world)
+    if p_up:
+        for eid, belief in p_up.entity_memory.items():
+            up = BeliefService.merge_indirect_belief(recipient, belief)
+            if up:
+                recipient.mind.perception.entity_memory.update(up.entity_memory)
         
     # Recipient should STILL HAVE direct belief because it has higher total value (confidence * directness)
     # unless the new one is significantly more recent? 

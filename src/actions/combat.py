@@ -205,7 +205,7 @@ class CombatAftermathService:
             impact=0.5 + (hp_lost_ratio * 2.0),
             details=CombatNarrative(
                 target_id=defender.id,
-                target_kind=defender.kind,
+                target_kind=getattr(defender, "kind", "unknown"),
                 damage_dealt=damage,
                 was_fatal=(defender.combat.hp - damage) <= 0
             )
@@ -219,7 +219,7 @@ class CombatAftermathService:
             impact=1.0 + (hp_lost_ratio * 3.0),
             details=CombatNarrative(
                 target_id=attacker.id,
-                target_kind=attacker.kind,
+                target_kind=getattr(attacker, "kind", "unknown"),
                 damage_dealt=damage,
                 was_fatal=(defender.combat.hp - damage) <= 0
             )
@@ -358,7 +358,10 @@ class CombatAction:
         if not is_evasion and (defender.combat.hp - damage) > 0:
             # Check threshold against predicted HP after damage is applied
             if (defender.combat.hp - damage) / defender.combat.max_hp < 0.15:
-                proposal.updates.append(ProgressionUpdate(max_hp_delta=1))
+                proposal.updates.append(ProgressionUpdate(
+                    target_id=defender.id,
+                    max_hp_delta=1
+                ))
 
     @staticmethod
     def _get_weapon_range(entity: Entity) -> int:

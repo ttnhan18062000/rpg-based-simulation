@@ -6,6 +6,7 @@ from src.actions.base import ActionProposal, SocialUpdate, PerceptionUpdate
 from src.systems.gameplay.action_system import ActionSystem
 from src.core.world.grid import Grid
 from src.platform.spatial_hash import SpatialHash
+from src.config import SimulationConfig
 
 @pytest.fixture
 def world():
@@ -35,7 +36,7 @@ def test_nemesis_milestone_creation(world, hero, rival):
     proposal = ActionProposal(actor_id=hero.id, verb=ActionType.REST, updates=[up])
     
     # 3. Apply updates
-    ActionSystem.apply_action_state_transitions(world, None, [proposal], None)
+    ActionSystem.apply_action_state_transitions(world, SimulationConfig(), [proposal], None)
     
     # 4. Verify SocialRegistry
     assert world.social_registry.get_bond(hero.id, rival.id).rivalry == 0.85
@@ -55,7 +56,7 @@ def test_memory_salience_retention(world, hero, rival):
     # 1. Create a "major" memory (Nemesis)
     up_major = SocialUpdate(source_id=hero.id, target_id=rival.id, rivalry_delta=0.9)
     prop_major = ActionProposal(actor_id=hero.id, verb=ActionType.REST, updates=[up_major])
-    ActionSystem.apply_action_state_transitions(world, None, [prop_major], None)
+    ActionSystem.apply_action_state_transitions(world, SimulationConfig(), [prop_major], None)
     
     # 2. Fill memory with "minor" memories (impact 0.1)
     # We exceed 50 to trigger pruning
@@ -67,7 +68,7 @@ def test_memory_salience_retention(world, hero, rival):
             "details": {"type": "minor"}
         }])
         prop_minor = ActionProposal(actor_id=hero.id, verb=ActionType.REST, updates=[minor_up])
-        ActionSystem.apply_action_state_transitions(world, None, [prop_minor], None)
+        ActionSystem.apply_action_state_transitions(world, SimulationConfig(), [prop_minor], None)
         
     # 3. Verify that the Nemesis memory survived pruning while minor ones were removed
     log = hero.mind.narrative.memory_log

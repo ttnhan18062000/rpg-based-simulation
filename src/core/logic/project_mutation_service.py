@@ -39,18 +39,49 @@ class ProjectMutationService:
                 return
 
         # 2. Concerns-driven Interruption
-        # If the StrategicConsequenceService just added a high-priority concern, 
-        # we should probably suspend the current project if it's not urgent enough.
-        # However, StrategicInterruptionService (Tactical) usually handles the *decision*.
-        # This service handles the *mutation* and *recovery semantics*.
-        
-        # We look at the concerns we just added to the updates
         for concern in updates.concerns_add_or_update:
             if concern.priority > current.priority + current.interruption_threshold:
-                # We should record that this project IS being interrupted by this concern
-                cls._suspend_project(current, updates, f"Strategic Interrupt: {concern.label}", [event.event_id])
-                # Note: AIBrain will actually switch the current_project_id later.
-                # Here we just prepare the record for suspension.
+                # Decide: Suspend or Pivot?
+                from src.core.models.enums import ConcernKind, ProjectKind
+                
+                # Pivot logic: If it's a threat and we were exploring, pivot to survival/defense
+                if concern.kind == ConcernKind.THREAT and current.kind == ProjectKind.EXPLORATION:
+                     cls._pivot_project(current, updates, ProjectKind.DEVELOPMENT, f"Threat response: {concern.label}", [event.event_id])
+                else:
+                     cls._suspend_project(current, updates, f"Strategic Interrupt: {concern.label}", [event.event_id])
+                
+                return
+
+    @staticmethod
+    def _pivot_project(
+        project: ProjectRecord,
+        updates: StrategicUpdate,
+        new_kind: ProjectKind,
+        reason: str,
+        event_ids: list[str]
+    ) -> None:
+        """Mutate a project's kind while preserving progress if possible."""
+        updated_p = project.model_copy(update={
+            "kind": new_kind,
+            "label": f"Pivoted: {project.label} ({reason})",
+            "interrupted_by_event_ids": list(set(project.interrupted_by_event_ids + event_ids)),
+            "urgency": max(project.urgency, 0.7) # Increase urgency for pivots
+        })
+        
+        # Merge into updates
+        found = False
+        for i, up in enumerate(updates.projects_add_or_update):
+            if up.project_id == project.project_id:
+                updates.projects_add_or_update[i] = updated_p
+                found = True
+                break
+        if not found:
+            updates.projects_add_or_update.append(updated_p)
+            
+        # Record interruption for AIBrain awareness
+        updates.interrupted_project_id = project.project_id
+            
+        logger.info("Project %s pivoted to %s: %s", project.project_id, new_kind.name, reason)
 
     @staticmethod
     def _suspend_project(

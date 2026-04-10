@@ -80,6 +80,10 @@ def test_pricing_reputation_scaling():
     
     assert price_trusted < price_untrusted, "Trusted entities should get better buy prices"
 
+def test_scaling_500_entities():
+    tps, eps = run_bench(500)
+    assert tps > 0.4
+
 def test_rest_to_sleep_transition():
     rng = DeterministicRNG(42)
     
@@ -128,11 +132,11 @@ def test_gossip_distance_bounds():
         threat=ThreatEstimate(overall=0.9)
     )
     
-    update = KnowledgePropagationService.propagate_gossip(sharer, recipient, world)
+    perception_up, _ = KnowledgePropagationService.propagate_gossip(sharer, recipient, world)
     
-    assert update is not None
-    assert 3 in update.entity_memory, "Nearby target should be shared"
-    assert 4 not in update.entity_memory, "Far target should NOT be shared (unless famous)"
+    assert perception_up is not None
+    assert 3 in perception_up.entity_memory, "Nearby target should be shared"
+    assert 4 not in perception_up.entity_memory, "Far target should NOT be shared (unless famous)"
 
 def test_subjective_gathering_vision():
     rng = DeterministicRNG(42)

@@ -22,9 +22,12 @@ def test_perception_tracks_position_history():
     actor.id = 1
     actor.spatial.pos = Vector2(1, 1)
     actor.spatial.vision_range = 10
-    actor.identity.faction = "player"
+    actor.identity.faction = 0
+    actor.identity.cluster_id = None
     actor.mind.perception.max_attention_slots = 5
     actor.mind.navigation.pos_history = []
+    actor.mind.social.known_bonds = {}
+    actor.mind.social.faction_standing = {}
     actor.progression.age_ticks = 0
     actor.progression.longevity_limit = 100
 
@@ -68,11 +71,13 @@ def test_appraisal_detects_stuck():
     actor.combat = CombatAspect(hp=100, max_hp=100)
     actor.progression = ProgressionAspect(age_ticks=0, longevity_limit=10000)
     
-    ctx = MagicMock(actor=actor, snapshot=MagicMock(tick=100), visible=[])
+    ctx = MagicMock(actor=actor, visible=[])
+    ctx.snapshot.tick = 100
+    ctx.snapshot.hour = 12
     ctx.config.flee_hp_threshold = 0.2
     updates = []
     
-    brain._memory_appraisal_phase(ctx, updates)
+    brain._memory_appraisal_phase(ctx, updates, {})
     
     # Check MindUpdate for STUCK emotion
     mind_up = next((u for u in updates if isinstance(u, MindUpdate) and u.emotion_set), None)

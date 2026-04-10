@@ -16,18 +16,16 @@ def test_inspector_curated_output():
     entity.identity.tier = 1
     entity.identity.faction = "Highland"
     
-    # Personality labels
-    entity.identity.archetype = MagicMock()
-    entity.identity.archetype.name = "SLAYER"
-    entity.identity.openness = 0.8 # Creative
-    entity.identity.conscientiousness = 0.2 # Easygoing
-    entity.identity.extraversion = 0.5 # Average
-    entity.identity.agreeableness = 0.9 # Compassionate
-    entity.identity.neuroticism = 0.1 # Resilient
-    
-    # Goal scores
+    # Personality traits
     entity.mind = MagicMock()
     entity.mind.decision = MagicMock()
+    entity.mind.decision.personality = MagicMock()
+    entity.mind.decision.personality.aggression = 0.8  # Aggressive
+    entity.mind.decision.personality.greed = 0.9       # Greedy
+    entity.mind.decision.personality.caution = 0.1     # Reckless
+    entity.mind.decision.personality.ambition = 0.9    # Ambitious
+    entity.mind.decision.personality.curiosity = 0.8   # Curious
+    
     entity.mind.decision.goal_scores = {
         GoalType.COMBAT: 1.5,
         GoalType.LOOT: 0.9,
@@ -77,8 +75,11 @@ def test_inspector_curated_output():
     
     # VERIFY: Curation requirements
     assert "WHO IS THIS?" in output
-    assert "Creative" in output
-    assert "Easygoing" in output
+    assert "Aggressive" in output
+    assert "Greedy" in output
+    assert "Reckless" in output
+    assert "Ambitious" in output
+    assert "Curious" in output
     
     assert "LIKELY NEXT CHOICES" in output
     assert "1. COMBAT" in output

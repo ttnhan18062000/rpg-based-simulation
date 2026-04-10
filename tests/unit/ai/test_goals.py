@@ -16,8 +16,8 @@ class TestGoalRegistry:
     """Test the global goal registry."""
 
     def test_registry_has_10_goals(self):
-        # Increased to 12 in Phase 1 (Stage 4 baseline)
-        assert len(GOAL_REGISTRY) == 12
+        # Increased to 13 in Phase 3 (including Investigate)
+        assert len(GOAL_REGISTRY) == 13
 
     def test_registry_names_unique(self):
         names = [g.name for g in GOAL_REGISTRY]
@@ -28,7 +28,8 @@ class TestGoalRegistry:
         expected = {
             GoalType.COMBAT, GoalType.FLEE, GoalType.EXPLORE, GoalType.LOOT, 
             GoalType.TRADE, GoalType.REST, GoalType.CRAFT, GoalType.SOCIAL, 
-            GoalType.GUARD, GoalType.CORPSE_RUN, GoalType.SLEEP, GoalType.EAT
+            GoalType.GUARD, GoalType.CORPSE_RUN, GoalType.SLEEP, GoalType.EAT,
+            GoalType.INVESTIGATE
         }
         assert names == expected
 
@@ -44,7 +45,7 @@ class TestGoalEvaluation:
         rng = MagicMock()
         brain = AIBrain(config, rng)
         
-        actor = Entity(id=1, kind="hero", faction="player")
+        actor = Entity(id=1, kind="hero", faction=0)
         actor.combat.hp = 100
         actor.combat.max_hp = 100
         
@@ -63,13 +64,14 @@ class TestGoalEvaluation:
     def test_combat_goal_scoring(self, setup_context):
         ctx = setup_context
         # Near enemy -> should be high score
-        enemy = Entity(id=2, kind="mob", faction="global_hostile")
+        from src.core.models.enums import Faction
+        enemy = Entity(id=2, kind="mob", faction=Faction.GOBLIN_HORDE)
         enemy.spatial.pos = Vector2(2, 1)
         ctx._visible_override = [enemy]
         
         goal = CombatGoal()
         # [AOA STABILIZATION] Explicitly register hostile faction for reliable test mocking
-        ctx.faction_reg.set_relation("player", "global_hostile", FactionRelation.HOSTILE)
+        ctx.faction_reg.set_relation(Faction.HERO_GUILD, Faction.GOBLIN_HORDE, FactionRelation.HOSTILE)
         
         score = goal.score(ctx)
         assert score > 0.5
@@ -94,7 +96,7 @@ class TestGoalLocking:
         rng = MagicMock()
         brain = AIBrain(config, rng)
         
-        actor = Entity(id=1, kind="hero", faction="player")
+        actor = Entity(id=1, kind="hero", faction=0)
         actor.combat.max_hp = 100
         actor.combat.hp = 10  # Low HP ratio (0.1 < 0.5) to trigger neuroticism override
         # Neuroticism >= 0.8 allows breaking locks
@@ -129,4 +131,4 @@ class TestAIBrainShim:
     def test_shim_exports_registry(self):
         from src.ai.goal_evaluator import GOAL_REGISTRY as LegacyRegistry
         assert LegacyRegistry is GOAL_REGISTRY
-        assert len(LegacyRegistry) == 12
+        assert len(LegacyRegistry) == 13

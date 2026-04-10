@@ -116,7 +116,13 @@ class ConflictResolver:
                             if other.id == entity.id or not other.combat.alive: continue
                             if other.identity.faction != entity.identity.faction:
                                 # Trigger free Opportunity Attack
-                                opp_prop = ActionProposal(actor_id=other.id, verb=ActionType.ATTACK, target=entity.id, reason="Opportunity Attack")
+                                opp_prop = ActionProposal(
+                                    actor_id=other.id, 
+                                    verb=ActionType.ATTACK, 
+                                    target=entity.id, 
+                                    reason="Opportunity Attack",
+                                    metadata={"verb": "OPPORTUNITY_ATTACK"}
+                                )
                                 if self._combat_action.validate(opp_prop, world):
                                     self._combat_action.apply(opp_prop, world)
                                     all_applied.append(opp_prop)

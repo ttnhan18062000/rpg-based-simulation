@@ -145,6 +145,7 @@ class ObjectiveRecord(SimulationModel):
     target_id: int | None = None
     target_pos: Vector2 | None = None
     
+    blocker_ids: list[str] = Field(default_factory=list)
     blockers: list[BlockerRecord] = Field(default_factory=list)
     leads: list[LeadRecord] = Field(default_factory=list)
     
@@ -289,12 +290,19 @@ class RecruitmentOfferRecord(SimulationModel):
     status: OfferStatus = OfferStatus.PENDING
     created_tick: int = 0
     expires_tick: int | None = None
+    
+    # Negotiation History [phase_3_task_1]
+    counter_reason: str = ""
+    original_founder_id: int | None = None
+    negotiation_count: int = 0
+    negotiation_history: list[dict[str, Any]] = Field(default_factory=list) # [{tick, from, status, terms}]
 
 class StrategicState(SimulationModel):
     """Aggregate strategic stratum attached to MindAspect. [PHASE 1]"""
     model_config = ConfigDict(extra='forbid')
     
     directives: list[DirectiveRecord] = Field(default_factory=list)
+    blockers: list[BlockerRecord] = Field(default_factory=list)
     projects: list[ProjectRecord] = Field(default_factory=list)
     concerns: list[ConcernRecord] = Field(default_factory=list)
     obligations: list[ObligationRecord] = Field(default_factory=list)

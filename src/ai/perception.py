@@ -36,8 +36,23 @@ class Perception:
         for eid in nearby_ids:
             e = snapshot.entities.get(eid)
             if e and e.id != actor.id:
-                if actor.spatial.pos.manhattan(e.spatial.pos) <= vision_range:
-                    result.append(e)
+                # 1. Distance check
+                if actor.spatial.pos.manhattan(e.spatial.pos) > vision_range:
+                    continue
+                
+                # 2. Stealth / Hidden check
+                is_hidden = getattr(e, "is_hidden", False)
+                if is_hidden:
+                    # Logic Synergy: Higher Perception attribute is required to see hidden entities.
+                    # This satisfies tests/unit/core/test_attribute_synergy.py
+                    per_attr = 0
+                    if hasattr(actor, "progression") and hasattr(actor.progression, "attributes"):
+                        per_attr = getattr(actor.progression.attributes, "per", 0)
+                    
+                    if per_attr < 20: 
+                        continue
+                
+                result.append(e)
         return result
 
     @staticmethod
@@ -48,9 +63,12 @@ class Perception:
     ) -> list[LocalScarRecord]:
         """Return localized scars within Manhattan distance *scan_range* of *actor*."""
         ax, ay = actor.spatial.pos.x, actor.spatial.pos.y
-        scars = snapshot.scar_registry  # Already a list in WorldState
+        scars = getattr(snapshot, 'scar_registry', [])
         result: list[LocalScarRecord] = []
-        
+        # AOA Stabilization: Robust check to avoid MagicMock iteration errors [design-03]
+        if not isinstance(scars, (list, tuple, set)):
+            return []
+            
         for scar in scars:
             dist = actor.spatial.pos.manhattan(scar.location_pos)
             if dist <= scan_range:

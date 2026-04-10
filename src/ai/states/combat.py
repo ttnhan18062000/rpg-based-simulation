@@ -36,7 +36,6 @@ def best_ready_skill(actor: Entity, dist_to_enemy: int = 1, nearby_enemies: int 
     for si in actor.progression.skills:
         sdef = SKILL_DEFS.get(si.skill_id)
         if sdef is None:
-            # print(f"  Skill {si.skill_id} NOT FOUND in SKILL_DEFS")
             continue
         if not sdef: continue
         
@@ -129,8 +128,8 @@ class HuntHandler(StateHandler):
             for v in ctx.visible:
                 if ctx.faction_reg.is_hostile(actor.identity.faction, v.identity.faction):
                     belief = ctx.get_belief(v.id)
-                    # If we believe they are alive (injury < 1.0)
-                    if belief and (belief.visible_injury < 1.0 or belief.visible_injury == -1.0):
+                    # If we believe they are alive (injury < 1.0), or we just saw them
+                    if not belief or (belief.visible_injury < 1.0 or belief.visible_injury == -1.0):
                         if actor.spatial.pos.manhattan(v.spatial.pos) <= 4:
                             nearby_count += 1
             

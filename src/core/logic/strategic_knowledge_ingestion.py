@@ -42,6 +42,7 @@ class StrategicKnowledgeIngestionService:
                 subject=mat_id,
                 source_type="guild",
                 source_confidence=source_confidence,
+                certainty=source_confidence,
                 interpreted_meaning=hint,
                 semantic_tags=["material", "guild_tip"],
                 discovered_tick=tick,
@@ -66,6 +67,7 @@ class StrategicKnowledgeIngestionService:
                 subject="enemy_camp",
                 source_type="guild",
                 source_confidence=source_confidence,
+                certainty=source_confidence,
                 candidate_zone_ids=[zone_id],
                 discovered_tick=tick
             ))
@@ -90,7 +92,7 @@ class StrategicKnowledgeIngestionService:
         leads = []
         
         for mat_id, (have, need) in missing_materials.items():
-            b_id = f"blocker_mat_{mat_id}_{tick}"
+            b_id = f"blocker_mat_{mat_id}" # Stable ID for resolution
             blockers.append(BlockerRecord(
                 blocker_id=b_id,
                 kind=BlockerKind.MATERIAL,
@@ -103,34 +105,54 @@ class StrategicKnowledgeIngestionService:
             ))
             # Also create a lead to find this material if not already known
             leads.append(LeadRecord(
-                lead_id=f"lead_need_{mat_id}_{tick}",
+                lead_id=f"lead_need_{mat_id}",
                 kind=LeadKind.OBJECT,
                 label=f"Find {mat_id}",
                 subject=mat_id,
                 source_type="blacksmith_demand",
+                certainty=1.0,
                 semantic_tags=["material", "blocked_requirement"],
                 discovered_tick=tick
             ))
             
         if gold_needed > 0:
             blockers.append(BlockerRecord(
-                blocker_id=f"blocker_gold_{tick}",
+                blocker_id="blocker_gold",
                 kind=BlockerKind.MATERIAL,
                 label="Insufficient Gold",
                 subject_ref="gold",
-                severity=gold_needed / 100.0, # Heuristic
+                severity=min(1.0, gold_needed / 100.0), # Heuristic
                 spawned_from_id=objective_id,
                 suggested_detour_types=[ObjectiveKind.KILL, ObjectiveKind.COLLECT],
                 discovered_tick=tick
             ))
             
-        # Note: We return StrategicUpdate but blockers are attached to objectives/projects.
-        # In this simplified model, we'll mark them as "concerns" or updates to the active project.
-        # However, StrategicUpdate usually takes lists of records to MERGE into the state.
-        
         return StrategicUpdate(
             target_id=actor_id,
             leads_add_or_update=leads,
+            blockers_add_or_update=blockers
+        )
+
+    @staticmethod
+    def ingest_material_acquisition(
+        actor_id: int,
+        tick: int,
+        item_ids: List[str]
+    ) -> StrategicUpdate:
+        """Emits resolutions for material blockers after acquisition."""
+        blockers = []
+        for iid in item_ids:
+            # We use the same stable ID pattern as ingest_blacksmith_constraint
+            blockers.append(BlockerRecord(
+                blocker_id=f"blocker_mat_{iid}",
+                kind=BlockerKind.MATERIAL,
+                label=f"Missing {iid}",
+                subject_ref=iid,
+                resolved=True,
+                discovered_tick=tick
+            ))
+        return StrategicUpdate(
+            target_id=actor_id,
             blockers_add_or_update=blockers
         )
 
@@ -144,9 +166,10 @@ class StrategicKnowledgeIngestionService:
     ) -> StrategicUpdate:
         """Converts class hall gated progress into capability blockers."""
         blocker = BlockerRecord(
-            blocker_id=f"blocker_class_{skill_id}_{tick}",
+            blocker_id=f"blocker_capability_{skill_id}",
             kind=BlockerKind.CAPABILITY if not is_breakthrough else BlockerKind.ACCESS,
             label=f"Gated: {skill_id}",
+            subject_ref=skill_id,
             description=reason,
             severity=0.8,
             suggested_detour_types=[ObjectiveKind.WAIT, ObjectiveKind.INVESTIGATE],
@@ -156,14 +179,35 @@ class StrategicKnowledgeIngestionService:
             target_id=actor_id,
             blockers_add_or_update=[blocker],
             leads_add_or_update=[LeadRecord(
-                lead_id=f"lead_skill_{skill_id}_{tick}",
+                lead_id=f"lead_skill_{skill_id}",
                 kind=LeadKind.EVENT,
                 label=f"Unlock {skill_id}",
                 subject=skill_id,
                 interpreted_meaning=reason,
                 source_type="class_hall",
+                certainty=1.0,
                 discovered_tick=tick
             )]
+        )
+
+    @staticmethod
+    def ingest_capability_acquisition(
+        actor_id: int,
+        tick: int,
+        skill_id: str
+    ) -> StrategicUpdate:
+        """Emits resolutions for capability blockers after success."""
+        blocker = BlockerRecord(
+            blocker_id=f"blocker_capability_{skill_id}",
+            kind=BlockerKind.CAPABILITY,
+            label=f"Gated: {skill_id}",
+            subject_ref=skill_id,
+            resolved=True,
+            discovered_tick=tick
+        )
+        return StrategicUpdate(
+            target_id=actor_id,
+            blockers_add_or_update=[blocker]
         )
 
     @staticmethod
@@ -186,6 +230,7 @@ class StrategicKnowledgeIngestionService:
             subject="world_event",
             source_type="inn",
             interpreted_meaning=rumor_text,
+            certainty=0.5, # Rumors are uncertain
             discovered_tick=tick
         ))
         
@@ -218,7 +263,7 @@ class StrategicKnowledgeIngestionService:
         blockers = []
         if needs_rebuild:
             blockers.append(BlockerRecord(
-                blocker_id=f"blocker_home_rebuild_{tick}",
+                blocker_id="blocker_home_rebuild",
                 kind=BlockerKind.ACCESS,
                 label="Home Damaged",
                 severity=0.9,
@@ -229,4 +274,21 @@ class StrategicKnowledgeIngestionService:
         return StrategicUpdate(
             target_id=actor_id,
             blockers_add_or_update=blockers
+        )
+
+    @staticmethod
+    def ingest_home_upgrade_success(
+        actor_id: int,
+        tick: int
+    ) -> StrategicUpdate:
+        """Emits resolutions for home maintenance blockers after upgrade."""
+        return StrategicUpdate(
+            target_id=actor_id,
+            blockers_add_or_update=[BlockerRecord(
+                blocker_id="blocker_home_rebuild",
+                kind=BlockerKind.ACCESS,
+                label="Home Damaged",
+                resolved=True,
+                discovered_tick=tick
+            )]
         )

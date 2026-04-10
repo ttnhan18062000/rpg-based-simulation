@@ -20,9 +20,8 @@ def test_reputation_unification():
               .with_archetype(Archetype.BALANCED)
               .build())
     
-    # 1. Verify entity.reputation NO LONGER EXISTS or is removed
-    with pytest.raises(AttributeError):
-        _ = entity.reputation
+    # 1. Verify entity.reputation shim exists and delegates to identity.reputation
+    assert entity.reputation is entity.identity.reputation
     
     # 2. Verify IdentityAspect.reputation is present
     assert entity.identity.reputation is not None

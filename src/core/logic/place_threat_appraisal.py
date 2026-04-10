@@ -45,20 +45,33 @@ class PlaceThreatAppraisalService:
             return
             
         # 3. Calculate Pressure
-        # Base severity of event * attachment importance
-        pressure = event.severity * attachment.importance
+        # Manhattan distance to attachment
+        dist = attachment.location_pos.manhattan(event.location)
+        # Normalize distance (0-20 range for pressure decay)
+        dist_factor = max(0.0, 1.0 - (dist / 20.0))
         
+        # Base severity of event * attachment importance * distance sensitivity
+        pressure = event.severity * attachment.importance * (0.5 + 0.5 * dist_factor)
+        
+        # [PHASE 4] Home Priority Bias: Significant multiplier for home threats
+        from src.core.models.enums import AttachmentKind
+        if attachment.kind == AttachmentKind.HOME:
+            pressure *= 1.5
+            
         # 4. Generate Concern if sufficiently high
-        if pressure > 0.5:
+        if pressure > 0.4:
             # We use a deterministic ID based on region to avoid duplicates if multiple events happen
             concern_id = f"concern_threat_{region.region_id}_{entity.id}"
             
             # Check if concern already exists to avoid spamming updates
             existing = next((c for c in entity.mind.strategic.concerns if c.concern_id == concern_id), None)
             if existing:
+                # Update priority if existing is lower
+                if existing.priority < 2.0 + pressure:
+                     updated_c = existing.model_copy(update={"priority": min(10.0, 2.0 + pressure), "urgency": min(1.0, 0.4 + (pressure * 0.1))})
+                     updates.concerns_add_or_update.append(updated_c)
                 return
 
-            from src.core.models.enums import InterpretedLifeEventKind
             label = f"Threat to {attachment.kind.name.title()} ({region.region_id})"
             
             new_concern = ConcernRecord(
@@ -68,10 +81,11 @@ class PlaceThreatAppraisalService:
                 priority=min(10.0, 2.0 + pressure),
                 cause_type="environmental",
                 source_event_id=event.event_id,
-                urgency=min(1.0, 0.4 + (pressure * 0.1)),
+                urgency=min(1.0, 0.5 + (pressure * 0.1)),
                 attachment_relevance=attachment.importance,
                 visibility="private",
                 created_tick=world.tick
             )
             updates.concerns_add_or_update.append(new_concern)
-            logger.info("Entity %d generated regional concern for %s: %s", entity.id, region.region_id, label)
+            logger.info("Entity %d generated regional concern for %s: %s (dist: %.1f, pressure: %.2f)", 
+                        entity.id, region.region_id, label, dist, pressure)

@@ -39,11 +39,10 @@ def engine_stack() -> Generator:
     try:
         check_docker = subprocess.run("docker compose version", shell=True, capture_output=True, text=True)
         if check_docker.returncode != 0:
-            print(f"DEBUG: docker compose version failed with returncode {check_docker.returncode}")
-            print(f"DEBUG: STDERR: {check_docker.stderr}")
+
             pytest.skip("Docker Compose not available (non-zero exit), skipping E2E stack tests.")
     except Exception as e:
-        print(f"DEBUG: docker compose version raised exception: {e}")
+
         pytest.skip(f"Docker Compose not available (exception: {e}), skipping E2E stack tests.")
 
     # Assign dynamic ports to avoid conflicts with production

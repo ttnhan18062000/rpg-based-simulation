@@ -172,7 +172,8 @@ class EntityPresenter:
             SocialBondSchema, ReputationProfileSchema, TurningPointSchema, MemoryLogSchema,
             SuccessorSummarySchema, HouseholdSummarySchema,
             StrategicStateSchema, ProjectSchema, ObjectiveSchema, BlockerSchema, LeadSchema,
-            DirectiveSchema, ConcernSchema
+            DirectiveSchema, ConcernSchema, PersonalityProfileSchema, PersonalMotiveSchema,
+            BeliefRecordSchema, ThreatEstimateSchema
         )
         from src.core.models.enums import Element, LifeRole
         from src.api.schemas import PlaceAttachmentSchema

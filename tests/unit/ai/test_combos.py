@@ -20,7 +20,7 @@ def test_shatter_combo():
     from src.platform.spatial_hash import SpatialHash
     world = WorldState(seed=42, grid=grid, spatial_index=SpatialHash(cell_size=8))
     
-    attacker = Entity(id=1, kind="hero", faction="player")
+    attacker = Entity(id=1, kind="hero", faction=0)
     attacker.combat.atk_base = 10
     from src.core.gameplay.classes import SkillInstance
     attacker.progression.skills = [SkillInstance(skill_id="Heavy Strike")]

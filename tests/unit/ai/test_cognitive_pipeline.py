@@ -25,7 +25,7 @@ def mock_brain():
 
 def test_decide_produces_consistent_result(mock_brain):
     # REAL Entity [AOA STABILIZATION]
-    actor = Entity(id=1, kind="hero", faction="player")
+    actor = Entity(id=1, kind="hero", faction=0)
     actor.spatial.pos = Vector2(5, 5)
     actor.mind.decision.ai_state = AIState.IDLE
     
@@ -51,7 +51,7 @@ def test_decide_produces_consistent_result(mock_brain):
 
 def test_decide_increments_idle_ticks_on_rest(mock_brain):
     # REAL Entity [AOA STABILIZATION]
-    actor = Entity(id=2, kind="hero", faction="player")
+    actor = Entity(id=2, kind="hero", faction=0)
     actor.mind.decision.ai_state = AIState.IDLE
     actor.mind.decision.consecutive_idle_ticks = 5
     
@@ -85,7 +85,7 @@ def test_perception_phase_appraisal_sync(mock_brain):
     from src.core.models.enums import EmotionType
     
     # REAL Entity [AOA STABILIZATION]
-    actor = Entity(id=3, kind="hero", faction="player")
+    actor = Entity(id=3, kind="hero", faction=0)
     actor.combat.max_hp = 100
     actor.combat.hp = 50 # 0.5 ratio
     actor.spatial.pos = Vector2(5, 5)
