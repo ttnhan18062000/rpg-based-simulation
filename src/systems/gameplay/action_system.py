@@ -514,7 +514,7 @@ class ActionSystem(System):
                         # Phase 4: Trigger social/reputation consequences on resolution or failure
                         if ct.status in (StrategicStatus.RESOLVED, StrategicStatus.ABANDONED):
                              from src.ai.strategy.contract_outcome import ContractOutcomeService
-                             ContractOutcomeService.resolve_contract(world, ct, ct.status)
+                             ContractOutcomeService.resolve_contract(world, ct, ct.status, emit=emit)
 
                         found = False
                         for i, existing in enumerate(strat.contracts):
@@ -818,14 +818,14 @@ class ActionSystem(System):
                 if defender:
                     events = EventInterpreterService.interpret_combat_aftermath(actor, defender, up.result, world)
                     for event in events:
-                        SocialStateApplicator.apply_interpreted_event(event, world)
+                        SocialStateApplicator.apply_interpreted_event(event, world, updates=updates)
 
         # 2. Positional/Tactical Events
         spatial_up = next((u for u in updates if isinstance(u, SpatialUpdate)), None)
         if spatial_up:
             event = EventInterpreterService.interpret_tactical_outcome(world, actor, spatial_up)
             if event:
-                SocialStateApplicator.apply_interpreted_event(event, world)
+                SocialStateApplicator.apply_interpreted_event(event, world, updates=updates)
 
     @classmethod
     def _process_proximity_gossip(cls, world: WorldState, actor: Entity, updates: list[IntentUpdate]) -> None:

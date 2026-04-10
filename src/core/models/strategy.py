@@ -244,6 +244,18 @@ class ProjectRecord(SimulationModel):
     updated_tick: int = 0
     resolved_tick: int | None = None
     
+    # Project Interruption & Recovery [PHASE 5]
+    interrupted_by_event_ids: list[str] = Field(default_factory=list)
+    suspension_reason: str = ""
+    recovery_behavior: str = "default" # "resume", "restart", "abandon"
+    
+    mutation_source_id: str | None = None # project_id that this project mutated from
+    split_from_id: str | None = None # project_id that this project split from
+    
+    resume_conditions: dict[str, Any] = Field(default_factory=dict)
+    abandonment_reason: str = ""
+    symbolic_closure_required: bool = False
+    
     metadata: dict[str, Any] = Field(default_factory=dict)
 
 class ConcernRecord(SimulationModel):
@@ -254,7 +266,20 @@ class ConcernRecord(SimulationModel):
     kind: ConcernKind
     label: str
     priority: float = Field(default=2.0, ge=0.0, le=10.0)
+    
+    # Context & History [PHASE 5]
+    cause_type: str = "" # e.g. "event", "scar", "environmental"
     source_event_id: str | None = None
+    linked_scar_ids: list[str] = Field(default_factory=list)
+    
+    urgency: float = Field(default=0.5, ge=0.0, le=1.0)
+    irreversibility: float = Field(default=0.0, ge=0.0, le=1.0)
+    attachment_relevance: float = Field(default=0.0, ge=0.0, le=1.0)
+    social_cost: float = Field(default=0.0, ge=0.0, le=1.0)
+    
+    # Visibility [PHASE 5]
+    visibility: str = "private" # 'private', 'shared', 'public'
+    
     created_tick: int = 0
     resolved_tick: int | None = None
 
@@ -293,6 +318,7 @@ class SocialContractRecord(SimulationModel):
     founder_id: int
     member_ids: list[int] = Field(default_factory=list)
     invited_ids: list[int] = Field(default_factory=list)
+    member_roles: dict[int, str] = Field(default_factory=dict) # entity_id -> role_name
     
     required_roles: dict[str, int] = Field(default_factory=dict) # role_name -> count
     reward_logic: str = "equal_split" # 'fixed', 'equal_split', 'performance'

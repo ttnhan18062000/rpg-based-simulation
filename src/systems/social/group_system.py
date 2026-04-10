@@ -4,7 +4,8 @@ import uuid
 from typing import TYPE_CHECKING
 from src.systems.infrastructure.base import System
 from src.core.models.lived_structure import GroupRecord
-from src.core.models.enums import GroupKind, GoalType, ContractKind, StrategicStatus
+from src.core.models.enums import GroupKind, GoalType, ContractKind
+from src.core.models.strategy import StrategicStatus
 from src.ai.strategy.contract_outcome import ContractOutcomeService
 
 if TYPE_CHECKING:
@@ -103,7 +104,7 @@ class GroupSystem(System):
             if len(member_ids) < 2: continue
             
             ct = contract_info[cid]
-            group_id = ct.linked_group_id
+            group_id = ct.party_id
             
             # If contract has a group_id, check if it still exists
             existing_group = context.world.group_registry.get(group_id) if group_id else None
@@ -138,7 +139,7 @@ class GroupSystem(System):
                         # Update the contract record inside strategic state
                         for m_ct in m_ent.mind.strategic.contracts:
                             if m_ct.contract_id == cid:
-                                m_ct.linked_group_id = new_group_id
+                                m_ct.party_id = new_group_id
                 
                 if context.emit:
                     context.emit("group", f"Contract party formed for {cid} with {len(member_ids)} members", 
@@ -194,9 +195,9 @@ class GroupSystem(System):
                 leader = context.world.get_entity(group.leader_id)
                 if leader:
                     for ct in leader.mind.strategic.contracts:
-                        if ct.linked_group_id == gid and ct.status == StrategicStatus.ACTIVE:
+                        if ct.party_id == gid and ct.status == StrategicStatus.ACTIVE:
                             # Apply consequences
-                            ContractOutcomeService.resolve_contract(context.world, ct, StrategicStatus.ABANDONED)
+                            ContractOutcomeService.resolve_contract(context.world, ct, StrategicStatus.ABANDONED, emit=context.emit)
                             break
 
             for mid in group.member_ids:

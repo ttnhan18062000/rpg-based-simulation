@@ -8,7 +8,7 @@ It ensures that semantic interpretations actually change the simulation state.
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING, List, Optional
 
 from src.core.logic.turning_points import TurningPointService
 from src.core.logic.relationship_service import RelationshipService
@@ -20,7 +20,7 @@ if TYPE_CHECKING:
     from src.core.entities.entity import Entity
     from src.core.models.world_state import WorldState
     from src.core.models.life_events import InterpretedLifeEvent
-    from src.actions.base import SocialUpdate, ReputationUpdate
+    from src.actions.base import SocialUpdate, ReputationUpdate, IntentUpdate
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +31,8 @@ class SocialStateApplicator:
     def apply_interpreted_event(
         cls, 
         event: InterpretedLifeEvent, 
-        world: WorldState
+        world: WorldState,
+        updates: Optional[List[IntentUpdate]] = None
     ) -> None:
         """Apply an interpreted event to the world and involved entities."""
         tick = world.tick
@@ -39,9 +40,11 @@ class SocialStateApplicator:
         if not actor:
             return
 
+        tp_record: Optional[TurningPointRecord] = None
+
         # 1. Handle Turning Point Candidates
         if event.turning_point_candidate:
-            tp = TurningPointRecord(
+            tp_record = TurningPointRecord(
                 event_id=event.event_id,
                 kind=cls._map_event_to_tp_kind(event.kind),
                 tick=tick,
@@ -54,7 +57,8 @@ class SocialStateApplicator:
                 tags_remove=event.tags_remove,
                 salience_score=0.0 # Will be calc'd in insert
             )
-            TurningPointService.insert(actor, tp, tick)
+            # Mutation (Direct)
+            TurningPointService.insert(actor, tp_record, tick)
 
         # 2. Apply Reputation Deltas (Authoritative)
         if event.reputation_deltas:
@@ -66,12 +70,12 @@ class SocialStateApplicator:
                 if field_name == 'notoriety_delta': field_name = 'threat_notoriety_delta'
                 rep_data[field_name] = v
             
-            update = ReputationUpdate(
+            rep_update = ReputationUpdate(
                 tags_add=event.tags_add,
                 tags_remove=event.tags_remove,
                 **rep_data
             )
-            ReputationService.apply_update(actor, update)
+            ReputationService.apply_update(actor, rep_update)
 
         # 3. Apply Relationship Deltas
         for subject_id, deltas in event.relationship_deltas.items():
@@ -80,12 +84,19 @@ class SocialStateApplicator:
             social_data = {f"{k}_delta": v for k, v in deltas.items()}
             
             # Authoritative choice: Subject's view of Actor changes based on Actor's action
-            update = SocialUpdate(
+            social_update = SocialUpdate(
                 source_id=subject_id, # The perceiver
                 target_id=event.actor_id, # The perceived
                 **social_data
             )
-            RelationshipService.apply_update(world.social_registry, update, tick)
+            RelationshipService.apply_update(world.social_registry, social_update, tick)
+
+        # 4. Strategic Consequences [PHASE 5]
+        if updates is not None:
+            from src.core.logic.strategic_consequence_service import StrategicConsequenceService
+            strat_up = StrategicConsequenceService.process_consequences(world, actor, event, tp_record)
+            if strat_up:
+                updates.append(strat_up)
 
     @staticmethod
     def _map_event_to_tp_kind(event_kind: int) -> TurningPointKind:

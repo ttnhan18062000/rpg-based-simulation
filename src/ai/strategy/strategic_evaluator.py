@@ -68,6 +68,19 @@ class StrategicEvaluator:
             reason=f"Selected {selected_kind} {selected_id} via interruption appraisal."
         )
 
+        # 2.2 Handle Project Interruption semantics [PHASE 5]
+        if ctx.current_project and selected_id != ctx.current_project.project_id:
+             old_prj = ctx.current_project
+             # We mark the old project as suspended if we are switching to something else
+             suspended_prj = old_prj.model_copy(update={
+                 "status": StrategicStatus.SUSPENDED,
+                 "suspension_reason": decision.reason,
+                 "interrupted_by_event_ids": [getattr(best_candidate, "source_event_id", "external")] if hasattr(best_candidate, "source_event_id") else ["external"]
+             })
+             decision.updates.projects_add_or_update.append(suspended_prj)
+             decision.updates.interrupted_project_id = old_prj.project_id
+             logger.info("StrategicEvaluator: Interrupting project %s in favor of %s", old_prj.project_id, selected_id)
+
         # 2.5 Persist new concerns [STAGE 4 RESTORATION]
         # Any concern that was sensed but isn't in state needs to be added to the update
         current_concern_ids = {c.concern_id for c in ctx.strategic.concerns}

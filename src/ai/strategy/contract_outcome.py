@@ -3,7 +3,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 
-from src.core.models.enums import StrategicStatus
+from src.core.models.strategy import StrategicStatus
 from src.actions.base import SocialUpdate, ReputationUpdate
 from src.core.logic.relationship_service import RelationshipService
 from src.core.logic.reputation_service import ReputationService
@@ -21,7 +21,8 @@ class ContractOutcomeService:
         cls, 
         world: WorldState, 
         contract: SocialContractRecord, 
-        outcome: StrategicStatus
+        outcome: StrategicStatus,
+        emit: Any = None
     ) -> None:
         """Process the final outcome of a social contract."""
         if outcome not in (StrategicStatus.RESOLVED, StrategicStatus.ABANDONED):
@@ -79,9 +80,9 @@ class ContractOutcomeService:
                     if m_ct.contract_id == contract.contract_id:
                         m_ct.status = outcome
                         # Clear group linkage
-                        m_ct.linked_group_id = None
+                        m_ct.party_id = None
                         
-        if world.emit:
+        if emit:
             label = "COMPLETED" if outcome == StrategicStatus.RESOLVED else "FAILED"
-            world.emit("social", f"Contract {contract.contract_id} {label}", 
+            emit("social", f"Contract {contract.contract_id} {label}", 
                        entity_ids=tuple(contract.member_ids))

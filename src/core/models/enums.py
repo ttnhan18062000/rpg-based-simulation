@@ -214,6 +214,19 @@ class InterpretedLifeEventKind(IntEnum):
     BETRAYAL = 7
     FIRST_KILL = 8
     SLAY_FOE = 9
+    
+    # Phase 5 Expansion [Task 8]
+    RESCUE_PERFORMED = 10
+    RESCUED_BY_OTHER = 11
+    DEFENSE_FAILED = 12
+    HOME_DAMAGED = 13
+    CONTRACT_HONORED_PUBLICLY = 14
+    CONTRACT_BETRAYED_PUBLICLY = 15
+    REPEATED_FAILED_ATTEMPT = 16
+    PUBLIC_DISGRACE = 17
+    WARNING_IGNORED = 18
+    BODY_RECOVERED = 19
+    BODY_ABANDONED = 20
 
 from typing import Annotated
 from pydantic import BeforeValidator, PlainSerializer

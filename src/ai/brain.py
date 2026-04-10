@@ -11,6 +11,7 @@ import logging
 from typing import Any, TYPE_CHECKING
 
 from src.core.models.enums import AIState, ActionType, GoalType, EmotionType, Domain
+from src.core.models.strategy import StrategicStatus
 from src.actions.base import (
     ActionProposal, IntentUpdate, MindUpdate, NavigationUpdate, PerceptionUpdate, 
     ProgressionUpdate, StrategicUpdate
@@ -175,6 +176,17 @@ class AIBrain:
 
     def _strategic_appraisal_phase(self, actor: Entity, snapshot: Snapshot, updates: list[IntentUpdate], ctx: AIContext) -> str | None:
         """Phase 2: Strategic Appraisal. Select core commitment and derive objectives."""
+        # 0. Environmental Consequence Appraisal [PHASE 5 Task 6]
+        # This injects concerns based on local scars and regional danger.
+        from src.core.logic.world_consequence_interpretation import WorldConsequenceInterpretationService
+        # We need a StrategicUpdate to collect environmental concerns
+        env_up = StrategicUpdate(target_id=actor.id)
+        WorldConsequenceInterpretationService.appraise_environment(snapshot, actor, env_up)
+        if env_up.concerns_add_or_update:
+             updates.append(env_up)
+             # Refresh ctx list of concerns so building decision slice sees them
+             ctx.strategic.concerns.extend(env_up.concerns_add_or_update)
+        
         # 1. Slice [phase_2_stage_4]
         candidates = self._strat_builder.build_decision_slice(ctx)
         
@@ -523,12 +535,13 @@ class AIBrain:
         actor = ctx.actor
         strat = actor.mind.strategic
         
-        # Find active contract
-        active_ct = next((c for c in strat.contracts if c.status == StrategicStatus.ACTIVE), None)
-        if not active_ct:
+        # Find active contract linked to current group
+        active_contract = next((ct for ct in actor.mind.strategic.contracts 
+                                if ct.status == StrategicStatus.ACTIVE and ct.party_id == actor.identity.group_id), None)
+        if not active_contract:
             return
             
-        role = active_ct.member_roles.get(actor.id)
+        role = active_contract.member_roles.get(actor.id)
         if not role:
             return
             
@@ -542,7 +555,7 @@ class AIBrain:
             ctx.tactical_hints["min_dist"] = 3
             
             # Find the vanguard to stay near
-            vanguard_id = next((eid for eid, r in active_ct.member_roles.items() if r == "vanguard"), active_ct.founder_id)
+            vanguard_id = next((eid for eid, r in active_contract.member_roles.items() if r == "vanguard"), active_contract.founder_id)
             if vanguard_id != actor.id:
                 ctx.tactical_hints["follow_target_id"] = vanguard_id
         elif role == "healer":
@@ -553,7 +566,7 @@ class AIBrain:
             # Identify most injured ally in party
             most_injured_id = None
             min_hp_ratio = 1.0
-            for mid in active_ct.member_ids:
+            for mid in active_contract.member_ids:
                 if mid == actor.id: continue
                 m_ent = ctx.snapshot.entities.get(mid)
                 if m_ent and m_ent.combat.alive:
@@ -566,6 +579,6 @@ class AIBrain:
                 ctx.tactical_hints["support_target_id"] = most_injured_id
             else:
                 # Default to following vanguard
-                vanguard_id = next((eid for eid, r in active_ct.member_roles.items() if r == "vanguard"), active_ct.founder_id)
+                vanguard_id = next((eid for eid, r in active_contract.member_roles.items() if r == "vanguard"), active_contract.founder_id)
                 if vanguard_id != actor.id:
                     ctx.tactical_hints["follow_target_id"] = vanguard_id

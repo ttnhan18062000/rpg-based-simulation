@@ -245,11 +245,20 @@ class EntityInspector:
             print(f"\n  \033[96m◈ Active Projects ({len(strat.projects)})\033[0m")
             current_id = strat.current_project_id
             for p in strat.projects:
-                status_chip = "\033[92m[ACTIVE]\033[0m" if p.project_id == current_id else "[IDLE]"
+                status_color = "\033[92m" if p.status == StrategicStatus.ACTIVE else "\033[93m" if p.status == StrategicStatus.SUSPENDED else "\033[90m"
+                status_chip = f"{status_color}[{p.status.name}]\033[0m"
+                if p.project_id == current_id:
+                     status_chip = f"\033[1;92m[CURRENT]\033[0m"
+                
                 project_name = f"\033[1m{p.label}\033[0m"
                 reason = p.metadata.get("reason", "")
                 reason_str = f" \033[90m({reason})\033[0m" if reason else ""
-                print(f"    {status_chip} {p.project_id:20} | {project_name}{reason_str}")
+                
+                suspension_str = ""
+                if p.status == StrategicStatus.SUSPENDED:
+                    suspension_str = f" \033[93m| Reason: {p.suspension_reason}\033[0m"
+                
+                print(f"    {status_chip} {p.project_id:20} | {project_name}{reason_str}{suspension_str}")
                 if p.project_id == current_id:
                     # Find the active objective label
                     obj_label = "No labeled objective"
@@ -274,8 +283,11 @@ class EntityInspector:
         if strat.concerns:
             print(f"\n  \033[91m◈ Active Concerns ({len(strat.concerns)})\033[0m")
             for c in strat.concerns:
-                urgency = "\033[91m(!)\033[0m" if c.priority > 4.0 else "   "
-                print(f"    {urgency} {c.label:30} | Priority: {c.priority:.2f}")
+                urgency_mark = "\033[91m(!)\033[0m" if c.priority > 4.0 or c.urgency > 0.8 else "   "
+                vis_icon = "👁" if c.visibility == "public" else "🔒" if c.visibility == "private" else "👥"
+                print(f"    {urgency_mark} {c.label:30} | Pri: {c.priority:.1f} | Urg: {c.urgency:.1f} | {vis_icon} {c.visibility}")
+                if c.source_event_id:
+                    print(f"       \033[90m↳ Cause: {c.cause_type} ({c.source_event_id})\033[0m")
         
         # 5. Obligations/Contracts (Summary)
         total_obs = len(strat.obligations) + len(strat.contracts)

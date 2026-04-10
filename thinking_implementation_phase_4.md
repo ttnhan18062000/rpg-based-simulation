@@ -25,7 +25,7 @@ At the end of Phase 4, an entity can determine that a project is not solo-viable
 
 ## Task
 
-[ ] (checkbox) - [Task 1] - Define social contract and party records in the strategic domain
+[x] (checkbox) - [Task 1] - Define social contract and party records in the strategic domain
 
 [Task Description]
 Phase 4 needs explicit records for the things the design says are currently missing: social contracts, party purpose, negotiated terms, role expectations, fallback conditions, dissolution conditions, ownership of rewards, and social memory when promises are broken. The current `GroupRecord` is only sufficient for tactical coordination; it is not expressive enough for contracts.
@@ -75,18 +75,18 @@ Do not overload `GroupRecord` into a giant hybrid object. It already serves tact
 
 [Task check list]
 
-- [ ] Add strategic contract records
-- [ ] Add party-purpose and reward-term fields
-- [ ] Add breach and dissolution metadata
-- [ ] Add stable IDs and lifecycle fields
-- [ ] Keep tactical group and strategic contract separate
+- [x] Add strategic contract records
+- [x] Add party-purpose and reward-term fields
+- [x] Add breach and dissolution metadata
+- [x] Add stable IDs and lifecycle fields
+- [x] Keep tactical group and strategic contract separate
 
 [Task acceptance criteria]
 The engine can represent a negotiated cooperative arrangement as a first-class strategic object rather than inferring one from raw group membership.
 
 ---
 
-[ ] (checkbox) - [Task 2] - Extend strategic updates and authoritative application for contracts and party state
+[x] (checkbox) - [Task 2] - Extend strategic updates and authoritative application for contracts and party state
 
 [Task Description]
 Once contracts exist as records, they need the same authoritative lifecycle as other strategic state. Recruitment offers, accepted terms, member additions/removals, breaches, payout resolution, and dissolution cannot be handled as incidental local variables in AI code. They must survive ticks and be applied deterministically.
@@ -118,18 +118,18 @@ Do not let contract acceptance or breach effects mutate social bonds directly in
 
 [Task check list]
 
-- [ ] Extend strategic update operations for contracts
-- [ ] Add authoritative apply paths for contract lifecycle
-- [ ] Support recruitment offer issuance and response
-- [ ] Support breach and payout resolution
-- [ ] Support sync hooks into tactical group creation/removal
+- [x] Extend strategic update operations for contracts
+- [x] Add authoritative apply paths for contract lifecycle
+- [x] Support recruitment offer issuance and response
+- [x] Support breach and payout resolution
+- [x] Support sync hooks into tactical group creation/removal
 
 [Task acceptance criteria]
 Contract-backed cooperation can be created, changed, and resolved through deterministic typed updates, with no direct AI mutation shortcuts.
 
 ---
 
-[ ] (checkbox) - [Task 3] - Build ally discovery and candidate ranking logic
+[x] (checkbox) - [Task 3] - Build ally discovery and candidate ranking logic
 
 [Task Description]
 The design is explicit that entities should ask who knows something they lack, who owes them, who trusts them enough, who is brave enough, who benefits, who may betray, and who is already busy with their own obligations. The current engine already has the raw data for that through social bonds, public reputation, place attachments, narrative memory, and current project state, but no reusable service for recruitment ranking.
@@ -163,18 +163,18 @@ Do not reduce ally selection to “highest trust nearby.” The design explicitl
 
 [Task check list]
 
-- [ ] Add candidate selection service
-- [ ] Score trust, debt, loyalty, rivalry, fear, and reputation
-- [ ] Score required-role fit
-- [ ] Penalize obligation conflicts and unavailability
-- [ ] Emit bounded ranked candidate list with reasons
+- [x] Add candidate selection service
+- [x] Score trust, debt, loyalty, rivalry, fear, and reputation
+- [x] Score required-role fit
+- [x] Penalize obligation conflicts and unavailability
+- [x] Emit bounded ranked candidate list with reasons
 
 [Task acceptance criteria]
 When a project needs allies, the engine can produce a ranked set of socially plausible candidates rather than defaulting to nearest compatible unit or same-cluster ally.
 
 ---
 
-[ ] (checkbox) - [Task 4] - Implement recruitment, negotiation, and offer/response mechanics
+[x] (checkbox) - [Task 4] - Implement recruitment, negotiation, and offer/response mechanics
 
 [Task Description]
 A party system without negotiation is fake. The design explicitly includes negotiate terms, hire specialist, repay debt, request training, seek faction backing, and hire specialist as social objectives, and says party formation should happen when blocker analysis says solo failure is likely and trust/incentive thresholds are sufficient. Recruitment must therefore include offer creation, acceptance, refusal, and term shaping.
@@ -213,18 +213,18 @@ Do not shortcut negotiation into a yes/no join roll. That loses the whole point 
 
 [Task check list]
 
-- [ ] Add recruitment offer model and service
-- [ ] Add acceptance/refusal/counter-demand outcomes
-- [ ] Base willingness on relationship, risk, and incentives
-- [ ] Create contract on successful negotiation
-- [ ] Persist negotiation history for future memory
+- [x] Add recruitment offer model and service
+- [x] Add acceptance/refusal/counter-demand outcomes
+- [x] Base willingness on relationship, risk, and incentives
+- [x] Create contract on successful negotiation
+- [x] Persist negotiation history for future memory
 
 [Task acceptance criteria]
 Entities can recruit others through explicit offers and negotiated terms, and different relationship/reputation contexts produce different outcomes.
 
 ---
 
-[ ] (checkbox) - [Task 5] - Connect contracts to tactical group instantiation and maintenance
+[x] (checkbox) - [Task 5] - Connect contracts to tactical group instantiation and maintenance
 
 [Task Description]
 The current `GroupSystem` already forms and maintains groups, but it does so through implicit cluster logic and default goals. Phase 4 should keep the maintenance strengths of this system while changing the reason groups come into existence. Tactical groups should become execution vehicles for contract-backed projects, not auto-formed social cliques.
@@ -258,18 +258,18 @@ Do not delete the current group system and start over. It already provides usefu
 
 [Task check list]
 
-- [ ] Add contract-backed group formation path
-- [ ] Map contract/project purpose to shared tactical goal
-- [ ] Preserve existing maintenance logic where valid
-- [ ] Support leader and target updates from contract/objective changes
-- [ ] Support clean dissolution when contract ends
+- [x] Add contract-backed group formation path
+- [x] Map contract/project purpose to shared tactical goal
+- [x] Preserve existing maintenance logic where valid
+- [x] Support leader and target updates from contract/objective changes
+- [x] Support clean dissolution when contract ends
 
 [Task acceptance criteria]
 Accepted contracts can materialize into tactical groups that reuse the engine’s existing coordination infrastructure while now having a real strategic purpose.
 
 ---
 
-[ ] (checkbox) - [Task 6] - Upgrade group coordination from generic follow-leader bias to role-aware party behavior
+[x] (checkbox) - [Task 6] - Upgrade group coordination from generic follow-leader bias to role-aware party behavior
 
 [Task Description]
 The current AI only uses group membership to bias the shared goal and to push non-leaders toward the anchor when they drift too far. That is a good start, but a contract-backed expedition, escort, militia, or revenge pact needs more than “follow leader” and “share explore/combat bias.”
@@ -306,18 +306,18 @@ Do not overbuild formation AI first. Keep the first version focused on execution
 
 [Task check list]
 
-- [ ] Add role-aware party execution fields
-- [ ] Map party type to tactical coordination behavior
-- [ ] Extend AI group bias beyond generic shared-goal multiplication
-- [ ] Add regroup and retreat thresholds
-- [ ] Support protection targets and escort logic
+- [x] Add role-aware party execution fields
+- [x] Map party type to tactical coordination behavior
+- [x] Extend AI group bias beyond generic shared-goal multiplication
+- [x] Add regroup and retreat thresholds
+- [x] Support protection targets and escort logic
 
 [Task acceptance criteria]
 Different contract-backed party types produce meaningfully different tactical coordination patterns instead of all collapsing into “share goal, stay near leader.”
 
 ---
 
-[ ] (checkbox) - [Task 7] - Apply social and reputational consequences when contracts are honored or broken
+[x] (checkbox) - [Task 7] - Apply social and reputational consequences when contracts are honored or broken
 
 [Task Description]
 The design explicitly says promises must have cost and that whether contracts are honored should feed trust, debt, reputation, and future recruitment viability. The current engine already has the right consequence infrastructure: `RelationshipService` applies directed social bond changes through `SocialUpdate`, and `ReputationService` applies public reputation changes like trustworthiness, greed, cowardice, heroism, and defender score. Phase 4 should plug contract outcomes into those systems.
@@ -352,18 +352,18 @@ Do not make all party breakups morally equivalent. A mercenary leaving after non
 
 [Task check list]
 
-- [ ] Add contract consequence service
-- [ ] Emit social bond changes from outcomes
-- [ ] Emit reputation changes from visible contract outcomes
-- [ ] Distinguish justified exit from betrayal
-- [ ] Support major-outcome narrative hooks
+- [x] Add contract consequence service
+- [x] Emit social bond changes from outcomes
+- [x] Emit reputation changes from visible contract outcomes
+- [x] Distinguish justified exit from betrayal
+- [x] Support major-outcome narrative hooks
 
 [Task acceptance criteria]
 Honoring or breaking a contract creates durable social and public consequences that affect later cooperation and recruitment.
 
 ---
 
-[ ] (checkbox) - [Task 8] - Integrate public reputation into recruitment and alliance viability
+[x] (checkbox) - [Task 8] - Integrate public reputation into recruitment and alliance viability
 
 [Task Description]
 The design says public narrative should affect recruitment success, rumor credibility, fear response, willingness to trade or ally, faction access, and future obligations offered. The source already models public reputation through scores like heroism, cowardice, greed, defender score, trustworthiness, and threat notoriety. Phase 4 should make those fields operational in social coordination, not just inspectable.
@@ -398,17 +398,17 @@ Do not double count reputation and trust as if they are the same thing. Public t
 
 [Task check list]
 
-- [ ] Feed public reputation into ally ranking
-- [ ] Feed public reputation into negotiation outcomes
-- [ ] Distinguish private bond vs public narrative effects
-- [ ] Reflect cowardice/greed/trustworthiness/defender score in party viability
+- [x] Feed public reputation into ally ranking
+- [x] Feed public reputation into negotiation outcomes
+- [x] Distinguish private bond vs public narrative effects
+- [x] Reflect cowardice/greed/trustworthiness/defender score in party viability
 
 [Task acceptance criteria]
 Entities with different public reputations experience different recruitment and alliance outcomes even when their direct relationship values are similar.
 
 ---
 
-[ ] (checkbox) - [Task 9] - Upgrade inn and social interaction systems into party-relevant social surfaces
+[x] (checkbox) - [Task 9] - Upgrade inn and social interaction systems into party-relevant social surfaces
 
 [Task Description]
 The current inn/social layer already supports gossip and some hero-to-hero trading, and familiarity can grow into informal “allies.” That is useful, but Phase 4 needs the inn and similar locations to become recruiting, negotiating, and contract-maintenance surfaces instead of just rumor and incidental trade surfaces.
@@ -446,17 +446,17 @@ Do not turn buildings into menus in code form. They should act as contextual soc
 
 [Task check list]
 
-- [ ] Add recruit/negotiation interactions to inn/guild/social surfaces
-- [ ] Support debt settlement and contract renewal
-- [ ] Support warning-spread and militia assembly behaviors
-- [ ] Reuse current project/blocker context in interaction selection
+- [x] Add recruit/negotiation interactions to inn/guild/social surfaces
+- [x] Support debt settlement and contract renewal
+- [x] Support warning-spread and militia assembly behaviors
+- [x] Reuse current project/blocker context in interaction selection
 
 [Task acceptance criteria]
 Social locations become meaningful coordination hubs where parties can actually be formed, negotiated, and maintained.
 
 ---
 
-[ ] (checkbox) - [Task 10] - Add observability and regression tests for cooperation, breach, and consequence loops
+[x] (checkbox) - [Task 10] - Add observability and regression tests for cooperation, breach, and consequence loops
 
 [Task Description]
 Phase 4 can easily become theater: the engine says there are parties and contracts, but under the hood nothing binds behavior and nothing persists after betrayal or completion. You need explicit visibility and tests that prove contracts affect recruitment, group execution, and later relationships. The design is explicit that visible consequences are what make the feature feel alive.
@@ -499,12 +499,12 @@ Do not rely on anecdotal simulation stories as proof. This phase needs hard asse
 
 [Task check list]
 
-- [ ] Add contract and party inspection views
-- [ ] Add recruitment ranking tests
-- [ ] Add negotiation and contract lifecycle tests
-- [ ] Add breach consequence tests
-- [ ] Add group-integration tests
-- [ ] Add deterministic repeatability coverage
+- [x] Add contract and party inspection views
+- [x] Add recruitment ranking tests
+- [x] Add negotiation and contract lifecycle tests
+- [x] Add breach consequence tests
+- [x] Add group-integration tests
+- [x] Add deterministic repeatability coverage
 
 [Task acceptance criteria]
 You can prove that cooperation is negotiated, tactically instantiated, and socially remembered, rather than being a temporary movement bonus with narrative dressing.

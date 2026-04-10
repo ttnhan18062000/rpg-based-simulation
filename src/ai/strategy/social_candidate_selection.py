@@ -39,8 +39,8 @@ class SocialCandidateSelectionService:
             eid for eid, e in snapshot.entities.items()
             if eid != actor.id and e.identity.faction == actor.identity.faction and e.combat.alive
         ]
-        
-        # 2. Score each candidate
+        import logging
+        logging.debug(f"Eligible entities: {potential_ids}")
         scores: list[CandidateScore] = []
         for eid in potential_ids:
             candidate = snapshot.entities[eid]

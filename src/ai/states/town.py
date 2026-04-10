@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from src.actions.base import (
+    ActionType, ActionProposal, IntentUpdate, ProgressionUpdate,
     IdentityUpdate, InteractionUpdate, PerceptionUpdate, MindUpdate,
     RoutineUpdate, StrategicUpdate
 )
@@ -631,7 +633,7 @@ class VisitInnHandler(StateHandler):
 
         hp_needed = actor.combat.max_hp - actor.combat.hp
         sta_needed = actor.progression.max_stamina - actor.progression.stamina
-        
+        if hp_needed > 0 or sta_needed > 0 or actor.mind.routine.sleep_debt > 0.1:
             return AIState.SLEEPING, ActionProposal(
                 actor_id=actor.id, verb=ActionType.SLEEP,
                 reason="Checking into inn to sleep",
