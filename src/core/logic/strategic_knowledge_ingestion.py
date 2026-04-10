@@ -130,8 +130,8 @@ class StrategicKnowledgeIngestionService:
         
         return StrategicUpdate(
             target_id=actor_id,
-            leads_add_or_update=leads
-            # Logic for attaching blockers to current project will happen in ActionSystem application or Evaluator
+            leads_add_or_update=leads,
+            blockers_add_or_update=blockers
         )
 
     @staticmethod
@@ -152,9 +152,9 @@ class StrategicKnowledgeIngestionService:
             suggested_detour_types=[ObjectiveKind.WAIT, ObjectiveKind.INVESTIGATE],
             discovered_tick=tick
         )
-        # For now, we just emit a lead about the requirement
         return StrategicUpdate(
             target_id=actor_id,
+            blockers_add_or_update=[blocker],
             leads_add_or_update=[LeadRecord(
                 lead_id=f"lead_skill_{skill_id}_{tick}",
                 kind=LeadKind.EVENT,
@@ -164,4 +164,69 @@ class StrategicKnowledgeIngestionService:
                 source_type="class_hall",
                 discovered_tick=tick
             )]
+        )
+
+    @staticmethod
+    def ingest_inn_rumor(
+        actor_id: int,
+        tick: int,
+        rumor_text: str,
+        danger_level: float = 0.0,
+        opportunity_id: Optional[str] = None
+    ) -> StrategicUpdate:
+        """Converts inn gossip into leads or shared concerns."""
+        leads = []
+        concerns = []
+        
+        # 1. Generic Lead for the rumor
+        leads.append(LeadRecord(
+            lead_id=f"lead_inn_{uuid.uuid4().hex[:8]}_{tick}",
+            kind=LeadKind.EVENT,
+            label="Inn Rumor",
+            subject="world_event",
+            source_type="inn",
+            interpreted_meaning=rumor_text,
+            discovered_tick=tick
+        ))
+        
+        # 2. If rumor implies high danger, spawn a shared/caution concern
+        if danger_level > 0.5:
+             from src.core.models.strategy import ConcernRecord
+             concerns.append(ConcernRecord(
+                 concern_id=f"concern_inn_danger_{tick}",
+                 cause_type="rumor",
+                 label="Reported Danger",
+                 urgency=danger_level,
+                 is_public=True,
+                 discovered_tick=tick
+             ))
+             
+        return StrategicUpdate(
+            target_id=actor_id,
+            leads_add_or_update=leads,
+            concerns_add_or_update=concerns
+        )
+
+    @staticmethod
+    def ingest_home_maintenance(
+        actor_id: int,
+        tick: int,
+        needs_rebuild: bool = False,
+        missing_materials: Optional[Dict[str, int]] = None
+    ) -> StrategicUpdate:
+        """Converts home state into strategic pressures."""
+        blockers = []
+        if needs_rebuild:
+            blockers.append(BlockerRecord(
+                blocker_id=f"blocker_home_rebuild_{tick}",
+                kind=BlockerKind.ACCESS,
+                label="Home Damaged",
+                severity=0.9,
+                suggested_detour_types=[ObjectiveKind.COLLECT],
+                discovered_tick=tick
+            ))
+            
+        return StrategicUpdate(
+            target_id=actor_id,
+            blockers_add_or_update=blockers
         )

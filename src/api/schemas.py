@@ -145,6 +145,67 @@ class ReputationProfileSchema(BaseModel):
     tags: list[str] = Field(default_factory=list)
 
 
+# --- Strategic Domain [PHASE 6] ---
+
+class BlockerSchema(BaseModel):
+    blocker_id: str
+    kind: str
+    label: str
+    severity: float
+    resolved: bool = False
+
+class LeadSchema(BaseModel):
+    lead_id: str
+    kind: str
+    label: str
+    subject: str = ""
+    certainty: float
+    source_type: str = ""
+    discovered_tick: int
+
+class ObjectiveSchema(BaseModel):
+    objective_id: str
+    kind: str
+    label: str
+    status: str
+    priority: float
+    progress: float
+    blockers: list[BlockerSchema] = Field(default_factory=list)
+    leads: list[LeadSchema] = Field(default_factory=list)
+
+class ProjectSchema(BaseModel):
+    project_id: str
+    kind: str
+    label: str
+    status: str
+    priority: float
+    urgency: float
+    objectives: list[ObjectiveSchema] = Field(default_factory=list)
+    active_objective_id: str | None = None
+    suspension_reason: str = ""
+
+class ConcernSchema(BaseModel):
+    concern_id: str
+    kind: str
+    label: str
+    priority: float
+    urgency: float
+    visibility: str = "private"
+
+class DirectiveSchema(BaseModel):
+    directive_id: str
+    kind: str
+    label: str
+    priority: float
+
+class StrategicStateSchema(BaseModel):
+    directives: list[DirectiveSchema] = Field(default_factory=list)
+    projects: list[ProjectSchema] = Field(default_factory=list)
+    concerns: list[ConcernSchema] = Field(default_factory=list)
+    current_project_id: str | None = None
+    project_lock_until: int = 0
+
+
 # --- Continuity and Inheritance [PHASE 4] ---
 
 class SuccessorSummarySchema(BaseModel):
@@ -337,6 +398,8 @@ class EntitySchema(BaseModel):
     generation: int = 1
     household_id: str | None = None
     traits: list[int] = Field(default_factory=list)
+    # Strategic Layer [PHASE 6]
+    strategy: StrategicStateSchema | None = None
 
 # --- Introspection (Phase 4) ---
 

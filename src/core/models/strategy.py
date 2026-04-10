@@ -11,7 +11,10 @@ from typing import Any
 from pydantic import Field, ConfigDict
 from src.core.models.base import SimulationModel
 from src.core.models.vectors import Vector2
-from src.core.models.enums import ContractKind, OfferStatus
+from src.core.models.enums import (
+    ContractKind, OfferStatus, StrategicStatus, DirectiveKind, 
+    ProjectKind, ObjectiveKind, ConcernKind, LeadKind, BlockerKind
+)
 
 class DecisionDriver(SimulationModel):
     """A structured record explaining a bias or decision driver. [phase_2_stage_9]"""
@@ -21,71 +24,6 @@ class DecisionDriver(SimulationModel):
     label: str
     weight: float
     description: str | None = None
-
-@unique
-class StrategicStatus(IntEnum):
-    """Lifecycle status for projects and objectives."""
-    ACTIVE = 0
-    SUSPENDED = 1
-    RESOLVED = 2
-    ABANDONED = 3
-
-@unique
-class DirectiveKind(IntEnum):
-    """Categories for enduring orientations."""
-    IDEOLOGICAL = 0
-    PROFESSIONAL = 1
-    FACTIONAL = 2
-    PERSONAL = 3
-
-@unique
-class ProjectKind(IntEnum):
-    """Broad categories for strategic pursuits."""
-    QUEST = 0
-    EXPLORATION = 1
-    SOCIAL = 2
-    INVESTIGATION = 3
-    DEVELOPMENT = 4
-
-@unique
-class ObjectiveKind(IntEnum):
-    """Specific types of strategic sub-tasks."""
-    VISIT = 0
-    KILL = 1
-    COLLECT = 2
-    INTERACT = 3
-    WAIT = 4
-    INVESTIGATE = 5
-    SCOUT = 6
-    TRAIN = 7
-
-@unique
-class ConcernKind(IntEnum):
-    """Immediate strategic interrupts or priorities."""
-    THREAT = 0
-    OPPORTUNITY = 1
-    OBLIGATION = 2
-
-@unique
-class LeadKind(IntEnum):
-    """Types of uncertain strategic clues."""
-    LOCATION = 0
-    PERSON = 1
-    OBJECT = 2
-    EVENT = 3
-
-@unique
-class BlockerKind(IntEnum):
-    """Reasons why a project or objective cannot proceed. [phase_3_task_2]"""
-    KNOWLEDGE = 0 # Location or identity unknown
-    CAPABILITY = 1 # Strength, skill, or level too low
-    ACCESS = 2 # Route blocked, key missing
-    SOCIAL = 3 # Trust too low, reputation insufficient
-    MATERIAL = 4 # Missing gold or materials
-    TIMING = 5 # Event not active, deadline missed
-    OBLIGATION = 6 # Conflicting commitment
-    ENVIRONMENTAL = 7 # Weather, danger, or terrain too harsh
-    CONFIDENCE = 8 # Evidence contradictory or risky
 
 class DirectiveRecord(SimulationModel):
     """Enduring orientations rooted in identity or role. [PHASE 1]"""

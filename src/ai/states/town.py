@@ -584,7 +584,7 @@ class VisitClassHallHandler(StateHandler):
                     reason=f"Learning skill: {sdef.name}",
                     updates=[ProgressionUpdate(gold_delta=-sdef.gold_cost, skills_add=[sid])])
 
-        # If we didn't learn anything, check if we are gated [phase_3_task_5]
+        # If we didn't learn anything, check if we are gated [phase_6_task_1]
         for sid in available:
             if sid not in known_ids:
                 sdef = SKILL_DEFS.get(sid)
@@ -673,10 +673,28 @@ class VisitInnHandler(StateHandler):
                         updates=[StrategicUpdate(offers_add_or_update=[new_off])])
 
         from src.core.gameplay.effects import well_rested_effect
+        
+        # Phase 6: Rumor Ingestion (Task 1)
+        rumors = [
+            "Heavy bandit activity reported near the Oasis.",
+            "A dark fog has settled over the Ruins.",
+            "Guild scouts spotted a massive wolf in the Forest."
+        ]
+        rumor = ctx.rng.choice(rumors)
+        strategic_up = StrategicKnowledgeIngestionService.ingest_inn_rumor(
+            actor_id=actor.id,
+            tick=snapshot.tick,
+            rumor_text=rumor,
+            danger_level=0.3 if "bandit" in rumor or "wolf" in rumor else 0.6
+        )
+
         return AIState.RESTING_IN_TOWN, ActionProposal(
             actor_id=actor.id, verb=ActionType.REST,
             reason="Fully recovered at inn + Well-Rested! → checking other activities",
-            updates=[ProgressionUpdate(effects_add=[well_rested_effect()])])
+            updates=[
+                ProgressionUpdate(effects_add=[well_rested_effect()]),
+                strategic_up
+            ])
 
 
 class VisitHomeHandler(StateHandler):
@@ -764,6 +782,22 @@ class VisitHomeHandler(StateHandler):
                 reason="Eating at home",
                 updates=[RoutineUpdate(hunger_delta=-0.2)])
 
+        # Phase 6: Home Maintenance/Pressure Ingestion (Task 1)
+        needs_rebuild = False
+        if hasattr(actor.spatial, "home_building_id") and actor.spatial.home_building_id:
+             # Find the actual building building to check durability
+             for b in snapshot.buildings:
+                 if b.building_id == actor.spatial.home_building_id:
+                     needs_rebuild = b.durability < 20.0
+                     break
+                     
+        strategic_up = StrategicKnowledgeIngestionService.ingest_home_maintenance(
+            actor_id=actor.id,
+            tick=snapshot.tick,
+            needs_rebuild=needs_rebuild
+        )
+
         return AIState.RESTING_IN_TOWN, ActionProposal(
             actor_id=actor.id, verb=ActionType.REST,
-            reason="Done at home → checking other activities")
+            reason="Done at home → checking other activities",
+            updates=[strategic_up])

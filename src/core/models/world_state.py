@@ -13,6 +13,7 @@ from .households import HouseholdRecord # [PHASE 4]
 from .local_scars import LocalScarRecord # [PHASE 4]
 from .regions import RegionConsequenceRecord # [PHASE 4]
 from .continuity import SuccessorRecord # [PHASE 4]
+from .world_strategy import WorldStrategicRegistry # [PHASE 6]
 
 if TYPE_CHECKING:
     from src.core.entities.entity import Entity
@@ -27,7 +28,7 @@ if TYPE_CHECKING:
 class WorldState:
     """The single source of truth for the simulation."""
 
-    __slots__ = ("world_age", "faction_aggression", "difficulty_modifier", "monuments", "tick", "seed", "entities", "grid", "spatial_index", "_next_entity_id", "ground_items", "camps", "buildings", "resource_nodes", "_next_node_id", "treasure_chests", "_next_chest_id", "regions", "maturity", "last_calamity_tick", "event_bus", "faction_deaths_per_region", "region_control", "war_status", "history", "_history_subscribed", "town_treasury", "corpse_nodes", "_next_corpse_id", "social_registry", "group_registry", "world_history", "household_registry", "scar_registry", "region_consequence_registry", "successor_registry", "_frozen")
+    __slots__ = ("world_age", "faction_aggression", "difficulty_modifier", "monuments", "tick", "seed", "entities", "grid", "spatial_index", "_next_entity_id", "ground_items", "camps", "buildings", "resource_nodes", "_next_node_id", "treasure_chests", "_next_chest_id", "regions", "maturity", "last_calamity_tick", "event_bus", "faction_deaths_per_region", "region_control", "war_status", "history", "_history_subscribed", "town_treasury", "corpse_nodes", "_next_corpse_id", "social_registry", "group_registry", "world_history", "household_registry", "scar_registry", "region_consequence_registry", "successor_registry", "strategic_registry", "_frozen")
 
     def __init__(
         self,
@@ -70,6 +71,7 @@ class WorldState:
         self.scar_registry: list[LocalScarRecord] = [] # [PHASE 4]
         self.region_consequence_registry: dict[str, RegionConsequenceRecord] = {} # [PHASE 4]
         self.successor_registry: dict[int, SuccessorRecord] = {} # [PHASE 4] Entity ID -> Record
+        self.strategic_registry: WorldStrategicRegistry = WorldStrategicRegistry() # [PHASE 6]
         self.event_bus = None
         self._frozen: bool = False
 
@@ -104,6 +106,7 @@ class WorldState:
             region_con.freeze()
         for successor in self.successor_registry.values():
             successor.freeze()
+        self.strategic_registry.freeze()
 
     def allocate_entity_id(self) -> int:
         self._check_frozen("allocate_entity_id")
@@ -224,6 +227,8 @@ class WorldState:
             world.region_consequence_registry = {k: v.model_copy(deep=True) for k, v in snap.region_consequence_registry.items()}
         if hasattr(snap, "successor_registry"):
             world.successor_registry = {k: v.model_copy(deep=True) for k, v in snap.successor_registry.items()}
+        if hasattr(snap, "strategic_registry"):
+            world.strategic_registry = snap.strategic_registry.copy()
             
         world.event_bus = None
         

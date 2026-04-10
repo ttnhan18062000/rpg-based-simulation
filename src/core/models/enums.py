@@ -77,6 +77,63 @@ class OfferStatus(IntEnum):
     CANCELLED = 4
 
 @unique
+class StrategicStatus(IntEnum):
+    """Lifecycle status for projects and objectives."""
+    ACTIVE = 0
+    SUSPENDED = 1
+    RESOLVED = 2
+    ABANDONED = 3
+
+@unique
+class DirectiveKind(IntEnum):
+    """Categories for enduring orientations."""
+    IDEOLOGICAL = 0
+    PROFESSIONAL = 1
+    FACTIONAL = 2
+    PERSONAL = 3
+
+@unique
+class ProjectKind(IntEnum):
+    """Broad categories for strategic pursuits."""
+    QUEST = 0
+    EXPLORATION = 1
+    SOCIAL = 2
+    INVESTIGATION = 3
+    DEVELOPMENT = 4
+
+@unique
+class ObjectiveKind(IntEnum):
+    """Specific types of strategic sub-tasks."""
+    VISIT = 0
+    KILL = 1
+    COLLECT = 2
+    INTERACT = 3
+    WAIT = 4
+    INVESTIGATE = 5
+    SCOUT = 6
+    TRAIN = 7
+
+@unique
+class ConcernKind(IntEnum):
+    """Immediate strategic interrupts or priorities."""
+    THREAT = 0
+    OPPORTUNITY = 1
+    OBLIGATION = 2
+
+@unique
+class LeadKind(IntEnum):
+    """Types of uncertain strategic clues."""
+    LOCATION = 0
+    PERSON = 1
+    OBJECT = 2
+    EVENT = 3
+
+@unique
+class BlockerKind(IntEnum):
+    """Reasons why a project or objective cannot proceed."""
+    KNOWLEDGE = 0; CAPABILITY = 1; ACCESS = 2; SOCIAL = 3; MATERIAL = 4; TIMING = 5; OBLIGATION = 6; ENVIRONMENTAL = 7; CONFIDENCE = 8
+
+@unique
 class EnemyTier(IntEnum):
     """Enemy difficulty tiers — affects stats, behavior, and loot."""
 
@@ -259,6 +316,13 @@ AttachmentKindSer = Annotated[AttachmentKind, BeforeValidator(_parse_enum(Attach
 ContractKindSer = Annotated[ContractKind, BeforeValidator(_parse_enum(ContractKind)), PlainSerializer(lambda v: ContractKind(v).name.lower(), return_type=str)]
 OfferStatusSer = Annotated[OfferStatus, BeforeValidator(_parse_enum(OfferStatus)), PlainSerializer(lambda v: OfferStatus(v).name.lower(), return_type=str)]
 ArchetypeSer = Annotated[Archetype, BeforeValidator(_parse_enum(Archetype)), PlainSerializer(lambda v: Archetype(v).name.lower(), return_type=str)]
+StrategicStatusSer = Annotated[StrategicStatus, BeforeValidator(_parse_enum(StrategicStatus)), PlainSerializer(lambda v: StrategicStatus(v).name.lower(), return_type=str)]
+DirectiveKindSer = Annotated[DirectiveKind, BeforeValidator(_parse_enum(DirectiveKind)), PlainSerializer(lambda v: DirectiveKind(v).name.lower(), return_type=str)]
+ProjectKindSer = Annotated[ProjectKind, BeforeValidator(_parse_enum(ProjectKind)), PlainSerializer(lambda v: ProjectKind(v).name.lower(), return_type=str)]
+ObjectiveKindSer = Annotated[ObjectiveKind, BeforeValidator(_parse_enum(ObjectiveKind)), PlainSerializer(lambda v: ObjectiveKind(v).name.lower(), return_type=str)]
+ConcernKindSer = Annotated[ConcernKind, BeforeValidator(_parse_enum(ConcernKind)), PlainSerializer(lambda v: ConcernKind(v).name.lower(), return_type=str)]
+LeadKindSer = Annotated[LeadKind, BeforeValidator(_parse_enum(LeadKind)), PlainSerializer(lambda v: LeadKind(v).name.lower(), return_type=str)]
+BlockerKindSer = Annotated[BlockerKind, BeforeValidator(_parse_enum(BlockerKind)), PlainSerializer(lambda v: BlockerKind(v).name.lower(), return_type=str)]
 
 from dataclasses import dataclass, field
 @dataclass(frozen=True)

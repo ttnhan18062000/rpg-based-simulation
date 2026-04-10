@@ -170,8 +170,9 @@ class EntityPresenter:
         from src.api.schemas import (
             EntitySchema, EffectSchema, QuestSchema, RoutineStateSchema,
             SocialBondSchema, ReputationProfileSchema, TurningPointSchema, MemoryLogSchema,
-            BeliefRecordSchema, ThreatEstimateSchema, PersonalityProfileSchema, PersonalMotiveSchema,
-            SuccessorSummarySchema, HouseholdSummarySchema
+            SuccessorSummarySchema, HouseholdSummarySchema,
+            StrategicStateSchema, ProjectSchema, ObjectiveSchema, BlockerSchema, LeadSchema,
+            DirectiveSchema, ConcernSchema
         )
         from src.core.models.enums import Element, LifeRole
         from src.api.schemas import PlaceAttachmentSchema
@@ -375,7 +376,8 @@ class EntityPresenter:
                 )
                 for log in mind.narrative.memory_log
             ],
-            social_bonds=EntityPresenter._serialize_social_bonds(entity, registry, world) if registry else []
+            social_bonds=EntityPresenter._serialize_social_bonds(entity, registry, world) if registry else [],
+            strategy=EntityPresenter._serialize_strategy(entity)
         )
 
     @staticmethod
@@ -540,3 +542,78 @@ class EntityPresenter:
             return f"Reached a turning point: {summary}."
 
         return f"{log.type.title()} event detected."
+        
+    @staticmethod
+    def _serialize_strategy(entity: "Entity") -> Any:
+        from src.api.schemas import (
+            StrategicStateSchema, ProjectSchema, ObjectiveSchema, 
+            BlockerSchema, LeadSchema, DirectiveSchema, ConcernSchema
+        )
+        s = entity.mind.strategic
+        if not s:
+            return None
+            
+        return StrategicStateSchema(
+            directives=[
+                DirectiveSchema(
+                    directive_id=d.directive_id,
+                    kind=d.kind.name.lower() if hasattr(d.kind, "name") else str(d.kind).lower(),
+                    label=d.label,
+                    priority=d.priority
+                ) for d in s.directives
+            ],
+            projects=[
+                ProjectSchema(
+                    project_id=p.project_id,
+                    kind=p.kind.name.lower() if hasattr(p.kind, "name") else str(p.kind).lower(),
+                    label=p.label,
+                    status=p.status.name.lower() if hasattr(p.status, "name") else str(p.status).lower(),
+                    priority=p.priority,
+                    urgency=p.urgency,
+                    active_objective_id=p.active_objective_id,
+                    suspension_reason=p.suspension_reason,
+                    objectives=[
+                        ObjectiveSchema(
+                            objective_id=o.objective_id,
+                            kind=o.kind.name.lower() if hasattr(o.kind, "name") else str(o.kind).lower(),
+                            label=o.label,
+                            status=o.status.name.lower() if hasattr(o.status, "name") else str(o.status).lower(),
+                            priority=o.priority,
+                            progress=o.progress,
+                            blockers=[
+                                BlockerSchema(
+                                    blocker_id=b.blocker_id,
+                                    kind=b.kind.name.lower() if hasattr(b.kind, "name") else str(b.kind).lower(),
+                                    label=b.label,
+                                    severity=b.severity,
+                                    resolved=b.resolved
+                                ) for b in o.blockers
+                            ],
+                            leads=[
+                                LeadSchema(
+                                    lead_id=l.lead_id,
+                                    kind=l.kind.name.lower() if hasattr(l.kind, "name") else str(l.kind).lower(),
+                                    label=l.label,
+                                    subject=l.subject,
+                                    certainty=l.certainty,
+                                    source_type=l.source_type,
+                                    discovered_tick=l.discovered_tick
+                                ) for l in o.leads
+                            ]
+                        ) for o in p.objectives
+                    ]
+                ) for p in s.projects
+            ],
+            concerns=[
+                ConcernSchema(
+                    concern_id=c.concern_id,
+                    kind=c.kind.name.lower() if hasattr(c.kind, "name") else str(c.kind).lower(),
+                    label=c.label,
+                    priority=c.priority,
+                    urgency=c.urgency,
+                    visibility=c.visibility
+                ) for c in s.concerns
+            ],
+            current_project_id=s.current_project_id,
+            project_lock_until=s.project_lock_until
+        )

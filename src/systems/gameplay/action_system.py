@@ -10,7 +10,8 @@ from __future__ import annotations
 import logging
 import math
 from typing import TYPE_CHECKING, Any, Callable
-from src.core.models.enums import AIState, ActionType, Element, GoalType, EmotionType, HeroClass
+from src.core.models.enums import AIState, ActionType, Element, GoalType, EmotionType, HeroClass, StrategicStatus
+ Oscar
 from src.core.entities.entity import Entity
 from src.actions.base import (
     ActionProposal, IntentUpdate, MindUpdate, NavigationUpdate, CombatTraceUpdate,
@@ -475,11 +476,29 @@ class ActionSystem(System):
                         found = False
                         for i, existing in enumerate(strat.projects):
                             if existing.project_id == prj.project_id:
+                                # If found, check for status transition
+                                if existing.status != prj.status:
+                                    from src.utils.metrics import SIM_STRATEGIC_PROJECT_STATUS
+                                    if prj.status == StrategicStatus.RESOLVED:
+                                        SIM_STRATEGIC_PROJECT_STATUS.labels(
+                                            kind=prj.kind.name.lower() if hasattr(prj.kind, "name") else str(prj.kind).lower(),
+                                            status="completed"
+                                        ).inc()
+                                    elif prj.status == StrategicStatus.ABANDONED:
+                                        SIM_STRATEGIC_PROJECT_STATUS.labels(
+                                            kind=prj.kind.name.lower() if hasattr(prj.kind, "name") else str(prj.kind).lower(),
+                                            status="abandoned"
+                                        ).inc()
                                 strat.projects[i] = prj
                                 found = True
                                 break
                         if not found:
                             strat.projects.append(prj)
+                            from src.utils.metrics import SIM_STRATEGIC_PROJECT_STATUS
+                            SIM_STRATEGIC_PROJECT_STATUS.labels(
+                                kind=prj.kind.name.lower() if hasattr(prj.kind, "name") else str(prj.kind).lower(),
+                                status="started"
+                            ).inc()
                 if up.projects_remove:
                     strat.projects = [prj for prj in strat.projects if prj.project_id not in up.projects_remove]
                 
@@ -515,6 +534,13 @@ class ActionSystem(System):
                         if ct.status in (StrategicStatus.RESOLVED, StrategicStatus.ABANDONED):
                              from src.ai.strategy.contract_outcome import ContractOutcomeService
                              ContractOutcomeService.resolve_contract(world, ct, ct.status, emit=emit)
+                             
+                             if ct.status == StrategicStatus.ABANDONED:
+                                 from src.utils.metrics import SIM_STRATEGIC_CONTRACT_BREACHES
+                                 SIM_STRATEGIC_CONTRACT_BREACHES.labels(
+                                     contract_kind=ct.kind.name.lower() if hasattr(ct.kind, "name") else str(ct.kind).lower(),
+                                     reason="abandoned"
+                                 ).inc()
 
                         found = False
                         for i, existing in enumerate(strat.contracts):
