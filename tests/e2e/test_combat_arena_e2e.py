@@ -531,7 +531,7 @@ class TestAoESkillsE2E:
                        skills=["shield_wall", "power_strike", "whirlwind"],
                        mastery={"shield_wall": 100.0}, level=5)
         arena.add_mob(10, pos=(6, 5), weapon="rusty_sword", hp=200, atk=5)
-        arena.add_mob(11, pos=(7, 5), weapon="rusty_sword", hp=200, atk=5)
+        arena.add_mob(11, pos=(5, 6), weapon="rusty_sword", hp=200, atk=5)
         arena.run_ticks(3)
         # Should see whirlwind used (preferred over power_strike when 2+ enemies)
         whirlwind_uses = [e for e in arena.all_events()

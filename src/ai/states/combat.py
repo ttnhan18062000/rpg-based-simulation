@@ -25,12 +25,17 @@ def get_weapon_range(actor: Entity) -> int:
     return 1
 
 
-def best_ready_skill(actor: Entity, dist_to_enemy: int = 1, nearby_enemies: int = 1) -> str | None:
+def best_ready_skill(ctx: AIContext, target_enemy: Entity | None = None) -> str | None:
     """Return the skill_id of the best ready active combat skill, or None."""
     from src.core.gameplay.classes import SKILL_DEFS, SkillTarget, SkillType
     import logging
     logger = logging.getLogger(__name__)
     
+    actor = ctx.actor
+    dist_to_enemy = 1
+    if target_enemy:
+        dist_to_enemy = actor.spatial.pos.manhattan(target_enemy.spatial.pos)
+
     best_id = None
     best_score = 0.0
     for si in actor.progression.skills:
@@ -57,14 +62,24 @@ def best_ready_skill(actor: Entity, dist_to_enemy: int = 1, nearby_enemies: int 
         radius = getattr(sdef, "radius", 0)
         
         # Scoring: power * multiplier (if AoE and multiple targets hit)
-        score = power * (nearby_enemies if radius > 0 and nearby_enemies > 1 else 1)
+        hits = 1
+        if radius > 0:
+            # Determine AoE center
+            center = actor.spatial.pos if sdef.target == SkillTarget.SELF else (target_enemy.spatial.pos if target_enemy else actor.spatial.pos)
+            hits = 0
+            for v in ctx.visible:
+                 if ctx.faction_reg.is_hostile(actor.identity.faction, v.identity.faction):
+                     belief = ctx.get_belief(v.id)
+                     if not belief or (belief.visible_injury < 1.0 or belief.visible_injury == -1.0):
+                         if center.manhattan(v.spatial.pos) <= radius:
+                             hits += 1
+        
+        score = power * (hits if radius > 0 and hits > 1 else 1)
             
         if score > best_score:
             best_score = score
             best_id = si.skill_id
             
-    if best_id:
-        pass
     return best_id
 
 
@@ -123,22 +138,12 @@ class HuntHandler(StateHandler):
         weapon_rng = get_weapon_range(actor)
 
         # 2. Can we use a skill now?
-        if dist <= weapon_rng + 2:
-            nearby_count = 0
-            for v in ctx.visible:
-                if ctx.faction_reg.is_hostile(actor.identity.faction, v.identity.faction):
-                    belief = ctx.get_belief(v.id)
-                    # If we believe they are alive (injury < 1.0), or we just saw them
-                    if not belief or (belief.visible_injury < 1.0 or belief.visible_injury == -1.0):
-                        if actor.spatial.pos.manhattan(v.spatial.pos) <= 4:
-                            nearby_count += 1
-            
-            skill_id = best_ready_skill(actor, dist, nearby_count)
-            if skill_id:
-                return AIState.COMBAT, ActionProposal(
-                    actor_id=actor.id, verb=ActionType.USE_SKILL, target=(skill_id, enemy.id),
-                    reason=f"Skill {skill_id} ready during hunt → using on {enemy.id}",
-                    updates=[NavigationUpdate(chase_ticks=0)])
+        skill_id = best_ready_skill(ctx, enemy)
+        if skill_id:
+            return AIState.COMBAT, ActionProposal(
+                actor_id=actor.id, verb=ActionType.USE_SKILL, target=(skill_id, enemy.id),
+                reason=f"Skill {skill_id} ready during hunt → using on {enemy.id}",
+                updates=[NavigationUpdate(chase_ticks=0)])
 
         # 3. Distance-based transition
         if dist <= weapon_rng:
@@ -189,16 +194,7 @@ class CombatHandler(StateHandler):
         dist = actor.spatial.pos.manhattan(enemy.spatial.pos)
         weapon_rng = get_weapon_range(actor)
 
-        # 1. Action Preference: Skill > Attack
-        nearby_count = 0
-        for v in ctx.visible:
-            if ctx.faction_reg.is_hostile(actor.identity.faction, v.identity.faction):
-                belief = ctx.get_belief(v.id)
-                if belief and (belief.visible_injury < 1.0 or belief.visible_injury == -1.0):
-                    if actor.spatial.pos.manhattan(v.spatial.pos) <= 4:
-                        nearby_count += 1
-        
-        skill_id = best_ready_skill(actor, dist, nearby_count)
+        skill_id = best_ready_skill(ctx, enemy)
         if skill_id:
             return AIState.COMBAT, ActionProposal(
                 actor_id=actor.id, verb=ActionType.USE_SKILL, target=(skill_id, enemy.id),
@@ -214,7 +210,7 @@ class CombatHandler(StateHandler):
                 ally_belief = ctx.get_belief(target.id)
                 # If we believe they are alive
                 if ally_belief and ally_belief.visible_injury < 1.0:
-                    support_skill = best_ready_skill(actor, actor.spatial.pos.manhattan(target.spatial.pos), 0)
+                    support_skill = best_ready_skill(ctx, target)
                     if support_skill:
                         return AIState.COMBAT, ActionProposal(
                             actor_id=actor.id, verb=ActionType.USE_SKILL, target=(support_skill, target.id),

@@ -97,8 +97,7 @@ class WanderHandler(StateHandler):
             
             if dist <= weapon_rng:
                 from src.ai.states.combat import best_ready_skill
-                # Simple O(1) nearby count for Wander fallback
-                skill_id = best_ready_skill(actor, dist, 1)
+                skill_id = best_ready_skill(ctx, enemy)
                 
                 if skill_id:
                     return AIState.COMBAT, ActionProposal(
@@ -221,7 +220,7 @@ class ReturnToCampHandler(StateHandler):
             if target and target.combat.alive:
                 dist_to_ally = actor.spatial.pos.manhattan(target.spatial.pos)
                 from src.ai.states.combat import best_ready_skill
-                skill_id = best_ready_skill(actor, dist_to_ally, 0)
+                skill_id = best_ready_skill(ctx, target)
                 if skill_id:
                     return AIState.COMBAT, ActionProposal(
                         actor_id=actor.id, verb=ActionType.USE_SKILL, target=(skill_id, target.id),

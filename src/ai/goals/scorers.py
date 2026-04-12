@@ -122,7 +122,7 @@ class ExploreGoal(GoalScorer):
             if region_metric:
                 penalty = region_metric.danger_level * 0.5
         
-        return max(0.0, 0.4 + _trait_utility(ctx).explore - penalty)
+        return max(0.0, 0.3 + _trait_utility(ctx).explore - penalty)
 
 # ---------------------------------------------------------------------------
 # Loot — pick up items

@@ -286,6 +286,7 @@ class InterpretedLifeEventKind(IntEnum):
     TRESPASS = 19
     BODY_RECOVERED = 20
     BODY_ABANDONED = 21
+    HOMECOMING = 22
 
 from typing import Annotated
 from pydantic import BeforeValidator, PlainSerializer

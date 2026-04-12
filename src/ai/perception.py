@@ -287,24 +287,26 @@ class Perception:
             ty = ay + dy
             if ty < 0 or ty >= grid_h:
                 continue
-            remaining = scan_radius - abs(dy)
+            abs_dy = abs(dy)
+            remaining = scan_radius - abs_dy
             for dx in range(-remaining, remaining + 1):
                 tx = ax + dx
                 if tx < 0 or tx >= grid_w:
                     continue
-                if (tx, ty) in explored:
+                pos_tuple = (tx, ty)
+                if pos_tuple in explored:
                     continue
                 # Check if adjacent to an explored tile (frontier condition)
-                is_frontier = (
+                # Optimized: pre-bind lookups or use local variables
+                if not (
                     (tx - 1, ty) in explored or (tx + 1, ty) in explored
                     or (tx, ty - 1) in explored or (tx, ty + 1) in explored
-                )
-                if not is_frontier:
+                ):
                     continue
+                
                 candidate = Vector2(tx, ty)
                 if grid.is_walkable(candidate):
-                    dist = abs(dx) + abs(dy)
-                    frontier.append((dist, candidate))
+                    frontier.append((abs(dx) + abs_dy, candidate))
                     if len(frontier) >= 32:
                         break
             if len(frontier) >= 32:

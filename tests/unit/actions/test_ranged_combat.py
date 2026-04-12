@@ -285,34 +285,34 @@ class TestCombatActionRanged:
 class TestRangeAwareSkillSelection:
     def test_ranged_skill_selected_at_distance(self):
         from src.core.gameplay.classes import SkillInstance
-        from src.ai.states import best_ready_skill
+        from src.ai.states import best_ready_skill; from tests.helpers.ai_test_utils import make_test_ai_context
         e = _make_entity(1, stamina=50)
         e.progression.skills = [SkillInstance(skill_id="quick_shot")]  # range=3
-        result = best_ready_skill(e, dist_to_enemy=3)
+        result = enemy = _make_entity(2, pos=(3, 0)); ctx = make_test_ai_context(e, enemies=[enemy]); result = best_ready_skill(ctx, enemy)
         assert result == "quick_shot"
 
     def test_melee_skill_not_selected_at_distance(self):
         from src.core.gameplay.classes import SkillInstance
-        from src.ai.states import best_ready_skill
+        from src.ai.states import best_ready_skill; from tests.helpers.ai_test_utils import make_test_ai_context
         e = _make_entity(1, stamina=50)
         e.progression.skills = [SkillInstance(skill_id="power_strike")]  # range=1
-        result = best_ready_skill(e, dist_to_enemy=3)
+        result = enemy = _make_entity(2, pos=(3, 0)); ctx = make_test_ai_context(e, enemies=[enemy]); result = best_ready_skill(ctx, enemy)
         assert result is None
 
     def test_melee_skill_selected_when_adjacent(self):
         from src.core.gameplay.classes import SkillInstance
-        from src.ai.states import best_ready_skill
+        from src.ai.states import best_ready_skill; from tests.helpers.ai_test_utils import make_test_ai_context
         e = _make_entity(1, stamina=50)
         e.progression.skills = [SkillInstance(skill_id="power_strike")]  # range=1
-        result = best_ready_skill(e, dist_to_enemy=1)
+        result = enemy = _make_entity(2, pos=(1, 0)); ctx = make_test_ai_context(e, enemies=[enemy]); result = best_ready_skill(ctx, enemy)
         assert result == "power_strike"
 
     def test_self_buff_always_available(self):
         from src.core.gameplay.classes import SkillInstance
-        from src.ai.states import best_ready_skill
+        from src.ai.states import best_ready_skill; from tests.helpers.ai_test_utils import make_test_ai_context
         e = _make_entity(1, stamina=50)
         e.progression.skills = [SkillInstance(skill_id="shield_wall")]  # SELF target
-        result = best_ready_skill(e, dist_to_enemy=5)
+        result = enemy = _make_entity(2, pos=(5, 0)); ctx = make_test_ai_context(e, enemies=[enemy]); result = best_ready_skill(ctx, enemy)
         # shield_wall is a self-buff with def_mod, power=0 → won't be selected
         # because power is 0 and best_power starts at 0.0
         # This is expected — self-buffs with no power don't get selected
@@ -320,13 +320,13 @@ class TestRangeAwareSkillSelection:
 
     def test_prefers_highest_power_in_range(self):
         from src.core.gameplay.classes import SkillInstance
-        from src.ai.states import best_ready_skill
+        from src.ai.states import best_ready_skill; from tests.helpers.ai_test_utils import make_test_ai_context
         e = _make_entity(1, stamina=50)
         e.progression.skills = [
             SkillInstance(skill_id="quick_shot"),    # power=1.5, range=3
             SkillInstance(skill_id="arcane_bolt"),    # power=2.0, range=4
         ]
-        result = best_ready_skill(e, dist_to_enemy=3)
+        result = enemy = _make_entity(2, pos=(3, 0)); ctx = make_test_ai_context(e, enemies=[enemy]); result = best_ready_skill(ctx, enemy)
         assert result == "arcane_bolt"
 
 

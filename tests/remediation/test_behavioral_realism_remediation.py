@@ -12,6 +12,7 @@ from src.core.models.enums import Faction as FactionEnum, AIState, ActionType, M
 from src.core.gameplay.buildings import item_sell_price, shop_buy_price
 from src.actions.rest import RestAction
 from src.core.logic.knowledge_propagation import KnowledgePropagationService
+from tests.benchmarks.test_scaling_bench import run_bench
 from src.ai.states.interaction import find_nearby_resource
 from src.ai.states.navigation import propose_retreat_home
 from src.ai.states.base import AIContext

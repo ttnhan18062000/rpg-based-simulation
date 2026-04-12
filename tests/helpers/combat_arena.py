@@ -78,13 +78,14 @@ class CombatArena:
         from src.core.registry.registry_loader import load_all_registries
         load_all_registries()
         
+        from src.core.gameplay.faction import Faction, FactionRegistry
+        faction_reg = FactionRegistry.default()
+        
         brain_mod = __import__("src.ai.brain", fromlist=["AIBrain"])
-        brain = brain_mod.AIBrain(self.config, self.rng)
+        brain = brain_mod.AIBrain(self.config, self.rng, faction_reg=faction_reg)
         pool = WorkerPool(self.config, brain, self.rng)
         resolver = ConflictResolver(self.config, self.rng)
         gen = EntityGenerator(self.config, self.rng)
-        from src.core.gameplay.faction import Faction, FactionRegistry
-        faction_reg = FactionRegistry.default()
 
         self.loop = WorldLoop(
             self.config, self.world, pool, resolver, gen,

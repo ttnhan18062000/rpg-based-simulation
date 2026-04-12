@@ -560,6 +560,7 @@ class AIBrain:
             return actor.mind.decision.ai_state
 
         if self._goal_evaluator.is_goal_locked(ctx):
+            ctx.tactical_hints["goal_locked"] = True
             return actor.mind.decision.ai_state
 
         current_boredom = dict(actor.mind.decision.boredom_multipliers)
@@ -611,6 +612,13 @@ class AIBrain:
         handler = STATE_HANDLERS.get(state, _FALLBACK)
         try:
             new_state, proposal = handler.handle(ctx)
+            
+            # AOA Stabilization: Enforce goal commitment lock.
+            # State handlers should not transition away from a locked state unless to IDLE or FLEE.
+            if ctx.tactical_hints.get("goal_locked") and new_state != state:
+                if new_state not in (AIState.IDLE, AIState.FLEE):
+                    new_state = state
+                    proposal = proposal.model_copy(update={"reason": f"[LOCKED] {proposal.reason}"})
             final_typed = list(updates)
             if proposal.updates:
                 final_typed.extend(proposal.updates)

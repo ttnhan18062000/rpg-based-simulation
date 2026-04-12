@@ -203,7 +203,7 @@ class TestIntegration:
         if hero and mob and mob.combat.alive:
             dist = hero.spatial.pos.manhattan(mob.spatial.pos)
             # Hero should have closed distance (not stuck at wall)
-            assert dist < 10, f"Hero should navigate around wall, dist={dist}"
+            assert dist < 10
 
     def test_greedy_fallback_for_short_distance(self):
         """Short distances (≤2) should use greedy, not A*."""
@@ -224,19 +224,26 @@ class TestIntegration:
     def test_entity_navigates_maze(self):
         """Entity navigates a simple maze using A*."""
         from tests.helpers.combat_arena import CombatArena
-        arena = CombatArena(width=15, height=15, min_commitment_ticks=0)
+        arena = CombatArena(width=15, height=15, min_commitment_ticks=0, town_center_x=3, town_center_y=5, sleep_decay_rate=0, hunger_decay_rate=0)
         # Create a simple maze:
         # Wall from (5,0) to (5,10), gap at (5,11)
         for y in range(11):
             arena.set_wall(5, y)
         arena.add_hero(1, pos=(3, 5), weapon="iron_sword", hp=200, atk=15, 
-                       mastery={"blacksmithing": 1.0})
-        # Add a dummy recipe so he thinks he's a master and doesn't need the blacksmith
+                       mastery={"blacksmithing": 1.0}, vision_range=20)
         hero = arena.entity(1)
         if hero:
             hero.identity.known_recipes = ["iron_sword"]
+            # [AOA STABILIZATION] Disable sleep/hunger to ensure hero completes navigation
+            hero.mind.routine.sleep_debt = -100.0  # Keep them awake
+            hero.mind.routine.hunger_level = -100.0
             
         arena.add_mob(2, pos=(7, 5), weapon="rusty_sword", hp=200, atk=5)
+        
+        # [AOA STABILIZATION] Explicitly register hostility to trigger HuntGoal
+        from src.core.gameplay.faction import Faction, FactionRelation
+        arena.loop._faction_reg.set_relation(Faction.HERO_GUILD, Faction.GOBLIN_HORDE, FactionRelation.HOSTILE)
+        
         arena.run_ticks(50)
         hero = arena.entity(1)
         mob = arena.entity(2)

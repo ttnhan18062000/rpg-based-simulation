@@ -28,8 +28,14 @@ class SimulationModel(BaseModel):
         copy_obj = super().model_copy(**kwargs)
         
         # AOA Pillar 1: Isolation. The new copy must be unfrozen and mutable.
-        # We recursively unfreeze the copy_obj IN-PLACE (since it's a fresh copy).
-        self._unfreeze_inplace(copy_obj)
+        # Optimized Path: If 'self' wasn't frozen, its deep-copy won't be either, 
+        # and it won't contain MappingProxyType/tuple-collections that need unfreezing.
+        if getattr(self, "_frozen", False):
+            self._unfreeze_inplace(copy_obj)
+        else:
+            # We must still ensure the new object's flag is explicitly False 
+            # (though it should be by default from self).
+            object.__setattr__(copy_obj, "_frozen", False)
         
         return copy_obj
 
