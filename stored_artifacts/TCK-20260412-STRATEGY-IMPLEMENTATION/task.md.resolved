@@ -1,0 +1,16 @@
+- [ ] Milestone 5: Unit Tests for strategic logic
+    - [ ] Create `tests/unit/core/logic/test_strategic_reprioritization.py`
+    - [ ] Implement tests for `ConcernGenerationService`
+    - [ ] Implement tests for `DirectiveMutationService`
+    - [ ] Implement tests for `ProjectMutationService`
+- [ ] Milestone 5: E2E Verification
+    - [ ] Create `tests/e2e/test_strategic_reprioritization.py`
+    - [ ] Define "Near Death" scenario
+    - [ ] Verify strategic pivot
+- [ ] Milestone 3: Tested Leads Logic
+    - [ ] Update `StrategicState` model in `strategy.py`
+    - [ ] Update `ActionSystem` for state application
+    - [ ] Update `StrategicEvaluator` to mark leads as tested
+- [ ] Milestone 4: Social Candidate Filtering
+    - [ ] Hardened filtering in `SocialCandidateSelectionService`
+    - [ ] Verify with tests

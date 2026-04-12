@@ -330,6 +330,8 @@ class StrategicUpdate(IntentUpdate):
     interrupted_project_id: str | None = None
     project_lock_until: int | None = None
     engaged_ticks: int | None = None
+    last_interpreted_event_tick: int | None = None
+    tested_lead_ids: list[str] = Field(default_factory=list)
     
     # Traceability [PHASE 2]
     strategic_drivers: list[DecisionDriver] = Field(default_factory=list)

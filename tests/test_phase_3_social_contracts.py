@@ -19,7 +19,7 @@ def custom_mock_ctx():
     actor.mind = SimpleNamespace(
         decision=SimpleNamespace(personality=SimpleNamespace(greed=0.5), motives=[]),
         social=SimpleNamespace(known_bonds={}),
-        strategic=SimpleNamespace(directives=[])
+        strategic=SimpleNamespace(directives=[], concerns=[])
     )
     actor.identity = SimpleNamespace(
         reputation=SimpleNamespace(trustworthiness=5, heroism_score=5),

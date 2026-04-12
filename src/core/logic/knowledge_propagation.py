@@ -73,7 +73,7 @@ class KnowledgePropagationService:
             # (Heuristic: Share the highest confidence lead that isn't exhausted)
             potential_leads = sorted(
                 [l for l in sharer_leads if not l.is_exhausted],
-                key=lambda l: l.confidence,
+                key=lambda l: l.certainty,
                 reverse=True
             )
             
@@ -81,14 +81,14 @@ class KnowledgePropagationService:
                 lead_to_share = potential_leads[0]
                 # Filter leads already known by recipient
                 existing = next((l for l in recipient.mind.strategic.leads if l.label == lead_to_share.label), None)
-                if not existing or (lead_to_share.confidence > existing.confidence):
+                if not existing or (lead_to_share.certainty > existing.certainty):
                     # [phase_3_task_6] Rumor Degradation
                     # Create an indirect copy with reduced confidence and directness
                     new_lead = lead_to_share.model_copy(update={
                         "source_type": "gossip",
                         "source_entity_id": sharer.id,
                         "directness": lead_to_share.directness * 0.8,
-                        "confidence": lead_to_share.confidence * 0.9,
+                        "certainty": lead_to_share.certainty * 0.9,
                         "freshness_tick": world.tick
                     })
                     

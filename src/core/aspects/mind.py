@@ -239,6 +239,7 @@ class InterpretedEvent(SimulationModel):
     tick: int
     type: str # e.g. "glory", "trauma", "discovery", "social"
     impact: float = 0.0 # Salience/Importance score
+    life_event_kind: int | None = None # [PHASE 5] Link back to InterpretedLifeEventKind
     details: Union[CombatNarrative, LootNarrative, DiscoveryNarrative, SocialNarrative, dict[str, Any]] = Field(default_factory=dict)
 
 MemoryLogEntry = InterpretedEvent # Backward compatibility alias

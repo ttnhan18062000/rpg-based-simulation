@@ -1,4 +1,7 @@
 from __future__ import annotations
+import logging
+
+logger = logging.getLogger(__name__)
 
 from src.actions.base import ActionType, ActionProposal
 from src.ai.perception import Perception
@@ -343,8 +346,17 @@ class InvestigateHandler(StateHandler):
                     actor, next_tile, snapshot, f"Target area empty → narrowing search to {next_tile}",
                     updates=final_updates)
             else:
-                # No more tiles or no zone → resolve
-                final_updates.append(StrategicUpdate(current_objective_id="")) 
+                # No more tiles or no zone → resolve lead as tested
+                strat_up = StrategicUpdate(current_objective_id="")
+                if obj.leads:
+                    # Knowledge Continuity: Mark leads as tested and add to persistent tracking
+                    for lead in obj.leads:
+                        updated_lead = lead.model_copy(update={"tested": True})
+                        strat_up.leads_add_or_update.append(updated_lead)
+                        strat_up.tested_lead_ids.append(lead.lead_id)
+                    logger.info("InvestigateHandler: Exhausted search for %s leads. Marking as tested.", len(obj.leads))
+                
+                final_updates.append(strat_up) 
                 return AIState.WANDER, ActionProposal(
                     actor_id=actor.id, verb=ActionType.REST,
                     reason="Search space exhausted or lead resolved → clearing objective",

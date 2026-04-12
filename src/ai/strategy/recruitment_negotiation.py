@@ -49,7 +49,7 @@ class RecruitmentNegotiationService:
         ))
         
         # Role Expectation
-        role = "vanguard" if project and project.metadata.get("risk", 0) < 0.5 else "support"
+        role = "vanguard" if project and project.metadata.get("risk", 0) > 0.5 else "support"
         terms.append(ContractTermRecord(
             term_type="behavior",
             label="Preferred Role",
@@ -57,8 +57,8 @@ class RecruitmentNegotiationService:
         ))
 
         # 2. Package the offer
-        offer_id = f"off_{uuid.uuid4().hex[:8]}"
-        tick = ctx.snapshot.tick
+        from src.core.models.enums import Domain
+        offer_id = f"off_{ctx.rng.next_hex(Domain.SOCIAL, actor.id, ctx.snapshot.tick, sub_id=60)}"
         
         offer = RecruitmentOfferRecord(
             offer_id=offer_id,
@@ -68,13 +68,13 @@ class RecruitmentNegotiationService:
             project_id=project.project_id if project else None,
             status=OfferStatus.PENDING,
             proposed_terms=terms,
-            expires_tick=tick + 100,
+            expires_tick=ctx.snapshot.tick + 100,
             original_founder_id=actor.id
         )
         
         # Log initial history
         offer.negotiation_history.append({
-            "tick": tick,
+            "tick": ctx.snapshot.tick,
             "from_id": actor.id,
             "status": OfferStatus.PENDING,
             "terms": [t.model_dump() for t in terms]
@@ -141,9 +141,15 @@ class RecruitmentNegotiationService:
             if motive.kind == "prove_strength":
                 if offer.contract_kind == ContractKind.EXPEDITION: willingness += 0.2
 
-        # 5. Risk Assessment (Placeholder for simple HP check)
+        # 5. Risk and Traumatic Bias [PHASE 5]
         if actor.combat.hp_ratio < 0.4:
             willingness -= 0.5 # Too injured to care about contracts
+            
+        # 5b. Betrayal Aversion Feedback
+        has_betrayal_trauma = any("Betrayal" in c.label for c in actor.mind.strategic.concerns) or \
+                              any("Betrayal" in d.label for d in actor.mind.strategic.directives)
+        if has_betrayal_trauma:
+            willingness -= 0.4 # Significant penalty for recent betrayal
             
         # Final Decision
         threshold = 0.3 # Base threshold to say 'Yes'

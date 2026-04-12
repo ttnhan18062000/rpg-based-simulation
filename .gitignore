@@ -216,3 +216,5 @@ pytest*.txt
 tmp/*
 reviews/*
 !reviews/code_exporter.py
+
+logs/*

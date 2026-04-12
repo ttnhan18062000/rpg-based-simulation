@@ -1,26 +1,32 @@
-# Test Plan - Simulation Regression Fix
+# Test Plan - TCK-20260412-REGRESSION-FIX
 
-## Objective
-Restore 100% stability to the simulation regression suite.
+## Target Areas
+- `InterpretedLifeEventKind` enum.
+- Benchmark scaling for 1000+ entities.
+- Combat engagement determinism.
+- AOE skill selection logic.
 
-## Automated Tests
+## Verification Steps
 
-### Unit Tests
-- `pytest tests/unit/ai/test_goals.py`: Verify goal scoring logic and base utilities.
-- `pytest tests/unit/ai/test_pathfinding.py`: (If applicable) Verify fix for maze navigation.
+### 1. Automated Regression Run
+Run the full suite highlighting the previously failed tests:
+```bash
+pytest tests/unit/core/models/test_enums.py
+pytest tests/bench/test_scaling.py
+pytest tests/e2e/test_combat_arena_e2e.py
+pytest tests/unit/ai/test_aoe_selection.py
+```
 
-### Integration Tests
-- `pytest tests/integration/infrastructure/test_chaos.py`: Verify enum resolution and resilience logic.
-- `pytest tests/integration/test_chaos.py`: Duplicate check.
+### 2. Full Suite Pass
+Ensure no side effects in other modules:
+```bash
+pytest tests/
+```
 
-### E2E Tests
-- `pytest tests/e2e/test_combat_arena_e2e.py`:
-    - `TestAIRefinementE2E::test_goal_commitment_and_anti_jitter`: Verify jitter prevention.
-    - `TestAoESkillsE2E::test_ai_prefers_aoe_when_clustered`: Verify AoE prioritization.
-    - `TestMultiEntityCombatE2E::test_ranged_and_melee_hero_vs_mob`: Verify ranged engagement.
+### 3. Benchmark Validation
+Verify performance is within 10% of the baseline (2.0s per 1000 ticks/entity-pair).
 
-### Benchmarks
-- `pytest tests/benchmarks/test_scaling_bench.py`: Verify TPS thresholds.
-
-## Manual Verification
-- None.
+## Criteria for Success
+- 100% pass rate in standard test runner.
+- Zero `AttributeError` or `NameError` in chaos/remediation suites.
+- Execution time per tick remains sub-millisecond for at least 95% of ticks.

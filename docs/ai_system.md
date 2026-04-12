@@ -4,61 +4,64 @@ The WorldLoop AI system uses a **Hybrid Architecture** combining **Utility AI** 
 
 ---
 
-## 1. The 4-Phase Cognitive Pipeline
+## 1. The 5-Phase Cognitive Pipeline
 
-Every time an entity is scheduled to act, the `AIBrain.decide()` method executes a structured four-phase pipeline:
+Every scheduled tick, the `AIBrain` executes an expanded cognitive cycle to bridge long-term strategy with tactical execution.
+
+### Phase 0: Strategic Derivation [NEW]
+- **Input**: `MindAspect.strategic` state.
+- **Logic**: Process high-level **Projects** to derive the active **Objective**.
+- **Locking**: If a project or objective is locked (hysteresis), this phase skip derivation to ensure continuity.
+- **Updates**: Refreshes the `active_objective_id` in the strategic state.
 
 ### Phase 1: Sensory & Perception
 - **Input**: Raw `Snapshot` and `Entity` state.
-- **Selective Attention**: The brain filters all visible entities based on "Saliency" (Distance × Hostility × Tier). Only the top `max_attention_slots` (default 5) are actively processed.
-- **Updates**: Proposes a `PerceptionUpdate` to set the `attention_pool` and `pos_history`.
+- **Selective Attention**: Filters visible entities based on "Saliency". Top slots are actively processed.
+- **Updates**: Proposes a `PerceptionUpdate` for the `attention_pool`.
 
 ### Phase 2: Memory & Appraisal
-- **Memory Decay**: Entities in memory that are no longer visible have their `stale_ticks` incremented. If they cross a threshold (15-30 ticks), they are forgotten.
-- **Emotional Appraisal**: 
-  - **Stuck Detection**: High `stuck` spike if position hasn't changed in 5 ticks.
-  - **Region Dread**: Sentiment-based `panic` increase if current region has high trauma history.
-  - **Survival appraisal**: `panic` increase if HP < flee threshold.
-- **Updates**: Proposes `PerceptionUpdate` (memory changes) and `MindUpdate` (emotional shifts).
+- **Memory Decay**: Increments `stale_ticks` for entities no longer visible.
+- **Emotional Appraisal**: Calculates `panic`, `stuck`, and `dread` based on current surroundings.
+- **Updates**: Proposes `PerceptionUpdate` and `MindUpdate`.
 
-### Phase 3: Deliberation (Planning)
-- **Utility Scoring**: Each registered `GoalScorer` (Combat, Flee, Loot, etc.) evaluates the current context and returns a score (0.0 - 1.0+).
-- **Boredom/Hysteresis**: 
-  - Recent goals receive a **Boredom Multiplier** (0.8x) to prevent repetitive loops.
-  - The current active goal receives a **1.25x Hysteresis boost** to prevent "state-shivering" between equally scored options.
-- **Selection**: A temperature-controlled **Softmax** picks the winning goal from the top 3 candidates.
-- **Updates**: Proposes `MindUpdate` with new goal scores and the target `AIState`.
+### Phase 3: Deliberation (Goal Selection)
+- **Strategic Alignment**: Utility scores are now biased by the **Active Objective** (1.5x - 2.0x weight).
+- **Utility Scoring**: Candidates evaluated against `GoalScorer` registry.
+- **Hysteresis**: Ensures smooth transitions by protecting the current goal unless a significantly better one appears.
+- **Updates**: Proposes `MindUpdate` with target `AIState`.
 
 ### Phase 4: Output (Proposal)
-- **State Handler**: The `StateHandler` for the selected `AIState` (e.g., `CombatHandler`) generates a concrete `ActionProposal` (ATTACK, MOVE, etc.).
-- **Tactical Hints**: The brain injects "Hints" (e.g., `skirmish=True` for ranged classes) into the context to flavor the handler's output.
-- **Final Return**: Returns the `tuple[AIState, ActionProposal]` to the engine.
+- **State Handler**: The `StateHandler` (e.g. `CombatHandler`) generates concrete `ActionProposal`.
+- **Strategic Persistence**: Handlers can now propose `StrategicUpdate` to mark objective progress.
 
 ---
 
-## 2. Nested Mind Structure
+## 2. Strategic Mind Structure
 
-The `MindAspect` is decomposed into typed sub-models to ensure the API can reliably serve data for UI introspection.
+The `MindAspect` has been hardened to support authoritatively persistent goals:
 
-- **`decision`**: Tracks `goal_scores`, `boredom_multipliers`, and `consecutive_idle_ticks`.
-- **`perception`**: Stores `threat_table`, `entity_memory` (short-term), and `terrain_memory`.
-- **`emotion`**: Real-time floats for `panic`, `stuck`, `bravery`, and long-term `mood`.
-- **`navigation`**: Stores `cached_path` (A*) and `pos_history`.
-- **`narrative`**: A `memory_log` of typed records (`CombatNarrative`, `LootNarrative`, `DiscoveryNarrative`).
+*   **`strategic`**: (The Continuity Stratum)
+    *   **Directives**: Canonical motives (Built-in or Quest-driven).
+    *   **Projects**: Current long-term commitment (e.g. "Visit Blacksmith").
+    *   **Objectives**: The tactical step (e.g. "Navigate to Shop").
+*   **`decision`**: Real-time AI goal scores and tactical state.
+*   **`perception`**: Threat table and subjective entity/terrain memory.
+*   **`narrative`**: Chronological memory log of `InterpretedEvent` records.
 
 ---
 
-## 3. Utility Goal Registry
+## 3. Hierarchical Commitment Registry
 
-| Goal | target_state | Primary Logic |
+Strategic reasoning is supported by a registry of projects:
+
+| Project | Kind | Typical Initial Objective |
 | :--- | :--- | :--- |
-| **COMBAT** | HUNT | Proximity to highest threat/nearest enemy. |
-| **FLEE** | FLEE | HP ratio < flee threshold (default 30%). |
-| **LOOT** | LOOTING | Presence of ground loot within vision range. |
-| **TRADE** | VISIT_SHOP | Bag > 80% full or has high-value gold pouches. |
-| **REST** | RESTING_IN_TOWN | Low HP/Stamina + proximity to safe zone. |
-| **CRAFT** | VISIT_BLACKSMITH | Has materials + gold for learned recipes. |
-| **GUARD** | GUARD_CAMP | (Mobs only) Protector of home territory. |
+| **Survival** | CORE | `FLEE`, `REST`, or `RECOVER` |
+| **Combat** | TACTICAL | `ENGAGE`, `HUNT`, or `BRACE` |
+| **Logistics** | SERVICE | `RESTOCK`, `CRAFT`, or `SELL` |
+| **Exploration** | WORLD | `EXPLORE_REGION` or `VISIT_POI` |
+
+---
 
 ---
 

@@ -162,6 +162,7 @@ class SimulationConfig:
 
     # Debug / Stability (AOA Phase 5)
     ignore_phase_errors: bool = False    # Whether to suppress exceptions in engine phases
+    max_regression_runs: int = 10        # Number of headless run artifacts to keep per directory
 
     # Biological Needs [PHASE 3]
     sleep_decay_rate: float = 0.002      # Debt increase per tick

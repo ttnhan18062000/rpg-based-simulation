@@ -5,12 +5,14 @@ import uuid
 import logging
 from typing import TYPE_CHECKING
 from src.core.models.strategy import DirectiveRecord, DirectiveKind
+from src.core.models.enums import TurningPointKind, Domain
 
 if TYPE_CHECKING:
     from src.core.models.world_state import WorldState
     from src.core.entities.entity import Entity
     from src.core.models.life_events import TurningPointRecord
     from src.actions.base import StrategicUpdate
+    from src.systems.rng import DeterministicRNG
 
 logger = logging.getLogger(__name__)
 
@@ -23,10 +25,10 @@ class DirectiveMutationService:
         world: WorldState, 
         entity: Entity, 
         tp: TurningPointRecord, 
-        updates: StrategicUpdate
+        updates: StrategicUpdate,
+        rng: DeterministicRNG | None = None
     ) -> None:
         """Analyze turning point and mutate directives if salience thresholds are met."""
-        from src.core.models.enums import TurningPointKind
         
         # High salience requirement for identity shift
         # (Assuming salience_score is calculated in TurningPointService.insert)
@@ -35,27 +37,24 @@ class DirectiveMutationService:
 
         # 1. Map Turning Point Kind to Directive Shift
         if tp.kind == TurningPointKind.NEAR_DEATH:
-            cls._ensure_directive(entity, updates, "Safety & Self-Preservation", DirectiveKind.PERSONAL, 3.5, "trauma")
+            cls._ensure_directive(entity, updates, "Safety & Self-Preservation", DirectiveKind.PERSONAL, 3.5, "trauma", world.tick, rng)
             
         elif tp.kind == TurningPointKind.BETRAYAL or tp.kind == TurningPointKind.ALLY_DIED:
-            cls._ensure_directive(entity, updates, "Avenge Betrayal/Loss", DirectiveKind.PERSONAL, 3.0, "trauma")
+            cls._ensure_directive(entity, updates, "Avenge Betrayal/Loss", DirectiveKind.PERSONAL, 3.0, "trauma", world.tick, rng)
             
         elif tp.kind == TurningPointKind.BOSS_ENCOUNTER:
             if tp.emotional_impact < 0:
                 # Failed boss encounter
-                cls._ensure_directive(entity, updates, "Ascend/Become Stronger", DirectiveKind.PROFESSIONAL, 3.0, "defeat")
-            else:
-                # Successful boss encounter
-                cls._ensure_directive(entity, updates, "Legendary Ambition", DirectiveKind.PROFESSIONAL, 4.0, "glory")
+                cls._ensure_directive(entity, updates, "Legendary Ambition", DirectiveKind.PROFESSIONAL, 4.0, "glory", world.tick, rng)
 
         elif tp.kind == TurningPointKind.AVENGED_ALLY:
-            cls._ensure_directive(entity, updates, "Guardian of the Guild", DirectiveKind.FACTIONAL, 3.5, "loyalty")
+            cls._ensure_directive(entity, updates, "Guardian of the Guild", DirectiveKind.FACTIONAL, 3.5, "loyalty", world.tick, rng)
 
         elif tp.kind == TurningPointKind.RESCUE:
-            cls._ensure_directive(entity, updates, "Heroic Altruism", DirectiveKind.IDEOLOGICAL, 3.2, "social")
+            cls._ensure_directive(entity, updates, "Heroic Altruism", DirectiveKind.IDEOLOGICAL, 3.2, "social", world.tick, rng)
 
         elif tp.kind == TurningPointKind.FIRST_KILL:
-            cls._ensure_directive(entity, updates, "Lethal Resolve", DirectiveKind.PERSONAL, 2.5, "bloodshed")
+            cls._ensure_directive(entity, updates, "Lethal Resolve", DirectiveKind.PERSONAL, 2.5, "bloodshed", world.tick, rng)
 
     @staticmethod
     def _ensure_directive(
@@ -64,7 +63,9 @@ class DirectiveMutationService:
         label: str, 
         kind: DirectiveKind, 
         priority: float,
-        source: str
+        source: str,
+        tick: int = 0,
+        rng: DeterministicRNG | None = None
     ) -> None:
         """Check for existing directive by label or add a new one."""
         existing = next((d for d in entity.mind.strategic.directives if d.label == label), None)
@@ -79,7 +80,7 @@ class DirectiveMutationService:
         else:
             # Add new directive
             new_d = DirectiveRecord(
-                directive_id=f"dir_{label.lower().replace(' ', '_')}_{uuid.uuid4().hex[:4]}",
+                directive_id=f"dir_{label.lower().replace(' ', '_')}_{rng.next_hex(Domain.SOCIAL, entity.id, tick, sub_id=30)}" if rng else f"dir_{label.lower().replace(' ', '_')}_{uuid.uuid4().hex[:4]}",
                 kind=kind,
                 label=label,
                 priority=priority,

@@ -17,6 +17,7 @@ from src.core.models.enums import TurningPointKind, PersonalMotiveType
 
 if TYPE_CHECKING:
     from src.core.entities.entity import Entity
+    from src.systems.rng import DeterministicRNG
 
 logger = logging.getLogger(__name__)
 
@@ -71,7 +72,7 @@ class TurningPointService:
         return (base + motive_bonus + entity_bonus) * recency_mult * resolution_mult
 
     @classmethod
-    def prepare_insertion(cls, entity: "Entity", turning_point: TurningPointRecord, current_tick: int) -> PerceptionUpdate | None:
+    def prepare_insertion(cls, entity: "Entity", turning_point: TurningPointRecord, current_tick: int, rng: DeterministicRNG | None = None) -> PerceptionUpdate | None:
         """Evaluates a turning point for insertion. Returns PerceptionUpdate if it should be added.
         
         AOA Pillar 2: Services return intent. Mutation is handled authoritatively.
@@ -87,9 +88,10 @@ class TurningPointService:
         candidate_salience = cls.calculate_salience(turning_point, current_tick, motives)
         
         # Score the turning point
+        from src.core.models.enums import Domain
         turning_point = turning_point.model_copy(update={
             "salience_score": candidate_salience,
-            "event_id": turning_point.event_id or f"tp-{uuid.uuid4().hex[:8]}"
+            "event_id": turning_point.event_id or (f"tp-{rng.next_hex(Domain.SOCIAL, entity.id, current_tick, sub_id=50)}" if rng else f"tp-{uuid.uuid4().hex[:8]}")
         })
 
         # 3. Decision to insert

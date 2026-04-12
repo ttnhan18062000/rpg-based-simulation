@@ -7,6 +7,7 @@ InterpretedLifeEvent captures the social meaning of observed actions.
 
 from __future__ import annotations
 
+from typing import Any
 from pydantic import Field, ConfigDict
 from src.core.models.base import SimulationModel
 from src.core.models.enums import TurningPointKind, InterpretedLifeEventKind
@@ -62,6 +63,7 @@ class InterpretedLifeEvent(SimulationModel):
     tags_add: list[str] = Field(default_factory=list)
     tags_remove: list[str] = Field(default_factory=list)
     turning_point_candidate: bool = False
+    details: dict[str, Any] = Field(default_factory=dict) # [PHASE 5] Metadata for divergence logic
 
 
 class ReputationProfile(SimulationModel):
