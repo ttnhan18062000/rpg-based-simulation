@@ -14,12 +14,13 @@ class SimulationModel(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
     _frozen: bool = PrivateAttr(default=False)
 
-    def copy(self: T) -> T:
-        """Deep copy for snapshot isolation or recovery. 
+    def copy(self: T, deep: bool = True) -> T:
+        """Copy for snapshot isolation or recovery. 
         
         AOA Pillar 1: Isolation. Copies are always unfrozen and mutable by default.
+        By default, it uses deepcopy (deep=True). Use deep=False for shallow model-only copy.
         """
-        return self.model_copy(deep=True)
+        return self.model_copy(deep=deep)
 
     def model_copy(self: T, **kwargs: Any) -> T:
         """Override Pydantic's model_copy to ensure private state reset and collection mutability."""
@@ -27,8 +28,14 @@ class SimulationModel(BaseModel):
         copy_obj = super().model_copy(**kwargs)
         
         # AOA Pillar 1: Isolation. The new copy must be unfrozen and mutable.
-        # We recursively unfreeze the copy_obj IN-PLACE (since it's a fresh copy).
-        self._unfreeze_inplace(copy_obj)
+        # Optimized Path: If 'self' wasn't frozen, its deep-copy won't be either, 
+        # and it won't contain MappingProxyType/tuple-collections that need unfreezing.
+        if getattr(self, "_frozen", False):
+            self._unfreeze_inplace(copy_obj)
+        else:
+            # We must still ensure the new object's flag is explicitly False 
+            # (though it should be by default from self).
+            object.__setattr__(copy_obj, "_frozen", False)
         
         return copy_obj
 

@@ -17,7 +17,7 @@ def test_appraisal_phase_triggers_panic_on_low_hp():
     rng = MagicMock()
     brain = AIBrain(config, rng)
     
-    actor = Entity(id=1, kind="hero", faction="player")
+    actor = Entity(id=1, kind="hero", faction=0)
     actor.combat.max_hp = 100
     actor.combat.hp = 20 # 0.2 ratio, below 30% threshold
     actor.identity.display_name = "PanicAgent"
@@ -25,6 +25,10 @@ def test_appraisal_phase_triggers_panic_on_low_hp():
     # Mock context with proper fields [AOA STABILIZATION]
     snapshot = MagicMock()
     snapshot.tick = 100 # Ensure appraisal throttle is bypassed
+    snapshot.hour = 12
+    snapshot.social_registry = {}
+    snapshot.group_registry = {}
+    snapshot.region_consequence_registry = {}
     ctx = AIContext(
         actor=actor,
         snapshot=snapshot,
@@ -39,7 +43,7 @@ def test_appraisal_phase_triggers_panic_on_low_hp():
     # Appraisal logic currently lives in deliberation/brain helper, 
     # but the style check is in finalization. 
     # Actually, brain._memory_appraisal_phase appends to updates.
-    brain._memory_appraisal_phase(ctx, updates)
+    brain._memory_appraisal_phase(ctx, updates, {})
     
     # In AOA Brain, appraisal might project into MindUpdate
     # Check if panic delta exists in any MindUpdate

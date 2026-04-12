@@ -25,10 +25,9 @@ def _state_fingerprint(mgr: EngineManager) -> str:
         parts.append(f"e{eid}:{e.kind}@{e.spatial.pos.x:.2f},{e.spatial.pos.y:.2f}|hp={hp}/{mhp}")
         # Epic 17 / Genetic Pillar
         parts.append(f"e{eid}:gen={e.identity.generation}|deaths={e.identity.death_count}")
-        if hasattr(e.mind, "perception") and e.mind.perception.hero_familiarity:
-            # Sort keys for deterministic string representation
-            fam = ",".join(f"{k}:{v:.4f}" for k, v in sorted(e.mind.perception.hero_familiarity.items()))
-            parts.append(f"e{eid}:fam={fam}")
+        # Social Registry Bonds (Authoritative social state)
+        for target_id, bond in sorted(mgr.world.social_registry.bonds.get(eid, {}).items()):
+            parts.append(f"e{eid}:bond={target_id}:{bond.familiarity:.4f}")
     return hashlib.sha256("\n".join(parts).encode()).hexdigest()
 
 def test_chaos_mode_resilience():

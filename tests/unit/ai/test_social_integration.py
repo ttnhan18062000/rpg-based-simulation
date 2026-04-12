@@ -50,8 +50,10 @@ def test_social_bias_on_goal_scoring():
     )
     
     # Update brain to run appraisal (All motive logic is now here in Phase 1/2)
+    from src.core.logic.social_appraisal import SocialAppraisalService
+    social_biases = SocialAppraisalService.calculate_social_motives(actor, [friend], registry)
     updates = []
-    brain._memory_appraisal_phase(ctx, updates)
+    brain._memory_appraisal_phase(ctx, updates, social_biases)
     
     # Apply MindUpdate to actor
     has_social_driver = False
@@ -98,8 +100,10 @@ def test_reputation_impact_on_caution():
         _visible_override=[villain]
     )
     
+    from src.core.logic.social_appraisal import SocialAppraisalService
+    social_biases = SocialAppraisalService.calculate_social_motives(actor, [villain], registry)
     updates = []
-    brain._memory_appraisal_phase(ctx, updates)
+    brain._memory_appraisal_phase(ctx, updates, social_biases)
     for up in updates:
         if isinstance(up, MindUpdate) and up.social_update:
             actor.mind.social = up.social_update

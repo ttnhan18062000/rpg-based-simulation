@@ -21,6 +21,7 @@ from src.ai.goals.scorers import (
     CorpseScorer,
     SleepScorer,
     EatScorer,
+    InvestigateGoal,
 )
 
 _registered = False
@@ -45,3 +46,4 @@ def register_all_goals() -> None:
     register_goal(CorpseScorer())
     register_goal(SleepScorer())
     register_goal(EatScorer())
+    register_goal(InvestigateGoal())

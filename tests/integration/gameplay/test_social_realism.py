@@ -57,9 +57,19 @@ class TestSocialRealismPipeline:
         assert near_death is not None
         assert near_death.severity > 5.0
         
-        # 4. Step 2: Application
+        # 4. Step 2: Application (AOA: Process intents)
+        from src.actions.base import PerceptionUpdate, ReputationUpdate, SocialUpdate
         for ev in events:
-            SocialStateApplicator.apply_interpreted_event(ev, world)
+            updates = SocialStateApplicator.apply_interpreted_event(ev, world)
+            for up in updates:
+                if isinstance(up, PerceptionUpdate):
+                    if up.turning_points_add:
+                        hero.mind.narrative.turning_points.extend(up.turning_points_add)
+                elif isinstance(up, ReputationUpdate):
+                    # Manual apply for test mock
+                    hero.reputation.heroism_score += getattr(up, 'heroism_delta', 0.0)
+                elif isinstance(up, SocialUpdate):
+                    RelationshipService.apply_update(registry, up, world.tick)
         
         # 5. Verification: Narrative Memory
         assert len(hero.mind.narrative.turning_points) >= 1
@@ -115,7 +125,10 @@ class TestSocialRealismPipeline:
         assert "Saviour" in indirect_belief.apparent_reputation_tags
         
         # Merge into recipient
-        BeliefService.merge_indirect_belief(recipient, indirect_belief)
+        up = BeliefService.merge_indirect_belief(recipient, indirect_belief)
+        if up and up.entity_memory:
+            recipient.mind.perception.entity_memory.update(up.entity_memory)
+            
         stored = recipient.mind.perception.entity_memory[target.id]
         assert stored.knowledge_source == "indirect"
         assert stored.confidence < direct_belief.confidence

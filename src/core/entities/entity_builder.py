@@ -340,6 +340,26 @@ class EntityBuilder:
         # AOA Entity doesn't have home_storage yet, but we'll accept the call
         return self
 
+    def _seed_strategic_state(self, entity: Entity, mind: MindAspect):
+        """Seeds 1-2 fundamental directives based on identity and role. [PHASE 1]"""
+        from src.core.models.strategy import DirectiveRecord, DirectiveKind
+        arch = entity.identity.archetype
+        
+        directives = []
+        if arch == Archetype.GREEDY_SCAVENGER:
+            directives.append(DirectiveRecord(directive_id="dir_wealth", kind=DirectiveKind.PERSONAL, label="Accumulate wealth", priority=1.5, source="archetype"))
+        elif arch == Archetype.BLOODTHIRSTY_SLAYER:
+            directives.append(DirectiveRecord(directive_id="dir_power", kind=DirectiveKind.PERSONAL, label="Seek powerful foes", priority=2.0, source="archetype"))
+        elif arch == Archetype.HONORABLE_DEFENDER:
+            directives.append(DirectiveRecord(directive_id="dir_honor", kind=DirectiveKind.PERSONAL, label="Protect those in need", priority=1.8, source="archetype"))
+        elif arch == Archetype.COWARDLY_SURVIVOR:
+            directives.append(DirectiveRecord(directive_id="dir_survival", kind=DirectiveKind.PERSONAL, label="Avoid unnecessary risks", priority=2.5, source="archetype"))
+        
+        if entity.identity.role == EntityRole.HERO:
+            directives.append(DirectiveRecord(directive_id="dir_hero", kind=DirectiveKind.PROFESSIONAL, label="Complete contracts", priority=1.2, source="role"))
+            
+        mind.strategic.directives = directives
+
     def is_world_boss(self, boss: bool) -> EntityBuilder:
         self._is_world_boss = boss
         return self
@@ -469,6 +489,9 @@ class EntityBuilder:
         
         # Seed Lived Structures [PHASE 3]
         self._seed_lived_structures(entity, mind)
+        
+        # Seed Strategic State [PHASE 1]
+        self._seed_strategic_state(entity, mind)
 
         entity.combat = CombatAspect(
 

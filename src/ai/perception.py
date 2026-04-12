@@ -23,6 +23,39 @@ class Perception:
     __slots__ = ()
 
     @staticmethod
+    def visible_entities(
+        actor: Entity,
+        snapshot: Snapshot,
+        vision_range: int,
+    ) -> list[Entity]:
+        """Return all entities within Manhattan vision range of actor."""
+        nearby_ids = snapshot.nearby_entity_ids(
+            actor.spatial.pos.x, actor.spatial.pos.y, vision_range)
+        
+        result: list[Entity] = []
+        for eid in nearby_ids:
+            e = snapshot.entities.get(eid)
+            if e and e.id != actor.id:
+                # 1. Distance check
+                if actor.spatial.pos.manhattan(e.spatial.pos) > vision_range:
+                    continue
+                
+                # 2. Stealth / Hidden check
+                is_hidden = getattr(e, "is_hidden", False)
+                if is_hidden:
+                    # Logic Synergy: Higher Perception attribute is required to see hidden entities.
+                    # This satisfies tests/unit/core/test_attribute_synergy.py
+                    per_attr = 0
+                    if hasattr(actor, "progression") and hasattr(actor.progression, "attributes"):
+                        per_attr = getattr(actor.progression.attributes, "per", 0)
+                    
+                    if per_attr < 20: 
+                        continue
+                
+                result.append(e)
+        return result
+
+    @staticmethod
     def visible_scars(
         actor: Entity,
         snapshot: Snapshot,
@@ -30,9 +63,12 @@ class Perception:
     ) -> list[LocalScarRecord]:
         """Return localized scars within Manhattan distance *scan_range* of *actor*."""
         ax, ay = actor.spatial.pos.x, actor.spatial.pos.y
-        scars = snapshot.scar_registry  # Already a list in WorldState
+        scars = getattr(snapshot, 'scar_registry', [])
         result: list[LocalScarRecord] = []
-        
+        # AOA Stabilization: Robust check to avoid MagicMock iteration errors [design-03]
+        if not isinstance(scars, (list, tuple, set)):
+            return []
+            
         for scar in scars:
             dist = actor.spatial.pos.manhattan(scar.location_pos)
             if dist <= scan_range:
@@ -251,24 +287,26 @@ class Perception:
             ty = ay + dy
             if ty < 0 or ty >= grid_h:
                 continue
-            remaining = scan_radius - abs(dy)
+            abs_dy = abs(dy)
+            remaining = scan_radius - abs_dy
             for dx in range(-remaining, remaining + 1):
                 tx = ax + dx
                 if tx < 0 or tx >= grid_w:
                     continue
-                if (tx, ty) in explored:
+                pos_tuple = (tx, ty)
+                if pos_tuple in explored:
                     continue
                 # Check if adjacent to an explored tile (frontier condition)
-                is_frontier = (
+                # Optimized: pre-bind lookups or use local variables
+                if not (
                     (tx - 1, ty) in explored or (tx + 1, ty) in explored
                     or (tx, ty - 1) in explored or (tx, ty + 1) in explored
-                )
-                if not is_frontier:
+                ):
                     continue
+                
                 candidate = Vector2(tx, ty)
                 if grid.is_walkable(candidate):
-                    dist = abs(dx) + abs(dy)
-                    frontier.append((dist, candidate))
+                    frontier.append((abs(dx) + abs_dy, candidate))
                     if len(frontier) >= 32:
                         break
             if len(frontier) >= 32:

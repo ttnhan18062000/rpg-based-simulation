@@ -1,15 +1,18 @@
 from __future__ import annotations
 
 from src.actions.base import (
-    ActionType, ActionProposal, IntentUpdate, ProgressionUpdate, 
+    ActionType, ActionProposal, IntentUpdate, ProgressionUpdate,
     IdentityUpdate, InteractionUpdate, PerceptionUpdate, MindUpdate,
-    RoutineUpdate
+    RoutineUpdate, StrategicUpdate
 )
+from src.core.logic.strategic_knowledge_ingestion import StrategicKnowledgeIngestionService
 from src.core.gameplay.buildings import (
-    Building, RECIPES, RECIPE_MAP, SHOP_INVENTORY,
+    Building, RECIPES, RECIPE_MAP, SHOP_INVENTORY, MATERIAL_HINTS,
     can_craft, item_sell_price, shop_buy_price,
 )
-from src.core.models.enums import AIState, EntityRole
+from src.core.models.enums import (
+    AIState, EntityRole, OfferStatus, ContractKind, BlockerKind, AttachmentKind
+)
 from src.core.gameplay.items.item_registry import ITEM_REGISTRY
 from src.core.entities.entity import Entity
 from src.core.gameplay.items.items import ItemType, _item_power
@@ -143,20 +146,34 @@ def hero_wants_to_buy(actor: Entity) -> str | None:
 
 
 def hero_should_visit_blacksmith(actor: Entity) -> bool:
+    """True if hero has material or gold blockers that can be resolved at a blacksmith."""
     if not actor.inventory:
         return False
+    
+    # Standard: Check for any material blockers that need crafting or materials
+    has_mat_blocker = any(b for b in actor.mind.strategic.blockers if b.kind == BlockerKind.MATERIAL and not b.resolved)
+    if has_mat_blocker:
+        return True
+        
+    # Also visit if we don't know any recipes yet [bootstrapping]
     if not actor.identity.known_recipes:
         return True
-    if actor.identity.craft_target:
-        recipe = RECIPE_MAP.get(actor.identity.craft_target)
-        if recipe and can_craft(recipe, actor.progression.gold, actor.inventory.items):
-            return True
+        
     return False
 
 
 def hero_should_visit_guild(actor: Entity) -> bool:
+    """True if hero has knowledge blockers or is missing basic entity map intel."""
+    
+    # 1. Strategic: Check for any active knowledge blockers
+    has_know_blocker = any(b for b in actor.mind.strategic.blockers if b.kind == BlockerKind.KNOWLEDGE and not b.resolved)
+    if has_know_blocker:
+        return True
+        
+    # 2. Heuristic: No enemy knowledge in memory (bootstrapping discovery)
     if not actor.mind.perception.entity_memory:
-        return False
+        return True
+        
     known_prefixes = {"goblin", "wolf", "bandit", "skeleton", "zombie", "lich", "orc"}
     known_kinds = {em.get("kind", "") for em in actor.mind.perception.entity_memory.values() if isinstance(em, dict)}
     has_any_enemy_knowledge = any(
@@ -167,6 +184,12 @@ def hero_should_visit_guild(actor: Entity) -> bool:
 
 
 def hero_should_visit_class_hall(actor: Entity) -> bool:
+    """True if hero has capability blockers resolveable through training."""
+    has_cap_blocker = any(b for b in actor.mind.strategic.blockers if b.kind == BlockerKind.CAPABILITY and not b.resolved)
+    if has_cap_blocker:
+        return True
+        
+    # Also check if we have enough gold to learn something new but haven't yet
     from src.core.gameplay.classes import (
         HeroClass, available_class_skills, can_breakthrough, SKILL_DEFS,
     )
@@ -176,6 +199,7 @@ def hero_should_visit_class_hall(actor: Entity) -> bool:
         return False
     if hero_class == HeroClass.NONE:
         return False
+        
     known_ids = {s.skill_id for s in actor.progression.skills}
     available = available_class_skills(hero_class, actor.progression.level)
     for sid in available:
@@ -183,6 +207,7 @@ def hero_should_visit_class_hall(actor: Entity) -> bool:
             sdef = SKILL_DEFS.get(sid)
             if sdef and actor.progression.gold >= sdef.gold_cost:
                 return True
+                
     if actor.progression.attributes and can_breakthrough(hero_class, actor.progression.level, actor.progression.attributes):
         return True
     return False
@@ -192,12 +217,27 @@ def hero_should_visit_inn(actor: Entity) -> bool:
     if actor.progression.max_stamina <= 0:
         return False
     # Stage 4: Routine Integration
-    return actor.progression.stamina < actor.progression.max_stamina * 0.4 or actor.mind.routine.sleep_debt > 0.6
+    # Stage 4: Routine Integration
+    if actor.progression.stamina < actor.progression.max_stamina * 0.4 or actor.mind.routine.sleep_debt > 0.6:
+        return True
+    
+    # Phase 4: Social Drive (Recruitment/Networking)
+    if actor.progression.level >= 3 and not actor.mind.strategic.current_project_id:
+        # If we have gold and no project, maybe we go to the inn to find allies
+        if actor.progression.gold >= 50:
+            return True
+            
+    return False
 
 
 def hero_should_visit_home(actor: Entity) -> bool:
-    """True if hero should go home to store items or upgrade."""
-    # If we have items to store, we want to go home
+    """True if hero has access blockers or needs to store items."""
+    # 1. Strategic: Check for any access blockers (e.g. maintenance)
+    has_access_blocker = any(b for b in actor.mind.strategic.blockers if b.kind == BlockerKind.ACCESS and not b.resolved)
+    if has_access_blocker:
+        return True
+        
+    # 2. Capacity: If we have items to store, we want to go home
     if actor.inventory and actor.inventory.used_slots >= actor.inventory.max_slots - 1:
         return True
         
@@ -374,29 +414,47 @@ class VisitBlacksmithHandler(StateHandler):
                 for mid, qty in recipe.materials.items():
                     for _ in range(qty): mats.append(mid)
                 
+                # Standardization: Ingest material acquisition to resolve blockers [phase_3_task_5]
+                strat_up = StrategicKnowledgeIngestionService.ingest_material_acquisition(
+                    actor_id=actor.id, tick=snapshot.tick, item_ids=[recipe.output_item]
+                )
+                
                 return AIState.VISIT_BLACKSMITH, ActionProposal(
                     actor_id=actor.id, verb=ActionType.REST,
                     reason=f"Crafting {recipe.output_item}",
                     updates=[
                         ProgressionUpdate(inventory_remove=mats, gold_delta=-recipe.gold_cost, inventory_add=[recipe.output_item]),
-                        IdentityUpdate(craft_target=None)
+                        IdentityUpdate(craft_target=None),
+                        strat_up
                     ])
 
         if actor.identity.craft_target:
             recipe = RECIPE_MAP.get(actor.identity.craft_target)
             if recipe:
-                missing = []
+                missing_mats = {}
+                missing_strings = []
                 for mat_id, qty in recipe.materials.items():
                     have = inv.items.count(mat_id)
                     if have < qty:
-                        missing.append(f"{mat_id} ({have}/{qty})")
+                        missing_mats[mat_id] = (have, qty)
+                        missing_strings.append(f"{mat_id} ({have}/{qty})")
+                
                 gold_needed = max(0, recipe.gold_cost - actor.progression.gold)
-                reason = f"Need: {', '.join(missing)}"
-                if gold_needed > 0:
-                    reason += f" + {gold_needed}g"
+                
+                # Use Strategic Ingestion for rich resource/capability blockers [phase_3_task_5]
+                strategic_up = StrategicKnowledgeIngestionService.ingest_blacksmith_constraint(
+                    actor_id=actor.id,
+                    tick=snapshot.tick,
+                    recipe_id=recipe.recipe_id,
+                    missing_materials=missing_mats,
+                    gold_needed=gold_needed,
+                    objective_id=actor.mind.strategic.current_objective_id
+                )
+                
                 return AIState.WANDER, ActionProposal(
                     actor_id=actor.id, verb=ActionType.REST,
-                    reason=f"Left blacksmith to gather materials — {reason}")
+                    reason=f"Left blacksmith (missing requirements: {', '.join(missing_strings)})",
+                    updates=[strategic_up])
 
         return AIState.RESTING_IN_TOWN, ActionProposal(
             actor_id=actor.id, verb=ActionType.REST,
@@ -434,12 +492,6 @@ class VisitGuildHandler(StateHandler):
             if nk not in actor.mind.perception.terrain_memory:
                 revealed[nk] = node.terrain.value if hasattr(node.terrain, 'value') else int(node.terrain)
 
-        if revealed:
-            return AIState.VISIT_GUILD, ActionProposal(
-                actor_id=actor.id, verb=ActionType.REST,
-                reason=f"Guild revealed {len(revealed)} locations!",
-                updates=[PerceptionUpdate(terrain_memory=revealed)])
-
         from src.core.gameplay.quests import generate_quest, MAX_ACTIVE_QUESTS
         active_quests = [q for q in actor.progression.quests if not q.completed]
         if len(active_quests) < MAX_ACTIVE_QUESTS:
@@ -460,36 +512,45 @@ class VisitGuildHandler(StateHandler):
                     reason=f"Accepted quest: {new_quest.title}",
                     updates=[ProgressionUpdate(quest_add=[new_quest])])
 
-        from src.core.gameplay.buildings import MATERIAL_HINTS
-        new_goals = []
+        material_hints = {}
         if actor.identity.craft_target:
             recipe = RECIPE_MAP.get(actor.identity.craft_target)
             if recipe:
                 for mat_id in recipe.materials:
                     hint = MATERIAL_HINTS.get(mat_id)
-                    if hint and hint not in actor.mind.decision.goals:
-                        new_goals.append(f"Guild tip: {mat_id} — {hint}")
+                    if hint:
+                        material_hints[mat_id] = hint
 
-        terrain_tips = [
-            "Forests (green) host wolves — wolf pelts and fangs drop there.",
-            "Deserts (tan) host bandits — fiber and raw gems found there.",
-            "Swamps (purple) host undead — bone shards and ectoplasm drop there.",
-            "Mountains (grey) host orcs — stone blocks and iron ore found there.",
-        ]
-        for tip in terrain_tips:
-            goal_text = f"Guild tip: {tip}"
-            if goal_text not in actor.mind.decision.goals:
-                new_goals.append(goal_text)
+        # 3. Use Strategic Ingestion for rich uncertainty-aware intel [phase_3_task_4]
+        # We don't reveal exact terrain memory anymore for hints; we use LeadRecords/Zones.
+        camps_to_ingest = []
+        for cx, cy in snapshot.camps:
+             if (cx, cy) not in actor.mind.perception.terrain_memory:
+                  camps_to_ingest.append((cx, cy))
+        
+        resources_to_ingest = []
+        for node in snapshot.resource_nodes:
+            nk = (node.spatial.pos.x, node.spatial.pos.y)
+            if nk not in actor.mind.perception.terrain_memory:
+                resources_to_ingest.append((nk[0], nk[1], node.item_group if hasattr(node, "item_group") else "unknown"))
 
-        if new_goals or revealed:
-            final_updates = []
-            if revealed: final_updates.append(PerceptionUpdate(terrain_memory=revealed))
-            if new_goals: final_updates.append(MindUpdate(goals_add=new_goals))
-            
-            return AIState.VISIT_GUILD, ActionProposal(
-                actor_id=actor.id, verb=ActionType.REST,
-                reason=f"Got intel from guild hall",
-                updates=final_updates)
+        strategic_up = StrategicKnowledgeIngestionService.ingest_guild_intel(
+            actor_id=actor.id,
+            tick=snapshot.tick,
+            material_hints=material_hints,
+            camps_found=camps_to_ingest,
+            resources_found=resources_to_ingest
+        )
+
+        final_updates = [strategic_up]
+        if revealed:
+             # PerceptionUpdate is now strictly for immediate map reveal, not intel tracking
+             final_updates.append(PerceptionUpdate(terrain_memory=revealed))
+             
+        return AIState.VISIT_GUILD, ActionProposal(
+            actor_id=actor.id, verb=ActionType.REST,
+            reason=f"Got rich strategic intel from guild hall (Leads: {len(strategic_up.leads_add_or_update)})",
+            updates=final_updates)
 
         return AIState.RESTING_IN_TOWN, ActionProposal(
             actor_id=actor.id, verb=ActionType.REST,
@@ -521,7 +582,6 @@ class VisitClassHallHandler(StateHandler):
             return AIState.RESTING_IN_TOWN, ActionProposal(
                 actor_id=actor.id, verb=ActionType.REST, reason="No class → switching")
 
-        from src.systems.lifecycle.progression_system import available_class_skills, can_learn_skill
         from src.core.gameplay.classes import SkillInstance
         
         known_ids = {s.skill_id for s in actor.progression.skills}
@@ -534,10 +594,34 @@ class VisitClassHallHandler(StateHandler):
                 if not can_learn:
                     continue
                         
+                # Standardization: Ingest capability acquisition [phase_3_task_5]
+                strat_up = StrategicKnowledgeIngestionService.ingest_capability_acquisition(
+                    actor_id=actor.id, tick=snapshot.tick, skill_id=sid
+                )
+                
                 return AIState.VISIT_CLASS_HALL, ActionProposal(
                     actor_id=actor.id, verb=ActionType.REST, 
                     reason=f"Learning skill: {sdef.name}",
-                    updates=[ProgressionUpdate(gold_delta=-sdef.gold_cost, skills_add=[sid])])
+                    updates=[
+                        ProgressionUpdate(gold_delta=-sdef.gold_cost, skills_add=[SkillInstance(skill_id=sid)]),
+                        strat_up
+                    ])
+
+        # If we didn't learn anything, check if we are gated [phase_6_task_1]
+        for sid in available:
+            if sid not in known_ids:
+                sdef = SKILL_DEFS.get(sid)
+                if sdef and actor.progression.gold < sdef.gold_cost:
+                    strategic_up = StrategicKnowledgeIngestionService.ingest_class_hall_requirement(
+                        actor_id=actor.id,
+                        tick=snapshot.tick,
+                        skill_id=sid,
+                        reason=f"Insufficient gold ({actor.progression.gold}/{sdef.gold_cost})"
+                    )
+                    return AIState.RESTING_IN_TOWN, ActionProposal(
+                        actor_id=actor.id, verb=ActionType.REST, 
+                        reason=f"Gated at class hall: {sid} (Needs gold)",
+                        updates=[strategic_up])
 
         if actor.progression.attributes and can_breakthrough(hero_class, actor.progression.level, actor.progression.attributes):
             bt = BREAKTHROUGHS.get(hero_class)
@@ -572,18 +656,68 @@ class VisitInnHandler(StateHandler):
 
         hp_needed = actor.combat.max_hp - actor.combat.hp
         sta_needed = actor.progression.max_stamina - actor.progression.stamina
-        
         if hp_needed > 0 or sta_needed > 0 or actor.mind.routine.sleep_debt > 0.1:
             return AIState.SLEEPING, ActionProposal(
                 actor_id=actor.id, verb=ActionType.SLEEP,
                 reason="Checking into inn to sleep",
                 updates=[RoutineUpdate(is_sleeping=True)])
 
+        # Phase 4: Social Coordination
+        from src.ai.strategy.recruitment_negotiation import RecruitmentNegotiationService
+        
+        # A. Evaluate Pending Offers (Candidate side)
+        for off in actor.mind.strategic.offers:
+            if off.status == OfferStatus.PENDING:
+                accepted = RecruitmentNegotiationService.evaluate_offer(ctx, off)
+                new_status = OfferStatus.ACCEPTED if accepted else OfferStatus.DECLINED
+                
+                updated_off = off.model_copy(update={"status": new_status})
+                return AIState.VISIT_INN, ActionProposal(
+                    actor_id=actor.id, verb=ActionType.REST,
+                    reason=f"{'Accepted' if accepted else 'Declined'} recruitment offer from {off.founder_id}",
+                    updates=[StrategicUpdate(offers_add_or_update=[updated_off])])
+                    
+        # B. Generate Offers (Founder side)
+        # If we have a project that needs allies
+        prj = actor.mind.strategic.current_project
+        if prj and len(prj.objectives) > 0 and actor.progression.gold >= 100:
+            # Check if we have enough members? (Simulated for now)
+            from src.ai.strategy.social_candidate_selection import SocialCandidateSelectionService
+            candidates = SocialCandidateSelectionService.find_candidates(ctx, prj)
+            if candidates:
+                cand = candidates[0]
+                # Check if we already have a pending offer for this person
+                existing = [o for o in actor.mind.strategic.offers if o.candidate_id == cand.entity_id and o.status == OfferStatus.PENDING]
+                if not existing:
+                    new_off = RecruitmentNegotiationService.create_offer(ctx, cand.entity_id, prj)
+                    return AIState.VISIT_INN, ActionProposal(
+                        actor_id=actor.id, verb=ActionType.REST,
+                        reason=f"Generating recruitment offer for {cand.entity_id} at the Inn",
+                        updates=[StrategicUpdate(offers_add_or_update=[new_off])])
+
         from src.core.gameplay.effects import well_rested_effect
+        
+        # Phase 6: Rumor Ingestion (Task 1)
+        rumors = [
+            "Heavy bandit activity reported near the Oasis.",
+            "A dark fog has settled over the Ruins.",
+            "Guild scouts spotted a massive wolf in the Forest."
+        ]
+        rumor = ctx.rng.choice(rumors)
+        strategic_up = StrategicKnowledgeIngestionService.ingest_inn_rumor(
+            actor_id=actor.id,
+            tick=snapshot.tick,
+            rumor_text=rumor,
+            danger_level=0.3 if "bandit" in rumor or "wolf" in rumor else 0.6
+        )
+
         return AIState.RESTING_IN_TOWN, ActionProposal(
             actor_id=actor.id, verb=ActionType.REST,
             reason="Fully recovered at inn + Well-Rested! → checking other activities",
-            updates=[ProgressionUpdate(effects_add=[well_rested_effect()])])
+            updates=[
+                ProgressionUpdate(effects_add=[well_rested_effect()]),
+                strategic_up
+            ])
 
 
 class VisitHomeHandler(StateHandler):
@@ -596,7 +730,6 @@ class VisitHomeHandler(StateHandler):
         # Resolve home position: 1. spatial.home_pos, 2. PlaceAttachment(HOME)
         target_pos = actor.spatial.home_pos
         if not target_pos:
-            from src.core.models.enums import AttachmentKind
             attachment = next((a for a in actor.mind.place_attachments if a.kind == AttachmentKind.HOME), None)
             if attachment:
                 target_pos = attachment.location_pos
@@ -617,12 +750,18 @@ class VisitHomeHandler(StateHandler):
 
         cost = storage.upgrade_cost()
         if cost is not None and actor.progression.gold >= cost:
+            # Standardization: Home maintenance resolution [phase_3_task_5]
+            strat_up = StrategicKnowledgeIngestionService.ingest_home_upgrade_success(
+                actor_id=actor.id, tick=snapshot.tick
+            )
+            
             return AIState.VISIT_HOME, ActionProposal(
                 actor_id=actor.id, verb=ActionType.REST,
                 reason=f"Upgrading home storage",
                 updates=[
                     ProgressionUpdate(gold_delta=-cost),
-                    InteractionUpdate(home_storage_upgrade=True)
+                    InteractionUpdate(home_storage_upgrade=True),
+                    strat_up
                 ])
 
         stored = []
@@ -671,6 +810,22 @@ class VisitHomeHandler(StateHandler):
                 reason="Eating at home",
                 updates=[RoutineUpdate(hunger_delta=-0.2)])
 
+        # Phase 6: Home Maintenance/Pressure Ingestion (Task 1)
+        needs_rebuild = False
+        if hasattr(actor.spatial, "home_building_id") and actor.spatial.home_building_id:
+             # Find the actual building building to check durability
+             for b in snapshot.buildings:
+                 if b.building_id == actor.spatial.home_building_id:
+                     needs_rebuild = b.durability < 20.0
+                     break
+                     
+        strategic_up = StrategicKnowledgeIngestionService.ingest_home_maintenance(
+            actor_id=actor.id,
+            tick=snapshot.tick,
+            needs_rebuild=needs_rebuild
+        )
+
         return AIState.RESTING_IN_TOWN, ActionProposal(
             actor_id=actor.id, verb=ActionType.REST,
-            reason="Done at home → checking other activities")
+            reason="Done at home → checking other activities",
+            updates=[strategic_up])

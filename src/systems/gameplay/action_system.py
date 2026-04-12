@@ -10,7 +10,7 @@ from __future__ import annotations
 import logging
 import math
 from typing import TYPE_CHECKING, Any, Callable
-from src.core.models.enums import AIState, ActionType, Element, GoalType, EmotionType, HeroClass
+from src.core.models.enums import AIState, ActionType, Element, GoalType, EmotionType, HeroClass, StrategicStatus
 from src.core.entities.entity import Entity
 from src.actions.base import (
     ActionProposal, IntentUpdate, MindUpdate, NavigationUpdate, CombatTraceUpdate,
@@ -133,8 +133,9 @@ class ActionSystem(System):
                         entity.mind.routine.is_sleeping = False
                         
                     entity.mind.decision.ai_state = new_state
-                    if entity.mind.decision.goal_committed_at == 0:
-                         entity.mind.decision.goal_committed_at = world.tick
+            # [AOA STABILIZATION] Removed auto-initialization of goal_committed_at here.
+            # AIBrain now handles this authoritatively to avoid Tick 1 reset bugs.
+                 
             if proposal.reason:
                 entity.mind.decision.last_reason = proposal.reason
 
@@ -151,7 +152,10 @@ class ActionSystem(System):
     @classmethod
     def _apply_updates(cls, world: WorldState, actor: Entity, updates: list[IntentUpdate], proposal: ActionProposal) -> None:
         """Apply typed simulation side-effects (AOA Phase 5)."""
-        from src.actions.base import MindUpdate, PerceptionUpdate, ProgressionUpdate, NavigationUpdate, SocialUpdate, RoutineUpdate
+        from src.actions.base import (
+            MindUpdate, PerceptionUpdate, ProgressionUpdate, NavigationUpdate, 
+            SocialUpdate, RoutineUpdate, StrategicUpdate
+        )
         
         for up in updates:
             # Stage 5: Multi-entity update support
@@ -174,6 +178,8 @@ class ActionSystem(System):
                     decision.last_goal = up.last_goal
                 if up.driver_details is not None:
                     decision.driver_details = up.driver_details
+                if up.goal_committed_at is not None:
+                    decision.goal_committed_at = up.goal_committed_at
                 
                 # Grudge / Emotion handling
                 if up.grudge_delta:
@@ -196,9 +202,19 @@ class ActionSystem(System):
                     for tid, delta in up.threat_delta.items():
                         entity.mind.perception.threat_table[tid] = entity.mind.perception.threat_table.get(tid, 0.0) + delta
                 if up.entity_memory:
-                    from src.ai.beliefs import BeliefService
                     for target_id, new_belief in up.entity_memory.items():
-                        BeliefService.merge_indirect_belief(entity, new_belief)
+                        # Authoritative Merge: Update existing record or add new one
+                        existing = entity.mind.perception.entity_memory.get(target_id)
+                        if existing:
+                            # Use model_copy to preserve unchanged fields and respect AOA isolation
+                            entity.mind.perception.entity_memory[target_id] = existing.model_copy(update=new_belief.model_dump(exclude_unset=True))
+                        else:
+                            entity.mind.perception.entity_memory[target_id] = new_belief
+
+                if up.turning_points_add:
+                    for tp in up.turning_points_add:
+                        entity.mind.narrative.add_turning_point(tp)
+
                 if up.memory_log_add:
                     log = entity.mind.narrative.memory_log
                     log.extend(up.memory_log_add)
@@ -285,6 +301,19 @@ class ActionSystem(System):
                 if up.is_sleeping is not None:
                     entity.mind.routine.is_sleeping = up.is_sleeping
 
+            elif isinstance(up, NavigationUpdate):
+                nav = entity.mind.navigation
+                if up.pos_history:
+                    nav.pos_history = up.pos_history
+                if up.cached_path is not None:
+                    nav.cached_path = up.cached_path
+                if up.target_pos is not None:
+                    nav.cached_path_target = up.target_pos
+                if up.chase_ticks is not None:
+                    nav.chase_ticks = up.chase_ticks
+                if up.engaged_ticks is not None:
+                    nav.engaged_ticks = up.engaged_ticks
+
             elif isinstance(up, SpatialUpdate):
                 # AOA Stabilization: Authoritative position update via WorldState
                 # This ensures the spatial index is updated for AoE and navigation.
@@ -299,7 +328,8 @@ class ActionSystem(System):
                 res = up.result
                 target = world.entities.get(res.defender_id)
                 if target and target.combat.alive:
-                    target.combat.hp = max(0, target.combat.hp - res.damage)
+                    # AOA Phase 5: HP reduction is now handled authoritatively by ProgressionUpdate
+                    # to prevent double-dipping. Trace persists for narrative/UI/threat.
                     
                     # AOA Stabilization: Handle Shattered (Frozen) expiration on target
                     if res.details and getattr(res.details, "is_shattered", False):
@@ -449,6 +479,185 @@ class ActionSystem(System):
                         # Emit a NEW update to the same entity (the one perceiving the change)
                         # Note: We append to 'updates' so the current loop picks it up immediately.
                         updates.append(PerceptionUpdate(memory_log_add=[entry]))
+
+            elif isinstance(up, StrategicUpdate):
+                strat = entity.mind.strategic
+                
+                # Phase 1 Stage 4: Deterministic Merging by ID
+                if up.directives_add:
+                    for d in up.directives_add:
+                        found = False
+                        for i, existing in enumerate(strat.directives):
+                            if existing.directive_id == d.directive_id:
+                                strat.directives[i] = d
+                                found = True
+                                break
+                        if not found:
+                            strat.directives.append(d)
+                if up.directives_remove:
+                    strat.directives = [d for d in strat.directives if d.directive_id not in up.directives_remove]
+                
+                if up.projects_add_or_update:
+                    for prj in up.projects_add_or_update:
+                        found = False
+                        for i, existing in enumerate(strat.projects):
+                            if existing.project_id == prj.project_id:
+                                # If found, check for status transition
+                                if existing.status != prj.status:
+                                    from src.utils.metrics import SIM_STRATEGIC_PROJECT_STATUS
+                                    if prj.status == StrategicStatus.RESOLVED:
+                                        SIM_STRATEGIC_PROJECT_STATUS.labels(
+                                            kind=prj.kind.name.lower() if hasattr(prj.kind, "name") else str(prj.kind).lower(),
+                                            status="completed"
+                                        ).inc()
+                                    elif prj.status == StrategicStatus.ABANDONED:
+                                        SIM_STRATEGIC_PROJECT_STATUS.labels(
+                                            kind=prj.kind.name.lower() if hasattr(prj.kind, "name") else str(prj.kind).lower(),
+                                            status="abandoned"
+                                        ).inc()
+                                strat.projects[i] = prj
+                                found = True
+                                break
+                        if not found:
+                            strat.projects.append(prj)
+                            from src.utils.metrics import SIM_STRATEGIC_PROJECT_STATUS
+                            SIM_STRATEGIC_PROJECT_STATUS.labels(
+                                kind=prj.kind.name.lower() if hasattr(prj.kind, "name") else str(prj.kind).lower(),
+                                status="started"
+                            ).inc()
+                if up.projects_remove:
+                    strat.projects = [prj for prj in strat.projects if prj.project_id not in up.projects_remove]
+                
+                if up.concerns_add_or_update:
+                    for c in up.concerns_add_or_update:
+                        found = False
+                        for i, existing in enumerate(strat.concerns):
+                            if existing.concern_id == c.concern_id:
+                                strat.concerns[i] = c
+                                found = True
+                                break
+                        if not found:
+                            strat.concerns.append(c)
+                if up.concerns_remove:
+                    strat.concerns = [c for c in strat.concerns if c.concern_id not in up.concerns_remove]
+                
+                if up.obligations_add_or_update:
+                    for o in up.obligations_add_or_update:
+                        found = False
+                        for i, existing in enumerate(strat.obligations):
+                            if existing.obligation_id == o.obligation_id:
+                                strat.obligations[i] = o
+                                found = True
+                                break
+                        if not found:
+                            strat.obligations.append(o)
+                if up.obligations_remove:
+                    strat.obligations = [o for o in strat.obligations if o.obligation_id not in up.obligations_remove]
+                
+                if up.contracts_add_or_update:
+                    for ct in up.contracts_add_or_update:
+                        # Phase 4: Trigger social/reputation consequences on resolution or failure
+                        if ct.status in (StrategicStatus.RESOLVED, StrategicStatus.ABANDONED):
+                             from src.ai.strategy.contract_outcome import ContractOutcomeService
+                             ContractOutcomeService.resolve_contract(world, ct, ct.status, emit=emit)
+                             
+                             if ct.status == StrategicStatus.ABANDONED:
+                                 from src.utils.metrics import SIM_STRATEGIC_CONTRACT_BREACHES
+                                 SIM_STRATEGIC_CONTRACT_BREACHES.labels(
+                                     contract_kind=ct.kind.name.lower() if hasattr(ct.kind, "name") else str(ct.kind).lower(),
+                                     reason="abandoned"
+                                 ).inc()
+
+                        found = False
+                        for i, existing in enumerate(strat.contracts):
+                            if existing.contract_id == ct.contract_id:
+                                strat.contracts[i] = ct
+                                found = True
+                                break
+                        if not found:
+                            strat.contracts.append(ct)
+                if up.contracts_remove:
+                    strat.contracts = [ct for ct in strat.contracts if ct.contract_id not in up.contracts_remove]
+                
+                if up.offers_add_or_update:
+                    for off in up.offers_add_or_update:
+                        found = False
+                        for i, existing in enumerate(strat.offers):
+                            if existing.offer_id == off.offer_id:
+                                strat.offers[i] = off
+                                found = True
+                                break
+                        if not found:
+                            strat.offers.append(off)
+                if up.offers_remove:
+                    strat.offers = [off for off in strat.offers if off.offer_id not in up.offers_remove]
+                
+                if up.leads_add_or_update:
+                    for ld in up.leads_add_or_update:
+                        found = False
+                        for i, existing in enumerate(strat.leads):
+                            if existing.lead_id == ld.lead_id:
+                                strat.leads[i] = ld
+                                found = True
+                                break
+                        if not found:
+                            strat.leads.append(ld)
+                if up.leads_remove:
+                    strat.leads = [ld for ld in strat.leads if ld.lead_id not in up.leads_remove]
+                
+                if up.candidate_zones_add_or_update:
+                    for cz in up.candidate_zones_add_or_update:
+                        found = False
+                        for i, existing in enumerate(strat.candidate_zones):
+                            if existing.zone_id == cz.zone_id:
+                                strat.candidate_zones[i] = cz
+                                found = True
+                                break
+                        if not found:
+                            strat.candidate_zones.append(cz)
+                if up.candidate_zones_remove:
+                    strat.candidate_zones = [cz for cz in strat.candidate_zones if cz.zone_id not in up.candidate_zones_remove]
+                
+                if up.hypotheses_add_or_update:
+                    for hy in up.hypotheses_add_or_update:
+                        found = False
+                        for i, existing in enumerate(strat.hypotheses):
+                            if existing.hypothesis_id == hy.hypothesis_id:
+                                strat.hypotheses[i] = hy
+                                found = True
+                                break
+                        if not found:
+                            strat.hypotheses.append(hy)
+                if up.hypotheses_remove:
+                    strat.hypotheses = [hy for hy in strat.hypotheses if hy.hypothesis_id not in up.hypotheses_remove]
+                
+                if up.blockers_add_or_update:
+                    for bl in up.blockers_add_or_update:
+                        found = False
+                        for i, existing in enumerate(strat.blockers):
+                            if existing.blocker_id == bl.blocker_id:
+                                strat.blockers[i] = bl
+                                found = True
+                                break
+                        if not found:
+                            strat.blockers.append(bl)
+                if up.blockers_remove:
+                    strat.blockers = [bl for bl in strat.blockers if bl.blocker_id not in up.blockers_remove]
+                if up.current_project_id is not None:
+                    strat.current_project_id = up.current_project_id
+                if up.current_objective_id is not None:
+                    strat.current_objective_id = up.current_objective_id
+                if up.interrupted_project_id is not None:
+                    strat.interrupted_project_id = up.interrupted_project_id
+                
+                if up.project_lock_until is not None:
+                    strat.project_lock_until = up.project_lock_until
+                if up.engaged_ticks is not None:
+                    strat.engaged_ticks = up.engaged_ticks
+                if up.strategic_drivers:
+                    strat.recent_drivers = up.strategic_drivers
+                
+                strat.last_strategic_tick = world.tick
 
             elif isinstance(up, RoutineUpdate):
                 # Phase 3: Biological State Transitions
@@ -675,14 +884,39 @@ class ActionSystem(System):
                 if defender:
                     events = EventInterpreterService.interpret_combat_aftermath(actor, defender, up.result, world)
                     for event in events:
-                        SocialStateApplicator.apply_interpreted_event(event, world)
+                        # 1. Social Interpretation
+                        social_up = SocialStateApplicator.apply_interpreted_event(event, world)
+                        if social_up:
+                            updates.extend(social_up)
+                        
+                        # 2. Strategic Consequences (Separate Layer)
+                        from src.core.logic.strategic_consequence_service import StrategicConsequenceService
+                        # Pass TP candidate if one was generated in the interpretation phase
+                        tp_up = next((u for u in social_up if isinstance(u, PerceptionUpdate) and u.turning_points_add), None)
+                        tp_record = tp_up.turning_points_add[0] if tp_up else None
+                        
+                        strat_up = StrategicConsequenceService.process_consequences(world, actor, event, tp_record)
+                        if strat_up:
+                            updates.append(strat_up)
 
         # 2. Positional/Tactical Events
         spatial_up = next((u for u in updates if isinstance(u, SpatialUpdate)), None)
         if spatial_up:
             event = EventInterpreterService.interpret_tactical_outcome(world, actor, spatial_up)
             if event:
-                SocialStateApplicator.apply_interpreted_event(event, world)
+                # 1. Social Interpretation
+                social_up = SocialStateApplicator.apply_interpreted_event(event, world)
+                if social_up:
+                    updates.extend(social_up)
+                
+                # 2. Strategic Consequences
+                from src.core.logic.strategic_consequence_service import StrategicConsequenceService
+                tp_up = next((u for u in social_up if isinstance(u, PerceptionUpdate) and u.turning_points_add), None)
+                tp_record = tp_up.turning_points_add[0] if tp_up else None
+                
+                strat_up = StrategicConsequenceService.process_consequences(world, actor, event, tp_record)
+                if strat_up:
+                    updates.append(strat_up)
 
     @classmethod
     def _process_proximity_gossip(cls, world: WorldState, actor: Entity, updates: list[IntentUpdate]) -> None:
@@ -695,14 +929,14 @@ class ActionSystem(System):
             dist = actor.spatial.pos.manhattan(other.spatial.pos)
             if dist <= 5:
                 # Proximity exists — trigger gossip from actor to other
-                up = KnowledgePropagationService.propagate_gossip(actor, other, world)
-                if up:
-                    updates.append(up)
+                p_up, s_up = KnowledgePropagationService.propagate_gossip(actor, other, world)
+                if p_up: updates.append(p_up)
+                if s_up: updates.append(s_up)
                     
                 # Reciprocal gossip (Other to Actor)
-                up_back = KnowledgePropagationService.propagate_gossip(other, actor, world)
-                if up_back:
-                    updates.append(up_back)
+                p_up_back, s_up_back = KnowledgePropagationService.propagate_gossip(other, actor, world)
+                if p_up_back: updates.append(p_up_back)
+                if s_up_back: updates.append(s_up_back)
 
     def _update_ai_derived_states(self, context: SystemContext, applied: list[ActionProposal]) -> None:
         world = context.world

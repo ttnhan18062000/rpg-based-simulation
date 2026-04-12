@@ -147,7 +147,8 @@ class HysteresisModifier(ScoreModifier):
     def modify(self, score: GoalScore, ctx: AIContext) -> None:
         mind_dec = ctx.actor.mind.decision
         if mind_dec.last_goal == score.goal:
-            ticks_held = max(0, ctx.snapshot.tick - mind_dec.goal_committed_at)
+            committed_at = mind_dec.goal_committed_at or 0
+            ticks_held = max(0, ctx.snapshot.tick - committed_at)
             boost = 1.25 + 0.05 * min(ticks_held, 10)
             score.score *= boost
 
@@ -183,7 +184,8 @@ class MemoryModifier(ScoreModifier):
                 score.score *= 1.0 + glory / 100.0
             
             # Nemesis fear: discourage fighting a high-grudge rival directly (0.1x penalty)
-            # Soul Pillar: Lower threshold (5.0) to capture early grudge generation
+            # AOA Architectural Note: This check usesCtx.nearest_enemy which retrieves from snapshot.
+            # If the enemy is a nemesis, we strongly suppress the COMBAT goal.
             enemy = ctx.nearest_enemy()
             if enemy and mind.emotion.grudges.get(enemy.id, 0.0) >= 5.0:
                 score.score *= 0.1
@@ -192,11 +194,11 @@ class MemoryModifier(ScoreModifier):
             if trauma < 0:
                 score.score *= 1.0 + abs(trauma) / 100.0
             
-            # Nemesis bias: if a known nemesis is visible, EXTREME boost to flee (10.0x)
-            # Soul Pillar: Lower threshold (5.0) to capture early grudge generation
+            # Nemesis bias: if a known nemesis is visible, EXTREME boost to flee (20.0x)
+            # Phase 2 Refinement: Increased to 20.0x to ensure override of tactical aggression.
             enemy = ctx.nearest_enemy()
             if enemy and mind.emotion.grudges.get(enemy.id, 0.0) >= 5.0:
-                score.score *= 10.0
+                score.score *= 20.0
         if goal == GoalType.EXPLORE:
             discoveries = sum(
                 1 for e in mind.narrative.memory_log
@@ -227,20 +229,26 @@ class SkirmishModifier(ScoreModifier):
         
         if ctx.actor.progression.hero_class in ranged_classes:
             goal = score.goal
-            # If a hostile is adjacent, boost flee or move_away
-            if goal in (GoalType.FLEE, GoalType.EXPLORE): # Use EXPLORE as proxy for generic move
-                target_id = ctx.actor.combat.combat_target_id
-                if target_id:
-                    mem = ctx.actor.mind.perception.entity_memory.get(target_id)
-                    if mem:
-                        # MemoryRecord is a Pydantic model
-                        t_pos = getattr(mem, "pos", None)
-                        if t_pos:
-                            from src.core.models.vectors import Vector2
-                            v_target = Vector2.from_any(t_pos)
-                            dist = ctx.actor.spatial.pos.manhattan(v_target)
-                            if dist <= 3:
-                                score.score *= 2.0
+            # If a hostile is in range or we have a target, stay in combat/hunt
+            target_id = ctx.actor.combat.combat_target_id
+            target_pos = None
+            if target_id:
+                mem = ctx.actor.mind.perception.entity_memory.get(target_id)
+                if mem: target_pos = getattr(mem, "pos", None)
+            
+            if not target_pos:
+                enemy = ctx.nearest_enemy()
+                if enemy: target_pos = enemy.spatial.pos
+
+            if target_pos:
+                dist = ctx.actor.spatial.pos.manhattan(target_pos)
+                if dist <= 8: # Skirmish engagement range
+                    if goal == GoalType.COMBAT:
+                        score.score *= 1.5
+                    if goal == GoalType.EXPLORE and dist <= 3: # Move away (kiting)
+                        score.score *= 2.0
+                    if goal == GoalType.REST:
+                        score.score *= 0.1 # Never rest while skirmishing
 
 
 class AmbitionModifier(ScoreModifier):
@@ -355,19 +363,31 @@ class GoalEvaluator:
         return scores
 
     def is_goal_locked(self, ctx: AIContext) -> bool:
-        min_ticks = getattr(ctx.config, 'min_commitment_ticks', 3)
+        """Check if the current goal should be held to prevent flip-flopping.
+        
+        AOA Enforcement: State locks prevent high-frequency decision jitter.
+        """
+        # Never lock IDLE state; we always want to find a goal.
+        if ctx.actor.mind.decision.ai_state == AIState.IDLE:
+            return False
+            
         committed_at = ctx.actor.mind.decision.goal_committed_at
+        if committed_at < 0:
+            return False
+            
         ticks_held = ctx.snapshot.tick - committed_at
+        min_ticks = getattr(ctx.config, 'min_commitment_ticks', 3)
 
+        # Window check: 0 <= ticks_held < min_ticks
         if 0 <= ticks_held < min_ticks:
-            # Soul/Personality override: fear breaks the lock early
+            # Soul/Personality override: extreme fear or critical injury breaks the lock
             panic = ctx.actor.mind.emotion.panic
             personality = ctx.actor.mind.decision.personality
-            if ctx.actor.combat.hp_ratio < 0.5 and (personality.neuroticism > 0.5 or panic > 0.5):
+            
+            # Use a more resilient threshold for breaking locks (0.25 HP or 0.8 Panic)
+            if ctx.actor.combat.hp_ratio < 0.25 or panic > 0.8:
                 return False
-            # Critical override for all: near death breaks the lock
-            if ctx.actor.combat.hp_ratio < 0.15:
-                return False
+                
             return True
         return False
 

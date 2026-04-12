@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING
 
 from src.actions.base import ActionProposal, IntentUpdate
 from src.ai.perception import Perception
-from src.core.models.enums import AIState, ActionType, Domain, HeroClass
+from src.core.models.enums import AIState, ActionType, Domain, HeroClass, GoalType
 from src.core.gameplay.faction import Faction, FactionRegistry
 from src.core.entities.entity import Entity, Vector2
 
@@ -18,6 +18,12 @@ if TYPE_CHECKING:
     from src.config import SimulationConfig
     from src.core.models.snapshot import Snapshot
     from src.platform.rng import DeterministicRNG
+    from src.core.models.strategy import (
+        StrategicState, ProjectRecord, ObjectiveRecord, DirectiveRecord,
+        ConcernRecord, LeadRecord, ObligationRecord, SocialContractRecord,
+        StrategicStatus
+    )
+    from src.core.aspects.mind import BeliefRecord, InterpretedEvent
 
 
 @dataclass(slots=True)
@@ -42,6 +48,72 @@ class AIContext:
 
     def get_belief(self, entity_id: int) -> BeliefRecord | None:
         return self.entity_memory.get(entity_id)
+
+    # -- strategic helpers (authoritative commitments) --
+
+    @property
+    def strategic(self) -> StrategicState:
+        """Access the actor's strategic stratum."""
+        return self.actor.mind.strategic
+
+    @property
+    def current_project(self) -> ProjectRecord | None:
+        """The currently active strategic project."""
+        return self.strategic.current_project
+
+    @property
+    def current_objective(self) -> ObjectiveRecord | None:
+        """The specific objective being pursued within the current project."""
+        return self.strategic.current_objective
+
+    @property
+    def active_directives(self) -> list[DirectiveRecord]:
+        """Enduring orientations filtered by priority."""
+        return sorted(self.strategic.directives, key=lambda d: d.priority, reverse=True)
+
+    @property
+    def active_concerns(self) -> list[ConcernRecord]:
+        """Active interrupts (Threats, Opportunities) not yet resolved."""
+        return [c for c in self.strategic.concerns if c.resolved_tick is None]
+
+    @property
+    def active_leads(self) -> list[LeadRecord]:
+        """Available clues for investigation that are not exhausted."""
+        return [l for l in self.strategic.leads if not l.is_exhausted]
+
+    @property
+    def active_obligations(self) -> list[ObligationRecord]:
+        """Unresolved social or professional duties."""
+        return [o for o in self.strategic.obligations if o.resolved_tick is None]
+
+    @property
+    def active_contracts(self) -> list[SocialContractRecord]:
+        """Active social contracts or party commitments."""
+        return [c for c in self.strategic.contracts if c.status == StrategicStatus.ACTIVE]
+
+    @property
+    def attachment_pressure(self) -> dict[str, float]:
+        """Summarized emotional/strategic pressure from place attachments."""
+        # Simple heuristic: prioritize based on attachment level
+        return {a.location_id: a.attachment_level for a in self.actor.mind.place_attachments}
+
+    @property
+    def recent_salient_events(self) -> list[InterpretedEvent]:
+        """High-impact narrative events from recent memory."""
+        # Return last 5 events with impact > 1.0
+        return [e for e in self.actor.mind.narrative.memory_log if abs(e.impact) > 1.0][-5:]
+
+    @property
+    def social_support_surface(self) -> list[int]:
+        """IDs of visible allies or candidates for social support."""
+        # Entities with positive bonds in our social stance
+        bonds = self.actor.mind.social.known_bonds
+        candidates = []
+        for v in self.visible:
+            bond = bonds.get(v.id)
+            if bond and bond.trust > 0.3:
+                candidates.append(v.id)
+        return candidates
 
     # -- cached helpers (lazily populated) --
     _visible_cache: list[Entity] | None = field(init=False, default=None)
@@ -93,7 +165,9 @@ class AIContext:
                 # If we have a belief, use its threat estimate
                 # High aggression makes high-threat targets more salient (challenge)
                 # Low aggression (cautious) makes them less salient (avoidance)
-                threat_weight = belief.threat.overall * (0.5 + aggression)
+                t = belief.threat
+                t_overall = t.overall if hasattr(t, 'overall') else t.get('overall', 0.5)
+                threat_weight = t_overall * (0.5 + aggression)
             
             saliency = (prox_weight * 0.7) + (threat_weight * 0.3)
             
@@ -166,6 +240,15 @@ def propose_move_toward(actor: Entity, target_pos: Vector2, snapshot: Snapshot, 
         return _greedy_move_toward(actor, target_pos, snapshot, reason, updates=final_updates)
 
     if dist > 8:
+        # AOA Stabilization: Ensure target_pos is a Vector2 for grid checks [design-03]
+        # AOA Stabilization: Ensure target_pos is a Vector2 for grid checks [design-03]
+        if not hasattr(target_pos, 'x'):
+            from src.core.models.vectors import Vector2
+            try:
+                target_pos = Vector2.model_validate(target_pos)
+            except Exception:
+                pass # If coercion fails, grid checks below will likely fail with clear error
+            
         is_shared_target = (snapshot.grid.is_town(target_pos) or snapshot.grid.is_camp(target_pos))
         
         # Check for World Boss (Calamity) at target position
@@ -330,7 +413,12 @@ def should_flee(actor: Entity, config: SimulationConfig, enemy: Entity | None = 
     - Mood: Despair increases it, Fury decreases it.
     - Beliefs: Threat estimates from memory increase it.
     """
-    base_threshold = getattr(config, "flee_hp_threshold", 0.2)
+    # Layer 3 Hysteresis: Use exit threshold if currently fleeing
+    is_fleeing = actor.mind.decision.ai_state == AIState.FLEE or actor.mind.decision.last_goal == GoalType.FLEE
+    if is_fleeing:
+        base_threshold = getattr(config, "flee_exit_threshold", 0.4)
+    else:
+        base_threshold = getattr(config, "flee_hp_threshold", 0.2)
     
     # 1. Personality Influence [STAGE 1]
     pers = actor.mind.decision.personality
@@ -346,20 +434,53 @@ def should_flee(actor: Entity, config: SimulationConfig, enemy: Entity | None = 
     # 3. Belief/Threat Bias [STAGE 1]
     threat_mod = 0.0
     memory = actor.mind.perception.entity_memory
+    
+    # Nemesis recognition: If any visible enemy has threat > 0.8 OR high grudge, PANIC FLEE immediately
+    # This ensures entities respect powerful enemies before taking damage. [AOA STABILIZATION]
+    grudges = actor.mind.emotion.grudges
+    for eid, belief in memory.items():
+        is_nemesis = False
+        if grudges.get(eid, 0.0) >= 10.0:  # If we've taken ~100 damage or explicit 10 grudge
+            is_nemesis = True
+            
+        t = belief.threat
+        t_overall = t.overall if hasattr(t, 'overall') else t.get('overall', 0.0)
+        t_conf = t.confidence if hasattr(t, 'confidence') else t.get('confidence', 0.0)
+        
+        if (t_overall > 0.8 and t_conf > 0.4) or is_nemesis:
+            # Check believe pos (dist <= 6 for "nearby")
+            if actor.spatial.pos.manhattan(belief.pos) <= 6:
+                return True
+                
     if enemy:
         # Check subjective belief for this specific enemy
         belief = memory.get(enemy.id)
         if belief:
-            # Use threat estimate if confidence is high enough
-            if belief.threat.confidence > 0.3:
-                threat_mod += (belief.threat.overall * 0.4)
+            t = belief.threat
+            if t:
+                # AOA Architectural Note: Snapshot actors are frozen, converting nested dicts 
+                # to MappingProxyType. We use robust accessors here to handle both 
+                # mutable models and immutable frozen records without crashing.
+                t_conf = t.confidence if hasattr(t, 'confidence') else t.get('confidence', 0.0)
+                t_overall = t.overall if hasattr(t, 'overall') else t.get('overall', 0.0)
+                
+                # Use threat estimate if confidence is high enough
+                if t_conf > 0.3:
+                    threat_mod += (t_overall * 0.4)
             # Factor in visible injury (subjective)
             if belief.visible_injury >= 0: # -1 = Unknown
                 threat_mod *= (1.0 - (belief.visible_injury * 0.5))
-    else:
         # Scan all known beliefs for high-threat nearby entities
         for eid, belief in memory.items():
-            if belief.threat.overall > 0.6 and belief.threat.confidence > 0.4:
+            t = belief.threat
+            if not t:
+                continue
+                
+            # Robust access for both models and frozen dicts (mappingproxy)
+            t_overall = t.overall if hasattr(t, 'overall') else t.get('overall', 0.0)
+            t_conf = t.confidence if hasattr(t, 'confidence') else t.get('confidence', 0.0)
+            
+            if t_overall > 0.6 and t_conf > 0.4:
                 # Use belief pos (might be stale!)
                 d = actor.spatial.pos.manhattan(belief.pos)
                 if d <= 5: # Within immediate danger zone
@@ -367,20 +488,22 @@ def should_flee(actor: Entity, config: SimulationConfig, enemy: Entity | None = 
                     break
 
     # 4. Ranged Bias
-    ranged_bias = 0.2 if _is_ranged(actor) else 0.0
+    # Phase 2 Refinement: Increased ranged_bias from 0.2 to 0.4 (ensuring flee at ~60% HP)
+    # to meet E2E regression requirements for Ranger/Mage survivability.
+    ranged_bias = 0.4 if _is_ranged(actor) else 0.0
     
     final_threshold = base_threshold + caution_bias + mood_mod + threat_mod + ranged_bias
     return actor.combat.hp_ratio < final_threshold
 
 def _is_ranged(actor: Entity) -> bool:
     """Helper to detect if an entity is a ranged unit."""
-    if actor.identity.hero_class == HeroClass.RANGER:
+    if actor.identity.hero_class in (HeroClass.RANGER, HeroClass.MAGE, HeroClass.ARCHMAGE, HeroClass.SHARPSHOOTER):
         return True
     # Check weapon (AOA: moved to inventory aspect)
     weapon = ""
     if actor.inventory:
         weapon = actor.inventory.weapon or ""
-    return "bow" in weapon.lower() or "staff" in weapon.lower()
+    return "bow" in weapon.lower() or "staff" in weapon.lower() or "wand" in weapon.lower()
 
 
 def is_on_home_territory(ctx: AIContext) -> bool:

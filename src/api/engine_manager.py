@@ -142,6 +142,13 @@ class EngineManager:
         snap = self.get_snapshot()
         return snap.grid if snap else None
 
+    @property
+    def world(self) -> WorldState:
+        """AOA Shim: Direct access to the loop's world (for integration tests)."""
+        if self._loop is None:
+            raise RuntimeError("EngineManager world accessed before build")
+        return self._loop.world
+
     def get_static_data(self) -> typing.Any | None:
         """Return cached static world data or generate it if missing."""
         snap = self.get_snapshot()

@@ -4,7 +4,13 @@ import uuid
 from typing import TYPE_CHECKING
 from src.systems.infrastructure.base import System
 from src.core.models.lived_structure import GroupRecord
-from src.core.models.enums import GroupKind, GoalType
+from src.core.models.enums import GroupKind, GoalType, ContractKind
+from src.core.models.strategy import StrategicStatus
+from src.ai.strategy.contract_outcome import ContractOutcomeService
+from src.actions.base import SocialUpdate, ReputationUpdate, StrategicUpdate
+from src.core.logic.relationship_service import RelationshipService
+from src.core.logic.reputation_service import ReputationService
+from src.core.logic.contract_consequence_service import ContractConsequenceService
 
 if TYPE_CHECKING:
     from src.systems.infrastructure.base import SystemContext
@@ -21,6 +27,7 @@ class GroupSystem(System):
 
         self._process_dissolution(context)
         self._process_formation(context)
+        self._process_contract_formation(context)
         self._process_maintenance(context)
 
     def _process_formation(self, context: SystemContext) -> None:
@@ -32,15 +39,12 @@ class GroupSystem(System):
         for group in context.world.group_registry.values():
             all_member_ids.update(group.member_ids)
 
-        print(f"DEBUG: Found {len(context.world.entities)} total entities in world")
         for ent in context.world.entities.values():
-            print(f"DEBUG: Checking entity {ent.id}: alive={ent.combat.alive}, cluster={ent.identity.cluster_id}, faction={ent.identity.faction}")
             if not ent.combat.alive: continue
             if not ent.identity.cluster_id: continue
             if ent.id in all_member_ids: continue
             eligible.append(ent)
 
-        print(f"DEBUG: Eligible entities: {[e.id for e in eligible]}")
         # Cluster them by (faction, cluster_id)
         clusters = {}
         for ent in eligible:
@@ -78,6 +82,80 @@ class GroupSystem(System):
                              entity_ids=tuple(group.member_ids))
             logger.info(f"Formed group {group_id} for cluster {cluster_id} with leader {leader.id}")
 
+    def _process_contract_formation(self, context: SystemContext) -> None:
+        """Scan for active social contracts and instantiate GroupRecords for them."""
+        # 1. Group active contract_ids across all entities
+        active_contract_parties: dict[str, set[int]] = {}
+        contract_info: dict[str, Any] = {}
+        
+        from src.core.models.strategy import StrategicStatus
+        
+        for ent in context.world.entities.values():
+            if not ent.combat.alive: continue
+            
+            for ct in ent.mind.strategic.contracts:
+                if ct.status == StrategicStatus.ACTIVE:
+                    if ct.contract_id not in active_contract_parties:
+                        active_contract_parties[ct.contract_id] = set()
+                        contract_info[ct.contract_id] = ct
+                    active_contract_parties[ct.contract_id].add(ent.id)
+                    
+        # 2. Reconcile with GroupRegistry
+        for cid, member_ids in active_contract_parties.items():
+            if len(member_ids) < 2: continue
+            
+            ct = contract_info[cid]
+            group_id = ct.party_id
+            
+            # If contract has a group_id, check if it still exists
+            existing_group = context.world.group_registry.get(group_id) if group_id else None
+            
+            if not existing_group:
+                # Create NEW GroupRecord for this contract
+                new_group_id = f"party_{cid}_{uuid.uuid4().hex[:4]}"
+                
+                # Map contract 'purpose' to group shared_goal
+                shared_goal = GoalType.EXPLORE
+                if ct.kind == ContractKind.EXPEDITION: shared_goal = GoalType.EXPLORE
+                elif ct.kind == ContractKind.ESCORT: shared_goal = GoalType.WANDER 
+                elif ct.kind == ContractKind.MERCENARY: shared_goal = GoalType.HUNT
+                elif ct.kind == ContractKind.REVENGE_PACT: shared_goal = GoalType.HUNT
+                
+                group = GroupRecord(
+                    group_id=new_group_id,
+                    leader_id=ct.founder_id,
+                    kind=GroupKind.PARTY,
+                    shared_goal=shared_goal,
+                    member_ids=member_ids,
+                    member_roles=ct.member_roles, # [phase_3_task_3]
+                    anchor_pos=None, # Will be set in maintenance
+                    cohesion_level=1.2
+                )
+                context.world.group_registry[new_group_id] = group
+                
+                # Authoritative update of member components
+                for mid in member_ids:
+                    m_ent = context.world.get_entity(mid)
+                    if m_ent:
+                        m_ent.identity.group_id = new_group_id
+                        # Update the contract record inside strategic state
+                        for m_ct in m_ent.mind.strategic.contracts:
+                            if m_ct.contract_id == cid:
+                                m_ct.party_id = new_group_id
+                
+                if context.emit:
+                    context.emit("group", f"Contract party formed for {cid} with {len(member_ids)} members", 
+                                 entity_ids=tuple(member_ids))
+                logger.info(f"Formed contract party {new_group_id} for contract {cid}")
+            else:
+                # Refresh member IDs and ensure linkage
+                existing_group.member_ids = member_ids
+                existing_group.member_roles = ct.member_roles # [phase_3_task_3]
+                for mid in member_ids:
+                    m_ent = context.world.get_entity(mid)
+                    if m_ent and m_ent.identity.group_id != existing_group.group_id:
+                        m_ent.identity.group_id = existing_group.group_id
+
     def _process_maintenance(self, context: SystemContext) -> None:
         """Update group state: leader position, cohesion, and adding stray members."""
         to_remove = []
@@ -112,6 +190,19 @@ class GroupSystem(System):
 
         for gid in to_remove:
             group = context.world.group_registry.pop(gid)
+            
+            # Phase 4: Handle Contract Failure on group dissolution
+            if group.kind == GroupKind.PARTY:
+                leader = context.world.get_entity(group.leader_id)
+                if leader:
+                    for ct in leader.mind.strategic.contracts:
+                        if ct.party_id == gid and ct.status == StrategicStatus.ACTIVE:
+                            # Apply all social, reputational, and strategic consequences [phase_3_task_2]
+                            ContractConsequenceService.apply_resolution(
+                                context.world, ct, StrategicStatus.ABANDONED, context.world.tick
+                            )
+                            break
+
             for mid in group.member_ids:
                 member = context.world.entities.get(mid)
                 if member and member.identity.group_id == gid:

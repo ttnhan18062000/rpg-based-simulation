@@ -24,8 +24,9 @@ logger = logging.getLogger(__name__)
 class EventInterpreterService:
     """Centralized service for semantic event interpretation."""
 
-    @staticmethod
+    @classmethod
     def interpret_combat_aftermath(
+        cls,
         actor: Entity, 
         defender: Entity, 
         combat_result: CombatTraceRecord, 
@@ -51,19 +52,32 @@ class EventInterpreterService:
                 relationship_deltas={actor.id: {"fear": 0.6, "trust": -0.4, "resentment": 0.5}}
             ))
 
-        # 2. Betrayal Detection (Actor hitting Ally)
+        # 2a. Betrayal Detection: Victim's perspective (Turning Point & Sentiment)
         if actor.identity.faction == defender.identity.faction and actor.id != defender.id and combat_result.damage > 0:
              events.append(InterpretedLifeEvent(
                 event_id=f"evt-{uuid.uuid4().hex[:8]}",
-                kind=InterpretedLifeEventKind.BETRAYAL, # Added to enums in Phase 2
+                kind=InterpretedLifeEventKind.BETRAYAL,
                 tick=tick,
-                actor_id=actor.id,
-                subject_ids=[defender.id],
+                actor_id=defender.id, # Perceiver
+                subject_ids=[actor.id], # Perpetrator
                 location=actor.spatial.pos,
                 severity=9.0,
                 public_visibility=0.7,
                 turning_point_candidate=True,
-                relationship_deltas={defender.id: {"trust": -1.0, "resentment": 1.0, "loyalty": -0.8}},
+                relationship_deltas={actor.id: {"trust": -1.0, "resentment": 1.0, "loyalty": -0.8}}
+            ))
+             
+             # 2b. Betrayal Detection: Perpetrator's perspective (Reputation & Tags)
+             events.append(InterpretedLifeEvent(
+                event_id=f"evt-{uuid.uuid4().hex[:8]}",
+                kind=InterpretedLifeEventKind.BETRAYAL,
+                tick=tick,
+                actor_id=actor.id, # Perpetrator
+                subject_ids=[defender.id], # Victim
+                location=actor.spatial.pos,
+                severity=9.0,
+                public_visibility=0.7,
+                turning_point_candidate=False, 
                 reputation_deltas={"trustworthiness": -2.0},
                 tags_add=["Ally-Slayer"]
             ))
@@ -120,7 +134,7 @@ class EventInterpreterService:
     @classmethod
     def _apply_reputation_modifiers(cls, actor: Entity, event: InterpretedLifeEvent) -> None:
         """Adjust social deltas based on actor's current reputation."""
-        rep = actor.reputation
+        rep = actor.identity.reputation
         tags = set(rep.reputation_tags)
         
         for sid, deltas in event.relationship_deltas.items():
@@ -204,3 +218,36 @@ class EventInterpreterService:
                 reputation_deltas={"greed_score": 0.4}
             ))
         return events
+
+    @classmethod
+    def interpret_tactical_outcome(
+        cls,
+        world: WorldState,
+        actor: Entity,
+        spatial_up: "SpatialUpdate"
+    ) -> InterpretedLifeEvent | None:
+        """Analyze movement for tactical meaning (Disengage, Town Entry, etc.). [PHASE 2]"""
+        # Basic implementation: Detect substantial movement away from danger
+        # or reaching a safe zone (Town/Sanctuary)
+        from src.core.models.enums import Material
+        
+        tick = world.tick
+        pos = spatial_up.new_pos
+        prev_pos = actor.spatial.pos
+        
+        # 1. Town Entry detection
+        tile = world.grid.get(pos)
+        prev_tile = world.grid.get(prev_pos)
+        
+        if tile == Material.TOWN and prev_tile != Material.TOWN:
+            return InterpretedLifeEvent(
+                event_id=f"evt-{uuid.uuid4().hex[:8]}",
+                kind=InterpretedLifeEventKind.HOMECOMING if actor.kind == "hero" else InterpretedLifeEventKind.TRESPASS,
+                tick=tick,
+                actor_id=actor.id,
+                location=pos,
+                severity=2.0,
+                public_visibility=0.3
+            )
+            
+        return None

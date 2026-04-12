@@ -1,21 +1,15 @@
 from typing import Any, TYPE_CHECKING, Union, Literal
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, Field, ConfigDict, model_validator
 from src.core.models.base import Aspect, SimulationModel
 from src.core.models.enums import AIState, GoalType, EmotionType
 from src.core.models.vectors import Vector2
 from src.core.models.lived_structure import RoutineProfile, PlaceAttachment # [PHASE 3]
+from src.core.models.strategy import StrategicState, DecisionDriver  # [PHASE 1]
 
 if TYPE_CHECKING:
     from src.core.entities.entity import Entity
 
-class DecisionDriver(SimulationModel):
-    """A structured record explaining a bias or decision driver. [STAGE 1]"""
-    model_config = ConfigDict(extra='forbid')
-    
-    kind: str # 'motive', 'personality', 'emotion', 'belief', 'social', 'biological'
-    label: str
-    weight: float
-    description: str | None = None
+
 
 class PersonalityProfile(SimulationModel):
     """RPG-focused behavioral traits that bias Utility AI scoring. [PHASE 1]"""
@@ -50,7 +44,7 @@ class DecisionState(SimulationModel):
     goals: list[str] = Field(default_factory=list)
     last_reason: str = ""
     last_goal: GoalType | None = None
-    goal_committed_at: int = 0
+    goal_committed_at: int = -1
     goal_switch_count: int = 0
     goal_cooldowns: dict[GoalType, int] = Field(default_factory=dict)
     goal_scores: dict[GoalType, float] = Field(default_factory=dict)
@@ -98,6 +92,37 @@ class BeliefRecord(SimulationModel):
     observed_skills: set[str] = Field(default_factory=set)
     confidence: float = 0.5
     
+    @model_validator(mode="before")
+    @classmethod
+    def _coerce_belief(cls, data: Any) -> Any:
+        """Coerce collections and nested models from list/dict during serialization recovery."""
+        if not isinstance(data, dict):
+            return data
+            
+        # Coerce observed_skills from list to set
+        skills = data.get("observed_skills")
+        if isinstance(skills, list):
+            data["observed_skills"] = set(skills)
+            
+        # Coerce threat from dict to ThreatEstimate
+        threat = data.get("threat")
+        if isinstance(threat, dict):
+            data["threat"] = ThreatEstimate.model_validate(threat)
+            
+        return data
+            
+    @model_validator(mode="after")
+    def _ensure_strict_belief_types(self) -> "BeliefRecord":
+        """Final authoritative check to guarantee type safety after Pydantic initialization."""
+        if isinstance(self.observed_skills, list):
+            self.observed_skills = set(self.observed_skills)
+            
+        if isinstance(self.threat, dict):
+            # This handles cases where threat was never converted to a model (e.g. model_construct)
+            self.threat = ThreatEstimate.model_validate(self.threat)
+            
+        return self
+    
     # [PHASE 2] Knowledge source quality — differentiates direct vs indirect knowledge
     knowledge_source: str = "direct"  # "direct" or "indirect"
     directness: float = Field(default=1.0, ge=0.0, le=1.0)
@@ -110,8 +135,6 @@ class BeliefRecord(SimulationModel):
     apparent_threat_notoriety: float = 0.0
 
 MemoryRecord = BeliefRecord # Alias for backward compatibility during transition
-
-from pydantic import model_validator
 
 class PerceptionMemory(SimulationModel):
     """Short-term sensory memory and threat tracking. [AOA STABILIZATION]"""
@@ -132,7 +155,6 @@ class PerceptionMemory(SimulationModel):
     memory_stale_ticks: dict[int, int] = Field(default_factory=dict)
     attention_pool: list[int] = Field(default_factory=list)
     max_attention_slots: int = 5
-    hero_familiarity: dict[int, float] = Field(default_factory=dict)
 
 class EmotionState(SimulationModel):
     """Short-term emotional spikes and long-term mood."""
@@ -229,6 +251,31 @@ class NarrativeMemory(SimulationModel):
     memory_locations: dict[str, float] = Field(default_factory=dict)
     region_fatigue: dict[str, float] = Field(default_factory=dict)
     
+    @model_validator(mode="before")
+    @classmethod
+    def _coerce_narrative(cls, data: Any) -> Any:
+        """Coerce collections if they arrive as list from serialization drift."""
+        if not isinstance(data, dict):
+            return data
+        
+        # memory_locations can drift to list of pairs in some JSON serializers
+        locs = data.get("memory_locations")
+        if isinstance(locs, list):
+            data["memory_locations"] = dict(locs)
+            
+        return data
+            
+    @model_validator(mode="after")
+    def _ensure_strict_narrative_types(self) -> "NarrativeMemory":
+        """Final authoritative check for narrative collection types."""
+        if isinstance(self.memory_locations, list):
+            self.memory_locations = dict(self.memory_locations)
+            
+        if isinstance(self.region_fatigue, list):
+            self.region_fatigue = dict(self.region_fatigue)
+            
+        return self
+    
     # [PHASE 2] Durable turning-point memories — capped at 20
     turning_points: list["TurningPointRecord"] = Field(default_factory=list)
 
@@ -281,6 +328,9 @@ class MindAspect(Aspect):
     narrative: NarrativeMemory = Field(default_factory=NarrativeMemory)
     routine: RoutineState = Field(default_factory=RoutineState)
     social: SocialStance = Field(default_factory=SocialStance)
+    
+    # Fundamental continuity stratum [PHASE 1]
+    strategic: StrategicState = Field(default_factory=StrategicState)
     
     # Pillar 2: Lived Structure [PHASE 3]
     routine_profiles: list[RoutineProfile] = Field(default_factory=list)
@@ -344,4 +394,5 @@ NarrativeMemory.model_rebuild()
 RoutineState.model_rebuild()
 SocialBondRecord.model_rebuild()
 SocialStance.model_rebuild()
+StrategicState.model_rebuild()
 MindAspect.model_rebuild()

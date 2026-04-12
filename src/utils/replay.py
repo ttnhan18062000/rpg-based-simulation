@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
     from src.actions.base import ActionProposal
     from src.core.models.world_state import WorldState
+from src.core.models.enums import AIState, ActionType, StrategicStatus
 
 logger = logging.getLogger(__name__)
 
@@ -36,7 +37,13 @@ class ReplayRecorder:
                 "kind": e.kind,
                 "pos": [e.spatial.pos.x, e.spatial.pos.y],
                 "hp": e.combat.hp,
-                "state": e.mind.decision.ai_state.name if hasattr(e.mind.decision.ai_state, "name") else AIState(e.mind.decision.ai_state).name,
+                "state": e.mind.decision.ai_state.name if hasattr(e.mind.decision.ai_state, "name") else str(e.mind.decision.ai_state),
+                "strategy": {
+                    "project_id": e.mind.strategic.current_project_id,
+                    "objective_id": e.mind.strategic.current_objective_id,
+                    "interrupted_by": e.mind.strategic.interrupted_project_id,
+                    "concern_count": len(e.mind.strategic.concerns)
+                }
             }
             for e in world.entities.values()
             if e.combat.alive
@@ -55,18 +62,24 @@ class ReplayRecorder:
             for a in applied_actions
         ]
 
+        strategic_snapshot = {
+            "opportunities": [opp.label for opp in world.strategic_registry.opportunities.values() if opp.status == StrategicStatus.ACTIVE],
+            "obligations": [obl.label for obl in world.strategic_registry.obligations.values()]
+        }
+
         self._ticks.append(
             {
                 "tick": tick,
                 "actions": actions_log,
                 "entities": entities_snapshot,
+                "world_strategic": strategic_snapshot
             }
         )
 
     def flush(self) -> None:
         """Write accumulated data to disk."""
         replay = {
-            "version": "1.0",
+            "version": "2.0",
             "seed": self._seed,
             "total_ticks": len(self._ticks),
             "ticks": self._ticks,

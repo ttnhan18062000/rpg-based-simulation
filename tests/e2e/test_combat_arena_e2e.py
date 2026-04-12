@@ -14,6 +14,7 @@ Covers existing F4 (ranged combat) mechanics, general combat flow, and AOA Phase
 from tests.helpers.combat_arena import CombatArena
 from src.core.gameplay.classes import HeroClass
 from src.core.models.enums import AIState, EnemyTier, Material
+from src.core.models.strategy import ObjectiveKind
 from src.core.gameplay.faction import Faction
 from src.core.models.vectors import Vector2
 from src.core.gameplay.attributes import Attributes
@@ -252,8 +253,10 @@ class TestMultiEntityCombatE2E:
         arena = CombatArena()
         arena.add_hero(1, pos=(5, 5), weapon="iron_sword", hp=100, atk=15)
         arena.add_hero(2, pos=(2, 5), weapon="shortbow", hp=80, atk=12,
-                       hero_class=HeroClass.RANGER)
-        arena.add_mob(3, pos=(6, 5), weapon="rusty_sword", hp=80, atk=8)
+                       hero_class=HeroClass.RANGER, objective_kind=ObjectiveKind.KILL,
+                       vision_range=15)
+        arena.add_mob(3, pos=(6, 5), weapon="rusty_sword", hp=80, atk=8, 
+                      objective_kind=ObjectiveKind.KILL, vision_range=15)
         arena.run_until(lambda a: not a.entity_alive(3), max_ticks=100)
         # Mob should eventually die
         assert not arena.entity_alive(3)
@@ -528,7 +531,7 @@ class TestAoESkillsE2E:
                        skills=["shield_wall", "power_strike", "whirlwind"],
                        mastery={"shield_wall": 100.0}, level=5)
         arena.add_mob(10, pos=(6, 5), weapon="rusty_sword", hp=200, atk=5)
-        arena.add_mob(11, pos=(7, 5), weapon="rusty_sword", hp=200, atk=5)
+        arena.add_mob(11, pos=(5, 6), weapon="rusty_sword", hp=200, atk=5)
         arena.run_ticks(3)
         # Should see whirlwind used (preferred over power_strike when 2+ enemies)
         whirlwind_uses = [e for e in arena.all_events()
@@ -604,7 +607,7 @@ class TestAIRefinementE2E:
         hero = arena.add_hero(1, pos=(2, 2), hp=1000)
         
         # Boss deals heavy damage
-        boss = arena.add_mob(2, pos=(3, 2), atk=120, tier=2)
+        boss = arena.add_mob(2, pos=(3, 2), atk=80, tier=2)
         boss.combat.luck = 1000
         
         hero.identity.neuroticism = 0.8

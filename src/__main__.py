@@ -35,6 +35,17 @@ def _build_parser() -> argparse.ArgumentParser:
     insp.add_argument("--workers", type=int, default=4)
     insp.add_argument("--log-level", type=str, default="WARNING", choices=["DEBUG", "INFO", "WARNING"])
 
+    # --- CLI mode ---
+    cli = sub.add_parser("cli", help="Headless CLI simulation")
+    cli.add_argument("--ticks", type=int, default=100)
+    cli.add_argument("--entities", type=int, default=10)
+    cli.add_argument("--seed", type=int, default=42)
+    cli.add_argument("--workers", type=int, default=4)
+    cli.add_argument("--grid-width", type=int, default=128)
+    cli.add_argument("--grid-height", type=int, default=128)
+    cli.add_argument("--replay", type=str, default="replay.json")
+    cli.add_argument("--log-level", type=str, default="INFO", choices=["DEBUG", "INFO", "WARNING"])
+
     return parser
 
 

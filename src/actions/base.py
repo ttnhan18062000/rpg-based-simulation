@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     from src.core.aspects.mind import MemoryRecord, MemoryLogEntry
     from src.core.aspects.combat import CombatTraceRecord
     from src.core.gameplay.classes import SkillInstance
-    from src.core.quests import Quest
+    from src.core.gameplay.quests import Quest
     from src.core.effects import StatusEffect
     from src.core.gameplay.effects import EffectType
 
@@ -89,10 +89,6 @@ class MindUpdate(IntentUpdate):
     new_ai_state: int | None = None
     consecutive_idle_ticks: int | None = None
     
-    # AI Goals
-    goals_add: list[str] | None = None
-    goals_remove: list[str] | None = None
-    
     # Emotion
     emotion_delta: dict[EmotionType, float] | None = None
     emotion_set: dict[EmotionType, float] | None = None
@@ -112,6 +108,7 @@ class PerceptionUpdate(IntentUpdate):
     
     # Narrative
     memory_log_add: list[MemoryLogEntry] | None = None
+    turning_points_add: list[TurningPointRecord] | None = None
     memory_locations_set: dict[str, float] | None = None
     
     # Tactical
@@ -131,6 +128,17 @@ class PerceptionUpdate(IntentUpdate):
                 MemoryLogEntry.model_validate(m) if isinstance(m, dict) else m 
                 for m in self.memory_log_add
             ]
+            
+        if self.turning_points_add:
+            from src.core.models.life_events import TurningPointRecord
+            self.turning_points_add = [
+                TurningPointRecord.model_validate(t) if isinstance(t, dict) else t 
+                for t in self.turning_points_add
+            ]
+            
+        if isinstance(self.memory_locations_set, list):
+            self.memory_locations_set = dict(self.memory_locations_set)
+            
         return self
 
 class NavigationUpdate(IntentUpdate):
@@ -139,6 +147,7 @@ class NavigationUpdate(IntentUpdate):
     cached_path: list[Vector2] | None = None
     target_pos: Vector2 | None = None
     chase_ticks: int | None = None
+    engaged_ticks: int | None = None
 
     @model_validator(mode="after")
     def _coerce_navigation(self) -> "NavigationUpdate":
@@ -191,7 +200,7 @@ class ProgressionUpdate(IntentUpdate):
         # Pydantic dataclasses (SkillInstance, Quest, StatusEffect) 
         # might need coercion if they come from loose dicts (e.g. from workers)
         from src.core.gameplay.classes import SkillInstance
-        from src.core.quests import Quest
+        from src.core.gameplay.quests import Quest
         from src.core.effects import StatusEffect
         from src.core.gameplay.effects import EffectType
         from src.core.gameplay.effects import EffectType
@@ -283,6 +292,72 @@ class ReputationUpdate(IntentUpdate):
     tags_add: list[str] = Field(default_factory=list)
     tags_remove: list[str] = Field(default_factory=list)
 
+class StrategicUpdate(IntentUpdate):
+    """Updates to the entity's Strategic stratum. [PHASE 1]"""
+    directives_add: list[DirectiveRecord] = Field(default_factory=list)
+    directives_remove: list[str] = Field(default_factory=list)
+    
+    blockers_add_or_update: list[BlockerRecord] = Field(default_factory=list)
+    blockers_remove: list[str] = Field(default_factory=list)
+    
+    projects_add_or_update: list[ProjectRecord] = Field(default_factory=list)
+    projects_remove: list[str] = Field(default_factory=list)
+    
+    concerns_add_or_update: list[ConcernRecord] = Field(default_factory=list)
+    concerns_remove: list[str] = Field(default_factory=list)
+    
+    obligations_add_or_update: list[ObligationRecord] = Field(default_factory=list)
+    obligations_remove: list[str] = Field(default_factory=list)
+    
+    contracts_add_or_update: list[SocialContractRecord] = Field(default_factory=list)
+    contracts_remove: list[str] = Field(default_factory=list)
+    
+    offers_add_or_update: list[RecruitmentOfferRecord] = Field(default_factory=list)
+    offers_remove: list[str] = Field(default_factory=list)
+    
+    leads_add_or_update: list[LeadRecord] = Field(default_factory=list)
+    leads_remove: list[str] = Field(default_factory=list)
+    
+    # [phase_3_task_3]
+    candidate_zones_add_or_update: list[CandidateZoneRecord] = Field(default_factory=list)
+    candidate_zones_remove: list[str] = Field(default_factory=list)
+    
+    hypotheses_add_or_update: list[HypothesisRecord] = Field(default_factory=list)
+    hypotheses_remove: list[str] = Field(default_factory=list)
+    
+    current_project_id: str | None = None
+    current_objective_id: str | None = None
+    interrupted_project_id: str | None = None
+    project_lock_until: int | None = None
+    engaged_ticks: int | None = None
+    
+    # Traceability [PHASE 2]
+    strategic_drivers: list[DecisionDriver] = Field(default_factory=list)
+
+    @model_validator(mode="after")
+    def _coerce_strategic(self) -> "StrategicUpdate":
+        """Force coercion of strategic records if they came in as dicts."""
+        from src.core.models.strategy import (
+            DirectiveRecord, ProjectRecord, ConcernRecord, 
+            ObligationRecord, SocialContractRecord, LeadRecord,
+            CandidateZoneRecord, HypothesisRecord
+        )
+        if self.directives_add:
+            self.directives_add = [DirectiveRecord.model_validate(d) if isinstance(d, dict) else d for d in self.directives_add]
+        if self.projects_add_or_update:
+            self.projects_add_or_update = [ProjectRecord.model_validate(p) if isinstance(p, dict) else p for p in self.projects_add_or_update]
+        if self.concerns_add_or_update:
+            self.concerns_add_or_update = [ConcernRecord.model_validate(c) if isinstance(c, dict) else c for c in self.concerns_add_or_update]
+        if self.obligations_add_or_update:
+            self.obligations_add_or_update = [ObligationRecord.model_validate(o) if isinstance(o, dict) else o for o in self.obligations_add_or_update]
+        if self.contracts_add_or_update:
+            self.contracts_add_or_update = [SocialContractRecord.model_validate(s) if isinstance(s, dict) else s for s in self.contracts_add_or_update]
+        if self.offers_add_or_update:
+            self.offers_add_or_update = [RecruitmentOfferRecord.model_validate(o) if isinstance(o, dict) else o for o in self.offers_add_or_update]
+        if self.leads_add_or_update:
+            self.leads_add_or_update = [LeadRecord.model_validate(l) if isinstance(l, dict) else l for l in self.leads_add_or_update]
+        return self
+
 
 class WorldUpdate(IntentUpdate):
     """Authoritative updates to global world state (Corpses, Idents, Spawns). [AOA STABILIZATION]"""
@@ -307,6 +382,9 @@ def _rebuild_action_models():
         MemoryRecord, MemoryLogEntry, CombatNarrative, LootNarrative, 
         DiscoveryNarrative, PersonalMotive, DecisionDriver
     )
+    from src.core.models.life_events import (
+        TurningPointRecord
+    )
     from src.core.aspects.combat import CombatAspect
     from src.core.models.combat import CombatTraceRecord, CombatTraceDetails
     from src.core.entities.entity import Entity
@@ -314,9 +392,17 @@ def _rebuild_action_models():
     
     # Gameplay Components (needed for ProgressionUpdate)
     from src.core.gameplay.classes import SkillInstance
-    from src.core.quests import Quest
+    from src.core.gameplay.quests import Quest
     from src.core.effects import StatusEffect
     from src.core.gameplay.effects import EffectType
+    
+    # Strategic Components (needed for StrategicUpdate) [PHASE 1]
+    from src.core.models.strategy import (
+        DirectiveRecord, ProjectRecord, ConcernRecord, 
+        ObligationRecord, SocialContractRecord, RecruitmentOfferRecord,
+        ContractTermRecord, LeadRecord, CandidateZoneRecord, HypothesisRecord,
+        BlockerRecord
+    )
     
     # Create a unified namespace for Pydantic to resolve string forward references
     ns = locals().copy()
@@ -335,6 +421,7 @@ def _rebuild_action_models():
     SocialUpdate.model_rebuild(_types_namespace=ns)
     ReputationUpdate.model_rebuild(_types_namespace=ns)
     RoutineUpdate.model_rebuild(_types_namespace=ns)
+    StrategicUpdate.model_rebuild(_types_namespace=ns)
     CombatTraceUpdate.model_rebuild(_types_namespace=ns)
     
     # 2. Finalize Aggregate Models

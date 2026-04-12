@@ -23,7 +23,7 @@ class SkillTarget(IntEnum):
 
 @unique
 class AIState(IntEnum):
-    IDLE = 0; WANDER = 1; HUNT = 2; COMBAT = 3; FLEE = 4; RETURN_TO_TOWN = 5; RESTING_IN_TOWN = 6; RETURN_TO_CAMP = 7; GUARD_CAMP = 8; LOOTING = 9; ALERT = 10; VISIT_SHOP = 11; VISIT_BLACKSMITH = 12; VISIT_GUILD = 13; HARVESTING = 14; VISIT_CLASS_HALL = 15; VISIT_INN = 16; VISIT_HOME = 17; RAID = 18; EXHAUSTED = 19; RECOVER_CORPSE = 20; SLEEPING = 21; EATING = 22
+    IDLE = 0; WANDER = 1; HUNT = 2; COMBAT = 3; FLEE = 4; RETURN_TO_TOWN = 5; RESTING_IN_TOWN = 6; RETURN_TO_CAMP = 7; GUARD_CAMP = 8; LOOTING = 9; ALERT = 10; VISIT_SHOP = 11; VISIT_BLACKSMITH = 12; VISIT_GUILD = 13; HARVESTING = 14; VISIT_CLASS_HALL = 15; VISIT_INN = 16; VISIT_HOME = 17; RAID = 18; EXHAUSTED = 19; RECOVER_CORPSE = 20; SLEEPING = 21; EATING = 22; INVESTIGATING = 23
 
 @unique
 class Direction(IntEnum): NORTH = 0; EAST = 1; SOUTH = 2; WEST = 3
@@ -51,12 +51,88 @@ class LifeRole(IntEnum):
 @unique
 class GroupKind(IntEnum):
     """Small-group coordination types. [PHASE 3]"""
-    SOCIAL_CLIQUE = 0; PATROL = 1; RAID_PACK = 2; ESCORT = 3; HOUSEHOLD = 4
+    SOCIAL_CLIQUE = 0; PATROL = 1; RAID_PACK = 2; ESCORT = 3; HOUSEHOLD = 4; PARTY = 5
 
 @unique
 class AttachmentKind(IntEnum):
     """Types of location-based sentiment. [PHASE 3]"""
     HOME = 0; WORKPLACE = 1; TRAINING_GROUND = 2; MARKET = 3; FAVORITE_SPOT = 4; SHRINE = 5
+
+@unique
+class ContractKind(IntEnum):
+    """Categories for negotiated social agreements. [PHASE 4]"""
+    EXPEDITION = 0 # Objective-driven travel
+    ESCORT = 1 # Protection-driven movement
+    MILITIA = 2 # Collective defense
+    MERCENARY = 3 # Paid combat/service
+    REVENGE_PACT = 4 # Vendetta-driven cooperation
+
+@unique
+class OfferStatus(IntEnum):
+    """Lifecycle of a recruitment or social proposal. [PHASE 4]"""
+    PENDING = 0
+    ACCEPTED = 1
+    DECLINED = 2
+    EXPIRED = 3
+    CANCELLED = 4
+    COUNTERED = 5
+
+@unique
+class StrategicStatus(IntEnum):
+    """Lifecycle status for projects and objectives."""
+    ACTIVE = 0
+    SUSPENDED = 1
+    RESOLVED = 2
+    ABANDONED = 3
+
+@unique
+class DirectiveKind(IntEnum):
+    """Categories for enduring orientations."""
+    IDEOLOGICAL = 0
+    PROFESSIONAL = 1
+    FACTIONAL = 2
+    PERSONAL = 3
+
+@unique
+class ProjectKind(IntEnum):
+    """Broad categories for strategic pursuits."""
+    QUEST = 0
+    EXPLORATION = 1
+    SOCIAL = 2
+    INVESTIGATION = 3
+    DEVELOPMENT = 4
+
+@unique
+class ObjectiveKind(IntEnum):
+    """Specific types of strategic sub-tasks."""
+    VISIT = 0
+    KILL = 1
+    COLLECT = 2
+    INTERACT = 3
+    WAIT = 4
+    INVESTIGATE = 5
+    SCOUT = 6
+    TRAIN = 7
+
+@unique
+class ConcernKind(IntEnum):
+    """Immediate strategic interrupts or priorities."""
+    THREAT = 0
+    OPPORTUNITY = 1
+    OBLIGATION = 2
+
+@unique
+class LeadKind(IntEnum):
+    """Types of uncertain strategic clues."""
+    LOCATION = 0
+    PERSON = 1
+    OBJECT = 2
+    EVENT = 3
+
+@unique
+class BlockerKind(IntEnum):
+    """Reasons why a project or objective cannot proceed."""
+    KNOWLEDGE = 0; CAPABILITY = 1; ACCESS = 2; SOCIAL = 3; MATERIAL = 4; TIMING = 5; OBLIGATION = 6; ENVIRONMENTAL = 7; CONFIDENCE = 8
 
 @unique
 class EnemyTier(IntEnum):
@@ -138,6 +214,7 @@ class GoalType(IntEnum):
     CORPSE_RUN = 9
     SLEEP = 10
     EAT = 11
+    INVESTIGATE = 12
 
 @unique
 class EmotionType(IntEnum):
@@ -195,6 +272,21 @@ class InterpretedLifeEventKind(IntEnum):
     BETRAYAL = 7
     FIRST_KILL = 8
     SLAY_FOE = 9
+    
+    # Phase 5 Expansion [Task 8]
+    RESCUE_PERFORMED = 10
+    RESCUED_BY_OTHER = 11
+    DEFENSE_FAILED = 12
+    HOME_DAMAGED = 13
+    CONTRACT_HONORED_PUBLICLY = 14
+    CONTRACT_BETRAYED_PUBLICLY = 15
+    REPEATED_FAILED_ATTEMPT = 16
+    PUBLIC_DISGRACE = 17
+    WARNING_IGNORED = 18
+    TRESPASS = 19
+    BODY_RECOVERED = 20
+    BODY_ABANDONED = 21
+    HOMECOMING = 22
 
 from typing import Annotated
 from pydantic import BeforeValidator, PlainSerializer
@@ -224,7 +316,16 @@ VetryRankSer = Annotated[int, BeforeValidator(_parse_enum(VeterancyRank)), Plain
 LifeRoleSer = Annotated[LifeRole, BeforeValidator(_parse_enum(LifeRole)), PlainSerializer(lambda v: LifeRole(v).name.lower(), return_type=str)]
 GroupKindSer = Annotated[GroupKind, BeforeValidator(_parse_enum(GroupKind)), PlainSerializer(lambda v: GroupKind(v).name.lower(), return_type=str)]
 AttachmentKindSer = Annotated[AttachmentKind, BeforeValidator(_parse_enum(AttachmentKind)), PlainSerializer(lambda v: AttachmentKind(v).name.lower(), return_type=str)]
+ContractKindSer = Annotated[ContractKind, BeforeValidator(_parse_enum(ContractKind)), PlainSerializer(lambda v: ContractKind(v).name.lower(), return_type=str)]
+OfferStatusSer = Annotated[OfferStatus, BeforeValidator(_parse_enum(OfferStatus)), PlainSerializer(lambda v: OfferStatus(v).name.lower(), return_type=str)]
 ArchetypeSer = Annotated[Archetype, BeforeValidator(_parse_enum(Archetype)), PlainSerializer(lambda v: Archetype(v).name.lower(), return_type=str)]
+StrategicStatusSer = Annotated[StrategicStatus, BeforeValidator(_parse_enum(StrategicStatus)), PlainSerializer(lambda v: StrategicStatus(v).name.lower(), return_type=str)]
+DirectiveKindSer = Annotated[DirectiveKind, BeforeValidator(_parse_enum(DirectiveKind)), PlainSerializer(lambda v: DirectiveKind(v).name.lower(), return_type=str)]
+ProjectKindSer = Annotated[ProjectKind, BeforeValidator(_parse_enum(ProjectKind)), PlainSerializer(lambda v: ProjectKind(v).name.lower(), return_type=str)]
+ObjectiveKindSer = Annotated[ObjectiveKind, BeforeValidator(_parse_enum(ObjectiveKind)), PlainSerializer(lambda v: ObjectiveKind(v).name.lower(), return_type=str)]
+ConcernKindSer = Annotated[ConcernKind, BeforeValidator(_parse_enum(ConcernKind)), PlainSerializer(lambda v: ConcernKind(v).name.lower(), return_type=str)]
+LeadKindSer = Annotated[LeadKind, BeforeValidator(_parse_enum(LeadKind)), PlainSerializer(lambda v: LeadKind(v).name.lower(), return_type=str)]
+BlockerKindSer = Annotated[BlockerKind, BeforeValidator(_parse_enum(BlockerKind)), PlainSerializer(lambda v: BlockerKind(v).name.lower(), return_type=str)]
 
 from dataclasses import dataclass, field
 @dataclass(frozen=True)

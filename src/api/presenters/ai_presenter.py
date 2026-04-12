@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Optional
 from src.api.schemas import AIDecisionSchema, GoalScoreSchema, SocialBondSchema, DecisionDriverSchema
 
 if TYPE_CHECKING:
@@ -136,5 +136,159 @@ class AIPresenter:
             nearest_target_id=nearest_id,
             group_id=entity.identity.group_id,
             active_routine_id=mind.routine.active_routine_id,
+            strategy=AIPresenter._serialize_strategy(entity), # [PHASE 4]
             narrative_impacts=narrative_impacts
         )
+
+    @staticmethod
+    def _serialize_strategy(entity: "Entity") -> Any:
+        """Shim for strategic serialization to avoid circular dependencies with EntityPresenter."""
+        from src.api.schemas import (
+            StrategicStateSchema, ProjectSchema, ObjectiveSchema, 
+            BlockerSchema, LeadSchema, DirectiveSchema, ConcernSchema,
+            CandidateZoneSchema, HypothesisSchema, ObligationSchema,
+            SocialContractSchema, RecruitmentOfferSchema
+        )
+        s = entity.mind.strategic
+        if not s:
+            return None
+            
+        return StrategicStateSchema(
+            directives=[
+                DirectiveSchema(
+                    directive_id=d.directive_id,
+                    kind=d.kind.name.lower() if hasattr(d.kind, "name") else str(d.kind).lower(),
+                    label=d.label,
+                    priority=d.priority
+                ) for d in s.directives
+            ],
+            projects=[
+                ProjectSchema(
+                    project_id=p.project_id,
+                    kind=p.kind.name.lower() if hasattr(p.kind, "name") else str(p.kind).lower(),
+                    label=p.label,
+                    status=p.status.name.lower() if hasattr(p.status, "name") else str(p.status).lower(),
+                    priority=round(p.priority, 2),
+                    urgency=round(p.urgency, 2),
+                    active_objective_id=p.active_objective_id,
+                    suspension_reason=p.suspension_reason,
+                    committed_at=p.committed_at,
+                    abandonment_cost=round(p.abandonment_cost, 2),
+                    interruption_threshold=round(p.interruption_threshold, 2),
+                    emotional_weight=round(p.emotional_weight, 2),
+                    objectives=[
+                        ObjectiveSchema(
+                            objective_id=o.objective_id,
+                            kind=o.kind.name.lower() if hasattr(o.kind, "name") else str(o.kind).lower(),
+                            label=o.label,
+                            status=o.status.name.lower() if hasattr(o.status, "name") else str(o.status).lower(),
+                            priority=round(o.priority, 2),
+                            progress=round(o.progress, 2),
+                            blocker_ids=o.blocker_ids,
+                            leads=[
+                                LeadSchema(
+                                    lead_id=l.lead_id,
+                                    kind=l.kind.name.lower() if hasattr(l.kind, "name") else str(l.kind).lower(),
+                                    label=l.label,
+                                    subject=l.subject,
+                                    certainty=round(l.certainty, 2),
+                                    source_type=l.source_type,
+                                    discovered_tick=l.discovered_tick,
+                                    directness=round(l.directness, 2),
+                                    is_exhausted=l.is_exhausted
+                                ) for l in o.leads
+                            ]
+                        ) for o in p.objectives
+                    ]
+                ) for p in s.projects
+            ],
+            blockers=[
+                BlockerSchema(
+                    blocker_id=b.blocker_id,
+                    kind=b.kind.name.lower() if hasattr(b.kind, "name") else str(b.kind).lower(),
+                    label=b.label,
+                    severity=round(b.severity, 2),
+                    resolved=b.resolved
+                ) for b in s.blockers
+            ],
+            leads=[
+                LeadSchema(
+                    lead_id=l.lead_id,
+                    kind=l.kind.name.lower() if hasattr(l.kind, "name") else str(l.kind).lower(),
+                    label=l.label,
+                    subject=l.subject,
+                    certainty=round(l.certainty, 2),
+                    source_type=l.source_type,
+                    discovered_tick=l.discovered_tick,
+                    directness=round(l.directness, 2),
+                    is_exhausted=l.is_exhausted
+                ) for l in s.leads
+            ],
+            zones=[
+                CandidateZoneSchema(
+                    zone_id=z.zone_id,
+                    region_id=z.region_id,
+                    confidence=round(z.confidence, 2),
+                    search_outcome=z.search_outcome,
+                    last_search_tick=z.last_search_tick
+                ) for z in s.candidate_zones
+            ],
+            hypotheses=[
+                HypothesisSchema(
+                    hypothesis_id=h.hypothesis_id,
+                    label=h.label,
+                    confidence=round(h.confidence, 2),
+                    is_active=h.is_active
+                ) for h in s.hypotheses
+            ],
+            concerns=[
+                ConcernSchema(
+                    concern_id=c.concern_id,
+                    kind=c.kind.name.lower() if hasattr(c.kind, "name") else str(c.kind).lower(),
+                    label=c.label,
+                    priority=round(c.priority, 2),
+                    urgency=round(c.urgency, 2),
+                    visibility=c.visibility
+                ) for c in s.concerns
+            ],
+            obligations=[
+                ObligationSchema(
+                    obligation_id=o.obligation_id,
+                    target_id=o.target_id,
+                    label=o.label,
+                    priority=round(o.priority, 2),
+                    deadline_tick=o.deadline_tick
+                ) for o in s.obligations
+            ],
+            contracts=[
+                SocialContractSchema(
+                    contract_id=c.contract_id,
+                    kind=c.kind.name.lower() if hasattr(c.kind, "name") else str(c.kind).lower(),
+                    purpose=c.purpose,
+                    founder_id=c.founder_id,
+                    member_ids=c.member_ids,
+                    member_roles=c.member_roles,
+                    status=c.status.name.lower() if hasattr(c.status, "name") else str(c.status).lower(),
+                    created_tick=c.created_tick,
+                    expires_tick=c.expires_tick,
+                    breach_count=len(c.breach_history)
+                ) for c in s.contracts
+            ],
+            offers=[
+                RecruitmentOfferSchema(
+                    offer_id=o.offer_id,
+                    recruiter_id=o.recruiter_id,
+                    candidate_id=o.candidate_id,
+                    contract_kind=o.contract_kind.name.lower() if hasattr(o.contract_kind, "name") else str(o.contract_kind).lower(),
+                    status=o.status.name.lower() if hasattr(o.status, "name") else str(o.status).lower(),
+                    negotiation_count=o.negotiation_count,
+                    expires_tick=o.expires_tick
+                ) for o in s.offers
+            ],
+            current_project_id=s.current_project_id,
+            current_objective_id=s.current_objective_id,
+            interrupted_project_id=s.interrupted_project_id,
+            project_lock_until=s.project_lock_until,
+            recent_driver_labels=[d.label for d in s.recent_drivers]
+        )
+

@@ -2,7 +2,8 @@ from src.core.models.enums import AIState
 from src.ai.states.base import AIContext, StateHandler
 from src.ai.states.navigation import (
     IdleHandler, WanderHandler, ReturnToTownHandler, 
-    ReturnToCampHandler, GuardCampHandler, ExhaustedHandler
+    ReturnToCampHandler, GuardCampHandler, ExhaustedHandler,
+    InvestigateHandler
 )
 from src.ai.states.combat import (
     HuntHandler, CombatHandler, FleeHandler, AlertHandler
@@ -38,6 +39,8 @@ STATE_HANDLERS: dict[AIState, StateHandler] = {
     AIState.VISIT_HOME: VisitHomeHandler(),
     AIState.SLEEPING: SleepingHandler(),
     AIState.EATING: EatingHandler(),
+    AIState.EXHAUSTED: ExhaustedHandler(),
+    AIState.INVESTIGATING: InvestigateHandler(),
 }
 
 __all__ = [

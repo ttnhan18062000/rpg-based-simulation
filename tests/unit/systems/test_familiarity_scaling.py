@@ -44,6 +44,10 @@ def test_cha_impacts_familiarity_gain():
     world.entities = {1: h1, 2: h2}
     world.entities_at_radius.return_value = [h2, h1]
     
+    # Mock social registry in world
+    from src.core.models.social import SocialRegistry
+    world.social_registry = SocialRegistry()
+    
     ctx = SystemContext(
         config=config,
         world=world,
@@ -57,6 +61,7 @@ def test_cha_impacts_familiarity_gain():
     system._tick_proximity_familiarity(ctx, 100)
     
     # Expected gain for CHA 50: 0.002 * (1 + 50*0.01) = 0.002 * 1.5 = 0.003
-    fam_score = h1.identity.hero_familiarity.get(2, 0.0)
+    bond = world.social_registry.get_bond(h1.id, h2.id)
+    fam_score = bond.familiarity
     assert fam_score > 0.002 # Should be 0.003
     assert fam_score == pytest.approx(0.003)

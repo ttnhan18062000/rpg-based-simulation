@@ -45,7 +45,13 @@ def test_perception_phase_populates_attention_pool(brain):
     with patch('src.ai.brain.Perception.visible_entities', return_value=[e1, e2, e3, e4]):
         # Run perception
         updates = []
-        brain._sensory_perception_phase(actor, MagicMock(), updates)
+        snap = MagicMock()
+        snap.tick = 100
+        snap.social_registry = MagicMock()
+        snap.social_registry.get_bond_or_none.return_value = None
+        snap.social_registry.get_reputation.return_value = 0
+        snap.group_registry = {}
+        brain._sensory_perception_phase(actor, snap, updates)
         
         # Check updates instead of actor (AOA is pure)
         from src.actions.base import PerceptionUpdate

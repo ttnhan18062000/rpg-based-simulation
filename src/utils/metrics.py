@@ -218,4 +218,27 @@ SIM_STATE_TRANSITION_FAILURES = Counter(
     ["from_state", "to_state"]
 )
 
-# NOTE: SIM_TICK_DURATION already exists at line 16, but we will use the "phase" label heavily.
+# --- Strategic Metrics [PHASE 6] ---
+
+SIM_STRATEGIC_PROJECT_STATUS = Counter(
+    "sim_strategic_project_status_total",
+    "Tracking strategic project lifecycle transitions",
+    ["kind", "status"] # kind: quest, exploration, etc. status: started, completed, abandoned
+)
+
+SIM_STRATEGIC_PRESSURE_CONCERNS = Gauge(
+    "sim_strategic_pressure_concerns",
+    "Tracking active strategic pressures (concerns) across the population",
+    ["kind"] # kind: threat, opportunity, obligation
+)
+
+SIM_STRATEGIC_WORLD_OPPORTUNITIES = Gauge(
+    "sim_strategic_world_opportunities",
+    "Number of active shared world opportunities"
+)
+
+SIM_STRATEGIC_CONTRACT_BREACHES = Counter(
+    "sim_strategic_contract_breaches_total",
+    "Tracking social contract violations",
+    ["contract_kind", "reason"]
+)

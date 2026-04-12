@@ -145,20 +145,20 @@ class TestCombatActionRanged(unittest.TestCase):
 class TestRangeAwareSkillSelection(unittest.TestCase):
     def test_ranged_skill_selected_at_distance(self):
         from src.core.gameplay.classes import SkillInstance
-        from src.ai.states import best_ready_skill
+        from src.ai.states import best_ready_skill; from tests.helpers.ai_test_utils import make_test_ai_context
         e = _make_entity(1)
         e.progression.stamina = 50
         e.progression.skills = [SkillInstance(skill_id="quick_shot")]  # range=3
-        result = best_ready_skill(e, dist_to_enemy=3)
+        result = enemy = _make_entity(2, pos=(3, 0)); ctx = make_test_ai_context(e, enemies=[enemy]); result = best_ready_skill(ctx, enemy)
         assert result == "quick_shot"
 
     def test_melee_skill_not_selected_at_distance(self):
         from src.core.gameplay.classes import SkillInstance
-        from src.ai.states import best_ready_skill
+        from src.ai.states import best_ready_skill; from tests.helpers.ai_test_utils import make_test_ai_context
         e = _make_entity(1)
         e.progression.stamina = 50
         e.progression.skills = [SkillInstance(skill_id="power_strike")]  # range=1
-        result = best_ready_skill(e, dist_to_enemy=3)
+        result = enemy = _make_entity(2, pos=(3, 0)); ctx = make_test_ai_context(e, enemies=[enemy]); result = best_ready_skill(ctx, enemy)
         assert result is None
 
 

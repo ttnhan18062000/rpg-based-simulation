@@ -38,6 +38,17 @@ class WanderHandler(StateHandler):
 
         if beyond_leash(actor):
             return propose_retreat_home(ctx, "Beyond leash range → returning home")
+            
+        # Social/Following Bias [PHASE 4]
+        follow_id = ctx.tactical_hints.get("follow_target_id")
+        if follow_id:
+            target = snapshot.entities.get(follow_id)
+            if target and target.combat.alive:
+                dist = actor.spatial.pos.manhattan(target.spatial.pos)
+                if dist > 3: # Keep distance but stay close
+                    return AIState.WANDER, propose_move_toward(
+                        actor, target.spatial.pos, snapshot, f"Following leader {target.id}",
+                        updates=final_updates)
 
         if is_in_hostile_town(ctx):
             if actor.combat.hp_ratio < 0.6 or enemy is None:
@@ -79,46 +90,28 @@ class WanderHandler(StateHandler):
                         updates=final_updates)
 
         if enemy is not None:
-            if should_flee(actor, config):
-                return propose_retreat_home(ctx, "Low HP → retreating")
-            
             dist = actor.spatial.pos.manhattan(enemy.spatial.pos)
             # get_weapon_range in combat.py
             from src.ai.states.combat import get_weapon_range
             weapon_rng = get_weapon_range(actor)
             
             if dist <= weapon_rng:
-                # Use spatial index for O(1) cell lookup
-                potential_ids = snapshot.nearby_entity_ids(actor.spatial.pos.x, actor.spatial.pos.y, 4)
-                nearby_count = 0
-                for eid in potential_ids:
-                    if eid == actor.id: continue
-                    e = snapshot.entities.get(eid)
-                    if not e or not e.combat.alive: continue
-                    if ctx.faction_reg.is_hostile(actor.identity.faction, e.identity.faction):
-                        if e.spatial.pos.manhattan(actor.spatial.pos) <= 4:
-                            nearby_count += 1
-                
                 from src.ai.states.combat import best_ready_skill
+                skill_id = best_ready_skill(ctx, enemy)
                 
-                skill_id = best_ready_skill(actor, dist, nearby_count)
                 if skill_id:
                     return AIState.COMBAT, ActionProposal(
                         actor_id=actor.id, verb=ActionType.USE_SKILL, target=(skill_id, enemy.id),
-                        reason=f"Skill {skill_id} ready during wander → using on {enemy.id}",
+                        reason=f"Enemy adjacent during wander (Unlocked) → using {skill_id}",
                         updates=final_updates)
                 else:
                     return AIState.COMBAT, ActionProposal(
                         actor_id=actor.id, verb=ActionType.ATTACK, target=enemy.id,
-                        reason=f"Adjacent to enemy {enemy.id} during wander → basic attack",
+                        reason=f"Enemy in range during wander (Unlocked) → attacking",
                         updates=final_updates)
-                return AIState.COMBAT, ActionProposal(
-                    actor_id=actor.id, verb=ActionType.ATTACK, target=enemy.id,
-                    reason=f"Engaging enemy {enemy.id} in range {dist}",
-                    updates=final_updates)
 
             return AIState.HUNT, propose_move_toward(
-                actor, enemy.spatial.pos, snapshot, "Spotted enemy → hunting",
+                actor, enemy.spatial.pos, snapshot, "Spotted enemy during wander (Unlocked) → hunting",
                 updates=final_updates)
 
         if actor.identity.faction == Faction.HERO_GUILD and actor.progression.level >= 3:
@@ -220,6 +213,19 @@ class ReturnToCampHandler(StateHandler):
                 reason="Arrived at camp → guarding",
                 updates=final_updates + heal_meta + [NavigationUpdate(chase_ticks=0)])
 
+        # Support Bias during Hunt
+        support_id = ctx.tactical_hints.get("support_target_id")
+        if support_id:
+            target = snapshot.entities.get(support_id)
+            if target and target.combat.alive:
+                dist_to_ally = actor.spatial.pos.manhattan(target.spatial.pos)
+                from src.ai.states.combat import best_ready_skill
+                skill_id = best_ready_skill(ctx, target)
+                if skill_id:
+                    return AIState.COMBAT, ActionProposal(
+                        actor_id=actor.id, verb=ActionType.USE_SKILL, target=(skill_id, target.id),
+                        reason=f"Healing/Supporting ally {target.id} during hunt")
+
         camp = Perception.nearest_camp(actor, snapshot)
         if camp:
             return AIState.RETURN_TO_CAMP, propose_move_toward(
@@ -280,3 +286,71 @@ class ExhaustedHandler(StateHandler):
             verb=ActionType.REST,
             reason="EXHAUSTED: Recovering stamina..."
         )
+
+
+class InvestigateHandler(StateHandler):
+    """Handles movement toward a strategic lead. [PHASE 3]
+    
+    If the target is reached and the area is empty, it narrows the search 
+    via SearchNarrowingService and moves to the next candidate tile.
+    """
+    def handle(self, ctx: AIContext) -> tuple[AIState, ActionProposal]:
+        from src.core.models.strategy import ObjectiveKind, ProjectRecord
+        from src.actions.base import StrategicUpdate
+        from src.core.logic.search_narrowing import SearchNarrowingService
+        
+        actor, snapshot = ctx.actor, ctx.snapshot
+        cleanup = get_perception_cleanup_update(actor, snapshot)
+        final_updates = [cleanup] if cleanup else []
+
+        obj = actor.mind.strategic.current_objective
+        if not obj or obj.kind != ObjectiveKind.INVESTIGATE or not obj.target_pos:
+            return AIState.WANDER, ActionProposal(
+                actor_id=actor.id, verb=ActionType.REST,
+                reason="No valid investigation objective → wander",
+                updates=final_updates)
+
+        # 1. Update Persistent Search History [phase_3_task_8]
+        hist_up = SearchNarrowingService.update_search_history(ctx)
+        if hist_up:
+            final_updates.append(hist_up)
+
+        target = Vector2(x=obj.target_pos.x, y=obj.target_pos.y)
+        dist = actor.spatial.pos.manhattan(target)
+
+        # 2. Narrow Search on arrival
+        if dist == 0:
+            # Check for next search tile within relevant candidate zones
+            zone_id = None
+            if obj.leads:
+                 zone_id = obj.leads[0].candidate_zone_ids[0] if obj.leads[0].candidate_zone_ids else None
+            
+            next_tile = SearchNarrowingService.select_next_search_tile(ctx, zone_id) if zone_id else None
+            
+            if next_tile:
+                # Update current objective with new target_pos
+                updated_obj = obj.model_copy(update={"target_pos": next_tile})
+                prj = next((p for p in actor.mind.strategic.projects if p.project_id == obj.project_id), None)
+                if prj:
+                     updated_prj = prj.model_copy()
+                     for i, o in enumerate(updated_prj.objectives):
+                          if o.objective_id == obj.objective_id:
+                               updated_prj.objectives[i] = updated_obj
+                               break
+                     final_updates.append(StrategicUpdate(projects_add_or_update=[updated_prj]))
+                
+                return AIState.INVESTIGATING, propose_move_toward(
+                    actor, next_tile, snapshot, f"Target area empty → narrowing search to {next_tile}",
+                    updates=final_updates)
+            else:
+                # No more tiles or no zone → resolve
+                final_updates.append(StrategicUpdate(current_objective_id="")) 
+                return AIState.WANDER, ActionProposal(
+                    actor_id=actor.id, verb=ActionType.REST,
+                    reason="Search space exhausted or lead resolved → clearing objective",
+                    updates=final_updates)
+
+        # 3. Tactical Movement
+        return AIState.INVESTIGATING, propose_move_toward(
+            actor, target, snapshot, f"Moving to investigate strategic lead at {target}",
+            updates=final_updates)

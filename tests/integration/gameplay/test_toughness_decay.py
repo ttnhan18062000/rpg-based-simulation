@@ -69,10 +69,12 @@ def test_near_death_hardening():
     with patch('src.actions.combat.DamageResolutionService.resolve', return_value=(10, False, False, {"raw_damage": 10, "mitigation": 0})):
         combat_action.apply(proposal, world)
     
-    # In AOA, CombatAction.apply DOES NOT mutate defender.combat.hp directly.
-    # It appends updates to the proposal.
-    # However, it SHOULD still update max_hp if the threshold is met by predicted damage.
-    assert defender.combat.max_hp == old_max_hp + 1
+    # 4. Verify that CombatAction.apply proposes a ProgressionUpdate for the defender
+    from src.actions.base import ProgressionUpdate
+    prog_up = next((u for u in proposal.updates if isinstance(u, ProgressionUpdate) and u.target_id == defender.id and u.max_hp_delta > 0), None)
+    assert prog_up is not None, "Should generate a ProgressionUpdate for hardening targeted at the defender"
+    assert prog_up.max_hp_delta == 1, f"Expected +1 max_hp_delta, got {prog_up.max_hp_delta}"
+    assert prog_up.target_id == defender.id
 
 def test_stat_decay_inactivity():
     """Verify that stat decay can be triggered."""
@@ -138,4 +140,8 @@ def test_toughness_hardening_integration():
         mock_resolve.return_value = (0, False, False, {"raw_damage": 0, "mitigation": 0})
         combat_action.apply(proposal, world)
         
-    assert defender.combat.max_hp == old_max_hp + 1
+    # 4. Verify that CombatAction.apply proposes a ProgressionUpdate
+    from src.actions.base import ProgressionUpdate
+    prog_up = next((u for u in proposal.updates if isinstance(u, ProgressionUpdate) and u.target_id == defender.id and u.max_hp_delta > 0), None)
+    assert prog_up is not None, "Should generate a ProgressionUpdate for hardening"
+    assert prog_up.max_hp_delta == 1, f"Expected +1 max_hp_delta, got {prog_up.max_hp_delta}"

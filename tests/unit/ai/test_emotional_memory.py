@@ -35,7 +35,10 @@ def test_locational_trauma_triggers_dread():
     
     snapshot = type('MockSnapshot', (), {
         'tick': 100,
+        'hour': 12,
         'social_registry': SocialRegistry(),
+        'region_consequence_registry': {},
+        'regions': [],
         'entities': {1: actor},
         'nearby_entity_ids': lambda x, y, r: []
     })
@@ -50,7 +53,7 @@ def test_locational_trauma_triggers_dread():
     )
     
     updates = []
-    brain._memory_appraisal_phase(ctx, updates)
+    brain._memory_appraisal_phase(ctx, updates, {})
     
     # Check for DREAD increment proposed in updates
     dread_proposed = False
@@ -74,7 +77,10 @@ def test_emotional_bias_on_utility():
     
     snapshot = type('MockSnapshot', (), {
         'tick': 100,
+        'hour': 12,
         'social_registry': SocialRegistry(),
+        'region_consequence_registry': {},
+        'regions': [],
         'entities': {1: actor},
         'nearby_entity_ids': lambda x, y, r: []
     })
@@ -89,7 +95,7 @@ def test_emotional_bias_on_utility():
     )
     
     updates = []
-    brain._memory_appraisal_phase(ctx, updates)
+    brain._memory_appraisal_phase(ctx, updates, {})
     
     # Check decision drivers and updates
     has_dread_driver = False
@@ -110,7 +116,10 @@ def test_emotional_decay():
     
     snapshot = type('MockSnapshot', (), {
         'tick': 100,
+        'hour': 12,
         'social_registry': SocialRegistry(),
+        'region_consequence_registry': {},
+        'regions': [],
         'entities': {1: actor},
         'nearby_entity_ids': lambda x, y, r: []
     })
@@ -125,7 +134,7 @@ def test_emotional_decay():
     )
     
     updates = []
-    brain._memory_appraisal_phase(ctx, updates)
+    brain._memory_appraisal_phase(ctx, updates, {})
     
     decay_proposed = False
     for up in updates:

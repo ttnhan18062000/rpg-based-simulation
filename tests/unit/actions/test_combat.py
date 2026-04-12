@@ -207,28 +207,28 @@ class TestSkillUsage:
 
     def test_best_ready_skill_returns_highest_power(self):
         from src.core.gameplay.classes import SkillInstance
-        from src.ai.states import best_ready_skill
+        from src.ai.states import best_ready_skill; from tests.helpers.ai_test_utils import make_test_ai_context
         e = _make_entity(1, stamina=50)
         e.progression.skills = [
             SkillInstance(skill_id="power_strike"),   # power=1.8
             SkillInstance(skill_id="ambush"),          # power=1.6
         ]
-        result = best_ready_skill(e)
+        result = best_ready_skill(make_test_ai_context(e))
         assert result == "power_strike"
 
     def test_best_ready_skill_skips_on_cooldown(self):
         from src.core.gameplay.classes import SkillInstance
-        from src.ai.states import best_ready_skill
+        from src.ai.states import best_ready_skill; from tests.helpers.ai_test_utils import make_test_ai_context
         e = _make_entity(1, stamina=50)
         si = SkillInstance(skill_id="power_strike")
         si.cooldown_remaining = 3  # on cooldown
         e.progression.skills = [si, SkillInstance(skill_id="ambush")]
-        result = best_ready_skill(e)
+        result = best_ready_skill(make_test_ai_context(e))
         assert result == "ambush"
 
     def test_best_ready_skill_skips_insufficient_stamina(self):
         from src.core.gameplay.classes import SkillInstance
-        from src.ai.states import best_ready_skill
+        from src.ai.states import best_ready_skill; from tests.helpers.ai_test_utils import make_test_ai_context
         e = _make_entity(1, stamina=5)
         e.progression.stamina = 5
         # power_strike costs 12 stamina, ambush costs 8 — both too expensive
@@ -236,21 +236,21 @@ class TestSkillUsage:
             SkillInstance(skill_id="power_strike"),
             SkillInstance(skill_id="ambush"),
         ]
-        result = best_ready_skill(e)
+        result = best_ready_skill(make_test_ai_context(e))
         assert result is None
 
     def test_best_ready_skill_none_when_no_skills(self):
-        from src.ai.states.combat import best_ready_skill
+        from src.ai.states.combat import best_ready_skill; from tests.helpers.ai_test_utils import make_test_ai_context
         e = _make_entity(1, stamina=50)
         e.progression.skills = []
-        assert best_ready_skill(e) is None
+        assert best_ready_skill(make_test_ai_context(e)) is None
 
     def test_best_ready_skill_ignores_passive(self):
         from src.core.gameplay.classes import SkillInstance
-        from src.ai.states.combat import best_ready_skill
+        from src.ai.states.combat import best_ready_skill; from tests.helpers.ai_test_utils import make_test_ai_context
         e = _make_entity(1, stamina=50)
         e.progression.skills = [SkillInstance(skill_id="scavenge")]  # passive skill
-        assert best_ready_skill(e) is None
+        assert best_ready_skill(make_test_ai_context(e)) is None
 
     def test_skill_use_costs_stamina(self):
         from src.core.gameplay.classes import SkillInstance, SKILL_DEFS

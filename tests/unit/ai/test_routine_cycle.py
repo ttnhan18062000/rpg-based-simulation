@@ -17,7 +17,7 @@ def world():
 @pytest.fixture
 def hero(world):
     e = Entity(id=world.allocate_entity_id(), kind="hero")
-    e.identity.faction = Faction.HERO_GUILD
+    e.identity.faction = 0
     world.add_entity(e)
     return e
 
@@ -38,20 +38,27 @@ def ctx(world, hero):
     faction_reg = MagicMock()
     faction_reg.is_hostile.return_value = False
     
-    return AIContext(
+    ctx = AIContext(
         actor=hero,
         snapshot=snapshot,
         config=config,
         rng=rng,
         faction_reg=faction_reg
     )
+    snapshot.hour = 12
+    hero.mind.routine.disrupted_until_tick = 0
+    hero.mind.emotion.panic = 0.0
+    hero.mind.routine_profiles = []
+    hero.mind.place_attachments = []
+    return ctx
 
 def test_biological_decay_authoritative(world, hero):
     # 1. Initial state
     assert hero.mind.routine.sleep_debt == 0.0
     
     # 2. Advance time (ActionSystem tick)
-    ActionSystem.apply_action_state_transitions(world, None, [], None)
+    from src.config import SimulationConfig
+    ActionSystem.apply_action_state_transitions(world, SimulationConfig(), [], None)
     
     # 3. Verify decay
     assert hero.mind.routine.sleep_debt > 0.0
@@ -68,6 +75,7 @@ def test_sleep_goal_utility_at_night(ctx):
     
     # 2. Night Time (Tick 220 = Hour 22)
     ctx.snapshot.tick = 220
+    ctx.snapshot.hour = 22
     scores_night = evaluator.evaluate(ctx)
     score_night = next(s.score for s in scores_night if s.goal == GoalType.SLEEP)
     
@@ -85,6 +93,7 @@ def test_nocturnal_predator_bonus(ctx):
     
     # 2. Night Time (Tick 220 = Hour 22)
     ctx.snapshot.tick = 220
+    ctx.snapshot.hour = 22
     scores_night = evaluator.evaluate(ctx)
     combat_night = next(s.score for s in scores_night if s.goal == GoalType.COMBAT)
     
@@ -93,7 +102,8 @@ def test_nocturnal_predator_bonus(ctx):
     
     # They should also resist Sleep more than average
     ctx.actor.mind.routine.sleep_debt = 0.8
-    utility_night_slayer = next(s.score for s in scores_night if s.goal == GoalType.SLEEP)
+    scores_night_slayer = evaluator.evaluate(ctx)
+    utility_night_slayer = next(s.score for s in scores_night_slayer if s.goal == GoalType.SLEEP)
     
     # Normal hero (Balanced)
     ctx.actor.identity.archetype = Archetype.BALANCED

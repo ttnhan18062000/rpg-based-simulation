@@ -13,16 +13,13 @@ class RoutineService:
 
     @staticmethod
     def calculate_routine_biases(entity: 'Entity', current_hour: int, current_tick: int) -> dict[GoalType, float]:
-        """Returns utility multipliers for goals based on biological debt, schedule, and attachments.
-        
-        Args:
-            entity: The entity to evaluate.
-            current_hour: The current world hour (0-23).
-            current_tick: The current simulation tick.
+        """Returns utility multipliers for goals based on biological debt, schedule, and attachments."""
+        # AOA Stabilization: Robust numeric check to avoid MagicMock comparison errors [design-03]
+        try:
+            current_hour = int(current_hour)
+        except (TypeError, ValueError):
+            current_hour = 0
             
-        Returns:
-            A dictionary mapping GoalType to a utility multiplier (1.0 = no bias).
-        """
         biases = {g: 1.0 for g in GoalType}
         routine_state = entity.mind.routine
         
@@ -90,7 +87,9 @@ class RoutineService:
                             biases[g] *= (1.0 + attachment.importance * 0.4)
 
         # 5. Night/Day Circadian Baseline (for entities without specific profiles)
-        is_active_window = 6 <= current_hour < 22
+        # AOA Stabilization: Robust check for non-numeric current_hour from Mocks [design-03]
+        safe_hour = current_hour if isinstance(current_hour, (int, float)) else 12
+        is_active_window = 6 <= safe_hour < 22
         if not is_active_window and not entity.mind.routine_profiles:
             # Night time baseline: Strong bias toward sleep and safety
             biases[GoalType.SLEEP] = biases.get(GoalType.SLEEP, 1.0) * 2.0

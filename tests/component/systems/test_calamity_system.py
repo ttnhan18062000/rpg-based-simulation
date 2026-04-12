@@ -48,9 +48,7 @@ def test_calamity_spawning(basic_setup):
     # Force a calamity spawn
     boss = gen.spawn_calamity(world, "gorath")
     
-    print(f"DEBUG: boss.identity.is_world_boss={boss.identity.is_world_boss}")
-    print(f"DEBUG: boss.combat.hp={boss.combat.hp}")
-    print(f"DEBUG: boss.kind={boss.kind}")
+
     
     assert boss.identity.is_world_boss is True
     assert boss.identity.role == EntityRole.WORLD_BOSS

@@ -10,6 +10,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 from src.ai.goals.base import GoalScorer
 from src.core.models.enums import AIState, GoalType, Faction
+from src.core.models.strategy import ObjectiveKind
 from src.core.entities.traits import aggregate_trait_stats, aggregate_trait_utility
 from src.core.models.vectors import Vector2
 
@@ -26,6 +27,37 @@ def _trait_utility(ctx: AIContext):
 def _is_hero(ctx: AIContext) -> bool:
     return ctx.actor.identity.faction == Faction.HERO_GUILD
 
+def _current_region_difficulty(ctx: AIContext) -> int:
+    """Returns the difficulty tier of the current region (1-4)."""
+    actor = ctx.actor
+    rid = actor.spatial.current_region_id
+    if not rid:
+        return 0
+    
+    # Check current regions in snapshot
+    for region in ctx.snapshot.regions:
+        if region.region_id == rid:
+            return region.difficulty
+            
+    return 0
+
+def _region_danger_penalty(ctx: AIContext) -> float:
+    """Calculates a utility penalty based on region difficulty vs actor level. [PHASE 4]"""
+    difficulty = _current_region_difficulty(ctx)
+    if difficulty <= 0:
+        return 0.0
+        
+    level = ctx.actor.progression.level
+    
+    # Formula: excess_danger = (diff * 3) - (level + 3)
+    # Each point of excess_danger adds 0.05 penalty, capped at 0.4
+    excess = (difficulty * 3) - (level + 3)
+    if excess <= 0:
+        return 0.0
+        
+    penalty = excess * 0.05
+    return min(0.4, penalty)
+
 # ---------------------------------------------------------------------------
 # Combat — seek and fight enemies
 # ---------------------------------------------------------------------------
@@ -38,11 +70,11 @@ class CombatGoal(GoalScorer):
     def score(self, ctx: AIContext) -> float:
         actor = ctx.actor
         hp_ratio = actor.combat.hp_ratio
-        base = 0.3
+        base = 0.5
         enemy = ctx.nearest_enemy()
         if enemy:
             dist = actor.spatial.pos.manhattan(enemy.spatial.pos)
-            base += 0.7 * max(0, 1.0 - dist / 15.0)  # [AOA STABILIZATION] Boosted for unit test reliability
+            base += 0.5 * max(0, 1.0 - dist / 15.0)  # [AOA STABILIZATION] Dominant utility for engagement
         return base + _trait_utility(ctx).combat
 
 # ---------------------------------------------------------------------------
@@ -56,39 +88,19 @@ class FleeGoal(GoalScorer):
     def target_state(self) -> AIState: return AIState.FLEE
     def score(self, ctx: AIContext) -> float:
         actor = ctx.actor
-        hp_ratio = actor.combat.hp_ratio
         
-        # Deadband logic: 
-        # Enter at 0.3 (30%) HP, exit at 0.5 (50%) HP if already fleeing.
-        enter_threshold = getattr(ctx.config, "flee_hp_threshold", 0.3)
-        exit_threshold = getattr(ctx.config, "flee_exit_threshold", 0.5)
+        # [AOA STABILIZATION] Unify with tactical should_flee heuristic
+        # This ensures ranged/melee bias and situational awareness are consistent 
+        # between goal selection and action execution.
+        from src.ai.states.base import should_flee
         
-        # [PHASE 4 STAGE 3] Regional Danger Bias
-        # --- Regional Consequence Bias [PHASE 4] ---
-        # Situational danger from LocalScars and Macro Regional Danger layers
-        # shift the fleeing threshold upward.
-        rid = actor.spatial.current_region_id
-        danger_bias = 0.0
-        if rid:
-            region_metric = ctx.snapshot.region_consequence_registry.get(rid)
-            if region_metric:
-                # High danger regions lower the "enter" threshold (make you flee earlier)
-                danger_bias = region_metric.danger_level * 0.2
-        
-        is_already_fleeing = actor.mind.decision.ai_state == AIState.FLEE
-        
-        if hp_ratio < (enter_threshold + danger_bias):
-            return 2.0
-        if is_already_fleeing and hp_ratio < (exit_threshold + danger_bias):
+        # We check locally visible context and memory via should_flee
+        if should_flee(actor, ctx.config, ctx.nearest_enemy()):
             return 2.0
             
         # Situational Panic: Even if HP is high, extreme local trauma might trigger a retreat
-        from src.ai.perception import Perception
-        nearby_scars = Perception.visible_scars(actor, ctx.snapshot, scan_range=5)
-        if nearby_scars:
-            max_severity = max(s.severity for s in nearby_scars)
-            if max_severity > 0.9 and actor.mind.emotion.panic > 0.7:
-                return 1.5 # Panic flight
+        if actor.mind.emotion.panic > 0.8:
+            return 1.5 # Panic flight
                 
         return 0.0
 
@@ -110,7 +122,7 @@ class ExploreGoal(GoalScorer):
             if region_metric:
                 penalty = region_metric.danger_level * 0.5
         
-        return max(0.0, 0.2 + _trait_utility(ctx).explore - penalty)
+        return max(0.0, 0.3 + _trait_utility(ctx).explore - penalty)
 
 # ---------------------------------------------------------------------------
 # Loot — pick up items
@@ -157,9 +169,10 @@ class SleepScorer(GoalScorer):
     def target_state(self) -> AIState: return AIState.SLEEPING
     def score(self, ctx: AIContext) -> float:
         debt = ctx.actor.mind.routine.sleep_debt
-        hour = (ctx.snapshot.tick % 240) // 10
         utility = debt * 1.5
-        if hour >= 22 or hour <= 6: utility += 1.0
+        if debt > 0.05:
+            hour = ctx.snapshot.hour
+            if hour >= 22 or hour <= 6: utility += 1.0
         return utility
 
 class EatScorer(GoalScorer):
@@ -221,3 +234,20 @@ class CorpseScorer(GoalScorer):
     @property
     def target_state(self) -> AIState: return AIState.RECOVER_CORPSE
     def score(self, ctx: AIContext) -> float: return 0.0
+
+# ---------------------------------------------------------------------------
+# Investigation detours [PHASE 3]
+# ---------------------------------------------------------------------------
+
+class InvestigateGoal(GoalScorer):
+    """Utility based on having an active strategic lead/investigation objective."""
+    @property
+    def name(self) -> GoalType: return GoalType.INVESTIGATE
+    @property
+    def target_state(self) -> AIState: return AIState.INVESTIGATING
+    def score(self, ctx: AIContext) -> float:
+        obj = ctx.actor.mind.strategic.current_objective
+        if obj and obj.kind == ObjectiveKind.INVESTIGATE:
+            # High priority detour to resolve uncertainty
+            return 2.5 
+        return 0.0

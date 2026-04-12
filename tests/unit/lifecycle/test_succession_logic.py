@@ -36,6 +36,14 @@ def test_permadeath_succession_and_heirlooms(mock_world, lifecycle_system):
     hero.spatial.pos = Vector2(5, 5)
     hero.spatial.home_pos = Vector2(0, 0)
     hero.identity.household_id = "house_0_0"
+    hero.progression.gold = 1000 # [PHASE 1 STAGE 13]
+    
+    # Add Strategic Directives [PHASE 1 STAGE 13]
+    from src.core.models.strategy import DirectiveRecord, DirectiveKind
+    hero.mind.strategic.directives = [
+        DirectiveRecord(directive_id="revenge_1", kind=DirectiveKind.PERSONAL, label="Revenge on Goblins"),
+        DirectiveRecord(directive_id="guild_loyalty", kind=DirectiveKind.FACTIONAL, label="Defend the Guild")
+    ]
     
     # Add heirlooms
     ITEM_REGISTRY["legendary_sword"] = ItemTemplate(
@@ -74,10 +82,12 @@ def test_permadeath_succession_and_heirlooms(mock_world, lifecycle_system):
     successor_rec = mock_world.successor_registry[1]
     assert successor_rec.household_id == "house_0_0"
     assert successor_rec.motive_fragments["predecessor_name"] == "Arthas"
+    assert len(successor_rec.motive_fragments["directives"]) == 2 # [PHASE 1 STAGE 13]
     
     # 4. Verify Heirlooms in Household
     assert "house_0_0" in mock_world.household_registry
     household = mock_world.household_registry["house_0_0"]
+    assert household.legacy_gold == 500 # 50% of 1000
     assert "legendary_sword" in household.heirloom_ids
     assert "common_trash" not in household.heirloom_ids # Should have been dropped or stayed in inventory
     
@@ -92,6 +102,15 @@ def test_permadeath_succession_and_heirlooms(mock_world, lifecycle_system):
     assert new_hero.identity.household_id == "house_0_0"
     assert "Heir of Arthas" in new_hero.identity.titles
     assert new_hero.inventory.weapon == "legendary_sword"
+    
+    # Verify Legacy Directives [PHASE 1 STAGE 13]
+    legacy_labels = [d.label for d in new_hero.mind.strategic.directives]
+    assert "Legacy: Revenge on Goblins" in legacy_labels
+    assert "Legacy: Defend the Guild" in legacy_labels
+    
+    # Verify Wealth Stipend [PHASE 1 STAGE 13]
+    assert new_hero.progression.gold == 100 # 50 base + 50 stipend (10% of 500)
+    assert household.legacy_gold == 450 # 500 - 50
     
     # Verify SuccessorRecord cleanup
     assert 1 not in mock_world.successor_registry

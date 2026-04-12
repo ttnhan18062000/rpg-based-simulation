@@ -22,6 +22,7 @@ class HouseholdRecord(SimulationModel):
     
     # Legacy & Status
     reputation: float = Field(default=0.0, ge=-100.0, le=100.0)
+    legacy_gold: int = Field(default=0) # [PHASE 1 STAGE 13]
     storage_id: str | None = None # Reference to a shared persistent inventory
     heirloom_ids: list[str] = Field(default_factory=list) # [PHASE 4] Persistent equipment
     

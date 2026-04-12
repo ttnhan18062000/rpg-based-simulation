@@ -79,7 +79,7 @@ def test_reputation_penalty_on_trust_gain(basic_world):
     
     # A (betrayer), B (observer)
     a = Entity(id=1, kind="hero")
-    a.reputation.reputation_tags.append("Ally-Slayer")
+    a.identity.reputation.reputation_tags.append("Ally-Slayer")
     
     b = Entity(id=2, kind="hero")
     

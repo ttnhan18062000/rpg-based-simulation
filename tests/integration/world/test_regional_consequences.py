@@ -134,6 +134,17 @@ class TestRegionalConsequences(unittest.TestCase):
         actor.spatial.current_region_id = region_id
         actor.identity.traits = [TraitType.CURIOUS] # Positive explore utility
         
+        # [AOA STABILIZATION] Inject a visible high-threat enemy into memory
+        # to trigger should_flee's panic logic, justifying the danger bias.
+        from src.ai.beliefs import BeliefRecord
+        from src.core.aspects.mind import ThreatEstimate
+        actor.mind.perception.entity_memory[999] = BeliefRecord(
+            entity_id=999,
+            pos=Vector2(51, 51), # Right next to actor
+            last_seen_tick=1,
+            threat=ThreatEstimate(overall=0.9, confidence=1.0)
+        )
+        
         snapshot = Snapshot.from_world(self.world)
         ctx = AIContext(
             actor=actor,

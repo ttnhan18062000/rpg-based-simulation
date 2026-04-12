@@ -32,7 +32,7 @@ class SimulationConfig:
     # AI
     vision_range: int = 6
     flee_hp_threshold: float = 0.3
-    flee_exit_threshold: float = 0.5         # HP ratio to stop fleeing (deadband)
+    flee_exit_threshold: float = 0.4         # HP ratio to stop fleeing (deadband)
     min_commitment_ticks: int = 3            # minimum ticks before goal re-evaluation
     goal_cooldown_ticks: int = 5             # ticks abandoned goals are penalized
     goal_cooldown_penalty: float = 0.5       # score multiplier during cooldown

@@ -26,9 +26,11 @@ class TelemetrySystem(System):
             # SIM_ACTION_QUEUE_DEPTH, # Handled by WorldLoop since it owns the queue
             ACTIVE_ENTITIES,
             SIM_TOP_HERO_LEVEL,
-            SIM_TOP_HERO_GOLD
+            SIM_TOP_HERO_GOLD,
+            SIM_STRATEGIC_PRESSURE_CONCERNS,
+            SIM_STRATEGIC_WORLD_OPPORTUNITIES
         )
-        from src.core.models.enums import Faction, HeroClass
+        from src.core.models.enums import Faction, HeroClass, StrategicStatus
         
         world = ctx.world
         
@@ -100,3 +102,20 @@ class TelemetrySystem(System):
                 break
         if not calamity_active:
             SIM_CALAMITY_ACTIVE.labels(region_id="none").set(0)
+
+        # 4. Strategic Pressures (Phase 6)
+        concern_kind_counts = {} # kind_name -> total_count
+        for entity in world.entities.values():
+            if not entity.combat.alive or entity.kind == "generator":
+                continue
+            for concern in entity.mind.strategic.concerns:
+                kind_name = concern.kind.name.lower() if hasattr(concern.kind, "name") else str(concern.kind).lower()
+                concern_kind_counts[kind_name] = concern_kind_counts.get(kind_name, 0) + 1
+        
+        for kind, count in concern_kind_counts.items():
+            SIM_STRATEGIC_PRESSURE_CONCERNS.labels(kind=kind).set(count)
+            
+        # 5. World Opportunities (Phase 6)
+        active_opps = sum(1 for opp in world.strategic_registry.opportunities.values() 
+                          if opp.status == StrategicStatus.ACTIVE)
+        SIM_STRATEGIC_WORLD_OPPORTUNITIES.set(active_opps)

@@ -33,7 +33,7 @@ class KnowledgePropagationSystem(System):
         # 2. Identify potential sharing pairs (nearby allies)
         for sharer in entities:
             # Random chance to share if not busy
-            if ctx.rng.next_bool(Domain.SOCIAL, sharer.id, tick, 0.3): # ~30% chance to attempt sharing
+            if not ctx.rng.next_bool(Domain.SOCIAL, sharer.id, tick, 0.4): # ~40% chance to attempt sharing
                 continue
                 
             # Get nearby entities in vision range
@@ -45,18 +45,30 @@ class KnowledgePropagationSystem(System):
                 # Only share with allies/neutrals (to start with)
                 if not ctx.faction_reg.is_hostile(sharer.identity.faction, recipient.identity.faction):
                     # Attempt propagation
-                    update = KnowledgePropagationService.propagate_gossip(sharer, recipient, world)
-                    if update:
-                        # Authoritative application via ActionSystem shim or direct update
-                        # Since this is a system running in the tick loop, we apply directly to the recipient's mind update queue or similar.
-                        # In this architecture, systems usually push updates to the context.
-                        # ctx.emit("social", f"{sharer.display_name} shared rumors with {recipient.display_name}", (sharer.id, recipient.id))
-                        
-                        # Apply to memory (Authoritative transition)
-                        for eid, belief in update.entity_memory.items():
+                    p_update, s_update = KnowledgePropagationService.propagate_gossip(sharer, recipient, world)
+                    
+                    if p_update:
+                        # Apply entity memory (Authoritative transition)
+                        for eid, belief in p_update.entity_memory.items():
                             from src.ai.beliefs import BeliefService
-                            BeliefService.merge_indirect_belief(recipient, belief)
+                            up = BeliefService.merge_indirect_belief(recipient, belief)
+                            if up and up.entity_memory:
+                                recipient.mind.perception.entity_memory.update(up.entity_memory)
                             
+                    if s_update:
+                        # Apply strategic leads (Authoritative transition)
+                        strat = recipient.mind.strategic
+                        if s_update.leads_add_or_update:
+                            for new_lead in s_update.leads_add_or_update:
+                                # Merge lead
+                                existing = next((l for l in strat.leads if l.label == new_lead.label), None)
+                                if existing:
+                                    # Update confidence if higher
+                                    existing.confidence = max(existing.confidence, new_lead.confidence)
+                                else:
+                                    strat.leads.append(new_lead)
+                        
+                    if p_update or s_update:
                         # Log for visualization
                         if ctx.emit:
                              ctx.emit("social", f"{sharer.identity.display_name} shared knowledge with {recipient.identity.display_name}", (sharer.id, recipient.id))

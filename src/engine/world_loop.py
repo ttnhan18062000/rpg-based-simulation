@@ -149,7 +149,9 @@ class WorldLoop:
         self._system_manager.register(KnowledgePropagationSystem(config, self._rng), config.subsystem_rate_environment)
         
         from src.systems.world.regional_consequence_system import RegionalConsequenceSystem
+        from src.systems.world.strategy_world_integration_system import StrategicWorldIntegrationSystem
         self._system_manager.register(RegionalConsequenceSystem(config, self._rng), config.subsystem_rate_environment)
+        self._system_manager.register(StrategicWorldIntegrationSystem(config, self._rng), config.subsystem_rate_environment)
         
         from src.systems.infrastructure.event_system import EventBus, TelemetryBridge
         self._world.event_bus = EventBus()

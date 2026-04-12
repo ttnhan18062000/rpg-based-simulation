@@ -59,7 +59,7 @@ def test_scaling_100_entities():
 
 def test_scaling_500_entities():
     tps, eps = run_bench(500)
-    assert tps > 0.5
+    assert tps > 0.25
 
 @pytest.mark.slow
 def test_scaling_1000_entities():

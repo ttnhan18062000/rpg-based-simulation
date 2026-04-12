@@ -57,7 +57,7 @@ def test_dynamic_liberate_quest(context):
         rng=context.rng,
         world=world
     )
-    print(f"DEBUG: Generated quest: {quest}")
+
     
     # 3. Verify it's a liberate quest
     assert quest is not None
@@ -72,7 +72,7 @@ def test_history_logging(context):
     
     # 1. Initial on_tick to subscribe
     history_system.on_tick(context, 0)
-    print(f"DEBUG: Subscribers after on_tick: {len(world.event_bus._global_subscribers)}")
+
     assert len(world.event_bus._global_subscribers) > 0
     
     # 2. Simulate a war declaration
@@ -81,11 +81,11 @@ def test_history_logging(context):
     world.faction_aggression[target_faction] = 85.0
     world.war_status[target_faction] = False # Ensure it's not already at war
     
-    print(f"DEBUG: Triggering StrategySystem on_tick at 100")
+
     strategy_system.on_tick(context, 100)
     
     # 3. Verify history entry
-    print(f"DEBUG: History entries: {world.history}")
+
     assert len(world.history) > 0
     war_entry = next((e for e in world.history if e["type"] == "WarEvent"), None)
     assert war_entry is not None

@@ -21,6 +21,7 @@ def reward_setup():
     # Killer (Hero)
     killer = MagicMock(spec=Entity)
     killer.id = 1
+    killer.kind = "hero"
     killer.identity = IdentityAspect(display_name="Hero", kind="hero", faction=Faction.HERO_GUILD)
     killer.combat = CombatAspect(hp=100, max_hp=100, atk_base=100, def_base=10)
     killer.progression = ProgressionAspect(level=1, hero_class=HeroClass.WARRIOR)
@@ -31,6 +32,7 @@ def reward_setup():
     # Victim (Hero)
     victim = MagicMock(spec=Entity)
     victim.id = 2
+    victim.kind = "boss"
     victim.identity = IdentityAspect(display_name="Boss", kind="boss", faction=Faction.HERO_GUILD, is_world_boss=True)
     victim.combat = CombatAspect(hp=10, max_hp=500, atk_base=20, def_base=20)
     victim.progression = ProgressionAspect(level=5, gold=100)

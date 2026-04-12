@@ -143,6 +143,17 @@ class Entity(SimulationModel):
         """Check if entity has a specific TraitType via its identity aspect."""
         return trait in self.identity.traits
 
+    # --- AOA Shims (Backward Compatibility) ---
+
+    # --- AOA Shims (Backward Compatibility) ---
+    # HP and Stamina shims removed to satisfy Architectural Integrity tests.
+    # Use .combat.hp and .progression.stamina instead.
+
+    @property
+    def reputation(self) -> ReputationProfile:
+        """AOA Shim: Redirects to identity.reputation."""
+        return self.identity.reputation
+
     # --- Copying ---
 
     def copy(self) -> Entity:

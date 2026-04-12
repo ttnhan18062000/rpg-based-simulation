@@ -50,8 +50,9 @@ class Snapshot(SimulationModel):
     world_history: "WorldHistoryRegistry" = Field(default_factory=lambda: WorldHistoryRegistry())
     household_registry: Mapping[str, "HouseholdRecord"] = Field(default_factory=dict)
     scar_registry: tuple["LocalScarRecord", ...] = Field(default_factory=tuple)
-    region_consequence_registry: Mapping[str, "RegionConsequenceRecord"] = Field(default_factory=dict)
-    successor_registry: Mapping[int, "SuccessorRecord"] = Field(default_factory=dict)
+    region_consequence_registry: dict[str, RegionConsequenceRecord] = Field(default_factory=dict)
+    successor_registry: dict[int, SuccessorRecord] = Field(default_factory=dict)
+    strategic_registry: "WorldStrategicRegistry" = Field(default_factory=lambda: WorldStrategicRegistry()) # [PHASE 6]
     
     # Internal spatial caches (not serialized)
     _spatial: dict = PrivateAttr(default_factory=dict)
@@ -110,6 +111,7 @@ class Snapshot(SimulationModel):
             scar_registry=tuple(s.model_copy(deep=True) for s in world.scar_registry),
             region_consequence_registry={k: v.model_copy(deep=True) for k, v in world.region_consequence_registry.items()},
             successor_registry={k: v.model_copy(deep=True) for k, v in world.successor_registry.items()},
+            strategic_registry=world.strategic_registry.copy()
         )
         
         # Manually set private attrs
@@ -161,6 +163,7 @@ from src.core.models.households import HouseholdRecord
 from src.core.models.local_scars import LocalScarRecord
 from src.core.models.regions import RegionConsequenceRecord
 from src.core.models.continuity import SuccessorRecord
+from .world_strategy import WorldStrategicRegistry # [PHASE 6]
 from src.core.models.enums import Faction, HeroClass, AIState, ActionType, EmotionType, GoalType
 
 Snapshot.model_rebuild()
