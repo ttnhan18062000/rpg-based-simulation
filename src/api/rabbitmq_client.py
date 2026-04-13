@@ -1,21 +1,33 @@
+from __future__ import annotations
+
 import os
-import pika
 import logging
+from typing import TYPE_CHECKING
+
+try:
+    import pika
+    HAS_PIKA = True
+except ImportError:
+    HAS_PIKA = False
+    pika = None
+
+if TYPE_CHECKING:
+    import pika
 
 logger = logging.getLogger(__name__)
 
 # Track a global connection for simple synchronous workers/clients 
 # (e.g., the EngineManager loop or the ai_worker thread).
-_connection: pika.BlockingConnection | None = None
+_connection: 'pika.BlockingConnection' | None = None
 
 
 def is_rabbitmq_disabled() -> bool:
     """Return True if RabbitMQ integration is explicitly disabled."""
     return os.environ.get("DISABLE_RABBITMQ", "0").lower() in ("1", "true", "yes")
 
-def get_rabbitmq() -> pika.BlockingConnection | None:
+def get_rabbitmq() -> 'pika.BlockingConnection' | None:
     """Get or create a synchronous RabbitMQ connection with retry logic."""
-    if is_rabbitmq_disabled():
+    if is_rabbitmq_disabled() or not HAS_PIKA or pika is None:
         return None
         
     global _connection

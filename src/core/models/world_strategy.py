@@ -54,5 +54,5 @@ class WorldStrategicRegistry(SimulationModel):
     last_update_tick: int = 0
 
     def copy(self) -> WorldStrategicRegistry:
-        return self.model_copy(deep=False)
+        return self.model_copy(deep=True)
 

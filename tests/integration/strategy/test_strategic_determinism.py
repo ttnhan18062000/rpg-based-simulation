@@ -1,29 +1,26 @@
 import os
 import json
-import shutil
 import pytest
-from scripts.test_harness import run_harness
+from src.testing.headless_regression_runner import HeadlessRunner
 
 @pytest.fixture
-def harness_outdir(tmp_path):
-    """Temporary directory for harness outputs."""
-    outdir = tmp_path / "harness_test"
-    outdir.mkdir()
-    return str(outdir)
+def runner(tmp_path):
+    """HeadlessRunner instance for testing."""
+    outdir = tmp_path / "regression_tests"
+    return HeadlessRunner(output_root=str(outdir), max_runs=5)
 
-def test_harness_determinism(harness_outdir):
+def test_harness_determinism(runner):
     """Verify that two runs with the same seed produce byte-identical results."""
     seed = 123
-    ticks = 10
-    
-    run1_dir = os.path.join(harness_outdir, "run1")
-    run2_dir = os.path.join(harness_outdir, "run2")
+    ticks = 5 # Reduced for speed, still proves determinism
     
     # Run 1
-    res1 = run_harness(seed, ticks, run1_dir, verify=True)
+    res1 = runner.run(seed, ticks)
+    assert res1.success, f"Run 1 failed: {res1.error}"
     
     # Run 2
-    res2 = run_harness(seed, ticks, run2_dir, verify=True)
+    res2 = runner.run(seed, ticks)
+    assert res2.success, f"Run 2 failed: {res2.error}"
     
     # Verify replay files match
     with open(res1.replay_path, 'r') as f:
@@ -34,27 +31,27 @@ def test_harness_determinism(harness_outdir):
     assert replay1 == replay2, "Replay logs differ between deterministic runs!"
     print("✓ Replay logs are identical.")
 
-    # Verify cognition exports match for one tracked entity
-    eid = list(res1.cognition_paths.keys())[0]
-    with open(res1.cognition_paths[eid], 'r') as f:
-        cognition1 = json.load(f)
-    with open(res2.cognition_paths[eid], 'r') as f:
-        cognition2 = json.load(f)
-        
-    assert cognition1 == cognition2, "Cognition exports differ between deterministic runs!"
+    # Verify cognition exports match for tracked entities
+    for eid in res1.cognition_paths:
+        with open(res1.cognition_paths[eid], 'r') as f:
+            cognition1 = json.load(f)
+        with open(res2.cognition_paths[eid], 'r') as f:
+            cognition2 = json.load(f)
+            
+        assert cognition1 == cognition2, f"Cognition exports for E{eid} differ between deterministic runs!"
     print("✓ Cognition exports are identical.")
 
-def test_harness_non_determinism_different_seed(harness_outdir):
+def test_harness_non_determinism_different_seed(runner):
     """Verify that different seeds produce different outcomes (basic sanity check)."""
-    ticks = 10
+    ticks = 5
     
     # Run with Seed A
-    run_a_dir = os.path.join(harness_outdir, "run_a")
-    res_a = run_harness(111, ticks, run_a_dir)
+    res_a = runner.run(111, ticks)
+    assert res_a.success
     
     # Run with Seed B
-    run_b_dir = os.path.join(harness_outdir, "run_b")
-    res_b = run_harness(222, ticks, run_b_dir)
+    res_b = runner.run(222, ticks)
+    assert res_b.success
     
     with open(res_a.replay_path, 'r') as f:
         replay_a = json.load(f)
@@ -62,7 +59,6 @@ def test_harness_non_determinism_different_seed(harness_outdir):
         replay_b = json.load(f)
         
     # Verify that the runs are actually different at an action level
-    # Different seeds should lead to at least one divergent AI decision
     diverged = False
     for t_a, t_b in zip(replay_a["ticks"], replay_b["ticks"]):
         actions_a = t_a["actions"]

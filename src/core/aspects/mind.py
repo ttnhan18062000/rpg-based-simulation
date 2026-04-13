@@ -144,6 +144,29 @@ class PerceptionMemory(SimulationModel):
     terrain_memory: dict[tuple[int, int], int] = Field(default_factory=dict)
     entity_memory: dict[int, MemoryRecord] = Field(default_factory=dict)
     
+    @model_validator(mode="before")
+    @classmethod
+    def _coerce_memory_keys(cls, data: Any) -> Any:
+        """AOA Phase 6: Coerce JSON string keys back to tuples for terrain_memory."""
+        if not isinstance(data, dict):
+            return data
+            
+        terrain = data.get("terrain_memory")
+        if isinstance(terrain, dict):
+            new_terrain = {}
+            for k, v in terrain.items():
+                if isinstance(k, str) and k.startswith("(") and k.endswith(")"):
+                    try:
+                        # Parse "(x, y)" -> (x, y)
+                        parts = k[1:-1].split(",")
+                        new_terrain[(int(parts[0]), int(parts[1]))] = v
+                    except (ValueError, IndexError):
+                        new_terrain[k] = v
+                else:
+                    new_terrain[k] = v
+            data["terrain_memory"] = new_terrain
+        return data
+    
     @model_validator(mode="after")
     def _validate_memory(self) -> "PerceptionMemory":
         """Force coercion of memory records if they came in as dicts."""

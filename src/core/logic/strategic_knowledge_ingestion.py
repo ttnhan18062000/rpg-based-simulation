@@ -259,14 +259,15 @@ class StrategicKnowledgeIngestionService:
         
         # 2. If rumor implies high danger, spawn a shared/caution concern
         if danger_level > 0.5:
-             from src.core.models.strategy import ConcernRecord
+             from src.core.models.strategy import ConcernRecord, ConcernKind
              concerns.append(ConcernRecord(
                  concern_id=f"concern_inn_danger_{tick}",
+                 kind=ConcernKind.THREAT,
                  cause_type="rumor",
                  label="Reported Danger",
                  urgency=danger_level,
-                 is_public=True,
-                 discovered_tick=tick
+                 visibility="public",
+                 created_tick=tick
              ))
              
         return StrategicUpdate(

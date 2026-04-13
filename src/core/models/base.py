@@ -3,6 +3,18 @@ from typing import TYPE_CHECKING, TypeVar, Type, Any
 from pydantic import BaseModel, ConfigDict, Field, PrivateAttr, model_serializer
 from types import MappingProxyType
 import typing
+import copyreg
+
+# AOA Phase Boundary: Register MappingProxyType with copyreg to ensure 
+# picklability/deepcopy safety in Python 3.13. This allows frozen models 
+# to be deep-copied into snapshots without TypeError.
+def _reconstruct_mapping_proxy(d: dict[Any, Any]) -> MappingProxyType:
+    return MappingProxyType(d)
+
+def _reduce_mapping_proxy(mp: MappingProxyType) -> tuple:
+    return (_reconstruct_mapping_proxy, (dict(mp),))
+
+copyreg.pickle(MappingProxyType, _reduce_mapping_proxy)
 
 if TYPE_CHECKING:
     from src.core.entities.entity import Entity

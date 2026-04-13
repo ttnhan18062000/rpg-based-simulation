@@ -1,11 +1,23 @@
-"""Kafka Client for persistent event sourcing and epoch snapshots."""
+from __future__ import annotations
 
 import logging
 import os
-from typing import Any
+from typing import Any, TYPE_CHECKING
 
-from confluent_kafka import Producer, Consumer
-from confluent_kafka.admin import AdminClient, NewTopic
+try:
+    from confluent_kafka import Producer, Consumer
+    from confluent_kafka.admin import AdminClient, NewTopic
+    HAS_KAFKA = True
+except ImportError:
+    HAS_KAFKA = False
+    Producer = None
+    Consumer = None
+    AdminClient = None
+    NewTopic = None
+
+if TYPE_CHECKING:
+    from confluent_kafka import Producer, Consumer
+    from confluent_kafka.admin import AdminClient, NewTopic
 
 logger = logging.getLogger(__name__)
 
@@ -25,8 +37,8 @@ def is_kafka_disabled() -> bool:
 
 def init_kafka_topics() -> None:
     """Idempotently create exactly the required topics with appropriate configurations."""
-    if is_kafka_disabled():
-        logger.info("Kafka integration disabled via environment variable.")
+    if is_kafka_disabled() or not HAS_KAFKA or AdminClient is None:
+        logger.info("Kafka integration disabled or package missing.")
         return
         
     admin_client = AdminClient({"bootstrap.servers": get_kafka_url()})
@@ -65,11 +77,11 @@ def init_kafka_topics() -> None:
         logger.error("Failed to connect to Kafka AdminClient: %s", e)
 
 
-def get_kafka_producer() -> Producer | None:
+def get_kafka_producer() -> 'Producer' | None:
     """Return a singleton, highly-durable Kafka Producer."""
     global _PRODUCER_INSTANCE
     
-    if is_kafka_disabled():
+    if is_kafka_disabled() or not HAS_KAFKA or Producer is None:
         return None
         
     if _PRODUCER_INSTANCE is not None:
@@ -110,9 +122,9 @@ def flush_producer() -> None:
     if _PRODUCER_INSTANCE:
         _PRODUCER_INSTANCE.flush(timeout=5.0)
 
-def create_kafka_consumer(group_id: str = "sim_engine_recovery") -> Consumer | None:
+def create_kafka_consumer(group_id: str = "sim_engine_recovery") -> 'Consumer' | None:
     """Return a new Kafka Consumer configured for reading from the beginning."""
-    if is_kafka_disabled():
+    if is_kafka_disabled() or not HAS_KAFKA or Consumer is None:
         return None
         
     bootstrap_servers = get_kafka_url()

@@ -135,3 +135,52 @@ def test_milestone_4_social_filtering(ctx, actor, faction_reg):
     assert hostile_score < -4.0, f"Hostile score {hostile_score} should be low"
     assert ally_score > 1.0, f"Ally score {ally_score} should be high"
     assert any("debt_obligation" in d for d in ally_drivers), f"Drivers: {ally_drivers}"
+
+def test_strategic_uncertainty_and_anti_cheating(ctx, actor):
+    """Verify that rumors have lower certainty and vague leads don't 'cheat' with perfect coords."""
+    # 1. Ingest a rumor
+    rumor_up = StrategicKnowledgeIngestionService.ingest_inn_rumor(
+        actor_id=actor.id,
+        tick=100,
+        rumor_text="Rumors of a dragon in the north",
+        danger_level=0.8,
+        rng=DeterministicRNG(42)
+    )
+    
+    lead = rumor_up.leads_add_or_update[0]
+    assert lead.certainty == 0.5, "Rumors should have 0.5 certainty"
+    assert lead.target_coords is None, "Rumors should not magically have coords"
+    
+    # 2. Ingest guild intel (Higher confidence)
+    guild_up = StrategicKnowledgeIngestionService.ingest_guild_intel(
+        actor_id=actor.id,
+        tick=110,
+        material_hints={},
+        camps_found=[(50, 50)],
+        resources_found=[],
+        source_confidence=0.9
+    )
+    
+    guild_lead = next(l for l in guild_up.leads_add_or_update if "camp" in l.label.lower())
+    assert guild_lead.certainty == 0.9
+    # NOTE: ingest_guild_intel currently doesn't set target_coords on the LeadRecord,
+    # it puts it in candidate_zones. This is correct Phase 3 behavior (Anti-cheating).
+    assert guild_lead.target_coords is None
+    assert len(guild_up.candidate_zones_add_or_update) > 0
+    
+    # 3. Verify that we can't build a precise objective from a vague lead without a search
+    # (Checking the ObjectiveDerivationService/CandidateBuilder logic)
+    from src.core.models.strategy import ProjectRecord, ProjectKind, ObjectiveRecord, ObjectiveKind
+    
+    # If we create an objective for this vague lead
+    obj = ObjectiveRecord(
+        objective_id="obj_vague",
+        project_id="prj_vague",
+        kind=ObjectiveKind.INVESTIGATE,
+        label="Investigate Rumor",
+        leads=[lead]
+    )
+    
+    # In a real scenario, the Brain should use SearchNarrowingService to find the first tile.
+    # If target_pos is missing, it should fallback to region center or similar, not the 'cheated' camp loc.
+    assert obj.target_pos is None

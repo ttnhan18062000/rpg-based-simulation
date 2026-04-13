@@ -1,6 +1,7 @@
 """Grid / map system."""
 
 from __future__ import annotations
+from typing import TYPE_CHECKING, Any
 
 from src.core.models.enums import Material
 from src.core.models import Vector2
@@ -13,7 +14,7 @@ for m in Material:
 
 
 from src.core.models.base import SimulationModel
-from pydantic import ConfigDict, model_validator
+from pydantic import ConfigDict, model_validator, model_serializer
 
 class Grid(SimulationModel):
     """2D tile grid backed by a flat list for cache-friendly access."""
@@ -22,6 +23,15 @@ class Grid(SimulationModel):
     width: int
     height: int
     tiles: bytearray | bytes
+
+    @model_serializer(mode='plain')
+    def _serialize_grid(self) -> dict[str, Any]:
+        """AOA Phase 6: Canonical hex serialization for grid tiles."""
+        return {
+            "width": self.width,
+            "height": self.height,
+            "tiles": self.tiles.hex() if hasattr(self.tiles, "hex") else bytes(self.tiles).hex()
+        }
 
     @model_validator(mode='before')
     @classmethod
@@ -166,3 +176,5 @@ class Grid(SimulationModel):
             height=self.height,
             tiles=bytearray(self.tiles)
         )
+
+Grid.model_rebuild()

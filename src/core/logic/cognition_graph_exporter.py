@@ -85,6 +85,16 @@ class EntityCognitionExporter:
                 # Link objective to its active status
                 if p.active_objective_id == o.objective_id:
                     add_edge(p_id, o_id, "active_objective")
+                
+                # Link objective to its supporting leads [phase_3_task_5]
+                for lead_ref in o.leads:
+                    l_ref_id = f"lead:{lead_ref.lead_id}"
+                    add_edge(l_ref_id, o_id, "supports_objective")
+                
+                # Link objective to its blockers [phase_3_task_5]
+                for b_id_ref in o.blocker_ids:
+                    b_ref_id = f"blocker:{b_id_ref}"
+                    add_edge(b_ref_id, o_id, "blocks_objective")
 
         # 6. Map Continuity Edges
         if strat.current_project_id:
@@ -109,6 +119,14 @@ class EntityCognitionExporter:
                 "priority": c.priority
             })
             add_edge(root_id, c_id, "has_concern")
+            
+            # Map structural links for concerns if applicable [phase_3_task_5]
+            if hasattr(c, "source_event_id") and c.source_event_id:
+                ev_id = f"event:{c.source_event_id}"
+                # (Events aren't fully in graph yet, but we could add stub nodes)
+                # add_node(ev_id, "event", f"Event {c.source_event_id}")
+                # add_edge(ev_id, c_id, "caused_concern")
+                pass
 
         # 9. Map Blockers
         for b in sorted(strat.blockers, key=lambda x: x.blocker_id):
@@ -119,10 +137,46 @@ class EntityCognitionExporter:
             add_edge(root_id, b_id, "has_blocker")
 
         # 10. Map Leads
-        for l in sorted(strat.leads, key=lambda x: x.lead_id):
-            l_id = f"lead:{l.lead_id}"
-            add_node(l_id, "lead", l.label, {"certainty": l.certainty})
+            add_node(l_id, "lead", l.label, {
+                "certainty": l.certainty,
+                "kind": str(l.kind),
+                "target_pos": str(l.target_coords) if l.target_coords else None
+            })
             add_edge(root_id, l_id, "has_lead")
+            
+        # 11. Map Decision Drivers [phase_3_task_5]
+        for driver in getattr(strat, "recent_drivers", []):
+            dr_id = f"driver:{driver.label}:{tick}"
+            add_node(dr_id, "decision_driver", driver.label, {
+                "kind": driver.kind,
+                "weight": driver.weight,
+                "description": driver.description
+            })
+            add_edge(root_id, dr_id, "driven_by")
+
+        # 12. Map Turning Points [MILESTONE 6 Expansion]
+        narrative = getattr(entity.mind, "narrative", None)
+        if narrative:
+            for tp in sorted(narrative.turning_points, key=lambda x: x.event_id):
+                tp_id = f"turning_point:{tp.event_id}"
+                add_node(tp_id, "turning_point", tp.summary_tag or tp.kind.name, {
+                    "kind": tp.kind.name,
+                    "tick": tp.tick,
+                    "impact": tp.emotional_impact,
+                    "salience": tp.salience_score
+                })
+                add_edge(root_id, tp_id, "experienced")
+
+        # 13. Map Place Attachments [MILESTONE 6 Expansion]
+        attachments = getattr(entity.mind, "place_attachments", [])
+        for pa in sorted(attachments, key=lambda x: str(x.location_pos)):
+            pa_id = f"place_attachment:{pa.location_pos}"
+            add_node(pa_id, "place_attachment", pa.kind.name, {
+                "kind": pa.kind.name,
+                "importance": pa.importance,
+                "pos": str(pa.location_pos)
+            })
+            add_edge(root_id, pa_id, "attached_to")
 
         # Final Determinism: Sort nodes and edges
         graph.nodes.sort(key=lambda x: x.node_id)
