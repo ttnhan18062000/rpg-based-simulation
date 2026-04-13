@@ -276,20 +276,37 @@ Enum fields use `Annotated[EnumType, PlainSerializer(...)]` — **IntEnums at ru
 
 See **[docs/design_patterns.md](docs/design_patterns.md)** §7 for full details.
 
+## Observable AI & Strategic Cognition [NEW]
+
+The engine now supports a sophisticated **Strategic Cognition Layer** (Phase 7) that provides entities with long-term memory and hierarchical reasoning. 
+
+- **Mind Hierarchy**: Motives -> Projects -> Objectives. No more "tactical jitter".
+- **Continuity**: AI characters remember their current mission even after combat interruptions.
+- **Cognition Visualizer**: Interactive top-down mind-map visualization for auditing AI decisions.
+- **Headless Regression**: 100% deterministic simulation verifier with artifact generation.
+
+### Using the Cognition Visualizer
+To inspect an entity's strategic mind:
+1. Open `tools/viz_strategy.html` in any modern browser.
+2. Drag and drop a `cognition_e[id].json` file from your `logs/` directory.
+3. Explore the nodes (Directives, Projects, Objectives) and edges (pursuing, influenced by).
+
+---
+
 ## Documentation
 
 - **[docs/pitch.md](docs/pitch.md)** — Project pitch, vision, and roadmap
-- **[docs/architecture.md](docs/architecture.md)** — Technical architecture (concurrency model, tick cycle, API layer)
-- **[docs/frontend.md](docs/frontend.md)** — Frontend tech stack, component tree, hooks, canvas rendering
-- **[docs/api_reference.md](docs/api_reference.md)** — REST API endpoints and schemas (including metadata)
-- **[docs/design_patterns.md](docs/design_patterns.md)** — Design patterns, shared schemas, metadata API
-- **[docs/entities_and_factions.md](docs/entities_and_factions.md)** — Faction system, territory intrusion, status effects
-- **[docs/buildings_and_economy.md](docs/buildings_and_economy.md)** — Town buildings, shop, blacksmith, guild, crafting
-- **[docs/world_generation.md](docs/world_generation.md)** — Terrain regions, resource nodes, mob races
-- **[docs/attributes_and_classes.md](docs/attributes_and_classes.md)** — Attributes, classes, skills, breakthroughs
-- **[docs/items_and_inventory.md](docs/items_and_inventory.md)** — Items, equipment, inventory, loot
-- **[docs/combat_and_progression.md](docs/combat_and_progression.md)** — Combat system, leveling, damage
-- **[docs/ai_system.md](docs/ai_system.md)** — AI brain, goal evaluators, state handlers
+- **[docs/architecture.md](docs/architecture.md)** — Technical architecture (8-Phase orchestration, AOA)
+- **[docs/strategic_cognition.md](docs/strategic_cognition.md)** — **[NEW]** Entity strategy hierarchy (Directives -> Projects)
+- **[docs/ai_system.md](docs/ai_system.md)** — AI pipeline, utility scoring, and state handlers
+- **[docs/regression_and_verification.md](docs/regression_and_verification.md)** — **[NEW]** Log rotation & regression testing
+- **[docs/grand_strategy.md](docs/grand_strategy.md)** — World-tier strategy (Regional influence & war)
+- **[docs/entities_and_factions.md](docs/entities_and_factions.md)** — Faction system and territory intrusion
+- **[docs/buildings_and_economy.md](docs/buildings_and_economy.md)** — Town buildings and crafting
+- **[docs/world_generation.md](docs/world_generation.md)** — Terrain regions and spawner races
+- **[docs/attributes_and_classes.md](docs/attributes_and_classes.md)** — Stats, classes, and skills
+- **[docs/items_and_inventory.md](docs/items_and_inventory.md)** — Items, equipment, and loot
+- **[docs/combat_and_progression.md](docs/combat_and_progression.md)** — Combat system and power scaling
 
 ## Requirements
 

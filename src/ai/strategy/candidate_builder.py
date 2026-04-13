@@ -16,13 +16,17 @@ class StrategicCandidateBuilder:
     """
 
     @staticmethod
-    def build_decision_slice(ctx: AIContext, max_candidates: int = 5) -> list[StrategicCandidate]:
+    def build_decision_slice(ctx: AIContext, max_candidates: int = 5, fresh_concerns: list[ConcernRecord] | None = None) -> list[StrategicCandidate]:
         """Surfaces the most salient strategic options for evaluation."""
         # 0. Sense immediate environment for new concerns [STAGE 4 RESTORATION]
         environmental_concerns = StrategicCandidateBuilder._sense_world_events(ctx)
         
         candidates: list[StrategicCandidate] = []
         candidates.extend(environmental_concerns)
+        
+        # 0a. Inject ephemeral/proposed concerns from the current cycle [BUGFIX-2026-04-12]
+        if fresh_concerns:
+            candidates.extend(fresh_concerns)
         
         # 1. Current commitment (always include to allow continuation scoring)
         if ctx.current_project:

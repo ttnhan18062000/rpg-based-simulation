@@ -1,0 +1,32 @@
+# Implementation Plan - Stabilize Strategic Cognition Observability
+
+The goal is to resolve the `AttributeError: 'mappingproxy' object has no attribute 'x'` by ensuring that `Vector2` instances (and all `SimulationModel` subclasses) remain as objects during the recursive freezing process.
+
+## Problem Description
+
+During `SimulationModel.freeze()`, nested objects and collections are recursively frozen. Currently, the logic in `_freeze_recursive` relies on a `hasattr(val, "freeze")` check to identify models. However, it appears that in some contexts, `Vector2` instances or other models are being caught by the generic dictionary-freezing branch, which converts them into `MappingProxyType`. This causes failures in methods like `Grid.in_bounds` which expect a `Vector2` object with an `.x` attribute.
+
+## Proposed Changes
+
+### Core Models
+
+#### [MODIFY] [base.py](file:///home/vboxuser/Work/rpg-based-simulation/src/core/models/base.py)
+
+- Refactor `_freeze_recursive` to explicitly check for `SimulationModel` instances using `isinstance`.
+- Move the `SimulationModel` check to be more authoritative.
+- Add an explicit check for `Vector2` if necessary, though `SimulationModel` should cover it.
+- Ensure that if an object is already frozen, it is returned immediately without further processing of its dict (since it was already frozen).
+
+#### [MODIFY] [grid.py](file:///home/vboxuser/Work/rpg-based-simulation/src/core/world/grid.py) (Optional/Safety)
+
+- Keep the safety layer in `in_bounds` and `get` that can handle both attribute and dictionary access, but correctly address the root cause in `base.py`.
+
+## Verification Plan
+
+### Automated Tests
+- Run `pytest tests/e2e/test_strategic_regression.py` to ensure the regression is resolved.
+- Run `python3 tests/reproduce_vector_freeze.py` (updated if needed) to verify the fix.
+- Run `pytest tests/unit/core/test_deep_freeze.py` to ensure no regressions in freezing logic.
+
+### Manual Verification
+- Use `scripts/test_harness.py` to perform a full deterministic run and verify structural integrity of snapshots.

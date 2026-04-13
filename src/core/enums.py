@@ -65,6 +65,7 @@ class Domain(IntEnum):
     ITEM = 6
     HARVEST = 7
     MAP_GEN = 8
+    SOCIAL = 9
 
 
 @unique

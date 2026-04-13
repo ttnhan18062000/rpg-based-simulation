@@ -11,13 +11,14 @@ import logging
 from typing import TYPE_CHECKING, List
 
 from src.core.models.life_events import InterpretedLifeEvent
-from src.core.models.enums import InterpretedLifeEventKind, EnemyTier, EntityRole
+from src.core.models.enums import InterpretedLifeEventKind, EnemyTier, EntityRole, Domain
 from src.core.models.vectors import Vector2
 
 if TYPE_CHECKING:
     from src.core.entities.entity import Entity
     from src.core.models.world_state import WorldState
     from src.core.models.combat import CombatTraceRecord
+    from src.systems.rng import DeterministicRNG
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +31,8 @@ class EventInterpreterService:
         actor: Entity, 
         defender: Entity, 
         combat_result: CombatTraceRecord, 
-        world: WorldState
+        world: WorldState,
+        rng: DeterministicRNG | None = None
     ) -> List[InterpretedLifeEvent]:
         """Detect near-death, ally-death, boss-encounter, and avenging ally from combat. [PHASE 2]"""
         events = []
@@ -40,7 +42,7 @@ class EventInterpreterService:
         hp_ratio = defender.combat.hp / defender.combat.max_hp if defender.combat.max_hp > 0 else 0
         if hp_ratio < 0.2 and defender.combat.alive and combat_result.damage > 0:
             events.append(InterpretedLifeEvent(
-                event_id=f"evt-{uuid.uuid4().hex[:8]}",
+                event_id=f"evt-{rng.next_hex(Domain.SOCIAL, defender.id, tick, sub_id=0)}" if rng else f"evt-{uuid.uuid4().hex[:8]}",
                 kind=InterpretedLifeEventKind.NEAR_DEATH,
                 tick=tick,
                 actor_id=defender.id,
@@ -55,7 +57,7 @@ class EventInterpreterService:
         # 2a. Betrayal Detection: Victim's perspective (Turning Point & Sentiment)
         if actor.identity.faction == defender.identity.faction and actor.id != defender.id and combat_result.damage > 0:
              events.append(InterpretedLifeEvent(
-                event_id=f"evt-{uuid.uuid4().hex[:8]}",
+                event_id=f"evt-{rng.next_hex(Domain.SOCIAL, defender.id, tick, sub_id=1)}" if rng else f"evt-{uuid.uuid4().hex[:8]}",
                 kind=InterpretedLifeEventKind.BETRAYAL,
                 tick=tick,
                 actor_id=defender.id, # Perceiver
@@ -69,7 +71,7 @@ class EventInterpreterService:
              
              # 2b. Betrayal Detection: Perpetrator's perspective (Reputation & Tags)
              events.append(InterpretedLifeEvent(
-                event_id=f"evt-{uuid.uuid4().hex[:8]}",
+                event_id=f"evt-{rng.next_hex(Domain.SOCIAL, actor.id, tick, sub_id=2)}" if rng else f"evt-{uuid.uuid4().hex[:8]}",
                 kind=InterpretedLifeEventKind.BETRAYAL,
                 tick=tick,
                 actor_id=actor.id, # Perpetrator
@@ -84,8 +86,8 @@ class EventInterpreterService:
 
         # 3. Boss Encounter (Actor side)
         if defender.identity.role == EntityRole.WORLD_BOSS:
-            events.append(InterpretedLifeEvent(
-                event_id=f"evt-{uuid.uuid4().hex[:8]}",
+             events.append(InterpretedLifeEvent(
+                event_id=f"evt-{rng.next_hex(Domain.SOCIAL, actor.id, tick, sub_id=3)}" if rng else f"evt-{uuid.uuid4().hex[:8]}",
                 kind=InterpretedLifeEventKind.FIRST_BOSS_ENCOUNTER,
                 tick=tick,
                 actor_id=actor.id,
@@ -100,8 +102,8 @@ class EventInterpreterService:
         if not defender.combat.alive:
             # ... (lines 87-113)
             if actor.identity.kill_count == 1:
-                events.append(InterpretedLifeEvent(
-                    event_id=f"evt-{uuid.uuid4().hex[:8]}",
+                 events.append(InterpretedLifeEvent(
+                    event_id=f"evt-{rng.next_hex(Domain.SOCIAL, actor.id, tick, sub_id=4)}" if rng else f"evt-{uuid.uuid4().hex[:8]}",
                     kind=InterpretedLifeEventKind.FIRST_KILL,
                     tick=tick,
                     actor_id=actor.id,
@@ -113,8 +115,8 @@ class EventInterpreterService:
                 ))
             
             if actor.identity.faction != defender.identity.faction:
-                 events.append(InterpretedLifeEvent(
-                    event_id=f"evt-{uuid.uuid4().hex[:8]}",
+                  events.append(InterpretedLifeEvent(
+                    event_id=f"evt-{rng.next_hex(Domain.SOCIAL, actor.id, tick, sub_id=5)}" if rng else f"evt-{uuid.uuid4().hex[:8]}",
                     kind=InterpretedLifeEventKind.SLAY_FOE,
                     tick=tick,
                     actor_id=actor.id,
@@ -158,13 +160,14 @@ class EventInterpreterService:
         actor: Entity, 
         threat_source_id: int, 
         threat_level: float, 
-        world: WorldState
+        world: WorldState,
+        rng: DeterministicRNG | None = None
     ) -> List[InterpretedLifeEvent]:
         """Detect fleeing from a significant threat."""
         events = []
         if threat_level > 0.7:
             events.append(InterpretedLifeEvent(
-                event_id=f"evt-{uuid.uuid4().hex[:8]}",
+                event_id=f"evt-{rng.next_hex(Domain.SOCIAL, actor.id, world.tick, sub_id=6)}" if rng else f"evt-{uuid.uuid4().hex[:8]}",
                 kind=InterpretedLifeEventKind.FLED_FROM_THREAT,
                 tick=world.tick,
                 actor_id=actor.id,
@@ -181,13 +184,14 @@ class EventInterpreterService:
         actor: Entity, 
         threats_nearby_count: int, 
         ticks_held: int, 
-        world: WorldState
+        world: WorldState,
+        rng: DeterministicRNG | None = None
     ) -> List[InterpretedLifeEvent]:
         """Detect holding ground against multiple threats."""
         events = []
         if threats_nearby_count >= 2 and ticks_held >= 5:
             events.append(InterpretedLifeEvent(
-                event_id=f"evt-{uuid.uuid4().hex[:8]}",
+                event_id=f"evt-{rng.next_hex(Domain.SOCIAL, actor.id, world.tick, sub_id=7)}" if rng else f"evt-{uuid.uuid4().hex[:8]}",
                 kind=InterpretedLifeEventKind.HELD_POSITION,
                 tick=world.tick,
                 actor_id=actor.id,
@@ -202,13 +206,14 @@ class EventInterpreterService:
     def interpret_looting(
         actor: Entity, 
         danger_level: float, 
-        world: WorldState
+        world: WorldState,
+        rng: DeterministicRNG | None = None
     ) -> List[InterpretedLifeEvent]:
         """Detect looting while in observable danger."""
         events = []
         if danger_level > 0.5:
             events.append(InterpretedLifeEvent(
-                event_id=f"evt-{uuid.uuid4().hex[:8]}",
+                event_id=f"evt-{rng.next_hex(Domain.SOCIAL, actor.id, world.tick, sub_id=8)}" if rng else f"evt-{uuid.uuid4().hex[:8]}",
                 kind=InterpretedLifeEventKind.LOOTED_DURING_DANGER,
                 tick=world.tick,
                 actor_id=actor.id,
@@ -224,7 +229,8 @@ class EventInterpreterService:
         cls,
         world: WorldState,
         actor: Entity,
-        spatial_up: "SpatialUpdate"
+        spatial_up: "SpatialUpdate",
+        rng: DeterministicRNG | None = None
     ) -> InterpretedLifeEvent | None:
         """Analyze movement for tactical meaning (Disengage, Town Entry, etc.). [PHASE 2]"""
         # Basic implementation: Detect substantial movement away from danger
@@ -241,7 +247,7 @@ class EventInterpreterService:
         
         if tile == Material.TOWN and prev_tile != Material.TOWN:
             return InterpretedLifeEvent(
-                event_id=f"evt-{uuid.uuid4().hex[:8]}",
+                event_id=f"evt-{rng.next_hex(Domain.SOCIAL, actor.id, tick, sub_id=9)}" if rng else f"evt-{uuid.uuid4().hex[:8]}",
                 kind=InterpretedLifeEventKind.HOMECOMING if actor.kind == "hero" else InterpretedLifeEventKind.TRESPASS,
                 tick=tick,
                 actor_id=actor.id,

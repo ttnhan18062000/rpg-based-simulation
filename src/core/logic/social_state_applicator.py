@@ -22,6 +22,7 @@ if TYPE_CHECKING:
     from src.core.models.world_state import WorldState
     from src.core.models.life_events import InterpretedLifeEvent
     from src.actions.base import SocialUpdate, ReputationUpdate, IntentUpdate
+    from src.systems.rng import DeterministicRNG
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +36,8 @@ class SocialStateApplicator:
     def apply_interpreted_event(
         cls, 
         event: InterpretedLifeEvent, 
-        world: WorldState
+        world: WorldState,
+        rng: DeterministicRNG | None = None
     ) -> list[IntentUpdate]:
         """Apply an interpreted event by generating intent updates.
         
@@ -62,7 +64,7 @@ class SocialStateApplicator:
                 tags_remove=event.tags_remove,
                 salience_score=0.0 
             )
-            tp_up = TurningPointService.prepare_insertion(actor, tp_record, tick)
+            tp_up = TurningPointService.prepare_insertion(actor, tp_record, tick, rng)
             if tp_up:
                 updates.append(tp_up)
 
@@ -99,7 +101,7 @@ class SocialStateApplicator:
         tp_up = next((u for u in updates if hasattr(u, 'turning_points_add') and u.turning_points_add), None)
         tp_record = tp_up.turning_points_add[0] if tp_up else None
         
-        strat_up = StrategicConsequenceService.process_consequences(world, actor, event, tp_record)
+        strat_up = StrategicConsequenceService.process_consequences(world, actor, event, tp_record, rng)
         if strat_up:
             updates.append(strat_up)
 

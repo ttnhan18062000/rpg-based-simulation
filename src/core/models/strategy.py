@@ -318,11 +318,16 @@ class StrategicState(SimulationModel):
     
     # Continuity [phase_2_stage_3]
     project_lock_until: int = 0
+    engaged_ticks: int = 0
     
     # Observability [phase_2_stage_9]
     recent_drivers: list[DecisionDriver] = Field(default_factory=list)
     
     last_strategic_tick: int = 0
+    last_interpreted_event_tick: int = 0
+    
+    # Knowledge Continuity [phase_3_task_3]
+    tested_lead_ids: list[str] = Field(default_factory=list)
 
     @property
     def current_project(self) -> ProjectRecord | None:

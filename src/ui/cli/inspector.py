@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING, Any
 import json
-from src.core.models.enums import AIState
+from src.core.models.enums import AIState, StrategicStatus
 from src.core.models.vectors import Vector2
 
 if TYPE_CHECKING:
@@ -321,9 +321,13 @@ class EntityInspector:
                 lock_val = int(strat.project_lock_until)
                 lock_rem = max(0, lock_val - int(current_tick))
                 lock_str = f" \033[93m(LOCKED {lock_rem}t)\033[0m" if lock_rem > 0 else ""
-            except (TypeError, ValueError):
+                
+                engaged = int(strat.engaged_ticks)
+                engaged_str = f" | \033[96mEngaged: {engaged}t\033[0m" if engaged > 0 else ""
+            except (TypeError, ValueError, AttributeError):
                 lock_str = ""
-            print(f"  \033[1mCommitted\033[0m: {duration} ticks ago{lock_str}")
+                engaged_str = ""
+            print(f"  \033[1mCommitted\033[0m: {duration} ticks ago{lock_str}{engaged_str}")
             try:
                 # AOA Stabilization: Robust numeric check for MagicMock [design-03]
                 thresh = float(current_prj.interruption_threshold)

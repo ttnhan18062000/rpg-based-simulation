@@ -3,6 +3,18 @@ from typing import TYPE_CHECKING, TypeVar, Type, Any
 from pydantic import BaseModel, ConfigDict, Field, PrivateAttr, model_serializer
 from types import MappingProxyType
 import typing
+import copyreg
+
+# AOA Phase Boundary: Register MappingProxyType with copyreg to ensure 
+# picklability/deepcopy safety in Python 3.13. This allows frozen models 
+# to be deep-copied into snapshots without TypeError.
+def _reconstruct_mapping_proxy(d: dict[Any, Any]) -> MappingProxyType:
+    return MappingProxyType(d)
+
+def _reduce_mapping_proxy(mp: MappingProxyType) -> tuple:
+    return (_reconstruct_mapping_proxy, (dict(mp),))
+
+copyreg.pickle(MappingProxyType, _reduce_mapping_proxy)
 
 if TYPE_CHECKING:
     from src.core.entities.entity import Entity
@@ -131,9 +143,20 @@ class SimulationModel(BaseModel):
         # we might need to use __slots__ or __dict__.
         fields = getattr(type(self), "model_fields", None)
         if fields:
-            for name in fields:
+            for name, field_info in fields.items():
                 val = getattr(self, name)
                 if val is not None:
+                    # [CORRECTED] Type-Aware Coercion: 
+                    # If this field should be a SimulationModel but contains a dict (drifted),
+                    # restore it authoritatively before freezing.
+                    if isinstance(val, dict):
+                        expected_type = field_info.annotation
+                        # Handle Optional/Union by finding the SimulationModel subclass
+                        model_type = self._get_model_type(expected_type)
+                        if model_type:
+                            val = model_type.model_validate(val)
+                            object.__setattr__(self, name, val)
+
                     # Always use object.__setattr__ during internal AOA freeze
                     object.__setattr__(self, name, self._freeze_recursive(val))
         elif hasattr(self, "__dict__"):
@@ -146,14 +169,41 @@ class SimulationModel(BaseModel):
                     val = getattr(self, name)
                     object.__setattr__(self, name, self._freeze_recursive(val))
 
+    def _get_model_type(self, annotation: Any) -> type[SimulationModel] | None:
+        """Helper to extract a SimulationModel subclass from a type annotation.
+        
+        Only returns a type if there is exactly one SimulationModel subclass in the 
+        annotation (handles Optional[T] and direct types). For complex Unions (like 
+        Narrative details), it returns None to avoid incorrect coercion.
+        """
+        import typing
+        
+        # Direct check
+        if isinstance(annotation, type) and issubclass(annotation, SimulationModel):
+            return annotation
+            
+        # Check Union/Optional
+        origin = typing.get_origin(annotation)
+        if origin is typing.Union:
+            model_types = []
+            for arg in typing.get_args(annotation):
+                if isinstance(arg, type) and issubclass(arg, SimulationModel):
+                    model_types.append(arg)
+            
+            # Only return if there is exactly one candidate (e.g. Optional[T])
+            if len(model_types) == 1:
+                return model_types[0]
+                    
+        return None
+
     def _freeze_recursive(self, val: Any) -> Any:
         """Recursively freeze models and convert collections to immutable equivalents.
         
         Optimized to skip already frozen objects to avoid re-validation overhead.
         """
         # Pillar 1 & 2: AOA Immutability
-        # If it has a freeze method, it's likely a SimulationModel or Aspect
-        if hasattr(val, "freeze") and callable(val.freeze):
+        # If it's a SimulationModel, it handles its own freezing (Deep)
+        if isinstance(val, SimulationModel):
             if not getattr(val, "_frozen", False):
                 val.freeze()
             return val

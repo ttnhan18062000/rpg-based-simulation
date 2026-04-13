@@ -6,14 +6,15 @@ import logging
 import time
 from typing import TYPE_CHECKING, Any
 
-import pika
-from pika.exceptions import AMQPError
+# Infrastructure imports handled lazily or via TYPE_CHECKING
 
 from src.core.models.enums import AIState, Domain
 from src.api.rabbitmq_client import get_rabbitmq
 from src.utils.serialization import SimulationSerializer
 
 if TYPE_CHECKING:
+    import pika
+    from pika.exceptions import AMQPError
     from src.actions.base import ActionProposal
     from src.config import SimulationConfig
     from src.core.entities.entity import Entity
@@ -42,7 +43,7 @@ class WorkerPool:
         self._rng = rng
         
         # We only use RabbitMQ if num_workers > 1
-        self._channel: pika.adapters.blocking_connection.BlockingChannel | None = None
+        self._channel: 'pika.adapters.blocking_connection.BlockingChannel' | None = None
         self._snapshot_exchange = 'ai_snapshots'
         self._tasks_queue = 'ai_tasks'
         self._results_queue = 'ai_results'
@@ -231,6 +232,6 @@ class WorkerPool:
         if self._channel and self._channel.is_open:
             try:
                 self._channel.close()
-            except AMQPError:
+            except Exception: # Avoid top-level AMQPError dependency
                 pass
             self._channel = None

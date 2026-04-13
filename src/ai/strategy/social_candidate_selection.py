@@ -108,7 +108,21 @@ class SocialCandidateSelectionService:
             # Neutral/Unknown
             drivers.append("unknown:0.0")
 
-        # --- B. Public Reputation (Public) ---
+        # --- B. Faction Dynamics [Milestone 4] ---
+        # Faction hostility is a non-starter for social contracts (usually)
+        if ctx.faction_reg.is_hostile(actor.identity.faction, candidate.identity.faction):
+            score -= 5.0
+            drivers.append(f"hostile_faction:-5.0")
+        elif actor.identity.faction != candidate.identity.faction:
+            # Neutral but different faction penalty
+            score -= 0.5
+            drivers.append(f"foreign_faction:-0.5")
+        else:
+            # Same faction bonus
+            score += 0.5
+            drivers.append(f"faction_alignment:+0.5")
+
+        # --- C. Public Reputation (Public) ---
         rep = candidate.identity.reputation
         
         # Scale reputation impact: Higher impact for strangers
@@ -148,7 +162,21 @@ class SocialCandidateSelectionService:
                 score += 1.0
                 drivers.append("danger_attraction:+1.0")
 
-        # --- C. Capability & Role Fit ---
+        # --- D. Social Debt & Reciprocity [Milestone 4] ---
+        # Higher debt leverage makes them 'easier' to recruit (obligation)
+        if bond:
+            # bond.debt < 0 means 'They owe us'
+            # (Already handled in relationship dynamics, but we can refine here)
+            if bond.debt < -0.4:
+                leverage_boost = abs(bond.debt) * 0.5
+                score += leverage_boost
+                drivers.append(f"debt_obligation:{leverage_boost:+.1f}")
+            elif bond.debt > 0.4:
+                # We owe them! Maybe we recruit them to settle the score? 
+                # (Or they might expect better terms, which isn't modeled yet)
+                pass
+
+        # --- E. Capability & Role Fit ---
         if project:
             required_roles = project.metadata.get("required_roles", [])
             # Simple check: healer role?

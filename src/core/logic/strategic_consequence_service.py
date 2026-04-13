@@ -12,8 +12,10 @@ from src.actions.base import StrategicUpdate
 
 if TYPE_CHECKING:
     from src.core.models.world_state import WorldState
+    from src.core.models.snapshot import Snapshot
     from src.core.entities.entity import Entity
     from src.core.models.life_events import InterpretedLifeEvent, TurningPointRecord
+    from src.systems.rng import DeterministicRNG
 
 logger = logging.getLogger(__name__)
 
@@ -23,25 +25,29 @@ class StrategicConsequenceService:
     @classmethod
     def process_consequences(
         cls, 
-        world: WorldState, 
+        world: WorldState | Snapshot, 
         entity: Entity, 
         event: InterpretedLifeEvent, 
-        tp: Optional[TurningPointRecord] = None
+        tp: Optional[TurningPointRecord] = None,
+        rng: DeterministicRNG | None = None,
+        updates: Optional[StrategicUpdate] = None
     ) -> StrategicUpdate:
         """Analyze an event/turning point and generate strategic updates.
         
         This is called after social/reputation updates have been applied.
         """
-        updates = StrategicUpdate(target_id=entity.id)
+        if updates is None:
+            updates = StrategicUpdate(target_id=entity.id)
+        tick = world.tick if hasattr(world, 'tick') else getattr(world, 'tick', 0)
         
         # 1. Concern Generation (Task 2)
         from src.core.logic.concern_generation import ConcernGenerationService
-        ConcernGenerationService.generate(world, entity, event, updates)
+        ConcernGenerationService.generate(world, entity, event, updates, rng)
         
         # 2. Directive Mutation (Task 3)
         if tp:
             from src.core.logic.directive_mutation_service import DirectiveMutationService
-            DirectiveMutationService.evaluate_mutation(world, entity, tp, updates)
+            DirectiveMutationService.evaluate_mutation(world, entity, tp, updates, rng)
             
         # 3. Place Appraisal (Task 4)
         from src.core.logic.place_threat_appraisal import PlaceThreatAppraisalService

@@ -55,7 +55,8 @@ def test_dynamic_liberate_quest(context):
         hero_level=10,
         existing_quest_ids=set(),
         rng=context.rng,
-        world=world
+        world=world,
+        force_template_id="liberate_region"
     )
 
     

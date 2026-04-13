@@ -4,7 +4,7 @@ import uuid
 from typing import TYPE_CHECKING
 from src.systems.infrastructure.base import System
 from src.core.models.lived_structure import GroupRecord
-from src.core.models.enums import GroupKind, GoalType, ContractKind
+from src.core.models.enums import GroupKind, GoalType, ContractKind, Domain
 from src.core.models.strategy import StrategicStatus
 from src.ai.strategy.contract_outcome import ContractOutcomeService
 from src.actions.base import SocialUpdate, ReputationUpdate, StrategicUpdate
@@ -61,7 +61,7 @@ class GroupSystem(System):
             members.sort(key=lambda e: e.progression.level, reverse=True)
             leader = members[0]
             
-            group_id = f"group_{cluster_id}_{uuid.uuid4().hex[:4]}"
+            group_id = f"group_{cluster_id}_{context.rng.next_hex(Domain.SOCIAL, leader.id, context.world.tick, sub_id=10)}"
             group = GroupRecord(
                 group_id=group_id,
                 leader_id=leader.id,
@@ -112,7 +112,7 @@ class GroupSystem(System):
             
             if not existing_group:
                 # Create NEW GroupRecord for this contract
-                new_group_id = f"party_{cid}_{uuid.uuid4().hex[:4]}"
+                new_group_id = f"party_{cid}_{context.rng.next_hex(Domain.SOCIAL, ct.founder_id, context.world.tick, sub_id=11)}"
                 
                 # Map contract 'purpose' to group shared_goal
                 shared_goal = GoalType.EXPLORE

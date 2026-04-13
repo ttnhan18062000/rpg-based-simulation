@@ -7,6 +7,7 @@ from src.core.models.strategy import StrategicStatus, ProjectRecord
 
 if TYPE_CHECKING:
     from src.core.models.world_state import WorldState
+    from src.core.models.snapshot import Snapshot
     from src.core.entities.entity import Entity
     from src.core.models.life_events import InterpretedLifeEvent, TurningPointRecord
     from src.actions.base import StrategicUpdate
@@ -19,7 +20,7 @@ class ProjectMutationService:
     @classmethod
     def process_interruption(
         cls, 
-        world: WorldState, 
+        world: WorldState | Snapshot, 
         entity: Entity, 
         event: InterpretedLifeEvent, 
         tp: Optional[TurningPointRecord], 
@@ -64,7 +65,7 @@ class ProjectMutationService:
         updated_p = project.model_copy(update={
             "kind": new_kind,
             "label": f"Pivoted: {project.label} ({reason})",
-            "interrupted_by_event_ids": list(set(project.interrupted_by_event_ids + event_ids)),
+            "interrupted_by_event_ids": list(set(project.interrupted_by_event_ids) | set(event_ids)),
             "urgency": max(project.urgency, 0.7) # Increase urgency for pivots
         })
         
@@ -95,7 +96,7 @@ class ProjectMutationService:
         updated_p = project.model_copy(update={
             "status": StrategicStatus.SUSPENDED,
             "suspension_reason": reason,
-            "interrupted_by_event_ids": list(set(project.interrupted_by_event_ids + event_ids)),
+            "interrupted_by_event_ids": list(set(project.interrupted_by_event_ids) | set(event_ids)),
             "recovery_behavior": "resume" # Default to resume for now
         })
         

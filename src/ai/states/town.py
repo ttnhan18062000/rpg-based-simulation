@@ -539,7 +539,8 @@ class VisitGuildHandler(StateHandler):
             tick=snapshot.tick,
             material_hints=material_hints,
             camps_found=camps_to_ingest,
-            resources_found=resources_to_ingest
+            resources_found=resources_to_ingest,
+            tested_lead_ids=actor.mind.strategic.tested_lead_ids
         )
 
         final_updates = [strategic_up]
@@ -708,7 +709,9 @@ class VisitInnHandler(StateHandler):
             actor_id=actor.id,
             tick=snapshot.tick,
             rumor_text=rumor,
-            danger_level=0.3 if "bandit" in rumor or "wolf" in rumor else 0.6
+            danger_level=0.3 if "bandit" in rumor or "wolf" in rumor else 0.6,
+            rng=ctx.rng,
+            tested_lead_ids=actor.mind.strategic.tested_lead_ids
         )
 
         return AIState.RESTING_IN_TOWN, ActionProposal(

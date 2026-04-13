@@ -36,49 +36,40 @@ WorldLoop strictly isolates **Mutation** from **Reading** to avoid race conditio
 
 ## 2. The 7-Phase Orchestration Cycle
 
-Every tick (default 50ms) executes exactly seven phases in a strict, contract-enforced sequence defined in `src/engine/world_loop.py`.
+Every tick (default 50ms) executes exactly seven phases in a strict, contract-enforced sequence. The engine has moved from a tactical loop to a **Strategic-Aware Orchestration** where world-tier systems and entity-tier strategic persistence are interleaved with the tactical action loop.
 
 ### Phase Sequence & Contracts
 
 | Phase | Responsibility | Permissions (READ / MUTATE) |
 | :--- | :--- | :--- |
-| **1. PreSystems** | Global clock, age multipliers, environmental shifts. | `world.clock`, `world.config` / `world.environment` |
-| **2. Scheduling** | Identify entities due to act, reset per-tick temporary state. | `world.entities` / `tick_ready_entities` |
-| **3. Collection** | Fan-out AI tasks to `WorkerPool`, collect `ActionProposal` list. | `world.entities`, `action_queue` / `tick_proposals` |
-| **4. Resolution** | **Conflict & Update Phase**. Resolution, authoritative reward proposals. | `tick_proposals` / `tick_applied`, `world.entities` |
-| **5. Cleanup** | Remove dead entities, drop items, and handle hero respawns. | `world.entities`, `rng` / `world.entities` (DELETE) |
-| **6. Finalization** | **Metric Phase**. Calculate tick-duration and performance metrics. | `world`, `tick_applied` / `tick_metrics` |
-| **7. Persistence** | **External Phase**. Kafka/Redis publication and stream canonicalization. | `world`, `tick_applied`, `tick_events` / NONE (I/O only) |
+| **1. Pre-Systems** | **Environmental & Strategic Phase**. Regional control shifts, Calamities, and [StrategySystem] broadcasts. | `world.clock`, `system_manager` / `world.region_control`, `strategic_registry` |
+| **2. Scheduling** | Identify entities due to act and reset per-tick temporary state. | `world.entities` / `tick_ready_entities` |
+| **3. Collection** | Fan-out AI tasks to `WorkerPool`. Entities derive tactical objectives from strategic projects here. | `world.entities`, `mind.strategic` / `tick_proposals` |
+| **4. Resolution** | **Conflict & Authoritative Update**. Resolves tactical actions and applies long-term project progress. | `tick_proposals` / `world.entities`, `action_system` |
+| **5. Cleanup** | Remove dead entities, drop items, handle hero respawns and log rotation tasks. | `world.entities`, `rng` / `world.entities` (DELETE) |
+| **6. Finalization** | **Metric Phase**. Performance metrics and tick-duration calculations. | `world`, `tick_applied` / `tick_metrics` |
+| **7. Persistence** | **External Phase**. Redis Delta-Streaming and Kafka Snapshot persistence. | `world`, `tick_applied`, `tick_events` / NONE (I/O only) |
 
 ### Phase Governance (`PhaseGuard`)
-Runtime integrity is enforced by the `PhaseGuard` and `EngineContextProxy`. Since the **RPG Core Stabilization (2026-04-06)**, the guard is in **Strict Mode**: any attempt to access or mutate a field not explicitly declared in the `PhaseContract` will raise a `RuntimeError` and halt execution. This ensures 100% architectural compliance.
+Runtime integrity is enforced by the `PhaseGuard`. Since the **Strategic Stabilization (2026-04)**, the guard ensures that even long-term memory updates and strategic project derivations remain deterministic and traceable. Any attempt to access state outside the `PhaseContract` results in an immediate simulation halt.
 
 ---
 
-## 3. Aspect-Oriented Entity Model
+## 3. Strategic AI Framework
 
-Entities are no longer "flat" data objects. They are composed of domain-specific **Aspects** that encapsulate logic and state.
+Entities are governed by a **Tri-Layer Strategic Hierarchy** embedded in their `MindAspect`:
 
-### Core Aspect Container
-```python
-class Entity(SimulationModel):
-    identity: IdentityAspect    # Name, kind, faction, role
-    spatial: SpatialAspect      # Position, facing, vision_range
-    combat: CombatAspect        # HP, ATK/DEF properties, alive status
-    progression: ProgressionAspect # Level, XP, stat training accumulators
-    mind: MindAspect            # AI state, perception, emotion, memories
-    interaction: InteractionAspect # Reputation, familiarity, active interaction state
-    inventory: InventoryAspect  # Equipment slots, bag items, gold
-```
+1.  **Directives**: Persistent, motive-driven "north stars" (e.g., "Build Wealth").
+2.  **Projects**: Medium-term commitments with specific success conditions (e.g., "Clear Bandit Camp").
+3.  **Objectives**: Tactical, concrete steps derived dynamically from the active project (e.g., "Kill Bandit Leader").
 
-### Snapshot Immutability (`freeze()`)
-Before being passed to the `WorkerPool`, every `Entity` and `WorldState` is put through a `freeze()` process. This recursively converts Pydantic models into `MappingProxyType` or tuple-backed structures, making them functionally immutable. This ensures that AI logic remains a purely functional mapping from `WorldState -> ActionProposal`.
+This hierarchy ensures that AI behavior remains consistent across hundreds of ticks, resisting tactical "jitter" and maintaining narrative continuity.
 
 ---
 
 ## 4. Deterministic Determinism
 
-WorldLoop uses the **Seed-Domain-Identity** formula to ensure perfect replayability.
+WorldLoop uses the **Seed-Domain-Identity** formula to ensure perfect replayability, now extended to include strategic choice-points.
 
 ### The RNG Formula
 The `DeterministicRNG` (using `xxhash`) generates seeds based on:

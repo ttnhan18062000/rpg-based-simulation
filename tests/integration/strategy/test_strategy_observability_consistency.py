@@ -2,6 +2,7 @@ import pytest
 from unittest.mock import MagicMock, patch
 from pathlib import Path
 from src.core.models.strategy import ConcernRecord, ConcernKind
+from src.core.models.snapshot import Snapshot
 from src.core.models.world_state import WorldState
 from src.core.entities.entity import Entity
 from src.core.entities.entity_builder import EntityBuilder
@@ -11,6 +12,7 @@ from src.platform.rng import DeterministicRNG
 from src.api.presenters.ai_presenter import AIPresenter
 from src.systems.infrastructure.telemetry_system import TelemetrySystem
 from src.systems.infrastructure.base import SystemContext
+from src.systems.gameplay.action_system import ActionSystem
 from src.utils.replay import ReplayRecorder
 
 @pytest.fixture
@@ -86,3 +88,33 @@ def test_strategy_observability_consistency(test_entity, base_world, test_rng, t
     assert entity_snap["strategy"]["concern_count"] == 1
     assert "project_id" in entity_snap["strategy"]
     assert "interrupted_by" in entity_snap["strategy"]
+
+def test_strategic_decision_driver_traceability(test_entity, base_world, test_rng):
+    """Verify that DecisionDriver records flow from AIBrain to the entity state."""
+    from src.ai.brain import AIBrain
+    from src.config import SimulationConfig
+    from src.core.models.strategy import ProjectRecord, ProjectKind
+    from src.actions.base import StrategicUpdate
+    
+    brain = AIBrain(SimulationConfig(), test_rng)
+    
+    # 1. Setup a project that should be selected
+    prj = ProjectRecord(project_id="prj_target", kind=ProjectKind.QUEST, label="Goal Project", priority=5.0)
+    test_entity.mind.strategic.projects.append(prj)
+    
+    # 2. Run Brain Decision
+    snapshot = Snapshot.from_world(base_world)
+    _, proposal = brain.decide(test_entity, snapshot)
+    
+    # 3. Find StrategicUpdate and verify drivers exist
+    strat_up = next((up for up in proposal.updates if isinstance(up, StrategicUpdate)), None)
+    assert strat_up is not None
+    assert len(strat_up.strategic_drivers) > 0
+    assert any("Commitment" in d.label for d in strat_up.strategic_drivers)
+    
+    # 4. Apply via ActionSystem
+    ActionSystem.apply_strategic_update(test_entity, strat_up)
+    
+    # 5. Verify Entity State has the drivers
+    assert len(test_entity.mind.strategic.recent_drivers) > 0
+    assert test_entity.mind.strategic.recent_drivers[0].label == strat_up.strategic_drivers[0].label

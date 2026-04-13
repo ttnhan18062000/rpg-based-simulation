@@ -7,13 +7,17 @@ structured LeadRecords, Hypotheses, and CandidateZoneRecords.
 from __future__ import annotations
 import logging
 import uuid
-from typing import Any, List, Dict, Optional
+from typing import Any, List, Dict, Optional, TYPE_CHECKING
 
 from src.actions.base import StrategicUpdate
 from src.core.models.strategy import (
     LeadRecord, LeadKind, BlockerRecord, BlockerKind, 
     CandidateZoneRecord, StrategicStatus, ObjectiveKind
 )
+from src.core.models.enums import Domain
+
+if TYPE_CHECKING:
+    from src.systems.rng import DeterministicRNG
 
 logger = logging.getLogger(__name__)
 
@@ -27,16 +31,24 @@ class StrategicKnowledgeIngestionService:
         material_hints: Dict[str, str], # mat_id -> hint_text
         camps_found: List[tuple[int, int]],
         resources_found: List[tuple[int, int, str]], # x, y, item_group
-        source_confidence: float = 0.8
+        source_confidence: float = 0.8,
+        rng: Optional[DeterministicRNG] = None,
+        tested_lead_ids: Optional[List[str]] = None
     ) -> StrategicUpdate:
         """Converts guild hints and revelations into LeadRecords and CandidateZones."""
         leads = []
         zones = []
         
+        tested = set(tested_lead_ids) if tested_lead_ids else set()
+
         # 1. Convert material hints to leads
         for mat_id, hint in material_hints.items():
+            lead_id = f"lead_guild_{mat_id}_{tick}"
+            if lead_id in tested:
+                continue
+                
             leads.append(LeadRecord(
-                lead_id=f"lead_guild_{mat_id}_{tick}",
+                lead_id=lead_id,
                 kind=LeadKind.OBJECT,
                 label=f"Hint: {mat_id}",
                 subject=mat_id,
@@ -60,8 +72,12 @@ class StrategicKnowledgeIngestionService:
                 confidence=source_confidence,
                 last_search_tick=0
             ))
+            lead_id = f"lead_guild_camp_{x}_{y}"
+            if lead_id in tested:
+                continue
+                
             leads.append(LeadRecord(
-                lead_id=f"lead_guild_camp_{x}_{y}",
+                lead_id=lead_id,
                 kind=LeadKind.LOCATION,
                 label="Reported Camp",
                 subject="enemy_camp",
@@ -216,15 +232,22 @@ class StrategicKnowledgeIngestionService:
         tick: int,
         rumor_text: str,
         danger_level: float = 0.0,
-        opportunity_id: Optional[str] = None
+        opportunity_id: Optional[str] = None,
+        rng: Optional[DeterministicRNG] = None,
+        tested_lead_ids: Optional[List[str]] = None
     ) -> StrategicUpdate:
         """Converts inn gossip into leads or shared concerns."""
         leads = []
         concerns = []
         
+        lead_id = f"lead_inn_{rng.next_hex(Domain.SOCIAL, actor_id, tick, sub_id=40)}" if rng else f"lead_inn_{uuid.uuid4().hex[:8]}_{tick}"
+        
+        if tested_lead_ids and lead_id in tested_lead_ids:
+            return StrategicUpdate(target_id=actor_id)
+
         # 1. Generic Lead for the rumor
         leads.append(LeadRecord(
-            lead_id=f"lead_inn_{uuid.uuid4().hex[:8]}_{tick}",
+            lead_id=lead_id,
             kind=LeadKind.EVENT,
             label="Inn Rumor",
             subject="world_event",
@@ -236,14 +259,15 @@ class StrategicKnowledgeIngestionService:
         
         # 2. If rumor implies high danger, spawn a shared/caution concern
         if danger_level > 0.5:
-             from src.core.models.strategy import ConcernRecord
+             from src.core.models.strategy import ConcernRecord, ConcernKind
              concerns.append(ConcernRecord(
                  concern_id=f"concern_inn_danger_{tick}",
+                 kind=ConcernKind.THREAT,
                  cause_type="rumor",
                  label="Reported Danger",
                  urgency=danger_level,
-                 is_public=True,
-                 discovered_tick=tick
+                 visibility="public",
+                 created_tick=tick
              ))
              
         return StrategicUpdate(

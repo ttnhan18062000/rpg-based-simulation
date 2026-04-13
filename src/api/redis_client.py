@@ -21,10 +21,16 @@ def get_redis_url() -> str:
     """Get the Redis connection URL from the environment, defaulting to localhost."""
     return os.environ.get("REDIS_URL", "redis://127.0.0.1:6379/0")
 
+def is_redis_disabled() -> bool:
+    """Return True if Redis integration is explicitly disabled."""
+    return os.environ.get("DISABLE_REDIS", "0").lower() in ("1", "true", "yes")
+
 def get_async_redis() -> Optional["aioredis.Redis"]:
     """Get or create the global async Redis client."""
     global _async_redis_client
     if _async_redis_client is None:
+        if is_redis_disabled():
+            return None
         if not HAS_REDIS_PKG or aioredis is None:
             logger.warning("Redis package not installed, async Redis unavailable.")
             return None
@@ -49,6 +55,8 @@ def get_sync_redis() -> Optional["syncredis.Redis"]:
     """
     global _sync_redis_client
     if _sync_redis_client is None:
+        if is_redis_disabled():
+            return None
         if not HAS_REDIS_PKG or syncredis is None:
             logger.warning("Redis package not installed, sync Redis unavailable.")
             return None

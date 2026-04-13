@@ -22,22 +22,27 @@ class DeterministicRNG:
     def __init__(self, seed: int) -> None:
         self._seed = seed
 
-    def _hash(self, domain: Domain, entity_id: int, tick: int) -> int:
-        payload = struct.pack("<qiqi", self._seed, domain.value, entity_id, tick)
+    def _hash(self, domain: Domain, entity_id: int, tick: int, sub_id: int = 0) -> int:
+        payload = struct.pack("<qiqii", self._seed, domain.value, entity_id, tick, sub_id)
         return xxhash.xxh64(payload).intdigest()
 
-    def next_float(self, domain: Domain, entity_id: int, tick: int) -> float:
+    def next_float(self, domain: Domain, entity_id: int, tick: int, sub_id: int = 0) -> float:
         """Return a deterministic float in [0.0, 1.0)."""
-        return self._hash(domain, entity_id, tick) / (self._MAX_UINT64 + 1)
+        return self._hash(domain, entity_id, tick, sub_id) / (self._MAX_UINT64 + 1)
 
-    def next_int(self, domain: Domain, entity_id: int, tick: int, low: int, high: int) -> int:
+    def next_int(self, domain: Domain, entity_id: int, tick: int, low: int, high: int, sub_id: int = 0) -> int:
         """Return a deterministic integer in [low, high] inclusive."""
-        f = self.next_float(domain, entity_id, tick)
+        f = self.next_float(domain, entity_id, tick, sub_id)
         return low + int(f * (high - low + 1))
 
-    def next_bool(self, domain: Domain, entity_id: int, tick: int, probability: float = 0.5) -> bool:
+    def next_bool(self, domain: Domain, entity_id: int, tick: int, probability: float = 0.5, sub_id: int = 0) -> bool:
         """Return True with the given probability."""
-        return self.next_float(domain, entity_id, tick) < probability
+        return self.next_float(domain, entity_id, tick, sub_id) < probability
+
+    def next_hex(self, domain: Domain, entity_id: int, tick: int, length: int = 8, sub_id: int = 0) -> str:
+        """Return a deterministic hex string."""
+        h = self._hash(domain, entity_id, tick, sub_id)
+        return hex(h)[2:2+length]
 
     def weighted_choice(self, domain: Domain, entity_id: int, tick: int, items: list, weights: list[float]):
         """Deterministic weighted choice."""

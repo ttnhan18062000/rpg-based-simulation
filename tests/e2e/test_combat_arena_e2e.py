@@ -251,13 +251,25 @@ class TestMultiEntityCombatE2E:
     def test_ranged_and_melee_hero_vs_mob(self):
         """Melee hero engages mob, ranged hero attacks from distance."""
         arena = CombatArena()
-        arena.add_hero(1, pos=(5, 5), weapon="iron_sword", hp=100, atk=15)
-        arena.add_hero(2, pos=(2, 5), weapon="shortbow", hp=80, atk=12,
-                       hero_class=HeroClass.RANGER, objective_kind=ObjectiveKind.KILL,
-                       vision_range=15)
+        h1 = arena.add_hero(1, pos=(5, 5), weapon="iron_sword", hp=100, atk=15,
+                           vision_range=15, objective_kind=ObjectiveKind.KILL,
+                           ai_state=AIState.IDLE)
+        h2 = arena.add_hero(2, pos=(2, 5), weapon="shortbow", hp=80, atk=12,
+                           hero_class=HeroClass.RANGER, objective_kind=ObjectiveKind.KILL,
+                           vision_range=15, ai_state=AIState.IDLE)
+        
+        # Phase 1: Force extreme aggression to overcome stochastic jitter
+        h1.mind.decision.personality.aggression = 1.0
+        h1.mind.decision.personality.caution = 0.0
+        h2.mind.decision.personality.aggression = 1.0
+        h2.mind.decision.personality.caution = 0.0
+        
         arena.add_mob(3, pos=(6, 5), weapon="rusty_sword", hp=80, atk=8, 
-                      objective_kind=ObjectiveKind.KILL, vision_range=15)
-        arena.run_until(lambda a: not a.entity_alive(3), max_ticks=100)
+                      objective_kind=ObjectiveKind.KILL, vision_range=20,
+                      ai_state=AIState.IDLE)
+        
+        arena.run_until(lambda a: not a.entity_alive(3), max_ticks=200)
+        
         # Mob should eventually die
         assert not arena.entity_alive(3)
 

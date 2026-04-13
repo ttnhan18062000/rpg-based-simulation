@@ -184,19 +184,26 @@ class AIBrain:
 
     def _strategic_appraisal_phase(self, actor: Entity, snapshot: Snapshot, updates: list[IntentUpdate], ctx: AIContext) -> str | None:
         """Phase 2: Strategic Appraisal. Select core commitment and derive objectives."""
-        # 0. Environmental Consequence Appraisal [PHASE 5 Task 6]
-        # This injects concerns based on local scars and regional danger.
         from src.core.logic.world_consequence_interpretation import WorldConsequenceInterpretationService
-        # We need a StrategicUpdate to collect environmental concerns
+        from src.core.logic.strategic_event_interpreter import StrategicEventInterpreter
+        
+        # We need a StrategicUpdate to collect environmental and event concerns
         env_up = StrategicUpdate(target_id=actor.id)
+        
+        # 0a. Persistent Scars / Environmental Appraisal
         WorldConsequenceInterpretationService.appraise_environment(snapshot, actor, env_up)
-        if env_up.concerns_add_or_update:
+        
+        # 0b. Event-Driven Reflection [PHASE 5]
+        StrategicEventInterpreter.interpret_recent_memory(ctx, env_up)
+        
+        if env_up.concerns_add_or_update or env_up.last_interpreted_event_tick:
              updates.append(env_up)
-             # Refresh ctx list of concerns so building decision slice sees them
-             ctx.strategic.concerns.extend(env_up.concerns_add_or_update)
+             # Note: We no longer mutate ctx directly here [BUGFIX-2026-04-12]
         
         # 1. Slice [phase_2_stage_4]
-        candidates = self._strat_builder.build_decision_slice(ctx)
+        # Pass fresh concerns so the builder sees them in the same tick
+        fresh = env_up.concerns_add_or_update if env_up.concerns_add_or_update else None
+        candidates = self._strat_builder.build_decision_slice(ctx, fresh_concerns=fresh)
         
         # 2. Evaluate [phase_2_stage_2, phase_2_stage_3, phase_2_stage_7]
         decision = self._strat_evaluator.evaluate(ctx, candidates)

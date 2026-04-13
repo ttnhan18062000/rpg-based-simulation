@@ -56,6 +56,3 @@ class WorldStrategicRegistry(SimulationModel):
     def copy(self) -> WorldStrategicRegistry:
         return self.model_copy(deep=True)
 
-    def freeze(self) -> None:
-        """Lock the registry (AOA Pillar 1)."""
-        pass # Pydantic models are effectively frozen if handled correctly
