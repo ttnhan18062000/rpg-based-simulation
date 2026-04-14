@@ -27,24 +27,33 @@ class SocialCandidateSelectionService:
         cls, 
         ctx: AIContext, 
         project: ProjectRecord | None = None,
-        max_results: int = 5
+        profile: CognitionCapacityProfile | None = None
     ) -> list[CandidateScore]:
         """Produce a ranked list of potential allies for the given project."""
         actor = ctx.actor
         snapshot = ctx.snapshot
         
         # 1. Identify raw pool (Same faction nearby or in memory)
-        # For now, we consider all same-faction entities in the snapshot as potential candidates.
         potential_ids = [
             eid for eid, e in snapshot.entities.items()
             if eid != actor.id and e.identity.faction == actor.identity.faction and e.combat.alive
         ]
+        
+        # [PHASE 4 INTEL CAPACITY] SOCIAL BANDWIDTH
+        # Limit the number of candidates we even consider evaluating
+        if profile:
+            max_eval = profile.social_bandwidth
+            if len(potential_ids) > max_eval:
+                # We sort then slice to keep it deterministic but limited
+                # In a more advanced version, we might prioritize known allies
+                potential_ids = sorted(potential_ids)[:max_eval]
+
         import logging
         logging.debug(f"Eligible entities: {potential_ids}")
         scores: list[CandidateScore] = []
         for eid in potential_ids:
             candidate = snapshot.entities[eid]
-            score, drivers, cap_match = cls._score_candidate(ctx, candidate, project)
+            score, drivers, cap_match = cls._score_candidate(ctx, candidate, project, profile)
             
             # Filter out extreme negatives (nemeses or those who completely lack capability)
             if score > -2.0:
@@ -57,14 +66,17 @@ class SocialCandidateSelectionService:
         
         # 3. Rank and bound
         scores.sort(key=lambda s: s.score, reverse=True)
-        return scores[:max_results]
+        # Final slice for the UI/Return
+        limit = profile.active_slice_limit if profile else 5
+        return scores[:limit]
 
     @classmethod
     def _score_candidate(
         cls, 
         ctx: AIContext, 
         candidate: Entity, 
-        project: ProjectRecord | None
+        project: ProjectRecord | None,
+        profile: CognitionCapacityProfile | None = None
     ) -> tuple[float, list[str], bool]:
         """Calculate a composite social-strategic score for a candidate."""
         actor = ctx.actor
@@ -201,5 +213,16 @@ class SocialCandidateSelectionService:
         if dist > 30: # 3 regions away
             score -= 0.5
             drivers.append("distant:-0.5")
+
+        # --- F. Judgment Stability Perturbation [PHASE 4] ---
+        if profile and profile.judgment_stability < 0.9:
+            from src.core.models.enums import Domain
+            # Perturb the final score based on judgment stability
+            tick = ctx.snapshot.tick
+            seed = hash(f"{actor.id}_{candidate.id}_{tick}") % 10000
+            noise = (ctx.rng.next_float(Domain.AI_DECISION, actor.id, tick, seed) - 0.5) * (2.0 * (1.0 - profile.judgment_stability))
+            score += noise
+            if abs(noise) > 0.1:
+                drivers.append(f"judgment_noise:{noise:+.1f}")
 
         return score, drivers, cap_match

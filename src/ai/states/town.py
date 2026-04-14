@@ -664,19 +664,26 @@ class VisitInnHandler(StateHandler):
                 updates=[RoutineUpdate(is_sleeping=True)])
 
         # Phase 4: Social Coordination
-        from src.ai.strategy.recruitment_negotiation import RecruitmentNegotiationService
-        
         # A. Evaluate Pending Offers (Candidate side)
-        for off in actor.mind.strategic.offers:
-            if off.status == OfferStatus.PENDING:
-                accepted = RecruitmentNegotiationService.evaluate_offer(ctx, off)
-                new_status = OfferStatus.ACCEPTED if accepted else OfferStatus.DECLINED
+        from src.ai.cognition_capacity import CognitionCapacityBuilder
+        profile = CognitionCapacityBuilder.build(actor, tick=snapshot.tick)
+        
+        pending_offers = [o for o in actor.mind.strategic.offers if o.status == OfferStatus.PENDING]
+        # [PHASE 4 INTEL CAPACITY] SOCIAL BANDWIDTH
+        evaluated_count = 0
+        for off in pending_offers:
+            if evaluated_count >= profile.social_bandwidth:
+                break
                 
-                updated_off = off.model_copy(update={"status": new_status})
-                return AIState.VISIT_INN, ActionProposal(
-                    actor_id=actor.id, verb=ActionType.REST,
-                    reason=f"{'Accepted' if accepted else 'Declined'} recruitment offer from {off.founder_id}",
-                    updates=[StrategicUpdate(offers_add_or_update=[updated_off])])
+            accepted = RecruitmentNegotiationService.evaluate_offer(ctx, off)
+            new_status = OfferStatus.ACCEPTED if accepted else OfferStatus.DECLINED
+            
+            updated_off = off.model_copy(update={"status": new_status})
+            return AIState.VISIT_INN, ActionProposal(
+                actor_id=actor.id, verb=ActionType.REST,
+                reason=f"{'Accepted' if accepted else 'Declined'} recruitment offer from {off.founder_id} (Social Bandwidth: {evaluated_count+1}/{profile.social_bandwidth})",
+                updates=[StrategicUpdate(offers_add_or_update=[updated_off])])
+            evaluated_count += 1
                     
         # B. Generate Offers (Founder side)
         # If we have a project that needs allies
@@ -684,13 +691,16 @@ class VisitInnHandler(StateHandler):
         if prj and len(prj.objectives) > 0 and actor.progression.gold >= 100:
             # Check if we have enough members? (Simulated for now)
             from src.ai.strategy.social_candidate_selection import SocialCandidateSelectionService
-            candidates = SocialCandidateSelectionService.find_candidates(ctx, prj)
+            from src.ai.cognition_capacity import CognitionCapacityBuilder
+            profile = CognitionCapacityBuilder.build(actor, tick=snapshot.tick)
+            
+            candidates = SocialCandidateSelectionService.find_candidates(ctx, prj, profile=profile)
             if candidates:
                 cand = candidates[0]
                 # Check if we already have a pending offer for this person
                 existing = [o for o in actor.mind.strategic.offers if o.candidate_id == cand.entity_id and o.status == OfferStatus.PENDING]
                 if not existing:
-                    new_off = RecruitmentNegotiationService.create_offer(ctx, cand.entity_id, prj)
+                    new_off = RecruitmentNegotiationService.create_offer(ctx, cand.entity_id, prj, profile=profile)
                     return AIState.VISIT_INN, ActionProposal(
                         actor_id=actor.id, verb=ActionType.REST,
                         reason=f"Generating recruitment offer for {cand.entity_id} at the Inn",
@@ -711,7 +721,8 @@ class VisitInnHandler(StateHandler):
             rumor_text=rumor,
             danger_level=0.3 if "bandit" in rumor or "wolf" in rumor else 0.6,
             rng=ctx.rng,
-            tested_lead_ids=actor.mind.strategic.tested_lead_ids
+            tested_lead_ids=actor.mind.strategic.tested_lead_ids,
+            profile=profile
         )
 
         return AIState.RESTING_IN_TOWN, ActionProposal(

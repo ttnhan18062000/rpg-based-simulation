@@ -394,6 +394,52 @@ class EntityInspector:
         # 5. Uncertainty & Social [PHASE 4]
         EntityInspector.render_uncertainty_layer(entity)
         EntityInspector.render_social_contracts(entity)
+        EntityInspector.render_cognition_capacity(entity)
+
+    @staticmethod
+    def render_cognition_capacity(entity: "Entity"):
+        """Display cognitive budgets and overload status. [phase_2_intel_capacity]"""
+        strat = entity.mind.strategic
+        profile = strat.last_capacity_profile
+        if not profile:
+            return
+
+        EntityInspector.print_header("COGNITION & CAPACITY")
+        
+        # 1. Capacity Profile Summary
+        print(f"  \033[95m◈ Cognitive Profile\033[0m")
+        print(f"    Planning:  {profile.planning_budget:>3} | Stability: {profile.judgment_stability:.2f}")
+        print(f"    Evidence:  {profile.evidence_quality:.2f} | Social BW: {profile.social_bandwidth:>3}")
+        print(f"    Detour:     {profile.detour_depth_limit:>2} | Leads:    {profile.lead_retention_limit:>3}")
+
+        # 2. Budget Usage Bars
+        print(f"\n  \033[96m◈ Active Budgets\033[0m")
+        
+        def print_budget_bar(label: str, used: int, limit: int, color: str = "\033[96m"):
+            pct = int(min(100, (used / max(1, limit)) * 100))
+            bar_len = 20
+            filled = int((pct / 100) * bar_len)
+            
+            bar_color = color
+            if pct > 90: bar_color = "\033[91m" # Red
+            elif pct > 70: bar_color = "\033[93m" # Yellow
+            
+            bar = f"[{'#' * filled}{'-' * (bar_len - filled)}]"
+            print(f"    {label:12} {bar_color}{bar}\033[0m {used}/{limit}")
+
+        print_budget_bar("Candidates", strat.active_slice_used, profile.active_slice_limit)
+        print_budget_bar("Concerns", strat.active_concerns_used, profile.concern_intake_limit, "\033[91m")
+        print_budget_bar("Leads", strat.retained_leads_used, profile.lead_retention_limit, "\033[92m")
+        print_budget_bar("Zones", strat.candidate_zones_used, profile.candidate_zone_limit, "\033[94m")
+        print_budget_bar("Allies", strat.ally_evaluations_used, profile.ally_evaluation_limit, "\033[95m")
+
+        # 3. Overload Status
+        if strat.is_overloaded:
+            print(f"\n  \033[1;91m[!] COGNITIVE OVERLOAD ALERT\033[0m")
+            print(f"    Score: {strat.overload_score:.2f} | Dropped: {strat.dropped_candidates_count} candidates")
+            print(f"    Latent Concerns: {strat.latent_concerns_count} (ignored this tick)")
+        else:
+            print(f"\n  \033[90mStrategic pressure: {strat.overload_score:.2f} (Stable)\033[0m")
 
     @staticmethod
     def inspect_full(entity: "Entity", registry: "SocialRegistry"):

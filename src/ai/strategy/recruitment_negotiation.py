@@ -30,7 +30,8 @@ class RecruitmentNegotiationService:
         ctx: AIContext, 
         candidate_id: int, 
         project: ProjectRecord,
-        kind: ContractKind = ContractKind.EXPEDITION
+        kind: ContractKind = ContractKind.EXPEDITION,
+        profile: CognitionCapacityProfile | None = None
     ) -> RecruitmentOfferRecord:
         """Founder generates an initial recruitment offer for a candidate."""
         actor = ctx.actor
@@ -40,7 +41,18 @@ class RecruitmentNegotiationService:
         
         # Reward Split (Greed affects how much we keep)
         greed = actor.mind.decision.personality.greed
-        share = max(0.1, min(0.5, 0.5 - (greed * 0.4))) # Offer between 10% and 50%
+        base_share = 0.5 - (greed * 0.4) # Target share between 10% and 50%
+        
+        # [PHASE 4 INTEL CAPACITY] Judgment Stability Perturbation
+        share = base_share
+        if profile and profile.judgment_stability < 0.8:
+            from src.core.models.enums import Domain
+            seed = hash(f"offer_{candidate_id}_{ctx.snapshot.tick}") % 10000
+            # Desperateness/Poor math adds/removes up to 20% share
+            noise = (ctx.rng.next_float(Domain.SOCIAL, actor.id, ctx.snapshot.tick, seed) - 0.5) * (0.4 * (1.0 - profile.judgment_stability))
+            share = max(0.05, min(0.6, base_share + noise))
+            
+        share = round(share, 2)
         
         terms.append(ContractTermRecord(
             term_type="payout",

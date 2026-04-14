@@ -511,6 +511,19 @@ class ActionSystem(System):
         if up.engaged_ticks is not None: strat.engaged_ticks = up.engaged_ticks
         if up.strategic_drivers: strat.recent_drivers = up.strategic_drivers
         if world: strat.last_strategic_tick = world.tick
+        
+        # 10. Cognitive Bounding Metrics [phase_2_intel_capacity]
+        if up.last_capacity_profile is not None: strat.last_capacity_profile = up.last_capacity_profile
+        if up.active_slice_used is not None: strat.active_slice_used = up.active_slice_used
+        if up.active_concerns_used is not None: strat.active_concerns_used = up.active_concerns_used
+        if up.retained_leads_used is not None: strat.retained_leads_used = up.retained_leads_used
+        if up.candidate_zones_used is not None: strat.candidate_zones_used = up.candidate_zones_used
+        if up.ally_evaluations_used is not None: strat.ally_evaluations_used = up.ally_evaluations_used
+        if up.detour_depth_used is not None: strat.detour_depth_used = up.detour_depth_used
+        if up.dropped_candidates_count is not None: strat.dropped_candidates_count = up.dropped_candidates_count
+        if up.latent_concerns_count is not None: strat.latent_concerns_count = up.latent_concerns_count
+        if up.is_overloaded is not None: strat.is_overloaded = up.is_overloaded
+        if up.overload_score is not None: strat.overload_score = up.overload_score
 
     @classmethod
     def _apply_biological_decay(cls, world: WorldState, config: SimulationConfig) -> None:

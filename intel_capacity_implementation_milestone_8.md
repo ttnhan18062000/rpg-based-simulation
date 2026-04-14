@@ -305,7 +305,7 @@ The feature is only considered closed when those conditions are met.
 
 ## Task
 
-[ ] (checkbox) - [Task 1] - Create the complete feature specification document
+[x] (checkbox) - [Task 1] - Create the complete feature specification document
 
 [Task Description]
 Write the exact implementation specification for the bounded-intelligence extension so the entire subsystem has one authoritative reference.
@@ -322,28 +322,30 @@ Do not summarize loosely. Include exact formulas, exact field names, exact thres
 
 [Task check list]
 
-- [ ] Add Purpose
-- [ ] Add Scope
-- [ ] Add Non-goals
-- [ ] Add Core model contracts
-- [ ] Add profile field definitions
-- [ ] Add Phase 1 formulas
-- [ ] Add appraisal rules
-- [ ] Add uncertainty rules
-- [ ] Add social rules
-- [ ] Add event rules
-- [ ] Add telemetry rules
-- [ ] Add replay and graph rules
-- [ ] Add determinism rules
-- [ ] Add authoritative-application rules
-- [ ] Add invariants and failure modes
+- [x] Add Purpose
+- [x] Add Scope
+- [x] Add Non-goals
+- [x] Add Core model contracts
+- [x] Add profile field definitions
+- [x] Add Phase 1 formulas
+- [x] Add appraisal rules
+- [x] Add uncertainty rules
+- [x] Add social rules
+- [x] Add event rules
+- [x] Add telemetry rules
+- [x] Add replay and graph rules
+- [x] Add determinism rules
+- [x] Add authoritative-application rules
+- [x] Add invariants and failure modes
+
+[Implementation Note]: `docs/strategy/bounded_cognition_feature_spec.md` created. It provides a complete, exact reference for all 8 phases of the strategic cognition engine.
 
 [Task acceptance criteria]
 The feature spec exists and fully describes the implemented bounded-cognition system with exact contracts and formulas.
 
 ---
 
-[ ] (checkbox) - [Task 2] - Create the complete test matrix document
+[x] (checkbox) - [Task 2] - Create the complete test matrix document
 
 [Task Description]
 Document every required bounded-cognition test so the proof surface is explicit and auditable.
@@ -360,25 +362,27 @@ Do not group tests vaguely. Every test function must be listed by exact module p
 
 [Task check list]
 
-- [ ] Add Phase 1 tests
-- [ ] Add Phase 2 tests
-- [ ] Add Phase 3 tests
-- [ ] Add Phase 4 tests
-- [ ] Add Phase 5 tests
-- [ ] Add Phase 6 tests
-- [ ] Add Phase 7 tests
-- [ ] Add shared fixture rules
-- [ ] Add determinism requirements
-- [ ] Add non-mutation requirements
-- [ ] Add artifact-consistency requirements
-- [ ] Add documentation-integrity requirements
+- [x] Add Phase 1 tests
+- [x] Add Phase 2 tests
+- [x] Add Phase 3 tests
+- [x] Add Phase 4 tests
+- [x] Add Phase 5 tests
+- [x] Add Phase 6 tests
+- [x] Add Phase 7 tests
+- [x] Add shared fixture rules
+- [x] Add determinism requirements
+- [x] Add non-mutation requirements
+- [x] Add artifact-consistency requirements
+- [x] Add documentation-integrity requirements
+
+[Implementation Note]: `docs/strategy/bounded_cognition_test_matrix.md` created. It catalogs every regression and unit test required to prove the subsystem's reliability.
 
 [Task acceptance criteria]
 The test matrix exists and enumerates the complete bounded-cognition proof surface exactly.
 
 ---
 
-[ ] (checkbox) - [Task 3] - Create the exact UI contract document
+[x] (checkbox) - [Task 3] - Create the exact UI contract document
 
 [Task Description]
 Document every UI-facing bounded-cognition and strategy field so frontend and inspection consumers can rely on a stable contract.
@@ -395,26 +399,28 @@ Do not describe fields informally. Include exact type, nullability, source, surf
 
 [Task check list]
 
-- [ ] Add UI observability goals
-- [ ] Add capacity schema contract
-- [ ] Add budget-usage schema contract
-- [ ] Add overload schema contract
-- [ ] Add decision schema additions
-- [ ] Add inspection schema additions
-- [ ] Add full strategy coverage
-- [ ] Add presenter serialization rules
-- [ ] Add route contract
-- [ ] Add CLI contract
-- [ ] Add replay cognition contract
-- [ ] Add graph cognition contract
-- [ ] Add naming and nullability rules
+- [x] Add UI observability goals
+- [x] Add capacity schema contract
+- [x] Add budget-usage schema contract
+- [x] Add overload schema contract
+- [x] Add decision schema additions
+- [x] Add inspection schema additions
+- [x] Add full strategy coverage
+- [x] Add presenter serialization rules
+- [x] Add route contract
+- [x] Add CLI contract
+- [x] Add replay cognition contract
+- [x] Add graph cognition contract
+- [x] Add naming and nullability rules
+
+[Implementation Note]: `docs/strategy/bounded_cognition_ui_contract.md` created. Defines the exact API and artifact field mappings for frontend and CLI inspection.
 
 [Task acceptance criteria]
 The UI contract exists and covers every required field and surface exactly.
 
 ---
 
-[ ] (checkbox) - [Task 4] - Create the exact tuning guide
+[x] (checkbox) - [Task 4] - Create the exact tuning guide
 
 [Task Description]
 Document how bounded-cognition formulas and thresholds may be tuned safely without breaking determinism or feature semantics.
@@ -431,26 +437,28 @@ Do not write generic balancing advice. Every tuning note must name exact formula
 
 [Task check list]
 
-- [ ] Add tuning goals
-- [ ] Add normalization assumptions
-- [ ] Add value-range guidance
-- [ ] Add low-medium-high interpretation guidance
-- [ ] Add appraisal tuning rules
-- [ ] Add uncertainty tuning rules
-- [ ] Add social tuning rules
-- [ ] Add event tuning rules
-- [ ] Add overload tuning rules
-- [ ] Add safe change policy
-- [ ] Add unsafe change examples
-- [ ] Add regression watchlist
-- [ ] Add scenario-based tuning checklist
+- [x] Add tuning goals
+- [x] Add normalization assumptions
+- [x] Add value-range guidance
+- [x] Add low-medium-high interpretation guidance
+- [x] Add appraisal tuning rules
+- [x] Add uncertainty tuning rules
+- [x] Add social tuning rules
+- [x] Add event tuning rules
+- [x] Add overload tuning rules
+- [x] Add safe change policy
+- [x] Add unsafe change examples
+- [x] Add regression watchlist
+- [x] Add scenario-based tuning checklist
+
+[Implementation Note]: `docs/strategy/bounded_cognition_tuning_guide.md` created. Provides exact formula groups and regression risks for future attribute balancing.
 
 [Task acceptance criteria]
 The tuning guide exists and provides exact safe-tuning guidance for all bounded-cognition formula groups.
 
 ---
 
-[ ] (checkbox) - [Task 5] - Add documentation-integrity audit helpers and tests
+[x] (checkbox) - [Task 5] - Add documentation-integrity audit helpers and tests
 
 [Task Description]
 Make the documentation executable against the code so drift is detected automatically.
@@ -476,24 +484,26 @@ Do not write brittle free-text snapshot tests. Use exact section extraction and 
 
 [Task check list]
 
-- [ ] Add markdown section loader
-- [ ] Add bullet extraction helper
-- [ ] Add required-string assertion helper
-- [ ] Add test-function existence helper
-- [ ] Add schema-field existence helper
-- [ ] Add feature-spec field coverage tests
-- [ ] Add test-matrix completeness tests
-- [ ] Add UI-contract field coverage tests
-- [ ] Add replay field coverage tests
-- [ ] Add graph field coverage tests
-- [ ] Add test-function existence tests
+- [x] Add markdown section loader
+- [x] Add bullet extraction helper
+- [x] Add required-string assertion helper
+- [x] Add test-function existence helper
+- [x] Add schema-field existence helper
+- [x] Add feature-spec field coverage tests
+- [x] Add test-matrix completeness tests
+- [x] Add UI-contract field coverage tests
+- [x] Add replay field coverage tests
+- [x] Add graph field coverage tests
+- [x] Add test-function existence tests
+
+[Implementation Note]: `src/testing/doc_contract_audit.py` and `tests/docs/test_bounded_cognition_docs_integrity.py` implemented. Every doc field is automatically verified against schema models and replay artifacts.
 
 [Task acceptance criteria]
 Documentation-integrity tests prove that docs, schemas, replay artifacts, graph export, and test modules all align exactly.
 
 ---
 
-[ ] (checkbox) - [Task 6] - Create the exact release checklist and closure audit tests
+[x] (checkbox) - [Task 6] - Create the exact release checklist and closure audit tests
 
 [Task Description]
 Turn the completed bounded-cognition implementation into a release-auditable subsystem with one exact closure checklist.
@@ -529,13 +539,15 @@ Do not let the release checklist become descriptive prose. It must be machine-au
 
 [Task check list]
 
-- [ ] Add release checklist document
-- [ ] Add all required phase headers
-- [ ] Add artifact-class references
-- [ ] Add schema-class references
-- [ ] Add regression-scenario references
-- [ ] Add checklist audit tests
-- [ ] Gate manifest completion flag on consistency and docs integrity
+- [x] Add release checklist document
+- [x] Add all required phase headers
+- [x] Add artifact-class references
+- [x] Add schema-class references
+- [x] Add regression-scenario references
+- [x] Add checklist audit tests
+- [x] Gate manifest completion flag on consistency and docs integrity
+
+[Implementation Note]: `docs/strategy/bounded_cognition_release_checklist.md` finalized. Headless runner now sets `cognition_consistency_checked = True` only when all artifact and doc-integrity proofs are green.
 
 [Task acceptance criteria]
 The bounded-cognition feature has a machine-auditable release checklist and a final completion flag that only turns true when both artifact proof and documentation proof are satisfied.

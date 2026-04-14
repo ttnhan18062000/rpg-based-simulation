@@ -23,6 +23,7 @@ from pydantic import Field, model_validator
 from src.core.models.base import SimulationModel
 from src.core.models.types import TargetUnion, BuildingTarget
 from src.core.models.combat import CombatTraceRecord, CombatTraceDetails
+from src.core.models.cognition import CognitionCapacityProfile
 
 class ActionBatch(SimulationModel):
     """A batch of action proposals for a specific tick, used for Kafka/Persistence."""
@@ -332,9 +333,23 @@ class StrategicUpdate(IntentUpdate):
     engaged_ticks: int | None = None
     last_interpreted_event_tick: int | None = None
     tested_lead_ids: list[str] = Field(default_factory=list)
+    source_trust_updates: dict[str, float] = Field(default_factory=dict)
     
     # Traceability [PHASE 2]
     strategic_drivers: list[DecisionDriver] = Field(default_factory=list)
+    
+    # Cognitive Bounding Metrics [phase_2_intel_capacity]
+    last_capacity_profile: CognitionCapacityProfile | None = None
+    active_slice_used: int | None = None
+    active_concerns_used: int | None = None
+    retained_leads_used: int | None = None
+    candidate_zones_used: int | None = None
+    ally_evaluations_used: int | None = None
+    detour_depth_used: int | None = None
+    dropped_candidates_count: int | None = None
+    latent_concerns_count: int | None = None
+    is_overloaded: bool | None = None
+    overload_score: float | None = None
 
     @model_validator(mode="after")
     def _coerce_strategic(self) -> "StrategicUpdate":

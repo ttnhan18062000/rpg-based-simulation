@@ -512,7 +512,7 @@ At the end of Phase 5, major events produce deterministic interpretation scores,
 
 ## Task
 
-[ ] (checkbox) - [Task 1] - Add event-interpretation working models and service surface
+[x] (checkbox) - [Task 1] - Add event-interpretation working models and service surface
 
 [Task Description]
 Create the exact derived working models and service interface for deterministic event interpretation, directive mutation, and project reprioritization.
@@ -536,20 +536,22 @@ These are derived interpretation outputs only. They are not authoritative state 
 
 [Task check list]
 
-- [ ] Add `EventInterpretationAssessment`
-- [ ] Add `DirectiveMutationProposal`
-- [ ] Add `ProjectReprioritizationOutcome`
-- [ ] Add `StrategicEventInterpretationService`
-- [ ] Keep field names exact
-- [ ] Keep outputs typed and deterministic
-- [ ] Avoid loose metadata dicts
+- [x] Add `EventInterpretationAssessment`
+- [x] Add `DirectiveMutationProposal`
+- [x] Add `ProjectReprioritizationOutcome`
+- [x] Add `StrategicEventInterpretationService`
+- [x] Keep field names exact
+- [x] Keep outputs typed and deterministic
+- [x] Avoid loose metadata dicts
+
+[Implementation Note]: Established `StrategicEventInterpretationService` and working models for assessment, mutation, and reprioritization in `src/ai/strategic_event_interpretation.py`.
 
 [Task acceptance criteria]
 The codebase compiles with exact event-interpretation models and service entrypoints matching the required contract.
 
 ---
 
-[ ] (checkbox) - [Task 2] - Implement deterministic interpretation scoring and concern generation
+[x] (checkbox) - [Task 2] - Implement deterministic interpretation scoring and concern generation
 
 [Task Description]
 Make major-event interpretation exact and profile-sensitive so concern generation becomes deterministic and history-aware.
@@ -576,22 +578,24 @@ Do not add extra event kinds. Do not use random interpretation variance. Do not 
 
 [Task check list]
 
-- [ ] Add exact event-kind set
-- [ ] Add exact event-payload normalization
-- [ ] Add exact home-attachment extraction
-- [ ] Add exact social-bond extraction
-- [ ] Add exact formulas for all six event kinds
-- [ ] Add exact identity-drift-pressure formula
-- [ ] Add exact concern-score formula
-- [ ] Add exact concern-threshold mapping
-- [ ] Keep interpretation deterministic
+- [x] Add exact event-kind set
+- [x] Add exact event-payload normalization
+- [x] Add exact home-attachment extraction
+- [x] Add exact social-bond extraction
+- [x] Add exact formulas for all six event kinds
+- [x] Add exact identity-drift-pressure formula
+- [x] Add exact concern-score formula
+- [x] Add exact concern-threshold mapping
+- [x] Keep interpretation deterministic
+
+[Implementation Note]: Event interpretation scoring for all 6 core events (threat, death, betrayal, etc.) implemented with deterministic, attribute-weighted formulas. Concern generation mappings verified.
 
 [Task acceptance criteria]
 The service returns deterministic interpretation assessments and exact concern-generation decisions for all allowed event kinds.
 
 ---
 
-[ ] (checkbox) - [Task 3] - Implement exact directive mutation rules
+[x] (checkbox) - [Task 3] - Implement exact directive mutation rules
 
 [Task Description]
 Make directive mutation explicit, thresholded, and profile-sensitive so identity drift is bounded and testable rather than vague.
@@ -618,21 +622,23 @@ Do not mutate directives directly in this phase. Do not create broad identity re
 
 [Task check list]
 
-- [ ] Add exact directive target set
-- [ ] Add exact mutation-kind set
-- [ ] Add exact threshold rule
-- [ ] Add exact positive delta formula
-- [ ] Add exact negative delta formula
-- [ ] Add exact event-to-directive mapping
-- [ ] Add exact betrayal second-mutation rule
-- [ ] Keep mutation proposals deterministic
+- [x] Add exact directive target set
+- [x] Add exact mutation-kind set
+- [x] Add exact threshold rule
+- [x] Add exact positive delta formula
+- [x] Add exact negative delta formula
+- [x] Add exact event-to-directive mapping
+- [x] Add exact betrayal second-mutation rule
+- [x] Keep mutation proposals deterministic
+
+[Implementation Note]: Directive mutation logic correctly applies the drift pressure threshold (0.60) and computes exact delta proposals for strategic identity shift.
 
 [Task acceptance criteria]
 The service returns deterministic directive-mutation proposals using the exact formulas, thresholds, and mapping rules.
 
 ---
 
-[ ] (checkbox) - [Task 4] - Implement exact project reprioritization rules
+[x] (checkbox) - [Task 4] - Implement exact project reprioritization rules
 
 [Task Description]
 Make event-driven project continuity explicit so current work is kept, suspended, replaced, or transformed through exact deterministic rules.
@@ -664,21 +670,23 @@ Do not skip the continuity comparison when a current project exists. Do not trea
 
 [Task check list]
 
-- [ ] Add exact `pressure_score` formula
-- [ ] Add exact `continuity_resistance` formula
-- [ ] Add exact keep rule
-- [ ] Add exact transform rules
-- [ ] Add exact suspend rule for near death
-- [ ] Add exact replace rules for home threat, ally death, and betrayal
-- [ ] Add exact preserve-for-resume flags
-- [ ] Keep reprioritization deterministic and non-mutating
+- [x] Add exact `pressure_score` formula
+- [x] Add exact `continuity_resistance` formula
+- [x] Add exact keep rule
+- [x] Add exact transform rules
+- [x] Add exact suspend rule for near death
+- [x] Add exact replace rules for home threat, ally death, and betrayal
+- [x] Add exact preserve-for-resume flags
+- [x] Keep reprioritization deterministic and non-mutating
+
+[Implementation Note]: Reprioritization logic balances `pressure_score` against `continuity_resistance` to decide project outcomes (keep/suspend/replace/transform) deterministically.
 
 [Task acceptance criteria]
 The service returns deterministic reprioritization outcomes using the exact formulas and action mapping rules.
 
 ---
 
-[ ] (checkbox) - [Task 5] - Add deterministic tests for interpretation, directive mutation, and reprioritization
+[x] (checkbox) - [Task 5] - Add deterministic tests for interpretation, directive mutation, and reprioritization
 
 [Task Description]
 Lock the event-consequence contract so the phase cannot silently regress into urgency nudges, unconditional branching, or fuzzy identity drift.
@@ -727,22 +735,24 @@ Use controlled fixtures with fixed event payloads, fixed profile values, fixed a
 
 [Task check list]
 
-- [ ] Add interpretation-score tests
-- [ ] Add concern-threshold tests
-- [ ] Add directive-mutation threshold tests
-- [ ] Add exact positive and negative delta tests
-- [ ] Add second-betrayal-mutation test
-- [ ] Add project keep-versus-replace test
-- [ ] Add transform tests
-- [ ] Add suspend-and-resume-preservation test
-- [ ] Add non-mutation test
+- [x] Add interpretation-score tests
+- [x] Add concern-threshold tests
+- [x] Add directive-mutation threshold tests
+- [x] Add exact positive and negative delta tests
+- [x] Add second-betrayal-mutation test
+- [x] Add project keep-versus-replace test
+- [x] Add transform tests
+- [x] Add suspend-and-resume-preservation test
+- [x] Add non-mutation test
+
+[Implementation Note]: Regression suite in `tests/ai/` covers all M5 scenarios, including high-attachment home threat and low-judgment identity drift. Verified non-mutating purity.
 
 [Task acceptance criteria]
 Phase 5 ships with deterministic tests proving exact event interpretation, exact directive mutation, exact reprioritization logic, and non-mutation behavior.
 
 ---
 
-[ ] (checkbox) - [Task 6] - Add exact event-interpretation documentation
+[x] (checkbox) - [Task 6] - Add exact event-interpretation documentation
 
 [Task Description]
 Document the full operational semantics of event interpretation, directive mutation, and project reprioritization so later phases cannot reinterpret them informally.
@@ -796,16 +806,18 @@ Do not describe this phase in broad prose only. The event-kind set, formulas, th
 
 [Task check list]
 
-- [ ] Document exact event kinds
-- [ ] Document exact payload fields
-- [ ] Document exact attachment and bond extraction
-- [ ] Document exact formulas for all six event kinds
-- [ ] Document exact drift and concern formulas
-- [ ] Document exact directive mutation rules
-- [ ] Document exact reprioritization formulas
-- [ ] Document exact action-order rule
-- [ ] Document all required tests
-- [ ] Document exact regression purpose for each test
+- [x] Document exact event kinds
+- [x] Document exact payload fields
+- [x] Document exact attachment and bond extraction
+- [x] Document exact formulas for all six event kinds
+- [x] Document exact drift and concern formulas
+- [x] Document exact directive mutation rules
+- [x] Document exact reprioritization formulas
+- [x] Document exact action-order rule
+- [x] Document all required tests
+- [x] Document exact regression purpose for each test
+
+[Implementation Note]: All operational semantics for event-consequence and identity-drift documented in `docs/strategy/`. Verified alignment with implementation.
 
 [Task acceptance criteria]
 Phase 5 has an exact event-interpretation document and exact test-matrix document that match implementation.

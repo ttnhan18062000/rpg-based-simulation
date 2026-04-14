@@ -143,6 +143,43 @@ class ReputationProfileSchema(BaseModel):
     threat_notoriety: float
     trustworthiness: float
     tags: list[str] = Field(default_factory=list)
+    
+class CognitionCapacitySchema(BaseModel):
+    """Authoritative capacity profile. [phase_2_intel_capacity]"""
+    planning_budget: int
+    judgment_stability: float
+    evidence_quality: float
+    social_bandwidth: int
+    detour_depth_limit: int
+    active_slice_limit: int
+    concern_intake_limit: int
+    lead_retention_limit: int
+    candidate_zone_limit: int
+    ally_evaluation_limit: int
+    blocker_resolution_patience: float
+    resume_reliability: float
+    interruption_resistance: float
+    abandonment_threshold_mod: float
+    contradiction_sensitivity: float
+    source_trust_learning_rate: float
+
+class CognitionBudgetUsageSchema(BaseModel):
+    """Live budget tracking. [phase_2_intel_capacity]"""
+    active_slice_used: int
+    active_concerns_used: int
+    retained_leads_used: int
+    candidate_zones_used: int
+    ally_evaluations_used: int
+    detour_depth_used: int
+    dropped_candidates_count: int
+    latent_concerns_count: int
+
+class CognitionOverloadSchema(BaseModel):
+    """Overload alert status. [phase_2_intel_capacity]"""
+    is_overloaded: bool
+    overload_score: float
+    primary_overload_source: str | None = None
+    last_overload_tick: int | None = None
 
 
 # --- Strategic Domain [PHASE 6] ---
@@ -266,6 +303,11 @@ class StrategicStateSchema(BaseModel):
     interrupted_project_id: str | None = None
     project_lock_until: int = 0
     recent_driver_labels: list[str] = Field(default_factory=list)
+    
+    # [phase_2_intel_capacity]
+    capacity: CognitionCapacitySchema | None = None
+    usage: CognitionBudgetUsageSchema | None = None
+    overload: CognitionOverloadSchema | None = None
 
 
 # --- Continuity and Inheritance [PHASE 4] ---

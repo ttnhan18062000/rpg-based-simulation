@@ -341,7 +341,7 @@ At the end of Phase 4, cooperation need is profile-sensitive and deterministic, 
 
 ## Task
 
-[ ] (checkbox) - [Task 1] - Add social-reasoning working models and service surface
+[x] (checkbox) - [Task 1] - Add social-reasoning working models and service surface
 
 [Task Description]
 Create the exact derived working models and service interface for cooperation-need detection, bounded ally scoring, and contract-stability forecasting.
@@ -365,20 +365,22 @@ These are derived reasoning outputs only. They are not authoritative social or s
 
 [Task check list]
 
-- [ ] Add `CooperationNeedAssessment`
-- [ ] Add `AllySuitabilityScore`
-- [ ] Add `ContractStabilityForecast`
-- [ ] Add `StrategicSocialReasoningService`
-- [ ] Keep field names exact
-- [ ] Keep outputs typed and deterministic
-- [ ] Avoid loose metadata dicts
+- [x] Add `CooperationNeedAssessment`
+- [x] Add `AllySuitabilityScore`
+- [x] Add `ContractStabilityForecast`
+- [x] Add `StrategicSocialReasoningService`
+- [x] Keep field names exact
+- [x] Keep outputs typed and deterministic
+- [x] Avoid loose metadata dicts
+
+[Implementation Note]: Established social reasoning models and `StrategicSocialReasoningService` in `src/ai/strategic_social_reasoning.py`. All interfaces are non-mutating and deterministic.
 
 [Task acceptance criteria]
 The codebase compiles with exact social-reasoning models and service entrypoints matching the required contract.
 
 ---
 
-[ ] (checkbox) - [Task 2] - Implement deterministic cooperation-need detection
+[x] (checkbox) - [Task 2] - Implement deterministic cooperation-need detection
 
 [Task Description]
 Make recognition of non-solo-viable work profile-sensitive and exact so low-judgment entities can miss cooperation need while high-judgment entities detect it reliably.
@@ -405,21 +407,23 @@ Do not use hidden heuristics for missing roles or party size. If required projec
 
 [Task check list]
 
-- [ ] Add exact required project fields if missing
-- [ ] Add exact role-gap calculation
-- [ ] Add exact `need_score` formula
-- [ ] Add exact `recognition_score` formula
-- [ ] Add exact `requires_cooperation` threshold
-- [ ] Add exact `recognized_need` threshold
-- [ ] Add exact recruitment objective precedence rule
-- [ ] Keep assessment deterministic
+- [x] Add exact required project fields if missing
+- [x] Add exact role-gap calculation
+- [x] Add exact `need_score` formula
+- [x] Add exact `recognition_score` formula
+- [x] Add exact `requires_cooperation` threshold
+- [x] Add exact `recognized_need` threshold
+- [x] Add exact recruitment objective precedence rule
+- [x] Keep assessment deterministic
+
+[Implementation Note]: Cooperation need detection implemented with specific thresholds for requirement (0.55) and recognition (0.50). Precise role-gap calculation and objective precedence verified.
 
 [Task acceptance criteria]
 The service returns deterministic, profile-sensitive cooperation-need assessments using the exact formulas and thresholds.
 
 ---
 
-[ ] (checkbox) - [Task 3] - Implement bounded ally filtering and ranking
+[x] (checkbox) - [Task 3] - Implement bounded ally filtering and ranking
 
 [Task Description]
 Make ally evaluation profile-sensitive, deterministic, and bounded so cooperation quality differs by entity without exploding candidate search.
@@ -447,21 +451,23 @@ Do not evaluate more than `profile.ally_evaluation_limit` final ranked candidate
 
 [Task check list]
 
-- [ ] Add exact candidate filters
-- [ ] Add exact relation normalization
-- [ ] Add exact conflict-penalty extraction
-- [ ] Add exact availability formula
-- [ ] Add exact role-fit rules
-- [ ] Add exact `total_score` formula
-- [ ] Add exact deterministic sorting
-- [ ] Apply exact evaluation cap
+- [x] Add exact candidate filters
+- [x] Add exact relation normalization
+- [x] Add exact conflict-penalty extraction
+- [x] Add exact availability formula
+- [x] Add exact role-fit rules
+- [x] Add exact `total_score` formula
+- [x] Add exact deterministic sorting
+- [x] Apply exact evaluation cap
+
+[Implementation Note]: Ally evaluation applies the `ally_evaluation_limit` cap and deterministic sorting. Relationship scores (trust, loyalty, etc.) and role-fit are correctly weighted.
 
 [Task acceptance criteria]
 The service returns a deterministic bounded ally ranking using the exact formula, filter rules, and evaluation cap.
 
 ---
 
-[ ] (checkbox) - [Task 4] - Implement exact contract-stability forecasting
+[x] (checkbox) - [Task 4] - Implement exact contract-stability forecasting
 
 [Task Description]
 Forecast whether a proposed recruited group is likely to remain stable enough for contract-backed cooperation before any authoritative contract mutation occurs.
@@ -486,18 +492,20 @@ This is only a forecast in this phase. It must not directly create, modify, or d
 
 [Task check list]
 
-- [ ] Compute exact role coverage
-- [ ] Compute exact averages
-- [ ] Compute exact `stability_score`
-- [ ] Apply exact label thresholds
-- [ ] Keep forecast deterministic and non-mutating
+- [x] Compute exact role coverage
+- [x] Compute exact averages
+- [x] Compute exact `stability_score`
+- [x] Apply exact label thresholds
+- [x] Keep forecast deterministic and non-mutating
+
+[Implementation Note]: Stability forecasting derives deterministic scores and labels (stable/fragile/unstable) based on trust, coverage, and resourcing.
 
 [Task acceptance criteria]
 The service returns a deterministic contract-stability forecast using the exact formula and labels.
 
 ---
 
-[ ] (checkbox) - [Task 5] - Add deterministic tests for cooperation need, ally ranking, and stability forecasting
+[x] (checkbox) - [Task 5] - Add deterministic tests for cooperation need, ally ranking, and stability forecasting
 
 [Task Description]
 Lock the social-reasoning contract so the phase cannot silently regress into unbounded ally search, vague cooperation heuristics, or unstable social selection.
@@ -544,22 +552,24 @@ Use controlled fixtures with fixed project fields, fixed role requirements, fixe
 
 [Task check list]
 
-- [ ] Add cooperation-need threshold tests
-- [ ] Add recognition-failure test for low judgment
-- [ ] Add exact recruitment-objective precedence test
-- [ ] Add exact role-fit ranking test
-- [ ] Add filter rejection test
-- [ ] Add bounded ally count test
-- [ ] Add deterministic sorting test
-- [ ] Add stability forecast label tests
-- [ ] Add non-mutation test
+- [x] Add cooperation-need threshold tests
+- [x] Add recognition-failure test for low judgment
+- [x] Add exact recruitment-objective precedence test
+- [x] Add exact role-fit ranking test
+- [x] Add filter rejection test
+- [x] Add bounded ally count test
+- [x] Add deterministic sorting test
+- [x] Add stability forecast label tests
+- [x] Add non-mutation test
+
+[Implementation Note]: Robust test suite implemented for M4 in `tests/ai/`. Verified that low-judgment entities can fail to recognize cooperation need.
 
 [Task acceptance criteria]
 Phase 4 ships with deterministic tests proving exact cooperation-need detection, exact ally ranking, bounded candidate evaluation, exact stability forecasting, and non-mutation behavior.
 
 ---
 
-[ ] (checkbox) - [Task 6] - Add exact social-reasoning documentation
+[x] (checkbox) - [Task 6] - Add exact social-reasoning documentation
 
 [Task Description]
 Document the full operational semantics of cooperation-need detection, bounded ally ranking, and contract-stability forecasting so later phases cannot reinterpret them informally.
@@ -610,17 +620,19 @@ Do not describe this phase in broad prose only. The role-tag vocabulary, formula
 
 [Task check list]
 
-- [ ] Document exact role tags
-- [ ] Document exact class-to-role mapping
-- [ ] Document exact `need_score` formula
-- [ ] Document exact `recognition_score` formula
-- [ ] Document exact recruitment-objective precedence
-- [ ] Document exact ally filter rules
-- [ ] Document exact ally-scoring formula
-- [ ] Document exact evaluation cap
-- [ ] Document exact stability formula and thresholds
-- [ ] Document all required tests
-- [ ] Document exact regression purpose for each test
+- [x] Document exact role tags
+- [x] Document exact class-to-role mapping
+- [x] Document exact `need_score` formula
+- [x] Document exact `recognition_score` formula
+- [x] Document exact recruitment-objective precedence
+- [x] Document exact ally filter rules
+- [x] Document exact ally-scoring formula
+- [x] Document exact evaluation cap
+- [x] Document exact stability formula and thresholds
+- [x] Document all required tests
+- [x] Document exact regression purpose for each test
+
+[Implementation Note]: Social reasoning operational semantics and matrices documented in `docs/strategy/`. Alignment with implementation verified.
 
 [Task acceptance criteria]
 Phase 4 has an exact social-reasoning document and exact test-matrix document that match implementation.

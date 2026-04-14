@@ -42,7 +42,16 @@ class ReplayRecorder:
                     "project_id": e.mind.strategic.current_project_id,
                     "objective_id": e.mind.strategic.current_objective_id,
                     "interrupted_by": e.mind.strategic.interrupted_project_id,
-                    "concern_count": len(e.mind.strategic.concerns)
+                    "concern_count": len(e.mind.strategic.concerns),
+                    # [phase_2_intel_capacity]
+                    "planning_budget": e.mind.strategic.last_capacity_profile.planning_budget if e.mind.strategic.last_capacity_profile else 0,
+                    "judgment_stability": e.mind.strategic.last_capacity_profile.judgment_stability if e.mind.strategic.last_capacity_profile else 0.0,
+                    "evidence_quality": e.mind.strategic.last_capacity_profile.evidence_quality if e.mind.strategic.last_capacity_profile else 0.0,
+                    "social_bandwidth": e.mind.strategic.last_capacity_profile.social_bandwidth if e.mind.strategic.last_capacity_profile else 0,
+                    "active_slice_used": e.mind.strategic.active_slice_used,
+                    "dropped_candidates_count": e.mind.strategic.dropped_candidates_count,
+                    "detour_depth_used": e.mind.strategic.detour_depth_used,
+                    "is_overloaded": e.mind.strategic.is_overloaded
                 }
             }
             for e in world.entities.values()

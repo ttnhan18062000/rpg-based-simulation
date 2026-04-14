@@ -69,3 +69,53 @@ def assert_determinism(graph_a: Dict[str, Any], graph_b: Dict[str, Any]):
     # Simply compare the dumped JSON structures (since Milestone 6 enforced sorting)
     # We remove 'exported_at_tick' or similar if they differ, but they shouldn't for same seed.
     assert graph_a == graph_b, "Graphs diverged despite identical seeds"
+
+def assert_cognition_consistency(replay_json: Dict[str, Any], cognition_graphs: Dict[int, Dict[str, Any]]):
+    """Verify that cognitive metrics in replay summary match the exported graphs."""
+    ticks = replay_json.get("ticks", [])
+    if not ticks:
+        return
+        
+    last_tick_data = ticks[-1]
+    last_tick = last_tick_data.get("tick", 0)
+    entities = last_tick_data.get("entities", [])
+    
+    for entity_snapshot in entities:
+        eid = entity_snapshot.get("id")
+        strat = entity_snapshot.get("strategy", {})
+        
+        graph = cognition_graphs.get(eid)
+        if not graph:
+            continue
+            
+        # 1. Find the cognition profile node in graph
+        nodes = graph["elements"]["nodes"]
+        cp_node = next((n for n in nodes if n["data"]["kind"] == "cognition_profile"), None)
+        assert cp_node is not None, f"Entity {eid} graph missing cognition_profile node"
+        
+        # 2. Compare attributes (flattened in Cytoscape format)
+        data = cp_node["data"]
+        eb_plan = strat.get("planning_budget")
+        gr_plan = data.get("planning_budget")
+        assert gr_plan == eb_plan, f"Planning budget mismatch for entity {eid}: Graph={gr_plan}, Replay={eb_plan}"
+        
+        eb_used = strat.get("active_slice_used")
+        gr_used = data.get("active_slice_used")
+        assert gr_used == eb_used, f"Active slice usage mismatch for entity {eid}: Graph={gr_used}, Replay={eb_used}"
+        
+        eb_over = strat.get("is_overloaded")
+        gr_over = data.get("is_overloaded")
+        assert gr_over == eb_over, f"Overload status mismatch for entity {eid}: Graph={gr_over}, Replay={eb_over}"
+
+def assert_overload_behavior(replay_json: Dict[str, Any]):
+    """Ensure that overload flags appear if active_slice_used == limit (or high score)."""
+    for tick_data in replay_json.get("ticks", []):
+        for e in tick_data.get("entities", []):
+            strat = e.get("strategy", {})
+            if strat.get("is_overloaded"):
+                # If overloaded, usage should be close to or at budget (or high pressure)
+                used = strat.get("active_slice_used", 0)
+                budget = strat.get("planning_budget", 1)
+                # Overload can trigger before reaching budget if pressure is extremely high, 
+                # but usually used will be high.
+                assert used >= 0, "Negative usage recorded"

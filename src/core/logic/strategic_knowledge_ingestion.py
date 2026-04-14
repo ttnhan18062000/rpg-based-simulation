@@ -18,6 +18,7 @@ from src.core.models.enums import Domain
 
 if TYPE_CHECKING:
     from src.systems.rng import DeterministicRNG
+    from src.ai.cognition_capacity import CognitionCapacityProfile
 
 logger = logging.getLogger(__name__)
 
@@ -234,9 +235,10 @@ class StrategicKnowledgeIngestionService:
         danger_level: float = 0.0,
         opportunity_id: Optional[str] = None,
         rng: Optional[DeterministicRNG] = None,
-        tested_lead_ids: Optional[List[str]] = None
+        tested_lead_ids: Optional[List[str]] = None,
+        profile: Optional[CognitionCapacityProfile] = None
     ) -> StrategicUpdate:
-        """Converts inn gossip into leads or shared concerns."""
+        """Converts inn gossip into leads or shared concerns. [phase_2_intel_capacity]"""
         leads = []
         concerns = []
         
@@ -258,7 +260,13 @@ class StrategicKnowledgeIngestionService:
         ))
         
         # 2. If rumor implies high danger, spawn a shared/caution concern
-        if danger_level > 0.5:
+        # Bounded by judgment stability (lower stability = lower threshold for panic/caution)
+        base_threshold = 0.5
+        stability = profile.judgment_stability if profile else 1.0
+        # range: 0.3 (unstable) to 0.7 (stable)
+        effective_threshold = base_threshold * (0.5 + 0.7 * stability)
+
+        if danger_level > effective_threshold:
              from src.core.models.strategy import ConcernRecord, ConcernKind
              concerns.append(ConcernRecord(
                  concern_id=f"concern_inn_danger_{tick}",

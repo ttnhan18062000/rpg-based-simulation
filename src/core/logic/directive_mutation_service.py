@@ -13,6 +13,7 @@ if TYPE_CHECKING:
     from src.core.models.life_events import TurningPointRecord
     from src.actions.base import StrategicUpdate
     from src.systems.rng import DeterministicRNG
+    from src.ai.cognition_capacity import CognitionCapacityProfile
 
 logger = logging.getLogger(__name__)
 
@@ -26,13 +27,23 @@ class DirectiveMutationService:
         entity: Entity, 
         tp: TurningPointRecord, 
         updates: StrategicUpdate,
-        rng: DeterministicRNG | None = None
+        rng: DeterministicRNG | None = None,
+        profile: CognitionCapacityProfile | None = None
     ) -> None:
-        """Analyze turning point and mutate directives if salience thresholds are met."""
+        """Analyze turning point and mutate directives if salience thresholds are met. [phase_2_intel_capacity]"""
         
+        # Resolve profile if missing
+        if profile is None:
+            from src.ai.cognition_capacity import CognitionCapacityBuilder
+            profile = CognitionCapacityBuilder.build(entity)
+
         # High salience requirement for identity shift
-        # (Assuming salience_score is calculated in TurningPointService.insert)
-        if tp.salience_score < 0.8: 
+        # Bounded by judgment stability (higher stability = higher threshold for identity drift)
+        base_threshold = 0.8
+        # range: 0.8 (unstable) to 1.2 (stable)
+        effective_threshold = base_threshold * (0.5 + 0.7 * profile.judgment_stability)
+        
+        if tp.salience_score < effective_threshold: 
             return
 
         # 1. Map Turning Point Kind to Directive Shift

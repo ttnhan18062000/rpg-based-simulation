@@ -407,7 +407,7 @@ At the end of Phase 2, strategic appraisal builds a deterministic bounded candid
 
 ## Task
 
-[ ] (checkbox) - [Task 1] - Add bounded strategic appraisal working models
+[x] (checkbox) - [Task 1] - Add bounded strategic appraisal working models
 
 [Task Description]
 Create the exact derived working models that represent bounded candidate evaluation and the continuity decision outcome.
@@ -430,19 +430,21 @@ These are appraisal-side derived models only. They are not authoritative persist
 
 [Task check list]
 
-- [ ] Add `StrategicCandidate`
-- [ ] Add `BoundedStrategicSlice`
-- [ ] Add `StrategicDecisionOutcome`
-- [ ] Keep all field names exact
-- [ ] Keep models typed and deterministic
-- [ ] Avoid hidden mutable dict payloads
+- [x] Add `StrategicCandidate`
+- [x] Add `BoundedStrategicSlice`
+- [x] Add `StrategicDecisionOutcome`
+- [x] Keep all field names exact
+- [x] Keep models typed and deterministic
+- [x] Avoid hidden mutable dict payloads
+
+[Implementation Note]: Added `StrategicCandidate`, `BoundedStrategicSlice`, and `StrategicDecisionOutcome` working models in `src/ai/strategic_bounded_appraisal.py`. These models are fully typed and decoupled from strategic state.
 
 [Task acceptance criteria]
 The codebase compiles with exact bounded-appraisal working models that match the required field contract.
 
 ---
 
-[ ] (checkbox) - [Task 2] - Implement candidate gathering, scoring, and pre-bounds
+[x] (checkbox) - [Task 2] - Implement candidate gathering, scoring, and pre-bounds
 
 [Task Description]
 Build the exact bounded candidate-set construction pipeline from existing strategic state.
@@ -481,25 +483,27 @@ If appraisal-required fields are missing on any strategic record, add them expli
 
 [Task check list]
 
-- [ ] Gather raw candidates from the exact allowed sources
-- [ ] Add normalization helpers
-- [ ] Implement current-project score formula
-- [ ] Implement concern score formula
-- [ ] Implement obligation score formula
-- [ ] Implement suspended-project score formula
-- [ ] Implement lead score formula
-- [ ] Implement blocker score formula
-- [ ] Implement contract score formula
-- [ ] Apply exact pre-bounds
-- [ ] Reserve current-project slot when applicable
-- [ ] Track dropped counts exactly
+- [x] Gather raw candidates from the exact allowed sources
+- [x] Add normalization helpers
+- [x] Implement current-project score formula
+- [x] Implement concern score formula
+- [x] Implement obligation score formula
+- [x] Implement suspended-project score formula
+- [x] Implement lead score formula
+- [x] Implement blocker score formula
+- [x] Implement contract score formula
+- [x] Apply exact pre-bounds
+- [x] Reserve current-project slot when applicable
+- [x] Track dropped counts exactly
+
+[Implementation Note]: `BoundedStrategicAppraisalService` successfully gathers and scores candidates from all 8 sources with priority-based pre-bounds. Current project always occupies a reserved slot if active.
 
 [Task acceptance criteria]
 The service produces a bounded candidate pool using the exact source list, formulas, and pre-bound rules.
 
 ---
 
-[ ] (checkbox) - [Task 3] - Implement deterministic final slice construction and continuity decision
+[x] (checkbox) - [Task 3] - Implement deterministic final slice construction and continuity decision
 
 [Task Description]
 Convert the bounded candidate pool into a final strategic slice and continuity outcome without mutating authoritative state.
@@ -526,21 +530,23 @@ Do not directly mutate `entity.mind.strategic`. The result must remain a derived
 
 [Task check list]
 
-- [ ] Deduplicate candidates deterministically
-- [ ] Sort candidates with exact tie rules
-- [ ] Apply final slice cap
-- [ ] Compute `switch_margin`
-- [ ] Apply exact keep/switch rule
-- [ ] Apply exact objective-retention rule
-- [ ] Apply exact objective-derivation precedence
-- [ ] Return structured non-mutating outcome
+- [x] Deduplicate candidates deterministically
+- [x] Sort candidates with exact tie rules
+- [x] Apply final slice cap
+- [x] Compute `switch_margin`
+- [x] Apply exact keep/switch rule
+- [x] Apply exact objective-retention rule
+- [x] Apply exact objective-derivation precedence
+- [x] Return structured non-mutating outcome
+
+[Implementation Note]: Final slice construction applies `active_slice_limit` and deterministic sorting. Switch margin calculation is profile-sensitive, ensuring stable continuity while allowing justifiable shifts.
 
 [Task acceptance criteria]
 The service returns a deterministic `StrategicDecisionOutcome` that captures bounded slicing and project/objective continuity without mutating stored strategy.
 
 ---
 
-[ ] (checkbox) - [Task 4] - Integrate bounded appraisal into the brain pipeline
+[x] (checkbox) - [Task 4] - Integrate bounded appraisal into the brain pipeline
 
 [Task Description]
 Route the new bounded-appraisal layer into the existing strategic appraisal flow so entities start using cognition capacity during thinking.
@@ -566,18 +572,20 @@ Do not let tactical goal scoring re-expand the candidate space. Tactical logic m
 
 [Task check list]
 
-- [ ] Build profile at strategic phase entry
-- [ ] Call bounded appraisal service
-- [ ] Route outcome into continuity handling
-- [ ] Keep tactical layer downstream only
-- [ ] Preserve structured explainability discipline
+- [x] Build profile at strategic phase entry
+- [x] Call bounded appraisal service
+- [x] Route outcome into continuity handling
+- [x] Keep tactical layer downstream only
+- [x] Preserve structured explainability discipline
+
+[Implementation Note]: Integrated bounded appraisal into `AIBrain.py` and `ObjectiveDerivationService`. Tactical deliberations are now strictly downstream of the bounded strategic slice.
 
 [Task acceptance criteria]
 The brain uses bounded strategic appraisal before tactics, and tactical choice no longer sees an unbounded strategic frontier.
 
 ---
 
-[ ] (checkbox) - [Task 5] - Add deterministic tests for bounded slicing and continuity
+[x] (checkbox) - [Task 5] - Add deterministic tests for bounded slicing and continuity
 
 [Task Description]
 Lock the behavioral contract so Phase 2 cannot silently degrade into either project churn or unbounded candidate noise.
@@ -624,23 +632,25 @@ Use controlled fixtures with identical strategic state and different cognition p
 
 [Task check list]
 
-- [ ] Add bounded slice width tests
-- [ ] Add concern cap tests
-- [ ] Add lead cap tests
-- [ ] Add reserved-slot test
-- [ ] Add deterministic dropped-count test
-- [ ] Add keep-project switch-margin test
-- [ ] Add switch-project switch-margin test
-- [ ] Add current-objective retention test
-- [ ] Add blocker-triggered objective replacement test
-- [ ] Add non-mutation test
+- [x] Add bounded slice width tests
+- [x] Add concern cap tests
+- [x] Add lead cap tests
+- [x] Add reserved-slot test
+- [x] Add deterministic dropped-count test
+- [x] Add keep-project switch-margin test
+- [x] Add switch-project switch-margin test
+- [x] Add current-objective retention test
+- [x] Add blocker-triggered objective replacement test
+- [x] Add non-mutation test
+
+[Implementation Note]: All M2 tests passed in `tests/ai/`. Verified that low-intel entities correctly truncate their active space while Sage-tier entities juggle full slices.
 
 [Task acceptance criteria]
 Phase 2 ships with deterministic tests proving bounded candidate slicing, continuity stability, switch behavior, and objective retention rules.
 
 ---
 
-[ ] (checkbox) - [Task 6] - Add exact decision-flow documentation
+[x] (checkbox) - [Task 6] - Add exact decision-flow documentation
 
 [Task Description]
 Document the operational semantics of bounded strategic appraisal so the phase is auditable and later phases can build on it without reinterpreting the rules.
@@ -689,14 +699,16 @@ Do not describe this phase in prose only. The formulas, bounds, tie-break rules,
 
 [Task check list]
 
-- [ ] Document exact candidate sources
-- [ ] Document exact candidate fields
-- [ ] Document exact scoring formulas
-- [ ] Document exact bound rules
-- [ ] Document exact switch-margin rule
-- [ ] Document exact objective precedence
-- [ ] Document all required tests
-- [ ] Document exact regression purpose of each test
+- [x] Document exact candidate sources
+- [x] Document exact candidate fields
+- [x] Document exact scoring formulas
+- [x] Document exact bound rules
+- [x] Document exact switch-margin rule
+- [x] Document exact objective precedence
+- [x] Document all required tests
+- [x] Document exact regression purpose of each test
+
+[Implementation Note]: Strategic decision flow and test mapping documented in `docs/strategy/`. Verified alignment with current implementation.
 
 [Task acceptance criteria]
 Phase 2 has an exact operational decision-flow document and exact test-matrix document that match implementation.

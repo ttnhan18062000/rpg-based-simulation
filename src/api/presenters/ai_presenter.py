@@ -147,7 +147,8 @@ class AIPresenter:
             StrategicStateSchema, ProjectSchema, ObjectiveSchema, 
             BlockerSchema, LeadSchema, DirectiveSchema, ConcernSchema,
             CandidateZoneSchema, HypothesisSchema, ObligationSchema,
-            SocialContractSchema, RecruitmentOfferSchema
+            SocialContractSchema, RecruitmentOfferSchema,
+            CognitionCapacitySchema, CognitionBudgetUsageSchema, CognitionOverloadSchema
         )
         s = entity.mind.strategic
         if not s:
@@ -289,6 +290,23 @@ class AIPresenter:
             current_objective_id=s.current_objective_id,
             interrupted_project_id=s.interrupted_project_id,
             project_lock_until=s.project_lock_until,
-            recent_driver_labels=[d.label for d in s.recent_drivers]
+            recent_driver_labels=[d.label for d in s.recent_drivers],
+            
+            # [phase_2_intel_capacity]
+            capacity=CognitionCapacitySchema(**s.last_capacity_profile.model_dump()) if s.last_capacity_profile else None,
+            usage=CognitionBudgetUsageSchema(
+                active_slice_used=s.active_slice_used,
+                active_concerns_used=s.active_concerns_used,
+                retained_leads_used=s.retained_leads_used,
+                candidate_zones_used=s.candidate_zones_used,
+                ally_evaluations_used=s.ally_evaluations_used,
+                detour_depth_used=s.detour_depth_used,
+                dropped_candidates_count=s.dropped_candidates_count,
+                latent_concerns_count=s.latent_concerns_count
+            ) if s.last_capacity_profile else None,
+            overload=CognitionOverloadSchema(
+                is_overloaded=s.is_overloaded,
+                overload_score=round(s.overload_score, 2)
+            ) if s.last_capacity_profile else None
         )
 

@@ -178,6 +178,24 @@ class EntityCognitionExporter:
             })
             add_edge(root_id, pa_id, "attached_to")
 
+        # 14. Map Cognition Profile & Usage [MILESTONE 7 Expansion]
+        if strat.last_capacity_profile:
+            cp_id = f"cognition:{entity.id}:{tick}"
+            cp = strat.last_capacity_profile
+            add_node(cp_id, "cognition_profile", "Cognitive Profile", {
+                "planning_budget": cp.planning_budget,
+                "judgment_stability": cp.judgment_stability,
+                "evidence_quality": cp.evidence_quality,
+                "social_bandwidth": cp.social_bandwidth,
+                "active_slice_limit": cp.active_slice_limit,
+                # Usage stats
+                "active_slice_used": strat.active_slice_used,
+                "dropped_candidates": strat.dropped_candidates_count,
+                "is_overloaded": strat.is_overloaded,
+                "overload_score": strat.overload_score
+            })
+            add_edge(root_id, cp_id, "has_cognition_profile")
+
         # Final Determinism: Sort nodes and edges
         graph.nodes.sort(key=lambda x: x.node_id)
         graph.edges.sort(key=lambda x: x.edge_id)

@@ -12,6 +12,7 @@ if TYPE_CHECKING:
     from src.ai.strategy.strategic_evaluator import StrategicDecision
     from src.ai.strategy.blocker_inference import BlockerInferenceService
     from src.ai.strategy.detour_suggestion import DetourSuggestionService
+    from src.ai.cognition_capacity import CognitionCapacityProfile
 
 logger = logging.getLogger(__name__)
 
@@ -22,12 +23,12 @@ class ObjectiveDerivationService:
         self.blocker_inference = blocker_inference
         self.detour_suggestion = detour_suggestion
 
-    def apply_derivation(self, ctx: AIContext, winner: ProjectRecord | ConcernRecord, decision: StrategicDecision):
+    def apply_derivation(self, ctx: AIContext, winner: ProjectRecord | ConcernRecord, decision: StrategicDecision, profile: CognitionCapacityProfile):
         """Ensures the selected commitment is actionable."""
         if isinstance(winner, ConcernRecord):
             self._handle_concern_promotion(ctx, winner, decision)
         else:
-            self._handle_project_objectives(ctx, winner, decision)
+            self._handle_project_objectives(ctx, winner, decision, profile)
 
     def _handle_concern_promotion(self, ctx: AIContext, concern: ConcernRecord, decision: StrategicDecision):
         """Converts an immediate concern into a temporary project."""
@@ -97,7 +98,7 @@ class ObjectiveDerivationService:
             decision.updates.current_project_id = prj_id
             decision.updates.current_objective_id = "obj_stabilize_region"
 
-    def _handle_project_objectives(self, ctx: AIContext, prj: ProjectRecord, decision: StrategicDecision):
+    def _handle_project_objectives(self, ctx: AIContext, prj: ProjectRecord, decision: StrategicDecision, profile: CognitionCapacityProfile):
         """Ensures a project has an active and valid objective."""
         current_tick = ctx.snapshot.tick
         
@@ -120,7 +121,7 @@ class ObjectiveDerivationService:
         # 2.5 Automated Blocker Inference & Detour Spawning [phase_3_task_7]
         if active_obj and active_obj.status == StrategicStatus.ACTIVE:
             # Check for structural blockers (Knowledge, Capability, etc.)
-            inferred = self.blocker_inference.infer_blockers(ctx, active_obj)
+            inferred = self.blocker_inference.infer_blockers(ctx, active_obj, profile)
             
             # Combine with existing blockers in the objective
             all_blockers = list(active_obj.blockers)
@@ -138,7 +139,31 @@ class ObjectiveDerivationService:
             for blocker in all_blockers:
                  if blocker.resolved: continue
                  
-                 detours = self.detour_suggestion.suggest_detours(ctx, blocker, prj.project_id)
+                 detours = self.detour_suggestion.suggest_detours(ctx, blocker, prj.project_id, profile)
+                 
+                 # [PHASE 3 INTEL CAPACITY] Handle Detour Depth Fallback
+                 if not detours and not blocker.resolved:
+                      parent_obj = next((o for o in prj.objectives if o.objective_id == blocker.spawned_from_id), None)
+                      depth = (parent_obj.detour_depth + 1) if parent_obj else 1
+                      
+                      if depth > profile.detour_depth_limit:
+                           # FORCED FALLBACK: Suspend project due to insurmountable complexity
+                           updated_prj = prj.model_copy(update={
+                                "status": StrategicStatus.SUSPENDED,
+                                "suspension_reason": f"Complexity Depth Exceeded ({depth} > {profile.detour_depth_limit})"
+                           })
+                           decision.updates.projects_add_or_update.append(updated_prj)
+                           decision.updates.current_objective_id = ""
+                           
+                           from src.core.aspects.mind import DecisionDriver
+                           decision.updates.strategic_drivers.append(DecisionDriver(
+                                kind="strategic",
+                                label="Detour Depth Exceeded",
+                                weight=1.0,
+                                description=f"Suspending {prj.project_id} because detour recursion reached {depth}."
+                           ))
+                           return 
+                           
                  if detours:
                       # We found a detour! Check if it's already in the project and active.
                       detour = detours[0]
