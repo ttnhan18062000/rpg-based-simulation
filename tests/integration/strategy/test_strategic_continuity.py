@@ -34,7 +34,7 @@ def test_directive_mutation_salience_threshold(base_world):
     DirectiveMutationService.evaluate_mutation(base_world, entity, tp_low, updates, rng)
     assert len(updates.directives_add) == 0
     
-    # 2. High salience
+    # 2. High salience (requires history to satisfy count threshold)
     tp_high = TurningPointRecord(
         event_id="ev2",
         kind=TurningPointKind.NEAR_DEATH,
@@ -42,6 +42,8 @@ def test_directive_mutation_salience_threshold(base_world):
         salience_score=0.9,
         emotional_impact=-5.0
     )
+    tp_prev = TurningPointRecord(event_id="prev", kind=TurningPointKind.NEAR_DEATH, tick=0, salience_score=1.0)
+    entity.mind.narrative.turning_points = [tp_prev, tp_prev, tp_high]
     
     DirectiveMutationService.evaluate_mutation(base_world, entity, tp_high, updates, rng)
     assert len(updates.directives_add) == 1
@@ -70,6 +72,8 @@ def test_directive_priority_strengthening(base_world):
         tick=20,
         salience_score=0.9
     )
+    tp_prev = TurningPointRecord(event_id="prev", kind=TurningPointKind.NEAR_DEATH, tick=0, salience_score=1.0)
+    entity.mind.narrative.turning_points = [tp_prev, tp_prev, tp_repeat]
     
     DirectiveMutationService.evaluate_mutation(base_world, entity, tp_repeat, updates, rng)
     

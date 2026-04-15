@@ -16,7 +16,14 @@ logger = logging.getLogger(__name__)
 
 
 class ReplayRecorder:
-    """Accumulates tick events and flushes to a JSON replay file."""
+    """Accumulates tick events and flushes to a JSON replay file.
+    
+    [TRUTH OWNERSHIP]
+    - Owner of Compact Longitudinal Summary.
+    - Responsible for recording a deterministic seed and enough tick-by-tick deltas
+      to reconstruct a simulation exactly.
+    - Must stay summary-level for performance; not a full state-dump surface.
+    """
 
     __slots__ = ("_path", "_ticks", "_seed")
 
@@ -43,15 +50,18 @@ class ReplayRecorder:
                     "objective_id": e.mind.strategic.current_objective_id,
                     "interrupted_by": e.mind.strategic.interrupted_project_id,
                     "concern_count": len(e.mind.strategic.concerns),
-                    # [phase_2_intel_capacity]
-                    "planning_budget": e.mind.strategic.last_capacity_profile.planning_budget if e.mind.strategic.last_capacity_profile else 0,
-                    "judgment_stability": e.mind.strategic.last_capacity_profile.judgment_stability if e.mind.strategic.last_capacity_profile else 0.0,
-                    "evidence_quality": e.mind.strategic.last_capacity_profile.evidence_quality if e.mind.strategic.last_capacity_profile else 0.0,
-                    "social_bandwidth": e.mind.strategic.last_capacity_profile.social_bandwidth if e.mind.strategic.last_capacity_profile else 0,
+                    # [phase_2_intel_capacity] Nested profile for consistency with assertions
+                    "last_capacity_profile": e.mind.strategic.last_capacity_profile.model_dump(mode='json') if e.mind.strategic.last_capacity_profile else None,
                     "active_slice_used": e.mind.strategic.active_slice_used,
+                    "active_concerns_used": e.mind.strategic.active_concerns_used,
+                    "retained_leads_used": e.mind.strategic.retained_leads_used,
+                    "candidate_zones_used": e.mind.strategic.candidate_zones_used,
+                    "ally_evaluations_used": e.mind.strategic.ally_evaluations_used,
                     "dropped_candidates_count": e.mind.strategic.dropped_candidates_count,
                     "detour_depth_used": e.mind.strategic.detour_depth_used,
-                    "is_overloaded": e.mind.strategic.is_overloaded
+                    "is_overloaded": e.mind.strategic.is_overloaded,
+                    "primary_overload_source": e.mind.strategic.primary_overload_source,
+                    "last_overload_tick": e.mind.strategic.last_overload_tick
                 }
             }
             for e in world.entities.values()

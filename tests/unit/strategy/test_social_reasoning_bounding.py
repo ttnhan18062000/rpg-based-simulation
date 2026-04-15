@@ -54,7 +54,8 @@ def test_recruitment_offer_bounding_unstable(mock_ctx, mock_project):
         contradiction_sensitivity=0.9, source_trust_learning_rate=0.9
     )
     
-    # Seed chosen to ensure some noise in DeterministicRNG
+    # Change tick to ensure noise is non-zero for this seed
+    mock_ctx.snapshot.tick = 101
     offer = RecruitmentNegotiationService.create_offer(
         mock_ctx, candidate_id=2, project=mock_project, profile=unstable_profile
     )

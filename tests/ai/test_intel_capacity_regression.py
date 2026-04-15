@@ -31,7 +31,8 @@ def test_intel_capacity_replay_and_graph_export():
     last_tick_entities = replay_data["ticks"][-1]["entities"]
     for e_shot in last_tick_entities:
         strat = e_shot.get("strategy", {})
-        assert "planning_budget" in strat, "Replay missing planning_budget"
+        assert "last_capacity_profile" in strat, "Replay missing capacity profile"
+        assert strat["last_capacity_profile"]["planning_budget"] >= 0, "Planning budget missing or invalid"
         assert "active_slice_used" in strat, "Replay missing active_slice_used"
         assert "is_overloaded" in strat, "Replay missing is_overloaded"
     
@@ -144,7 +145,9 @@ def test_intel_capacity_divergence_scenario():
     peon_snap = next(e for e in replay_data["ticks"][0]["entities"] if e["id"] == 102)
     
     # Sage should have higher budget and no overload (limit for 15/15 is ~9)
-    assert sage_snap["strategy"]["planning_budget"] > peon_snap["strategy"]["planning_budget"]
+    sage_budget = sage_snap["strategy"]["last_capacity_profile"]["planning_budget"]
+    peon_budget = peon_snap["strategy"]["last_capacity_profile"]["planning_budget"]
+    assert sage_budget > peon_budget
     assert peon_snap["strategy"]["is_overloaded"] is True
     assert sage_snap["strategy"]["is_overloaded"] is False
     

@@ -88,7 +88,6 @@ class LeadRecord(SimulationModel):
     source_quality: float = Field(default=0.5, ge=0.0, le=1.0)
     
     # Uncertainty & Provenance [phase_3_task_1]
-    certainty: float = Field(default=0.5, ge=0.0, le=1.0)
     directness: float = Field(default=1.0, ge=0.0, le=1.0) # 1.0 = direct, <1.0 = gossiped
     source_confidence: float = Field(default=1.0, ge=0.0, le=1.0)
     
@@ -120,6 +119,7 @@ class CandidateZoneRecord(SimulationModel):
     region_tags: list[str] = Field(default_factory=list) # e.g. "mountain", "swamp"
     
     confidence: float = Field(default=0.5, ge=0.0, le=1.0)
+    approx_coords: Vector2 | None = None # Scout center [PHASE 3]
     supporting_lead_ids: list[str] = Field(default_factory=list)
     contradiction_count: int = 0
     
@@ -366,6 +366,8 @@ class StrategicState(SimulationModel):
     latent_concerns_count: int = 0
     is_overloaded: bool = False
     overload_score: float = 0.0
+    primary_overload_source: str | None = None
+    last_overload_tick: int | None = None
 
     @property
     def current_project(self) -> ProjectRecord | None:

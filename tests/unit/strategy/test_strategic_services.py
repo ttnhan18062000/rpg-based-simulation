@@ -8,6 +8,7 @@ from src.core.logic.concern_generation import ConcernGenerationService
 from src.core.logic.directive_mutation_service import DirectiveMutationService
 from src.core.logic.project_mutation_service import ProjectMutationService
 from src.core.models.strategy import StrategicState, ProjectRecord, ProjectKind, StrategicStatus, ConcernKind, ObjectiveRecord, ObjectiveKind, BlockerRecord, BlockerKind, ConcernRecord
+from src.ai.cognition_capacity import CognitionCapacityProfile
 from src.actions.base import StrategicUpdate, PerceptionUpdate
 from src.core.models.life_events import InterpretedLifeEvent, TurningPointRecord
 from src.core.models.enums import InterpretedLifeEventKind, TurningPointKind, ObjectiveKind
@@ -166,7 +167,13 @@ def test_concern_generation_near_death(mock_world, actor, rng):
         severity=8.0
     )
     
-    ConcernGenerationService.generate(mock_world, actor, event, updates, rng)
+    from src.ai.cognition_capacity import CognitionCapacityBuilder
+    profile = CognitionCapacityBuilder.build(actor)
+    # Force stability to 1.0 to ensure deterministic 4.5 priority
+    from src.ai.cognition_capacity import CognitionCapacityProfile
+    stable_profile = profile.model_copy(update={"judgment_stability": 1.0})
+    
+    ConcernGenerationService.generate(mock_world, actor, event, updates, rng, profile=stable_profile)
     
     assert len(updates.concerns_add_or_update) == 1
     concern = updates.concerns_add_or_update[0]
@@ -182,6 +189,9 @@ def test_directive_mutation_near_death(mock_world, actor, rng):
         tick=mock_world.tick,
         salience_score=0.9
     )
+    
+    prev_tp = TurningPointRecord(event_id="prev", kind=TurningPointKind.NEAR_DEATH, tick=0, salience_score=1.0)
+    actor.mind.narrative.turning_points = [prev_tp, prev_tp, tp]
     
     DirectiveMutationService.evaluate_mutation(mock_world, actor, tp, updates, rng)
     

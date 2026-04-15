@@ -15,6 +15,16 @@ def test_inspector_curated_output():
     entity.identity.display_name = "Test Hero"
     entity.identity.tier = 1
     entity.identity.faction = "Highland"
+    entity.identity.archetype = MagicMock()
+    entity.identity.archetype.name = "Warrior"
+    entity.identity.reputation = MagicMock()
+    entity.identity.reputation.reputation_tags = ["Hero"]
+    entity.identity.reputation.defender_score = 5.0
+    entity.identity.reputation.heroism_score = 5.0
+    entity.identity.reputation.trustworthiness = 5.0
+    entity.identity.reputation.greed_score = 5.0
+    entity.identity.reputation.threat_notoriety = 5.0
+    entity.identity.reputation.cowardice_score = 5.0
     
     # Personality traits
     entity.mind = MagicMock()
@@ -39,8 +49,23 @@ def test_inspector_curated_output():
     entity.mind.routine.active_start_hour = 8
     entity.mind.routine.active_end_hour = 20
     
+    entity.mind.decision.ai_state = AIState.IDLE
     entity.mind.navigation = MagicMock()
     entity.mind.perception = MagicMock()
+    entity.mind.strategic = MagicMock()
+    entity.mind.strategic.projects = []
+    entity.mind.strategic.directives = []
+    entity.mind.strategic.concerns = []
+    entity.mind.strategic.leads = []
+    entity.mind.strategic.candidate_zones = []
+    entity.mind.strategic.hypotheses = []
+    entity.mind.strategic.contracts = []
+    entity.mind.strategic.offers = []
+    entity.mind.strategic.obligations = []
+    entity.mind.strategic.recent_drivers = []
+    entity.mind.strategic.current_objective_id = None
+    entity.mind.strategic.last_capacity_profile = None
+    entity.mind.strategic.interrupted_project_id = None
     
     entity.progression = MagicMock()
     entity.progression.level = 5
@@ -54,9 +79,10 @@ def test_inspector_curated_output():
     
     # Narrative log
     from src.core.aspects.mind import InterpretedEvent
-    e1 = InterpretedEvent(tick=10, type="combat", impact=1.2, details={"desc": "Killed a Dragon"})
+    e1 = InterpretedEvent(tick=10, type="combat", impact=1.5, details={"desc": "Killed a Dragon"})
     entity.mind.narrative = MagicMock()
     entity.mind.narrative.memory_log = [e1]
+    entity.mind.narrative.turning_points = []
     
     # Mock registry
     registry = MagicMock()

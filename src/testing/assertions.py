@@ -40,20 +40,18 @@ def assert_strategic_consistency(replay_json: Dict[str, Any], cognition_graphs: 
         return
         
     last_tick_data = ticks[-1]
-    last_world_state = last_tick_data.get("state", {})
-    entities = last_world_state.get("entities", {})
+    entities = last_tick_data.get("entities", [])
     
-    for eid_str, graph in cognition_graphs.items():
-        eid = int(eid_str)
-        entity_data = entities.get(eid_str)
-        if not entity_data:
+    # Track 2: Strategic consistency should work with list-based entities
+    for entity_snapshot in entities:
+        eid = entity_snapshot.get("id")
+        graph = cognition_graphs.get(eid)
+        if not graph:
             continue
             
         # Check current project/objective in graph matches entity state
-        # In EntityCognitionExporter, we use kind="pursuing" for the current project edge
-        mind = entity_data.get("mind", {})
-        strat = mind.get("strategic", {})
-        expected_project_id = strat.get("current_project_id")
+        strat = entity_snapshot.get("strategy", {})
+        expected_project_id = strat.get("project_id")
         
         if expected_project_id:
             edges = graph["elements"]["edges"]
@@ -71,18 +69,24 @@ def assert_determinism(graph_a: Dict[str, Any], graph_b: Dict[str, Any]):
     assert graph_a == graph_b, "Graphs diverged despite identical seeds"
 
 def assert_cognition_consistency(replay_json: Dict[str, Any], cognition_graphs: Dict[int, Dict[str, Any]]):
-    """Verify that cognitive metrics in replay summary match the exported graphs."""
+    """Verify that cognitive metrics in replay summary match the exported graphs.
+    
+    [INTENTIONAL OVERLAP CONTRACT]
+    - Capacity: planning_budget, judgment_stability, evidence_quality, social_bandwidth.
+    - Usage: active_slice_used, dropped_candidates_count, is_overloaded.
+    - Determinism: Both must derive from the exact same StrategicState snapshot.
+    """
     ticks = replay_json.get("ticks", [])
     if not ticks:
         return
         
     last_tick_data = ticks[-1]
-    last_tick = last_tick_data.get("tick", 0)
     entities = last_tick_data.get("entities", [])
     
     for entity_snapshot in entities:
         eid = entity_snapshot.get("id")
         strat = entity_snapshot.get("strategy", {})
+        cp = strat.get("last_capacity_profile", {})
         
         graph = cognition_graphs.get(eid)
         if not graph:
@@ -95,20 +99,50 @@ def assert_cognition_consistency(replay_json: Dict[str, Any], cognition_graphs: 
         
         # 2. Compare attributes (flattened in Cytoscape format)
         data = cp_node["data"]
-        eb_plan = strat.get("planning_budget")
-        gr_plan = data.get("planning_budget")
-        assert gr_plan == eb_plan, f"Planning budget mismatch for entity {eid}: Graph={gr_plan}, Replay={eb_plan}"
         
-        eb_used = strat.get("active_slice_used")
-        gr_used = data.get("active_slice_used")
-        assert gr_used == eb_used, f"Active slice usage mismatch for entity {eid}: Graph={gr_used}, Replay={eb_used}"
+        # Capacity Parity (Complete Milestone 2 Set)
+        capacity_fields = [
+            "planning_budget", "judgment_stability", "evidence_quality", "social_bandwidth",
+            "detour_depth_limit", "active_slice_limit", "concern_intake_limit", "lead_retention_limit",
+            "candidate_zone_limit", "ally_evaluation_limit", "blocker_resolution_patience",
+            "resume_reliability", "interruption_resistance", "abandonment_threshold_mod",
+            "contradiction_sensitivity", "source_trust_learning_rate"
+        ]
         
+        for field in capacity_fields:
+            eb_val = cp.get(field)
+            gr_val = data.get(field)
+            if eb_val is not None: # Replay might have None if not updated
+                assert gr_val == eb_val, f"{field} mismatch for entity {eid}: Graph={gr_val}, Replay={eb_val}"
+        
+        # Usage Parity
+        usage_fields = {
+            "active_slice_used": "active_slice_used",
+            "dropped_candidates_count": "dropped_candidates",
+            "active_concerns_used": "active_concerns_used",
+            "retained_leads_used": "retained_leads_used",
+            "candidate_zones_used": "candidate_zones_used",
+            "ally_evaluations_used": "ally_evaluations_used",
+            "detour_depth_used": "detour_depth_used"
+        }
+        
+        for eb_key, gr_key in usage_fields.items():
+            eb_val = strat.get(eb_key)
+            gr_val = data.get(gr_key)
+            if eb_val is not None:
+                assert gr_val == eb_val, f"{eb_key} mismatch for entity {eid}: Graph={gr_val}, Replay={eb_val}"
+        
+        # 3. Overload Parity
         eb_over = strat.get("is_overloaded")
         gr_over = data.get("is_overloaded")
         assert gr_over == eb_over, f"Overload status mismatch for entity {eid}: Graph={gr_over}, Replay={eb_over}"
+        
+        eb_source = strat.get("primary_overload_source")
+        gr_source = data.get("primary_overload_source")
+        assert gr_source == eb_source, f"Primary overload source mismatch for entity {eid}: Graph={gr_source}, Replay={eb_source}"
 
 def assert_overload_behavior(replay_json: Dict[str, Any]):
-    """Ensure that overload flags appear if active_slice_used == limit (or high score)."""
+    """Ensure that overload flags appear if active_slice_used >= budget. [STABILIZATION]"""
     for tick_data in replay_json.get("ticks", []):
         for e in tick_data.get("entities", []):
             strat = e.get("strategy", {})
@@ -118,4 +152,4 @@ def assert_overload_behavior(replay_json: Dict[str, Any]):
                 budget = strat.get("planning_budget", 1)
                 # Overload can trigger before reaching budget if pressure is extremely high, 
                 # but usually used will be high.
-                assert used >= 0, "Negative usage recorded"
+                assert used >= 0, f"Negative usage {used} for overloaded entity {e.get('id')}"

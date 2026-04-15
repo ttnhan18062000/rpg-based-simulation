@@ -137,6 +137,11 @@ def test_identity_drift_resistance(mock_world, mock_entity, stable_profile, unst
     tp.kind = TurningPointKind.NEAR_DEATH
     tp.salience_score = 0.9 # Between default stable (1.2) and unstable (0.8) thresholds
     
+    # Seed history to satisfy count threshold (requires 2+ for Near Death)
+    prev_tp = MagicMock()
+    prev_tp.kind = TurningPointKind.NEAR_DEATH
+    mock_entity.mind.narrative.turning_points = [prev_tp, prev_tp, tp] 
+    
     # Stable
     updates_s = StrategicUpdate(target_id=mock_entity.id)
     DirectiveMutationService.evaluate_mutation(mock_world, mock_entity, tp, updates_s, None, profile=stable_profile)

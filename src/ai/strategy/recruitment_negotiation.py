@@ -108,6 +108,7 @@ class RecruitmentNegotiationService:
             
         # 1. Base Willingness from Relationship
         willingness = 0.0
+        reason = "Insufficient motivation or trust"
         bond = actor.mind.social.known_bonds.get(offer.recruiter_id)
         if bond:
             # Trust is the strongest multiplier
@@ -157,11 +158,27 @@ class RecruitmentNegotiationService:
         if actor.combat.hp_ratio < 0.4:
             willingness -= 0.5 # Too injured to care about contracts
             
-        # 5b. Betrayal Aversion Feedback
-        has_betrayal_trauma = any("Betrayal" in c.label for c in actor.mind.strategic.concerns) or \
-                              any("Betrayal" in d.label for d in actor.mind.strategic.directives)
-        if has_betrayal_trauma:
-            willingness -= 0.4 # Significant penalty for recent betrayal
+        # 5b. Betrayal Trauma Feedback [TCK-20260414-SOCIAL-03]
+        from src.core.models.enums import TurningPointKind
+        
+        # Scan durable TurningPoints for private betrayal history (bypassing public fame)
+        betrayals = [tp for tp in actor.mind.narrative.turning_points if tp.kind == TurningPointKind.BETRAYAL]
+        
+        if betrayals:
+            # General distrust penalty
+            willingness -= 0.5
+            
+            # Check for direct grudge: Did THIS recruiter betray us?
+            direct_betrayal = any(offer.recruiter_id in tp.involved_entity_ids for tp in betrayals)
+            if direct_betrayal:
+                willingness -= 1.0 # Instant rejection
+                reason = "Recruiter was involved in a past betrayal."
+        
+        # Fallback to general concern scan
+        has_betrayal_concern = any("Betrayal" in c.label for c in actor.mind.strategic.concerns) or \
+                               any("Betrayal" in d.label for d in actor.mind.strategic.directives)
+        if has_betrayal_concern:
+            willingness -= 0.3
             
         # Final Decision
         threshold = 0.3 # Base threshold to say 'Yes'
@@ -204,7 +221,7 @@ class RecruitmentNegotiationService:
                     reason="Haggling for better payout"
                 )
                 
-        return OfferAppraisal(status=OfferStatus.DECLINED, reason="Insufficient motivation or trust")
+        return OfferAppraisal(status=OfferStatus.DECLINED, reason=reason)
 
     @classmethod
     def evaluate_counter(

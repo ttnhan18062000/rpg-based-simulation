@@ -63,8 +63,8 @@ class KnowledgePropagationSystem(System):
                                 # Merge lead
                                 existing = next((l for l in strat.leads if l.label == new_lead.label), None)
                                 if existing:
-                                    # Update confidence if higher
-                                    existing.confidence = max(existing.confidence, new_lead.confidence)
+                                    # Update certainty if higher
+                                    existing.certainty = max(existing.certainty, new_lead.certainty)
                                 else:
                                     strat.leads.append(new_lead)
                         

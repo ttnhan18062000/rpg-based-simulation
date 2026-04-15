@@ -5,7 +5,14 @@ if TYPE_CHECKING:
     from src.core.entities.entity import Entity
 
 class AIPresenter:
-    """Translates raw AI decision data into explainable schemas."""
+    """Translates raw AI decision data into explainable schemas.
+    
+    [TRUTH OWNERSHIP]
+    - Owner of Structured Human-Facing Inspection.
+    - Responsible for translating raw MindAspect state into a shape matching AIDecisionSchema.
+    - Must NOT mutate entity state or invent missing history.
+    - Used by the REST API and entity inspection endpoints.
+    """
 
     @staticmethod
     def get_explanation(entity: "Entity") -> AIDecisionSchema:
@@ -136,12 +143,12 @@ class AIPresenter:
             nearest_target_id=nearest_id,
             group_id=entity.identity.group_id,
             active_routine_id=mind.routine.active_routine_id,
-            strategy=AIPresenter._serialize_strategy(entity), # [PHASE 4]
+            strategy=AIPresenter.serialize_strategy(entity), # [PHASE 4]
             narrative_impacts=narrative_impacts
         )
 
     @staticmethod
-    def _serialize_strategy(entity: "Entity") -> Any:
+    def serialize_strategy(entity: "Entity") -> Any:
         """Shim for strategic serialization to avoid circular dependencies with EntityPresenter."""
         from src.api.schemas import (
             StrategicStateSchema, ProjectSchema, ObjectiveSchema, 
@@ -306,7 +313,9 @@ class AIPresenter:
             ) if s.last_capacity_profile else None,
             overload=CognitionOverloadSchema(
                 is_overloaded=s.is_overloaded,
-                overload_score=round(s.overload_score, 2)
+                overload_score=round(s.overload_score, 2),
+                primary_overload_source=s.primary_overload_source,
+                last_overload_tick=s.last_overload_tick
             ) if s.last_capacity_profile else None
         )
 

@@ -57,7 +57,9 @@ class TestStrategicRegression:
         replay = load_json(result.replay_path)
         graphs = {eid: load_json(path) for eid, path in result.cognition_paths.items()}
         
+        from src.testing.assertions import assert_strategic_consistency, assert_cognition_consistency
         assert_strategic_consistency(replay, graphs)
+        assert_cognition_consistency(replay, graphs)
 
     def test_graph_structural_integrity(self, runner):
         """Verify that all exported graphs follow structural invariant rules."""

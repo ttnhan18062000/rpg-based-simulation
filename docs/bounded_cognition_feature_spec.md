@@ -16,6 +16,14 @@ The core contract is the `CognitionCapacityProfile`, derived deterministically f
 | `active_slice_limit` | Max candidates (concerns, leads, etc.) passed to brain. |
 | `concern_intake_limit` | Max new concerns processed per tick. |
 | `lead_retention_limit` | Max leads kept in memory before dropping low-certainty ones. |
+| `candidate_zone_limit` | Max uncertainty regions tracked (Intel capacity). |
+| `ally_evaluation_limit` | Max allies whose strategic value is assessed (Social bandwidth). |
+| `blocker_resolution_patience` | Tolerance for stalled sub-objectives before re-evaluation. |
+| `resume_reliability` | Probability of successful project resumption after suspension. |
+| `interruption_resistance` | Friction against switching away from current project. |
+| `abandonment_threshold_mod` | Adjustment to default project abandonment costs. |
+| `contradiction_sensitivity` | Sensitivity to conflicting intelligence from multiple sources. |
+| `source_trust_learning_rate` | Speed of reputation updates for information sources. |
 
 ## Profile Derivation Rules
 Profiles are built using the `CognitionCapacityBuilder` based on normalized attributes (1-15 scale):

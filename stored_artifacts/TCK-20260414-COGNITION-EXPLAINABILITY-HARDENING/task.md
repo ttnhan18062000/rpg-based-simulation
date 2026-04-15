@@ -1,0 +1,16 @@
+- [x] Expand `BoundedStrategicAppraisalService`
+    - [x] Gather `candidate_zones` and `offers`
+    - [x] Apply caps in `_apply_pre_bounds`
+    - [x] Update category-specific drop metrics
+- [x] Update `AIBrain` Metric Population
+    - [x] Use `bounded_slice` results for `candidate_zones_used` and `ally_evaluations_used`
+- [x] UI & Observability Hardening
+    - [x] Update `EntityInspector` with `primary_overload_source` and `last_overload_tick`
+    - [x] Verify `AIPresenter` mapping
+- [x] Verification & Testing
+    - [x] Create `test_strategic_explainability.py`
+    - [x] Assert personality-based capacity effects
+    - [x] Assert `switch_reason` correctness
+- [x] Documentation & Ticket Update
+    - [x] Finalize `TCK-20260414-COGNITION-EXPLAINABILITY-HARDENING.md`
+    - [x] Move ticket to `done/`

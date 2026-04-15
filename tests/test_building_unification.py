@@ -21,6 +21,7 @@ from src.core.models.strategy import (
 )
 from src.actions.base import ActionProposal, PerceptionUpdate, StrategicUpdate
 from src.ai.strategy.detour_suggestion import DetourSuggestionService
+from src.ai.cognition_capacity import CognitionCapacityBuilder
 from src.core.gameplay.items.item_registry import ItemTemplate, ItemType, ITEM_REGISTRY
 from src.core.aspects.progression import ProgressionAspect
 
@@ -247,7 +248,8 @@ def test_detour_suggestion_lifecycle_awareness(ai_context):
     
     ai_context.actor.mind.strategic.leads = [exhausted_lead, untested_lead]
     
-    detours = DetourSuggestionService.suggest_detours(ai_context, blocker, "proj_1")
+    profile = CognitionCapacityBuilder.build(ai_context.actor)
+    detours = DetourSuggestionService.suggest_detours(ai_context, blocker, "proj_1", profile)
     
     assert len(detours) == 1
     d = detours[0]

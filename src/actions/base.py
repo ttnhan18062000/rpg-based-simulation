@@ -282,6 +282,20 @@ class SocialUpdate(IntentUpdate):
     admiration_delta: float = 0.0
     debt_delta: float = 0.0
 
+class SocialEventUpdate(IntentUpdate):
+    """Update for pushing interpreted life events from the AI back to the system. [PHASE 3]"""
+    events_add: list[InterpretedLifeEvent] = Field(default_factory=list)
+
+    @model_validator(mode="after")
+    def _coerce_social_events(self) -> "SocialEventUpdate":
+        from src.core.models.life_events import InterpretedLifeEvent
+        if self.events_add:
+            self.events_add = [
+                InterpretedLifeEvent(**e) if isinstance(e, dict) else e 
+                for e in self.events_add
+            ]
+        return self
+
 class ReputationUpdate(IntentUpdate):
     """Updates to an entity's public reputation profile. [PHASE 2]"""
     defender_delta: float = 0.0
@@ -350,6 +364,8 @@ class StrategicUpdate(IntentUpdate):
     latent_concerns_count: int | None = None
     is_overloaded: bool | None = None
     overload_score: float | None = None
+    primary_overload_source: str | None = None
+    last_overload_tick: int | None = None
 
     @model_validator(mode="after")
     def _coerce_strategic(self) -> "StrategicUpdate":
@@ -400,7 +416,7 @@ def _rebuild_action_models():
         DiscoveryNarrative, PersonalMotive, DecisionDriver
     )
     from src.core.models.life_events import (
-        TurningPointRecord
+        TurningPointRecord, InterpretedLifeEvent
     )
     from src.core.aspects.combat import CombatAspect
     from src.core.models.combat import CombatTraceRecord, CombatTraceDetails
@@ -438,6 +454,7 @@ def _rebuild_action_models():
     SocialUpdate.model_rebuild(_types_namespace=ns)
     ReputationUpdate.model_rebuild(_types_namespace=ns)
     RoutineUpdate.model_rebuild(_types_namespace=ns)
+    SocialEventUpdate.model_rebuild(_types_namespace=ns)
     StrategicUpdate.model_rebuild(_types_namespace=ns)
     CombatTraceUpdate.model_rebuild(_types_namespace=ns)
     

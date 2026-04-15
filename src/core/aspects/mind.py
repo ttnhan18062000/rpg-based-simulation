@@ -300,6 +300,20 @@ class NarrativeMemory(SimulationModel):
             
         return self
     
+    def add_interpreted_life_event(self, event: "InterpretedLifeEvent", max_entries: int = 50) -> None:
+        """Add a high-level social event to the narrative history. [PHASE 3]"""
+        from src.core.aspects.mind import InterpretedEvent
+        entry = InterpretedEvent(
+            tick=event.tick,
+            type="social",
+            impact=event.severity,
+            life_event_kind=event.kind,
+            details={"desc": f"Intel {event.kind.name.lower().replace('intel_', '')}", "source_id": event.subject_ids[0] if event.subject_ids else None}
+        )
+        self.memory_log.append(entry)
+        if len(self.memory_log) > max_entries:
+            self.memory_log.pop(0)
+
     # [PHASE 2] Durable turning-point memories — capped at 20
     turning_points: list["TurningPointRecord"] = Field(default_factory=list)
 

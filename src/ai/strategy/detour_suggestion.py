@@ -60,6 +60,13 @@ class DetourSuggestionService:
             
             target_pos = lead.target_coords if lead else None
             
+            # [TCK-20260414-SOCIAL-02] Use CandidateZone center for scouting if lead is vague
+            if lead and not target_pos and lead.candidate_zone_ids:
+                 zone_id = lead.candidate_zone_ids[0]
+                 zone = next((z for z in ctx.strategic.candidate_zones if z.zone_id == zone_id), None)
+                 if zone:
+                      target_pos = zone.approx_coords
+            
             detours.append(ObjectiveRecord(
                 objective_id=f"detour_investigate_{blocker.blocker_id}",
                 project_id=project_id,

@@ -435,9 +435,17 @@ class EntityInspector:
 
         # 3. Overload Status
         if strat.is_overloaded:
-            print(f"\n  \033[1;91m[!] COGNITIVE OVERLOAD ALERT\033[0m")
-            print(f"    Score: {strat.overload_score:.2f} | Dropped: {strat.dropped_candidates_count} candidates")
-            print(f"    Latent Concerns: {strat.latent_concerns_count} (ignored this tick)")
+            source_color = "\033[91m" # Default red
+            if strat.primary_overload_source == "complexity":
+                source_color = "\033[93m" # Yellow for complexity
+            elif strat.primary_overload_source in ("trauma", "panic"):
+                source_color = "\033[1;91m" # Bold red for severe trauma
+                
+            print(f"\n  {source_color}[!] COGNITIVE OVERLOAD ALERT\033[0m")
+            print(f"    Source: {source_color}{strat.primary_overload_source or 'unknown'}\033[0m | Score: {strat.overload_score:.2f}")
+            print(f"    Dropped: {strat.dropped_candidates_count} candidates | Latent Concerns: {strat.latent_concerns_count}")
+            if strat.last_overload_tick:
+                print(f"    Last Overload Tick: T{strat.last_overload_tick}")
         else:
             print(f"\n  \033[90mStrategic pressure: {strat.overload_score:.2f} (Stable)\033[0m")
 

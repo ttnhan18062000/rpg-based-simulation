@@ -540,7 +540,8 @@ class VisitGuildHandler(StateHandler):
             material_hints=material_hints,
             camps_found=camps_to_ingest,
             resources_found=resources_to_ingest,
-            tested_lead_ids=actor.mind.strategic.tested_lead_ids
+            tested_lead_ids=actor.mind.strategic.tested_lead_ids,
+            source_trust=actor.mind.strategic.source_trust
         )
 
         final_updates = [strategic_up]
@@ -714,7 +715,6 @@ class VisitInnHandler(StateHandler):
             "A dark fog has settled over the Ruins.",
             "Guild scouts spotted a massive wolf in the Forest."
         ]
-        rumor = ctx.rng.choice(rumors)
         strategic_up = StrategicKnowledgeIngestionService.ingest_inn_rumor(
             actor_id=actor.id,
             tick=snapshot.tick,
@@ -722,7 +722,8 @@ class VisitInnHandler(StateHandler):
             danger_level=0.3 if "bandit" in rumor or "wolf" in rumor else 0.6,
             rng=ctx.rng,
             tested_lead_ids=actor.mind.strategic.tested_lead_ids,
-            profile=profile
+            profile=profile,
+            source_trust=actor.mind.strategic.source_trust
         )
 
         return AIState.RESTING_IN_TOWN, ActionProposal(

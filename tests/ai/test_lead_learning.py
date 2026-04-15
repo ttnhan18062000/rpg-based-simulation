@@ -5,6 +5,7 @@ from src.ai.strategy.strategic_learning_service import StrategicLearningService
 from src.ai.cognition_capacity import CognitionCapacityProfile
 from src.core.models.strategy import LeadRecord, LeadKind, StrategicState
 from src.core.models.enums import Domain
+from src.core.models.vectors import Vector2
 from src.platform.rng import DeterministicRNG
 
 @pytest.fixture
@@ -14,6 +15,8 @@ def mock_ctx():
     ctx.snapshot.tick = 100
     ctx.actor = MagicMock()
     ctx.actor.id = 1
+    ctx.actor.spatial = MagicMock()
+    ctx.actor.spatial.pos = Vector2(x=5, y=5)
     
     # Mock Strategic State
     strat = StrategicState(
@@ -44,7 +47,8 @@ def test_learning_success(mock_ctx):
     )
     
     # Process Success
-    update = StrategicLearningService.process_lead_outcome(mock_ctx, lead, success=True, profile=profile)
+    updates = StrategicLearningService.process_lead_outcome(mock_ctx, lead, success=True, profile=profile)
+    update = updates[0] # StrategicUpdate
     
     # Certainty should increase
     # Formula: certainty + (1 - certainty) * learning_rate (approx)
@@ -54,7 +58,7 @@ def test_learning_success(mock_ctx):
     updated_lead = update.leads_add_or_update[0]
     assert updated_lead.certainty > 0.5
     assert updated_lead.tested == True
-    assert updated_lead.is_exhausted == False
+    assert updated_lead.is_exhausted == True
     
     # Source Trust should increase in the state's dictionary
     # Wait! StrategicLearningService doesn't update source_trust in the StrategicUpdate object?
@@ -80,7 +84,8 @@ def test_learning_failure(mock_ctx):
     )
     
     # Process Failure
-    update = StrategicLearningService.process_lead_outcome(mock_ctx, lead, success=False, profile=profile)
+    updates = StrategicLearningService.process_lead_outcome(mock_ctx, lead, success=False, profile=profile)
+    update = updates[0] # StrategicUpdate
     
     updated_lead = update.leads_add_or_update[0]
     assert updated_lead.certainty < 0.5

@@ -10,6 +10,7 @@ import logging
 import threading
 import time
 import typing
+import uuid
 from typing import TYPE_CHECKING
 
 from src.ai.brain import AIBrain
@@ -270,10 +271,13 @@ class EngineManager:
 
     def _try_recover_world(self, cfg: SimulationConfig) -> WorldState | None:
         """Attempt to recover the simulation state from Kafka."""
-        import uuid
-        from src.api.kafka_client import create_kafka_consumer, KAFKA_TOPIC_SNAPSHOTS, KAFKA_TOPIC_EVENTS
+        from src.api.kafka_client import create_kafka_consumer, KAFKA_TOPIC_SNAPSHOTS, KAFKA_TOPIC_EVENTS, HAS_KAFKA
         from src.utils.serialization import SimulationSerializer
         from src.core.models.snapshot import Snapshot
+        
+        if not HAS_KAFKA:
+            return None
+            
         from confluent_kafka import TopicPartition, OFFSET_BEGINNING
         
         # Unique consumer group for startup so it doesn't mess with other readers
