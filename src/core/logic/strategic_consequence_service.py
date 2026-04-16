@@ -40,14 +40,18 @@ class StrategicConsequenceService:
             updates = StrategicUpdate(target_id=entity.id)
         tick = world.tick if hasattr(world, 'tick') else getattr(world, 'tick', 0)
         
+        # [phase_2_intel_capacity] Resolve cognitive profile
+        from src.ai.cognition_capacity import CognitionCapacityBuilder
+        profile = CognitionCapacityBuilder.build(entity)
+        
         # 1. Concern Generation (Task 2)
         from src.core.logic.concern_generation import ConcernGenerationService
-        ConcernGenerationService.generate(world, entity, event, updates, rng)
+        ConcernGenerationService.generate(world, entity, event, updates, rng, profile=profile)
         
         # 2. Directive Mutation (Task 3)
         if tp:
             from src.core.logic.directive_mutation_service import DirectiveMutationService
-            DirectiveMutationService.evaluate_mutation(world, entity, tp, updates, rng)
+            DirectiveMutationService.evaluate_mutation(world, entity, tp, updates, rng, profile=profile)
             
         # 3. Place Appraisal (Task 4)
         from src.core.logic.place_threat_appraisal import PlaceThreatAppraisalService
@@ -55,6 +59,6 @@ class StrategicConsequenceService:
         
         # 4. Project Mutation & Interruption (Task 5)
         from src.core.logic.project_mutation_service import ProjectMutationService
-        ProjectMutationService.process_interruption(world, entity, event, tp, updates)
+        ProjectMutationService.process_interruption(world, entity, event, tp, updates, profile=profile)
         
         return updates

@@ -15,6 +15,7 @@ from src.core.models.enums import (
     ContractKind, OfferStatus, StrategicStatus, DirectiveKind, 
     ProjectKind, ObjectiveKind, ConcernKind, LeadKind, BlockerKind
 )
+from src.core.models.cognition import CognitionCapacityProfile
 
 class DecisionDriver(SimulationModel):
     """A structured record explaining a bias or decision driver. [phase_2_stage_9]"""
@@ -48,6 +49,8 @@ class BlockerRecord(SimulationModel):
     severity: float = Field(default=0.5, ge=0.0, le=1.0)
     confidence: float = Field(default=1.0, ge=0.0, le=1.0)
     
+    source_project_id: str | None = None # [phase_2_intel_capacity]
+    
     # Traceability [phase_3_task_2]
     evidence_refs: list[str] = Field(default_factory=list) # lead_ids or event_ids
     spawned_from_id: str | None = None # project_id or objective_id
@@ -75,9 +78,16 @@ class LeadRecord(SimulationModel):
     
     source_type: str = "" # e.g. "guild", "gossip", "observation"
     source_entity_id: int | None = None
+    source_id: str | None = None # Generic ID for trust mapping
+    
+    # Appraisal [phase_2_intel_capacity]
+    priority: float = Field(default=1.0, ge=0.0, le=5.0)
+    certainty: float = Field(default=0.5, ge=0.0, le=1.0) # [phase_3_intel_capacity]
+    contradiction_count: int = 0 # [phase_3_intel_capacity]
+    freshness: float = Field(default=0.5, ge=0.0, le=1.0)
+    source_quality: float = Field(default=0.5, ge=0.0, le=1.0)
     
     # Uncertainty & Provenance [phase_3_task_1]
-    certainty: float = Field(default=0.5, ge=0.0, le=1.0)
     directness: float = Field(default=1.0, ge=0.0, le=1.0) # 1.0 = direct, <1.0 = gossiped
     source_confidence: float = Field(default=1.0, ge=0.0, le=1.0)
     
@@ -109,6 +119,7 @@ class CandidateZoneRecord(SimulationModel):
     region_tags: list[str] = Field(default_factory=list) # e.g. "mountain", "swamp"
     
     confidence: float = Field(default=0.5, ge=0.0, le=1.0)
+    approx_coords: Vector2 | None = None # Scout center [PHASE 3]
     supporting_lead_ids: list[str] = Field(default_factory=list)
     contradiction_count: int = 0
     
@@ -152,6 +163,7 @@ class ObjectiveRecord(SimulationModel):
     # Traceability [phase_3_task_2]
     evidence_refs: list[str] = Field(default_factory=list) # lead_ids or event_ids
     spawned_from_id: str | None = None # blocker_id or project_id
+    detour_depth: int = 0 # [phase_3_intel_capacity]
     
     created_tick: int = 0
     resolved_tick: int | None = None
@@ -178,6 +190,10 @@ class ProjectRecord(SimulationModel):
     
     objectives: list[ObjectiveRecord] = Field(default_factory=list)
     active_objective_id: str | None = None
+    
+    # Appraisal [phase_2_intel_capacity]
+    salience: float = Field(default=0.5, ge=0.0, le=1.0)
+    last_selected_tick: int = 0
     
     created_tick: int = 0
     updated_tick: int = 0
@@ -213,6 +229,11 @@ class ConcernRecord(SimulationModel):
     
     urgency: float = Field(default=0.5, ge=0.0, le=1.0)
     irreversibility: float = Field(default=0.0, ge=0.0, le=1.0)
+    
+    # Appraisal [phase_2_intel_capacity]
+    salience: float = Field(default=0.5, ge=0.0, le=1.0)
+    source_project_id: str | None = None
+    
     attachment_relevance: float = Field(default=0.0, ge=0.0, le=1.0)
     social_cost: float = Field(default=0.0, ge=0.0, le=1.0)
     
@@ -230,6 +251,8 @@ class ObligationRecord(SimulationModel):
     target_id: int
     label: str
     priority: float = Field(default=1.0, ge=0.0, le=5.0)
+    urgency: float = Field(default=0.5, ge=0.0, le=1.0) # [phase_2_intel_capacity]
+    deadline_pressure: float = Field(default=0.0, ge=0.0, le=1.0) # [phase_2_intel_capacity]
     deadline_tick: int | None = None
     created_tick: int = 0
     resolved_tick: int | None = None
@@ -249,6 +272,7 @@ class SocialContractRecord(SimulationModel):
     contract_id: str
     kind: ContractKind
     purpose: str
+    priority: float = Field(default=1.0, ge=0.0, le=5.0) # [phase_2_intel_capacity]
     formation_reason: str = ""
     
     project_id: str | None = None # The underlying strategic project
@@ -328,6 +352,22 @@ class StrategicState(SimulationModel):
     
     # Knowledge Continuity [phase_3_task_3]
     tested_lead_ids: list[str] = Field(default_factory=list)
+    source_trust: dict[str, float] = Field(default_factory=dict) # [phase_3_intel_capacity]
+    
+    # Cognitive Bounding Metrics [phase_2_intel_capacity]
+    last_capacity_profile: CognitionCapacityProfile | None = None
+    active_slice_used: int = 0
+    active_concerns_used: int = 0
+    retained_leads_used: int = 0
+    candidate_zones_used: int = 0
+    ally_evaluations_used: int = 0
+    detour_depth_used: int = 0
+    dropped_candidates_count: int = 0
+    latent_concerns_count: int = 0
+    is_overloaded: bool = False
+    overload_score: float = 0.0
+    primary_overload_source: str | None = None
+    last_overload_tick: int | None = None
 
     @property
     def current_project(self) -> ProjectRecord | None:

@@ -376,7 +376,7 @@ At the end of Phase 3, blocker diagnosis is profile-sensitive and deterministic,
 
 ## Task
 
-[ ] (checkbox) - [Task 1] - Add uncertainty-resolution working models and service surface
+[x] (checkbox) - [Task 1] - Add uncertainty-resolution working models and service surface
 
 [Task Description]
 Create the exact derived working models and service interface for cognition-sensitive blocker diagnosis, detour planning, and lead learning.
@@ -400,20 +400,22 @@ These are appraisal-side and learning-side derived models only. They are not aut
 
 [Task check list]
 
-- [ ] Add `BlockerDiagnosisResult`
-- [ ] Add `DetourPlanCandidate`
-- [ ] Add `LeadLearningOutcome`
-- [ ] Add `StrategicUncertaintyResolutionService`
-- [ ] Keep field names exact
-- [ ] Keep outputs typed and deterministic
-- [ ] Avoid loose metadata dicts
+- [x] Add `BlockerDiagnosisResult`
+- [x] Add `DetourPlanCandidate`
+- [x] Add `LeadLearningOutcome`
+- [x] Add `StrategicUncertaintyResolutionService`
+- [x] Keep field names exact
+- [x] Keep outputs typed and deterministic
+- [x] Avoid loose metadata dicts
+
+[Implementation Note]: Established `StrategicUncertaintyResolutionService` and associated working models in `src/ai/strategic_uncertainty_resolution.py`. The interface is pure and deterministic.
 
 [Task acceptance criteria]
 The codebase compiles with exact uncertainty-resolution models and service entrypoints matching the required contract.
 
 ---
 
-[ ] (checkbox) - [Task 2] - Implement deterministic blocker diagnosis
+[x] (checkbox) - [Task 2] - Implement deterministic blocker diagnosis
 
 [Task Description]
 Make blocker diagnosis profile-sensitive and exact so entities differ in diagnosis quality without introducing randomness.
@@ -449,19 +451,21 @@ Do not use random misdiagnosis. Do not add extra blocker types. Do not hide miss
 
 [Task check list]
 
-- [ ] Add exact blocker type enumeration for this phase
-- [ ] Add exact confidence formulas for all seven blocker types
-- [ ] Add exact `misdiagnosed` threshold
-- [ ] Add exact fallback misdiagnosis table
-- [ ] Add exact recommended detour mapping
-- [ ] Keep diagnosis deterministic
+- [x] Add exact blocker type enumeration for this phase
+- [x] Add exact confidence formulas for all seven blocker types
+- [x] Add exact `misdiagnosed` threshold
+- [x] Add exact fallback misdiagnosis table
+- [x] Add exact recommended detour mapping
+- [x] Keep diagnosis deterministic
+
+[Implementation Note]: Blocker diagnosis implemented with exact per-type confidence formulas. Deterministic misdiagnosis threshold (0.55) and fallback mapping table verified.
 
 [Task acceptance criteria]
 The service returns deterministic blocker diagnoses and can produce profile-sensitive misdiagnosis through the exact confidence threshold and fallback table.
 
 ---
 
-[ ] (checkbox) - [Task 3] - Implement bounded detour candidate generation and forced terminal resolution
+[x] (checkbox) - [Task 3] - Implement bounded detour candidate generation and forced terminal resolution
 
 [Task Description]
 Bound recursive preparation work so blocked projects cannot spawn infinite detour chains.
@@ -489,20 +493,22 @@ Do not allow partial overflow of detour depth. There is no “soft” recursion 
 
 [Task check list]
 
-- [ ] Add exact detour mapping table
-- [ ] Add exact detour scoring formulas
-- [ ] Add exact depth ratio computation
-- [ ] Add exact depth-limit comparison
-- [ ] Add exact forced terminal candidate
-- [ ] Add exact suspend/delay/abandon rule
-- [ ] Prevent any further recursive detour candidate generation after depth exhaustion
+- [x] Add exact detour mapping table
+- [x] Add exact detour scoring formulas
+- [x] Add exact depth ratio computation
+- [x] Add exact depth-limit comparison
+- [x] Add exact forced terminal candidate
+- [x] Add exact suspend/delay/abandon rule
+- [x] Prevent any further recursive detour candidate generation after depth exhaustion
+
+[Implementation Note]: Detour generation is strictly bounded by `detour_depth_limit`. Forced terminal outcomes (suspend/delay/abandon) are derived deterministically when depth is exhausted.
 
 [Task acceptance criteria]
 Detour generation is profile-sensitive, deterministic, and cannot recurse past the exact depth limit.
 
 ---
 
-[ ] (checkbox) - [Task 4] - Implement exact lead-learning outcomes
+[x] (checkbox) - [Task 4] - Implement exact lead-learning outcomes
 
 [Task Description]
 Make lead confidence and source trust evolve deterministically based on confirmation, contradiction, and no-result outcomes.
@@ -538,19 +544,21 @@ This phase must not directly update source-trust state or lead state. It only re
 
 [Task check list]
 
-- [ ] Add exact confirmed formula
-- [ ] Add exact contradicted formula
-- [ ] Add exact no-result formula
-- [ ] Add exact retry-suppression thresholds
-- [ ] Always mark leads as tested
-- [ ] Keep learning outcome deterministic and non-mutating
+- [x] Add exact confirmed formula
+- [x] Add exact contradicted formula
+- [x] Add exact no-result formula
+- [x] Add exact retry-suppression thresholds
+- [x] Always mark leads as tested
+- [x] Keep learning outcome deterministic and non-mutating
+
+[Implementation Note]: Lead learning applies exact confidence and source-trust deltas. Verified retry suppression thresholds for contradiction (0.35) and no-result (0.25).
 
 [Task acceptance criteria]
 Lead learning outcomes are exact, deterministic, and ready for later authoritative update application.
 
 ---
 
-[ ] (checkbox) - [Task 5] - Add deterministic tests for diagnosis, detour bounding, and lead learning
+[x] (checkbox) - [Task 5] - Add deterministic tests for diagnosis, detour bounding, and lead learning
 
 [Task Description]
 Lock the uncertainty-handling contract so the phase cannot silently regress into fake omniscience, unbounded preparation loops, or noisy lead handling.
@@ -598,23 +606,25 @@ Use controlled fixtures with fixed cognition profiles and fixed blocker/lead inp
 
 [Task check list]
 
-- [ ] Add diagnosis confidence tests
-- [ ] Add deterministic misdiagnosis-table tests
-- [ ] Add exact detour-mapping tests
-- [ ] Add exact detour-score tests
-- [ ] Add exact depth-limit tests
-- [ ] Add exact forced terminal outcome tests
-- [ ] Add exact lead-confirmation tests
-- [ ] Add exact contradiction tests
-- [ ] Add exact no-result tests
-- [ ] Add non-mutation test
+- [x] Add diagnosis confidence tests
+- [x] Add deterministic misdiagnosis-table tests
+- [x] Add exact detour-mapping tests
+- [x] Add exact detour-score tests
+- [x] Add exact depth-limit tests
+- [x] Add exact forced terminal outcome tests
+- [x] Add exact lead-confirmation tests
+- [x] Add exact contradiction tests
+- [x] Add exact no-result tests
+- [x] Add non-mutation test
+
+[Implementation Note]: Complete test coverage in `tests/ai/` for diagnosis sensitivity, detour depth bounding, and lead learning formulas. Purity and non-mutation verified.
 
 [Task acceptance criteria]
 Phase 3 ships with deterministic tests proving exact blocker diagnosis, exact detour bounding, exact lead learning, and non-mutation behavior.
 
 ---
 
-[ ] (checkbox) - [Task 6] - Add exact uncertainty-resolution documentation
+[x] (checkbox) - [Task 6] - Add exact uncertainty-resolution documentation
 
 [Task Description]
 Document the full operational semantics of diagnosis, detour bounding, and lead learning so later phases cannot reinterpret the rules informally.
@@ -664,16 +674,18 @@ Do not describe this phase in broad prose only. The blocker-type set, formulas, 
 
 [Task check list]
 
-- [ ] Document exact blocker types
-- [ ] Document exact diagnosis formulas
-- [ ] Document exact misdiagnosis threshold and fallback table
-- [ ] Document exact detour mappings
-- [ ] Document exact detour formulas
-- [ ] Document exact depth-limit rule
-- [ ] Document exact forced terminal outcome rule
-- [ ] Document exact lead-learning formulas
-- [ ] Document all required tests
-- [ ] Document exact regression purpose for each test
+- [x] Document exact blocker types
+- [x] Document exact diagnosis formulas
+- [x] Document exact misdiagnosis threshold and fallback table
+- [x] Document exact detour mappings
+- [x] Document exact detour formulas
+- [x] Document exact depth-limit rule
+- [x] Document exact forced terminal outcome rule
+- [x] Document exact lead-learning formulas
+- [x] Document all required tests
+- [x] Document exact regression purpose for each test
+
+[Implementation Note]: Operational semantics for M3 documented in `docs/strategy/`. Verified alignment with implemented formulas and mapping rules.
 
 [Task acceptance criteria]
 Phase 3 has an exact uncertainty-resolution document and exact test-matrix document that match implementation.

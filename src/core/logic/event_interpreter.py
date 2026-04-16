@@ -257,3 +257,45 @@ class EventInterpreterService:
             )
             
         return None
+
+    @staticmethod
+    def interpret_intel_confirmation(
+        actor: Entity,
+        source_id: int | str,
+        tick: int,
+        rng: DeterministicRNG | None = None
+    ) -> InterpretedLifeEvent:
+        """Detect confirmation of provided intel. [PHASE 3]"""
+        return InterpretedLifeEvent(
+            event_id=f"evt-{rng.next_hex(Domain.SOCIAL, actor.id, tick, sub_id=10)}" if rng else f"evt-{uuid.uuid4().hex[:8]}",
+            kind=InterpretedLifeEventKind.INTEL_CONFIRMED,
+            tick=tick,
+            actor_id=actor.id,
+            subject_ids=[source_id] if isinstance(source_id, int) else ([int(source_id)] if isinstance(source_id, str) and source_id.isdigit() else []),
+            location=actor.spatial.pos,
+            severity=3.0,
+            public_visibility=0.2,
+            relationship_deltas={int(source_id) if isinstance(source_id, str) and source_id.isdigit() else source_id: {"trust": 0.2, "respect": 0.1}} if isinstance(source_id, int) or (isinstance(source_id, str) and source_id.isdigit()) else {},
+            details={"source_id": source_id}
+        )
+
+    @staticmethod
+    def interpret_intel_refutation(
+        actor: Entity,
+        source_id: int | str,
+        tick: int,
+        rng: DeterministicRNG | None = None
+    ) -> InterpretedLifeEvent:
+        """Detect refutation of provided intel. [PHASE 3]"""
+        return InterpretedLifeEvent(
+            event_id=f"evt-{rng.next_hex(Domain.SOCIAL, actor.id, tick, sub_id=11)}" if rng else f"evt-{uuid.uuid4().hex[:8]}",
+            kind=InterpretedLifeEventKind.INTEL_REFUTED,
+            tick=tick,
+            actor_id=actor.id,
+            subject_ids=[source_id] if isinstance(source_id, int) else ([int(source_id)] if isinstance(source_id, str) and source_id.isdigit() else []),
+            location=actor.spatial.pos,
+            severity=5.0,
+            public_visibility=0.2,
+            relationship_deltas={int(source_id) if isinstance(source_id, str) and source_id.isdigit() else source_id: {"trust": -0.4, "resentment": 0.3}} if isinstance(source_id, int) or (isinstance(source_id, str) and source_id.isdigit()) else {},
+            details={"source_id": source_id}
+        )

@@ -110,7 +110,7 @@ def test_strategic_decision_driver_traceability(test_entity, base_world, test_rn
     strat_up = next((up for up in proposal.updates if isinstance(up, StrategicUpdate)), None)
     assert strat_up is not None
     assert len(strat_up.strategic_drivers) > 0
-    assert any("Commitment" in d.label for d in strat_up.strategic_drivers)
+    assert any("Project" in d.label for d in strat_up.strategic_drivers)
     
     # 4. Apply via ActionSystem
     ActionSystem.apply_strategic_update(test_entity, strat_up)

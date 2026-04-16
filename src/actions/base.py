@@ -23,6 +23,7 @@ from pydantic import Field, model_validator
 from src.core.models.base import SimulationModel
 from src.core.models.types import TargetUnion, BuildingTarget
 from src.core.models.combat import CombatTraceRecord, CombatTraceDetails
+from src.core.models.cognition import CognitionCapacityProfile
 
 class ActionBatch(SimulationModel):
     """A batch of action proposals for a specific tick, used for Kafka/Persistence."""
@@ -281,6 +282,20 @@ class SocialUpdate(IntentUpdate):
     admiration_delta: float = 0.0
     debt_delta: float = 0.0
 
+class SocialEventUpdate(IntentUpdate):
+    """Update for pushing interpreted life events from the AI back to the system. [PHASE 3]"""
+    events_add: list[InterpretedLifeEvent] = Field(default_factory=list)
+
+    @model_validator(mode="after")
+    def _coerce_social_events(self) -> "SocialEventUpdate":
+        from src.core.models.life_events import InterpretedLifeEvent
+        if self.events_add:
+            self.events_add = [
+                InterpretedLifeEvent(**e) if isinstance(e, dict) else e 
+                for e in self.events_add
+            ]
+        return self
+
 class ReputationUpdate(IntentUpdate):
     """Updates to an entity's public reputation profile. [PHASE 2]"""
     defender_delta: float = 0.0
@@ -332,9 +347,25 @@ class StrategicUpdate(IntentUpdate):
     engaged_ticks: int | None = None
     last_interpreted_event_tick: int | None = None
     tested_lead_ids: list[str] = Field(default_factory=list)
+    source_trust_updates: dict[str, float] = Field(default_factory=dict)
     
     # Traceability [PHASE 2]
     strategic_drivers: list[DecisionDriver] = Field(default_factory=list)
+    
+    # Cognitive Bounding Metrics [phase_2_intel_capacity]
+    last_capacity_profile: CognitionCapacityProfile | None = None
+    active_slice_used: int | None = None
+    active_concerns_used: int | None = None
+    retained_leads_used: int | None = None
+    candidate_zones_used: int | None = None
+    ally_evaluations_used: int | None = None
+    detour_depth_used: int | None = None
+    dropped_candidates_count: int | None = None
+    latent_concerns_count: int | None = None
+    is_overloaded: bool | None = None
+    overload_score: float | None = None
+    primary_overload_source: str | None = None
+    last_overload_tick: int | None = None
 
     @model_validator(mode="after")
     def _coerce_strategic(self) -> "StrategicUpdate":
@@ -385,7 +416,7 @@ def _rebuild_action_models():
         DiscoveryNarrative, PersonalMotive, DecisionDriver
     )
     from src.core.models.life_events import (
-        TurningPointRecord
+        TurningPointRecord, InterpretedLifeEvent
     )
     from src.core.aspects.combat import CombatAspect
     from src.core.models.combat import CombatTraceRecord, CombatTraceDetails
@@ -423,6 +454,7 @@ def _rebuild_action_models():
     SocialUpdate.model_rebuild(_types_namespace=ns)
     ReputationUpdate.model_rebuild(_types_namespace=ns)
     RoutineUpdate.model_rebuild(_types_namespace=ns)
+    SocialEventUpdate.model_rebuild(_types_namespace=ns)
     StrategicUpdate.model_rebuild(_types_namespace=ns)
     CombatTraceUpdate.model_rebuild(_types_namespace=ns)
     

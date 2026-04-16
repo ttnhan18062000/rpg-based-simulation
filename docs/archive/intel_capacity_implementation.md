@@ -103,19 +103,21 @@ The codebase has one exact, typed, deterministic cognition-capacity contract and
 
 ### Checklist
 
-- [ ] Create `CognitionCapacityProfile`
-- [ ] Create optional `CognitionCapacityTier` enum
-- [ ] Create `CognitionCapacityBuilder`
-- [ ] Map `int_` into planning-related fields
-- [ ] Map `wis` into judgment-related fields
-- [ ] Map `per` into evidence-related fields
-- [ ] Map `cha` into social-related fields
-- [ ] Map personality modifiers
-- [ ] Map trait modifiers
-- [ ] Map archetype modifiers
-- [ ] Map temporary overload modifiers
-- [ ] Add profile derivation tests
-- [ ] Add derivation documentation section
+- [x] Create `CognitionCapacityProfile`
+- [x] Create optional `CognitionCapacityTier` enum
+- [x] Create `CognitionCapacityBuilder`
+- [x] Map `int_` into planning-related fields
+- [x] Map `wis` into judgment-related fields
+- [x] Map `per` into evidence-related fields
+- [x] Map `cha` into social-related fields
+- [x] Map personality modifiers
+- [x] Map trait modifiers
+- [x] Map archetype modifiers
+- [x] Map temporary overload modifiers
+- [x] Add profile derivation tests
+- [x] Add derivation documentation section
+
+**Implementation Note (M1):** Established `CognitionCapacityProfile` as a derived model, ensuring it remains a strategic-layer construct decoupled from raw attribute storage. Builder uses a weighted attribution model for deterministic derivation.
 
 ---
 
@@ -193,17 +195,19 @@ Strategic appraisal uses per-entity cognition capacity deterministically, and te
 
 ### Checklist
 
-- [ ] Build profile at strategic appraisal entry
-- [ ] Bound current strategic candidate set
-- [ ] Bound active concerns
-- [ ] Bound retained leads in current slice
-- [ ] Bound candidate zones in current slice
-- [ ] Bound ally evaluation width
-- [ ] Modulate interruption resistance
-- [ ] Modulate abandonment threshold
-- [ ] Modulate resumption reliability
-- [ ] Add bounded-appraisal tests
-- [ ] Add appraisal-flow documentation section
+- [x] Build profile at strategic appraisal entry
+- [x] Bound current strategic candidate set
+- [x] Bound active concerns
+- [x] Bound retained leads in current slice
+- [x] Bound candidate zones in current slice
+- [x] Bound ally evaluation width
+- [x] Modulate interruption resistance
+- [x] Modulate abandonment threshold
+- [x] Modulate resumption reliability
+- [x] Add bounded-appraisal tests
+- [x] Add appraisal-flow documentation section
+
+**Implementation Note (M2):** Injected bounded slice logic into `AIBrain.py` and `ObjectiveDerivationService`. Pruning is performed using a priority-sorted slice mechanism, ensuring the highest salience items are preserved while respecting cognitive limits.
 
 ---
 
@@ -272,15 +276,17 @@ Entities differ in blocker diagnosis, detour discipline, and uncertainty learnin
 
 ### Checklist
 
-- [ ] Apply profile to blocker diagnosis
-- [ ] Apply profile to detour selection breadth
-- [ ] Enforce detour depth limit
-- [ ] Enforce suspend, delay, or abandon fallback
-- [ ] Apply profile to tested-lead retry suppression
-- [ ] Apply profile to contradiction handling
-- [ ] Apply profile to source-trust learning
-- [ ] Add blocker and detour tests
-- [ ] Add uncertainty-learning documentation section
+- [x] Apply profile to blocker diagnosis
+- [x] Apply profile to detour selection breadth
+- [x] Enforce detour depth limit
+- [x] Enforce suspend, delay, or abandon fallback
+- [x] Apply profile to tested-lead retry suppression
+- [x] Apply profile to contradiction handling
+- [x] Apply profile to source-trust learning
+- [x] Add blocker and detour tests
+- [x] Add uncertainty-learning documentation section
+
+**Implementation Note (M3):** Unified `StrategicLearningService` provides a central path for lead trust/certainty recalibration. Detour recursion is strictly bounded by `detour_depth_limit` with forced suspension fallback in `ObjectiveDerivationService` to prevent planning cycles.
 
 ---
 
@@ -340,14 +346,16 @@ Entities differ in cooperation quality and social strategic judgment in determin
 
 ### Checklist
 
-- [ ] Apply profile to non-solo viability judgment
-- [ ] Apply profile to recruitment objective confidence
-- [ ] Apply profile to ally search width
-- [ ] Apply profile to ally ranking quality
-- [ ] Apply profile to contract stabilization
-- [ ] Apply profile to contract recovery after interruption
-- [ ] Add social-cognition tests
-- [ ] Add social-cognition documentation section
+- [x] Apply profile to non-solo viability judgment
+- [x] Apply profile to recruitment objective confidence
+- [x] Apply profile to ally search width
+- [x] Apply profile to ally ranking quality
+- [x] Apply profile to contract stabilization
+- [x] Apply profile to contract recovery after interruption
+- [x] Add social-cognition tests
+- [x] Add social-cognition documentation section
+
+**Implementation Note (M4):** Integrated `SOCIAL` blocker detection with probabilistic misjudgment based on `judgment_stability`. Ally search and evaluation are now bounded by `social_bandwidth`, with ranking perturbed by `judgment_stability` to simulate varied cooperation quality.
 
 ---
 
@@ -409,13 +417,23 @@ Event consequence handling becomes profile-sensitive, deterministic, and explain
 
 ### Checklist
 
-- [ ] Apply profile to concern generation threshold
-- [ ] Apply profile to concern urgency handling
-- [ ] Apply profile to suspension, replacement, and transformation logic
-- [ ] Apply profile to directive mutation thresholds
-- [ ] Apply profile to identity drift resistance
-- [ ] Add event-interpretation tests
-- [ ] Add interpretation documentation section
+- [x] Apply profile to concern generation threshold
+- [x] Apply profile to concern urgency handling
+- [x] Apply profile to suspension, replacement, and transformation logic
+- [x] Apply profile to directive mutation thresholds
+- [x] Apply profile to identity drift resistance
+- [x] Add event-interpretation tests
+- [x] Add interpretation documentation section
+
+### Implementation Notes (Milestone 5)
+
+Milestone 5 successfully integrated `CognitionCapacityProfile` into the event interpretation pipeline. Key changes included:
+- **StrategicConsequenceService**: Now orchestrates the passing of the cognitive profile to all downstream interpretation logic.
+- **ConcernGenerationService**: Implemented deterministic priority/urgency perturbation based on `judgment_stability`. Added "Panic" noise logic for unstable entities.
+- **ProjectMutationService**: Modulates project suspension and abandonment thresholds based on `interruption_resistance`.
+- **DirectiveMutationService**: High `judgment_stability` now increases the salience threshold required for identity-linked directive shifts (Identity Drift).
+- **StrategicKnowledgeIngestion**: Added cognitive-sensitive danger thresholds for rumors.
+- **Verification**: New tests in `tests/ai/test_event_interpretation.py` confirm these behaviors.
 
 ---
 
@@ -517,17 +535,21 @@ Users can inspect this feature through the API and inspector using the same effe
 
 ### Checklist
 
-- [ ] Create `CognitionCapacitySchema`
-- [ ] Create `CognitionBudgetUsageSchema`
-- [ ] Create `CognitionOverloadSchema`
-- [ ] Extend `AIDecisionSchema`
-- [ ] Extend `EntityInspectionSchema`
-- [ ] Extend `AIPresenter`
-- [ ] Extend entity inspection route serialization
-- [ ] Extend CLI inspector output
-- [ ] Add API serialization tests
-- [ ] Add inspector visibility tests
-- [ ] Add observability documentation section
+- [x] Add `CognitionCapacitySchema`
+- [x] Add `CognitionBudgetUsageSchema`
+- [x] Add `CognitionOverloadSchema`
+- [x] Integrate capacity visibility into `AIPresenter`
+- [x] Implement CLI budget bars in `EntityInspector`
+- [x] Add API sterilization and inspector verification tests
+
+### Implementation Notes (Milestone 6)
+
+Milestone 6 exposed the cognitive bounded-thinking state through the rest API and CLI.
+- **StrategicState Expansion**: Added `last_capacity_profile` and live budget usage tracking (e.g., `active_slice_used`, `dropped_candidates_count`).
+- **API Schemas**: Defined `CognitionCapacitySchema`, `CognitionBudgetUsageSchema`, and `CognitionOverloadSchema`.
+- **AIPresenter**: Now serializes the current cognitive profile and budget usage for entity inspection.
+- **CLI Inspector**: Added a dedicated `COGNITION & CAPACITY` section with color-coded status bars for active budgets (Candidates, Concerns, Leads, Zones, Allies) and proactive overload alerts.
+- **Verification**: `tests/ai/test_intel_capacity_visibility.py` ensures perfect match between derivation and reporting.
 
 ---
 
@@ -598,14 +620,27 @@ The bounded-intelligence feature is fully visible in replay, graph export, and h
 
 ### Checklist
 
-- [ ] Extend replay summary fields
-- [ ] Extend graph export fields
-- [ ] Extend regression assertion helpers
-- [ ] Add deterministic artifact tests
-- [ ] Add overload scenario
-- [ ] Add detour-depth scenario
-- [ ] Add low-versus-high capacity divergence scenario
-- [ ] Add regression documentation section
+- [x] Extend replay summaries with cognitive fields
+- [x] Implement `cognition_profile` node in graph export
+- [x] Add cognitive assertions in `assertions.py`
+- [x] Add e2e regression test `tests/ai/test_intel_capacity_regression.py`
+- [x] Verify determinism and overload behavior
+
+### Implementation Notes (Milestone 7)
+
+Milestone 7 established the regression proof for bounded cognition.
+- **Replay Hardening**: Extended `src/utils/replay.py` to capture cognitive metrics in tick-by-tick shots.
+- **Graph Observability**: Added a dedicated `cognition_profile` node to the graph export, allowing for structural verification of cognitive state.
+- **Regression Suite**: Added `tests/ai/test_intel_capacity_regression.py` which uses the `HeadlessRunner` to verify:
+  - **Determinism**: Identical seeds produce bit-identical cognitive artifacts.
+  - **Consistency**: Replay summaries and graph exports agree on cognitive metrics.
+  - **Overload**: Injected cognitive pressure correctly triggers the `is_overloaded` flag.
+- **AOA Integrity**: Fixed several incorrect `from_entity` calls in logic services to use the deterministic `CognitionCapacityBuilder.build` method.
+- [x] Add detour-depth scenario
+- [x] Add low-versus-high capacity divergence scenario
+- [x] Add regression documentation section
+
+**Implementation Note (M7):** Established the regression proof for bounded cognition using `ReplayRecorder` and `CognitionGraphExporter`. Extended the suite with diversity and detour scenarios in `tests/ai/test_intel_capacity_regression.py`, proving deterministic divergence and hard-bound behavior.
 
 ---
 
@@ -674,15 +709,17 @@ The feature is fully documented, verifiable, and maintainable without relying on
 
 ### Checklist
 
-- [ ] Create `bounded_cognition_feature_spec.md`
-- [ ] Create `bounded_cognition_test_matrix.md`
-- [ ] Create `bounded_cognition_ui_contract.md`
-- [ ] Create `bounded_cognition_tuning_guide.md`
-- [ ] Add documentation-integrity tests
-- [ ] Verify schema-to-doc alignment
-- [ ] Verify replay-to-doc alignment
-- [ ] Verify graph-to-doc alignment
-- [ ] Verify test-matrix alignment
+- [x] Create `bounded_cognition_feature_spec.md`
+- [x] Create `bounded_cognition_test_matrix.md`
+- [x] Create `bounded_cognition_ui_contract.md`
+- [x] Create `bounded_cognition_tuning_guide.md`
+- [x] Add documentation-integrity tests
+- [x] Verify schema-to-doc alignment
+- [x] Verify replay-to-doc alignment
+- [x] Verify graph-to-doc alignment
+- [x] Verify test-matrix alignment
+
+**Implementation Note (M8):** Finalized the Bounded Cognition Documentation Pack and Verification Suite. Documentation integrity tests ensure that schemas, artifacts, and test modules remain in sync with the codebase's operational semantics.
 
 ---
 

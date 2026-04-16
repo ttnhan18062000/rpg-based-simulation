@@ -62,3 +62,14 @@ Strategic state is stored in the `StrategicState` model within the `MindAspect`.
 - Mutations ONLY happen in Phase 4 (Resolution) via the `ActionSystem`.
 - High-level strategic choices are recorded in the `DecisionLog` for replayability.
 - The `freeze()` mechanism ensures that strategic choices during a tick are isolated from other concurrent workers.
+
+---
+
+## 6. Structural Explainability: Decision Drivers
+
+To prevent the AI from being a "black box," the strategy system surfaces **Decision Drivers**. These are explicit reasons for strategic shifts, committed authoritatively to the entity's state.
+
+- **`recent_drivers`**: A list of `DecisionDriver` objects stored in the `StrategicState`.
+- **Labels**: Standardized labels like `STRATEGIC_SWITCH`, `STRATEGIC_RESUME`, `STRATEGIC_KEEP`.
+- **Transparency**: Each driver includes a human-readable `description` and a `weight`, allowing the `AIPresenter` to explain exactly why a project was abandoned or resumed.
+- **Traceability**: These drivers are visible in the API via the `StrategicStateSchema` and can be inspected in the UI to debug "jitter" or illogical project shifts.

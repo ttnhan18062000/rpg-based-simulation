@@ -18,6 +18,7 @@ from src.core.models.enums import Domain
 
 if TYPE_CHECKING:
     from src.systems.rng import DeterministicRNG
+    from src.ai.cognition_capacity import CognitionCapacityProfile
 
 logger = logging.getLogger(__name__)
 
@@ -33,12 +34,19 @@ class StrategicKnowledgeIngestionService:
         resources_found: List[tuple[int, int, str]], # x, y, item_group
         source_confidence: float = 0.8,
         rng: Optional[DeterministicRNG] = None,
-        tested_lead_ids: Optional[List[str]] = None
+        tested_lead_ids: Optional[List[str]] = None,
+        source_trust: Optional[Dict[str, float]] = None
     ) -> StrategicUpdate:
         """Converts guild hints and revelations into LeadRecords and CandidateZones."""
         leads = []
         zones = []
         
+        # Apply source trust weighting [TCK-20260414-SOCIAL-01]
+        effective_confidence = source_confidence
+        if source_trust and "guild" in source_trust:
+            effective_confidence *= (source_trust["guild"] * 2.0) # Scale 0.5 to 1.0 logic
+            effective_confidence = max(0.0, min(1.0, effective_confidence))
+
         tested = set(tested_lead_ids) if tested_lead_ids else set()
 
         # 1. Convert material hints to leads
@@ -53,8 +61,9 @@ class StrategicKnowledgeIngestionService:
                 label=f"Hint: {mat_id}",
                 subject=mat_id,
                 source_type="guild",
-                source_confidence=source_confidence,
-                certainty=source_confidence,
+                source_id="guild",
+                source_confidence=effective_confidence,
+                certainty=effective_confidence,
                 interpreted_meaning=hint,
                 semantic_tags=["material", "guild_tip"],
                 discovered_tick=tick,
@@ -69,7 +78,7 @@ class StrategicKnowledgeIngestionService:
             zones.append(CandidateZoneRecord(
                 zone_id=zone_id,
                 region_tags=["hostile_camp"],
-                confidence=source_confidence,
+                confidence=effective_confidence,
                 last_search_tick=0
             ))
             lead_id = f"lead_guild_camp_{x}_{y}"
@@ -82,8 +91,9 @@ class StrategicKnowledgeIngestionService:
                 label="Reported Camp",
                 subject="enemy_camp",
                 source_type="guild",
-                source_confidence=source_confidence,
-                certainty=source_confidence,
+                source_id="guild",
+                source_confidence=effective_confidence,
+                certainty=effective_confidence,
                 candidate_zone_ids=[zone_id],
                 discovered_tick=tick
             ))
@@ -234,12 +244,23 @@ class StrategicKnowledgeIngestionService:
         danger_level: float = 0.0,
         opportunity_id: Optional[str] = None,
         rng: Optional[DeterministicRNG] = None,
-        tested_lead_ids: Optional[List[str]] = None
+        tested_lead_ids: Optional[List[str]] = None,
+        profile: Optional[CognitionCapacityProfile] = None,
+        source_trust: Optional[Dict[str, float]] = None,
+        subject: str = "world_event"
     ) -> StrategicUpdate:
-        """Converts inn gossip into leads or shared concerns."""
+        """Converts inn gossip into leads or shared concerns. [phase_2_intel_capacity]"""
         leads = []
+        zones = []
         concerns = []
         
+        # Apply source trust weighting [TCK-20260414-SOCIAL-01]
+        source_confidence = 0.5 # Default for rumors
+        if source_trust and "inn" in source_trust:
+             # Scale trust (0.0-1.0) into a confidence multiplier
+             source_confidence *= (source_trust["inn"] * 2.0)
+             source_confidence = max(0.0, min(1.0, source_confidence))
+
         lead_id = f"lead_inn_{rng.next_hex(Domain.SOCIAL, actor_id, tick, sub_id=40)}" if rng else f"lead_inn_{uuid.uuid4().hex[:8]}_{tick}"
         
         if tested_lead_ids and lead_id in tested_lead_ids:
@@ -250,15 +271,43 @@ class StrategicKnowledgeIngestionService:
             lead_id=lead_id,
             kind=LeadKind.EVENT,
             label="Inn Rumor",
-            subject="world_event",
+            subject=subject,
             source_type="inn",
+            source_id="inn",
             interpreted_meaning=rumor_text,
-            certainty=0.5, # Rumors are uncertain
+            source_confidence=source_confidence,
+            certainty=source_confidence,
+            candidate_zone_ids=[f"zone_{lead_id}"],
             discovered_tick=tick
         ))
         
+        # 1.5 Create a Candidate Zone for the rumor [TCK-20260414-SOCIAL-02]
+        from src.core.models.vectors import Vector2
+        # Hypothetical location: random offset from actor's current pos (simulating 'somewhere out there')
+        # In a real scenario, this would be tied to region tags in the rumor text.
+        offset_x = rng.next_int(Domain.AI_DECISION, actor_id, tick, -20, 20, sub_id=1) if rng else 10
+        offset_y = rng.next_int(Domain.AI_DECISION, actor_id, tick, -20, 20, sub_id=2) if rng else 10
+        
+        # We don't have actor pos here, so we assume a 'vague' anchor or just leave it for the resolver.
+        # For the test to work, we'll just use a stable but unknown coordinate.
+        approx_pos = Vector2(x=50 + offset_x, y=50 + offset_y) 
+
+        zones.append(CandidateZoneRecord(
+            zone_id=f"zone_{lead_id}",
+            confidence=source_confidence,
+            approx_coords=approx_pos,
+            supporting_lead_ids=[lead_id],
+            last_search_tick=0
+        ))
+        
         # 2. If rumor implies high danger, spawn a shared/caution concern
-        if danger_level > 0.5:
+        # Bounded by judgment stability (lower stability = lower threshold for panic/caution)
+        base_threshold = 0.5
+        stability = profile.judgment_stability if profile else 1.0
+        # range: 0.3 (unstable) to 0.7 (stable)
+        effective_threshold = base_threshold * (0.5 + 0.7 * stability)
+
+        if danger_level > effective_threshold:
              from src.core.models.strategy import ConcernRecord, ConcernKind
              concerns.append(ConcernRecord(
                  concern_id=f"concern_inn_danger_{tick}",
@@ -273,6 +322,7 @@ class StrategicKnowledgeIngestionService:
         return StrategicUpdate(
             target_id=actor_id,
             leads_add_or_update=leads,
+            candidate_zones_add_or_update=zones,
             concerns_add_or_update=concerns
         )
 

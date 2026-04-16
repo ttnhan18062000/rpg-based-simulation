@@ -287,6 +287,8 @@ class InterpretedLifeEventKind(IntEnum):
     BODY_RECOVERED = 20
     BODY_ABANDONED = 21
     HOMECOMING = 22
+    INTEL_CONFIRMED = 23
+    INTEL_REFUTED = 24
 
 from typing import Annotated
 from pydantic import BeforeValidator, PlainSerializer

@@ -5,7 +5,14 @@ if TYPE_CHECKING:
     from src.core.entities.entity import Entity
 
 class AIPresenter:
-    """Translates raw AI decision data into explainable schemas."""
+    """Translates raw AI decision data into explainable schemas.
+    
+    [TRUTH OWNERSHIP]
+    - Owner of Structured Human-Facing Inspection.
+    - Responsible for translating raw MindAspect state into a shape matching AIDecisionSchema.
+    - Must NOT mutate entity state or invent missing history.
+    - Used by the REST API and entity inspection endpoints.
+    """
 
     @staticmethod
     def get_explanation(entity: "Entity") -> AIDecisionSchema:
@@ -136,18 +143,19 @@ class AIPresenter:
             nearest_target_id=nearest_id,
             group_id=entity.identity.group_id,
             active_routine_id=mind.routine.active_routine_id,
-            strategy=AIPresenter._serialize_strategy(entity), # [PHASE 4]
+            strategy=AIPresenter.serialize_strategy(entity), # [PHASE 4]
             narrative_impacts=narrative_impacts
         )
 
     @staticmethod
-    def _serialize_strategy(entity: "Entity") -> Any:
+    def serialize_strategy(entity: "Entity") -> Any:
         """Shim for strategic serialization to avoid circular dependencies with EntityPresenter."""
         from src.api.schemas import (
             StrategicStateSchema, ProjectSchema, ObjectiveSchema, 
             BlockerSchema, LeadSchema, DirectiveSchema, ConcernSchema,
             CandidateZoneSchema, HypothesisSchema, ObligationSchema,
-            SocialContractSchema, RecruitmentOfferSchema
+            SocialContractSchema, RecruitmentOfferSchema,
+            CognitionCapacitySchema, CognitionBudgetUsageSchema, CognitionOverloadSchema
         )
         s = entity.mind.strategic
         if not s:
@@ -289,6 +297,29 @@ class AIPresenter:
             current_objective_id=s.current_objective_id,
             interrupted_project_id=s.interrupted_project_id,
             project_lock_until=s.project_lock_until,
-            recent_driver_labels=[d.label for d in s.recent_drivers]
+            recent_driver_labels=[d.label for d in s.recent_drivers],
+            recent_drivers=[
+                DecisionDriverSchema(kind=d.kind, label=d.label, weight=round(d.weight, 2))
+                for d in s.recent_drivers
+            ],
+            
+            # [phase_2_intel_capacity]
+            capacity=CognitionCapacitySchema(**s.last_capacity_profile.model_dump()) if s.last_capacity_profile else None,
+            usage=CognitionBudgetUsageSchema(
+                active_slice_used=s.active_slice_used,
+                active_concerns_used=s.active_concerns_used,
+                retained_leads_used=s.retained_leads_used,
+                candidate_zones_used=s.candidate_zones_used,
+                ally_evaluations_used=s.ally_evaluations_used,
+                detour_depth_used=s.detour_depth_used,
+                dropped_candidates_count=s.dropped_candidates_count,
+                latent_concerns_count=s.latent_concerns_count
+            ) if s.last_capacity_profile else None,
+            overload=CognitionOverloadSchema(
+                is_overloaded=s.is_overloaded,
+                overload_score=round(s.overload_score, 2),
+                primary_overload_source=s.primary_overload_source,
+                last_overload_tick=s.last_overload_tick
+            ) if s.last_capacity_profile else None
         )
 

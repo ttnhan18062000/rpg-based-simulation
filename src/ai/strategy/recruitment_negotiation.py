@@ -30,7 +30,8 @@ class RecruitmentNegotiationService:
         ctx: AIContext, 
         candidate_id: int, 
         project: ProjectRecord,
-        kind: ContractKind = ContractKind.EXPEDITION
+        kind: ContractKind = ContractKind.EXPEDITION,
+        profile: CognitionCapacityProfile | None = None
     ) -> RecruitmentOfferRecord:
         """Founder generates an initial recruitment offer for a candidate."""
         actor = ctx.actor
@@ -40,7 +41,18 @@ class RecruitmentNegotiationService:
         
         # Reward Split (Greed affects how much we keep)
         greed = actor.mind.decision.personality.greed
-        share = max(0.1, min(0.5, 0.5 - (greed * 0.4))) # Offer between 10% and 50%
+        base_share = 0.5 - (greed * 0.4) # Target share between 10% and 50%
+        
+        # [PHASE 4 INTEL CAPACITY] Judgment Stability Perturbation
+        share = base_share
+        if profile and profile.judgment_stability < 0.8:
+            from src.core.models.enums import Domain
+            seed = hash(f"offer_{candidate_id}_{ctx.snapshot.tick}") % 10000
+            # Desperateness/Poor math adds/removes up to 20% share
+            noise = (ctx.rng.next_float(Domain.SOCIAL, actor.id, ctx.snapshot.tick, seed) - 0.5) * (0.4 * (1.0 - profile.judgment_stability))
+            share = max(0.05, min(0.6, base_share + noise))
+            
+        share = round(share, 2)
         
         terms.append(ContractTermRecord(
             term_type="payout",
@@ -96,6 +108,7 @@ class RecruitmentNegotiationService:
             
         # 1. Base Willingness from Relationship
         willingness = 0.0
+        reason = "Insufficient motivation or trust"
         bond = actor.mind.social.known_bonds.get(offer.recruiter_id)
         if bond:
             # Trust is the strongest multiplier
@@ -145,11 +158,27 @@ class RecruitmentNegotiationService:
         if actor.combat.hp_ratio < 0.4:
             willingness -= 0.5 # Too injured to care about contracts
             
-        # 5b. Betrayal Aversion Feedback
-        has_betrayal_trauma = any("Betrayal" in c.label for c in actor.mind.strategic.concerns) or \
-                              any("Betrayal" in d.label for d in actor.mind.strategic.directives)
-        if has_betrayal_trauma:
-            willingness -= 0.4 # Significant penalty for recent betrayal
+        # 5b. Betrayal Trauma Feedback [TCK-20260414-SOCIAL-03]
+        from src.core.models.enums import TurningPointKind
+        
+        # Scan durable TurningPoints for private betrayal history (bypassing public fame)
+        betrayals = [tp for tp in actor.mind.narrative.turning_points if tp.kind == TurningPointKind.BETRAYAL]
+        
+        if betrayals:
+            # General distrust penalty
+            willingness -= 0.5
+            
+            # Check for direct grudge: Did THIS recruiter betray us?
+            direct_betrayal = any(offer.recruiter_id in tp.involved_entity_ids for tp in betrayals)
+            if direct_betrayal:
+                willingness -= 1.0 # Instant rejection
+                reason = "Recruiter was involved in a past betrayal."
+        
+        # Fallback to general concern scan
+        has_betrayal_concern = any("Betrayal" in c.label for c in actor.mind.strategic.concerns) or \
+                               any("Betrayal" in d.label for d in actor.mind.strategic.directives)
+        if has_betrayal_concern:
+            willingness -= 0.3
             
         # Final Decision
         threshold = 0.3 # Base threshold to say 'Yes'
@@ -192,7 +221,7 @@ class RecruitmentNegotiationService:
                     reason="Haggling for better payout"
                 )
                 
-        return OfferAppraisal(status=OfferStatus.DECLINED, reason="Insufficient motivation or trust")
+        return OfferAppraisal(status=OfferStatus.DECLINED, reason=reason)
 
     @classmethod
     def evaluate_counter(

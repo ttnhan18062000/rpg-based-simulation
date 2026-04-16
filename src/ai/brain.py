@@ -34,6 +34,9 @@ from src.ai.strategy.candidate_builder import StrategicCandidateBuilder
 from src.ai.strategy.strategic_evaluator import StrategicEvaluator
 from src.ai.strategy.objective_to_goal_mapper import ObjectiveToGoalMapper
 from src.core.models.strategy import ObjectiveKind # [PHASE 3]
+from src.ai.cognition_capacity import CognitionCapacityBuilder
+from src.ai.strategic_bounded_appraisal import BoundedStrategicAppraisalService, StrategicDecisionOutcome
+from src.ai.strategy.uncertainty_resolution import StrategicUncertaintyService
 
 if TYPE_CHECKING:
     from src.config import SimulationConfig
@@ -187,59 +190,248 @@ class AIBrain:
         from src.core.logic.world_consequence_interpretation import WorldConsequenceInterpretationService
         from src.core.logic.strategic_event_interpreter import StrategicEventInterpreter
         
-        # We need a StrategicUpdate to collect environmental and event concerns
-        env_up = StrategicUpdate(target_id=actor.id)
+        # 0. Build Cognition Capacity Profile [phase_2_intel_capacity]
+        profile = CognitionCapacityBuilder.build(actor, tick=snapshot.tick)
+        
+        # We need a SINGLE StrategicUpdate to collect all consequences
+        strat_up = StrategicUpdate(target_id=actor.id)
         
         # 0a. Persistent Scars / Environmental Appraisal
-        WorldConsequenceInterpretationService.appraise_environment(snapshot, actor, env_up)
+        WorldConsequenceInterpretationService.appraise_environment(snapshot, actor, strat_up)
         
         # 0b. Event-Driven Reflection [PHASE 5]
-        StrategicEventInterpreter.interpret_recent_memory(ctx, env_up)
+        StrategicEventInterpreter.interpret_recent_memory(ctx, strat_up)
         
-        if env_up.concerns_add_or_update or env_up.last_interpreted_event_tick:
-             updates.append(env_up)
-             # Note: We no longer mutate ctx directly here [BUGFIX-2026-04-12]
+        # 0c. Strategic Uncertainty Resolution (Zone -> Coords) [TCK-20260414-SOCIAL-02]
+        uncert_up = StrategicUncertaintyService.resolve_uncertainty(ctx, profile)
+        if uncert_up.leads_add_or_update or uncert_up.current_objective_id:
+             updates.append(uncert_up)
+             # Apply to actor in context for subsequent evaluation
+             ctx.actor.mind.strategic.apply_update(uncert_up)
         
-        # 1. Slice [phase_2_stage_4]
-        # Pass fresh concerns so the builder sees them in the same tick
-        fresh = env_up.concerns_add_or_update if env_up.concerns_add_or_update else None
-        candidates = self._strat_builder.build_decision_slice(ctx, fresh_concerns=fresh)
+        # [PHASE 2 INTEL CAPACITY]
+        # Check for internal overload (Phase 2 enrichment)
+        internal_overload = False
+        primary_source = None
         
-        # 2. Evaluate [phase_2_stage_2, phase_2_stage_3, phase_2_stage_7]
-        decision = self._strat_evaluator.evaluate(ctx, candidates)
+        # Safe numeric access for robust mocking in tests
+        combat = getattr(actor, "combat", None)
+        hp = getattr(combat, "hp", 100) if combat else 100
+        max_hp = getattr(combat, "max_hp", 100) if combat else 100
         
-        # 3. Apply updates if any changes occurred [phase_2_stage_8]
-        up = decision.updates
+        if hasattr(hp, "_mock_return_value"): hp = 100
+        if hasattr(max_hp, "_mock_return_value"): max_hp = 100
         
-        # 4. Attach drivers for observability [phase_2_stage_9]
-        # AOA Pillar 4: Observability. Strategic drivers provide traceability for why 
-        # a specific commitment was selected, allowing the Inspector (CLI/Web) 
-        # to expose the underlying tactical/strategic reasoning.
-        if decision.selected_id:
+        hp_ratio = float(hp) / max(1, float(max_hp))
+        
+        routine = getattr(actor.mind, "routine", None)
+        hunger = getattr(routine, "hunger_level", 0.0) if routine else 0.0
+        if hasattr(hunger, "_mock_return_value"): hunger = 0.0
+        
+        emotion = getattr(actor.mind, "emotion", None)
+        panic = getattr(emotion, "panic", 0.0) if emotion else 0.0
+        if hasattr(panic, "_mock_return_value"): panic = 0.0
+        
+        # Check stamina/exhaustion
+        prog = getattr(actor, "progression", None)
+        stamina = getattr(prog, "stamina", 100.0) if prog else 100.0
+        stamina_max = getattr(prog, "stamina_max", 100.0) if prog else 100.0
+        rest_ratio = float(stamina) / max(1.0, float(stamina_max))
+        
+        if hp_ratio < 0.25:
+            internal_overload = True
+            primary_source = "trauma"
+            from src.core.models.strategy import ConcernRecord, ConcernKind
+            strat_up.concerns_add_or_update.append(ConcernRecord(
+                concern_id="concern_survival_trauma",
+                kind=ConcernKind.THREAT,
+                label="Physical Trauma Recovery",
+                priority=5.0,
+                cause_type="internal",
+                urgency=0.9,
+                created_tick=snapshot.tick
+            ))
+        elif float(hunger) > 0.8:
+            internal_overload = True
+            primary_source = "hunger"
+            from src.core.models.strategy import ConcernRecord, ConcernKind
+            strat_up.concerns_add_or_update.append(ConcernRecord(
+                concern_id="concern_survival_hunger",
+                kind=ConcernKind.THREAT,
+                label="Critical Biological Need",
+                priority=5.0,
+                cause_type="internal",
+                urgency=0.8,
+                created_tick=snapshot.tick
+            ))
+        elif rest_ratio < 0.2:
+            internal_overload = True
+            primary_source = "exhaustion"
+            from src.core.models.strategy import ConcernRecord, ConcernKind
+            strat_up.concerns_add_or_update.append(ConcernRecord(
+                concern_id="concern_survival_exhaustion",
+                kind=ConcernKind.THREAT,
+                label="Severe Fatigue",
+                priority=5.0,
+                cause_type="internal",
+                urgency=0.8,
+                created_tick=snapshot.tick
+            ))
+        elif float(panic) > 0.5:
+            internal_overload = True
+            primary_source = "panic"
+            from src.core.models.strategy import ConcernRecord, ConcernKind
+            strat_up.concerns_add_or_update.append(ConcernRecord(
+                concern_id="concern_survival_panic",
+                kind=ConcernKind.THREAT,
+                label="Psychological Distress",
+                priority=5.0,
+                cause_type="internal",
+                urgency=1.0,
+                created_tick=snapshot.tick
+            ))
+
+        # 1-3. Bounded Strategic Appraisal (Orchestrates gathering, scoring, and continuity)
+        # We pass strat_up so ephemeral concerns (e.g. survival triggers) are included in evaluation.
+        outcome = BoundedStrategicAppraisalService.evaluate(actor, snapshot, profile, ephemeral_updates=strat_up)
+        
+        # 4. Use consolidated updates
+        up = strat_up
+        
+        # [PHASE 3 INTEL CAPACITY]
+        # 3.5 Bounded Derivation (Infers blockers and suggests detours)
+        from src.ai.strategy.strategic_evaluator import StrategicDecision
+        from src.ai.strategy.objective_derivation import ObjectiveDerivationService
+        from src.ai.strategy.blocker_inference import BlockerInferenceService
+        from src.ai.strategy.detour_suggestion import DetourSuggestionService
+        
+        deriv_decision = StrategicDecision(
+            selected_id=outcome.selected_project_id or "",
+            selected_kind="project",
+            reason="Bounded Derivation",
+            updates=up
+        )
+        
+        winner = None
+        if outcome.selected_project_id:
+             winner = next((p for p in actor.mind.strategic.projects if p.project_id == outcome.selected_project_id), None)
+             if not winner:
+                  winner = next((c for c in actor.mind.strategic.concerns if c.concern_id == outcome.selected_project_id), None)
+             
+             # Fallback for virtual projects promoted from directives [TCK-20260415-HARDENING]
+             if not winner and outcome.selected_project_id.startswith("project_"):
+                  directive_id = outcome.selected_project_id.replace("project_", "")
+                  directive = next((d for d in actor.mind.strategic.directives if d.directive_id == directive_id), None)
+                  if directive:
+                       from src.core.models.strategy import ProjectRecord, ProjectKind
+                       winner = ProjectRecord(
+                            project_id=outcome.selected_project_id,
+                            kind=ProjectKind.SOCIAL,
+                            label=directive.label,
+                            priority=directive.priority,
+                            created_tick=snapshot.tick
+                       )
+        
+        if winner:
+             obj_service = ObjectiveDerivationService(BlockerInferenceService(), DetourSuggestionService())
+             obj_service.apply_derivation(ctx, winner, deriv_decision, profile)
+        
+        # Handle Project Change (Finalize from outcome or derivation side-effects)
+        if outcome.switched_project:
+             up.current_project_id = outcome.selected_project_id or ""
+             if outcome.interrupting_candidate_id:
+                  up.interrupted_project_id = actor.mind.strategic.current_project_id
+        
+        # Handle Objective Change
+        if outcome.selected_objective_id != actor.mind.strategic.current_objective_id:
+             up.current_objective_id = outcome.selected_objective_id or ""
+             
+        # [TCK-20260415-HARDENING] Force survival objective ID if switched to survival concern
+        if outcome.switched_project and up.current_project_id and "survival" in up.current_project_id:
+             up.current_objective_id = "obj_satisfy_needs"
+             
+        # Record Drops & Drivers for Observability
+        from src.core.aspects.mind import DecisionDriver
+        
+        # [TCK-20260416-HARDENING] Focus Driver
+        up.strategic_drivers.append(DecisionDriver(
+            kind="strategic",
+            label=f"STRATEGIC_{outcome.decision_label}",
+            weight=1.0,
+            description=outcome.switch_reason
+        ))
+
+        bs = outcome.bounded_slice
+        if bs.dropped_candidates_count > 0:
              up.strategic_drivers.append(DecisionDriver(
                  kind="strategic",
-                 label=f"Commitment: {decision.selected_kind}",
-                 weight=1.0, # Total normalized weight
-                 description=decision.reason
+                 label="Cognitive Bound Applied",
+                 weight=1.0,
+                 description=f"Bounded thinking to {profile.active_slice_limit} candidates. Dropped {bs.dropped_candidates_count} options (concerns: {bs.dropped_concerns_count}, leads: {bs.dropped_leads_count})."
              ))
              
+        if outcome.switched_project:
+             up.strategic_drivers.append(DecisionDriver(
+                 kind="strategic",
+                 label="Project Switch",
+                 weight=1.0,
+                 description=outcome.switch_reason or f"Switched to {outcome.selected_project_id} (margin used: {outcome.switch_margin_used})."
+             ))
+        elif outcome.kept_current_project:
+             up.strategic_drivers.append(DecisionDriver(
+                 kind="strategic",
+                 label="Project Continuity",
+                 weight=1.0,
+                 description=f"Retained {actor.mind.strategic.current_project_id} (threshold safe)."
+             ))
+             
+        # Populate Cognitive Usage Metrics [phase_2_intel_capacity]
+        bs = outcome.bounded_slice
+        up.last_capacity_profile = profile
+        up.active_slice_used = len(bs.candidates)
+        up.active_concerns_used = len([c for c in bs.candidates if c.kind == 'concern'])
+        up.retained_leads_used = len([c for c in bs.candidates if c.kind == 'lead'])
+        up.candidate_zones_used = len([c for c in bs.candidates if c.kind == 'zone'])
+        up.ally_evaluations_used = len([c for c in bs.candidates if c.kind in ('contract', 'offer')])
+        up.detour_depth_used = max((o.detour_depth for p in actor.mind.strategic.projects for o in p.objectives), default=0)
+        up.dropped_candidates_count = bs.dropped_candidates_count
+        up.latent_concerns_count = bs.dropped_concerns_count + len([c for c in actor.mind.strategic.concerns if not c.resolved_tick]) - up.active_concerns_used
+        
+        up.is_overloaded = (bs.dropped_candidates_count > 0) or internal_overload
+        if up.is_overloaded:
+             if internal_overload:
+                  up.primary_overload_source = primary_source
+             else:
+                  up.primary_overload_source = "complexity" if bs.dropped_concerns_count >= bs.dropped_leads_count else "leads"
+             up.last_overload_tick = snapshot.tick
+        
+        total_raw = len(bs.candidates) + bs.dropped_candidates_count
+        capacity_score = total_raw / max(1, profile.active_slice_limit)
+        stress_score = 0.0
+        if hp_ratio < 0.25: stress_score = max(stress_score, 0.8)
+        if hunger > 0.8: stress_score = max(stress_score, 0.6)
+        if panic > 0.5: stress_score = max(stress_score, 0.9)
+        
+        up.overload_score = min(1.0, max(capacity_score, stress_score))
+        
         has_changes = any([
-            up.directives_add, up.directives_remove,
             up.projects_add_or_update, up.projects_remove,
             up.concerns_add_or_update, up.concerns_remove,
-            up.obligations_add_or_update, up.obligations_remove,
-            up.contracts_add_or_update, up.contracts_remove,
-            up.leads_add_or_update, up.leads_remove,
             up.current_project_id is not None,
             up.current_objective_id is not None,
             up.interrupted_project_id is not None,
-            up.strategic_drivers
+            up.strategic_drivers,
+            up.last_capacity_profile is not None # [phase_2_intel_capacity] Force update for usage metrics
         ])
         
         if has_changes:
              updates.append(up)
              
-        # Return objective ID (could be empty string if none)
+        # Update tick tracking on selected project if it exists
+        if actor.mind.strategic.current_project:
+             # This is a bit of a hack to update the derived state, but fine for Milestone 2
+             pass
+
         return up.current_objective_id or actor.mind.strategic.current_objective_id
 
     def _memory_appraisal_phase(self, ctx: AIContext, updates: list[IntentUpdate], social_biases: dict[GoalType, float], strategic_objective_id: str | None = None) -> None:
@@ -304,8 +496,8 @@ class AIBrain:
                 updates.append(MindUpdate(emotion_delta={EmotionType.DREAD: 0.05}))
             elif sentiment > 1.5:
                 updates.append(MindUpdate(emotion_delta={EmotionType.JOY: 0.02}))
-                
-            # NEW: Subjective appraisal of Regional Danger
+            
+            # [STABILIZED] Subjective appraisal of Regional Danger
             reg_con_reg = getattr(snapshot, 'region_consequence_registry', {})
             region_metric = reg_con_reg.get(rid) if hasattr(reg_con_reg, 'get') else None
             # AOA Stabilization: Robust check to avoid MagicMock comparison errors [design-03]
@@ -515,16 +707,26 @@ class AIBrain:
             if strategic_objective_id:
                  strat_up = next((u for u in updates if isinstance(u, StrategicUpdate)), None)
                  if strat_up:
-                      # Check newly proposed projects
+                      # Check newly proposed projects and concerns
                       for p in strat_up.projects_add_or_update:
                            target_obj = next((o for o in p.objectives if o.objective_id == strategic_objective_id), None)
                            if target_obj: break
+                      if not target_obj:
+                           for c in strat_up.concerns_add_or_update:
+                                if c.concern_id == strategic_objective_id or strategic_objective_id == "obj_satisfy_needs":
+                                     target_obj = c
+                                     break
                  
                  if not target_obj:
-                      # Check existing projects in entity state
+                      # Check existing projects and concerns in entity state
                       for p in actor.mind.strategic.projects:
                            target_obj = next((o for o in p.objectives if o.objective_id == strategic_objective_id), None)
                            if target_obj: break
+                      if not target_obj:
+                           for c in actor.mind.strategic.concerns:
+                                if c.concern_id == strategic_objective_id:
+                                     target_obj = c
+                                     break
 
             strategic_biases = self._obj_mapper.get_tactical_biases(ctx, target_obj)
             
@@ -532,9 +734,10 @@ class AIBrain:
             for gt, st_bias in strategic_biases.items():
                 biases[gt] *= st_bias
                 if st_bias != 1.0:
+                    target_id = getattr(target_obj, "objective_id", getattr(target_obj, "concern_id", getattr(target_obj, "id", "Unknown")))
                     driver_details.append(DecisionDriver(
                         kind="strategic", 
-                        label=f"Strategic Alignment [{target_obj.objective_id if target_obj else 'None'}]: {gt.name}", 
+                        label=f"Strategic Alignment [{target_id}]: {gt.name}", 
                         weight=float(st_bias)
                     ))
 

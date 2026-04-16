@@ -67,8 +67,8 @@ class PlaceThreatAppraisalService:
             existing = next((c for c in entity.mind.strategic.concerns if c.concern_id == concern_id), None)
             if existing:
                 # Update priority if existing is lower
-                if existing.priority < 2.0 + pressure:
-                     updated_c = existing.model_copy(update={"priority": min(10.0, 2.0 + pressure), "urgency": min(1.0, 0.4 + (pressure * 0.1))})
+                if existing.priority < 4.0 + pressure:
+                     updated_c = existing.model_copy(update={"priority": min(10.0, 4.0 + pressure), "urgency": min(1.0, 0.4 + (pressure * 0.1))})
                      updates.concerns_add_or_update.append(updated_c)
                 return
 
@@ -78,7 +78,7 @@ class PlaceThreatAppraisalService:
                 concern_id=concern_id,
                 kind=ConcernKind.THREAT,
                 label=label,
-                priority=min(10.0, 2.0 + pressure),
+            priority=min(10.0, 4.0 + pressure),
                 cause_type="environmental",
                 source_event_id=event.event_id,
                 urgency=min(1.0, 0.5 + (pressure * 0.1)),

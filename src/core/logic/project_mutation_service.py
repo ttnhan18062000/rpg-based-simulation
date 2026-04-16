@@ -11,6 +11,7 @@ if TYPE_CHECKING:
     from src.core.entities.entity import Entity
     from src.core.models.life_events import InterpretedLifeEvent, TurningPointRecord
     from src.actions.base import StrategicUpdate
+    from src.ai.cognition_capacity import CognitionCapacityProfile
 
 logger = logging.getLogger(__name__)
 
@@ -24,24 +25,41 @@ class ProjectMutationService:
         entity: Entity, 
         event: InterpretedLifeEvent, 
         tp: Optional[TurningPointRecord], 
-        updates: StrategicUpdate
+        updates: StrategicUpdate,
+        profile: CognitionCapacityProfile | None = None
     ) -> None:
-        """Evaluate if the current project should be suspended or mutated."""
+        """Evaluate if the current project should be suspended or mutated. [phase_2_intel_capacity]"""
         current = entity.mind.strategic.current_project
         if not current:
             return
+            
+        # Resolve profile if missing
+        if profile is None:
+            from src.ai.cognition_capacity import CognitionCapacityBuilder
+            profile = CognitionCapacityBuilder.build(entity)
 
         # 1. High-Impact Turning Points (Trauma/Betrayal)
-        if tp and tp.salience_score > 6.0:
+        # Bounded by judgment stability and abandonment threshold
+        salience_threshold = 6.0 * profile.judgment_stability
+        if tp and tp.salience_score > salience_threshold:
             from src.core.models.enums import TurningPointKind
             if tp.kind in (TurningPointKind.BETRAYAL, TurningPointKind.ALLY_DIED, TurningPointKind.NEAR_DEATH):
                 # Major life event — current project is likely obsolete or needs total pivot
-                cls._suspend_project(current, updates, f"Major Trauma: {tp.kind.name}", [event.event_id])
+                # Abandonment cost check
+                if profile.abandonment_threshold_mod > 0.8:
+                    cls._suspend_project(current, updates, f"Major Trauma: {tp.kind.name}", [event.event_id])
+                else:
+                    # Low abandonment threshold -> just abandon it
+                    cls._abandon_project(current, updates, f"Traumatic Abandonment: {tp.kind.name}", [event.event_id])
                 return
 
         # 2. Concerns-driven Interruption
+        # Bounded by interruption resistance
+        resistance_mod = (profile.interruption_resistance - 0.5) * 0.4 # range -0.2 to +0.2
+        effective_threshold = current.interruption_threshold + resistance_mod
+
         for concern in updates.concerns_add_or_update:
-            if concern.priority > current.priority + current.interruption_threshold:
+            if concern.priority > current.priority + effective_threshold:
                 # Decide: Suspend or Pivot?
                 from src.core.models.enums import ConcernKind, ProjectKind
                 
@@ -92,15 +110,13 @@ class ProjectMutationService:
         event_ids: list[str]
     ) -> None:
         """Prepare a project update that marks it as suspended with recovery metadata."""
-        # Use existing record but modify fields
         updated_p = project.model_copy(update={
             "status": StrategicStatus.SUSPENDED,
             "suspension_reason": reason,
             "interrupted_by_event_ids": list(set(project.interrupted_by_event_ids) | set(event_ids)),
-            "recovery_behavior": "resume" # Default to resume for now
+            "recovery_behavior": "resume"
         })
         
-        # Check if already in updates to avoid duplicates
         found = False
         for i, up in enumerate(updates.projects_add_or_update):
             if up.project_id == project.project_id:
@@ -110,10 +126,31 @@ class ProjectMutationService:
         if not found:
             updates.projects_add_or_update.append(updated_p)
         
-        # Also ensure current_project_id is cleared if we are suspending
         updates.interrupted_project_id = project.project_id
-        # We don't clear current_project_id here yet, because AIBrain needs to know it's switching.
-        # Actually, ActionSystem application of StrategicUpdate will set current_project_id if provided.
-        # But here we are just providing the mutated project record.
-        
         logger.info("Project %s suspended: %s", project.project_id, reason)
+
+    @staticmethod
+    def _abandon_project(
+        project: ProjectRecord,
+        updates: StrategicUpdate,
+        reason: str,
+        event_ids: list[str]
+    ) -> None:
+        """Prepare a project update that marks it as abandoned. [phase_2_intel_capacity]"""
+        updated_p = project.model_copy(update={
+            "status": StrategicStatus.ABANDONED,
+            "abandonment_reason": reason,
+            "interrupted_by_event_ids": list(set(project.interrupted_by_event_ids) | set(event_ids))
+        })
+        
+        found = False
+        for i, up in enumerate(updates.projects_add_or_update):
+            if up.project_id == project.project_id:
+                updates.projects_add_or_update[i] = updated_p
+                found = True
+                break
+        if not found:
+            updates.projects_add_or_update.append(updated_p)
+        
+        updates.interrupted_project_id = project.project_id
+        logger.info("Project %s abandoned: %s", project.project_id, reason)

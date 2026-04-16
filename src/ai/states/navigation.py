@@ -18,7 +18,7 @@ from src.actions.base import (
     ActionType, ActionProposal, IntentUpdate, 
     InteractionUpdate, ProgressionUpdate, NavigationUpdate
 )
-from src.core.models.enums import HeroClass
+from src.core.models.enums import HeroClass, LeadKind
 
 
 class IdleHandler(StateHandler):
@@ -301,8 +301,11 @@ class InvestigateHandler(StateHandler):
         from src.core.models.strategy import ObjectiveKind, ProjectRecord
         from src.actions.base import StrategicUpdate
         from src.core.logic.search_narrowing import SearchNarrowingService
+        from src.ai.cognition_capacity import CognitionCapacityBuilder
+        from src.ai.strategy.strategic_learning_service import StrategicLearningService
         
         actor, snapshot = ctx.actor, ctx.snapshot
+        profile = CognitionCapacityBuilder.build(actor, tick=snapshot.tick)
         cleanup = get_perception_cleanup_update(actor, snapshot)
         final_updates = [cleanup] if cleanup else []
 
@@ -320,6 +323,33 @@ class InvestigateHandler(StateHandler):
 
         target = Vector2(x=obj.target_pos.x, y=obj.target_pos.y)
         dist = actor.spatial.pos.manhattan(target)
+
+        # 0. Confirmation by Sight [phase_3_task_1]
+        if obj.leads:
+            for lead in obj.leads:
+                is_confirmed = False
+                # AOA: Lead subject can be str or int. Snapshot keys are ints. [phase_3_task_1]
+                lead_subject = lead.subject
+                if isinstance(lead_subject, str) and lead_subject.isdigit():
+                    lead_subject = int(lead_subject)
+                
+                if lead.kind == LeadKind.PERSON and lead_subject is not None:
+                    if lead_subject in snapshot.entities:
+                        # Seen the person! confirm.
+                        is_confirmed = True
+                elif lead.kind == LeadKind.LOCATION:
+                    # If we can see the target tile and it's what we expected? 
+                    # For now, just arrival is enough for location.
+                    pass
+                
+                if is_confirmed:
+                    learning_ups = StrategicLearningService.process_lead_outcome(ctx, lead, success=True, profile=profile)
+                    final_updates.extend(learning_ups)
+                    final_updates.append(StrategicUpdate(current_objective_id=""))
+                    return AIState.WANDER, ActionProposal(
+                        actor_id=actor.id, verb=ActionType.REST,
+                        reason=f"Intel confirmed by sight: {lead.label}",
+                        updates=final_updates)
 
         # 2. Narrow Search on arrival
         if dist == 0:
@@ -347,16 +377,16 @@ class InvestigateHandler(StateHandler):
                     updates=final_updates)
             else:
                 # No more tiles or no zone → resolve lead as tested
-                strat_up = StrategicUpdate(current_objective_id="")
                 if obj.leads:
-                    # Knowledge Continuity: Mark leads as tested and add to persistent tracking
+                    # Knowledge Continuity: Mark leads as tested and recalibrate trust [PHASE 3 INTEL CAPACITY]
                     for lead in obj.leads:
-                        updated_lead = lead.model_copy(update={"tested": True})
-                        strat_up.leads_add_or_update.append(updated_lead)
-                        strat_up.tested_lead_ids.append(lead.lead_id)
-                    logger.info("InvestigateHandler: Exhausted search for %s leads. Marking as tested.", len(obj.leads))
+                        # If we reached here, the search is exhausted and we found nothing -> Failure
+                        learning_ups = StrategicLearningService.process_lead_outcome(ctx, lead, success=False, profile=profile)
+                        final_updates.extend(learning_ups)
+                        
+                    logger.info("InvestigateHandler: Exhausted search for %s leads. Recalibrating trust.", len(obj.leads))
                 
-                final_updates.append(strat_up) 
+                final_updates.append(StrategicUpdate(current_objective_id="")) 
                 return AIState.WANDER, ActionProposal(
                     actor_id=actor.id, verb=ActionType.REST,
                     reason="Search space exhausted or lead resolved → clearing objective",

@@ -13,7 +13,14 @@ if TYPE_CHECKING:
     from src.core.aspects.mind import Entity # type: ignore
 
 class EntityCognitionExporter:
-    """Read-only derivation of a cognition graph from entity state."""
+    """Read-only derivation of a cognition graph from entity state.
+    
+    [TRUTH OWNERSHIP]
+    - Owner of Relational Reasoning Topology.
+    - Responsible for mapping internal state (projects, links, biases) into nodes and edges.
+    - Must stay structurally consistent with AIPresenter claims.
+    - Used for advanced graph-based verification and visual reasoning inspection.
+    """
 
     @staticmethod
     def export(entity: Any, tick: int) -> CognitionGraph:
@@ -137,12 +144,38 @@ class EntityCognitionExporter:
             add_edge(root_id, b_id, "has_blocker")
 
         # 10. Map Leads
+        for l in sorted(strat.leads, key=lambda x: x.lead_id):
+            l_id = f"lead:{l.lead_id}"
             add_node(l_id, "lead", l.label, {
                 "certainty": l.certainty,
                 "kind": str(l.kind),
                 "target_pos": str(l.target_coords) if l.target_coords else None
             })
             add_edge(root_id, l_id, "has_lead")
+
+        # 11. Map Candidate Zones [MILESTONE 6 Expansion]
+        for z in sorted(strat.candidate_zones, key=lambda x: x.zone_id):
+            z_id = f"candidate_zone:{z.zone_id}"
+            add_node(z_id, "candidate_zone", f"Zone {z.zone_id}", {
+                "confidence": z.confidence,
+                "approx_coords": str(z.approx_coords) if z.approx_coords else None
+            })
+            add_edge(root_id, z_id, "monitoring_zone")
+            
+            # Link supporting leads back to zone
+            for lead_id in z.supporting_lead_ids:
+                add_edge(f"lead:{lead_id}", z_id, "supports_zone")
+
+        # 12. Map Hypotheses [MILESTONE 6 Expansion]
+        for h in sorted(strat.hypotheses, key=lambda x: x.hypothesis_id):
+            h_id = f"hypothesis:{h.hypothesis_id}"
+            add_node(h_id, "hypothesis", h.label, {"confidence": h.confidence})
+            add_edge(root_id, h_id, "formulated_hypothesis")
+            
+            for lead_id in h.supporting_lead_ids:
+                add_edge(f"lead:{lead_id}", h_id, "supports_hypothesis")
+            for lead_id in h.contradicted_by_lead_ids:
+                add_edge(f"lead:{lead_id}", h_id, "contradicts_hypothesis")
             
         # 11. Map Decision Drivers [phase_3_task_5]
         for driver in getattr(strat, "recent_drivers", []):
@@ -166,6 +199,33 @@ class EntityCognitionExporter:
                     "salience": tp.salience_score
                 })
                 add_edge(root_id, tp_id, "experienced")
+                
+                # Link involved entities to turning point
+                for inv_id in tp.involved_entity_ids:
+                    add_edge(tp_id, f"entity:{inv_id}", "involved")
+
+        # 14. Map Social Bonds (Relational Edges) [MILESTONE 6 Expansion]
+        social = getattr(entity.mind, "social", None)
+        if social:
+            for bond in sorted(social.known_bonds.values(), key=lambda x: x.target_id):
+                target_node_id = f"entity:{bond.target_id}"
+                # Add stub node for target if it doesn't exist ( exporter is local to one entity usually)
+                # But we want to see the edge.
+                edge_kind = "social_bond"
+                add_edge(root_id, target_node_id, edge_kind, f"Trust: {bond.trust:.2f}")
+                # We could add more specific edges or attributes to the edge here
+                # [PHASE 5] Add detailed attributes to social edges
+        
+        # 15. Map Active Recruitment Offers [MILESTONE 6 Expansion]
+        for offer in sorted(strat.offers, key=lambda x: x.offer_id):
+            off_id = f"offer:{offer.offer_id}"
+            target_id = f"entity:{offer.candidate_id}"
+            add_node(off_id, "offer", f"Offer {offer.offer_id}", {
+                "status": str(offer.status),
+                "kind": str(offer.contract_kind)
+            })
+            add_edge(root_id, off_id, "sent_offer")
+            add_edge(off_id, target_id, "proposed_to")
 
         # 13. Map Place Attachments [MILESTONE 6 Expansion]
         attachments = getattr(entity.mind, "place_attachments", [])
@@ -177,6 +237,42 @@ class EntityCognitionExporter:
                 "pos": str(pa.location_pos)
             })
             add_edge(root_id, pa_id, "attached_to")
+
+        # 14. Map Cognition Profile & Usage [MILESTONE 7 Expansion]
+        if strat.last_capacity_profile:
+            cp_id = f"cognition:{entity.id}:{tick}"
+            cp = strat.last_capacity_profile
+            add_node(cp_id, "cognition_profile", "Cognitive Profile", {
+                "planning_budget": cp.planning_budget,
+                "judgment_stability": cp.judgment_stability,
+                "evidence_quality": cp.evidence_quality,
+                "social_bandwidth": cp.social_bandwidth,
+                "detour_depth_limit": cp.detour_depth_limit,
+                "active_slice_limit": cp.active_slice_limit,
+                "concern_intake_limit": cp.concern_intake_limit,
+                "lead_retention_limit": cp.lead_retention_limit,
+                "candidate_zone_limit": cp.candidate_zone_limit,
+                "ally_evaluation_limit": cp.ally_evaluation_limit,
+                "blocker_resolution_patience": cp.blocker_resolution_patience,
+                "resume_reliability": cp.resume_reliability,
+                "interruption_resistance": cp.interruption_resistance,
+                "abandonment_threshold_mod": cp.abandonment_threshold_mod,
+                "contradiction_sensitivity": cp.contradiction_sensitivity,
+                "source_trust_learning_rate": cp.source_trust_learning_rate,
+                # Usage stats
+                "active_slice_used": strat.active_slice_used,
+                "active_concerns_used": strat.active_concerns_used,
+                "retained_leads_used": strat.retained_leads_used,
+                "candidate_zones_used": strat.candidate_zones_used,
+                "ally_evaluations_used": strat.ally_evaluations_used,
+                "detour_depth_used": strat.detour_depth_used,
+                "dropped_candidates": strat.dropped_candidates_count,
+                "is_overloaded": strat.is_overloaded,
+                "overload_score": strat.overload_score,
+                "primary_overload_source": strat.primary_overload_source,
+                "last_overload_tick": strat.last_overload_tick
+            })
+            add_edge(root_id, cp_id, "has_cognition_profile")
 
         # Final Determinism: Sort nodes and edges
         graph.nodes.sort(key=lambda x: x.node_id)

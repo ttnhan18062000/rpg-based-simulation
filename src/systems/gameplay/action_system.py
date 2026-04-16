@@ -146,7 +146,7 @@ class ActionSystem(System):
         """Apply typed simulation side-effects (AOA Phase 5)."""
         from src.actions.base import (
             MindUpdate, PerceptionUpdate, ProgressionUpdate, NavigationUpdate, 
-            SocialUpdate, RoutineUpdate, StrategicUpdate
+            SocialUpdate, RoutineUpdate, StrategicUpdate, SocialEventUpdate
         )
         
         for up in updates:
@@ -352,6 +352,18 @@ class ActionSystem(System):
                         entry = InterpretedEvent(tick=world.tick, type="social", impact=abs(new_v - old_v) + 0.5, details=narrative)
                         updates.append(PerceptionUpdate(memory_log_add=[entry]))
 
+            elif isinstance(up, SocialEventUpdate):
+                from src.actions.base import PerceptionUpdate
+                from src.core.aspects.mind import InterpretedEvent
+                for evt in up.events_add:
+                    # 1. Add to actor's narrative memory (semantic interpretation)
+                    actor.mind.narrative.add_interpreted_life_event(evt)
+                    # 2. Derive systemic social updates (relationships, reputation)
+                    applicator_updates = SocialStateApplicator.apply_interpreted_event(evt, world, rng=None) # RNG pass-through if needed
+                    if applicator_updates:
+                        # Recursively apply the derived systemic updates
+                        cls._apply_updates(world, actor, applicator_updates, proposal, emit=emit)
+
             elif isinstance(up, StrategicUpdate):
                 cls.apply_strategic_update(entity, up, world, emit)
 
@@ -469,19 +481,22 @@ class ActionSystem(System):
             strat.obligations = [o for o in strat.obligations if o.obligation_id not in up.obligations_remove]
         if up.contracts_add_or_update:
             for ct in up.contracts_add_or_update:
-                if world and emit and ct.status in (StrategicStatus.RESOLVED, StrategicStatus.ABANDONED):
-                     from src.ai.strategy.contract_outcome import ContractOutcomeService
-                     ContractOutcomeService.resolve_contract(world, ct, ct.status, emit=emit)
-                     if ct.status == StrategicStatus.ABANDONED:
-                         from src.utils.metrics import SIM_STRATEGIC_CONTRACT_BREACHES
-                         SIM_STRATEGIC_CONTRACT_BREACHES.labels(contract_kind=ct.kind.name.lower() if hasattr(ct.kind, "name") else str(ct.kind).lower(), reason="abandoned").inc()
                 found = False
                 for i, existing in enumerate(strat.contracts):
                     if existing.contract_id == ct.contract_id:
+                        # [TCK-20260415-HARDENING] Metric increment only on status transition
+                        if existing.status != ct.status:
+                             if ct.status == StrategicStatus.ABANDONED:
+                                 from src.utils.metrics import SIM_STRATEGIC_CONTRACT_BREACHES
+                                 SIM_STRATEGIC_CONTRACT_BREACHES.labels(contract_kind=ct.kind.name.lower() if hasattr(ct.kind, "name") else str(ct.kind).lower(), reason="abandoned").inc()
+                        
                         strat.contracts[i] = ct
                         found = True
                         break
-                if not found: strat.contracts.append(ct)
+                if not found: 
+                    strat.contracts.append(ct)
+                    # Note: We don't increment "started" metrics for contracts here yet to avoid over-counting during bootstrap
+        
         if up.contracts_remove:
             strat.contracts = [ct for ct in strat.contracts if ct.contract_id not in up.contracts_remove]
         if up.offers_add_or_update:
@@ -509,8 +524,30 @@ class ActionSystem(System):
         if up.blockers_remove:
             strat.blockers = [bl for bl in strat.blockers if bl.blocker_id not in up.blockers_remove]
         if up.engaged_ticks is not None: strat.engaged_ticks = up.engaged_ticks
-        if up.strategic_drivers: strat.recent_drivers = up.strategic_drivers
         if world: strat.last_strategic_tick = world.tick
+        
+        # [phase_3_intel_capacity]
+        if up.source_trust_updates:
+            strat.source_trust.update(up.source_trust_updates)
+        
+        # 10. Cognitive Bounding Metrics [phase_2_intel_capacity]
+        if up.last_capacity_profile is not None: strat.last_capacity_profile = up.last_capacity_profile
+        if up.active_slice_used is not None: strat.active_slice_used = up.active_slice_used
+        if up.active_concerns_used is not None: strat.active_concerns_used = up.active_concerns_used
+        if up.retained_leads_used is not None: strat.retained_leads_used = up.retained_leads_used
+        if up.candidate_zones_used is not None: strat.candidate_zones_used = up.candidate_zones_used
+        if up.ally_evaluations_used is not None: strat.ally_evaluations_used = up.ally_evaluations_used
+        if up.detour_depth_used is not None: strat.detour_depth_used = up.detour_depth_used
+        if up.dropped_candidates_count is not None: strat.dropped_candidates_count = up.dropped_candidates_count
+        if up.latent_concerns_count is not None: strat.latent_concerns_count = up.latent_concerns_count
+        if up.is_overloaded is not None: strat.is_overloaded = up.is_overloaded
+        if up.overload_score is not None: strat.overload_score = up.overload_score
+        if up.primary_overload_source is not None: strat.primary_overload_source = up.primary_overload_source
+        if up.last_overload_tick is not None: strat.last_overload_tick = up.last_overload_tick
+        
+        # 11. Traceability
+        if up.strategic_drivers:
+            strat.recent_drivers = up.strategic_drivers
 
     @classmethod
     def _apply_biological_decay(cls, world: WorldState, config: SimulationConfig) -> None:

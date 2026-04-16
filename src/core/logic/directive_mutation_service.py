@@ -13,6 +13,7 @@ if TYPE_CHECKING:
     from src.core.models.life_events import TurningPointRecord
     from src.actions.base import StrategicUpdate
     from src.systems.rng import DeterministicRNG
+    from src.ai.cognition_capacity import CognitionCapacityProfile
 
 logger = logging.getLogger(__name__)
 
@@ -26,21 +27,44 @@ class DirectiveMutationService:
         entity: Entity, 
         tp: TurningPointRecord, 
         updates: StrategicUpdate,
-        rng: DeterministicRNG | None = None
+        rng: DeterministicRNG | None = None,
+        profile: CognitionCapacityProfile | None = None
     ) -> None:
-        """Analyze turning point and mutate directives if salience thresholds are met."""
+        """Analyze turning point and mutate directives if salience thresholds are met. [phase_2_intel_capacity]"""
         
+        # Resolve profile if missing
+        if profile is None:
+            from src.ai.cognition_capacity import CognitionCapacityBuilder
+            profile = CognitionCapacityBuilder.build(entity)
+
         # High salience requirement for identity shift
-        # (Assuming salience_score is calculated in TurningPointService.insert)
-        if tp.salience_score < 0.8: 
+        # Bounded by judgment stability (higher stability = higher threshold for identity drift)
+        # range: 0.8 (unstable) to 1.2 (stable)
+        base_threshold = 0.8
+        effective_threshold = base_threshold * (0.5 + 0.7 * profile.judgment_stability)
+        
+        if tp.salience_score < effective_threshold: 
             return
+
+        # [TCK-20260414-SOCIAL-04] Count event history for persistence thresholds
+        history = entity.mind.narrative.turning_points
+        def get_count(kind):
+            return len([prev for prev in history if prev.kind == kind])
 
         # 1. Map Turning Point Kind to Directive Shift
         if tp.kind == TurningPointKind.NEAR_DEATH:
-            cls._ensure_directive(entity, updates, "Safety & Self-Preservation", DirectiveKind.PERSONAL, 3.5, "trauma", world.tick, rng)
+            # Requires at least 2 salient Near Deaths to shift to a Safety directive
+            if get_count(TurningPointKind.NEAR_DEATH) >= 2:
+                cls._ensure_directive(entity, updates, "Safety & Self-Preservation", DirectiveKind.PERSONAL, 3.5, "trauma", world.tick, rng)
             
-        elif tp.kind == TurningPointKind.BETRAYAL or tp.kind == TurningPointKind.ALLY_DIED:
+        elif tp.kind == TurningPointKind.BETRAYAL:
+            # Betrayal is uniquely high-impact (Threshold: 1)
             cls._ensure_directive(entity, updates, "Avenge Betrayal/Loss", DirectiveKind.PERSONAL, 3.0, "trauma", world.tick, rng)
+
+        elif tp.kind == TurningPointKind.ALLY_DIED:
+            # Requires at least 2 salient Ally Deaths to trigger vengeful focus
+            if get_count(TurningPointKind.ALLY_DIED) >= 2:
+                 cls._ensure_directive(entity, updates, "Avenge Betrayal/Loss", DirectiveKind.PERSONAL, 3.0, "trauma", world.tick, rng)
             
         elif tp.kind == TurningPointKind.BOSS_ENCOUNTER:
             if tp.emotional_impact < 0:

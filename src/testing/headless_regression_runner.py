@@ -44,6 +44,7 @@ class HeadlessRunner:
         """Disable external infrastructure for clean regression."""
         os.environ["LOKI_URL"] = ""
         os.environ["DISABLE_KAFKA"] = "1"
+        os.environ["DISABLE_RABBITMQ"] = "1"
         os.environ["REDIS_URL"] = ""
         os.environ["DISABLE_REDIS"] = "1"
         os.environ["METRICS_PORT"] = "0"

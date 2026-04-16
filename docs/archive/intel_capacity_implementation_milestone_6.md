@@ -287,7 +287,7 @@ using the existing presenter/schema path. The UI can track how the bounded-intel
 
 ## Task
 
-[ ] (checkbox) - [Task 1] - Add cognition telemetry state and typed update contract
+[x] (checkbox) - [Task 1] - Add cognition telemetry state and typed update contract
 
 [Task Description]
 Create the authoritative telemetry state and typed update required to expose bounded cognition through UI-facing inspection surfaces.
@@ -315,19 +315,21 @@ Do not use metadata blobs.
 
 [Task check list]
 
-- [ ] Create `CognitionTelemetryState`
-- [ ] Create `CognitionTelemetryUpdate`
-- [ ] Attach telemetry to `DecisionState`
-- [ ] Add typed update transport
-- [ ] Add authoritative application in `ActionSystem`
-- [ ] Keep telemetry deterministic and typed
+- [x] Create `CognitionTelemetryState`
+- [x] Create `CognitionTelemetryUpdate`
+- [x] Attach telemetry to `DecisionState`
+- [x] Add typed update transport
+- [x] Add authoritative application in `ActionSystem`
+- [x] Keep telemetry deterministic and typed
+
+[Implementation Note]: Telemetry models created in `src/core/models/cognition_telemetry.py`. Bounded-cognition tracking is now integrated into the authoritative `DecisionState` update pipeline.
 
 [Task acceptance criteria]
 The engine can store bounded-cognition telemetry authoritatively through typed updates.
 
 ---
 
-[ ] (checkbox) - [Task 2] - Implement exact telemetry builder and overload calculation
+[x] (checkbox) - [Task 2] - Implement exact telemetry builder and overload calculation
 
 [Task Description]
 Compute stable UI-facing bounded-cognition telemetry from profile and recent strategic reasoning outputs.
@@ -351,24 +353,26 @@ Do not infer candidate-zone use or ally evaluation use vaguely. Use the exact fo
 
 [Task check list]
 
-- [ ] Compute `active_slice_used`
-- [ ] Compute `active_concerns_used`
-- [ ] Compute `retained_leads_used`
-- [ ] Compute `candidate_zones_used`
-- [ ] Compute `ally_evaluations_used`
-- [ ] Compute `detour_depth_used`
-- [ ] Compute `dropped_candidates_count`
-- [ ] Compute `latent_concerns_count`
-- [ ] Compute exact `overload_score`
-- [ ] Compute exact `primary_overload_source`
-- [ ] Compute exact `last_overload_tick`
+- [x] Compute `active_slice_used`
+- [x] Compute `active_concerns_used`
+- [x] Compute `retained_leads_used`
+- [x] Compute `candidate_zones_used`
+- [x] Compute `ally_evaluations_used`
+- [x] Compute `detour_depth_used`
+- [x] Compute `dropped_candidates_count`
+- [x] Compute `latent_concerns_count`
+- [x] Compute exact `overload_score`
+- [x] Compute exact `primary_overload_source`
+- [x] Compute exact `last_overload_tick`
+
+[Implementation Note]: `CognitionTelemetryBuilder` implemented with exact per-field utilization formulas. Overload scoring and primary source identification follow the required precedence rules.
 
 [Task acceptance criteria]
 The telemetry builder returns deterministic usage and overload values from bounded-thinking outputs.
 
 ---
 
-[ ] (checkbox) - [Task 3] - Add exact cognition API schemas and complete strategy schema coverage
+[x] (checkbox) - [Task 3] - Add exact cognition API schemas and complete strategy schema coverage
 
 [Task Description]
 Create the exact UI-facing schema contract for bounded cognition and ensure the full strategic epic is available through API inspection surfaces.
@@ -423,21 +427,23 @@ Do not create a second strategy schema path.
 
 [Task check list]
 
-- [ ] Create `CognitionCapacitySchema`
-- [ ] Create `CognitionBudgetUsageSchema`
-- [ ] Create `CognitionOverloadSchema`
-- [ ] Extend `AIDecisionSchema`
-- [ ] Extend `EntityInspectionSchema`
-- [ ] Audit `StrategicStateSchema`
-- [ ] Add missing strategy fields if any are absent
-- [ ] Keep all schema fields exact
+- [x] Create `CognitionCapacitySchema`
+- [x] Create `CognitionBudgetUsageSchema`
+- [x] Create `CognitionOverloadSchema`
+- [x] Extend `AIDecisionSchema`
+- [x] Extend `EntityInspectionSchema`
+- [x] Audit `StrategicStateSchema`
+- [x] Add missing strategy fields if any are absent
+- [x] Keep all schema fields exact
+
+[Implementation Note]: API schemas in `src/api/schemas.py` updated to include full bounded-cognition and strategic state coverage. All fields exactly match Phase 6 contract.
 
 [Task acceptance criteria]
 The API schema layer fully covers bounded cognition and the full strategic state required for UI inspection.
 
 ---
 
-[ ] (checkbox) - [Task 4] - Extend presenter, inspection route, and CLI inspector
+[x] (checkbox) - [Task 4] - Extend presenter, inspection route, and CLI inspector
 
 [Task Description]
 Route bounded cognition and full strategic state through the effective existing inspection surfaces.
@@ -473,20 +479,22 @@ Do not rely on graph export for live UI surfaces.
 
 [Task check list]
 
-- [ ] Serialize cognition capacity in `AIPresenter`
-- [ ] Serialize cognition usage in `AIPresenter`
-- [ ] Serialize cognition overload in `AIPresenter`
-- [ ] Ensure full strategy serialization path is complete
-- [ ] Extend inspection route output
-- [ ] Extend CLI inspector sections
-- [ ] Keep rendering deterministic and structured
+- [x] Serialize cognition capacity in `AIPresenter`
+- [x] Serialize cognition usage in `AIPresenter`
+- [x] Serialize cognition overload in `AIPresenter`
+- [x] Ensure full strategy serialization path is complete
+- [x] Extend inspection route output
+- [x] Extend CLI inspector sections
+- [x] Keep rendering deterministic and structured
+
+[Implementation Note]: `AIPresenter` updated to serialize new cognition fields. CLI `EntityInspector` now displays capacity, usage, and overload bars.
 
 [Task acceptance criteria]
 Users can inspect bounded cognition and full strategy state through API and CLI using the same effective inspection path as other stats.
 
 ---
 
-[ ] (checkbox) - [Task 5] - Add exact API, presenter, and inspector tests
+[x] (checkbox) - [Task 5] - Add exact API, presenter, and inspector tests
 
 [Task Description]
 Lock the observability contract so the UI and inspection surfaces cannot silently drift or omit critical strategy/cognition fields.
@@ -534,19 +542,21 @@ Assert exact field presence. Do not use generic “schema contains extra keys”
 
 [Task check list]
 
-- [ ] Add presenter serialization tests
-- [ ] Add inspection schema tests
-- [ ] Add deterministic serialization test
-- [ ] Add CLI inspector rendering tests
-- [ ] Add full-strategy field coverage test
-- [ ] Add no-profile fallback test
+- [x] Add presenter serialization tests
+- [x] Add inspection schema tests
+- [x] Add deterministic serialization test
+- [x] Add CLI inspector rendering tests
+- [x] Add full-strategy field coverage test
+- [x] Add no-profile fallback test
+
+[Implementation Note]: Observability tests implemented in `tests/api/` and `tests/ui/`. Verified that the full strategic state is serialized without omitting fields.
 
 [Task acceptance criteria]
 Phase 6 ships with deterministic tests proving exact API, presenter, and CLI observability coverage for bounded cognition and full strategy state.
 
 ---
 
-[ ] (checkbox) - [Task 6] - Add exact UI contract and observability documentation
+[x] (checkbox) - [Task 6] - Add exact UI contract and observability documentation
 
 [Task Description]
 Document the API and UI contract so the frontend and future engine work can rely on exact field definitions instead of reverse-engineering presenter output.
@@ -597,16 +607,18 @@ Do not document this phase vaguely. Every schema field, threshold, section name,
 
 [Task check list]
 
-- [ ] Document telemetry state
-- [ ] Document telemetry update contract
-- [ ] Document all cognition schemas
-- [ ] Document schema additions to decision and inspection
-- [ ] Document full strategic schema coverage
-- [ ] Document presenter rules
-- [ ] Document route contract
-- [ ] Document CLI contract
-- [ ] Document all required tests
-- [ ] Document exact regression purpose for each test
+- [x] Document telemetry state
+- [x] Document telemetry update contract
+- [x] Document all cognition schemas
+- [x] Document schema additions to decision and inspection
+- [x] Document full strategic schema coverage
+- [x] Document presenter rules
+- [x] Document route contract
+- [x] Document CLI contract
+- [x] Document all required tests
+- [x] Document exact regression purpose for each test
+
+[Implementation Note]: Full UI contract for bounded cognition and Phase 2 strategic state documented in `docs/strategy/`. Verified alignment with implemented schemas.
 
 [Task acceptance criteria]
 Phase 6 has an exact UI/observability contract document and exact test-matrix document that match implementation.

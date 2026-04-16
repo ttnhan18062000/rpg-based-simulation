@@ -245,7 +245,7 @@ At the end of Phase 7, replay contains a bounded-cognition summary for tracked e
 
 ## Task
 
-[ ] (checkbox) - [Task 1] - Add replay cognition summary contract
+[x] (checkbox) - [Task 1] - Add replay cognition summary contract
 
 [Task Description]
 Create the exact replay-side bounded-cognition summary model and integrate it into tracked entity replay output.
@@ -269,21 +269,23 @@ Do not flatten cognition fields into the top-level replay entity summary in this
 
 [Task check list]
 
-- [ ] Create `ReplayCognitionSummary`
-- [ ] Add all required capacity fields
-- [ ] Add all required usage fields
-- [ ] Add overload fields
-- [ ] Add current project and objective fields
-- [ ] Attach `cognition` to replay tracked entity summary
-- [ ] Apply exact `is_overloaded` threshold
-- [ ] Keep replay serialization deterministic
+- [x] Create `ReplayCognitionSummary`
+- [x] Add all required capacity fields
+- [x] Add all required usage fields
+- [x] Add overload fields
+- [x] Add current project and objective fields
+- [x] Attach `cognition` to replay tracked entity summary
+- [x] Apply exact `is_overloaded` threshold
+- [x] Keep replay serialization deterministic
+
+[Implementation Note]: `ReplayCognitionSummary` established in the replay artifact pipeline. All tracked entities now include nested cognition state.
 
 [Task acceptance criteria]
 Tracked replay entities serialize bounded cognition through one exact nested replay summary object.
 
 ---
 
-[ ] (checkbox) - [Task 2] - Add exact bounded-cognition graph node export
+[x] (checkbox) - [Task 2] - Add exact bounded-cognition graph node export
 
 [Task Description]
 Extend graph export so bounded cognition becomes part of the structural artifact, not just live inspection.
@@ -309,21 +311,23 @@ Do not place bounded cognition only in root-node attributes.
 
 [Task check list]
 
-- [ ] Add `bounded_cognition` node kind handling
-- [ ] Add `has_cognition_state` edge kind handling
-- [ ] Add exact node ID rule
-- [ ] Add exact edge ID rule
-- [ ] Add exact label
-- [ ] Add all required attribute keys
-- [ ] Skip node creation when no profile exists
-- [ ] Keep export deterministic
+- [x] Add `bounded_cognition` node kind handling
+- [x] Add `has_cognition_state` edge kind handling
+- [x] Add exact node ID rule
+- [x] Add exact edge ID rule
+- [x] Add exact label
+- [x] Add all required attribute keys
+- [x] Skip node creation when no profile exists
+- [x] Keep export deterministic
+
+[Implementation Note]: Cognition graph exporter extended with `bounded_cognition` nodes and `has_cognition_state` edges. All telemetry attributes correctly mapped.
 
 [Task acceptance criteria]
 Graph export includes exactly one bounded-cognition node and one edge per entity when telemetry exists.
 
 ---
 
-[ ] (checkbox) - [Task 3] - Extend headless runner manifest and artifact plumbing
+[x] (checkbox) - [Task 3] - Extend headless runner manifest and artifact plumbing
 
 [Task Description]
 Make the headless regression runner explicitly aware of bounded-cognition artifacts.
@@ -351,17 +355,19 @@ Do not infer cognition presence after the fact by reading freeform logs. The man
 
 [Task check list]
 
-- [ ] Add `tracked_entities_with_cognition`
-- [ ] Add `cognition_consistency_checked`
-- [ ] Populate cognition-aware manifest fields deterministically
-- [ ] Keep runner output stable by seed
+- [x] Add `tracked_entities_with_cognition`
+- [x] Add `cognition_consistency_checked`
+- [x] Populate cognition-aware manifest fields deterministically
+- [x] Keep runner output stable by seed
+
+[Implementation Note]: Headless regression runner manifest updated to track cognition artifact participation. Verified deterministic output.
 
 [Task acceptance criteria]
 The headless runner writes a manifest that explicitly records bounded-cognition artifact participation.
 
 ---
 
-[ ] (checkbox) - [Task 4] - Add exact replay-vs-graph cognition assertion helpers
+[x] (checkbox) - [Task 4] - Add exact replay-vs-graph cognition assertion helpers
 
 [Task Description]
 Create deterministic consistency checks so bounded cognition is verified across final artifacts.
@@ -397,20 +403,22 @@ Do not compare extra fields that are not intentionally shared between replay and
 
 [Task check list]
 
-- [ ] Add presence assertions
-- [ ] Add capacity consistency assertion
-- [ ] Add usage consistency assertion
-- [ ] Add overload consistency assertion
-- [ ] Add project consistency assertion
-- [ ] Add structured mismatch diff output
-- [ ] Keep assertion behavior deterministic
+- [x] Add presence assertions
+- [x] Add capacity consistency assertion
+- [x] Add usage consistency assertion
+- [x] Add overload consistency assertion
+- [x] Add project consistency assertion
+- [x] Add structured mismatch diff output
+- [x] Keep assertion behavior deterministic
+
+[Implementation Note]: `src/testing/assertions.py` extended with replay-vs-graph consistency checks. Detailed structured diffs provided on mismatch.
 
 [Task acceptance criteria]
 The regression suite can verify bounded-cognition consistency across replay and graph using exact field comparisons and structured diagnostics.
 
 ---
 
-[ ] (checkbox) - [Task 5] - Add deterministic end-to-end bounded-cognition scenarios
+[x] (checkbox) - [Task 5] - Add deterministic end-to-end bounded-cognition scenarios
 
 [Task Description]
 Prove that bounded cognition survives a real headless engine run and produces stable artifact-level divergence.
@@ -443,21 +451,23 @@ Keep scenarios small and explicit. These are proof scenarios, not sandbox demos.
 
 [Task check list]
 
-- [ ] Add bounded-slice pressure scenario
-- [ ] Add detour-depth exhaustion scenario
-- [ ] Add social-bandwidth divergence scenario
-- [ ] Add overload-flag scenario
-- [ ] Assert replay artifact values
-- [ ] Assert graph artifact values
-- [ ] Assert replay-vs-graph consistency
-- [ ] Keep all scenarios deterministic
+- [x] Add bounded-slice pressure scenario
+- [x] Add detour-depth exhaustion scenario
+- [x] Add social-bandwidth divergence scenario
+- [x] Add overload-flag scenario
+- [x] Assert replay artifact values
+- [x] Assert graph artifact values
+- [x] Assert replay-vs-graph consistency
+- [x] Keep all scenarios deterministic
+
+[Implementation Note]: End-to-end regression tests established in `tests/ai/test_intel_capacity_regression.py`. Scenarios verify slice pressure, detour limits, and overload flags.
 
 [Task acceptance criteria]
 The regression suite proves bounded cognition end to end through deterministic artifact-level scenarios.
 
 ---
 
-[ ] (checkbox) - [Task 6] - Add exact replay/export/regression documentation
+[x] (checkbox) - [Task 6] - Add exact replay/export/regression documentation
 
 [Task Description]
 Document the final artifact contract for bounded cognition so the regression path remains auditable and maintainable.
@@ -504,14 +514,16 @@ Do not describe this phase vaguely. The exact replay fields, exact graph attribu
 
 [Task check list]
 
-- [ ] Document replay cognition contract
-- [ ] Document graph node contract
-- [ ] Document manifest fields
-- [ ] Document shared consistency field set
-- [ ] Document mismatch diff format
-- [ ] Document exact scenarios
-- [ ] Document all required tests
-- [ ] Document exact regression purpose for each test
+- [x] Document replay cognition contract
+- [x] Document graph node contract
+- [x] Document manifest fields
+- [x] Document shared consistency field set
+- [x] Document mismatch diff format
+- [x] Document exact scenarios
+- [x] Document all required tests
+- [x] Document exact regression purpose for each test
+
+[Implementation Note]: Final artifact contracts and regression matrices documented in `docs/strategy/`. Full alignment with Phase 7 implementation verified.
 
 [Task acceptance criteria]
 Phase 7 has an exact artifact-contract document and exact test-matrix document that match implementation.
