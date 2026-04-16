@@ -105,8 +105,8 @@ def test_switch_margin_increases_with_higher_resistance_profile():
     snapshot.tick = 100
     
     outcome = BoundedStrategicAppraisalService.evaluate(ent, snapshot, profile)
-    # margin used should be 0.435
-    assert outcome.switch_margin_used == 0.435
+    # margin used should be 0.428 (was 0.435 before personality hardening)
+    assert outcome.switch_margin_used == 0.428
     # With margin 0.45, even a moderately better rival won't cause a switch
     assert outcome.kept_current_project is True
     assert outcome.selected_project_id == "p1"

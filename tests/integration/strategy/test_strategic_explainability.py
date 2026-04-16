@@ -136,9 +136,22 @@ def test_switch_reason_transparency(mock_world, brain):
     assert update.current_project_id == "p2"
     
     # Check drivers for reason
-    driver = next((d for d in update.strategic_drivers if d.label == "Project Switch"), None)
+    driver = next((d for d in update.strategic_drivers if d.label == "STRATEGIC_SWITCH"), None)
     assert driver is not None
     # Verify exact keyword presence for transparency
     assert "score" in driver.description.lower()
     assert "current" in driver.description.lower()
     assert "margin" in driver.description.lower()
+
+    # 4. Prove Authoritative Commitment (Milestone 4)
+    from src.systems.gameplay.action_system import ActionSystem
+    ActionSystem.apply_strategic_update(hero, update)
+    
+    # recent_drivers should now contain the switch driver
+    assert any(d.label == "STRATEGIC_SWITCH" for d in hero.mind.strategic.recent_drivers)
+    
+    # Verify SCHEMA transparency
+    from src.api.presenters.ai_presenter import AIPresenter
+    explanation = AIPresenter.get_explanation(hero)
+    strat_schema = explanation.strategy
+    assert any(d.label == "STRATEGIC_SWITCH" for d in strat_schema.recent_drivers)

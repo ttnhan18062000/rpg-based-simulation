@@ -65,35 +65,56 @@ def create_mock_entity(
 
 
 class TestPersonalityDerivation:
-    """Verify personality modifiers affect builder output."""
+    """Verify personality modifiers affect builder output with deterministic deltas."""
 
-    def test_high_curiosity_increases_lead_retention(self):
-        """High curiosity should increase lead_retention_limit."""
-        base = create_mock_entity(curiosity=0.1)
-        curious = create_mock_entity(curiosity=0.9)
+    def test_curiosity_impact_on_leads(self):
+        """Higher curiosity should strictly increase lead_retention_limit until clamped."""
+        # Baseline with minimal attributes (n_per=0, n_int=0)
+        v_low = create_mock_entity(int_=1, per=1, curiosity=0.0) # 2.0 -> 2
+        v_high = create_mock_entity(int_=1, per=1, curiosity=1.0) # 3.5 -> 3
+        
+        p0 = CognitionCapacityBuilder.build(v_low)
+        p1 = CognitionCapacityBuilder.build(v_high)
+        
+        assert p1.lead_retention_limit > p0.lead_retention_limit
+        assert p0.lead_retention_limit == 2
+        assert p1.lead_retention_limit == 3
+
+    def test_caution_impact_on_resume(self):
+        """Higher caution should strictly increase resume_reliability."""
+        reckless = create_mock_entity(caution=0.0)
+        cautious = create_mock_entity(caution=1.0)
+
+        p_reckless = CognitionCapacityBuilder.build(reckless)
+        p_cautious = CognitionCapacityBuilder.build(cautious)
+
+        assert p_cautious.resume_reliability > p_reckless.resume_reliability
+        # Delta should be exactly 0.15
+        assert round(p_cautious.resume_reliability - p_reckless.resume_reliability, 2) == 0.15
+
+    def test_neuroticism_impact_on_stability(self):
+        """Higher neuroticism should strictly decrease judgment_stability."""
+        stable = create_mock_entity(neuroticism=0.0)
+        anxious = create_mock_entity(neuroticism=1.0)
+
+        p_stable = CognitionCapacityBuilder.build(stable)
+        p_anxious = CognitionCapacityBuilder.build(anxious)
+
+        assert p_anxious.judgment_stability < p_stable.judgment_stability
+        assert p_stable.judgment_stability - p_anxious.judgment_stability == pytest.approx(0.10)
+
+    def test_unmapped_personality_no_effect(self):
+        """Verify that aggression and greed do NOT affect cognitive capacity profile (Sparse Mapping)."""
+        base = create_mock_entity(aggression=0.5, greed=0.5)
+        high_aggro = create_mock_entity(aggression=1.0, greed=0.5)
+        high_greed = create_mock_entity(aggression=0.5, greed=1.0)
 
         p_base = CognitionCapacityBuilder.build(base)
-        p_curious = CognitionCapacityBuilder.build(curious)
+        p_aggro = CognitionCapacityBuilder.build(high_aggro)
+        p_greed = CognitionCapacityBuilder.build(high_greed)
 
-        # Curiosity maps to the CURIOUS trait path, but also affects personality directly
-        # The builder uses p_cur = pers.curiosity, which doesn't directly map to limits
-        # However, TraitType.CURIOUS does add +1 lead retention
-        # Let's verify that the profiles are at least deterministically different
-        assert p_base.planning_budget == p_curious.planning_budget  # curiosity doesn't affect planning
-        # Both should be valid profiles
-        assert p_base.lead_retention_limit >= 1
-        assert p_curious.lead_retention_limit >= 1
-
-    def test_high_caution_does_not_change_planning(self):
-        """Caution is a personality trait but does not modify planning budget."""
-        cautious = create_mock_entity(caution=0.9)
-        reckless = create_mock_entity(caution=0.1)
-
-        p_cautious = CognitionCapacityBuilder.build(cautious)
-        p_reckless = CognitionCapacityBuilder.build(reckless)
-
-        # Caution doesn't feed into the planning_budget formula
-        assert p_cautious.planning_budget == p_reckless.planning_budget
+        assert p_base.model_dump() == p_aggro.model_dump()
+        assert p_base.model_dump() == p_greed.model_dump()
 
 
 class TestTraitDerivation:

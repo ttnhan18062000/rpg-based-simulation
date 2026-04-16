@@ -21,6 +21,67 @@ class StrategicUncertaintyService:
     @staticmethod
     def resolve_uncertainty(ctx: AIContext, profile: CognitionCapacityProfile) -> StrategicUpdate:
         """Inspects the current state and resolves zones to coordinates if evidence is found."""
+        # 1. Proximity Resolution (Waveform Collapse)
+        up = StrategicUncertaintyService._resolve_proximity(ctx, profile)
+        
+        # 2. Contradiction Processing (Degradation) [MILESTONE 5]
+        contra_up = StrategicUncertaintyService.handle_contradictions(ctx, profile)
+        
+        # Merge updates
+        up.leads_add_or_update.extend(contra_up.leads_add_or_update)
+        up.hypotheses_add_or_update.extend(contra_up.hypotheses_add_or_update)
+        if contra_up.current_objective_id:
+             up.current_objective_id = contra_up.current_objective_id
+             
+        return up
+
+    @staticmethod
+    def handle_contradictions(ctx: AIContext, profile: CognitionCapacityProfile) -> StrategicUpdate:
+        """Degrades certainty and handles hypothesis impacts when contradictions appear. [MILESTONE 5]"""
+        actor = ctx.actor
+        strat = actor.mind.strategic
+        up = StrategicUpdate(target_id=actor.id)
+        
+        sensitivity = getattr(profile, "contradiction_sensitivity", 0.5)
+        
+        # 1. Lead Degradation
+        for lead in strat.leads:
+            if lead.contradiction_count > 0:
+                # Penalty: 10% per contradiction * sensitivity
+                penalty = lead.contradiction_count * 0.1 * sensitivity
+                new_certainty = max(0.0, lead.certainty - penalty)
+                
+                if new_certainty != lead.certainty:
+                    up.leads_add_or_update.append(lead.model_copy(update={"certainty": round(new_certainty, 3)}))
+        
+        # 2. Hypothesis Impact
+        for hypo in strat.hypotheses:
+            if not hypo.is_active: continue
+            
+            total_contra = 0
+            for lid in hypo.supporting_lead_ids:
+                lead = next((l for l in strat.leads if l.lead_id == lid), None)
+                if lead:
+                    total_contra += lead.contradiction_count
+            
+            if total_contra > 0:
+                # Hypothesis penalty is more aggressive
+                penalty = total_contra * 0.15 * sensitivity
+                new_conf = max(0.0, hypo.confidence - penalty)
+                
+                if new_conf != hypo.confidence:
+                    up.hypotheses_add_or_update.append(hypo.model_copy(update={"confidence": round(new_conf, 3)}))
+                    
+                    if new_conf < 0.2:
+                        # Deactivate hypothesis if confidence is too low
+                         up.hypotheses_add_or_update[-1].is_active = False
+                         logger.info("Hypothesis %s deactivated due to low confidence (%s)", hypo.hypothesis_id, new_conf)
+
+        return up
+
+    @staticmethod
+    def _resolve_proximity(ctx: AIContext, profile: CognitionCapacityProfile) -> StrategicUpdate:
+        """Internal logic for proximity-based resolution."""
         actor = ctx.actor
         strat = actor.mind.strategic
         up = StrategicUpdate(target_id=actor.id)

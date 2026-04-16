@@ -144,7 +144,7 @@ class CognitionCapacityBuilder:
         
         # Exact Formulas (Matching tests Case A/B)
         planning_budget = int(_clamp(3.0 + 5.0 * n_int + 1.0 * n_wis + trait_plan_mod + panic_plan_mod - stress_penalty * 4.0, 1.0, 9.0))
-        judgment_stability = round(_clamp(0.35 + 0.45 * n_wis + 0.10 * n_int - 0.20 * fatigue + trait_stab_mod - stress_penalty * 0.5, 0.05, 0.95), 3)
+        judgment_stability = round(_clamp(0.35 + 0.45 * n_wis + 0.10 * n_int - 0.20 * fatigue + trait_stab_mod - stress_penalty * 0.5 - (p_neu * 0.10), 0.05, 0.95), 3)
         evidence_quality = round(_clamp(0.30 + 0.50 * n_per + 0.10 * n_wis + 0.05 * n_int - 0.20 * fatigue + trait_evid_mod - stress_penalty * 0.3, 0.05, 0.95), 3)
         social_bandwidth = int(_clamp(2.0 + 4.0 * n_cha + 1.0 * n_wis, 1.0, 7.0))
         
@@ -152,13 +152,13 @@ class CognitionCapacityBuilder:
         detour_depth_limit = int(_clamp(1.0 + 2.0 * n_int + 1.0 * n_wis + arch_mod, 1.0, 4.0))
         active_slice_limit = int(_clamp(3.0 + 4.0 * n_int + 2.0 * n_wis + trait_slice_mod, 1.0, 9.0))
         concern_intake_limit = int(_clamp(2.0 + 2.0 * n_wis + 1.0 * n_int, 1.0, 5.0))
-        lead_retention_limit = int(_clamp(2.0 + 3.0 * n_per + 2.0 * n_int + trait_lead_mod, 1.0, 7.0))
+        lead_retention_limit = int(_clamp(2.0 + 3.0 * n_per + 2.0 * n_int + trait_lead_mod + (p_cur * 1.5), 1.0, 7.0))
         candidate_zone_limit = int(_clamp(1.0 + 3.0 * n_per + 1.0 * n_int, 1.0, 5.0))
         ally_evaluation_limit = social_bandwidth
         
         # Mental Resistance / Tolerance
         blocker_resolution_patience = round(_clamp(0.30 + 0.35 * n_int + 0.25 * n_wis - 0.20 * fatigue, 0.05, 0.95), 3)
-        resume_reliability = round(_clamp(0.25 + 0.35 * n_int + 0.25 * n_wis + 0.10 * n_per - 0.20 * fatigue - stress_penalty * 0.2, 0.05, 0.95), 3)
+        resume_reliability = round(_clamp(0.25 + 0.35 * n_int + 0.25 * n_wis + 0.10 * n_per - 0.20 * fatigue - stress_penalty * 0.2 + (p_cau * 0.15), 0.05, 0.95), 3)
         interruption_resistance = round(_clamp(0.20 + 0.45 * n_wis + 0.15 * n_int - 0.15 * fatigue - stress_penalty * 0.3, 0.05, 0.95), 3)
         
         # Archetype Adjustments 

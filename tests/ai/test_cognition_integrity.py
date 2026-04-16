@@ -211,7 +211,7 @@ def test_documentation_alignment():
     [MILESTONE 8 PROOF]
     """
     import os
-    doc_path = "intel_capacity_implementation_updated.md"
+    doc_path = "docs/archive/intel_capacity_implementation_updated.md"
     assert os.path.exists(doc_path), f"Documentation missing: {doc_path}"
     
     with open(doc_path, "r") as f:

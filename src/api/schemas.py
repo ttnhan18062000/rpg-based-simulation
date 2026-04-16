@@ -182,6 +182,12 @@ class CognitionOverloadSchema(BaseModel):
     last_overload_tick: int | None = None
 
 
+class DecisionDriverSchema(BaseModel):
+    kind: str
+    label: str
+    weight: float
+    description: str = ""
+
 # --- Strategic Domain [PHASE 6] ---
 
 class BlockerSchema(BaseModel):
@@ -303,6 +309,7 @@ class StrategicStateSchema(BaseModel):
     interrupted_project_id: str | None = None
     project_lock_until: int = 0
     recent_driver_labels: list[str] = Field(default_factory=list)
+    recent_drivers: list[DecisionDriverSchema] = Field(default_factory=list)
     
     # [phase_2_intel_capacity]
     capacity: CognitionCapacitySchema | None = None
@@ -539,10 +546,6 @@ class GoalScoreSchema(BaseModel):
 
 # SocialBondSchema merged above
 
-class DecisionDriverSchema(BaseModel):
-    kind: str
-    label: str
-    weight: float
 
 class AIDecisionSchema(BaseModel):
     entity_id: int

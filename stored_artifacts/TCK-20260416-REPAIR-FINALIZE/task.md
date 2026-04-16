@@ -1,0 +1,12 @@
+- [ ] Root Cleanup
+    - [ ] Delete `replay.json`
+    - [ ] Delete `test_output.txt`
+- [ ] Artifact Migration
+    - [ ] Create `stored_artifacts/TCK-20260416-REPAIR-FINALIZE/`
+    - [ ] Move `repair_implementation.md` -> `plan.md`
+    - [ ] Migrate `staging_artifacts/TCK-20260414-INFRA-REMEDIATION/`
+    - [ ] Migrate `staging_artifacts/TCK-20260414-LEARNING-SOCIAL-CONSEQUENCE/`
+    - [ ] Delete `staging_artifacts/TCK-20260414-COGNITION-EXPLAINABILITY-HARDENING/`
+- [ ] Final Verification
+    - [ ] Run full strategic test suite one last time
+    - [ ] Verify root directory is clean

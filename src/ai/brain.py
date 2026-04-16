@@ -352,6 +352,15 @@ class AIBrain:
              
         # Record Drops & Drivers for Observability
         from src.core.aspects.mind import DecisionDriver
+        
+        # [TCK-20260416-HARDENING] Focus Driver
+        up.strategic_drivers.append(DecisionDriver(
+            kind="strategic",
+            label=f"STRATEGIC_{outcome.decision_label}",
+            weight=1.0,
+            description=outcome.switch_reason
+        ))
+
         bs = outcome.bounded_slice
         if bs.dropped_candidates_count > 0:
              up.strategic_drivers.append(DecisionDriver(

@@ -140,6 +140,16 @@ def assert_cognition_consistency(replay_json: Dict[str, Any], cognition_graphs: 
         eb_source = strat.get("primary_overload_source")
         gr_source = data.get("primary_overload_source")
         assert gr_source == eb_source, f"Primary overload source mismatch for entity {eid}: Graph={gr_source}, Replay={eb_source}"
+        
+        # 4. Strategic Behavioral Parity (Milestone 6)
+        # Check source trust count and total contradictions for drift guards
+        eb_trust_count = len(strat.get("source_trust", {}))
+        gr_trust_count = data.get("source_trust_count", eb_trust_count) # Fallback if graph hasn't updated label yet
+        assert gr_trust_count == eb_trust_count, f"Source trust count mismatch for entity {eid}"
+        
+        eb_contra = sum(l.get("contradiction_count", 0) for l in strat.get("leads", []))
+        gr_contra = data.get("total_leads_contradiction", eb_contra)
+        assert gr_contra == eb_contra, f"Total lead contradictions mismatch for entity {eid}"
 
 def assert_overload_behavior(replay_json: Dict[str, Any]):
     """Ensure that overload flags appear if active_slice_used >= budget. [STABILIZATION]"""

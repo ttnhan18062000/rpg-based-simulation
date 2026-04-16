@@ -44,8 +44,8 @@ Every tick (default 50ms) executes exactly seven phases in a strict, contract-en
 | :--- | :--- | :--- |
 | **1. Pre-Systems** | **Environmental & Strategic Phase**. Regional control shifts, Calamities, and [StrategySystem] broadcasts. | `world.clock`, `system_manager` / `world.region_control`, `strategic_registry` |
 | **2. Scheduling** | Identify entities due to act and reset per-tick temporary state. | `world.entities` / `tick_ready_entities` |
-| **3. Collection** | Fan-out AI tasks to `WorkerPool`. Entities derive tactical objectives from strategic projects here. | `world.entities`, `mind.strategic` / `tick_proposals` |
-| **4. Resolution** | **Conflict & Authoritative Update**. Resolves tactical actions and applies long-term project progress. | `tick_proposals` / `world.entities`, `action_system` |
+| **3. Collection** | Fan-out AI tasks to `WorkerPool`. Entities derive tactical objectives and Strategic Updates (e.g. project switches) here. | `world.entities`, `mind.strategic` / `tick_proposals` |
+| **4. Resolution** | **Conflict & Authoritative Update**. Resolves tactical actions and applies Strategic Updates (Source Trust, Projects) via `ActionSystem`. | `tick_proposals` / `world.entities`, `action_system` |
 | **5. Cleanup** | Remove dead entities, drop items, handle hero respawns and log rotation tasks. | `world.entities`, `rng` / `world.entities` (DELETE) |
 | **6. Finalization** | **Metric Phase**. Performance metrics and tick-duration calculations. | `world`, `tick_applied` / `tick_metrics` |
 | **7. Persistence** | **External Phase**. Redis Delta-Streaming and Kafka Snapshot persistence. | `world`, `tick_applied`, `tick_events` / NONE (I/O only) |

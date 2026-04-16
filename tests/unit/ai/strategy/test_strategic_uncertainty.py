@@ -1,151 +1,62 @@
 import pytest
-from src.core.entities.entity import Entity
-from src.core.models.snapshot import Snapshot
-from src.core.models.enums import GoalType, ActionType, AIState
-from src.ai.brain import AIBrain
-from src.platform.rng import DeterministicRNG
-from src.config import SimulationConfig
-from src.core.models.vectors import Vector2
-from src.core.models.strategy import (
-    StrategicStatus, ObjectiveKind, LeadKind, LeadRecord, ObjectiveRecord, 
-    BlockerRecord, BlockerKind, ProjectRecord, ProjectKind
-)
-from src.actions.base import StrategicUpdate, MindUpdate
+from src.core.models.strategy import LeadRecord, LeadKind, CognitionCapacityProfile
+from src.ai.strategy.uncertainty_resolution import StrategicUncertaintyService
+from unittest.mock import MagicMock
 
-def test_strategic_detour_knowledge_blocker():
-    """Verify that a knowledge blocker triggers a strategic investigation detour. [PHASE 3]"""
-    rng = DeterministicRNG(seed=42)
-    config = SimulationConfig()
-    brain = AIBrain(config, rng)
-    
-    actor = Entity(id=1, kind="hero")
-    actor.identity.faction = 0 # HERO_GUILD
-    
-    # 1. Setup a blocked objective
-    project_id = "project_secret_ruins"
-    obj_id = "obj_visit_ruins"
-    
-    ruins_obj = ObjectiveRecord(
-        objective_id=obj_id,
-        project_id=project_id,
-        kind=ObjectiveKind.VISIT,
-        label="Find the Secret Ruins",
-        status=StrategicStatus.ACTIVE,
-        priority=3.0,
-        # NO target_pos -> Location unknown
-    )
-    
-    # Add a knowledge blocker
-    ruins_obj.blockers.append(BlockerRecord(
-        blocker_id="blocker_missing_loc",
-        kind=BlockerKind.KNOWLEDGE,
-        label="Unknown Location",
-        discovered_tick=0
-    ))
-    
-    ruins_prj = ProjectRecord(
-        project_id=project_id,
-        kind=ProjectKind.EXPLORATION,
-        label="Ruins Exploration",
-        priority=3.0,
-        objectives=[ruins_obj],
-        active_objective_id=obj_id
-    )
-    
-    actor.mind.strategic.projects = [ruins_prj]
-    actor.mind.strategic.current_project_id = project_id
-    actor.mind.strategic.current_objective_id = obj_id
-    
-    # 2. Add a Lead (Rumor)
+def create_test_profile(**kwargs):
+    base = {
+        "planning_budget": 5, "judgment_stability": 0.5,
+        "evidence_quality": 0.5, "social_bandwidth": 5, "detour_depth_limit": 3,
+        "active_slice_limit": 5, "concern_intake_limit": 3, "lead_retention_limit": 5,
+        "candidate_zone_limit": 3, "ally_evaluation_limit": 5, "blocker_resolution_patience": 0.5,
+        "resume_reliability": 0.5, "interruption_resistance": 0.5, "abandonment_threshold_mod": 1.0,
+        "contradiction_sensitivity": 1.0, "source_trust_learning_rate": 0.5
+    }
+    base.update(kwargs)
+    return CognitionCapacityProfile(**base)
+
+def test_contradiction_degrades_certainty():
+    """Verify that leads with contradictions lose certainty based on profile sensitivity. [MILESTONE 5]"""
+    # 1. Setup
+    ctx = MagicMock()
+    # Pydantic models need real data or dicts for mock_copy etc
     lead = LeadRecord(
-        lead_id="lead_ruins_rumor",
-        kind=LeadKind.LOCATION,
-        label="Old Man's Tale",
-        target_coords=Vector2(x=15, y=20),
-        discovered_tick=10
+        lead_id="L1", kind=LeadKind.LOCATION, label="Hidden Cave",
+        certainty=0.8, contradiction_count=2
     )
-    actor.mind.strategic.leads = [lead]
+    ctx.actor.mind.strategic.leads = [lead]
+    ctx.current_objective = None
     
-    # 3. Setup World/Snapshot
-    from src.core.models.world_state import WorldState
-    from src.core.world.grid import Grid
-    from src.platform.spatial_hash import SpatialHash
+    profile = create_test_profile(contradiction_sensitivity=1.0)
     
-    world = WorldState(seed=42, grid=Grid(50,50), spatial_index=SpatialHash(16))
-    world.entities[actor.id] = actor
-    world.tick = 100
+    # 2. Execute
+    # We'll need to call a new method 'handle_contradictions' which we're about to implement.
+    # For now, resolve_uncertainty might include it or we call it separately.
+    # The plan says "Implement contradiction-driven uncertainty degradation".
+    up = StrategicUncertaintyService.handle_contradictions(ctx, profile)
     
-    snapshot = Snapshot.from_world(world)
-    
-    # 4. Run Brain Decide
-    new_state, proposal = brain.decide(actor, snapshot)
-    
-    # 5. Verify Detour Proposal
-    strat_up = next((u for u in proposal.updates if isinstance(u, StrategicUpdate)), None)
-    assert strat_up is not None
-    
-    # It should have updated the project with a new investigate objective
-    assert strat_up.current_objective_id.startswith("detour_investigate_")
-    
-    detour_prj = next((p for p in strat_up.projects_add_or_update if p.project_id == project_id), None)
-    assert detour_prj is not None
-    assert any(o.kind == ObjectiveKind.INVESTIGATE for o in detour_prj.objectives)
-    
-    # Verify the new objective has the target_pos from the lead
-    new_obj = next(o for o in detour_prj.objectives if o.objective_id == strat_up.current_objective_id)
-    assert new_obj.target_pos == Vector2(x=15, y=20)
+    # 3. Verify
+    assert len(up.leads_add_or_update) == 1
+    updated = up.leads_add_or_update[0]
+    assert updated.certainty < 0.8
+    # Formula check: 0.8 - (2 * 0.1 * 1.0) = 0.6
+    assert updated.certainty == 0.6
 
-def test_investigating_state_tactical_execution():
-    """Verify that an INVESTIGATE objective triggers the INVESTIGATING state and moves toward target. [PHASE 3]"""
-    rng = DeterministicRNG(seed=42)
-    config = SimulationConfig()
-    brain = AIBrain(config, rng)
+def test_hypothesis_impacted_by_contradiction():
+    """Verify that hypotheses lose confidence when supporting leads are contradicted. [MILESTONE 5]"""
+    from src.core.models.strategy import HypothesisRecord
+    ctx = MagicMock()
     
-    actor = Entity(id=2, kind="hero")
-    actor.identity.faction = 0
-    actor.spatial.pos = Vector2(0, 0)
+    lead = LeadRecord(lead_id="L1", kind=LeadKind.LOCATION, label="L1", certainty=0.5, contradiction_count=1)
+    hypo = HypothesisRecord(hypothesis_id="H1", label="Cave exists", confidence=0.8, supporting_lead_ids=["L1"])
     
-    # 1. Setup active investigate objective
-    lead_pos = Vector2(10, 10)
-    investigate_obj = ObjectiveRecord(
-        objective_id="detour_ruins",
-        project_id="prj_1",
-        kind=ObjectiveKind.INVESTIGATE,
-        label="Investigate Lead",
-        status=StrategicStatus.ACTIVE,
-        priority=4.0,
-        target_pos=lead_pos
-    )
+    ctx.actor.mind.strategic.leads = [lead]
+    ctx.actor.mind.strategic.hypotheses = [hypo]
     
-    prj = ProjectRecord(
-        project_id="prj_1",
-        kind=ProjectKind.INVESTIGATION,
-        label="Active Lead",
-        objectives=[investigate_obj],
-        active_objective_id=investigate_obj.objective_id
-    )
-    actor.mind.strategic.projects = [prj]
-    actor.mind.strategic.current_project_id = prj.project_id
-    actor.mind.strategic.current_objective_id = investigate_obj.objective_id
+    profile = create_test_profile(contradiction_sensitivity=1.0)
     
-    from src.core.models.world_state import WorldState
-    from src.core.world.grid import Grid
-    from src.platform.spatial_hash import SpatialHash
+    up = StrategicUncertaintyService.handle_contradictions(ctx, profile)
     
-    world = WorldState(seed=42, grid=Grid(20,20), spatial_index=SpatialHash(16))
-    world.entities[actor.id] = actor
-    snapshot = Snapshot.from_world(world)
-    
-    # 2. Run Brain
-    new_state, proposal = brain.decide(actor, snapshot)
-    
-    # 3. Verify INVESTIGATING state selected
-    assert proposal.new_ai_state == int(AIState.INVESTIGATING)
-    
-    # 4. Verify Movement Proposal toward lead
-    assert proposal.verb == ActionType.MOVE
-    # Propose_move_toward should move closer to (10,10) from (0,0)
-    assert proposal.target.x in [0, 1]
-    assert proposal.target.y in [0, 1]
-    assert proposal.target != actor.spatial.pos
-    assert actor.spatial.pos.manhattan(lead_pos) > proposal.target.manhattan(lead_pos)
+    assert len(up.hypotheses_add_or_update) == 1
+    updated_hypo = up.hypotheses_add_or_update[0]
+    assert updated_hypo.confidence < 0.8

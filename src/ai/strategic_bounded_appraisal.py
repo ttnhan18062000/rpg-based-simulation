@@ -48,6 +48,7 @@ class StrategicDecisionOutcome(SimulationModel):
     switched_project: bool = False
     switch_margin_used: float = 0.0
     interrupting_candidate_id: str | None = None
+    decision_label: str = "KEEP" # "KEEP", "SWITCH", "RESUME", "SUSPEND"
     switch_reason: str | None = None
     bounded_slice: BoundedStrategicSlice
 
@@ -289,6 +290,11 @@ class BoundedStrategicAppraisalService:
             c = _clamp(getattr(source, "certainty", 0.5), 0.0, 1.0)
             f = _clamp(getattr(source, "freshness", 0.5), 0.0, 1.0)
             q = _clamp(getattr(source, "source_quality", 0.5), 0.0, 1.0)
+            
+            # Apply trust multiplier [TCK-20260416-HARDENING]
+            trust = entity.mind.strategic.source_trust.get(source.source_id, 1.0) if source.source_id else 1.0
+            q = _clamp(q * trust, 0.0, 1.0)
+            
             score = round(_clamp(0.20 * p + 0.25 * c + 0.20 * f + 0.20 * q + 0.15 * profile.evidence_quality, 0.0, 1.0), 3)
         elif kind == "zone":
             conf = _clamp(getattr(source, "confidence", 0.5), 0.0, 1.0)
@@ -339,10 +345,7 @@ class BoundedStrategicAppraisalService:
         pool.extend(leads[:profile.lead_retention_limit])
         drops['leads'] = max(0, len(leads) - profile.lead_retention_limit)
         
-        # 2. Concerns
-        concerns = sorted(by_kind.get('concern', []), key=lambda x: x.score, reverse=True)
-        pool.extend(concerns[:profile.concern_intake_limit])
-        drops['concerns'] = max(0, len(concerns) - profile.concern_intake_limit)
+        # 2. Leads (Wait, we already added them at line 337. Continuing to suspended projects)
         
         # 3. Suspended projects
         suspended = sorted(by_kind.get('suspended_project', []), key=lambda x: x.score, reverse=True)
@@ -400,6 +403,7 @@ class BoundedStrategicAppraisalService:
         switched = False
         selected_project_id = current_project_id
         interrupting_id = None
+        decision_label = "KEEP"
         switch_reason = None
         
         if current_project_id:
@@ -412,20 +416,26 @@ class BoundedStrategicAppraisalService:
                      selected_objective_id=strat.current_objective_id,
                      kept_current_project=True,
                      switched_project=False,
+                     decision_label="KEEP",
                      switch_reason=f"Project {current_project_id} is locked until tick {lock_until}.",
                      bounded_slice=bounded_slice
                  )
                  
             if best_rival_score > current_score + switch_margin:
                 # SWITCH
+                # Mapping
                 switched = True
+                decision_label = "SWITCH"
+                if best_rival.kind == "suspended_project":
+                    decision_label = "RESUME"
+                
                 interrupting_id = best_rival.candidate_id
                 switch_reason = f"Rival {best_rival.kind} {best_rival.source_id} score ({best_rival.score}) exceeded current project ({current_score}) by margin {switch_margin}."
-                # Map rival to project root
                 selected_project_id = BoundedStrategicAppraisalService._map_candidate_to_project(best_rival, strat)
             else:
                 # KEEP
                 kept = True
+                decision_label = "KEEP"
         else:
             # NO CURRENT PROJECT -> pick highest project source
             valid_rivals = [c for c in bounded_slice.candidates if c.kind in ('project', 'suspended_project', 'concern', 'obligation')]
@@ -433,6 +443,9 @@ class BoundedStrategicAppraisalService:
                 best_valid = max(valid_rivals, key=lambda x: x.score)
                 selected_project_id = BoundedStrategicAppraisalService._map_candidate_to_project(best_valid, strat)
                 switched = True
+                decision_label = "SWITCH"
+                if best_valid.kind == "suspended_project":
+                    decision_label = "RESUME"
                 switch_reason = f"No current project. Selected {best_valid.kind} {best_valid.source_id} (score {best_valid.score}) as new focus."
 
         # Objective Continuity
@@ -451,6 +464,7 @@ class BoundedStrategicAppraisalService:
             selected_objective_id=selected_obj_id,
             kept_current_project=kept,
             switched_project=switched,
+            decision_label=decision_label,
             switch_margin_used=switch_margin,
             interrupting_candidate_id=interrupting_id,
             switch_reason=switch_reason,

@@ -298,6 +298,10 @@ class AIPresenter:
             interrupted_project_id=s.interrupted_project_id,
             project_lock_until=s.project_lock_until,
             recent_driver_labels=[d.label for d in s.recent_drivers],
+            recent_drivers=[
+                DecisionDriverSchema(kind=d.kind, label=d.label, weight=round(d.weight, 2))
+                for d in s.recent_drivers
+            ],
             
             # [phase_2_intel_capacity]
             capacity=CognitionCapacitySchema(**s.last_capacity_profile.model_dump()) if s.last_capacity_profile else None,

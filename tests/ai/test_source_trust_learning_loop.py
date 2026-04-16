@@ -64,10 +64,14 @@ def test_source_trust_learning_loop(mock_ctx):
     new_trust = strat_up.source_trust_updates["guild"]
     assert new_trust < 0.5
     
-    # Update mock state with new trust to simulate authoritative application
-    mock_ctx.strategic.source_trust["guild"] = new_trust
+    # 3. Apply Update Authoritatively (Milestone 3)
+    from src.systems.gameplay.action_system import ActionSystem
+    ActionSystem.apply_strategic_update(mock_ctx.actor, strat_up)
     
-    # 3. Ingest NEW intel from the same source (Trust < 0.5)
+    # Verify persistence in state
+    assert mock_ctx.strategic.source_trust["guild"] == new_trust
+    
+    # 4. Ingest NEW intel from the same source (Trust < 0.5)
     new_hints = {"gold": "Buried in the sand"}
     secondary_up = StrategicKnowledgeIngestionService.ingest_guild_intel(
         actor_id=mock_ctx.actor.id,
