@@ -17,6 +17,7 @@ from src.actions.base import (
     PerceptionUpdate, ProgressionUpdate, IdentityUpdate, InteractionUpdate, SpatialUpdate,
     WorldUpdate, BuildingUpdate, RoutineUpdate, ReputationUpdate, StrategicUpdate
 )
+from src.core.models.reason_codes import ActionReason, ReasonCode
 from src.core.gameplay.items.item_registry import ITEM_REGISTRY
 from src.core.gameplay.classes import SKILL_DEFS
 from src.core.logic.event_interpreter import EventInterpreterService
@@ -65,13 +66,83 @@ class ActionSystem(System):
         faction_reg: FactionRegistry | None = None
     ) -> None:
         """Core side-effects applied identically in live and replay/recovery."""
-        # 0. Global Biological Decay (Authoritative State)
-        cls._apply_biological_decay(world, config)
+        # Biological Decay moved to PreSystemsPhase in Milestone 1.
         
         for proposal in applied:
             entity = world.entities.get(proposal.actor_id)
             if entity is None or not entity.combat.alive:
                 continue
+
+            # --- Rulebook Authority Boundary [Milestone 1] ---
+            from src.core.logic.legality_service import LegalityService
+            from src.core.models.types import LocationTarget, BuildingTarget
+            
+            # Authoritative legality check before generating ANY updates
+            is_legal = True
+            rejection_reason = ""
+            
+            if config.overhaul_features.get("use_legality_v2", True):
+                if proposal.verb == ActionType.MOVE:
+                    target_pos = proposal.target
+                    # [Milestone 7] Consolidated Legality v2: Range check + Occupancy
+                    if not LegalityService.check_range(entity.spatial.pos, target_pos, 1):
+                        is_legal = False
+                        proposal.reason = ActionReason(code=ReasonCode.OUT_OF_RANGE, metadata={"max_range": 1}, is_rejection=True)
+                        rejection_reason = proposal.reason.reason_text
+                    elif not LegalityService.check_occupancy(target_pos, world, ignore_entity_id=entity.id):
+                        is_legal = False
+                        proposal.reason = ActionReason(code=ReasonCode.OCCUPANCY_VIOLATION, metadata={"pos": target_pos.to_dict() if hasattr(target_pos, "to_dict") else str(target_pos)}, is_rejection=True)
+                        rejection_reason = proposal.reason.reason_text
+                elif proposal.verb == ActionType.ATTACK:
+                    if isinstance(proposal.target, int):
+                        target_ent = world.entities.get(proposal.target)
+                        if not target_ent or not target_ent.combat.alive:
+                            is_legal = False
+                            proposal.reason = ActionReason(code=ReasonCode.TARGET_INVALID, is_rejection=True)
+                            rejection_reason = proposal.reason.reason_text
+                        else:
+                            from src.actions.combat import CombatAction
+                            weapon_range = CombatAction._get_weapon_range(entity)
+                            if not LegalityService.check_range(entity.spatial.pos, target_ent.spatial.pos, weapon_range):
+                                is_legal = False
+                                proposal.reason = ActionReason(code=ReasonCode.OUT_OF_RANGE, metadata={"max_range": weapon_range}, is_rejection=True)
+                                rejection_reason = proposal.reason.reason_text
+                    elif isinstance(proposal.target, BuildingTarget):
+                        target_b = next((b for b in world.buildings if b.building_id == proposal.target.building_id), None)
+                        if not target_b:
+                            is_legal = False
+                            proposal.reason = ActionReason(code=ReasonCode.TARGET_INVALID, metadata={"type": "building"}, is_rejection=True)
+                            rejection_reason = proposal.reason.reason_text
+                        else:
+                            from src.actions.combat import CombatAction
+                            weapon_range = CombatAction._get_weapon_range(entity)
+                            if not LegalityService.check_range(entity.spatial.pos, target_b.pos, weapon_range):
+                                is_legal = False
+                                proposal.reason = ActionReason(code=ReasonCode.OUT_OF_RANGE, metadata={"max_range": weapon_range}, is_rejection=True)
+                                rejection_reason = proposal.reason.reason_text
+            
+            if not is_legal:
+                if not isinstance(proposal.reason, ActionReason):
+                    proposal.reason = f"REJECTED: {rejection_reason or 'Unknown Legality Error'}"
+                
+                logger.warning("Rejected illegal proposal from entity %d: %s (%s)", entity.id, proposal.verb, rejection_reason)
+                entity.mind.decision.last_reason = proposal.reason
+                continue
+            # -------------------------------------------------
+
+            # Milestone 5: Fatigue Pressure
+            # Entities with < 15% stamina are EXHAUSTED (EffectType.SLOW + ATK penalty)
+            if config.overhaul_features.get("use_combat_interaction_v2", True) and entity.progression.stamina_ratio < 0.15:
+                # Check if already has fatigue to avoid stacking
+                if not any(e.source == "exhaustion" for e in entity.combat.effects):
+                    from src.core.gameplay.effects import StatusEffect, EffectType
+                    entity.combat.add_effect(StatusEffect(
+                        effect_type=EffectType.SLOW,
+                        remaining_ticks=5, # Short duration, reapplied if still low
+                        source="exhaustion",
+                        atk_mult=0.7,
+                        spd_mult=0.5
+                    ))
 
             # Unified Update Collection
             all_updates: list[IntentUpdate] = []
@@ -111,8 +182,19 @@ class ActionSystem(System):
             # Phase 2: Social Interpretation Pass
             cls._process_social_interpretation(world, entity, all_updates, proposal, rng)
             
-            # Phase 2: Social Convergence (Gossip)
+            # Milestone 2: Social Convergence (Gossip)
             cls._process_proximity_gossip(world, entity, all_updates)
+
+            # Milestone 5: Global Stamina Costs
+            if config.overhaul_features.get("use_combat_interaction_v2", True):
+                if proposal.verb == ActionType.MOVE:
+                     all_updates.append(ProgressionUpdate(stamina_delta=-2, reason="Movement effort"))
+                elif proposal.verb == ActionType.USE_SKILL:
+                     # Standard skill cost is handled in _get_use_skill_updates
+                     pass
+                elif proposal.verb != ActionType.SLEEP and proposal.verb != ActionType.EAT:
+                     # Minor drain for all other active verbs
+                     all_updates.append(ProgressionUpdate(stamina_delta=-1, reason="Active effort"))
 
             # 3. Final Application (Authoritative Pipeline)
             if all_updates:
@@ -222,6 +304,10 @@ class ActionSystem(System):
                     nav.cached_path_target = up.target_pos
                 if up.chase_ticks is not None:
                     nav.chase_ticks = up.chase_ticks
+                if up.intention is not None:
+                    nav.intention = up.intention
+                if up.blocked_ticks is not None:
+                    nav.blocked_ticks = up.blocked_ticks
 
             elif isinstance(up, ProgressionUpdate):
                 if up.hp_delta:
@@ -260,11 +346,19 @@ class ActionSystem(System):
                         for item in up.inventory_remove:
                             if item in entity.inventory.items:
                                 entity.inventory.items.remove(item)
+                if up.effects_add:
+                    for eff in up.effects_add:
+                        entity.combat.add_effect(eff)
                 if up.effects_expire_all:
                     for etype in up.effects_expire_all:
                         for eff in entity.combat.effects:
                             if eff.effect_type == etype:
                                 eff.remaining_ticks = 0
+                if up.consequences_add:
+                    for cons in up.consequences_add:
+                        entity.combat.add_consequence(cons)
+                if up.consequences_remove:
+                    entity.combat.consequences = [c for c in entity.combat.consequences if c.id not in up.consequences_remove]
 
             elif isinstance(up, RoutineUpdate):
                 if up.hunger_delta:
@@ -586,8 +680,10 @@ class ActionSystem(System):
         if sdef.radius > 0:
             from src.core.models.vectors import Vector2
             center = entity.spatial.pos
+            from src.core.models.types import LocationTarget
             if target_id and world.entities.get(target_id): center = world.entities[target_id].spatial.pos
             elif proposal and isinstance(proposal.target, Vector2): center = proposal.target
+            elif proposal and isinstance(proposal.target, LocationTarget): center = proposal.target.pos
             potential = world.entities_at_radius(center, sdef.radius)
             for t in potential:
                 if t.id != entity.id and t.combat.alive:
@@ -599,7 +695,7 @@ class ActionSystem(System):
         from src.actions.combat import DamageResolutionService, CombatAftermathService
         for t in targets:
             damage, is_crit, is_evaded, trace_details = DamageResolutionService.resolve(attacker=entity, defender=t, world=world, config=config, skill_id=skill_id, power=power, rng=rng, faction_reg=faction_reg, override_damage_type=sdef.damage_type, override_element=sdef.element)
-            CombatAftermathService.process(attacker=entity, defender=t, world=world, damage=damage, is_crit=is_crit, is_evasion=is_evaded, config=config, proposal=proposal, trace_details=trace_details)
+            CombatAftermathService.process(attacker=entity, defender=t, world=world, damage=damage, is_crit=is_crit, is_evasion=is_evaded, config=config, proposal=proposal, rng=rng, trace_details=trace_details)
             for up in proposal.updates:
                 if isinstance(up, CombatTraceUpdate) and (up.result.skill_name == "SKILL" or up.result.skill_name is None):
                     up.result.skill_name = sdef.name

@@ -164,6 +164,15 @@ class SimulationConfig:
     ignore_phase_errors: bool = False    # Whether to suppress exceptions in engine phases
     max_regression_runs: int = 10        # Number of headless run artifacts to keep per directory
 
+    # Rollout Hardening (Milestone 7)
+    # Toggles for granular control over the combat and movement overhaul systems.
+    overhaul_features: dict[str, bool] = field(default_factory=lambda: {
+        "use_legality_v2": True,           # Spatial/Timing rules
+        "use_combat_interaction_v2": True, # Engagement/OA rules
+        "use_movement_model_v2": True,     # Intention/Congestion rules
+        "use_tactical_evaluator_v2": True, # AI Heuristics
+    })
+
     # Biological Needs [PHASE 3]
     sleep_decay_rate: float = 0.002      # Debt increase per tick
     hunger_decay_rate: float = 0.001     # Hunger increase per tick

@@ -134,7 +134,7 @@ No full balance-tuning pass, large-scale formation AI, or stat ownership rebalan
 
 ## Task
 
-[ ] (checkbox) - [Task 1] - Define the tactical-behavior contract
+[x] (checkbox) - [Task 1] - Define the tactical-behavior contract
 
 [Task Description]
 Create the exact rule contract for tactical combat and combat-movement behavior. This is the foundational modeling task for Milestone 4. Without it, safe-shot logic, retreat logic, ranged spacing, and melee commitment will remain implicit and contradictory.
@@ -181,22 +181,22 @@ Do not let role behavior become undocumented magic.
 
 [Task check list]
 
-- [ ] Define safe-shot semantics
-- [ ] Define distance-management modes
-- [ ] Define tactical retreat semantics
-- [ ] Define local position-value semantics
-- [ ] Define commitment/disengagement tactical use
-- [ ] Define minimum role-sensitive behavior classes
-- [ ] Define small-group coordination scope
-- [ ] Define explicit non-goals
-- [ ] Keep the contract exact and minimal
+- [x] Define safe-shot semantics
+- [x] Define distance-management modes
+- [x] Define tactical retreat semantics
+- [x] Define local position-value semantics
+- [x] Define commitment/disengagement tactical use
+- [x] Define minimum role-sensitive behavior classes
+- [x] Define small-group coordination scope
+- [x] Define explicit non-goals
+- [x] Keep the contract exact and minimal
 
 [Task acceptance criteria]
 The project has one exact tactical-behavior contract that can be used as the authoritative source for implementation and tests.
 
 ---
 
-[ ] (checkbox) - [Task 2] - Implement safe-shot and distance-management behavior
+[x] (checkbox) - [Task 2] - Implement safe-shot and distance-management behavior
 
 [Task Description]
 Teach entities to make better short-horizon ranged and melee spacing decisions. This task translates the core tactical-use portion of the rulebook into runtime behavior.
@@ -243,19 +243,19 @@ This task is about tactical use of space, not raw damage optimization.
 
 [Task check list]
 
-- [ ] Add safe-shot evaluation
-- [ ] Add distance-management modes
-- [ ] Add ranged spacing behavior
-- [ ] Add melee pressure behavior
-- [ ] Consume interaction and movement state cleanly
-- [ ] Remove or isolate binary legacy logic where present
+- [x] Add safe-shot evaluation
+- [x] Add distance-management modes
+- [x] Add ranged spacing behavior
+- [x] Add melee pressure behavior
+- [x] Consume interaction and movement state cleanly
+- [x] Remove or isolate binary legacy logic where present
 
 [Task acceptance criteria]
 Entities can deliberately manage range and choose safer attacks instead of relying on accidental or binary behavior.
 
 ---
 
-[ ] (checkbox) - [Task 3] - Implement tactical retreat and commitment behavior
+[x] (checkbox) - [Task 3] - Implement tactical retreat and commitment behavior
 
 [Task Description]
 Make retreat and continued engagement deliberate tactical choices rather than crude panic switches or endless stubborn contact.
@@ -297,19 +297,19 @@ The goal is tactical judgment, not panic scripting.
 
 [Task check list]
 
-- [ ] Add retreat trigger logic
-- [ ] Add tactical retreat behavior
-- [ ] Add commitment-retention logic
-- [ ] Add disengagement-aware retreat behavior
-- [ ] Consume combat interaction state correctly
-- [ ] Remove or isolate crude panic-only legacy behavior
+- [x] Add retreat trigger logic
+- [x] Add tactical retreat behavior
+- [x] Add commitment-retention logic
+- [x] Add disengagement-aware retreat behavior
+- [x] Consume combat interaction state correctly
+- [x] Remove or isolate crude panic-only legacy behavior
 
 [Task acceptance criteria]
 Entities can retreat or remain committed for tactical reasons instead of only because of binary HP-state logic.
 
 ---
 
-[ ] (checkbox) - [Task 4] - Implement role-sensitive tactical behavior
+[x] (checkbox) - [Task 4] - Implement role-sensitive tactical behavior
 
 [Task Description]
 Different entity combat roles must produce different tactical use of the same combat and movement primitives. This task makes those differences explicit.
@@ -345,19 +345,19 @@ Do not let role-sensitive behavior become hidden scattered conditionals.
 
 [Task check list]
 
-- [ ] Define or centralize tactical role categories
-- [ ] Add melee-biased behavior profile
-- [ ] Add ranged-biased behavior profile
-- [ ] Add AoE-capable tactical behavior
-- [ ] Add low-confidence / retreat-biased behavior
-- [ ] Keep role behavior explicit and auditable
+- [x] Define or centralize tactical role categories
+- [x] Add melee-biased behavior profile
+- [x] Add ranged-biased behavior profile
+- [x] Add AoE-capable tactical behavior
+- [x] Add low-confidence / retreat-biased behavior
+- [x] Keep role behavior explicit and auditable
 
 [Task acceptance criteria]
 Different combat-capable entities use the same system differently in deterministic, role-sensitive ways.
 
 ---
 
-[ ] (checkbox) - [Task 5] - Implement light small-group tactical coordination
+[x] (checkbox) - [Task 5] - Implement light small-group tactical coordination
 
 [Task Description]
 Improve common small-group behavior so allies stop undermining each other in obvious ways, without jumping to a full formation or doctrine system.
@@ -399,19 +399,19 @@ The point is better coherence, not perfect teamwork.
 
 [Task check list]
 
-- [ ] Add ranged spacing-preservation logic
-- [ ] Add local lane-discipline logic
-- [ ] Add position-preservation logic
-- [ ] Add non-destructive allied local coordination
-- [ ] Keep coordination scope intentionally small
-- [ ] Avoid formation-system scope creep
+- [x] Add ranged spacing-preservation logic
+- [x] Add local lane-discipline logic
+- [x] Add position-preservation logic
+- [x] Add non-destructive allied local coordination
+- [x] Keep coordination scope intentionally small
+- [x] Avoid formation-system scope creep
 
 [Task acceptance criteria]
 Small groups behave more coherently in common local combat situations without requiring a full doctrine system.
 
 ---
 
-[ ] (checkbox) - [Task 6] - Add tactical-behavior scenario tests
+[x] (checkbox) - [Task 6] - Add tactical-behavior scenario tests
 
 [Task Description]
 Lock the Milestone 4 contract with deterministic tactical scenario tests so later balance work and larger-scale battle work cannot silently break short-horizon behavior quality.
@@ -466,20 +466,20 @@ These are tactical semantics tests.
 
 [Task check list]
 
-- [ ] Add safe-shot tests
-- [ ] Add distance-management tests
-- [ ] Add retreat tests
-- [ ] Add commitment tests
-- [ ] Add role-sensitive behavior tests
-- [ ] Add small-group coordination tests
-- [ ] Add deterministic tactical-behavior tests
+- [x] Add safe-shot tests
+- [x] Add distance-management tests
+- [x] Add retreat tests
+- [x] Add commitment tests
+- [x] Add role-sensitive behavior tests
+- [x] Add small-group coordination tests
+- [x] Add deterministic tactical-behavior tests
 
 [Task acceptance criteria]
 The tactical AI layer is pinned by deterministic contract tests and tactical scenario tests.
 
 ---
 
-[ ] (checkbox) - [Task 7] - Add exact Milestone 4 documentation pack
+[x] (checkbox) - [Task 7] - Add exact Milestone 4 documentation pack
 
 [Task Description]
 Document the complete Milestone 4 contract so later balance and scenario milestones cannot reinterpret tactical behavior semantics informally.
@@ -533,13 +533,13 @@ This milestone exists to stop tactical behavior semantics from living only in co
 
 [Task check list]
 
-- [ ] Document exact tactical rules
-- [ ] Document role-sensitive behavior classes
-- [ ] Document small-group coordination scope
-- [ ] Document exact non-goals
-- [ ] Document determinism expectations
-- [ ] Document tactical tests
-- [ ] Document regression purpose of each test group
+- [x] Document exact tactical rules
+- [x] Document role-sensitive behavior classes
+- [x] Document small-group coordination scope
+- [x] Document exact non-goals
+- [x] Document determinism expectations
+- [x] Document tactical tests
+- [x] Document regression purpose of each test group
 
 [Task acceptance criteria]
 Milestone 4 has a complete exact tactical-behavior rulebook document and exact test-matrix document that match the implementation.
@@ -559,3 +559,15 @@ Stop relying on binary attack-or-run behavior. Stop making tactical quality an a
 
 The consequences and opportunity cost if this fails
 Milestone 5 and later will try to tune balance on top of crude tactical behavior, and the simulation will still look unintelligent even if the underlying combat and movement systems are technically correct.
+
+---
+
+### Implementation Comments (Audit 2026-04-17)
+
+- **TacticalEvaluator**: Canonical evaluation logic in `src/ai/tactical/evaluator.py`. It integrates current capability, enemy proximity, and terrain to derive `TacticalMode`.
+- **Safe-Shot**: Implemented as high-priority target selection involving LOS checks and obstruction evaluation, ensuring entities don't step into danger for lower-value hits.
+- **Distance Maintenance**: entities now select `MovementIntention` (e.g., `RETREAT`, `COOPERATIVE_REGROUP`) to preserve optimal range.
+- **Retreat Behavior**: Integrated with `CombatInteractionService` OAs. Entities evaluation disengagement cost versus staying.
+- **Coordination**: Light lane-discipline implemented in `MovementModel` via coordination hints (Wait/Yield).
+- **Tests**: Validated in `tests/ai/test_tactical_evaluator.py`.
+

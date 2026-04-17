@@ -132,7 +132,7 @@ No ally pass-through, tactical cover intelligence, or stat rebalance is required
 
 ## Task
 
-[ ] (checkbox) - [Task 1] - Define the movement intention and execution contract
+[x] (checkbox) - [Task 1] - Define the movement intention and execution contract
 
 [Task Description]
 Create the exact rule contract for movement semantics. This is the foundational modeling task for Milestone 3. Without it, route planning, rerouting, congestion handling, and anti-oscillation behavior will remain implicit and contradictory.
@@ -178,22 +178,22 @@ Do not let congestion handling become an undocumented pile of exceptions.
 
 [Task check list]
 
-- [ ] Define movement intention categories
-- [ ] Define route-planning responsibility
-- [ ] Define local-step responsibility
-- [ ] Define replanning triggers
-- [ ] Define legal congestion responses
-- [ ] Define legal anti-oscillation responses
-- [ ] Define interaction boundaries
-- [ ] Define explicit non-goals
-- [ ] Keep the contract exact and minimal
+- [x] Define movement intention categories
+- [x] Define route-planning responsibility
+- [x] Define local-step responsibility
+- [x] Define replanning triggers
+- [x] Define legal congestion responses
+- [x] Define legal anti-oscillation responses
+- [x] Define interaction boundaries
+- [x] Define explicit non-goals
+- [x] Keep the contract exact and minimal
 
 [Task acceptance criteria]
 The project has one exact movement contract that can be used as the authoritative source for implementation and tests.
 
 ---
 
-[ ] (checkbox) - [Task 2] - Implement explicit movement intention state
+[x] (checkbox) - [Task 2] - Implement explicit movement intention state
 
 [Task Description]
 Make movement purpose explicit and authoritative. This task translates the intention portion of the rulebook into runtime truth.
@@ -237,19 +237,19 @@ The whole point is to make movement purpose explicit and auditable.
 
 [Task check list]
 
-- [ ] Add explicit movement intention state
-- [ ] Add intention persistence rules
-- [ ] Add intention change triggers
-- [ ] Connect intention to planning
-- [ ] Connect intention to local step selection
-- [ ] Remove or isolate conflicting legacy assumptions
+- [x] Add explicit movement intention state
+- [x] Add intention persistence rules
+- [x] Add intention change triggers
+- [x] Connect intention to planning
+- [x] Connect intention to local step selection
+- [x] Remove or isolate conflicting legacy assumptions
 
 [Task acceptance criteria]
 Movement intention is explicit, deterministic runtime state rather than emergent side effect.
 
 ---
 
-[ ] (checkbox) - [Task 3] - Implement route-level planning and local-step separation
+[x] (checkbox) - [Task 3] - Implement route-level planning and local-step separation
 
 [Task Description]
 Separate “where the entity is trying to go” from “which tile it steps to right now.” This is the structural core of believable movement.
@@ -290,19 +290,19 @@ The purpose of this task is structural separation.
 
 [Task check list]
 
-- [ ] Add route-level plan structure
-- [ ] Add local-step execution structure
-- [ ] Add exact replanning triggers
-- [ ] Add route persistence rules
-- [ ] Keep route and step logic separate
-- [ ] Remove or isolate pathfinding-overreach where present
+- [x] Add route-level plan structure
+- [x] Add local-step execution structure
+- [x] Add exact replanning triggers
+- [x] Add route persistence rules
+- [x] Keep route and step logic separate
+- [x] Remove or isolate pathfinding-overreach where present
 
 [Task acceptance criteria]
 Movement uses distinct route-planning and step-execution layers, with explicit replanning rules.
 
 ---
 
-[ ] (checkbox) - [Task 4] - Implement congestion handling without ally pass-through
+[x] (checkbox) - [Task 4] - Implement congestion handling without ally pass-through
 
 [Task Description]
 Create one general framework for resolving no-progress movement caused by occupied lanes while preserving hard occupancy.
@@ -351,22 +351,22 @@ This needs one coherent framework, not isolated if-statements.
 
 [Task check list]
 
-- [ ] Add wait behavior
-- [ ] Add yield behavior
-- [ ] Add sidestep behavior
-- [ ] Add local reroute behavior
-- [ ] Handle corridor blockage
-- [ ] Handle same-next-tile conflicts
-- [ ] Handle blocked pursuit and retreat lanes
-- [ ] Keep the response deterministic
-- [ ] Preserve hard occupancy
+- [x] Add wait behavior
+- [x] Add yield behavior
+- [x] Add sidestep behavior
+- [x] Add local reroute behavior
+- [x] Handle corridor blockage
+- [x] Handle same-next-tile conflicts
+- [x] Handle blocked pursuit and retreat lanes
+- [x] Keep the response deterministic
+- [x] Preserve hard occupancy
 
 [Task acceptance criteria]
 Common ally-block and lane-block movement failures are resolved through one explicit, deterministic congestion framework without ally pass-through.
 
 ---
 
-[ ] (checkbox) - [Task 5] - Implement route commitment and anti-oscillation behavior
+[x] (checkbox) - [Task 5] - Implement route commitment and anti-oscillation behavior
 
 [Task Description]
 Prevent movement from becoming jittery, flip-floppy, or locally rational but globally stupid.
@@ -405,20 +405,20 @@ The goal is stable movement, not stubborn stupidity.
 
 [Task check list]
 
-- [ ] Add route-commitment rules
-- [ ] Add progress vs no-progress criteria
-- [ ] Detect local back-and-forth oscillation
-- [ ] Detect reroute flip-flopping
-- [ ] Detect repeated jitter without progress
-- [ ] Keep the response deterministic
-- [ ] Keep commitment and adaptation balanced
+- [x] Add route-commitment rules
+- [x] Add progress vs no-progress criteria
+- [x] Detect local back-and-forth oscillation
+- [x] Detect reroute flip-flopping
+- [x] Detect repeated jitter without progress
+- [x] Keep the response deterministic
+- [x] Keep commitment and adaptation balanced
 
 [Task acceptance criteria]
 Movement is stable rather than jitter-driven, and common no-progress oscillation patterns are explicitly suppressed.
 
 ---
 
-[ ] (checkbox) - [Task 6] - Add movement-model and congestion tests
+[x] (checkbox) - [Task 6] - Add movement-model and congestion tests
 
 [Task Description]
 Lock the Milestone 3 contract with deterministic tests so later tactical AI and balance work cannot silently break the movement model.
@@ -483,20 +483,20 @@ These are contract tests for movement-system semantics.
 
 [Task check list]
 
-- [ ] Add movement intention tests
-- [ ] Add route/step separation tests
-- [ ] Add replanning-trigger tests
-- [ ] Add congestion tests
-- [ ] Add deterministic wait/yield/sidestep tests
-- [ ] Add anti-oscillation tests
-- [ ] Add deterministic movement progression tests
+- [x] Add movement intention tests
+- [x] Add route/step separation tests
+- [x] Add replanning-trigger tests
+- [x] Add congestion tests
+- [x] Add deterministic wait/yield/sidestep tests
+- [x] Add anti-oscillation tests
+- [x] Add deterministic movement progression tests
 
 [Task acceptance criteria]
 The movement model is pinned by deterministic contract tests, congestion tests, and anti-oscillation tests.
 
 ---
 
-[ ] (checkbox) - [Task 7] - Add exact Milestone 3 documentation pack
+[x] (checkbox) - [Task 7] - Add exact Milestone 3 documentation pack
 
 [Task Description]
 Document the complete Milestone 3 contract so later tactical AI and balance milestones cannot reinterpret movement semantics informally.
@@ -551,13 +551,13 @@ This milestone exists to stop movement semantics from living only in code and me
 
 [Task check list]
 
-- [ ] Document exact movement rules
-- [ ] Document congestion response classes
-- [ ] Document anti-oscillation semantics
-- [ ] Document exact non-goals
-- [ ] Document determinism expectations
-- [ ] Document movement tests
-- [ ] Document regression purpose of each test group
+- [x] Document exact movement rules
+- [x] Document congestion response classes
+- [x] Document anti-oscillation semantics
+- [x] Document exact non-goals
+- [x] Document determinism expectations
+- [x] Document movement tests
+- [x] Document regression purpose of each test group
 
 [Task acceptance criteria]
 Milestone 3 has a complete exact movement-rulebook document and exact test-matrix document that match the implementation.
@@ -577,3 +577,15 @@ Stop solving blocked movement with isolated hacks. Stop relying on full reroute 
 
 The consequences and opportunity cost if this fails
 Milestone 4 and later will try to build tactical AI on top of brittle, jittery, congestion-prone movement, and the combat overhaul will still feel fake even if the combat rules themselves improve.
+
+---
+
+### Implementation Comments (Audit 2026-04-17)
+
+- **MovementModel**: stateless service in `src/core/logic/movement_model.py` coordinating route planning and local stepping.
+- **Intentions**: `MovementIntention` enum defines the "why" of movement. It is persisted in `entity.mind.navigation.intention`.
+- **Two-Layer Planning**: `plan_route` generates the high-level path (cached in entity navigation), while `select_step` chooses the immediate tile based on local congestion.
+- **Congestion Control**: `select_step` implements `WAIT`, `YIELD`, and `SIDESTEP` responses to occupied paths, maintaining the Milestone 1 "one-person-per-tile" rule without ally pass-through.
+- **Persistence**: `blocked_ticks` and `cached_path` prevent oscillation and high-frequency replanning ripples.
+- **Tests**: Verified in `tests/movement/test_congestion_control.py` and `tests/movement/test_movement_intentions.py`.
+

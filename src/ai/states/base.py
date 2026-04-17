@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING
 
 from src.actions.base import ActionProposal, IntentUpdate
 from src.ai.perception import Perception
-from src.core.models.enums import AIState, ActionType, Domain, HeroClass, GoalType
+from src.core.models.enums import AIState, ActionType, Domain, HeroClass, GoalType, MovementIntention
 from src.core.gameplay.faction import Faction, FactionRegistry
 from src.core.entities.entity import Entity, Vector2
 
@@ -207,142 +207,68 @@ def is_tile_passable(actor: Entity, pos: Vector2, snapshot: Snapshot) -> bool:
 
 
 def _greedy_move_toward(actor: Entity, target_pos: Vector2, snapshot: Snapshot, reason: str, updates: list[IntentUpdate] | None = None) -> ActionProposal:
-    # --- Greedy Fallback ---
-    # Find all 4 neighbors, pick the one with minimal Manhattan distance to destination
-    neighbors = [
-        Vector2(x=actor.spatial.pos.x + 1, y=actor.spatial.pos.y),
-        Vector2(x=actor.spatial.pos.x - 1, y=actor.spatial.pos.y),
-        Vector2(x=actor.spatial.pos.x, y=actor.spatial.pos.y + 1),
-        Vector2(x=actor.spatial.pos.x, y=actor.spatial.pos.y - 1),
-    ]
+    # DEPRECATED: Use MovementModel.select_step for local decisions.
+    # Keeping for legacy if absolutely needed, but rerouting to MOVE intent.
+    from src.core.logic.movement_model import MovementModel
+    from src.core.models.enums import MovementIntention
     
-    best_step = None
-    min_dist = actor.spatial.pos.manhattan(target_pos)
+    # Minimal mock context for legacy calls
+    from src.ai.states.base import AIContext
+    from src.core.gameplay.faction import FactionRegistry
+    from src.platform.rng import DeterministicRNG
+    ctx = AIContext(actor=actor, snapshot=snapshot, config=None, rng=None, faction_reg=None)
     
-    for n in neighbors:
-        if not snapshot.grid.is_walkable(n): continue
-        d = n.manhattan(target_pos)
-        if d < min_dist:
-            min_dist = d
-            best_step = n
-            
-    if best_step:
-        return ActionProposal(actor_id=actor.id, verb=ActionType.MOVE, target=best_step, reason=f"{reason} (Greedy)", updates=updates or [])
-    
-    return ActionProposal(actor_id=actor.id, verb=ActionType.REST, reason=f"{reason} (path blocked)", updates=updates or [])
+    return MovementModel.plan_or_step(ctx, target_pos, MovementIntention.PURSUIT, reason)
 
 
-def propose_move_toward(actor: Entity, target_pos: Vector2, snapshot: Snapshot, reason: str, updates: list[IntentUpdate] | None = None) -> ActionProposal:
-    dist = actor.spatial.pos.manhattan(target_pos)
-    final_updates = list(updates) if updates else []
-
-    if dist <= 2:
-        return _greedy_move_toward(actor, target_pos, snapshot, reason, updates=final_updates)
-
-    if dist > 8:
-        # AOA Stabilization: Ensure target_pos is a Vector2 for grid checks [design-03]
-        # AOA Stabilization: Ensure target_pos is a Vector2 for grid checks [design-03]
-        if not hasattr(target_pos, 'x'):
-            from src.core.models.vectors import Vector2
-            try:
-                target_pos = Vector2.model_validate(target_pos)
-            except Exception:
-                pass # If coercion fails, grid checks below will likely fail with clear error
-            
-        is_shared_target = (snapshot.grid.is_town(target_pos) or snapshot.grid.is_camp(target_pos))
-        
-        # Check for World Boss (Calamity) at target position
-        if not is_shared_target:
-            from src.core.models.enums import EntityRole
-            # Use spatial index to quickly check entities at target_pos
-            nearby_ids = snapshot.nearby_entity_ids(target_pos.x, target_pos.y, 1)
-            for eid in nearby_ids:
-                e = snapshot.entities.get(eid)
-                if e and e.spatial.pos == target_pos and e.identity.role == EntityRole.WORLD_BOSS:
-                    is_shared_target = True
+def _merge_intent_updates(proposal: ActionProposal, updates: list[IntentUpdate] | None):
+    """Merge new updates into existing proposal updates, hitting existing types."""
+    if not updates:
+        return
+    for new_up in updates:
+        found = False
+        for i, existing in enumerate(proposal.updates):
+            if type(existing) is type(new_up):
+                # Standard pydantic merge for SimulationModels
+                from src.core.models.base import SimulationModel
+                if isinstance(existing, SimulationModel):
+                    dump = new_up.model_dump(exclude_unset=True)
+                    proposal.updates[i] = existing.model_copy(update=dump)
+                    found = True
                     break
-        
-        if is_shared_target:
-            from src.ai.flow_fields import FlowFieldManager
-            ff = FlowFieldManager.get_instance().get_flow_field(target_pos, snapshot.grid, snapshot.tick)
-            fvec = ff.get_vector(actor.spatial.pos)
-            if fvec and (abs(fvec.x) > 0.01 or abs(fvec.y) > 0.01):
-                # Optimized step selection
-                from src.core.models.vectors import DIRECTION_OFFSETS
-                best_step = None
-                max_dot = -1.0
-                for step in DIRECTION_OFFSETS.values():
-                    dot = step.x * fvec.x + step.y * fvec.y
-                    if dot > max_dot:
-                        dest = actor.spatial.pos + step
-                        if is_tile_passable(actor, dest, snapshot):
-                            max_dot = dot
-                            best_step = step
-                
-                if best_step:
-                    return ActionProposal(actor_id=actor.id, verb=ActionType.MOVE, 
-                                          target=actor.spatial.pos + best_step, 
-                                          reason=f"{reason} (Flow Field)",
-                                          updates=final_updates)
-            
-            # Fallback to direct greedy movement
-            logger.debug("Navigation: FF fallback to Greedy for %s at %s", actor.id, actor.spatial.pos)
+        if not found:
+            proposal.updates.append(new_up)
 
-    # Use NavigationState from MindAspect
-    from src.actions.base import NavigationUpdate
-    nav = actor.mind.navigation
-    cached = nav.cached_path
-    cached_target = nav.cached_path_target
+def propose_move_toward(
+    ctx: AIContext, 
+    target_pos: Vector2, 
+    reason: str, 
+    intention: MovementIntention = MovementIntention.PURSUIT,
+    updates: list[IntentUpdate] | None = None
+) -> ActionProposal:
+    """Propose movement toward a target using the authoritative MovementModel."""
+    from src.core.logic.movement_model import MovementModel
+    proposal = MovementModel.plan_or_step(ctx, target_pos, intention, reason)
+    _merge_intent_updates(proposal, updates)
+    return proposal
+
+
+def propose_move_away(
+    ctx: AIContext, 
+    threat_pos: Vector2, 
+    reason: str, 
+    intention: MovementIntention = MovementIntention.RETREAT,
+    updates: list[IntentUpdate] | None = None
+) -> ActionProposal:
+    """Propose movement away from a threat using the authoritative MovementModel."""
+    # Step 1: Determine 'away' direction
+    direction = Perception.direction_away_from(ctx.actor.spatial.pos, threat_pos)
+    target_pos = ctx.actor.spatial.pos + (direction * 5) # Heuristic 'run away' target
     
-    if (cached and cached_target
-            and cached_target == target_pos
-            and len(cached) > 0
-            and cached[0] == actor.spatial.pos):
-        
-        next_path = list(cached)
-        next_path.pop(0)
-        
-        if next_path and is_tile_passable(actor, next_path[0], snapshot):
-            final_updates.append(NavigationUpdate(cached_path=next_path, target_pos=target_pos))
-            return ActionProposal(
-                actor_id=actor.id, 
-                verb=ActionType.MOVE,
-                target=next_path[0], 
-                reason=f"{reason} (A* cached)",
-                updates=final_updates
-            )
-
-    from src.ai.pathfinding import Pathfinder
-    pf = Pathfinder(snapshot.grid)
-    path = pf.find_path(actor.spatial.pos, target_pos)
-
-    if path:
-        step = path[0]
-        if is_tile_passable(actor, step, snapshot):
-            final_updates.append(NavigationUpdate(cached_path=path, target_pos=target_pos))
-            return ActionProposal(
-                actor_id=actor.id, 
-                verb=ActionType.MOVE,
-                target=step, 
-                reason=f"{reason} (A*)",
-                updates=final_updates
-            )
-
-    return _greedy_move_toward(actor, target_pos, snapshot, reason, updates=final_updates)
-
-
-def propose_move_away(actor: Entity, threat_pos: Vector2, snapshot: Snapshot, reason: str, updates: list[IntentUpdate] | None = None) -> ActionProposal:
-    direction = Perception.direction_away_from(actor.spatial.pos, threat_pos)
-    dest = actor.spatial.pos + direction
-    final_updates = updates or []
-    if is_tile_passable(actor, dest, snapshot):
-        return ActionProposal(actor_id=actor.id, verb=ActionType.MOVE, target=dest, reason=reason, updates=final_updates)
-    perps = [Vector2(-direction.y, direction.x), Vector2(direction.y, -direction.x)]
-    for p in perps:
-        alt = actor.spatial.pos + p
-        if is_tile_passable(actor, alt, snapshot):
-            return ActionProposal(actor_id=actor.id, verb=ActionType.MOVE, target=alt, reason=f"{reason} (side step)", updates=final_updates)
-    return ActionProposal(actor_id=actor.id, verb=ActionType.REST, reason=f"{reason} (flee blocked)", updates=final_updates)
+    from src.core.logic.movement_model import MovementModel
+    proposal = MovementModel.plan_or_step(ctx, target_pos, intention, reason)
+    _merge_intent_updates(proposal, updates)
+    return proposal
 
 
 def propose_retreat_home(ctx: AIContext, reason: str) -> tuple[AIState, ActionProposal]:
@@ -354,16 +280,16 @@ def propose_retreat_home(ctx: AIContext, reason: str) -> tuple[AIState, ActionPr
     # [PHASE 2 REMEDIATION] Prioritize authoritative home_pos if it exists
     if actor.spatial.home_pos:
         return state, propose_move_toward(
-            actor, actor.spatial.home_pos, ctx.snapshot, reason)
+            ctx, actor.spatial.home_pos, reason, MovementIntention.RETREAT)
             
     camp = Perception.nearest_camp(actor, ctx.snapshot)
     if camp:
         return state, propose_move_toward(
-            actor, camp, ctx.snapshot, reason)
+            ctx, camp, reason, MovementIntention.REGROUP)
             
     enemy = ctx.nearest_enemy()
     if enemy:
-        return AIState.FLEE, propose_move_away(actor, enemy.spatial.pos, ctx.snapshot, reason)
+        return AIState.FLEE, propose_move_away(ctx, enemy.spatial.pos, reason)
         
     return AIState.WANDER, ActionProposal(
         actor_id=actor.id, verb=ActionType.REST, reason=f"{reason} (nowhere to go)")

@@ -11,7 +11,8 @@ import logging
 from typing import TYPE_CHECKING
 from src.actions.base import ActionProposal, CombatTraceUpdate, PerceptionUpdate, MindUpdate, ProgressionUpdate, SocialUpdate
 from src.actions.damage import get_damage_calculator
-from src.core.models.enums import ActionType, DamageType, Domain, Element, EmotionType
+from src.core.models.enums import ActionType, DamageType, Domain, Element, EmotionType, ConsequenceKind
+from src.core.models.consequence import Consequence
 from src.core.gameplay.faction import Faction, FactionRegistry
 from src.core.gameplay.items.item_registry import ITEM_REGISTRY
 
@@ -104,8 +105,8 @@ class DamageResolutionService:
         }
 
 class CombatAftermathService:
-    @staticmethod
-    def process(attacker: Entity, defender: Entity, world: WorldState, damage: int, is_crit: bool, is_evasion: bool, config: SimulationConfig, proposal: ActionProposal, trace_details: dict | None = None):
+    @classmethod
+    def process(cls, attacker: Entity, defender: Entity, world: WorldState, damage: int, is_crit: bool, is_evasion: bool, config: SimulationConfig, proposal: ActionProposal, rng: DeterministicRNG, trace_details: dict | None = None):
         tick = world.tick
         
         # Emit combat event for monitoring and E2E tests
@@ -228,6 +229,54 @@ class CombatAftermathService:
         # But for now, we append them to proposal.updates; ActionSystem handles routing by target_id.
         proposal.updates.append(PerceptionUpdate(target_id=defender.id, memory_log_add=[defender_narrative]))
 
+        # --- Milestone 5: Persistent Combat Consequences (Wounds) ---
+        cls._inflict_consequences(attacker, defender, damage, is_crit, world, proposal, config, rng)
+
+    @classmethod
+    def _inflict_consequences(cls, attacker: Entity, defender: Entity, damage: int, is_crit: bool, world: WorldState, proposal: ActionProposal, config: SimulationConfig, rng: DeterministicRNG):
+        """Roll for and apply wounds/scars based on hit severity. [Milestone 5]"""
+        max_hp = max(1, defender.combat.max_hp)
+        hp_lost_ratio = damage / max_hp
+        tick = world.tick
+        
+        # Thresholds
+        is_massive = hp_lost_ratio > 0.25
+        wound_chance = 0.0
+        if is_massive: wound_chance = 1.0
+        elif is_crit: wound_chance = 0.4
+        elif hp_lost_ratio > 0.15: wound_chance = 0.2
+        
+        from src.core.models.enums import Domain, ConsequenceKind
+        if not rng.next_bool(Domain.COMBAT, defender.id, tick + 7, wound_chance):
+            return
+
+        # Generate Wound
+        wound_id = f"wnd_{tick}_{defender.id}"
+        
+        # Basic Wound Templates
+        roll = rng.next_float(Domain.COMBAT, defender.id, tick + 8)
+        
+        if roll < 0.25:
+            # Leg Wound
+            c = Consequence(id=wound_id, kind=ConsequenceKind.WOUND, tag="Leg Wound", spd_mult=0.8, severity=2, remaining_ticks=300)
+        elif roll < 0.50:
+            # Arm Wound
+            c = Consequence(id=wound_id, kind=ConsequenceKind.WOUND, tag="Arm Wound", atk_mult=0.85, severity=2, remaining_ticks=250)
+        elif roll < 0.75:
+            # Chest Wound
+            c = Consequence(id=wound_id, kind=ConsequenceKind.WOUND, tag="Grievous Chest Wound", max_stamina_mult=0.7, spd_mult=0.9, severity=3, remaining_ticks=400)
+        else:
+            # Head Wound
+            c = Consequence(id=wound_id, kind=ConsequenceKind.WOUND, tag="Head Trauma", atk_mult=0.9, def_mult=0.9, severity=3, remaining_ticks=200)
+
+        # Scarring (10% chance on massive hit or fatal blow avoided)
+        if (is_massive or (defender.combat.hp - damage) < (max_hp * 0.1)) and rng.next_bool(Domain.COMBAT, defender.id, tick + 9, 0.1):
+             scar_id = f"scr_{tick}_{defender.id}"
+             scar = Consequence(id=scar_id, kind=ConsequenceKind.SCAR, tag="Combat Scar", spd_mult=0.98, severity=1, remaining_ticks=-1)
+             proposal.updates.append(ProgressionUpdate(target_id=defender.id, consequences_add=[scar]))
+
+        proposal.updates.append(ProgressionUpdate(target_id=defender.id, consequences_add=[c]))
+
 class KillRewardService:
     @staticmethod
     def resolve_kill(killer: Entity, victim: Entity, world: WorldState, proposal: ActionProposal):
@@ -292,23 +341,30 @@ class CombatAction:
             # Building attack validation
             target_b = next((b for b in world.buildings if b.building_id == proposal.target.building_id), None)
             if not target_b or not target_b.is_functional: return False
-            dist = attacker.spatial.pos.manhattan(target_b.pos)
+            from src.core.logic.legality_service import LegalityService
+            dist = LegalityService.get_distance(attacker.spatial.pos, target_b.pos)
             return dist <= self._get_weapon_range(attacker)
             
         target_id: int = proposal.target
         defender = world.entities.get(target_id)
         if not defender or not defender.combat.alive: return False
         
-        # 1. Distance check
-        dist = attacker.spatial.pos.manhattan(defender.spatial.pos)
-        weapon_range = self._get_weapon_range(attacker)
-        if dist > weapon_range: return False
+        # 1. Authoritative Rulebook checks
+        from src.core.logic.legality_service import LegalityService
         
-        # 2. Line of Sight check for ranged attacks (range > 1)
-        if weapon_range > 1 and dist > 1:
+        target_pos = defender.spatial.pos
+        weapon_range = self._get_weapon_range(attacker)
+        
+        # 1a. Range check
+        if not LegalityService.check_range(attacker.spatial.pos, target_pos, weapon_range):
+            return False
+            
+        # 1b. Line of Sight check for ranged attacks (range > 1)
+        # Skip if adjacent (dist == 1) as verified by LegalityService.is_adjacent
+        if weapon_range > 1 and not LegalityService.is_adjacent(attacker.spatial.pos, target_pos):
             if not world.grid.has_line_of_sight(
                 int(attacker.spatial.pos.x), int(attacker.spatial.pos.y),
-                int(defender.spatial.pos.x), int(defender.spatial.pos.y)
+                int(target_pos.x), int(target_pos.y)
             ):
                 return False
                 
@@ -335,8 +391,13 @@ class CombatAction:
         # AOA Stabilization: Explicit combat target synchronization
         # Required for AI tactical focus and skirmish logic.
         attacker.combat.combat_target_id = defender.id
+        attacker.mind.navigation.engagement_target_id = defender.id # [Milestone 2] Stickiness
         if defender.combat.alive:
             defender.combat.combat_target_id = attacker.id
+            defender.mind.navigation.engagement_target_id = attacker.id # [Milestone 2] Stickiness
+
+        # Milestone 5: Stamina pressure (Basic attack costs 8 stamina)
+        proposal.updates.append(ProgressionUpdate(stamina_delta=-8))
 
         # RESOLVE
         damage, is_crit, is_evasion, trace_details = DamageResolutionService.resolve(
@@ -348,7 +409,7 @@ class CombatAction:
         )
 
         # AFTERMATH (Memory, Grudges, Threat)
-        CombatAftermathService.process(attacker, defender, world, damage, is_crit, is_evasion, self._config, proposal, trace_details)
+        CombatAftermathService.process(attacker, defender, world, damage, is_crit, is_evasion, self._config, proposal, self._rng, trace_details)
 
         # KILL RECOGNITION (Pillar 1 Convergence: Proposed in Apply Phase)
         if not is_evasion and (defender.combat.hp - damage) <= 0:

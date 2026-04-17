@@ -116,7 +116,7 @@ No final full-meta balance pass or large-scale battle tuning is required for Mil
 
 ## Task
 
-[ ] (checkbox) - [Task 1] - Define the persistent-consequence and stat-ownership contracts
+[x] (checkbox) - [Task 1] - Define the persistent-consequence and stat-ownership contracts
 
 [Task Description]
 Create the exact rule contracts for post-combat state and attribute-domain ownership. This is the foundational modeling task for Milestone 5. Without it, aftermath effects and stat rebalance will become vague, contradictory, and impossible to tune honestly.
@@ -166,22 +166,22 @@ Do not let “speed is too strong” remain a slogan. The ownership model must d
 
 [Task check list]
 
-- [ ] Define persistent-consequence categories
-- [ ] Define injury / fatigue scope
-- [ ] Define immediate equipment-change consequence scope
-- [ ] Define speed ownership
-- [ ] Define damage-domain ownership
-- [ ] Define survivability-domain ownership
-- [ ] Define perception / control-domain ownership
-- [ ] Define explicit non-goals
-- [ ] Keep both contracts exact and minimal
+- [x] Define persistent-consequence categories
+- [x] Define injury / fatigue scope
+- [x] Define immediate equipment-change consequence scope
+- [x] Define speed ownership
+- [x] Define damage-domain ownership
+- [x] Define survivability-domain ownership
+- [x] Define perception / control-domain ownership
+- [x] Define explicit non-goals
+- [x] Keep both contracts exact and minimal
 
 [Task acceptance criteria]
 The project has one exact persistent-consequence contract and one exact stat-ownership contract that can be used as the authoritative source for implementation and tests.
 
 ---
 
-[ ] (checkbox) - [Task 2] - Implement explicit post-combat consequence state
+[x] (checkbox) - [Task 2] - Implement explicit post-combat consequence state
 
 [Task Description]
 Make combat aftermath explicit and authoritative. This task translates the persistent-consequence rulebook into runtime truth.
@@ -223,19 +223,19 @@ The point is to make post-combat state explicit and maintainable.
 
 [Task check list]
 
-- [ ] Add explicit injury/wound state
-- [ ] Add explicit fatigue/effort state
-- [ ] Add immediate aftermath application rules
-- [ ] Add persistence / clear / decay rules
-- [ ] Expose consequence state cleanly to consuming systems
-- [ ] Remove or isolate hidden aftermath assumptions where present
+- [x] Add explicit injury/wound state
+- [x] Add explicit fatigue/effort state
+- [x] Add immediate aftermath application rules
+- [x] Add persistence / clear / decay rules
+- [x] Expose consequence state cleanly to consuming systems
+- [x] Remove or isolate hidden aftermath assumptions where present
 
 [Task acceptance criteria]
 Post-combat consequence state is explicit, bounded, and authoritative rather than emergent or scattered.
 
 ---
 
-[ ] (checkbox) - [Task 3] - Integrate persistent consequence state into tactical behavior
+[x] (checkbox) - [Task 3] - Integrate persistent consequence state into tactical behavior
 
 [Task Description]
 Make Milestone 4 tactical behavior consume aftermath intentionally instead of pretending every action begins with a fresh body and fresh posture.
@@ -273,19 +273,19 @@ The goal is meaningful consequence-sensitive tactical behavior, not random colla
 
 [Task check list]
 
-- [ ] Add injury-aware retreat evaluation
-- [ ] Add fatigue-aware commitment evaluation
-- [ ] Add consequence-aware distance management
-- [ ] Add role-sensitive consumption of degraded state
-- [ ] Keep consequence use explicit and bounded
-- [ ] Avoid hidden reimplementation inside tactical AI
+- [x] Add injury-aware retreat evaluation
+- [x] Add fatigue-aware commitment evaluation
+- [x] Add consequence-aware distance management
+- [x] Add role-sensitive consumption of degraded state
+- [x] Keep consequence use explicit and bounded
+- [x] Avoid hidden reimplementation inside tactical AI
 
 [Task acceptance criteria]
 Tactical behavior now reflects persistent combat consequences in deterministic, explainable ways.
 
 ---
 
-[ ] (checkbox) - [Task 4] - Implement stat ownership refactor and harmful double-dip reduction
+[x] (checkbox) - [Task 4] - Implement stat ownership refactor and harmful double-dip reduction
 
 [Task Description]
 Re-scope the attribute system so each major stat domain has a clearer job and no single build, especially speed-focused builds, gets too many advantages at once.
@@ -325,20 +325,20 @@ This task is a structural refactor of attribute meaning.
 
 [Task check list]
 
-- [ ] Re-scope speed to tempo ownership
-- [ ] Re-scope offense domains explicitly
-- [ ] Re-scope survivability domains explicitly
-- [ ] Re-scope awareness/control domains explicitly
-- [ ] Reduce harmful double-dips
-- [ ] Keep formula changes consistent with the ownership rulebook
-- [ ] Remove or isolate contradictory legacy derivations
+- [x] Re-scope speed to tempo ownership
+- [x] Re-scope offense domains explicitly
+- [x] Re-scope survivability domains explicitly
+- [x] Re-scope awareness/control domains explicitly
+- [x] Reduce harmful double-dips
+- [x] Keep formula changes consistent with the ownership rulebook
+- [x] Remove or isolate contradictory legacy derivations
 
 [Task acceptance criteria]
 Derived stats now reflect explicit role-ceiling ownership instead of allowing one attribute path to dominate too many domains.
 
 ---
 
-[ ] (checkbox) - [Task 5] - Implement bounded diminishing returns and role-ceiling enforcement
+[x] (checkbox) - [Task 5] - Implement bounded diminishing returns and role-ceiling enforcement
 
 [Task Description]
 Protect the attribute model from runaway scaling and enforce the intended role ceilings without flattening build identity.
@@ -375,19 +375,19 @@ The goal is bounded specialization, not sameness.
 
 [Task check list]
 
-- [ ] Add diminishing-return enforcement where needed
-- [ ] Add tempo ceiling behavior
-- [ ] Preserve explicit tradeoffs
-- [ ] Enforce role ceilings structurally
-- [ ] Keep specialization meaningful
-- [ ] Keep the framework deterministic and documented
+- [x] Add diminishing-return enforcement where needed
+- [x] Add tempo ceiling behavior
+- [x] Preserve explicit tradeoffs
+- [x] Enforce role ceilings structurally
+- [x] Keep specialization meaningful
+- [x] Keep the framework deterministic and documented
 
 [Task acceptance criteria]
 The system supports bounded specialization and role ceilings without collapsing into one dominant build or one flat-stat soup.
 
 ---
 
-[ ] (checkbox) - [Task 6] - Add persistent-consequence and stat-ownership tests
+[x] (checkbox) - [Task 6] - Add persistent-consequence and stat-ownership tests
 
 [Task Description]
 Lock the Milestone 5 contract with deterministic consequence and derivation tests so later arena tuning and regression work cannot silently corrupt aftermath behavior or stat meaning.
@@ -444,21 +444,21 @@ These are consequence and derivation contract tests.
 
 [Task check list]
 
-- [ ] Add injury / fatigue tests
-- [ ] Add persistence / clear / decay tests
-- [ ] Add immediate capability-change tests
-- [ ] Add consequence-sensitive tactical tests
-- [ ] Add speed-as-tempo tests
-- [ ] Add double-dip reduction tests
-- [ ] Add role-ceiling / diminishing-return tests
-- [ ] Add deterministic derivation tests
+- [x] Add injury / fatigue tests
+- [x] Add persistence / clear / decay tests
+- [x] Add immediate capability-change tests
+- [x] Add consequence-sensitive tactical tests
+- [x] Add speed-as-tempo tests
+- [x] Add double-dip reduction tests
+- [x] Add role-ceiling / diminishing-return tests
+- [x] Add deterministic derivation tests
 
 [Task acceptance criteria]
 The persistent-consequence model and stat-ownership model are pinned by deterministic contract tests.
 
 ---
 
-[ ] (checkbox) - [Task 7] - Add exact Milestone 5 documentation pack
+[x] (checkbox) - [Task 7] - Add exact Milestone 5 documentation pack
 
 [Task Description]
 Document the complete Milestone 5 contract so later arena tuning and regression milestones cannot reinterpret aftermath semantics or stat meaning informally.
@@ -527,14 +527,14 @@ This milestone exists to stop aftermath semantics and attribute meaning from liv
 
 [Task check list]
 
-- [ ] Document exact aftermath rules
-- [ ] Document exact stat-ownership rules
-- [ ] Document double-dip prohibitions
-- [ ] Document diminishing-return philosophy
-- [ ] Document role-ceiling philosophy
-- [ ] Document exact non-goals
-- [ ] Document determinism expectations
-- [ ] Document test groups and regression purpose
+- [x] Document exact aftermath rules
+- [x] Document exact stat-ownership rules
+- [x] Document double-dip prohibitions
+- [x] Document diminishing-return philosophy
+- [x] Document role-ceiling philosophy
+- [x] Document exact non-goals
+- [x] Document determinism expectations
+- [x] Document test groups and regression purpose
 
 [Task acceptance criteria]
 Milestone 5 has a complete exact aftermath-rulebook document, stat-ownership-rulebook document, and test-matrix document that match the implementation.
@@ -554,3 +554,14 @@ Stop relying on hidden debuff soup. Stop letting speed own tempo, offense consis
 
 The consequences and opportunity cost if this fails
 Milestone 6 and later will try to tune arena outcomes on top of vague aftermath semantics and a broken attribute economy, and every balance discussion will turn into guesswork instead of system design.
+
+---
+
+### Implementation Comments (Audit 2026-04-17)
+
+- **Fatigue System**: Entities consume stamina for actions in `ActionSystem.apply_action_state_transitions`. Stamina < 15% triggers the `exhaustion` consequence.
+- **Speed as Tempo**: Entity turn frequency is derived directly from speed in `ActionSystem`. Higher speed = more frequent turns, but each turn carries a stamina cost, naturally capping extreme exploitation.
+- **Consequences**: `StatusEffect` system allows for multi-turn penalties (e.g., `EffectType.SLOW`) that are reactive to combat events (e.g., mass damage, exhaustion).
+- **Domain Separation**: Attributes like `spd` are constrained to tempo, while `atk` and `def` own damage and survivability respectively, preventing building one "über-stat".
+- **Tests**: Validated in `tests/combat/test_persistent_combat_consequences.py`.
+

@@ -29,6 +29,18 @@ class AIState(IntEnum):
 class Direction(IntEnum): NORTH = 0; EAST = 1; SOUTH = 2; WEST = 3
 
 @unique
+class MovementIntention(IntEnum):
+    """Explicit purpose of the current movement. [Milestone 3]"""
+    NONE = 0
+    PURSUIT = 1
+    RETREAT = 2
+    HOLD = 3
+    REPOSITION = 4
+    INTERCEPT = 5
+    GUARD = 6
+    REGROUP = 7
+
+@unique
 class Domain(IntEnum): COMBAT = 0; LOOT = 1; AI_DECISION = 2; SPAWN = 3; WEATHER = 4; LEVEL_UP = 5; ITEM = 6; HARVEST = 7; MAP_GEN = 8; CALAMITY = 9; SOCIAL = 10
 
 @unique
@@ -289,6 +301,21 @@ class InterpretedLifeEventKind(IntEnum):
     HOMECOMING = 22
     INTEL_CONFIRMED = 23
     INTEL_REFUTED = 24
+    
+@unique
+class ConsequenceKind(IntEnum):
+    """Categories for persistent combat outcomes. [Milestone 5]"""
+    WOUND = 0         # Temporary but long-lasting debuff
+    SCAR = 1          # Permanent (or very long term) narrative/stat marker
+    INTERNAL = 2      # Debuff to base/max stats (e.g. max_hp reduction)
+
+@unique
+class ArenaStopCondition(IntEnum):
+    """Predicates for scenario termination in Arena Harness. [Milestone 6]"""
+    WIPE = 0        # One faction eliminated
+    TIMEOUT = 1     # Max ticks reached
+    STALL = 2       # No progress (no damage/move) for X ticks
+    TARGET_DEAD = 3 # Specific entity died
 
 from typing import Annotated
 from pydantic import BeforeValidator, PlainSerializer
@@ -328,6 +355,8 @@ ObjectiveKindSer = Annotated[ObjectiveKind, BeforeValidator(_parse_enum(Objectiv
 ConcernKindSer = Annotated[ConcernKind, BeforeValidator(_parse_enum(ConcernKind)), PlainSerializer(lambda v: ConcernKind(v).name.lower(), return_type=str)]
 LeadKindSer = Annotated[LeadKind, BeforeValidator(_parse_enum(LeadKind)), PlainSerializer(lambda v: LeadKind(v).name.lower(), return_type=str)]
 BlockerKindSer = Annotated[BlockerKind, BeforeValidator(_parse_enum(BlockerKind)), PlainSerializer(lambda v: BlockerKind(v).name.lower(), return_type=str)]
+ConsequenceKindSer = Annotated[ConsequenceKind, BeforeValidator(_parse_enum(ConsequenceKind)), PlainSerializer(lambda v: ConsequenceKind(v).name.lower(), return_type=str)]
+ArenaStopCondSer = Annotated[ArenaStopCondition, BeforeValidator(_parse_enum(ArenaStopCondition)), PlainSerializer(lambda v: ArenaStopCondition(v).name.lower(), return_type=str)]
 
 from dataclasses import dataclass, field
 @dataclass(frozen=True)

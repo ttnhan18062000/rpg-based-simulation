@@ -70,13 +70,34 @@ class ConflictResolver:
 
     @classmethod
     def _sort(cls, proposals: list[ActionProposal], world: WorldState) -> list[ActionProposal]:
-        """Deterministic sort: explicit action priority, then next_act_at, then entity ID."""
+        """Deterministic sort: explicit action priority, then intention priority, then next_act_at, then entity ID."""
+        from src.core.logic.movement_model import INTENTION_PRIORITY
 
-        def sort_key(p: ActionProposal) -> tuple[int, float, int]:
+        def sort_key(p: ActionProposal) -> tuple[int, int, float, int]:
             entity = world.entities.get(p.actor_id)
             next_act = entity.next_act_at if entity else float("inf")
-            priority = cls.PRIORITY_MAP.get(ActionType(p.verb), 100)
-            return (priority, next_act, p.actor_id)
+            
+            # Action Priority (MOVE vs ATTACK etc)
+            action_priority = cls.PRIORITY_MAP.get(ActionType(p.verb), 100)
+            
+            # Intention Priority (RETREAT > PURSUIT etc)
+            intent_priority = 0
+            if p.verb == ActionType.MOVE:
+                # Try to get intention from proposal updates or entity state
+                intent = None
+                for u in p.updates:
+                    if hasattr(u, "intention"):
+                        intent = u.intention
+                        break
+                if intent is None and entity:
+                    intent = entity.mind.navigation.intention
+                
+                # Higher priority value (e.g. 100 for RETREAT) should come FIRST
+                # So we use negative for the tuple sort (low value = first)
+                if intent:
+                    intent_priority = -INTENTION_PRIORITY.get(intent, 0)
+            
+            return (action_priority, intent_priority, next_act, p.actor_id)
 
         return sorted(proposals, key=sort_key)
 
@@ -108,27 +129,25 @@ class ConflictResolver:
                 if MoveAction.validate(proposal, world, occupied):
                     entity = world.entities.get(proposal.actor_id)
                     if entity:
-                        # -- Opportunity Attack Logic --
-                        # If the entity was engaged (adjacent to hostiles), they get to strike
-                        old_pos = entity.spatial.pos
-                        # Opportunity Attack Check: Is anyone adjacent and hostile?
-                        for other in world.entities_at_radius(old_pos, 1):
-                            if other.id == entity.id or not other.combat.alive: continue
-                            if other.identity.faction != entity.identity.faction:
-                                # Trigger free Opportunity Attack
-                                opp_prop = ActionProposal(
-                                    actor_id=other.id, 
-                                    verb=ActionType.ATTACK, 
-                                    target=entity.id, 
-                                    reason="Opportunity Attack",
-                                    metadata={"verb": "OPPORTUNITY_ATTACK"}
-                                )
-                                if self._combat_action.validate(opp_prop, world):
-                                    self._combat_action.apply(opp_prop, world)
-                                    all_applied.append(opp_prop)
-                                    # OA results will be applied later in ActionSystem.process_applied_actions
-                                else:
-                                    logger.debug("OA_VALIDATE_FAIL: %d -> %d", other.id, entity.id)
+                        # -- Opportunity Attack Logic (Milestone 2) --
+                        from src.core.logic.combat_interaction_service import CombatInteractionService
+                        attackers = CombatInteractionService.evaluate_disengagement(entity, proposal.target, world)
+                        for attacker_id in attackers:
+                            attacker = world.entities.get(attacker_id)
+                            if not attacker: continue
+                            
+                            opp_prop = ActionProposal(
+                                actor_id=attacker.id, 
+                                verb=ActionType.ATTACK, 
+                                target=entity.id, 
+                                reason="Opportunity Attack",
+                                metadata={"verb": "OPPORTUNITY_ATTACK"}
+                            )
+                            if self._combat_action.validate(opp_prop, world):
+                                self._combat_action.apply(opp_prop, world)
+                                all_applied.append(opp_prop)
+                            else:
+                                logger.debug("OA_VALIDATE_FAIL: %d -> %d", attacker.id, entity.id)
 
                         # Free old position (if it was claimed this tick)
                         occupied.discard((entity.spatial.pos.x, entity.spatial.pos.y))

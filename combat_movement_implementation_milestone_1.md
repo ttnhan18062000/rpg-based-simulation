@@ -111,7 +111,7 @@ No combat intelligence upgrade, anti-stalemate mechanic, or balance change is re
 
 ## Task
 
-[ ] (checkbox) - [Task 1] - Define the combat-movement rulebook contract
+[x] (checkbox) - [Task 1] - Define the combat-movement rulebook contract
 
 [Task Description]
 Create the exact design contract for spatial legality and timing semantics. This is the foundational modeling task for the overhaul. Without it, later milestones will drift into hidden assumptions and contradictory behavior.
@@ -162,22 +162,22 @@ Do not mix this contract with later milestone mechanics.
 
 [Task check list]
 
-- [ ] Define Manhattan distance contract
-- [ ] Define orthogonal adjacency contract
-- [ ] Define one-unit-per-tile contract
-- [ ] Define no-pass-through contract
-- [ ] Define AoE impact/radius legality contract
-- [ ] Define readiness-turn contract
-- [ ] Define world-time progression contract
-- [ ] Define explicit non-goals
-- [ ] Keep the contract exact and minimal
+- [x] Define Manhattan distance contract
+- [x] Define orthogonal adjacency contract
+- [x] Define one-unit-per-tile contract
+- [x] Define no-pass-through contract
+- [x] Define AoE impact/radius legality contract
+- [x] Define readiness-turn contract
+- [x] Define world-time progression contract
+- [x] Define explicit non-goals
+- [x] Keep the contract exact and minimal
 
 [Task acceptance criteria]
 The project has one exact combat-movement rulebook that can be used as the authoritative source for implementation and tests.
 
 ---
 
-[ ] (checkbox) - [Task 2] - Implement exact spatial legality primitives
+[x] (checkbox) - [Task 2] - Implement exact spatial legality primitives
 
 [Task Description]
 Make the codebase obey the frozen spatial contract. This task translates the spatial rulebook into authoritative legality behavior.
@@ -214,20 +214,20 @@ This task is not for combat balance. It is for legality consistency.
 
 [Task check list]
 
-- [ ] Centralize Manhattan distance usage
-- [ ] Centralize orthogonal adjacency usage
-- [ ] Enforce occupancy on movement execution
-- [ ] Enforce AoE center legality
-- [ ] Enforce splash radius from impact center
-- [ ] Ensure combat resolution is gated by legality
-- [ ] Remove or isolate conflicting legacy checks
+- [x] Centralize Manhattan distance usage
+- [x] Centralize orthogonal adjacency usage
+- [x] Enforce occupancy on movement execution
+- [x] Enforce AoE center legality
+- [x] Enforce splash radius from impact center
+- [x] Ensure combat resolution is gated by legality
+- [x] Remove or isolate conflicting legacy checks
 
 [Task acceptance criteria]
 Spatial legality behavior is exact, centralized, and consistent with the Milestone 1 rulebook.
 
 ---
 
-[ ] (checkbox) - [Task 3] - Refactor the engine loop to separate world-time from entity action turns
+[x] (checkbox) - [Task 3] - Refactor the engine loop to separate world-time from entity action turns
 
 [Task Description]
 Repair the core lifecycle model so passive world progression no longer depends on whether any entity acted.
@@ -262,19 +262,19 @@ This refactor must make the separation structural.
 
 [Task check list]
 
-- [ ] Separate world-time progression path
-- [ ] Separate entity-turn execution path
-- [ ] Ensure quiet ticks still progress passive systems
-- [ ] Preserve readiness-based entity turns
-- [ ] Remove proposal-gated passive progression where present
-- [ ] Keep deterministic processing order
+- [x] Separate world-time progression path
+- [x] Separate entity-turn execution path
+- [x] Ensure quiet ticks still progress passive systems
+- [x] Preserve readiness-based entity turns
+- [x] Remove proposal-gated passive progression where present
+- [x] Keep deterministic processing order
 
 [Task acceptance criteria]
 The runtime loop structurally separates world-time from entity action turns, and passive progression no longer depends on whether proposals existed.
 
 ---
 
-[ ] (checkbox) - [Task 4] - Add rule-contract and lifecycle tests
+[x] (checkbox) - [Task 4] - Add rule-contract and lifecycle tests
 
 [Task Description]
 Lock the Milestone 1 contract with deterministic tests so later milestones cannot silently change the laws of space and time.
@@ -322,21 +322,21 @@ Do not add large scenario-balance tests in this milestone.
 
 [Task check list]
 
-- [ ] Add Manhattan distance tests
-- [ ] Add adjacency tests
-- [ ] Add occupancy tests
-- [ ] Add AoE legality tests
-- [ ] Add readiness-turn tests
-- [ ] Add quiet-tick world progression tests
-- [ ] Add passive progression tests
-- [ ] Add deterministic lifecycle tests
+- [x] Add Manhattan distance tests
+- [x] Add adjacency tests
+- [x] Add occupancy tests
+- [x] Add AoE legality tests
+- [x] Add readiness-turn tests
+- [x] Add quiet-tick world progression tests
+- [x] Add passive progression tests
+- [x] Add deterministic lifecycle tests
 
 [Task acceptance criteria]
 The core laws of combat and movement are pinned by deterministic rule-contract tests.
 
 ---
 
-[ ] (checkbox) - [Task 5] - Add exact Milestone 1 documentation pack
+[x] (checkbox) - [Task 5] - Add exact Milestone 1 documentation pack
 
 [Task Description]
 Document the complete Milestone 1 contract so later milestones cannot reinterpret it informally.
@@ -387,13 +387,13 @@ Do not defer it.
 
 [Task check list]
 
-- [ ] Document exact spatial rules
-- [ ] Document exact timing rules
-- [ ] Document exact non-goals
-- [ ] Document determinism expectations
-- [ ] Document rule-contract tests
-- [ ] Document lifecycle tests
-- [ ] Document regression purpose of each test group
+- [x] Document exact spatial rules
+- [x] Document exact timing rules
+- [x] Document exact non-goals
+- [x] Document determinism expectations
+- [x] Document rule-contract tests
+- [x] Document lifecycle tests
+- [x] Document regression purpose of each test group
 
 [Task acceptance criteria]
 Milestone 1 has a complete exact rulebook document and exact test-matrix document that match the implementation.
@@ -413,3 +413,14 @@ Stop relying on hidden emergent behavior for distance, occupancy, AoE legality, 
 
 The consequences and opportunity cost if this fails
 Every later combat and movement milestone will be built on contradictory laws, and you will waste time tuning broken behavior instead of fixing the foundation.
+
+---
+
+### Implementation Comments (Audit 2026-04-17)
+
+- **Rulebook**: Canonical rules established in `docs/combat/combat_movement_rulebook_m1.md`.
+- **LegalityService**: Centralized authoritative host for Manhattan distance (`check_range`), orthogonal adjacency (`is_orthogonal_adjacent`), and occupancy (`check_occupancy`) logic in `src/core/logic/legality_service.py`.
+- **ActionSystem**: Enforces legality re-validation in `apply_action_state_transitions` to ensure all AI-proposed actions obey the rulebook before state mutation.
+- **Engine Loop**: Structural separation accomplished in `src/engine/phases/presystems.py` (passive world-time progression) and `src/engine/phases/scheduling.py` (readiness-based turn identification).
+- **Tests**: Core laws pinned in `tests/combat/test_combat_movement_rulebook.py` and `tests/combat/test_world_time_progression.py`.
+

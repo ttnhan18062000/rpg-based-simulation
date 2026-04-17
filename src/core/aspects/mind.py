@@ -1,7 +1,10 @@
 from typing import Any, TYPE_CHECKING, Union, Literal
 from pydantic import BaseModel, Field, ConfigDict, model_validator
 from src.core.models.base import Aspect, SimulationModel
-from src.core.models.enums import AIState, GoalType, EmotionType
+from src.core.models.enums import (
+    ActionType, AIState, HeroClass, GoalType, DamageType, Element, 
+    VeterancyRank, ItemType, Rarity, MovementIntention, EmotionType
+)
 from src.core.models.vectors import Vector2
 from src.core.models.lived_structure import RoutineProfile, PlaceAttachment # [PHASE 3]
 from src.core.models.strategy import StrategicState, DecisionDriver  # [PHASE 1]
@@ -197,11 +200,15 @@ class NavigationState(SimulationModel):
     """Pathfinding and movement history."""
     model_config = ConfigDict(extra='forbid')
     
+    intention: MovementIntention = MovementIntention.NONE
+    blocked_ticks: int = 0
     cached_path: list[Vector2] | None = Field(default=None, repr=False)
     cached_path_target: Vector2 | None = Field(default=None, repr=False)
     pos_history: list[Vector2] = Field(default_factory=list)
     chase_ticks: int = 0
     engaged_ticks: int = 0
+    engagement_target_id: int | None = None  # [Milestone 2] For target stickiness
+    stalemate_counter: int = 0               # [Milestone 2] For loop breaking
 
 # SocialBondPerception merged into SocialBondRecord in life_events.py [PHASE 2]
 

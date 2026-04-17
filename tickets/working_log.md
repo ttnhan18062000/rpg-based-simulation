@@ -1,0 +1,3 @@
+- 2026-04-17: Completed TCK-20260417-COMBAT-MOVEMENT-RULEBOOK (Milestone 1). Established LegalityService and Engine-Time decoupling.
+- 2026-04-17: Completed TCK-20260417-COMBAT-INTERACTION-CORE (Milestone 2). Stabilized combat AI regression suite (100% pass rate).
+- 2026-04-17: Completed TCK-20260417-COMBAT-MOVEMENT-FINALIZE (Milestones 3-7). Finalized structured observability, rollout hardening, and authoritative spec consolidation.

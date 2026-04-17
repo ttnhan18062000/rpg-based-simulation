@@ -31,7 +31,8 @@ class MoveAction:
         if not world.grid.is_walkable(target): return False
         
         # O(1) Check: Is anyone already there? (AOA Phase 6)
-        if world.is_occupied(target): return False
+        from src.core.logic.legality_service import LegalityService
+        if not LegalityService.check_occupancy(target, world): return False
         
         # Set Check: Did anyone ELSE move there this tick?
         if (target.x, target.y) in occupied: return False

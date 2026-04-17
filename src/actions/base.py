@@ -7,9 +7,10 @@ from typing import Any, TYPE_CHECKING, TypeVar, Generic, Union
 
 from pydantic import Field
 
-from src.core.models.enums import ActionType, GoalType, EmotionType, PersonalMotiveType
+from src.core.models.enums import ActionType, GoalType, EmotionType, PersonalMotiveType, MovementIntention
 
 from src.core.models.vectors import Vector2
+from src.core.models.reason_codes import ActionReason
 if TYPE_CHECKING:
     from src.core.aspects.mind import MemoryRecord, MemoryLogEntry
     from src.core.aspects.combat import CombatTraceRecord
@@ -17,6 +18,7 @@ if TYPE_CHECKING:
     from src.core.gameplay.quests import Quest
     from src.core.effects import StatusEffect
     from src.core.gameplay.effects import EffectType
+    from src.core.models.consequence import Consequence
 
 
 from pydantic import Field, model_validator
@@ -40,7 +42,7 @@ class ActionProposal(SimulationModel):
     actor_id: int
     verb: ActionType
     target: TargetUnion = None
-    reason: str = ""
+    reason: ActionReason | str | dict = ""
     new_ai_state: int | None = None
     
     # Typed updates for state synchronization (AOA Phase 5)
@@ -68,6 +70,7 @@ class ActionProposal(SimulationModel):
 class IntentUpdate(SimulationModel):
     """Base for all typed simulation side-effects."""
     target_id: int | None = None
+    reason: ActionReason | str | dict = ""
 
 from pydantic import model_validator
 from typing import TYPE_CHECKING, Any
@@ -149,6 +152,9 @@ class NavigationUpdate(IntentUpdate):
     target_pos: Vector2 | None = None
     chase_ticks: int | None = None
     engaged_ticks: int | None = None
+    stalemate_counter: int | None = None
+    intention: MovementIntention | None = None
+    blocked_ticks: int | None = None
 
     @model_validator(mode="after")
     def _coerce_navigation(self) -> "NavigationUpdate":
@@ -195,6 +201,10 @@ class ProgressionUpdate(IntentUpdate):
     effects_add: list[StatusEffect] = Field(default_factory=list)
     effects_remove: list[str] = Field(default_factory=list) # by effect_id or source
     effects_expire_all: list[EffectType] = Field(default_factory=list)
+    
+    # Consequences (CombatAspect) [Milestone 5]
+    consequences_add: list[Consequence] = Field(default_factory=list)
+    consequences_remove: list[str] = Field(default_factory=list) # by id
 
     @model_validator(mode="after")
     def _coerce_progression(self) -> "ProgressionUpdate":
@@ -220,6 +230,12 @@ class ProgressionUpdate(IntentUpdate):
             self.effects_add = [
                 StatusEffect(**e) if isinstance(e, dict) else e 
                 for e in self.effects_add
+            ]
+        if self.consequences_add:
+            from src.core.models.consequence import Consequence
+            self.consequences_add = [
+                Consequence(**c) if isinstance(c, dict) else c 
+                for c in self.consequences_add
             ]
         return self
 
@@ -428,6 +444,7 @@ def _rebuild_action_models():
     from src.core.gameplay.quests import Quest
     from src.core.effects import StatusEffect
     from src.core.gameplay.effects import EffectType
+    from src.core.models.consequence import Consequence
     
     # Strategic Components (needed for StrategicUpdate) [PHASE 1]
     from src.core.models.strategy import (
@@ -459,6 +476,8 @@ def _rebuild_action_models():
     CombatTraceUpdate.model_rebuild(_types_namespace=ns)
     
     # 2. Finalize Aggregate Models
+    from src.core.models.reason_codes import ActionReason
+    ActionReason.model_rebuild(_types_namespace=ns)
     ActionProposal.model_rebuild(_types_namespace=ns)
     ActionBatch.model_rebuild(_types_namespace=ns)
 

@@ -182,11 +182,13 @@ class CognitionOverloadSchema(BaseModel):
     last_overload_tick: int | None = None
 
 
-class DecisionDriverSchema(BaseModel):
-    kind: str
-    label: str
-    weight: float
     description: str = ""
+
+class ActionReasonSchema(BaseModel):
+    """API representation of a structured action reason. [Milestone 7]"""
+    code: str
+    metadata: dict = Field(default_factory=dict)
+    reason_text: str = ""
 
 # --- Strategic Domain [PHASE 6] ---
 
@@ -566,6 +568,7 @@ class AIDecisionSchema(BaseModel):
     active_routine_id: str | None = None
     strategy: Optional[StrategicStateSchema] = None # [PHASE 4]
     narrative_impacts: list[str] = Field(default_factory=list) # [PHASE 2] Global recent life shifts
+    last_reason: ActionReasonSchema | str | dict = "" # [Milestone 7] Structured observability
 
 class SchedulerTimelineItemSchema(BaseModel):
     entity_id: int

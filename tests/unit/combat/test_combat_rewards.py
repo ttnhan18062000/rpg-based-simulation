@@ -28,6 +28,7 @@ def reward_setup():
     killer.spatial = SpatialAspect(pos=Vector2(10, 10))
     killer.inventory = MagicMock()
     killer.inventory.weapon = None
+    killer.mind = MagicMock()
     
     # Victim (Hero)
     victim = MagicMock(spec=Entity)
@@ -39,6 +40,7 @@ def reward_setup():
     victim.spatial = SpatialAspect(pos=Vector2(11, 10))
     victim.inventory = MagicMock()
     victim.inventory.items = ["magic_orc_axe"]
+    victim.mind = MagicMock()
     
     world = MagicMock()
     world.entities = {1: killer, 2: victim}

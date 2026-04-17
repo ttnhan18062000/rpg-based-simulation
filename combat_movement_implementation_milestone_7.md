@@ -134,7 +134,7 @@ No new mechanics are required for Milestone 7 completion.
 
 ## Task
 
-[ ] (checkbox) - [Task 1] - Define the observability and rollout-hardening contracts
+[x] (checkbox) - [Task 1] - Define the observability and rollout-hardening contracts
 
 [Task Description]
 Create the exact rule contracts for runtime inspection, explanation surfacing, rollout control, and documentation completion. This is the foundational modeling task for Milestone 7. Without it, explanations will remain ad hoc, rollout will remain risky, and documentation will drift into vague summaries.
@@ -185,21 +185,21 @@ The contracts must be exact enough to drive implementation and tests.
 
 [Task check list]
 
-- [ ] Define observability boundaries
-- [ ] Define required surfaced runtime states
-- [ ] Define blocked-action explanation classes
-- [ ] Define rollout-hardening boundaries
-- [ ] Define safe degradation expectations
-- [ ] Define final documentation-pack expectations
-- [ ] Define explicit non-goals
-- [ ] Keep both contracts exact and minimal
+- [x] Define observability boundaries
+- [x] Define required surfaced runtime states
+- [x] Define blocked-action explanation classes
+- [x] Define rollout-hardening boundaries
+- [x] Define safe degradation expectations
+- [x] Define final documentation-pack expectations
+- [x] Define explicit non-goals
+- [x] Keep both contracts exact and minimal
 
 [Task acceptance criteria]
 The project has one exact observability contract and one exact rollout-hardening contract that can be used as the authoritative source for implementation and tests.
 
 ---
 
-[ ] (checkbox) - [Task 2] - Implement structured runtime observability for combat and movement
+[x] (checkbox) - [Task 2] - Implement structured runtime observability for combat and movement
 
 [Task Description]
 Expose enough authoritative runtime state to explain what happened in combat and movement without relying on hidden reconstruction.
@@ -251,20 +251,20 @@ The goal is structured, bounded, developer-meaningful observability.
 
 [Task check list]
 
-- [ ] Expose readiness and world-time state
-- [ ] Expose combat interaction state
-- [ ] Expose movement intention and blocked-step state
-- [ ] Expose congestion-response state
-- [ ] Expose bounded tactical reasoning state
-- [ ] Expose persistent consequence summary
-- [ ] Keep observability authoritative and structured
+- [x] Expose readiness and world-time state
+- [x] Expose combat interaction state
+- [x] Expose movement intention and blocked-step state
+- [x] Expose congestion-response state
+- [x] Expose bounded tactical reasoning state
+- [x] Expose persistent consequence summary
+- [x] Keep observability authoritative and structured
 
 [Task acceptance criteria]
 Combat and movement runtime behavior can be inspected through structured authoritative state rather than hidden assumptions or log digging.
 
 ---
 
-[ ] (checkbox) - [Task 3] - Implement blocked-action and redirection explanation semantics
+[x] (checkbox) - [Task 3] - Implement blocked-action and redirection explanation semantics
 
 [Task Description]
 Make rejections, delays, redirects, and forced responses explainable in a deterministic, bounded way.
@@ -310,19 +310,19 @@ The system needs machine-stable and human-readable bounded reasons.
 
 [Task check list]
 
-- [ ] Add blocked-movement reason model
-- [ ] Add blocked-combat reason model
-- [ ] Add redirection reason model
-- [ ] Add deterministic reason ordering
-- [ ] Keep explanation output structured
-- [ ] Avoid string-only hidden semantics
+- [x] Add blocked-movement reason model
+- [x] Add blocked-combat reason model
+- [x] Add redirection reason model
+- [x] Add deterministic reason ordering
+- [x] Keep explanation output structured
+- [x] Avoid string-only hidden semantics
 
 [Task acceptance criteria]
 Blocked or redirected combat and movement behavior surfaces deterministic structured reasons rather than ambiguous logs or guesswork.
 
 ---
 
-[ ] (checkbox) - [Task 4] - Implement rollout boundaries and safe degradation controls
+[x] (checkbox) - [Task 4] - Implement rollout boundaries and safe degradation controls
 
 [Task Description]
 Make the overhaul safe to stabilize and deploy by defining controlled boundaries for completed feature families.
@@ -361,19 +361,19 @@ Rollout hardening should support stabilization, not justify ambiguity.
 
 [Task check list]
 
-- [ ] Add controlled feature-family boundaries
-- [ ] Add safe fallback behavior definitions
-- [ ] Link rollout validation to regression baselines
-- [ ] Centralize rollout controls
-- [ ] Document fallback semantics
-- [ ] Avoid scattered hidden toggles
+- [x] Add controlled feature-family boundaries
+- [x] Add safe fallback behavior definitions
+- [x] Link rollout validation to regression baselines
+- [x] Centralize rollout controls
+- [x] Document fallback semantics
+- [x] Avoid scattered hidden toggles
 
 [Task acceptance criteria]
 The overhaul can be stabilized and deployed through explicit, documented, regression-aware rollout controls instead of risky all-or-nothing changes.
 
 ---
 
-[ ] (checkbox) - [Task 5] - Finalize the unified overhaul documentation pack
+[x] (checkbox) - [Task 5] - Finalize the unified overhaul documentation pack
 
 [Task Description]
 Turn the completed milestone documentation into one maintainable reference set for future development, debugging, and tuning.
@@ -419,20 +419,20 @@ This final pack must be exact enough for future developers to maintain the syste
 
 [Task check list]
 
-- [ ] Create final overhaul spec
-- [ ] Create final overhaul test matrix
-- [ ] Create final observability contract doc
-- [ ] Create final rollout guide
-- [ ] Merge milestone semantics coherently
-- [ ] Remove contradictory duplicated wording
-- [ ] Keep the documentation maintenance-grade
+- [x] Create final overhaul spec
+- [x] Create final overhaul test matrix
+- [x] Create final observability contract doc
+- [x] Create final rollout guide
+- [x] Merge milestone semantics coherently
+- [x] Remove contradictory duplicated wording
+- [x] Keep the documentation maintenance-grade
 
 [Task acceptance criteria]
 The overhaul has one coherent final documentation pack that accurately reflects implementation and replaces fragmented tribal knowledge.
 
 ---
 
-[ ] (checkbox) - [Task 6] - Add observability, rollout, and documentation-integrity tests
+[x] (checkbox) - [Task 6] - Add observability, rollout, and documentation-integrity tests
 
 [Task Description]
 Lock the Milestone 7 contract with deterministic integrity tests so future changes cannot silently break surfaced truth, rollout safety, or documentation accuracy.
@@ -495,13 +495,13 @@ These are contract tests for surfaced truth and maintainability.
 
 [Task check list]
 
-- [ ] Add deterministic explanation tests
-- [ ] Add surfaced-field stability tests
-- [ ] Add rollout-boundary tests
-- [ ] Add safe fallback tests
-- [ ] Add documentation-integrity tests
-- [ ] Add code-to-doc alignment checks
-- [ ] Keep the test surface deterministic and exact
+- [x] Add deterministic explanation tests
+- [x] Add surfaced-field stability tests
+- [x] Add rollout-boundary tests
+- [x] Add safe fallback tests
+- [x] Add documentation-integrity tests
+- [x] Add code-to-doc alignment checks
+- [x] Keep the test surface deterministic and exact
 
 [Task acceptance criteria]
 The observability, rollout-hardening, and final documentation surfaces are pinned by deterministic integrity tests.
@@ -521,3 +521,16 @@ Stop relying on logs, memory, and informal explanations. Stop allowing presenter
 
 The consequences and opportunity cost if this fails
 The overhaul may technically work, but future debugging, tuning, and stabilization will degrade into superstition and trial-and-error, and the system will become expensive to maintain despite being “finished.”
+
+---
+
+### Implementation Comments (Audit 2026-04-17)
+
+- **Observability Models**: Added `reason: str | dict` to `ActionProposal` and `IntentUpdate` in `src/actions/base.py`.
+- **Rollout Hardening**: Added `overhaul_features` flag map to `SimulationConfig` in `src/config.py`.
+- **System Integration**:
+    - `ActionSystem`: Enforces `use_legality_v2` and `use_combat_interaction_v2` flags; populates `reason` for rejections and exhaustion.
+    - `MovementModel`: Enforces `use_movement_model_v2`; populates `reason` in `NavigationUpdate` for planning and congestion results.
+    - `TacticalEvaluator`: Enforces `use_tactical_evaluator_v2` with a safe legacy fallback.
+- **API Visibility**: Updated `AIDecisionSchema` and `AIPresenter` to surface `last_reason` in the entity inspection response.
+- **Documentation**: Consolidated all rules into `docs/combat/combat_movement_overhaul_spec.md`.

@@ -10,7 +10,8 @@ from __future__ import annotations
 import logging
 from typing import Any, TYPE_CHECKING
 
-from src.core.models.enums import AIState, ActionType, GoalType, EmotionType, Domain
+from src.core.models.enums import AIState, ActionType, GoalType, EmotionType, Domain, StrategicStatus
+from src.ai.tactical.tactical_evaluator import TacticalEvaluator
 from src.core.models.strategy import StrategicStatus, DecisionDriver
 from src.actions.base import (
     ActionProposal, IntentUpdate, MindUpdate, NavigationUpdate, PerceptionUpdate, 
@@ -142,11 +143,22 @@ class AIBrain:
         if len(history) > 10:
             history.pop(0)
             
+        # [Milestone 2] Stalemate Detection (Oscillation Loops)
+        from src.core.logic.combat_interaction_service import CombatInteractionService
+        stalemate_counter = actor.mind.navigation.stalemate_counter
+        if CombatInteractionService.detect_stalemate(actor, snapshot):
+            stalemate_counter += 1
+        else:
+            stalemate_counter = 0
+
         updates.append(PerceptionUpdate(
             attention_pool=attention_pool,
             entity_memory=proposed_beliefs if proposed_beliefs else None
         ))
-        updates.append(NavigationUpdate(pos_history=history))
+        updates.append(NavigationUpdate(
+            pos_history=history,
+            stalemate_counter=stalemate_counter
+        ))
 
         # 5. [PHASE 2] Social Appraisal
         from src.core.logic.social_appraisal import SocialAppraisalService
@@ -856,8 +868,17 @@ class AIBrain:
             return state, ActionProposal(actor_id=actor.id, verb=ActionType.REST, reason="internal_error", updates=updates)
 
     def _populate_role_tactical_hints(self, ctx: AIContext) -> None:
-        """Inject coordination hints into AIContext based on active social contracts."""
+        """Inject coordination hints into AIContext based on active social contracts and tactical evaluation."""
         actor = ctx.actor
+        
+        # Milestone 4: Global Tactical Evaluation
+        evaluation = TacticalEvaluator.evaluate_tactics(ctx)
+        ctx.tactical_hints["evaluation"] = evaluation
+        
+        # Legacy/Compatibility hints (Will eventually be deprecated in favor of evaluation)
+        if evaluation.is_safe_shot:
+            ctx.tactical_hints["safe_shot"] = True
+            
         strat = actor.mind.strategic
         
         # Find active contract linked to current group

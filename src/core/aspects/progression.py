@@ -15,7 +15,19 @@ class ProgressionAspect(Aspect):
     gold: int = 0
     fame: int = 0
     stamina: int = 50
-    max_stamina: int = 50
+    max_stamina_base: int = 50
+    
+    @property
+    def max_stamina(self) -> int:
+        mult = 1.0
+        if self._entity and hasattr(self._entity, "combat"):
+            for cons in self._entity.combat.consequences:
+                mult *= cons.max_stamina_mult
+        return max(1, int(self.max_stamina_base * mult))
+
+    @max_stamina.setter
+    def max_stamina(self, value: int) -> None:
+        self.max_stamina_base = value
     
     # Hero skills and class
     hero_class: int = 0                 # HeroClass enum value
@@ -89,7 +101,7 @@ class ProgressionAspect(Aspect):
         self.gold = max(0, self.gold)
         self.xp = max(0, self.xp)
         self.level = max(1, self.level)
-        self.max_stamina = max(1, self.max_stamina)
+        self.max_stamina_base = max(1, self.max_stamina_base)
 
     def on_attach(self, owner: Any) -> None:
         """Called when the aspect is attached to an Entity."""

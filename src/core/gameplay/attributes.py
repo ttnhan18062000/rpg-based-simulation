@@ -363,12 +363,21 @@ _ACTION_DELAY_MULT: dict[str, float] = {
 }
 
 def speed_delay(spd: int, action: str = "move", interaction_speed: float = 1.0) -> float:
+    """Calculate the delay (in ticks) before the next action. [AOA STABILIZATION]
+    
+    Milestone 5: Rebalanced for Tempo.
+    Uses a softer logarithmic curve to ensure diminishing returns at high agility.
+    """
     s = max(spd, 1)
-    base = 1.0 / (1.0 + _math.log(s))
+    # base = 1.0 / (1.0 + math.log(s)) -> Replaced with more controlled curve
+    base = 1.2 / (1.0 + _math.log1p(s * 0.5))
+    
     delay = base * _ACTION_DELAY_MULT.get(action, 1.0)
     if action in ("loot", "harvest", "use_item", "rest"):
         delay /= max(interaction_speed, 0.5)
-    return max(0.3, min(4.0, delay))
+        
+    # Pillar 3: Tempo Limit (Minimum 0.4s recovery window)
+    return max(0.4, min(4.0, delay))
 
 def decay_attributes(
     entity: Entity,

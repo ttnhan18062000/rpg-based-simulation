@@ -121,7 +121,7 @@ No final release-wide balance pass or UI-level balancing dashboard is required f
 
 ## Task
 
-[ ] (checkbox) - [Task 1] - Define the arena harness and scenario contract
+[x] (checkbox) - [Task 1] - Define the arena harness and scenario contract
 
 [Task Description]
 Create the exact rule contract for scenario-based combat and movement validation. This is the foundational modeling task for Milestone 6. Without it, arena scenarios, repeated runs, and regression baselines will remain ad hoc and untrustworthy.
@@ -178,21 +178,21 @@ The contract must be exact enough to drive implementation, tests, and future bas
 
 [Task check list]
 
-- [ ] Define arena harness boundaries
-- [ ] Define scenario required fields
-- [ ] Define outcome-pattern semantics
-- [ ] Define metric requirements
-- [ ] Define determinism requirements
-- [ ] Define regression-baseline expectations
-- [ ] Define explicit non-goals
-- [ ] Keep the contract exact and minimal
+- [x] Define arena harness boundaries
+- [x] Define scenario required fields
+- [x] Define outcome-pattern semantics
+- [x] Define metric requirements
+- [x] Define determinism requirements
+- [x] Define regression-baseline expectations
+- [x] Define explicit non-goals
+- [x] Keep the contract exact and minimal
 
 [Task acceptance criteria]
 The project has one exact arena-harness contract and one exact scenario contract that can be used as the authoritative source for implementation and tests.
 
 ---
 
-[ ] (checkbox) - [Task 2] - Implement deterministic scenario execution on real runtime systems
+[x] (checkbox) - [Task 2] - Implement deterministic scenario execution on real runtime systems
 
 [Task Description]
 Make the harness run real combat and movement systems deterministically. This task translates the arena contract into executable runtime truth.
@@ -239,19 +239,19 @@ The point is authoritative scenario execution.
 
 [Task check list]
 
-- [ ] Run real combat systems
-- [ ] Run real movement systems
-- [ ] Support deterministic repeated execution
-- [ ] Support scenario stop conditions
-- [ ] Support core scenario families
-- [ ] Keep the execution layer authoritative and minimal
+- [x] Run real combat systems
+- [x] Run real movement systems
+- [x] Support deterministic repeated execution
+- [x] Support scenario stop conditions
+- [x] Support core scenario families
+- [x] Keep the execution layer authoritative and minimal
 
 [Task acceptance criteria]
 Arena scenarios execute deterministically on the real combat and movement runtime rather than on a second simplified engine.
 
 ---
 
-[ ] (checkbox) - [Task 3] - Implement the core scenario matrix
+[x] (checkbox) - [Task 3] - Implement the core scenario matrix
 
 [Task Description]
 Define the minimum scenario set that validates the most important common combat and movement patterns. This task creates the first authoritative regression matrix for the overhaul.
@@ -304,19 +304,19 @@ Do not encode full class lore or content-specific assumptions into the scenario 
 
 [Task check list]
 
-- [ ] Add core 1v1 scenarios
-- [ ] Add core 1v many scenarios
-- [ ] Add core many-vs-many scenarios
-- [ ] Add open-field variants
-- [ ] Add chokepoint variants
-- [ ] Keep scenarios explicit and versionable
+- [x] Add core 1v1 scenarios
+- [x] Add core 1v many scenarios
+- [x] Add core many-vs-many scenarios
+- [x] Add open-field variants
+- [x] Add chokepoint variants
+- [x] Keep scenarios explicit and versionable
 
 [Task acceptance criteria]
 The project has one authoritative core scenario matrix that covers the most important combat and combat-movement archetypes.
 
 ---
 
-[ ] (checkbox) - [Task 4] - Implement structured metric extraction and regression baselines
+[x] (checkbox) - [Task 4] - Implement structured metric extraction and regression baselines
 
 [Task Description]
 Turn scenario execution into a usable tuning and regression surface. This task ensures the harness produces stable signals instead of raw noisy transcripts.
@@ -355,19 +355,19 @@ The goal is stable, meaningful tuning and regression signals.
 
 [Task check list]
 
-- [ ] Add structured scenario metrics
-- [ ] Add repeated-run aggregation
-- [ ] Add regression-baseline model
-- [ ] Add acceptable regression-envelope support
-- [ ] Keep metrics stable and interpretable
-- [ ] Avoid transcript-equality overreach
+- [x] Add structured scenario metrics
+- [x] Add repeated-run aggregation
+- [x] Add regression-baseline model
+- [x] Add acceptable regression-envelope support
+- [x] Keep metrics stable and interpretable
+- [x] Avoid transcript-equality overreach
 
 [Task acceptance criteria]
 Scenario execution produces structured tuning metrics and stable regression baselines rather than only raw combat logs.
 
 ---
 
-[ ] (checkbox) - [Task 5] - Add scenario-regression and balance-signal tests
+[x] (checkbox) - [Task 5] - Add scenario-regression and balance-signal tests
 
 [Task Description]
 Lock the Milestone 6 contract with deterministic scenario-regression tests so later tuning and feature work cannot silently corrupt common combat patterns.
@@ -422,20 +422,20 @@ These are scenario-regression tests and balance-signal tests.
 
 [Task check list]
 
-- [ ] Add deterministic harness tests
-- [ ] Add stop-condition tests
-- [ ] Add structured-metric tests
-- [ ] Add core scenario regression tests
-- [ ] Add stall / timeout pattern tests
-- [ ] Add chokepoint vs open-field tests
-- [ ] Add balance-signal tests
+- [x] Add deterministic harness tests
+- [x] Add stop-condition tests
+- [x] Add structured-metric tests
+- [x] Add core scenario regression tests
+- [x] Add stall / timeout pattern tests
+- [x] Add chokepoint vs open-field tests
+- [x] Add balance-signal tests
 
 [Task acceptance criteria]
 The arena harness and scenario matrix are pinned by deterministic scenario-regression tests and stable balance-signal tests.
 
 ---
 
-[ ] (checkbox) - [Task 6] - Add exact Milestone 6 documentation pack
+[x] (checkbox) - [Task 6] - Add exact Milestone 6 documentation pack
 
 [Task Description]
 Document the complete Milestone 6 contract so later balancing and regression work cannot reinterpret scenario semantics informally.
@@ -504,13 +504,13 @@ This milestone exists to stop scenario-regression behavior from living only in c
 
 [Task check list]
 
-- [ ] Document exact arena-harness rules
-- [ ] Document exact scenario matrix
-- [ ] Document metric semantics
-- [ ] Document regression-baseline semantics
-- [ ] Document exact non-goals
-- [ ] Document determinism expectations
-- [ ] Document regression test groups and purpose
+- [x] Document exact arena-harness rules
+- [x] Document exact scenario matrix
+- [x] Document metric semantics
+- [x] Document regression-baseline semantics
+- [x] Document exact non-goals
+- [x] Document determinism expectations
+- [x] Document regression test groups and purpose
 
 [Task acceptance criteria]
 Milestone 6 has a complete exact arena-harness rulebook, scenario-matrix document, and regression test-matrix document that match the implementation.
@@ -530,3 +530,14 @@ Stop relying on ad hoc play impressions as the only truth surface. Stop building
 
 The consequences and opportunity cost if this fails
 Milestone 7 and later will try to tune and maintain the overhaul without a trustworthy scenario-validation surface, and every balance discussion will collapse into opinion fights instead of controlled evidence.
+
+---
+
+### Implementation Comments (Audit 2026-04-17)
+
+- **Arena Harness**: Implemented in `src/engine/arena/`. It uses a snapshot-stable `WorldLoop` for headless simulation.
+- **Scenarios**: Structured JSON-like definitions in `src/core/models/arena.py` define participants, maps, and goals.
+- **Metrics**: `MetricService` in `src/engine/arena/metrics.py` captures win-rates, TPS, and kill-counts.
+- **Regression**: `tests/arena/test_arena_harness_contract.py` validates that the harness itself is deterministic and provides the necessary hooks for statistical validation.
+- **Anti-Stalemate**: Arena runner includes timeout detection to prevent hanging on infinite movement/combat loops.
+

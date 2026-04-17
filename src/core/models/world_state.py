@@ -150,13 +150,16 @@ class WorldState:
 
     def is_occupied(self, pos: Vector2) -> bool:
         """O(1) check if a position is occupied by a living entity using the spatial index."""
-        # Query only the specific cell containing the position
+        return self.get_entity_at(pos) is not None
+
+    def get_entity_at(self, pos: Vector2) -> int | None:
+        """Returns the ID of the living entity at the given position, if any."""
         ids = self.spatial_index.query_cell(pos)
         for eid in ids:
             e = self.entities.get(eid)
             if e and e.combat.alive and e.spatial.pos.x == pos.x and e.spatial.pos.y == pos.y:
-                return True
-        return False
+                return eid
+        return None
 
     def drop_items(self, pos: Vector2, item_ids: list[str]) -> None:
         self._check_frozen("drop_items")

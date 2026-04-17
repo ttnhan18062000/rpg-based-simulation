@@ -108,7 +108,7 @@ No tactical movement sophistication, congestion handling, or stat rebalance is r
 
 ## Task
 
-[ ] (checkbox) - [Task 1] - Define the combat interaction contract
+[x] (checkbox) - [Task 1] - Define the combat interaction contract
 
 [Task Description]
 Create the exact rule contract for combat interaction semantics. This is the foundational modeling task for Milestone 2. Without it, engagement, disengagement, pursuit, and anti-loop behavior will remain implicit and contradictory.
@@ -153,21 +153,21 @@ Do not let anti-stalemate live as an undocumented emergency patch.
 
 [Task check list]
 
-- [ ] Define engagement semantics
-- [ ] Define disengagement semantics
-- [ ] Define pursuit commitment semantics
-- [ ] Define target-stickiness semantics
-- [ ] Define anti-stalemate problem classes
-- [ ] Define interaction-layer boundaries
-- [ ] Define explicit non-goals
-- [ ] Keep the contract exact and minimal
+- [x] Define engagement semantics
+- [x] Define disengagement semantics
+- [x] Define pursuit commitment semantics
+- [x] Define target-stickiness semantics
+- [x] Define anti-stalemate problem classes
+- [x] Define interaction-layer boundaries
+- [x] Define explicit non-goals
+- [x] Keep the contract exact and minimal
 
 [Task acceptance criteria]
 The project has one exact combat interaction contract that can be used as the authoritative source for implementation and tests.
 
 ---
 
-[ ] (checkbox) - [Task 2] - Implement the engagement and disengagement state model
+[x] (checkbox) - [Task 2] - Implement the engagement and disengagement state model
 
 [Task Description]
 Make combat interaction state explicit and authoritative. This task translates the engagement/disengagement portion of the rulebook into runtime truth.
@@ -208,19 +208,19 @@ The whole point is to make combat contact state explicit and auditable.
 
 [Task check list]
 
-- [ ] Add explicit engagement state
-- [ ] Add explicit disengagement detection
-- [ ] Add disengagement consequence hook
-- [ ] Add engagement clear conditions
-- [ ] Keep state transient and authoritative
-- [ ] Remove or isolate conflicting legacy assumptions
+- [x] Add explicit engagement state
+- [x] Add explicit disengagement detection
+- [x] Add disengagement consequence hook
+- [x] Add engagement clear conditions
+- [x] Keep state transient and authoritative
+- [x] Remove or isolate conflicting legacy assumptions
 
 [Task acceptance criteria]
 Engagement and disengagement are explicit, deterministic runtime concepts rather than emergent side effects.
 
 ---
 
-[ ] (checkbox) - [Task 3] - Implement combat context and target-stickiness hooks
+[x] (checkbox) - [Task 3] - Implement combat context and target-stickiness hooks
 
 [Task Description]
 Add the missing middle layer between spatial legality and raw combat math so combat behavior can depend on what is happening, not only on where entities stand.
@@ -259,19 +259,19 @@ Do not let target stickiness become “never retarget.” It is controlled persi
 
 [Task check list]
 
-- [ ] Add structured combat context
-- [ ] Add moved / engaged / pursuit context hooks
-- [ ] Add target-stickiness rule
-- [ ] Add explicit retarget triggers
-- [ ] Pass interaction context into combat resolution
-- [ ] Remove ad hoc reconstruction where possible
+- [x] Add structured combat context
+- [x] Add moved / engaged / pursuit context hooks
+- [x] Add target-stickiness rule
+- [x] Add explicit retarget triggers
+- [x] Pass interaction context into combat resolution
+- [x] Remove ad hoc reconstruction where possible
 
 [Task acceptance criteria]
 Combat resolution receives explicit interaction context, and target switching is stable instead of jitter-driven.
 
 ---
 
-[ ] (checkbox) - [Task 4] - Implement the anti-stalemate framework
+[x] (checkbox) - [Task 4] - Implement the anti-stalemate framework
 
 [Task Description]
 Create one general mechanism for resolving no-progress combat loops. This is the core corrective task for the current equal-speed and repeated disengage failures.
@@ -318,21 +318,21 @@ The anti-stalemate layer is part of combat interaction, not personality.
 
 [Task check list]
 
-- [ ] Define repeated-loop detection
-- [ ] Define progress vs no-progress criteria
-- [ ] Handle equal-speed pursuit loops
-- [ ] Handle disengage / re-engage loops
-- [ ] Handle step-threshold loops
-- [ ] Handle chase-without-resolution loops
-- [ ] Keep the response deterministic
-- [ ] Keep the framework general rather than patch-based
+- [x] Define repeated-loop detection
+- [x] Define progress vs no-progress criteria
+- [x] Handle equal-speed pursuit loops
+- [x] Handle disengage / re-engage loops
+- [x] Handle step-threshold loops
+- [x] Handle chase-without-resolution loops
+- [x] Keep the response deterministic
+- [x] Keep the framework general rather than patch-based
 
 [Task acceptance criteria]
 Common no-progress combat loops are detected and resolved through one explicit, deterministic interaction framework.
 
 ---
 
-[ ] (checkbox) - [Task 5] - Add combat interaction and anti-stalemate tests
+[x] (checkbox) - [Task 5] - Add combat interaction and anti-stalemate tests
 
 [Task Description]
 Lock the Milestone 2 contract with deterministic tests so later tactical AI and balance work cannot silently break the combat interaction model.
@@ -385,21 +385,21 @@ These are contract tests for combat-time semantics.
 
 [Task check list]
 
-- [ ] Add engagement tests
-- [ ] Add disengagement tests
-- [ ] Add target-stickiness tests
-- [ ] Add context-passing tests
-- [ ] Add equal-speed loop tests
-- [ ] Add disengage loop tests
-- [ ] Add chase loop tests
-- [ ] Add deterministic progression tests
+- [x] Add engagement tests
+- [x] Add disengagement tests
+- [x] Add target-stickiness tests
+- [x] Add context-passing tests
+- [x] Add equal-speed loop tests
+- [x] Add disengage loop tests
+- [x] Add chase loop tests
+- [x] Add deterministic progression tests
 
 [Task acceptance criteria]
 The combat interaction model is pinned by deterministic contract tests and loop-resolution tests.
 
 ---
 
-[ ] (checkbox) - [Task 6] - Add exact Milestone 2 documentation pack
+[x] (checkbox) - [Task 6] - Add exact Milestone 2 documentation pack
 
 [Task Description]
 Document the complete Milestone 2 contract so later milestones cannot reinterpret combat interaction semantics informally.
@@ -454,13 +454,13 @@ This milestone exists to stop combat-time semantics from living only in code and
 
 [Task check list]
 
-- [ ] Document exact interaction rules
-- [ ] Document anti-stalemate classes
-- [ ] Document exact non-goals
-- [ ] Document determinism expectations
-- [ ] Document interaction tests
-- [ ] Document loop-resolution tests
-- [ ] Document regression purpose of each test group
+- [x] Document exact interaction rules
+- [x] Document anti-stalemate classes
+- [x] Document exact non-goals
+- [x] Document determinism expectations
+- [x] Document interaction tests
+- [x] Document loop-resolution tests
+- [x] Document regression purpose of each test group
 
 [Task acceptance criteria]
 Milestone 2 has a complete exact interaction-rulebook document and exact test-matrix document that match the implementation.
@@ -480,3 +480,14 @@ Stop solving chase and kiting failures with isolated patches. Stop relying on re
 
 The consequences and opportunity cost if this fails
 Milestone 3 and later will try to build smarter movement and smarter AI on top of undefined combat contact behavior, and the entire overhaul will drift back into patchwork.
+
+---
+
+### Implementation Comments (Audit 2026-04-17)
+
+- **Interaction Service**: The `src/core/logic/combat_interaction_service.py` is the authoritative source for engagement state and anti-stalemate detection.
+- **Engagement Model**: Entities enter `engaged` state when adjacent and hostile. This state is checked during movement to trigger OAs.
+- **Opportunity Attacks**: Implemented as reactions in `CombatInteractionService` and triggered by `MoveAction` in `src/actions/move.py`.
+- **Anti-Stalemate**: Coordinate history is tracked to detect rhythmic loops (A->B, B->A). Loops are broken by forcing a wait or reposition.
+- **Tests**: Contract and regression tests live in `tests/combat/`.
+

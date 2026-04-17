@@ -1,0 +1,31 @@
+{
+  "id": "1v1-02-KITING-OPEN",
+  "name": "1v1 Kiting Check",
+  "description": "Ranger vs Warrior in open space. Ranger should win >70%.",
+  "participants": [
+    {
+      "kind": "hero",
+      "role": 0,
+      "hero_class": 2,
+      "level": 1,
+      "faction": 0
+    },
+    {
+      "kind": "hero",
+      "role": 0,
+      "hero_class": 1,
+      "level": 1,
+      "faction": 1
+    }
+  ],
+  "initial_placements": [
+    {"x": 20, "y": 32},
+    {"x": 44, "y": 32}
+  ],
+  "grid_width": 64,
+  "grid_height": 64,
+  "stop_conditions": [
+    {"type": "wipe"}
+  ],
+  "iterations": 5
+}

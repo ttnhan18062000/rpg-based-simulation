@@ -56,9 +56,9 @@ def test_biological_decay_authoritative(world, hero):
     # 1. Initial state
     assert hero.mind.routine.sleep_debt == 0.0
     
-    # 2. Advance time (ActionSystem tick)
+    # 2. Advance time (Biological Decay)
     from src.config import SimulationConfig
-    ActionSystem.apply_action_state_transitions(world, SimulationConfig(), [], None)
+    ActionSystem._apply_biological_decay(world, SimulationConfig())
     
     # 3. Verify decay
     assert hero.mind.routine.sleep_debt > 0.0

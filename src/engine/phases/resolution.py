@@ -53,5 +53,5 @@ class ResolutionPhase(EnginePhase):
         ctx.action_system.process_applied_actions(system_ctx, to_apply)
         ctx.tick_applied = to_apply
         
-        # 3. Lifecycle hooks (Level up, stamina regen, etc.)
-        ctx.hero_lifecycle.on_tick(system_ctx, ctx.world.tick)
+        # 3. [Milestone 1] Hero lifecycle moved to PreSystemsPhase to ensure
+        # it runs even on quiet ticks.

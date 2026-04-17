@@ -1,0 +1,58 @@
+{
+  "id": "1vm-01-ELITE-VS-SWARM",
+  "name": "Elite vs Swarm",
+  "description": "Lvl 10 Warrior vs 5x Lvl 1 Goblins. Warrior should win >80%.",
+  "participants": [
+    {
+      "kind": "hero",
+      "role": 0,
+      "hero_class": 1,
+      "level": 10,
+      "faction": 0
+    },
+    {
+      "kind": "goblin",
+      "role": 1,
+      "level": 1,
+      "faction": 1
+    },
+    {
+      "kind": "goblin",
+      "role": 1,
+      "level": 1,
+      "faction": 1
+    },
+    {
+      "kind": "goblin",
+      "role": 1,
+      "level": 1,
+      "faction": 1
+    },
+    {
+      "kind": "goblin",
+      "role": 1,
+      "level": 1,
+      "faction": 1
+    },
+    {
+      "kind": "goblin",
+      "role": 1,
+      "level": 1,
+      "faction": 1
+    }
+  ],
+  "initial_placements": [
+    {"x": 32, "y": 32},
+    {"x": 40, "y": 30},
+    {"x": 40, "y": 34},
+    {"x": 42, "y": 32},
+    {"x": 28, "y": 30},
+    {"x": 28, "y": 34}
+  ],
+  "grid_width": 64,
+  "grid_height": 64,
+  "stop_conditions": [
+    {"type": "wipe"}
+  ],
+  "iterations": 5
+}

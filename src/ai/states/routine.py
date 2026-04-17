@@ -1,5 +1,5 @@
 from __future__ import annotations
-from src.core.models.enums import AIState, ActionType
+from src.core.models.enums import AIState, ActionType, MovementIntention
 from src.actions.base import ActionProposal, RoutineUpdate
 from src.ai.states.base import StateHandler, AIContext
 
@@ -32,8 +32,8 @@ class SleepingHandler(StateHandler):
                 # We need to get home first
                 from src.ai.states.base import propose_move_toward
                 return AIState.SLEEPING, propose_move_toward(
-                    actor, target_pos, ctx.snapshot, 
-                    "Heading home to sleep",
+                    ctx, target_pos, 
+                    "Heading home to sleep", MovementIntention.NONE,
                     updates=[RoutineUpdate(is_sleeping=False)] # Wake up to walk
                 )
             else:
