@@ -76,7 +76,11 @@ class ReplayRecorder:
                     if hasattr(a.target, "x")
                     else a.target
                 ),
-                "reason": a.reason,
+                "reason": (
+                    a.reason.model_dump(mode='json') 
+                    if hasattr(a.reason, "model_dump") 
+                    else a.reason
+                ),
             }
             for a in applied_actions
         ]

@@ -42,7 +42,7 @@ Ticket must include:
 
 - finish ticket
 - move ticket to `tickets/done/`
-- append `tickets/working_log.md`
+- append `tickets/working_log.csv`
 - move staging artifacts to `stored_artifacts/`
 - update related docs
 - verify no leftover staging/temp files remain

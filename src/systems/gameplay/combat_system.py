@@ -59,21 +59,8 @@ class CombatSystem(System):
             if not combat:
                 continue
                 
-            adjacent_hostile = False
-            for oid in spatial.query_radius(entity.spatial.pos, 1):
-                if oid == entity.id:
-                    continue
-                other = entities.get(oid)
-                if other is None or not other.combat.alive or other.kind == "generator":
-                    continue
-                    
-                # Manhattan distance check and hostility check
-                if (abs(entity.spatial.pos.x - other.spatial.pos.x) + abs(entity.spatial.pos.y - other.spatial.pos.y) <= 1 
-                    and reg.is_hostile(entity.identity.faction, other.identity.faction)):
-                    adjacent_hostile = True
-                    break
-                    
-            if adjacent_hostile:
+            from src.core.logic.combat_interaction_service import CombatInteractionService
+            if CombatInteractionService.is_engaged(entity, context.world):
                 entity.mind.navigation.engaged_ticks = min(entity.mind.navigation.engaged_ticks + 1, 10)
                 # Disrupt routine patterns for 50 ticks (5 hours) after contact [PHASE 3]
                 entity.mind.routine.disrupted_until_tick = context.world.tick + 50

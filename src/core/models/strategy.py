@@ -7,6 +7,7 @@ unfinished business.
 
 from __future__ import annotations
 from enum import IntEnum, unique
+import logging
 from typing import Any
 from pydantic import Field, ConfigDict
 from src.core.models.base import SimulationModel
@@ -16,6 +17,8 @@ from src.core.models.enums import (
     ProjectKind, ObjectiveKind, ConcernKind, LeadKind, BlockerKind
 )
 from src.core.models.cognition import CognitionCapacityProfile
+
+logger = logging.getLogger(__name__)
 
 class DecisionDriver(SimulationModel):
     """A structured record explaining a bias or decision driver. [phase_2_stage_9]"""
@@ -101,7 +104,6 @@ class LeadRecord(SimulationModel):
     
     # Status & Hypothesis Links [phase_3_task_1]
     tested: bool = False
-    contradiction_count: int = 0
     
     candidate_zone_ids: list[str] = Field(default_factory=list)
     candidate_entity_ids: list[int] = Field(default_factory=list)
@@ -383,6 +385,167 @@ class StrategicState(SimulationModel):
         if not prj or not self.current_objective_id:
             return None
         return next((o for o in prj.objectives if o.objective_id == self.current_objective_id), None)
+
+    def apply_update(self, up: "StrategicUpdate") -> None:
+        """Apply a StrategicUpdate to this state in-place. [AOA STABILIZATION]"""
+        if up.current_project_id is not None:
+            self.current_project_id = up.current_project_id
+        if up.current_objective_id is not None:
+            self.current_objective_id = up.current_objective_id
+        if up.interrupted_project_id is not None:
+            self.interrupted_project_id = up.interrupted_project_id
+        if up.project_lock_until is not None:
+            self.project_lock_until = up.project_lock_until
+        if up.engaged_ticks is not None:
+            self.engaged_ticks = up.engaged_ticks
+        if up.last_interpreted_event_tick is not None:
+            self.last_interpreted_event_tick = up.last_interpreted_event_tick
+        
+        # Collections (Add or Update)
+        for d in up.directives_add:
+            found = False
+            for i, ex in enumerate(self.directives):
+                if ex.directive_id == d.directive_id:
+                    self.directives[i] = d
+                    found = True
+                    break
+            if not found: self.directives.append(d)
+        
+        for p in up.projects_add_or_update:
+            found = False
+            for i, ex in enumerate(self.projects):
+                if ex.project_id == p.project_id:
+                    self.projects[i] = p
+                    found = True
+                    break
+            if not found: self.projects.append(p)
+            
+        for c in up.concerns_add_or_update:
+            found = False
+            for i, ex in enumerate(self.concerns):
+                if ex.concern_id == c.concern_id:
+                    self.concerns[i] = c
+                    found = True
+                    break
+            if not found: self.concerns.append(c)
+            
+        for ld in up.leads_add_or_update:
+            found = False
+            for i, ex in enumerate(self.leads):
+                if ex.lead_id == ld.lead_id:
+                    # Protection [AOA PERSISTENCE]: Don't let stale updates revert tested/exhausted flags
+                    updated_ld = ld.model_copy()
+                    if ex.tested: updated_ld.tested = True
+                    if ex.is_exhausted: updated_ld.is_exhausted = True
+                    
+                    self.leads[i] = updated_ld
+                    found = True
+                    break
+            if not found: self.leads.append(ld)
+
+        for cz in up.candidate_zones_add_or_update:
+            found = False
+            for i, existing in enumerate(self.candidate_zones):
+                if existing.zone_id == cz.zone_id:
+                    self.candidate_zones[i] = cz
+                    found = True
+                    break
+            if not found: self.candidate_zones.append(cz)
+
+        for hy in up.hypotheses_add_or_update:
+            found = False
+            for i, existing in enumerate(self.hypotheses):
+                if existing.hypothesis_id == hy.hypothesis_id:
+                    self.hypotheses[i] = hy
+                    found = True
+                    break
+            if not found: self.hypotheses.append(hy)
+
+        for o in up.obligations_add_or_update:
+            found = False
+            for i, existing in enumerate(self.obligations):
+                if existing.obligation_id == o.obligation_id:
+                    self.obligations[i] = o
+                    found = True
+                    break
+            if not found: self.obligations.append(o)
+
+        for ct in up.contracts_add_or_update:
+            found = False
+            for i, existing in enumerate(self.contracts):
+                if existing.contract_id == ct.contract_id:
+                    self.contracts[i] = ct
+                    found = True
+                    break
+            if not found: self.contracts.append(ct)
+
+        for off in up.offers_add_or_update:
+            found = False
+            for i, existing in enumerate(self.offers):
+                if existing.offer_id == off.offer_id:
+                    self.offers[i] = off
+                    found = True
+                    break
+            if not found: self.offers.append(off)
+
+        for bl in up.blockers_add_or_update:
+            found = False
+            for i, existing in enumerate(self.blockers):
+                if existing.blocker_id == bl.blocker_id:
+                    self.blockers[i] = bl
+                    found = True
+                    break
+            if not found: self.blockers.append(bl)
+
+        # Scalar/Flag Updates
+        if up.tested_lead_ids:
+            for lid in up.tested_lead_ids:
+                if lid not in self.tested_lead_ids: self.tested_lead_ids.append(lid)
+
+        # Removes
+        if up.directives_remove:
+            self.directives = [d for d in self.directives if d.directive_id not in up.directives_remove]
+        if up.projects_remove:
+            self.projects = [p for p in self.projects if p.project_id not in up.projects_remove]
+        if up.concerns_remove:
+            self.concerns = [c for c in self.concerns if c.concern_id not in up.concerns_remove]
+        if up.leads_remove:
+            self.leads = [ld for ld in self.leads if ld.lead_id not in up.leads_remove]
+        if up.candidate_zones_remove:
+            self.candidate_zones = [cz for cz in self.candidate_zones if cz.zone_id not in up.candidate_zones_remove]
+        if up.hypotheses_remove:
+            self.hypotheses = [hy for hy in self.hypotheses if hy.hypothesis_id not in up.hypotheses_remove]
+        if up.obligations_remove:
+            self.obligations = [o for o in self.obligations if o.obligation_id not in up.obligations_remove]
+        if up.contracts_remove:
+            self.contracts = [ct for ct in self.contracts if ct.contract_id not in up.contracts_remove]
+        if up.offers_remove:
+            self.offers = [off for off in self.offers if off.offer_id not in up.offers_remove]
+        if up.blockers_remove:
+            self.blockers = [bl for bl in self.blockers if bl.blocker_id not in up.blockers_remove]
+            
+        # [phase_3_intel_capacity]
+        if up.source_trust_updates:
+            self.source_trust.update(up.source_trust_updates)
+
+        # Cognitive Metrics & Overload
+        if up.last_capacity_profile is not None: self.last_capacity_profile = up.last_capacity_profile
+        if up.active_slice_used is not None: self.active_slice_used = up.active_slice_used
+        if up.active_concerns_used is not None: self.active_concerns_used = up.active_concerns_used
+        if up.retained_leads_used is not None: self.retained_leads_used = up.retained_leads_used
+        if up.candidate_zones_used is not None: self.candidate_zones_used = up.candidate_zones_used
+        if up.ally_evaluations_used is not None: self.ally_evaluations_used = up.ally_evaluations_used
+        if up.detour_depth_used is not None: self.detour_depth_used = up.detour_depth_used
+        if up.dropped_candidates_count is not None: self.dropped_candidates_count = up.dropped_candidates_count
+        if up.latent_concerns_count is not None: self.latent_concerns_count = up.latent_concerns_count
+        if up.is_overloaded is not None: self.is_overloaded = up.is_overloaded
+        if up.overload_score is not None: self.overload_score = up.overload_score
+        if up.primary_overload_source is not None: self.primary_overload_source = up.primary_overload_source
+        if up.last_overload_tick is not None: self.last_overload_tick = up.last_overload_tick
+        
+        # Traceability
+        if up.strategic_drivers:
+            self.recent_drivers = up.strategic_drivers
 
 # --- Pydantic model rebuilds ---
 def rebuild_strategic_models():

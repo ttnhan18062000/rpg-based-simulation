@@ -155,7 +155,7 @@ Before closing work, verify:
 Then:
 
 - move ticket to `tickets/done/`
-- append `tickets/working_log.md`
+- append `tickets/working_log.csv`
 - move staging artifacts to `stored_artifacts/`
 
 ---

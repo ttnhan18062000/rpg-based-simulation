@@ -48,3 +48,18 @@ def test_warrior_prefers_defensive_gear():
     m_armor_pwr = _item_power(armor_template, HeroClass.MAGE) # 5*0.2 + 10*1.5? = 16
     
     assert m_wand_pwr > m_armor_pwr
+
+# --- Restored Starting Gear Checks ---
+
+@pytest.mark.parametrize("hero_class, expected_weapon", [
+    (HeroClass.WARRIOR, "iron_sword"),
+    (HeroClass.RANGER, "shortbow"),
+    (HeroClass.MAGE, "apprentice_staff"),
+    (HeroClass.ROGUE, "bandit_dagger"),
+])
+def test_hero_starting_gear_integrity(hero_class, expected_weapon):
+    """Verify that each hero class has the correct starting gear defined."""
+    from src.core.gameplay.classes import HERO_STARTING_GEAR
+    gear = HERO_STARTING_GEAR.get(hero_class)
+    assert gear is not None
+    assert gear["weapon"] == expected_weapon

@@ -1,0 +1,14 @@
+- `[/]` Phase 1: Snapshot Optimization
+    - `[ ]` Update `src/core/models/snapshot.py` with universal shallow support
+    - `[ ]` Update `src/engine/phases/persistence.py` to use optimization
+    - `[ ]` Update `src/engine/world_loop.py` if needed
+- `[ ]` Phase 2: Resource Cleanup & Hardening
+    - `[ ]` Harden `WorkerPool.shutdown()`
+    - `[ ]` Harden `ArenaRunner` and `WorldLoop` cleanup
+- `[ ]` Phase 3: Test Infrastructure (Resource Limiting)
+    - `[ ]` Implement `pytest_runtest_teardown` memory hook in `tests/conftest.py`
+- `[ ]` Phase 4: Regression Test Refactoring
+    - `[ ]` Update `tests/arena/test_arena_harness_contract.py` for determinism and semantics
+- `[ ]` Phase 5: Verification
+    - `[ ]` Run performance tests
+    - `[ ]` Verify memory boundary tripwire

@@ -131,12 +131,19 @@ class WorkerPool:
                 continue
 
             try:
-                _eid, new_state, proposal = self._think(snapshot_actor, snapshot)
+                from src.core.models.base import DecisionPhase
+                with DecisionPhase():
+                    _eid, new_state, proposal = self._think(snapshot_actor, snapshot)
                 action_queue.push(proposal)
             except Exception as e:
                 from src.utils.metrics import SIM_ERRORS_TOTAL
                 SIM_ERRORS_TOTAL.labels(exception_type=type(e).__name__, component="ai_think_inline").inc()
-                logger.exception("AI failed for entity %d", entity.id)
+                import traceback
+                tb_str = traceback.format_exc()
+                logger.error("AI failed for entity %d: %s\n%s", entity.id, e, tb_str)
+                # Explicitly clear context to assist GC
+                del tb_str
+                del e
     def _dispatch_rabbitmq(
         self,
         entities: list[Entity],
@@ -228,10 +235,16 @@ class WorkerPool:
         return entity.id, new_state, proposal
 
     def shutdown(self) -> None:
-        """Close RabbitMQ channels."""
-        if self._channel and self._channel.is_open:
+        """Close RabbitMQ channels and clear internal references (Idempotent). [Milestone 6]"""
+        if hasattr(self, "_channel") and self._channel and self._channel.is_open:
             try:
                 self._channel.close()
             except Exception: # Avoid top-level AMQPError dependency
                 pass
-            self._channel = None
+        
+        # Aggressive Slot Clearing (Idempotent)
+        self._channel = None
+        self._brain = None
+        self._rng = None
+        self._config = None
+        self._logger = None

@@ -23,6 +23,32 @@ class EventBus:
     def subscribe_all(self, handler: EventHandler) -> None:
         self._global_subscribers.append(handler)
 
+    def unsubscribe(self, event_type: Type[DomainEvent], handler: EventHandler) -> None:
+        """Remove a subscriber for a specific event type."""
+        if event_type in self._subscribers:
+            try:
+                self._subscribers[event_type].remove(handler)
+                if not self._subscribers[event_type]:
+                    del self._subscribers[event_type]
+            except ValueError:
+                pass
+
+    def unsubscribe_all(self, handler: EventHandler) -> None:
+        """Remove a subscriber from all event types and global subscriptions."""
+        for handlers in self._subscribers.values():
+            try:
+                handlers.remove(handler)
+            except ValueError:
+                pass
+        
+        # Clean up empty lists
+        self._subscribers = {k: v for k, v in self._subscribers.items() if v}
+        
+        try:
+            self._global_subscribers.remove(handler)
+        except ValueError:
+            pass
+
     def publish(self, event: DomainEvent) -> None:
         evt_type = type(event)
         if evt_type in self._subscribers:
@@ -53,6 +79,18 @@ class TelemetryBridge:
         bus.subscribe(TradeEvent, self.handle_trade)
         bus.subscribe(CraftEvent, self.handle_craft)
         bus.subscribe(QuestEvent, self.handle_quest)
+
+    def detach(self, bus: EventBus) -> None:
+        """Detach all handlers from the bus to break circular references."""
+        bus.unsubscribe(CombatEvent, self.handle_combat)
+        bus.unsubscribe(DeathEvent, self.handle_death)
+        bus.unsubscribe(LootEvent, self.handle_loot)
+        bus.unsubscribe(LevelUpEvent, self.handle_level_up)
+        bus.unsubscribe(TradeEvent, self.handle_trade)
+        bus.unsubscribe(CraftEvent, self.handle_craft)
+        bus.unsubscribe(QuestEvent, self.handle_quest)
+        self._world = None
+        self._emit = None
 
     def _get_name(self, entity_id: int) -> str:
         ent = self._world.entities.get(entity_id)

@@ -79,10 +79,37 @@ class TestLineOfSight(unittest.TestCase):
         g = _make_grid()
         assert g.has_line_of_sight(0, 0, 5, 0) is True
 
+    def test_clear_diagonal(self):
+        g = _make_grid()
+        assert g.has_line_of_sight(0, 0, 3, 3) is True
+
     def test_wall_blocks_line_of_sight(self):
         g = _make_grid()
         g.set(Vector2(3, 0), Material.WALL)
         assert g.has_line_of_sight(0, 0, 5, 0) is False
+
+    def test_wall_on_diagonal_blocks(self):
+        g = _make_grid()
+        g.set(Vector2(1, 1), Material.WALL)
+        assert g.has_line_of_sight(0, 0, 2, 2) is False
+
+    def test_adjacent_always_visible(self):
+        g = _make_grid()
+        g.set(Vector2(1, 1), Material.WALL)
+        # Adjacent tiles should ignore LOS blocking if using certain rules, 
+        # but pure LOS usually respects blocks. 
+        # Standard AOA: adjacent is always visible.
+        assert g.has_line_of_sight(0, 0, 1, 1) is True
+
+    def test_wall_at_endpoint_doesnt_block(self):
+        g = _make_grid()
+        g.set(Vector2(5, 0), Material.WALL)
+        assert g.has_line_of_sight(0, 0, 5, 0) is True
+
+    def test_wall_at_start_doesnt_block(self):
+        g = _make_grid()
+        g.set(Vector2(0, 0), Material.WALL)
+        assert g.has_line_of_sight(0, 0, 5, 0) is True
 
 
 class TestCoverSystem(unittest.TestCase):
@@ -123,7 +150,11 @@ class TestCombatActionRanged(unittest.TestCase):
         dfn = _make_entity(2, pos=(5, 8), faction=Faction.GOBLIN_HORDE)
         world = self._make_world(g, [atk, dfn])
         proposal = ActionProposal(actor_id=1, verb=ActionType.ATTACK, target=2)
-        assert self.ca.validate(proposal, world) is False
+        print(f"DEBUG_TEST: AtkPos={atk.spatial.pos}, DfnPos={dfn.spatial.pos}, Dist={atk.spatial.pos.manhattan(dfn.spatial.pos)}")
+        print(f"DEBUG_TEST: Weapon={atk.inventory.weapon if atk.inventory else 'NONE'}")
+        val = self.ca.validate(proposal, world)
+        print(f"DEBUG_TEST: Validation result={val}")
+        assert val is False
 
     def test_ranged_attack_at_distance_valid(self):
         g = _make_grid()

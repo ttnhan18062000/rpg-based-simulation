@@ -53,69 +53,76 @@ class PersistencePhase(EnginePhase):
         tick = ctx.world.tick
         applied = ctx.tick_applied
         
+        from src.api.redis_client import is_redis_disabled, get_sync_redis
+        from src.api.kafka_client import is_kafka_disabled, get_kafka_producer
+
+        # Optimization: Short-circuit if all external persistence is disabled.
+        # This prevents redundant snapshot creation and schema conversion. [Performance Hardening]
+        if is_redis_disabled() and is_kafka_disabled():
+            return
+
         # 1. Redis Streaming (Canonical Map-Stream - Pillar 5)
-        try:
-            from src.api.redis_client import get_sync_redis
-            from src.api.presenters.entity_presenter import EntityPresenter
-            from src.api.presenters.world_presenter import WorldPresenter
-            r = get_sync_redis()
-            if r is None:
-                return
-            
-            # Convert to Slim Schema (Filtered for performance/isolation)
-            from src.core.models.snapshot import Snapshot
-            snap = Snapshot.from_world(ctx.world)
-            
-            loot_duration = ctx.config.loot_duration if hasattr(ctx.config, "loot_duration") else 10.0
-            new_slim = {}
-            for eid, e in snap.entities.items():
-                if not e.combat.alive: continue
-                new_slim[eid] = EntityPresenter.to_slim_schema(e, loot_duration=loot_duration)
+        if not is_redis_disabled():
+            try:
+                from src.api.presenters.entity_presenter import EntityPresenter
+                from src.api.presenters.world_presenter import WorldPresenter
+                r = get_sync_redis()
+                if r:
+                    # Convert to Slim Schema (Filtered for performance/isolation)
+                    is_shallow = ctx.config.num_workers <= 1
+                    snap = Snapshot.from_world(ctx.world, shallow=is_shallow)
+                    
+                    loot_duration = ctx.config.loot_duration if hasattr(ctx.config, "loot_duration") else 10.0
+                    new_slim = {}
+                    for eid, e in snap.entities.items():
+                        if not e.combat.alive: continue
+                        new_slim[eid] = EntityPresenter.to_slim_schema(e, loot_duration=loot_duration)
 
-            # Compute Delta
-            from src.api.schemas import EventSchema
-            changed = []
-            removed = []
-            for eid, e in new_slim.items():
-                old_e = self._last_published_slim.get(eid)
-                if old_e is None or old_e != e:
-                    changed.append(e.model_dump())
-            for eid in self._last_published_slim:
-                if eid not in new_slim:
-                    removed.append(eid)
+                    # Compute Delta
+                    from src.api.schemas import EventSchema
+                    changed = []
+                    removed = []
+                    for eid, e in new_slim.items():
+                        old_e = self._last_published_slim.get(eid)
+                        if old_e is None or old_e != e:
+                            changed.append(e.model_dump())
+                    for eid in self._last_published_slim:
+                        if eid not in new_slim:
+                            removed.append(eid)
 
-            serialized_events = [
-                EventSchema(tick=ev.tick, category=ev.category, message=ev.message,
-                            entity_ids=list(ev.entity_ids), metadata=ev.metadata).model_dump()
-                for ev in ctx.tick_events
-            ]
+                    serialized_events = [
+                        EventSchema(tick=ev.tick, category=ev.category, message=ev.message,
+                                    entity_ids=list(ev.entity_ids), metadata=ev.metadata).model_dump()
+                        for ev in ctx.tick_events
+                    ]
 
-            # Compute Rich & Compact Payloads (Canonicalization - Pillar 5)
-            rich_payload = WorldPresenter.to_compact_tick(snap, ctx.tick_events, mode="rich")
-            compact_payload = WorldPresenter.to_compact_tick(snap, ctx.tick_events, mode="compact")
+                    # Compute Rich & Compact Payloads (Canonicalization - Pillar 5)
+                    from src.api.presenters.world_presenter import WorldPresenter
+                    rich_payload = WorldPresenter.to_compact_tick(snap, ctx.tick_events, mode="rich")
+                    compact_payload = WorldPresenter.to_compact_tick(snap, ctx.tick_events, mode="compact")
 
-            # Publish to Redis Stream if non-empty or heartbeat
-            import json
-            from src.utils.serialization import SimulationJSONEncoder
+                    # Publish to Redis Stream if non-empty or heartbeat
+                    import json
+                    from src.utils.serialization import SimulationJSONEncoder
+                    
+                    if changed or removed or serialized_events or tick % 20 == 0:
+                        delta = {
+                            "tick": tick,
+                            "changed": changed,
+                            "removed": removed,
+                            "events": serialized_events,
+                        }
+                        
+                        r.xadd("sim:stream", {
+                            "payload": json.dumps(delta),
+                            "rich": json.dumps(rich_payload, cls=SimulationJSONEncoder),
+                            "compact": json.dumps(compact_payload, cls=SimulationJSONEncoder),
+                        })
+                    
+                    self._last_published_slim = new_slim
             
-            if changed or removed or serialized_events or tick % 20 == 0:
-                delta = {
-                    "tick": tick,
-                    "changed": changed,
-                    "removed": removed,
-                    "events": serialized_events,
-                }
-                
-                r.xadd("sim:stream", {
-                    "payload": json.dumps(delta),
-                    "rich": json.dumps(rich_payload, cls=SimulationJSONEncoder),
-                    "compact": json.dumps(compact_payload, cls=SimulationJSONEncoder),
-                })
-            
-            self._last_published_slim = new_slim
-            
-        except Exception as e:
-            logger.error("Tick %d: Failed to publish to Redis stream: %s", tick, e)
+            except Exception as e:
+                logger.error("Tick %d: Failed to publish to Redis stream: %s", tick, e)
 
         # 2. Kafka Publishing (Analytics & Persistence)
         try:
@@ -132,7 +139,8 @@ class PersistencePhase(EnginePhase):
             # Snapshot: Every 1000 ticks or on demand
             if tick % 1000 == 0:
                 with SIM_KAFKA_PUBLISH_DURATION.labels(type="snapshot").time():
-                    snap = Snapshot.from_world(ctx.world)
+                    is_shallow = ctx.config.num_workers <= 1
+                    snap = Snapshot.from_world(ctx.world, shallow=is_shallow)
                     producer.produce(
                         KAFKA_TOPIC_SNAPSHOTS,
                         key="latest",

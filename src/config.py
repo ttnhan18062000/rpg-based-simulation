@@ -17,6 +17,7 @@ class SimulationConfig:
     # Timing
     max_ticks: int = 50000
     worker_timeout_seconds: float = 2.0
+    watchdog_timeout: float = 2.0      # Real-time seconds per tick before abort [Milestone 6]
 
     # Workers
     num_workers: int = 4
@@ -55,6 +56,12 @@ class SimulationConfig:
     damage_variance: float = 0.3
     crit_chance: float = 0.1
     crit_multiplier: float = 2.0
+    
+    # Milestone 2 Context Modifiers
+    high_ground_atk_bonus: float = 0.15
+    flanking_atk_bonus: float = 0.15
+    moved_atk_penalty: float = 0.15
+    ranged_cover_def_bonus: float = 0.20
 
     # Leveling
     xp_per_kill_base: int = 80
@@ -163,6 +170,15 @@ class SimulationConfig:
     # Debug / Stability (AOA Phase 5)
     ignore_phase_errors: bool = False    # Whether to suppress exceptions in engine phases
     max_regression_runs: int = 10        # Number of headless run artifacts to keep per directory
+
+    # Rollout Hardening (Milestone 7)
+    # Toggles for granular control over the combat and movement overhaul systems.
+    overhaul_features: dict[str, bool] = field(default_factory=lambda: {
+        "use_legality_v2": True,           # Spatial/Timing rules
+        "use_combat_interaction_v2": True, # Engagement/OA rules
+        "use_movement_model_v2": True,     # Intention/Congestion rules
+        "use_tactical_evaluator_v2": True, # AI Heuristics
+    })
 
     # Biological Needs [PHASE 3]
     sleep_decay_rate: float = 0.002      # Debt increase per tick

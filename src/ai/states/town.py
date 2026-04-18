@@ -11,7 +11,7 @@ from src.core.gameplay.buildings import (
     can_craft, item_sell_price, shop_buy_price,
 )
 from src.core.models.enums import (
-    AIState, EntityRole, OfferStatus, ContractKind, BlockerKind, AttachmentKind
+    AIState, EntityRole, OfferStatus, ContractKind, BlockerKind, AttachmentKind, MovementIntention
 )
 from src.core.gameplay.items.item_registry import ITEM_REGISTRY
 from src.core.entities.entity import Entity
@@ -269,36 +269,36 @@ class RestingInTownHandler(StateHandler):
             store = find_building(snapshot, "store")
             if store:
                 return AIState.VISIT_SHOP, propose_move_toward(
-                    actor, store.spatial.pos, snapshot, f"Heading to store to buy {want_buy}")
+                    ctx, store.spatial.pos, f"Heading to store to buy {want_buy}", MovementIntention.NONE)
 
         if hero_should_visit_blacksmith(actor):
             bs = find_building(snapshot, "blacksmith")
             if bs:
                 return AIState.VISIT_BLACKSMITH, propose_move_toward(
-                    actor, bs.spatial.pos, snapshot, "Heading to blacksmith")
+                    ctx, bs.spatial.pos, "Heading to blacksmith", MovementIntention.NONE)
 
         if hero_should_visit_guild(actor):
             guild = find_building(snapshot, "guild")
             if guild:
                 return AIState.VISIT_GUILD, propose_move_toward(
-                    actor, guild.spatial.pos, snapshot, "Heading to guild for intel")
+                    ctx, guild.spatial.pos, "Heading to guild for intel", MovementIntention.NONE)
 
         if hero_should_visit_class_hall(actor):
             ch = find_building(snapshot, "class_hall")
             if ch:
                 return AIState.VISIT_CLASS_HALL, propose_move_toward(
-                    actor, ch.spatial.pos, snapshot, "Heading to class hall")
+                    ctx, ch.spatial.pos, "Heading to class hall", MovementIntention.NONE)
 
         if hero_should_visit_home(actor):
             if actor.spatial.home_pos:
                 return AIState.VISIT_HOME, propose_move_toward(
-                    actor, actor.spatial.home_pos, snapshot, "Heading home to manage storage")
+                    ctx, actor.spatial.home_pos, "Heading home to manage storage", MovementIntention.NONE)
 
         if hero_should_visit_inn(actor):
             inn = find_building(snapshot, "inn")
             if inn:
                 return AIState.VISIT_INN, propose_move_toward(
-                    actor, inn.spatial.pos, snapshot, "Heading to inn to recover stamina")
+                    ctx, inn.spatial.pos, "Heading to inn to recover stamina", MovementIntention.NONE)
 
         return AIState.WANDER, ActionProposal(
             actor_id=actor.id, verb=ActionType.REST,
@@ -318,7 +318,7 @@ class VisitShopHandler(StateHandler):
 
         if actor.spatial.pos.manhattan(store.spatial.pos) > 0:
             return AIState.VISIT_SHOP, propose_move_toward(
-                actor, store.spatial.pos, snapshot, "Walking to store")
+                ctx, store.spatial.pos, "Walking to store", MovementIntention.NONE)
 
         inv = actor.inventory
         if inv is None:
@@ -394,7 +394,7 @@ class VisitBlacksmithHandler(StateHandler):
 
         if actor.spatial.pos.manhattan(bs.spatial.pos) > 0:
             return AIState.VISIT_BLACKSMITH, propose_move_toward(
-                actor, bs.spatial.pos, snapshot, "Walking to blacksmith")
+                ctx, bs.spatial.pos, "Walking to blacksmith", MovementIntention.NONE)
 
         inv = actor.inventory
         if inv is None:
@@ -474,7 +474,7 @@ class VisitGuildHandler(StateHandler):
 
         if actor.spatial.pos.manhattan(guild.spatial.pos) > 0:
             return AIState.VISIT_GUILD, propose_move_toward(
-                actor, guild.spatial.pos, snapshot, "Walking to guild hall")
+                ctx, guild.spatial.pos, "Walking to guild hall", MovementIntention.NONE)
 
         revealed = {}
         for cx, cy in snapshot.camps:
@@ -572,7 +572,7 @@ class VisitClassHallHandler(StateHandler):
 
         if actor.spatial.pos.manhattan(ch.spatial.pos) > 0:
             return AIState.VISIT_CLASS_HALL, propose_move_toward(
-                actor, ch.spatial.pos, snapshot, "Walking to class hall")
+                ctx, ch.spatial.pos, "Walking to class hall", MovementIntention.NONE)
 
         from src.core.gameplay.classes import (
             HeroClass, available_class_skills, can_breakthrough, can_learn_skill,
@@ -654,7 +654,7 @@ class VisitInnHandler(StateHandler):
 
         if actor.spatial.pos.manhattan(inn.spatial.pos) > 0:
             return AIState.VISIT_INN, propose_move_toward(
-                actor, inn.spatial.pos, snapshot, "Walking to inn")
+                ctx, inn.spatial.pos, "Walking to inn", MovementIntention.NONE)
 
         hp_needed = actor.combat.max_hp - actor.combat.hp
         sta_needed = actor.progression.max_stamina - actor.progression.stamina
@@ -755,7 +755,7 @@ class VisitHomeHandler(StateHandler):
 
         if actor.spatial.pos.manhattan(target_pos) > 0:
             return AIState.VISIT_HOME, propose_move_toward(
-                actor, target_pos, snapshot, "Walking home")
+                ctx, target_pos, "Walking home", MovementIntention.NONE)
 
         inv = actor.inventory
         storage = actor.inventory.home_storage if inv else None

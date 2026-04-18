@@ -218,3 +218,5 @@ reviews/*
 !reviews/code_exporter.py
 
 logs/*
+
+.gemini/*

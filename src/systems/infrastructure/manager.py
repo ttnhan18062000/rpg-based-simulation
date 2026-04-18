@@ -58,3 +58,5 @@ class SystemManager:
         if self._context:
             for system, _ in self._systems:
                 system.on_shutdown(self._context)
+            self._context = None
+        self._systems.clear()

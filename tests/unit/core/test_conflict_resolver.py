@@ -237,13 +237,24 @@ class TestDiagonalHuntYield:
         from src.core.gameplay.faction import FactionRegistry
         faction_reg = FactionRegistry.default()
         snapshot = Snapshot.from_world(world)
-        return AIContext(
+        from src.ai.tactical.contract import TacticalEvaluation, TacticalMode
+        
+        # Simple heuristic: find another entity to target
+        enemy_id = next((eid for eid in world.entities.keys() if eid != actor.id), None)
+        
+        ctx = AIContext(
             actor=snapshot.entities[actor.id],
             snapshot=snapshot,
             config=cfg,
             rng=rng,
             faction_reg=faction_reg,
+            tactical_hints={"evaluation": TacticalEvaluation(
+                mode=TacticalMode.CLOSE,
+                target_id=enemy_id,
+                reason="Test aggressive pursuit"
+            )}
         )
+        return ctx
 
     def test_higher_id_yields_at_diagonal(self):
         """Higher-ID entity should REST when at Manhattan 2 with aggressive enemy."""

@@ -15,6 +15,7 @@ from pydantic import Field, PrivateAttr
 if TYPE_CHECKING:
     from src.core.entities.entity import Entity
     from src.platform.rng import DeterministicRNG
+from src.core.models.enums import TacticalRole, HeroClass
 
 class Attributes(SimulationModel):
     """Primary RPG attributes for an entity (9 attributes)."""
@@ -109,6 +110,74 @@ class AttributeCaps(SimulationModel):
         self.cha_cap = max(1, self.cha_cap)
 
 # ---------------------------------------------------------------------------
+# Milestone 5: Role Profiling & Specialization
+# ---------------------------------------------------------------------------
+
+ROLE_PROFILES: dict[TacticalRole, dict[str, float]] = {
+    TacticalRole.MELEE_STRIKER:      {"str": 1.0, "vit": 0.8, "end": 0.6},
+    TacticalRole.RANGED_SKIRMISHER:  {"agi": 1.0, "per": 0.8, "end": 0.6},
+    TacticalRole.SUPPORT_HEALER:     {"spi": 1.0, "wis": 0.8, "int": 0.6},
+    TacticalRole.AOE_PRESSURE:      {"int": 1.0, "spi": 0.8, "wis": 0.6},
+    TacticalRole.RETREAT_BIASED:     {"vit": 0.5, "end": 1.0, "agi": 0.7}, # Defensive focus
+}
+
+def derive_tactical_role_from_class(hero_class: HeroClass) -> TacticalRole:
+    """Map HeroClass to its natural intended tactical role."""
+    melee_classes = {HeroClass.WARRIOR, HeroClass.CHAMPION, HeroClass.BRUTE, HeroClass.TANK}
+    ranged_classes = {HeroClass.RANGER, HeroClass.SHARPSHOOTER, HeroClass.SCOUT}
+    magic_classes = {HeroClass.MAGE, HeroClass.ARCHMAGE, HeroClass.CASTER}
+    
+    if hero_class in melee_classes: return TacticalRole.MELEE_STRIKER
+    if hero_class in ranged_classes: return TacticalRole.RANGED_SKIRMISHER
+    if hero_class in magic_classes: return TacticalRole.AOE_PRESSURE
+    return TacticalRole.MELEE_STRIKER # Default fallback
+
+def derive_tactical_role(entity: Any) -> TacticalRole:
+    """Derive role from current effective stats and apply hysteresis stability."""
+    prog = entity.progression
+    attrs = prog.attributes
+    if not attrs: return prog.tactical_role
+    
+    # Calculate scores for each role based on effective attributes
+    scores: dict[TacticalRole, float] = {}
+    for role, weights in ROLE_PROFILES.items():
+        score = 0.0
+        for attr_key, weight in weights.items():
+            val = getattr(attrs, _TRAIN_MAP[attr_key][0])
+            score += val * weight
+        scores[role] = score
+        
+    # Find the highest scoring role (Ideal Role)
+    ideal_role = max(scores, key=lambda k: scores[k])
+    
+    # Apply Hysteresis stability logic
+    if ideal_role == prog.tactical_role:
+        prog.role_stability = min(10, prog.role_stability + 1)
+    else:
+        prog.role_stability -= 1
+        if prog.role_stability <= 0:
+            prog.tactical_role = ideal_role
+            prog.role_stability = 5 # Reset to mid-point stability
+            
+    return prog.tactical_role
+
+def apply_soft_cap(value: float, cap: float) -> int:
+    """Apply 3-stage piecewise linear diminishing returns. [Milestone 5]"""
+    if value <= cap:
+        return int(value)
+    
+    # Stage 1: 100% contribution (already handled)
+    # Stage 2: 50% contribution until 2x cap
+    if value <= cap * 2:
+        overflow = value - cap
+        return int(cap + overflow * 0.5)
+        
+    # Stage 3: 10% contribution thereafter
+    base_cap = cap + cap * 0.5 # cap + (2*cap - cap)*0.5
+    extreme_overflow = value - cap * 2
+    return int(base_cap + extreme_overflow * 0.1)
+
+# ---------------------------------------------------------------------------
 # Attribute → derived stat formulas
 # ---------------------------------------------------------------------------
 
@@ -134,6 +203,7 @@ def derive_luck(base_luck: int, wis: int) -> int:
     return base_luck + int(wis * 0.3)
 
 def derive_stamina(base_stamina: int, end: int) -> int:
+    # Bonus is absolute addition to base
     return base_stamina + end * 2
 
 def derive_xp_multiplier(wis: int, int_: int) -> float:
@@ -175,8 +245,13 @@ def recalc_derived_stats(entity: "Entity", new_attrs: Attributes, old_attrs: Att
     combat = entity.combat
     prog = entity.progression
     
+    # Milestone 5: Dynamic Role Update
+    derive_tactical_role(entity)
+    
     # Reset old contributions if necessary
     if old_attrs is not None:
+        # Revert old attribute contributions before applying new ones
+        prog.max_stamina -= derive_stamina(0, old_attrs.end)
         combat.max_hp -= derive_max_hp(0, old_attrs.vit, old_attrs.end)
         combat.atk_base -= derive_atk(0, old_attrs.str_)
         combat.def_base -= derive_def(0, old_attrs.vit)
@@ -186,21 +261,33 @@ def recalc_derived_stats(entity: "Entity", new_attrs: Attributes, old_attrs: Att
         combat.luck -= derive_luck(0, old_attrs.wis)
         combat.matk -= derive_matk(0, old_attrs.spi, old_attrs.int_)
         combat.mdef -= derive_mdef(0, old_attrs.wis, old_attrs.spi)
-        prog.max_stamina -= derive_stamina(0, old_attrs.end)
 
     # Apply new contributions
-    combat.max_hp = derive_max_hp(combat.max_hp, new_attrs.vit, new_attrs.end)
-    combat.atk_base = derive_atk(combat.atk_base, new_attrs.str_)
-    combat.def_base = derive_def(combat.def_base, new_attrs.vit)
-    combat.spd_base = derive_spd(combat.spd_base, new_attrs.agi)
+    raw_max_hp = derive_max_hp(combat.max_hp, new_attrs.vit, new_attrs.end)
+    combat.max_hp = apply_soft_cap(raw_max_hp, 200.0) # Milestone 5 Ceiling
+    
+    raw_atk = derive_atk(combat.atk_base, new_attrs.str_)
+    combat.atk_base = apply_soft_cap(raw_atk, 40.0) 
+    
+    raw_def = derive_def(combat.def_base, new_attrs.vit)
+    combat.def_base = apply_soft_cap(raw_def, 20.0)
+    
+    raw_spd = derive_spd(combat.spd_base, new_attrs.agi)
+    combat.spd_base = apply_soft_cap(raw_spd, 25.0)
+    
     combat.crit_rate = derive_crit_rate(combat.crit_rate, new_attrs.agi, new_attrs.wis)
     combat.evasion = derive_evasion(combat.evasion, new_attrs.agi)
     combat.luck = derive_luck(combat.luck, new_attrs.wis)
-    combat.matk = derive_matk(combat.matk, new_attrs.spi, new_attrs.int_)
+    
+    raw_matk = derive_matk(combat.matk, new_attrs.spi, new_attrs.int_)
+    combat.matk = apply_soft_cap(raw_matk, 40.0)
+    
     combat.mdef = derive_mdef(combat.mdef, new_attrs.wis, new_attrs.spi)
     combat.hp_regen = derive_hp_regen(new_attrs.end, new_attrs.vit)
     
-    prog.max_stamina = derive_stamina(prog.max_stamina, new_attrs.end)
+    raw_stamina = derive_stamina(prog.max_stamina, new_attrs.end)
+    prog.max_stamina = apply_soft_cap(raw_stamina, 200.0)
+    
     entity.spatial.vision_range = derive_vision(6, new_attrs.per)
     combat.cooldown_reduction = derive_cooldown_reduction(new_attrs.int_, new_attrs.wis)
     
@@ -273,16 +360,27 @@ def train_attributes(entity: Any, action: str, bucket: Any = None, aptitudes: di
     old_snapshot = attrs.copy()
     changed = False
     
-    soft_cap_limit = prog.level * 5 + 15
+    soft_cap_limit = prog.level * 5 + 15 # Legacy base
     aptitudes = aptitudes or prog.aptitudes
+    role_weights = ROLE_PROFILES.get(prog.tactical_role, {})
     
     for attr_key, base_rate in rates.items():
         rate = base_rate * aptitudes.get(attr_key, 1.0)
         
-        # Pillar 3: Soft Cap Diminishing Returns
+        # Pillar 3: Specialized Soft Cap Diminishing Returns [Milestone 5]
+        weight = role_weights.get(attr_key, 0.0)
+        if weight >= 1.0: # Primary
+            soft_limit = prog.level * 10 + 20
+        elif weight >= 0.5: # Secondary
+            soft_limit = prog.level * 5 + 15
+        else: # Off-role
+            soft_limit = prog.level * 2 + 10
+
         current_val = getattr(attrs, _TRAIN_MAP[attr_key][0])
-        if current_val >= soft_cap_limit:
-            rate *= 0.1 # 90% reduction beyond soft cap
+        if current_val >= soft_limit:
+            rate *= 0.5 # 50% slow beyond first soft cap
+            if current_val >= soft_limit * 2:
+                rate *= 0.2 # 90% total slow for extreme specialization
             
         if _apply_train(attrs, caps, attr_key, rate):
             changed = True
@@ -363,12 +461,21 @@ _ACTION_DELAY_MULT: dict[str, float] = {
 }
 
 def speed_delay(spd: int, action: str = "move", interaction_speed: float = 1.0) -> float:
+    """Calculate the delay (in ticks) before the next action. [AOA STABILIZATION]
+    
+    Milestone 5: Rebalanced for Tempo.
+    Uses a softer logarithmic curve to ensure diminishing returns at high agility.
+    """
     s = max(spd, 1)
-    base = 1.0 / (1.0 + _math.log(s))
+    # base = 1.0 / (1.0 + math.log(s)) -> Replaced with more controlled curve
+    base = 1.2 / (1.0 + _math.log1p(s * 0.5))
+    
     delay = base * _ACTION_DELAY_MULT.get(action, 1.0)
     if action in ("loot", "harvest", "use_item", "rest"):
         delay /= max(interaction_speed, 0.5)
-    return max(0.3, min(4.0, delay))
+        
+    # Pillar 3: Tempo Limit (Minimum 0.4s recovery window)
+    return max(0.4, min(4.0, delay))
 
 def decay_attributes(
     entity: Entity,

@@ -64,12 +64,15 @@ class ActionProposalGuard:
     a RuntimeError, ensuring that AI logic remains purely functional and proposal-based.
     """
     
-    def __init__(self, world: WorldState):
+    def __init__(self, world: WorldState, is_shallow: bool = False):
         self.world = world
+        self.is_shallow = is_shallow
 
     def __enter__(self):
-        # Lock the world state if supported (Snapshot support)
-        if hasattr(self.world, "freeze"):
+        # AOA Optimization: If shallow, we skip the destructive freeze() 
+        # that would affect shared references in the live world. 
+        # Safety is instead enforced via the DecisionPhase tripwire.
+        if not self.is_shallow and hasattr(self.world, "freeze"):
             self.world.freeze()
         return self.world
 

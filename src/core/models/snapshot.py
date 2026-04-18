@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 from src.core.models.base import SimulationModel
 from src.core.models.social import SocialRegistry
 
-_SPATIAL_CELL = 16  # cell size for snapshot spatial index
+_SPATIAL_CELL = 8  # cell size aligned with SimulationConfig.spatial_cell_size
 
 class Snapshot(SimulationModel):
     """Read-only view of the world, safe to share across threads.
@@ -68,7 +68,58 @@ class Snapshot(SimulationModel):
         return (self.tick % 100) * 24 // 100
 
     @classmethod
-    def from_world(cls, world: WorldState) -> Snapshot:
+    def from_world(cls, world: WorldState, shallow: bool = False) -> Snapshot:
+        """Create a snapshot of the world state.
+        
+        If shallow=True, it skips deep-copying and freezing entities. 
+        This is significantly faster but MUST be used with the DecisionPhase 
+        mutation tripwire for safety. [Milestone 7 Optimization]
+        """
+        if shallow:
+            # Optimized Path: Share references to live objects.
+            # Mutation safety is enforced via DecisionPhase tripwire in SimulationModel.
+            # Pillar 7: High-perf construction bypassing repetitive Pydantic tree validation.
+            snap = cls.model_construct(
+                tick=world.tick,
+                seed=world.seed,
+                entities=dict(world.entities),
+                grid=world.grid, # Shared reference
+                ground_items=world.ground_items,
+                camps=tuple((c.x, c.y) for c in world.camps),
+                buildings=tuple(world.buildings),
+                resource_nodes=tuple(world.resource_nodes.values()),
+                treasure_chests=tuple(world.treasure_chests.values()),
+                regions=tuple(world.regions),
+                region_control=world.region_control,
+                war_status=world.war_status,
+                faction_aggression=world.faction_aggression,
+                social_registry=world.social_registry,
+                group_registry=world.group_registry,
+                world_history=world.world_history,
+                household_registry=world.household_registry,
+                scar_registry=tuple(world.scar_registry),
+                region_consequence_registry=world.region_consequence_registry,
+                successor_registry=world.successor_registry,
+                strategic_registry=world.strategic_registry
+            )
+            
+            # Tier 2 Optimization: Direct Spatial Sharing
+            # If the cell size matches, we can share the spatial dictionary (dict of sets).
+            # This is safe because sets of entity IDs are naturally immutable for the snapshot.
+            world_cell_size = getattr(world.spatial_index, "_cell_size", 8)
+            if world_cell_size == _SPATIAL_CELL:
+                snap._spatial = dict(world.spatial_index._cells)
+            else:
+                # Fallback only if config changes mid-run (unlikely in production)
+                spatial = defaultdict(list)
+                for eid, e in copied_entities.items():
+                    if e.combat.hp > 0 and e.kind != "generator":
+                        spatial[(e.spatial.pos.x // _SPATIAL_CELL, e.spatial.pos.y // _SPATIAL_CELL)].append(eid)
+                snap._spatial = dict(spatial)
+                
+            return snap
+
+        # Original Authoritative Path (Deep Isolation)
         copied_entities = {}
         for eid, e in world.entities.items():
             # AOA Pillar 1: Isolation. Each entity in the snapshot must be 
@@ -124,6 +175,7 @@ class Snapshot(SimulationModel):
 
     def nearby_entity_ids(self, x: int, y: int, radius: int) -> list[int]:
         """Return entity IDs in cells overlapping the Manhattan-radius neighborhood."""
+        # x/y can be raw ints or parts of a dict if called with keywords
         cx, cy = x // _SPATIAL_CELL, y // _SPATIAL_CELL
         r = (radius // _SPATIAL_CELL) + 1
         result: list[int] = []
@@ -133,6 +185,16 @@ class Snapshot(SimulationModel):
                 if bucket:
                     result.extend(bucket)
         return result
+
+    def get_entity_at(self, pos: Vector2) -> int | None:
+        """Returns the ID of the living entity at the given position, if any."""
+        # radius 0 check for exact cell
+        ids = self.nearby_entity_ids(pos.x, pos.y, 0)
+        for eid in ids:
+            e = self.entities.get(eid)
+            if e and e.combat.alive and e.spatial.pos == pos:
+                return eid
+        return None
 
     def nearby_ground_positions(self, x: int, y: int, radius: int) -> list[tuple[int, int]]:
         """Return ground item positions (gx, gy) in neighboring spatial cells."""

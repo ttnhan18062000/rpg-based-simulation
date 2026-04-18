@@ -17,13 +17,19 @@ from src.actions.base import (
     PerceptionUpdate, ProgressionUpdate, IdentityUpdate, InteractionUpdate, SpatialUpdate,
     WorldUpdate, BuildingUpdate, RoutineUpdate, ReputationUpdate, StrategicUpdate
 )
+from src.core.models.reason_codes import ActionReason, ReasonCode
 from src.core.gameplay.items.item_registry import ITEM_REGISTRY
-from src.core.gameplay.classes import SKILL_DEFS
+from src.core.gameplay.classes import SKILL_DEFS, SkillTarget, SkillType
 from src.core.logic.event_interpreter import EventInterpreterService
 from src.core.logic.social_state_applicator import SocialStateApplicator
 from src.core.logic.knowledge_propagation import KnowledgePropagationService
+from src.core.logic.memory_salience import MemorySalienceService
+from src.core.gameplay.effects import StatusEffect, EffectType
+from src.core.models.strategy import StrategicState
 from src.actions.eat import EatAction
 from src.actions.sleep import SleepAction
+from src.core.gameplay.attributes import train_attributes
+from src.core.logic.reputation_service import ReputationService
 from src.systems.infrastructure.base import System
 
 if TYPE_CHECKING:
@@ -32,19 +38,23 @@ if TYPE_CHECKING:
     from src.core.world.factions import FactionRegistry
     from src.systems.infrastructure.base import SystemContext
     from src.utils.event_emitter import EventEmitter
+    from src.platform.rng import DeterministicRNG
 
 logger = logging.getLogger(__name__)
 
 class ActionSystem(System):
     """System for processing applied actions and tactical state changes."""
 
-    def process_applied_actions(self, context: SystemContext, applied: list[ActionProposal]) -> None:
+    def process_applied_actions(self, context: SystemContext, proposals: list[ActionProposal], applied: list[ActionProposal] | None = None) -> None:
         """Process state mutations and intent metadata for all ready entities."""
+        applied = applied or []
+        applied_ids = {p.actor_id for p in applied}
         # 1. Authoritative State Application (Unified Pipeline)
         self.apply_action_state_transitions(
             context.world, 
             context.config, 
-            applied, 
+            proposals,
+            applied_ids,
             context.rng,
             emit=context.emit,
             faction_reg=context.faction_reg
@@ -59,85 +69,112 @@ class ActionSystem(System):
         cls, 
         world: WorldState, 
         config: SimulationConfig, 
-        applied: list[ActionProposal],
-        rng: DeterministicRNG,
+        proposals: list[ActionProposal],
+        applied_ids: set[int] | None = None,
+        rng: DeterministicRNG | None = None,
         emit: Callable | None = None,
         faction_reg: FactionRegistry | None = None
     ) -> None:
         """Core side-effects applied identically in live and replay/recovery."""
-        # 0. Global Biological Decay (Authoritative State)
-        cls._apply_biological_decay(world, config)
+        if applied_ids is None:
+            applied_ids = {p.actor_id for p in proposals}
         
-        for proposal in applied:
+        for proposal in proposals:
             entity = world.entities.get(proposal.actor_id)
             if entity is None or not entity.combat.alive:
                 continue
-
-            # Unified Update Collection
-            all_updates: list[IntentUpdate] = []
-            if proposal.updates:
-                all_updates.extend(proposal.updates)
-
-            # 2. Update Generation (Functional Side-Effects)
-            if proposal.verb == ActionType.USE_ITEM and proposal.target:
-                all_updates.extend(cls._get_use_item_updates(world, config, entity, proposal.target))
-            elif proposal.verb == ActionType.LOOT:
-                all_updates.extend(cls._get_looting_updates(world, entity, proposal.target))
-            elif proposal.verb == ActionType.HARVEST and proposal.target:
-                all_updates.extend(cls._get_harvesting_updates(world, entity, proposal.target))
-            elif proposal.verb == ActionType.EAT:
-                all_updates.extend(EatAction.get_updates(proposal, world))
-            elif proposal.verb == ActionType.SLEEP:
-                all_updates.extend(SleepAction.get_updates(proposal, world))
-            elif proposal.verb == ActionType.USE_SKILL:
-                skill_id = proposal.metadata.get("skill_id")
-                target_id = proposal.metadata.get("target_id")
-                
-                if isinstance(proposal.target, (tuple, list)) and len(proposal.target) == 2:
-                    skill_id = proposal.target[0]
-                    target_id = proposal.target[1]
-                elif isinstance(proposal.target, int):
-                    target_id = proposal.target
-                
-                if skill_id:
-                    all_updates.extend(cls._get_use_skill_updates(world, config, rng, faction_reg, entity, skill_id, target_id, proposal=proposal, emit=emit))
-                else:
-                    logger.warning("Entity %d proposed USE_SKILL but no skill_id found in target or metadata", entity.id)
-
-            elif proposal.verb == ActionType.ATTACK and isinstance(proposal.target, int):
-                target_id = proposal.target
-                all_updates.extend(cls._get_use_skill_updates(world, config, rng, faction_reg, entity, "Attack", target_id, proposal=proposal, emit=emit, ignore_skill_check=True))
-
-            # Phase 2: Social Interpretation Pass
-            cls._process_social_interpretation(world, entity, all_updates, proposal, rng)
             
-            # Phase 2: Social Convergence (Gossip)
-            cls._process_proximity_gossip(world, entity, all_updates)
+            is_physically_accepted = proposal.actor_id in applied_ids
+            
+            # --- Cognitive State Persistence [Milestone 7] ---
+            # delib_updates partition contains internal state changes (Strategic, Mind, Perception, Navigation).
+            # These are ALWAYS applied if the entity deliberated, even if their physical action failed.
+            delib_updates = [up for up in (proposal.updates or []) if isinstance(up, (StrategicUpdate, MindUpdate, PerceptionUpdate))]
+            if delib_updates:
+                cls._apply_updates(world, entity, delib_updates, proposal, emit=emit)
 
-            # 3. Final Application (Authoritative Pipeline)
-            if all_updates:
-                cls._apply_updates(world, entity, all_updates, proposal, emit=emit)
-
-            # 4. Direct State Transitions (AI Internal)
+            # [AOA STABILIZATION] Apply AI State transition and Reason regardless of physical outcome.
             if proposal.new_ai_state is not None:
-                new_state = AIState(proposal.new_ai_state)
-                if new_state != entity.mind.decision.ai_state:
-                    if new_state == AIState.SLEEPING:
-                        entity.mind.routine.is_sleeping = True
-                    elif entity.mind.routine.is_sleeping and new_state != AIState.SLEEPING:
-                        entity.mind.routine.is_sleeping = False
-                        
-                    entity.mind.decision.ai_state = new_state
-                 
+                entity.mind.decision.ai_state = AIState(proposal.new_ai_state)
             if proposal.reason:
                 entity.mind.decision.last_reason = proposal.reason
+            
+            # --- Rulebook Authority Boundary ---
+            # If rejected by ConflictResolver, we skip physical side-effects.
+            if not is_physically_accepted:
+                continue
 
-            # 5. Attribute Training
-            from src.core.gameplay.attributes import train_attributes
+            # --- Physical Side-Effects (Authoritative) ---
+            # 1. Fatigue Pressure
+            if config.overhaul_features.get("use_combat_interaction_v2", True) and entity.progression.stamina_ratio < 0.15:
+                if not any(e.source == "exhaustion" for e in entity.combat.effects):
+                    entity.combat.add_effect(StatusEffect(
+                        effect_type=EffectType.SLOW,
+                        remaining_ticks=5,
+                        source="exhaustion",
+                        atk_mult=0.7,
+                        spd_mult=0.5
+                    ))
+
+            # 2. Collect Physical Updates
+            # We TRUST that ConflictResolver has already populated MOVE, ATTACK, and REST updates.
+            # We ONLY enrich those that need system-level interpretation (ITEM, LOOT, HARVEST).
+            physical_updates: list[IntentUpdate] = []
+            if proposal.updates:
+                physical_updates.extend([up for up in proposal.updates if not isinstance(up, (StrategicUpdate, MindUpdate, PerceptionUpdate, NavigationUpdate))])
+
+            if proposal.verb == ActionType.USE_ITEM and proposal.target:
+                physical_updates.extend(cls._get_use_item_updates(world, config, entity, proposal.target))
+            elif proposal.verb == ActionType.LOOT:
+                physical_updates.extend(cls._get_looting_updates(world, entity, proposal.target))
+            elif proposal.verb == ActionType.HARVEST and proposal.target:
+                physical_updates.extend(cls._get_harvesting_updates(world, entity, proposal.target))
+            elif proposal.verb == ActionType.EAT:
+                physical_updates.extend(EatAction.get_updates(proposal, world))
+            elif proposal.verb == ActionType.SLEEP:
+                physical_updates.extend(SleepAction.get_updates(proposal, world))
+            elif proposal.verb == ActionType.USE_SKILL and not any(isinstance(up, CombatTraceUpdate) for up in physical_updates):
+                # Only re-evaluate if NOT already populated by ConflictResolver
+                skill_id = proposal.target[0] if isinstance(proposal.target, (tuple, list)) else None
+                target_id = proposal.target[1] if isinstance(proposal.target, (tuple, list)) else (proposal.target if isinstance(proposal.target, int) else None)
+                if skill_id:
+                    physical_updates.extend(cls._get_use_skill_updates(world, config, rng, faction_reg, entity, skill_id, target_id, proposal=proposal, emit=emit))
+
+            # 3. Social Interpretation Pass
+            cls._process_social_interpretation(world, entity, physical_updates, proposal, rng)
+            
+            # Reputation
+            rep_updates = [up for up in physical_updates if isinstance(up, ReputationUpdate)]
+            for rup in rep_updates:
+                ReputationService.apply_update(entity, rup)
+
+            # 4. Contextual Side-Effects (Gossip)
+            cls._process_proximity_gossip(world, entity, physical_updates)
+
+            # 5. Global Stamina Costs (if not already handled)
+            if config.overhaul_features.get("use_combat_interaction_v2", True):
+                if not any(hasattr(up, "stamina_delta") and up.stamina_delta is not None for up in physical_updates):
+                    if proposal.verb == ActionType.MOVE:
+                         physical_updates.append(ProgressionUpdate(stamina_delta=-2, reason="Movement effort"))
+                    elif proposal.verb != ActionType.SLEEP and proposal.verb != ActionType.EAT:
+                         physical_updates.append(ProgressionUpdate(stamina_delta=-1, reason="Active effort"))
+
+            # 6. Final Authoritative Application
+            if physical_updates:
+                cls._apply_updates(world, entity, physical_updates, proposal, emit=emit)
+
+            # 7. Post-Action Synchronization
+            if proposal.new_ai_state is not None:
+                new_state = AIState(proposal.new_ai_state)
+                if new_state == AIState.SLEEPING:
+                    entity.mind.routine.is_sleeping = True
+                elif entity.mind.routine.is_sleeping and new_state != AIState.SLEEPING:
+                    entity.mind.routine.is_sleeping = False
+
+            # 8. Attribute Training & Timing
             verb_name = proposal.verb.name if hasattr(proposal.verb, "name") else ActionType(proposal.verb).name
             train_attributes(entity, verb_name.lower())
-
-            # 6. Cooldown Management
+            
             speed = entity.combat.spd
             entity.next_act_at += 1.0 / max(0.1, speed / 10.0)
 
@@ -206,8 +243,8 @@ class ActionSystem(System):
                 if up.memory_log_add:
                     log = entity.mind.narrative.memory_log
                     log.extend(up.memory_log_add)
-                    from src.core.logic.memory_salience import MemorySalienceService
-                    MemorySalienceService.prune(entity, world.tick, max_entries=50)
+                    if world.tick % 10 == 0:
+                        MemorySalienceService.prune(entity, world.tick, max_entries=50)
                 
                 if up.memory_locations_set:
                     entity.mind.narrative.memory_locations.update(up.memory_locations_set)
@@ -220,12 +257,26 @@ class ActionSystem(System):
                     nav.cached_path = up.cached_path
                 if up.target_pos is not None:
                     nav.cached_path_target = up.target_pos
-                if up.chase_ticks is not None:
-                    nav.chase_ticks = up.chase_ticks
+                if up.stalemate_counter is not None:
+                    nav.stalemate_counter = up.stalemate_counter
+                if up.last_ai_state is not None:
+                    nav.last_ai_state = up.last_ai_state
+                if up.last_target_id is not None:
+                    nav.last_target_id = up.last_target_id
+                if up.intention is not None:
+                    nav.intention = up.intention
+                if up.blocked_ticks is not None:
+                    nav.blocked_ticks = up.blocked_ticks
+                if up.oscillation_counter is not None:
+                    nav.oscillation_counter = up.oscillation_counter
+                if up.last_route_hash is not None:
+                    nav.last_route_hash = up.last_route_hash
 
             elif isinstance(up, ProgressionUpdate):
-                if up.hp_delta:
+                if up.hp_delta is not None and up.hp_delta != 0:
+                    old_hp = entity.combat.hp
                     entity.combat.hp = max(0, min(entity.combat.max_hp, entity.combat.hp + up.hp_delta))
+                    logger.info("Tick %d: Entity %d HP %d -> %d (delta %d)", world.tick, entity.id, old_hp, entity.combat.hp, up.hp_delta)
                 if up.max_hp_delta:
                     entity.combat.max_hp_base += up.max_hp_delta
                     entity.combat.hp = max(0, min(entity.combat.max_hp, entity.combat.hp + up.max_hp_delta))
@@ -246,7 +297,6 @@ class ActionSystem(System):
                         si = next((s for s in entity.progression.skills if s.skill_id == sid), None)
                         if si: si.cooldown_remaining = cd
                 if up.skills_add:
-                    from src.core.gameplay.classes import SkillInstance
                     for s in up.skills_add:
                         if isinstance(s, str):
                              entity.progression.skills.append(SkillInstance(skill_id=s))
@@ -260,11 +310,19 @@ class ActionSystem(System):
                         for item in up.inventory_remove:
                             if item in entity.inventory.items:
                                 entity.inventory.items.remove(item)
+                if up.effects_add:
+                    for eff in up.effects_add:
+                        entity.combat.add_effect(eff)
                 if up.effects_expire_all:
                     for etype in up.effects_expire_all:
                         for eff in entity.combat.effects:
                             if eff.effect_type == etype:
                                 eff.remaining_ticks = 0
+                if up.consequences_add:
+                    for cons in up.consequences_add:
+                        entity.combat.add_consequence(cons)
+                if up.consequences_remove:
+                    entity.combat.consequences = [c for c in entity.combat.consequences if c.id not in up.consequences_remove]
 
             elif isinstance(up, RoutineUpdate):
                 if up.hunger_delta:
@@ -275,16 +333,24 @@ class ActionSystem(System):
                     entity.mind.routine.is_sleeping = up.is_sleeping
 
             elif isinstance(up, SpatialUpdate):
-                world.move_entity(entity.id, up.new_pos)
-                if up.facing: entity.spatial.facing = up.facing
-                if up.region_id: entity.spatial.region_id = up.region_id
+                # Authoritative Speed/Leash Safety [AOA STABILIZATION]
+                can_move = True
+                if hasattr(entity.combat, "spd") and entity.combat.spd <= 0:
+                    # Allow non-positional updates (facing, region)
+                    if up.new_pos and up.new_pos != entity.spatial.pos:
+                        can_move = False
+                
+                if can_move:
+                    if up.new_pos: world.move_entity(entity.id, up.new_pos)
+                    if up.facing: entity.spatial.facing = up.facing
+                    if up.region_id: entity.spatial.region_id = up.region_id
+                    if up.moved_this_tick is not None: entity.spatial.moved_this_tick = up.moved_this_tick
 
             elif isinstance(up, CombatTraceUpdate):
                 res = up.result
                 target = world.entities.get(res.defender_id)
                 if target and target.combat.alive:
                     if res.details and getattr(res.details, "is_shattered", False):
-                        from src.core.gameplay.effects import EffectType
                         for eff in target.combat.effects:
                             if eff.effect_type == EffectType.FROZEN: eff.remaining_ticks = 0
                     
@@ -370,184 +436,42 @@ class ActionSystem(System):
     @staticmethod
     def apply_strategic_update(entity: Entity, up: StrategicUpdate, world: WorldState | None = None, emit: EventEmitter | None = None) -> None:
         """Authoritatively applies strategic stratum mutations. [AOA AUTHORITATIVE]"""
+        
         from src.core.models.enums import StrategicStatus
         strat = entity.mind.strategic
         
-        # 1. Directives
-        if up.directives_add:
-            for d in up.directives_add:
-                found = False
-                for i, existing in enumerate(strat.directives):
-                    if existing.directive_id == d.directive_id:
-                        strat.directives[i] = d
-                        found = True
-                        break
-                if not found: strat.directives.append(d)
-        if up.directives_remove:
-            strat.directives = [d for d in strat.directives if d.directive_id not in up.directives_remove]
-        
-        # 2. Projects
+        # 1. Prometheus Metrics (State Transition Tracking)
         if up.projects_add_or_update:
             for p in up.projects_add_or_update:
                 found = False
-                for i, existing in enumerate(strat.projects):
+                for existing in strat.projects:
                     if existing.project_id == p.project_id:
                         if existing.status != p.status:
                             from src.utils.metrics import SIM_STRATEGIC_PROJECT_STATUS
                             status_label = "completed" if p.status == StrategicStatus.RESOLVED else "abandoned" if p.status == StrategicStatus.ABANDONED else None
                             if status_label:
                                 SIM_STRATEGIC_PROJECT_STATUS.labels(kind=p.kind.name.lower() if hasattr(p.kind, "name") else str(p.kind).lower(), status=status_label).inc()
-                        strat.projects[i] = p
                         found = True
                         break
                 if not found:
-                    strat.projects.append(p)
                     from src.utils.metrics import SIM_STRATEGIC_PROJECT_STATUS
                     SIM_STRATEGIC_PROJECT_STATUS.labels(kind=p.kind.name.lower() if hasattr(p.kind, "name") else str(p.kind).lower(), status="started").inc()
-        if up.projects_remove:
-            strat.projects = [p for p in strat.projects if p.project_id not in up.projects_remove]
-            
-        # 3. Focus/Locks
-        if up.current_project_id is not None: strat.current_project_id = up.current_project_id
-        if up.current_objective_id is not None: strat.current_objective_id = up.current_objective_id
-        if up.interrupted_project_id is not None: strat.interrupted_project_id = up.interrupted_project_id
-        if up.project_lock_until is not None: strat.project_lock_until = up.project_lock_until
-            
-        # 4. Concerns
-        if up.concerns_add_or_update:
-            for c in up.concerns_add_or_update:
-                found = False
-                for i, existing in enumerate(strat.concerns):
-                    if existing.concern_id == c.concern_id:
-                        strat.concerns[i] = c
-                        found = True
-                        break
-                if not found: strat.concerns.append(c)
-        if up.concerns_remove:
-            strat.concerns = [c for c in strat.concerns if c.concern_id not in up.concerns_remove]
-            
-        # 5. Leads & Knowledge Continuity
-        if up.leads_add_or_update:
-            for ld in up.leads_add_or_update:
-                found = False
-                for i, existing in enumerate(strat.leads):
-                    if existing.lead_id == ld.lead_id:
-                        strat.leads[i] = ld
-                        found = True
-                        break
-                if not found: strat.leads.append(ld)
-        if up.leads_remove:
-            strat.leads = [ld for ld in strat.leads if ld.lead_id not in up.leads_remove]
-        if up.tested_lead_ids:
-            for lid in up.tested_lead_ids:
-                if lid not in strat.tested_lead_ids: strat.tested_lead_ids.append(lid)
-            
-        # 6. Memory & Spatial
-        if up.last_interpreted_event_tick is not None: strat.last_interpreted_event_tick = up.last_interpreted_event_tick
-        if up.candidate_zones_add_or_update:
-            for cz in up.candidate_zones_add_or_update:
-                found = False
-                for i, existing in enumerate(strat.candidate_zones):
-                    if existing.zone_id == cz.zone_id:
-                        strat.candidate_zones[i] = cz
-                        found = True
-                        break
-                if not found: strat.candidate_zones.append(cz)
-        if up.candidate_zones_remove:
-            strat.candidate_zones = [cz for cz in strat.candidate_zones if cz.zone_id not in up.candidate_zones_remove]
-        if up.hypotheses_add_or_update:
-            for hy in up.hypotheses_add_or_update:
-                found = False
-                for i, existing in enumerate(strat.hypotheses):
-                    if existing.hypothesis_id == hy.hypothesis_id:
-                        strat.hypotheses[i] = hy
-                        found = True
-                        break
-                if not found: strat.hypotheses.append(hy)
-        if up.hypotheses_remove:
-            strat.hypotheses = [hy for hy in strat.hypotheses if hy.hypothesis_id not in up.hypotheses_remove]
-            
-        # 8. Social Obligations
-        if up.obligations_add_or_update:
-            for o in up.obligations_add_or_update:
-                found = False
-                for i, existing in enumerate(strat.obligations):
-                    if existing.obligation_id == o.obligation_id:
-                        strat.obligations[i] = o
-                        found = True
-                        break
-                if not found: strat.obligations.append(o)
-        if up.obligations_remove:
-            strat.obligations = [o for o in strat.obligations if o.obligation_id not in up.obligations_remove]
+
         if up.contracts_add_or_update:
             for ct in up.contracts_add_or_update:
-                found = False
-                for i, existing in enumerate(strat.contracts):
+                for existing in strat.contracts:
                     if existing.contract_id == ct.contract_id:
-                        # [TCK-20260415-HARDENING] Metric increment only on status transition
-                        if existing.status != ct.status:
-                             if ct.status == StrategicStatus.ABANDONED:
-                                 from src.utils.metrics import SIM_STRATEGIC_CONTRACT_BREACHES
-                                 SIM_STRATEGIC_CONTRACT_BREACHES.labels(contract_kind=ct.kind.name.lower() if hasattr(ct.kind, "name") else str(ct.kind).lower(), reason="abandoned").inc()
-                        
-                        strat.contracts[i] = ct
-                        found = True
+                        if existing.status != ct.status and ct.status == StrategicStatus.ABANDONED:
+                            from src.utils.metrics import SIM_STRATEGIC_CONTRACT_BREACHES
+                            SIM_STRATEGIC_CONTRACT_BREACHES.labels(contract_kind=ct.kind.name.lower() if hasattr(ct.kind, "name") else str(ct.kind).lower(), reason="abandoned").inc()
                         break
-                if not found: 
-                    strat.contracts.append(ct)
-                    # Note: We don't increment "started" metrics for contracts here yet to avoid over-counting during bootstrap
         
-        if up.contracts_remove:
-            strat.contracts = [ct for ct in strat.contracts if ct.contract_id not in up.contracts_remove]
-        if up.offers_add_or_update:
-            for off in up.offers_add_or_update:
-                found = False
-                for i, existing in enumerate(strat.offers):
-                    if existing.offer_id == off.offer_id:
-                        strat.offers[i] = off
-                        found = True
-                        break
-                if not found: strat.offers.append(off)
-        if up.offers_remove:
-            strat.offers = [off for off in strat.offers if off.offer_id not in up.offers_remove]
-            
-        # 9. Blockers & Metrics
-        if up.blockers_add_or_update:
-            for bl in up.blockers_add_or_update:
-                found = False
-                for i, existing in enumerate(strat.blockers):
-                    if existing.blocker_id == bl.blocker_id:
-                        strat.blockers[i] = bl
-                        found = True
-                        break
-                if not found: strat.blockers.append(bl)
-        if up.blockers_remove:
-            strat.blockers = [bl for bl in strat.blockers if bl.blocker_id not in up.blockers_remove]
-        if up.engaged_ticks is not None: strat.engaged_ticks = up.engaged_ticks
-        if world: strat.last_strategic_tick = world.tick
+        # 2. Delegate authoritative mutation to the StrategicState model [AOA STABILIZATION]
+        strat.apply_update(up)
         
-        # [phase_3_intel_capacity]
-        if up.source_trust_updates:
-            strat.source_trust.update(up.source_trust_updates)
-        
-        # 10. Cognitive Bounding Metrics [phase_2_intel_capacity]
-        if up.last_capacity_profile is not None: strat.last_capacity_profile = up.last_capacity_profile
-        if up.active_slice_used is not None: strat.active_slice_used = up.active_slice_used
-        if up.active_concerns_used is not None: strat.active_concerns_used = up.active_concerns_used
-        if up.retained_leads_used is not None: strat.retained_leads_used = up.retained_leads_used
-        if up.candidate_zones_used is not None: strat.candidate_zones_used = up.candidate_zones_used
-        if up.ally_evaluations_used is not None: strat.ally_evaluations_used = up.ally_evaluations_used
-        if up.detour_depth_used is not None: strat.detour_depth_used = up.detour_depth_used
-        if up.dropped_candidates_count is not None: strat.dropped_candidates_count = up.dropped_candidates_count
-        if up.latent_concerns_count is not None: strat.latent_concerns_count = up.latent_concerns_count
-        if up.is_overloaded is not None: strat.is_overloaded = up.is_overloaded
-        if up.overload_score is not None: strat.overload_score = up.overload_score
-        if up.primary_overload_source is not None: strat.primary_overload_source = up.primary_overload_source
-        if up.last_overload_tick is not None: strat.last_overload_tick = up.last_overload_tick
-        
-        # 11. Traceability
-        if up.strategic_drivers:
-            strat.recent_drivers = up.strategic_drivers
+        # 3. Synchronize world-dependent metadata
+        if world:
+            strat.last_strategic_tick = world.tick
 
     @classmethod
     def _apply_biological_decay(cls, world: WorldState, config: SimulationConfig) -> None:
@@ -555,6 +479,8 @@ class ActionSystem(System):
         for entity in world.entities.values():
             if not entity.combat.alive: continue
             routine = entity.mind.routine
+            # DEBUG
+            print(f"DEBUG: entity={entity.id} sleep_debt={type(routine.sleep_debt)} decay={type(config.sleep_decay_rate)}")
             routine.sleep_debt = max(0.0, min(1.0, routine.sleep_debt + config.sleep_decay_rate))
             routine.hunger_level = max(0.0, min(1.0, routine.hunger_level + config.hunger_decay_rate))
             if routine.sleep_debt >= 1.0 and not routine.is_sleeping: routine.is_sleeping = True
@@ -586,8 +512,10 @@ class ActionSystem(System):
         if sdef.radius > 0:
             from src.core.models.vectors import Vector2
             center = entity.spatial.pos
+            from src.core.models.types import LocationTarget
             if target_id and world.entities.get(target_id): center = world.entities[target_id].spatial.pos
             elif proposal and isinstance(proposal.target, Vector2): center = proposal.target
+            elif proposal and isinstance(proposal.target, LocationTarget): center = proposal.target.pos
             potential = world.entities_at_radius(center, sdef.radius)
             for t in potential:
                 if t.id != entity.id and t.combat.alive:
@@ -599,7 +527,7 @@ class ActionSystem(System):
         from src.actions.combat import DamageResolutionService, CombatAftermathService
         for t in targets:
             damage, is_crit, is_evaded, trace_details = DamageResolutionService.resolve(attacker=entity, defender=t, world=world, config=config, skill_id=skill_id, power=power, rng=rng, faction_reg=faction_reg, override_damage_type=sdef.damage_type, override_element=sdef.element)
-            CombatAftermathService.process(attacker=entity, defender=t, world=world, damage=damage, is_crit=is_crit, is_evasion=is_evaded, config=config, proposal=proposal, trace_details=trace_details)
+            CombatAftermathService.process(attacker=entity, defender=t, world=world, damage=damage, is_crit=is_crit, is_evasion=is_evaded, config=config, proposal=proposal, rng=rng, trace_details=trace_details)
             for up in proposal.updates:
                 if isinstance(up, CombatTraceUpdate) and (up.result.skill_name == "SKILL" or up.result.skill_name is None):
                     up.result.skill_name = sdef.name

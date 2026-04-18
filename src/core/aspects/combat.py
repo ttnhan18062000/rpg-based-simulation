@@ -6,6 +6,7 @@ from src.core.models.enums import Element
 
 from src.core.models.combat import CombatTraceRecord, CombatTraceDetails
 from src.core.models.types import TargetUnion
+from src.core.models.consequence import Consequence
 
 if TYPE_CHECKING:
     from src.actions.base import CombatTraceUpdate
@@ -70,11 +71,10 @@ class CombatAspect(Aspect):
     def _bravery_mult(self) -> float:
         """AOA Stabilization Shim: Legacy emotional impact on stats."""
         # We look up the parent entity's mind aspect
-        # In AOA, aspects should ideally be decoupled, but for legacy test compatibility
-        # we allow this back-reference or assume the property is only called when attached.
-        if not hasattr(self, "_entity") or not self._entity or not self._entity.mind:
+        entity = self._entity_ref() if self._entity_ref else None
+        if not entity or not hasattr(entity, "mind") or not entity.mind:
             return 1.0
-        bravery = self._entity.mind.emotion.bravery
+        bravery = entity.mind.emotion.bravery
         if bravery > 0.8: return 1.1
         if bravery < 0.3: return 0.9
         return 1.0
@@ -84,6 +84,9 @@ class CombatAspect(Aspect):
         mult = self._bravery_mult
         for eff in self.effects:
             mult *= getattr(eff, "atk_mult", 1.0)
+        # Milestone 5: Combat Consequences
+        for cons in self.consequences:
+            mult *= cons.atk_mult
         return int(self.atk_base * mult)
 
     @property
@@ -91,6 +94,8 @@ class CombatAspect(Aspect):
         mult = self._bravery_mult
         for eff in self.effects:
             mult *= getattr(eff, "def_mult", 1.0)
+        for cons in self.consequences:
+            mult *= cons.def_mult
         return int(self.def_base * mult)
 
     @property
@@ -98,6 +103,8 @@ class CombatAspect(Aspect):
         mult = self._bravery_mult
         for eff in self.effects:
             mult *= getattr(eff, "spd_mult", 1.0)
+        for cons in self.consequences:
+            mult *= cons.spd_mult
         return int(self.spd_base * mult)
 
     # Magic combat
@@ -140,10 +147,27 @@ class CombatAspect(Aspect):
     
     # State & Targeting
     effects: list["StatusEffect"] = Field(default_factory=list)
+    consequences: list[Consequence] = Field(default_factory=list)
     combat_target_id: TargetUnion = Field(default=None)
     
     # Introspection: recent combat traces (ring buffer) [AOA STABILIZATION]
     traces: list[CombatTraceRecord] = Field(default_factory=list)
+
+    def add_consequence(self, consequence: Consequence) -> None:
+        """Add a persistent consequence (wound/scar) to the entity."""
+        self.consequences.append(consequence)
+
+    def prune_consequences(self) -> int:
+        """Remove expired consequences and return count removed."""
+        count = len(self.consequences)
+        self.consequences = [c for c in self.consequences if not c.expired]
+        return count - len(self.consequences)
+
+    @property
+    def scars(self) -> list[Consequence]:
+        """Return all permanent consequences."""
+        from src.core.models.enums import ConsequenceKind
+        return [c for c in self.consequences if c.kind == ConsequenceKind.SCAR]
 
     def add_effect(self, effect: Any) -> None:
         """Add a StatusEffect to the entity."""
@@ -170,6 +194,7 @@ class CombatAspect(Aspect):
         copy_obj = super().model_copy(**kwargs)
         copy_obj.elem_vuln = dict(self.elem_vuln)
         copy_obj.effects = list(self.effects)
+        copy_obj.consequences = [c.model_copy(deep=True) for c in self.consequences]
         return copy_obj
 
     def validate(self) -> None:

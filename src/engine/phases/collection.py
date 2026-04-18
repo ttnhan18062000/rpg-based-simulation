@@ -38,11 +38,18 @@ class CollectionPhase(EnginePhase):
             ctx.tick_proposals = []
             return
 
+        # Determine if we can use shallow snapshot (Optimization for local execution)
+        # We use shallow snapshots ONLY when running with a single local worker 
+        # to avoid the O(ticks * entities) deepcopy/freeze overhead.
+        is_shallow = ctx.config.num_workers <= 1
+        
         # Snapshot for AI decisions
-        snapshot = Snapshot.from_world(ctx.world)
+        snapshot = Snapshot.from_world(ctx.world, shallow=is_shallow)
         
         # Dispatch to workers with Phase Boundary Protection
-        with ActionProposalGuard(snapshot):
+        # AOA Optimization: We combine the Snapshot with a DecisionPhase tripwire.
+        from src.core.models.base import DecisionPhase
+        with ActionProposalGuard(snapshot, is_shallow=is_shallow), DecisionPhase():
             ctx.worker_pool.dispatch(ctx.tick_ready_entities, snapshot, ctx.action_queue)
             proposals = ctx.action_queue.drain()
 
@@ -54,11 +61,16 @@ class CollectionPhase(EnginePhase):
                     from src.utils.metrics import SIM_INVALID_ACTIONS_TOTAL
                     SIM_INVALID_ACTIONS_TOTAL.labels(action_type="rest", reason="timeout").inc()
                     
+                    from src.core.models.reason_codes import ActionReason, ReasonCode
                     proposals.append(ActionProposal(
                         actor_id=entity.id,
                         verb=ActionType.REST,
                         target=None,
-                        reason="Chaos Drop / Worker Timeout",
+                        reason=ActionReason(
+                            code=ReasonCode.INTERACTION_REJECTED, 
+                            metadata={"detail": "Chaos Drop / Worker Timeout"},
+                            is_rejection=True
+                        ),
                         new_ai_state=int(entity.mind.decision.ai_state)
                     ))
         

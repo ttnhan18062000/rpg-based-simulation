@@ -1,5 +1,6 @@
-from typing import TYPE_CHECKING, Any, Optional
-from src.api.schemas import AIDecisionSchema, GoalScoreSchema, SocialBondSchema, DecisionDriverSchema
+from typing import TYPE_CHECKING, Any
+from src.api.schemas import AIDecisionSchema, GoalScoreSchema, SocialBondSchema, DecisionDriverSchema, ActionReasonSchema
+from src.core.models.reason_codes import ActionReason
 
 if TYPE_CHECKING:
     from src.core.entities.entity import Entity
@@ -144,7 +145,12 @@ class AIPresenter:
             group_id=entity.identity.group_id,
             active_routine_id=mind.routine.active_routine_id,
             strategy=AIPresenter.serialize_strategy(entity), # [PHASE 4]
-            narrative_impacts=narrative_impacts
+            narrative_impacts=narrative_impacts,
+            last_reason=ActionReasonSchema(
+                code=decision.last_reason.code.value,
+                metadata=decision.last_reason.metadata,
+                reason_text=decision.last_reason.reason_text
+            )
         )
 
     @staticmethod

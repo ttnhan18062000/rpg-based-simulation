@@ -30,7 +30,9 @@ WorldLoop strictly isolates **Mutation** from **Reading** to avoid race conditio
 1.  **Web Thread (FastAPI)**: Serves the REST API and handles user I/O. It **only** reads immutable `Snapshot` copies of the world.
 2.  **Simulation Thread (`WorldLoop`)**: The **Single-Writer**. Only this thread is allowed to mutate the `WorldState`.
 3.  **Worker Pool**: AI brain computations are offloaded to background threads. They receive a `freeze()` frozen snapshot and return an `ActionProposal`. They cannot change the state directly.
-4.  **Snapshots**: At the end of every tick, the engine creates a `Snapshot` (a deep-copy processed by the `WorldPresenter`) and performs an atomic swap.
+4.  **The Mutation Tripwire (`DecisionPhase`)**: To ensure absolute read-only integrity during AI deliberation, the engine uses a custom context manager. When active, it triggers a `RuntimeError` if an AI handler attempts to modify any property of a pre-existing entity.
+5.  **Universal Shallow Snapshots**: For single-worker scenarios (like the Arena), the engine uses an optimized shallow-copy strategy (`model_construct`). This bypasses recursive Pydantic validation, relying on the `DecisionPhase` tripwire to prevent illegal mutations of shared references.
+6.  **Snapshots**: At the end of every tick, the engine creates a `Snapshot` (a deep-copy processed by the `WorldPresenter`) and performs an atomic swap.
 
 ---
 

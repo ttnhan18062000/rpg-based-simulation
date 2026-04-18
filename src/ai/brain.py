@@ -10,7 +10,8 @@ from __future__ import annotations
 import logging
 from typing import Any, TYPE_CHECKING
 
-from src.core.models.enums import AIState, ActionType, GoalType, EmotionType, Domain
+from src.core.models.enums import AIState, ActionType, GoalType, EmotionType, Domain, StrategicStatus
+from src.ai.tactical.tactical_evaluator import TacticalEvaluator
 from src.core.models.strategy import StrategicStatus, DecisionDriver
 from src.actions.base import (
     ActionProposal, IntentUpdate, MindUpdate, NavigationUpdate, PerceptionUpdate, 
@@ -99,7 +100,8 @@ class AIBrain:
         selected_state = self._deliberation_tactical_phase(ctx, typed_updates)
         
         # --- Phase 5: Output (Proposal) ---
-        return self._finalization_phase(ctx, selected_state, typed_updates)
+        final_state, proposal = self._finalization_phase(ctx, selected_state, typed_updates)
+        return final_state, proposal
 
     def _sensory_perception_phase(self, actor: Entity, snapshot: Snapshot, updates: list[IntentUpdate]) -> tuple[AIContext, dict[GoalType, float]]:
         """Phase 1: Input. Gather raw data and apply selective attention."""
@@ -142,11 +144,24 @@ class AIBrain:
         if len(history) > 10:
             history.pop(0)
             
+        # [Milestone 2] Stalemate Detection (Oscillation Loops)
+        from src.core.logic.combat_interaction_service import CombatInteractionService
+        stalemate_counter = actor.mind.navigation.stalemate_counter
+        if CombatInteractionService.detect_stalemate(actor, snapshot):
+            stalemate_counter += 1
+        else:
+            stalemate_counter = 0
+
         updates.append(PerceptionUpdate(
             attention_pool=attention_pool,
             entity_memory=proposed_beliefs if proposed_beliefs else None
         ))
-        updates.append(NavigationUpdate(pos_history=history))
+        updates.append(NavigationUpdate(
+            pos_history=history,
+            stalemate_counter=stalemate_counter,
+            last_ai_state=int(actor.mind.decision.ai_state),
+            last_target_id=actor.combat.combat_target_id
+        ))
 
         # 5. [PHASE 2] Social Appraisal
         from src.core.logic.social_appraisal import SocialAppraisalService
@@ -813,6 +828,7 @@ class AIBrain:
         return actor.mind.decision.ai_state
 
     def _finalization_phase(self, ctx: AIContext, state: AIState, updates: list[IntentUpdate]) -> tuple[AIState, ActionProposal]:
+        # Phase 5: Convert typed updates to ActionProposal.
         """Phase 4: Output. Proposal generation."""
         actor = ctx.actor
         
@@ -852,12 +868,27 @@ class AIBrain:
             })
             return new_state, proposal
         except Exception as e:
-            logger.error("Error in AI handler %s for entity %d: %s", state, actor.id, e, exc_info=True)
+            import traceback
+            tb_str = traceback.format_exc()
+            logger.error("Error in AI handler %s for entity %d: %s\n%s", 
+                         state, actor.id, e, tb_str)
+            # Explicitly clear context to assist GC in high-frequency loops
+            del tb_str
+            del e
             return state, ActionProposal(actor_id=actor.id, verb=ActionType.REST, reason="internal_error", updates=updates)
 
     def _populate_role_tactical_hints(self, ctx: AIContext) -> None:
-        """Inject coordination hints into AIContext based on active social contracts."""
+        """Inject coordination hints into AIContext based on active social contracts and tactical evaluation."""
         actor = ctx.actor
+        
+        # Milestone 4: Global Tactical Evaluation
+        evaluation = TacticalEvaluator.evaluate_tactics(ctx)
+        ctx.tactical_hints["evaluation"] = evaluation
+        
+        # Legacy/Compatibility hints (Will eventually be deprecated in favor of evaluation)
+        if evaluation.is_safe_shot:
+            ctx.tactical_hints["safe_shot"] = True
+            
         strat = actor.mind.strategic
         
         # Find active contract linked to current group

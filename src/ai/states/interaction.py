@@ -1,16 +1,12 @@
 from __future__ import annotations
 
-from src.actions.base import ActionType, ActionProposal
+from src.actions.base import ActionType, ActionProposal, InteractionUpdate, ProgressionUpdate, IntentUpdate, RoutineUpdate
 from src.ai.perception import Perception
-from src.core.models.enums import AIState
+from src.core.models.enums import AIState, MovementIntention
 from src.core.entities.entity import Entity, Vector2
 from src.ai.states.base import (
     AIContext, StateHandler, get_dead_memory_ids, get_perception_cleanup_update, 
     propose_move_toward, should_flee, propose_retreat_home
-)
-from src.actions.base import (
-    ActionType, ActionProposal, InteractionUpdate, 
-    ProgressionUpdate, IntentUpdate
 )
 
 
@@ -59,7 +55,7 @@ class LootingHandler(StateHandler):
         loot_pos = Perception.ground_loot_nearby(actor, snapshot, radius=4)
         if loot_pos is not None:
             return AIState.LOOTING, propose_move_toward(
-                actor, loot_pos, snapshot, "Moving to loot",
+                ctx, loot_pos, "Moving to loot", MovementIntention.REPOSITION,
                 updates=final_updates)
 
         return AIState.WANDER, ActionProposal(
@@ -75,12 +71,12 @@ class HarvestingHandler(StateHandler):
         final_updates = [cleanup] if cleanup else []
 
         if should_flee(actor, ctx.config):
-            return propose_retreat_home(ctx, "Low HP → abandoning harvest", updates=final_updates)
+            return propose_retreat_home(ctx, "Low HP → abandoning harvest")
 
         enemy = ctx.nearest_enemy()
         if enemy and actor.spatial.pos.manhattan(enemy.spatial.pos) <= 3:
             return AIState.HUNT, propose_move_toward(
-                actor, enemy.spatial.pos, snapshot, "Enemy nearby → abandoning harvest",
+                ctx, enemy.spatial.pos, "Enemy nearby → abandoning harvest", MovementIntention.PURSUIT,
                 updates=final_updates + [InteractionUpdate(loot_progress_set=0)])
 
         res = None
@@ -97,7 +93,7 @@ class HarvestingHandler(StateHandler):
                     reason="No resources available → wander",
                     updates=final_updates + [InteractionUpdate(loot_progress_set=0)])
             return AIState.HARVESTING, propose_move_toward(
-                actor, res.spatial.pos, snapshot, f"Moving to {res.name}",
+                ctx, res.spatial.pos, f"Moving to {res.name}", MovementIntention.REPOSITION,
                 updates=final_updates)
 
         if actor.interaction.loot_progress >= res.harvest_ticks:
@@ -143,6 +139,6 @@ class CorpseRunHandler(StateHandler):
             )
 
         return AIState.RECOVER_CORPSE, propose_move_toward(
-            actor, my_node.spatial.pos, snapshot, 
-            f"Running to corpse at {my_node.spatial.pos}",
+            ctx, my_node.spatial.pos, 
+            f"Running to corpse at {my_node.spatial.pos}", MovementIntention.RETREAT,
             updates=final_updates)

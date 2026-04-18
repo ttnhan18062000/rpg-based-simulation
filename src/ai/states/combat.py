@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from src.actions.base import ActionType, ActionProposal
 from src.ai.perception import Perception
-from src.core.models.enums import AIState
+from src.core.models.enums import AIState, MovementIntention
 from src.core.gameplay.items.item_registry import ITEM_REGISTRY
-from src.core.entities.entity import Entity
+from src.core.entities.entity import Entity, Vector2
 from src.ai.states.base import (
     AIContext, StateHandler, get_dead_memory_ids, get_perception_cleanup_update,
     propose_move_toward, propose_move_away, propose_retreat_home,
@@ -14,6 +14,7 @@ from src.actions.base import (
     ActionType, ActionProposal, IntentUpdate, 
     NavigationUpdate, PerceptionUpdate, ProgressionUpdate
 )
+from src.ai.tactical.contract import TacticalMode, TacticalRole, TacticalEvaluation
 
 
 def get_weapon_range(actor: Entity) -> int:
@@ -123,7 +124,7 @@ class HuntHandler(StateHandler):
                         reason="Reached last known position, target gone → wander",
                         updates=[NavigationUpdate(chase_ticks=0), PerceptionUpdate(memory_remove=[eid])])
                 return AIState.HUNT, propose_move_toward(
-                    actor, target_pos, snapshot, "Hunting from memory",
+                    ctx, target_pos, "Hunting from memory", MovementIntention.PURSUIT,
                     updates=[NavigationUpdate(chase_ticks=actor.mind.navigation.chase_ticks + 1)])
             
             return AIState.WANDER, ActionProposal(
@@ -131,28 +132,38 @@ class HuntHandler(StateHandler):
                 reason="Lost target → back to wander",
                 updates=[NavigationUpdate(chase_ticks=0)])
 
-        if should_flee(actor, config, enemy):
-            return propose_retreat_home(ctx, f"Target {enemy.id} too dangerous → aborting hunt")
+        # 1. Tactical Evaluation
+        eval: TacticalEvaluation = ctx.tactical_hints.get("evaluation")
+        if not eval or not eval.target_id:
+            return AIState.WANDER, ActionProposal(actor_id=actor.id, verb=ActionType.REST, reason="No tactical target")
+
+        # 2. Targeted Enemy Retrieval
+        enemy = snapshot.entities.get(eval.target_id)
+        if not enemy:
+             return AIState.WANDER, ActionProposal(actor_id=actor.id, verb=ActionType.REST, reason="Tactical target missing")
 
         dist = actor.spatial.pos.manhattan(enemy.spatial.pos)
         weapon_rng = get_weapon_range(actor)
 
-        # 2. Can we use a skill now?
+        # 3. Deliberate Retreat
+        if eval.mode == TacticalMode.RETREAT:
+            return propose_retreat_home(ctx, eval.reason)
+
+        # 4. Use Skills/Attacks if "Safe" (Milestone 4: Safe Shot)
         skill_id = best_ready_skill(ctx, enemy)
-        if skill_id:
+        if skill_id and (dist <= weapon_rng or eval.is_safe_shot):
             return AIState.COMBAT, ActionProposal(
                 actor_id=actor.id, verb=ActionType.USE_SKILL, target=(skill_id, enemy.id),
-                reason=f"Skill {skill_id} ready during hunt → using on {enemy.id}",
+                reason=f"{eval.reason} + Skill {skill_id} ready",
                 updates=[NavigationUpdate(chase_ticks=0)])
 
-        # 3. Distance-based transition
-        if dist <= weapon_rng:
+        if dist <= weapon_rng and eval.mode != TacticalMode.WIDEN:
             return AIState.COMBAT, ActionProposal(
                 actor_id=actor.id, verb=ActionType.ATTACK, target=enemy.id,
-                reason=f"In range of enemy {enemy.id} (dist={dist}, range={weapon_rng}) → attacking",
+                reason=f"{eval.reason} + Attacking {enemy.id}",
                 updates=[NavigationUpdate(chase_ticks=0)])
 
-        # 4. Handle deadlocks (yielding)
+        # 5. Handle yielding/deadlocks
         if (dist == 2
                 and enemy.mind.decision.ai_state in (AIState.HUNT, AIState.COMBAT)
                 and actor.id > enemy.id):
@@ -160,13 +171,22 @@ class HuntHandler(StateHandler):
                 actor_id=actor.id, verb=ActionType.REST,
                 reason=f"Yielding to let enemy {enemy.id} close gap (anti-deadlock)")
 
-        # 5. Tactical Intent: Skirmish (Kiting)
-        if ctx.tactical_hints.get("skirmish") and dist < ctx.tactical_hints.get("min_dist", 3):
-            return AIState.HUNT, propose_move_away(actor, enemy.spatial.pos, snapshot, "Skirmishing (kiting) to maintain distance", updates=[NavigationUpdate(chase_ticks=actor.mind.navigation.chase_ticks + 1)])
+        # 6. Tactical Movement
+        if eval.mode in (TacticalMode.COVER, TacticalMode.CHOKEPOINT):
+             if eval.target_pos:
+                 target_vec = Vector2(eval.target_pos[0], eval.target_pos[1])
+                 if actor.spatial.pos != target_vec:
+                     return AIState.HUNT, propose_move_toward(ctx, target_vec, eval.reason, MovementIntention.REPOSITION, updates=[NavigationUpdate(chase_ticks=actor.mind.navigation.chase_ticks + 1)])
+        
+        if eval.mode == TacticalMode.WIDEN:
+             return AIState.HUNT, propose_move_away(ctx, enemy.spatial.pos, eval.reason, MovementIntention.REPOSITION, updates=[NavigationUpdate(chase_ticks=actor.mind.navigation.chase_ticks + 1)])
+        
+        if eval.mode == TacticalMode.MAINTAIN and dist == eval.preferred_dist:
+             return AIState.HUNT, ActionProposal(actor_id=actor.id, verb=ActionType.REST, reason="Maintaining distance (Waiting)")
 
-        # 6. Move closer
+        # Default Pursuit
         return AIState.HUNT, propose_move_toward(
-            actor, enemy.spatial.pos, snapshot, f"Hunting enemy {enemy.id}",
+            ctx, enemy.spatial.pos, eval.reason, MovementIntention.PURSUIT,
             updates=[NavigationUpdate(chase_ticks=actor.mind.navigation.chase_ticks + 1)])
 
 
@@ -176,60 +196,69 @@ class CombatHandler(StateHandler):
         cleanup = get_perception_cleanup_update(actor, snapshot)
         final_updates = [cleanup] if cleanup else []
 
-        enemy = ctx.nearest_enemy()
-        if enemy is None:
-            return AIState.WANDER, ActionProposal(
-                actor_id=actor.id, verb=ActionType.REST,
-                reason="Combat target lost → returning to wander")
+        # 1. Tactical Evaluation
+        eval: TacticalEvaluation = ctx.tactical_hints.get("evaluation")
+        if not eval or not eval.target_id:
+            return AIState.WANDER, ActionProposal(actor_id=actor.id, verb=ActionType.REST, reason="No tactical target")
 
-        if should_flee(actor, config, enemy):
+        enemy = snapshot.entities.get(eval.target_id)
+        if not enemy:
+            return AIState.WANDER, ActionProposal(actor_id=actor.id, verb=ActionType.REST, reason="Combat target lost")
+
+        # 2. Deliberate Retreat
+        if eval.mode == TacticalMode.RETREAT:
             potion_id = can_use_potion(actor)
             if potion_id:
                 return AIState.COMBAT, ActionProposal(
                     actor_id=actor.id, verb=ActionType.USE_ITEM, target=potion_id,
-                    reason=f"Subjective threat high (Feeling unsafe) → using {potion_id}",
+                    reason=f"Retreating + Using {potion_id}",
                     updates=[NavigationUpdate(chase_ticks=0)])
-            return propose_retreat_home(ctx, "Low HP / High Threat → Retreating")
+            return propose_retreat_home(ctx, eval.reason)
 
         dist = actor.spatial.pos.manhattan(enemy.spatial.pos)
         weapon_rng = get_weapon_range(actor)
 
+        # 3. Action Selection
         skill_id = best_ready_skill(ctx, enemy)
-        if skill_id:
+        if skill_id and (dist <= weapon_rng or eval.is_safe_shot):
             return AIState.COMBAT, ActionProposal(
                 actor_id=actor.id, verb=ActionType.USE_SKILL, target=(skill_id, enemy.id),
-                reason=f"Using skill {skill_id} on enemy {enemy.id} (dist={dist})",
+                reason=f"{eval.reason} + Using skill {skill_id}",
                 updates=final_updates)
 
-        # 2. Tactical Intent: Support / Healing
+        # 4. Tactical Intent: Support / Coordination
         support_id = ctx.tactical_hints.get("support_target_id")
         if support_id:
             target = snapshot.entities.get(support_id)
             if target:
-                # Use belief for ally health if possible
                 ally_belief = ctx.get_belief(target.id)
-                # If we believe they are alive
                 if ally_belief and ally_belief.visible_injury < 1.0:
                     support_skill = best_ready_skill(ctx, target)
                     if support_skill:
                         return AIState.COMBAT, ActionProposal(
                             actor_id=actor.id, verb=ActionType.USE_SKILL, target=(support_skill, target.id),
                             reason=f"Supporting ally {target.id}")
-                    return AIState.COMBAT, propose_move_toward(actor, target.spatial.pos, snapshot, f"Moving to support {target.id}", updates=[NavigationUpdate(chase_ticks=0)])
+                    return AIState.COMBAT, propose_move_toward(ctx, target.spatial.pos, f"Moving to support {target.id}", MovementIntention.REGROUP, updates=[NavigationUpdate(chase_ticks=0)])
 
-        # 3. Distance-based decision
+        # 5. Tactical Movement vs Attack
+        if eval.mode in (TacticalMode.COVER, TacticalMode.CHOKEPOINT):
+             if eval.target_pos:
+                 target_vec = Vector2(eval.target_pos[0], eval.target_pos[1])
+                 if actor.spatial.pos != target_vec:
+                     return AIState.COMBAT, propose_move_toward(ctx, target_vec, eval.reason, MovementIntention.REPOSITION)
+
         if dist <= weapon_rng:
-            # Skirmish check: if too close, reposition
-            if ctx.tactical_hints.get("skirmish") and dist < ctx.tactical_hints.get("min_dist", 1):
-                return AIState.COMBAT, propose_move_away(actor, enemy.spatial.pos, snapshot, "Skirmishing (kiting) for breathing room")
+            if eval.mode == TacticalMode.WIDEN:
+                return AIState.COMBAT, propose_move_away(ctx, enemy.spatial.pos, eval.reason, MovementIntention.REPOSITION)
                 
             return AIState.COMBAT, ActionProposal(
                 actor_id=actor.id, verb=ActionType.ATTACK, target=enemy.id,
-                reason=f"Attacking enemy {enemy.id} (dist={dist}, range={weapon_rng})",
+                reason=f"{eval.reason} + Attacking {enemy.id}",
                 updates=[NavigationUpdate(chase_ticks=0)])
 
+        # Pursuit
         return AIState.HUNT, propose_move_toward(
-            actor, enemy.spatial.pos, snapshot, f"Enemy {enemy.id} out of range ({dist} > {weapon_rng}) → closing distance")
+            ctx, enemy.spatial.pos, eval.reason, MovementIntention.PURSUIT)
 
 
 class FleeHandler(StateHandler):
@@ -246,7 +275,7 @@ class FleeHandler(StateHandler):
                 updates=[NavigationUpdate(chase_ticks=0)])
 
         return AIState.FLEE, propose_move_away(
-            actor, enemy.spatial.pos, snapshot, f"Fleeing from enemy {enemy.id}",
+            ctx, enemy.spatial.pos, f"Fleeing from enemy {enemy.id}", MovementIntention.RETREAT,
             updates=final_updates + [NavigationUpdate(chase_ticks=0)])
 
 
@@ -264,7 +293,7 @@ class AlertHandler(StateHandler):
                     reason=f"Alert! Attacking intruder {enemy.id}",
                 updates=[NavigationUpdate(chase_ticks=0)])
             return AIState.HUNT, propose_move_toward(
-                actor, enemy.spatial.pos, snapshot, f"Alert! Chasing intruder {enemy.id}")
+                ctx, enemy.spatial.pos, f"Alert! Chasing intruder {enemy.id}", MovementIntention.PURSUIT)
 
         from src.ai.states.base import is_on_home_territory
         if is_on_home_territory(ctx):

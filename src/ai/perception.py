@@ -32,23 +32,26 @@ class Perception:
         nearby_ids = snapshot.nearby_entity_ids(
             actor.spatial.pos.x, actor.spatial.pos.y, vision_range)
         
+        # Cache actor attributes outside loop to avoid redundant hasattr/getattr overhead
+        per_attr = 0
+        if hasattr(actor, "progression") and actor.progression.attributes:
+            per_attr = getattr(actor.progression.attributes, "per", 0)
+            
+        actor_id = actor.id
+        ax, ay = actor.spatial.pos.x, actor.spatial.pos.y
+        
         result: list[Entity] = []
         for eid in nearby_ids:
+            if eid == actor_id:
+                continue
             e = snapshot.entities.get(eid)
-            if e and e.id != actor.id:
+            if e:
                 # 1. Distance check
-                if actor.spatial.pos.manhattan(e.spatial.pos) > vision_range:
+                if abs(ax - e.spatial.pos.x) + abs(ay - e.spatial.pos.y) > vision_range:
                     continue
                 
                 # 2. Stealth / Hidden check
-                is_hidden = getattr(e, "is_hidden", False)
-                if is_hidden:
-                    # Logic Synergy: Higher Perception attribute is required to see hidden entities.
-                    # This satisfies tests/unit/core/test_attribute_synergy.py
-                    per_attr = 0
-                    if hasattr(actor, "progression") and hasattr(actor.progression, "attributes"):
-                        per_attr = getattr(actor.progression.attributes, "per", 0)
-                    
+                if getattr(e, "is_hidden", False):
                     if per_attr < 20: 
                         continue
                 

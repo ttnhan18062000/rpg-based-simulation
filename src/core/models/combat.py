@@ -23,6 +23,12 @@ class CombatTraceDetails(SimulationModel):
     overkill: int = 0
     is_shattered: bool = False
     effect_triggers: list[str] = Field(default_factory=list)
+    
+    # Milestone 2: Tactical Modifiers
+    has_high_ground: bool = False
+    is_flanked: bool = False
+    has_cover: bool = False
+    is_moving: bool = False
 
 class CombatTraceRecord(SimulationModel):
     """Authoritative record of a combat interaction.

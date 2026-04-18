@@ -61,3 +61,25 @@ For visual auditing of strategic decisions:
 1. Open `tools/viz_strategy.html` in a web browser.
 2. Drag and drop any `cognition_e[id].json` file from your `logs/` directory.
 3. Use the **Dagre (Top-Down)** layout to see the hierarchy of Directives, Projects, and Objectives.
+
+---
+
+## 6. The Arena Regression Harness
+
+The `ArenaRunner` (`src/engine/arena/runner.py`) is used for statistical verification of combat and movement behaviors. It eliminates the overhead of full world-loading and focuses on high-frequency interaction scenarios.
+
+### Resource Boundaries & Stability
+To protect the system from memory leaks and execution deadlocks, the test infrastructure implements a multi-tier watchdog system:
+
+1.  **Virtual Memory Cap (2.0GB)**: Enforced via `resource.setrlimit` at the OS level. Prevents runaway memory allocation from locking the system.
+2.  **SIGKILL Hang Watchdog**: A background daemon monitors the wall-clock duration of every test. If a test exceeds its timeout (Default: **300s**, `@pytest.mark.slow`: **600s**), the entire process is immediately terminated via `SIGKILL`.
+3.  **Process Cleanup Utility**: If orphaned test workers are suspected, run the following to safely terminate them:
+    ```bash
+    python3 scripts/cleanup_tests.py
+    ```
+
+### Execution
+```bash
+# Run the full regression suite with the watchdog and aligned registries
+PYTHONPATH=. pytest tests/unit/core/gameplay/test_item_contracts.py tests/unit/combat/test_ranged_combat.py
+```

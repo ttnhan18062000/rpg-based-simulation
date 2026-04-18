@@ -75,7 +75,7 @@ def test_snapshot_deep_purity():
     snap_e = snap.entities[99]
     
     # 3. Verify freeze on snapshot entity
-    with pytest.raises(RuntimeError, match="Cannot mutate frozen CombatAspect"):
+    with pytest.raises(RuntimeError, match="Object is Frozen"):
         snap_e.combat.hp = 50
         
     # 4. Verify freeze on collections (list -> tuple)

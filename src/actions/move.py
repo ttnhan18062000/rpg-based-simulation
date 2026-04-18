@@ -28,13 +28,23 @@ class MoveAction:
         if not entity or not entity.combat.alive: return False
         
         target: Vector2 = proposal.target
-        if not world.grid.is_walkable(target): return False
+        from src.core.models.reason_codes import ActionReason, ReasonCode
+        
+        if not world.grid.is_walkable(target): 
+            proposal.reason = ActionReason(code=ReasonCode.PATH_NOT_FOUND, metadata={"detail": "Terrain blocked"}, is_rejection=True)
+            return False
         
         # O(1) Check: Is anyone already there? (AOA Phase 6)
-        if world.is_occupied(target): return False
+        from src.core.logic.legality_service import LegalityService
+        success, reason = LegalityService.verify_occupancy(target, world)
+        if not success: 
+            proposal.reason = reason
+            return False
         
         # Set Check: Did anyone ELSE move there this tick?
-        if (target.x, target.y) in occupied: return False
+        if (target.x, target.y) in occupied: 
+            proposal.reason = ActionReason(code=ReasonCode.OCCUPANCY_VIOLATION, metadata={"detail": "Position claimed this tick"}, is_rejection=True)
+            return False
         
         return True
 
@@ -49,4 +59,4 @@ class MoveAction:
         
         from src.actions.base import NavigationUpdate, SpatialUpdate
         proposal.updates.append(NavigationUpdate(target_pos=target))
-        proposal.updates.append(SpatialUpdate(new_pos=target))
+        proposal.updates.append(SpatialUpdate(new_pos=target, moved_this_tick=True))

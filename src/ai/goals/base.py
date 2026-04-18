@@ -151,6 +151,20 @@ class HysteresisModifier(ScoreModifier):
             ticks_held = max(0, ctx.snapshot.tick - committed_at)
             boost = 1.25 + 0.05 * min(ticks_held, 10)
             score.score *= boost
+ 
+ 
+class StalemateModifier(ScoreModifier):
+    """Breaks oscillation loops by penalizing the current goal and boosting alternates."""
+    def modify(self, score: GoalScore, ctx: AIContext) -> None:
+        counter = ctx.actor.mind.navigation.stalemate_counter
+        if counter >= 3: # Threshold from Milestone 2
+            mind_dec = ctx.actor.mind.decision
+            if mind_dec.last_goal == score.goal:
+                # Penalize the goal that is causing the loop
+                score.score *= 0.1
+            else:
+                # Boost other viable options
+                score.score *= 2.0
 
 
 class CooldownModifier(ScoreModifier):
@@ -338,6 +352,7 @@ class GoalEvaluator:
             CooldownModifier(),
             MemoryModifier(),
             StuckModifier(),
+            StalemateModifier(),
             SkirmishModifier(),
             AmbitionModifier(),
             FatigueModifier(),
@@ -380,6 +395,10 @@ class GoalEvaluator:
 
         # Window check: 0 <= ticks_held < min_ticks
         if 0 <= ticks_held < min_ticks:
+            # Milestone 2: Stalemate lock-break
+            if ctx.actor.mind.navigation.stalemate_counter >= 3:
+                return False
+
             # Soul/Personality override: extreme fear or critical injury breaks the lock
             panic = ctx.actor.mind.emotion.panic
             personality = ctx.actor.mind.decision.personality

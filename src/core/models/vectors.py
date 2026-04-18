@@ -38,6 +38,9 @@ class Vector2(SimulationModel):
     def __sub__(self, other: Vector2) -> Vector2:
         return Vector2(x=self.x - other.x, y=self.y - other.y)
 
+    def __mul__(self, scalar: int | float) -> Vector2:
+        return Vector2(x=int(self.x * scalar), y=int(self.y * scalar))
+
     def manhattan(self, other: Any) -> int:
         """Robust manhattan distance (AOA Hardened for dict-coercion)."""
         if not isinstance(other, Vector2):

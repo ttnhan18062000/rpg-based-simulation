@@ -147,6 +147,7 @@ def test_intel_refutation_by_exhaustion():
     
     # Lead should be tested and exhausted
     updated_lead = next(l for l in hero.mind.strategic.leads if l.lead_id == "l2")
+    print(f"\nDEBUG_LEAD: {updated_lead.model_dump()}")
     assert updated_lead.tested is True
     assert updated_lead.is_exhausted is True
     assert updated_lead.certainty < 0.5

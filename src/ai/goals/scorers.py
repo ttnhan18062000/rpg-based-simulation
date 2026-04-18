@@ -75,6 +75,11 @@ class CombatGoal(GoalScorer):
         if enemy:
             dist = actor.spatial.pos.manhattan(enemy.spatial.pos)
             base += 0.5 * max(0, 1.0 - dist / 15.0)  # [AOA STABILIZATION] Dominant utility for engagement
+            
+            # [Milestone 2] Target Stickiness (Hysteresis)
+            from src.core.logic.combat_interaction_service import CombatInteractionService
+            base += CombatInteractionService.get_stickiness_bonus(actor, enemy.id)
+            
         return base + _trait_utility(ctx).combat
 
 # ---------------------------------------------------------------------------

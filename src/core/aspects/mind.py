@@ -1,10 +1,14 @@
 from typing import Any, TYPE_CHECKING, Union, Literal
 from pydantic import BaseModel, Field, ConfigDict, model_validator
 from src.core.models.base import Aspect, SimulationModel
-from src.core.models.enums import AIState, GoalType, EmotionType
+from src.core.models.enums import (
+    ActionType, AIState, HeroClass, GoalType, DamageType, Element, 
+    VeterancyRank, ItemType, Rarity, MovementIntention, EmotionType
+)
 from src.core.models.vectors import Vector2
 from src.core.models.lived_structure import RoutineProfile, PlaceAttachment # [PHASE 3]
 from src.core.models.strategy import StrategicState, DecisionDriver  # [PHASE 1]
+from src.core.models.reason_codes import ActionReason, ReasonCode
 
 if TYPE_CHECKING:
     from src.core.entities.entity import Entity
@@ -42,7 +46,7 @@ class DecisionState(SimulationModel):
     
     ai_state: AIState = AIState.IDLE
     goals: list[str] = Field(default_factory=list)
-    last_reason: str = ""
+    last_reason: ActionReason = Field(default_factory=lambda: ActionReason(code=ReasonCode.WAITING))
     last_goal: GoalType | None = None
     goal_committed_at: int = -1
     goal_switch_count: int = 0
@@ -103,6 +107,12 @@ class BeliefRecord(SimulationModel):
         skills = data.get("observed_skills")
         if isinstance(skills, list):
             data["observed_skills"] = set(skills)
+            
+        # Coerce pos from dict to Vector2
+        pos = data.get("pos")
+        if isinstance(pos, dict):
+            from src.core.models.vectors import Vector2
+            data["pos"] = Vector2.model_validate(pos)
             
         # Coerce threat from dict to ThreatEstimate
         threat = data.get("threat")
@@ -197,11 +207,19 @@ class NavigationState(SimulationModel):
     """Pathfinding and movement history."""
     model_config = ConfigDict(extra='forbid')
     
+    intention: MovementIntention = MovementIntention.NONE
+    blocked_ticks: int = 0
     cached_path: list[Vector2] | None = Field(default=None, repr=False)
     cached_path_target: Vector2 | None = Field(default=None, repr=False)
     pos_history: list[Vector2] = Field(default_factory=list)
     chase_ticks: int = 0
     engaged_ticks: int = 0
+    engagement_target_id: int | None = None  # [Milestone 2] For target stickiness
+    last_ai_state: AIState | None = None   # [Milestone 2] For stalemate detection
+    last_target_id: int | None = None      # [Milestone 2] For stalemate detection
+    stalemate_counter: int = 0               # [Milestone 2] For loop breaking
+    oscillation_counter: int = 0             # [Milestone 3] For movement anti-jitter
+    last_route_hash: str | None = None       # [Milestone 3] For reroute hysteresis
 
 # SocialBondPerception merged into SocialBondRecord in life_events.py [PHASE 2]
 

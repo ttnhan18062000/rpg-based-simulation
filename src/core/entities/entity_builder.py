@@ -125,8 +125,9 @@ class EntityBuilder:
         self._leash_radius = radius
         return self
 
-    def at(self, pos: Vector2) -> EntityBuilder:
-        self._pos = pos
+    def at(self, pos: Vector2 | dict) -> EntityBuilder:
+        from src.core.models.vectors import Vector2
+        self._pos = Vector2.from_any(pos)
         return self
 
     def home(self, pos: Vector2 | None) -> EntityBuilder:

@@ -1,7 +1,8 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING, Any
-from pydantic import Field
+from pydantic import Field, model_validator
 from src.core.models.base import Aspect
+from src.core.models.enums import TacticalRole
 
 if TYPE_CHECKING:
     from src.core.gameplay.classes import SkillInstance
@@ -15,7 +16,29 @@ class ProgressionAspect(Aspect):
     gold: int = 0
     fame: int = 0
     stamina: int = 50
-    max_stamina: int = 50
+    max_stamina_base: int = 50
+    
+    @model_validator(mode='before')
+    @classmethod
+    def _initialize_stamina_base(cls, data: Any) -> Any:
+        """AOA Stabilization: Ensures max_stamina initialization sets the base field."""
+        if isinstance(data, dict):
+            if "max_stamina" in data and "max_stamina_base" not in data:
+                data["max_stamina_base"] = data.pop("max_stamina")
+        return data
+
+    @property
+    def max_stamina(self) -> int:
+        mult = 1.0
+        entity = self._entity_ref() if self._entity_ref else None
+        if entity and hasattr(entity, "combat"):
+            for cons in entity.combat.consequences:
+                mult *= cons.max_stamina_mult
+        return max(1, int(self.max_stamina_base * mult))
+
+    @max_stamina.setter
+    def max_stamina(self, value: int) -> None:
+        self.max_stamina_base = value
     
     # Hero skills and class
     hero_class: int = 0                 # HeroClass enum value
@@ -41,6 +64,10 @@ class ProgressionAspect(Aspect):
     talents: list[str] = Field(default_factory=list)
     quests: list[Any] = Field(default_factory=list)
 
+    # Milestone 5: Specialized Role Ownership
+    tactical_role: TacticalRole = TacticalRole.MELEE_STRIKER
+    role_stability: int = 5 # Starting hysteresis counter
+
     @property
     def xp_mult(self) -> float:
         """Dynamic XP multiplier combining attributes and active effects. [AOA STABILIZATION]"""
@@ -52,8 +79,9 @@ class ProgressionAspect(Aspect):
             base = 1.0 + w * 0.01 + i * 0.005
             
         # Apply multipliers from combat effects
-        if self._entity and hasattr(self._entity, "combat"):
-            for eff in self._entity.combat.effects:
+        entity = self._entity_ref() if self._entity_ref else None
+        if entity and hasattr(entity, "combat"):
+            for eff in entity.combat.effects:
                 base *= getattr(eff, "xp_mult", 1.0)
         return base
 
@@ -89,13 +117,19 @@ class ProgressionAspect(Aspect):
         self.gold = max(0, self.gold)
         self.xp = max(0, self.xp)
         self.level = max(1, self.level)
-        self.max_stamina = max(1, self.max_stamina)
+        self.max_stamina_base = max(1, self.max_stamina_base)
 
     def on_attach(self, owner: Any) -> None:
         """Called when the aspect is attached to an Entity."""
         super().on_attach(owner)
         if self.genetic_seed != 0 and not self.aptitudes:
             self.init_genetics()
+        
+        # Milestone 5: Initial role sync
+        from src.core.models.enums import HeroClass
+        if self.hero_class != HeroClass.NONE:
+            from src.core.gameplay.attributes import derive_tactical_role_from_class
+            self.tactical_role = derive_tactical_role_from_class(HeroClass(self.hero_class))
 
     def init_genetics(self) -> None:
         """Initialize aptitudes and longevity from the genetic seed."""

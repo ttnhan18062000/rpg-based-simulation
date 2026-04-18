@@ -7,7 +7,7 @@ Audit and reconcile the Phase 1 and Phase 2 stages of the Strategic Design Shift
 - Update `thinking_implementation_phase_1.md` checkmarks and add comments.
 - Create retrospective tickets for Phase 1 Stages (1-6) and Phase 2.
 - Verify structural integrity of Stage 5 (Snapshot safety) for the strategic domain.
-- Update `working_log.md` with reconciled ticket entries.
+- Update `working_log.csv` with reconciled ticket entries.
 
 ## Out of Scope
 - Implementing new strategic features.
@@ -16,7 +16,7 @@ Audit and reconcile the Phase 1 and Phase 2 stages of the Strategic Design Shift
 ## Acceptance Criteria
 - `thinking_implementation_phase_1.md` reflects 100% completion with implementation details.
 - Tickets exist for all stages of Phase 1 and Phase 2.
-- `working_log.md` is updated and consistent.
+- `working_log.csv` is updated and consistent.
 - Snapshot safety test passes for nested strategic records.
 
 ## Related Tickets
