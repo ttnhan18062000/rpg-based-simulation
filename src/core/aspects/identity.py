@@ -1,6 +1,6 @@
 from __future__ import annotations
 from typing import Any
-from pydantic import Field
+from pydantic import Field, model_validator
 from src.core.models.base import Aspect
 from src.core.models.enums import EntityRole, Archetype, ArchetypeSer
 from src.core.gameplay.faction import Faction
@@ -10,6 +10,20 @@ class IdentityAspect(Aspect):
     """Aspect handling entity name, faction, role, and tiering. [AOA STABILIZATION]"""
     display_name: str = ""
     faction: Any = Faction.HERO_GUILD
+    
+    @model_validator(mode="before")
+    @classmethod
+    def _coerce_faction(cls, data: Any) -> Any:
+        if isinstance(data, dict) and "faction" in data:
+            from src.core.gameplay.faction import Faction
+            val = data["faction"]
+            if not isinstance(val, (Faction, int)):
+                # Handle string names
+                try:
+                    data["faction"] = Faction[str(val).upper()]
+                except (KeyError, ValueError):
+                    pass
+        return data
     role: Any = EntityRole.MOB
     tier: int = 0
     difficulty_tier: int = 1

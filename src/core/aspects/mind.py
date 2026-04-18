@@ -107,6 +107,12 @@ class BeliefRecord(SimulationModel):
         if isinstance(skills, list):
             data["observed_skills"] = set(skills)
             
+        # Coerce pos from dict to Vector2
+        pos = data.get("pos")
+        if isinstance(pos, dict):
+            from src.core.models.vectors import Vector2
+            data["pos"] = Vector2.model_validate(pos)
+            
         # Coerce threat from dict to ThreatEstimate
         threat = data.get("threat")
         if isinstance(threat, dict):

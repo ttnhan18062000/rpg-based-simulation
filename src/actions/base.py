@@ -29,6 +29,7 @@ from src.core.models.cognition import CognitionCapacityProfile
 
 class ActionBatch(SimulationModel):
     """A batch of action proposals for a specific tick, used for Kafka/Persistence."""
+    TRIPWIRE_EXEMPT: typing.ClassVar[bool] = True
     tick: int
     proposals: list[ActionProposal] = Field(default_factory=list)
 
@@ -38,6 +39,7 @@ class ActionProposal(SimulationModel):
     The WorldLoop validates and applies (or rejects) each proposal.
     Pillar 3: Conflict Resolution & Authoritative Application.
     """
+    TRIPWIRE_EXEMPT: typing.ClassVar[bool] = True
 
     actor_id: int
     verb: ActionType
@@ -69,6 +71,7 @@ class ActionProposal(SimulationModel):
 
 class IntentUpdate(SimulationModel):
     """Base for all typed simulation side-effects."""
+    TRIPWIRE_EXEMPT: typing.ClassVar[bool] = True
     target_id: int | None = None
     reason: ActionReason | str | dict = ""
 

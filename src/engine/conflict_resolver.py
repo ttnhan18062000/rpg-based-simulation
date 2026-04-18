@@ -178,5 +178,6 @@ class ConflictResolver:
         verb_name = proposal.verb.name if hasattr(proposal.verb, "name") else ActionType(proposal.verb).name
         SIM_INVALID_ACTIONS_TOTAL.labels(action_type=verb_name.lower(), reason="validation_failed").inc()
         
-        logger.debug("Rejected: %s", proposal)
+        logger.debug("Rejected: actor_id=%s verb=%s reason='%s'", 
+                     proposal.actor_id, verb_name, proposal.reason)
         return False

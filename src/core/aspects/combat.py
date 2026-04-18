@@ -71,11 +71,10 @@ class CombatAspect(Aspect):
     def _bravery_mult(self) -> float:
         """AOA Stabilization Shim: Legacy emotional impact on stats."""
         # We look up the parent entity's mind aspect
-        # In AOA, aspects should ideally be decoupled, but for legacy test compatibility
-        # we allow this back-reference or assume the property is only called when attached.
-        if not hasattr(self, "_entity") or not self._entity or not self._entity.mind:
+        entity = self._entity_ref() if self._entity_ref else None
+        if not entity or not hasattr(entity, "mind") or not entity.mind:
             return 1.0
-        bravery = self._entity.mind.emotion.bravery
+        bravery = entity.mind.emotion.bravery
         if bravery > 0.8: return 1.1
         if bravery < 0.3: return 0.9
         return 1.0

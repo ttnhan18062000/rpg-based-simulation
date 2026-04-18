@@ -271,3 +271,35 @@ class WorldState:
         # Use stable JSON serialization
         state_str = json.dumps(state_data, sort_keys=True)
         return hashlib.sha256(state_str.encode()).hexdigest()
+
+    def shutdown(self) -> None:
+        """Deep cleanup of world state collections to break circular references and free memory. [Harden 7]"""
+        # Clear large dictionaries
+        self.entities.clear()
+        self.resource_nodes.clear()
+        self.treasure_chests.clear()
+        self.corpse_nodes.clear()
+        self.ground_items.clear()
+        self.group_registry.clear()
+        self.household_registry.clear()
+        self.region_consequence_registry.clear()
+        self.successor_registry.clear()
+        
+        # Clear large lists
+        self.camps.clear()
+        self.buildings.clear()
+        self.regions.clear()
+        self.scar_registry.clear()
+        self.history.clear()
+        self.monuments.clear()
+        
+        # Shutdown sub-registries if they support it
+        if hasattr(self.social_registry, "shutdown"):
+            self.social_registry.shutdown()
+        if hasattr(self.world_history, "clear"):
+            self.world_history.clear()
+        if hasattr(self.strategic_registry, "clear"):
+            self.strategic_registry.clear()
+            
+        # Clear event bus to prevent lingering handler references
+        self.event_bus = None

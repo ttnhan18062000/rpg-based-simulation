@@ -295,6 +295,13 @@ class RecruitmentOfferSchema(BaseModel):
     negotiation_count: int = 0
     expires_tick: int | None = None
 
+class DecisionDriverSchema(BaseModel):
+    """Structured record explaining a decision bias. [Milestone 7]"""
+    kind: str
+    label: str
+    weight: float
+    description: str | None = None
+
 class StrategicStateSchema(BaseModel):
     directives: list[DirectiveSchema] = Field(default_factory=list)
     blockers: list[BlockerSchema] = Field(default_factory=list)

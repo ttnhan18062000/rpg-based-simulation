@@ -1,14 +1,21 @@
-# Test Plan: Combat Movement Observability
+# Test Plan - Milestone 7 Stabilization
 
-## Unit Tests
-- `src/core/models/reason_codes.py`: Verify `ActionReason.reason_text` prepends "REJECTED: " when `is_rejection=True`.
+## Scope
+Verification of observability contract and rollout hardening boundaries.
 
-## Integration Tests
-- `tests/rollout/test_combat_movement_rollout_boundaries.py`: Ensure legality v2 rejections are correctly caught and formatted for the API.
-- `tests/observability/test_combat_movement_observability_contract.py`: Ensure structured reason codes are populated at runtime.
+## Automated Tests
 
-## Documentation Tests
-- `tests/docs/test_combat_movement_documentation_integrity.py`: Verify that all milestone rulebooks are present and documented according to the overhaul spec.
+### 1. Documentation Integrity
+- **Command**: `pytest tests/docs/test_combat_movement_documentation_integrity.py`
+- **Goal**: Ensure all documented reasons exist in the code base.
 
-## Regression Suite
-- Run full suite: `pytest tests/observability/ tests/rollout/ tests/docs/`
+### 2. Rollout Verification
+- **Command**: `pytest tests/rollout/test_combat_movement_rollout_boundaries.py`
+- **Goal**: Ensure toggling `overhaul_features` flags results in correct legacy/v2 behavior transitions.
+
+### 3. API Observability
+- **Command**: `pytest tests/observability/test_combat_movement_observability_contract.py`
+- **Goal**: Ensure `ReasonCode` and `ActionReason` are correctly serialized through the API layer.
+
+## Manual Verification
+- N/A (Automated tests are authoritative for this milestone).

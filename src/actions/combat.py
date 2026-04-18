@@ -11,10 +11,13 @@ import logging
 from typing import TYPE_CHECKING
 from src.actions.base import ActionProposal, CombatTraceUpdate, PerceptionUpdate, MindUpdate, ProgressionUpdate, SocialUpdate
 from src.actions.damage import get_damage_calculator
-from src.core.models.enums import ActionType, DamageType, Domain, Element, EmotionType, ConsequenceKind
+from src.core.models.enums import ActionType, DamageType, Domain, Element, EmotionType, ConsequenceKind, HeroClass
 from src.core.models.consequence import Consequence
 from src.core.gameplay.faction import Faction, FactionRegistry
 from src.core.gameplay.items.item_registry import ITEM_REGISTRY
+from src.core.models.combat import CombatTraceRecord, CombatTraceDetails
+from src.core.logic.social_interpretation import SocialInterpretationService
+from src.core.aspects.mind import InterpretedEvent, CombatNarrative
 
 if TYPE_CHECKING:
     from src.config import SimulationConfig
@@ -127,7 +130,6 @@ class CombatAftermathService:
             ))
 
         # Rich Trace Generation (AOA Phase 5)
-        from src.core.models.combat import CombatTraceRecord, CombatTraceDetails
         trace = CombatTraceUpdate(
             result=CombatTraceRecord(
                 tick=tick, 
@@ -162,7 +164,6 @@ class CombatAftermathService:
             return
 
         # Phase 1: Relationship/Social Awareness Integration
-        from src.core.logic.social_interpretation import SocialInterpretationService
         hp_lost_ratio = damage / max(1, defender.combat.max_hp)
         if hp_lost_ratio > 0.0:
              social_up = SocialInterpretationService.get_harm_deltas(attacker, defender, hp_lost_ratio)
@@ -180,7 +181,6 @@ class CombatAftermathService:
             
         # Threat Table
         base_threat = damage * config.threat_damage_mult
-        from src.core.models.enums import HeroClass
         hclass = getattr(attacker.progression, "hero_class", HeroClass.NONE)
         if hclass == HeroClass.NONE:
             hclass = getattr(attacker.identity, "hero_class", HeroClass.NONE)
@@ -197,7 +197,6 @@ class CombatAftermathService:
         trace.result.grudge = float(damage) / 10.0
 
         # Phase 5: Narrative Memory Generation [STAGE 5]
-        from src.core.aspects.mind import InterpretedEvent, CombatNarrative
         
         # Narrative for Attacker (The Glory)
         attacker_narrative = InterpretedEvent(
@@ -246,7 +245,6 @@ class CombatAftermathService:
         elif is_crit: wound_chance = 0.4
         elif hp_lost_ratio > 0.15: wound_chance = 0.2
         
-        from src.core.models.enums import Domain, ConsequenceKind
         if not rng.next_bool(Domain.COMBAT, defender.id, tick + 7, wound_chance):
             return
 
@@ -428,6 +426,8 @@ class CombatAction:
     def _get_weapon_range(entity: Entity) -> int:
         if entity.inventory and entity.inventory.weapon:
             weapon_tmpl = ITEM_REGISTRY.get(entity.inventory.weapon)
+            print(f"DEBUG_RANGE: Entity={entity.id}, Weapon={entity.inventory.weapon}, Found={weapon_tmpl is not None}, Range={weapon_tmpl.weapon_range if weapon_tmpl else 'N/A'}")
             if weapon_tmpl:
                 return weapon_tmpl.weapon_range
+        print(f"DEBUG_RANGE: Entity={entity.id}, No weapon, returning 1")
         return 1

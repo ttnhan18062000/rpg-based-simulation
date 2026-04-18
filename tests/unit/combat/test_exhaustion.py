@@ -58,7 +58,7 @@ def test_exhaustion_penalty_application(world, config, rng):
     proposal = ActionProposal(actor_id=1, verb=ActionType.MOVE, target=(5,5))
     
     ActionSystem.apply_action_state_transitions(
-        world, config, [proposal], rng
+        world, config, [proposal], {1}, rng
     )
     
     # Check if fatigue effect was added

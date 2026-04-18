@@ -50,7 +50,8 @@ class ResolutionPhase(EnginePhase):
 
         # 2. Sequential Application & Metadata (The Rebuild: Pillars 1-3)
         # Consolidates tactical actions and AI-intent metadata application.
-        ctx.action_system.process_applied_actions(system_ctx, to_apply)
+        # [AOA STABILIZATION] Pass ALL proposals for cognitive application, and to_apply for physical.
+        ctx.action_system.process_applied_actions(system_ctx, ctx.tick_proposals, to_apply)
         ctx.tick_applied = to_apply
         
         # 3. [Milestone 1] Hero lifecycle moved to PreSystemsPhase to ensure

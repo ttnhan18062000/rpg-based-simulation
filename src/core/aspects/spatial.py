@@ -1,5 +1,6 @@
 from __future__ import annotations
-from pydantic import Field
+from typing import Any
+from pydantic import Field, model_validator
 from src.core.models.base import Aspect
 from src.core.models.vectors import Vector2
 
@@ -16,6 +17,19 @@ class SpatialAspect(Aspect):
     
     # Sensory limits
     vision_range: int = 6
+
+    @model_validator(mode="before")
+    @classmethod
+    def coerce_vectors(cls, data: Any) -> Any:
+        """Harden against dictionary-based position data from scenarios."""
+        if isinstance(data, dict):
+            if "pos" in data and isinstance(data["pos"], dict):
+                data["pos"] = Vector2.from_any(data["pos"])
+            if "facing" in data and isinstance(data["facing"], dict):
+                data["facing"] = Vector2.from_any(data["facing"])
+            if "home_pos" in data and isinstance(data["home_pos"], dict):
+                data["home_pos"] = Vector2.from_any(data["home_pos"])
+        return data
 
 
 # Rebuild Model to finalize Pydantic setup

@@ -42,9 +42,13 @@ class EntityGenerator:
         self._rng = rng
 
     def should_spawn(self, world: WorldState) -> bool:
+        if self._config.generator_spawn_interval <= 0:
+            return False
+            
         alive_count = sum(1 for e in world.entities.values() if e.kind != "generator" and e.combat.alive)
         return (
-            world.tick % self._config.generator_spawn_interval == 0
+            world.tick > 0  # Skip tick 0 to avoid immediate spawn in arenas
+            and world.tick % self._config.generator_spawn_interval == 0
             and alive_count < self._config.generator_max_entities
         )
 

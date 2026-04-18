@@ -111,6 +111,8 @@ class Pathfinder:
         closed: set[tuple[int, int]] = set()
         nodes_explored = 0
 
+        # Pillar 6: Harden against dict-based goal coordinates
+        goal = Vector2.from_any(goal)
         gx, gy = goal.x, goal.y
 
         while open_heap and nodes_explored < self._max_nodes:

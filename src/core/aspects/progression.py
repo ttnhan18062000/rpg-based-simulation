@@ -1,6 +1,6 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING, Any
-from pydantic import Field
+from pydantic import Field, model_validator
 from src.core.models.base import Aspect
 
 if TYPE_CHECKING:
@@ -17,11 +17,21 @@ class ProgressionAspect(Aspect):
     stamina: int = 50
     max_stamina_base: int = 50
     
+    @model_validator(mode='before')
+    @classmethod
+    def _initialize_stamina_base(cls, data: Any) -> Any:
+        """AOA Stabilization: Ensures max_stamina initialization sets the base field."""
+        if isinstance(data, dict):
+            if "max_stamina" in data and "max_stamina_base" not in data:
+                data["max_stamina_base"] = data.pop("max_stamina")
+        return data
+
     @property
     def max_stamina(self) -> int:
         mult = 1.0
-        if self._entity and hasattr(self._entity, "combat"):
-            for cons in self._entity.combat.consequences:
+        entity = self._entity_ref() if self._entity_ref else None
+        if entity and hasattr(entity, "combat"):
+            for cons in entity.combat.consequences:
                 mult *= cons.max_stamina_mult
         return max(1, int(self.max_stamina_base * mult))
 
@@ -64,8 +74,9 @@ class ProgressionAspect(Aspect):
             base = 1.0 + w * 0.01 + i * 0.005
             
         # Apply multipliers from combat effects
-        if self._entity and hasattr(self._entity, "combat"):
-            for eff in self._entity.combat.effects:
+        entity = self._entity_ref() if self._entity_ref else None
+        if entity and hasattr(entity, "combat"):
+            for eff in entity.combat.effects:
                 base *= getattr(eff, "xp_mult", 1.0)
         return base
 

@@ -73,11 +73,14 @@ class EatingHandler(StateHandler):
         # 2. Find food in inventory
         from src.core.gameplay.items.item_registry import ITEM_REGISTRY
         food_item = None
-        for item_id in actor.inventory.items:
-            template = ITEM_REGISTRY.get(item_id)
-            if template and template.hunger_reduction > 0:
-                food_item = item_id
-                break
+        
+        inventory = getattr(actor, "inventory", None)
+        if inventory and hasattr(inventory, "items"):
+            for item_id in inventory.items:
+                template = ITEM_REGISTRY.get(item_id)
+                if template and template.hunger_reduction > 0:
+                    food_item = item_id
+                    break
         
         if not food_item:
             return AIState.IDLE, ActionProposal(

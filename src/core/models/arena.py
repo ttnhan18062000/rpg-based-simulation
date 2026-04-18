@@ -42,8 +42,8 @@ class Scenario(SimulationModel):
     # Optional materials (wall coordinates, etc.)
     grid_materials: Dict[str, List[Vector2]] = Field(default_factory=dict)
     
-    stop_conditions: List[StopCondition]
-    max_ticks: int = 5000
+    stop_conditions: List[StopCondition] = Field(default_factory=list)
+    max_ticks: int = 2000
     iterations: int = 10
     
     @model_validator(mode="after")
@@ -69,4 +69,5 @@ class ScenarioReport(SimulationModel):
     avg_ticks: float
     stall_rate: float
     avg_damage: float
+    stop_reason: Optional[ArenaStopCondSer] = None
     baseline_diffs: Optional[Dict[str, float]] = None

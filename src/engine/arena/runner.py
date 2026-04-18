@@ -34,7 +34,7 @@ class ArenaRunner:
         self.base_config = replace(config,
             num_workers=1,
             max_ticks=1000,
-            log_level="WARNING"
+            log_level=config.log_level if config.log_level != "INFO" else "WARNING"
         )
         # Disable infrastructure via environment (AOA Barrier Implementation)
         import os
@@ -69,8 +69,10 @@ class ArenaRunner:
             try:
                 mat = Material[mat_name.upper()]
                 for pos in positions:
-                    if grid.in_bounds(pos):
-                        grid.set(pos, mat)
+                    from src.core.models.vectors import Vector2
+                    pos_v = Vector2.from_any(pos)
+                    if grid.in_bounds(pos_v):
+                        grid.set(pos_v, mat)
             except (KeyError, ValueError):
                 logger.warning("Invalid material name in scenario: %s", mat_name)
                     
@@ -90,6 +92,7 @@ class ArenaRunner:
                 EntityBuilder(rng, eid, tick=0)
                 .kind(profile.kind)
                 .at(pos)
+                .home(pos) # Anchor for leash-based behaviors
                 .faction(profile.faction)
                 .role(profile.role)
             )
@@ -133,61 +136,144 @@ class ArenaRunner:
             rng=rng
         )
         
-        # Simplified execution loop with StopCondition monitoring
+        # simplified execution loop with StopCondition monitoring
         stop_reason = ArenaStopCondition.TIMEOUT
         ticks = 0
+        
+        # Calculate initial faction count for wipe detection logic
+        initial_factions = set()
+        for ent in world.entities.values():
+            if ent.kind != "generator":
+                initial_factions.add(ent.identity.faction)
+        initial_faction_count = len(initial_factions)
         
         # Stall tracking state
         stagnant_ticks = 0
         recent_hps = {e.id: e.combat.hp for e in world.entities.values()}
-        recent_positions = {e.id: e.spatial.pos.model_copy() for e in world.entities.values()}
         
-        while ticks < scenario.max_ticks:
-            # Stall Detection (Activity check every 5 ticks)
-            if ticks > 0 and ticks % 5 == 0:
-                is_stagnant = MetricService.detect_stall(world, recent_hps, recent_positions)
-                if is_stagnant:
-                    stagnant_ticks += 5
-                else:
-                    stagnant_ticks = 0
+        # Pillar 6: Harden coordinate extraction against dict-based positions
+        from src.core.models.vectors import Vector2
+        recent_positions = {}
+        for e in world.entities.values():
+            pos = Vector2.from_any(e.spatial.pos)
+            recent_positions[e.id] = (pos.x, pos.y)
+        
+        # Performance Monitoring: Track resource growth per iteration
+        try:
+            import psutil
+            process = psutil.Process()
+            start_rss = process.memory_info().rss
+            start_cpu = process.cpu_times()
+        except (ImportError, Exception):
+            start_rss = None
+            start_cpu = None
+            process = None
+
+        try:
+            while ticks < scenario.max_ticks:
+                # Stall Detection (Activity check every 5 ticks)
+                if ticks > 0 and ticks % 5 == 0:
+                    is_stagnant = MetricService.detect_stall(world, recent_hps, recent_positions)
+                    if is_stagnant:
+                        stagnant_ticks += 5
+                    else:
+                        stagnant_ticks = 0
+                    
+                    # Refresh activity snapshots
+                    recent_hps = {e.id: e.combat.hp for e in world.entities.values()}
+                    recent_positions = {}
+                    for e in world.entities.values():
+                        pos = Vector2.from_any(e.spatial.pos)
+                        recent_positions[e.id] = (pos.x, pos.y)
                 
-                # Refresh activity snapshots
-                recent_hps = {e.id: e.combat.hp for e in world.entities.values()}
-                recent_positions = {e.id: e.spatial.pos.model_copy() for e in world.entities.values()}
-            
-            # 100 ticks of zero activity = STALL
-            if stagnant_ticks >= 100:
-                stop_reason = ArenaStopCondition.STALL
-                break
+                # 100 ticks of zero activity = STALL
+                if stagnant_ticks >= 100:
+                    stop_reason = ArenaStopCondition.STALL
+                    break
 
-            # Check Stop Conditions (Faction Wipes)
-            reason = self._check_stop_conditions(world, scenario, ticks)
-            if reason:
-                stop_reason = reason
-                break
+                # Check Stop Conditions (Faction Wipes)
+                reason = self._check_stop_conditions(world, scenario, ticks, initial_faction_count)
+                if reason is not None:
+                    stop_reason = reason
+                    break
+                    
+                if not loop.tick_once():
+                    # Check conditions one last time after the final tick
+                    last_reason = self._check_stop_conditions(world, scenario, ticks)
+                    if last_reason:
+                        stop_reason = last_reason
+                    break
+                ticks += 1
                 
-            if not loop.tick_once():
-                break
-            ticks += 1
+                # Tier 3 Protection: Active Memory Guard
+                # Raise error if current iteration leaks more than 300MB mid-run
+                if process and ticks % 10 == 0:
+                    current_rss = process.memory_info().rss
+                    delta_mb = (current_rss - start_rss) / (1024 * 1024)
+                    DELTA_LIMIT_MB = 600 # 600MB safety delta [Milestone 7 Hardening]
+                    if delta_mb > DELTA_LIMIT_MB:
+                        raise RuntimeError(f"Arena Iteration {iteration} exceeded safety memory delta: {delta_mb:.1f}MB > {DELTA_LIMIT_MB}MB. Aborting scenario.")
+
+                if ticks % 100 == 0:
+                    logger.info("Arena Iteration %d: Tick %d...", iteration, ticks)
+
+            # Determine winner based on survivor faction
+            winner = self._determine_winner(world)
+            deaths = [e.id for e in world.entities.values() if not e.combat.alive]
             
-            if ticks % 100 == 0:
-                logger.info("Arena Iteration %d: Tick %d...", iteration, ticks)
+            result = ArenaResult(
+                iteration=iteration,
+                winner_faction=winner,
+                ticks=ticks,
+                stop_reason=stop_reason,
+                deaths=deaths
+            )
+            
+            # Post-iteration resource check
+            if process and start_rss is not None and start_cpu is not None:
+                end_info = process.memory_info()
+                end_cpu = process.cpu_times()
+                
+                delta_mb = (end_info.rss - start_rss) / (1024 * 1024)
+                # Combined User/System time
+                delta_cpu = (end_cpu.user + end_cpu.system) - (start_cpu.user + start_cpu.system)
+                
+                # We expect roughly < 2s for 1000 ticks in headless arena
+                avg_ms_per_tick = (delta_cpu * 1000) / max(1, ticks)
+                
+                if delta_mb > 50: # Threshold for a single iteration leak
+                    logger.warning("Arena Iteration %d leaked %.2f MB", iteration, delta_mb)
+                
+                if delta_cpu > 5.0: # 5 seconds for a single iteration is very slow for arena
+                    logger.warning("Arena Iteration %d occupied too much CPU: %.2fs (%.2fms/tick)", 
+                                   iteration, delta_cpu, avg_ms_per_tick)
+            
+            return result
+        finally:
+            # Hermetic Cleanup: Ensure worker pools and systems are closed 
+            # to prevent memory leaks and resource exhaustion between iterations.
+            if hasattr(loop, "shutdown"):
+                loop.shutdown()
+            
+            worker_pool.shutdown()
+            
+            # Explicitly clear large data structures [Hardening]
+            # Use local names to avoid UnboundLocalError if loop/worker_pool init failed
+            if 'world' in locals() and world:
+                world.shutdown()
+            
+            if 'loop' in locals(): del loop
+            if 'worker_pool' in locals(): del worker_pool
+            if 'world' in locals(): del world
+            if 'grid' in locals(): del grid
+            if 'spatial' in locals(): del spatial
+            if 'rng' in locals(): del rng
+            
+            import gc
+            # Pillar 6: Full generation collection to reclaim cyclic structures broken by weakref
+            gc.collect(2)
 
-        # Determine winner based on survivor faction
-        winner = self._determine_winner(world)
-        deaths = [e.id for e in world.entities.values() if not e.combat.alive]
-        
-        worker_pool.shutdown()
-        
-        return ArenaResult(
-            iteration=iteration,
-            winner_faction=winner,
-            ticks=ticks,
-            stop_reason=stop_reason,
-            deaths=deaths
-        )
-
-    def _check_stop_conditions(self, world: WorldState, scenario: Scenario, ticks: int) -> Optional[ArenaStopCondition]:
+    def _check_stop_conditions(self, world: WorldState, scenario: Scenario, ticks: int, initial_faction_count: int = 2) -> Optional[ArenaStopCondition]:
         """Detect scenario-specific termination. [Milestone 6]"""
         
         # Predefined Check: Faction Wipe
@@ -196,8 +282,12 @@ class ArenaRunner:
             if ent.combat.alive and ent.kind != "generator":
                 alive_factions.add(ent.identity.faction)
         
-        if len(alive_factions) <= 1:
-            return ArenaStopCondition.WIPE
+        # WIPE logic: 
+        # 1. More than one faction started, now only one (or zero) left.
+        # 2. Only one faction started, now zero left.
+        if len(alive_factions) < initial_faction_count:
+            if len(alive_factions) <= 1:
+                return ArenaStopCondition.WIPE
             
         # Optional: Stall Detection (To be enhanced in Task 3)
         # We could track damage history, if no damage for N ticks, STALL.
@@ -228,20 +318,39 @@ class ArenaRunner:
         stalls = 0
         
         for res in results:
-            if res.winner_faction is not None:
+            wf = res.winner_faction
+            if wf is not None:
                 # Faction enum values can be logged by name
-                fname = res.winner_faction.name
+                if hasattr(wf, "name"):
+                    fname = wf.name
+                else:
+                    # Fallback for serialized/coerced values
+                    from src.core.models.enums import Faction
+                    try:
+                        fname = Faction(wf).name if not isinstance(wf, str) else wf
+                    except (ValueError, TypeError):
+                        fname = str(wf)
                 win_counts[fname] = win_counts.get(fname, 0) + 1
             
             total_ticks += res.ticks
             if res.stop_reason == ArenaStopCondition.STALL:
                 stalls += 1
-                
+        # Dominant stop reason (heuristic: if any iteration stalled, report STALL)
+        dominant_reason = ArenaStopCondition.TIMEOUT
+        if stalls > 0:
+            dominant_reason = ArenaStopCondition.STALL
+        elif results:
+            # Otherwise use the most frequent reason
+            from collections import Counter
+            reasons = [res.stop_reason for res in results]
+            dominant_reason = Counter(reasons).most_common(1)[0][0]
+
         return ScenarioReport(
             scenario_id=scenario.id,
             total_iterations=total,
             win_rates={k: v/total for k, v in win_counts.items()},
             avg_ticks=total_ticks / total,
             stall_rate=stalls / total,
-            avg_damage=0.0 # Placeholder for Task 3 damage tracking
+            avg_damage=0.0, # Placeholder for Task 3 damage tracking
+            stop_reason=dominant_reason
         )

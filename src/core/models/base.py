@@ -4,6 +4,35 @@ from pydantic import BaseModel, ConfigDict, Field, PrivateAttr, model_serializer
 from types import MappingProxyType
 import typing
 import copyreg
+import threading
+import weakref
+
+# AOA Mutation Tripwire: Prevents state mutation during AI decision phases.
+_decision_context = threading.local()
+
+class DecisionPhase:
+    """Context manager to enforce read-only access during AI deliberation.
+    
+    Uses a generation counter to allow mutation of objects created DURING 
+    the phase (proposals/updates) while protecting pre-existing state.
+    """
+    def __enter__(self) -> None:
+        # Increment generation to mark the start of a new protected phase
+        current = getattr(_decision_context, "generation", 0)
+        _decision_context.generation = current + 1
+
+    def __exit__(self, *args: Any) -> None:
+        # Decrement to return to previous state (supports nesting)
+        current = getattr(_decision_context, "generation", 0)
+        _decision_context.generation = max(0, current - 1)
+
+    @staticmethod
+    def is_active() -> bool:
+        return getattr(_decision_context, "generation", 0) > 0
+
+    @staticmethod
+    def current_generation() -> int:
+        return getattr(_decision_context, "generation", 0)
 
 # AOA Phase Boundary: Register MappingProxyType with copyreg to ensure 
 # picklability/deepcopy safety in Python 3.13. This allows frozen models 
@@ -25,6 +54,20 @@ class SimulationModel(BaseModel):
     """Base class for all sim state models that support runtime immutability."""
     model_config = ConfigDict(arbitrary_types_allowed=True)
     _frozen: bool = PrivateAttr(default=False)
+    
+    # Track which decision generation this instance was created in.
+    # Instances from generation 0 (World/State) are protected from AI mutation.
+    _creation_generation: int = PrivateAttr(default_factory=DecisionPhase.current_generation)
+    
+    # AOA Type Isolation: If True, this class is part of the core state and 
+    # should be protected by the mutation tripwire during decision phases.
+    TRIPWIRE_PROTECTED: typing.ClassVar[bool] = False
+
+    def __init__(self, **data: Any) -> None:
+        super().__init__(**data)
+        # Pydantic default_factory for PrivateAttr doesn't always trigger in manual __init__
+        if not hasattr(self, "_creation_generation"):
+            object.__setattr__(self, "_creation_generation", DecisionPhase.current_generation())
 
     def copy(self: T, deep: bool = True) -> T:
         """Copy for snapshot isolation or recovery. 
@@ -40,14 +83,13 @@ class SimulationModel(BaseModel):
         copy_obj = super().model_copy(**kwargs)
         
         # AOA Pillar 1: Isolation. The new copy must be unfrozen and mutable.
-        # Optimized Path: If 'self' wasn't frozen, its deep-copy won't be either, 
-        # and it won't contain MappingProxyType/tuple-collections that need unfreezing.
+        # It is also marked with the CURRENT generation so it can be modified 
+        # as a local work-object even during a decision phase.
+        object.__setattr__(copy_obj, "_creation_generation", DecisionPhase.current_generation())
+        object.__setattr__(copy_obj, "_frozen", False)
+        
         if getattr(self, "_frozen", False):
             self._unfreeze_inplace(copy_obj)
-        else:
-            # We must still ensure the new object's flag is explicitly False 
-            # (though it should be by default from self).
-            object.__setattr__(copy_obj, "_frozen", False)
         
         return copy_obj
 
@@ -55,12 +97,7 @@ class SimulationModel(BaseModel):
         """Recursively resets _frozen and converts collections to mutable types in-place."""
         if isinstance(obj, SimulationModel):
             # AOA Stabilization: If it's already unfrozen, skip recursion
-            # Unless we are doing this on a fresh deepcopy which might have 
-            # inherited the 'True' flag but contains immutable collection types.
             if getattr(obj, "_frozen", False) is False:
-                # Optimized Path: Check if it has any collections that need unfreezing
-                # For now, we still need to check nested models, but we can skip
-                # the flag setting and most of the overhead.
                 pass 
 
             # Reset frozen flag on this model
@@ -72,7 +109,6 @@ class SimulationModel(BaseModel):
                 for name in fields:
                     val = getattr(obj, name)
                     if val is not None:
-                        # Process the value and set it back on the object
                         new_val = self._unfreeze_val_recursive(val)
                         if new_val is not val:
                             object.__setattr__(obj, name, new_val)
@@ -87,31 +123,20 @@ class SimulationModel(BaseModel):
         """Helper to process values during in-place unfreezing."""
         if isinstance(val, MappingProxyType):
             return {k: self._unfreeze_val_recursive(v) for k, v in val.items()}
-            
         if isinstance(val, (tuple, list)):
             return [self._unfreeze_val_recursive(item) for item in val]
-            
         if isinstance(val, (frozenset, set)):
             return set(self._unfreeze_val_recursive(item) for item in val)
-            
         if isinstance(val, dict):
             return {k: self._unfreeze_val_recursive(v) for k, v in val.items()}
-
         if isinstance(val, SimulationModel):
-            # If it's a model, it was already deep-copied by super().model_copy(deep=True).
             self._unfreeze_inplace(val)
             return val
-            
         return val
 
     @model_serializer(mode='plain')
     def _serialize_aoa(self) -> dict[str, Any]:
-        """AOA Phase 6: Custom serialization for frozen models.
-        
-        Converts MappingProxyType and deep tuples back to standard JSON-friendly 
-        types without triggering Pydantic validation warnings.
-        """
-        # Internal state without private attributes
+        """AOA Phase 6: Custom serialization for frozen models."""
         data = {k: v for k, v in self.__dict__.items() if not k.startswith("_")}
         return self._serialize_recursive(data)
 
@@ -125,39 +150,24 @@ class SimulationModel(BaseModel):
             return val.model_dump()
         return val
 
-
     def freeze(self) -> None:
         """Lock the model for read-only access (Recursive). top-level and nested collections."""
-        # Use getattr to safely check _frozen even if it's in slots or __dict__
         if getattr(self, "_frozen", False):
             return 
-        
-        # Run validation before freezing to ensure data integrity
         self.validate()
-        
-        # Use object.__setattr__ to bypass Pydantic's frozen check for initial flag
         object.__setattr__(self, "_frozen", True)
         
-        # 1. Recursive freeze for nested SimulationModels and collections
-        # Pydantic models have model_fields; if it's a standard dataclass or slotted object, 
-        # we might need to use __slots__ or __dict__.
         fields = getattr(type(self), "model_fields", None)
         if fields:
             for name, field_info in fields.items():
                 val = getattr(self, name)
                 if val is not None:
-                    # [CORRECTED] Type-Aware Coercion: 
-                    # If this field should be a SimulationModel but contains a dict (drifted),
-                    # restore it authoritatively before freezing.
                     if isinstance(val, dict):
                         expected_type = field_info.annotation
-                        # Handle Optional/Union by finding the SimulationModel subclass
                         model_type = self._get_model_type(expected_type)
                         if model_type:
                             val = model_type.model_validate(val)
                             object.__setattr__(self, name, val)
-
-                    # Always use object.__setattr__ during internal AOA freeze
                     object.__setattr__(self, name, self._freeze_recursive(val))
         elif hasattr(self, "__dict__"):
             for name, val in self.__dict__.items():
@@ -170,61 +180,33 @@ class SimulationModel(BaseModel):
                     object.__setattr__(self, name, self._freeze_recursive(val))
 
     def _get_model_type(self, annotation: Any) -> type[SimulationModel] | None:
-        """Helper to extract a SimulationModel subclass from a type annotation.
-        
-        Only returns a type if there is exactly one SimulationModel subclass in the 
-        annotation (handles Optional[T] and direct types). For complex Unions (like 
-        Narrative details), it returns None to avoid incorrect coercion.
-        """
+        """Helper to extract a SimulationModel subclass from a type annotation."""
         import typing
-        
-        # Direct check
         if isinstance(annotation, type) and issubclass(annotation, SimulationModel):
             return annotation
-            
-        # Check Union/Optional
         origin = typing.get_origin(annotation)
         if origin is typing.Union:
-            model_types = []
-            for arg in typing.get_args(annotation):
-                if isinstance(arg, type) and issubclass(arg, SimulationModel):
-                    model_types.append(arg)
-            
-            # Only return if there is exactly one candidate (e.g. Optional[T])
+            model_types = [arg for arg in typing.get_args(annotation) 
+                          if isinstance(arg, type) and issubclass(arg, SimulationModel)]
             if len(model_types) == 1:
                 return model_types[0]
-                    
         return None
 
     def _freeze_recursive(self, val: Any) -> Any:
-        """Recursively freeze models and convert collections to immutable equivalents.
-        
-        Optimized to skip already frozen objects to avoid re-validation overhead.
-        """
-        # Pillar 1 & 2: AOA Immutability
-        # If it's a SimulationModel, it handles its own freezing (Deep)
+        """Recursively freeze models and convert collections to immutable equivalents."""
         if isinstance(val, SimulationModel):
             if not getattr(val, "_frozen", False):
                 val.freeze()
             return val
-            
         if isinstance(val, (list, tuple)):
-            # Handle both lists and tuples to ensure deep immutability
-            # Only convert if not already a tuple of non-mutable items
             return tuple(self._freeze_recursive(item) for item in val)
-            
         if isinstance(val, (dict, MappingProxyType)):
-            # If it's already a MappingProxyType, it might still have nested mutable items
-            # Recursively freeze values and wrap in MappingProxyType
             frozen_dict = {k: self._freeze_recursive(v) for k, v in val.items()}
             return MappingProxyType(frozen_dict)
-            
         if isinstance(val, (bytearray, memoryview)):
             return bytes(val)
-            
         if isinstance(val, set):
             return frozenset(self._freeze_recursive(item) for item in val)
-            
         return val
 
     def validate(self) -> None:
@@ -232,15 +214,35 @@ class SimulationModel(BaseModel):
         pass
 
     def __setattr__(self, name: str, value: Any) -> None:
-        if getattr(self, "_frozen", False) and not name.startswith("_"):
-            # Use self.__class__.__name__ for consistency with line 64
-            raise RuntimeError(f"Cannot mutate frozen {self.__class__.__name__} (Field: {name})")
+        # AOA Pillar 1: Mutation Tripwire (Optimized).
+        if name.startswith("_"):
+            object.__setattr__(self, name, value)
+            return
+
+        # Optimization: Only core state models (Entity, Aspect, WorldState) 
+        # incur the tripwire overhead. Transient objects (Proposals, records) 
+        # skip this entirely.
+        if self.TRIPWIRE_PROTECTED:
+            current_gen = getattr(_decision_context, "generation", 0)
+            if current_gen > 0:
+                # The tripwire fires if this object was created in an EARLIER generation
+                # (meaning it is Sensing input, not a local work-object for the current phase).
+                my_gen = getattr(self, "_creation_generation", 0)
+                if my_gen < current_gen:
+                    raise RuntimeError(
+                        f"Cannot mutate {self.__class__.__name__}.{name} during Decision Phase. "
+                        f"[Protected State Violation: Gen {my_gen} < {current_gen}]"
+                    )
+        
+        # Finally, check for explicit frozen status (Snapshots used in Multi-Worker mode).
+        if getattr(self, "_frozen", False):
+            raise RuntimeError(f"Cannot mutate {self.__class__.__name__}.{name}: Object is Frozen.")
+            
         object.__setattr__(self, name, value)
 
     def __getstate__(self) -> dict[str, Any]:
         """Custom pickle state to handle MappingProxyType."""
         state = self.__dict__.copy()
-        # MappingProxyType is not picklable; convert back to dict for the wire
         for key, val in state.items():
             if isinstance(val, MappingProxyType):
                 state[key] = dict(val)
@@ -249,27 +251,22 @@ class SimulationModel(BaseModel):
     def __setstate__(self, state: dict[str, Any]) -> None:
         """Custom pickle restoration."""
         for key, val in state.items():
-            object.__setattr__(self, key, val)
+            object.__setattr__(key, val)
 
 class Aspect(SimulationModel):
-    """Base class for all entity functional modules (Aspects/Components).
-    
-    Aspects are Pydantic models that hold both data and lifecycle hooks.
-    """
-    
-    # Internal reference to the parent entity (not serialized)
-    _entity: Any = PrivateAttr(default=None)
+    """Base class for all entity functional modules (Aspects/Components)."""
+    TRIPWIRE_PROTECTED: typing.ClassVar[bool] = True
+    _entity_ref: Any = PrivateAttr(default=None)
 
     def on_attach(self, entity: Entity) -> None:
-        """Called when the aspect is added to an entity."""
-        self._entity = entity
+        self._entity_ref = weakref.ref(entity)
 
     def on_tick(self, tick: int) -> None:
-        """Lifecycle hook called every world tick."""
         pass
     
     @property
     def entity(self) -> Entity:
-        if self._entity is None:
-            raise RuntimeError(f"Aspect {self.__class__.__name__} is not attached to an entity.")
-        return self._entity
+        entity = self._entity_ref() if self._entity_ref else None
+        if entity is None:
+            raise RuntimeError(f"Aspect {self.__class__.__name__} is not attached to an entity or entity has been GC'd.")
+        return entity

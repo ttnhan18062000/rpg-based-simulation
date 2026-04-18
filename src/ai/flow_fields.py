@@ -80,7 +80,7 @@ class FlowFieldManager:
     def __init__(self):
         # target_pos_tuple -> FlowField (AOA Stabilization: instance-local cache)
         self._cache: dict[tuple[int, int, int, int], FlowField] = {}
-        self.default_ttl = 5
+        self.default_ttl = 50
 
     @classmethod
     def get_instance(cls) -> FlowFieldManager:

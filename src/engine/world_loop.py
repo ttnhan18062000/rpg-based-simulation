@@ -212,12 +212,18 @@ class WorldLoop:
             return False
 
         self._step()
+        
+        # [AOA STABILIZATION] Ensure tick is recorded BEFORE incrementing world.tick
+        # to maintain consistency with historical replay snapshots.
+        if self._recorder:
+            self._recorder.record_tick(self._world.tick, self._last_applied, self._world)
+
         self._world.tick += 1
         return True
 
     def create_snapshot(self) -> Snapshot:
         """Create an immutable snapshot of the current world state."""
-        return Snapshot.from_world(self._world)
+        return Snapshot.from_world(self._world, shallow=self._config.num_workers <= 1)
 
     def run(self) -> None:
         """Execute the simulation until max_ticks or no entities remain."""
@@ -330,3 +336,40 @@ class WorldLoop:
             elif m.buff_type == "atk":
                 # AOA Stabilization: Use atk_base as atk is a read-only property
                 hero.combat.atk_base = int(hero.combat.atk_base * 1.1)
+
+    def shutdown(self) -> None:
+        """Thoroughly release references to break circular cycles and avoid memory leaks. [Hardening]"""
+        # 1. Break the telemetry cycle
+        if hasattr(self, "_telemetry_bridge") and self._telemetry_bridge:
+            if self._world and hasattr(self._world, "event_bus") and self._world.event_bus:
+                self._telemetry_bridge.detach(self._world.event_bus)
+            self._telemetry_bridge = None
+            
+        # 2. Shutdown systems
+        if hasattr(self, "_system_manager") and self._system_manager:
+            self._system_manager.shutdown()
+            self._system_manager = None
+            
+        self._action_system = None
+        self._hero_lifecycle = None
+        self._history_system = None
+            
+        # 3. Clear core references
+        self._world = None
+        if self._worker_pool:
+            self._worker_pool.shutdown()
+        self._worker_pool = None
+        self._action_queue = None
+        self._conflict_resolver = None
+        self._generator = None
+        self._recorder = None
+        
+        # 4. Explicit list/dict nullification to break stubborn cycles
+        self._phases = []
+        self._tick_events = []
+        self._last_applied = []
+        self._rng = None
+        self._faction_reg = None
+        self._social_registry = None
+        self._config = None
+        self._logger = None

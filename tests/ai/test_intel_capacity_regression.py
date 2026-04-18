@@ -109,7 +109,7 @@ def test_intel_capacity_divergence_scenario():
     from src.utils.replay import ReplayRecorder
     from src.core.entities.entity import Entity
     
-    config = SimulationConfig(world_seed=777, max_ticks=2, grid_width=10, grid_height=10)
+    config = SimulationConfig(world_seed=777, max_ticks=2, grid_width=10, grid_height=10, num_workers=1)
     mgr = EngineManager(config)
     loop = mgr._loop
     

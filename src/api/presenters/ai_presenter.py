@@ -1,3 +1,4 @@
+from typing import TYPE_CHECKING, Any
 from src.api.schemas import AIDecisionSchema, GoalScoreSchema, SocialBondSchema, DecisionDriverSchema, ActionReasonSchema
 from src.core.models.reason_codes import ActionReason
 

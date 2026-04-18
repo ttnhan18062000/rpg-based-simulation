@@ -65,20 +65,34 @@ class Grid(SimulationModel):
     def _idx(self, x: int, y: int) -> int:
         return y * self.width + x
 
-    def in_bounds(self, pos: Vector2) -> bool:
+    def in_bounds(self, pos: Vector2 | dict) -> bool:
+        if isinstance(pos, dict):
+            # AOA Hardened: handle raw dicts from Pydantic or external deserialization
+            px, py = pos.get('x', -1), pos.get('y', -1)
+            return 0 <= px < self.width and 0 <= py < self.height
         return 0 <= pos.x < self.width and 0 <= pos.y < self.height
 
-    def get(self, pos: Vector2) -> Material:
+    def get(self, pos: Vector2 | dict) -> Material:
         if not self.in_bounds(pos):
             return Material.WALL
-        val = self.tiles[self._idx(pos.x, pos.y)]
+        
+        if isinstance(pos, dict):
+            px, py = pos.get('x', 0), pos.get('y', 0)
+        else:
+            px, py = pos.x, pos.y
+            
+        val = self.tiles[self._idx(px, py)]
         return _MATERIAL_CACHE[val]
 
-    def set(self, pos: Vector2, material: Material) -> None:
+    def set(self, pos: Vector2 | dict, material: Material) -> None:
         if self.in_bounds(pos):
-            self.tiles[self._idx(pos.x, pos.y)] = int(material)
+            if isinstance(pos, dict):
+                px, py = pos.get('x', 0), pos.get('y', 0)
+            else:
+                px, py = pos.x, pos.y
+            self.tiles[self._idx(px, py)] = int(material)
 
-    def is_walkable(self, pos: Vector2) -> bool:
+    def is_walkable(self, pos: Vector2 | dict) -> bool:
         mat = self.get(pos)
         return mat not in (Material.WALL, Material.WATER, Material.LAVA)
 

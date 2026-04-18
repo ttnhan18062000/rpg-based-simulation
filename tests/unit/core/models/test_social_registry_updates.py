@@ -13,11 +13,10 @@ from src.platform.spatial_hash import SpatialHash
 @pytest.fixture
 def mock_config():
     class MockConfig:
+        hunger_decay_rate = 0.001
         threat_damage_mult = 1.0
         threat_heal_mult = 1.0
-        # Biological needs decay rates
-        sleep_decay_rate = 0.002
-        hunger_decay_rate = 0.001
+        overhaul_features = {"use_combat_interaction_v2": True}
     return MockConfig()
 
 @pytest.fixture
@@ -47,6 +46,9 @@ def test_combat_updates_social_registry(world, attacker, defender, mock_config):
     damage = 25
     proposal = ActionProposal(actor_id=attacker.id, verb=ActionType.ATTACK, target=defender.id)
     
+    from src.platform.rng import DeterministicRNG
+    rng = DeterministicRNG(42)
+    
     # 2. Process aftermath (emits SocialUpdate)
     CombatAftermathService.process(
         attacker=attacker,
@@ -56,7 +58,8 @@ def test_combat_updates_social_registry(world, attacker, defender, mock_config):
         is_crit=False,
         is_evasion=False,
         config=mock_config,
-        proposal=proposal
+        proposal=proposal,
+        rng=rng
     )
     
     # Check that a SocialUpdate was produced
@@ -69,11 +72,13 @@ def test_combat_updates_social_registry(world, attacker, defender, mock_config):
     assert update.fear_delta > 0
     
     # 3. Apply updates via ActionSystem
+    from src.platform.rng import DeterministicRNG
     ActionSystem.apply_action_state_transitions(
         world=world,
         config=mock_config,
-        applied=[proposal],
-        rng=None
+        proposals=[proposal],
+        applied_ids={attacker.id},
+        rng=DeterministicRNG(42)
     )
     
     # 4. Verify SocialRegistry state
@@ -88,7 +93,9 @@ def test_archetype_influence_on_social_deltas(world, attacker, defender, mock_co
     damage = 20
     proposal = ActionProposal(actor_id=attacker.id, verb=ActionType.ATTACK, target=defender.id)
     
-    CombatAftermathService.process(attacker, defender, world, damage, False, False, mock_config, proposal)
+    from src.platform.rng import DeterministicRNG
+    rng = DeterministicRNG(42)
+    CombatAftermathService.process(attacker, defender, world, damage, False, False, mock_config, proposal, rng)
     
     social_up = next(u for u in proposal.updates if isinstance(u, SocialUpdate))
     fear_with_slayer = social_up.fear_delta
@@ -96,7 +103,7 @@ def test_archetype_influence_on_social_deltas(world, attacker, defender, mock_co
     # Switch to balanced attacker
     attacker.identity.archetype = Archetype.BALANCED
     proposal_2 = ActionProposal(actor_id=attacker.id, verb=ActionType.ATTACK, target=defender.id)
-    CombatAftermathService.process(attacker, defender, world, damage, False, False, mock_config, proposal_2)
+    CombatAftermathService.process(attacker, defender, world, damage, False, False, mock_config, proposal_2, rng)
     
     social_up_2 = next(u for u in proposal_2.updates if isinstance(u, SocialUpdate))
     fear_with_balanced = social_up_2.fear_delta

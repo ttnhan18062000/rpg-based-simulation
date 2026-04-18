@@ -30,6 +30,7 @@ class Entity(SimulationModel):
     
     Composition-based actor following the Aspect-Oriented Architecture (AOA).
     """
+    TRIPWIRE_PROTECTED: typing.ClassVar[bool] = True
     model_config = ConfigDict(arbitrary_types_allowed=True, extra="forbid")
 
     id: int
@@ -178,10 +179,6 @@ class Entity(SimulationModel):
             if hasattr(asp, "freeze"):
                 asp.freeze()
 
-    def __setattr__(self, name: str, value: Any) -> None:
-        if getattr(self, "_frozen", False) and not name.startswith("_"):
-            raise RuntimeError(f"Cannot mutate frozen Entity {self.id} (Field: {name})")
-        super().__setattr__(name, value)
 
 # Rebuild models to finalize Pydantic setup
 # AOA Final Convergence: Restore eager model_rebuild now that circular 

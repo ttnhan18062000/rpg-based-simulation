@@ -29,20 +29,26 @@ class MetricService:
         return metrics
 
     @staticmethod
-    def detect_stall(world: WorldState, recent_hps: Dict[int, float], recent_positions: Dict[int, Any]) -> bool:
+    def detect_stall(world: WorldState, recent_hps: Dict[int, float], recent_positions: Dict[int, tuple[int, int]]) -> bool:
         """Returns True if no entity has meaningfully changed state."""
         for eid, ent in world.entities.items():
             if not ent.combat.alive:
                 continue
             
-            # HP check
+            # HP check: Only treat HP DECREASES (damage) as activity. 
+            # Regeneration/Resting without movement or combat is still a stall.
             prev_hp = recent_hps.get(eid)
-            if prev_hp is not None and ent.combat.hp != prev_hp:
-                return False # Activity detected
+            if prev_hp is not None and ent.combat.hp < prev_hp:
+                return False 
             
             # Position check
             prev_pos = recent_positions.get(eid)
-            if prev_pos is not None and ent.spatial.pos != prev_pos:
-                return False # Activity detected
+            if prev_pos is not None:
+                # Use from_any to normalize access
+                from src.core.models.vectors import Vector2
+                pos = Vector2.from_any(ent.spatial.pos)
+                curr_pos = (pos.x, pos.y)
+                if curr_pos != prev_pos:
+                    return False 
                 
-        return True # Every alive entity is stagnant
+        return True 

@@ -56,7 +56,7 @@ class InterpretedLifeEvent(SimulationModel):
     subject_ids: list[int] = Field(default_factory=list)
     location: Vector2 = Field(default_factory=lambda: Vector2(x=0, y=0))
     evidence_refs: list[str] = Field(default_factory=list)
-    severity: float = Field(default=0.0, ge=0.0, le=10.0)
+    severity: float = Field(default=0.0, ge=0.0, le=1000.0)
     public_visibility: float = Field(default=0.0, ge=0.0, le=1.0)
     relationship_deltas: dict[int, dict[str, float]] = Field(default_factory=dict)
     reputation_deltas: dict[str, float] = Field(default_factory=dict)

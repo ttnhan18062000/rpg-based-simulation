@@ -134,6 +134,7 @@ def derive_luck(base_luck: int, wis: int) -> int:
     return base_luck + int(wis * 0.3)
 
 def derive_stamina(base_stamina: int, end: int) -> int:
+    # Bonus is absolute addition to base
     return base_stamina + end * 2
 
 def derive_xp_multiplier(wis: int, int_: int) -> float:
@@ -177,6 +178,8 @@ def recalc_derived_stats(entity: "Entity", new_attrs: Attributes, old_attrs: Att
     
     # Reset old contributions if necessary
     if old_attrs is not None:
+        # Revert old attribute contributions before applying new ones
+        prog.max_stamina -= derive_stamina(0, old_attrs.end)
         combat.max_hp -= derive_max_hp(0, old_attrs.vit, old_attrs.end)
         combat.atk_base -= derive_atk(0, old_attrs.str_)
         combat.def_base -= derive_def(0, old_attrs.vit)
@@ -186,7 +189,6 @@ def recalc_derived_stats(entity: "Entity", new_attrs: Attributes, old_attrs: Att
         combat.luck -= derive_luck(0, old_attrs.wis)
         combat.matk -= derive_matk(0, old_attrs.spi, old_attrs.int_)
         combat.mdef -= derive_mdef(0, old_attrs.wis, old_attrs.spi)
-        prog.max_stamina -= derive_stamina(0, old_attrs.end)
 
     # Apply new contributions
     combat.max_hp = derive_max_hp(combat.max_hp, new_attrs.vit, new_attrs.end)

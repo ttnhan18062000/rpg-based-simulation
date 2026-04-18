@@ -1,17 +1,19 @@
-# Investigation: Combat Movement Observability Stabilization
+# Investigation: Milestone 7 Diagnostic Failures
 
-## Objective
-Identify why `ActionSystem` rejections sometimes lacked the "REJECTED: " prefix and verify documentation alignment.
+## Current Failures
 
-## Findings
-- **Prefix Discrepancy**: Legacy string-based rejections in `ActionSystem.apply_action_state_transitions` were manually prefixed. New `ActionReason` objects introduced in Milestone 7 were being serialized via `reason_text` which lacked the logic to prepend the prefix when used as an authoritative rejection.
-- **Rollout Tests**: `tests/rollout/test_combat_movement_rollout_boundaries.py` specifically asserts that blocked actions contain "REJECTED: " in their reason strings.
-- **Documentation**: Milestone 1-6 docs were updated with implementation details but required a final verification against the specialized services (`LegalityService`, `MovementModel`, etc.) to ensure 100% accuracy.
+### 1. Documentation Integrity (`test_observability_reasons_exist_in_code`)
+- **Issue**: The test fails because it doesn't scan `src/core/models/reason_codes.py` where the canonical reason strings are defined.
+- **Root Cause**: `ActionReason.reason_text` is the source of truth, but the test only checks logic files.
 
-## Root Cause
-The `ActionReason` model was designed for structured observation but didn't have a semantic flag for "this is a rejection" vs "this is an intention".
+### 2. Rollout Boundaries (`test_rollout_movement_v2_vs_v1`, etc.)
+- **Issue**: `MovementModel` and `TacticalEvaluator` return `ActionReason` objects, but tests perform substring checks using `in` on the reason field.
+- **Root Cause**: Without `__str__` defined on `ActionReason`, `in` doesn't find the expected strings. Additionally, some strings in the tests (e.g., "Legacy") are slightly different from the actual output (e.g., "Legacy Fallback").
 
-## Resolution
-- Added `is_rejection` boolean to `ActionReason`.
-- Updated `ActionReason.reason_text` property to handle conditional prefixing.
-- Refactored `ActionSystem` to use the structured model consistently for all legality rejections.
+### 3. ActionSystem Rejection Prefix
+- **Issue**: `ActionSystem` only adds "REJECTED: " if the reason is a string. If it's an `ActionReason`, it stays as an object.
+- **Root Cause**: Discrepancy between v1 (string-based) and v2 (object-based) observability.
+
+## Approach
+- Define `__str__` and `__contains__` (or just ensure `.reason_text` is checked) to bridge the gap.
+- Align all test strings with `reason_codes.py`.

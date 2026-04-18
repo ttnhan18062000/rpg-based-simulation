@@ -100,7 +100,8 @@ class AIBrain:
         selected_state = self._deliberation_tactical_phase(ctx, typed_updates)
         
         # --- Phase 5: Output (Proposal) ---
-        return self._finalization_phase(ctx, selected_state, typed_updates)
+        final_state, proposal = self._finalization_phase(ctx, selected_state, typed_updates)
+        return final_state, proposal
 
     def _sensory_perception_phase(self, actor: Entity, snapshot: Snapshot, updates: list[IntentUpdate]) -> tuple[AIContext, dict[GoalType, float]]:
         """Phase 1: Input. Gather raw data and apply selective attention."""
@@ -825,6 +826,7 @@ class AIBrain:
         return actor.mind.decision.ai_state
 
     def _finalization_phase(self, ctx: AIContext, state: AIState, updates: list[IntentUpdate]) -> tuple[AIState, ActionProposal]:
+        # Phase 5: Convert typed updates to ActionProposal.
         """Phase 4: Output. Proposal generation."""
         actor = ctx.actor
         
@@ -864,7 +866,13 @@ class AIBrain:
             })
             return new_state, proposal
         except Exception as e:
-            logger.error("Error in AI handler %s for entity %d: %s", state, actor.id, e, exc_info=True)
+            import traceback
+            tb_str = traceback.format_exc()
+            logger.error("Error in AI handler %s for entity %d: %s\n%s", 
+                         state, actor.id, e, tb_str)
+            # Explicitly clear context to assist GC in high-frequency loops
+            del tb_str
+            del e
             return state, ActionProposal(actor_id=actor.id, verb=ActionType.REST, reason="internal_error", updates=updates)
 
     def _populate_role_tactical_hints(self, ctx: AIContext) -> None:
