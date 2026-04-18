@@ -1,12 +1,12 @@
-# Project Architecture: The Orchestrated Conductor (AOA)
+# Project Architecture: The Resource-Safe Conductor (v2)
 
-This document provides a deep technical overview of the **Aspect-Oriented Architecture (AOA)** at the heart of the WorldLoop RPG simulation. It is the primary guide for developers to understand the engine's "plumbing," concurrency model, and strict execution guarantees.
+This document provides a deep technical overview of the **Resource-Safe Simulation Engine** at the heart of the v2 RPG simulation. It defines the authoritative execution laws, deterministic guarantees, and resource-safety boundaries.
 
 ---
 
 ## 1. High-Level Architecture
 
-The simulation is built on a **Deterministic Orchestrated Engine** where the `WorldLoop` acts as a central conductor, coordinating decoupled systems and maintaining a single source of truth through immutable snapshots.
+The engine is built on a **Deterministic Orchestrated Loop** where the `Kernel` acts as the authoritative conductor, coordinating decoupled systems and maintaining a single source of truth.
 
 ### System Context Diagram
 
@@ -15,100 +15,75 @@ graph TD
     Client["Browser (React + Canvas)"] -- REST/Polling --> API["FastAPI (Web Thread)"]
     API -- "ReadOnly Snapshots" --> Client
     
-    API -- Controls --> Engine["WorldLoop (Simulation Thread)"]
-    Engine -- Snapshots --> API
+    API -- Controls --> Kernel["Simulation Kernel (Simulation Thread)"]
+    Kernel -- StateUpdate --> ApplyPath["ApplyPath (Authoritative)"]
+    ApplyPath -- AuthoritativeState --> Kernel
     
-    Engine -- Events --> Kafka["Apache Kafka (Event Sourcing)"]
-    Engine -- AI Tasks --> WorkerPool["WorkerPool (Concurrent AI)"]
-    WorkerPool -- "ActionProposals" --> Engine
+    Kernel -- TraceEvents --> Replay["ReplayManager (Streaming Persistence)"]
+    Kernel -- WorkPackets --> WorkerPool["WorkerPool (Concurrent AI)"]
+    WorkerPool -- "ActionResults" --> Kernel
 ```
 
 ### The Threaded Concurrency Model
 
-WorldLoop strictly isolates **Mutation** from **Reading** to avoid race conditions and GIL contention:
+The v2 engine isolates **Authoritative Mutation** from **Concurrent Deliberation** to ensure 100% determinism and resource safety:
 
-1.  **Web Thread (FastAPI)**: Serves the REST API and handles user I/O. It **only** reads immutable `Snapshot` copies of the world.
-2.  **Simulation Thread (`WorldLoop`)**: The **Single-Writer**. Only this thread is allowed to mutate the `WorldState`.
-3.  **Worker Pool**: AI brain computations are offloaded to background threads. They receive a `freeze()` frozen snapshot and return an `ActionProposal`. They cannot change the state directly.
-4.  **The Mutation Tripwire (`DecisionPhase`)**: To ensure absolute read-only integrity during AI deliberation, the engine uses a custom context manager. When active, it triggers a `RuntimeError` if an AI handler attempts to modify any property of a pre-existing entity.
-5.  **Universal Shallow Snapshots**: For single-worker scenarios (like the Arena), the engine uses an optimized shallow-copy strategy (`model_construct`). This bypasses recursive Pydantic validation, relying on the `DecisionPhase` tripwire to prevent illegal mutations of shared references.
-6.  **Snapshots**: At the end of every tick, the engine creates a `Snapshot` (a deep-copy processed by the `WorldPresenter`) and performs an atomic swap.
+1.  **Simulation Thread (`Kernel`)**: The **Single-Writer**. Only this thread is allowed to produce and apply `AuthoritativeState` transitions.
+2.  **Web Thread (FastAPI)**: Serves the REST API. It reads immutable `AuthoritativeState` references. 
+3.  **Worker Pool (AI)**: AI brain computations are fanned out to background threads. They receive **Compact Worker Packets** (shallow-cloned subset of state) and return **ActionResults**. They never modify the world state directly.
+4.  **Generation-Based Apply**: Instead of deep-cloning every tick, the engine uses the `ApplyPath` to create the next "Generation" of the world. This preserves shared references for read-only visibility while ensuring that even a single illegal mutation of a shared reference is caught by runtime checks or caught by the law of separation.
 
 ---
 
-## 2. The 7-Phase Orchestration Cycle
+## 2. The 6-Phase Deterministic Kernel Loop
 
-Every tick (default 50ms) executes exactly seven phases in a strict, contract-enforced sequence. The engine has moved from a tactical loop to a **Strategic-Aware Orchestration** where world-tier systems and entity-tier strategic persistence are interleaved with the tactical action loop.
+Every tick executes exactly six phases in a strict, contract-enforced sequence. This "Law of Ticks" is frozen in **Milestone 1**.
 
 ### Phase Sequence & Contracts
 
 | Phase | Responsibility | Permissions (READ / MUTATE) |
 | :--- | :--- | :--- |
-| **1. Pre-Systems** | **Environmental & Strategic Phase**. Regional control shifts, Calamities, and [StrategySystem] broadcasts. | `world.clock`, `system_manager` / `world.region_control`, `strategic_registry` |
-| **2. Scheduling** | Identify entities due to act and reset per-tick temporary state. | `world.entities` / `tick_ready_entities` |
-| **3. Collection** | Fan-out AI tasks to `WorkerPool`. Entities derive tactical objectives and Strategic Updates (e.g. project switches) here. | `world.entities`, `mind.strategic` / `tick_proposals` |
-| **4. Resolution** | **Conflict & Authoritative Update**. Resolves tactical actions and applies Strategic Updates (Source Trust, Projects) via `ActionSystem`. | `tick_proposals` / `world.entities`, `action_system` |
-| **5. Cleanup** | Remove dead entities, drop items, handle hero respawns and log rotation tasks. | `world.entities`, `rng` / `world.entities` (DELETE) |
-| **6. Finalization** | **Metric Phase**. Performance metrics and tick-duration calculations. | `world`, `tick_applied` / `tick_metrics` |
-| **7. Persistence** | **External Phase**. Redis Delta-Streaming and Kafka Snapshot persistence. | `world`, `tick_applied`, `tick_events` / NONE (I/O only) |
+| **1. INIT** | Increments simulation clock and resets per-tick buffers. | `state.world_time` / `state.world_time` |
+| **2. GOVERNANCE** | Evaluates resource pressure (RAM/CPU) and calculates the **Degradation Mode**. | `status.signals`, `profile` / `governor.policy` |
+| **3. SCHEDULING** | Identifies entities due to act and selects work based on the **Work Debt** budget. | `state.entities`, `policy` / `tick_work` |
+| **4. PACKETIZATION** | Offloads AI deliberation tasks to the `WorkerPool` using compact packets. | `tick_work`, `policy` / `worker_results` |
+| **5. RESOLUTION** | **Authoritative Update**. Converts results into `StateUpdate` and applies it via `ApplyPath`. | `worker_results` / `state.authoritative` |
+| **6. PERSISTENCE** | **External Phase**. Streams `TraceEvent` records to the `ReplayManager`. | `state.hash`, `policy` / `disk/stream` (I/O only) |
 
-### Phase Governance (`PhaseGuard`)
-Runtime integrity is enforced by the `PhaseGuard`. Since the **Strategic Stabilization (2026-04)**, the guard ensures that even long-term memory updates and strategic project derivations remain deterministic and traceable. Any attempt to access state outside the `PhaseContract` results in an immediate simulation halt.
-
----
-
-## 3. Strategic AI Framework
-
-Entities are governed by a **Tri-Layer Strategic Hierarchy** embedded in their `MindAspect`:
-
-1.  **Directives**: Persistent, motive-driven "north stars" (e.g., "Build Wealth").
-2.  **Projects**: Medium-term commitments with specific success conditions (e.g., "Clear Bandit Camp").
-3.  **Objectives**: Tactical, concrete steps derived dynamically from the active project (e.g., "Kill Bandit Leader").
-
-This hierarchy ensures that AI behavior remains consistent across hundreds of ticks, resisting tactical "jitter" and maintaining narrative continuity.
+### Phase Governance
+Runtime integrity is enforced by the **PhaseContract**. Any attempt to access state outside the assigned phase boundary or perform unmanaged mutations results in an immediate simulation halt. This prevents "Semantic Drift" where systems accidentally depend on the side effects of others.
 
 ---
 
-## 4. Deterministic Determinism
+## 3. Resource-Safe Execution Laws
 
-WorldLoop uses the **Seed-Domain-Identity** formula to ensure perfect replayability, now extended to include strategic choice-points.
+The engine is governed by three primary laws to ensure it survives pathological conditions:
+
+1.  **Law of Bounded State**: No authoritative collection may grow without limit. Every entity, event buffer, and replay stream must have an explicit retention policy.
+2.  **Law of Non-Blocking Persistence**: Replay and observability are "Non-Authoritative." Failures in tracing or persistence must never stall the kernel.
+3.  **Law of Progressive Degradation**: The engine must shed optional load (traces, then diagnostics, then AI fidelity) before it crashes due to resource exhaustion.
+
+---
+
+## 4. Determinism & Deterministic RNG
+
+The v2 kernel uses the **Seed-Domain-Identity** formula to ensure perfect replayability across all certified hardware.
 
 ### The RNG Formula
-The `DeterministicRNG` (using `xxhash`) generates seeds based on:
+The `DeterministicRNG` (using `xxhash`) generates sequences based on:
 1.  **World Seed**: Global simulation seed.
-2.  **Domain**: (e.g., `Domain.COMBAT`, `Domain.AI_WANDER`).
+2.  **Domain**: Identifies the simulation subsystem (e.g., `Domain.COMBAT`).
 3.  **Entity ID**: Ensures different entities don't "sync" their random rolls.
 4.  **Tick**: Ensures rolls change every frame.
 
-```python
-# Canonical way to roll for crit
-roll = ctx.rng.next_float(Domain.COMBAT, attacker.id, ctx.world.tick)
-is_crit = roll < attacker.combat.crit_rate
-```
-
 ---
 
-## 5. Persistence & Event Sourcing (Kafka)
+## 5. Performance Monitoring (Standard Hardware Classes)
 
-Instead of a traditional CRUD database, the engine uses **Event Sourcing**:
+Throughput claims are never made in isolation. The engine certifies its performance against **Hardware Classes**:
+- **Class A (Low-Power)**: Bounded to strictly degraded profiles (10 TPS).
+- **Class B (Consumer)**: Standard profile (20 TPS).
+- **Class C (High-Performance)**: Enhanced observability profiles.
 
--   **Snapshots**: Compacted world state saved to `sim.snapshots` every 100 ticks.
--   **Events**: Granular `SimEvent` logs (Combat, Loot, Level-up) saved to `sim.events`.
--   **Recovery**: On boot, the engine fetches the latest snapshot and "replays" the Kafka event stream until it reaches the desired tick.
-
----
-
-## 6. The Presenter Boundary
-
-The API does not serve the raw `WorldState`. It uses the `WorldPresenter` to:
-1.  **Slimming**: Reduce 1MB+ entity objects to ~200B "Slim" versions for map rendering.
-2.  **Mapping**: Convert internal Python enums/IDs into developer-friendly string keys for the frontend.
-3.  **Introspection**: Inject derived stats (like `StatBreakdown`) only when a specific entity is inspected.
-
----
-
-## 7. Performance Benchmarks
--   **Tick Budget**: 50ms (20 TPS).
--   **Resolution Target**: ~2ms for 200 entities.
--   **API Loop**: ~80ms polling cycle.
--   **SSE Stream**: Delta-compression for large world changes.
+> [!NOTE]
+> All architectural claims in this document are pinned by the `tests_v2/docs/` integrity suite.

@@ -94,10 +94,13 @@ No replay system, bounded persistence, worker execution, or degradation control 
 
 ## Task
 
-[ ] (checkbox) - [Task 1] - Implement the minimal kernel tick execution path
+[x] (checkbox) - [Task 1] - Implement the minimal kernel tick execution path
 
 [Task Description]
 Build the smallest exact runnable kernel loop that obeys the Milestone 1 contract. This is the core execution task for the milestone.
+
+[Task implementation comments]
+The core tick loop reached its first runnable state in `src_v2/engine/kernel.py`. It implements the mandatory 6-phase cycle (Init, Governance, Scheduling, Workers, Resolution, Persistence) and ensures a single stable tick entry point for all engine simulations.
 
 [Task technical implementation]
 Implement one kernel entry point such as `tick()` or equivalent that performs:
@@ -134,22 +137,25 @@ Do not add extension hooks for future milestones unless the Milestone 1 contract
 
 [Task check list]
 
-- [ ] Implement one deterministic tick entry point
-- [ ] Advance simulation-time in one explicit place
-- [ ] Execute frozen phase order
-- [ ] Keep authoritative mutation inside explicit paths
-- [ ] Keep the kernel single-threaded
-- [ ] Avoid future-milestone leakage
+- [x] Implement one deterministic tick entry point
+- [x] Advance simulation-time in one explicit place
+- [x] Execute frozen phase order
+- [x] Keep authoritative mutation inside explicit paths
+- [x] Keep the kernel single-threaded
+- [x] Avoid future-milestone leakage
 
 [Task acceptance criteria]
 The engine has one minimal runnable tick execution path that obeys the kernel contract and contains no hidden authority paths.
 
 ---
 
-[ ] (checkbox) - [Task 2] - Implement world-time progression and readiness separation
+[x] (checkbox) - [Task 2] - Implement world-time progression and readiness separation
 
 [Task Description]
 Make the runtime obey the separation between general world-time progression and readiness-gated entity action.
+
+[Task implementation comments]
+Readiness gating is implemented in `src_v2/engine/readiness.py`. The system distinguishes between authoritative world-time progression (tick-driven) and entity-level "readiness to act" (logic-driven), allowing for quiet ticks without losing time-based state progression.
 
 [Task technical implementation]
 Implement two distinct runtime responsibilities:
@@ -184,22 +190,25 @@ Do not leave world-time progression hidden inside action-processing code.
 
 [Task check list]
 
-- [ ] Implement world-time progression path
-- [ ] Implement readiness evaluation path
-- [ ] Ensure quiet ticks still advance passive time
-- [ ] Keep readiness separate from world-time advancement
-- [ ] Preserve deterministic ordering
-- [ ] Keep implementation minimal and exact
+- [x] Implement world-time progression path
+- [x] Implement readiness evaluation path
+- [x] Ensure quiet ticks still advance passive time
+- [x] Keep readiness separate from world-time advancement
+- [x] Preserve deterministic ordering
+- [x] Keep implementation minimal and exact
 
 [Task acceptance criteria]
 World-time progression and readiness-gated action are structurally separate, and quiet ticks still produce valid deterministic simulation progression.
 
 ---
 
-[ ] (checkbox) - [Task 3] - Implement the authoritative apply path
+[x] (checkbox) - [Task 3] - Implement the authoritative apply path
 
 [Task Description]
 Create the single explicit path through which authoritative state is mutated.
+
+[Task implementation comments]
+The authoritative update flow is finalized in `src_v2/engine/apply.py`. All mutations to the `AuthoritativeState` must pass through this path, which enforces deterministic merging of `EntityUpdate` packets and validation of the state transitions.
 
 [Task technical implementation]
 Implement an apply layer that:
@@ -231,21 +240,24 @@ Do not introduce future conflict-resolution complexity unless it is required for
 
 [Task check list]
 
-- [ ] Create one authoritative apply path
-- [ ] Enforce deterministic update ordering
-- [ ] Reject invalid mutation attempts
-- [ ] Keep derived state outside authoritative mutation
-- [ ] Keep the apply layer minimal and exact
+- [x] Create one authoritative apply path
+- [x] Enforce deterministic update ordering
+- [x] Reject invalid mutation attempts
+- [x] Keep derived state outside authoritative mutation
+- [x] Keep the apply layer minimal and exact
 
 [Task acceptance criteria]
 All authoritative state changes flow through one deterministic apply path and no implicit mutation path remains in the minimal kernel.
 
 ---
 
-[ ] (checkbox) - [Task 4] - Implement deterministic RNG plumbing and stable checkpoint hashing
+[x] (checkbox) - [Task 4] - Implement deterministic RNG plumbing and stable checkpoint hashing
 
 [Task Description]
 Make deterministic execution provable rather than assumed.
+
+[Task implementation comments]
+RNG plumbing resides in `src_v2/platform/rng.py`, using individual seeds derived from the world seed + tick. Checkpoint hashing is implemented in `src_v2/engine/checkpoint.py`, providing a bit-identical hash of the authoritative state for regression verification.
 
 [Task technical implementation]
 Implement:
@@ -279,22 +291,25 @@ Do not allow unordered collections to poison checkpoint determinism.
 
 [Task check list]
 
-- [ ] Implement deterministic seed handling
-- [ ] Route authoritative randomness through one policy
-- [ ] Implement canonical checkpoint generation
-- [ ] Exclude non-authoritative fields from checkpoints
-- [ ] Add stable ordering rules for checkpoint material
-- [ ] Keep checkpoint representation test-friendly
+- [x] Implement deterministic seed handling
+- [x] Route authoritative randomness through one policy
+- [x] Implement canonical checkpoint generation
+- [x] Exclude non-authoritative fields from checkpoints
+- [x] Add stable ordering rules for checkpoint material
+- [x] Keep checkpoint representation test-friendly
 
 [Task acceptance criteria]
 The engine can prove deterministic execution by producing identical authoritative checkpoints for repeated runs with the same seed and input.
 
 ---
 
-[ ] (checkbox) - [Task 5] - Add minimal-kernel deterministic test suite
+[x] (checkbox) - [Task 5] - Add minimal-kernel deterministic test suite
 
 [Task Description]
 Lock the Milestone 2 runtime behavior with deterministic tests so later milestones cannot silently change the kernel foundation.
+
+[Task implementation comments]
+Minimal kernel tests are established in `tests_v2/engine/test_minimal_kernel.py`. These tests verify that the kernel produces byte-identical hash outputs for the same seeds across multiple runs.
 
 [Task technical implementation]
 Add exact tests for:
@@ -338,23 +353,26 @@ Do not add worker, replay, or governor tests here.
 
 [Task check list]
 
-- [ ] Add tick-execution tests
-- [ ] Add quiet-tick progression tests
-- [ ] Add readiness gating tests
-- [ ] Add authoritative apply-path tests
-- [ ] Add deterministic RNG tests
-- [ ] Add stable checkpoint tests
-- [ ] Add invalid-mutation rejection tests
+- [x] Add tick-execution tests
+- [x] Add quiet-tick progression tests
+- [x] Add readiness gating tests
+- [x] Add authoritative apply-path tests
+- [x] Add deterministic RNG tests
+- [x] Add stable checkpoint tests
+- [x] Add invalid-mutation rejection tests
 
 [Task acceptance criteria]
 The minimal kernel is pinned by deterministic tests proving correct phase execution, correct readiness behavior, correct authoritative mutation, and stable checkpoint reproducibility.
 
 ---
 
-[ ] (checkbox) - [Task 6] - Add exact Milestone 2 documentation pack
+[x] (checkbox) - [Task 6] - Add exact Milestone 2 documentation pack
 
 [Task Description]
 Document the complete Milestone 2 kernel implementation so later milestones build on a frozen executable reference rather than informal memory.
+
+[Task implementation comments]
+Foundational documentation pack finalized in `docs/engine/minimal_kernel_m2.md`. This document serves as the executable reference for the kernel's single-thread behavior.
 
 [Task technical implementation]
 Create:
@@ -404,13 +422,13 @@ Do not defer it until after later infrastructure exists.
 
 [Task check list]
 
-- [ ] Document exact minimal-kernel scope
-- [ ] Document tick execution semantics
-- [ ] Document readiness/world-time separation
-- [ ] Document apply-path semantics
-- [ ] Document deterministic RNG usage
-- [ ] Document checkpoint semantics
-- [ ] Document test matrix and regression intent
+- [x] Document exact minimal-kernel scope
+- [x] Document tick execution semantics
+- [x] Document readiness/world-time separation
+- [x] Document apply-path semantics
+- [x] Document deterministic RNG usage
+- [x] Document checkpoint semantics
+- [x] Document test matrix and regression intent
 
 [Task acceptance criteria]
 Milestone 2 has a complete exact documentation pack describing the minimal kernel and the deterministic test matrix that freezes it.

@@ -128,10 +128,13 @@ No replay sink, concurrency model, or external deployment control is required fo
 
 ## Task
 
-[ ] (checkbox) - [Task 1] - Define the resource-governor and degradation contract
+[x] (checkbox) - [Task 1] - Define the resource-governor and degradation contract
 
 [Task Description]
 Create the exact design contract for pressure detection, runtime modes, degradation order, and recovery behavior. This is the foundational modeling task for runtime protection.
+
+[Task implementation comments]
+Defined the core governor laws in `docs/engine/resource_governor_contract_m5.md`. The contract established the authoritative modes (Normal, Constrained, Degraded, Survival) and the precise signals (Memory, Tick, Queue, Debt) used for transition.
 
 [Task technical implementation]
 Create one new governor contract document and one code-facing contract section that define exactly:
@@ -173,24 +176,27 @@ Do not leave any degradable category implicit.
 
 [Task check list]
 
-- [ ] Define profile-aware governor semantics
-- [ ] Define pressure signal set
-- [ ] Define threshold and trend semantics
-- [ ] Define runtime modes
-- [ ] Define degradable vs non-degradable behavior
-- [ ] Define degradation order
-- [ ] Define recovery behavior
-- [ ] Define explicit non-goals
+- [x] Define profile-aware governor semantics
+- [x] Define pressure signal set
+- [x] Define threshold and trend semantics
+- [x] Define runtime modes
+- [x] Define degradable vs non-degradable behavior
+- [x] Define degradation order
+- [x] Define recovery behavior
+- [x] Define explicit non-goals
 
 [Task acceptance criteria]
 The project has one exact governor and degradation contract that can be used as the authoritative source for implementation and tests.
 
 ---
 
-[ ] (checkbox) - [Task 2] - Implement pressure measurement and runtime mode transitions
+[x] (checkbox) - [Task 2] - Implement pressure measurement and runtime mode transitions
 
 [Task Description]
 Make the runtime obey the frozen governor contract by implementing one exact pressure-evaluation and mode-transition path.
+
+[Task implementation comments]
+Pressure measurement and mode transition logic is housed in `src_v2/engine/governor.py`. The `check_pressure` method evaluates current telemetry against the profile's limits and updates the `AuthoritativeState.runtime.status` field atomically during the Governance phase of the tick loop.
 
 [Task technical implementation]
 Implement or refactor the governor so that:
@@ -224,22 +230,25 @@ Do not fuse measurement and shedding into one opaque block.
 
 [Task check list]
 
-- [ ] Implement profile-aware pressure measurement
-- [ ] Implement exact threshold evaluation
-- [ ] Implement deterministic escalation rules
-- [ ] Implement deterministic recovery rules
-- [ ] Implement hysteresis if required
-- [ ] Keep transitions separate from shedding logic
+- [x] Implement profile-aware pressure measurement
+- [x] Implement exact threshold evaluation
+- [x] Implement deterministic escalation rules
+- [x] Implement deterministic recovery rules
+- [x] Implement hysteresis if required
+- [x] Keep transitions separate from shedding logic
 
 [Task acceptance criteria]
 The engine has one exact pressure-measurement and mode-transition path that is deterministic and profile-aware.
 
 ---
 
-[ ] (checkbox) - [Task 3] - Implement degradation policy enforcement for optional cost
+[x] (checkbox) - [Task 3] - Implement degradation policy enforcement for optional cost
 
 [Task Description]
 Make the runtime obey the frozen degradation contract by shedding or reducing only the costs that are explicitly allowed to degrade.
+
+[Task implementation comments]
+Degradation enforcement is cross-cutting but controlled by the Governor. It regulates the `ReplayBuffer` size, the verbosity of the `ActionReason` payloads, and the `Scheduler`'s willingness to accept opportunistic work. All shedding follows the strict order defined in `src_v2/core/retention.py`.
 
 [Task technical implementation]
 Implement exact enforcement behavior for:
@@ -280,23 +289,26 @@ Do not allow “temporary” bypasses for optional systems.
 
 [Task check list]
 
-- [ ] Implement verbose-diagnostics degradation
-- [ ] Implement replay-richness placeholder degradation
-- [ ] Implement optional-metrics degradation
-- [ ] Implement summary/maintenance degradation
-- [ ] Implement non-critical enrichment shedding
-- [ ] Preserve authoritative semantics
-- [ ] Preserve exact degradation order
+- [x] Implement verbose-diagnostics degradation
+- [x] Implement replay-richness placeholder degradation
+- [x] Implement optional-metrics degradation
+- [x] Implement summary/maintenance degradation
+- [x] Implement non-critical enrichment shedding
+- [x] Preserve authoritative semantics
+- [x] Preserve exact degradation order
 
 [Task acceptance criteria]
 Optional runtime cost is shed in the exact declared order while core simulation semantics remain unchanged.
 
 ---
 
-[ ] (checkbox) - [Task 4] - Add deterministic governor and degradation tests
+[x] (checkbox) - [Task 4] - Add deterministic governor and degradation tests
 
 [Task Description]
 Lock the Milestone 5 runtime-protection rules with deterministic tests so later milestones cannot silently turn the governor into an unstable or unsafe control layer.
+
+[Task implementation comments]
+Governor verification is handled in `tests_v2/engine/test_resource_governor_contract.py`. These tests simulate synthetic pressure spikes and verify that the engine enters the correct degradation state within exactly one tick.
 
 [Task technical implementation]
 Add exact tests for:
@@ -341,22 +353,25 @@ Do not add system-wide stress certification here. That belongs later.
 
 [Task check list]
 
-- [ ] Add threshold evaluation tests
-- [ ] Add mode-transition tests
-- [ ] Add recovery and hysteresis tests
-- [ ] Add degradation-order tests
-- [ ] Add authoritative-safety boundary tests
-- [ ] Add deterministic repeated-pattern tests
+- [x] Add threshold evaluation tests
+- [x] Add mode-transition tests
+- [x] Add recovery and hysteresis tests
+- [x] Add degradation-order tests
+- [x] Add authoritative-safety boundary tests
+- [x] Add deterministic repeated-pattern tests
 
 [Task acceptance criteria]
 The resource governor and degradation rules are pinned by deterministic tests proving correct pressure handling, correct mode transitions, correct degradation order, and preservation of authoritative behavior.
 
 ---
 
-[ ] (checkbox) - [Task 5] - Add exact Milestone 5 documentation pack
+[x] (checkbox) - [Task 5] - Add exact Milestone 5 documentation pack
 
 [Task Description]
 Document the complete Milestone 5 runtime-protection model so later milestones cannot reinterpret pressure handling and degradation informally.
+
+[Task implementation comments]
+Finalized the Governor technical contract. Verified its terminology aligns with the `RuntimeMode` Enum in `src_v2/core/enums.py`.
 
 [Task technical implementation]
 Create:
@@ -416,12 +431,12 @@ Do not defer degradation documentation until replay or observability exists.
 
 [Task check list]
 
-- [ ] Document exact governor rules
-- [ ] Document exact runtime modes
-- [ ] Document exact degradation order
-- [ ] Document exact recovery behavior
-- [ ] Document forbidden degradation behavior
-- [ ] Document the deterministic test matrix
+- [x] Document exact governor rules
+- [x] Document exact runtime modes
+- [x] Document exact degradation order
+- [x] Document exact recovery behavior
+- [x] Document forbidden degradation behavior
+- [x] Document the deterministic test matrix
 
 [Task acceptance criteria]
 Milestone 5 has a complete exact documentation pack describing pressure handling, runtime modes, degradation behavior, recovery behavior, and the deterministic test matrix that freezes them.

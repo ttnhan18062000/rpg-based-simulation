@@ -96,10 +96,13 @@ No external broker, distributed fleet, or remote orchestration system is require
 
 ## Task
 
-[ ] (checkbox) - [Task 1] - Define the bounded worker-execution contract
+[x] (checkbox) - [Task 1] - Define the bounded worker-execution contract
 
 [Task Description]
 Create the exact design contract for worker packets, result packets, inflight bounds, queue bounds, deterministic-equivalence requirements, and fallback behavior. This is the foundational modeling task for safe concurrency.
+
+[Task implementation comments]
+Defined the core concurrency laws in `docs/engine/worker_contract_m8.md`. The contract established the "Compact Payload" rule, limiting worker packets to local actor state and immediate neighborhood context to prevent memory replication.
 
 [Task technical implementation]
 Create one new worker contract document and one code-facing contract section that define exactly:
@@ -142,23 +145,26 @@ Do not allow any worker packet to remain “open ended.”
 
 [Task check list]
 
-- [ ] Define worker packet semantics
-- [ ] Define result packet semantics
-- [ ] Define deterministic-equivalence requirements
-- [ ] Define inflight bounds
-- [ ] Define queue bounds
-- [ ] Define fallback-to-local rules
-- [ ] Define explicit non-goals
+- [x] Define worker packet semantics
+- [x] Define result packet semantics
+- [x] Define deterministic-equivalence requirements
+- [x] Define inflight bounds
+- [x] Define queue bounds
+- [x] Define fallback-to-local rules
+- [x] Define explicit non-goals
 
 [Task acceptance criteria]
 The project has one exact bounded worker-execution contract that can be used as the authoritative source for implementation and tests.
 
 ---
 
-[ ] (checkbox) - [Task 2] - Implement compact worker packets and bounded execution controls
+[x] (checkbox) - [Task 2] - Implement compact worker packets and bounded execution controls
 
 [Task Description]
 Make the codebase obey the frozen worker contract by implementing one exact bounded worker path with compact payloads and explicit control limits.
+
+[Task implementation comments]
+Worker execution is managed by `src_v2/platform/worker_pool.py`. The `WorkerPool` enforces strict inflight and queue limits defined in the runtime profile. Work packets are constructed as shallow clones of actor-local state, preventing the "World Serialization" hazard.
 
 [Task technical implementation]
 Implement or refactor the concurrency layer so that:
@@ -193,22 +199,25 @@ Do not let worker execution directly mutate authoritative state outside the appl
 
 [Task check list]
 
-- [ ] Implement compact worker packets
-- [ ] Implement bounded inflight control
-- [ ] Implement bounded queue control
-- [ ] Keep worker execution separate from authoritative apply
-- [ ] Keep concurrency profile-aware
-- [ ] Avoid whole-world payload leakage
+- [x] Implement compact worker packets
+- [x] Implement bounded inflight control
+- [x] Implement bounded queue control
+- [x] Keep worker execution separate from authoritative apply
+- [x] Keep concurrency profile-aware
+- [x] Avoid whole-world payload leakage
 
 [Task acceptance criteria]
 The engine has one exact bounded worker-execution path using compact packets and enforcing exact inflight and queue limits.
 
 ---
 
-[ ] (checkbox) - [Task 3] - Implement deterministic fallback-to-local execution
+[x] (checkbox) - [Task 3] - Implement deterministic fallback-to-local execution
 
 [Task Description]
 Ensure the engine remains safe and usable when worker execution is unavailable, constrained, or disabled.
+
+[Task implementation comments]
+Fallback logic is housed in `src_v2/platform/local_resolver.py`. If the worker pool is at capacity or disabled, the scheduler automatically routes work to the local thread. The `Apply` phase remains agnostic to the execution source, ensuring bit-identical results regardless of the worker mode.
 
 [Task technical implementation]
 Implement exact behavior for:
@@ -242,22 +251,25 @@ Do not make worker failure corrupt authoritative execution ordering.
 
 [Task check list]
 
-- [ ] Implement exact fallback triggers
-- [ ] Implement deterministic local fallback behavior
-- [ ] Preserve scheduler and apply semantics under fallback
-- [ ] Keep fallback profile-aware
-- [ ] Define recovery behavior if supported
-- [ ] Avoid hidden alternate semantics
+- [x] Implement exact fallback triggers
+- [x] Implement deterministic local fallback behavior
+- [x] Preserve scheduler and apply semantics under fallback
+- [x] Keep fallback profile-aware
+- [x] Define recovery behavior if supported
+- [x] Avoid hidden alternate semantics
 
 [Task acceptance criteria]
 Worker failure or disablement leads to deterministic local fallback behavior that preserves authoritative semantics and stays within profile rules.
 
 ---
 
-[ ] (checkbox) - [Task 4] - Add deterministic concurrency and bounded-worker tests
+[x] (checkbox) - [Task 4] - Add deterministic concurrency and bounded-worker tests
 
 [Task Description]
 Lock the Milestone 8 concurrency rules with deterministic tests so later milestones cannot silently reintroduce giant payloads, queue blowups, or semantic drift.
+
+[Task implementation comments]
+Concurrency verification is performed in `tests_v2/platform/test_worker_pool.py`. These tests confirm that the pool rejects work when the queue is full and that the `LocalResolver` produces identical state mutations to the parallel workers.
 
 [Task technical implementation]
 Add exact tests for:
@@ -308,22 +320,25 @@ Do not add broker transport cases in this milestone.
 
 [Task check list]
 
-- [ ] Add worker-packet bound tests
-- [ ] Add inflight-limit tests
-- [ ] Add queue-depth tests
-- [ ] Add deterministic-equivalence tests
-- [ ] Add local-vs-worker equivalence tests
-- [ ] Add fallback tests
+- [x] Add worker-packet bound tests
+- [x] Add inflight-limit tests
+- [x] Add queue-depth tests
+- [x] Add deterministic-equivalence tests
+- [x] Add local-vs-worker equivalence tests
+- [x] Add fallback tests
 
 [Task acceptance criteria]
 The bounded worker-execution contract is pinned by deterministic tests proving packet discipline, bound enforcement, equivalence of authoritative outcomes, and safe fallback behavior.
 
 ---
 
-[ ] (checkbox) - [Task 5] - Add exact Milestone 8 documentation pack
+[x] (checkbox) - [Task 5] - Add exact Milestone 8 documentation pack
 
 [Task Description]
 Document the complete Milestone 8 bounded concurrency model so later milestones cannot reinterpret worker behavior informally.
+
+[Task implementation comments]
+Finalized the Worker Contract and Queue Bounds Matrix. Verified that the documentation's fallback rules are correctly reflected in the `LocalResolver` error-handling logic.
 
 [Task technical implementation]
 Create:
@@ -382,12 +397,12 @@ Do not defer bounded-concurrency documentation until after certification exists.
 
 [Task check list]
 
-- [ ] Document exact worker rules
-- [ ] Document exact inflight and queue bounds
-- [ ] Document deterministic-equivalence rules
-- [ ] Document fallback rules
-- [ ] Document forbidden worker behavior
-- [ ] Document the deterministic test matrix
+- [x] Document exact worker rules
+- [x] Document exact inflight and queue bounds
+- [x] Document deterministic-equivalence rules
+- [x] Document fallback rules
+- [x] Document forbidden worker behavior
+- [x] Document the deterministic test matrix
 
 [Task acceptance criteria]
 Milestone 8 has a complete exact documentation pack describing bounded worker execution, deterministic equivalence, fallback behavior, and the deterministic test matrix that freezes them.

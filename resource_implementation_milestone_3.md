@@ -113,10 +113,13 @@ No replay sink, concurrency system, or resource-governor behavior is required fo
 
 ## Task
 
-[ ] (checkbox) - [Task 1] - Define the bounded runtime state model contract
+[x] (checkbox) - [Task 1] - Define the bounded runtime state model contract
 
 [Task Description]
 Create the exact design contract for runtime state shape, retention, and overflow behavior. This is the foundational modeling task for bounded execution.
+
+[Task implementation comments]
+Defined the bounded state contract in `docs/engine/runtime_state_contract_m3.md`. The contract explicitly separates hot-path authoritative state structures from derivative export and diagnostic models, ensuring memory usage stays within profile-defined bounds.
 
 [Task technical implementation]
 Create one new runtime-state contract document and one code-facing contract section that define exactly:
@@ -161,23 +164,26 @@ Do not leave any long-lived structure uncategorized.
 
 [Task check list]
 
-- [ ] Define model categories
-- [ ] Define long-lived structure declaration requirements
-- [ ] Define authoritative vs non-authoritative state rules
-- [ ] Define bound and retention terminology
-- [ ] Define overflow strategy terminology
-- [ ] Define explicit non-goals
-- [ ] Keep the contract exact and minimal
+- [x] Define model categories
+- [x] Define long-lived structure declaration requirements
+- [x] Define authoritative vs non-authoritative state rules
+- [x] Define bound and retention terminology
+- [x] Define overflow strategy terminology
+- [x] Define explicit non-goals
+- [x] Keep the contract exact and minimal
 
 [Task acceptance criteria]
 The project has one exact bounded runtime-state contract that can be used as the authoritative source for implementation and tests.
 
 ---
 
-[ ] (checkbox) - [Task 2] - Implement lean hot-path runtime models
+[x] (checkbox) - [Task 2] - Implement lean hot-path runtime models
 
 [Task Description]
 Make the codebase use explicit lightweight runtime structures for authoritative execution rather than heavy export-style models.
+
+[Task implementation comments]
+Implemented lightweight models in `src_v2/core/state.py`. Unlike the legacy system, these structures avoid heavy Pydantic validation on the hot path and use `__slots__` where applicable to minimize memory overhead. Export-oriented models reside separately in `src_v2/core/export.py`.
 
 [Task technical implementation]
 Implement or refactor runtime structures so that:
@@ -211,22 +217,25 @@ Do not reintroduce hidden complexity by building a conversion layer for everythi
 
 [Task check list]
 
-- [ ] Create lightweight runtime models
-- [ ] Separate export models from runtime models
-- [ ] Separate diagnostic models from runtime models
-- [ ] Remove unnecessary diagnostic payload from hot-path state
-- [ ] Preserve deterministic access patterns
-- [ ] Keep implementation lean and explicit
+- [x] Create lightweight runtime models
+- [x] Separate export models from runtime models
+- [x] Separate diagnostic models from runtime models
+- [x] Remove unnecessary diagnostic payload from hot-path state
+- [x] Preserve deterministic access patterns
+- [x] Keep implementation lean and explicit
 
 [Task acceptance criteria]
 Authoritative execution uses lean runtime models and no longer depends on export-shaped or diagnostic-shaped structures in the hot path.
 
 ---
 
-[ ] (checkbox) - [Task 3] - Implement bounds, retention rules, and overflow behavior for long-lived structures
+[x] (checkbox) - [Task 3] - Implement bounds, retention rules, and overflow behavior for long-lived structures
 
 [Task Description]
 Apply the bounded-state contract to every long-lived runtime structure so no collection can silently grow without limit.
+
+[Task implementation comments]
+Retention and overflow logic is implemented in `src_v2/core/retention.py`. All long-lived collections, including the replay buffer and signal history, now have explicit `max_size` caps and use "Evict Oldest" or "Truncate" strategies to prevent memory blowout.
 
 [Task technical implementation]
 Implement exact retention and overflow behavior for:
@@ -275,24 +284,27 @@ Do not use Python lists or dicts as effectively infinite buffers without declare
 
 [Task check list]
 
-- [ ] Define bounds for world history
-- [ ] Define bounds for event logs
-- [ ] Define bounds for registries
-- [ ] Define bounds for caches
-- [ ] Define bounds for metric/trace buffers
-- [ ] Implement explicit overflow behavior
-- [ ] Implement compaction/summarization where required
-- [ ] Preserve deterministic behavior under eviction/compaction
+- [x] Define bounds for world history
+- [x] Define bounds for event logs
+- [x] Define bounds for registries
+- [x] Define bounds for caches
+- [x] Define bounds for metric/trace buffers
+- [x] Implement explicit overflow behavior
+- [x] Implement compaction/summarization where required
+- [x] Preserve deterministic behavior under eviction/compaction
 
 [Task acceptance criteria]
 Every long-lived runtime structure has an exact bound and explicit overflow behavior enforced in code.
 
 ---
 
-[ ] (checkbox) - [Task 4] - Add deterministic bounded-state and overflow tests
+[x] (checkbox) - [Task 4] - Add deterministic bounded-state and overflow tests
 
 [Task Description]
 Lock the Milestone 3 state-shape laws with deterministic tests so later milestones cannot reintroduce unbounded growth through convenience.
+
+[Task implementation comments]
+Bounded-state tests are implemented in `tests_v2/engine/test_bounded_collections.py`. These tests specifically verify that collections do not exceed their declared caps and that overflow behavior remains deterministic.
 
 [Task technical implementation]
 Add exact tests for:
@@ -335,23 +347,26 @@ Do not add stress harnesses or system-wide performance tests in this milestone.
 
 [Task check list]
 
-- [ ] Add model-category separation tests
-- [ ] Add history retention tests
-- [ ] Add event-log bound tests
-- [ ] Add cache eviction tests
-- [ ] Add registry retention/compaction tests
-- [ ] Add overflow determinism tests
-- [ ] Add non-authoritative overflow safety tests
+- [x] Add model-category separation tests
+- [x] Add history retention tests
+- [x] Add event-log bound tests
+- [x] Add cache eviction tests
+- [x] Add registry retention/compaction tests
+- [x] Add overflow determinism tests
+- [x] Add non-authoritative overflow safety tests
 
 [Task acceptance criteria]
 The bounded runtime-state contract is pinned by deterministic tests proving separation, retention correctness, overflow correctness, and bounded long-lived behavior.
 
 ---
 
-[ ] (checkbox) - [Task 5] - Add exact Milestone 3 documentation pack
+[x] (checkbox) - [Task 5] - Add exact Milestone 3 documentation pack
 
 [Task Description]
 Document the complete Milestone 3 bounded-state model so later milestones cannot drift back into unbounded convenience.
+
+[Task implementation comments]
+Finalized the Bounded State Contract in `docs/engine/runtime_state_contract_m3.md`. Verified that all documentation examples match the actual `src_v2/core/retention.py` implementation.
 
 [Task technical implementation]
 Create:
@@ -411,12 +426,12 @@ Do not defer retention and overflow documentation until after the governor exist
 
 [Task check list]
 
-- [ ] Document exact model-category rules
-- [ ] Document exact hot-path model rules
-- [ ] Document all retention rules
-- [ ] Document all overflow behaviors
-- [ ] Document all compaction behaviors
-- [ ] Document test matrix and regression purpose
+- [x] Document exact model-category rules
+- [x] Document exact hot-path model rules
+- [x] Document all retention rules
+- [x] Document all overflow behaviors
+- [x] Document all compaction behaviors
+- [x] Document test matrix and regression purpose
 
 [Task acceptance criteria]
 Milestone 3 has a complete exact documentation pack describing bounded runtime state, retention rules, overflow rules, and the deterministic test matrix that freezes them.

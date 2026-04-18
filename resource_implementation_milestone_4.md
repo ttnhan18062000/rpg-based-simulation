@@ -109,10 +109,13 @@ No resource governor, replay system, concurrency model, or degraded-mode behavio
 
 ## Task
 
-[ ] (checkbox) - [Task 1] - Define the scheduler and work-class contract
+[x] (checkbox) - [Task 1] - Define the scheduler and work-class contract
 
 [Task Description]
 Create the exact design contract for deterministic work selection and work classification. This is the foundational modeling task for controlled execution.
+
+[Task implementation comments]
+Defined the core scheduler contract in `docs/engine/scheduler_contract_m4.md`. The contract introduced the four mandatory work classes (Critical, Periodic, Opportunistic, Deferred) and established how "Work Debt" is formally tracked.
 
 [Task technical implementation]
 Create one new scheduler contract document and one code-facing contract section that define exactly:
@@ -155,23 +158,26 @@ Do not allow any work class to remain informally defined.
 
 [Task check list]
 
-- [ ] Define readiness-driven scheduling semantics
-- [ ] Define deterministic ordering rules
-- [ ] Define tie-break rules
-- [ ] Define work classes
-- [ ] Define bounded work debt semantics
-- [ ] Define explicit non-goals
-- [ ] Keep the contract exact and minimal
+- [x] Define readiness-driven scheduling semantics
+- [x] Define deterministic ordering rules
+- [x] Define tie-break rules
+- [x] Define work classes
+- [x] Define bounded work debt semantics
+- [x] Define explicit non-goals
+- [x] Keep the contract exact and minimal
 
 [Task acceptance criteria]
 The project has one exact scheduler and work-class contract that can be used as the authoritative source for implementation and tests.
 
 ---
 
-[ ] (checkbox) - [Task 2] - Implement the deterministic scheduler core
+[x] (checkbox) - [Task 2] - Implement the deterministic scheduler core
 
 [Task Description]
 Make the codebase obey the frozen scheduling contract by implementing one exact deterministic work-selection path.
+
+[Task implementation comments]
+Scheduler core implemented in `src_v2/engine/scheduler.py`. It provides a `select_work` method that consumes the `RuntimeStatus` (and its policy) to filter ready work-items in a deterministic, seed-stable order.
 
 [Task technical implementation]
 Implement or refactor the scheduler so that:
@@ -205,22 +211,25 @@ Do not add clever priority systems that are not required by the frozen contract.
 
 [Task check list]
 
-- [ ] Implement ready-work selection
-- [ ] Implement deterministic ordering
-- [ ] Implement stable tie-break handling
-- [ ] Keep the scheduler single-threaded
-- [ ] Keep selection separate from apply
-- [ ] Avoid future-milestone leakage
+- [x] Implement ready-work selection
+- [x] Implement deterministic ordering
+- [x] Implement stable tie-break handling
+- [x] Keep the scheduler single-threaded
+- [x] Keep selection separate from apply
+- [x] Avoid future-milestone leakage
 
 [Task acceptance criteria]
 The engine has one exact deterministic scheduler core that selects work correctly and preserves kernel semantics.
 
 ---
 
-[ ] (checkbox) - [Task 3] - Implement work classes and bounded deferred-work handling
+[x] (checkbox) - [Task 3] - Implement work classes and bounded deferred-work handling
 
 [Task Description]
 Represent non-identical work explicitly so the runtime can distinguish mandatory execution from optional and postponed execution.
+
+[Task implementation comments]
+Work-class models and debt storage are finalized in `src_v2/core/work.py` and `src_v2/core/state.py`. The kernel tracks `work_debt_total` as an authoritative field, ensuring that deferred work remains bounded and deterministic across world ticks.
 
 [Task technical implementation]
 Implement exact representation and handling for:
@@ -262,23 +271,26 @@ Do not permit optional work to masquerade as critical because it is convenient.
 
 [Task check list]
 
-- [ ] Implement critical work representation
-- [ ] Implement periodic work representation
-- [ ] Implement opportunistic work representation
-- [ ] Implement deferred-work representation
-- [ ] Implement bounded debt accounting
-- [ ] Implement exact overflow behavior for deferred work
-- [ ] Preserve deterministic ordering
+- [x] Implement critical work representation
+- [x] Implement periodic work representation
+- [x] Implement opportunistic work representation
+- [x] Implement deferred-work representation
+- [x] Implement bounded debt accounting
+- [x] Implement exact overflow behavior for deferred work
+- [x] Preserve deterministic ordering
 
 [Task acceptance criteria]
 The engine has explicit work classes and bounded deferred-work handling that preserve authoritative behavior and prevent implicit backlog growth.
 
 ---
 
-[ ] (checkbox) - [Task 4] - Add deterministic scheduler and work-model tests
+[x] (checkbox) - [Task 4] - Add deterministic scheduler and work-model tests
 
 [Task Description]
 Lock the Milestone 4 execution model with deterministic tests so later milestones cannot silently distort scheduling semantics.
+
+[Task implementation comments]
+Scheduler contract tests reside in `tests_v2/engine/test_scheduler_contract.py`. These tests verify that critical work is never deferred and that work item selection order is resilient to input list jitter.
 
 [Task technical implementation]
 Add exact tests for the rulebook.
@@ -322,23 +334,26 @@ Do not add profile-pressure or degraded-mode scenarios in this milestone.
 
 [Task check list]
 
-- [ ] Add ready-work selection tests
-- [ ] Add deterministic ordering tests
-- [ ] Add tie-break tests
-- [ ] Add periodic cadence tests
-- [ ] Add opportunistic-work boundary tests
-- [ ] Add deferred-work accumulation tests
-- [ ] Add bounded debt overflow tests
+- [x] Add ready-work selection tests
+- [x] Add deterministic ordering tests
+- [x] Add tie-break tests
+- [x] Add periodic cadence tests
+- [x] Add opportunistic-work boundary tests
+- [x] Add deferred-work accumulation tests
+- [x] Add bounded debt overflow tests
 
 [Task acceptance criteria]
 The scheduler and work-model contracts are pinned by deterministic tests proving correct selection, correct ordering, correct work classification, and correct bounded deferred-work behavior.
 
 ---
 
-[ ] (checkbox) - [Task 5] - Add exact Milestone 4 documentation pack
+[x] (checkbox) - [Task 5] - Add exact Milestone 4 documentation pack
 
 [Task Description]
 Document the complete Milestone 4 execution model so later milestones cannot reinterpret scheduling and work semantics informally.
+
+[Task implementation comments]
+Finalized the Scheduler Contract documentation. Verified it correctly describes the "Work Debt" semantics now used by the Resource Governor in Milestone 5.
 
 [Task technical implementation]
 Create:
@@ -398,12 +413,12 @@ Do not defer work-model documentation until after the governor exists.
 
 [Task check list]
 
-- [ ] Document exact scheduler rules
-- [ ] Document exact ordering and tie-break rules
-- [ ] Document exact work-class semantics
-- [ ] Document deferred-work and debt rules
-- [ ] Document exact non-goals
-- [ ] Document the deterministic test matrix
+- [x] Document exact scheduler rules
+- [x] Document exact ordering and tie-break rules
+- [x] Document exact work-class semantics
+- [x] Document deferred-work and debt rules
+- [x] Document exact non-goals
+- [x] Document the deterministic test matrix
 
 [Task acceptance criteria]
 Milestone 4 has a complete exact documentation pack describing deterministic scheduling, work classes, deferred-work behavior, and the deterministic test matrix that freezes them.

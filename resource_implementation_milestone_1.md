@@ -119,10 +119,13 @@ No scheduler optimization, replay system, concurrency model, or degradation mech
 
 ## Task
 
-[ ] (checkbox) - [Task 1] - Define the simulation kernel contract
+[x] (checkbox) - [Task 1] - Define the simulation kernel contract
 
 [Task Description]
 Create the exact design contract for simulation semantics. This is the foundational modeling task for the new engine. Without it, later milestones will drift into hidden assumptions, accidental ordering rules, and fake determinism.
+
+[Task implementation comments]
+Implemented the core contract in `docs/engine/simulation_kernel_contract_m1.md` and `src_v2/core/contracts.py`. The kernel orchestrator in `src_v2/engine/kernel.py` strictly follows the phase-ordered tick loop (INIT, GOVERNANCE, SCHEDULING, PACKETIZATION, RESOLUTION, PERSISTENCE). Deterministic progression is guaranteed via the `ApplyPath` mechanism and `AuthoritativeState` partitioning.
 
 [Task technical implementation]
 Create one new kernel-contract reference document and one code-facing contract section that define exactly:
@@ -167,24 +170,27 @@ Do not mix this contract with future milestone implementation detail.
 
 [Task check list]
 
-- [ ] Define tick semantics
-- [ ] Define tick phase ordering
-- [ ] Define authoritative state boundaries
-- [ ] Define action-readiness semantics
-- [ ] Define deterministic apply-order semantics
-- [ ] Define deterministic RNG semantics
-- [ ] Define explicit non-goals
-- [ ] Keep the contract exact and minimal
+- [x] Define tick semantics
+- [x] Define tick phase ordering
+- [x] Define authoritative state boundaries
+- [x] Define action-readiness semantics
+- [x] Define deterministic apply-order semantics
+- [x] Define deterministic RNG semantics
+- [x] Define explicit non-goals
+- [x] Keep the contract exact and minimal
 
 [Task acceptance criteria]
 The project has one exact simulation-kernel contract that can be used as the authoritative source for implementation and tests.
 
 ---
 
-[ ] (checkbox) - [Task 2] - Define the runtime-profile and resource-envelope contract
+[x] (checkbox) - [Task 2] - Define the runtime-profile and resource-envelope contract
 
 [Task Description]
 Create the exact operational contract for stable and bounded resource usage. This task freezes what a runtime profile is and what limits it must define.
+
+[Task implementation comments]
+Implemented the profile schema in `src_v2/config/profiles.py` and validation logic in `src_v2/config/validator.py`. Reference profiles are defined in `src_v2/config/__init__.py`. The resource envelope (RAM, CPU, Queue, Work Debt) is now a first-class requirement for every certified simulation run.
 
 [Task technical implementation]
 Create one exact profile contract that defines:
@@ -232,22 +238,25 @@ Do not use vague phrases like “reasonable resource usage.” Every profile fie
 
 [Task check list]
 
-- [ ] Define runtime profile semantics
-- [ ] Define hard resource-envelope fields
-- [ ] Define profile validation rules
-- [ ] Define performance-language contract
-- [ ] Define hardware-class certification concept
-- [ ] Keep profile rules exact and enforceable
+- [x] Define runtime profile semantics
+- [x] Define hard resource-envelope fields
+- [x] Define profile validation rules
+- [x] Define performance-language contract
+- [x] Define hardware-class certification concept
+- [x] Keep profile rules exact and enforceable
 
 [Task acceptance criteria]
 The project has one exact runtime-profile contract that defines stable resource ceilings and correct performance language.
 
 ---
 
-[ ] (checkbox) - [Task 3] - Implement authoritative state classification and kernel phase skeleton
+[x] (checkbox) - [Task 3] - Implement authoritative state classification and kernel phase skeleton
 
 [Task Description]
 Make the codebase reflect the frozen kernel contract at a structural level. This task does not implement full engine behavior. It creates the exact boundaries and skeleton that later milestones will fill.
+
+[Task implementation comments]
+The skeletal engine is implemented in `src_v2/engine/kernel.py`. Authoritative state is strictly typed in `src_v2/core/state.py`. Kernel phases are explicitly defined as generators in `src_v2/engine/phases.py`, ensuring deterministic execution order across all world ticks.
 
 [Task technical implementation]
 Implement or scaffold:
@@ -282,22 +291,25 @@ Do not hide authoritative-state separation inside comments only. It must be refl
 
 [Task check list]
 
-- [ ] Separate authoritative and derived state structures
-- [ ] Create explicit kernel phase skeleton
-- [ ] Freeze deterministic phase order in code
-- [ ] Separate world-time and readiness boundaries
-- [ ] Keep the implementation skeletal and exact
-- [ ] Avoid future-milestone leakage
+- [x] Separate authoritative and derived state structures
+- [x] Create explicit kernel phase skeleton
+- [x] Freeze deterministic phase order in code
+- [x] Separate world-time and readiness boundaries
+- [x] Keep the implementation skeletal and exact
+- [x] Avoid future-milestone leakage
 
 [Task acceptance criteria]
 The project structure reflects the kernel contract and exposes explicit boundaries for authoritative state, tick phases, and readiness semantics.
 
 ---
 
-[ ] (checkbox) - [Task 4] - Add deterministic kernel-contract and profile-contract tests
+[x] (checkbox) - [Task 4] - Add deterministic kernel-contract and profile-contract tests
 
 [Task Description]
 Lock the Milestone 1 contract with deterministic tests so later milestones cannot silently change the engine’s laws.
+
+[Task implementation comments]
+Implemented contract tests in `tests_v2/engine/test_simulation_kernel_contract.py` and `tests_v2/config/test_runtime_profile_contract.py`. These tests verify deterministic RNG seeding, phase ordering, and profile ceiling enforcement.
 
 [Task technical implementation]
 Add exact tests for the rulebook.
@@ -340,23 +352,26 @@ Do not add heavy stress, replay, concurrency, or benchmark suites in this milest
 
 [Task check list]
 
-- [ ] Add deterministic seed tests
-- [ ] Add phase-order tests
-- [ ] Add authoritative-state boundary tests
-- [ ] Add readiness/world-time boundary tests
-- [ ] Add profile-schema tests
-- [ ] Add invalid-profile rejection tests
-- [ ] Add performance-language contract tests
+- [x] Add deterministic seed tests
+- [x] Add phase-order tests
+- [x] Add authoritative-state boundary tests
+- [x] Add readiness/world-time boundary tests
+- [x] Add profile-schema tests
+- [x] Add invalid-profile rejection tests
+- [x] Add performance-language contract tests
 
 [Task acceptance criteria]
 The simulation kernel and runtime-profile contracts are pinned by deterministic tests.
 
 ---
 
-[ ] (checkbox) - [Task 5] - Add exact Milestone 1 documentation pack
+[x] (checkbox) - [Task 5] - Add exact Milestone 1 documentation pack
 
 [Task Description]
 Document the complete Milestone 1 contract so later milestones cannot reinterpret it informally.
+
+[Task implementation comments]
+Authoritative documentation pack created in `docs/engine/`. Contracts for kernel and profiles are verified by the automated doc-integrity suite implemented in Milestone 10.
 
 [Task technical implementation]
 Create:
@@ -416,12 +431,12 @@ Do not defer it.
 
 [Task check list]
 
-- [ ] Document exact kernel rules
-- [ ] Document exact profile rules
-- [ ] Document exact non-goals
-- [ ] Document determinism expectations
-- [ ] Document contract-test groups
-- [ ] Document regression purpose of each test group
+- [x] Document exact kernel rules
+- [x] Document exact profile rules
+- [x] Document exact non-goals
+- [x] Document determinism expectations
+- [x] Document contract-test groups
+- [x] Document regression purpose of each test group
 
 [Task acceptance criteria]
 Milestone 1 has a complete exact kernel and runtime-profile documentation pack that matches the implementation.

@@ -105,10 +105,13 @@ No concurrency, remote persistence architecture, or final resilience certificati
 
 ## Task
 
-[ ] (checkbox) - [Task 1] - Define the replay and bounded persistence contract
+[x] (checkbox) - [Task 1] - Define the replay and bounded persistence contract
 
 [Task Description]
 Create the exact design contract for streaming replay, bounded replay staging, replay modes, quota handling, and sink-pressure behavior. This is the foundational modeling task for persistence discipline.
+
+[Task implementation comments]
+Defined the core persistence laws in `docs/engine/replay_contract_m6.md`. The contract established replay as a strictly non-authoritative signal and defined the mandatory chunk-rotation and staging boundaries required for long-run stability.
 
 [Task technical implementation]
 Create one new replay contract document and one code-facing contract section that define exactly:
@@ -165,23 +168,26 @@ Do not leave mode behavior vague.
 
 [Task check list]
 
-- [ ] Define replay capture semantics
-- [ ] Define replay ordering semantics
-- [ ] Define chunking and rotation semantics
-- [ ] Define replay mode behavior
-- [ ] Define bounded staging/window semantics
-- [ ] Define quota and sink-pressure behavior
-- [ ] Define explicit non-goals
+- [x] Define replay capture semantics
+- [x] Define replay ordering semantics
+- [x] Define chunking and rotation semantics
+- [x] Define replay mode behavior
+- [x] Define bounded staging/window semantics
+- [x] Define quota and sink-pressure behavior
+- [x] Define explicit non-goals
 
 [Task acceptance criteria]
 The project has one exact replay and bounded-persistence contract that can be used as the authoritative source for implementation and tests.
 
 ---
 
-[ ] (checkbox) - [Task 2] - Implement the streaming replay core and chunk rotation
+[x] (checkbox) - [Task 2] - Implement the streaming replay core and chunk rotation
 
 [Task Description]
 Make the codebase obey the frozen replay contract by implementing one exact streaming replay path and one exact chunk lifecycle.
+
+[Task implementation comments]
+Streaming replay is implemented in `src_v2/engine/persistence.py`. Replay chunks are rotated every 1000 ticks (default) or when they exceed the byte limit, ensuring that the engine never attempts to serialize a whole-session object graph.
 
 [Task technical implementation]
 Implement or refactor the replay layer so that:
@@ -216,22 +222,25 @@ Do not introduce giant serialization steps that rebuild whole object graphs unne
 
 [Task check list]
 
-- [ ] Implement incremental replay emission
-- [ ] Implement replay chunk creation
-- [ ] Implement deterministic chunk rotation
-- [ ] Implement closed-chunk immutability behavior
-- [ ] Implement deterministic replay ordering
-- [ ] Keep replay non-authoritative
+- [x] Implement incremental replay emission
+- [x] Implement replay chunk creation
+- [x] Implement deterministic chunk rotation
+- [x] Implement closed-chunk immutability behavior
+- [x] Implement deterministic replay ordering
+- [x] Keep replay non-authoritative
 
 [Task acceptance criteria]
 The engine has one exact streaming replay core that emits bounded replay data incrementally and rotates chunks deterministically.
 
 ---
 
-[ ] (checkbox) - [Task 3] - Implement bounded staging, replay modes, and sink-pressure behavior
+[x] (checkbox) - [Task 3] - Implement bounded staging, replay modes, and sink-pressure behavior
 
 [Task Description]
 Make replay obey bounded-memory and profile-driven persistence rules under normal and pressured conditions.
+
+[Task implementation comments]
+Bounded staging is enforced by `src_v2/engine/replay_buffer.py`. Replay modes (Off, Minimal, Debug, Forensic) are integrated with the `ServiceRegistry`, allowing the `Governor` to shed replay richness when memory pressure is detected.
 
 [Task technical implementation]
 Implement exact behavior for:
@@ -274,23 +283,26 @@ Do not allow replay mode behavior to drift outside the profile contract.
 
 [Task check list]
 
-- [ ] Implement bounded replay staging
-- [ ] Implement replay-window overflow behavior
-- [ ] Implement replay mode enforcement
-- [ ] Implement disk-budget handling
-- [ ] Implement sink-pressure behavior
-- [ ] Integrate replay degradation with governor rules
-- [ ] Preserve authoritative execution safety
+- [x] Implement bounded replay staging
+- [x] Implement replay-window overflow behavior
+- [x] Implement replay mode enforcement
+- [x] Implement disk-budget handling
+- [x] Implement sink-pressure behavior
+- [x] Integrate replay degradation with governor rules
+- [x] Preserve authoritative execution safety
 
 [Task acceptance criteria]
 Replay staging remains bounded, replay modes behave exactly as declared, and sink-pressure behavior stays within contract without corrupting core simulation semantics.
 
 ---
 
-[ ] (checkbox) - [Task 4] - Add deterministic replay and bounded-persistence tests
+[x] (checkbox) - [Task 4] - Add deterministic replay and bounded-persistence tests
 
 [Task Description]
 Lock the Milestone 6 replay rules with deterministic tests so later milestones cannot silently reintroduce in-memory accumulation or uncontrolled persistence cost.
+
+[Task implementation comments]
+Replay contract tests reside in `tests_v2/engine/test_replay_contract.py`. These tests verify that replay emission order is identical across repeated runs and that the in-memory buffer correctly respects its `max_age` and `max_count` limits.
 
 [Task technical implementation]
 Add exact tests for:
@@ -342,23 +354,26 @@ Do not add distributed storage cases in this milestone.
 
 [Task check list]
 
-- [ ] Add replay non-authoritative tests
-- [ ] Add replay ordering tests
-- [ ] Add chunk rotation tests
-- [ ] Add bounded staging tests
-- [ ] Add replay mode tests
-- [ ] Add sink-pressure tests
-- [ ] Add disk-budget tests
+- [x] Add replay non-authoritative tests
+- [x] Add replay ordering tests
+- [x] Add chunk rotation tests
+- [x] Add bounded staging tests
+- [x] Add replay mode tests
+- [x] Add sink-pressure tests
+- [x] Add disk-budget tests
 
 [Task acceptance criteria]
 The replay and bounded-persistence contracts are pinned by deterministic tests proving correct ordering, correct chunking, correct bounded staging, correct mode behavior, and correct pressure handling.
 
 ---
 
-[ ] (checkbox) - [Task 5] - Add exact Milestone 6 documentation pack
+[x] (checkbox) - [Task 5] - Add exact Milestone 6 documentation pack
 
 [Task Description]
 Document the complete Milestone 6 replay and bounded-persistence model so later milestones cannot reinterpret persistence behavior informally.
+
+[Task implementation comments]
+Finalized the Replay Contract documentation in `docs/engine/replay_contract_m6.md`. Verified that the documentation's chunking logic matches the production `persistence.py` implementation.
 
 [Task technical implementation]
 Create:
@@ -421,12 +436,12 @@ Do not defer replay-mode and pressure documentation until later observability ex
 
 [Task check list]
 
-- [ ] Document exact replay rules
-- [ ] Document exact replay-mode behavior
-- [ ] Document exact chunking and staging rules
-- [ ] Document exact pressure and budget behavior
-- [ ] Document forbidden replay behavior
-- [ ] Document the deterministic test matrix
+- [x] Document exact replay rules
+- [x] Document exact replay-mode behavior
+- [x] Document exact chunking and staging rules
+- [x] Document exact pressure and budget behavior
+- [x] Document forbidden replay behavior
+- [x] Document the deterministic test matrix
 
 [Task acceptance criteria]
 Milestone 6 has a complete exact documentation pack describing streaming replay, bounded persistence, replay modes, pressure behavior, and the deterministic test matrix that freezes them.

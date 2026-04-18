@@ -1,88 +1,66 @@
-# AI System: The Cognitive Pipeline
+# AI System: The Cognitive Pipeline (v2)
 
-The WorldLoop AI system uses a **Hybrid Architecture** combining **Utility AI** for high-level goal selection and a **State Machine (FSM)** for tactical execution. Following the AOA pivot, the AI is strictly stateless and side-effect-free during its decision cycle.
+Following the **Resource-Safe Engineering** model, the AI system is strictly decoupled from the authoritative world state. Deliberation occurs in background workers using read-only snapshots, and the results are returned as authoritative `ActionResults`.
 
 ---
 
-## 1. The 5-Phase Cognitive Pipeline
+## 1. The 5-Phase Cognitive Cycle
 
-Every scheduled tick, the `AIBrain` executes an expanded cognitive cycle to bridge long-term strategy with tactical execution.
+Every AI worker executes a single, deterministic cognitive cycle during the **PACKETIZATION** phase of the kernel. This cycle bridges long-term strategy with tactical execution.
 
-### Phase 0: Strategic Derivation [NEW]
+### Phase 1: Strategic Appraisal
 - **Input**: `MindAspect.strategic` state.
-- **Logic**: Process high-level **Projects** to derive the active **Objective**.
-- **Locking**: If a project or objective is locked (hysteresis), this phase skip derivation to ensure continuity.
-- **Updates**: Refreshes the `active_objective_id` in the strategic state.
+- **Logic**: Evaluates the current **Project** (e.g., "Clear Bandit Camp") to derive the active **Objective** (e.g., "Attack Leader").
+- **Hysteresis**: Ensures goal continuity by protecting the current objective from low-impact fluctuations.
 
-### Phase 1: Sensory & Perception
-- **Input**: Raw `Snapshot` and `Entity` state.
-- **Selective Attention**: Filters visible entities based on "Saliency". Top slots are actively processed.
-- **Updates**: Proposes a `PerceptionUpdate` for the `attention_pool`.
+### Phase 2: Sensory Filtering & Perception
+- **Input**: `WorkerPacket` and local viewport.
+- **Selective Attention**: Filters the visible world into a prioritized "Attention Pool" based on **Saliency** (distance, threat level, faction).
+- **Perception Update**: Proposes updates to the entity's subjective `perception` memory.
 
-### Phase 2: Memory & Appraisal
-- **Memory Decay**: Increments `stale_ticks` for entities no longer visible.
-- **Emotional Appraisal**: Calculates `panic`, `stuck`, and `dread` based on current surroundings.
-- **Updates**: Proposes `PerceptionUpdate` and `MindUpdate`.
+### Phase 3: Appraisal (Emotional Spike)
+- **Logic**: Derives real-time emotional states (`panic`, `bravery`, `dread`) from the attention pool and recent narrative memory.
+- **Grudges**: Identifies "Nemeses" in the current viewport to bias targeting.
 
-### Phase 3: Deliberation (Goal Selection)
-- **Strategic Alignment**: Utility scores are now biased by the **Active Objective** (1.5x - 2.0x weight).
-- **Utility Scoring**: Candidates evaluated against `GoalScorer` registry.
-- **Hysteresis**: Ensures smooth transitions by protecting the current goal unless a significantly better one appears.
-- **Updates**: Proposes `MindUpdate` with target `AIState`.
+### Phase 4: Deliberation (Goal Scoring)
+- **Input**: Utility AI Scorers + Personality Traits.
+- **Scoring**: Candidates are evaluated against the `GoalRegistry`. Utility scores are heavily biased by the active **Strategic Objective**.
+- **Pick**: Selection of the winning `AIState` (e.g., `HUNT`, `FLEE`, `GATHER`).
 
-### Phase 4: Output (Proposal)
-- **State Handler**: The `StateHandler` (e.g. `CombatHandler`) generates concrete `ActionProposal`.
-- **Strategic Persistence**: Handlers can now propose `StrategicUpdate` to mark objective progress.
+### Phase 5: Output (Action Proposal)
+- **Logic**: The mapping of the chosen state to a concrete `ActionProposal` via the `StateHandler`.
+- **Result Generation**: Produces a `WorkerResult` containing the tactical proposal and any proposed updates to the entity's mental state.
 
 ---
 
-## 2. Strategic Mind Structure
+## 2. Strategic Mind Hierarchy
 
-The `MindAspect` has been hardened to support authoritatively persistent goals:
+The `MindAspect` is the permanent authoritative store for an entity's strategic history:
 
-*   **`strategic`**: (The Continuity Stratum)
-    *   **Directives**: Canonical motives (Built-in or Quest-driven).
-    *   **Projects**: Current long-term commitment (e.g. "Visit Blacksmith").
-    *   **Objectives**: The tactical step (e.g. "Navigate to Shop").
-*   **`decision`**: Real-time AI goal scores and tactical state.
-*   **`perception`**: Threat table and subjective entity/terrain memory.
-*   **`narrative`**: Chronological memory log of `InterpretedEvent` records.
+*   **`strategic`**: Continuity layer. Stores `Directives` (motives), `Projects` (medium-term), and `Objectives` (immediate).
+*   **`perception`**: Threat table and subjective terrain/entity memory.
+*   **`emotion`**: Persistent grudges and emotional baseline.
+*   **`narrative`**: Log of high-impact events (Trauma, Glory).
 
 ---
 
-## 3. Hierarchical Commitment Registry
+## 3. Stateless Execution Law
 
-Strategic reasoning is supported by a registry of projects:
+**CRITICAL**: All AI deliberation must be **Stateless and Side-Effect-Free**.
+- Workers receive a `WorkerPacket` (a shallow-cloned view restricted to local context).
+- Workers must NOT attempt to mutate any world reference.
+- All intended changes must be expressed as a `WorkerResult`.
 
-| Project | Kind | Typical Initial Objective |
-| :--- | :--- | :--- |
-| **Survival** | CORE | `FLEE`, `REST`, or `RECOVER` |
-| **Combat** | TACTICAL | `ENGAGE`, `HUNT`, or `BRACE` |
-| **Logistics** | SERVICE | `RESTOCK`, `CRAFT`, or `SELL` |
-| **Exploration** | WORLD | `EXPLORE_REGION` or `VISIT_POI` |
+This law ensures that the simulation can be parallelized safely and that AI logic never accidentally leaks into the authoritative resolution phase.
 
 ---
 
----
+## 4. Tactical Handlers
 
-## 4. State Handlers (Tactical Execution)
+State handlers translate "Intent" into "Action":
+- **CombatHandler**: Handles skill priority and kiting distance.
+- **WanderHandler**: Manages frontier traversal and leashing.
+- **RestockHandler**: Orchestrates town service visits based on economic need.
 
-The FSM handlers implement the "How" for each state.
-
-- **CombatHandler**: Handles skill selection (Melee vs. AoE vs. Kiting).
-- **WanderHandler**: Implements frontier exploration and leash enforcement.
-- **TownHandlers**: Orchestrate complex service interactions (Buying potions, upgrading equipment).
-- **Navigation Logic**:
-  - **Manhattan Dist ≤ 2**: Greedy movement for performance.
-  - **Manhattan Dist > 2**: A* Pathfinding with terrain cost integration.
-
----
-
-## 5. Statelessness & Side-Effects
-
-**CRITICAL**: The `AIBrain` and all `StateHandler` objects must be **side-effect-free**. They must NOT:
-1.  Mutate `actor` or `snapshot` fields.
-2.  Perform direct I/O.
-3.  Access global mutable state.
-
-All desired changes must be expressed as `IntentUpdate` records within the returned `ActionProposal`. The `ActionSystem` resolution phase is the only place where these updates are actually applied to the world state.
+> [!TIP]
+> Use the `Cognition Visualizer` (`tools/viz_strategy.html`) to audit hierarchical AI decisions in real-time.

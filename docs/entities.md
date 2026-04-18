@@ -1,112 +1,72 @@
-# Entities & Factions: The Aspect-Oriented Model
+# Entities & Factions: The Aspect-Oriented Model (v2)
 
-In the WorldLoop RPG, every agent (Heroes, Wolves, Goblins, etc.) is an `Entity`. Following the **Aspect-Oriented Architecture (AOA)**, entities are no longer monolithic objects but are composed of discrete, domain-specific **Aspects**.
+In the WorldLoop RPG, every agent (Heroes, Mobs, NPCs) is an `Entity`. Following the **Resource-Safe Engine (v2)** architecture, entities are composed of discrete **Aspects** and governed by strict authoritative mutation laws.
 
 ---
 
-## 1. The Entity Container
+## 1. The Entity Shell
 
-The `Entity` class (`src/core/entities/entity.py`) serves as a shell that coordinates lifecycle events (ticks) and enforces synchronization between its aspects.
+The `Entity` class (`src_v2/core/entities/entity.py`) coordinates lifecycle events and enforces synchronization between its aspects.
 
 ### Core Properties
-- **`id`**: A unique, monotonic integer assigned at spawn.
-- **`kind`**: The archetype string (e.g., `"hero"`, `"bandit_archer"`, `"wolf"`).
-- **`next_act_at`**: The absolute tick time when the entity is next allowed to act (Speed-based).
+- **`id`**: A unique, monotonic integer.
+- **`kind`**: The archetype string (e.g., `"hero"`, `"wolf"`).
+- **`next_act_at`**: The absolute tick when the entity is next allowed to act.
 
-### Execution Guarantees
-- **Phase-Locked Mutation**: Entities can only be mutated during the **Resolution** phase. any attempt to change an attribute during AI Deliberation will raise a `RuntimeError`.
-- **Deep-Copy Snapshots**: When the engine creates a snapshot, it uses `model_copy(deep=True)` to ensure that the read-only view is 100% isolated from the simulation thread.
+### Authoritative Execution Laws
+1.  **Generation-Based Apply**: In v2, entities are never deep-cloned during a standard tick. Instead, they are updated through the `ApplyPath`, which creates the next "Generation" of the entity state. This ensures that shared references remain read-only for observers.
+2.  **Phase-Locked Mutation**: Entities can only be mutated during the **RESOLUTION** phase of the kernel. Any attempt to modify a field during AI Deliberation results in a simulation halt.
+3.  **Shallow Packetization**: For AI workers, entities are wrapped in a `WorkerPacket` which provides a shallow, read-only view of the actor and its immediate surroundings.
 
 ---
 
 ## 2. Aspect Decomposition
 
-Each aspect encapsulates a specific domain of the entity's existence.
-
 ### 2.1 IdentityAspect
-Handles the "soul" and social standing of the entity.
-- **`display_name`**: User-facing name.
-- **`faction`**: The `Faction` enum identifying alignment.
-- **`role`**: `EntityRole` (HERO, MOB, BOSS, NPC).
-- **`tier`**: Difficulty level (0=Basic, 3=Elite).
-- **`traits`**: List of 2–4 `TraitType` enums (Aggressive, Greedy, etc.).
-- **`life_directive`**: Permanent narrative goal (e.g., `"MONSTER_HUNTER"`).
+The "Social Fingerprint" and personality of the entity.
+- **`faction`**: One of the five primary world factions.
+- **`role`**: `HERO`, `MOB`, `BOSS`, or `NPC`.
+- **`traits`**: Discrete behavioral modifiers (e.g., `Greedy`, `aggressive`).
 
 ### 2.2 SpatialAspect
-Handles the entity's physical presence in the 2D grid.
+Physical presence in the 100x100 grid.
 - **`pos`**: `Vector2` location.
-- **`facing`**: Direction of last movement (used for flanking math).
-- **`vision_range`**: Perception radius (Manhattan distance).
+- **`vision_range`**: Maximum radius for sensory perception.
 
 ### 2.3 CombatAspect
-Handles health, damage throughput, and active status effects.
-- **`hp` / `max_hp_base`**: Current and base maximum health.
-- **`atk_base` / `def_base` / `spd_base`**: Authoritative base stats.
-- **`matk_base` / `mdef_base`**: Magical base stats.
-- **`crit_rate` / `crit_dmg` / `evasion`**: Secondary combat probabilities.
-- **`elem_vuln`**: Dictionary of elemental multipliers (FIRE, ICE, etc.).
-- **`effects`**: List of active `StatusEffect` objects.
-- **`traces`**: A ring buffer of `CombatTraceRecord` for UI introspection.
+Authoritative health and damage state.
+- **`hp` / `max_hp_base`**: Authoritative health pools.
+- **`atk` / `def` / `spd`**: Derived combat stats based on genetics and level.
+- **`status_effects`**: List of active `StatusEffect` objects.
 
 ### 2.4 ProgressionAspect
-Handles RPG growth, currency, and skill mastery.
-- **`level` / `xp` / `xp_to_next`**: Traditional leveling state.
-- **`gold` / `fame`**: Economic and social currency.
-- **`stamina` / `max_stamina`**: Resource for movement and skills.
-- **`skills`**: List of `SkillInstance` objects with cooldown/mastery state.
-- **`attributes`**: The 9 primary attributes (STR, AGI, VIT, INT, SPI, WIS, END, PER, CHA).
-- **`aptitudes`**: Genetic multipliers (0.8x - 1.25x) affecting attribute training speed.
+RPG growth and genetic potential.
+- **`level` / `xp`**: Progression state.
+- **`aptitudes`**: Genetic multipliers (0.8x - 1.2x) that determine how many stats are gained per level. This ensures that two heroes of the same level can have radically different builds.
 
 ### 2.5 MindAspect
-The most complex aspect, decomposed into cognitive sub-domains:
-- **`decision`**: Current `AIState` (HUNT, FLEE, etc.) and Utility AI goal scores.
-- **`perception`**: Sensory memory of seen entities (`entity_memory`) and territory (`terrain_memory`).
-- **`emotion`**: Real-time emotional spikes (`panic`, `bravery`) and long-term `grudges`.
-- **`navigation`**: A* path cache and movement history.
-- **`narrative`**: A log of high-impact "Glory" and "Trauma" events.
-
-### 2.6 InventoryAspect
-Handles item management and equipment.
-- **`equipment`**: Slots for weapon, armor, and accessories.
-- **`bag`**: A list of `ItemInstance` objects (Clamped by weight/slots).
+The cognitive stratum, composed of:
+- **`strategic`**: Stores current `Projects` and `Objectives`.
+- **`perception`**: Subjective memory of seen threats and terrain.
+- **`emotion`**: Persistent `panic` and `bravery` levels.
+- **`narrative`**: Log of "Glory" and "Trauma" events.
 
 ---
 
-## 3. Factions & Territory
+## 3. Factions & Relations
 
-Factions define how entities perceive the world and each other.
-
-### World Factions
-| Faction | Dominant Race | Primary Territory | Relations |
-| :--- | :--- | :--- | :--- |
-| **HERO_GUILD** | Hero | Town / Sanctuary | Allied with all Heroes. |
-| **GOBLIN_HORDE**| Goblin | Camp / Ruins | Hostile to all others. |
-| **WOLF_PACK** | Wolf | Forest / Cave | Neutral to nature, Hostile to Town. |
-| **UNDEAD** | Skeleton/Zombie | Swamp / Graveyard | Hostile to all life. |
-| **ORC_TRIBE** | Orc | Mountain / Volcanic | Territorial, extremely aggressive. |
-
-### Territory Debuffs
-Stepping onto hostile territory (e.g., a Hero entering a Goblin Camp) applies immediate passive debuffs:
-- **ATK/DEF Reduction**: ~20-30% penalty.
-- **Alert Trigger**: Spawns in the area gain a perception boost toward the intruder.
-- **Aggression Scaling**: Presence in a territory slowly builds faction-wide "War Ugency."
+Factions dictate sensory saliency and targeting priority:
+- **HERO_GUILD**: Allied with all Heroes.
+- **GOBLIN_HORDE**: Hostile to all life.
+- **WOLF_PACK**: Neutral to nature, hostile to non-nature intruders.
+- **UNDEAD**: Hostile to all life.
+- **ORC_TRIBE**: Territorial defenders.
 
 ---
 
-## 4. Trait Effects
+## 4. Genetic Seeds
 
-Traits are multiplicative modifiers applied to an entity's AI and Stats.
+Every entity is initialized with a `deterministic_seed`. This seed generates the unique `Aptitude` pool, ensuring that every entity's career is unique but perfectly reproducible if the world is replayed.
 
-- **Aggressive**: +5% ATK, -20% Flee utility, -10% Flee threshold.
-- **Greedy**: +40% Looting utility, prioritizes High-Value items.
-- **Arcane Gifted**: +10% MATK, +5% SPI training speed.
-- **Cowardly**: +40% Flee utility, doubles morale loss on teammate death.
-
----
-
-## 5. Genetic Seeds & Evolution
-
-Every NPC and Hero is seeded with a `genetic_seed`. This seed determines:
-1.  **Aptitudes**: Which stats the entity "learns" faster (e.g., a Warrior with high STR aptitude).
-2.  **Longevity**: The maximum number of ticks before the entity naturally "retires" or reaches its `longevity_limit`.
-3.  **Inheritance**: When an entity dies, its replacement (next `generation`) may inherit a portion of the predecessor's reputation or "World Fame."
+> [!IMPORTANT]
+> All Entity state changes MUST flow through the `ApplyPath`. Do not attempt many-to-many mutations or ad-hoc field updates outside the resolution phase.

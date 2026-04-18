@@ -117,10 +117,13 @@ No new engine features are required for Milestone 10 completion.
 
 ## Task
 
-[ ] (checkbox) - [Task 1] - Define the documentation-pack and engineering-playbook contract
+[x] (checkbox) - [Task 1] - Define the documentation-pack and engineering-playbook contract
 
 [Task Description]
 Create the exact design contract for architecture documentation, engineering guardrails, TDD rules, profile extension rules, certification extension rules, and contributor constraints. This is the foundational modeling task for long-term maintainability.
+
+[Task implementation comments]
+Defined the core maintenance laws in `docs/engine/project_lawbook_m10.md` and `docs/engine/engineering_playbook_m10.md`. The contract established manifest-driven integrity as the primary mechanism for preventing architectural drift.
 
 [Task technical implementation]
 Create one new engineering-playbook contract document and one code-facing documentation-integrity contract section that define exactly:
@@ -159,23 +162,26 @@ Do not allow mandatory architecture documents to remain unspecified.
 
 [Task check list]
 
-- [ ] Define mandatory architecture documents
-- [ ] Define required content for each document
-- [ ] Define playbook rules for new subsystems
-- [ ] Define TDD extension rules
-- [ ] Define profile and certification extension rules
-- [ ] Define contributor guardrails
-- [ ] Define explicit non-goals
+- [x] Define mandatory architecture documents
+- [x] Define required content for each document
+- [x] Define playbook rules for new subsystems
+- [x] Define TDD extension rules
+- [x] Define profile and certification extension rules
+- [x] Define contributor guardrails
+- [x] Define explicit non-goals
 
 [Task acceptance criteria]
 The project has one exact documentation and engineering-playbook contract that can be used as the authoritative source for final documentation and future contribution rules.
 
 ---
 
-[ ] (checkbox) - [Task 2] - Finalize the architecture documentation pack
+[x] (checkbox) - [Task 2] - Finalize the architecture documentation pack
 
 [Task Description]
 Make the project’s core laws and runtime behavior fully documented so no critical assumption remains tribal knowledge.
+
+[Task implementation comments]
+Finalized all 10 technical contracts in `docs/engine/`. Each document follows the mandatory "Purpose" and "Kernel Boundaries/Scope" structure, verified by automated structural compliance checks.
 
 [Task technical implementation]
 Create or finalize exact documents for:
@@ -210,26 +216,29 @@ Do not let the architecture pack become a loose folder of inconsistent notes.
 
 [Task check list]
 
-- [ ] Finalize kernel documentation
-- [ ] Finalize profile and envelope documentation
-- [ ] Finalize bounded-state documentation
-- [ ] Finalize scheduler documentation
-- [ ] Finalize governor documentation
-- [ ] Finalize replay documentation
-- [ ] Finalize observability documentation
-- [ ] Finalize worker-execution documentation
-- [ ] Finalize certification documentation
-- [ ] Finalize architecture index/cross-reference structure
+- [x] Finalize kernel documentation
+- [x] Finalize profile and envelope documentation
+- [x] Finalize bounded-state documentation
+- [x] Finalize scheduler documentation
+- [x] Finalize governor documentation
+- [x] Finalize replay documentation
+- [x] Finalize observability documentation
+- [x] Finalize worker-execution documentation
+- [x] Finalize certification documentation
+- [x] Finalize architecture index/cross-reference structure
 
 [Task acceptance criteria]
 The project has one complete exact architecture documentation pack that matches the implementation and test contracts.
 
 ---
 
-[ ] (checkbox) - [Task 3] - Finalize the engineering playbook and contributor guardrails
+[x] (checkbox) - [Task 3] - Finalize the engineering playbook and contributor guardrails
 
 [Task Description]
 Make future change discipline explicit so contributors cannot add new subsystems or features without declaring semantic and resource consequences.
+
+[Task implementation comments]
+Implemented the mandatory extension templates for Subsystems, Profiles, and Scenarios in the playbook. Hard guardrails against "Unbounded Collections" and "Universal Performance Claims" are now codified and monitored.
 
 [Task technical implementation]
 Create or finalize one exact playbook that defines:
@@ -280,22 +289,25 @@ Do not allow “temporary exceptions” without exact review rules.
 
 [Task check list]
 
-- [ ] Finalize subsystem-extension rules
-- [ ] Finalize TDD extension rules
-- [ ] Finalize profile-extension rules
-- [ ] Finalize certification-extension rules
-- [ ] Finalize contributor guardrails
-- [ ] Wire playbook into contribution flow
+- [x] Finalize subsystem-extension rules
+- [x] Finalize TDD extension rules
+- [x] Finalize profile-extension rules
+- [x] Finalize certification-extension rules
+- [x] Finalize contributor guardrails
+- [x] Wire playbook into contribution flow
 
 [Task acceptance criteria]
 The project has one exact engineering playbook and contributor-guardrail system that governs how future work is proposed and implemented.
 
 ---
 
-[ ] (checkbox) - [Task 4] - Add documentation-integrity and guardrail tests/checks
+[x] (checkbox) - [Task 4] - Add documentation-integrity and guardrail tests/checks
 
 [Task Description]
 Lock the Milestone 10 documentation and playbook rules so future contributors cannot quietly drift away from them.
+
+[Task implementation comments]
+Deployed the automated integrity suite in `tests_v2/docs/`. This suite enforces manifest-driven presence, terminology alignment with Enums, and forbidden term scanning.
 
 [Task technical implementation]
 Add exact checks or tests for:
@@ -333,22 +345,25 @@ Do not let documentation integrity become a manual review-only hope.
 
 [Task check list]
 
-- [ ] Add mandatory-doc existence checks
-- [ ] Add mandatory-section checks
-- [ ] Add terminology alignment checks
-- [ ] Add contributor-guardrail checks
-- [ ] Add profile/certification template checks
-- [ ] Add forbidden-language checks
+- [x] Add mandatory-doc existence checks
+- [x] Add mandatory-section checks
+- [x] Add terminology alignment checks
+- [x] Add contributor-guardrail checks
+- [x] Add profile/certification template checks
+- [x] Add forbidden-language checks
 
 [Task acceptance criteria]
 The documentation pack and engineering playbook are pinned by checks that detect drift, missing structure, and forbidden claims.
 
 ---
 
-[ ] (checkbox) - [Task 5] - Add exact Milestone 10 documentation pack summary and release-ready project lawbook
+[x] (checkbox) - [Task 5] - Add exact Milestone 10 documentation pack summary and release-ready project lawbook
 
 [Task Description]
 Publish the final consolidated “project lawbook” so the finished engine can be handed to future contributors without relying on oral tradition.
+
+[Task implementation comments]
+Published the Project Lawbook in `docs/engine/project_lawbook_m10.md` as the authoritative index and architectural summary for the entire engine project.
 
 [Task technical implementation]
 Create:
@@ -398,12 +413,12 @@ Do not end the project with fragmented docs and no canonical lawbook.
 
 [Task check list]
 
-- [ ] Publish final project lawbook
-- [ ] Publish final documentation-integrity test matrix
-- [ ] Summarize core architecture laws
-- [ ] Summarize extension rules
-- [ ] Summarize forbidden behaviors
-- [ ] Summarize release-readiness conditions
+- [x] Publish final project lawbook
+- [x] Publish final documentation-integrity test matrix
+- [x] Summarize core architecture laws
+- [x] Summarize extension rules
+- [x] Summarize forbidden behaviors
+- [x] Summarize release-readiness conditions
 
 [Task acceptance criteria]
 Milestone 10 has a complete final project lawbook and documentation-integrity matrix that define how the engine is understood, extended, and protected from future drift.

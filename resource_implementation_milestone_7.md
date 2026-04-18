@@ -109,10 +109,13 @@ No concurrency, distributed control plane, or final resilience certification har
 
 ## Task
 
-[ ] (checkbox) - [Task 1] - Define the observability and operational-control contract
+[x] (checkbox) - [Task 1] - Define the observability and operational-control contract
 
 [Task Description]
 Create the exact design contract for surfaced runtime signals, startup validation, runtime profile surfacing, graceful shutdown, and operational flags. This is the foundational modeling task for inspectable and controllable runtime behavior.
+
+[Task implementation comments]
+Defined the core observability laws in `docs/engine/observability_contract_m7.md`. The contract established the requirement for structured `ActionReason` payloads and mandatory telemetry for memory and work debt.
 
 [Task technical implementation]
 Create one new observability contract document and one code-facing contract section that define exactly:
@@ -155,23 +158,26 @@ Do not leave any surfaced signal vague.
 
 [Task check list]
 
-- [ ] Define required runtime signals
-- [ ] Define observability budget rules
-- [ ] Define startup-validation rules
-- [ ] Define runtime-profile surfacing rules
-- [ ] Define graceful shutdown rules
-- [ ] Define operational flag boundaries
-- [ ] Define explicit non-goals
+- [x] Define required runtime signals
+- [x] Define observability budget rules
+- [x] Define startup-validation rules
+- [x] Define runtime-profile surfacing rules
+- [x] Define graceful shutdown rules
+- [x] Define operational flag boundaries
+- [x] Define explicit non-goals
 
 [Task acceptance criteria]
 The project has one exact observability and operational-control contract that can be used as the authoritative source for implementation and tests.
 
 ---
 
-[ ] (checkbox) - [Task 2] - Implement surfaced runtime signals and startup validation
+[x] (checkbox) - [Task 2] - Implement surfaced runtime signals and startup validation
 
 [Task Description]
 Make the codebase obey the frozen observability and operational-control contract by implementing one exact surfaced-state path and one exact startup-validation path.
+
+[Task implementation comments]
+Surfaced signals are implemented as typed presenters in `src_v2/api/presenters.py`. Startup validation for runtime profiles is enforced by `src_v2/config/validator.py`, which rejects mismatched envelope settings before the tick loop begins.
 
 [Task technical implementation]
 Implement or refactor the runtime so that:
@@ -206,22 +212,25 @@ Do not allow startup validation to be partial or best-effort.
 
 [Task check list]
 
-- [ ] Implement surfaced runtime signals
-- [ ] Surface current profile and runtime mode
-- [ ] Implement stable signal naming and meaning
-- [ ] Implement startup validation
-- [ ] Enforce profile-aware observability limits
-- [ ] Preserve non-authoritative observability boundaries
+- [x] Implement surfaced runtime signals
+- [x] Surface current profile and runtime mode
+- [x] Implement stable signal naming and meaning
+- [x] Implement startup validation
+- [x] Enforce profile-aware observability limits
+- [x] Preserve non-authoritative observability boundaries
 
 [Task acceptance criteria]
 The engine exposes the required runtime signals consistently and rejects unsafe or contradictory startup configurations before execution.
 
 ---
 
-[ ] (checkbox) - [Task 3] - Implement graceful shutdown and operational flag handling
+[x] (checkbox) - [Task 3] - Implement graceful shutdown and operational flag handling
 
 [Task Description]
 Make runtime shutdown and operational controls obey exact contract behavior rather than ad hoc process behavior.
+
+[Task implementation comments]
+Graceful shutdown is coordinated by the `Kernel` in `src_v2/engine/kernel.py`, ensuring all in-memory replay chunks are flushed to the persistence sink. Operational flags for feature rollout are managed via the `Governor` to ensure they respect active mode constraints.
 
 [Task technical implementation]
 Implement exact behavior for:
@@ -256,22 +265,25 @@ Do not let feature flags become a second configuration system with looser rules.
 
 [Task check list]
 
-- [ ] Implement explicit shutdown sequence
-- [ ] Implement shutdown handling for non-authoritative buffers
-- [ ] Implement deterministic shutdown-under-pressure behavior
-- [ ] Implement validated operational flag handling
-- [ ] Preserve authoritative integrity on shutdown
-- [ ] Keep flags subordinate to profile and governor rules
+- [x] Implement explicit shutdown sequence
+- [x] Implement shutdown handling for non-authoritative buffers
+- [x] Implement deterministic shutdown-under-pressure behavior
+- [x] Implement validated operational flag handling
+- [x] Preserve authoritative integrity on shutdown
+- [x] Keep flags subordinate to profile and governor rules
 
 [Task acceptance criteria]
 Shutdown and operational flag behavior are explicit, validated, and safe, and do not alter authoritative semantics implicitly.
 
 ---
 
-[ ] (checkbox) - [Task 4] - Add deterministic observability and operational-control tests
+[x] (checkbox) - [Task 4] - Add deterministic observability and operational-control tests
 
 [Task Description]
 Lock the Milestone 7 visibility and control rules with deterministic tests so later milestones cannot silently turn observability into instability or operational controls into guesswork.
+
+[Task implementation comments]
+Observability tests in `tests_v2/engine/test_observability_contract.py` verify that structured reasons are correctly populated for both success and failure paths. Graceful shutdown tests ensure bit-identical replay output after a controlled termination.
 
 [Task technical implementation]
 Add exact tests for:
@@ -321,22 +333,25 @@ Do not add distributed runtime cases in this milestone.
 
 [Task check list]
 
-- [ ] Add surfaced-signal tests
-- [ ] Add profile and mode surfacing tests
-- [ ] Add startup-validation tests
-- [ ] Add graceful-shutdown tests
-- [ ] Add shutdown-under-pressure tests
-- [ ] Add operational-flag boundary tests
+- [x] Add surfaced-signal tests
+- [x] Add profile and mode surfacing tests
+- [x] Add startup-validation tests
+- [x] Add graceful-shutdown tests
+- [x] Add shutdown-under-pressure tests
+- [x] Add operational-flag boundary tests
 
 [Task acceptance criteria]
 The observability and operational-control contracts are pinned by deterministic tests proving stable signal exposure, correct startup validation, correct shutdown behavior, and safe flag handling.
 
 ---
 
-[ ] (checkbox) - [Task 5] - Add exact Milestone 7 documentation pack
+[x] (checkbox) - [Task 5] - Add exact Milestone 7 documentation pack
 
 [Task Description]
 Document the complete Milestone 7 observability and operational-control model so later milestones cannot reinterpret runtime visibility and control behavior informally.
+
+[Task implementation comments]
+Finalized the Observability Contract and Operational Control Matrix. Documented the `ReasonCode` taxonomy used by the structured reason system.
 
 [Task technical implementation]
 Create:
@@ -396,12 +411,12 @@ Do not defer operational documentation until after certification exists.
 
 [Task check list]
 
-- [ ] Document exact observability rules
-- [ ] Document exact startup-validation rules
-- [ ] Document exact graceful-shutdown rules
-- [ ] Document exact operational flag boundaries
-- [ ] Document forbidden operational behavior
-- [ ] Document the deterministic test matrix
+- [x] Document exact observability rules
+- [x] Document exact startup-validation rules
+- [x] Document exact graceful-shutdown rules
+- [x] Document exact operational flag boundaries
+- [x] Document forbidden operational behavior
+- [x] Document the deterministic test matrix
 
 [Task acceptance criteria]
 Milestone 7 has a complete exact documentation pack describing runtime visibility, operational controls, startup validation, shutdown behavior, and the deterministic test matrix that freezes them.

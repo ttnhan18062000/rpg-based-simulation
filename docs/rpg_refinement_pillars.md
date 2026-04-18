@@ -1,80 +1,58 @@
-# The 4 Pillars of RPG Refinement
+# The 4 Pillars of RPG Refinement (v2)
 
-The RPG simulation has evolved from a reactive world into a **proactive, personality-driven engine**. This shift is structured around four architectural pillars that influence every entity from spawn to level 100.
+The WorldLoop simulation is structured around four architectural pillars that drive emergent, personality-driven gameplay within a strict **Resource-Safe** container.
 
 ---
 
-## 🏛️ Pillar 1: The Soul (Mind & Emotions)
+## 🏛️ Pillar 1: The Soul (Cognitive Integrity)
 *Transforming reaction-machines into evolving agents.*
 
-### 1.1 The 7-Phase Cognitive Pipeline
-Instead of simple state-logic, entities now process their world through a structured brain:
-1.  **Sensory**: Gathers raw data & applies **Selective Attention**.
-2.  **Perception**: Identifies nearest threats and ally proximity.
-3.  **Memory**: Records narrative logs (Trauma, Glory, Discoveries).
-4.  **Appraisal**: Derives `mood` and `bravery` from memory clusters.
-5.  **Deliberation**: Utility AI goal scoring with personality modifiers.
-6.  **Selection**: Picking a goal using **Temperature (Softmax)**.
-7.  **Output**: Generates Action Proposal + **Tactical Intents**.
+### 1.1 The 5-Phase Cognitive Cycle
+Entities process their world through a structured brain that isolates strategy from tactical response:
+1.  **Strategic Appraisal**: Derives tactical objectives from long-term projects.
+2.  **Sensory Filtering**: prioritizes relevant viewport entities (Selective Attention).
+3.  **Appraisal**: Calculates emotional spikes (Panic, Grudges, Bravery).
+4.  **Deliberation**: Utility AI goal scoring with personality modifiers.
+5.  **Selection & Output**: Proposals concrete `ActionResult` with intent.
 
 ### 1.2 Selective Attention
-Simulates "tunnel vision" in dense scenarios. Entities filter their visible list based on **Saliency** (distance, rarity, faction), ensuring the brain only considers the most relevant entities for decision-making.
-
-### 1.3 Narrative Appraisal
-- **Trauma Cluster**: High-damage events reduce `mood` and increase `panic`.
-- **Glory Cluster**: Victorious encounters boost `bravery` and combat tenacity.
+Simulates "tunnel vision" and cognitive limits. Entities filter their viewport based on **Saliency**, ensuring that workers Deliberation remains within a fixed resource budget even in dense crowds.
 
 ---
 
-## 🏛️ Pillar 2: The Body (Genetics & Progression)
-*Ensuring every entity is a unique biological agent.*
+## 🏛️ Pillar 2: The Body (Genetic Determinism)
+*Ensuring every entity is a unique, persistent agent.*
 
-### 2.1 Genetic Evolution (Aptitudes)
-Every entity possesses unique genetic **Aptitudes** (multipliers for STR, AGI, INT, etc.).
-- **Divergence**: Two level-20 Warriors will have different stats based on their seed-derived aptitudes.
-- **Milestone Growth**: Stat growth is accelerated at "Ascension" (50), "Mastery" (75), and "Divinity" (100).
+### 2.1 Genetic Aptitudes
+Every entity is seeded with unique **Aptitudes** (e.g., STR, INT, AGI) that act as multiplicative modifiers for growth. 
+- **Evolutionary Scaling**: At level milestones (50, 75, 100), entities unlock specialized **Pillar Traits** (Colossus, Archmage, Juggernaut) that fundamentally warp their stats.
 
-### 2.2 Pillar Traits
-High-level entities unlock unique traits at breakthroughs:
-- **Colossus (Level 50)**: Massive HP and DEF spikes.
-- **Archmage (Level 75)**: Skill power and mana cost optimization.
-- **Juggernaut (Level 100)**: Ultimate resilience and CC immunity.
+### 2.2 Bounded Progression
+The engine guarantees that stat growth remains within a certified envelope, preventing "Infinite Stat Drift" that could break simulation math.
 
 ---
 
-## 🏛️ Pillar 3: The Action (Tactical Decoupling)
+## 🏛️ Pillar 3: The Action (Authoritative Decoupling)
 *Separating 'What to do' from 'How to do it'.*
 
-### 3.1 Tactical Intents (Hints)
-The brain no longer just says "Attack". It provides **Tactical Hints** to the state handlers:
-- **Skirmish (Kiting)**: "Maintain 3 tiles distance while attacking."
-- **Support**: "Target specifically the ally at 10% HP for the next heal."
-- **Flank**: "Prioritize targets not facing the actor."
+### 3.1 Worker Packets
+The brain no longer "does" things. It proposes them. By offloading AI to the `WorkerPool` using compact state-packets, the engine can parallelize thousands of entities while maintaining a single authoritative state transition point.
 
-### 3.2 Decision Inertia (Goal Hysteresis)
-To prevent "jittering" between goals:
-- **Goal Lock**: Entities commit to a state for `GOAL_LOCK_TICKS` (5-10) unless in critical danger.
-- **Anticipatory Cooldowns**: Recently abandoned goals are penalized to prevent rapid switching.
+### 3.2 Decision Continuity
+To prevent "tactical jitter," entities use **Goal Hysteresis**. Once a commitment (Objective) is made, the brain penalizes switching to a new goal unless the utility delta exceeds a "Breakthrough Threshold."
 
 ---
 
-## 🏛️ Pillar 4: The Social (Relationships)
-*Driving emergent behavior through collective history.*
+## 🏛️ Pillar 4: The Social (Relationship Continuity)
+*Driving behavior through collective history.*
 
 ### 4.1 Familiarity & Bonding
-Entities develop **Familiarity** with nearby allies (+0.002/tick).
-- **Group Cohesion**: High familiarity (allies) provides a subtle `bravery` boost when in proximity.
-- **The Nemesis System**: Victims record a "Grudge" against attackers, marking them as Nemeses who override standard priority targeting.
+Entities register presence-based familiarity with allies, providing subtle morale boosts. Conversely, the **Nemesis System** marks high-impact attackers as priority targets that override standard AI scoring.
 
 ### 4.2 Environmental Dread
-Collective regional sentiment (derived from deaths of same-faction entities) creates a "Dread" aura, causing local entities to become more anxious and prone to fleeing.
+Local casualty rates create a "Regional Dread" aura. High-dread zones bias all local AI toward caution, flight, and defensive behavior.
 
 ---
 
-## ⚙️ Technical Optimizations
-
-### Vector Flow Fields (Navigation Amortization)
-For mass navigation (e.g., 50 heroes targeting a City), the engine uses **Vector Flow Fields** ($O(1)$ query) instead of individual A* pathing to reduce CPU overhead by 90% in dense zones.
-
-### Hysteresis-Driven Sleep
-Entities in a `Goal Lock` skip the expensive `AIBrain.decide()` selection phase for the duration of the lock, further stabilizing the simulation performance.
+## ⚙️ Technical Constraints
+All gameplay pillars are implemented within the **Law of 6 Phases**. This ensures that even the most complex AI interaction remains deterministic, replayable, and resource-bounded.

@@ -293,20 +293,30 @@ To inspect an entity's strategic mind:
 
 ---
 
-## Documentation
+## Documentation Integrity & Milestone Records
 
-- **[docs/pitch.md](docs/pitch.md)** — Project pitch, vision, and roadmap
-- **[docs/architecture.md](docs/architecture.md)** — Technical architecture (8-Phase orchestration, AOA)
-- **[docs/strategic_cognition.md](docs/strategic_cognition.md)** — **[NEW]** Entity strategy hierarchy (Directives -> Projects)
-- **[docs/ai_system.md](docs/ai_system.md)** — AI pipeline, utility scoring, and state handlers
-- **[docs/regression_and_verification.md](docs/regression_and_verification.md)** — **[NEW]** Log rotation & regression testing
-- **[docs/grand_strategy.md](docs/grand_strategy.md)** — World-tier strategy (Regional influence & war)
-- **[docs/entities_and_factions.md](docs/entities_and_factions.md)** — Faction system and territory intrusion
-- **[docs/buildings_and_economy.md](docs/buildings_and_economy.md)** — Town buildings and crafting
-- **[docs/world_generation.md](docs/world_generation.md)** — Terrain regions and spawner races
-- **[docs/attributes_and_classes.md](docs/attributes_and_classes.md)** — Stats, classes, and skills
-- **[docs/items_and_inventory.md](docs/items_and_inventory.md)** — Items, equipment, and loot
-- **[docs/combat_and_progression.md](docs/combat_and_progression.md)** — Combat system and power scaling
+The version 2 engine is protected by a **Documentation Integrity Suite** that enforces strict structural and semantic compliance across all technical contracts.
+
+### Research & Implementation Milestones (100% Complete)
+
+Every milestone below contains its authoritative design contract, technical implementation checklist, and final implementation comments linking the design to the `src_v2/` codebase.
+
+- **[Milestone 1 — Simulation Kernel & Resource Envelope](resource_implementation_milestone_1.md)** — Sets the 8-phase deterministic tick law.
+- **[Milestone 2 — Deterministic Tick Loop & Execution Phases](resource_implementation_milestone_2.md)** — Frozen 6-phase atomic resolution cycle.
+- **[Milestone 3 — Bounded State Models & Retention Policy](resource_implementation_milestone_3.md)** — Authoritative vs local state separation.
+- **[Milestone 4 — Deterministic Scheduling & Work Classes](resource_implementation_milestone_4.md)** — Readiness-driven work selection logic.
+- **[Milestone 5 — Resource Governor & Degradation State Machine](resource_implementation_milestone_5.md)** — Adaptive load shedding.
+- **[Milestone 6 — Streaming Replay & Bounded Persistence](resource_implementation_milestone_6.md)** — Bit-identical forensic recording.
+- **[Milestone 7 — Observability & Operational Controls](resource_implementation_milestone_7.md)** — Structured reason taxonomy.
+- **[Milestone 8 — Safe Concurrency & Bounded Worker Execution](resource_implementation_milestone_8.md)** — Parallel AI with single-writer safety.
+- **[Milestone 9 — Resource Certification & Resilience Harness](resource_implementation_milestone_9.md)** — Envelope compliance proofs.
+- **[Milestone 10 — Documentation Integrity & Project Maintenance](resource_implementation_milestone_10.md)** — Final project lawbook and maintenance cycle.
+
+### Core Documentation
+
+- **[Project Lawbook](docs/engine/project_lawbook_m10.md)** — The canonical summary of all engine laws.
+- **[Engineering Playbook](docs/engine/engineering_playbook_m10.md)** — Guidelines for extending the engine safely.
+- **[Architecture Guide](docs/architecture.md)** — High-level technical overview of the AOA design.
 
 ## Requirements
 
