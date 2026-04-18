@@ -1,0 +1,27 @@
+- [x] Legality Service Expansion
+    - [x] Add `get_occupant_id` to `LegalityService`
+    - [x] Add `check_targeting_legality` to `LegalityService`
+    - [x] Add `get_distance` to `LegalityService`
+- [x] Movement Model Integration
+    - [x] Replace `_get_blocker` in `MovementModel`
+    - [x] Replace raw `.manhattan()` in `MovementModel`
+- [x] Combat Action Integration
+    - [x] Refactor `CombatAction.validate` to use `LegalityService`
+- [x] Drift Guards (Tests)
+    - [x] Create `tests/engine/test_quiet_tick_integrity.py`
+    - [x] Implement Scenario 1: Dead World
+    - [x] Implement Scenario 2: Sleeping World
+    - [x] Implement Scenario 3: Social Proximity Bonding
+- [x] Verification
+    - [x] Run quiet tick integrity tests
+    - [x] Run existing progression tests
+    - [x] Verify LegalityService unit tests
+- [x] Milestone 2: Combat-Context & Anti-Stalemate
+    - [x] Clarify requirements for context modifiers and stalemate logic
+    - [x] Implement tactical advantage modifiers (elevation, flanking, cover)
+    - [x] Implement anti-stalemate logic for long-running combat
+    - [x] Add regression tests for combat context and stalemate breaks
+- [ ] Milestone 3: Congestion & Advanced Anti-Oscillation
+    - [ ] Research crowd-dynamics and tile-swapping edge cases
+    - [ ] Implement group movement anti-congestion in tight corridors
+    - [ ] Harden tile-yield logic for high-priority pathing

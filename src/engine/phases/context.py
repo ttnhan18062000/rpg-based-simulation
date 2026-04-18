@@ -40,5 +40,6 @@ class EngineContext:
     tick_new_entities: list = field(default_factory=list)
     tick_proposals: list[ActionProposal] = field(default_factory=list)
     tick_applied: list[ActionProposal] = field(default_factory=list)
+    tick_rejected: list[ActionProposal] = field(default_factory=list) # Milestone 7
     tick_events: list[SimEvent] = field(default_factory=list)
     tick_start_time: float = 0.0

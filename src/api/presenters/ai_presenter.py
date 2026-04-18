@@ -150,7 +150,7 @@ class AIPresenter:
                 code=decision.last_reason.code.value,
                 metadata=decision.last_reason.metadata,
                 reason_text=decision.last_reason.reason_text
-            ) if isinstance(decision.last_reason, ActionReason) else decision.last_reason
+            )
         )
 
     @staticmethod

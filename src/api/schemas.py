@@ -575,7 +575,7 @@ class AIDecisionSchema(BaseModel):
     active_routine_id: str | None = None
     strategy: Optional[StrategicStateSchema] = None # [PHASE 4]
     narrative_impacts: list[str] = Field(default_factory=list) # [PHASE 2] Global recent life shifts
-    last_reason: ActionReasonSchema | str | dict = "" # [Milestone 7] Structured observability
+    last_reason: ActionReasonSchema # [Milestone 7] Strictly typed authoritative reason
 
 class SchedulerTimelineItemSchema(BaseModel):
     entity_id: int

@@ -17,6 +17,13 @@ class SpatialAspect(Aspect):
     
     # Sensory limits
     vision_range: int = 6
+    
+    # Movement tracking [Milestone 2]
+    moved_this_tick: bool = False
+
+    def on_tick(self, tick: int) -> None:
+        """Reset tick-based movement flag."""
+        self.moved_this_tick = False
 
     @model_validator(mode="before")
     @classmethod

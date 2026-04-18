@@ -103,18 +103,30 @@ class CombatInteractionService:
 
     @classmethod
     def detect_stalemate(cls, entity: Entity, world: WorldState | Snapshot) -> bool:
-        """Heuristic for detecting step-forward/step-back loops.
+        """Heuristic for detecting multi-state rhythmic oscillation.
         
-        Implementation: Checks pos_history for rhythmic oscillation.
-        Example: [A, B, A, B] -> Stalemate.
+        Milestone 2 Requirement: Break if zero net change in position, target, 
+        or AI state over 3 logic cycles.
         """
-        history = entity.mind.navigation.pos_history
-        if len(history) < 4:
+        nav = entity.mind.navigation
+        history = nav.pos_history
+        if len(history) < 2:
             return False
             
-        # Check for A-B-A-B pattern
-        # history[-1] is current (about to be moved), history[-2] is last, etc.
-        # But ActionSystem appends TO history. Let's assume history[-1] is where we just came from.
-        if history[-1] == history[-3] and history[-2] == history[-4] and history[-1] != history[-2]:
-            return True
-        return False
+        # 1. Positional Stalemate: ABAB oscillation or static standing
+        pos_stalemate = False
+        if len(history) >= 4:
+            if history[-1] == history[-3] and history[-2] == history[-4]:
+                pos_stalemate = True
+        elif len(history) >= 2:
+             if history[-1] == entity.spatial.pos: # Standing still
+                 pos_stalemate = True
+
+        # 2. Contextual Stalemate: Same target and same AI state
+        # We check if these are unchanged since the last evaluation
+        state_stalemate = (
+            entity.mind.decision.ai_state == nav.last_ai_state and
+            entity.combat.combat_target_id == nav.last_target_id
+        )
+        
+        return pos_stalemate and state_stalemate

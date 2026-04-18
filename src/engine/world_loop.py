@@ -69,6 +69,7 @@ class WorldLoop:
         "_generator",
         "_recorder",
         "_last_applied",
+        "_last_rejected",
         "_tick_events",
         "_faction_reg",
         "_rng",
@@ -102,6 +103,7 @@ class WorldLoop:
         self._generator = generator
         self._recorder = recorder
         self._last_applied: list[ActionProposal] = []
+        self._last_rejected: list[ActionProposal] = []
         self._tick_events: list = []
         self._faction_reg = faction_reg or FactionRegistry.default()
         self._rng = rng
@@ -181,6 +183,11 @@ class WorldLoop:
     def last_applied(self) -> list[ActionProposal]:
         """Actions applied during the most recent tick."""
         return self._last_applied
+
+    @property
+    def last_rejected(self) -> list[ActionProposal]:
+        """Actions strictly rejected during the most recent tick. [Milestone 7]"""
+        return self._last_rejected
 
     @property
     def tick_events(self) -> list:
@@ -291,6 +298,7 @@ class WorldLoop:
 
         # Sync results for legacy API/Recorder
         self._last_applied = ctx.tick_applied
+        self._last_rejected = ctx.tick_rejected # [Milestone 7]
 
 
     def _check_level_ups(self) -> None:

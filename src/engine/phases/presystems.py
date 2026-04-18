@@ -39,6 +39,11 @@ class PreSystemsPhase(EnginePhase):
             # These must run every tick, even if no entities act.
             ctx.action_system._apply_biological_decay(ctx.world, ctx.config)
             
+            # Milestone 2: Propagate on_tick to all entities (resets moved_this_tick, etc.)
+            for entity in ctx.world.entities.values():
+                if entity.combat.alive:
+                    entity.on_tick(ctx.world.tick)
+            
             system_ctx = SystemContext(
                 ctx.config, ctx.world, ctx.rng, ctx.generator, 
                 ctx.faction_reg, ctx.emit

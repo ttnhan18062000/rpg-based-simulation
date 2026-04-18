@@ -48,13 +48,14 @@ class ConflictResolver:
         self._combat_action = CombatAction(config, rng)
         self._action_system = ActionSystem(config, rng)
 
-    def resolve(self, proposals: list[ActionProposal], world: WorldState) -> list[ActionProposal]:
-        """Validate and apply proposals. Returns the list of *applied* proposals."""
+    def resolve(self, proposals: list[ActionProposal], world: WorldState) -> tuple[list[ActionProposal], list[ActionProposal]]:
+        """Validate and apply proposals. Returns (applied, rejected)."""
         if not proposals:
-            return []
+            return [], []
 
         sorted_proposals = self._sort(proposals, world)
         applied: list[ActionProposal] = []
+        rejected: list[ActionProposal] = []
         
         # Track positions claimed DURING this resolution tick (AOA Phase 6)
         resolution_occupied: set[tuple[int, int]] = set()
@@ -63,8 +64,10 @@ class ConflictResolver:
         
         for p in sorted_proposals:
             res = self._apply_one(p, world, resolution_occupied, applied)
+            if not res:
+                rejected.append(p)
 
-        return applied
+        return applied, rejected
 
     # -- internals --
 

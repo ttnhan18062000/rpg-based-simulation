@@ -235,15 +235,15 @@ class WorkerPool:
         return entity.id, new_state, proposal
 
     def shutdown(self) -> None:
-        """Close RabbitMQ channels and clear internal references."""
-        if self._channel and self._channel.is_open:
+        """Close RabbitMQ channels and clear internal references (Idempotent). [Milestone 6]"""
+        if hasattr(self, "_channel") and self._channel and self._channel.is_open:
             try:
                 self._channel.close()
             except Exception: # Avoid top-level AMQPError dependency
                 pass
-            self._channel = None
         
-        # Clear slots to break potential circular references [Hardening]
+        # Aggressive Slot Clearing (Idempotent)
+        self._channel = None
         self._brain = None
         self._rng = None
         self._config = None

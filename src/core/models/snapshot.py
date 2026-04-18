@@ -186,6 +186,16 @@ class Snapshot(SimulationModel):
                     result.extend(bucket)
         return result
 
+    def get_entity_at(self, pos: Vector2) -> int | None:
+        """Returns the ID of the living entity at the given position, if any."""
+        # radius 0 check for exact cell
+        ids = self.nearby_entity_ids(pos.x, pos.y, 0)
+        for eid in ids:
+            e = self.entities.get(eid)
+            if e and e.combat.alive and e.spatial.pos == pos:
+                return eid
+        return None
+
     def nearby_ground_positions(self, x: int, y: int, radius: int) -> list[tuple[int, int]]:
         """Return ground item positions (gx, gy) in neighboring spatial cells."""
         cx, cy = x // _SPATIAL_CELL, y // _SPATIAL_CELL

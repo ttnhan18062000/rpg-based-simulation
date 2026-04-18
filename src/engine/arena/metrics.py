@@ -50,5 +50,22 @@ class MetricService:
                 curr_pos = (pos.x, pos.y)
                 if curr_pos != prev_pos:
                     return False 
+        
+        return True
                 
-        return True 
+    @staticmethod
+    def record_usage_stats() -> Dict[str, float]:
+        """Capture current resource utilization for stability auditing. [Milestone 6]"""
+        try:
+            import psutil
+            process = psutil.Process()
+            info = process.memory_info()
+            cpu = process.cpu_times()
+            return {
+                "rss_mb": info.rss / (1024 * 1024),
+                "cpu_user": cpu.user,
+                "cpu_system": cpu.system,
+                "cpu_total": cpu.user + cpu.system
+            }
+        except (ImportError, Exception):
+            return {"rss_mb": 0.0, "cpu_user": 0.0, "cpu_system": 0.0, "cpu_total": 0.0}

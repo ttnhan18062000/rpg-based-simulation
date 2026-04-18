@@ -26,6 +26,11 @@ The user observed multiple lingering `pytest` processes that do not exit properl
 ## Related Docs
 - None
 
+## Related Stored Artifacts
+- [walkthrough.md](file:///home/vboxuser/Work/rpg-based-simulation/stored_artifacts/TCK-20260418-TEST-STABILITY-HARDENING/walkthrough.md)
+- [implementation_plan.md](file:///home/vboxuser/Work/rpg-based-simulation/stored_artifacts/TCK-20260418-TEST-STABILITY-HARDENING/implementation_plan.md)
+- [task.md](file:///home/vboxuser/Work/rpg-based-simulation/stored_artifacts/TCK-20260418-TEST-STABILITY-HARDENING/task.md)
+
 ## Related Code Areas
 - `pyproject.toml`
 - `tests/conftest.py`

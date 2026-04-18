@@ -2,6 +2,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 from pydantic import Field, model_validator
 from src.core.models.base import Aspect
+from src.core.models.enums import TacticalRole
 
 if TYPE_CHECKING:
     from src.core.gameplay.classes import SkillInstance
@@ -63,6 +64,10 @@ class ProgressionAspect(Aspect):
     talents: list[str] = Field(default_factory=list)
     quests: list[Any] = Field(default_factory=list)
 
+    # Milestone 5: Specialized Role Ownership
+    tactical_role: TacticalRole = TacticalRole.MELEE_STRIKER
+    role_stability: int = 5 # Starting hysteresis counter
+
     @property
     def xp_mult(self) -> float:
         """Dynamic XP multiplier combining attributes and active effects. [AOA STABILIZATION]"""
@@ -119,6 +124,12 @@ class ProgressionAspect(Aspect):
         super().on_attach(owner)
         if self.genetic_seed != 0 and not self.aptitudes:
             self.init_genetics()
+        
+        # Milestone 5: Initial role sync
+        from src.core.models.enums import HeroClass
+        if self.hero_class != HeroClass.NONE:
+            from src.core.gameplay.attributes import derive_tactical_role_from_class
+            self.tactical_role = derive_tactical_role_from_class(HeroClass(self.hero_class))
 
     def init_genetics(self) -> None:
         """Initialize aptitudes and longevity from the genetic seed."""

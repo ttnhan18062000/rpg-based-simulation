@@ -320,12 +320,18 @@ class InvestigateHandler(StateHandler):
                 
                 if is_confirmed:
                     learning_ups = StrategicLearningService.process_lead_outcome(ctx, lead, success=True, profile=profile)
-                    final_updates.extend(learning_ups)
-                    final_updates.append(StrategicUpdate(current_objective_id=""))
+                    # Consolidate: Merge objective clearance into the existing StrategicUpdate if present
+                    final_ups = list(learning_ups)
+                    strat_up = next((u for u in final_ups if isinstance(u, StrategicUpdate)), None)
+                    if strat_up:
+                         strat_up.current_objective_id = ""
+                    else:
+                         final_ups.append(StrategicUpdate(current_objective_id=""))
+                    
                     return AIState.WANDER, ActionProposal(
                         actor_id=actor.id, verb=ActionType.REST,
                         reason=f"Intel confirmed by sight: {lead.label}",
-                        updates=final_updates)
+                        updates=final_ups)
 
         # 2. Narrow Search on arrival
         if dist == 0:
@@ -349,7 +355,7 @@ class InvestigateHandler(StateHandler):
                      final_updates.append(StrategicUpdate(projects_add_or_update=[updated_prj]))
                 
                 return AIState.INVESTIGATING, propose_move_toward(
-                    actor, next_tile, snapshot, f"Target area empty → narrowing search to {next_tile}",
+                    ctx, next_tile, f"Target area empty → narrowing search to {next_tile}",
                     updates=final_updates)
             else:
                 # No more tiles or no zone → resolve lead as tested
@@ -362,7 +368,13 @@ class InvestigateHandler(StateHandler):
                         
                     logger.info("InvestigateHandler: Exhausted search for %s leads. Recalibrating trust.", len(obj.leads))
                 
-                final_updates.append(StrategicUpdate(current_objective_id="")) 
+                # Consolidate: Merge objective clearance into existing StrategicUpdate
+                strat_up = next((u for u in final_updates if isinstance(u, StrategicUpdate)), None)
+                if strat_up:
+                     strat_up.current_objective_id = ""
+                else:
+                     final_updates.append(StrategicUpdate(current_objective_id=""))
+
                 return AIState.WANDER, ActionProposal(
                     actor_id=actor.id, verb=ActionType.REST,
                     reason="Search space exhausted or lead resolved → clearing objective",

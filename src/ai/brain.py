@@ -158,7 +158,9 @@ class AIBrain:
         ))
         updates.append(NavigationUpdate(
             pos_history=history,
-            stalemate_counter=stalemate_counter
+            stalemate_counter=stalemate_counter,
+            last_ai_state=int(actor.mind.decision.ai_state),
+            last_target_id=actor.combat.combat_target_id
         ))
 
         # 5. [PHASE 2] Social Appraisal

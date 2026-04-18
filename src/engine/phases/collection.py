@@ -61,11 +61,16 @@ class CollectionPhase(EnginePhase):
                     from src.utils.metrics import SIM_INVALID_ACTIONS_TOTAL
                     SIM_INVALID_ACTIONS_TOTAL.labels(action_type="rest", reason="timeout").inc()
                     
+                    from src.core.models.reason_codes import ActionReason, ReasonCode
                     proposals.append(ActionProposal(
                         actor_id=entity.id,
                         verb=ActionType.REST,
                         target=None,
-                        reason="Chaos Drop / Worker Timeout",
+                        reason=ActionReason(
+                            code=ReasonCode.INTERACTION_REJECTED, 
+                            metadata={"detail": "Chaos Drop / Worker Timeout"},
+                            is_rejection=True
+                        ),
                         new_ai_state=int(entity.mind.decision.ai_state)
                     ))
         

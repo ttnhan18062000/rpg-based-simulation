@@ -78,3 +78,37 @@ def test_aoe_splash_radius():
     assert 1 in affected
     assert 2 in affected
     assert 3 not in affected
+
+def test_get_occupant_id():
+    """Verify occupant lookup."""
+    world = MagicMock()
+    pos = Vector2(1, 1)
+    world.get_entity_at.return_value = 42
+    assert LegalityService.get_occupant_id(pos, world) == 42
+    
+    world.get_entity_at.return_value = None
+    assert LegalityService.get_occupant_id(pos, world) is None
+
+def test_check_targeting_legality():
+    """Verify consolidated targeting rules (Range + LOS)."""
+    world = MagicMock()
+    origin = Vector2(0, 0)
+    target = Vector2(2, 0) # Dist 2
+    
+    # 1. In range, has LOS
+    world.grid.has_line_of_sight.return_value = True
+    assert LegalityService.check_targeting_legality(origin, target, 2, world) is True
+    
+    # 2. Out of range
+    assert LegalityService.check_targeting_legality(origin, target, 1, world) is False
+    
+    # 3. In range, NO LOS
+    world.grid.has_line_of_sight.return_value = False
+    assert LegalityService.check_targeting_legality(origin, target, 2, world) is False
+    
+    # 4. Adjacent (Dist 1), NO LOS (should skip LOS check and return True)
+    adj_target = Vector2(1, 0)
+    assert LegalityService.check_targeting_legality(origin, adj_target, 1, world) is True
+    
+    # 5. In range, NO LOS, but requires_los=False
+    assert LegalityService.check_targeting_legality(origin, target, 2, world, requires_los=False) is True

@@ -4,7 +4,7 @@ from src.actions.base import ActionType, ActionProposal
 from src.ai.perception import Perception
 from src.core.models.enums import AIState, MovementIntention
 from src.core.gameplay.items.item_registry import ITEM_REGISTRY
-from src.core.entities.entity import Entity
+from src.core.entities.entity import Entity, Vector2
 from src.ai.states.base import (
     AIContext, StateHandler, get_dead_memory_ids, get_perception_cleanup_update,
     propose_move_toward, propose_move_away, propose_retreat_home,
@@ -172,6 +172,12 @@ class HuntHandler(StateHandler):
                 reason=f"Yielding to let enemy {enemy.id} close gap (anti-deadlock)")
 
         # 6. Tactical Movement
+        if eval.mode in (TacticalMode.COVER, TacticalMode.CHOKEPOINT):
+             if eval.target_pos:
+                 target_vec = Vector2(eval.target_pos[0], eval.target_pos[1])
+                 if actor.spatial.pos != target_vec:
+                     return AIState.HUNT, propose_move_toward(ctx, target_vec, eval.reason, MovementIntention.REPOSITION, updates=[NavigationUpdate(chase_ticks=actor.mind.navigation.chase_ticks + 1)])
+        
         if eval.mode == TacticalMode.WIDEN:
              return AIState.HUNT, propose_move_away(ctx, enemy.spatial.pos, eval.reason, MovementIntention.REPOSITION, updates=[NavigationUpdate(chase_ticks=actor.mind.navigation.chase_ticks + 1)])
         
@@ -235,6 +241,12 @@ class CombatHandler(StateHandler):
                     return AIState.COMBAT, propose_move_toward(ctx, target.spatial.pos, f"Moving to support {target.id}", MovementIntention.REGROUP, updates=[NavigationUpdate(chase_ticks=0)])
 
         # 5. Tactical Movement vs Attack
+        if eval.mode in (TacticalMode.COVER, TacticalMode.CHOKEPOINT):
+             if eval.target_pos:
+                 target_vec = Vector2(eval.target_pos[0], eval.target_pos[1])
+                 if actor.spatial.pos != target_vec:
+                     return AIState.COMBAT, propose_move_toward(ctx, target_vec, eval.reason, MovementIntention.REPOSITION)
+
         if dist <= weapon_rng:
             if eval.mode == TacticalMode.WIDEN:
                 return AIState.COMBAT, propose_move_away(ctx, enemy.spatial.pos, eval.reason, MovementIntention.REPOSITION)

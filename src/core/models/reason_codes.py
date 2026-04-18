@@ -12,12 +12,16 @@ class ReasonCode(Enum):
     YIELDING = "yielding"
     SIDESTEPPING = "sidestepping"
     WAITING = "waiting"
+    CONGESTION = "congestion"
+    PATH_EXHAUSTED = "path_exhausted"
+    TARGET_REACHED = "target_reached"
     
     # Combat
     OUT_OF_RANGE = "out_of_range"
     TARGET_INVALID = "target_invalid"
     ACTION_EXHAUSTION = "exhaustion"
     INTERACTION_REJECTED = "interaction_rejected"
+    ENGAGED = "engaged"
     
     # Tactical AI
     NO_TARGET = "no_target"
@@ -25,8 +29,9 @@ class ReasonCode(Enum):
     KITING = "kiting"
     MAINTAIN_DISTANCE = "maintain_distance"
     ALLY_SPACING = "ally_spacing"
+    CLOSING_RANGE = "closing_range"
     
-    # Legacy/Misc
+    # Legacy (To be removed)
     LEGACY_FALLBACK = "legacy_fallback"
 
 class ActionReason(SimulationModel):

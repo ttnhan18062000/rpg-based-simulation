@@ -8,6 +8,7 @@ from src.core.models.enums import (
 from src.core.models.vectors import Vector2
 from src.core.models.lived_structure import RoutineProfile, PlaceAttachment # [PHASE 3]
 from src.core.models.strategy import StrategicState, DecisionDriver  # [PHASE 1]
+from src.core.models.reason_codes import ActionReason, ReasonCode
 
 if TYPE_CHECKING:
     from src.core.entities.entity import Entity
@@ -45,7 +46,7 @@ class DecisionState(SimulationModel):
     
     ai_state: AIState = AIState.IDLE
     goals: list[str] = Field(default_factory=list)
-    last_reason: str = ""
+    last_reason: ActionReason = Field(default_factory=lambda: ActionReason(code=ReasonCode.WAITING))
     last_goal: GoalType | None = None
     goal_committed_at: int = -1
     goal_switch_count: int = 0
@@ -214,7 +215,11 @@ class NavigationState(SimulationModel):
     chase_ticks: int = 0
     engaged_ticks: int = 0
     engagement_target_id: int | None = None  # [Milestone 2] For target stickiness
+    last_ai_state: AIState | None = None   # [Milestone 2] For stalemate detection
+    last_target_id: int | None = None      # [Milestone 2] For stalemate detection
     stalemate_counter: int = 0               # [Milestone 2] For loop breaking
+    oscillation_counter: int = 0             # [Milestone 3] For movement anti-jitter
+    last_route_hash: str | None = None       # [Milestone 3] For reroute hysteresis
 
 # SocialBondPerception merged into SocialBondRecord in life_events.py [PHASE 2]
 

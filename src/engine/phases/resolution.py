@@ -30,6 +30,7 @@ class ResolutionPhase(EnginePhase):
                 "hero_lifecycle": PhaseAccess.READ_WRITE,
                 "tick_proposals": PhaseAccess.READ,
                 "tick_applied": PhaseAccess.MUTATE,
+                "tick_rejected": PhaseAccess.MUTATE,
                 "tick_events": PhaseAccess.READ_WRITE,
                 "emit": PhaseAccess.READ_WRITE
             }
@@ -41,7 +42,8 @@ class ResolutionPhase(EnginePhase):
             return
 
         # 1. Conflict Resolution
-        to_apply = ctx.conflict_resolver.resolve(ctx.tick_proposals, ctx.world)
+        to_apply, rejected = ctx.conflict_resolver.resolve(ctx.tick_proposals, ctx.world)
+        ctx.tick_rejected = rejected
         
         system_ctx = SystemContext(
             ctx.config, ctx.world, ctx.rng, ctx.generator, 

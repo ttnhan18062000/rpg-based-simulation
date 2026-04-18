@@ -395,6 +395,10 @@ class GoalEvaluator:
 
         # Window check: 0 <= ticks_held < min_ticks
         if 0 <= ticks_held < min_ticks:
+            # Milestone 2: Stalemate lock-break
+            if ctx.actor.mind.navigation.stalemate_counter >= 3:
+                return False
+
             # Soul/Personality override: extreme fear or critical injury breaks the lock
             panic = ctx.actor.mind.emotion.panic
             personality = ctx.actor.mind.decision.personality

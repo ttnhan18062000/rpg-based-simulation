@@ -45,7 +45,14 @@ def test_arena_structural_determinism(arena_runner):
     # Pillar 6: Structural verification of the entire report tree
     d1 = report1.model_dump()
     d2 = report2.model_dump()
-    assert d1 == d2, "Reports are not structurally identical across runs with same seed"
+    
+    # [Milestone 7] Ignore non-deterministic performance metrics
+    perf_keys = ["avg_peak_rss", "peak_rss_high_water", "total_cpu_time"]
+    for d in [d1, d2]:
+         for k in perf_keys:
+             d.pop(k, None)
+             
+    assert d1 == d2, f"Reports differ: {d1} vs {d2}"
     assert report1.avg_ticks > 0
 
 def test_arena_stop_condition_wipe(arena_runner):

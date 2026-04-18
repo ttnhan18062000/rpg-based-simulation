@@ -45,8 +45,9 @@ logger = logging.getLogger(__name__)
 class ActionSystem(System):
     """System for processing applied actions and tactical state changes."""
 
-    def process_applied_actions(self, context: SystemContext, proposals: list[ActionProposal], applied: list[ActionProposal]) -> None:
+    def process_applied_actions(self, context: SystemContext, proposals: list[ActionProposal], applied: list[ActionProposal] | None = None) -> None:
         """Process state mutations and intent metadata for all ready entities."""
+        applied = applied or []
         applied_ids = {p.actor_id for p in applied}
         # 1. Authoritative State Application (Unified Pipeline)
         self.apply_action_state_transitions(
@@ -69,12 +70,14 @@ class ActionSystem(System):
         world: WorldState, 
         config: SimulationConfig, 
         proposals: list[ActionProposal],
-        applied_ids: set[int],
-        rng: DeterministicRNG,
+        applied_ids: set[int] | None = None,
+        rng: DeterministicRNG | None = None,
         emit: Callable | None = None,
         faction_reg: FactionRegistry | None = None
     ) -> None:
         """Core side-effects applied identically in live and replay/recovery."""
+        if applied_ids is None:
+            applied_ids = {p.actor_id for p in proposals}
         
         for proposal in proposals:
             entity = world.entities.get(proposal.actor_id)
@@ -254,12 +257,20 @@ class ActionSystem(System):
                     nav.cached_path = up.cached_path
                 if up.target_pos is not None:
                     nav.cached_path_target = up.target_pos
-                if up.chase_ticks is not None:
-                    nav.chase_ticks = up.chase_ticks
+                if up.stalemate_counter is not None:
+                    nav.stalemate_counter = up.stalemate_counter
+                if up.last_ai_state is not None:
+                    nav.last_ai_state = up.last_ai_state
+                if up.last_target_id is not None:
+                    nav.last_target_id = up.last_target_id
                 if up.intention is not None:
                     nav.intention = up.intention
                 if up.blocked_ticks is not None:
                     nav.blocked_ticks = up.blocked_ticks
+                if up.oscillation_counter is not None:
+                    nav.oscillation_counter = up.oscillation_counter
+                if up.last_route_hash is not None:
+                    nav.last_route_hash = up.last_route_hash
 
             elif isinstance(up, ProgressionUpdate):
                 if up.hp_delta is not None and up.hp_delta != 0:
@@ -333,6 +344,7 @@ class ActionSystem(System):
                     if up.new_pos: world.move_entity(entity.id, up.new_pos)
                     if up.facing: entity.spatial.facing = up.facing
                     if up.region_id: entity.spatial.region_id = up.region_id
+                    if up.moved_this_tick is not None: entity.spatial.moved_this_tick = up.moved_this_tick
 
             elif isinstance(up, CombatTraceUpdate):
                 res = up.result
@@ -424,6 +436,7 @@ class ActionSystem(System):
     @staticmethod
     def apply_strategic_update(entity: Entity, up: StrategicUpdate, world: WorldState | None = None, emit: EventEmitter | None = None) -> None:
         """Authoritatively applies strategic stratum mutations. [AOA AUTHORITATIVE]"""
+        
         from src.core.models.enums import StrategicStatus
         strat = entity.mind.strategic
         
@@ -466,6 +479,8 @@ class ActionSystem(System):
         for entity in world.entities.values():
             if not entity.combat.alive: continue
             routine = entity.mind.routine
+            # DEBUG
+            print(f"DEBUG: entity={entity.id} sleep_debt={type(routine.sleep_debt)} decay={type(config.sleep_decay_rate)}")
             routine.sleep_debt = max(0.0, min(1.0, routine.sleep_debt + config.sleep_decay_rate))
             routine.hunger_level = max(0.0, min(1.0, routine.hunger_level + config.hunger_decay_rate))
             if routine.sleep_debt >= 1.0 and not routine.is_sleeping: routine.is_sleeping = True

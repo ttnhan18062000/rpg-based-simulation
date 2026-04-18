@@ -1,6 +1,7 @@
 from __future__ import annotations
 import logging
 import time
+import threading
 from typing import List, Dict, Any, Optional
 
 from src.core.models.arena import Scenario, ParticipantProfile, ArenaResult, ScenarioReport
@@ -20,6 +21,42 @@ from src.core.entities.entity_builder import EntityBuilder
 from src.engine.arena.metrics import MetricService
 
 logger = logging.getLogger(__name__)
+
+class WatchdogTimeoutError(RuntimeError):
+    """Raised when a single simulation tick takes too long in real-time. [Milestone 6]"""
+    pass
+
+class ArenaWatchdog:
+    """Background monitoring for simulation hangs. [Milestone 6]"""
+    def __init__(self, timeout: float):
+        self.timeout = timeout
+        self.last_tick_time = 0.0
+        self.running = False
+        self._thread = None
+
+    def start(self) -> None:
+        self.last_tick_time = time.time()
+        self.running = True
+        self._thread = threading.Thread(target=self._run, daemon=True, name="ArenaWatchdog")
+        self._thread.start()
+
+    def stop(self) -> None:
+        self.running = False
+
+    def poke(self) -> None:
+        """Mark a logical tick as completed."""
+        self.last_tick_time = time.time()
+
+    def _run(self) -> None:
+        while self.running:
+            elapsed = time.time() - self.last_tick_time
+            if elapsed > self.timeout:
+                logger.error("WATCHDOG: Tick exceeded real-time limit of %.1fs (Elapsed: %.1fs). Aborting.", self.timeout, elapsed)
+                import _thread
+                # Elevate to main thread to break infinite loops
+                _thread.interrupt_main()
+                break
+            time.sleep(min(0.5, self.timeout / 4))
 
 class ArenaRunner:
     """Authoritative runner for Milestone 6 Arena Scenarios.
@@ -60,218 +97,186 @@ class ArenaRunner:
 
     def _run_iteration(self, scenario: Scenario, iteration: int, seed: int) -> ArenaResult:
         """Single deterministic execution of a scenario. [Milestone 6]"""
-        rng = DeterministicRNG(seed)
-        grid = Grid(scenario.grid_width, scenario.grid_height)
+        # 1. Initialize heavy refs to None [Milestone 6 Defensive Pattern]
+        rng = None
+        grid = None
+        spatial = None
+        world = None
+        worker_pool = None
+        loop = None
+        watchdog = None
         
-        # Apply materials from scenario (e.g. walls for chokepoints)
-        for mat_name, positions in scenario.grid_materials.items():
-            from src.core.models.enums import Material
-            try:
-                mat = Material[mat_name.upper()]
-                for pos in positions:
-                    from src.core.models.vectors import Vector2
-                    pos_v = Vector2.from_any(pos)
-                    if grid.in_bounds(pos_v):
-                        grid.set(pos_v, mat)
-            except (KeyError, ValueError):
-                logger.warning("Invalid material name in scenario: %s", mat_name)
-                    
-        spatial = SpatialHash(self.base_config.spatial_cell_size)
-        world = WorldState(seed=seed, grid=grid, spatial_index=spatial)
-        
-        # Setup Registries
-        faction_reg = FactionRegistry.default()
-        generator = EntityGenerator(self.base_config, rng)
-        
-        # Spawn Participants
-        for idx, profile in enumerate(scenario.participants):
-            pos = scenario.initial_placements[idx]
-            eid = world.allocate_entity_id()
+        # Resource tracking
+        start_stats = MetricService.record_usage_stats()
+        peak_rss = start_stats["rss_mb"]
+
+        try:
+            rng = DeterministicRNG(seed)
+            grid = Grid(scenario.grid_width, scenario.grid_height)
             
-            builder = (
-                EntityBuilder(rng, eid, tick=0)
-                .kind(profile.kind)
-                .at(pos)
-                .home(pos) # Anchor for leash-based behaviors
-                .faction(profile.faction)
-                .role(profile.role)
+            # Apply materials from scenario
+            for mat_name, positions in scenario.grid_materials.items():
+                from src.core.models.enums import Material
+                try:
+                    mat = Material[mat_name.upper()]
+                    for pos in positions:
+                        from src.core.models.vectors import Vector2
+                        pos_v = Vector2.from_any(pos)
+                        if grid.in_bounds(pos_v):
+                            grid.set(pos_v, mat)
+                except (KeyError, ValueError):
+                    logger.warning("Invalid material name in scenario: %s", mat_name)
+                        
+            spatial = SpatialHash(self.base_config.spatial_cell_size)
+            world = WorldState(seed=seed, grid=grid, spatial_index=spatial)
+            
+            faction_reg = FactionRegistry.default()
+            generator = EntityGenerator(self.base_config, rng)
+            
+            # Spawn Participants
+            for idx, profile in enumerate(scenario.participants):
+                pos = scenario.initial_placements[idx]
+                eid = world.allocate_entity_id()
+                
+                builder = (
+                    EntityBuilder(rng, eid, tick=0)
+                    .kind(profile.kind)
+                    .at(pos)
+                    .home(pos)
+                    .faction(profile.faction)
+                    .role(profile.role)
+                )
+                
+                if profile.hero_class:
+                    builder.with_hero_class(profile.hero_class)
+                    builder.with_class_skills(profile.hero_class, level=profile.level)
+                
+                ent = builder.build()
+                
+                if profile.hp_over is not None: 
+                    ent.combat.max_hp = profile.hp_over
+                    ent.combat.hp = profile.hp_over
+                if profile.atk_over is not None: 
+                    ent.combat.atk_base = profile.atk_over
+                if profile.spd_over is not None: 
+                    ent.combat.spd_base = profile.spd_over
+                
+                for k, v in profile.stat_overrides.items():
+                    if hasattr(ent.combat, k):
+                        setattr(ent.combat, k, v)
+                    elif hasattr(ent.progression, k):
+                        setattr(ent.progression, k, v)
+                
+                world.add_entity(ent)
+
+            brain = AIBrain(self.base_config, rng, faction_reg)
+            worker_pool = WorkerPool(self.base_config, brain, rng)
+            conflict_resolver = ConflictResolver(self.base_config, rng)
+            
+            loop = WorldLoop(
+                config=self.base_config,
+                world=world,
+                worker_pool=worker_pool,
+                conflict_resolver=conflict_resolver,
+                generator=generator,
+                faction_reg=faction_reg,
+                rng=rng
             )
             
-            if profile.hero_class:
-                builder.with_hero_class(profile.hero_class)
-                builder.with_class_skills(profile.hero_class, level=profile.level)
-            
-            ent = builder.build()
-            
-            # Apply individual overrides for fine-grain tuning
-            if profile.hp_over is not None: 
-                ent.combat.max_hp = profile.hp_over
-                ent.combat.hp = profile.hp_over
-            if profile.atk_over is not None: 
-                ent.combat.atk_base = profile.atk_over
-            if profile.spd_over is not None: 
-                ent.combat.spd_base = profile.spd_over
-            
-            # General attribute/progression overrides
-            for k, v in profile.stat_overrides.items():
-                if hasattr(ent.combat, k):
-                    setattr(ent.combat, k, v)
-                elif hasattr(ent.progression, k):
-                    setattr(ent.progression, k, v)
-            
-            world.add_entity(ent)
+            # Watchdog initialization (Milestone 6)
+            timeout = getattr(self.base_config, "watchdog_timeout", 2.0)
+            watchdog = ArenaWatchdog(timeout)
+            watchdog.start()
 
-        # Setup Engine Components
-        brain = AIBrain(self.base_config, rng, faction_reg)
-        worker_pool = WorkerPool(self.base_config, brain, rng)
-        conflict_resolver = ConflictResolver(self.base_config, rng)
-        
-        loop = WorldLoop(
-            config=self.base_config,
-            world=world,
-            worker_pool=worker_pool,
-            conflict_resolver=conflict_resolver,
-            generator=generator,
-            faction_reg=faction_reg,
-            rng=rng
-        )
-        
-        # simplified execution loop with StopCondition monitoring
-        stop_reason = ArenaStopCondition.TIMEOUT
-        ticks = 0
-        
-        # Calculate initial faction count for wipe detection logic
-        initial_factions = set()
-        for ent in world.entities.values():
-            if ent.kind != "generator":
-                initial_factions.add(ent.identity.faction)
-        initial_faction_count = len(initial_factions)
-        
-        # Stall tracking state
-        stagnant_ticks = 0
-        recent_hps = {e.id: e.combat.hp for e in world.entities.values()}
-        
-        # Pillar 6: Harden coordinate extraction against dict-based positions
-        from src.core.models.vectors import Vector2
-        recent_positions = {}
-        for e in world.entities.values():
-            pos = Vector2.from_any(e.spatial.pos)
-            recent_positions[e.id] = (pos.x, pos.y)
-        
-        # Performance Monitoring: Track resource growth per iteration
-        try:
-            import psutil
-            process = psutil.Process()
-            start_rss = process.memory_info().rss
-            start_cpu = process.cpu_times()
-        except (ImportError, Exception):
-            start_rss = None
-            start_cpu = None
-            process = None
+            stop_reason = ArenaStopCondition.TIMEOUT
+            ticks = 0
+            
+            initial_factions = set(e.identity.faction for e in world.entities.values() if e.kind != "generator")
+            initial_faction_count = len(initial_factions)
+            stagnant_ticks = 0
+            recent_hps = {e.id: e.combat.hp for e in world.entities.values()}
+            
+            from src.core.models.vectors import Vector2
+            recent_positions = {e.id: (Vector2.from_any(e.spatial.pos).x, Vector2.from_any(e.spatial.pos).y) for e in world.entities.values()}
+            rejection_stats: Dict[str, int] = {}
 
-        try:
             while ticks < scenario.max_ticks:
-                # Stall Detection (Activity check every 5 ticks)
+                watchdog.poke()
+                
                 if ticks > 0 and ticks % 5 == 0:
                     is_stagnant = MetricService.detect_stall(world, recent_hps, recent_positions)
-                    if is_stagnant:
-                        stagnant_ticks += 5
-                    else:
-                        stagnant_ticks = 0
+                    stagnant_ticks = stagnant_ticks + 5 if is_stagnant else 0
                     
-                    # Refresh activity snapshots
                     recent_hps = {e.id: e.combat.hp for e in world.entities.values()}
-                    recent_positions = {}
-                    for e in world.entities.values():
-                        pos = Vector2.from_any(e.spatial.pos)
-                        recent_positions[e.id] = (pos.x, pos.y)
+                    recent_positions = {e.id: (Vector2.from_any(e.spatial.pos).x, Vector2.from_any(e.spatial.pos).y) for e in world.entities.values()}
                 
-                # 100 ticks of zero activity = STALL
                 if stagnant_ticks >= 100:
                     stop_reason = ArenaStopCondition.STALL
                     break
+                
+                # --- Milestone 7: Explicit Rejection Auditing ---
+                for p in loop.last_rejected:
+                    from src.core.models.reason_codes import ActionReason
+                    if isinstance(p.reason, ActionReason) and p.reason.is_rejection:
+                        rcode = p.reason.code.value
+                        rejection_stats[rcode] = rejection_stats.get(rcode, 0) + 1
 
-                # Check Stop Conditions (Faction Wipes)
                 reason = self._check_stop_conditions(world, scenario, ticks, initial_faction_count)
                 if reason is not None:
                     stop_reason = reason
                     break
                     
                 if not loop.tick_once():
-                    # Check conditions one last time after the final tick
                     last_reason = self._check_stop_conditions(world, scenario, ticks)
-                    if last_reason:
-                        stop_reason = last_reason
+                    if last_reason: stop_reason = last_reason
                     break
                 ticks += 1
                 
-                # Tier 3 Protection: Active Memory Guard
-                # Raise error if current iteration leaks more than 300MB mid-run
-                if process and ticks % 10 == 0:
-                    current_rss = process.memory_info().rss
-                    delta_mb = (current_rss - start_rss) / (1024 * 1024)
-                    DELTA_LIMIT_MB = 600 # 600MB safety delta [Milestone 7 Hardening]
-                    if delta_mb > DELTA_LIMIT_MB:
-                        raise RuntimeError(f"Arena Iteration {iteration} exceeded safety memory delta: {delta_mb:.1f}MB > {DELTA_LIMIT_MB}MB. Aborting scenario.")
+                # Active Memory Guard & Peak RSS Tracking
+                current_stats = MetricService.record_usage_stats()
+                current_rss = current_stats["rss_mb"]
+                peak_rss = max(peak_rss, current_rss)
+                
+                if current_rss - start_stats["rss_mb"] > 600:
+                    raise RuntimeError(f"Arena leaked > 600MB mid-run. Current: {current_rss:.1f}MB")
 
                 if ticks % 100 == 0:
                     logger.info("Arena Iteration %d: Tick %d...", iteration, ticks)
 
-            # Determine winner based on survivor faction
             winner = self._determine_winner(world)
-            deaths = [e.id for e in world.entities.values() if not e.combat.alive]
+            end_stats = MetricService.record_usage_stats()
             
-            result = ArenaResult(
+            return ArenaResult(
                 iteration=iteration,
                 winner_faction=winner,
                 ticks=ticks,
                 stop_reason=stop_reason,
-                deaths=deaths
+                deaths=[e.id for e in world.entities.values() if not e.combat.alive],
+                rejection_counts=rejection_stats,
+                peak_rss_mb=peak_rss,
+                cpu_time_sec=end_stats["cpu_total"] - start_stats["cpu_total"]
             )
-            
-            # Post-iteration resource check
-            if process and start_rss is not None and start_cpu is not None:
-                end_info = process.memory_info()
-                end_cpu = process.cpu_times()
-                
-                delta_mb = (end_info.rss - start_rss) / (1024 * 1024)
-                # Combined User/System time
-                delta_cpu = (end_cpu.user + end_cpu.system) - (start_cpu.user + start_cpu.system)
-                
-                # We expect roughly < 2s for 1000 ticks in headless arena
-                avg_ms_per_tick = (delta_cpu * 1000) / max(1, ticks)
-                
-                if delta_mb > 50: # Threshold for a single iteration leak
-                    logger.warning("Arena Iteration %d leaked %.2f MB", iteration, delta_mb)
-                
-                if delta_cpu > 5.0: # 5 seconds for a single iteration is very slow for arena
-                    logger.warning("Arena Iteration %d occupied too much CPU: %.2fs (%.2fms/tick)", 
-                                   iteration, delta_cpu, avg_ms_per_tick)
-            
-            return result
+
+        except KeyboardInterrupt:
+            # Watchdog interrupt_main raises this
+            logger.critical("Arena Iteration %d ABORTED by Watchdog (Tick hang)", iteration)
+            return ArenaResult(iteration=iteration, ticks=ticks, stop_reason=ArenaStopCondition.WATCHDOG_TIMEOUT)
         finally:
-            # Hermetic Cleanup: Ensure worker pools and systems are closed 
-            # to prevent memory leaks and resource exhaustion between iterations.
-            if hasattr(loop, "shutdown"):
-                loop.shutdown()
+            self._cleanup_hermetic_resources(world, loop, worker_pool, watchdog)
+
+    def _cleanup_hermetic_resources(self, world=None, loop=None, pool=None, watchdog=None) -> None:
+        """Centralized idempotent resource reclamation for Milestone 6."""
+        if watchdog:
+            watchdog.stop()
+        if pool:
+            pool.shutdown()
+        if world:
+            world.shutdown()
+        if loop and hasattr(loop, "shutdown"):
+            loop.shutdown()
             
-            worker_pool.shutdown()
-            
-            # Explicitly clear large data structures [Hardening]
-            # Use local names to avoid UnboundLocalError if loop/worker_pool init failed
-            if 'world' in locals() and world:
-                world.shutdown()
-            
-            if 'loop' in locals(): del loop
-            if 'worker_pool' in locals(): del worker_pool
-            if 'world' in locals(): del world
-            if 'grid' in locals(): del grid
-            if 'spatial' in locals(): del spatial
-            if 'rng' in locals(): del rng
-            
-            import gc
-            # Pillar 6: Full generation collection to reclaim cyclic structures broken by weakref
-            gc.collect(2)
+        import gc
+        gc.collect(2)
 
     def _check_stop_conditions(self, world: WorldState, scenario: Scenario, ticks: int, initial_faction_count: int = 2) -> Optional[ArenaStopCondition]:
         """Detect scenario-specific termination. [Milestone 6]"""
@@ -316,8 +321,21 @@ class ArenaRunner:
         win_counts: Dict[str, int] = {}
         total_ticks = 0
         stalls = 0
+        watchdog_timeouts = 0
+        total_rss = 0.0
+        peak_rss_high_water = 0.0
+        total_cpu = 0.0
+        rejection_totals: Dict[str, int] = {}
         
         for res in results:
+            total_rss += res.peak_rss_mb
+            peak_rss_high_water = max(peak_rss_high_water, res.peak_rss_mb)
+            total_cpu += res.cpu_time_sec
+            
+            # Aggregate rejections [Milestone 7]
+            for rcode, count in res.rejection_counts.items():
+                rejection_totals[rcode] = rejection_totals.get(rcode, 0) + count
+            
             wf = res.winner_faction
             if wf is not None:
                 # Faction enum values can be logged by name
@@ -335,6 +353,8 @@ class ArenaRunner:
             total_ticks += res.ticks
             if res.stop_reason == ArenaStopCondition.STALL:
                 stalls += 1
+            elif res.stop_reason == ArenaStopCondition.WATCHDOG_TIMEOUT:
+                watchdog_timeouts += 1
         # Dominant stop reason (heuristic: if any iteration stalled, report STALL)
         dominant_reason = ArenaStopCondition.TIMEOUT
         if stalls > 0:
@@ -351,6 +371,11 @@ class ArenaRunner:
             win_rates={k: v/total for k, v in win_counts.items()},
             avg_ticks=total_ticks / total,
             stall_rate=stalls / total,
+            watchdog_timeout_rate=watchdog_timeouts / total,
             avg_damage=0.0, # Placeholder for Task 3 damage tracking
-            stop_reason=dominant_reason
+            stop_reason=dominant_reason,
+            avg_rejection_counts={k: v / total for k, v in rejection_totals.items()},
+            avg_peak_rss=total_rss / total,
+            peak_rss_high_water=peak_rss_high_water,
+            total_cpu_time=total_cpu
         )

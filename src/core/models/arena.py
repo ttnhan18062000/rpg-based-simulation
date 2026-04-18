@@ -60,6 +60,12 @@ class ArenaResult(SimulationModel):
     stop_reason: ArenaStopCondSer
     total_damage: int = 0
     deaths: List[int] = Field(default_factory=list) # IDs of dead entities
+    # Milestone 7: Observability Auditing
+    rejection_counts: Dict[str, int] = Field(default_factory=dict) # ReasonCode -> Count
+    
+    # Milestone 6: Resource Metrics
+    peak_rss_mb: float = 0.0
+    cpu_time_sec: float = 0.0
 
 class ScenarioReport(SimulationModel):
     """Aggregated metrics across multiple arena runs. [Milestone 6]"""
@@ -68,6 +74,14 @@ class ScenarioReport(SimulationModel):
     win_rates: Dict[str, float] # Faction name -> % (0.0 to 1.0)
     avg_ticks: float
     stall_rate: float
+    watchdog_timeout_rate: float = 0.0 # [Milestone 7]
     avg_damage: float
     stop_reason: Optional[ArenaStopCondSer] = None
     baseline_diffs: Optional[Dict[str, float]] = None
+    # Milestone 7: Observability Auditing
+    avg_rejection_counts: Dict[str, float] = Field(default_factory=dict)
+    
+    # Milestone 6: Resource Metrics
+    avg_peak_rss: float = 0.0
+    peak_rss_high_water: float = 0.0
+    total_cpu_time: float = 0.0

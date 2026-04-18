@@ -7,6 +7,7 @@ unfinished business.
 
 from __future__ import annotations
 from enum import IntEnum, unique
+import logging
 from typing import Any
 from pydantic import Field, ConfigDict
 from src.core.models.base import SimulationModel
@@ -16,6 +17,8 @@ from src.core.models.enums import (
     ProjectKind, ObjectiveKind, ConcernKind, LeadKind, BlockerKind
 )
 from src.core.models.cognition import CognitionCapacityProfile
+
+logger = logging.getLogger(__name__)
 
 class DecisionDriver(SimulationModel):
     """A structured record explaining a bias or decision driver. [phase_2_stage_9]"""
@@ -101,7 +104,6 @@ class LeadRecord(SimulationModel):
     
     # Status & Hypothesis Links [phase_3_task_1]
     tested: bool = False
-    contradiction_count: int = 0
     
     candidate_zone_ids: list[str] = Field(default_factory=list)
     candidate_entity_ids: list[int] = Field(default_factory=list)
@@ -431,7 +433,12 @@ class StrategicState(SimulationModel):
             found = False
             for i, ex in enumerate(self.leads):
                 if ex.lead_id == ld.lead_id:
-                    self.leads[i] = ld
+                    # Protection [AOA PERSISTENCE]: Don't let stale updates revert tested/exhausted flags
+                    updated_ld = ld.model_copy()
+                    if ex.tested: updated_ld.tested = True
+                    if ex.is_exhausted: updated_ld.is_exhausted = True
+                    
+                    self.leads[i] = updated_ld
                     found = True
                     break
             if not found: self.leads.append(ld)

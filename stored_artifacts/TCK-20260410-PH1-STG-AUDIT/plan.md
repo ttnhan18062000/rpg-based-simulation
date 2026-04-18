@@ -34,7 +34,7 @@ Reconcile the historical implementation of the Strategic Design Shift with the r
 - **Test**: Add a specific test case to `tests/core/test_strategy_models.py` or a new integration test for deep cloning.
 
 ### 4. Update Working Log
-- **File**: `tickets/working_log.md`
+- **File**: `tickets/working_log.csv`
 - **Action**: Add the retrospective entries.
 
 ## Test Plan

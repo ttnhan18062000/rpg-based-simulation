@@ -18,5 +18,5 @@
     - [x] Run all unit tests
     - [x] Verify 100% pass rate (or explained skips)
 - [ ] Completion phase
-    - [ ] Update `working_log.md`
+    - [ ] Update `working_log.csv`
     - [ ] Finalize ticket

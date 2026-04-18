@@ -242,13 +242,21 @@ def _merge_intent_updates(proposal: ActionProposal, updates: list[IntentUpdate] 
 def propose_move_toward(
     ctx: AIContext, 
     target_pos: Vector2, 
-    reason: str, 
+    reason: ActionReason | str, 
     intention: MovementIntention = MovementIntention.PURSUIT,
     updates: list[IntentUpdate] | None = None
 ) -> ActionProposal:
     """Propose movement toward a target using the authoritative MovementModel."""
     from src.core.logic.movement_model import MovementModel
-    proposal = MovementModel.plan_or_step(ctx, target_pos, intention, reason)
+    from src.core.models.reason_codes import ActionReason, ReasonCode
+    
+    # Authoritative Reason Coercion
+    if isinstance(reason, str):
+        reason_obj = ActionReason(code=ReasonCode.LEGACY_FALLBACK, metadata={"detail": reason})
+    else:
+        reason_obj = reason
+
+    proposal = MovementModel.plan_or_step(ctx, target_pos, intention, reason_obj)
     _merge_intent_updates(proposal, updates)
     return proposal
 
@@ -256,7 +264,7 @@ def propose_move_toward(
 def propose_move_away(
     ctx: AIContext, 
     threat_pos: Vector2, 
-    reason: str, 
+    reason: ActionReason | str, 
     intention: MovementIntention = MovementIntention.RETREAT,
     updates: list[IntentUpdate] | None = None
 ) -> ActionProposal:
@@ -266,14 +274,30 @@ def propose_move_away(
     target_pos = ctx.actor.spatial.pos + (direction * 5) # Heuristic 'run away' target
     
     from src.core.logic.movement_model import MovementModel
-    proposal = MovementModel.plan_or_step(ctx, target_pos, intention, reason)
+    from src.core.models.reason_codes import ActionReason, ReasonCode
+
+    # Authoritative Reason Coercion
+    if isinstance(reason, str):
+        reason_obj = ActionReason(code=ReasonCode.LEGACY_FALLBACK, metadata={"detail": reason})
+    else:
+        reason_obj = reason
+
+    proposal = MovementModel.plan_or_step(ctx, target_pos, intention, reason_obj)
     _merge_intent_updates(proposal, updates)
     return proposal
 
 
-def propose_retreat_home(ctx: AIContext, reason: str) -> tuple[AIState, ActionProposal]:
+def propose_retreat_home(ctx: AIContext, reason: ActionReason | str) -> tuple[AIState, ActionProposal]:
     """Propose moving toward the actor's authoritative home or nearest generic camp."""
     actor = ctx.actor
+    from src.core.models.reason_codes import ActionReason, ReasonCode
+
+    # Authoritative Reason Coercion
+    if isinstance(reason, str):
+        reason_obj = ActionReason(code=ReasonCode.LEGACY_FALLBACK, metadata={"detail": reason})
+    else:
+        reason_obj = reason
+
     # Heroes go to TOWN, others go to CAMP
     state = AIState.RETURN_TO_TOWN if actor.identity.faction == Faction.HERO_GUILD else AIState.RETURN_TO_CAMP
     

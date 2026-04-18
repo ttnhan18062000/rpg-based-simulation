@@ -39,7 +39,8 @@ class DamageResolutionService:
         power: float = 1.0, 
         faction_reg: FactionRegistry | None = None,
         override_damage_type: DamageType | None = None, 
-        override_element: Element | None = None
+        override_element: Element | None = None,
+        context_modifiers: dict[str, float] | None = None
     ) -> tuple[int, bool, bool, dict]:
         tick = world.tick
         
@@ -68,8 +69,12 @@ class DamageResolutionService:
         calculator = get_damage_calculator(dmg_type)
         dmg_ctx = calculator.resolve(attacker, defender)
         
-        atk_final = int(dmg_ctx.atk_power * dmg_ctx.atk_mult * power)
-        def_final = int(dmg_ctx.def_power * dmg_ctx.def_mult)
+        # Milestone 2: Contextual Multipliers
+        atk_context = context_modifiers.get("atk_mult", 1.0) if context_modifiers else 1.0
+        def_context = context_modifiers.get("def_mult", 1.0) if context_modifiers else 1.0
+        
+        atk_final = int(dmg_ctx.atk_power * dmg_ctx.atk_mult * power * atk_context)
+        def_final = int(dmg_ctx.def_power * dmg_ctx.def_mult * def_context)
         
         # Pillar 3: Fractional Armor Mitigation
         raw_damage = int(atk_final * (atk_final / (atk_final + def_final * 2.0 + 1.0)))
@@ -104,7 +109,11 @@ class DamageResolutionService:
             "elemental_mult": elem_mult,
             "dmg_type": dmg_type.name.lower() if hasattr(dmg_type, "name") else DamageType(dmg_type).name.lower(),
             "element": element.name.lower() if hasattr(element, "name") else Element(element).name.lower(),
-            "has_shattered": has_frozen
+            "has_shattered": has_frozen,
+            "has_high_ground": context_modifiers.get("has_high_ground", False) if context_modifiers else False,
+            "is_flanked": context_modifiers.get("is_flanked", False) if context_modifiers else False,
+            "has_cover": context_modifiers.get("has_cover", False) if context_modifiers else False,
+            "is_moving": context_modifiers.get("is_moving", False) if context_modifiers else False
         }
 
 class CombatAftermathService:
@@ -143,7 +152,11 @@ class CombatAftermathService:
                     elemental_mult=trace_details.get("elemental_mult", 1.0) if trace_details else 1.0,
                     is_crit=is_crit,
                     is_evaded=is_evasion,
-                    is_shattered=trace_details.get("has_shattered", False) if trace_details else False
+                    is_shattered=trace_details.get("has_shattered", False) if trace_details else False,
+                    has_high_ground=trace_details.get("has_high_ground", False) if trace_details else False,
+                    is_flanked=trace_details.get("is_flanked", False) if trace_details else False,
+                    has_cover=trace_details.get("has_cover", False) if trace_details else False,
+                    is_moving=trace_details.get("is_moving", False) if trace_details else False
                 )
             )
         )
@@ -334,18 +347,27 @@ class CombatAction:
         attacker = world.entities.get(proposal.actor_id)
         if not attacker or not attacker.combat.alive: return False
         
+        from src.core.models.reason_codes import ActionReason, ReasonCode
         from src.actions.base import BuildingTarget
         if isinstance(proposal.target, BuildingTarget):
             # Building attack validation
             target_b = next((b for b in world.buildings if b.building_id == proposal.target.building_id), None)
-            if not target_b or not target_b.is_functional: return False
+            if not target_b or not target_b.is_functional: 
+                proposal.reason = ActionReason(code=ReasonCode.TARGET_INVALID, metadata={"detail": "Building destroyed or missing"}, is_rejection=True)
+                return False
             from src.core.logic.legality_service import LegalityService
             dist = LegalityService.get_distance(attacker.spatial.pos, target_b.pos)
-            return dist <= self._get_weapon_range(attacker)
+            weapon_range = self._get_weapon_range(attacker)
+            if dist > weapon_range:
+                proposal.reason = ActionReason(code=ReasonCode.OUT_OF_RANGE, metadata={"max_range": weapon_range, "actual_dist": dist}, is_rejection=True)
+                return False
+            return True
             
         target_id: int = proposal.target
         defender = world.entities.get(target_id)
-        if not defender or not defender.combat.alive: return False
+        if not defender or not defender.combat.alive: 
+            proposal.reason = ActionReason(code=ReasonCode.TARGET_INVALID, metadata={"target_id": target_id}, is_rejection=True)
+            return False
         
         # 1. Authoritative Rulebook checks
         from src.core.logic.legality_service import LegalityService
@@ -353,19 +375,14 @@ class CombatAction:
         target_pos = defender.spatial.pos
         weapon_range = self._get_weapon_range(attacker)
         
-        # 1a. Range check
-        if not LegalityService.check_range(attacker.spatial.pos, target_pos, weapon_range):
+        # Consolidation [Milestone 1]: Singular legality path for targeting
+        success, reason = LegalityService.verify_targeting_legality(
+            attacker.spatial.pos, target_pos, weapon_range, world, requires_los=True
+        )
+        if not success:
+            proposal.reason = reason
             return False
             
-        # 1b. Line of Sight check for ranged attacks (range > 1)
-        # Skip if adjacent (dist == 1) as verified by LegalityService.is_adjacent
-        if weapon_range > 1 and not LegalityService.is_adjacent(attacker.spatial.pos, target_pos):
-            if not world.grid.has_line_of_sight(
-                int(attacker.spatial.pos.x), int(attacker.spatial.pos.y),
-                int(target_pos.x), int(target_pos.y)
-            ):
-                return False
-                
         return True
 
     def apply(self, proposal: ActionProposal, world: WorldState) -> None:
@@ -397,13 +414,41 @@ class CombatAction:
         # Milestone 5: Stamina pressure (Basic attack costs 8 stamina)
         proposal.updates.append(ProgressionUpdate(stamina_delta=-8))
 
+        # Milestone 2: Contextual Modifiers
+        from src.core.logic.legality_service import LegalityService
+        
+        tactical_flags = {
+            "has_high_ground": LegalityService.check_high_ground(attacker.spatial.pos, defender.spatial.pos, world),
+            "is_flanked": LegalityService.check_flanking(defender.id, world),
+            "has_cover": LegalityService.check_cover(attacker.spatial.pos, defender.spatial.pos, world),
+            "is_moving": attacker.spatial.moved_this_tick
+        }
+        
+        atk_mult = 1.0
+        def_mult = 1.0
+        if tactical_flags["has_high_ground"]:
+            atk_mult *= (1.0 + self._config.high_ground_atk_bonus)
+        if tactical_flags["is_flanked"]:
+            atk_mult *= (1.0 + self._config.flanking_atk_bonus)
+        if tactical_flags["is_moving"]:
+            atk_mult *= (1.0 - self._config.moved_atk_penalty)
+        if tactical_flags["has_cover"]:
+            def_mult *= (1.0 + self._config.ranged_cover_def_bonus)
+            
+        context_modifiers = {
+            "atk_mult": atk_mult,
+            "def_mult": def_mult,
+            **tactical_flags
+        }
+
         # RESOLVE
         damage, is_crit, is_evasion, trace_details = DamageResolutionService.resolve(
             attacker=attacker, 
             defender=defender, 
             world=world, 
             config=self._config, 
-            rng=self._rng
+            rng=self._rng,
+            context_modifiers=context_modifiers
         )
 
         # AFTERMATH (Memory, Grudges, Threat)

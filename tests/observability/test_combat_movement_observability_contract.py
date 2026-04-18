@@ -123,8 +123,9 @@ def test_action_system_rejection_observability(setup_world):
     config = SimulationConfig()
     config.overhaul_features["use_legality_v2"] = True
     
-    # 3. Create a proposal to move to the blocked spot
-    proposal = ActionProposal(actor_id=actor_id, verb=ActionType.MOVE, target=Vector2(5, 5), reason="Testing rejection")
+    # 3. Create a proposal to move to the blocked spot with the expected rejection reason
+    rejection_reason = ActionReason(code=ReasonCode.OUT_OF_RANGE, metadata={"max_range": 1}, is_rejection=True)
+    proposal = ActionProposal(actor_id=actor_id, verb=ActionType.MOVE, target=Vector2(5, 5), reason=rejection_reason)
     
     system = ActionSystem(config, rng)
     system_ctx = SystemContext(
@@ -144,7 +145,8 @@ def test_action_system_rejection_observability(setup_world):
         world, 
         config, 
         [proposal], 
-        rng, 
+        {actor_id},
+        rng=rng, 
         emit=lambda *args: None, 
         faction_reg=None
     )

@@ -10,7 +10,7 @@ from pydantic import Field
 from src.core.models.enums import ActionType, GoalType, EmotionType, PersonalMotiveType, MovementIntention
 
 from src.core.models.vectors import Vector2
-from src.core.models.reason_codes import ActionReason
+from src.core.models.reason_codes import ActionReason, ReasonCode
 if TYPE_CHECKING:
     from src.core.aspects.mind import MemoryRecord, MemoryLogEntry
     from src.core.aspects.combat import CombatTraceRecord
@@ -40,11 +40,10 @@ class ActionProposal(SimulationModel):
     Pillar 3: Conflict Resolution & Authoritative Application.
     """
     TRIPWIRE_EXEMPT: typing.ClassVar[bool] = True
-
     actor_id: int
     verb: ActionType
-    target: TargetUnion = None
-    reason: ActionReason | str | dict = ""
+    target: TargetUnion | None = None
+    reason: ActionReason = Field(default_factory=lambda: ActionReason(code=ReasonCode.ADVANCING)) # [Milestone 7] Strictly typed
     new_ai_state: int | None = None
     
     # Typed updates for state synchronization (AOA Phase 5)
@@ -53,16 +52,45 @@ class ActionProposal(SimulationModel):
     
     @model_validator(mode='before')
     @classmethod
-    def _validate_target(cls, data: Any) -> Any:
-        """AOA Stabilization: Ensure target is correctly coerced from dict to Vector2."""
+    def _coerce_action_fields(cls, data: Any) -> Any:
+        """AOA Stabilization: Ensure fields are correctly coerced for project closure."""
         if not isinstance(data, dict):
             return data
+            
+        # Coerce reason from str to ActionReason [Milestone 7 Authoritative]
+        reason = data.get("reason")
+        if isinstance(reason, str):
+            from src.core.models.reason_codes import ActionReason, ReasonCode
+            
+            # Known mapping for common legacy strings
+            mapping = {
+                "Occupied": ReasonCode.OCCUPANCY_VIOLATION,
+                "Out of range": ReasonCode.OUT_OF_RANGE,
+                "Low HP": ReasonCode.LOW_HP_RETREAT,
+                "No target": ReasonCode.NO_TARGET,
+                "Target reached": ReasonCode.TARGET_REACHED,
+                "Target invalid": ReasonCode.TARGET_INVALID,
+                "Exhaustion": ReasonCode.ACTION_EXHAUSTION,
+            }
+            code = mapping.get(reason, ReasonCode.LEGACY_FALLBACK)
+            data["reason"] = ActionReason(
+                code=code, 
+                metadata={"detail": reason} if code == ReasonCode.LEGACY_FALLBACK else {},
+                is_rejection=True # Legacy strings in proposals are usually rejections
+            )
+            
+        # Coerce target from dict to Vector2 if needed
         target = data.get("target")
         if isinstance(target, dict) and "x" in target and "y" in target:
-            # Import Vector2 here to avoid circular dependencies
             from src.core.models.vectors import Vector2
             data["target"] = Vector2.model_validate(target)
+            
         return data
+
+    @property
+    def reason_text(self) -> str:
+        """Compatibility property for legacy code expecting a string."""
+        return str(self.reason)
 
     def __repr__(self) -> str:
         count = len(self.updates)
@@ -72,8 +100,33 @@ class ActionProposal(SimulationModel):
 class IntentUpdate(SimulationModel):
     """Base for all typed simulation side-effects."""
     TRIPWIRE_EXEMPT: typing.ClassVar[bool] = True
+    actor_id: int = 0
+    verb: ActionType = ActionType.REST
     target_id: int | None = None
-    reason: ActionReason | str | dict = ""
+    target: Vector2 | None = None # [AOA] Renamed from target_pos to target for consistency with Proposal
+    reason: ActionReason = Field(default_factory=lambda: ActionReason(code=ReasonCode.ADVANCING)) # [Milestone 7] Strictly typed
+
+    @property
+    def target_pos(self) -> Vector2 | None:
+        """Alias for compatibility."""
+        return self.target
+
+    @model_validator(mode='before')
+    @classmethod
+    def _coerce_intent_fields(cls, data: Any) -> Any:
+        if not isinstance(data, dict):
+            return data
+            
+        # Handle legacy target_pos
+        if "target_pos" in data and "target" not in data:
+            data["target"] = data.pop("target_pos")
+            
+        reason = data.get("reason")
+        if isinstance(reason, str):
+            from src.core.models.reason_codes import ActionReason, ReasonCode
+            # Simple fallback for intent updates (rarely rejections)
+            data["reason"] = ActionReason(code=ReasonCode.LEGACY_FALLBACK, metadata={"detail": reason})
+        return data
 
 from pydantic import model_validator
 from typing import TYPE_CHECKING, Any
@@ -152,13 +205,15 @@ class NavigationUpdate(IntentUpdate):
     """Updates to pathfinding memory and history. [AOA STABILIZATION]"""
     pos_history: list[Vector2] | None = None
     cached_path: list[Vector2] | None = None
-    target_pos: Vector2 | None = None
     chase_ticks: int | None = None
     engaged_ticks: int | None = None
     stalemate_counter: int | None = None
+    last_ai_state: int | None = None
+    last_target_id: int | None = None
     intention: MovementIntention | None = None
     blocked_ticks: int | None = None
-
+    oscillation_counter: int | None = None
+    last_route_hash: str | None = None
     @model_validator(mode="after")
     def _coerce_navigation(self) -> "NavigationUpdate":
         from src.core.models.vectors import Vector2
@@ -172,8 +227,6 @@ class NavigationUpdate(IntentUpdate):
                 Vector2.model_validate(p) if isinstance(p, dict) else p 
                 for p in self.cached_path
             ]
-        if isinstance(self.target_pos, dict):
-            self.target_pos = Vector2.model_validate(self.target_pos)
         return self
 
 class ProgressionUpdate(IntentUpdate):
@@ -271,6 +324,7 @@ class SpatialUpdate(IntentUpdate):
     new_pos: Vector2
     facing: Vector2 | None = None
     region_id: str | None = None
+    moved_this_tick: bool | None = None
 
     @model_validator(mode="after")
     def _coerce_spatial(self) -> "SpatialUpdate":

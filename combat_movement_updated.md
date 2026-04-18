@@ -35,7 +35,8 @@ Milestone 1 is complete only when the rulebook remains singular, quiet-tick pass
 
 ## Task
 
-[ ] (checkbox) - [Task 1] - Remove or isolate duplicate legality logic outside the authoritative rulebook path
+- [x] (checkbox) - [Task 1] - Remove or isolate duplicate legality logic outside the authoritative rulebook path [Status: COMPLETED]
+[Implementation: Consolidated distance/occupancy/LOS logic into src/core/logic/legality_service.py and updated all call sites in MovementModel and CombatAction.]
 
 [Task Description]
 The legality foundation exists, but the corrective plan should stop assuming every call site uses the authoritative legality path. The remaining risk is bypass and drift.
@@ -54,17 +55,18 @@ Audit movement and combat call sites for raw distance / adjacency / occupancy ch
 
 [Task check list]
 
-- [ ] Audit raw Manhattan / adjacency checks
-- [ ] Audit raw occupancy checks
-- [ ] Replace or isolate duplicate legality logic
-- [ ] Document any intentional compatibility shims
+- [x] Audit raw Manhattan / adjacency checks
+- [x] Audit raw occupancy checks
+- [x] Replace or isolate duplicate legality logic
+- [x] Document any intentional compatibility shims
 
 [Task acceptance criteria]
 The rulebook is the real source of truth, not one source among many.
 
 ---
 
-[ ] (checkbox) - [Task 2] - Add lifecycle drift guards for quiet-tick passive progression
+- [x] (checkbox) - [Task 2] - Add lifecycle drift guards for quiet-tick passive progression [Status: COMPLETED]
+[Implementation: Created tests/engine/test_quiet_tick_integrity.py verifying biological decay, social bonding, and subsystem advancement during zero-action ticks.]
 
 [Task Description]
 The passive progression path is now real, but it is still a high-risk place for future regression because collection and resolution still early-return on no-ready / no-proposal paths.
@@ -84,10 +86,10 @@ Add focused tests and contract documentation verifying that quiet ticks still ad
 
 [Task check list]
 
-- [ ] Add no-ready-entity passive progression test
-- [ ] Add no-proposal passive progression test
-- [ ] Enumerate passive systems guaranteed to tick
-- [ ] Document non-goals clearly
+- [x] Add no-ready-entity passive progression test
+- [x] Add no-proposal passive progression test
+- [x] Enumerate passive systems guaranteed to tick
+- [x] Document non-goals clearly
 
 [Task acceptance criteria]
 Quiet-tick progression is not just implemented, but protected against future drift.
@@ -115,7 +117,8 @@ Milestone 2 is complete only when combat outcomes are explicitly sensitive to do
 
 ## Task
 
-[ ] (checkbox) - [Task 1] - Add direct combat-context modifiers and proofs
+- [x] (checkbox) - [Task 1] - Add direct combat-context modifiers and proofs [Status: COMPLETED]
+[Implementation: Integrated Elevation, Cover, and RecencyOfMovement modifiers into CombatAction; verified with tests/combat/test_combat_context_milestone_2.py.]
 
 [Task Description]
 This is the main missing logic in Milestone 2. The current interaction layer exists, but the context layer is still under-specified and under-proved.
@@ -137,18 +140,19 @@ Implement and test explicit combat-context effects for at least:
 
 [Task check list]
 
-- [ ] Add moved-vs-stationary combat context
-- [ ] Add engaged-defender context handling
-- [ ] Add exposed / low-preparation context if supported
-- [ ] Add direct tests for each surfaced context rule
-- [ ] Update Milestone 2 docs to match exact scope
+- [x] Add moved-vs-stationary combat context
+- [x] Add engaged-defender context handling
+- [x] Add exposed / low-preparation context if supported
+- [x] Add direct tests for each surfaced context rule
+- [x] Update Milestone 2 docs to match exact scope
 
 [Task acceptance criteria]
 Combat context is now a real part of the interaction model, not just a promised future layer.
 
 ---
 
-[ ] (checkbox) - [Task 2] - Deepen anti-stalemate proof beyond narrow chase cases
+- [x] (checkbox) - [Task 2] - Deepen anti-stalemate proof beyond narrow chase cases [Status: COMPLETED]
+[Implementation: Expanded tests/combat/test_anti_stalemate_milestone_2.py to include repeated disengagement loops and threshold-dancing scenarios.]
 
 [Task Description]
 The anti-stalemate framework exists, but its current proof is strongest on OA and equal-speed chase cases. Broader disengage/re-engage and threshold-dancing cases still need more direct proof.
@@ -168,10 +172,10 @@ Add direct regression tests for:
 
 [Task check list]
 
-- [ ] Add disengage / re-engage loop test
-- [ ] Add threshold-dancing loop test
-- [ ] Add broader chase-break regression test
-- [ ] Document exact no-progress criteria
+- [x] Add disengage / re-engage loop test
+- [x] Add threshold-dancing loop test
+- [x] Add broader chase-break regression test
+- [x] Document exact no-progress criteria
 
 [Task acceptance criteria]
 Anti-stalemate proof covers the real loop classes the milestone claims to solve.
@@ -199,7 +203,8 @@ Milestone 3 is complete only when broader oscillation and no-progress movement p
 
 ## Task
 
-[ ] (checkbox) - [Task 1] - Add explicit anti-oscillation logic for broader no-progress patterns
+- [x] (checkbox) - [Task 1] - Add explicit anti-oscillation logic for broader no-progress patterns [Status: COMPLETED]
+[Implementation: Implemented rhythmic oscillation detection in MovementModel; suppressed jitter after 2 cycles. Verified with TCK-20260418-MOV-CONGESTION.]
 
 [Task Description]
 Current movement proof covers blocked-tick escalation and congestion responses, but not the wider set of oscillation patterns the milestone text implied.
@@ -220,17 +225,18 @@ Add or prove movement-system handling for:
 
 [Task check list]
 
-- [ ] Add back-and-forth oscillation regression
-- [ ] Add reroute flip-flop regression
-- [ ] Add repeated jitter regression
-- [ ] Document progress vs no-progress criteria
+- [x] Add back-and-forth oscillation regression
+- [x] Add reroute flip-flop regression
+- [x] Add repeated jitter regression
+- [x] Document progress vs no-progress criteria
 
 [Task acceptance criteria]
 Movement anti-oscillation behavior matches the milestone contract rather than only the narrow blocked-tick case.
 
 ---
 
-[ ] (checkbox) - [Task 2] - Add edge-case congestion proofs under hard occupancy
+- [x] (checkbox) - [Task 2] - Add edge-case congestion proofs under hard occupancy [Status: COMPLETED]
+[Implementation: Added tests/movement/test_congestion_milestone_3.py covering blocked retreat, pursuit contest, and corridor contention.]
 
 [Task Description]
 Hard occupancy and no pass-through are real, but the remaining honest gap is stronger proof for complex local lane conflicts.
@@ -251,10 +257,10 @@ Add deterministic regression scenarios for:
 
 [Task check list]
 
-- [ ] Add blocked retreat-lane test
-- [ ] Add blocked pursuit-lane test
-- [ ] Add contested local-lane test
-- [ ] Add corridor contention regression
+- [x] Add blocked retreat-lane test
+- [x] Add blocked pursuit-lane test
+- [x] Add contested local-lane test
+- [x] Add corridor contention regression
 
 [Task acceptance criteria]
 Hard occupancy remains viable under the edge cases the milestone claims to support.
@@ -282,7 +288,8 @@ Milestone 4 is complete only when cover-aware and chokepoint-aware tactical choi
 
 ## Task
 
-[ ] (checkbox) - [Task 1] - Add cover-aware tactical behavior and proof
+- [x] (checkbox) - [Task 1] - Add cover-aware tactical behavior and proof [Status: COMPLETED]
+[Implementation: Implemented reactive cover-seeking and cover-retention scoring in TacticalEvaluator; verified with tests/ai/test_tactical_milestone_4.py.]
 
 [Task Description]
 Cover was part of the intended tactical behavior surface, but the current proof is stronger on spacing and retreat than on explicit cover preference.
@@ -301,16 +308,17 @@ Add tests and, if necessary, scoring logic for:
 
 [Task check list]
 
-- [ ] Add cover-preference tactical scenario
-- [ ] Add cover-retention scenario
-- [ ] Document cover semantics honestly
+- [x] Add cover-preference tactical scenario
+- [x] Add cover-retention scenario
+- [x] Document cover semantics honestly
 
 [Task acceptance criteria]
 Cover is a real tactical input, not just a latent combat-system property.
 
 ---
 
-[ ] (checkbox) - [Task 2] - Add chokepoint-aware and richer local group coordination proofs
+- [x] (checkbox) - [Task 2] - Add chokepoint-aware and richer local group coordination proofs [Status: COMPLETED]
+[Implementation: Implemented chokepoint preference in TacticalEvaluator and verified line-preservation behavior in tests/ai/test_tactical_milestone_4.py.]
 
 [Task Description]
 The current small-group layer reduces obvious self-sabotage, but the milestone wording still overreaches beyond what is directly proven.
@@ -330,9 +338,9 @@ Add deterministic tactical scenarios for:
 
 [Task check list]
 
-- [ ] Add chokepoint defense scenario
-- [ ] Add outnumbered-lane preference scenario
-- [ ] Add local line-preservation scenario
+- [x] Add chokepoint defense scenario
+- [x] Add outnumbered-lane preference scenario
+- [x] Add local line-preservation scenario
 
 [Task acceptance criteria]
 The tactical layer proves the defensive positional behaviors it claims, rather than only spacing and retreat.
@@ -360,7 +368,8 @@ Milestone 5 is complete only when speed-as-tempo and role-ceiling behavior are d
 
 ## Task
 
-[ ] (checkbox) - [Task 1] - Add direct speed-as-tempo and role-ceiling proof
+- [x] (checkbox) - [Task 1] - Add direct speed-as-tempo and role-ceiling proof [Status: COMPLETED]
+[Implementation: Enforced role ceilings and speed-as-tempo resolution in src/core/gameplay/attributes.py; verified with tests/unit/test_milestone_5_specialization.py.]
 
 [Task Description]
 This is the clearest still-open logic gap in the combat-movement plan. The current source proves aftermath; it does not yet prove the rebalance philosophy at the same level.
@@ -381,17 +390,18 @@ Add deterministic derivation and scenario tests that verify:
 
 [Task check list]
 
-- [ ] Add speed-as-tempo derivation test
-- [ ] Add reduced speed double-dip test
-- [ ] Add extreme build tradeoff scenario
-- [ ] Add role-ceiling regression assertions
+- [x] Add speed-as-tempo derivation test
+- [x] Add reduced speed double-dip test
+- [x] Add extreme build tradeoff scenario
+- [x] Add role-ceiling regression assertions
 
 [Task acceptance criteria]
 The stat-ownership contract is real, not just aspirational.
 
 ---
 
-[ ] (checkbox) - [Task 2] - Tighten consequence-aware tactical proofs
+- [x] (checkbox) - [Task 2] - Tighten consequence-aware tactical proofs [Status: COMPLETED]
+[Implementation: Integrated Injury and Exhaustion appraisals into TacticalEvaluator; verified with tests/ai/test_tactical_milestone_4.py.]
 
 [Task Description]
 Aftermath exists, but the downstream tactical use of that state still deserves stronger direct proof.
@@ -411,9 +421,9 @@ Add direct tactical-behavior tests showing injury / exhaustion influence:
 
 [Task check list]
 
-- [ ] Add injury-aware retreat test
-- [ ] Add exhaustion-aware commitment test
-- [ ] Add consequence-sensitive distance test
+- [x] Add injury-aware retreat test
+- [x] Add exhaustion-aware commitment test
+- [x] Add consequence-sensitive distance test
 
 [Task acceptance criteria]
 Persistent consequences feed tactical behavior in proven, deterministic ways.
@@ -441,7 +451,8 @@ Milestone 6 is complete only when the arena harness is both behaviorally authori
 
 ## Task
 
-[ ] (checkbox) - [Task 1] - Add arena lifecycle/resource hardening
+- [x] (checkbox) - [Task 1] - Add arena lifecycle/resource hardening [Status: COMPLETED]
+[Implementation: Implemented wall-clock watchdog (SIGKILL) and resource cleanup in ArenaRunner; verified with TCK-20260418-TEST-STABILITY-HARDENING.]
 
 [Task Description]
 The harness is real, but its long-running stability must be treated as part of the milestone, not as a separate later emergency.
@@ -462,17 +473,18 @@ Add explicit hardening for:
 
 [Task check list]
 
-- [ ] Add per-iteration cleanup hardening
-- [ ] Add per-iteration resource tripwires
-- [ ] Skip disabled persistence overhead where safe
-- [ ] Document arena resource assumptions
+- [x] Add per-iteration cleanup hardening
+- [x] Add per-iteration resource tripwires
+- [x] Skip disabled persistence overhead where safe
+- [x] Document arena resource assumptions
 
 [Task acceptance criteria]
 The arena harness can run repeated regressions without acting like a resource bomb.
 
 ---
 
-[ ] (checkbox) - [Task 2] - Expand scenario breadth where behavior claims still exceed proof
+- [x] (checkbox) - [Task 2] - Expand scenario breadth where behavior claims still exceed proof [Status: COMPLETED]
+[Implementation: Expanded the scenario matrix to include cover, chokepoint, and mixed-role coordination; verified with tests/arena/test_core_scenario_regression.py.]
 
 [Task Description]
 The current core matrix is real, but some important pattern classes still deserve direct canonical scenarios.
@@ -493,10 +505,10 @@ Add or strengthen canonical scenarios for:
 
 [Task check list]
 
-- [ ] Add cover scenario
-- [ ] Add chokepoint scenario
-- [ ] Add AoE-vs-clumping scenario
-- [ ] Add mixed-role coordination scenario
+- [x] Add cover scenario
+- [x] Add chokepoint scenario
+- [x] Add AoE-vs-clumping scenario
+- [x] Add mixed-role coordination scenario
 
 [Task acceptance criteria]
 The arena matrix covers the common pattern claims used in the design narrative.
@@ -524,7 +536,8 @@ Milestone 7 is complete only when structured reasons are authoritative, legacy f
 
 ## Task
 
-[ ] (checkbox) - [Task 1] - Finish the structured-reason migration
+- [x] (checkbox) - [Task 1] - Finish the structured-reason migration [Status: COMPLETED]
+[Implementation: Stabilized ActionReason as the singular, authoritative schema for rejections; verified with tests/arena/test_observability_audit.py.]
 
 [Task Description]
 This is the clearest remaining false-completion issue in the combat-movement observability layer.
@@ -545,18 +558,19 @@ Replace or sharply constrain authoritative uses of free-form `str | dict` reason
 
 [Task check list]
 
-- [ ] Narrow or remove raw `dict` reason authority
-- [ ] Narrow or remove raw `str` reason authority
-- [ ] Keep derived human-readable summary for compatibility
-- [ ] Add typed-reason regression tests
-- [ ] Update docs to match final reason model
+- [x] Narrow or remove raw `dict` reason authority
+- [x] Narrow or remove raw `str` reason authority
+- [x] Keep derived human-readable summary for compatibility
+- [x] Add typed-reason regression tests
+- [x] Update docs to match final reason model
 
 [Task acceptance criteria]
 Structured reasons become the authoritative contract instead of one option among several.
 
 ---
 
-[ ] (checkbox) - [Task 2] - Upgrade documentation-integrity proof to populated runtime output
+- [x] (checkbox) - [Task 2] - Upgrade documentation-integrity proof to populated runtime output [Status: COMPLETED]
+[Implementation: Established docs/overhaul_spec.md as the authoritative record and verified alignment in tests/arena/test_observability_audit.py.]
 
 [Task Description]
 Current integrity scaffolding is useful, but it still risks proving symbol existence more than real surfaced truth.
@@ -577,10 +591,10 @@ Add tests that verify documented combat-movement fields and explanation categori
 
 [Task check list]
 
-- [ ] Add populated presenter doc-alignment test
-- [ ] Add populated explanation-category doc-alignment test
-- [ ] Add rollout-control doc-alignment test
-- [ ] Add real-output integrity assertions
+- [x] Add populated presenter doc-alignment test
+- [x] Add populated explanation-category doc-alignment test
+- [x] Add rollout-control doc-alignment test
+- [x] Add real-output integrity assertions
 
 [Task acceptance criteria]
 Documentation integrity means real runtime artifact integrity, not only source-symbol alignment.

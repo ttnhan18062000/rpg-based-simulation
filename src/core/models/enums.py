@@ -258,6 +258,15 @@ class PersonalMotiveType(IntEnum):
     SOCIAL_STATUS = 4
 
 @unique
+class TacticalRole(IntEnum):
+    """Inherent or assigned combat roles. [Milestone 5]"""
+    MELEE_STRIKER = 0
+    RANGED_SKIRMISHER = 1
+    SUPPORT_HEALER = 2
+    AOE_PRESSURE = 3
+    RETREAT_BIASED = 4
+
+@unique
 class TurningPointKind(IntEnum):
     """Categories for life-defining moments. [PHASE 2]"""
     NEAR_DEATH = 0
@@ -316,6 +325,7 @@ class ArenaStopCondition(IntEnum):
     TIMEOUT = 1     # Max ticks reached
     STALL = 2       # No progress (no damage/move) for X ticks
     TARGET_DEAD = 3 # Specific entity died
+    WATCHDOG_TIMEOUT = 4 # System watchdog terminated simulation [Milestone 7]
 
 from typing import Annotated
 from pydantic import BeforeValidator, PlainSerializer
