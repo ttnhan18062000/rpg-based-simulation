@@ -39,13 +39,17 @@ class PressureInjector:
 
 
 def get_scenario_expectations(scenario_id: str) -> ScenarioExpectations:
-    """M9 Law: Scenario-bound pass/fail criteria and sampling intervals."""
+    """M10 Law: Scenario-bound pass/fail criteria and sampling intervals."""
+    from src_v2.certification.models import FailureKind
+    
     if scenario_id == "IDLE_CLEAN":
         return ScenarioExpectations(
             required_governor_modes=["NORMAL"],
             requires_recovery=False,
             requires_semantic_equivalence=True,
-            sampling_interval_ticks=10
+            required_sampling_interval_ticks=10,
+            allowed_failure_kinds=[FailureKind.NONE],
+            reproducibility_required=True
         )
     elif scenario_id == "RAM_PRESSURE":
         return ScenarioExpectations(
@@ -53,14 +57,18 @@ def get_scenario_expectations(scenario_id: str) -> ScenarioExpectations:
             requires_recovery=True,
             requires_semantic_equivalence=False, # We expect some shedding if configured
             max_recovery_ticks=100,
-            sampling_interval_ticks=5
+            recovery_time_limit_ticks=150,
+            required_sampling_interval_ticks=5,
+            allowed_failure_kinds=[FailureKind.NONE, FailureKind.FAILED_ENVELOPE]
         )
     elif scenario_id == "DET_EQUIV":
         return ScenarioExpectations(
             required_governor_modes=["NORMAL"],
             requires_recovery=False,
             requires_semantic_equivalence=True,
-            sampling_interval_ticks=1
+            required_sampling_interval_ticks=1,
+            allowed_failure_kinds=[FailureKind.NONE],
+            reproducibility_required=True
         )
     else:
         return ScenarioExpectations() # Default safe

@@ -37,19 +37,19 @@ def test_concurrency_determinism_equivalence():
     # 1. Run Locally
     kernel_local = Kernel(profile_local, state_start, DeterministicRNG(42))
     # Mock scheduler to return 10 items
-    kernel_local._scheduler.select_work = MagicMock(return_value=[
-        WorkItem(owner_id=i, work_class=WorkClass.CRITICAL, action_type="ENTITY_ACT")
+    kernel_local._scheduler.select_work = MagicMock(return_value=([
+        WorkItem(owner_id=i, work_class=WorkClass.CRITICAL, work_kind="ENTITY_ACT")
         for i in range(10)
-    ])
+    ], 0))
     kernel_local.tick_once()
     final_state_local = kernel_local.state
     
     # 2. Run Concurrently
     kernel_concurrent = Kernel(profile_concurrent, state_start, DeterministicRNG(42))
-    kernel_concurrent._scheduler.select_work = MagicMock(return_value=[
-        WorkItem(owner_id=i, work_class=WorkClass.CRITICAL, action_type="ENTITY_ACT")
+    kernel_concurrent._scheduler.select_work = MagicMock(return_value=([
+        WorkItem(owner_id=i, work_class=WorkClass.CRITICAL, work_kind="ENTITY_ACT")
         for i in range(10)
-    ])
+    ], 0))
     kernel_concurrent.tick_once()
     final_state_concurrent = kernel_concurrent.state
     
@@ -78,10 +78,17 @@ def test_race_resistance_via_sorting():
         # Lower IDs sleep longer so they should finish LATER
         delay = (10 - packet.subject.id) * 0.01 
         time.sleep(delay)
-        return WorkerResult(entity_id=packet.subject.id, update=EntityUpdate(entity_id=packet.subject.id, readiness_delta=packet.subject.id))
+        return WorkerResult(source_packet_id=packet.packet_id, entity_id=packet.subject.id, update=EntityUpdate(entity_id=packet.subject.id, readiness_delta=packet.subject.id))
 
     packets = [
-        WorkerPacket(tick=0, world_time=0, seed=i, subject=MagicMock(id=i), neighbor_view={}, action_type="ACT", payload={})
+        WorkerPacket(
+            packet_id=f"test:{i}", 
+            tick=0, world_time=0, seed=i, 
+            subject=MagicMock(id=i), 
+            neighbor_view=[], 
+            work_kind="ACT", 
+            payload={}
+        )
         for i in range(1, 6) # IDs 1 to 5
     ]
     

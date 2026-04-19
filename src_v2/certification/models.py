@@ -8,12 +8,16 @@ from typing import List, Dict, Any, Optional
 
 
 class FailureKind(str, Enum):
-    """M9 Law: Precise failure taxonomy."""
+    """
+    M10 Law: Standardized FAILED_* taxonomy.
+    SENTINEL: 'NONE' is the sole non-failure identifier, exempt from FAILED_* prefix.
+    """
     NONE = "none"
     FAILED_ENVELOPE = "failed_envelope"
-    FAILED_DEGRADATION_ORDER = "failed_degradation_order"
-    FAILED_RECOVERY = "failed_recovery"
+    FAILED_DEGRADATION_SEQUENCE = "failed_degradation_sequence"
+    FAILED_RECOVERY_TIMEOUT = "failed_recovery_timeout"
     FAILED_SEMANTIC_DRIFT = "failed_semantic_drift"
+    FAILED_TELEMETRY_GAP = "failed_telemetry_gap"
     FAILED_REPORTING_INCOMPLETE = "failed_reporting_incomplete"
     FAILED_INVALID_SCENARIO = "failed_invalid_scenario"
     FAILED_ENVIRONMENT_MISMATCH = "failed_environment_mismatch"
@@ -27,32 +31,52 @@ class HardwareClass(str, Enum):
 
 @dataclass(frozen=True, slots=True)
 class MeasurementPoint:
-    """M9 Law: Closed, bounded telemetry point."""
+    """M10 Law: Closed, bounded telemetry point."""
     tick: int
     mode: str
     memory_rss_mb: float
+    memory_trend_mb_per_tick: float  # Trending signal
     tick_compute_ms: float
+    tick_compute_ms_avg: float       # Trending signal
     work_debt: int
-    queue_utilization: float
+    worker_utilization: float        # Explicit worker pressure
+    queue_utilization: float         # Explicit queue pressure
     replay_pressure: float
+    active_workers: int
     timestamp: float = field(default_factory=time.time)
 
 
 @dataclass(frozen=True, slots=True)
 class ScenarioExpectations:
-    """Formal requirements for a scenario pass."""
+    """M10 Law: Explicit requirements for a scenario pass."""
     required_governor_modes: List[str] = field(default_factory=list)
     requires_recovery: bool = False
     requires_semantic_equivalence: bool = True
     max_recovery_ticks: int = 50
+    recovery_time_limit_ticks: int = 100
     sampling_interval_ticks: int = 10
+    required_sampling_interval_ticks: int = 10
+    allowed_failure_kinds: List[FailureKind] = field(default_factory=lambda: [FailureKind.NONE])
+    reproducibility_required: bool = True
+
+
+@dataclass(frozen=True, slots=True)
+class EnvironmentCapture:
+    """M10 Law: Explicit separation of host facts and classification metadata."""
+    detected_facts: Dict[str, Any]
+    detected_class: HardwareClass
+    effective_class: HardwareClass
+    override_applied: bool
+    os_name: str = "linux"
+    python_version: str = "3.13"
 
 
 @dataclass
 class CertificationResult:
-    """M9 Law: The machine-readable source of truth."""
+    """M10 Law: The machine-readable proof artifact (Source of Truth)."""
     run_id: str
     timestamp: float
+    commit_sha: str # M10 Provenance Rule
     
     # Context
     profile_name: str
@@ -60,10 +84,7 @@ class CertificationResult:
     seed: int
     
     # Environment
-    detected_hardware_class: HardwareClass
-    effective_hardware_class: HardwareClass
-    hardware_class_override_applied: bool
-    platform_info: Dict[str, Any]
+    environment: EnvironmentCapture
     
     # Evidence
     measurements: List[MeasurementPoint]
@@ -73,8 +94,9 @@ class CertificationResult:
     
     # Outcome
     conformance_passed: bool
-    failure_kind: FailureKind
-    failure_reason: Optional[str]
+    allowed_failure_observed: bool = False # M10 Law: Honest Reporting Flag
+    failure_kind: FailureKind = FailureKind.NONE
+    failure_reason: Optional[str] = None
     
     def to_json(self) -> str:
         return json.dumps(asdict(self), indent=2)

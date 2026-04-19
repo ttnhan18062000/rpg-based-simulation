@@ -11,38 +11,65 @@ from src_v2.core.state import AuthoritativeState
 class CanonicalStateHasher:
     """
     Deterministic hasher for AuthoritativeState.
-    Isolation: hacing logic resides outside the core state models.
+    Isolation: hashing logic resides outside the core state models.
     """
 
     @staticmethod
     def get_hash(state: AuthoritativeState) -> str:
         """
-        Produce a SHA256 hash of the canonical state representation.
+        Produce a SHA256 hash of the compact canonical JSON representation.
+        Locked by Milestone A Closure Contract.
         """
-        canonical_material = CanonicalStateHasher._canonicalize(state)
-        json_bytes = json.dumps(
-            canonical_material, 
-            sort_keys=True, 
-            separators=(",", ":")
-        ).encode("utf-8")
-        
-        return hashlib.sha256(json_bytes).hexdigest()
+        compact_json = CanonicalStateHasher.to_canonical_json(state, pretty=False)
+        return hashlib.sha256(compact_json.encode("utf-8")).hexdigest()
 
     @staticmethod
-    def _canonicalize(state: AuthoritativeState) -> Dict[str, Any]:
+    def to_canonical_json(state: AuthoritativeState, pretty: bool = False) -> str:
+        """
+        Convert AuthoritativeState into a canonical JSON representation.
+        - pretty=False: Compact format for hashing (Truth).
+        - pretty=True: Indented format for debugging (Audit).
+        """
+        data = CanonicalStateHasher.to_canonical_data(state)
+        
+        if pretty:
+            return json.dumps(data, sort_keys=True, indent=2)
+        return json.dumps(data, sort_keys=True, separators=(",", ":"))
+
+    @staticmethod
+    def to_canonical_data(state: AuthoritativeState) -> Dict[str, Any]:
         """
         Convert AuthoritativeState into a sortable dictionary structure.
-        Excludes non-authoritative logic or transient data (if any).
+        Includes only authoritative fields defined by the Milestone A contract.
         """
-        # We use asdict but must ensure sorting of keys in nested dicts
-        # happens in the json.dumps stage with sort_keys=True.
-        # Here we only need to handle non-serializable objects.
-        raw = asdict(state)
+        # 1. Scalar fields
+        data = {
+            "tick": state.tick,
+            "seed": state.seed,
+            "world_time": state.world_time
+        }
         
-        # Ensure entity keys (ints) are converted to strings for JSON
-        raw["entities"] = {str(k): v for k, v in raw["entities"].items()}
+        # 2. Entities (Sorted by ID)
+        sorted_entities = {}
+        for eid in sorted(state.entities.keys()):
+            ent = state.entities[eid]
+            sorted_entities[str(eid)] = {
+                "id": ent.id,
+                "kind": ent.kind,
+                "position": ent.position,
+                "readiness": ent.readiness,
+                "active": ent.active,
+                "properties": dict(sorted(ent.properties.items()))
+            }
+        data["entities"] = sorted_entities
         
-        # Enums or other complex types should be simplified if they exist.
-        # In Milestone 2, our state is purely primitives, dicts, and tuples.
+        # 3. Global collections (All sorted by key)
+        data["global_resources"] = dict(sorted(state.global_resources.items()))
+        data["periodic_due_ticks"] = dict(sorted(state.periodic_due_ticks.items()))
+        data["work_debt"] = dict(sorted(state.work_debt.items()))
         
-        return raw
+        # 4. RNG Checkpoint
+        # We assume rng_checkpoint is already a primitive or sortable dict/list.
+        data["rng_checkpoint"] = state.rng_checkpoint
+        
+        return data

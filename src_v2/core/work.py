@@ -25,7 +25,7 @@ class WorkItem:
     work_class: WorkClass
     
     # Payload for execution (system-specific)
-    action_type: str
+    work_kind: str
     payload: Dict[str, Any] = field(default_factory=dict)
     
     # Ordering hints

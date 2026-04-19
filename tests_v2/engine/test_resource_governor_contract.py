@@ -28,22 +28,22 @@ def test_escalation_path(base_profile):
     
     # 1. Normal
     signals_normal = PressureSignals(tick_compute_ms=5.0)
-    gov.evaluate(base_profile, signals_normal, status)
+    gov.evaluate(base_profile, signals_normal, status, 0)
     assert status.current_mode == RuntimeMode.NORMAL
     
     # 2. Constrained (threshold 16.0 * 0.7 = 11.2)
     signals_constrained = PressureSignals(tick_compute_ms = 12.0)
-    gov.evaluate(base_profile, signals_constrained, status)
+    gov.evaluate(base_profile, signals_constrained, status, 1)
     assert status.current_mode == RuntimeMode.CONSTRAINED
     
     # 3. Degraded (threshold 16.0)
     signals_degraded = PressureSignals(tick_compute_ms = 20.0)
-    gov.evaluate(base_profile, signals_degraded, status)
+    gov.evaluate(base_profile, signals_degraded, status, 2)
     assert status.current_mode == RuntimeMode.DEGRADED
     
     # 4. Survival (threshold 16.0 * 1.5 = 24.0)
     signals_survival = PressureSignals(tick_compute_ms = 30.0)
-    gov.evaluate(base_profile, signals_survival, status)
+    gov.evaluate(base_profile, signals_survival, status, 3)
     assert status.current_mode == RuntimeMode.SURVIVAL
 
 
@@ -54,9 +54,9 @@ def test_multi_signal_escalation(base_profile):
     
     # Debt threshold: 100. Degraded at 50% (50). Survival at 100% (100).
     signals = PressureSignals(work_debt_total=60)
-    gov.evaluate(base_profile, signals, status)
+    gov.evaluate(base_profile, signals, status, 10)
     assert status.current_mode == RuntimeMode.DEGRADED
     
     signals_survival = PressureSignals(work_debt_total=110)
-    gov.evaluate(base_profile, signals_survival, status)
+    gov.evaluate(base_profile, signals_survival, status, 11)
     assert status.current_mode == RuntimeMode.SURVIVAL

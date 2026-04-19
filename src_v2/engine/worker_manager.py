@@ -71,9 +71,7 @@ class WorkerManager:
                 self._inflight_count -= 1
 
         # M8 Law: Deterministic Equivalence. 
-        # Results must be sorted by Entity ID before returning to ensure 
-        # identical application order regardless of thread race.
-        results.sort(key=lambda r: r.entity_id)
+        # Removal of opportunistic sorting; Kernel owns authoritative commit order.
         return results
 
     def _execute_locally(
@@ -82,12 +80,11 @@ class WorkerManager:
         worker_fn: Callable[[WorkerPacket], WorkerResult]
     ) -> List[WorkerResult]:
         """Strictly synchronous execution fallback."""
-        results = [worker_fn(p) for p in packets]
-        results.sort(key=lambda r: r.entity_id)
-        return results
+        return [worker_fn(p) for p in packets]
 
     def _wrap_work(self, packet: WorkerPacket, fn: Callable) -> WorkerResult:
         """Helper to capture compute time and handle errors inside the pool."""
+        from src_v2.core.worker_protocol import ResultStatus
         start = time.perf_counter_ns()
         try:
             result = fn(packet)
@@ -95,17 +92,38 @@ class WorkerManager:
             # Add compute time to metadata
             if isinstance(result, WorkerResult):
                 result = WorkerResult(
+                    source_packet_id=result.source_packet_id,
                     entity_id=result.entity_id,
                     update=result.update,
+                    status=result.status,
                     compute_time_ns=elapsed
                 )
             return result
         except Exception as e:
             logger.error("Internal worker crash: %s", e)
             return WorkerResult(
+                source_packet_id=packet.packet_id,
                 entity_id=packet.subject.id,
-                update=EntityUpdate(entity_id=packet.subject.id, readiness_delta=0.0) # No-op
+                update=EntityUpdate(entity_id=packet.subject.id), # No-op
+                status=ResultStatus.FAILURE
             )
+
+    def get_stats(self) -> Dict[str, Any]:
+        """
+        Produce a read-only snapshot of worker statistics.
+        M7 Law: This is the authoritative way for observability to read pressure.
+        """
+        # Capacity utilization is inflight relative to queue depth limit.
+        capacity_utilization = (
+            self._inflight_count / self._max_queue_depth 
+            if self._max_queue_depth > 0 else 1.0
+        )
+        
+        return {
+            "capacity_utilization": capacity_utilization,
+            "active_workers": self._inflight_count,
+            "max_capacity": self._max_queue_depth
+        }
 
     def shutdown(self) -> None:
         """Gracefully terminate the pool."""

@@ -6,19 +6,21 @@ from enum import IntEnum, auto
 class TickPhase(IntEnum):
     """
     The authoritative order of operations inside a single simulation tick.
-    This order is frozen by the Milestone 1 contract.
+    Locked by the Milestone A Closure Contract.
     """
-    INIT = auto()           # Context setup, request handling
-    SCHEDULING = auto()     # Entity eligibility check
-    COLLECTION = auto()     # Proposal gathering
-    RESOLUTION = auto()     # Validation and Apply
-    CLEANUP = auto()        # State finalization, lifecycle
-    ADVANCEMENT = auto()    # Increment world tick
-    PERSISTENCE = auto()    # Non-authoritative logging/replay (Last)
+    INIT = auto()           # Context setup, policy/governance evaluation
+    SCHEDULING = auto()     # Work selection and budgeting
+    COLLECTION = auto()     # Proposal/Work-packet gathering
+    RESOLUTION = auto()     # Validation and Apply (Authoritative)
+    CLEANUP = auto()        # State finalization and lifecycle
+    ADVANCEMENT = auto()    # Increment world tick (Closure)
+    
+    # Non-authoritative hooks (must not influence authoritative state)
+    PERSISTENCE = auto()    # Post-tick logging, replay emission, snapshots
 
 
 def get_authoritative_phases() -> list[TickPhase]:
-    """Returns only the phases required for core simulation semantics."""
+    """Returns exactly the 6 phases required for authoritative simulation semantics."""
     return [
         TickPhase.INIT,
         TickPhase.SCHEDULING,

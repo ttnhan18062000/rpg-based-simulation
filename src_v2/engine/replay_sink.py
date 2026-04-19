@@ -59,14 +59,29 @@ class ReplaySink:
             return False
 
     def write_manifest(self, manifest_data: Dict[str, Any]) -> bool:
-        """Write the run metadata index."""
+        """
+        Write the run metadata index atomically.
+        M7 Law: Write to temp then rename to ensure integrity.
+        """
         try:
             manifest_path = self._run_dir / "manifest.json"
-            with open(manifest_path, "w") as f:
+            temp_path = self._run_dir / "manifest.json.tmp"
+            
+            with open(temp_path, "w") as f:
                 json.dump(manifest_data, f, indent=2)
+            
+            # Atomic rename (POSIX property)
+            os.replace(temp_path, manifest_path)
             return True
         except Exception:
             return False
+
+    def check_quota(self, max_bytes: int) -> bool:
+        """
+        Simulated quota check.
+        M6 Law: Replay must be pressure-aware.
+        """
+        return self._metrics.quota_used_bytes < max_bytes
 
     @property
     def metrics(self) -> SinkMetrics:

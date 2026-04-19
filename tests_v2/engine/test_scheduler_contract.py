@@ -13,7 +13,7 @@ def test_readiness_driven_selection():
     })
     
     scheduler = DeterministicScheduler()
-    work = scheduler.select_work(state)
+    work = scheduler.select_work(state)[0]
     
     # Expect 2 entity actions (ID 1 and 3)
     # Order should be Readiness DESC (3 then 1)
@@ -31,22 +31,22 @@ def test_deterministic_tiebreak():
     })
     
     scheduler = DeterministicScheduler()
-    work = scheduler.select_work(state)
+    work = scheduler.select_work(state)[0]
     
     assert [w.owner_id for w in work] == [1, 2, 3]
 
 
 def test_periodic_selection():
     """Verify that periodic tasks are selected when due."""
-    p_def = PeriodicDefinition(subsystem_id="weather", action_type="UPDATE", cadence=10)
+    p_def = PeriodicDefinition(subsystem_id="weather", work_kind="UPDATE", cadence=10)
     scheduler = DeterministicScheduler(periodic_defs=[p_def])
     
     # Tick 0: Weather is due (due_tick=0)
     state_0 = AuthoritativeState(tick=0, seed=42, periodic_due_ticks={"weather": 0})
-    work_0 = scheduler.select_work(state_0)
+    work_0, _ = scheduler.select_work(state_0)
     assert any(w.owner_id == "weather" for w in work_0)
     
     # Tick 5: Weather is NOT due (due_tick=10)
     state_5 = AuthoritativeState(tick=5, seed=42, periodic_due_ticks={"weather": 10})
-    work_5 = scheduler.select_work(state_5)
+    work_5, _ = scheduler.select_work(state_5)
     assert not any(w.owner_id == "weather" for w in work_5)

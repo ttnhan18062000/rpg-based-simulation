@@ -50,4 +50,20 @@ All new features must follow this exact sequence:
 - Duration: [Ticks]
 - Expected Failure: [FailureKind|NONE]
 - Recovery Required: [Yes/No]
+- Sampling Cadence: [Ticks]
+```
+
+### Subsystem Contract Template
+```markdown
+## Subsystem: [Name]
+- **Authoritative Status**: [YES/NO] (Must be YES if impacting simulation)
+- **State Partition**: [State category in runtime_state_contract_m3.md]
+- **Resource Budget**:
+  - Max RSS: [X] MB
+  - Max Compute: [Y] ms / tick
+- **Retention / Overflow Policy**: [e.g. DROP_OLDEST, BLOCK]
+- **Degradation Laws**:
+  - CONSTRAINED: [Behavior change]
+  - DEGRADED: [Behavior change]
+  - SURVIVAL: [Behavior change]
 ```

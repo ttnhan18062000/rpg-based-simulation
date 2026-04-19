@@ -12,18 +12,23 @@ from src_v2.core.governance import RuntimeMode
 class RuntimeSnapshot:
     """
     Law: Surfaced runtime signals must be stable in meaning and naming.
-    This is the closed, typed operational surface for Milestone 7.
+    This is the closed, typed operational surface for Milestone B.
     """
     profile_name: str
     runtime_mode: str
+    
+    # Primary Pressure Inputs
     memory_rss_mb: float
     memory_trend_mb_per_tick: float
     tick_compute_ms_avg: float
     work_debt_total: int
-    queue_utilization: float
-    dropped_work_count: int
+    capacity_utilization: float   # Worker/Queue pressure
     replay_backlog_kb: int
+    
+    # Outcome Accounting
     active_workers: int
+    dropped_work_count: int      # Autoritative work shed by governor
+    replay_dropped_events: int   # Non-authoritative events lost due to buffer pressure
     uptime_seconds: float
     last_tick: int
 
@@ -79,17 +84,27 @@ class SignalCollector:
         }
 
     def get_snapshot(self, kernel: Any) -> RuntimeSnapshot:
-        """Derive a stable, typed snapshot from the current kernel state."""
+        """
+        Produce a truthful snapshot of the engine's operational state.
+        M7 Law: No placeholders. All data must be sourced from real behavior.
+        """
         status = kernel.status
-        replay = kernel.replay
         
+        # 1. Primary Pressure: Platform
         platform = self.collect_platform_signals(kernel.state.tick)
         
-        # Calculate compute trend from status history
+        # 2. Primary Pressure: Compute (from history)
         compute_avg = 0.0
         if status.signal_history:
             total_compute = sum(s.tick_compute_ms for s in status.signal_history)
             compute_avg = total_compute / len(status.signal_history)
+
+        # 3. Primary Pressure: Subsystems (via explicit interfaces)
+        worker_stats = kernel._worker_manager.get_stats()
+        replay_stats = kernel._replay.get_stats()
+        
+        # 4. Primary Pressure: Authoritative State
+        work_debt_total = sum(kernel.state.work_debt.values())
 
         return RuntimeSnapshot(
             profile_name=self._profile_name,
@@ -97,11 +112,13 @@ class SignalCollector:
             memory_rss_mb=platform["rss_mb"],
             memory_trend_mb_per_tick=platform["memory_trend"],
             tick_compute_ms_avg=compute_avg,
-            work_debt_total=kernel.state.work_debt_total if hasattr(kernel.state, "work_debt_total") else 0, # Placeholder
-            queue_utilization=0.0, # Placeholder
-            dropped_work_count=0,   # Placeholder
-            replay_backlog_kb=replay.buffer_usage_kb if hasattr(replay, "buffer_usage_kb") else 0,
-            active_workers=1,        # M6/M7 is single-threaded
+            work_debt_total=work_debt_total,
+            capacity_utilization=worker_stats["capacity_utilization"],
+            replay_backlog_kb=replay_stats["backlog_kb"],
+            # Outcome Accounting
+            active_workers=worker_stats["active_workers"],
+            dropped_work_count=status.total_dropped_work,
+            replay_dropped_events=replay_stats["dropped_events_count"],
             uptime_seconds=time.perf_counter() - self._start_time,
             last_tick=kernel.state.tick
         )

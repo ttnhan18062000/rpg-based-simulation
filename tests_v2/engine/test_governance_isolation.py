@@ -15,7 +15,7 @@ def test_hash_invariance_to_governance_state():
     # 1. Simulate a mode change (NORMAL -> SURVIVAL)
     # This should be isolated from AuthoritativeState.
     status = RuntimeStatus(current_mode=RuntimeMode.NORMAL)
-    status.reset_dwell(RuntimeMode.SURVIVAL)
+    status.reset_dwell(RuntimeMode.SURVIVAL, 10)
     
     # Assert that the state object itself has no reference to mode
     assert not hasattr(state, "current_mode")

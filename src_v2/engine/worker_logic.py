@@ -13,6 +13,7 @@ def default_simulation_worker(packet: WorkerPacket) -> WorkerResult:
     # In a full simulation, this would involve movement/combat logic 
     # using packet.subject and packet.neighbor_view.
     return WorkerResult(
+        source_packet_id=packet.packet_id,
         entity_id=packet.subject.id,
         update=EntityUpdate(
             entity_id=packet.subject.id,

@@ -57,5 +57,5 @@ def test_harness_detects_missing_degradation_mode():
     
     # VERIFY: Fails because DEGRADED was never entered
     assert not result.conformance_passed
-    assert result.failure_kind == FailureKind.FAILED_DEGRADATION_ORDER
-    assert "Expected mode DEGRADED was never entered" in result.failure_reason
+    assert result.failure_kind == FailureKind.FAILED_DEGRADATION_SEQUENCE
+    assert "Required mode 'DEGRADED' was never entered" in result.failure_reason

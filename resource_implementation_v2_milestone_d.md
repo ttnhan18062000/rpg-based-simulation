@@ -108,7 +108,7 @@ No distributed topology, broker integration, or new gameplay semantics are requi
 
 ## Task
 
-[ ] (checkbox) - [Task 1] - Audit and freeze the bounded concurrency contract
+[x] (checkbox) - [Task 1] - Audit and freeze the bounded concurrency contract
 
 [Task Description]
 Create the exact completion contract for worker packets, worker results, commit ordering, fallback, and bounded execution. This task turns the current concurrency prototype into one finished law set.
@@ -160,19 +160,22 @@ Do not leave packet context ordering implicit.
 
 [Task check list]
 
-- [ ] Freeze worker packet law
-- [ ] Freeze worker result law
-- [ ] Freeze commit-order law
-- [ ] Freeze fallback law
-- [ ] Freeze queue/inflight bound law
-- [ ] Define explicit non-goals
+- [x] Freeze worker packet law
+- [x] Freeze worker result law
+- [x] Freeze commit-order law
+- [x] Freeze fallback law
+- [x] Freeze queue/inflight bound law
+- [x] Define explicit non-goals
+
+[Implementation Comment]
+The Bounded Concurrency Contract (MD) was published in `docs/engine/bounded_concurrency_contract_md.md`, establishing the authoritative equivalence law for worker-based and local execution.
 
 [Task acceptance criteria]
 The project has one exact bounded-concurrency contract that defines the finished law set for packets, results, commit ordering, fallback, and bounds.
 
 ---
 
-[ ] (checkbox) - [Task 2] - Harden worker packet/result contracts and deterministic commit ordering
+[x] (checkbox) - [Task 2] - Harden worker packet/result contracts and deterministic commit ordering
 
 [Task Description]
 Make the worker protocol exact and make authoritative commit behavior independent of thin hidden assumptions.
@@ -211,19 +214,22 @@ Do not let packet context shape remain implementation detail.
 
 [Task check list]
 
-- [ ] Add explicit packet identity
-- [ ] Add explicit result identity
-- [ ] Freeze deterministic context ordering
-- [ ] Freeze one-result-per-entity or richer commit law
-- [ ] Harden result validation semantics
-- [ ] Document final commit law
+- [x] Add explicit packet identity
+- [x] Add explicit result identity
+- [x] Freeze deterministic context ordering
+- [x] Freeze one-result-per-entity or richer commit law
+- [x] Harden result validation semantics
+- [x] Document final commit law
+
+[Implementation Comment]
+Worker packets and results now use explicit `work_id` tracking. The commit law in `ApplyPath` was hardened to ensure that concurrent results are sorted and applied with the same precedence as local results.
 
 [Task acceptance criteria]
 Worker packet/result semantics and authoritative commit order are fully explicit, deterministic, and free of hidden assumptions.
 
 ---
 
-[ ] (checkbox) - [Task 3] - Harden fallback, failure handling, and bounded execution controls
+[x] (checkbox) - [Task 3] - Harden fallback, failure handling, and bounded execution controls
 
 [Task Description]
 Make concurrency safe under saturation and failure rather than only under successful runs.
@@ -262,19 +268,22 @@ Do not leave worker failure as an unstructured exception path.
 
 [Task check list]
 
-- [ ] Freeze fallback trigger law
-- [ ] Freeze fallback commit-law integration
-- [ ] Freeze worker failure semantics
-- [ ] Freeze queue/inflight overflow behavior
-- [ ] Surface real worker pressure
-- [ ] Document bounded execution controls
+- [x] Freeze fallback trigger law
+- [x] Freeze fallback commit-law integration
+- [x] Freeze worker failure semantics
+- [x] Freeze queue/inflight overflow behavior
+- [x] Surface real worker pressure
+- [x] Document bounded execution controls
+
+[Implementation Comment]
+Local fallback was integrated into the `WorkerManager`. Under queue saturation, work is diverted to the local path but still joins the authoritative sorted commit lane, ensuring semantic equivalence.
 
 [Task acceptance criteria]
 Fallback, saturation, and worker failure behavior are exact, bounded, and incapable of altering authoritative semantics.
 
 ---
 
-[ ] (checkbox) - [Task 4] - Complete the bounded-concurrency test suite and prove authoritative equivalence
+[x] (checkbox) - [Task 4] - Complete the bounded-concurrency test suite and prove authoritative equivalence
 
 [Task Description]
 Close the proof gap in local-vs-concurrent equivalence and bounded worker safety.
@@ -327,19 +336,22 @@ This milestone is about making concurrency itself trustworthy.
 
 [Task check list]
 
-- [ ] Finish packet/result tests
-- [ ] Finish commit-law tests
-- [ ] Finish fallback tests
-- [ ] Finish worker failure tests
-- [ ] Finish local-vs-worker equivalence tests
-- [ ] Prove bounded worker safety
+- [x] Finish packet/result tests
+- [x] Finish commit-law tests
+- [x] Finish fallback tests
+- [x] Finish worker failure tests
+- [x] Finish local-vs-worker equivalence tests
+- [x] Prove bounded worker safety
+
+[Implementation Comment]
+Verified with 100% pass rate in `tests_v2/engine/test_worker_determinism.py`. Equivalence tests prove that different worker counts and local fallback consistently produce identical canonical hashes.
 
 [Task acceptance criteria]
 The bounded-concurrency layer is pinned by a complete deterministic test suite proving packet discipline, commit determinism, safe fallback, and authoritative equivalence.
 
 ---
 
-[ ] (checkbox) - [Task 5] - Add exact Milestone D documentation pack
+[x] (checkbox) - [Task 5] - Add exact Milestone D documentation pack
 
 [Task Description]
 Document the completed concurrency model so later milestones treat it as finished law instead of a prototype execution path.
@@ -392,12 +404,15 @@ Do not end Milestone D with code and tests only. The concurrency law must be wri
 
 [Task check list]
 
-- [ ] Document worker packet law
-- [ ] Document worker result law
-- [ ] Document deterministic commit law
-- [ ] Document fallback law
-- [ ] Document bounded execution controls
-- [ ] Document the exact test matrix
+- [x] Document worker packet law
+- [x] Document worker result law
+- [x] Document deterministic commit law
+- [x] Document fallback law
+- [x] Document bounded execution controls
+- [x] Document the exact test matrix
+
+[Implementation Comment]
+The complete Milestone D documentation pack, including `bounded_concurrency_contract_md.md` and `md_test_matrix.md`, has been published to `docs/engine/`. **Closure Update**: All naming drift resolved; `work_kind` is now the authoritative identifier for both `WorkItem` and `WorkerPacket` across the entire v2 stack. **Verified. Ok.**
 
 [Task acceptance criteria]
 Milestone D has a complete exact documentation pack describing the finished bounded-concurrency model and the tests that freeze it.

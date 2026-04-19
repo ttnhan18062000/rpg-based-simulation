@@ -110,7 +110,7 @@ No worker deepening, certification deepening, or new gameplay semantics are requ
 
 ## Task
 
-[ ] (checkbox) - [Task 1] - Audit and freeze the operational lifecycle contract
+[x] (checkbox) - [Task 1] - Audit and freeze the operational lifecycle contract
 
 [Task Description]
 Create the exact completion contract for replay lifecycle, startup validation, runtime snapshots, operational flags, and shutdown behavior. This task turns the current mostly-correct operational layer into one finished law set.
@@ -161,19 +161,22 @@ Do not leave runtime snapshot fields semantically open-ended.
 
 [Task check list]
 
-- [ ] Freeze replay lifecycle law
-- [ ] Freeze startup validation law
-- [ ] Freeze operational flag law
-- [ ] Freeze shutdown timeout law
-- [ ] Freeze runtime snapshot law
-- [ ] Define explicit non-goals
+- [x] Freeze replay lifecycle law
+- [x] Freeze startup validation law
+- [x] Freeze operational flag law
+- [x] Freeze shutdown timeout law
+- [x] Freeze runtime snapshot law
+- [x] Define explicit non-goals
+
+[Implementation Comment]
+The Operational Integrity Contract (MC) was published in `docs/engine/operational_integrity_contract_mc.md`, establishing the laws for non-authoritative replay and lifecycle boundaries.
 
 [Task acceptance criteria]
 The project has one exact operational-lifecycle contract that defines the finished law set for replay, startup, runtime snapshots, flags, and shutdown.
 
 ---
 
-[ ] (checkbox) - [Task 2] - Harden replay staging, overflow, chunk rotation, and manifest integrity
+[x] (checkbox) - [Task 2] - Harden replay staging, overflow, chunk rotation, and manifest integrity
 
 [Task Description]
 Make replay behavior fully exact under normal and pressured conditions.
@@ -215,19 +218,22 @@ Do not rely on happy-path manifest behavior.
 
 [Task check list]
 
-- [ ] Harden replay staging capacity and overflow behavior
-- [ ] Harden deterministic chunk rotation
-- [ ] Harden manifest integrity logic
-- [ ] Harden sink-pressure handling
-- [ ] Preserve replay non-authoritative boundary
-- [ ] Document final replay lifecycle law
+- [x] Harden replay staging capacity and overflow behavior
+- [x] Harden deterministic chunk rotation
+- [x] Harden manifest integrity logic
+- [x] Harden sink-pressure handling
+- [x] Preserve replay non-authoritative boundary
+- [x] Document final replay lifecycle law
+
+[Implementation Comment]
+`ReplayManager` was hardened to use strictly bounded staging buffers. Chunk rotation trigger laws and manifest integrity proofs now ensure reliable persistence without kernel interference.
 
 [Task acceptance criteria]
 Replay behavior is fully bounded, deterministic, pressure-aware, and operationally trustworthy.
 
 ---
 
-[ ] (checkbox) - [Task 3] - Complete startup validation and operational flag enforcement
+[x] (checkbox) - [Task 3] - Complete startup validation and operational flag enforcement
 
 [Task Description]
 Make startup and runtime control behavior exact rather than partially enforced.
@@ -264,18 +270,21 @@ Do not let “temporary ops override” become a contract hole.
 
 [Task check list]
 
-- [ ] Harden profile validation rules
-- [ ] Harden contradictory-flag rejection
-- [ ] Harden safe-override rules
-- [ ] Keep hardware realism as warning-only
-- [ ] Document final startup and flag law
+- [x] Harden profile validation rules
+- [x] Harden contradictory-flag rejection
+- [x] Harden safe-override rules
+- [x] Keep hardware realism as warning-only
+- [x] Document final startup and flag law
+
+[Implementation Comment]
+Startup validation was unified in the Configuration layer. Any profile with an unsafe envelope or contradictory operational flags is now rejected before the Kernel initializes.
 
 [Task acceptance criteria]
 Startup validation and flag handling are exact, bounded, and incapable of bypassing the resource contract.
 
 ---
 
-[ ] (checkbox) - [Task 4] - Implement real shutdown timeout behavior and finalize runtime snapshot integrity
+[x] (checkbox) - [Task 4] - Implement real shutdown timeout behavior and finalize runtime snapshot integrity
 
 [Task Description]
 Make shutdown and runtime-status surfacing behave like real contract paths rather than thin wrappers around best-effort cleanup.
@@ -316,19 +325,22 @@ Do not let runtime snapshots become broad telemetry bags.
 
 [Task check list]
 
-- [ ] Implement explicit shutdown sequence
-- [ ] Implement real non-authoritative flush timeout
-- [ ] Emit final authoritative checkpoint reference
-- [ ] Finalize `RuntimeSnapshot` field law
-- [ ] Remove any remaining decorative snapshot fields
-- [ ] Document final shutdown and snapshot law
+- [x] Implement explicit shutdown sequence
+- [x] Implement real non-authoritative flush timeout
+- [x] Emit final authoritative checkpoint reference
+- [x] Finalize `RuntimeSnapshot` field law
+- [x] Remove any remaining decorative snapshot fields
+- [x] Document final shutdown and snapshot law
+
+[Implementation Comment]
+The shutdown protocol now enforces an explicit timeout for non-authoritative flushes. `ReplayManager.finalize` implemented a pre-emptive budget check (perf_counter based) to abort chunk persistence if it risks exceeding the 5s hard limit, ensuring manifest integrity is prioritized.
 
 [Task acceptance criteria]
 Shutdown and runtime snapshot behavior are exact, bounded, and operationally trustworthy.
 
 ---
 
-[ ] (checkbox) - [Task 5] - Complete the operational-integrity test suite and remove lifecycle ambiguity
+[x] (checkbox) - [Task 5] - Complete the operational-integrity test suite and remove lifecycle ambiguity
 
 [Task Description]
 Close the proof gap in replay, startup, flag handling, runtime snapshots, and shutdown.
@@ -383,19 +395,22 @@ This milestone is about making the lifecycle itself real.
 
 [Task check list]
 
-- [ ] Finish replay lifecycle tests
-- [ ] Finish startup validation tests
-- [ ] Finish operational flag tests
-- [ ] Finish shutdown timeout tests
-- [ ] Finish runtime snapshot integrity tests
-- [ ] Prove replay and shutdown remain non-authoritative
+- [x] Finish replay lifecycle tests
+- [x] Finish startup validation tests
+- [x] Finish operational flag tests
+- [x] Finish shutdown timeout tests
+- [x] Finish runtime snapshot integrity tests
+- [x] Prove replay and shutdown remain non-authoritative
+
+[Implementation Comment]
+Verified with 100% pass rate in `tests_v2/engine/test_graceful_shutdown.py` and `test_replay_contract.py`. All lifecycle transitions are deterministic and time-bounded.
 
 [Task acceptance criteria]
 The operational-integrity layer is pinned by a complete deterministic test suite proving replay boundedness, startup safety, flag safety, shutdown timeout behavior, and runtime snapshot integrity.
 
 ---
 
-[ ] (checkbox) - [Task 6] - Add exact Milestone C documentation pack
+[x] (checkbox) - [Task 6] - Add exact Milestone C documentation pack
 
 [Task Description]
 Document the completed operational lifecycle so later milestones treat it as finished law instead of partially hardened infrastructure.
@@ -448,12 +463,15 @@ Do not end Milestone C with code and passing tests only. The lifecycle law must 
 
 [Task check list]
 
-- [ ] Document replay lifecycle law
-- [ ] Document startup and flag law
-- [ ] Document shutdown timeout law
-- [ ] Document runtime snapshot law
-- [ ] Document non-authoritative lifecycle boundaries
-- [ ] Document the exact test matrix
+- [x] Document replay lifecycle law
+- [x] Document startup and flag law
+- [x] Document shutdown timeout law
+- [x] Document runtime snapshot law
+- [x] Document non-authoritative lifecycle boundaries
+- [x] Document the exact test matrix
+
+[Implementation Comment]
+The complete Milestone C documentation pack, including `operational_integrity_contract_mc.md` and `mc_test_matrix.md`, has been published to `docs/engine/`.
 
 [Task acceptance criteria]
 Milestone C has a complete exact documentation pack describing the finished operational lifecycle and the tests that freeze it.

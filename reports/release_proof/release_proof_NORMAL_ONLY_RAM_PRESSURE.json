@@ -1,0 +1,53 @@
+{
+  "run_id": "596bc699-5f9b-40be-86a9-fa16179e56d3",
+  "timestamp": 1776594842.5781758,
+  "commit_sha": "252a1e2495872e807075a2446a51675543d56b7b",
+  "profile_name": "NORMAL_ONLY",
+  "scenario_id": "RAM_PRESSURE",
+  "seed": 42,
+  "environment": {
+    "detected_facts": {
+      "os": "Linux",
+      "os_release": "6.17.0-22-generic",
+      "python_version": "3.13.7",
+      "cpu_count_logical": 6,
+      "cpu_count_physical": 6,
+      "ram_total_gb": 11.18,
+      "cpu_freq_mhz": 2687.998
+    },
+    "detected_class": "class_b",
+    "effective_class": "class_b",
+    "override_applied": false,
+    "os_name": "linux",
+    "python_version": "3.13"
+  },
+  "measurements": [
+    {
+      "tick": 0,
+      "mode": "NORMAL",
+      "memory_rss_mb": 45.34375,
+      "memory_trend_mb_per_tick": 0.0,
+      "tick_compute_ms": 0.050328002544119954,
+      "tick_compute_ms_avg": 0.050328002544119954,
+      "work_debt": 0,
+      "worker_utilization": 0.0,
+      "queue_utilization": 0.0,
+      "replay_pressure": 0.0,
+      "active_workers": 0,
+      "timestamp": 1776594842.58156
+    }
+  ],
+  "baseline_hash": "08ddf9a5ee5de3bccd224121a54cf781c2bedaa79876418d88e4f3cfe9c7c8c1",
+  "final_hash": "08ddf9a5ee5de3bccd224121a54cf781c2bedaa79876418d88e4f3cfe9c7c8c1",
+  "governor_mode_sequence": [
+    "NORMAL",
+    "NORMAL",
+    "NORMAL",
+    "NORMAL",
+    "NORMAL"
+  ],
+  "conformance_passed": false,
+  "allowed_failure_observed": false,
+  "failure_kind": "failed_degradation_sequence",
+  "failure_reason": "Required mode 'DEGRADED' was never entered during scenario."
+}

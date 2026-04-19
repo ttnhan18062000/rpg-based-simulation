@@ -8,8 +8,11 @@ from src_v2.engine.replay_buffer import ReplayBuffer
 from src_v2.engine.replay_sink import ReplaySink
 from src_v2.core.replay_modes import ReplayMode
 
+import logging
 if TYPE_CHECKING:
     from src_v2.engine.policy import GovernorPolicy
+
+logger = logging.getLogger(__name__)
 
 
 class ReplayManager:
@@ -23,19 +26,30 @@ class ReplayManager:
         run_dir: Path, 
         profile_name: str,
         buffer_capacity_kb: int = 1024,
-        chunk_tick_limit: int = 100
+        chunk_tick_limit: int = 100,
+        replay_mode: ReplayMode = ReplayMode.DEBUG_WINDOWED,
+        rotation_threshold: float = 0.9
     ):
         self._run_dir = run_dir
         self._profile_name = profile_name
-        self._buffer = ReplayBuffer(buffer_capacity_kb)
+        
+        # M6 Law: Mode-specific retention policy
+        from src_v2.core.retention import OverflowPolicy
+        policy = OverflowPolicy.EVICT_OLDEST
+        if replay_mode == ReplayMode.FORENSIC_SHORT_RUN:
+            policy = OverflowPolicy.TRUNCATE_NEWEST
+            
+        self._buffer = ReplayBuffer(buffer_capacity_kb, policy)
         self._sink = ReplaySink(run_dir)
         
         self._chunk_tick_limit = chunk_tick_limit
+        self._rotation_threshold = rotation_threshold
         self._current_chunk_id = 0
         self._chunk_start_tick = 0
         
         self._manifest: Dict[str, Any] = {
             "profile": profile_name,
+            "mode": str(replay_mode),
             "start_time": time.time(),
             "chunks": [],
             "status": "IN_PROGRESS"
@@ -64,29 +78,61 @@ class ReplayManager:
 
     def on_tick_end(self, current_tick: int) -> None:
         """
-        Check for deterministic chunk rotation at tick boundary.
+        Check for deterministic or pressure-based chunk rotation.
         """
+        # 1. Time/Tick based rotation
         ticks_in_chunk = current_tick - self._chunk_start_tick
-        
         if ticks_in_chunk >= self._chunk_tick_limit:
             self._rotate_chunk(current_tick)
+            return
 
-    def finalize(self) -> None:
-        """Finalize the run and write the manifest."""
-        # M7 Law: Hard Timeout for Non-Authoritative Flush
-        # Since this is single-threaded, we can't easily kill an IO thread, 
-        # but we can check if it's taking too long between chunks if we had many.
+        # 2. Saturation based early rotation (M6 Law)
+        stats = self.get_stats()
+        if stats["buffer_utilization"] >= self._rotation_threshold:
+            self._rotate_chunk(current_tick)
+
+    def finalize(self, timeout_s: float = 5.0) -> None:
+        """
+        Finalize the run and write the manifest.
+        M7 Law: Bounded non-authoritative flush budget.
+        Pre-emptive timeout enforcement: Skip flush if near budget.
+        """
+        start_finalize = time.perf_counter()
+        
         try:
-            self._rotate_chunk(self._chunk_start_tick)
-        except Exception:
-            pass
+            # M7 Law: Establish a safety margin for the manifest write itself.
+            # Manifest is authoritative, while the final chunk rotation is observational.
+            manifest_safety_margin = 0.5 # 500ms for atomic manifest write
+            
+            # Step 1: Pre-emptive budget check for the final rotation
+            elapsed = time.perf_counter() - start_finalize
+            remaining = timeout_s - elapsed
+            
+            if remaining > manifest_safety_margin + 0.1: # 100ms buffer for rotation startup
+                # We have enough budget to attempt a final rotation
+                self._rotate_chunk(self._chunk_start_tick)
+                self._manifest["status"] = "COMPLETED"
+            else:
+                # M7 Law: Skip rotation to protect the manifest budget
+                logger.warning("Replay finalize: Skipping final rotation due to insufficient budget (Remaining: %.3fs)", remaining)
+                self._manifest["status"] = "SKIPPED_TIMEOUT"
+            
+            # Step 2: Final post-fact check
+            if time.perf_counter() - start_finalize > timeout_s:
+                 self._manifest["status"] = "TIMEOUT"
+                
+        except Exception as e:
+            logger.error("Replay finalize failed: %s", e)
+            self._manifest["status"] = "FAILED"
 
-        self._manifest["status"] = "COMPLETED"
         self._manifest["end_time"] = time.time()
         self._manifest["metrics"] = {
             "bytes_written": self._sink.metrics.bytes_written,
-            "chunks_persisted": self._sink.metrics.chunks_persisted
+            "chunks_persisted": self._sink.metrics.chunks_persisted,
+            "dropped_events": self.get_stats()["dropped_events_count"]
         }
+        
+        # M7 Law: Atomic Manifest Update (Write then Rename)
         self._sink.write_manifest(self._manifest)
 
     def _rotate_chunk(self, end_tick: int) -> None:
@@ -117,3 +163,20 @@ class ReplayManager:
     @property
     def metrics(self):
         return self._sink.metrics
+
+    def get_stats(self) -> Dict[str, Any]:
+        """
+        Produce a read-only snapshot of replay statistics.
+        M7 Law: This is the authoritative way for observability to read pressure.
+        """
+        buffer_stats = self._buffer.get_stats()
+        
+        return {
+            "backlog_kb": buffer_stats["backlog_kb"],
+            "buffer_utilization": (
+                buffer_stats["backlog_kb"] / buffer_stats["capacity_kb"] 
+                if buffer_stats["capacity_kb"] > 0 else 0.0
+            ),
+            "dropped_events_count": buffer_stats["dropped_events_count"],
+            "total_bytes_written": self._sink.metrics.bytes_written
+        }

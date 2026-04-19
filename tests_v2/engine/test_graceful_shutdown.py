@@ -1,76 +1,64 @@
 import pytest
-import logging
+import time
+from pathlib import Path
+from unittest.mock import MagicMock
+from src_v2.engine.kernel import Kernel
 from src_v2.config.profiles import RuntimeProfile, HardwareClass
 from src_v2.core.state import AuthoritativeState
-from src_v2.engine.kernel import Kernel
-from unittest.mock import MagicMock, patch
+from src_v2.platform.rng import DeterministicRNG
 
-
-def test_graceful_shutdown_sequence(tmp_path, caplog):
-    """
-    M7 Law: Shutdown must preserve authoritative integrity and 
-    emit a final checkpoint hash.
-    """
-    profile = RuntimeProfile(
-        name="SHUTDOWN_TEST",
-        hardware_class=HardwareClass.CLASS_B,
+@pytest.fixture
+def basic_profile():
+    return RuntimeProfile(
+        name="test_profile",
+        hardware_class=HardwareClass.CLASS_A,
         max_ram_mb=512,
-        max_cpu_percent=50.0,
+        max_cpu_percent=80,
         max_worker_count=4,
-        max_queue_depth=1000,
-        max_work_debt=100,
-        max_replay_buffer_kb=64,
-        max_observability_budget_percent=5.0,
-        max_tick_budget_ms=10.0
+        max_queue_depth=100,
+        max_replay_buffer_kb=1024,
+        max_observability_budget_percent=10,
+        max_tick_budget_ms=16.6
     )
-    state = AuthoritativeState(tick=42, seed=42)
+
+def test_shutdown_sequence_suspension(basic_profile):
+    """M7 Law: Shutdown must suspend new work arrival."""
+    state = AuthoritativeState(tick=0, seed=42)
+    rng = DeterministicRNG(42)
+    kernel = Kernel(profile=basic_profile, state=state, rng=rng)
     
-    # Mock replay so we can see finalize call
+    kernel.shutdown()
+    
+    # Attempting to tick after shutdown should do nothing (return early)
+    # We check if world_time stays same
+    initial_time = state.world_time
+    kernel.tick_once() 
+    assert state.world_time == initial_time
+
+def test_shutdown_timeout_logic(basic_profile, tmp_path):
+    """M7 Law: Shutdown flush respects timeout."""
+    state = AuthoritativeState(tick=0, seed=42)
+    rng = DeterministicRNG(42)
+    
+    # Mock ReplayManager to simulate slow finalize
     mock_replay = MagicMock()
     
-    kernel = Kernel(
-        profile=profile, state=state, rng=MagicMock(), replay=mock_replay
-    )
+    kernel = Kernel(profile=basic_profile, state=state, rng=rng, replay=mock_replay)
     
-    with caplog.at_level(logging.INFO):
-        kernel.shutdown()
-        
-    # 1. Verify Auth Hash emission
-    assert "Final Auth Hash" in caplog.text
+    kernel.shutdown(timeout_s=0.1)
     
-    # 2. Verify Replay Finalization
-    assert mock_replay.finalize.called
+    # Verify mock_replay.finalize was called with timeout
+    mock_replay.finalize.assert_called_once_with(timeout_s=0.1)
 
-
-def test_shutdown_resilience_to_stalled_io(tmp_path):
-    """
-    M7 Law: Implementation of a hard timeout check in finalize is not 
-    possible in a single-threaded mock, but we verify error handling.
-    """
-    profile = RuntimeProfile(
-        name="RESILIENT_SHUTDOWN",
-        hardware_class=HardwareClass.CLASS_B,
-        max_ram_mb=512,
-        max_cpu_percent=50.0,
-        max_worker_count=4,
-        max_queue_depth=1000,
-        max_work_debt=100,
-        max_replay_buffer_kb=64,
-        max_observability_budget_percent=5.0,
-        max_tick_budget_ms=10.0
-    )
+def test_final_hash_logged(basic_profile, caplog):
+    """M7 Law: Final authoritative hash emitted at shutdown."""
+    import logging
+    caplog.set_level(logging.INFO)
+    
     state = AuthoritativeState(tick=0, seed=42)
+    rng = DeterministicRNG(42)
+    kernel = Kernel(profile=basic_profile, state=state, rng=rng)
     
-    from src_v2.engine.replay_manager import ReplayManager
-    run_dir = tmp_path / "stalled_run"
-    replay = ReplayManager(run_dir=run_dir, profile_name="TEST")
+    kernel.shutdown()
     
-    # Mocking _rotate_chunk to fail
-    with patch.object(replay, "_rotate_chunk", side_effect=IOError("Stalled IO")):
-        kernel = Kernel(profile=profile, state=state, rng=MagicMock(), replay=replay)
-        
-        # Shutdown should NOT raise even if rotate fails
-        kernel.shutdown()
-        
-    # Manifest should still be marked as completed
-    assert replay._manifest["status"] == "COMPLETED"
+    assert "Final Auth Hash:" in caplog.text

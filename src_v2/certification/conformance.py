@@ -9,8 +9,8 @@ from src_v2.config.profiles import RuntimeProfile
 
 class ConformanceEvaluator:
     """
-    M9 Law: Multi-dimensional conformance evaluation.
-    Beyond simple envelope ceilings.
+    M10 Law: Multi-dimensional conformance evaluation.
+    Enforces precise resource, recovery, and sequence laws.
     """
 
     @staticmethod
@@ -20,40 +20,124 @@ class ConformanceEvaluator:
         measurements: List[MeasurementPoint],
         mode_sequence: List[str],
         baseline_hash: Optional[str],
-        final_hash: Optional[str]
-    ) -> (bool, FailureKind, str):
+        final_hash: Optional[str],
+        secondary_hash: Optional[str] = None
+    ) -> (bool, FailureKind, str, bool):
         """
-        Comprehensive pass/fail check.
+        Comprehensive pass/fail proof evaluation.
+        M10 Law: Returns (conformance_passed, failure_kind, failure_reason, allowed_failure_observed).
         """
-        # 1. Envelope Compliance
-        for p in measurements:
-            if p.memory_rss_mb > profile.max_ram_mb:
-                return False, FailureKind.FAILED_ENVELOPE, f"RAM violation at tick {p.tick}: {p.memory_rss_mb} > {profile.max_ram_mb}"
-            
-            # Note: Tick compute ms is checked against budget
-            if p.tick_compute_ms > profile.max_tick_budget_ms:
-                # We allow some bursts unless it's sustained? No, M9 is strict.
-                # But we only mark failure if it happens when governor should have shed.
-                pass 
+        fail_kind = FailureKind.NONE
+        fail_reason = ""
+        allowed_failure_observed = False
 
-        # 2. Semantic Equivalence
-        if expectations.requires_semantic_equivalence:
+        # 1. Reporting Completeness & Telemetry Gap Check
+        if not measurements:
+            fail_kind = FailureKind.FAILED_REPORTING_INCOMPLETE
+            fail_reason = "No measurement points captured during scenario."
+        
+        if fail_kind == FailureKind.NONE:
+            last_tick = -1
+            # M10 Law: No telemetry gaps exceed the scenario-defined allowance relative to cadence.
+            max_allowed_gap = expectations.required_sampling_interval_ticks * 2
+            for p in measurements:
+                if last_tick != -1:
+                    gap = p.tick - last_tick
+                    if gap > max_allowed_gap:
+                        fail_kind = FailureKind.FAILED_TELEMETRY_GAP
+                        fail_reason = f"Telemetry gap of {gap} ticks at tick {p.tick} (Limit: {max_allowed_gap})"
+                        break
+                last_tick = p.tick
+
+        # 2. Envelope Compliance
+        if fail_kind == FailureKind.NONE:
+            for p in measurements:
+                if p.memory_rss_mb > profile.max_ram_mb:
+                    fail_kind = FailureKind.FAILED_ENVELOPE
+                    fail_reason = f"RAM violation: {p.memory_rss_mb}MB > {profile.max_ram_mb}MB at tick {p.tick}"
+                    break
+                
+                # Tick budget check (Allowing for burst unless explicitly forbidden)
+                if p.tick_compute_ms > profile.max_tick_budget_ms * 1.5: # 50% burst allowance for M10
+                    fail_kind = FailureKind.FAILED_ENVELOPE
+                    fail_reason = f"Tick budget violation: {p.tick_compute_ms:.1f}ms > {profile.max_tick_budget_ms * 1.5:.1f}ms at tick {p.tick}"
+                    break
+                
+                # M10 Law: If SURVIVAL mode is reached, it must be because of specific pressure.
+                if p.mode == "SURVIVAL":
+                    # Check disaggregated pressure signals (Renamed from capacity_utilization)
+                    # Survival is valid if either workers are saturated or queue is building.
+                    if p.worker_utilization < 0.8 and p.queue_utilization < 0.8 and p.work_debt < 10:
+                        fail_kind = FailureKind.FAILED_DEGRADATION_SEQUENCE
+                        fail_reason = f"System entered SURVIVAL without sufficient pressure (Worker: {p.worker_utilization:.2f}, Queue: {p.queue_utilization:.2f}) at tick {p.tick}"
+                        break
+
+        # 3. Semantic Equivalence (Baseline vs Concurrent)
+        if fail_kind == FailureKind.NONE and expectations.requires_semantic_equivalence:
             if not baseline_hash or not final_hash or baseline_hash != final_hash:
-                return False, FailureKind.FAILED_SEMANTIC_DRIFT, f"Hash mismatch: baseline={baseline_hash}, final={final_hash}"
+                fail_kind = FailureKind.FAILED_SEMANTIC_DRIFT
+                fail_reason = f"Authoritative divergence from baseline: baseline={baseline_hash}, final={final_hash}"
 
-        # 3. Degradation Order (Simple heuristic for M9)
-        # Verify that if we were under pressure, we actually entered degraded modes
-        for mode in expectations.required_governor_modes:
-            if mode not in mode_sequence:
-                return False, FailureKind.FAILED_DEGRADATION_ORDER, f"Expected mode {mode} was never entered."
+        # M10 Law: Reproducibility (Concurrent vs Concurrent)
+        if fail_kind == FailureKind.NONE and expectations.reproducibility_required:
+            if not secondary_hash or final_hash != secondary_hash:
+                fail_kind = FailureKind.FAILED_SEMANTIC_DRIFT
+                fail_reason = f"Reproducibility failure: run1={final_hash}, run2={secondary_hash}"
 
-        # 4. Recovery Behavior
-        if expectations.requires_recovery:
-            # Must return to NORMAL eventually
-            if mode_sequence[-1] != "NORMAL":
-                return False, FailureKind.FAILED_RECOVERY, "System failed to return to NORMAL mode after pressure."
+        # 4. Degradation Sequence (Monotonicity Check)
+        if fail_kind == FailureKind.NONE:
+            from src_v2.core.governance import RuntimeMode
+            last_mode_val = 0 # NORMAL
+            for mode_name in mode_sequence:
+                mode_val = RuntimeMode[mode_name].value
+                if mode_val > last_mode_val + 1:
+                    fail_kind = FailureKind.FAILED_DEGRADATION_SEQUENCE
+                    fail_reason = f"Invalid mode jump: {RuntimeMode(last_mode_val).name} -> {mode_name}"
+                    break
+                last_mode_val = max(last_mode_val, mode_val)
+
+            if fail_kind == FailureKind.NONE:
+                for required_mode in expectations.required_governor_modes:
+                    if required_mode not in mode_sequence:
+                        fail_kind = FailureKind.FAILED_DEGRADATION_SEQUENCE
+                        fail_reason = f"Required mode '{required_mode}' was never entered during scenario."
+                        break
+
+        # 5. Recovery Compliance
+        if fail_kind == FailureKind.NONE and expectations.requires_recovery:
+            if "NORMAL" not in mode_sequence[len(mode_sequence)//2:]: 
+                fail_kind = FailureKind.FAILED_RECOVERY_TIMEOUT
+                fail_reason = "System failed to recover to NORMAL mode within scenario window."
             
-            # Check duration of degraded state? (Optional for M9)
-            pass
+            if fail_kind == FailureKind.NONE:
+                first_pressure_idx = -1
+                for i, m in enumerate(mode_sequence):
+                    if m != "NORMAL":
+                        first_pressure_idx = i
+                        break
+                
+                if first_pressure_idx != -1:
+                    last_pressure_idx = -1
+                    for i in range(len(mode_sequence)-1, -1, -1):
+                        if mode_sequence[i] != "NORMAL":
+                            last_pressure_idx = i
+                            break
+                    
+                    recovery_duration = last_pressure_idx - first_pressure_idx
+                    if recovery_duration > expectations.recovery_time_limit_ticks:
+                        fail_kind = FailureKind.FAILED_RECOVERY_TIMEOUT
+                        fail_reason = f"System took too long to recover: {recovery_duration} ticks (Limit: {expectations.recovery_time_limit_ticks})"
+                    
+                    if fail_kind == FailureKind.NONE and mode_sequence[-1] != "NORMAL":
+                        fail_kind = FailureKind.FAILED_RECOVERY_TIMEOUT
+                        fail_reason = "System is not in NORMAL mode at scenario termination."
 
-        return True, FailureKind.NONE, "Certification PASS"
+        # 6. Global Law: Allowed Failure Filter
+        if fail_kind != FailureKind.NONE:
+            if fail_kind in expectations.allowed_failure_kinds:
+                # M10 Law: Honest Reporting - Keep fail_kind but set allowed_failure_observed=True
+                return True, fail_kind, f"Allowed Failure Detected: {fail_reason}", True
+            else:
+                return False, fail_kind, fail_reason, False
+
+        return True, FailureKind.NONE, "Certification PASS", False

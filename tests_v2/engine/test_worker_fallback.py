@@ -24,7 +24,7 @@ def test_queue_saturation_triggers_local_fallback():
         # Hold and block the single worker thread to keep the queue occupied
         if threading.current_thread().ident != main_thread_id:
             time.sleep(0.1)
-        return WorkerResult(entity_id=packet.subject.id, update=MagicMock())
+        return WorkerResult(source_packet_id=packet.packet_id, entity_id=packet.subject.id, update=MagicMock())
 
     # Submit 10 packets.
     # 1st packet: Goes to worker thread (Inflight = 1)
@@ -32,7 +32,14 @@ def test_queue_saturation_triggers_local_fallback():
     # 3rd packet: Inflight = 2 == Depth 2. Goes to LOCAL fallback.
     # ... and so on.
     packets = [
-        WorkerPacket(tick=0, world_time=0, seed=i, subject=MagicMock(id=i), neighbor_view={}, action_type="ACT", payload={})
+        WorkerPacket(
+            packet_id=f"test:{i}", 
+            tick=0, world_time=0, seed=i, 
+            subject=MagicMock(id=i), 
+            neighbor_view=[], 
+            work_kind="ACT", 
+            payload={}
+        )
         for i in range(10)
     ]
     
@@ -55,7 +62,16 @@ def test_force_local_override():
     
     def worker_fn(packet: WorkerPacket) -> WorkerResult:
         assert threading.current_thread().ident == main_thread_id
-        return WorkerResult(entity_id=0, update=MagicMock())
+        return WorkerResult(source_packet_id=packet.packet_id, entity_id=0, update=MagicMock())
 
-    packets = [WorkerPacket(tick=0, world_time=0, seed=0, subject=MagicMock(id=0), neighbor_view={}, action_type="ACT", payload={})]
+    packets = [
+        WorkerPacket(
+            packet_id="test:0", 
+            tick=0, world_time=0, seed=0, 
+            subject=MagicMock(id=0), 
+            neighbor_view=[], 
+            work_kind="ACT", 
+            payload={}
+        )
+    ]
     manager.execute_batch(packets, worker_fn)

@@ -21,26 +21,36 @@ def test_harness_catches_failed_recovery():
     harness = CertificationHarness(profile)
     expectations = get_scenario_expectations("RAM_PRESSURE") # requires_recovery=True
     
-    # We will mock the kernel's mode status 
-    from unittest.mock import PropertyMock, patch
-    with patch("src_v2.engine.runtime_status.RuntimeStatus.current_mode", new_callable=PropertyMock) as mock_mode:
+    from unittest.mock import patch
+    # We will mock the governor's evaluation
+    with patch("src_v2.engine.governor.ResourceGovernor.evaluate") as mock_eval:
         from src_v2.core.governance import RuntimeMode
-        # Baseline (10 ticks) + Cert (10 ticks). 
-        # current_mode is accessed multiple times per tick.
-        # We need a robust side_effect.
-        def mode_side_effect(*args, **kwargs):
-            mode_side_effect.call_count += 1
-            # First 50 calls (baseline + start of cert) are NORMAL
-            if mode_side_effect.call_count < 50:
-                return RuntimeMode.NORMAL
-            return RuntimeMode.DEGRADED
+        from src_v2.engine.policy import GovernorPolicy
         
-        mode_side_effect.call_count = 0
-        mock_mode.side_effect = mode_side_effect
+        def g_eval_side_effect(profile, signals, status, current_tick):
+            g_eval_side_effect.call_count += 1
+            # Baseline (10 ticks) + Cert (10 ticks). 
+            # Governor.evaluate is called once per tick per kernel.
+            # Calls 1-10: Baseline (Returns NORMAL)
+            # Calls 11-13: Cert (Returns NORMAL)
+            # Calls 14-15: Cert (Returns CONSTRAINED)
+            # Calls 16-20: Cert (Returns DEGRADED)
+            if g_eval_side_effect.call_count <= 13: 
+                mode = RuntimeMode.NORMAL
+            elif g_eval_side_effect.call_count <= 15:
+                mode = RuntimeMode.CONSTRAINED
+            else:
+                mode = RuntimeMode.DEGRADED
+                
+            status.current_mode = mode
+            return GovernorPolicy.from_mode(mode)
+        
+        g_eval_side_effect.call_count = 0
+        mock_eval.side_effect = g_eval_side_effect
         
         result = harness.run_scenario("RAM_PRESSURE", state, expectations, ticks=10)
         
         # VERIFY: Fails because it never returned to NORMAL at the END
         assert not result.conformance_passed
-        assert result.failure_kind == FailureKind.FAILED_RECOVERY
-        assert "failed to return to NORMAL" in result.failure_reason
+        assert result.failure_kind == FailureKind.FAILED_RECOVERY_TIMEOUT
+        assert "System failed to recover" in result.failure_reason

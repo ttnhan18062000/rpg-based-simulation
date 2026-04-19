@@ -8,12 +8,12 @@ def test_deferred_drain_selection():
     state = AuthoritativeState(tick=1, seed=42, work_debt={"subsys_A": 2})
     
     scheduler = DeterministicScheduler()
-    work = scheduler.select_work(state)
+    work = scheduler.select_work(state)[0]
     
     assert len(work) == 1
     assert work[0].work_class == WorkClass.DEFERRED
     assert work[0].owner_id == "subsys_A"
-    assert work[0].action_type == "DRAIN_DEBT"
+    assert work[0].work_kind == "DRAIN_DEBT"
 
 
 def test_deferred_drain_ordering():
@@ -24,7 +24,7 @@ def test_deferred_drain_ordering():
     })
     
     scheduler = DeterministicScheduler()
-    work = scheduler.select_work(state)
+    work = scheduler.select_work(state)[0]
     
     assert len(work) == 2
     assert work[0].owner_id == "A"
@@ -37,7 +37,7 @@ def test_deferred_vs_periodic_priority():
     from src_v2.engine.scheduler import PeriodicDefinition
     from src_v2.core.state import EntityState
     
-    p_def = PeriodicDefinition(subsystem_id="P", action_type="ACT", cadence=1)
+    p_def = PeriodicDefinition(subsystem_id="P", work_kind="ACT", cadence=1)
     state = AuthoritativeState(tick=1, seed=42, 
         entities={1: EntityState(id=1, kind="hero", position=(0,0), readiness=100.0)},
         periodic_due_ticks={"P": 1},
@@ -45,7 +45,7 @@ def test_deferred_vs_periodic_priority():
     )
     
     scheduler = DeterministicScheduler(periodic_defs=[p_def])
-    work = scheduler.select_work(state)
+    work = scheduler.select_work(state)[0]
     
     # 1. Critical (ID 1)
     # 2. Periodic (P)

@@ -21,9 +21,9 @@ class HardwareClassifier:
         cores = psutil.cpu_count(logical=True) or 0
         ram_gb = psutil.virtual_memory().total / (1024**3)
         
-        if cores >= 16 and ram_gb >= 31: # Allow small buffer
+        if cores >= 16 and ram_gb >= 32.0:
             return HardwareClass.CLASS_A
-        elif cores >= 4 and ram_gb >= 7:
+        elif cores >= 4 and ram_gb >= 8.0:
             return HardwareClass.CLASS_B
         else:
             return HardwareClass.CLASS_C

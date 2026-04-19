@@ -103,7 +103,7 @@ No replay hardening, shutdown deepening, worker contract deepening, or certifica
 
 ## Task
 
-[ ] (checkbox) - [Task 1] - Audit and freeze the real runtime-signal contract
+[x] (checkbox) - [Task 1] - Audit and freeze the real runtime-signal contract
 
 [Task Description]
 Create the exact completion contract for operational signals and governor-facing pressure input. This task turns the current mixed real/placeholder signal surface into one finished law set.
@@ -148,18 +148,21 @@ Do not keep fields whose only real meaning is “reserved for later.”
 
 [Task check list]
 
-- [ ] Freeze required runtime fields
-- [ ] Freeze units and semantics for each field
-- [ ] Freeze bounded-history rules
-- [ ] Freeze governor-critical input rules
-- [ ] Define explicit non-goals
+- [x] Freeze required runtime fields
+- [x] Freeze units and semantics for each field
+- [x] Freeze bounded-history rules
+- [x] Freeze governor-critical input rules
+- [x] Define explicit non-goals
+
+[Implementation Comment]
+The Runtime Signal Contract (MB) was published in `docs/engine/runtime_signal_contract_mb.md`, defining the exact metrics and units used for governor-critical pressure evaluation.
 
 [Task acceptance criteria]
 The project has one exact runtime-signal contract that defines the finished law set for operational pressure input and bounded signal history.
 
 ---
 
-[ ] (checkbox) - [Task 2] - Replace placeholder metrics with real bounded runtime signals
+[x] (checkbox) - [Task 2] - Replace placeholder metrics with real bounded runtime signals
 
 [Task Description]
 Make the current runtime-signal surface truthful. This task removes placeholder and dummy fields and replaces them with real bounded measurements.
@@ -208,19 +211,22 @@ Do not build unbounded trend history.
 
 [Task check list]
 
-- [ ] Replace placeholder queue metrics
-- [ ] Replace placeholder dropped-work counters
-- [ ] Replace placeholder worker metrics
-- [ ] Replace placeholder replay pressure metrics
-- [ ] Freeze bounded trend windows
-- [ ] Freeze explicit units for surfaced trends
+- [x] Replace placeholder queue metrics
+- [x] Replace placeholder dropped-work counters
+- [x] Replace placeholder worker metrics
+- [x] Replace placeholder replay pressure metrics
+- [x] Freeze bounded trend windows
+- [x] Freeze explicit units for surfaced trends
+
+[Implementation Comment]
+All decorative zeros were removed. `capacity_utilization` was disaggregated into explicit `worker_utilization` and `queue_utilization` signals. `RuntimeStatus` now calculates 100-tick windowed moving averages (`tick_compute_ms_avg`) and memory trends (`memory_trend_mb_per_tick`) to satisfy the M7 truthful telemetry contract.
 
 [Task acceptance criteria]
 All surfaced runtime metrics used by the governor or by operational status are real, bounded, and free of placeholder semantics.
 
 ---
 
-[ ] (checkbox) - [Task 3] - Harden governor transitions, degradation order, and recovery behavior
+[x] (checkbox) - [Task 3] - Harden governor transitions, degradation order, and recovery behavior
 
 [Task Description]
 Turn the governor from a structurally correct state machine into a fully trusted pressure controller.
@@ -266,19 +272,22 @@ Do not make recovery or degradation “heuristic enough” to be hard to explain
 
 [Task check list]
 
-- [ ] Freeze exact escalation rules
-- [ ] Freeze exact recovery rules
-- [ ] Freeze anti-thrashing logic
-- [ ] Freeze degradation order
-- [ ] Prove no authoritative contamination
-- [ ] Document final governor law
+- [x] Freeze exact escalation rules
+- [x] Freeze exact recovery rules
+- [x] Freeze anti-thrashing logic
+- [x] Freeze degradation order
+- [x] Prove no authoritative contamination
+- [x] Document final governor law
+
+[Implementation Comment]
+`ResourceGovernor` escalation was hardened with explicit dwell-time and low-watermark logic. The degradation order (Traces -> Diagnostics -> AI Fidelity) is now strictly enforced.
 
 [Task acceptance criteria]
 Governor transitions, degradation order, and recovery behavior are exact, deterministic, bounded, and semantically safe.
 
 ---
 
-[ ] (checkbox) - [Task 4] - Finish scheduler-policy integration and prove semantic safety under degradation
+[x] (checkbox) - [Task 4] - Finish scheduler-policy integration and prove semantic safety under degradation
 
 [Task Description]
 Make scheduler behavior under pressure exact, explicit, and semantically safe.
@@ -316,18 +325,21 @@ Do not let degradation create alternate kernel semantics.
 
 [Task check list]
 
-- [ ] Freeze explicit `GovernorPolicy` fields
-- [ ] Remove raw runtime-mode interpretation from scheduler
-- [ ] Freeze degradation-safe scheduler filtering
-- [ ] Freeze non-deferrable protection
-- [ ] Document final scheduler-policy boundary
+- [x] Freeze explicit `GovernorPolicy` fields
+- [x] Remove raw runtime-mode interpretation from scheduler
+- [x] Freeze degradation-safe scheduler filtering
+- [x] Freeze non-deferrable protection
+- [x] Document final scheduler-policy boundary
+
+[Implementation Comment]
+The `GovernorPolicy` now acts as the singular boundary for scheduler integration. The scheduler no longer interprets raw modes, instead consuming explicit work-suppression flags.
 
 [Task acceptance criteria]
 Scheduler behavior under degradation is explicit, policy-driven, and guaranteed not to alter authoritative semantics.
 
 ---
 
-[ ] (checkbox) - [Task 5] - Complete the runtime-protection test suite and eliminate weak proofs
+[x] (checkbox) - [Task 5] - Complete the runtime-protection test suite and eliminate weak proofs
 
 [Task Description]
 Close the proof gap in the safety-control layer by finishing the governor and runtime-signal tests and eliminating weak or decorative protections.
@@ -379,19 +391,22 @@ This milestone is about making the protection model itself real.
 
 [Task check list]
 
-- [ ] Finish all runtime-signal truth tests
-- [ ] Finish all governor transition tests
-- [ ] Finish all anti-thrashing tests
-- [ ] Finish all scheduler-policy boundary tests
-- [ ] Prove governance isolation from authoritative hash
-- [ ] Make the runtime-protection suite complete and exact
+- [x] Finish all runtime-signal truth tests
+- [x] Finish all governor transition tests
+- [x] Finish all anti-thrashing tests
+- [x] Finish all scheduler-policy boundary tests
+- [x] Prove governance isolation from authoritative hash
+- [x] Make the runtime-protection suite complete and exact
+
+[Implementation Comment]
+Verified with `tests_v2/engine/test_resource_governor_contract.py`. All tests use real signal injection to prove transition accuracy and anti-thrashing stability.
 
 [Task acceptance criteria]
 The runtime-protection layer is pinned by a complete deterministic test suite proving signal truthfulness, governor correctness, degradation order, recovery stability, and semantic safety.
 
 ---
 
-[ ] (checkbox) - [Task 6] - Add exact Milestone B documentation pack
+[x] (checkbox) - [Task 6] - Add exact Milestone B documentation pack
 
 [Task Description]
 Document the completed runtime-protection model so later milestones treat it as finished law rather than a provisional control layer.
@@ -444,12 +459,15 @@ Do not end Milestone B with only code and passing tests. The completed pressure 
 
 [Task check list]
 
-- [ ] Document runtime signal law
-- [ ] Document bounded trend/history law
-- [ ] Document governor transition law
-- [ ] Document degradation-order law
-- [ ] Document scheduler-policy law
-- [ ] Document the exact test matrix
+- [x] Document runtime signal law
+- [x] Document bounded trend/history law
+- [x] Document governor transition law
+- [x] Document degradation-order law
+- [x] Document scheduler-policy law
+- [x] Document the exact test matrix
+
+[Implementation Comment]
+The complete Milestone B documentation pack, including `runtime_signal_contract_mb.md` and `mb_test_matrix.md`, has been published to `docs/engine/`.
 
 [Task acceptance criteria]
 Milestone B has a complete exact documentation pack describing the finished runtime-pressure model and the tests that freeze it.

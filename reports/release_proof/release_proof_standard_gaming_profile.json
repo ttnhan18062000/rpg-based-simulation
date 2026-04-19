@@ -1,0 +1,51 @@
+{
+  "run_id": "53326a7d-0af5-4db0-b1cf-c51892f6858c",
+  "timestamp": 1776579764.7158577,
+  "commit_sha": "63ae100628b6ddcacb0dfed668ecf87c33e5610b",
+  "profile_name": "standard_gaming_profile",
+  "scenario_id": "IDLE_CLEAN",
+  "seed": 42,
+  "environment": {
+    "detected_facts": {
+      "os": "Linux",
+      "os_release": "6.17.0-22-generic",
+      "python_version": "3.13.7",
+      "cpu_count_logical": 6,
+      "cpu_count_physical": 6,
+      "ram_total_gb": 11.18,
+      "cpu_freq_mhz": 2687.998
+    },
+    "detected_class": "class_b",
+    "effective_class": "class_b",
+    "override_applied": false
+  },
+  "measurements": [
+    {
+      "tick": 0,
+      "mode": "NORMAL",
+      "memory_rss_mb": 32.51171875,
+      "tick_compute_ms": 0.49571999988984317,
+      "work_debt": 0,
+      "capacity_utilization": 0.0,
+      "replay_pressure": 0.0,
+      "timestamp": 1776579764.7173128
+    }
+  ],
+  "baseline_hash": "ebf133b9f9dbbe138547eae32101375dd7ab027dbdf7c496c2edba295ce06217",
+  "final_hash": "ebf133b9f9dbbe138547eae32101375dd7ab027dbdf7c496c2edba295ce06217",
+  "governor_mode_sequence": [
+    "NORMAL",
+    "NORMAL",
+    "NORMAL",
+    "NORMAL",
+    "NORMAL",
+    "NORMAL",
+    "NORMAL",
+    "NORMAL",
+    "NORMAL",
+    "NORMAL"
+  ],
+  "conformance_passed": true,
+  "failure_kind": "none",
+  "failure_reason": "Certification PASS"
+}

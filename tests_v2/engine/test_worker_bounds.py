@@ -20,10 +20,17 @@ def test_worker_count_upper_bound():
         with lock:
             unique_threads.add(threading.current_thread().ident)
         time.sleep(0.05) # Hold thread
-        return WorkerResult(entity_id=packet.subject.id, update=MagicMock())
+        return WorkerResult(source_packet_id=packet.packet_id, entity_id=packet.subject.id, update=MagicMock())
 
     packets = [
-        WorkerPacket(tick=0, world_time=0, seed=i, subject=MagicMock(id=i), neighbor_view={}, action_type="ACT", payload={})
+        WorkerPacket(
+            packet_id=f"test:{i}", 
+            tick=0, world_time=0, seed=i, 
+            subject=MagicMock(id=i), 
+            neighbor_view=[], 
+            work_kind="ACT", 
+            payload={}
+        )
         for i in range(10) # 10 tasks for 3 workers
     ]
     

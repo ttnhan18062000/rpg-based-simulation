@@ -34,7 +34,10 @@ class Kernel:
     __slots__ = (
         "_profile", "_state", "_rng", "_phases", 
         "_scheduler", "_governor", "_status", "_replay", "_collector",
-        "_worker_manager"
+        "_worker_manager", "_stopped",
+        "_start_perf_ts", "_current_world_time", "_platform_signals",
+        "_current_signals", "_current_policy", "_current_work_items",
+        "_source_packets", "_final_results", "_final_compute_ms"
     )
 
     def __init__(
@@ -52,7 +55,8 @@ class Kernel:
         from src_v2.config.validator import ProfileValidator
         ProfileValidator.validate_profile(profile)
         if flags:
-            ProfileValidator.validate_flags(flags)
+            ProfileValidator.validate_flags(flags, profile)
+        self._stopped = False
 
         self._profile = profile
         self._state = state
@@ -87,111 +91,219 @@ class Kernel:
             self._replay = replay
 
     def tick_once(self) -> None:
-        """Execute exactly one simulation tick."""
-        start_time = time.perf_counter()
+        """
+        Execute exactly one simulation tick in the authoritative contract order.
+        Authoritative Phases: INIT -> SCHEDULING -> COLLECTION -> RESOLUTION -> CLEANUP -> ADVANCEMENT
+        """
+        if getattr(self, "_stopped", False):
+             logger.warning("Attempted tick_once after shutdown.")
+             return
+
+        # 1-6 Authoritative Sequence
+        self._phase_init()
+        self._phase_scheduling()
+        self._phase_collection()
+        self._phase_resolution()
+        self._phase_cleanup()
+        self._phase_advancement()
         
-        # 1. INIT
-        next_world_time = self._state.world_time + 1
+        # 7. Non-authoritative Persistence
+        self._phase_persistence()
+
+    def _phase_init(self) -> None:
+        """1. INIT (Context setup, Governance, policy evaluation)"""
+        self._start_perf_ts = time.perf_counter()
+        self._current_world_time = self._state.world_time + 1
         
-        # 2. GOVERNANCE
-        platform_signals = self._collector.collect_platform_signals(self._state.tick)
-        total_debt = sum(self._state.work_debt.values())
-        signals = PressureSignals(
-            work_debt_total=total_debt,
+        # Capture Primary Pressure Inputs (M7 Real Sensors)
+        worker_stats = self._worker_manager.get_stats()
+        replay_stats = self._replay.get_stats()
+        self._platform_signals = self._collector.collect_platform_signals(self._state.tick)
+        
+        self._current_signals = PressureSignals(
+            work_debt_total=sum(self._state.work_debt.values()),
             tick_compute_ms=(self._status.signal_history[-1].tick_compute_ms 
                              if self._status.signal_history else 0.0),
-            queue_utilization=0.0,
-            memory_estimate_mb=platform_signals["rss_mb"]
+            worker_utilization=worker_stats["capacity_utilization"], # Renamed from capacity
+            queue_utilization=0.0, # Will be updated in ADVANCEMENT based on selected work
+            memory_estimate_mb=self._platform_signals["rss_mb"],
+            replay_backlog_kb=replay_stats["backlog_kb"],
+            active_workers=worker_stats["active_workers"],
+            dropped_work_delta=self._status.dropped_work_delta
         )
-        policy = self._governor.evaluate(self._profile, signals, self._status)
         
-        # 3. SCHEDULING
-        work_items = self._scheduler.select_work(self._state, policy)
-        
-        self._replay.emit(TraceEvent(
-            tick=self._state.tick,
-            system="KERNEL",
-            event_type="WORK_SCHEDULED",
-            payload={"count": len(work_items), "mode": str(self._status.current_mode)}
-        ), policy)
-        
-        # 4. PACKETIZATION & CONCURRENT EXECUTION
-        # M8 Law: Map work items to compact worker packets
-        from src_v2.core.worker_protocol import WorkerPacket
+        # Policy Evaluation
+        self._current_policy = self._governor.evaluate(
+            self._profile, 
+            self._current_signals, 
+            self._status, 
+            self._state.tick
+        )
+
+    def _phase_scheduling(self) -> None:
+        """2. SCHEDULING (Work selection under policy)"""
+        self._current_work_items, dropped_count = self._scheduler.select_work(self._state, self._current_policy)
+        self._status.record_dropped_work(dropped_count)
+
+    def _phase_collection(self) -> None:
+        """3. COLLECTION (Packetization & Concurrent Execution dispatch)"""
+        from src_v2.core.worker_protocol import WorkerPacket, WorkerResult, ResultStatus
         from src_v2.engine.worker_logic import default_simulation_worker
+        from src_v2.core.protocol_validator import ProtocolValidator
+        from src_v2.core.concurrency_law import ConcurrencyLaw
         
-        packets = []
-        for item in work_items:
-            if item.work_class == WorkClass.CRITICAL and item.action_type == "ENTITY_ACT":
+        packets: List[WorkerPacket] = []
+        self._source_packets = {}
+        
+        for i, item in enumerate(self._current_work_items):
+            if item.work_class == WorkClass.CRITICAL and item.work_kind == "ENTITY_ACT" and isinstance(item.owner_id, int):
                 subject = self._state.entities.get(item.owner_id)
                 if subject:
-                    # M8 Law: Neighbor view must be restricted. 
-                    # Placeholder: Empty view for M8 proof of concept
-                    packets.append(WorkerPacket(
+                    neighbor_view = [] 
+                    packet_id = f"{self._state.tick}:{i}"
+                    packet = WorkerPacket(
+                        packet_id=packet_id,
                         tick=self._state.tick,
                         world_time=self._state.world_time,
-                        seed=self._rng.next_int(0, 1000000), # Individual seed for worker
+                        seed=self._rng.next_int(0, 1000000), 
                         subject=subject,
-                        neighbor_view={}, # To be expanded in real use
-                        action_type=item.action_type,
+                        neighbor_view=neighbor_view, 
+                        work_kind=item.work_kind,
                         payload=item.payload
-                    ))
+                    )
+                    packets.append(packet)
+                    self._source_packets[packet_id] = packet
 
-        # Dispatch via Bounded WorkerManager
+        # Pre-dispatch validation
+        ProtocolValidator.validate_packet_batch(packets)
+
+        # Execution remains inside the COLLECTION phase boundary
         worker_results = self._worker_manager.execute_batch(
             packets, default_simulation_worker
         )
-
-        # 5. RESOLUTION
-        # Map worker results back to authoritative updates
-        entity_updates: Dict[int, EntityUpdate] = {}
+        
+        # Inject priorities for commit sorting
+        self._final_results = []
         for res in worker_results:
-            entity_updates[res.entity_id] = res.update
+            source = self._source_packets.get(res.source_packet_id)
+            if source:
+                item = next((wi for wi in self._current_work_items if wi.owner_id == res.entity_id), None)
+                local_pri = item.priority if item else 0
+                
+                final_res = WorkerResult(
+                    source_packet_id=res.source_packet_id,
+                    entity_id=res.entity_id,
+                    update=res.update,
+                    status=res.status,
+                    class_priority=ConcurrencyLaw.get_class_priority(item.work_class if item else WorkClass.CRITICAL),
+                    local_priority=local_pri,
+                    compute_time_ns=res.compute_time_ns
+                )
+                self._final_results.append(final_res)
+
+        # Post-execution validation
+        ProtocolValidator.validate_result_batch(self._final_results, self._source_packets)
+
+    def _phase_resolution(self) -> None:
+        """4. RESOLUTION (Authoritative Apply)"""
+        from src_v2.core.worker_protocol import ResultStatus
+        from src_v2.core.updates import StateUpdate, EntityUpdate
+        
+        # M8 Law: Frozen Commit Key sorting
+        self._final_results.sort(key=lambda r: (r.class_priority, r.local_priority, r.entity_id))
+        
+        entity_updates: Dict[int, EntityUpdate] = {}
+        for res in self._final_results:
+            if res.status == ResultStatus.SUCCESS:
+                entity_updates[res.entity_id] = res.update
+            else:
+                entity_updates[res.entity_id] = EntityUpdate(entity_id=res.entity_id)
 
         update = StateUpdate(entity_updates=entity_updates, periodic_updates={}, work_debt_updates={})
         
         from src_v2.engine.apply import ApplyPath
         next_tick = self._state.tick + 1
-        self._state = ApplyPath.apply_generation(self._state, update, next_tick, next_world_time)
+        self._state = ApplyPath.apply_generation(self._state, update, next_tick, self._current_world_time)
+
+    def _phase_cleanup(self) -> None:
+        """5. CLEANUP (Internal metrics & State finalization)"""
+        end_time = time.perf_counter()
+        self._final_compute_ms = (end_time - self._start_perf_ts) * 1000.0
+
+    def _phase_advancement(self) -> None:
+        """6. ADVANCEMENT (Recording signals into status)"""
+        terminal_worker_stats = self._worker_manager.get_stats()
+        terminal_replay_stats = self._replay.get_stats()
         
-        # 6. PERSISTENCE
+        self._status.record_signals(PressureSignals(
+            work_debt_total=sum(self._state.work_debt.values()),
+            tick_compute_ms=self._final_compute_ms,
+            worker_utilization=terminal_worker_stats["capacity_utilization"],
+            queue_utilization=len(self._current_work_items) / self._profile.max_queue_depth if self._profile.max_queue_depth else 0.0,
+            memory_estimate_mb=self._platform_signals["rss_mb"],
+            replay_backlog_kb=terminal_replay_stats["backlog_kb"],
+            active_workers=terminal_worker_stats["active_workers"],
+            dropped_work_delta=self._status.dropped_work_delta
+        ))
+
+    def _phase_persistence(self) -> None:
+        """7. PERSISTENCE (Non-authoritative hooks: Replay, logging, metrics)"""
+        if self._status.current_mode == "SURVIVAL":
+            # In SURVIVAL mode, we might want to skip some non-authoritative work
+            # to save compute budget, but basic traces are usually kept.
+            pass
+
         from src_v2.engine.checkpoint import CanonicalStateHasher
         tick_hash = CanonicalStateHasher.get_hash(self._state)
         
-        self._replay.emit(TraceEvent(tick=self._state.tick, system="KERNEL", event_type="TICK_END", payload={"hash": tick_hash}), policy)
+        # M6/M10 Law: Uniform work_kind naming in traces
+        self._replay.emit(TraceEvent(
+            tick=self._state.tick,
+            system="KERNEL",
+            event_type="WORK_SCHEDULED",
+            payload={"count": len(self._current_work_items), "mode": str(self._status.current_mode)}
+        ), self._current_policy)
+        
+        self._replay.emit(TraceEvent(
+            tick=self._state.tick, 
+            system="KERNEL", 
+            event_type="TICK_END", 
+            payload={"hash": tick_hash}
+        ), self._current_policy)
+        
+        # Deterministic rotation check
         self._replay.on_tick_end(self._state.tick)
-        
-        # Finalize measurement
-        end_time = time.perf_counter()
-        final_compute_ms = (end_time - start_time) * 1000.0
-        
-        # Aggregate worker compute time into status metrics if needed
-        self._status.record_signals(PressureSignals(
-            work_debt_total=total_debt,
-            tick_compute_ms=final_compute_ms,
-            memory_estimate_mb=platform_signals["rss_mb"]
-        ))
 
-    def shutdown(self) -> None:
-        """Properly close the kernel with deterministic cleanup."""
-        # Clean up worker pool
+    def shutdown(self, timeout_s: float = 5.0) -> None:
+        """
+        Properly close the kernel with deterministic cleanup.
+        M7 Law: Shutdown is a bounded non-authoritative flush budget.
+        """
+        # 1. SUSPEND (Stop work arrival and producers)
+        self._stopped = True
         self._worker_manager.shutdown()
 
-        # 1. Authoritative Hash Finalization
+        # 2. FINAL AUTHORITATIVE HASH
+        # Capture this before any non-authoritative flushes potentially fail.
         from src_v2.engine.checkpoint import CanonicalStateHasher
         final_hash = CanonicalStateHasher.get_hash(self._state)
-        logger.info("M8 Graceful Shutdown: Final Auth Hash: %s", final_hash)
+        logger.info("Kernel Shutdown: Final Auth Hash: %s", final_hash)
         
-        self._replay.finalize()
+        # 3. NON-AUTHORITATIVE FLUSH (Bounded)
+        # Attempt to persist final replay chunk and manifest index.
+        try:
+            self._replay.finalize(timeout_s=timeout_s)
+        except Exception as e:
+            logger.error("Non-authoritative flush failed during shutdown: %s", e)
 
     @property
-    def state(self) -> AuthoritativeState:
-        return self._state
-    
+    def replay(self) -> ReplayManager:
+        return self._replay
+
     @property
     def status(self) -> RuntimeStatus:
         return self._status
 
     @property
-    def replay(self) -> ReplayManager:
-        return self._replay
+    def state(self) -> AuthoritativeState:
+        return self._state

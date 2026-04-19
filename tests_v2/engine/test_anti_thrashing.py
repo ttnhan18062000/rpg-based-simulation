@@ -29,21 +29,21 @@ def test_recovery_dwell_time(base_profile):
     
     # 1. Escalate to DEGRADED (Threshold is 10.0; Survival is 15.0)
     signals_hi = PressureSignals(tick_compute_ms = 12.0)
-    gov.evaluate(base_profile, signals_hi, status)
+    gov.evaluate(base_profile, signals_hi, status, 0)
     assert status.current_mode == RuntimeMode.DEGRADED
     
     # 2. Pressure drops to NORMAL level
     signals_lo = PressureSignals(tick_compute_ms = 2.0)
     
     # Evaluate for dwell-1 ticks
-    for _ in range(dwell - 1):
-        gov.evaluate(base_profile, signals_lo, status)
+    for t in range(1, dwell):
+        gov.evaluate(base_profile, signals_lo, status, t)
         # Should stay in DEGRADED due to dwell time
         assert status.current_mode == RuntimeMode.DEGRADED
         
     # 3. Final tick(s) satisfy dwell time
-    gov.evaluate(base_profile, signals_lo, status) # Dwell reaches 5
-    gov.evaluate(base_profile, signals_lo, status) # Recovery happens
+    gov.evaluate(base_profile, signals_lo, status, dwell) # Dwell reaches 5
+    gov.evaluate(base_profile, signals_lo, status, dwell + 1) # Recovery happens
     # Recovery should happen (to CONSTRAINED first, as we recovery one level at a time)
     assert status.current_mode == RuntimeMode.CONSTRAINED
 
@@ -55,16 +55,16 @@ def test_low_watermark_blocking(base_profile):
     
     # 1. Escalate to DEGRADED (trigger was 10.0)
     signals_hi = PressureSignals(tick_compute_ms = 11.0)
-    gov.evaluate(base_profile, signals_hi, status)
+    gov.evaluate(base_profile, signals_hi, status, 0)
     assert status.current_mode == RuntimeMode.DEGRADED
     
     # 2. Pressure drops to 8.0 (Below trigger 10.0, but ABOVE watermark 5.0)
     signals_mid = PressureSignals(tick_compute_ms = 8.0)
-    gov.evaluate(base_profile, signals_mid, status)
+    gov.evaluate(base_profile, signals_mid, status, 1)
     # Should stay in DEGRADED
     assert status.current_mode == RuntimeMode.DEGRADED
     
-    # 3. Pressure drops to 4.0 (Below watermark 5.0)
-    signals_lo = PressureSignals(tick_compute_ms = 4.0)
-    gov.evaluate(base_profile, signals_lo, status)
+    # 3. Pressure drops to 3.0 (Below watermark 3.5: 10.0 * 0.7 * 0.5)
+    signals_lo = PressureSignals(tick_compute_ms = 3.0)
+    gov.evaluate(base_profile, signals_lo, status, 2)
     assert status.current_mode == RuntimeMode.CONSTRAINED

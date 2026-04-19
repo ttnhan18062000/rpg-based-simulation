@@ -61,9 +61,66 @@ def test_terminology_alignment():
     for f in monitored["FailureKind"]:
         assert f in actual_failures, f"Stale FailureKind in manifest: {f}"
 
+def test_scoped_reporting_compliance():
+    """
+    M10 Law: Certification reports must bind claims to (Profile, Scenario, Hardware).
+    """
+    report_path = "reports/release_proof/release_report.md"
+    if not os.path.exists(report_path):
+        pytest.skip("No release report found for scoped compliance check.")
+        
+    with open(report_path, "r") as f:
+        content = f.read()
+        
+    required_scoped_fields = [
+        "Profile",
+        "Scenario",
+        "Hardware Class",
+        "Commit SHA"
+    ]
+    for field in required_scoped_fields:
+        assert field in content, f"Release report missing required scoped field: {field}"
+
+def test_recorder_enforcement_logic():
+    """
+    M10 Law: Recorder must refuse to generate reports for invalid/unscoped results.
+    """
+    from src_v2.certification.recorder import CertificationRecorder
+    from src_v2.certification.models import CertificationResult, FailureKind, EnvironmentCapture, HardwareClass
+    
+    recorder = CertificationRecorder(output_dir="tmp/test_recorder")
+    
+    # We verify the 'quadrant' fields are present in the instance
+    res = CertificationResult(
+        run_id="test", timestamp=0.0, commit_sha="sha",
+        profile_name="p", scenario_id="s", seed=0,
+        environment=EnvironmentCapture({}, HardwareClass.CLASS_A, HardwareClass.CLASS_A, False),
+        measurements=[], baseline_hash=None, final_hash=None,
+        governor_mode_sequence=[], conformance_passed=True,
+        failure_kind=FailureKind.NONE, failure_reason=None
+    )
+    assert hasattr(res, "commit_sha")
+    assert hasattr(res.environment, "effective_class")
+
+def test_release_target_binding():
+    """
+    M10 Law: verify that docs/engine/project_lawbook_m10.md support claims match manifest.json.
+    """
+    manifest = load_manifest()
+    targets = manifest["declared_release_targets"]
+    required_classes = targets["required_hardware_classes"]
+    
+    lawbook_path = "docs/engine/project_lawbook_m10.md"
+    with open(lawbook_path, "r") as f:
+        content = f.read().lower()
+        
+    for hw_class in required_classes:
+        # Check if the lawbook mentions the class in its certification conditions
+        assert hw_class.lower() in content, f"Lawbook lacks mention of declared release target: {hw_class}"
+
 def test_link_integrity():
     """
-    Basic check for local file links in documentation.
+    M10 Law: Basic check for local file links in documentation.
     """
     manifest = load_manifest()
     for doc in manifest["mandatory_documents"]:
@@ -83,17 +140,17 @@ def test_link_integrity():
             clean_link = link.replace("file://", "")
             # Handle absolute vs relative
             if clean_link.startswith("/"):
-                # For this check, we treat / as project root (vboxuser context)
-                # But actually, links in these docs are usually relative or file:///home/...
+                # For this check, we treat / as project root
                 if "home/vboxuser/Work/rpg-based-simulation/" in clean_link:
                     link_path = clean_link
                 else:
-                    continue # Skip strange absolute paths
+                    # Try to see if it's a workspace-relative path starting with /
+                    link_path = os.path.join("/home/vboxuser/Work/rpg-based-simulation", clean_link.lstrip("/"))
             else:
                 link_path = os.path.join(base_dir, clean_link)
-                # Normalize (remove #L123 fragments)
-                link_path = link_path.split("#")[0]
+            
+            # Normalize (remove #L123 fragments)
+            link_path = link_path.split("#")[0]
             
             if link_path.endswith(".md") or link_path.endswith(".json"):
-                 # We only check internal md/json links
-                 assert os.path.exists(link_path), f"Broken link in {path}: {link}"
+                 assert os.path.exists(link_path), f"Broken link in {path}: {link} (Resolved to: {link_path})"

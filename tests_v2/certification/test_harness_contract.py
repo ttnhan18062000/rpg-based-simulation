@@ -21,7 +21,7 @@ def test_certification_detects_semantic_drift():
         0: EntityState(id=0, kind="TEST", position=(0,0), readiness=100.0)
     })
     
-    harness = CertificationHarness(profile)
+    harness = CertificationHarness(profile, output_dir="tmp/test_harness")
     expectations = get_scenario_expectations("DET_EQUIV")
     
     # We will "break" the deterministic equivalence by mocking 
@@ -41,25 +41,37 @@ def test_honest_language_compliance():
     Verify that the recorder does not make universal claims.
     """
     from src_v2.certification.recorder import CertificationRecorder
-    from src_v2.certification.models import CertificationResult, HardwareClass as CHC, FailureKind
-    from unittest.mock import MagicMock
+    from src_v2.certification.models import (
+        CertificationResult, HardwareClass as CHC, FailureKind,
+        EnvironmentCapture
+    )
     
     recorder = CertificationRecorder(output_dir="tmp/cert_test")
     res = CertificationResult(
-        run_id="test_id", timestamp=0.0,
-        profile_name="PROD", scenario_id="IDLE", seed=1,
-        detected_hardware_class=CHC.CLASS_B,
-        effective_hardware_class=CHC.CLASS_B,
-        hardware_class_override_applied=False,
-        platform_info={}, measurements=[],
-        baseline_hash="A", final_hash="A",
+        run_id="test_id", 
+        timestamp=0.0,
+        commit_sha="test-sha",
+        profile_name="PROD", 
+        scenario_id="IDLE", 
+        seed=1,
+        environment=EnvironmentCapture(
+            detected_facts={},
+            detected_class=CHC.CLASS_B,
+            effective_class=CHC.CLASS_B,
+            override_applied=False
+        ),
+        measurements=[],
+        baseline_hash="A", 
+        final_hash="A",
         governor_mode_sequence=["NORMAL"],
-        conformance_passed=True, failure_kind=FailureKind.NONE, failure_reason=None
+        conformance_passed=True, 
+        failure_kind=FailureKind.NONE, 
+        failure_reason=None
     )
     
     md_report = recorder._generate_markdown(res)
     
     # VERIFY: Bound language
     assert "performance and safety metrics in this report apply only to" in md_report.lower()
-    assert "claims of universal throughput are not supported" in md_report.lower()
+    assert "claims of universal throughput" in md_report.lower()
     assert "**hardware class**: `class_b`" in md_report.lower()

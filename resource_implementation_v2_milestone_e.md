@@ -120,7 +120,7 @@ No new engine semantics are required for Milestone E completion.
 
 ## Task
 
-[ ] (checkbox) - [Task 1] - Audit and freeze the proof-system contract
+[x] (checkbox) - [Task 1] - Audit and freeze the proof-system contract
 
 [Task Description]
 Create the exact completion contract for certification, conformance, scenario expectations, reporting, and docs/playbook enforcement. This task turns the current certification architecture into one finished law set.
@@ -164,19 +164,22 @@ Do not leave report honesty as a cultural hope instead of a rule.
 
 [Task check list]
 
-- [ ] Freeze certification law
-- [ ] Freeze scenario expectation law
-- [ ] Freeze failure taxonomy law
-- [ ] Freeze reporting honesty law
-- [ ] Freeze docs/playbook guardrail law
-- [ ] Define explicit non-goals
+- [x] Freeze certification law
+- [x] Freeze scenario expectation law
+- [x] Freeze failure taxonomy law
+- [x] Freeze reporting honesty law
+- [x] Freeze docs/playbook guardrail law
+- [x] Define explicit non-goals
+
+[Implementation Comment]
+The Proof System Contract (ME) was published in `docs/engine/proof_system_contract_me.md`, defining the final machine-readable trust model and production-readiness gate.
 
 [Task acceptance criteria]
 The project has one exact proof-system contract that defines the finished law set for certification, reporting, and documentation guardrails.
 
 ---
 
-[ ] (checkbox) - [Task 2] - Deepen certification scenario and conformance models
+[x] (checkbox) - [Task 2] - Deepen certification scenario and conformance models
 
 [Task Description]
 Make certification evidence richer, more explicit, and more enforceable.
@@ -221,18 +224,21 @@ Do not reduce conformance to ceiling violations only.
 
 [Task check list]
 
-- [ ] Deepen scenario expectation model
-- [ ] Deepen conformance logic
-- [ ] Deepen baseline binding/equivalence logic
-- [ ] Freeze exact pass/fail reasoning
-- [ ] Document final proof model
+- [x] Deepen scenario expectation model
+- [x] Deepen conformance logic
+- [x] Deepen baseline binding/equivalence logic
+- [x] Freeze exact pass/fail reasoning
+- [x] Document final proof model
+
+[Implementation Comment]
+Scenario models were expanded to include `sampling_interval` and `allowed_failure_kinds`. Conformance evaluation now validates multi-worker equivalence and degradation-before-failure laws. **Closure Update**: Reproducibility is now strictly enforced via mandatory double-run bit-identical hash comparison.
 
 [Task acceptance criteria]
 Certification scenarios and conformance logic are explicit, complete, and capable of proving more than simple resource ceilings.
 
 ---
 
-[ ] (checkbox) - [Task 3] - Harden structured failure taxonomy and honest reporting
+[x] (checkbox) - [Task 3] - Harden structured failure taxonomy and honest reporting
 
 [Task Description]
 Make certification outputs operationally trustworthy by ensuring failures are exact and report language cannot overclaim.
@@ -271,18 +277,21 @@ Do not leave report truthfulness to manual review only.
 
 [Task check list]
 
-- [ ] Finalize explicit failure taxonomy
-- [ ] Finalize hardware-class reporting integrity
-- [ ] Finalize honest report language rules
-- [ ] Add report-language enforcement checks
-- [ ] Document final reporting law
+- [x] Finalize explicit failure taxonomy
+- [x] Finalize hardware-class reporting integrity
+- [x] Finalize honest report language rules
+- [x] Add report-language enforcement checks
+- [x] Document final reporting law
+
+[Implementation Comment]
+Final failure taxonomy using the `FAILED_*` prefix was implemented. The `CertificationRecorder` now enforces 'Honest Reporting' by binding all claims to the technical quadrant (Profile, Scenario, Hardware, SHA). **Closure Update**: Environment Capture disaggregates detected vs effective class, and proofs carry the Engine SHA provenance.
 
 [Task acceptance criteria]
 Certification failures are exact, reports are scoped and honest, and environment binding is explicit and testable.
 
 ---
 
-[ ] (checkbox) - [Task 4] - Harden docs/playbook/guardrail integrity and production-readiness gating
+[x] (checkbox) - [Task 4] - Harden docs/playbook/guardrail integrity and production-readiness gating
 
 [Task Description]
 Turn the documentation and contributor control system into a real release and maintenance gate.
@@ -336,19 +345,22 @@ Do not let contributor rules stay purely cultural.
 
 [Task check list]
 
-- [ ] Harden manifest-driven docs integrity
-- [ ] Harden terminology alignment checks
-- [ ] Add/finish extension templates
-- [ ] Harden contributor guardrails
-- [ ] Define production-readiness release gate
-- [ ] Document final lawbook/playbook rules
+- [x] Harden manifest-driven docs integrity
+- [x] Harden terminology alignment checks
+- [x] Add/finish extension templates
+- [x] Harden contributor guardrails
+- [x] Define production-readiness release gate
+- [x] Document final lawbook/playbook rules
+
+[Implementation Comment]
+`manifest.json` was hardened with `declared_release_targets`. The production gate in `test_final_gate.py` enforces documentation integrity and evidence provenance as a hard release blocker. **Closure Update**: Phase-order auditing added via `test_phase_order.py`, proving the 7-phase authoritative sequence.
 
 [Task acceptance criteria]
 Documentation integrity, contributor guardrails, and production-readiness gating are enforceable, testable, and incapable of drifting silently.
 
 ---
 
-[ ] (checkbox) - [Task 5] - Complete the proof-system test suite and final evidence gate
+[x] (checkbox) - [Task 5] - Complete the proof-system test suite and final evidence gate
 
 [Task Description]
 Close the last proof gap so the engine’s “ready” claim is evidence-backed and enforceable.
@@ -402,18 +414,21 @@ This milestone is about final evidence quality.
 
 [Task check list]
 
-- [ ] Finish certification-proof tests
-- [ ] Finish failure-taxonomy tests
-- [ ] Finish report-honesty tests
-- [ ] Finish docs/playbook integrity tests
-- [ ] Make final release gate exact and enforceable
+- [x] Finish certification-proof tests
+- [x] Finish failure-taxonomy tests
+- [x] Finish report-honesty tests
+- [x] Finish docs/playbook integrity tests
+- [x] Make final release gate exact and enforceable
+
+[Implementation Comment]
+Verified with 100% pass rate in `tests_v2/certification/test_final_gate.py` and `tests_v2/docs/test_contributor_guardrails.py`. The release gate is now fully evidence-backed.
 
 [Task acceptance criteria]
 The final proof-system layer is pinned by a complete deterministic test suite proving certification truth, reporting truth, docs/playbook integrity, and production-readiness gating.
 
 ---
 
-[ ] (checkbox) - [Task 6] - Add exact Milestone E documentation pack
+[x] (checkbox) - [Task 6] - Add exact Milestone E documentation pack
 
 [Task Description]
 Document the completed proof system so the engine’s final trust model is written down as exact law rather than inferred from code and tests.
@@ -467,13 +482,16 @@ Do not end Milestone E with code and passing tests only. The final trust model m
 
 [Task check list]
 
-- [ ] Document machine-readable certification law
-- [ ] Document scenario/conformance law
-- [ ] Document failure-taxonomy law
-- [ ] Document honest reporting law
-- [ ] Document docs/playbook guardrail law
-- [ ] Document production-readiness gate
-- [ ] Document the exact test matrix
+- [x] Document machine-readable certification law
+- [x] Document scenario/conformance law
+- [x] Document failure-taxonomy law
+- [x] Document honest reporting law
+- [x] Document docs/playbook guardrail law
+- [x] Document production-readiness gate
+- [x] Document the exact test matrix
+
+[Implementation Comment]
+The complete Milestone E documentation pack, including `proof_system_contract_me.md` and `me_test_matrix.md`, has been published to `docs/engine/`.
 
 [Task acceptance criteria]
 Milestone E has a complete exact documentation pack describing the finished proof system and the tests that freeze it.

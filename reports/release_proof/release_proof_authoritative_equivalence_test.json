@@ -1,0 +1,141 @@
+{
+  "run_id": "c2440861-f988-47ea-8397-ed90c72b1c2b",
+  "timestamp": 1776579764.6732328,
+  "commit_sha": "63ae100628b6ddcacb0dfed668ecf87c33e5610b",
+  "profile_name": "authoritative_equivalence_test",
+  "scenario_id": "DET_EQUIV",
+  "seed": 42,
+  "environment": {
+    "detected_facts": {
+      "os": "Linux",
+      "os_release": "6.17.0-22-generic",
+      "python_version": "3.13.7",
+      "cpu_count_logical": 6,
+      "cpu_count_physical": 6,
+      "ram_total_gb": 11.18,
+      "cpu_freq_mhz": 2687.998
+    },
+    "detected_class": "class_b",
+    "effective_class": "class_b",
+    "override_applied": false
+  },
+  "measurements": [
+    {
+      "tick": 0,
+      "mode": "NORMAL",
+      "memory_rss_mb": 32.30859375,
+      "tick_compute_ms": 2.771317998849554,
+      "work_debt": 0,
+      "capacity_utilization": 0.0,
+      "replay_pressure": 0.0,
+      "timestamp": 1776579764.6958244
+    },
+    {
+      "tick": 1,
+      "mode": "NORMAL",
+      "memory_rss_mb": 32.30859375,
+      "tick_compute_ms": 0.06575299994437955,
+      "work_debt": 0,
+      "capacity_utilization": 0.0,
+      "replay_pressure": 0.0,
+      "timestamp": 1776579764.695945
+    },
+    {
+      "tick": 2,
+      "mode": "NORMAL",
+      "memory_rss_mb": 32.30859375,
+      "tick_compute_ms": 0.022520998754771426,
+      "work_debt": 0,
+      "capacity_utilization": 0.0,
+      "replay_pressure": 0.0,
+      "timestamp": 1776579764.6960013
+    },
+    {
+      "tick": 3,
+      "mode": "NORMAL",
+      "memory_rss_mb": 32.30859375,
+      "tick_compute_ms": 0.023818000045139343,
+      "work_debt": 0,
+      "capacity_utilization": 0.0,
+      "replay_pressure": 0.0,
+      "timestamp": 1776579764.6960561
+    },
+    {
+      "tick": 4,
+      "mode": "NORMAL",
+      "memory_rss_mb": 32.30859375,
+      "tick_compute_ms": 0.020479001250350848,
+      "work_debt": 0,
+      "capacity_utilization": 0.0,
+      "replay_pressure": 0.0,
+      "timestamp": 1776579764.6961083
+    },
+    {
+      "tick": 5,
+      "mode": "NORMAL",
+      "memory_rss_mb": 32.30859375,
+      "tick_compute_ms": 0.02039199898717925,
+      "work_debt": 0,
+      "capacity_utilization": 0.0,
+      "replay_pressure": 0.0,
+      "timestamp": 1776579764.696158
+    },
+    {
+      "tick": 6,
+      "mode": "NORMAL",
+      "memory_rss_mb": 32.30859375,
+      "tick_compute_ms": 0.018311000530957244,
+      "work_debt": 0,
+      "capacity_utilization": 0.0,
+      "replay_pressure": 0.0,
+      "timestamp": 1776579764.6962035
+    },
+    {
+      "tick": 7,
+      "mode": "NORMAL",
+      "memory_rss_mb": 32.30859375,
+      "tick_compute_ms": 0.01690299905021675,
+      "work_debt": 0,
+      "capacity_utilization": 0.0,
+      "replay_pressure": 0.0,
+      "timestamp": 1776579764.6962476
+    },
+    {
+      "tick": 8,
+      "mode": "NORMAL",
+      "memory_rss_mb": 32.30859375,
+      "tick_compute_ms": 0.01898600021377206,
+      "work_debt": 0,
+      "capacity_utilization": 0.0,
+      "replay_pressure": 0.0,
+      "timestamp": 1776579764.6962907
+    },
+    {
+      "tick": 9,
+      "mode": "NORMAL",
+      "memory_rss_mb": 32.30859375,
+      "tick_compute_ms": 0.018934000763692893,
+      "work_debt": 0,
+      "capacity_utilization": 0.0,
+      "replay_pressure": 0.0,
+      "timestamp": 1776579764.6963363
+    }
+  ],
+  "baseline_hash": "ebf133b9f9dbbe138547eae32101375dd7ab027dbdf7c496c2edba295ce06217",
+  "final_hash": "ebf133b9f9dbbe138547eae32101375dd7ab027dbdf7c496c2edba295ce06217",
+  "governor_mode_sequence": [
+    "NORMAL",
+    "NORMAL",
+    "NORMAL",
+    "NORMAL",
+    "NORMAL",
+    "NORMAL",
+    "NORMAL",
+    "NORMAL",
+    "NORMAL",
+    "NORMAL"
+  ],
+  "conformance_passed": true,
+  "failure_kind": "none",
+  "failure_reason": "Certification PASS"
+}

@@ -1,42 +1,57 @@
 from __future__ import annotations
 
+from enum import Enum
 from dataclasses import dataclass
-from typing import Dict, Any, TYPE_CHECKING
+from typing import Dict, Any, List, Tuple, TYPE_CHECKING
 from src_v2.core.updates import EntityUpdate
 
 if TYPE_CHECKING:
     from src_v2.core.state import EntityState
 
 
+class ResultStatus(Enum):
+    SUCCESS = "success"
+    FAILURE = "failure"
+    TIMEOUT = "timeout"
+
+
 @dataclass(frozen=True, slots=True)
 class WorkerPacket:
     """
-    Law: A worker must receive a compact, bounded context.
-    M8 Core contract for thread-safe work distribution.
+    Law: A worker must receive a compact, bounded, and read-only context.
+    Tick-local deterministic identity: {tick}:{ordinal}
     """
+    packet_id: str
     tick: int
     world_time: int
     seed: int
     
-    # Target Information
+    # Target Information (Read-Only Snapshot)
     subject: EntityState
     
-    # Restricted View (Neighbors context)
-    # M8 Recommendation: Direct interaction neighborhood only.
-    neighbor_view: Dict[int, EntityState]
+    # Canonical Context (Sorted by EntityID)
+    # M8 Law: Neighbor context must be deterministic regardless of dictionary hash.
+    neighbor_view: List[Tuple[int, EntityState]]
     
-    # Work Type details (copied from WorkItem for convenience)
-    action_type: str
+    # Work Type details
+    work_kind: str
     payload: Dict[str, Any]
 
 
 @dataclass(frozen=True, slots=True)
 class WorkerResult:
     """
-    Law: Workers return compact authoritative deltas, not world modifications.
+    Law: Workers return compact authoritative deltas linked to their source packet.
+    M8 Law (Option A): One result per entity per tick.
     """
+    source_packet_id: str
     entity_id: int
     update: EntityUpdate
+    status: ResultStatus = ResultStatus.SUCCESS
+    
+    # Sorting keys for frozen commit law
+    class_priority: int = 0
+    local_priority: int = 0
     
     # Metadata for verification/replay
     compute_time_ns: int = 0

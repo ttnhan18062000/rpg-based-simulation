@@ -28,16 +28,14 @@ class ResourceGovernor:
         self, 
         profile: RuntimeProfile, 
         signals: PressureSignals, 
-        status: RuntimeStatus
+        status: RuntimeStatus,
+        current_tick: int
     ) -> GovernorPolicy:
         """
         Determine the next operational mode and return the derived policy.
         Implements Escalation (Immediate) and Recovery (Gated).
         """
-        # 1. Capture signals
-        status.record_signals(signals)
-        
-        # 2. Determine raw indicated mode based on thresholds
+        # Indicated mode based on input signals
         indicated_mode = self._get_indicated_mode(profile, signals)
         
         # 3. Transition Logic
@@ -45,12 +43,13 @@ class ResourceGovernor:
         
         if indicated_mode > current_mode:
             # Escalation Rule: Immediate
-            status.reset_dwell(indicated_mode)
+            status.reset_dwell(indicated_mode, current_tick)
         elif indicated_mode < current_mode:
             # Recovery Rule: Gated by Low-Watermark and Dwell Time
             if self._can_recover(profile, signals, status):
                 # Transition down only one level at a time for stability
-                status.reset_dwell(RuntimeMode(current_mode - 1))
+                parent_mode = RuntimeMode(current_mode - 1)
+                status.reset_dwell(parent_mode, current_tick)
             else:
                 status.increment_dwell()
         else:
@@ -66,25 +65,32 @@ class ResourceGovernor:
     ) -> RuntimeMode:
         """
         Map pressure signals to the indicated severity level.
+        M7 Law: Evaluate relative to profile limits.
         """
-        # SURVIVAL (3): Critical overload
+        # 1. SURVIVAL (3): Critical overload
         if signals.work_debt_total >= profile.max_work_debt:
             return RuntimeMode.SURVIVAL
         if signals.tick_compute_ms >= profile.max_tick_budget_ms * 1.5:
             return RuntimeMode.SURVIVAL
+        if signals.memory_estimate_mb >= profile.max_ram_mb:
+            return RuntimeMode.SURVIVAL
         
-        # DEGRADED (2): High pressure
+        # 2. DEGRADED (2): High pressure
         if signals.work_debt_total >= profile.max_work_debt * 0.5:
             return RuntimeMode.DEGRADED
         if signals.tick_compute_ms >= profile.max_tick_budget_ms:
             return RuntimeMode.DEGRADED
-        if signals.queue_utilization >= 0.9:
+        if signals.worker_utilization >= 0.9 or signals.queue_utilization >= 0.9:
+            return RuntimeMode.DEGRADED
+        if profile.max_replay_buffer_kb > 0 and signals.replay_backlog_kb >= profile.max_replay_buffer_kb * 0.9:
             return RuntimeMode.DEGRADED
             
-        # CONSTRAINED (1): Early pressure
+        # 3. CONSTRAINED (1): Early pressure
         if signals.tick_compute_ms >= profile.max_tick_budget_ms * 0.7:
             return RuntimeMode.CONSTRAINED
-        if signals.queue_utilization >= 0.7:
+        if signals.worker_utilization >= 0.7 or signals.queue_utilization >= 0.7:
+            return RuntimeMode.CONSTRAINED
+        if signals.memory_estimate_mb >= profile.max_ram_mb * profile.degradation_threshold_ram:
             return RuntimeMode.CONSTRAINED
             
         return RuntimeMode.NORMAL
@@ -106,18 +112,27 @@ class ResourceGovernor:
             return False
             
         # 2. Low-Watermark Check
-        # Signals must be significantly below the thresholds of the *current* mode's triggers
-        # to prevent rapid oscillation back and forth.
+        # Signals must be below current mode's thresholds * watermark
+        # Example: to recover from CONSTRAINED (0.7ms), signals must be < 0.56ms (0.7 * 0.8)
         
-        recovery_limit_debt = profile.max_work_debt * self._recovery_watermark
-        recovery_limit_ms = profile.max_tick_budget_ms * self._recovery_watermark
-        recovery_limit_queue = 0.7 * self._recovery_watermark # 0.7 is constrained threshold
+        watermark = self._recovery_watermark
         
-        if signals.work_debt_total > recovery_limit_debt:
-            return False
+        # Thresholds derived from NORMAL trigger points (CONSTRAINED triggers)
+        # Note: We use the *lowest* escalation threshold as the recovery baseline.
+        recovery_limit_ms = (profile.max_tick_budget_ms * 0.7) * watermark
+        recovery_limit_capacity = 0.7 * watermark
+        recovery_limit_ram = (profile.max_ram_mb * profile.degradation_threshold_ram) * watermark
+        
+        # Work debt recovery is usually faster, 80% of current mode's trigger
+        recovery_limit_debt = (profile.max_work_debt * 0.5) * watermark
+        
         if signals.tick_compute_ms > recovery_limit_ms:
             return False
-        if signals.queue_utilization > recovery_limit_queue:
+        if signals.worker_utilization > recovery_limit_capacity or signals.queue_utilization > recovery_limit_capacity:
+            return False
+        if signals.memory_estimate_mb > recovery_limit_ram:
+            return False
+        if signals.work_debt_total > recovery_limit_debt:
             return False
             
         return True
