@@ -1,7 +1,7 @@
 {
-  "run_id": "596bc699-5f9b-40be-86a9-fa16179e56d3",
-  "timestamp": 1776594842.5781758,
-  "commit_sha": "252a1e2495872e807075a2446a51675543d56b7b",
+  "run_id": "00ab085c-7efe-4247-9284-2f7d4a08d7b0",
+  "timestamp": 1776649617.1291416,
+  "commit_sha": "e47940e793c9196b4ddb314af215ffd15c78fbf0",
   "profile_name": "NORMAL_ONLY",
   "scenario_id": "RAM_PRESSURE",
   "seed": 42,
@@ -23,23 +23,24 @@
   },
   "measurements": [
     {
-      "tick": 0,
+      "tick": 5,
       "mode": "NORMAL",
-      "memory_rss_mb": 45.34375,
+      "memory_rss_mb": 45.98046875,
       "memory_trend_mb_per_tick": 0.0,
-      "tick_compute_ms": 0.050328002544119954,
-      "tick_compute_ms_avg": 0.050328002544119954,
+      "tick_compute_ms": 0.023884,
+      "tick_compute_ms_avg": 0.029325,
       "work_debt": 0,
       "worker_utilization": 0.0,
       "queue_utilization": 0.0,
       "replay_pressure": 0.0,
       "active_workers": 0,
-      "timestamp": 1776594842.58156
+      "timestamp": 1776649617.1307163
     }
   ],
   "baseline_hash": "08ddf9a5ee5de3bccd224121a54cf781c2bedaa79876418d88e4f3cfe9c7c8c1",
   "final_hash": "08ddf9a5ee5de3bccd224121a54cf781c2bedaa79876418d88e4f3cfe9c7c8c1",
   "governor_mode_sequence": [
+    "NORMAL",
     "NORMAL",
     "NORMAL",
     "NORMAL",

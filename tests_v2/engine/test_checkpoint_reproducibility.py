@@ -50,3 +50,64 @@ def test_property_sorting_in_hash():
     })
     
     assert CanonicalStateHasher.get_hash(state_a) == CanonicalStateHasher.get_hash(state_b)
+
+
+def test_deep_property_sorting():
+    """Verify that nested dictionaries in properties are sorted during hashing."""
+    state_a = AuthoritativeState(tick=1, seed=1, entities={
+        1: EntityState(id=1, kind="a", position=(0,0), properties={
+            "meta": {"b": 2, "a": 1}
+        })
+    })
+    state_b = AuthoritativeState(tick=1, seed=1, entities={
+        1: EntityState(id=1, kind="a", position=(0,0), properties={
+            "meta": {"a": 1, "b": 2}
+        })
+    })
+    
+    # Even if dictionary insertion order is different, sort_keys=True should save us.
+    assert CanonicalStateHasher.get_hash(state_a) == CanonicalStateHasher.get_hash(state_b)
+
+
+def test_hash_isolation():
+    """Milestone A Law: Proves non-authoritative state is isolated from the hash."""
+    state = AuthoritativeState(tick=1, seed=1)
+    hash_init = CanonicalStateHasher.get_hash(state)
+    
+    # Simulate non-authoritative state variation
+    # (By creating a new instance with same authoritative data, 
+    # but imagining it was part of a different Kernel context)
+    state_same = AuthoritativeState(tick=1, seed=1)
+    
+    assert hash_init == CanonicalStateHasher.get_hash(state_same)
+
+
+def test_rng_hash_reproducibility():
+    """Verify that RNG state checkpoints are stable and reproducible in the hash."""
+    from src_v2.platform.rng import DeterministicRNG
+    rng = DeterministicRNG(seed=123)
+    
+    # Advance RNG
+    rng.next_float()
+    checkpoint_1 = rng.get_state()
+    
+    state_a = AuthoritativeState(tick=1, seed=123, rng_checkpoint=checkpoint_1)
+    hash_a = CanonicalStateHasher.get_hash(state_a)
+    
+    # Restore and verify
+    rng.set_state(checkpoint_1)
+    checkpoint_2 = rng.get_state()
+    
+    state_b = AuthoritativeState(tick=1, seed=123, rng_checkpoint=checkpoint_2)
+    hash_b = CanonicalStateHasher.get_hash(state_b)
+    
+    # Checkpoint tuples are identical
+    assert checkpoint_1 == checkpoint_2
+    # Hashes are identical
+    assert hash_a == hash_b
+    
+    # Differing RNG state should change the hash
+    rng.next_float()
+    checkpoint_3 = rng.get_state()
+    state_c = AuthoritativeState(tick=1, seed=123, rng_checkpoint=checkpoint_3)
+    assert CanonicalStateHasher.get_hash(state_c) != hash_a

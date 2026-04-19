@@ -3,7 +3,23 @@
     "default": "class_b",
     "required_profiles": ["authoritative_equivalence_test", "standard_gaming_profile"],
     "required_hardware_classes": ["class_b"],
-    "required_scenarios": ["IDLE_CLEAN", "DET_EQUIV"]
+    "required_scenarios": [
+      "IDLE_CLEAN", 
+      "DET_EQUIV", 
+      "RAM_PRESSURE", 
+      "TICK_BUDGET_PRESSURE", 
+      "QUEUE_INFLIGHT_PRESSURE", 
+      "WORK_DEBT_BUILDUP", 
+      "REPLAY_PRESSURE", 
+      "DEGRADED_NORMAL_RECOVERY", 
+      "SURVIVAL_NORMAL_RECOVERY", 
+      "STARTUP_VALIDATION", 
+      "REPLAY_OVERFLOW_SURVIVAL", 
+      "SHUTDOWN_TIMEOUT_SURVIVAL", 
+      "WORKER_FAILURE_FALLBACK", 
+      "LOCAL_CONCURRENT_EQUIV", 
+      "MISSING_SCENARIO_BLOCK"
+    ]
   },
   "mandatory_documents": [
     {
@@ -43,7 +59,7 @@
       "required_headers": ["Purpose", "Conformance Proof Taxonomy", "Hardware Classification Rules"]
     },
     {
-      "path": "docs/engine/proof_system_contract_me.md",
+      "path": "docs/engine/certification_contract_me.md",
       "required_headers": ["Purpose", "Conformance Law", "Failure Taxonomy Law"]
     },
     {
@@ -68,8 +84,22 @@
   "monitored_terminology": {
     "RuntimeMode": ["NORMAL", "CONSTRAINED", "DEGRADED", "SURVIVAL"],
     "HardwareClass": ["class_a", "class_b", "class_c"],
-    "FailureKind": ["FAILED_ENVELOPE", "FAILED_SEMANTIC_DRIFT", "FAILED_RECOVERY_TIMEOUT", "FAILED_TELEMETRY_GAP"],
-    "ReplayMode": ["LIVE", "BUFFERED", "DISABLED"],
-    "RetentionPolicy": ["DROP_OLDEST", "PAUSE_PRODUCER", "TRUNCATE"]
+    "FailureKind": [
+      "FAILED_ENVELOPE", 
+      "FAILED_DEGRADATION_SEQUENCE",
+      "FAILED_RECOVERY_TIMEOUT", 
+      "FAILED_SEMANTIC_DRIFT", 
+      "FAILED_TELEMETRY_GAP",
+      "FAILED_REPORTING_INCOMPLETE",
+      "FAILED_INVALID_SCENARIO",
+      "FAILED_ENVIRONMENT_MISMATCH",
+      "FAILED_REPLAY_PERSISTENCE",
+      "FAILED_MANIFEST_INCOMPLETE",
+      "FAILED_MISSING_SCENARIO",
+      "FAILED_WORKER_PROPAGATION",
+      "FAILED_LIFECYCLE"
+    ],
+    "ReplayMode": ["DEBUG_WINDOWED", "FORENSIC_SHORT_RUN", "OFF"],
+    "RetentionPolicy": ["EVICT_OLDEST", "TRUNCATE_NEWEST"]
   }
 }

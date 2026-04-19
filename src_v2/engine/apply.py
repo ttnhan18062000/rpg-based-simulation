@@ -12,6 +12,7 @@ if TYPE_CHECKING:
 class ApplyPath:
     """
     The singular authority for state transitions.
+    Milestone A Law: apply_generation is the ONLY entry point for AuthoritativeState mutation.
     Implements generation-based state application (immutable transitions).
     """
 
@@ -24,6 +25,7 @@ class ApplyPath:
     ) -> AuthoritativeState:
         """
         Produce a new state generation from the prior state and updates.
+        Invariant: All input collections MUST be sorted before application.
         """
         # 1. Update entities
         new_entities = dict(prior_state.entities)
@@ -55,7 +57,9 @@ class ApplyPath:
         new_debt = dict(prior_state.work_debt)
         sorted_debt_keys = sorted(update.work_debt_updates.keys())
         for d_key in sorted_debt_keys:
-            new_debt[d_key] = update.work_debt_updates[d_key]
+            delta = update.work_debt_updates[d_key]
+            # M4 Law: Debt should be clamped to absolute zero
+            new_debt[d_key] = max(0, new_debt.get(d_key, 0) + delta)
             
         # 5. Create new generation
         return replace(
@@ -71,9 +75,16 @@ class ApplyPath:
 
     @staticmethod
     def _apply_entity_update(entity: EntityState, update: EntityUpdate) -> EntityState:
-        """Apply updates to a single entity, producing a new EntityState instance."""
+        """
+        Apply updates to a single entity, producing a new EntityState instance.
+        Law: This MUST produce a new instance to ensure prior-generation purity.
+        """
+        # Shallow clone of properties to prevent immediate aliasing.
+        # Deep nesting in properties is highly discouraged in Milestone A baseline.
+        # We use dict() which is sufficient for non-nested properties.
         new_properties = dict(entity.properties)
-        new_properties.update(update.property_updates)
+        if update.property_updates:
+            new_properties.update(update.property_updates)
         
         return replace(
             entity,

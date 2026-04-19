@@ -21,11 +21,12 @@ def test_harness_catches_ram_violation():
     
     state = AuthoritativeState(tick=0, seed=42, entities={
         i: EntityState(id=i, kind="TEST", position=(0,0), readiness=100.0)
-        for i in range(100) # 100 entities in 1MB limit should fail
+        for i in range(1, 101) # 100 entities in 1MB limit should fail
     })
     
     harness = CertificationHarness(profile)
-    expectations = get_scenario_expectations("IDLE_CLEAN")
+    from dataclasses import replace
+    expectations = replace(get_scenario_expectations("IDLE_CLEAN"), required_sampling_interval_ticks=1)
     
     result = harness.run_scenario("IDLE_CLEAN", state, expectations, ticks=1)
     

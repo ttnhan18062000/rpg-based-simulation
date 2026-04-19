@@ -31,16 +31,20 @@ class RuntimeStatus:
 
     def record_signals(self, signals: PressureSignals) -> None:
         """Append fresh signals and calculate trends."""
-        # 1. Calculate computed trending fields
+        # 1. Calculate computed trending fields (Law: 5-tick rolling window)
         avg_compute = signals.tick_compute_ms
         memory_trend = 0.0
         
-        if self.signal_history:
-            prev = self.signal_history[-1]
+        # Access history for windowed math
+        history_list = list(self.signal_history)
+        
+        if history_list:
+            prev = history_list[-1]
             memory_trend = signals.memory_estimate_mb - prev.memory_estimate_mb
             
-            # Simple window-based average for CPU
-            all_compute = [s.tick_compute_ms for s in self.signal_history] + [signals.tick_compute_ms]
+            # Rolling average for CPU (Last 5 samples including current)
+            window = history_list[-4:] + [signals]
+            all_compute = [s.tick_compute_ms for s in window]
             avg_compute = sum(all_compute) / len(all_compute)
             
         # 2. Enrich signals with calculated trends
@@ -73,3 +77,8 @@ class RuntimeStatus:
         self.current_mode = new_mode
         self.mode_dwell_ticks = 0
         self.last_transition_tick = current_tick
+
+    def get_recent_history(self, count: int) -> List[PressureSignals]:
+        """Return the last N recorded signal sets."""
+        history = list(self.signal_history)
+        return history[-count:] if count > 0 else []

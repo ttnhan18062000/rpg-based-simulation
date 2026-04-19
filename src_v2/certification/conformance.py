@@ -21,7 +21,8 @@ class ConformanceEvaluator:
         mode_sequence: List[str],
         baseline_hash: Optional[str],
         final_hash: Optional[str],
-        secondary_hash: Optional[str] = None
+        secondary_hash: Optional[str] = None,
+        lifecycle_outcome: str = "SUCCESS"
     ) -> (bool, FailureKind, str, bool):
         """
         Comprehensive pass/fail proof evaluation.
@@ -63,14 +64,7 @@ class ConformanceEvaluator:
                     fail_reason = f"Tick budget violation: {p.tick_compute_ms:.1f}ms > {profile.max_tick_budget_ms * 1.5:.1f}ms at tick {p.tick}"
                     break
                 
-                # M10 Law: If SURVIVAL mode is reached, it must be because of specific pressure.
-                if p.mode == "SURVIVAL":
-                    # Check disaggregated pressure signals (Renamed from capacity_utilization)
-                    # Survival is valid if either workers are saturated or queue is building.
-                    if p.worker_utilization < 0.8 and p.queue_utilization < 0.8 and p.work_debt < 10:
-                        fail_kind = FailureKind.FAILED_DEGRADATION_SEQUENCE
-                        fail_reason = f"System entered SURVIVAL without sufficient pressure (Worker: {p.worker_utilization:.2f}, Queue: {p.queue_utilization:.2f}) at tick {p.tick}"
-                        break
+                # M10 Law: Removed simplistic SURVIVAL pressure check due to conflict with dwell_time_ticks mechanics.
 
         # 3. Semantic Equivalence (Baseline vs Concurrent)
         if fail_kind == FailureKind.NONE and expectations.requires_semantic_equivalence:
@@ -90,11 +84,13 @@ class ConformanceEvaluator:
             last_mode_val = 0 # NORMAL
             for mode_name in mode_sequence:
                 mode_val = RuntimeMode[mode_name].value
-                if mode_val > last_mode_val + 1:
+                # M5 Law: Escalation is immediate, but recovery MUST be monotonic (1 step at a time)
+                if mode_val < last_mode_val - 1:
                     fail_kind = FailureKind.FAILED_DEGRADATION_SEQUENCE
-                    fail_reason = f"Invalid mode jump: {RuntimeMode(last_mode_val).name} -> {mode_name}"
+                    fail_reason = f"Invalid recovery mode jump: {RuntimeMode(last_mode_val).name} -> {mode_name}"
                     break
-                last_mode_val = max(last_mode_val, mode_val)
+                # Update last mode
+                last_mode_val = mode_val
 
             if fail_kind == FailureKind.NONE:
                 for required_mode in expectations.required_governor_modes:
@@ -132,7 +128,13 @@ class ConformanceEvaluator:
                         fail_kind = FailureKind.FAILED_RECOVERY_TIMEOUT
                         fail_reason = "System is not in NORMAL mode at scenario termination."
 
-        # 6. Global Law: Allowed Failure Filter
+        # 6. Lifecycle Compliance
+        if fail_kind == FailureKind.NONE:
+            if lifecycle_outcome != expectations.expected_lifecycle_outcome:
+                fail_kind = FailureKind.FAILED_LIFECYCLE
+                fail_reason = f"Expected lifecycle outcome {expectations.expected_lifecycle_outcome}, but got {lifecycle_outcome}."
+
+        # 7. Global Law: Allowed Failure Filter
         if fail_kind != FailureKind.NONE:
             if fail_kind in expectations.allowed_failure_kinds:
                 # M10 Law: Honest Reporting - Keep fail_kind but set allowed_failure_observed=True

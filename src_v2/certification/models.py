@@ -21,6 +21,11 @@ class FailureKind(str, Enum):
     FAILED_REPORTING_INCOMPLETE = "failed_reporting_incomplete"
     FAILED_INVALID_SCENARIO = "failed_invalid_scenario"
     FAILED_ENVIRONMENT_MISMATCH = "failed_environment_mismatch"
+    FAILED_REPLAY_PERSISTENCE = "failed_replay_persistence"
+    FAILED_MANIFEST_INCOMPLETE = "failed_manifest_incomplete"
+    FAILED_MISSING_SCENARIO = "failed_missing_scenario"
+    FAILED_WORKER_PROPAGATION = "failed_worker_propagation"
+    FAILED_LIFECYCLE = "failed_lifecycle"
 
 
 class HardwareClass(str, Enum):
@@ -58,6 +63,11 @@ class ScenarioExpectations:
     required_sampling_interval_ticks: int = 10
     allowed_failure_kinds: List[FailureKind] = field(default_factory=lambda: [FailureKind.NONE])
     reproducibility_required: bool = True
+    expected_lifecycle_outcome: str = "SUCCESS"
+    shutdown_timeout_s: float = 5.0
+    required_artifacts: List[str] = field(default_factory=list)
+    allowed_execution_modes: List[str] = field(default_factory=lambda: ["local", "concurrent"])
+    allowed_profiles: List[str] = field(default_factory=lambda: ["standard_gaming_profile"])
 
 
 @dataclass(frozen=True, slots=True)

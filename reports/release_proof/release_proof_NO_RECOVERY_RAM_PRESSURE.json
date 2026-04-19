@@ -1,7 +1,7 @@
 {
-  "run_id": "6502a587-e7e6-44cd-9dc3-3a328b076d82",
-  "timestamp": 1776594842.6761122,
-  "commit_sha": "252a1e2495872e807075a2446a51675543d56b7b",
+  "run_id": "8d59771b-1d85-442c-b64a-07a2d4accaf2",
+  "timestamp": 1776649617.1829717,
+  "commit_sha": "e47940e793c9196b4ddb314af215ffd15c78fbf0",
   "profile_name": "NO_RECOVERY",
   "scenario_id": "RAM_PRESSURE",
   "seed": 42,
@@ -23,37 +23,38 @@
   },
   "measurements": [
     {
-      "tick": 0,
-      "mode": "NORMAL",
-      "memory_rss_mb": 45.359375,
+      "tick": 5,
+      "mode": "CONSTRAINED",
+      "memory_rss_mb": 46.12109375,
       "memory_trend_mb_per_tick": 0.0,
-      "tick_compute_ms": 0.08765000166022219,
-      "tick_compute_ms_avg": 0.08765000166022219,
+      "tick_compute_ms": 0.024122,
+      "tick_compute_ms_avg": 0.0376058,
       "work_debt": 0,
       "worker_utilization": 0.0,
       "queue_utilization": 0.0,
       "replay_pressure": 0.0,
       "active_workers": 0,
-      "timestamp": 1776594842.678295
+      "timestamp": 1776649617.1841974
     },
     {
-      "tick": 5,
+      "tick": 10,
       "mode": "DEGRADED",
-      "memory_rss_mb": 45.359375,
+      "memory_rss_mb": 46.12109375,
       "memory_trend_mb_per_tick": 0.0,
-      "tick_compute_ms": 0.02929900074377656,
-      "tick_compute_ms_avg": 0.04479533466413462,
+      "tick_compute_ms": 0.049139,
+      "tick_compute_ms_avg": 0.028771199999999997,
       "work_debt": 0,
       "worker_utilization": 0.0,
       "queue_utilization": 0.0,
       "replay_pressure": 0.0,
       "active_workers": 0,
-      "timestamp": 1776594842.678882
+      "timestamp": 1776649617.184443
     }
   ],
   "baseline_hash": "cc5710a3af92eefc789b92d5655501c7e5bed2c199102073a6bf75132900df65",
   "final_hash": "cc5710a3af92eefc789b92d5655501c7e5bed2c199102073a6bf75132900df65",
   "governor_mode_sequence": [
+    "NORMAL",
     "NORMAL",
     "NORMAL",
     "NORMAL",

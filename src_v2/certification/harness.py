@@ -16,6 +16,7 @@ from src_v2.certification.models import (
 )
 from src_v2.certification.hardware import HardwareClassifier
 from src_v2.certification.conformance import ConformanceEvaluator
+from src_v2.certification.recorder import CertificationRecorder
 
 logger = logging.getLogger(__name__)
 
@@ -40,6 +41,9 @@ class CertificationHarness:
         self._detected_class = HardwareClassifier.detect_class()
         self._effective_class = override_class or self._detected_class
         self._override_applied = override_class is not None
+        
+        # M10 Law: Initialize the authoritative recorder
+        self._recorder = CertificationRecorder(output_dir)
         
         # M10 Law: Commit Provenance
         self._commit_sha = self._get_current_sha()
@@ -67,16 +71,25 @@ class CertificationHarness:
         run_id = str(uuid.uuid4())
         start_ts = time.time()
         
-        # 1. Establish Baseline (For semantic equivalence)
-        baseline_hash = self._get_baseline_hash(initial_state, ticks)
+        from src_v2.certification.models import EnvironmentCapture, MeasurementPoint, CertificationResult
+        from src_v2.engine.kernel import Kernel
+        from src_v2.platform.rng import DeterministicRNG
+        from src_v2.certification.conformance import ConformanceEvaluator
+        from src_v2.engine.checkpoint import CanonicalStateHasher
         
-        # 2. Run Main Certification (Run 1)
+        start_ts = time.time()
         measurements: List[MeasurementPoint] = []
-        mode_sequence: List[str] = []
         
+        # 1. Reproducibility Check (Run 1)
+        baseline_hash = self._get_baseline_hash(initial_state, ticks)
         kernel = Kernel(self._profile, initial_state, DeterministicRNG(initial_state.seed))
         
-        for t in range(ticks):
+        # M10 Law: Boot state must be captured before tick mutations
+        mode_sequence = [kernel.status.current_mode.name]
+        
+        # 2. RUN (Subject Execution)
+        # Note: We capture measurements during this loop.
+        for t in range(1, ticks + 1):
             kernel.tick_once()
             
             # M10 Law: required_sampling_interval_ticks enforcement
@@ -84,7 +97,8 @@ class CertificationHarness:
                 snapshot = kernel.status.signal_history[-1] if kernel.status.signal_history else None
                 if snapshot:
                     # M10 Law: Capture TRUTHFUL signals
-                    replay_stats = kernel.replay.get_stats()
+                    # We access internal stats for certification-level precision
+                    replay_stats = kernel._replay.get_stats()
                     measurements.append(MeasurementPoint(
                         tick=t,
                         mode=kernel.status.current_mode.name,
@@ -101,10 +115,13 @@ class CertificationHarness:
             
             mode_sequence.append(kernel.status.current_mode.name)
 
-        from src_v2.engine.checkpoint import CanonicalStateHasher
-        final_hash = CanonicalStateHasher.get_hash(kernel.state)
+        # 3. FINALIZATION (Lifecycle Truth Propagation)
+        # M7/M10 Law: Derive lifecycle result from real runtime shutdown.
+        shutdown_res = kernel.shutdown(timeout_s=expectations.shutdown_timeout_s)
+        final_hash = shutdown_res.final_hash
+        lifecycle_outcome = shutdown_res.overall_outcome.value
         
-        # 3. Reproducibility Check (Run 2)
+        # 4. Reproducibility Check (Run 2)
         secondary_hash = None
         if expectations.reproducibility_required:
             logger.info(f"Scenario {scenario_id}: executing 2nd run for reproducibility proof.")
@@ -112,13 +129,18 @@ class CertificationHarness:
             kernel2 = Kernel(self._profile, initial_state, DeterministicRNG(initial_state.seed))
             for _ in range(ticks):
                 kernel2.tick_once()
+            # We don't necessarily need a clean shutdown for the 2nd run's hash,
+            # but we use the state hash directly for performance.
+            from src_v2.engine.checkpoint import CanonicalStateHasher
             secondary_hash = CanonicalStateHasher.get_hash(kernel2.state)
 
-        # 4. Evaluate Conformance
+        # 5. Evaluate Conformance
+            
         passed, fail_kind, fail_reason, allowed_failure_observed = ConformanceEvaluator.evaluate(
             self._profile, expectations, measurements, 
             mode_sequence, baseline_hash, final_hash,
-            secondary_hash=secondary_hash
+            secondary_hash=secondary_hash,
+            lifecycle_outcome=lifecycle_outcome
         )
         
         # 5. Construct Result
@@ -154,56 +176,19 @@ class CertificationHarness:
 
     def _persist_proof_bundle(self, result: CertificationResult):
         """Save evidence to the deterministic output directory."""
-        self._output_dir.mkdir(parents=True, exist_ok=True)
-        
-        # A. Machine-Readable JSON
-        json_path = self._output_dir / f"release_proof_{result.profile_name}_{result.scenario_id}.json"
-        with open(json_path, "w") as f:
-            f.write(result.to_json())
+        # 1. Authoritative Recording (M10 Law)
+        # This handles JSON persistence and human-readable MD generation.
+        self._recorder.record(result)
             
-        # B. Manifest Snapshot (M10 Alignment)
+        # 2. Manifest Snapshot (M10 Alignment)
         manifest_path = Path("docs/engine/manifest.json")
         if manifest_path.exists():
             snapshot_path = self._output_dir / "manifest_snapshot.json"
             with open(manifest_path, "r") as src, open(snapshot_path, "w") as dst:
                 dst.write(src.read())
             
-        # C. Human-Readable Scoped Report
-        report_path = self._output_dir / "release_report.md"
-        with open(report_path, "w") as f:
-            f.write(self._generate_scoped_report(result))
-            
         logger.info(f"Proof bundle persisted to {self._output_dir}")
 
-    def _generate_scoped_report(self, result: CertificationResult) -> str:
-        """M10 Law: Scoped reporting model."""
-        outcome = "PASS" if result.conformance_passed else f"FAIL [{result.failure_kind}]"
-        
-        return f"""# Certification Report: {result.scenario_id}
-## Status: {outcome}
-
-### Scoped Metadata (M10 Honest Reporting Quadrant)
-- **Profile**: {result.profile_name}
-- **Scenario**: {result.scenario_id}
-- **Hardware Class**: {result.environment.effective_class.name}
-- **Override Status**: {result.environment.override_applied}
-- **Commit SHA**: {result.commit_sha}
-
-### Environment Capture
-- Detected HW: {result.environment.detected_class.name}
-- Platform: {result.environment.detected_facts.get('system', 'unknown')}
-
-### Conformance Outcome
-- **Success**: {result.conformance_passed}
-- **Failure Kind**: {result.failure_kind.name}
-- **Reason**: {result.failure_reason or "N/A"}
-
-### Evidence
-- **Ticks**: {len(result.governor_mode_sequence)}
-- **Measurements**: {len(result.measurements)}
-- **Baseline Hash**: `{result.baseline_hash}`
-- **Final Hash**:    `{result.final_hash}`
-"""
 
     def _get_baseline_hash(self, state: AuthoritativeState, ticks: int) -> str:
         """Establish source of truth via deterministic sequential execution."""

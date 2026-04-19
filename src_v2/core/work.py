@@ -22,6 +22,7 @@ class WorkItem:
     A discrete unit of work requested from the kernel.
     """
     owner_id: int | str   # Entity ID or Subsystem Name
+    work_id: str          # Unique work identifier (e.g. tick:entity:kind)
     work_class: WorkClass
     
     # Payload for execution (system-specific)

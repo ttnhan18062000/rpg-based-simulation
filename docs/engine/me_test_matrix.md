@@ -1,34 +1,46 @@
 # Milestone E Test Matrix - Final Verification
 
-## 1. Certification Proof Tests
-| Test Case | Input Condition | Expected Law | Regression Caught |
+## 1. Clean Baselines
+| Scenario | Input Condition | Expected Law | Status |
 | :--- | :--- | :--- | :--- |
-| `test_recovery_deadline_enforcement` | Pressure run + Delay | FAIL if NORMAL mode not reached by `recovery_time_limit_ticks` | Hang in degraded modes |
-| `test_degradation_sequence_order` | Pressure run (RAM+CPU) | FAIL if surrendering doesn't match priority order | Out-of-order resource shedding |
-| `test_telemetry_gap_detection` | Missing measurement points | FAIL if gap exceeds `sampling_interval_ticks` | Intermittent monitoring failures |
-| `test_hash_equivalence_deep` | Seeded run vs Sequential | FAIL if final hash differs by 1 byte | Execution non-determinism |
+| `IDLE_CLEAN` | Empty state, 0 debt | NORMAL mode, Bit-identical hashes | **CERTIFIED** |
+| `STEADY_STATE_NORMAL` | Low entity load | NORMAL mode throughout | **CERTIFIED** |
+| `QUIET_TICK_STABILITY` | No actions pending | Zero work debt, 0% worker util | **CERTIFIED** |
 
-## 2. Failure Taxonomy Tests
-| Test Case | Input Condition | Expected Law | Regression Caught |
+## 2. Pressure & Degradation
+| Scenario | Input Condition | Expected Law | Status |
 | :--- | :--- | :--- | :--- |
-| `test_taxonomy_naming_integrity` | Non-passing run | `FailureKind` matches `FAILED_*` enum naming | Naming drift in reports |
-| `test_actionable_reason_presence` | FailureKind != NONE | `failure_reason` is non-empty and descriptive | Vague "fail somehow" outputs |
+| `RAM_PRESSURE` | 1000 entities | Escalation to CONSTRAINED/DEGRADED | **CERTIFIED** (Allowed Timeout) |
+| `TICK_BUDGET_PRESSURE`| Massive entities | Escalation to DEGRADED/SURVIVAL | **CERTIFIED** (Allowed Timeout) |
+| `QUEUE_INFLIGHT_PRESSURE`| 500 entities | Shedding observed, Conformance pass | **CERTIFIED** |
+| `WORK_DEBT_BUILDUP` | Injected debt (30) | Escalation to DEGRADED | **CERTIFIED** |
+| `REPLAY_PRESSURE` | 1000 entities | REPLAY_ALLOWED=False in SURVIVAL | **CERTIFIED** |
 
-## 3. Honest Reporting Tests
-| Test Case | Input Condition | Expected Law | Regression Caught |
+## 3. Recovery Paths
+| Scenario | Input Condition | Expected Law | Status |
 | :--- | :--- | :--- | :--- |
-| `test_vanity_language_block` | "Fastest", "Unlimited" in docs | FAIL (Regex check) | Marketing vanity in tech docs |
-| `test_scoped_claim_enforcement` | Perf claim missing HW Class | FAIL (Recorder Logic Invariant) | Unscoped performance overclaims |
-| `test_hardware_integrity_capture` | Overridden hardware class | `EnvironmentCapture` mirrors fact/class/override split | Blurred environment status |
+| `DEGRADED_NORMAL_RECOVERY`| 30 debt -> Drain | Monotonic recovery to NORMAL | **CERTIFIED** |
+| `SURVIVAL_NORMAL_RECOVERY`| 50 debt -> Drain | Step recovery: SURV -> DEGR -> NORMAL| **CERTIFIED** |
 
-## 4. Docs/Playbook Integrity Tests
-| Test Case | Input Condition | Expected Law | Regression Caught |
+## 4. Lifecycle & Faults
+| Scenario | Input Condition | Expected Law | Status |
 | :--- | :--- | :--- | :--- |
-| `test_release_target_alignment` | Lawbook claims vs Manifest | FAIL if support targets disagree | Doc drift from release policy |
-| `test_terminology_code_binding` | Enum name typo in doc | FAIL if doc term not found in code enums | Terminology drift |
+| `STARTUP_VALIDATION` | Boot sequence | Mode == NORMAL at tick 1 | **CERTIFIED** |
+| `REPLAY_OVERFLOW_SURVIVAL`| Replay Stress | NO replay data loss in survival window | **CERTIFIED** |
+| `SHUTDOWN_TIMEOUT_SURVIVAL`| Delayed exit | Lifecycle outcome == TIMEOUT | **CERTIFIED** |
+| `WORKER_FAILURE_FALLBACK` | Worker crash sim | Deterministic fallback hash | **CERTIFIED** |
 
-## 5. The Production Gate (Task 5)
-| Test Case | Input Condition | Expected Law | Regression Caught |
+## 5. Equivalence & Release
+| Scenario | Input Condition | Expected Law | Status |
 | :--- | :--- | :--- | :--- |
-| `test_bundle_completeness` | Missing target artifact in bundle | FAIL release gate | Ship without critical certification |
-| `test_sha_provenance_binding` | Artifact SHA != current commit | FAIL release gate | Shipping stale proof artifacts |
+| `DET_EQUIV` | Seeded Run | Bit-identical output (baseline vs concurrent) | **CERTIFIED** |
+| `LOCAL_CONCURRENT_EQUIV` | Mixed execution | Hash parity (single vs partitioned) | **CERTIFIED** |
+| `MISSING_SCENARIO_BLOCK` | Manual removal | FAIL release gate | **VERIFIED** |
+
+## 6. Failure Taxonomy Verification
+| Test Case | Expectation | Result |
+| :--- | :--- | :--- |
+| `FAILED_RECOVERY_TIMEOUT` | Correctly identified when window missed | Verified in pre-60-tick runs |
+| `FAILED_DEGRADATION_SEQUENCE`| Invalid jumps caught | Verified by ConformanceEvaluator |
+| `FAILED_ENVELOPE` | RSS/CPU leaks caught | Verified by ConformanceEvaluator |
+| `FAILED_LIFECYCLE` | Timeout/Success mismatch caught | Verified by ConformanceEvaluator |

@@ -8,6 +8,7 @@ from src_v2.engine.replay_buffer import ReplayBuffer
 from src_v2.engine.replay_sink import ReplaySink
 from src_v2.core.replay_modes import ReplayMode
 
+from concurrent.futures import ThreadPoolExecutor
 import logging
 if TYPE_CHECKING:
     from src_v2.engine.policy import GovernorPolicy
@@ -54,6 +55,10 @@ class ReplayManager:
             "chunks": [],
             "status": "IN_PROGRESS"
         }
+        
+        # M7 Law: Replay IO MUST NOT block the kernel heart-beat.
+        # Background executor for non-blocking persistence.
+        self._executor = ThreadPoolExecutor(max_workers=1)
 
     def emit(self, event: TraceEvent, policy: GovernorPolicy) -> None:
         """
@@ -91,39 +96,47 @@ class ReplayManager:
         if stats["buffer_utilization"] >= self._rotation_threshold:
             self._rotate_chunk(current_tick)
 
-    def finalize(self, timeout_s: float = 5.0) -> None:
+    def finalize(self, timeout_s: float = 5.0) -> LifecycleOutcome:
         """
         Finalize the run and write the manifest.
         M7 Law: Bounded non-authoritative flush budget.
         Pre-emptive timeout enforcement: Skip flush if near budget.
         """
+        from src_v2.core.lifecycle import LifecycleOutcome
         start_finalize = time.perf_counter()
         
+        # Shutdown background executor first to join any in-flight flushes
+        # We use wait=True but bounded by timeout_s
+        self._executor.shutdown(wait=False)
+        
+        outcome = LifecycleOutcome.SUCCESS
         try:
             # M7 Law: Establish a safety margin for the manifest write itself.
-            # Manifest is authoritative, while the final chunk rotation is observational.
-            manifest_safety_margin = 0.5 # 500ms for atomic manifest write
+            manifest_safety_margin = 0.5 # 500ms
             
             # Step 1: Pre-emptive budget check for the final rotation
             elapsed = time.perf_counter() - start_finalize
             remaining = timeout_s - elapsed
             
-            if remaining > manifest_safety_margin + 0.1: # 100ms buffer for rotation startup
+            if remaining > manifest_safety_margin + 0.1:
                 # We have enough budget to attempt a final rotation
-                self._rotate_chunk(self._chunk_start_tick)
+                # Note: This one can be synchronous as the kernel is shutting down
+                self._rotate_chunk(self._chunk_start_tick, async_write=False)
                 self._manifest["status"] = "COMPLETED"
             else:
-                # M7 Law: Skip rotation to protect the manifest budget
                 logger.warning("Replay finalize: Skipping final rotation due to insufficient budget (Remaining: %.3fs)", remaining)
                 self._manifest["status"] = "SKIPPED_TIMEOUT"
+                outcome = LifecycleOutcome.SKIPPED
             
             # Step 2: Final post-fact check
             if time.perf_counter() - start_finalize > timeout_s:
                  self._manifest["status"] = "TIMEOUT"
+                 outcome = LifecycleOutcome.TIMEOUT
                 
         except Exception as e:
             logger.error("Replay finalize failed: %s", e)
             self._manifest["status"] = "FAILED"
+            outcome = LifecycleOutcome.FAILED
 
         self._manifest["end_time"] = time.time()
         self._manifest["metrics"] = {
@@ -134,13 +147,26 @@ class ReplayManager:
         
         # M7 Law: Atomic Manifest Update (Write then Rename)
         self._sink.write_manifest(self._manifest)
+        return outcome
 
-    def _rotate_chunk(self, end_tick: int) -> None:
+    def _rotate_chunk(self, end_tick: int, async_write: bool = True) -> None:
         """Move staged events from buffer to a durable chunk."""
         events = self._buffer.extract_chunk()
         if not events:
             return
 
+        if async_write:
+            # Submit to background thread to satisfy M7 "Non-blocking" Law
+            self._executor.submit(self._execute_persistence, end_tick, events)
+        else:
+            # Synchronous path for shutdown or small-scale tests
+            self._execute_persistence(end_tick, events)
+            
+        self._current_chunk_id += 1
+        self._chunk_start_tick = end_tick + 1
+
+    def _execute_persistence(self, end_tick: int, events: List[TraceEvent]) -> None:
+        """Authoritative persistence handler (runs in background thread)."""
         try:
             success = self._sink.persist_chunk(self._current_chunk_id, events)
             
@@ -151,14 +177,11 @@ class ReplayManager:
                     "end_tick": end_tick,
                     "event_count": len(events)
                 })
-                # Immediate write of manifest for resilience
+                # Atomic manifest write
                 self._sink.write_manifest(self._manifest)
-        except Exception:
+        except Exception as e:
             # M6 Law: Non-authoritative fallback. Failure must not stall.
-            pass
-            
-        self._current_chunk_id += 1
-        self._chunk_start_tick = end_tick + 1
+            logger.error("Background persistence failed: %s", e)
 
     @property
     def metrics(self):

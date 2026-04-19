@@ -23,7 +23,7 @@ def base_profile():
 
 def test_escalation_path(base_profile):
     """Verify that mode escalates immediately with rising pressure."""
-    gov = ResourceGovernor(dwell_time=10)
+    gov = ResourceGovernor()
     status = RuntimeStatus()
     
     # 1. Normal

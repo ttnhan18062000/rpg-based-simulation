@@ -22,6 +22,9 @@ class DeterministicScheduler:
     """
     Authoritative orchestrator for deterministic work selection.
     Bucketizes work and applies class-local ordering rules.
+    
+    Milestone A Law: Work selection MUST be deterministic and order-invariant.
+    Hierarchy: 1. CRITICAL, 2. PERIODIC, 3. DEFERRED, 4. OPPORTUNISTIC (Gated).
     """
 
     def __init__(self, periodic_defs: Sequence[PeriodicDefinition] = ()):
@@ -34,7 +37,11 @@ class DeterministicScheduler:
     ) -> tuple[List[WorkItem], int]:
         """
         Produce a deterministic sequence of work items for the current tick.
-        Law: Critical (Entities) -> Periodic -> Opportunistic.
+        Law: Critical (Entities) -> Periodic -> Deferred -> Opportunistic.
+        Tie-Breaks:
+          Critical Entities: (-readiness, owner_id)
+          Periodic Tasks: (due_tick, owner_id)
+          Deferred Debt: (owner_id)
         Returns: (WorkItems, DroppedCount)
         """
         from src_v2.engine.policy import GovernorPolicy
@@ -49,6 +56,7 @@ class DeterministicScheduler:
             if ent.readiness >= 100.0:
                 critical_items.append(WorkItem(
                     owner_id=ent.id,
+                    work_id=f"{state.tick}:critical:{ent.id}",
                     work_class=WorkClass.CRITICAL,
                     work_kind="ENTITY_ACT",
                     readiness=ent.readiness
@@ -69,6 +77,7 @@ class DeterministicScheduler:
             if state.tick >= due_tick:
                 periodic_items.append(WorkItem(
                     owner_id=sid,
+                    work_id=f"{state.tick}:periodic:{sid}",
                     work_class=WorkClass.PERIODIC,
                     work_kind=pdef.work_kind,
                     payload=pdef.payload,
@@ -85,6 +94,7 @@ class DeterministicScheduler:
             if debt_count > 0:
                 deferred_items.append(WorkItem(
                     owner_id=d_id,
+                    work_id=f"{state.tick}:deferred:{d_id}",
                     work_class=WorkClass.DEFERRED,
                     work_kind="DRAIN_DEBT",
                     due_tick=state.tick
@@ -93,12 +103,11 @@ class DeterministicScheduler:
         deferred_items.sort(key=lambda x: x.owner_id)
         work_sequence.extend(deferred_items)
 
-        # 4. OPPORTUNISTIC: Optional Enrichment
+        # 4. OPPORTUNISTIC: Optional Enrichment (Non-authoritative)
+        # Milestone A Law: Baseline runtime does not support opportunistic components.
+        # This branch is gated to ensure non-authoritative work never contaminates the core.
         if policy.allow_opportunistic:
-            # Placeholder for future opportunitistic work injection
+            # Note: No opportunistic work classes are implemented in the Milestone A baseline.
             pass
-        else:
-            # If we had opportunistic work to inject, we would count it as dropped here.
-            pass
-
+        
         return work_sequence, dropped_count

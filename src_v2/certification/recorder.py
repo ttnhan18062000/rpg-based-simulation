@@ -24,21 +24,29 @@ class CertificationRecorder:
         """
         # 1. Invariant Check: Scoped metadata must be present
         if not result.commit_sha or result.commit_sha == "unknown-dirty":
-            # In a real CI, we might raise an error here. 
-            # For Milestone E, we will record it but mark it clearly as non-certified.
             pass
             
         if not result.environment.effective_class:
             raise ValueError("M10 Law: Certification cannot be recorded without an Effective Hardware Class.")
 
         # 2. Machine-readable artifact (The Proof)
-        json_path = self._output_dir / "release_proof.json"
+        file_id = f"{result.profile_name}_{result.scenario_id}"
+        json_path = self._output_dir / f"release_proof_{file_id}.json"
         with open(json_path, "w") as f:
             f.write(result.to_json())
 
         # 3. Markdown summary (The Scoped Report)
         md_path = self._output_dir / "release_report.md"
-        with open(md_path, "w") as f:
+        # We append to the report or overwrite? 
+        # Milestone E usually wants one summary report, but we'll provide 
+        # scenario-specific reports too for detail.
+        detail_md_path = self._output_dir / f"release_report_{file_id}.md"
+        with open(detail_md_path, "w") as f:
+            f.write(self._generate_markdown(result))
+            
+        # Also maintain a 'latest' link for easy inspection
+        latest_md_path = self._output_dir / "release_report_latest.md"
+        with open(latest_md_path, "w") as f:
             f.write(self._generate_markdown(result))
 
         return str(json_path)

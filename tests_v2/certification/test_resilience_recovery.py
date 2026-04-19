@@ -19,7 +19,13 @@ def test_harness_catches_failed_recovery():
     
     state = AuthoritativeState(tick=0, seed=42, entities={})
     harness = CertificationHarness(profile)
-    expectations = get_scenario_expectations("RAM_PRESSURE") # requires_recovery=True
+    from dataclasses import replace
+    # We use RAM_PRESSURE but EXPLICITLY forbid recovery timeout for this test
+    # so that the harness.run_scenario actually fails with conformance_passed=False
+    expectations = replace(
+        get_scenario_expectations("RAM_PRESSURE"), 
+        allowed_failure_kinds=[FailureKind.NONE]
+    )
     
     from unittest.mock import patch
     # We will mock the governor's evaluation

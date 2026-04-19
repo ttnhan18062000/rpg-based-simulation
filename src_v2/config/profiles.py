@@ -36,6 +36,12 @@ class RuntimeProfile(BaseModel):
     # Latency
     max_tick_budget_ms: float = Field(..., gt=0, description="Max ms allowed per authoritative tick")
     
+    # Operational Controls (Milestone B)
+    sampling_interval_ticks: int = Field(10, gt=0, description="Cadence for OS signal sampling (RSS)")
+    recovery_watermark: float = Field(0.8, ge=0.5, le=0.95, description="Hysteresis multiplier for recovery")
+    dwell_time_ticks: int = Field(10, ge=0, description="Minimum ticks to stay in mode before recovery")
+    confidence_window_ticks: int = Field(5, ge=0, description="Consecutive ticks required below watermark to recover")
+
     # Degradation
     degradation_threshold_ram: float = Field(0.85, ge=0.5, le=1.0, description="RAM pressure to trigger shedding")
     degradation_threshold_cpu: float = Field(0.90, ge=0.5, le=1.0, description="CPU pressure to trigger shedding")

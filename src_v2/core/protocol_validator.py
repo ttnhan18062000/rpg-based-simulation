@@ -46,22 +46,32 @@ class ProtocolValidator:
         seen_entities: Set[int] = set()
         
         for result in results:
-            # 1. Source Traceability
-            if result.source_packet_id not in source_packets:
+            # 1. Source Traceability (Optional for local-only baseline runs)
+            if result.source_packet_id in source_packets:
+                packet = source_packets[result.source_packet_id]
+                
+                # 2. Identity Matching
+                if result.entity_id != packet.subject.id:
+                    raise ProtocolViolationError(
+                        f"Result entity mismatch: expected {packet.subject.id}, got {result.entity_id}"
+                    )
+                
+                if result.work_id != packet.work_id:
+                    raise ProtocolViolationError(
+                        f"Result work_id mismatch: expected {packet.work_id}, got {result.work_id}"
+                    )
+            elif not result.source_packet_id.startswith("local:"):
+                # If not local, must have a source packet
                 raise ProtocolViolationError(f"Orphan result: source packet {result.source_packet_id} not found")
             
-            packet = source_packets[result.source_packet_id]
-            
-            # 2. Identity Matching
-            if result.entity_id != packet.subject.id:
-                raise ProtocolViolationError(
-                    f"Result entity mismatch: expected {packet.subject.id}, got {result.entity_id}"
-                )
-            
             # 3. Option A Enforcement (Post-execution)
-            if result.entity_id in seen_entities:
-                raise ProtocolViolationError(f"Duplicate authoritative result for entity {result.entity_id}")
-            seen_entities.add(result.entity_id)
+            if result.entity_id != 0:
+                if result.entity_id in seen_entities:
+                    raise ProtocolViolationError(f"Duplicate authoritative result for entity {result.entity_id}")
+                seen_entities.add(result.entity_id)
+            elif not result.subsystem_id:
+                # System results (entity_id=0) must specify a subsystem_id to avoid collision
+                raise ProtocolViolationError("System result missing subsystem_id")
             
             # 4. Success invariant
             if result.status == ResultStatus.FAILURE:

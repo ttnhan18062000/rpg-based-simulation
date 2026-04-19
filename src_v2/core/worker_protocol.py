@@ -4,6 +4,7 @@ from enum import Enum
 from dataclasses import dataclass
 from typing import Dict, Any, List, Tuple, TYPE_CHECKING
 from src_v2.core.updates import EntityUpdate
+from src_v2.core.work import WorkClass
 
 if TYPE_CHECKING:
     from src_v2.core.state import EntityState
@@ -22,11 +23,14 @@ class WorkerPacket:
     Tick-local deterministic identity: {tick}:{ordinal}
     """
     packet_id: str
+    work_id: str
     tick: int
     world_time: int
     seed: int
     
     # Target Information (Read-Only Snapshot)
+    # work_class included for policy-aware logic inside workers
+    work_class: WorkClass
     subject: EntityState
     
     # Canonical Context (Sorted by EntityID)
@@ -45,7 +49,9 @@ class WorkerResult:
     M8 Law (Option A): One result per entity per tick.
     """
     source_packet_id: str
+    work_id: str
     entity_id: int
+    work_class: WorkClass
     update: EntityUpdate
     status: ResultStatus = ResultStatus.SUCCESS
     
@@ -55,3 +61,8 @@ class WorkerResult:
     
     # Metadata for verification/replay
     compute_time_ns: int = 0
+    
+    # System Updates (Milestone C: De-simulation)
+    # Allows workers/executors to update global state components
+    work_debt_update: Optional[int] = None
+    subsystem_id: Optional[str] = None

@@ -3,6 +3,7 @@ import time
 import threading
 from src_v2.engine.worker_manager import WorkerManager
 from src_v2.core.worker_protocol import WorkerPacket, WorkerResult
+from src_v2.core.work import WorkClass
 from unittest.mock import MagicMock
 
 
@@ -20,12 +21,20 @@ def test_worker_count_upper_bound():
         with lock:
             unique_threads.add(threading.current_thread().ident)
         time.sleep(0.05) # Hold thread
-        return WorkerResult(source_packet_id=packet.packet_id, entity_id=packet.subject.id, update=MagicMock())
+        return WorkerResult(
+            source_packet_id=packet.packet_id, 
+            work_id=packet.work_id,
+            entity_id=packet.subject.id, 
+            work_class=packet.work_class,
+            update=MagicMock()
+        )
 
     packets = [
         WorkerPacket(
             packet_id=f"test:{i}", 
+            work_id=f"w:{i}",
             tick=0, world_time=0, seed=i, 
+            work_class=WorkClass.CRITICAL,
             subject=MagicMock(id=i), 
             neighbor_view=[], 
             work_kind="ACT", 

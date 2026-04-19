@@ -15,6 +15,9 @@ class GovernorPolicy:
     diagnostic_verbosity: str = "FULL"  # "FULL", "MINIMAL", "ERROR", "MUTED"
     metrics_detail: str = "HIGH"        # "HIGH", "LOW", "MUTED"
     
+    # M8 Adaptive Concurrency
+    concurrency_limit: float = 1.0     # 0.0 to 1.0 multiplier of active pool
+    
     # M6 Replay Policy
     replay_allowed: bool = True
     replay_richness: str = "FULL"       # "FULL", "MINIMAL", "OFF"
@@ -31,6 +34,7 @@ class GovernorPolicy:
                 allow_non_authoritative_periodic=True,
                 diagnostic_verbosity="FULL",
                 metrics_detail="HIGH",
+                concurrency_limit=1.0,
                 replay_allowed=True,
                 replay_richness="FULL",
                 allow_subsystem_traces=True
@@ -42,6 +46,7 @@ class GovernorPolicy:
                 allow_non_authoritative_periodic=True,
                 diagnostic_verbosity="MINIMAL",
                 metrics_detail="HIGH",
+                concurrency_limit=1.0,
                 replay_allowed=True,
                 replay_richness="FULL",
                 allow_subsystem_traces=False # Drop internal traces first
@@ -53,6 +58,7 @@ class GovernorPolicy:
                 allow_non_authoritative_periodic=True,
                 diagnostic_verbosity="ERROR",
                 metrics_detail="LOW",
+                concurrency_limit=0.5,
                 replay_allowed=True,
                 replay_richness="MINIMAL",
                 allow_subsystem_traces=False
@@ -64,6 +70,7 @@ class GovernorPolicy:
                 allow_non_authoritative_periodic=False,
                 diagnostic_verbosity="MUTED",
                 metrics_detail="MUTED",
+                concurrency_limit=0.25,
                 replay_allowed=False,
                 replay_richness="OFF",
                 allow_subsystem_traces=False

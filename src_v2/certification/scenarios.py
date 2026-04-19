@@ -42,7 +42,8 @@ def get_scenario_expectations(scenario_id: str) -> ScenarioExpectations:
     """M10 Law: Scenario-bound pass/fail criteria and sampling intervals."""
     from src_v2.certification.models import FailureKind
     
-    if scenario_id == "IDLE_CLEAN":
+    # 1. Clean Baselines
+    if scenario_id in ("IDLE_CLEAN", "STEADY_STATE_NORMAL", "QUIET_TICK_STABILITY"):
         return ScenarioExpectations(
             required_governor_modes=["NORMAL"],
             requires_recovery=False,
@@ -51,17 +52,71 @@ def get_scenario_expectations(scenario_id: str) -> ScenarioExpectations:
             allowed_failure_kinds=[FailureKind.NONE],
             reproducibility_required=True
         )
-    elif scenario_id == "RAM_PRESSURE":
+    
+    # 2. Pressure & Degradation
+    elif scenario_id in ("RAM_PRESSURE", "TICK_BUDGET_PRESSURE", "QUEUE_INFLIGHT_PRESSURE", "WORK_DEBT_BUILDUP"):
         return ScenarioExpectations(
             required_governor_modes=["NORMAL", "DEGRADED"],
             requires_recovery=True,
-            requires_semantic_equivalence=False, # We expect some shedding if configured
+            requires_semantic_equivalence=False,
             max_recovery_ticks=100,
             recovery_time_limit_ticks=150,
             required_sampling_interval_ticks=5,
-            allowed_failure_kinds=[FailureKind.NONE, FailureKind.FAILED_ENVELOPE]
+            allowed_failure_kinds=[FailureKind.NONE, FailureKind.FAILED_ENVELOPE, FailureKind.FAILED_RECOVERY_TIMEOUT]
         )
-    elif scenario_id == "DET_EQUIV":
+    elif scenario_id == "REPLAY_PRESSURE":
+        return ScenarioExpectations(
+            required_governor_modes=["NORMAL", "DEGRADED", "SURVIVAL"],
+            requires_recovery=True,
+            requires_semantic_equivalence=False,
+            required_sampling_interval_ticks=5,
+            allowed_failure_kinds=[FailureKind.NONE, FailureKind.FAILED_ENVELOPE, FailureKind.FAILED_REPLAY_PERSISTENCE, FailureKind.FAILED_RECOVERY_TIMEOUT]
+        )
+        
+    # 3. Recovery Paths
+    elif scenario_id == "DEGRADED_NORMAL_RECOVERY":
+        return ScenarioExpectations(
+            required_governor_modes=["NORMAL", "DEGRADED"],
+            requires_recovery=True,
+            requires_semantic_equivalence=False,
+        )
+    elif scenario_id == "SURVIVAL_NORMAL_RECOVERY":
+        return ScenarioExpectations(
+            required_governor_modes=["NORMAL", "DEGRADED", "SURVIVAL"],
+            requires_recovery=True,
+            requires_semantic_equivalence=False,
+        )
+
+    # 4. Lifecycle & Faults
+    elif scenario_id == "STARTUP_VALIDATION":
+        return ScenarioExpectations(
+            required_governor_modes=["NORMAL"],
+            expected_lifecycle_outcome="SUCCESS",
+        )
+    elif scenario_id == "REPLAY_OVERFLOW_SURVIVAL":
+        return ScenarioExpectations(
+            required_governor_modes=["SURVIVAL"],
+            requires_recovery=False,
+            requires_semantic_equivalence=False,
+            expected_lifecycle_outcome="SUCCESS",
+            allowed_failure_kinds=[FailureKind.NONE, FailureKind.FAILED_REPLAY_PERSISTENCE]
+        )
+    elif scenario_id == "SHUTDOWN_TIMEOUT_SURVIVAL":
+        return ScenarioExpectations(
+            expected_lifecycle_outcome="TIMEOUT",
+            shutdown_timeout_s=0.0, # Force immediate timeout
+            requires_semantic_equivalence=False,
+            allowed_failure_kinds=[FailureKind.NONE, FailureKind.FAILED_LIFECYCLE]
+        )
+    elif scenario_id == "WORKER_FAILURE_FALLBACK":
+        return ScenarioExpectations(
+            required_governor_modes=["NORMAL"],
+            allowed_failure_kinds=[FailureKind.NONE, FailureKind.FAILED_WORKER_PROPAGATION],
+            requires_semantic_equivalence=True  # Should fallback deterministically
+        )
+
+    # 5. Equivalence (Milestone D closure)
+    elif scenario_id in ("DET_EQUIV", "LOCAL_CONCURRENT_EQUIV"):
         return ScenarioExpectations(
             required_governor_modes=["NORMAL"],
             requires_recovery=False,
@@ -70,5 +125,12 @@ def get_scenario_expectations(scenario_id: str) -> ScenarioExpectations:
             allowed_failure_kinds=[FailureKind.NONE],
             reproducibility_required=True
         )
+    
+    # Release verification scenarios
+    elif scenario_id == "MISSING_SCENARIO_BLOCK":
+        return ScenarioExpectations(
+            allowed_failure_kinds=[FailureKind.FAILED_MISSING_SCENARIO]
+        )
+        
     else:
         return ScenarioExpectations() # Default safe

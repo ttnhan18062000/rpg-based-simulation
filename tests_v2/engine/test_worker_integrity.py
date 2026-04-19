@@ -7,11 +7,14 @@ from src_v2.core.state import EntityState
 @pytest.fixture
 def sample_packet():
     subject = EntityState(id=1, kind="ACTOR", position=(0.0, 0.0))
+    from src_v2.core.work import WorkClass
     return WorkerPacket(
         packet_id="100:0",
+        work_id="100:1:TEST",
         tick=100,
         world_time=1000,
         seed=42,
+        work_class=WorkClass.CRITICAL,
         subject=subject,
         neighbor_view=[],
         work_kind="TEST",
@@ -26,11 +29,14 @@ def test_protocol_duplicate_packet_rejection(sample_packet):
 
 def test_protocol_option_a_pre_dispatch_rejection(sample_packet):
     """M8 Law: Multiple work items for the same entity in one tick is forbidden (Option A)."""
+    from src_v2.core.work import WorkClass
     p2 = WorkerPacket(
         packet_id="100:1",
+        work_id="100:1:TEST_DUPE",
         tick=100,
         world_time=1000,
         seed=43,
+        work_class=WorkClass.CRITICAL,
         subject=sample_packet.subject, # Same entity
         neighbor_view=[],
         work_kind="TEST",
@@ -41,11 +47,14 @@ def test_protocol_option_a_pre_dispatch_rejection(sample_packet):
 
 def test_protocol_canonical_context_rejection(sample_packet):
     """M8 Law: Neighbor view must be sorted by ID."""
+    from src_v2.core.work import WorkClass
     p2 = WorkerPacket(
         packet_id="100:1",
+        work_id="100:2:TEST",
         tick=100,
         world_time=1000,
         seed=43,
+        work_class=WorkClass.CRITICAL,
         subject=EntityState(id=2, kind="X", position=(1.0, 1.0)),
         neighbor_view=[(10, None), (5, None)], # Unsorted
         work_kind="TEST",
@@ -56,9 +65,12 @@ def test_protocol_canonical_context_rejection(sample_packet):
 
 def test_protocol_result_traceability_rejection(sample_packet):
     """M8 Law: Results must link back to a valid source packet."""
+    from src_v2.core.work import WorkClass
     result = WorkerResult(
         source_packet_id="UNKNOWN",
+        work_id="UNKNOWN",
         entity_id=1,
+        work_class=WorkClass.CRITICAL,
         update=EntityUpdate(entity_id=1)
     )
     source_packets = {"100:0": sample_packet}
@@ -67,9 +79,12 @@ def test_protocol_result_traceability_rejection(sample_packet):
 
 def test_protocol_result_id_mismatch_rejection(sample_packet):
     """M8 Law: Result entity ID must match the packet's subject ID."""
+    from src_v2.core.work import WorkClass
     result = WorkerResult(
         source_packet_id="100:0",
+        work_id=sample_packet.work_id,
         entity_id=999, # Mismatch
+        work_class=sample_packet.work_class,
         update=EntityUpdate(entity_id=999)
     )
     source_packets = {"100:0": sample_packet}
@@ -78,7 +93,14 @@ def test_protocol_result_id_mismatch_rejection(sample_packet):
 
 def test_protocol_duplicate_result_rejection(sample_packet):
     """M8 Law: Duplicate authoritative results for same entity must be rejected."""
-    res1 = WorkerResult(source_packet_id="100:0", entity_id=1, update=EntityUpdate(1))
+    from src_v2.core.work import WorkClass
+    res1 = WorkerResult(
+        source_packet_id="100:0", 
+        work_id=sample_packet.work_id,
+        entity_id=1, 
+        work_class=sample_packet.work_class,
+        update=EntityUpdate(1)
+    )
     # Note: Validator doesn't know about packet IDs for results directly, 
     # but it checks entity_id uniqueness in one batch.
     with pytest.raises(ProtocolViolationError, match="Duplicate authoritative result"):

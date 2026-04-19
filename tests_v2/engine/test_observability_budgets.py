@@ -17,9 +17,8 @@ def test_signal_collector_bounded_history():
     # Internally we should only have running sums/averages or fixed deques.
     # We verify the collectors internal state doesn't have 1000 items.
     
-    # In my implementation, I used simple sums and sample_count for moving avg.
-    # This is O(1) space, which is perfectly bounded.
-    assert collector._sample_count == 999 # First tick has no delta
+    # M7 Law: Trending must use fixed-size windows (deque maxlen=5).
+    assert len(collector._rss_history) == 5
     
     # We also check that snapshot doesn't grow.
     kernel = MagicMock()

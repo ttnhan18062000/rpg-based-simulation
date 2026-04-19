@@ -30,7 +30,7 @@ def test_concurrency_determinism_equivalence():
     # Setup identical initial state
     entities = {
         i: EntityState(id=i, kind="TEST", position=(0,0), readiness=100.0)
-        for i in range(10)
+        for i in range(1, 11)
     }
     state_start = AuthoritativeState(tick=0, seed=42, entities=entities)
     
@@ -38,8 +38,8 @@ def test_concurrency_determinism_equivalence():
     kernel_local = Kernel(profile_local, state_start, DeterministicRNG(42))
     # Mock scheduler to return 10 items
     kernel_local._scheduler.select_work = MagicMock(return_value=([
-        WorkItem(owner_id=i, work_class=WorkClass.CRITICAL, work_kind="ENTITY_ACT")
-        for i in range(10)
+        WorkItem(owner_id=i, work_id=f"w:{i}", work_class=WorkClass.CRITICAL, work_kind="ENTITY_ACT")
+        for i in range(1, 11)
     ], 0))
     kernel_local.tick_once()
     final_state_local = kernel_local.state
@@ -47,15 +47,15 @@ def test_concurrency_determinism_equivalence():
     # 2. Run Concurrently
     kernel_concurrent = Kernel(profile_concurrent, state_start, DeterministicRNG(42))
     kernel_concurrent._scheduler.select_work = MagicMock(return_value=([
-        WorkItem(owner_id=i, work_class=WorkClass.CRITICAL, work_kind="ENTITY_ACT")
-        for i in range(10)
+        WorkItem(owner_id=i, work_id=f"w:{i}", work_class=WorkClass.CRITICAL, work_kind="ENTITY_ACT")
+        for i in range(1, 11)
     ], 0))
     kernel_concurrent.tick_once()
     final_state_concurrent = kernel_concurrent.state
     
     # VERIFY: Bit-identical outcomes
     assert final_state_local.tick == final_state_concurrent.tick
-    for eid in range(10):
+    for eid in range(1, 11):
         assert final_state_local.entities[eid].readiness == final_state_concurrent.entities[eid].readiness
         assert final_state_local.entities[eid].readiness == 0.0 # Standard -100 delta
 
@@ -78,12 +78,20 @@ def test_race_resistance_via_sorting():
         # Lower IDs sleep longer so they should finish LATER
         delay = (10 - packet.subject.id) * 0.01 
         time.sleep(delay)
-        return WorkerResult(source_packet_id=packet.packet_id, entity_id=packet.subject.id, update=EntityUpdate(entity_id=packet.subject.id, readiness_delta=packet.subject.id))
+        return WorkerResult(
+            source_packet_id=packet.packet_id, 
+            work_id=packet.work_id,
+            entity_id=packet.subject.id, 
+            work_class=packet.work_class,
+            update=EntityUpdate(entity_id=packet.subject.id, readiness_delta=packet.subject.id)
+        )
 
     packets = [
         WorkerPacket(
             packet_id=f"test:{i}", 
+            work_id=f"w:{i}",
             tick=0, world_time=0, seed=i, 
+            work_class=WorkClass.CRITICAL,
             subject=MagicMock(id=i), 
             neighbor_view=[], 
             work_kind="ACT", 

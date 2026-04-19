@@ -19,6 +19,7 @@ class CanonicalStateHasher:
         """
         Produce a SHA256 hash of the compact canonical JSON representation.
         Locked by Milestone A Closure Contract.
+        Truth: Governance, Replay, and Operational state are strictly EXCLUDED.
         """
         compact_json = CanonicalStateHasher.to_canonical_json(state, pretty=False)
         return hashlib.sha256(compact_json.encode("utf-8")).hexdigest()
@@ -41,6 +42,7 @@ class CanonicalStateHasher:
         """
         Convert AuthoritativeState into a sortable dictionary structure.
         Includes only authoritative fields defined by the Milestone A contract.
+        Law: Non-authoritative state (governance, replay, transients) is EXCLUDED.
         """
         # 1. Scalar fields
         data = {
@@ -51,6 +53,7 @@ class CanonicalStateHasher:
         
         # 2. Entities (Sorted by ID)
         sorted_entities = {}
+        # IDs are integers, but JSON keys must be strings.
         for eid in sorted(state.entities.keys()):
             ent = state.entities[eid]
             sorted_entities[str(eid)] = {
@@ -69,7 +72,8 @@ class CanonicalStateHasher:
         data["work_debt"] = dict(sorted(state.work_debt.items()))
         
         # 4. RNG Checkpoint
-        # We assume rng_checkpoint is already a primitive or sortable dict/list.
+        # Law: The internal RNG state must be captured exactly for reproducibility.
+        # random.Random.getstate() returns a tuple; json.dumps will convert it to a list.
         data["rng_checkpoint"] = state.rng_checkpoint
         
         return data

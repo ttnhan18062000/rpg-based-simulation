@@ -18,7 +18,7 @@ def test_certification_detects_semantic_drift():
     )
     
     state = AuthoritativeState(tick=0, seed=42, entities={
-        0: EntityState(id=0, kind="TEST", position=(0,0), readiness=100.0)
+        1: EntityState(id=1, kind="TEST", position=(0,0), readiness=100.0)
     })
     
     harness = CertificationHarness(profile, output_dir="tmp/test_harness")
