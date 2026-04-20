@@ -20,22 +20,35 @@ class RuntimeMode(IntEnum):
 class PressureSignals:
     """
     Operational measurements used for governing decisions.
+    Status: FROZEN (Resource Phase 4 Milestone 1)
+    
     M7 Law: Only include Primary Pressure Inputs here.
     """
-    tick_compute_ms: float = 0.0
-    tick_compute_ms_avg: float = 0.0  # Trending signal
+    # 1. Compute & Load
+    tick_compute_ms: float = 0.0      # Absolute nanosecond-derived compute time
+    tick_compute_ms_avg: float = 0.0  # Rolling 5-tick average
     
-    work_debt_total: int = 0
+    # 2. Work & Debt
+    work_debt_total: int = 0          # Total unhandled system debt (D1, D2, ...)
     
-    worker_utilization: float = 0.0   # Ratio of concurrent workers used
-    queue_utilization: float = 0.0    # Ratio of work-queue depth used
+    # 3. Utilization (Disaggregated - Law M7.1)
+    worker_utilization: float = 0.0   # Current worker usage / Max allowed
+    queue_utilization: float = 0.0    # Current queue depth / Max allowed
+    active_workers: int = 0           # Raw count of concurrent workers
     
-    memory_estimate_mb: float = 0.0
-    memory_trend_mb_per_tick: float = 0.0  # Trending signal
+    # 4. Memory & Resource
+    memory_estimate_mb: float = 0.0   # RSS measurement from collector
+    memory_trend_mb_per_tick: float = 0.0 # Delta vs previous tick
     
-    replay_backlog_kb: int = 0       # Current in-memory staging size
-    active_workers: int = 0           # Current concurrent worker count
-    dropped_work_delta: int = 0       # Work dropped in the current tick
+    # 5. Pipeline & Lifecycle
+    replay_backlog_kb: int = 0       # In-memory staging pending persistence
+    dropped_work_delta: int = 0       # Work shed in the current tick
+    
+    # 6. Gameplay Throughput (Milestone 2)
+    movement_count: int = 0           # Successfully processed moves in current tick
+    
+    # 7. Performance Breakdown (Milestone 3)
+    phase_costs_ms: Dict[str, float] = field(default_factory=dict)
 
 
 @dataclass(frozen=True, slots=True)

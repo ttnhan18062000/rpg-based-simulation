@@ -36,10 +36,17 @@ def test_replay_chunk_rotation_logic(tmp_path):
     replay.on_tick_end(1)
     assert not (run_dir / "chunk_0000.json").exists()
 
-    # Tick 2 -> Rotation triggered
     # 2 - 0 = 2. Trigered!
     replay.emit(TraceEvent(tick=2, system="K", event_type="E2"), policy)
     replay.on_tick_end(2)
+    
+    # Wait for async rotation
+    import time
+    for _ in range(50):
+        if (run_dir / "chunk_0000.json").exists():
+            break
+        time.sleep(0.01)
+        
     assert (run_dir / "chunk_0000.json").exists()
     
     # Emit E3 so finalize has something to flush into chunk_0001
@@ -59,6 +66,14 @@ def test_manifest_integrity(tmp_path):
     replay.emit(TraceEvent(tick=0, system="K", event_type="E0"), policy)
     replay.on_tick_end(0) # Rotates chunk 0
     
+    # Wait for manifest update (M6 Law)
+    import time
+    for _ in range(50):
+        with replay._manifest_lock:
+            if len(replay._manifest["chunks"]) == 1:
+                break
+        time.sleep(0.01)
+        
     replay.finalize()
     
     manifest_path = run_dir / "manifest.json"

@@ -1,7 +1,7 @@
-# Milestone A: Core Runtime Completion Contract
+# Phase 4 / Milestone 1: Substrate Baseline Freeze Contract
 
 ## 1. Purpose
-This document defines the authoritative law for the deterministic single-process engine baseline. Milestone A closes the single-process runtime as the unquestioned semantic reference for all later concurrent and optimized modes.
+This document defines the authoritative law for the deterministic single-process engine substrate as it enters the "Phase 4 - Gameplay Attachment" phase. This milestone freezes the substrate to ensure a stable foundation for the first official RPG slices.
 
 ## 2. Scope of Milestone A
 The scope is limited to the **deterministic single-process runtime path**. 
@@ -72,13 +72,13 @@ The `CanonicalStateHasher` defines the proof of integrity.
 - Full certification (E)
 
 ## 10. Verification Status
-This contract is **CLOSED** and verified by the following:
+This contract is **FROZEN** for Phase 4 Milestone 1 and verified by the following:
 - **Test Matrix**: `docs/engine/ma_test_matrix.md`
-- **Closure Guard**: `tests_v2/engine/test_milestone_a_closure.py` (Proves zero placeholders and structural compliance)
-- **EPIC Traceability**: All Milestone A tasks in `tickets/done/`
+- **Closure Guard**: `tests_v2/engine/test_milestone_a_closure.py`
+- **Integrity Guard**: `tests_v2/engine/test_substrate_freeze_m1.py` (New for Phase 4)
 
 ## 11. Completion Confirmation
-Milestone A (Core Runtime Completion) is formally concluded. The single-process path is now the absolute semantic baseline for the v2 engine.
+The `src_v2` substrate is formally frozen for gameplay attachment. Any divergence from this baseline must be logged in `docs/engine/divergence_log_m2.md`.
 
-**Status: FINALIZED / CLOSED**
-**Date: 2026-04-19**
+**Status: FROZEN (PHASE 4 MILESTONE 1)**
+**Date: 2026-04-20**

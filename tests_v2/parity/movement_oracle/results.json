@@ -1,0 +1,47 @@
+[
+  {
+    "scenario": "success_move",
+    "is_valid": true,
+    "reason_code": "ADVANCING",
+    "target": [
+      5,
+      6
+    ]
+  },
+  {
+    "scenario": "blocked_terrain",
+    "is_valid": false,
+    "reason_code": "PATH_NOT_FOUND",
+    "target": [
+      5,
+      6
+    ]
+  },
+  {
+    "scenario": "occupied_tile",
+    "is_valid": false,
+    "reason_code": "OCCUPANCY_VIOLATION",
+    "target": [
+      5,
+      6
+    ]
+  },
+  {
+    "scenario": "actor_dead",
+    "is_valid": false,
+    "reason_code": "ADVANCING",
+    "target": [
+      5,
+      6
+    ]
+  },
+  {
+    "scenario": "double_claim",
+    "is_valid": false,
+    "reason_code": "OCCUPANCY_VIOLATION",
+    "target": [
+      5,
+      6
+    ]
+  }
+]

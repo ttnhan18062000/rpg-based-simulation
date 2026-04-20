@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from enum import Enum
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Dict, Any, List, Tuple, TYPE_CHECKING
 from src_v2.core.updates import EntityUpdate
 from src_v2.core.work import WorkClass
@@ -36,10 +36,13 @@ class WorkerPacket:
     # Canonical Context (Sorted by EntityID)
     # M8 Law: Neighbor context must be deterministic regardless of dictionary hash.
     neighbor_view: List[Tuple[int, EntityState]]
-    
     # Work Type details
     work_kind: str
     payload: Dict[str, Any]
+
+    # Deterministic Context (Defaulted for backwards compatibility/optional inclusion)
+    blocked_tiles: List[Tuple[int, int]] = field(default_factory=list) # Spatial Law
+    transient_claims: List[Tuple[int, int]] = field(default_factory=list) # Multi-agent conflict truth
 
 
 @dataclass(frozen=True, slots=True)

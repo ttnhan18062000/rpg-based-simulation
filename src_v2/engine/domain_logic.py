@@ -15,30 +15,13 @@ class SimulationDomainLogic:
 
     @staticmethod
     def execute_move(
+        state: AuthoritativeState,
         entity: EntityState, 
         target_pos: Tuple[float, float]
     ) -> EntityUpdate:
-        """Clamped step movement towards target."""
-        pos = entity.position
-        
-        # Calculate vector
-        dx = target_pos[0] - pos[0]
-        dy = target_pos[1] - pos[1]
-        dist = (dx**2 + dy**2)**0.5
-        
-        max_step = 1.0 # Law: Static max step in baseline
-        if dist > max_step:
-            fx = dx / dist * max_step
-            fy = dy / dist * max_step
-            new_pos = (pos[0] + fx, pos[1] + fy)
-        else:
-            new_pos = (target_pos[0], target_pos[1])
-            
-        return EntityUpdate(
-            entity_id=entity.id,
-            new_position=new_pos,
-            readiness_delta=-50.0 # Movement Cost Law
-        )
+        """GRID-BASED AUTHORITATIVE MOVEMENT."""
+        from src_v2.engine.movement import MovementSystem
+        return MovementSystem.resolve_move(state, entity, target_pos)
 
     @staticmethod
     def execute_action(

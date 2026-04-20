@@ -61,11 +61,15 @@ def test_milestone_b_operational_gate(mb_profile, initial_state):
     
     # Each tick calling Init (start) and Cleanup (end)
     # We want (end - start) / 1e6 = 120ms -> end - start = 120,000,000 ns
-    time_sequence = []
-    for t in range(40):
-        time_sequence.extend([t * 2_000_000_000, t * 2_000_000_000 + 120_000_000])
-        
-    with patch('time.perf_counter_ns', side_effect=time_sequence):
+    def time_gen():
+        t = 0
+        while True:
+            t += 1_000_000_000 # 1s between ticks
+            yield t
+            for _ in range(20): # Up to 20 sub-tick calls
+                yield t + 120_000_000
+    
+    with patch('time.perf_counter_ns', side_effect=time_gen()):
         # Ticks 5-9: Normal -> DEGRADED
         for i in range(10):
             kernel.tick_once()

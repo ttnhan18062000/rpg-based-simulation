@@ -10,6 +10,8 @@ from src_v2.core.governance import RuntimeMode, PressureSignals
 class RuntimeStatus:
     """
     Operational control state for the simulation engine.
+    Status: FROZEN (Resource Phase 4 Milestone 1)
+    
     M5 Law: This state is isolated from AuthoritativeState and does not 
     contaminate simulation hashes.
     """
@@ -58,7 +60,8 @@ class RuntimeStatus:
             memory_trend_mb_per_tick = memory_trend,
             replay_backlog_kb = signals.replay_backlog_kb,
             active_workers = signals.active_workers,
-            dropped_work_delta = signals.dropped_work_delta
+            dropped_work_delta = signals.dropped_work_delta,
+            phase_costs_ms = signals.phase_costs_ms
         )
         
         self.signal_history.append(enriched)

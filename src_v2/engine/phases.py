@@ -6,7 +6,9 @@ from enum import IntEnum, auto
 class TickPhase(IntEnum):
     """
     The authoritative order of operations inside a single simulation tick.
-    Locked by the Milestone A Closure Contract.
+    Status: FROZEN (Resource Phase 4 Milestone 1)
+    
+    Locked by the Phase 4 Baseline Freeze Contract.
     """
     INIT = auto()           # Context setup, policy/governance evaluation
     SCHEDULING = auto()     # Work selection and budgeting

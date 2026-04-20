@@ -26,20 +26,28 @@ The Project Lawbook is the canonical authority on the simulation engine's archit
 
 ## Table of Contents
 
-### Technical Contracts
-- [Simulation Kernel (M1)](simulation_kernel_contract_m1.md): Tick semantics and phase ordering.
-- [Runtime Profiles (M1)](runtime_profiles_m1.md): Envelope schema and hardware levels.
-- [Runtime State (M3)](runtime_state_contract_m3.md): Authoritative vs Non-authoritative partitioning.
-- [Scheduler & Work Model (M4)](scheduler_contract_m4.md): Eligibility and prioritization.
-- [Resource Governor (M5)](resource_governor_contract_m5.md): Degradation and shedding laws.
-- [Replay & Retention (M6)](replay_contract_m6.md): Bounded persistence and rollback semantics.
-- [Observability & Controls (M7)](observability_contract_m7.md): Operational budgets and terminal commands.
-- [Worker & Parallelism (M8)](worker_contract_m8.md): Concurrency bounds and deterministic fallback.
-- [Certification & Resilience (M9)](certification_contract_m9.md): Hardware labeling and honest-language reporting.
+### Technical Contracts (Substrate)
+- [Simulation Kernel (Substrate)](simulation_kernel_contract_m1.md): Tick semantics and phase ordering.
+- [Runtime Profiles (Substrate)](runtime_profiles_m1.md): Envelope schema and hardware levels.
+- [Runtime State (Substrate)](runtime_state_contract_m3.md): Authoritative vs Non-authoritative partitioning.
+- [Scheduler & Work Model (Substrate)](scheduler_contract_m4.md): Eligibility and prioritization.
+- [Resource Governor (Substrate)](resource_governor_contract_m5.md): Degradation and shedding laws.
+- [Replay & Retention (Substrate)](replay_contract_m6.md): Bounded persistence and rollback semantics.
+- [Observability & Controls (Substrate)](observability_contract_m7.md): Operational budgets and terminal commands.
+- [Worker & Parallelism (Substrate)](worker_contract_m8.md): Concurrency bounds and deterministic fallback.
+- [Certification & Resilience (Substrate)](certification_contract_m9.md): Hardware labeling and honest-language reporting.
+
+### Technical Contracts (Phase 4: Gameplay Attachment)
+- [M1: Substrate Freeze](runtime_completion_contract_ma.md): Closing the repaired baseline.
+- [M2: Movement Slice](attach_gate1_movement_scope.md): First deterministic gameplay slice.
+- [M3: Optimization](performance_contract.md): Benchmark-driven performance.
+- [M4: Resource Slice](m4_test_matrix.md): Resource-node interaction.
+- [M5: Gameplay Surface](supported_gameplay_surface_m5.md): Integrated certification.
 
 ### Maintenance & Contribution
 - [Engineering Playbook (M10)](engineering_playbook_m10.md): Extension templates and TDD workflow.
 - [Root Contributing Guide](../../CONTRIBUTING.md): Top-level safety guardrails.
+- [Divergence Log](attach_gate1_movement_scope.md): Canonical record of intentional parity shifts.
 
 ## Release-Readiness (M10)
 This engine is certified for production deployment under the following conditions:

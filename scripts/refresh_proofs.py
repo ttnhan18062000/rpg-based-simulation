@@ -10,7 +10,7 @@ sys.path.insert(0, os.getcwd())
 from src_v2.config.profiles import RuntimeProfile, HardwareClass
 from src_v2.core.state import AuthoritativeState, EntityState
 from src_v2.certification.harness import CertificationHarness
-from src_v2.certification.scenarios import get_scenario_expectations, PressureInjector
+from src_v2.certification.scenarios import get_scenario_expectations, PressureInjector, build_scenario_state
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("refresh_proofs")
@@ -56,9 +56,10 @@ def refresh_all():
             logger.info(f"--- REFRESHING: {p_name} x {s_id} ---")
             expectations = get_scenario_expectations(s_id)
             
-            # 1. BOLUS PRESSURE (Distributed across 4 subsystems to hit 16 drain/tick)
-            state = base_state
+            # 1. Use scenario-specific base state if available (Milestone 5)
+            state = build_scenario_state(s_id)
             
+            # 2. BOLUS PRESSURE (Distributed across 4 subsystems to hit 16 drain/tick)
             if "SURVIVAL" in expectations.required_governor_modes:
                 # 1200 total debt. 1200 / 16 = 75 ticks to recovery. (Passes 100 limit)
                 for sys_id in ["KERNEL", "REPLAY", "PHYSICS", "AI"]:

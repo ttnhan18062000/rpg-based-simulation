@@ -11,7 +11,7 @@ def default_simulation_worker(packet: WorkerPacket) -> WorkerResult:
     """
     if packet.work_kind == "ENTITY_MOVE":
         target = packet.payload.get("target_position", packet.subject.position)
-        update = SimulationDomainLogic.execute_move(packet.subject, target)
+        update = SimulationDomainLogic.execute_move(packet, packet.subject, target)
     elif packet.work_kind == "ENTITY_ACT":
         update = SimulationDomainLogic.execute_action(packet.subject, packet.payload)
     else:

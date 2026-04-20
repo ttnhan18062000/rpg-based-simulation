@@ -1,0 +1,18 @@
+# Test Plan - TCK-20260420-CORE-MOVEMENT-SLICE
+
+## Verification Strategy
+- **Differential Parity Test**: Capture movement validation results from the original `src` engine and verify that the `src_v2` engine produces bit-identical outputs for the same scenarios.
+
+## Test Harness
+- Oracle: `tests_v2/parity/movement_oracle/results.json` (Captured via `capture_src_movement_oracle.py`)
+- Verifier: `tests_v2/parity/movement_oracle/verify_v2_movement.py`
+
+## Scenarios
+1. **success_move**: Valid cardinal step.
+2. **blocked_terrain**: Target is in static blocked tiles.
+3. **occupied_tile**: Target is occupied by another entity.
+4. **actor_dead**: Actor is not active (No-Op).
+5. **double_claim**: Target is claimed by another agent in the same tick (Transient Claim).
+
+## Result
+- All 5 scenarios PASSED.

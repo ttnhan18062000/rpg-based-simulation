@@ -54,11 +54,15 @@ class DeterministicScheduler:
         critical_items: List[WorkItem] = []
         for ent in state.entities.values():
             if ent.readiness >= 100.0:
+                work_kind = ent.properties.get("work_kind", "ENTITY_ACT")
+                payload = ent.properties.get("payload", {})
+                
                 critical_items.append(WorkItem(
                     owner_id=ent.id,
                     work_id=f"{state.tick}:critical:{ent.id}",
                     work_class=WorkClass.CRITICAL,
-                    work_kind="ENTITY_ACT",
+                    work_kind=work_kind,
+                    payload=payload,
                     readiness=ent.readiness
                 ))
         

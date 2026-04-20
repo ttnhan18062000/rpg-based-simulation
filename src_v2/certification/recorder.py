@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import json
 from pathlib import Path
 from src_v2.certification.models import CertificationResult
 
@@ -8,48 +9,62 @@ from src_v2.certification.models import CertificationResult
 class CertificationRecorder:
     """
     M10 Law: Record machine-readable truth and generate MD derivatives.
-    Enforces the 'Honest Reporting Logic Invariant':
-    Reports CANNOT be generated unless claim is strictly bound to:
-    (Profile, Scenario, Hardware Class, Commit SHA).
     """
 
     def __init__(self, output_dir: str = "reports/release_proof"):
         self._output_dir = Path(output_dir)
         self._output_dir.mkdir(parents=True, exist_ok=True)
-
     def record(self, result: CertificationResult) -> str:
         """
-        Record the machine-readable truth and generate the MD derivative.
-        Enforces logic invariants.
+        M10 Law: Record machine-readable truth in a consolidated bundle.
         """
         # 1. Invariant Check: Scoped metadata must be present
-        if not result.commit_sha or result.commit_sha == "unknown-dirty":
-            pass
-            
         if not result.environment.effective_class:
             raise ValueError("M10 Law: Certification cannot be recorded without an Effective Hardware Class.")
 
-        # 2. Machine-readable artifact (The Proof)
-        file_id = f"{result.profile_name}_{result.scenario_id}"
-        json_path = self._output_dir / f"release_proof_{file_id}.json"
-        with open(json_path, "w") as f:
-            f.write(result.to_json())
+        # 2. Update Machine-readable Bundle (proofs_bundle.json)
+        bundle_path = self._output_dir / "proofs_bundle.json"
+        bundle = {}
+        if bundle_path.exists():
+            try:
+                with open(bundle_path, "r") as f:
+                    bundle = json.load(f)
+            except Exception:
+                bundle = {}
 
-        # 3. Markdown summary (The Scoped Report)
+        # Keyed by profile x scenario for easy lookup
+        key = f"{result.profile_name}:{result.scenario_id}"
+        bundle[key] = json.loads(result.to_json())
+        
+        with open(bundle_path, "w") as f:
+            json.dump(bundle, f, indent=2)
+
+        # 3. Consolidate Markdown (Unified Release Report)
+        # We rewrite the report to include all results in the bundle for completeness.
         md_path = self._output_dir / "release_report.md"
-        # We append to the report or overwrite? 
-        # Milestone E usually wants one summary report, but we'll provide 
-        # scenario-specific reports too for detail.
-        detail_md_path = self._output_dir / f"release_report_{file_id}.md"
-        with open(detail_md_path, "w") as f:
-            f.write(self._generate_markdown(result))
+        with open(md_path, "w") as f:
+            f.write("# Consolidated Certification Report\n\n")
+            f.write(f"**Last Run ID**: `{result.run_id}`\n")
+            f.write(f"**Commit SHA**: `{result.commit_sha}`\n\n")
+            f.write("## Scenario Summary\n\n")
+            f.write("| Profile | Scenario | Status | Fail Kind | Reason |\n")
+            f.write("| :--- | :--- | :--- | :--- | :--- |\n")
             
-        # Also maintain a 'latest' link for easy inspection
-        latest_md_path = self._output_dir / "release_report_latest.md"
-        with open(latest_md_path, "w") as f:
+            # Sort by profile then scenario
+            sorted_keys = sorted(bundle.keys())
+            for k in sorted_keys:
+                r = bundle[k]
+                status = "✅" if r["conformance_passed"] else "❌"
+                if r.get("allowed_failure_observed"): status = "⚠️"
+                f.write(f"| {r['profile_name']} | {r['scenario_id']} | {status} | {r['failure_kind']} | {r.get('failure_reason', '')} |\n")
+            
+            f.write("\n---\n\n")
+            
+            # Detailed breakdown for the CURRENT result (or all? Let's do latest and summary)
+            f.write("## Latest Run Detail\n\n")
             f.write(self._generate_markdown(result))
 
-        return str(json_path)
+        return str(bundle_path)
 
     def _generate_markdown(self, result: CertificationResult) -> str:
         """

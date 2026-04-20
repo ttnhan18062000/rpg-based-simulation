@@ -73,6 +73,15 @@ def test_early_rotation_trigger(replay_dir):
     # 75% > 50% threshold -> Should rotate
     manager.on_tick_end(1)
     assert manager._current_chunk_id == 1
+    
+    # Wait for background persistence to update the manifest (M7 Law)
+    import time
+    for _ in range(50):
+        with manager._manifest_lock:
+            if len(manager._manifest["chunks"]) == 1:
+                break
+        time.sleep(0.01)
+        
     assert len(manager._manifest["chunks"]) == 1
 
 def test_atomic_manifest_write(replay_dir):

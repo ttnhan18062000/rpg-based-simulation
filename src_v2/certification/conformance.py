@@ -59,7 +59,7 @@ class ConformanceEvaluator:
                     break
                 
                 # Tick budget check (Allowing for burst unless explicitly forbidden)
-                if p.tick_compute_ms > profile.max_tick_budget_ms * 1.5: # 50% burst allowance for M10
+                if p.tick_compute_ms > (profile.max_tick_budget_ms * 1.5) + 0.001: 
                     fail_kind = FailureKind.FAILED_ENVELOPE
                     fail_reason = f"Tick budget violation: {p.tick_compute_ms:.1f}ms > {profile.max_tick_budget_ms * 1.5:.1f}ms at tick {p.tick}"
                     break

@@ -32,6 +32,8 @@ class Kernel:
     """
     v2 is a deterministic, resource-bounded, profile-driven simulation runtime.
     
+    Status: FROZEN (Resource Phase 4 Milestone 1)
+    
     Milestone A Law: The single-process path is the absolute semantic source of truth.
     Authoritative Phases: INIT -> SCHEDULING -> COLLECTION -> RESOLUTION -> CLEANUP -> ADVANCEMENT
     Any logic outside these 6 phases is strictly non-authoritative.
@@ -43,7 +45,8 @@ class Kernel:
         "_worker_manager", "_executor", "_stopped",
         "_start_perf_ts", "_current_world_time", "_platform_signals",
         "_current_signals", "_current_policy", "_current_work_items",
-        "_source_packets", "_source_work_items", "_final_results", "_final_compute_ms"
+        "_source_packets", "_source_work_items", "_final_results", "_final_compute_ms",
+        "_phase_costs"
     )
 
     def __init__(
@@ -58,13 +61,7 @@ class Kernel:
         executor: Optional[IWorkExecutor] = None,
         flags: Optional[Dict[str, bool]] = None
     ) -> None:
-        # M7 Law: Startup Validation
-        from src_v2.config.validator import ProfileValidator
-        ProfileValidator.validate_profile(profile)
-        if flags:
-            ProfileValidator.validate_flags(flags, profile)
         self._stopped = False
-
         self._profile = profile
         self._state = state
         self._rng = rng
@@ -107,26 +104,71 @@ class Kernel:
             self._executor = LocalSequentialExecutor()
 
         self._current_world_time = state.world_time
+        self._phase_costs = {}
+
+        # M7 Law: Formal Validation Gate
+        # By default we validate on init, but this can be bypassed or re-triggered.
+        self.validate(flags)
+
+    def validate(self, flags: Optional[Dict[str, bool]] = None) -> None:
+        """
+        Authoritative validation of the kernel configuration.
+        M7 Law: This boundary allows for patch-time validation without restart.
+        """
+        from src_v2.config.validator import ProfileValidator
+        ProfileValidator.validate_profile(self._profile)
+        if flags:
+             ProfileValidator.validate_flags(flags, self._profile)
 
     def tick_once(self) -> None:
         """
         Execute exactly one simulation tick in the authoritative contract order.
-        Milestone A Sequence: 1. INIT, 2. SCHEDULING, 3. COLLECTION, 4. RESOLUTION, 5. CLEANUP, 6. ADVANCEMENT.
+        Status: FROZEN (Resource Phase 4 Milestone 1)
+        
+        Law of 6 Phases (Step 1-6):
+        1. INIT        (Context & Governance)
+        2. SCHEDULING  (Work selection)
+        3. COLLECTION  (Execution)
+        4. RESOLUTION  (Authoritative Apply)
+        5. CLEANUP     (Internal metrics)
+        6. ADVANCEMENT (Signal recording)
+        
+        Non-Authoritative (Step 7+):
+        7. PERSISTENCE (Observational: Replay, Logs)
         """
         if getattr(self, "_stopped", False):
              logger.warning("Attempted tick_once after shutdown.")
              return
 
         # 1-6 Authoritative Sequence
+        t0 = time.perf_counter_ns()
         self._phase_init()
-        self._phase_scheduling()
-        self._phase_collection()
-        self._phase_resolution()
-        self._phase_cleanup()
-        self._phase_advancement()
+        t1 = time.perf_counter_ns()
+        self._phase_costs["init"] = (t1 - t0) / 1e6
         
-        # 7. Non-authoritative Persistence
+        self._phase_scheduling()
+        t2 = time.perf_counter_ns()
+        self._phase_costs["scheduling"] = (t2 - t1) / 1e6
+        
+        self._phase_collection()
+        t3 = time.perf_counter_ns()
+        self._phase_costs["collection"] = (t3 - t2) / 1e6
+        
+        self._phase_resolution()
+        t4 = time.perf_counter_ns()
+        self._phase_costs["resolution"] = (t4 - t3) / 1e6
+        
+        self._phase_cleanup()
+        t5 = time.perf_counter_ns()
+        self._phase_costs["cleanup"] = (t5 - t4) / 1e6
+        
+        self._phase_advancement()
+        t6 = time.perf_counter_ns()
+        self._phase_costs["advancement"] = (t6 - t5) / 1e6
+        
+        # 7. Non-authoritative Persistence (Timed separately if needed, but not in authoritative budget)
         self._phase_persistence()
+        self._phase_costs["persistence"] = (time.perf_counter_ns() - t6) / 1e6
 
     def _phase_init(self) -> None:
         """1. INIT (Context setup, Governance, policy evaluation)"""
@@ -153,7 +195,9 @@ class Kernel:
             memory_estimate_mb=self._platform_signals["rss_mb"],
             replay_backlog_kb=replay_stats["backlog_kb"],
             active_workers=worker_stats["active_workers"],
-            dropped_work_delta=self._status.dropped_work_delta
+            dropped_work_delta=self._status.dropped_work_delta,
+            phase_costs_ms=(self._status.signal_history[-1].phase_costs_ms 
+                            if self._status.signal_history else {})
         )
         
         # Policy Evaluation
@@ -163,6 +207,9 @@ class Kernel:
             self._status, 
             self._state.tick
         )
+        
+        # M8 Law: Proactive Concurrency Shedding
+        self._executor.set_concurrency_limit(self._current_policy.concurrency_limit)
 
     def _phase_scheduling(self) -> None:
         """2. SCHEDULING (Work selection under policy)"""
@@ -214,7 +261,21 @@ class Kernel:
                 # Failure-to-No-Op Law
                 entity_updates[res.entity_id] = EntityUpdate(entity_id=res.entity_id)
 
-        update = StateUpdate(entity_updates=entity_updates, periodic_updates={}, work_debt_updates=work_debt_updates)
+        update = StateUpdate(
+            entity_updates=entity_updates, 
+            node_updates={}, 
+            resource_updates={},
+            periodic_updates={}, 
+            work_debt_updates=work_debt_updates
+        )
+        
+        # M4 Law: Authoritative Interaction Filtering
+        from src_v2.engine.interaction import InteractionSystem
+        update = InteractionSystem.enforce(self._state, update)
+        
+        # M4 Law: Town Territory Resolution
+        from src_v2.engine.town_resolution import TownResolutionSystem
+        update = TownResolutionSystem.resolve(self._state, update)
         
         from src_v2.engine.apply import ApplyPath
         next_tick = self._state.tick + 1
@@ -245,13 +306,15 @@ class Kernel:
             memory_estimate_mb=self._platform_signals["rss_mb"],
             replay_backlog_kb=terminal_replay_stats["backlog_kb"],
             active_workers=terminal_worker_stats["active_workers"],
-            dropped_work_delta=self._status.dropped_work_delta
+            dropped_work_delta=self._status.dropped_work_delta,
+            phase_costs_ms=self._phase_costs.copy()
         ))
 
     def _phase_persistence(self) -> None:
         """
         7. PERSISTENCE (Non-authoritative hooks: Replay, logging, metrics)
         Law: This phase is observational only. It MUST NOT mutate AuthoritativeState.
+        Any failure in this phase MUST NOT affect simulation integrity.
         """
         if self._status.current_mode == RuntimeMode.SURVIVAL:
             # In SURVIVAL mode, we might want to skip some non-authoritative work
@@ -266,7 +329,7 @@ class Kernel:
             tick=self._state.tick,
             system="KERNEL",
             event_type="WORK_SCHEDULED",
-            payload={"count": len(self._current_work_items), "mode": str(self._status.current_mode)}
+            payload={"count": len(self._current_work_items), "mode": self._status.current_mode.name}
         ), self._current_policy)
         
         self._replay.emit(TraceEvent(

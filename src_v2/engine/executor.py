@@ -25,6 +25,9 @@ class IWorkExecutor(Protocol):
     ) -> List[WorkerResult]:
         ...
 
+    def set_concurrency_limit(self, limit: float) -> None:
+        ...
+
 class LocalSequentialExecutor:
     """
     Milestone A Law: The deterministic, single-process execution baseline.
@@ -51,7 +54,7 @@ class LocalSequentialExecutor:
                 # Execute Domain Logic Directly
                 if item.work_kind == "ENTITY_MOVE":
                     target = item.payload.get("target_position", subject.position)
-                    update = SimulationDomainLogic.execute_move(subject, target)
+                    update = SimulationDomainLogic.execute_move(state, subject, target)
                 else:
                     update = SimulationDomainLogic.execute_action(subject, item.payload)
                 
@@ -84,6 +87,10 @@ class LocalSequentialExecutor:
                 ))
         return results
 
+    def set_concurrency_limit(self, limit: float) -> None:
+        """Local executor is always sequential (limit=0 effectively)."""
+        pass
+
 class ConcurrentExecutionAdapter:
     """
     The concurrent execution strategy.
@@ -92,6 +99,10 @@ class ConcurrentExecutionAdapter:
     def __init__(self, worker_manager: WorkerManager, concurrency_limit: float = 1.0):
         self._worker_manager = worker_manager
         self._concurrency_limit = concurrency_limit
+
+    def set_concurrency_limit(self, limit: float) -> None:
+        """Update the active concurrency throttle for the next batch."""
+        self._concurrency_limit = limit
 
     def execute(
         self, 

@@ -10,6 +10,7 @@ from src_v2.core.replay_modes import ReplayMode
 
 from concurrent.futures import ThreadPoolExecutor
 import logging
+import threading
 if TYPE_CHECKING:
     from src_v2.engine.policy import GovernorPolicy
 
@@ -59,6 +60,7 @@ class ReplayManager:
         # M7 Law: Replay IO MUST NOT block the kernel heart-beat.
         # Background executor for non-blocking persistence.
         self._executor = ThreadPoolExecutor(max_workers=1)
+        self._manifest_lock = threading.Lock()
 
     def emit(self, event: TraceEvent, policy: GovernorPolicy) -> None:
         """
@@ -105,9 +107,10 @@ class ReplayManager:
         from src_v2.core.lifecycle import LifecycleOutcome
         start_finalize = time.perf_counter()
         
-        # Shutdown background executor first to join any in-flight flushes
-        # We use wait=True but bounded by timeout_s
-        self._executor.shutdown(wait=False)
+        # Shutdown background executor and WAIT for pending flushes
+        # M7 Law: Bounded non-authoritative flush budget.
+        # Note: ThreadPoolExecutor.shutdown does not support timeout in standard Python.
+        self._executor.shutdown(wait=True)
         
         outcome = LifecycleOutcome.SUCCESS
         try:
@@ -146,7 +149,8 @@ class ReplayManager:
         }
         
         # M7 Law: Atomic Manifest Update (Write then Rename)
-        self._sink.write_manifest(self._manifest)
+        with self._manifest_lock:
+            self._sink.write_manifest(self._manifest)
         return outcome
 
     def _rotate_chunk(self, end_tick: int, async_write: bool = True) -> None:
@@ -157,28 +161,47 @@ class ReplayManager:
 
         if async_write:
             # Submit to background thread to satisfy M7 "Non-blocking" Law
-            self._executor.submit(self._execute_persistence, end_tick, events)
+            # M6 Law: Capture metadata snapshot to prevent race with next tick
+            self._executor.submit(
+                self._execute_persistence, 
+                self._current_chunk_id,
+                self._chunk_start_tick,
+                end_tick, 
+                events
+            )
         else:
             # Synchronous path for shutdown or small-scale tests
-            self._execute_persistence(end_tick, events)
+            self._execute_persistence(
+                self._current_chunk_id,
+                self._chunk_start_tick,
+                end_tick, 
+                events
+            )
             
         self._current_chunk_id += 1
         self._chunk_start_tick = end_tick + 1
 
-    def _execute_persistence(self, end_tick: int, events: List[TraceEvent]) -> None:
+    def _execute_persistence(
+        self, 
+        chunk_id: int, 
+        start_tick: int, 
+        end_tick: int, 
+        events: List[TraceEvent]
+    ) -> None:
         """Authoritative persistence handler (runs in background thread)."""
         try:
-            success = self._sink.persist_chunk(self._current_chunk_id, events)
+            success = self._sink.persist_chunk(chunk_id, events)
             
             if success:
-                self._manifest["chunks"].append({
-                    "id": self._current_chunk_id,
-                    "start_tick": self._chunk_start_tick,
-                    "end_tick": end_tick,
-                    "event_count": len(events)
-                })
-                # Atomic manifest write
-                self._sink.write_manifest(self._manifest)
+                with self._manifest_lock:
+                    self._manifest["chunks"].append({
+                        "id": chunk_id,
+                        "start_tick": start_tick,
+                        "end_tick": end_tick,
+                        "event_count": len(events)
+                    })
+                    # Atomic manifest write
+                    self._sink.write_manifest(self._manifest)
         except Exception as e:
             # M6 Law: Non-authoritative fallback. Failure must not stall.
             logger.error("Background persistence failed: %s", e)

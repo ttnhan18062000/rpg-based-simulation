@@ -71,7 +71,15 @@ def test_replay_order_preservation(tmp_path):
     
     # Check chunks on disk
     import json
+    import time
     chunk0_path = run_dir / "chunk_0000.json"
+    
+    # Wait for async persistence (M6 Law)
+    for _ in range(50):
+        if chunk0_path.exists():
+            break
+        time.sleep(0.01)
+        
     with open(chunk0_path, "r") as f:
         data0 = json.load(f)
         # e1, e2, e3 all land in chunk 0 if rotation is exactly at tick 2

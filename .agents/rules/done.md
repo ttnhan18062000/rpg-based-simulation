@@ -16,4 +16,5 @@ A task is not done unless all are true:
 - staging artifacts were migrated
 - no important decision is undocumented
 - repo state is consistent
+- temporary run data and certification reports were cleaned (`data/runs/`, `reports/release_proof/`)
 - no known material gap is left unstated

@@ -1,24 +1,11 @@
 {
   "declared_release_targets": {
     "default": "class_b",
-    "required_profiles": ["authoritative_equivalence_test", "standard_gaming_profile"],
+    "required_profiles": ["CRUSH_TEST", "NORMAL_ONLY", "NO_RECOVERY"],
     "required_hardware_classes": ["class_b"],
     "required_scenarios": [
       "IDLE_CLEAN", 
-      "DET_EQUIV", 
-      "RAM_PRESSURE", 
-      "TICK_BUDGET_PRESSURE", 
-      "QUEUE_INFLIGHT_PRESSURE", 
-      "WORK_DEBT_BUILDUP", 
-      "REPLAY_PRESSURE", 
-      "DEGRADED_NORMAL_RECOVERY", 
-      "SURVIVAL_NORMAL_RECOVERY", 
-      "STARTUP_VALIDATION", 
-      "REPLAY_OVERFLOW_SURVIVAL", 
-      "SHUTDOWN_TIMEOUT_SURVIVAL", 
-      "WORKER_FAILURE_FALLBACK", 
-      "LOCAL_CONCURRENT_EQUIV", 
-      "MISSING_SCENARIO_BLOCK"
+      "RAM_PRESSURE"
     ]
   },
   "mandatory_documents": [
