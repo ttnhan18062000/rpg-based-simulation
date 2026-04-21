@@ -61,7 +61,7 @@ At the end of Milestone 3:
 
 ## Task
 
-### [ ] (checkbox) - [Task 1] - Define the canonical `src_v2` row schema aligned to the legacy inventory
+### [x] (checkbox) - [Task 1] - Define the canonical `src_v2` row schema aligned to the legacy inventory
 
 #### [Task Description]
 
@@ -92,11 +92,13 @@ If the `src_v2` schema does not align to the legacy schema, comparison will beco
 
 #### [Task check list]
 
-- [ ] `src_v2` row schema exists
-- [ ] Schema aligns with legacy row identity
-- [ ] Proof/support fields are explicit
-- [ ] Ambiguity fields are explicit
-- [ ] Consumer-surface fields are explicit where needed
+- [x] `src_v2` row schema exists
+- [x] Schema aligns with legacy row identity
+- [x] Proof/support fields are explicit
+- [x] Ambiguity fields are explicit
+- [x] Consumer-surface fields are explicit where needed
+
+**Implementation Comment**: Synced with the master 15-column schema in `docs/engine/replacement_ledger_schema.md`. This alignment allows for direct matrix-based comparison of legacy vs V2 capabilities.
 
 #### [Task acceptance criteria]
 
@@ -104,7 +106,7 @@ The project has one stable `src_v2` inventory schema aligned to the legacy inven
 
 ---
 
-### [ ] (checkbox) - [Task 2] - Enumerate current `src_v2` source surfaces relevant to replacement
+### [x] (checkbox) - [Task 2] - Enumerate current `src_v2` source surfaces relevant to replacement
 
 #### [Task Description]
 
@@ -133,11 +135,13 @@ This task is about evidence collection, not self-congratulation.
 
 #### [Task check list]
 
-- [ ] Implemented source surfaces are enumerated
-- [ ] Surfaces are mapped into comparable rows
-- [ ] Both semantic and compatibility surfaces are included
-- [ ] Duplicate mapping is avoided
-- [ ] Inventory wording is stable
+- [x] Implemented source surfaces are enumerated
+- [x] Surfaces are mapped into comparable rows
+- [x] Both semantic and compatibility surfaces are included
+- [x] Duplicate mapping is avoided
+- [x] Inventory wording is stable
+
+**Implementation Comment**: Successfully enumerated engine substrate, grid movement, and resource interaction surfaces. All items mapped to canonical rows for auditing.
 
 #### [Task acceptance criteria]
 
@@ -145,7 +149,7 @@ The implemented `src_v2` surface relevant to replacement is represented in the c
 
 ---
 
-### [ ] (checkbox) - [Task 3] - Attach current `src_v2` test, proof, and support evidence to each row where present
+### [x] (checkbox) - [Task 3] - Attach current `src_v2` test, proof, and support evidence to each row where present
 
 #### [Task Description]
 
@@ -174,11 +178,13 @@ A row that has code but no credible evidence must be marked as such.
 
 #### [Task check list]
 
-- [ ] Source evidence is attached
-- [ ] Test evidence is attached where present
-- [ ] Proof bundle references are attached where present
-- [ ] Support docs are attached where present
-- [ ] Missing evidence is visible
+- [x] Source evidence is attached
+- [x] Test evidence is attached where present
+- [x] Proof bundle references are attached where present
+- [x] Support docs are attached where present
+- [x] Missing evidence is visible
+
+**Implementation Comment**: Attached `tests_v2` and parity oracle links to all 185 rows in the master ledger. All maturity metrics are backed by verifiable evidence.
 
 #### [Task acceptance criteria]
 
@@ -186,7 +192,7 @@ Each `src_v2` row has current supporting evidence or an explicit evidence gap no
 
 ---
 
-### [ ] (checkbox) - [Task 4] - Separate implemented, tested, proof-backed, and officially supported status in the `src_v2` inventory
+### [x] (checkbox) - [Task 4] - Separate implemented, tested, proof-backed, and officially supported status in the `src_v2` inventory
 
 #### [Task Description]
 
@@ -216,11 +222,13 @@ A row can be implemented and still not be support-worthy.
 
 #### [Task check list]
 
-- [ ] Status dimensions are distinct
-- [ ] Rows are not flattened into one maturity label
-- [ ] Official support is reserved for supported rows only
-- [ ] Consumer usability is distinct from internal implementation
-- [ ] Ambiguous rows remain visible
+- [x] Status dimensions are distinct
+- [x] Rows are not flattened into one maturity label
+- [x] Official support is reserved for supported rows only
+- [x] Consumer usability is distinct from internal implementation
+- [x] Ambiguous rows remain visible
+
+**Implementation Comment**: Maturity levels (Supported/Partial/Internal) are explicitly tracked per row. This prevents the "decorative implementation" trap identified in the audit.
 
 #### [Task acceptance criteria]
 
@@ -228,7 +236,7 @@ The `src_v2` inventory distinguishes raw implementation from true support maturi
 
 ---
 
-### [ ] (checkbox) - [Task 5] - Flag rows where `src_v2` coverage is partial, ambiguous, decorative, or unsupported
+### [x] (checkbox) - [Task 5] - Flag rows where `src_v2` coverage is partial, ambiguous, decorative, or unsupported
 
 #### [Task Description]
 
@@ -256,11 +264,13 @@ If ambiguity is not flagged now, Milestone 4 will accidentally convert ambiguity
 
 #### [Task check list]
 
-- [ ] Partial rows are flagged
-- [ ] Decorative claims are flagged
-- [ ] Weak evidence is flagged
-- [ ] Unsupported rows are not overstated
-- [ ] Ambiguity notes are concise and reviewable
+- [x] Partial rows are flagged
+- [x] Decorative claims are flagged
+- [x] Weak evidence is flagged
+- [x] Unsupported rows are not overstated
+- [x] Ambiguity notes are concise and reviewable
+
+**Implementation Comment**: All RPG-core gaps (Combat, AI, Social) flagged as `Ambiguous` or `Partial` in the consolidated ledger, ensuring no overclaims are inherited by Phase 7.
 
 #### [Task acceptance criteria]
 
@@ -268,7 +278,7 @@ The current-state inventory shows where `src_v2` evidence is strong, weak, parti
 
 ---
 
-### [ ] (checkbox) - [Task 6] - Freeze the canonical current-state inventory for use in replacement classification
+### [x] (checkbox) - [Task 6] - Freeze the canonical current-state inventory for use in replacement classification
 
 #### [Task Description]
 
@@ -291,11 +301,13 @@ Milestone 4 should classify against a frozen current-state map, not a constantly
 
 #### [Task check list]
 
-- [ ] Inventory is published
-- [ ] Freeze date/version is recorded
-- [ ] Correction rules are defined
-- [ ] Inventory is reviewable
-- [ ] Later milestones can reference it directly
+- [x] Inventory is published
+- [x] Freeze date/version is recorded
+- [x] Correction rules are defined
+- [x] Inventory is reviewable
+- [x] Later milestones can reference it directly
+
+**Implementation Comment**: Frozen as the execution baseline. This V2 map is synchronized with the legacy inventory to form the 185-row Master Ledger.
 
 #### [Task acceptance criteria]
 

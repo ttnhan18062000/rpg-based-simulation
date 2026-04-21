@@ -97,7 +97,7 @@ At the end of Milestone 1:
 
 ## Task
 
-### [ ] (checkbox) - [Task 1] - Freeze the exact supported Phase 5 slice as the formal Phase 6 baseline
+### [x] (checkbox) - [Task 1] - Freeze the exact supported Phase 5 slice as the formal Phase 6 baseline
 
 #### [Task Description]
 
@@ -129,11 +129,13 @@ Do not let “there is code” masquerade as “officially supported.”
 
 #### [Task check list]
 
-- [ ] Supported Phase 5 surface is explicit
-- [ ] Unsupported remainder is explicit
-- [ ] Experimental or partial surfaces are not misrepresented
-- [ ] Execution-mode assumptions are explicit where relevant
-- [ ] Baseline wording matches actual code/tests
+- [x] Supported Phase 5 surface is explicit
+- [x] Unsupported remainder is explicit
+- [x] Experimental or partial surfaces are not misrepresented
+- [x] Execution-mode assumptions are explicit where relevant
+- [x] Baseline wording matches actual code/tests
+
+**Implementation Comment**: Frozen via `docs/engine/phase5_exit_support_boundary.md`. This artifact explicitly defines the Move-Harvest-Resolve loop and Blacksmith crafting as the official baseline, while excluding combat and advanced economy.
 
 #### [Task acceptance criteria]
 
@@ -141,7 +143,7 @@ The project has one precise statement of the supported Phase 5 slice that Phase 
 
 ---
 
-### [ ] (checkbox) - [Task 2] - Consolidate known Phase 5 divergences, limitations, and unsupported remainder into one truth package
+### [x] (checkbox) - [Task 2] - Consolidate known Phase 5 divergences, limitations, and unsupported remainder into one truth package
 
 #### [Task Description]
 
@@ -173,11 +175,13 @@ It is a false support claim waiting to happen.
 
 #### [Task check list]
 
-- [ ] Preserved behavior already claimed by Phase 5 is listed
-- [ ] Intentional divergences are listed
-- [ ] Unsupported remainder is listed
-- [ ] Limitations are listed
-- [ ] Every mismatch has rationale or is explicitly unresolved
+- [x] Preserved behavior already claimed by Phase 5 is listed
+- [x] Intentional divergences are listed
+- [x] Unsupported remainder is listed
+- [x] Limitations are listed
+- [x] Every mismatch has rationale or is explicitly unresolved
+
+**Implementation Comment**: Established `docs/engine/phase5_truth_package.md` as the master index. Divergences are detailed in `docs/engine/divergence_log.md` with handbook-compliant rationales (Bug Fix, Contract Hardening, etc.). Limitations are cataloged in `docs/engine/known_limitations.md`.
 
 #### [Task acceptance criteria]
 
@@ -185,7 +189,7 @@ Phase 5 ends with one discoverable truth package for preserved, divergent, unsup
 
 ---
 
-### [ ] (checkbox) - [Task 3] - Consolidate Phase 5 proof artifacts into a discoverable baseline entry package
+### [x] (checkbox) - [Task 3] - Consolidate Phase 5 proof artifacts into a discoverable baseline entry package
 
 #### [Task Description]
 
@@ -216,11 +220,13 @@ If the proof package is not discoverable, Phase 6 classification work will fall 
 
 #### [Task check list]
 
-- [ ] Proof artifacts are indexed
-- [ ] Links to supporting tests exist
-- [ ] Lifecycle/certification implications are referenced where relevant
-- [ ] Evidence package is readable without tribal knowledge
-- [ ] Package matches current supported claims
+- [x] Proof artifacts are indexed
+- [x] Links to supporting tests exist
+- [x] Lifecycle/certification implications are referenced where relevant
+- [x] Evidence package is readable without tribal knowledge
+- [x] Package matches current supported claims
+
+**Implementation Comment**: Created `docs/engine/phase5_proof_bundle.md`. This artifact provides a direct index to parity oracles, contract test suites, and certification results. All claims of "Official Support" are now discoverable and verifiable by external reviewers.
 
 #### [Task acceptance criteria]
 
@@ -228,7 +234,7 @@ The current Phase 5 baseline has one discoverable proof package suitable for Pha
 
 ---
 
-### [ ] (checkbox) - [Task 4] - Reconcile release-truth and support-language surfaces with the actual baseline
+### [x] (checkbox) - [Task 4] - Reconcile release-truth and support-language surfaces with the actual baseline
 
 #### [Task Description]
 
@@ -260,11 +266,13 @@ A strong runtime with dishonest release language is still dishonest.
 
 #### [Task check list]
 
-- [ ] Overclaims are removed
-- [ ] Support language matches proof language
-- [ ] Replacement language matches actual baseline
-- [ ] Docs and release artifacts say the same thing
-- [ ] Known limitations remain visible
+- [x] Overclaims are removed
+- [x] Support language matches proof language
+- [x] Replacement language matches actual baseline
+- [x] Docs and release artifacts say the same thing
+- [x] Known limitations remain visible
+
+**Implementation Comment**: Hardened `README.md`, `pitch.md`, and high-level matrices. Removed all overclaims regarding combat or social support. Added explicit baseline warnings and qualified the "substrate-only" nature of standard milestones.
 
 #### [Task acceptance criteria]
 
@@ -272,7 +280,7 @@ Release/documentation truth is aligned with the actual Phase 5 baseline.
 
 ---
 
-### [ ] (checkbox) - [Task 5] - Freeze the formal Phase 5 exit package for downstream Phase 6 use
+### [x] (checkbox) - [Task 5] - Freeze the formal Phase 5 exit package for downstream Phase 6 use
 
 #### [Task Description]
 
@@ -301,11 +309,13 @@ Do not let later milestones renegotiate the Phase 5 baseline casually.
 
 #### [Task check list]
 
-- [ ] Supported slices are listed
-- [ ] Proof status is listed
-- [ ] Divergences are listed
-- [ ] Limitations are listed
-- [ ] Package is concise and authoritative
+- [x] Supported slices are listed
+- [x] Proof status is listed
+- [x] Divergences are listed
+- [x] Limitations are listed
+- [x] Package is concise and authoritative
+
+**Implementation Comment**: Published `docs/engine/phase5_exit_package.md`. This is the single authoritative source for Phase 6 entry, unifying truth, proof, and support boundaries for the replacement ledger phase.
 
 #### [Task acceptance criteria]
 
@@ -313,7 +323,7 @@ A single Phase 5 exit package exists and is usable as the official Phase 6 input
 
 ---
 
-### [ ] (checkbox) - [Task 6] - Publish the formal “Phase 6 ready” gate
+### [x] (checkbox) - [Task 6] - Publish the formal “Phase 6 ready” gate
 
 #### [Task Description]
 
@@ -341,11 +351,13 @@ This is the line between “still cleaning Phase 5” and “actually entering P
 
 #### [Task check list]
 
-- [ ] Gate conditions are explicit
-- [ ] Gate conditions are evidence-backed
-- [ ] Approval criteria are reviewable
-- [ ] Known limitations are attached
-- [ ] Phase 6 entry is no longer ambiguous
+- [x] Gate conditions are explicit
+- [x] Gate conditions are evidence-backed
+- [x] Approval criteria are reviewable
+- [x] Known limitations are attached
+- [x] Phase 6 entry is no longer ambiguous
+
+**Implementation Comment**: The exit package and accompanying integrity tests (`tests_v2/docs/test_doc_integrity.py`) formally constitute the Phase 6 ready gate. All requirements for Milestone 1 are satisfied.
 
 #### [Task acceptance criteria]
 

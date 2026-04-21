@@ -22,19 +22,17 @@ Think of it as an **ant farm meets Final Fantasy** — a living world you observ
 
 ### 🌍 A Complete Living World
 
-This isn't a toy simulation. The systems are deep enough to produce real RPG gameplay:
+> [!IMPORTANT]
+> **Verified Baseline (Phase 5)**: Only the core **Move-Harvest-Resolve-Craft** loop is currently verified for bit-identical parity in `src_v2`. Systems marked as "Vision" or "Legacy" are currently being classified in the Phase 6 replacement ledger.
 
-| System | What It Does |
-|--------|-------------|
-| **8 biomes** | Forest, desert, swamp, mountain, grassland, snow, jungle, volcanic — each with unique races, resources, and terrain features |
-| **9+ factions** | Hero Guild, Goblin Horde, Wolf Pack, Bandit Clan, Undead, Orc Tribe, Centaur Herd, Frost Kin, Lizardfolk, Demon Horde — with territory, hostility, and faction-aware AI |
-| **4 hero classes** | Warrior → Champion, Ranger → Sharpshooter, Mage → Archmage, Rogue → Assassin — each with unique skills, scaling, and playstyle |
-| **30+ item types** | Weapons, armor, accessories, potions, crafting materials — with rarity tiers (Common → Epic) and stat bonuses |
-| **AoE & ranged combat** | Whirlwind, Rain of Arrows, Fireball — with weapon range, line of sight, cover, threat/aggro, kiting AI |
-| **A* pathfinding** | Terrain-cost-aware routing with road preference, path caching, and greedy fallback |
-| **Full economy** | Shop, blacksmith, guild — heroes sell loot, buy potions, learn recipes, craft gear |
-| **Personality traits** | Brave, Cautious, Greedy, Curious, Resilient — each modifies AI goal scoring differently |
-| **Region difficulty** | Tier 1–4 scaling by distance from town — stat multipliers, loot quality, and mob composition increase |
+| System | Verified Level (Phase 5) | Status / Plan |
+| :--- | :--- | :--- |
+| **Grid Engine** | **OFFICIAL** | Cardinal & Diagonal movement |
+| **Interaction** | **OFFICIAL** | Looting & Harvesting |
+| **Town Loop** | **SUPPORTED** | Blacksmith crafting (simplified) |
+| **Strategic AI** | **SUPPORTED** | Seek/Redirection loop |
+| **Combat** | **UNSUPPORTED** | Pending Phase 6 Ledger |
+| **Social / Tact.**| **UNSUPPORTED** | Pending Phase 6 Ledger |
 
 ### 📖 Emergent Stories, Not Scripted Ones
 
@@ -126,13 +124,16 @@ All game definitions are pydantic dataclasses — `IntEnum` at runtime for fast 
 
 ### What's Built (production-ready)
 
-**Simulation:**
-- 200+ autonomous entities on a 512×512 Voronoi-tessellated world with 8 biomes
-- Hybrid AI: Utility AI for goal selection + State Machine for execution
-- Full combat: AoE skills, ranged weapons, threat/aggro, opportunity attacks, kiting, cover
-- A* pathfinding with terrain costs, path caching, greedy fallback
-- Economy loop: loot → sell → buy potions → gather materials → craft gear
-- 9+ factions with territory, hostility, alert states, town aura
+**Simulation (Verified Baseline):**
+- Autonomous entities on a deterministic 2D world.
+- Core Loop: Move-Harvest-Resolve-Craft (Seek loop).
+- Interaction: Deterministic looting and harvesting with strict channeling.
+- Faction: Fundamental territory and hostility checks (Territory/Aura).
+
+**Simulation (Legacy / Vision):**
+- Advanced Combat: AoE, ranged weapons, threat/aggro, opportunistic attacks.
+- Advanced Navigation: A* pathfinding with terrain costs (currently linear stepping).
+- Complex Economy: Shops, guilds, nested item rarities.
 
 **Engineering:**
 - Deterministic replay: same seed = same world on any machine (verified by SHA-256 fingerprint test)

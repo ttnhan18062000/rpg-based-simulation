@@ -5,7 +5,10 @@ A high-fidelity 2D RPG simulation engine with parallel AI, deterministic replay,
 ## Architecture
 
 > [!NOTE]
-> **Architectural Convergence Complete**: The engine has successfully migrated to a **Feature-Based Aspect-Oriented Architecture** (AOA). This design uses composition (Aspects) for entities and domain-separated modules for simulation logic. The system is fully stabilized for high-density, deterministic simulation.
+> **Architectural Convergence Complete**: The engine has successfully migrated to a **Feature-Based Aspect-Oriented Architecture** (AOA). This design uses composition (Aspects) for entities and domain-separated modules for simulation logic.
+
+> [!IMPORTANT]
+> **Current Support Baseline**: The engine is currently in the **Phase 5 Entry Gate** of the Resource Epic. Only the core interaction loop (Move/Harvest/Resolve) is officially verified for bit-identical parity. See [Phase 5 Truth Package](docs/engine/phase5_truth_package.md) for details on supported vs. unsupported logic.
 
 ```
 src/
@@ -297,9 +300,9 @@ To inspect an entity's strategic mind:
 
 The version 2 engine is protected by a **Documentation Integrity Suite** that enforces strict structural and semantic compliance across all technical contracts.
 
-### Research & Implementation Milestones (100% Complete)
+### Substrate Implementation Milestones (100% Complete)
 
-Every milestone below contains its authoritative design contract, technical implementation checklist, and final implementation comments linking the design to the `src_v2/` codebase.
+The following milestones define the **Simulation Substrate** (Kernel, Scheduling, Persistence). These represent the 100% complete foundation, but do not imply 100% gameplay logic recovery.
 
 - **[Milestone 1 — Simulation Kernel & Resource Envelope](resource_implementation_milestone_1.md)** — Sets the 8-phase deterministic tick law.
 - **[Milestone 2 — Deterministic Tick Loop & Execution Phases](resource_implementation_milestone_2.md)** — Frozen 6-phase atomic resolution cycle.

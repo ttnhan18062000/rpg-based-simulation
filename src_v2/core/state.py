@@ -6,6 +6,14 @@ from src_v2.core.strategic import StrategicComponent
 
 
 @dataclass(frozen=True, slots=True)
+class SocialComponent:
+    """State for reputation, trust, and betrayal history."""
+    trust_history: Dict[int, float] = field(default_factory=dict) # EntityID -> Trust Score
+    betrayal_count: int = 0
+    public_reputation: float = 1.0 # Standard recruitment modifier
+
+
+@dataclass(frozen=True, slots=True)
 class InteractionComponent:
     """State for multi-tick channeling logic."""
     target_node_id: int | None = None
@@ -46,6 +54,7 @@ class EntityState:
     identity: IdentityComponent = field(default_factory=IdentityComponent)
     inventory: InventoryComponent = field(default_factory=InventoryComponent)
     strategic: StrategicComponent = field(default_factory=StrategicComponent)
+    social: SocialComponent = field(default_factory=SocialComponent)
     properties: Dict[str, Any] = field(default_factory=dict)
 
 

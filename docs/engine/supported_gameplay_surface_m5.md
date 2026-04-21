@@ -10,9 +10,9 @@ This document defines the official support boundary for gameplay logic within `s
 | **Grid Movement** | OFFICIAL | Authoritative Apply | HASH_MATCH | EQUIVALENT |
 | **Resource Interaction**| OFFICIAL | InteractionSystem | HASH_MATCH | EQUIVALENT |
 | **Inventory (Bounded)** | OFFICIAL | InventoryComponent | HASH_MATCH | PROTECTED |
+| **Blacksmithing** | SUPPORTED | BlacksmithSystem | EQUIVALENT | PROTECTED |
+| **Progression Loop** | OFFICIAL | RedirectionSystem | HASH_MATCH | PROTECTED |
 | **Combat** | EXCLUDED | N/A | N/A | N/A |
-| **Crafting** | EXCLUDED | N/A | N/A | N/A |
-| **AI (Hierarchical)** | EXCLUDED | N/A | N/A | N/A |
 
 ## 3. Support Definitions
 
@@ -37,6 +37,7 @@ This document defines the official support boundary for gameplay logic within `s
 | **Inventory** | Unbounded Dict | Bounded Slots/Weight | **Resource Budgeting**: Prevents OOM via infinite item storage. |
 
 ## 5. Known Limitations
-- Movement is currently limited to 1x1 grid resolution.
-- Resource nodes do not yet support complex regeneration curves (only simple cooldowns).
-- Multi-actor contention for the same node is resolved by authoritative resolution order (first-processed-first-served).
+- Movement is currently limited to 1x1 grid resolution (no advanced pathfinding).
+- Only the "Blacksmith" building is supported for town resolution.
+- Only "Material" blockers and "Location" leads are supported in the strategic loop.
+- Multi-actor contention is resolved by authoritative resolution order.

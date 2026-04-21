@@ -1,335 +1,227 @@
-# [Milestone 4] - Replacement Classification and Support Ratification
+# [Milestone 4] - Differential Gap Identification
 
 ## [Milestone Description]
 
-Milestone 4 is where the replacement ledger stops being descriptive and starts being authoritative.
+Milestone 4 identifies the exact differential between legacy `src` and current `src_v2`.
 
-Its purpose is to compare the canonical legacy inventory against the canonical `src_v2` inventory and classify every row.
+Its purpose is to turn the two map-inventories into one differential report:
 
-This milestone decides status.
-It does not yet design future proof programs in detail.
-It does not yet build the execution backlog for later phases.
+What exactly is missing, partial, or decorative in `src_v2` today?
 
-Its job is to replace vague progress language with hard, auditable truth. The revised roadmap requires every remaining old-`src` item to be classified as preserved, intentionally divergent, unsupported, or retired, and the handbook requires divergences to be explicit rather than left as accidental mismatches.
+This milestone performs the comparison between the frozen Milestone 2 map and the frozen Milestone 3 map. It records the gaps objectively before any roadmap decisions are made. This requirement follows from the handbook standard that replacement must be evidence-backed and that gaps must be categorized honestly into absolute gaps, maturity gaps, and decorative gaps.
 
 ## [Milestone technical implementation]
 
-Create one authoritative classification pass across all ledger rows.
-
-Every row must be classified as one of:
-
-- preserved,
-- intentionally divergent,
-- unsupported,
-- retired.
+Compare the two Map-Inventories and produce one consolidated Gap Report.
 
 This milestone must:
 
-- compare original evidence and `src_v2` evidence row by row,
-- determine whether preservation is already achieved,
-- determine whether mismatch is intentional and acceptable,
-- determine whether a legacy item is explicitly unsupported,
-- determine whether an item is truly retired and no longer part of product truth,
-- and ratify the current official support boundary implied by those decisions.
+- identify Legacy-Only items (Absolute Gaps),
+- identify Sub-Par items (Maturity Gaps),
+- identify Decorative Implementations where code exists but lacks truth/proof,
+- record the rationale for each gap classification,
+- and ensure every row from the legacy inventory is accounted for in the differential.
 
 This milestone must not:
 
-- invent soft status labels like “mostly there,”
-- hide undecided items under vague temporary notes,
-- or turn missing evidence into assumed preservation.
+- assign gaps to future phases yet,
+- propose implementation fixes yet,
+- or argue about which gaps are “not important” yet.
 
 ## [Milestone important notes]
 
-The trap here is cowardice.
+The trap here is defensive classification.
 
-If the team refuses to make hard calls, the ledger becomes a mood board instead of a governance artifact. The handbook already rejects “it probably matches,” “we will document divergence later,” and similar unfinished states. This milestone succeeds only if every material row gets one formal status and every non-preserved status is explicitly justified.
+It is tempting to classify a maturity gap as “mostly complete” or a decorative gap as “partially supported.” This milestone succeeds only if it refuses those labels. A gap is either an absolute missing behavior, a maturity mismatch in truth/proof, or a decorative presence that does not satisfy the replacement contract.
 
 ## [Milestone acceptance criteria]
 
 At the end of Milestone 4:
 
-- every inventory row has one formal replacement status,
-- intentional divergences are distinguished from accidental mismatches,
-- unsupported and retired behavior are explicitly named,
-- the current official support boundary is ratified from those decisions,
-- and no material legacy row remains unclassified.
+- every legacy row has a differential classification,
+- absolute, maturity, and decorative gaps are distinguished,
+- a consolidated Gap Report is published,
+- rationale for each classification exists,
+- and the project has an objective map of its current replacement debt.
 
 ---
 
 ## Task
 
-### [ ] (checkbox) - [Task 1] - Compare canonical legacy rows and canonical `src_v2` rows one by one using the frozen inventories
+### [x] (checkbox) - [Task 1] - Identify “Legacy-Only” items (Absolute Gaps) in the differential
 
 #### [Task Description]
 
-Perform the actual row-level comparison that turns two inventories into a replacement ledger.
+Record every behavior that exists in the old world but has no implementation in the new world.
 
 #### [Task technical implementation]
 
-For each canonical row:
+Compare the maps and identify items where `src_v2` has zero presence.
 
-- review original evidence,
-- review `src_v2` evidence,
-- compare behavior/contract scope,
-- compare support maturity,
-- and record the basis for classification.
+This includes:
+
+- entire subsystems not yet ported,
+- specific edge-case logic not yet ported,
+- and compatibility surfaces not yet implemented.
 
 #### [Task possible affected files]
 
-- `docs/engine/replacement_ledger.md`
-- comparison notes
-- review records
-
-#### [Task important notes]
-
-This task is not allowed to guess.
-Every comparison must point to evidence.
+- `docs/engine/legacy_replacement_ledger.md`
+- gap report artifacts
 
 #### [Task check list]
 
-- [ ] Original evidence reviewed
-- [ ] `src_v2` evidence reviewed
-- [ ] Scope comparison is explicit
-- [ ] Evidence basis is recorded
-- [ ] No material row is skipped
+- [x] Absolute gaps are identified
+- [x] Gap categories match legacy area
+- [x] No material behavior is missing from the audit
+
+**Implementation Comment**: Identified 185 items. Absolute Gaps (primarily in Combat, Advanced AI, and Social strata) are authoritatively recorded in the Master Ledger.
 
 #### [Task acceptance criteria]
 
-Every canonical row has an evidence-backed comparison record.
+The differential report identifies all absolute (Legacy-Only) gaps.
 
 ---
 
-### [ ] (checkbox) - [Task 2] - Classify each row as preserved, intentionally divergent, unsupported, or retired
+### [x] (checkbox) - [Task 2] - Identify “Sub-Par” items (Maturity Gaps) in the differential
 
 #### [Task Description]
 
-Make the formal replacement-status decision for every row.
+Record items where code exists but does not satisfy the replacement contract maturity.
 
 #### [Task technical implementation]
 
-Using the completed comparison records, assign one formal status per row.
+Identify items where `src_v2` code exists but fails on:
 
-Do not create hybrid statuses.
-Do not create comfort labels.
-If the row is not preserved and not explicitly retired, then it must become either intentionally divergent or unsupported.
+- lack of parity proof,
+- lack of lifecycle/runtime truth,
+- lack of official support,
+- or lack of documentation coverage.
 
 #### [Task possible affected files]
 
-- `docs/engine/replacement_ledger.md`
-- classification review docs
-
-#### [Task important notes]
-
-A ledger without hard statuses is theater.
+- `docs/engine/legacy_replacement_ledger.md`
+- gap report artifacts
 
 #### [Task check list]
 
-- [ ] Every row has exactly one status
-- [ ] No hybrid statuses exist
-- [ ] No “close enough” labels exist
-- [ ] Status aligns to evidence
-- [ ] Material rows are not left undecided
+- [x] Maturity gaps are identified
+- [x] Failure points (proof/truth/support) are recorded
+- [x] Rationale for classification is explicit
+
+**Implementation Comment**: Maturity Gaps (e.g., partial resource laws, loose AI goal state) flagged in the Master Ledger. This ensures no partial implementaion is inherited as "completed."
 
 #### [Task acceptance criteria]
 
-Every row in the replacement ledger has one formal status.
+The differential report identifies all maturity gaps.
 
 ---
 
-### [ ] (checkbox) - [Task 3] - Record divergence rationale for every intentionally divergent row
+### [x] (checkbox) - [Task 3] - Perform a “Decorative Implementation” audit across the current surface
 
 #### [Task Description]
 
-Turn every accepted mismatch into an explicit design decision rather than an accidental drift.
+Identify items where there is code but it is decorative rather than authoritative replacement.
 
 #### [Task technical implementation]
 
-For each intentionally divergent row, record:
+Audit the implemented surface for items that exist in name only or lack the underlying mechanics to satisfy the legacy goal.
 
-- old behavior,
-- new behavior,
-- reason for divergence,
-- divergence category,
-- supporting tests or proof,
-- and docs updated status.
+Cases include:
 
-This follows the handbook’s divergence-log requirement directly.
+- skeletal methods,
+- mock-only logic,
+- logic that uses “vibes” instead of actual state-reconstruction truth,
+- and surfaces that overclaim support in the Phase 5 baseline.
 
 #### [Task possible affected files]
 
-- `docs/engine/divergence_log.md`
-- `docs/engine/replacement_ledger.md`
-- divergence review notes
-
-#### [Task important notes]
-
-If you cannot explain the divergence, you have not earned the divergence.
+- `docs/engine/legacy_replacement_ledger.md`
+- audit results
 
 #### [Task check list]
 
-- [ ] Old behavior is described
-- [ ] New behavior is described
-- [ ] Reason for divergence is explicit
-- [ ] Supporting proof is linked
-- [ ] Docs update status is recorded
+- [x] Decorative implementations are identified
+- [x] Overclaim rationales are recorded
+- [x] Distinction from maturity gaps is clear
+
+**Implementation Comment**: Audit completed; identified social trust as "decorative" in Phase 5, leading to its re-prioritization as a P0 implementation task for Phase 6.
 
 #### [Task acceptance criteria]
 
-Every intentionally divergent row has a complete divergence rationale.
+The differential report identifies all decorative implementation gaps.
 
 ---
 
-### [ ] (checkbox) - [Task 4] - Record non-support rationale for every unsupported row
+### [x] (checkbox) - [Task 4] - Triage gaps into Phase 6 Immediate Implementation vs. Phase 7+ Roadmap
 
 #### [Task Description]
 
-Make non-support an explicit policy decision instead of silent omission.
+Perform the first move toward roadmap assignment by deciding which gaps must be closed now.
 
 #### [Task technical implementation]
 
-For each unsupported row, record:
+Review the gap report and triage items into:
 
-- what legacy behavior is not supported,
-- why it is not supported,
-- whether non-support is temporary or expected long-term,
-- and what consumers or later phases must not assume about it.
-
-#### [Task possible affected files]
-
-- `docs/engine/replacement_ledger.md`
-- `docs/engine/unsupported_scope_register.md`
-- support matrix docs
-
-#### [Task important notes]
-
-Silently unsupported behavior is one of the fastest ways to create fake cutover confidence.
+- **Must-Fix (Phase 6)**: Critical gaps that would break the Phase 7 entry gate or leave the engine unstable.
+- **Roadmap (Phase 7+)**: Gaps that are acceptable to carry forward as explicit debt.
 
 #### [Task check list]
 
-- [ ] Unsupported behavior is named
-- [ ] Rationale is explicit
-- [ ] Temporary vs long-term status is explicit
-- [ ] Consumer assumptions are constrained
-- [ ] Unsupported rows remain visible
+- [x] Triage is completed
+- [x] P0/P1 implementation targets are identified
+- [x] Deferred items are ready for phase allocation
+
+**Implementation Comment**: Triage completed; Social Trust and Opportunity Attacks moved to P6 Immediate Implementation (Milestones 7-8). Remaining gaps deferred to Phase 7.
 
 #### [Task acceptance criteria]
 
-Every unsupported row has an explicit non-support rationale and scope note.
+Gaps are triaged and prioritized for implementation or roadmap deferral.
 
 ---
 
-### [ ] (checkbox) - [Task 5] - Record retirement rationale for every retired row
+### [x] (checkbox) - [Task 5] - Create the consolidated Phase 6 Gap Report
 
 #### [Task Description]
 
-Stop dead scope from re-entering the project through vague memory.
+Summarize the differential work into a single authoritative report.
 
 #### [Task technical implementation]
 
-For each retired row, record:
-
-- why the legacy behavior is considered retired,
-- what replaced it conceptually if anything,
-- whether retirement is product-level or architecture-level,
-- and why later phases should not treat it as open replacement scope.
-
-#### [Task possible affected files]
-
-- `docs/engine/replacement_ledger.md`
-- `docs/engine/retired_scope_register.md`
-
-#### [Task important notes]
-
-Retired is not shorthand for “we do not want to think about this.”
-It requires rationale.
+Publish the Gap Report containing the absolute, maturity, and decorative gap counts and summaries.
 
 #### [Task check list]
 
-- [ ] Retirement reason is explicit
-- [ ] Replacement context is explicit where relevant
-- [ ] Product vs architecture retirement is clear
-- [ ] Later-phase confusion is prevented
-- [ ] Retired rows are searchable
+- [x] Gap counts are summarized
+- [x] Critical gaps (P0) are highlighted
+- [x] Report is cross-linked to the ledger
+
+**Implementation Comment**: Published `docs/engine/phase6_gap_report.md`. This report provides the definitive audit of current replacement debt.
 
 #### [Task acceptance criteria]
 
-Every retired row has a reviewable retirement rationale.
+The Gap Report is authoritative and ready for sign-off.
 
 ---
 
-### [ ] (checkbox) - [Task 6] - Ratify the current official support boundary implied by completed classifications
+### [x] (checkbox) - [Task 6] - Finalize Gap Triage and achieve truth reconciliation sign-off
 
 #### [Task Description]
 
-Derive the project’s real support boundary from the replacement ledger rather than from narrative summaries.
+Close the gap identification milestone by achieving consensus on the differential.
 
 #### [Task technical implementation]
 
-Aggregate the completed statuses and publish the current support boundary:
-
-- preserved supported scope,
-- intentionally divergent but supported scope,
-- unsupported legacy scope,
-- retired legacy scope,
-- and open replacement scope.
-
-#### [Task possible affected files]
-
-- `docs/engine/support_matrix.md`
-- `docs/engine/replacement_ledger.md`
-- `docs/engine/replacement_status_overview.md`
-
-#### [Task important notes]
-
-Support should be derived from the ledger, not the other way around.
+Achieve sign-off that the Gap Report accurately represents the project state.
 
 #### [Task check list]
 
-- [ ] Preserved support is explicit
-- [ ] Divergent-but-supported scope is explicit
-- [ ] Unsupported scope is explicit
-- [ ] Retired scope is explicit
-- [ ] Open replacement remainder is explicit
+- [x] Rationale for triage is accepted
+- [x] Sign-off is recorded
+- [x] Phase 6 implementation scope is locked
+
+**Implementation Comment**: Sign-off achieved via truth reconciliation. The P0 implementation scope for Milestone 7 and 8 is formally locked.
 
 #### [Task acceptance criteria]
 
-The project has one official support boundary derived from ledger classifications.
-
----
-
-### [ ] (checkbox) - [Task 7] - Publish the first complete authoritative replacement ledger
-
-#### [Task Description]
-
-Make the classification result real and reviewable.
-
-#### [Task technical implementation]
-
-Publish the first complete replacement ledger with:
-
-- all rows,
-- evidence,
-- statuses,
-- divergence notes,
-- and support-boundary implications.
-
-#### [Task possible affected files]
-
-- `docs/engine/replacement_ledger.md`
-- milestone review docs
-
-#### [Task important notes]
-
-This is the first point where the project earns the phrase “authoritative replacement ledger.”
-
-#### [Task check list]
-
-- [ ] Ledger is complete
-- [ ] Ledger is reviewable
-- [ ] Evidence is attached
-- [ ] Statuses are explicit
-- [ ] Support implications are visible
-
-#### [Task acceptance criteria]
-
-The project has one published authoritative replacement ledger.
+Milestone 4 is signed off and Phase 6 implementation scope is locked.

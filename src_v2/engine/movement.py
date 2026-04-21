@@ -47,10 +47,24 @@ class MovementSystem:
                 property_updates={"last_move_failed": True, "failure_reason": reason_code}
             )
 
-        # 4. Success Execution
+        # 4. Opportunity Attack Check (Milestone 8 P0)
+        # If actor was engaged before moving, trigger OAs on egress.
+        engaged_hostiles = LegalityServiceV2.get_engaged_hostiles(entity, state_or_context)
+        combat_update = None
+        if engaged_hostiles:
+            from src_v2.engine.combat import CombatReactionSystem
+            # P0: For now, we resolve the first hostile's OA and apply it.
+            # In a multi-hostile engagement, we'd iterate and sum, but let's keep it simple.
+            entities = getattr(state_or_context, 'entities', {})
+            attacker = entities.get(engaged_hostiles[0])
+            if attacker:
+                combat_update = CombatReactionSystem.resolve_opportunity_attack(attacker, entity)
+
+        # 5. Success Execution
         return EntityUpdate(
             entity_id=entity.id,
             new_position=effective_target,
             moved_this_tick=True,
-            readiness_delta=-50.0 # Parity cost
+            readiness_delta=-50.0, # Parity cost
+            combat=combat_update
         )

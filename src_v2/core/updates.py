@@ -12,6 +12,13 @@ class InteractionUpdate:
     target_node_id: Optional[int] = None
     progress_delta: float = 0.0
     reset: bool = False
+
+@dataclass(frozen=True, slots=True)
+class CombatUpdate:
+    """Authoritative combat interaction results."""
+    damage_taken: float = 0.0
+    attacker_id: Optional[int] = None
+    is_opportunity_attack: bool = False
     
 @dataclass(frozen=True, slots=True)
 class IdentityUpdate:
@@ -19,6 +26,14 @@ class IdentityUpdate:
     recipes_learned: list[str] = field(default_factory=list)
     craft_target: Optional[str] = None
     navigation_target: Optional[tuple[float, float]] = None
+
+@dataclass(frozen=True, slots=True)
+class SocialUpdate:
+    """Updates to trust, reputation, and betrayal history."""
+    trust_delta: Dict[int, float] = field(default_factory=dict) # EntityID -> Delta
+    betrayal_increment: int = 0
+    reputation_set: Optional[float] = None
+
 
 @dataclass(frozen=True, slots=True)
 class StrategicUpdate:
@@ -50,6 +65,8 @@ class EntityUpdate:
     identity: Optional[IdentityUpdate] = None
     inventory: Optional[InventoryUpdate] = None
     strategic: Optional[StrategicUpdate] = None
+    social: Optional[SocialUpdate] = None
+    combat: Optional[CombatUpdate] = None
     property_updates: Dict[str, Any] = field(default_factory=dict)
 
 

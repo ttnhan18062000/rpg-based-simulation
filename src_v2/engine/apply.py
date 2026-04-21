@@ -172,6 +172,29 @@ class ApplyPath:
                 leads=new_leads
             )
 
+        # Social updates
+        new_social = entity.social
+        if update.social:
+            from src_v2.core.state import SocialComponent
+            new_trust = dict(entity.social.trust_history)
+            for eid, delta in update.social.trust_delta.items():
+                new_trust[eid] = max(0.0, min(1.0, new_trust.get(eid, 0.5) + delta))
+            
+            new_social = SocialComponent(
+                trust_history=new_trust,
+                betrayal_count=entity.social.betrayal_count + update.social.betrayal_increment,
+                public_reputation=update.social.reputation_set if update.social.reputation_set is not None else entity.social.public_reputation
+            )
+
+        # Combat updates
+        if update.combat:
+            # P0: For now, we record damage in property_updates to avoid adding 'hp' to EntityState yet
+            # as that might require a larger migration.
+            current_damage = new_properties.get("total_damage_taken", 0.0)
+            new_properties = dict(new_properties)
+            new_properties["total_damage_taken"] = current_damage + update.combat.damage_taken
+            new_properties["last_attacker_id"] = update.combat.attacker_id
+
         return replace(
             entity,
             position=update.new_position if update.new_position is not None else entity.position,
@@ -181,5 +204,6 @@ class ApplyPath:
             identity=new_identity,
             inventory=new_inventory,
             strategic=new_strategic,
+            social=new_social,
             properties=new_properties
         )

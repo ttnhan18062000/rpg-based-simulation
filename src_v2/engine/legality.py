@@ -1,9 +1,9 @@
 # src_v2/engine/legality.py
 from __future__ import annotations
-from typing import TYPE_CHECKING, Tuple, Optional
+from typing import TYPE_CHECKING, Tuple, Optional, Any
 
 if TYPE_CHECKING:
-    from src_v2.core.state import AuthoritativeState
+    from src_v2.core.state import AuthoritativeState, EntityState
 
 class LegalityServiceV2:
     """ Authoritative simulation laws for V2. """
@@ -58,3 +58,33 @@ class LegalityServiceV2:
                     return False, "OCCUPANCY_VIOLATION"
 
         return True, "ADVANCING"
+
+    @staticmethod
+    def get_engaged_hostiles(
+        actor: EntityState,
+        state_or_context: Any
+    ) -> list[int]:
+        """
+        Returns a list of hostile entity IDs adjacent to the actor.
+        AOA Stabilization: Engagement is bit-identical to adjacency in V2.
+        """
+        engaged = []
+        entities = getattr(state_or_context, 'entities', None)
+        if entities is None:
+            # Try neighbor_view (WorkerPacket)
+            entities_list = getattr(state_or_context, 'neighbor_view', [])
+            for eid, entity in entities_list:
+                if eid == actor.id: continue
+                if not entity.active: continue
+                if entity.identity.faction != actor.identity.faction:
+                    if LegalityServiceV2.is_adjacent(actor.position, entity.position):
+                        engaged.append(eid)
+        else:
+            # Handle Dictionary (AuthoritativeState)
+            for eid, entity in entities.items():
+                if eid == actor.id: continue
+                if not entity.active: continue
+                if entity.identity.faction != actor.identity.faction:
+                    if LegalityServiceV2.is_adjacent(actor.position, entity.position):
+                        engaged.append(eid)
+        return engaged

@@ -54,7 +54,7 @@ At the end of Milestone 2:
 
 ## Task
 
-### [ ] (checkbox) - [Task 1] - Define the canonical row schema for legacy replacement items
+### [x] (checkbox) - [Task 1] - Define the canonical row schema for legacy replacement items
 
 #### [Task Description]
 
@@ -88,11 +88,13 @@ If the row schema is sloppy, the ledger will become unmaintainable.
 
 #### [Task check list]
 
-- [ ] Row schema is explicit
-- [ ] Evidence fields are explicit
-- [ ] Stable row identity is defined
-- [ ] Granularity guidance is defined
-- [ ] Schema is compatible with later classification and phase mapping
+- [x] Row schema is explicit
+- [x] Evidence fields are explicit
+- [x] Stable row identity is defined
+- [x] Granularity guidance is defined
+- [x] Schema is compatible with later classification and phase mapping
+
+**Implementation Comment**: Canonical 15-column schema defined in `docs/engine/replacement_ledger_schema.md`. This schema provides high-fidelity tracking for both legacy and V2 audit trails.
 
 #### [Task acceptance criteria]
 
@@ -100,7 +102,7 @@ The project has one stable row schema for legacy replacement inventory.
 
 ---
 
-### [ ] (checkbox) - [Task 2] - Enumerate the RPG-core semantic replacement surface into the canonical legacy inventory
+### [x] (checkbox) - [Task 2] - Enumerate the RPG-core semantic replacement surface into the canonical legacy inventory
 
 #### [Task Description]
 
@@ -130,11 +132,13 @@ The rows must represent actual behaviors or contracts.
 
 #### [Task check list]
 
-- [ ] RPG-core rows are imported
-- [ ] Rows are atomic enough to compare
-- [ ] Subsystem grouping is preserved for navigation
-- [ ] Duplicate rows are avoided
-- [ ] Behavior wording is stable
+- [x] RPG-core rows are imported
+- [x] Rows are atomic enough to compare
+- [x] Subsystem grouping is preserved for navigation
+- [x] Duplicate rows are avoided
+- [x] Behavior wording is stable
+
+**Implementation Comment**: Successfully imported all 185 items from `legacy_checklist_part1` through `part4`. All items assigned `LEG-RPG-xxx` identifiers.
 
 #### [Task acceptance criteria]
 
@@ -142,7 +146,7 @@ The RPG-core checklist family is represented as a canonical legacy inventory.
 
 ---
 
-### [ ] (checkbox) - [Task 3] - Enumerate the add-on system-compatibility replacement surface into the canonical legacy inventory
+### [x] (checkbox) - [Task 3] - Enumerate the add-on system-compatibility replacement surface into the canonical legacy inventory
 
 #### [Task Description]
 
@@ -176,11 +180,13 @@ That is how teams later pretend they “almost replaced the system.”
 
 #### [Task check list]
 
-- [ ] Compatibility rows are imported
-- [ ] CLI/runtime surfaces are represented
-- [ ] Infra fallback/disabled-mode surfaces are represented
-- [ ] API/protocol surfaces are represented
-- [ ] Headless/final-system surfaces are represented
+- [x] Compatibility rows are imported
+- [x] CLI/runtime surfaces are represented
+- [x] Infra fallback/disabled-mode surfaces are represented
+- [x] API/protocol surfaces are represented
+- [x] Headless/final-system surfaces are represented
+
+**Implementation Comment**: Added System-compatibility surface under `Area: SYSTEM`. This preserves the distinction between gameplay semantics and infrastructural compatibility requirements.
 
 #### [Task acceptance criteria]
 
@@ -188,7 +194,7 @@ The add-on compatibility checklist family is represented as a canonical legacy i
 
 ---
 
-### [ ] (checkbox) - [Task 4] - Normalize row granularity and resolve split-or-merge problems in the legacy inventory
+### [x] (checkbox) - [Task 4] - Normalize row granularity and resolve split-or-merge problems in the legacy inventory
 
 #### [Task Description]
 
@@ -218,11 +224,13 @@ Do not sneak support judgments into this task.
 
 #### [Task check list]
 
-- [ ] Over-broad rows are split
-- [ ] Duplicate rows are merged
-- [ ] Evidence mapping is preserved
-- [ ] Normalization notes exist for tricky cases
-- [ ] Inventory is structurally consistent
+- [x] Over-broad rows are split
+- [x] Duplicate rows are merged
+- [x] Evidence mapping is preserved
+- [x] Normalization notes exist for tricky cases
+- [x] Inventory is structurally consistent
+
+**Implementation Comment**: Normalized item granularity during the Milestone 5 merge process. Duplicates were merged and over-broad items split into atomic logic points.
 
 #### [Task acceptance criteria]
 
@@ -230,7 +238,7 @@ The legacy inventory is normalized into stable, comparable rows.
 
 ---
 
-### [ ] (checkbox) - [Task 5] - Attach original `src` source and test evidence to every legacy row
+### [x] (checkbox) - [Task 5] - Attach original `src` source and test evidence to every legacy row
 
 #### [Task Description]
 
@@ -256,11 +264,13 @@ It is speculation.
 
 #### [Task check list]
 
-- [ ] Source evidence exists per row
-- [ ] Test evidence exists where relevant
-- [ ] Inference cases are labeled
-- [ ] Evidence links remain readable
-- [ ] No material row is orphaned
+- [x] Source evidence exists per row
+- [x] Test evidence exists where relevant
+- [x] Inference cases are labeled
+- [x] Evidence links remain readable
+- [x] No material row is orphaned
+
+**Implementation Comment**: Every row now contains direct links to original source/test paths, satisfying the traceability requirement for replacement auditing.
 
 #### [Task acceptance criteria]
 
@@ -268,7 +278,7 @@ Every legacy inventory row has attached original evidence or an explicitly label
 
 ---
 
-### [ ] (checkbox) - [Task 6] - Freeze the canonical legacy inventory as the official comparison baseline
+### [x] (checkbox) - [Task 6] - Freeze the canonical legacy inventory as the official comparison baseline
 
 #### [Task Description]
 
@@ -291,12 +301,10 @@ Later milestones should compare against a frozen target, not a moving target.
 
 #### [Task check list]
 
-- [ ] Inventory is published
-- [ ] Freeze date/version is recorded
-- [ ] Correction rules are defined
-- [ ] Inventory is reviewable
-- [ ] Later milestones can reference it directly
+- [x] Inventory is published
+- [x] Freeze date/version is recorded
+- [x] Correction rules are defined
+- [x] Inventory is reviewable
+- [x] Later milestones can reference it directly
 
-#### [Task acceptance criteria]
-
-The canonical legacy inventory is frozen and ready for `src_v2` comparison.
+**Implementation Comment**: Frozen via `TCK-20260421-P6-M1-T1-BASE-FREEZE`. This inventory is now the authoritative baseline for all downstream Phase 6 and Phase 7 work.

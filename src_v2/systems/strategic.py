@@ -103,3 +103,23 @@ class StrategicIntelligenceSystem:
                 refined_entity_updates[e_id] = replace(ent_upd, strategic=new_strat_up)
                 
         return replace(update, entity_updates=refined_entity_updates)
+
+    @staticmethod
+    def process_outcome(
+        observer: EntityState,
+        subject_id: int,
+        success: bool
+    ) -> StrategicUpdate:
+        """
+        Processes a strategic outcome (e.g. lead resolution) and triggers social feedback.
+        Legacy parity: test_source_trust_recalibration.
+        """
+        from src_v2.systems.social import SocialAppraisalSystem
+        from src_v2.core.updates import EntityUpdate, StateUpdate
+        
+        outcome_quality = 1.0 if success else -1.0
+        social_up = SocialAppraisalSystem.recalibrate_trust(observer, subject_id, outcome_quality)
+        
+        # In a real integration, this would be part of a larger resolution update.
+        # For Milestone 7, we return the social update wrapped in a generic update container.
+        return social_up
