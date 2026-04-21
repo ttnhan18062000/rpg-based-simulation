@@ -1,0 +1,133 @@
+[
+  {
+    "scenario": "shop_sell_materials",
+    "input": {
+      "inventory": [
+        "wood",
+        "wood",
+        "iron_ore"
+      ],
+      "gold": 100
+    },
+    "gold_delta": 20,
+    "items_removed": [
+      "wood",
+      "wood",
+      "iron_ore"
+    ],
+    "items_added": []
+  },
+  {
+    "scenario": "shop_sell_common_gear",
+    "input": {
+      "inventory": [
+        "iron_sword"
+      ],
+      "gold": 100
+    },
+    "gold_delta": 5,
+    "items_removed": [
+      "iron_sword"
+    ],
+    "items_added": []
+  },
+  {
+    "scenario": "blacksmith_learn_recipes",
+    "input": {
+      "recipes": [],
+      "gold": 100
+    },
+    "gold_delta": 0,
+    "items_removed": [],
+    "items_added": [],
+    "recipes_learned": [
+      "craft_steel_sword",
+      "craft_battle_axe",
+      "craft_enchanted_blade",
+      "craft_iron_plate",
+      "craft_enchanted_robe",
+      "craft_ring_of_power",
+      "craft_evasion_amulet",
+      "craft_wolf_cloak",
+      "craft_fang_necklace",
+      "craft_desert_bow",
+      "craft_bone_shield",
+      "craft_spectral_blade",
+      "craft_mountain_plate",
+      "craft_herbal_remedy"
+    ]
+  },
+  {
+    "scenario": "blacksmith_craft_success",
+    "input": {
+      "recipes": [
+        "craft_steel_sword"
+      ],
+      "craft_target": "craft_steel_sword",
+      "inventory": [
+        "iron_ore",
+        "iron_ore",
+        "wood"
+      ],
+      "gold": 100
+    },
+    "gold_delta": -60,
+    "items_removed": [
+      "iron_ore",
+      "iron_ore",
+      "wood"
+    ],
+    "items_added": [
+      "steel_sword"
+    ]
+  },
+  {
+    "scenario": "blacksmith_missing_gold",
+    "input": {
+      "recipes": [
+        "craft_steel_sword"
+      ],
+      "craft_target": "craft_steel_sword",
+      "inventory": [
+        "iron_ore",
+        "iron_ore",
+        "wood"
+      ],
+      "gold": 10
+    },
+    "gold_delta": 0,
+    "items_removed": [],
+    "items_added": [],
+    "blockers_added": [
+      {
+        "id": "blocker_gold",
+        "kind": "material",
+        "subject": "gold"
+      }
+    ]
+  },
+  {
+    "scenario": "blacksmith_missing_materials",
+    "input": {
+      "recipes": [
+        "craft_steel_sword"
+      ],
+      "craft_target": "craft_steel_sword",
+      "inventory": [
+        "iron_ore",
+        "wood"
+      ],
+      "gold": 100
+    },
+    "gold_delta": 0,
+    "items_removed": [],
+    "items_added": [],
+    "blockers_added": [
+      {
+        "id": "blocker_mat_iron_ore",
+        "kind": "material",
+        "subject": "iron_ore"
+      }
+    ]
+  }
+]

@@ -8,107 +8,138 @@ sys.path.append(os.path.abspath("."))
 
 from src.ai.states.interaction import LootingHandler, HarvestingHandler
 from src.ai.states.base import AIContext
-from src.core.models.enums import ActionType, AIState, GoalType
+from src.core.models.enums import ActionType, AIState, GoalType, Faction, MovementIntention
 from src.core.models.vectors import Vector2
+from src.core.entities.entity import Entity
+from src.core.models.snapshot import Snapshot
+from src.config import SimulationConfig
 
 def run_oracle():
     results = []
     
     # Mock resources
     node_wood = MagicMock()
+    node_wood.id = 500
     node_wood.spatial.pos = Vector2(1, 1)
     node_wood.is_available = True
     node_wood.name = "Timber"
-    node_wood.harvest_ticks = 3
+    node_wood.harvest_ticks = 2
     
-    # --- Scenario 1: Harvesting Progress ---
-    actor = MagicMock()
-    actor.id = 1
+    # --- Real Entity Setup ---
+    actor = Entity(id=1, kind="hero")
     actor.spatial.pos = Vector2(1, 1)
+    actor.spatial.vision_range = 10
     actor.interaction.loot_progress = 0
-    actor.inventory.is_effectively_full = False
+    from src.core.aspects.inventory import InventoryAspect
+    actor.inventory = InventoryAspect()
+    actor.identity.faction = Faction.HERO_GUILD
+    actor.next_act_at = 100
+    actor.combat.hp = 100
+    actor.combat.max_hp = 100
     
-    # Mock combat
-    type(actor.combat).hp_ratio = PropertyMock(return_value=1.0)
-    type(actor.combat).hp = PropertyMock(return_value=100)
-    type(actor.combat).max_hp = PropertyMock(return_value=100)
-    type(actor.combat).alive = PropertyMock(return_value=True)
-    
-    # Mock mind/decision/personality/emotion for should_flee
     actor.mind.decision.ai_state = AIState.IDLE
     actor.mind.decision.last_goal = GoalType.EXPLORE
     actor.mind.decision.personality.caution = 0.5
+    actor.mind.decision.personality.aggression = 0.5
     actor.mind.emotion.mood = 0.5
     actor.mind.emotion.panic = 0.0
     actor.mind.emotion.grudges = {}
     actor.mind.perception.entity_memory = {}
     actor.identity.hero_class = None
     
+    # Snapshot
     snapshot = MagicMock()
     snapshot.resource_nodes = [node_wood]
     snapshot.ground_items = {}
     snapshot.entities = {1: actor}
+    snapshot.grid.is_walkable.return_value = True
     
-    # Mock config
-    config = MagicMock()
-    config.flee_hp_threshold = 0.2
-    config.flee_exit_threshold = 0.4
-    config.low_hp_threshold = 0.2
-    config.crit_hp_threshold = 0.1
-    config.base_bravery = 0.5
+    # Real Config
+    config = SimulationConfig(
+        flee_hp_threshold=0.2,
+        flee_exit_threshold=0.4,
+        overhaul_features={"use_movement_model_v2": False}
+    )
     
-    # AIContext(actor, snapshot, config, rng, faction_reg)
+    # Mock faction_reg
+    faction_reg = MagicMock()
+    faction_reg.is_hostile.return_value = False 
+    
     ctx = AIContext(
         actor=actor, 
         snapshot=snapshot, 
         config=config,
         rng=MagicMock(),
-        faction_reg=MagicMock()
+        faction_reg=faction_reg
     )
+    ctx._visible_override = []
     
-    # Tick 1
+    def capture(name, state, proposal):
+        res = {
+            "scenario": name,
+            "state": state.name,
+            "verb": proposal.verb.name if hasattr(proposal.verb, "name") else str(proposal.verb)
+        }
+        if hasattr(proposal, "target") and proposal.target:
+             res["target"] = [proposal.target.x, proposal.target.y] if hasattr(proposal.target, "x") else proposal.target
+        
+        for u in (proposal.updates or []):
+            if hasattr(u, "loot_progress_delta"):
+                res["progress_delta"] = u.loot_progress_delta
+            if hasattr(u, "loot_progress_set"):
+                res["progress_set"] = u.loot_progress_set
+        results.append(res)
+
+    # --- Scenario 1: Harvesting Progress ---
     handler = HarvestingHandler()
     state, proposal = handler.handle(ctx)
-    results.append({
-        "scenario": "harvest_tick_1",
-        "state": state.name,
-        "verb": proposal.verb.name if hasattr(proposal.verb, "name") else str(proposal.verb),
-        "progress_delta": next((u.loot_progress_delta for u in (proposal.updates or []) if hasattr(u, "loot_progress_delta")), 0)
-    })
+    capture("harvest_tick_1", state, proposal)
     
-    # Tick 4 (Completion)
-    actor.interaction.loot_progress = 3
+    # --- Scenario 2: Harvesting Done ---
+    actor.interaction.loot_progress = 2 
     state, proposal = handler.handle(ctx)
-    results.append({
-        "scenario": "harvest_done",
-        "state": state.name,
-        "verb": proposal.verb.name if hasattr(proposal.verb, "name") else str(proposal.verb),
-        "target": [proposal.target.x, proposal.target.y] if hasattr(proposal.target, "x") else proposal.target
-    })
+    capture("harvest_done", state, proposal)
     
-    # --- Scenario 2: Looting Progress ---
+    # --- Scenario 3: Looting Progress ---
     actor.interaction.loot_progress = 0
     snapshot.ground_items = {(1, 1): ["wood"]}
-    config.loot_duration = 5
     
     handler = LootingHandler()
     state, proposal = handler.handle(ctx)
-    results.append({
-        "scenario": "loot_tick_1",
-        "state": state.name,
-        "verb": proposal.verb.name if hasattr(proposal.verb, "name") else str(proposal.verb),
-        "progress_delta": next((u.loot_progress_delta for u in (proposal.updates or []) if hasattr(u, "loot_progress_delta")), 0)
-    })
+    capture("loot_tick_1", state, proposal)
     
-    # --- Scenario 3: Inventory Full ---
-    actor.inventory.is_effectively_full = True
+    # --- Scenario 4: Inventory Full ---
+    actor.inventory.max_slots = 5
+    actor.inventory.items = ["wood"] * 5
+    
     state, proposal = handler.handle(ctx)
-    results.append({
-        "scenario": "loot_full_inventory",
-        "state": state.name,
-        "verb": proposal.verb.name if hasattr(proposal.verb, "name") else str(proposal.verb),
-        "progress_set": next((u.loot_progress_set for u in (proposal.updates or []) if hasattr(u, "loot_progress_set")), -1)
-    })
+    capture("loot_full_inventory", state, proposal)
+
+    # --- Scenario 5: Interruption by Enemy (Reset) ---
+    actor.inventory.items = []
+    actor.interaction.loot_progress = 1
+    
+    enemy = Entity(id=999, kind="monster")
+    enemy.spatial.pos = Vector2(2, 2)
+    enemy.combat.hp = 100
+    enemy.identity.faction = Faction.GOBLIN_HORDE
+    
+    def is_hostile_mock(f1, f2):
+        return (f1 == Faction.HERO_GUILD and f2 == Faction.GOBLIN_HORDE)
+    faction_reg.is_hostile.side_effect = is_hostile_mock
+    
+    ctx._visible_override = [enemy]
+    
+    handler = HarvestingHandler()
+    state, proposal = handler.handle(ctx)
+    capture("harvest_interrupted_enemy", state, proposal)
+
+    # --- Scenario 6: Interruption by HP (Reset/Flee) ---
+    ctx._visible_override = [] 
+    actor.combat.hp = 10 
+    
+    state, proposal = handler.handle(ctx)
+    capture("harvest_interrupted_hp", state, proposal)
 
     output_path = "tests_v2/parity/interaction_oracle/results.json"
     os.makedirs(os.path.dirname(output_path), exist_ok=True)

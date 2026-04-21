@@ -2,7 +2,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Dict, Set, Tuple
 from dataclasses import replace
 
-from src_v2.core.updates import EntityUpdate, InventoryUpdate
+from src_v2.core.updates import EntityUpdate, InventoryUpdate, IdentityUpdate
 
 if TYPE_CHECKING:
     from src_v2.core.state import AuthoritativeState, EntityState
@@ -16,27 +16,26 @@ class TownResolutionSystem:
     """
 
     # Parity with legacy SELL_PRICES and Item Registry
-    ITEM_SELL_PRICES: Dict[str, int] = {
-        "WOOD": 5,
-        "ORE": 5,
-        "IRON_ORE": 5,
-        "FISH": 5,
-        "LEATHER": 5,
-        "FIBER": 5,
-        "HERB": 5,
-        "GOLD": 1, 
+    ITEM_VALUES: Dict[str, int] = {
+        "wood": 5,
+        "iron_ore": 5,
+        "iron_sword": 5,
+        "steel_sword": 15,
+        "herbal_remedy": 10,
         "__DEFAULT__": 3
     }
 
     @staticmethod
     def resolve(state: AuthoritativeState, update: StateUpdate) -> StateUpdate:
         """
-        Detect entities in town and apply resource conversions.
+        Detect entities in town and apply general passive laws (Healing).
         """
         refined_entity_updates = dict(update.entity_updates)
         
+        # Town Configuration Constants (Parity with config.py)
+        PASSIVE_HEAL_AMT = 1 # town_passive_heal
+        
         for e_id, entity in state.entities.items():
-            # Check if entity is in town
             pos = entity.position
             ent_upd = refined_entity_updates.get(e_id)
             if ent_upd and ent_upd.new_position:
@@ -45,40 +44,27 @@ class TownResolutionSystem:
             tile_pos = (int(pos[0]), int(pos[1]))
             
             if tile_pos in state.town_tiles:
-                if not entity.inventory.items:
+                # 1. Passive Healing Law (Property-based HP)
+                current_hp = entity.properties.get("hp", 100)
+                max_hp = entity.properties.get("max_hp", 100)
+                
+                property_updates = {}
+                if current_hp < max_hp:
+                    property_updates["hp"] = min(max_hp, current_hp + PASSIVE_HEAL_AMT)
+                
+                if not property_updates:
                     continue
                 
-                total_value = 0
-                items_to_remove = []
-                for item in entity.inventory.items:
-                    if item == "GOLD": continue
-                    price = TownResolutionSystem.ITEM_SELL_PRICES.get(item, TownResolutionSystem.ITEM_SELL_PRICES["__DEFAULT__"])
-                    total_value += price
-                    items_to_remove.append(item)
-                
-                if not items_to_remove:
-                    continue
-                
-                # Merge with existing update if any
+                # Merge with existing update
                 existing_upd = refined_entity_updates.get(e_id, EntityUpdate(entity_id=e_id))
                 
-                # Prepare inventory changes
-                existing_added = existing_upd.inventory.items_added if existing_upd.inventory else []
-                existing_removed = existing_upd.inventory.items_removed if existing_upd.inventory else []
-                
-                new_removed = list(existing_removed)
-                new_removed.extend(items_to_remove)
-                
-                new_added = list(existing_added)
-                for _ in range(total_value):
-                    new_added.append("GOLD")
+                # Properties merge
+                new_prop_updates = dict(existing_upd.property_updates)
+                new_prop_updates.update(property_updates)
                 
                 refined_entity_updates[e_id] = replace(
                     existing_upd,
-                    inventory=InventoryUpdate(
-                        items_added=new_added,
-                        items_removed=new_removed
-                    )
+                    property_updates=new_prop_updates
                 )
 
         return replace(update, entity_updates=refined_entity_updates)

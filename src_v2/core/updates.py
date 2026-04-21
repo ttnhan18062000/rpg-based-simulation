@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, TYPE_CHECKING
+if TYPE_CHECKING:
+    from src_v2.core.strategic import BlockerState, LeadState
 
 
 @dataclass(frozen=True, slots=True)
@@ -10,12 +12,28 @@ class InteractionUpdate:
     target_node_id: Optional[int] = None
     progress_delta: float = 0.0
     reset: bool = False
+    
+@dataclass(frozen=True, slots=True)
+class IdentityUpdate:
+    """Updates to characteristics or knowledge."""
+    recipes_learned: list[str] = field(default_factory=list)
+    craft_target: Optional[str] = None
+    navigation_target: Optional[tuple[float, float]] = None
+
+@dataclass(frozen=True, slots=True)
+class StrategicUpdate:
+    """Updates to markers for strategic markers (blockers, leads)."""
+    blockers_add_or_update: list[BlockerState] = field(default_factory=list)
+    blockers_remove: list[str] = field(default_factory=list)
+    leads_add_or_update: list[LeadState] = field(default_factory=list)
+    leads_remove: list[str] = field(default_factory=list)
 
 @dataclass(frozen=True, slots=True)
 class InventoryUpdate:
     """Authoritative inventory changes."""
     items_added: list[str] = field(default_factory=list)
     items_removed: list[str] = field(default_factory=list)
+    gold_delta: int = 0
 
 
 @dataclass(frozen=True, slots=True)
@@ -29,7 +47,9 @@ class EntityUpdate:
     readiness_delta: float = 0.0
     active: Optional[bool] = None
     interaction: Optional[InteractionUpdate] = None
+    identity: Optional[IdentityUpdate] = None
     inventory: Optional[InventoryUpdate] = None
+    strategic: Optional[StrategicUpdate] = None
     property_updates: Dict[str, Any] = field(default_factory=dict)
 
 

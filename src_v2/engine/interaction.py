@@ -69,7 +69,7 @@ class InteractionSystem:
                 continue
 
             # 2. Progress Advancement
-            if ent_upd.interaction.progress_delta > 0:
+            if ent_upd.interaction.progress_delta >= 0:
                 target_id = proposed_target if proposed_target is not None else current_target
                 if target_id is None:
                     continue

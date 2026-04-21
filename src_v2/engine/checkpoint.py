@@ -53,7 +53,6 @@ class CanonicalStateHasher:
         
         # 2. Entities (Sorted by ID)
         sorted_entities = {}
-        # IDs are integers, but JSON keys must be strings.
         for eid in sorted(state.entities.keys()):
             ent = state.entities[eid]
             sorted_entities[str(eid)] = {
@@ -62,14 +61,37 @@ class CanonicalStateHasher:
                 "position": ent.position,
                 "readiness": ent.readiness,
                 "active": ent.active,
+                "interaction": {
+                    "target_node_id": ent.interaction.target_node_id,
+                    "progress": ent.interaction.progress
+                },
+                "identity": {
+                    "role": ent.identity.role,
+                    "faction": ent.identity.faction,
+                    "known_recipes": sorted(list(ent.identity.known_recipes)),
+                    "craft_target": ent.identity.craft_target
+                },
+                "inventory": {
+                    "gold": ent.inventory.gold,
+                    "items": sorted(ent.inventory.items),
+                    "current_weight": ent.inventory.current_weight
+                },
+                "strategic": {
+                    "blockers": {k: asdict(v) for k, v in sorted(ent.strategic.blockers.items())},
+                    "leads": {k: asdict(v) for k, v in sorted(ent.strategic.leads.items())}
+                },
                 "properties": dict(sorted(ent.properties.items()))
             }
         data["entities"] = sorted_entities
         
-        # 3. Global collections (All sorted by key)
+        # 3. Global collections (All sorted by key/id)
         data["global_resources"] = dict(sorted(state.global_resources.items()))
         data["periodic_due_ticks"] = dict(sorted(state.periodic_due_ticks.items()))
         data["work_debt"] = dict(sorted(state.work_debt.items()))
+        
+        data["blocked_tiles"] = sorted([str(t) for t in state.blocked_tiles])
+        data["town_tiles"] = sorted([str(t) for t in state.town_tiles])
+        data["building_tiles"] = {str(k): v for k, v in sorted(state.building_tiles.items(), key=lambda x: str(x[0]))}
         
         # 4. RNG Checkpoint
         # Law: The internal RNG state must be captured exactly for reproducibility.

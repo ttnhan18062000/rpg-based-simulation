@@ -25,3 +25,9 @@
 ## Support Boundary
 - Movement is officially supported for **all Hero and Mob entities** in the standard simulation loop.
 - Supported in both **Local** and **Concurrent** execution modes (where concurrent is proven non-conflicting).
+
+## Proof Path
+- **Parity Proof**: `tests_v2/parity/test_movement_parity.py`
+  - Enforces bit-identical behavior and error-reason parity against original `src` behavior for supported grid movement scenarios.
+- **Contract Proof**: `tests_v2/gameplay/test_movement_contract.py`
+  - Enforces authoritative state boundaries and V2-specific movement invariants.

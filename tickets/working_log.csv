@@ -161,3 +161,8 @@ timestamp,ticket_id,title,status,summary,artifacts_path
 2026-04-20T16:34:00Z,TCK-20260420-INTERACT-LOOT,Channeled Looting,DONE,Implement one-shot ground item looting with channeling reset.,stored_artifacts/TCK-20260420-INTERACT-LOOT/
 2026-04-20T16:35:00Z,TCK-20260420-TOWN-LOOP,Town Resource Resolution,DONE,Implemented sell-on-entry material conversion logic.,stored_artifacts/TCK-20260420-TOWN-LOOP/
 2026-04-21,TCK-20260421-V2-TEST-HARDENING,V2 Test Verification and Hardening complete (168/168 passed)
+2026-04-21T08:30:00Z,TCK-20260421-RESOURCE-INTERACT-PARITY,Implement Initial Resource Interaction Differential Parity Proof,DONE,Implemented bit-identical harvest and loot outcomes.,stored_artifacts/TCK-20260421-RESOURCE-INTERACT-PARITY/
+2026-04-21T08:30:10Z,TCK-20260421-TOWN-RESOLUTION-SCOPE,Town Resource Resolution Recovery,DONE,Implemented legal blacksmith and shop resolution with full legacy parity.,stored_artifacts/TCK-20260421-TOWN-RESOLUTION-SCOPE/
+2026-04-21T08:30:20Z,TCK-20260421-RESOURCE-CONTRACT,Resource Contract and Domain invariants,DONE,Enforced weight and slot pressure laws in InteractionSystem.,stored_artifacts/TCK-20260421-RESOURCE-CONTRACT/
+2026-04-21T08:30:30Z,TCK-20260421-PROGRESSION-LOOP-PROOF,Integrated Resource Progression Proof,DONE,Verified bit-identical autonomous progression loop.,stored_artifacts/TCK-20260421-PROGRESSION-LOOP-PROOF/
+2026-04-21T08:30:40Z,TCK-20260421-PHASE5-MILESTONE-5,Supported Progression Surface Consolidation,DONE,Published Phase 5 truth package and hardened certification.,stored_artifacts/TCK-20260421-PHASE5-MILESTONE-5/

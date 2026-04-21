@@ -269,14 +269,70 @@ class Kernel:
             work_debt_updates=work_debt_updates
         )
         
-        # M4 Law: Authoritative Interaction Filtering
+        # (Moved to end of phase for router integration)
+        
+        # --- Phase A: Logic Truth (Services & Territory) ---
+        from src_v2.engine.town_resolution import TownResolutionSystem
+        from src_v2.engine.shop import ShopSystem
+        from src_v2.engine.blacksmith import BlacksmithSystem
+        
+        update = TownResolutionSystem.resolve(self._state, update)
+        update = ShopSystem.enforce(self._state, update)
+        update = BlacksmithSystem.enforce(self._state, update)
+        
+        # --- Phase B: Intent Routers (Interaction Proposals) ---
+        refined_entity_updates = dict(update.entity_updates)
+        for e_id, entity in self._state.entities.items():
+            ent_upd = refined_entity_updates.get(e_id, EntityUpdate(entity_id=e_id))
+            
+            nav_target = entity.identity.navigation_target
+            if ent_upd.identity and ent_upd.identity.navigation_target is not None:
+                nav_target = ent_upd.identity.navigation_target
+            
+            if nav_target and (entity.position == nav_target):
+                target_node = next((n for n in self._state.resource_nodes.values() if n.position == nav_target), None)
+                if target_node and target_node.remaining_charges > 0:
+                    from src_v2.core.updates import InteractionUpdate
+                    current_int = ent_upd.interaction or InteractionUpdate()
+                    if not current_int.reset:
+                         refined_entity_updates[e_id] = replace(ent_upd,
+                             interaction=replace(current_int, target_node_id=target_node.id, progress_delta=1)
+                         )
+        
+        update = replace(update, entity_updates=refined_entity_updates)
+        
+        # --- Phase C: Authoritative Laws (Interaction Filtering) ---
         from src_v2.engine.interaction import InteractionSystem
         update = InteractionSystem.enforce(self._state, update)
         
-        # M4 Law: Town Territory Resolution
-        from src_v2.engine.town_resolution import TownResolutionSystem
-        update = TownResolutionSystem.resolve(self._state, update)
+        # --- Phase D: Strategic AI (Resolution & Redirection) ---
+        from src_v2.systems.strategic import StrategicIntelligenceSystem
+        update = StrategicIntelligenceSystem.resolve_blockers(self._state, update)
         
+        from src_v2.systems.redirection import StrategicRedirectionSystem
+        update = StrategicRedirectionSystem.enforce(self._state, update)
+        
+        # --- Phase E: Intent Routers (Movement Proposals) ---
+        from src_v2.engine.movement import MovementSystem
+        refined_entity_updates = dict(update.entity_updates)
+        for e_id, entity in self._state.entities.items():
+            ent_upd = refined_entity_updates.get(e_id, EntityUpdate(entity_id=e_id))
+            nav_target = entity.identity.navigation_target
+            if ent_upd.identity and ent_upd.identity.navigation_target is not None:
+                nav_target = ent_upd.identity.navigation_target
+            
+            if nav_target and (entity.position != nav_target):
+                if not ent_upd.moved_this_tick and not (ent_upd.interaction and ent_upd.interaction.progress_delta > 0):
+                    move_upd = MovementSystem.resolve_move(self._state, entity, nav_target)
+                    refined_entity_updates[e_id] = replace(ent_upd, 
+                        new_position=move_upd.new_position,
+                        moved_this_tick=move_upd.moved_this_tick,
+                        readiness_delta=ent_upd.readiness_delta + move_upd.readiness_delta,
+                        property_updates={**ent_upd.property_updates, **move_upd.property_updates}
+                    )
+        
+        update = replace(update, entity_updates=refined_entity_updates)
+
         from src_v2.engine.apply import ApplyPath
         next_tick = self._state.tick + 1
         self._state = ApplyPath.apply_generation(self._state, update, next_tick, self._current_world_time)

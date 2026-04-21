@@ -81,23 +81,54 @@ class GameplayInjector:
 
     @staticmethod
     def build_integrated_loop(state: AuthoritativeState) -> AuthoritativeState:
-        """Complex Loop: Move(0,0->0,1) -> Harvest(3ticks) -> Move(0,1->0,0)."""
-        # This requires AI logic or a multi-step intent script which V2 doesn't have yet.
-        # For now, we simulate the "Load" by placing multiple entities in different states.
-        from src_v2.core.state import EntityState, ResourceNodeState, InteractionComponent, InventoryComponent
+        """
+        Autonomous Progression Loop: 
+        1. Entity at Town (0,0) wants to craft a sword.
+        2. Blacksmith fails (missing iron_ore).
+        3. Strategic AI generates blocker and lead for iron_ore at (1,0).
+        4. Entity moves to (1,0), harvests, and returns.
+        """
+        from src_v2.core.state import (
+            EntityState, ResourceNodeState, InteractionComponent, 
+            InventoryComponent, IdentityComponent
+        )
+        from src_v2.core.strategic import StrategicComponent, BlockerState, LeadState
         from dataclasses import replace
         
-        entities = {}
-        nodes = {}
+        # 1. Resource Node at (1.0, 0.0)
+        node = ResourceNodeState(
+            id=101, kind="ORE_VEIN", position=(1.0, 0.0), 
+            yields_item="iron_ore", remaining_charges=5, max_charges=5, required_ticks=2
+        )
         
-        # Actor 1: Mid-harvest
-        nodes[101] = ResourceNodeState(id=101, kind="gold", position=(10,10), yields_item="gold", remaining_charges=1, max_charges=1, required_ticks=3)
-        entities[1] = EntityState(id=1, kind="hero", position=(10,10), readiness=100.0, interaction=InteractionComponent(target_node_id=101, progress=1), inventory=InventoryComponent(max_slots=5))
+        # 2. Hero at Town (0.0, 0.0) with Craft Intent but no materials
+        actor = EntityState(
+            id=1, kind="hero", position=(0.0, 0.0), readiness=100.0,
+            identity=IdentityComponent(
+                craft_target="craft_steel_sword",
+                known_recipes={"craft_steel_sword"}, # Set for recipes
+                navigation_target=(0.0, 0.0)
+            ),
+            strategic=StrategicComponent(
+                leads={
+                    "lead_ore": LeadState(id="lead_ore", kind="location", subject="iron_ore", detail="1.0,0.0")
+                }
+            ),
+            inventory=InventoryComponent(max_slots=10, gold=100, items=["iron_ore", "wood"])
+        )
         
-        # Actor 2: Mid-move
-        entities[2] = EntityState(id=2, kind="hero", position=(0,0), readiness=100.0, properties={"work_kind": "ENTITY_MOVE", "payload": {"target_position": (5,5)}})
+        new_nodes = dict(state.resource_nodes)
+        new_nodes[101] = node
         
-        return replace(state, entities=entities, resource_nodes=nodes)
+        new_entities = dict(state.entities)
+        new_entities[1] = actor
+        
+        return replace(state, 
+            entities=new_entities, 
+            resource_nodes=new_nodes,
+            town_tiles={(0,0)},
+            building_tiles={(0,0): "blacksmith"}
+        )
 
 
 def build_scenario_state(scenario_id: str) -> AuthoritativeState:

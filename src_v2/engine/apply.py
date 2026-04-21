@@ -132,7 +132,44 @@ class ApplyPath:
                 entity.inventory,
                 items=new_items,
                 current_slots_used=len(new_items),
-                current_weight=new_weight
+                current_weight=new_weight,
+                gold=entity.inventory.gold + update.inventory.gold_delta
+            )
+
+        # Identity updates
+        new_identity = entity.identity
+        if update.identity:
+            new_recipes = set(entity.identity.known_recipes)
+            new_recipes.update(update.identity.recipes_learned)
+            new_identity = replace(
+                entity.identity,
+                known_recipes=new_recipes,
+                craft_target=update.identity.craft_target if update.identity.craft_target is not None else entity.identity.craft_target,
+                navigation_target=update.identity.navigation_target if update.identity.navigation_target is not None else entity.identity.navigation_target
+            )
+
+        # Strategic updates
+        new_strategic = entity.strategic
+        if update.strategic:
+            from src_v2.core.strategic import StrategicComponent
+            new_blockers = dict(entity.strategic.blockers)
+            new_leads = dict(entity.strategic.leads)
+            
+            for b in update.strategic.blockers_add_or_update:
+                new_blockers[b.id] = b
+            for bid in update.strategic.blockers_remove:
+                if bid in new_blockers:
+                    del new_blockers[bid]
+                    
+            for l in update.strategic.leads_add_or_update:
+                new_leads[l.id] = l
+            for lid in update.strategic.leads_remove:
+                if lid in new_leads:
+                    del new_leads[lid]
+            
+            new_strategic = StrategicComponent(
+                blockers=new_blockers,
+                leads=new_leads
             )
 
         return replace(
@@ -141,6 +178,8 @@ class ApplyPath:
             readiness=entity.readiness + update.readiness_delta,
             active=update.active if update.active is not None else entity.active,
             interaction=new_interaction,
+            identity=new_identity,
             inventory=new_inventory,
+            strategic=new_strategic,
             properties=new_properties
         )

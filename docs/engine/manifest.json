@@ -5,10 +5,15 @@
     "required_hardware_classes": ["class_b"],
     "required_scenarios": [
       "IDLE_CLEAN", 
-      "RAM_PRESSURE"
+      "RAM_PRESSURE",
+      "INTEG_RESOURCE_LOOP"
     ]
   },
   "mandatory_documents": [
+    {
+      "path": "docs/engine/supported_progression_surface_phase5.md",
+      "required_headers": ["Purpose", "Support Matrix", "Supported Behavioral Boundaries"]
+    },
     {
       "path": "docs/engine/simulation_kernel_contract_m1.md",
       "required_headers": ["Purpose", "Kernel Boundaries"]

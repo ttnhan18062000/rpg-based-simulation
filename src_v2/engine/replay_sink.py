@@ -29,6 +29,20 @@ class ReplaySink:
         self._run_dir.mkdir(parents=True, exist_ok=True)
         self._metrics = SinkMetrics()
 
+    def _clean_for_json(self, obj: Any) -> Any:
+        """Deeply convert for JSON compatibility, ensuring all keys are strings."""
+        from dataclasses import is_dataclass, asdict
+        
+        if isinstance(obj, dict):
+            return {str(k): self._clean_for_json(v) for k, v in obj.items()}
+        if isinstance(obj, (list, tuple, set)):
+            return [self._clean_for_json(x) for x in obj]
+        if is_dataclass(obj):
+            return self._clean_for_json(asdict(obj))
+        if hasattr(obj, '__dict__'):
+            return self._clean_for_json(obj.__dict__)
+        return obj
+
     def persist_chunk(self, chunk_id: int, events: List[TraceEvent]) -> bool:
         """
         Write a batch of events to a durable chunk file.
@@ -39,8 +53,11 @@ class ReplaySink:
             filepath = self._run_dir / filename
             
             # Serialize events to compact JSON (no whitespace)
-            data = [asdict(e) for e in events]
-            json_data = json.dumps(data, separators=(',', ':'))
+            # M6 Law: Sanitize for environment-specific JSON constraints
+            raw_data = [asdict(e) for e in events]
+            clean_data = self._clean_for_json(raw_data)
+            
+            json_data = json.dumps(clean_data, separators=(',', ':'))
             encoded_data = json_data.encode('utf-8')
             
             with open(filepath, "wb") as f:

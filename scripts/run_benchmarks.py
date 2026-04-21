@@ -46,22 +46,55 @@ def create_harvest_stress_state(count: int = 100) -> AuthoritativeState:
     return AuthoritativeState(tick=1, seed=42, entities=entities, resource_nodes=nodes)
 
 def create_integrated_loop_state(count: int = 100) -> AuthoritativeState:
-    # 50% moving, 50% harvesting
-    from src_v2.core.state import ResourceNodeState, InteractionComponent, InventoryComponent
+    """
+    Autonomous Stress Test: 
+    Large number of entities completing full Seek-Harvest-Return loops.
+    """
+    from src_v2.core.state import (
+        ResourceNodeState, InteractionComponent, InventoryComponent, 
+        IdentityComponent
+    )
+    from src_v2.core.strategic import StrategicComponent, LeadState
     entities = {}
     nodes = {}
+    
+    # 1. Place a few dense resource clusters
+    for i in range(10):
+        nid = 2000 + i
+        nx, ny = 10.0 + (i % 3), 10.0 + (i // 3)
+        nodes[nid] = ResourceNodeState(
+            id=nid, kind="iron", position=(nx, ny), 
+            yields_item="iron_ore", remaining_charges=1000, max_charges=1000, required_ticks=3
+        )
+    
+    # 2. Hero Entities spread around town (0,0)
     for i in range(count):
         eid = 300 + i
-        nid = 2000 + i
-        x, y = float(i % 10), float(i // 10)
-        if i % 2 == 0:
-            # Moving
-            entities[eid] = EntityState(id=eid, kind="hero", position=(x, y), readiness=100.0, properties={"work_kind": "ENTITY_MOVE", "payload": {"target_position": (x + 1, y + 1)}})
-        else:
-            # Harvesting
-            nodes[nid] = ResourceNodeState(id=nid, kind="herb", position=(x, y), yields_item="herb", remaining_charges=5, max_charges=5, required_ticks=2)
-            entities[eid] = EntityState(id=eid, kind="hero", position=(x, y), readiness=100.0, interaction=InteractionComponent(target_node_id=nid, progress=0), inventory=InventoryComponent(max_slots=5))
-    return AuthoritativeState(tick=1, seed=42, entities=entities, resource_nodes=nodes)
+        # Spread entities slightly to reduce movement congestion in benchmark
+        spawn_x, spawn_y = float(i % 5), float(i // 5)
+        
+        entities[eid] = EntityState(
+            id=eid, kind="hero", position=(spawn_x, spawn_y), readiness=100.0, 
+            identity=IdentityComponent(
+                craft_target="craft_steel_sword",
+                known_recipes={"craft_steel_sword"},
+                navigation_target=(spawn_x, spawn_y)
+            ),
+            strategic=StrategicComponent(
+                leads={
+                    "lead_ore": LeadState(id=f"lead_ore_{eid}", kind="location", subject="iron_ore", detail="10.0,10.0")
+                }
+            ),
+            inventory=InventoryComponent(max_slots=10, gold=100)
+        )
+        
+    return AuthoritativeState(
+        tick=1, seed=42, 
+        entities=entities, 
+        resource_nodes=nodes,
+        town_tiles={(0,0), (1,0), (0,1), (1,1)}, # Larger town area for benchmark
+        building_tiles={(0,0): "blacksmith"}
+    )
 
 def get_profile(name, max_workers=0):
     return RuntimeProfile(

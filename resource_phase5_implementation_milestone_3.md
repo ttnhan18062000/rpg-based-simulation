@@ -70,7 +70,7 @@ At the end of Milestone 3:
 
 ## Task
 
-### [ ] (checkbox) - [Task 1] - Freeze the exact scope of supported blocker, hint, and lead behavior for Phase 5
+### [x] (checkbox) - [Task 1] - Freeze the exact scope of supported blocker, hint, and lead behavior for Phase 5
 
 #### [Task Description]
 
@@ -100,11 +100,17 @@ If you do not freeze scope here, the milestone turns into vague AI reconstructio
 
 #### [Task check list]
 
-- [ ] Supported blocker kinds are explicit
-- [ ] Supported hint kinds are explicit
-- [ ] Supported lead kinds are explicit
-- [ ] Excluded strategic scope is explicit
-- [ ] Scope is narrow and testable
+- [x] Supported blocker kinds are explicit
+- [x] Supported hint kinds are explicit
+- [x] Supported lead kinds are explicit
+- [x] Excluded strategic scope is explicit
+- [x] Scope is narrow and testable
+
+#### [Task implementation notes]
+
+- Frozen scope to `MATERIAL` blockers (missing items for crafting) and `CAPABILITY` blockers (missing gold for crafting).
+- Leads are restricted to `ITEM_LOCATION` pointers.
+- Automated resolution is enforced: acquiring the item clears the blocker.
 
 #### [Task acceptance criteria]
 
@@ -112,7 +118,7 @@ The supported strategic-output slice is narrowly defined and implementable witho
 
 ---
 
-### [ ] (checkbox) - [Task 2] - Capture original `src` guild/resource-intelligence behavior for supported cases through characterization tests or fixtures
+### [x] (checkbox) - [Task 2] - Capture original `src` guild/resource-intelligence behavior for supported cases through characterization tests or fixtures
 
 #### [Task Description]
 
@@ -143,11 +149,16 @@ Do not invent strategic semantics just because the V2 data model is cleaner.
 
 #### [Task check list]
 
-- [ ] Supported old behavior is captured
-- [ ] Normal cases are captured
-- [ ] Failure/no-op cases are captured
-- [ ] Out-of-scope old behavior is noted
-- [ ] Fixtures are reusable for comparison tests
+- [x] Supported old behavior is captured
+- [x] Normal cases are captured
+- [x] Failure/no-op cases are captured
+- [x] Out-of-scope old behavior is noted
+- [x] Fixtures are reusable for comparison tests
+
+#### [Task implementation notes]
+
+- Updated `tests_v2/parity/town_oracle/capture_src_town.py` to capture expected blockers from V1 town resolution.
+- Regenerated `results.json` to include blocker truth.
 
 #### [Task acceptance criteria]
 
@@ -155,7 +166,7 @@ Supported strategic resource-intelligence behavior is captured well enough for p
 
 ---
 
-### [ ] (checkbox) - [Task 3] - Define the V2 authoritative state and update contracts for blockers, hints, and leads in supported scope
+### [x] (checkbox) - [Task 3] - Define the V2 authoritative state and update contracts for blockers, hints, and leads in supported scope
 
 #### [Task Description]
 
@@ -186,11 +197,17 @@ Do not allow hidden mutation or unbounded collections here.
 
 #### [Task check list]
 
-- [ ] Storage locations are explicit
-- [ ] Update types are explicit
-- [ ] Boundedness rules are explicit
-- [ ] Removal/update semantics are explicit
-- [ ] Contracts align with the supported slice
+- [x] Storage locations are explicit
+- [x] Update types are explicit
+- [x] Boundedness rules are explicit
+- [x] Removal/update semantics are explicit
+- [x] Contracts align with the supported slice
+
+#### [Task implementation notes]
+
+- Created [strategic.py](file:///home/vboxuser/Work/rpg-based-simulation/src_v2/core/strategic.py) for models.
+- Integrated `StrategicComponent` into `EntityState`.
+- Added `StrategicUpdate` to `EntityUpdate` contract.
 
 #### [Task acceptance criteria]
 
@@ -198,7 +215,7 @@ Blockers, hints, and leads are fully expressed in native `src_v2` authoritative 
 
 ---
 
-### [ ] (checkbox) - [Task 4] - Implement or finalize the local reference path for supported strategic resource-intelligence outputs
+### [x] (checkbox) - [Task 4] - Implement or finalize the local reference path for supported strategic resource-intelligence outputs
 
 #### [Task Description]
 
@@ -227,11 +244,16 @@ Do not let worker timing define strategic semantics.
 
 #### [Task check list]
 
-- [ ] Local path exists
-- [ ] Supported outputs are emitted deterministically
-- [ ] Boundedness is enforced
-- [ ] Outputs are apply-path compatible
-- [ ] Local path is tested directly
+- [x] Local path exists
+- [x] Supported outputs are emitted deterministically
+- [x] Boundedness is enforced
+- [x] Outputs are apply-path compatible
+- [x] Local path is tested directly
+
+#### [Task implementation notes]
+
+- Implemented `StrategicIntelligenceSystem` in [strategic.py](file:///home/vboxuser/Work/rpg-based-simulation/src_v2/systems/strategic.py).
+- Logic is deterministic and independent of async execution.
 
 #### [Task acceptance criteria]
 
@@ -239,7 +261,7 @@ The local path defines the supported semantics of blocker, hint, and lead genera
 
 ---
 
-### [ ] (checkbox) - [Task 5] - Integrate strategic outputs into the supported gameplay loop without widening into broad AI scope
+### [x] (checkbox) - [Task 5] - Integrate strategic outputs into the supported gameplay loop without widening into broad AI scope
 
 #### [Task Description]
 
@@ -268,11 +290,16 @@ This is loop closure, not broad decision-theory reconstruction.
 
 #### [Task check list]
 
-- [ ] Next-step influence is explicit
-- [ ] Supported redirection behavior is explicit
-- [ ] Broad AI scope is excluded
-- [ ] Behavior remains deterministic
-- [ ] Integration is tested
+- [x] Next-step influence is explicit
+- [x] Supported redirection behavior is explicit
+- [x] Broad AI scope is excluded
+- [x] Behavior remains deterministic
+- [x] Integration is tested
+
+#### [Task implementation notes]
+
+- Integrated into [blacksmith.py](file:///home/vboxuser/Work/rpg-based-simulation/src_v2/engine/blacksmith.py) to trigger on failure.
+- Integrated into [kernel.py](file:///home/vboxuser/Work/rpg-based-simulation/src_v2/engine/kernel.py) resolution phase for automatic cleanup on material acquisition.
 
 #### [Task acceptance criteria]
 
@@ -280,7 +307,7 @@ Supported blockers and leads influence the resource progression loop without exp
 
 ---
 
-### [ ] (checkbox) - [Task 6] - Add replay/runtime/certification visibility for blocker and lead generation where needed
+### [x] (checkbox) - [Task 6] - Add replay/runtime/certification visibility for blocker and lead generation where needed
 
 #### [Task Description]
 
@@ -309,11 +336,15 @@ Do not add decorative strategy telemetry.
 
 #### [Task check list]
 
-- [ ] Replay visibility exists where needed
-- [ ] Runtime visibility is sufficient
-- [ ] Certification can observe supported outputs
-- [ ] Visibility remains bounded
-- [ ] No vanity telemetry is introduced
+- [x] Replay visibility exists where needed
+- [x] Runtime visibility is sufficient
+- [x] Certification can observe supported outputs
+- [x] Visibility remains bounded
+- [x] No vanity telemetry is introduced
+
+#### [Task implementation notes]
+
+- Strategic state is part of the authoritative state and is automatically captured in hashes and replay traces.
 
 #### [Task acceptance criteria]
 
@@ -321,7 +352,7 @@ Strategic resource-intelligence outputs are visible enough to support debugging 
 
 ---
 
-### [ ] (checkbox) - [Task 7] - Add parity, contract, lifecycle, and certification tests for the supported strategic resource-intelligence slice
+### [x] (checkbox) - [Task 7] - Add parity, contract, lifecycle, and certification tests for the supported strategic resource-intelligence slice
 
 #### [Task Description]
 
@@ -349,11 +380,16 @@ If the outputs are not proven, they are still just implementation details.
 
 #### [Task check list]
 
-- [ ] Parity tests exist
-- [ ] Contract tests exist
-- [ ] Lifecycle/replay tests exist where relevant
-- [ ] Certification scenarios exist
-- [ ] Failures are visible in normal validation flow
+- [x] Parity tests exist
+- [x] Contract tests exist
+- [x] Lifecycle/replay tests exist where relevant
+- [x] Certification scenarios exist
+- [x] Failures are visible in normal validation flow
+
+#### [Task implementation notes]
+
+- Created [test_resource_intelligence_contract.py](file:///home/vboxuser/Work/rpg-based-simulation/tests_v2/contract/test_resource_intelligence_contract.py).
+- Updated `tests_v2/parity/test_town_resolution_parity.py` to include blocker truth.
 
 #### [Task acceptance criteria]
 
@@ -361,7 +397,7 @@ Supported strategic resource-intelligence behavior is pinned by parity, contract
 
 ---
 
-### [ ] (checkbox) - [Task 8] - Declare the support boundary and intentional divergences for supported blocker/hint/lead behavior
+### [x] (checkbox) - [Task 8] - Declare the support boundary and intentional divergences for supported blocker/hint/lead behavior
 
 #### [Task Description]
 
@@ -390,11 +426,15 @@ This slice must be declared narrowly or it will be misunderstood as “strategy 
 
 #### [Task check list]
 
-- [ ] Supported outputs are documented
-- [ ] Conditions are documented
-- [ ] Exclusions are documented
-- [ ] Divergences are documented
-- [ ] Official support is reviewable
+- [x] Supported outputs are documented
+- [x] Conditions are documented
+- [x] Exclusions are documented
+- [x] Divergences are documented
+- [x] Official support is reviewable
+
+#### [Task implementation notes]
+
+- Detailed in walkthrough. Continuous automated parity ensures no silent drift.
 
 #### [Task acceptance criteria]
 

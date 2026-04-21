@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Dict, Any
+from typing import Dict, Any, Set
+from src_v2.core.strategic import StrategicComponent
 
 
 @dataclass(frozen=True, slots=True)
@@ -12,12 +13,22 @@ class InteractionComponent:
     start_tick: int = 0
 
 @dataclass(frozen=True, slots=True)
+class IdentityComponent:
+    """Core entity characteristics and knowledge."""
+    role: int = 0 # EntityRole.HERO
+    faction: int = 0 # Faction.HERO_GUILD
+    known_recipes: Set[str] = field(default_factory=set)
+    craft_target: str | None = None
+    navigation_target: tuple[float, float] | None = None
+
+@dataclass(frozen=True, slots=True)
 class InventoryComponent:
     """Bounded container for items."""
     max_slots: int = 16
     max_weight: int = 50
     current_slots_used: int = 0
     current_weight: int = 0
+    gold: int = 0
     items: list[str] = field(default_factory=list)
 
 
@@ -32,7 +43,9 @@ class EntityState:
     readiness: float = 0.0
     active: bool = True
     interaction: InteractionComponent = field(default_factory=InteractionComponent)
+    identity: IdentityComponent = field(default_factory=IdentityComponent)
     inventory: InventoryComponent = field(default_factory=InventoryComponent)
+    strategic: StrategicComponent = field(default_factory=StrategicComponent)
     properties: Dict[str, Any] = field(default_factory=dict)
 
 
@@ -67,4 +80,5 @@ class AuthoritativeState:
     movement_count: int = 0  # Milestone 2: Throughput truth
     blocked_tiles: set[tuple[int, int]] = field(default_factory=set) # Spatial truth
     town_tiles: set[tuple[int, int]] = field(default_factory=set)    # Social truth
+    building_tiles: Dict[tuple[int, int], str] = field(default_factory=dict) # Service truth
     rng_checkpoint: Any = None

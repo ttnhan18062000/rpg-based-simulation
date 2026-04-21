@@ -3,368 +3,368 @@
     "scenario_id": "IDLE_BASELINE",
     "profile": "bench_sequential",
     "sample_ticks": 200,
-    "total_time_s": 0.09673970700168866,
-    "avg_tps": 2067.4034085766752,
-    "avg_tick_compute_ms": 0.36024186,
+    "total_time_s": 0.061027514000670635,
+    "avg_tps": 3277.2103415158317,
+    "avg_tick_compute_ms": 0.17480827999999998,
     "phase_breakdown": {
       "init": {
-        "avg_ms": 0.05434633,
-        "max_ms": 1.408447,
-        "min_ms": 0.007401
+        "avg_ms": 0.024399220000000003,
+        "max_ms": 0.511823,
+        "min_ms": 0.007342
       },
       "scheduling": {
-        "avg_ms": 0.0052448799999999995,
-        "max_ms": 0.024266,
-        "min_ms": 0.001942
+        "avg_ms": 0.00378791,
+        "max_ms": 0.017982,
+        "min_ms": 0.001984
       },
       "collection": {
-        "avg_ms": 0.006562479999999999,
-        "max_ms": 0.247938,
-        "min_ms": 0.001381
+        "avg_ms": 0.00291317,
+        "max_ms": 0.013047,
+        "min_ms": 0.001312
       },
       "resolution": {
-        "avg_ms": 0.25143557,
-        "max_ms": 22.017445,
-        "min_ms": 0.009789
+        "avg_ms": 0.0625035,
+        "max_ms": 1.493559,
+        "min_ms": 0.02471
       },
       "cleanup": {
-        "avg_ms": 0.04496423,
-        "max_ms": 1.235487,
-        "min_ms": 0.001594
+        "avg_ms": 0.08249409999999999,
+        "max_ms": 3.939732,
+        "min_ms": 0.001565
       },
       "advancement": {
-        "avg_ms": 0.01855793,
-        "max_ms": 0.077512,
-        "min_ms": 0.00679
+        "avg_ms": 0.024298350000000003,
+        "max_ms": 1.064157,
+        "min_ms": 0.006425
       },
       "persistence": {
-        "avg_ms": 0.08030659,
-        "max_ms": 3.147704,
-        "min_ms": 0.01205
+        "avg_ms": 0.12755419,
+        "max_ms": 8.012805,
+        "min_ms": 0.01323
       }
     },
-    "timestamp": 1776699382.450871
+    "timestamp": 1776759892.229821
   },
   {
     "scenario_id": "MOVEMENT_STRESS_100",
     "profile": "bench_sequential",
     "sample_ticks": 200,
-    "total_time_s": 0.6713112739998905,
-    "avg_tps": 297.92438730893804,
-    "avg_tick_compute_ms": 0.57326696,
+    "total_time_s": 0.7588496839998697,
+    "avg_tps": 263.5568073848395,
+    "avg_tick_compute_ms": 1.37966673,
     "phase_breakdown": {
       "init": {
-        "avg_ms": 0.31498212,
-        "max_ms": 19.314857,
-        "min_ms": 0.012879
+        "avg_ms": 0.18039431999999997,
+        "max_ms": 2.853428,
+        "min_ms": 0.028243
       },
       "scheduling": {
-        "avg_ms": 0.033260330000000005,
-        "max_ms": 0.512965,
-        "min_ms": 0.005098
+        "avg_ms": 0.049090049999999996,
+        "max_ms": 0.510888,
+        "min_ms": 0.011672
       },
       "collection": {
-        "avg_ms": 0.02133638,
-        "max_ms": 0.81114,
-        "min_ms": 0.002038
+        "avg_ms": 0.0179251,
+        "max_ms": 0.209082,
+        "min_ms": 0.007136
       },
       "resolution": {
-        "avg_ms": 0.1029967,
-        "max_ms": 3.554607,
-        "min_ms": 0.01333
+        "avg_ms": 1.0345500300000001,
+        "max_ms": 2.628221,
+        "min_ms": 0.439665
       },
       "cleanup": {
-        "avg_ms": 0.10514315,
-        "max_ms": 7.308677,
-        "min_ms": 0.002296
+        "avg_ms": 0.10934334,
+        "max_ms": 5.861304,
+        "min_ms": 0.004869
       },
       "advancement": {
-        "avg_ms": 0.029253849999999998,
-        "max_ms": 0.295349,
-        "min_ms": 0.008226
+        "avg_ms": 0.05937527,
+        "max_ms": 0.563844,
+        "min_ms": 0.022447
       },
       "persistence": {
-        "avg_ms": 2.93785557,
-        "max_ms": 75.135952,
-        "min_ms": 0.376059
+        "avg_ms": 2.11645208,
+        "max_ms": 10.751411,
+        "min_ms": 0.903944
       }
     },
-    "timestamp": 1776699383.2893496
+    "timestamp": 1776759893.2156122
   },
   {
     "scenario_id": "HARVEST_STRESS_100",
     "profile": "bench_sequential",
     "sample_ticks": 200,
-    "total_time_s": 0.40627344099993934,
-    "avg_tps": 492.2792873384747,
-    "avg_tick_compute_ms": 0.27388265,
+    "total_time_s": 0.5188065359998291,
+    "avg_tps": 385.5001549172193,
+    "avg_tick_compute_ms": 1.18445313,
     "phase_breakdown": {
       "init": {
-        "avg_ms": 0.11075022000000001,
-        "max_ms": 3.144091,
-        "min_ms": 0.016979
+        "avg_ms": 0.06496408,
+        "max_ms": 0.550118,
+        "min_ms": 0.015964
       },
       "scheduling": {
-        "avg_ms": 0.026660560000000003,
-        "max_ms": 0.41004,
-        "min_ms": 0.006853
+        "avg_ms": 0.024332950000000002,
+        "max_ms": 0.361059,
+        "min_ms": 0.006699
       },
       "collection": {
-        "avg_ms": 0.01073668,
-        "max_ms": 0.036627,
-        "min_ms": 0.003264
+        "avg_ms": 0.01203957,
+        "max_ms": 0.148901,
+        "min_ms": 0.003654
       },
       "resolution": {
-        "avg_ms": 0.09987674,
-        "max_ms": 2.079028,
-        "min_ms": 0.018851
+        "avg_ms": 1.05958349,
+        "max_ms": 15.274652,
+        "min_ms": 0.401474
       },
       "cleanup": {
-        "avg_ms": 0.030156239999999997,
-        "max_ms": 0.35685,
-        "min_ms": 0.002566
+        "avg_ms": 0.02725983,
+        "max_ms": 0.354224,
+        "min_ms": 0.00322
       },
       "advancement": {
-        "avg_ms": 0.03464309,
-        "max_ms": 0.350087,
-        "min_ms": 0.011999
+        "avg_ms": 0.03967706,
+        "max_ms": 0.42936,
+        "min_ms": 0.011404
       },
       "persistence": {
-        "avg_ms": 0.99854712,
-        "max_ms": 17.406922,
-        "min_ms": 0.324493
+        "avg_ms": 1.52187517,
+        "max_ms": 13.545231,
+        "min_ms": 0.572666
       }
     },
-    "timestamp": 1776699383.7653167
+    "timestamp": 1776759893.8918982
   },
   {
     "scenario_id": "INTEGRATED_LOOP_100",
     "profile": "bench_sequential",
     "sample_ticks": 200,
-    "total_time_s": 0.3195497569977306,
-    "avg_tps": 625.8806199042748,
-    "avg_tick_compute_ms": 0.33657138000000003,
+    "total_time_s": 1.9232309689996328,
+    "avg_tps": 103.9916698637761,
+    "avg_tick_compute_ms": 5.63982073,
     "phase_breakdown": {
       "init": {
-        "avg_ms": 0.12634202,
-        "max_ms": 2.800899,
-        "min_ms": 0.016043
+        "avg_ms": 0.08709707,
+        "max_ms": 0.36328,
+        "min_ms": 0.02551
       },
       "scheduling": {
-        "avg_ms": 0.029281259999999996,
-        "max_ms": 0.204262,
-        "min_ms": 0.007456
+        "avg_ms": 0.02236994,
+        "max_ms": 0.264157,
+        "min_ms": 0.008831
       },
       "collection": {
-        "avg_ms": 0.01486261,
-        "max_ms": 0.145299,
-        "min_ms": 0.003702
+        "avg_ms": 0.014164600000000001,
+        "max_ms": 0.154917,
+        "min_ms": 0.005844
       },
       "resolution": {
-        "avg_ms": 0.11054371999999998,
-        "max_ms": 3.926195,
-        "min_ms": 0.018985
+        "avg_ms": 5.494788519999999,
+        "max_ms": 13.786389,
+        "min_ms": 2.867337
       },
       "cleanup": {
-        "avg_ms": 0.061868410000000006,
-        "max_ms": 2.316836,
-        "min_ms": 0.002533
+        "avg_ms": 0.02589149,
+        "max_ms": 0.156797,
+        "min_ms": 0.006402
       },
       "advancement": {
-        "avg_ms": 0.040644400000000004,
-        "max_ms": 0.605846,
-        "min_ms": 0.010308
+        "avg_ms": 0.055116649999999996,
+        "max_ms": 0.234699,
+        "min_ms": 0.019297
       },
       "persistence": {
-        "avg_ms": 1.25010974,
-        "max_ms": 15.98274,
-        "min_ms": 0.333542
+        "avg_ms": 3.0231912199999997,
+        "max_ms": 8.934204,
+        "min_ms": 1.417137
       }
     },
-    "timestamp": 1776699384.3160167
+    "timestamp": 1776759896.2556744
   },
   {
     "scenario_id": "IDLE_BASELINE",
     "profile": "bench_concurrent",
     "sample_ticks": 200,
-    "total_time_s": 0.11888458800240187,
-    "avg_tps": 1682.3038491411462,
-    "avg_tick_compute_ms": 0.53195445,
+    "total_time_s": 0.04114306500014209,
+    "avg_tps": 4861.086552479969,
+    "avg_tick_compute_ms": 0.11937611000000001,
     "phase_breakdown": {
       "init": {
-        "avg_ms": 0.08827389000000001,
-        "max_ms": 3.210513,
-        "min_ms": 0.010212
+        "avg_ms": 0.030798429999999998,
+        "max_ms": 0.984131,
+        "min_ms": 0.007558
       },
       "scheduling": {
-        "avg_ms": 0.00606222,
-        "max_ms": 0.060197,
-        "min_ms": 0.002466
+        "avg_ms": 0.0067442100000000005,
+        "max_ms": 0.315429,
+        "min_ms": 0.001895
       },
       "collection": {
-        "avg_ms": 0.01636337,
-        "max_ms": 0.221074,
-        "min_ms": 0.00571
+        "avg_ms": 0.00895838,
+        "max_ms": 0.139457,
+        "min_ms": 0.003898
       },
       "resolution": {
-        "avg_ms": 0.0429559,
-        "max_ms": 1.600437,
-        "min_ms": 0.011523
+        "avg_ms": 0.05531434,
+        "max_ms": 0.362542,
+        "min_ms": 0.024216
       },
       "cleanup": {
-        "avg_ms": 0.38072854999999994,
-        "max_ms": 20.613646,
-        "min_ms": 0.002152
+        "avg_ms": 0.01876492,
+        "max_ms": 0.211109,
+        "min_ms": 0.001628
       },
       "advancement": {
-        "avg_ms": 0.047887759999999994,
-        "max_ms": 1.645792,
-        "min_ms": 0.009436
+        "avg_ms": 0.02812271,
+        "max_ms": 0.645801,
+        "min_ms": 0.006898
       },
       "persistence": {
-        "avg_ms": 0.18180886000000002,
-        "max_ms": 4.274876,
-        "min_ms": 0.01612
+        "avg_ms": 0.039132,
+        "max_ms": 0.348156,
+        "min_ms": 0.012963
       }
     },
-    "timestamp": 1776699384.4512196
+    "timestamp": 1776759896.3098385
   },
   {
     "scenario_id": "MOVEMENT_STRESS_100",
     "profile": "bench_concurrent",
     "sample_ticks": 200,
-    "total_time_s": 0.45164767899768776,
-    "avg_tps": 442.8230439351464,
-    "avg_tick_compute_ms": 0.58391528,
+    "total_time_s": 0.5825423690002935,
+    "avg_tps": 343.3226674022387,
+    "avg_tick_compute_ms": 0.9937817200000001,
     "phase_breakdown": {
       "init": {
-        "avg_ms": 0.41471769,
-        "max_ms": 30.432205,
-        "min_ms": 0.011573
+        "avg_ms": 0.05237825,
+        "max_ms": 0.371883,
+        "min_ms": 0.01203
       },
       "scheduling": {
-        "avg_ms": 0.03124577,
-        "max_ms": 0.788477,
-        "min_ms": 0.005183
+        "avg_ms": 0.015773250000000003,
+        "max_ms": 0.129284,
+        "min_ms": 0.005446
       },
       "collection": {
-        "avg_ms": 0.046175959999999995,
-        "max_ms": 0.680041,
-        "min_ms": 0.006662
+        "avg_ms": 0.03350953,
+        "max_ms": 0.39067,
+        "min_ms": 0.007586
       },
       "resolution": {
-        "avg_ms": 0.07415627,
-        "max_ms": 0.751283,
-        "min_ms": 0.012846
+        "avg_ms": 0.8589874500000001,
+        "max_ms": 4.669814,
+        "min_ms": 0.372461
       },
       "cleanup": {
-        "avg_ms": 0.02763187,
-        "max_ms": 0.439835,
-        "min_ms": 0.001841
+        "avg_ms": 0.03629607,
+        "max_ms": 1.182503,
+        "min_ms": 0.003041
       },
       "advancement": {
-        "avg_ms": 0.07570655,
-        "max_ms": 2.58566,
-        "min_ms": 0.008414
+        "avg_ms": 0.044094470000000004,
+        "max_ms": 0.840826,
+        "min_ms": 0.010381
       },
       "persistence": {
-        "avg_ms": 1.37464641,
-        "max_ms": 16.761674,
-        "min_ms": 0.341491
+        "avg_ms": 1.60694658,
+        "max_ms": 7.448951,
+        "min_ms": 0.645571
       }
     },
-    "timestamp": 1776699385.111924
+    "timestamp": 1776759897.141867
   },
   {
     "scenario_id": "HARVEST_STRESS_100",
     "profile": "bench_concurrent",
     "sample_ticks": 200,
-    "total_time_s": 0.5784469840000384,
-    "avg_tps": 345.7533802267811,
-    "avg_tick_compute_ms": 0.93925939,
+    "total_time_s": 0.5303624919997674,
+    "avg_tps": 377.1005736960896,
+    "avg_tick_compute_ms": 1.32630865,
     "phase_breakdown": {
       "init": {
-        "avg_ms": 0.12615276,
-        "max_ms": 3.649784,
-        "min_ms": 0.012247
+        "avg_ms": 0.0822822,
+        "max_ms": 1.184314,
+        "min_ms": 0.015485
       },
       "scheduling": {
-        "avg_ms": 0.061477529999999996,
-        "max_ms": 2.205909,
-        "min_ms": 0.005437
+        "avg_ms": 0.02870926,
+        "max_ms": 0.418296,
+        "min_ms": 0.006991
       },
       "collection": {
-        "avg_ms": 0.17817615,
-        "max_ms": 8.325563,
-        "min_ms": 0.006446
+        "avg_ms": 0.03580199,
+        "max_ms": 0.313927,
+        "min_ms": 0.008056
       },
       "resolution": {
-        "avg_ms": 0.30111338,
-        "max_ms": 14.309501,
-        "min_ms": 0.014737
+        "avg_ms": 1.14330472,
+        "max_ms": 11.299983,
+        "min_ms": 0.386427
       },
       "cleanup": {
-        "avg_ms": 0.27751642,
-        "max_ms": 16.573758,
-        "min_ms": 0.002388
+        "avg_ms": 0.04397765,
+        "max_ms": 0.928427,
+        "min_ms": 0.003446
       },
       "advancement": {
-        "avg_ms": 0.24974204,
-        "max_ms": 13.143838,
-        "min_ms": 0.009201
+        "avg_ms": 0.05399807,
+        "max_ms": 1.465154,
+        "min_ms": 0.011321
       },
       "persistence": {
-        "avg_ms": 2.95345029,
-        "max_ms": 50.831421,
-        "min_ms": 0.204414
+        "avg_ms": 1.36454558,
+        "max_ms": 3.694946,
+        "min_ms": 0.577303
       }
     },
-    "timestamp": 1776699386.0267549
+    "timestamp": 1776759897.8878763
   },
   {
     "scenario_id": "INTEGRATED_LOOP_100",
     "profile": "bench_concurrent",
     "sample_ticks": 200,
-    "total_time_s": 0.4959507260027749,
-    "avg_tps": 403.2658679864116,
-    "avg_tick_compute_ms": 1.00552629,
+    "total_time_s": 2.1014952899986383,
+    "avg_tps": 95.17032988455072,
+    "avg_tick_compute_ms": 6.9368490099999995,
     "phase_breakdown": {
       "init": {
-        "avg_ms": 0.18632639999999998,
-        "max_ms": 8.000045,
-        "min_ms": 0.016567
+        "avg_ms": 0.09153967,
+        "max_ms": 0.583558,
+        "min_ms": 0.026507
       },
       "scheduling": {
-        "avg_ms": 0.029507759999999997,
-        "max_ms": 0.356012,
-        "min_ms": 0.007316
+        "avg_ms": 0.03597064,
+        "max_ms": 0.358498,
+        "min_ms": 0.011269
       },
       "collection": {
-        "avg_ms": 0.07769447,
-        "max_ms": 3.151564,
-        "min_ms": 0.00975
+        "avg_ms": 0.05604978,
+        "max_ms": 0.390974,
+        "min_ms": 0.02185
       },
       "resolution": {
-        "avg_ms": 0.14220252,
-        "max_ms": 2.853494,
-        "min_ms": 0.020091
+        "avg_ms": 6.7078435899999995,
+        "max_ms": 16.778566,
+        "min_ms": 2.858995
       },
       "cleanup": {
-        "avg_ms": 0.5827619399999999,
-        "max_ms": 53.300594,
-        "min_ms": 0.002627
+        "avg_ms": 0.05217372,
+        "max_ms": 0.782313,
+        "min_ms": 0.010146
       },
       "advancement": {
-        "avg_ms": 0.09312674,
-        "max_ms": 2.266714,
-        "min_ms": 0.011832
+        "avg_ms": 0.06362783,
+        "max_ms": 0.385935,
+        "min_ms": 0.029376
       },
       "persistence": {
-        "avg_ms": 2.27163505,
-        "max_ms": 25.202507,
-        "min_ms": 0.318235
+        "avg_ms": 3.63387796,
+        "max_ms": 14.305416,
+        "min_ms": 1.590131
       }
     },
-    "timestamp": 1776699387.121591
+    "timestamp": 1776759900.5211325
   }
 ]
