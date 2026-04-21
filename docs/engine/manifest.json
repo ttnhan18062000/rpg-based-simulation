@@ -77,6 +77,7 @@
     "RuntimeMode": ["NORMAL", "CONSTRAINED", "DEGRADED", "SURVIVAL"],
     "HardwareClass": ["class_a", "class_b", "class_c"],
     "FailureKind": [
+      "NONE",
       "FAILED_ENVELOPE", 
       "FAILED_DEGRADATION_SEQUENCE",
       "FAILED_RECOVERY_TIMEOUT", 

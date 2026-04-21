@@ -38,4 +38,4 @@ The following cycle is officially supported, certified, and bit-identical under 
 
 ## 7. Quality Certificate
 > [!IMPORTANT]
-> The integrated progression substrate is now **regression-guarded** by [test_progression_integrity_guards.py](file:///home/vboxuser/Work/rpg-based-simulation/tests_v2/parity/test_progression_integrity_guards.py). Any changes to the `Kernel` resolution phase that break same-tick redirection will fail the release gate.
+> The integrated progression substrate is now **regression-guarded** by [test_logic_guards.py](file:///home/vboxuser/Work/rpg-based-simulation/tests_v2/integrity/test_logic_guards.py). Any changes to the `Kernel` resolution phase that break same-tick redirection will fail the release gate.

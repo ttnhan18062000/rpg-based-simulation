@@ -166,3 +166,5 @@ timestamp,ticket_id,title,status,summary,artifacts_path
 2026-04-21T08:30:20Z,TCK-20260421-RESOURCE-CONTRACT,Resource Contract and Domain invariants,DONE,Enforced weight and slot pressure laws in InteractionSystem.,stored_artifacts/TCK-20260421-RESOURCE-CONTRACT/
 2026-04-21T08:30:30Z,TCK-20260421-PROGRESSION-LOOP-PROOF,Integrated Resource Progression Proof,DONE,Verified bit-identical autonomous progression loop.,stored_artifacts/TCK-20260421-PROGRESSION-LOOP-PROOF/
 2026-04-21T08:30:40Z,TCK-20260421-PHASE5-MILESTONE-5,Supported Progression Surface Consolidation,DONE,Published Phase 5 truth package and hardened certification.,stored_artifacts/TCK-20260421-PHASE5-MILESTONE-5/
+2026-04-21,TCK-20260421-RESOURCE-HARDENING,Phase 5 Hardening & Integrity Guards,DONE
+Audit-Date,TCK-20260421-LEGACY-AUDIT,DONE

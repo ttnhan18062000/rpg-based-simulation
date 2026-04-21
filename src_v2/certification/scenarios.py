@@ -114,7 +114,7 @@ class GameplayInjector:
                     "lead_ore": LeadState(id="lead_ore", kind="location", subject="iron_ore", detail="1.0,0.0")
                 }
             ),
-            inventory=InventoryComponent(max_slots=10, gold=100, items=["iron_ore", "wood"])
+            inventory=InventoryComponent(max_slots=10, gold=100, items=["wood", "iron_ore"])
         )
         
         new_nodes = dict(state.resource_nodes)

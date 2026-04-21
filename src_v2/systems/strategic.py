@@ -74,9 +74,15 @@ class StrategicIntelligenceSystem:
                 
             # Scan for material blockers matching added items
             resolved_ids = []
+            
+            # Combine current blockers and proposed additions for resolution check
+            active_blocker_ids = set(entity.strategic.blockers.keys())
+            if ent_upd.strategic:
+                active_blocker_ids.update(b.id for b in ent_upd.strategic.blockers_add_or_update)
+            
             for item in items_added:
                 blocker_id = f"blocker_mat_{item}"
-                if blocker_id in entity.strategic.blockers:
+                if blocker_id in active_blocker_ids:
                     resolved_ids.append(blocker_id)
             
             if resolved_ids:
