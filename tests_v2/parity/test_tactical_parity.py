@@ -28,7 +28,7 @@ def test_target_selection_parity():
     
     state = AuthoritativeState(tick=1, seed=42, entities={1: attacker, 2: t1, 3: t2})
     
-    decision = TacticalDecisionSystem.evaluate(attacker, state)
+    decision = TacticalDecisionSystem.evaluate_entity_intent(state, attacker)
     assert decision.task.payload_set["target_id"] == 2 # Lowest HP wins in V2
     
 def test_retreat_threshold_divergence():
@@ -36,8 +36,10 @@ def test_retreat_threshold_divergence():
     Divergence: V2 retreat at 20%, V1 retreat at 25%.
     """
     attacker = create_mock_entity(1, 1, pos=(0, 0), hp=21) # Just above V2 threshold
-    state = AuthoritativeState(tick=1, seed=42, entities={1: attacker})
+    hostile = create_mock_entity(2, 2, pos=(1, 1)) # Need a hostile to trigger intent logic
+    state = AuthoritativeState(tick=1, seed=42, entities={1: attacker, 2: hostile})
     
-    decision = TacticalDecisionSystem.evaluate(attacker, state)
+    decision = TacticalDecisionSystem.evaluate_entity_intent(state, attacker)
     # At 21 HP (21%), V2 stays in CLOSE mode. V1 would RETREAT.
-    assert decision.task.payload_set["action"] != "RETREAT"
+    assert decision.task.payload_set.get("action") != "RETREAT"
+    assert decision.task.payload_set.get("reason") != "RETREAT"

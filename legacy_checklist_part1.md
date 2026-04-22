@@ -161,22 +161,22 @@ Relevant original source files:
   Atomic checklist:
 - [x] Strategic state is first-class and survives across ticks (directives, projects, objectives, concerns, blockers, obligations, contracts, offers, leads, candidate zones, hypotheses).
 - [x] Current project/objective continuity is explicit and bounded.
-- [ ] Project switching uses interruption resistance / margin logic, not full rescore every tick.
+- [x] Project switching uses interruption resistance / margin logic, not full rescore every tick.
 - [x] Current project gets reservation/retention priority inside bounded strategic slices.
 - [x] Blockers are inferred from project/objective state and can be accurate or misdiagnosed under bounded cognition.
-- [ ] Leads are retained under profile-specific bandwidth limits.
-- [ ] Concerns are retained under profile-specific intake limits.
-- [ ] Detours are suggested from blockers and leads within breadth/depth limits.
-- [ ] Rejected/tested leads are suppressed to avoid blind retries.
+- [x] Leads are retained under profile-specific bandwidth limits.
+- [x] Concerns are retained under profile-specific intake limits.
+- [x] Detours are suggested from blockers and leads within breadth/depth limits.
+- [x] Rejected/tested leads are suppressed to avoid blind retries.
 - [x] Strategic overload is visible through bounded capacity metrics.
-- [ ] Event interpretation can mutate directives, projects, concerns, and source trust.
-- [ ] Knowledge remains uncertain (leads/candidate zones/hypotheses) until resolved.
-- [ ] Cognition graph export exposes persisted strategic state without becoming the source of truth.
+- [x] Event interpretation can mutate directives, projects, concerns, and source trust.
+- [x] Knowledge remains uncertain (leads/candidate zones/hypotheses) until resolved.
+- [x] Cognition graph export exposes persisted strategic state without becoming the source of truth.
 
 original evidence: `ai/strategy/`, `core/logic/strategic_consequence_service.py`
-`src_v2` evidence: `src_v2/systems/strategic.py`, `src_v2/systems/redirection.py`, `src_v2/core/updates.py`
-divergence note: v2 leverages the `StrategicIntelligenceSystem` to authoritatively resolve blockers and `StrategicRedirectionSystem` to drive intention pivots based on resolved resource truth.
-proof path: `tests_v2/contract/test_resource_intelligence_contract.py`
+`src_v2` evidence: `src_v2/systems/strategic.py`, `src_v2/systems/event_interpreter.py`, `src_v2/systems/detour.py`, `src_v2/systems/belief.py`, `src_v2/systems/cognition_export.py`
+diverge note: v2 Phase 9 implements full interruption resistance, bandwidth enforcement, detour suggestion, event interpretation, belief cycle, and cognition graph export.
+proof path: `tests_v2/strategic/`, `tests_v2/cognition/`
 
 ### Social / contracts / relationships / reputation
 
@@ -193,14 +193,14 @@ Relevant original source files:
 - `core/models/lived_structure.py`
 - `core/models/social.py`
   Atomic checklist:
-- [ ] Private betrayal history can override public recruiter reputation.
-- [ ] Social learning updates familiarity/trust-like bonds from interaction evidence.
-- [ ] Social contracts and obligations are explicit strategic objects, not flavor text.
-- [ ] Breaking or honoring contracts has persistent consequences.
+- [x] Private betrayal history can override public recruiter reputation.
+- [x] Social learning updates familiarity/trust-like bonds from interaction evidence.
+- [x] Social contracts and obligations are explicit strategic objects, not flavor text.
+- [x] Breaking or honoring contracts has persistent consequences.
 - [ ] Public reputation is distinct from private narrative meaning.
-- [ ] Turning points and interpreted life events feed future strategic and social behavior.
+- [x] Turning points and interpreted life events feed future strategic and social behavior.
 - [ ] Party/group cooperation is purpose-driven, not just proximity clustering.
-- [ ] Recruitment evaluates trust, debt, greed, capability fit, and prior trauma.
+- [x] Recruitment evaluates trust, debt, greed, capability fit, and prior trauma.
 
 ### Progression / classes / skills / attributes / entity growth
 

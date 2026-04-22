@@ -29,10 +29,20 @@ class EvolutionSystem:
             ent_upd = update.entity_updates.get(e_id, EntityUpdate(entity_id=e_id))
             
             # Current points + proposed delta from this tick
-            total_points = entity.identity.evolution_points
-            if ent_upd.identity:
-                total_points += ent_upd.identity.evolution_points_delta
+            xp_mult = 1.0
+            if entity.biological.well_rested_until >= state.tick:
+                xp_mult = 1.5
             
+            proposed_delta = 0
+            if ent_upd.identity:
+                proposed_delta = int(ent_upd.identity.evolution_points_delta * xp_mult)
+            
+            total_points = entity.identity.evolution_points + proposed_delta
+            
+            if xp_mult != 1.0 and ent_upd.identity and ent_upd.identity.evolution_points_delta != 0:
+                ent_upd = replace(ent_upd, identity=replace(ent_upd.identity, evolution_points_delta=proposed_delta))
+                update.entity_updates[e_id] = ent_upd
+
             if total_points >= EvolutionSystem.EVOLUTION_THRESHOLD:
                 # Trigger Authoritative Evolution
                 new_level = entity.identity.evolution_level + 1
@@ -48,7 +58,7 @@ class EvolutionSystem:
                     kind_set=new_kind,
                     identity=replace(id_upd, 
                         evolution_level_set=new_level,
-                        evolution_points_delta=ent_upd.identity.evolution_points_delta - EvolutionSystem.EVOLUTION_THRESHOLD if ent_upd.identity else -EvolutionSystem.EVOLUTION_THRESHOLD
+                        evolution_points_delta=proposed_delta - EvolutionSystem.EVOLUTION_THRESHOLD
                     ),
                     # Evolution provides a 'Restoration' and stat boost
                     combat=replace(cb_upd,

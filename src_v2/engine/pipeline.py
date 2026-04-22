@@ -31,6 +31,7 @@ class AuthoritativeApplyPipeline:
         from src_v2.engine.sabotage import BuildingSabotageSystem
         from src_v2.engine.combat import CombatResolutionSystem
         from src_v2.engine.legality import LegalityServiceV2
+        from src_v2.systems.lifecycle import LifecycleSystem
         
         # 1. Territorial & Service Laws (Healing, Shopping, Crafting)
         # These operate on current position (or proposed new position)
@@ -57,6 +58,7 @@ class AuthoritativeApplyPipeline:
         
         # 4. Strategic Logic
         update = StrategicIntelligenceSystem.resolve_blockers(state, update)
+        update = StrategicIntelligenceSystem.evaluate_biological_concerns(state, update)
         update = StrategicRedirectionSystem.enforce(state, update)
         
         # 5. Intent Routing (Movement)
@@ -69,6 +71,9 @@ class AuthoritativeApplyPipeline:
         
         # 7. Evolution & Growth
         update = EvolutionSystem.evaluate(state, update)
+        
+        # 8. Lifecycle (Aging, Death, Succession)
+        update = LifecycleSystem.resolve_lifecycle(state, update)
         
         return update
 
@@ -142,12 +147,26 @@ class AuthoritativeApplyPipeline:
         
         refined_entity_updates = dict(update.entity_updates)
         
-        for e_id, entity in state.entities.items():
-            ent_upd = refined_entity_updates.get(e_id)
-            if not ent_upd or not ent_upd.task: continue
+        # Phase 9 Fix: Use list(keys) to avoid "dictionary changed size during iteration"
+        for e_id in list(refined_entity_updates.keys()):
+            ent_upd = refined_entity_updates[e_id]
+            entity = state.entities.get(e_id)
+            if not entity or not entity.active: continue
             
             task_upd = ent_upd.task
-            if task_upd.work_kind_set == "ENTITY_ACT" and task_upd.payload_set.get("action") == "ATTACK":
+            if not task_upd or task_upd.work_kind_set != "ENTITY_ACT": continue
+            
+            action_kind = task_upd.payload_set.get("action")
+            legal, reason = LegalityServiceV2.verify_action_legality(entity, action_kind, state)
+            
+            if not legal:
+                 # Suppression! Remove the task and record failure
+                 refined_entity_updates[e_id] = replace(ent_upd,
+                    task=replace(task_upd, payload_set={**task_upd.payload_set, "outcome": "FAILURE", "reason": reason})
+                 )
+                 continue
+
+            if action_kind == "ATTACK":
                 target_id = task_upd.payload_set.get("target_id")
                 if target_id is None: continue
                 
@@ -203,14 +222,20 @@ class AuthoritativeApplyPipeline:
                         damage_taken=combat_upd.damage_taken + atk_bonus,
                         hp_delta=combat_upd.hp_delta - atk_bonus
                     )
+
+                # Phase 9: Near Death Hardening
+                if combat_upd.outcome_kind == "SURVIVE":
+                     new_hp = target.combat.hp + combat_upd.hp_delta
+                     if 0 < (new_hp / target.combat.max_hp) < 0.1:
+                          # Near death survivor! Increase Max HP by 5
+                          combat_upd = replace(combat_upd, max_hp_delta=combat_upd.max_hp_delta + 5)
                 
                 # 4. Emit Updates
                 # Target gets the combat update (HP change)
                 target_upd = refined_entity_updates.get(target_id, EntityUpdate(entity_id=target_id))
                 refined_entity_updates[target_id] = replace(target_upd, combat=combat_upd)
                 
-                # Attacker is marked as having acted (readiness reset is handled by Kernel/Apply)
-                # But we might want to record the action in the payload
+                # Attacker is marked as having acted
                 refined_entity_updates[e_id] = replace(ent_upd,
                     task=replace(task_upd, payload_set={**task_upd.payload_set, "outcome": "SUCCESS"})
                 )

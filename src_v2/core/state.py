@@ -6,6 +6,29 @@ from src_v2.core.strategic import StrategicComponent
 
 
 @dataclass(frozen=True, slots=True)
+class BiologicalComponent:
+    """State for sleep, hunger, and other biological pressures."""
+    sleep_debt: float = 0.0      # 0.0 to 100.0, affects performance
+    hunger: float = 0.0          # 0.0 to 100.0, affects stamina/readiness
+    rest_pressure: float = 0.0   # 0.0 to 100.0, forced rest at high values
+    last_meal_tick: int = 0
+    last_sleep_tick: int = 0
+    well_rested_until: int = 0   # Tick until which well-rested buff applies
+
+
+@dataclass(frozen=True, slots=True)
+class LifecycleComponent:
+    """State for hero aging and death mechanics."""
+    age_ticks: int = 0
+    max_age_ticks: int = 10000
+    is_permadeath: bool = False
+    death_tick: Optional[int] = None
+    death_reason: Optional[str] = None
+    heir_entity_id: Optional[int] = None
+    heirlooms: list[str] = field(default_factory=list)
+
+
+@dataclass(frozen=True, slots=True)
 class RegionState:
     """Regional attributes and world dynamic markers."""
     id: str
@@ -96,6 +119,8 @@ class EntityState:
     inventory: InventoryComponent = field(default_factory=InventoryComponent)
     strategic: StrategicComponent = field(default_factory=StrategicComponent)
     social: SocialComponent = field(default_factory=SocialComponent)
+    biological: BiologicalComponent = field(default_factory=BiologicalComponent)
+    lifecycle: LifecycleComponent = field(default_factory=LifecycleComponent)
     combat: CombatComponent = field(default_factory=CombatComponent)
     navigation: NavigationComponent = field(default_factory=NavigationComponent)
     task: TaskComponent = field(default_factory=TaskComponent)

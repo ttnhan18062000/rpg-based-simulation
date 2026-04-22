@@ -29,7 +29,32 @@ class ApplyPath:
             # Milestone 5 Law: Passive Advancement (Readiness gain)
             # Every tick, entities gain 10.0 readiness (capped at 100.0)
             passive_readiness = min(100.0, entity.readiness + 10.0)
-            entity = replace(entity, readiness=passive_readiness)
+            
+            # Phase 9: Biological Decay
+            # Every tick, hunger and sleep debt increase slightly
+            new_hunger = min(100.0, entity.biological.hunger + 0.1)
+            new_sleep = min(100.0, entity.biological.sleep_debt + 0.05)
+            new_biological = replace(entity.biological, hunger=new_hunger, sleep_debt=new_sleep)
+            
+            # Phase 9: Lifecycle Aging
+            new_lifecycle = replace(entity.lifecycle, age_ticks=entity.lifecycle.age_ticks + 1)
+            
+            # Phase 9: Regional Hazard Drain
+            from src_v2.engine.legality import LegalityServiceV2
+            region = LegalityServiceV2.get_region_for_position(entity.position, prior_state)
+            hazard_damage = 0
+            if region and region.hazard_level > 0:
+                hazard_damage = int(region.hazard_level * 10 * (1.0 + region.calamity_intensity))
+            
+            new_hp = max(0, entity.combat.hp - hazard_damage)
+            new_combat = replace(entity.combat, hp=new_hp)
+            
+            entity = replace(entity, 
+                readiness=passive_readiness, 
+                biological=new_biological, 
+                lifecycle=new_lifecycle,
+                combat=new_combat
+            )
             
             ent_upd = update.entity_updates.get(e_id)
             if ent_upd:
@@ -190,13 +215,42 @@ class ApplyPath:
                 public_reputation=update.social.reputation_set if update.social.reputation_set is not None else entity.social.public_reputation
             )
 
+        new_biological = entity.biological
+        if update.biological:
+            from src_v2.core.state import BiologicalComponent
+            new_biological = replace(
+                entity.biological,
+                sleep_debt=max(0.0, min(100.0, entity.biological.sleep_debt + update.biological.sleep_debt_delta)),
+                hunger=max(0.0, min(100.0, entity.biological.hunger + update.biological.hunger_delta)),
+                rest_pressure=max(0.0, min(100.0, entity.biological.rest_pressure + update.biological.rest_pressure_delta)),
+                last_meal_tick=update.biological.last_meal_tick_set if update.biological.last_meal_tick_set is not None else entity.biological.last_meal_tick,
+                last_sleep_tick=update.biological.last_sleep_tick_set if update.biological.last_sleep_tick_set is not None else entity.biological.last_sleep_tick,
+                well_rested_until=update.biological.well_rested_until_set if update.biological.well_rested_until_set is not None else entity.biological.well_rested_until
+            )
+
+        new_lifecycle = entity.lifecycle
+        if update.lifecycle:
+            from src_v2.core.state import LifecycleComponent
+            new_heirlooms = list(entity.lifecycle.heirlooms)
+            new_heirlooms.extend(update.lifecycle.heirlooms_add)
+            new_lifecycle = replace(
+                entity.lifecycle,
+                age_ticks=entity.lifecycle.age_ticks + update.lifecycle.age_delta,
+                is_permadeath=update.lifecycle.is_permadeath_set if update.lifecycle.is_permadeath_set is not None else entity.lifecycle.is_permadeath,
+                death_tick=update.lifecycle.death_tick_set if update.lifecycle.death_tick_set is not None else entity.lifecycle.death_tick,
+                death_reason=update.lifecycle.death_reason_set if update.lifecycle.death_reason_set is not None else entity.lifecycle.death_reason,
+                heir_entity_id=update.lifecycle.heir_entity_id_set if update.lifecycle.heir_entity_id_set is not None else entity.lifecycle.heir_entity_id,
+                heirlooms=new_heirlooms
+            )
+
         new_combat = entity.combat
         if update.combat:
-            new_hp = max(0, entity.combat.hp + update.combat.hp_delta - update.combat.damage_taken)
+            new_hp = max(0, entity.combat.hp + update.combat.hp_delta)
+            new_max_hp = entity.combat.max_hp + update.combat.max_hp_delta
             is_alive = update.combat.alive_set if update.combat.alive_set is not None else (new_hp > 0)
             from src_v2.core.state import CombatComponent
             new_combat = CombatComponent(
-                hp=new_hp, max_hp=entity.combat.max_hp,
+                hp=new_hp, max_hp=new_max_hp,
                 atk=entity.combat.atk, def_stat=entity.combat.def_stat,
                 evasion=entity.combat.evasion, alive=is_alive
             )
@@ -232,6 +286,8 @@ class ApplyPath:
             inventory=new_inventory,
             strategic=new_strategic,
             social=new_social,
+            biological=new_biological,
+            lifecycle=new_lifecycle,
             combat=new_combat,
             navigation=new_navigation,
             task=new_task,

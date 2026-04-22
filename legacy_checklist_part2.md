@@ -7,9 +7,9 @@
 
 #### `ai/test_bounded_detours.py`
 
-- [ ] `test_detour_breadth_limit`: Detour breadth limit.
-- [ ] `test_detour_depth_limit_fallback`: Detour depth limit fallback.
-- [ ] `test_retry_suppression`: Retry suppression.
+- [x] `test_detour_breadth_limit`: Detour breadth limit.
+- [x] `test_detour_depth_limit_fallback`: Detour depth limit fallback.
+- [x] `test_retry_suppression`: Retry suppression.
 
 #### `ai/test_bounded_objective_continuity.py`
 
@@ -19,21 +19,21 @@
 
 #### `ai/test_bounded_project_continuity.py`
 
-- [ ] `test_project_retention_when_rival_is_below_margin`: Project retention when rival is below margin.
-- [ ] `test_project_switch_when_rival_is_above_margin`: Project switch when rival is above margin.
-- [ ] `test_switch_margin_increases_with_higher_resistance_profile`: Switch margin increases with higher resistance profile.
+- [x] `test_project_retention_when_rival_is_below_margin`: Project retention when rival is below margin.
+- [x] `test_project_switch_when_rival_is_above_margin`: Project switch when rival is above margin.
+- [x] `test_switch_margin_increases_with_higher_resistance_profile`: Switch margin increases with higher resistance profile.
 
 #### `ai/test_bounded_strategic_slice.py`
 
 - [ ] `test_low_profile_entity_has_smaller_active_slice_than_high_profile_entity`: Low profile entity has smaller active slice than high profile entity.
-- [ ] `test_concern_intake_is_capped_by_profile`: Concern intake is capped by profile.
-- [ ] `test_lead_retention_is_capped_by_profile`: Lead retention is capped by profile.
+- [x] `test_concern_intake_is_capped_by_profile`: Concern intake is capped by profile.
+- [x] `test_lead_retention_is_capped_by_profile`: Lead retention is capped by profile.
 - [ ] `test_reserved_current_project_slot_is_used_when_current_project_exists`: Reserved current project slot is used when current project exists.
 - [ ] `test_dropped_candidate_counts_are_deterministic`: Dropped candidate counts are deterministic.
 
 #### `ai/test_cognition_capacity_determinism.py`
 
-- [ ] `test_profile_derivation_is_deterministic_for_same_entity_state`: Profile derivation is deterministic for same entity state.
+- [x] `test_profile_derivation_is_deterministic_for_same_entity_state`: Profile derivation is deterministic for same entity state.
 - [ ] `test_profile_derivation_is_independent_of_tick_in_milestone_1`: Profile derivation is independent of tick in milestone 1.
 - [ ] `test_profile_derivation_does_not_use_rng`: Profile derivation does not use rng.
 
@@ -66,17 +66,17 @@
 
 #### `ai/test_event_interpretation.py`
 
-- [ ] `test_stable_concern_generation`: Stable concern generation.
-- [ ] `test_unstable_panic_concern`: Unstable panic concern.
-- [ ] `test_interruption_resistance_stable`: Interruption resistance stable.
-- [ ] `test_interruption_resistance_unstable`: Interruption resistance unstable.
+- [x] `test_stable_concern_generation`: Stable concern generation.
+- [x] `test_unstable_panic_concern`: Unstable panic concern.
+- [x] `test_interruption_resistance_stable`: Interruption resistance stable.
+- [x] `test_interruption_resistance_unstable`: Interruption resistance unstable.
 - [ ] `test_identity_drift_resistance`: Identity drift resistance.
 - [ ] `test_rumor_sensitivity_unstable`: Rumor sensitivity unstable.
 
 #### `ai/test_lead_learning.py`
 
-- [ ] `test_learning_success`: Learning success.
-- [ ] `test_learning_failure`: Learning failure.
+- [x] `test_learning_success`: Learning success.
+- [x] `test_learning_failure`: Learning failure.
 
 #### `ai/test_social_cognition.py`
 
@@ -86,7 +86,7 @@
 
 #### `ai/test_source_trust_learning_loop.py`
 
-- [ ] `test_source_trust_learning_loop`: Source trust learning loop — Prove that future weighting is affected by source trust after a learning event..
+- [x] `test_source_trust_learning_loop`: Source trust learning loop — Prove that future weighting is affected by source trust after a learning event..
 
 #### `ai/test_uncertainty_resolution_loop.py`
 
@@ -94,10 +94,10 @@
 
 #### `core/test_cognition_graph_exporter.py`
 
-- [ ] `test_export_empty_strategy`: Export empty strategy — Verify export from an entity with no strategic state..
-- [ ] `test_export_with_core_strategic_state`: Export with core strategic state — Verify export of directives, projects, and objectives..
-- [ ] `test_export_determinism`: Export determinism — Verify that multiple exports from the same state are identical..
-- [ ] `test_non_mutation`: Non mutation — Verify that exporter does not mutate the source entity..
+- [x] `test_export_empty_strategy`: Export empty strategy — Verify export from an entity with no strategic state..
+- [x] `test_export_with_core_strategic_state`: Export with core strategic state — Verify export of directives, projects, and objectives..
+- [x] `test_export_determinism`: Export determinism — Verify that multiple exports from the same state are identical..
+- [x] `test_non_mutation`: Non mutation — Verify that exporter does not mutate the source entity..
 
 #### `core/test_strategy_models.py`
 
@@ -113,12 +113,12 @@
 
 #### `integration/strategy/test_strategic_brain_integration.py`
 
-- [ ] `test_strategic_pivot_on_regional_danger`: Strategic pivot on regional danger — Verify that heroes pivot from personal quests to regional stabilization during high-danger events..
-- [ ] `test_scar_detection`: Scar detection — Verify that heroes sense nearby world trauma (scars) and investigate..
-- [ ] `test_near_death_triggers_survival_consequences`: Near death triggers survival consequences — Verify that a NEAR_DEATH event generates a concern and suspends the current project via applicator..
-- [ ] `test_betrayal_mutates_directives`: Betrayal mutates directives — Verify that a salient betrayal turning point adds an 'Avenge' directive..
+- [x] `test_strategic_pivot_on_regional_danger`: Strategic pivot on regional danger — Verify that heroes pivot from personal quests to regional stabilization during high-danger events..
+- [x] `test_scar_detection`: Scar detection — Verify that heroes sense nearby world trauma (scars) and investigate..
+- [x] `test_near_death_triggers_survival_consequences`: Near death triggers survival consequences — Verify that a NEAR_DEATH event generates a concern and suspends the current project via applicator..
+- [x] `test_betrayal_mutates_directives`: Betrayal mutates directives — Verify that a salient betrayal turning point adds an 'Avenge' directive..
 - [ ] `test_divergent_home_response`: Divergent home response — Verify that only entities with place attachment react strongly to home damage..
-- [ ] `test_betrayal_trauma_affects_recruitment`: Betrayal trauma affects recruitment — Verify that a recent betrayal makes entities less willing to accept recruitment offers..
+- [x] `test_betrayal_trauma_affects_recruitment`: Betrayal trauma affects recruitment — Verify that a recent betrayal makes entities less willing to accept recruitment offers..
 
 #### `integration/strategy/test_strategic_capacity_enforcement.py`
 
@@ -128,8 +128,8 @@
 
 #### `integration/strategy/test_strategic_continuity.py`
 
-- [ ] `test_directive_mutation_salience_threshold`: Directive mutation salience threshold — Verify that only high-salience turning points trigger mutations..
-- [ ] `test_directive_priority_strengthening`: Directive priority strengthening — Verify that repeated high-salience events strengthen directive priority..
+- [x] `test_directive_mutation_salience_threshold`: Directive mutation salience threshold — Verify that only high-salience turning points trigger mutations..
+- [x] `test_directive_priority_strengthening`: Directive priority strengthening — Verify that repeated high-salience events strengthen directive priority..
 
 #### `integration/strategy/test_strategic_continuity_hardening.py`
 
@@ -151,10 +151,10 @@
 #### `integration/strategy/test_strategic_persistence.py`
 
 - [ ] `test_persistence_boost_prevents_switching`: Persistence boost prevents switching — Verify that the persistence boost prevents switching to a slightly better project..
-- [ ] `test_project_lock_prevents_switching`: Project lock prevents switching — Verify that project_lock_until strictly prevents any switches despite critical concerns..
-- [ ] `test_interruption_threshold_overridden_by_major_threat`: Interruption threshold overridden by major threat — Verify that a massive threat CAN overcome the interruption threshold..
+- [x] `test_project_lock_prevents_switching`: Project lock prevents switching — Verify that project_lock_until strictly prevents any switches despite critical concerns..
+- [x] `test_interruption_threshold_overridden_by_major_threat`: Interruption threshold overridden by major threat — Verify that a massive threat CAN overcome the interruption threshold..
 - [ ] `test_strategic_pipeline_home_threat`: Strategic pipeline home threat — Verify the flow from life event through StrategicConsequenceService to project pivot..
-- [ ] `test_resume_restores_valid_objective`: Resume restores valid objective — Verify that brain restores the last active objective when resuming a project. [Strategy M2].
+- [x] `test_resume_restores_valid_objective`: Resume restores valid objective — Verify that brain restores the last active objective when resuming a project. [Strategy M2].
 - [ ] `test_resumed_objective_survives_cycle`: Resumed objective survives cycle — Verify that a restored objective doesn't immediately flip back to ProjectRecord.objectives[0] if it matches. [Strategy M2].
 
 #### `integration/strategy/test_strategic_replay_determinism.py`
@@ -195,8 +195,8 @@
 
 #### `unit/ai/strategy/test_strategic_uncertainty.py`
 
-- [ ] `test_contradiction_degrades_certainty`: Contradiction degrades certainty — Verify that leads with contradictions lose certainty based on profile sensitivity. [MILESTONE 5].
-- [ ] `test_hypothesis_impacted_by_contradiction`: Hypothesis impacted by contradiction — Verify that hypotheses lose confidence when supporting leads are contradicted. [MILESTONE 5].
+- [x] `test_contradiction_degrades_certainty`: Contradiction degrades certainty — Verify that leads with contradictions lose certainty based on profile sensitivity. [MILESTONE 5].
+- [x] `test_hypothesis_impacted_by_contradiction`: Hypothesis impacted by contradiction — Verify that hypotheses lose confidence when supporting leads are contradicted. [MILESTONE 5].
 
 #### `unit/ai/strategy/test_blocker_resolution.py`
 
@@ -213,11 +213,11 @@ proof path: `tests_v2/contract/test_resource_intelligence_contract.py`
 
 - [ ] `test_canonical_blocker_structure`: Canonical blocker structure — Verify that StrategicState has a blockers list and ObjectiveRecord uses IDs..
 - [ ] `test_strategic_snapshot_isolation`: Strategic snapshot isolation — Verify that deep copying an entity results in a fully isolated strategic tree..
-- [ ] `test_belief_decay_aoa_purity`: Belief decay aoa purity — Verify that BeliefService.decay_stale_beliefs returns an update and does not mutate in-place..
+- [x] `test_belief_decay_aoa_purity`: Belief decay aoa purity — Verify that BeliefService.decay_stale_beliefs returns an update and does not mutate in-place..
 - [ ] `test_social_applicator_aoa_purity`: Social applicator aoa purity — Verify that SocialStateApplicator returns updates and does not mutate the world..
-- [ ] `test_concern_generation_near_death`: Concern generation near death.
-- [ ] `test_directive_mutation_near_death`: Directive mutation near death.
-- [ ] `test_project_mutation_interruption`: Project mutation interruption.
+- [x] `test_concern_generation_near_death`: Concern generation near death.
+- [x] `test_directive_mutation_near_death`: Directive mutation near death.
+- [x] `test_project_mutation_interruption`: Project mutation interruption.
 - [ ] `test_strategic_update_blocker_merging`: Strategic update blocker merging — Verify that ActionSystem merges blockers from StrategicUpdate correctly..
 
 #### `unit/systems/test_strategy.py`
@@ -238,12 +238,12 @@ proof path: `tests_v2/contract/test_resource_intelligence_contract.py`
 
 #### `ai/test_betrayal_social_consequence.py`
 
-- [ ] `test_betrayal_social_consequence`: Betrayal social consequence — Verify that private betrayal trauma prevents recruitment even for reputable founders..
+- [x] `test_betrayal_social_consequence`: Betrayal social consequence — Verify that private betrayal trauma prevents recruitment even for reputable founders..
 
 #### `ai/test_learning_social.py`
 
 - [ ] `test_intel_confirmation_by_sight`: Intel confirmation by sight — Verify that seeing a person mentioned in a lead confirms it and boosts trust..
-- [ ] `test_intel_refutation_by_exhaustion`: Intel refutation by exhaustion — Verify that failing to find a target refutes the lead and drops trust..
+- [x] `test_intel_refutation_by_exhaustion`: Intel refutation by exhaustion — Verify that failing to find a target refutes the lead and drops trust..
 
 #### `core/test_lived_models.py`
 
@@ -317,4 +317,4 @@ proof path: N/A
 
 #### `unit/systems/test_familiarity_scaling.py`
 
-- [ ] `test_cha_impacts_familiarity_gain`: Cha impacts familiarity gain — Verify that a hero with higher CHA gains familiarity faster..
+- [x] `test_cha_impacts_familiarity_gain`: Cha impacts familiarity gain — Verify that a hero with higher CHA gains familiarity faster..

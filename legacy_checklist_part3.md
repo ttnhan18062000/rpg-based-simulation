@@ -2,7 +2,7 @@
 
 #### `unit/ai/test_legend_legacy.py`
 
-- [ ] `test_narrative_memory_logging`: Narrative memory logging.
+- [x] `test_narrative_memory_logging`: Narrative memory logging.
 - [ ] `test_bravery_modifiers`: Bravery modifiers.
 - [x] `test_regional_suppression`: Regional suppression.
 
@@ -21,9 +21,9 @@
 
 #### `unit/core/aspects/test_skill_scaling.py`
 
-- [ ] `test_physical_skill_scaling`: Physical skill scaling.
-- [ ] `test_magical_skill_scaling`: Magical skill scaling.
-- [ ] `test_elemental_skill_scaling`: Elemental skill scaling.
+- [x] `test_physical_skill_scaling`: Physical skill scaling.
+- [x] `test_magical_skill_scaling`: Magical skill scaling.
+- [x] `test_elemental_skill_scaling`: Elemental skill scaling.
 
 #### `unit/core/gameplay/test_attribute_synergy.py`
 

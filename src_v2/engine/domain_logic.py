@@ -26,9 +26,41 @@ class SimulationDomainLogic:
     @staticmethod
     def execute_action(
         entity: EntityState, 
-        payload: Optional[Dict[str, Any]] = None
+        payload: Optional[Dict[str, Any]] = None,
+        current_tick: int = 0
     ) -> EntityUpdate:
-        """Standard action cost."""
+        """Standard action cost and routine logic."""
+        action = payload.get("action") if payload else None
+        from src_v2.core.updates import BiologicalUpdate
+        
+        if action == "SLEEP":
+            return EntityUpdate(
+                entity_id=entity.id,
+                readiness_delta=-100.0,
+                biological=BiologicalUpdate(
+                    sleep_debt_delta=-20.0,
+                    rest_pressure_delta=-10.0,
+                    last_sleep_tick_set=current_tick
+                )
+            )
+        elif action == "EAT":
+            return EntityUpdate(
+                entity_id=entity.id,
+                readiness_delta=-100.0,
+                biological=BiologicalUpdate(
+                    hunger_delta=-40.0,
+                    last_meal_tick_set=current_tick
+                )
+            )
+        elif action == "REST":
+            return EntityUpdate(
+                entity_id=entity.id,
+                readiness_delta=-100.0,
+                biological=BiologicalUpdate(
+                    rest_pressure_delta=-30.0
+                )
+            )
+
         return EntityUpdate(
             entity_id=entity.id,
             readiness_delta=-100.0

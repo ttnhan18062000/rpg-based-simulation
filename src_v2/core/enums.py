@@ -1,6 +1,20 @@
 from enum import Enum, IntEnum, unique
 
 @unique
+class EntityRole(IntEnum):
+    HERO = 0
+    SHOPKEEPER = 1
+    MONSTER = 2
+    CITIZEN = 3
+
+@unique
+class Faction(IntEnum):
+    HERO_GUILD = 0
+    MONSTER_HORDE = 1
+    TOWN_COUNCIL = 2
+    NEUTRAL = 3
+
+@unique
 class Direction(IntEnum):
     """Cardinal directions for grid movement."""
     NORTH = 0
@@ -53,6 +67,11 @@ class ReasonCode(Enum):
     MAINTAIN_DISTANCE = "maintain_distance"
     ALLY_SPACING = "ally_spacing"
     CLOSING_RANGE = "closing_range"
+    
+    # Routine / Biological
+    HUNGER = "hunger"
+    SLEEPY = "sleepy"
+    FORCED_REST = "forced_rest"
     
     # Legacy/Fallback
     UNKNOWN = "unknown"

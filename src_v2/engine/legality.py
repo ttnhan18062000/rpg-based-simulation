@@ -13,6 +13,16 @@ class LegalityServiceV2:
         return int(abs(a[0] - b[0]) + abs(a[1] - b[1]))
 
     @staticmethod
+    def get_region_for_position(pos: Tuple[float, float], state: AuthoritativeState) -> Optional[RegionState]:
+        """Returns the region containing the given position."""
+        from src_v2.core.state import RegionState
+        for region in state.regions.values():
+            x_min, y_min, x_max, y_max = region.bounds
+            if x_min <= pos[0] <= x_max and y_min <= pos[1] <= y_max:
+                return region
+        return None
+
+    @staticmethod
     def is_adjacent(a: Tuple[float, float], b: Tuple[float, float]) -> bool:
         return LegalityServiceV2.get_manhattan_dist(a, b) == 1
 
@@ -28,9 +38,13 @@ class LegalityServiceV2:
         """
         target_grid_pos = (int(pos[0]), int(pos[1]))
         
-        # 1. Static Terrain (WALL)
+        # 1. Static Terrain (WALL / blocked_tiles)
         terrain = getattr(state_or_context, 'terrain', {})
         if terrain.get(target_grid_pos) == "WALL":
+            return False, "PATH_NOT_FOUND"
+            
+        blocked_tiles = getattr(state_or_context, 'blocked_tiles', set())
+        if target_grid_pos in blocked_tiles:
             return False, "PATH_NOT_FOUND"
 
         # 2. Buildings (Solid structures)
@@ -93,6 +107,23 @@ class LegalityServiceV2:
                     if LegalityServiceV2.is_adjacent(actor.position, entity.position):
                         engaged.append(eid)
         return engaged
+
+    @staticmethod
+    def verify_action_legality(
+        actor: EntityState,
+        action_kind: str,
+        state: AuthoritativeState
+    ) -> Tuple[bool, str]:
+        """
+        Phase 9: Regional Suppression.
+        Checks if the current region suppresses specific actions.
+        """
+        region = LegalityServiceV2.get_region_for_position(actor.position, state)
+        if region and region.suppression_active:
+            # High-level suppression blocks disruptive/strategic actions
+            if action_kind in ["SABOTAGE", "RECRUIT", "THEFT"]:
+                 return False, "REGIONAL_SUPPRESSION"
+        return True, "LEGAL"
 
     @staticmethod
     def verify_attack_legality(

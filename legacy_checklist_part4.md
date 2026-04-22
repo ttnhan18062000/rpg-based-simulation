@@ -52,11 +52,11 @@ divergence note: v2 converges movement and congestion resolution into the `Movem
 proof path: `tests_v2/engine/test_anti_thrashing.py`
 
 #### `unit/ai/strategy/test_recruitment_negotiation.py`
-
-- [ ] `test_recruitment_offer_generation`: Recruitment offer generation — Verify that a recruiter creates a reasonable offer based on greed and risk. [PHASE 4].
-- [ ] `test_recruitment_offer_evaluation_acceptance`: Recruitment offer evaluation acceptance — Verify candidate accepts a fair offer from a trusted friend. [PHASE 4].
-- [ ] `test_recruitment_haggling_counter_offer`: Recruitment haggling counter offer — Verify greedy candidate counter-offers when the payout is too low. [PHASE 4].
-- [ ] `test_recruiter_evaluates_counter`: Recruiter evaluates counter — Verify recruiter accepts a counter-offer for an urgent project. [PHASE 4].
+ 
+- [x] `test_recruitment_offer_generation`: Recruitment offer generation — Verify that a recruiter creates a reasonable offer based on greed and risk.
+- [x] `test_recruitment_offer_evaluation_acceptance`: Recruitment offer evaluation acceptance — Verify candidate accepts a fair offer from a trusted friend.
+- [x] `test_recruitment_haggling_counter_offer`: Recruitment haggling counter offer — Verify greedy candidate counter-offers when the payout is too low.
+- [x] `test_recruiter_evaluates_counter`: Recruiter evaluates counter — Verify recruiter accepts a counter-offer for an urgent project.
 
 #### `unit/ai/test_action_styles.py`
 
@@ -74,9 +74,9 @@ proof path: `tests_v2/engine/test_anti_thrashing.py`
 
 #### `unit/ai/test_belief_cycle.py`
 
-- [ ] `test_belief_refresh_captures_apparent_state`: Belief refresh captures apparent state.
-- [ ] `test_belief_decay_lifecycle`: Belief decay lifecycle.
-- [ ] `test_threat_estimation_logic`: Threat estimation logic.
+- [x] `test_belief_refresh_captures_apparent_state`: Belief refresh captures apparent state.
+- [x] `test_belief_decay_lifecycle`: Belief decay lifecycle.
+- [x] `test_threat_estimation_logic`: Threat estimation logic.
 
 #### `unit/ai/test_cognitive_pipeline.py`
 
@@ -119,8 +119,8 @@ proof path: `tests_v2/engine/test_anti_thrashing.py`
 
 #### `unit/ai/test_narrative_memory.py`
 
-- [ ] `test_narrative_memory_trauma_biasing`: Narrative memory trauma biasing.
-- [ ] `test_narrative_memory_victory_confidence`: Narrative memory victory confidence.
+- [x] `test_narrative_memory_trauma_biasing`: Narrative memory trauma biasing.
+- [x] `test_narrative_memory_victory_confidence`: Narrative memory victory confidence.
 - [ ] `test_region_fatigue_biasing`: Region fatigue biasing.
 - [ ] `test_social_appraisal_with_narrative`: Social appraisal with narrative.
 
@@ -251,7 +251,7 @@ proof path: `tests_v2/engine/test_worker_equivalence.py`
 
 #### `unit/systems/test_dynamic_quests.py`
 
-- [ ] `test_dynamic_liberate_quest`: Dynamic liberate quest.
+- [x] `test_dynamic_liberate_quest`: Dynamic liberate quest.
 - [ ] `test_history_logging`: History logging.
 
 #### `unit/systems/test_evolution.py`

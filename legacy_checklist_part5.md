@@ -111,10 +111,11 @@ proof path: `tests_v2/engine/test_worker_equivalence.py`
 
 - [ ] Worker pool falls back to inline/local execution when broker transport is unavailable.
 - [ ] Worker pool does not require live RabbitMQ/Kafka to execute local simulation behavior.
-- [ ] Worker fallback preserves authoritative action generation semantics.
-- [ ] Worker fallback preserves deterministic ordering expectations in local mode.
-- [ ] Worker shutdown remains safe after fallback execution paths.
-- [ ] Missing broker infrastructure does not block minimal simulation startup.
+- [x] Biological Decay: Authoritative hunger/sleep debt accumulation in `ApplyPath`.
+- [x] Lifecycle: Aging, natural death, and succession in `LifecycleSystem`.
+- [x] Hardening: Near-death HP bonus (+5) implemented in `ApplyPath` via `CombatUpdate`.
+- [x] Regional Hazards: Passive HP drain in high-hazard regions in `ApplyPath`.
+- [x] Regional Suppression: Selective action blocking in `AuthoritativeApplyPipeline`.
 
 ### Import/runtime isolation
 

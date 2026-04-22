@@ -52,12 +52,12 @@ class MovementSystem:
         engaged_hostiles = LegalityServiceV2.get_engaged_hostiles(entity, state_or_context)
         combat_update = None
         if engaged_hostiles:
-            from src_v2.engine.combat import CombatReactionSystem
+            from src_v2.engine.combat import CombatResolutionSystem
             # P0: For now, we resolve the first hostile's OA and apply it.
             entities = getattr(state_or_context, 'entities', {})
             attacker = entities.get(engaged_hostiles[0])
             if attacker:
-                combat_update = CombatReactionSystem.resolve_opportunity_attack(attacker, entity)
+                combat_update = CombatResolutionSystem.resolve_opportunity_attack(attacker, entity)
 
         # 5. Success Execution
         return EntityUpdate(

@@ -56,7 +56,7 @@ class LocalSequentialExecutor:
                     target = item.payload.get("target_position", subject.position)
                     update = SimulationDomainLogic.execute_move(state, subject, target)
                 else:
-                    update = SimulationDomainLogic.execute_action(subject, item.payload)
+                    update = SimulationDomainLogic.execute_action(subject, item.payload, state.tick)
                 
                 results.append(WorkerResult(
                     source_packet_id=f"local:{state.tick}:{i}",
