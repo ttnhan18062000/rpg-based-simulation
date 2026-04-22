@@ -166,10 +166,6 @@ timestamp,ticket_id,title,status,summary,artifacts_path
 2026-04-21T08:30:20Z,TCK-20260421-RESOURCE-CONTRACT,Resource Contract and Domain invariants,DONE,Enforced weight and slot pressure laws in InteractionSystem.,stored_artifacts/TCK-20260421-RESOURCE-CONTRACT/
 2026-04-21T08:30:30Z,TCK-20260421-PROGRESSION-LOOP-PROOF,Integrated Resource Progression Proof,DONE,Verified bit-identical autonomous progression loop.,stored_artifacts/TCK-20260421-PROGRESSION-LOOP-PROOF/
 2026-04-21T08:30:40Z,TCK-20260421-PHASE5-MILESTONE-5,Supported Progression Surface Consolidation,DONE,Published Phase 5 truth package and hardened certification.,stored_artifacts/TCK-20260421-PHASE5-MILESTONE-5/
-2026-04-21,TCK-20260421-RESOURCE-HARDENING,Phase 5 Hardening & Integrity Guards,DONE
-Audit-Date,TCK-20260421-LEGACY-AUDIT,DONE
-2026-04-21,TCK-20260421-P6-M1-T1-BASE-FREEZE,Phase 5 Support baseline frozen,DONE
-2026-04-21,TCK-20260421-P6-M1-T1-BASE-FREEZE,Phase 5 Support baseline frozen,DONE,Established the immutable baseline for Phase 5 supported logic.,tickets/done/TCK-20260421-P6-M1-T1-BASE-FREEZE.md
 2026-04-21,TCK-20260421-P6-M1-T2-TRUTH-CONSOLIDATION,Truth Consolidation (Inventory Merge),DONE,Merged disparate checklists into a single inventory surface.,tickets/done/TCK-20260421-P6-M1-T2-TRUTH-CONSOLIDATION.md
 2026-04-21,TCK-20260421-P6-M1-T5-EXIT-PACKAGE,Phase 6 Exit Package,DONE,Published formal certification of Phase 6 strategic baseline.,tickets/done/TCK-20260421-P6-M1-T5-EXIT-PACKAGE.md
 2026-04-21,TCK-20260421-P6-M2-T1-LEDGER-SCHEMA,Ledger Schema Establishment,DONE,Defined the 15-column canonical replacement schema.,tickets/done/TCK-20260421-P6-M2-T1-LEDGER-SCHEMA.md
