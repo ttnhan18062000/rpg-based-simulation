@@ -13,23 +13,36 @@ class SocialAppraisalSystem:
     def recalibrate_trust(
         observer: EntityState,
         subject_id: int,
-        outcome_quality: float # 1.0 for success, -1.0 for false lead/betrayal
+        outcome_quality: float = 0.0, # -1.0 to 1.0
+        harm_ratio: float = 0.0,      # damage / max_hp
+        help_ratio: float = 0.0       # help / max_hp
     ) -> SocialUpdate:
         """
         Recalculate trust based on a concrete interaction outcome.
-        Legacy test parity: test_source_trust_recalibration.
+        Legacy Parity: 
+        - Harm: -0.1 - (harm_ratio * 0.5)
+        - Help: 0.05 + (help_ratio * 0.4)
+        - General Success/Failure: 0.1 / -0.2
         """
-        current_trust = observer.social.trust_history.get(subject_id, 0.5) # Default 0.5 (Neutral)
+        current_trust = observer.social.trust_history.get(subject_id, 0.5)
         
-        # Recalibration logic: 
-        # Success adds 0.1 (capped at 1.0)
-        # Failure/Betrayal reduces 0.2 (floor at 0.0)
-        if outcome_quality > 0:
-            new_trust = min(1.0, current_trust + 0.1)
+        trust_delta = 0.0
+        
+        if harm_ratio > 0:
+            trust_delta = -0.1 - (harm_ratio * 0.5)
+        elif help_ratio > 0:
+            trust_delta = 0.05 + (help_ratio * 0.4)
         else:
-            new_trust = max(0.0, current_trust - 0.2)
-            
-        return SocialUpdate(trust_delta={subject_id: new_trust - current_trust})
+            # Fallback to general quality deltas
+            if outcome_quality > 0:
+                trust_delta = 0.1
+            elif outcome_quality < 0:
+                trust_delta = -0.2
+                
+        # Archetype scaling would go here if IdentityComponent had it.
+        # For now, we use the base legacy formulas.
+        
+        return SocialUpdate(trust_delta={subject_id: trust_delta})
 
     @staticmethod
     def evaluate_recruitment_offer(

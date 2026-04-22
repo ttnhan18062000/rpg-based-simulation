@@ -1,9 +1,12 @@
 from __future__ import annotations
 
-from typing import List, Dict, Any, Sequence, Optional
+from typing import List, Dict, Any, Sequence, Optional, TYPE_CHECKING
 from dataclasses import dataclass, field
 from src_v2.core.state import AuthoritativeState
 from src_v2.core.work import WorkItem, WorkClass
+
+if TYPE_CHECKING:
+    from src_v2.engine.policy import GovernorPolicy
 
 
 @dataclass(frozen=True, slots=True)
@@ -21,10 +24,6 @@ class PeriodicDefinition:
 class DeterministicScheduler:
     """
     Authoritative orchestrator for deterministic work selection.
-    Bucketizes work and applies class-local ordering rules.
-    
-    Milestone A Law: Work selection MUST be deterministic and order-invariant.
-    Hierarchy: 1. CRITICAL, 2. PERIODIC, 3. DEFERRED, 4. OPPORTUNISTIC (Gated).
     """
 
     def __init__(self, periodic_defs: Sequence[PeriodicDefinition] = ()):
@@ -37,12 +36,6 @@ class DeterministicScheduler:
     ) -> tuple[List[WorkItem], int]:
         """
         Produce a deterministic sequence of work items for the current tick.
-        Law: Critical (Entities) -> Periodic -> Deferred -> Opportunistic.
-        Tie-Breaks:
-          Critical Entities: (-readiness, owner_id)
-          Periodic Tasks: (due_tick, owner_id)
-          Deferred Debt: (owner_id)
-        Returns: (WorkItems, DroppedCount)
         """
         from src_v2.engine.policy import GovernorPolicy
         
@@ -54,8 +47,9 @@ class DeterministicScheduler:
         critical_items: List[WorkItem] = []
         for ent in state.entities.values():
             if ent.readiness >= 100.0:
-                work_kind = ent.properties.get("work_kind", "ENTITY_ACT")
-                payload = ent.properties.get("payload", {})
+                # Milestone 2: Hardened TaskComponent intent
+                work_kind = ent.task.work_kind
+                payload = ent.task.payload
                 
                 critical_items.append(WorkItem(
                     owner_id=ent.id,
@@ -72,7 +66,6 @@ class DeterministicScheduler:
         # 2. PERIODIC: Subsystem Upkeep
         periodic_items: List[WorkItem] = []
         for sid, pdef in self._periodic_defs.items():
-            # M5 Law: Non-authoritative periodic work is shed in SURVIVAL
             if not pdef.is_authoritative and not policy.allow_non_authoritative_periodic:
                 dropped_count += 1
                 continue
@@ -92,7 +85,7 @@ class DeterministicScheduler:
         periodic_items.sort(key=lambda x: (x.due_tick, x.owner_id))
         work_sequence.extend(periodic_items)
 
-        # 3. DEFERRED: Drain postponed authoritative work (Non-degradable)
+        # 3. DEFERRED: Drain postponed authoritative work
         deferred_items: List[WorkItem] = []
         for d_id, debt_count in state.work_debt.items():
             if debt_count > 0:
@@ -107,11 +100,8 @@ class DeterministicScheduler:
         deferred_items.sort(key=lambda x: x.owner_id)
         work_sequence.extend(deferred_items)
 
-        # 4. OPPORTUNISTIC: Optional Enrichment (Non-authoritative)
-        # Milestone A Law: Baseline runtime does not support opportunistic components.
-        # This branch is gated to ensure non-authoritative work never contaminates the core.
+        # 4. OPPORTUNISTIC: Optional Enrichment
         if policy.allow_opportunistic:
-            # Note: No opportunistic work classes are implemented in the Milestone A baseline.
             pass
         
         return work_sequence, dropped_count

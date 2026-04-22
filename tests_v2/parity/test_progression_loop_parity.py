@@ -91,7 +91,7 @@ def test_full_resource_progression_loop(profile, initial_state):
     kernel.tick_once()
     hero = kernel.state.entities[1]
     assert hero.inventory.items.count("iron_ore") == 2
-    assert hero.identity.navigation_target == (0.0, 0.0)
+    assert hero.navigation.target == (0.0, 0.0)
     
     # Tick 4: Move back to town
     kernel.tick_once()

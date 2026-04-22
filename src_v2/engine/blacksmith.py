@@ -126,19 +126,25 @@ class BlacksmithSystem:
             building_type = state.building_tiles.get(tile_pos)
             
             # --- Law of Knowledge (Wholesale Learning) ---
-            if building_type == "blacksmith" and not entity.identity.known_recipes:
-                existing_upd = refined_entity_updates.get(e_id, EntityUpdate(entity_id=e_id))
-                existing_id = existing_upd.identity if existing_upd.identity else IdentityUpdate()
+            if building_type == "blacksmith":
+                # Check functionality (LEG-RPG-001/006)
+                building = next((b for b in state.buildings.values() if b.position == tile_pos and b.kind == "blacksmith"), None)
+                if building and not building.functional:
+                    continue # Blacksmith is sabotaged and non-functional
                 
-                # Wholesale learning (Parity with V1)
-                all_recipes = list(BlacksmithSystem.RECIPES.keys())
-                new_id = replace(existing_id, recipes_learned=all_recipes)
-                
-                refined_entity_updates[e_id] = replace(
-                    existing_upd,
-                    identity=new_id
-                )
-                continue # Skip crafting check if we just learned recipes this tick? 
+                if not entity.identity.known_recipes:
+                    existing_upd = refined_entity_updates.get(e_id, EntityUpdate(entity_id=e_id))
+                    existing_id = existing_upd.identity if existing_upd.identity else IdentityUpdate()
+                    
+                    # Wholesale learning (Parity with V1)
+                    all_recipes = list(BlacksmithSystem.RECIPES.keys())
+                    new_id = replace(existing_id, recipes_learned=all_recipes)
+                    
+                    refined_entity_updates[e_id] = replace(
+                        existing_upd,
+                        identity=new_id
+                    )
+                    continue # Skip crafting check if we just learned recipes this tick? 
                          # Actually V1 does both if possible.
 
             # --- Law of Materials (Crafting) ---

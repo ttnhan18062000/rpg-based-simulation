@@ -57,7 +57,7 @@ At the end of Milestone 5:
 
 ## Task
 
-### [ ] (checkbox) - [Task 1] - Audit world generation, entity initialization, and engine sequencing against Phase 7 determinism rows
+### [x] (checkbox) - [Task 1] - Audit world generation, entity initialization, and engine sequencing against Phase 7 determinism rows
 
 #### [Task Description]
 
@@ -100,7 +100,7 @@ The project has a concrete audit of world/init/order determinism gaps.
 
 ---
 
-### [ ] (checkbox) - [Task 2] - Canonicalize deterministic world generation and initialization inputs for supported substrate scope
+### [x] (checkbox) - [Task 2] - Canonicalize deterministic world generation and initialization inputs for supported substrate scope
 
 #### [Task Description]
 
@@ -142,7 +142,7 @@ Supported world generation and initialization depend on one explicit determinist
 
 ---
 
-### [ ] (checkbox) - [Task 3] - Define and enforce explicit engine phase order for supported runtime paths
+### [x] (checkbox) - [Task 3] - Define and enforce explicit engine phase order for supported runtime paths
 
 #### [Task Description]
 
@@ -182,7 +182,7 @@ Supported engine phase order is explicit, enforced, and test-visible.
 
 ---
 
-### [ ] (checkbox) - [Task 4] - Define and enforce explicit subsystem tick sequencing and tick-integrity rules
+### [x] (checkbox) - [Task 4] - Define and enforce explicit subsystem tick sequencing and tick-integrity rules
 
 #### [Task Description]
 
@@ -223,7 +223,7 @@ Supported subsystem sequencing and tick-integrity rules are explicit and enforce
 
 ---
 
-### [ ] (checkbox) - [Task 5] - Add determinism tests for world generation, initialization, phase order, and subsystem order
+### [x] (checkbox) - [Task 5] - Add determinism tests for world generation, initialization, phase order, and subsystem order
 
 #### [Task Description]
 
@@ -264,7 +264,7 @@ Deterministic world/init/order substrate is directly proven by focused tests.
 
 ---
 
-### [ ] (checkbox) - [Task 6] - Publish the deterministic world/init/order contract for supported substrate scope
+### [x] (checkbox) - [Task 6] - Publish the deterministic world/init/order contract for supported substrate scope
 
 #### [Task Description]
 

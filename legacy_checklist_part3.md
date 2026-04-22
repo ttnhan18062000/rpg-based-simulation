@@ -4,7 +4,7 @@
 
 - [ ] `test_narrative_memory_logging`: Narrative memory logging.
 - [ ] `test_bravery_modifiers`: Bravery modifiers.
-- [ ] `test_regional_suppression`: Regional suppression.
+- [x] `test_regional_suppression`: Regional suppression.
 
 #### `unit/combat/test_combat_rewards.py`
 
@@ -14,7 +14,7 @@
 #### `unit/core/aspects/test_progression.py`
 
 - [ ] `test_undead_no_level_up`: Undead no level up — Undead should have a train_rate of 0.0 and never level up..
-- [ ] `test_milestone_level_up`: Milestone level up — Reaching a milestone like level 5 grants extra stats..
+- [x] `test_milestone_level_up`: Milestone level up — Reaching a milestone like level 5 grants extra stats..
 - [ ] `test_veterancy_multipliers`: Veterancy multipliers — Veterancy Ranks should boost stats via StatsProxy..
 - [ ] `test_innate_talents_training`: Innate talents training — Talented attributes gain 2x points, weak attributes gain 0.5x..
 - [ ] `test_combat_veterancy_points`: Combat veterancy points — Combat yields veterancy points..
@@ -45,18 +45,18 @@
 
 #### `core/test_snapshot_integrity.py`
 
-- [ ] `test_snapshot_immutability_enforced`: Snapshot immutability enforced.
-- [ ] `test_snapshot_entities_are_deep_copied`: Snapshot entities are deep copied.
-- [ ] `test_snapshot_entities_are_frozen`: Snapshot entities are frozen.
+- [x] `test_snapshot_immutability_enforced`: Snapshot immutability enforced.
+- [x] `test_snapshot_entities_are_deep_copied`: Snapshot entities are deep copied.
+- [x] `test_snapshot_entities_are_frozen`: Snapshot entities are frozen.
 
 #### `integration/engine/test_determinism.py`
 
-- [ ] `test_simulation_determinism`: Simulation determinism — Verify that two identical simulations with the same seed produce the same result..
-- [ ] `test_different_seeds_different_hashes`: Different seeds different hashes — Verify that different seeds produce different world states..
+- [x] `test_simulation_determinism`: Simulation determinism — Verify that two identical simulations with the same seed produce the same result..
+- [x] `test_different_seeds_different_hashes`: Different seeds different hashes — Verify that different seeds produce different world states..
 
 #### `integration/engine/test_mutation_purity.py`
 
-- [ ] `test_aibrain_statelessness`: Aibrain statelessness.
+- [x] `test_aibrain_statelessness`: Aibrain statelessness.
 
 #### `unit/core/gameplay/items/test_inventory_resolution.py`
 
@@ -72,8 +72,8 @@ proof path: `tests_v2/core/test_authoritative_state_contract.py`
 
 #### `integration/engine/test_snapshot_safety.py`
 
-- [ ] `test_entity_deep_copy_isolation`: Entity deep copy isolation — Verify that Entity.copy() provides absolute isolation for nested mutable structures..
-- [ ] `test_snapshot_actor_isolation`: Snapshot actor isolation — Verify that resolving an actor from a Snapshot ensures mutation safety..
+- [x] `test_entity_deep_copy_isolation`: Entity deep copy isolation — Verify that Entity.copy() provides absolute isolation for nested mutable structures..
+- [x] `test_snapshot_actor_isolation`: Snapshot actor isolation — Verify that resolving an actor from a Snapshot ensures mutation safety..
 - [ ] `test_aspect_model_rebuild_integrity`: Aspect model rebuild integrity — Ensure that deep copies correctly initialize models and don't lose data..
 - [ ] `test_lived_structure_isolation`: Lived structure isolation — Verify isolation for Phase 3 routine and attachment structures..
 
@@ -84,11 +84,11 @@ proof path: `tests_v2/core/test_authoritative_state_contract.py`
 
 #### `unit/core/models/test_snapshot_purity.py`
 
-- [ ] `test_simulation_model_collection_freeze_list`: Simulation model collection freeze list — Verify that lists in SimulationModel become immutable after freeze..
-- [ ] `test_simulation_model_collection_freeze_dict`: Simulation model collection freeze dict — Verify that dicts in SimulationModel become immutable MappingProxy after freeze..
-- [ ] `test_world_state_freeze_guards`: World state freeze guards — Verify that WorldState prevents mutations after freeze..
-- [ ] `test_snapshot_deep_purity`: Snapshot deep purity — Verify that Snapshot entities and their nested aspects are recursively frozen..
-- [ ] `test_action_proposal_guard_integration`: Action proposal guard integration — Verify the ActionProposalGuard context manager properly freezes the snapshot..
+- [x] `test_simulation_model_collection_freeze_list`: Simulation model collection freeze list — Verify that lists in SimulationModel become immutable after freeze..
+- [x] `test_simulation_model_collection_freeze_dict`: Simulation model collection freeze dict — Verify that dicts in SimulationModel become immutable MappingProxy after freeze..
+- [x] `test_world_state_freeze_guards`: World state freeze guards — Verify that WorldState prevents mutations after freeze..
+- [x] `test_snapshot_deep_purity`: Snapshot deep purity — Verify that Snapshot entities and their nested aspects are recursively frozen..
+- [x] `test_action_proposal_guard_integration`: Action proposal guard integration — Verify the ActionProposalGuard context manager properly freezes the snapshot..
 
 #### `unit/systems/test_town_service.py`
 
@@ -103,8 +103,8 @@ proof path: `tests_v2/parity/test_town_resolution_parity.py`
 
 #### `unit/core/test_deep_freeze.py`
 
-- [ ] `test_deep_freeze_nested_collections`: Deep freeze nested collections — Verify that freeze() recursively converts nested collections to immutable types..
-- [ ] `test_deep_freeze_idempotency`: Deep freeze idempotency — Verify that calling freeze() multiple times is safe..
+- [x] `test_deep_freeze_nested_collections`: Deep freeze nested collections — Verify that freeze() recursively converts nested collections to immutable types..
+- [x] `test_deep_freeze_idempotency`: Deep freeze idempotency — Verify that calling freeze() multiple times is safe..
 
 #### `unit/core/test_domain_invariants.py`
 
@@ -123,4 +123,4 @@ proof path: `tests_v2/parity/test_town_resolution_parity.py`
 
 #### `unit/systems/test_calamity_evolution.py`
 
-- [ ] `test_calamity_evolution`: Calamity evolution.
+- [x] `test_calamity_evolution`: Calamity evolution.

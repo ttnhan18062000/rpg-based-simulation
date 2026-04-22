@@ -42,3 +42,28 @@ class SimulationDomainLogic:
         """
         # owner_id is the subsystem name (e.g. "REPLAY", "KERNEL")
         return -profile.max_worker_count
+
+    @staticmethod
+    def get_neighbor_view(
+        state: AuthoritativeState,
+        subject: EntityState, 
+        radius: float
+    ) -> List[tuple[int, EntityState]]:
+        """
+        Produce a deterministic, ID-sorted view of nearby entities.
+        Milestone D Law: Views must be bit-identical across parallel executions.
+        """
+        neighbors = []
+        sx, sy = subject.position
+        for e_id, ent in state.entities.items():
+            if e_id == subject.id:
+                continue
+            
+            ex, ey = ent.position
+            dist = ((ex - sx)**2 + (ey - sy)**2)**0.5
+            if dist <= radius:
+                neighbors.append((e_id, ent))
+        
+        # Sort by Entity ID for absolute determinism
+        neighbors.sort(key=lambda x: x[0])
+        return neighbors

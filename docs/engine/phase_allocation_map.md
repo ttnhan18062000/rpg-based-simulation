@@ -6,10 +6,10 @@ This document maps the remaining replacement scope to specific future phases and
 
 | Target Phase | Scope Description | Ledger Items | Closure Condition |
 | :--- | :--- | :--- | :--- |
-| **Phase 6** | Social Trust, Opportunity Attacks, and Interaction Hardening. | 52 | Parity Oracle + Contract Proof |
-| **Phase 7** | Substrate Determinism, Regional Hazards, and Calamity Evolution. | 7 | Substrate Closure + Determinism |
-| **Phase 8** | Combat/Tactical AI and World Interaction Semantics. | 119 | Contract Enforcement + AI Heuristics |
-| **Phase 9** | Strategic Intelligence & Progression Deepening. | 0 | TBD |
+| **Phase 6** | Social Trust, Opportunity Attacks, and Interaction Hardening. | 35 | Parity Oracle + Contract Proof |
+| **Phase 7** | Substrate Determinism, Regional Hazards, and Calamity Evolution. | 3 | Substrate Closure + Determinism |
+| **Phase 8** | Combat/Tactical AI and World Interaction Semantics. | 18 | Contract Enforcement + AI Heuristics |
+| **Phase 9** | Strategic Intelligence & Social Narrative Deepening. | 2 | Contract Enforcement |
 | **Phase 10** | Legacy System Compatibility & WebSocket Finalization. | 0 (Managed in Sys-Compat) | CLI/API Black-box Validation |
 
 ## Proof-Path Distribution

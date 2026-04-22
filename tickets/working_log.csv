@@ -172,3 +172,16 @@ timestamp,ticket_id,title,status,summary,artifacts_path
 2026-04-21,TCK-20260421-P6-M2-T2-RPG-CORE-POPULATION,RPG-CORE Population,DONE,Restored all 185 items into the Master Ledger.,tickets/done/TCK-20260421-P6-M2-T2-RPG-CORE-POPULATION.md
 2026-04-21,TCK-20260421-P6-M3-T1-V2-LEDGER-SCHEMA,V2 Ledger Schema Alignment,DONE,Synchronized V2 maturity metrics with canonical schema.,tickets/done/TCK-20260421-P6-M3-T1-V2-LEDGER-SCHEMA.md
 2026-04-21,TCK-20260421-P6-M7-M8-P0-RECOVERY,P0 Logic Recovery (Social/Tactical),DONE,Implemented Social Trust and Opportunity Attack mechanisms.,tickets/done/TCK-20260421-P6-M7-M8-P0-RECOVERY.md
+2026-04-22T08:15:00Z,TCK-20260422-RESOURCE-PH7-M1-T1-BACKLOG-FREEZE,Freeze Phase 7 Replacement Ledger Row Set,DONE,Triaged 185 rows and published official Phase 7 substrate backlog.,stored_artifacts/TCK-20260422-RESOURCE-PH7-M1-T1-BACKLOG-FREEZE/
+2026-04-22T08:25:00Z,TCK-20260422-RESOURCE-PH7-M1-T2-CLOSURE-CONDITIONS,Define Phase 7 Closure Conditions,DONE,Established Substrate Truth Standard and published backlog closure conditions.,stored_artifacts/TCK-20260422-RESOURCE-PH7-M1-T2-CLOSURE-CONDITIONS/
+2026-04-22T08:35:00Z,TCK-20260422-RESOURCE-PH7-M1-T3-DOWNSTREAM-BLOCKERS,Identify Phase 7 Downstream Blockers,DONE,Documented critical path dependencies for Phases 8 and 9.,stored_artifacts/TCK-20260422-RESOURCE-PH7-M1-T3-DOWNSTREAM-BLOCKERS/
+2026-04-22T08:38:00Z,TCK-20260422-RESOURCE-PH7-M1-T4-ENTRY-PACKAGE,Publish Phase 7 Entry Package,DONE,Formally opened the Phase 7 implementation gate.,stored_artifacts/TCK-20260422-RESOURCE-PH7-M1-T4-ENTRY-PACKAGE/
+2026-04-22T08:48:00Z,TCK-20260422-RESOURCE-PH7-M2-T1-ACTION-UPDATE-AUDIT,Audit Phase 7 Action/Update Rows,DONE,Identified critical gaps in Intent model and Kernel routing.,stored_artifacts/TCK-20260422-RESOURCE-PH7-M2-T1-ACTION-UPDATE-AUDIT/
+2026-04-22,TCK-20260422-PH6-M7-M8-HARDENING,Phase 6 Hardening,DONE
+2026-04-22,TCK-20260422-PH7-M2-SUBSTRATE-CLOSURE,Phase 7 M2 Substrate Hardening,DONE
+2026-04-22,TCK-20260422-PH7-M3-KERNEL-STABILITY,Phase 7 M3 Authoritative Apply Path,DONE
+2026-04-22,TCK-20260422-PH7-M4-SNAPSHOT-INTEGRITY,Phase 7 M4 Snapshot Integrity,DONE
+2026-04-22,TCK-20260422-PH7-M5-DETERMINISTIC-WORLD-GEN,Phase 7 M5 Deterministic World Gen,DONE
+2026-04-22,PHASE-7-CLOSURE,Hardened substrate intent models and published exit package.
+2026-04-22T14:00:00Z,TCK-20260422-RECOVERY-GAPS,Implementing Phase 7 & 8 Recovery Gaps (Hazards, Calamities, Evolution, Sabotage),DONE,Implemented and integrated Regional Hazards, Entity Evolution, and Building Sabotage into the authoritative engine. Verified with 100% test pass.,stored_artifacts/TCK-20260422-RECOVERY-GAPS/
+2026-04-22,TCK-20260422-PH7-HARDENING-CLOSURE,DONE,Closed Phase 7 Substrate Hardening with full proof bundle

@@ -2,7 +2,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Dict, Set, Tuple
 from dataclasses import replace
 
-from src_v2.core.updates import EntityUpdate, InventoryUpdate, IdentityUpdate
+from src_v2.core.updates import EntityUpdate, InventoryUpdate, IdentityUpdate, CombatUpdate
 
 if TYPE_CHECKING:
     from src_v2.core.state import AuthoritativeState, EntityState
@@ -11,19 +11,8 @@ if TYPE_CHECKING:
 
 class TownResolutionSystem:
     """
-    Authoritative handler for town territory resolution:
-    1. Sell-on-Entry Law: Materials converted to GOLD when in town.
+    Authoritative handler for town territory resolution.
     """
-
-    # Parity with legacy SELL_PRICES and Item Registry
-    ITEM_VALUES: Dict[str, int] = {
-        "wood": 5,
-        "iron_ore": 5,
-        "iron_sword": 5,
-        "steel_sword": 15,
-        "herbal_remedy": 10,
-        "__DEFAULT__": 3
-    }
 
     @staticmethod
     def resolve(state: AuthoritativeState, update: StateUpdate) -> StateUpdate:
@@ -44,27 +33,19 @@ class TownResolutionSystem:
             tile_pos = (int(pos[0]), int(pos[1]))
             
             if tile_pos in state.town_tiles:
-                # 1. Passive Healing Law (Property-based HP)
-                current_hp = entity.properties.get("hp", 100)
-                max_hp = entity.properties.get("max_hp", 100)
+                # 1. Passive Healing Law (Hardened CombatComponent)
+                current_hp = entity.combat.hp
+                max_hp = entity.combat.max_hp
                 
-                property_updates = {}
                 if current_hp < max_hp:
-                    property_updates["hp"] = min(max_hp, current_hp + PASSIVE_HEAL_AMT)
-                
-                if not property_updates:
-                    continue
-                
-                # Merge with existing update
-                existing_upd = refined_entity_updates.get(e_id, EntityUpdate(entity_id=e_id))
-                
-                # Properties merge
-                new_prop_updates = dict(existing_upd.property_updates)
-                new_prop_updates.update(property_updates)
-                
-                refined_entity_updates[e_id] = replace(
-                    existing_upd,
-                    property_updates=new_prop_updates
-                )
+                    existing_upd = refined_entity_updates.get(e_id, EntityUpdate(entity_id=e_id))
+                    
+                    combat_upd = existing_upd.combat or CombatUpdate()
+                    new_combat_upd = replace(combat_upd, hp_delta=combat_upd.hp_delta + PASSIVE_HEAL_AMT)
+                    
+                    refined_entity_updates[e_id] = replace(
+                        existing_upd,
+                        combat=new_combat_upd
+                    )
 
         return replace(update, entity_updates=refined_entity_updates)

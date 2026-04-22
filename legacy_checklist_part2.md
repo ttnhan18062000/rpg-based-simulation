@@ -138,7 +138,7 @@
 
 #### `integration/strategy/test_strategic_determinism.py`
 
-- [ ] `test_harness_determinism`: Harness determinism — Verify that two runs with the same seed produce byte-identical results..
+- [x] `test_harness_determinism`: Harness determinism — Verify that two runs with the same seed produce byte-identical results..
 - [ ] `test_harness_non_determinism_different_seed`: Harness non determinism different seed — Verify that different seeds produce different outcomes (basic sanity check)..
 
 #### `integration/strategy/test_strategic_explainability.py`
@@ -159,8 +159,8 @@
 
 #### `integration/strategy/test_strategic_replay_determinism.py`
 
-- [ ] `test_world_strategic_registry_deep_isolation`: World strategic registry deep isolation — Verify that WorldStrategicRegistry.copy() performs a deep copy..
-- [ ] `test_strategic_replay_graph_equality`: Strategic replay graph equality — Verify that replaying from a snapshot yields bit-identical cognition graphs..
+- [x] `test_world_strategic_registry_deep_isolation`: World strategic registry deep isolation — Verify that WorldStrategicRegistry.copy() performs a deep copy..
+- [x] `test_strategic_replay_graph_equality`: Strategic replay graph equality — Verify that replaying from a snapshot yields bit-identical cognition graphs..
 - [ ] `test_lead_outcome_grounding_verification`: Lead outcome grounding verification — Verify that precise leads correctly ground into world entities..
 
 #### `integration/strategy/test_strategic_resume_objective.py`
@@ -169,9 +169,9 @@
 
 #### `integration/strategy/test_strategic_structural_integrity.py`
 
-- [ ] `test_snapshot_strategic_isolation`: Snapshot strategic isolation — Verify that Snapshot.from_world deep-copies and freezes strategic state..
+- [x] `test_snapshot_strategic_isolation`: Snapshot strategic isolation — Verify that Snapshot.from_world deep-copies and freezes strategic state..
 - [ ] `test_strategic_update_merging_identical_ids`: Strategic update merging identical ids — Verify that ActionSystem merges updates with identical IDs correctly..
-- [ ] `test_serialization_round_trip`: Serialization round trip — Verify that StrategicState survives full JSON serialization round-trip..
+- [x] `test_serialization_round_trip`: Serialization round trip — Verify that StrategicState survives full JSON serialization round-trip..
 - [ ] `test_strategic_update_coercion_from_dict`: Strategic update coercion from dict — Verify that StrategicUpdate correctly coerces dicts to models (worker transport emulation)..
 
 #### `integration/strategy/test_strategic_transport.py`

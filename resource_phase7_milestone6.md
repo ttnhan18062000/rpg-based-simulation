@@ -55,7 +55,7 @@ At the end of Milestone 6:
 
 ## Task
 
-### [ ] (checkbox) - [Task 1] - Verify replay-visible authoritative state shape against the completed deterministic substrate contracts
+### [x] (checkbox) - [Task 1] - Verify replay-visible authoritative state shape against the completed deterministic substrate contracts
 
 #### [Task Description]
 
@@ -96,7 +96,7 @@ Replay-visible authoritative state shape is verified against the completed Phase
 
 ---
 
-### [ ] (checkbox) - [Task 2] - Consolidate the direct proof bundle for Phase 7 substrate closure
+### [x] (checkbox) - [Task 2] - Consolidate the direct proof bundle for Phase 7 substrate closure
 
 #### [Task Description]
 
@@ -137,7 +137,7 @@ The project has one discoverable proof bundle for completed Phase 7 substrate cl
 
 ---
 
-### [ ] (checkbox) - [Task 3] - Update replacement-ledger statuses and closure evidence for completed Phase 7 rows
+### [x] (checkbox) - [Task 3] - Update replacement-ledger statuses and closure evidence for completed Phase 7 rows
 
 #### [Task Description]
 
@@ -176,7 +176,7 @@ Completed Phase 7 rows are reflected accurately in the replacement ledger.
 
 ---
 
-### [ ] (checkbox) - [Task 4] - Publish the supported deterministic substrate boundary after Phase 7 closure
+### [x] (checkbox) - [Task 4] - Publish the supported deterministic substrate boundary after Phase 7 closure
 
 #### [Task Description]
 
@@ -217,7 +217,7 @@ The project has one explicit statement of deterministic substrate support after 
 
 ---
 
-### [ ] (checkbox) - [Task 5] - Publish known divergences, unsupported remainder, and still-blocked downstream rows after Phase 7
+### [x] (checkbox) - [Task 5] - Publish known divergences, unsupported remainder, and still-blocked downstream rows after Phase 7
 
 #### [Task Description]
 
@@ -256,7 +256,7 @@ The project has one visible remainder package after Phase 7 closure.
 
 ---
 
-### [ ] (checkbox) - [Task 6] - Publish the formal “Phase 7 complete” exit package and Phase 8 handoff baseline
+### [x] (checkbox) - [Task 6] - Publish the formal “Phase 7 complete” exit package and Phase 8 handoff baseline
 
 #### [Task Description]
 

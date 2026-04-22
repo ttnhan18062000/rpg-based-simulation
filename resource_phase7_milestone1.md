@@ -102,7 +102,7 @@ At the end of Milestone 1:
 
 ## Task
 
-### [ ] (checkbox) - [Task 1] - Freeze the exact Phase 7 replacement-ledger row set as the official substrate backlog
+### [x] (checkbox) - [Task 1] - Freeze the exact Phase 7 replacement-ledger row set as the official substrate backlog
 
 #### [Task Description]
 
@@ -144,7 +144,7 @@ The project has one explicit Phase 7 substrate backlog derived from the locked l
 
 ---
 
-### [ ] (checkbox) - [Task 2] - Freeze explicit closure conditions for every Phase 7 substrate row
+### [x] (checkbox) - [Task 2] - Freeze explicit closure conditions for every Phase 7 substrate row
 
 #### [Task Description]
 
@@ -186,7 +186,7 @@ Every Phase 7 row has a fixed and explicit finish line.
 
 ---
 
-### [ ] (checkbox) - [Task 3] - Publish downstream dependency blockers caused by unfinished substrate rows
+### [x] (checkbox) - [Task 3] - Publish downstream dependency blockers caused by unfinished substrate rows
 
 #### [Task Description]
 
@@ -206,17 +206,17 @@ For each downstream row blocked by substrate closure, record:
 - `docs/engine/remaining_replacement_scope.md`
 - `docs/engine/phase7_backlog.md`
 
-#### [Task important notes]
+#### [Task implementation comments]
 
-If blocker visibility is missing, teams will work around substrate flaws instead of fixing them.
+- Completed. Dependency mapping finalized in `docs/engine/phase7_pipeline_scope_audit.md`. Identified Phase 8/9 blockers for Strategic Intelligence.
 
 #### [Task check list]
 
-- [ ] Blocked downstream rows are identified
-- [ ] Blocking substrate guarantees are named
-- [ ] Phase ownership stays explicit
-- [ ] Dependency notes are concise
-- [ ] Later assumptions are constrained
+- [x] Blocked downstream rows are identified
+- [x] Blocking substrate guarantees are named
+- [x] Phase ownership stays explicit
+- [x] Dependency notes are concise
+- [x] Later assumptions are constrained
 
 #### [Task acceptance criteria]
 
@@ -224,7 +224,7 @@ Downstream dependency blockers are visible and linked to unfinished Phase 7 rows
 
 ---
 
-### [ ] (checkbox) - [Task 4] - Reconfirm and publish the current substrate support boundary entering Phase 7
+### [x] (checkbox) - [Task 4] - Reconfirm and publish the current substrate support boundary entering Phase 7
 
 #### [Task Description]
 
@@ -246,17 +246,17 @@ Publish or refresh one substrate support-boundary package covering:
 - `docs/engine/phase7_entry_support_boundary.md`
 - `docs/engine/replacement_status_overview.md`
 
-#### [Task important notes]
+#### [Task implementation comments]
 
-Do not start Phase 7 with inflated substrate claims.
+- Completed. Entry support boundary published in `docs/engine/phase7_entry_support_boundary.md`.
 
 #### [Task check list]
 
-- [ ] Current authoritative substrate scope is explicit
-- [ ] Current deterministic guarantees are explicit
-- [ ] Unsupported remainder is explicit
-- [ ] Provisional areas are explicit
-- [ ] Wording matches actual branch reality
+- [x] Current authoritative substrate scope is explicit
+- [x] Current deterministic guarantees are explicit
+- [x] Unsupported remainder is explicit
+- [x] Provisional areas are explicit
+- [x] Wording matches actual branch reality
 
 #### [Task acceptance criteria]
 
@@ -264,7 +264,7 @@ The project has one honest statement of substrate support entering Phase 7.
 
 ---
 
-### [ ] (checkbox) - [Task 5] - Publish the formal Phase 7 entry package and readiness gate
+### [x] (checkbox) - [Task 5] - Publish the formal Phase 7 entry package and readiness gate
 
 #### [Task Description]
 
@@ -286,17 +286,17 @@ Create one readiness gate that requires:
 - `docs/engine/phase7_entry_package.md`
 - milestone review docs
 
-#### [Task important notes]
+#### [Task implementation comments]
 
-This is the line between “Phase 7 is planned” and “Phase 7 is truly executable.”
+- Completed. Entry package and readiness gate finalized. Phase 7 implementation proceeded to full hardening.
 
 #### [Task check list]
 
-- [ ] Gate conditions are explicit
-- [ ] Gate conditions are reviewable
-- [ ] Supporting artifacts are linked
-- [ ] Known limitations are attached
-- [ ] Phase 7 entry is unambiguous
+- [x] Gate conditions are explicit
+- [x] Gate conditions are reviewable
+- [x] Supporting artifacts are linked
+- [x] Known limitations are attached
+- [x] Phase 7 entry is unambiguous
 
 #### [Task acceptance criteria]
 

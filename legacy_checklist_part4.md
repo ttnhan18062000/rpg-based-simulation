@@ -3,7 +3,7 @@
 #### `ai/test_intel_capacity_regression.py`
 
 - [ ] `test_intel_capacity_replay_and_graph_export`: Intel capacity replay and graph export — Verify that cognitive metrics survive replay and graph export pipelines..
-- [ ] `test_intel_capacity_determinism`: Intel capacity determinism — Verify that identical seeds produce identical cognitive profiles and artifacts..
+- [x] `test_intel_capacity_determinism`: Intel capacity determinism — Verify that identical seeds produce identical cognitive profiles and artifacts..
 - [ ] `test_intel_capacity_overload_injection`: Intel capacity overload injection — Inject extreme cognitive pressure and verify overload triggering in artifacts..
 - [ ] `test_intel_capacity_divergence_scenario`: Intel capacity divergence scenario — Verify that different attributes lead to differing usage artifacts..
 - [ ] `test_intel_capacity_detour_depth_hardbound`: Intel capacity detour depth hardbound — Verify that detour depth is capped in artifacts even under pressure..
@@ -149,12 +149,12 @@ proof path: `tests_v2/engine/test_anti_thrashing.py`
 #### `unit/combat/test_building_sabotage.py`
 
 - [ ] `test_validate_building_target`: Validate building target.
-- [ ] `test_apply_building_sabotage`: Apply building sabotage.
+- [x] `test_apply_building_sabotage`: Apply building sabotage.
 
 #### `unit/combat/test_combat_building.py`
 
 - [ ] `test_building_sabotage_validation`: Building sabotage validation.
-- [ ] `test_building_sabotage_application`: Building sabotage application.
+- [x] `test_building_sabotage_application`: Building sabotage application.
 
 #### `unit/combat/test_consequences.py`
 
@@ -181,8 +181,8 @@ proof path: `tests_v2/core/test_authoritative_state_contract.py`
 
 #### `unit/core/aspects/test_evolution.py`
 
-- [ ] `test_entity_evolution_transformation`: Entity evolution transformation — Verify that a goblin evolves into a warrior/scout when hitting level cap. [AOA REFACTOR].
-- [ ] `test_evolution_equipment_refresh`: Evolution equipment refresh — Verify that evolution provides new equipment. [AOA REFACTOR].
+- [x] `test_entity_evolution_transformation`: Entity evolution transformation — Verify that a goblin evolves into a warrior/scout when hitting level cap. [AOA REFACTOR].
+- [x] `test_evolution_equipment_refresh`: Evolution equipment refresh — Verify that evolution provides new equipment. [AOA REFACTOR].
 
 #### `unit/core/aspects/test_genetics.py`
 
@@ -256,8 +256,8 @@ proof path: `tests_v2/engine/test_worker_equivalence.py`
 
 #### `unit/systems/test_evolution.py`
 
-- [ ] `test_entity_evolution_transformation`: Entity evolution transformation — Verify that a goblin evolves into a warrior/scout when hitting level cap..
-- [ ] `test_evolution_equipment_refresh`: Evolution equipment refresh — Verify that evolution provides new equipment..
+- [x] `test_entity_evolution_transformation`: Entity evolution transformation — Verify that a goblin evolves into a warrior/scout when hitting level cap..
+- [x] `test_evolution_equipment_refresh`: Evolution equipment refresh — Verify that evolution provides new equipment..
 
 #### `unit/systems/test_personality_ai.py`
 

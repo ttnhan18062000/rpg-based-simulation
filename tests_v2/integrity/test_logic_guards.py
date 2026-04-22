@@ -62,7 +62,7 @@ def test_resolution_phase_ordering_integrity(integrity_profile):
     
     hero = kernel.state.entities[1]
     assert "steel_sword" in hero.inventory.items, f"INTEGRATION FAILURE: Hero failed to craft sword. Inventory: {hero.inventory.items}, Blockers: {list(hero.strategic.blockers.keys())}"
-    assert hero.identity.navigation_target == (0.0, 0.0), "INTEGRATION FAILURE: Hero final target should be home (0,0)"
+    assert hero.navigation.target == (0.0, 0.0), "INTEGRATION FAILURE: Hero final target should be home (0,0)"
 
 def test_lifecycle_timeout_semantics_guard(integrity_profile):
     """

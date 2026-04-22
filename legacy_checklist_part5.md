@@ -139,9 +139,9 @@ Relevant original source/test evidence:
 
 ### Chaos determinism
 
-- [ ] Given identical seed and identical chaos configuration, repeated chaos-mode runs remain deterministic.
-- [ ] Chaos-mode determinism is verified by repeated world-state fingerprint comparison.
-- [ ] Chaos-enabled infrastructure does not introduce hidden non-determinism into equivalent runs.
+- [x] Given identical seed and identical chaos configuration, repeated chaos-mode runs remain deterministic..
+- [x] Chaos-mode determinism is verified by repeated world-state fingerprint comparison.
+- [x] Chaos-enabled infrastructure does not introduce hidden non-determinism into equivalent runs.
 
 ---
 
@@ -157,13 +157,13 @@ Relevant original source/test evidence:
 
 - [ ] Replay files are written in the expected legacy location/format semantics for headless runs.
 - [ ] Replay snapshots preserve deterministic entity ordering and field availability where legacy tests rely on them.
-- [ ] Replay preserves enough world-state detail to support legacy fingerprinting and regression assertions.
-- [ ] Replay can support structural comparison between repeated runs with same seed.
+- [x] Replay preserves enough world-state detail to support legacy fingerprinting and regression assertions.
+- [x] Replay can support structural comparison between repeated runs with same seed.
 - [ ] Replay remains aligned with other truth surfaces where legacy tests expect parity.
 
 ### End-to-end deterministic replay path
 
-- [ ] Same seed and equivalent configuration produce identical replay-visible state across runs.
+- [x] Same seed and equivalent configuration produce identical replay-visible state across runs..
 - [ ] Different seeds produce divergent replay-visible state.
 - [ ] Replay includes ground-item state where legacy determinism tests inspect it.
 - [ ] Replay includes enough actor combat/progression/mind state for state-fingerprint checks.

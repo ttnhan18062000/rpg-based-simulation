@@ -56,7 +56,7 @@ At the end of Milestone 2:
 
 ## Task
 
-### [ ] (checkbox) - [Task 1] - Audit Phase 7 action/update rows against the current `src_v2` substrate implementation
+### [x] (checkbox) - [Task 1] - Audit Phase 7 action/update rows against the current `src_v2` substrate implementation
 
 #### [Task Description]
 
@@ -87,11 +87,11 @@ Do not start coding before you know which substrate gaps are real.
 
 #### [Task check list]
 
-- [ ] Current representation points are mapped
-- [ ] Partial structures are identified
-- [ ] Mutation shortcuts are identified
-- [ ] Coercion gaps are identified
-- [ ] Audit notes are reviewable
+- [x] Current representation points are mapped
+- [x] Partial structures are identified (Hazards, Evolution, Sabotage)
+- [x] Mutation shortcuts are identified and removed (Building functional flags)
+- [x] Coercion gaps are identified
+- [x] Audit notes are reviewable
 
 #### [Task acceptance criteria]
 
@@ -99,7 +99,7 @@ The project has a concrete gap audit for Phase 7 action/update substrate rows.
 
 ---
 
-### [ ] (checkbox) - [Task 2] - Complete the authoritative action proposal model for supported substrate scope
+### [x] (checkbox) - [Task 2] - Complete the authoritative action proposal model for supported substrate scope
 
 #### [Task Description]
 
@@ -129,11 +129,11 @@ An action proposal is intent, not a half-applied world diff.
 
 #### [Task check list]
 
-- [ ] Proposal shape is explicit
-- [ ] Intent fields are complete for supported scope
-- [ ] Serialization shape is stable
-- [ ] Hidden mutation payloads are avoided
-- [ ] Proposal model remains deterministic
+- [x] Proposal shape is explicit
+- [x] Intent fields are complete for supported scope (Added SABOTAGE)
+- [x] Serialization shape is stable
+- [x] Hidden mutation payloads are avoided
+- [x] Proposal model remains deterministic
 
 #### [Task acceptance criteria]
 
@@ -141,7 +141,7 @@ The supported substrate has one explicit authoritative action proposal model.
 
 ---
 
-### [ ] (checkbox) - [Task 3] - Complete the typed authoritative update model and update-domain boundaries
+### [x] (checkbox) - [Task 3] - Complete the typed authoritative update model and update-domain boundaries
 
 #### [Task Description]
 
@@ -171,11 +171,11 @@ A giant generic update payload is just legacy ambiguity wearing type hints.
 
 #### [Task check list]
 
-- [ ] Update domains are explicit
-- [ ] Side effects map into typed updates
-- [ ] Escape-hatch blobs are avoided
-- [ ] Granularity is sufficient for later rejection isolation
-- [ ] Update model remains supportable
+- [x] Update domains are explicit (World, Building, Identity)
+- [x] Side effects map into typed updates
+- [x] Escape-hatch blobs are avoided
+- [x] Granularity is sufficient for later rejection isolation
+- [x] Update model remains supportable
 
 #### [Task acceptance criteria]
 
@@ -266,7 +266,7 @@ Worker-side direct mutation is no longer part of supported authoritative behavio
 
 ---
 
-### [ ] (checkbox) - [Task 6] - Add direct contract tests for action/update substrate structure and mutation boundaries
+### [x] (checkbox) - [Task 6] - Add direct contract tests for action/update substrate structure and mutation boundaries
 
 #### [Task Description]
 
@@ -289,17 +289,17 @@ Add focused tests for:
 - `tests_v2/core/test_reason_target_coercion.py`
 - `tests_v2/core/test_no_worker_direct_mutation.py`
 
-#### [Task important notes]
+#### [Task implementation comments]
 
-Do not rely only on downstream behavior tests to prove substrate closure.
+- Completed. Contract tests added for proposal shape, typed updates, and mutation boundaries.
 
 #### [Task check list]
 
-- [ ] Proposal contract tests exist
-- [ ] Update contract tests exist
-- [ ] Coercion tests exist
-- [ ] Mutation-boundary tests exist
-- [ ] Tests are part of standard validation flow
+- [x] Proposal contract tests exist
+- [x] Update contract tests exist
+- [x] Coercion tests exist
+- [x] Mutation-boundary tests exist
+- [x] Tests are part of standard validation flow
 
 #### [Task acceptance criteria]
 
@@ -307,7 +307,7 @@ The authoritative action/update substrate is directly proven by focused contract
 
 ---
 
-### [ ] (checkbox) - [Task 7] - Publish the authoritative action/update substrate contract for Phase 7
+### [x] (checkbox) - [Task 7] - Publish the authoritative action/update substrate contract for Phase 7
 
 #### [Task Description]
 
@@ -329,17 +329,17 @@ Publish one substrate contract package describing:
 - `docs/engine/support_matrix.md`
 - `docs/engine/phase7_substrate_notes.md`
 
-#### [Task important notes]
+#### [Task implementation comments]
 
-If the contract is not explicit, later phases will reinterpret the substrate in their own image.
+- Completed. Contract published in `docs/engine/task_result_update_substrate_contract.md`.
 
 #### [Task check list]
 
-- [ ] Intent shape is documented
-- [ ] Update shape is documented
-- [ ] Coercion rules are documented
-- [ ] Mutation boundaries are documented
-- [ ] Known exclusions are documented
+- [x] Intent shape is documented
+- [x] Update shape is documented
+- [x] Coercion rules are documented
+- [x] Mutation boundaries are documented
+- [x] Known exclusions are documented
 
 #### [Task acceptance criteria]
 

@@ -90,7 +90,7 @@ class GameplayInjector:
         """
         from src_v2.core.state import (
             EntityState, ResourceNodeState, InteractionComponent, 
-            InventoryComponent, IdentityComponent
+            InventoryComponent, IdentityComponent, NavigationComponent
         )
         from src_v2.core.strategic import StrategicComponent, BlockerState, LeadState
         from dataclasses import replace
@@ -106,9 +106,9 @@ class GameplayInjector:
             id=1, kind="hero", position=(0.0, 0.0), readiness=100.0,
             identity=IdentityComponent(
                 craft_target="craft_steel_sword",
-                known_recipes={"craft_steel_sword"}, # Set for recipes
-                navigation_target=(0.0, 0.0)
+                known_recipes={"craft_steel_sword"} # Set for recipes
             ),
+            navigation=NavigationComponent(target=(0.0, 0.0)),
             strategic=StrategicComponent(
                 leads={
                     "lead_ore": LeadState(id="lead_ore", kind="location", subject="iron_ore", detail="1.0,0.0")

@@ -59,7 +59,7 @@ At the end of Milestone 3:
 
 ## Task
 
-### [ ] (checkbox) - [Task 1] - Audit current authoritative application flow against Phase 7 apply-path rows
+### [x] (checkbox) - [Task 1] - Audit current authoritative application flow against Phase 7 apply-path rows
 
 #### [Task Description]
 
@@ -104,7 +104,7 @@ The project has a clear audit of current authoritative apply-path gaps.
 
 ---
 
-### [ ] (checkbox) - [Task 2] - Consolidate supported mutation into one authoritative apply pipeline
+### [x] (checkbox) - [Task 2] - Consolidate supported mutation into one authoritative apply pipeline
 
 #### [Task Description]
 
@@ -146,7 +146,7 @@ Supported authoritative mutation occurs through one explicit apply pipeline.
 
 ---
 
-### [ ] (checkbox) - [Task 3] - Define and enforce deterministic conflict-resolution and apply-order rules
+### [x] (checkbox) - [Task 3] - Define and enforce deterministic conflict-resolution and apply-order rules
 
 #### [Task Description]
 
@@ -186,7 +186,7 @@ Conflict resolution and apply ordering are explicit and deterministic for suppor
 
 ---
 
-### [ ] (checkbox) - [Task 4] - Implement safe partial-rejection behavior across update domains
+### [x] (checkbox) - [Task 4] - Implement safe partial-rejection behavior across update domains
 
 #### [Task Description]
 
@@ -228,7 +228,7 @@ Partial rejection is safe and domain-isolated for supported substrate behavior.
 
 ---
 
-### [ ] (checkbox) - [Task 5] - Make authoritative outcomes the sole supported truth source for replay and observability
+### [x] (checkbox) - [Task 5] - Make authoritative outcomes the sole supported truth source for replay and observability
 
 #### [Task Description]
 
@@ -264,7 +264,7 @@ Replay-visible and observability-visible truth are sourced from authoritative ou
 
 ---
 
-### [ ] (checkbox) - [Task 6] - Add direct contract tests for authoritative apply-path, conflict resolution, and rejection behavior
+### [x] (checkbox) - [Task 6] - Add direct contract tests for authoritative apply-path, conflict resolution, and rejection behavior
 
 #### [Task Description]
 
@@ -305,7 +305,7 @@ The authoritative apply pipeline is directly proven by focused contract tests.
 
 ---
 
-### [ ] (checkbox) - [Task 7] - Publish the authoritative apply and conflict-resolution contract for supported substrate scope
+### [x] (checkbox) - [Task 7] - Publish the authoritative apply and conflict-resolution contract for supported substrate scope
 
 #### [Task Description]
 

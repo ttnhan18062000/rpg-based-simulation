@@ -43,6 +43,11 @@ class ShopSystem:
             building_type = state.building_tiles.get(tile_pos)
             
             if building_type == "shop":
+                # Check functionality (LEG-RPG-001/006)
+                building = next((b for b in state.buildings.values() if b.position == tile_pos and b.kind == "shop"), None)
+                if building and not building.functional:
+                    continue # Shop is sabotaged and non-functional
+                
                 # Sell items based on V1 logic (Materials + Junk)
                 gold_delta = 0
                 items_to_remove = []
@@ -50,8 +55,9 @@ class ShopSystem:
                 for item in entity.inventory.items:
                     # Logic matches V1 VisitShopHandler (materials + basic gear if not equipped)
                     # For M2 parity, we'll use a specific set of items from the oracle scenarios
-                    if item in ("wood", "ore", "iron_ore", "fish", "leather", "fiber", "herb", "iron_sword"):
-                        price = ShopSystem.get_sell_price(item)
+                    item_key = item.lower()
+                    if item_key in ("wood", "ore", "iron_ore", "fish", "leather", "fiber", "herb", "iron_sword"):
+                        price = ShopSystem.get_sell_price(item_key)
                         gold_delta += price
                         items_to_remove.append(item)
                 

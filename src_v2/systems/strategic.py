@@ -95,10 +95,20 @@ class StrategicIntelligenceSystem:
                     if b.id not in resolved_ids
                 ]
                 
+                # Resolve leads as well
+                resolved_leads = []
+                active_lead_ids = set(entity.strategic.leads.keys())
+                for item in items_added:
+                    # Find any lead with this subject
+                    for l_id, lead in entity.strategic.leads.items():
+                         if lead.subject == item:
+                             resolved_leads.append(l_id)
+                
                 new_strat_up = replace(
                     strat_up,
                     blockers_add_or_update=new_additions,
-                    blockers_remove=list(set(strat_up.blockers_remove + resolved_ids))
+                    blockers_remove=list(set(strat_up.blockers_remove + resolved_ids)),
+                    leads_remove=list(set(strat_up.leads_remove + resolved_leads))
                 )
                 refined_entity_updates[e_id] = replace(ent_upd, strategic=new_strat_up)
                 

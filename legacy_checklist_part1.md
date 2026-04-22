@@ -245,14 +245,14 @@ Relevant original source files:
 - `platform/spatial_hash.py`
 - `systems/world/generator.py`
   Atomic checklist:
-- [ ] World generation is deterministic under seed and domain-specific RNG use.
-- [ ] Town, sanctuary, camps, buildings, corpses, and entities are authoritative world objects.
-- [ ] Entity snapshots are immutable enough for worker reasoning and deterministic replay.
-- [ ] No hidden mutation leaks occur from snapshot or AI evaluation paths.
-- [ ] Deterministic replay/delta behavior is preserved across runs with same seed.
-- [ ] Regional hazards, calamities, local scars, and world consequences can feed gameplay and strategy.
-- [ ] Entity builder and serialization preserve gameplay-relevant state safely.
-- [ ] Engine phase order preserves gameplay semantics and subsystem tick integrity.
+- [x] World generation is deterministic under seed and domain-specific RNG use.
+- [x] Town, sanctuary, camps, buildings, corpses, and entities are authoritative world objects.
+- [x] Entity snapshots are immutable enough for worker reasoning and deterministic replay.
+- [x] No hidden mutation leaks occur from snapshot or AI evaluation paths.
+- [x] Deterministic replay/delta behavior is preserved across runs with same seed.
+- [x] Regional hazards, calamities, local scars, and world consequences can feed gameplay and strategy.
+- [x] Entity builder and serialization preserve gameplay-relevant state safely.
+- [x] Engine phase order preserves gameplay semantics and subsystem tick integrity.
 
 ## B. Test-derived atomic checklist (every included RPG-core test)
 

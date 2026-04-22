@@ -128,6 +128,9 @@ class ConcurrentExecutionAdapter:
                     # M7/A Law: Snapshot context
                     subject_snapshot = replace(subject, properties=dict(subject.properties))
                     
+                    from src_v2.engine.domain_logic import SimulationDomainLogic
+                    neighbor_view = SimulationDomainLogic.get_neighbor_view(state, subject_snapshot, radius=10.0) # Default test radius
+                    
                     packet_id = f"{state.tick}:{i}"
                     packet = WorkerPacket(
                         packet_id=packet_id,
@@ -137,7 +140,7 @@ class ConcurrentExecutionAdapter:
                         seed=rng.next_int(0, 1000000), 
                         work_class=item.work_class,
                         subject=subject_snapshot,
-                        neighbor_view=[], # Simplified for baseline test if needed
+                        neighbor_view=neighbor_view,
                         work_kind=item.work_kind,
                         payload=item.payload
                     )

@@ -64,7 +64,9 @@ def test_movement_parity_with_oracle(oracle):
 
     # 3. Extract V2 results
     v2_valid = update.moved_this_tick == True
-    v2_reason = update.property_updates.get("failure_reason", "ADVANCING")
+    v2_reason = "ADVANCING"
+    if update.navigation and update.navigation.failure_reason:
+        v2_reason = update.navigation.failure_reason
 
     # 4. Parity Assertions
     # Special case: actor_dead in src returns False/None. In V2 it returns False/ADVANCING (No-Op).

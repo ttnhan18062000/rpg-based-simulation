@@ -36,7 +36,7 @@ def test_local_executor_movement():
     res = results[0]
     assert res.entity_id == 1
     assert res.update.new_position == (1.0, 0.0) # Clamped step
-    assert res.update.readiness_delta == -50.0
+    assert res.update.readiness_delta == -10.0
     assert "local:" in res.source_packet_id # Proof of local path
 
 def test_local_executor_action():

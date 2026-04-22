@@ -1,4 +1,4 @@
-from enum import IntEnum, unique
+from enum import Enum, IntEnum, unique
 
 @unique
 class Direction(IntEnum):
@@ -18,4 +18,41 @@ class MovementIntention(IntEnum):
     REPOSITION = 4
     INTERCEPT = 5
     GUARD = 6
-    REGROUP = 7
+@unique
+class ActionType(IntEnum):
+    """Authoritative action categories."""
+    REST = 0
+    MOVE = 1
+    INTERACT = 2
+    ATTACK = 3
+
+class ReasonCode(Enum):
+    """Stable identifiers for simulation decision drivers."""
+    # Movement
+    ADVANCING = "advancing"
+    OCCUPANCY_VIOLATION = "occupancy_violation"
+    PATH_NOT_FOUND = "path_not_found"
+    YIELDING = "yielding"
+    SIDESTEPPING = "sidestepping"
+    WAITING = "waiting"
+    CONGESTION = "congestion"
+    PATH_EXHAUSTED = "path_exhausted"
+    TARGET_REACHED = "target_reached"
+    
+    # Combat/Interaction
+    OUT_OF_RANGE = "out_of_range"
+    TARGET_INVALID = "target_invalid"
+    ACTION_EXHAUSTION = "exhaustion"
+    INTERACTION_REJECTED = "interaction_rejected"
+    ENGAGED = "engaged"
+    
+    # Tactical AI
+    NO_TARGET = "no_target"
+    LOW_HP_RETREAT = "low_hp_retreat"
+    KITING = "kiting"
+    MAINTAIN_DISTANCE = "maintain_distance"
+    ALLY_SPACING = "ally_spacing"
+    CLOSING_RANGE = "closing_range"
+    
+    # Legacy/Fallback
+    UNKNOWN = "unknown"

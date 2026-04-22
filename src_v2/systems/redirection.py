@@ -17,7 +17,7 @@ class StrategicRedirectionSystem:
         """
         Scan entities for blockers and propose navigation targets to resolve them.
         """
-        from src_v2.core.updates import EntityUpdate, IdentityUpdate
+        from src_v2.core.updates import EntityUpdate, NavigationUpdate
         
         refined_entity_updates = dict(update.entity_updates)
         
@@ -60,10 +60,10 @@ class StrategicRedirectionSystem:
                     try:
                         coords = tuple(map(float, match_lead.detail.split(',')))
                         
-                        existing_id = ent_upd.identity or IdentityUpdate()
-                        if entity.identity.navigation_target != coords:
-                             new_id = replace(existing_id, navigation_target=coords)
-                             refined_entity_updates[e_id] = replace(ent_upd, identity=new_id)
+                        existing_nav = ent_upd.navigation or NavigationUpdate()
+                        if entity.navigation.target != coords:
+                             new_nav = replace(existing_nav, target_set=coords)
+                             refined_entity_updates[e_id] = replace(ent_upd, navigation=new_nav)
                     except (ValueError, AttributeError):
                         pass # Vague or invalid lead
             
@@ -84,9 +84,9 @@ class StrategicRedirectionSystem:
                             town_pos = list(state.town_tiles)[0]
                             town_coords = (float(town_pos[0]), float(town_pos[1]))
                             
-                            existing_id = ent_upd.identity or IdentityUpdate()
-                            if entity.identity.navigation_target != town_coords:
-                                 new_id = replace(existing_id, navigation_target=town_coords)
-                                 refined_entity_updates[e_id] = replace(ent_upd, identity=new_id)
+                            existing_nav = ent_upd.navigation or NavigationUpdate()
+                            if entity.navigation.target != town_coords:
+                                 new_nav = replace(existing_nav, target_set=town_coords)
+                                 refined_entity_updates[e_id] = replace(ent_upd, navigation=new_nav)
 
         return replace(update, entity_updates=refined_entity_updates)

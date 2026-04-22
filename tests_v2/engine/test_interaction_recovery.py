@@ -65,7 +65,8 @@ def test_town_resolution_sell_on_entry():
         tick=1,
         seed=42,
         entities={1: entity},
-        town_tiles={(5,5)}
+        town_tiles={(5,5)},
+        building_tiles={(5,5): "shop"}
     )
     
     # Update: Move to (5,5)
@@ -74,14 +75,15 @@ def test_town_resolution_sell_on_entry():
     )
     
     # Resolve
-    refined = TownResolutionSystem.resolve(state, upd)
+    from src_v2.engine.pipeline import AuthoritativeApplyPipeline
+    refined = AuthoritativeApplyPipeline.refine(state, upd)
     
     ent_upd = refined.entity_updates[1]
     assert "WOOD" in ent_upd.inventory.items_removed
     assert "ORE" in ent_upd.inventory.items_removed
     
     # Value: WOOD(5) + ORE(5) = 10 GOLD
-    assert ent_upd.inventory.items_added.count("GOLD") == 10
+    assert ent_upd.inventory.gold_delta == 10
 
 def test_movement_interruption():
     # Setup state: Channelling interaction

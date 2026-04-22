@@ -1,0 +1,315 @@
+{
+  "CRUSH_TEST:IDLE_CLEAN": {
+    "conformance_passed": true,
+    "failure_kind": null,
+    "failure_reason": null,
+    "timestamp": 1776868198.648515,
+    "commit_sha": "35e0b838014fd1e9e6ba4ff276996d510048b1f4",
+    "environment": {
+      "effective_class": "class_b",
+      "detected_class": "class_b",
+      "override_applied": false,
+      "detected_facts": {}
+    },
+    "measurements": [
+      {
+        "tick": 0,
+        "mode": "NORMAL",
+        "memory_rss_mb": 0.0,
+        "tick_compute_ms": 0.0,
+        "worker_utilization": 0.0,
+        "queue_utilization": 0.0
+      }
+    ],
+    "baseline_hash": "A",
+    "final_hash": "A",
+    "governor_mode_sequence": [
+      "NORMAL"
+    ],
+    "profile_name": "CRUSH_TEST",
+    "scenario_id": "IDLE_CLEAN"
+  },
+  "CRUSH_TEST:RAM_PRESSURE": {
+    "conformance_passed": true,
+    "failure_kind": null,
+    "failure_reason": null,
+    "timestamp": 1776868198.648515,
+    "commit_sha": "35e0b838014fd1e9e6ba4ff276996d510048b1f4",
+    "environment": {
+      "effective_class": "class_b",
+      "detected_class": "class_b",
+      "override_applied": false,
+      "detected_facts": {}
+    },
+    "measurements": [
+      {
+        "tick": 0,
+        "mode": "NORMAL",
+        "memory_rss_mb": 0.0,
+        "tick_compute_ms": 0.0,
+        "worker_utilization": 0.0,
+        "queue_utilization": 0.0
+      }
+    ],
+    "baseline_hash": "A",
+    "final_hash": "A",
+    "governor_mode_sequence": [
+      "NORMAL"
+    ],
+    "profile_name": "CRUSH_TEST",
+    "scenario_id": "RAM_PRESSURE"
+  },
+  "CRUSH_TEST:INTEG_RESOURCE_LOOP": {
+    "conformance_passed": true,
+    "failure_kind": null,
+    "failure_reason": null,
+    "timestamp": 1776868198.648515,
+    "commit_sha": "35e0b838014fd1e9e6ba4ff276996d510048b1f4",
+    "environment": {
+      "effective_class": "class_b",
+      "detected_class": "class_b",
+      "override_applied": false,
+      "detected_facts": {}
+    },
+    "measurements": [
+      {
+        "tick": 0,
+        "mode": "NORMAL",
+        "memory_rss_mb": 0.0,
+        "tick_compute_ms": 0.0,
+        "worker_utilization": 0.0,
+        "queue_utilization": 0.0
+      }
+    ],
+    "baseline_hash": "A",
+    "final_hash": "A",
+    "governor_mode_sequence": [
+      "NORMAL"
+    ],
+    "profile_name": "CRUSH_TEST",
+    "scenario_id": "INTEG_RESOURCE_LOOP"
+  },
+  "NORMAL_ONLY:IDLE_CLEAN": {
+    "conformance_passed": true,
+    "failure_kind": null,
+    "failure_reason": null,
+    "timestamp": 1776868198.648515,
+    "commit_sha": "35e0b838014fd1e9e6ba4ff276996d510048b1f4",
+    "environment": {
+      "effective_class": "class_b",
+      "detected_class": "class_b",
+      "override_applied": false,
+      "detected_facts": {}
+    },
+    "measurements": [
+      {
+        "tick": 0,
+        "mode": "NORMAL",
+        "memory_rss_mb": 0.0,
+        "tick_compute_ms": 0.0,
+        "worker_utilization": 0.0,
+        "queue_utilization": 0.0
+      }
+    ],
+    "baseline_hash": "A",
+    "final_hash": "A",
+    "governor_mode_sequence": [
+      "NORMAL"
+    ],
+    "profile_name": "NORMAL_ONLY",
+    "scenario_id": "IDLE_CLEAN"
+  },
+  "NORMAL_ONLY:RAM_PRESSURE": {
+    "conformance_passed": true,
+    "failure_kind": null,
+    "failure_reason": null,
+    "timestamp": 1776868198.648515,
+    "commit_sha": "35e0b838014fd1e9e6ba4ff276996d510048b1f4",
+    "environment": {
+      "effective_class": "class_b",
+      "detected_class": "class_b",
+      "override_applied": false,
+      "detected_facts": {}
+    },
+    "measurements": [
+      {
+        "tick": 0,
+        "mode": "NORMAL",
+        "memory_rss_mb": 0.0,
+        "tick_compute_ms": 0.0,
+        "worker_utilization": 0.0,
+        "queue_utilization": 0.0
+      }
+    ],
+    "baseline_hash": "A",
+    "final_hash": "A",
+    "governor_mode_sequence": [
+      "NORMAL"
+    ],
+    "profile_name": "NORMAL_ONLY",
+    "scenario_id": "RAM_PRESSURE"
+  },
+  "NORMAL_ONLY:INTEG_RESOURCE_LOOP": {
+    "conformance_passed": true,
+    "failure_kind": null,
+    "failure_reason": null,
+    "timestamp": 1776868198.648515,
+    "commit_sha": "35e0b838014fd1e9e6ba4ff276996d510048b1f4",
+    "environment": {
+      "effective_class": "class_b",
+      "detected_class": "class_b",
+      "override_applied": false,
+      "detected_facts": {}
+    },
+    "measurements": [
+      {
+        "tick": 0,
+        "mode": "NORMAL",
+        "memory_rss_mb": 0.0,
+        "tick_compute_ms": 0.0,
+        "worker_utilization": 0.0,
+        "queue_utilization": 0.0
+      }
+    ],
+    "baseline_hash": "A",
+    "final_hash": "A",
+    "governor_mode_sequence": [
+      "NORMAL"
+    ],
+    "profile_name": "NORMAL_ONLY",
+    "scenario_id": "INTEG_RESOURCE_LOOP"
+  },
+  "NO_RECOVERY:IDLE_CLEAN": {
+    "conformance_passed": true,
+    "failure_kind": null,
+    "failure_reason": null,
+    "timestamp": 1776868198.648515,
+    "commit_sha": "35e0b838014fd1e9e6ba4ff276996d510048b1f4",
+    "environment": {
+      "effective_class": "class_b",
+      "detected_class": "class_b",
+      "override_applied": false,
+      "detected_facts": {}
+    },
+    "measurements": [
+      {
+        "tick": 0,
+        "mode": "NORMAL",
+        "memory_rss_mb": 0.0,
+        "tick_compute_ms": 0.0,
+        "worker_utilization": 0.0,
+        "queue_utilization": 0.0
+      }
+    ],
+    "baseline_hash": "A",
+    "final_hash": "A",
+    "governor_mode_sequence": [
+      "NORMAL"
+    ],
+    "profile_name": "NO_RECOVERY",
+    "scenario_id": "IDLE_CLEAN"
+  },
+  "NO_RECOVERY:RAM_PRESSURE": {
+    "run_id": "74ff53d9-90fa-4c94-b08c-61f5266d3df6",
+    "timestamp": 1776868198.685628,
+    "commit_sha": "35e0b838014fd1e9e6ba4ff276996d510048b1f4",
+    "profile_name": "NO_RECOVERY",
+    "scenario_id": "RAM_PRESSURE",
+    "seed": 42,
+    "environment": {
+      "detected_facts": {
+        "os": "Linux",
+        "os_release": "6.17.0-22-generic",
+        "python_version": "3.13.7",
+        "cpu_count_logical": 6,
+        "cpu_count_physical": 6,
+        "ram_total_gb": 11.18,
+        "cpu_freq_mhz": 2687.998
+      },
+      "detected_class": "class_b",
+      "effective_class": "class_b",
+      "override_applied": false,
+      "os_name": "linux",
+      "python_version": "3.13"
+    },
+    "measurements": [
+      {
+        "tick": 5,
+        "mode": "CONSTRAINED",
+        "memory_rss_mb": 48.9453125,
+        "memory_trend_mb_per_tick": 0.0,
+        "tick_compute_ms": 0.055559,
+        "tick_compute_ms_avg": 0.0676072,
+        "work_debt": 0,
+        "worker_utilization": 0.0,
+        "queue_utilization": 0.0,
+        "replay_pressure": 0.0,
+        "active_workers": 0,
+        "timestamp": 1776868198.688413
+      },
+      {
+        "tick": 10,
+        "mode": "DEGRADED",
+        "memory_rss_mb": 48.9453125,
+        "memory_trend_mb_per_tick": 0.0,
+        "tick_compute_ms": 0.095287,
+        "tick_compute_ms_avg": 0.0780586,
+        "work_debt": 0,
+        "worker_utilization": 0.0,
+        "queue_utilization": 0.0,
+        "replay_pressure": 0.0,
+        "active_workers": 0,
+        "timestamp": 1776868198.6889353
+      }
+    ],
+    "baseline_hash": "e68ff8d510e1e48fd855b77be68625c80419f2ed6792cad4edb6d76c5b911151",
+    "final_hash": "e68ff8d510e1e48fd855b77be68625c80419f2ed6792cad4edb6d76c5b911151",
+    "governor_mode_sequence": [
+      "NORMAL",
+      "NORMAL",
+      "NORMAL",
+      "NORMAL",
+      "CONSTRAINED",
+      "CONSTRAINED",
+      "DEGRADED",
+      "DEGRADED",
+      "DEGRADED",
+      "DEGRADED",
+      "DEGRADED"
+    ],
+    "conformance_passed": false,
+    "allowed_failure_observed": false,
+    "failure_kind": "failed_recovery_timeout",
+    "failure_reason": "System failed to recover to NORMAL mode within scenario window."
+  },
+  "NO_RECOVERY:INTEG_RESOURCE_LOOP": {
+    "conformance_passed": true,
+    "failure_kind": null,
+    "failure_reason": null,
+    "timestamp": 1776868198.648515,
+    "commit_sha": "35e0b838014fd1e9e6ba4ff276996d510048b1f4",
+    "environment": {
+      "effective_class": "class_b",
+      "detected_class": "class_b",
+      "override_applied": false,
+      "detected_facts": {}
+    },
+    "measurements": [
+      {
+        "tick": 0,
+        "mode": "NORMAL",
+        "memory_rss_mb": 0.0,
+        "tick_compute_ms": 0.0,
+        "worker_utilization": 0.0,
+        "queue_utilization": 0.0
+      }
+    ],
+    "baseline_hash": "A",
+    "final_hash": "A",
+    "governor_mode_sequence": [
+      "NORMAL"
+    ],
+    "profile_name": "NO_RECOVERY",
+    "scenario_id": "INTEG_RESOURCE_LOOP"
+  }
+}

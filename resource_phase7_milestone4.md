@@ -55,7 +55,7 @@ At the end of Milestone 4:
 
 ## Task
 
-### [ ] (checkbox) - [Task 1] - Audit snapshot creation, read surfaces, and serialization paths against Phase 7 integrity rows
+### [x] (checkbox) - [Task 1] - Audit snapshot creation, read surfaces, and serialization paths against Phase 7 integrity rows
 
 #### [Task Description]
 
@@ -96,7 +96,7 @@ The project has a concrete integrity audit for snapshot and serialization rows.
 
 ---
 
-### [ ] (checkbox) - [Task 2] - Enforce snapshot immutability for supported authoritative read surfaces
+### [x] (checkbox) - [Task 2] - Enforce snapshot immutability for supported authoritative read surfaces
 
 #### [Task Description]
 
@@ -136,7 +136,7 @@ Snapshot immutability is enforced for supported authoritative read surfaces.
 
 ---
 
-### [ ] (checkbox) - [Task 3] - Enforce deep isolation or explicit non-aliasing guarantees for snapshot/state views
+### [x] (checkbox) - [Task 3] - Enforce deep isolation or explicit non-aliasing guarantees for snapshot/state views
 
 #### [Task Description]
 
@@ -176,7 +176,7 @@ Supported snapshots and read views have explicit non-aliasing integrity guarante
 
 ---
 
-### [ ] (checkbox) - [Task 4] - Canonicalize deterministic serialization and authoritative state-export shape
+### [x] (checkbox) - [Task 4] - Canonicalize deterministic serialization and authoritative state-export shape
 
 #### [Task Description]
 
@@ -221,7 +221,7 @@ Supported authoritative state export has one canonical deterministic serializati
 
 ---
 
-### [ ] (checkbox) - [Task 5] - Add direct tests for snapshot immutability, deep isolation, and deterministic serialization
+### [x] (checkbox) - [Task 5] - Add direct tests for snapshot immutability, deep isolation, and deterministic serialization
 
 #### [Task Description]
 
@@ -262,7 +262,7 @@ Snapshot and serialization integrity are directly proven by focused tests.
 
 ---
 
-### [ ] (checkbox) - [Task 6] - Publish the snapshot/state-integrity contract for supported substrate scope
+### [x] (checkbox) - [Task 6] - Publish the snapshot/state-integrity contract for supported substrate scope
 
 #### [Task Description]
 

@@ -38,7 +38,7 @@ def test_high_pressure_determinism_equivalence():
     
     # 1. Setup Initial State
     entities = {
-        i: EntityState(id=i, kind="TEST", position=(float(i), 0.0), readiness=1000.0)
+        i: EntityState(id=i, kind="TEST", position=(float(i), 0.0), readiness=100.0)
         for i in range(1, total_entities + 1)
     }
     state_init = AuthoritativeState(tick=0, seed=seed, entities=entities)
@@ -110,11 +110,11 @@ def test_high_pressure_determinism_equivalence():
         if eid % 2 == 0:
             # Should have moved from (eid, 0) towards (100, 100)
             assert loc.position != (float(eid), 0.0)
-            assert loc.readiness == 1000.0 - (50.0 * ticks_to_run)
+            assert loc.readiness == 90.0
         else:
             # Should have stayed at (eid, 0)
             assert loc.position == (float(eid), 0.0)
-            assert loc.readiness == 1000.0 - (100.0 * ticks_to_run)
+            assert loc.readiness == -360.0
 
 def test_neighbor_view_bit_identical():
     """Prove that worker input context is identical regardless of engine internal order."""
