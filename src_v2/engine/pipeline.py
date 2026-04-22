@@ -29,12 +29,17 @@ class AuthoritativeApplyPipeline:
         from src_v2.engine.world_dynamics import WorldDynamicsSystem
         from src_v2.engine.evolution import EvolutionSystem
         from src_v2.engine.sabotage import BuildingSabotageSystem
+        from src_v2.engine.combat import CombatResolutionSystem
+        from src_v2.engine.legality import LegalityServiceV2
         
         # 1. Territorial & Service Laws (Healing, Shopping, Crafting)
         # These operate on current position (or proposed new position)
         update = TownResolutionSystem.resolve(state, raw_update)
         update = ShopSystem.enforce(state, update)
         update = BlacksmithSystem.enforce(state, update)
+        
+        # 1.2 Combat Laws (Attack resolution)
+        update = AuthoritativeApplyPipeline._route_combat_intent(state, update)
         
         # 1.5 World Dynamics (Regional Hazards, Calamities)
         update = WorldDynamicsSystem.resolve_dynamics(state, update)
@@ -123,6 +128,93 @@ class AuthoritativeApplyPipeline:
                         combat=move_upd.combat or ent_upd.combat,
                         navigation=merged_nav
                     )
+        return replace(update, entity_updates=refined_entity_updates)
+
+    @staticmethod
+    def _route_combat_intent(state: AuthoritativeState, update: StateUpdate) -> StateUpdate:
+        """
+        Processes ATTACK intents and resolves them through CombatResolutionSystem.
+        Includes legality checks and position-sensitive bonuses (Milestone 4).
+        """
+        from src_v2.engine.combat import CombatResolutionSystem
+        from src_v2.engine.legality import LegalityServiceV2
+        from src_v2.core.updates import EntityUpdate
+        
+        refined_entity_updates = dict(update.entity_updates)
+        
+        for e_id, entity in state.entities.items():
+            ent_upd = refined_entity_updates.get(e_id)
+            if not ent_upd or not ent_upd.task: continue
+            
+            task_upd = ent_upd.task
+            if task_upd.work_kind_set == "ENTITY_ACT" and task_upd.payload_set.get("action") == "ATTACK":
+                target_id = task_upd.payload_set.get("target_id")
+                if target_id is None: continue
+                
+                target = state.entities.get(target_id)
+                if not target: continue
+                
+                # 1. Legality Check (LoS, Range, Faction)
+                is_legal, reason = LegalityServiceV2.verify_attack_legality(entity, target, state)
+                if not is_legal:
+                     # Mark failure in task payload (Milestone 3 logic)
+                     refined_entity_updates[e_id] = replace(ent_upd,
+                         task=replace(task_upd, payload_set={**task_upd.payload_set, "failure_reason": reason})
+                     )
+                     continue
+                
+                # 2. Position-Sensitive Bonuses (Milestone 4)
+                # 2.1 High Ground
+                attacker_terrain = state.terrain.get((int(entity.position[0]), int(entity.position[1])))
+                atk_bonus = 0
+                if attacker_terrain == "HILL":
+                    atk_bonus += 5
+                
+                # 2.2 Bracketing (Flanking)
+                # If target is between two hostiles on opposite sides
+                engaged = LegalityServiceV2.get_engaged_hostiles(target, state)
+                if len(engaged) >= 2:
+                    # Check for opposite pairs
+                    # (x+1, y) and (x-1, y) OR (x, y+1) and (x, y-1)
+                    tx, ty = int(target.position[0]), int(target.position[1])
+                    opposites = [
+                        ((tx+1, ty), (tx-1, ty)),
+                        ((tx, ty+1), (tx, ty-1))
+                    ]
+                    for pair_a, pair_b in opposites:
+                        has_a = any(int(state.entities[eid].position[0]) == pair_a[0] and 
+                                    int(state.entities[eid].position[1]) == pair_a[1] for eid in engaged)
+                        has_b = any(int(state.entities[eid].position[0]) == pair_b[0] and 
+                                    int(state.entities[eid].position[1]) == pair_b[1] for eid in engaged)
+                        if has_a and has_b:
+                            atk_bonus += 3 # Bracketing bonus
+                            break
+
+                # 3. Resolve Attack
+                combat_upd = CombatResolutionSystem.resolve_attack(
+                    entity, 
+                    target, 
+                    is_lethal=True
+                )
+                
+                # Apply bonus to damage taken in update (Authoritative modification)
+                if atk_bonus > 0:
+                    combat_upd = replace(combat_upd, 
+                        damage_taken=combat_upd.damage_taken + atk_bonus,
+                        hp_delta=combat_upd.hp_delta - atk_bonus
+                    )
+                
+                # 4. Emit Updates
+                # Target gets the combat update (HP change)
+                target_upd = refined_entity_updates.get(target_id, EntityUpdate(entity_id=target_id))
+                refined_entity_updates[target_id] = replace(target_upd, combat=combat_upd)
+                
+                # Attacker is marked as having acted (readiness reset is handled by Kernel/Apply)
+                # But we might want to record the action in the payload
+                refined_entity_updates[e_id] = replace(ent_upd,
+                    task=replace(task_upd, payload_set={**task_upd.payload_set, "outcome": "SUCCESS"})
+                )
+
         return replace(update, entity_updates=refined_entity_updates)
 
     @staticmethod

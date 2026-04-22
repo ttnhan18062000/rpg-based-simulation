@@ -32,6 +32,7 @@ class CombatComponent:
     max_hp: int = 100
     atk: int = 10
     def_stat: int = 5
+    range: int = 1
     evasion: float = 0.05
     alive: bool = True
 
@@ -139,6 +140,7 @@ class AuthoritativeState:
     resource_nodes: Dict[int, ResourceNodeState] = field(default_factory=dict)
     buildings: Dict[int, BuildingState] = field(default_factory=dict) # Sabotage truth
     regions: Dict[str, RegionState] = field(default_factory=dict)    # World dynamics truth
+    terrain: Dict[tuple[int, int], str] = field(default_factory=dict) # Local tile truth (WALL, FOREST, etc)
     global_resources: Dict[str, float] = field(default_factory=dict)
     periodic_due_ticks: Dict[str, int] = field(default_factory=dict)
     work_debt: Dict[str, int] = field(default_factory=dict)

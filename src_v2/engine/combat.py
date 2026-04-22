@@ -5,38 +5,60 @@ from src_v2.core.updates import CombatUpdate
 if TYPE_CHECKING:
     from src_v2.core.state import EntityState
 
-class CombatReactionSystem:
+class CombatResolutionSystem:
     """
-    Authoritative logic for reaction attacks and combat outcomes.
+    Authoritative logic for combat interactions and outcomes.
     Matches legacy 'CombatInteractionService'.
     """
+    
+    @staticmethod
+    def calculate_damage(attacker: EntityState, defender: EntityState) -> int:
+        """
+        Pillar 3: Fractional Armor Mitigation
+        Formula: damage = atk * (atk / (atk + def * 2.0 + 1.0))
+        """
+        atk = float(attacker.combat.atk)
+        dfn = float(defender.combat.def_stat)
+        raw_damage = int(atk * (atk / (atk + dfn * 2.0 + 1.0)))
+        return max(1, raw_damage)
+
+    @staticmethod
+    def resolve_attack(
+        attacker: EntityState,
+        defender: EntityState,
+        is_opportunity_attack: bool = False,
+        is_lethal: bool = True
+    ) -> CombatUpdate:
+        """
+        Core combat resolution logic.
+        """
+        # 1. Calculate Damage
+        damage = CombatResolutionSystem.calculate_damage(attacker, defender)
+        
+        # 2. Determine Outcome
+        new_hp = defender.combat.hp - damage
+        outcome = "SURVIVE"
+        alive = True
+        
+        if new_hp <= 0:
+            outcome = "KILL" if is_lethal else "DEFEAT"
+            alive = False
+
+        return CombatUpdate(
+            damage_taken=damage,
+            hp_delta=-damage,
+            attacker_id=attacker.id,
+            is_opportunity_attack=is_opportunity_attack,
+            alive_set=alive,
+            outcome_kind=outcome,
+            is_lethal=is_lethal
+        )
 
     @staticmethod
     def resolve_opportunity_attack(
         attacker: EntityState,
         defender: EntityState
     ) -> CombatUpdate:
-        """
-        Resolution logic for a single Opportunity Attack (OA).
-        Legacy Parity Formula: damage = atk * (atk / (atk + def * 2.0 + 1.0))
-        """
-        # 1. Evasion check
-        # For simplicity in V2, we use a simple RNG check here or assume hit if testing parity
-        # In a real engine, we'd pass RNG. For now, we assume hit to match the parity test setup.
-        
-        # 2. Damage calculation
-        atk = attacker.combat.atk
-        dfn = defender.combat.def_stat
-        
-        atk_final = float(atk)
-        def_final = float(dfn)
-        
-        # Pillar 3: Fractional Armor Mitigation
-        raw_damage = int(atk_final * (atk_final / (atk_final + def_final * 2.0 + 1.0)))
-        damage = max(1, raw_damage)
-        
-        return CombatUpdate(
-            damage_taken=damage,
-            attacker_id=attacker.id,
-            is_opportunity_attack=True
+        return CombatResolutionSystem.resolve_attack(
+            attacker, defender, is_opportunity_attack=True, is_lethal=False
         )

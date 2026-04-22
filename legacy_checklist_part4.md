@@ -41,10 +41,10 @@
 
 #### `movement/test_congestion_milestone_3.py`
 
-- [ ] `test_blocked_retreat_yield`: Blocked retreat yield — Verify high-priority RETREAT ally forces yield from lower-priority ally..
+- [x] `test_blocked_retreat_yield`: Blocked retreat yield — Verify high-priority RETREAT ally forces yield from lower-priority ally..
 - [x] `test_oscillation_suppression`: Oscillation suppression — Verify A-B-A-B movement is suppressed after 2 cycles..
 - [x] `test_reroute_hysteresis`: Reroute hysteresis — Verify minor reroutes are ignored to prevent flip-flopping..
-- [ ] `test_safe_sidestepping`: Safe sidestepping — Verify yielding entities do not sidestep closer to danger..
+- [x] `test_safe_sidestepping`: Safe sidestepping — Verify yielding entities do not sidestep closer to danger..
 
 original evidence: `movement/test_congestion_milestone_3.py`
 `src_v2` evidence: `src_v2/engine/movement.py`

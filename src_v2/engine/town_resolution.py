@@ -31,21 +31,36 @@ class TownResolutionSystem:
                 pos = ent_upd.new_position
             
             tile_pos = (int(pos[0]), int(pos[1]))
+            building_type = state.building_tiles.get(tile_pos)
             
+            # 1. Passive Healing Law (Always active in town)
             if tile_pos in state.town_tiles:
-                # 1. Passive Healing Law (Hardened CombatComponent)
                 current_hp = entity.combat.hp
                 max_hp = entity.combat.max_hp
                 
                 if current_hp < max_hp:
                     existing_upd = refined_entity_updates.get(e_id, EntityUpdate(entity_id=e_id))
-                    
                     combat_upd = existing_upd.combat or CombatUpdate()
                     new_combat_upd = replace(combat_upd, hp_delta=combat_upd.hp_delta + PASSIVE_HEAL_AMT)
                     
                     refined_entity_updates[e_id] = replace(
                         existing_upd,
                         combat=new_combat_upd
+                    )
+
+            # 2. Explicit REST Intent (Only in INN/HOME)
+            if building_type in ("inn", "home"):
+                ent_upd = refined_entity_updates.get(e_id, EntityUpdate(entity_id=e_id))
+                if ent_upd.task and ent_upd.task.work_kind_set == "ENTITY_ACT" and ent_upd.task.payload_set.get("action") == "REST":
+                    # REST gives 5x passive heal and restores readiness
+                    REST_HEAL_BONUS = 5
+                    combat_upd = ent_upd.combat or CombatUpdate()
+                    new_combat_upd = replace(combat_upd, hp_delta=combat_upd.hp_delta + REST_HEAL_BONUS)
+                    
+                    refined_entity_updates[e_id] = replace(
+                        ent_upd,
+                        combat=new_combat_upd,
+                        readiness_delta=ent_upd.readiness_delta + 10.0 # Readiness boost
                     )
 
         return replace(update, entity_updates=refined_entity_updates)

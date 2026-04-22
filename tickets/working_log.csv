@@ -185,3 +185,4 @@ timestamp,ticket_id,title,status,summary,artifacts_path
 2026-04-22,PHASE-7-CLOSURE,Hardened substrate intent models and published exit package.
 2026-04-22T14:00:00Z,TCK-20260422-RECOVERY-GAPS,Implementing Phase 7 & 8 Recovery Gaps (Hazards, Calamities, Evolution, Sabotage),DONE,Implemented and integrated Regional Hazards, Entity Evolution, and Building Sabotage into the authoritative engine. Verified with 100% test pass.,stored_artifacts/TCK-20260422-RECOVERY-GAPS/
 2026-04-22,TCK-20260422-PH7-HARDENING-CLOSURE,DONE,Closed Phase 7 Substrate Hardening with full proof bundle
+2026-04-22T23:37:00Z,TCK-20260422-PH8-STRATEGIC-RECOVERY,Phase 8 Strategic Recovery Completion,DONE,Finalized authoritative gameplay layer recovery (Combat/Tactical/Local World) and published exit package.,stored_artifacts/TCK-20260422-PH8-STRATEGIC-RECOVERY/

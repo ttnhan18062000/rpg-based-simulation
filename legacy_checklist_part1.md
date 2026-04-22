@@ -75,13 +75,13 @@ Relevant original source files:
 - [x] Manhattan distance is the shared spatial metric for movement and combat range where claimed.
 - [x] Cardinal/tile movement and occupancy legality are explicit.
 - [x] Occupied-tile movement is rejected or redirected rather than silently overlapped.
-- [ ] Melee legality depends on adjacency/engagement rules, not raw damage stats.
-- [ ] Ranged legality depends on range and line-of-sight rules.
-- [ ] AoE legality is split into impact-center legality and radius application.
+- [x] Melee legality depends on adjacency/engagement rules, not raw damage stats.
+- [x] Ranged legality depends on range and line-of-sight rules.
+- [x] AoE legality is split into impact-center legality and radius application.
 - [x] World-time progression is distinct from readiness-based action cadence.
 - [x] Quiet ticks still advance passive world consequences.
-- [ ] Disengagement, pursuit, target stickiness, and opportunity consequences are explicit rules.
-- [ ] Anti-stalemate logic handles repeated chase/kite/step-back loops.
+- [x] Disengagement, pursuit, target stickiness, and opportunity consequences are explicit rules.
+- [x] Anti-stalemate logic handles repeated chase/kite/step-back loops.
 - [x] Movement intentions exist as semantic modes (pursue, retreat, hold, reposition, intercept, guard, regroup).
 - [x] Congestion is handled through waiting/yielding/sidestepping/rerouting before weakening occupancy.
 - [x] Tactical choice is a bounded choice among legal actions, not a geometry exploit.
@@ -262,10 +262,10 @@ Each checkbox below is derived from one original test. Keep the original test na
 
 #### `ai/test_tactical_milestone_4.py`
 
-- [ ] `test_reactive_cover_seeking`: Reactive cover seeking — Verify that actor seeks cover only when a ranged threat is visible..
-- [ ] `test_chokepoint_holding`: Chokepoint holding — Verify that actor identifies and holds a 1-tile gap..
-- [ ] `test_cardinal_opposite_bracketing`: Cardinal opposite bracketing — Verify that two allies bracket a target from opposite sides..
-- [ ] `test_tactical_mode_integration_handler`: Tactical mode integration handler — Verify that CombatHandler respects the tactical target_pos..
+- [x] `test_reactive_cover_seeking`: Reactive cover seeking — Verify that actor seeks cover only when a ranged threat is visible..
+- [x] `test_chokepoint_holding`: Chokepoint holding — Verify that actor identifies and holds a 1-tile gap..
+- [x] `test_cardinal_opposite_bracketing`: Cardinal opposite bracketing — Verify that two allies bracket a target from opposite sides..
+- [x] `test_tactical_mode_integration_handler`: Tactical mode integration handler — Verify that CombatHandler respects the tactical target_pos..
 
 #### `arena/test_arena_harness_contract.py`
 
@@ -310,21 +310,21 @@ Each checkbox below is derived from one original test. Keep the original test na
 
 #### `combat/test_combat_context_milestone_2.py`
 
-- [ ] `test_high_ground_bonus`: High ground bonus — Verify High Ground bonus applies when attacker is on MOUNTAIN and defender is on FLOOR..
-- [ ] `test_flanking_bonus`: Flanking bonus — Verify Flanking bonus applies when defender is bracketed north/south..
-- [ ] `test_moved_penalty`: Moved penalty — Verify Moved Recently penalty applies when attacker has moved this tick..
-- [ ] `test_ranged_cover_bonus`: Ranged cover bonus — Verify Cover bonus applies against ranged attacks when adjacent to WALL..
+- [x] `test_high_ground_bonus`: High ground bonus — Verify High Ground bonus applies when attacker is on MOUNTAIN and defender is on FLOOR..
+- [x] `test_flanking_bonus`: Flanking bonus — Verify Flanking bonus applies when defender is bracketed north/south..
+- [x] `test_moved_penalty`: Moved penalty — Verify Moved Recently penalty applies when attacker has moved this tick..
+- [x] `test_ranged_cover_bonus`: Ranged cover bonus — Verify Cover bonus applies against ranged attacks when adjacent to WALL..
 
 #### `combat/test_combat_movement_rulebook.py`
 
-- [ ] `test_manhattan_distance`: Manhattan distance — Verify Manhattan distance calculation..
-- [ ] `test_orthogonal_adjacency`: Orthogonal adjacency — Verify that only orthogonal tiles are adjacent..
-- [ ] `test_check_range`: Check range — Verify range enforcement..
-- [ ] `test_check_occupancy`: Check occupancy — Verify 1-unit-per-tile occupancy rule..
-- [ ] `test_aoe_legality`: Aoe legality — Verify AoE impact constraints..
-- [ ] `test_aoe_splash_radius`: Aoe splash radius — Verify entities affected by splash radius..
-- [ ] `test_get_occupant_id`: Get occupant id — Verify occupant lookup..
-- [ ] `test_check_targeting_legality`: Check targeting legality — Verify consolidated targeting rules (Range + LOS)..
+- [x] `test_manhattan_distance`: Manhattan distance — Verify Manhattan distance calculation..
+- [x] `test_orthogonal_adjacency`: Orthogonal adjacency — Verify that only orthogonal tiles are adjacent..
+- [x] `test_check_range`: Check range — Verify range enforcement..
+- [x] `test_check_occupancy`: Check occupancy — Verify 1-unit-per-tile occupancy rule..
+- [x] `test_aoe_legality`: Aoe legality — Verify AoE impact constraints..
+- [x] `test_aoe_splash_radius`: Aoe splash radius — Verify entities affected by splash radius..
+- [x] `test_get_occupant_id`: Get occupant id — Verify occupant lookup..
+- [x] `test_check_targeting_legality`: Check targeting legality — Verify consolidated targeting rules (Range + LOS)..
 
 #### `combat/test_engagement_contract.py`
 

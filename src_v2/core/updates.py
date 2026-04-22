@@ -21,6 +21,8 @@ class CombatUpdate:
     attacker_id: Optional[int] = None
     is_opportunity_attack: bool = False
     alive_set: Optional[bool] = None
+    outcome_kind: str = "SURVIVE" # SURVIVE, DEFEAT, KILL
+    is_lethal: bool = False
 
 @dataclass(frozen=True, slots=True)
 class NavigationUpdate:

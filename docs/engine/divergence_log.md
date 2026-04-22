@@ -11,6 +11,9 @@ This document is the canonical record of intentional behavior shifts in `src_v2`
 | **Interaction** | Immediate Completion | **Contract Hardening** | RATIFIED |
 | **Town Loop** | Simplified Recipe Costs | **Intentional Change** | PHASE-LIMITED |
 | **AI/Strategic** | Proactive Redirection | **Contract Hardening** | RATIFIED |
+| **Tactical** | Priority-Based Targeting | **Contract Hardening** | RATIFIED |
+| **Tactical** | 20% Retreat Threshold | **Intentional Change** | RATIFIED |
+| **Combat** | Omitted Variance/Evasion | **Substrate Clarity** | PHASE-LIMITED |
 
 ---
 
@@ -52,5 +55,26 @@ This document is the canonical record of intentional behavior shifts in `src_v2`
 - **Rationale**: **Contract Hardening**. Improves AI effectiveness and ensures the simulation doesn't "waste" a tick on now-obsolete goals.
 - **Verification**: `docs/engine/phase5_resource_intelligence_support.md`
 
+### 2.6 Priority-Based Tactical Targeting
+- **Subsystem**: Tactical AI
+- **Old Behavior**: Nearest enemy was always selected.
+- **New Behavior**: Deterministic priority chain: `Lowest HP` > `Closest Distance` > `Lowest Entity ID`.
+- **Rationale**: **Contract Hardening**. Prevents target oscillation and improves AI effectiveness in focused firing.
+- **Verification**: `tests_v2/parity/test_tactical_parity.py`
+
+### 2.7 20% Retreat Threshold
+- **Subsystem**: Tactical AI
+- **Old Behavior**: Entities retreated at 25% HP.
+- **New Behavior**: Entities retreat at 20% HP.
+- **Rationale**: **Intentional Gameplay Change**. Aligns with V2's more aggressive hero-bias scenarios.
+- **Verification**: `tests_v2/parity/test_tactical_parity.py`
+
+### 2.8 Omitted Combat Variance/Evasion
+- **Subsystem**: Combat Resolution
+- **Old Behavior**: Combat included evasion checks and ~10% damage variance.
+- **New Behavior**: Combat resolution is currently 100% deterministic (no variance, no evasion).
+- **Rationale**: **Substrate Clarity**. Ensuring the base damage resolution is bit-identical and stable before layering stochastic noise.
+- **Verification**: `tests_v2/parity/test_combat_parity.py`
+
 ---
-*Last updated: 2026-04-21 as part of Phase 6 Milestone 1.*
+*Last updated: 2026-04-22 as part of Phase 8 Milestone 5.*

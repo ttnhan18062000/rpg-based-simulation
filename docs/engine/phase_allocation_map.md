@@ -8,8 +8,8 @@ This document maps the remaining replacement scope to specific future phases and
 | :--- | :--- | :--- | :--- |
 | **Phase 6** | Social Trust, Opportunity Attacks, and Interaction Hardening. | 35 | Parity Oracle + Contract Proof |
 | **Phase 7** | Substrate Determinism, Regional Hazards, and Calamity Evolution. | 3 | Substrate Closure + Determinism |
-| **Phase 8** | Combat/Tactical AI and World Interaction Semantics. | 18 | Contract Enforcement + AI Heuristics |
-| **Phase 9** | Strategic Intelligence & Social Narrative Deepening. | 2 | Contract Enforcement |
+| **Phase 8** | Combat/Tactical AI and World Interaction Semantics. | 12 | Contract Enforcement + AI Heuristics |
+| **Phase 9** | Strategic Intelligence & Social Narrative Deepening. | 8 | Contract Enforcement |
 | **Phase 10** | Legacy System Compatibility & WebSocket Finalization. | 0 (Managed in Sys-Compat) | CLI/API Black-box Validation |
 
 ## Proof-Path Distribution
