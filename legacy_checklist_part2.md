@@ -2,8 +2,8 @@
 
 #### `ai/test_bounded_blockers.py`
 
-- [ ] `test_accurate_diagnosis_high_wisdom`: Accurate diagnosis high wisdom.
-- [ ] `test_misdiagnosis_low_wisdom`: Misdiagnosis low wisdom.
+- [x] `test_accurate_diagnosis_high_wisdom`: Accurate diagnosis high wisdom.
+- [x] `test_misdiagnosis_low_wisdom`: Misdiagnosis low wisdom.
 
 #### `ai/test_bounded_detours.py`
 
@@ -13,9 +13,9 @@
 
 #### `ai/test_bounded_objective_continuity.py`
 
-- [ ] `test_objective_derivation_precedence_blocker_first`: Objective derivation precedence blocker first.
-- [ ] `test_objective_derivation_precedence_active_objective_if_no_blocker`: Objective derivation precedence active objective if no blocker.
-- [ ] `test_objective_derivation_precedence_first_unresolved_if_no_active`: Objective derivation precedence first unresolved if no active.
+- [x] `test_objective_derivation_precedence_blocker_first`: Objective derivation precedence blocker first.
+- [x] `test_objective_derivation_precedence_active_objective_if_no_blocker`: Objective derivation precedence active objective if no blocker.
+- [x] `test_objective_derivation_precedence_first_unresolved_if_no_active`: Objective derivation precedence first unresolved if no active.
 
 #### `ai/test_bounded_project_continuity.py`
 
@@ -25,44 +25,44 @@
 
 #### `ai/test_bounded_strategic_slice.py`
 
-- [ ] `test_low_profile_entity_has_smaller_active_slice_than_high_profile_entity`: Low profile entity has smaller active slice than high profile entity.
+- [x] `test_low_profile_entity_has_smaller_active_slice_than_high_profile_entity`: Low profile entity has smaller active slice than high profile entity.
 - [x] `test_concern_intake_is_capped_by_profile`: Concern intake is capped by profile.
 - [x] `test_lead_retention_is_capped_by_profile`: Lead retention is capped by profile.
-- [ ] `test_reserved_current_project_slot_is_used_when_current_project_exists`: Reserved current project slot is used when current project exists.
-- [ ] `test_dropped_candidate_counts_are_deterministic`: Dropped candidate counts are deterministic.
+- [x] `test_reserved_current_project_slot_is_used_when_current_project_exists`: Reserved current project slot is used when current project exists.
+- [x] `test_dropped_candidate_counts_are_deterministic`: Dropped candidate counts are deterministic.
 
 #### `ai/test_cognition_capacity_determinism.py`
 
 - [x] `test_profile_derivation_is_deterministic_for_same_entity_state`: Profile derivation is deterministic for same entity state.
-- [ ] `test_profile_derivation_is_independent_of_tick_in_milestone_1`: Profile derivation is independent of tick in milestone 1.
-- [ ] `test_profile_derivation_does_not_use_rng`: Profile derivation does not use rng.
+- [x] `test_profile_derivation_is_independent_of_tick_in_milestone_1`: Profile derivation is independent of tick in milestone 1.
+- [x] `test_profile_derivation_does_not_use_rng`: Profile derivation does not use rng.
 
 #### `ai/test_cognition_capacity_non_mutation.py`
 
-- [ ] `test_build_profile_does_not_mutate_entity_attributes`: Build profile does not mutate entity attributes.
-- [ ] `test_build_profile_does_not_mutate_caps`: Build profile does not mutate caps.
-- [ ] `test_build_profile_does_not_mutate_stamina`: Build profile does not mutate stamina.
-- [ ] `test_build_profile_returns_new_profile_object_each_call`: Build profile returns new profile object each call.
+- [x] `test_build_profile_does_not_mutate_entity_attributes`: Build profile does not mutate entity attributes.
+- [x] `test_build_profile_does_not_mutate_caps`: Build profile does not mutate caps.
+- [x] `test_build_profile_does_not_mutate_stamina`: Build profile does not mutate stamina.
+- [x] `test_build_profile_returns_new_profile_object_each_call`: Build profile returns new profile object each call.
 
 #### `ai/test_cognition_explainability.py`
 
-- [ ] `test_overload_metadata_population`: Overload metadata population — Verify that primary_overload_source and last_overload_tick are correctly populated in replay..
-- [ ] `test_personality_formula_impact`: Personality formula impact — Verify that personality archetypes and traits impact the capacity profile..
-- [ ] `test_inspector_smoke_coverage`: Inspector smoke coverage — Smoke test to ensure EntityInspector (AIPresenter) doesn't crash with new fields..
+- [x] `test_overload_metadata_population`: Overload metadata population — Verify that primary_overload_source and last_overload_tick are correctly populated in replay..
+- [x] `test_personality_formula_impact`: Personality formula impact — Verify that personality archetypes and traits impact the capacity profile..
+- [x] `test_inspector_smoke_coverage`: Inspector smoke coverage — Smoke test to ensure EntityInspector (AIPresenter) doesn't crash with new fields..
 
 #### `ai/test_cognition_integrity.py`
 
-- [ ] `test_ui_contract_alignment`: Ui contract alignment — Verify that every field in bounded_cognition_ui_contract.md exists in Pydantic schemas..
-- [ ] `test_feature_spec_replay_alignment`: Feature spec replay alignment — Verify that replay fields mentioned in feature spec are present in recorder..
-- [ ] `test_feature_spec_graph_export_alignment`: Feature spec graph export alignment — Verify that graph export fields mentioned in feature spec are present in exporter..
-- [ ] `test_test_matrix_existence`: Test matrix existence — Verify that all test modules mentioned in test_matrix.md actually exist..
-- [ ] `test_populated_artifact_consistency`: Populated artifact consistency — Verify that a live HeadlessRunner execution produces populated and consistent artifacts. [TRACK 1 HARDENING].
-- [ ] `test_truth_surface_parity`: Truth surface parity — Verify that Replay, API Schema, and Cognition Graph maintain strict parity. [TRUTH SURFACE OWNERSHIP PROOF].
-- [ ] `test_documentation_alignment`: Documentation alignment — Verify that documented fields in intel_capacity_implementation_updated.md are real. [MILESTONE 8 PROOF].
+- [x] `test_ui_contract_alignment`: Ui contract alignment — Verify that every field in bounded_cognition_ui_contract.md exists in Pydantic schemas..
+- [x] `test_feature_spec_replay_alignment`: Feature spec replay alignment — Verify that replay fields mentioned in feature spec are present in recorder..
+- [x] `test_feature_spec_graph_export_alignment`: Feature spec graph export alignment — Verify that graph export fields mentioned in feature spec are present in exporter..
+- [x] `test_test_matrix_existence`: Test matrix existence — Verify that all test modules mentioned in test_matrix.md actually exist..
+- [x] `test_populated_artifact_consistency`: Populated artifact consistency — Verify that a live HeadlessRunner execution produces populated and consistent artifacts. [TRACK 1 HARDENING].
+- [x] `test_truth_surface_parity`: Truth surface parity — Verify that Replay, API Schema, and Cognition Graph maintain strict parity. [TRUTH SURFACE OWNERSHIP PROOF].
+- [x] `test_documentation_alignment`: Documentation alignment — Verify that documented fields in intel_capacity_implementation_updated.md are real. [MILESTONE 8 PROOF].
 
 #### `ai/test_directive_mutation_thresholds.py`
 
-- [ ] `test_directive_mutation_thresholds`: Directive mutation thresholds — Verify that directives only mutate after repeated thresholded events..
+- [x] `test_directive_mutation_thresholds`: Directive mutation thresholds — Verify that directives only mutate after repeated thresholded events..
 
 #### `ai/test_event_interpretation.py`
 
@@ -70,8 +70,8 @@
 - [x] `test_unstable_panic_concern`: Unstable panic concern.
 - [x] `test_interruption_resistance_stable`: Interruption resistance stable.
 - [x] `test_interruption_resistance_unstable`: Interruption resistance unstable.
-- [ ] `test_identity_drift_resistance`: Identity drift resistance.
-- [ ] `test_rumor_sensitivity_unstable`: Rumor sensitivity unstable.
+- [x] `test_identity_drift_resistance`: Identity drift resistance.
+- [x] `test_rumor_sensitivity_unstable`: Rumor sensitivity unstable.
 
 #### `ai/test_lead_learning.py`
 
@@ -80,9 +80,9 @@
 
 #### `ai/test_social_cognition.py`
 
-- [ ] `test_social_blocker_detection_solo`: Social blocker detection solo.
-- [ ] `test_social_misjudgment_low_stability`: Social misjudgment low stability.
-- [ ] `test_social_bandwidth_pool_limiting`: Social bandwidth pool limiting.
+- [x] `test_social_blocker_detection_solo`: Social blocker detection solo.
+- [x] `test_social_misjudgment_low_stability`: Social misjudgment low stability.
+- [x] `test_social_bandwidth_pool_limiting`: Social bandwidth pool limiting.
 
 #### `ai/test_source_trust_learning_loop.py`
 
@@ -90,7 +90,7 @@
 
 #### `ai/test_uncertainty_resolution_loop.py`
 
-- [ ] `test_uncertainty_resolution_loop`: Uncertainty resolution loop — Prove that proximity to a rumored zone resolves imprecise leads into precise targets..
+- [x] `test_uncertainty_resolution_loop`: Uncertainty resolution loop — Prove that proximity to a rumored zone resolves imprecise leads into precise targets..
 
 #### `core/test_cognition_graph_exporter.py`
 
@@ -101,15 +101,15 @@
 
 #### `core/test_strategy_models.py`
 
-- [ ] `test_strategic_model_rebuild`: Strategic model rebuild — Verify pydantic model rebuild handles recursive refs..
-- [ ] `test_directive_creation`: Directive creation.
-- [ ] `test_strategic_state_defaults`: Strategic state defaults.
-- [ ] `test_strategic_state_serialization`: Strategic state serialization.
+- [x] `test_strategic_model_rebuild`: Strategic model rebuild — Verify pydantic model rebuild handles recursive refs..
+- [x] `test_directive_creation`: Directive creation.
+- [x] `test_strategic_state_defaults`: Strategic state defaults.
+- [x] `test_strategic_state_serialization`: Strategic state serialization.
 
 #### `integration/strategy/test_cognition_graph_regression.py`
 
-- [ ] `test_cognition_graph_deterministic_simulation`: Cognition graph deterministic simulation — Verify that a simulation produces a valid, repeatable cognition graph..
-- [ ] `test_graph_structural_invariants`: Graph structural invariants — Verify that the graph follows structural rules across ticks..
+- [x] `test_cognition_graph_deterministic_simulation`: Cognition graph deterministic simulation — Verify that a simulation produces a valid, repeatable cognition graph..
+- [x] `test_graph_structural_invariants`: Graph structural invariants — Verify that the graph follows structural rules across ticks..
 
 #### `integration/strategy/test_strategic_brain_integration.py`
 
@@ -117,14 +117,14 @@
 - [x] `test_scar_detection`: Scar detection — Verify that heroes sense nearby world trauma (scars) and investigate..
 - [x] `test_near_death_triggers_survival_consequences`: Near death triggers survival consequences — Verify that a NEAR_DEATH event generates a concern and suspends the current project via applicator..
 - [x] `test_betrayal_mutates_directives`: Betrayal mutates directives — Verify that a salient betrayal turning point adds an 'Avenge' directive..
-- [ ] `test_divergent_home_response`: Divergent home response — Verify that only entities with place attachment react strongly to home damage..
+- [x] `test_divergent_home_response`: Divergent home response — Verify that only entities with place attachment react strongly to home damage..
 - [x] `test_betrayal_trauma_affects_recruitment`: Betrayal trauma affects recruitment — Verify that a recent betrayal makes entities less willing to accept recruitment offers..
 
 #### `integration/strategy/test_strategic_capacity_enforcement.py`
 
-- [ ] `test_budget_enforcement_truncation`: Budget enforcement truncation — Verify that candidate_zone_limit correctly truncates the pool AND preserves highest-scored zones..
-- [ ] `test_source_trust_behavioral_impact`: Source trust behavioral impact — Verify that updating source trust results in different weighting in the next cycle. [MILESTONE 3].
-- [ ] `test_overload_metrics_visibility`: Overload metrics visibility — Verify that primary_overload_source and metrics are populated when stressed..
+- [x] `test_budget_enforcement_truncation`: Budget enforcement truncation — Verify that candidate_zone_limit correctly truncates the pool AND preserves highest-scored zones..
+- [x] `test_source_trust_behavioral_impact`: Source trust behavioral impact — Verify that updating source trust results in different weighting in the next cycle. [MILESTONE 3].
+- [x] `test_overload_metrics_visibility`: Overload metrics visibility — Verify that primary_overload_source and metrics are populated when stressed..
 
 #### `integration/strategy/test_strategic_continuity.py`
 
@@ -133,46 +133,46 @@
 
 #### `integration/strategy/test_strategic_continuity_hardening.py`
 
-- [ ] `test_strategic_objective_continuity`: Strategic objective continuity — Prove that an existing objective is preserved if the project remains stable and no high blockers appear..
-- [ ] `test_objective_resumption_aligns_with_tactical`: Objective resumption aligns with tactical — Verify that a resumed objective correctly drives goal selection..
+- [x] `test_strategic_objective_continuity`: Strategic objective continuity — Prove that an existing objective is preserved if the project remains stable and no high blockers appear..
+- [x] `test_objective_resumption_aligns_with_tactical`: Objective resumption aligns with tactical — Verify that a resumed objective correctly drives goal selection..
 
 #### `integration/strategy/test_strategic_determinism.py`
 
 - [x] `test_harness_determinism`: Harness determinism — Verify that two runs with the same seed produce byte-identical results..
-- [ ] `test_harness_non_determinism_different_seed`: Harness non determinism different seed — Verify that different seeds produce different outcomes (basic sanity check)..
+- [x] `test_harness_non_determinism_different_seed`: Harness non determinism different seed — Verify that different seeds produce different outcomes (basic sanity check)..
 
 #### `integration/strategy/test_strategic_explainability.py`
 
-- [ ] `test_candidate_zone_enforcement`: Candidate zone enforcement — Verify that candidate_zone_limit is enforced and drops excess zones..
-- [ ] `test_ally_evaluation_enforcement`: Ally evaluation enforcement — Verify that ally_evaluation_limit caps contracts and offers evaluated..
-- [ ] `test_overload_source_trauma`: Overload source trauma — Verify that heavy HP damage triggers 'trauma' as the primary overload source..
-- [ ] `test_switch_reason_transparency`: Switch reason transparency — Verify that a project switch provides a human-readable reason..
+- [x] `test_candidate_zone_enforcement`: Candidate zone enforcement — Verify that candidate_zone_limit is enforced and drops excess zones..
+- [x] `test_ally_evaluation_enforcement`: Ally evaluation enforcement — Verify that ally_evaluation_limit caps contracts and offers evaluated..
+- [x] `test_overload_source_trauma`: Overload source trauma — Verify that heavy HP damage triggers 'trauma' as the primary overload source..
+- [x] `test_switch_reason_transparency`: Switch reason transparency — Verify that a project switch provides a human-readable reason..
 
 #### `integration/strategy/test_strategic_persistence.py`
 
-- [ ] `test_persistence_boost_prevents_switching`: Persistence boost prevents switching — Verify that the persistence boost prevents switching to a slightly better project..
+- [x] `test_persistence_boost_prevents_switching`: Persistence boost prevents switching — Verify that the persistence boost prevents switching to a slightly better project..
 - [x] `test_project_lock_prevents_switching`: Project lock prevents switching — Verify that project_lock_until strictly prevents any switches despite critical concerns..
 - [x] `test_interruption_threshold_overridden_by_major_threat`: Interruption threshold overridden by major threat — Verify that a massive threat CAN overcome the interruption threshold..
-- [ ] `test_strategic_pipeline_home_threat`: Strategic pipeline home threat — Verify the flow from life event through StrategicConsequenceService to project pivot..
+- [x] `test_strategic_pipeline_home_threat`: Strategic pipeline home threat — Verify the flow from life event through StrategicConsequenceService to project pivot..
 - [x] `test_resume_restores_valid_objective`: Resume restores valid objective — Verify that brain restores the last active objective when resuming a project. [Strategy M2].
-- [ ] `test_resumed_objective_survives_cycle`: Resumed objective survives cycle — Verify that a restored objective doesn't immediately flip back to ProjectRecord.objectives[0] if it matches. [Strategy M2].
+- [x] `test_resumed_objective_survives_cycle`: Resumed objective survives cycle — Verify that a restored objective doesn't immediately flip back to ProjectRecord.objectives[0] if it matches. [Strategy M2].
 
 #### `integration/strategy/test_strategic_replay_determinism.py`
 
 - [x] `test_world_strategic_registry_deep_isolation`: World strategic registry deep isolation — Verify that WorldStrategicRegistry.copy() performs a deep copy..
 - [x] `test_strategic_replay_graph_equality`: Strategic replay graph equality — Verify that replaying from a snapshot yields bit-identical cognition graphs..
-- [ ] `test_lead_outcome_grounding_verification`: Lead outcome grounding verification — Verify that precise leads correctly ground into world entities..
+- [x] `test_lead_outcome_grounding_verification`: Lead outcome grounding verification — Verify that precise leads correctly ground into world entities..
 
 #### `integration/strategy/test_strategic_resume_objective.py`
 
-- [ ] `test_objective_resume_reliability`: Objective resume reliability — Verify that a suspended objective is resumed correctly..
+- [x] `test_objective_resume_reliability`: Objective resume reliability — Verify that a suspended objective is resumed correctly..
 
 #### `integration/strategy/test_strategic_structural_integrity.py`
 
 - [x] `test_snapshot_strategic_isolation`: Snapshot strategic isolation — Verify that Snapshot.from_world deep-copies and freezes strategic state..
-- [ ] `test_strategic_update_merging_identical_ids`: Strategic update merging identical ids — Verify that ActionSystem merges updates with identical IDs correctly..
+- [x] `test_strategic_update_merging_identical_ids`: Strategic update merging identical ids — Verify that ActionSystem merges updates with identical IDs correctly..
 - [x] `test_serialization_round_trip`: Serialization round trip — Verify that StrategicState survives full JSON serialization round-trip..
-- [ ] `test_strategic_update_coercion_from_dict`: Strategic update coercion from dict — Verify that StrategicUpdate correctly coerces dicts to models (worker transport emulation)..
+- [x] `test_strategic_update_coercion_from_dict`: Strategic update coercion from dict — Verify that StrategicUpdate correctly coerces dicts to models (worker transport emulation)..
 
 #### `integration/strategy/test_strategic_transport.py`
 

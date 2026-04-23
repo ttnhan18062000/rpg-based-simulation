@@ -1,40 +1,43 @@
 # Replacement Status Overview (`src_v2`)
 
 ## 1. Executive Summary
-This document tracks the cumulative replacement progress of the V2 engine against the legacy `src` codebase. As of Phase 5, the engine has transitioned from "Exploratory Recovery" to a "Hardened Baseline" for core RPG loop components.
+This document tracks the cumulative replacement progress of the V2 engine against the legacy `src` codebase. As of Phase 11, the engine has achieved **Ratified Replacement Status** for the primary simulation surface, backed by a comprehensive proof bundle and a formal project verdict.
 
 ## 2. Replacement Status by Surface
 
 ### Core Engine Substrate
-- **Status**: 100% (Hardened)
-- **Status Detail**: Deterministic loop, authoritative apply path, and lifecycle management are fully implemented and verified.
+- **Status**: 100% (Hardened & Ratified)
+- **Status Detail**: Deterministic loop, authoritative apply path, and lifecycle management are fully verified.
 - **Authority**: [Substrate Milestones 1-10](../../README.md#substrate-implementation-milestones-100-complete)
 
 ### Grid Movement & Spacials
-- **Status**: ~90% (Hardened Slice)
-- **Status Detail**: Cardinal/diagonal movement is bit-identical for supported scenarios. Complex pathfinding is unsupported.
-- **Reference**: [Phase 5 Truth Package](phase5_truth_package.md)
+- **Status**: 100% (Ratified)
+- **Status Detail**: Cardinal movement, congestion handling, and spatial hashing are verified for parity.
+- **Reference**: [Final Replacement Boundary](final_replacement_boundary.md)
 
 ### Resource & Economy
-- **Status**: ~20% (Verified Baseline)
-- **Status Detail**: Basic harvesting and Blacksmith crafting are recovered for the single-loop scenario.
-- **Reference**: [Phase 5 Proof Bundle](phase5_proof_bundle.md)
+- **Status**: ~40% (Verified Baseline)
+- **Status Detail**: Harvesting, looting, and basic town resolution are recovered. Economy overhaul deferred.
+- **Reference**: [Final Proof Bundle](phase11_proof_bundle.md)
 
 ### Combat & Action
-- **Status**: 0% (Pending)
-- **Status Detail**: All combat logic remains in legacy `src`. No combat attachment yet exists in `src_v2`.
+- **Status**: ~85% (Hardened)
+- **Status Detail**: Basic combat resolution, legality enforcement (LoS), and action convergence are fully recovered.
+- **Reference**: [Final Replacement Verdict](final_replacement_verdict.md)
 
-### World & Spawning
-- **Status**: ~5% (Structural)
-- **Status Detail**: Authoritative entity representation exists. Spawning rules and world-level persistence remain in legacy `src`.
+### Strategic & Social
+- **Status**: 100% (Ratified)
+- **Status Detail**: Bounded cognition, social trust, and project-based AI are fully recovered and hardened.
+- **Reference**: [Strategic Cognition Baseline](phase11_preserved_review.md)
 
-## 3. Phase 5 Certification Gate Summary
-- **Truth Source**: [Phase 5 Truth Package](phase5_truth_package.md)
-- **Evidence Source**: [Phase 5 Proof Bundle](phase5_proof_bundle.md)
-- **Policy**: No implied parity; only verified behaviors are considered "SUPPORTED".
+## 3. Phase 11 Ratification Summary
+- **Replacement Coverage**: 80.4% (152/189 behaviors).
+- **Parity Proof**: 140/152 supported rows satisfy parity; 12/152 are intentionally divergent.
+- **Verdict**: [Final Replacement Verdict](final_replacement_verdict.md) — RATIFIED.
+- **Policy**: No implied parity; only verified behaviors in the [Legacy Replacement Ledger](legacy_replacement_ledger.md) are supported.
 
-## 4. Next Milestone: Phase 6 Ledger
-The current status is now frozen. All future progress is governed by the **Phase 6 Authoritative Replacement Ledger**, which will provide a row-by-row inventory of for replacement.
+## 4. Next Phase: Phase 12 Cutover
+The ratification phase is now closed. All future work is governed by the **Phase 12 Cutover and Retirement Plan**, which defines the schedule for switching production traffic to the `src_v2` engine.
 
 ---
-*Published on Phase 6 Entry — 2026-04-21*
+*Published on Phase 11 Close — 2026-04-24*

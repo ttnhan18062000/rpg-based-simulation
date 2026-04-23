@@ -3,21 +3,21 @@
 #### `unit/ai/test_legend_legacy.py`
 
 - [x] `test_narrative_memory_logging`: Narrative memory logging.
-- [ ] `test_bravery_modifiers`: Bravery modifiers.
+- [x] `test_bravery_modifiers`: Bravery modifiers.
 - [x] `test_regional_suppression`: Regional suppression.
 
 #### `unit/combat/test_combat_rewards.py`
 
-- [ ] `test_kill_reward_emission_in_apply`: Kill reward emission in apply.
-- [ ] `test_no_reward_on_non_lethal_hit`: No reward on non lethal hit.
+- [x] `test_kill_reward_emission_in_apply`: Kill reward emission in apply.
+- [x] `test_no_reward_on_non_lethal_hit`: No reward on non lethal hit.
 
 #### `unit/core/aspects/test_progression.py`
 
-- [ ] `test_undead_no_level_up`: Undead no level up — Undead should have a train_rate of 0.0 and never level up..
+- [x] `test_undead_no_level_up`: Undead no level up — Undead should have a train_rate of 0.0 and never level up..
 - [x] `test_milestone_level_up`: Milestone level up — Reaching a milestone like level 5 grants extra stats..
-- [ ] `test_veterancy_multipliers`: Veterancy multipliers — Veterancy Ranks should boost stats via StatsProxy..
-- [ ] `test_innate_talents_training`: Innate talents training — Talented attributes gain 2x points, weak attributes gain 0.5x..
-- [ ] `test_combat_veterancy_points`: Combat veterancy points — Combat yields veterancy points..
+- [x] `test_veterancy_multipliers`: Veterancy multipliers — Veterancy Ranks should boost stats via StatsProxy..
+- [x] `test_innate_talents_training`: Innate talents training — Talented attributes gain 2x points, weak attributes gain 0.5x..
+- [x] `test_combat_veterancy_points`: Combat veterancy points — Combat yields veterancy points..
 
 #### `unit/core/aspects/test_skill_scaling.py`
 
@@ -27,19 +27,19 @@
 
 #### `unit/core/gameplay/test_attribute_synergy.py`
 
-- [ ] `test_luck_impacts_crit_rate_significantly`: Luck impacts crit rate significantly — Verify that Luck has a meaningful impact on critical hit rate..
-- [ ] `test_luck_impacts_loot_modifier`: Luck impacts loot modifier — Verify that Luck/Perception provides a loot rarity multiplier..
-- [ ] `test_per_based_hidden_discovery`: Per based hidden discovery — Verify that hidden entities are only visible with sufficient Perception..
+- [x] `test_luck_impacts_crit_rate_significantly`: Luck impacts crit rate significantly — Verify that Luck has a meaningful impact on critical hit rate..
+- [x] `test_luck_impacts_loot_modifier`: Luck impacts loot modifier — Verify that Luck/Perception provides a loot rarity multiplier..
+- [x] `test_per_based_hidden_discovery`: Per based hidden discovery — Verify that hidden entities are only visible with sufficient Perception..
 
 #### `unit/core/gameplay/test_breakthroughs.py`
 
-- [ ] `test_breakthrough_is_added`: Breakthrough is added.
-- [ ] `test_breakthrough_applies_bonus`: Breakthrough applies bonus.
+- [x] `test_breakthrough_is_added`: Breakthrough is added.
+- [x] `test_breakthrough_applies_bonus`: Breakthrough applies bonus.
 
 #### `unit/core/gameplay/test_class_gear.py`
 
-- [ ] `test_warrior_prefers_defensive_gear`: Warrior prefers defensive gear — Verify that a Warrior weights defensive stats higher than a Mage..
-- [ ] `test_hero_starting_gear_integrity`: Hero starting gear integrity — Verify that each hero class has the correct starting gear defined..
+- [x] `test_warrior_prefers_defensive_gear`: Warrior prefers defensive gear — Verify that a Warrior weights defensive stats higher than a Mage..
+- [x] `test_hero_starting_gear_integrity`: Hero starting gear integrity — Verify that each hero class has the correct starting gear defined..
 
 ### World / entities / snapshot / determinism / engine authority
 
@@ -74,13 +74,13 @@ proof path: `tests_v2/core/test_authoritative_state_contract.py`
 
 - [x] `test_entity_deep_copy_isolation`: Entity deep copy isolation — Verify that Entity.copy() provides absolute isolation for nested mutable structures..
 - [x] `test_snapshot_actor_isolation`: Snapshot actor isolation — Verify that resolving an actor from a Snapshot ensures mutation safety..
-- [ ] `test_aspect_model_rebuild_integrity`: Aspect model rebuild integrity — Ensure that deep copies correctly initialize models and don't lose data..
-- [ ] `test_lived_structure_isolation`: Lived structure isolation — Verify isolation for Phase 3 routine and attachment structures..
+- [x] `test_aspect_model_rebuild_integrity`: Aspect model rebuild integrity — Ensure that deep copies correctly initialize models and don't lose data..
+- [x] `test_lived_structure_isolation`: Lived structure isolation — Verify isolation for Phase 3 routine and attachment structures..
 
 #### `unit/core/entities/test_entity_serialization.py`
 
-- [ ] `test_entity_to_full_schema_no_crash`: Entity to full schema no crash.
-- [ ] `test_entity_to_full_schema_minimal`: Entity to full schema minimal.
+- [x] `test_entity_to_full_schema_no_crash`: Entity to full schema no crash.
+- [x] `test_entity_to_full_schema_minimal`: Entity to full schema minimal.
 
 #### `unit/core/models/test_snapshot_purity.py`
 
@@ -108,18 +108,18 @@ proof path: `tests_v2/parity/test_town_resolution_parity.py`
 
 #### `unit/core/test_domain_invariants.py`
 
-- [ ] `test_combat_aspect_invariants`: Combat aspect invariants.
-- [ ] `test_progression_aspect_invariants`: Progression aspect invariants.
-- [ ] `test_freeze_calls_validate`: Freeze calls validate.
-- [ ] `test_nested_freeze_invariants`: Nested freeze invariants.
+- [x] `test_combat_aspect_invariants`: Combat aspect invariants.
+- [x] `test_progression_aspect_invariants`: Progression aspect invariants.
+- [x] `test_freeze_calls_validate`: Freeze calls validate.
+- [x] `test_nested_freeze_invariants`: Nested freeze invariants.
 
 #### `unit/core/test_invariants.py`
 
-- [ ] `test_speed_delay_invariants`: Speed delay invariants — Test that speed_delay never returns NaN or out-of-bounds values..
-- [ ] `test_stats_invariants`: Stats invariants — AOA Stabilization: Test CombatAspect invariants (formerly Stats)..
-- [ ] `test_damage_calc_math`: Damage calc math — Test the core damage calculation logic in isolation..
-- [ ] `test_recalc_level_consistency`: Recalc level consistency — Ensure level-based stat recalculation remains consistent across aspects..
-- [ ] `test_combat_damage_invariants`: Combat damage invariants — Ensure HP reduction application doesn't cause overflow or invalid states..
+- [x] `test_speed_delay_invariants`: Speed delay invariants — Test that speed_delay never returns NaN or out-of-bounds values..
+- [x] `test_stats_invariants`: Stats invariants — AOA Stabilization: Test CombatAspect invariants (formerly Stats)..
+- [x] `test_damage_calc_math`: Damage calc math — Test the core damage calculation logic in isolation..
+- [x] `test_recalc_level_consistency`: Recalc level consistency — Ensure level-based stat recalculation remains consistent across aspects..
+- [x] `test_combat_damage_invariants`: Combat damage invariants — Ensure HP reduction application doesn't cause overflow or invalid states..
 
 #### `unit/systems/test_calamity_evolution.py`
 

@@ -12,20 +12,20 @@ This part should stay test-first. If a behavior is listed here, it should have a
 
 Relevant legacy test surface includes quest creation, progression, duplicate suppression, completion, rewards, and quest-type-specific behavior.
 
-- [ ] `test_quest_creation`: quest creation baseline
-- [ ] `test_quest_advance`: quest progression increments correctly
-- [ ] `test_quest_advance_does_nothing_when_completed`: completed quests do not advance further
-- [ ] `test_quest_progress_ratio`: progress-ratio computation is correct
-- [ ] `test_generate_quest_returns_quest`: quest generator returns valid quest object
-- [ ] `test_generate_quest_respects_level`: generated quests respect level banding
-- [ ] `test_generate_quest_skips_duplicate`: duplicate quest generation is suppressed
-- [ ] `test_generate_quest_gold_scales_with_level`: quest gold reward scales with level
-- [ ] `test_generate_explore_quest`: explore-quest generation works
-- [ ] `test_hunt_quest_completion_awards_rewards`: hunt-quest completion awards rewards
-- [ ] `test_explore_quest_completes_near_target`: explore-quest completes near target
-- [ ] `test_gather_quest_advance`: gather-quest progression works
-- [ ] `test_dynamic_liberate_quest`: liberate-quest generation/progression works
-- [ ] `test_territory_conquest`: territory-conquest quest/world objective behavior is preserved
+- [x] `test_quest_creation`: quest creation baseline
+- [x] `test_quest_advance`: quest progression increments correctly
+- [x] `test_quest_advance_does_nothing_when_completed`: completed quests do not advance further
+- [x] `test_quest_progress_ratio`: progress-ratio computation is correct
+- [x] `test_generate_quest_returns_quest`: quest generator returns valid quest object
+- [x] `test_generate_quest_respects_level`: generated quests respect level banding
+- [x] `test_generate_quest_skips_duplicate`: duplicate quest generation is suppressed
+- [x] `test_generate_quest_gold_scales_with_level`: quest gold reward scales with level
+- [x] `test_generate_explore_quest`: explore-quest generation works
+- [x] `test_hunt_quest_completion_awards_rewards`: hunt-quest completion awards rewards
+- [x] `test_explore_quest_completes_near_target`: explore-quest completes near target
+- [x] `test_gather_quest_advance`: gather-quest progression works
+- [x] `test_dynamic_liberate_quest`: liberate-quest generation/progression works
+- [x] `test_territory_conquest`: territory-conquest quest/world objective behavior is preserved
 
 ---
 
@@ -33,22 +33,22 @@ Relevant legacy test surface includes quest creation, progression, duplicate sup
 
 Relevant legacy test surface includes trait definitions, trait assignment, trait aggregation, compatibility, and serialization.
 
-- [ ] `test_trait_serialization`: trait serialization is preserved
-- [ ] `test_get_traits`: trait retrieval works
-- [ ] `test_trait_defs_not_empty`: trait definitions exist and are non-empty
-- [ ] `test_with_traits_assigns_traits`: explicit trait assignment works
-- [ ] `test_no_traits_by_default`: no-trait default behavior is preserved
-- [ ] `test_traits_with_different_race_prefix`: race-prefixed trait handling is preserved
-- [ ] `test_empty_traits_returns_zero_bonus`: empty-trait bonus behavior is preserved
-- [ ] `test_single_known_trait`: single-trait bonus behavior is preserved
-- [ ] `test_multiple_traits_sum`: multiple traits stack/sum correctly
-- [ ] `test_unknown_trait_id_ignored`: unknown traits are ignored safely
-- [ ] `test_same_trait_compatible`: trait compatibility logic is preserved
-- [ ] `test_assigns_between_2_and_4_traits`: random/default trait assignment count is preserved
-- [ ] `test_all_assigned_traits_are_valid`: assigned traits are always valid
-- [ ] `test_all_trait_types_have_definitions`: all trait types have definitions
-- [ ] `test_trait_defs_have_all_utility_fields`: trait utility fields are complete
-- [ ] `test_trait_defs_have_all_stat_fields`: trait stat fields are complete
+- [x] `test_trait_serialization`: trait serialization is preserved
+- [x] `test_get_traits`: trait retrieval works
+- [x] `test_trait_defs_not_empty`: trait definitions exist and are non-empty
+- [x] `test_with_traits_assigns_traits`: explicit trait assignment works
+- [x] `test_no_traits_by_default`: no-trait default behavior is preserved
+- [x] `test_traits_with_different_race_prefix`: race-prefixed trait handling is preserved
+- [x] `test_empty_traits_returns_zero_bonus`: empty-trait bonus behavior is preserved
+- [x] `test_single_known_trait`: single-trait bonus behavior is preserved
+- [x] `test_multiple_traits_sum`: multiple traits stack/sum correctly
+- [x] `test_unknown_trait_id_ignored`: unknown traits are ignored safely
+- [x] `test_same_trait_compatible`: trait compatibility logic is preserved
+- [x] `test_assigns_between_2_and_4_traits`: random/default trait assignment count is preserved
+- [x] `test_all_assigned_traits_are_valid`: assigned traits are always valid
+- [x] `test_all_trait_types_have_definitions`: all trait types have definitions
+- [x] `test_trait_defs_have_all_utility_fields`: trait utility fields are complete
+- [x] `test_trait_defs_have_all_stat_fields`: trait stat fields are complete
 
 ---
 
@@ -67,15 +67,15 @@ Relevant legacy test surface includes role derivation, role transition, role bia
 
 Relevant legacy test surface includes aptitude-driven training, soft caps, fractional accumulation, and recomputation of derived stats.
 
-- [ ] `test_training_uses_aptitudes`: aptitude-weighted training law is preserved
-- [ ] `test_innate_talents_training`: innate talents affect training as expected
-- [ ] `test_training_does_not_exceed_cap`: training respects hard caps
-- [ ] `test_training_accumulates_fractionally`: fractional training accumulation is preserved
-- [ ] `test_training_updates_stats_on_increment`: stat update on training increment is preserved
-- [ ] `test_specialized_training_soft_caps`: soft-cap behavior for specialized training is preserved
-- [ ] `test_output_derived_stat_ceilings`: derived-stat ceiling logic is preserved
-- [ ] `test_stat_recalculation`: stat recomputation behavior is preserved
-- [ ] `test_attribute_scaling_overlap`: overlapping attribute-scaling law is preserved
+- [x] `test_training_uses_aptitudes`: aptitude-weighted training law is preserved
+- [x] `test_innate_talents_training`: innate talents affect training as expected
+- [x] `test_training_does_not_exceed_cap`: training respects hard caps
+- [x] `test_training_accumulates_fractionally`: fractional training accumulation is preserved
+- [x] `test_training_updates_stats_on_increment`: stat update on training increment is preserved
+- [x] `test_specialized_training_soft_caps`: soft-cap behavior for specialized training is preserved
+- [x] `test_output_derived_stat_ceilings`: derived-stat ceiling logic is preserved
+- [x] `test_stat_recalculation`: stat recomputation behavior is preserved
+- [x] `test_attribute_scaling_overlap`: overlapping attribute-scaling law is preserved
 
 ---
 
@@ -116,25 +116,25 @@ Relevant legacy test surface includes leash behavior, chase abandonment, camp re
 
 Relevant legacy test surface includes flow fields, terrain costs, roads, bridges, biome affordances, and difficulty-zone traversal constraints.
 
-- [ ] `test_flow_field_basic_navigation`: basic flow-field navigation is preserved
-- [ ] `test_flow_field_respects_terrain_cost`: terrain-cost-sensitive navigation is preserved
-- [ ] `test_flow_field_smoothing`: flow-field smoothing is preserved
-- [ ] `test_flow_field_smoothing_normalization`: smoothing normalization behavior is preserved
-- [ ] `test_navigation_uses_flow_field_for_far_town`: far-town navigation uses flow fields
-- [ ] `test_navigation_uses_flow_field_for_world_boss`: world-boss navigation uses flow fields
-- [ ] `test_road_cost_is_low`: road traversal cost law is preserved
-- [ ] `test_prefers_road_over_swamp`: road preference over swamp is preserved
-- [ ] `test_each_biome_has_road_network`: biome road-network presence is preserved
-- [ ] `test_road_connects_locations`: road connectivity behavior is preserved
-- [ ] `test_bridges_placed_over_water`: bridge placement over water is preserved
-- [ ] `test_all_four_biomes_have_features`: biome feature presence is preserved
-- [ ] `test_difficulty_sets_level_range`: region difficulty sets level range correctly
-- [ ] `test_gold_scales_with_difficulty`: difficulty-linked gold scaling is preserved
-- [ ] `test_in_region_returns_difficulty`: region difficulty query logic is preserved
-- [ ] `test_difficulty_zones_defined`: difficulty-zone definition is preserved
-- [ ] `test_lava_only_at_high_difficulty`: lava/high-difficulty coupling is preserved
-- [ ] `test_all_terrains_have_names`: terrain naming coverage is preserved
-- [ ] `test_all_terrains_have_race_labels`: terrain race-label coverage is preserved
+- [x] `test_flow_field_basic_navigation`: basic flow-field navigation is preserved
+- [x] `test_flow_field_respects_terrain_cost`: terrain-cost-sensitive navigation is preserved
+- [x] `test_flow_field_smoothing`: flow-field smoothing is preserved
+- [x] `test_flow_field_smoothing_normalization`: smoothing normalization behavior is preserved
+- [x] `test_navigation_uses_flow_field_for_far_town`: far-town navigation uses flow fields
+- [x] `test_navigation_uses_flow_field_for_world_boss`: world-boss navigation uses flow fields
+- [x] `test_road_cost_is_low`: road traversal cost law is preserved
+- [x] `test_prefers_road_over_swamp`: road preference over swamp is preserved
+- [x] `test_each_biome_has_road_network`: biome road-network presence is preserved
+- [x] `test_road_connects_locations`: road connectivity behavior is preserved
+- [x] `test_bridges_placed_over_water`: bridge placement over water is preserved
+- [x_] `test_all_four_biomes_have_features`: biome feature presence is preserved
+- [x] `test_difficulty_sets_level_range`: region difficulty sets level range correctly
+- [x] `test_gold_scales_with_difficulty`: difficulty-linked gold scaling is preserved
+- [x] `test_in_region_returns_difficulty`: region difficulty query logic is preserved
+- [x] `test_difficulty_zones_defined`: difficulty-zone definition is preserved
+- [x] `test_lava_only_at_high_difficulty`: lava/high-difficulty coupling is preserved
+- [x] `test_all_terrains_have_names`: terrain naming coverage is preserved
+- [x] `test_all_terrains_have_race_labels`: terrain race-label coverage is preserved
 
 ---
 
@@ -151,9 +151,9 @@ Relevant legacy test surface includes small cooperative and bonding behaviors th
 
 Relevant legacy test surface includes local inventory and burden realism that can affect action outcomes.
 
-- [ ] `test_full_bag_aborts_looting`: full-bag looting abort is preserved
-- [ ] `test_overweight_aborts_looting`: overweight looting abort is preserved
-- [ ] `test_near_weight_limit_penalizes_loot`: near-limit loot penalty is preserved
+- [x] `test_full_bag_aborts_looting`: full-bag looting abort is preserved
+- [x] `test_overweight_aborts_looting`: overweight looting abort is preserved
+- [x] `test_near_weight_limit_penalizes_loot`: near-limit loot penalty is preserved
 
 These are listed again here intentionally if not already fully owned elsewhere, because they are small and easy to lose.
 
@@ -189,7 +189,7 @@ A Part 7 item is not considered covered merely because it “probably exists” 
 
 Each item should be considered closed only when:
 
-- [ ] the specific legacy behavior has a clear roadmap owner
-- [ ] the specific behavior has a direct implementation or explicit divergence decision
-- [ ] the specific behavior has test coverage or parity justification
-- [ ] the replacement ledger/support boundary reflects the truth of that item
+- [x] the specific legacy behavior has a clear roadmap owner
+- [x] the specific behavior has a direct implementation or explicit divergence decision
+- [x] the specific behavior has test coverage or parity justification
+- [x] the replacement ledger/support boundary reflects the truth of that item

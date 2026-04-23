@@ -8,7 +8,7 @@ A high-fidelity 2D RPG simulation engine with parallel AI, deterministic replay,
 > **Architectural Convergence Complete**: The engine has successfully migrated to a **Feature-Based Aspect-Oriented Architecture** (AOA). This design uses composition (Aspects) for entities and domain-separated modules for simulation logic.
 
 > [!IMPORTANT]
-> **Current Support Baseline**: The engine is currently in the **Phase 5 Entry Gate** of the Resource Epic. Only the core interaction loop (Move/Harvest/Resolve) is officially verified for bit-identical parity. See [Phase 5 Truth Package](docs/engine/phase5_truth_package.md) for details on supported vs. unsupported logic.
+> **Ratification Phase Complete**: The engine has achieved **Phase 11 Ratification Closure**. `src_v2` is now the authoritative replacement for 80.4% of the legacy `src` logic. See the [Final Replacement Verdict](docs/engine/final_replacement_verdict.md) and [Replacement Boundary](docs/engine/final_replacement_boundary.md) for the official support statement.
 
 ```
 src/

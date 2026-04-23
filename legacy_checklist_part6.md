@@ -19,18 +19,18 @@ Relevant original source/test evidence:
 - `tests/unit/ai/test_cognitive_pipeline.py`
 - related belief/appraisal tests in `all_test.py`
 
-- [ ] `test_perception_phase_populates_attention_pool`: attention pool population
+- [x] `test_perception_phase_populates_attention_pool`: attention pool population
 - [x] `test_belief_refresh_captures_apparent_state`: belief refresh from apparent state
 - [x] `test_belief_decay_lifecycle`: belief decay lifecycle
-- [ ] `test_belief_conflict_resolution`: belief conflict handling
-- [ ] `test_belief_sharing_propagation`: belief sharing propagation
+- [x] `test_belief_conflict_resolution`: belief conflict handling
+- [x] `test_belief_sharing_propagation`: belief sharing propagation
 - [x] `test_threat_estimation_logic`: threat estimation logic
-- [ ] `test_perception_phase_appraisal_sync`: appraisal sync
-- [ ] `test_perception_tracks_position_history`: position-history tracking
-- [ ] `test_appraisal_phase_triggers_panic_on_low_hp`: panic trigger via appraisal
-- [ ] `test_appraisal_detects_stuck`: stuck appraisal detection
-- [ ] `test_social_appraisal_logic`: social appraisal logic
-- [ ] `test_social_appraisal_with_narrative`: narrative-informed social appraisal
+- [x] `test_perception_phase_appraisal_sync`: appraisal sync
+- [x] `test_perception_tracks_position_history`: position-history tracking
+- [x] `test_appraisal_phase_triggers_panic_on_low_hp`: panic trigger via appraisal
+- [x] `test_appraisal_detects_stuck`: stuck appraisal detection
+- [x] `test_social_appraisal_logic`: social appraisal logic
+- [x] `test_social_appraisal_with_narrative`: narrative-informed social appraisal
 
 ---
 
@@ -80,15 +80,15 @@ Relevant original source evidence:
 - `SocialModifier`
 - `RoutineModifier`
 
-- [ ] `test_ai_boredom_diversification`: boredom diversification effect
-- [ ] `test_boredom_modifier_applies_multipliers`: boredom modifier law
-- [ ] `test_life_stage_modifier_early_bracket`: life-stage modifier law
-- [ ] `test_motive_modifier_biases_explore`: motive modifier explore bias
-- [ ] `test_motive_modifier_biases_rest`: motive modifier rest bias
-- [ ] `test_motive_modifier_biases_flee`: motive modifier flee bias
-- [ ] `test_goal_evaluator_uses_modifiers`: goal evaluator modifier integration
-- [ ] `test_softmax_distribution`: score-to-choice distribution
-- [ ] `test_softmax_with_equal_scores`: equal-score handling
+- [x] `test_ai_boredom_diversification`: boredom diversification effect
+- [x] `test_boredom_modifier_applies_multipliers`: boredom modifier law
+- [x] `test_life_stage_modifier_early_bracket`: life-stage modifier law
+- [x] `test_motive_modifier_biases_explore`: motive modifier explore bias
+- [x] `test_motive_modifier_biases_rest`: motive modifier rest bias
+- [x] `test_motive_modifier_biases_flee`: motive modifier flee bias
+- [x] `test_goal_evaluator_uses_modifiers`: goal evaluator modifier integration
+- [x] `test_softmax_distribution`: score-to-choice distribution
+- [x] `test_softmax_with_equal_scores`: equal-score handling
 
 ---
 
@@ -101,14 +101,14 @@ Relevant original source/test evidence:
 - `tests/unit/ai/test_emotional_memory.py`
 - `tests/unit/ai/test_narrative_memory.py`
 
-- [ ] `test_locational_trauma_triggers_dread`: locational trauma -> dread
-- [ ] `test_emotional_bias_on_utility`: emotion changes utility
-- [ ] `test_emotional_decay`: emotional decay
-- [ ] `test_narrative_memory_trauma_biasing`: trauma memory biasing
-- [ ] `test_narrative_memory_victory_confidence`: victory-confidence memory
+- [x] `test_locational_trauma_triggers_dread`: locational trauma -> dread
+- [x] `test_emotional_bias_on_utility`: emotion changes utility
+- [x] `test_emotional_decay`: emotional decay
+- [x] `test_narrative_memory_trauma_biasing`: trauma memory biasing
+- [x] `test_narrative_memory_victory_confidence`: victory-confidence memory
 - [x] `test_narrative_memory_logging`: narrative memory logging
-- [ ] `test_social_appraisal_with_narrative`: narrative-informed social appraisal
-- [ ] `test_bravery_modifiers`: bravery modifiers
+- [x] `test_social_appraisal_with_narrative`: narrative-informed social appraisal
+- [x] `test_bravery_modifiers`: bravery modifiers
 
 ---
 
@@ -121,22 +121,22 @@ Relevant original source/test evidence:
 - `tests/unit/combat/**`
 - related stamina tests in `all_test.py`
 
-- [ ] `test_wound_infliction_massive_hit`: wound infliction
-- [ ] `test_wound_stat_impact`: wound stat penalties
-- [ ] `test_scar_permanence`: scar permanence
-- [ ] `test_scar_decay`: scar decay behavior if preserved
-- [ ] `test_local_scar_record`: local scar record
-- [ ] `test_scar_detection`: scar detection
-- [ ] `test_ai_perception_of_scars`: perception of scars
-- [ ] `test_stamina_drain_on_attack`: stamina drain on attack
-- [ ] `test_stamina_decreases_on_move`: stamina drain on move
-- [ ] `test_stamina_decreases_on_harvest`: stamina drain on harvest
-- [ ] `test_skill_use_costs_stamina`: stamina cost on skill use
-- [ ] `test_stamina_regen_resting`: rest stamina regen
-- [ ] `test_stamina_regen_active`: active regen
-- [ ] `test_stamina_regen_capped`: regen cap
-- [ ] `test_exhaustion_penalty_application`: exhaustion penalty
-- [ ] `test_best_ready_skill_skips_insufficient_stamina`: skill gating by stamina
+- [x] `test_wound_infliction_massive_hit`: wound infliction
+- [x] `test_wound_stat_impact`: wound stat penalties
+- [x] `test_scar_permanence`: scar permanence
+- [x] `test_scar_decay`: scar decay behavior if preserved
+- [x] `test_local_scar_record`: local scar record
+- [x] `test_scar_detection`: scar detection
+- [x] `test_ai_perception_of_scars`: perception of scars
+- [x] `test_stamina_drain_on_attack`: stamina drain on attack
+- [x] `test_stamina_decreases_on_move`: stamina drain on move
+- [x] `test_stamina_decreases_on_harvest`: stamina drain on harvest
+- [x] `test_skill_use_costs_stamina`: stamina cost on skill use
+- [x] `test_stamina_regen_resting`: rest stamina regen
+- [x] `test_stamina_regen_active`: active regen
+- [x] `test_stamina_regen_capped`: regen cap
+- [x] `test_exhaustion_penalty_application`: exhaustion penalty
+- [x] `test_best_ready_skill_skips_insufficient_stamina`: skill gating by stamina
 
 ---
 
@@ -149,13 +149,13 @@ Relevant original source/test evidence:
 - `tests/unit/ai/test_flanking.py`
 - `tests/unit/ai/test_combos.py`
 
-- [ ] `test_execution_phase_modifies_proposal_with_aggressive_style`: aggressive action style
-- [ ] `test_execution_phase_modifies_proposal_with_evasive_style`: evasive action style
-- [ ] `test_flanking_bonus`: flanking bonus
-- [ ] `test_no_flanking_bonus_when_facing_attacker`: facing-sensitive flanking exclusion
-- [ ] `test_shatter_combo`: combo behavior
-- [ ] `test_ranged_hero_kites_when_adjacent`: ranged kiting
-- [ ] `test_ranged_skirmisher_kites_when_close`: ranged skirmish spacing
+- [x] `test_execution_phase_modifies_proposal_with_aggressive_style`: aggressive action style
+- [x] `test_execution_phase_modifies_proposal_with_evasive_style`: evasive action style
+- [x] `test_flanking_bonus`: flanking bonus
+- [x] `test_no_flanking_bonus_when_facing_attacker`: facing-sensitive flanking exclusion
+- [x] `test_shatter_combo`: combo behavior
+- [x] `test_ranged_hero_kites_when_adjacent`: ranged kiting
+- [x] `test_ranged_skirmisher_kites_when_close`: ranged skirmish spacing
 
 ---
 
@@ -166,16 +166,16 @@ Relevant original source/test evidence:
 - loot and discovery logic in `all_src.py`
 - related tests in `all_test.py`
 
-- [ ] `test_luck_impacts_loot_modifier`: loot modifier from luck/perception
-- [ ] `test_per_based_hidden_discovery`: hidden discovery from perception
-- [ ] `test_loot_recovery_consistency`: loot recovery consistency
-- [ ] `test_loot_no_duplication`: no duplicated loot
-- [ ] `test_corpse_loot_convergence`: corpse loot convergence
-- [ ] `test_loot_and_respawn`: loot and respawn interaction
-- [ ] `test_loot_tables_exist`: loot table integrity
-- [ ] `test_full_bag_aborts_looting`: abort looting when full
-- [ ] `test_overweight_aborts_looting`: abort looting when overweight
-- [ ] `test_near_weight_limit_penalizes_loot`: weight-limit penalty on looting
+- [x] `test_luck_impacts_loot_modifier`: loot modifier from luck/perception
+- [x] `test_per_based_hidden_discovery`: hidden discovery from perception
+- [x] `test_loot_recovery_consistency`: loot recovery consistency
+- [x] `test_loot_no_duplication`: no duplicated loot
+- [x] `test_corpse_loot_convergence`: corpse loot convergence
+- [x] `test_loot_and_respawn`: loot and respawn interaction
+- [x] `test_loot_tables_exist`: loot table integrity
+- [x] `test_full_bag_aborts_looting`: abort looting when full
+- [x] `test_overweight_aborts_looting`: abort looting when overweight
+- [x] `test_near_weight_limit_penalizes_loot`: weight-limit penalty on looting
 
 ---
 
@@ -193,7 +193,7 @@ Relevant original source/test evidence:
 - [x] `test_region_consequence_record`: region consequence record
 - [x] `test_conquered_region_triggers_stronghold`: conquered region -> stronghold consequence
 - [x] `test_strategic_pipeline_home_threat`: home threat in strategic pipeline
-- [ ] `test_world_consequence_*`: world consequence interpretation coverage where applicable
+- [x] `test_world_consequence_*`: world consequence interpretation coverage where applicable
 
 ---
 
@@ -210,11 +210,11 @@ Relevant original source/test evidence:
 - [x] `test_hero_death_creates_scar`: death scar consequences
 - [x] `test_near_death_triggers_survival_consequences`: near-death survival consequences
 - [x] `test_near_death_hardening`: near-death hardening (+5 HP)
-- [ ] `test_nemesis_recognition_and_fear_bias`: nemesis recognition and fear bias
-- [ ] `test_nemesis_milestone_creation`: nemesis milestone creation
-- [ ] `test_locational_memory_on_death`: locational memory on death
-- [ ] `test_influence_shifts_on_monster_death`: influence shift on monster death
-- [ ] `test_influence_shifts_on_hero_death`: influence shift on hero death
+- [x] `test_nemesis_recognition_and_fear_bias`: nemesis recognition and fear bias
+- [x] `test_nemesis_milestone_creation`: nemesis milestone creation
+- [x] `test_locational_memory_on_death`: locational memory on death
+- [x] `test_influence_shifts_on_monster_death`: influence shift on monster death
+- [x] `test_influence_shifts_on_hero_death`: influence shift on hero death
 
 ---
 
@@ -225,5 +225,5 @@ Relevant original source/test evidence:
 - diagnosis logic in `all_src.py`
 - related tests in `all_test.py`
 
-- [ ] `test_accurate_diagnosis_high_wisdom`: accurate diagnosis at high wisdom
-- [ ] `test_misdiagnosis_low_wisdom`: misdiagnosis at low wisdom
+- [x] `test_accurate_diagnosis_high_wisdom`: accurate diagnosis at high wisdom
+- [x] `test_misdiagnosis_low_wisdom`: misdiagnosis at high wisdom

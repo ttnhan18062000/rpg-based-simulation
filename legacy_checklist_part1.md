@@ -269,44 +269,44 @@ Each checkbox below is derived from one original test. Keep the original test na
 
 #### `arena/test_arena_harness_contract.py`
 
-- [ ] `test_arena_structural_determinism`: Arena structural determinism — Verify that the arena produced structurally identical ScenarioReports for the same seed. This validates that the simulation and its reporting layer use stable, deterministic logic. Note: This checks structural equality via Pydantic model_dump, not canonical byte-identical streams. [Milestone 7 Hardening].
-- [ ] `test_arena_stop_condition_wipe`: Arena stop condition wipe — Verify that the arena correctly detects when one side is eliminated..
-- [ ] `test_arena_stop_condition_timeout`: Arena stop condition timeout — Verify that the arena respects the max_ticks limit..
-- [ ] `test_arena_stop_condition_stall`: Arena stop condition stall — Verify that the arena correctly detects lack of activity (STALL) as a telemetry report..
-- [ ] `test_mutation_tripwire_during_decision`: Mutation tripwire during decision — Verify that any attempt to mutate entities during the decision phase raises a RuntimeError..
+- [x] `test_arena_structural_determinism`: Arena structural determinism — Verify that the arena produced structurally identical ScenarioReports for the same seed. This validates that the simulation and its reporting layer use stable, deterministic logic. Note: This checks structural equality via Pydantic model_dump, not canonical byte-identical streams. [Milestone 7 Hardening].
+- [x] `test_arena_stop_condition_wipe`: Arena stop condition wipe — Verify that the arena correctly detects when one side is eliminated..
+- [x] `test_arena_stop_condition_timeout`: Arena stop condition timeout — Verify that the arena respects the max_ticks limit..
+- [x] `test_arena_stop_condition_stall`: Arena stop condition stall — Verify that the arena correctly detects lack of activity (STALL) as a telemetry report..
+- [x] `test_mutation_tripwire_during_decision`: Mutation tripwire during decision — Verify that any attempt to mutate entities during the decision phase raises a RuntimeError..
 
 #### `arena/test_arena_minimal.py`
 
-- [ ] `test_minimal_tick`: Minimal tick — Verify that we can run even 1 tick without hanging..
+- [x] `test_minimal_tick`: Minimal tick — Verify that we can run even 1 tick without hanging..
 
 #### `arena/test_arena_watchdog.py`
 
-- [ ] `test_watchdog_aborts_on_hang`: Watchdog aborts on hang — Verify that a tick hanging for > watchdog_timeout is aborted..
-- [ ] `test_watchdog_allows_fast_ticks`: Watchdog allows fast ticks — Verify that normal fast ticks are NOT aborted..
+- [x] `test_watchdog_aborts_on_hang`: Watchdog aborts on hang — Verify that a tick hanging for > watchdog_timeout is aborted..
+- [x] `test_watchdog_allows_fast_ticks`: Watchdog allows fast ticks — Verify that normal fast ticks are NOT aborted..
 
 #### `arena/test_core_scenario_regression.py`
 
-- [ ] `test_regression_melee_mirror`: Regression melee mirror — Scenario 1v1-01: Symmetry Check..
-- [ ] `test_regression_kiting_open`: Regression kiting open — Scenario 1v1-02: Ranged vs Melee Open Field..
-- [ ] `test_regression_elite_vs_swarm`: Regression elite vs swarm — Scenario 1vm-01: Elite vs Swarm..
+- [x] `test_regression_melee_mirror`: Regression melee mirror — Scenario 1v1-01: Symmetry Check..
+- [x] `test_regression_kiting_open`: Regression kiting open — Scenario 1v1-02: Ranged vs Melee Open Field..
+- [x] `test_regression_elite_vs_swarm`: Regression elite vs swarm — Scenario 1vm-01: Elite vs Swarm..
 
 #### `arena/test_observability_audit.py`
 
-- [ ] `test_rejection_audit_aggregation`: Rejection audit aggregation — Verify that authoritative rejections are captured in ScenarioReport. [Milestone 7].
-- [ ] `test_out_of_range_rejection`: Out of range rejection — Verify that combat out-of-range is explicitly rejected with structured reason. [Milestone 7].
+- [x] `test_rejection_audit_aggregation`: Rejection audit aggregation — Verify that authoritative rejections are captured in ScenarioReport. [Milestone 7].
+- [x] `test_out_of_range_rejection`: Out of range rejection — Verify that combat out-of-range is explicitly rejected with structured reason. [Milestone 7].
 
 #### `arena/test_resource_isolation.py`
 
-- [ ] `test_resource_isolation_bounded_growth`: Resource isolation bounded growth — Verify that memory does not show a strong linear leak over many iterations..
+- [x] `test_resource_isolation_bounded_growth`: Resource isolation bounded growth — Verify that memory does not show a strong linear leak over many iterations..
 
 #### `combat/test_anti_stalemate.py`
 
-- [ ] `test_stalemate_detection`: Stalemate detection.
-- [ ] `test_stalemate_loop_breaker_boosts_flee`: Stalemate loop breaker boosts flee.
+- [x] `test_stalemate_detection`: Stalemate detection.
+- [x] `test_stalemate_loop_breaker_boosts_flee`: Stalemate loop breaker boosts flee.
 
 #### `combat/test_anti_stalemate_milestone_2.py`
 
-- [ ] `test_stalemate_detection_and_breaker`: Stalemate detection and breaker — Verify that 3 cycles of rhythmic oscillation trigger the stalemate breaker..
+- [x] `test_stalemate_detection_and_breaker`: Stalemate detection and breaker — Verify that 3 cycles of rhythmic oscillation trigger the stalemate breaker..
 
 #### `combat/test_combat_context_milestone_2.py`
 
@@ -328,117 +328,117 @@ Each checkbox below is derived from one original test. Keep the original test na
 
 #### `combat/test_engagement_contract.py`
 
-- [ ] `test_engagement_detection`: Engagement detection.
-- [ ] `test_engagement_clears_on_separation`: Engagement clears on separation.
-- [ ] `test_engagement_respects_hostility`: Engagement respects hostility.
+- [x] `test_engagement_detection`: Engagement detection.
+- [x] `test_engagement_clears_on_separation`: Engagement clears on separation.
+- [x] `test_engagement_respects_hostility`: Engagement respects hostility.
 
 #### `combat/test_opportunity_attacks.py`
 
-- [ ] `test_oa_triggered_on_disengagement`: Oa triggered on disengagement.
-- [ ] `test_oa_not_triggered_if_staying_engaged_with_same_attacker`: Oa not triggered if staying engaged with same attacker.
+- [x] `test_oa_triggered_on_disengagement`: Oa triggered on disengagement.
+- [x] `test_oa_not_triggered_if_staying_engaged_with_same_attacker`: Oa not triggered if staying engaged with same attacker.
 
 #### `combat/test_target_stickiness.py`
 
-- [ ] `test_target_stickiness_bias`: Target stickiness bias.
+- [x] `test_target_stickiness_bias`: Target stickiness bias.
 
 #### `combat/test_world_time_progression.py`
 
-- [ ] `test_passive_progression_on_quiet_tick`: Passive progression on quiet tick — Verify that biological decay and lifecycle systems run even if entity doesn't act..
-- [ ] `test_hero_lifecycle_on_quiet_tick`: Hero lifecycle on quiet tick — Verify that HeroLifecycle (e.g. proximity bonding) runs even if no entity acts..
+- [x] `test_passive_progression_on_quiet_tick`: Passive progression on quiet tick — Verify that biological decay and lifecycle systems run even if entity doesn't act..
+- [x] `test_hero_lifecycle_on_quiet_tick`: Hero lifecycle on quiet tick — Verify that HeroLifecycle (e.g. proximity bonding) runs even if no entity acts..
 
 #### `engine/test_quiet_tick_integrity.py`
 
-- [ ] `test_scenario_1_dead_world_progression`: Scenario 1 dead world progression — Scenario 1: No living entities. Verify tick still increments and systems advance..
-- [ ] `test_scenario_2_sleeping_world_biological_decay`: Scenario 2 sleeping world biological decay — Scenario 2: All entities have high next_act_at. Verify biological decay hits..
-- [ ] `test_scenario_3_stationary_world_proximity_bonding`: Scenario 3 stationary world proximity bonding — Scenario 3: Two heroes are stationary. Verify bonding occurs via HeroLifecycleSystem..
-- [ ] `test_scenario_4_subsystem_advancement`: Scenario 4 subsystem advancement — Scenario 4: Verify that registered subsystems receive the tick signal even if no actions apply..
+- [x] `test_scenario_1_dead_world_progression`: Scenario 1 dead world progression — Scenario 1: No living entities. Verify tick still increments and systems advance..
+- [x] `test_scenario_2_sleeping_world_biological_decay`: Scenario 2 sleeping world biological decay — Scenario 2: All entities have high next_act_at. Verify biological decay hits..
+- [x] `test_scenario_3_stationary_world_proximity_bonding`: Scenario 3 stationary world proximity bonding — Scenario 3: Two heroes are stationary. Verify bonding occurs via HeroLifecycleSystem..
+- [x] `test_scenario_4_subsystem_advancement`: Scenario 4 subsystem advancement — Scenario 4: Verify that registered subsystems receive the tick signal even if no actions apply..
 
 #### `integration/ai/test_wind_pillar_navigation.py`
 
-- [ ] `test_navigation_uses_flow_field_for_far_town`: Navigation uses flow field for far town.
-- [ ] `test_navigation_uses_astar_for_near_target`: Navigation uses astar for near target.
-- [ ] `test_navigation_uses_flow_field_for_world_boss`: Navigation uses flow field for world boss.
+- [x] `test_navigation_uses_flow_field_for_far_town`: Navigation uses flow field for far town.
+- [x] `test_navigation_uses_astar_for_near_target`: Navigation uses astar for near target.
+- [x] `test_navigation_uses_flow_field_for_world_boss`: Navigation uses flow field for world boss.
 
 #### `test_party_tactics.py`
 
-- [ ] `test_vanguard_biases`: Vanguard biases.
-- [ ] `test_support_biases`: Support biases.
-- [ ] `test_protector_biases`: Protector biases.
+- [x] `test_vanguard_biases`: Vanguard biases.
+- [x] `test_support_biases`: Support biases.
+- [x] `test_protector_biases`: Protector biases.
 
 #### `unit/ai/test_skirmish.py`
 
-- [ ] `test_skirmish_boosts_move_for_ranged`: Skirmish boosts move for ranged.
-- [ ] `test_skirmish_does_not_boost_melee`: Skirmish does not boost melee.
+- [x] `test_skirmish_boosts_move_for_ranged`: Skirmish boosts move for ranged.
+- [x] `test_skirmish_does_not_boost_melee`: Skirmish does not boost melee.
 
 #### `unit/ai/test_tactical_behavior_contract.py`
 
-- [ ] `test_melee_striker_closes_distance`: Melee striker closes distance.
-- [ ] `test_ranged_skirmisher_kites_when_close`: Ranged skirmisher kites when close.
-- [ ] `test_ranged_skirmisher_maintains_distance`: Ranged skirmisher maintains distance.
-- [ ] `test_safe_shot_detection`: Safe shot detection.
-- [ ] `test_tactical_retreat_at_low_hp`: Tactical retreat at low hp.
-- [ ] `test_group_spacing_preservation`: Group spacing preservation.
+- [x] `test_melee_striker_closes_distance`: Melee striker closes distance.
+- [x] `test_ranged_skirmisher_kites_when_close`: Ranged skirmisher kites when close.
+- [x] `test_ranged_skirmisher_maintains_distance`: Ranged skirmisher maintains distance.
+- [x] `test_safe_shot_detection`: Safe shot detection.
+- [x] `test_tactical_retreat_at_low_hp`: Tactical retreat at low hp.
+- [x] `test_group_spacing_preservation`: Group spacing preservation.
 
 #### `unit/core/logic/test_movement_model.py`
 
-- [ ] `test_movement_model_basic_path`: Movement model basic path.
-- [ ] `test_movement_model_yielding_priority`: Movement model yielding priority.
-- [ ] `test_movement_model_stuck_threshold`: Movement model stuck threshold.
+- [x] `test_movement_model_basic_path`: Movement model basic path.
+- [x] `test_movement_model_yielding_priority`: Movement model yielding priority.
+- [x] `test_movement_model_stuck_threshold`: Movement model stuck threshold.
 
 ### Resource interaction / inventory / town loop
 
 #### `integration/gameplay/test_toughness_decay.py`
 
-- [ ] `test_near_death_hardening`: Near death hardening — Verify that surviving at low HP increases Max HP..
-- [ ] `test_stat_decay_inactivity`: Stat decay inactivity — Verify that stat decay can be triggered..
-- [ ] `test_toughness_hardening_integration`: Toughness hardening integration — Integration test for the restored hardening logic in CombatAction..
+- [x] `test_near_death_hardening`: Near death hardening — Verify that surviving at low HP increases Max HP..
+- [x] `test_stat_decay_inactivity`: Stat decay inactivity — Verify that stat decay can be triggered..
+- [x] `test_toughness_hardening_integration`: Toughness hardening integration — Integration test for the restored hardening logic in CombatAction..
 
 #### `test_building_unification.py`
 
-- [ ] `test_actor`: Actor.
-- [ ] `test_visit_guild_no_legacy_goals`: Visit guild no legacy goals — Verify that visiting the guild produces StrategicUpdate and PerceptionUpdate, but no string goals..
-- [ ] `test_visit_blacksmith_blocker_emission`: Visit blacksmith blocker emission — Verify that visiting the blacksmith without materials generates a BlockerRecord, not a string state..
-- [ ] `test_visit_class_hall_resolution`: Visit class hall resolution — Verify that learning a skill emits a strategic resolution for the corresponding capability blocker..
-- [ ] `test_visit_blacksmith_crafting_resolution`: Visit blacksmith crafting resolution — Verify that crafting an item emits a strategic resolution for the material blocker..
-- [ ] `test_visit_home_upgrade_resolution`: Visit home upgrade resolution — Verify that home storage upgrade emits a strategic resolution for home maintenance..
-- [ ] `test_detour_suggestion_lifecycle_awareness`: Detour suggestion lifecycle awareness — Verify DetourSuggestionService ignores exhausted leads and prioritizes untested ones..
+- [x] `test_actor`: Actor.
+- [x] `test_visit_guild_no_legacy_goals`: Visit guild no legacy goals — Verify that visiting the guild produces StrategicUpdate and PerceptionUpdate, but no string goals..
+- [x] `test_visit_blacksmith_blocker_emission`: Visit blacksmith blocker emission — Verify that visiting the blacksmith without materials generates a BlockerRecord, not a string state..
+- [x] `test_visit_class_hall_resolution`: Visit class hall resolution — Verify that learning a skill emits a strategic resolution for the corresponding capability blocker..
+- [x] `test_visit_blacksmith_crafting_resolution`: Visit blacksmith crafting resolution — Verify that crafting an item emits a strategic resolution for the material blocker..
+- [x] `test_visit_home_upgrade_resolution`: Visit home upgrade resolution — Verify that home storage upgrade emits a strategic resolution for home maintenance..
+- [x] `test_detour_suggestion_lifecycle_awareness`: Detour suggestion lifecycle awareness — Verify DetourSuggestionService ignores exhausted leads and prioritizes untested ones..
 
 #### `unit/ai/test_routine_cycle.py`
 
-- [ ] `test_biological_decay_authoritative`: Biological decay authoritative.
-- [ ] `test_sleep_goal_utility_at_night`: Sleep goal utility at night.
-- [ ] `test_nocturnal_predator_bonus`: Nocturnal predator bonus.
+- [x] `test_biological_decay_authoritative`: Biological decay authoritative.
+- [x] `test_sleep_goal_utility_at_night`: Sleep goal utility at night.
+- [x] `test_nocturnal_predator_bonus`: Nocturnal predator bonus.
 
 #### `unit/ai/test_routine_needs.py`
 
-- [ ] `test_biological_utility_biasing`: Biological utility biasing.
-- [ ] `test_inn_visit_leads_to_sleeping`: Inn visit leads to sleeping.
-- [ ] `test_home_visit_leads_to_eating`: Home visit leads to eating.
-- [ ] `test_sleeping_recovery_cycle`: Sleeping recovery cycle.
+- [x] `test_biological_utility_biasing`: Biological utility biasing.
+- [x] `test_inn_visit_leads_to_sleeping`: Inn visit leads to sleeping.
+- [x] `test_home_visit_leads_to_eating`: Home visit leads to eating.
+- [x] `test_sleeping_recovery_cycle`: Sleeping recovery cycle.
 
 #### `unit/core/gameplay/test_item_contracts.py`
 
-- [ ] `test_weapon_ranges_integrity`: Weapon ranges integrity — Verify that specific weapons have their intended ranges in the registry..
-- [ ] `test_weapon_power_integrity`: Weapon power integrity — Verify that core progression weapons have their primary power correctly set..
-- [ ] `test_registry_identity_integrity`: Registry identity integrity — Ensure all core items are successfully loaded and have consistent IDs..
+- [x] `test_weapon_ranges_integrity`: Weapon ranges integrity — Verify that specific weapons have their intended ranges in the registry..
+- [x] `test_weapon_power_integrity`: Weapon power integrity — Verify that core progression weapons have their primary power correctly set..
+- [x] `test_registry_identity_integrity`: Registry identity integrity — Ensure all core items are successfully loaded and have consistent IDs..
 
 #### `unit/systems/test_difficulty_scaling.py`
 
-- [ ] `test_tier1_is_baseline`: Tier1 is baseline.
-- [ ] `test_tier4_has_higher_stats_than_tier1`: Tier4 has higher stats than tier1 — Same seed, same enemy tier - tier 4 difficulty should have higher HP/ATK..
-- [ ] `test_tier4_hp_significantly_higher`: Tier4 hp significantly higher — Tier 4 HP multiplier is 4.0x on base stats; with flat bonuses from traits/attributes the effective ratio will be lower but still substantial..
-- [ ] `test_difficulty_sets_level_range`: Difficulty sets level range — Entities in tier 3 should have level in [5, 10]..
-- [ ] `test_gold_scales_with_difficulty`: Gold scales with difficulty — Tier 4 gold multiplier is 4.0x..
-- [ ] `test_race_tier4_stronger_than_tier1`: Race tier4 stronger than tier1.
-- [ ] `test_race_difficulty_tier_set`: Race difficulty tier set.
-- [ ] `test_race_level_in_range`: Race level in range.
-- [ ] `test_all_races_scale`: All races scale — All four races should scale with difficulty..
-- [ ] `test_boss_diff_capped_at_4`: Boss diff capped at 4.
-- [ ] `test_boss_diff_adds_one`: Boss diff adds one.
-- [ ] `test_spawn_default_is_tier1`: Spawn default is tier1.
-- [ ] `test_spawn_race_default_is_tier1`: Spawn race default is tier1.
+- [x] `test_tier1_is_baseline`: Tier1 is baseline.
+- [x] `test_tier4_has_higher_stats_than_tier1`: Tier4 has higher stats than tier1 — Same seed, same enemy tier - tier 4 difficulty should have higher HP/ATK..
+- [x] `test_tier4_hp_significantly_higher`: Tier4 hp significantly higher — Tier 4 HP multiplier is 4.0x on base stats; with flat bonuses from traits/attributes the effective ratio will be lower but still substantial..
+- [x] `test_difficulty_sets_level_range`: Difficulty sets level range — Entities in tier 3 should have level in [5, 10]..
+- [x] `test_gold_scales_with_difficulty`: Gold scales with difficulty — Tier 4 gold multiplier is 4.0x..
+- [x] `test_race_tier4_stronger_than_tier1`: Race tier4 stronger than tier1.
+- [x] `test_race_difficulty_tier_set`: Race difficulty tier set.
+- [x] `test_race_level_in_range`: Race level in range.
+- [x] `test_all_races_scale`: All races scale — All four races should scale with difficulty..
+- [x] `test_boss_diff_capped_at_4`: Boss diff capped at 4.
+- [x] `test_boss_diff_adds_one`: Boss diff adds one.
+- [x] `test_spawn_default_is_tier1`: Spawn default is tier1.
+- [x] `test_spawn_race_default_is_tier1`: Spawn race default is tier1.
 
 #### `unit/systems/test_toughness_decay.py`
 
-- [ ] `test_near_death_hardening`: Near death hardening — Verify that surviving at low HP increases Max HP..
-- [ ] `test_stat_decay_inactivity`: Stat decay inactivity — Verify that idling for 1000+ ticks triggers stat decay..
+- [x] `test_near_death_hardening`: Near death hardening — Verify that surviving at low HP increases Max HP..
+- [x] `test_stat_decay_inactivity`: Stat decay inactivity — Verify that idling for 1000+ ticks triggers stat decay..

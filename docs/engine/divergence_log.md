@@ -13,7 +13,9 @@ This document is the canonical record of intentional behavior shifts in `src_v2`
 | **AI/Strategic** | Proactive Redirection | **Contract Hardening** | RATIFIED |
 | **Tactical** | Priority-Based Targeting | **Contract Hardening** | RATIFIED |
 | **Tactical** | 20% Retreat Threshold | **Intentional Change** | RATIFIED |
-| **Combat** | Omitted Variance/Evasion | **Substrate Clarity** | PHASE-LIMITED |
+| **Combat** | Legality Enforcement | **Contract Hardening** | RATIFIED |
+| **AI/Strategic** | Cognitive Boundedness | **Contract Hardening** | RATIFIED |
+| **System** | API/CLI Normalization | **Protocol Hardening** | RATIFIED |
 
 ---
 
@@ -75,6 +77,27 @@ This document is the canonical record of intentional behavior shifts in `src_v2`
 - **New Behavior**: Combat resolution is currently 100% deterministic (no variance, no evasion).
 - **Rationale**: **Substrate Clarity**. Ensuring the base damage resolution is bit-identical and stable before layering stochastic noise.
 - **Verification**: `tests_v2/parity/test_combat_parity.py`
+
+### 2.9 Legality Enforcement (LoS & Engagement)
+- **Subsystem**: Combat / Legality
+- **Old Behavior**: Ranged attacks often clipped corners; melee attacks could be initiated during "illegal" movement states (stale engagement).
+- **New Behavior**: `LegalityService` enforces strict Line-of-Sight and engagement-registry truth. Moves that would violate engagement-lock are rejected.
+- **Rationale**: **Contract Hardening**. Ensures V2 combat is spatially honest and prevents "ghost-swing" exploits.
+- **Verification**: `tests_v2/test_legality.py`
+
+### 2.10 Cognitive Boundedness (Attention & Detours)
+- **Subsystem**: AI / Strategic
+- **Old Behavior**: AI detours were recursively deep; attention was unbounded, leading to "omniscience" bugs.
+- **New Behavior**: Strategic cognition is profile-capped. Attention is limited to `N` nearest neighbors; detours are capped at depth `3`.
+- **Rationale**: **Contract Hardening**. Prevents performance spikes and ensures AI behavior is predictable and bounded.
+- **Verification**: `test_resource_intelligence_contract.py`
+
+### 2.11 API/CLI Normalization
+- **Subsystem**: System Compatibility
+- **Old Behavior**: CLI flags and API responses were loosely structured and often returned internal object references.
+- **New Behavior**: Explicitly typed schemas for all CLI outputs and REST responses. Internal IDs are never exposed directly.
+- **Rationale**: **Protocol Hardening**. Decouples internal engine state from external interface stability.
+- **Verification**: `test_rest_parity.py`, `test_entry_parity.py`
 
 ---
 *Last updated: 2026-04-22 as part of Phase 8 Milestone 5.*
