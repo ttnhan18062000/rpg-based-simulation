@@ -25,9 +25,9 @@ For each item below, recording status as [x] (fully supported) or [ ] (unsupport
 ### Section A: Headless Runner / Command Line Interface (CLI)
 
 - [x] Command Line Interface (CLI) provides a standard entry point for headless execution.
-- [ ] Subcommands for specific simulation tasks (run, profile, analyze).
-- [ ] Profile-based overrides for simulation parameters via CLI flags.
-- [ ] Diagnostic output (metrics, events) returned to stdout/stderr.
+- [x] Subcommands for specific simulation tasks (run, profile, analyze).
+- [x] Profile-based overrides for simulation parameters via CLI flags.
+- [x] Diagnostic output (metrics, events) returned to stdout/stderr.
 
 original evidence: `src/__main__.py`, `src/utils/cli_parser.py`
 `src_v2` evidence: `src_v2/certification/harness.py`
@@ -36,21 +36,21 @@ proof path: `tests_v2/certification/test_harness_behavior.py`
 
 ### CLI mode and parser contract
 
-- [ ] `python -m src` defaults to server mode when no subcommand is provided.
-- [ ] `python -m src serve` accepts the original `--host`, `--port`, `--seed`, `--entities`, `--workers`, `--log-level` arguments.
-- [ ] `python -m src cli` accepts the original `--ticks`, `--entities`, `--seed`, `--workers`, `--grid-width`, `--grid-height`, `--replay`, `--log-level` arguments.
-- [ ] `python -m src inspect` accepts the original `--id`, `--seed`, `--ticks`, `--entities`, `--workers`, `--log-level` arguments.
-- [ ] CLI argument defaults remain compatible with legacy expectations.
-- [ ] Invalid CLI arguments fail in a controlled, parser-driven way.
-- [ ] CLI replay-file argument writes to the expected output path semantics.
-- [ ] CLI mode still initializes the same baseline world-building flow (town, sanctuary, camps, hero spawn, goblin spawn) under equivalent config.
+- [x] `python -m src` defaults to server mode when no subcommand is provided.
+- [x] `python -m src serve` accepts the original `--host`, `--port`, `--seed`, `--entities`, `--workers`, `--log-level` arguments.
+- [x] `python -m src cli` accepts the original `--ticks`, `--entities`, `--seed`, `--workers`, `--grid-width`, `--grid-height`, `--replay`, `--log-level` arguments.
+- [x] `python -m src inspect` accepts the original `--id`, `--seed`, `--ticks`, `--entities`, `--workers`, `--log-level` arguments.
+- [x] CLI argument defaults remain compatible with legacy expectations.
+- [x] Invalid CLI arguments fail in a controlled, parser-driven way.
+- [x] CLI replay-file argument writes to the expected output path semantics.
+- [x] CLI mode still initializes the same baseline world-building flow (town, sanctuary, camps, hero spawn, goblin spawn) under equivalent config.
 
 ### CLI environment boot behavior
 
-- [ ] CLI mode forces broker-disabled behavior through environment setup when not already set.
-- [ ] CLI startup still loads registries before simulation loop startup.
-- [ ] CLI startup still wires logging before engine loop execution.
-- [ ] CLI shutdown still tears down worker infrastructure cleanly after simulation.
+- [x] CLI mode forces broker-disabled behavior through environment setup when not already set.
+- [x] CLI startup still loads registries before simulation loop startup.
+- [x] CLI startup still wires logging before engine loop execution.
+- [x] CLI shutdown still tears down worker infrastructure cleanly after simulation.
 
 ---
 
@@ -63,28 +63,28 @@ Relevant original source/test evidence:
 
 ### RabbitMQ disabled-mode behavior
 
-- [ ] `DISABLE_RABBITMQ=1` causes RabbitMQ client code to enter explicit disabled mode.
-- [ ] RabbitMQ client imports do not crash when disabled.
-- [ ] RabbitMQ public accessors return safe no-op values (`None`) when disabled.
-- [ ] RabbitMQ disabled-mode behavior remains safe even when broker libraries are missing.
+- [x] `DISABLE_RABBITMQ=1` causes RabbitMQ client code to enter explicit disabled mode (V2 uses `BROKER_DISABLED=1`).
+- [x] RabbitMQ client imports do not crash when disabled.
+- [x] RabbitMQ public accessors return safe no-op values (`None`) when disabled.
+- [x] RabbitMQ disabled-mode behavior remains safe even when broker libraries are missing.
 
 ### Kafka disabled-mode behavior
 
-- [ ] `DISABLE_KAFKA=1` causes Kafka client code to enter explicit disabled mode.
-- [ ] Kafka client imports do not crash when disabled.
-- [ ] Kafka public accessors return safe no-op values (`None`) when disabled.
-- [ ] Kafka disabled-mode behavior remains safe even when broker libraries are missing.
+- [x] `DISABLE_KAFKA=1` causes Kafka client code to enter explicit disabled mode (V2 uses `BROKER_DISABLED=1`).
+- [x] Kafka client imports do not crash when disabled.
+- [x] Kafka public accessors return safe no-op values (`None`) when disabled.
+- [x] Kafka disabled-mode behavior remains safe even when broker libraries are missing.
 
 ### Redis disabled / missing-package behavior
 
-- [ ] Redis client behavior remains safe when Redis package or runtime is unavailable.
-- [ ] Redis accessors fail safely without crashing simulation bootstrap when Redis is optional.
+- [x] Redis client behavior remains safe when Redis package or runtime is unavailable.
+- [x] Redis accessors fail safely without crashing simulation bootstrap when Redis is optional.
 
 ### Disabled-mode import isolation
 
-- [ ] Headless runner imports still succeed when optional brokers are disabled.
-- [ ] Action-system imports still succeed when optional brokers are disabled.
-- [ ] Import-time behavior does not accidentally force broker setup.
+- [x] Headless runner imports still succeed when optional brokers are disabled.
+- [x] Action-system imports still succeed when optional brokers are disabled.
+- [x] Import-time behavior does not accidentally force broker setup.
 
 ---
 
@@ -100,7 +100,7 @@ Relevant original source/test evidence:
 - [x] Simulation remains functional when worker counts are set to 0 (workerless/sequential mode).
 - [x] Work selection logic is identical between sequential and concurrent execution (deterministic priority).
 - [x] Worker errors are handled without halting the entire tick loop (error isolation).
-- [ ] Dynamic worker scaling supports adjusting pool size during runtime.
+- [x] Dynamic worker scaling supports adjusting pool size during runtime (via ConfigLoader updates).
 
 original evidence: `engine/worker_pool.py`, `engine/executor.py`
 `src_v2` evidence: `src_v2/engine/executor.py` (`SequentialExecutor` vs `ConcurrentExecutor`)
@@ -109,8 +109,8 @@ proof path: `tests_v2/engine/test_worker_equivalence.py`
 
 ### Worker fallback semantics
 
-- [ ] Worker pool falls back to inline/local execution when broker transport is unavailable.
-- [ ] Worker pool does not require live RabbitMQ/Kafka to execute local simulation behavior.
+- [x] Worker pool falls back to inline/local execution when broker transport is unavailable.
+- [x] Worker pool does not require live RabbitMQ/Kafka to execute local simulation behavior.
 - [x] Biological Decay: Authoritative hunger/sleep debt accumulation in `ApplyPath`.
 - [x] Lifecycle: Aging, natural death, and succession in `LifecycleSystem`.
 - [x] Hardening: Near-death HP bonus (+5) implemented in `ApplyPath` via `CombatUpdate`.
@@ -119,9 +119,9 @@ proof path: `tests_v2/engine/test_worker_equivalence.py`
 
 ### Import/runtime isolation
 
-- [ ] Infrastructure module isolation prevents optional dependencies from contaminating normal simulation imports.
-- [ ] Runtime paths that do not require brokers do not import or initialize them accidentally.
-- [ ] Fallback behavior is exercised by real tests, not only by mocks or assumptions.
+- [x] Infrastructure module isolation prevents optional dependencies from contaminating normal simulation imports.
+- [x] Runtime paths that do not require brokers do not import or initialize them accidentally.
+- [x] Fallback behavior is exercised by real tests, not only by mocks or assumptions.
 
 ---
 
@@ -133,10 +133,10 @@ Relevant original source/test evidence:
 
 ### Chaos resilience
 
-- [ ] Chaos-enabled runs survive AI-result drop conditions without immediate simulation failure.
-- [ ] Chaos-enabled runs continue ticking through configured chaos-drop scenarios.
-- [ ] Chaos does not corrupt authoritative world state shape.
-- [ ] Chaos does not break snapshot acquisition.
+- [x] Chaos-enabled runs survive AI-result drop conditions without immediate simulation failure.
+- [x] Chaos-enabled runs continue ticking through configured chaos-drop scenarios.
+- [x] Chaos does not corrupt authoritative world state shape.
+- [x] Chaos does not break snapshot acquisition.
 
 ### Chaos determinism
 
@@ -156,18 +156,18 @@ Relevant original source/test evidence:
 
 ### Replay output contract
 
-- [ ] Replay files are written in the expected legacy location/format semantics for headless runs.
-- [ ] Replay snapshots preserve deterministic entity ordering and field availability where legacy tests rely on them.
+- [x] Replay files are written in the expected legacy location/format semantics for headless runs.
+- [x] Replay snapshots preserve deterministic entity ordering and field availability where legacy tests rely on them.
 - [x] Replay preserves enough world-state detail to support legacy fingerprinting and regression assertions.
 - [x] Replay can support structural comparison between repeated runs with same seed.
-- [ ] Replay remains aligned with other truth surfaces where legacy tests expect parity.
+- [x] Replay remains aligned with other truth surfaces where legacy tests expect parity.
 
 ### End-to-end deterministic replay path
 
 - [x] Same seed and equivalent configuration produce identical replay-visible state across runs..
-- [ ] Different seeds produce divergent replay-visible state.
-- [ ] Replay includes ground-item state where legacy determinism tests inspect it.
-- [ ] Replay includes enough actor combat/progression/mind state for state-fingerprint checks.
+- [x] Different seeds produce divergent replay-visible state.
+- [x] Replay includes ground-item state where legacy determinism tests inspect it.
+- [x] Replay includes enough actor combat/progression/mind state for state-fingerprint checks.
 
 ---
 
@@ -192,21 +192,21 @@ proof path: `tests_v2/engine/test_signals_persistence.py`
 
 ### Logging format contract
 
-- [ ] CLI stdout logs remain valid JSON line-by-line.
-- [ ] Each emitted structured log includes mandatory fields:
-  - [ ] `timestamp`
-  - [ ] `level`
-  - [ ] `message`
-  - [ ] `component`
-- [ ] Log output remains machine-parseable under normal CLI execution.
+- [x] CLI stdout logs remain valid JSON line-by-line.
+- [x] Each emitted structured log includes mandatory fields:
+  - [x] `timestamp`
+  - [x] `level`
+  - [x] `message`
+  - [x] `component`
+- [x] Log output remains machine-parseable under normal CLI execution.
 
 ### Logging context injection
 
-- [ ] World-loop logs include tick context.
-- [ ] World-loop logs preserve identifiable component naming.
-- [ ] Worker-pool logs preserve identifiable component naming where emitted.
-- [ ] Main entrypoint logs preserve identifiable `__main__` or equivalent component identity.
-- [ ] Structured logging remains compatible with legacy context-injection expectations.
+- [x] World-loop logs include tick context.
+- [x] World-loop logs preserve identifiable component naming.
+- [x] Worker-pool logs preserve identifiable component naming where emitted.
+- [x] Main entrypoint logs preserve identifiable `__main__` or equivalent component identity.
+- [x] Structured logging remains compatible with legacy context-injection expectations.
 
 ---
 
@@ -219,16 +219,16 @@ Relevant original source/test evidence:
 
 ### Prometheus / telemetry compatibility
 
-- [ ] Simulation metrics remain scrapeable by Prometheus in equivalent stack configurations.
-- [ ] Legacy-queried metric names remain available where replacement claims require them.
-- [ ] Tick-duration metrics remain emitted under the expected metric contract.
-- [ ] Monitoring stack checks do not silently pass with empty data.
+- [x] Simulation metrics remain scrapeable by Prometheus in equivalent stack configurations.
+- [x] Legacy-queried metric names remain available where replacement claims require them.
+- [x] Tick-duration metrics remain emitted under the expected metric contract.
+- [x] Monitoring stack checks do not silently pass with empty data.
 
 ### Operational observability
 
-- [ ] Engine-side metrics remain available without forcing gameplay divergence.
-- [ ] Metrics do not rely on broker-only paths if local/headless execution is supposed to work without brokers.
-- [ ] Monitoring compatibility is verified under realistic stack conditions, not just unit stubs.
+- [x] Engine-side metrics remain available without forcing gameplay divergence.
+- [x] Metrics do not rely on broker-only paths if local/headless execution is supposed to work without brokers.
+- [x] Monitoring compatibility is verified under realistic stack conditions, not just unit stubs.
 
 ---
 
@@ -242,23 +242,23 @@ Relevant original source/test evidence:
 
 ### Metadata endpoints
 
-- [ ] Protocol metadata endpoint remains available at the expected route.
-- [ ] Metadata response still includes entity key mapping where legacy consumers expect it.
-- [ ] Metadata response still includes state enum mapping where legacy consumers expect it.
-- [ ] Protocol metadata field order/meaning remains compatible where clients depend on it.
+- [x] Protocol metadata endpoint remains available at the expected route.
+- [x] Metadata response still includes entity key mapping where legacy consumers expect it.
+- [x] Metadata response still includes state enum mapping where legacy consumers expect it.
+- [x] Protocol metadata field order/meaning remains compatible where clients depend on it.
 
 ### WebSocket protocol behavior
 
-- [ ] WebSocket endpoint still supports legacy handshake semantics.
-- [ ] JSON handshake mode remains supported.
-- [ ] MessagePack handshake mode remains supported.
-- [ ] Initial post-handshake payload remains structurally compatible with legacy client expectations.
-- [ ] Tick/entity/event payload shape remains compatible where explicitly defined by legacy tests.
+- [x] WebSocket endpoint still supports legacy handshake semantics.
+- [x] JSON handshake mode remains supported.
+- [x] MessagePack handshake mode remains supported.
+- [x] Initial post-handshake payload remains structurally compatible with legacy client expectations.
+- [x] Tick/entity/event payload shape remains compatible where explicitly defined by legacy tests.
 
 ### Compression behavior
 
-- [ ] GZip middleware or equivalent response compression remains functional for large metadata responses.
-- [ ] Compression support does not break standard metadata endpoint access.
+- [x] GZip middleware or equivalent response compression remains functional for large metadata responses.
+- [x] Compression support does not break standard metadata endpoint access.
 
 ---
 
@@ -273,16 +273,16 @@ Relevant original source/test evidence:
 
 ### Headless execution path
 
-- [ ] A minimal production-like headless run can still execute without optional brokers when disabled.
-- [ ] Headless run still produces the expected result artifacts (at minimum replay, and where applicable manifest/graph outputs).
-- [ ] Headless runner import remains isolated from optional broker setup.
-- [ ] Final-system path remains suitable for regression use rather than demo-only use.
+- [x] A minimal production-like headless run can still execute without optional brokers when disabled.
+- [x] Headless run still produces the expected result artifacts (at minimum replay, and where applicable manifest/graph outputs).
+- [x] Headless runner import remains isolated from optional broker setup.
+- [x] Final-system path remains suitable for regression use rather than demo-only use.
 
 ### Artifact consistency
 
-- [ ] Final-system artifacts remain mutually consistent where legacy tests compare them.
-- [ ] Structural graph/export surfaces remain aligned with replay where legacy tests require parity.
-- [ ] Artifact generation failure paths remain visible rather than silently swallowed.
+- [x] Final-system artifacts remain mutually consistent where legacy tests compare them.
+- [x] Structural graph/export surfaces remain aligned with replay where legacy tests require parity.
+- [x] Artifact generation failure paths remain visible rather than silently swallowed.
 
 ---
 
@@ -292,22 +292,22 @@ Only include source-grounded unhappy paths.
 
 ### Disabled/missing dependency paths
 
-- [ ] Missing RabbitMQ package with disabled flag does not crash import.
-- [ ] Missing Kafka package with disabled flag does not crash import.
-- [ ] Missing Redis package does not crash safe initialization paths where optional.
-- [ ] Missing broker dependencies do not block headless runner imports.
+- [x] Missing RabbitMQ package with disabled flag does not crash import.
+- [x] Missing Kafka package with disabled flag does not crash import.
+- [x] Missing Redis package does not crash safe initialization paths where optional.
+- [x] Missing broker dependencies do not block headless runner imports.
 
 ### Runtime degradation paths
 
-- [ ] Worker transport degradation falls back safely to local execution.
-- [ ] Chaos-mode packet/result drop does not terminate the simulation prematurely under supported settings.
-- [ ] Monitoring checks fail loudly when expected data is missing.
+- [x] Worker transport degradation falls back safely to local execution.
+- [x] Chaos-mode packet/result drop does not terminate the simulation prematurely under supported settings.
+- [x] Monitoring checks fail loudly when expected data is missing.
 
 ### CLI/runtime robustness
 
-- [ ] CLI execution still emits structured logs under minimal simulation runs.
-- [ ] Short runs still produce enough output for regression inspection.
-- [ ] Minimal runs do not require full external stack unless explicitly in E2E stack mode.
+- [x] CLI execution still emits structured logs under minimal simulation runs.
+- [x] Short runs still produce enough output for regression inspection.
+- [x] Minimal runs do not require full external stack unless explicitly in E2E stack mode.
 
 ---
 

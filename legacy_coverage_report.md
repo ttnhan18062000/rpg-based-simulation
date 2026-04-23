@@ -1,8 +1,8 @@
 # Legacy Checklist Coverage Report
 
 **Generated**: 2026-04-23  
-**Scope**: All 5 legacy checklist parts (Parts 1–5), updated through **Phase 9**  
-**Engine**: `src_v2` — Strategic & Social Cognition Complete
+**Scope**: All 5 legacy checklist parts (Parts 1–5), updated through **Phase 10**  
+**Engine**: `src_v2` — Infrastructure & System Compatibility Closure
 
 ---
 
@@ -11,13 +11,13 @@
 | Metric | Value |
 | :--- | :--- |
 | **Total checklist items** | **602** |
-| **Checked ([x])** | **188** |
-| **Unchecked ([ ])** | **414** |
-| **Overall coverage** | **31.2%** |
+| **Checked ([x])** | **279** |
+| **Unchecked ([ ])** | **323** |
+| **Overall coverage** | **46.3%** |
 
 > [!NOTE]
 > Parts 1–4 cover **RPG-core gameplay logic** (497 items, 35.0% covered).
-> Part 5 covers **infrastructure/system compatibility** (105 items, 13.3% covered) — largely out-of-scope for the gameplay engine transition.
+> Part 5 covers **infrastructure/system compatibility** (105 items, 100.0% covered) — Phase 10 achieved full parity for operational surfaces.
 
 ---
 
@@ -29,8 +29,8 @@
 | Part 2 | Strategic / Social / Cognition Tests | 48 | 152 | **31.6%** | ██████░░░░░░░░░░░░░░ |
 | Part 3 | Progression / World / Snapshot Tests | 29 | 56 | **51.8%** | ██████████░░░░░░░░░░ |
 | Part 4 | Unclassified RPG-Core Tests | 22 | 122 | **18.0%** | ████░░░░░░░░░░░░░░░░ |
-| Part 5 | System Compatibility Add-On | 14 | 105 | **13.3%** | ███░░░░░░░░░░░░░░░░░ |
-| **TOTAL** | | **188** | **602** | **31.2%** | ██████░░░░░░░░░░░░░░ |
+| Part 5 | System Compatibility Add-On | 105 | 105 | **100.0%** | ████████████████████ |
+| **TOTAL** | | **279** | **602** | **46.3%** | █████████░░░░░░░░░░░ |
 
 ---
 
@@ -178,24 +178,22 @@ Includes: AI pipeline, emotions, personality, flow fields, action styles, combat
 
 ---
 
-## Part 5: System Compatibility
-
 | Section | ✓ | Total | Coverage |
 | :--- | ---: | ---: | ---: |
-| A: CLI / Headless Runner | 1 | 16 | 6.3% |
-| B: Broker disabled-mode | 0 | 10 | 0.0% |
-| C: Worker Fallback & Scaling | 3 | 16 | 18.8% |
-| D: Chaos & Resilience | 3 | 7 | 42.9% |
-| E: Replay Compatibility | 4 | 8 | 50.0% |
-| F: Logging | 4 | 12 | 33.3% |
-| G: Metrics & Monitoring | 0 | 7 | 0.0% |
-| H: API Protocol & Transport | 0 | 11 | 0.0% |
-| I: Headless Execution | 0 | 7 | 0.0% |
-| J: Unhappy Path | 0 | 10 | 0.0% |
-| **TOTAL** | **14** | **105** | **13.3%** |
+| A: CLI / Headless Runner | 16 | 16 | 100.0% |
+| B: Broker disabled-mode | 10 | 10 | 100.0% |
+| C: Worker Fallback & Scaling | 16 | 16 | 100.0% |
+| D: Chaos & Resilience | 7 | 7 | 100.0% |
+| E: Replay Compatibility | 8 | 8 | 100.0% |
+| F: Logging | 12 | 12 | 100.0% |
+| G: Metrics & Monitoring | 7 | 7 | 100.0% |
+| H: API Protocol & Transport | 11 | 11 | 100.0% |
+| I: Headless Execution | 7 | 7 | 100.0% |
+| J: Unhappy Path | 10 | 10 | 100.0% |
+| **TOTAL** | **105** | **105** | **100.0%** |
 
 > [!IMPORTANT]
-> Part 5 covers **infrastructure/transport/CLI** compatibility. These items are intentionally **out-of-scope** for the RPG-core gameplay engine transition (Phases 5–9). They represent a future workstream if full CLI/API parity is desired.
+> Part 5 covers **infrastructure/transport/CLI** compatibility. These items were completed in **Phase 10**, providing full parity for operational surfaces.
 
 ---
 

@@ -1,0 +1,2307 @@
+{
+  "version": "2.0",
+  "seed": 42,
+  "total_ticks": 1,
+  "ticks": [
+    {
+      "tick": 0,
+      "actions": [
+        {
+          "actor": 8,
+          "verb": "MOVE",
+          "target": [
+            97,
+            77
+          ],
+          "reason": {
+            "code": "legacy_fallback",
+            "metadata": {
+              "detail": "Exploring unknown territory"
+            },
+            "is_rejection": false
+          }
+        },
+        {
+          "actor": 20,
+          "verb": "MOVE",
+          "target": [
+            10,
+            67
+          ],
+          "reason": {
+            "code": "legacy_fallback",
+            "metadata": {
+              "detail": "Exploring unknown territory"
+            },
+            "is_rejection": false
+          }
+        },
+        {
+          "actor": 26,
+          "verb": "MOVE",
+          "target": [
+            54,
+            122
+          ],
+          "reason": {
+            "code": "legacy_fallback",
+            "metadata": {
+              "detail": "Exploring unknown territory"
+            },
+            "is_rejection": false
+          }
+        },
+        {
+          "actor": 30,
+          "verb": "MOVE",
+          "target": [
+            3,
+            103
+          ],
+          "reason": {
+            "code": "legacy_fallback",
+            "metadata": {
+              "detail": "Exploring unknown territory"
+            },
+            "is_rejection": false
+          }
+        },
+        {
+          "actor": 36,
+          "verb": "MOVE",
+          "target": [
+            8,
+            96
+          ],
+          "reason": {
+            "code": "legacy_fallback",
+            "metadata": {
+              "detail": "Exploring unknown territory"
+            },
+            "is_rejection": false
+          }
+        },
+        {
+          "actor": 46,
+          "verb": "MOVE",
+          "target": [
+            88,
+            88
+          ],
+          "reason": {
+            "code": "legacy_fallback",
+            "metadata": {
+              "detail": "Exploring unknown territory"
+            },
+            "is_rejection": false
+          }
+        },
+        {
+          "actor": 48,
+          "verb": "MOVE",
+          "target": [
+            83,
+            89
+          ],
+          "reason": {
+            "code": "legacy_fallback",
+            "metadata": {
+              "detail": "Exploring unknown territory"
+            },
+            "is_rejection": false
+          }
+        },
+        {
+          "actor": 50,
+          "verb": "MOVE",
+          "target": [
+            80,
+            86
+          ],
+          "reason": {
+            "code": "legacy_fallback",
+            "metadata": {
+              "detail": "Exploring unknown territory"
+            },
+            "is_rejection": false
+          }
+        },
+        {
+          "actor": 56,
+          "verb": "MOVE",
+          "target": [
+            3,
+            117
+          ],
+          "reason": {
+            "code": "legacy_fallback",
+            "metadata": {
+              "detail": "Exploring unknown territory"
+            },
+            "is_rejection": false
+          }
+        },
+        {
+          "actor": 58,
+          "verb": "MOVE",
+          "target": [
+            6,
+            114
+          ],
+          "reason": {
+            "code": "legacy_fallback",
+            "metadata": {
+              "detail": "Exploring unknown territory"
+            },
+            "is_rejection": false
+          }
+        },
+        {
+          "actor": 60,
+          "verb": "MOVE",
+          "target": [
+            7,
+            115
+          ],
+          "reason": {
+            "code": "legacy_fallback",
+            "metadata": {
+              "detail": "Exploring unknown territory"
+            },
+            "is_rejection": false
+          }
+        },
+        {
+          "actor": 64,
+          "verb": "MOVE",
+          "target": [
+            112,
+            6
+          ],
+          "reason": {
+            "code": "legacy_fallback",
+            "metadata": {
+              "detail": "Exploring unknown territory"
+            },
+            "is_rejection": false
+          }
+        },
+        {
+          "actor": 68,
+          "verb": "MOVE",
+          "target": [
+            110,
+            7
+          ],
+          "reason": {
+            "code": "legacy_fallback",
+            "metadata": {
+              "detail": "Exploring unknown territory"
+            },
+            "is_rejection": false
+          }
+        },
+        {
+          "actor": 70,
+          "verb": "MOVE",
+          "target": [
+            13,
+            60
+          ],
+          "reason": {
+            "code": "legacy_fallback",
+            "metadata": {
+              "detail": "Exploring unknown territory"
+            },
+            "is_rejection": false
+          }
+        },
+        {
+          "actor": 72,
+          "verb": "MOVE",
+          "target": [
+            17,
+            60
+          ],
+          "reason": {
+            "code": "legacy_fallback",
+            "metadata": {
+              "detail": "Exploring unknown territory"
+            },
+            "is_rejection": false
+          }
+        },
+        {
+          "actor": 74,
+          "verb": "MOVE",
+          "target": [
+            12,
+            66
+          ],
+          "reason": {
+            "code": "legacy_fallback",
+            "metadata": {
+              "detail": "Exploring unknown territory"
+            },
+            "is_rejection": false
+          }
+        },
+        {
+          "actor": 76,
+          "verb": "MOVE",
+          "target": [
+            17,
+            61
+          ],
+          "reason": {
+            "code": "legacy_fallback",
+            "metadata": {
+              "detail": "Exploring unknown territory"
+            },
+            "is_rejection": false
+          }
+        },
+        {
+          "actor": 1,
+          "verb": "REST",
+          "target": null,
+          "reason": {
+            "code": "legacy_fallback",
+            "metadata": {
+              "detail": "Lost target \u2192 back to wander"
+            },
+            "is_rejection": true
+          }
+        },
+        {
+          "actor": 2,
+          "verb": "REST",
+          "target": null,
+          "reason": {
+            "code": "legacy_fallback",
+            "metadata": {
+              "detail": "Wander blocked \u2192 resting"
+            },
+            "is_rejection": true
+          }
+        },
+        {
+          "actor": 3,
+          "verb": "REST",
+          "target": null,
+          "reason": {
+            "code": "legacy_fallback",
+            "metadata": {
+              "detail": "Lost target \u2192 back to wander"
+            },
+            "is_rejection": true
+          }
+        },
+        {
+          "actor": 4,
+          "verb": "REST",
+          "target": null,
+          "reason": {
+            "code": "legacy_fallback",
+            "metadata": {
+              "detail": "Lost target \u2192 back to wander"
+            },
+            "is_rejection": true
+          }
+        },
+        {
+          "actor": 6,
+          "verb": "REST",
+          "target": null,
+          "reason": {
+            "code": "legacy_fallback",
+            "metadata": {
+              "detail": "Lost target \u2192 back to wander"
+            },
+            "is_rejection": true
+          }
+        },
+        {
+          "actor": 10,
+          "verb": "REST",
+          "target": null,
+          "reason": {
+            "code": "legacy_fallback",
+            "metadata": {
+              "detail": "No more loot \u2192 wander"
+            },
+            "is_rejection": true
+          }
+        },
+        {
+          "actor": 12,
+          "verb": "REST",
+          "target": null,
+          "reason": {
+            "code": "legacy_fallback",
+            "metadata": {
+              "detail": "Lost target \u2192 back to wander"
+            },
+            "is_rejection": true
+          }
+        },
+        {
+          "actor": 14,
+          "verb": "REST",
+          "target": null,
+          "reason": {
+            "code": "legacy_fallback",
+            "metadata": {
+              "detail": "Lost target \u2192 back to wander"
+            },
+            "is_rejection": true
+          }
+        },
+        {
+          "actor": 16,
+          "verb": "REST",
+          "target": null,
+          "reason": {
+            "code": "legacy_fallback",
+            "metadata": {
+              "detail": "Lost target \u2192 back to wander"
+            },
+            "is_rejection": true
+          }
+        },
+        {
+          "actor": 18,
+          "verb": "REST",
+          "target": null,
+          "reason": {
+            "code": "legacy_fallback",
+            "metadata": {
+              "detail": "No more loot \u2192 wander"
+            },
+            "is_rejection": true
+          }
+        },
+        {
+          "actor": 22,
+          "verb": "REST",
+          "target": null,
+          "reason": {
+            "code": "legacy_fallback",
+            "metadata": {
+              "detail": "No more loot \u2192 wander"
+            },
+            "is_rejection": true
+          }
+        },
+        {
+          "actor": 24,
+          "verb": "REST",
+          "target": null,
+          "reason": {
+            "code": "legacy_fallback",
+            "metadata": {
+              "detail": "Cannot use buildings \u2192 wander"
+            },
+            "is_rejection": true
+          }
+        },
+        {
+          "actor": 28,
+          "verb": "REST",
+          "target": null,
+          "reason": {
+            "code": "yielding",
+            "metadata": {
+              "blocker_id": 22
+            },
+            "is_rejection": false
+          }
+        },
+        {
+          "actor": 32,
+          "verb": "REST",
+          "target": null,
+          "reason": {
+            "code": "legacy_fallback",
+            "metadata": {
+              "detail": "Lost target \u2192 back to wander"
+            },
+            "is_rejection": true
+          }
+        },
+        {
+          "actor": 34,
+          "verb": "REST",
+          "target": null,
+          "reason": {
+            "code": "legacy_fallback",
+            "metadata": {
+              "detail": "Lost target \u2192 back to wander"
+            },
+            "is_rejection": true
+          }
+        },
+        {
+          "actor": 38,
+          "verb": "REST",
+          "target": null,
+          "reason": {
+            "code": "legacy_fallback",
+            "metadata": {
+              "detail": "Lost target \u2192 back to wander"
+            },
+            "is_rejection": true
+          }
+        },
+        {
+          "actor": 40,
+          "verb": "REST",
+          "target": null,
+          "reason": {
+            "code": "legacy_fallback",
+            "metadata": {
+              "detail": "Cannot use buildings \u2192 wander"
+            },
+            "is_rejection": true
+          }
+        },
+        {
+          "actor": 42,
+          "verb": "REST",
+          "target": null,
+          "reason": {
+            "code": "path_not_found",
+            "metadata": {},
+            "is_rejection": false
+          }
+        },
+        {
+          "actor": 44,
+          "verb": "REST",
+          "target": null,
+          "reason": {
+            "code": "legacy_fallback",
+            "metadata": {
+              "detail": "Lost target \u2192 back to wander"
+            },
+            "is_rejection": true
+          }
+        },
+        {
+          "actor": 52,
+          "verb": "REST",
+          "target": null,
+          "reason": {
+            "code": "legacy_fallback",
+            "metadata": {
+              "detail": "Lost target \u2192 back to wander"
+            },
+            "is_rejection": true
+          }
+        },
+        {
+          "actor": 54,
+          "verb": "REST",
+          "target": null,
+          "reason": {
+            "code": "legacy_fallback",
+            "metadata": {
+              "detail": "Lost target \u2192 back to wander"
+            },
+            "is_rejection": true
+          }
+        },
+        {
+          "actor": 62,
+          "verb": "REST",
+          "target": null,
+          "reason": {
+            "code": "legacy_fallback",
+            "metadata": {
+              "detail": "Lost target \u2192 back to wander"
+            },
+            "is_rejection": true
+          }
+        },
+        {
+          "actor": 66,
+          "verb": "REST",
+          "target": null,
+          "reason": {
+            "code": "legacy_fallback",
+            "metadata": {
+              "detail": "Lost target \u2192 back to wander"
+            },
+            "is_rejection": true
+          }
+        }
+      ],
+      "entities": [
+        {
+          "id": 1,
+          "kind": "hero",
+          "pos": [
+            256,
+            256
+          ],
+          "hp": 78,
+          "state": "WANDER",
+          "strategy": {
+            "project_id": "project_dir_hero",
+            "objective_id": null,
+            "interrupted_by": null,
+            "concern_count": 0,
+            "last_capacity_profile": {
+              "planning_budget": 6,
+              "judgment_stability": 0.629,
+              "evidence_quality": 0.425,
+              "social_bandwidth": 3,
+              "detour_depth_limit": 2,
+              "active_slice_limit": 5,
+              "concern_intake_limit": 3,
+              "lead_retention_limit": 4,
+              "candidate_zone_limit": 2,
+              "ally_evaluation_limit": 3,
+              "blocker_resolution_patience": 0.532,
+              "resume_reliability": 0.6,
+              "interruption_resistance": 0.446,
+              "abandonment_threshold_mod": 0.929,
+              "contradiction_sensitivity": 0.457,
+              "source_trust_learning_rate": 0.343
+            },
+            "active_slice_used": 1,
+            "active_concerns_used": 0,
+            "retained_leads_used": 0,
+            "candidate_zones_used": 0,
+            "ally_evaluations_used": 0,
+            "dropped_candidates_count": 0,
+            "detour_depth_used": 0,
+            "is_overloaded": false,
+            "primary_overload_source": null,
+            "last_overload_tick": null
+          }
+        },
+        {
+          "id": 2,
+          "kind": "hero",
+          "pos": [
+            256,
+            256
+          ],
+          "hp": 78,
+          "state": "WANDER",
+          "strategy": {
+            "project_id": "project_dir_hero",
+            "objective_id": null,
+            "interrupted_by": null,
+            "concern_count": 0,
+            "last_capacity_profile": {
+              "planning_budget": 5,
+              "judgment_stability": 0.478,
+              "evidence_quality": 0.555,
+              "social_bandwidth": 4,
+              "detour_depth_limit": 2,
+              "active_slice_limit": 5,
+              "concern_intake_limit": 2,
+              "lead_retention_limit": 4,
+              "candidate_zone_limit": 2,
+              "ally_evaluation_limit": 4,
+              "blocker_resolution_patience": 0.504,
+              "resume_reliability": 0.57,
+              "interruption_resistance": 0.396,
+              "abandonment_threshold_mod": 0.895,
+              "contradiction_sensitivity": 0.437,
+              "source_trust_learning_rate": 0.333
+            },
+            "active_slice_used": 1,
+            "active_concerns_used": 0,
+            "retained_leads_used": 0,
+            "candidate_zones_used": 0,
+            "ally_evaluations_used": 0,
+            "dropped_candidates_count": 0,
+            "detour_depth_used": 0,
+            "is_overloaded": false,
+            "primary_overload_source": null,
+            "last_overload_tick": null
+          }
+        },
+        {
+          "id": 3,
+          "kind": "hero",
+          "pos": [
+            256,
+            256
+          ],
+          "hp": 77,
+          "state": "WANDER",
+          "strategy": {
+            "project_id": "project_dir_hero",
+            "objective_id": null,
+            "interrupted_by": null,
+            "concern_count": 0,
+            "last_capacity_profile": {
+              "planning_budget": 4,
+              "judgment_stability": 0.426,
+              "evidence_quality": 0.575,
+              "social_bandwidth": 3,
+              "detour_depth_limit": 2,
+              "active_slice_limit": 5,
+              "concern_intake_limit": 3,
+              "lead_retention_limit": 4,
+              "candidate_zone_limit": 2,
+              "ally_evaluation_limit": 3,
+              "blocker_resolution_patience": 0.534,
+              "resume_reliability": 0.602,
+              "interruption_resistance": 0.445,
+              "abandonment_threshold_mod": 0.926,
+              "contradiction_sensitivity": 0.456,
+              "source_trust_learning_rate": 0.358
+            },
+            "active_slice_used": 1,
+            "active_concerns_used": 0,
+            "retained_leads_used": 0,
+            "candidate_zones_used": 0,
+            "ally_evaluations_used": 0,
+            "dropped_candidates_count": 0,
+            "detour_depth_used": 0,
+            "is_overloaded": false,
+            "primary_overload_source": null,
+            "last_overload_tick": null
+          }
+        },
+        {
+          "id": 4,
+          "kind": "hero",
+          "pos": [
+            256,
+            256
+          ],
+          "hp": 66,
+          "state": "WANDER",
+          "strategy": {
+            "project_id": "project_dir_hero",
+            "objective_id": null,
+            "interrupted_by": null,
+            "concern_count": 0,
+            "last_capacity_profile": {
+              "planning_budget": 6,
+              "judgment_stability": 0.628,
+              "evidence_quality": 0.505,
+              "social_bandwidth": 4,
+              "detour_depth_limit": 2,
+              "active_slice_limit": 5,
+              "concern_intake_limit": 3,
+              "lead_retention_limit": 4,
+              "candidate_zone_limit": 2,
+              "ally_evaluation_limit": 4,
+              "blocker_resolution_patience": 0.553,
+              "resume_reliability": 0.607,
+              "interruption_resistance": 0.45,
+              "abandonment_threshold_mod": 0.924,
+              "contradiction_sensitivity": 0.384,
+              "source_trust_learning_rate": 0.372
+            },
+            "active_slice_used": 1,
+            "active_concerns_used": 0,
+            "retained_leads_used": 0,
+            "candidate_zones_used": 0,
+            "ally_evaluations_used": 0,
+            "dropped_candidates_count": 0,
+            "detour_depth_used": 0,
+            "is_overloaded": false,
+            "primary_overload_source": null,
+            "last_overload_tick": null
+          }
+        },
+        {
+          "id": 6,
+          "kind": "goblin",
+          "pos": [
+            38,
+            49
+          ],
+          "hp": 29,
+          "state": "WANDER",
+          "strategy": {
+            "project_id": "project_dir_survival",
+            "objective_id": "obj_satisfy_needs",
+            "interrupted_by": null,
+            "concern_count": 0,
+            "last_capacity_profile": {
+              "planning_budget": 3,
+              "judgment_stability": 0.357,
+              "evidence_quality": 0.343,
+              "social_bandwidth": 2,
+              "detour_depth_limit": 1,
+              "active_slice_limit": 4,
+              "concern_intake_limit": 2,
+              "lead_retention_limit": 3,
+              "candidate_zone_limit": 1,
+              "ally_evaluation_limit": 2,
+              "blocker_resolution_patience": 0.471,
+              "resume_reliability": 0.564,
+              "interruption_resistance": 0.371,
+              "abandonment_threshold_mod": 0.886,
+              "contradiction_sensitivity": 0.229,
+              "source_trust_learning_rate": 0.214
+            },
+            "active_slice_used": 1,
+            "active_concerns_used": 0,
+            "retained_leads_used": 0,
+            "candidate_zones_used": 0,
+            "ally_evaluations_used": 0,
+            "dropped_candidates_count": 0,
+            "detour_depth_used": 0,
+            "is_overloaded": false,
+            "primary_overload_source": null,
+            "last_overload_tick": null
+          }
+        },
+        {
+          "id": 8,
+          "kind": "goblin_scout",
+          "pos": [
+            97,
+            77
+          ],
+          "hp": 31,
+          "state": "WANDER",
+          "strategy": {
+            "project_id": "project_dir_survival",
+            "objective_id": "obj_satisfy_needs",
+            "interrupted_by": null,
+            "concern_count": 0,
+            "last_capacity_profile": {
+              "planning_budget": 4,
+              "judgment_stability": 0.457,
+              "evidence_quality": 0.343,
+              "social_bandwidth": 2,
+              "detour_depth_limit": 1,
+              "active_slice_limit": 4,
+              "concern_intake_limit": 2,
+              "lead_retention_limit": 3,
+              "candidate_zone_limit": 1,
+              "ally_evaluation_limit": 2,
+              "blocker_resolution_patience": 0.471,
+              "resume_reliability": 0.564,
+              "interruption_resistance": 0.371,
+              "abandonment_threshold_mod": 0.886,
+              "contradiction_sensitivity": 0.229,
+              "source_trust_learning_rate": 0.214
+            },
+            "active_slice_used": 1,
+            "active_concerns_used": 0,
+            "retained_leads_used": 0,
+            "candidate_zones_used": 0,
+            "ally_evaluations_used": 0,
+            "dropped_candidates_count": 0,
+            "detour_depth_used": 0,
+            "is_overloaded": false,
+            "primary_overload_source": null,
+            "last_overload_tick": null
+          }
+        },
+        {
+          "id": 10,
+          "kind": "goblin",
+          "pos": [
+            113,
+            96
+          ],
+          "hp": 29,
+          "state": "WANDER",
+          "strategy": {
+            "project_id": "project_dir_wealth",
+            "objective_id": null,
+            "interrupted_by": null,
+            "concern_count": 0,
+            "last_capacity_profile": {
+              "planning_budget": 3,
+              "judgment_stability": 0.357,
+              "evidence_quality": 0.193,
+              "social_bandwidth": 2,
+              "detour_depth_limit": 1,
+              "active_slice_limit": 4,
+              "concern_intake_limit": 2,
+              "lead_retention_limit": 3,
+              "candidate_zone_limit": 1,
+              "ally_evaluation_limit": 2,
+              "blocker_resolution_patience": 0.471,
+              "resume_reliability": 0.481,
+              "interruption_resistance": 0.371,
+              "abandonment_threshold_mod": 0.886,
+              "contradiction_sensitivity": 0.229,
+              "source_trust_learning_rate": 0.214
+            },
+            "active_slice_used": 1,
+            "active_concerns_used": 0,
+            "retained_leads_used": 0,
+            "candidate_zones_used": 0,
+            "ally_evaluations_used": 0,
+            "dropped_candidates_count": 0,
+            "detour_depth_used": 0,
+            "is_overloaded": false,
+            "primary_overload_source": null,
+            "last_overload_tick": null
+          }
+        },
+        {
+          "id": 12,
+          "kind": "goblin_warrior",
+          "pos": [
+            27,
+            81
+          ],
+          "hp": 51,
+          "state": "WANDER",
+          "strategy": {
+            "project_id": "project_dir_wealth",
+            "objective_id": null,
+            "interrupted_by": null,
+            "concern_count": 0,
+            "last_capacity_profile": {
+              "planning_budget": 4,
+              "judgment_stability": 0.457,
+              "evidence_quality": 0.343,
+              "social_bandwidth": 2,
+              "detour_depth_limit": 1,
+              "active_slice_limit": 4,
+              "concern_intake_limit": 2,
+              "lead_retention_limit": 3,
+              "candidate_zone_limit": 1,
+              "ally_evaluation_limit": 2,
+              "blocker_resolution_patience": 0.471,
+              "resume_reliability": 0.481,
+              "interruption_resistance": 0.371,
+              "abandonment_threshold_mod": 0.886,
+              "contradiction_sensitivity": 0.229,
+              "source_trust_learning_rate": 0.214
+            },
+            "active_slice_used": 1,
+            "active_concerns_used": 0,
+            "retained_leads_used": 0,
+            "candidate_zones_used": 0,
+            "ally_evaluations_used": 0,
+            "dropped_candidates_count": 0,
+            "detour_depth_used": 0,
+            "is_overloaded": false,
+            "primary_overload_source": null,
+            "last_overload_tick": null
+          }
+        },
+        {
+          "id": 14,
+          "kind": "goblin_elite",
+          "pos": [
+            12,
+            70
+          ],
+          "hp": 64,
+          "state": "WANDER",
+          "strategy": {
+            "project_id": "project_dir_wealth",
+            "objective_id": null,
+            "interrupted_by": null,
+            "concern_count": 0,
+            "last_capacity_profile": {
+              "planning_budget": 4,
+              "judgment_stability": 0.457,
+              "evidence_quality": 0.343,
+              "social_bandwidth": 2,
+              "detour_depth_limit": 1,
+              "active_slice_limit": 4,
+              "concern_intake_limit": 2,
+              "lead_retention_limit": 3,
+              "candidate_zone_limit": 1,
+              "ally_evaluation_limit": 2,
+              "blocker_resolution_patience": 0.471,
+              "resume_reliability": 0.481,
+              "interruption_resistance": 0.371,
+              "abandonment_threshold_mod": 0.886,
+              "contradiction_sensitivity": 0.229,
+              "source_trust_learning_rate": 0.214
+            },
+            "active_slice_used": 1,
+            "active_concerns_used": 0,
+            "retained_leads_used": 0,
+            "candidate_zones_used": 0,
+            "ally_evaluations_used": 0,
+            "dropped_candidates_count": 0,
+            "detour_depth_used": 0,
+            "is_overloaded": false,
+            "primary_overload_source": null,
+            "last_overload_tick": null
+          }
+        },
+        {
+          "id": 16,
+          "kind": "goblin_warrior",
+          "pos": [
+            13,
+            64
+          ],
+          "hp": 48,
+          "state": "WANDER",
+          "strategy": {
+            "project_id": "project_dir_wealth",
+            "objective_id": null,
+            "interrupted_by": null,
+            "concern_count": 0,
+            "last_capacity_profile": {
+              "planning_budget": 4,
+              "judgment_stability": 0.457,
+              "evidence_quality": 0.343,
+              "social_bandwidth": 2,
+              "detour_depth_limit": 1,
+              "active_slice_limit": 4,
+              "concern_intake_limit": 2,
+              "lead_retention_limit": 3,
+              "candidate_zone_limit": 1,
+              "ally_evaluation_limit": 2,
+              "blocker_resolution_patience": 0.471,
+              "resume_reliability": 0.481,
+              "interruption_resistance": 0.371,
+              "abandonment_threshold_mod": 0.886,
+              "contradiction_sensitivity": 0.229,
+              "source_trust_learning_rate": 0.214
+            },
+            "active_slice_used": 1,
+            "active_concerns_used": 0,
+            "retained_leads_used": 0,
+            "candidate_zones_used": 0,
+            "ally_evaluations_used": 0,
+            "dropped_candidates_count": 0,
+            "detour_depth_used": 0,
+            "is_overloaded": false,
+            "primary_overload_source": null,
+            "last_overload_tick": null
+          }
+        },
+        {
+          "id": 18,
+          "kind": "goblin_warrior",
+          "pos": [
+            8,
+            72
+          ],
+          "hp": 42,
+          "state": "WANDER",
+          "strategy": {
+            "project_id": null,
+            "objective_id": null,
+            "interrupted_by": null,
+            "concern_count": 0,
+            "last_capacity_profile": {
+              "planning_budget": 4,
+              "judgment_stability": 0.457,
+              "evidence_quality": 0.343,
+              "social_bandwidth": 2,
+              "detour_depth_limit": 1,
+              "active_slice_limit": 4,
+              "concern_intake_limit": 2,
+              "lead_retention_limit": 3,
+              "candidate_zone_limit": 1,
+              "ally_evaluation_limit": 2,
+              "blocker_resolution_patience": 0.471,
+              "resume_reliability": 0.541,
+              "interruption_resistance": 0.371,
+              "abandonment_threshold_mod": 0.886,
+              "contradiction_sensitivity": 0.229,
+              "source_trust_learning_rate": 0.214
+            },
+            "active_slice_used": 0,
+            "active_concerns_used": 0,
+            "retained_leads_used": 0,
+            "candidate_zones_used": 0,
+            "ally_evaluations_used": 0,
+            "dropped_candidates_count": 0,
+            "detour_depth_used": 0,
+            "is_overloaded": false,
+            "primary_overload_source": null,
+            "last_overload_tick": null
+          }
+        },
+        {
+          "id": 20,
+          "kind": "goblin_warrior",
+          "pos": [
+            10,
+            67
+          ],
+          "hp": 56,
+          "state": "WANDER",
+          "strategy": {
+            "project_id": null,
+            "objective_id": null,
+            "interrupted_by": null,
+            "concern_count": 0,
+            "last_capacity_profile": {
+              "planning_budget": 4,
+              "judgment_stability": 0.557,
+              "evidence_quality": 0.343,
+              "social_bandwidth": 2,
+              "detour_depth_limit": 1,
+              "active_slice_limit": 5,
+              "concern_intake_limit": 2,
+              "lead_retention_limit": 3,
+              "candidate_zone_limit": 1,
+              "ally_evaluation_limit": 2,
+              "blocker_resolution_patience": 0.471,
+              "resume_reliability": 0.541,
+              "interruption_resistance": 0.371,
+              "abandonment_threshold_mod": 0.886,
+              "contradiction_sensitivity": 0.229,
+              "source_trust_learning_rate": 0.214
+            },
+            "active_slice_used": 0,
+            "active_concerns_used": 0,
+            "retained_leads_used": 0,
+            "candidate_zones_used": 0,
+            "ally_evaluations_used": 0,
+            "dropped_candidates_count": 0,
+            "detour_depth_used": 0,
+            "is_overloaded": false,
+            "primary_overload_source": null,
+            "last_overload_tick": null
+          }
+        },
+        {
+          "id": 22,
+          "kind": "goblin_elite",
+          "pos": [
+            61,
+            120
+          ],
+          "hp": 64,
+          "state": "WANDER",
+          "strategy": {
+            "project_id": "project_dir_wealth",
+            "objective_id": null,
+            "interrupted_by": null,
+            "concern_count": 0,
+            "last_capacity_profile": {
+              "planning_budget": 3,
+              "judgment_stability": 0.357,
+              "evidence_quality": 0.193,
+              "social_bandwidth": 2,
+              "detour_depth_limit": 1,
+              "active_slice_limit": 4,
+              "concern_intake_limit": 2,
+              "lead_retention_limit": 3,
+              "candidate_zone_limit": 1,
+              "ally_evaluation_limit": 2,
+              "blocker_resolution_patience": 0.471,
+              "resume_reliability": 0.481,
+              "interruption_resistance": 0.371,
+              "abandonment_threshold_mod": 0.886,
+              "contradiction_sensitivity": 0.229,
+              "source_trust_learning_rate": 0.214
+            },
+            "active_slice_used": 1,
+            "active_concerns_used": 0,
+            "retained_leads_used": 0,
+            "candidate_zones_used": 0,
+            "ally_evaluations_used": 0,
+            "dropped_candidates_count": 0,
+            "detour_depth_used": 0,
+            "is_overloaded": false,
+            "primary_overload_source": null,
+            "last_overload_tick": null
+          }
+        },
+        {
+          "id": 24,
+          "kind": "goblin_warrior",
+          "pos": [
+            55,
+            118
+          ],
+          "hp": 41,
+          "state": "WANDER",
+          "strategy": {
+            "project_id": null,
+            "objective_id": null,
+            "interrupted_by": null,
+            "concern_count": 0,
+            "last_capacity_profile": {
+              "planning_budget": 4,
+              "judgment_stability": 0.457,
+              "evidence_quality": 0.343,
+              "social_bandwidth": 2,
+              "detour_depth_limit": 1,
+              "active_slice_limit": 4,
+              "concern_intake_limit": 2,
+              "lead_retention_limit": 3,
+              "candidate_zone_limit": 1,
+              "ally_evaluation_limit": 2,
+              "blocker_resolution_patience": 0.471,
+              "resume_reliability": 0.451,
+              "interruption_resistance": 0.371,
+              "abandonment_threshold_mod": 0.886,
+              "contradiction_sensitivity": 0.229,
+              "source_trust_learning_rate": 0.214
+            },
+            "active_slice_used": 0,
+            "active_concerns_used": 0,
+            "retained_leads_used": 0,
+            "candidate_zones_used": 0,
+            "ally_evaluations_used": 0,
+            "dropped_candidates_count": 0,
+            "detour_depth_used": 0,
+            "is_overloaded": false,
+            "primary_overload_source": null,
+            "last_overload_tick": null
+          }
+        },
+        {
+          "id": 26,
+          "kind": "goblin_warrior",
+          "pos": [
+            54,
+            122
+          ],
+          "hp": 40,
+          "state": "WANDER",
+          "strategy": {
+            "project_id": "project_dir_honor",
+            "objective_id": null,
+            "interrupted_by": null,
+            "concern_count": 0,
+            "last_capacity_profile": {
+              "planning_budget": 4,
+              "judgment_stability": 0.457,
+              "evidence_quality": 0.393,
+              "social_bandwidth": 2,
+              "detour_depth_limit": 1,
+              "active_slice_limit": 4,
+              "concern_intake_limit": 2,
+              "lead_retention_limit": 4,
+              "candidate_zone_limit": 1,
+              "ally_evaluation_limit": 2,
+              "blocker_resolution_patience": 0.471,
+              "resume_reliability": 0.511,
+              "interruption_resistance": 0.371,
+              "abandonment_threshold_mod": 0.886,
+              "contradiction_sensitivity": 0.229,
+              "source_trust_learning_rate": 0.214
+            },
+            "active_slice_used": 1,
+            "active_concerns_used": 0,
+            "retained_leads_used": 0,
+            "candidate_zones_used": 0,
+            "ally_evaluations_used": 0,
+            "dropped_candidates_count": 0,
+            "detour_depth_used": 0,
+            "is_overloaded": false,
+            "primary_overload_source": null,
+            "last_overload_tick": null
+          }
+        },
+        {
+          "id": 28,
+          "kind": "goblin_warrior",
+          "pos": [
+            60,
+            120
+          ],
+          "hp": 38,
+          "state": "WANDER",
+          "strategy": {
+            "project_id": "project_dir_wealth",
+            "objective_id": null,
+            "interrupted_by": null,
+            "concern_count": 0,
+            "last_capacity_profile": {
+              "planning_budget": 4,
+              "judgment_stability": 0.457,
+              "evidence_quality": 0.393,
+              "social_bandwidth": 2,
+              "detour_depth_limit": 1,
+              "active_slice_limit": 4,
+              "concern_intake_limit": 2,
+              "lead_retention_limit": 4,
+              "candidate_zone_limit": 1,
+              "ally_evaluation_limit": 2,
+              "blocker_resolution_patience": 0.471,
+              "resume_reliability": 0.481,
+              "interruption_resistance": 0.371,
+              "abandonment_threshold_mod": 0.886,
+              "contradiction_sensitivity": 0.229,
+              "source_trust_learning_rate": 0.214
+            },
+            "active_slice_used": 1,
+            "active_concerns_used": 0,
+            "retained_leads_used": 0,
+            "candidate_zones_used": 0,
+            "ally_evaluations_used": 0,
+            "dropped_candidates_count": 0,
+            "detour_depth_used": 0,
+            "is_overloaded": false,
+            "primary_overload_source": null,
+            "last_overload_tick": null
+          }
+        },
+        {
+          "id": 30,
+          "kind": "goblin_elite",
+          "pos": [
+            3,
+            103
+          ],
+          "hp": 62,
+          "state": "WANDER",
+          "strategy": {
+            "project_id": "project_dir_power",
+            "objective_id": null,
+            "interrupted_by": null,
+            "concern_count": 0,
+            "last_capacity_profile": {
+              "planning_budget": 4,
+              "judgment_stability": 0.457,
+              "evidence_quality": 0.343,
+              "social_bandwidth": 2,
+              "detour_depth_limit": 1,
+              "active_slice_limit": 4,
+              "concern_intake_limit": 2,
+              "lead_retention_limit": 3,
+              "candidate_zone_limit": 1,
+              "ally_evaluation_limit": 2,
+              "blocker_resolution_patience": 0.471,
+              "resume_reliability": 0.496,
+              "interruption_resistance": 0.371,
+              "abandonment_threshold_mod": 0.886,
+              "contradiction_sensitivity": 0.229,
+              "source_trust_learning_rate": 0.214
+            },
+            "active_slice_used": 1,
+            "active_concerns_used": 0,
+            "retained_leads_used": 0,
+            "candidate_zones_used": 0,
+            "ally_evaluations_used": 0,
+            "dropped_candidates_count": 0,
+            "detour_depth_used": 0,
+            "is_overloaded": false,
+            "primary_overload_source": null,
+            "last_overload_tick": null
+          }
+        },
+        {
+          "id": 32,
+          "kind": "goblin_warrior",
+          "pos": [
+            -2,
+            100
+          ],
+          "hp": 41,
+          "state": "WANDER",
+          "strategy": {
+            "project_id": null,
+            "objective_id": null,
+            "interrupted_by": null,
+            "concern_count": 0,
+            "last_capacity_profile": {
+              "planning_budget": 4,
+              "judgment_stability": 0.457,
+              "evidence_quality": 0.343,
+              "social_bandwidth": 2,
+              "detour_depth_limit": 1,
+              "active_slice_limit": 4,
+              "concern_intake_limit": 2,
+              "lead_retention_limit": 3,
+              "candidate_zone_limit": 1,
+              "ally_evaluation_limit": 2,
+              "blocker_resolution_patience": 0.471,
+              "resume_reliability": 0.451,
+              "interruption_resistance": 0.371,
+              "abandonment_threshold_mod": 0.886,
+              "contradiction_sensitivity": 0.229,
+              "source_trust_learning_rate": 0.214
+            },
+            "active_slice_used": 0,
+            "active_concerns_used": 0,
+            "retained_leads_used": 0,
+            "candidate_zones_used": 0,
+            "ally_evaluations_used": 0,
+            "dropped_candidates_count": 0,
+            "detour_depth_used": 0,
+            "is_overloaded": false,
+            "primary_overload_source": null,
+            "last_overload_tick": null
+          }
+        },
+        {
+          "id": 34,
+          "kind": "goblin_warrior",
+          "pos": [
+            0,
+            93
+          ],
+          "hp": 39,
+          "state": "WANDER",
+          "strategy": {
+            "project_id": null,
+            "objective_id": null,
+            "interrupted_by": null,
+            "concern_count": 0,
+            "last_capacity_profile": {
+              "planning_budget": 4,
+              "judgment_stability": 0.457,
+              "evidence_quality": 0.193,
+              "social_bandwidth": 2,
+              "detour_depth_limit": 1,
+              "active_slice_limit": 4,
+              "concern_intake_limit": 2,
+              "lead_retention_limit": 3,
+              "candidate_zone_limit": 1,
+              "ally_evaluation_limit": 2,
+              "blocker_resolution_patience": 0.471,
+              "resume_reliability": 0.451,
+              "interruption_resistance": 0.371,
+              "abandonment_threshold_mod": 0.886,
+              "contradiction_sensitivity": 0.229,
+              "source_trust_learning_rate": 0.214
+            },
+            "active_slice_used": 0,
+            "active_concerns_used": 0,
+            "retained_leads_used": 0,
+            "candidate_zones_used": 0,
+            "ally_evaluations_used": 0,
+            "dropped_candidates_count": 0,
+            "detour_depth_used": 0,
+            "is_overloaded": false,
+            "primary_overload_source": null,
+            "last_overload_tick": null
+          }
+        },
+        {
+          "id": 36,
+          "kind": "goblin_warrior",
+          "pos": [
+            8,
+            96
+          ],
+          "hp": 49,
+          "state": "WANDER",
+          "strategy": {
+            "project_id": "project_dir_honor",
+            "objective_id": null,
+            "interrupted_by": null,
+            "concern_count": 0,
+            "last_capacity_profile": {
+              "planning_budget": 4,
+              "judgment_stability": 0.457,
+              "evidence_quality": 0.193,
+              "social_bandwidth": 2,
+              "detour_depth_limit": 1,
+              "active_slice_limit": 4,
+              "concern_intake_limit": 2,
+              "lead_retention_limit": 3,
+              "candidate_zone_limit": 1,
+              "ally_evaluation_limit": 2,
+              "blocker_resolution_patience": 0.471,
+              "resume_reliability": 0.511,
+              "interruption_resistance": 0.371,
+              "abandonment_threshold_mod": 0.886,
+              "contradiction_sensitivity": 0.229,
+              "source_trust_learning_rate": 0.214
+            },
+            "active_slice_used": 1,
+            "active_concerns_used": 0,
+            "retained_leads_used": 0,
+            "candidate_zones_used": 0,
+            "ally_evaluations_used": 0,
+            "dropped_candidates_count": 0,
+            "detour_depth_used": 0,
+            "is_overloaded": false,
+            "primary_overload_source": null,
+            "last_overload_tick": null
+          }
+        },
+        {
+          "id": 38,
+          "kind": "goblin_elite",
+          "pos": [
+            127,
+            126
+          ],
+          "hp": 58,
+          "state": "WANDER",
+          "strategy": {
+            "project_id": null,
+            "objective_id": null,
+            "interrupted_by": null,
+            "concern_count": 0,
+            "last_capacity_profile": {
+              "planning_budget": 3,
+              "judgment_stability": 0.357,
+              "evidence_quality": 0.343,
+              "social_bandwidth": 2,
+              "detour_depth_limit": 1,
+              "active_slice_limit": 4,
+              "concern_intake_limit": 2,
+              "lead_retention_limit": 3,
+              "candidate_zone_limit": 1,
+              "ally_evaluation_limit": 2,
+              "blocker_resolution_patience": 0.471,
+              "resume_reliability": 0.541,
+              "interruption_resistance": 0.371,
+              "abandonment_threshold_mod": 0.886,
+              "contradiction_sensitivity": 0.229,
+              "source_trust_learning_rate": 0.214
+            },
+            "active_slice_used": 0,
+            "active_concerns_used": 0,
+            "retained_leads_used": 0,
+            "candidate_zones_used": 0,
+            "ally_evaluations_used": 0,
+            "dropped_candidates_count": 0,
+            "detour_depth_used": 0,
+            "is_overloaded": false,
+            "primary_overload_source": null,
+            "last_overload_tick": null
+          }
+        },
+        {
+          "id": 40,
+          "kind": "goblin_warrior",
+          "pos": [
+            121,
+            126
+          ],
+          "hp": 44,
+          "state": "WANDER",
+          "strategy": {
+            "project_id": "project_dir_wealth",
+            "objective_id": null,
+            "interrupted_by": null,
+            "concern_count": 0,
+            "last_capacity_profile": {
+              "planning_budget": 4,
+              "judgment_stability": 0.457,
+              "evidence_quality": 0.343,
+              "social_bandwidth": 2,
+              "detour_depth_limit": 1,
+              "active_slice_limit": 4,
+              "concern_intake_limit": 2,
+              "lead_retention_limit": 3,
+              "candidate_zone_limit": 1,
+              "ally_evaluation_limit": 2,
+              "blocker_resolution_patience": 0.471,
+              "resume_reliability": 0.481,
+              "interruption_resistance": 0.371,
+              "abandonment_threshold_mod": 0.886,
+              "contradiction_sensitivity": 0.229,
+              "source_trust_learning_rate": 0.214
+            },
+            "active_slice_used": 1,
+            "active_concerns_used": 0,
+            "retained_leads_used": 0,
+            "candidate_zones_used": 0,
+            "ally_evaluations_used": 0,
+            "dropped_candidates_count": 0,
+            "detour_depth_used": 0,
+            "is_overloaded": false,
+            "primary_overload_source": null,
+            "last_overload_tick": null
+          }
+        },
+        {
+          "id": 42,
+          "kind": "goblin_warrior",
+          "pos": [
+            129,
+            124
+          ],
+          "hp": 48,
+          "state": "WANDER",
+          "strategy": {
+            "project_id": null,
+            "objective_id": null,
+            "interrupted_by": null,
+            "concern_count": 0,
+            "last_capacity_profile": {
+              "planning_budget": 4,
+              "judgment_stability": 0.457,
+              "evidence_quality": 0.343,
+              "social_bandwidth": 2,
+              "detour_depth_limit": 1,
+              "active_slice_limit": 4,
+              "concern_intake_limit": 2,
+              "lead_retention_limit": 3,
+              "candidate_zone_limit": 1,
+              "ally_evaluation_limit": 2,
+              "blocker_resolution_patience": 0.471,
+              "resume_reliability": 0.541,
+              "interruption_resistance": 0.371,
+              "abandonment_threshold_mod": 0.886,
+              "contradiction_sensitivity": 0.229,
+              "source_trust_learning_rate": 0.214
+            },
+            "active_slice_used": 0,
+            "active_concerns_used": 0,
+            "retained_leads_used": 0,
+            "candidate_zones_used": 0,
+            "ally_evaluations_used": 0,
+            "dropped_candidates_count": 0,
+            "detour_depth_used": 0,
+            "is_overloaded": false,
+            "primary_overload_source": null,
+            "last_overload_tick": null
+          }
+        },
+        {
+          "id": 44,
+          "kind": "goblin_warrior",
+          "pos": [
+            127,
+            124
+          ],
+          "hp": 45,
+          "state": "WANDER",
+          "strategy": {
+            "project_id": "project_dir_survival",
+            "objective_id": "obj_satisfy_needs",
+            "interrupted_by": null,
+            "concern_count": 0,
+            "last_capacity_profile": {
+              "planning_budget": 4,
+              "judgment_stability": 0.457,
+              "evidence_quality": 0.343,
+              "social_bandwidth": 2,
+              "detour_depth_limit": 1,
+              "active_slice_limit": 4,
+              "concern_intake_limit": 2,
+              "lead_retention_limit": 3,
+              "candidate_zone_limit": 1,
+              "ally_evaluation_limit": 2,
+              "blocker_resolution_patience": 0.471,
+              "resume_reliability": 0.564,
+              "interruption_resistance": 0.371,
+              "abandonment_threshold_mod": 0.886,
+              "contradiction_sensitivity": 0.229,
+              "source_trust_learning_rate": 0.214
+            },
+            "active_slice_used": 1,
+            "active_concerns_used": 0,
+            "retained_leads_used": 0,
+            "candidate_zones_used": 0,
+            "ally_evaluations_used": 0,
+            "dropped_candidates_count": 0,
+            "detour_depth_used": 0,
+            "is_overloaded": false,
+            "primary_overload_source": null,
+            "last_overload_tick": null
+          }
+        },
+        {
+          "id": 46,
+          "kind": "goblin_elite",
+          "pos": [
+            88,
+            88
+          ],
+          "hp": 62,
+          "state": "WANDER",
+          "strategy": {
+            "project_id": "project_dir_power",
+            "objective_id": null,
+            "interrupted_by": null,
+            "concern_count": 0,
+            "last_capacity_profile": {
+              "planning_budget": 4,
+              "judgment_stability": 0.457,
+              "evidence_quality": 0.343,
+              "social_bandwidth": 2,
+              "detour_depth_limit": 1,
+              "active_slice_limit": 4,
+              "concern_intake_limit": 2,
+              "lead_retention_limit": 3,
+              "candidate_zone_limit": 1,
+              "ally_evaluation_limit": 2,
+              "blocker_resolution_patience": 0.471,
+              "resume_reliability": 0.496,
+              "interruption_resistance": 0.371,
+              "abandonment_threshold_mod": 0.886,
+              "contradiction_sensitivity": 0.229,
+              "source_trust_learning_rate": 0.214
+            },
+            "active_slice_used": 1,
+            "active_concerns_used": 0,
+            "retained_leads_used": 0,
+            "candidate_zones_used": 0,
+            "ally_evaluations_used": 0,
+            "dropped_candidates_count": 0,
+            "detour_depth_used": 0,
+            "is_overloaded": false,
+            "primary_overload_source": null,
+            "last_overload_tick": null
+          }
+        },
+        {
+          "id": 48,
+          "kind": "goblin_warrior",
+          "pos": [
+            83,
+            89
+          ],
+          "hp": 47,
+          "state": "WANDER",
+          "strategy": {
+            "project_id": "project_dir_power",
+            "objective_id": null,
+            "interrupted_by": null,
+            "concern_count": 0,
+            "last_capacity_profile": {
+              "planning_budget": 4,
+              "judgment_stability": 0.457,
+              "evidence_quality": 0.343,
+              "social_bandwidth": 2,
+              "detour_depth_limit": 1,
+              "active_slice_limit": 4,
+              "concern_intake_limit": 2,
+              "lead_retention_limit": 3,
+              "candidate_zone_limit": 1,
+              "ally_evaluation_limit": 2,
+              "blocker_resolution_patience": 0.471,
+              "resume_reliability": 0.496,
+              "interruption_resistance": 0.371,
+              "abandonment_threshold_mod": 0.886,
+              "contradiction_sensitivity": 0.229,
+              "source_trust_learning_rate": 0.214
+            },
+            "active_slice_used": 1,
+            "active_concerns_used": 0,
+            "retained_leads_used": 0,
+            "candidate_zones_used": 0,
+            "ally_evaluations_used": 0,
+            "dropped_candidates_count": 0,
+            "detour_depth_used": 0,
+            "is_overloaded": false,
+            "primary_overload_source": null,
+            "last_overload_tick": null
+          }
+        },
+        {
+          "id": 50,
+          "kind": "goblin_warrior",
+          "pos": [
+            80,
+            86
+          ],
+          "hp": 46,
+          "state": "WANDER",
+          "strategy": {
+            "project_id": "project_dir_honor",
+            "objective_id": null,
+            "interrupted_by": null,
+            "concern_count": 0,
+            "last_capacity_profile": {
+              "planning_budget": 5,
+              "judgment_stability": 0.557,
+              "evidence_quality": 0.343,
+              "social_bandwidth": 2,
+              "detour_depth_limit": 1,
+              "active_slice_limit": 4,
+              "concern_intake_limit": 2,
+              "lead_retention_limit": 3,
+              "candidate_zone_limit": 1,
+              "ally_evaluation_limit": 2,
+              "blocker_resolution_patience": 0.471,
+              "resume_reliability": 0.511,
+              "interruption_resistance": 0.371,
+              "abandonment_threshold_mod": 0.886,
+              "contradiction_sensitivity": 0.229,
+              "source_trust_learning_rate": 0.214
+            },
+            "active_slice_used": 1,
+            "active_concerns_used": 0,
+            "retained_leads_used": 0,
+            "candidate_zones_used": 0,
+            "ally_evaluations_used": 0,
+            "dropped_candidates_count": 0,
+            "detour_depth_used": 0,
+            "is_overloaded": false,
+            "primary_overload_source": null,
+            "last_overload_tick": null
+          }
+        },
+        {
+          "id": 52,
+          "kind": "goblin_warrior",
+          "pos": [
+            79,
+            88
+          ],
+          "hp": 47,
+          "state": "WANDER",
+          "strategy": {
+            "project_id": "project_dir_power",
+            "objective_id": null,
+            "interrupted_by": null,
+            "concern_count": 0,
+            "last_capacity_profile": {
+              "planning_budget": 4,
+              "judgment_stability": 0.457,
+              "evidence_quality": 0.193,
+              "social_bandwidth": 2,
+              "detour_depth_limit": 1,
+              "active_slice_limit": 4,
+              "concern_intake_limit": 2,
+              "lead_retention_limit": 3,
+              "candidate_zone_limit": 1,
+              "ally_evaluation_limit": 2,
+              "blocker_resolution_patience": 0.471,
+              "resume_reliability": 0.496,
+              "interruption_resistance": 0.371,
+              "abandonment_threshold_mod": 0.886,
+              "contradiction_sensitivity": 0.229,
+              "source_trust_learning_rate": 0.214
+            },
+            "active_slice_used": 1,
+            "active_concerns_used": 0,
+            "retained_leads_used": 0,
+            "candidate_zones_used": 0,
+            "ally_evaluations_used": 0,
+            "dropped_candidates_count": 0,
+            "detour_depth_used": 0,
+            "is_overloaded": false,
+            "primary_overload_source": null,
+            "last_overload_tick": null
+          }
+        },
+        {
+          "id": 54,
+          "kind": "goblin_elite",
+          "pos": [
+            1,
+            110
+          ],
+          "hp": 56,
+          "state": "WANDER",
+          "strategy": {
+            "project_id": null,
+            "objective_id": null,
+            "interrupted_by": null,
+            "concern_count": 0,
+            "last_capacity_profile": {
+              "planning_budget": 4,
+              "judgment_stability": 0.457,
+              "evidence_quality": 0.343,
+              "social_bandwidth": 2,
+              "detour_depth_limit": 1,
+              "active_slice_limit": 4,
+              "concern_intake_limit": 2,
+              "lead_retention_limit": 3,
+              "candidate_zone_limit": 1,
+              "ally_evaluation_limit": 2,
+              "blocker_resolution_patience": 0.471,
+              "resume_reliability": 0.541,
+              "interruption_resistance": 0.371,
+              "abandonment_threshold_mod": 0.886,
+              "contradiction_sensitivity": 0.229,
+              "source_trust_learning_rate": 0.214
+            },
+            "active_slice_used": 0,
+            "active_concerns_used": 0,
+            "retained_leads_used": 0,
+            "candidate_zones_used": 0,
+            "ally_evaluations_used": 0,
+            "dropped_candidates_count": 0,
+            "detour_depth_used": 0,
+            "is_overloaded": false,
+            "primary_overload_source": null,
+            "last_overload_tick": null
+          }
+        },
+        {
+          "id": 56,
+          "kind": "goblin_warrior",
+          "pos": [
+            3,
+            117
+          ],
+          "hp": 41,
+          "state": "WANDER",
+          "strategy": {
+            "project_id": "project_dir_honor",
+            "objective_id": null,
+            "interrupted_by": null,
+            "concern_count": 0,
+            "last_capacity_profile": {
+              "planning_budget": 3,
+              "judgment_stability": 0.357,
+              "evidence_quality": 0.393,
+              "social_bandwidth": 2,
+              "detour_depth_limit": 1,
+              "active_slice_limit": 4,
+              "concern_intake_limit": 2,
+              "lead_retention_limit": 4,
+              "candidate_zone_limit": 1,
+              "ally_evaluation_limit": 2,
+              "blocker_resolution_patience": 0.471,
+              "resume_reliability": 0.511,
+              "interruption_resistance": 0.371,
+              "abandonment_threshold_mod": 0.886,
+              "contradiction_sensitivity": 0.229,
+              "source_trust_learning_rate": 0.214
+            },
+            "active_slice_used": 1,
+            "active_concerns_used": 0,
+            "retained_leads_used": 0,
+            "candidate_zones_used": 0,
+            "ally_evaluations_used": 0,
+            "dropped_candidates_count": 0,
+            "detour_depth_used": 0,
+            "is_overloaded": false,
+            "primary_overload_source": null,
+            "last_overload_tick": null
+          }
+        },
+        {
+          "id": 58,
+          "kind": "goblin_warrior",
+          "pos": [
+            6,
+            114
+          ],
+          "hp": 54,
+          "state": "WANDER",
+          "strategy": {
+            "project_id": "project_dir_power",
+            "objective_id": null,
+            "interrupted_by": null,
+            "concern_count": 0,
+            "last_capacity_profile": {
+              "planning_budget": 4,
+              "judgment_stability": 0.457,
+              "evidence_quality": 0.343,
+              "social_bandwidth": 2,
+              "detour_depth_limit": 1,
+              "active_slice_limit": 4,
+              "concern_intake_limit": 2,
+              "lead_retention_limit": 3,
+              "candidate_zone_limit": 1,
+              "ally_evaluation_limit": 2,
+              "blocker_resolution_patience": 0.471,
+              "resume_reliability": 0.496,
+              "interruption_resistance": 0.371,
+              "abandonment_threshold_mod": 0.886,
+              "contradiction_sensitivity": 0.229,
+              "source_trust_learning_rate": 0.214
+            },
+            "active_slice_used": 1,
+            "active_concerns_used": 0,
+            "retained_leads_used": 0,
+            "candidate_zones_used": 0,
+            "ally_evaluations_used": 0,
+            "dropped_candidates_count": 0,
+            "detour_depth_used": 0,
+            "is_overloaded": false,
+            "primary_overload_source": null,
+            "last_overload_tick": null
+          }
+        },
+        {
+          "id": 60,
+          "kind": "goblin_warrior",
+          "pos": [
+            7,
+            115
+          ],
+          "hp": 46,
+          "state": "WANDER",
+          "strategy": {
+            "project_id": "project_dir_honor",
+            "objective_id": null,
+            "interrupted_by": null,
+            "concern_count": 0,
+            "last_capacity_profile": {
+              "planning_budget": 5,
+              "judgment_stability": 0.557,
+              "evidence_quality": 0.393,
+              "social_bandwidth": 2,
+              "detour_depth_limit": 1,
+              "active_slice_limit": 4,
+              "concern_intake_limit": 2,
+              "lead_retention_limit": 4,
+              "candidate_zone_limit": 1,
+              "ally_evaluation_limit": 2,
+              "blocker_resolution_patience": 0.471,
+              "resume_reliability": 0.511,
+              "interruption_resistance": 0.371,
+              "abandonment_threshold_mod": 0.886,
+              "contradiction_sensitivity": 0.229,
+              "source_trust_learning_rate": 0.214
+            },
+            "active_slice_used": 1,
+            "active_concerns_used": 0,
+            "retained_leads_used": 0,
+            "candidate_zones_used": 0,
+            "ally_evaluations_used": 0,
+            "dropped_candidates_count": 0,
+            "detour_depth_used": 0,
+            "is_overloaded": false,
+            "primary_overload_source": null,
+            "last_overload_tick": null
+          }
+        },
+        {
+          "id": 62,
+          "kind": "goblin_elite",
+          "pos": [
+            106,
+            0
+          ],
+          "hp": 72,
+          "state": "WANDER",
+          "strategy": {
+            "project_id": "project_dir_survival",
+            "objective_id": "obj_satisfy_needs",
+            "interrupted_by": null,
+            "concern_count": 0,
+            "last_capacity_profile": {
+              "planning_budget": 5,
+              "judgment_stability": 0.557,
+              "evidence_quality": 0.193,
+              "social_bandwidth": 2,
+              "detour_depth_limit": 1,
+              "active_slice_limit": 4,
+              "concern_intake_limit": 2,
+              "lead_retention_limit": 3,
+              "candidate_zone_limit": 1,
+              "ally_evaluation_limit": 2,
+              "blocker_resolution_patience": 0.471,
+              "resume_reliability": 0.564,
+              "interruption_resistance": 0.371,
+              "abandonment_threshold_mod": 0.886,
+              "contradiction_sensitivity": 0.229,
+              "source_trust_learning_rate": 0.214
+            },
+            "active_slice_used": 1,
+            "active_concerns_used": 0,
+            "retained_leads_used": 0,
+            "candidate_zones_used": 0,
+            "ally_evaluations_used": 0,
+            "dropped_candidates_count": 0,
+            "detour_depth_used": 0,
+            "is_overloaded": false,
+            "primary_overload_source": null,
+            "last_overload_tick": null
+          }
+        },
+        {
+          "id": 64,
+          "kind": "goblin_warrior",
+          "pos": [
+            112,
+            6
+          ],
+          "hp": 39,
+          "state": "WANDER",
+          "strategy": {
+            "project_id": null,
+            "objective_id": null,
+            "interrupted_by": null,
+            "concern_count": 0,
+            "last_capacity_profile": {
+              "planning_budget": 4,
+              "judgment_stability": 0.457,
+              "evidence_quality": 0.343,
+              "social_bandwidth": 2,
+              "detour_depth_limit": 1,
+              "active_slice_limit": 4,
+              "concern_intake_limit": 2,
+              "lead_retention_limit": 3,
+              "candidate_zone_limit": 1,
+              "ally_evaluation_limit": 2,
+              "blocker_resolution_patience": 0.471,
+              "resume_reliability": 0.451,
+              "interruption_resistance": 0.371,
+              "abandonment_threshold_mod": 0.886,
+              "contradiction_sensitivity": 0.229,
+              "source_trust_learning_rate": 0.214
+            },
+            "active_slice_used": 0,
+            "active_concerns_used": 0,
+            "retained_leads_used": 0,
+            "candidate_zones_used": 0,
+            "ally_evaluations_used": 0,
+            "dropped_candidates_count": 0,
+            "detour_depth_used": 0,
+            "is_overloaded": false,
+            "primary_overload_source": null,
+            "last_overload_tick": null
+          }
+        },
+        {
+          "id": 66,
+          "kind": "goblin_warrior",
+          "pos": [
+            112,
+            5
+          ],
+          "hp": 41,
+          "state": "WANDER",
+          "strategy": {
+            "project_id": null,
+            "objective_id": null,
+            "interrupted_by": null,
+            "concern_count": 0,
+            "last_capacity_profile": {
+              "planning_budget": 4,
+              "judgment_stability": 0.457,
+              "evidence_quality": 0.343,
+              "social_bandwidth": 2,
+              "detour_depth_limit": 1,
+              "active_slice_limit": 4,
+              "concern_intake_limit": 2,
+              "lead_retention_limit": 3,
+              "candidate_zone_limit": 1,
+              "ally_evaluation_limit": 2,
+              "blocker_resolution_patience": 0.471,
+              "resume_reliability": 0.496,
+              "interruption_resistance": 0.371,
+              "abandonment_threshold_mod": 0.886,
+              "contradiction_sensitivity": 0.229,
+              "source_trust_learning_rate": 0.214
+            },
+            "active_slice_used": 0,
+            "active_concerns_used": 0,
+            "retained_leads_used": 0,
+            "candidate_zones_used": 0,
+            "ally_evaluations_used": 0,
+            "dropped_candidates_count": 0,
+            "detour_depth_used": 0,
+            "is_overloaded": false,
+            "primary_overload_source": null,
+            "last_overload_tick": null
+          }
+        },
+        {
+          "id": 68,
+          "kind": "goblin_warrior",
+          "pos": [
+            110,
+            7
+          ],
+          "hp": 44,
+          "state": "WANDER",
+          "strategy": {
+            "project_id": "project_dir_power",
+            "objective_id": null,
+            "interrupted_by": null,
+            "concern_count": 0,
+            "last_capacity_profile": {
+              "planning_budget": 4,
+              "judgment_stability": 0.457,
+              "evidence_quality": 0.343,
+              "social_bandwidth": 2,
+              "detour_depth_limit": 1,
+              "active_slice_limit": 4,
+              "concern_intake_limit": 2,
+              "lead_retention_limit": 3,
+              "candidate_zone_limit": 1,
+              "ally_evaluation_limit": 2,
+              "blocker_resolution_patience": 0.471,
+              "resume_reliability": 0.496,
+              "interruption_resistance": 0.371,
+              "abandonment_threshold_mod": 0.886,
+              "contradiction_sensitivity": 0.229,
+              "source_trust_learning_rate": 0.214
+            },
+            "active_slice_used": 1,
+            "active_concerns_used": 0,
+            "retained_leads_used": 0,
+            "candidate_zones_used": 0,
+            "ally_evaluations_used": 0,
+            "dropped_candidates_count": 0,
+            "detour_depth_used": 0,
+            "is_overloaded": false,
+            "primary_overload_source": null,
+            "last_overload_tick": null
+          }
+        },
+        {
+          "id": 70,
+          "kind": "goblin_elite",
+          "pos": [
+            13,
+            60
+          ],
+          "hp": 72,
+          "state": "WANDER",
+          "strategy": {
+            "project_id": "project_dir_survival",
+            "objective_id": "obj_satisfy_needs",
+            "interrupted_by": null,
+            "concern_count": 0,
+            "last_capacity_profile": {
+              "planning_budget": 4,
+              "judgment_stability": 0.557,
+              "evidence_quality": 0.343,
+              "social_bandwidth": 2,
+              "detour_depth_limit": 1,
+              "active_slice_limit": 5,
+              "concern_intake_limit": 2,
+              "lead_retention_limit": 3,
+              "candidate_zone_limit": 1,
+              "ally_evaluation_limit": 2,
+              "blocker_resolution_patience": 0.471,
+              "resume_reliability": 0.564,
+              "interruption_resistance": 0.371,
+              "abandonment_threshold_mod": 0.886,
+              "contradiction_sensitivity": 0.229,
+              "source_trust_learning_rate": 0.214
+            },
+            "active_slice_used": 1,
+            "active_concerns_used": 0,
+            "retained_leads_used": 0,
+            "candidate_zones_used": 0,
+            "ally_evaluations_used": 0,
+            "dropped_candidates_count": 0,
+            "detour_depth_used": 0,
+            "is_overloaded": false,
+            "primary_overload_source": null,
+            "last_overload_tick": null
+          }
+        },
+        {
+          "id": 72,
+          "kind": "goblin_warrior",
+          "pos": [
+            17,
+            60
+          ],
+          "hp": 50,
+          "state": "WANDER",
+          "strategy": {
+            "project_id": "project_dir_honor",
+            "objective_id": null,
+            "interrupted_by": null,
+            "concern_count": 0,
+            "last_capacity_profile": {
+              "planning_budget": 4,
+              "judgment_stability": 0.457,
+              "evidence_quality": 0.343,
+              "social_bandwidth": 2,
+              "detour_depth_limit": 1,
+              "active_slice_limit": 4,
+              "concern_intake_limit": 2,
+              "lead_retention_limit": 3,
+              "candidate_zone_limit": 1,
+              "ally_evaluation_limit": 2,
+              "blocker_resolution_patience": 0.471,
+              "resume_reliability": 0.511,
+              "interruption_resistance": 0.371,
+              "abandonment_threshold_mod": 0.886,
+              "contradiction_sensitivity": 0.229,
+              "source_trust_learning_rate": 0.214
+            },
+            "active_slice_used": 1,
+            "active_concerns_used": 0,
+            "retained_leads_used": 0,
+            "candidate_zones_used": 0,
+            "ally_evaluations_used": 0,
+            "dropped_candidates_count": 0,
+            "detour_depth_used": 0,
+            "is_overloaded": false,
+            "primary_overload_source": null,
+            "last_overload_tick": null
+          }
+        },
+        {
+          "id": 74,
+          "kind": "goblin_warrior",
+          "pos": [
+            12,
+            66
+          ],
+          "hp": 39,
+          "state": "WANDER",
+          "strategy": {
+            "project_id": null,
+            "objective_id": null,
+            "interrupted_by": null,
+            "concern_count": 0,
+            "last_capacity_profile": {
+              "planning_budget": 4,
+              "judgment_stability": 0.457,
+              "evidence_quality": 0.393,
+              "social_bandwidth": 2,
+              "detour_depth_limit": 1,
+              "active_slice_limit": 4,
+              "concern_intake_limit": 2,
+              "lead_retention_limit": 4,
+              "candidate_zone_limit": 1,
+              "ally_evaluation_limit": 2,
+              "blocker_resolution_patience": 0.471,
+              "resume_reliability": 0.541,
+              "interruption_resistance": 0.371,
+              "abandonment_threshold_mod": 0.886,
+              "contradiction_sensitivity": 0.229,
+              "source_trust_learning_rate": 0.214
+            },
+            "active_slice_used": 0,
+            "active_concerns_used": 0,
+            "retained_leads_used": 0,
+            "candidate_zones_used": 0,
+            "ally_evaluations_used": 0,
+            "dropped_candidates_count": 0,
+            "detour_depth_used": 0,
+            "is_overloaded": false,
+            "primary_overload_source": null,
+            "last_overload_tick": null
+          }
+        },
+        {
+          "id": 76,
+          "kind": "goblin_warrior",
+          "pos": [
+            17,
+            61
+          ],
+          "hp": 50,
+          "state": "WANDER",
+          "strategy": {
+            "project_id": "project_dir_power",
+            "objective_id": null,
+            "interrupted_by": null,
+            "concern_count": 0,
+            "last_capacity_profile": {
+              "planning_budget": 5,
+              "judgment_stability": 0.657,
+              "evidence_quality": 0.393,
+              "social_bandwidth": 2,
+              "detour_depth_limit": 1,
+              "active_slice_limit": 5,
+              "concern_intake_limit": 2,
+              "lead_retention_limit": 4,
+              "candidate_zone_limit": 1,
+              "ally_evaluation_limit": 2,
+              "blocker_resolution_patience": 0.471,
+              "resume_reliability": 0.496,
+              "interruption_resistance": 0.371,
+              "abandonment_threshold_mod": 0.886,
+              "contradiction_sensitivity": 0.229,
+              "source_trust_learning_rate": 0.214
+            },
+            "active_slice_used": 1,
+            "active_concerns_used": 0,
+            "retained_leads_used": 0,
+            "candidate_zones_used": 0,
+            "ally_evaluations_used": 0,
+            "dropped_candidates_count": 0,
+            "detour_depth_used": 0,
+            "is_overloaded": false,
+            "primary_overload_source": null,
+            "last_overload_tick": null
+          }
+        }
+      ],
+      "world_strategic": {
+        "opportunities": [],
+        "obligations": []
+      }
+    }
+  ]
+}
