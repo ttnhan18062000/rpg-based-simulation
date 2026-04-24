@@ -176,22 +176,22 @@
 
 #### `integration/strategy/test_strategic_transport.py`
 
-- [ ] `test_strategic_update_multi_record_transport`: Strategic update multi record transport — Verify that a single proposal can carry multiple strategic updates..
-- [ ] `test_strategic_update_repeated_id_last_one_wins`: Strategic update repeated id last one wins — Verify that repeated IDs in a single update follow last-one-wins semantics..
-- [ ] `test_strategic_update_idempotency_over_ticks`: Strategic update idempotency over ticks — Verify that applying the same update multiple times is idempotent..
-- [ ] `test_strategic_update_target_routing`: Strategic update target routing — Verify that strategic updates can be routed to a target entity..
+- [x] `test_strategic_update_multi_record_transport`: Strategic update multi record transport — Verify that a single proposal can carry multiple strategic updates..
+- [x] `test_strategic_update_repeated_id_last_one_wins`: Strategic update repeated id last one wins — Verify that repeated IDs in a single update follow last-one-wins semantics..
+- [x] `test_strategic_update_idempotency_over_ticks`: Strategic update idempotency over ticks — Verify that applying the same update multiple times is idempotent..
+- [x] `test_strategic_update_target_routing`: Strategic update target routing — Verify that strategic updates can be routed to a target entity..
 
 #### `integration/strategy/test_strategic_world_integration.py`
 
-- [ ] `test_world_strategic_registry_persistence`: World strategic registry persistence — Verify that WorldStrategicRegistry is preserved in snapshots..
-- [ ] `test_strategic_world_integration_system_pruning`: Strategic world integration system pruning — Verify that the system prunes expired world opportunities..
-- [ ] `test_telemetry_strategic_metrics`: Telemetry strategic metrics — Verify that TelemetrySystem collects strategic metrics..
+- [x] `test_world_strategic_registry_persistence`: World strategic registry persistence — Verify that WorldStrategicRegistry is preserved in snapshots..
+- [x] `test_strategic_world_integration_system_pruning`: Strategic world integration system pruning — Verify that the system prunes expired world opportunities..
+- [x] `test_telemetry_strategic_metrics`: Telemetry strategic metrics — Verify that TelemetrySystem collects strategic metrics..
 
 #### `unit/ai/strategy/test_strategic_biasing.py`
 
-- [ ] `test_biological_need_to_strategic_bias`: Biological need to strategic bias.
-- [ ] `test_directive_to_project_flow`: Directive to project flow.
-- [ ] `test_strategic_bias_impact_on_selection`: Strategic bias impact on selection.
+- [x] `test_biological_need_to_strategic_bias`: Biological need to strategic bias.
+- [x] `test_directive_to_project_flow`: Directive to project flow.
+- [x] `test_strategic_bias_impact_on_selection`: Strategic bias impact on selection.
 
 #### `unit/ai/strategy/test_strategic_uncertainty.py`
 
@@ -211,28 +211,25 @@ proof path: `tests_v2/contract/test_resource_intelligence_contract.py`
 
 #### `unit/strategy/test_strategic_services.py`
 
-- [ ] `test_canonical_blocker_structure`: Canonical blocker structure — Verify that StrategicState has a blockers list and ObjectiveRecord uses IDs..
-- [ ] `test_strategic_snapshot_isolation`: Strategic snapshot isolation — Verify that deep copying an entity results in a fully isolated strategic tree..
+- [x] `test_canonical_blocker_structure`: Canonical blocker structure — Verify that StrategicState has a blockers list and ObjectiveRecord uses IDs..
+- [x] `test_strategic_snapshot_isolation`: Strategic snapshot isolation — Verify that deep copying an entity results in a fully isolated strategic tree..
 - [x] `test_belief_decay_aoa_purity`: Belief decay aoa purity — Verify that BeliefService.decay_stale_beliefs returns an update and does not mutate in-place..
-- [ ] `test_social_applicator_aoa_purity`: Social applicator aoa purity — Verify that SocialStateApplicator returns updates and does not mutate the world..
-- [x] `test_concern_generation_near_death`: Concern generation near death.
-- [x] `test_directive_mutation_near_death`: Directive mutation near death.
-- [x] `test_project_mutation_interruption`: Project mutation interruption.
-- [ ] `test_strategic_update_blocker_merging`: Strategic update blocker merging — Verify that ActionSystem merges blockers from StrategicUpdate correctly..
+- [x] `test_social_applicator_aoa_purity`: Social applicator aoa purity — Verify that SocialStateApplicator returns updates and does not mutate the world..
+- [x] `test_strategic_update_blocker_merging`: Strategic update blocker merging — Verify that ActionSystem merges blockers from StrategicUpdate correctly..
 
 #### `unit/systems/test_strategy.py`
 
-- [ ] `test_influence_shifts_on_monster_death`: Influence shifts on monster death.
-- [ ] `test_influence_shifts_on_hero_death`: Influence shifts on hero death.
-- [ ] `test_war_state_transition`: War state transition.
-- [ ] `test_conquered_region_triggers_stronghold`: Conquered region triggers stronghold.
-- [ ] `test_stronghold_debuff_application`: Stronghold debuff application.
+- [x] `test_influence_shifts_on_monster_death`: Influence shifts on monster death.
+- [x] `test_influence_shifts_on_hero_death`: Influence shifts on hero death.
+- [x] `test_war_state_transition`: War state transition.
+- [x] `test_conquered_region_triggers_stronghold`: Conquered region triggers stronghold.
+- [x] `test_stronghold_debuff_application`: Stronghold debuff application.
 
 #### `unit/systems/test_strategy_system.py`
 
-- [ ] `test_war_declaration`: War declaration.
-- [ ] `test_territory_conquest`: Territory conquest.
-- [ ] `test_territory_liberation`: Territory liberation.
+- [x] `test_war_declaration`: War declaration.
+- [x] `test_territory_conquest`: Territory conquest.
+- [x] `test_territory_liberation`: Territory liberation.
 
 ### Social / contracts / reputation / lived consequences
 
@@ -242,38 +239,38 @@ proof path: `tests_v2/contract/test_resource_intelligence_contract.py`
 
 #### `ai/test_learning_social.py`
 
-- [ ] `test_intel_confirmation_by_sight`: Intel confirmation by sight — Verify that seeing a person mentioned in a lead confirms it and boosts trust..
+- [x] `test_intel_confirmation_by_sight`: Intel confirmation by sight — Verify that seeing a person mentioned in a lead confirms it and boosts trust..
 - [x] `test_intel_refutation_by_exhaustion`: Intel refutation by exhaustion — Verify that failing to find a target refutes the lead and drops trust..
 
 #### `core/test_lived_models.py`
 
-- [ ] `test_routine_profile_instantiation`: Routine profile instantiation — Verify RoutineProfile can be instantiated with hybrid scheduling..
-- [ ] `test_place_attachment_instantiation`: Place attachment instantiation — Verify PlaceAttachment can be instantiated and supports sentiment..
-- [ ] `test_group_record_instantiation`: Group record instantiation — Verify GroupRecord supports shared tactical intent..
-- [ ] `test_entity_integration`: Entity integration — Verify Entity and IdentityAspect absorb new Phase 3 fields..
-- [ ] `test_world_state_registry`: World state registry — Verify GroupRegistry integration in WorldState..
+- [x] `test_routine_profile_instantiation`: Routine profile instantiation — Verify RoutineProfile can be instantiated with hybrid scheduling..
+- [x] `test_place_attachment_instantiation`: Place attachment instantiation — Verify PlaceAttachment can be instantiated and supports sentiment..
+- [x] `test_group_record_instantiation`: Group record instantiation — Verify GroupRecord supports shared tactical intent..
+- [x] `test_entity_integration`: Entity integration — Verify Entity and IdentityAspect absorb new Phase 3 fields..
+- [x] `test_world_state_registry`: World state registry — Verify GroupRegistry integration in WorldState..
 
 #### `integration/gameplay/test_social_meaning.py`
 
-- [ ] `test_social_event_betrayal`: Social event betrayal — Verify that hitting an ally triggers a betrayal event and social bond shift..
-- [ ] `test_social_event_near_death_and_tp`: Social event near death and tp — Verify that a near-death experience creates a durable turning point..
-- [ ] `test_social_event_first_kill_milestone`: Social event first kill milestone — Verify that first kill increments reputation and notoriety..
+- [x] `test_social_event_betrayal`: Social event betrayal — Verify that hitting an ally triggers a betrayal event and social bond shift..
+- [x] `test_social_event_near_death_and_tp`: Social event near death and tp — Verify that a near-death experience creates a durable turning point..
+- [x] `test_social_event_first_kill_milestone`: Social event first kill milestone — Verify that first kill increments reputation and notoriety..
 
 #### `test_phase_3_social_contracts.py`
 
-- [ ] `test_recruitment_haggling_threshold`: Recruitment haggling threshold — Verify that candidates counter-offer when willingness is close to threshold..
-- [ ] `test_contract_outcome_consequences`: Contract outcome consequences — Verify that contract resolution returns correct intent updates for all members..
-- [ ] `test_role_aware_tactical_biases`: Role aware tactical biases — Verify that utility biases change based on contract role..
+- [x] `test_recruitment_haggling_threshold`: Recruitment haggling threshold — Verify that candidates counter-offer when willingness is close to threshold..
+- [x] `test_contract_outcome_consequences`: Contract outcome consequences — Verify that contract resolution returns correct intent updates for all members..
+- [x] `test_role_aware_tactical_biases`: Role aware tactical biases — Verify that utility biases change based on contract role..
 
 #### `unit/ai/test_social.py`
 
-- [ ] `test_inn_gossip`: Inn gossip.
-- [ ] `test_hero_trading`: Hero trading.
+- [x] `test_inn_gossip`: Inn gossip.
+- [x] `test_hero_trading`: Hero trading.
 
 #### `unit/ai/strategy/test_lead_generation.py`
 
 - [x] `test_lead_generation_from_blocker`: Lead generation from blocker — Verify that a blocker without a known location generates a 'location' lead..
-- [ ] `test_lead_deduplication`: Lead deduplication — Ensure same clue doesn't create duplicate leads..
+- [x] `test_lead_deduplication`: Lead deduplication — Ensure same clue doesn't create duplicate leads..
 
 original evidence: `unit/ai/strategy/test_lead_generation.py`
 `src_v2` evidence: `src_v2/systems/strategic.py`
@@ -282,28 +279,28 @@ proof path: `tests_v2/contract/test_resource_intelligence_contract.py`
 
 #### `unit/ai/test_social_integration.py`
 
-- [ ] `test_social_bias_on_goal_scoring`: Social bias on goal scoring — Verify that a high-trust bond increases SOCIAL goal score..
-- [ ] `test_reputation_impact_on_caution`: Reputation impact on caution — Verify low global reputation triggers defensive posture in cautious entities..
+- [x] `test_social_bias_on_goal_scoring`: Social bias on goal scoring — Verify that a high-trust bond increases SOCIAL goal score..
+- [x] `test_reputation_impact_on_caution`: Reputation impact on caution — Verify low global reputation triggers defensive posture in cautious entities..
 
 #### `unit/core/gameplay/test_npc_contracts.py`
 
-- [ ] `test_npc_loadout_integrity`: Npc loadout integrity — Verify that specific NPC tiers are assigned their canonical equipment..
-- [ ] `test_npc_kind_mapping_integrity`: Npc kind mapping integrity — Verify that race/tier combinations map to the correct semantic kind name..
+- [x] `test_npc_loadout_integrity`: Npc loadout integrity — Verify that specific NPC tiers are assigned their canonical equipment..
+- [x] `test_npc_kind_mapping_integrity`: Npc kind mapping integrity — Verify that race/tier combinations map to the correct semantic kind name..
 
 #### `unit/core/models/test_social_milestones.py`
 
-- [ ] `test_nemesis_milestone_creation`: Nemesis milestone creation.
-- [ ] `test_memory_salience_retention`: Memory salience retention..
+- [x] `test_nemesis_milestone_creation`: Nemesis milestone creation.
+- [x] `test_memory_salience_retention`: Memory salience retention..
 
 #### `unit/core/models/test_social_registry_updates.py`
 
-- [ ] `test_combat_updates_social_registry`: Combat updates social registry.
-- [ ] `test_archetype_influence_on_social_deltas`: Archetype influence on social deltas.
+- [x] `test_combat_updates_social_registry`: Combat updates social registry.
+- [x] `test_archetype_influence_on_social_deltas`: Archetype influence on social deltas.
 
 #### `unit/ai/strategy/test_social_recruitment.py`
 
-- [ ] `test_recruitment_necessity_evaluation`: Recruitment necessity evaluation — Verify that a blocker with 'group' requirement triggers recruitment intention..
-- [ ] `test_candidate_viability_check`: Candidate viability check — Ensure recruiter skips hostile or incapable candidates..
+- [x] `test_recruitment_necessity_evaluation`: Recruitment necessity evaluation — Verify that a blocker with 'group' requirement triggers recruitment intention..
+- [x] `test_candidate_viability_check`: Candidate viability check — Ensure recruiter skips hostile or incapable candidates..
 
 original evidence: `unit/ai/strategy/test_social_recruitment.py`
 `src_v2` evidence: `N/A`
@@ -312,8 +309,8 @@ proof path: N/A
 
 #### `unit/strategy/test_social_reasoning_bounding.py`
 
-- [ ] `test_recruitment_offer_bounding_stable`: Recruitment offer bounding stable — Stable entities produce consistent offers without noise..
-- [ ] `test_recruitment_offer_bounding_unstable`: Recruitment offer bounding unstable — Unstable entities produce noisy/perturbed offers..
+- [x] `test_recruitment_offer_bounding_stable`: Recruitment offer bounding stable — Stable entities produce consistent offers without noise..
+- [x] `test_recruitment_offer_bounding_unstable`: Recruitment offer bounding unstable — Unstable entities produce noisy/perturbed offers..
 
 #### `unit/systems/test_familiarity_scaling.py`
 

@@ -8,58 +8,34 @@ A high-fidelity 2D RPG simulation engine with parallel AI, deterministic replay,
 > **Architectural Convergence Complete**: The engine has successfully migrated to a **Feature-Based Aspect-Oriented Architecture** (AOA). This design uses composition (Aspects) for entities and domain-separated modules for simulation logic.
 
 > [!IMPORTANT]
-> **Ratification Phase Complete**: The engine has achieved **Phase 11 Ratification Closure**. `src_v2` is now the authoritative replacement for 80.4% of the legacy `src` logic. See the [Final Replacement Verdict](docs/engine/final_replacement_verdict.md) and [Replacement Boundary](docs/engine/final_replacement_boundary.md) for the official support statement.
+> **Operational Cutover Complete**: The engine has successfully transitioned to the **src_v2** authoritative runtime as of Phase 12. The legacy `src` logic is officially deprecated and slated for retirement in Phase 13. See the [Phase 12 Entry Package](docs/engine/phase12_entry_package.md) and the [Phase 13 Retirement Manifest](docs/engine/phase13_retirement_manifest.md) for details.
 
 ```
-src/
+src_v2/
 ├── __main__.py              # Entry point — serve (default) or cli mode
-├── config.py                # SimulationConfig dataclass
-├── api/                     # FastAPI web server layer
-│   ├── app.py               #   App factory (lifespan, CORS, serves frontend/dist/)
-│   ├── engine_manager.py    #   Background thread wrapper (atomic snapshot swap)
-│   ├── dependencies.py      #   FastAPI dependency injection
-│   ├── schemas.py           #   Pydantic response models
-│   └── routes/              #   Versioned REST endpoints
-│       ├── map.py            #     GET /api/v1/map
-│       ├── state.py          #     GET /api/v1/state, /stats
-│       ├── control.py        #     POST /api/v1/control/{action}, /speed
-│       ├── config.py         #     GET /api/v1/config
-│       └── metadata.py       #     GET /api/v1/metadata/* (8 endpoints)
-├── core/                    # Data models & world representation (pydantic shared schemas)
-│   ├── enums.py             #   ActionType, AIState, Direction, Domain, Material
-│   ├── models.py            #   Vector2, Stats, Entity (with faction + effects)
-│   ├── faction.py           #   Faction, FactionRelation, FactionRegistry, TerritoryInfo
-│   ├── effects.py           #   StatusEffect, EffectType, factory helpers
-│   ├── buildings.py         #   Building model, shop/recipe/guild config, economy helpers
-│   ├── items.py             #   ItemTemplate (pydantic dataclass), Inventory, ITEM_REGISTRY
-│   ├── classes.py           #   ClassDef, SkillDef, BreakthroughDef (pydantic dataclasses)
-│   ├── traits.py            #   TraitDef (pydantic dataclass), UtilityBonus, TraitRegistry
-│   ├── resource_nodes.py    #   ResourceNode, TERRAIN_RESOURCES
-│   ├── grid.py              #   Tile-based map
-│   ├── world_state.py       #   Mutable authoritative state
-│   └── snapshot.py          #   Immutable read-only view for workers
-├── engine/                  # Tick engine & concurrency
-│   ├── world_loop.py        #   4-phase tick cycle (Schedule → Collect → Resolve → Cleanup)
-│   ├── action_queue.py      #   Thread-safe MPSC queue
-│   ├── worker_pool.py       #   ThreadPoolExecutor for AI
-│   └── conflict_resolver.py #   Deterministic conflict arbitration
-├── actions/                 # Action proposals & handlers
-│   ├── base.py              #   ActionProposal dataclass
-│   ├── move.py              #   MoveAction (validate + apply)
-│   ├── rest.py              #   RestAction
-│   └── combat.py            #   CombatAction with deterministic damage rolls
-├── ai/                      # Intelligence layer
-│   ├── brain.py             #   AIBrain dispatcher (faction-aware, class-based)
-│   ├── perception.py        #   Vision & memory utilities (faction-aware)
-│   └── states.py            #   Class-based StateHandler registry + AIContext
-├── systems/                 # Engine systems
-│   ├── rng.py               #   Domain-separated deterministic RNG (xxhash)
-│   ├── spatial_hash.py      #   O(1) spatial neighbor lookups
-│   └── generator.py         #   Entity spawner
-└── utils/
-    ├── logging.py           #   Structured logging setup
-    ├── event_log.py         #   Thread-safe ring buffer for API events
-    └── replay.py            #   JSON replay recorder
+├── cli/                     # CLI entrypoint and argument parsing
+├── config/                  # Configuration loaders and validators
+├── api/                     # FastAPI web server and WebSocket layer
+│   ├── server.py            #   FastAPI app factory
+│   ├── engine_manager.py    #   V2 Engine lifecycle management
+│   └── ws/                  #   High-performance Binary WebSocket (BWS)
+├── core/                    # Authoritative state and domain models
+│   ├── state.py             #   The singular source of truth
+│   ├── strategic.py         #   Strategic cognition models
+│   └── worker_protocol.py   #   Worker intent/result contracts
+├── engine/                  # The Simulation Kernel
+│   ├── kernel.py            #   The 8-phase deterministic tick executor
+│   ├── worker_manager.py    #   Parallel worker orchestration
+│   └── replay_manager.py    #   Chunked, resource-safe replay system
+├── systems/                 # Pure domain systems (No side effects)
+│   ├── movement.py          #   Legality and redirection
+│   ├── combat.py            #   Deterministic combat resolution
+│   └── strategic.py         #   Strategic project evaluation
+├── platform/                # Hardware and OS abstractions
+│   ├── rng.py               #   Domain-separated xxhash RNG
+│   └── clock.py             #   Monotonic tick timing
+├── logging/                 # Structured, contextual logging
+└── certification/           # Forensic verification and parity harness
 
 frontend/                    # React + Vite + TypeScript SPA
 ├── vite.config.ts           #   Build config + API proxy
@@ -107,10 +83,10 @@ make cli             # Run headless simulation (200 ticks)
 
 ### Server Mode (default)
 
-Starts a FastAPI server and serves the production frontend build at `http://127.0.0.1:8000`.
+Starts the FastAPI server with the V2 engine backend.
 
 ```bash
-python -m src serve --host 127.0.0.1 --port 8000 --seed 42 --entities 10
+python3 -m src serve --host 127.0.0.1 --port 8000 --seed 42 --entities 10
 ```
 
 | Flag          | Default     | Description                 |
@@ -124,10 +100,10 @@ python -m src serve --host 127.0.0.1 --port 8000 --seed 42 --entities 10
 
 ### CLI Mode
 
-Runs the simulation headless and writes a JSON replay file.
+Runs the simulation headless and writes a chunked replay directory.
 
 ```bash
-python -m src cli --seed 42 --ticks 500 --entities 15 --log-level DEBUG
+python3 -m src cli --seed 42 --ticks 1000 --entities 50 --log-level INFO
 ```
 
 | Flag          | Default     | Description                 |

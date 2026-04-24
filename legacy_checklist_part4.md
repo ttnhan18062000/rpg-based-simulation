@@ -16,8 +16,8 @@
 
 #### `integration/strategy/test_building_to_strategy_pipeline.py`
 
-- [ ] `test_rng`: Rng.
-- [ ] `test_entity`: Entity.
+- [x] `test_rng`: Rng.
+- [x] `test_entity`: Entity.
 - [x] `test_guild_intel_to_strategy_visible_pipeline`: Guild intel to strategy visible pipeline — Verify that guild intel produces leads/zones that are visible in API schemas..
 - [x] `test_blacksmith_blocker_resolution_pipeline`: Blacksmith blocker resolution pipeline — Verify that blacksmith constraints produce blockers that are resolved by acquisition..
 
@@ -34,8 +34,8 @@
 
 #### `integration/strategy/test_strategy_observability_consistency.py`
 
-- [ ] `test_rng`: Rng.
-- [ ] `test_entity`: Entity.
+- [x] `test_rng`: Rng.
+- [x] `test_entity`: Entity.
 - [x] `test_strategy_observability_consistency`: Strategy observability consistency — Verify that a strategic shift is consistently observable across all surfaces..
 - [x] `test_strategic_decision_driver_traceability`: Strategic decision driver traceability — Verify that DecisionDriver records flow from AIBrain to the entity state..
 

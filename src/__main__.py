@@ -320,6 +320,17 @@ def _run_inspect(args: argparse.Namespace) -> None:
 
 
 def main() -> None:
+    import os
+    # Phase 12 Cutover Delegation
+    if os.environ.get("USE_LEGACY_SRC") != "1":
+        try:
+            from src_v2.cli.entry import main as v2_main
+            v2_main()
+            return
+        except ImportError:
+            # Fallback to legacy if v2 is missing (safety)
+            pass
+
     parser = _build_parser()
     args = parser.parse_args()
 

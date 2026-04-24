@@ -127,7 +127,7 @@ Relevant legacy test surface includes flow fields, terrain costs, roads, bridges
 - [x] `test_each_biome_has_road_network`: biome road-network presence is preserved
 - [x] `test_road_connects_locations`: road connectivity behavior is preserved
 - [x] `test_bridges_placed_over_water`: bridge placement over water is preserved
-- [x_] `test_all_four_biomes_have_features`: biome feature presence is preserved
+- [x] `test_all_four_biomes_have_features`: biome feature presence is preserved
 - [x] `test_difficulty_sets_level_range`: region difficulty sets level range correctly
 - [x] `test_gold_scales_with_difficulty`: difficulty-linked gold scaling is preserved
 - [x] `test_in_region_returns_difficulty`: region difficulty query logic is preserved
@@ -165,12 +165,12 @@ This section is governance-only.
 
 Use this part to map residual logic into roadmap phases:
 
-- [ ] Phase 8 owns:
+- [x] Phase 8 owns:
   - leash/camp/local anchored ecology
   - local burden/loot-abort realism
   - local/path-affordance pieces only where they directly affect immediate tactics
 
-- [ ] Phase 9 owns:
+- [x] Phase 9 owns:
   - quests
   - traits
   - roles
@@ -179,7 +179,7 @@ Use this part to map residual logic into roadmap phases:
   - regional traversal/topology when it affects world-scale intention
   - cooperation/proximity bonding
 
-- [ ] No Part 7 item should be left implicit under a generic bucket like “AI improvements” or “progression tuning`
+- [x] No Part 7 item should be left implicit under a generic bucket like “AI improvements” or “progression tuning”
 
 ---
 

@@ -61,6 +61,18 @@
     {
       "path": "docs/engine/project_lawbook_m10.md",
       "required_headers": ["Purpose", "Architectural Pillars", "Table of Contents"]
+    },
+    {
+      "path": "docs/engine/phase12_entry_package.md",
+      "required_headers": ["Purpose", "Cutover Authorization", "Operational Constraints"]
+    },
+    {
+      "path": "docs/engine/phase13_retirement_manifest.md",
+      "required_headers": ["Purpose", "Core Logic & Engine", "Retirement Protocol"]
+    },
+    {
+      "path": "docs/engine/legacy_replacement_ledger.md",
+      "required_headers": ["Purpose", "Replacement Ledger"]
     }
   ],
   "forbidden_terms": [

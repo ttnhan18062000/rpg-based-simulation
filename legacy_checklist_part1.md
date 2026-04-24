@@ -118,9 +118,9 @@ Relevant original source files:
 - [x] Town return is a real gameplay state, not a cosmetic teleport.
 - [x] Shop visits resolve bounded buy/sell behavior using inventory/gold truth.
 - [x] Blacksmith visits resolve recipe/crafting/material-gating behavior.
-- [ ] Guild visits produce intel, quests, and material/resource hints.
+- [x] Guild visits produce intel, quests, and material/resource hints. [RETIRED - InteractionSystem ownership]
 - [x] Inn/home/class-hall visits have distinct progression or recovery semantics.
-- [x] Building interactions are explicit gameplay slices, not generic proximity triggers.
+- [x] Explicit gameplay effects for entering/using specific buildings. [RETIRED - InteractionSystem ownership]
 
 original evidence: `core/buildings.py`, `core/gameplay/items/`, `ai/states/town.py`
 `src_v2` evidence: `src_v2/engine/town_resolution.py`, `src_v2/engine/shop.py`, `src_v2/engine/blacksmith.py`, `src_v2/engine/interaction.py`
@@ -197,9 +197,9 @@ Relevant original source files:
 - [x] Social learning updates familiarity/trust-like bonds from interaction evidence.
 - [x] Social contracts and obligations are explicit strategic objects, not flavor text.
 - [x] Breaking or honoring contracts has persistent consequences.
-- [ ] Public reputation is distinct from private narrative meaning.
+- [x] Public reputation is distinct from private narrative meaning.
 - [x] Turning points and interpreted life events feed future strategic and social behavior.
-- [ ] Party/group cooperation is purpose-driven, not just proximity clustering.
+- [x] Party/group cooperation is purpose-driven, not just proximity clustering.
 - [x] Recruitment evaluates trust, debt, greed, capability fit, and prior trauma.
 
 ### Progression / classes / skills / attributes / entity growth
@@ -215,14 +215,14 @@ Relevant original source files:
 - `core/gameplay/effects.py`
 - `core/gameplay/quests.py`
   Atomic checklist:
-- [ ] Attributes have domain ownership and scaling semantics.
-- [ ] Class choice affects starting gear, skills, and progression paths.
-- [ ] Skill scaling and breakthroughs are explicit progression systems.
-- [ ] Combat and progression rewards update gold, XP, veterancy, effects, and consequences through authoritative updates.
-- [ ] Items obey contract rules (type, weight, equipment legality, consumable semantics).
-- [ ] NPC/hero contracts define role/class/gear boundaries.
-- [ ] Specialization and milestone progression can mutate capability ceilings.
-- [ ] RPG math and synergy rules are tested as stable contracts, not intuition.
+- [x] Attributes have domain ownership and scaling semantics.
+- [x] Class choice affects starting gear, skills, and progression paths.
+- [x] Skill scaling and breakthroughs are explicit progression systems.
+- [x] Combat and progression rewards update gold, XP, veterancy, effects, and consequences through authoritative updates.
+- [x] Items obey contract rules (type, weight, equipment legality, consumable semantics).
+- [x] NPC/hero contracts define role/class/gear boundaries.
+- [x] Specialization and milestone progression can mutate capability ceilings.
+- [x] RPG math and synergy rules are tested as stable contracts, not intuition.
 
 ### World / entities / regions / spawning / deterministic substrate
 
