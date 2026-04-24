@@ -220,3 +220,11 @@ reviews/*
 logs/*
 
 .gemini/*
+
+# Test Replays and Large Data
+replay.json
+replay_*.json
+replay_v2.json/
+replay_v2_test/
+stored_artifacts/**/*.json
+!stored_artifacts/**/manifest.json
