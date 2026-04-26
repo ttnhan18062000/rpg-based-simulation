@@ -31,20 +31,30 @@ Factions (Goblins, Wolves, Bandits, etc.) grow more hostile based on their proxi
 
 ---
 
-## 1.5 Strategic Resilience (Milestone 11)
+## 1.5 Regional Sovereignty & Taxation (Milestone 11/Phase 24)
 
-The world's regions dynamically shift between Hero and Monster control based on the **Influence Index**.
+The world's regions dynamically shift between Hero and Monster control based on the **Influence Index**. This system drives macroscopic economics and tactical pressure.
 
 ### Regional Influence
 - **Shift Calculation**:
   - **Hero Death**: `-5.0` Influence (favors Monsters).
   - **Monster Death**: `+5.0` Influence (favors Heroes).
-- **Safe-Zones** (`Influence > 80.0`):
-  - **Population Suppression**: `50%` reduction in monster spawn rates.
-  - **Tier Cap**: Spawns are capped at **SCOUT** tier or lower.
-- **Conquered Regions** (`Influence < -80.0`):
-  - **Stronghold Spawning**: A static **Stronghold** entity is spawned at the region center.
-  - **`CONQUERED_DEBUFF`**: Heroes in the region suffer **0.8x ATK/DEF** as long as the stronghold stands.
+- **Sovereignty Transitions**:
+  - **Conquest** (`Influence <= -50.0`): Region is taken by **MONSTER_HORDE**.
+  - **Liberation** (`Influence >= 50.0`): Region is taken by **HERO_GUILD**.
+  - **Neutral**: Region is contested or unowned.
+
+### Macroscopic Taxation
+Every **100 ticks**, the sovereign faction collects taxes from their owned regions:
+- **Hero Tax**: Heroes in an owned region pay **2.0 Gold** to the owner faction.
+- **Building Tax**: Functional buildings in an owned region pay **10.0 Gold** to the owner faction.
+- **Gold Sinks**: Taxation funnels individual wealth into global faction resources (e.g., `faction_0_gold`), which fuels macroscopic recruitment and world-scaling.
+
+### Regional Pressure (`CONQUERED_DEBUFF`)
+Heroes venturing into monster-owned territory suffer significant stat penalties:
+- **Stat Multipliers**: **0.8x ATK**, **0.8x DEF**, and **0.9x Speed**.
+- **Mechanic**: The debuff is applied per-tick during the authoritative state generation while the hero remains in the region.
+- **Counter-play**: Reclaiming the region (Liberation) or killing the local monster population instantly removes these penalties.
 
 ---
 

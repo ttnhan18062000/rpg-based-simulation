@@ -15,7 +15,7 @@ The current code already has the structural pieces:
 
 That is the good news.
 
-The bad news is that the current worker path is still not trustworthy enough to carry real RPG logic. The default worker logic is placeholder-level rather than real domain execution, and the concurrency surface still depends on thin assumptions around packet meaning, result meaning, fallback safety, batch behavior, and failure handling. That means the engine has a concurrency shape, but not yet concurrency law. See [all_src_v2.py](sandbox:/mnt/data/all_src_v2.py).
+The bad news is that the current worker path is still not trustworthy enough to carry real RPG logic. The default worker logic is placeholder-level rather than real domain execution, and the concurrency surface still depends on thin assumptions around packet meaning, result meaning, fallback safety, batch behavior, and failure handling. That means the engine has a concurrency shape, but not yet concurrency law. See [all_src.py](sandbox:/mnt/data/all_src.py).
 
 Milestone D exists to make these things true:
 
@@ -210,10 +210,10 @@ This document must explicitly define:
 
 - `docs/engine/bounded_concurrency_contract_md.md`
 - `docs/engine/md_test_matrix.md`
-- `src_v2/engine/worker_manager.py`
-- `src_v2/engine/kernel.py`
-- `src_v2/core/work.py`
-- `src_v2/core/updates.py`
+- `src/engine/worker_manager.py`
+- `src/engine/kernel.py`
+- `src/core/work.py`
+- `src/core/updates.py`
 
 ### [Task important notes]
 
@@ -278,10 +278,10 @@ Then harden packet creation so that:
 
 ### [Task possible affected files]
 
-- `src_v2/engine/worker_manager.py`
-- `src_v2/core/work.py`
-- `src_v2/core/state.py`
-- `src_v2/engine/kernel.py`
+- `src/engine/worker_manager.py`
+- `src/core/work.py`
+- `src/core/state.py`
+- `src/engine/kernel.py`
 - packet-related tests
 
 ### [Task important notes]
@@ -341,9 +341,9 @@ Audit `WorkerResult` and related update models so that:
 
 ### [Task possible affected files]
 
-- `src_v2/core/updates.py`
-- `src_v2/engine/worker_manager.py`
-- `src_v2/engine/apply.py`
+- `src/core/updates.py`
+- `src/engine/worker_manager.py`
+- `src/engine/apply.py`
 - result-validation tests
 
 ### [Task important notes]
@@ -405,9 +405,9 @@ This task must ensure:
 
 ### [Task possible affected files]
 
-- `src_v2/engine/worker_manager.py`
-- `src_v2/engine/kernel.py`
-- `src_v2/core/work.py`
+- `src/engine/worker_manager.py`
+- `src/engine/kernel.py`
+- `src/core/work.py`
 - supported domain execution modules
 - local reference executor modules
 
@@ -469,9 +469,9 @@ Then ensure:
 
 ### [Task possible affected files]
 
-- `src_v2/engine/kernel.py`
-- `src_v2/engine/apply.py`
-- `src_v2/engine/worker_manager.py`
+- `src/engine/kernel.py`
+- `src/engine/apply.py`
+- `src/engine/worker_manager.py`
 - concurrency ordering tests
 
 ### [Task important notes]
@@ -534,9 +534,9 @@ Also define bounded submission policy:
 
 ### [Task possible affected files]
 
-- `src_v2/engine/worker_manager.py`
-- `src_v2/config/profiles.py`
-- `src_v2/observability/runtime_status.py`
+- `src/engine/worker_manager.py`
+- `src/config/profiles.py`
+- `src/observability/runtime_status.py`
 - worker-manager tests
 
 ### [Task important notes]
@@ -599,9 +599,9 @@ Then implement:
 
 ### [Task possible affected files]
 
-- `src_v2/engine/worker_manager.py`
-- `src_v2/observability/runtime_status.py`
-- `src_v2/governance/governor.py` if concurrency pressure affects mode
+- `src/engine/worker_manager.py`
+- `src/observability/runtime_status.py`
+- `src/governance/governor.py` if concurrency pressure affects mode
 - concurrency failure tests
 
 ### [Task important notes]
@@ -663,9 +663,9 @@ Also define non-equivalence boundaries:
 
 ### [Task possible affected files]
 
-- `tests_v2/engine/test_worker_local_equivalence.py`
-- `tests_v2/engine/test_determinism_suite.py`
-- `src_v2/engine/checkpoint.py`
+- `tests/engine/test_worker_local_equivalence.py`
+- `tests/engine/test_determinism_suite.py`
+- `src/engine/checkpoint.py`
 - supported concurrent domain tests
 
 ### [Task important notes]
@@ -722,10 +722,10 @@ If concurrency pressure affects governor behavior, define exactly how that signa
 
 ### [Task possible affected files]
 
-- `src_v2/observability/runtime_status.py`
-- `src_v2/observability/signals.py`
-- `src_v2/engine/worker_manager.py`
-- `src_v2/governance/governor.py`
+- `src/observability/runtime_status.py`
+- `src/observability/signals.py`
+- `src/engine/worker_manager.py`
+- `src/governance/governor.py`
 - observability tests
 
 ### [Task important notes]
@@ -796,15 +796,15 @@ Add headless and system-level tests covering:
 
 ### Suggested test groups
 
-- `tests_v2/concurrency/test_packet_contract.py`
-- `tests_v2/concurrency/test_result_contract.py`
-- `tests_v2/concurrency/test_commit_order.py`
-- `tests_v2/concurrency/test_worker_failures.py`
-- `tests_v2/concurrency/test_worker_timeouts.py`
-- `tests_v2/concurrency/test_fallback_semantics.py`
-- `tests_v2/concurrency/test_inflight_bounds.py`
-- `tests_v2/concurrency/test_headless_concurrent_loop.py`
-- `tests_v2/concurrency/test_local_vs_concurrent_equivalence.py`
+- `tests/concurrency/test_packet_contract.py`
+- `tests/concurrency/test_result_contract.py`
+- `tests/concurrency/test_commit_order.py`
+- `tests/concurrency/test_worker_failures.py`
+- `tests/concurrency/test_worker_timeouts.py`
+- `tests/concurrency/test_fallback_semantics.py`
+- `tests/concurrency/test_inflight_bounds.py`
+- `tests/concurrency/test_headless_concurrent_loop.py`
+- `tests/concurrency/test_local_vs_concurrent_equivalence.py`
 
 ### [Task possible affected files]
 
@@ -861,11 +861,11 @@ Ensure that:
 
 ### [Task possible affected files]
 
-- `src_v2/engine/kernel.py`
-- `src_v2/engine/worker_manager.py`
-- `src_v2/engine/apply.py`
-- `src_v2/core/work.py`
-- `src_v2/core/updates.py`
+- `src/engine/kernel.py`
+- `src/engine/worker_manager.py`
+- `src/engine/apply.py`
+- `src/core/work.py`
+- `src/core/updates.py`
 
 ### [Task important notes]
 
@@ -993,8 +993,8 @@ This can be done with:
 
 ### [Task possible affected files]
 
-- `tests_v2/docs/*`
-- `tests_v2/concurrency/test_md_doc_integrity.py`
+- `tests/docs/*`
+- `tests/concurrency/test_md_doc_integrity.py`
 - CI config
 - integrity helpers
 

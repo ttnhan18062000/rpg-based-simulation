@@ -10,7 +10,7 @@ DONE
 Recover legacy API routes, WebSocket protocol, and transport-level semantics (compression, etc.) for the V2 engine.
 
 ## Scope
-- [x] Task 1: Audit API, protocol, transport, compression, and headless rows against current `src_v2` consumer behavior.
+- [x] Task 1: Audit API, protocol, transport, compression, and headless rows against current `src` consumer behavior.
 - [x] Task 2: Recover supported API route and metadata compatibility semantics.
 - [x] Task 3: Recover supported protocol, transport, and compression compatibility semantics.
 - [x] Task 4: Recover supported headless and final-system execution compatibility semantics.

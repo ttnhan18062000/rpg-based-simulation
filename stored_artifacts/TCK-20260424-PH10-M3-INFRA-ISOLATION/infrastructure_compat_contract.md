@@ -17,7 +17,7 @@ The engine follows a strict configuration precedence order:
 | `RPG_MAX_RAM_MB` | Resource bound for profile validation. | **NEW**. V2-specific safety guard. |
 
 ## 3. Infrastructure Isolation
-- **Import-Time Safety**: The core engine (`src_v2.engine.kernel`) is guaranteed to be importable without external infrastructure (RabbitMQ, Kafka, Postgres) present.
+- **Import-Time Safety**: The core engine (`src.engine.kernel`) is guaranteed to be importable without external infrastructure (RabbitMQ, Kafka, Postgres) present.
 - **Runtime Fallback**: V2 uses local `ThreadPoolExecutor` as the primary concurrent substrate, eliminating the mandatory requirement for external brokers in standard operation.
 - **Disabled-Mode Branching**: When `BROKER_DISABLED=1` is set, the engine bypasses thread pool initialization and executes all work packets synchronously in the kernel thread.
 

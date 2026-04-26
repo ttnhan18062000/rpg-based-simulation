@@ -20,7 +20,7 @@ It does not yet close API/protocol behavior or final-system/headless compatibili
 
 ## [Milestone technical implementation]
 
-Recover the supported operational-artifact compatibility surface in native `src_v2` terms.
+Recover the supported operational-artifact compatibility surface in native `src` terms.
 
 This milestone must:
 
@@ -57,7 +57,7 @@ At the end of this milestone:
 
 ## Task
 
-### [ ] (checkbox) - [Task 1] - Audit replay, logging, metrics, and report rows against current `src_v2` operational artifact behavior
+### [ ] (checkbox) - [Task 1] - Audit replay, logging, metrics, and report rows against current `src` operational artifact behavior
 
 #### [Task Description]
 
@@ -65,7 +65,7 @@ Find where operational compatibility is already real, partial, or fake.
 
 #### [Task technical implementation]
 
-Review all Phase 10 operational-artifact rows and map them to current `src_v2` implementation points.
+Review all Phase 10 operational-artifact rows and map them to current `src` implementation points.
 
 Identify:
 
@@ -77,9 +77,9 @@ Identify:
 
 #### [Task possible affected files]
 
-- `src_v2/replay/**`
-- `src_v2/observability/**`
-- `src_v2/certification/**`
+- `src/replay/**`
+- `src/observability/**`
+- `src/certification/**`
 - `docs/engine/replacement_ledger.md`
 
 #### [Task important notes]
@@ -117,10 +117,10 @@ Implement or refine supported behavior for:
 
 #### [Task possible affected files]
 
-- `src_v2/replay/**`
-- `src_v2/certification/**`
-- `tests_v2/replay/**`
-- `tests_v2/certification/**`
+- `src/replay/**`
+- `src/certification/**`
+- `tests/replay/**`
+- `tests/certification/**`
 
 #### [Task important notes]
 
@@ -157,10 +157,10 @@ Implement or refine supported behavior for:
 
 #### [Task possible affected files]
 
-- `src_v2/observability/**`
-- `src_v2/logging/**`
-- `tests_v2/e2e/**`
-- `tests_v2/integration/**`
+- `src/observability/**`
+- `src/logging/**`
+- `tests/e2e/**`
+- `tests/integration/**`
 
 #### [Task important notes]
 
@@ -198,10 +198,10 @@ Add focused tests for:
 
 #### [Task possible affected files]
 
-- `tests_v2/replay/**`
-- `tests_v2/certification/**`
-- `tests_v2/e2e/**`
-- `tests_v2/integration/**`
+- `tests/replay/**`
+- `tests/certification/**`
+- `tests/e2e/**`
+- `tests/integration/**`
 
 #### [Task important notes]
 

@@ -13,5 +13,5 @@
 ## References
 - `src/core/logic/legality_service.py`
 - `src/actions/move.py`
-- `src_v2/core/state.py`
-- `src_v2/engine/worker_logic.py`
+- `src/core/state.py`
+- `src/engine/worker_logic.py`

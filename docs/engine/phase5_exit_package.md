@@ -3,7 +3,7 @@
 This document is the authoritative exit summary for Phase 5 of the Resource Epic. It marks the formal completion of Milestone 1 (Hardening and Consolidation) and provides the certified baseline for the Phase 6 Authoritative Replacement Ledger.
 
 ## 1. Executive Summary
-Phase 5 successfully transitioned the `src_v2` engine from "experimental recovery" to a "hardened baseline." The core gameplay loop of **Move-Harvest-Resolve-Craft** is now officially supported, bit-identical to legacy `src` where required, and protected by a robust certification harness.
+Phase 5 successfully transitioned the `src` engine from "experimental recovery" to a "hardened baseline." The core gameplay loop of **Move-Harvest-Resolve-Craft** is now officially supported, bit-identical to legacy `src` where required, and protected by a robust certification harness.
 
 ## 2. Canonical Truth & Proof Surface
 The following artifacts constitute the hardened truth baseline. They must be considered the final word on Phase 5 status.

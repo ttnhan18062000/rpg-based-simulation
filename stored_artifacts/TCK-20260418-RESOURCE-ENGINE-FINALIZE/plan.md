@@ -1,6 +1,6 @@
 # Project Documentation Close-out (Milestones 1-10)
 
-This plan covers the final documentation hardening of the simulation engine. Every milestone document (1-10) will be updated to reflect full project completion, marking all checklists as done and adding "Implementation Comments" that link the theoretical tasks to the actual code/test artifacts in `src_v2` and `tests_v2`.
+This plan covers the final documentation hardening of the simulation engine. Every milestone document (1-10) will be updated to reflect full project completion, marking all checklists as done and adding "Implementation Comments" that link the theoretical tasks to the actual code/test artifacts in `src` and `tests`.
 
 ## User Review Required
 
@@ -14,8 +14,8 @@ Update all `resource_implementation_milestone_*.md` files from 1 to 10.
 
 - **Status Update**: Mark all check boxes `[x]`.
 - **Implementation Comments**: For every `[Task 1]`, `[Task 2]`, etc., add a new `[Task implementation comments]` section.
-    - Reference specific files in `src_v2/` (e.g., `src_v2/engine/kernel.py`, `src_v2/engine/governor.py`).
-    - Reference specific test suites in `tests_v2/`.
+    - Reference specific files in `src/` (e.g., `src/engine/kernel.py`, `src/engine/governor.py`).
+    - Reference specific test suites in `tests/`.
     - Briefly explain how the "Rules" for that task were satisfied.
 
 ### [Component] Project Artifacts (.gemini/antigravity/brain/...)
@@ -37,4 +37,4 @@ Update the project-level artifacts.
 
 ### Manual Verification
 - Review the resulting `resource_implementation_milestone_*.md` files to ensure all checklists are `[x]` and comments are present.
-- Run `pytest tests_v2/docs/` to ensure my edits didn't break any mandatory header requirements (e.g., if I accidentally removed a ## Purpose header).
+- Run `pytest tests/docs/` to ensure my edits didn't break any mandatory header requirements (e.g., if I accidentally removed a ## Purpose header).

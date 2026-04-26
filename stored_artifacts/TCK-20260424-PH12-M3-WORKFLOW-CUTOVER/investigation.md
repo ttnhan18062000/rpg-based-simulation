@@ -1,7 +1,7 @@
 # Phase 12 M3 Investigation: Workflow & CI Cutover
 
 ## 1. CI Configuration
-- `.github/workflows/main.yml`: Update to use `tests_v2` as the primary gate.
+- `.github/workflows/main.yml`: Update to use `tests` as the primary gate.
 - `Makefile`: Update `test` and `run` targets to default to V2.
 
 ## 2. Findings

@@ -5,8 +5,8 @@
 - Verify `docs/engine/legacy_replacement_ledger.md` has no "UNSUPPORTED" rows for Phase 7 scope.
 
 ## 2. Automated Validation
-- Run `pytest tests_v2` (Full suite).
-- Verify `tests_v2/integrity/` pass rate.
+- Run `pytest tests` (Full suite).
+- Verify `tests/integrity/` pass rate.
 
 ## 3. Exit Confirmation
 - Confirm that the "Phase 7 complete" entry is present in `working_log.csv`.

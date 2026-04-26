@@ -36,10 +36,10 @@ Phase 9 targets the following unchecked subsystem groups:
 
 | Module | Lines | Maturity |
 | :--- | :--- | :--- |
-| `src_v2/core/strategic.py` | 27 | **Thin** — Only `BlockerState`, `LeadState`, `StrategicComponent` |
-| `src_v2/systems/strategic.py` | 135 | **Baseline** — Crafting blockers, material resolution, process_outcome stub |
-| `src_v2/systems/social.py` | 74 | **Baseline** — Trust recalibration, recruitment eval, betrayal stub |
-| `src_v2/core/state.py` (SocialComponent) | ~5 | **Thin** — trust_history, betrayal_count, public_reputation only |
+| `src/core/strategic.py` | 27 | **Thin** — Only `BlockerState`, `LeadState`, `StrategicComponent` |
+| `src/systems/strategic.py` | 135 | **Baseline** — Crafting blockers, material resolution, process_outcome stub |
+| `src/systems/social.py` | 74 | **Baseline** — Trust recalibration, recruitment eval, betrayal stub |
+| `src/core/state.py` (SocialComponent) | ~5 | **Thin** — trust_history, betrayal_count, public_reputation only |
 
 > [!IMPORTANT]
 > The strategic and social layers are currently **stub-level**. Phase 9 requires significant model expansion and new system implementations, not just hardening of existing code.
@@ -88,15 +88,15 @@ Recovers the strategic mind subsystem beyond baseline blockers/leads.
 6. **Implement event interpretation** — Events can mutate directives, projects, concerns, and source trust (LEG-RPG-116 strategic pivot, LEG-RPG-117 scar detection).
 
 #### Affected files:
-- [MODIFY] [strategic.py](file:///home/vboxuser/Work/rpg-based-simulation/src_v2/core/strategic.py) — Model expansion
-- [MODIFY] [strategic.py](file:///home/vboxuser/Work/rpg-based-simulation/src_v2/systems/strategic.py) — System logic
-- [NEW] `src_v2/systems/event_interpreter.py` — Event-to-strategic mutation pipeline
-- [NEW] `src_v2/systems/detour.py` — Detour suggestion from blockers/leads
-- [MODIFY] [state.py](file:///home/vboxuser/Work/rpg-based-simulation/src_v2/core/state.py) — StrategicComponent wiring
-- [NEW] `tests_v2/strategic/test_interruption_resistance.py`
-- [NEW] `tests_v2/strategic/test_lead_bandwidth.py`
-- [NEW] `tests_v2/strategic/test_detour_suggestion.py`
-- [NEW] `tests_v2/strategic/test_event_interpretation.py`
+- [MODIFY] [strategic.py](file:///home/vboxuser/Work/rpg-based-simulation/src/core/strategic.py) — Model expansion
+- [MODIFY] [strategic.py](file:///home/vboxuser/Work/rpg-based-simulation/src/systems/strategic.py) — System logic
+- [NEW] `src/systems/event_interpreter.py` — Event-to-strategic mutation pipeline
+- [NEW] `src/systems/detour.py` — Detour suggestion from blockers/leads
+- [MODIFY] [state.py](file:///home/vboxuser/Work/rpg-based-simulation/src/core/state.py) — StrategicComponent wiring
+- [NEW] `tests/strategic/test_interruption_resistance.py`
+- [NEW] `tests/strategic/test_lead_bandwidth.py`
+- [NEW] `tests/strategic/test_detour_suggestion.py`
+- [NEW] `tests/strategic/test_event_interpretation.py`
 
 ---
 
@@ -113,14 +113,14 @@ Recovers the social subsystem: betrayal, trust, reputation, contracts, and recru
 6. **Implement source trust recalibration** — Refutation drops trust (LEG-RPG-123), contradiction degrades certainty (LEG-RPG-125).
 
 #### Affected files:
-- [MODIFY] [social.py](file:///home/vboxuser/Work/rpg-based-simulation/src_v2/systems/social.py) — System expansion
-- [MODIFY] [state.py](file:///home/vboxuser/Work/rpg-based-simulation/src_v2/core/state.py) — SocialComponent expansion
-- [MODIFY] [updates.py](file:///home/vboxuser/Work/rpg-based-simulation/src_v2/core/updates.py) — SocialUpdate expansion
-- [NEW] `src_v2/systems/contracts.py` — Social contract lifecycle
-- [NEW] `tests_v2/social/test_betrayal_consequence.py`
-- [NEW] `tests_v2/social/test_social_contracts.py`
-- [NEW] `tests_v2/social/test_recruitment_depth.py`
-- [NEW] `tests_v2/social/test_source_trust.py`
+- [MODIFY] [social.py](file:///home/vboxuser/Work/rpg-based-simulation/src/systems/social.py) — System expansion
+- [MODIFY] [state.py](file:///home/vboxuser/Work/rpg-based-simulation/src/core/state.py) — SocialComponent expansion
+- [MODIFY] [updates.py](file:///home/vboxuser/Work/rpg-based-simulation/src/core/updates.py) — SocialUpdate expansion
+- [NEW] `src/systems/contracts.py` — Social contract lifecycle
+- [NEW] `tests/social/test_betrayal_consequence.py`
+- [NEW] `tests/social/test_social_contracts.py`
+- [NEW] `tests/social/test_recruitment_depth.py`
+- [NEW] `tests/social/test_source_trust.py`
 
 ---
 
@@ -135,14 +135,14 @@ Recovers the knowledge uncertainty layer and narrative memory.
 4. **Implement cognition graph export** — Exposes persisted strategic state without becoming the source of truth.
 
 #### Affected files:
-- [NEW] `src_v2/systems/belief.py` — Belief cycle engine
-- [NEW] `src_v2/systems/narrative.py` — Narrative memory logging
-- [MODIFY] [strategic.py](file:///home/vboxuser/Work/rpg-based-simulation/src_v2/systems/strategic.py) — Knowledge uncertainty integration
-- [NEW] `src_v2/systems/cognition_export.py` — Graph export (read-only presenter)
-- [NEW] `tests_v2/cognition/test_belief_cycle.py`
-- [NEW] `tests_v2/cognition/test_narrative_memory.py`
-- [NEW] `tests_v2/cognition/test_knowledge_uncertainty.py`
-- [NEW] `tests_v2/cognition/test_cognition_graph_export.py`
+- [NEW] `src/systems/belief.py` — Belief cycle engine
+- [NEW] `src/systems/narrative.py` — Narrative memory logging
+- [MODIFY] [strategic.py](file:///home/vboxuser/Work/rpg-based-simulation/src/systems/strategic.py) — Knowledge uncertainty integration
+- [NEW] `src/systems/cognition_export.py` — Graph export (read-only presenter)
+- [NEW] `tests/cognition/test_belief_cycle.py`
+- [NEW] `tests/cognition/test_narrative_memory.py`
+- [NEW] `tests/cognition/test_knowledge_uncertainty.py`
+- [NEW] `tests/cognition/test_cognition_graph_export.py`
 
 ---
 
@@ -157,12 +157,12 @@ Recovers the knowledge uncertainty layer and narrative memory.
 3. **Implement skill scaling types** — Physical/Magical/Elemental scaling (LEG-RPG-145).
 
 #### Affected files:
-- [NEW] `src_v2/systems/quests.py`
-- [NEW] `src_v2/systems/genetics.py`
-- [MODIFY] `src_v2/core/state.py` — ProgressionComponent
-- [NEW] `tests_v2/progression/test_quest_generation.py`
-- [NEW] `tests_v2/progression/test_genetics.py`
-- [NEW] `tests_v2/progression/test_skill_scaling.py`
+- [NEW] `src/systems/quests.py`
+- [NEW] `src/systems/genetics.py`
+- [MODIFY] `src/core/state.py` — ProgressionComponent
+- [NEW] `tests/progression/test_quest_generation.py`
+- [NEW] `tests/progression/test_genetics.py`
+- [NEW] `tests/progression/test_skill_scaling.py`
 
 ---
 
@@ -193,21 +193,21 @@ These milestones address the gaps identified in `resource_phase9_updated.md`, re
 ### Milestone 7: Routine, Biological Needs, and Life-Rhythm Closure
 
 #### Tasks:
-1. **Implement routine-state model** — Add `BiologicalComponent` to `src_v2/core/state.py` (sleep debt, hunger, rest pressure).
-2. **Implement routine goal biasing** — Biological needs generate `ConcernState` and affect strategic scores in `src_v2/systems/strategic.py`.
+1. **Implement routine-state model** — Add `BiologicalComponent` to `src/core/state.py` (sleep debt, hunger, rest pressure).
+2. **Implement routine goal biasing** — Biological needs generate `ConcernState` and affect strategic scores in `src/systems/strategic.py`.
 3. **Add contract tests** — Direct proof for sleep/hunger/rest logic.
 
 ### Milestone 8: Hero Lifecycle, Permadeath, Succession, and Heirloom Closure
 
 #### Tasks:
-1. **Implement hero lifecycle state** — Aging, near-death survivor, and permadeath classification in `src_v2/core/lifecycle.py`.
-2. **Implement succession semantics** — Heir designation and heirloom transfer in `src_v2/systems/lifecycle.py`.
+1. **Implement hero lifecycle state** — Aging, near-death survivor, and permadeath classification in `src/core/lifecycle.py`.
+2. **Implement succession semantics** — Heir designation and heirloom transfer in `src/systems/lifecycle.py`.
 3. **Add direct tests** — Lifecycle continuity and inheritance proof.
 
 ### Milestone 9: Recruitment Negotiation and Contract Richness Closure
 
 #### Tasks:
-1. **Expand recruitment to negotiation** — Counter-offers and haggling rounds in `src_v2/systems/social.py`.
+1. **Expand recruitment to negotiation** — Counter-offers and haggling rounds in `src/systems/social.py`.
 2. **Add richer willingness factors** — Trust, debt, loyalty, and resentment integrated into evaluation.
 3. **Add contract tests** — Social negotiation depth proof.
 
@@ -245,13 +245,13 @@ These milestones address the gaps identified in `resource_phase9_updated.md`, re
 ## Verification Plan
 
 ### Automated Tests
-- `pytest tests_v2/ai/test_biological_needs.py`
-- `pytest tests_v2/progression/test_lifecycle.py`
-- `pytest tests_v2/social/test_recruitment_negotiation.py`
-- `pytest tests_v2/strategy/test_region_consequences.py`
-- `pytest tests_v2/world/test_leash_and_camp.py`
-- `pytest tests_v2/ai/test_role_derivation.py`
-- `pytest tests_v2/ -v` — Full regression check.
+- `pytest tests/ai/test_biological_needs.py`
+- `pytest tests/progression/test_lifecycle.py`
+- `pytest tests/social/test_recruitment_negotiation.py`
+- `pytest tests/strategy/test_region_consequences.py`
+- `pytest tests/world/test_leash_and_camp.py`
+- `pytest tests/ai/test_role_derivation.py`
+- `pytest tests/ -v` — Full regression check.
 
 ### Manual Verification
 - Audit `EntityState` snapshots to ensure biological needs persist correctly across ticks.

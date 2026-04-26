@@ -13,14 +13,14 @@ To protect the engine from resource-safety drift, the following behaviors are **
 5.  **Telemetry Leakage**: Do not store diagnostic fields, UI strings, or telemetry inside the `AuthoritativeState`. Keep the simulation core lean.
 
 ## Engine Authority (Phase 12+)
-As of Phase 12, the **src_v2** engine is the project's operational default. All development should target the V2 substrate.
+As of Phase 12, the **src** engine is the project's operational default. All development should target the V2 substrate.
 
 ## Verification
 Before submitting a pull request, you must ensure all tests pass:
 ```bash
 make test
 ```
-This command executes the **tests_v2** suite, which includes contract, parity, and stress scenarios. For coverage analysis, use:
+This command executes the **tests** suite, which includes contract, parity, and stress scenarios. For coverage analysis, use:
 ```bash
 make test-cov
 ```

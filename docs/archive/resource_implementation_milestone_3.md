@@ -183,7 +183,7 @@ The project has one exact bounded runtime-state contract that can be used as the
 Make the codebase use explicit lightweight runtime structures for authoritative execution rather than heavy export-style models.
 
 [Task implementation comments]
-Implemented lightweight models in `src_v2/core/state.py`. Unlike the legacy system, these structures avoid heavy Pydantic validation on the hot path and use `__slots__` where applicable to minimize memory overhead. Export-oriented models reside separately in `src_v2/core/export.py`.
+Implemented lightweight models in `src/core/state.py`. Unlike the legacy system, these structures avoid heavy Pydantic validation on the hot path and use `__slots__` where applicable to minimize memory overhead. Export-oriented models reside separately in `src/core/export.py`.
 
 [Task technical implementation]
 Implement or refactor runtime structures so that:
@@ -235,7 +235,7 @@ Authoritative execution uses lean runtime models and no longer depends on export
 Apply the bounded-state contract to every long-lived runtime structure so no collection can silently grow without limit.
 
 [Task implementation comments]
-Retention and overflow logic is implemented in `src_v2/core/retention.py`. All long-lived collections, including the replay buffer and signal history, now have explicit `max_size` caps and use "Evict Oldest" or "Truncate" strategies to prevent memory blowout.
+Retention and overflow logic is implemented in `src/core/retention.py`. All long-lived collections, including the replay buffer and signal history, now have explicit `max_size` caps and use "Evict Oldest" or "Truncate" strategies to prevent memory blowout.
 
 [Task technical implementation]
 Implement exact retention and overflow behavior for:
@@ -304,7 +304,7 @@ Every long-lived runtime structure has an exact bound and explicit overflow beha
 Lock the Milestone 3 state-shape laws with deterministic tests so later milestones cannot reintroduce unbounded growth through convenience.
 
 [Task implementation comments]
-Bounded-state tests are implemented in `tests_v2/engine/test_bounded_collections.py`. These tests specifically verify that collections do not exceed their declared caps and that overflow behavior remains deterministic.
+Bounded-state tests are implemented in `tests/engine/test_bounded_collections.py`. These tests specifically verify that collections do not exceed their declared caps and that overflow behavior remains deterministic.
 
 [Task technical implementation]
 Add exact tests for:
@@ -366,7 +366,7 @@ The bounded runtime-state contract is pinned by deterministic tests proving sepa
 Document the complete Milestone 3 bounded-state model so later milestones cannot drift back into unbounded convenience.
 
 [Task implementation comments]
-Finalized the Bounded State Contract in `docs/engine/runtime_state_contract_m3.md`. Verified that all documentation examples match the actual `src_v2/core/retention.py` implementation.
+Finalized the Bounded State Contract in `docs/engine/runtime_state_contract_m3.md`. Verified that all documentation examples match the actual `src/core/retention.py` implementation.
 
 [Task technical implementation]
 Create:

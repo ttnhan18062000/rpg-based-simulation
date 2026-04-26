@@ -3,7 +3,7 @@ Blunt answer:
 **We do not need to finish every v2 milestone before attaching to real RPG logic.**
 But we **do** need to finish enough of the runtime milestones that attaching RPG logic does not contaminate the engine with fake safety and fake correctness.
 
-Right now, the worker path is still placeholder-level. In `default_simulation_worker`, the “simulation” is just a readiness reduction, not real domain logic. That means full RPG attachment now would be premature. See [all_src_v2.py](sandbox:/mnt/data/all_src_v2.py).
+Right now, the worker path is still placeholder-level. In `default_simulation_worker`, the “simulation” is just a readiness reduction, not real domain logic. That means full RPG attachment now would be premature. See [all_src.py](sandbox:/mnt/data/all_src.py).
 
 ## High-level milestone path until real RPG attachment
 

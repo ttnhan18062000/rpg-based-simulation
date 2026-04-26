@@ -5,8 +5,8 @@ Recovered the user- and operator-facing entry surface for the V2 engine.
 ## CLI & Entrypoint Recovery
 
 ### 1. Unified Entrypoint
-- Implemented `src_v2/__main__.py` and `src_v2/cli/entry.py`.
-- Supports the standard `python3 -m src_v2` entry gate.
+- Implemented `src/__main__.py` and `src/cli/entry.py`.
+- Supports the standard `python3 -m src` entry gate.
 
 ### 2. Subcommand & Argument Parity
 - Recovered the `cli` subcommand for headless simulation.
@@ -21,11 +21,11 @@ Recovered the user- and operator-facing entry surface for the V2 engine.
 ## Verification
 
 ### Black-Box Testing
-- Created [test_entry_parity.py](file:///home/vboxuser/Work/rpg-based-simulation/tests_v2/cli/test_entry_parity.py).
+- Created [test_entry_parity.py](file:///home/vboxuser/Work/rpg-based-simulation/tests/cli/test_entry_parity.py).
 - Verified basic execution, invalid argument handling, default mode, and seed-based determinism.
 
 ```bash
-pytest tests_v2/cli/test_entry_parity.py
+pytest tests/cli/test_entry_parity.py
 # Result: 4 passed
 ```
 

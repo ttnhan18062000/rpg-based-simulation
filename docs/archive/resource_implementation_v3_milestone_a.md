@@ -155,19 +155,19 @@ The document must explicitly state:
 
 Also add short code-facing law comments near:
 
-- `src_v2/engine/kernel.py`
-- `src_v2/engine/apply.py`
-- `src_v2/engine/checkpoint.py`
-- `src_v2/engine/scheduler.py`
+- `src/engine/kernel.py`
+- `src/engine/apply.py`
+- `src/engine/checkpoint.py`
+- `src/engine/scheduler.py`
 
 ### [Task possible affected files]
 
 - `docs/engine/runtime_completion_contract_ma.md`
 - `docs/engine/ma_test_matrix.md`
-- `src_v2/engine/kernel.py`
-- `src_v2/engine/apply.py`
-- `src_v2/engine/checkpoint.py`
-- `src_v2/engine/scheduler.py`
+- `src/engine/kernel.py`
+- `src/engine/apply.py`
+- `src/engine/checkpoint.py`
+- `src/engine/scheduler.py`
 
 ### [Task important notes]
 
@@ -231,12 +231,12 @@ If nested dicts remain in `AuthoritativeState`, you must at least guarantee appl
 
 ### [Task possible affected files]
 
-- `src_v2/engine/apply.py`
-- `src_v2/engine/kernel.py`
-- `src_v2/core/state.py`
-- `src_v2/core/updates.py`
-- `tests_v2/engine/test_authoritative_apply.py`
-- `tests_v2/engine/test_no_hidden_mutation.py`
+- `src/engine/apply.py`
+- `src/engine/kernel.py`
+- `src/core/state.py`
+- `src/core/updates.py`
+- `tests/engine/test_authoritative_apply.py`
+- `tests/engine/test_no_hidden_mutation.py`
 
 ### [Task important notes]
 
@@ -254,7 +254,7 @@ Do not rely on `frozen=True` as proof if mutable nested containers remain expose
 - [x] Document authoritative mutation boundary
 
 **Implementation Comment**:
-Hardened `ApplyPath._apply_entity_update` to ensure explicit dictionary cloning for properties. Refactored `Kernel._phase_collection` to create entity snapshots before passing to workers, preventing "within-tick" mutation leaks. Proved isolation via `tests_v2/engine/test_no_hidden_mutation.py`.
+Hardened `ApplyPath._apply_entity_update` to ensure explicit dictionary cloning for properties. Refactored `Kernel._phase_collection` to create entity snapshots before passing to workers, preventing "within-tick" mutation leaks. Proved isolation via `tests/engine/test_no_hidden_mutation.py`.
 
 ### [Task acceptance criteria]
 
@@ -306,10 +306,10 @@ Add phase-order tests that fail on:
 
 ### [Task possible affected files]
 
-- `src_v2/engine/kernel.py`
-- `src_v2/engine/tick.py`
-- `tests_v2/engine/test_minimal_kernel.py`
-- `tests_v2/engine/test_kernel_phase_order.py`
+- `src/engine/kernel.py`
+- `src/engine/tick.py`
+- `tests/engine/test_minimal_kernel.py`
+- `tests/engine/test_kernel_phase_order.py`
 
 ### [Task important notes]
 
@@ -327,7 +327,7 @@ Do not let replay, signals, or future worker hooks define baseline semantics.
 - [x] Document phase law
 
 **Implementation Comment**:
-Pinned the 6-phase authoritative tick loop in `kernel.py`. Verified phase-order enforcement and side-effect boundaries via `tests_v2/engine/test_milestone_a_closure.py`, ensuring all mandated phases are orchestrated by `tick_once`.
+Pinned the 6-phase authoritative tick loop in `kernel.py`. Verified phase-order enforcement and side-effect boundaries via `tests/engine/test_milestone_a_closure.py`, ensuring all mandated phases are orchestrated by `tick_once`.
 
 ### [Task acceptance criteria]
 
@@ -376,11 +376,11 @@ Do the following:
 
 ### [Task possible affected files]
 
-- `src_v2/engine/scheduler.py`
-- `src_v2/core/work.py`
-- `src_v2/engine/kernel.py`
-- `tests_v2/engine/test_scheduler_contract.py`
-- `tests_v2/engine/test_deferred_work_debt.py`
+- `src/engine/scheduler.py`
+- `src/core/work.py`
+- `src/engine/kernel.py`
+- `tests/engine/test_scheduler_contract.py`
+- `tests/engine/test_deferred_work_debt.py`
 
 ### [Task important notes]
 
@@ -398,7 +398,7 @@ Do not let opportunistic placeholder logic remain as ambiguous future behavior i
 - [x] Document deterministic work-order law
 
 **Implementation Comment**:
-Hard-coded the `CRITICAL > PERIODIC > DEFERRED` hierarchy in `DeterministicScheduler`. Implemented exact tie-break laws (`-readiness, owner_id`) and verified stable sorting via `tests_v2/engine/test_scheduler_contract.py`. Opportunistic work is explicitly gated as a no-op fallback.
+Hard-coded the `CRITICAL > PERIODIC > DEFERRED` hierarchy in `DeterministicScheduler`. Implemented exact tie-break laws (`-readiness, owner_id`) and verified stable sorting via `tests/engine/test_scheduler_contract.py`. Opportunistic work is explicitly gated as a no-op fallback.
 
 ### [Task acceptance criteria]
 
@@ -444,11 +444,11 @@ Keep hashing logic external to the state model.
 
 ### [Task possible affected files]
 
-- `src_v2/engine/checkpoint.py`
-- `src_v2/core/state.py`
-- `tests_v2/engine/test_determinism_suite.py`
-- `tests_v2/engine/test_governance_isolation.py`
-- `tests_v2/engine/test_checkpoint_purity.py`
+- `src/engine/checkpoint.py`
+- `src/core/state.py`
+- `tests/engine/test_determinism_suite.py`
+- `tests/engine/test_governance_isolation.py`
+- `tests/engine/test_checkpoint_purity.py`
 
 ### [Task important notes]
 
@@ -466,7 +466,7 @@ Do not rely on Python dict insertion history as proof of determinism.
 - [x] Document checkpoint purity law
 
 **Implementation Comment**:
-Finalized `CanonicalStateHasher` with recursive sorting for properties and stable RNG state capture. Proved "Truth Isolation" via `tests_v2/engine/test_checkpoint_reproducibility.py`, ensuring that external transients in the Kernel or Governor have zero impact on the simulation hash.
+Finalized `CanonicalStateHasher` with recursive sorting for properties and stable RNG state capture. Proved "Truth Isolation" via `tests/engine/test_checkpoint_reproducibility.py`, ensuring that external transients in the Kernel or Governor have zero impact on the simulation hash.
 
 ### [Task acceptance criteria]
 
@@ -501,9 +501,9 @@ Do not leave semantic ambiguity behind comments.
 
 ### [Task possible affected files]
 
-- `src_v2/engine/scheduler.py`
-- `src_v2/engine/kernel.py`
-- `tests_v2/engine/*`
+- `src/engine/scheduler.py`
+- `src/engine/kernel.py`
+- `tests/engine/*`
 - `docs/engine/runtime_completion_contract_ma.md`
 
 ### [Task important notes]
@@ -520,7 +520,7 @@ Worker placeholder logic is not Milestone A scope, but baseline law must not cla
 - [x] Update docs to match reality
 
 **Implementation Comment**:
-Removed `pass` placeholders from `scheduler.py` and audited `kernel.py` for remaining `TODO`s. Established `tests_v2/engine/test_milestone_a_closure.py` as an automated scan for forbidden patterns in authoritative files.
+Removed `pass` placeholders from `scheduler.py` and audited `kernel.py` for remaining `TODO`s. Established `tests/engine/test_milestone_a_closure.py` as an automated scan for forbidden patterns in authoritative files.
 
 ### [Task acceptance criteria]
 
@@ -582,14 +582,14 @@ Complete or add tests for these groups.
 
 ### Suggested test groups
 
-- `tests_v2/engine/test_minimal_kernel.py`
-- `tests_v2/engine/test_authoritative_apply.py`
-- `tests_v2/engine/test_scheduler_contract.py`
-- `tests_v2/engine/test_deferred_work_debt.py`
-- `tests_v2/engine/test_determinism_suite.py`
-- `tests_v2/engine/test_governance_isolation.py`
-- `tests_v2/engine/test_checkpoint_purity.py`
-- `tests_v2/engine/test_no_hidden_mutation.py`
+- `tests/engine/test_minimal_kernel.py`
+- `tests/engine/test_authoritative_apply.py`
+- `tests/engine/test_scheduler_contract.py`
+- `tests/engine/test_deferred_work_debt.py`
+- `tests/engine/test_determinism_suite.py`
+- `tests/engine/test_governance_isolation.py`
+- `tests/engine/test_checkpoint_purity.py`
+- `tests/engine/test_no_hidden_mutation.py`
 
 ### [Task possible affected files]
 
@@ -651,9 +651,9 @@ Pull out any kernel-level logic that belongs elsewhere, especially:
 
 ### [Task possible affected files]
 
-- `src_v2/engine/kernel.py`
+- `src/engine/kernel.py`
 - neighboring orchestration-related modules
-- `src_v2/engine/tick.py`
+- `src/engine/tick.py`
 
 ### [Task important notes]
 
@@ -778,8 +778,8 @@ This can be light-touch:
 
 ### [Task possible affected files]
 
-- `tests_v2/docs/*`
-- `tests_v2/engine/test_ma_doc_integrity.py`
+- `tests/docs/*`
+- `tests/engine/test_ma_doc_integrity.py`
 - CI config
 - doc-integrity helpers
 
@@ -797,7 +797,7 @@ Just make regression cheap and visible.
 - [x] Record Milestone A completion gate
 
 **Implementation Comment**:
-Implemented `tests_v2/engine/test_milestone_a_closure.py` which serves as the permanent guardrail for Milestone A. It fails on structural drift, hidden placeholders, or phase-order violations, ensuring the baseline remains untouched during future work.
+Implemented `tests/engine/test_milestone_a_closure.py` which serves as the permanent guardrail for Milestone A. It fails on structural drift, hidden placeholders, or phase-order violations, ensuring the baseline remains untouched during future work.
 
 ### [Task acceptance criteria]
 

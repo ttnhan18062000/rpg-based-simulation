@@ -27,7 +27,7 @@
 - Supported in both **Local** and **Concurrent** execution modes (where concurrent is proven non-conflicting).
 
 ## Proof Path
-- **Parity Proof**: `tests_v2/parity/test_movement_parity.py`
+- **Parity Proof**: `tests/parity/test_movement_parity.py`
   - Enforces bit-identical behavior and error-reason parity against original `src` behavior for supported grid movement scenarios.
-- **Contract Proof**: `tests_v2/gameplay/test_movement_contract.py`
+- **Contract Proof**: `tests/gameplay/test_movement_contract.py`
   - Enforces authoritative state boundaries and V2-specific movement invariants.

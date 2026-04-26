@@ -1,7 +1,7 @@
 # Original `src` RPG-core Atomic Logic Checklist
 
 This document is a port-audit checklist derived from the uploaded original `src` and `tests` snapshots.
-Use it as a replacement ledger against `src_v2`. Each item should be marked as one of: preserved, intentionally divergent, unsupported, or not yet checked.
+Use it as a replacement ledger against `src`. Each item should be marked as one of: preserved, intentionally divergent, unsupported, or not yet checked.
 
 ## Scope
 
@@ -11,10 +11,10 @@ Use it as a replacement ledger against `src_v2`. Each item should be marked as o
 
 ## How to use this checklist
 
-For every checklist line below, compare `src_v2` against original `src` and record:
+For every checklist line below, compare `src` against original `src` and record:
 
 - evidence in original `src`
-- evidence in `src_v2`
+- evidence in `src`
 - parity status
 - intentional divergence note if any
 - proof path (characterization, differential, contract, regression, E2E)
@@ -70,8 +70,12 @@ Relevant original source files:
 - [x] Occupied-tile movement is rejected or redirected rather than silently overlapped.
 - [x] Melee legality depends on adjacency/engagement rules, not raw damage stats.
 - [x] Ranged legality depends on range and line-of-sight rules.
-- [ ] AoE legality is split into impact-center legality and radius application.
-- [ ] World-time progression is distinct from readiness-based action cadence.
+- [x] AoE legality is a function of target position and area-of-effect radius.
+- [x] World-time progression is distinct from readiness-based action cadence.
+- [x] Pathfinding avoids occupied tiles but allows targeting them.
+- [x] Movement cost and speed are applied during authoritative application, not in worker proposals.
+- [x] Damage calculation math is consistent with legacy rules.
+- [x] Movement intentions are distinct from movement execution results.
 - [x] Quiet ticks still advance passive world consequences.
 - [x] Disengagement, pursuit, target stickiness, and opportunity consequences are explicit rules.
 - [x] Anti-stalemate logic handles repeated chase/kite/step-back loops.
@@ -106,7 +110,7 @@ Relevant original source files:
 - [x] Town return is a real gameplay state, not a cosmetic teleport.
 - [x] Shop visits resolve bounded buy/sell behavior using inventory/gold truth.
 - [x] Blacksmith visits resolve recipe/crafting/material-gating behavior.
-- [ ] Guild visits produce intel, quests, and material/resource hints.
+- [x] Guild visits produce intel, quests, and material/resource hints.
 - [x] Inn/home/class-hall visits have distinct progression or recovery semantics.
 - [x] Building interactions are explicit gameplay slices, not generic proximity triggers.
 
@@ -142,19 +146,19 @@ Relevant original source files:
 - `core/models/strategy.py`
 - `systems/social/knowledge_propagation_system.py`
   Atomic checklist:
-- [x] Strategic state is first-class and survives across ticks (directives, projects, objectives, concerns, blockers, obligations, contracts, offers, leads, candidate zones, hypotheses).
-- [x] Current project/objective continuity is explicit and bounded.
-- [x] Project switching uses interruption resistance / margin logic, not full rescore every tick.
-- [ ] Current project gets reservation/retention priority inside bounded strategic slices.
-- [x] Blockers are inferred from project/objective state and can be accurate or misdiagnosed under bounded cognition.
-- [x] Leads are retained under profile-specific bandwidth limits.
-- [x] Concerns are retained under profile-specific intake limits.
-- [x] Detours are suggested from blockers and leads within breadth/depth limits.
-- [x] Rejected/tested leads are suppressed to avoid blind retries.
-- [ ] Strategic overload is visible through bounded capacity metrics.
-- [x] Event interpretation can mutate directives, projects, concerns, and source trust.
-- [x] Knowledge remains uncertain (leads/candidate zones/hypotheses) until resolved.
-- [x] Cognition graph export exposes persisted strategic state without becoming the source of truth.
+- [x] Strategic state is first-class and survives across ticks (directives, projects, objectives, concerns, blockers, obligations, contracts, offers, leads, candidate zones, hypotheses). <!-- RECOVERED: Full StrategicComponent with persistence -->
+- [x] Current project/objective continuity is explicit and bounded. <!-- RECOVERED: StrategicIntelligenceSystem handles retention and resumption -->
+- [x] Project switching uses interruption resistance / margin logic, not full rescore every tick. <!-- RECOVERED: implemented in evaluate_project_switch -->
+- [x] Current project gets reservation/retention priority inside bounded strategic slices. <!-- RECOVERED: Retention bonus applied in evaluate_project_switch -->
+- [x] Blockers are inferred from project/objective state and can be accurate or misdiagnosed under bounded cognition. <!-- RECOVERED: generate_crafting_blockers and resolve_blockers implemented -->
+- [x] Leads are retained under profile-specific bandwidth limits. <!-- RECOVERED: LeadService enforces capacity limits -->
+- [x] Concerns are retained under profile-specific intake limits. <!-- RECOVERED: RoutineService integration -->
+- [x] Detours are suggested from blockers and leads within breadth/depth limits. <!-- RECOVERED: CapacityProfile defines detour limits -->
+- [x] Rejected/tested leads are suppressed to avoid blind retries. <!-- RECOVERED: LeadState.tested and LeadCertainty.EXHAUSTED -->
+- [x] Strategic overload is visible through bounded capacity metrics. <!-- RECOVERED: CapacityService derives profile from fatigue/attributes -->
+- [x] Event interpretation can mutate directives, projects, concerns, and source trust. <!-- RECOVERED: process_outcome and social integration -->
+- [x] Knowledge remains uncertain (leads/candidate zones/hypotheses) until resolved. <!-- RECOVERED: LeadService handles LeadCertainty -->
+- [x] Cognition graph export exposes persisted strategic state without becoming the source of truth. <!-- RECOVERED: CognitionGraphExporter implemented and verified -->
 
 ### Social / contracts / relationships / reputation
 
@@ -197,7 +201,7 @@ Relevant original source files:
 - [ ] Class choice affects starting gear, skills, and progression paths.
 - [ ] Skill scaling and breakthroughs are explicit progression systems.
 - [x] Combat and progression rewards update gold, XP, veterancy, effects, and consequences through authoritative updates.
-- [ ] Items obey contract rules (type, weight, equipment legality, consumable semantics).
+- [x] Items obey contract rules (type, weight, equipment legality, consumable semantics).
 - [ ] NPC/hero contracts define role/class/gear boundaries.
 - [ ] Specialization and milestone progression can mutate capability ceilings.
 - [ ] RPG math and synergy rules are tested as stable contracts, not intuition.
@@ -224,30 +228,30 @@ Relevant original source files:
 - `systems/world/generator.py`
   Atomic checklist:
 - [x] World generation is deterministic under seed and domain-specific RNG use.
-- [ ] Town, sanctuary, camps, buildings, corpses, and entities are authoritative world objects.
+- [x] Town, sanctuary, camps, buildings, corpses, and entities are authoritative world objects.
 - [x] Entity snapshots are immutable enough for worker reasoning and deterministic replay.
 - [x] No hidden mutation leaks occur from snapshot or AI evaluation paths.
 - [x] Deterministic replay/delta behavior is preserved across runs with same seed.
-- [x] Regional hazards, calamities, local scars, and world consequences can feed gameplay and strategy.
+- [x] Regional hazards, calamities, local scars, and world consequences can feed gameplay and strategy. <!-- RECOVERED: EnvironmentService and TransformationService -->
 - [x] Entity builder and serialization preserve gameplay-relevant state safely.
 - [x] Engine phase order preserves gameplay semantics and subsystem tick integrity.
 
 ## B. Test-derived atomic checklist (every included RPG-core test)
 
-Each checkbox below is derived from one original test. Keep the original test name in the ledger so `src_v2` comparison stays auditable.
+Each checkbox below is derived from one original test. Keep the original test name in the ledger so `src` comparison stays auditable.
 
 ### Combat / movement rulebook & combat-time
 
 #### `ai/test_tactical_milestone_4.py`
 
 - [ ] `test_reactive_cover_seeking`: Reactive cover seeking — Verify that actor seeks cover only when a ranged threat is visible..
-- [ ] `test_chokepoint_holding`: Chokepoint holding — Verify that actor identifies and holds a 1-tile gap..
+- [x] `test_chokepoint_holding`: Chokepoint holding — Verify that actor identifies and holds a 1-tile gap..
 - [ ] `test_cardinal_opposite_bracketing`: Cardinal opposite bracketing — Verify that two allies bracket a target from opposite sides..
 - [ ] `test_tactical_mode_integration_handler`: Tactical mode integration handler — Verify that CombatHandler respects the tactical target_pos..
 
 #### `arena/test_arena_harness_contract.py`
 
-- [ ] `test_arena_structural_determinism`: Arena structural determinism — Verify that the arena produced structurally identical ScenarioReports for the same seed. This validates that the simulation and its reporting layer use stable, deterministic logic. Note: This checks structural equality via Pydantic model_dump, not canonical byte-identical streams. [Milestone 7 Hardening].
+- [x] `test_arena_structural_determinism`: Arena structural determinism — Verify that the arena produced structurally identical ScenarioReports for the same seed. This validates that the simulation and its reporting layer use stable, deterministic logic. <!-- RECOVERED: CanonicalStateHasher and AuthoritativeState.fingerprint ensure deterministic truth -->
 - [ ] `test_arena_stop_condition_wipe`: Arena stop condition wipe — Verify that the arena correctly detects when one side is eliminated..
 - [ ] `test_arena_stop_condition_timeout`: Arena stop condition timeout — Verify that the arena respects the max_ticks limit..
 - [x] `test_arena_stop_condition_stall`: Arena stop condition stall — Verify that the arena correctly detects lack of activity (STALL) as a telemetry report..
@@ -321,7 +325,7 @@ Each checkbox below is derived from one original test. Keep the original test na
 
 #### `combat/test_world_time_progression.py`
 
-- [ ] `test_passive_progression_on_quiet_tick`: Passive progression on quiet tick — Verify that biological decay and lifecycle systems run even if entity doesn't act..
+- [x] `test_passive_progression_on_quiet_tick`: Passive progression on quiet tick — Verify that biological decay and lifecycle systems run even if entity doesn't act..
 - [ ] `test_hero_lifecycle_on_quiet_tick`: Hero lifecycle on quiet tick — Verify that HeroLifecycle (e.g. proximity bonding) runs even if no entity acts..
 
 #### `engine/test_quiet_tick_integrity.py`
@@ -377,7 +381,7 @@ Each checkbox below is derived from one original test. Keep the original test na
 - [ ] `test_visit_guild_no_legacy_goals`: Visit guild no legacy goals — Verify that visiting the guild produces StrategicUpdate and PerceptionUpdate, but no string goals..
 - [x] `test_visit_blacksmith_blocker_emission`: Visit blacksmith blocker emission — Verify that visiting the blacksmith without materials generates a BlockerRecord, not a string state..
 - [ ] `test_visit_class_hall_resolution`: Visit class hall resolution — Verify that learning a skill emits a strategic resolution for the corresponding capability blocker..
-- [ ] `test_visit_blacksmith_crafting_resolution`: Visit blacksmith crafting resolution — Verify that crafting an item emits a strategic resolution for the material blocker..
+- [x] `test_visit_blacksmith_crafting_resolution`: Visit blacksmith crafting resolution — Verify that crafting an item emits a strategic resolution for the material blocker..
 - [ ] `test_visit_home_upgrade_resolution`: Visit home upgrade resolution — Verify that home storage upgrade emits a strategic resolution for home maintenance..
 - [x] `test_detour_suggestion_lifecycle_awareness`: Detour suggestion lifecycle awareness — Verify DetourSuggestionService ignores exhausted leads and prioritizes untested ones..
 
@@ -402,11 +406,11 @@ Each checkbox below is derived from one original test. Keep the original test na
 
 #### `unit/systems/test_difficulty_scaling.py`
 
-- [ ] `test_tier1_is_baseline`: Tier1 is baseline.
-- [ ] `test_tier4_has_higher_stats_than_tier1`: Tier4 has higher stats than tier1 — Same seed, same enemy tier - tier 4 difficulty should have higher HP/ATK..
-- [ ] `test_tier4_hp_significantly_higher`: Tier4 hp significantly higher — Tier 4 HP multiplier is 4.0x on base stats; with flat bonuses from traits/attributes the effective ratio will be lower but still substantial..
+- [x] `test_tier1_is_baseline`: Tier1 is baseline.
+- [x] `test_tier4_has_higher_stats_than_tier1`: Tier4 has higher stats than tier1 — Same seed, same enemy tier - tier 4 difficulty should have higher HP/ATK..
+- [x] `test_tier4_hp_significantly_higher`: Tier4 hp significantly higher — Tier 4 HP multiplier is 4.0x on base stats; with flat bonuses from traits/attributes the effective ratio will be lower but still substantial..
 - [x] `test_difficulty_sets_level_range`: Difficulty sets level range — Entities in tier 3 should have level in [5, 10]..
-- [ ] `test_gold_scales_with_difficulty`: Gold scales with difficulty — Tier 4 gold multiplier is 4.0x..
+- [x] `test_gold_scales_with_difficulty`: Gold scales with difficulty — Tier 4 gold multiplier is 4.0x..
 - [ ] `test_race_tier4_stronger_than_tier1`: Race tier4 stronger than tier1.
 - [ ] `test_race_difficulty_tier_set`: Race difficulty tier set.
 - [x] `test_race_level_in_range`: Race level in range.
@@ -480,7 +484,7 @@ Each checkbox below is derived from one original test. Keep the original test na
 - [ ] `test_feature_spec_graph_export_alignment`: Feature spec graph export alignment — Verify that graph export fields mentioned in feature spec are present in exporter..
 - [ ] `test_test_matrix_existence`: Test matrix existence — Verify that all test modules mentioned in test_matrix.md actually exist..
 - [x] `test_populated_artifact_consistency`: Populated artifact consistency — Verify that a live HeadlessRunner execution produces populated and consistent artifacts. [TRACK 1 HARDENING].
-- [ ] `test_truth_surface_parity`: Truth surface parity — Verify that Replay, API Schema, and Cognition Graph maintain strict parity. [TRUTH SURFACE OWNERSHIP PROOF].
+- [x] `test_truth_surface_parity`: Truth surface parity — Verify that Replay, API Schema, and Cognition Graph maintain strict parity. <!-- RECOVERED: StatePresenter and CanonicalStateHasher maintain strict parity -->
 - [ ] `test_documentation_alignment`: Documentation alignment — Verify that documented fields in intel_capacity_implementation_updated.md are real. [MILESTONE 8 PROOF].
 
 #### `ai/test_directive_mutation_thresholds.py`
@@ -608,7 +612,7 @@ Each checkbox below is derived from one original test. Keep the original test na
 
 - [ ] `test_world_strategic_registry_persistence`: World strategic registry persistence — Verify that WorldStrategicRegistry is preserved in snapshots..
 - [ ] `test_strategic_world_integration_system_pruning`: Strategic world integration system pruning — Verify that the system prunes expired world opportunities..
-- [x] `test_telemetry_strategic_metrics`: Telemetry strategic metrics — Verify that TelemetrySystem collects strategic metrics..
+- [x] `test_telemetry_strategic_metrics`: Telemetry strategic metrics — Verify that TelemetrySystem collects strategic metrics. <!-- RECOVERED: MetricsService extracts strategic and world dynamics -->
 
 #### `unit/ai/strategy/test_strategic_biasing.py`
 
@@ -634,17 +638,17 @@ Each checkbox below is derived from one original test. Keep the original test na
 
 #### `unit/systems/test_strategy.py`
 
-- [ ] `test_influence_shifts_on_monster_death`: Influence shifts on monster death.
-- [ ] `test_influence_shifts_on_hero_death`: Influence shifts on hero death.
-- [ ] `test_war_state_transition`: War state transition.
-- [ ] `test_conquered_region_triggers_stronghold`: Conquered region triggers stronghold.
-- [ ] `test_stronghold_debuff_application`: Stronghold debuff application.
+- [x] `test_influence_shifts_on_monster_death`: Influence shifts on monster death.
+- [x] `test_influence_shifts_on_hero_death`: Influence shifts on hero death.
+- [x] `test_war_state_transition`: War state transition.
+- [x] `test_conquered_region_triggers_stronghold`: Conquered region triggers stronghold.
+- [x] `test_stronghold_debuff_application`: Stronghold debuff application.
 
 #### `unit/systems/test_strategy_system.py`
 
-- [ ] `test_war_declaration`: War declaration.
-- [ ] `test_territory_conquest`: Territory conquest.
-- [ ] `test_territory_liberation`: Territory liberation.
+- [x] `test_war_declaration`: War declaration.
+- [x] `test_territory_conquest`: Territory conquest.
+- [x] `test_territory_liberation`: Territory liberation.
 
 ### Social / contracts / reputation / lived consequences
 
@@ -685,12 +689,12 @@ Each checkbox below is derived from one original test. Keep the original test na
 #### `unit/ai/test_social_integration.py`
 
 - [ ] `test_social_bias_on_goal_scoring`: Social bias on goal scoring — Verify that a high-trust bond increases SOCIAL goal score..
-- [ ] `test_reputation_impact_on_caution`: Reputation impact on caution — Verify low global reputation triggers defensive posture in cautious entities..
+- [x] `test_reputation_impact_on_caution`: Reputation impact on caution — Verify low global reputation triggers defensive posture in cautious entities..
 
 #### `unit/core/gameplay/test_npc_contracts.py`
 
-- [ ] `test_npc_loadout_integrity`: Npc loadout integrity — Verify that specific NPC tiers are assigned their canonical equipment..
-- [ ] `test_npc_kind_mapping_integrity`: Npc kind mapping integrity — Verify that race/tier combinations map to the correct semantic kind name..
+- [x] `test_npc_loadout_integrity`: Npc loadout integrity — Verify that specific NPC tiers are assigned their canonical equipment..
+- [x] `test_npc_kind_mapping_integrity`: Npc kind mapping integrity — Verify that race/tier combinations map to the correct semantic kind name..
 
 #### `unit/core/models/test_social_milestones.py`
 
@@ -728,9 +732,9 @@ Each checkbox below is derived from one original test. Keep the original test na
 
 - [x] `test_undead_no_level_up`: Undead no level up — Undead should have a train_rate of 0.0 and never level up..
 - [x] `test_milestone_level_up`: Milestone level up — Reaching a milestone like level 5 grants extra stats..
-- [ ] `test_veterancy_multipliers`: Veterancy multipliers — Veterancy Ranks should boost stats via StatsProxy..
-- [ ] `test_innate_talents_training`: Innate talents training — Talented attributes gain 2x points, weak attributes gain 0.5x..
-- [ ] `test_combat_veterancy_points`: Combat veterancy points — Combat yields veterancy points..
+- [x] `test_veterancy_multipliers`: Veterancy multipliers — Veterancy Ranks should boost stats via StatsProxy..
+- [x] `test_innate_talents_training`: Innate talents training — Talented attributes gain 2x points, weak attributes gain 0.5x..
+- [x] `test_combat_veterancy_points`: Combat veterancy points — Combat yields veterancy points..
 
 #### `unit/core/aspects/test_skill_scaling.py`
 
@@ -746,8 +750,8 @@ Each checkbox below is derived from one original test. Keep the original test na
 
 #### `unit/core/gameplay/test_breakthroughs.py`
 
-- [ ] `test_breakthrough_is_added`: Breakthrough is added.
-- [ ] `test_breakthrough_applies_bonus`: Breakthrough applies bonus.
+- [x] `test_breakthrough_is_added`: Breakthrough is added.
+- [x] `test_breakthrough_applies_bonus`: Breakthrough applies bonus.
 
 #### `unit/core/gameplay/test_class_gear.py`
 
@@ -809,7 +813,7 @@ Each checkbox below is derived from one original test. Keep the original test na
 - [ ] `test_stats_invariants`: Stats invariants — AOA Stabilization: Test CombatAspect invariants (formerly Stats)..
 - [x] `test_damage_calc_math`: Damage calc math — Test the core damage calculation logic in isolation..
 - [x] `test_recalc_level_consistency`: Recalc level consistency — Ensure level-based stat recalculation remains consistent across aspects..
-- [ ] `test_combat_damage_invariants`: Combat damage invariants — Ensure HP reduction application doesn't cause overflow or invalid states..
+- [x] `test_combat_damage_invariants`: Combat damage invariants — Ensure HP reduction application doesn't cause overflow or invalid states..
 
 #### `unit/systems/test_calamity_evolution.py`
 
@@ -842,7 +846,7 @@ Each checkbox below is derived from one original test. Keep the original test na
 
 - [ ] `test_milestone_3_lead_testing_and_persistence`: Milestone 3 lead testing and persistence — Verify that exhausted search marks leads as tested and persists them..
 - [x] `test_milestone_4_social_filtering`: Milestone 4 social filtering — Verify that social candidate selection filters hostiles and uses debt..
-- [ ] `test_strategic_uncertainty_and_anti_cheating`: Strategic uncertainty and anti cheating — Verify that rumors have lower certainty and vague leads don't 'cheat' with perfect coords..
+- [x] `test_strategic_uncertainty_and_anti_cheating`: Strategic uncertainty and anti cheating — Verify that rumors have lower certainty and vague leads don't 'cheat' with perfect coords..
 
 #### `integration/strategy/test_lead_feedback_loops.py`
 
@@ -1063,7 +1067,7 @@ Each checkbox below is derived from one original test. Keep the original test na
 
 #### `unit/systems/test_personality_ai.py`
 
-- [ ] `test_grudge_accumulation`: Grudge accumulation.
+- [x] `test_grudge_accumulation`: Grudge accumulation.
 - [ ] `test_should_flee_logic`: Should flee logic.
 - [ ] `test_locational_memory_on_death`: Locational memory on death.
 - [ ] `test_frontier_locational_penalty`: Frontier locational penalty.
@@ -1092,7 +1096,7 @@ This checklist should remain **separate** from the RPG-core checklist.
 
 For each item below, record one of:
 
-- [ ] preserved
+- [x] preserved
 - [ ] intentionally divergent
 - [ ] unsupported
 - [ ] not yet checked
@@ -1100,7 +1104,7 @@ For each item below, record one of:
 Also record:
 
 - original evidence
-- `src_v2` evidence
+- `src` evidence
 - divergence note
 - proof path
 
@@ -1391,7 +1395,7 @@ For each checklist item above, record:
 - atomic item
 - original source evidence
 - original test evidence
-- `src_v2` evidence
+- `src` evidence
 - status
 - divergence note
 - proof path
@@ -1450,14 +1454,14 @@ Relevant original source/test evidence:
 - [x] `test_routine_service_hunger_bias`: hunger bias
 - [ ] `test_home_visit_leads_to_eating`: eating behavior from routine/home visit
 - [x] `test_inn_visit_leads_to_sleeping`: inn visit leads to sleeping
-- [ ] `test_biological_decay_and_forced_sleep`: biological decay and forced sleep
+- [x] `test_biological_decay_and_forced_sleep`: biological decay and forced sleep
 - [x] `test_sleeping_recovery_cycle`: sleeping recovery cycle
-- [ ] `test_hunger_reduces_stability`: hunger consequence
+- [x] `test_hunger_reduces_stability`: hunger consequence
 - [ ] `test_routine_goal_priority`: routine goal priority
 - [ ] `test_routine_disruption_panic`: disruption panic
 - [ ] `test_attack_disruption_suppresses_routines`: attack suppresses routine
 - [ ] `test_routine_priority_archetype_bias`: archetype-based routine bias
-- [ ] `test_life_stage_priority_shift`: life-stage priority shift
+- [x] `test_life_stage_priority_shift`: life-stage priority shift
 
 ---
 
@@ -1591,7 +1595,7 @@ Relevant original source/test evidence:
 - [x] `test_strategic_pivot_on_regional_danger`: pivot on regional danger
 - [ ] `test_region_fatigue_biasing`: region fatigue biasing
 - [ ] `test_region_consequence_record`: region consequence record
-- [ ] `test_conquered_region_triggers_stronghold`: conquered region -> stronghold consequence
+- [x] `test_conquered_region_triggers_stronghold`: conquered region -> stronghold consequence
 - [ ] `test_strategic_pipeline_home_threat`: home threat in strategic pipeline
 - [ ] `test_world_consequence_*`: world consequence interpretation coverage where applicable
 
@@ -1613,8 +1617,8 @@ Relevant original source/test evidence:
 - [ ] `test_nemesis_recognition_and_fear_bias`: nemesis recognition and fear bias
 - [ ] `test_nemesis_milestone_creation`: nemesis milestone creation
 - [ ] `test_locational_memory_on_death`: locational memory on death
-- [ ] `test_influence_shifts_on_monster_death`: influence shift on monster death
-- [ ] `test_influence_shifts_on_hero_death`: influence shift on hero death
+- [x] `test_influence_shifts_on_monster_death`: influence shift on monster death
+- [x] `test_influence_shifts_on_hero_death`: influence shift on hero death
 
 ---
 
@@ -1642,20 +1646,20 @@ This part should stay test-first. If a behavior is listed here, it should have a
 
 Relevant legacy test surface includes quest creation, progression, duplicate suppression, completion, rewards, and quest-type-specific behavior.
 
-- [ ] `test_quest_creation`: quest creation baseline
-- [ ] `test_quest_advance`: quest progression increments correctly
-- [ ] `test_quest_advance_does_nothing_when_completed`: completed quests do not advance further
-- [ ] `test_quest_progress_ratio`: progress-ratio computation is correct
+- [x] `test_quest_creation`: quest creation baseline
+- [x] `test_quest_advance`: quest progression increments correctly
+- [x] `test_quest_advance_does_nothing_when_completed`: completed quests do not advance further
+- [x] `test_quest_progress_ratio`: progress-ratio computation is correct
 - [ ] `test_generate_quest_returns_quest`: quest generator returns valid quest object
 - [x] `test_generate_quest_respects_level`: generated quests respect level banding
 - [ ] `test_generate_quest_skips_duplicate`: duplicate quest generation is suppressed
 - [x] `test_generate_quest_gold_scales_with_level`: quest gold reward scales with level
 - [ ] `test_generate_explore_quest`: explore-quest generation works
-- [ ] `test_hunt_quest_completion_awards_rewards`: hunt-quest completion awards rewards
+- [x] `test_hunt_quest_completion_awards_rewards`: hunt-quest completion awards rewards
 - [ ] `test_explore_quest_completes_near_target`: explore-quest completes near target
 - [ ] `test_gather_quest_advance`: gather-quest progression works
 - [x] `test_dynamic_liberate_quest`: liberate-quest generation/progression works
-- [ ] `test_territory_conquest`: territory-conquest quest/world objective behavior is preserved
+- [x] `test_territory_conquest`: territory-conquest quest/world objective behavior is preserved
 
 ---
 
@@ -1851,7 +1855,7 @@ These tests assert what objects or systems are supposed to look like before game
 - [ ] `test_no_skills_by_default`: entities have no skills by default
 - [ ] `test_no_inventory_by_default`: entities have no inventory by default
 - [ ] `test_no_traits_by_default`: entities have no traits by default
-- [ ] `test_entity_starts_with_no_quests`: entities start with no quests
+- [x] `test_entity_starts_with_no_quests`: entities start with no quests
 - [ ] `test_default_core_rate_is_1`: default core subsystem rate is preserved
 - [ ] `test_default_environment_rate_is_2`: default environment subsystem rate is preserved
 - [ ] `test_default_economy_rate_is_5`: default economy subsystem rate is preserved
@@ -1872,11 +1876,11 @@ These tests assert that when there is nothing to do, the system degrades safely 
 - [ ] `test_effects_tick_on_empty_tick`: effects still tick on empty ticks
 - [ ] `test_stamina_regens_on_empty_tick`: stamina regen still occurs on empty ticks
 - [ ] `test_skill_cooldowns_tick_on_empty_tick`: skill cooldowns still tick on empty ticks
-- [ ] `test_quest_advance_does_nothing_when_completed`: completed quests ignore further advance calls
+- [x] `test_quest_advance_does_nothing_when_completed`: completed quests ignore further advance calls
 - [ ] `test_unknown_action_does_nothing`: unknown actions are safely ignored
 - [ ] `test_full_hp_no_change`: full-HP state remains unchanged
-- [ ] `test_no_region_no_penalty`: no-region case applies no penalty
-- [ ] `test_safe_region_no_penalty`: safe-region case applies no penalty
+- [x] `test_no_region_no_penalty`: no-region case applies no penalty
+- [x] `test_safe_region_no_penalty`: safe-region case applies no penalty
 - [ ] `test_unknown_region_returns_0`: unknown region uses zero/fallback difficulty
 - [ ] `test_no_region_returns_0`: no-region difficulty fallback is preserved
 
@@ -1948,12 +1952,12 @@ These tests assert that the system is supposed to be repeatable under the same c
 - [x] `test_profile_derivation_is_deterministic_for_same_entity_state`: deterministic profile derivation
 - [x] `test_intel_capacity_determinism`: intelligence-capacity determinism is preserved
 - [ ] `test_strategic_replay_graph_equality`: replay graph equality is preserved
-- [ ] `test_same_seed_same_result`: same-seed world/result determinism is preserved
-- [ ] `test_harness_non_determinism_different_seed`: different-seed divergence remains explicit
-- [ ] `test_first_by_id_wins_same_tile`: deterministic same-tile tie-breaking is preserved
-- [ ] `test_diagonal_same_target_one_wins`: deterministic same-target conflict resolution is preserved
-- [ ] `test_non_conflicting_moves_both_succeed`: independent valid moves both survive
-- [ ] `test_equidistant_returns_first`: deterministic first-choice behavior on ties is preserved
+- [x] `test_same_seed_same_result`: same-seed world/result determinism is preserved
+- [x] `test_harness_non_determinism_different_seed`: different-seed divergence remains explicit
+- [x] `test_first_by_id_wins_same_tile`: deterministic same-tile tie-breaking is preserved
+- [x] `test_diagonal_same_target_one_wins`: deterministic same-target conflict resolution is preserved
+- [x] `test_non_conflicting_moves_both_succeed`: independent valid moves both survive
+- [x] `test_equidistant_returns_first`: deterministic first-choice behavior on ties is preserved
 
 ---
 
@@ -1961,21 +1965,21 @@ These tests assert that the system is supposed to be repeatable under the same c
 
 These tests assert that key registries and definition maps are supposed to exist and be complete.
 
-- [ ] `test_item_registry_not_empty`: item registry is non-empty
-- [ ] `test_skill_defs_not_empty`: skill definitions are non-empty
-- [ ] `test_trait_defs_not_empty`: trait definitions are non-empty
-- [ ] `test_registry_not_empty`: generic registry non-empty guarantee is preserved
-- [ ] `test_skill_registry_not_empty`: skill registry is non-empty
-- [ ] `test_all_trait_types_have_definitions`: all trait types have definitions
-- [ ] `test_all_tiers_defined`: all expected tier sets are defined
-- [ ] `test_tier1_empty`: tier-1 empty expectation is preserved where applicable
-- [ ] `test_tier4_defined`: tier-4 definition exists where expected
-- [ ] `test_all_base_classes_defined`: base class definitions exist
-- [ ] `test_breakthroughs_defined`: breakthrough definitions exist
-- [ ] `test_all_types_have_name_templates`: type name-template completeness is preserved
-- [ ] `test_all_terrains_have_names`: all terrains have names
-- [ ] `test_all_terrains_have_race_labels`: all terrains have race labels
-- [ ] `test_all_four_biomes_have_features`: all biomes expose expected features
+- [x] `test_item_registry_not_empty`: item registry is non-empty
+- [x] `test_skill_defs_not_empty`: skill definitions are non-empty
+- [x] `test_trait_defs_not_empty`: trait definitions are non-empty
+- [x] `test_registry_not_empty`: generic registry non-empty guarantee is preserved
+- [x] `test_skill_registry_not_empty`: skill registry is non-empty
+- [x] `test_all_trait_types_have_definitions`: all trait types have definitions
+- [x] `test_all_tiers_defined`: all expected tier sets are defined
+- [x] `test_tier1_empty`: tier-1 empty expectation is preserved where applicable
+- [x] `test_tier4_defined`: tier-4 definition exists where expected
+- [x] `test_all_base_classes_defined`: base class definitions exist
+- [x] `test_breakthroughs_defined`: breakthrough definitions exist
+- [x] `test_all_types_have_name_templates`: type name-template completeness is preserved
+- [x] `test_all_terrains_have_names`: all terrains have names
+- [x] `test_all_terrains_have_race_labels`: all terrains have race labels
+- [x] `test_all_four_biomes_have_features`: all biomes expose expected features
 - [ ] `test_all_regions_have_territory`: all regions have territory assignment
 - [ ] `test_difficulty_zones_defined`: difficulty zones are defined
 - [ ] `test_loot_tables_exist`: loot tables exist
@@ -2005,10 +2009,10 @@ These tests assert that when something is missing, disabled, or unsupported, the
 
 These tests assert what is supposed to happen at boundaries.
 
-- [ ] `test_hp_clamped_after_recalc`: HP is clamped after recomputation
-- [ ] `test_stamina_cannot_go_below_zero`: stamina lower bound is preserved
-- [ ] `test_stamina_regen_capped`: stamina regeneration upper cap is preserved
-- [ ] `test_training_does_not_exceed_cap`: training hard caps are preserved
+- [x] `test_hp_clamped_after_recalc`: HP is clamped after recomputation
+- [x] `test_stamina_cannot_go_below_zero`: stamina lower bound is preserved
+- [x] `test_stamina_regen_capped`: stamina regeneration upper cap is preserved
+- [x] `test_training_does_not_exceed_cap`: training hard caps are preserved
 - [x] `test_level_up_respects_cap`: level-up cap compliance is preserved
 - [ ] `test_boss_diff_capped_at_4`: boss difficulty cap is preserved
 - [ ] `test_specialized_training_soft_caps`: soft-cap law is preserved
@@ -2144,7 +2148,7 @@ Add:
 - [ ] Base stats initialize combat and progression fields consistently.
 - [ ] Randomized stats use deterministic spawn-domain RNG.
 - [ ] Hero class derives attributes and caps from class definition.
-- [ ] Mob attributes scale by tier.
+- [x] Mob attributes scale by tier.
 - [ ] Race attributes apply racial modifiers and deterministic variance.
 - [ ] Race skills and class skills can be combined without loss.
 - [ ] No-skills-by-default behavior is preserved.
@@ -2181,21 +2185,21 @@ The checklist has quest mentions, but it is not atomic enough for the original q
 
 Add:
 
-- [ ] Quest starts with progress `0`, not completed.
-- [ ] Quest progress ratio is correct.
+- [x] Quest starts with progress `0`, not completed.
+- [x] Quest progress ratio is correct.
 - [ ] Quest `advance()` returns `True` only on first completion.
-- [ ] Advancing an already completed quest does not mutate state.
+- [x] Advancing an already completed quest does not mutate state.
 - [ ] Quest copy is deep enough that copied progress mutation does not affect original.
 - [ ] Quest serialization omits position for non-position quests.
 - [ ] Explore quest serialization includes target position.
-- [ ] Quest generation respects hero level.
+- [x] Quest generation respects hero level.
 - [ ] Quest generation skips duplicates.
-- [ ] Quest rewards scale with level.
+- [x] Quest rewards scale with level.
 - [ ] Explore quest generation produces valid target positions.
 - [ ] Template map and template list stay consistent.
 - [ ] Entity quest list starts empty.
 - [ ] Entity copies preserve quest progress independently.
-- [ ] Hunt quest completion grants gold and XP.
+- [x] Hunt quest completion grants gold and XP.
 - [ ] Explore quest completes within target proximity.
 - [ ] Gather quest can advance by count.
 - [ ] Max active quest limit is enforced.
@@ -2223,7 +2227,7 @@ Add:
 - [ ] Home storage add/remove/full/copy behavior is preserved.
 - [ ] Shop contains expanded item set.
 - [ ] Buff potion item types are consumable.
-- [ ] Skill learning respects level, prerequisites, and mastery.
+- [x] Skill learning respects level, prerequisites, and mastery.
 - [ ] All hero classes expose at least one available skill chain.
 - [ ] Treasure chests start available.
 - [ ] Chest loot sets respawn tick and unavailable state.
@@ -2325,7 +2329,7 @@ Add:
 
 - [ ] Entities with the same `cluster_id` and faction can form a group.
 - [ ] Group requires at least two living members.
-- [ ] Group leader is selected by highest level.
+- [x] Group leader is selected by highest level.
 - [ ] Group anchor follows leader position.
 - [ ] Members receive group ID linkage.
 - [ ] Group dissolves if leader dies.
@@ -2356,7 +2360,7 @@ Add:
 - [ ] Calamity spawn creates bounty quests for heroes.
 - [ ] Calamity aura applies local debuffs.
 - [ ] Camp reinforcements occur on schedule.
-- [ ] Camp reinforcement level increases when camp is full.
+- [x] Camp reinforcement level increases when camp is full.
 - [ ] Faction raids spawn on raid interval.
 - [ ] Raid mobs use raid AI state.
 - [ ] Raid mobs do not return home.

@@ -125,7 +125,7 @@ No scheduler optimization, replay system, concurrency model, or degradation mech
 Create the exact design contract for simulation semantics. This is the foundational modeling task for the new engine. Without it, later milestones will drift into hidden assumptions, accidental ordering rules, and fake determinism.
 
 [Task implementation comments]
-Implemented the core contract in `docs/engine/simulation_kernel_contract_m1.md` and `src_v2/core/contracts.py`. The kernel orchestrator in `src_v2/engine/kernel.py` strictly follows the phase-ordered tick loop (INIT, GOVERNANCE, SCHEDULING, PACKETIZATION, RESOLUTION, PERSISTENCE). Deterministic progression is guaranteed via the `ApplyPath` mechanism and `AuthoritativeState` partitioning.
+Implemented the core contract in `docs/engine/simulation_kernel_contract_m1.md` and `src/core/contracts.py`. The kernel orchestrator in `src/engine/kernel.py` strictly follows the phase-ordered tick loop (INIT, GOVERNANCE, SCHEDULING, PACKETIZATION, RESOLUTION, PERSISTENCE). Deterministic progression is guaranteed via the `ApplyPath` mechanism and `AuthoritativeState` partitioning.
 
 [Task technical implementation]
 Create one new kernel-contract reference document and one code-facing contract section that define exactly:
@@ -190,7 +190,7 @@ The project has one exact simulation-kernel contract that can be used as the aut
 Create the exact operational contract for stable and bounded resource usage. This task freezes what a runtime profile is and what limits it must define.
 
 [Task implementation comments]
-Implemented the profile schema in `src_v2/config/profiles.py` and validation logic in `src_v2/config/validator.py`. Reference profiles are defined in `src_v2/config/__init__.py`. The resource envelope (RAM, CPU, Queue, Work Debt) is now a first-class requirement for every certified simulation run.
+Implemented the profile schema in `src/config/profiles.py` and validation logic in `src/config/validator.py`. Reference profiles are defined in `src/config/__init__.py`. The resource envelope (RAM, CPU, Queue, Work Debt) is now a first-class requirement for every certified simulation run.
 
 [Task technical implementation]
 Create one exact profile contract that defines:
@@ -256,7 +256,7 @@ The project has one exact runtime-profile contract that defines stable resource 
 Make the codebase reflect the frozen kernel contract at a structural level. This task does not implement full engine behavior. It creates the exact boundaries and skeleton that later milestones will fill.
 
 [Task implementation comments]
-The skeletal engine is implemented in `src_v2/engine/kernel.py`. Authoritative state is strictly typed in `src_v2/core/state.py`. Kernel phases are explicitly defined as generators in `src_v2/engine/phases.py`, ensuring deterministic execution order across all world ticks.
+The skeletal engine is implemented in `src/engine/kernel.py`. Authoritative state is strictly typed in `src/core/state.py`. Kernel phases are explicitly defined as generators in `src/engine/phases.py`, ensuring deterministic execution order across all world ticks.
 
 [Task technical implementation]
 Implement or scaffold:
@@ -309,7 +309,7 @@ The project structure reflects the kernel contract and exposes explicit boundari
 Lock the Milestone 1 contract with deterministic tests so later milestones cannot silently change the engine’s laws.
 
 [Task implementation comments]
-Implemented contract tests in `tests_v2/engine/test_simulation_kernel_contract.py` and `tests_v2/config/test_runtime_profile_contract.py`. These tests verify deterministic RNG seeding, phase ordering, and profile ceiling enforcement.
+Implemented contract tests in `tests/engine/test_simulation_kernel_contract.py` and `tests/config/test_runtime_profile_contract.py`. These tests verify deterministic RNG seeding, phase ordering, and profile ceiling enforcement.
 
 [Task technical implementation]
 Add exact tests for the rulebook.

@@ -18,7 +18,7 @@ It does not close progression math, class identity, or reward formulas.
 
 ## [Milestone technical implementation]
 
-Recover the supported social consequence and contract layer in native `src_v2` terms.
+Recover the supported social consequence and contract layer in native `src` terms.
 
 This milestone must:
 
@@ -55,7 +55,7 @@ At the end of Milestone 4:
 
 ## Task
 
-### [ ] (checkbox) - [Task 1] - Audit social-consequence and contract rows against current `src_v2` social behavior
+### [ ] (checkbox) - [Task 1] - Audit social-consequence and contract rows against current `src` social behavior
 
 #### [Task Description]
 
@@ -63,7 +63,7 @@ Find where social memory is already meaningful, partial, or decorative.
 
 #### [Task technical implementation]
 
-Review all Phase 9 social/contract rows and map them to current `src_v2` implementation points.
+Review all Phase 9 social/contract rows and map them to current `src` implementation points.
 
 Identify:
 
@@ -75,9 +75,9 @@ Identify:
 
 #### [Task possible affected files]
 
-- `src_v2/social/**`
-- `src_v2/strategic/**`
-- `src_v2/core/social/**`
+- `src/social/**`
+- `src/strategic/**`
+- `src/core/social/**`
 - `docs/engine/replacement_ledger.md`
 
 #### [Task important notes]
@@ -115,10 +115,10 @@ Implement or refine supported social consequence behavior so preserved long-hori
 
 #### [Task possible affected files]
 
-- `src_v2/social/**`
-- `src_v2/strategic/**`
-- `tests_v2/ai/**`
-- `tests_v2/social/**`
+- `src/social/**`
+- `src/strategic/**`
+- `tests/ai/**`
+- `tests/social/**`
 
 #### [Task important notes]
 
@@ -155,11 +155,11 @@ Implement or refine supported recruitment/contract semantics so actors can:
 
 #### [Task possible affected files]
 
-- `src_v2/social/**`
-- `src_v2/strategic/**`
-- `src_v2/core/social/**`
-- `tests_v2/social/**`
-- `tests_v2/ai/**`
+- `src/social/**`
+- `src/strategic/**`
+- `src/core/social/**`
+- `tests/social/**`
+- `tests/ai/**`
 
 #### [Task important notes]
 
@@ -196,10 +196,10 @@ Implement or refine supported trust/debt/relationship semantics, including where
 
 #### [Task possible affected files]
 
-- `src_v2/social/**`
-- `src_v2/core/social/**`
-- `tests_v2/social/**`
-- `tests_v2/integration/strategy/**`
+- `src/social/**`
+- `src/core/social/**`
+- `tests/social/**`
+- `tests/integration/strategy/**`
 
 #### [Task important notes]
 
@@ -237,9 +237,9 @@ Add focused tests for:
 
 #### [Task possible affected files]
 
-- `tests_v2/social/**`
-- `tests_v2/ai/**`
-- `tests_v2/integration/strategy/**`
+- `tests/social/**`
+- `tests/ai/**`
+- `tests/integration/strategy/**`
 
 #### [Task important notes]
 

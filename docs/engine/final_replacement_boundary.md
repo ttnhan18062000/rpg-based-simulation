@@ -4,7 +4,7 @@ This document defines the authoritative boundary between supported replacement a
 
 ## 1. Supported Replacement Boundary (RATIFIED)
 
-The following behaviors are officially replaced by `src_v2` and backed by bit-identical or contractual proof:
+The following behaviors are officially replaced by `src` and backed by bit-identical or contractual proof:
 
 - **Movement Substrate**: All Manhattan/Cardinal movement, pathfinding, and congestion sidestepping.
 - **Resource/Interaction**: All harvesting, looting, channeled states, and inventory capacity limits.

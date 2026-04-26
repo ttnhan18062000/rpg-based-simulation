@@ -30,9 +30,9 @@ Transition the worker pool from a static-only resource to an elastic resource go
 - `resource_handbook.md` (Principle 8)
 
 ## Related Code Areas
-- `src_v2/engine/policy.py`
-- `src_v2/engine/worker_manager.py`
-- `src_v2/engine/kernel.py`
+- `src/engine/policy.py`
+- `src/engine/worker_manager.py`
+- `src/engine/kernel.py`
 
 ## Assumptions / Open Questions
 - If `concurrency_limit` is less than 1, excess work packets remain in the `queued` count and are reported as such.

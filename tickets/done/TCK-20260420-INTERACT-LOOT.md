@@ -19,5 +19,5 @@ Recover the original RPG-core interaction behavior for looting ground items and 
 - [ ] Any movement (`moved_this_tick`) properly clears `InteractionComponent.progress`.
 
 ## Files Changed
-- `src_v2/engine/interaction.py`
-- `src_v2/core/state.py` (Potential metadata for ground items)
+- `src/engine/interaction.py`
+- `src/core/state.py` (Potential metadata for ground items)

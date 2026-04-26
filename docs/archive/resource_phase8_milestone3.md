@@ -74,9 +74,9 @@ Identify:
 
 #### [Task possible affected files]
 
-- `src_v2/ai/**`
-- `src_v2/combat/**`
-- `src_v2/engine/**`
+- `src/ai/**`
+- `src/combat/**`
+- `src/engine/**`
 - `docs/engine/replacement_ledger.md`
 - `docs/engine/phase8_backlog.md`
 
@@ -117,9 +117,9 @@ Refine or complete local tactical decision logic so supported actors can:
 
 #### [Task possible affected files]
 
-- `src_v2/ai/**`
-- `src_v2/combat/**`
-- `tests_v2/tactical/**`
+- `src/ai/**`
+- `src/combat/**`
+- `tests/tactical/**`
 
 #### [Task important notes]
 
@@ -160,10 +160,10 @@ Refine or complete local tactical movement/commitment rules so supported actors 
 
 #### [Task possible affected files]
 
-- `src_v2/ai/**`
-- `src_v2/combat/**`
-- `src_v2/navigation/**`
-- `tests_v2/tactical/**`
+- `src/ai/**`
+- `src/combat/**`
+- `src/navigation/**`
+- `tests/tactical/**`
 
 #### [Task important notes]
 
@@ -203,9 +203,9 @@ Implement or refine bounded local anti-stalemate handling for preserved scenario
 
 #### [Task possible affected files]
 
-- `src_v2/ai/**`
-- `src_v2/combat/**`
-- `tests_v2/tactical/test_anti_stalemate.py`
+- `src/ai/**`
+- `src/combat/**`
+- `tests/tactical/test_anti_stalemate.py`
 
 #### [Task important notes]
 
@@ -247,10 +247,10 @@ Add focused tests for:
 
 #### [Task possible affected files]
 
-- `tests_v2/tactical/test_target_selection_contract.py`
-- `tests_v2/tactical/test_engagement_behavior.py`
-- `tests_v2/tactical/test_pursuit_and_retreat.py`
-- `tests_v2/tactical/test_anti_stalemate.py`
+- `tests/tactical/test_target_selection_contract.py`
+- `tests/tactical/test_engagement_behavior.py`
+- `tests/tactical/test_pursuit_and_retreat.py`
+- `tests/tactical/test_anti_stalemate.py`
 
 #### [Task important notes]
 
@@ -265,7 +265,7 @@ Do not rely on “it looks smarter in a run” as tactical proof.
 - [x] Anti-stalemate tests exist
 
 #### [Implementation Comment]
-Created comprehensive test suite in `tests_v2/tactical/`. All tests pass.
+Created comprehensive test suite in `tests/tactical/`. All tests pass.
 
 #### [Task acceptance criteria]
 

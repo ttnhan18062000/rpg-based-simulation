@@ -38,25 +38,25 @@ The Milestone A baseline is currently entangled with `WorkerPacket` and `WorkerM
 - docs/superpowers/specs/2026-04-20-resource-engine-substrate-hardening.md
 
 ## Related Code Areas
-- src_v2/engine/kernel.py
-- src_v2/engine/executor.py (NEW)
+- src/engine/kernel.py
+- src/engine/executor.py (NEW)
 
 ## Implementation Notes
 - Use `Protocol` for `IWorkExecutor` for flexiblity.
 - Ensure `Logic` is shared between `LocalExecutor` and `WorkerLogic`.
 
 ## Test Summary
-- `tests_v2/engine/test_milestone_a_closure.py`: Isolation & contract purity (PASSED)
-- `tests_v2/engine/test_determinism_suite.py`: Bit-identical outcome equivalence (PASSED)
-- `tests_v2/engine/test_signal_hardening.py`: Peak-utilization & queue depth accuracy (PASSED)
-- `tests_v2/engine/test_milestone_c_desimulation.py`: Authoritative debt drainage (PASSED)
+- `tests/engine/test_milestone_a_closure.py`: Isolation & contract purity (PASSED)
+- `tests/engine/test_determinism_suite.py`: Bit-identical outcome equivalence (PASSED)
+- `tests/engine/test_signal_hardening.py`: Peak-utilization & queue depth accuracy (PASSED)
+- `tests/engine/test_milestone_c_desimulation.py`: Authoritative debt drainage (PASSED)
 
 ## Files Changed
-- `src_v2/engine/kernel.py`
-- `src_v2/engine/executor.py`
-- `src_v2/engine/worker_manager.py`
-- `src_v2/engine/domain_logic.py`
-- `src_v2/core/worker_protocol.py`
-- `src_v2/core/protocol_validator.py`
-- `src_v2/core/updates.py`
-- `src_v2/engine/apply.py`
+- `src/engine/kernel.py`
+- `src/engine/executor.py`
+- `src/engine/worker_manager.py`
+- `src/engine/domain_logic.py`
+- `src/core/worker_protocol.py`
+- `src/core/protocol_validator.py`
+- `src/core/updates.py`
+- `src/engine/apply.py`

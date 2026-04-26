@@ -1,7 +1,7 @@
 # Phase 4 Exit Package: Core Truth & Parity Status
 
 ## 1. Executive Summary
-Phase 4 concluded with the successful transition of the `src_v2` Resource Engine into an authoritative resolution substrate. This package serves as the "frozen" reference for the engine's truth surfaces before entering Phase 5 expansion.
+Phase 4 concluded with the successful transition of the `src` Resource Engine into an authoritative resolution substrate. This package serves as the "frozen" reference for the engine's truth surfaces before entering Phase 5 expansion.
 
 ## 2. Supported Slices
 | Layer | Verification | Status |

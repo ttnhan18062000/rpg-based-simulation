@@ -1,6 +1,6 @@
-# High-Level Implementation Plan — Phase 5 of `src_v2`
+# High-Level Implementation Plan — Phase 5 of `src`
 
-This plan assumes Phase 4 has brought `src_v2` to a materially better state, but not yet to full RPG-core progression closure.
+This plan assumes Phase 4 has brought `src` to a materially better state, but not yet to full RPG-core progression closure.
 
 It assumes the current branch either already has, or is expected to complete before formal Phase 5 entry:
 
@@ -14,7 +14,7 @@ It also assumes the project is **not done** recovering the original RPG-core loo
 
 This is not the phase where the project should widen into combat, broad AI, full quest graphs, or generalized economy simulation.
 
-It is the phase where `src_v2` must recover the next part of the original gameplay spine:
+It is the phase where `src` must recover the next part of the original gameplay spine:
 
 - resources moving from world to inventory,
 - inventory resolving through town behavior,
@@ -42,7 +42,7 @@ Milestone 1 is the entry gate for Phase 5.
 
 Its purpose is to stop the team from building the next gameplay loop on top of unfinished Phase 4 truth gaps.
 
-By this point, `src_v2` may already have a better movement slice and a better resource interaction slice, but that does not automatically mean the branch is ready for the next phase.
+By this point, `src` may already have a better movement slice and a better resource interaction slice, but that does not automatically mean the branch is ready for the next phase.
 
 This milestone exists to close the remaining gaps that would otherwise contaminate all later progression work:
 
@@ -58,7 +58,7 @@ It closes the phase boundary honestly.
 
 ## [Milestone technical implementation]
 
-Create one explicit readiness gate for Phase 5 that confirms the current `src_v2` branch is stable enough to attach the next progression-layer systems.
+Create one explicit readiness gate for Phase 5 that confirms the current `src` branch is stable enough to attach the next progression-layer systems.
 
 This milestone must:
 
@@ -126,7 +126,7 @@ This milestone recovers the first bounded, officially supported version of that 
 
 ## [Milestone technical implementation]
 
-Create one native `src_v2` town resource-resolution layer that covers the first officially supported town-side progression behavior.
+Create one native `src` town resource-resolution layer that covers the first officially supported town-side progression behavior.
 
 This milestone must:
 
@@ -178,7 +178,7 @@ Milestone 3 recovers the first bounded strategic feedback loop from resource pro
 The original `src` does not treat gathering and town services as isolated mechanics.
 Those systems emit pressure, needs, hints, and leads that shape what happens next.
 
-This milestone exists to recover the first supported version of that loop in `src_v2`.
+This milestone exists to recover the first supported version of that loop in `src`.
 
 The goal is not to recover all strategic AI.
 The goal is to recover the part of strategy that is directly necessary for resource progression truth.
@@ -249,7 +249,7 @@ It is the milestone that stops the team from declaring loop recovery without evi
 
 ## [Milestone technical implementation]
 
-Create one integrated differential-proof layer comparing the supported progression loop in original `src` and `src_v2` under equivalent conditions where parity is intended.
+Create one integrated differential-proof layer comparing the supported progression loop in original `src` and `src` under equivalent conditions where parity is intended.
 
 This milestone must:
 
@@ -266,7 +266,7 @@ Scope must stay narrow and literal.
 
 The danger here is self-deception.
 
-Once several pieces work in `src_v2`, teams start calling that “recovered gameplay.”
+Once several pieces work in `src`, teams start calling that “recovered gameplay.”
 That claim is worthless unless old-vs-new comparisons exist for the same supported loop.
 
 ## [Milestone acceptance criteria]
@@ -350,7 +350,7 @@ At the end of this milestone:
 
 ## Task
 
-- [ ] (checkbox) - [Task 1] - Define the supported progression-surface matrix for the current `src_v2` phase
+- [ ] (checkbox) - [Task 1] - Define the supported progression-surface matrix for the current `src` phase
 - [ ] (checkbox) - [Task 2] - Expand certification scenarios to cover the integrated supported progression loop
 - [ ] (checkbox) - [Task 3] - Expand benchmark scenarios to cover the integrated supported progression loop
 - [ ] (checkbox) - [Task 4] - Integrate supported progression truth into release-gate expectations and proof bundle requirements

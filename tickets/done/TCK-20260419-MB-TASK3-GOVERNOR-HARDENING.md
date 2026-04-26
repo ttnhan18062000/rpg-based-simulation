@@ -33,8 +33,8 @@ Transition the `ResourceGovernor` from rough heuristics to a hardened control la
 - `docs/engine/runtime_signals_contract_mb.md`
 
 ## Related Code Areas
-- `src_v2/engine/governor.py`
-- `src_v2/engine/runtime_status.py`
+- `src/engine/governor.py`
+- `src/engine/runtime_status.py`
 
 ## Assumptions / Open Questions
 - Assume `recovery_watermark` is a multiplier for ALL thresholds (RAM, CPU, Workers).

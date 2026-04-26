@@ -38,7 +38,7 @@ Final hardening of the engine by establishing authoritative documentation, contr
 
 ## Related Code Areas
 - `docs/engine/`
-- `tests_v2/docs/` [NEW]
+- `tests/docs/` [NEW]
 
 ## Assumptions / Open Questions
 - We assume documentation integrity is verified via `pytest` by checking file existence and mandatory section headers.
@@ -57,7 +57,7 @@ Final hardening of the engine by establishing authoritative documentation, contr
 - `docs/engine/engineering_playbook_m10.md`
 - `docs/engine/manifest.json`
 - `resource_implementation_milestone_10.md`
-- `tests_v2/docs/test_doc_integrity.py`
+- `tests/docs/test_doc_integrity.py`
 
 ## Completion Summary
 Milestone 10 complete. The project has a machine-verified documentation pack and a clear path for future maintenance. All 10 milestones are formally audited and locked.

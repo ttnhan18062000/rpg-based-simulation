@@ -38,8 +38,8 @@ Hard-code the deterministic work hierarchy and tie-break rules for the simulatio
 - `stored_artifacts/TCK-20260419-MA-TASK3-PIN-SCHEDULER/test_plan.md`
 
 ## Related Code Areas
-- `src_v2/engine/scheduler.py`
-- `src_v2/core/work.py`
+- `src/engine/scheduler.py`
+- `src/core/work.py`
 
 ## Assumptions / Open Questions
 - None.
@@ -59,8 +59,8 @@ Hard-code the deterministic work hierarchy and tie-break rules for the simulatio
 - `test_governor_gating_non_auth_periodic`: PASSED
 
 ## Files Changed
-- `src_v2/engine/scheduler.py`
-- `tests_v2/engine/test_scheduler_contract.py`
+- `src/engine/scheduler.py`
+- `tests/engine/test_scheduler_contract.py`
 
 ## Completion Summary
 - Successfully pinned the deterministic scheduler classes. The scheduler now follows a strict hierarchy and uses exact tie-break rules as defined in the Milestone A Law. Comprehensive tests ensure that these rules remain stable and that no accidental placeholders contaminate the baseline path.

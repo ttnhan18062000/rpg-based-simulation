@@ -2,9 +2,9 @@
 
 ## [Milestone Description]
 
-Milestone 2 moves the supported entry and consumer-facing runtime surface to `src_v2`.
+Milestone 2 moves the supported entry and consumer-facing runtime surface to `src`.
 
-Its purpose is to make `src_v2` the default operational runtime for the cutover-allowed surface.
+Its purpose is to make `src` the default operational runtime for the cutover-allowed surface.
 
 This milestone covers:
 
@@ -20,12 +20,12 @@ It does not yet close CI/release workflow migration or full operational artifact
 
 ## [Milestone technical implementation]
 
-Cut over supported runtime entry surfaces to `src_v2` in a controlled way.
+Cut over supported runtime entry surfaces to `src` in a controlled way.
 
 This milestone must:
 
-- switch supported default entrypoints to `src_v2`,
-- switch supported serve/headless/runtime consumers to `src_v2`,
+- switch supported default entrypoints to `src`,
+- switch supported serve/headless/runtime consumers to `src`,
 - preserve explicit constraints for unsupported or divergent surfaces,
 - validate that operator-visible behavior remains within the ratified cutover boundary,
 - and keep fallback/rollback paths visible while cutover is still in progress.
@@ -46,8 +46,8 @@ If old `src` is still the thing people really depend on, then you have not cut o
 
 At the end of Milestone 2:
 
-- supported runtime entrypoints default to `src_v2`,
-- supported consumers run through `src_v2`,
+- supported runtime entrypoints default to `src`,
+- supported consumers run through `src`,
 - unsupported/divergent surfaces remain constrained,
 - and the project has one credible runtime-entry cutover slice.
 
@@ -67,14 +67,14 @@ Review all Phase 12-supported runtime entry surfaces and confirm:
 
 - current routing path,
 - old `src` dependency points,
-- `src_v2` equivalent path,
+- `src` equivalent path,
 - operator-visible contract expectations,
 - and rollback/fallback dependencies.
 
 #### [Task possible affected files]
 
 - `src/__main__.py`
-- `src_v2/__main__.py`
+- `src/__main__.py`
 - runtime entry docs
 - `docs/engine/phase12_cutover_ownership.md`
 
@@ -96,15 +96,15 @@ The project has a concrete audit of supported runtime entry and consumer executi
 
 ---
 
-### [ ] (checkbox) - [Task 2] - Switch supported default CLI and serve/headless entrypoints to `src_v2`
+### [ ] (checkbox) - [Task 2] - Switch supported default CLI and serve/headless entrypoints to `src`
 
 #### [Task Description]
 
-Make `src_v2` the real default runtime for the supported entry surface.
+Make `src` the real default runtime for the supported entry surface.
 
 #### [Task technical implementation]
 
-Update the supported runtime entry surface so cutover-eligible default entrypoints and supported serve/headless paths route to `src_v2` by default.
+Update the supported runtime entry surface so cutover-eligible default entrypoints and supported serve/headless paths route to `src` by default.
 
 This task should:
 
@@ -114,10 +114,10 @@ This task should:
 
 #### [Task possible affected files]
 
-- `src_v2/__main__.py`
+- `src/__main__.py`
 - launcher/wrapper scripts
 - deployment/runbook docs
-- `tests_v2/e2e/**`
+- `tests/e2e/**`
 
 #### [Task important notes]
 
@@ -125,15 +125,15 @@ Changing the default without preserving the ratified contract is not cutover. It
 
 #### [Task check list]
 
-- [x] Default entry routes to `src_v2`
-- [x] Serve/headless routes to `src_v2`
+- [x] Default entry routes to `src`
+- [x] Serve/headless routes to `src`
 - [x] Allowed fallback remains explicit
 - [x] Unsupported scope is not rerouted
 - [x] Operator-facing behavior remains bounded
 
 #### [Task acceptance criteria]
 
-Supported runtime entrypoints now default to `src_v2`.
+Supported runtime entrypoints now default to `src`.
 
 ---
 
@@ -154,8 +154,8 @@ Run black-box validation on supported operator-facing execution flows, including
 
 #### [Task possible affected files]
 
-- `tests_v2/e2e/**`
-- `tests_v2/cli/**`
+- `tests/e2e/**`
+- `tests/cli/**`
 - runbook validation notes
 
 #### [Task important notes]
@@ -172,7 +172,7 @@ If operators still need old `src` muscle memory to succeed, the cutover is fake.
 
 #### [Task acceptance criteria]
 
-Supported operator-facing execution behavior is validated under the `src_v2` default runtime.
+Supported operator-facing execution behavior is validated under the `src` default runtime.
 
 ---
 
@@ -186,8 +186,8 @@ Turn runtime cutover from a config change into an explicit operational fact.
 
 Publish one runtime cutover baseline summarizing:
 
-- what entrypoints now default to `src_v2`,
-- what consumers are now served by `src_v2`,
+- what entrypoints now default to `src`,
+- what consumers are now served by `src`,
 - what fallback still exists,
 - and what remains outside the cutover boundary.
 

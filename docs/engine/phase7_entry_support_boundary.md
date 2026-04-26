@@ -8,22 +8,22 @@ This document defines the supported substrate boundary at the start of Phase 7. 
 ### A. Intent Model (Task/Work Packets)
 - **Scope**: Structured intent emitted by worker-side logic.
 - **Contract**: Tasks carry `NavigationComponent` and `TaskComponent` requirements. Untyped `properties` are officially retired for authoritative use.
-- **Verification**: `tests_v2/core/test_intent_model.py`
+- **Verification**: `tests/core/test_intent_model.py`
 
 ### B. Resolution Model (Worker Results)
 - **Scope**: Deterministic output of semantic executors (e.g., Strategic, Movement).
 - **Contract**: Results must emit explicit `EntityUpdate` or `WorldUpdate` records. Direct mutation of `AuthoritativeState` is forbidden.
-- **Verification**: `tests_v2/engine/test_worker_isolation.py`
+- **Verification**: `tests/engine/test_worker_isolation.py`
 
 ### C. Refinement Pipeline (Authoritative Refinement)
 - **Scope**: Consolidation of results through the 6-phase authoritative tick.
 - **Contract**: Phases execute in strict order: Town/Service -> Dynamics -> Interaction -> Strategic -> Movement -> Occupancy.
-- **Verification**: `tests_v2/engine/test_phase_order.py`
+- **Verification**: `tests/engine/test_phase_order.py`
 
 ### D. Authoritative Apply (Outcome Truth)
 - **Scope**: Single-point application of the refined `StateUpdate`.
 - **Contract**: World truth is defined by the post-apply state, which is frozen and emitted for replay.
-- **Verification**: `tests_v2/engine/test_authoritative_apply.py`
+- **Verification**: `tests/engine/test_authoritative_apply.py`
 
 ## 3. Supported Gameplay Slice
 - **Grid Movement**: Deterministic 8-way tile navigation.

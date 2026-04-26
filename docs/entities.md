@@ -6,7 +6,7 @@ In the WorldLoop RPG, every agent (Heroes, Mobs, NPCs) is an `Entity`. Following
 
 ## 1. The Entity Shell
 
-The `Entity` class (`src_v2/core/entities/entity.py`) coordinates lifecycle events and enforces synchronization between its aspects.
+The `Entity` class (`src/core/entities/entity.py`) coordinates lifecycle events and enforces synchronization between its aspects.
 
 ### Core Properties
 - **`id`**: A unique, monotonic integer.

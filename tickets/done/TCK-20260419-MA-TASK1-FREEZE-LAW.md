@@ -12,7 +12,7 @@ Write the finished law set for the deterministic single-process baseline so impl
 ## Scope
 - [x] Create `docs/engine/runtime_completion_contract_ma.md`
 - [x] Create `docs/engine/ma_test_matrix.md`
-- [x] Add code-facing law comments to `src_v2/engine/kernel.py`, `apply.py`, `checkpoint.py`, `scheduler.py`
+- [x] Add code-facing law comments to `src/engine/kernel.py`, `apply.py`, `checkpoint.py`, `scheduler.py`
 
 ## Out of Scope
 - Replay hardening (beyond isolation)
@@ -40,10 +40,10 @@ Write the finished law set for the deterministic single-process baseline so impl
 - `stored_artifacts/TCK-20260419-MA-TASK1-FREEZE-LAW/test_plan.md`
 
 ## Related Code Areas
-- `src_v2/engine/kernel.py`
-- `src_v2/engine/apply.py`
-- `src_v2/engine/checkpoint.py`
-- `src_v2/engine/scheduler.py`
+- `src/engine/kernel.py`
+- `src/engine/apply.py`
+- `src/engine/checkpoint.py`
+- `src/engine/scheduler.py`
 
 ## Assumptions / Open Questions
 - Assumption: The existing 6-phase sequence is the correct baseline to freeze. (Confirmed in code).
@@ -55,15 +55,15 @@ Write the finished law set for the deterministic single-process baseline so impl
 
 ## Test Summary
 - Manual consistency check passed.
-- All existing engine tests (`tests_v2/engine`) passed.
+- All existing engine tests (`tests/engine`) passed.
 
 ## Files Changed
 - `docs/engine/runtime_completion_contract_ma.md`
 - `docs/engine/ma_test_matrix.md`
-- `src_v2/engine/kernel.py`
-- `src_v2/engine/apply.py`
-- `src_v2/engine/checkpoint.py`
-- `src_v2/engine/scheduler.py`
+- `src/engine/kernel.py`
+- `src/engine/apply.py`
+- `src/engine/checkpoint.py`
+- `src/engine/scheduler.py`
 
 ## Completion Summary
 - Finalized the Milestone A runtime contract and test matrix. This establishes the "Law" for the deterministic single-process baseline, which is the foundation for all subsequent work in Milestone A.

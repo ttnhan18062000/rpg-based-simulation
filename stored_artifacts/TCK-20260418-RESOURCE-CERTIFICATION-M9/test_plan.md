@@ -20,6 +20,6 @@
 - **Rate-Limiting**: Verify that `BENCHMARK_MODE` (if implemented) successfully stabilizes tick variance.
 
 ## Test Files
-- `tests_v2/certification/test_harness_contract.py`
-- `tests_v2/certification/test_envelope_violations.py`
-- `tests_v2/certification/test_resilience_recovery.py`
+- `tests/certification/test_harness_contract.py`
+- `tests/certification/test_envelope_violations.py`
+- `tests/certification/test_resilience_recovery.py`

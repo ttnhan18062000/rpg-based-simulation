@@ -177,7 +177,7 @@ The project has one exact certification and resilience-harness contract that can
 Make the project obey the frozen certification contract by implementing one exact harness that runs named profile-bound scenarios and captures required evidence.
 
 [Task implementation comments]
-The certification harness is integrated into the `tests_v2/` suite. The `test_doc_integrity.py` and `test_quality_law.py` modules serve as the authoritative gatekeepers, ensuring that every code change is backed by valid documentation and that the documentation itself is structurally sound.
+The certification harness is integrated into the `tests/` suite. The `test_doc_integrity.py` and `test_quality_law.py` modules serve as the authoritative gatekeepers, ensuring that every code change is backed by valid documentation and that the documentation itself is structurally sound.
 
 [Task technical implementation]
 Implement or refactor the harness so that:
@@ -232,7 +232,7 @@ The project has one exact certification harness that runs profile-bound scenario
 Exercise the runtime under the conditions that actually matter: pressure, saturation, degradation, recovery, and certified performance reporting.
 
 [Task implementation comments]
-Resilience scenarios are implemented in `tests_v2/engine/test_resource_governor_contract.py`. These tests inject synthetic memory and work-debt spikes and verify that the `Governor` enters the correct `Degraded` or `Survival` state while preserving authoritative state integrity.
+Resilience scenarios are implemented in `tests/engine/test_resource_governor_contract.py`. These tests inject synthetic memory and work-debt spikes and verify that the `Governor` enters the correct `Degraded` or `Survival` state while preserving authoritative state integrity.
 
 [Task technical implementation]
 Implement exact scenario suites for:
@@ -291,7 +291,7 @@ The harness can exercise pressure, degradation, recovery, and throughput scenari
 Lock the Milestone 9 proof model with deterministic or profile-stable tests so later milestones cannot weaken certification standards or hide resource-envelope violations.
 
 [Task implementation comments]
-Regression tests have been consolidated into the `tests_v2/` hierarchy. Every milestone is now protected by an integrity suite that prevents "Document Drift" and ensures that the technical contracts remain the authoritative source of truth.
+Regression tests have been consolidated into the `tests/` hierarchy. Every milestone is now protected by an integrity suite that prevents "Document Drift" and ensures that the technical contracts remain the authoritative source of truth.
 
 [Task technical implementation]
 Add exact tests for:

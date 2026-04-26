@@ -1,4 +1,4 @@
-Below is the **Phase 9 remaining-tasks implementation plan only**, based on the uploaded current branch [all_src_v2_p9.py](sandbox:/mnt/data/all_src_v2_p9.py) and [all_test_v2_p9.py](sandbox:/mnt/data/all_test_v2_p9.py), reviewed against the original [all_src.py](sandbox:/mnt/data/all_src.py) and [all_test.py](sandbox:/mnt/data/all_test.py). The current V2 branch already has real coverage for belief cycle, cognition export, narrative memory, parts of social consequence, genetics/skill scaling, and dynamic quest generation, but it still lacks several original RPG consequence families that are explicit in the legacy test surface.
+Below is the **Phase 9 remaining-tasks implementation plan only**, based on the uploaded current branch [all_src_p9.py](sandbox:/mnt/data/all_src_p9.py) and [all_test_v2_p9.py](sandbox:/mnt/data/all_test_v2_p9.py), reviewed against the original [all_src.py](sandbox:/mnt/data/all_src.py) and [all_test.py](sandbox:/mnt/data/all_test.py). The current V2 branch already has real coverage for belief cycle, cognition export, narrative memory, parts of social consequence, genetics/skill scaling, and dynamic quest generation, but it still lacks several original RPG consequence families that are explicit in the legacy test surface.
 
 # Phase 9 Remaining Tasks Implementation Plan
 
@@ -22,10 +22,10 @@ Add explicit long-horizon state for:
 
 Possible affected files:
 
-- `src_v2/ai/**`
-- `src_v2/strategic/**`
-- `src_v2/core/cognition/**`
-- `src_v2/core/state/**`
+- `src/ai/**`
+- `src/strategic/**`
+- `src/core/cognition/**`
+- `src/core/state/**`
 
 Acceptance criteria:
 
@@ -46,9 +46,9 @@ Recover preserved logic for:
 
 Possible affected files:
 
-- `src_v2/ai/**`
-- `src_v2/strategic/**`
-- `tests_v2/ai/**`
+- `src/ai/**`
+- `src/strategic/**`
+- `tests/ai/**`
 
 Acceptance criteria:
 
@@ -69,9 +69,9 @@ Add focused tests covering:
 
 Possible affected files:
 
-- `tests_v2/ai/test_routine_service.py`
-- `tests_v2/ai/test_biological_needs.py`
-- `tests_v2/integration/strategy/**`
+- `tests/ai/test_routine_service.py`
+- `tests/ai/test_biological_needs.py`
+- `tests/integration/strategy/**`
 
 Acceptance criteria:
 
@@ -97,10 +97,10 @@ Add explicit lifecycle semantics for:
 
 Possible affected files:
 
-- `src_v2/progression/**`
-- `src_v2/social/**`
-- `src_v2/core/progression/**`
-- `src_v2/core/state/**`
+- `src/progression/**`
+- `src/social/**`
+- `src/core/progression/**`
+- `src/core/state/**`
 
 Acceptance criteria:
 
@@ -118,10 +118,10 @@ Recover preserved continuity rules for:
 
 Possible affected files:
 
-- `src_v2/progression/**`
-- `src_v2/social/**`
-- `src_v2/core/progression/**`
-- `src_v2/core/social/**`
+- `src/progression/**`
+- `src/social/**`
+- `src/core/progression/**`
+- `src/core/social/**`
 
 Acceptance criteria:
 
@@ -140,9 +140,9 @@ Add focused tests for:
 
 Possible affected files:
 
-- `tests_v2/progression/test_lifecycle.py`
-- `tests_v2/social/test_succession.py`
-- `tests_v2/integration/strategy/**`
+- `tests/progression/test_lifecycle.py`
+- `tests/social/test_succession.py`
+- `tests/integration/strategy/**`
 
 Acceptance criteria:
 
@@ -169,9 +169,9 @@ Implement preserved negotiation logic for:
 
 Possible affected files:
 
-- `src_v2/social/**`
-- `src_v2/strategic/**`
-- `src_v2/core/social/**`
+- `src/social/**`
+- `src/strategic/**`
+- `src/core/social/**`
 
 Acceptance criteria:
 
@@ -191,9 +191,9 @@ Recover preserved contribution from:
 
 Possible affected files:
 
-- `src_v2/social/**`
-- `src_v2/core/social/**`
-- `tests_v2/social/**`
+- `src/social/**`
+- `src/core/social/**`
+- `tests/social/**`
 
 Acceptance criteria:
 
@@ -212,8 +212,8 @@ Add focused tests for:
 
 Possible affected files:
 
-- `tests_v2/social/test_recruitment_negotiation.py`
-- `tests_v2/social/test_contract_evaluation.py`
+- `tests/social/test_recruitment_negotiation.py`
+- `tests/social/test_contract_evaluation.py`
 
 Acceptance criteria:
 
@@ -241,9 +241,9 @@ Add explicit state and update rules for:
 
 Possible affected files:
 
-- `src_v2/strategic/**`
-- `src_v2/world/**`
-- `src_v2/core/strategic/**`
+- `src/strategic/**`
+- `src/world/**`
+- `src/core/strategic/**`
 
 Acceptance criteria:
 
@@ -260,9 +260,9 @@ Recover supported logic for:
 
 Possible affected files:
 
-- `src_v2/strategic/**`
-- `src_v2/world/**`
-- `tests_v2/strategy/**`
+- `src/strategic/**`
+- `src/world/**`
+- `tests/strategy/**`
 
 Acceptance criteria:
 
@@ -281,8 +281,8 @@ Add focused tests for:
 
 Possible affected files:
 
-- `tests_v2/strategy/test_region_consequences.py`
-- `tests_v2/integration/strategy/**`
+- `tests/strategy/test_region_consequences.py`
+- `tests/integration/strategy/**`
 
 Acceptance criteria:
 
@@ -309,9 +309,9 @@ Recover preserved logic for:
 
 Possible affected files:
 
-- `src_v2/strategic/**`
-- `src_v2/social/**`
-- `src_v2/core/state/**`
+- `src/strategic/**`
+- `src/social/**`
+- `src/core/state/**`
 
 Acceptance criteria:
 
@@ -328,10 +328,10 @@ Recover preserved logic for:
 
 Possible affected files:
 
-- `src_v2/world/**`
-- `src_v2/strategic/**`
-- `tests_v2/world/**`
-- `tests_v2/strategy/**`
+- `src/world/**`
+- `src/strategic/**`
+- `tests/world/**`
+- `tests/strategy/**`
 
 Acceptance criteria:
 
@@ -347,9 +347,9 @@ Recover preserved low-intensity social-world linkages such as:
 
 Possible affected files:
 
-- `src_v2/social/**`
-- `src_v2/strategic/**`
-- `tests_v2/social/**`
+- `src/social/**`
+- `src/strategic/**`
+- `tests/social/**`
 
 Acceptance criteria:
 
@@ -367,9 +367,9 @@ Add focused tests for:
 
 Possible affected files:
 
-- `tests_v2/world/test_place_attachment.py`
-- `tests_v2/world/test_leash_and_camp.py`
-- `tests_v2/social/test_proximity_bonding.py`
+- `tests/world/test_place_attachment.py`
+- `tests/world/test_leash_and_camp.py`
+- `tests/social/test_proximity_bonding.py`
 
 Acceptance criteria:
 
@@ -396,9 +396,9 @@ Recover preserved logic for:
 
 Possible affected files:
 
-- `src_v2/strategic/**`
-- `src_v2/ai/**`
-- `src_v2/core/strategic/**`
+- `src/strategic/**`
+- `src/ai/**`
+- `src/core/strategic/**`
 
 Acceptance criteria:
 
@@ -414,10 +414,10 @@ Recover preserved logic for:
 
 Possible affected files:
 
-- `src_v2/ai/**`
-- `src_v2/progression/**`
-- `src_v2/core/gameplay/**`
-- `tests_v2/ai/**`
+- `src/ai/**`
+- `src/progression/**`
+- `src/core/gameplay/**`
+- `tests/ai/**`
 
 Acceptance criteria:
 
@@ -435,9 +435,9 @@ Add focused tests for:
 
 Possible affected files:
 
-- `tests_v2/ai/test_role_derivation.py`
-- `tests_v2/ai/test_role_bias.py`
-- `tests_v2/progression/test_trait_identity.py`
+- `tests/ai/test_role_derivation.py`
+- `tests/ai/test_role_bias.py`
+- `tests/progression/test_trait_identity.py`
 
 Acceptance criteria:
 

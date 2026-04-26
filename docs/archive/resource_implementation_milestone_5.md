@@ -196,7 +196,7 @@ The project has one exact governor and degradation contract that can be used as 
 Make the runtime obey the frozen governor contract by implementing one exact pressure-evaluation and mode-transition path.
 
 [Task implementation comments]
-Pressure measurement and mode transition logic is housed in `src_v2/engine/governor.py`. The `check_pressure` method evaluates current telemetry against the profile's limits and updates the `AuthoritativeState.runtime.status` field atomically during the Governance phase of the tick loop.
+Pressure measurement and mode transition logic is housed in `src/engine/governor.py`. The `check_pressure` method evaluates current telemetry against the profile's limits and updates the `AuthoritativeState.runtime.status` field atomically during the Governance phase of the tick loop.
 
 [Task technical implementation]
 Implement or refactor the governor so that:
@@ -248,7 +248,7 @@ The engine has one exact pressure-measurement and mode-transition path that is d
 Make the runtime obey the frozen degradation contract by shedding or reducing only the costs that are explicitly allowed to degrade.
 
 [Task implementation comments]
-Degradation enforcement is cross-cutting but controlled by the Governor. It regulates the `ReplayBuffer` size, the verbosity of the `ActionReason` payloads, and the `Scheduler`'s willingness to accept opportunistic work. All shedding follows the strict order defined in `src_v2/core/retention.py`.
+Degradation enforcement is cross-cutting but controlled by the Governor. It regulates the `ReplayBuffer` size, the verbosity of the `ActionReason` payloads, and the `Scheduler`'s willingness to accept opportunistic work. All shedding follows the strict order defined in `src/core/retention.py`.
 
 [Task technical implementation]
 Implement exact enforcement behavior for:
@@ -308,7 +308,7 @@ Optional runtime cost is shed in the exact declared order while core simulation 
 Lock the Milestone 5 runtime-protection rules with deterministic tests so later milestones cannot silently turn the governor into an unstable or unsafe control layer.
 
 [Task implementation comments]
-Governor verification is handled in `tests_v2/engine/test_resource_governor_contract.py`. These tests simulate synthetic pressure spikes and verify that the engine enters the correct degradation state within exactly one tick.
+Governor verification is handled in `tests/engine/test_resource_governor_contract.py`. These tests simulate synthetic pressure spikes and verify that the engine enters the correct degradation state within exactly one tick.
 
 [Task technical implementation]
 Add exact tests for:
@@ -371,7 +371,7 @@ The resource governor and degradation rules are pinned by deterministic tests pr
 Document the complete Milestone 5 runtime-protection model so later milestones cannot reinterpret pressure handling and degradation informally.
 
 [Task implementation comments]
-Finalized the Governor technical contract. Verified its terminology aligns with the `RuntimeMode` Enum in `src_v2/core/enums.py`.
+Finalized the Governor technical contract. Verified its terminology aligns with the `RuntimeMode` Enum in `src/core/enums.py`.
 
 [Task technical implementation]
 Create:

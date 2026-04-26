@@ -14,7 +14,7 @@ Design and implement the runtime state shape to prevent unbounded memory growth 
 - Implement `Lean Hot-Path Models` for authoritative execution.
 - Implement `Bounded Collections` (Retention/Overflow) for logs, history, and registries.
 - Establish the `RetentionMatrix` for all long-lived structures.
-- Pin with deterministic bounded-state tests in `tests_v2/`.
+- Pin with deterministic bounded-state tests in `tests/`.
 
 ## Out of Scope
 - Replay streaming implementation.
@@ -26,7 +26,7 @@ Design and implement the runtime state shape to prevent unbounded memory growth 
 - [x] Explicit separation between `Runtime`, `Export`, and `Diagnostic` models.
 - [x] All long-lived structures (lists, dicts) have explicit bounds and overflow policies.
 - [x] Hot-path models are optimized for execution, not serialization.
-- [x] 100% test pass in `tests_v2/` for bounded-state behavior.
+- [x] 100% test pass in `tests/` for bounded-state behavior.
 - [x] Documentation pack (Contract, Retention Matrix, Test Matrix) finalized.
 
 ## Related Tickets
@@ -36,9 +36,9 @@ Design and implement the runtime state shape to prevent unbounded memory growth 
 - `resource_implementation_milestone_3.md`
 
 ## Related Code Areas
-- `src_v2/core/`
-- `src_v2/engine/`
-- `tests_v2/`
+- `src/core/`
+- `src/engine/`
+- `tests/`
 
 ## Assumptions / Open Questions
 - We will use simple wrappers or decorators to enforce bounds on standard Python collections.

@@ -15,11 +15,11 @@ The original `src` routes gathered value through town systems that:
 - produce or clear blocker conditions,
 - and create the next progression step.
 
-This milestone restores the first bounded official version of that loop in `src_v2`.
+This milestone restores the first bounded official version of that loop in `src`.
 
 ## [Milestone technical implementation]
 
-Create one town resource-resolution slice in native `src_v2` contract terms.
+Create one town resource-resolution slice in native `src` contract terms.
 
 This milestone must complete the following areas:
 
@@ -155,7 +155,7 @@ Document which old behavior is intentionally not preserved in this phase.
 #### [Task possible affected files]
 
 - original `src` comparison fixtures
-- `tests_v2/parity/test_town_resolution_parity.py`
+- `tests/parity/test_town_resolution_parity.py`
 - divergence log
 - town characterization docs
 
@@ -184,7 +184,7 @@ Supported town behavior is captured well enough to drive parity review during im
 
 #### [Task Description]
 
-Map town resource resolution into native `src_v2` terms.
+Map town resource resolution into native `src` terms.
 
 #### [Task technical implementation]
 
@@ -200,9 +200,9 @@ Keep authoritative mutation singular in the apply path.
 
 #### [Task possible affected files]
 
-- `src_v2/core/state.py`
-- `src_v2/core/work.py`
-- `src_v2/core/updates.py`
+- `src/core/state.py`
+- `src/core/work.py`
+- `src/core/updates.py`
 - town resolution modules
 - town contract docs
 
@@ -223,7 +223,7 @@ Expanded `InventoryComponent` with authoritative `gold` field. Added `IdentityCo
 
 #### [Task acceptance criteria]
 
-Town resolution is fully expressed in native `src_v2` authoritative contract terms.
+Town resolution is fully expressed in native `src` authoritative contract terms.
 
 ---
 
@@ -246,8 +246,8 @@ This local path must become the reference for later differential and equivalence
 
 #### [Task possible affected files]
 
-- `src_v2/systems/town_resolution.py`
-- `src_v2/engine/kernel.py`
+- `src/systems/town_resolution.py`
+- `src/engine/kernel.py`
 - local gameplay tests
 - progression loop fixtures
 
@@ -291,8 +291,8 @@ Keep the scope small and explicit.
 
 #### [Task possible affected files]
 
-- `src_v2/systems/shop.py`
-- `src_v2/systems/blacksmith.py`
+- `src/systems/shop.py`
+- `src/systems/blacksmith.py`
 - town progression helpers
 - gameplay tests
 
@@ -378,8 +378,8 @@ Add:
 
 #### [Task possible affected files]
 
-- `tests_v2/gameplay/test_town_resolution_contract.py`
-- `tests_v2/parity/test_town_resolution_parity.py`
+- `tests/gameplay/test_town_resolution_contract.py`
+- `tests/parity/test_town_resolution_parity.py`
 - lifecycle tests
 - certification tests
 
@@ -390,8 +390,8 @@ It is done because it is proven.
 
 #### [Task check list]
 
-- [x] Parity tests exist (tests_v2/parity/test_town_resolution_parity.py)
-- [x] Local contract tests exist (tests_v2/contract/test_town_contract.py)
+- [x] Parity tests exist (tests/parity/test_town_resolution_parity.py)
+- [x] Local contract tests exist (tests/contract/test_town_contract.py)
 - [x] Lifecycle tests exist where relevant (Handled via checkpointing logic)
 - [x] Certification scenarios exist (Differential validation against V1 oracle)
 - [x] Failures are visible in normal validation

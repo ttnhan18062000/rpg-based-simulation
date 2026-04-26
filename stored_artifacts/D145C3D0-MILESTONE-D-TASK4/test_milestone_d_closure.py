@@ -5,12 +5,12 @@ import threading
 from typing import Dict, List
 from unittest.mock import MagicMock
 
-from src_v2.engine.kernel import Kernel
-from src_v2.core.state import AuthoritativeState, EntityState
-from src_v2.core.work import WorkItem, WorkClass
-from src_v2.platform.rng import DeterministicRNG
-from src_v2.config.profiles import RuntimeProfile, HardwareClass
-from src_v2.core.worker_protocol import WorkerPacket, WorkerResult
+from src.engine.kernel import Kernel
+from src.core.state import AuthoritativeState, EntityState
+from src.core.work import WorkItem, WorkClass
+from src.platform.rng import DeterministicRNG
+from src.config.profiles import RuntimeProfile, HardwareClass
+from src.core.worker_protocol import WorkerPacket, WorkerResult
 
 def get_base_profile(workers: int) -> RuntimeProfile:
     return RuntimeProfile(
@@ -48,8 +48,8 @@ def test_high_pressure_determinism_equivalence():
     
     # Custom worker for determinism check
     def deterministic_worker(packet: WorkerPacket) -> WorkerResult:
-        from src_v2.core.updates import EntityUpdate
-        from src_v2.core.worker_protocol import WorkerResult
+        from src.core.updates import EntityUpdate
+        from src.core.worker_protocol import WorkerResult
         return WorkerResult(
             source_packet_id=packet.packet_id,
             work_id=packet.work_id,

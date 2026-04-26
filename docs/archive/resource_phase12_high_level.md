@@ -1,10 +1,10 @@
 Below is the **high-level implementation plan for Phase 12** in the same milestone style as the earlier high-level phase plans.
 
-This plan is grounded in the corrected roadmap and the ratification-first sequencing from [resource_phases.md](sandbox:/mnt/data/resource_phases.md) and the support/cutover discipline from [src_v2_principle.md](sandbox:/mnt/data/src_v2_principle.md).
+This plan is grounded in the corrected roadmap and the ratification-first sequencing from [resource_phases.md](sandbox:/mnt/data/resource_phases.md) and the support/cutover discipline from [src_principle.md](sandbox:/mnt/data/src_principle.md).
 
 ---
 
-# High-Level Implementation Plan — Phase 12 of `src_v2`
+# High-Level Implementation Plan — Phase 12 of `src`
 
 This plan assumes Phase 11 has already produced:
 
@@ -18,13 +18,13 @@ It also assumes the project has stopped pretending that ratified replacement tru
 
 Phase 12 is not the phase where the project should widen into new semantics, new compatibility closure, or legacy retirement.
 
-It is the phase where `src_v2` must become the **actual default operational surface** for the supported system.
+It is the phase where `src` must become the **actual default operational surface** for the supported system.
 
 The purpose of Phase 12 is:
 
-- move supported execution paths from old `src` to `src_v2`,
-- move supported consumer-facing entrypoints and workflows to `src_v2`,
-- move CI, release, replay/report, and operational workflows to `src_v2`,
+- move supported execution paths from old `src` to `src`,
+- move supported consumer-facing entrypoints and workflows to `src`,
+- move CI, release, replay/report, and operational workflows to `src`,
 - validate that supported cutover paths work under real operational conditions,
 - keep unsupported/divergent/retired scope visible during the transition,
 - and publish the operational cutover baseline that Phase 13 legacy retirement is allowed to rely on.
@@ -68,7 +68,7 @@ This milestone must:
 
 - freeze the exact cutover-eligible surfaces from Phase 11,
 - separate allowed cutover scope from unsupported/divergent/retired scope,
-- define the consumer/workflow groups that will move to `src_v2`,
+- define the consumer/workflow groups that will move to `src`,
 - confirm rollback expectations and non-goals are explicit,
 - and publish one formal “Phase 12 begins from this cutover baseline” record.
 
@@ -100,9 +100,9 @@ At the end of this milestone:
 
 ## [Milestone Description]
 
-Milestone 2 moves the supported entry and consumer-facing runtime surface to `src_v2`.
+Milestone 2 moves the supported entry and consumer-facing runtime surface to `src`.
 
-Its purpose is to make `src_v2` the default operational runtime for the cutover-allowed surface.
+Its purpose is to make `src` the default operational runtime for the cutover-allowed surface.
 
 This milestone covers:
 
@@ -118,12 +118,12 @@ It does not yet close CI/release workflow migration or full operational artifact
 
 ## [Milestone technical implementation]
 
-Cut over supported runtime entry surfaces to `src_v2` in a controlled way.
+Cut over supported runtime entry surfaces to `src` in a controlled way.
 
 This milestone must:
 
-- switch supported default entrypoints to `src_v2`,
-- switch supported serve/headless/runtime consumers to `src_v2`,
+- switch supported default entrypoints to `src`,
+- switch supported serve/headless/runtime consumers to `src`,
 - preserve explicit constraints for unsupported or divergent surfaces,
 - validate that operator-visible behavior remains within the ratified cutover boundary,
 - and keep fallback/rollback paths visible while cutover is still in progress.
@@ -144,8 +144,8 @@ If old `src` is still the thing people really depend on, then you have not cut o
 
 At the end of this milestone:
 
-- supported runtime entrypoints default to `src_v2`,
-- supported consumers run through `src_v2`,
+- supported runtime entrypoints default to `src`,
+- supported consumers run through `src`,
 - unsupported/divergent surfaces remain constrained,
 - and the project has one credible runtime-entry cutover slice.
 
@@ -155,9 +155,9 @@ At the end of this milestone:
 
 ## [Milestone Description]
 
-Milestone 3 moves the project’s internal operating workflows to `src_v2`.
+Milestone 3 moves the project’s internal operating workflows to `src`.
 
-Its purpose is to make the team’s own execution, testing, replay/report, and release routines depend on `src_v2` rather than old `src`.
+Its purpose is to make the team’s own execution, testing, replay/report, and release routines depend on `src` rather than old `src`.
 
 This milestone covers:
 
@@ -173,13 +173,13 @@ It does not yet close final production-style validation or legacy retirement.
 
 ## [Milestone technical implementation]
 
-Cut over supported project workflows and artifacts to `src_v2`.
+Cut over supported project workflows and artifacts to `src`.
 
 This milestone must:
 
-- switch CI paths and validation jobs to `src_v2`,
-- switch replay/report/proof generation paths to `src_v2`,
-- switch release/build or packaging flows to `src_v2` where ratified,
+- switch CI paths and validation jobs to `src`,
+- switch replay/report/proof generation paths to `src`,
+- switch release/build or packaging flows to `src` where ratified,
 - ensure operational artifacts come from the new supported source of truth,
 - and preserve visibility of any workflows still intentionally excluded.
 
@@ -199,8 +199,8 @@ If CI and artifact generation still lean on the old runtime, the organization it
 
 At the end of this milestone:
 
-- supported CI and operational workflows run on `src_v2`,
-- supported artifacts are generated from `src_v2`,
+- supported CI and operational workflows run on `src`,
+- supported artifacts are generated from `src`,
 - mixed-runtime truth surfaces are eliminated where cutover was allowed,
 - and the project has one credible workflow/artifact cutover slice.
 
@@ -265,7 +265,7 @@ At the end of this milestone:
 
 Milestone 5 turns the validated cutover into the new default authority for supported operation.
 
-Its purpose is to establish `src_v2` as the real operational default before legacy runtime retirement begins.
+Its purpose is to establish `src` as the real operational default before legacy runtime retirement begins.
 
 This milestone covers:
 
@@ -279,11 +279,11 @@ It is the closure milestone for cutover truth.
 
 ## [Milestone technical implementation]
 
-Publish and enforce `src_v2` as the supported operational default for the ratified cutover surface.
+Publish and enforce `src` as the supported operational default for the ratified cutover surface.
 
 This milestone must:
 
-- declare `src_v2` the default authority for supported operational use,
+- declare `src` the default authority for supported operational use,
 - publish any remaining residual old-`src` dependencies still allowed before retirement,
 - restate the cutover boundary after validation,
 - publish what Phase 13 is now allowed to remove,
@@ -299,13 +299,13 @@ This milestone must not:
 
 The trap here is premature cleanup language.
 
-Phase 12 ends when `src_v2` becomes the operational default for supported scope. It does **not** end when every trace of old `src` is gone.
+Phase 12 ends when `src` becomes the operational default for supported scope. It does **not** end when every trace of old `src` is gone.
 
 ## [Milestone acceptance criteria]
 
 At the end of this milestone:
 
-- `src_v2` is the default authority for supported operational use,
+- `src` is the default authority for supported operational use,
 - residual legacy dependencies are explicit,
 - the validated cutover boundary is explicit,
 - and the branch has a formal “Phase 12 complete” handoff baseline for Phase 13.

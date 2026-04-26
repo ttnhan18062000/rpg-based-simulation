@@ -17,7 +17,7 @@ It is not a repetition of Phase 5’s broader resource loop and not broader soci
 
 ## [Milestone technical implementation]
 
-Recover the supported local environment/world-interaction semantics in a way that is native to `src_v2` authority and determinism rules.
+Recover the supported local environment/world-interaction semantics in a way that is native to `src` authority and determinism rules.
 
 This milestone must:
 
@@ -73,10 +73,10 @@ Identify:
 
 #### [Task possible affected files]
 
-- `src_v2/world/**`
-- `src_v2/buildings/**`
-- `src_v2/combat/**`
-- `src_v2/navigation/**`
+- `src/world/**`
+- `src/buildings/**`
+- `src/combat/**`
+- `src/navigation/**`
 - `docs/engine/replacement_ledger.md`
 
 #### [Task important notes]
@@ -117,11 +117,11 @@ Implement or refine local terrain/spatial semantics so supported immediate gamep
 
 #### [Task possible affected files]
 
-- `src_v2/world/**`
-- `src_v2/navigation/**`
-- `src_v2/combat/**`
-- `tests_v2/world/**`
-- `tests_v2/tactical/**`
+- `src/world/**`
+- `src/navigation/**`
+- `src/combat/**`
+- `tests/world/**`
+- `tests/tactical/**`
 
 #### [Task important notes]
 
@@ -163,10 +163,10 @@ This task should remain focused on immediate semantics such as:
 
 #### [Task possible affected files]
 
-- `src_v2/buildings/**`
-- `src_v2/world/**`
-- `src_v2/combat/**`
-- `tests_v2/world/**`
+- `src/buildings/**`
+- `src/world/**`
+- `src/combat/**`
+- `tests/world/**`
 
 #### [Task important notes]
 
@@ -206,10 +206,10 @@ Implement or refine preserved position-sensitive local semantics where the repla
 
 #### [Task possible affected files]
 
-- `src_v2/world/**`
-- `src_v2/combat/**`
-- `src_v2/tactical/**`
-- `tests_v2/tactical/**`
+- `src/world/**`
+- `src/combat/**`
+- `src/tactical/**`
+- `tests/tactical/**`
 
 #### [Task important notes]
 
@@ -250,9 +250,9 @@ Add focused tests for:
 
 #### [Task possible affected files]
 
-- `tests_v2/world/test_local_environment_semantics.py`
-- `tests_v2/world/test_building_interaction_contract.py`
-- `tests_v2/tactical/test_position_sensitive_local_behavior.py`
+- `tests/world/test_local_environment_semantics.py`
+- `tests/world/test_building_interaction_contract.py`
+- `tests/tactical/test_position_sensitive_local_behavior.py`
 
 #### [Task important notes]
 
@@ -267,7 +267,7 @@ Do not leave local environment proof hidden inside broad combat runs.
 - [x] Tests are part of standard validation flow
 
 #### [Implementation Comment]
-Created focused tests in `tests_v2/world/` and `tests_v2/tactical/`.
+Created focused tests in `tests/world/` and `tests/tactical/`.
 
 #### [Task acceptance criteria]
 

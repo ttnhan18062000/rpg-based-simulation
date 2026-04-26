@@ -3,11 +3,11 @@ from __future__ import annotations
 from enum import Enum
 from dataclasses import dataclass
 from typing import Dict, Any, List, Tuple, TYPE_CHECKING
-from src_v2.core.updates import EntityUpdate
-from src_v2.core.work import WorkClass
+from src.core.updates import EntityUpdate
+from src.core.work import WorkClass
 
 if TYPE_CHECKING:
-    from src_v2.core.state import EntityState
+    from src.core.state import EntityState
 
 
 class ResultStatus(Enum):

@@ -1,6 +1,6 @@
 # Bounded Tactical Engagement Contract (Phase 8)
 
-This document defines the authoritative logic for local tactical decisions in the `src_v2` engine.
+This document defines the authoritative logic for local tactical decisions in the `src` engine.
 
 ## 1. Tactical Evaluation Boundary
 Tactical decisions are triggered when an entity is `active`, `alive`, and its `readiness >= 100`. 

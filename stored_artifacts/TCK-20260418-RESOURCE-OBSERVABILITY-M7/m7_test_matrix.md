@@ -13,8 +13,8 @@
 
 ## Verification Command
 ```bash
-pytest tests_v2/config/test_startup_validation.py
-pytest tests_v2/engine/test_graceful_shutdown.py
-pytest tests_v2/engine/test_observability_budgets.py
-pytest tests_v2/engine/test_operational_flags.py
+pytest tests/config/test_startup_validation.py
+pytest tests/engine/test_graceful_shutdown.py
+pytest tests/engine/test_observability_budgets.py
+pytest tests/engine/test_operational_flags.py
 ```

@@ -21,7 +21,7 @@ Prove that the authoritative state is immutable, isolated from observational pat
 - **Assertion**: Verifying `kernel.state.entities[id].properties["damage"]` is still `10`.
 
 ### 3. Singular Mutation Audit
-- **Action**: Grep for any code that calls `dataclasses.replace` on `AuthoritativeState` or `EntityState` outside of `src_v2/engine/apply.py`.
+- **Action**: Grep for any code that calls `dataclasses.replace` on `AuthoritativeState` or `EntityState` outside of `src/engine/apply.py`.
 - **Expected**: Only `apply.py` should perform authoritative transitions.
 
 ### 4. Deterministic Apply Order

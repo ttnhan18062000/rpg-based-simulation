@@ -5,9 +5,9 @@ Below is the **full detailed implementation plan for Phase 8**, using the same m
 [legacy_logic_checklist_part1.md](sandbox:/mnt/data/legacy_logic_checklist_part1.md)
 [legacy_logic_checklist_part4.md](sandbox:/mnt/data/legacy_logic_checklist_part4.md)
 [legacy_logic_checklist_part5.md](sandbox:/mnt/data/legacy_logic_checklist_part5.md)
-[src_v2_principle.md](sandbox:/mnt/data/src_v2_principle.md)
+[src_principle.md](sandbox:/mnt/data/src_principle.md)
 
-# Detailed Implementation Plan — Phase 8 of `src_v2`
+# Detailed Implementation Plan — Phase 8 of `src`
 
 This plan assumes Phase 7 has already produced:
 

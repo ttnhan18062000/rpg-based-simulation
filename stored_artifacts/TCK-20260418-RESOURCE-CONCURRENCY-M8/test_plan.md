@@ -20,7 +20,7 @@
 - **Explicit Disable**: Set `max_worker_count=0` and verify the engine gracefully executes everything locally.
 
 ## Tests to Implement
-- `tests_v2/engine/test_worker_contract.py`
-- `tests_v2/engine/test_worker_bounds.py`
-- `tests_v2/engine/test_worker_determinism.py`
-- `tests_v2/engine/test_worker_fallback.py`
+- `tests/engine/test_worker_contract.py`
+- `tests/engine/test_worker_bounds.py`
+- `tests/engine/test_worker_determinism.py`
+- `tests/engine/test_worker_fallback.py`

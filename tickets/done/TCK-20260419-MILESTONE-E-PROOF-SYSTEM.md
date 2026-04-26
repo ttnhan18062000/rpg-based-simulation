@@ -40,9 +40,9 @@ Transform the engine's certification harness into a fully trustworthy evidence-b
 - stored_artifacts/TCK-20260418-RESOURCE-ENGINE-FINALIZE/
 
 ## Related Code Areas
-- src_v2/certification/
-- tests_v2/certification/
-- tests_v2/docs/
+- src/certification/
+- tests/certification/
+- tests/docs/
 
 ## Implementation Notes
 - Standardized on `FAILED_*` taxonomy for all conformance failures.
@@ -50,22 +50,22 @@ Transform the engine's certification harness into a fully trustworthy evidence-b
 - Enforced a 24-hour freshness limit on proof artifacts in the production gate.
 
 ## Test Summary
-- tests_v2/docs/test_doc_integrity.py (Passed)
-- tests_v2/docs/test_contributor_guardrails.py (Passed)
-- tests_v2/certification/test_final_gate.py (Passed)
-- tests_v2/certification/test_harness_contract.py (Passed)
+- tests/docs/test_doc_integrity.py (Passed)
+- tests/docs/test_contributor_guardrails.py (Passed)
+- tests/certification/test_final_gate.py (Passed)
+- tests/certification/test_harness_contract.py (Passed)
 
 ## Files Changed
-- src_v2/certification/models.py
-- src_v2/certification/conformance.py
-- src_v2/certification/harness.py
-- src_v2/certification/recorder.py
-- src_v2/certification/scenarios.py
+- src/certification/models.py
+- src/certification/conformance.py
+- src/certification/harness.py
+- src/certification/recorder.py
+- src/certification/scenarios.py
 - docs/engine/manifest.json
 - docs/engine/engineering_playbook_m10.md
-- tests_v2/docs/test_doc_integrity.py
-- tests_v2/certification/test_final_gate.py
-- tests_v2/certification/test_harness_contract.py
+- tests/docs/test_doc_integrity.py
+- tests/certification/test_final_gate.py
+- tests/certification/test_harness_contract.py
 
 ## Completion Summary
 Transformed the certification harness into a rigorous Proof System. Implemented the 'Honest Reporting Quadrant' (Profile, Scenario, Hardware Class, Commit SHA), hardened the production gate with SHA and freshness verification, and enforced technical integrity via manifest-driven terminology and document compliance. All verification gates passed with 100% stability. Verified with 17 tests across docs and certification suites.

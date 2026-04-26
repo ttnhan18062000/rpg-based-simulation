@@ -1,0 +1,3152 @@
+- id: SUB-001
+  text: World generation is deterministic under seed and domain-specific RNG use.
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-002
+  text: Town, sanctuary, camps, buildings, corpses, and entities are authoritative
+    world objects.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-003
+  text: Entity snapshots are immutable enough for worker reasoning and deterministic
+    replay.
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-004
+  status: legacy_verified
+  v2_evidence: null
+  test_path: null
+  text: No hidden mutation leaks occur from snapshot or AI evaluation paths.
+  priority: P0
+  legacy_evidence: null
+  proof_type: parity
+  divergence_note: null
+  support_boundary: null
+- id: SUB-005
+  text: Deterministic replay/delta behavior is preserved across runs with same seed.
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-006
+  text: Regional hazards, calamities, local scars, and world consequences can feed
+    gameplay and strategy.
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-007
+  text: Entity builder and serialization preserve gameplay-relevant state safely.
+  status: verified
+  priority: P0
+  legacy_evidence: src/core/entities/entity_builder.py
+  v2_evidence: src_v2/core/builder.py
+  proof_type: parity
+  test_path: tests_v2/parity/test_entity_construction.py
+  divergence_note: null
+  support_boundary: null
+- id: SUB-008
+  status: legacy_verified
+  v2_evidence: null
+  test_path: null
+  text: Engine phase order preserves gameplay semantics and subsystem tick integrity.
+  priority: P0
+  legacy_evidence: null
+  proof_type: parity
+  divergence_note: null
+  support_boundary: null
+- id: SUB-009
+  text: "`test_resource_isolation_bounded_growth`: Resource isolation bounded growth\
+    \ \u2014 Verify that memory does not show a strong linear leak over many iterations.."
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-010
+  text: "`test_scenario_1_dead_world_progression`: Scenario 1 dead world progression\
+    \ \u2014 Scenario 1: No living entities. Verify tick still increments and systems\
+    \ advance.."
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-011
+  text: "`test_scenario_2_sleeping_world_biological_decay`: Scenario 2 sleeping world\
+    \ biological decay \u2014 Scenario 2: All entities have high next_act_at. Verify\
+    \ biological decay hits.."
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-012
+  text: "`test_scenario_3_stationary_world_proximity_bonding`: Scenario 3 stationary\
+    \ world proximity bonding \u2014 Scenario 3: Two heroes are stationary. Verify\
+    \ bonding occurs via HeroLifecycleSystem.."
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-013
+  text: "`test_scenario_4_subsystem_advancement`: Scenario 4 subsystem advancement\
+    \ \u2014 Scenario 4: Verify that registered subsystems receive the tick signal\
+    \ even if no actions apply.."
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-014
+  text: '`test_navigation_uses_flow_field_for_far_town`: Navigation uses flow field
+    for far town.'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-015
+  text: '`test_navigation_uses_astar_for_near_target`: Navigation uses astar for near
+    target.'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-016
+  text: '`test_navigation_uses_flow_field_for_world_boss`: Navigation uses flow field
+    for world boss.'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-017
+  text: '`test_profile_derivation_is_deterministic_for_same_entity_state`: Profile
+    derivation is deterministic for same entity state.'
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-018
+  text: '`test_profile_derivation_is_independent_of_tick_in_milestone_1`: Profile
+    derivation is independent of tick in milestone 1.'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-019
+  text: '`test_profile_derivation_does_not_use_rng`: Profile derivation does not use
+    rng.'
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-020
+  text: "`test_harness_determinism`: Harness determinism \u2014 Verify that two runs\
+    \ with the same seed produce byte-identical results.."
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-021
+  text: "`test_harness_non_determinism_different_seed`: Harness non determinism different\
+    \ seed \u2014 Verify that different seeds produce different outcomes (basic sanity\
+    \ check).."
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-022
+  text: "`test_world_strategic_registry_deep_isolation`: World strategic registry\
+    \ deep isolation \u2014 Verify that WorldStrategicRegistry.copy() performs a deep\
+    \ copy.."
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: src_v2/core/immutability.py
+  proof_type: parity
+  test_path: tests_v2/parity/test_isolation_boundary.py
+  divergence_note: null
+  support_boundary: null
+- id: SUB-023
+  text: "`test_strategic_replay_graph_equality`: Strategic replay graph equality \u2014\
+    \ Verify that replaying from a snapshot yields bit-identical cognition graphs.."
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-024
+  text: "`test_lead_outcome_grounding_verification`: Lead outcome grounding verification\
+    \ \u2014 Verify that precise leads correctly ground into world entities.."
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-025
+  text: '`test_combat_updates_social_registry`: Combat updates social registry.'
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-026
+  text: '`test_archetype_influence_on_social_deltas`: Archetype influence on social
+    deltas.'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-027
+  status: legacy_verified
+  v2_evidence: null
+  test_path: null
+  text: '`test_snapshot_immutability_enforced`: Snapshot immutability enforced.'
+  priority: P0
+  legacy_evidence: null
+  proof_type: parity
+  divergence_note: null
+  support_boundary: null
+- id: SUB-028
+  text: '`test_snapshot_entities_are_deep_copied`: Snapshot entities are deep copied.'
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-029
+  text: '`test_snapshot_entities_are_frozen`: Snapshot entities are frozen.'
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: src_v2/core/state.py
+  proof_type: parity
+  test_path: tests_v2/test_snapshot_integrity.py
+  divergence_note: null
+  support_boundary: null
+- id: SUB-030
+  text: "`test_simulation_determinism`: Simulation determinism \u2014 Verify that\
+    \ two identical simulations with the same seed produce the same result.."
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-031
+  text: "`test_different_seeds_different_hashes`: Different seeds different hashes\
+    \ \u2014 Verify that different seeds produce different world states.."
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-032
+  text: '`test_aibrain_statelessness`: Aibrain statelessness.'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-033
+  text: "`test_entity_deep_copy_isolation`: Entity deep copy isolation \u2014 Verify\
+    \ that Entity.copy() provides absolute isolation for nested mutable structures.."
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-034
+  text: "`test_snapshot_actor_isolation`: Snapshot actor isolation \u2014 Verify that\
+    \ resolving an actor from a Snapshot ensures mutation safety.."
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: src_v2/engine/executor.py
+  proof_type: parity
+  test_path: tests_v2/parity/test_isolation_boundary.py
+  divergence_note: null
+  support_boundary: null
+- id: SUB-035
+  text: "`test_aspect_model_rebuild_integrity`: Aspect model rebuild integrity \u2014\
+    \ Ensure that deep copies correctly initialize models and don't lose data.."
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-036
+  text: "`test_lived_structure_isolation`: Lived structure isolation \u2014 Verify\
+    \ isolation for Phase 3 routine and attachment structures.."
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-037
+  text: '`test_entity_to_full_schema_no_crash`: Entity to full schema no crash.'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-038
+  text: '`test_entity_to_full_schema_minimal`: Entity to full schema minimal.'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-039
+  text: "`test_simulation_model_collection_freeze_list`: Simulation model collection\
+    \ freeze list \u2014 Verify that lists in SimulationModel become immutable after\
+    \ freeze.."
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-040
+  text: "`test_simulation_model_collection_freeze_dict`: Simulation model collection\
+    \ freeze dict \u2014 Verify that dicts in SimulationModel become immutable MappingProxy\
+    \ after freeze.."
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-041
+  text: "`test_world_state_freeze_guards`: World state freeze guards \u2014 Verify\
+    \ that WorldState prevents mutations after freeze.."
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-042
+  text: "`test_snapshot_deep_purity`: Snapshot deep purity \u2014 Verify that Snapshot\
+    \ entities and their nested aspects are recursively frozen.."
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-043
+  text: "`test_action_proposal_guard_integration`: Action proposal guard integration\
+    \ \u2014 Verify the ActionProposalGuard context manager properly freezes the snapshot.."
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-044
+  text: "`test_deep_freeze_nested_collections`: Deep freeze nested collections \u2014\
+    \ Verify that freeze() recursively converts nested collections to immutable types.."
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-045
+  text: "`test_deep_freeze_idempotency`: Deep freeze idempotency \u2014 Verify that\
+    \ calling freeze() multiple times is safe.."
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-046
+  text: '`test_combat_aspect_invariants`: Combat aspect invariants.'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-047
+  text: '`test_progression_aspect_invariants`: Progression aspect invariants.'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-048
+  text: '`test_freeze_calls_validate`: Freeze calls validate.'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-049
+  text: '`test_nested_freeze_invariants`: Nested freeze invariants.'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-050
+  text: "`test_speed_delay_invariants`: Speed delay invariants \u2014 Test that speed_delay\
+    \ never returns NaN or out-of-bounds values.."
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-051
+  text: "`test_stats_invariants`: Stats invariants \u2014 AOA Stabilization: Test\
+    \ CombatAspect invariants (formerly Stats).."
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-052
+  text: "`test_damage_calc_math`: Damage calc math \u2014 Test the core damage calculation\
+    \ logic in isolation.."
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-053
+  text: "`test_recalc_level_consistency`: Recalc level consistency \u2014 Ensure level-based\
+    \ stat recalculation remains consistent across aspects.."
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-054
+  text: "`test_combat_damage_invariants`: Combat damage invariants \u2014 Ensure HP\
+    \ reduction application doesn't cause overflow or invalid states.."
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-055
+  text: '`test_json_encoder_mapping_proxy`: Json encoder mapping proxy.'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-056
+  text: '`test_json_encoder_enum`: Json encoder enum.'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-057
+  text: '`test_serialization_pydantic_model`: Serialization pydantic model.'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-058
+  text: '`test_serialization_frozen_model_with_proxy`: Serialization frozen model
+    with proxy.'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-059
+  text: '`test_serializer_loads`: Serializer loads.'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-060
+  text: CLI mode forces broker-disabled behavior through environment setup when not
+    already set.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-061
+  text: CLI startup still loads registries before simulation loop startup.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-062
+  text: CLI startup still wires logging before engine loop execution.
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-063
+  text: CLI shutdown still tears down worker infrastructure cleanly after simulation.
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-064
+  text: Headless runner imports still succeed when optional brokers are disabled.
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-065
+  text: Action-system imports still succeed when optional brokers are disabled.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-066
+  text: Import-time behavior does not accidentally force broker setup.
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-067
+  text: Infrastructure module isolation prevents optional dependencies from contaminating
+    normal simulation imports.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-068
+  text: Runtime paths that do not require brokers do not import or initialize them
+    accidentally.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-069
+  text: Fallback behavior is exercised by real tests, not only by mocks or assumptions.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-070
+  text: Given identical seed and identical chaos configuration, repeated chaos-mode
+    runs remain deterministic.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-071
+  text: Chaos-mode determinism is verified by repeated world-state fingerprint comparison.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-072
+  text: Chaos-enabled infrastructure does not introduce hidden non-determinism into
+    equivalent runs.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-073
+  text: '`test_default_values`: default entity/build values are preserved'
+  status: verified
+  priority: P0
+  legacy_evidence: src/core/entities/entity_builder.py
+  v2_evidence: src_v2/core/builder.py
+  proof_type: parity
+  test_path: tests_v2/parity/test_entity_construction.py
+  divergence_note: null
+  support_boundary: null
+- id: SUB-074
+  text: '`test_default_values_all_zero`: default zero-valued state is preserved'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-075
+  text: '`test_default_multiplicative_values_are_1`: default multiplicative modifiers
+    equal 1'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-076
+  text: '`test_default_additive_values_are_0`: default additive modifiers equal 0'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-077
+  text: '`test_default_metadata_is_none`: metadata defaults to `None`'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-078
+  text: '`test_none_metadata_preserved`: `None` metadata remains preserved'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-079
+  text: '`test_schema_none_metadata`: schema handles `None` metadata correctly'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-080
+  text: '`test_no_skills_by_default`: entities have no skills by default'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-081
+  text: '`test_no_inventory_by_default`: entities have no inventory by default'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-082
+  text: '`test_no_traits_by_default`: entities have no traits by default'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-083
+  text: '`test_entity_starts_with_no_quests`: entities start with no quests'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-084
+  text: '`test_default_core_rate_is_1`: default core subsystem rate is preserved'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-085
+  text: '`test_default_environment_rate_is_2`: default environment subsystem rate
+    is preserved'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-086
+  text: '`test_default_economy_rate_is_5`: default economy subsystem rate is preserved'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-087
+  text: '`test_default_region_id`: default region identifier is preserved'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-088
+  text: '`test_default_empty`: default empty collection/container semantics are preserved'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-089
+  text: '`test_empty_zones_returns_1`: empty-zone fallback behavior is preserved'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-090
+  text: '`test_empty_regions_returns_none`: empty-region lookup returns `None`'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-091
+  text: '`test_select_returns_none_on_empty`: selection on empty inputs returns `None`'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-092
+  text: '`test_export_empty_strategy`: exporting empty strategy state is safe'
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-093
+  text: '`test_no_changes_skipped`: no-change updates are skipped safely'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-094
+  text: '`test_effects_tick_on_empty_tick`: effects still tick on empty ticks'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-095
+  text: '`test_stamina_regens_on_empty_tick`: stamina regen still occurs on empty
+    ticks'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-096
+  text: '`test_skill_cooldowns_tick_on_empty_tick`: skill cooldowns still tick on
+    empty ticks'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-097
+  text: '`test_quest_advance_does_nothing_when_completed`: completed quests ignore
+    further advance calls'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-098
+  text: '`test_unknown_action_does_nothing`: unknown actions are safely ignored'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-099
+  text: '`test_full_hp_no_change`: full-HP state remains unchanged'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-100
+  text: '`test_no_region_no_penalty`: no-region case applies no penalty'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-101
+  text: '`test_safe_region_no_penalty`: safe-region case applies no penalty'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-102
+  text: '`test_unknown_region_returns_0`: unknown region uses zero/fallback difficulty'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-103
+  text: '`test_no_region_returns_0`: no-region difficulty fallback is preserved'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-104
+  text: '`test_quest_copy`: quest copy preserves quest state'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-105
+  text: '`test_entity_copy_preserves_quests`: entity copy preserves quests'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-106
+  text: '`test_entity_copy_preserves_attributes`: entity copy preserves attributes'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-107
+  text: '`test_entity_copy_preserves_skills`: entity copy preserves skills'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-108
+  text: '`test_entity_copy_includes_home_storage`: entity copy preserves home storage'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-109
+  text: '`test_entity_without_home_storage`: no-home-storage case remains safe'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-110
+  text: '`test_region_copy`: region copy semantics are preserved'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-111
+  text: '`test_attributes_copy`: attribute copy semantics are preserved'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-112
+  text: '`test_copy`: generic model copy semantics are preserved wherever tested'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-113
+  text: '`test_grid_copy_is_not_shared`: copied grids are not aliased'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-114
+  text: '`test_entity_copy_shallow_vs_refs`: copy/ref-sharing behavior is explicit
+    and preserved'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-115
+  text: '`test_latest_preserves_metadata`: latest-version object preserves metadata'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-116
+  text: '`test_serialization_round_trip`: serialization round-trip is preserved'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-117
+  text: '`test_item_serialization`: item serialization is preserved'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-118
+  text: '`test_enchanted_blade_serialization`: enchanted item serialization is preserved'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-119
+  text: '`test_skill_serialization`: skill serialization is preserved'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-120
+  text: '`test_passive_skill_serialization`: passive skill serialization is preserved'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-121
+  text: '`test_class_serialization`: class serialization is preserved'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-122
+  text: '`test_breakthrough_serialization`: breakthrough serialization is preserved'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-123
+  text: '`test_trait_serialization`: trait serialization is preserved'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-124
+  text: '`test_history_registry_serialization`: history registry serialization is
+    preserved'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-125
+  text: '`test_entity_to_full_schema_no_crash`: full schema export does not crash'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-126
+  text: '`test_serialization_pydantic_model`: pydantic serialization assumption is
+    preserved'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-127
+  text: '`test_serialization_frozen_model_with_proxy`: frozen/proxy serialization
+    is preserved'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-128
+  text: '`test_inspection_serialization`: inspection serialization is preserved'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-129
+  text: '`test_cognition_api_serialization`: cognition API serialization is preserved'
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-130
+  text: '`test_entity_deep_copy_isolation`: deep-copy isolation is preserved'
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-131
+  text: '`test_deep_freeze_nested_collections`: deep freeze handles nested collections'
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-132
+  text: '`test_deep_freeze_idempotency`: deep freeze is idempotent'
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-133
+  text: '`test_freeze_calls_validate`: freeze triggers validation correctly'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-134
+  text: '`test_nested_freeze_invariants`: nested freeze invariants are preserved'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-135
+  text: '`test_world_state_freeze_guards`: world-state freeze guards are preserved'
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-136
+  text: '`test_simulation_model_collection_freeze_list`: list freezing behavior is
+    preserved'
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-137
+  text: '`test_simulation_model_collection_freeze_dict`: dict freezing behavior is
+    preserved'
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-138
+  text: '`test_vector2_coercion_during_freeze`: vector coercion during freeze is preserved'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-139
+  text: '`test_non_mutation`: non-mutation guarantee is preserved'
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-140
+  text: '`test_build_profile_does_not_mutate_caps`: cognition-profile derivation is
+    non-mutating'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-141
+  text: '`test_build_profile_returns_new_profile_object_each_call`: fresh profile
+    object guarantee is preserved'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-142
+  text: '`test_profile_derivation_is_deterministic_for_same_entity_state`: deterministic
+    profile derivation'
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-143
+  text: '`test_intel_capacity_determinism`: intelligence-capacity determinism is preserved'
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-144
+  text: '`test_strategic_replay_graph_equality`: replay graph equality is preserved'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-145
+  text: '`test_same_seed_same_result`: same-seed world/result determinism is preserved'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-146
+  text: '`test_harness_non_determinism_different_seed`: different-seed divergence
+    remains explicit'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-147
+  text: '`test_first_by_id_wins_same_tile`: deterministic same-tile tie-breaking is
+    preserved'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-148
+  text: '`test_diagonal_same_target_one_wins`: deterministic same-target conflict
+    resolution is preserved'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-149
+  text: '`test_non_conflicting_moves_both_succeed`: independent valid moves both survive'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-150
+  text: '`test_equidistant_returns_first`: deterministic first-choice behavior on
+    ties is preserved'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-151
+  text: '`test_item_registry_not_empty`: item registry is non-empty'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-152
+  text: '`test_skill_defs_not_empty`: skill definitions are non-empty'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-153
+  text: '`test_trait_defs_not_empty`: trait definitions are non-empty'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-154
+  text: '`test_registry_not_empty`: generic registry non-empty guarantee is preserved'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-155
+  text: '`test_skill_registry_not_empty`: skill registry is non-empty'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-156
+  text: '`test_all_trait_types_have_definitions`: all trait types have definitions'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-157
+  text: '`test_all_tiers_defined`: all expected tier sets are defined'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-158
+  text: '`test_tier1_empty`: tier-1 empty expectation is preserved where applicable'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-159
+  text: '`test_tier4_defined`: tier-4 definition exists where expected'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-160
+  text: '`test_all_base_classes_defined`: base class definitions exist'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-161
+  text: '`test_breakthroughs_defined`: breakthrough definitions exist'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-162
+  text: '`test_all_types_have_name_templates`: type name-template completeness is
+    preserved'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-163
+  text: '`test_all_terrains_have_names`: all terrains have names'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-164
+  text: '`test_all_terrains_have_race_labels`: all terrains have race labels'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-165
+  text: '`test_all_four_biomes_have_features`: all biomes expose expected features'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-166
+  text: '`test_all_regions_have_territory`: all regions have territory assignment'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-167
+  text: '`test_difficulty_zones_defined`: difficulty zones are defined'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-168
+  text: '`test_loot_tables_exist`: loot tables exist'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-169
+  text: '`test_detour_depth_limit_fallback`: detour depth fallback is preserved'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-170
+  text: '`test_worker_pool_fallback_to_inline`: worker pool falls back to inline execution'
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-171
+  text: '`test_rabbitmq_disabled_no_crash`: RabbitMQ-disabled mode does not crash'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-172
+  text: '`test_kafka_disabled_no_crash`: Kafka-disabled mode does not crash'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-173
+  text: '`test_redis_disabled_no_crash`: Redis-disabled mode does not crash'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-174
+  text: '`test_headless_runner_importable_without_brokers`: headless runner imports
+    safely without brokers'
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-175
+  text: '`test_action_system_importable_without_brokers`: action system imports safely
+    without brokers'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-176
+  text: '`test_simulation_step_runs_without_brokers`: simulation can step without
+    brokers'
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-177
+  text: '`test_regression_runner_survives_no_infrastructure`: regression runner survives
+    no-infrastructure mode'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-178
+  text: '`test_get_unknown`: unknown registry/class lookup is handled safely'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-179
+  text: '`test_unknown_trait_id_ignored`: unknown trait IDs are ignored safely'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-180
+  text: '`test_unknown_type_falls_back_to_physical`: unknown damage/action type falls
+    back safely'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-181
+  text: '`test_hp_clamped_after_recalc`: HP is clamped after recomputation'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-182
+  text: '`test_stamina_cannot_go_below_zero`: stamina lower bound is preserved'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-183
+  text: '`test_stamina_regen_capped`: stamina regeneration upper cap is preserved'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-184
+  text: '`test_training_does_not_exceed_cap`: training hard caps are preserved'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-185
+  text: '`test_level_up_respects_cap`: level-up cap compliance is preserved'
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-186
+  text: '`test_boss_diff_capped_at_4`: boss difficulty cap is preserved'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-187
+  text: '`test_specialized_training_soft_caps`: soft-cap law is preserved'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-188
+  text: '`test_output_derived_stat_ceilings`: derived-stat ceilings are preserved'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-189
+  text: '`test_physical_no_attributes_defaults_mult_to_1`: missing-attribute multiplier
+    defaults are preserved'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-190
+  text: '`test_magical_no_attributes_defaults_mult_to_1`: magical default multiplier
+    law is preserved'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-191
+  text: '`test_full_bag_returns_zero`: full-bag score/utility floor is preserved'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-192
+  text: '`test_overweight_loot_score_zero`: overweight loot utility floor is preserved'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-193
+  text: '`test_objective_derivation_precedence_active_objective_if_no_blocker`: active-objective
+    precedence is preserved'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-194
+  text: '`test_objective_derivation_precedence_first_unresolved_if_no_active`: unresolved-first
+    precedence is preserved'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-195
+  text: '`test_reserved_current_project_slot_is_used_when_current_project_exists`:
+    current-project reserved slot law is preserved'
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-196
+  text: '`test_next_step_returns_first_tile`: first-step path semantics are preserved'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-197
+  text: '`test_returns_nearest`: nearest-target selection is preserved'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-198
+  text: '`test_equidistant_returns_first`: stable first-on-tie semantics are preserved'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-199
+  text: '`test_best_ready_skill_returns_highest_power`: best-ready-skill precedence
+    is preserved'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-200
+  text: '`test_best_ready_skill_skips_on_cooldown`: cooldown exclusion precedence
+    is preserved'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-201
+  text: '`test_best_ready_skill_skips_insufficient_stamina`: stamina exclusion precedence
+    is preserved'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-202
+  text: '`test_best_ready_skill_none_when_no_skills`: no-skill fallback is preserved'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-203
+  text: '`test_phase_guard_read_unauthorized`: unauthorized phase read is guarded'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-204
+  text: '`test_no_path_through_walls`: pathfinding guardrail against walls is preserved'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-205
+  text: '`test_next_step_no_path`: no-path fallback is preserved'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-206
+  text: '`test_safe_shot_detection`: safe-shot guard logic is preserved'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-207
+  text: '`test_no_flanking_bonus_when_facing_attacker`: flanking exclusion guardrail
+    is preserved'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-208
+  text: '`test_no_opportunity_attack_when_moving_toward`: OA guardrail is preserved'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-209
+  text: '`test_no_cover_on_open_ground`: cover absence on open ground is preserved'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-210
+  text: '`test_non_equipment_ignored`: non-equipment inputs are ignored safely'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-211
+  text: '`test_cannot_breakthrough_no_class`: breakthrough precondition guard is preserved'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-212
+  text: '`test_no_class`: no-class guard behavior is preserved'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-213
+  text: '`test_inspector_smoke_empty_state`: empty-state inspector safety is preserved'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-214
+  text: '`test_inspector_smoke_corrupted_state`: corrupted-state inspector safety
+    is preserved'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-215
+  text: '`test_inspector_smoke_maximal_state`: maximal-state inspector safety is preserved'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-216
+  text: '`test_render_strategic_domain_empty`: empty strategic-domain rendering is
+    preserved'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-217
+  text: '`test_empty_strategic_state_rendering`: empty strategic rendering is preserved'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-218
+  text: '`test_cognition_inspector_rendering`: cognition inspector rendering is preserved'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-219
+  text: '`test_cognition_empty_profile`: empty cognition-profile rendering is preserved'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-220
+  text: Goal registry contains the expected built-in goals.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-221
+  text: Goal registry names are unique.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-222
+  text: Every built-in goal maps to a valid target AI state.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-223
+  text: Combat goal scores high when hostile enemies are visible.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-224
+  text: Flee goal scores high below HP threshold.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-225
+  text: Explore goal has a stable baseline score.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-226
+  text: Empty goal candidate list returns `None`.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-227
+  text: RNG value `0.0` selects the highest candidate.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-228
+  text: '`top_n` selection limits candidates before weighted selection.'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-229
+  text: Neuroticism can break goal commitment lock under low HP pressure.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-230
+  text: Legacy `goal_evaluator.py` shim behavior is preserved or intentionally removed.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-231
+  text: Loot goal returns zero when bag is full.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-232
+  text: Trade goal receives urgency when inventory is nearly full or overweight.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-233
+  text: EntityBuilder default entity has stable kind, faction, alive combat state,
+    and wander AI state.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-234
+  text: '`.kind()`, `.at()`, `.home()`, `.ai_state()`, `.faction()`, `.tier()` preserve
+    exact field effects.'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-235
+  text: Hero kind enforces minimum stamina behavior.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-236
+  text: Base stats initialize combat and progression fields consistently.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-237
+  text: Randomized stats use deterministic spawn-domain RNG.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-238
+  text: Hero class derives attributes and caps from class definition.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-239
+  text: Mob attributes scale by tier.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-240
+  text: Race attributes apply racial modifiers and deterministic variance.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-241
+  text: Race skills and class skills can be combined without loss.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-242
+  text: No-skills-by-default behavior is preserved.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-243
+  text: Builder supports clique, household, home building, world role, and leash fields.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-244
+  text: Builder-created entities deep-copy safely.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-245
+  text: '`load_all_registries()` loads items, classes, skills, breakthroughs, traits,
+    spawn configs, and loot configs.'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-246
+  text: Spawn config entries actually initialize generated entities.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-247
+  text: Loot config entries are loaded and used by `EntityGenerator`.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-248
+  text: Item registry lookup returns expected item type and bonuses.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-249
+  text: Class definitions contain class skill lists.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-250
+  text: Every class skill ID resolves in the skill registry.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-251
+  text: Missing registry entries fail safely, not silently.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-252
+  text: Registry loading is deterministic and idempotent.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-253
+  text: Duplicate or malformed data definitions are rejected or explicitly handled.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-254
+  text: Quest starts with progress `0`, not completed.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-255
+  text: Quest progress ratio is correct.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-256
+  text: Quest `advance()` returns `True` only on first completion.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-257
+  text: Advancing an already completed quest does not mutate state.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-258
+  text: Quest copy is deep enough that copied progress mutation does not affect original.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-259
+  text: Quest serialization omits position for non-position quests.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-260
+  text: Explore quest serialization includes target position.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-261
+  text: Quest generation respects hero level.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-262
+  text: Quest generation skips duplicates.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-263
+  text: Quest rewards scale with level.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-264
+  text: Explore quest generation produces valid target positions.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-265
+  text: Template map and template list stay consistent.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-266
+  text: Entity quest list starts empty.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-267
+  text: Entity copies preserve quest progress independently.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-268
+  text: Hunt quest completion grants gold and XP.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-269
+  text: Explore quest completes within target proximity.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-270
+  text: Gather quest can advance by count.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-271
+  text: Max active quest limit is enforced.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-272
+  text: Deterministic RNG repeats exactly for same seed/domain/entity/tick.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-273
+  text: RNG domain separation produces different streams for different domains.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-274
+  text: '`next_int()` always respects inclusive bounds.'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-275
+  text: Spatial hash insert places entity in correct cell.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-276
+  text: Spatial hash radius query includes neighboring cells.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-277
+  text: Spatial hash move removes old cell membership and adds new cell membership.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-278
+  text: Spatial hash remove clears membership.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-279
+  text: Spatial hash behavior is deterministic independent of insertion order where
+    required.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-280
+  text: Unauthorized phase read raises.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-281
+  text: Unauthorized phase mutation raises.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-282
+  text: Unauthorized phase emit raises.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-283
+  text: Authorized mutation succeeds only in permitted phase.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-284
+  text: Internal field access is controlled.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-285
+  text: Scheduling phase cannot mutate HP.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-286
+  text: Persistence phase is read-only.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-287
+  text: Phase guard prevents bypassing authoritative action/update application.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-288
+  text: Nested phase access follows the same authorization law.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-289
+  text: AI presenter maps structured decision drivers.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-290
+  text: Belief inspection includes apparent state.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-291
+  text: Injury blurring affects API-visible state consistently.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-292
+  text: Stat breakdown service matches real derived stat math.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-293
+  text: Combat trace recording is inspectable.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-294
+  text: AI explainability persists across ticks.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-295
+  text: Scheduler timeline is inspectable.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-296
+  text: Entity inspection behavior matches legacy.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-297
+  text: AI explanation parity is preserved or intentionally divergent.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-298
+  text: Missing continuity data is handled safely.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-299
+  text: Corrupted inspection state does not crash.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-300
+  text: Strategic consistency assertion fails on real drift.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-301
+  text: Cognition consistency assertion fails when replay and graph diverge.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-302
+  text: Graph integrity assertion catches broken cognition graph structure.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-303
+  text: Determinism assertion compares actual replay outputs, not superficial success.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-304
+  text: Overload behavior assertion preserves capacity failure semantics.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-305
+  text: Combat arena helper preserves default factions, hostility, tick running, and
+    entity lookup semantics.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-306
+  text: Legacy stat helper preserves expected combat math inputs.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null

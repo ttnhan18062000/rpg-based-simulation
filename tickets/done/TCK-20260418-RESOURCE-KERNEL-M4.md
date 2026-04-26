@@ -14,7 +14,7 @@ Replace naive execution with an explicit deterministic scheduler that classifies
 - Implement `WorkClass` model (Critical, Periodic, Opportunistic, Deferred).
 - Implement `Bounded Work Debt` for deferred tasks.
 - Implement the `Deterministic Scheduler` core with explicit tie-breaking.
-- Pin with scheduler contract tests in `tests_v2/`.
+- Pin with scheduler contract tests in `tests/`.
 
 ## Out of Scope
 - Resource governor implementation (pressure response).
@@ -26,7 +26,7 @@ Replace naive execution with an explicit deterministic scheduler that classifies
 - [x] Explicit deterministic work selection path.
 - [x] Work classified into Critical/Periodic/Opportunistic/Deferred.
 - [x] Deferred work has explicit bounds and accumulation/drain rules.
-- [x] 100% test pass in `tests_v2/` for scheduling semantics.
+- [x] 100% test pass in `tests/` for scheduling semantics.
 - [x] Documentation pack (Contract, Work Model Matrix, Test Matrix) finalized.
 
 ## Related Tickets
@@ -36,9 +36,9 @@ Replace naive execution with an explicit deterministic scheduler that classifies
 - `resource_implementation_milestone_4.md`
 
 ## Related Code Areas
-- `src_v2/engine/`
-- `src_v2/core/`
-- `tests_v2/`
+- `src/engine/`
+- `src/core/`
+- `tests/`
 
 ## Assumptions / Open Questions
 - We will integrate the `Scheduler` into the `Kernel.tick_once()` orchestration.
@@ -48,16 +48,16 @@ Replace naive execution with an explicit deterministic scheduler that classifies
 - Follow the Step 5 strategy: Docs -> Types -> Tests -> Implementation.
 
 ## Test Summary
-- 35 tests passed in `tests_v2/`.
+- 35 tests passed in `tests/`.
 - `test_readiness_driven_selection` confirmed correct entity action timing.
 - `test_deterministic_tiebreak` verified stable sort order by EntityID.
 - `test_bucket_prioritization` verified Critical > Periodic > Deferred ranking.
 - `test_deferred_drain_order` verified authoritative debt reduction.
 
 ## Files Changed
-- `src_v2/core/` (work, state, updates)
-- `src_v2/engine/` (scheduler, kernel, apply)
-- `tests_v2/` (new scheduler and work class tests)
+- `src/core/` (work, state, updates)
+- `src/engine/` (scheduler, kernel, apply)
+- `tests/` (new scheduler and work class tests)
 - `docs/engine/` (M4 specs)
 
 ## Completion Summary

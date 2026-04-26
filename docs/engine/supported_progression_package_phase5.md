@@ -1,7 +1,7 @@
 # Supported Progression Package (Phase 5)
 
 ## 1. Overview
-This package defines the canonical state of the `src_v2` Resource Engine at the end of Phase 5. It unifies the recovered gameplay behavior with the engine's authoritative resolution substrate.
+This package defines the canonical state of the `src` Resource Engine at the end of Phase 5. It unifies the recovered gameplay behavior with the engine's authoritative resolution substrate.
 
 ## 2. Core Support Matrix
 
@@ -38,4 +38,4 @@ The following cycle is officially supported, certified, and bit-identical under 
 
 ## 7. Quality Certificate
 > [!IMPORTANT]
-> The integrated progression substrate is now **regression-guarded** by [test_logic_guards.py](file:///home/vboxuser/Work/rpg-based-simulation/tests_v2/integrity/test_logic_guards.py). Any changes to the `Kernel` resolution phase that break same-tick redirection will fail the release gate.
+> The integrated progression substrate is now **regression-guarded** by [test_logic_guards.py](file:///home/vboxuser/Work/rpg-based-simulation/tests/integrity/test_logic_guards.py). Any changes to the `Kernel` resolution phase that break same-tick redirection will fail the release gate.

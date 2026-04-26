@@ -1,4 +1,4 @@
-# High-Level Implementation Plan — Phase 7 of `src_v2`
+# High-Level Implementation Plan — Phase 7 of `src`
 
 This plan assumes Phase 6 has already produced:
 
@@ -11,7 +11,7 @@ It also assumes the project has stopped pretending that “a lot of engine/runti
 
 Phase 7 is not the phase where the project should widen into major combat recovery, broad strategic cognition recovery, or full system compatibility closure.
 
-It is the phase where `src_v2` must complete the deterministic substrate that all later preserved gameplay and compatibility claims depend on.
+It is the phase where `src` must complete the deterministic substrate that all later preserved gameplay and compatibility claims depend on.
 
 The purpose of Phase 7 is:
 

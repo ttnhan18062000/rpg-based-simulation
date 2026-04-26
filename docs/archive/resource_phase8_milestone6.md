@@ -203,7 +203,7 @@ Collect and index:
 
 - `docs/engine/phase8_proof_bundle.md`
 - `docs/engine/release_proof/phase8/*`
-- `tests_v2/**`
+- `tests/**`
 
 #### [Task important notes]
 

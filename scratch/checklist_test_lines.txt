@@ -1,0 +1,746 @@
+243:- [ ] `test_reactive_cover_seeking`: Reactive cover seeking — Verify that actor seeks cover only when a ranged threat is visible..
+244:- [ ] `test_chokepoint_holding`: Chokepoint holding — Verify that actor identifies and holds a 1-tile gap..
+245:- [ ] `test_cardinal_opposite_bracketing`: Cardinal opposite bracketing — Verify that two allies bracket a target from opposite sides..
+246:- [ ] `test_tactical_mode_integration_handler`: Tactical mode integration handler — Verify that CombatHandler respects the tactical target_pos..
+250:- [x] `test_arena_structural_determinism`: Arena structural determinism — Verify that the arena produced structurally identical ScenarioReports for the same seed. This validates that the simulation and its reporting layer use stable, deterministic logic. <!-- RECOVERED: CanonicalStateHasher and AuthoritativeState.fingerprint ensure deterministic truth -->
+251:- [ ] `test_arena_stop_condition_wipe`: Arena stop condition wipe — Verify that the arena correctly detects when one side is eliminated..
+252:- [ ] `test_arena_stop_condition_timeout`: Arena stop condition timeout — Verify that the arena respects the max_ticks limit..
+253:- [x] `test_arena_stop_condition_stall`: Arena stop condition stall — Verify that the arena correctly detects lack of activity (STALL) as a telemetry report..
+254:- [ ] `test_mutation_tripwire_during_decision`: Mutation tripwire during decision — Verify that any attempt to mutate entities during the decision phase raises a RuntimeError..
+258:- [ ] `test_minimal_tick`: Minimal tick — Verify that we can run even 1 tick without hanging..
+262:- [ ] `test_watchdog_aborts_on_hang`: Watchdog aborts on hang — Verify that a tick hanging for > watchdog_timeout is aborted..
+263:- [ ] `test_watchdog_allows_fast_ticks`: Watchdog allows fast ticks — Verify that normal fast ticks are NOT aborted..
+267:- [ ] `test_regression_melee_mirror`: Regression melee mirror — Scenario 1v1-01: Symmetry Check..
+268:- [ ] `test_regression_kiting_open`: Regression kiting open — Scenario 1v1-02: Ranged vs Melee Open Field..
+269:- [ ] `test_regression_elite_vs_swarm`: Regression elite vs swarm — Scenario 1vm-01: Elite vs Swarm..
+273:- [ ] `test_rejection_audit_aggregation`: Rejection audit aggregation — Verify that authoritative rejections are captured in ScenarioReport. [Milestone 7].
+274:- [ ] `test_out_of_range_rejection`: Out of range rejection — Verify that combat out-of-range is explicitly rejected with structured reason. [Milestone 7].
+278:- [ ] `test_resource_isolation_bounded_growth`: Resource isolation bounded growth — Verify that memory does not show a strong linear leak over many iterations..
+282:- [x] `test_stalemate_detection`: Stalemate detection.
+283:- [x] `test_stalemate_loop_breaker_boosts_flee`: Stalemate loop breaker boosts flee.
+287:- [x] `test_stalemate_detection_and_breaker`: Stalemate detection and breaker — Verify that 3 cycles of rhythmic oscillation trigger the stalemate breaker..
+291:- [x] `test_high_ground_bonus`: High ground bonus — Verify High Ground bonus applies when attacker is on MOUNTAIN and defender is on FLOOR..
+292:- [x] `test_flanking_bonus`: Flanking bonus — Verify Flanking bonus applies when defender is bracketed north/south..
+293:- [ ] `test_moved_penalty`: Moved penalty — Verify Moved Recently penalty applies when attacker has moved this tick..
+294:- [ ] `test_ranged_cover_bonus`: Ranged cover bonus — Verify Cover bonus applies against ranged attacks when adjacent to WALL..
+298:- [x] `test_manhattan_distance`: Manhattan distance — Verify Manhattan distance calculation..
+299:- [x] `test_orthogonal_adjacency`: Orthogonal adjacency — Verify that only orthogonal tiles are adjacent..
+300:- [x] `test_check_range`: Check range — Verify range enforcement..
+301:- [x] `test_check_occupancy`: Check occupancy — Verify 1-unit-per-tile occupancy rule..
+302:- [ ] `test_aoe_legality`: Aoe legality — Verify AoE impact constraints..
+303:- [ ] `test_aoe_splash_radius`: Aoe splash radius — Verify entities affected by splash radius..
+304:- [ ] `test_get_occupant_id`: Get occupant id — Verify occupant lookup..
+305:- [x] `test_check_targeting_legality`: Check targeting legality — Verify consolidated targeting rules (Range + LOS)..
+309:- [x] `test_engagement_detection`: Engagement detection.
+310:- [x] `test_engagement_clears_on_separation`: Engagement clears on separation.
+311:- [x] `test_engagement_respects_hostility`: Engagement respects hostility.
+315:- [x] `test_oa_triggered_on_disengagement`: Oa triggered on disengagement.
+316:- [ ] `test_oa_not_triggered_if_staying_engaged_with_same_attacker`: Oa not triggered if staying engaged with same attacker.
+320:- [x] `test_target_stickiness_bias`: Target stickiness bias.
+324:- [ ] `test_passive_progression_on_quiet_tick`: Passive progression on quiet tick — Verify that biological decay and lifecycle systems run even if entity doesn't act..
+325:- [ ] `test_hero_lifecycle_on_quiet_tick`: Hero lifecycle on quiet tick — Verify that HeroLifecycle (e.g. proximity bonding) runs even if no entity acts..
+329:- [x] `test_scenario_1_dead_world_progression`: Scenario 1 dead world progression — Scenario 1: No living entities. Verify tick still increments and systems advance..
+330:- [x] `test_scenario_2_sleeping_world_biological_decay`: Scenario 2 sleeping world biological decay — Scenario 2: All entities have high next_act_at. Verify biological decay hits..
+331:- [ ] `test_scenario_3_stationary_world_proximity_bonding`: Scenario 3 stationary world proximity bonding — Scenario 3: Two heroes are stationary. Verify bonding occurs via HeroLifecycleSystem..
+332:- [x] `test_scenario_4_subsystem_advancement`: Scenario 4 subsystem advancement — Scenario 4: Verify that registered subsystems receive the tick signal even if no actions apply..
+336:- [ ] `test_navigation_uses_flow_field_for_far_town`: Navigation uses flow field for far town.
+337:- [ ] `test_navigation_uses_astar_for_near_target`: Navigation uses astar for near target.
+338:- [ ] `test_navigation_uses_flow_field_for_world_boss`: Navigation uses flow field for world boss.
+340:#### `test_party_tactics.py`
+342:- [ ] `test_vanguard_biases`: Vanguard biases.
+343:- [ ] `test_support_biases`: Support biases.
+344:- [ ] `test_protector_biases`: Protector biases.
+348:- [ ] `test_skirmish_boosts_move_for_ranged`: Skirmish boosts move for ranged.
+349:- [ ] `test_skirmish_does_not_boost_melee`: Skirmish does not boost melee.
+353:- [x] `test_melee_striker_closes_distance`: Melee striker closes distance.
+354:- [ ] `test_ranged_skirmisher_kites_when_close`: Ranged skirmisher kites when close.
+355:- [ ] `test_ranged_skirmisher_maintains_distance`: Ranged skirmisher maintains distance.
+356:- [ ] `test_safe_shot_detection`: Safe shot detection.
+357:- [x] `test_tactical_retreat_at_low_hp`: Tactical retreat at low hp.
+358:- [ ] `test_group_spacing_preservation`: Group spacing preservation.
+362:- [x] `test_movement_model_basic_path`: Movement model basic path.
+363:- [x] `test_movement_model_yielding_priority`: Movement model yielding priority.
+364:- [ ] `test_movement_model_stuck_threshold`: Movement model stuck threshold.
+370:- [x] `test_near_death_hardening`: Near death hardening — Verify that surviving at low HP increases Max HP..
+371:- [ ] `test_stat_decay_inactivity`: Stat decay inactivity — Verify that stat decay can be triggered..
+372:- [ ] `test_toughness_hardening_integration`: Toughness hardening integration — Integration test for the restored hardening logic in CombatAction..
+374:#### `test_building_unification.py`
+376:- [ ] `test_actor`: Actor.
+377:- [ ] `test_visit_guild_no_legacy_goals`: Visit guild no legacy goals — Verify that visiting the guild produces StrategicUpdate and PerceptionUpdate, but no string goals..
+378:- [x] `test_visit_blacksmith_blocker_emission`: Visit blacksmith blocker emission — Verify that visiting the blacksmith without materials generates a BlockerRecord, not a string state..
+379:- [ ] `test_visit_class_hall_resolution`: Visit class hall resolution — Verify that learning a skill emits a strategic resolution for the corresponding capability blocker..
+380:- [ ] `test_visit_blacksmith_crafting_resolution`: Visit blacksmith crafting resolution — Verify that crafting an item emits a strategic resolution for the material blocker..
+381:- [ ] `test_visit_home_upgrade_resolution`: Visit home upgrade resolution — Verify that home storage upgrade emits a strategic resolution for home maintenance..
+382:- [x] `test_detour_suggestion_lifecycle_awareness`: Detour suggestion lifecycle awareness — Verify DetourSuggestionService ignores exhausted leads and prioritizes untested ones..
+386:- [x] `test_biological_decay_authoritative`: Biological decay authoritative.
+387:- [x] `test_sleep_goal_utility_at_night`: Sleep goal utility at night.
+388:- [ ] `test_nocturnal_predator_bonus`: Nocturnal predator bonus.
+392:- [ ] `test_biological_utility_biasing`: Biological utility biasing.
+393:- [x] `test_inn_visit_leads_to_sleeping`: Inn visit leads to sleeping.
+394:- [ ] `test_home_visit_leads_to_eating`: Home visit leads to eating.
+395:- [x] `test_sleeping_recovery_cycle`: Sleeping recovery cycle.
+399:- [ ] `test_weapon_ranges_integrity`: Weapon ranges integrity — Verify that specific weapons have their intended ranges in the registry..
+400:- [ ] `test_weapon_power_integrity`: Weapon power integrity — Verify that core progression weapons have their primary power correctly set..
+401:- [ ] `test_registry_identity_integrity`: Registry identity integrity — Ensure all core items are successfully loaded and have consistent IDs..
+405:- [x] `test_tier1_is_baseline`: Tier1 is baseline.
+406:- [x] `test_tier4_has_higher_stats_than_tier1`: Tier4 has higher stats than tier1 — Same seed, same enemy tier - tier 4 difficulty should have higher HP/ATK..
+407:- [x] `test_tier4_hp_significantly_higher`: Tier4 hp significantly higher — Tier 4 HP multiplier is 4.0x on base stats; with flat bonuses from traits/attributes the effective ratio will be lower but still substantial..
+408:- [x] `test_difficulty_sets_level_range`: Difficulty sets level range — Entities in tier 3 should have level in [5, 10]..
+409:- [x] `test_gold_scales_with_difficulty`: Gold scales with difficulty — Tier 4 gold multiplier is 4.0x..
+410:- [ ] `test_race_tier4_stronger_than_tier1`: Race tier4 stronger than tier1.
+411:- [ ] `test_race_difficulty_tier_set`: Race difficulty tier set.
+412:- [x] `test_race_level_in_range`: Race level in range.
+413:- [ ] `test_all_races_scale`: All races scale — All four races should scale with difficulty..
+414:- [ ] `test_boss_diff_capped_at_4`: Boss diff capped at 4.
+415:- [ ] `test_boss_diff_adds_one`: Boss diff adds one.
+416:- [ ] `test_spawn_default_is_tier1`: Spawn default is tier1.
+417:- [ ] `test_spawn_race_default_is_tier1`: Spawn race default is tier1.
+421:- [x] `test_near_death_hardening`: Near death hardening — Verify that surviving at low HP increases Max HP..
+422:- [ ] `test_stat_decay_inactivity`: Stat decay inactivity — Verify that idling for 1000+ ticks triggers stat decay..
+428:- [ ] `test_accurate_diagnosis_high_wisdom`: Accurate diagnosis high wisdom.
+429:- [ ] `test_misdiagnosis_low_wisdom`: Misdiagnosis low wisdom.
+433:- [x] `test_detour_breadth_limit`: Detour breadth limit.
+434:- [ ] `test_detour_depth_limit_fallback`: Detour depth limit fallback.
+435:- [x] `test_retry_suppression`: Retry suppression.
+439:- [ ] `test_objective_derivation_precedence_blocker_first`: Objective derivation precedence blocker first.
+440:- [ ] `test_objective_derivation_precedence_active_objective_if_no_blocker`: Objective derivation precedence active objective if no blocker.
+441:- [ ] `test_objective_derivation_precedence_first_unresolved_if_no_active`: Objective derivation precedence first unresolved if no active.
+445:- [x] `test_project_retention_when_rival_is_below_margin`: Project retention when rival is below margin.
+446:- [x] `test_project_switch_when_rival_is_above_margin`: Project switch when rival is above margin.
+447:- [x] `test_switch_margin_increases_with_higher_resistance_profile`: Switch margin increases with higher resistance profile.
+451:- [ ] `test_low_profile_entity_has_smaller_active_slice_than_high_profile_entity`: Low profile entity has smaller active slice than high profile entity.
+452:- [ ] `test_concern_intake_is_capped_by_profile`: Concern intake is capped by profile.
+453:- [x] `test_lead_retention_is_capped_by_profile`: Lead retention is capped by profile.
+454:- [x] `test_reserved_current_project_slot_is_used_when_current_project_exists`: Reserved current project slot is used when current project exists.
+455:- [x] `test_dropped_candidate_counts_are_deterministic`: Dropped candidate counts are deterministic.
+459:- [x] `test_profile_derivation_is_deterministic_for_same_entity_state`: Profile derivation is deterministic for same entity state.
+460:- [ ] `test_profile_derivation_is_independent_of_tick_in_milestone_1`: Profile derivation is independent of tick in milestone 1.
+461:- [x] `test_profile_derivation_does_not_use_rng`: Profile derivation does not use rng.
+465:- [ ] `test_build_profile_does_not_mutate_entity_attributes`: Build profile does not mutate entity attributes.
+466:- [ ] `test_build_profile_does_not_mutate_caps`: Build profile does not mutate caps.
+467:- [ ] `test_build_profile_does_not_mutate_stamina`: Build profile does not mutate stamina.
+468:- [ ] `test_build_profile_returns_new_profile_object_each_call`: Build profile returns new profile object each call.
+472:- [ ] `test_overload_metadata_population`: Overload metadata population — Verify that primary_overload_source and last_overload_tick are correctly populated in replay..
+473:- [ ] `test_personality_formula_impact`: Personality formula impact — Verify that personality archetypes and traits impact the capacity profile..
+474:- [ ] `test_inspector_smoke_coverage`: Inspector smoke coverage — Smoke test to ensure EntityInspector (AIPresenter) doesn't crash with new fields..
+478:- [ ] `test_ui_contract_alignment`: Ui contract alignment — Verify that every field in bounded_cognition_ui_contract.md exists in Pydantic schemas..
+479:- [ ] `test_feature_spec_replay_alignment`: Feature spec replay alignment — Verify that replay fields mentioned in feature spec are present in recorder..
+480:- [ ] `test_feature_spec_graph_export_alignment`: Feature spec graph export alignment — Verify that graph export fields mentioned in feature spec are present in exporter..
+481:- [ ] `test_test_matrix_existence`: Test matrix existence — Verify that all test modules mentioned in test_matrix.md actually exist..
+482:- [x] `test_populated_artifact_consistency`: Populated artifact consistency — Verify that a live HeadlessRunner execution produces populated and consistent artifacts. [TRACK 1 HARDENING].
+483:- [x] `test_truth_surface_parity`: Truth surface parity — Verify that Replay, API Schema, and Cognition Graph maintain strict parity. <!-- RECOVERED: StatePresenter and CanonicalStateHasher maintain strict parity -->
+484:- [ ] `test_documentation_alignment`: Documentation alignment — Verify that documented fields in intel_capacity_implementation_updated.md are real. [MILESTONE 8 PROOF].
+488:- [ ] `test_directive_mutation_thresholds`: Directive mutation thresholds — Verify that directives only mutate after repeated thresholded events..
+492:- [x] `test_stable_concern_generation`: Stable concern generation.
+493:- [ ] `test_unstable_panic_concern`: Unstable panic concern.
+494:- [ ] `test_interruption_resistance_stable`: Interruption resistance stable.
+495:- [ ] `test_interruption_resistance_unstable`: Interruption resistance unstable.
+496:- [ ] `test_identity_drift_resistance`: Identity drift resistance.
+497:- [ ] `test_rumor_sensitivity_unstable`: Rumor sensitivity unstable.
+501:- [ ] `test_learning_success`: Learning success.
+502:- [ ] `test_learning_failure`: Learning failure.
+506:- [ ] `test_social_blocker_detection_solo`: Social blocker detection solo.
+507:- [ ] `test_social_misjudgment_low_stability`: Social misjudgment low stability.
+508:- [ ] `test_social_bandwidth_pool_limiting`: Social bandwidth pool limiting.
+512:- [x] `test_source_trust_learning_loop`: Source trust learning loop — Prove that future weighting is affected by source trust after a learning event..
+516:- [ ] `test_uncertainty_resolution_loop`: Uncertainty resolution loop — Prove that proximity to a rumored zone resolves imprecise leads into precise targets..
+520:- [x] `test_export_empty_strategy`: Export empty strategy — Verify export from an entity with no strategic state..
+521:- [x] `test_export_with_core_strategic_state`: Export with core strategic state — Verify export of directives, projects, and objectives..
+522:- [x] `test_export_determinism`: Export determinism — Verify that multiple exports from the same state are identical..
+523:- [x] `test_non_mutation`: Non mutation — Verify that exporter does not mutate the source entity..
+527:- [ ] `test_strategic_model_rebuild`: Strategic model rebuild — Verify pydantic model rebuild handles recursive refs..
+528:- [ ] `test_directive_creation`: Directive creation.
+529:- [x] `test_strategic_state_defaults`: Strategic state defaults.
+530:- [x] `test_strategic_state_serialization`: Strategic state serialization.
+534:- [ ] `test_cognition_graph_deterministic_simulation`: Cognition graph deterministic simulation — Verify that a simulation produces a valid, repeatable cognition graph..
+535:- [ ] `test_graph_structural_invariants`: Graph structural invariants — Verify that the graph follows structural rules across ticks..
+539:- [x] `test_strategic_pivot_on_regional_danger`: Strategic pivot on regional danger — Verify that heroes pivot from personal quests to regional stabilization during high-danger events..
+540:- [x] `test_scar_detection`: Scar detection — Verify that heroes sense nearby world trauma (scars) and investigate..
+541:- [x] `test_near_death_triggers_survival_consequences`: Near death triggers survival consequences — Verify that a NEAR_DEATH event generates a concern and suspends the current project via applicator..
+542:- [x] `test_betrayal_mutates_directives`: Betrayal mutates directives — Verify that a salient betrayal turning point adds an 'Avenge' directive..
+543:- [ ] `test_divergent_home_response`: Divergent home response — Verify that only entities with place attachment react strongly to home damage..
+544:- [x] `test_betrayal_trauma_affects_recruitment`: Betrayal trauma affects recruitment — Verify that a recent betrayal makes entities less willing to accept recruitment offers..
+548:- [x] `test_budget_enforcement_truncation`: Budget enforcement truncation — Verify that candidate_zone_limit correctly truncates the pool AND preserves highest-scored zones..
+549:- [x] `test_source_trust_behavioral_impact`: Source trust behavioral impact — Verify that updating source trust results in different weighting in the next cycle. [MILESTONE 3].
+550:- [ ] `test_overload_metrics_visibility`: Overload metrics visibility — Verify that primary_overload_source and metrics are populated when stressed..
+554:- [x] `test_directive_mutation_salience_threshold`: Directive mutation salience threshold — Verify that only high-salience turning points trigger mutations..
+555:- [x] `test_directive_priority_strengthening`: Directive priority strengthening — Verify that repeated high-salience events strengthen directive priority..
+559:- [ ] `test_strategic_objective_continuity`: Strategic objective continuity — Prove that an existing objective is preserved if the project remains stable and no high blockers appear..
+560:- [ ] `test_objective_resumption_aligns_with_tactical`: Objective resumption aligns with tactical — Verify that a resumed objective correctly drives goal selection..
+564:- [ ] `test_harness_determinism`: Harness determinism — Verify that two runs with the same seed produce byte-identical results..
+565:- [x] `test_harness_non_determinism_different_seed`: Harness non determinism different seed — Verify that different seeds produce different outcomes (basic sanity check)..
+569:- [ ] `test_candidate_zone_enforcement`: Candidate zone enforcement — Verify that candidate_zone_limit is enforced and drops excess zones..
+570:- [ ] `test_ally_evaluation_enforcement`: Ally evaluation enforcement — Verify that ally_evaluation_limit caps contracts and offers evaluated..
+571:- [ ] `test_overload_source_trauma`: Overload source trauma — Verify that heavy HP damage triggers 'trauma' as the primary overload source..
+572:- [ ] `test_switch_reason_transparency`: Switch reason transparency — Verify that a project switch provides a human-readable reason..
+576:- [x] `test_persistence_boost_prevents_switching`: Persistence boost prevents switching — Verify that the persistence boost prevents switching to a slightly better project..
+577:- [x] `test_project_lock_prevents_switching`: Project lock prevents switching — Verify that project_lock_until strictly prevents any switches despite critical concerns..
+578:- [x] `test_interruption_threshold_overridden_by_major_threat`: Interruption threshold overridden by major threat — Verify that a massive threat CAN overcome the interruption threshold..
+579:- [ ] `test_strategic_pipeline_home_threat`: Strategic pipeline home threat — Verify the flow from life event through StrategicConsequenceService to project pivot..
+580:- [x] `test_resume_restores_valid_objective`: Resume restores valid objective — Verify that brain restores the last active objective when resuming a project. [Strategy M2].
+581:- [ ] `test_resumed_objective_survives_cycle`: Resumed objective survives cycle — Verify that a restored objective doesn't immediately flip back to ProjectRecord.objectives[0] if it matches. [Strategy M2].
+585:- [ ] `test_world_strategic_registry_deep_isolation`: World strategic registry deep isolation — Verify that WorldStrategicRegistry.copy() performs a deep copy..
+586:- [ ] `test_strategic_replay_graph_equality`: Strategic replay graph equality — Verify that replaying from a snapshot yields bit-identical cognition graphs..
+587:- [ ] `test_lead_outcome_grounding_verification`: Lead outcome grounding verification — Verify that precise leads correctly ground into world entities..
+591:- [x] `test_objective_resume_reliability`: Objective resume reliability — Verify that a suspended objective is resumed correctly..
+595:- [ ] `test_snapshot_strategic_isolation`: Snapshot strategic isolation — Verify that Snapshot.from_world deep-copies and freezes strategic state..
+596:- [ ] `test_strategic_update_merging_identical_ids`: Strategic update merging identical ids — Verify that ActionSystem merges updates with identical IDs correctly..
+597:- [ ] `test_serialization_round_trip`: Serialization round trip — Verify that StrategicState survives full JSON serialization round-trip..
+598:- [ ] `test_strategic_update_coercion_from_dict`: Strategic update coercion from dict — Verify that StrategicUpdate correctly coerces dicts to models (worker transport emulation)..
+602:- [ ] `test_strategic_update_multi_record_transport`: Strategic update multi record transport — Verify that a single proposal can carry multiple strategic updates..
+603:- [ ] `test_strategic_update_repeated_id_last_one_wins`: Strategic update repeated id last one wins — Verify that repeated IDs in a single update follow last-one-wins semantics..
+604:- [x] `test_strategic_update_idempotency_over_ticks`: Strategic update idempotency over ticks — Verify that applying the same update multiple times is idempotent..
+605:- [ ] `test_strategic_update_target_routing`: Strategic update target routing — Verify that strategic updates can be routed to a target entity..
+609:- [ ] `test_world_strategic_registry_persistence`: World strategic registry persistence — Verify that WorldStrategicRegistry is preserved in snapshots..
+610:- [ ] `test_strategic_world_integration_system_pruning`: Strategic world integration system pruning — Verify that the system prunes expired world opportunities..
+611:- [x] `test_telemetry_strategic_metrics`: Telemetry strategic metrics — Verify that TelemetrySystem collects strategic metrics. <!-- RECOVERED: MetricsService extracts strategic and world dynamics -->
+615:- [x] `test_biological_need_to_strategic_bias`: Biological need to strategic bias.
+616:- [x] `test_directive_to_project_flow`: Directive to project flow.
+617:- [ ] `test_strategic_bias_impact_on_selection`: Strategic bias impact on selection.
+621:- [x] `test_contradiction_degrades_certainty`: Contradiction degrades certainty — Verify that leads with contradictions lose certainty based on profile sensitivity. [MILESTONE 5].
+622:- [x] `test_hypothesis_impacted_by_contradiction`: Hypothesis impacted by contradiction — Verify that hypotheses lose confidence when supporting leads are contradicted. [MILESTONE 5].
+626:- [ ] `test_canonical_blocker_structure`: Canonical blocker structure — Verify that StrategicState has a blockers list and ObjectiveRecord uses IDs..
+627:- [ ] `test_strategic_snapshot_isolation`: Strategic snapshot isolation — Verify that deep copying an entity results in a fully isolated strategic tree..
+628:- [ ] `test_belief_decay_aoa_purity`: Belief decay aoa purity — Verify that BeliefService.decay_stale_beliefs returns an update and does not mutate in-place..
+629:- [ ] `test_social_applicator_aoa_purity`: Social applicator aoa purity — Verify that SocialStateApplicator returns updates and does not mutate the world..
+630:- [x] `test_concern_generation_near_death`: Concern generation near death.
+631:- [x] `test_directive_mutation_near_death`: Directive mutation near death.
+632:- [x] `test_project_mutation_interruption`: Project mutation interruption.
+633:- [ ] `test_strategic_update_blocker_merging`: Strategic update blocker merging — Verify that ActionSystem merges blockers from StrategicUpdate correctly..
+637:- [ ] `test_influence_shifts_on_monster_death`: Influence shifts on monster death.
+638:- [ ] `test_influence_shifts_on_hero_death`: Influence shifts on hero death.
+639:- [ ] `test_war_state_transition`: War state transition.
+640:- [x] `test_conquered_region_triggers_stronghold`: Conquered region triggers stronghold.
+641:- [x] `test_stronghold_debuff_application`: Stronghold debuff application.
+645:- [x] `test_war_declaration`: War declaration.
+646:- [x] `test_territory_conquest`: Territory conquest.
+647:- [x] `test_territory_liberation`: Territory liberation.
+653:- [x] `test_betrayal_social_consequence`: Betrayal social consequence — Verify that private betrayal trauma prevents recruitment even for reputable founders..
+657:- [ ] `test_intel_confirmation_by_sight`: Intel confirmation by sight — Verify that seeing a person mentioned in a lead confirms it and boosts trust..
+658:- [ ] `test_intel_refutation_by_exhaustion`: Intel refutation by exhaustion — Verify that failing to find a target refutes the lead and drops trust..
+662:- [ ] `test_routine_profile_instantiation`: Routine profile instantiation — Verify RoutineProfile can be instantiated with hybrid scheduling..
+663:- [ ] `test_place_attachment_instantiation`: Place attachment instantiation — Verify PlaceAttachment can be instantiated and supports sentiment..
+664:- [ ] `test_group_record_instantiation`: Group record instantiation — Verify GroupRecord supports shared tactical intent..
+665:- [ ] `test_entity_integration`: Entity integration — Verify Entity and IdentityAspect absorb new Phase 3 fields..
+666:- [ ] `test_world_state_registry`: World state registry — Verify GroupRegistry integration in WorldState..
+670:- [x] `test_social_event_betrayal`: Social event betrayal — Verify that hitting an ally triggers a betrayal event and social bond shift..
+671:- [ ] `test_social_event_near_death_and_tp`: Social event near death and tp — Verify that a near-death experience creates a durable turning point..
+672:- [ ] `test_social_event_first_kill_milestone`: Social event first kill milestone — Verify that first kill increments reputation and notoriety..
+674:#### `test_phase_3_social_contracts.py`
+676:- [ ] `test_recruitment_haggling_threshold`: Recruitment haggling threshold — Verify that candidates counter-offer when willingness is close to threshold..
+677:- [x] `test_contract_outcome_consequences`: Contract outcome consequences — Verify that contract resolution returns correct intent updates for all members..
+678:- [x] `test_role_aware_tactical_biases`: Role aware tactical biases — Verify that utility biases change based on contract role..
+682:- [ ] `test_inn_gossip`: Inn gossip.
+683:- [ ] `test_hero_trading`: Hero trading.
+687:- [ ] `test_social_bias_on_goal_scoring`: Social bias on goal scoring — Verify that a high-trust bond increases SOCIAL goal score..
+688:- [x] `test_reputation_impact_on_caution`: Reputation impact on caution — Verify low global reputation triggers defensive posture in cautious entities..
+692:- [x] `test_npc_loadout_integrity`: Npc loadout integrity — Verify that specific NPC tiers are assigned their canonical equipment..
+693:- [x] `test_npc_kind_mapping_integrity`: Npc kind mapping integrity — Verify that race/tier combinations map to the correct semantic kind name..
+697:- [ ] `test_nemesis_milestone_creation`: Nemesis milestone creation.
+698:- [x] `test_memory_salience_retention`: Memory salience retention.
+702:- [x] `test_combat_updates_social_registry`: Combat updates social registry.
+703:- [ ] `test_archetype_influence_on_social_deltas`: Archetype influence on social deltas.
+707:- [ ] `test_recruitment_offer_bounding_stable`: Recruitment offer bounding stable — Stable entities produce consistent offers without noise..
+708:- [ ] `test_recruitment_offer_bounding_unstable`: Recruitment offer bounding unstable — Unstable entities produce noisy/perturbed offers..
+712:- [x] `test_cha_impacts_familiarity_gain`: Cha impacts familiarity gain — Verify that a hero with higher CHA gains familiarity faster..
+718:- [ ] `test_narrative_memory_logging`: Narrative memory logging.
+719:- [ ] `test_bravery_modifiers`: Bravery modifiers.
+720:- [x] `test_regional_suppression`: Regional suppression.
+724:- [ ] `test_kill_reward_emission_in_apply`: Kill reward emission in apply.
+725:- [ ] `test_no_reward_on_non_lethal_hit`: No reward on non lethal hit.
+729:- [x] `test_undead_no_level_up`: Undead no level up — Undead should have a train_rate of 0.0 and never level up..
+730:- [x] `test_milestone_level_up`: Milestone level up — Reaching a milestone like level 5 grants extra stats..
+731:- [x] `test_veterancy_multipliers`: Veterancy multipliers — Veterancy Ranks should boost stats via StatsProxy..
+732:- [x] `test_innate_talents_training`: Innate talents training — Talented attributes gain 2x points, weak attributes gain 0.5x..
+733:- [x] `test_combat_veterancy_points`: Combat veterancy points — Combat yields veterancy points..
+737:- [x] `test_physical_skill_scaling`: Physical skill scaling.
+738:- [x] `test_magical_skill_scaling`: Magical skill scaling.
+739:- [x] `test_elemental_skill_scaling`: Elemental skill scaling.
+743:- [ ] `test_luck_impacts_crit_rate_significantly`: Luck impacts crit rate significantly — Verify that Luck has a meaningful impact on critical hit rate..
+744:- [ ] `test_luck_impacts_loot_modifier`: Luck impacts loot modifier — Verify that Luck/Perception provides a loot rarity multiplier..
+745:- [ ] `test_per_based_hidden_discovery`: Per based hidden discovery — Verify that hidden entities are only visible with sufficient Perception..
+749:- [x] `test_breakthrough_is_added`: Breakthrough is added.
+750:- [x] `test_breakthrough_applies_bonus`: Breakthrough applies bonus.
+754:- [ ] `test_warrior_prefers_defensive_gear`: Warrior prefers defensive gear — Verify that a Warrior weights defensive stats higher than a Mage..
+755:- [ ] `test_hero_starting_gear_integrity`: Hero starting gear integrity — Verify that each hero class has the correct starting gear defined..
+761:- [x] `test_snapshot_immutability_enforced`: Snapshot immutability enforced.
+762:- [x] `test_snapshot_entities_are_deep_copied`: Snapshot entities are deep copied.
+763:- [x] `test_snapshot_entities_are_frozen`: Snapshot entities are frozen.
+767:- [x] `test_simulation_determinism`: Simulation determinism — Verify that two identical simulations with the same seed produce the same result..
+768:- [x] `test_different_seeds_different_hashes`: Different seeds different hashes — Verify that different seeds produce different world states..
+772:- [ ] `test_aibrain_statelessness`: Aibrain statelessness.
+776:- [x] `test_entity_deep_copy_isolation`: Entity deep copy isolation — Verify that Entity.copy() provides absolute isolation for nested mutable structures..
+777:- [x] `test_snapshot_actor_isolation`: Snapshot actor isolation — Verify that resolving an actor from a Snapshot ensures mutation safety..
+778:- [ ] `test_aspect_model_rebuild_integrity`: Aspect model rebuild integrity — Ensure that deep copies correctly initialize models and don't lose data..
+779:- [ ] `test_lived_structure_isolation`: Lived structure isolation — Verify isolation for Phase 3 routine and attachment structures..
+783:- [ ] `test_entity_to_full_schema_no_crash`: Entity to full schema no crash.
+784:- [ ] `test_entity_to_full_schema_minimal`: Entity to full schema minimal.
+788:- [x] `test_simulation_model_collection_freeze_list`: Simulation model collection freeze list — Verify that lists in SimulationModel become immutable after freeze..
+789:- [x] `test_simulation_model_collection_freeze_dict`: Simulation model collection freeze dict — Verify that dicts in SimulationModel become immutable MappingProxy after freeze..
+790:- [x] `test_world_state_freeze_guards`: World state freeze guards — Verify that WorldState prevents mutations after freeze..
+791:- [x] `test_snapshot_deep_purity`: Snapshot deep purity — Verify that Snapshot entities and their nested aspects are recursively frozen..
+792:- [ ] `test_action_proposal_guard_integration`: Action proposal guard integration — Verify the ActionProposalGuard context manager properly freezes the snapshot..
+796:- [x] `test_deep_freeze_nested_collections`: Deep freeze nested collections — Verify that freeze() recursively converts nested collections to immutable types..
+797:- [x] `test_deep_freeze_idempotency`: Deep freeze idempotency — Verify that calling freeze() multiple times is safe..
+801:- [ ] `test_combat_aspect_invariants`: Combat aspect invariants.
+802:- [ ] `test_progression_aspect_invariants`: Progression aspect invariants.
+803:- [ ] `test_freeze_calls_validate`: Freeze calls validate.
+804:- [ ] `test_nested_freeze_invariants`: Nested freeze invariants.
+808:- [x] `test_speed_delay_invariants`: Speed delay invariants — Test that speed_delay never returns NaN or out-of-bounds values..
+809:- [ ] `test_stats_invariants`: Stats invariants — AOA Stabilization: Test CombatAspect invariants (formerly Stats)..
+810:- [x] `test_damage_calc_math`: Damage calc math — Test the core damage calculation logic in isolation..
+811:- [x] `test_recalc_level_consistency`: Recalc level consistency — Ensure level-based stat recalculation remains consistent across aspects..
+812:- [ ] `test_combat_damage_invariants`: Combat damage invariants — Ensure HP reduction application doesn't cause overflow or invalid states..
+816:- [ ] `test_calamity_evolution`: Calamity evolution.
+822:- [ ] `test_intel_capacity_replay_and_graph_export`: Intel capacity replay and graph export — Verify that cognitive metrics survive replay and graph export pipelines..
+823:- [x] `test_intel_capacity_determinism`: Intel capacity determinism — Verify that identical seeds produce identical cognitive profiles and artifacts..
+824:- [ ] `test_intel_capacity_overload_injection`: Intel capacity overload injection — Inject extreme cognitive pressure and verify overload triggering in artifacts..
+825:- [ ] `test_intel_capacity_divergence_scenario`: Intel capacity divergence scenario — Verify that different attributes lead to differing usage artifacts..
+826:- [x] `test_intel_capacity_detour_depth_hardbound`: Intel capacity detour depth hardbound — Verify that detour depth is capped in artifacts even under pressure..
+830:- [x] `test_cognition_api_serialization`: Cognition api serialization — Verify that cognitive metrics are correctly serialized for the API..
+831:- [ ] `test_cognition_inspector_rendering`: Cognition inspector rendering — Verify that the CLI inspector correctly renders cognitive data..
+832:- [ ] `test_cognition_empty_profile`: Cognition empty profile — Verify that inspector handles entities without cognitive profiles gracefully..
+836:- [ ] `test_rng`: Rng.
+837:- [ ] `test_entity`: Entity.
+838:- [ ] `test_guild_intel_to_strategy_visible_pipeline`: Guild intel to strategy visible pipeline — Verify that guild intel produces leads/zones that are visible in API schemas..
+839:- [ ] `test_blacksmith_blocker_resolution_pipeline`: Blacksmith blocker resolution pipeline — Verify that blacksmith constraints produce blockers that are resolved by acquisition..
+843:- [ ] `test_milestone_3_lead_testing_and_persistence`: Milestone 3 lead testing and persistence — Verify that exhausted search marks leads as tested and persists them..
+844:- [x] `test_milestone_4_social_filtering`: Milestone 4 social filtering — Verify that social candidate selection filters hostiles and uses debt..
+845:- [ ] `test_strategic_uncertainty_and_anti_cheating`: Strategic uncertainty and anti cheating — Verify that rumors have lower certainty and vague leads don't 'cheat' with perfect coords..
+849:- [x] `test_source_trust_recalibration`: Source trust recalibration — Verify that a 'False' lead outcome reduces source trust..
+850:- [ ] `test_severe_failure_abandonment_impact`: Severe failure abandonment impact — Verify that a project switch/abandonment reflects in strategic drivers..
+854:- [ ] `test_rng`: Rng.
+855:- [ ] `test_entity`: Entity.
+856:- [x] `test_strategy_observability_consistency`: Strategy observability consistency — Verify that a strategic shift is consistently observable across all surfaces..
+857:- [x] `test_strategic_decision_driver_traceability`: Strategic decision driver traceability — Verify that DecisionDriver records flow from AIBrain to the entity state..
+861:- [ ] `test_blocked_retreat_yield`: Blocked retreat yield — Verify high-priority RETREAT ally forces yield from lower-priority ally..
+862:- [ ] `test_oscillation_suppression`: Oscillation suppression — Verify A-B-A-B movement is suppressed after 2 cycles..
+863:- [ ] `test_reroute_hysteresis`: Reroute hysteresis — Verify minor reroutes are ignored to prevent flip-flopping..
+864:- [ ] `test_safe_sidestepping`: Safe sidestepping — Verify yielding entities do not sidestep closer to danger..
+868:- [ ] `test_recruitment_offer_generation`: Recruitment offer generation — Verify that a recruiter creates a reasonable offer based on greed and risk. [PHASE 4].
+869:- [x] `test_recruitment_offer_evaluation_acceptance`: Recruitment offer evaluation acceptance — Verify candidate accepts a fair offer from a trusted friend. [PHASE 4].
+870:- [ ] `test_recruitment_haggling_counter_offer`: Recruitment haggling counter offer — Verify greedy candidate counter-offers when the payout is too low. [PHASE 4].
+871:- [ ] `test_recruiter_evaluates_counter`: Recruiter evaluates counter — Verify recruiter accepts a counter-offer for an urgent project. [PHASE 4].
+875:- [ ] `test_execution_phase_modifies_proposal_with_aggressive_style`: Execution phase modifies proposal with aggressive style.
+876:- [ ] `test_execution_phase_modifies_proposal_with_evasive_style`: Execution phase modifies proposal with evasive style.
+880:- [ ] `test_ai_boredom_diversification`: Ai boredom diversification — Verify that an entity eventually shifts away from a repetitive goal due to boredom..
+881:- [x] `test_life_stage_priority_shift`: Life stage priority shift — Verify level 1 and level 25 entities have different goal preferences..
+885:- [ ] `test_perception_phase_populates_attention_pool`: Perception phase populates attention pool.
+889:- [x] `test_belief_refresh_captures_apparent_state`: Belief refresh captures apparent state.
+890:- [x] `test_belief_decay_lifecycle`: Belief decay lifecycle.
+891:- [x] `test_threat_estimation_logic`: Threat estimation logic.
+895:- [ ] `test_decide_produces_consistent_result`: Decide produces consistent result.
+896:- [ ] `test_decide_increments_idle_ticks_on_rest`: Decide increments idle ticks on rest.
+897:- [ ] `test_perception_phase_appraisal_sync`: Perception phase appraisal sync.
+901:- [ ] `test_shatter_combo`: Shatter combo.
+905:- [ ] `test_locational_trauma_triggers_dread`: Locational trauma triggers dread — Verify entering a high-trauma region increments DREAD..
+906:- [x] `test_emotional_bias_on_utility`: Emotional bias on utility — Verify DREAD increases FLEE utility and decreases EXPLORE utility..
+907:- [ ] `test_emotional_decay`: Emotional decay — Verify emotions propose negative delta for decay..
+911:- [ ] `test_appraisal_phase_triggers_panic_on_low_hp`: Appraisal phase triggers panic on low hp.
+915:- [x] `test_flanking_bonus`: Flanking bonus.
+916:- [ ] `test_no_flanking_bonus_when_facing_attacker`: No flanking bonus when facing attacker.
+920:- [ ] `test_flow_field_basic_navigation`: Flow field basic navigation.
+921:- [ ] `test_flow_field_respects_terrain_cost`: Flow field respects terrain cost.
+922:- [ ] `test_flow_field_smoothing_normalization`: Flow field smoothing normalization — Verify that get_vector returns a normalized Vector2..
+923:- [ ] `test_flow_field_smoothing`: Flow field smoothing — Verify that get_vector uses neighbor averaging for smoother curves..
+924:- [ ] `test_cache_with_ttl`: Cache with ttl.
+928:- [ ] `test_bilinear_interpolation_basic`: Bilinear interpolation basic.
+929:- [ ] `test_static_target_caching`: Static target caching.
+930:- [ ] `test_moving_target_ttl`: Moving target ttl.
+934:- [x] `test_narrative_memory_trauma_biasing`: Narrative memory trauma biasing.
+935:- [x] `test_narrative_memory_victory_confidence`: Narrative memory victory confidence.
+936:- [ ] `test_region_fatigue_biasing`: Region fatigue biasing.
+937:- [ ] `test_social_appraisal_with_narrative`: Social appraisal with narrative.
+941:- [ ] `test_motive_modifier_biases_explore`: Motive modifier biases explore.
+942:- [ ] `test_motive_modifier_biases_rest`: Motive modifier biases rest.
+943:- [ ] `test_motive_modifier_biases_flee`: Motive modifier biases flee.
+947:- [ ] `test_boredom_modifier_applies_multipliers`: Boredom modifier applies multipliers.
+948:- [ ] `test_life_stage_modifier_early_bracket`: Life stage modifier early bracket.
+949:- [ ] `test_goal_evaluator_uses_modifiers`: Goal evaluator uses modifiers.
+953:- [ ] `test_softmax_distribution`: Softmax distribution.
+954:- [ ] `test_softmax_with_equal_scores`: Softmax with equal scores.
+958:- [ ] `test_perception_tracks_position_history`: Perception tracks position history.
+959:- [ ] `test_appraisal_detects_stuck`: Appraisal detects stuck.
+963:- [ ] `test_validate_building_target`: Validate building target.
+964:- [ ] `test_apply_building_sabotage`: Apply building sabotage.
+968:- [ ] `test_building_sabotage_validation`: Building sabotage validation.
+969:- [ ] `test_building_sabotage_application`: Building sabotage application.
+973:- [ ] `test_wound_infliction_massive_hit`: Wound infliction massive hit — Verify that damage > 25% max HP guarantees a wound..
+974:- [ ] `test_wound_stat_impact`: Wound stat impact — Verify that wounds correctly reduce properties in CombatAspect..
+975:- [ ] `test_scar_permanence`: Scar permanence — Verify that scars are permanent and identifiable..
+979:- [ ] `test_stamina_drain_on_attack`: Stamina drain on attack — Verify that a basic attack drains stamina from the actor..
+980:- [ ] `test_exhaustion_penalty_application`: Exhaustion penalty application — Verify that ActionSystem applies fatigue effect when stamina is low..
+984:- [ ] `test_entity_field_integrity`: Entity field integrity — Ensure Entity model_fields contains only the ID, Kind, and Aspects..
+985:- [ ] `test_entity_property_locking`: Entity property locking — Ensure no forbidden legacy properties have been re-introduced as shims..
+986:- [ ] `test_aspect_model_purity`: Aspect model purity — Ensure aspects themselves stay clean of Cross-Aspect dependencies..
+987:- [ ] `test_mandatory_aspect_naming`: Mandatory aspect naming — Aspects must be named exactly as their type (lowercase)..
+991:- [x] `test_entity_evolution_transformation`: Entity evolution transformation — Verify that a goblin evolves into a warrior/scout when hitting level cap. [AOA REFACTOR].
+992:- [ ] `test_evolution_equipment_refresh`: Evolution equipment refresh — Verify that evolution provides new equipment. [AOA REFACTOR].
+996:- [ ] `test_genetic_seed_init`: Genetic seed init.
+997:- [x] `test_training_uses_aptitudes`: Training uses aptitudes.
+998:- [x] `test_aging_and_death`: Aging and death.
+1002:- [ ] `test_personality_bias_logic`: Personality bias logic.
+1003:- [ ] `test_social_appraisal_logic`: Social appraisal logic.
+1004:- [ ] `test_full_motive_pipeline_integration`: Full motive pipeline integration — Verifies that social and personality biases stack correctly..
+1008:- [x] `test_routine_service_sleep_bias`: Routine service sleep bias.
+1009:- [ ] `test_routine_service_forced_rest_during_off_hours`: Routine service forced rest during off hours.
+1010:- [x] `test_routine_service_hunger_bias`: Routine service hunger bias.
+1014:- [ ] `test_history_registry_serialization`: History registry serialization.
+1015:- [ ] `test_household_record`: Household record.
+1016:- [ ] `test_local_scar_record`: Local scar record.
+1017:- [ ] `test_region_consequence_record`: Region consequence record.
+1018:- [ ] `test_world_state_integration_phase4`: World state integration phase4.
+1022:- [ ] `test_json_encoder_mapping_proxy`: Json encoder mapping proxy.
+1023:- [ ] `test_json_encoder_enum`: Json encoder enum.
+1024:- [ ] `test_serialization_pydantic_model`: Serialization pydantic model.
+1025:- [ ] `test_serialization_frozen_model_with_proxy`: Serialization frozen model with proxy.
+1026:- [ ] `test_serializer_loads`: Serializer loads.
+1030:- [ ] `test_vector2_coercion_during_freeze`: Vector2 coercion during freeze — CRITICAL ARCHITECTURAL VERIFICATION: Ensures that if a field expecting a SimulationModel subclass (like Vector2) contains a raw dict (e.g. from serialization drift), the freeze() logic authoritatively coerces it back to the proper object before applying proxies..
+1034:- [ ] `test_well_rested_effect_application`: Well rested effect application — Verify that the Well-Rested buff correctly affects Max HP and XP mult..
+1035:- [ ] `test_attribute_synergy_xp_mult`: Attribute synergy xp mult — Verify that Wisdom/Intelligence correctly affects XP multiplier..
+1036:- [ ] `test_class_weighted_gear`: Class weighted gear — Verify that item power is correctly weighted for different classes..
+1040:- [ ] `test_eb_stats_scaling`: Eb stats scaling.
+1044:- [ ] `test_grid_bytearray_correctness`: Grid bytearray correctness — Verify Grid correctly stores and retrieves materials using bytearray and cache..
+1045:- [ ] `test_grid_copy_is_not_shared`: Grid copy is not shared — Verify Grid.copy() duplicates the bytearray data..
+1046:- [ ] `test_entity_copy_shallow_vs_refs`: Entity copy shallow vs refs — Verify Entity.copy() is shallow for aspects but produces a new Entity object..
+1047:- [ ] `test_ai_worker_batch_processing_logic`: Ai worker batch processing logic — Verify AIWorkerDaemon correctly handles a batch of tasks..
+1051:- [ ] `test_loot_no_duplication`: Loot no duplication — Verify that items picked up by the system are not duplicated by AI updates..
+1052:- [ ] `test_corpse_loot_convergence`: Corpse loot convergence — Verify that corpse recovery is authoritatively handled by ActionSystem..
+1056:- [x] `test_dynamic_liberate_quest`: Dynamic liberate quest.
+1057:- [ ] `test_history_logging`: History logging.
+1061:- [x] `test_entity_evolution_transformation`: Entity evolution transformation — Verify that a goblin evolves into a warrior/scout when hitting level cap..
+1062:- [ ] `test_evolution_equipment_refresh`: Evolution equipment refresh — Verify that evolution provides new equipment..
+1066:- [ ] `test_grudge_accumulation`: Grudge accumulation.
+1067:- [ ] `test_should_flee_logic`: Should flee logic.
+1068:- [ ] `test_locational_memory_on_death`: Locational memory on death.
+1069:- [ ] `test_frontier_locational_penalty`: Frontier locational penalty.
+1422:- [ ] `test_perception_phase_populates_attention_pool`: attention pool population
+1423:- [x] `test_belief_refresh_captures_apparent_state`: belief refresh from apparent state
+1424:- [x] `test_belief_decay_lifecycle`: belief decay lifecycle
+1425:- [ ] `test_belief_conflict_resolution`: belief conflict handling
+1426:- [ ] `test_belief_sharing_propagation`: belief sharing propagation
+1427:- [x] `test_threat_estimation_logic`: threat estimation logic
+1428:- [ ] `test_perception_phase_appraisal_sync`: appraisal sync
+1429:- [ ] `test_perception_tracks_position_history`: position-history tracking
+1430:- [ ] `test_appraisal_phase_triggers_panic_on_low_hp`: panic trigger via appraisal
+1431:- [ ] `test_appraisal_detects_stuck`: stuck appraisal detection
+1432:- [ ] `test_social_appraisal_logic`: social appraisal logic
+1433:- [ ] `test_social_appraisal_with_narrative`: narrative-informed social appraisal
+1446:- [x] `test_sleep_goal_utility_at_night`: sleep utility at night
+1447:- [ ] `test_rest_to_sleep_transition`: rest-to-sleep transition
+1448:- [x] `test_routine_service_sleep_bias`: sleep bias
+1449:- [ ] `test_routine_service_forced_rest_during_off_hours`: forced off-hours rest
+1450:- [x] `test_routine_service_hunger_bias`: hunger bias
+1451:- [ ] `test_home_visit_leads_to_eating`: eating behavior from routine/home visit
+1452:- [x] `test_inn_visit_leads_to_sleeping`: inn visit leads to sleeping
+1453:- [x] `test_biological_decay_and_forced_sleep`: biological decay and forced sleep
+1454:- [x] `test_sleeping_recovery_cycle`: sleeping recovery cycle
+1455:- [x] `test_hunger_reduces_stability`: hunger consequence
+1456:- [ ] `test_routine_goal_priority`: routine goal priority
+1457:- [ ] `test_routine_disruption_panic`: disruption panic
+1458:- [ ] `test_attack_disruption_suppresses_routines`: attack suppresses routine
+1459:- [ ] `test_routine_priority_archetype_bias`: archetype-based routine bias
+1460:- [ ] `test_life_stage_priority_shift`: life-stage priority shift
+1483:- [ ] `test_ai_boredom_diversification`: boredom diversification effect
+1484:- [ ] `test_boredom_modifier_applies_multipliers`: boredom modifier law
+1485:- [ ] `test_life_stage_modifier_early_bracket`: life-stage modifier law
+1486:- [ ] `test_motive_modifier_biases_explore`: motive modifier explore bias
+1487:- [ ] `test_motive_modifier_biases_rest`: motive modifier rest bias
+1488:- [ ] `test_motive_modifier_biases_flee`: motive modifier flee bias
+1489:- [ ] `test_goal_evaluator_uses_modifiers`: goal evaluator modifier integration
+1490:- [ ] `test_softmax_distribution`: score-to-choice distribution
+1491:- [ ] `test_softmax_with_equal_scores`: equal-score handling
+1504:- [ ] `test_locational_trauma_triggers_dread`: locational trauma -> dread
+1505:- [x] `test_emotional_bias_on_utility`: emotion changes utility
+1506:- [ ] `test_emotional_decay`: emotional decay
+1507:- [x] `test_narrative_memory_trauma_biasing`: trauma memory biasing
+1508:- [x] `test_narrative_memory_victory_confidence`: victory-confidence memory
+1509:- [ ] `test_narrative_memory_logging`: narrative memory logging
+1510:- [ ] `test_social_appraisal_with_narrative`: narrative-informed social appraisal
+1511:- [ ] `test_bravery_modifiers`: bravery modifiers
+1524:- [ ] `test_wound_infliction_massive_hit`: wound infliction
+1525:- [ ] `test_wound_stat_impact`: wound stat penalties
+1526:- [ ] `test_scar_permanence`: scar permanence
+1527:- [ ] `test_scar_decay`: scar decay behavior if preserved
+1528:- [ ] `test_local_scar_record`: local scar record
+1529:- [x] `test_scar_detection`: scar detection
+1530:- [ ] `test_ai_perception_of_scars`: perception of scars
+1531:- [ ] `test_stamina_drain_on_attack`: stamina drain on attack
+1532:- [ ] `test_stamina_decreases_on_move`: stamina drain on move
+1533:- [ ] `test_stamina_decreases_on_harvest`: stamina drain on harvest
+1534:- [ ] `test_skill_use_costs_stamina`: stamina cost on skill use
+1535:- [ ] `test_stamina_regen_resting`: rest stamina regen
+1536:- [ ] `test_stamina_regen_active`: active regen
+1537:- [ ] `test_stamina_regen_capped`: regen cap
+1538:- [ ] `test_exhaustion_penalty_application`: exhaustion penalty
+1539:- [ ] `test_best_ready_skill_skips_insufficient_stamina`: skill gating by stamina
+1552:- [ ] `test_execution_phase_modifies_proposal_with_aggressive_style`: aggressive action style
+1553:- [ ] `test_execution_phase_modifies_proposal_with_evasive_style`: evasive action style
+1554:- [x] `test_flanking_bonus`: flanking bonus
+1555:- [ ] `test_no_flanking_bonus_when_facing_attacker`: facing-sensitive flanking exclusion
+1556:- [ ] `test_shatter_combo`: combo behavior
+1557:- [ ] `test_ranged_hero_kites_when_adjacent`: ranged kiting
+1558:- [ ] `test_ranged_skirmisher_kites_when_close`: ranged skirmish spacing
+1569:- [ ] `test_luck_impacts_loot_modifier`: loot modifier from luck/perception
+1570:- [ ] `test_per_based_hidden_discovery`: hidden discovery from perception
+1571:- [ ] `test_loot_recovery_consistency`: loot recovery consistency
+1572:- [ ] `test_loot_no_duplication`: no duplicated loot
+1573:- [ ] `test_corpse_loot_convergence`: corpse loot convergence
+1574:- [ ] `test_loot_and_respawn`: loot and respawn interaction
+1575:- [ ] `test_loot_tables_exist`: loot table integrity
+1576:- [ ] `test_full_bag_aborts_looting`: abort looting when full
+1577:- [ ] `test_overweight_aborts_looting`: abort looting when overweight
+1578:- [ ] `test_near_weight_limit_penalizes_loot`: weight-limit penalty on looting
+1590:- [x] `test_regional_suppression`: regional suppression
+1591:- [x] `test_strategic_pivot_on_regional_danger`: pivot on regional danger
+1592:- [ ] `test_region_fatigue_biasing`: region fatigue biasing
+1593:- [ ] `test_region_consequence_record`: region consequence record
+1594:- [x] `test_conquered_region_triggers_stronghold`: conquered region -> stronghold consequence
+1595:- [ ] `test_strategic_pipeline_home_threat`: home threat in strategic pipeline
+1596:- [ ] `test_world_consequence_*`: world consequence interpretation coverage where applicable
+1607:- [x] `test_aging_and_death`: aging and death
+1608:- [ ] `test_hero_lifecycle_system_permadeath`: hero permadeath
+1609:- [ ] `test_permadeath_succession_and_heirlooms`: succession and heirlooms
+1610:- [ ] `test_hero_death_creates_scar`: death scar consequences
+1611:- [x] `test_near_death_triggers_survival_consequences`: near-death survival consequences
+1612:- [x] `test_near_death_hardening`: near-death hardening
+1613:- [ ] `test_nemesis_recognition_and_fear_bias`: nemesis recognition and fear bias
+1614:- [ ] `test_nemesis_milestone_creation`: nemesis milestone creation
+1615:- [ ] `test_locational_memory_on_death`: locational memory on death
+1616:- [x] `test_influence_shifts_on_monster_death`: influence shift on monster death
+1617:- [x] `test_influence_shifts_on_hero_death`: influence shift on hero death
+1628:- [ ] `test_accurate_diagnosis_high_wisdom`: accurate diagnosis at high wisdom
+1629:- [ ] `test_misdiagnosis_low_wisdom`: misdiagnosis at low wisdom
+1645:- [x] `test_quest_creation`: quest creation baseline
+1646:- [x] `test_quest_advance`: quest progression increments correctly
+1647:- [x] `test_quest_advance_does_nothing_when_completed`: completed quests do not advance further
+1648:- [x] `test_quest_progress_ratio`: progress-ratio computation is correct
+1649:- [ ] `test_generate_quest_returns_quest`: quest generator returns valid quest object
+1650:- [x] `test_generate_quest_respects_level`: generated quests respect level banding
+1651:- [ ] `test_generate_quest_skips_duplicate`: duplicate quest generation is suppressed
+1652:- [x] `test_generate_quest_gold_scales_with_level`: quest gold reward scales with level
+1653:- [ ] `test_generate_explore_quest`: explore-quest generation works
+1654:- [x] `test_hunt_quest_completion_awards_rewards`: hunt-quest completion awards rewards
+1655:- [ ] `test_explore_quest_completes_near_target`: explore-quest completes near target
+1656:- [ ] `test_gather_quest_advance`: gather-quest progression works
+1657:- [x] `test_dynamic_liberate_quest`: liberate-quest generation/progression works
+1658:- [x] `test_territory_conquest`: territory-conquest quest/world objective behavior is preserved
+1666:- [ ] `test_trait_serialization`: trait serialization is preserved
+1667:- [ ] `test_get_traits`: trait retrieval works
+1668:- [ ] `test_trait_defs_not_empty`: trait definitions exist and are non-empty
+1669:- [ ] `test_with_traits_assigns_traits`: explicit trait assignment works
+1670:- [ ] `test_no_traits_by_default`: no-trait default behavior is preserved
+1671:- [ ] `test_traits_with_different_race_prefix`: race-prefixed trait handling is preserved
+1672:- [ ] `test_empty_traits_returns_zero_bonus`: empty-trait bonus behavior is preserved
+1673:- [ ] `test_single_known_trait`: single-trait bonus behavior is preserved
+1674:- [ ] `test_multiple_traits_sum`: multiple traits stack/sum correctly
+1675:- [ ] `test_unknown_trait_id_ignored`: unknown traits are ignored safely
+1676:- [ ] `test_same_trait_compatible`: trait compatibility logic is preserved
+1677:- [ ] `test_assigns_between_2_and_4_traits`: random/default trait assignment count is preserved
+1678:- [ ] `test_all_assigned_traits_are_valid`: assigned traits are always valid
+1679:- [ ] `test_all_trait_types_have_definitions`: all trait types have definitions
+1680:- [ ] `test_trait_defs_have_all_utility_fields`: trait utility fields are complete
+1681:- [ ] `test_trait_defs_have_all_stat_fields`: trait stat fields are complete
+1689:- [ ] `test_initial_role_derivation`: initial role derivation is preserved
+1690:- [ ] `test_dynamic_role_transition_with_hysteresis`: dynamic role transition with hysteresis is preserved
+1691:- [x] `test_role_bias_influence`: role bias affects decisions as expected
+1692:- [x] `test_role_aware_tactical_biases`: tactical behavior reflects role-aware biasing
+1700:- [x] `test_training_uses_aptitudes`: aptitude-weighted training law is preserved
+1701:- [ ] `test_innate_talents_training`: innate talents affect training as expected
+1702:- [ ] `test_training_does_not_exceed_cap`: training respects hard caps
+1703:- [ ] `test_training_accumulates_fractionally`: fractional training accumulation is preserved
+1704:- [ ] `test_training_updates_stats_on_increment`: stat update on training increment is preserved
+1705:- [ ] `test_specialized_training_soft_caps`: soft-cap behavior for specialized training is preserved
+1706:- [ ] `test_output_derived_stat_ceilings`: derived-stat ceiling logic is preserved
+1707:- [ ] `test_stat_recalculation`: stat recomputation behavior is preserved
+1708:- [ ] `test_attribute_scaling_overlap`: overlapping attribute-scaling law is preserved
+1716:- [ ] `test_place_attachment_instantiation`: place attachment can be instantiated
+1717:- [ ] `test_place_attachment_navigation`: place attachment influences navigation correctly
+1718:- [ ] `test_place_attachment_home_navigation`: home-oriented navigation behavior is preserved
+1719:- [ ] `test_no_home_returns_false`: no-home logic is preserved
+1720:- [ ] `test_home_sets_home_pos`: home position assignment is preserved
+1721:- [ ] `test_entity_copy_includes_home_storage`: home storage is preserved during copy
+1722:- [ ] `test_entity_without_home_storage`: no-home-storage case is preserved
+1723:- [ ] `test_divergent_home_response`: divergent home response behavior is explicit and preserved where intended
+1724:- [ ] `test_home_priority_retreat`: home-priority retreat behavior is preserved
+1725:- [ ] `test_visit_home_upgrade_resolution`: visit-home upgrade resolution is preserved
+1726:- [ ] `test_home_visit_leads_to_eating`: home visit can lead to eating behavior
+1734:- [ ] `test_no_leash_returns_false`: no-leash detection behavior is preserved
+1735:- [ ] `test_mob_beyond_leash_returns_to_camp`: beyond-leash return-to-camp behavior is preserved
+1736:- [ ] `test_mob_within_leash_wanders_normally`: within-leash wandering behavior is preserved
+1737:- [ ] `test_no_leash_mob_wanders_freely`: leash-free wandering behavior is preserved
+1738:- [ ] `test_chase_beyond_leash_abandons`: chase abandonment beyond leash is preserved
+1739:- [ ] `test_chase_within_leash_continues`: chase continuation within leash is preserved
+1740:- [ ] `test_no_leash_mob_hunts_freely`: no-leash hunting freedom is preserved
+1741:- [ ] `test_camp_reinforcements`: camp reinforcement behavior is preserved
+1749:- [ ] `test_flow_field_basic_navigation`: basic flow-field navigation is preserved
+1750:- [ ] `test_flow_field_respects_terrain_cost`: terrain-cost-sensitive navigation is preserved
+1751:- [ ] `test_flow_field_smoothing`: flow-field smoothing is preserved
+1752:- [ ] `test_flow_field_smoothing_normalization`: smoothing normalization behavior is preserved
+1753:- [ ] `test_navigation_uses_flow_field_for_far_town`: far-town navigation uses flow fields
+1754:- [ ] `test_navigation_uses_flow_field_for_world_boss`: world-boss navigation uses flow fields
+1755:- [ ] `test_road_cost_is_low`: road traversal cost law is preserved
+1756:- [ ] `test_prefers_road_over_swamp`: road preference over swamp is preserved
+1757:- [ ] `test_each_biome_has_road_network`: biome road-network presence is preserved
+1758:- [ ] `test_road_connects_locations`: road connectivity behavior is preserved
+1759:- [ ] `test_bridges_placed_over_water`: bridge placement over water is preserved
+1760:- [ ] `test_all_four_biomes_have_features`: biome feature presence is preserved
+1761:- [x] `test_difficulty_sets_level_range`: region difficulty sets level range correctly
+1762:- [ ] `test_gold_scales_with_difficulty`: difficulty-linked gold scaling is preserved
+1763:- [ ] `test_in_region_returns_difficulty`: region difficulty query logic is preserved
+1764:- [ ] `test_difficulty_zones_defined`: difficulty-zone definition is preserved
+1765:- [ ] `test_lava_only_at_high_difficulty`: lava/high-difficulty coupling is preserved
+1766:- [ ] `test_all_terrains_have_names`: terrain naming coverage is preserved
+1767:- [ ] `test_all_terrains_have_race_labels`: terrain race-label coverage is preserved
+1775:- [ ] `test_cooperation_recruitment_logic`: cooperation in recruitment/social choice is preserved
+1776:- [ ] `test_scenario_3_stationary_world_proximity_bonding`: proximity bonding behavior is preserved
+1784:- [ ] `test_full_bag_aborts_looting`: full-bag looting abort is preserved
+1785:- [ ] `test_overweight_aborts_looting`: overweight looting abort is preserved
+1786:- [ ] `test_near_weight_limit_penalizes_loot`: near-limit loot penalty is preserved
+1844:- [ ] `test_default_values`: default entity/build values are preserved
+1845:- [ ] `test_default_values_all_zero`: default zero-valued state is preserved
+1846:- [ ] `test_default_multiplicative_values_are_1`: default multiplicative modifiers equal 1
+1847:- [ ] `test_default_additive_values_are_0`: default additive modifiers equal 0
+1848:- [ ] `test_default_metadata_is_none`: metadata defaults to `None`
+1849:- [ ] `test_none_metadata_preserved`: `None` metadata remains preserved
+1850:- [ ] `test_schema_none_metadata`: schema handles `None` metadata correctly
+1851:- [ ] `test_no_skills_by_default`: entities have no skills by default
+1852:- [ ] `test_no_inventory_by_default`: entities have no inventory by default
+1853:- [ ] `test_no_traits_by_default`: entities have no traits by default
+1854:- [x] `test_entity_starts_with_no_quests`: entities start with no quests
+1855:- [ ] `test_default_core_rate_is_1`: default core subsystem rate is preserved
+1856:- [ ] `test_default_environment_rate_is_2`: default environment subsystem rate is preserved
+1857:- [ ] `test_default_economy_rate_is_5`: default economy subsystem rate is preserved
+1858:- [ ] `test_default_region_id`: default region identifier is preserved
+1859:- [ ] `test_default_empty`: default empty collection/container semantics are preserved
+1860:- [ ] `test_empty_zones_returns_1`: empty-zone fallback behavior is preserved
+1861:- [ ] `test_empty_regions_returns_none`: empty-region lookup returns `None`
+1862:- [ ] `test_select_returns_none_on_empty`: selection on empty inputs returns `None`
+1863:- [x] `test_export_empty_strategy`: exporting empty strategy state is safe
+1871:- [ ] `test_no_changes_skipped`: no-change updates are skipped safely
+1872:- [ ] `test_effects_tick_on_empty_tick`: effects still tick on empty ticks
+1873:- [ ] `test_stamina_regens_on_empty_tick`: stamina regen still occurs on empty ticks
+1874:- [ ] `test_skill_cooldowns_tick_on_empty_tick`: skill cooldowns still tick on empty ticks
+1875:- [x] `test_quest_advance_does_nothing_when_completed`: completed quests ignore further advance calls
+1876:- [ ] `test_unknown_action_does_nothing`: unknown actions are safely ignored
+1877:- [ ] `test_full_hp_no_change`: full-HP state remains unchanged
+1878:- [x] `test_no_region_no_penalty`: no-region case applies no penalty
+1879:- [x] `test_safe_region_no_penalty`: safe-region case applies no penalty
+1880:- [ ] `test_unknown_region_returns_0`: unknown region uses zero/fallback difficulty
+1881:- [ ] `test_no_region_returns_0`: no-region difficulty fallback is preserved
+1889:- [ ] `test_quest_copy`: quest copy preserves quest state
+1890:- [ ] `test_entity_copy_preserves_quests`: entity copy preserves quests
+1891:- [ ] `test_entity_copy_preserves_attributes`: entity copy preserves attributes
+1892:- [ ] `test_entity_copy_preserves_skills`: entity copy preserves skills
+1893:- [ ] `test_entity_copy_includes_home_storage`: entity copy preserves home storage
+1894:- [ ] `test_entity_without_home_storage`: no-home-storage case remains safe
+1895:- [ ] `test_region_copy`: region copy semantics are preserved
+1896:- [ ] `test_attributes_copy`: attribute copy semantics are preserved
+1897:- [ ] `test_copy`: generic model copy semantics are preserved wherever tested
+1898:- [ ] `test_grid_copy_is_not_shared`: copied grids are not aliased
+1899:- [ ] `test_entity_copy_shallow_vs_refs`: copy/ref-sharing behavior is explicit and preserved
+1900:- [ ] `test_latest_preserves_metadata`: latest-version object preserves metadata
+1908:- [ ] `test_serialization_round_trip`: serialization round-trip is preserved
+1909:- [ ] `test_item_serialization`: item serialization is preserved
+1910:- [ ] `test_enchanted_blade_serialization`: enchanted item serialization is preserved
+1911:- [ ] `test_skill_serialization`: skill serialization is preserved
+1912:- [ ] `test_passive_skill_serialization`: passive skill serialization is preserved
+1913:- [ ] `test_class_serialization`: class serialization is preserved
+1914:- [ ] `test_breakthrough_serialization`: breakthrough serialization is preserved
+1915:- [ ] `test_trait_serialization`: trait serialization is preserved
+1916:- [ ] `test_history_registry_serialization`: history registry serialization is preserved
+1917:- [ ] `test_entity_to_full_schema_no_crash`: full schema export does not crash
+1918:- [ ] `test_serialization_pydantic_model`: pydantic serialization assumption is preserved
+1919:- [ ] `test_serialization_frozen_model_with_proxy`: frozen/proxy serialization is preserved
+1920:- [ ] `test_inspection_serialization`: inspection serialization is preserved
+1921:- [x] `test_cognition_api_serialization`: cognition API serialization is preserved
+1929:- [x] `test_entity_deep_copy_isolation`: deep-copy isolation is preserved
+1930:- [x] `test_deep_freeze_nested_collections`: deep freeze handles nested collections
+1931:- [x] `test_deep_freeze_idempotency`: deep freeze is idempotent
+1932:- [ ] `test_freeze_calls_validate`: freeze triggers validation correctly
+1933:- [ ] `test_nested_freeze_invariants`: nested freeze invariants are preserved
+1934:- [x] `test_world_state_freeze_guards`: world-state freeze guards are preserved
+1935:- [x] `test_simulation_model_collection_freeze_list`: list freezing behavior is preserved
+1936:- [x] `test_simulation_model_collection_freeze_dict`: dict freezing behavior is preserved
+1937:- [ ] `test_vector2_coercion_during_freeze`: vector coercion during freeze is preserved
+1938:- [x] `test_non_mutation`: non-mutation guarantee is preserved
+1939:- [ ] `test_build_profile_does_not_mutate_caps`: cognition-profile derivation is non-mutating
+1940:- [ ] `test_build_profile_returns_new_profile_object_each_call`: fresh profile object guarantee is preserved
+1948:- [x] `test_profile_derivation_is_deterministic_for_same_entity_state`: deterministic profile derivation
+1949:- [x] `test_intel_capacity_determinism`: intelligence-capacity determinism is preserved
+1950:- [ ] `test_strategic_replay_graph_equality`: replay graph equality is preserved
+1951:- [ ] `test_same_seed_same_result`: same-seed world/result determinism is preserved
+1952:- [ ] `test_harness_non_determinism_different_seed`: different-seed divergence remains explicit
+1953:- [ ] `test_first_by_id_wins_same_tile`: deterministic same-tile tie-breaking is preserved
+1954:- [ ] `test_diagonal_same_target_one_wins`: deterministic same-target conflict resolution is preserved
+1955:- [ ] `test_non_conflicting_moves_both_succeed`: independent valid moves both survive
+1956:- [ ] `test_equidistant_returns_first`: deterministic first-choice behavior on ties is preserved
+1964:- [ ] `test_item_registry_not_empty`: item registry is non-empty
+1965:- [ ] `test_skill_defs_not_empty`: skill definitions are non-empty
+1966:- [ ] `test_trait_defs_not_empty`: trait definitions are non-empty
+1967:- [ ] `test_registry_not_empty`: generic registry non-empty guarantee is preserved
+1968:- [ ] `test_skill_registry_not_empty`: skill registry is non-empty
+1969:- [ ] `test_all_trait_types_have_definitions`: all trait types have definitions
+1970:- [ ] `test_all_tiers_defined`: all expected tier sets are defined
+1971:- [ ] `test_tier1_empty`: tier-1 empty expectation is preserved where applicable
+1972:- [ ] `test_tier4_defined`: tier-4 definition exists where expected
+1973:- [ ] `test_all_base_classes_defined`: base class definitions exist
+1974:- [ ] `test_breakthroughs_defined`: breakthrough definitions exist
+1975:- [ ] `test_all_types_have_name_templates`: type name-template completeness is preserved
+1976:- [ ] `test_all_terrains_have_names`: all terrains have names
+1977:- [ ] `test_all_terrains_have_race_labels`: all terrains have race labels
+1978:- [ ] `test_all_four_biomes_have_features`: all biomes expose expected features
+1979:- [ ] `test_all_regions_have_territory`: all regions have territory assignment
+1980:- [ ] `test_difficulty_zones_defined`: difficulty zones are defined
+1981:- [ ] `test_loot_tables_exist`: loot tables exist
+1989:- [ ] `test_detour_depth_limit_fallback`: detour depth fallback is preserved
+1990:- [x] `test_worker_pool_fallback_to_inline`: worker pool falls back to inline execution
+1991:- [ ] `test_rabbitmq_disabled_no_crash`: RabbitMQ-disabled mode does not crash
+1992:- [ ] `test_kafka_disabled_no_crash`: Kafka-disabled mode does not crash
+1993:- [ ] `test_redis_disabled_no_crash`: Redis-disabled mode does not crash
+1994:- [x] `test_headless_runner_importable_without_brokers`: headless runner imports safely without brokers
+1995:- [ ] `test_action_system_importable_without_brokers`: action system imports safely without brokers
+1996:- [x] `test_simulation_step_runs_without_brokers`: simulation can step without brokers
+1997:- [ ] `test_regression_runner_survives_no_infrastructure`: regression runner survives no-infrastructure mode
+1998:- [ ] `test_get_unknown`: unknown registry/class lookup is handled safely
+1999:- [ ] `test_unknown_trait_id_ignored`: unknown trait IDs are ignored safely
+2000:- [ ] `test_unknown_type_falls_back_to_physical`: unknown damage/action type falls back safely
+2008:- [ ] `test_hp_clamped_after_recalc`: HP is clamped after recomputation
+2009:- [ ] `test_stamina_cannot_go_below_zero`: stamina lower bound is preserved
+2010:- [ ] `test_stamina_regen_capped`: stamina regeneration upper cap is preserved
+2011:- [ ] `test_training_does_not_exceed_cap`: training hard caps are preserved
+2012:- [x] `test_level_up_respects_cap`: level-up cap compliance is preserved
+2013:- [ ] `test_boss_diff_capped_at_4`: boss difficulty cap is preserved
+2014:- [ ] `test_specialized_training_soft_caps`: soft-cap law is preserved
+2015:- [ ] `test_output_derived_stat_ceilings`: derived-stat ceilings are preserved
+2016:- [ ] `test_physical_no_attributes_defaults_mult_to_1`: missing-attribute multiplier defaults are preserved
+2017:- [ ] `test_magical_no_attributes_defaults_mult_to_1`: magical default multiplier law is preserved
+2018:- [ ] `test_full_bag_returns_zero`: full-bag score/utility floor is preserved
+2019:- [ ] `test_overweight_loot_score_zero`: overweight loot utility floor is preserved
+2027:- [ ] `test_objective_derivation_precedence_active_objective_if_no_blocker`: active-objective precedence is preserved
+2028:- [ ] `test_objective_derivation_precedence_first_unresolved_if_no_active`: unresolved-first precedence is preserved
+2029:- [x] `test_reserved_current_project_slot_is_used_when_current_project_exists`: current-project reserved slot law is preserved
+2030:- [ ] `test_next_step_returns_first_tile`: first-step path semantics are preserved
+2031:- [ ] `test_returns_nearest`: nearest-target selection is preserved
+2032:- [ ] `test_equidistant_returns_first`: stable first-on-tie semantics are preserved
+2033:- [ ] `test_best_ready_skill_returns_highest_power`: best-ready-skill precedence is preserved
+2034:- [ ] `test_best_ready_skill_skips_on_cooldown`: cooldown exclusion precedence is preserved
+2035:- [ ] `test_best_ready_skill_skips_insufficient_stamina`: stamina exclusion precedence is preserved
+2036:- [ ] `test_best_ready_skill_none_when_no_skills`: no-skill fallback is preserved
+2044:- [ ] `test_phase_guard_read_unauthorized`: unauthorized phase read is guarded
+2045:- [ ] `test_no_path_through_walls`: pathfinding guardrail against walls is preserved
+2046:- [ ] `test_next_step_no_path`: no-path fallback is preserved
+2047:- [ ] `test_safe_shot_detection`: safe-shot guard logic is preserved
+2048:- [ ] `test_no_flanking_bonus_when_facing_attacker`: flanking exclusion guardrail is preserved
+2049:- [ ] `test_no_opportunity_attack_when_moving_toward`: OA guardrail is preserved
+2050:- [ ] `test_no_cover_on_open_ground`: cover absence on open ground is preserved
+2051:- [ ] `test_non_equipment_ignored`: non-equipment inputs are ignored safely
+2052:- [ ] `test_cannot_breakthrough_no_class`: breakthrough precondition guard is preserved
+2053:- [ ] `test_no_class`: no-class guard behavior is preserved
+2061:- [ ] `test_inspector_smoke_empty_state`: empty-state inspector safety is preserved
+2062:- [ ] `test_inspector_smoke_corrupted_state`: corrupted-state inspector safety is preserved
+2063:- [ ] `test_inspector_smoke_maximal_state`: maximal-state inspector safety is preserved
+2064:- [ ] `test_render_strategic_domain_empty`: empty strategic-domain rendering is preserved
+2065:- [ ] `test_empty_strategic_state_rendering`: empty strategic rendering is preserved
+2066:- [ ] `test_cognition_inspector_rendering`: cognition inspector rendering is preserved
+2067:- [ ] `test_cognition_empty_profile`: empty cognition-profile rendering is preserved

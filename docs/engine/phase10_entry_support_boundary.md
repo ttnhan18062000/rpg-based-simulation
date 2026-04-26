@@ -3,7 +3,7 @@
 This document defines the honest support status of the system-compatibility surface as of the start of Phase 10.
 
 ## 1. CLI & Entrypoint
-- **Supported**: Basic unified entry gate (`python -m src_v2`).
+- **Supported**: Basic unified entry gate (`python -m src`).
 - **Provisional**: `--seed`, `--ticks`, `--config`.
 - **Unsupported**: `--headless`, `--watchdog`, `--profile`, and full flag-parity with legacy `main.py`.
 

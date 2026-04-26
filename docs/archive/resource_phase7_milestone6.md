@@ -74,8 +74,8 @@ to confirm they align with the completed Phase 7 substrate contracts.
 
 #### [Task possible affected files]
 
-- `src_v2/replay/**`
-- `tests_v2/replay/**`
+- `src/replay/**`
+- `tests/replay/**`
 - `docs/engine/phase7_proof_bundle.md`
 
 #### [Task important notes]
@@ -117,7 +117,7 @@ Collect and index:
 
 - `docs/engine/phase7_proof_bundle.md`
 - `docs/engine/release_proof/phase7/*`
-- `tests_v2/**`
+- `tests/**`
 
 #### [Task important notes]
 

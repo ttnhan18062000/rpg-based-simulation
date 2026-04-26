@@ -24,7 +24,7 @@ This document defines the supported network and system interfaces for the V2 eng
 - **Timeouts**: API server respects standard HTTP timeouts; WebSocket has a 10-second inactivity buffer for queue management.
 
 ## 4. Headless Execution
-- **CLI Mode**: Fully supported via `python3 -m src_v2 cli`.
+- **CLI Mode**: Fully supported via `python3 -m src cli`.
 - **System Service**: V2 is designed to run as a headless system process using `uvicorn` or similar ASGI servers.
 - **Non-Interactive**: All configuration is handled via CLI flags, Environment variables, or YAML files.
 

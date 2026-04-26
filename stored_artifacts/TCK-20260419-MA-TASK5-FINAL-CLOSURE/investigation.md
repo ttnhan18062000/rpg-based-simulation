@@ -2,26 +2,26 @@
 
 ## Audit of Core Files
 
-### `src_v2/engine/kernel.py`
+### `src/engine/kernel.py`
 - [x] Includes explicit 6-phase order comments.
 - [x] Implements strict Truth Isolation for worker state.
 - [x] `_phase_persistence` has a `pass` placeholder, which is compliant for Milestone A (no persistence required for baseline).
 
-### `src_v2/engine/apply.py`
+### `src/engine/apply.py`
 - [x] Includes authoritative mutation boundary law.
 - [x] Hardened against dictionary aliasing.
 
-### `src_v2/engine/scheduler.py`
+### `src/engine/scheduler.py`
 - [x] Explicitly gates `OPPORTUNISTIC` branch.
 - [x] Pins tie-break rules for all work classes.
 
-### `src_v2/engine/checkpoint.py`
+### `src/engine/checkpoint.py`
 - [x] Implements canonical hashing with Truth Isolation.
 - [x] Verified recursive sorting for nested properties.
 
 ## Test Coverage Inventory
 
-Current passing tests in `tests_v2/engine`:
+Current passing tests in `tests/engine`:
 - **Phase Order**: `test_simulation_kernel_contract.py`
 - **Mutation Guards**: `test_no_hidden_mutation.py`
 - **Apply Determinism**: `test_authoritative_apply.py`

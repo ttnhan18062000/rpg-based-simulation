@@ -10,7 +10,7 @@ DONE
 
 ## Request Summary
 
-Milestone 1 Task 2 of Phase 6: Consolidate known Phase 5 divergences, limitations, and unsupported remainder into one authoritative truth package. This ensures that Phase 6 begins with a clear, documented record of how src_v2 differs from legacy src.
+Milestone 1 Task 2 of Phase 6: Consolidate known Phase 5 divergences, limitations, and unsupported remainder into one authoritative truth package. This ensures that Phase 6 begins with a clear, documented record of how src differs from legacy src.
 
 ## Scope
 
@@ -40,7 +40,7 @@ Milestone 1 Task 2 of Phase 6: Consolidate known Phase 5 divergences, limitation
 ## Related Docs
 
 - [resource_phase6_milestone1.md](file:///home/vboxuser/Work/rpg-based-simulation/resource_phase6_milestone1.md)
-- [src_v2_principle.md](file:///home/vboxuser/Work/rpg-based-simulation/src_v2_principle.md)
+- [src_principle.md](file:///home/vboxuser/Work/rpg-based-simulation/src_principle.md)
 - [phase5_truth_package.md](file:///home/vboxuser/Work/rpg-based-simulation/docs/engine/phase5_truth_package.md)
 
 ## Related Stored Artifacts

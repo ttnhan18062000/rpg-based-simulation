@@ -1,7 +1,7 @@
 # Phase 8 Milestone 3: Bounded Tactical Audit
 
 ## 1. Current State of Tactical Decision Paths
-As of Milestone 2 completion, the `src_v2` engine lacks a centralized tactical decision layer. 
+As of Milestone 2 completion, the `src` engine lacks a centralized tactical decision layer. 
 
 - **Target Selection**: Non-existent. Entities have no mechanism to evaluate neighbors or select a hostile target.
 - **Engagement Logic**: Currently "implicit". Entities only act if their `TaskComponent` is manually set to `ENTITY_MOVE` or `ENTITY_ACT`. There is no reactive logic to engage a hostile that enters visibility.

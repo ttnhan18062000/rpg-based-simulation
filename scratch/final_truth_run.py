@@ -2,10 +2,10 @@ import json
 import logging
 import os
 from pathlib import Path
-from src_v2.certification.harness import CertificationHarness
-from src_v2.core.state import AuthoritativeState
-from src_v2.config.profiles import HardwareClass, RuntimeProfile
-from src_v2.certification.scenarios import get_scenario_expectations
+from src.certification.harness import CertificationHarness
+from src.core.state import AuthoritativeState
+from src.config.profiles import HardwareClass, RuntimeProfile
+from src.certification.scenarios import get_scenario_expectations
 
 logging.basicConfig(level=logging.INFO)
 

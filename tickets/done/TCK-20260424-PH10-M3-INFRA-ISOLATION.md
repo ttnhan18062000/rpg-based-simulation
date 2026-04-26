@@ -10,7 +10,7 @@ DONE
 Recover environment flags, broker-disabled mode, and infrastructure-isolation behavior for the V2 engine.
 
 ## Scope
-- [x] Task 1: Audit legacy environment-flag and disabled-mode rows against current `src_v2` infrastructure behavior.
+- [x] Task 1: Audit legacy environment-flag and disabled-mode rows against current `src` infrastructure behavior.
 - [x] Task 2: Recover supported environment-flag behavior and explicit disabled-mode semantics.
 - [x] Task 3: Recover safe import-time and integration-time isolation behavior for optional infrastructure.
 - [x] Task 4: Add direct compatibility tests for environment flags, disabled mode, and infra isolation.

@@ -187,7 +187,7 @@ The project has one exact replay and bounded-persistence contract that can be us
 Make the codebase obey the frozen replay contract by implementing one exact streaming replay path and one exact chunk lifecycle.
 
 [Task implementation comments]
-Streaming replay is implemented in `src_v2/engine/persistence.py`. Replay chunks are rotated every 1000 ticks (default) or when they exceed the byte limit, ensuring that the engine never attempts to serialize a whole-session object graph.
+Streaming replay is implemented in `src/engine/persistence.py`. Replay chunks are rotated every 1000 ticks (default) or when they exceed the byte limit, ensuring that the engine never attempts to serialize a whole-session object graph.
 
 [Task technical implementation]
 Implement or refactor the replay layer so that:
@@ -240,7 +240,7 @@ The engine has one exact streaming replay core that emits bounded replay data in
 Make replay obey bounded-memory and profile-driven persistence rules under normal and pressured conditions.
 
 [Task implementation comments]
-Bounded staging is enforced by `src_v2/engine/replay_buffer.py`. Replay modes (Off, Minimal, Debug, Forensic) are integrated with the `ServiceRegistry`, allowing the `Governor` to shed replay richness when memory pressure is detected.
+Bounded staging is enforced by `src/engine/replay_buffer.py`. Replay modes (Off, Minimal, Debug, Forensic) are integrated with the `ServiceRegistry`, allowing the `Governor` to shed replay richness when memory pressure is detected.
 
 [Task technical implementation]
 Implement exact behavior for:
@@ -302,7 +302,7 @@ Replay staging remains bounded, replay modes behave exactly as declared, and sin
 Lock the Milestone 6 replay rules with deterministic tests so later milestones cannot silently reintroduce in-memory accumulation or uncontrolled persistence cost.
 
 [Task implementation comments]
-Replay contract tests reside in `tests_v2/engine/test_replay_contract.py`. These tests verify that replay emission order is identical across repeated runs and that the in-memory buffer correctly respects its `max_age` and `max_count` limits.
+Replay contract tests reside in `tests/engine/test_replay_contract.py`. These tests verify that replay emission order is identical across repeated runs and that the in-memory buffer correctly respects its `max_age` and `max_count` limits.
 
 [Task technical implementation]
 Add exact tests for:

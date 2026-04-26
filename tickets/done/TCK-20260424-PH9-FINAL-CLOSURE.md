@@ -34,22 +34,22 @@ Finalize the implementation of Phase 9 milestones including biological needs, he
 - Centralized role-based biasing in `RoutineService`.
 
 ## Test Summary
-- `pytest tests_v2/strategic/test_biological_needs.py` (PASS)
-- `pytest tests_v2/progression/test_lifecycle.py` (PASS)
-- `pytest tests_v2/social/test_recruitment.py` (PASS)
-- `pytest tests_v2/world/test_regional_consequences.py` (PASS)
-- `pytest tests_v2/world/test_anchored_world.py` (PASS)
-- `pytest tests_v2/strategic/test_role_biasing.py` (PASS)
+- `pytest tests/strategic/test_biological_needs.py` (PASS)
+- `pytest tests/progression/test_lifecycle.py` (PASS)
+- `pytest tests/social/test_recruitment.py` (PASS)
+- `pytest tests/world/test_regional_consequences.py` (PASS)
+- `pytest tests/world/test_anchored_world.py` (PASS)
+- `pytest tests/strategic/test_role_biasing.py` (PASS)
 
 ## Files Changed
-- `src_v2/core/state.py`
-- `src_v2/core/strategic.py`
-- `src_v2/core/enums.py`
-- `src_v2/engine/apply.py`
-- `src_v2/engine/pipeline.py`
-- `src_v2/systems/social.py`
-- `src_v2/systems/routine.py`
-- `src_v2/systems/strategic.py`
+- `src/core/state.py`
+- `src/core/strategic.py`
+- `src/core/enums.py`
+- `src/engine/apply.py`
+- `src/engine/pipeline.py`
+- `src/systems/social.py`
+- `src/systems/routine.py`
+- `src/systems/strategic.py`
 - `legacy_checklist_part5.md`
 - `legacy_checklist_part4.md`
 

@@ -11,8 +11,8 @@ Consolidate the supported progression surface for Phase 5. This involves definin
 
 ## Scope
 - [ ] Task 1: Define the supported progression-surface matrix (`docs/engine/supported_progression_surface_phase5.md`)
-- [ ] Task 2: Expand certification scenarios (`src_v2/certification/scenarios.py`)
-- [ ] Task 3: Expand benchmark scenarios (`scripts/run_benchmarks.py` and `src_v2/perf/bench_harness.py`)
+- [ ] Task 2: Expand certification scenarios (`src/certification/scenarios.py`)
+- [ ] Task 3: Expand benchmark scenarios (`scripts/run_benchmarks.py` and `src/perf/bench_harness.py`)
 - [ ] Task 4: Integrate progression truth into release gates (`docs/engine/manifest.json`)
 - [ ] Task 5: Consolidate report and proof language
 - [ ] Task 6: Add progression-surface regression guards (parity, determinism, lifecycle)
@@ -34,15 +34,15 @@ Consolidate the supported progression surface for Phase 5. This involves definin
 
 ## Related Docs
 - `resource_phase5_implementation_milestone_5.md`
-- `src_v2_overview.md`
+- `src_overview.md`
 
 ## Related Stored Artifacts
 - None
 
 ## Related Code Areas
-- `src_v2/certification/`
-- `src_v2/perf/`
-- `src_v2/engine/kernel.py`
+- `src/certification/`
+- `src/perf/`
+- `src/engine/kernel.py`
 - `docs/engine/`
 
 ## Assumptions / Open Questions
@@ -54,13 +54,13 @@ Consolidate the supported progression surface for Phase 5. This involves definin
 - Consolidation focuses on "honest claims" and "explicit exclusions".
 
 ## Test Summary
-- 100% Pass in `tests_v2/parity/test_progression_integrity_guards.py`.
+- 100% Pass in `tests/parity/test_progression_integrity_guards.py`.
 - Final Benchmark run complete (~104 TPS integrated loop).
 
 ## Files Changed
 - `docs/engine/supported_progression_surface_phase5.md`
 - `docs/engine/supported_progression_package_phase5.md`
-- `src_v2/certification/scenarios.py`
+- `src/certification/scenarios.py`
 - `scripts/run_benchmarks.py`
 
 ## Completion Summary

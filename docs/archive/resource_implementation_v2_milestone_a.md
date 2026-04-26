@@ -204,10 +204,10 @@ Review and harden the apply implementation so that:
 
 [Task possible affected files]
 
-- `src_v2/engine/apply.py`
-- `src_v2/engine/kernel.py`
-- `src_v2/core/state.py`
-- `src_v2/core/updates.py`
+- `src/engine/apply.py`
+- `src/engine/kernel.py`
+- `src/core/state.py`
+- `src/core/updates.py`
 
 [Task important notes]
 Do not add convenience mutation helpers outside `ApplyPath`.
@@ -224,7 +224,7 @@ Do not keep “temporary” direct modifications in kernel orchestration.
 - [x] Document authoritative mutation boundaries
 
 [Implementation Comment]
-The authoritative apply path was hardened in `src_v2/engine/apply.py`. All state transitions (Entities, Resources, Debt, RNG) are now singular and immutably applied via `apply_generation`.
+The authoritative apply path was hardened in `src/engine/apply.py`. All state transitions (Entities, Resources, Debt, RNG) are now singular and immutably applied via `apply_generation`.
 
 [Task acceptance criteria]
 All authoritative mutation is singular, deterministic, and free of hidden or shortcut mutation paths.
@@ -263,9 +263,9 @@ Complete the scheduler contract implementation so that:
 
 [Task possible affected files]
 
-- `src_v2/engine/scheduler.py`
-- `src_v2/core/work.py`
-- `src_v2/engine/kernel.py`
+- `src/engine/scheduler.py`
+- `src/core/work.py`
+- `src/engine/kernel.py`
 
 [Task important notes]
 Do not redesign work classes here.
@@ -320,8 +320,8 @@ Complete the checkpoint contract and implementation so that:
 
 [Task possible affected files]
 
-- `src_v2/engine/checkpoint.py`
-- `src_v2/core/state.py`
+- `src/engine/checkpoint.py`
+- `src/core/state.py`
 - checkpoint-related test modules
 
 [Task important notes]
@@ -339,7 +339,7 @@ Do not weaken canonicalization by relying on incidental Python container history
 - [x] Document checkpoint purity rules
 
 [Implementation Comment]
-`CanonicalStateHasher` was implemented in `src_v2/engine/checkpoint.py`. It uses compact JSON serialization with sorted keys to generate a SHA-256 hash that is isolated from non-authoritative metrics.
+`CanonicalStateHasher` was implemented in `src/engine/checkpoint.py`. It uses compact JSON serialization with sorted keys to generate a SHA-256 hash that is isolated from non-authoritative metrics.
 
 [Task acceptance criteria]
 Canonical checkpoint generation is fully deterministic, fully authoritative-only, and fully trustworthy as the runtime baseline proof.
@@ -390,12 +390,12 @@ Complete or add exact tests for:
 
 ### Suggested test groups
 
-- `tests_v2/engine/test_minimal_kernel.py`
-- `tests_v2/engine/test_authoritative_apply.py`
-- `tests_v2/engine/test_scheduler_contract.py`
-- `tests_v2/engine/test_deferred_work_debt.py`
-- `tests_v2/engine/test_determinism_suite.py`
-- `tests_v2/engine/test_governance_isolation.py`
+- `tests/engine/test_minimal_kernel.py`
+- `tests/engine/test_authoritative_apply.py`
+- `tests/engine/test_scheduler_contract.py`
+- `tests/engine/test_deferred_work_debt.py`
+- `tests/engine/test_determinism_suite.py`
+- `tests/engine/test_governance_isolation.py`
 
 [Task possible affected files]
 
@@ -418,7 +418,7 @@ This milestone is about finishing the single-process semantic baseline.
 - [x] Make the core-law suite complete and exact
 
 [Implementation Comment]
-Verified with 57 tests in `tests_v2/engine/`. All placeholders were removed, and new suites for checkpoint reproducibility and boundary enforcement were added.
+Verified with 57 tests in `tests/engine/`. All placeholders were removed, and new suites for checkpoint reproducibility and boundary enforcement were added.
 
 [Task acceptance criteria]
 The deterministic single-process runtime is pinned by a complete core-law test suite with no placeholders and no unfinished semantic guarantees.
@@ -450,7 +450,7 @@ Refactor `Kernel` orchestration so that:
 
 [Task possible affected files]
 
-- `src_v2/engine/kernel.py`
+- `src/engine/kernel.py`
 - neighboring orchestration-related modules
 
 [Task important notes]

@@ -7,20 +7,20 @@ from dataclasses import replace
 from pathlib import Path
 from typing import TYPE_CHECKING, List, Dict, Optional
 
-from src_v2.engine.phases import get_authoritative_phases
-from src_v2.core.updates import StateUpdate, EntityUpdate
-from src_v2.core.work import WorkClass
-from src_v2.core.governance import PressureSignals
-from src_v2.core.diagnostic import TraceEvent
+from src.engine.phases import get_authoritative_phases
+from src.core.updates import StateUpdate, EntityUpdate
+from src.core.work import WorkClass
+from src.core.governance import PressureSignals
+from src.core.diagnostic import TraceEvent
 
 if TYPE_CHECKING:
-    from src_v2.config.profiles import RuntimeProfile
-    from src_v2.core.state import AuthoritativeState
-    from src_v2.platform.rng import DeterministicRNG
-    from src_v2.engine.scheduler import DeterministicScheduler
-    from src_v2.engine.governor import ResourceGovernor
-    from src_v2.engine.runtime_status import RuntimeStatus
-    from src_v2.engine.replay_manager import ReplayManager
+    from src.config.profiles import RuntimeProfile
+    from src.core.state import AuthoritativeState
+    from src.platform.rng import DeterministicRNG
+    from src.engine.scheduler import DeterministicScheduler
+    from src.engine.governor import ResourceGovernor
+    from src.engine.runtime_status import RuntimeStatus
+    from src.engine.replay_manager import ReplayManager
 
 logger = logging.getLogger(__name__)
 
@@ -55,7 +55,7 @@ class Kernel:
         flags: Optional[Dict[str, bool]] = None
     ) -> None:
         # M7 Law: Startup Validation
-        from src_v2.config.validator import ProfileValidator
+        from src.config.validator import ProfileValidator
         ProfileValidator.validate_profile(profile)
         if flags:
             ProfileValidator.validate_flags(flags, profile)
@@ -66,12 +66,12 @@ class Kernel:
         self._rng = rng
         self._phases = get_authoritative_phases()
         
-        from src_v2.engine.scheduler import DeterministicScheduler as DefaultScheduler
-        from src_v2.engine.governor import ResourceGovernor as DefaultGovernor
-        from src_v2.engine.runtime_status import RuntimeStatus as DefaultStatus
-        from src_v2.engine.replay_manager import ReplayManager as DefaultReplayManager
-        from src_v2.engine.observability import SignalCollector
-        from src_v2.engine.worker_manager import WorkerManager
+        from src.engine.scheduler import DeterministicScheduler as DefaultScheduler
+        from src.engine.governor import ResourceGovernor as DefaultGovernor
+        from src.engine.runtime_status import RuntimeStatus as DefaultStatus
+        from src.engine.replay_manager import ReplayManager as DefaultReplayManager
+        from src.engine.observability import SignalCollector
+        from src.engine.worker_manager import WorkerManager
         
         self._scheduler = scheduler or DefaultScheduler()
         self._governor = governor or DefaultGovernor()
@@ -159,10 +159,10 @@ class Kernel:
 
     def _phase_collection(self) -> None:
         """3. COLLECTION (Packetization & Concurrent Execution dispatch)"""
-        from src_v2.core.worker_protocol import WorkerPacket, WorkerResult, ResultStatus
-        from src_v2.engine.worker_logic import default_simulation_worker
-        from src_v2.core.protocol_validator import ProtocolValidator
-        from src_v2.core.concurrency_law import ConcurrencyLaw
+        from src.core.worker_protocol import WorkerPacket, WorkerResult, ResultStatus
+        from src.engine.worker_logic import default_simulation_worker
+        from src.core.protocol_validator import ProtocolValidator
+        from src.core.concurrency_law import ConcurrencyLaw
         
         packets: List[WorkerPacket] = []
         self._source_packets = {}
@@ -234,9 +234,9 @@ class Kernel:
 
     def _phase_resolution(self) -> None:
         """4. RESOLUTION (Authoritative Apply)"""
-        from src_v2.core.worker_protocol import ResultStatus
-        from src_v2.core.updates import StateUpdate, EntityUpdate
-        from src_v2.core.protocol_validator import ProtocolViolationError
+        from src.core.worker_protocol import ResultStatus
+        from src.core.updates import StateUpdate, EntityUpdate
+        from src.core.protocol_validator import ProtocolViolationError
         
         # M8 Law: Frozen Commit Key sorting
         # Deterministic precedence: Class Priority > Local Priority > Entity ID
@@ -256,7 +256,7 @@ class Kernel:
 
         update = StateUpdate(entity_updates=entity_updates, periodic_updates={}, work_debt_updates={})
         
-        from src_v2.engine.apply import ApplyPath
+        from src.engine.apply import ApplyPath
         next_tick = self._state.tick + 1
         self._state = ApplyPath.apply_generation(self._state, update, next_tick, self._current_world_time)
 
@@ -298,7 +298,7 @@ class Kernel:
             # to save compute budget, but basic traces are usually kept.
             pass
 
-        from src_v2.engine.checkpoint import CanonicalStateHasher
+        from src.engine.checkpoint import CanonicalStateHasher
         tick_hash = CanonicalStateHasher.get_hash(self._state)
         
         # M6/M10 Law: Uniform work_kind naming in traces
@@ -330,7 +330,7 @@ class Kernel:
 
         # 2. FINAL AUTHORITATIVE HASH
         # Capture this before any non-authoritative flushes potentially fail.
-        from src_v2.engine.checkpoint import CanonicalStateHasher
+        from src.engine.checkpoint import CanonicalStateHasher
         final_hash = CanonicalStateHasher.get_hash(self._state)
         logger.info("Kernel Shutdown: Final Auth Hash: %s", final_hash)
         

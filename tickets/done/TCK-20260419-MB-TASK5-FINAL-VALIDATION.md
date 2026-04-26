@@ -11,7 +11,7 @@ DONE
 Complete the final validation gate for Milestone B. This ensures all laws (Truth, Boundedness, Hysteresis, Elasticity) are verified by a unified closure test suite.
 
 ## Scope
-- [x] Create `tests_v2/engine/test_milestone_b_closure.py`.
+- [x] Create `tests/engine/test_milestone_b_closure.py`.
 - [x] Run the complete V2 Engine test suite.
 - [x] Verify 100% pass rate.
 - [ ] Update `walkthrough.md` with proof of work for Milestone B.
@@ -34,7 +34,7 @@ Complete the final validation gate for Milestone B. This ensures all laws (Truth
 - `resource_handbook.md`
 
 ## Related Code Areas
-- `tests_v2/engine/`
+- `tests/engine/`
 
 ## Assumptions / Open Questions
 - None.

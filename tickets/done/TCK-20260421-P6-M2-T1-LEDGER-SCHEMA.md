@@ -36,7 +36,7 @@ Milestone 2 Task 1 of Phase 6: Define the formal schema for the Authoritative Re
 ## Related Docs
 
 - [resource_phase6_milestone2.md](file:///home/vboxuser/Work/rpg-based-simulation/resource_phase6_milestone2.md)
-- [src_v2_principle.md](file:///home/vboxuser/Work/rpg-based-simulation/src_v2_principle.md)
+- [src_principle.md](file:///home/vboxuser/Work/rpg-based-simulation/src_principle.md)
 
 ## Related Stored Artifacts
 
@@ -57,7 +57,7 @@ Milestone 2 Task 1 of Phase 6: Define the formal schema for the Authoritative Re
 
 ## Test Summary
 
-- Verified link integrity via `pytest tests_v2/docs/test_doc_integrity.py`.
+- Verified link integrity via `pytest tests/docs/test_doc_integrity.py`.
 
 ## Files Changed
 

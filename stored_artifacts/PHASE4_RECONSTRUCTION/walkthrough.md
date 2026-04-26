@@ -24,8 +24,8 @@ Recovered the original RPG-core interaction mechanics, ensuring bit-identical be
 
 All changes have been verified against the hardened substrate and parity test suites.
 
-- **Determinism Suite**: `tests_v2/engine/test_determinism_suite.py` passed with 100% bit-identical equivalence.
-- **Interaction Recovery Suite**: `tests_v2/engine/test_interaction_recovery.py` passed, confirming weight pressure, looting, and town resolution logic.
+- **Determinism Suite**: `tests/engine/test_determinism_suite.py` passed with 100% bit-identical equivalence.
+- **Interaction Recovery Suite**: `tests/engine/test_interaction_recovery.py` passed, confirming weight pressure, looting, and town resolution logic.
 - **Certification Gate**: All release-proof artifacts have been refreshed and confirm 100% compliance.
 
 > [!IMPORTANT]

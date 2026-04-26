@@ -24,12 +24,12 @@ Ensure replay behavior is fully exact and bounded under normal and pressured con
 - Verified `ReplayBuffer` correctly drops oldest events on overflow.
 
 ## Test Summary
-- `tests_v2/engine/test_replay_overflow.py` PASS
-- `tests_v2/engine/test_replay_pressure.py` PASS
+- `tests/engine/test_replay_overflow.py` PASS
+- `tests/engine/test_replay_pressure.py` PASS
 
 ## Files Changed
-- `src_v2/engine/replay_buffer.py`
-- `src_v2/engine/replay_manager.py`
+- `src/engine/replay_buffer.py`
+- `src/engine/replay_manager.py`
 
 ## Completion Summary
 Replay staging hardened and verified under pressure.

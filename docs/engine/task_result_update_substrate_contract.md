@@ -1,6 +1,6 @@
 # Task/Result/Update Substrate Contract
 
-This document defines the authoritative substrate contract for the `src_v2` engine. It formalizes the flow of information from scheduling to authoritative application.
+This document defines the authoritative substrate contract for the `src` engine. It formalizes the flow of information from scheduling to authoritative application.
 
 ## 1. The Three-Stage Authoritative Flow
 
@@ -62,6 +62,6 @@ The `AuthoritativeApplyPipeline` is the ONLY place where updates are transformed
 
 ## 5. Verification Path
 This contract is enforced by:
-- `src_v2/core/protocol_validator.py`: Static validation of batches.
-- `tests_v2/engine/test_worker_integrity.py`: Runtime boundary proofs.
-- `tests_v2/engine/test_authoritative_apply.py`: Refinement/Apply correctness.
+- `src/core/protocol_validator.py`: Static validation of batches.
+- `tests/engine/test_worker_integrity.py`: Runtime boundary proofs.
+- `tests/engine/test_authoritative_apply.py`: Refinement/Apply correctness.

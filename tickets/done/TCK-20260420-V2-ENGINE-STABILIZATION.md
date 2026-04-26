@@ -7,7 +7,7 @@ V2 Resource Engine Test Stabilization and Protocol Alignment
 DONE
 
 ## Request Summary
-Resolve all failing tests in `tests_v2/` following the Milestone C/D architecture hardening.
+Resolve all failing tests in `tests/` following the Milestone C/D architecture hardening.
 
 ## Scope
 - Fix protocol-stripping bug in `WorkerManager`.
@@ -21,10 +21,10 @@ Resolve all failing tests in `tests_v2/` following the Milestone C/D architectur
 - Distributed worker architecture.
 
 ## Acceptance Criteria
-- [x] 100% pass rate in `pytest tests_v2/` (156 items).
+- [x] 100% pass rate in `pytest tests/` (156 items).
 - [x] No `ProtocolViolationError` related to entity_id 0 collisions.
 - [x] All telemetry tests use disaggregated signals.
-- [x] Manifest terminology aligns with `src_v2/certification/models.py`.
+- [x] Manifest terminology aligns with `src/certification/models.py`.
 
 ## Related Tickets
 - None
@@ -36,9 +36,9 @@ Resolve all failing tests in `tests_v2/` following the Milestone C/D architectur
 - None
 
 ## Related Code Areas
-- `src_v2/engine/worker_manager.py`
-- `src_v2/core/worker_protocol.py`
-- `tests_v2/`
+- `src/engine/worker_manager.py`
+- `src/core/worker_protocol.py`
+- `tests/`
 
 ## Assumptions / Open Questions
 - None
@@ -47,20 +47,20 @@ Resolve all failing tests in `tests_v2/` following the Milestone C/D architectur
 - Discovered that `WorkerManager._wrap_work` was manually reconstructing `WorkerResult` without preserving `subsystem_id`, which was causing protocol violations in high-pressure scenarios.
 
 ## Test Summary
-- Ran `pytest tests_v2/`: 156/156 PASSED.
+- Ran `pytest tests/`: 156/156 PASSED.
 
 ## Files Changed
-- `src_v2/engine/worker_manager.py`
-- `tests_v2/engine/test_signal_truth.py`
-- `tests_v2/engine/test_worker_integrity.py`
-- `tests_v2/engine/test_worker_adaptation.py`
-- `tests_v2/engine/test_worker_determinism.py`
-- `tests_v2/engine/test_local_executor.py`
-- `tests_v2/engine/test_milestone_b_closure.py`
-- `tests_v2/engine/test_milestone_d_closure.py`
-- `tests_v2/engine/test_observability_budgets.py`
-- `tests_v2/certification/test_envelope_violations.py`
-- `tests_v2/certification/test_harness_contract.py`
+- `src/engine/worker_manager.py`
+- `tests/engine/test_signal_truth.py`
+- `tests/engine/test_worker_integrity.py`
+- `tests/engine/test_worker_adaptation.py`
+- `tests/engine/test_worker_determinism.py`
+- `tests/engine/test_local_executor.py`
+- `tests/engine/test_milestone_b_closure.py`
+- `tests/engine/test_milestone_d_closure.py`
+- `tests/engine/test_observability_budgets.py`
+- `tests/certification/test_envelope_violations.py`
+- `tests/certification/test_harness_contract.py`
 
 ## Completion Summary
 Full test suite stability restored. The V2 engine is now compliant with all declared Milestone C/D/E laws.

@@ -20,7 +20,7 @@ from pydantic import BaseModel, ConfigDict
 from typing import TYPE_CHECKING, TypeVar, Type
 
 if TYPE_CHECKING:
-    from src.core.models import Entity
+    from src_legacy.core.models import Entity
 
 class Aspect(BaseModel):
     """Base class for all entity functional modules."""

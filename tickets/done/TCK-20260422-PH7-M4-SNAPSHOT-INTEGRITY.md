@@ -32,9 +32,9 @@ Close the snapshot and state-isolation substrate to ensure read surfaces are imm
 - resource_phase7_high_level.md
 
 ## Related Code Areas
-- \`src_v2/core/state.py\`
-- \`src_v2/engine/checkpoint.py\`
-- \`src_v2/core/export.py\`
+- \`src/core/state.py\`
+- \`src/engine/checkpoint.py\`
+- \`src/core/export.py\`
 
 ## Assumptions / Open Questions
 - We will use a combination of dataclass \`replace\` and frozen slots for integrity.

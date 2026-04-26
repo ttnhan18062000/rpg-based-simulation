@@ -5,14 +5,14 @@ Verify the authoritative resource governor and degradation state machine for Mil
 
 ## Test Areas
 
-### 1. Pressure detection and Mode Transition (`tests_v2/engine/test_resource_governor_contract.py`)
+### 1. Pressure detection and Mode Transition (`tests/engine/test_resource_governor_contract.py`)
 - **Goal**: Verify correct escalation / recovery.
 - **Tests**:
   - `test_escalation_path`: Normal -> Constrained -> Degraded -> Survival as signals rise.
   - `test_recovery_hysteresis`: Verify that recovery requires multiple ticks of low pressure.
   - `test_threshold_integrity`: Verify transitions happen at the exact profile limits.
 
-### 2. Degradation Policy (`tests_v2/engine/test_degradation_order.py`)
+### 2. Degradation Policy (`tests/engine/test_degradation_order.py`)
 - **Goal**: Verify that shedding follows the matrix.
 - **Tests**:
   - `test_opportunistic_shedding`: Verify `OPPORTUNISTIC` is dropped first.

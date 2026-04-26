@@ -41,11 +41,11 @@ Recover the authoritative moment-to-moment gameplay layer, including determinist
 - stored_artifacts/TCK-20260422-PH8-STRATEGIC-RECOVERY/
 
 ## Related Code Areas
-- src_v2/engine/tactical.py
-- src_v2/engine/legality.py
-- src_v2/engine/pipeline.py
-- tests_v2/parity/test_combat_parity.py
-- tests_v2/parity/test_tactical_parity.py
+- src/engine/tactical.py
+- src/engine/legality.py
+- src/engine/pipeline.py
+- tests/parity/test_combat_parity.py
+- tests/parity/test_tactical_parity.py
 
 ## Implementation Notes
 - Coerced legacy engagement logic into a deterministic priority chain (Lowest HP > Closest > Lowest ID).
@@ -53,15 +53,15 @@ Recover the authoritative moment-to-moment gameplay layer, including determinist
 - Implemented Manhattan-step LoS checks for performance-stable legality.
 
 ## Test Summary
-- 100% pass on `tests_v2/tactical/test_tactical_behavior.py`.
-- 100% pass on `tests_v2/parity/test_combat_parity.py`.
+- 100% pass on `tests/tactical/test_tactical_behavior.py`.
+- 100% pass on `tests/parity/test_combat_parity.py`.
 - Verified bit-identical damage resolution for fractional armor mitigation.
 
 ## Files Changed
-- src_v2/core/state.py
-- src_v2/engine/legality.py
-- src_v2/engine/pipeline.py
-- src_v2/engine/town_resolution.py
+- src/core/state.py
+- src/engine/legality.py
+- src/engine/pipeline.py
+- src/engine/town_resolution.py
 - docs/engine/divergence_log.md
 - docs/engine/legacy_replacement_ledger.md
 

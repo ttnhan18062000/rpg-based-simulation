@@ -19,5 +19,5 @@ Implement the 'Pressure Law' for inventory weight, matching the original `src` b
 - [ ] Interaction resets on weight-based rejection.
 
 ## Files Changed
-- `src_v2/engine/interaction.py`
-- `src_v2/engine/apply.py`
+- `src/engine/interaction.py`
+- `src/engine/apply.py`

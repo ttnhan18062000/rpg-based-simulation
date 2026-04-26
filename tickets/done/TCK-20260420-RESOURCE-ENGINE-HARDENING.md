@@ -24,7 +24,7 @@ Finalize the hardening of the V2 Resource Engine by replacing simulated lifecycl
 - [x] All lifecycle outcomes derived from real runtime finalization.
 - [x] JSON proofs contain disaggregated `worker_utilization` and `queue_utilization`.
 - [x] `scripts/refresh_proofs.py` generates passing proofs for all manifest targets.
-- [x] `pytest tests_v2/certification/test_final_gate.py` passes 100%.
+- [x] `pytest tests/certification/test_final_gate.py` passes 100%.
 
 ## Related Tickets
 - TCK-20260419-MC-TASK6-FINAL-DOC-PACK.md (Predecessor)
@@ -35,24 +35,24 @@ Finalize the hardening of the V2 Resource Engine by replacing simulated lifecycl
 - docs/engine/manifest.json
 
 ## Related Code Areas
-- src_v2/engine/kernel.py
-- src_v2/engine/executor.py
-- src_v2/certification/harness.py
+- src/engine/kernel.py
+- src/engine/executor.py
+- src/certification/harness.py
 - scripts/refresh_proofs.py
 
 ## Implementation Notes
 - Discovered that single-subsystem debt drain was too slow (4/tick), causing recovery timeouts in certification runs. Parallelized debt across 4 subsystems in the refresh script to satisfy 100-tick recovery limit.
 
 ## Test Summary
-- `pytest tests_v2/certification/test_final_gate.py` (3/3 Passed)
+- `pytest tests/certification/test_final_gate.py` (3/3 Passed)
 - `python3 scripts/refresh_proofs.py` (Successful regeneration of 24 targets)
 
 ## Files Changed
-- src_v2/engine/kernel.py
-- src_v2/engine/executor.py
-- src_v2/engine/observability.py
-- src_v2/engine/worker_manager.py
-- src_v2/certification/harness.py
+- src/engine/kernel.py
+- src/engine/executor.py
+- src/engine/observability.py
+- src/engine/worker_manager.py
+- src/certification/harness.py
 - scripts/refresh_proofs.py
 - resource_handbook.md
 - resource_implementation_v3_updated.md

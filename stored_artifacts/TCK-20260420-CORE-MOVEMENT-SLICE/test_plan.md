@@ -1,11 +1,11 @@
 # Test Plan - TCK-20260420-CORE-MOVEMENT-SLICE
 
 ## Verification Strategy
-- **Differential Parity Test**: Capture movement validation results from the original `src` engine and verify that the `src_v2` engine produces bit-identical outputs for the same scenarios.
+- **Differential Parity Test**: Capture movement validation results from the original `src` engine and verify that the `src` engine produces bit-identical outputs for the same scenarios.
 
 ## Test Harness
-- Oracle: `tests_v2/parity/movement_oracle/results.json` (Captured via `capture_src_movement_oracle.py`)
-- Verifier: `tests_v2/parity/movement_oracle/verify_v2_movement.py`
+- Oracle: `tests/parity/movement_oracle/results.json` (Captured via `capture_src_movement_oracle.py`)
+- Verifier: `tests/parity/movement_oracle/verify_v2_movement.py`
 
 ## Scenarios
 1. **success_move**: Valid cardinal step.

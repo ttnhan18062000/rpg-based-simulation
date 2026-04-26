@@ -7,7 +7,7 @@ V2 Test Suite Hardening & Phase 4 Alignment
 DONE
 
 ## Request Summary
-Verify all `tests_v2` and ensure they pass after the engine reconstruction.
+Verify all `tests` and ensure they pass after the engine reconstruction.
 
 ## Scope
 - Fix regressions in substrate freeze tests due to Phase Law updates.
@@ -16,7 +16,7 @@ Verify all `tests_v2` and ensure they pass after the engine reconstruction.
 - Hardened Final Gate certification test against stale/missing proof bundles.
 
 ## Acceptance Criteria
-- 100% pass rate for `tests_v2` (168 tests).
+- 100% pass rate for `tests` (168 tests).
 - Robust handling of async persistence in tests.
 - Alignment of doc links with real file structure.
 
@@ -30,16 +30,16 @@ Verify all `tests_v2` and ensure they pass after the engine reconstruction.
 - Added `ensure_passing_bundle` fixture to `test_final_gate.py` for runtime stability.
 
 ## Test Summary
-- `pytest tests_v2`: 168 passed.
+- `pytest tests`: 168 passed.
 
 ## Files Changed
-- `tests_v2/engine/test_substrate_freeze_m1.py`
-- `tests_v2/engine/test_milestone_b_closure.py`
-- `tests_v2/engine/test_replay_contract.py`
-- `tests_v2/engine/test_replay_chunk_rotation.py`
-- `tests_v2/engine/test_replay_pressure.py`
-- `tests_v2/certification/test_final_gate.py`
-- `tests_v2/docs/test_doc_integrity.py`
+- `tests/engine/test_substrate_freeze_m1.py`
+- `tests/engine/test_milestone_b_closure.py`
+- `tests/engine/test_replay_contract.py`
+- `tests/engine/test_replay_chunk_rotation.py`
+- `tests/engine/test_replay_pressure.py`
+- `tests/certification/test_final_gate.py`
+- `tests/docs/test_doc_integrity.py`
 - `docs/engine/project_lawbook_m10.md`
 - `docs/engine/manifest.json`
 

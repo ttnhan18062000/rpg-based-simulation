@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This document explains, at a high level, what the V2 epic is, why it exists, what has already been implemented in `src_v2` and `tests_v2`, what the end goal is, and how the work is intended to progress from the start to completion.
+This document explains, at a high level, what the V2 epic is, why it exists, what has already been implemented in `src` and `tests`, what the end goal is, and how the work is intended to progress from the start to completion.
 
 This is the top-level orientation document for the V2 source and test effort.
 
@@ -101,7 +101,7 @@ The engine must emit machine-readable evidence and scoped human-readable reports
 
 The V2 effort is implemented primarily through two parallel structures:
 
-### `src_v2`
+### `src`
 
 This contains the engine runtime itself:
 
@@ -116,7 +116,7 @@ This contains the engine runtime itself:
 - concurrency support,
 - and certification support. :contentReference[oaicite:0]{index=0}
 
-### `tests_v2`
+### `tests`
 
 This contains the law-oriented proof surface for the engine:
 

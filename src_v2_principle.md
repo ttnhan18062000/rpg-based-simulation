@@ -20,7 +20,7 @@ The current V2 runtime already includes profile contracts, authoritative state, 
 
 ## 1.1 Preserve intended behavior, not accidental legacy behavior
 
-When porting logic from the original `src` into `src_v2`, the goal is **not** to preserve every historical quirk automatically.
+When porting logic from the original `src` into `src`, the goal is **not** to preserve every historical quirk automatically.
 
 The goal is to preserve:
 
@@ -46,7 +46,7 @@ The goal is **not** to preserve blindly:
 
 ---
 
-## 1.2 `src` is the behavior oracle; `src_v2` is the new contract implementation
+## 1.2 `src` is the behavior oracle; `src` is the new contract implementation
 
 The original `src` should be treated as:
 
@@ -55,14 +55,14 @@ The original `src` should be treated as:
 - a source of pure data/constants where safe,
 - and a comparison oracle during porting.
 
-It should **not** be treated as the runtime implementation to import wholesale into `src_v2`.
+It should **not** be treated as the runtime implementation to import wholesale into `src`.
 
 ### Validation checklist
 
 - [ ] I used original `src` behavior as a reference where needed.
-- [ ] I did not import old runtime orchestration, authority paths, or lifecycle logic directly into `src_v2`.
+- [ ] I did not import old runtime orchestration, authority paths, or lifecycle logic directly into `src`.
 - [ ] Any reused code from `src` is limited to pure data, pure formulas, or static definitions.
-- [ ] The new implementation is native to `src_v2`’s contracts.
+- [ ] The new implementation is native to `src`’s contracts.
 
 ---
 
@@ -179,11 +179,11 @@ For any rewritten slice, compare old behavior and new behavior under equivalent 
 - same seed where applicable,
 - same scenario,
 - same expected semantic result,
-- explicit comparison between `src` and `src_v2`.
+- explicit comparison between `src` and `src`.
 
 ### Validation checklist
 
-- [ ] I compared original `src` and `src_v2` for the slice where parity is expected.
+- [ ] I compared original `src` and `src` for the slice where parity is expected.
 - [ ] I compared final state or authoritative deltas directly.
 - [ ] I investigated every mismatch.
 - [ ] Every accepted mismatch is documented as an intentional divergence.
@@ -251,11 +251,11 @@ Use when preserving behavior from original `src`.
 
 ## 3.2 Differential tests
 
-Use when porting from `src` to `src_v2`.
+Use when porting from `src` to `src`.
 
 ### Checklist
 
-- [ ] Same scenario is executed against `src` and `src_v2`.
+- [ ] Same scenario is executed against `src` and `src`.
 - [ ] The comparison target is explicit:
   - [ ] final authoritative state
   - [ ] deltas
@@ -323,7 +323,7 @@ Use this section as the default “ready to merge” checklist.
 
 - [ ] I reviewed original `src` behavior for this slice.
 - [ ] I captured expected old behavior before or during implementation.
-- [ ] I compared `src` and `src_v2` where parity matters.
+- [ ] I compared `src` and `src` where parity matters.
 - [ ] I wrote down every intentional divergence.
 
 ## 4.3 V2 authority and determinism
@@ -378,7 +378,7 @@ Use this section as the default “ready to merge” checklist.
 
 ---
 
-# 5. Porting checklist from original `src` into `src_v2`
+# 5. Porting checklist from original `src` into `src`
 
 Use this when moving any RPG-core logic into V2.
 
@@ -404,7 +404,7 @@ Use this when moving any RPG-core logic into V2.
 
 ## 5.4 Rebuild, not blind transplant
 
-- [ ] I implemented the slice natively in `src_v2`.
+- [ ] I implemented the slice natively in `src`.
 - [ ] I did not import old runtime orchestration code directly.
 - [ ] Any reused old code is pure and contract-safe.
 - [ ] The slice fits V2’s authority, lifecycle, and proof model.
@@ -489,7 +489,7 @@ The current V2 certification code and tests already enforce honest allowed failu
 
 # 7. Divergence log requirement
 
-Every time `src_v2` intentionally does not match original `src`, record it.
+Every time `src` intentionally does not match original `src`, record it.
 
 ## Required divergence log fields
 
@@ -565,7 +565,7 @@ A slice is not “officially supported” just because it exists.
 
 It becomes officially supported only when all of these are true:
 
-- [ ] behavior is implemented in `src_v2`
+- [ ] behavior is implemented in `src`
 - [ ] original behavior has been characterized if needed
 - [ ] parity is verified where intended
 - [ ] divergences are documented
@@ -621,7 +621,7 @@ Use this template whenever declaring a new code slice complete.
 
 # 12. Final principle
 
-A rewrite into `src_v2` is complete only when it preserves intended original behavior **and** satisfies the new V2 runtime contract.
+A rewrite into `src` is complete only when it preserves intended original behavior **and** satisfies the new V2 runtime contract.
 
 Not one or the other.
 

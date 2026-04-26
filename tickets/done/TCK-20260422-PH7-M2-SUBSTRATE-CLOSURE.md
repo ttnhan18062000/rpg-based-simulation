@@ -10,8 +10,8 @@ OPEN
 Audit and harden the action/update substrate to ensure all mutation intent is explicit, typed, and emitted through the authoritative substrate model. Eliminate non-deterministic shortcuts and "decorative" bypasses.
 
 ## Scope
-- Audit \`src_v2/engine/worker_manager.py\` for intent emission patterns.
-- Audit \`src_v2/core/updates.py\` for typed coverage of all current gameplay interactions.
+- Audit \`src/engine/worker_manager.py\` for intent emission patterns.
+- Audit \`src/core/updates.py\` for typed coverage of all current gameplay interactions.
 - Migrate remaining durable state from \`properties\` to typed components (e.g., \`NavigationComponent\` or \`StrategicComponent\` expansions).
 - Ensure all worker-side logic emits structured \`EntityUpdate\` objects instead of raw dicts or direct state mutations (which are already prohibited by \`ApplyPath\`, but must be enforced at the worker interface).
 
@@ -30,12 +30,12 @@ Audit and harden the action/update substrate to ensure all mutation intent is ex
 
 ## Related Docs
 - resource_phase7_milestone2.md
-- src_v2_principle.md
+- src_principle.md
 
 ## Related Code Areas
-- \`src_v2/engine/worker_manager.py\`
-- \`src_v2/core/updates.py\`
-- \`src_v2/engine/apply.py\`
+- \`src/engine/worker_manager.py\`
+- \`src/core/updates.py\`
+- \`src/engine/apply.py\`
 
 ## Assumptions / Open Questions
 - None at this stage.

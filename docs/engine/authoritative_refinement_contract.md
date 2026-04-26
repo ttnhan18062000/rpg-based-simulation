@@ -1,6 +1,6 @@
 # Authoritative Refinement Contract
 
-This document defines the **Refinement** stage of the `src_v2` authoritative mutation pipeline.
+This document defines the **Refinement** stage of the `src` authoritative mutation pipeline.
 
 ## 1. Overview
 Refinement is the process of transforming raw `ActionProposal` results into a consolidated, conflict-free `StateUpdate`. It is the "thought-to-authority" boundary where global invariants are enforced.
@@ -25,5 +25,5 @@ To ensure deterministic resolution, systems must be invoked in the following str
 - **Semantic Closure**: While Phase 7 owns the *orchestration* of Strategic modules, it does NOT own their *semantic depth*. These are "Mixed-Surface Dependencies" whose internal logic is owned by later phases.
 
 ## 5. Verification
-- `src_v2/engine/pipeline.py`: Authoritative implementation.
-- `tests_v2/engine/test_phase_order.py`: Order enforcement proof.
+- `src/engine/pipeline.py`: Authoritative implementation.
+- `tests/engine/test_phase_order.py`: Order enforcement proof.

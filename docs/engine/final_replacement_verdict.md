@@ -1,11 +1,11 @@
 # Authoritative Replacement Verdict: Phase 11 Final
 
 ## 1. Official Statement
-The `src_v2` engine is hereby ratified as a stable and honest replacement for the original `src` system within the defined [Final Replacement Boundary](final_replacement_boundary.md).
+The `src` engine is hereby ratified as a stable and honest replacement for the original `src` system within the defined [Final Replacement Boundary](final_replacement_boundary.md).
 
 ## 2. Verdict Justification
 This verdict is based on:
-- **100% Stability**: All `tests_v2/` suites pass (391/391).
+- **100% Stability**: All `tests/` suites pass (391/391).
 - **80.4% Row Coverage**: 152 out of 189 legacy behaviors have been proven-replaced in the [Legacy Replacement Ledger](legacy_replacement_ledger.md).
 - **Hardened Substrate**: Authoritative mutation and cognitive boundedness are enforced by design.
 - **Proof Sufficiency**: Every supported claim is backed by a verified artifact in the [Final Proof Bundle](phase11_proof_bundle.md).

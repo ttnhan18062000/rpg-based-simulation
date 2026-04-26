@@ -64,7 +64,7 @@ This milestone is successful only if it proves that the supported gameplay surfa
 At the end of this milestone:
 
 - a deterministic resource interaction core is officially supported,
-- the slice is ported into `src_v2` natively,
+- the slice is ported into `src` natively,
 - parity and divergence rules are explicit,
 - runtime/lifecycle/certification behavior are covered,
 - and the engine now supports more than one gameplay slice under the V2 contract without drifting into a different game.
@@ -171,7 +171,7 @@ The old engine already tells you what the core loop is.
 - [x] Non-preserved behavior is explicitly noted
 
 #### [Implementation Notes]
-Captured in `tests_v2/parity/interaction_oracle/capture_src_interaction.py`. Found that the legacy engine had a secret 'instant harvest' bug where despite AI channeling, the action system awarded items on tick 1. V2 enforces the intended Channeling Law.
+Captured in `tests/parity/interaction_oracle/capture_src_interaction.py`. Found that the legacy engine had a secret 'instant harvest' bug where despite AI channeling, the action system awarded items on tick 1. V2 enforces the intended Channeling Law.
 
 #### [Task acceptance criteria]
 
@@ -183,7 +183,7 @@ Original resource interaction behavior is captured well enough to support parity
 
 #### [Task Description]
 
-Map resource interaction into native `src_v2` contract terms.
+Map resource interaction into native `src` contract terms.
 
 #### [Task technical implementation]
 
@@ -198,9 +198,9 @@ Define:
 
 #### [Task possible affected files]
 
-- `src_v2/core/state.py`
-- `src_v2/core/work.py`
-- `src_v2/core/updates.py`
+- `src/core/state.py`
+- `src/core/work.py`
+- `src/core/updates.py`
 - resource contract docs
 
 #### [Task important notes]
@@ -218,11 +218,11 @@ Port the old gameplay meaning into V2 contracts.
 - [x] Success/block/abort/no-op semantics are explicit
 
 #### [Implementation Notes]
-Defined `InteractionComponent`, `InventoryComponent`, and `ResourceNodeState` in `src_v2/core/state.py`. Protocol extended in `src_v2/core/updates.py`.
+Defined `InteractionComponent`, `InventoryComponent`, and `ResourceNodeState` in `src/core/state.py`. Protocol extended in `src/core/updates.py`.
 
 #### [Task acceptance criteria]
 
-The resource interaction slice is fully expressed in native `src_v2` contract terms.
+The resource interaction slice is fully expressed in native `src` contract terms.
 
 ---
 
@@ -246,7 +246,7 @@ Implement the local reference path for:
 #### [Task possible affected files]
 
 - resource execution modules
-- `src_v2/engine/kernel.py`
+- `src/engine/kernel.py`
 - local resource tests
 
 #### [Task important notes]
@@ -264,7 +264,7 @@ Concurrent execution cannot define the semantics.
 - [x] Local path is tested directly
 
 #### [Implementation Notes]
-Implemented `InteractionSystem.enforce` in `src_v2/engine/interaction.py`. This system acts as a deterministic filter during the resolution phase, ensuring the Channeling Law is absolute.
+Implemented `InteractionSystem.enforce` in `src/engine/interaction.py`. This system acts as a deterministic filter during the resolution phase, ensuring the Channeling Law is absolute.
 
 #### [Task acceptance criteria]
 
@@ -292,7 +292,7 @@ Keep support scope narrow and explicit.
 
 #### [Task possible affected files]
 
-- `src_v2/engine/worker_manager.py`
+- `src/engine/worker_manager.py`
 - resource worker modules
 - packet/result validation tests
 - concurrency docs
@@ -405,7 +405,7 @@ It is done because it is proven.
 - [x] Inventory/resource semantics are directly pinned by tests
 
 #### [Implementation Notes]
-Unit tests in `tests_v2/unit/test_interaction_system.py` pin channeling success, movement interruption, and inventory pressure.
+Unit tests in `tests/unit/test_interaction_system.py` pin channeling success, movement interruption, and inventory pressure.
 
 #### [Task acceptance criteria]
 

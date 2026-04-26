@@ -19,8 +19,8 @@
 - Territory ownership.
 
 ## Findings
-- The `src_v2` engine is architecturally isolated via the `V2EngineManager`.
-- Most unsupported logic is already "No-Op" or explicitly bypassed in `src_v2`.
-- The transition to "operational default" requires ensuring all CLI/API entrypoints point to `src_v2` by default in Milestone 2.
+- The `src` engine is architecturally isolated via the `V2EngineManager`.
+- Most unsupported logic is already "No-Op" or explicitly bypassed in `src`.
+- The transition to "operational default" requires ensuring all CLI/API entrypoints point to `src` by default in Milestone 2.
 Supported Rows: 145
 Constrained Rows: 39

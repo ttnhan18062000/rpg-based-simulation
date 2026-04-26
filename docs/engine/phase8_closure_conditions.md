@@ -24,7 +24,7 @@ This document defines the exact finish lines for every Phase 8 row.
 
 ### LEG-RPG-075, 076, 077: Spatial Tactics (Cover, Chokepoint, Flanking)
 - **Condition**: Local decision logic must recognize and utilize spatial features (terrain markers) to optimize survival or lethality.
-- **Verification**: Pathfinding/positioning audits in `tests_v2/scenarios/`.
+- **Verification**: Pathfinding/positioning audits in `tests/scenarios/`.
 
 ## World Interaction
 

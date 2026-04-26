@@ -14,10 +14,10 @@ Execute Task 2 of Phase 7 Milestone 2: Complete the authoritative action proposa
 
 ## Scope
 
-- [ ] Create `src_v2/core/actions.py`.
+- [ ] Create `src/core/actions.py`.
 - [ ] Define `ActionProposal` as a frozen dataclass with slots.
 - [ ] Include fields: `actor_id`, `verb` (ActionType), `target`, `reason`, and `updates`.
-- [ ] Define V2 `ActionType` enum in `src_v2/core/enums.py`.
+- [ ] Define V2 `ActionType` enum in `src/core/enums.py`.
 - [ ] Ensure the model is deterministic and serialization-safe.
 - [ ] Establish initial linkage between `ActionProposal` and `EntityUpdate`.
 
@@ -28,8 +28,8 @@ Execute Task 2 of Phase 7 Milestone 2: Complete the authoritative action proposa
 
 ## Acceptance Criteria
 
-- [ ] `src_v2/core/actions.py` exists with a strictly typed `ActionProposal` model.
-- [ ] `ActionType` enum is defined in `src_v2/core/enums.py`.
+- [ ] `src/core/actions.py` exists with a strictly typed `ActionProposal` model.
+- [ ] `ActionType` enum is defined in `src/core/enums.py`.
 - [ ] The proposal model does not contain hidden mutation payloads.
 
 ## Related Tickets
@@ -47,8 +47,8 @@ Execute Task 2 of Phase 7 Milestone 2: Complete the authoritative action proposa
 
 ## Related Code Areas
 
-- `src_v2/core/`
-- `src_v2/actions/`
+- `src/core/`
+- `src/actions/`
 
 ## Assumptions / Open Questions
 

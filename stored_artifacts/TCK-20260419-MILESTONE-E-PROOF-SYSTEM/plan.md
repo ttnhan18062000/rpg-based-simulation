@@ -28,5 +28,5 @@ Transform the certification harness into a fully trustworthy, evidence-backed pr
 - Implement `test_final_gate.py` to verify bundle completeness, freshness, and SHA matches.
 
 ## Verification
-- Run all tests in `tests_v2/docs/` and `tests_v2/certification/`.
+- Run all tests in `tests/docs/` and `tests/certification/`.
 - Verify report generation in `reports/release_proof/`.

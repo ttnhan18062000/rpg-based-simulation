@@ -7,12 +7,12 @@
 - This prevents direct assignment like `state.tick = 10`.
 - However, members like `entities: Dict[int, EntityState]` and `properties: Dict[str, Any]` are NOT frozen. They can be mutated via `state.entities[id] = ...` or `ent.properties["key"] = val`.
 
-### Apply Path (`src_v2/engine/apply.py`)
+### Apply Path (`src/engine/apply.py`)
 - `ApplyPath.apply_generation` correctly creates NEW generations using `replace`.
 - It uses `dict(prior_state.entities)` to clone the top-level collection.
 - Issue: Nested `properties` dict in `EntityState` is cloned using `dict(entity.properties)` in `_apply_entity_update`. This is a shallow copy. If `properties` contains nested dicts/lists, they are shared across generations.
 
-### Kernel Leaks (`src_v2/engine/kernel.py`)
+### Kernel Leaks (`src/engine/kernel.py`)
 - `_phase_collection` passes the `subject` (EntityState) to `WorkerPacket`.
 - The `subject` is a reference to an object in the current tick's `AuthoritativeState`.
 - If a worker (synchronous or asynchronous) mutates `subject.properties`, it affects the authoritative state immediately, which violates the "Resolution" phase boundary (Phase 4).

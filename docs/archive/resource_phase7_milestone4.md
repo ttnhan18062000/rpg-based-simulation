@@ -72,10 +72,10 @@ Review:
 
 #### [Task possible affected files]
 
-- `src_v2/core/state/**`
-- `src_v2/replay/**`
-- `src_v2/serialization/**`
-- `tests_v2/**`
+- `src/core/state/**`
+- `src/replay/**`
+- `src/serialization/**`
+- `tests/**`
 - `docs/engine/replacement_ledger.md`
 
 #### [Task important notes]
@@ -114,9 +114,9 @@ This task should:
 
 #### [Task possible affected files]
 
-- `src_v2/core/state/**`
-- `src_v2/core/models/**`
-- `tests_v2/core/test_snapshot_immutability.py`
+- `src/core/state/**`
+- `src/core/models/**`
+- `tests/core/test_snapshot_immutability.py`
 
 #### [Task important notes]
 
@@ -154,9 +154,9 @@ This task should:
 
 #### [Task possible affected files]
 
-- `src_v2/core/state/**`
-- `src_v2/core/models/**`
-- `tests_v2/core/test_snapshot_deep_isolation.py`
+- `src/core/state/**`
+- `src/core/models/**`
+- `tests/core/test_snapshot_deep_isolation.py`
 
 #### [Task important notes]
 
@@ -198,9 +198,9 @@ This task should:
 
 #### [Task possible affected files]
 
-- `src_v2/serialization/**`
-- `src_v2/replay/**`
-- `tests_v2/core/test_state_serialization_determinism.py`
+- `src/serialization/**`
+- `src/replay/**`
+- `tests/core/test_state_serialization_determinism.py`
 
 #### [Task important notes]
 
@@ -239,10 +239,10 @@ Add focused tests for:
 
 #### [Task possible affected files]
 
-- `tests_v2/core/test_snapshot_immutability.py`
-- `tests_v2/core/test_snapshot_deep_isolation.py`
-- `tests_v2/core/test_state_serialization_determinism.py`
-- `tests_v2/replay/test_authoritative_export_shape.py`
+- `tests/core/test_snapshot_immutability.py`
+- `tests/core/test_snapshot_deep_isolation.py`
+- `tests/core/test_state_serialization_determinism.py`
+- `tests/replay/test_authoritative_export_shape.py`
 
 #### [Task important notes]
 

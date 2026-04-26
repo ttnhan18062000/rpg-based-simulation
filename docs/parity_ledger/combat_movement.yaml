@@ -1,0 +1,2025 @@
+- id: COMB-001
+  text: Manhattan distance is the shared spatial metric for movement and combat range
+    where claimed.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: '`src_v2/engine/legality.py` (`get_manhattan_dist`)'
+  proof_type: parity
+  test_path: '`tests_v2/parity/test_movement_parity.py`'
+  divergence_note: null
+  support_boundary: null
+- id: COMB-002
+  text: Cardinal/tile movement and occupancy legality are explicit.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: '`src_v2/engine/movement.py` (`resolve_move` cardinal clamping), `src_v2/engine/legality.py`
+    (`verify_occupancy`)'
+  proof_type: parity
+  test_path: '`tests_v2/parity/test_movement_parity.py`'
+  divergence_note: null
+  support_boundary: null
+- id: COMB-003
+  text: Occupied-tile movement is rejected or redirected rather than silently overlapped.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: '`src_v2/engine/movement.py` (rejection via `NavigationUpdate`), `src_v2/engine/pipeline.py`
+    (`_resolve_occupancy_conflicts`)'
+  proof_type: parity
+  test_path: '`tests_v2/test_occupancy_conflicts.py`'
+  divergence_note: null
+  support_boundary: null
+- id: COMB-004
+  text: Melee legality depends on adjacency/engagement rules, not raw damage stats.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: '`src_v2/engine/legality.py` (`is_adjacent`, `get_engaged_hostiles`)'
+  proof_type: parity
+  test_path: '`tests_v2/parity/test_combat_parity.py`'
+  divergence_note: null
+  support_boundary: null
+- id: COMB-005
+  text: Ranged legality depends on range and line-of-sight rules.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: '`src_v2/engine/legality.py` (`verify_attack_legality` checks range
+    and `has_line_of_sight`)'
+  proof_type: parity
+  test_path: '`tests_v2/parity/test_combat_parity.py`'
+  divergence_note: null
+  support_boundary: null
+- id: COMB-006
+  text: AoE legality is split into impact-center legality and radius application.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-007
+  text: World-time progression is distinct from readiness-based action cadence.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-008
+  text: Quiet ticks still advance passive world consequences.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: '`src_v2/engine/apply.py` (`ApplyPath.apply_generation` gains readiness,
+    ages entities, increases hunger/sleep debt, applies hazard damage)'
+  proof_type: parity
+  test_path: '`tests_v2/test_substrate_hardening.py`'
+  divergence_note: null
+  support_boundary: null
+- id: COMB-009
+  text: Disengagement, pursuit, target stickiness, and opportunity consequences are
+    explicit rules.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: '`src_v2/engine/movement.py` (triggers `resolve_opportunity_attack`),
+    `src_v2/engine/tactical.py` (stickiness logic)'
+  proof_type: parity
+  test_path: '`tests_v2/parity/test_oa_parity.py`, `tests_v2/parity/test_tactical_parity.py`'
+  divergence_note: null
+  support_boundary: null
+- id: COMB-010
+  text: Anti-stalemate logic handles repeated chase/kite/step-back loops.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: '`src_v2/engine/tactical.py` (uses `stale_ticks` to trigger `STALEMATE_BREAK`)'
+  proof_type: parity
+  test_path: '`tests_v2/parity/test_tactical_parity.py`'
+  divergence_note: null
+  support_boundary: null
+- id: COMB-011
+  text: Movement intentions exist as semantic modes (pursue, retreat, hold, reposition,
+    intercept, guard, regroup).
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-012
+  text: Congestion is handled through waiting/yielding/sidestepping/rerouting before
+    weakening occupancy.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-013
+  text: Tactical choice is a bounded choice among legal actions, not a geometry exploit.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: '`src_v2/engine/tactical.py` (bounded by visibility and `evaluate_entity_intent`),
+    `src_v2/engine/pipeline.py` (post-refinement legality checks)'
+  proof_type: parity
+  test_path: '`tests_v2/parity/test_tactical_parity.py`'
+  divergence_note: null
+  support_boundary: null
+- id: COMB-014
+  text: "`test_reactive_cover_seeking`: Reactive cover seeking \u2014 Verify that\
+    \ actor seeks cover only when a ranged threat is visible.."
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-015
+  text: "`test_chokepoint_holding`: Chokepoint holding \u2014 Verify that actor identifies\
+    \ and holds a 1-tile gap.."
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-016
+  text: "`test_cardinal_opposite_bracketing`: Cardinal opposite bracketing \u2014\
+    \ Verify that two allies bracket a target from opposite sides.."
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-017
+  text: "`test_tactical_mode_integration_handler`: Tactical mode integration handler\
+    \ \u2014 Verify that CombatHandler respects the tactical target_pos.."
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-018
+  text: '`test_stalemate_detection`: Stalemate detection.'
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-019
+  text: '`test_stalemate_loop_breaker_boosts_flee`: Stalemate loop breaker boosts
+    flee.'
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-020
+  text: "`test_stalemate_detection_and_breaker`: Stalemate detection and breaker \u2014\
+    \ Verify that 3 cycles of rhythmic oscillation trigger the stalemate breaker.."
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-021
+  text: "`test_high_ground_bonus`: High ground bonus \u2014 Verify High Ground bonus\
+    \ applies when attacker is on MOUNTAIN and defender is on FLOOR.."
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-022
+  text: "`test_flanking_bonus`: Flanking bonus \u2014 Verify Flanking bonus applies\
+    \ when defender is bracketed north/south.."
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-023
+  text: "`test_moved_penalty`: Moved penalty \u2014 Verify Moved Recently penalty\
+    \ applies when attacker has moved this tick.."
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-024
+  text: "`test_ranged_cover_bonus`: Ranged cover bonus \u2014 Verify Cover bonus applies\
+    \ against ranged attacks when adjacent to WALL.."
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-025
+  text: "`test_manhattan_distance`: Manhattan distance \u2014 Verify Manhattan distance\
+    \ calculation.."
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-026
+  text: "`test_orthogonal_adjacency`: Orthogonal adjacency \u2014 Verify that only\
+    \ orthogonal tiles are adjacent.."
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-027
+  text: "`test_check_range`: Check range \u2014 Verify range enforcement.."
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-028
+  text: "`test_check_occupancy`: Check occupancy \u2014 Verify 1-unit-per-tile occupancy\
+    \ rule.."
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-029
+  text: "`test_aoe_legality`: Aoe legality \u2014 Verify AoE impact constraints.."
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-030
+  text: "`test_aoe_splash_radius`: Aoe splash radius \u2014 Verify entities affected\
+    \ by splash radius.."
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-031
+  text: "`test_get_occupant_id`: Get occupant id \u2014 Verify occupant lookup.."
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-032
+  text: "`test_check_targeting_legality`: Check targeting legality \u2014 Verify consolidated\
+    \ targeting rules (Range + LOS).."
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-033
+  text: '`test_engagement_detection`: Engagement detection.'
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-034
+  text: '`test_engagement_clears_on_separation`: Engagement clears on separation.'
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-035
+  text: '`test_engagement_respects_hostility`: Engagement respects hostility.'
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-036
+  text: '`test_oa_triggered_on_disengagement`: Oa triggered on disengagement.'
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-037
+  text: '`test_oa_not_triggered_if_staying_engaged_with_same_attacker`: Oa not triggered
+    if staying engaged with same attacker.'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-038
+  text: '`test_target_stickiness_bias`: Target stickiness bias.'
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-039
+  text: "`test_passive_progression_on_quiet_tick`: Passive progression on quiet tick\
+    \ \u2014 Verify that biological decay and lifecycle systems run even if entity\
+    \ doesn't act.."
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-040
+  text: "`test_hero_lifecycle_on_quiet_tick`: Hero lifecycle on quiet tick \u2014\
+    \ Verify that HeroLifecycle (e.g. proximity bonding) runs even if no entity acts.."
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-041
+  text: '`test_vanguard_biases`: Vanguard biases.'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-042
+  text: '`test_support_biases`: Support biases.'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-043
+  text: '`test_protector_biases`: Protector biases.'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-044
+  text: '`test_skirmish_boosts_move_for_ranged`: Skirmish boosts move for ranged.'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-045
+  text: '`test_skirmish_does_not_boost_melee`: Skirmish does not boost melee.'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-046
+  text: '`test_movement_model_basic_path`: Movement model basic path.'
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-047
+  text: '`test_movement_model_yielding_priority`: Movement model yielding priority.'
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-048
+  text: '`test_movement_model_stuck_threshold`: Movement model stuck threshold.'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-049
+  text: '`test_kill_reward_emission_in_apply`: Kill reward emission in apply.'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-050
+  text: '`test_no_reward_on_non_lethal_hit`: No reward on non lethal hit.'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-051
+  text: "`test_blocked_retreat_yield`: Blocked retreat yield \u2014 Verify high-priority\
+    \ RETREAT ally forces yield from lower-priority ally.."
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-052
+  text: "`test_oscillation_suppression`: Oscillation suppression \u2014 Verify A-B-A-B\
+    \ movement is suppressed after 2 cycles.."
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-053
+  text: "`test_reroute_hysteresis`: Reroute hysteresis \u2014 Verify minor reroutes\
+    \ are ignored to prevent flip-flopping.."
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-054
+  text: "`test_safe_sidestepping`: Safe sidestepping \u2014 Verify yielding entities\
+    \ do not sidestep closer to danger.."
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-055
+  text: '`test_flanking_bonus`: Flanking bonus.'
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-056
+  text: '`test_no_flanking_bonus_when_facing_attacker`: No flanking bonus when facing
+    attacker.'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-057
+  text: '`test_flow_field_basic_navigation`: Flow field basic navigation.'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-058
+  text: '`test_flow_field_respects_terrain_cost`: Flow field respects terrain cost.'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-059
+  text: "`test_flow_field_smoothing_normalization`: Flow field smoothing normalization\
+    \ \u2014 Verify that get_vector returns a normalized Vector2.."
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-060
+  text: "`test_flow_field_smoothing`: Flow field smoothing \u2014 Verify that get_vector\
+    \ uses neighbor averaging for smoother curves.."
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-061
+  text: '`test_cache_with_ttl`: Cache with ttl.'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-062
+  text: '`test_bilinear_interpolation_basic`: Bilinear interpolation basic.'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-063
+  text: '`test_static_target_caching`: Static target caching.'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-064
+  text: '`test_moving_target_ttl`: Moving target ttl.'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-065
+  text: '`test_perception_tracks_position_history`: Perception tracks position history.'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-066
+  text: '`test_appraisal_detects_stuck`: Appraisal detects stuck.'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-067
+  text: '`test_validate_building_target`: Validate building target.'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-068
+  text: '`test_apply_building_sabotage`: Apply building sabotage.'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-069
+  text: '`test_building_sabotage_validation`: Building sabotage validation.'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-070
+  text: '`test_building_sabotage_application`: Building sabotage application.'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-071
+  text: "`test_wound_infliction_massive_hit`: Wound infliction massive hit \u2014\
+    \ Verify that damage > 25% max HP guarantees a wound.."
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-072
+  text: "`test_wound_stat_impact`: Wound stat impact \u2014 Verify that wounds correctly\
+    \ reduce properties in CombatAspect.."
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-073
+  text: "`test_scar_permanence`: Scar permanence \u2014 Verify that scars are permanent\
+    \ and identifiable.."
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-074
+  text: "`test_stamina_drain_on_attack`: Stamina drain on attack \u2014 Verify that\
+    \ a basic attack drains stamina from the actor.."
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-075
+  text: "`test_exhaustion_penalty_application`: Exhaustion penalty application \u2014\
+    \ Verify that ActionSystem applies fatigue effect when stamina is low.."
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-076
+  text: "`test_entity_field_integrity`: Entity field integrity \u2014 Ensure Entity\
+    \ model_fields contains only the ID, Kind, and Aspects.."
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-077
+  text: "`test_entity_property_locking`: Entity property locking \u2014 Ensure no\
+    \ forbidden legacy properties have been re-introduced as shims.."
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-078
+  text: "`test_aspect_model_purity`: Aspect model purity \u2014 Ensure aspects themselves\
+    \ stay clean of Cross-Aspect dependencies.."
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-079
+  text: "`test_mandatory_aspect_naming`: Mandatory aspect naming \u2014 Aspects must\
+    \ be named exactly as their type (lowercase).."
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-080
+  text: "`test_vector2_coercion_during_freeze`: Vector2 coercion during freeze \u2014\
+    \ CRITICAL ARCHITECTURAL VERIFICATION: Ensures that if a field expecting a SimulationModel\
+    \ subclass (like Vector2) contains a raw dict (e.g. from serialization drift),\
+    \ the freeze() logic authoritatively coerces it back to the proper object before\
+    \ applying proxies.."
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-081
+  text: "`test_well_rested_effect_application`: Well rested effect application \u2014\
+    \ Verify that the Well-Rested buff correctly affects Max HP and XP mult.."
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-082
+  text: "`test_attribute_synergy_xp_mult`: Attribute synergy xp mult \u2014 Verify\
+    \ that Wisdom/Intelligence correctly affects XP multiplier.."
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-083
+  text: "`test_class_weighted_gear`: Class weighted gear \u2014 Verify that item power\
+    \ is correctly weighted for different classes.."
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-084
+  text: '`test_eb_stats_scaling`: Eb stats scaling.'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-085
+  text: "`test_grid_bytearray_correctness`: Grid bytearray correctness \u2014 Verify\
+    \ Grid correctly stores and retrieves materials using bytearray and cache.."
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-086
+  text: "`test_grid_copy_is_not_shared`: Grid copy is not shared \u2014 Verify Grid.copy()\
+    \ duplicates the bytearray data.."
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-087
+  text: "`test_entity_copy_shallow_vs_refs`: Entity copy shallow vs refs \u2014 Verify\
+    \ Entity.copy() is shallow for aspects but produces a new Entity object.."
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-088
+  text: "`test_ai_worker_batch_processing_logic`: Ai worker batch processing logic\
+    \ \u2014 Verify AIWorkerDaemon correctly handles a batch of tasks.."
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-089
+  text: "`test_loot_no_duplication`: Loot no duplication \u2014 Verify that items\
+    \ picked up by the system are not duplicated by AI updates.."
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-090
+  text: "`test_corpse_loot_convergence`: Corpse loot convergence \u2014 Verify that\
+    \ corpse recovery is authoritatively handled by ActionSystem.."
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-091
+  text: '`test_dynamic_liberate_quest`: Dynamic liberate quest.'
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-092
+  text: '`test_history_logging`: History logging.'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-093
+  text: '`test_ai_boredom_diversification`: boredom diversification effect'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-094
+  text: '`test_boredom_modifier_applies_multipliers`: boredom modifier law'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-095
+  text: '`test_life_stage_modifier_early_bracket`: life-stage modifier law'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-096
+  text: '`test_motive_modifier_biases_explore`: motive modifier explore bias'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-097
+  text: '`test_motive_modifier_biases_rest`: motive modifier rest bias'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-098
+  text: '`test_motive_modifier_biases_flee`: motive modifier flee bias'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-099
+  text: '`test_goal_evaluator_uses_modifiers`: goal evaluator modifier integration'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-100
+  text: '`test_softmax_distribution`: score-to-choice distribution'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-101
+  text: '`test_softmax_with_equal_scores`: equal-score handling'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-102
+  text: '`test_wound_infliction_massive_hit`: wound infliction'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-103
+  text: '`test_wound_stat_impact`: wound stat penalties'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-104
+  text: '`test_scar_permanence`: scar permanence'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-105
+  text: '`test_scar_decay`: scar decay behavior if preserved'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-106
+  text: '`test_local_scar_record`: local scar record'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-107
+  text: '`test_scar_detection`: scar detection'
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-108
+  text: '`test_ai_perception_of_scars`: perception of scars'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-109
+  text: '`test_stamina_drain_on_attack`: stamina drain on attack'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-110
+  text: '`test_stamina_decreases_on_move`: stamina drain on move'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-111
+  text: '`test_stamina_decreases_on_harvest`: stamina drain on harvest'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-112
+  text: '`test_skill_use_costs_stamina`: stamina cost on skill use'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-113
+  text: '`test_stamina_regen_resting`: rest stamina regen'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-114
+  text: '`test_stamina_regen_active`: active regen'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-115
+  text: '`test_stamina_regen_capped`: regen cap'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-116
+  text: '`test_exhaustion_penalty_application`: exhaustion penalty'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-117
+  text: '`test_best_ready_skill_skips_insufficient_stamina`: skill gating by stamina'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-118
+  text: '`test_execution_phase_modifies_proposal_with_aggressive_style`: aggressive
+    action style'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-119
+  text: '`test_execution_phase_modifies_proposal_with_evasive_style`: evasive action
+    style'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-120
+  text: '`test_flanking_bonus`: flanking bonus'
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-121
+  text: '`test_no_flanking_bonus_when_facing_attacker`: facing-sensitive flanking
+    exclusion'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-122
+  text: '`test_shatter_combo`: combo behavior'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-123
+  text: '`test_ranged_hero_kites_when_adjacent`: ranged kiting'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-124
+  text: '`test_ranged_skirmisher_kites_when_close`: ranged skirmish spacing'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-125
+  text: '`test_no_leash_returns_false`: no-leash detection behavior is preserved'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-126
+  text: '`test_mob_beyond_leash_returns_to_camp`: beyond-leash return-to-camp behavior
+    is preserved'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-127
+  text: '`test_mob_within_leash_wanders_normally`: within-leash wandering behavior
+    is preserved'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-128
+  text: '`test_no_leash_mob_wanders_freely`: leash-free wandering behavior is preserved'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-129
+  text: '`test_chase_beyond_leash_abandons`: chase abandonment beyond leash is preserved'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-130
+  text: '`test_chase_within_leash_continues`: chase continuation within leash is preserved'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-131
+  text: '`test_no_leash_mob_hunts_freely`: no-leash hunting freedom is preserved'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-132
+  text: '`test_camp_reinforcements`: camp reinforcement behavior is preserved'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-133
+  text: 'Phase 8 owns:'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-134
+  text: 'Phase 9 owns:'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-135
+  text: "No Part 7 item should be left implicit under a generic bucket like \u201C\
+    AI improvements\u201D or \u201Cprogression tuning`"
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-136
+  text: the specific legacy behavior has a clear roadmap owner
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-137
+  text: the specific behavior has a direct implementation or explicit divergence decision
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-138
+  text: the specific behavior has test coverage or parity justification
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-139
+  text: the replacement ledger/support boundary reflects the truth of that item
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-140
+  text: 'Phase 7 owns:'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-141
+  text: 'Phase 8 owns:'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-142
+  text: 'Phase 9 owns:'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-143
+  text: 'Phase 10 owns:'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-144
+  text: 'Phase 11+ owns:'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-145
+  text: the specific assumption has a clear roadmap owner
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-146
+  text: the specific assumption has direct implementation or an explicit divergence/unsupported
+    decision
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-147
+  text: the specific assumption has test coverage or proof justification
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-148
+  text: the support boundary and replacement ledger reflect its true status
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-149
+  text: Melee weapons default to range `1`.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-150
+  text: Shortbow and longbow have distinct weapon ranges.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-151
+  text: Clear horizontal line of sight passes.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-152
+  text: Clear diagonal line of sight passes.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-153
+  text: Wall between attacker and target blocks LOS.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-154
+  text: Wall on diagonal path blocks LOS.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-155
+  text: Adjacent tiles are always visible under legacy rule.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-156
+  text: Wall at endpoint does not block LOS.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-157
+  text: Wall at start does not block LOS.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-158
+  text: Adjacent wall counts as cover.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-159
+  text: Open ground gives no cover.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-160
+  text: Melee attack adjacent is valid.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-161
+  text: Melee attack out of range is invalid.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-162
+  text: Ranged attack at valid distance is valid.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-163
+  text: Unarmed entity range is `1`.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-164
+  text: Ranged skill can be selected at distance.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-165
+  text: Melee skill is not selected at ranged distance.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-166
+  text: Starting gear gives warrior sword and ranger bow.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-167
+  text: Straight-line path returns expected step count.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-168
+  text: Same start and goal returns empty path.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-169
+  text: Adjacent goal returns single-step path.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-170
+  text: Path routes around walls.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-171
+  text: Fully enclosed goal returns no path.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-172
+  text: Unwalkable goal returns no path.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-173
+  text: Returned path excludes start position.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-174
+  text: Max-node budget can terminate search with no path.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-175
+  text: '`next_step()` returns first path tile.'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-176
+  text: Occupied tiles are avoided.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-177
+  text: Goal tile can remain reachable even if listed as occupied.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-178
+  text: Road cost is lower than floor.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-179
+  text: Swamp cost is higher than floor.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-180
+  text: Terrain cost registry is used by pathfinding.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-181
+  text: Long-distance movement uses A\*.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-182
+  text: Short-distance movement can use greedy fallback.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-183
+  text: Entity with `leash_radius=0` is never beyond leash.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-184
+  text: Entity with no home position is never beyond leash.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-185
+  text: Distance within leash returns false.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-186
+  text: Distance beyond leash returns true.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-187
+  text: Leash multiplier extends allowed chase range.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-188
+  text: Wander handler sends beyond-leash mob to return-to-camp.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-189
+  text: Within-leash mob continues wandering.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-190
+  text: No-leash mob wanders freely.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-191
+  text: Hunt handler abandons chase beyond `1.5x` leash.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-192
+  text: Hunt handler continues chase inside `1.5x` leash.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-193
+  text: Hunt handler gives up after chase timeout.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-194
+  text: Chase ticks reset on combat engagement.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-195
+  text: Return-to-camp heals while returning.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: COMB-196
+  text: Returning mob resumes normal behavior after reaching camp.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null

@@ -20,7 +20,7 @@ It does not yet close replay/logging/metrics compatibility or API/protocol closu
 
 ## [Milestone technical implementation]
 
-Recover the supported infrastructure-isolation and disabled-mode surface in native `src_v2` terms.
+Recover the supported infrastructure-isolation and disabled-mode surface in native `src` terms.
 
 This milestone must:
 
@@ -56,7 +56,7 @@ At the end of this milestone:
 
 ## Task
 
-### [ ] (checkbox) - [Task 1] - Audit legacy environment-flag and disabled-mode rows against current `src_v2` infrastructure behavior
+### [ ] (checkbox) - [Task 1] - Audit legacy environment-flag and disabled-mode rows against current `src` infrastructure behavior
 
 #### [Task Description]
 
@@ -64,7 +64,7 @@ Find where disabled-mode and infrastructure-isolation behavior is already real, 
 
 #### [Task technical implementation]
 
-Review all Phase 10 infrastructure rows and map them to current `src_v2` implementation points.
+Review all Phase 10 infrastructure rows and map them to current `src` implementation points.
 
 Identify:
 
@@ -76,9 +76,9 @@ Identify:
 
 #### [Task possible affected files]
 
-- `src_v2/config/**`
-- `src_v2/platform/**`
-- `src_v2/broker/**`
+- `src/config/**`
+- `src/platform/**`
+- `src/broker/**`
 - `docs/engine/replacement_ledger.md`
 
 #### [Task important notes]
@@ -116,11 +116,11 @@ Implement or refine supported behavior for:
 
 #### [Task possible affected files]
 
-- `src_v2/config/**`
-- `src_v2/platform/**`
-- `src_v2/broker/**`
-- `tests_v2/config/**`
-- `tests_v2/integration/infra/**`
+- `src/config/**`
+- `src/platform/**`
+- `src/broker/**`
+- `tests/config/**`
+- `tests/integration/infra/**`
 
 #### [Task important notes]
 
@@ -157,11 +157,11 @@ Implement or refine supported safe behavior for:
 
 #### [Task possible affected files]
 
-- `src_v2/platform/**`
-- `src_v2/broker/**`
-- `src_v2/api/**`
-- `tests_v2/integration/infra/**`
-- `tests_v2/api/**`
+- `src/platform/**`
+- `src/broker/**`
+- `src/api/**`
+- `tests/integration/infra/**`
+- `tests/api/**`
 
 #### [Task important notes]
 
@@ -199,9 +199,9 @@ Add focused tests for:
 
 #### [Task possible affected files]
 
-- `tests_v2/config/**`
-- `tests_v2/integration/infra/**`
-- `tests_v2/api/**`
+- `tests/config/**`
+- `tests/integration/infra/**`
+- `tests/api/**`
 
 #### [Task important notes]
 

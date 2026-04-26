@@ -1,4 +1,4 @@
-# Replacement Status Overview (`src_v2`)
+# Replacement Status Overview (`src`)
 
 ## 1. Executive Summary
 This document tracks the cumulative replacement progress of the V2 engine against the legacy `src` codebase. As of Phase 11, the engine has achieved **Ratified Replacement Status** for the primary simulation surface, backed by a comprehensive proof bundle and a formal project verdict.
@@ -37,7 +37,7 @@ This document tracks the cumulative replacement progress of the V2 engine agains
 - **Policy**: No implied parity; only verified behaviors in the [Legacy Replacement Ledger](legacy_replacement_ledger.md) are supported.
 
 ## 4. Next Phase: Phase 12 Cutover
-The ratification phase is now closed. All future work is governed by the **Phase 12 Cutover and Retirement Plan**, which defines the schedule for switching production traffic to the `src_v2` engine.
+The ratification phase is now closed. All future work is governed by the **Phase 12 Cutover and Retirement Plan**, which defines the schedule for switching production traffic to the `src` engine.
 
 ---
 *Published on Phase 11 Close — 2026-04-24*

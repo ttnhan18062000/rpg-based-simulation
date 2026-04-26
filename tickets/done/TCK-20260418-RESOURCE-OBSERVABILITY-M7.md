@@ -38,10 +38,10 @@ Establish the engine's first runtime-visibility and operational-control surfaces
 - `m7_test_matrix.md`
 
 ## Related Code Areas
-- `src_v2/config/validator.py`
-- `src_v2/engine/observability.py`
-- `src_v2/engine/kernel.py`
-- `src_v2/engine/replay_manager.py`
+- `src/config/validator.py`
+- `src/engine/observability.py`
+- `src/engine/kernel.py`
+- `src/engine/replay_manager.py`
 
 ## Assumptions / Open Questions
 - Hardware realism is surfaced as a warning in M7, with formal rejection deferred to M9 certification.
@@ -55,11 +55,11 @@ Establish the engine's first runtime-visibility and operational-control surfaces
 - Verified budget-exhaustion rejection, trend bounding, and graceful shutdown sequencing.
 
 ## Files Changed
-- `src_v2/config/validator.py`
-- `src_v2/engine/observability.py`
-- `src_v2/engine/kernel.py`
-- `src_v2/engine/replay_manager.py`
-- `src_v2/engine/runtime_status.py`
+- `src/config/validator.py`
+- `src/engine/observability.py`
+- `src/engine/kernel.py`
+- `src/engine/replay_manager.py`
+- `src/engine/runtime_status.py`
 
 ## Completion Summary
 Milestone 7 finalized. The engine now has a formal operational control surface. It rejects unsafe configurations at startup, provides stable and bounded runtime visibility via trends and snapshots, and performs deterministic graceful shutdowns that preserve authoritative integrity.

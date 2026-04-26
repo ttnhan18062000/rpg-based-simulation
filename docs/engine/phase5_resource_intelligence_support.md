@@ -1,7 +1,7 @@
 # Phase 5 Resource Intelligence: Support Boundary
 
 ## 1. Supported Intelligence Surface
-The `src_v2` Resource Engine officially supports a narrow slice of strategic intelligence necessary for loop closure.
+The `src` Resource Engine officially supports a narrow slice of strategic intelligence necessary for loop closure.
 
 | Feature | Support Level | Implementation |
 | :--- | :--- | :--- |

@@ -33,18 +33,18 @@ Verify the Phase 6 M7 (Social Trust) and M8 (Opportunity Attacks) P0 recovery im
 
 ## Related Docs
 - [docs/engine/legacy_replacement_ledger.md](file:///home/vboxuser/Work/rpg-based-simulation/docs/engine/legacy_replacement_ledger.md)
-- [src_v2_principle.md](file:///home/vboxuser/Work/rpg-based-simulation/src_v2_principle.md)
+- [src_principle.md](file:///home/vboxuser/Work/rpg-based-simulation/src_principle.md)
 
 ## Related Stored Artifacts
 - None
 
 ## Related Code Areas
-- `src_v2/core/state.py`
-- `src_v2/systems/social.py`
-- `src_v2/engine/combat.py`
-- `src_v2/engine/apply.py`
-- `tests_v2/parity/test_social_parity.py`
-- `tests_v2/parity/test_oa_parity.py`
+- `src/core/state.py`
+- `src/systems/social.py`
+- `src/engine/combat.py`
+- `src/engine/apply.py`
+- `tests/parity/test_social_parity.py`
+- `tests/parity/test_oa_parity.py`
 
 ## Assumptions / Open Questions
 - Assumption: Legacy damage formulas for OA should match standard melee resolution.

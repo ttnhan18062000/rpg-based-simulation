@@ -226,9 +226,9 @@ This document must explicitly define:
 
 - `docs/engine/certification_contract_me.md`
 - `docs/engine/me_test_matrix.md`
-- `src_v2/certification/harness.py`
-- `src_v2/certification/conformance.py`
-- `src_v2/certification/models.py`
+- `src/certification/harness.py`
+- `src/certification/conformance.py`
+- `src/certification/models.py`
 - release-gate docs
 
 ### [Task important notes]
@@ -321,7 +321,7 @@ For every scenario define:
 
 ### [Task possible affected files]
 
-- `src_v2/certification/scenarios.py`
+- `src/certification/scenarios.py`
 - `docs/engine/certification_scenario_matrix.md`
 - scenario-related tests
 
@@ -383,9 +383,9 @@ Also ensure that expectations can represent:
 
 ### [Task possible affected files]
 
-- `src_v2/certification/models.py`
-- `src_v2/certification/scenarios.py`
-- `src_v2/certification/conformance.py`
+- `src/certification/models.py`
+- `src/certification/scenarios.py`
+- `src/certification/conformance.py`
 - expectation-model tests
 
 ### [Task important notes]
@@ -446,9 +446,9 @@ For each failure kind define:
 
 ### [Task possible affected files]
 
-- `src_v2/certification/models.py`
-- `src_v2/certification/conformance.py`
-- `src_v2/certification/recorder.py`
+- `src/certification/models.py`
+- `src/certification/conformance.py`
+- `src/certification/recorder.py`
 - failure-taxonomy tests
 
 ### [Task important notes]
@@ -504,9 +504,9 @@ Define and enforce:
 
 ### [Task possible affected files]
 
-- `src_v2/certification/conformance.py`
-- `src_v2/certification/models.py`
-- `src_v2/certification/recorder.py`
+- `src/certification/conformance.py`
+- `src/certification/models.py`
+- `src/certification/recorder.py`
 - allowed-failure tests
 
 ### [Task important notes]
@@ -565,9 +565,9 @@ Also ensure that certification output states:
 
 ### [Task possible affected files]
 
-- `src_v2/certification/conformance.py`
-- `src_v2/certification/harness.py`
-- `src_v2/engine/checkpoint.py`
+- `src/certification/conformance.py`
+- `src/certification/harness.py`
+- `src/engine/checkpoint.py`
 - equivalence/reproducibility tests
 
 ### [Task important notes]
@@ -622,9 +622,9 @@ Ensure measurement capture remains bounded and does not violate earlier runtime 
 
 ### [Task possible affected files]
 
-- `src_v2/certification/models.py`
-- `src_v2/certification/harness.py`
-- `src_v2/certification/recorder.py`
+- `src/certification/models.py`
+- `src/certification/harness.py`
+- `src/certification/recorder.py`
 - measurement-related tests
 
 ### [Task important notes]
@@ -688,8 +688,8 @@ Ensure the recorder:
 
 ### [Task possible affected files]
 
-- `src_v2/certification/recorder.py`
-- `src_v2/certification/models.py`
+- `src/certification/recorder.py`
+- `src/certification/models.py`
 - proof-bundle tests
 - release-bundle docs/tests
 
@@ -751,7 +751,7 @@ Add explicit blocking reasons for:
 
 ### [Task possible affected files]
 
-- `tests_v2/certification/test_final_gate.py`
+- `tests/certification/test_final_gate.py`
 - release-gate helpers
 - proof-bundle validation modules
 - release docs
@@ -815,8 +815,8 @@ Ensure the harness and scenario model can support all three layers cleanly.
 
 ### [Task possible affected files]
 
-- `src_v2/certification/harness.py`
-- `src_v2/certification/scenarios.py`
+- `src/certification/harness.py`
+- `src/certification/scenarios.py`
 - `docs/engine/certification_layers.md`
 - headless/full-system certification tests
 
@@ -868,9 +868,9 @@ Ensure that:
 
 ### [Task possible affected files]
 
-- `src_v2/certification/harness.py`
-- `src_v2/certification/conformance.py`
-- `src_v2/certification/recorder.py`
+- `src/certification/harness.py`
+- `src/certification/conformance.py`
+- `src/certification/recorder.py`
 - release-validation modules
 - docs
 
@@ -951,14 +951,14 @@ Complete or add tests for these groups.
 
 ### Suggested test groups
 
-- `tests_v2/certification/test_scenario_matrix.py`
-- `tests_v2/certification/test_expectation_model.py`
-- `tests_v2/certification/test_failure_taxonomy.py`
-- `tests_v2/certification/test_allowed_failure_truth.py`
-- `tests_v2/certification/test_conformance_semantics.py`
-- `tests_v2/certification/test_proof_bundle_integrity.py`
-- `tests_v2/certification/test_release_gate.py`
-- `tests_v2/certification/test_certification_layers.py`
+- `tests/certification/test_scenario_matrix.py`
+- `tests/certification/test_expectation_model.py`
+- `tests/certification/test_failure_taxonomy.py`
+- `tests/certification/test_allowed_failure_truth.py`
+- `tests/certification/test_conformance_semantics.py`
+- `tests/certification/test_proof_bundle_integrity.py`
+- `tests/certification/test_release_gate.py`
+- `tests/certification/test_certification_layers.py`
 
 ### [Task possible affected files]
 
@@ -1093,8 +1093,8 @@ This can be done with:
 
 ### [Task possible affected files]
 
-- `tests_v2/docs/*`
-- `tests_v2/certification/test_me_doc_integrity.py`
+- `tests/docs/*`
+- `tests/certification/test_me_doc_integrity.py`
 - CI config
 - integrity helpers
 

@@ -1,10 +1,10 @@
 Below is the **high-level implementation plan for Phase 11** in the same milestone style as the earlier high-level phase plans.
 
-This plan is grounded in the corrected roadmap and the replacement-governance model from [resource_phases.md](sandbox:/mnt/data/resource_phases.md), the completion/official-support standards from [src_v2_principle.md](sandbox:/mnt/data/src_v2_principle.md), and the compatibility-ledger framing already surfaced through [legacy_logic_checklist_part2.md](sandbox:/mnt/data/legacy_logic_checklist_part2.md).
+This plan is grounded in the corrected roadmap and the replacement-governance model from [resource_phases.md](sandbox:/mnt/data/resource_phases.md), the completion/official-support standards from [src_principle.md](sandbox:/mnt/data/src_principle.md), and the compatibility-ledger framing already surfaced through [legacy_logic_checklist_part2.md](sandbox:/mnt/data/legacy_logic_checklist_part2.md).
 
 ---
 
-# High-Level Implementation Plan — Phase 11 of `src_v2`
+# High-Level Implementation Plan — Phase 11 of `src`
 
 This plan assumes Phase 10 has already produced:
 
@@ -19,7 +19,7 @@ It also assumes the project has stopped pretending that broad implementation cov
 
 Phase 11 is not the phase where the project should widen into new semantics, new compatibility work, or legacy retirement.
 
-It is the phase where `src_v2` must turn all prior phase results into a **single authoritative replacement verdict**.
+It is the phase where `src` must turn all prior phase results into a **single authoritative replacement verdict**.
 
 The purpose of Phase 11 is:
 
@@ -262,7 +262,7 @@ At the end of this milestone:
 
 Milestone 5 turns the reconciled governance system into the official replacement verdict.
 
-Its purpose is to produce the final proof bundle and replacement-status package that says, precisely, what `src_v2` has replaced and what it has not.
+Its purpose is to produce the final proof bundle and replacement-status package that says, precisely, what `src` has replaced and what it has not.
 
 This milestone covers:
 

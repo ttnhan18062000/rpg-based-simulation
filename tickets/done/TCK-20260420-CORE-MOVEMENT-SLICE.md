@@ -7,12 +7,12 @@ First Official RPG Slice: Deterministic Grid Movement
 OPEN
 
 ## Request Summary
-Implement the first official gameplay slice for `src_v2` by porting deterministic grid movement from the original `src`, ensuring it adheres to the frozen substrate contract without semantic drift.
+Implement the first official gameplay slice for `src` by porting deterministic grid movement from the original `src`, ensuring it adheres to the frozen substrate contract without semantic drift.
 
 ## Scope
 - Capture original movement behavior from `src/actions/move.py` and `src/ai/pathfinding.py`.
 - Define V2 movement contract (Authoritative State, Work Contract, Apply Contract).
-- Implement local reference path for movement in `src_v2`.
+- Implement local reference path for movement in `src`.
 - Integrate movement into replay, runtime, and certification surfaces.
 - Add parity and certification tests.
 
@@ -33,16 +33,16 @@ Implement the first official gameplay slice for `src_v2` by porting deterministi
 
 ## Related Docs
 - [resource_phase4_high_level.md](file:///home/vboxuser/Work/rpg-based-simulation/resource_phase4_high_level.md)
-- [src_v2_overview.md](file:///home/vboxuser/Work/rpg-based-simulation/src_v2_overview.md)
+- [src_overview.md](file:///home/vboxuser/Work/rpg-based-simulation/src_overview.md)
 
 ## Related Stored Artifacts
 - None
 
 ## Related Code Areas
-- `src_v2/engine/kernel.py`
-- `src_v2/engine/apply.py`
-- `src_v2/core/state.py`
-- `src_v2/core/governance.py`
+- `src/engine/kernel.py`
+- `src/engine/apply.py`
+- `src/core/state.py`
+- `src/core/governance.py`
 
 ## Assumptions / Open Questions
 - **Assumption**: Movement is a "Local" work kind for this slice.
@@ -50,7 +50,7 @@ Implement the first official gameplay slice for `src_v2` by porting deterministi
 
 ## Implementation Notes
 - Use `LegalityService` parity where possible.
-- Ensure `NavigationUpdate` and `SpatialUpdate` equivalents exist in `src_v2`.
+- Ensure `NavigationUpdate` and `SpatialUpdate` equivalents exist in `src`.
 
 ## Test Summary
 - TBD

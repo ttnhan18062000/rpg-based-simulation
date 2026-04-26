@@ -1,14 +1,14 @@
-# [Milestone 3] - Canonical `src_v2` Surface Inventory
+# [Milestone 3] - Canonical `src` Surface Inventory
 
 ## [Milestone Description]
 
-Milestone 3 constructs the authoritative inventory of the current `src_v2` replacement surface.
+Milestone 3 constructs the authoritative inventory of the current `src` replacement surface.
 
 Its purpose is to answer the mirror question:
 
-What does `src_v2` actually implement, test, prove, expose, and claim today?
+What does `src` actually implement, test, prove, expose, and claim today?
 
-This milestone looks only at the current `src_v2` side.
+This milestone looks only at the current `src` side.
 
 It does not reopen legacy inventory work.
 It does not classify final replacement status yet.
@@ -18,11 +18,11 @@ It creates the evidence-backed current-state map that the replacement ledger nee
 
 ## [Milestone technical implementation]
 
-Create one canonical `src_v2` inventory that maps current source, tests, proof artifacts, declared support claims, and consumer-facing surfaces into the same comparison unit used by the legacy inventory.
+Create one canonical `src` inventory that maps current source, tests, proof artifacts, declared support claims, and consumer-facing surfaces into the same comparison unit used by the legacy inventory.
 
 This milestone must:
 
-- enumerate implemented `src_v2` slices relevant to replacement,
+- enumerate implemented `src` slices relevant to replacement,
 - attach current source and test evidence to each row,
 - distinguish implemented/tested/proof-backed/officially-supported status,
 - record current support boundaries where already declared,
@@ -51,7 +51,7 @@ This milestone succeeds only if it keeps those categories separate.
 
 At the end of Milestone 3:
 
-- the current `src_v2` replacement-relevant surface is enumerated,
+- the current `src` replacement-relevant surface is enumerated,
 - every comparable row has current evidence attached,
 - ambiguous or partial coverage is explicitly flagged,
 - support and proof claims are distinguished from raw implementation presence,
@@ -61,7 +61,7 @@ At the end of Milestone 3:
 
 ## Task
 
-### [x] (checkbox) - [Task 1] - Define the canonical `src_v2` row schema aligned to the legacy inventory
+### [x] (checkbox) - [Task 1] - Define the canonical `src` row schema aligned to the legacy inventory
 
 #### [Task Description]
 
@@ -69,12 +69,12 @@ Create the current-state mirror of the legacy inventory unit.
 
 #### [Task technical implementation]
 
-Define one `src_v2` row schema aligned to the canonical legacy row structure.
+Define one `src` row schema aligned to the canonical legacy row structure.
 
 The schema should include:
 
-- `src_v2` source evidence,
-- `src_v2` test evidence,
+- `src` source evidence,
+- `src` test evidence,
 - proof artifact references,
 - current support status,
 - notes on ambiguity or partiality,
@@ -83,16 +83,16 @@ The schema should include:
 #### [Task possible affected files]
 
 - `docs/engine/replacement_ledger_schema.md`
-- `docs/engine/src_v2_inventory.md`
+- `docs/engine/src_inventory.md`
 - ledger templates
 
 #### [Task important notes]
 
-If the `src_v2` schema does not align to the legacy schema, comparison will become interpretive instead of mechanical.
+If the `src` schema does not align to the legacy schema, comparison will become interpretive instead of mechanical.
 
 #### [Task check list]
 
-- [x] `src_v2` row schema exists
+- [x] `src` row schema exists
 - [x] Schema aligns with legacy row identity
 - [x] Proof/support fields are explicit
 - [x] Ambiguity fields are explicit
@@ -102,19 +102,19 @@ If the `src_v2` schema does not align to the legacy schema, comparison will beco
 
 #### [Task acceptance criteria]
 
-The project has one stable `src_v2` inventory schema aligned to the legacy inventory.
+The project has one stable `src` inventory schema aligned to the legacy inventory.
 
 ---
 
-### [x] (checkbox) - [Task 2] - Enumerate current `src_v2` source surfaces relevant to replacement
+### [x] (checkbox) - [Task 2] - Enumerate current `src` source surfaces relevant to replacement
 
 #### [Task Description]
 
-Map the actual implemented `src_v2` surface into the canonical inventory.
+Map the actual implemented `src` surface into the canonical inventory.
 
 #### [Task technical implementation]
 
-Enumerate the replacement-relevant `src_v2` source surfaces, including:
+Enumerate the replacement-relevant `src` source surfaces, including:
 
 - engine and substrate surfaces,
 - supported gameplay semantics,
@@ -125,8 +125,8 @@ Map them into the row schema without claiming closure yet.
 
 #### [Task possible affected files]
 
-- `docs/engine/src_v2_inventory.md`
-- `src_v2/**`
+- `docs/engine/src_inventory.md`
+- `src/**`
 - source inventory helpers if used
 
 #### [Task important notes]
@@ -145,15 +145,15 @@ This task is about evidence collection, not self-congratulation.
 
 #### [Task acceptance criteria]
 
-The implemented `src_v2` surface relevant to replacement is represented in the canonical inventory.
+The implemented `src` surface relevant to replacement is represented in the canonical inventory.
 
 ---
 
-### [x] (checkbox) - [Task 3] - Attach current `src_v2` test, proof, and support evidence to each row where present
+### [x] (checkbox) - [Task 3] - Attach current `src` test, proof, and support evidence to each row where present
 
 #### [Task Description]
 
-Make every `src_v2` row evidence-backed rather than impression-backed.
+Make every `src` row evidence-backed rather than impression-backed.
 
 #### [Task technical implementation]
 
@@ -167,8 +167,8 @@ Attach the best current evidence for each row:
 
 #### [Task possible affected files]
 
-- `docs/engine/src_v2_inventory.md`
-- `tests_v2/**`
+- `docs/engine/src_inventory.md`
+- `tests/**`
 - proof bundle docs
 - support boundary docs
 
@@ -184,15 +184,15 @@ A row that has code but no credible evidence must be marked as such.
 - [x] Support docs are attached where present
 - [x] Missing evidence is visible
 
-**Implementation Comment**: Attached `tests_v2` and parity oracle links to all 185 rows in the master ledger. All maturity metrics are backed by verifiable evidence.
+**Implementation Comment**: Attached `tests` and parity oracle links to all 185 rows in the master ledger. All maturity metrics are backed by verifiable evidence.
 
 #### [Task acceptance criteria]
 
-Each `src_v2` row has current supporting evidence or an explicit evidence gap note.
+Each `src` row has current supporting evidence or an explicit evidence gap note.
 
 ---
 
-### [x] (checkbox) - [Task 4] - Separate implemented, tested, proof-backed, and officially supported status in the `src_v2` inventory
+### [x] (checkbox) - [Task 4] - Separate implemented, tested, proof-backed, and officially supported status in the `src` inventory
 
 #### [Task Description]
 
@@ -212,7 +212,7 @@ This directly follows the handbook’s official-support gate and completion stan
 
 #### [Task possible affected files]
 
-- `docs/engine/src_v2_inventory.md`
+- `docs/engine/src_inventory.md`
 - inventory schema docs
 - support matrix docs
 
@@ -232,11 +232,11 @@ A row can be implemented and still not be support-worthy.
 
 #### [Task acceptance criteria]
 
-The `src_v2` inventory distinguishes raw implementation from true support maturity.
+The `src` inventory distinguishes raw implementation from true support maturity.
 
 ---
 
-### [x] (checkbox) - [Task 5] - Flag rows where `src_v2` coverage is partial, ambiguous, decorative, or unsupported
+### [x] (checkbox) - [Task 5] - Flag rows where `src` coverage is partial, ambiguous, decorative, or unsupported
 
 #### [Task Description]
 
@@ -254,7 +254,7 @@ Review every row and flag cases where:
 
 #### [Task possible affected files]
 
-- `docs/engine/src_v2_inventory.md`
+- `docs/engine/src_inventory.md`
 - ambiguity review notes
 - support gap logs
 
@@ -274,7 +274,7 @@ If ambiguity is not flagged now, Milestone 4 will accidentally convert ambiguity
 
 #### [Task acceptance criteria]
 
-The current-state inventory shows where `src_v2` evidence is strong, weak, partial, or missing.
+The current-state inventory shows where `src` evidence is strong, weak, partial, or missing.
 
 ---
 
@@ -286,14 +286,14 @@ End evidence gathering for the current-state map before comparison begins.
 
 #### [Task technical implementation]
 
-Publish the canonical `src_v2` inventory and mark it as frozen input for Milestone 4.
+Publish the canonical `src` inventory and mark it as frozen input for Milestone 4.
 
 Post-freeze changes should require correction notes, not quiet edits.
 
 #### [Task possible affected files]
 
-- `docs/engine/src_v2_inventory.md`
-- `docs/engine/phase6_src_v2_inventory_freeze.md`
+- `docs/engine/src_inventory.md`
+- `docs/engine/phase6_src_inventory_freeze.md`
 
 #### [Task important notes]
 
@@ -311,4 +311,4 @@ Milestone 4 should classify against a frozen current-state map, not a constantly
 
 #### [Task acceptance criteria]
 
-The canonical `src_v2` inventory is frozen and ready for replacement classification.
+The canonical `src` inventory is frozen and ready for replacement classification.

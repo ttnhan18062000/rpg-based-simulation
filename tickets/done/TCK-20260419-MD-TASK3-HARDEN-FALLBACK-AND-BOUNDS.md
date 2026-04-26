@@ -35,9 +35,9 @@ Ensure that the concurrency layer handles failures, queue saturation, and pressu
 - None
 
 ## Related Code Areas
-- src_v2/engine/worker_manager.py
-- src_v2/engine/kernel.py
-- tests_v2/engine/test_fallback_hardening.py
+- src/engine/worker_manager.py
+- src/engine/kernel.py
+- tests/engine/test_fallback_hardening.py
 
 ## Assumptions / Open Questions
 - None.
@@ -47,7 +47,7 @@ Ensure that the concurrency layer handles failures, queue saturation, and pressu
 - Catch `Future.result()` exceptions in the batch collector.
 
 ## Test Summary
-- New test suite: `tests_v2/engine/test_fallback_hardening.py`.
+- New test suite: `tests/engine/test_fallback_hardening.py`.
 
 ## Files Changed
 - TBD

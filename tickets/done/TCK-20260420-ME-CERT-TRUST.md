@@ -34,9 +34,9 @@ Transform the existing certification harness into a comprehensive, production-gr
 - `implementation_plan.md`
 
 ## Related Code Areas
-- `src_v2/certification/`
+- `src/certification/`
 - `certify_all.py`
-- `tests_v2/certification/`
+- `tests/certification/`
 
 ## Assumptions / Open Questions
 - Assume 60 ticks is sufficient for the current injected pressure levels.
@@ -51,7 +51,7 @@ Transform the existing certification harness into a comprehensive, production-gr
 
 ## Files Changed
 - `certify_all.py`: Increased ticks and refined injections.
-- `src_v2/certification/scenarios.py`: Adjusted drift rules for stress tests.
+- `src/certification/scenarios.py`: Adjusted drift rules for stress tests.
 - `docs/engine/me_test_matrix.md`: Completed documentation.
 
 ## Completion Summary

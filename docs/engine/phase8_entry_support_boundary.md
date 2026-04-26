@@ -1,6 +1,6 @@
 # Phase 8 Entry Support Boundary
 
-This document defines the honest truth of combat and tactical support in `src_v2` at the start of Phase 8.
+This document defines the honest truth of combat and tactical support in `src` at the start of Phase 8.
 
 ## 1. Currently Supported Semantics (Legacy Precursors)
 

@@ -17,15 +17,15 @@ Implemented `test_town_contract.py` which formally enforces the "Laws" of the to
 
 ### 3. Verification & Certification Proofs
 Executed a complete suite of parity and contract tests:
-- **Parity Results**: `tests_v2/parity/test_town_resolution_parity.py` passed 6/6.
-- **Contract Results**: `tests_v2/contract/test_town_contract.py` passed 7/7.
+- **Parity Results**: `tests/parity/test_town_resolution_parity.py` passed 6/6.
+- **Contract Results**: `tests/contract/test_town_contract.py` passed 7/7.
 
 ```bash
 ============================= test session starts ==============================
 collected 13 items                                                             
 
-tests_v2/parity/test_town_resolution_parity.py ......                    [ 46%]
-tests_v2/contract/test_town_contract.py .......                          [100%]
+tests/parity/test_town_resolution_parity.py ......                    [ 46%]
+tests/contract/test_town_contract.py .......                          [100%]
 
 ============================== 13 passed in 0.05s ==============================
 ```
@@ -57,5 +57,5 @@ Any proposed `StateUpdate` that violates these laws will be refined (overwritten
 
 ## Final Repository State
 - All temporary artifacts and staging data have been cleaned.
-- Parity oracles and contract tests are preserved in `tests_v2/` for regression protection.
+- Parity oracles and contract tests are preserved in `tests/` for regression protection.
 - State components and update structures are fully aligned with the V2 core architecture.

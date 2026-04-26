@@ -100,7 +100,7 @@ No replay system, bounded persistence, worker execution, or degradation control 
 Build the smallest exact runnable kernel loop that obeys the Milestone 1 contract. This is the core execution task for the milestone.
 
 [Task implementation comments]
-The core tick loop reached its first runnable state in `src_v2/engine/kernel.py`. It implements the mandatory 6-phase cycle (Init, Governance, Scheduling, Workers, Resolution, Persistence) and ensures a single stable tick entry point for all engine simulations.
+The core tick loop reached its first runnable state in `src/engine/kernel.py`. It implements the mandatory 6-phase cycle (Init, Governance, Scheduling, Workers, Resolution, Persistence) and ensures a single stable tick entry point for all engine simulations.
 
 [Task technical implementation]
 Implement one kernel entry point such as `tick()` or equivalent that performs:
@@ -155,7 +155,7 @@ The engine has one minimal runnable tick execution path that obeys the kernel co
 Make the runtime obey the separation between general world-time progression and readiness-gated entity action.
 
 [Task implementation comments]
-Readiness gating is implemented in `src_v2/engine/readiness.py`. The system distinguishes between authoritative world-time progression (tick-driven) and entity-level "readiness to act" (logic-driven), allowing for quiet ticks without losing time-based state progression.
+Readiness gating is implemented in `src/engine/readiness.py`. The system distinguishes between authoritative world-time progression (tick-driven) and entity-level "readiness to act" (logic-driven), allowing for quiet ticks without losing time-based state progression.
 
 [Task technical implementation]
 Implement two distinct runtime responsibilities:
@@ -208,7 +208,7 @@ World-time progression and readiness-gated action are structurally separate, and
 Create the single explicit path through which authoritative state is mutated.
 
 [Task implementation comments]
-The authoritative update flow is finalized in `src_v2/engine/apply.py`. All mutations to the `AuthoritativeState` must pass through this path, which enforces deterministic merging of `EntityUpdate` packets and validation of the state transitions.
+The authoritative update flow is finalized in `src/engine/apply.py`. All mutations to the `AuthoritativeState` must pass through this path, which enforces deterministic merging of `EntityUpdate` packets and validation of the state transitions.
 
 [Task technical implementation]
 Implement an apply layer that:
@@ -257,7 +257,7 @@ All authoritative state changes flow through one deterministic apply path and no
 Make deterministic execution provable rather than assumed.
 
 [Task implementation comments]
-RNG plumbing resides in `src_v2/platform/rng.py`, using individual seeds derived from the world seed + tick. Checkpoint hashing is implemented in `src_v2/engine/checkpoint.py`, providing a bit-identical hash of the authoritative state for regression verification.
+RNG plumbing resides in `src/platform/rng.py`, using individual seeds derived from the world seed + tick. Checkpoint hashing is implemented in `src/engine/checkpoint.py`, providing a bit-identical hash of the authoritative state for regression verification.
 
 [Task technical implementation]
 Implement:
@@ -309,7 +309,7 @@ The engine can prove deterministic execution by producing identical authoritativ
 Lock the Milestone 2 runtime behavior with deterministic tests so later milestones cannot silently change the kernel foundation.
 
 [Task implementation comments]
-Minimal kernel tests are established in `tests_v2/engine/test_minimal_kernel.py`. These tests verify that the kernel produces byte-identical hash outputs for the same seeds across multiple runs.
+Minimal kernel tests are established in `tests/engine/test_minimal_kernel.py`. These tests verify that the kernel produces byte-identical hash outputs for the same seeds across multiple runs.
 
 [Task technical implementation]
 Add exact tests for:

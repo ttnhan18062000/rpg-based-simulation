@@ -212,9 +212,9 @@ Complete and harden:
 
 [Task possible affected files]
 
-- `src_v2/certification/models.py`
-- `src_v2/certification/conformance.py`
-- `src_v2/certification/harness.py`
+- `src/certification/models.py`
+- `src/certification/conformance.py`
+- `src/certification/harness.py`
 - related scenario definition modules
 
 [Task important notes]
@@ -265,8 +265,8 @@ Complete and harden:
 
 [Task possible affected files]
 
-- `src_v2/certification/models.py`
-- `src_v2/certification/recorder.py`
+- `src/certification/models.py`
+- `src/certification/recorder.py`
 - report-language compliance tests
 - hardware classification integration modules
 
@@ -395,12 +395,12 @@ Complete or add exact tests for:
 
 ### Suggested test groups
 
-- `tests_v2/certification/test_envelope_violations.py`
-- `tests_v2/certification/test_harness_contract.py`
-- `tests_v2/certification/test_resilience_recovery.py`
-- `tests_v2/certification/test_certification_determinism.py`
-- `tests_v2/docs/test_doc_integrity.py`
-- `tests_v2/docs/test_contributor_guardrails.py`
+- `tests/certification/test_envelope_violations.py`
+- `tests/certification/test_harness_contract.py`
+- `tests/certification/test_resilience_recovery.py`
+- `tests/certification/test_certification_determinism.py`
+- `tests/docs/test_doc_integrity.py`
+- `tests/docs/test_contributor_guardrails.py`
 
 [Task possible affected files]
 
@@ -421,7 +421,7 @@ This milestone is about final evidence quality.
 - [x] Make final release gate exact and enforceable
 
 [Implementation Comment]
-Verified with 100% pass rate in `tests_v2/certification/test_final_gate.py` and `tests_v2/docs/test_contributor_guardrails.py`. The release gate is now fully evidence-backed.
+Verified with 100% pass rate in `tests/certification/test_final_gate.py` and `tests/docs/test_contributor_guardrails.py`. The release gate is now fully evidence-backed.
 
 [Task acceptance criteria]
 The final proof-system layer is pinned by a complete deterministic test suite proving certification truth, reporting truth, docs/playbook integrity, and production-readiness gating.

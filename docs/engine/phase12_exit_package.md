@@ -10,9 +10,9 @@
 - **Certification Manifest**: [manifest.json](manifest.json) (Updated with P12 targets)
 
 ## 3. Operational State
-- **Primary Engine**: `src_v2`
+- **Primary Engine**: `src`
 - **Rollback Surface**: `USE_LEGACY_SRC=1`
-- **Test Authority**: `tests_v2/`
+- **Test Authority**: `tests/`
 
 ## 4. Closure Authorization
 This package authorizes the closure of Phase 12 and the initiation of Phase 13 Retirement.

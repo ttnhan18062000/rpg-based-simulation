@@ -18,7 +18,7 @@ Milestone 1 Task 3 of Phase 6: Turn the current Phase 5 proof surface into one d
 - [x] Index parity test results (Movement, Interaction, Town Resolution).
 - [x] Index contract test coverage (Authoritative Apply, Strategic Intelligence, Lifecycle).
 - [x] Index certification and benchmark results (Profile B validation).
-- [x] Link to relevant test code in `tests_v2/` and oracle results in `tests_v2/parity/`.
+- [x] Link to relevant test code in `tests/` and oracle results in `tests/parity/`.
 
 ## Out of Scope
 
@@ -49,7 +49,7 @@ Milestone 1 Task 3 of Phase 6: Turn the current Phase 5 proof surface into one d
 ## Related Code Areas
 
 - `docs/engine/`
-- `tests_v2/`
+- `tests/`
 
 ## Assumptions / Open Questions
 

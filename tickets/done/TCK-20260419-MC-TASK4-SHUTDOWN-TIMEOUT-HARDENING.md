@@ -26,19 +26,19 @@ Ensure replay shutdown is bounded by a real timeout and final manifest integrity
 - Harden deterministic chunk rotation and saturation guards.
 - Implement Non-Blocking IO via background thread pool.
 - Verified `ReplayManager.finalize` budget check using `perf_counter` and 0.5s safety margin.
-- Implemented `tests_v2/engine/test_manifest_integrity.py` to prove atomic write-rename behavior.
+- Implemented `tests/engine/test_manifest_integrity.py` to prove atomic write-rename behavior.
 
 ## Test Summary
-- `tests_v2/engine/test_non_blocking_io.py` PASS
-- `tests_v2/engine/test_manifest_integrity.py` PASS
-- `tests_v2/engine/test_replay_shutdown_budget.py` PASS
-- `tests_v2/engine/test_graceful_shutdown.py` PASS
-- `tests_v2/engine/test_io_matrix.py` PASS
+- `tests/engine/test_non_blocking_io.py` PASS
+- `tests/engine/test_manifest_integrity.py` PASS
+- `tests/engine/test_replay_shutdown_budget.py` PASS
+- `tests/engine/test_graceful_shutdown.py` PASS
+- `tests/engine/test_io_matrix.py` PASS
 
 ## Files Changed
-- `src_v2/engine/replay_manager.py`
-- `src_v2/engine/replay_sink.py`
-- `tests_v2/engine/test_manifest_integrity.py`
+- `src/engine/replay_manager.py`
+- `src/engine/replay_sink.py`
+- `tests/engine/test_manifest_integrity.py`
 
 ## Completion Summary
 Shutdown is now a bounded, trustworthy contract path.

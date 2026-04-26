@@ -16,7 +16,7 @@ The v2 code already has the right shape for runtime control:
 That is the good news.
 
 The bad news is that the current runtime control surface is still too dependent on estimated, simplified, or placeholder-flavored signals. In the existing code, queue utilization starts as `0.0`, some pressure values are inferred from local work counts rather than real system accounting, worker pressure is simplified, and replay pressure is estimated instead of being tracked from a stronger contract. That means the governor can still be correct in shape while being weak in truth. The v2 high-level plan explicitly calls this out as a Milestone B problem.
-References: [resource_high_level_v2.md](sandbox:/mnt/data/resource_high_level_v2.md), [all_src_v2.py](sandbox:/mnt/data/all_src_v2.py)
+References: [resource_high_level_v2.md](sandbox:/mnt/data/resource_high_level_v2.md), [all_src.py](sandbox:/mnt/data/all_src.py)
 
 This milestone exists to fix that.
 
@@ -125,7 +125,7 @@ The second trap is treating monitoring as cosmetic. It is not. In this engine, m
 The third trap is allowing policy degradation to drift into semantic degradation. Milestone B is allowed to shed declared operational cost, but it is not allowed to quietly redefine the simulation’s core correctness contract.
 
 The fourth trap is allowing governance state to leak into authoritative identity. The current code and tests already care about governance/hash isolation. Milestone B must preserve that separation aggressively, not just incidentally.
-References: [all_tests_v2.py](sandbox:/mnt/data/all_tests_v2.py), [all_src_v2.py](sandbox:/mnt/data/all_src_v2.py)
+References: [all_tests.py](sandbox:/mnt/data/all_tests.py), [all_src.py](sandbox:/mnt/data/all_src.py)
 
 ---
 
@@ -200,9 +200,9 @@ It must also state:
 
 - `docs/engine/runtime_signals_contract_mb.md`
 - `docs/engine/mb_test_matrix.md`
-- `src_v2/governance/governor.py`
-- `src_v2/observability/runtime_status.py`
-- `src_v2/observability/signals.py`
+- `src/governance/governor.py`
+- `src/observability/runtime_status.py`
+- `src/observability/signals.py`
 - nearby profile and policy docs
 
 ### [Task important notes]
@@ -275,13 +275,13 @@ Then implement real accounting for at least these dimensions:
 
 ### [Task possible affected files]
 
-- `src_v2/observability/signals.py`
-- `src_v2/observability/runtime_status.py`
-- `src_v2/engine/kernel.py`
-- `src_v2/engine/scheduler.py`
-- `src_v2/engine/worker_manager.py`
-- `src_v2/replay/replay.py`
-- `src_v2/config/profiles.py`
+- `src/observability/signals.py`
+- `src/observability/runtime_status.py`
+- `src/engine/kernel.py`
+- `src/engine/scheduler.py`
+- `src/engine/worker_manager.py`
+- `src/replay/replay.py`
+- `src/config/profiles.py`
 
 ### [Task important notes]
 
@@ -343,10 +343,10 @@ If a signal uses trend logic, define:
 
 ### [Task possible affected files]
 
-- `src_v2/observability/signals.py`
-- `src_v2/observability/runtime_status.py`
-- `src_v2/governance/governor.py`
-- `src_v2/config/profiles.py`
+- `src/observability/signals.py`
+- `src/observability/runtime_status.py`
+- `src/governance/governor.py`
+- `src/config/profiles.py`
 
 ### [Task important notes]
 
@@ -406,9 +406,9 @@ Review and harden the transition logic so that:
 
 ### [Task possible affected files]
 
-- `src_v2/governance/governor.py`
-- `src_v2/governance/models.py`
-- `src_v2/observability/signals.py`
+- `src/governance/governor.py`
+- `src/governance/models.py`
+- `src/observability/signals.py`
 - governor-related tests
 
 ### [Task important notes]
@@ -477,10 +477,10 @@ This task must ensure:
 
 ### [Task possible affected files]
 
-- `src_v2/engine/scheduler.py`
-- `src_v2/governance/governor.py`
-- `src_v2/core/work.py`
-- `src_v2/observability/runtime_status.py`
+- `src/engine/scheduler.py`
+- `src/governance/governor.py`
+- `src/core/work.py`
+- `src/observability/runtime_status.py`
 - related scheduler/governor tests
 
 ### [Task important notes]
@@ -536,12 +536,12 @@ If any current field is mixing operational and authoritative meaning, split it n
 
 ### [Task possible affected files]
 
-- `src_v2/core/state.py`
-- `src_v2/engine/checkpoint.py`
-- `src_v2/governance/governor.py`
-- `src_v2/observability/runtime_status.py`
-- `tests_v2/engine/test_governance_isolation.py`
-- `tests_v2/engine/test_checkpoint_purity.py`
+- `src/core/state.py`
+- `src/engine/checkpoint.py`
+- `src/governance/governor.py`
+- `src/observability/runtime_status.py`
+- `tests/engine/test_governance_isolation.py`
+- `tests/engine/test_checkpoint_purity.py`
 
 ### [Task important notes]
 
@@ -611,10 +611,10 @@ Also add one headless runtime snapshot output path suitable for:
 
 ### [Task possible affected files]
 
-- `src_v2/observability/runtime_status.py`
-- `src_v2/observability/signals.py`
-- `src_v2/engine/kernel.py`
-- `src_v2/certification/harness.py`
+- `src/observability/runtime_status.py`
+- `src/observability/signals.py`
+- `src/engine/kernel.py`
+- `src/certification/harness.py`
 - headless test utilities
 
 ### [Task important notes]
@@ -685,13 +685,13 @@ Complete or add tests for these groups.
 
 ### Suggested test groups
 
-- `tests_v2/governance/test_signal_truth.py`
-- `tests_v2/governance/test_signal_boundedness.py`
-- `tests_v2/governance/test_governor_transitions.py`
-- `tests_v2/governance/test_governor_antithrashing.py`
-- `tests_v2/governance/test_scheduler_policy_integration.py`
-- `tests_v2/engine/test_governance_isolation.py`
-- `tests_v2/observability/test_runtime_status.py`
+- `tests/governance/test_signal_truth.py`
+- `tests/governance/test_signal_boundedness.py`
+- `tests/governance/test_governor_transitions.py`
+- `tests/governance/test_governor_antithrashing.py`
+- `tests/governance/test_scheduler_policy_integration.py`
+- `tests/engine/test_governance_isolation.py`
+- `tests/observability/test_runtime_status.py`
 
 ### [Task possible affected files]
 
@@ -746,10 +746,10 @@ Ensure that:
 
 ### [Task possible affected files]
 
-- `src_v2/engine/kernel.py`
-- `src_v2/governance/governor.py`
-- `src_v2/observability/signals.py`
-- `src_v2/observability/runtime_status.py`
+- `src/engine/kernel.py`
+- `src/governance/governor.py`
+- `src/observability/signals.py`
+- `src/observability/runtime_status.py`
 - scheduler-related modules
 
 ### [Task important notes]
@@ -873,8 +873,8 @@ This can be done with:
 
 ### [Task possible affected files]
 
-- `tests_v2/docs/*`
-- `tests_v2/governance/test_mb_doc_integrity.py`
+- `tests/docs/*`
+- `tests/governance/test_mb_doc_integrity.py`
 - CI config
 - integrity helpers
 

@@ -15,5 +15,5 @@ Build the minimal runnable kernel with deterministic single-thread execution.
 - [ ] Implement `apply.py`
 - [ ] Implement `checkpoint.py`
 - [ ] Upgrade `kernel.py`
-- [ ] Write `tests_v2/`
+- [ ] Write `tests/`
 - [ ] Verify determinism

@@ -27,31 +27,31 @@ Implement authoritative Shop and Blacksmith systems in V2 Engine to achieve bit-
 - None
 
 ## Related Docs
-- src_v2_overview.md
-- src_v2_principle.md
+- src_overview.md
+- src_principle.md
 
 ## Related Code Areas
-- src_v2/engine/town_resolution.py
-- src_v2/engine/shop.py
-- src_v2/engine/blacksmith.py
-- src_v2/core/state.py
+- src/engine/town_resolution.py
+- src/engine/shop.py
+- src/engine/blacksmith.py
+- src/core/state.py
 
 ## Implementation Notes
 - Standardized all item keys to lowercase for parity.
 - Separated passive laws (Healing) from active services (Shop/Blacksmith).
 
 ## Test Summary
-- tests_v2/parity/test_town_resolution_parity.py: 6/6 passed.
+- tests/parity/test_town_resolution_parity.py: 6/6 passed.
 
 ## Files Changed
-- src_v2/core/state.py
-- src_v2/core/updates.py
-- src_v2/engine/apply.py
-- src_v2/engine/town_resolution.py
-- src_v2/engine/shop.py
-- src_v2/engine/blacksmith.py
-- src_v2/engine/kernel.py
-- src_v2/engine/checkpoint.py
+- src/core/state.py
+- src/core/updates.py
+- src/engine/apply.py
+- src/engine/town_resolution.py
+- src/engine/shop.py
+- src/engine/blacksmith.py
+- src/engine/kernel.py
+- src/engine/checkpoint.py
 
 ## Completion Summary
 Milestone 2 core implementation is complete. All systems are integrated into the authoritative resolution phase and verified via parity testing.

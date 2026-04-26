@@ -31,7 +31,7 @@ Close the remaining "Signal Semantic Compression" and "Environmental Capture" dr
 - `resource_implementation_v2_review.md`
 
 ## Related Code Areas
-- `src_v2/core/governance.py`
-- `src_v2/engine/runtime_status.py`
-- `src_v2/engine/kernel.py`
-- `src_v2/certification/harness.py`
+- `src/core/governance.py`
+- `src/engine/runtime_status.py`
+- `src/engine/kernel.py`
+- `src/certification/harness.py`

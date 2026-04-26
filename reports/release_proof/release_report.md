@@ -1,7 +1,7 @@
 # Consolidated Certification Report
 
-**Last Run ID**: `a1c27bac-b807-4e27-a20b-51ffb080396f`
-**Commit SHA**: `ff1d5d77fbe7193d05cde14a0cf837c4dfca6261`
+**Last Run ID**: `1bd778be-0432-40ee-a8e3-d4298b1b421a`
+**Commit SHA**: `f558a7a96ff00fabac119539ea58280e7075db89`
 
 ## Scenario Summary
 
@@ -15,14 +15,14 @@
 | NORMAL_ONLY | RAM_PRESSURE | ✅ | None | None |
 | NO_RECOVERY | IDLE_CLEAN | ✅ | None | None |
 | NO_RECOVERY | INTEG_RESOURCE_LOOP | ✅ | None | None |
-| NO_RECOVERY | RAM_PRESSURE | ❌ | failed_recovery_timeout | System failed to recover to NORMAL mode within scenario window. |
+| NO_RECOVERY | RAM_PRESSURE | ⚠️ | failed_recovery_timeout | System failed to recover to NORMAL mode within scenario window. |
 
 ---
 
 ## Latest Run Detail
 
 # Certification Report: RAM_PRESSURE
-**Commit SHA**: `ff1d5d77fbe7193d05cde14a0cf837c4dfca6261`
+**Commit SHA**: `f558a7a96ff00fabac119539ea58280e7075db89`
 **Status**: ❌ **FAIL**
 **Allowed Failure Observed**: `False`
 
@@ -31,16 +31,18 @@
 - **Hardware Class**: `CLASS_B`
 - **Scenario**: `RAM_PRESSURE`
 - **Seed**: `42`
+- **Peak RAM (RSS)**: `151.4 MB`
+- **Total CPU Time**: `0.001 sec`
 
 ## 2. Resource Conformance Evidence
 | Tick | Mode | RAM (MB) | Compute (ms) | Worker % | Queue % |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| 5 | CONSTRAINED | 68.4 | 1.0 | 0.00 | 0.00 |
-| 10 | DEGRADED | 68.4 | 0.3 | 0.00 | 0.00 |
+| 5 | CONSTRAINED | 151.4 | 0.6 | 0.00 | 0.00 |
+| 10 | DEGRADED | 151.4 | 0.3 | 0.00 | 0.00 |
 
 ## 3. Semantic Integrity Proof (Milestone D Law)
-- **Baseline Hash**: `e68ff8d510e1e48fd855b77be68625c80419f2ed6792cad4edb6d76c5b911151`
-- **Final Hash**: `e68ff8d510e1e48fd855b77be68625c80419f2ed6792cad4edb6d76c5b911151`
+- **Baseline Hash**: `fa09d0ba0918226006101020e0bc66d5239f183dd3a008f94f6b8d231d9dcf1f`
+- **Final Hash**: `fa09d0ba0918226006101020e0bc66d5239f183dd3a008f94f6b8d231d9dcf1f`
 - **Status**: MATCHED
 
 ## 4. Conformance Verdict

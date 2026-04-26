@@ -5,21 +5,21 @@ Verify the deterministic work selection, work classification, and bounded debt h
 
 ## Test Areas
 
-### 1. Deterministic Scheduler (`tests_v2/engine/test_scheduler_contract.py`)
+### 1. Deterministic Scheduler (`tests/engine/test_scheduler_contract.py`)
 - **Goal**: Verify stable work selection.
 - **Tests**:
   - `test_readiness_selection`: Periodic/Entity work is only selected if due.
   - `test_tie_break_order`: Multiple entities at same readiness/priority are sorted by ID.
   - `test_repeatable_selection`: Multiple ticks produce identical work chains across runs.
 
-### 2. Work Classes (`tests_v2/engine/test_work_classes.py`)
+### 2. Work Classes (`tests/engine/test_work_classes.py`)
 - **Goal**: Verify priority and subordination.
 - **Tests**:
   - `test_priority_enforcement`: Critical work always executes before Opportunistic.
   - `test_periodic_cadence`: Verify a task with cadence=10 executes exactly on ticks 10, 20, 30.
   - `test_opportunistic_bypass`: Verify that optional work doesn't affect authoritative state.
 
-### 3. Bounded Work Debt (`tests_v2/engine/test_deferred_work_debt.py`)
+### 3. Bounded Work Debt (`tests/engine/test_deferred_work_debt.py`)
 - **Goal**: Verify that postponed work is bounded.
 - **Tests**:
   - `test_deferred_accumulation`: Add work while "busy", verify it goes to the deferred queue.

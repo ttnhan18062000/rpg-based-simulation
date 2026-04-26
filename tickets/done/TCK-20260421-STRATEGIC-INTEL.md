@@ -38,11 +38,11 @@ Recover the strategic feedback layer necessary for the RPG progression loop in V
 - None
 
 ## Related Code Areas
-- `src_v2/core/strategic.py` (New)
-- `src_v2/systems/strategic.py` (New)
-- `src_v2/core/state.py`
-- `src_v2/core/updates.py`
-- `src_v2/engine/apply.py`
+- `src/core/strategic.py` (New)
+- `src/systems/strategic.py` (New)
+- `src/core/state.py`
+- `src/core/updates.py`
+- `src/engine/apply.py`
 
 ## Assumptions / Open Questions
 - Should blockers live in `IdentityComponent` or a new `StrategicComponent`? (Assuming new component for modularity).

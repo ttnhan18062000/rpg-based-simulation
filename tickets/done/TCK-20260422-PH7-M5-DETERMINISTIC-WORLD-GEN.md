@@ -30,9 +30,9 @@ Close the execution substrate that defines how the world is formed and how the e
 - resource_phase7_high_level.md
 
 ## Related Code Areas
-- \`src_v2/engine/kernel.py\`
-- \`src_v2/engine/pipeline.py\`
-- \`src_v2/core/state.py\`
+- \`src/engine/kernel.py\`
+- \`src/engine/pipeline.py\`
+- \`src/core/state.py\`
 
 ## Assumptions / Open Questions
 - We use Python's \`random.Random(seed)\` for determinism.

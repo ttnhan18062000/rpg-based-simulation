@@ -1,6 +1,6 @@
 # Phase 5 Truth Package
 
-This document serves as the authoritative container for the truth state of `src_v2` at the conclusion of Phase 5. It consolidates scattered notes on divergences, limitations, and unsupported logic to provide a clean entry baseline for Phase 6.
+This document serves as the authoritative container for the truth state of `src` at the conclusion of Phase 5. It consolidates scattered notes on divergences, limitations, and unsupported logic to provide a clean entry baseline for Phase 6.
 
 ## 1. Truth Surface Map
 
@@ -12,7 +12,7 @@ The Phase 5 truth is split into three primary artifacts:
 
 ## 2. Decision Rationale Standard
 
-All records in this package adhere to the `src_v2_principle.md` standards:
+All records in this package adhere to the `src_principle.md` standards:
 
 - **No Implied Parity**: If it isn't listed, it isn't supported.
 - **Explicit Rationale**: Every divergence must be classified (Bug Fix, Contract Hardening, etc.).

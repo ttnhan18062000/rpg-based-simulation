@@ -39,9 +39,9 @@ Finalize the `CanonicalStateHasher` to ensure it only includes authoritative fie
 - `stored_artifacts/TCK-20260419-MA-TASK4-HARDEN-HASHING/test_plan.md`
 
 ## Related Code Areas
-- `src_v2/engine/checkpoint.py`
-- `src_v2/core/state.py`
-- `src_v2/platform/rng.py`
+- `src/engine/checkpoint.py`
+- `src/core/state.py`
+- `src/platform/rng.py`
 
 ## Assumptions / Open Questions
 - None.
@@ -60,8 +60,8 @@ Finalize the `CanonicalStateHasher` to ensure it only includes authoritative fie
 - `test_rng_hash_reproducibility`: PASSED
 
 ## Files Changed
-- `src_v2/engine/checkpoint.py`
-- `tests_v2/engine/test_checkpoint_reproducibility.py`
+- `src/engine/checkpoint.py`
+- `tests/engine/test_checkpoint_reproducibility.py`
 
 ## Completion Summary
 - Successfully audited and hardened canonical hashing. The `CanonicalStateHasher` now provides a trustworthy, deterministic proof of simulation identity. It is provably isolated from non-authoritative transients and correctly handles deep nested collections and the RNG internal state.

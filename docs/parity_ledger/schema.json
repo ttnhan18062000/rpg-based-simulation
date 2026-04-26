@@ -1,0 +1,57 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "V2 Parity Ledger Schema",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": ["id", "text", "status", "priority"],
+    "properties": {
+      "id": {
+        "type": "string",
+        "pattern": "^[A-Z]+-[0-9]{3}$"
+      },
+      "text": {
+        "type": "string"
+      },
+      "status": {
+        "type": "string",
+        "enum": ["verified", "divergent", "missing", "unsupported", "legacy_verified"]
+      },
+      "priority": {
+        "type": "string",
+        "enum": ["P0", "P1", "P2"]
+      },
+      "legacy_evidence": {
+        "type": ["string", "null"]
+      },
+      "v2_evidence": {
+        "type": ["string", "null"]
+      },
+      "proof_type": {
+        "type": ["string", "null"],
+        "enum": ["parity", "contract", "differential", "regression", null]
+      },
+      "test_path": {
+        "type": ["string", "null"]
+      },
+      "divergence_note": {
+        "type": ["string", "null"]
+      },
+      "support_boundary": {
+        "type": ["string", "null"]
+      }
+    },
+    "if": {
+      "properties": { "status": { "enum": ["verified", "divergent"] } }
+    },
+    "then": {
+      "required": ["v2_evidence", "test_path"]
+    },
+    "if": {
+      "properties": { "status": { "const": "divergent" } }
+    },
+    "then": {
+      "required": ["divergence_note"]
+    }
+  }
+}

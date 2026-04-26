@@ -36,8 +36,8 @@ Establish the absolute operational contract for Milestone B. This document defin
 - `staging_artifacts/TCK-20260419-MB-PLANNING/investigation.md`
 
 ## Related Code Areas
-- `src_v2/engine/governor.py`
-- `src_v2/engine/observability.py`
+- `src/engine/governor.py`
+- `src/engine/observability.py`
 
 ## Assumptions / Open Questions
 - Assume "Peak Utilization" is the goal for worker accounting.

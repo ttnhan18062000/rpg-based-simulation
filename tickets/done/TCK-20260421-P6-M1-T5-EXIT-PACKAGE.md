@@ -59,12 +59,12 @@ Milestone 1 Task 5 of Phase 6: Produce the final, authoritative Phase 5 Exit Pac
 ## Implementation Notes
 
 - Produced the unified executive summary for Phase 5.
-- Verified structural integrity using `pytest tests_v2/docs/test_doc_integrity.py`.
+- Verified structural integrity using `pytest tests/docs/test_doc_integrity.py`.
 - All high-level and tactical docs are now in perfect sync.
 
 ## Test Summary
 
-- 100% pass on `tests_v2/docs/test_doc_integrity.py`.
+- 100% pass on `tests/docs/test_doc_integrity.py`.
 - Manual link audit confirmed 0 broken cross-references in the exit package.
 
 ## Files Changed

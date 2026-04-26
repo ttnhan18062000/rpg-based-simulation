@@ -9,7 +9,7 @@ Integrated Phase 1 Macro-Interest systems into the simulation's cognitive pipeli
 - IdentityAspect: Extended with OCEAN traits and archetype templates.
 - MindAspect: Added Motive Appraisal state (DecisionModel).
 - AIBrain: Implemented throttled Motive Appraisal pipeline.
-- Social Registry: Unified models in `src.core.models.social`.
+- Social Registry: Unified models in `src_legacy.core.models.social`.
 - Goal Selection: Integrated `MotiveModifier` to apply pre-calculated biases.
 
 ## Acceptance Criteria:

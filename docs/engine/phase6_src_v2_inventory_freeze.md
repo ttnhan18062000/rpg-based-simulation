@@ -1,22 +1,22 @@
-# Phase 6 `src_v2` Surface Inventory Freeze
+# Phase 6 `src` Surface Inventory Freeze
 
-This document formalizes the current state of the `src_v2` engine as of the start of the Replacement Ledger mapping. It represents the "Replacement" side of the comparison.
+This document formalizes the current state of the `src` engine as of the start of the Replacement Ledger mapping. It represents the "Replacement" side of the comparison.
 
 ## Freeze Metadata
 
 - **Date**: 2026-04-21
 - **Snapshot ID**: `PHASE6-V2-FREEZE-001`
-- **Engine Version**: `src_v2` (Resource Phase 5 Milestone 3 Hardened)
+- **Engine Version**: `src` (Resource Phase 5 Milestone 3 Hardened)
 - **Status**: LOCKED
 
 ## Canonical Inventory Summary
 
-The `src_v2` engine implementation has been audited against the Frozen Legacy Inventory. The following totals represent the verified maturity as of this freeze:
+The `src` engine implementation has been audited against the Frozen Legacy Inventory. The following totals represent the verified maturity as of this freeze:
 
 | Dimension | Count | Verified Evidence |
 | :--- | :--- | :--- |
-| **IMPLEMENTED** | 44 | Code existence in `src_v2/engine` and `src_v2/systems` |
-| **TESTED** | 44 | Coverage in `tests_v2/parity` and `tests_v2/verify` |
+| **IMPLEMENTED** | 44 | Code existence in `src/engine` and `src/systems` |
+| **TESTED** | 44 | Coverage in `tests/parity` and `tests/verify` |
 | **PROOF-BACKED** | 44 | Passing results in `phase5_proof_bundle` and `m7_parity_oracle` |
 | **SUPPORTED** | 43 | Officially documented and contract-compliant |
 
@@ -31,7 +31,7 @@ Initial scan identifies the following coverage characteristics:
 
 ## Approval
 
-This freeze is the authoritative baseline for the `src_v2` side of the **Authoritative Replacement Ledger**.
+This freeze is the authoritative baseline for the `src` side of the **Authoritative Replacement Ledger**.
 
 ---
 *End of Freeze Document*

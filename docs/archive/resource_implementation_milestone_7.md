@@ -177,7 +177,7 @@ The project has one exact observability and operational-control contract that ca
 Make the codebase obey the frozen observability and operational-control contract by implementing one exact surfaced-state path and one exact startup-validation path.
 
 [Task implementation comments]
-Surfaced signals are implemented as typed presenters in `src_v2/api/presenters.py`. Startup validation for runtime profiles is enforced by `src_v2/config/validator.py`, which rejects mismatched envelope settings before the tick loop begins.
+Surfaced signals are implemented as typed presenters in `src/api/presenters.py`. Startup validation for runtime profiles is enforced by `src/config/validator.py`, which rejects mismatched envelope settings before the tick loop begins.
 
 [Task technical implementation]
 Implement or refactor the runtime so that:
@@ -230,7 +230,7 @@ The engine exposes the required runtime signals consistently and rejects unsafe 
 Make runtime shutdown and operational controls obey exact contract behavior rather than ad hoc process behavior.
 
 [Task implementation comments]
-Graceful shutdown is coordinated by the `Kernel` in `src_v2/engine/kernel.py`, ensuring all in-memory replay chunks are flushed to the persistence sink. Operational flags for feature rollout are managed via the `Governor` to ensure they respect active mode constraints.
+Graceful shutdown is coordinated by the `Kernel` in `src/engine/kernel.py`, ensuring all in-memory replay chunks are flushed to the persistence sink. Operational flags for feature rollout are managed via the `Governor` to ensure they respect active mode constraints.
 
 [Task technical implementation]
 Implement exact behavior for:
@@ -283,7 +283,7 @@ Shutdown and operational flag behavior are explicit, validated, and safe, and do
 Lock the Milestone 7 visibility and control rules with deterministic tests so later milestones cannot silently turn observability into instability or operational controls into guesswork.
 
 [Task implementation comments]
-Observability tests in `tests_v2/engine/test_observability_contract.py` verify that structured reasons are correctly populated for both success and failure paths. Graceful shutdown tests ensure bit-identical replay output after a controlled termination.
+Observability tests in `tests/engine/test_observability_contract.py` verify that structured reasons are correctly populated for both success and failure paths. Graceful shutdown tests ensure bit-identical replay output after a controlled termination.
 
 [Task technical implementation]
 Add exact tests for:

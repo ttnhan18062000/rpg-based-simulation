@@ -7,7 +7,7 @@ Legacy `src` Logic and System Compatibility Audit
 DONE
 
 ## Request Summary
-Audit the legacy checklists (Part 1-5) against the `src_v2` implementation and mark completed/divergent/unsupported status for each item with evidence.
+Audit the legacy checklists (Part 1-5) against the `src` implementation and mark completed/divergent/unsupported status for each item with evidence.
 
 ## Scope
 - Port status verification for RPG-core (Part 1-4).
@@ -20,7 +20,7 @@ Audit the legacy checklists (Part 1-5) against the `src_v2` implementation and m
 
 ## Acceptance Criteria
 - All 5 legacy checklist parts are updated with status and evidence.
-- Evidence is verified against `src_v2` code or tests.
+- Evidence is verified against `src` code or tests.
 - Divergence notes are provided for refactored systems.
 
 ## Related Tickets
@@ -37,8 +37,8 @@ Audit the legacy checklists (Part 1-5) against the `src_v2` implementation and m
 - None
 
 ## Related Code Areas
-- src_v2/
-- tests_v2/
+- src/
+- tests/
 
 ## Assumptions / Open Questions
 - Assumption: "Brokerless" is the intended baseline for Phase 5.
@@ -47,7 +47,7 @@ Audit the legacy checklists (Part 1-5) against the `src_v2` implementation and m
 - Use `preserved`, `intentionally divergent`, or `unsupported` as status.
 
 ## Test Summary
-- Verify with `pytest tests_v2/integrity/`.
+- Verify with `pytest tests/integrity/`.
 
 ## Files Changed
 - legacy_checklist_part1.md
@@ -60,5 +60,5 @@ Audit the legacy checklists (Part 1-5) against the `src_v2` implementation and m
 - Successfully audited and marked 5 parts of the legacy checklist.
 - Verified parity for RPG-core (Authoritative model, Combat, Movement, Resource loops).
 - Documented divergence for CLI and Infrastructure (Brokerless focus).
-- Validated with 100% pass rate in `tests_v2/integrity/`.
-- All marked items are backed by direct code evidence in `src_v2`.
+- Validated with 100% pass rate in `tests/integrity/`.
+- All marked items are backed by direct code evidence in `src`.

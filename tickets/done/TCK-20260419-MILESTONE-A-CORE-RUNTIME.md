@@ -26,7 +26,7 @@ Harden the engine's core runtime into a provably deterministic single-process ba
 - [x] Persistence/Replay emission is non-authoritative and occurs after tick advancement.
 - [x] Hashing uses compact canonical JSON string as the source of truth.
 - [x] All state collections are sorted before hashing/apply.
-- [x] No `pass` or placeholder tests remain in `tests_v2/engine/`.
+- [x] No `pass` or placeholder tests remain in `tests/engine/`.
 - [x] 100% test pass rate for the engine suite (57/57).
 
 ## Related Tickets
@@ -36,31 +36,31 @@ Harden the engine's core runtime into a provably deterministic single-process ba
 - [Runtime Completion Contract](file:///home/vboxuser/Work/rpg-based-simulation/docs/engine/runtime_completion_contract_ma.md)
 
 ## Related Code Areas
-- `src_v2/engine/kernel.py`
-- `src_v2/engine/phases.py`
-- `src_v2/engine/apply.py`
-- `src_v2/engine/checkpoint.py`
-- `src_v2/engine/governor.py`
+- `src/engine/kernel.py`
+- `src/engine/phases.py`
+- `src/engine/apply.py`
+- `src/engine/checkpoint.py`
+- `src/engine/governor.py`
 
 ## Implementation Notes
 - Resolved double-recording of signals in `ResourceGovernor` and `Kernel`.
 - Established a `pretty=True` debug mode for `to_canonical_json` to support drift auditing without compromising hash stability.
 
 ## Test Summary
-- `pytest tests_v2/engine/`: 57 PASSED.
+- `pytest tests/engine/`: 57 PASSED.
 - Added `test_checkpoint_reproducibility.py` and `test_kernel_boundaries.py`.
 
 ## Files Changed
-- `src_v2/engine/kernel.py`
-- `src_v2/engine/phases.py`
-- `src_v2/engine/apply.py` (Audit)
-- `src_v2/engine/checkpoint.py`
-- `src_v2/engine/governor.py`
-- `tests_v2/engine/test_authoritative_apply.py`
-- `tests_v2/engine/test_checkpoint_reproducibility.py`
-- `tests_v2/engine/test_kernel_boundaries.py`
-- `tests_v2/engine/test_operational_flags.py`
-- `tests_v2/engine/test_simulation_kernel_contract.py`
+- `src/engine/kernel.py`
+- `src/engine/phases.py`
+- `src/engine/apply.py` (Audit)
+- `src/engine/checkpoint.py`
+- `src/engine/governor.py`
+- `tests/engine/test_authoritative_apply.py`
+- `tests/engine/test_checkpoint_reproducibility.py`
+- `tests/engine/test_kernel_boundaries.py`
+- `tests/engine/test_operational_flags.py`
+- `tests/engine/test_simulation_kernel_contract.py`
 
 ## Completion Summary
 Milestone A is closed. The engine now possesses a hard, auditable semantic baseline that satisfies the primary det-baseline goal for V2.

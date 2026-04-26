@@ -6,9 +6,9 @@ This document restates the honest current support level for strategic and social
 
 | Capability | Status | Evidence |
 | :--- | :--- | :--- |
-| Strategic state persistence (blockers, leads) | **SUPPORTED** | `src_v2/core/strategic.py` |
-| Crafting blocker generation | **SUPPORTED** | `src_v2/systems/strategic.py` |
-| Material blocker auto-resolution | **SUPPORTED** | `src_v2/systems/strategic.py` |
+| Strategic state persistence (blockers, leads) | **SUPPORTED** | `src/core/strategic.py` |
+| Crafting blocker generation | **SUPPORTED** | `src/systems/strategic.py` |
+| Material blocker auto-resolution | **SUPPORTED** | `src/systems/strategic.py` |
 | Strategic outcome processing (stub) | **PARTIAL** | `process_outcome()` delegates to social trust only |
 | Directives | **UNSUPPORTED** | No model or mutation logic |
 | Projects / Objectives | **UNSUPPORTED** | No model or lifecycle |
@@ -23,7 +23,7 @@ This document restates the honest current support level for strategic and social
 
 | Capability | Status | Evidence |
 | :--- | :--- | :--- |
-| Trust recalibration (harm/help) | **SUPPORTED** | `src_v2/systems/social.py` |
+| Trust recalibration (harm/help) | **SUPPORTED** | `src/systems/social.py` |
 | Recruitment offer evaluation | **SUPPORTED** | `evaluate_recruitment_offer()` |
 | Betrayal recording (stub) | **PARTIAL** | Returns SocialUpdate with increment only |
 | Private betrayal overriding reputation | **UNSUPPORTED** | No private/public split |

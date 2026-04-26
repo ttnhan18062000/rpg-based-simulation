@@ -18,7 +18,7 @@ It is the broadest compatibility milestone, but it is still bounded to declared 
 
 ## [Milestone technical implementation]
 
-Recover the supported API/protocol/headless system surface in native `src_v2` terms.
+Recover the supported API/protocol/headless system surface in native `src` terms.
 
 This milestone must:
 
@@ -56,7 +56,7 @@ At the end of this milestone:
 
 ## Task
 
-### [ ] (checkbox) - [Task 1] - Audit API, protocol, transport, compression, and headless rows against current `src_v2` consumer behavior
+### [ ] (checkbox) - [Task 1] - Audit API, protocol, transport, compression, and headless rows against current `src` consumer behavior
 
 #### [Task Description]
 
@@ -64,7 +64,7 @@ Find where consumer-facing compatibility is already real, partial, or fake.
 
 #### [Task technical implementation]
 
-Review all Phase 10 consumer-surface rows and map them to current `src_v2` implementation points.
+Review all Phase 10 consumer-surface rows and map them to current `src` implementation points.
 
 Identify:
 
@@ -76,9 +76,9 @@ Identify:
 
 #### [Task possible affected files]
 
-- `src_v2/api/**`
-- `src_v2/protocol/**`
-- `src_v2/headless/**`
+- `src/api/**`
+- `src/protocol/**`
+- `src/headless/**`
 - `docs/engine/replacement_ledger.md`
 
 #### [Task important notes]
@@ -116,9 +116,9 @@ Implement or refine supported behavior for:
 
 #### [Task possible affected files]
 
-- `src_v2/api/**`
-- `tests_v2/api/**`
-- `tests_v2/integration/**`
+- `src/api/**`
+- `tests/api/**`
+- `tests/integration/**`
 
 #### [Task important notes]
 
@@ -155,10 +155,10 @@ Implement or refine supported behavior for:
 
 #### [Task possible affected files]
 
-- `src_v2/protocol/**`
-- `src_v2/api/**`
-- `tests_v2/api/**`
-- `tests_v2/integration/**`
+- `src/protocol/**`
+- `src/api/**`
+- `tests/api/**`
+- `tests/integration/**`
 
 #### [Task important notes]
 
@@ -195,11 +195,11 @@ Implement or refine supported headless/final-system behavior, including where pr
 
 #### [Task possible affected files]
 
-- `src_v2/headless/**`
-- `src_v2/api/**`
-- `src_v2/engine/**`
-- `tests_v2/e2e/**`
-- `tests_v2/integration/**`
+- `src/headless/**`
+- `src/api/**`
+- `src/engine/**`
+- `tests/e2e/**`
+- `tests/integration/**`
 
 #### [Task important notes]
 
@@ -237,9 +237,9 @@ Add focused tests for:
 
 #### [Task possible affected files]
 
-- `tests_v2/api/**`
-- `tests_v2/integration/**`
-- `tests_v2/e2e/**`
+- `tests/api/**`
+- `tests/integration/**`
+- `tests/e2e/**`
 
 #### [Task important notes]
 

@@ -51,9 +51,9 @@ Prove the integrated resource progression loop (Movement -> Interaction -> Resol
 
 ## Related Code Areas
 
-- `src_v2/engine/` (kernel, movement, interaction, blacksmith, shop)
-- `src_v2/systems/strategic.py`
-- `tests_v2/parity/`
+- `src/engine/` (kernel, movement, interaction, blacksmith, shop)
+- `src/systems/strategic.py`
+- `tests/parity/`
 
 ## Assumptions / Open Questions
 
@@ -66,15 +66,15 @@ Prove the integrated resource progression loop (Movement -> Interaction -> Resol
 
 ## Test Summary
 
-- 100% Pass in `tests_v2/parity/test_progression_loop_parity.py`.
-- 100% Pass in `tests_v2/parity/test_progression_integrity_guards.py`.
+- 100% Pass in `tests/parity/test_progression_loop_parity.py`.
+- 100% Pass in `tests/parity/test_progression_integrity_guards.py`.
 
 ## Files Changed
 
-- `src_v2/engine/kernel.py`
-- `src_v2/systems/redirection.py`
-- `tests_v2/parity/test_progression_loop_parity.py`
-- `tests_v2/parity/test_progression_integrity_guards.py`
+- `src/engine/kernel.py`
+- `src/systems/redirection.py`
+- `tests/parity/test_progression_loop_parity.py`
+- `tests/parity/test_progression_integrity_guards.py`
 
 ## Completion Summary
 

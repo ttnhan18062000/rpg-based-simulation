@@ -121,13 +121,13 @@ Add focused tests for:
 
 #### [Task possible affected files]
 
-- `tests_v2/engine/test_worker_integrity.py`
-- `tests_v2/core/test_no_worker_direct_mutation.py`
-- `tests_v2/engine/test_worker_fallback.py`
+- `tests/engine/test_worker_integrity.py`
+- `tests/core/test_no_worker_direct_mutation.py`
+- `tests/engine/test_worker_fallback.py`
 
 #### [Task implementation comments]
 
-- Completed. Mutation boundary tests implemented in `tests_v2/core/test_no_worker_direct_mutation.py`. Frozen dataclass enforcement verified.
+- Completed. Mutation boundary tests implemented in `tests/core/test_no_worker_direct_mutation.py`. Frozen dataclass enforcement verified.
 
 #### [Task acceptance criteria]
 
@@ -198,13 +198,13 @@ Add focused tests where one domain is rejected and unrelated domains survive, fo
 
 #### [Task possible affected files]
 
-- `tests_v2/engine/test_partial_rejection.py`
-- `tests_v2/engine/test_authoritative_apply.py`
-- `tests_v2/engine/test_pipeline_contract.py`
+- `tests/engine/test_partial_rejection.py`
+- `tests/engine/test_authoritative_apply.py`
+- `tests/engine/test_pipeline_contract.py`
 
 #### [Task implementation comments]
 
-- Completed. Mixed-domain partial rejection proven in `tests_v2/engine/test_partial_rejection.py` (Occupancy vs Combat/Readiness).
+- Completed. Mixed-domain partial rejection proven in `tests/engine/test_partial_rejection.py` (Occupancy vs Combat/Readiness).
 
 #### [Task acceptance criteria]
 
@@ -231,13 +231,13 @@ Add explicit tests and docs proving replay/output surfaces are sourced from:
 
 #### [Task possible affected files]
 
-- `tests_v2/replay/test_authoritative_outcome_truth.py`
+- `tests/replay/test_authoritative_outcome_truth.py`
 - `docs/engine/authoritative_mutation_pipeline_contract.md`
 - `docs/engine/phase7_proof_bundle.md`
 
 #### [Task implementation comments]
 
-- Completed. Replay-visible truth sourcing proven in `tests_v2/replay/test_authoritative_outcome_truth.py`. Verified that `REFINED_UPDATE` trace sources from refined outcomes.
+- Completed. Replay-visible truth sourcing proven in `tests/replay/test_authoritative_outcome_truth.py`. Verified that `REFINED_UPDATE` trace sources from refined outcomes.
 
 #### [Task acceptance criteria]
 
@@ -267,8 +267,8 @@ Define and test:
 
 - `docs/engine/authoritative_export_contract.md`
 - `docs/engine/serialization_contract.md`
-- `tests_v2/replay/test_authoritative_export_shape.py`
-- `tests_v2/core/test_state_serialization_determinism.py`
+- `tests/replay/test_authoritative_export_shape.py`
+- `tests/core/test_state_serialization_determinism.py`
 
 #### [Task implementation comments]
 
@@ -299,14 +299,14 @@ Add stronger proof for:
 
 #### [Task possible affected files]
 
-- `tests_v2/test_deterministic_baseline.py`
-- `tests_v2/world/test_world_generation_determinism.py`
-- `tests_v2/world/test_entity_init_determinism.py`
+- `tests/test_deterministic_baseline.py`
+- `tests/world/test_world_generation_determinism.py`
+- `tests/world/test_entity_init_determinism.py`
 - `docs/engine/deterministic_runtime_baseline_contract.md`
 
 #### [Task implementation comments]
 
-- Completed. World-gen/init determinism strengthened in `tests_v2/test_deterministic_baseline.py` using multi-domain fingerprints.
+- Completed. World-gen/init determinism strengthened in `tests/test_deterministic_baseline.py` using multi-domain fingerprints.
 
 #### [Task acceptance criteria]
 
@@ -332,13 +332,13 @@ Update docs, tests, and support language so they clearly state:
 
 - `docs/engine/deterministic_runtime_baseline_contract.md`
 - `docs/engine/phase7_exit_support_boundary.md`
-- `tests_v2/engine/test_phase_order.py`
-- `tests_v2/engine/test_phase_order_contract.py`
-- `tests_v2/engine/test_replay_contract.py`
+- `tests/engine/test_phase_order.py`
+- `tests/engine/test_phase_order_contract.py`
+- `tests/engine/test_replay_contract.py`
 
 #### [Task implementation comments]
 
-- Completed. 6 authoritative phases strictly separated from persistence in `tests_v2/test_deterministic_baseline.py` and documented in `authoritative_refinement_contract.md`.
+- Completed. 6 authoritative phases strictly separated from persistence in `tests/test_deterministic_baseline.py` and documented in `authoritative_refinement_contract.md`.
 
 #### [Task acceptance criteria]
 

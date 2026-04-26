@@ -1,7 +1,7 @@
 # Supported Progression Surface Matrix (Phase 5)
 
 ## 1. Purpose
-This document defines the official support boundary for the integrated resource progression loop in `src_v2`. It identifies the authoritative behaviors verified through Phase 5 recovery and establishes the truth for current engine claims.
+This document defines the official support boundary for the integrated resource progression loop in `src`. It identifies the authoritative behaviors verified through Phase 5 recovery and establishes the truth for current engine claims.
 
 ## 2. Support Matrix
 

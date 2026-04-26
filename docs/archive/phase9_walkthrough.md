@@ -28,22 +28,22 @@ We have successfully completed the implementation of the remaining Phase 9 miles
 
 ## Verification Proof
 A comprehensive suite of 19 contract tests was implemented and passed:
-- `tests_v2/strategic/test_biological_needs.py`: 6 tests
-- `tests_v2/progression/test_lifecycle.py`: 5 tests
-- `tests_v2/social/test_recruitment.py`: 3 tests
-- `tests_v2/world/test_regional_consequences.py`: 3 tests
-- `tests_v2/world/test_anchored_world.py`: 1 test
-- `tests_v2/strategic/test_role_biasing.py`: 1 test
+- `tests/strategic/test_biological_needs.py`: 6 tests
+- `tests/progression/test_lifecycle.py`: 5 tests
+- `tests/social/test_recruitment.py`: 3 tests
+- `tests/world/test_regional_consequences.py`: 3 tests
+- `tests/world/test_anchored_world.py`: 1 test
+- `tests/strategic/test_role_biasing.py`: 1 test
 
 ```bash
 ============================== 19 passed in 0.12s ==============================
 ```
 
 ## Artifacts Updated
-- `src_v2/engine/apply.py`: Authoritative aging and hazard drain.
-- `src_v2/engine/pipeline.py`: Near-death hardening and regional suppression.
-- `src_v2/systems/social.py`: Recruitment cost logic.
-- `src_v2/systems/routine.py`: Anchored behavior and role biasing.
-- `src_v2/core/enums.py`: Role and Faction enums.
-- `src_v2/core/state.py` & `src_v2/core/strategic.py`: State expansion.
+- `src/engine/apply.py`: Authoritative aging and hazard drain.
+- `src/engine/pipeline.py`: Near-death hardening and regional suppression.
+- `src/systems/social.py`: Recruitment cost logic.
+- `src/systems/routine.py`: Anchored behavior and role biasing.
+- `src/core/enums.py`: Role and Faction enums.
+- `src/core/state.py` & `src/core/strategic.py`: State expansion.
 - `legacy_checklist_part5.md`: Updated support status.

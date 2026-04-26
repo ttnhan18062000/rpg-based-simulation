@@ -16,8 +16,8 @@ This package formalizes the transition into Phase 10.
 Close the remaining **System-Compatibility Gap** (CLI, Env, Observability, API) to enable full `src` replacement.
 
 ## Entry Baseline
-- **Codebase**: `src_v2` hardened through Phase 9.
-- **Tests**: `tests_v2/` passing 100% (375 tests).
+- **Codebase**: `src` hardened through Phase 9.
+- **Tests**: `tests/` passing 100% (375 tests).
 - **Parity**: Semantic parity established for all RPG-core domains.
 
 ---

@@ -21,6 +21,6 @@ Implement the 'Town Loop' where entities on Town tiles convert their harvested m
 - [ ] No gold awarded if the entity is not on a town tile.
 
 ## Files Changed
-- `src_v2/core/state.py` (Add town_tiles)
-- `src_v2/engine/town_resolution.py` [NEW]
-- `src_v2/engine/kernel.py` (Wiring)
+- `src/core/state.py` (Add town_tiles)
+- `src/engine/town_resolution.py` [NEW]
+- `src/engine/kernel.py` (Wiring)

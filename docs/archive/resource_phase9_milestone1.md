@@ -1,6 +1,6 @@
-Below is the **full detailed implementation plan for Phase 9**, in the same milestone/task structure style as your earlier implementation docs, and aligned with the Phase 9 high-level plan plus the roadmap/checklist surfaces in [resource_phases.md](sandbox:/mnt/data/resource_phases.md), [legacy_logic_checklist_part4.md](sandbox:/mnt/data/legacy_logic_checklist_part4.md), [legacy_logic_checklist_part5.md](sandbox:/mnt/data/legacy_logic_checklist_part5.md), and [src_v2_principle.md](sandbox:/mnt/data/src_v2_principle.md).
+Below is the **full detailed implementation plan for Phase 9**, in the same milestone/task structure style as your earlier implementation docs, and aligned with the Phase 9 high-level plan plus the roadmap/checklist surfaces in [resource_phases.md](sandbox:/mnt/data/resource_phases.md), [legacy_logic_checklist_part4.md](sandbox:/mnt/data/legacy_logic_checklist_part4.md), [legacy_logic_checklist_part5.md](sandbox:/mnt/data/legacy_logic_checklist_part5.md), and [src_principle.md](sandbox:/mnt/data/src_principle.md).
 
-# Detailed Implementation Plan — Phase 9 of `src_v2`
+# Detailed Implementation Plan — Phase 9 of `src`
 
 This plan assumes Phase 8 has already produced:
 

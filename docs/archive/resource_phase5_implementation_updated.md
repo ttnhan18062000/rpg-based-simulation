@@ -4,7 +4,7 @@
 
 Milestone 5 is **not** a documentation wrap-up anymore.
 
-Based on the current `src_v2` verification state, this milestone is now the closure phase for a branch that has a mostly working progression runtime but an unclosed support surface, an incomplete proof surface, and release artifacts that do not yet match reality.
+Based on the current `src` verification state, this milestone is now the closure phase for a branch that has a mostly working progression runtime but an unclosed support surface, an incomplete proof surface, and release artifacts that do not yet match reality.
 
 The branch is close enough to overclaim and not close enough to deserve it.
 
@@ -102,7 +102,7 @@ Repair or formally de-scope the concrete behavior gaps that currently make the s
 
 Close the following blockers first:
 
-- implement the missing sell-on-entry behavior in `src_v2/engine/town_resolution.py` **or**
+- implement the missing sell-on-entry behavior in `src/engine/town_resolution.py` **or**
   explicitly remove that claim from the supported loop and adjust all dependent tests/docs,
 - normalize item and resource identifiers across progression systems so the supported loop uses one canonical namespace,
 - verify that town return, inventory, blacksmith/shop interaction, and progression scenarios all consume the same canonical identifiers,
@@ -110,18 +110,18 @@ Close the following blockers first:
 
 Current known hotspots include:
 
-- `src_v2/engine/town_resolution.py`
-- `src_v2/engine/interaction_system.py`
-- `src_v2/engine/blacksmith_system.py`
-- `src_v2/engine/shop_system.py`
+- `src/engine/town_resolution.py`
+- `src/engine/interaction_system.py`
+- `src/engine/blacksmith_system.py`
+- `src/engine/shop_system.py`
 - progression scenario definitions and tests that depend on resource naming and town resolution semantics
 
 #### [Task possible affected files]
 
-- `src_v2/engine/town_resolution.py`
-- `src_v2/engine/interaction_system.py`
-- `src_v2/engine/blacksmith_system.py`
-- `src_v2/engine/shop_system.py`
+- `src/engine/town_resolution.py`
+- `src/engine/interaction_system.py`
+- `src/engine/blacksmith_system.py`
+- `src/engine/shop_system.py`
 - progression loop tests
 - parity scenario files
 - support docs
@@ -146,7 +146,7 @@ The declared supported progression loop is internally coherent and no longer rel
 
 ---
 
-### [x] (checkbox) - [Task 2] - Define the supported progression-surface matrix for the current `src_v2` phase
+### [x] (checkbox) - [Task 2] - Define the supported progression-surface matrix for the current `src` phase
 
 #### [Task Description]
 
@@ -215,9 +215,9 @@ This task must close the current parity integrity gap between “we compared beh
 
 #### [Task possible affected files]
 
-- `tests_v2/parity/test_movement_parity.py`
-- `tests_v2/parity/test_resource_interaction_parity.py`
-- `tests_v2/parity/town_oracle/capture_src_town.py`
+- `tests/parity/test_movement_parity.py`
+- `tests/parity/test_resource_interaction_parity.py`
+- `tests/parity/town_oracle/capture_src_town.py`
 - parity oracle artifacts
 - divergence docs
 - integrated parity tests
@@ -262,7 +262,7 @@ Use the integrated progression scenario as the baseline certification target and
 
 #### [Task possible affected files]
 
-- `src_v2/certification/scenarios.py`
+- `src/certification/scenarios.py`
 - certification models
 - progression certification tests
 - certification docs
@@ -317,7 +317,7 @@ Tie the benchmark harness to the same integrated progression scenario family use
 #### [Task possible affected files]
 
 - benchmark scenario definitions
-- `src_v2/perf/bench_harness.py`
+- `src/perf/bench_harness.py`
 - benchmark docs
 - regression reporting
 
@@ -528,7 +528,7 @@ Publish one package containing:
 - unsupported areas,
 - release-truth dependencies,
 - and the exact answer to:
-  “What progression behavior does `src_v2` currently support and prove?”
+  “What progression behavior does `src` currently support and prove?”
 
 #### [Task possible affected files]
 

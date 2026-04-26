@@ -20,7 +20,7 @@ This document audits the systems invoked by the `AuthoritativeApplyPipeline.refi
 ## Audit Findings
 
 ### 1. Semantic Bleed
-- **StrategicIntelligenceSystem** and **StrategicRedirectionSystem** are the primary sources of semantic bleed in the pipeline. They currently reside in `src_v2/systems/` rather than `src_v2/engine/`, indicating they are higher-level logic being invoked by the substrate to prevent navigation deadlocks.
+- **StrategicIntelligenceSystem** and **StrategicRedirectionSystem** are the primary sources of semantic bleed in the pipeline. They currently reside in `src/systems/` rather than `src/engine/`, indicating they are higher-level logic being invoked by the substrate to prevent navigation deadlocks.
 - **Action Recommendation**: These systems should be treated as "Mixed-Surface Temporary Dependencies." Phase 7 does NOT own their logic, only their deterministic orchestration within the 6-phase tick.
 
 ### 2. Substrate Integrity

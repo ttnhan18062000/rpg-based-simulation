@@ -1,8 +1,8 @@
 Below is the full detailed implementation plan for **Phase 6** in the same milestone-and-task structure as the detailed Phase 5 reference. It is built around the corrected post–Phase 5 roadmap: Phase 6 is the **replacement-ledger and scope-ratification phase**, not a gameplay-expansion phase. Its job is to build the authoritative replacement ledger across both checklist families, classify every remaining legacy item, and assign proof path and future phase ownership without mixing those jobs together. That separation is required by the revised roadmap and by the V2 handbook’s support, divergence, and proof standards.
 
-# Detailed Implementation Plan — Phase 6 of `src_v2`
+# Detailed Implementation Plan — Phase 6 of `src`
 
-This plan assumes Phase 5 has already moved `src_v2` into a materially better state by recovering a bounded resource/town/progression slice and by improving proof, runtime truth, and support clarity around that slice.
+This plan assumes Phase 5 has already moved `src` into a materially better state by recovering a bounded resource/town/progression slice and by improving proof, runtime truth, and support clarity around that slice.
 
 Phase 6 is not a broad semantic expansion phase.
 
@@ -211,7 +211,7 @@ The output should be reviewable by someone who did not personally build Phase 5.
 
 - `docs/engine/phase5_proof_bundle.md`
 - `docs/engine/release_proof/phase5/*`
-- `tests_v2/*`
+- `tests/*`
 - benchmark/certification index docs
 
 #### [Task important notes]
@@ -357,7 +357,7 @@ This is the line between “still cleaning Phase 5” and “actually entering P
 - [x] Known limitations are attached
 - [x] Phase 6 entry is no longer ambiguous
 
-**Implementation Comment**: The exit package and accompanying integrity tests (`tests_v2/docs/test_doc_integrity.py`) formally constitute the Phase 6 ready gate. All requirements for Milestone 1 are satisfied.
+**Implementation Comment**: The exit package and accompanying integrity tests (`tests/docs/test_doc_integrity.py`) formally constitute the Phase 6 ready gate. All requirements for Milestone 1 are satisfied.
 
 #### [Task acceptance criteria]
 

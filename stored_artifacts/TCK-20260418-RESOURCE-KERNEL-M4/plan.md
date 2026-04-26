@@ -14,5 +14,5 @@ Implement a deterministic scheduler and work-class model.
 - [ ] Implement `work.py` (Types)
 - [ ] Implement `scheduler.py` (Core logic)
 - [ ] Integrate with `kernel.py`
-- [ ] Write `tests_v2/` for scheduling and debt
+- [ ] Write `tests/` for scheduling and debt
 - [ ] Verify determinism

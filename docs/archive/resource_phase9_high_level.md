@@ -2,11 +2,11 @@ Good. Phase 9 is where the rewrite either recovers the game’s mind, or keeps p
 
 After Phase 8, the trap is obvious: once combat and local action look credible, people start saying “the core game is basically back.” That is false. What is still missing is the layer that gives the world continuity, consequence, memory, and progression meaning.
 
-This Phase 9 plan is grounded in the roadmap and checklist surfaces from [resource_phases.md](sandbox:/mnt/data/resource_phases.md), [legacy_logic_checklist_part4.md](sandbox:/mnt/data/legacy_logic_checklist_part4.md), [legacy_logic_checklist_part5.md](sandbox:/mnt/data/legacy_logic_checklist_part5.md), and the V2 completion rules in [src_v2_principle.md](sandbox:/mnt/data/src_v2_principle.md).
+This Phase 9 plan is grounded in the roadmap and checklist surfaces from [resource_phases.md](sandbox:/mnt/data/resource_phases.md), [legacy_logic_checklist_part4.md](sandbox:/mnt/data/legacy_logic_checklist_part4.md), [legacy_logic_checklist_part5.md](sandbox:/mnt/data/legacy_logic_checklist_part5.md), and the V2 completion rules in [src_principle.md](sandbox:/mnt/data/src_principle.md).
 
 ---
 
-# High-Level Implementation Plan — Phase 9 of `src_v2`
+# High-Level Implementation Plan — Phase 9 of `src`
 
 This plan assumes Phase 8 has already produced:
 
@@ -20,7 +20,7 @@ It also assumes the project has stopped pretending that local gameplay closure i
 
 Phase 9 is not the phase where the project should widen into legacy system compatibility, cutover, or runtime retirement.
 
-It is the phase where `src_v2` must recover the next large semantic surface of original `src`:
+It is the phase where `src` must recover the next large semantic surface of original `src`:
 
 - strategic continuity,
 - bounded cognition and explainability,
@@ -129,7 +129,7 @@ It does not yet close social consequence, contracts, or progression math itself.
 
 ## [Milestone technical implementation]
 
-Recover the supported strategic continuity and cognition layer in native `src_v2` terms.
+Recover the supported strategic continuity and cognition layer in native `src` terms.
 
 This milestone must:
 
@@ -240,7 +240,7 @@ It does not yet close progression math, class identity, or reward formulas.
 
 ## [Milestone technical implementation]
 
-Recover the supported social consequence and contract layer in native `src_v2` terms.
+Recover the supported social consequence and contract layer in native `src` terms.
 
 This milestone must:
 

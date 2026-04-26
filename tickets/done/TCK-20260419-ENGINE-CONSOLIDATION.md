@@ -38,26 +38,26 @@ Finalize the v2 engine overhaul by enforcing phase laws, hardening signal modeli
 
 ## Test Summary
 
-- Full regression suite across `tests_v2/engine` and `tests_v2/certification`.
+- Full regression suite across `tests/engine` and `tests/certification`.
 - Automated generation of proof artifacts for `standard_gaming_profile` and `authoritative_equivalence_test`.
 - Verified final gate enforcement of manifest targets.
 
 ## Files Changed
 
-- src_v2/core/governance.py
-- src_v2/core/worker_protocol.py
-- src_v2/core/work.py
-- src_v2/engine/kernel.py
-- src_v2/engine/scheduler.py
-- src_v2/engine/runtime_status.py
-- src_v2/engine/replay_manager.py
-- src_v2/certification/hardware.py
-- src_v2/certification/conformance.py
-- src_v2/certification/harness.py
-- tests_v2/certification/test_final_gate.py
-- tests_v2/certification/test_resilience_recovery.py
-- tests_v2/certification/test_envelope_violations.py
-- tests_v2/engine/* (WorkerPacket/Result updates)
+- src/core/governance.py
+- src/core/worker_protocol.py
+- src/core/work.py
+- src/engine/kernel.py
+- src/engine/scheduler.py
+- src/engine/runtime_status.py
+- src/engine/replay_manager.py
+- src/certification/hardware.py
+- src/certification/conformance.py
+- src/certification/harness.py
+- tests/certification/test_final_gate.py
+- tests/certification/test_resilience_recovery.py
+- tests/certification/test_envelope_violations.py
+- tests/engine/* (WorkerPacket/Result updates)
 
 ## Completion Summary
 

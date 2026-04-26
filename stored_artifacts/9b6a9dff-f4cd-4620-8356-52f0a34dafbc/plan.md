@@ -6,7 +6,7 @@ The goal of this milestone was to finalize the Town Resource Resolution by imple
 
 ### [Component Name] Town Contract Tests
 
-#### [NEW] [test_town_contract.py](file:///home/vboxuser/Work/rpg-based-simulation/tests_v2/contract/test_town_contract.py) [COMPLETED]
+#### [NEW] [test_town_contract.py](file:///home/vboxuser/Work/rpg-based-simulation/tests/contract/test_town_contract.py) [COMPLETED]
 
 This file contains the contract enforcement tests for the town services.
 
@@ -29,11 +29,11 @@ The systems are now "hardened." Any `StateUpdate` that deviates from these laws 
 ### Automated Tests
 - Run the new contract test suite:
   ```bash
-  pytest tests_v2/contract/test_town_contract.py
+  pytest tests/contract/test_town_contract.py
   ```
 - Re-run the parity test suite to ensure no regressions:
   ```bash
-  pytest tests_v2/parity/test_town_resolution_parity.py
+  pytest tests/parity/test_town_resolution_parity.py
   ```
 
 ### Manual Verification

@@ -6,36 +6,36 @@ Implement deterministic resource interaction (loot/harvest channeling) and inven
 ## Proposed Changes
 
 ### 1. State Expansion
-- **[MODIFY] src_v2/core/state.py**:
+- **[MODIFY] src/core/state.py**:
     - Add `InteractionComponent` {loot_progress, current_target_id}.
     - Add `InventoryComponent` {items: List[str], max_slots, max_weight}.
     - Add `ResourceNodeComponent` {harvest_ticks, items: List[str], is_available, respawn_cooldown}.
 
 ### 2. Update Protocol
-- **[MODIFY] src_v2/core/updates.py**:
+- **[MODIFY] src/core/updates.py**:
     - Add `InteractionUpdate` {progress_delta, target_id_set}.
     - Add `InventoryUpdate` {add_items, remove_items}.
     - Add `NodeUpdate` {set_available, start_respawn}.
 
 ### 3. Interaction System [NEW]
-- **[NEW] src_v2/engine/interaction.py**:
+- **[NEW] src/engine/interaction.py**:
     - Implements the channeling logic.
     - `process_interaction`: Logic to increment progress if target is still valid and reachable.
     - `finalize_interaction`: Logic to commit loot to inventory and deplete node.
 
 ### 4. Domain Logic Integration
-- **[MODIFY] src_v2/engine/domain_logic.py**:
+- **[MODIFY] src/engine/domain_logic.py**:
     - Integrate `INTERACT` work item handler.
     - Call into `InteractionSystem`.
 
 ### 5. Apply Path
-- **[MODIFY] src_v2/engine/apply.py**:
+- **[MODIFY] src/engine/apply.py**:
     - Implement atomic application of inventory and interaction updates.
 
 ## Verification Plan
 
 ### Automated Tests
-- **[NEW] tests_v2/parity/interaction_oracle/**:
+- **[NEW] tests/parity/interaction_oracle/**:
     - Capture script for old harvest/loot logic.
     - Parity script for V2 interaction.
 - **Unit Tests**:

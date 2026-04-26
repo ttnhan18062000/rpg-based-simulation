@@ -11,8 +11,8 @@ This document defines the canonical schema for the **Authoritative Replacement L
 | **Atomic Item**| The specific behavior or contract name. |
 | **Legacy Source**| File path and line range in the original `src/`. |
 | **Legacy Test** | Test module or function in the original `tests/`. |
-| **V2 Source** | File path and line range in `src_v2/`. |
-| **V2 Test** | Test file path or function in `tests_v2/`. |
+| **V2 Source** | File path and line range in `src/`. |
+| **V2 Test** | Test file path or function in `tests/`. |
 | **Proof Artifact**| Link to Proof Bundle or Parity Oracle. |
 | **Maturity** | `IMPLEMENTED`, `TESTED`, `PROOF-BACKED`, `SUPPORTED`. |
 | **Status** | `SUPPORTED`, `DIVERGENT`, `UNSUPPORTED`, `RETIRED`. |
@@ -43,8 +43,8 @@ The "Atomic Item" must represent a single, verifiable contract or rule.
 
 To maintain "Baseline Honesty," V2 implementation status is split into four distinct dimensions:
 
-- **IMPLEMENTED**: Code exists in `src_v2` that claims to handle the item. No verification assumed.
-- **TESTED**: Direct unit or integration tests exist in `tests_v2` for the item.
+- **IMPLEMENTED**: Code exists in `src` that claims to handle the item. No verification assumed.
+- **TESTED**: Direct unit or integration tests exist in `tests` for the item.
 - **PROOF-BACKED**: The item is verified via a **Parity Oracle** or **Contract Test** against the legacy baseline.
 - **SUPPORTED**: The item is officially declared as "Official" or "Supported" in consumer-facing docs (e.g., `support_matrix.md`).
 
@@ -53,7 +53,7 @@ To maintain "Baseline Honesty," V2 implementation status is split into four dist
 
 ## 4. Classification Definitions
 
-- **SUPPORTED**: Bit-identical or semantic-equivalent proof exists in `src_v2`.
+- **SUPPORTED**: Bit-identical or semantic-equivalent proof exists in `src`.
 - **DIVERGENT**: Behavior exists but intentionally differs from legacy (rationalized).
 - **UNSUPPORTED**: Behavior is present in legacy code but will not be recovered.
 - **RETIRED**: Behavior is obsolete or replaced by a fundamentally different design (e.g., AOA transitions).

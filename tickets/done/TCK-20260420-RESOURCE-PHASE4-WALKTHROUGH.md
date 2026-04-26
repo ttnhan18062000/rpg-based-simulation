@@ -11,7 +11,7 @@ Created `docs/engine/supported_gameplay_surface_m5.md` which explicitly defines:
 - **Intentional Divergences**: Hardening the "Channeling Law" (3-tick harvest) vs legacy instant behavior.
 
 ### 2. Certification Harness Expansion
-Updated `src_v2/certification/scenarios.py` with three new integrated scenarios:
+Updated `src/certification/scenarios.py` with three new integrated scenarios:
 - `MVM_PATH_20`: Long-distance path stress test.
 - `RES_HARVEST_3`: Standard interaction cycle.
 - `INTEG_RESOURCE_LOOP`: Integrated Move -> Harvest -> Move simulation.
@@ -22,7 +22,7 @@ Expanded `scripts/run_benchmarks.py` to include:
 - `INTEGRATED_LOOP_100`: High-contention mixed load (50% moving, 50% harvesting).
 
 ### 4. Release Gate Hardening
-Updated `docs/engine/manifest.json` to require these new scenarios for any release. Verified that `tests_v2/certification/test_final_gate.py` correctly enforces these requirements.
+Updated `docs/engine/manifest.json` to require these new scenarios for any release. Verified that `tests/certification/test_final_gate.py` correctly enforces these requirements.
 
 ## Verification Results
 

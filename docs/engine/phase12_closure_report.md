@@ -1,7 +1,7 @@
 # Phase 12 Closure Report: Operational Cutover Complete
 
 ## 1. Executive Summary
-Phase 12 has successfully transitioned the project's operational authority to the `src_v2` engine. All primary consumer surfaces (CLI, REST API, Replay) have been migrated and validated under real-world conditions. The legacy engine remains functional as a sanctioned rollback surface, but is no longer the default runtime.
+Phase 12 has successfully transitioned the project's operational authority to the `src` engine. All primary consumer surfaces (CLI, REST API, Replay) have been migrated and validated under real-world conditions. The legacy engine remains functional as a sanctioned rollback surface, but is no longer the default runtime.
 
 ## 2. Operational Metrics
 Validation was performed using a 1000-tick headless simulation on a `class_b` hardware profile.
@@ -19,10 +19,10 @@ Validation was performed using a 1000-tick headless simulation on a `class_b` ha
 
 ## 4. Authority Ratification
 The following systems are now formally RATIFIED as project authorities:
-- **Runtime Kernel**: `src_v2.engine.kernel`
-- **CLI Entrypoint**: `src_v2.cli.entry`
-- **REST/WS API**: `src_v2.api.server`
-- **Replay Manager**: `src_v2.engine.replay_manager`
+- **Runtime Kernel**: `src.engine.kernel`
+- **CLI Entrypoint**: `src.cli.entry`
+- **REST/WS API**: `src.api.server`
+- **Replay Manager**: `src.engine.replay_manager`
 
 ## 5. Phase 13 Readiness
 The repository is now in a **"Ready for Phase 13"** state. The following retirement assets have been identified:

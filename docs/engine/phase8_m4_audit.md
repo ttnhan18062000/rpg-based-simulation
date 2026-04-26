@@ -1,7 +1,7 @@
 # Phase 8 Milestone 4: Environment & World-Interaction Audit
 
 ## 1. Current State of World Interaction
-The `src_v2` engine has implemented high-level world dynamics (hazards/calamities) and building sabotage, but lacks local spatial interaction rules.
+The `src` engine has implemented high-level world dynamics (hazards/calamities) and building sabotage, but lacks local spatial interaction rules.
 
 - **Terrain**: Currently non-existent. All tiles are "Open". There is no logic for blocked movement (walls) or movement penalties (forests).
 - **Buildings**: `BuildingState` exists with HP and `functional` status. `BuildingSabotageSystem` handles damage. However, "Local Access" or "Usage" (e.g., entering a shop to buy) is currently implicit or handled via high-level `town_resolution.py`.

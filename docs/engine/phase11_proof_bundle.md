@@ -22,7 +22,7 @@ This document consolidates all proof artifacts required for the V2 replacement v
 
 | Category | Primary Proof File | Coverage |
 | :--- | :--- | :--- |
-| **Parity** | `tests_v2/parity/` | Bit-identical on supported slice. |
+| **Parity** | `tests/parity/` | Bit-identical on supported slice. |
 | **Contracts** | `test_resource_intelligence_contract.py` | Cognitive boundedness enforced. |
 | **Lifecycle** | `test_authoritative_apply.py` | Substrate mutation hardened. |
 | **Observability** | `test_observability.py` | Deterministic replay verified. |
@@ -30,7 +30,7 @@ This document consolidates all proof artifacts required for the V2 replacement v
 
 ## 4. Final Evidence Statement
 
-The `src_v2` engine has achieved **100% test suite stability** and has satisfied all bit-identical and contractual proof requirements defined in the `src_v2_principle.md` for the supported replacement surface.
+The `src` engine has achieved **100% test suite stability** and has satisfied all bit-identical and contractual proof requirements defined in the `src_principle.md` for the supported replacement surface.
 
 ---
 **Ratification Status**: PROVISIONAL (Proof Consolidated)

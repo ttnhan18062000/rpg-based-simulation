@@ -19,7 +19,7 @@ The user requested a reduction in the file count in `reports/release_proof/`, wh
 - [x] `reports/release_proof/` contains exactly 3 authoritative files.
 - [x] `proofs_bundle.json` contains all 30 required scenario results.
 - [x] `release_report.md` provides a summary of all scenarios.
-- [x] `pytest tests_v2/certification/test_final_gate.py` passes 100%.
+- [x] `pytest tests/certification/test_final_gate.py` passes 100%.
 
 ## Related Tickets
 - `TCK-20260420-CORE-MOVEMENT-SLICE`
@@ -34,12 +34,12 @@ The user requested a reduction in the file count in `reports/release_proof/`, wh
 
 ## Test Summary
 - `scripts/refresh_proofs.py`: Successfully re-certified 30 scenario targets into the bundle.
-- `tests_v2/certification/test_final_gate.py`: 3/3 passed (including manifest compliance).
+- `tests/certification/test_final_gate.py`: 3/3 passed (including manifest compliance).
 
 ## Files Changed
-- `src_v2/certification/recorder.py`
-- `src_v2/core/worker_protocol.py`
-- `tests_v2/certification/test_final_gate.py`
+- `src/certification/recorder.py`
+- `src/core/worker_protocol.py`
+- `tests/certification/test_final_gate.py`
 
 ## Completion Summary
 Consolidated all certification evidence into a single machine-readable bundle and a unified human-readable report. This drastically reduces repository noise while hardening the release gate's ability to verify the entire engine state in a single pass.

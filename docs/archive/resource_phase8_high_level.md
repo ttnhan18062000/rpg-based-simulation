@@ -1,10 +1,10 @@
 Below is the **high-level implementation plan for Phase 8** in the same milestone style as the earlier high-level phase plans.
 
-This plan is grounded in the corrected roadmap and the legacy replacement surfaces described in [resource_phases.md](sandbox:/mnt/data/resource_phases.md), [legacy_logic_checklist_part1.md](sandbox:/mnt/data/legacy_logic_checklist_part1.md), [legacy_logic_checklist_part4.md](sandbox:/mnt/data/legacy_logic_checklist_part4.md), [legacy_logic_checklist_part5.md](sandbox:/mnt/data/legacy_logic_checklist_part5.md), and the V2 completion rules in [src_v2_principle.md](sandbox:/mnt/data/src_v2_principle.md).
+This plan is grounded in the corrected roadmap and the legacy replacement surfaces described in [resource_phases.md](sandbox:/mnt/data/resource_phases.md), [legacy_logic_checklist_part1.md](sandbox:/mnt/data/legacy_logic_checklist_part1.md), [legacy_logic_checklist_part4.md](sandbox:/mnt/data/legacy_logic_checklist_part4.md), [legacy_logic_checklist_part5.md](sandbox:/mnt/data/legacy_logic_checklist_part5.md), and the V2 completion rules in [src_principle.md](sandbox:/mnt/data/src_principle.md).
 
 ---
 
-# High-Level Implementation Plan — Phase 8 of `src_v2`
+# High-Level Implementation Plan — Phase 8 of `src`
 
 This plan assumes Phase 7 has already produced:
 
@@ -18,7 +18,7 @@ It also assumes the project has stopped pretending that substrate closure is the
 
 Phase 8 is not the phase where the project should widen into broad strategic cognition recovery, social consequence recovery, progression/class math, or system-compatibility closure.
 
-It is the phase where `src_v2` must recover the next large semantic surface of original `src`:
+It is the phase where `src` must recover the next large semantic surface of original `src`:
 
 - combat legality,
 - combat outcome semantics,
@@ -123,7 +123,7 @@ It does not yet close broader tactical behavior such as target switching, pursui
 
 ## [Milestone technical implementation]
 
-Recover the preserved combat legality and direct combat outcome model in native `src_v2` terms.
+Recover the preserved combat legality and direct combat outcome model in native `src` terms.
 
 This milestone must:
 
@@ -236,7 +236,7 @@ It is not a repetition of Phase 5’s broader resource loop, and it is not broad
 
 ## [Milestone technical implementation]
 
-Recover the supported local environment/world-interaction semantics in a way that is native to `src_v2` authority and determinism rules.
+Recover the supported local environment/world-interaction semantics in a way that is native to `src` authority and determinism rules.
 
 This milestone must:
 

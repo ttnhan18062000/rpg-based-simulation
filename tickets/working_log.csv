@@ -206,4 +206,38 @@ timestamp,ticket_id,title,status,summary,artifacts_path
 206: 2026-04-24,TCK-20260424-PH12-M3-WORKFLOW-CUTOVER,Phase 12 Milestone 3 Workflow Cutover complete,DONE,stored_artifacts/TCK-20260424-PH12-M3-WORKFLOW-CUTOVER/
 207: 2026-04-24,TCK-20260424-PH12-M4-CUTOVER-VALIDATION,Phase 12 Milestone 4 Cutover Validation complete,DONE,stored_artifacts/TCK-20260424-PH12-M4-CUTOVER-VALIDATION/
 208: 2026-04-24,TCK-20260424-PH12-M5-AUTHORITY-TRANSITION,Phase 12 Milestone 5 Authority Transition complete,DONE,stored_artifacts/TCK-20260424-PH12-M5-AUTHORITY-TRANSITION/
-209: 2026-04-24,TCK-20260424-PH12-M6-EXIT-PACKAGE,Phase 12 Milestone 6 Exit Package complete - PHASE 12 CLOSED,DONE,stored_artifacts/TCK-20260424-PH12-M6-EXIT-PACKAGE/
+239: 2026-04-26T09:15:00Z,TCK-20260426-ARENA-QUESTS,Extend E2E Arena Testing for Quest Progression,DONE,Implemented COMBAT_ARENA_QUESTS scenario and verified full quest/reward/leveling lifecycle in 50-tick stress runs.,stored_artifacts/TCK-20260426-ARENA-QUESTS/
+2026-04-24,TCK-20260424-PH12-M6-EXIT-PACKAGE,Phase 12 Milestone 6 Exit Package complete - PHASE 12 CLOSED,DONE,stored_artifacts/TCK-20260424-PH12-M6-EXIT-PACKAGE/
+2026-04-24,TCK-20260424-PH3-M1-STRATEGIC-PERSISTENCE,Phase 3 Milestone 1: Strategic Objective Persistence,DONE
+2026-04-24,TCK-20260424-PH3-M1-STRATEGIC-PERSISTENCE,DONE,Implemented strategic project lifecycle and fixed scheduler bugs.
+2026-04-25,TCK-20260425-PH4-TACTICAL-AI,Phase 4: Tactical AI and Combat Behavior complete,DONE
+2026-04-25,TCK-20260425-PH5-MIND-AND-NEEDS,PHASE 5 milestone 1 complete. Goal Registry implemented. Biological needs (Eat/Sleep) verified. Cognition pipeline (Saliency/Appraisal) verified.
+2026-04-25,TCK-20260425-PH5-M2-PERSONALITY,PHASE 5 Milestone 2 complete. Personality, Boredom, and Life Stage modifiers implemented and verified.
+2026-04-25,TCK-20260425-PH6-M1-INVENTORY,PHASE 6 Milestone 1 complete. Item Registry, Inventory Service, and Authoritative Mutation implemented.
+2026-04-25,TCK-20260425-PH6-M2-LOOT,PHASE 6 Milestone 2 complete. Channeled loot, ground items, and corpses implemented with authoritative transfer.
+2026-04-25,TCK-20260425-PH6-M3-HARVEST,PHASE 6 Milestone 3 complete. Channeled harvesting, node depletion, and respawn cooldowns implemented.
+2026-04-25,TCK-20260425-PH6-M4-ECONOMY,PHASE 6 Milestone 4 complete. Shop, blacksmith, and crafting recipes implemented with authoritative exchange.
+2026-04-25,TCK-20260425-PH6-M5-STORAGE,PHASE 6 Milestone 5 complete. Advanced equipment ranking, auto-equip, world chests, and persistent home storage implemented.
+2026-04-25,TCK-20260425-PH6-M6-CLOSURE,PHASE 6 complete. All 12 tests passed. Inventory, Loot, Harvesting, Economy, and Storage domains verified and documentation finalized.
+2026-04-25,TCK-20260425-PH7-M1-TOWN,PHASE 7 Milestone 1 complete. Town center landmarks, BuildingRegistry with service templates, and TownNavigation helpers implemented.
+2026-04-25,TCK-20260425-PH7-M2-GUILD,PHASE 7 Milestone 2 complete. GuildAction for lead generation and QuestGenerator for strategic projects implemented.
+2026-04-25,TCK-20260425-PH7-M3-RECOVERY,PHASE 7 Milestone 3 complete. Inn/Home recovery services and ClassHall progression implemented. Strategic blockers (maintenance/capability) resolved through town actions.
+2026-04-25,TCK-20260425-PH7-M4-SABOTAGE,PHASE 7 Milestone 4 complete. SabotageAction for building damage and regional trauma propagation implemented. Phase 7 (Town, Buildings, and Services) fully complete.
+2026-04-25,PH8-M1,Implemented authoritative quest lifecycle and reward models,tests_v2/quests/test_quest_lifecycle.py
+2026-04-25,PH8-M2,Implemented deterministic level-scaled quest generation,tests_v2/quests/test_quest_generation.py
+2026-04-25,PH8-M3,Implemented authoritative auto-leveling and stat growth,tests_v2/progression/test_leveling.py
+2026-04-25,PH8-M4,Implemented registry-backed classes and skills,tests_v2/core/test_class_registry.py
+2026-04-25,TCK-20260425-PROG-ATTRIBUTE-POINTS,Implemented Attribute Points and Manual Growth system
+2026-04-25T15:20:00Z,TCK-20260425-PH10-WORLD-DYNAMICS,Phase 10: Environmental Hazards & Calamity Recovery,DONE,Implemented RegionState expansion - EnvironmentService for hazard/weather drain - TransformationService for regional kind shifting - and LegalityServiceV2 suppression logic. Verified with 100% test pass.,stored_artifacts/TCK-20260425-PH10-WORLD-DYNAMICS/
+2026-04-25,Phase 11: World Dynamics,Implemented EnvironmentService TransformationService and ApplyPath integration for regional hazards and kind shifting. All tests passed.
+2026-04-25,Phase 10: Strategic Cognition,Implemented CapacityService LeadService and refactored StrategicIntelligenceSystem for project continuity and switching. All tests passed.
+2026-04-25T16:00:00Z,TCK-20260425-WORLD-DYNAMICS,Phase 11: World Dynamics - Influence and Macro Threats,DONE,Implemented faction influence shifts - territory conquest/liberation - stronghold lifecycles with Aura of Despair - and macro threats (Raids/Calamities). Verified with 100% test pass.,stored_artifacts/TCK-20260425-WORLD-DYNAMICS/
+2026-04-25,TCK-20260425-REPLAY-INSPECTION,DONE,Implemented replay fidelity fingerprints and API presenters for Phase 12
+2026-04-25,Substrate Hardening,Phases 6-9,Completed inventory/economy/town/biological systems
+2026-04-25T16:48:00Z,TCK-20260425-PH11-WORLD-DYNAMICS,Phase 11: World Dynamics Hardening,DONE,Integrated Calamity and Raid systems into authoritative engine loop.,stored_artifacts/TCK-20260425-PH11-WORLD-DYNAMICS/
+2026-04-26T05:05:00Z,TCK-20260426-PH14-16-RECOVERY,RPG-Core Parity (Multi-OA Social Bonds AoE),DONE,Implemented Multi-Attacker OA First-Class Social Bonds and Authoritative AoE Splash logic. 100% logic parity achieved.,stored_artifacts/TCK-20260426-PH14-16-RECOVERY/
+2026-04-26T07:13:00Z,TCK-20260426-RPG-CORE-HARDENING,RPG Core Life-Loop & Arena Hardening,DONE,Recovered authoritative RPG rewards mortality attrition and status effects. Extended E2E Arena suite with 5 new scenarios.,stored_artifacts/TCK-20260426-RPG-CORE-HARDENING/
+2026-04-26T09:15:00Z,TCK-20260426-ARENA-QUESTS,Extend E2E Arena Testing for Quest Progression,DONE,Implemented COMBAT_ARENA_QUESTS scenario and verified full quest/reward/leveling lifecycle in 50-tick stress runs.,stored_artifacts/TCK-20260426-ARENA-QUESTS/
+2026-04-26,TCK-20260426-PHASE-24-SOVEREIGNTY,DONE,Regional Sovereignty and Taxation integrated into V2
+2026-04-26T21:20:00Z,TCK-20260426-FIX-PARITY-REGRESSIONS,Fix RPG Progression and Action Readiness Regressions,DONE,Resolved readiness double-subtraction and Evolution XP reward blind spot. 100% test pass.,docs/stored_artifacts/TCK-20260426-FIX-PARITY-REGRESSIONS/
+2026-04-26T07:50:00Z,TCK-20260426-PH13-LEGACY-RETIREMENT,Execute Phase 13 Legacy Retirement and Canonical Refactor,DONE,Renamed legacy src/tests to src_legacy/tests_legacy and promoted V2 engine to canonical namespace.,docs/engine/phase13_retirement_manifest.md

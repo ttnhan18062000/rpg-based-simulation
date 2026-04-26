@@ -32,23 +32,23 @@ Complete the hardening of the Phase 7 substrate as defined in the `resource_phas
 - `docs/engine/phase7_proof_bundle.md`
 
 ## Related Code Areas
-- `src_v2/engine/pipeline.py`
-- `src_v2/engine/kernel.py`
-- `src_v2/core/state.py`
-- `tests_v2/`
+- `src/engine/pipeline.py`
+- `src/engine/kernel.py`
+- `src/core/state.py`
+- `tests/`
 
 ## Implementation Notes
 The substrate is now officially HARDENED and FROZEN.
 
 ## Test Summary
-- `tests_v2/core/test_no_worker_direct_mutation.py`: PASS
-- `tests_v2/engine/test_partial_rejection.py`: PASS
-- `tests_v2/replay/test_authoritative_outcome_truth.py`: PASS
-- `tests_v2/test_deterministic_baseline.py`: PASS
+- `tests/core/test_no_worker_direct_mutation.py`: PASS
+- `tests/engine/test_partial_rejection.py`: PASS
+- `tests/replay/test_authoritative_outcome_truth.py`: PASS
+- `tests/test_deterministic_baseline.py`: PASS
 
 ## Files Changed
-- `src_v2/core/state.py`
-- `src_v2/engine/kernel.py`
+- `src/core/state.py`
+- `src/engine/kernel.py`
 - `docs/engine/phase7_pipeline_scope_audit.md` [NEW]
 - `docs/engine/phase7_entry_support_boundary.md` [NEW]
 - `docs/engine/task_result_update_substrate_contract.md` [NEW]

@@ -177,7 +177,7 @@ The project has one exact scheduler and work-class contract that can be used as 
 Make the codebase obey the frozen scheduling contract by implementing one exact deterministic work-selection path.
 
 [Task implementation comments]
-Scheduler core implemented in `src_v2/engine/scheduler.py`. It provides a `select_work` method that consumes the `RuntimeStatus` (and its policy) to filter ready work-items in a deterministic, seed-stable order.
+Scheduler core implemented in `src/engine/scheduler.py`. It provides a `select_work` method that consumes the `RuntimeStatus` (and its policy) to filter ready work-items in a deterministic, seed-stable order.
 
 [Task technical implementation]
 Implement or refactor the scheduler so that:
@@ -229,7 +229,7 @@ The engine has one exact deterministic scheduler core that selects work correctl
 Represent non-identical work explicitly so the runtime can distinguish mandatory execution from optional and postponed execution.
 
 [Task implementation comments]
-Work-class models and debt storage are finalized in `src_v2/core/work.py` and `src_v2/core/state.py`. The kernel tracks `work_debt_total` as an authoritative field, ensuring that deferred work remains bounded and deterministic across world ticks.
+Work-class models and debt storage are finalized in `src/core/work.py` and `src/core/state.py`. The kernel tracks `work_debt_total` as an authoritative field, ensuring that deferred work remains bounded and deterministic across world ticks.
 
 [Task technical implementation]
 Implement exact representation and handling for:
@@ -290,7 +290,7 @@ The engine has explicit work classes and bounded deferred-work handling that pre
 Lock the Milestone 4 execution model with deterministic tests so later milestones cannot silently distort scheduling semantics.
 
 [Task implementation comments]
-Scheduler contract tests reside in `tests_v2/engine/test_scheduler_contract.py`. These tests verify that critical work is never deferred and that work item selection order is resilient to input list jitter.
+Scheduler contract tests reside in `tests/engine/test_scheduler_contract.py`. These tests verify that critical work is never deferred and that work item selection order is resilient to input list jitter.
 
 [Task technical implementation]
 Add exact tests for the rulebook.

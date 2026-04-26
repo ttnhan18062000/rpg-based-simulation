@@ -507,7 +507,7 @@
       },
       "targets": [
         {
-          "expr": "{job=\"varlogs\"} | json | component=~\"src.engine.world_loop|src.actions.*\" | msg!~\"Failed to publish.*|Tick.*|World.*|Worker.*\"",
+          "expr": "{job=\"varlogs\"} | json | component=~\"src_legacy.engine.world_loop|src.actions.*\" | msg!~\"Failed to publish.*|Tick.*|World.*|Worker.*\"",
           "refId": "A",
           "datasource": {
             "type": "loki",

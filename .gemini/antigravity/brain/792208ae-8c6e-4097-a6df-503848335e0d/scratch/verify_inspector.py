@@ -6,9 +6,9 @@ from unittest.mock import MagicMock
 # Add project root to path
 sys.path.append(os.path.abspath("."))
 
-from src.core.entities.entity import Entity
-from src.core.models.strategy import StrategicState, ProjectRecord, ProjectKind, StrategicStatus
-from src.ui.cli.inspector import EntityInspector
+from src_legacy.core.entities.entity import Entity
+from src_legacy.core.models.strategy import StrategicState, ProjectRecord, ProjectKind, StrategicStatus
+from src_legacy.ui.cli.inspector import EntityInspector
 
 # Setup mock registry
 registry = MagicMock()

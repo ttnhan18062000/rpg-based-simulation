@@ -8,12 +8,12 @@ Produce a concrete gap audit for the Phase 7 Action/Update substrate to guide th
 
 ### Research & Audit
 
-- [ ] [AUDIT] `src_v2/core/updates.py`:
+- [ ] [AUDIT] `src/core/updates.py`:
     - Check for missing "Verb", "Reason", and "Target" fields.
     - Identify "Flat" fields that should be disaggregated into domains.
-- [ ] [AUDIT] `src_v2/engine/kernel.py`:
+- [ ] [AUDIT] `src/engine/kernel.py`:
     - Identify "Intent Routing" logic in `_phase_resolution` that should be moved to workers.
-- [ ] [AUDIT] `src_v2/core/worker_protocol.py`:
+- [ ] [AUDIT] `src/core/worker_protocol.py`:
     - Evaluate how `ActionProposal` fits into the `WorkerResult` structure.
 
 ### Documentation

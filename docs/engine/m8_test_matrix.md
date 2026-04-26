@@ -10,7 +10,7 @@
 
 ## Verification Command
 ```bash
-pytest tests_v2/engine/test_worker_determinism.py
-pytest tests_v2/engine/test_worker_bounds.py
-pytest tests_v2/engine/test_worker_fallback.py
+pytest tests/engine/test_worker_determinism.py
+pytest tests/engine/test_worker_bounds.py
+pytest tests/engine/test_worker_fallback.py
 ```

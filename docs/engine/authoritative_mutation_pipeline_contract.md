@@ -1,6 +1,6 @@
 # Authoritative Mutation Pipeline Contract
 
-This document integrates the **Refinement** and **Apply** contracts into a unified specification for the `src_v2` state transition lifecycle.
+This document integrates the **Refinement** and **Apply** contracts into a unified specification for the `src` state transition lifecycle.
 
 ## 1. The Pipeline Law: "Proposal -> Refine -> Apply"
 
@@ -31,4 +31,4 @@ By splitting Refinement from Apply, the engine achieves:
 ## 5. Verification Bundle
 - [Refinement Contract](authoritative_refinement_contract.md)
 - [Apply Contract](authoritative_apply_contract.md)
-- `tests_v2/engine/test_pipeline_contract.py`
+- `tests/engine/test_pipeline_contract.py`

@@ -1,7 +1,7 @@
 # Phase 5 Progression Recovery Statement
 
 ## 1. Recovered Behavior
-The `src_v2` engine has officially recovered the **Integrated Resource Progression Loop**. This represents a complete, closed cycle of gameplay that matches original `src` semantics and determinism.
+The `src` engine has officially recovered the **Integrated Resource Progression Loop**. This represents a complete, closed cycle of gameplay that matches original `src` semantics and determinism.
 
 **Recovered Cycle:**
 1.  **Seek**: Autonomous identification of missing materials via `StrategicIntelligenceSystem`.

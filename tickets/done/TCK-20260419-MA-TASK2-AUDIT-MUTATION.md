@@ -38,10 +38,10 @@ Make the authoritative apply path singular, explicit, and provably exclusive. En
 - `stored_artifacts/TCK-20260419-MA-TASK2-AUDIT-MUTATION/test_plan.md`
 
 ## Related Code Areas
-- `src_v2/engine/apply.py`
-- `src_v2/engine/kernel.py`
-- `src_v2/core/state.py`
-- `src_v2/core/updates.py`
+- `src/engine/apply.py`
+- `src/engine/kernel.py`
+- `src/core/state.py`
+- `src/core/updates.py`
 
 ## Assumptions / Open Questions
 - Assumption: `properties` dictionary in `EntityState` is the main target for aliasing issues.
@@ -49,7 +49,7 @@ Make the authoritative apply path singular, explicit, and provably exclusive. En
 ## Implementation Notes
 - Hardened `ApplyPath._apply_entity_update` to be explicit about dictionary cloning.
 - Refactored `Kernel._phase_collection` to use `replace(subject, properties=dict(subject.properties))` when creating `WorkerPacket`. This ensures that even if a worker mutates the `subject` reference (within-tick), it doesn't leak into the kernel's authoritative reference.
-- Created `tests_v2/engine/test_no_hidden_mutation.py` to prove these laws.
+- Created `tests/engine/test_no_hidden_mutation.py` to prove these laws.
 
 ## Test Summary
 - `test_prior_state_purity_deep_properties`: PASSED
@@ -59,9 +59,9 @@ Make the authoritative apply path singular, explicit, and provably exclusive. En
 - `test_entity_state_is_frozen`: PASSED
 
 ## Files Changed
-- `src_v2/engine/apply.py`
-- `src_v2/engine/kernel.py`
-- `tests_v2/engine/test_no_hidden_mutation.py`
+- `src/engine/apply.py`
+- `src/engine/kernel.py`
+- `tests/engine/test_no_hidden_mutation.py`
 
 ## Completion Summary
 - Successfully audited and closed mutation paths. The `ApplyPath` is now the singular authoritative entry point, and the `Kernel` now protects the state during the collection phase by passing entity snapshots to workers. This ensures absolute prior-state purity and anti-aliasing.

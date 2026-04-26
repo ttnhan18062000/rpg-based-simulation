@@ -20,16 +20,16 @@ Harden startup and runtime control behavior to ensure contradictory or unsafe fl
 - [x] Hardware realism remains a warning-only path.
 
 ## Implementation Notes
-- Implemented `tests_v2/config/test_forbidden_flags.py` to verify rejection of `BYPASS_GOVERNOR` and other contract overrides.
+- Implemented `tests/config/test_forbidden_flags.py` to verify rejection of `BYPASS_GOVERNOR` and other contract overrides.
 - Verified validation logic for `SURVIVAL_ONLY` vs `REPLAY_ENABLED`.
 
 ## Test Summary
-- `tests_v2/config/test_forbidden_flags.py` PASS
-- `tests_v2/config/test_startup_validation.py` PASS
+- `tests/config/test_forbidden_flags.py` PASS
+- `tests/config/test_startup_validation.py` PASS
 
 ## Files Changed
-- `src_v2/config/validator.py`
-- `tests_v2/config/test_forbidden_flags.py`
+- `src/config/validator.py`
+- `tests/config/test_forbidden_flags.py`
 
 ## Completion Summary
 Startup validation is now a hard contract gate for operational safety.

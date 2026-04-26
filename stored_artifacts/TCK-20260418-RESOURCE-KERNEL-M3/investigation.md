@@ -12,19 +12,19 @@ Design the runtime state shape to prevent unbounded growth and high hot-path ove
 
 ### 2. Bounded Collections
 - **Problem**: Python lists and dicts grow until RAM exhausts.
-- **Solution**: Create `BoundedList` (circular buffer) and `BoundedDict` (LRU or count-limited) in a new `src_v2/core/collections.py`.
+- **Solution**: Create `BoundedList` (circular buffer) and `BoundedDict` (LRU or count-limited) in a new `src/core/collections.py`.
 - **Overflow Policy**: 
     - `TRUNCATE`: Remove oldest.
     - `REJECT`: Stop adding.
     - `COMPACT`: Summarize (e.g., aggregate float values).
 
 ### 3. Case Study: World History
-- Instead of storing every state generation forever, `src_v2` will maintain a `HistoricalWindow`.
+- Instead of storing every state generation forever, `src` will maintain a `HistoricalWindow`.
 - Default: 100 ticks. Older states are dropped unless explicitly exported to a separate persistence layer.
 
 ### 4. Case Study: Event Logs
 - Current logs in the legacy engine are often just lists of strings.
-- In `src_v2`, `EventLog` will be a `BoundedList[AuthoritativeEvent]`.
+- In `src`, `EventLog` will be a `BoundedList[AuthoritativeEvent]`.
 
 ## Technical Risks
 - **Overhead of Wrapping**: Custom collections might be slower than native ones.

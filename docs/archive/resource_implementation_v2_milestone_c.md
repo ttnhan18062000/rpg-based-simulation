@@ -206,9 +206,9 @@ Complete and harden:
 
 [Task possible affected files]
 
-- `src_v2/engine/replay_buffer.py`
-- `src_v2/engine/replay_sink.py`
-- `src_v2/engine/replay_manager.py`
+- `src/engine/replay_buffer.py`
+- `src/engine/replay_sink.py`
+- `src/engine/replay_manager.py`
 - manifest-related modules
 
 [Task important notes]
@@ -259,7 +259,7 @@ Complete and harden:
 
 [Task possible affected files]
 
-- `src_v2/config/validator.py`
+- `src/config/validator.py`
 - config/profile integration modules
 - operational flag handling modules
 
@@ -312,9 +312,9 @@ Complete and harden:
 
 [Task possible affected files]
 
-- `src_v2/engine/kernel.py`
-- `src_v2/engine/observability.py`
-- `src_v2/engine/runtime_status.py`
+- `src/engine/kernel.py`
+- `src/engine/observability.py`
+- `src/engine/runtime_status.py`
 - replay integration modules
 - shutdown-related modules
 
@@ -375,13 +375,13 @@ Complete or add exact tests for:
 
 ### Suggested test groups
 
-- `tests_v2/config/test_startup_validation.py`
-- `tests_v2/engine/test_replay_contract.py`
-- `tests_v2/engine/test_replay_chunk_rotation.py`
-- `tests_v2/engine/test_replay_pressure.py`
-- `tests_v2/engine/test_graceful_shutdown.py`
-- `tests_v2/engine/test_operational_flags.py`
-- `tests_v2/engine/test_observability_budgets.py`
+- `tests/config/test_startup_validation.py`
+- `tests/engine/test_replay_contract.py`
+- `tests/engine/test_replay_chunk_rotation.py`
+- `tests/engine/test_replay_pressure.py`
+- `tests/engine/test_graceful_shutdown.py`
+- `tests/engine/test_operational_flags.py`
+- `tests/engine/test_observability_budgets.py`
 
 [Task possible affected files]
 
@@ -403,7 +403,7 @@ This milestone is about making the lifecycle itself real.
 - [x] Prove replay and shutdown remain non-authoritative
 
 [Implementation Comment]
-Verified with 100% pass rate in `tests_v2/engine/test_graceful_shutdown.py` and `test_replay_contract.py`. All lifecycle transitions are deterministic and time-bounded.
+Verified with 100% pass rate in `tests/engine/test_graceful_shutdown.py` and `test_replay_contract.py`. All lifecycle transitions are deterministic and time-bounded.
 
 [Task acceptance criteria]
 The operational-integrity layer is pinned by a complete deterministic test suite proving replay boundedness, startup safety, flag safety, shutdown timeout behavior, and runtime snapshot integrity.

@@ -1,8 +1,8 @@
 Below is the detailed Phase 5 implementation plan in the same structure as before.
 
-# Detailed Implementation Plan — Phase 5 of `src_v2`
+# Detailed Implementation Plan — Phase 5 of `src`
 
-This plan assumes Phase 4 has already moved `src_v2` into a materially better state, but that the branch still has unfinished truth and progression-loop work.
+This plan assumes Phase 4 has already moved `src` into a materially better state, but that the branch still has unfinished truth and progression-loop work.
 
 Phase 5 is not a broad expansion phase.
 
@@ -107,7 +107,7 @@ Take the existing movement parity work and turn it into an ordinary validation r
 
 #### [Task technical implementation]
 
-Move movement verification from script-oriented support into a standard `tests_v2` gate.
+Move movement verification from script-oriented support into a standard `tests` gate.
 
 This task should:
 
@@ -126,9 +126,9 @@ Ensure the supported movement scope stays narrow and literal:
 
 #### [Task possible affected files]
 
-- `tests_v2/parity/test_movement_parity.py`
-- `tests_v2/gameplay/test_movement_contract.py`
-- `tests_v2/gameplay/parity/*`
+- `tests/parity/test_movement_parity.py`
+- `tests/gameplay/test_movement_contract.py`
+- `tests/gameplay/parity/*`
 - existing movement oracle helpers
 - CI/test target configuration
 
@@ -167,13 +167,13 @@ Build initial characterization and differential tests for supported resource-int
 - interruption/reset behavior,
 - and supported depletion/respawn behavior where parity is intended.
 
-Compare original `src` outcomes to `src_v2` outcomes for the declared supported subset only.
+Compare original `src` outcomes to `src` outcomes for the declared supported subset only.
 
 Record intentional differences explicitly rather than silently absorbing them into the new contract.
 
 #### [Task possible affected files]
 
-- `tests_v2/parity/test_resource_interaction_parity.py`
+- `tests/parity/test_resource_interaction_parity.py`
 - comparison fixtures against original `src`
 - divergence log docs
 - gameplay parity support helpers
@@ -308,9 +308,9 @@ Either:
 
 #### [Task possible affected files]
 
-- `src_v2/observability/*`
-- `src_v2/certification/*`
-- `src_v2/config/profiles.py`
+- `src/observability/*`
+- `src/certification/*`
+- `src/config/profiles.py`
 - support docs
 - resource contract docs/tests
 

@@ -12,7 +12,7 @@ Establish the formal entry gate for Phase 12 Cutover. Ensure that the cutover su
 ## Scope
 - [x] Task 1: Freeze the exact cutover-eligible surfaces from Phase 11.
 - [x] Task 2: Separate allowed cutover scope from unsupported/divergent/retired scope.
-- [x] Task 3: Define the consumer/workflow groups that will move to `src_v2`.
+- [x] Task 3: Define the consumer/workflow groups that will move to `src`.
 - [x] Task 4: Confirm rollback expectations and non-goals are explicit.
 - [x] Task 5: Publish the formal Phase 12 entry package and readiness record.
 

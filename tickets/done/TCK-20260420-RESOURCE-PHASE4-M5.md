@@ -2,7 +2,7 @@
 
 ## [Milestone Description]
 
-Milestone 5 is the consolidation milestone for the first real gameplay-support phase of `src_v2`.
+Milestone 5 is the consolidation milestone for the first real gameplay-support phase of `src`.
 
 By the time this milestone starts, the project should already have:
 
@@ -118,7 +118,7 @@ At the end of Milestone 5:
 
 #### [Task Description]
 
-Create the first official gameplay support matrix for `src_v2`.
+Create the first official gameplay support matrix for `src`.
 
 #### [Task technical implementation]
 
@@ -180,7 +180,7 @@ Add and organize certification scenarios covering:
 Ensure `ScenarioExpectations` and `ConformanceEvaluator` remain scoped and honest for gameplay scenarios. The existing certification model already supports scenario-bound expectations, lifecycle outcome checks, and honest allowed-failure behavior, so gameplay certification must extend that model rather than inventing a separate proof path.
 
 #### [Implementation Notes]
-- **Scenarios**: Added `MVM_PATH_20`, `RES_HARVEST_3`, and `INTEG_RESOURCE_LOOP` to `src_v2/certification/scenarios.py`.
+- **Scenarios**: Added `MVM_PATH_20`, `RES_HARVEST_3`, and `INTEG_RESOURCE_LOOP` to `src/certification/scenarios.py`.
 - **State Factory**: Implemented `build_scenario_state` to provide deterministic initial states for gameplay tests.
 - **Proof**: Verified that all scenarios generate bit-identical hashes across sequential and concurrent runs.
 
@@ -261,7 +261,7 @@ The current release-proof tests already verify proof bundle existence, target co
 
 #### [Implementation Notes]
 - **Manifest**: Updated `docs/engine/manifest.json` with the new mandatory gameplay certification targets.
-- **Harden**: Updated `tests_v2/certification/test_final_gate.py` to ensure it iterates over the expanded scenario list.
+- **Harden**: Updated `tests/certification/test_final_gate.py` to ensure it iterates over the expanded scenario list.
 - **Fix**: Adjusted `ConformanceEvaluator` to handle floating-point jitter in tick budget checks (added 0.001ms epsilon).
 
 #### [Task check list]
@@ -381,7 +381,7 @@ Publish one package containing:
 - known limitations,
 - and explicit unsupported areas.
 
-This package should become the canonical reference for “what gameplay `src_v2` currently supports.”
+This package should become the canonical reference for “what gameplay `src` currently supports.”
 
 #### [Implementation Notes]
 - **Package**: Consolidated `supported_gameplay_surface_m5.md` serves as the root of the support package.

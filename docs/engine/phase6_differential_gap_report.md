@@ -1,6 +1,6 @@
 # Phase 6 Differential Gap Report
 
-This report identifies the authoritative logic gaps between the Frozen Legacy Inventory and the Current-State audited `src_v2` engine.
+This report identifies the authoritative logic gaps between the Frozen Legacy Inventory and the Current-State audited `src` engine.
 
 ## Gap Summary
 
@@ -14,7 +14,7 @@ This report identifies the authoritative logic gaps between the Frozen Legacy In
 
 ### Absolute Gaps (Missing Logic)
 
-These items exist in the legacy logic but have no corresponding implementation in `src_v2`.
+These items exist in the legacy logic but have no corresponding implementation in `src`.
 
 #### RPG-CORE: Social & Strategic Cognition
 - **Social Trust & Betrayal**: LEG-RPG-049 to LEG-RPG-056. trust-weighted resolution, betrayal history, public vs private reputation.
@@ -33,7 +33,7 @@ These items exist in the legacy logic but have no corresponding implementation i
 
 ### Maturity Gaps (Sub-Par Verification)
 
-These items are implemented in `src_v2` but are marked as `DIVERGENT` or `PARTIAL` due to limited verification or changed semantics.
+These items are implemented in `src` but are marked as `DIVERGENT` or `PARTIAL` due to limited verification or changed semantics.
 
 - **LEG-RPG-017**: Disengagement/OA. Currently "Partial" as the OA trigger contract is missing from movement resolution.
 - **LEG-RPG-041/107**: Detour/Search Breadth. Capped in V2 to preserve performance (DIVERGENT from legacy depth).

@@ -86,4 +86,4 @@ Throughput claims are never made in isolation. The engine certifies its performa
 - **Class C (High-Performance)**: Enhanced observability profiles.
 
 > [!NOTE]
-> All architectural claims in this document are pinned by the `tests_v2/docs/` integrity suite.
+> All architectural claims in this document are pinned by the `tests/docs/` integrity suite.

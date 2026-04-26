@@ -62,7 +62,7 @@ At the end of this milestone:
 
 ## Task
 
-### [x] (checkbox) - [Task 1] - Define the benchmark and profiling contract for `src_v2`
+### [x] (checkbox) - [Task 1] - Define the benchmark and profiling contract for `src`
 
 #### [Task Description]
 
@@ -184,7 +184,7 @@ Instrumentation must stay bounded and should be benchmark-mode appropriate.
 - [x] Instrumentation is bounded
 - [x] Benchmark outputs include timing breakdowns
 
-**Implementation**: [kernel.py](file:///home/vboxuser/Work/rpg-based-simulation/src_v2/engine/kernel.py), [governance.py](file:///home/vboxuser/Work/rpg-based-simulation/src_v2/core/governance.py)
+**Implementation**: [kernel.py](file:///home/vboxuser/Work/rpg-based-simulation/src/engine/kernel.py), [governance.py](file:///home/vboxuser/Work/rpg-based-simulation/src/core/governance.py)
 
 #### [Task acceptance criteria]
 
@@ -316,7 +316,7 @@ Optimize the top cost drivers only.
 - [x] Optimization remains within supported scope
 - [x] Gameplay semantics did not drift
 
-**Implementation**: [apply.py](file:///home/vboxuser/Work/rpg-based-simulation/src_v2/engine/apply.py) (avoided property cloning) and [kernel.py](file:///home/vboxuser/Work/rpg-based-simulation/src_v2/engine/kernel.py) (optimized trace string conversion).
+**Implementation**: [apply.py](file:///home/vboxuser/Work/rpg-based-simulation/src/engine/apply.py) (avoided property cloning) and [kernel.py](file:///home/vboxuser/Work/rpg-based-simulation/src/engine/kernel.py) (optimized trace string conversion).
 
 #### [Task acceptance criteria]
 

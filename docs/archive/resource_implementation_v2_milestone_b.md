@@ -198,10 +198,10 @@ Complete and harden:
 
 [Task possible affected files]
 
-- `src_v2/engine/observability.py`
-- `src_v2/engine/runtime_status.py`
-- `src_v2/engine/governor.py`
-- `src_v2/engine/kernel.py`
+- `src/engine/observability.py`
+- `src/engine/runtime_status.py`
+- `src/engine/governor.py`
+- `src/engine/kernel.py`
 - neighboring queue/replay/worker integration points
 
 [Task important notes]
@@ -260,10 +260,10 @@ Complete the governor so that:
 
 [Task possible affected files]
 
-- `src_v2/engine/governor.py`
-- `src_v2/core/governance.py`
-- `src_v2/engine/runtime_status.py`
-- `src_v2/engine/policy.py`
+- `src/engine/governor.py`
+- `src/core/governance.py`
+- `src/engine/runtime_status.py`
+- `src/engine/policy.py`
 
 [Task important notes]
 Do not add new runtime modes.
@@ -313,10 +313,10 @@ Complete the scheduler-policy boundary so that:
 
 [Task possible affected files]
 
-- `src_v2/engine/scheduler.py`
-- `src_v2/engine/policy.py`
-- `src_v2/core/work.py`
-- `src_v2/engine/kernel.py`
+- `src/engine/scheduler.py`
+- `src/engine/policy.py`
+- `src/core/work.py`
+- `src/engine/kernel.py`
 
 [Task important notes]
 Do not let scheduler logic absorb governor behavior.
@@ -373,10 +373,10 @@ Complete or add exact tests for:
 
 ### Suggested test groups
 
-- `tests_v2/engine/test_resource_governor_contract.py`
-- `tests_v2/engine/test_degradation_order.py`
-- `tests_v2/engine/test_anti_thrashing.py`
-- `tests_v2/engine/test_governance_isolation.py`
+- `tests/engine/test_resource_governor_contract.py`
+- `tests/engine/test_degradation_order.py`
+- `tests/engine/test_anti_thrashing.py`
+- `tests/engine/test_governance_isolation.py`
 - new or expanded runtime-signal truth tests
 
 [Task possible affected files]
@@ -399,7 +399,7 @@ This milestone is about making the protection model itself real.
 - [x] Make the runtime-protection suite complete and exact
 
 [Implementation Comment]
-Verified with `tests_v2/engine/test_resource_governor_contract.py`. All tests use real signal injection to prove transition accuracy and anti-thrashing stability.
+Verified with `tests/engine/test_resource_governor_contract.py`. All tests use real signal injection to prove transition accuracy and anti-thrashing stability.
 
 [Task acceptance criteria]
 The runtime-protection layer is pinned by a complete deterministic test suite proving signal truthfulness, governor correctness, degradation order, recovery stability, and semantic safety.

@@ -40,9 +40,9 @@ Continue the V2 engine recovery by implementing the remaining semantic gaps iden
 - None
 
 ## Related Code Areas
-- `src_v2/core/state.py`
-- `src_v2/engine/pipeline.py`
-- `src_v2/engine/legality.py`
+- `src/core/state.py`
+- `src/engine/pipeline.py`
+- `src/engine/legality.py`
 
 ## Implementation Notes
 - **Regional Hazards**: Implemented in `WorldDynamicsSystem`. It iterates over regions, finds entities within `bounds`, and applies HP/Readiness drains scaled by `hazard_level` and `calamity_intensity`.
@@ -51,20 +51,20 @@ Continue the V2 engine recovery by implementing the remaining semantic gaps iden
 - **State Integrity**: Updated `AuthoritativeState` and `EntityState` to be the singular sources of truth for these mechanics, fulfilling the M7 Law of deterministic substrate.
 
 ## Test Summary
-- `tests_v2/verify/test_recovery_gaps.py`: Specialized contract proof for hazards, evolution, and sabotage (3/3 PASS).
-- `tests_v2/integrity/test_logic_guards.py`: Verified autonomous loop determinism and scenario build integrity (7/7 PASS).
-- `tests_v2/`: Full V2 test suite (232/232 PASS).
+- `tests/verify/test_recovery_gaps.py`: Specialized contract proof for hazards, evolution, and sabotage (3/3 PASS).
+- `tests/integrity/test_logic_guards.py`: Verified autonomous loop determinism and scenario build integrity (7/7 PASS).
+- `tests/`: Full V2 test suite (232/232 PASS).
 
 ## Files Changed
-- `src_v2/core/state.py`
-- `src_v2/core/updates.py`
-- `src_v2/engine/apply.py`
-- `src_v2/engine/pipeline.py`
-- `src_v2/engine/world_dynamics.py`
-- `src_v2/engine/evolution.py`
-- `src_v2/engine/sabotage.py`
-- `src_v2/engine/shop.py`
-- `src_v2/engine/blacksmith.py`
+- `src/core/state.py`
+- `src/core/updates.py`
+- `src/engine/apply.py`
+- `src/engine/pipeline.py`
+- `src/engine/world_dynamics.py`
+- `src/engine/evolution.py`
+- `src/engine/sabotage.py`
+- `src/engine/shop.py`
+- `src/engine/blacksmith.py`
 - `docs/engine/legacy_replacement_ledger.md`
 - `legacy_checklist_part1.md`
 - `legacy_checklist_part3.md`

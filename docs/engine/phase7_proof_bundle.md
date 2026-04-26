@@ -11,16 +11,16 @@ This bundle aggregates all technical evidence supporting the closure of the Phas
 ## 2. Verification Proofs (The "Evidence")
 
 ### A. Isolation and Security
-- `tests_v2/core/test_no_worker_direct_mutation.py`: Proves workers cannot mutate state directly.
-- `tests_v2/engine/test_worker_integrity.py`: Proves protocol traceability and canonical context.
+- `tests/core/test_no_worker_direct_mutation.py`: Proves workers cannot mutate state directly.
+- `tests/engine/test_worker_integrity.py`: Proves protocol traceability and canonical context.
 
 ### B. Resolution Integrity
-- `tests_v2/engine/test_partial_rejection.py`: Proves mixed-domain partial rejection safety.
-- `tests_v2/engine/test_phase_order.py`: Proves strict adherence to the 6-phase resolution order.
+- `tests/engine/test_partial_rejection.py`: Proves mixed-domain partial rejection safety.
+- `tests/engine/test_phase_order.py`: Proves strict adherence to the 6-phase resolution order.
 
 ### C. Determinism and Truth
-- `tests_v2/test_deterministic_baseline.py`: Proves bit-identical initialization and tick execution.
-- `tests_v2/replay/test_authoritative_outcome_truth.py`: Proves replay truth sources from post-apply outcomes.
+- `tests/test_deterministic_baseline.py`: Proves bit-identical initialization and tick execution.
+- `tests/replay/test_authoritative_outcome_truth.py`: Proves replay truth sources from post-apply outcomes.
 
 ## 3. Structural Audits
 - [Pipeline Scope Audit](phase7_pipeline_scope_audit.md): Classifies all systems in the refinement pipeline and identifies semantic bleed.

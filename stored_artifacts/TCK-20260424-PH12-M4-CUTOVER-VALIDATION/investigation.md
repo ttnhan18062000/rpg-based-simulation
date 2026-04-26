@@ -28,4 +28,4 @@
 - Milestone 6 exit package must explicitly document this migration path.
 
 ## 4. Final Verdict
-The `src_v2` engine is operationally stable and provides a ~70x performance increase in headless mode compared to the legacy engine. The rollback mechanism is verified and functional. The cutover is **RATIFIED** for Milestone 5.
+The `src` engine is operationally stable and provides a ~70x performance increase in headless mode compared to the legacy engine. The rollback mechanism is verified and functional. The cutover is **RATIFIED** for Milestone 5.

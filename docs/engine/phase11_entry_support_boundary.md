@@ -1,6 +1,6 @@
 # Phase 11 Entry Support Boundary
 
-This document defines the honest support boundary of the `src_v2` engine as of the start of Phase 11.
+This document defines the honest support boundary of the `src` engine as of the start of Phase 11.
 
 ## 1. Supported Scope (Full Parity)
 
@@ -23,7 +23,7 @@ The following areas differ intentionally from legacy behavior to satisfy V2 prin
 
 ## 3. Unsupported Scope (Deferred or Retired)
 
-The following legacy features are **NOT** implemented in `src_v2` and are excluded from ratification:
+The following legacy features are **NOT** implemented in `src` and are excluded from ratification:
 
 - **Legacy UI**: Old web-frontend integration (replaced by modern API/WS contracts).
 - **External Redis Pub/Sub**: Replaced by in-process tick listeners for state streaming.

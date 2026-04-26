@@ -11,8 +11,8 @@ Implement the engine's first bounded concurrency model. Introduce worker packets
 
 ## Scope
 - Define the `WorkerContract` (Packets, Results, Equivalence).
-- Implement `src_v2/engine/workers.py` (WorkerManager, Pool Control).
-- Integrate concurrency into `src_v2/engine/kernel.py` tick loop.
+- Implement `src/engine/workers.py` (WorkerManager, Pool Control).
+- Integrate concurrency into `src/engine/kernel.py` tick loop.
 - Implement `Fallback-to-Local` mechanics for constrained environments.
 - Enforce strict memory/queue bounds via the Runtime Profile.
 
@@ -39,26 +39,26 @@ Implement the engine's first bounded concurrency model. Introduce worker packets
 - None
 
 ## Related Code Areas
-- `src_v2/engine/kernel.py`
-- `src_v2/engine/workers.py` [NEW]
-- `src_v2/core/work.py`
+- `src/engine/kernel.py`
+- `src/engine/workers.py` [NEW]
+- `src/core/work.py`
 
 ## Assumptions / Open Questions
 - We assume `ThreadPoolExecutor` is sufficient for local "scale-out" within the same process envelope for this milestone.
 - Does "compact packet" require serialization, or just restricted object access? (Plan: Restricted object access/Frozen data packets).
 
 ## Implementation Notes
-- Implemented `WorkerPool` in `src_v2/platform/worker_pool.py` with explicit semaphore-based injection.
+- Implemented `WorkerPool` in `src/platform/worker_pool.py` with explicit semaphore-based injection.
 - Enforced "Compact Packet" law by using shallow-cloned attribute sets rather than deep-copied entity objects.
 - Integrated `LocalResolver` as a high-priority fallback path to ensure simulation continuity during thread exhaustion.
 
 ## Test Summary
-- `tests_v2/platform/test_worker_pool.py`: Verified queue rejection and thread-pool saturation logic.
-- `tests_v2/engine/test_worker_determinism.py`: Guaranteed bit-identical state across local vs. worker paths.
+- `tests/platform/test_worker_pool.py`: Verified queue rejection and thread-pool saturation logic.
+- `tests/engine/test_worker_determinism.py`: Guaranteed bit-identical state across local vs. worker paths.
 
 ## Files Changed
-- `src_v2/platform/worker_pool.py`
-- `src_v2/platform/local_resolver.py`
+- `src/platform/worker_pool.py`
+- `src/platform/local_resolver.py`
 - `resource_implementation_milestone_8.md`
 
 ## Completion Summary

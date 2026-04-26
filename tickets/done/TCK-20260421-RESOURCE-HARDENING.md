@@ -16,7 +16,7 @@ Implement a robust, automated integrity suite to prevent silent architectural dr
 - Resolve identified drift in links and logic.
 
 ## Acceptance Criteria
-- 100% pass of `tests_v2/integrity/` suite.
+- 100% pass of `tests/integrity/` suite.
 - No remaining broken links in mandatory release docs.
 - Manifest terminology 1:1 with code Enums.
 - Zero-tick resolution conflict resolved in Strategic system.
@@ -28,14 +28,14 @@ Implement a robust, automated integrity suite to prevent silent architectural dr
 - `test_logic_guards.py`: Passed (Redirection logic hardened)
 
 ## Files Changed
-- `src_v2/systems/strategic.py` (Fixed zero-tick resolution)
-- `src_v2/certification/scenarios.py` (Initialized integration state)
+- `src/systems/strategic.py` (Fixed zero-tick resolution)
+- `src/certification/scenarios.py` (Initialized integration state)
 - `docs/engine/manifest.json` (Synced terminology)
 - `docs/engine/supported_progression_package_phase5.md` (Fixed links)
-- `tests_v2/integrity/test_doc_guards.py` [NEW]
-- `tests_v2/integrity/test_manifest_guards.py` [NEW]
-- `tests_v2/integrity/test_parity_guards.py` [NEW]
-- `tests_v2/integrity/test_logic_guards.py` [NEW]
+- `tests/integrity/test_doc_guards.py` [NEW]
+- `tests/integrity/test_manifest_guards.py` [NEW]
+- `tests/integrity/test_parity_guards.py` [NEW]
+- `tests/integrity/test_logic_guards.py` [NEW]
 
 ## Completion Summary
 Hardening complete. The engine is now "Certified Stable" with programmatic enforcement of all release-truth artifacts.

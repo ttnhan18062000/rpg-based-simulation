@@ -8,10 +8,10 @@ A high-fidelity 2D RPG simulation engine with parallel AI, deterministic replay,
 > **Architectural Convergence Complete**: The engine has successfully migrated to a **Feature-Based Aspect-Oriented Architecture** (AOA). This design uses composition (Aspects) for entities and domain-separated modules for simulation logic.
 
 > [!IMPORTANT]
-> **Operational Cutover Complete**: The engine has successfully transitioned to the **src_v2** authoritative runtime as of Phase 12. The legacy `src` logic is officially deprecated and slated for retirement in Phase 13. See the [Phase 12 Entry Package](docs/engine/phase12_entry_package.md) and the [Phase 13 Retirement Manifest](docs/engine/phase13_retirement_manifest.md) for details.
+> **Operational Cutover Complete**: The engine has successfully transitioned to the **src** authoritative runtime as of Phase 12. The legacy `src` logic is officially deprecated and slated for retirement in Phase 13. See the [Phase 12 Entry Package](docs/engine/phase12_entry_package.md) and the [Phase 13 Retirement Manifest](docs/engine/phase13_retirement_manifest.md) for details.
 
 ```
-src_v2/
+src/
 ├── __main__.py              # Entry point — serve (default) or cli mode
 ├── cli/                     # CLI entrypoint and argument parsing
 ├── config/                  # Configuration loaders and validators

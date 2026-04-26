@@ -1,12 +1,12 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
-from src_v2.core.governance import RuntimeMode, PressureSignals
-from src_v2.engine.policy import GovernorPolicy
+from src.core.governance import RuntimeMode, PressureSignals
+from src.engine.policy import GovernorPolicy
 
 if TYPE_CHECKING:
-    from src_v2.config.profiles import RuntimeProfile
-    from src_v2.engine.runtime_status import RuntimeStatus
+    from src.config.profiles import RuntimeProfile
+    from src.engine.runtime_status import RuntimeStatus
 
 
 class ResourceGovernor:

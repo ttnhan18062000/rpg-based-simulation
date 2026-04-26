@@ -1,0 +1,73 @@
+- id: SUB-001
+  text: World generation is deterministic under seed and domain-specific RNG use.
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-002
+  text: Town, sanctuary, camps, buildings, corpses, and entities are authoritative
+    world objects.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-003
+  text: Entity snapshots are immutable enough for worker reasoning and deterministic
+    replay.
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-004
+  text: No hidden mutation leaks occur from snapshot or AI evaluation paths.
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-005
+  text: Deterministic replay/delta behavior is preserved across runs with same seed.
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-006
+  text: Regional hazards, calamities, local scars, and world consequences can feed
+    gameplay and strategy.
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SUB-007
+  text: Entity builder and serialization preserve gameplay-relevant state safely.
+  status: verified
+  priority: P0
+  legacy_evidence: src/core/entities/entity_builder.py
+  v2_evidence: src_v2/core/builder.py
+  proof_type: parity
+  test_path: tests_v2/parity/test_entity_construction.py
+  divergence_note: null
+  support_boundary: null

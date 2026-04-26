@@ -21,7 +21,7 @@ It does not yet close broker-disabled behavior, observability compatibility, or 
 
 ## [Milestone technical implementation]
 
-Recover the supported CLI and entrypoint surface in native `src_v2` terms.
+Recover the supported CLI and entrypoint surface in native `src` terms.
 
 This milestone must:
 
@@ -57,7 +57,7 @@ At the end of this milestone:
 
 ## Task
 
-### [ ] (checkbox) - [Task 1] - Audit legacy CLI and entrypoint rows against current `src_v2` entry behavior
+### [ ] (checkbox) - [Task 1] - Audit legacy CLI and entrypoint rows against current `src` entry behavior
 
 #### [Task Description]
 
@@ -65,7 +65,7 @@ Find where the system-entry surface is already real, partial, or fake.
 
 #### [Task technical implementation]
 
-Review all Phase 10 entry-surface rows and map them to current `src_v2` implementation points.
+Review all Phase 10 entry-surface rows and map them to current `src` implementation points.
 
 Identify:
 
@@ -77,9 +77,9 @@ Identify:
 
 #### [Task possible affected files]
 
-- `src_v2/__main__.py`
-- `src_v2/cli/**`
-- `src_v2/api/**`
+- `src/__main__.py`
+- `src/cli/**`
+- `src/api/**`
 - `docs/engine/replacement_ledger.md`
 - `docs/engine/phase10_backlog.md`
 
@@ -118,10 +118,10 @@ Implement or refine supported entry behavior so preserved execution contracts ar
 
 #### [Task possible affected files]
 
-- `src_v2/__main__.py`
-- `src_v2/cli/**`
-- `tests_v2/e2e/**`
-- `tests_v2/cli/**`
+- `src/__main__.py`
+- `src/cli/**`
+- `tests/e2e/**`
+- `tests/cli/**`
 
 #### [Task important notes]
 
@@ -158,11 +158,11 @@ Implement or refine supported behavior for:
 
 #### [Task possible affected files]
 
-- `src_v2/cli/**`
-- `src_v2/engine/**`
-- `src_v2/api/**`
-- `tests_v2/e2e/**`
-- `tests_v2/cli/**`
+- `src/cli/**`
+- `src/engine/**`
+- `src/api/**`
+- `tests/e2e/**`
+- `tests/cli/**`
 
 #### [Task important notes]
 
@@ -200,9 +200,9 @@ Add focused tests for:
 
 #### [Task possible affected files]
 
-- `tests_v2/cli/**`
-- `tests_v2/e2e/**`
-- `tests_v2/integration/**`
+- `tests/cli/**`
+- `tests/e2e/**`
+- `tests/integration/**`
 
 #### [Task important notes]
 

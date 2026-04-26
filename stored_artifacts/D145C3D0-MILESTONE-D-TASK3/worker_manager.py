@@ -6,8 +6,8 @@ import math
 import threading
 from concurrent.futures import ThreadPoolExecutor, Future
 from typing import List, Dict, Any, Optional, Callable
-from src_v2.core.worker_protocol import WorkerPacket, WorkerResult
-from src_v2.core.updates import EntityUpdate
+from src.core.worker_protocol import WorkerPacket, WorkerResult
+from src.core.updates import EntityUpdate
 
 logger = logging.getLogger(__name__)
 
@@ -89,7 +89,7 @@ class WorkerManager:
                 result = future.result()
                 results.append(result)
             except Exception as e:
-                from src_v2.core.worker_protocol import ResultStatus
+                from src.core.worker_protocol import ResultStatus
                 logger.error("Unexpected worker future failure: %s", e)
                 # This should be rare if _wrap_work is doing its job, but we must protect the batch.
                 # However, we don't have the packet here easily. 
@@ -114,7 +114,7 @@ class WorkerManager:
 
     def _wrap_work(self, packet: WorkerPacket, fn: Callable) -> WorkerResult:
         """Helper to capture compute time and handle errors inside the pool."""
-        from src_v2.core.worker_protocol import ResultStatus
+        from src.core.worker_protocol import ResultStatus
         self._active_count += 1
         self._peak_active = max(self._peak_active, self._active_count)
         

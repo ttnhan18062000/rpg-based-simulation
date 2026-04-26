@@ -1,0 +1,801 @@
+- id: INFRA-001
+  text: "`test_rejection_audit_aggregation`: Rejection audit aggregation \u2014 Verify\
+    \ that authoritative rejections are captured in ScenarioReport. [Milestone 7]."
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: INFRA-002
+  text: "`test_out_of_range_rejection`: Out of range rejection \u2014 Verify that\
+    \ combat out-of-range is explicitly rejected with structured reason. [Milestone\
+    \ 7]."
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: INFRA-003
+  text: '`test_rng`: Rng.'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: INFRA-004
+  text: '`test_entity`: Entity.'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: INFRA-005
+  text: "`test_strategy_observability_consistency`: Strategy observability consistency\
+    \ \u2014 Verify that a strategic shift is consistently observable across all surfaces.."
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: INFRA-006
+  text: "`test_strategic_decision_driver_traceability`: Strategic decision driver\
+    \ traceability \u2014 Verify that DecisionDriver records flow from AIBrain to\
+    \ the entity state.."
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: INFRA-007
+  text: '`DISABLE_RABBITMQ=1` causes RabbitMQ client code to enter explicit disabled
+    mode.'
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: INFRA-008
+  text: RabbitMQ client imports do not crash when disabled.
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: INFRA-009
+  text: RabbitMQ public accessors return safe no-op values (`None`) when disabled.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: INFRA-010
+  text: RabbitMQ disabled-mode behavior remains safe even when broker libraries are
+    missing.
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: INFRA-011
+  text: '`DISABLE_KAFKA=1` causes Kafka client code to enter explicit disabled mode.'
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: INFRA-012
+  text: Kafka client imports do not crash when disabled.
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: INFRA-013
+  text: Kafka public accessors return safe no-op values (`None`) when disabled.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: INFRA-014
+  text: Kafka disabled-mode behavior remains safe even when broker libraries are missing.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: INFRA-015
+  text: Redis client behavior remains safe when Redis package or runtime is unavailable.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: INFRA-016
+  text: Redis accessors fail safely without crashing simulation bootstrap when Redis
+    is optional.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: INFRA-017
+  text: Worker pool falls back to inline/local execution when broker transport is
+    unavailable.
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: INFRA-018
+  text: Worker pool does not require live RabbitMQ/Kafka to execute local simulation
+    behavior.
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: INFRA-019
+  text: Worker fallback preserves authoritative action generation semantics.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: INFRA-020
+  text: Worker fallback preserves deterministic ordering expectations in local mode.
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: INFRA-021
+  text: Worker shutdown remains safe after fallback execution paths.
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: INFRA-022
+  text: Missing broker infrastructure does not block minimal simulation startup.
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: INFRA-023
+  text: Chaos-enabled runs survive AI-result drop conditions without immediate simulation
+    failure.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: INFRA-024
+  text: Chaos-enabled runs continue ticking through configured chaos-drop scenarios.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: INFRA-025
+  text: Chaos does not corrupt authoritative world state shape.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: INFRA-026
+  text: Chaos does not break snapshot acquisition.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: INFRA-027
+  text: Same seed and equivalent configuration produce identical replay-visible state
+    across runs.
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: INFRA-028
+  text: Different seeds produce divergent replay-visible state.
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: INFRA-029
+  text: Replay includes ground-item state where legacy determinism tests inspect it.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: INFRA-030
+  text: Replay includes enough actor combat/progression/mind state for state-fingerprint
+    checks.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: INFRA-031
+  text: World-loop logs include tick context.
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: INFRA-032
+  text: World-loop logs preserve identifiable component naming.
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: INFRA-033
+  text: Worker-pool logs preserve identifiable component naming where emitted.
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: INFRA-034
+  text: Main entrypoint logs preserve identifiable `__main__` or equivalent component
+    identity.
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: INFRA-035
+  text: Structured logging remains compatible with legacy context-injection expectations.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: INFRA-036
+  text: Simulation metrics remain scrapeable by Prometheus in equivalent stack configurations.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: INFRA-037
+  text: Legacy-queried metric names remain available where replacement claims require
+    them.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: INFRA-038
+  text: Tick-duration metrics remain emitted under the expected metric contract.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: INFRA-039
+  text: Monitoring stack checks do not silently pass with empty data.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: INFRA-040
+  text: Engine-side metrics remain available without forcing gameplay divergence.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: INFRA-041
+  text: Metrics do not rely on broker-only paths if local/headless execution is supposed
+    to work without brokers.
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: INFRA-042
+  text: Monitoring compatibility is verified under realistic stack conditions, not
+    just unit stubs.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: INFRA-043
+  text: Protocol metadata endpoint remains available at the expected route.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: INFRA-044
+  text: Metadata response still includes entity key mapping where legacy consumers
+    expect it.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: INFRA-045
+  text: Metadata response still includes state enum mapping where legacy consumers
+    expect it.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: INFRA-046
+  text: Protocol metadata field order/meaning remains compatible where clients depend
+    on it.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: INFRA-047
+  text: WebSocket endpoint still supports legacy handshake semantics.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: INFRA-048
+  text: JSON handshake mode remains supported.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: INFRA-049
+  text: MessagePack handshake mode remains supported.
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: INFRA-050
+  text: Initial post-handshake payload remains structurally compatible with legacy
+    client expectations.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: INFRA-051
+  text: Tick/entity/event payload shape remains compatible where explicitly defined
+    by legacy tests.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: INFRA-052
+  text: GZip middleware or equivalent response compression remains functional for
+    large metadata responses.
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: INFRA-053
+  text: Compression support does not break standard metadata endpoint access.
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: INFRA-054
+  text: A minimal production-like headless run can still execute without optional
+    brokers when disabled.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: INFRA-055
+  text: Headless run still produces the expected result artifacts (at minimum replay,
+    and where applicable manifest/graph outputs).
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: INFRA-056
+  text: Headless runner import remains isolated from optional broker setup.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: INFRA-057
+  text: Final-system path remains suitable for regression use rather than demo-only
+    use.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: INFRA-058
+  text: Final-system artifacts remain mutually consistent where legacy tests compare
+    them.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: INFRA-059
+  text: Structural graph/export surfaces remain aligned with replay where legacy tests
+    require parity.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: INFRA-060
+  text: Artifact generation failure paths remain visible rather than silently swallowed.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: INFRA-061
+  text: Missing RabbitMQ package with disabled flag does not crash import.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: INFRA-062
+  text: Missing Kafka package with disabled flag does not crash import.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: INFRA-063
+  text: Missing Redis package does not crash safe initialization paths where optional.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: INFRA-064
+  text: Missing broker dependencies do not block headless runner imports.
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: INFRA-065
+  text: Worker transport degradation falls back safely to local execution.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: INFRA-066
+  text: Chaos-mode packet/result drop does not terminate the simulation prematurely
+    under supported settings.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: INFRA-067
+  text: Monitoring checks fail loudly when expected data is missing.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: INFRA-068
+  text: CLI execution still emits structured logs under minimal simulation runs.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: INFRA-069
+  text: Short runs still produce enough output for regression inspection.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: INFRA-070
+  text: Minimal runs do not require full external stack unless explicitly in E2E stack
+    mode.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: INFRA-071
+  text: Simulation step runs when brokers are missing.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: INFRA-072
+  text: RabbitMQ missing-package path fails closed or disables cleanly.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: INFRA-073
+  text: Kafka missing-package path fails closed or disables cleanly.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: INFRA-074
+  text: Engine manager recovery handles missing Kafka.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: INFRA-075
+  text: Worker pool RabbitMQ dispatch contract is preserved if broker mode is supported.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: INFRA-076
+  text: Kafka recovery can reconstruct from snapshot plus event stream.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: INFRA-077
+  text: Live-vs-manual replay produces same world state for loot recovery.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null

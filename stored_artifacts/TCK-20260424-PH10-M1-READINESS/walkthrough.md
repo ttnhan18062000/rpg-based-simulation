@@ -18,5 +18,5 @@ Established the official readiness gate for Phase 10: Infrastructure/Fallback St
 - Published the formal [phase10_entry_package.md](file:///home/vboxuser/Work/rpg-based-simulation/docs/engine/phase10_entry_package.md), officially opening Phase 10.
 
 ## Verification
-- Verified all 375 tests in `tests_v2/` pass before entry.
+- Verified all 375 tests in `tests/` pass before entry.
 - Governance artifacts are linked and consistent with the legacy replacement ledger.

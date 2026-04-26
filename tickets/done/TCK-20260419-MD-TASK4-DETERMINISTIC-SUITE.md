@@ -32,9 +32,9 @@ Provide final certification that the V2 concurrency layer is bit-identical to th
 - resource_high_level_v3.md
 
 ## Related Code Areas
-- src_v2/engine/kernel.py
-- src_v2/engine/worker_logic.py
-- src_v2/engine/worker_manager.py
+- src/engine/kernel.py
+- src/engine/worker_logic.py
+- src/engine/worker_manager.py
 
 ## Implementation Notes
 - Implemented `_handle_movement` in `worker_logic.py` to calculate clamped steps towards a target position.
@@ -42,12 +42,12 @@ Provide final certification that the V2 concurrency layer is bit-identical to th
 - Forced randomized `time.sleep` in the stress test worker pool to guarantee chaotic completion orders.
 
 ## Test Summary
-- `tests_v2/engine/test_milestone_d_closure.py`: High-pressure determinism equivalence (Passed).
+- `tests/engine/test_milestone_d_closure.py`: High-pressure determinism equivalence (Passed).
 
 ## Files Changed
-- [src_v2/engine/worker_logic.py](file:///home/vboxuser/Work/rpg-based-simulation/src_v2/engine/worker_logic.py)
-- [src_v2/engine/kernel.py](file:///home/vboxuser/Work/rpg-based-simulation/src_v2/engine/kernel.py)
-- [tests_v2/engine/test_milestone_d_closure.py](file:///home/vboxuser/Work/rpg-based-simulation/tests_v2/engine/test_milestone_d_closure.py)
+- [src/engine/worker_logic.py](file:///home/vboxuser/Work/rpg-based-simulation/src/engine/worker_logic.py)
+- [src/engine/kernel.py](file:///home/vboxuser/Work/rpg-based-simulation/src/engine/kernel.py)
+- [tests/engine/test_milestone_d_closure.py](file:///home/vboxuser/Work/rpg-based-simulation/tests/engine/test_milestone_d_closure.py)
 
 ## Completion Summary
 - Successfully completed Milestone D hardening. The concurrency layer is now proven equivalent to the single-threaded baseline using real domain logic (Movement). All protocol and commit laws are enforced and verified.

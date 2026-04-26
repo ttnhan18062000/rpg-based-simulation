@@ -4,7 +4,7 @@
 
 Milestone 5 turns the reconciled governance system into the official replacement verdict.
 
-Its purpose is to produce the final proof bundle and replacement-status package that says, precisely, what `src_v2` has replaced and what it has not.
+Its purpose is to produce the final proof bundle and replacement-status package that says, precisely, what `src` has replaced and what it has not.
 
 This milestone covers:
 
@@ -97,7 +97,7 @@ The project has one discoverable final proof bundle.
 
 #### [Task Description]
 
-State exactly what `src_v2` has replaced and what it has not.
+State exactly what `src` has replaced and what it has not.
 
 #### [Task technical implementation]
 

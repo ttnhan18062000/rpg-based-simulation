@@ -78,7 +78,7 @@ Add or consolidate characterization tests and fixtures for preserved Phase 10 be
 
 #### [Task possible affected files]
 
-- `tests_v2/parity/**`
+- `tests/parity/**`
 - characterization fixtures
 - `docs/engine/phase10_proof_bundle.md`
 
@@ -118,8 +118,8 @@ Build or extend parity tests for the supported preserved subset of:
 
 #### [Task possible affected files]
 
-- `tests_v2/parity/test_cli_parity.py`
-- `tests_v2/parity/test_disabled_mode_parity.py`
+- `tests/parity/test_cli_parity.py`
+- `tests/parity/test_disabled_mode_parity.py`
 - parity fixtures
 - divergence notes
 
@@ -158,9 +158,9 @@ Build or extend parity tests for the supported preserved subset of:
 
 #### [Task possible affected files]
 
-- `tests_v2/parity/test_operational_artifact_parity.py`
-- `tests_v2/parity/test_api_protocol_parity.py`
-- `tests_v2/parity/test_headless_parity.py`
+- `tests/parity/test_operational_artifact_parity.py`
+- `tests/parity/test_api_protocol_parity.py`
+- `tests/parity/test_headless_parity.py`
 - parity fixtures
 - divergence notes
 
@@ -283,7 +283,7 @@ Collect and index:
 
 - `docs/engine/phase10_proof_bundle.md`
 - `docs/engine/release_proof/phase10/*`
-- `tests_v2/**`
+- `tests/**`
 
 #### [Task important notes]
 

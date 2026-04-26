@@ -1,4 +1,4 @@
-# Updated Implementation Plan — [Phase 4] of the `src_v2` Epic
+# Updated Implementation Plan — [Phase 4] of the `src` Epic
 
 ## [Phase Name]
 
@@ -8,17 +8,17 @@
 
 ## [Phase Description]
 
-Phase 4 is the current implementation phase of the `src_v2` epic.
+Phase 4 is the current implementation phase of the `src` epic.
 
 Its purpose is to move the project from infrastructure-heavy hardening into a disciplined gameplay attachment phase **without** drifting away from the original `src` RPG-core logic.
 
 This phase begins from a mixed reality:
 
-- the `src_v2` substrate already has substantial runtime/governance/certification structure,
+- the `src` substrate already has substantial runtime/governance/certification structure,
 - movement parity has improved materially and is now close to the original path,
 - but substrate freeze is **not** closed,
 - declared resource truth is **not** fully closed,
-- and the original RPG-core resource loop is only **partially** represented in `src_v2`.
+- and the original RPG-core resource loop is only **partially** represented in `src`.
 
 This phase is therefore **not** a generic “add more gameplay” phase.
 It is the phase where the project must:
@@ -166,7 +166,7 @@ At the end of Phase 4:
 - the second official slice preserves the original resource interaction loop rather than inventing a substitute,
 - benchmark and certification claims are scoped to the actually supported gameplay surface,
 - support boundaries and intentional divergences are explicit,
-- and the project can state what `src_v2` currently supports **without** overstating gameplay or runtime truth.
+- and the project can state what `src` currently supports **without** overstating gameplay or runtime truth.
 
 ---
 

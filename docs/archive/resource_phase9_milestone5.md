@@ -58,7 +58,7 @@ At the end of Milestone 5:
 
 ## Task
 
-### [ ] (checkbox) - [Task 1] - Audit progression, class, skill, attribute, and reward rows against current `src_v2` progression behavior
+### [ ] (checkbox) - [Task 1] - Audit progression, class, skill, attribute, and reward rows against current `src` progression behavior
 
 #### [Task Description]
 
@@ -66,7 +66,7 @@ Find where RPG growth semantics are already real, partial, or fake.
 
 #### [Task technical implementation]
 
-Review all Phase 9 progression rows and map them to current `src_v2` implementation points.
+Review all Phase 9 progression rows and map them to current `src` implementation points.
 
 Identify:
 
@@ -78,9 +78,9 @@ Identify:
 
 #### [Task possible affected files]
 
-- `src_v2/progression/**`
-- `src_v2/combat/**`
-- `src_v2/core/progression/**`
+- `src/progression/**`
+- `src/combat/**`
+- `src/core/progression/**`
 - `docs/engine/replacement_ledger.md`
 
 #### [Task important notes]
@@ -118,9 +118,9 @@ Implement or refine supported progression behavior so actors can:
 
 #### [Task possible affected files]
 
-- `src_v2/progression/**`
-- `src_v2/core/progression/**`
-- `tests_v2/progression/**`
+- `src/progression/**`
+- `src/core/progression/**`
+- `tests/progression/**`
 
 #### [Task important notes]
 
@@ -158,10 +158,10 @@ Implement or refine supported class/gear/talent behavior, including where preser
 
 #### [Task possible affected files]
 
-- `src_v2/progression/**`
-- `src_v2/core/progression/**`
-- `tests_v2/progression/**`
-- `tests_v2/core/gameplay/**`
+- `src/progression/**`
+- `src/core/progression/**`
+- `tests/progression/**`
+- `tests/core/gameplay/**`
 
 #### [Task important notes]
 
@@ -199,11 +199,11 @@ Implement or refine supported skill and attribute semantics, including where pre
 
 #### [Task possible affected files]
 
-- `src_v2/progression/**`
-- `src_v2/core/gameplay/**`
-- `src_v2/combat/**`
-- `tests_v2/progression/**`
-- `tests_v2/core/gameplay/**`
+- `src/progression/**`
+- `src/core/gameplay/**`
+- `src/combat/**`
+- `tests/progression/**`
+- `tests/core/gameplay/**`
 
 #### [Task important notes]
 
@@ -235,11 +235,11 @@ Implement or refine supported reward-emission behavior so preserved outcomes suc
 
 #### [Task possible affected files]
 
-- `src_v2/progression/**`
-- `src_v2/engine/apply/**`
-- `src_v2/combat/**`
-- `tests_v2/progression/**`
-- `tests_v2/combat/**`
+- `src/progression/**`
+- `src/engine/apply/**`
+- `src/combat/**`
+- `tests/progression/**`
+- `tests/combat/**`
 
 #### [Task important notes]
 
@@ -277,9 +277,9 @@ Add focused tests for:
 
 #### [Task possible affected files]
 
-- `tests_v2/progression/**`
-- `tests_v2/combat/**`
-- `tests_v2/core/gameplay/**`
+- `tests/progression/**`
+- `tests/combat/**`
+- `tests/core/gameplay/**`
 
 #### [Task important notes]
 

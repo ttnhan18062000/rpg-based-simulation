@@ -112,7 +112,7 @@ Finalize the audit trail by linking every claim to its evidence.
 
 #### [Task technical implementation]
 
-Attach direct links to `src_v2`, `tests_v2`, and proof artifacts for every supported or partial item.
+Attach direct links to `src`, `tests`, and proof artifacts for every supported or partial item.
 
 #### [Task possible affected files]
 

@@ -264,7 +264,7 @@ This epic is not primarily about:
 
 The configuration layer defines the operating envelope.
 
-### `src_v2/config/profiles.py`
+### `src/config/profiles.py`
 
 Defines `RuntimeProfile` and `HardwareClass`.
 
@@ -284,7 +284,7 @@ Profile fields cover:
 
 This file is the core statement of what the runtime is allowed to consume.
 
-### `src_v2/config/validation.py`
+### `src/config/validation.py`
 
 Defines startup validation rules and illegal flag/profile combinations.
 This is the beginning of lifecycle truth.
@@ -295,7 +295,7 @@ This is the beginning of lifecycle truth.
 
 The core layer defines authoritative state, authoritative deltas, work identity, governance signals, and packet/result contracts.
 
-### `src_v2/core/state.py`
+### `src/core/state.py`
 
 Contains `EntityState` and `AuthoritativeState`.
 
@@ -312,12 +312,12 @@ Contains `EntityState` and `AuthoritativeState`.
 
 This is the canonical semantic state.
 
-### `src_v2/core/updates.py`
+### `src/core/updates.py`
 
 Contains `EntityUpdate` and `StateUpdate`.
 This is the authoritative delta surface used by the apply path.
 
-### `src_v2/core/work.py`
+### `src/core/work.py`
 
 Defines `WorkClass` and `WorkItem`.
 
@@ -330,7 +330,7 @@ Current work classes include:
 
 This is the root of scheduling and work-law reasoning.
 
-### `src_v2/core/governance.py`
+### `src/core/governance.py`
 
 Defines:
 
@@ -346,7 +346,7 @@ This is the root of degradation/recovery reasoning.
 
 The engine layer is where orchestration, mutation, selection, checkpointing, replay, and worker execution live.
 
-### `src_v2/engine/kernel.py`
+### `src/engine/kernel.py`
 
 The `Kernel` is the runtime orchestrator.
 
@@ -363,27 +363,27 @@ Its job is to:
 The kernel is allowed to orchestrate.
 It is not allowed to become the hidden owner of every subsystem rule.
 
-### `src_v2/engine/scheduler.py`
+### `src/engine/scheduler.py`
 
 The scheduler selects work.
 
 It must define exact ordering and exact class semantics.
 It must not mutate authoritative state.
 
-### `src_v2/engine/apply.py`
+### `src/engine/apply.py`
 
 The apply path is the sole authoritative mutator.
 
 This is one of the most important files in the whole epic.
 If mutation leaks outside this path, the trust model is broken.
 
-### `src_v2/engine/checkpoint.py`
+### `src/engine/checkpoint.py`
 
 Canonical checkpointing and authoritative hashing live here.
 
 This module must remain external to the state models themselves and must operate only on authoritative material.
 
-### `src_v2/engine/worker_manager.py`
+### `src/engine/worker_manager.py`
 
 Owns bounded worker execution control:
 
@@ -401,7 +401,7 @@ This module is a runtime-control boundary, not just a thin thread-pool wrapper.
 
 The replay layer is operational, not authoritative.
 
-### `src_v2/replay/replay.py`
+### `src/replay/replay.py`
 
 Owns:
 
@@ -414,7 +414,7 @@ Owns:
 Replay must never redefine authoritative truth.
 It is support infrastructure that must remain bounded and honest.
 
-### `src_v2/replay/manifest.py`
+### `src/replay/manifest.py`
 
 Owns the replay bundle structure and manifest integrity.
 
@@ -427,11 +427,11 @@ The bundle must be structurally checkable.
 
 The observability layer is operational and bounded.
 
-### `src_v2/observability/signals.py`
+### `src/observability/signals.py`
 
 Owns runtime-signal collection and bounded history/trend logic.
 
-### `src_v2/observability/runtime_status.py`
+### `src/observability/runtime_status.py`
 
 Owns the surfaced runtime/lifecycle/control-state snapshot.
 
@@ -442,7 +442,7 @@ It is supposed to be the truthful operational surface of the engine.
 
 ## Governance layer
 
-### `src_v2/governance/governor.py`
+### `src/governance/governor.py`
 
 Owns degradation, recovery, hysteresis, and policy interpretation from signals.
 
@@ -453,7 +453,7 @@ A governor driven by fake or weak signals is fake safety.
 
 ## Certification layer
 
-### `src_v2/certification/models.py`
+### `src/certification/models.py`
 
 Defines:
 
@@ -463,15 +463,15 @@ Defines:
 - result models,
 - proof metadata.
 
-### `src_v2/certification/conformance.py`
+### `src/certification/conformance.py`
 
 Owns pass/fail judgment from scenario expectations and measured results.
 
-### `src_v2/certification/harness.py`
+### `src/certification/harness.py`
 
 Owns scenario execution and measurement capture.
 
-### `src_v2/certification/recorder.py`
+### `src/certification/recorder.py`
 
 Owns proof artifact output.
 

@@ -7,7 +7,7 @@ Milestone 1: Simulation Kernel Contract and Resource-Envelope Rulebook
 DONE
 
 ## Request Summary
-Establish the foundational laws, contracts, and skeletal engine structure for the fresh resource-safe simulation project (`src_v2`).
+Establish the foundational laws, contracts, and skeletal engine structure for the fresh resource-safe simulation project (`src`).
 
 ## Scope
 - Define simulation kernel contract (docs & types).
@@ -26,10 +26,10 @@ Establish the foundational laws, contracts, and skeletal engine structure for th
 
 ## Acceptance Criteria
 - [x] Contract documents (`simulation_kernel_contract_m1.md`, `runtime_profiles_m1.md`, `m1_test_matrix.md`) exist and are approved.
-- [x] Code-facing contract types (`Pydantic` and `Dataclasses`) exist in `src_v2/`.
-- [x] Skeletal kernel shell (`src_v2/engine/kernel.py`) orchestrates frozen phase order.
-- [x] Deterministic enforcement tests (`tests_v2/`) pass 100%.
-- [x] Zero legacy imports in `src_v2/` or `tests_v2/`.
+- [x] Code-facing contract types (`Pydantic` and `Dataclasses`) exist in `src/`.
+- [x] Skeletal kernel shell (`src/engine/kernel.py`) orchestrates frozen phase order.
+- [x] Deterministic enforcement tests (`tests/`) pass 100%.
+- [x] Zero legacy imports in `src/` or `tests/`.
 
 ## Related Tickets
 - None
@@ -43,8 +43,8 @@ Establish the foundational laws, contracts, and skeletal engine structure for th
 - None
 
 ## Related Code Areas
-- `src_v2/` (New)
-- `tests_v2/` (New)
+- `src/` (New)
+- `tests/` (New)
 - `docs/engine/` (New)
 
 ## Assumptions / Open Questions
@@ -56,12 +56,12 @@ Establish the foundational laws, contracts, and skeletal engine structure for th
 - Strict isolation from legacy dependencies.
 
 ## Test Summary
-- 12 contract tests passed in `tests_v2/`.
+- 12 contract tests passed in `tests/`.
 - Verifed zero legacy imports from `src/`.
 
 ## Files Changed
-- `src_v2/` (all files)
-- `tests_v2/` (all files)
+- `src/` (all files)
+- `tests/` (all files)
 - `docs/engine/` (all files)
 
 ## Completion Summary

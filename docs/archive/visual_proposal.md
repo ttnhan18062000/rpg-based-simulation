@@ -43,7 +43,7 @@ We cannot have the API query the `WorldState` directly while the `WorldLoop` is 
 ### The `EngineManager` Class
 ```python
 import threading
-from src.engine.world_loop import WorldLoop
+from src_legacy.engine.world_loop import WorldLoop
 
 class EngineManager:
     def __init__(self, config):

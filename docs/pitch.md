@@ -23,7 +23,7 @@ Think of it as an **ant farm meets Final Fantasy** — a living world you observ
 ### 🌍 A Complete Living World
 
 > [!IMPORTANT]
-> **Verified Baseline (Phase 5)**: Only the core **Move-Harvest-Resolve-Craft** loop is currently verified for bit-identical parity in `src_v2`. Systems marked as "Vision" or "Legacy" are currently being classified in the Phase 6 replacement ledger.
+> **Verified Baseline (Phase 5)**: Only the core **Move-Harvest-Resolve-Craft** loop is currently verified for bit-identical parity in `src`. Systems marked as "Vision" or "Legacy" are currently being classified in the Phase 6 replacement ledger.
 
 | System | Verified Level (Phase 5) | Status / Plan |
 | :--- | :--- | :--- |

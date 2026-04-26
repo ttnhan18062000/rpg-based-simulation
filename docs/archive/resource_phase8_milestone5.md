@@ -75,7 +75,7 @@ Add or consolidate characterization tests and fixtures for preserved Phase 8 beh
 
 #### [Task possible affected files]
 
-- `tests_v2/parity/**`
+- `tests/parity/**`
 - characterization fixtures
 - `docs/engine/phase8_proof_bundle.md`
 
@@ -92,7 +92,7 @@ If legacy behavior is not characterized, parity claims are guesswork.
 - [x] Weak-proof areas are reduced
 
 #### [Implementation Comment]
-Reviewed legacy `CombatInteractionService` and `TacticalEvaluator`. Created characterization tests in `tests_v2/parity/`.
+Reviewed legacy `CombatInteractionService` and `TacticalEvaluator`. Created characterization tests in `tests/parity/`.
 
 #### [Task acceptance criteria]
 
@@ -117,7 +117,7 @@ Build or extend parity tests for the supported preserved combat subset, includin
 
 #### [Task possible affected files]
 
-- `tests_v2/parity/test_combat_parity.py`
+- `tests/parity/test_combat_parity.py`
 - combat parity fixtures
 - divergence notes
 
@@ -160,8 +160,8 @@ Build or extend parity tests for the supported preserved subset of:
 
 #### [Task possible affected files]
 
-- `tests_v2/parity/test_tactical_parity.py`
-- `tests_v2/parity/test_local_world_semantics_parity.py`
+- `tests/parity/test_tactical_parity.py`
+- `tests/parity/test_local_world_semantics_parity.py`
 - parity fixtures
 - divergence notes
 
@@ -178,7 +178,7 @@ Do not let tactical “looks right” stand in for old-vs-new evidence.
 - [x] Proof remains bounded to supported scope
 
 #### [Implementation Comment]
-Created `tests_v2/parity/test_tactical_parity.py` documenting target selection and retreat threshold shifts.
+Created `tests/parity/test_tactical_parity.py` documenting target selection and retreat threshold shifts.
 
 #### [Task acceptance criteria]
 
@@ -294,7 +294,7 @@ Collect and index:
 
 - `docs/engine/phase8_proof_bundle.md`
 - `docs/engine/release_proof/phase8/*`
-- `tests_v2/**`
+- `tests/**`
 
 #### [Task important notes]
 

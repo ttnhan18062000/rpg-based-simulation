@@ -4,7 +4,7 @@
 
 Milestone 1 is the transition from repair mode to build mode.
 
-Its purpose is to freeze the repaired `src_v2` substrate so future gameplay implementation does not continue building on moving assumptions.
+Its purpose is to freeze the repaired `src` substrate so future gameplay implementation does not continue building on moving assumptions.
 
 At this point, the engine should already have:
 
@@ -91,7 +91,7 @@ At the end of Milestone 1:
 
 ## Task
 
-### [x] (checkbox) - [Task 1] - Freeze the repaired semantic baseline contract for `src_v2`
+### [x] (checkbox) - [Task 1] - Freeze the repaired semantic baseline contract for `src`
 
 #### [Task Description]
 
@@ -113,8 +113,8 @@ This task should anchor future gameplay work to the local reference path first, 
 
 - `docs/engine/runtime_completion_contract_ma.md`
 - `docs/engine/project_lawbook_m10.md`
-- `src_v2/engine/kernel.py`
-- `src_v2/engine/apply.py`
+- `src/engine/kernel.py`
+- `src/engine/apply.py`
 - baseline law tests
 
 #### [Task important notes]
@@ -130,11 +130,11 @@ Freeze the repaired baseline.
 - [x] Operational state is separated from authoritative state
 - [x] Tests still match the frozen law
 
-**Implementation**: [project_lawbook_m10.md](file:///home/vboxuser/Work/rpg-based-simulation/docs/engine/project_lawbook_m10.md) and [kernel.py](file:///home/vboxuser/Work/rpg-based-simulation/src_v2/engine/kernel.py).
+**Implementation**: [project_lawbook_m10.md](file:///home/vboxuser/Work/rpg-based-simulation/docs/engine/project_lawbook_m10.md) and [kernel.py](file:///home/vboxuser/Work/rpg-based-simulation/src/engine/kernel.py).
 
 #### [Task acceptance criteria]
 
-The repaired local `src_v2` runtime is explicitly frozen as the semantic build target for all later gameplay slices.
+The repaired local `src` runtime is explicitly frozen as the semantic build target for all later gameplay slices.
 
 ---
 
@@ -158,9 +158,9 @@ Review for lingering schema ambiguity and remove anything transitional.
 
 #### [Task possible affected files]
 
-- `src_v2/observability/signals.py`
-- `src_v2/observability/runtime_status.py`
-- `src_v2/engine/kernel.py`
+- `src/observability/signals.py`
+- `src/observability/runtime_status.py`
+- `src/engine/kernel.py`
 - lifecycle/result model files
 - `docs/engine/*status*`
 - relevant tests
@@ -178,7 +178,7 @@ It is about locking the current truth surface.
 - [x] Timeout/success/failure vocabulary is stable
 - [x] Tests and docs use the same vocabulary
 
-**Implementation**: [governance.py](file:///home/vboxuser/Work/rpg-based-simulation/src_v2/core/governance.py) and [runtime_status.py](file:///home/vboxuser/Work/rpg-based-simulation/src_v2/engine/runtime_status.py).
+**Implementation**: [governance.py](file:///home/vboxuser/Work/rpg-based-simulation/src/core/governance.py) and [runtime_status.py](file:///home/vboxuser/Work/rpg-based-simulation/src/engine/runtime_status.py).
 
 #### [Task acceptance criteria]
 
@@ -213,8 +213,8 @@ Ensure recorder behavior, release-gate assumptions, and integrity tests all alig
 
 #### [Task possible affected files]
 
-- `src_v2/certification/recorder.py`
-- `src_v2/certification/harness.py`
+- `src/certification/recorder.py`
+- `src/certification/harness.py`
 - `docs/engine/manifest.json`
 - release-proof docs
 - certification and docs tests
@@ -257,9 +257,9 @@ Ensure scheduler/kernel/worker paths enforce the same declared boundary.
 
 #### [Task possible affected files]
 
-- `src_v2/core/work.py`
-- `src_v2/engine/kernel.py`
-- `src_v2/engine/worker_manager.py`
+- `src/core/work.py`
+- `src/engine/kernel.py`
+- `src/engine/worker_manager.py`
 - concurrency docs
 - concurrency tests
 
@@ -299,9 +299,9 @@ Audit and remove:
 
 #### [Task possible affected files]
 
-- `src_v2/engine/*`
-- `src_v2/certification/*`
-- `src_v2/observability/*`
+- `src/engine/*`
+- `src/certification/*`
+- `src/observability/*`
 - `docs/*`
 - regression tests
 

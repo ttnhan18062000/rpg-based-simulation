@@ -18,7 +18,7 @@ This document maps the Phase 8 combat rows to the current implementation and ide
 The engine lacks a centralized `verify_attack(attacker, target)` entry point in the `LegalityService`. Actions currently perform ad-hoc checks or rely on simulated outcome assumptions.
 
 ### 2. Standard Combat Resolution
-`CombatReactionSystem` only handles Opportunity Attacks. Standard melee and ranged attacks have no authoritative resolution logic in `src_v2`.
+`CombatReactionSystem` only handles Opportunity Attacks. Standard melee and ranged attacks have no authoritative resolution logic in `src`.
 
 ### 3. Defeat/Kill Semantics
 `CombatUpdate` and `ApplyPipeline` do not yet distinguish between "Defeated" (non-lethal/regeneration allowed) and "Killed" (permanent removal). HP dropping to zero simply sets `active=False` without semantic classification.

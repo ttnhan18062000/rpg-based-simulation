@@ -202,9 +202,9 @@ Complete and harden:
 
 [Task possible affected files]
 
-- `src_v2/core/worker_protocol.py`
-- `src_v2/engine/worker_manager.py`
-- `src_v2/engine/kernel.py`
+- `src/core/worker_protocol.py`
+- `src/engine/worker_manager.py`
+- `src/engine/kernel.py`
 - apply/commit integration modules
 
 [Task important notes]
@@ -256,8 +256,8 @@ Complete and harden:
 
 [Task possible affected files]
 
-- `src_v2/engine/worker_manager.py`
-- `src_v2/engine/kernel.py`
+- `src/engine/worker_manager.py`
+- `src/engine/kernel.py`
 - fallback/failure integration points
 - runtime signal integration modules
 
@@ -319,9 +319,9 @@ Complete or add exact tests for:
 
 ### Suggested test groups
 
-- `tests_v2/engine/test_worker_determinism.py`
-- `tests_v2/engine/test_worker_bounds.py`
-- `tests_v2/engine/test_worker_fallback.py`
+- `tests/engine/test_worker_determinism.py`
+- `tests/engine/test_worker_bounds.py`
+- `tests/engine/test_worker_fallback.py`
 - new packet/result/worker-failure tests
 
 [Task possible affected files]
@@ -344,7 +344,7 @@ This milestone is about making concurrency itself trustworthy.
 - [x] Prove bounded worker safety
 
 [Implementation Comment]
-Verified with 100% pass rate in `tests_v2/engine/test_worker_determinism.py`. Equivalence tests prove that different worker counts and local fallback consistently produce identical canonical hashes.
+Verified with 100% pass rate in `tests/engine/test_worker_determinism.py`. Equivalence tests prove that different worker counts and local fallback consistently produce identical canonical hashes.
 
 [Task acceptance criteria]
 The bounded-concurrency layer is pinned by a complete deterministic test suite proving packet discipline, commit determinism, safe fallback, and authoritative equivalence.

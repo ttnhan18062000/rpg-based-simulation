@@ -33,9 +33,9 @@ Transition runtime signals from estimates to truthful facts. This involves imple
 - `docs/engine/runtime_signals_contract_mb.md`
 
 ## Related Code Areas
-- `src_v2/engine/worker_manager.py`
-- `src_v2/engine/runtime_status.py`
-- `src_v2/engine/observability.py`
+- `src/engine/worker_manager.py`
+- `src/engine/runtime_status.py`
+- `src/engine/observability.py`
 
 ## Assumptions / Open Questions
 - Assume 5-tick/5-sample window is sufficient for "Stable Law."

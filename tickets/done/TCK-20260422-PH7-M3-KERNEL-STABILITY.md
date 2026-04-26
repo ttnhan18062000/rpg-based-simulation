@@ -31,12 +31,12 @@ Close the authoritative application model to ensure that one authoritative outco
 
 ## Related Docs
 - resource_phase7_high_level.md
-- src_v2_principle.md
+- src_principle.md
 
 ## Related Code Areas
-- \`src_v2/engine/kernel.py\`
-- \`src_v2/engine/governor.py\`
-- \`src_v2/engine/runtime_status.py\`
+- \`src/engine/kernel.py\`
+- \`src/engine/governor.py\`
+- \`src/engine/runtime_status.py\`
 
 ## Assumptions / Open Questions
 - Compute budgets are defined in the \`RuntimeProfile\`.

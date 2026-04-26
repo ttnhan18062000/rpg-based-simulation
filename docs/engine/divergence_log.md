@@ -1,6 +1,6 @@
-# `src_v2` Divergence Log
+# `src` Divergence Log
 
-This document is the canonical record of intentional behavior shifts in `src_v2` compared to original `src`. Every divergence listed here must have a rationale and be classified according to the `src_v2_principle.md` standards.
+This document is the canonical record of intentional behavior shifts in `src` compared to original `src`. Every divergence listed here must have a rationale and be classified according to the `src_principle.md` standards.
 
 ## 1. Divergence Summary Table
 
@@ -26,14 +26,14 @@ This document is the canonical record of intentional behavior shifts in `src_v2`
 - **Old Behavior**: Legacy engine allowed "instant-harvest" bugs under specific tick conditions or race timings where the channeled duration was not strictly enforced before update application.
 - **New Behavior**: `InteractionSystem.enforce` strictly verifies that `progress >= duration` before adding items to inventory. Aborts occur if the entity moves or interacts with another target.
 - **Rationale**: **Bug Fix**. Prevents exploitation of timing bugs and ensures the "Channeling Law" is absolute.
-- **Verification**: `tests_v2/parity/test_resource_interaction_parity.py`
+- **Verification**: `tests/parity/test_resource_interaction_parity.py`
 
 ### 2.2 Lowercase Registry Keys
 - **Subsystem**: Core / State
 - **Old Behavior**: Item and resource registry keys used inconsistent casing (e.g., `Iron_Ore`, `iron_ore`, `IRON_ORE`).
 - **New Behavior**: All keys are normalized to lowercase during registry loading and state serialization.
 - **Rationale**: **Lifecycle Truth Fix**. Stabilizes state hashing and prevents "ghost" items caused by case-sensitivity drit.
-- **Verification**: `tests_v2/unit/test_registry_identity_integrity.py`
+- **Verification**: `tests/unit/test_registry_identity_integrity.py`
 
 ### 2.3 Immediate Interaction Completion (Tick 0)
 - **Subsystem**: Interaction / Inventory
@@ -62,28 +62,28 @@ This document is the canonical record of intentional behavior shifts in `src_v2`
 - **Old Behavior**: Nearest enemy was always selected.
 - **New Behavior**: Deterministic priority chain: `Lowest HP` > `Closest Distance` > `Lowest Entity ID`.
 - **Rationale**: **Contract Hardening**. Prevents target oscillation and improves AI effectiveness in focused firing.
-- **Verification**: `tests_v2/parity/test_tactical_parity.py`
+- **Verification**: `tests/parity/test_tactical_parity.py`
 
 ### 2.7 20% Retreat Threshold
 - **Subsystem**: Tactical AI
 - **Old Behavior**: Entities retreated at 25% HP.
 - **New Behavior**: Entities retreat at 20% HP.
 - **Rationale**: **Intentional Gameplay Change**. Aligns with V2's more aggressive hero-bias scenarios.
-- **Verification**: `tests_v2/parity/test_tactical_parity.py`
+- **Verification**: `tests/parity/test_tactical_parity.py`
 
 ### 2.8 Omitted Combat Variance/Evasion
 - **Subsystem**: Combat Resolution
 - **Old Behavior**: Combat included evasion checks and ~10% damage variance.
 - **New Behavior**: Combat resolution is currently 100% deterministic (no variance, no evasion).
 - **Rationale**: **Substrate Clarity**. Ensuring the base damage resolution is bit-identical and stable before layering stochastic noise.
-- **Verification**: `tests_v2/parity/test_combat_parity.py`
+- **Verification**: `tests/parity/test_combat_parity.py`
 
 ### 2.9 Legality Enforcement (LoS & Engagement)
 - **Subsystem**: Combat / Legality
 - **Old Behavior**: Ranged attacks often clipped corners; melee attacks could be initiated during "illegal" movement states (stale engagement).
 - **New Behavior**: `LegalityService` enforces strict Line-of-Sight and engagement-registry truth. Moves that would violate engagement-lock are rejected.
 - **Rationale**: **Contract Hardening**. Ensures V2 combat is spatially honest and prevents "ghost-swing" exploits.
-- **Verification**: `tests_v2/test_legality.py`
+- **Verification**: `tests/test_legality.py`
 
 ### 2.10 Cognitive Boundedness (Attention & Detours)
 - **Subsystem**: AI / Strategic

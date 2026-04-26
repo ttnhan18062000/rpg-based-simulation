@@ -47,12 +47,12 @@ Hardening Phase 6: Recover the P0 "Must-Have" gaps identified in the Master Ledg
 
 ## Related Code Areas
 
-- `src_v2/core/state.py`
-- `src_v2/core/updates.py`
-- `src_v2/engine/movement.py`
-- `src_v2/engine/legality.py`
-- `src_v2/systems/social.py`
-- `src_v2/engine/combat.py`
+- `src/core/state.py`
+- `src/core/updates.py`
+- `src/engine/movement.py`
+- `src/engine/legality.py`
+- `src/systems/social.py`
+- `src/engine/combat.py`
 
 ## Assumptions / Open Questions
 
@@ -65,20 +65,20 @@ Hardening Phase 6: Recover the P0 "Must-Have" gaps identified in the Master Ledg
 
 ## Test Summary
 
-- `tests_v2/parity/test_social_parity.py`: PASSED
-- `tests_v2/parity/test_oa_parity.py`: PASSED
+- `tests/parity/test_social_parity.py`: PASSED
+- `tests/parity/test_oa_parity.py`: PASSED
 
 ## Files Changed
 
-- [MODIFY] `src_v2/core/state.py`
-- [MODIFY] `src_v2/core/updates.py`
-- [MODIFY] `src_v2/engine/movement.py`
-- [MODIFY] `src_v2/engine/legality.py`
-- [MODIFY] `src_v2/engine/apply.py`
-- [NEW] `src_v2/systems/social.py`
-- [NEW] `src_v2/engine/combat.py`
-- [NEW] `tests_v2/parity/test_social_parity.py`
-- [NEW] `tests_v2/parity/test_oa_parity.py`
+- [MODIFY] `src/core/state.py`
+- [MODIFY] `src/core/updates.py`
+- [MODIFY] `src/engine/movement.py`
+- [MODIFY] `src/engine/legality.py`
+- [MODIFY] `src/engine/apply.py`
+- [NEW] `src/systems/social.py`
+- [NEW] `src/engine/combat.py`
+- [NEW] `tests/parity/test_social_parity.py`
+- [NEW] `tests/parity/test_oa_parity.py`
 
 ## Completion Summary
 

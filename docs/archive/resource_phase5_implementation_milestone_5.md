@@ -72,7 +72,7 @@ At the end of Milestone 5:
 
 ## Task
 
-### [ ] (checkbox) - [Task 1] - Define the supported progression-surface matrix for the current `src_v2` phase
+### [ ] (checkbox) - [Task 1] - Define the supported progression-surface matrix for the current `src` phase
 
 #### [Task Description]
 
@@ -135,7 +135,7 @@ Keep scenario claims narrow and literal.
 
 #### [Task possible affected files]
 
-- `src_v2/certification/scenarios.py`
+- `src/certification/scenarios.py`
 - certification models
 - progression certification tests
 - certification docs
@@ -363,7 +363,7 @@ Publish one package containing:
 - and unsupported areas.
 
 This package should become the canonical answer to:
-“What progression behavior does `src_v2` currently support and prove?”
+“What progression behavior does `src` currently support and prove?”
 
 #### [Task possible affected files]
 

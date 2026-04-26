@@ -4,7 +4,7 @@
 
 Milestone 5 turns the validated cutover into the new default authority for supported operation.
 
-Its purpose is to establish `src_v2` as the real operational default before legacy runtime retirement begins.
+Its purpose is to establish `src` as the real operational default before legacy runtime retirement begins.
 
 This milestone covers:
 
@@ -18,11 +18,11 @@ It is the closure milestone for cutover truth.
 
 ## [Milestone technical implementation]
 
-Publish and enforce `src_v2` as the supported operational default for the ratified cutover surface.
+Publish and enforce `src` as the supported operational default for the ratified cutover surface.
 
 This milestone must:
 
-- declare `src_v2` the default authority for supported operational use,
+- declare `src` the default authority for supported operational use,
 - publish any remaining residual old-`src` dependencies still allowed before retirement,
 - restate the cutover boundary after validation,
 - publish what Phase 13 is now allowed to remove,
@@ -38,13 +38,13 @@ This milestone must not:
 
 The trap here is premature cleanup language.
 
-Phase 12 ends when `src_v2` becomes the operational default for supported scope. It does not end when every trace of old `src` is gone.
+Phase 12 ends when `src` becomes the operational default for supported scope. It does not end when every trace of old `src` is gone.
 
 ## [Milestone acceptance criteria]
 
 At the end of this milestone:
 
-- `src_v2` is the default authority for supported operational use,
+- `src` is the default authority for supported operational use,
 - residual legacy dependencies are explicit,
 - the validated cutover boundary is explicit,
 - and the branch has a formal “Phase 12 complete” handoff baseline for Phase 13.
@@ -53,7 +53,7 @@ At the end of this milestone:
 
 ## Task
 
-### [ ] (checkbox) - [Task 1] - Declare `src_v2` the default authority for supported operational surfaces
+### [ ] (checkbox) - [Task 1] - Declare `src` the default authority for supported operational surfaces
 
 #### [Task Description]
 
@@ -61,7 +61,7 @@ Make the new runtime the real default for supported operation.
 
 #### [Task technical implementation]
 
-Update operational docs, runbooks, launch guidance, and workflow ownership so supported operational use now explicitly names `src_v2` as the authoritative default.
+Update operational docs, runbooks, launch guidance, and workflow ownership so supported operational use now explicitly names `src` as the authoritative default.
 
 #### [Task possible affected files]
 
@@ -84,7 +84,7 @@ If people still reach for old `src` by default, this milestone is not done.
 
 #### [Task acceptance criteria]
 
-`src_v2` is explicitly declared the default authority for supported operational use.
+`src` is explicitly declared the default authority for supported operational use.
 
 ---
 

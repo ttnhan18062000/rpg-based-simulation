@@ -1,10 +1,10 @@
 Below is the **high-level implementation plan for Phase 10** in the same milestone style as the earlier high-level phase plans.
 
-This plan is grounded in the corrected roadmap and the remaining system-surface replacement scope described in [resource_phases.md](sandbox:/mnt/data/resource_phases.md), plus the V2 completion rules in [src_v2_principle.md](sandbox:/mnt/data/src_v2_principle.md). It also follows the earlier correction that full replacement is **not** just semantic subsumption of gameplay. It also requires **legacy system-compatibility closure**.
+This plan is grounded in the corrected roadmap and the remaining system-surface replacement scope described in [resource_phases.md](sandbox:/mnt/data/resource_phases.md), plus the V2 completion rules in [src_principle.md](sandbox:/mnt/data/src_principle.md). It also follows the earlier correction that full replacement is **not** just semantic subsumption of gameplay. It also requires **legacy system-compatibility closure**.
 
 ---
 
-# High-Level Implementation Plan — Phase 10 of `src_v2`
+# High-Level Implementation Plan — Phase 10 of `src`
 
 This plan assumes Phase 9 has already produced:
 
@@ -19,7 +19,7 @@ It also assumes the project has stopped pretending that semantic recovery alone 
 
 Phase 10 is not the phase where the project should widen into new gameplay semantics, rewrite the runtime again, or begin legacy retirement.
 
-It is the phase where `src_v2` must recover the remaining **legacy system-compatibility surface** required for true replacement of original `src`.
+It is the phase where `src` must recover the remaining **legacy system-compatibility surface** required for true replacement of original `src`.
 
 The purpose of Phase 10 is:
 
@@ -124,7 +124,7 @@ It does not yet close broker-disabled behavior, observability compatibility, or 
 
 ## [Milestone technical implementation]
 
-Recover the supported CLI and entrypoint surface in native `src_v2` terms.
+Recover the supported CLI and entrypoint surface in native `src` terms.
 
 This milestone must:
 
@@ -180,7 +180,7 @@ It does not yet close replay/logging/metrics compatibility or API/protocol closu
 
 ## [Milestone technical implementation]
 
-Recover the supported infrastructure-isolation and disabled-mode surface in native `src_v2` terms.
+Recover the supported infrastructure-isolation and disabled-mode surface in native `src` terms.
 
 This milestone must:
 
@@ -236,7 +236,7 @@ It does not yet close API/protocol behavior or final-system/headless compatibili
 
 ## [Milestone technical implementation]
 
-Recover the supported operational-artifact compatibility surface in native `src_v2` terms.
+Recover the supported operational-artifact compatibility surface in native `src` terms.
 
 This milestone must:
 
@@ -291,7 +291,7 @@ It is the broadest compatibility milestone, but it is still bounded to declared 
 
 ## [Milestone technical implementation]
 
-Recover the supported API/protocol/headless system surface in native `src_v2` terms.
+Recover the supported API/protocol/headless system surface in native `src` terms.
 
 This milestone must:
 

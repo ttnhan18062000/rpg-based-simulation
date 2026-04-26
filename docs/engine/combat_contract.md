@@ -1,6 +1,6 @@
 # Authoritative Combat Contract (Phase 8)
 
-This document defines the explicit legality and outcome rules for combat interactions in the `src_v2` engine.
+This document defines the explicit legality and outcome rules for combat interactions in the `src` engine.
 
 ## 1. Combat Legality Rules
 

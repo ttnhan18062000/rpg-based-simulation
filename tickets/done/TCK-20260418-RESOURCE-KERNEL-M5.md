@@ -14,7 +14,7 @@ Implement an authoritative resource governor to protect the simulation envelope 
 - Implement `RuntimeMode` state machine (`NORMAL`, `CONSTRAINED`, `DEGRADED`, `SURVIVAL`).
 - Track pressure signals (Memory, Tick Budget, Debt, Queue).
 - Implement explicit degradation order for non-authoritative work (Diagnostics, Metrics, Opportunistic).
-- Pin with governor and degradation tests in `tests_v2/`.
+- Pin with governor and degradation tests in `tests/`.
 
 ## Out of Scope
 - Replay persistence.
@@ -35,9 +35,9 @@ Implement an authoritative resource governor to protect the simulation envelope 
 - `resource_implementation_milestone_5.md`
 
 ## Related Code Areas
-- `src_v2/engine/`
-- `src_v2/core/`
-- `tests_v2/`
+- `src/engine/`
+- `src/core/`
+- `tests/`
 
 ## Assumptions / Open Questions
 - Pressure signals will be mockable for tests.
@@ -48,16 +48,16 @@ Implement an authoritative resource governor to protect the simulation envelope 
 - Follow the M5 strategy: Protect Authoritative first, Shed Optional second.
 
 ## Test Summary
-- 43 tests passed in `tests_v2/`.
+- 43 tests passed in `tests/`.
 - `test_escalation` verified immediate response to tick-budget and debt pressure.
 - `test_anti_thrashing` confirmed that recovery is gated by low-watermark and dwell time.
 - `test_degradation_order` proved that only optional work is shed (Waterfall policy).
 - `test_governance_isolation` verified that `AuthoritativeState` hash is invariant to mode changes.
 
 ## Files Changed
-- `src_v2/core/governance.py`
-- `src_v2/engine/` (governor, policy, runtime_status, kernel, scheduler)
-- `tests_v2/` (governor, anti-thrashing, degradation, isolation)
+- `src/core/governance.py`
+- `src/engine/` (governor, policy, runtime_status, kernel, scheduler)
+- `tests/` (governor, anti-thrashing, degradation, isolation)
 - `docs/engine/` (M5 specs)
 
 ## Completion Summary

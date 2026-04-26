@@ -22,6 +22,6 @@ This document defines the frozen set of legacy system-compatibility rows owned b
 | **LEG-SYS-020** | SYS-COMPAT | Status endpoints | RESTful health and state endpoints. | BACKLOG |
 
 ## Closure Requirements
-1. **Contract Tests**: Each row must have a `tests_v2/compat/` contract test.
+1. **Contract Tests**: Each row must have a `tests/compat/` contract test.
 2. **Differential Proof**: Critical rows (CLI, Replay, API) must have a differential proof against `src`.
 3. **Boundary Update**: The Phase 10 exit support boundary must reflect the results.

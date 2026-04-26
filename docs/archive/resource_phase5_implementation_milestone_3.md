@@ -139,7 +139,7 @@ Document any original behaviors that remain intentionally out of scope.
 #### [Task possible affected files]
 
 - original `src` characterization fixtures
-- `tests_v2/parity/test_resource_intelligence_parity.py`
+- `tests/parity/test_resource_intelligence_parity.py`
 - divergence log
 - strategy characterization docs
 
@@ -157,7 +157,7 @@ Do not invent strategic semantics just because the V2 data model is cleaner.
 
 #### [Task implementation notes]
 
-- Updated `tests_v2/parity/town_oracle/capture_src_town.py` to capture expected blockers from V1 town resolution.
+- Updated `tests/parity/town_oracle/capture_src_town.py` to capture expected blockers from V1 town resolution.
 - Regenerated `results.json` to include blocker truth.
 
 #### [Task acceptance criteria]
@@ -170,7 +170,7 @@ Supported strategic resource-intelligence behavior is captured well enough for p
 
 #### [Task Description]
 
-Map strategic outputs into native `src_v2` data and update contracts.
+Map strategic outputs into native `src` data and update contracts.
 
 #### [Task technical implementation]
 
@@ -186,8 +186,8 @@ Ensure the representation stays bounded and explicit.
 
 #### [Task possible affected files]
 
-- `src_v2/core/state.py`
-- `src_v2/core/updates.py`
+- `src/core/state.py`
+- `src/core/updates.py`
 - strategic models
 - strategy contract docs
 
@@ -205,13 +205,13 @@ Do not allow hidden mutation or unbounded collections here.
 
 #### [Task implementation notes]
 
-- Created [strategic.py](file:///home/vboxuser/Work/rpg-based-simulation/src_v2/core/strategic.py) for models.
+- Created [strategic.py](file:///home/vboxuser/Work/rpg-based-simulation/src/core/strategic.py) for models.
 - Integrated `StrategicComponent` into `EntityState`.
 - Added `StrategicUpdate` to `EntityUpdate` contract.
 
 #### [Task acceptance criteria]
 
-Blockers, hints, and leads are fully expressed in native `src_v2` authoritative terms for the supported scope.
+Blockers, hints, and leads are fully expressed in native `src` authoritative terms for the supported scope.
 
 ---
 
@@ -234,7 +234,7 @@ This local path becomes the base for later proof and support-boundary documentat
 
 #### [Task possible affected files]
 
-- `src_v2/systems/resource_intelligence.py`
+- `src/systems/resource_intelligence.py`
 - strategy output helpers
 - local strategy tests
 
@@ -252,7 +252,7 @@ Do not let worker timing define strategic semantics.
 
 #### [Task implementation notes]
 
-- Implemented `StrategicIntelligenceSystem` in [strategic.py](file:///home/vboxuser/Work/rpg-based-simulation/src_v2/systems/strategic.py).
+- Implemented `StrategicIntelligenceSystem` in [strategic.py](file:///home/vboxuser/Work/rpg-based-simulation/src/systems/strategic.py).
 - Logic is deterministic and independent of async execution.
 
 #### [Task acceptance criteria]
@@ -298,8 +298,8 @@ This is loop closure, not broad decision-theory reconstruction.
 
 #### [Task implementation notes]
 
-- Integrated into [blacksmith.py](file:///home/vboxuser/Work/rpg-based-simulation/src_v2/engine/blacksmith.py) to trigger on failure.
-- Integrated into [kernel.py](file:///home/vboxuser/Work/rpg-based-simulation/src_v2/engine/kernel.py) resolution phase for automatic cleanup on material acquisition.
+- Integrated into [blacksmith.py](file:///home/vboxuser/Work/rpg-based-simulation/src/engine/blacksmith.py) to trigger on failure.
+- Integrated into [kernel.py](file:///home/vboxuser/Work/rpg-based-simulation/src/engine/kernel.py) resolution phase for automatic cleanup on material acquisition.
 
 #### [Task acceptance criteria]
 
@@ -369,8 +369,8 @@ Add:
 
 #### [Task possible affected files]
 
-- `tests_v2/parity/test_resource_intelligence_parity.py`
-- `tests_v2/gameplay/test_resource_intelligence_contract.py`
+- `tests/parity/test_resource_intelligence_parity.py`
+- `tests/gameplay/test_resource_intelligence_contract.py`
 - lifecycle tests
 - certification tests
 
@@ -388,8 +388,8 @@ If the outputs are not proven, they are still just implementation details.
 
 #### [Task implementation notes]
 
-- Created [test_resource_intelligence_contract.py](file:///home/vboxuser/Work/rpg-based-simulation/tests_v2/contract/test_resource_intelligence_contract.py).
-- Updated `tests_v2/parity/test_town_resolution_parity.py` to include blocker truth.
+- Created [test_resource_intelligence_contract.py](file:///home/vboxuser/Work/rpg-based-simulation/tests/contract/test_resource_intelligence_contract.py).
+- Updated `tests/parity/test_town_resolution_parity.py` to include blocker truth.
 
 #### [Task acceptance criteria]
 

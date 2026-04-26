@@ -31,10 +31,10 @@ Harden the worker protocol by implementing deterministic neighbor context, expli
 - `docs/engine/bounded_concurrency_contract_md.md`
 
 ## Related Code Areas
-- `src_v2/core/work.py`
-- `src_v2/core/worker_protocol.py`
-- `src_v2/engine/kernel.py`
-- `src_v2/core/protocol_validator.py`
+- `src/core/work.py`
+- `src/core/worker_protocol.py`
+- `src/engine/kernel.py`
+- `src/core/protocol_validator.py`
 
 ## Implementation Notes
 - Proposed 10.0 unit neighbor visibility radius.

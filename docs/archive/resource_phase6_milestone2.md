@@ -10,11 +10,11 @@ What exactly exists in legacy `src` that could still require preservation, ratif
 
 This milestone looks only at the legacy side.
 
-It does not judge whether `src_v2` already covers those behaviors.
+It does not judge whether `src` already covers those behaviors.
 It does not classify replacement status.
 It does not assign future implementation phases.
 
-It only normalizes the old world into an auditable inventory. That requirement follows directly from the revised roadmap and from the checklist design, including the recommended ledger columns for original evidence, `src_v2` evidence, status, divergence note, proof path, owner, and phase target.
+It only normalizes the old world into an auditable inventory. That requirement follows directly from the revised roadmap and from the checklist design, including the recommended ledger columns for original evidence, `src` evidence, status, divergence note, proof path, owner, and phase target.
 
 ## [Milestone technical implementation]
 
@@ -31,7 +31,7 @@ This milestone must:
 This milestone must not:
 
 - classify rows as preserved/divergent/unsupported/retired,
-- decide whether current `src_v2` already satisfies the row,
+- decide whether current `src` already satisfies the row,
 - or assign target future phases yet.
 
 ## [Milestone important notes]
@@ -198,7 +198,7 @@ The add-on compatibility checklist family is represented as a canonical legacy i
 
 #### [Task Description]
 
-Make the inventory comparable before any `src_v2` evidence is attached.
+Make the inventory comparable before any `src` evidence is attached.
 
 #### [Task technical implementation]
 
@@ -282,7 +282,7 @@ Every legacy inventory row has attached original evidence or an explicitly label
 
 #### [Task Description]
 
-End the discovery phase for old-`src` scope before `src_v2` comparison begins.
+End the discovery phase for old-`src` scope before `src` comparison begins.
 
 #### [Task technical implementation]
 

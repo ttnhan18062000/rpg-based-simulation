@@ -4,7 +4,7 @@ This artifact serves as the official entry gate for Phase 7 of the Resource Epic
 
 ## 1. Readiness Statement
 
-The Phase 7 planning phase (Milestone 1) is now **CLOSED**. The implementation backlog has been frozen, truth standards established, and downstream dependencies identified. The `src_v2` substrate is now positioned for authoritative closure.
+The Phase 7 planning phase (Milestone 1) is now **CLOSED**. The implementation backlog has been frozen, truth standards established, and downstream dependencies identified. The `src` substrate is now positioned for authoritative closure.
 
 ## 2. Entry Gate Artifacts
 

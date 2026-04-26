@@ -1,6 +1,6 @@
 # Substrate Truth Standard
 
-This document defines the authoritative truth levels and verification standards for the `src_v2` substrate closure (Phase 7).
+This document defines the authoritative truth levels and verification standards for the `src` substrate closure (Phase 7).
 
 ## Truth Levels
 
@@ -21,7 +21,7 @@ This document defines the authoritative truth levels and verification standards 
 - Must include "Mutation Tripwire" tests to ensure no hidden leaks.
 
 ### DIFFERENTIAL Proof
-- Requires a side-by-side comparison between legacy `src` and `src_v2` using the **Parity Oracle**.
+- Requires a side-by-side comparison between legacy `src` and `src` using the **Parity Oracle**.
 - Divergences must be explicitly logged in the [Divergence Log](divergence_log.md).
 
 ## Substrate Invariants (The "Golden Rules")

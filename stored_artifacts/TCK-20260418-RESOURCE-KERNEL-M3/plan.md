@@ -14,5 +14,5 @@ Establish the bounded-state foundation and separate hot-path models from diagnos
 - [ ] Implement `collections.py` (Bounded containers)
 - [ ] Implement `export.py` and `diagnostic.py`
 - [ ] Refactor `state.py` for purity/slots
-- [ ] Write `tests_v2/` for boundedness and separation
+- [ ] Write `tests/` for boundedness and separation
 - [ ] Verify memory stability

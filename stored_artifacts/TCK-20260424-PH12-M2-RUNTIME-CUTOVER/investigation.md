@@ -6,10 +6,10 @@
 - `src/headless.py`: CLI simulation runner.
 
 ## 2. V2 Integration Surface
-- `src_v2/engine/manager.py`: Bridge between legacy requests and V2 runtime.
-- `src_v2/api/presenters/`: Shaped read-models for API consumers.
+- `src/engine/manager.py`: Bridge between legacy requests and V2 runtime.
+- `src/api/presenters/`: Shaped read-models for API consumers.
 
 ## 3. Findings
 - The entrypoints have been successfully refactored to check `USE_V2_ENGINE` environment flag.
 - When enabled, `V2EngineManager` intercepts the tick loop and provides the simulation substrate.
-- Telemetry signals from `src_v2` are correctly routed to legacy-compatible stdout/logs.
+- Telemetry signals from `src` are correctly routed to legacy-compatible stdout/logs.

@@ -1,8 +1,8 @@
 # Phase 12 Milestone 3 Execution Plan: Workflow Cutover
 
 ## 1. Makefile Modernization
-- Update `test` target to `python -m pytest tests_v2/ -v --tb=short`.
-- Update `test-cov` target to `python -m pytest tests_v2/ -v --tb=short --cov=src_v2 --cov-report=term-missing`.
+- Update `test` target to `python -m pytest tests/ -v --tb=short`.
+- Update `test-cov` target to `python -m pytest tests/ -v --tb=short --cov=src --cov-report=term-missing`.
 - Update `profile` and `profile-full` to point to the V2-capable scripts (or verify their delegation).
 
 ## 2. CI/CD Realignment
@@ -14,4 +14,4 @@
 - Verify that `reports/release_proof/` is populated with V2 artifacts.
 
 ## 4. Documentation
-- Update `CONTRIBUTING.md` or `README.md` to reflect that `tests_v2` is the required test suite.
+- Update `CONTRIBUTING.md` or `README.md` to reflect that `tests` is the required test suite.

@@ -12,7 +12,7 @@ This is the final gating task for Milestone A. It involves aggregating all regre
 ## Scope
 - [x] Implement `test_no_placeholders_ma` to guard against silent failures.
 - [x] Implement `test_doc_integrity_ma` to verify contract adherence.
-- [x] Run the full `tests_v2/engine` suite (92 tests) to ensure zero regression.
+- [x] Run the full `tests/engine` suite (92 tests) to ensure zero regression.
 - [x] Final audit of `kernel.py`, `apply.py`, and `scheduler.py` for law compliance.
 - [x] Consolidate all Milestone A documentation to "Finalized" status.
 
@@ -21,7 +21,7 @@ This is the final gating task for Milestone A. It involves aggregating all regre
 - Changes to the underlying core state model.
 
 ## Acceptance Criteria
-- [x] 100% pass on all `tests_v2/engine` tests.
+- [x] 100% pass on all `tests/engine` tests.
 - [x] No Placeholder branches (`TODO`, `FIXME`) reachable in the baseline path.
 - [x] Core Runtime Contract is marked as finalized.
 - [x] No durability leaks found in audit.
@@ -42,13 +42,13 @@ This is the final gating task for Milestone A. It involves aggregating all regre
 - `stored_artifacts/TCK-20260419-MA-TASK5-FINAL-CLOSURE/test_plan.md`
 
 ## Related Code Areas
-- All files in `src_v2/engine/`
+- All files in `src/engine/`
 
 ## Assumptions / Open Questions
 - None.
 
 ## Implementation Notes
-- Created `tests_v2/engine/test_milestone_a_closure.py` which implements automated scans for forbidden patterns and structural compliance.
+- Created `tests/engine/test_milestone_a_closure.py` which implements automated scans for forbidden patterns and structural compliance.
 - Verified that all 6 mandated phases exist in the `Kernel` and are orchestrated by `tick_once`.
 - Reached 100% pass rate on 92 total engine tests.
 
@@ -56,11 +56,11 @@ This is the final gating task for Milestone A. It involves aggregating all regre
 - `test_closure_no_placeholders`: PASSED
 - `test_milestone_a_structural_compliance`: PASSED
 - `test_final_kernel_law_compliance`: PASSED
-- Total `tests_v2/engine`: 92/92 PASSED
+- Total `tests/engine`: 92/92 PASSED
 
 ## Files Changed
 - `docs/engine/runtime_completion_contract_ma.md`
-- `tests_v2/engine/test_milestone_a_closure.py`
+- `tests/engine/test_milestone_a_closure.py`
 
 ## Completion Summary
 - Milestone A is officially CLOSED. The v2 engine now has a provably deterministic, isolated, and structural-compliant single-process baseline. This serves as the absolute semantic reference for all future optimization and scale-out milestones.

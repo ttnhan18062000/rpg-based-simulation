@@ -35,10 +35,16 @@ dev = [
 rpg-sim = "src.__main__:main"
 
 [tool.setuptools.packages.find]
-include = ["src*", "src_v2*"]
+include = ["src*"]
 
 [tool.pytest.ini_options]
 pythonpath = ["."]
 markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "legacy_characterization: proves legacy behavior in src",
+    "v2_contract: defines a new V2-specific contract",
+    "differential: parity test comparing src and src_legacy",
+    "intentional_divergence: asserts a documented behavioral difference",
+    "regression: targets a specific bug identified during porting",
+    "certification: engine integrity proof for milestone gates",
 ]

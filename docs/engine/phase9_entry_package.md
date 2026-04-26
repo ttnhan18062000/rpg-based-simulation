@@ -10,7 +10,7 @@ This package formalizes the readiness gate for Phase 9: Strategic & Social Cogni
 | Phase 9 row set frozen | **PASSED** | `docs/engine/phase9_backlog.md` (10 rows) |
 | Closure conditions defined | **PASSED** | `docs/engine/phase9_closure_conditions.md` |
 | Support boundary restated | **PASSED** | `docs/engine/phase9_entry_support_boundary.md` |
-| All existing tests passing | **PASSED** | Full `tests_v2/` regression suite |
+| All existing tests passing | **PASSED** | Full `tests/` regression suite |
 
 ## 2. Phase 9 Scope
 

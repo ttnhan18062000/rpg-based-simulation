@@ -1,258 +1,84 @@
-"""Built-in GoalScorer implementations.
-
-Refactored for AOA Stabilization:
-- Explicit aspect access (spatial, combat, mind, progression).
-- Nested mind-state access (decision, emotion, perception).
-- Removed legacy property shims and getattr hacks.
-"""
-
 from __future__ import annotations
-from typing import TYPE_CHECKING
-from src.ai.goals.base import GoalScorer
-from src.core.models.enums import AIState, GoalType, Faction
-from src.core.models.strategy import ObjectiveKind
-from src.core.entities.traits import aggregate_trait_stats, aggregate_trait_utility
-from src.core.models.vectors import Vector2
+from src.ai.goals.base import GoalScorer, GoalScore
+from src.core.state import EntityState, AuthoritativeState
 
-if TYPE_CHECKING:
-    from src.ai.states import AIContext
-
-# ---------------------------------------------------------------------------
-# Shared helpers
-# ---------------------------------------------------------------------------
-
-def _trait_utility(ctx: AIContext):
-    return aggregate_trait_utility(ctx.actor.identity.traits)
-
-def _is_hero(ctx: AIContext) -> bool:
-    return ctx.actor.identity.faction == Faction.HERO_GUILD
-
-def _current_region_difficulty(ctx: AIContext) -> int:
-    """Returns the difficulty tier of the current region (1-4)."""
-    actor = ctx.actor
-    rid = actor.spatial.current_region_id
-    if not rid:
-        return 0
-    
-    # Check current regions in snapshot
-    for region in ctx.snapshot.regions:
-        if region.region_id == rid:
-            return region.difficulty
-            
-    return 0
-
-def _region_danger_penalty(ctx: AIContext) -> float:
-    """Calculates a utility penalty based on region difficulty vs actor level. [PHASE 4]"""
-    difficulty = _current_region_difficulty(ctx)
-    if difficulty <= 0:
-        return 0.0
+class HarvestScorer(GoalScorer):
+    def score(self, entity: EntityState, state: AuthoritativeState) -> GoalScore:
+        best_node_id = None
+        best_score = 0.0
         
-    level = ctx.actor.progression.level
-    
-    # Formula: excess_danger = (diff * 3) - (level + 3)
-    # Each point of excess_danger adds 0.05 penalty, capped at 0.4
-    excess = (difficulty * 3) - (level + 3)
-    if excess <= 0:
-        return 0.0
+        for node in state.resource_nodes.values():
+            if node.remaining_charges > 0 and node.cooldown_remaining <= 0:
+                # Proximity score
+                dist = max(1.0, abs(node.position[0] - entity.position[0]) + abs(node.position[1] - entity.position[1]))
+                node_score = 50.0 / dist
+                if node_score > best_score:
+                    best_score = node_score
+                    best_node_id = str(node.id)
         
-    penalty = excess * 0.05
-    return min(0.4, penalty)
-
-# ---------------------------------------------------------------------------
-# Combat — seek and fight enemies
-# ---------------------------------------------------------------------------
-
-class CombatGoal(GoalScorer):
-    @property
-    def name(self) -> GoalType: return GoalType.COMBAT
-    @property
-    def target_state(self) -> AIState: return AIState.HUNT
-    def score(self, ctx: AIContext) -> float:
-        actor = ctx.actor
-        hp_ratio = actor.combat.hp_ratio
-        base = 0.5
-        enemy = ctx.nearest_enemy()
-        if enemy:
-            dist = actor.spatial.pos.manhattan(enemy.spatial.pos)
-            base += 0.5 * max(0, 1.0 - dist / 15.0)  # [AOA STABILIZATION] Dominant utility for engagement
-            
-            # [Milestone 2] Target Stickiness (Hysteresis)
-            from src.core.logic.combat_interaction_service import CombatInteractionService
-            base += CombatInteractionService.get_stickiness_bonus(actor, enemy.id)
-            
-        return base + _trait_utility(ctx).combat
-
-# ---------------------------------------------------------------------------
-# Flee — retreat to safety
-# ---------------------------------------------------------------------------
-
-class FleeGoal(GoalScorer):
-    @property
-    def name(self) -> GoalType: return GoalType.FLEE
-    @property
-    def target_state(self) -> AIState: return AIState.FLEE
-    def score(self, ctx: AIContext) -> float:
-        actor = ctx.actor
-        
-        # [AOA STABILIZATION] Unify with tactical should_flee heuristic
-        # This ensures ranged/melee bias and situational awareness are consistent 
-        # between goal selection and action execution.
-        from src.ai.states.base import should_flee
-        
-        # We check locally visible context and memory via should_flee
-        if should_flee(actor, ctx.config, ctx.nearest_enemy()):
-            return 2.0
-            
-        # Situational Panic: Even if HP is high, extreme local trauma might trigger a retreat
-        if actor.mind.emotion.panic > 0.8:
-            return 1.5 # Panic flight
-                
-        return 0.0
-
-# ---------------------------------------------------------------------------
-# Explore — discover unknown territory
-# ---------------------------------------------------------------------------
-
-class ExploreGoal(GoalScorer):
-    @property
-    def name(self) -> GoalType: return GoalType.EXPLORE
-    @property
-    def target_state(self) -> AIState: return AIState.WANDER
-    def score(self, ctx: AIContext) -> float:
-        # [PHASE 4 STAGE 3] Suppress exploration in dangerous zones
-        rid = ctx.actor.spatial.current_region_id
-        penalty = 0.0
-        if rid:
-            region_metric = ctx.snapshot.region_consequence_registry.get(rid)
-            if region_metric:
-                penalty = region_metric.danger_level * 0.5
-        
-        return max(0.0, 0.3 + _trait_utility(ctx).explore - penalty)
-
-# ---------------------------------------------------------------------------
-# Loot — pick up items
-# ---------------------------------------------------------------------------
-
-class LootGoal(GoalScorer):
-    @property
-    def name(self) -> GoalType: return GoalType.LOOT
-    @property
-    def target_state(self) -> AIState: return AIState.LOOTING
-    def score(self, ctx: AIContext) -> float:
-        actor = ctx.actor
-        if not actor.inventory: return 0.0
-        
-        # Abort if full or overweight
-        if actor.inventory.is_full or actor.inventory.weight_ratio >= 1.0:
-            return 0.0
-            
-        base = 0.1
-        # Penalty for near-full bag
-        if actor.inventory.slots_free <= 2 or actor.inventory.weight_ratio >= 0.9:
-            base *= 0.2
-            
-        # Nearby loot bonus
-        if ctx.snapshot.ground_items:
-            # Simple proximity check for ground loot
-            for pos_tuple in ctx.snapshot.ground_items:
-                pos = Vector2(*pos_tuple)
-                if actor.spatial.pos.manhattan(pos) < 10:
-                    base += 0.5
-                    break
-                    
-        return base + _trait_utility(ctx).loot
-
-# ---------------------------------------------------------------------------
-# Bio-Needs — Sleep & Eat [PHASE 3]
-# ---------------------------------------------------------------------------
+        return GoalScore(kind="harvesting", utility=best_score, target_id=best_node_id)
 
 class SleepScorer(GoalScorer):
-    """Utility based on exhaustion and time of day."""
-    @property
-    def name(self) -> GoalType: return GoalType.SLEEP
-    @property
-    def target_state(self) -> AIState: return AIState.SLEEPING
-    def score(self, ctx: AIContext) -> float:
-        debt = ctx.actor.mind.routine.sleep_debt
-        utility = debt * 1.5
-        if debt > 0.05:
-            hour = ctx.snapshot.hour
-            if hour >= 22 or hour <= 6: utility += 1.0
-        return utility
+    def score(self, entity: EntityState, state: AuthoritativeState) -> GoalScore:
+        bio = entity.biological
+        utility = bio.sleep_debt # Base utility is sleep debt
+        
+        # Night bias
+        is_night = (state.world_time >= 1800 or state.world_time < 600)
+        if is_night:
+            utility += 30.0
+            
+        # Find nearest inn
+        best_building_id = None
+        min_dist = 999.0
+        for b in state.buildings.values():
+            if b.kind == "inn":
+                dist = abs(b.position[0] - entity.position[0]) + abs(b.position[1] - entity.position[1])
+                if dist < min_dist:
+                    min_dist = dist
+                    best_building_id = str(b.id)
+                    
+        return GoalScore(kind="fatigue", utility=utility, target_id=best_building_id)
 
 class EatScorer(GoalScorer):
-    """Utility based on hunger level."""
-    @property
-    def name(self) -> GoalType: return GoalType.EAT
-    @property
-    def target_state(self) -> AIState: return AIState.EATING
-    def score(self, ctx: AIContext) -> float:
-        return ctx.actor.mind.routine.hunger_level * 1.0
-
-# ---------------------------------------------------------------------------
-# Legacy Stubs for other goals
-# ---------------------------------------------------------------------------
-class TradeGoal(GoalScorer):
-    @property
-    def name(self) -> GoalType: return GoalType.TRADE
-    @property
-    def target_state(self) -> AIState: return AIState.VISIT_SHOP
-    def score(self, ctx: AIContext) -> float:
-        actor = ctx.actor
-        if not actor.inventory: return 0.0
+    def score(self, entity: EntityState, state: AuthoritativeState) -> GoalScore:
+        bio = entity.biological
+        utility = bio.hunger
         
-        base = 0.05
-        # Urgency bonus for full/heavy bag
-        if actor.inventory.is_full or actor.inventory.weight_ratio >= 0.9:
-            base += 0.8
-        elif actor.inventory.slots_free <= 3:
-            base += 0.4
+        # Find nearest tavern
+        best_building_id = None
+        min_dist = 999.0
+        for b in state.buildings.values():
+            if b.kind == "tavern":
+                dist = abs(b.position[0] - entity.position[0]) + abs(b.position[1] - entity.position[1])
+                if dist < min_dist:
+                    min_dist = dist
+                    best_building_id = str(b.id)
+                    
+        return GoalScore(kind="hunger", utility=utility, target_id=best_building_id)
+
+class SocialScorer(GoalScorer):
+    def score(self, entity: EntityState, state: AuthoritativeState) -> GoalScore:
+        # Placeholder for social interaction utility
+        return GoalScore(kind="social", utility=10.0)
+
+class TownScorer(GoalScorer):
+    """Scores the need to return to town for services."""
+    def score(self, entity: EntityState, state: AuthoritativeState) -> GoalScore:
+        bio = entity.biological
+        inv = entity.inventory
+        
+        # 1. Biological Needs
+        utility = (bio.sleep_debt + bio.hunger) / 2.0
+        
+        # 2. Inventory Fullness
+        inv_ratio = len(inv.items) / inv.max_slots
+        utility += inv_ratio * 40.0
+        
+        # 3. Low HP
+        hp_ratio = entity.combat.hp / entity.combat.max_hp
+        if hp_ratio < 0.5:
+            utility += (1.0 - hp_ratio) * 60.0
             
-        return base
-class RestGoal(GoalScorer):
-    @property
-    def name(self) -> GoalType: return GoalType.REST
-    @property
-    def target_state(self) -> AIState: return AIState.RESTING_IN_TOWN
-    def score(self, ctx: AIContext) -> float: return 0.0
-class CraftGoal(GoalScorer):
-    @property
-    def name(self) -> GoalType: return GoalType.CRAFT
-    @property
-    def target_state(self) -> AIState: return AIState.VISIT_BLACKSMITH
-    def score(self, ctx: AIContext) -> float: return 0.05
-class SocialGoal(GoalScorer):
-    @property
-    def name(self) -> GoalType: return GoalType.SOCIAL
-    @property
-    def target_state(self) -> AIState: return AIState.VISIT_GUILD
-    def score(self, ctx: AIContext) -> float: return 0.05
-class GuardGoal(GoalScorer):
-    @property
-    def name(self) -> GoalType: return GoalType.GUARD
-    @property
-    def target_state(self) -> AIState: return AIState.GUARD_CAMP
-    def score(self, ctx: AIContext) -> float: return 0.0
-class CorpseScorer(GoalScorer):
-    @property
-    def name(self) -> GoalType: return GoalType.CORPSE_RUN
-    @property
-    def target_state(self) -> AIState: return AIState.RECOVER_CORPSE
-    def score(self, ctx: AIContext) -> float: return 0.0
-
-# ---------------------------------------------------------------------------
-# Investigation detours [PHASE 3]
-# ---------------------------------------------------------------------------
-
-class InvestigateGoal(GoalScorer):
-    """Utility based on having an active strategic lead/investigation objective."""
-    @property
-    def name(self) -> GoalType: return GoalType.INVESTIGATE
-    @property
-    def target_state(self) -> AIState: return AIState.INVESTIGATING
-    def score(self, ctx: AIContext) -> float:
-        obj = ctx.actor.mind.strategic.current_objective
-        if obj and obj.kind == ObjectiveKind.INVESTIGATE:
-            # High priority detour to resolve uncertainty
-            return 2.5 
-        return 0.0
+        # Target is town center
+        return GoalScore(kind="town_return", utility=utility, target_pos=state.town_center)

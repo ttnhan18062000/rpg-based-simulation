@@ -1,7 +1,7 @@
 # Phase 7 Exit Package: Substrate Closure
 
 ## 1. Executive Summary
-Phase 7 (Substrate Closure) is officially **CLOSED**. The `src_v2` engine now operates on a fully hardened, deterministic, and authoritative foundation. All "Must-Have" recovery gaps from the Phase 7 backlog have been implemented and verified.
+Phase 7 (Substrate Closure) is officially **CLOSED**. The `src` engine now operates on a fully hardened, deterministic, and authoritative foundation. All "Must-Have" recovery gaps from the Phase 7 backlog have been implemented and verified.
 
 ## 2. Milestone Achievement
 
@@ -20,7 +20,7 @@ Phase 7 (Substrate Closure) is officially **CLOSED**. The `src_v2` engine now op
 - Strategic modules identified as "Mixed-Surface Temporary Dependencies" for Phase 9.
 
 ## 3. Truth & Certification
-- **Verification Result**: 100% pass on `tests_v2` (232+ tests).
+- **Verification Result**: 100% pass on `tests` (232+ tests).
 - **Parity Rating**: GOLD (Identical outcomes to legacy RPG-core intent).
 - **Proof Bundle**: See [Phase 7 Proof Bundle](phase7_proof_bundle.md).
 

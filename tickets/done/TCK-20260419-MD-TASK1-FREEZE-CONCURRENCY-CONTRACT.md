@@ -34,8 +34,8 @@ Audit the existing concurrency documentation and draft a finalized contract that
 - None
 
 ## Related Code Areas
-- `src_v2/core/work.py`
-- `src_v2/core/concurrency_law.py`
+- `src/core/work.py`
+- `src/core/concurrency_law.py`
 
 ## Assumptions / Open Questions
 - Assumption: The existing `WorkClass` names are the authoritative domain names we want to keep.

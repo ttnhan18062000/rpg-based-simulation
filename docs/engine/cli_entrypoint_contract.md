@@ -3,7 +3,7 @@
 This document defines the supported system-entry surface for the V2 engine.
 
 ## 1. Unified Entrypoint
-- **Command**: `python3 -m src_v2`
+- **Command**: `python3 -m src`
 - **Default Behavior**: Displays a placeholder for the `serve` mode. Full REST/WebSocket parity pending Milestone 5.
 
 ## 2. Subcommands
@@ -29,7 +29,7 @@ This document defines the supported system-entry surface for the V2 engine.
 - **Deterministic**: Guaranteed for identical `--seed` and `--entities`.
 
 ## 5. Startup & Shutdown Semantics
-- **Startup**: Registry-less initialization in V2. Scenario generation logic is native to `src_v2.systems.generator`.
+- **Startup**: Registry-less initialization in V2. Scenario generation logic is native to `src.systems.generator`.
 - **Shutdown**: Clean finalization of `Kernel` and `ReplayManager`. Produces `manifest.json` in the replay directory.
 
 ## 6. Known Divergences

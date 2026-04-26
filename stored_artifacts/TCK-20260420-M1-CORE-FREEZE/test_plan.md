@@ -5,7 +5,7 @@ We will use a combination of existing law tests and new "integrity" tests to ver
 
 ## New Tests
 
-### `tests_v2/engine/test_substrate_freeze_m1.py`
+### `tests/engine/test_substrate_freeze_m1.py`
 - **Baseline Invariance**: Verify that `Kernel.tick_once` calls the 6 phases in the exact order: INIT, SCHEDULING, COLLECTION, RESOLUTION, CLEANUP, ADVANCEMENT.
 - **Schema Lock**: Verify the field names and types of `PressureSignals`. Any change will require a deliberate contract break.
 - **Authoritative Purity**: Verify `AuthoritativeState` slots/fields only contain simulation-relevant data.

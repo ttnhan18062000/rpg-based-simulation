@@ -271,11 +271,11 @@ Audit all startup-time configuration and validate at runtime creation or startup
 
 ### [Task possible affected files]
 
-- `src_v2/config/profiles.py`
-- `src_v2/config/validation.py`
-- `src_v2/engine/kernel.py`
-- `src_v2/replay/replay.py`
-- `src_v2/observability/runtime_status.py`
+- `src/config/profiles.py`
+- `src/config/validation.py`
+- `src/engine/kernel.py`
+- `src/replay/replay.py`
+- `src/observability/runtime_status.py`
 - startup-related tests
 
 ### [Task important notes]
@@ -341,9 +341,9 @@ Then make that policy deterministic and visible in runtime status.
 
 ### [Task possible affected files]
 
-- `src_v2/replay/replay.py`
-- `src_v2/replay/models.py`
-- `src_v2/observability/runtime_status.py`
+- `src/replay/replay.py`
+- `src/replay/models.py`
+- `src/observability/runtime_status.py`
 - replay-related tests
 
 ### [Task important notes]
@@ -405,9 +405,9 @@ Define and enforce:
 
 ### [Task possible affected files]
 
-- `src_v2/replay/replay.py`
-- `src_v2/replay/manifest.py`
-- `src_v2/replay/models.py`
+- `src/replay/replay.py`
+- `src/replay/manifest.py`
+- `src/replay/models.py`
 - proof-bundle or release-bundle related tests
 
 ### [Task important notes]
@@ -467,9 +467,9 @@ This task must also define:
 
 ### [Task possible affected files]
 
-- `src_v2/replay/replay.py`
-- `src_v2/observability/runtime_status.py`
-- `src_v2/governance/governor.py` if replay pressure affects mode
+- `src/replay/replay.py`
+- `src/observability/runtime_status.py`
+- `src/governance/governor.py` if replay pressure affects mode
 - lifecycle and replay tests
 
 ### [Task important notes]
@@ -536,10 +536,10 @@ Also define one bounded runtime snapshot cadence:
 
 ### [Task possible affected files]
 
-- `src_v2/observability/runtime_status.py`
-- `src_v2/observability/signals.py`
-- `src_v2/engine/kernel.py`
-- `src_v2/replay/replay.py`
+- `src/observability/runtime_status.py`
+- `src/observability/signals.py`
+- `src/engine/kernel.py`
+- `src/replay/replay.py`
 - headless/system test helpers
 
 ### [Task important notes]
@@ -597,9 +597,9 @@ The shutdown contract must specify:
 
 ### [Task possible affected files]
 
-- `src_v2/engine/kernel.py`
-- `src_v2/replay/replay.py`
-- `src_v2/observability/runtime_status.py`
+- `src/engine/kernel.py`
+- `src/replay/replay.py`
+- `src/observability/runtime_status.py`
 - shutdown-related tests
 
 ### [Task important notes]
@@ -648,10 +648,10 @@ This task must ensure:
 
 ### [Task possible affected files]
 
-- `src_v2/engine/checkpoint.py`
-- `src_v2/engine/kernel.py`
-- `src_v2/replay/replay.py`
-- `src_v2/observability/runtime_status.py`
+- `src/engine/checkpoint.py`
+- `src/engine/kernel.py`
+- `src/replay/replay.py`
+- `src/observability/runtime_status.py`
 - lifecycle and checkpoint tests
 
 ### [Task important notes]
@@ -714,8 +714,8 @@ Also define explicit **partial-success semantics**, such as:
 
 ### [Task possible affected files]
 
-- `src_v2/replay/models.py`
-- `src_v2/observability/runtime_status.py`
+- `src/replay/models.py`
+- `src/observability/runtime_status.py`
 - lifecycle error/status modules
 - lifecycle tests
 - docs
@@ -796,14 +796,14 @@ Complete or add tests for these groups.
 
 ### Suggested test groups
 
-- `tests_v2/replay/test_staging_bounds.py`
-- `tests_v2/replay/test_rotation_manifest_integrity.py`
-- `tests_v2/replay/test_sink_pressure.py`
-- `tests_v2/runtime/test_startup_validation.py`
-- `tests_v2/runtime/test_shutdown_contract.py`
-- `tests_v2/runtime/test_final_authoritative_emission.py`
-- `tests_v2/observability/test_lifecycle_status.py`
-- `tests_v2/runtime/test_partial_success_semantics.py`
+- `tests/replay/test_staging_bounds.py`
+- `tests/replay/test_rotation_manifest_integrity.py`
+- `tests/replay/test_sink_pressure.py`
+- `tests/runtime/test_startup_validation.py`
+- `tests/runtime/test_shutdown_contract.py`
+- `tests/runtime/test_final_authoritative_emission.py`
+- `tests/observability/test_lifecycle_status.py`
+- `tests/runtime/test_partial_success_semantics.py`
 
 ### [Task possible affected files]
 
@@ -857,11 +857,11 @@ Ensure that:
 
 ### [Task possible affected files]
 
-- `src_v2/engine/kernel.py`
-- `src_v2/replay/replay.py`
-- `src_v2/replay/manifest.py`
-- `src_v2/observability/runtime_status.py`
-- `src_v2/engine/checkpoint.py`
+- `src/engine/kernel.py`
+- `src/replay/replay.py`
+- `src/replay/manifest.py`
+- `src/observability/runtime_status.py`
+- `src/engine/checkpoint.py`
 
 ### [Task important notes]
 
@@ -990,9 +990,9 @@ This can be done with:
 
 ### [Task possible affected files]
 
-- `tests_v2/docs/*`
-- `tests_v2/runtime/test_mc_doc_integrity.py`
-- `tests_v2/replay/test_manifest_schema_integrity.py`
+- `tests/docs/*`
+- `tests/runtime/test_mc_doc_integrity.py`
+- `tests/replay/test_manifest_schema_integrity.py`
 - CI config
 - integrity helpers
 

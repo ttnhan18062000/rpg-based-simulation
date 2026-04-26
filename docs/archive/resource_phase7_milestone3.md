@@ -79,10 +79,10 @@ Identify:
 
 #### [Task possible affected files]
 
-- `src_v2/engine/**`
-- `src_v2/apply/**`
-- `src_v2/replay/**`
-- `tests_v2/**`
+- `src/engine/**`
+- `src/apply/**`
+- `src/replay/**`
+- `tests/**`
 - `docs/engine/replacement_ledger.md`
 
 #### [Task important notes]
@@ -123,9 +123,9 @@ This task should:
 
 #### [Task possible affected files]
 
-- `src_v2/engine/**`
-- `src_v2/apply/**`
-- `src_v2/core/state/**`
+- `src/engine/**`
+- `src/apply/**`
+- `src/core/state/**`
 - tests and contract docs
 
 #### [Task important notes]
@@ -163,9 +163,9 @@ Define and implement explicit rules for:
 
 #### [Task possible affected files]
 
-- `src_v2/engine/**`
-- `src_v2/apply/**`
-- `tests_v2/engine/**`
+- `src/engine/**`
+- `src/apply/**`
+- `tests/engine/**`
 - apply contract docs
 
 #### [Task important notes]
@@ -205,9 +205,9 @@ This task should:
 
 #### [Task possible affected files]
 
-- `src_v2/apply/**`
-- `src_v2/core/models/**`
-- `tests_v2/engine/test_partial_rejection.py`
+- `src/apply/**`
+- `src/core/models/**`
+- `tests/engine/test_partial_rejection.py`
 
 #### [Task important notes]
 
@@ -240,9 +240,9 @@ Update replay/observability integration so supported truth is derived from autho
 
 #### [Task possible affected files]
 
-- `src_v2/replay/**`
-- `src_v2/observability/**`
-- `src_v2/engine/**`
+- `src/replay/**`
+- `src/observability/**`
+- `src/engine/**`
 - tests for replay/outcome truth
 
 #### [Task important notes]
@@ -282,10 +282,10 @@ Add focused tests for:
 
 #### [Task possible affected files]
 
-- `tests_v2/engine/test_authoritative_apply_path.py`
-- `tests_v2/engine/test_conflict_resolution_contract.py`
-- `tests_v2/engine/test_partial_rejection.py`
-- `tests_v2/replay/test_authoritative_outcome_truth.py`
+- `tests/engine/test_authoritative_apply_path.py`
+- `tests/engine/test_conflict_resolution_contract.py`
+- `tests/engine/test_partial_rejection.py`
+- `tests/replay/test_authoritative_outcome_truth.py`
 
 #### [Task important notes]
 

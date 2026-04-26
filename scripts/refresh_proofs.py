@@ -7,10 +7,10 @@ from pathlib import Path
 # Ensure PYTHONPATH is set
 sys.path.insert(0, os.getcwd())
 
-from src_v2.config.profiles import RuntimeProfile, HardwareClass
-from src_v2.core.state import AuthoritativeState, EntityState
-from src_v2.certification.harness import CertificationHarness
-from src_v2.certification.scenarios import get_scenario_expectations, PressureInjector, build_scenario_state
+from src.config.profiles import RuntimeProfile, HardwareClass
+from src.core.state import AuthoritativeState, EntityState
+from src.certification.harness import CertificationHarness
+from src.certification.scenarios import get_scenario_expectations, PressureInjector, build_scenario_state
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("refresh_proofs")

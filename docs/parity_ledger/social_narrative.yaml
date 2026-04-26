@@ -1,0 +1,1665 @@
+- id: SOC-001
+  text: Private betrayal history can override public recruiter reputation.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: '`src_v2/systems/social.py` (`evaluate_recruitment_offer` checks `betrayal_count`
+    and per-recruiter `trust`)'
+  proof_type: parity
+  test_path: '`tests_v2/parity/test_social_parity.py`'
+  divergence_note: null
+  support_boundary: null
+- id: SOC-002
+  text: Social learning updates familiarity/trust-like bonds from interaction evidence.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: '`src_v2/systems/social.py` (`recalibrate_trust` and `update_familiarity`) '
+  proof_type: parity
+  test_path: '`tests_v2/parity/test_social_parity.py`'
+  divergence_note: null
+  support_boundary: null
+- id: SOC-003
+  text: Social contracts and obligations are explicit strategic objects, not flavor
+    text.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: '`src_v2/systems/social.py` (`SocialContract` dataclass and `process_contract_outcome`) '
+  proof_type: parity
+  test_path: '`tests_v2/parity/test_social_parity.py`'
+  divergence_note: null
+  support_boundary: null
+- id: SOC-004
+  text: Breaking or honoring contracts has persistent consequences.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: '`src_v2/systems/social.py` (`process_contract_outcome` returns `SocialUpdate`
+    and `TurningPoint`s)'
+  proof_type: parity
+  test_path: '`tests_v2/parity/test_social_parity.py`'
+  divergence_note: null
+  support_boundary: null
+- id: SOC-005
+  text: Public reputation is distinct from private narrative meaning.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: '`src_v2/core/state.py` (`SocialComponent` has `public_reputation`
+    vs `trust_history`)'
+  proof_type: parity
+  test_path: '`tests_v2/parity/test_social_parity.py`'
+  divergence_note: null
+  support_boundary: null
+- id: SOC-006
+  text: Turning points and interpreted life events feed future strategic and social
+    behavior.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: '`src_v2/systems/social.py` (`TurningPoint`s affect recruitment and betrayal
+    feedback)'
+  proof_type: parity
+  test_path: '`tests_v2/parity/test_social_parity.py`'
+  divergence_note: null
+  support_boundary: null
+- id: SOC-007
+  text: Party/group cooperation is purpose-driven, not just proximity clustering.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: '`src_v2/systems/groups.py` (`GroupSystem` manages formation, cohesion,
+    and intent propagation)'
+  proof_type: parity
+  test_path: '`tests_v2/parity/test_group_coordination.py`'
+  divergence_note: null
+  support_boundary: null
+- id: SOC-008
+  text: Recruitment evaluates trust, debt, greed, capability fit, and prior trauma.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: '`src_v2/systems/social.py` (`calculate_recruitment_cost`, `evaluate_recruitment_offer`)'
+  proof_type: parity
+  test_path: '`tests_v2/parity/test_social_parity.py`'
+  divergence_note: null
+  support_boundary: null
+- id: SOC-009
+  text: "`test_arena_structural_determinism`: Arena structural determinism \u2014\
+    \ Verify that the arena produced structurally identical ScenarioReports for the\
+    \ same seed. This validates that the simulation and its reporting layer use stable,\
+    \ deterministic logic. Note: This checks structural equality via Pydantic model_dump,\
+    \ not canonical byte-identical streams. [Milestone 7 Hardening]."
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-010
+  text: "`test_arena_stop_condition_wipe`: Arena stop condition wipe \u2014 Verify\
+    \ that the arena correctly detects when one side is eliminated.."
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-011
+  text: "`test_arena_stop_condition_timeout`: Arena stop condition timeout \u2014\
+    \ Verify that the arena respects the max_ticks limit.."
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-012
+  text: "`test_arena_stop_condition_stall`: Arena stop condition stall \u2014 Verify\
+    \ that the arena correctly detects lack of activity (STALL) as a telemetry report.."
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-013
+  text: "`test_mutation_tripwire_during_decision`: Mutation tripwire during decision\
+    \ \u2014 Verify that any attempt to mutate entities during the decision phase\
+    \ raises a RuntimeError.."
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-014
+  text: "`test_minimal_tick`: Minimal tick \u2014 Verify that we can run even 1 tick\
+    \ without hanging.."
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-015
+  text: "`test_watchdog_aborts_on_hang`: Watchdog aborts on hang \u2014 Verify that\
+    \ a tick hanging for > watchdog_timeout is aborted.."
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-016
+  text: "`test_watchdog_allows_fast_ticks`: Watchdog allows fast ticks \u2014 Verify\
+    \ that normal fast ticks are NOT aborted.."
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-017
+  text: "`test_regression_melee_mirror`: Regression melee mirror \u2014 Scenario 1v1-01:\
+    \ Symmetry Check.."
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-018
+  text: "`test_regression_kiting_open`: Regression kiting open \u2014 Scenario 1v1-02:\
+    \ Ranged vs Melee Open Field.."
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-019
+  text: "`test_regression_elite_vs_swarm`: Regression elite vs swarm \u2014 Scenario\
+    \ 1vm-01: Elite vs Swarm.."
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-020
+  text: '`test_melee_striker_closes_distance`: Melee striker closes distance.'
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-021
+  text: '`test_ranged_skirmisher_kites_when_close`: Ranged skirmisher kites when close.'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-022
+  text: '`test_ranged_skirmisher_maintains_distance`: Ranged skirmisher maintains
+    distance.'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-023
+  text: '`test_safe_shot_detection`: Safe shot detection.'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-024
+  text: '`test_tactical_retreat_at_low_hp`: Tactical retreat at low hp.'
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-025
+  text: '`test_group_spacing_preservation`: Group spacing preservation.'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-026
+  text: "`test_weapon_ranges_integrity`: Weapon ranges integrity \u2014 Verify that\
+    \ specific weapons have their intended ranges in the registry.."
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-027
+  text: "`test_weapon_power_integrity`: Weapon power integrity \u2014 Verify that\
+    \ core progression weapons have their primary power correctly set.."
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-028
+  text: "`test_registry_identity_integrity`: Registry identity integrity \u2014 Ensure\
+    \ all core items are successfully loaded and have consistent IDs.."
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-029
+  text: '`test_tier1_is_baseline`: Tier1 is baseline.'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-030
+  text: "`test_tier4_has_higher_stats_than_tier1`: Tier4 has higher stats than tier1\
+    \ \u2014 Same seed, same enemy tier - tier 4 difficulty should have higher HP/ATK.."
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-031
+  text: "`test_tier4_hp_significantly_higher`: Tier4 hp significantly higher \u2014\
+    \ Tier 4 HP multiplier is 4.0x on base stats; with flat bonuses from traits/attributes\
+    \ the effective ratio will be lower but still substantial.."
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-032
+  text: "`test_difficulty_sets_level_range`: Difficulty sets level range \u2014 Entities\
+    \ in tier 3 should have level in [5, 10].."
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-033
+  text: "`test_gold_scales_with_difficulty`: Gold scales with difficulty \u2014 Tier\
+    \ 4 gold multiplier is 4.0x.."
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-034
+  text: '`test_race_tier4_stronger_than_tier1`: Race tier4 stronger than tier1.'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-035
+  text: '`test_race_difficulty_tier_set`: Race difficulty tier set.'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-036
+  text: '`test_race_level_in_range`: Race level in range.'
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-037
+  text: "`test_all_races_scale`: All races scale \u2014 All four races should scale\
+    \ with difficulty.."
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-038
+  text: '`test_boss_diff_capped_at_4`: Boss diff capped at 4.'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-039
+  text: '`test_boss_diff_adds_one`: Boss diff adds one.'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-040
+  text: '`test_spawn_default_is_tier1`: Spawn default is tier1.'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-041
+  text: '`test_spawn_race_default_is_tier1`: Spawn race default is tier1.'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-042
+  text: "`test_near_death_hardening`: Near death hardening \u2014 Verify that surviving\
+    \ at low HP increases Max HP.."
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-043
+  text: "`test_stat_decay_inactivity`: Stat decay inactivity \u2014 Verify that idling\
+    \ for 1000+ ticks triggers stat decay.."
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-044
+  text: "`test_source_trust_learning_loop`: Source trust learning loop \u2014 Prove\
+    \ that future weighting is affected by source trust after a learning event.."
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-045
+  text: "`test_uncertainty_resolution_loop`: Uncertainty resolution loop \u2014 Prove\
+    \ that proximity to a rumored zone resolves imprecise leads into precise targets.."
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-046
+  text: "`test_betrayal_social_consequence`: Betrayal social consequence \u2014 Verify\
+    \ that private betrayal trauma prevents recruitment even for reputable founders.."
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-047
+  text: "`test_intel_confirmation_by_sight`: Intel confirmation by sight \u2014 Verify\
+    \ that seeing a person mentioned in a lead confirms it and boosts trust.."
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-048
+  text: "`test_intel_refutation_by_exhaustion`: Intel refutation by exhaustion \u2014\
+    \ Verify that failing to find a target refutes the lead and drops trust.."
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-049
+  text: "`test_routine_profile_instantiation`: Routine profile instantiation \u2014\
+    \ Verify RoutineProfile can be instantiated with hybrid scheduling.."
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-050
+  text: "`test_place_attachment_instantiation`: Place attachment instantiation \u2014\
+    \ Verify PlaceAttachment can be instantiated and supports sentiment.."
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-051
+  text: "`test_coordination_anchor_drift`: Group anchor follows members."
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: '`src_v2/systems/groups.py` (`GroupSystem.update_groups` recalculates anchor)'
+  proof_type: parity
+  test_path: '`tests_v2/parity/test_group_coordination.py`'
+  divergence_note: null
+  support_boundary: null
+- id: SOC-052
+  text: "`test_entity_integration`: Entity integration \u2014 Verify Entity and IdentityAspect\
+    \ absorb new Phase 3 fields.."
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: '`src_v2/core/state.py` (`EntityState` has `group_id`, `AptitudeComponent` has growth fields)'
+  proof_type: parity
+  test_path: '`tests_v2/parity/test_entity_construction.py`'
+  divergence_note: null
+  support_boundary: null
+- id: SOC-053
+  text: "`test_world_state_registry`: World state registry \u2014 Verify GroupRegistry\
+    \ integration in WorldState.."
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-054
+  text: "`test_social_event_betrayal`: Social event betrayal \u2014 Verify that hitting\
+    \ an ally triggers a betrayal event and social bond shift.."
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-055
+  text: "`test_social_event_near_death_and_tp`: Social event near death and tp \u2014\
+    \ Verify that a near-death experience creates a durable turning point.."
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-056
+  text: "`test_social_event_first_kill_milestone`: Social event first kill milestone\
+    \ \u2014 Verify that first kill increments reputation and notoriety.."
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-057
+  text: "`test_recruitment_haggling_threshold`: Recruitment haggling threshold \u2014\
+    \ Verify that candidates counter-offer when willingness is close to threshold.."
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-058
+  text: "`test_contract_outcome_consequences`: Contract outcome consequences \u2014\
+    \ Verify that contract resolution returns correct intent updates for all members.."
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-059
+  text: "`test_role_aware_tactical_biases`: Role aware tactical biases \u2014 Verify\
+    \ that utility biases change based on contract role.."
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-060
+  text: '`test_inn_gossip`: Inn gossip.'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-061
+  text: '`test_hero_trading`: Hero trading.'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-062
+  text: "`test_social_bias_on_goal_scoring`: Social bias on goal scoring \u2014 Verify\
+    \ that a high-trust bond increases SOCIAL goal score.."
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-063
+  text: "`test_reputation_impact_on_caution`: Reputation impact on caution \u2014\
+    \ Verify low global reputation triggers defensive posture in cautious entities.."
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-064
+  text: "`test_npc_loadout_integrity`: Npc loadout integrity \u2014 Verify that specific\
+    \ NPC tiers are assigned their canonical equipment.."
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-065
+  text: "`test_npc_kind_mapping_integrity`: Npc kind mapping integrity \u2014 Verify\
+    \ that race/tier combinations map to the correct semantic kind name.."
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-066
+  text: '`test_nemesis_milestone_creation`: Nemesis milestone creation.'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-067
+  text: '`test_memory_salience_retention`: Memory salience retention.'
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-068
+  text: "`test_recruitment_offer_bounding_stable`: Recruitment offer bounding stable\
+    \ \u2014 Stable entities produce consistent offers without noise.."
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-069
+  text: "`test_recruitment_offer_bounding_unstable`: Recruitment offer bounding unstable\
+    \ \u2014 Unstable entities produce noisy/perturbed offers.."
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-070
+  text: "`test_cha_impacts_familiarity_gain`: Cha impacts familiarity gain \u2014\
+    \ Verify that a hero with higher CHA gains familiarity faster.."
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-071
+  text: "`test_recruitment_offer_generation`: Recruitment offer generation \u2014\
+    \ Verify that a recruiter creates a reasonable offer based on greed and risk.\
+    \ [PHASE 4]."
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-072
+  text: "`test_recruitment_offer_evaluation_acceptance`: Recruitment offer evaluation\
+    \ acceptance \u2014 Verify candidate accepts a fair offer from a trusted friend.\
+    \ [PHASE 4]."
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-073
+  text: "`test_recruitment_haggling_counter_offer`: Recruitment haggling counter offer\
+    \ \u2014 Verify greedy candidate counter-offers when the payout is too low. [PHASE\
+    \ 4]."
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-074
+  text: "`test_recruiter_evaluates_counter`: Recruiter evaluates counter \u2014 Verify\
+    \ recruiter accepts a counter-offer for an urgent project. [PHASE 4]."
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-075
+  text: '`test_execution_phase_modifies_proposal_with_aggressive_style`: Execution
+    phase modifies proposal with aggressive style.'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-076
+  text: '`test_execution_phase_modifies_proposal_with_evasive_style`: Execution phase
+    modifies proposal with evasive style.'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-077
+  text: "`test_ai_boredom_diversification`: Ai boredom diversification \u2014 Verify\
+    \ that an entity eventually shifts away from a repetitive goal due to boredom.."
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-078
+  text: "`test_life_stage_priority_shift`: Life stage priority shift \u2014 Verify\
+    \ level 1 and level 25 entities have different goal preferences.."
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-079
+  text: '`test_perception_phase_populates_attention_pool`: Perception phase populates
+    attention pool.'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-080
+  text: '`test_belief_refresh_captures_apparent_state`: Belief refresh captures apparent
+    state.'
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-081
+  text: '`test_belief_decay_lifecycle`: Belief decay lifecycle.'
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-082
+  text: '`test_threat_estimation_logic`: Threat estimation logic.'
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-083
+  text: '`test_decide_produces_consistent_result`: Decide produces consistent result.'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-084
+  text: '`test_decide_increments_idle_ticks_on_rest`: Decide increments idle ticks
+    on rest.'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-085
+  text: '`test_perception_phase_appraisal_sync`: Perception phase appraisal sync.'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-086
+  text: '`test_shatter_combo`: Shatter combo.'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-087
+  text: "`test_locational_trauma_triggers_dread`: Locational trauma triggers dread\
+    \ \u2014 Verify entering a high-trauma region increments DREAD.."
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-088
+  text: "`test_emotional_bias_on_utility`: Emotional bias on utility \u2014 Verify\
+    \ DREAD increases FLEE utility and decreases EXPLORE utility.."
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-089
+  text: "`test_emotional_decay`: Emotional decay \u2014 Verify emotions propose negative\
+    \ delta for decay.."
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-090
+  text: '`test_appraisal_phase_triggers_panic_on_low_hp`: Appraisal phase triggers
+    panic on low hp.'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-091
+  text: '`test_narrative_memory_trauma_biasing`: Narrative memory trauma biasing.'
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-092
+  text: '`test_narrative_memory_victory_confidence`: Narrative memory victory confidence.'
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-093
+  text: '`test_region_fatigue_biasing`: Region fatigue biasing.'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-094
+  text: '`test_social_appraisal_with_narrative`: Social appraisal with narrative.'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-095
+  text: '`test_motive_modifier_biases_explore`: Motive modifier biases explore.'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-096
+  text: '`test_motive_modifier_biases_rest`: Motive modifier biases rest.'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-097
+  text: '`test_motive_modifier_biases_flee`: Motive modifier biases flee.'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-098
+  text: '`test_boredom_modifier_applies_multipliers`: Boredom modifier applies multipliers.'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-099
+  text: '`test_life_stage_modifier_early_bracket`: Life stage modifier early bracket.'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-100
+  text: '`test_goal_evaluator_uses_modifiers`: Goal evaluator uses modifiers.'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-101
+  text: '`test_softmax_distribution`: Softmax distribution.'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-102
+  text: '`test_softmax_with_equal_scores`: Softmax with equal scores.'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-103
+  text: '`python -m src` defaults to server mode when no subcommand is provided.'
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-104
+  text: '`python -m src serve` accepts the original `--host`, `--port`, `--seed`,
+    `--entities`, `--workers`, `--log-level` arguments.'
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-105
+  text: '`python -m src cli` accepts the original `--ticks`, `--entities`, `--seed`,
+    `--workers`, `--grid-width`, `--grid-height`, `--replay`, `--log-level` arguments.'
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-106
+  text: '`python -m src inspect` accepts the original `--id`, `--seed`, `--ticks`,
+    `--entities`, `--workers`, `--log-level` arguments.'
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-107
+  text: CLI argument defaults remain compatible with legacy expectations.
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-108
+  text: Invalid CLI arguments fail in a controlled, parser-driven way.
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-109
+  text: CLI replay-file argument writes to the expected output path semantics.
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-110
+  text: CLI mode still initializes the same baseline world-building flow (town, sanctuary,
+    camps, hero spawn, goblin spawn) under equivalent config.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-111
+  text: Replay files are written in the expected legacy location/format semantics
+    for headless runs.
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-112
+  text: Replay snapshots preserve deterministic entity ordering and field availability
+    where legacy tests rely on them.
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-113
+  text: Replay preserves enough world-state detail to support legacy fingerprinting
+    and regression assertions.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-114
+  text: Replay can support structural comparison between repeated runs with same seed.
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-115
+  text: Replay remains aligned with other truth surfaces where legacy tests expect
+    parity.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-116
+  text: CLI stdout logs remain valid JSON line-by-line.
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-117
+  text: 'Each emitted structured log includes mandatory fields:'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-118
+  text: '`timestamp`'
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-119
+  text: '`level`'
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-120
+  text: '`message`'
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-121
+  text: '`component`'
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-122
+  text: Log output remains machine-parseable under normal CLI execution.
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-123
+  text: '`test_perception_phase_populates_attention_pool`: attention pool population'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-124
+  text: '`test_belief_refresh_captures_apparent_state`: belief refresh from apparent
+    state'
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-125
+  text: '`test_belief_decay_lifecycle`: belief decay lifecycle'
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-126
+  text: '`test_belief_conflict_resolution`: belief conflict handling'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-127
+  text: '`test_belief_sharing_propagation`: belief sharing propagation'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-128
+  text: '`test_threat_estimation_logic`: threat estimation logic'
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-129
+  text: '`test_perception_phase_appraisal_sync`: appraisal sync'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-130
+  text: '`test_perception_tracks_position_history`: position-history tracking'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-131
+  text: '`test_appraisal_phase_triggers_panic_on_low_hp`: panic trigger via appraisal'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-132
+  text: '`test_appraisal_detects_stuck`: stuck appraisal detection'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-133
+  text: '`test_social_appraisal_logic`: social appraisal logic'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-134
+  text: '`test_social_appraisal_with_narrative`: narrative-informed social appraisal'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-135
+  text: '`test_locational_trauma_triggers_dread`: locational trauma -> dread'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-136
+  text: '`test_emotional_bias_on_utility`: emotion changes utility'
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-137
+  text: '`test_emotional_decay`: emotional decay'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-138
+  text: '`test_narrative_memory_trauma_biasing`: trauma memory biasing'
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-139
+  text: '`test_narrative_memory_victory_confidence`: victory-confidence memory'
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-140
+  text: '`test_narrative_memory_logging`: narrative memory logging'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-141
+  text: '`test_social_appraisal_with_narrative`: narrative-informed social appraisal'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-142
+  text: '`test_bravery_modifiers`: bravery modifiers'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-143
+  text: '`test_cooperation_recruitment_logic`: cooperation in recruitment/social choice
+    is preserved'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-144
+  text: '`test_scenario_3_stationary_world_proximity_bonding`: proximity bonding behavior
+    is preserved'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-145
+  text: Entities with the same `cluster_id` and faction can form a group.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-146
+  text: Group requires at least two living members.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-147
+  text: Group leader is selected by highest level.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-148
+  text: Group anchor follows leader position.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-149
+  text: Members receive group ID linkage.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-150
+  text: Group dissolves if leader dies.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-151
+  text: Group removes dead members.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-152
+  text: Group dissolves if membership drops below two.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-153
+  text: Group cohesion decreases with distance from leader.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-154
+  text: Shared group goal biases member goal scoring.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-155
+  text: Distance from leader increases social regrouping bias.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-156
+  text: Active social contracts can instantiate party groups.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-157
+  text: Contract kind maps to shared group goal.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-158
+  text: Contract party dissolution applies contract consequences.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null

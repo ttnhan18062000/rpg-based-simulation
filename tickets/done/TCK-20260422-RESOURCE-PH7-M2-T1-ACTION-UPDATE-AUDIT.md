@@ -10,12 +10,12 @@ DONE
 
 ## Request Summary
 
-Execute Task 1 of Phase 7 Milestone 2: Audit Phase 7 action/update rows against the current `src_v2` substrate implementation. This involved identifying gaps in typed action proposals, update buckets, and legacy coercion points to ensure a concrete implementation roadmap for Milestone 2.
+Execute Task 1 of Phase 7 Milestone 2: Audit Phase 7 action/update rows against the current `src` substrate implementation. This involved identifying gaps in typed action proposals, update buckets, and legacy coercion points to ensure a concrete implementation roadmap for Milestone 2.
 
 ## Scope
 
 - [x] Review all Phase 7 action/update substrate rows in the master ledger.
-- [x] Map these rows to current `src_v2` implementation points (`src_v2/actions/`, `src_v2/core/models/`).
+- [x] Map these rows to current `src` implementation points (`src/actions/`, `src/core/models/`).
 - [x] Identify:
     - Already closed structures.
     - Partially typed structures.
@@ -47,9 +47,9 @@ Execute Task 1 of Phase 7 Milestone 2: Audit Phase 7 action/update rows against 
 
 ## Related Code Areas
 
-- `src_v2/core/`
-- `src_v2/engine/`
-- `src_v2/actions/`
+- `src/core/`
+- `src/engine/`
+- `src/actions/`
 
 ## Assumptions / Open Questions
 

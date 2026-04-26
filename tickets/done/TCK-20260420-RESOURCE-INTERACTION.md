@@ -39,18 +39,18 @@ Implement the fourth milestone of Resource Phase 4, establishing deterministic l
 - resource_phase4_implementation_milestone_4.md
 
 ## Related Code Areas
-- src_v2/core/state.py
-- src_v2/core/updates.py
-- src_v2/engine/domain_logic.py
-- src_v2/engine/interaction.py [NEW]
+- src/core/state.py
+- src/core/updates.py
+- src/engine/domain_logic.py
+- src/engine/interaction.py [NEW]
 
 ## Test Summary
-- `pytest tests_v2/unit/test_interaction_system.py` (PASS)
-- `pytest tests_v2/certification/test_final_gate.py` (INTEG_RESOURCE_LOOP)
+- `pytest tests/unit/test_interaction_system.py` (PASS)
+- `pytest tests/certification/test_final_gate.py` (INTEG_RESOURCE_LOOP)
 
 ## Files Changed
-- `src_v2/engine/domain_logic.py`
-- `src_v2/certification/scenarios.py`
+- `src/engine/domain_logic.py`
+- `src/certification/scenarios.py`
 
 ## Completion Summary
 - Successfully consolidated the second officially supported gameplay surface (Movement + Harvesting).

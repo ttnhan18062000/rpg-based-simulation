@@ -164,7 +164,7 @@ The project has one exact bounded worker-execution contract that can be used as 
 Make the codebase obey the frozen worker contract by implementing one exact bounded worker path with compact payloads and explicit control limits.
 
 [Task implementation comments]
-Worker execution is managed by `src_v2/platform/worker_pool.py`. The `WorkerPool` enforces strict inflight and queue limits defined in the runtime profile. Work packets are constructed as shallow clones of actor-local state, preventing the "World Serialization" hazard.
+Worker execution is managed by `src/platform/worker_pool.py`. The `WorkerPool` enforces strict inflight and queue limits defined in the runtime profile. Work packets are constructed as shallow clones of actor-local state, preventing the "World Serialization" hazard.
 
 [Task technical implementation]
 Implement or refactor the concurrency layer so that:
@@ -217,7 +217,7 @@ The engine has one exact bounded worker-execution path using compact packets and
 Ensure the engine remains safe and usable when worker execution is unavailable, constrained, or disabled.
 
 [Task implementation comments]
-Fallback logic is housed in `src_v2/platform/local_resolver.py`. If the worker pool is at capacity or disabled, the scheduler automatically routes work to the local thread. The `Apply` phase remains agnostic to the execution source, ensuring bit-identical results regardless of the worker mode.
+Fallback logic is housed in `src/platform/local_resolver.py`. If the worker pool is at capacity or disabled, the scheduler automatically routes work to the local thread. The `Apply` phase remains agnostic to the execution source, ensuring bit-identical results regardless of the worker mode.
 
 [Task technical implementation]
 Implement exact behavior for:
@@ -269,7 +269,7 @@ Worker failure or disablement leads to deterministic local fallback behavior tha
 Lock the Milestone 8 concurrency rules with deterministic tests so later milestones cannot silently reintroduce giant payloads, queue blowups, or semantic drift.
 
 [Task implementation comments]
-Concurrency verification is performed in `tests_v2/platform/test_worker_pool.py`. These tests confirm that the pool rejects work when the queue is full and that the `LocalResolver` produces identical state mutations to the parallel workers.
+Concurrency verification is performed in `tests/platform/test_worker_pool.py`. These tests confirm that the pool rejects work when the queue is full and that the `LocalResolver` produces identical state mutations to the parallel workers.
 
 [Task technical implementation]
 Add exact tests for:

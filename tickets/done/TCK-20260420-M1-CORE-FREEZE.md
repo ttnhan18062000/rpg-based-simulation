@@ -23,9 +23,9 @@ Freeze the core substrate baseline (Kernel, Apply, Sched) and the operational vo
 
 ## Acceptance Criteria
 - [x] `docs/engine/runtime_completion_contract_ma.md` updated and marked as Phase 4 Milestone 1 frozen.
-- [x] `src_v2/core/governance.py` (`PressureSignals`) and `src_v2/engine/runtime_status.py` docstrings updated and schema locked.
+- [x] `src/core/governance.py` (`PressureSignals`) and `src/engine/runtime_status.py` docstrings updated and schema locked.
 - [x] No placeholder or transitional signals remain in `Kernel` or `RuntimeStatus`.
-- [x] `tests_v2/engine/test_substrate_freeze_m1.py` exists and verifies schema/baseline stability.
+- [x] `tests/engine/test_substrate_freeze_m1.py` exists and verifies schema/baseline stability.
 - [x] All previous Milestone A/B/C integration tests pass.
 
 ## Related Tickets
@@ -44,10 +44,10 @@ Freeze the core substrate baseline (Kernel, Apply, Sched) and the operational vo
 - staging_artifacts/TCK-20260420-M1-CORE-FREEZE/test_plan.md
 
 ## Related Code Areas
-- src_v2/engine/kernel.py
-- src_v2/engine/apply.py
-- src_v2/core/governance.py
-- src_v2/engine/runtime_status.py
+- src/engine/kernel.py
+- src/engine/apply.py
+- src/core/governance.py
+- src/engine/runtime_status.py
 
 ## Assumptions / Open Questions
 - Assumption: The current set of `PressureSignals` is sufficient for initial gameplay attachment.
@@ -57,13 +57,13 @@ Freeze the core substrate baseline (Kernel, Apply, Sched) and the operational vo
 - Any needed terminology alignment should be done now before gameplay attachment begins.
 
 ## Test Summary
-- `pytest tests_v2/certification/test_final_gate.py` (PASS)
-- `pytest tests_v2/engine/test_determinism_suite.py` (PASS)
+- `pytest tests/certification/test_final_gate.py` (PASS)
+- `pytest tests/engine/test_determinism_suite.py` (PASS)
 
 ## Files Changed
 - `resource_phase4_implementation_milestone_1.md`
-- `src_v2/engine/kernel.py`
-- `src_v2/engine/runtime_status.py`
+- `src/engine/kernel.py`
+- `src/engine/runtime_status.py`
 
 ## Completion Summary
 - Substrate baseline is frozen under the "Law of 6 Phases".

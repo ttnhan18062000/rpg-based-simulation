@@ -13,7 +13,7 @@
     - Legacy Tests (`tests/`)
 
 ## 3. Global Scan
-- Run `grep -r "from src\." . --exclude-dir=src --exclude-dir=src_v2 --exclude-dir=tests --exclude-dir=tests_v2`.
+- Run `grep -r "from src\." . --exclude-dir=src --exclude-dir=src --exclude-dir=tests --exclude-dir=tests`.
 - Verify no active system code is bypassing the delegation layer.
 
 ## 4. Documentation Cleanup

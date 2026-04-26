@@ -16,4 +16,4 @@
     - [ ] Finalize `walkthrough.md`
     - [x] Update root `README.md` links (Verified)
 - [x] **Phase 3: Final Doc Integrity Check**
-    - [x] Run `pytest tests_v2/docs/`
+    - [x] Run `pytest tests/docs/`

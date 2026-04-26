@@ -3,7 +3,7 @@
 This document defines the exact simulation surface eligible for production cutover in Phase 12.
 
 ## 1. Allowed Supported Surface
-Phase 12 is authorized to cut over the following behaviors to the `src_v2` engine:
+Phase 12 is authorized to cut over the following behaviors to the `src` engine:
 
 | Category | Allowed Items | Constraint |
 | :--- | :--- | :--- |

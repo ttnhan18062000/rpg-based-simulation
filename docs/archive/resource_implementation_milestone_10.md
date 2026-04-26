@@ -307,7 +307,7 @@ The project has one exact engineering playbook and contributor-guardrail system 
 Lock the Milestone 10 documentation and playbook rules so future contributors cannot quietly drift away from them.
 
 [Task implementation comments]
-Deployed the automated integrity suite in `tests_v2/docs/`. This suite enforces manifest-driven presence, terminology alignment with Enums, and forbidden term scanning.
+Deployed the automated integrity suite in `tests/docs/`. This suite enforces manifest-driven presence, terminology alignment with Enums, and forbidden term scanning.
 
 [Task technical implementation]
 Add exact checks or tests for:

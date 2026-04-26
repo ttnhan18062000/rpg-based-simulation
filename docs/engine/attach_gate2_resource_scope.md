@@ -23,7 +23,7 @@
 - Supported in both **Local** and **Concurrent** execution modes.
 
 ## Proof Path
-- **Parity Proof**: `tests_v2/parity/test_resource_interaction_parity.py`
+- **Parity Proof**: `tests/parity/test_resource_interaction_parity.py`
   - Enforces bit-identical behavior against original `src` for harvesting progress and interruption scenarios.
-- **Contract Proof**: `tests_v2/contract/test_resource_contract.py`
+- **Contract Proof**: `tests/contract/test_resource_contract.py`
   - Enforces authoritative state boundaries and V2-specific resource laws (weight, capacity).

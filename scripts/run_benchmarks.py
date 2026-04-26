@@ -4,13 +4,13 @@ import json
 import logging
 from pathlib import Path
 
-# Add src_v2 to path
+# Add src to path
 sys.path.append(os.getcwd())
 
-from src_v2.perf.bench_harness import BenchHarness
-from src_v2.core.state import AuthoritativeState, EntityState
-from src_v2.config.profiles import RuntimeProfile, HardwareClass
-from src_v2.core.enums import Direction, MovementIntention
+from src.perf.bench_harness import BenchHarness
+from src.core.state import AuthoritativeState, EntityState
+from src.config.profiles import RuntimeProfile, HardwareClass
+from src.core.enums import Direction, MovementIntention
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -30,7 +30,7 @@ def create_movement_stress_state(count: int = 100) -> AuthoritativeState:
     return AuthoritativeState(tick=1, seed=42, entities=entities)
 
 def create_harvest_stress_state(count: int = 100) -> AuthoritativeState:
-    from src_v2.core.state import ResourceNodeState, InteractionComponent, InventoryComponent
+    from src.core.state import ResourceNodeState, InteractionComponent, InventoryComponent
     entities = {}
     nodes = {}
     for i in range(count):
@@ -50,11 +50,11 @@ def create_integrated_loop_state(count: int = 100) -> AuthoritativeState:
     Autonomous Stress Test: 
     Large number of entities completing full Seek-Harvest-Return loops.
     """
-    from src_v2.core.state import (
+    from src.core.state import (
         ResourceNodeState, InteractionComponent, InventoryComponent, 
         IdentityComponent
     )
-    from src_v2.core.strategic import StrategicComponent, LeadState
+    from src.core.strategic import StrategicComponent, LeadState
     entities = {}
     nodes = {}
     

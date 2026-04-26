@@ -1,8 +1,8 @@
 # Phase 12 M2 Test Plan: Runtime Cutover Validation
 
 ## 1. Unit Tests
-- `tests_v2/engine/test_manager_dispatch.py`: Verify V2EngineManager intercepts calls correctly.
-- `tests_v2/api/test_presenter_parity.py`: Verify V2 presenters match legacy schema.
+- `tests/engine/test_manager_dispatch.py`: Verify V2EngineManager intercepts calls correctly.
+- `tests/api/test_presenter_parity.py`: Verify V2 presenters match legacy schema.
 
 ## 2. Integration Tests
 - `python -m src cli --ticks 10 --seed 42`: Verify V2-driven CLI run completes without error.

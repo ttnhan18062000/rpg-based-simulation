@@ -7,7 +7,7 @@ Phase 12 Milestone 4: Real-Condition Cutover Validation and Rollback Discipline
 DONE
 
 ## Request Summary
-Validate the `src_v2` engine cutover under long-running simulation conditions and verify the functional integrity of the rollback mechanism.
+Validate the `src` engine cutover under long-running simulation conditions and verify the functional integrity of the rollback mechanism.
 
 ## Scope
 - [x] Task 1: Execute a "Real Condition" simulation (1000+ ticks) via the default `python3 -m src cli` entrypoint.

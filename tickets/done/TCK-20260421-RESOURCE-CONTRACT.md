@@ -10,7 +10,7 @@ DONE
 Establish authoritative contract tests for resource interactions and ensure the InteractionSystem enforces all domain invariants (weight pressure, slot capacity, etc.) regardless of AI proposals.
 
 ## Scope
-- Implement `tests_v2/contract/test_resource_contract.py`.
+- Implement `tests/contract/test_resource_contract.py`.
 - Verify weight pressure law in `InteractionSystem.enforce`.
 - Verify slot pressure law in `InteractionSystem.enforce`.
 - Verify node depletion and respawn triggers.
@@ -28,24 +28,24 @@ Establish authoritative contract tests for resource interactions and ensure the 
 - TCK-20260421-RESOURCE-INTERACT-PARITY
 
 ## Related Docs
-- docs/engine/src_v2_principle.md
+- docs/engine/src_principle.md
 
 ## Related Code Areas
-- src_v2/engine/interaction.py
-- src_v2/core/state.py
+- src/engine/interaction.py
+- src/core/state.py
 
 ## Implementation Notes
 - Use `pytest` for contract testing.
 - Focus on "Refining" the updates to be legal.
 
 ## Test Summary
-- 100% Pass in `tests_v2/contract/test_resource_contract.py`.
-- 100% Pass in `tests_v2/contract/test_resource_intelligence_contract.py`.
+- 100% Pass in `tests/contract/test_resource_contract.py`.
+- 100% Pass in `tests/contract/test_resource_intelligence_contract.py`.
 
 ## Files Changed
-- `src_v2/engine/interaction.py`
-- `src_v2/systems/strategic.py`
-- `src_v2/core/strategic.py`
+- `src/engine/interaction.py`
+- `src/systems/strategic.py`
+- `src/core/strategic.py`
 
 ## Completion Summary
 - Established authoritative contract tests for resource interaction and intelligence.

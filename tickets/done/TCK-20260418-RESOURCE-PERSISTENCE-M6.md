@@ -37,8 +37,8 @@ Implement a resource-safe persistence model for replay data with streaming emiss
 - `m6_test_matrix.md`
 
 ## Related Code Areas
-- `src_v2/engine/` (replay_manager, replay_buffer, replay_sink, kernel)
-- `src_v2/core/` (replay_modes, policy)
+- `src/engine/` (replay_manager, replay_buffer, replay_sink, kernel)
+- `src/core/` (replay_modes, policy)
 
 ## Assumptions / Open Questions
 - Falling back to JSON for chunks due to `msgpack` library unavailability in the isolated environment.
@@ -48,18 +48,18 @@ Implement a resource-safe persistence model for replay data with streaming emiss
 - Implemented "Waterfall Drop" policy in `GovernorPolicy` to shed internal traces before critical actions.
 
 ## Test Summary
-- 6 new tests added in `tests_v2/engine/`.
+- 6 new tests added in `tests/engine/`.
 - `test_non_authoritative` verified kernel resilience to disk failure.
 - `test_replay_overflow` verified buffer eviction policy.
 - `test_replay_chunk_rotation` verified manifest and rotation logic.
 
 ## Files Changed
-- `src_v2/core/replay_modes.py`
-- `src_v2/engine/replay_buffer.py`
-- `src_v2/engine/replay_sink.py`
-- `src_v2/engine/replay_manager.py`
-- `src_v2/engine/policy.py`
-- `src_v2/engine/kernel.py`
+- `src/core/replay_modes.py`
+- `src/engine/replay_buffer.py`
+- `src/engine/replay_sink.py`
+- `src/engine/replay_manager.py`
+- `src/engine/policy.py`
+- `src/engine/kernel.py`
 
 ## Completion Summary
 Milestone 6 finalized. The engine now supports resource-safe replay persistence. Replay data is streamed in deterministic chunks via a policy-bound buffer, ensuring that even under severe IO or memory pressure, the authoritative simulation remains stable and bit-identical.

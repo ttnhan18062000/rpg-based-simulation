@@ -31,16 +31,16 @@ Establish a trustworthy foundation for engine performance work, including per-ph
 - `TCK-20260420-CORE-MOVEMENT-SLICE`
 
 ## Related Docs
-- `src_v2_overview.md`
-- `src_v2_principle.md`
+- `src_overview.md`
+- `src_principle.md`
 
 ## Related Stored Artifacts
 - None
 
 ## Related Code Areas
-- `src_v2/engine/kernel.py`
-- `src_v2/core/governance.py`
-- `src_v2/engine/runtime_status.py`
+- `src/engine/kernel.py`
+- `src/core/governance.py`
+- `src/engine/runtime_status.py`
 
 ## Assumptions / Open Questions
 - We assume `time.perf_counter_ns()` provides sufficient resolution for phase-level timing in micro-ticks.

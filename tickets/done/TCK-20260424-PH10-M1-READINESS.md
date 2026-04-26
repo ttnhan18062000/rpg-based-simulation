@@ -36,9 +36,9 @@ Establish the readiness gate for Phase 10 (System Compatibility Closure). Identi
 - None
 
 ## Related Code Areas
-- `src_v2/engine/kernel.py`
-- `src_v2/engine/replay_manager.py`
-- `src_v2/certification/harness.py`
+- `src/engine/kernel.py`
+- `src/engine/replay_manager.py`
+- `src/certification/harness.py`
 
 ## Assumptions / Open Questions
 - None

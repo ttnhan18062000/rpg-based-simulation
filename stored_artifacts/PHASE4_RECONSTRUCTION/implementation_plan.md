@@ -15,11 +15,11 @@ This plan implements the updated Phase 4 requirements, transitioning from pure i
 
 Narrow focus on resolving artifacts that make Milestone 1 "dishonest."
 
-#### [MODIFY] [replay_manager.py](file:///home/vboxuser/Work/rpg-based-simulation/src_v2/engine/replay_manager.py)
+#### [MODIFY] [replay_manager.py](file:///home/vboxuser/Work/rpg-based-simulation/src/engine/replay_manager.py)
 - Refactor `_rotate_chunk` to capture `current_chunk_id` and `chunk_start_tick` in a local DTO before executor submission.
 - Centralize manifest updates to the main thread or use a thread-safe queue for metrics.
 
-#### [MODIFY] [kernel.py](file:///home/vboxuser/Work/rpg-based-simulation/src_v2/engine/kernel.py)
+#### [MODIFY] [kernel.py](file:///home/vboxuser/Work/rpg-based-simulation/src/engine/kernel.py)
 - Move `ProfileValidator` calls into a separate `validate()` method or a pre-flight check to allow for smoother patch/hot-reload boundaries.
 
 ---
@@ -28,12 +28,12 @@ Narrow focus on resolving artifacts that make Milestone 1 "dishonest."
 
 Narrow focus on recovering original parity for interaction laws.
 
-#### [MODIFY] [interaction.py](file:///home/vboxuser/Work/rpg-based-simulation/src_v2/engine/interaction.py)
+#### [MODIFY] [interaction.py](file:///home/vboxuser/Work/rpg-based-simulation/src/engine/interaction.py)
 - **Weight Pressure**: Update `Pressure Law` to check `current_weight <= max_weight`.
 - **Looting**: Expand `InteractionSystem.enforce` to handle items on the ground (Looting Law).
 - **Interruption**: Strictly enforce that any `moved_this_tick` or `target_change` resets progress to 0 (Channeling Law).
 
-#### [NEW] [town_resolution.py](file:///home/vboxuser/Work/rpg-based-simulation/src_v2/engine/town_resolution.py)
+#### [NEW] [town_resolution.py](file:///home/vboxuser/Work/rpg-based-simulation/src/engine/town_resolution.py)
 - Implement authoritative "sell-on-entry" logic for the town loop.
 - Provides the "Material/Gold/Capability Resolution" mentioned in Phase Task 5.
 
@@ -41,7 +41,7 @@ Narrow focus on recovering original parity for interaction laws.
 
 ### [Component] Performance & Measurement
 
-#### [MODIFY] [governor.py](file:///home/vboxuser/Work/rpg-based-simulation/src_v2/engine/governor.py)
+#### [MODIFY] [governor.py](file:///home/vboxuser/Work/rpg-based-simulation/src/engine/governor.py)
 - Implement "End-to-End CPU Contract" by having the `Governor` reduce `active_worker_count` or shed `DEFERRABLE` work if `worker_utilization` exceeds thresholds.
 
 ## Open Questions
@@ -52,8 +52,8 @@ Narrow focus on recovering original parity for interaction laws.
 ## Verification Plan
 
 ### Automated Tests
-- `pytest tests_v2/engine/test_replay_truth.py`: New test for race conditions in rotation.
-- `pytest tests_v2/engine/test_interaction_parity.py`: Verifies weight pressure and looting interruptions.
+- `pytest tests/engine/test_replay_truth.py`: New test for race conditions in rotation.
+- `pytest tests/engine/test_interaction_parity.py`: Verifies weight pressure and looting interruptions.
 - `python3 scripts/refresh_proofs.py`: Verifies that integrated scenarios still produce deterministic outcomes.
 
 ### Manual Verification

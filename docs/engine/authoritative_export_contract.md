@@ -37,8 +37,8 @@ To move beyond simple hashing, the engine will use a **Multi-Domain Fingerprint*
 - **Redundancy**: The `refined_update` must contain ALL changes applied to the state, such that `apply(state_t, update) == state_t+1`.
 
 ## 5. Export Logic Location
-- `src_v2/core/state.py`: `AuthoritativeState.fingerprint()` (To be implemented).
-- `src_v2/engine/kernel.py`: Integration in `_phase_resolution`.
+- `src/core/state.py`: `AuthoritativeState.fingerprint()` (To be implemented).
+- `src/engine/kernel.py`: Integration in `_phase_resolution`.
 
 ## 6. Verification
-- `tests_v2/replay/test_authoritative_export_shape.py`: Proof of shape consistency.
+- `tests/replay/test_authoritative_export_shape.py`: Proof of shape consistency.

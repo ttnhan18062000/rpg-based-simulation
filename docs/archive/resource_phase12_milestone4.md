@@ -71,7 +71,7 @@ Execute end-to-end validation on the supported cutover surface, covering:
 
 #### [Task possible affected files]
 
-- `tests_v2/e2e/**`
+- `tests/e2e/**`
 - operational validation scripts
 - runbook validation notes
 

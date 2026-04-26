@@ -1,7 +1,7 @@
 # Supported Gameplay Surface Matrix (Milestone 5)
 
 ## 1. Purpose
-This document defines the official support boundary for gameplay logic within `src_v2`. It distinguishes between verified authoritative behaviors and excluded or experimental systems.
+This document defines the official support boundary for gameplay logic within `src`. It distinguishes between verified authoritative behaviors and excluded or experimental systems.
 
 ## 2. Support Matrix
 

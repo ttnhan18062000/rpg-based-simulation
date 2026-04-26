@@ -20,7 +20,7 @@ It does not yet close broader tactical behavior such as target switching, pursui
 
 ## [Milestone technical implementation]
 
-Recover the preserved combat legality and direct combat outcome model in native `src_v2` terms.
+Recover the preserved combat legality and direct combat outcome model in native `src` terms.
 
 This milestone must:
 
@@ -56,7 +56,7 @@ At the end of Milestone 2:
 
 ## Task
 
-### [x] - [Task 1] - Audit Phase 8 combat-legality rows against current `src_v2` combat implementation
+### [x] - [Task 1] - Audit Phase 8 combat-legality rows against current `src` combat implementation
 
 #### [Task Description]
 
@@ -64,7 +64,7 @@ Find where direct combat semantics are already real, partial, or fake.
 
 #### [Task technical implementation]
 
-Review all Phase 8 direct-combat rows and map them to current `src_v2` combat implementation points.
+Review all Phase 8 direct-combat rows and map them to current `src` combat implementation points.
 
 Identify:
 
@@ -75,9 +75,9 @@ Identify:
 
 #### [Task possible affected files]
 
-- `src_v2/combat/**`
-- `src_v2/actions/**`
-- `src_v2/engine/**`
+- `src/combat/**`
+- `src/actions/**`
+- `src/engine/**`
 - `docs/engine/replacement_ledger.md`
 - `docs/engine/phase8_backlog.md`
 
@@ -119,10 +119,10 @@ Refine or complete the combat legality model so supported interactions enforce e
 
 #### [Task possible affected files]
 
-- `src_v2/combat/**`
-- `src_v2/actions/**`
-- `src_v2/core/models/**`
-- `tests_v2/combat/**`
+- `src/combat/**`
+- `src/actions/**`
+- `src/core/models/**`
+- `tests/combat/**`
 
 #### [Task important notes]
 
@@ -164,10 +164,10 @@ This task should include:
 
 #### [Task possible affected files]
 
-- `src_v2/combat/**`
-- `src_v2/apply/**`
-- `src_v2/core/models/**`
-- `tests_v2/combat/**`
+- `src/combat/**`
+- `src/apply/**`
+- `src/core/models/**`
+- `tests/combat/**`
 
 #### [Task important notes]
 
@@ -208,10 +208,10 @@ Implement or refine direct combat resolution so preserved legacy distinctions ar
 
 #### [Task possible affected files]
 
-- `src_v2/combat/**`
-- `src_v2/core/models/**`
-- `tests_v2/combat/test_combat_outcomes.py`
-- `tests_v2/combat/test_combat_rewards_contract.py`
+- `src/combat/**`
+- `src/core/models/**`
+- `tests/combat/test_combat_outcomes.py`
+- `tests/combat/test_combat_rewards_contract.py`
 
 #### [Task important notes]
 
@@ -253,9 +253,9 @@ Add focused tests for:
 
 #### [Task possible affected files]
 
-- `tests_v2/combat/test_combat_legality_contract.py`
-- `tests_v2/combat/test_direct_combat_outcomes.py`
-- `tests_v2/combat/test_combat_rewards_contract.py`
+- `tests/combat/test_combat_legality_contract.py`
+- `tests/combat/test_direct_combat_outcomes.py`
+- `tests/combat/test_combat_rewards_contract.py`
 
 #### [Task important notes]
 

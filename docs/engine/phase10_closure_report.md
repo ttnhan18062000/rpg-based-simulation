@@ -19,4 +19,4 @@ Phase 10 has successfully achieved infrastructure and system-surface parity betw
 All Phase 10 system compatibility rows in the `legacy_replacement_ledger.md` are now marked as **SUPPORTED**.
 
 ## 5. Next Steps
-The project is now ready for the final transition phase where the legacy `src/` can be retired in favor of the hardened `src_v2/`.
+The project is now ready for the final transition phase where the legacy `src/` can be retired in favor of the hardened `src/`.

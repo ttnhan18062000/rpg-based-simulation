@@ -1,12 +1,12 @@
 # Walkthrough: Final Engine Documentation Pack (Milestones 1-10)
 
-We have successfully completed the final documentation audit for the entire simulation engine. This project finalized the technical implementation records for all 10 milestones, ensuring that the project's historical implementation aligns perfectly with the final `src_v2/` and `tests_v2/` codebase.
+We have successfully completed the final documentation audit for the entire simulation engine. This project finalized the technical implementation records for all 10 milestones, ensuring that the project's historical implementation aligns perfectly with the final `src/` and `tests/` codebase.
 
 ## Key Accomplishments
 
 ### 1. Cumulative Milestone Audit (M1-M10)
 Every milestone implementation document (`resource_implementation_milestone_1.md` through `resource_implementation_milestone_10.md`) has been updated to reflect **100% completion**.
-- **Technical Implementation Comments**: Added detailed per-task implementation notes to all milestones, explicitly linking theoretical design requirements to actual code artifacts (e.g., `src_v2/engine/kernel.py`, `src_v2/engine/governor.py`).
+- **Technical Implementation Comments**: Added detailed per-task implementation notes to all milestones, explicitly linking theoretical design requirements to actual code artifacts (e.g., `src/engine/kernel.py`, `src/engine/governor.py`).
 - **Checklist Resolution**: Formally marked all internal implementation checklists as resolved.
 - **Contract Verification**: Confirmed that all milestones follow the strict resource-safety and deterministic-execution laws established in Milestone 1.
 
@@ -17,10 +17,10 @@ The entire documentation pack has been validated against the automated integrity
 - **Link Stability**: All cross-document links have been verified.
 
 ### 3. Verification Highlights
-We executed the final documentation integrity pass using the `tests_v2/docs/` suite, confirming 100% compliance.
+We executed the final documentation integrity pass using the `tests/docs/` suite, confirming 100% compliance.
 
 ```bash
-pytest tests_v2/docs/
+pytest tests/docs/
 ```
 
 | Suite | Status | Focus |
@@ -48,10 +48,10 @@ The engine is now locked in its final, authoritative state. Future maintainers c
 
 | Milestone | Key Architecture Locked | Verified File |
 | :--- | :--- | :--- |
-| **M1-M2** | Deterministic Kernel Tick Loop | `src_v2/engine/kernel.py` |
-| **M3-M4** | Bounded State & Scheduling | `src_v2/core/state.py` |
-| **M5** | Resource Governor (Degradation) | `src_v2/engine/governor.py` |
-| **M6** | Bounded Streaming Replay | `src_v2/engine/replay_buffer.py` |
-| **M7** | Structured Observability | `src_v2/api/presenters.py` |
-| **M8** | Bounded Worker Execution | `src_v2/platform/worker_pool.py` |
-| **M9-M10** | Certification & Integrity | `tests_v2/docs/` |
+| **M1-M2** | Deterministic Kernel Tick Loop | `src/engine/kernel.py` |
+| **M3-M4** | Bounded State & Scheduling | `src/core/state.py` |
+| **M5** | Resource Governor (Degradation) | `src/engine/governor.py` |
+| **M6** | Bounded Streaming Replay | `src/engine/replay_buffer.py` |
+| **M7** | Structured Observability | `src/api/presenters.py` |
+| **M8** | Bounded Worker Execution | `src/platform/worker_pool.py` |
+| **M9-M10** | Certification & Integrity | `tests/docs/` |

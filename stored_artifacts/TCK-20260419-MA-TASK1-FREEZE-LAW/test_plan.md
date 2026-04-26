@@ -5,10 +5,10 @@ Verify that the Milestone A law set is accurately documented, consistent across 
 
 ## Manual Verification
 1. **Consistency Check**: Cross-reference `docs/engine/runtime_completion_contract_ma.md` with:
-    - `src_v2/engine/kernel.py`
-    - `src_v2/engine/apply.py`
-    - `src_v2/engine/checkpoint.py`
-    - `src_v2/engine/scheduler.py`
+    - `src/engine/kernel.py`
+    - `src/engine/apply.py`
+    - `src/engine/checkpoint.py`
+    - `src/engine/scheduler.py`
     Ensure that the "laws" described in the doc are the ones being implemented/pinned in the code.
 2. **Completeness Check**: Verify that all items in the "Task 1 Checklist" from `resource_implementation_v3_milestone_a.md` are covered:
     - Freeze exact tick execution law
@@ -21,5 +21,5 @@ Verify that the Milestone A law set is accurately documented, consistent across 
 
 ## Automated Verification
 1. **Doc Integrity**: Run existing doc integrity tests (if any) to see if they need updates.
-    - `tests_v2/docs/test_doc_integrity.py` (if it exists)
+    - `tests/docs/test_doc_integrity.py` (if it exists)
 2. **Linting**: Ensure that the new markdown files are valid.

@@ -22,7 +22,7 @@ It does not yet close blocker/lead knowledge continuity, social consequence, or 
 
 ## [Milestone technical implementation]
 
-Recover the supported strategic continuity and cognition layer in native `src_v2` terms.
+Recover the supported strategic continuity and cognition layer in native `src` terms.
 
 This milestone must:
 
@@ -61,7 +61,7 @@ At the end of Milestone 2:
 
 ## Task
 
-### [ ] (checkbox) - [Task 1] - Audit strategic continuity and cognition rows against current `src_v2` long-horizon behavior
+### [ ] (checkbox) - [Task 1] - Audit strategic continuity and cognition rows against current `src` long-horizon behavior
 
 #### [Task Description]
 
@@ -69,7 +69,7 @@ Find where long-horizon continuity is already real, partial, or fake.
 
 #### [Task technical implementation]
 
-Review all Phase 9 strategic/cognitive rows and map them to current `src_v2` implementation points.
+Review all Phase 9 strategic/cognitive rows and map them to current `src` implementation points.
 
 Identify:
 
@@ -81,9 +81,9 @@ Identify:
 
 #### [Task possible affected files]
 
-- `src_v2/strategic/**`
-- `src_v2/ai/**`
-- `src_v2/core/strategic/**`
+- `src/strategic/**`
+- `src/ai/**`
+- `src/core/strategic/**`
 - `docs/engine/replacement_ledger.md`
 - `docs/engine/phase9_backlog.md`
 
@@ -122,9 +122,9 @@ Refine or complete the strategic continuity model so supported actors can:
 
 #### [Task possible affected files]
 
-- `src_v2/strategic/**`
-- `src_v2/core/strategic/**`
-- `tests_v2/strategy/**`
+- `src/strategic/**`
+- `src/core/strategic/**`
+- `tests/strategy/**`
 
 #### [Task important notes]
 
@@ -164,10 +164,10 @@ Implement or refine supported cognition-capacity logic so actors are bounded by 
 
 #### [Task possible affected files]
 
-- `src_v2/ai/**`
-- `src_v2/strategic/**`
-- `src_v2/core/cognition/**`
-- `tests_v2/ai/**`
+- `src/ai/**`
+- `src/strategic/**`
+- `src/core/cognition/**`
+- `tests/ai/**`
 
 #### [Task important notes]
 
@@ -204,9 +204,9 @@ Refine or complete profile derivation so supported cognition-capacity profiles a
 
 #### [Task possible affected files]
 
-- `src_v2/ai/**`
-- `src_v2/core/cognition/**`
-- `tests_v2/ai/**`
+- `src/ai/**`
+- `src/core/cognition/**`
+- `tests/ai/**`
 
 #### [Task important notes]
 
@@ -244,9 +244,9 @@ Implement or refine supported explainability surfaces, including where preserved
 
 #### [Task possible affected files]
 
-- `src_v2/strategic/**`
-- `src_v2/core/cognition/**`
-- `tests_v2/ai/**`
+- `src/strategic/**`
+- `src/core/cognition/**`
+- `tests/ai/**`
 - explainability docs
 
 #### [Task important notes]
@@ -286,11 +286,11 @@ Add focused tests for:
 
 #### [Task possible affected files]
 
-- `tests_v2/ai/test_bounded_strategic_slice.py`
-- `tests_v2/ai/test_cognition_capacity_determinism.py`
-- `tests_v2/ai/test_cognition_capacity_non_mutation.py`
-- `tests_v2/ai/test_cognition_explainability.py`
-- `tests_v2/strategy/**`
+- `tests/ai/test_bounded_strategic_slice.py`
+- `tests/ai/test_cognition_capacity_determinism.py`
+- `tests/ai/test_cognition_capacity_non_mutation.py`
+- `tests/ai/test_cognition_explainability.py`
+- `tests/strategy/**`
 
 #### [Task important notes]
 

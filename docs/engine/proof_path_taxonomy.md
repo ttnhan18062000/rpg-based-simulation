@@ -27,4 +27,4 @@ This document defines the controlled vocabulary for how open replacement rows ar
 A row is considered **CLOSED** only when:
 - The assigned proof path(s) have been executed and the results are recorded in a **Proof Artifact**.
 - Any intentional divergence from the original behavior is recorded in the `divergence_log.md`.
-- Supporting tests are merged into `tests_v2/`.
+- Supporting tests are merged into `tests/`.

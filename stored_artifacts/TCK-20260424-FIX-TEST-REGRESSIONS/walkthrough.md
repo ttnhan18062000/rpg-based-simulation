@@ -15,7 +15,7 @@ Restored 100% test stability for the V2 engine.
 ## Verification Results
 
 ### Automated Tests
-- `pytest tests_v2/`
+- `pytest tests/`
 - **Result**: 375 passed, 0 failed.
 
 ```bash

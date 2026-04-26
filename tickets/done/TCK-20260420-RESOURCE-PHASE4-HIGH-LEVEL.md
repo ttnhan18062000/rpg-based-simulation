@@ -1,10 +1,10 @@
-# Revised High-Level Implementation Plan — Next Phase of `src_v2`
+# Revised High-Level Implementation Plan — Next Phase of `src`
 
-This plan assumes the current `src_v2` branch is **close** to build-ready, but not yet ready to freeze blindly.
+This plan assumes the current `src` branch is **close** to build-ready, but not yet ready to freeze blindly.
 
 This is not a new roadmap from zero.
 
-It is the corrected next implementation phase after the current hardening work, where `src_v2` already has:
+It is the corrected next implementation phase after the current hardening work, where `src` already has:
 
 - profile and startup contracts,
 - authoritative state and apply-path structure,
@@ -94,7 +94,7 @@ Before Milestone 1 starts:
 
 Milestone 1 is the transition from repair mode to controlled build mode.
 
-Its purpose is to freeze the repaired `src_v2` substrate so future gameplay implementation does not continue building on moving assumptions.
+Its purpose is to freeze the repaired `src` substrate so future gameplay implementation does not continue building on moving assumptions.
 
 At this point, the engine should already have passed the Resource Truth Closure gate.
 This milestone turns repaired and closed substrate truths into a stable platform instead of letting the team keep reopening substrate arguments during gameplay work.
@@ -138,7 +138,7 @@ It is a stabilization gate.
 
 At the end of this milestone:
 
-- the local `src_v2` semantic baseline is stable,
+- the local `src` semantic baseline is stable,
 - runtime/lifecycle/certification truth contracts are stable,
 - proof bundle conventions are stable,
 - supported concurrency boundaries are explicit,
@@ -147,7 +147,7 @@ At the end of this milestone:
 
 ## Task
 
-- [ ] (checkbox) - [Task 1] - Freeze the repaired semantic baseline contract for `src_v2`
+- [ ] (checkbox) - [Task 1] - Freeze the repaired semantic baseline contract for `src`
 - [ ] (checkbox) - [Task 2] - Freeze runtime signal, runtime status, and lifecycle outcome vocabulary
 - [ ] (checkbox) - [Task 3] - Freeze proof bundle artifact naming and required certification artifact rules
 - [ ] (checkbox) - [Task 4] - Freeze the currently supported concurrency scope and explicitly mark unsupported work kinds
@@ -163,7 +163,7 @@ At the end of this milestone:
 
 ## [Milestone Description]
 
-Milestone 2 is the first official gameplay milestone for `src_v2`.
+Milestone 2 is the first official gameplay milestone for `src`.
 
 Its purpose is to make deterministic **grid movement** the first officially supported RPG-core slice in the new engine.
 
@@ -218,7 +218,7 @@ It is a quiet fork.
 
 At the end of this milestone:
 
-- deterministic grid movement is an officially supported gameplay slice in `src_v2`,
+- deterministic grid movement is an officially supported gameplay slice in `src`,
 - intended original movement behavior is preserved where required,
 - divergences are explicit where intentional,
 - the local path is authoritative,
@@ -231,7 +231,7 @@ At the end of this milestone:
 - [ ] (checkbox) - [Task 1] - Freeze the exact scope of the first supported movement slice
 - [ ] (checkbox) - [Task 2] - Capture original `src` movement behavior through characterization tests or scenario fixtures
 - [ ] (checkbox) - [Task 3] - Define the V2 authoritative state, work contract, and apply contract for movement
-- [ ] (checkbox) - [Task 4] - Implement or finalize the local movement reference path in `src_v2`
+- [ ] (checkbox) - [Task 4] - Implement or finalize the local movement reference path in `src`
 - [ ] (checkbox) - [Task 5] - Implement or finalize the supported concurrent movement path for declared safe scope
 - [ ] (checkbox) - [Task 6] - Integrate movement into replay, runtime visibility, and certification surfaces
 - [ ] (checkbox) - [Task 7] - Add parity, equivalence, lifecycle, and certification tests for movement
@@ -308,7 +308,7 @@ At the end of this milestone:
 
 ## Task
 
-- [ ] (checkbox) - [Task 1] - Define the benchmark and profiling contract for `src_v2`
+- [ ] (checkbox) - [Task 1] - Define the benchmark and profiling contract for `src`
 - [ ] (checkbox) - [Task 2] - Create stable benchmark scenarios for baseline runtime and the movement slice
 - [ ] (checkbox) - [Task 3] - Add per-phase and per-subsystem timing instrumentation
 - [ ] (checkbox) - [Task 4] - Establish baseline TPS and tick-cost measurements by scenario, profile, and hardware class
@@ -372,7 +372,7 @@ This milestone is successful only if it proves that the supported gameplay surfa
 At the end of this milestone:
 
 - a deterministic resource interaction slice is officially supported,
-- the slice is ported into `src_v2` natively,
+- the slice is ported into `src` natively,
 - parity and divergence rules are explicit,
 - runtime/lifecycle/certification behavior are covered,
 - and the engine now supports more than one gameplay slice under the V2 contract while remaining on the old RPG-core path.

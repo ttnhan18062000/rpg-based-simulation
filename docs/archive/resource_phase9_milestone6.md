@@ -77,7 +77,7 @@ Add or consolidate characterization tests and fixtures for preserved Phase 9 beh
 
 #### [Task possible affected files]
 
-- `tests_v2/parity/**`
+- `tests/parity/**`
 - characterization fixtures
 - `docs/engine/phase9_proof_bundle.md`
 
@@ -117,8 +117,8 @@ Build or extend parity tests for the supported preserved strategic/cognitive sub
 
 #### [Task possible affected files]
 
-- `tests_v2/parity/test_strategic_parity.py`
-- `tests_v2/parity/test_cognition_parity.py`
+- `tests/parity/test_strategic_parity.py`
+- `tests/parity/test_cognition_parity.py`
 - parity fixtures
 - divergence notes
 
@@ -156,9 +156,9 @@ Build or extend parity tests for the supported preserved subset of:
 
 #### [Task possible affected files]
 
-- `tests_v2/parity/test_resource_intelligence_parity.py`
-- `tests_v2/parity/test_social_contract_parity.py`
-- `tests_v2/parity/test_progression_parity.py`
+- `tests/parity/test_resource_intelligence_parity.py`
+- `tests/parity/test_social_contract_parity.py`
+- `tests/parity/test_progression_parity.py`
 - parity fixtures
 - divergence notes
 
@@ -282,7 +282,7 @@ Collect and index:
 
 - `docs/engine/phase9_proof_bundle.md`
 - `docs/engine/release_proof/phase9/*`
-- `tests_v2/**`
+- `tests/**`
 
 #### [Task important notes]
 

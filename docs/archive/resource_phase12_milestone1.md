@@ -1,6 +1,6 @@
-Below is the **full detailed implementation plan for Phase 12**, in the same milestone/task structure style as your earlier implementation docs, and aligned with the Phase 12 high-level plan plus the ratification-first sequencing from [resource_phases.md](sandbox:/mnt/data/resource_phases.md) and the support/cutover discipline from [src_v2_principle.md](sandbox:/mnt/data/src_v2_principle.md).
+Below is the **full detailed implementation plan for Phase 12**, in the same milestone/task structure style as your earlier implementation docs, and aligned with the Phase 12 high-level plan plus the ratification-first sequencing from [resource_phases.md](sandbox:/mnt/data/resource_phases.md) and the support/cutover discipline from [src_principle.md](sandbox:/mnt/data/src_principle.md).
 
-# Detailed Implementation Plan — Phase 12 of `src_v2`
+# Detailed Implementation Plan — Phase 12 of `src`
 
 This plan assumes Phase 11 has already produced:
 
@@ -67,7 +67,7 @@ This milestone must complete readiness closure in six areas:
    - supported cutover scope must be separated from unsupported/divergent/retired scope.
 
 3. **Ownership closure**
-   - consumer groups, workflows, and operator surfaces being moved to `src_v2` must be explicitly identified.
+   - consumer groups, workflows, and operator surfaces being moved to `src` must be explicitly identified.
 
 4. **Rollback closure**
    - rollback expectations, fallback behavior, and non-goals must be explicit.

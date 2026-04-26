@@ -14,7 +14,7 @@ Build the smallest correct runtime that obeys the Milestone 1 contract and prove
 - Implement `WorldTime` progression (passive) vs `Readiness` gating (active).
 - Implement singular `ApplyPath` for authoritative mutation.
 - Implement `CheckpointService` for stable state hashing.
-- Pin with deterministic enforcement tests in `tests_v2/`.
+- Pin with deterministic enforcement tests in `tests/`.
 
 ## Out of Scope
 - Scheduler optimization.
@@ -29,7 +29,7 @@ Build the smallest correct runtime that obeys the Milestone 1 contract and prove
 - [x] Entity action allowed only if `Readiness` threshold met.
 - [x] All mutation flows through the `ApplyPath`.
 - [x] Bit-identical checkpoints for same seed/inputs.
-- [x] 100% test pass in `tests_v2/`.
+- [x] 100% test pass in `tests/`.
 
 ## Related Tickets
 - TCK-20260418-RESOURCE-KERNEL-M1 (DONE)
@@ -42,9 +42,9 @@ Build the smallest correct runtime that obeys the Milestone 1 contract and prove
 - `stored_artifacts/TCK-20260418-RESOURCE-KERNEL-M1/`
 
 ## Related Code Areas
-- `src_v2/engine/`
-- `src_v2/core/`
-- `tests_v2/`
+- `src/engine/`
+- `src/core/`
+- `tests/`
 
 ## Assumptions / Open Questions
 - Checkpoint hashing will use canonical JSON serialization of the authoritative dict.
@@ -54,13 +54,13 @@ Build the smallest correct runtime that obeys the Milestone 1 contract and prove
 - Follow the Step 5 strategy: Docs -> Types -> Tests -> Shell (Implementation).
 
 ## Test Summary
-- 20 tests passed in tests_v2/.
+- 20 tests passed in tests/.
 - test_reproducibility confirmed 10/10 identical hashes.
 - test_generation_isolation confirmed immutability.
 
 ## Files Changed
-- src_v2/ (updates)
-- tests_v2/ (new engine tests)
+- src/ (updates)
+- tests/ (new engine tests)
 - docs/engine/ (M2 specs)
 
 ## Completion Summary

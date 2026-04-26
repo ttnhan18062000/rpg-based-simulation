@@ -2,24 +2,24 @@
 
 ## Current Engine State
 
-### Kernel Phases (`src_v2/engine/kernel.py`)
+### Kernel Phases (`src/engine/kernel.py`)
 - Currently implements: `_phase_init`, `_phase_scheduling`, `_phase_collection`, `_phase_resolution`, `_phase_cleanup`, `_phase_advancement`.
 - Also has a non-authoritative `_phase_persistence`.
 - Phase order is strict: 1-6 are authoritative.
 
-### Authoritative State (`src_v2/core/state.py`)
+### Authoritative State (`src/core/state.py`)
 - Fields: `tick`, `seed`, `world_time`, `entities`, `global_resources`, `periodic_due_ticks`, `work_debt`, `rng_checkpoint`.
 - Optimization: Frozen dataclass with slots.
 
-### Apply Path (`src_v2/engine/apply.py`)
+### Apply Path (`src/engine/apply.py`)
 - Singular entry point: `ApplyPath.apply_generation`.
 - Handles list-based dictionary updates with explicit sorting for determinism.
 
-### Checkpointing (`src_v2/engine/checkpoint.py`)
+### Checkpointing (`src/engine/checkpoint.py`)
 - Logic: `CanonicalStateHasher.get_hash`.
 - Correctly isolates authoritative fields but could be more explicitly documented.
 
-### Scheduler (`src_v2/engine/scheduler.py`)
+### Scheduler (`src/engine/scheduler.py`)
 - Order: Critical (Entities) -> Periodic -> Deferred -> Opportunistic.
 - Opportunistic is a placeholder.
 

@@ -56,7 +56,7 @@ At the end of Milestone 2:
 
 ## Task
 
-### [x] (checkbox) - [Task 1] - Audit Phase 7 action/update rows against the current `src_v2` substrate implementation
+### [x] (checkbox) - [Task 1] - Audit Phase 7 action/update rows against the current `src` substrate implementation
 
 #### [Task Description]
 
@@ -64,7 +64,7 @@ Start from evidence, not assumptions.
 
 #### [Task technical implementation]
 
-Review all Phase 7 action/update substrate rows and map them to current `src_v2` implementation points.
+Review all Phase 7 action/update substrate rows and map them to current `src` implementation points.
 
 Identify:
 
@@ -75,9 +75,9 @@ Identify:
 
 #### [Task possible affected files]
 
-- `src_v2/core/**`
-- `src_v2/engine/**`
-- `src_v2/actions/**`
+- `src/core/**`
+- `src/engine/**`
+- `src/actions/**`
 - `docs/engine/replacement_ledger.md`
 - `docs/engine/phase7_backlog.md`
 
@@ -118,9 +118,9 @@ This task should:
 
 #### [Task possible affected files]
 
-- `src_v2/actions/**`
-- `src_v2/core/models/**`
-- `tests_v2/**`
+- `src/actions/**`
+- `src/core/models/**`
+- `tests/**`
 - substrate contract docs
 
 #### [Task important notes]
@@ -160,10 +160,10 @@ This task should:
 
 #### [Task possible affected files]
 
-- `src_v2/core/models/**`
-- `src_v2/engine/**`
-- `src_v2/apply/**`
-- `tests_v2/**`
+- `src/core/models/**`
+- `src/engine/**`
+- `src/apply/**`
+- `tests/**`
 
 #### [Task important notes]
 
@@ -202,9 +202,9 @@ This task should:
 
 #### [Task possible affected files]
 
-- `src_v2/actions/**`
-- `src_v2/core/models/**`
-- `tests_v2/parity/**`
+- `src/actions/**`
+- `src/core/models/**`
+- `tests/parity/**`
 - docs for structured reason/target contract
 
 #### [Task important notes]
@@ -243,10 +243,10 @@ This task should:
 
 #### [Task possible affected files]
 
-- `src_v2/engine/**`
-- `src_v2/ai/**`
-- `src_v2/core/state/**`
-- `tests_v2/**`
+- `src/engine/**`
+- `src/ai/**`
+- `src/core/state/**`
+- `tests/**`
 
 #### [Task important notes]
 
@@ -284,10 +284,10 @@ Add focused tests for:
 
 #### [Task possible affected files]
 
-- `tests_v2/core/test_action_proposal_contract.py`
-- `tests_v2/core/test_typed_update_contract.py`
-- `tests_v2/core/test_reason_target_coercion.py`
-- `tests_v2/core/test_no_worker_direct_mutation.py`
+- `tests/core/test_action_proposal_contract.py`
+- `tests/core/test_typed_update_contract.py`
+- `tests/core/test_reason_target_coercion.py`
+- `tests/core/test_no_worker_direct_mutation.py`
 
 #### [Task implementation comments]
 

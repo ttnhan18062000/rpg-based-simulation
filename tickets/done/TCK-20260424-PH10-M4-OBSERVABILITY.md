@@ -10,7 +10,7 @@ DONE
 Recover legacy logging format, metrics emission, and replay artifact semantics for the V2 engine.
 
 ## Scope
-- [x] Task 1: Audit replay, logging, metrics, and report rows against current `src_v2` operational artifact behavior.
+- [x] Task 1: Audit replay, logging, metrics, and report rows against current `src` operational artifact behavior.
 - [x] Task 2: Recover supported replay and report artifact compatibility semantics.
 - [x] Task 3: Recover supported structured logging and metrics compatibility semantics.
 - [x] Task 4: Add direct compatibility tests for replay, logs, metrics, and reports.

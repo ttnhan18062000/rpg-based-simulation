@@ -1,0 +1,625 @@
+- id: WORLD-001
+  text: '`test_flow_field_basic_navigation`: basic flow-field navigation is preserved'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: WORLD-002
+  text: '`test_flow_field_respects_terrain_cost`: terrain-cost-sensitive navigation
+    is preserved'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: WORLD-003
+  text: '`test_flow_field_smoothing`: flow-field smoothing is preserved'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: WORLD-004
+  text: '`test_flow_field_smoothing_normalization`: smoothing normalization behavior
+    is preserved'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: WORLD-005
+  text: '`test_navigation_uses_flow_field_for_far_town`: far-town navigation uses
+    flow fields'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: WORLD-006
+  text: '`test_navigation_uses_flow_field_for_world_boss`: world-boss navigation uses
+    flow fields'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: WORLD-007
+  text: '`test_road_cost_is_low`: road traversal cost law is preserved'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: WORLD-008
+  text: '`test_prefers_road_over_swamp`: road preference over swamp is preserved'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: WORLD-009
+  text: '`test_each_biome_has_road_network`: biome road-network presence is preserved'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: WORLD-010
+  text: '`test_road_connects_locations`: road connectivity behavior is preserved'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: WORLD-011
+  text: '`test_bridges_placed_over_water`: bridge placement over water is preserved'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: WORLD-012
+  text: '`test_all_four_biomes_have_features`: biome feature presence is preserved'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: WORLD-013
+  text: '`test_difficulty_sets_level_range`: region difficulty sets level range correctly'
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: WORLD-014
+  text: '`test_gold_scales_with_difficulty`: difficulty-linked gold scaling is preserved'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: WORLD-015
+  text: '`test_in_region_returns_difficulty`: region difficulty query logic is preserved'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: WORLD-016
+  text: '`test_difficulty_zones_defined`: difficulty-zone definition is preserved'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: WORLD-017
+  text: '`test_lava_only_at_high_difficulty`: lava/high-difficulty coupling is preserved'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: WORLD-018
+  text: '`test_all_terrains_have_names`: terrain naming coverage is preserved'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: WORLD-019
+  text: '`test_all_terrains_have_race_labels`: terrain race-label coverage is preserved'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: WORLD-020
+  text: '`test_full_bag_aborts_looting`: full-bag looting abort is preserved'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: WORLD-021
+  text: '`test_overweight_aborts_looting`: overweight looting abort is preserved'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: WORLD-022
+  text: '`test_near_weight_limit_penalizes_loot`: near-limit loot penalty is preserved'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: WORLD-023
+  text: World maturity increases on schedule.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: WORLD-024
+  text: Calamity spawn obeys interval and forced-spawn ticks.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: WORLD-025
+  text: Spawned calamity has world-boss identity and role.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: WORLD-026
+  text: Calamity uses legendary stats.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: WORLD-027
+  text: Calamity receives legendary equipment/loot.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: WORLD-028
+  text: Calamity spawn creates bounty quests for heroes.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: WORLD-029
+  text: Calamity aura and regional hazards apply local debuffs/drain.
+  status: verified
+  priority: P0
+  legacy_evidence: 'EnvironmentService handles hazard_level and calamity_intensity scaling.'
+  v2_evidence: 'src_v2/engine/world_dynamics.py'
+  proof_type: parity
+  test_path: 'tests_v2/parity/test_parity_regional_sovereignty.py'
+  divergence_note: null
+  support_boundary: null
+- id: WORLD-060
+  text: Regional hazards drain HP/Readiness based on intensity.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: 'src_v2/engine/world_dynamics.py'
+  proof_type: parity
+  test_path: 'tests_v2/parity/test_parity_regional_sovereignty.py'
+  divergence_note: null
+  support_boundary: null
+- id: WORLD-061
+  text: Weather affects perception, evasion, and movement speed.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: 'src_v2/world/environment.py'
+  proof_type: parity
+  test_path: 'tests_v2/world/test_weather.py'
+  divergence_note: null
+  support_boundary: null
+- id: WORLD-062
+  text: Regions transform their kind based on trauma and calamity thresholds.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: 'src_v2/world/transformation.py'
+  proof_type: parity
+  test_path: 'tests_v2/world/test_transformations.py'
+  divergence_note: null
+  support_boundary: null
+- id: WORLD-030
+  text: Camp reinforcements occur on schedule.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: WORLD-031
+  text: Camp reinforcement level increases when camp is full.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: WORLD-032
+  text: Faction raids spawn on raid interval.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: WORLD-033
+  text: Raid mobs use raid AI state.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: WORLD-034
+  text: Raid mobs do not return home.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: WORLD-035
+  text: Killing world boss grants fame.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: WORLD-036
+  text: Killing world boss grants title.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: WORLD-037
+  text: Bounty completion rewards are applied.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: WORLD-038
+  text: Region contains uses Manhattan distance.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: WORLD-039
+  text: Region copy deep-copies locations.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: WORLD-040
+  text: Location model preserves type, position, and region ID.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: WORLD-041
+  text: Difficulty tier chosen by distance zones.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: WORLD-042
+  text: Boundary distances map to expected tier.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: WORLD-043
+  text: Empty difficulty zones default safely.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: WORLD-044
+  text: Region name selection is deterministic by terrain counter.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: WORLD-045
+  text: Resetting name counters restarts name sequence.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: WORLD-046
+  text: Every terrain has region names.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: WORLD-047
+  text: Every terrain has race label.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: WORLD-048
+  text: Difficulty multipliers exist for all tiers.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: WORLD-049
+  text: Difficulty multipliers scale upward.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: WORLD-050
+  text: All location types have name templates.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: WORLD-051
+  text: 'Expected POI types exist: camp, grove, ruins, dungeon, shrine, boss arena,
+    outpost, watchtower, portal, fishing spot, graveyard, obelisk.'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: WORLD-052
+  text: Voronoi map coverage is near-total.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: WORLD-053
+  text: Region terrain, overlays, details, and town tiles account for map tiles.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: WORLD-054
+  text: Regions border each other.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: WORLD-055
+  text: Every region owns some territory.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: WORLD-056
+  text: '`find_region_at()` returns nearest region.'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: WORLD-057
+  text: Equidistant region lookup returns first region.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: WORLD-058
+  text: Empty region list returns `None`.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: WORLD-059
+  text: Single region always matches.
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null

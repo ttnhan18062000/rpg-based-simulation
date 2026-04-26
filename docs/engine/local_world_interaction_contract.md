@@ -1,6 +1,6 @@
 # Local Environment & World-Interaction Contract (Phase 8)
 
-This document defines the authoritative semantics for environment and building interactions in the `src_v2` engine.
+This document defines the authoritative semantics for environment and building interactions in the `src` engine.
 
 ## 1. Terrain & Spatial Constraints
 ### 1.1 Blocked Movement (WALL)

@@ -32,7 +32,7 @@ Verify that replay-visible authoritative state matches the supported determinist
 - docs/engine/legacy_replacement_ledger.md
 
 ## Related Code Areas
-- \`src_v2/engine/replay_manager.py\`
+- \`src/engine/replay_manager.py\`
 - \`docs/\`
 
 ## Assumptions / Open Questions

@@ -41,4 +41,4 @@ Verify separation between Control and Authority.
 | :--- | :--- | :--- |
 | Signals Contract | [runtime_signals_contract_mb.md](./runtime_signals_contract_mb.md) | The Law |
 | Governor Law | [runtime_signals_contract_mb.md](./runtime_signals_contract_mb.md#5-governor-transition-law) | The Logic |
-| Closure Proof | [test_milestone_b_closure.py](../../tests_v2/governance/test_milestone_b_closure.py) | The Gate |
+| Closure Proof | [test_milestone_b_closure.py](../../tests/governance/test_milestone_b_closure.py) | The Gate |

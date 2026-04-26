@@ -2,11 +2,11 @@
 
 ## [Milestone Description]
 
-Milestone 4 identifies the exact differential between legacy `src` and current `src_v2`.
+Milestone 4 identifies the exact differential between legacy `src` and current `src`.
 
 Its purpose is to turn the two map-inventories into one differential report:
 
-What exactly is missing, partial, or decorative in `src_v2` today?
+What exactly is missing, partial, or decorative in `src` today?
 
 This milestone performs the comparison between the frozen Milestone 2 map and the frozen Milestone 3 map. It records the gaps objectively before any roadmap decisions are made. This requirement follows from the handbook standard that replacement must be evidence-backed and that gaps must be categorized honestly into absolute gaps, maturity gaps, and decorative gaps.
 
@@ -56,7 +56,7 @@ Record every behavior that exists in the old world but has no implementation in 
 
 #### [Task technical implementation]
 
-Compare the maps and identify items where `src_v2` has zero presence.
+Compare the maps and identify items where `src` has zero presence.
 
 This includes:
 
@@ -91,7 +91,7 @@ Record items where code exists but does not satisfy the replacement contract mat
 
 #### [Task technical implementation]
 
-Identify items where `src_v2` code exists but fails on:
+Identify items where `src` code exists but fails on:
 
 - lack of parity proof,
 - lack of lifecycle/runtime truth,

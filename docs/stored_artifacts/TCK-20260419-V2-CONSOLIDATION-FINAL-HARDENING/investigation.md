@@ -2,7 +2,7 @@
 
 ## 1. Divergence: Code vs Contract (M7)
 
-| Contract Requirement (M7 Doc) | Current Implementation (src_v2) | Status |
+| Contract Requirement (M7 Doc) | Current Implementation (src) | Status |
 |---|---|---|
 | `memory_trend_mb_per_tick` | Missing | **DRIFT** |
 | `tick_compute_ms_avg` | Missing | **DRIFT** |

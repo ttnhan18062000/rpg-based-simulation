@@ -7,7 +7,7 @@ Phase 12 Milestone 5: Default-Authority Transition and Phase 13 Readiness Baseli
 DONE
 
 ## Request Summary
-Formalize the transition of project authority to the `src_v2` engine and establish the baseline for legacy code retirement in Phase 13.
+Formalize the transition of project authority to the `src` engine and establish the baseline for legacy code retirement in Phase 13.
 
 ## Scope
 - [x] Task 1: Update `docs/engine/legacy_replacement_ledger.md` to mark Phase 12 items as fully supported and ratified.

@@ -11,7 +11,7 @@ This plan establishes the final **Verification Gate** for Milestone B. It ensure
 
 ### Certification Suite
 
-#### [NEW] [test_milestone_b_closure.py](file:///home/vboxuser/Work/rpg-based-simulation/tests_v2/engine/test_milestone_b_closure.py)
+#### [NEW] [test_milestone_b_closure.py](file:///home/vboxuser/Work/rpg-based-simulation/tests/engine/test_milestone_b_closure.py)
 - Implement `test_milestone_b_operational_gate`:
     - **Step 1: Normal Stabilization**: Stabilize signals in 5 ticks.
     - **Step 2: Sudden Saturation**: Burst workload to verify Peak Truth.
@@ -22,8 +22,8 @@ This plan establishes the final **Verification Gate** for Milestone B. It ensure
 ## Verification Plan
 
 ### Automated Tests
-- `PYTHONPATH=. pytest tests_v2/engine/test_milestone_b_closure.py`
-- Verify 100% pass on all `tests_v2/engine/test_*.py`.
+- `PYTHONPATH=. pytest tests/engine/test_milestone_b_closure.py`
+- Verify 100% pass on all `tests/engine/test_*.py`.
 
 ### Manual Verification
 - Review the `walkthrough.md` logic to ensure all changes match the [Milestone B Law](file:///home/vboxuser/Work/rpg-based-simulation/docs/engine/runtime_signals_contract_mb.md).

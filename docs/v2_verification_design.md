@@ -1,7 +1,7 @@
 # V2 Logic Verification Design
 
 ## Purpose
-The purpose of this design is to establish a rigorous, evidence-based audit of the `src_v2` engine and `tests_v2` proof suite against the logic claims inherited from the original `src` (as documented in `legacy_checklist.md` and `legacy_checklist_marked.md`).
+The purpose of this design is to establish a rigorous, evidence-based audit of the `src` engine and `tests` proof suite against the logic claims inherited from the original `src` (as documented in `legacy_checklist.md` and `legacy_checklist_marked.md`).
 
 ## Core Principles
 1. **Evidence-First**: Every claim of completion (`[x]`) must be backed by specific code locations and test cases.
@@ -19,8 +19,8 @@ A new file at the repository root will serve as the authoritative record of veri
 
 ### 2. Audit Workflow
 For each subsystem:
-- **Step A: Code Mapping**: Grep and static analysis of `src_v2` to identify the implementation of the atomic logic.
-- **Step B: Test Mapping**: Static analysis of `tests_v2` to identify the specific tests that validate the logic.
+- **Step A: Code Mapping**: Grep and static analysis of `src` to identify the implementation of the atomic logic.
+- **Step B: Test Mapping**: Static analysis of `tests` to identify the specific tests that validate the logic.
 - **Step C: Cross-Reference**: Ensure the implementation follows the "Authoritative Mutation Path" and "Deterministic Baseline" requirements.
 - **Step D: Documentation**: Update the ledger with the findings.
 

@@ -1,18 +1,18 @@
-# High-Level Implementation Plan — Phase 6 of `src_v2`
+# High-Level Implementation Plan — Phase 6 of `src`
 
-This plan assumes Phase 5 has materially improved `src_v2` by recovering a bounded resource/town/progression slice and by strengthening runtime truth around supported behavior.
+This plan assumes Phase 5 has materially improved `src` by recovering a bounded resource/town/progression slice and by strengthening runtime truth around supported behavior.
 
 It also assumes Phase 5 did **not** complete full replacement of original `src`.
 
 Phase 6 is therefore not a feature-expansion phase.
 
-It is the phase where `src_v2` must stop operating on implied scope and start operating on an authoritative replacement ledger.
+It is the phase where `src` must stop operating on implied scope and start operating on an authoritative replacement ledger.
 
 The purpose of Phase 6 is:
 
 - close remaining Phase 5 truth gaps that would poison replacement planning,
 - construct one authoritative inventory of the remaining old-`src` replacement surface,
-- construct one authoritative inventory of the current `src_v2` replacement surface,
+- construct one authoritative inventory of the current `src` replacement surface,
 - classify every legacy item as preserved, intentionally divergent, unsupported, or retired,
 - assign every remaining item to a proof path and a future phase,
 - and publish a locked execution baseline for Phases 7 through 10.
@@ -47,7 +47,7 @@ It closes the prior phase honestly so that Phase 6 does not inherit a lie.
 
 ## [Milestone technical implementation]
 
-Create one explicit Phase 6 entry gate that confirms the current `src_v2` branch is stable enough to serve as the baseline for replacement-scope ratification.
+Create one explicit Phase 6 entry gate that confirms the current `src` branch is stable enough to serve as the baseline for replacement-scope ratification.
 
 This milestone must:
 
@@ -67,7 +67,7 @@ This milestone must not:
 
 The trap here is bureaucratic dishonesty.
 
-If Phase 5 is described too broadly at entry, then every later classification decision gets poisoned by fake assumptions about what `src_v2` already supports.
+If Phase 5 is described too broadly at entry, then every later classification decision gets poisoned by fake assumptions about what `src` already supports.
 
 This milestone is successful only if the Phase 6 baseline is narrower, clearer, and more explicit than whatever informal narrative currently exists.
 
@@ -103,7 +103,7 @@ What exactly exists in legacy `src` that could still require replacement, ratifi
 
 This milestone looks only at the legacy side.
 
-It does not judge whether `src_v2` already covers those behaviors.
+It does not judge whether `src` already covers those behaviors.
 It does not classify parity status.
 It does not assign implementation phases.
 
@@ -124,7 +124,7 @@ This milestone must:
 This milestone must not:
 
 - classify items as preserved/divergent/unsupported/retired,
-- decide whether `src_v2` already satisfies the item,
+- decide whether `src` already satisfies the item,
 - or assign future proof or implementation ownership.
 
 ## [Milestone important notes]
@@ -156,17 +156,17 @@ At the end of this milestone:
 
 ---
 
-# [Milestone 3] - Canonical `src_v2` Surface Inventory
+# [Milestone 3] - Canonical `src` Surface Inventory
 
 ## [Milestone Description]
 
-Milestone 3 constructs the authoritative inventory of the current `src_v2` replacement surface.
+Milestone 3 constructs the authoritative inventory of the current `src` replacement surface.
 
 Its purpose is to answer the mirror question:
 
-What does `src_v2` actually implement, prove, expose, and claim today?
+What does `src` actually implement, prove, expose, and claim today?
 
-This milestone looks only at the current `src_v2` side.
+This milestone looks only at the current `src` side.
 
 It does not reopen legacy inventory work.
 It does not classify final replacement status yet.
@@ -176,15 +176,15 @@ It creates the evidence-backed current-state map that the replacement ledger nee
 
 ## [Milestone technical implementation]
 
-Create one canonical `src_v2` inventory that maps current source, tests, support claims, proof artifacts, and declared boundaries into the same comparison unit used by the legacy inventory.
+Create one canonical `src` inventory that maps current source, tests, support claims, proof artifacts, and declared boundaries into the same comparison unit used by the legacy inventory.
 
 This milestone must:
 
-- enumerate implemented `src_v2` slices relevant to replacement,
+- enumerate implemented `src` slices relevant to replacement,
 - attach current source and test evidence for each row,
 - record current support status where already declared,
 - record current proof paths where already present,
-- and flag rows where `src_v2` evidence is ambiguous, partial, or decorative.
+- and flag rows where `src` evidence is ambiguous, partial, or decorative.
 
 This milestone must not:
 
@@ -212,19 +212,19 @@ Those are not the same thing.
 
 At the end of this milestone:
 
-- the current `src_v2` replacement-relevant surface is enumerated,
+- the current `src` replacement-relevant surface is enumerated,
 - every comparable row has current evidence attached,
-- ambiguous or partial `src_v2` coverage is explicitly flagged,
+- ambiguous or partial `src` coverage is explicitly flagged,
 - support and proof claims are distinguished from raw implementation presence,
 - and the project has a current-state map suitable for classification.
 
 ## Task
 
-- [ ] (checkbox) - [Task 1] - Build the canonical `src_v2` row schema aligned to the legacy inventory structure
-- [ ] (checkbox) - [Task 2] - Enumerate current `src_v2` source surfaces relevant to replacement
-- [ ] (checkbox) - [Task 3] - Attach current `src_v2` test and proof evidence to each row where present
+- [ ] (checkbox) - [Task 1] - Build the canonical `src` row schema aligned to the legacy inventory structure
+- [ ] (checkbox) - [Task 2] - Enumerate current `src` source surfaces relevant to replacement
+- [ ] (checkbox) - [Task 3] - Attach current `src` test and proof evidence to each row where present
 - [ ] (checkbox) - [Task 4] - Separate implemented, tested, proof-backed, and officially supported status in the inventory
-- [ ] (checkbox) - [Task 5] - Flag rows where `src_v2` evidence is partial, ambiguous, or not yet support-worthy
+- [ ] (checkbox) - [Task 5] - Flag rows where `src` evidence is partial, ambiguous, or not yet support-worthy
 - [ ] (checkbox) - [Task 6] - Freeze the canonical current-state inventory for use in replacement classification
 
 ---
@@ -235,7 +235,7 @@ At the end of this milestone:
 
 Milestone 4 is where the actual replacement ledger begins to mean something.
 
-Its purpose is to compare the canonical legacy inventory against the canonical `src_v2` inventory and classify every row.
+Its purpose is to compare the canonical legacy inventory against the canonical `src` inventory and classify every row.
 
 This milestone decides status.
 It does not yet design the future proof program in detail.
@@ -256,7 +256,7 @@ Every row must be classified as one of:
 
 This milestone must:
 
-- compare original evidence and current `src_v2` evidence row by row,
+- compare original evidence and current `src` evidence row by row,
 - determine whether preservation is already achieved,
 - determine whether an observed mismatch is intentional and acceptable,
 - determine whether a legacy item is explicitly unsupported,
@@ -290,7 +290,7 @@ At the end of this milestone:
 
 ## Task
 
-- [ ] (checkbox) - [Task 1] - Compare canonical legacy and `src_v2` rows one by one using the frozen inventories
+- [ ] (checkbox) - [Task 1] - Compare canonical legacy and `src` rows one by one using the frozen inventories
 - [ ] (checkbox) - [Task 2] - Classify each row as preserved, intentionally divergent, unsupported, or retired
 - [ ] (checkbox) - [Task 3] - Record concise divergence rationale for every intentionally divergent row
 - [ ] (checkbox) - [Task 4] - Record explicit non-support rationale for every unsupported row

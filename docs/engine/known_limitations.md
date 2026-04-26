@@ -1,6 +1,6 @@
-# `src_v2` Known Limitations
+# `src` Known Limitations
 
-This document records the current technical limitations, unsupported features, and runtime constraints of the `src_v2` engine as of Phase 5. These items are candidates for the Phase 6 replacement ledger and future phase implementation.
+This document records the current technical limitations, unsupported features, and runtime constraints of the `src` engine as of Phase 5. These items are candidates for the Phase 6 replacement ledger and future phase implementation.
 
 ## 1. Gameplay / Mechanics Limitations
 

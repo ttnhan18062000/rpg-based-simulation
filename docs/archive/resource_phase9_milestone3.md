@@ -56,7 +56,7 @@ At the end of Milestone 3:
 
 ## Task
 
-### [ ] (checkbox) - [Task 1] - Audit blocker, lead, and knowledge-continuity rows against current `src_v2` intelligence behavior
+### [ ] (checkbox) - [Task 1] - Audit blocker, lead, and knowledge-continuity rows against current `src` intelligence behavior
 
 #### [Task Description]
 
@@ -64,7 +64,7 @@ Find where long-horizon resource intelligence is already real, partial, or fake.
 
 #### [Task technical implementation]
 
-Review all Phase 9 blocker/lead/knowledge rows and map them to current `src_v2` implementation points.
+Review all Phase 9 blocker/lead/knowledge rows and map them to current `src` implementation points.
 
 Identify:
 
@@ -76,9 +76,9 @@ Identify:
 
 #### [Task possible affected files]
 
-- `src_v2/strategic/**`
-- `src_v2/systems/strategic/**`
-- `src_v2/core/strategic/**`
+- `src/strategic/**`
+- `src/systems/strategic/**`
+- `src/core/strategic/**`
 - `docs/engine/replacement_ledger.md`
 
 #### [Task important notes]
@@ -116,10 +116,10 @@ Implement or refine supported blocker behavior so actors can:
 
 #### [Task possible affected files]
 
-- `src_v2/systems/strategic/**`
-- `src_v2/core/strategic/**`
-- `tests_v2/contract/test_resource_intelligence_contract.py`
-- `tests_v2/strategy/**`
+- `src/systems/strategic/**`
+- `src/core/strategic/**`
+- `tests/contract/test_resource_intelligence_contract.py`
+- `tests/strategy/**`
 
 #### [Task important notes]
 
@@ -157,10 +157,10 @@ Implement or refine supported lead semantics so actors can:
 
 #### [Task possible affected files]
 
-- `src_v2/strategic/**`
-- `src_v2/core/strategic/**`
-- `tests_v2/strategy/**`
-- `tests_v2/integration/strategy/**`
+- `src/strategic/**`
+- `src/core/strategic/**`
+- `tests/strategy/**`
+- `tests/integration/strategy/**`
 
 #### [Task important notes]
 
@@ -197,9 +197,9 @@ Implement or refine supported uncertainty semantics, including where preserved:
 
 #### [Task possible affected files]
 
-- `src_v2/strategic/**`
-- `src_v2/core/strategic/**`
-- `tests_v2/integration/strategy/**`
+- `src/strategic/**`
+- `src/core/strategic/**`
+- `tests/integration/strategy/**`
 - uncertainty docs
 
 #### [Task important notes]
@@ -239,9 +239,9 @@ Add focused tests for:
 
 #### [Task possible affected files]
 
-- `tests_v2/strategy/**`
-- `tests_v2/integration/strategy/**`
-- `tests_v2/contract/test_resource_intelligence_contract.py`
+- `tests/strategy/**`
+- `tests/integration/strategy/**`
+- `tests/contract/test_resource_intelligence_contract.py`
 
 #### [Task important notes]
 

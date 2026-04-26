@@ -1,9 +1,9 @@
 import json
 import logging
-from src_v2.certification.harness import CertificationHarness
-from src_v2.certification.scenarios import get_scenario_expectations, PressureInjector
-from src_v2.config.profiles import RuntimeProfile
-from src_v2.core.state import AuthoritativeState
+from src.certification.harness import CertificationHarness
+from src.certification.scenarios import get_scenario_expectations, PressureInjector
+from src.config.profiles import RuntimeProfile
+from src.core.state import AuthoritativeState
 
 logging.basicConfig(level=logging.INFO)
 

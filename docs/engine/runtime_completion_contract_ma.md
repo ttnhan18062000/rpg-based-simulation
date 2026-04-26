@@ -74,11 +74,11 @@ The `CanonicalStateHasher` defines the proof of integrity.
 ## 10. Verification Status
 This contract is **FROZEN** for Phase 4 Milestone 1 and verified by the following:
 - **Test Matrix**: `docs/engine/ma_test_matrix.md`
-- **Closure Guard**: `tests_v2/engine/test_milestone_a_closure.py`
-- **Integrity Guard**: `tests_v2/engine/test_substrate_freeze_m1.py` (New for Phase 4)
+- **Closure Guard**: `tests/engine/test_milestone_a_closure.py`
+- **Integrity Guard**: `tests/engine/test_substrate_freeze_m1.py` (New for Phase 4)
 
 ## 11. Completion Confirmation
-The `src_v2` substrate is formally frozen for gameplay attachment. Any divergence from this baseline must be logged in `docs/engine/divergence_log_m2.md`.
+The `src` substrate is formally frozen for gameplay attachment. Any divergence from this baseline must be logged in `docs/engine/divergence_log_m2.md`.
 
 **Status: FROZEN (PHASE 4 MILESTONE 1)**
 **Date: 2026-04-20**

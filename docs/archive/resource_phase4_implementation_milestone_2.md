@@ -2,7 +2,7 @@
 
 ## [Milestone Description]
 
-Milestone 2 is the first official gameplay milestone for `src_v2`.
+Milestone 2 is the first official gameplay milestone for `src`.
 
 Its purpose is to make deterministic **grid movement** the first officially supported RPG-core slice in the new engine.
 
@@ -174,9 +174,9 @@ Do not rewrite movement from memory.
 
 #### [Task implement comments]
 
-- Use `tests_v2/parity/movement_oracle/capture_src_movement_oracle.py` to generate [results.json](file:///home/vboxuser/Work/rpg-based-simulation/tests_v2/parity/movement_oracle/results.json).
+- Use `tests/parity/movement_oracle/capture_src_movement_oracle.py` to generate [results.json](file:///home/vboxuser/Work/rpg-based-simulation/tests/parity/movement_oracle/results.json).
 - Captured Success, Blocked Terrain, Occupied Tile, Actor Dead, and Double Claim scenarios.
-- Identified that `Actor Dead` scenario in `src` returns `False` but doesn't set a rejection reason; this will be hardened in `src_v2`.
+- Identified that `Actor Dead` scenario in `src` returns `False` but doesn't set a rejection reason; this will be hardened in `src`.
 
 #### [Task acceptance criteria]
 
@@ -188,7 +188,7 @@ Original movement behavior is captured well enough to support parity review duri
 
 #### [Task Description]
 
-Map movement into native `src_v2` contract terms.
+Map movement into native `src` contract terms.
 
 #### [Task technical implementation]
 
@@ -205,9 +205,9 @@ Ensure this contract preserves tile/grid semantics rather than drifting into gen
 
 #### [Task possible affected files]
 
-- `src_v2/core/state.py`
-- `src_v2/core/work.py`
-- `src_v2/core/updates.py`
+- `src/core/state.py`
+- `src/core/work.py`
+- `src/core/updates.py`
 - movement contract docs
 
 #### [Task important notes]
@@ -226,18 +226,18 @@ Port behavior into V2 contracts.
 
 #### [Task implement comments]
 
-- Created `src_v2/core/enums.py` with `Direction` and `MovementIntention`.
-- Updated `EntityUpdate` in `src_v2/core/updates.py` to include `moved_this_tick` and `new_position` (tuple).
+- Created `src/core/enums.py` with `Direction` and `MovementIntention`.
+- Updated `EntityUpdate` in `src/core/updates.py` to include `moved_this_tick` and `new_position` (tuple).
 - Added `movement_count` to `PressureSignals` and `AuthoritativeState` for throughput tracking.
 - Mapping: `MovementSystem` in `COLLECTION` phase generates `EntityUpdate`, `ApplyPath` in `RESOLUTION` phase commits it.
 
 #### [Task acceptance criteria]
 
-Movement is fully expressed in native `src_v2` contract terms.
+Movement is fully expressed in native `src` contract terms.
 
 ---
 
-### [x] (checkbox) - [Task 4] - Implement or finalize the local movement reference path in `src_v2`
+### [x] (checkbox) - [Task 4] - Implement or finalize the local movement reference path in `src`
 
 #### [Task Description]
 
@@ -259,7 +259,7 @@ Ensure this path is the reference used for parity and equivalence proof.
 #### [Task possible affected files]
 
 - movement execution modules
-- `src_v2/engine/kernel.py`
+- `src/engine/kernel.py`
 - local movement tests
 
 #### [Task important notes]
@@ -276,7 +276,7 @@ Concurrent movement cannot define movement semantics.
 - [x] Outputs are apply-path compatible
 - [x] Local path is tested directly
 
-**Implementation**: [movement.py](file:///home/vboxuser/Work/rpg-based-simulation/src_v2/engine/movement.py) and [domain_logic.py](file:///home/vboxuser/Work/rpg-based-simulation/src_v2/engine/domain_logic.py).
+**Implementation**: [movement.py](file:///home/vboxuser/Work/rpg-based-simulation/src/engine/movement.py) and [domain_logic.py](file:///home/vboxuser/Work/rpg-based-simulation/src/engine/domain_logic.py).
 
 #### [Task acceptance criteria]
 
@@ -304,7 +304,7 @@ Keep support scope narrow and explicit.
 
 #### [Task possible affected files]
 
-- `src_v2/engine/worker_manager.py`
+- `src/engine/worker_manager.py`
 - movement worker modules
 - packet/result validation tests
 - concurrency docs
@@ -323,7 +323,7 @@ Movement concurrency is only valid where already declared safe.
 - [x] Concurrent movement is tested against local semantics
 - [x] Concurrent movement does not weaken tile/grid semantics
 
-**Implementation**: [worker_logic.py](file:///home/vboxuser/Work/rpg-based-simulation/src_v2/engine/worker_logic.py) and [executor.py](file:///home/vboxuser/Work/rpg-based-simulation/src_v2/engine/executor.py).
+**Implementation**: [worker_logic.py](file:///home/vboxuser/Work/rpg-based-simulation/src/engine/worker_logic.py) and [executor.py](file:///home/vboxuser/Work/rpg-based-simulation/src/engine/executor.py).
 
 #### [Task acceptance criteria]
 
@@ -368,7 +368,7 @@ If it is officially supported, it must be visible to the truth surfaces.
 - [x] No unnecessary telemetry clutter was introduced
 - [x] Visibility remains bounded
 
-**Implementation**: [governance.py](file:///home/vboxuser/Work/rpg-based-simulation/src_v2/core/governance.py) (added `movement_count`) and [kernel.py](file:///home/vboxuser/Work/rpg-based-simulation/src_v2/engine/kernel.py).
+**Implementation**: [governance.py](file:///home/vboxuser/Work/rpg-based-simulation/src/core/governance.py) (added `movement_count`) and [kernel.py](file:///home/vboxuser/Work/rpg-based-simulation/src/engine/kernel.py).
 
 #### [Task acceptance criteria]
 
@@ -414,7 +414,7 @@ It is done because it is proven.
 - [x] Certification scenarios exist
 - [x] Tile/grid semantics are directly pinned by tests
 
-**Implementation**: [verify_v2_movement.py](file:///home/vboxuser/Work/rpg-based-simulation/tests_v2/parity/movement_oracle/verify_v2_movement.py).
+**Implementation**: [verify_v2_movement.py](file:///home/vboxuser/Work/rpg-based-simulation/tests/parity/movement_oracle/verify_v2_movement.py).
 
 #### [Task acceptance criteria]
 

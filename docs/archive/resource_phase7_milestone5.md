@@ -76,10 +76,10 @@ Review:
 
 #### [Task possible affected files]
 
-- `src_v2/world/**`
-- `src_v2/engine/**`
-- `src_v2/config/**`
-- `tests_v2/**`
+- `src/world/**`
+- `src/engine/**`
+- `src/config/**`
+- `tests/**`
 - `docs/engine/replacement_ledger.md`
 
 #### [Task important notes]
@@ -119,9 +119,9 @@ This task should:
 
 #### [Task possible affected files]
 
-- `src_v2/world/**`
-- `src_v2/config/**`
-- `src_v2/core/state/**`
+- `src/world/**`
+- `src/config/**`
+- `src/core/state/**`
 - determinism docs
 
 #### [Task important notes]
@@ -160,8 +160,8 @@ This task should make clear:
 
 #### [Task possible affected files]
 
-- `src_v2/engine/**`
-- `tests_v2/engine/test_engine_phase_order.py`
+- `src/engine/**`
+- `tests/engine/test_engine_phase_order.py`
 - engine contract docs
 
 #### [Task important notes]
@@ -201,8 +201,8 @@ This task should include:
 
 #### [Task possible affected files]
 
-- `src_v2/engine/**`
-- `tests_v2/engine/test_subsystem_tick_order.py`
+- `src/engine/**`
+- `tests/engine/test_subsystem_tick_order.py`
 - tick-integrity docs
 
 #### [Task important notes]
@@ -241,10 +241,10 @@ Add focused tests for:
 
 #### [Task possible affected files]
 
-- `tests_v2/world/test_world_generation_determinism.py`
-- `tests_v2/world/test_entity_init_determinism.py`
-- `tests_v2/engine/test_engine_phase_order.py`
-- `tests_v2/engine/test_subsystem_tick_order.py`
+- `tests/world/test_world_generation_determinism.py`
+- `tests/world/test_entity_init_determinism.py`
+- `tests/engine/test_engine_phase_order.py`
+- `tests/engine/test_subsystem_tick_order.py`
 
 #### [Task important notes]
 

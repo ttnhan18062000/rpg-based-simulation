@@ -24,7 +24,7 @@ Create one integrated old-vs-new proof layer for the supported progression loop.
 
 This milestone must:
 
-- define equivalent supported scenarios in original `src` and `src_v2`,
+- define equivalent supported scenarios in original `src` and `src`,
 - compare authoritative outcomes,
 - identify mismatches,
 - classify accepted divergences,
@@ -100,7 +100,7 @@ The integrated parity scope is narrow, explicit, and aligned with the actual sup
 
 #### [Task Description]
 
-Create comparable scenarios for original `src` and `src_v2`.
+Create comparable scenarios for original `src` and `src`.
 
 #### [Task technical implementation]
 
@@ -117,7 +117,7 @@ Make fixtures deterministic and reusable.
 #### [Task possible affected files]
 
 - parity fixture modules
-- `tests_v2/parity/test_progression_loop_parity.py`
+- `tests/parity/test_progression_loop_parity.py`
 - old-src scenario capture helpers
 
 #### [Task important notes]

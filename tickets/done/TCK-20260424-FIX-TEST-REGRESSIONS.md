@@ -1,13 +1,13 @@
 # TCK-20260424-FIX-TEST-REGRESSIONS
 
 ## Title
-Fix Test Regressions in tests_v2/
+Fix Test Regressions in tests/
 
 ## Status
 DONE
 
 ## Request Summary
-Fix 4 failed test cases in `tests_v2/` identified after Phase 9 closure.
+Fix 4 failed test cases in `tests/` identified after Phase 9 closure.
 
 ## Scope
 - Fix `TacticalDecisionSystem.evaluate` AttributeError in `test_tactical_parity.py`.
@@ -18,7 +18,7 @@ Fix 4 failed test cases in `tests_v2/` identified after Phase 9 closure.
 - Major architectural changes unless required by the fix.
 
 ## Acceptance Criteria
-- [x] `pytest tests_v2/` passes 100%.
+- [x] `pytest tests/` passes 100%.
 
 ## Related Tickets
 - None
@@ -30,10 +30,10 @@ Fix 4 failed test cases in `tests_v2/` identified after Phase 9 closure.
 - None
 
 ## Related Code Areas
-- `src_v2/systems/tactical.py`
-- `tests_v2/parity/test_tactical_parity.py`
-- `tests_v2/parity/test_oa_parity.py`
-- `tests_v2/parity/test_movement_parity.py`
+- `src/systems/tactical.py`
+- `tests/parity/test_tactical_parity.py`
+- `tests/parity/test_oa_parity.py`
+- `tests/parity/test_movement_parity.py`
 
 ## Assumptions / Open Questions
 - The `TacticalDecisionSystem` API changed during Phase 8/9 development and tests weren't updated.
@@ -45,13 +45,13 @@ Fix 4 failed test cases in `tests_v2/` identified after Phase 9 closure.
 - Fixed double-damage bug in `ApplyPath` where both `hp_delta` and `damage_taken` were being subtracted.
 
 ## Test Summary
-- `pytest tests_v2/` passed 100% (375 tests).
+- `pytest tests/` passed 100% (375 tests).
 - Verified OA parity damage (12 points).
 - Verified tactical selection and retreat thresholds.
 - Verified blocked terrain enforcement.
 
 ## Files Changed
-- `src_v2/engine/legality.py`
-- `src_v2/engine/movement.py`
-- `src_v2/engine/apply.py`
-- `tests_v2/parity/test_tactical_parity.py`
+- `src/engine/legality.py`
+- `src/engine/movement.py`
+- `src/engine/apply.py`
+- `tests/parity/test_tactical_parity.py`
