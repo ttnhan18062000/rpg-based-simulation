@@ -50,16 +50,51 @@ class ArenaInjector:
         generator = EntityGenerator(state.seed)
         new_entities = dict(state.entities)
         
+        from src.core.strategic import ContractState, ContractKind
+        
         # 1. Spawn Team A (Heroes) at Western boundary
+        hero_leader_id = None
         for i in range(team_size):
             hero = generator.spawn_hero(pos=(2.0, float(5 + i * 2)), state=state)
-            # Add to state immediately to ensure next ID is correct
+            if i == 0:
+                hero_leader_id = hero.id
+            elif hero_leader_id:
+                # Add contract with leader
+                contract = ContractState(
+                    id=f"team_a_contract_{hero.id}",
+                    kind=ContractKind.PROTECTION,
+                    source_id=hero_leader_id,
+                    target_id=hero.id,
+                    active=True
+                )
+                hero = replace(hero, strategic=replace(hero.strategic, contracts={contract.id: contract}))
+                # Update leader's state too
+                leader = new_entities[hero_leader_id]
+                new_entities[hero_leader_id] = replace(leader, strategic=replace(leader.strategic, contracts={**leader.strategic.contracts, contract.id: contract}))
+            
             new_entities[hero.id] = hero
             state = replace(state, entities=new_entities)
             
         # 2. Spawn Team B (Monsters) at Eastern boundary
+        monster_leader_id = None
         for i in range(team_size):
             monster = generator.spawn_monster(pos=(18.0, float(5 + i * 2)), state=state)
+            if i == 0:
+                monster_leader_id = monster.id
+            elif monster_leader_id:
+                # Add contract with leader
+                contract = ContractState(
+                    id=f"team_b_contract_{monster.id}",
+                    kind=ContractKind.PROTECTION,
+                    source_id=monster_leader_id,
+                    target_id=monster.id,
+                    active=True
+                )
+                monster = replace(monster, strategic=replace(monster.strategic, contracts={contract.id: contract}))
+                # Update leader's state too
+                leader = new_entities[monster_leader_id]
+                new_entities[monster_leader_id] = replace(leader, strategic=replace(leader.strategic, contracts={**leader.strategic.contracts, contract.id: contract}))
+                
             new_entities[monster.id] = monster
             state = replace(state, entities=new_entities)
             

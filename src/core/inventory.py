@@ -34,15 +34,33 @@ class InventoryService:
             return False
             
         # 2. Check Slots
-        existing_stack = next((s for s in inventory.items if (s.item_id if hasattr(s, "item_id") else s) == item_id), None)
-        if existing_stack:
-            # If it can stack, it doesn't take a new slot (assuming we don't exceed stack_size)
-            # For simplicity in M1, we assume infinite stacking within a slot or handling split stacks
-            # In V2, we should probably check stack_size
-            pass
-        else:
+        existing_stack = next((s for s in inventory.items if s.item_id == item_id), None)
+        if not existing_stack:
             if len(inventory.items) >= inventory.max_slots:
                 return False
+                
+        return True
+
+    @staticmethod
+    def can_add_items(inventory: InventoryComponent, item_stacks: List[ItemStack]) -> bool:
+        """Check if a list of item stacks can be added without exceeding slots or weight."""
+        temp_items = list(inventory.items)
+        total_weight = InventoryService.calculate_total_weight(inventory)
+        
+        for stack in item_stacks:
+            defn = ItemRegistry.get(stack.item_id)
+            if not defn:
+                return False # Law: Unknown items cannot be added
+                
+            total_weight += defn.weight * stack.quantity
+            if total_weight > inventory.max_weight:
+                return False
+                
+            existing = next((s for s in temp_items if s.item_id == stack.item_id), None)
+            if not existing:
+                if len(temp_items) >= inventory.max_slots:
+                    return False
+                temp_items.append(stack)
                 
         return True
 

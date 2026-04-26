@@ -42,28 +42,18 @@ class HarvestSystem:
             required = entity.properties.get("harvest_duration", 10.0)
             
             if new_progress >= required:
-                # COMPLETION
-                yield_item = node.yields_item
-                    
+                # COMPLETION (Proposed intent for refinement)
+                from src.core.updates import ResourceTransferIntent
                 entity_updates[entity.id] = EntityUpdate(
                     entity_id=entity.id,
-                    inventory=InventoryUpdate(items_add=[ItemStack(yield_item, 1)]),
-                    interaction=InteractionUpdate(reset=True)
+                    interaction=InteractionUpdate(reset=True),
+                    resource_transfers=[ResourceTransferIntent(
+                        source_id=node_id,
+                        source_kind="NODE",
+                        items_add=[ItemStack(item_id=node.yields_item, quantity=1)],
+                        transfer_kind="HARVEST"
+                    )]
                 )
-                
-                # Deplete node
-                new_charges = node.remaining_charges - 1
-                node_upd = ResourceNodeUpdate(
-                    node_id=node_id,
-                    charges_delta=-1
-                )
-                if new_charges <= 0:
-                    node_upd = ResourceNodeUpdate(
-                        node_id=node_id,
-                        charges_delta=-1,
-                        cooldown_set=node.respawn_cooldown
-                    )
-                node_updates[node_id] = node_upd
             else:
                 entity_updates[entity.id] = EntityUpdate(
                     entity_id=entity.id,

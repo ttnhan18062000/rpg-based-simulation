@@ -1,7 +1,7 @@
 # Consolidated Certification Report
 
-**Last Run ID**: `1bd778be-0432-40ee-a8e3-d4298b1b421a`
-**Commit SHA**: `f558a7a96ff00fabac119539ea58280e7075db89`
+**Last Run ID**: `17ef6c4d-1794-43a9-a28d-1c1474c8f2e2`
+**Commit SHA**: `6cd189a6add2f169d15838f7f4de5598131965e1`
 
 ## Scenario Summary
 
@@ -22,7 +22,7 @@
 ## Latest Run Detail
 
 # Certification Report: RAM_PRESSURE
-**Commit SHA**: `f558a7a96ff00fabac119539ea58280e7075db89`
+**Commit SHA**: `6cd189a6add2f169d15838f7f4de5598131965e1`
 **Status**: ❌ **FAIL**
 **Allowed Failure Observed**: `False`
 
@@ -31,14 +31,14 @@
 - **Hardware Class**: `CLASS_B`
 - **Scenario**: `RAM_PRESSURE`
 - **Seed**: `42`
-- **Peak RAM (RSS)**: `151.4 MB`
+- **Peak RAM (RSS)**: `142.4 MB`
 - **Total CPU Time**: `0.001 sec`
 
 ## 2. Resource Conformance Evidence
 | Tick | Mode | RAM (MB) | Compute (ms) | Worker % | Queue % |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| 5 | CONSTRAINED | 151.4 | 0.6 | 0.00 | 0.00 |
-| 10 | DEGRADED | 151.4 | 0.3 | 0.00 | 0.00 |
+| 5 | CONSTRAINED | 142.4 | 0.5 | 0.00 | 0.00 |
+| 10 | DEGRADED | 142.4 | 0.6 | 0.00 | 0.00 |
 
 ## 3. Semantic Integrity Proof (Milestone D Law)
 - **Baseline Hash**: `fa09d0ba0918226006101020e0bc66d5239f183dd3a008f94f6b8d231d9dcf1f`

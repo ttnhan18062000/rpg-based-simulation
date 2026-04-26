@@ -53,12 +53,16 @@ def test_building_sabotage():
 def test_evolution_trigger():
     # Setup state with entity near threshold
     entity = EntityState(id=3, kind="GOBLIN", position=(0,0),
-                         identity=IdentityComponent(evolution_points=950))
+                         identity=IdentityComponent(evolution_level=9, evolution_points=90))
     state = AuthoritativeState(tick=1, seed=42, entities={3: entity})
     
-    # Propose 60 points delta
+    # XP required for level 9 -> 10 is 100 * (9^1.5) = 2700
+    # So we need a much larger delta if we start at 90.
+    # Actually, let's just set points near the requirement.
+    from src.progression.leveling import LevelingService
+    req = LevelingService.get_xp_required(9)
     raw_update = StateUpdate(entity_updates={3: EntityUpdate(entity_id=3, 
-        identity=IdentityUpdate(evolution_points_delta=60))})
+        identity=IdentityUpdate(evolution_points_delta=req - 80))})
     
     # Refine
     refined = AuthoritativeApplyPipeline.refine(state, raw_update)
@@ -66,7 +70,7 @@ def test_evolution_trigger():
     # Verify evolution
     ent_upd = refined.entity_updates[3]
     assert ent_upd.kind_set == "GOBLIN_WARRIOR"
-    assert ent_upd.identity.evolution_level_set == 2
-    # Points delta should be 60 (proposed) - 1000 (consumed) = -940
-    # So new state points will be 950 - 940 = 10
-    assert ent_upd.identity.evolution_points_delta == -940
+    assert ent_upd.identity.evolution_level_set == 10
+    # Points consumed should be req. 
+    # Delta should be (req - 80) - req = -80
+    assert ent_upd.identity.evolution_points_delta == -80

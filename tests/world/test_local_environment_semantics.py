@@ -11,6 +11,7 @@ def create_mock_entity(eid, faction, pos=(10, 10), hp=100):
         position=pos,
         identity=IdentityComponent(faction=faction),
         combat=CombatComponent(hp=hp, max_hp=100, alive=True),
+        readiness=100.0,
         task=TaskComponent()
     )
 

@@ -63,4 +63,4 @@ def test_partial_rejection_occupancy_vs_readiness(base_state):
     
     res_2 = refined_update.entity_updates[2]
     assert res_2.new_position is None # Rejected
-    assert res_2.readiness_delta == 50.0 # Preserved
+    assert res_2.readiness_delta == 60.0 # 50.0 proposed + 10.0 global recovery

@@ -2,6 +2,7 @@ import pytest
 from dataclasses import replace
 from src.core.state import AuthoritativeState, EquipSlot
 from src.core.updates import EntityUpdate, IdentityUpdate, StateUpdate
+from src.engine.pipeline import AuthoritativeApplyPipeline
 from src.engine.apply import ApplyPath
 from src.core.builder import V2EntityBuilder
 from src.progression.leveling import LevelingService
@@ -20,7 +21,8 @@ def test_goblin_evolution():
     state = AuthoritativeState(tick=0, seed=1, entities={1: entity})
     state_upd = StateUpdate(entity_updates={1: update})
     
-    new_state = ApplyPath.apply_generation(state, state_upd)
+    refined = AuthoritativeApplyPipeline.refine(state, state_upd)
+    new_state = ApplyPath.apply_generation(state, refined)
     new_entity = new_state.entities[1]
     
     assert new_entity.kind == "goblin_1"
@@ -41,7 +43,8 @@ def test_no_evolution_before_threshold():
     state = AuthoritativeState(tick=0, seed=1, entities={1: entity})
     state_upd = StateUpdate(entity_updates={1: update})
     
-    new_state = ApplyPath.apply_generation(state, state_upd)
+    refined = AuthoritativeApplyPipeline.refine(state, state_upd)
+    new_state = ApplyPath.apply_generation(state, refined)
     new_entity = new_state.entities[1]
     
     assert new_entity.kind == "goblin_0"

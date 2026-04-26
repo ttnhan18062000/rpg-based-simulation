@@ -33,7 +33,13 @@ class ApplyPath:
         from src.world.regional_sovereignty import RegionalSovereigntyService
         
         new_regions, new_scars = RegionalConsequenceService.process_recovery(prior_state)
-        current_corpses = dict(prior_state.corpses)
+        
+        # Phase 9: Corpse Decay
+        current_corpses = {}
+        for c_id, corpse in prior_state.corpses.items():
+            if prior_state.tick < corpse.decay_tick:
+                current_corpses[c_id] = corpse
+        
         new_ground_items = dict(prior_state.ground_items)
         
         # Phase 16: Splash Damage Resolution (Pre-loop)
@@ -79,15 +85,6 @@ class ApplyPath:
             new_hp = max(0, entity.combat.hp - hazard_damage - starvation_damage - extra_damage.get(e_id, 0))
             new_combat = replace(entity.combat, hp=new_hp)
             
-            # Phase 24: Regional Sovereignty Debuffs (CONQUERED_DEBUFF)
-            if entity.identity.role == EntityRole.HERO and region and region.owner_faction_id == Faction.MONSTER_HORDE:
-                from src.world.regional_sovereignty import RegionalSovereigntyService
-                new_combat = replace(new_combat, 
-                    atk=int(new_combat.atk * RegionalSovereigntyService.CONQUERED_ATK_DEF_MOD),
-                    def_stat=int(new_combat.def_stat * RegionalSovereigntyService.CONQUERED_ATK_DEF_MOD),
-                    speed=int(new_combat.speed * RegionalSovereigntyService.CONQUERED_SPD_MOD)
-                )
-            
             # PH5 M2: Boredom Decay
             BOREDOM_DECAY = 0.05
             decayed_boredom = {}
@@ -98,18 +95,13 @@ class ApplyPath:
             new_strategic = replace(entity.strategic, boredom=decayed_boredom)
 
             # Milestone 5 Law: Passive Advancement (Readiness gain)
-            # Applied AFTER action costs to ensure gain during active ticks.
+            # Global recovery (+10.0) is now provided by the AuthoritativeApplyPipeline.
             readiness_after_upd = entity.readiness
             ent_upd = update.entity_updates.get(e_id)
             if ent_upd:
                 readiness_after_upd += ent_upd.readiness_delta
             
-            # Phase 22: Exhaustion Penalty (50% slower readiness gain)
-            passive_gain = 10.0
-            if entity.biological.sleep_debt > 80.0:
-                passive_gain *= 0.5
-                
-            final_readiness = min(100.0, readiness_after_upd + passive_gain)
+            final_readiness = min(100.0, readiness_after_upd)
 
             entity = replace(entity, 
                 biological=new_biological, 
@@ -128,7 +120,6 @@ class ApplyPath:
                 # PH6 M2: Corpse Spawning & Regional Trauma
                 was_alive = prior_state.entities[e_id].combat.alive
                 is_now_dead = was_alive and not final_entity.combat.alive
-                
                 if is_now_dead:
                     from src.core.state import CorpseState
                     from src.engine.legality import LegalityServiceV2
@@ -148,20 +139,7 @@ class ApplyPath:
             else:
                 new_entities[e_id] = replace(entity, readiness=final_readiness)
         
-        taxation_upd = RegionalSovereigntyService.process_taxation(prior_state)
-        
-        # Merge Taxation into new_entities and global resources
-        for e_id, ent_upd in taxation_upd.entity_updates.items():
-            if e_id in new_entities:
-                e = new_entities[e_id]
-                if ent_upd.inventory:
-                    from src.core.inventory import InventoryService
-                    new_inv = InventoryService.apply_update(e.inventory, ent_upd.inventory)
-                    new_entities[e_id] = replace(e, inventory=new_inv)
-        
         new_resources = dict(prior_state.global_resources)
-        for res_key, delta in taxation_upd.resource_updates.items():
-            new_resources[res_key] = new_resources.get(res_key, 0.0) + delta
                 
         # Phase 11: Authoritative Addition of Entities
         for e in update.entities_add:
@@ -232,9 +210,7 @@ class ApplyPath:
             delta = update.resource_updates[r_key]
             new_resources[r_key] = new_resources.get(r_key, 0.0) + delta
         
-        # Phase 24: Merge Taxation resources
-        for r_key, delta in taxation_upd.resource_updates.items():
-            new_resources[r_key] = new_resources.get(r_key, 0.0) + delta
+        # Phase 24: Merge resources
             
         new_periodic = dict(prior_state.periodic_due_ticks)
         sorted_periodic_keys = sorted(update.periodic_updates.keys())
@@ -308,7 +284,7 @@ class ApplyPath:
             chests=new_chests,
             home_storage=new_storage
         )
-
+        
         # Phase 11: Local Scars authoritative updates
         final_scars = dict(new_scars)
         for scar in update.scars_add_or_update:
@@ -317,7 +293,6 @@ class ApplyPath:
             final_scars.pop(scar_id, None)
 
         new_state = replace(new_state, local_scars=final_scars)
-        
         return new_state
 
     @staticmethod
@@ -487,14 +462,14 @@ class ApplyPath:
             new_max_hp = entity.combat.max_hp + update.combat.max_hp_delta
             new_hp = max(0, min(new_max_hp, entity.combat.hp + update.combat.hp_delta))
             is_alive = update.combat.alive_set if update.combat.alive_set is not None else (new_hp > 0)
-            from src.core.state import CombatComponent
-            new_combat = CombatComponent(
-                hp=new_hp, 
+            
+            new_combat = replace(
+                entity.combat,
+                hp=new_hp,
                 max_hp=new_max_hp,
-                atk=entity.combat.atk + update.combat.atk_delta, 
-                def_stat=entity.combat.def_stat + update.combat.def_delta,
-                range=entity.combat.range,
-                evasion=entity.combat.evasion, 
+                atk=int(entity.combat.atk + update.combat.atk_delta),
+                def_stat=int(entity.combat.def_stat + update.combat.def_delta),
+                speed=int(max(1, entity.combat.speed + update.combat.speed_delta)),
                 alive=is_alive
             )
 
@@ -505,6 +480,7 @@ class ApplyPath:
                 target=update.navigation.target_set if update.navigation.target_set is not None else entity.navigation.target,
                 path=update.navigation.path_set if update.navigation.path_set is not None else entity.navigation.path,
                 moved_recently=update.navigation.moved_recently_set if update.navigation.moved_recently_set is not None else entity.navigation.moved_recently,
+                movement_mode=update.navigation.movement_mode_set if update.navigation.movement_mode_set is not None else entity.navigation.movement_mode,
                 last_failure_reason=update.navigation.failure_reason if update.navigation.failure_reason is not None else entity.navigation.last_failure_reason
             )
 
@@ -535,20 +511,8 @@ class ApplyPath:
                         # Auto-transition to REWARDED to prevent double-rewards
                         updated_quest = QuestService.mark_rewarded(updated_quest)
                         
-                        # Grant XP
-                        new_identity = replace(
-                            new_identity, 
-                            evolution_points=new_identity.evolution_points + updated_quest.reward.xp
-                        )
-                        # Grant Gold and Items
-                        from src.core.updates import InventoryUpdate
-                        from src.core.inventory import InventoryService
-                        from src.core.state import ItemStack
-                        reward_inv_upd = InventoryUpdate(
-                            gold_delta=updated_quest.reward.gold,
-                            items_add=[ItemStack(item_id=tid, quantity=1) for tid in updated_quest.reward.items]
-                        )
-                        new_inventory = InventoryService.apply_update(new_inventory, reward_inv_upd)
+                        # Note: Evolution points, gold, and items are now handled via ResourceTransferIntent 
+                        # during Refinement (Pipeline.refine -> QuestResolutionSystem.enforce)
                     
                     new_projs = dict(new_strategic.projects)
                     new_projs[q_id] = updated_quest
@@ -572,53 +536,9 @@ class ApplyPath:
                 inv_upd_items = InventoryUpdate(items_add=items_to_add)
                 new_inventory = InventoryService.apply_update(new_inventory, inv_upd_items)
 
-        # PH8 M3: Authoritative Leveling
-        curr_xp = new_identity.evolution_points
-        curr_lvl = new_identity.evolution_level
-        
-        # PROG-015: Learning Rate / Undead No-Level Law
-        learning_rate = getattr(entity.aptitude, "learning_rate", 1.0)
-        
-        if learning_rate > 0:
-            while curr_lvl < 100: # PH8 Task 8.3: Level-up respects cap (100)
-                xp_needed = LevelingService.get_xp_required(curr_lvl)
-                if curr_xp >= xp_needed:
-                    curr_xp -= xp_needed
-                    curr_lvl += 1
-                    # Scale stats (Hybrid logic)
-                    new_combat = LevelingService.scale_combat_stats(new_combat, curr_lvl, role=new_identity.role)
-                    # Grant AP for Heroes (Base 5 + Milestone 5 every 5 levels)
-                    if new_identity.role == EntityRole.HERO:
-                        ap_gain = 5
-                        if curr_lvl % 5 == 0:
-                            ap_gain += 5 # Milestone bonus
-                        new_identity = replace(new_identity, unspent_ap=new_identity.unspent_ap + ap_gain)
-                else:
-                    break
-            
-            if curr_lvl >= 100:
-                curr_xp = 0
-        
-        # PH8 Task 8.5: Evolution Check
-        final_kind = update.kind_set if update.kind_set is not None else entity.kind
-        from src.progression.evolution import EvolutionService
-        evo_kind = EvolutionService.check_evolution(final_kind, curr_lvl)
-        if evo_kind:
-            final_kind = evo_kind
-            # Refresh gear for evolved form
-            from src.core.state import EquipmentComponent, EquipSlot
-            evo_gear = EvolutionService.get_evolution_gear(evo_kind)
-            if evo_gear:
-                new_equipment = EquipmentComponent(
-                    slots={EquipSlot(k): v for k, v in evo_gear.items()}
-                )
-        
-        if curr_lvl != new_identity.evolution_level or final_kind != entity.kind:
-            new_identity = replace(new_identity, evolution_level=curr_lvl, evolution_points=curr_xp)
-
-        return replace(
+        res = replace(
             entity,
-            kind=final_kind,
+            kind=update.kind_set if update.kind_set is not None else entity.kind,
             position=update.new_position if update.new_position is not None else entity.position,
             readiness=entity.readiness + update.readiness_delta,
             active=update.active if update.active is not None else entity.active,
@@ -637,3 +557,4 @@ class ApplyPath:
             group_id=update.group_id_set if update.group_id_set is not None and update.group_id_set != -1 else (None if update.group_id_set == -1 else entity.group_id),
             properties=new_properties
         )
+        return res

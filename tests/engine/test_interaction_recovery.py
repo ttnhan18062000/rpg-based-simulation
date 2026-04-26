@@ -58,7 +58,8 @@ def test_channeled_looting_one_shot():
 
 def test_town_resolution_sell_on_entry():
     # Setup state: Entity with materials entering town
-    inv = InventoryComponent(items=["wood", "ore"], max_weight=100.0)
+    from src.core.state import ItemStack
+    inv = InventoryComponent(items=[ItemStack("wood", 1), ItemStack("ore", 1)], max_weight=100.0)
     # Target position is (5,5) which we will mark as town
     entity = EntityState(id=1, kind="HERO", position=(0,0), inventory=inv)
     

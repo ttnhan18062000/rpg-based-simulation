@@ -5,6 +5,7 @@ from dataclasses import dataclass, field, replace
 from typing import Dict, Any, Set, Optional, List, Tuple
 from src.core.strategic import StrategicComponent
 from src.core.enums import Faction, EntityRole
+from src.core.movement_modes import MovementMode
 
 
 class ItemKind(str, Enum):
@@ -38,7 +39,7 @@ class BiologicalComponent:
     rest_pressure: float = 0.0   # 0.0 to 100.0, forced rest at high values
     last_meal_tick: int = 0
     last_sleep_tick: int = 0
-    well_rested_until: int = 0   # Tick until which well-rested buff applies
+    well_rested_until: int = -1   # Tick until which well-rested buff applies
 
 
 @dataclass(frozen=True, slots=True)
@@ -138,6 +139,7 @@ class NavigationComponent:
     target: Optional[tuple[float, float]] = None
     path: List[tuple[float, float]] = field(default_factory=list)
     moved_recently: bool = False
+    movement_mode: MovementMode = MovementMode.WANDER
     last_failure_reason: Optional[str] = None
 
 
@@ -223,6 +225,7 @@ class GroupRecord:
     member_ids: Set[int]
     anchor: tuple[float, float]
     shared_target_id: Optional[int] = None
+    contract_id: Optional[str] = None
     cohesion_radius: float = 5.0
     last_updated_tick: int = 0
     roles: Dict[int, str] = field(default_factory=dict) # entity_id -> role_name

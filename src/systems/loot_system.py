@@ -54,19 +54,26 @@ class LootSystem:
             # 3. Completion Check (required_ticks default to 10 if not set)
             required = 10.0
             if new_progress >= required:
-                # AUTHORITATIVE HANDOFF
+                # AUTHORITATIVE HANDOFF (Proposed intent for refinement)
                 items_to_add = []
+                source_kind = ""
                 if interaction_kind == "ground_item":
                     items_to_add = [ItemStack(target.item_id, target.quantity)]
-                    ground_items_remove.append(target_id)
+                    source_kind = "GROUND_ITEM"
                 else:
                     items_to_add = target.items
-                    corpses_remove.append(target_id)
+                    source_kind = "CORPSE"
                 
+                from src.core.updates import ResourceTransferIntent
                 entity_updates[entity.id] = EntityUpdate(
                     entity_id=entity.id,
-                    inventory=InventoryUpdate(items_add=items_to_add),
-                    interaction=InteractionUpdate(reset=True)
+                    interaction=InteractionUpdate(reset=True),
+                    resource_transfers=[ResourceTransferIntent(
+                        source_id=target_id,
+                        source_kind=source_kind,
+                        items_add=items_to_add,
+                        transfer_kind="LOOT"
+                    )]
                 )
             else:
                 # Continue progress

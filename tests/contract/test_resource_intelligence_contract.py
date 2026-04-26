@@ -40,7 +40,7 @@ def kernel(base_state):
         max_observability_budget_percent=10,
         max_tick_budget_ms=100
     )
-    rng = DeterministicRNG(seed=42)
+    rng = DeterministicRNG(base_seed=42)
     return Kernel(profile, base_state, rng)
 
 def test_law_of_necessity_blocker_generation(kernel):

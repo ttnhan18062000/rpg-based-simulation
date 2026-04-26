@@ -26,12 +26,14 @@ class Direction(IntEnum):
 class MovementIntention(IntEnum):
     """Explicit purpose of the current movement."""
     NONE = 0
-    PURSUIT = 1
+    PURSUE = 1
     RETREAT = 2
     HOLD = 3
     REPOSITION = 4
     INTERCEPT = 5
     GUARD = 6
+    WANDER = 7
+    REGROUP = 8
 @unique
 class ActionType(IntEnum):
     """Authoritative action categories."""

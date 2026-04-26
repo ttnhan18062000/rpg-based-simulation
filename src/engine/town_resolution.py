@@ -84,4 +84,88 @@ class TownResolutionSystem:
                         biological=new_bio_upd
                     )
 
-        return replace(update, entity_updates=refined_entity_updates)
+            # 4. Explicit GUILD Intent (Intel and Quests)
+            if building_type == "guild":
+                ent_upd = refined_entity_updates.get(e_id, EntityUpdate(entity_id=e_id))
+                if ent_upd.task and ent_upd.task.work_kind_set == "ENTITY_ACT" and ent_upd.task.payload_set.get("action") == "GATHER_INTEL":
+                    # Guild visits produce strategic leads
+                    from src.core.strategic import StrategicLead, LeadKind
+                    from src.core.updates import StrategicUpdate
+                    new_lead = StrategicLead(
+                        id=f"lead_intel_{state.tick}_{e_id}",
+                        kind=LeadKind.RESOURCE,
+                        subject="Rare Herb Patch",
+                        confidence=0.7,
+                        location=(50, 50) # Example location
+                    )
+                    
+                    strat_upd = ent_upd.strategic or StrategicUpdate()
+                    refined_entity_updates[e_id] = replace(
+                        ent_upd,
+                        strategic=replace(strat_upd, leads_add_or_update=[new_lead])
+                    )
+
+        # 4. Global Territorial Laws (Taxes and Suppression)
+        from src.engine.legality import LegalityServiceV2
+        
+        new_resource_updates = dict(update.resource_updates)
+        
+        for e_id, entity in state.entities.items():
+            if not entity.active: continue
+            
+            pos = entity.position
+            ent_upd = refined_entity_updates.get(e_id)
+            if ent_upd and ent_upd.new_position:
+                pos = ent_upd.new_position
+            
+            region = LegalityServiceV2.get_region_for_position(pos, state)
+            if not region: continue
+            
+            # A. Territorial Taxes (Milestone 4: Every 10 ticks)
+            if state.tick % 10 == 0 and region.owner_faction_id is not None:
+                if entity.identity.faction != region.owner_faction_id:
+                    TAX_AMT = 2.0
+                    ent_upd = refined_entity_updates.get(e_id, EntityUpdate(entity_id=e_id))
+                    inv_upd = ent_upd.inventory or InventoryUpdate()
+                    # Only tax if they have gold
+                    tax_to_pay = min(entity.inventory.gold, TAX_AMT)
+                    if tax_to_pay > 0:
+                        refined_entity_updates[e_id] = replace(ent_upd,
+                            inventory=replace(inv_upd, gold_delta=inv_upd.gold_delta - tax_to_pay)
+                        )
+                        
+                        # Accumulate in faction gold via resource_updates
+                        f_key = f"faction_{region.owner_faction_id}_gold"
+                        new_resource_updates[f_key] = new_resource_updates.get(f_key, 0.0) + tax_to_pay
+
+            # B. Regional Suppression Debuffs (Milestone 4)
+            if region.suppression_active and entity.identity.faction != region.owner_faction_id:
+                ent_upd = refined_entity_updates.get(e_id, EntityUpdate(entity_id=e_id))
+                cb_upd = ent_upd.combat or CombatUpdate()
+                # 0.8x Atk/Def, 0.9x Speed
+                atk_penalty = entity.combat.atk * (0.8 - 1.0)
+                def_penalty = entity.combat.def_stat * (0.8 - 1.0)
+                spd_penalty = entity.combat.speed * (0.9 - 1.0)
+                
+                refined_entity_updates[e_id] = replace(ent_upd,
+                    combat=replace(cb_upd,
+                        atk_delta=cb_upd.atk_delta + atk_penalty,
+                        def_delta=cb_upd.def_delta + def_penalty,
+                        speed_delta=cb_upd.speed_delta + spd_penalty
+                    )
+                )
+
+        # C. Building Taxation (Milestone 4: Every 10 ticks)
+        if state.tick % 10 == 0:
+            for b_id, building in state.buildings.items():
+                if building.functional:
+                    region = LegalityServiceV2.get_region_for_position(building.position, state)
+                    if region and region.owner_faction_id is not None:
+                        BUILD_TAX = 10.0
+                        f_key = f"faction_{region.owner_faction_id}_gold"
+                        new_resource_updates[f_key] = new_resource_updates.get(f_key, 0.0) + BUILD_TAX
+
+        return replace(update, 
+            entity_updates=refined_entity_updates,
+            resource_updates=new_resource_updates
+        )

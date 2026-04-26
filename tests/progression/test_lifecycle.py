@@ -72,12 +72,14 @@ def test_near_death_hardening_logic():
     from src.engine.pipeline import AuthoritativeApplyPipeline
     
     from src.core.state import IdentityComponent
-    hero = EntityState(id=1, kind="HERO", position=(0.0, 0.0), 
-                       identity=IdentityComponent(faction=0),
+    from src.core.enums import EntityRole
+    hero = EntityState(id=1, kind="HERO", position=(0.0, 0.0),
+                       identity=IdentityComponent(role=EntityRole.HERO, faction=0),
                        combat=CombatComponent(hp=100, max_hp=100))
     attacker = EntityState(id=2, kind="MONSTER", position=(1.0, 0.0),
-                           identity=IdentityComponent(faction=1),
-                           combat=CombatComponent(atk=105)) # Just enough to leave 5 HP
+                           identity=IdentityComponent(role=EntityRole.MONSTER, faction=1),
+                           combat=CombatComponent(atk=105),
+                           readiness=100.0) # Required for ENTITY_ACT
     
     state = AuthoritativeState(tick=100, seed=42, entities={1: hero, 2: attacker})
     

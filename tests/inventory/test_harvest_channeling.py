@@ -31,15 +31,21 @@ def test_harvest_channeling_and_yield():
         
     # 4. Final tick (10th)
     sys_upd = HarvestSystem.update(state)
-    assert 501 in sys_upd.node_updates
-    assert sys_upd.node_updates[501].charges_delta == -1
-    assert len(sys_upd.entity_updates[1].inventory.items_add) == 1
     
-    final_state = ApplyPath.apply_generation(state, sys_upd)
+    from src.engine.pipeline import AuthoritativeApplyPipeline
+    refined = AuthoritativeApplyPipeline.refine(state, sys_upd)
     
-    # 5. Verify results
-    assert final_state.resource_nodes[501].remaining_charges == 0
-    assert final_state.entities[1].inventory.items[0].item_id == "wood"
+    assert 501 in refined.node_updates
+    state = ApplyPath.apply_generation(state, refined)
+    
+    # 5. Verify inventory gain
+    new_ent = state.entities[1]
+    # Check for wood in inventory
+    wood_found = any(stack.item_id == "wood" for stack in new_ent.inventory.items)
+    assert wood_found
+    
+    # Verify results
+    assert state.resource_nodes[501].remaining_charges == 0
 
 @pytest.mark.v2_contract
 def test_harvest_node_cooldown():

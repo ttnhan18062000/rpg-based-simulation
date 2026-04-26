@@ -40,15 +40,19 @@ class ShopService:
         if not InventoryService.can_add_item(entity.inventory, item_id, quantity):
             return None
             
-        # 4. Generate Updates
+        # 4. Generate Intent
+        from src.core.updates import ResourceTransferIntent
         return StateUpdate(
             entity_updates={
                 entity.id: EntityUpdate(
                     entity_id=entity.id,
-                    inventory=InventoryUpdate(
+                    resource_transfers=[ResourceTransferIntent(
+                        source_id=item_id,
+                        source_kind="SHOP_BUY",
                         items_add=[ItemStack(item_id, quantity)],
-                        gold_delta=-total_cost
-                    )
+                        gold_cost=total_cost,
+                        transfer_kind="BUY"
+                    )]
                 )
             }
         )
@@ -81,15 +85,19 @@ class ShopService:
             
         total_gain = (item_def.value * quantity) // 2 # Sell for half price
         
-        # 3. Generate Updates
+        # 3. Generate Intent
+        from src.core.updates import ResourceTransferIntent
         return StateUpdate(
             entity_updates={
                 entity.id: EntityUpdate(
                     entity_id=entity.id,
-                    inventory=InventoryUpdate(
+                    resource_transfers=[ResourceTransferIntent(
+                        source_id=item_id,
+                        source_kind="SHOP_SELL",
                         items_remove=[ItemStack(item_id, quantity)],
-                        gold_delta=total_gain
-                    )
+                        gold_delta=total_gain,
+                        transfer_kind="SELL"
+                    )]
                 )
             }
         )

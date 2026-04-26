@@ -67,7 +67,59 @@ class QuestResolutionSystem:
             if target_kind == victim_kind:
                 updates.append(QuestUpdate(
                     quest_id=q_id,
-                    progress_delta=1.0
+                    progress_delta=1.0 # Standard kill progress
                 ))
                 
         return updates
+
+    @staticmethod
+    def enforce(state: AuthoritativeState, update: StateUpdate) -> StateUpdate:
+        """
+        Enforces quest completion rules and emits authoritative reward intents.
+        Ensures that quest rewards are capacity-aware.
+        """
+        from src.core.updates import ResourceTransferIntent, EntityUpdate
+        from dataclasses import replace
+        from src.core.quests import QuestStatus
+        from src.quests.service import QuestService
+        
+        refined_entity_updates = dict(update.entity_updates)
+        
+        for e_id, ent_upd in update.entity_updates.items():
+            if not ent_upd.quest:
+                continue
+                
+            entity = state.entities.get(e_id)
+            if not entity: continue
+            
+            q_id = ent_upd.quest.quest_id
+            project = entity.strategic.projects.get(q_id)
+            if not project or not isinstance(project, QuestState):
+                continue
+                
+            # Simulate what the new state will be
+            updated_quest = QuestService.add_progress(project, ent_upd.quest.progress_delta)
+            if ent_upd.quest.status_set is not None:
+                updated_quest = replace(updated_quest, quest_status=ent_upd.quest.status_set)
+                
+            # If transition to COMPLETED is happening, emit reward intent
+            if updated_quest.quest_status == QuestStatus.COMPLETED and project.quest_status == QuestStatus.ACTIVE:
+                from src.core.state import ItemStack
+                items = [ItemStack(item_id=tid, quantity=1) for tid in updated_quest.reward.items]
+                
+                intent = ResourceTransferIntent(
+                    source_id=q_id,
+                    source_kind="QUEST",
+                    items_add=items,
+                    gold_delta=updated_quest.reward.gold,
+                    xp_reward=updated_quest.reward.xp,
+                    transfer_kind="QUEST_REWARD"
+                )
+                
+                # Merge into entity update
+                refined_entity_updates[e_id] = replace(ent_upd, 
+                    resource_transfers=ent_upd.resource_transfers + [intent],
+                    quest=replace(ent_upd.quest, status_set=QuestStatus.REWARDED)
+                )
+                
+        return replace(update, entity_updates=refined_entity_updates)

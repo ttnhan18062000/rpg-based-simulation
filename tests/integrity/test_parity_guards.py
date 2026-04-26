@@ -2,7 +2,7 @@ import pytest
 import json
 import os
 
-ORACLE_ROOT = "tests/parity"
+ORACLE_ROOT = "tests_legacy/parity"
 REQUIRED_ORACLES = {
     "movement_oracle": "results.json",
     "interaction_oracle": "results.json",

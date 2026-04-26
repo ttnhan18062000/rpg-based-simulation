@@ -60,7 +60,11 @@ def test_arena_conquest_and_debuff():
     from dataclasses import replace
     region = state.regions["test_wilderness"]
     # Conquest threshold is -50.0
-    conquered_region = replace(region, influence=-60.0, owner_faction_id=Faction.MONSTER_HORDE)
+    conquered_region = replace(region, 
+        influence=-60.0, 
+        owner_faction_id=Faction.MONSTER_HORDE,
+        suppression_active=True
+    )
     # Set tick=100 to trigger taxation in the first run
     state = replace(state, regions={"test_wilderness": conquered_region}, tick=100)
     

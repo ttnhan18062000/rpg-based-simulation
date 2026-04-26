@@ -67,23 +67,25 @@ class ShopSystem:
                 if not items_to_remove:
                     continue
                 
-                existing_upd = refined_entity_updates.get(e_id, EntityUpdate(entity_id=e_id))
-                
-                # Inventory merge
-                existing_inv = existing_upd.inventory if existing_upd.inventory else InventoryUpdate()
-                new_removed = list(existing_inv.items_remove)
-                new_removed.extend(items_to_remove)
-                
-                new_inv = replace(
-                    existing_inv,
-                    items_remove=new_removed,
-                    gold_delta=existing_inv.gold_delta + gold_delta
+                # Phase 3 Law: Resource Conservation (Atomic Shop)
+                from src.core.updates import ResourceTransferIntent
+                intent = ResourceTransferIntent(
+                    source_id="AUTO_SELL",
+                    source_kind="SHOP_SELL",
+                    items_remove=items_to_remove,
+                    gold_delta=gold_delta,
+                    transfer_kind="SELL"
                 )
                 
-                refined_entity_updates[e_id] = replace(
-                    existing_upd,
-                    inventory=new_inv
-                )
+                from src.core.conservation import ResourceTransactionResolver
+                result = ResourceTransactionResolver.resolve(state, entity, intent)
+                
+                if result.accepted:
+                    existing_upd = refined_entity_updates.get(e_id, EntityUpdate(entity_id=e_id))
+                    refined_entity_updates[e_id] = replace(
+                        existing_upd,
+                        inventory=result.inventory_update
+                    )
                 
         return replace(update, entity_updates=refined_entity_updates)
 

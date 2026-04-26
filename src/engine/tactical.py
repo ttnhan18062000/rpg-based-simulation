@@ -6,6 +6,7 @@ from src.core.updates import EntityUpdate, TaskUpdate, NavigationUpdate
 from src.engine.legality import LegalityServiceV2
 from src.engine.positioning import PositioningService
 from src.core.strategic import ProjectStatus
+from src.core.movement_modes import MovementMode
 from src.core.enums import ActionStyle
 
 if TYPE_CHECKING:
@@ -65,7 +66,7 @@ class TacticalDecisionSystem:
              # PANIC: Move to safe origin
              return EntityUpdate(
                  entity_id=entity.id,
-                 navigation=NavigationUpdate(target_set=(0.0, 0.0)),
+                 navigation=NavigationUpdate(target_set=(0.0, 0.0), movement_mode_set=MovementMode.RETREAT),
                  task=TaskUpdate(
                      work_kind_set="ENTITY_MOVE",
                      payload_set={"target_position": (0.0, 0.0), "reason": "PANIC_RETREAT"}
@@ -120,7 +121,7 @@ class TacticalDecisionSystem:
                                 # Move to it
                                 return EntityUpdate(
                                     entity_id=entity.id,
-                                    navigation=NavigationUpdate(target_set=node.position),
+                                    navigation=NavigationUpdate(target_set=node.position, movement_mode_set=MovementMode.WANDER),
                                     task=TaskUpdate(
                                         work_kind_set="ENTITY_MOVE",
                                         payload_set={"target_position": node.position, "target_id": node.id}
@@ -136,7 +137,7 @@ class TacticalDecisionSystem:
                 if dist_sq > group.cohesion_radius**2:
                     return EntityUpdate(
                         entity_id=entity.id,
-                        navigation=NavigationUpdate(target_set=group.anchor),
+                        navigation=NavigationUpdate(target_set=group.anchor, movement_mode_set=MovementMode.REGROUP),
                         task=TaskUpdate(
                             work_kind_set="ENTITY_MOVE",
                             payload_set={"target_position": group.anchor, "reason": "REGROUP"}
@@ -177,7 +178,7 @@ class TacticalDecisionSystem:
              return EntityUpdate(
                  entity_id=entity.id,
                  strategic=strat_up,
-                 navigation=NavigationUpdate(target_set=(0.0, 0.0)),
+                 navigation=NavigationUpdate(target_set=(0.0, 0.0), movement_mode_set=MovementMode.WANDER),
                  task=TaskUpdate(
                      work_kind_set="ENTITY_MOVE",
                      payload_set={"target_position": (0.0, 0.0), "reason": "STALEMATE_BREAK"}
@@ -198,7 +199,7 @@ class TacticalDecisionSystem:
                  if cover_pos and cover_pos != entity.position:
                      return EntityUpdate(
                          entity_id=entity.id,
-                         navigation=NavigationUpdate(target_set=cover_pos),
+                         navigation=NavigationUpdate(target_set=cover_pos, movement_mode_set=MovementMode.REPOSITION),
                          task=TaskUpdate(
                              work_kind_set="ENTITY_MOVE",
                              payload_set={"target_position": cover_pos, "reason": "SEEK_COVER", "target_id": ranged_threats[0].id}
@@ -211,7 +212,7 @@ class TacticalDecisionSystem:
                   retreat_pos = (0.0, 0.0) # Simple fallback to origin for now
                   return EntityUpdate(
                       entity_id=entity.id,
-                      navigation=NavigationUpdate(target_set=retreat_pos),
+                      navigation=NavigationUpdate(target_set=retreat_pos, movement_mode_set=MovementMode.RETREAT),
                       task=TaskUpdate(
                           work_kind_set="ENTITY_MOVE",
                           payload_set={"target_position": retreat_pos, "reason": "PANIC_RETREAT"}
@@ -231,12 +232,43 @@ class TacticalDecisionSystem:
                  if is_walkable and bracket_pos != entity.position:
                      return EntityUpdate(
                          entity_id=entity.id,
-                         navigation=NavigationUpdate(target_set=bracket_pos),
+                         navigation=NavigationUpdate(target_set=bracket_pos, movement_mode_set=MovementMode.REPOSITION),
                          task=TaskUpdate(
                              work_kind_set="ENTITY_MOVE",
                              payload_set={"target_position": bracket_pos, "reason": "BRACKETING", "target_id": target.id}
                          )
                      )
+
+        # 5.3 Guarding Logic (Task 4.1)
+        if group:
+             # If an ally is wounded (<50% HP), try to guard them
+             ally_ids = [eid for eid in group.member_ids if eid != entity.id]
+             allies = [state.entities[eid] for eid in ally_ids if eid in state.entities]
+             wounded_ally = next((a for a in allies if a.combat.hp / max(1, a.combat.max_hp) < 0.5), None)
+             if wounded_ally:
+                 guard_pos = PositioningService.find_guard_position(entity, wounded_ally, target, state)
+                 if guard_pos != entity.position:
+                     return EntityUpdate(
+                         entity_id=entity.id,
+                         navigation=NavigationUpdate(target_set=guard_pos, movement_mode_set=MovementMode.GUARD),
+                         task=TaskUpdate(
+                             work_kind_set="ENTITY_MOVE",
+                             payload_set={"target_position": guard_pos, "reason": "GUARDING", "target_id": wounded_ally.id}
+                         )
+                     )
+
+        # 5.4 Intercept Logic (Task 4.1)
+        if dist_to_target > 3 and target.navigation.target:
+             intercept_pos = PositioningService.find_intercept_position(entity, target, state)
+             if intercept_pos != target.position:
+                 return EntityUpdate(
+                     entity_id=entity.id,
+                     navigation=NavigationUpdate(target_set=intercept_pos, movement_mode_set=MovementMode.INTERCEPT),
+                     task=TaskUpdate(
+                         work_kind_set="ENTITY_MOVE",
+                         payload_set={"target_position": intercept_pos, "reason": "INTERCEPTING", "target_id": target.id}
+                     )
+                 )
 
         if role == "VANGUARD" and dist_to_target <= 5:
              chokepoints = PositioningService.identify_chokepoints(entity, state)
@@ -246,6 +278,7 @@ class TacticalDecisionSystem:
                   if dist_to_target > entity.combat.range:
                        return EntityUpdate(
                            entity_id=entity.id,
+                           navigation=NavigationUpdate(movement_mode_set=MovementMode.HOLD),
                            task=TaskUpdate(
                                work_kind_set="ENTITY_ACT",
                                payload_set={"action": "HOLD", "reason": "HOLD_CHOKEPOINT", "target_id": target.id}
@@ -263,7 +296,7 @@ class TacticalDecisionSystem:
             
             return EntityUpdate(
                 entity_id=entity.id,
-                navigation=NavigationUpdate(target_set=kite_pos),
+                navigation=NavigationUpdate(target_set=kite_pos, movement_mode_set=MovementMode.RETREAT),
                 task=TaskUpdate(
                     work_kind_set="ENTITY_MOVE",
                     payload_set={"target_position": kite_pos, "reason": "KITING", "target_id": target.id}
@@ -298,7 +331,7 @@ class TacticalDecisionSystem:
             return EntityUpdate(
                 entity_id=entity.id,
                 strategic=strat_up,
-                navigation=NavigationUpdate(target_set=target.position),
+                navigation=NavigationUpdate(target_set=target.position, movement_mode_set=MovementMode.PURSUE),
                 task=TaskUpdate(
                     work_kind_set="ENTITY_MOVE",
                     payload_set={

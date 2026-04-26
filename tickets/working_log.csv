@@ -201,6 +201,7 @@ timestamp,ticket_id,title,status,summary,artifacts_path
 2026-04-24,TCK-20260424-PH11-M4-GOVERNANCE,Phase 11 Milestone 4 Governance Reconciliation complete,DONE,stored_artifacts/TCK-20260424-PH11-M1-READINESS/
 2026-04-24,TCK-20260424-PH11-M5-VERDICT,Phase 11 Milestone 5 Final Verdict complete,DONE,stored_artifacts/TCK-20260424-PH11-M1-READINESS/
 2026-04-24,TCK-20260424-PH11-M6-EXIT,Phase 11 Milestone 6 Phase 11 Exit Package complete - PHASE 11 CLOSED,DONE,stored_artifacts/TCK-20260424-PH11-M1-READINESS/
+2026-04-27T05:55:00Z,TCK-20260427-RESOURCE-CONSERVATION-HARDENING,Hardening Resource Conservation Law (Phase 3.1),DONE,Implemented ResourceTransactionResolver and refactored systems to use atomic intents.,stored_artifacts/TCK-20260427-RESOURCE-CONSERVATION-HARDENING/
 2024: 2026-04-24,TCK-20260424-PH12-M1-READINESS,Phase 12 Milestone 1 Readiness Gate complete,DONE,stored_artifacts/TCK-20260424-PH12-M1-READINESS/
 205: 2026-04-24,TCK-20260424-PH12-M2-RUNTIME-CUTOVER,Phase 12 Milestone 2 Runtime Cutover complete,DONE,stored_artifacts/TCK-20260424-PH12-M2-RUNTIME-CUTOVER/
 206: 2026-04-24,TCK-20260424-PH12-M3-WORKFLOW-CUTOVER,Phase 12 Milestone 3 Workflow Cutover complete,DONE,stored_artifacts/TCK-20260424-PH12-M3-WORKFLOW-CUTOVER/
@@ -241,3 +242,7 @@ timestamp,ticket_id,title,status,summary,artifacts_path
 2026-04-26,TCK-20260426-PHASE-24-SOVEREIGNTY,DONE,Regional Sovereignty and Taxation integrated into V2
 2026-04-26T21:20:00Z,TCK-20260426-FIX-PARITY-REGRESSIONS,Fix RPG Progression and Action Readiness Regressions,DONE,Resolved readiness double-subtraction and Evolution XP reward blind spot. 100% test pass.,docs/stored_artifacts/TCK-20260426-FIX-PARITY-REGRESSIONS/
 2026-04-26T07:50:00Z,TCK-20260426-PH13-LEGACY-RETIREMENT,Execute Phase 13 Legacy Retirement and Canonical Refactor,DONE,Renamed legacy src/tests to src_legacy/tests_legacy and promoted V2 engine to canonical namespace.,docs/engine/phase13_retirement_manifest.md
+2026-04-27T12:50:00Z,TCK-20260427-QUEST-IDENTITY,Fixing Quest Identity Paradox and Hardening Authoritative Rewards,DONE,Resolved quest identity paradox (faction block) and implemented global ResourceTransferIntent resolution. 100% test pass.,stored_artifacts/TCK-20260427-QUEST-IDENTITY/
+2026-04-27T13:45:00Z,TCK-20260427-PHASE3-RESOURCE-CONSERVATION,Implement Authoritative Resource Conservation (Phase 3),DONE,Hardened InventoryService and Refinement Pipeline to enforce atomic capacity-aware resource transfers. 100% test pass.,stored_artifacts/TCK-20260427-PHASE3-RESOURCE-CONSERVATION/
+2026-04-27T13:47:00Z,TCK-20260427-LEGACY-RESTORATION,Legacy Code Restoration and Test Environment Hardening,DONE,Restored src_legacy and tests_legacy to root. Migrated namespaces and verified V2 engine integrity.,stored_artifacts/TCK-20260427-LEGACY-RESTORATION/
+2026-04-27T20:38:00Z,TCK-20260427-RPG-CORE-MIGRATION,Migrate and Harden RPG Core Logic (Phases 1-11),DONE,Remediated all V2 engine test failures and hardened authoritative laws.,stored_artifacts/TCK-20260427-RPG-CORE-MIGRATION/

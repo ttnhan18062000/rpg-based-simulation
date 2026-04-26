@@ -41,6 +41,15 @@ class ScoreModifierSystem:
             boredom_score = boredom.get(score.kind, 0.0)
             utility -= (boredom_score * 0.5)
             
+            # 4. Blocker Suppression (Phase 6)
+            # If any blocker exists for this goal kind, apply heavy penalty
+            for blocker in entity.strategic.blockers.values():
+                 if not blocker.resolved and blocker.subject == score.kind:
+                      utility *= (1.0 - blocker.severity)
+                 elif not blocker.resolved and blocker.kind == "access" and score.target_id == blocker.subject:
+                      # If target ID is specifically blocked
+                      utility *= 0.1
+            
             # Ensure utility doesn't go below absolute minimum for critical needs
             if score.kind in ("fatigue", "hunger"):
                  utility = max(utility, score.utility * 0.2) # Needs always have some floor

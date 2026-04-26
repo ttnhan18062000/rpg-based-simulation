@@ -2,7 +2,7 @@ from __future__ import annotations
 from dataclasses import replace
 from typing import TYPE_CHECKING, Dict, List, Tuple
 
-from src.core.updates import StateUpdate, EntityUpdate, NavigationUpdate
+from src.core.updates import StateUpdate, EntityUpdate, NavigationUpdate, IdentityUpdate
 
 if TYPE_CHECKING:
     from src.core.state import AuthoritativeState
@@ -35,28 +35,26 @@ class AuthoritativeApplyPipeline:
         from src.systems.groups import GroupSystem
         
         # 1. Territorial & Service Laws (Healing, Shopping, Crafting)
-        # These operate on current position (or proposed new position)
         update = TownResolutionSystem.resolve(state, raw_update)
         update = ShopSystem.enforce(state, update)
         update = BlacksmithSystem.enforce(state, update)
         
         # 1.2 Combat Laws (Attack resolution)
         update = AuthoritativeApplyPipeline._route_combat_intent(state, update)
+        update = AuthoritativeApplyPipeline._apply_near_death_hardening(state, update)
         
-        # 1.5 World Dynamics (Regional Hazards, Calamities)
+        # 1.5 World Dynamics
         from src.systems.generator import EntityGenerator
         generator = EntityGenerator(state.seed + state.tick)
         update = WorldDynamicsSystem.resolve_dynamics(state, update, generator)
         
-        # 1.6 Building Sabotage
+        # 1.6 Building Sabotage (De-simulation)
         update = BuildingSabotageSystem.resolve(state, update)
         
         # 2. Intent Routing (Interaction)
-        # Identifies if entity is at a resource node and initiates progress
         update = AuthoritativeApplyPipeline._route_interaction_intent(state, update)
         
-        # 3. Interaction Enforcement (Harvesting/Looting)
-        # Validates channeling progress, item weights, and node depletion
+        # 3. Interaction Enforcement
         update = InteractionSystem.enforce(state, update)
         
         # 4. Strategic Logic
@@ -64,28 +62,51 @@ class AuthoritativeApplyPipeline:
         update = StrategicIntelligenceSystem.evaluate_biological_concerns(state, update)
         update = StrategicRedirectionSystem.enforce(state, update)
         
-        # 4.5 Social & Group Coordination
+        # 5. Intent Routing (Movement)
+        update = AuthoritativeApplyPipeline._route_movement_intent(state, update)
+        
+        # 6. Occupancy Conflicts (Milestone 3 Law)
+        update = AuthoritativeApplyPipeline._resolve_occupancy_conflicts(state, update)
+        
+        # 7. Lifecycle
+        from src.systems.lifecycle import LifecycleSystem
+        update = LifecycleSystem.resolve_lifecycle(state, update)
+        
+        # 8. Quest Completions & Rewards
+        from src.engine.quests import QuestResolutionSystem
+        update = QuestResolutionSystem.enforce(state, update)
+        
+        # 9. Atomic Resource Transactions (Consolidated)
+        update = AuthoritativeApplyPipeline._resolve_resource_transactions(state, update)
+        
+        # 10. Evolution & Growth (Captures XP from all sources above)
+        from src.engine.evolution import EvolutionSystem
+        update = EvolutionSystem.evaluate(state, update)
+        
+        # 11. Group Logic (Formation & Coordination)
         group_update = GroupSystem.update_groups(state)
         update = AuthoritativeApplyPipeline._merge_state_updates(update, group_update)
         
-        # 5. Intent Routing (Movement)
-        # Resolves proposed navigation targets into step-wise moves
-        update = AuthoritativeApplyPipeline._route_movement_intent(state, update)
-        
-        # 6. Conflict Resolution (Occupancy)
-        # Tie-breaks multiple entities racing for the same tile
-        update = AuthoritativeApplyPipeline._resolve_occupancy_conflicts(state, update)
-        
-        # 7. Evolution & Growth
-        update = EvolutionSystem.evaluate(state, update)
-        
-        # 7.5 Near-Death Hardening (Pillar 2.2)
-        update = AuthoritativeApplyPipeline._apply_near_death_hardening(state, update)
-        
-        # 8. Lifecycle (Aging, Death, Succession)
-        update = LifecycleSystem.resolve_lifecycle(state, update)
+        # 12. Global Readiness Recovery (+10.0 per tick for all active entities)
+        update = AuthoritativeApplyPipeline._apply_readiness_recovery(state, update)
         
         return update
+
+    @staticmethod
+    def _apply_readiness_recovery(state: AuthoritativeState, update: StateUpdate) -> StateUpdate:
+        refined_entity_updates = dict(update.entity_updates)
+        for e_id, entity in state.entities.items():
+            if not entity.active: continue
+            ent_upd = refined_entity_updates.get(e_id, EntityUpdate(entity_id=e_id))
+            
+            passive_gain = 10.0
+            if entity.biological.sleep_debt > 80.0:
+                passive_gain *= 0.5
+                
+            refined_entity_updates[e_id] = replace(ent_upd, 
+                readiness_delta=ent_upd.readiness_delta + passive_gain
+            )
+        return replace(update, entity_updates=refined_entity_updates)
 
     @staticmethod
     def _route_interaction_intent(state: AuthoritativeState, update: StateUpdate) -> StateUpdate:
@@ -98,13 +119,23 @@ class AuthoritativeApplyPipeline:
                 nav_target = ent_upd.navigation.target_set
             
             if nav_target and (entity.position == nav_target):
-                target_node = next((n for n in state.resource_nodes.values() if n.position == nav_target), None)
-                if target_node and target_node.remaining_charges > 0:
+                # Search for interaction targets at the destination
+                target_node = next((n for n in state.resource_nodes.values() if n.position == nav_target and n.remaining_charges > 0), None)
+                target_ground = next((g for g in state.ground_items.values() if g.position == nav_target), None) if not target_node else None
+                target_corpse = next((c for c in state.corpses.values() if c.position == nav_target), None) if not target_node and not target_ground else None
+                
+                final_target_id = None
+                if target_node: final_target_id = target_node.id
+                elif target_ground: final_target_id = target_ground.id
+                elif target_corpse: final_target_id = target_corpse.id
+                
+                if final_target_id is not None:
                     from src.core.updates import InteractionUpdate
                     current_int = ent_upd.interaction or InteractionUpdate()
                     if not current_int.reset:
+                         p_delta = current_int.progress_delta if current_int.progress_delta > 0 else 1
                          refined_entity_updates[e_id] = replace(ent_upd,
-                             interaction=replace(current_int, target_node_id=target_node.id, progress_delta=1)
+                             interaction=replace(current_int, target_node_id=final_target_id, progress_delta=p_delta)
                          )
         return replace(update, entity_updates=refined_entity_updates)
 
@@ -124,7 +155,10 @@ class AuthoritativeApplyPipeline:
                 # Note: ent_upd.interaction might have been added in _route_interaction_intent
                 is_interacting = (ent_upd.interaction and ent_upd.interaction.progress_delta > 0)
                 if not ent_upd.moved_this_tick and not is_interacting:
-                    move_updates = MovementSystem.resolve_move(state, entity, nav_target)
+                    mode = entity.navigation.movement_mode
+                    if ent_upd.navigation and ent_upd.navigation.movement_mode_set is not None:
+                        mode = ent_upd.navigation.movement_mode_set
+                    move_updates = MovementSystem.resolve_move(state, entity, nav_target, mode=mode)
                     
                     for u_id, u_upd in move_updates.items():
                         if u_id == e_id:
@@ -145,6 +179,23 @@ class AuthoritativeApplyPipeline:
                                 navigation=merged_nav,
                                 readiness_delta=min(ent_upd.readiness_delta, u_upd.readiness_delta)
                             )
+                            
+                            # Phase 6: Navigation Blocker Inference
+                            if merged_nav.failure_reason:
+                                from src.core.strategic import BlockerState
+                                from src.core.updates import StrategicUpdate
+                                curr_upd = refined_entity_updates[e_id]
+                                strat_up = curr_upd.strategic or StrategicUpdate()
+                                block_id = f"blocker_nav_{merged_nav.failure_reason}"
+                                nav_blocker = BlockerState(
+                                    id=block_id,
+                                    kind="access",
+                                    subject=merged_nav.failure_reason,
+                                    severity=0.8
+                                )
+                                refined_entity_updates[e_id] = replace(curr_upd,
+                                    strategic=replace(strat_up, blockers_add_or_update=[nav_blocker])
+                                )
                         else:
                             # Merge other entities' updates (e.g. attackers in OA)
                             if u_id in refined_entity_updates:
@@ -176,12 +227,31 @@ class AuthoritativeApplyPipeline:
             if not task_upd or task_upd.work_kind_set != "ENTITY_ACT": continue
             
             action_kind = task_upd.payload_set.get("action")
+            
+            # 1. Readiness Check (Standard Law)
+            ready, r_reason = LegalityServiceV2.verify_readiness(entity)
+            if not ready:
+                from src.core.strategic import BlockerState
+                from src.core.updates import StrategicUpdate
+                refined_entity_updates[e_id] = replace(ent_upd,
+                     task=replace(task_upd, payload_set={**task_upd.payload_set, "outcome": "FAILURE", "reason": r_reason}),
+                     strategic=replace(ent_upd.strategic or StrategicUpdate(), 
+                         blockers_add_or_update=[BlockerState(id=f"blocker_act_{r_reason}", kind="access", subject=r_reason)]
+                     )
+                )
+                continue
+
             legal, reason = LegalityServiceV2.verify_action_legality(entity, action_kind, state)
             
             if not legal:
                  # Suppression! Remove the task and record failure
+                 from src.core.strategic import BlockerState
+                 from src.core.updates import StrategicUpdate
                  refined_entity_updates[e_id] = replace(ent_upd,
-                    task=replace(task_upd, payload_set={**task_upd.payload_set, "outcome": "FAILURE", "reason": reason})
+                    task=replace(task_upd, payload_set={**task_upd.payload_set, "outcome": "FAILURE", "reason": reason}),
+                    strategic=replace(ent_upd.strategic or StrategicUpdate(), 
+                        blockers_add_or_update=[BlockerState(id=f"blocker_act_{reason}", kind="access", subject=reason)]
+                    )
                  )
                  continue
 
@@ -196,8 +266,13 @@ class AuthoritativeApplyPipeline:
                 is_legal, reason = LegalityServiceV2.verify_attack_legality(entity, target, state)
                 if not is_legal:
                      # Mark failure in task payload (Milestone 3 logic)
+                     from src.core.strategic import BlockerState
+                     from src.core.updates import StrategicUpdate
                      refined_entity_updates[e_id] = replace(ent_upd,
-                         task=replace(task_upd, payload_set={**task_upd.payload_set, "failure_reason": reason})
+                         task=replace(task_upd, payload_set={**task_upd.payload_set, "failure_reason": reason}),
+                         strategic=replace(ent_upd.strategic or StrategicUpdate(), 
+                             blockers_add_or_update=[BlockerState(id=f"blocker_atk_{reason}", kind="access", subject=reason)]
+                         )
                      )
                      continue
                 
@@ -330,13 +405,7 @@ class AuthoritativeApplyPipeline:
         new_entity_updates = dict(base.entity_updates)
         for e_id, extra_ent_upd in extra.entity_updates.items():
             if e_id in new_entity_updates:
-                # Merge individual EntityUpdate (simplified)
-                base_ent_upd = new_entity_updates[e_id]
-                new_entity_updates[e_id] = replace(
-                    base_ent_upd,
-                    group_id_set=extra_ent_upd.group_id_set if extra_ent_upd.group_id_set is not None else base_ent_upd.group_id_set
-                    # Add other fields if necessary
-                )
+                new_entity_updates[e_id] = new_entity_updates[e_id].merge(extra_ent_upd)
             else:
                 new_entity_updates[e_id] = extra_ent_upd
                 
@@ -345,4 +414,87 @@ class AuthoritativeApplyPipeline:
             entity_updates=new_entity_updates,
             groups_add_or_update=base.groups_add_or_update + extra.groups_add_or_update,
             groups_remove=base.groups_remove + extra.groups_remove
+        )
+
+    @staticmethod
+    def _resolve_resource_transactions(state: AuthoritativeState, update: StateUpdate) -> StateUpdate:
+        """
+        Final authority for all resource transfers.
+        Resolves any ResourceTransferIntent that wasn't handled by specific systems.
+        """
+        from src.core.conservation import ResourceTransactionResolver
+        from src.core.updates import InventoryUpdate
+        
+        refined_entity_updates = dict(update.entity_updates)
+        refined_node_updates = dict(update.node_updates)
+        ground_items_remove = list(update.ground_items_remove)
+        corpses_remove = list(update.corpses_remove)
+        
+        # Phase 9 Fix: Use list(keys) to avoid "dictionary changed size during iteration"
+        for e_id in list(refined_entity_updates.keys()):
+            ent_upd = refined_entity_updates[e_id]
+            if not ent_upd.resource_transfers:
+                continue
+                
+            entity = state.entities.get(e_id)
+            if not entity: continue
+            
+            from src.core.inventory import InventoryService
+            # Compute pending inventory state (updates as we process each intent)
+            current_inv_upd = ent_upd.inventory or InventoryUpdate()
+            current_id_upd = ent_upd.identity or IdentityUpdate()
+            
+            has_any_accepted = False
+            for intent in ent_upd.resource_transfers:
+                pending_inv = InventoryService.apply_update(entity.inventory, current_inv_upd)
+                
+                result = ResourceTransactionResolver.resolve(state, entity, intent, inventory_override=pending_inv)
+                if result.accepted:
+                    has_any_accepted = True
+                    # Update consolidated inventory update
+                    current_inv_upd = replace(current_inv_upd,
+                        items_add=list(current_inv_upd.items_add) + (result.inventory_update.items_add if result.inventory_update else []),
+                        items_remove=list(current_inv_upd.items_remove) + (result.inventory_update.items_remove if result.inventory_update else []),
+                        gold_delta=current_inv_upd.gold_delta + (result.inventory_update.gold_delta if result.inventory_update else 0)
+                    )
+                    
+                    # Update consolidated identity update
+                    current_id_upd = replace(current_id_upd,
+                        evolution_points_delta=current_id_upd.evolution_points_delta + (result.identity_update.evolution_points_delta if result.identity_update else 0),
+                    )
+                    
+                    # Update world (immediate, because world isn't local to entity)
+                    if result.node_update:
+                        n_id = result.node_update.node_id
+                        existing_node = refined_node_updates.get(n_id)
+                        if existing_node:
+                            refined_node_updates[n_id] = replace(existing_node,
+                                charges_delta=existing_node.charges_delta + result.node_update.charges_delta
+                            )
+                        else:
+                            refined_node_updates[n_id] = result.node_update
+                    
+                    if result.ground_item_remove is not None:
+                        ground_items_remove.append(result.ground_item_remove)
+                    if result.corpse_remove is not None:
+                        corpses_remove.append(result.corpse_remove)
+                
+            # Update entity and CLEAR intents
+            if has_any_accepted:
+                refined_entity_updates[e_id] = replace(ent_upd, 
+                    inventory=current_inv_upd,
+                    identity=current_id_upd,
+                    resource_transfers=[]
+                )
+            else:
+                refined_entity_updates[e_id] = replace(ent_upd, 
+                    resource_transfers=[]
+                )
+
+        return replace(
+            update,
+            entity_updates=refined_entity_updates,
+            node_updates=refined_node_updates,
+            ground_items_remove=ground_items_remove,
+            corpses_remove=corpses_remove
         )

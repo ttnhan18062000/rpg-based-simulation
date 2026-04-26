@@ -21,7 +21,9 @@ def test_level_cap_100():
     )
     state_upd = StateUpdate(entity_updates={1: update})
     
-    new_state = ApplyPath.apply_generation(state, state_upd)
+    from src.engine.pipeline import AuthoritativeApplyPipeline
+    refined = AuthoritativeApplyPipeline.refine(state, state_upd)
+    new_state = ApplyPath.apply_generation(state, refined)
     
     final_identity = new_state.entities[1].identity
     assert final_identity.evolution_level == 100
@@ -38,7 +40,9 @@ def test_veterancy_progression():
     )
     state_upd = StateUpdate(entity_updates={1: update})
     
-    new_state = ApplyPath.apply_generation(state, state_upd)
+    from src.engine.pipeline import AuthoritativeApplyPipeline
+    refined = AuthoritativeApplyPipeline.refine(state, state_upd)
+    new_state = ApplyPath.apply_generation(state, refined)
     
     ident = new_state.entities[1].identity
     assert ident.veterancy_rank == 1
@@ -55,7 +59,9 @@ def test_veterancy_multi_rank():
     )
     state_upd = StateUpdate(entity_updates={1: update})
     
-    new_state = ApplyPath.apply_generation(state, state_upd)
+    from src.engine.pipeline import AuthoritativeApplyPipeline
+    refined = AuthoritativeApplyPipeline.refine(state, state_upd)
+    new_state = ApplyPath.apply_generation(state, refined)
     
     ident = new_state.entities[1].identity
     assert ident.veterancy_rank == 2

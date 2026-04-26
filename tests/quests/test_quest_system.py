@@ -56,4 +56,5 @@ def test_bounty_quest_completion():
     
     ent_upd = update.entity_updates[1]
     assert ent_upd.quest.status_set == QuestStatus.REWARDED
-    assert ent_upd.reward.gold_gain == 500
+    # In V2, gold is emitted via ResourceTransferIntent
+    assert ent_upd.resource_transfers[0].gold_delta == 500

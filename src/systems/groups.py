@@ -51,7 +51,16 @@ class GroupSystem:
                 dy = member.position[1] - group.anchor[1]
                 dist_sq = dx*dx + dy*dy
                 
-                if dist_sq > (group.cohesion_radius * 2)**2: # Soft dissolution if too far
+                # Phase 7: Contract validity check
+                contract_invalid = False
+                if group.contract_id:
+                    contract = leader.strategic.contracts.get(group.contract_id)
+                    if not contract or not contract.active:
+                        contract_invalid = True
+                    elif contract.expiry_tick != -1 and state.tick > contract.expiry_tick:
+                        contract_invalid = True
+                
+                if dist_sq > (group.cohesion_radius * 2)**2 or contract_invalid: 
                     entity_updates[m_id] = EntityUpdate(entity_id=m_id, group_id_set=-1)
                     continue
                 
@@ -85,12 +94,12 @@ class GroupSystem:
             )
             groups_add_or_update.append(updated_group)
 
-        # 2. Group Formation (Clustering)
+        # 2. Group Formation (Purpose-Driven)
         # Find entities without groups
         ungrouped_ids = [e_id for e_id, e in state.entities.items() 
                          if e.combat.alive and e.group_id is None]
         
-        # Simple clustering: If two ungrouped allies are within 5 tiles, form a group
+        # Purpose-Driven Formation: Check for active social contracts (Recruitment/Protection)
         already_forming: Set[int] = set()
         for i, id_a in enumerate(ungrouped_ids):
             if id_a in already_forming:
@@ -98,25 +107,28 @@ class GroupSystem:
             
             entity_a = state.entities[id_a]
             new_group_members = {id_a}
+            active_contract_id = None
             
-            for id_b in ungrouped_ids[i+1:]:
-                if id_b in already_forming:
-                    continue
+            # Check for contracts where id_a is source or target
+            for c_id, contract in entity_a.strategic.contracts.items():
+                if not contract.active: continue
                 
-                entity_b = state.entities[id_b]
-                if entity_a.identity.faction != entity_b.identity.faction:
-                    continue
-                
-                # Distance check
-                dx = entity_a.position[0] - entity_b.position[0]
-                dy = entity_a.position[1] - entity_b.position[1]
-                if (dx*dx + dy*dy) < 5.0**2:
-                    new_group_members.add(id_b)
+                other_id = contract.target_id if contract.source_id == id_a else contract.source_id
+                if other_id in state.entities:
+                    other_entity = state.entities[other_id]
+                    if other_entity.combat.alive and other_entity.group_id is None:
+                        # Cohesion check: only form group if they are within range
+                        dx = entity_a.position[0] - other_entity.position[0]
+                        dy = entity_a.position[1] - other_entity.position[1]
+                        if (dx*dx + dy*dy) < (10.0**2):
+                            new_group_members.add(other_id)
+                            active_contract_id = c_id
+                            break # Simplified: stop at first contract
             
             if len(new_group_members) >= 2:
                 # Form new group
-                new_g_id = 10000 + len(state.groups) + len(groups_add_or_update) # Basic ID gen
-                leader_id = id_a # First one is leader
+                new_g_id = 10000 + len(state.groups) + len(groups_add_or_update)
+                leader_id = id_a # Simplified: initiator is leader
                 anchor_x = sum(state.entities[m_id].position[0] for m_id in new_group_members) / len(new_group_members)
                 anchor_y = sum(state.entities[m_id].position[1] for m_id in new_group_members) / len(new_group_members)
                 
@@ -125,6 +137,7 @@ class GroupSystem:
                     leader_id=leader_id,
                     member_ids=new_group_members,
                     anchor=(anchor_x, anchor_y),
+                    contract_id=active_contract_id,
                     last_updated_tick=state.tick
                 )
                 groups_add_or_update.append(new_group)

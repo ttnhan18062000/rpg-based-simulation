@@ -85,10 +85,11 @@ def test_hash_isolation():
 def test_rng_hash_reproducibility():
     """Verify that RNG state checkpoints are stable and reproducible in the hash."""
     from src.platform.rng import DeterministicRNG
-    rng = DeterministicRNG(seed=123)
+    from src.core.enums import Domain
+    rng = DeterministicRNG(base_seed=123)
     
     # Advance RNG
-    rng.next_float()
+    rng.next_float(Domain.DEFAULT)
     checkpoint_1 = rng.get_state()
     
     state_a = AuthoritativeState(tick=1, seed=123, rng_checkpoint=checkpoint_1)
@@ -107,7 +108,7 @@ def test_rng_hash_reproducibility():
     assert hash_a == hash_b
     
     # Differing RNG state should change the hash
-    rng.next_float()
+    rng.next_float(Domain.DEFAULT)
     checkpoint_3 = rng.get_state()
     state_c = AuthoritativeState(tick=1, seed=123, rng_checkpoint=checkpoint_3)
     assert CanonicalStateHasher.get_hash(state_c) != hash_a

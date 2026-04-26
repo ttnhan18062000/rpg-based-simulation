@@ -13,7 +13,7 @@ def test_biological_decay_per_tick():
     state = AuthoritativeState(tick=100, seed=42, entities={1: ent})
     
     update = StateUpdate()
-    next_state = ApplyPath.apply_generation(state, update, 101, 1001)
+    next_state = ApplyPath.apply_generation(state, update, 101)
     
     new_ent = next_state.entities[1]
     # Hunger: 10.0 + 0.1 = 10.1
@@ -76,17 +76,16 @@ def test_pipeline_integrates_biological_concerns():
     assert any(c.id == "concern_hunger" for c in ent_upd.strategic.concerns_add_or_update)
 
 def test_routine_action_execution():
-    """Verify that SLEEP/EAT actions produce correct biological updates."""
+    """Verify that REST/EAT actions produce correct biological updates."""
     from src.engine.domain_logic import SimulationDomainLogic
     
     bio = BiologicalComponent(hunger=50.0, sleep_debt=40.0)
-    ent = EntityState(id=1, kind="HERO", position=(0.0, 0.0), biological=bio)
+    ent = EntityState(id=1, kind="HERO", position=(0.0, 0.0), biological=bio, readiness=100.0)
     
-    # 1. Test SLEEP
-    upd_sleep = SimulationDomainLogic.execute_action(ent, {"action": "SLEEP"}, current_tick=500)
+    # 1. Test REST
+    upd_sleep = SimulationDomainLogic.execute_action(ent, {"action": "REST"}, current_tick=500)
     assert upd_sleep[1].biological is not None
-    assert upd_sleep[1].biological.sleep_debt_delta == -20.0
-    assert upd_sleep[1].biological.last_sleep_tick_set == 500
+    assert upd_sleep[1].biological.rest_pressure_delta == -30.0
     
     # 2. Test EAT
     upd_eat = SimulationDomainLogic.execute_action(ent, {"action": "EAT"}, current_tick=600)

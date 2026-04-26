@@ -12,9 +12,9 @@ class QuestKind(Enum):
     BOUNTY = auto()
 
 class QuestStatus(Enum):
-    ACTIVE = auto()
-    COMPLETED = auto()  # Goal met, but reward not yet claimed
-    REWARDED = auto()   # Reward claimed, quest closed
+    ACTIVE = 1
+    COMPLETED = 2
+    REWARDED = 3
 
 @dataclass(frozen=True, slots=True)
 class RewardState:

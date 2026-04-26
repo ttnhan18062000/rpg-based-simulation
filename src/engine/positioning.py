@@ -102,6 +102,70 @@ class PositioningService:
         mag = (dx*dx + dy*dy)**0.5
         if mag > 0:
             ux, uy = dx/mag, dy/mag
-            return (tx + round(ux), ty + round(uy))
+            return (float(int(tx + round(ux))), float(int(ty + round(uy))))
         
         return (tx + 1, ty) # Fallback
+
+    @staticmethod
+    def find_intercept_position(
+        entity: EntityState,
+        target: EntityState,
+        state: AuthoritativeState
+    ) -> Tuple[float, float]:
+        """
+        Calculates a position to intercept a moving target.
+        If target has a navigation target, try to move towards a point on their path.
+        """
+        if not target.navigation.target:
+            return target.position
+            
+        tx, ty = target.position
+        gx, gy = target.navigation.target
+        
+        # Vector from target to their goal
+        dx = gx - tx
+        dy = gy - ty
+        
+        # Point 2 tiles ahead of target along their goal vector
+        mag = (dx*dx + dy*dy)**0.5
+        if mag > 0:
+            ux, uy = dx/mag, dy/mag
+            intercept_pos = (float(int(tx + round(ux * 2))), float(int(ty + round(uy * 2))))
+            is_walkable, _ = LegalityServiceV2.verify_occupancy(intercept_pos, state, ignore_entity_id=entity.id)
+            if is_walkable:
+                return intercept_pos
+                
+        return target.position
+
+    @staticmethod
+    def find_guard_position(
+        entity: EntityState,
+        ward: EntityState,
+        threat: Optional[EntityState],
+        state: AuthoritativeState
+    ) -> Tuple[float, float]:
+        """
+        Finds a position to guard the 'ward' entity.
+        Prefer a position between the ward and the threat.
+        """
+        if not threat:
+            # Just stay adjacent to ward
+            return (ward.position[0] + 1, ward.position[1])
+            
+        wx, wy = ward.position
+        tx, ty = threat.position
+        
+        # Direction from ward to threat
+        dx = tx - wx
+        dy = ty - wy
+        
+        mag = (dx*dx + dy*dy)**0.5
+        if mag > 0:
+            ux, uy = dx/mag, dy/mag
+            # Stay 1 tile away from ward towards threat
+            guard_pos = (float(int(wx + round(ux))), float(int(wy + round(uy))))
+            is_walkable, _ = LegalityServiceV2.verify_occupancy(guard_pos, state, ignore_entity_id=entity.id)
+            if is_walkable:
+                return guard_pos
+                
+        return ward.position

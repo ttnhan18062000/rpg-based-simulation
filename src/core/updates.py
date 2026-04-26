@@ -10,6 +10,7 @@ if TYPE_CHECKING:
         CognitionProfile, GroundItemState, CorpseState, BlockerState, LeadState, DirectiveState, ProjectState, ContractState, SocialContract
     )
 from src.core.state import ItemStack, EquipSlot, AttributeComponent
+from src.core.movement_modes import MovementMode
 
 
 @dataclass(frozen=True, slots=True)
@@ -30,6 +31,21 @@ class InteractionUpdate:
     target_node_id: Optional[int] = None
     progress_delta: float = 0.0
     reset: bool = False
+
+@dataclass(frozen=True, slots=True)
+class ResourceTransferIntent:
+    """
+    Proposed atomic transfer between a world source and an entity.
+    Used by ResourceTransactionResolver to enforce conservation laws.
+    """
+    source_id: str | int
+    source_kind: str # "NODE", "GROUND_ITEM", "CORPSE", "CRAFTING", "SHOP_BUY", "SHOP_SELL"
+    items_add: List[ItemStack] = field(default_factory=list)
+    items_remove: List[ItemStack] = field(default_factory=list)
+    gold_delta: int = 0
+    gold_cost: int = 0
+    xp_reward: int = 0
+    transfer_kind: str = "AUTO" # "HARVEST", "LOOT", "PICKUP", "CRAFT", "BUY", "SELL"
 
 @dataclass(frozen=True, slots=True)
 class CombatIntent:
@@ -56,9 +72,11 @@ class CombatUpdate:
     def_delta: int = 0
     xp_gain: int = 0 # Rewards for the attacker
     gold_gain: int = 0
+    speed_delta: int = 0
     generation_delta: int = 0 # Lifecycle changes for the defender
     is_permadeath_set: Optional[bool] = None
     simultaneous_intents: List[CombatIntent] = field(default_factory=list)
+    trace: Dict[str, float] = field(default_factory=dict) # Breakdown of modifiers
 
 @dataclass(frozen=True, slots=True)
 class NavigationUpdate:
@@ -66,6 +84,7 @@ class NavigationUpdate:
     target_set: Optional[tuple[float, float]] = None
     path_set: Optional[List[tuple[float, float]]] = None
     moved_recently_set: Optional[bool] = None
+    movement_mode_set: Optional[MovementMode] = None
     failure_reason: Optional[str] = None
 
 @dataclass(frozen=True, slots=True)
@@ -216,6 +235,7 @@ class EntityUpdate:
     readiness_delta: float = 0.0
     active: Optional[bool] = None
     interaction: Optional[InteractionUpdate] = None
+    resource_transfers: List[ResourceTransferIntent] = field(default_factory=list)
     identity: Optional[IdentityUpdate] = None
     attributes: Optional[AttributeUpdate] = None
     inventory: Optional[InventoryUpdate] = None
@@ -245,6 +265,7 @@ class EntityUpdate:
             readiness_delta=self.readiness_delta + other.readiness_delta,
             active=other.active if other.active is not None else self.active,
             interaction=other.interaction if other.interaction is not None else self.interaction, # Simplified
+            resource_transfers=self.resource_transfers + other.resource_transfers,
             identity=other.identity if other.identity is not None else self.identity, # Simplified
             attributes=other.attributes if other.attributes is not None else self.attributes, # Simplified
             inventory=other.inventory if other.inventory is not None else self.inventory, # Simplified
@@ -261,6 +282,7 @@ class EntityUpdate:
             group_id_set=other.group_id_set if other.group_id_set is not None else self.group_id_set,
             property_updates={**self.property_updates, **other.property_updates}
         )
+        return res
 
 
 @dataclass(frozen=True, slots=True)

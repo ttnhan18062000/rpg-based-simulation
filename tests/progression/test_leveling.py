@@ -1,6 +1,7 @@
 import pytest
 from src.core.state import AuthoritativeState, EntityState, IdentityComponent, CombatComponent
 from src.core.updates import StateUpdate, EntityUpdate, IdentityUpdate, RewardUpdate
+from src.engine.pipeline import AuthoritativeApplyPipeline
 from src.engine.apply import ApplyPath
 from src.core.enums import EntityRole
 
@@ -18,21 +19,23 @@ def test_automatic_level_up():
     ent_upd = EntityUpdate(entity_id=99, reward=r_upd)
     state_upd = StateUpdate(entity_updates={99: ent_upd})
     
-    # 3. Apply
-    next_state = ApplyPath.apply_generation(state, state_upd)
+    # 3. Refine & Apply
+    refined = AuthoritativeApplyPipeline.refine(state, state_upd)
+    next_state = ApplyPath.apply_generation(state, refined)
     new_ent = next_state.entities[99]
     
     # Level 1 -> 2 (uses 100 XP, 50 remains)
     assert new_ent.identity.evolution_level == 2
     assert new_ent.identity.evolution_points == 50
     
-    # Stats grow by 10%
-    assert new_ent.combat.max_hp == 110
-    assert new_ent.combat.atk == 11
-    assert new_ent.combat.def_stat == 5 # int(5 * 1.1) = 5
+    # Stats grow by aptitude (Vit=20, Str=5, End=2)
+    # Default aptitude is 1.0 in V2
+    assert new_ent.combat.max_hp == 120
+    assert new_ent.combat.atk == 15
+    assert new_ent.combat.def_stat == 7 # 5 + 2
     
-    # Healing Surge check: (100/100) + 0.2 = 1.2 -> capped at 1.0 -> 110 HP
-    assert new_ent.combat.hp == 110
+    # Healing Surge check: restoration is capped at new max_hp
+    assert new_ent.combat.hp == 120
 
 @pytest.mark.v2_contract
 def test_multi_level_up():
@@ -50,16 +53,17 @@ def test_multi_level_up():
     ent_upd = EntityUpdate(entity_id=99, reward=r_upd)
     state_upd = StateUpdate(entity_updates={99: ent_upd})
     
-    # 3. Apply
-    next_state = ApplyPath.apply_generation(state, state_upd)
+    # 3. Refine & Apply
+    refined = AuthoritativeApplyPipeline.refine(state, state_upd)
+    next_state = ApplyPath.apply_generation(state, refined)
     new_ent = next_state.entities[99]
     
     assert new_ent.identity.evolution_level == 3
     assert new_ent.identity.evolution_points == (500 - 100 - 282) # 118
     
-    # L2 max_hp: 100 * 1.1 = 110
-    # L3 max_hp: 110 * 1.1 = 121
-    assert new_ent.combat.max_hp == 121
-    # L2 atk: 10 * 1.1 = 11
-    # L3 atk: 11 * 1.1 = 12
-    assert new_ent.combat.atk == 12
+    # L2 max_hp: 100 + 20 = 120
+    # L3 max_hp: 120 + 20 = 140
+    assert new_ent.combat.max_hp == 140
+    # L2 atk: 10 + 5 = 15
+    # L3 atk: 15 + 5 = 20
+    assert new_ent.combat.atk == 20

@@ -28,7 +28,7 @@ def test_debt_drainage_desimulation():
         work_debt={"KERNEL": 10} # 10 debt units
     )
     
-    rng = DeterministicRNG(seed=42)
+    rng = DeterministicRNG(base_seed=42)
     
     # Kernel with local executor
     kernel = Kernel(profile, state=state, rng=rng, executor=LocalSequentialExecutor())
@@ -53,7 +53,7 @@ def test_drain_debt_zero():
         max_tick_budget_ms=100
     )
     state = AuthoritativeState(tick=0, seed=42, entities={}, work_debt={"KERNEL": 5})
-    rng = DeterministicRNG(seed=42)
+    rng = DeterministicRNG(base_seed=42)
     
     kernel = Kernel(profile, state=state, rng=rng, executor=LocalSequentialExecutor())
     

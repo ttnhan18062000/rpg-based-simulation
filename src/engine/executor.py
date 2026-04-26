@@ -146,13 +146,14 @@ class ConcurrentExecutionAdapter:
                     neighbor_view = SimulationDomainLogic.get_neighbor_view(state, subject_snapshot, radius=10.0) # Default test radius
                     frozen_neighbor_view = [tuple([eid, deep_freeze(ent)]) for eid, ent in neighbor_view]
                     
+                    from src.core.enums import Domain
                     packet_id = f"{state.tick}:{i}"
                     packet = WorkerPacket(
                         packet_id=packet_id,
                         work_id=f"{state.tick}:{item.owner_id}:{item.work_kind}",
                         tick=state.tick,
                         world_time=state.world_time,
-                        seed=rng.next_int(0, 1000000), 
+                        seed=rng.next_int(Domain.DEFAULT, 0, 1000000), 
                         work_class=item.work_class,
                         subject=subject_snapshot,
                         neighbor_view=frozen_neighbor_view,

@@ -1,6 +1,6 @@
 import pytest
 from dataclasses import replace
-from src.core.state import AuthoritativeState, EntityState, InventoryComponent, IdentityComponent
+from src.core.state import AuthoritativeState, EntityState, InventoryComponent, IdentityComponent, ItemStack
 from src.core.updates import StateUpdate, EntityUpdate, InventoryUpdate, IdentityUpdate
 from src.engine.shop import ShopSystem
 from src.engine.blacksmith import BlacksmithSystem
@@ -13,7 +13,7 @@ def test_shop_sell_price_enforcement():
     # Entity with 2 woods at a shop
     actor = EntityState(
         id=e_id, kind="hero", position=pos,
-        inventory=InventoryComponent(items=["wood", "wood"], gold=100),
+        inventory=InventoryComponent(items=[ItemStack("wood", 1), ItemStack("wood", 1)], gold=100),
         identity=IdentityComponent(),
         properties={}
     )
@@ -40,7 +40,7 @@ def test_shop_junk_auto_sell():
     # Entity with a mix of items
     actor = EntityState(
         id=e_id, kind="hero", position=pos,
-        inventory=InventoryComponent(items=["wood", "steel_sword", "iron_sword"], gold=100),
+        inventory=InventoryComponent(items=[ItemStack("wood", 1), ItemStack("steel_sword", 1), ItemStack("iron_sword", 1)], gold=100),
         identity=IdentityComponent(),
         properties={}
     )
@@ -68,7 +68,7 @@ def test_blacksmith_material_consumption():
     # Entity with materials and gold for steel_sword
     actor = EntityState(
         id=e_id, kind="hero", position=pos,
-        inventory=InventoryComponent(items=["iron_ore", "iron_ore", "wood"], gold=100),
+        inventory=InventoryComponent(items=[ItemStack("iron_ore", 1), ItemStack("iron_ore", 1), ItemStack("wood", 1)], gold=100),
         identity=IdentityComponent(known_recipes={"craft_steel_sword"}, craft_target="craft_steel_sword"),
         properties={}
     )
@@ -102,7 +102,7 @@ def test_blacksmith_insufficient_materials():
     # Missing one iron_ore
     actor = EntityState(
         id=e_id, kind="hero", position=pos,
-        inventory=InventoryComponent(items=["iron_ore", "wood"], gold=100),
+        inventory=InventoryComponent(items=[ItemStack("iron_ore", 1), ItemStack("wood", 1)], gold=100),
         identity=IdentityComponent(known_recipes={"craft_steel_sword"}, craft_target="craft_steel_sword"),
         properties={}
     )
@@ -126,7 +126,7 @@ def test_blacksmith_insufficient_gold():
     # Not enough gold (needs 60)
     actor = EntityState(
         id=e_id, kind="hero", position=pos,
-        inventory=InventoryComponent(items=["iron_ore", "iron_ore", "wood"], gold=10),
+        inventory=InventoryComponent(items=[ItemStack("iron_ore", 1), ItemStack("iron_ore", 1), ItemStack("wood", 1)], gold=10),
         identity=IdentityComponent(known_recipes={"craft_steel_sword"}, craft_target="craft_steel_sword"),
         properties={}
     )

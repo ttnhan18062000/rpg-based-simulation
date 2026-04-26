@@ -20,8 +20,9 @@ def test_shop_buy():
     
     assert update is not None
     ent_upd = update.entity_updates[1]
-    assert ent_upd.inventory.gold_delta == -2 # Value is 1 in registry
-    assert ent_upd.inventory.items_add[0].item_id == "healing_potion"
+    assert ent_upd.resource_transfers is not None
+    assert ent_upd.resource_transfers[0].gold_cost == 2
+    assert ent_upd.resource_transfers[0].items_add[0].item_id == "healing_potion"
 
 def test_blacksmith_craft():
     entity = EntityState(

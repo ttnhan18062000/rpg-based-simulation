@@ -125,6 +125,15 @@ class LegalityServiceV2:
             if action_kind in ["SABOTAGE", "RECRUIT", "THEFT"]:
                  return False, "REGIONAL_SUPPRESSION"
         return True, "LEGAL"
+        
+    @staticmethod
+    def verify_readiness(entity: EntityState) -> Tuple[bool, str]:
+        """
+        Action Readiness Law: Every ENTITY_ACT requires 100.0 readiness.
+        """
+        if entity.readiness < 100.0:
+            return False, "INSUFFICIENT_READINESS"
+        return True, "READY"
 
     @staticmethod
     def verify_attack_legality(
@@ -283,3 +292,40 @@ class LegalityServiceV2:
                 return True
                 
         return False
+
+    @staticmethod
+    def get_entity_priority(entity: EntityState) -> int:
+        """Calculate movement/tie-breaking priority."""
+        from src.core.state import EntityRole
+        base = 0
+        if entity.identity.role == EntityRole.HERO: base = 100
+        elif entity.identity.role == EntityRole.MONSTER: base = 50
+        
+        # Add slight jitter/ID-based tie break
+        hp_ratio = (entity.combat.hp / entity.combat.max_hp) if entity.combat.max_hp > 0 else 1.0
+        return base + (100 if hp_ratio < 0.3 else 0)
+
+    @staticmethod
+    def get_engaged_hostiles(entity: EntityState, state: Any) -> List[int]:
+        """Find hostile entities currently in melee engagement with this entity."""
+        engaged = []
+        for other_id, other in state.entities.items():
+            if other_id == entity.id or not other.combat.alive:
+                continue
+            
+            # Simple adjacency check for melee engagement
+            dist = LegalityServiceV2.get_manhattan_dist(entity.position, other.position)
+            if dist <= 1:
+                # Check hostiles
+                if entity.identity.faction != other.identity.faction:
+                    engaged.append(other_id)
+        return engaged
+
+    @staticmethod
+    def get_occupant(pos: Tuple[float, float], state: Any, ignore_entity_id: Optional[int] = None) -> Optional[int]:
+        """Return the ID of the entity occupying the specified tile."""
+        for eid, ent in state.entities.items():
+            if eid == ignore_entity_id: continue
+            if ent.position == pos and ent.combat.alive:
+                return eid
+        return None

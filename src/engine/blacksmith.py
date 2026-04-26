@@ -197,34 +197,47 @@ class BlacksmithSystem:
                 )
                 refined_entity_updates[e_id] = replace(existing_upd, strategic=strat_up)
                 continue
+
+            # Phase 3 Law: Resource Conservation (Atomic Crafting)
+            from src.core.updates import ResourceTransferIntent
+            from src.core.state import ItemStack
+            
+            materials = [ItemStack(mat, count) for mat, count in recipe.materials.items()]
+            intent = ResourceTransferIntent(
+                source_id=craft_target,
+                source_kind="CRAFTING",
+                items_add=[ItemStack(recipe.output_item, 1)],
+                items_remove=materials,
+                gold_delta=-recipe.gold_cost, # Note: intent uses gold_cost as positive for deduction in resolve
+                gold_cost=recipe.gold_cost,
+                transfer_kind="CRAFT"
+            )
+            
+            from src.core.conservation import ResourceTransactionResolver
+            result = ResourceTransactionResolver.resolve(state, entity, intent)
+            
+            if not result.accepted:
+                # ABORT due to pressure or missing resources (should have been caught above, 
+                # but resolver is the final authority)
+                from src.systems.strategic import StrategicIntelligenceSystem
+                existing_upd = refined_entity_updates.get(e_id, EntityUpdate(entity_id=e_id))
+                strat_up = StrategicIntelligenceSystem.generate_crafting_blockers(
+                    entity, recipe.materials if result.reason == "INSUFFICIENT_MATERIALS" else {}, 
+                    recipe.gold_cost if result.reason == "INSUFFICIENT_GOLD" else 0
+                )
+                refined_entity_updates[e_id] = replace(existing_upd, strategic=strat_up)
+                continue
                 
             # SUCCESS: Apply crafting transformation
             existing_upd = refined_entity_updates.get(e_id, EntityUpdate(entity_id=e_id))
             
-            # 1. Deduct Materials & Gold, Add Output
-            existing_inv = existing_upd.inventory if existing_upd.inventory else InventoryUpdate()
-            new_removed = list(existing_inv.items_remove)
-            from src.core.state import ItemStack
-            for mat, count in recipe.materials.items():
-                new_removed.append(ItemStack(mat, count))
-            
-            new_added = list(existing_inv.items_add)
-            new_added.append(ItemStack(recipe.output_item, 1))
-            
-            new_inv = replace(
-                existing_inv,
-                items_add=new_added,
-                items_remove=new_removed,
-                gold_delta=existing_inv.gold_delta - recipe.gold_cost
-            )
-            
-            # 2. Reset Craft Target (Consumed)
+            # Reset Craft Target (Consumed)
             existing_id = existing_upd.identity if existing_upd.identity else IdentityUpdate()
             new_id = replace(existing_id, craft_target="")
             
             refined_entity_updates[e_id] = replace(
                 existing_upd,
-                inventory=new_inv,
+                inventory=result.inventory_update,
                 identity=new_id
             )
 

@@ -50,25 +50,31 @@ class CombatResolutionSystem:
         # 1. Evaluate Tactical Context
         atk_mult = 1.0
         def_mult = 1.0
+        trace = {}
         
         if LegalityServiceV2.check_high_ground(attacker.position, defender.position, state):
             atk_mult += CombatResolutionSystem.HIGH_GROUND_BONUS
+            trace["HIGH_GROUND"] = CombatResolutionSystem.HIGH_GROUND_BONUS
             
         if LegalityServiceV2.check_flanking(defender.id, state):
             atk_mult += CombatResolutionSystem.FLANKING_BONUS
+            trace["FLANKING"] = CombatResolutionSystem.FLANKING_BONUS
             
         if LegalityServiceV2.check_cover(attacker.position, defender.position, state):
             def_mult += CombatResolutionSystem.COVER_REDUCTION
+            trace["COVER_REDUCTION"] = CombatResolutionSystem.COVER_REDUCTION
             
         # 1.5 Status Effects: SHATTER (Pillar 2.1)
         # Any physical attack against a Frozen target deals 1.5x damage.
         if defender.properties.get("status_frozen"):
             atk_mult *= 1.5
+            trace["SHATTER"] = 1.5
             
         # 1.6 Biological Debuffs: EXHAUSTION
         # Exhausted entities have reduced offensive capability.
         if attacker.biological.sleep_debt > 80.0:
             atk_mult *= 0.8
+            trace["EXHAUSTION"] = 0.8
             
         # 2. Evaluate Social Bonds (Epic 17)
         # Check if any adjacent ally has a high bond (>0.5) with attacker
@@ -77,10 +83,13 @@ class CombatResolutionSystem:
                 ally = state.entities.get(sid)
                 if ally and ally.combat.alive and LegalityServiceV2.is_adjacent(attacker.position, ally.position):
                     atk_mult += CombatResolutionSystem.BOND_SYNERGY_BONUS
+                    trace["BOND_SYNERGY"] = CombatResolutionSystem.BOND_SYNERGY_BONUS
                     break # One bond is enough for the synergy bonus
 
         # 3. Calculate Damage
         damage = CombatResolutionSystem.calculate_damage(attacker, defender, atk_mult=atk_mult, def_mult=def_mult)
+        trace["FINAL_ATK_MULT"] = atk_mult
+        trace["FINAL_DEF_MULT"] = def_mult
         
         # 4. Determine Outcome
         new_hp = defender.combat.hp - damage
@@ -124,7 +133,8 @@ class CombatResolutionSystem:
             xp_gain=xp_gain,
             gold_gain=gold_gain,
             generation_delta=gen_delta,
-            is_permadeath_set=perma_set
+            is_permadeath_set=perma_set,
+            trace=trace
         )
 
     @staticmethod

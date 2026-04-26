@@ -28,15 +28,18 @@ def test_loot_channeling_completion():
         
     # 4. Final tick (10th)
     sys_upd = LootSystem.update(state)
-    assert 101 in sys_upd.ground_items_remove
-    assert len(sys_upd.entity_updates[1].inventory.items_add) == 1
     
-    final_state = ApplyPath.apply_generation(state, sys_upd)
+    from src.engine.pipeline import AuthoritativeApplyPipeline
+    refined = AuthoritativeApplyPipeline.refine(state, sys_upd)
     
-    # 5. Verify authoritative handoff
-    assert 101 not in final_state.ground_items
-    assert final_state.entities[1].inventory.items[0].item_id == "iron_ore"
-    assert final_state.entities[1].inventory.items[0].quantity == 5
+    assert 101 in refined.ground_items_remove
+    state = ApplyPath.apply_generation(state, refined)
+    
+    # 5. Verify results
+    assert 101 not in state.ground_items
+    new_ent = state.entities[1]
+    ore_found = any(stack.item_id == "iron_ore" and stack.quantity == 5 for stack in new_ent.inventory.items)
+    assert ore_found
 
 @pytest.mark.v2_contract
 def test_loot_interruption_by_distance():

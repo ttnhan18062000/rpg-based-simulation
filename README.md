@@ -8,7 +8,7 @@ A high-fidelity 2D RPG simulation engine with parallel AI, deterministic replay,
 > **Architectural Convergence Complete**: The engine has successfully migrated to a **Feature-Based Aspect-Oriented Architecture** (AOA). This design uses composition (Aspects) for entities and domain-separated modules for simulation logic.
 
 > [!IMPORTANT]
-> **Operational Cutover Complete**: The engine has successfully transitioned to the **src** authoritative runtime as of Phase 12. The legacy `src` logic is officially deprecated and slated for retirement in Phase 13. See the [Phase 12 Entry Package](docs/engine/phase12_entry_package.md) and the [Phase 13 Retirement Manifest](docs/engine/phase13_retirement_manifest.md) for details.
+> **Operational Cutover & Hardening Complete**: The engine has successfully transitioned to the **src** authoritative runtime. **Phase 11 (Reconciliation)** and **Phase 12 (Operational Hardening)** are complete. The V2 engine now satisfies all 1653 documented RPG-core laws with 100% parity and machine-verifiable evidence. **Phase 13 (Legacy Retirement)** has been explicitly skipped to preserve legacy assets for ongoing parity verification.
 
 ```
 src/

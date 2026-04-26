@@ -119,8 +119,20 @@ class SimulationDomainLogic:
     ) -> Dict[int, EntityUpdate]:
         """Standard action cost and routine logic."""
         action = payload.get("action") if payload else None
-        from src.core.updates import BiologicalUpdate, CombatUpdate, RewardUpdate, LifecycleUpdate
+        from src.core.updates import (
+            BiologicalUpdate, CombatUpdate, RewardUpdate, LifecycleUpdate,
+            NavigationUpdate, EntityUpdate
+        )
         
+        # 0. Readiness Check
+        from src.engine.legality import LegalityServiceV2
+        ready, r_reason = LegalityServiceV2.verify_readiness(entity)
+        if not ready:
+            return {entity.id: EntityUpdate(
+                entity_id=entity.id,
+                navigation=NavigationUpdate(failure_reason=r_reason)
+            )}
+            
         if action == "SLEEP":
             return {entity.id: EntityUpdate(
                 entity_id=entity.id,
@@ -148,6 +160,85 @@ class SimulationDomainLogic:
                     rest_pressure_delta=-30.0
                 )
             )}
+        elif action == "RECRUIT":
+            target_id = payload.get("target_id")
+            payout = payload.get("payout", 100)
+            target = None
+            if neighbor_view:
+                for eid, ent in neighbor_view:
+                    if eid == target_id:
+                        target = ent
+                        break
+            if not target and context and hasattr(context, "entities"):
+                target = context.entities.get(target_id)
+                
+            if not target:
+                from src.core.updates import NavigationUpdate
+                return {entity.id: EntityUpdate(entity_id=entity.id, navigation=NavigationUpdate(failure_reason="TARGET_NOT_FOUND"))}
+            
+            from src.systems.social import SocialAppraisalSystem
+            from src.core.strategic import ContractState, ContractKind
+            from src.core.updates import InventoryUpdate, StrategicUpdate
+            
+            # Evaluate offer
+            success = SocialAppraisalSystem.evaluate_recruitment_offer(
+                target, entity.id, payout=payout, risk=0.1
+            )
+            
+            if success:
+                contract_id = f"contract_recruit_{entity.id}_{target_id}_{current_tick}"
+                contract = ContractState(
+                    id=contract_id,
+                    kind=ContractKind.RECRUITMENT,
+                    source_id=entity.id,
+                    target_id=target_id,
+                    active=True,
+                    terms={"payout": payout}
+                )
+                
+                attacker_up = EntityUpdate(
+                    entity_id=entity.id,
+                    readiness_delta=-100.0,
+                    inventory=InventoryUpdate(gold_delta=-payout),
+                    strategic=StrategicUpdate(contracts_add_or_update=[contract])
+                )
+                target_up = EntityUpdate(
+                    entity_id=target_id,
+                    inventory=InventoryUpdate(gold_delta=payout),
+                    strategic=StrategicUpdate(contracts_add_or_update=[contract])
+                )
+                return {entity.id: attacker_up, target_id: target_up}
+            else:
+                return {entity.id: EntityUpdate(
+                    entity_id=entity.id, 
+                    readiness_delta=-50.0, 
+                    task=replace(entity.task, payload={**payload, "outcome": "FAILURE", "reason": "REJECTED"})
+                )}
+        elif action == "ALLOCATE_AP":
+            attr_name = payload.get("attribute")
+            amount = payload.get("amount", 1)
+            
+            if entity.identity.unspent_ap < amount:
+                return {entity.id: EntityUpdate(entity_id=entity.id, navigation=NavigationUpdate(failure_reason="INSUFFICIENT_AP"))}
+            
+            from src.core.updates import AttributeUpdate, IdentityUpdate, CombatUpdate
+            attr_up = AttributeUpdate()
+            combat_up = CombatUpdate()
+            
+            if attr_name == "strength":
+                attr_up = replace(attr_up, strength_delta=amount)
+                combat_up = replace(combat_up, atk_delta=amount * 2) # Strength boosts ATK
+            elif attr_name == "vitality":
+                attr_up = replace(attr_up, vitality_delta=amount)
+                combat_up = replace(combat_up, max_hp_delta=amount * 10, hp_delta=amount * 10)
+            # ... add more as needed
+            
+            return {entity.id: EntityUpdate(
+                entity_id=entity.id,
+                identity=IdentityUpdate(unspent_ap_delta=-amount),
+                attributes=attr_up,
+                combat=combat_up
+            )}
         elif action == "INTERACT":
             from src.core.updates import InteractionUpdate
             target_id = payload.get("target_id")
@@ -158,7 +249,6 @@ class SimulationDomainLogic:
             )}
         elif action == "ATTACK":
             target_id = payload.get("target_id")
-            # print(f"DEBUG: ATTACK action for {entity.id} targeting {target_id}")
             target = None
             if neighbor_view:
                 for eid, ent in neighbor_view:
@@ -170,14 +260,31 @@ class SimulationDomainLogic:
                 target = context.entities.get(target_id)
             
             if target and context:
+                from src.engine.legality import LegalityServiceV2
+                is_legal, reason = LegalityServiceV2.verify_attack_legality(entity, target, context)
+                
+                if not is_legal:
+                    return {entity.id: EntityUpdate(
+                        entity_id=entity.id,
+                        readiness_delta=-50.0, # Partial cost for failed intent
+                        navigation=NavigationUpdate(failure_reason=reason)
+                    )}
+
                 from src.engine.combat import CombatResolutionSystem
                 combat_up = CombatResolutionSystem.resolve_attack(entity, target, context)
                 
                 # Attacker Update: Cost + Rewards
+                from src.core.updates import ResourceTransferIntent
                 attacker_up = EntityUpdate(
                     entity_id=entity.id,
                     readiness_delta=-100.0,
-                    reward=RewardUpdate(xp_gain=combat_up.xp_gain, gold_gain=combat_up.gold_gain)
+                    reward=RewardUpdate(xp_gain=combat_up.xp_gain, gold_gain=0),
+                    resource_transfers=[ResourceTransferIntent(
+                        source_id=target.id,
+                        source_kind="COMBAT",
+                        gold_delta=combat_up.gold_gain,
+                        transfer_kind="REWARD"
+                    )]
                 )
                 
                 # Check HUNT quests if target was killed
@@ -191,16 +298,39 @@ class SimulationDomainLogic:
                 # Defender Update: Damage + Mortality
                 # Note: We strip the rewards from the defender's update
                 defender_combat_up = replace(combat_up, xp_gain=0, gold_gain=0)
+                
+                # Phase 7: Betrayal Check
+                from src.core.updates import StrategicUpdate, SocialUpdate
+                social_up = SocialUpdate(grudge_delta={entity.id: combat_up.damage_taken / target.combat.max_hp})
+                strat_up = StrategicUpdate()
+                group_dissolve_upd = None
+                
+                if entity.group_id is not None and entity.group_id == target.group_id:
+                    from src.systems.social import SocialAppraisalSystem
+                    s_up, st_up = SocialAppraisalSystem.process_betrayal(
+                        target, entity.id, salience=0.8, current_tick=current_tick
+                    )
+                    # Merge s_up with social_up
+                    social_up = replace(s_up, grudge_delta=social_up.grudge_delta)
+                    strat_up = st_up
+                    group_dissolve_upd = -1 # None/Reset
+                
                 defender_up = EntityUpdate(
                     entity_id=target.id,
                     combat=defender_combat_up,
-                    social=SocialUpdate(grudge_delta={entity.id: combat_up.damage_taken / target.combat.max_hp}),
+                    social=social_up,
+                    strategic=strat_up if strat_up.directives_add_or_update else None,
+                    group_id_set=group_dissolve_upd,
                     lifecycle=LifecycleUpdate(
                         age_delta=0,
                         generation_delta=combat_up.generation_delta,
                         is_permadeath_set=combat_up.is_permadeath_set
                     ) if (combat_up.generation_delta != 0 or combat_up.is_permadeath_set is not None) else None
                 )
+                
+                # Attacker also leaves group on betrayal
+                if group_dissolve_upd is not None:
+                    attacker_up = replace(attacker_up, group_id_set=group_dissolve_upd)
                 
                 return {entity.id: attacker_up, target.id: defender_up}
 

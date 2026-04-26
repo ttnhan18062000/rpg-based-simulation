@@ -64,18 +64,20 @@ def test_quest_completion_and_reward_emission(base_entity, active_quest):
     )
     state_upd = StateUpdate(entity_updates={entity.id: update})
     
-    new_state = ApplyPath.apply_generation(state, state_upd)
+    from src.engine.pipeline import AuthoritativeApplyPipeline
+    refined = AuthoritativeApplyPipeline.refine(state, state_upd)
+    new_state = ApplyPath.apply_generation(state, refined)
     new_entity = new_state.entities[entity.id]
     new_quest = new_entity.strategic.projects["q1"]
     
     # Verify status transition (Auto-Rewarded)
     assert new_quest.quest_status == QuestStatus.REWARDED
     
-    # Verify rewards applied (Note: level up happens if XP >= 100)
-    # base_entity is level 1, points 0.
-    # After +100 XP, it should be level 2, points 0.
-    assert new_entity.identity.evolution_level == 2
+    # Verify rewards applied
+    # XP should be 100 * 1.0 (No bonus) = 100. 
+    # Level 1->2 cost is 100. So 0 points remain.
     assert new_entity.identity.evolution_points == 0
+    assert new_entity.identity.evolution_level == 2
     assert new_entity.inventory.gold == entity.inventory.gold + 50
     assert any(item.item_id == "iron_sword" for item in new_entity.inventory.items)
 
@@ -91,7 +93,9 @@ def test_no_double_completion(base_entity, active_quest):
         quest=QuestUpdate(quest_id="q1", progress_delta=5.0)
     )
     state_upd1 = StateUpdate(entity_updates={entity.id: update1})
-    state1 = ApplyPath.apply_generation(state, state_upd1)
+    from src.engine.pipeline import AuthoritativeApplyPipeline
+    refined1 = AuthoritativeApplyPipeline.refine(state, state_upd1)
+    state1 = ApplyPath.apply_generation(state, refined1)
     entity1 = state1.entities[entity.id]
     xp_after_1 = entity1.identity.evolution_points
     
@@ -101,7 +105,8 @@ def test_no_double_completion(base_entity, active_quest):
         quest=QuestUpdate(quest_id="q1", progress_delta=5.0)
     )
     state_upd2 = StateUpdate(entity_updates={entity.id: update2})
-    state2 = ApplyPath.apply_generation(state1, state_upd2)
+    refined2 = AuthoritativeApplyPipeline.refine(state1, state_upd2)
+    state2 = ApplyPath.apply_generation(state1, refined2)
     entity2 = state2.entities[entity.id]
     
     # Verify no extra XP gained

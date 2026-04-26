@@ -20,7 +20,7 @@ from src.core.updates import (
 )
 from src.core.strategic import (
     BlockerState, LeadState, LeadCertainty,
-    ProjectState, ProjectStatus, ObjectiveState,
+    ProjectState, ProjectStatus, ObjectiveState, ObjectiveStatus,
     CognitionProfile
 )
 from src.strategy.cognition_capacity import CapacityService
@@ -312,6 +312,35 @@ class StrategicIntelligenceSystem:
                             )
                     except ValueError:
                         pass
+                
+                # Phase 6: Blocker & Detour Check
+                # If current project has any blockers, look for detours
+                if strat.blockers:
+                    from src.systems.detour import DetourSuggestionSystem
+                    detours = DetourSuggestionSystem.suggest_detours(entity, current_tick)
+                    if detours:
+                        best = detours[0]
+                        obj = ObjectiveState(
+                            id=f"detour_{best.blocker_id}_{current_tick}",
+                            kind=best.objective_kind,
+                            target=best.target,
+                            status=ObjectiveStatus.ACTIVE
+                        )
+                        detour_proj = ProjectState(
+                            id=f"proj_detour_{current_tick}",
+                            kind="detour",
+                            status=ProjectStatus.ACTIVE,
+                            objectives=[obj],
+                            active_objective_id=obj.id,
+                            lock_until_tick=current_tick + 20,
+                            created_tick=current_tick,
+                            score=best.score + 50.0 # High priority for detours
+                        )
+                        detour_up = StrategicIntelligenceSystem.evaluate_project_switch(entity, detour_proj, current_tick)
+                        if detour_up:
+                            if boredom_upd:
+                                detour_up = replace(detour_up, boredom_delta=boredom_upd)
+                            return detour_up
         
         # 2. Strategic Scoring (Always evaluate to allow switching)
         from src.ai.goals import GoalRegistry
@@ -342,7 +371,6 @@ class StrategicIntelligenceSystem:
                     return resumed_up
             
             # Create a candidate project object for evaluation
-            from src.core.strategic import ObjectiveState, ObjectiveStatus
             obj = ObjectiveState(
                 id=f"{best_candidate.kind}_{best_candidate.target_id}",
                 kind="reach_location",

@@ -1,36 +1,44 @@
+# src/platform/rng.py
 from __future__ import annotations
-
 import random
-from typing import Any
-
+from typing import Any, Optional
+from src.core.enums import Domain # Assuming Domain enum exists in src/core/enums.py
 
 class DeterministicRNG:
     """
-    Wrapper for Python's random.Random to ensure simulation isolation.
-    Authoritative logic must never use the global 'random' module.
+    Enhanced Deterministic RNG with Domain Separation for V2.
+    Ensures that different gameplay domains (e.g., SPAWN vs COMBAT) 
+    do not share the same random stream even with the same seed.
     """
-    __slots__ = ("_rng", "_seed")
+    __slots__ = ("_base_seed", "_rng_map")
 
-    def __init__(self, seed: int) -> None:
-        self._seed = seed
-        self._rng = random.Random(seed)
+    def __init__(self, base_seed: int) -> None:
+        self._base_seed = base_seed
+        self._rng_map: dict[Domain, random.Random] = {}
 
-    def next_float(self) -> float:
-        """Return a random float in range [0.0, 1.0)."""
-        return self._rng.random()
+    def _get_rng(self, domain: Domain) -> random.Random:
+        if domain not in self._rng_map:
+            # Seed each domain uniquely based on the base seed
+            domain_seed = self._base_seed ^ (domain.value << 16)
+            self._rng_map[domain] = random.Random(domain_seed)
+        return self._rng_map[domain]
 
-    def next_int(self, a: int, b: int) -> int:
-        """Return a random integer N such that a <= N <= b."""
-        return self._rng.randint(a, b)
+    def next_float(self, domain: Domain) -> float:
+        return self._get_rng(domain).random()
 
-    def get_state(self) -> Any:
-        """Capture the internal state for checkpoints."""
-        return self._rng.getstate()
+    def next_int(self, domain: Domain, a: int, b: int) -> int:
+        return self._get_rng(domain).randint(a, b)
 
-    def set_state(self, state: Any) -> None:
-        """Restore internal state from a checkpoint."""
-        self._rng.setstate(state)
+    def get_state(self) -> dict[int, Any]:
+        return {d.value: r.getstate() for d, r in self._rng_map.items()}
+
+    def set_state(self, state: dict[int, Any]) -> None:
+        for d_val, r_state in state.items():
+            domain = Domain(d_val)
+            if domain not in self._rng_map:
+                self._rng_map[domain] = random.Random()
+            self._rng_map[domain].setstate(r_state)
 
     @property
     def seed(self) -> int:
-        return self._seed
+        return self._base_seed

@@ -29,7 +29,7 @@ def test_regional_suppression_blocks_sabotage():
     # Region with suppression
     region = RegionState(id="holy_city", name="Holy City", bounds=(0, 0, 10, 10), suppression_active=True)
     
-    hero = EntityState(id=1, kind="HERO", position=(5.0, 5.0))
+    hero = EntityState(id=1, kind="HERO", position=(5.0, 5.0), readiness=100.0)
     state = AuthoritativeState(tick=100, seed=42, 
                                regions={"holy_city": region},
                                entities={1: hero})

@@ -19,8 +19,10 @@ def test_hero_ap_grant_on_level_up():
     ent_upd = EntityUpdate(entity_id=1, reward=r_upd)
     state_upd = StateUpdate(entity_updates={1: ent_upd})
     
-    # 3. Apply
-    next_state = ApplyPath.apply_generation(state, state_upd)
+    # 3. Refine & Apply
+    from src.engine.pipeline import AuthoritativeApplyPipeline
+    refined = AuthoritativeApplyPipeline.refine(state, state_upd)
+    next_state = ApplyPath.apply_generation(state, refined)
     new_ent = next_state.entities[1]
     
     assert new_ent.identity.evolution_level == 2
@@ -44,16 +46,19 @@ def test_monster_no_ap_auto_scale():
     ent_upd = EntityUpdate(entity_id=2, reward=r_upd)
     state_upd = StateUpdate(entity_updates={2: ent_upd})
     
-    # 3. Apply
-    next_state = ApplyPath.apply_generation(state, state_upd)
+    # 3. Refine & Apply
+    from src.engine.pipeline import AuthoritativeApplyPipeline
+    refined = AuthoritativeApplyPipeline.refine(state, state_upd)
+    next_state = ApplyPath.apply_generation(state, refined)
     new_ent = next_state.entities[2]
     
     assert new_ent.identity.evolution_level == 2
     assert new_ent.identity.unspent_ap == 0 # No AP for monsters
     
-    # 4. Auto-scale check: Monster stats SHOULD scale by 1.1x
-    assert new_ent.combat.max_hp == 110
-    assert new_ent.combat.atk == 11
+    # 4. Auto-scale check: Monster stats SHOULD scale by V2 Law (Vit=20, Str=5, End=2)
+    assert new_ent.combat.max_hp == 120
+    assert new_ent.combat.atk == 15
+    assert new_ent.combat.def_stat == 12
 
 @pytest.mark.v2_contract
 def test_attribute_allocation_and_recalc():
