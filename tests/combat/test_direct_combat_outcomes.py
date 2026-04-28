@@ -1,16 +1,20 @@
 import pytest
-from src.core.state import AuthoritativeState, EntityState, IdentityComponent, CombatComponent
+from src.core.state import AuthoritativeState, EntityState, IdentityComponent, CombatComponent, BiologicalComponent, LifecycleComponent
 from src.engine.combat import CombatResolutionSystem
 
 from src.core.enums import EntityRole
 
-def create_mock_entity(eid, atk=10, dfn=5, hp=100, role=EntityRole.HERO):
+def create_mock_entity(eid, faction=1, atk=10, dfn=5, hp=100, role=EntityRole.HERO):
     return EntityState(
         id=eid,
         kind="hero",
         position=(0, 0),
-        identity=IdentityComponent(faction=1, role=role),
-        combat=CombatComponent(hp=hp, max_hp=hp, atk=atk, def_stat=dfn)
+        readiness=100.0,
+        active=True,
+        identity=IdentityComponent(faction=faction, role=role),
+        combat=CombatComponent(hp=hp, max_hp=hp, atk=atk, def_stat=dfn, range=1, alive=True),
+        biological=BiologicalComponent(),
+        lifecycle=LifecycleComponent()
     )
 
 def test_combat_damage_calculation():
@@ -23,8 +27,8 @@ def test_combat_damage_calculation():
     assert damage == 4
 
 def test_survival_outcome():
-    attacker = create_mock_entity(1, atk=10)
-    defender = create_mock_entity(2, hp=100)
+    attacker = create_mock_entity(1, faction=1, atk=10)
+    defender = create_mock_entity(2, faction=2, hp=100) # Different faction
     
     state = AuthoritativeState(tick=1, seed=42, entities={1: attacker, 2: defender})
     update = CombatResolutionSystem.resolve_attack(attacker, defender, state=state)
@@ -34,8 +38,8 @@ def test_survival_outcome():
 
 def test_defeat_outcome():
     # Non-lethal attack
-    attacker = create_mock_entity(1, atk=1000)
-    defender = create_mock_entity(2, hp=10, role=EntityRole.MONSTER)
+    attacker = create_mock_entity(1, faction=1, atk=1000)
+    defender = create_mock_entity(2, faction=2, hp=10, role=EntityRole.MONSTER)
     
     state = AuthoritativeState(tick=1, seed=42, entities={1: attacker, 2: defender})
     update = CombatResolutionSystem.resolve_attack(attacker, defender, state=state, is_lethal=False)
@@ -44,8 +48,8 @@ def test_defeat_outcome():
 
 def test_kill_outcome():
     # Lethal attack
-    attacker = create_mock_entity(1, atk=1000)
-    defender = create_mock_entity(2, hp=10, role=EntityRole.MONSTER)
+    attacker = create_mock_entity(1, faction=1, atk=1000)
+    defender = create_mock_entity(2, faction=2, hp=10, role=EntityRole.MONSTER)
     
     state = AuthoritativeState(tick=1, seed=42, entities={1: attacker, 2: defender})
     update = CombatResolutionSystem.resolve_attack(attacker, defender, state=state, is_lethal=True)
@@ -53,8 +57,8 @@ def test_kill_outcome():
     assert update.alive_set is False
 
 def test_opportunity_attack_outcome():
-    attacker = create_mock_entity(1)
-    defender = create_mock_entity(2)
+    attacker = create_mock_entity(1, faction=1)
+    defender = create_mock_entity(2, faction=2)
     
     state = AuthoritativeState(tick=1, seed=42, entities={1: attacker, 2: defender})
     update = CombatResolutionSystem.resolve_opportunity_attack(attacker, defender, state=state)

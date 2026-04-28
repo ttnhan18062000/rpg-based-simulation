@@ -1,6 +1,6 @@
 # tests/combat/test_aoe_splash.py
 import pytest
-from src.core.state import AuthoritativeState, EntityState, IdentityComponent, CombatComponent, TaskComponent
+from src.core.state import AuthoritativeState, EntityState, IdentityComponent, CombatComponent, BiologicalComponent, LifecycleComponent
 from src.core.updates import StateUpdate, EntityUpdate, CombatUpdate, CombatIntent
 from src.engine.apply import ApplyPath
 from src.engine.combat import CombatResolutionSystem
@@ -12,9 +12,12 @@ def create_mock_entity(eid, pos, faction=Faction.HERO_GUILD):
         id=eid,
         kind="HERO",
         position=pos,
+        readiness=100.0,
+        active=True,
         identity=IdentityComponent(faction=faction),
-        combat=CombatComponent(hp=100, atk=20, def_stat=5, range=5),
-        active=True
+        combat=CombatComponent(hp=100, max_hp=100, atk=20, def_stat=5, range=10, alive=True),
+        biological=BiologicalComponent(),
+        lifecycle=LifecycleComponent()
     )
 
 @pytest.mark.v2_contract
@@ -37,7 +40,7 @@ def test_aoe_splash_damage():
     )
     
     # 2. Verify Legality
-    success, reason = LegalityServiceV2.verify_aoe_legality(attacker, target1.position, 10, state)
+    success, reason = LegalityServiceV2.verify_aoe_legality(attacker, target1.position, state)
     assert success is True
     
     # 3. Resolve AoE Attack
@@ -59,8 +62,14 @@ def test_aoe_splash_damage():
     # Primary target (2) should take 12 damage
     assert new_state.entities[2].combat.hp == 88 # 100 - 12
     
-    # Let's check target 3 and 4 (splash)
-    # They should take 10 damage each from extra_damage.
+    # Note: ApplyPath.apply_generation handles splash damage by iterating over simultaneous_intents
+    # and applying them to other entities in range.
+    # In V2, this is handled by the AuthoritativeApplyPipeline for full updates,
+    # but ApplyPath.apply_generation is the lower-level tool.
+    
+    # Verify splash damage (Splash damage = 50% of atk = 10)
+    # target 3 (16,10) is dist 1 from target 1 (15,10) -> in radius 2
+    # target 4 (14,10) is dist 1 from target 1 (15,10) -> in radius 2
     assert new_state.entities[3].combat.hp == 90 # 100 - 10
     assert new_state.entities[4].combat.hp == 90 # 100 - 10
     assert new_state.entities[5].combat.hp == 100 # No damage

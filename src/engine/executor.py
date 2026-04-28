@@ -1,5 +1,6 @@
 # src/engine/executor.py
 from __future__ import annotations
+from dataclasses import replace
 from typing import TYPE_CHECKING, List, Dict, Any, Protocol, Callable
 
 from src.core.worker_protocol import WorkerResult, ResultStatus, WorkerPacket
@@ -63,13 +64,15 @@ class LocalSequentialExecutor:
                     target = item.payload.get("target_position", frozen_subject.position)
                     updates = SimulationDomainLogic.execute_move(state, frozen_subject, target)
                 elif item.work_kind == "ENTITY_ACT":
+                    from src.core.updates import TaskUpdate
                     updates = SimulationDomainLogic.execute_action(frozen_subject, item.payload, state.tick, context=state)
+                    if frozen_subject.id in updates:
+                        updates[frozen_subject.id] = replace(updates[frozen_subject.id], task=TaskUpdate(work_kind_set="ENTITY_ACT", payload_set=item.payload))
                 elif item.work_kind == "ENTITY_BRAIN":
                     updates = SimulationDomainLogic.execute_brain(state, frozen_subject)
                 else:
                     from src.core.updates import EntityUpdate
                     updates = {frozen_subject.id: EntityUpdate(entity_id=frozen_subject.id)}
-                
                 for eid, upd in updates.items():
                     results.append(WorkerResult(
                         source_packet_id=f"local:{state.tick}:{i}",

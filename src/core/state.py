@@ -141,6 +141,11 @@ class NavigationComponent:
     moved_recently: bool = False
     movement_mode: MovementMode = MovementMode.WANDER
     last_failure_reason: Optional[str] = None
+    
+    # Phase 4 additions: Movement Congestion Recovery
+    wait_count: int = 0
+    oscillation_count: int = 0
+    last_position: Optional[tuple[float, float]] = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -251,6 +256,15 @@ class EquipmentComponent:
 
 
 @dataclass(frozen=True, slots=True)
+class IntentResult:
+    """The outcome of a specific resource transfer intent."""
+    transaction_id: str | None
+    accepted: bool
+    reason: str
+    source_kind: str
+    source_id: str | int
+
+@dataclass(frozen=True, slots=True)
 class EntityState:
     """
     Authoritative state for a single simulation entity.
@@ -273,6 +287,7 @@ class EntityState:
     equipment: EquipmentComponent = field(default_factory=EquipmentComponent)
     navigation: NavigationComponent = field(default_factory=NavigationComponent)
     task: TaskComponent = field(default_factory=TaskComponent)
+    latest_intent_results: List[IntentResult] = field(default_factory=list)
     group_id: Optional[int] = None
     properties: Dict[str, Any] = field(default_factory=dict)
 

@@ -5,6 +5,7 @@ from typing import List, Optional, TYPE_CHECKING
 from src.core.state import AuthoritativeState, EntityState
 from src.core.updates import StateUpdate
 from src.core.enums import Faction, Domain
+from src.platform.rng import DeterministicRNG
 
 if TYPE_CHECKING:
     from src.systems.generator import EntityGenerator
@@ -32,10 +33,9 @@ class RaidService:
         raid_size = RaidService.RAID_BASE_SIZE + state.maturity
         
         # Calculate spawn position far from town center (0,0)
-        # Using state.seed and tick for deterministic randomness
-        import random
-        rng = random.Random(state.seed + state.tick)
-        angle = rng.random() * 2 * math.pi
+        # Using stateless deterministic RNG
+        rng = DeterministicRNG(state.seed)
+        angle = rng.get_float(Domain.CALAMITY, state.tick, 0) * 2 * math.pi
         dist = RaidService.SANCTUARY_RADIUS + 10
         
         spawn_pos = (

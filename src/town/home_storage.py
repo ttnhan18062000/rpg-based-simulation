@@ -36,16 +36,21 @@ class HomeStorageService:
         if not InventoryService.can_add_item(home_inv, item_id, quantity):
             return None
             
-        # 4. Generate Updates
+        # 4. Generate Transaction Intent
+        from src.core.updates import ResourceTransferIntent
+        intent = ResourceTransferIntent(
+            source_id="HOME_STORAGE",
+            source_kind="HOME_STORAGE",
+            items_remove=[ItemStack(item_id, quantity)], # Entity gives to source
+            transfer_kind="DEPOSIT"
+        )
+        
         return StateUpdate(
             entity_updates={
                 entity.id: EntityUpdate(
                     entity_id=entity.id,
-                    inventory=InventoryUpdate(items_remove=[ItemStack(item_id, quantity)])
+                    resource_transfers=[intent]
                 )
-            },
-            home_storage_updates={
-                entity.id: InventoryUpdate(items_add=[ItemStack(item_id, quantity)])
             }
         )
 
@@ -61,26 +66,21 @@ class HomeStorageService:
         if dist > 2.0:
             return None
             
-        home_inv = state.home_storage.get(entity.id)
-        if not home_inv:
-            return None
-            
-        existing = next((s for s in home_inv.items if s.item_id == item_id), None)
-        if not existing or existing.quantity < quantity:
-            return None
-            
-        if not InventoryService.can_add_item(entity.inventory, item_id, quantity):
-            return None
-            
+        # 4. Generate Transaction Intent
+        from src.core.updates import ResourceTransferIntent
+        intent = ResourceTransferIntent(
+            source_id="HOME_STORAGE",
+            source_kind="HOME_STORAGE",
+            items_add=[ItemStack(item_id, quantity)], # Entity gains from source
+            transfer_kind="WITHDRAW"
+        )
+        
         return StateUpdate(
             entity_updates={
                 entity.id: EntityUpdate(
                     entity_id=entity.id,
-                    inventory=InventoryUpdate(items_add=[ItemStack(item_id, quantity)])
+                    resource_transfers=[intent]
                 )
-            },
-            home_storage_updates={
-                entity.id: InventoryUpdate(items_remove=[ItemStack(item_id, quantity)])
             }
         )
 

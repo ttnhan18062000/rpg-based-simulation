@@ -1,21 +1,21 @@
 # Consolidated Certification Report
 
-**Last Run ID**: `8aa42036-8961-4610-981a-94555093bf68`
-**Commit SHA**: `6cd189a6add2f169d15838f7f4de5598131965e1`
+**Last Run ID**: `b794ee67-168c-404b-8e6b-e974934e79ca`
+**Commit SHA**: `6353b6f3cf21673cd7f7232dcf2d766c86692c1d`
 
 ## Scenario Summary
 
 | Profile | Scenario | Status | Fail Kind | Reason |
 | :--- | :--- | :--- | :--- | :--- |
-| STRESS_TEST | COMBAT_ARENA_STRESS_50V50 | ⚠️ | failed_envelope | Tick budget violation: 652.7ms > 600.0ms at tick 21 |
+| STRESS_TEST | COMBAT_ARENA_STRESS_50V50 | ⚠️ | none | Certification PASS |
 
 ---
 
 ## Latest Run Detail
 
 # Certification Report: COMBAT_ARENA_STRESS_50V50
-**Commit SHA**: `6cd189a6add2f169d15838f7f4de5598131965e1`
-**Status**: ❌ **FAIL**
+**Commit SHA**: `6353b6f3cf21673cd7f7232dcf2d766c86692c1d`
+**Status**: ✅ **PASS**
 **Allowed Failure Observed**: `False`
 
 ## 1. Certified Execution Context (M10 Scoped Truth)
@@ -23,32 +23,32 @@
 - **Hardware Class**: `CLASS_B`
 - **Scenario**: `COMBAT_ARENA_STRESS_50V50`
 - **Seed**: `42`
-- **Peak RAM (RSS)**: `75.1 MB`
-- **Total CPU Time**: `2.799 sec`
+- **Peak RAM (RSS)**: `75.4 MB`
+- **Total CPU Time**: `1.511 sec`
 
 ## 2. Resource Conformance Evidence
 | Tick | Mode | RAM (MB) | Compute (ms) | Worker % | Queue % |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| 1 | NORMAL | 69.4 | 10.5 | 0.00 | 0.00 |
-| 2 | NORMAL | 69.4 | 27.0 | 0.00 | 0.00 |
-| 3 | NORMAL | 69.4 | 12.9 | 0.00 | 0.00 |
-| 26 | SURVIVAL | 73.6 | 15.8 | 0.00 | 0.00 |
-| 27 | SURVIVAL | 73.6 | 14.1 | 0.00 | 0.00 |
-| 28 | SURVIVAL | 73.6 | 14.8 | 0.00 | 0.00 |
-| 47 | DEGRADED | 74.9 | 17.2 | 0.00 | 0.00 |
-| 48 | CONSTRAINED | 74.9 | 14.5 | 0.00 | 0.00 |
-| 49 | CONSTRAINED | 74.9 | 20.4 | 0.00 | 0.00 |
-| 50 | CONSTRAINED | 75.1 | 12.2 | 0.00 | 0.00 |
+| 1 | NORMAL | 69.6 | 12.6 | 0.00 | 0.00 |
+| 2 | NORMAL | 69.6 | 5.6 | 0.00 | 0.00 |
+| 3 | NORMAL | 69.6 | 7.4 | 0.00 | 0.00 |
+| 26 | NORMAL | 73.5 | 7.9 | 0.00 | 0.00 |
+| 27 | NORMAL | 73.5 | 8.4 | 0.00 | 0.00 |
+| 28 | NORMAL | 73.5 | 7.8 | 0.00 | 0.00 |
+| 47 | NORMAL | 74.5 | 7.5 | 0.00 | 0.00 |
+| 48 | NORMAL | 74.5 | 9.1 | 0.00 | 0.00 |
+| 49 | NORMAL | 74.5 | 10.8 | 0.00 | 0.00 |
+| 50 | NORMAL | 75.4 | 9.7 | 0.00 | 0.00 |
 | ... | ... | ... | ... | ... | ... |
 
 ## 3. Semantic Integrity Proof (Milestone D Law)
-- **Baseline Hash**: `82db5b1cc83f18cb20cd5d525b78f903f650a8d80b7a133b0b3f0c4f2da8f965`
-- **Final Hash**: `82db5b1cc83f18cb20cd5d525b78f903f650a8d80b7a133b0b3f0c4f2da8f965`
+- **Baseline Hash**: `52070582c29b612978121bf1a1cd67466f07c8c04f05d540fd3ec111d2c9d29d`
+- **Final Hash**: `52070582c29b612978121bf1a1cd67466f07c8c04f05d540fd3ec111d2c9d29d`
 - **Status**: MATCHED
 
 ## 4. Conformance Verdict
-> [!CAUTION]
-> **FAILED_ENVELOPE**: Tick budget violation: 652.7ms > 600.0ms at tick 21
+> [!IMPORTANT]
+> This engine is certified to adhere to profile **STRESS_TEST** on Hardware Class **CLASS_B** for the given scenario duration.
 
 ## Honest Reporting Disclaimer
 Performance and safety metrics in this report apply ONLY to the (Profile, Scenario, Hardware Class) bundle defined above. Claims of universal throughput or unbounded scaling are explicitly unsupported by this certification and violate Milestone E project laws.

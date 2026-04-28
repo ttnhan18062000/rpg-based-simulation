@@ -46,46 +46,10 @@ class QuestSystem:
                 if progress_delta > 0:
                     new_val = quest.current_value + progress_delta
                     if new_val >= quest.goal_value:
-                        # Phase 3 Law: Resource Conservation (Reward Capacity)
-                        from src.core.updates import ResourceTransferIntent
-                        from src.core.state import ItemStack
-                        
-                        reward_items = [ItemStack(item_id=tid, quantity=1) for tid in quest.reward.items]
-                        intent = ResourceTransferIntent(
-                            source_id=quest.id,
-                            source_kind="QUEST",
-                            items_add=reward_items,
-                            gold_delta=quest.reward.gold,
-                            transfer_kind="REWARD"
-                        )
-                        
-                        # Use the resolver to check capacity
-                        from src.core.conservation import ResourceTransactionResolver
-                        result = ResourceTransactionResolver.resolve(state, entity, intent)
-                        
-                        if not result.accepted:
-                            # Skip completion for now (Inventory full)
-                            continue
-
                         # Quest Completed!
                         q_updates.append(QuestUpdate(
                             quest_id=quest.id,
                             status_set=QuestStatus.COMPLETED
-                        ))
-                        # Grant Reward (resolved via intent)
-                        # We still emit RewardUpdate for XP which is not an inventory item
-                        r_updates.append(RewardUpdate(
-                            xp_gain=quest.reward.xp,
-                            gold_gain=0, # Handled by intent
-                            items_gain=[] # Handled by intent
-                        ))
-                        # The intent will be processed by pipeline.refine
-                        q_intent = intent
-                        
-                        # Also mark as REWARDED
-                        q_updates.append(QuestUpdate(
-                            quest_id=quest.id,
-                            status_set=QuestStatus.REWARDED
                         ))
                     else:
                         q_updates.append(QuestUpdate(
@@ -93,16 +57,11 @@ class QuestSystem:
                             progress_delta=progress_delta
                         ))
             
-            if q_updates or r_updates:
-                # We need to handle multiple QuestUpdates per entity
-                # But EntityUpdate only takes one QuestUpdate
-                # I'll modify EntityUpdate or just send the first one for now
+            if q_updates:
                 for q_upd in q_updates:
                     entity_updates[entity.id] = EntityUpdate(
                         entity_id=entity.id,
-                        quest=q_upd,
-                        reward=r_updates[0] if r_updates else None,
-                        resource_transfers=[q_intent] if 'q_intent' in locals() else []
+                        quest=q_upd
                     )
                     
         return StateUpdate(entity_updates=entity_updates)

@@ -1,6 +1,7 @@
 import pytest
 from src.core.state import AuthoritativeState, EntityState, ChestState, InteractionComponent, ItemStack
 from src.systems.chest_system import ChestSystem
+from src.engine.pipeline import AuthoritativeApplyPipeline
 
 def test_chest_looting():
     # Setup entity looting
@@ -24,9 +25,10 @@ def test_chest_looting():
     )
     
     update = ChestSystem.update(state)
+    refined = AuthoritativeApplyPipeline.refine(state, update)
     
     # Verify inventory gain
-    ent_upd = update.entity_updates[1]
+    ent_upd = refined.entity_updates[1]
     assert ent_upd.inventory.items_add[0].item_id == "gold_coin"
     assert ent_upd.interaction.reset == True
     

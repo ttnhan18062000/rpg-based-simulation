@@ -16,6 +16,15 @@ class TransformationService:
             "DESERT": {"trauma": 80.0},
             "WASTELAND": {"trauma": 150.0}
         },
+        "BURNT_FOREST": {
+            "FOREST": {"trauma_less": 10.0}
+        },
+        "DESERT": {
+            "PLAINS": {"trauma_less": 20.0, "stability_more": 0.5}
+        },
+        "WASTELAND": {
+            "PLAINS": {"trauma_less": 30.0, "calamity_less": 0.1}
+        },
         "MOUNTAIN": {
             "VOLCANIC": {"calamity": 0.8},
             "FROZEN_PEAKS": {"modifiers": ["FROST"]}
@@ -43,7 +52,13 @@ class TransformationService:
             
             if "trauma" in requirements and region.trauma_score < requirements["trauma"]:
                 met = False
+            if "trauma_less" in requirements and region.trauma_score >= requirements["trauma_less"]:
+                met = False
             if "calamity" in requirements and region.calamity_intensity < requirements["calamity"]:
+                met = False
+            if "calamity_less" in requirements and region.calamity_intensity >= requirements["calamity_less"]:
+                met = False
+            if "stability_more" in requirements and region.stability <= requirements["stability_more"]:
                 met = False
             if "modifiers" in requirements:
                 for mod in requirements["modifiers"]:

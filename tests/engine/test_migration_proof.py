@@ -36,8 +36,8 @@ def test_ground_item_pickup_parity():
     assert ent_upd.interaction is not None
     assert ent_upd.interaction.target_node_id == 100
     
-    # 3. Enforce
-    refined_update = InteractionSystem.enforce(state, update)
+    # 3. Refine via Pipeline
+    refined_update = AuthoritativeApplyPipeline.refine(state, update)
     
     # 4. Verify results
     ent_upd = refined_update.entity_updates[1]
@@ -73,8 +73,8 @@ def test_corpse_looting_parity():
     update = AuthoritativeApplyPipeline._route_interaction_intent(state, update)
     assert update.entity_updates[1].interaction.target_node_id == 200
     
-    # 3. Enforce
-    refined_update = InteractionSystem.enforce(state, update)
+    # 3. Refine via Pipeline
+    refined_update = AuthoritativeApplyPipeline.refine(state, update)
     
     # 4. Verify results
     ent_upd = refined_update.entity_updates[1]

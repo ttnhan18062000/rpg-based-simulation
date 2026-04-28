@@ -67,7 +67,32 @@ class SimulationDomainLogic:
             social_context=entity.social
         )
         
-        strat_up = StrategicIntelligenceSystem.evaluate_strategic_intent(state, entity)
+        # Phase 6: Blocker Inference from recent failures
+        current_proj = entity.strategic.projects.get(entity.strategic.current_project_id or "")
+        inferred_up = StrategicIntelligenceSystem.infer_blockers(
+            entity,
+            entity.task.work_kind,
+            entity.task.payload,
+            navigation_failure=entity.navigation.last_failure_reason,
+            current_project=current_proj
+        )
+        
+        temp_entity = entity
+        if inferred_up.blockers_add_or_update:
+             from src.engine.apply import ApplyPath
+             temp_strat = entity.strategic
+             for b in inferred_up.blockers_add_or_update:
+                  temp_strat = replace(temp_strat, blockers={**temp_strat.blockers, b.id: b})
+             temp_entity = replace(entity, strategic=temp_strat)
+             
+        strat_up = StrategicIntelligenceSystem.evaluate_strategic_intent(state, temp_entity)
+        
+        # Merge inferred blockers into strat_up
+        if inferred_up.blockers_add_or_update:
+            strat_up = replace(
+                strat_up,
+                blockers_add_or_update=list(set(strat_up.blockers_add_or_update + inferred_up.blockers_add_or_update))
+            )
         
         temp_entity = entity
         if strat_up.current_project_id_set is not None:
@@ -177,7 +202,7 @@ class SimulationDomainLogic:
                 return {entity.id: EntityUpdate(entity_id=entity.id, navigation=NavigationUpdate(failure_reason="TARGET_NOT_FOUND"))}
             
             from src.systems.social import SocialAppraisalSystem
-            from src.core.strategic import ContractState, ContractKind
+            from src.core.strategic import ContractState, ContractKind, ContractStatus
             from src.core.updates import InventoryUpdate, StrategicUpdate
             
             # Evaluate offer
@@ -192,20 +217,35 @@ class SimulationDomainLogic:
                     kind=ContractKind.RECRUITMENT,
                     source_id=entity.id,
                     target_id=target_id,
-                    active=True,
+                    status=ContractStatus.ACTIVE,
                     terms={"payout": payout}
                 )
+                
+                from src.core.updates import ResourceTransferIntent
+                group_id = f"recruit_{entity.id}_{target_id}_{current_tick}"
                 
                 attacker_up = EntityUpdate(
                     entity_id=entity.id,
                     readiness_delta=-100.0,
-                    inventory=InventoryUpdate(gold_delta=-payout),
-                    strategic=StrategicUpdate(contracts_add_or_update=[contract])
+                    resource_transfers=[ResourceTransferIntent(
+                        source_id=target_id,
+                        source_kind="RECRUIT",
+                        gold_delta=-payout,
+                        group_id=group_id,
+                        transfer_kind="RECRUITMENT",
+                        strategic_upd=StrategicUpdate(contracts_add_or_update=[contract])
+                    )]
                 )
                 target_up = EntityUpdate(
                     entity_id=target_id,
-                    inventory=InventoryUpdate(gold_delta=payout),
-                    strategic=StrategicUpdate(contracts_add_or_update=[contract])
+                    resource_transfers=[ResourceTransferIntent(
+                        source_id=entity.id,
+                        source_kind="RECRUIT",
+                        gold_delta=payout,
+                        group_id=group_id,
+                        transfer_kind="RECRUITMENT",
+                        strategic_upd=StrategicUpdate(contracts_add_or_update=[contract])
+                    )]
                 )
                 return {entity.id: attacker_up, target_id: target_up}
             else:
@@ -239,6 +279,39 @@ class SimulationDomainLogic:
                 attributes=attr_up,
                 combat=combat_up
             )}
+        elif action == "TRAIN":
+            skill_id = payload.get("skill_id")
+            if not skill_id:
+                from src.core.updates import NavigationUpdate
+                return {entity.id: EntityUpdate(entity_id=entity.id, navigation=NavigationUpdate(failure_reason="MISSING_SKILL_ID"))}
+            
+            # Cost: 50 gold (LEG-RPG-001)
+            TRAIN_COST = 50
+            
+            from src.core.updates import ResourceTransferIntent, IdentityUpdate, StrategicUpdate
+            
+            # Find matching capability blockers
+            resolved_blockers = []
+            for b_id, b in entity.strategic.blockers.items():
+                if b.kind == "capability" and b.subject == skill_id:
+                    resolved_blockers.append(b_id)
+
+            # Transaction Intent with Contingent Updates
+            intent = ResourceTransferIntent(
+                source_id="CLASS_HALL",
+                source_kind="TOWN_SERVICE",
+                gold_delta=-TRAIN_COST,
+                transfer_kind="TRAIN",
+                is_group_required=True,
+                identity_upd=IdentityUpdate(recipes_learned=[skill_id]),
+                strategic_upd=StrategicUpdate(blockers_remove=resolved_blockers)
+            )
+            
+            return {entity.id: EntityUpdate(
+                entity_id=entity.id,
+                readiness_delta=-100.0,
+                resource_transfers=[intent]
+            )}
         elif action == "INTERACT":
             from src.core.updates import InteractionUpdate
             target_id = payload.get("target_id")
@@ -262,14 +335,8 @@ class SimulationDomainLogic:
             if target and context:
                 from src.engine.legality import LegalityServiceV2
                 is_legal, reason = LegalityServiceV2.verify_attack_legality(entity, target, context)
-                
                 if not is_legal:
-                    return {entity.id: EntityUpdate(
-                        entity_id=entity.id,
-                        readiness_delta=-50.0, # Partial cost for failed intent
-                        navigation=NavigationUpdate(failure_reason=reason)
-                    )}
-
+                    return {entity.id: EntityUpdate(entity_id=entity.id, readiness_delta=-50.0, navigation=NavigationUpdate(failure_reason=reason))}
                 from src.engine.combat import CombatResolutionSystem
                 combat_up = CombatResolutionSystem.resolve_attack(entity, target, context)
                 
@@ -278,11 +345,11 @@ class SimulationDomainLogic:
                 attacker_up = EntityUpdate(
                     entity_id=entity.id,
                     readiness_delta=-100.0,
-                    reward=RewardUpdate(xp_gain=combat_up.xp_gain, gold_gain=0),
                     resource_transfers=[ResourceTransferIntent(
                         source_id=target.id,
                         source_kind="COMBAT",
                         gold_delta=combat_up.gold_gain,
+                        xp_reward=combat_up.xp_gain,
                         transfer_kind="REWARD"
                     )]
                 )

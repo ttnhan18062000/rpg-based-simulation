@@ -62,10 +62,11 @@ def test_succession_and_heirloom_transfer():
     update = StateUpdate()
     refined = LifecycleSystem.resolve_lifecycle(state, update)
     
-    # Heir should receive the item
+    # Heir should receive the item via transaction
     heir_upd = refined.entity_updates[2]
-    assert heir_upd.inventory is not None
-    assert any(stack.item_id == "Excalibur" for stack in heir_upd.inventory.items_add)
+    assert len(heir_upd.resource_transfers) > 0
+    transfer = heir_upd.resource_transfers[0]
+    assert any(stack.item_id == "Excalibur" for stack in transfer.items_add)
 
 def test_near_death_hardening_logic():
     """Directly test the hardening logic in the pipeline."""

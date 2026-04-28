@@ -5,6 +5,8 @@ from src.core.state import AuthoritativeState, EntityState
 from src.quests.generator import QuestGenerator
 from src.core.strategic import LeadState, LeadCertainty
 from src.core.updates import StateUpdate, EntityUpdate, StrategicUpdate
+from src.core.enums import Domain
+from src.platform.rng import DeterministicRNG
 
 class GuildAction:
     """Action to visit the Guild for quests and world intelligence."""
@@ -37,8 +39,8 @@ class GuildAction:
                     )
                     
         # 2. Select 1-2 leads (Deterministic choice based on seed + entity ID)
-        rng = random.Random(state.seed + entity.id + state.tick)
-        selected_leads = rng.sample(potential_leads, min(2, len(potential_leads)))
+        rng = DeterministicRNG(state.seed)
+        selected_leads = rng.sample(Domain.SOCIAL, state.tick, entity.id, potential_leads, min(2, len(potential_leads)))
         
         # 3. Create a quest if the entity has space
         new_projects = []

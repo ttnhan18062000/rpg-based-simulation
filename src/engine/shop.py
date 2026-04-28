@@ -2,7 +2,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Dict
 from dataclasses import replace
 
-from src.core.updates import EntityUpdate, InventoryUpdate
+from src.core.updates import EntityUpdate
 
 if TYPE_CHECKING:
     from src.core.state import AuthoritativeState, EntityState
@@ -77,15 +77,11 @@ class ShopSystem:
                     transfer_kind="SELL"
                 )
                 
-                from src.core.conservation import ResourceTransactionResolver
-                result = ResourceTransactionResolver.resolve(state, entity, intent)
-                
-                if result.accepted:
-                    existing_upd = refined_entity_updates.get(e_id, EntityUpdate(entity_id=e_id))
-                    refined_entity_updates[e_id] = replace(
-                        existing_upd,
-                        inventory=result.inventory_update
-                    )
+                existing_upd = refined_entity_updates.get(e_id, EntityUpdate(entity_id=e_id))
+                refined_entity_updates[e_id] = replace(
+                    existing_upd,
+                    resource_transfers=list(existing_upd.resource_transfers) + [intent]
+                )
                 
         return replace(update, entity_updates=refined_entity_updates)
 

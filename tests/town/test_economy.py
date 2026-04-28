@@ -47,9 +47,10 @@ def test_blacksmith_craft():
     
     assert update is not None
     ent_upd = update.entity_updates[1]
-    # Check removals
-    mats_rem = {s.item_id: s.quantity for s in ent_upd.inventory.items_remove}
+    # Check intent
+    assert len(ent_upd.resource_transfers) == 1
+    intent = ent_upd.resource_transfers[0]
+    mats_rem = {s.item_id: s.quantity for s in intent.items_remove}
     assert mats_rem["iron_ore"] == 5
     assert mats_rem["wood"] == 2
-    # Check addition
-    assert ent_upd.inventory.items_add[0].item_id == "iron_sword"
+    assert intent.items_add[0].item_id == "iron_sword"

@@ -4,6 +4,7 @@ from typing import Dict, Any
 from src.core.state import AuthoritativeState, EntityState, ResourceNodeState, InteractionComponent, InventoryComponent, ItemStack
 from src.core.updates import StateUpdate, EntityUpdate, InteractionUpdate, InventoryUpdate
 from src.engine.interaction import InteractionSystem
+from src.engine.pipeline import AuthoritativeApplyPipeline
 
 def test_law_of_capacity_enforcement():
     """Law of Capacity: Progress reset if slots are full."""
@@ -26,7 +27,7 @@ def test_law_of_capacity_enforcement():
         }
     )
     
-    refined = InteractionSystem.enforce(state, update)
+    refined = AuthoritativeApplyPipeline.refine(state, update)
     e_upd = refined.entity_updates[1]
     
     assert e_upd.interaction.reset == True
@@ -53,7 +54,7 @@ def test_law_of_weight_enforcement():
         }
     )
     
-    refined = InteractionSystem.enforce(state, update)
+    refined = AuthoritativeApplyPipeline.refine(state, update)
     e_upd = refined.entity_updates[1]
     
     assert e_upd.interaction.reset == True
@@ -78,7 +79,7 @@ def test_law_of_proximity_reset_on_move():
         }
     )
     
-    refined = InteractionSystem.enforce(state, update)
+    refined = AuthoritativeApplyPipeline.refine(state, update)
     e_upd = refined.entity_updates[1]
     
     assert e_upd.interaction.reset == True
@@ -102,7 +103,7 @@ def test_law_of_availability_node_depleted():
         }
     )
     
-    refined = InteractionSystem.enforce(state, update)
+    refined = AuthoritativeApplyPipeline.refine(state, update)
     e_upd = refined.entity_updates[1]
     
     assert e_upd.interaction.reset == True

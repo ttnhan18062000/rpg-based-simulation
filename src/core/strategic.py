@@ -36,6 +36,15 @@ class LeadCertainty(str, Enum):
     EXHAUSTED = "EXHAUSTED"  # Tested and failed
 
 
+class ContractStatus(str, Enum):
+    """Lifecycle status of a social contract."""
+    OFFERED = "OFFERED"
+    ACTIVE = "ACTIVE"
+    COMPLETED = "COMPLETED"
+    FAILED = "FAILED"
+    BETRAYED = "BETRAYED"
+
+
 class ContractKind(str, Enum):
     """Types of social contracts."""
     RECRUITMENT = "RECRUITMENT"
@@ -53,7 +62,8 @@ class ContractState:
     target_id: int
     terms: Dict[str, Any] = field(default_factory=dict)
     expiry_tick: int = -1
-    active: bool = True
+    status: ContractStatus = ContractStatus.OFFERED
+    created_tick: int = 0
 
 
 @dataclass(frozen=True, slots=True)

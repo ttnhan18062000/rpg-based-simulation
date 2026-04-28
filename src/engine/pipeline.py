@@ -8,11 +8,6 @@ if TYPE_CHECKING:
     from src.core.state import AuthoritativeState
 
 class AuthoritativeApplyPipeline:
-    """
-    Unified authoritative refinement pipeline for the V2 Engine.
-    Enforces the "Proposal -> Refinement -> Apply" law.
-    """
-
     @staticmethod
     def refine(state: AuthoritativeState, raw_update: StateUpdate) -> StateUpdate:
         """
@@ -21,8 +16,8 @@ class AuthoritativeApplyPipeline:
         """
         from src.engine.town_resolution import TownResolutionSystem
         from src.engine.shop import ShopSystem
-        from src.engine.blacksmith import BlacksmithSystem
         from src.engine.interaction import InteractionSystem
+        from src.engine.blacksmith import BlacksmithSystem
         from src.systems.strategic import StrategicIntelligenceSystem
         from src.systems.redirection import StrategicRedirectionSystem
         from src.engine.movement import MovementSystem
@@ -34,8 +29,34 @@ class AuthoritativeApplyPipeline:
         from src.systems.lifecycle import LifecycleSystem
         from src.systems.groups import GroupSystem
         
+        # 0. Sanitize Worker Proposals (Milestone 13 Law)
+        # The worker results are only proposals. We preserve the INTENTS (task, navigation, etc.)
+        # but strip calculated results (identity_delta, combat results, etc.) to avoid 
+        # double-counting during authoritative re-execution in the Kernel.
+        sanitized_entity_updates = {}
+        for e_id, ent_upd in raw_update.entity_updates.items():
+            sanitized_transfers = [
+                t for t in ent_upd.resource_transfers 
+                if t.transfer_kind not in ("QUEST_REWARD", "KILL_REWARD", "REWARD", "TAX")
+            ]
+            sanitized_entity_updates[e_id] = EntityUpdate(
+                entity_id=e_id,
+                task=ent_upd.task,
+                navigation=ent_upd.navigation,
+                interaction=ent_upd.interaction,
+                quest=ent_upd.quest,
+                property_updates=ent_upd.property_updates,
+                new_position=ent_upd.new_position,
+                moved_this_tick=ent_upd.moved_this_tick,
+                readiness_delta=ent_upd.readiness_delta,
+                combat=ent_upd.combat,
+                resource_transfers=sanitized_transfers,
+                group_id_set=ent_upd.group_id_set
+            )
+        update = replace(raw_update, entity_updates=sanitized_entity_updates)
+        
         # 1. Territorial & Service Laws (Healing, Shopping, Crafting)
-        update = TownResolutionSystem.resolve(state, raw_update)
+        update = TownResolutionSystem.resolve(state, update)
         update = ShopSystem.enforce(state, update)
         update = BlacksmithSystem.enforce(state, update)
         
@@ -57,11 +78,6 @@ class AuthoritativeApplyPipeline:
         # 3. Interaction Enforcement
         update = InteractionSystem.enforce(state, update)
         
-        # 4. Strategic Logic
-        update = StrategicIntelligenceSystem.resolve_blockers(state, update)
-        update = StrategicIntelligenceSystem.evaluate_biological_concerns(state, update)
-        update = StrategicRedirectionSystem.enforce(state, update)
-        
         # 5. Intent Routing (Movement)
         update = AuthoritativeApplyPipeline._route_movement_intent(state, update)
         
@@ -71,13 +87,18 @@ class AuthoritativeApplyPipeline:
         # 7. Lifecycle
         from src.systems.lifecycle import LifecycleSystem
         update = LifecycleSystem.resolve_lifecycle(state, update)
-        
         # 8. Quest Completions & Rewards
         from src.engine.quests import QuestResolutionSystem
         update = QuestResolutionSystem.enforce(state, update)
-        
+
         # 9. Atomic Resource Transactions (Consolidated)
         update = AuthoritativeApplyPipeline._resolve_resource_transactions(state, update)
+        
+        
+        # 9.5 Strategic Logic (After resource resolution)
+        update = StrategicIntelligenceSystem.resolve_blockers(state, update)
+        update = StrategicIntelligenceSystem.evaluate_biological_concerns(state, update)
+        update = StrategicRedirectionSystem.enforce(state, update)
         
         # 10. Evolution & Growth (Captures XP from all sources above)
         from src.engine.evolution import EvolutionSystem
@@ -423,12 +444,14 @@ class AuthoritativeApplyPipeline:
         Resolves any ResourceTransferIntent that wasn't handled by specific systems.
         """
         from src.core.conservation import ResourceTransactionResolver
-        from src.core.updates import InventoryUpdate
+        from src.core.updates import InventoryUpdate, IdentityUpdate
         
         refined_entity_updates = dict(update.entity_updates)
         refined_node_updates = dict(update.node_updates)
         ground_items_remove = list(update.ground_items_remove)
         corpses_remove = list(update.corpses_remove)
+        resource_updates = dict(update.resource_updates)
+        current_home_storage_upds = dict(update.home_storage_updates)
         
         # Phase 9 Fix: Use list(keys) to avoid "dictionary changed size during iteration"
         for e_id in list(refined_entity_updates.keys()):
@@ -443,52 +466,240 @@ class AuthoritativeApplyPipeline:
             # Compute pending inventory state (updates as we process each intent)
             current_inv_upd = ent_upd.inventory or InventoryUpdate()
             current_id_upd = ent_upd.identity or IdentityUpdate()
+            current_bio_upd = ent_upd.biological
+            current_attr_upd = ent_upd.attributes
+            current_combat_upd = ent_upd.combat
+            current_strat_upd = ent_upd.strategic
+            current_interaction_upd = ent_upd.interaction
+            
+            intent_results = []
             
             has_any_accepted = False
-            for intent in ent_upd.resource_transfers:
-                pending_inv = InventoryService.apply_update(entity.inventory, current_inv_upd)
+            i = 0
+            while i < len(ent_upd.resource_transfers):
+                # Identify intent group (None group_id means single-intent independent group)
+                group_id = ent_upd.resource_transfers[i].group_id
+                group_intents = []
+                if group_id is None:
+                    group_intents = [ent_upd.resource_transfers[i]]
+                    j = i + 1
+                else:
+                    j = i
+                    while j < len(ent_upd.resource_transfers) and ent_upd.resource_transfers[j].group_id == group_id:
+                        group_intents.append(ent_upd.resource_transfers[j])
+                        j += 1
                 
-                result = ResourceTransactionResolver.resolve(state, entity, intent, inventory_override=pending_inv)
-                if result.accepted:
+                # Checkpoint for potential rollback
+                cp_inv = current_inv_upd
+                cp_id = current_id_upd
+                cp_bio = current_bio_upd
+                cp_attr = current_attr_upd
+                cp_combat = current_combat_upd
+                cp_strat = current_strat_upd
+                cp_home_stor = dict(current_home_storage_upds)
+                cp_node_upds = dict(refined_node_updates)
+                cp_ground_rem = list(ground_items_remove)
+                cp_corpse_rem = list(corpses_remove)
+                cp_quest_upd = refined_entity_updates[e_id].quest
+                
+                group_success = True
+                for intent in group_intents:
+                    pending_inv = InventoryService.apply_update(entity.inventory, current_inv_upd)
+                    print(f"[DEBUG] Processing intent: source_kind={intent.source_kind} transfer_kind={intent.transfer_kind}")
+                    result = ResourceTransactionResolver.resolve(state, entity, intent, inventory_override=pending_inv)
+                    print(f"[DEBUG] Intent result: accepted={result.accepted} reason={result.reason} identity_update={result.identity_update}")
+                    
+                    from src.core.state import IntentResult
+                    intent_results.append(IntentResult(
+                        transaction_id=intent.transaction_id,
+                        accepted=result.accepted,
+                        reason=result.reason,
+                        source_kind=intent.source_kind,
+                        source_id=intent.source_id
+                    ))
+                    
+                    if result.accepted:
+                        # Accumulate updates within the group
+                        current_inv_upd = replace(current_inv_upd,
+                            items_add=list(current_inv_upd.items_add) + (result.inventory_update.items_add if result.inventory_update else []),
+                            items_remove=list(current_inv_upd.items_remove) + (result.inventory_update.items_remove if result.inventory_update else []),
+                            gold_delta=current_inv_upd.gold_delta + (result.inventory_update.gold_delta if result.inventory_update else 0)
+                        )
+                        
+                        if result.biological_update:
+                             if current_bio_upd:
+                                  # Simple merge (set values from result over existing)
+                                  current_bio_upd = replace(current_bio_upd,
+                                       sleep_debt_delta=current_bio_upd.sleep_debt_delta + result.biological_update.sleep_debt_delta,
+                                       sleep_debt_set=result.biological_update.sleep_debt_set if result.biological_update.sleep_debt_set is not None else current_bio_upd.sleep_debt_set,
+                                       hunger_delta=current_bio_upd.hunger_delta + result.biological_update.hunger_delta,
+                                       hunger_set=result.biological_update.hunger_set if result.biological_update.hunger_set is not None else current_bio_upd.hunger_set,
+                                       well_rested_until_set=result.biological_update.well_rested_until_set if result.biological_update.well_rested_until_set is not None else current_bio_upd.well_rested_until_set
+                                  )
+                             else:
+                                  current_bio_upd = result.biological_update
+                                  
+                        if result.attributes_update:
+                             if current_attr_upd:
+                                  current_attr_upd = replace(current_attr_upd,
+                                       strength_delta=current_attr_upd.strength_delta + result.attributes_update.strength_delta,
+                                       agility_delta=current_attr_upd.agility_delta + result.attributes_update.agility_delta,
+                                       vitality_delta=current_attr_upd.vitality_delta + result.attributes_update.vitality_delta
+                                       # ... add more as needed
+                                  )
+                             else:
+                                  current_attr_upd = result.attributes_update
+                                  
+                        if result.identity_update:
+                             print(f"[DEBUG] e_id={e_id} result.identity_update={result.identity_update}")
+                             current_id_upd = replace(current_id_upd,
+                                  recipes_learned=list(current_id_upd.recipes_learned) + list(result.identity_update.recipes_learned),
+                                  evolution_points_delta=current_id_upd.evolution_points_delta + result.identity_update.evolution_points_delta,
+                                  unspent_ap_delta=current_id_upd.unspent_ap_delta + result.identity_update.unspent_ap_delta
+                             )
+                                  
+                             print(f"[DEBUG] e_id={e_id} current_id_upd={current_id_upd}")
+                        if result.combat_update:
+                             if current_combat_upd:
+                                  current_combat_upd = replace(current_combat_upd,
+                                       hp_delta=current_combat_upd.hp_delta + result.combat_update.hp_delta,
+                                       damage_taken=current_combat_upd.damage_taken + result.combat_update.damage_taken
+                                  )
+                             else:
+                                  current_combat_upd = result.combat_update
+                                  
+                        if result.strategic_update:
+                             if current_strat_upd:
+                                  # Merge StrategicUpdate
+                                  current_strat_upd = replace(current_strat_upd,
+                                       blockers_add_or_update=current_strat_upd.blockers_add_or_update + result.strategic_update.blockers_add_or_update,
+                                       blockers_remove=current_strat_upd.blockers_remove + result.strategic_update.blockers_remove,
+                                       leads_add_or_update=current_strat_upd.leads_add_or_update + result.strategic_update.leads_add_or_update,
+                                       leads_remove=current_strat_upd.leads_remove + result.strategic_update.leads_remove
+                                       # ... add more as needed
+                                  )
+                             else:
+                                  current_strat_upd = result.strategic_update
+                                  
+                        if result.home_storage_update:
+                             existing = current_home_storage_upds.get(e_id)
+                             if existing:
+                                  current_home_storage_upds[e_id] = replace(existing,
+                                       items_add=list(existing.items_add) + list(result.home_storage_update.items_add),
+                                       items_remove=list(existing.items_remove) + list(result.home_storage_update.items_remove)
+                                  )
+                             else:
+                                  current_home_storage_upds[e_id] = result.home_storage_update
+                        
+                        if result.node_update:
+                            n_id = result.node_update.node_id
+                            existing_node = refined_node_updates.get(n_id)
+                            if existing_node:
+                                refined_node_updates[n_id] = replace(existing_node,
+                                    charges_delta=existing_node.charges_delta + result.node_update.charges_delta
+                                )
+                            else:
+                                refined_node_updates[n_id] = result.node_update
+                        
+                        if result.ground_item_remove is not None:
+                            ground_items_remove.append(result.ground_item_remove)
+                        if result.corpse_remove is not None:
+                            corpses_remove.append(result.corpse_remove)
+                        
+                        # Handle Quest Status (Matching Phase 3 Task 3.1)
+                        if intent.transfer_kind == "QUEST_REWARD":
+                            from src.core.updates import QuestUpdate
+                            from src.core.quests import QuestStatus
+                            q_id = str(intent.source_id)
+                            curr_q_upd = refined_entity_updates[e_id].quest
+                            if curr_q_upd and curr_q_upd.quest_id == q_id:
+                                refined_entity_updates[e_id] = replace(refined_entity_updates[e_id],
+                                    quest=replace(curr_q_upd, status_set=QuestStatus.REWARDED)
+                                )
+                        
+                        # Handle Interaction Reset (Phase 1 Law)
+                        if intent.transfer_kind in ("HARVEST", "LOOT", "AUTO"):
+                            from src.core.updates import InteractionUpdate
+                            current_interaction_upd = InteractionUpdate(reset=True)
+                        
+                        # Handle Crafting Reset (Phase 1 Law)
+                        if intent.transfer_kind == "CRAFT":
+                            current_id_upd = replace(current_id_upd, craft_target="")
+                        
+                        # Handle Faction Gold Side-Effects (e.g. TAX)
+                        if intent.source_kind == "TAX" and intent.gold_delta != 0:
+                            f_key = f"{intent.source_id}_gold"
+                            resource_updates[f_key] = resource_updates.get(f_key, 0.0) - intent.gold_delta
+                            
+                        # Conservation Metrics (Phase 10)
+                        if result.accepted:
+                            # 1. Gold Conservation
+                            g_delta = (result.inventory_update.gold_delta if result.inventory_update else 0)
+                            if g_delta != 0:
+                                resource_updates["metric_total_gold"] = resource_updates.get("metric_total_gold", 0.0) + g_delta
+                            
+                            # 2. Item Conservation
+                            if result.inventory_update:
+                                for item in result.inventory_update.items_add:
+                                    m_key = f"metric_total_{item.item_id}"
+                                    resource_updates[m_key] = resource_updates.get(m_key, 0.0) + item.quantity
+                                for item in result.inventory_update.items_remove:
+                                    m_key = f"metric_total_{item.item_id}"
+                                    resource_updates[m_key] = resource_updates.get(m_key, 0.0) - item.quantity
+                    else:
+                        # If any intent in the group fails, and it's required, fail the group
+                        if intent.is_group_required:
+                            group_success = False
+                            break
+                
+                if group_success:
                     has_any_accepted = True
-                    # Update consolidated inventory update
-                    current_inv_upd = replace(current_inv_upd,
-                        items_add=list(current_inv_upd.items_add) + (result.inventory_update.items_add if result.inventory_update else []),
-                        items_remove=list(current_inv_upd.items_remove) + (result.inventory_update.items_remove if result.inventory_update else []),
-                        gold_delta=current_inv_upd.gold_delta + (result.inventory_update.gold_delta if result.inventory_update else 0)
-                    )
+                else:
+                    # Rollback group changes
+                    current_inv_upd = cp_inv
+                    current_id_upd = cp_id
+                    current_bio_upd = cp_bio
+                    current_attr_upd = cp_attr
+                    current_combat_upd = cp_combat
+                    current_strat_upd = cp_strat
+                    current_home_storage_upds = cp_home_stor
+                    refined_node_updates = cp_node_upds
+                    ground_items_remove = cp_ground_rem
+                    corpses_remove = cp_corpse_rem
+                    refined_entity_updates[e_id] = replace(refined_entity_updates[e_id], quest=cp_quest_upd)
                     
-                    # Update consolidated identity update
-                    current_id_upd = replace(current_id_upd,
-                        evolution_points_delta=current_id_upd.evolution_points_delta + (result.identity_update.evolution_points_delta if result.identity_update else 0),
-                    )
-                    
-                    # Update world (immediate, because world isn't local to entity)
-                    if result.node_update:
-                        n_id = result.node_update.node_id
-                        existing_node = refined_node_updates.get(n_id)
-                        if existing_node:
-                            refined_node_updates[n_id] = replace(existing_node,
-                                charges_delta=existing_node.charges_delta + result.node_update.charges_delta
-                            )
-                        else:
-                            refined_node_updates[n_id] = result.node_update
-                    
-                    if result.ground_item_remove is not None:
-                        ground_items_remove.append(result.ground_item_remove)
-                    if result.corpse_remove is not None:
-                        corpses_remove.append(result.corpse_remove)
+                    # Phase 1 Law: Reset interaction progress if harvest/loot fails due to capacity
+                    for intent in group_intents:
+                        if intent.transfer_kind in ("HARVEST", "LOOT", "AUTO"):
+                            from src.core.updates import InteractionUpdate
+                            current_interaction_upd = InteractionUpdate(reset=True)
+                            
+                            # Law of Conservation: Proactively strip any node updates for this source
+                            # if it failed, to ensure no "ghost" depletions happen.
+                            if intent.source_kind == "NODE" and intent.source_id in refined_node_updates:
+                                del refined_node_updates[intent.source_id]
+                            break
+                
+                i = j
                 
             # Update entity and CLEAR intents
             if has_any_accepted:
-                refined_entity_updates[e_id] = replace(ent_upd, 
+                refined_entity_updates[e_id] = replace(refined_entity_updates[e_id], 
                     inventory=current_inv_upd,
                     identity=current_id_upd,
-                    resource_transfers=[]
+                    biological=current_bio_upd,
+                    attributes=current_attr_upd,
+                    combat=current_combat_upd,
+                    strategic=current_strat_upd,
+                    interaction=current_interaction_upd,
+                    resource_transfers=[],
+                    intent_results=intent_results
                 )
             else:
-                refined_entity_updates[e_id] = replace(ent_upd, 
-                    resource_transfers=[]
+                refined_entity_updates[e_id] = replace(refined_entity_updates[e_id], 
+                    interaction=current_interaction_upd if current_interaction_upd else refined_entity_updates[e_id].interaction,
+                    resource_transfers=[],
+                    intent_results=intent_results
                 )
 
         return replace(
@@ -496,5 +707,7 @@ class AuthoritativeApplyPipeline:
             entity_updates=refined_entity_updates,
             node_updates=refined_node_updates,
             ground_items_remove=ground_items_remove,
-            corpses_remove=corpses_remove
+            corpses_remove=corpses_remove,
+            resource_updates=resource_updates,
+            home_storage_updates=current_home_storage_upds
         )

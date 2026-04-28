@@ -8,6 +8,7 @@ def create_mock_entity(eid, faction, hp=100, range=1, active=True):
         id=eid,
         kind="hero",
         position=(0, 0),
+        readiness=100.0,
         active=active,
         identity=IdentityComponent(faction=faction),
         combat=CombatComponent(hp=hp, range=range, alive=(hp > 0))

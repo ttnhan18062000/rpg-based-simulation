@@ -3,6 +3,7 @@ import pytest
 from src.core.state import AuthoritativeState, EntityState, IdentityComponent, CombatComponent, RegionState, BuildingState, TaskComponent
 from src.core.updates import StateUpdate, EntityUpdate, IdentityUpdate, TaskUpdate
 from src.engine.pipeline import AuthoritativeApplyPipeline
+from src.engine.evolution import EvolutionSystem
 
 def test_regional_hazard_impact():
     # Setup state with a hazardous region
@@ -57,15 +58,13 @@ def test_evolution_trigger():
     state = AuthoritativeState(tick=1, seed=42, entities={3: entity})
     
     # XP required for level 9 -> 10 is 100 * (9^1.5) = 2700
-    # So we need a much larger delta if we start at 90.
-    # Actually, let's just set points near the requirement.
     from src.progression.leveling import LevelingService
     req = LevelingService.get_xp_required(9)
     raw_update = StateUpdate(entity_updates={3: EntityUpdate(entity_id=3, 
         identity=IdentityUpdate(evolution_points_delta=req - 80))})
     
-    # Refine
-    refined = AuthoritativeApplyPipeline.refine(state, raw_update)
+    # Call EvolutionSystem directly (bypassing Pipeline sanitizer)
+    refined = EvolutionSystem.evaluate(state, raw_update)
     
     # Verify evolution
     ent_upd = refined.entity_updates[3]

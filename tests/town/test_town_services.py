@@ -30,9 +30,11 @@ def test_inn_restoration():
     
     # Verify completion update
     ent_upd = update.entity_updates[1]
-    assert ent_upd.biological.sleep_debt_set == 0.0
-    assert ent_upd.combat.hp_delta == 100
-    assert ent_upd.inventory.gold_delta == -10
+    assert len(ent_upd.resource_transfers) == 1
+    intent = ent_upd.resource_transfers[0]
+    assert intent.biological_upd.sleep_debt_set == 0.0
+    assert intent.combat_upd.hp_delta == 100
+    assert intent.gold_delta == -10
     assert ent_upd.interaction.reset == True
 
 def test_tavern_nourishment():
@@ -55,5 +57,7 @@ def test_tavern_nourishment():
     update = TownServiceSystem.update(state)
     
     ent_upd = update.entity_updates[1]
-    assert ent_upd.biological.hunger_set == 0.0
-    assert ent_upd.inventory.gold_delta == -5
+    assert len(ent_upd.resource_transfers) == 1
+    intent = ent_upd.resource_transfers[0]
+    assert intent.biological_upd.hunger_set == 0.0
+    assert intent.gold_delta == -5

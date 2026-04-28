@@ -37,8 +37,8 @@ class QuestService:
         Transition a quest to REWARDED status.
         Ensures rewards can only be granted once.
         """
-        if quest.quest_status != QuestStatus.COMPLETED:
-            # Only completed quests can be rewarded
+        if quest.quest_status not in (QuestStatus.COMPLETED, QuestStatus.REWARD_PENDING):
+            # Only completed or pending quests can be rewarded
             return quest
             
         return replace(

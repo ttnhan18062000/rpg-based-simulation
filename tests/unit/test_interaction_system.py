@@ -2,6 +2,7 @@ import pytest
 from src.core.state import AuthoritativeState, EntityState, InteractionComponent, InventoryComponent, ResourceNodeState, ItemStack
 from src.core.updates import StateUpdate, EntityUpdate, InteractionUpdate, InventoryUpdate
 from src.engine.interaction import InteractionSystem
+from src.engine.pipeline import AuthoritativeApplyPipeline
 
 def test_interaction_channeling_success():
     # Setup state: Entity at progress 2/3 for node 1
@@ -17,7 +18,7 @@ def test_interaction_channeling_success():
         10: EntityUpdate(entity_id=10, interaction=InteractionUpdate(target_node_id=1, progress_delta=1))
     })
     
-    refined = InteractionSystem.enforce(state, update)
+    refined = AuthoritativeApplyPipeline.refine(state, update)
     
     # Verify: Successful harvest
     ent_upd = refined.entity_updates[10]
@@ -42,7 +43,7 @@ def test_interaction_interrupted_by_movement():
                          interaction=InteractionUpdate(target_node_id=1, progress_delta=1))
     })
     
-    refined = InteractionSystem.enforce(state, update)
+    refined = AuthoritativeApplyPipeline.refine(state, update)
     
     # Verify: Progress reset due to movement
     ent_upd = refined.entity_updates[10]
@@ -63,7 +64,7 @@ def test_interaction_inventory_pressure():
         10: EntityUpdate(entity_id=10, interaction=InteractionUpdate(target_node_id=1, progress_delta=1))
     })
     
-    refined = InteractionSystem.enforce(state, update)
+    refined = AuthoritativeApplyPipeline.refine(state, update)
     
     # Verify: Reset but no item (inventory pressure)
     ent_upd = refined.entity_updates[10]

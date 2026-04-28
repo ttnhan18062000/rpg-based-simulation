@@ -7,7 +7,8 @@ from src.core.state import (
 )
 from src.core.enums import Faction, EntityRole
 from src.core.strategic import (
-    StrategicComponent, ProjectState, ProjectStatus, ObjectiveState, ObjectiveStatus
+    StrategicComponent, ProjectState, ProjectStatus, ObjectiveState, ObjectiveStatus,
+    ContractState, ContractKind, ContractStatus
 )
 from src.core.updates import StateUpdate, EntityUpdate, TaskUpdate
 from src.systems.social import SocialAppraisalSystem, SocialContract
@@ -71,13 +72,12 @@ def test_party_formation_from_contract():
     merc = create_mock_entity(2, (1.2, 1.2))
     
     # Give them a recruitment contract
-    from src.core.strategic import ContractState, ContractKind
     contract = ContractState(
         id="recruit_merc",
         kind=ContractKind.RECRUITMENT,
         source_id=1,
         target_id=2,
-        active=True
+        status=ContractStatus.ACTIVE
     )
     
     hero = replace(hero, strategic=replace(hero.strategic, contracts={"recruit_merc": contract}))

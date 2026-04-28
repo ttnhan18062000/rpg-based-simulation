@@ -101,30 +101,45 @@ class TacticalDecisionSystem:
                 if project:
                     obj = next((o for o in project.objectives if o.id == obj_id), None)
                     if obj and obj.kind == "reach_location" and obj.target:
-                        # Find the node
-                        node_id = int(obj.target)
-                        node = state.resource_nodes.get(node_id)
-                        if node and node.remaining_charges > 0:
-                            dist = abs(node.position[0] - entity.position[0]) + abs(node.position[1] - entity.position[1])
+                        # Find the node or target position
+                        target_pos = None
+                        node_id = None
+                        try:
+                            node_id = int(obj.target)
+                            node = state.resource_nodes.get(node_id)
+                            if node:
+                                target_pos = node.position
+                        except ValueError:
+                            # Not an int, try coordinate tuple
+                            try:
+                                target_pos = eval(obj.target)
+                            except:
+                                pass
+                        
+                        if target_pos:
+                            dist = abs(target_pos[0] - entity.position[0]) + abs(target_pos[1] - entity.position[1])
                             if dist < 1.0:
-                                # At node: Interact
-                                from src.core.updates import InteractionUpdate
-                                return EntityUpdate(
-                                    entity_id=entity.id,
-                                    task=TaskUpdate(
-                                        work_kind_set="ENTITY_ACT",
-                                        payload_set={"action": "INTERACT", "target_id": node.id}
-                                    ),
-                                    interaction=InteractionUpdate(target_node_id=node.id, progress_delta=1)
-                                )
+                                # At target: Interact if node, or just hold
+                                if node_id is not None:
+                                    from src.core.updates import InteractionUpdate
+                                    return EntityUpdate(
+                                        entity_id=entity.id,
+                                        task=TaskUpdate(
+                                            work_kind_set="ENTITY_ACT",
+                                            payload_set={"action": "INTERACT", "target_id": node_id}
+                                        ),
+                                        interaction=InteractionUpdate(target_node_id=node_id, progress_delta=1)
+                                    )
+                                else:
+                                    return EntityUpdate(entity_id=entity.id)
                             else:
                                 # Move to it
                                 return EntityUpdate(
                                     entity_id=entity.id,
-                                    navigation=NavigationUpdate(target_set=node.position, movement_mode_set=MovementMode.WANDER),
+                                    navigation=NavigationUpdate(target_set=target_pos, movement_mode_set=MovementMode.WANDER),
                                     task=TaskUpdate(
                                         work_kind_set="ENTITY_MOVE",
-                                        payload_set={"target_position": node.position, "target_id": node.id}
+                                        payload_set={"target_position": target_pos, "target_id": obj.target}
                                     )
                                 )
             

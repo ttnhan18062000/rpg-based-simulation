@@ -9,7 +9,8 @@ from src.core.state import (
     InteractionComponent, SocialComponent, TaskComponent,
     EquipmentComponent, AptitudeComponent, ItemStack, InventoryComponent
 )
-from src.core.enums import EntityRole, Faction, ActionType
+from src.core.enums import EntityRole, Faction, ActionType, Domain
+from src.platform.rng import DeterministicRNG
 
 if TYPE_CHECKING:
     from src.core.state import AuthoritativeState
@@ -20,7 +21,7 @@ class EntityGenerator:
     """
     
     def __init__(self, seed: int):
-        self.rng = random.Random(seed)
+        self.rng = DeterministicRNG(seed)
         self._last_id = 0
         
     def get_next_id(self, state: AuthoritativeState | None = None) -> int:
@@ -42,7 +43,8 @@ class EntityGenerator:
         base_def = 5 * mults.def_stat
         base_gold = 50 * mults.gold
         
-        evolution_level = self.rng.randint(mults.level_min, mults.level_max)
+        tick = state.tick if state else 0
+        evolution_level = self.rng.get_int(Domain.SPAWN, tick, entity_id, mults.level_min, mults.level_max)
         
         return EntityState(
             id=entity_id,
@@ -72,7 +74,8 @@ class EntityGenerator:
         from src.world.spawn_config import DIFFICULTY_TIERS
         mults = DIFFICULTY_TIERS.get(difficulty_tier, DIFFICULTY_TIERS[1])
         
-        evolution_level = self.rng.randint(mults.level_min, mults.level_max)
+        tick = state.tick if state else 0
+        evolution_level = self.rng.get_int(Domain.SPAWN, tick, entity_id, mults.level_min, mults.level_max)
         
         # Generic monster base (fallback)
         base_hp = 50 * mults.hp
@@ -108,7 +111,8 @@ class EntityGenerator:
         from src.world.spawn_config import DIFFICULTY_TIERS
         mults = DIFFICULTY_TIERS.get(difficulty_tier, DIFFICULTY_TIERS[1])
         
-        evolution_level = self.rng.randint(mults.level_min, mults.level_max)
+        tick = state.tick if state else 0
+        evolution_level = self.rng.get_int(Domain.SPAWN, tick, entity_id, mults.level_min, mults.level_max)
         
         # Goblin base: 30 HP, 8 ATK, 2 DEF, 5 Gold
         base_hp = 30 * mults.hp

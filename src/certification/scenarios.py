@@ -50,7 +50,7 @@ class ArenaInjector:
         generator = EntityGenerator(state.seed)
         new_entities = dict(state.entities)
         
-        from src.core.strategic import ContractState, ContractKind
+        from src.core.strategic import ContractState, ContractKind, ContractStatus
         
         # 1. Spawn Team A (Heroes) at Western boundary
         hero_leader_id = None
@@ -65,7 +65,7 @@ class ArenaInjector:
                     kind=ContractKind.PROTECTION,
                     source_id=hero_leader_id,
                     target_id=hero.id,
-                    active=True
+                    status=ContractStatus.ACTIVE
                 )
                 hero = replace(hero, strategic=replace(hero.strategic, contracts={contract.id: contract}))
                 # Update leader's state too
@@ -88,7 +88,7 @@ class ArenaInjector:
                     kind=ContractKind.PROTECTION,
                     source_id=monster_leader_id,
                     target_id=monster.id,
-                    active=True
+                    status=ContractStatus.ACTIVE
                 )
                 monster = replace(monster, strategic=replace(monster.strategic, contracts={contract.id: contract}))
                 # Update leader's state too

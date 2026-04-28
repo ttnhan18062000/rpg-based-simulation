@@ -44,20 +44,34 @@ class TownServiceSystem:
             if new_progress >= required:
                 # SUCCESS
                 if kind == "inn":
-                    # Full rest and HP recovery
+                    # Full rest and HP recovery (Transactional)
+                    from src.core.updates import ResourceTransferIntent
+                    intent = ResourceTransferIntent(
+                        source_id=building_id,
+                        source_kind="TOWN_SERVICE",
+                        gold_delta=-10,
+                        transfer_kind="INN_REST",
+                        biological_upd=BiologicalUpdate(sleep_debt_set=0.0, last_sleep_tick_set=state.tick),
+                        combat_upd=CombatUpdate(hp_delta=entity.combat.max_hp)
+                    )
                     entity_updates[entity.id] = EntityUpdate(
                         entity_id=entity.id,
-                        biological=BiologicalUpdate(sleep_debt_set=0.0, last_sleep_tick_set=state.tick),
-                        combat=CombatUpdate(hp_delta=entity.combat.max_hp), # Fully heal
-                        inventory=InventoryUpdate(gold_delta=-10), # Pay for inn
+                        resource_transfers=[intent],
                         interaction=InteractionUpdate(reset=True)
                     )
                 elif kind == "tavern":
-                    # Hunger recovery
+                    # Hunger recovery (Transactional)
+                    from src.core.updates import ResourceTransferIntent
+                    intent = ResourceTransferIntent(
+                        source_id=building_id,
+                        source_kind="TOWN_SERVICE",
+                        gold_delta=-5,
+                        transfer_kind="TAVERN_EAT",
+                        biological_upd=BiologicalUpdate(hunger_set=0.0, last_meal_tick_set=state.tick)
+                    )
                     entity_updates[entity.id] = EntityUpdate(
                         entity_id=entity.id,
-                        biological=BiologicalUpdate(hunger_set=0.0, last_meal_tick_set=state.tick),
-                        inventory=InventoryUpdate(gold_delta=-5), # Pay for meal
+                        resource_transfers=[intent],
                         interaction=InteractionUpdate(reset=True)
                     )
                 elif kind == "guild":

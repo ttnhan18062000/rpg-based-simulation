@@ -1,7 +1,7 @@
 # Consolidated Certification Report
 
-**Last Run ID**: `1f88ab52-dd33-4f90-9b4d-ea3788b98b8b`
-**Commit SHA**: `6cd189a6add2f169d15838f7f4de5598131965e1`
+**Last Run ID**: `24a0b6ab-78a7-4a7c-bb41-a4a37aa14980`
+**Commit SHA**: `6353b6f3cf21673cd7f7232dcf2d766c86692c1d`
 
 ## Scenario Summary
 
@@ -14,7 +14,7 @@
 ## Latest Run Detail
 
 # Certification Report: COMBAT_ARENA_REGIONAL
-**Commit SHA**: `6cd189a6add2f169d15838f7f4de5598131965e1`
+**Commit SHA**: `6353b6f3cf21673cd7f7232dcf2d766c86692c1d`
 **Status**: ✅ **PASS**
 **Allowed Failure Observed**: `False`
 
@@ -23,17 +23,17 @@
 - **Hardware Class**: `CLASS_B`
 - **Scenario**: `COMBAT_ARENA_REGIONAL`
 - **Seed**: `42`
-- **Peak RAM (RSS)**: `64.2 MB`
-- **Total CPU Time**: `0.008 sec`
+- **Peak RAM (RSS)**: `64.8 MB`
+- **Total CPU Time**: `0.004 sec`
 
 ## 2. Resource Conformance Evidence
 | Tick | Mode | RAM (MB) | Compute (ms) | Worker % | Queue % |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| 1 | NORMAL | 64.2 | 8.5 | 1.00 | 0.00 |
+| 1 | NORMAL | 64.8 | 3.8 | 1.00 | 0.00 |
 
 ## 3. Semantic Integrity Proof (Milestone D Law)
-- **Baseline Hash**: `7eefc1bc2b9444df86031a1c317a67486af828bcc6d72a5a05dff47611f6c93b`
-- **Final Hash**: `7eefc1bc2b9444df86031a1c317a67486af828bcc6d72a5a05dff47611f6c93b`
+- **Baseline Hash**: `a40870f066786c0fa62d260c765ed830e1beaf1058b4ec7f89713e83fed73a88`
+- **Final Hash**: `a40870f066786c0fa62d260c765ed830e1beaf1058b4ec7f89713e83fed73a88`
 - **Status**: MATCHED
 
 ## 4. Conformance Verdict

@@ -1,10 +1,10 @@
 {
   "profile": "cli_default",
   "mode": "2",
-  "start_time": 1777321842.2885432,
+  "start_time": 1777443203.2468631,
   "chunks": [],
   "status": "COMPLETED",
-  "end_time": 1777321842.4455366,
+  "end_time": 1777443203.3501573,
   "metrics": {
     "bytes_written": 0,
     "chunks_persisted": 0,

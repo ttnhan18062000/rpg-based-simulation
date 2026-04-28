@@ -49,10 +49,16 @@ class ChestSystem:
                     cooldown_set=chest.respawn_tick
                 )
                 
+                from src.core.updates import ResourceTransferIntent
                 entity_updates[entity.id] = EntityUpdate(
                     entity_id=entity.id,
-                    inventory=InventoryUpdate(items_add=chest.items),
-                    interaction=InteractionUpdate(reset=True)
+                    interaction=InteractionUpdate(reset=True),
+                    resource_transfers=[ResourceTransferIntent(
+                        source_id=chest_id,
+                        source_kind="CHEST",
+                        items_add=chest.items,
+                        transfer_kind="LOOT"
+                    )]
                 )
             else:
                 entity_updates[entity.id] = EntityUpdate(

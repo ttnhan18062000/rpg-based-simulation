@@ -59,16 +59,24 @@ class LifecycleSystem:
                     heir = state.entities.get(heir_id)
                     if heir:
                         heir_upd = refined_entity_updates.get(heir_id, EntityUpdate(entity_id=heir_id))
-                        # Transfer heirlooms
-                        heir_inv = heir_upd.inventory or InventoryUpdate()
-                        # Legacy Law: Heirlooms are transferred instantly upon death truth.
+                        # Transactional Heirloom Transfer
+                        from src.core.updates import ResourceTransferIntent
                         from src.core.state import ItemStack
-                        new_items = [ItemStack(item_id=tid, quantity=1) for tid in entity.lifecycle.heirlooms]
-                        refined_entity_updates[heir_id] = replace(heir_upd,
-                            inventory=replace(heir_inv,
-                                items_add=heir_inv.items_add + new_items
+                        
+                        # Combine inventory and specific heirlooms
+                        heirloom_stacks = [ItemStack(item_id=hid, quantity=1) for hid in entity.lifecycle.heirlooms]
+                        all_transfer_items = entity.inventory.items + heirloom_stacks
+                        
+                        if all_transfer_items:
+                            intent = ResourceTransferIntent(
+                                source_id=entity.id,
+                                source_kind="CHEST", # Use CHEST or similar source kind that allows items
+                                items_add=all_transfer_items,
+                                transfer_kind="AUTO"
                             )
-                        )
+                            refined_entity_updates[heir_id] = replace(heir_upd,
+                                resource_transfers=heir_upd.resource_transfers + [intent]
+                            )
 
         # Apply Influence Shifts and Conquest Lifecycle
         if recent_deaths:

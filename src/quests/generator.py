@@ -5,6 +5,8 @@ from typing import List, Dict, Any, Optional, Set
 
 from src.core.quests import QuestState, QuestKind, QuestStatus, RewardState
 from src.core.state import EntityState
+from src.core.enums import Domain
+from src.platform.rng import DeterministicRNG
 
 @dataclass(frozen=True, slots=True)
 class QuestTemplate:
@@ -50,9 +52,9 @@ class QuestGenerator:
         if not candidates:
             return None
             
-        # 2. Select template using seed + tick + level
-        rng = random.Random(seed + tick + level)
-        template = rng.choice(candidates)
+        # 2. Select template using DeterministicRNG
+        rng = DeterministicRNG(seed)
+        template = rng.choice(Domain.QUEST, tick, level, candidates)
         
         # 3. Scale rewards and goal
         # Linear scaling for now: 10% increase per level above min_level

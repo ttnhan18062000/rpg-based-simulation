@@ -5,6 +5,7 @@ from typing import Dict, List, Set, Optional, TYPE_CHECKING
 if TYPE_CHECKING:
     from src.core.state import AuthoritativeState, EntityState, GroupRecord
     from src.core.updates import StateUpdate, EntityUpdate
+    from src.core.strategic import ContractStatus
 
 class GroupSystem:
     """
@@ -54,8 +55,9 @@ class GroupSystem:
                 # Phase 7: Contract validity check
                 contract_invalid = False
                 if group.contract_id:
+                    from src.core.strategic import ContractStatus
                     contract = leader.strategic.contracts.get(group.contract_id)
-                    if not contract or not contract.active:
+                    if not contract or contract.status != ContractStatus.ACTIVE:
                         contract_invalid = True
                     elif contract.expiry_tick != -1 and state.tick > contract.expiry_tick:
                         contract_invalid = True
@@ -111,7 +113,8 @@ class GroupSystem:
             
             # Check for contracts where id_a is source or target
             for c_id, contract in entity_a.strategic.contracts.items():
-                if not contract.active: continue
+                from src.core.strategic import ContractStatus
+                if contract.status != ContractStatus.ACTIVE: continue
                 
                 other_id = contract.target_id if contract.source_id == id_a else contract.source_id
                 if other_id in state.entities:

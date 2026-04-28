@@ -23,14 +23,22 @@ class ClassHallAction:
             if b.kind == "capability" and b.subject == skill_id:
                 resolved_blockers.append(b_id)
                 
-        # 3. Transaction
+        # 3. Transaction with Contingent Updates
+        from src.core.updates import ResourceTransferIntent
+        intent = ResourceTransferIntent(
+            source_id="CLASS_HALL",
+            source_kind="TOWN_SERVICE",
+            gold_delta=-50,
+            transfer_kind="TRAIN",
+            identity_upd=IdentityUpdate(recipes_learned=[skill_id]),
+            strategic_upd=StrategicUpdate(blockers_remove=resolved_blockers)
+        )
+        
         return StateUpdate(
             entity_updates={
                 entity.id: EntityUpdate(
                     entity_id=entity.id,
-                    inventory=InventoryUpdate(gold_delta=-50),
-                    identity=IdentityUpdate(recipes_learned={skill_id}),
-                    strategic=StrategicUpdate(blockers_remove=resolved_blockers)
+                    resource_transfers=[intent]
                 )
             }
         )

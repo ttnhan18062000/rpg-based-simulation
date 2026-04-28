@@ -1,9 +1,9 @@
 # src/engine/legality.py
 from __future__ import annotations
-from typing import TYPE_CHECKING, Tuple, Optional, Any
+from typing import TYPE_CHECKING, Tuple, Optional, Any, List
 
 if TYPE_CHECKING:
-    from src.core.state import AuthoritativeState, EntityState
+    from src.core.state import AuthoritativeState, EntityState, RegionState
 
 class LegalityServiceV2:
     """ Authoritative simulation laws for V2. """
@@ -50,7 +50,6 @@ class LegalityServiceV2:
         # 2. Buildings (Solid structures)
         buildings = getattr(state_or_context, 'buildings', {})
         if buildings:
-            # If buildings is a dict {id: BuildingState}
             for b in buildings.values():
                 if (int(b.position[0]), int(b.position[1])) == target_grid_pos:
                     return False, "BUILDING_OBSTRUCTION"
@@ -79,49 +78,16 @@ class LegalityServiceV2:
         return True, "ADVANCING"
 
     @staticmethod
-    def get_engaged_hostiles(
-        actor: EntityState,
-        state_or_context: Any
-    ) -> list[int]:
-        """
-        Returns a list of hostile entity IDs adjacent to the actor.
-        AOA Stabilization: Engagement is bit-identical to adjacency in V2.
-        """
-        engaged = []
-        entities = getattr(state_or_context, 'entities', None)
-        if entities is None:
-            # Try neighbor_view (WorkerPacket)
-            entities_list = getattr(state_or_context, 'neighbor_view', [])
-            for eid, entity in entities_list:
-                if eid == actor.id: continue
-                if not entity.active: continue
-                if entity.identity.faction != actor.identity.faction:
-                    if LegalityServiceV2.is_adjacent(actor.position, entity.position):
-                        engaged.append(eid)
-        else:
-            # Handle Dictionary (AuthoritativeState)
-            for eid, entity in entities.items():
-                if eid == actor.id: continue
-                if not entity.active: continue
-                if entity.identity.faction != actor.identity.faction:
-                    if LegalityServiceV2.is_adjacent(actor.position, entity.position):
-                        engaged.append(eid)
-        engaged.sort()
-        return engaged
-
-    @staticmethod
     def verify_action_legality(
         actor: EntityState,
         action_kind: str,
         state: AuthoritativeState
     ) -> Tuple[bool, str]:
         """
-        Phase 9: Regional Suppression.
         Checks if the current region suppresses specific actions.
         """
         region = LegalityServiceV2.get_region_for_position(actor.position, state)
         if region and region.suppression_active:
-            # High-level suppression blocks disruptive/strategic actions
             if action_kind in ["SABOTAGE", "RECRUIT", "THEFT"]:
                  return False, "REGIONAL_SUPPRESSION"
         return True, "LEGAL"
@@ -139,7 +105,8 @@ class LegalityServiceV2:
     def verify_attack_legality(
         attacker: EntityState,
         target: EntityState,
-        state_or_context: Any
+        state_or_context: Any,
+        is_opportunity_attack: bool = False
     ) -> Tuple[bool, str]:
         """
         Authoritative validation for a combat interaction.
@@ -152,19 +119,55 @@ class LegalityServiceV2:
         if attacker.id == target.id:
             return False, "SELF_ATTACK_ILLEGAL"
 
-        # 2. Faction Validity
+        # 2. Readiness / Status Law
+        # Opportunity Attacks bypass readiness (Milestone 8 P0)
+        if not is_opportunity_attack and attacker.readiness < 100.0:
+            return False, "INSUFFICIENT_READINESS"
+        
+        if attacker.properties.get("status_frozen") or attacker.properties.get("status_stunned"):
+            return False, "ATTACKER_STATUS_BLOCKED"
+
+        # 3. Faction Validity
         if attacker.identity.faction == target.identity.faction:
             return False, "FRIENDLY_FIRE_ILLEGAL"
 
-        # 3. Range Validity
+        # 4. Range Validity
         dist = LegalityServiceV2.get_manhattan_dist(attacker.position, target.position)
         if dist > attacker.combat.range:
             return False, "OUT_OF_RANGE"
 
-        # 4. LoS / Obstruction
+        # 5. LoS / Obstruction
         if not LegalityServiceV2.has_line_of_sight(attacker.position, target.position, state_or_context):
             return False, "LOS_OBSTRUCTED"
             
+        return True, "LEGAL"
+
+    @staticmethod
+    def verify_aoe_legality(
+        attacker: EntityState,
+        target_pos: Tuple[float, float],
+        state_or_context: Any
+    ) -> Tuple[bool, str]:
+        """
+        Validation for Area-of-Effect positioning and execution.
+        """
+        # 1. Attacker Validity
+        if not attacker.active or not attacker.combat.alive:
+            return False, "ATTACKER_INCAPACITATED"
+        if attacker.readiness < 100.0:
+            return False, "INSUFFICIENT_READINESS"
+        if attacker.properties.get("status_frozen") or attacker.properties.get("status_stunned"):
+            return False, "ATTACKER_STATUS_BLOCKED"
+
+        # 2. Range Validity
+        dist = LegalityServiceV2.get_manhattan_dist(attacker.position, target_pos)
+        if dist > attacker.combat.range:
+            return False, "OUT_OF_RANGE"
+
+        # 3. LoS / Obstruction (Check path to center of AoE)
+        if not LegalityServiceV2.has_line_of_sight(attacker.position, target_pos, state_or_context):
+            return False, "LOS_OBSTRUCTED"
+
         return True, "LEGAL"
 
     @staticmethod
@@ -182,8 +185,6 @@ class LegalityServiceV2:
         terrain = getattr(state_or_context, 'terrain', {})
         buildings = getattr(state_or_context, 'buildings', {})
         
-        # Manhattan path check (simpler for tile-based RPG)
-        # We check all tiles between A and B
         dx = x1 - x0
         dy = y1 - y0
         step_x = 1 if dx > 0 else -1 if dx < 0 else 0
@@ -191,7 +192,6 @@ class LegalityServiceV2:
         
         curr_x, curr_y = x0, y0
         
-        # Check X steps
         while curr_x != x1:
             curr_x += step_x
             if (curr_x, curr_y) == (x1, y1): break
@@ -199,7 +199,6 @@ class LegalityServiceV2:
             for build in buildings.values():
                 if (int(build.position[0]), int(build.position[1])) == (curr_x, curr_y): return False
                 
-        # Check Y steps
         curr_x = x1
         while curr_y != y1:
             curr_y += step_y
@@ -211,26 +210,6 @@ class LegalityServiceV2:
         return True
 
     @staticmethod
-    def verify_aoe_legality(
-        attacker: EntityState,
-        target_pos: Tuple[float, float],
-        max_range: int,
-        state_or_context: Any
-    ) -> Tuple[bool, str]:
-        """
-        Authoritative validation for Area-of-Effect targeting.
-        Impact center must be in range and visible.
-        """
-        dist = LegalityServiceV2.get_manhattan_dist(attacker.position, target_pos)
-        if dist > max_range:
-            return False, "OUT_OF_RANGE"
-            
-        if not LegalityServiceV2.has_line_of_sight(attacker.position, target_pos, state_or_context):
-            return False, "LOS_OBSTRUCTED"
-            
-        return True, "LEGAL"
-
-    @staticmethod
     def check_high_ground(attacker_pos: Tuple[float, float], defender_pos: Tuple[float, float], state: AuthoritativeState) -> bool:
         """Verify if attacker has clear elevation advantage (Terrain-based)."""
         atk_pos = (int(attacker_pos[0]), int(attacker_pos[1]))
@@ -239,7 +218,6 @@ class LegalityServiceV2:
         attacker_tile = state.terrain.get(atk_pos, "PLAIN")
         defender_tile = state.terrain.get(def_pos, "PLAIN")
         
-        # Binary High Ground: HILL or MOUNTAIN vs anything else.
         high_ground_tiles = {"HILL", "MOUNTAIN"}
         return attacker_tile in high_ground_tiles and defender_tile not in high_ground_tiles
 
@@ -247,7 +225,6 @@ class LegalityServiceV2:
     def check_flanking(defender_id: int, state: AuthoritativeState) -> bool:
         """
         Authoritative geometric flanking check.
-        Criteria: At least two enemies must be on opposite cardinal sides (N/S or E/W).
         """
         defender = state.entities.get(defender_id)
         if not defender or not defender.combat.alive:
@@ -255,7 +232,6 @@ class LegalityServiceV2:
             
         x, y = int(defender.position[0]), int(defender.position[1])
         
-        # Helper to find if a hostile is at a position
         def has_hostile_at(pos: Tuple[int, int]) -> bool:
             for entity in state.entities.values():
                 if not entity.active or not entity.combat.alive: continue
@@ -279,14 +255,11 @@ class LegalityServiceV2:
         
         x, y = int(defender_pos[0]), int(defender_pos[1])
         
-        # Check adjacent wall between them
         if abs(dx) > abs(dy):
-            # Horizontal bias
             check_x = x - (1 if dx > 0 else -1)
             if state.terrain.get((check_x, y)) == "WALL":
                 return True
         else:
-            # Vertical bias
             check_y = y - (1 if dy > 0 else -1)
             if state.terrain.get((x, check_y)) == "WALL":
                 return True
@@ -296,36 +269,48 @@ class LegalityServiceV2:
     @staticmethod
     def get_entity_priority(entity: EntityState) -> int:
         """Calculate movement/tie-breaking priority."""
-        from src.core.state import EntityRole
+        from src.core.enums import EntityRole
         base = 0
         if entity.identity.role == EntityRole.HERO: base = 100
         elif entity.identity.role == EntityRole.MONSTER: base = 50
         
-        # Add slight jitter/ID-based tie break
         hp_ratio = (entity.combat.hp / entity.combat.max_hp) if entity.combat.max_hp > 0 else 1.0
         return base + (100 if hp_ratio < 0.3 else 0)
 
     @staticmethod
     def get_engaged_hostiles(entity: EntityState, state: Any) -> List[int]:
         """Find hostile entities currently in melee engagement with this entity."""
+        return LegalityServiceV2.get_engaged_hostiles_at_pos(entity.position, entity, state)
+
+    @staticmethod
+    def get_engaged_hostiles_at_pos(pos: Tuple[float, float], entity: EntityState, state: Any) -> List[int]:
+        """Find hostile entities that would be in melee engagement with this entity at a hypothetical position."""
         engaged = []
-        for other_id, other in state.entities.items():
-            if other_id == entity.id or not other.combat.alive:
-                continue
-            
-            # Simple adjacency check for melee engagement
-            dist = LegalityServiceV2.get_manhattan_dist(entity.position, other.position)
-            if dist <= 1:
-                # Check hostiles
-                if entity.identity.faction != other.identity.faction:
+        entities = getattr(state, 'entities', state if isinstance(state, dict) else {})
+        if isinstance(entities, dict):
+            for other_id, other in entities.items():
+                if other_id == entity.id or not other.combat.alive or not other.active:
+                    continue
+                dist = LegalityServiceV2.get_manhattan_dist(pos, other.position)
+                if dist <= 1 and entity.identity.faction != other.identity.faction:
                     engaged.append(other_id)
+        elif isinstance(entities, list):
+            for other_id, other in entities:
+                if other_id == entity.id or not other.combat.alive or not other.active:
+                    continue
+                dist = LegalityServiceV2.get_manhattan_dist(pos, other.position)
+                if dist <= 1 and entity.identity.faction != other.identity.faction:
+                    engaged.append(other_id)
+        engaged.sort()
         return engaged
 
     @staticmethod
     def get_occupant(pos: Tuple[float, float], state: Any, ignore_entity_id: Optional[int] = None) -> Optional[int]:
         """Return the ID of the entity occupying the specified tile."""
-        for eid, ent in state.entities.items():
-            if eid == ignore_entity_id: continue
-            if ent.position == pos and ent.combat.alive:
-                return eid
+        entities = getattr(state, 'entities', state if isinstance(state, dict) else {})
+        if isinstance(entities, dict):
+            for eid, ent in entities.items():
+                if eid == ignore_entity_id: continue
+                if ent.position == pos and ent.combat.alive and ent.active:
+                    return eid
         return None

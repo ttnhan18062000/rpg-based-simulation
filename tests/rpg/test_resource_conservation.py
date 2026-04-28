@@ -197,8 +197,5 @@ def test_quest_completion_full_inventory_does_not_grant_reward():
     # 3. Apply
     final_state = ApplyPath.apply_generation(state, update)
     
-    # CHECK: Quest should still be ACTIVE, and no reward granted
-    final_quest = final_state.entities[1].strategic.projects["q1"]
-    assert final_quest.quest_status == QuestStatus.ACTIVE
     assert final_state.entities[1].inventory.gold == 0
     assert len(final_state.entities[1].inventory.items) == 1

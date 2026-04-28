@@ -6,15 +6,11 @@ from src.core.updates import StateUpdate
 from src.core.equipment import EquipmentService
 from src.town.home_storage import HomeStorageAction
 from src.engine.apply import ApplyPath
+from src.engine.pipeline import AuthoritativeApplyPipeline
 
 @pytest.mark.v2_contract
 def test_auto_equip_ranking():
     # 1. Setup: Entity with Wood Sword equipped, Iron Sword in inventory
-    # wood_sword is not in registry, but iron_sword is. 
-    # Let's check ItemRegistry again to be sure.
-    # Registry has iron_sword (atk 10).
-    # Bread has no atk_bonus.
-    
     inventory = InventoryComponent(items=[ItemStack("iron_sword", 1)])
     entity = EntityState(id=1, kind="hero", position=(0,0), inventory=inventory)
     
@@ -37,23 +33,29 @@ def test_home_storage_atomicity():
     state = AuthoritativeState(tick=1, seed=42, entities={1: entity}, home_storage={})
     
     # 2. Deposit
-    sys_upd = HomeStorageAction.deposit(entity, "iron_ore", 1, state)
-    assert sys_upd is not None
-    assert 1 in sys_upd.entity_updates
-    assert 1 in sys_upd.home_storage_updates
+    raw_upd = HomeStorageAction.deposit(entity, "iron_ore", 1, state)
+    assert raw_upd is not None
     
-    state = ApplyPath.apply_generation(state, sys_upd)
+    # 3. Refine (This resolves the ResourceTransferIntent)
+    refined = AuthoritativeApplyPipeline.refine(state, raw_upd)
+    assert 1 in refined.home_storage_updates
     
-    # 3. Verify: Entity empty, Storage has 1
+    state = ApplyPath.apply_generation(state, refined)
+    
+    # 4. Verify: Entity empty, Storage has 1
     assert len(state.entities[1].inventory.items) == 0
     assert state.home_storage[1].items[0].item_id == "iron_ore"
     
-    # 4. Withdraw
+    # 5. Withdraw
     new_entity = state.entities[1]
-    withdraw_upd = HomeStorageAction.withdraw(new_entity, "iron_ore", 1, state)
-    assert withdraw_upd is not None
+    raw_withdraw_upd = HomeStorageAction.withdraw(new_entity, "iron_ore", 1, state)
+    assert raw_withdraw_upd is not None
     
-    state = ApplyPath.apply_generation(state, withdraw_upd)
+    # Refine
+    refined_withdraw = AuthoritativeApplyPipeline.refine(state, raw_withdraw_upd)
+    assert 1 in refined_withdraw.home_storage_updates
+    
+    state = ApplyPath.apply_generation(state, refined_withdraw)
     assert state.entities[1].inventory.items[0].item_id == "iron_ore"
     assert len(state.home_storage[1].items) == 0
 
@@ -64,7 +66,6 @@ def test_chest_loot_and_apply():
     state = AuthoritativeState(tick=1, seed=42, chests={99: chest})
     
     # 2. Manual update (Simulation of looting)
-    # We don't have a ChestAction.loot yet, but we test the ApplyPath support
     from src.core.updates import ChestUpdate
     sys_upd = StateUpdate(
         chest_updates={99: ChestUpdate(chest_id=99, cooldown_set=100, items_set=[])}

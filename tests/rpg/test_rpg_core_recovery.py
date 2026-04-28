@@ -12,6 +12,7 @@ def test_combat_progression_rewards():
     Verifies that killing a monster grants XP and Gold, and spawns a corpse.
     """
     state = build_scenario_state("COMBAT_ARENA_PROGRESSION")
+    from dataclasses import replace
     executor = LocalSequentialExecutor()
     rng = DeterministicRNG(base_seed=42)
     profile = ConfigLoader.load_profile()
@@ -164,12 +165,13 @@ def test_attrition_and_status():
     """
     Verifies Shatter damage, Exhaustion penalties, and Starvation decay.
     """
-    from src.core.state import BiologicalComponent, CombatComponent, EntityState
+    from src.core.state import BiologicalComponent, CombatComponent, EntityState, IdentityComponent
+    from src.core.enums import Faction
     from dataclasses import replace
     
     # 1. Test Shatter (1.5x damage vs Frozen)
-    attacker = EntityState(id=11, kind="HERO", position=(0,0), readiness=100.0, combat=CombatComponent(hp=100, atk=10, def_stat=10, alive=True))
-    target = EntityState(id=12, kind="HERO", position=(1,0), combat=CombatComponent(hp=100, atk=10, def_stat=5, alive=True),
+    attacker = EntityState(id=11, kind="HERO", position=(0,0), readiness=100.0, identity=IdentityComponent(faction=Faction.HERO_GUILD), combat=CombatComponent(hp=100, atk=10, def_stat=10, alive=True))
+    target = EntityState(id=12, kind="HERO", position=(1,0), identity=IdentityComponent(faction=Faction.MONSTER_HORDE), combat=CombatComponent(hp=100, atk=10, def_stat=5, alive=True),
                          properties={"status_frozen": True})
     
     from src.engine.combat import CombatResolutionSystem
@@ -206,6 +208,7 @@ def test_quest_lifecycle():
     )
     
     # Setup Hero
+    from dataclasses import replace
     hero = EntityState(
         id=1, 
         kind="HERO", 
@@ -237,6 +240,10 @@ def test_quest_lifecycle():
         neighbor_view=[(2, monster)],
         context=state
     )
+    # Ensure task is in proposal for kernel re-execution
+    from src.core.updates import TaskUpdate
+    if 1 in updates_dict:
+        updates_dict[1] = replace(updates_dict[1], task=TaskUpdate(work_kind_set="ENTITY_ACT", payload_set={"action": "ATTACK", "target_id": 2}))
     
     # Apply Updates
     state_up = StateUpdate(entity_updates=updates_dict)
@@ -248,7 +255,6 @@ def test_quest_lifecycle():
     
     # Assert status is REWARDED
     updated_quest = new_hero.strategic.projects["q1"]
-    print(f"DEBUG: test final quest status={updated_quest.quest_status}")
     assert updated_quest.quest_status == QuestStatus.REWARDED
     
     # Rewards should be applied

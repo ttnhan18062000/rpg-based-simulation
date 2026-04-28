@@ -20,13 +20,12 @@ def test_transfer_to_home():
     update = HomeStorageService.transfer_to_home(entity, "iron_ore", 3, state)
     
     assert update is not None
-    # Check inventory update (remove 3)
+    # Check inventory intent (remove 3)
     ent_upd = update.entity_updates[1]
-    assert ent_upd.inventory.items_remove[0].quantity == 3
-    
-    # Check home storage update (add 3)
-    storage_upd = update.home_storage_updates[1]
-    assert storage_upd.items_add[0].quantity == 3
+    assert len(ent_upd.resource_transfers) == 1
+    intent = ent_upd.resource_transfers[0]
+    assert intent.items_remove[0].quantity == 3
+    assert intent.transfer_kind == "DEPOSIT"
 
 def test_transfer_from_home():
     # Setup home storage with item
@@ -47,10 +46,9 @@ def test_transfer_from_home():
     update = HomeStorageService.transfer_from_home(entity, "wood", 5, state)
     
     assert update is not None
-    # Check inventory update (add 5)
+    # Check inventory intent (add 5)
     ent_upd = update.entity_updates[1]
-    assert ent_upd.inventory.items_add[0].quantity == 5
-    
-    # Check home storage update (remove 5)
-    storage_upd = update.home_storage_updates[1]
-    assert storage_upd.items_remove[0].quantity == 5
+    assert len(ent_upd.resource_transfers) == 1
+    intent = ent_upd.resource_transfers[0]
+    assert intent.items_add[0].quantity == 5
+    assert intent.transfer_kind == "WITHDRAW"

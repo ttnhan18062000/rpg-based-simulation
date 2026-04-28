@@ -102,8 +102,12 @@ class QuestResolutionSystem:
             if ent_upd.quest.status_set is not None:
                 updated_quest = replace(updated_quest, quest_status=ent_upd.quest.status_set)
                 
-            # If transition to COMPLETED is happening, emit reward intent
-            if updated_quest.quest_status == QuestStatus.COMPLETED and project.quest_status == QuestStatus.ACTIVE:
+            # 1. If transition to COMPLETED is happening OR quest is already REWARD_PENDING
+            # we emit an authoritative reward intent.
+            is_newly_completed = (updated_quest.quest_status == QuestStatus.COMPLETED and project.quest_status == QuestStatus.ACTIVE)
+            is_retry_pending = (project.quest_status == QuestStatus.REWARD_PENDING)
+            
+            if is_newly_completed or is_retry_pending:
                 from src.core.state import ItemStack
                 items = [ItemStack(item_id=tid, quantity=1) for tid in updated_quest.reward.items]
                 
@@ -113,13 +117,18 @@ class QuestResolutionSystem:
                     items_add=items,
                     gold_delta=updated_quest.reward.gold,
                     xp_reward=updated_quest.reward.xp,
-                    transfer_kind="QUEST_REWARD"
+                    transfer_kind="QUEST_REWARD",
+                    transaction_id=f"quest:{q_id}:reward",
+                    group_id=f"quest:{q_id}:reward",
+                    is_group_required=True
                 )
                 
-                # Merge into entity update
+                # Transition to REWARD_PENDING (if not already)
+                # Note: We do NOT set status to REWARDED here. 
+                # Pipeline._resolve_resource_transactions will do that upon success.
                 refined_entity_updates[e_id] = replace(ent_upd, 
                     resource_transfers=ent_upd.resource_transfers + [intent],
-                    quest=replace(ent_upd.quest, status_set=QuestStatus.REWARDED)
+                    quest=replace(ent_upd.quest, status_set=QuestStatus.REWARD_PENDING)
                 )
                 
         return replace(update, entity_updates=refined_entity_updates)

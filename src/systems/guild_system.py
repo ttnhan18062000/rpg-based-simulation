@@ -28,9 +28,6 @@ class GuildIntelSystem:
             # Progress Check
             new_progress = entity.interaction.progress + 1.0
             if new_progress >= 10.0:
-                # HERO GETS INTEL
-                rng = random.Random(state.seed + state.tick + entity.id)
-                
                 # 1. Find the region with highest trauma or lowest stability
                 high_risk_regions = sorted(
                     state.regions.values(), 

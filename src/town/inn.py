@@ -17,25 +17,25 @@ class InnAction:
         if entity.inventory.gold < 10:
             return None
             
-        # 2. Update Biological Component
-        new_bio = replace(
-            entity.biological,
-            sleep_debt=0.0,
-            hunger=max(0.0, entity.biological.hunger - 20.0), # Light meal included
-            well_rested_until=state.tick + 100
+        # 2. Transaction with Contingent Updates
+        from src.core.updates import ResourceTransferIntent
+        intent = ResourceTransferIntent(
+            source_id="INN",
+            source_kind="TOWN_SERVICE",
+            gold_delta=-10,
+            transfer_kind="INN_REST",
+            biological_upd=BiologicalUpdate(
+                sleep_debt_set=0.0,
+                hunger_delta=-20.0,
+                well_rested_until_set=state.tick + 100
+            )
         )
         
-        # 3. Transaction
         return StateUpdate(
             entity_updates={
                 entity.id: EntityUpdate(
                     entity_id=entity.id,
-                    inventory=InventoryUpdate(gold_delta=-10),
-                    biological=BiologicalUpdate(
-                        sleep_debt_set=0.0,
-                        hunger_delta=-20.0,
-                        well_rested_until_set=state.tick + 100
-                    )
+                    resource_transfers=[intent]
                 )
             }
         )

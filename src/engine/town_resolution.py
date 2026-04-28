@@ -2,7 +2,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Dict, Set, Tuple
 from dataclasses import replace
 
-from src.core.updates import EntityUpdate, InventoryUpdate, IdentityUpdate, CombatUpdate, BiologicalUpdate
+from src.core.updates import EntityUpdate, IdentityUpdate, CombatUpdate, BiologicalUpdate
 
 if TYPE_CHECKING:
     from src.core.state import AuthoritativeState, EntityState
@@ -53,20 +53,37 @@ class TownResolutionSystem:
                 ent_upd = refined_entity_updates.get(e_id, EntityUpdate(entity_id=e_id))
                 if ent_upd.task and ent_upd.task.work_kind_set == "ENTITY_ACT" and ent_upd.task.payload_set.get("action") == "REST":
                     # REST gives 5x passive heal and restores readiness
+                    # Cost: 10 gold (LEG-RPG-001)
                     REST_HEAL_BONUS = 5
                     REST_SLEEP_RECOVERY = -5.0
+                    REST_COST = 10
                     
+                    # Check building functionality (LEG-RPG-001/006)
+                    building = next((b for b in state.buildings.values() if b.position == tile_pos and b.kind == building_type), None)
+                    if building and not building.functional:
+                        continue
+
                     combat_upd = ent_upd.combat or CombatUpdate()
                     new_combat_upd = replace(combat_upd, hp_delta=combat_upd.hp_delta + REST_HEAL_BONUS)
                     
                     biological_upd = ent_upd.biological or BiologicalUpdate()
                     new_bio_upd = replace(biological_upd, sleep_debt_delta=biological_upd.sleep_debt_delta + REST_SLEEP_RECOVERY)
                     
+                    from src.core.updates import ResourceTransferIntent
+                    intent = ResourceTransferIntent(
+                        source_id=building_type.upper(),
+                        source_kind="TOWN_SERVICE",
+                        gold_delta=-REST_COST,
+                        transfer_kind="REST",
+                        is_group_required=True
+                    )
+                    
                     refined_entity_updates[e_id] = replace(
                         ent_upd,
                         combat=new_combat_upd,
                         readiness_delta=ent_upd.readiness_delta + 10.0,
-                        biological=new_bio_upd
+                        biological=new_bio_upd,
+                        resource_transfers=list(ent_upd.resource_transfers) + [intent]
                     )
 
             # 3. Explicit EAT Intent (Only in TAVERN)
@@ -74,14 +91,31 @@ class TownResolutionSystem:
                 ent_upd = refined_entity_updates.get(e_id, EntityUpdate(entity_id=e_id))
                 if ent_upd.task and ent_upd.task.work_kind_set == "ENTITY_ACT" and ent_upd.task.payload_set.get("action") == "EAT":
                     # EAT restores hunger
+                    # Cost: 5 gold (LEG-RPG-001)
                     EAT_HUNGER_RECOVERY = -20.0
+                    EAT_COST = 5
                     
+                    # Check building functionality
+                    building = next((b for b in state.buildings.values() if b.position == tile_pos and b.kind == "tavern"), None)
+                    if building and not building.functional:
+                        continue
+
                     biological_upd = ent_upd.biological or BiologicalUpdate()
                     new_bio_upd = replace(biological_upd, hunger_delta=biological_upd.hunger_delta + EAT_HUNGER_RECOVERY)
                     
+                    from src.core.updates import ResourceTransferIntent
+                    intent = ResourceTransferIntent(
+                        source_id="TAVERN",
+                        source_kind="TOWN_SERVICE",
+                        gold_delta=-EAT_COST,
+                        transfer_kind="EAT",
+                        is_group_required=True
+                    )
+                    
                     refined_entity_updates[e_id] = replace(
                         ent_upd,
-                        biological=new_bio_upd
+                        biological=new_bio_upd,
+                        resource_transfers=list(ent_upd.resource_transfers) + [intent]
                     )
 
             # 4. Explicit GUILD Intent (Intel and Quests)
@@ -125,13 +159,20 @@ class TownResolutionSystem:
             if state.tick % 10 == 0 and region.owner_faction_id is not None:
                 if entity.identity.faction != region.owner_faction_id:
                     TAX_AMT = 2.0
-                    ent_upd = refined_entity_updates.get(e_id, EntityUpdate(entity_id=e_id))
-                    inv_upd = ent_upd.inventory or InventoryUpdate()
                     # Only tax if they have gold
                     tax_to_pay = min(entity.inventory.gold, TAX_AMT)
                     if tax_to_pay > 0:
+                        from src.core.updates import ResourceTransferIntent
+                        intent = ResourceTransferIntent(
+                            source_id=f"tax_{region.id}",
+                            source_kind="TAX",
+                            gold_delta=-tax_to_pay,
+                            transfer_kind="TAX"
+                        )
+                        
+                        ent_upd = refined_entity_updates.get(e_id, EntityUpdate(entity_id=e_id))
                         refined_entity_updates[e_id] = replace(ent_upd,
-                            inventory=replace(inv_upd, gold_delta=inv_upd.gold_delta - tax_to_pay)
+                            resource_transfers=list(ent_upd.resource_transfers) + [intent]
                         )
                         
                         # Accumulate in faction gold via resource_updates

@@ -84,6 +84,14 @@ class WorldDynamicsSystem:
         from src.world.calamity import CalamityService
         calamity_update = CalamityService.process_world_dynamics(state, generator)
         
+        # 3.1 Standard Monster Replenishment
+        from src.world.spawn import SpawnService
+        spawn_update = SpawnService.process_spawns(state, generator)
+        
+        # 3.2 Resource Ecology (Replenishment)
+        from src.world.ecology import ResourceEcologyService
+        ecology_update = ResourceEcologyService.process_ecology(state, generator)
+
         # 3.5 Process Raids
         from src.world.raid import RaidService
         raid_update = RaidService.check_for_raid(state, generator)
@@ -91,7 +99,8 @@ class WorldDynamicsSystem:
         update = update.replace(
             maturity_set=calamity_update.maturity_set if calamity_update.maturity_set is not None else update.maturity_set,
             last_calamity_tick_set=calamity_update.last_calamity_tick_set if calamity_update.last_calamity_tick_set is not None else update.last_calamity_tick_set,
-            entities_add=update.entities_add + calamity_update.entities_add + raid_update.entities_add
+            entities_add=update.entities_add + calamity_update.entities_add + raid_update.entities_add + spawn_update.entities_add,
+            nodes_add=update.nodes_add + ecology_update.nodes_add
         )
 
         # 4. Regional Transformations (Type Shifting)
@@ -103,9 +112,42 @@ class WorldDynamicsSystem:
                 world_upd = refined_world_updates.get(r_id, WorldUpdate(region_id=r_id))
                 refined_world_updates[r_id] = replace(world_upd, kind_set=new_kind)
         
-        update = update.replace(world_updates=refined_world_updates)
+        # 5. Global Object Lifecycle (LEG-RPG-002/005)
+        from src.core.updates import ResourceNodeUpdate, ChestUpdate
+        
+        # 5.1 Nodes
+        refined_node_updates = dict(update.node_updates)
+        for n_id, node in state.resource_nodes.items():
+            if node.cooldown_remaining > 0:
+                n_upd = refined_node_updates.get(n_id, ResourceNodeUpdate(node_id=n_id))
+                # If finished cooldown, recharge
+                if node.cooldown_remaining == 1:
+                     refined_node_updates[n_id] = replace(n_upd, 
+                        cooldown_set=0,
+                        charges_delta=node.max_charges
+                    )
+                else:
+                     refined_node_updates[n_id] = replace(n_upd, cooldown_set=node.cooldown_remaining - 1)
 
-        return update
+        # 5.2 Chests
+        refined_chest_updates = dict(update.chest_updates)
+        for c_id, chest in state.chests.items():
+            if chest.cooldown_remaining > 0:
+                c_upd = refined_chest_updates.get(c_id, ChestUpdate(chest_id=c_id))
+                refined_chest_updates[c_id] = replace(c_upd, cooldown_set=chest.cooldown_remaining - 1)
+        
+        # 5.3 Corpses & Ground Items (Decay)
+        corpses_remove = list(update.corpses_remove)
+        for cp_id, corpse in state.corpses.items():
+            if state.tick >= corpse.decay_tick:
+                corpses_remove.append(cp_id)
+
+        return update.replace(
+            world_updates=refined_world_updates,
+            node_updates=refined_node_updates,
+            chest_updates=refined_chest_updates,
+            corpses_remove=corpses_remove
+        )
 
     @staticmethod
     def _get_region_for_pos(state: AuthoritativeState, pos: tuple[float, float]) -> RegionState | None:

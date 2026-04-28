@@ -41,15 +41,18 @@ def test_subsystem_order_documentation():
         "TownResolutionSystem.resolve",
         "ShopSystem.enforce",
         "BlacksmithSystem.enforce",
-        "WorldDynamicsSystem.resolve_dynamics", # Phase 7 corrected
+        "WorldDynamicsSystem.resolve_dynamics",
         "BuildingSabotageSystem.resolve",
         "AuthoritativeApplyPipeline._route_interaction_intent",
         "InteractionSystem.enforce",
-        "StrategicIntelligenceSystem.resolve_blockers",
-        "StrategicRedirectionSystem.enforce",
         "AuthoritativeApplyPipeline._route_movement_intent",
         "AuthoritativeApplyPipeline._resolve_occupancy_conflicts",
-        "EvolutionSystem.evaluate" # Phase 7 corrected
+        "LifecycleSystem.resolve_lifecycle",
+        "QuestResolutionSystem.enforce",
+        "AuthoritativeApplyPipeline._resolve_resource_transactions",
+        "StrategicIntelligenceSystem.resolve_blockers",
+        "StrategicRedirectionSystem.enforce",
+        "EvolutionSystem.evaluate"
     ]
     
     last_pos = -1

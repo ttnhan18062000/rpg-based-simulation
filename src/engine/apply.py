@@ -156,6 +156,9 @@ class ApplyPath:
                     remaining_charges=max(0, node.remaining_charges + node_upd.charges_delta),
                     cooldown_remaining=node_upd.cooldown_set if node_upd.cooldown_set is not None else node.cooldown_remaining
                 )
+        
+        for node in update.nodes_add:
+            new_nodes[node.id] = node
 
         new_buildings = dict(prior_state.buildings)
         sorted_building_ids = sorted(update.building_updates.keys())
@@ -350,7 +353,8 @@ class ApplyPath:
                 craft_target=update.identity.craft_target if update.identity.craft_target is not None else entity.identity.craft_target,
                 evolution_level=update.identity.evolution_level_set if update.identity.evolution_level_set is not None else entity.identity.evolution_level,
                 evolution_points=entity.identity.evolution_points + update.identity.evolution_points_delta,
-                unspent_ap=entity.identity.unspent_ap + update.identity.unspent_ap_delta
+                unspent_ap=entity.identity.unspent_ap + update.identity.unspent_ap_delta,
+                learned_skills=entity.identity.learned_skills.union(update.identity.learned_skills)
             )
             if update.identity.breakthroughs_add:
                 new_breakthroughs = set(new_identity.active_breakthroughs)
@@ -359,7 +363,6 @@ class ApplyPath:
             if update.identity.unspent_ap_set is not None:
                  new_identity = replace(new_identity, unspent_ap=update.identity.unspent_ap_set)
             
-            # PH8 Task 8.3: Veterancy processing
             if update.identity.veterancy_points_delta != 0:
                 from src.progression.veterancy import VeterancyService
                 new_identity = VeterancyService.process_points(new_identity, update.identity.veterancy_points_delta)
@@ -376,18 +379,7 @@ class ApplyPath:
                 perception=max(0, min(100, entity.attributes.perception + update.attributes.perception_delta)),
                 charisma=max(0, min(100, entity.attributes.charisma + update.attributes.charisma_delta))
             )
-            # Recalculate derived stats
-            derived = LevelingService.recalculate_combat_stats(new_attributes)
-            new_combat = replace(
-                new_combat,
-                max_hp=derived["max_hp"],
-                atk=derived["atk"],
-                def_stat=derived["def_stat"],
-                evasion=derived["evasion"]
-            )
-            # Ensure HP doesn't exceed new max
-            if new_combat.hp > new_combat.max_hp:
-                new_combat = replace(new_combat, hp=new_combat.max_hp)
+            # Recalculate derived stats - REMOVED (Handled by FINAL RECALCULATION GATE)
 
         if update.strategic:
             # Helper to merge dict-based updates
@@ -458,7 +450,7 @@ class ApplyPath:
                 heirlooms=new_heirlooms
             )
 
-        if update.combat:
+        if update.combat and update.combat.outcome_kind != "REJECTED":
             new_max_hp = entity.combat.max_hp + update.combat.max_hp_delta
             new_hp = max(0, min(new_max_hp, entity.combat.hp + update.combat.hp_delta))
             is_alive = update.combat.alive_set if update.combat.alive_set is not None else (new_hp > 0)
@@ -475,13 +467,22 @@ class ApplyPath:
 
         if update.navigation:
             from src.core.state import NavigationComponent
+            target_val = update.navigation.target_set if update.navigation.target_set is not None else entity.navigation.target
+            if update.navigation.clear_target: target_val = None
+            
+            path_val = update.navigation.path_set if update.navigation.path_set is not None else entity.navigation.path
+            if update.navigation.clear_path: path_val = []
+
             new_navigation = replace(
                 entity.navigation,
-                target=update.navigation.target_set if update.navigation.target_set is not None else entity.navigation.target,
-                path=update.navigation.path_set if update.navigation.path_set is not None else entity.navigation.path,
+                target=target_val,
+                path=path_val,
                 moved_recently=update.navigation.moved_recently_set if update.navigation.moved_recently_set is not None else entity.navigation.moved_recently,
                 movement_mode=update.navigation.movement_mode_set if update.navigation.movement_mode_set is not None else entity.navigation.movement_mode,
-                last_failure_reason=update.navigation.failure_reason if update.navigation.failure_reason is not None else entity.navigation.last_failure_reason
+                last_failure_reason=update.navigation.failure_reason if update.navigation.failure_reason is not None else entity.navigation.last_failure_reason,
+                wait_count=entity.navigation.wait_count + update.navigation.wait_count_delta,
+                oscillation_count=entity.navigation.oscillation_count + update.navigation.oscillation_count_delta,
+                last_position=update.navigation.last_position_set if update.navigation.last_position_set is not None else entity.navigation.last_position
             )
 
         if update.task:
@@ -506,35 +507,43 @@ class ApplyPath:
                     if update.quest.status_set is not None:
                         updated_quest = replace(updated_quest, quest_status=update.quest.status_set)
                     
-                    # 3. Handle Completion -> Rewarded transition (Authoritative Reward Emission)
-                    if updated_quest.quest_status == QuestStatus.COMPLETED and proj.quest_status == QuestStatus.ACTIVE:
-                        # Auto-transition to REWARDED to prevent double-rewards
-                        updated_quest = QuestService.mark_rewarded(updated_quest)
-                        
-                        # Note: Evolution points, gold, and items are now handled via ResourceTransferIntent 
-                        # during Refinement (Pipeline.refine -> QuestResolutionSystem.enforce)
-                    
                     new_projs = dict(new_strategic.projects)
                     new_projs[q_id] = updated_quest
                     new_strategic = replace(new_strategic, projects=new_projs)
 
         if update.reward:
-            # XP Gain
+            # XP / Evolution points remain in RewardUpdate for now
             new_identity = replace(
                 new_identity,
                 evolution_points=new_identity.evolution_points + update.reward.xp_gain
             )
-            # Gold Gain
-            from src.core.updates import InventoryUpdate
-            inv_upd = InventoryUpdate(gold_delta=update.reward.gold_gain)
-            from src.core.inventory import InventoryService
-            new_inventory = InventoryService.apply_update(new_inventory, inv_upd)
-            # Item Gain (deferred to InventoryService)
-            if update.reward.items_gain:
-                from src.core.state import ItemStack
-                items_to_add = [ItemStack(item_id=tid, quantity=1) for tid in update.reward.items_gain]
-                inv_upd_items = InventoryUpdate(items_add=items_to_add)
-                new_inventory = InventoryService.apply_update(new_inventory, inv_upd_items)
+            # Gold and Items MUST use ResourceTransferIntent (Phase 3 Law)
+
+        # ---------------------------------------------------------------------
+        # FINAL RECALCULATION GATE (PH8: Derived Stats Law)
+        # ---------------------------------------------------------------------
+        # If anything that impacts base stats changed, perform a final derivation.
+        stats_dirty = (
+            update.attributes is not None or 
+            update.equipment is not None or 
+            (update.identity is not None and update.identity.learned_skills)
+        )
+        
+        if stats_dirty:
+            derived = LevelingService.recalculate_combat_stats(new_attributes, new_equipment, new_identity.learned_skills)
+            
+            # Apply derived values. 
+            # Note: We preserve the current HP (after deltas) but cap it at new max.
+            new_combat = replace(
+                new_combat,
+                max_hp=derived["max_hp"],
+                atk=derived["atk"],
+                def_stat=derived["def_stat"],
+                evasion=derived["evasion"],
+                range=derived.get("range", new_combat.range)
+            )
+            if new_combat.hp > new_combat.max_hp:
+                new_combat = replace(new_combat, hp=new_combat.max_hp)
 
         res = replace(
             entity,
@@ -554,6 +563,7 @@ class ApplyPath:
             equipment=new_equipment,
             navigation=new_navigation,
             task=new_task,
+            latest_intent_results=update.intent_results,
             group_id=update.group_id_set if update.group_id_set is not None and update.group_id_set != -1 else (None if update.group_id_set == -1 else entity.group_id),
             properties=new_properties
         )

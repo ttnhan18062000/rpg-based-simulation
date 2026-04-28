@@ -3,6 +3,7 @@ from src.core.state import AuthoritativeState, EntityState, InventoryComponent, 
 from src.core.updates import StateUpdate, EntityUpdate, InteractionUpdate, InventoryUpdate
 from src.engine.interaction import InteractionSystem
 from src.engine.town_resolution import TownResolutionSystem
+from src.engine.pipeline import AuthoritativeApplyPipeline
 
 def test_weight_pressure_enforcement():
     # Setup state: Entity with limited weight capacity
@@ -22,7 +23,7 @@ def test_weight_pressure_enforcement():
         entity_updates={1: EntityUpdate(entity_id=1, interaction=InteractionUpdate(progress_delta=1.0, target_node_id=10))}
     )
     
-    refined = InteractionSystem.enforce(state, upd)
+    refined = AuthoritativeApplyPipeline.refine(state, upd)
     ent_upd = refined.entity_updates[1]
     
     # Should have been reset due to weight pressure
@@ -46,7 +47,7 @@ def test_channeled_looting_one_shot():
         entity_updates={1: EntityUpdate(entity_id=1, interaction=InteractionUpdate(progress_delta=1.0))}
     )
     
-    refined = InteractionSystem.enforce(state, upd)
+    refined = AuthoritativeApplyPipeline.refine(state, upd)
     
     # Node update should have charges_delta = -10 (ALL charges consumed for LOOT)
     node_upd = refined.node_updates[10]

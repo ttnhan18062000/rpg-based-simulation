@@ -25,3 +25,12 @@ DIFFICULTY_ZONES = (
     (220, 3),
     (999, 4),
 )
+# Regional Spawn Pools
+SPAWN_POOLS = {
+    "FOREST": ["goblin", "wolf", "bear"],
+    "PLAINS": ["slime", "bandit"],
+    "MOUNTAIN": ["harpy", "golem"],
+}
+
+# Target density (Monsters per 100x100 area per hazard level)
+BASE_MONSTER_DENSITY = 2.0

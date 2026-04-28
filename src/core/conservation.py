@@ -1,12 +1,12 @@
 from __future__ import annotations
-from dataclasses import dataclass, field
-from typing import List, Optional, TYPE_CHECKING
+from dataclasses import dataclass, field, replace
+from typing import List, Optional, TYPE_CHECKING, Dict, Any
 
 from src.core.inventory import InventoryService
-from src.core.updates import InventoryUpdate, ResourceNodeUpdate, InteractionUpdate
+from src.core.updates import InventoryUpdate, ResourceNodeUpdate, InteractionUpdate, IdentityUpdate, BiologicalUpdate, AttributeUpdate, CombatUpdate, StrategicUpdate
 
 if TYPE_CHECKING:
-    from src.core.state import AuthoritativeState, EntityState
+    from src.core.state import AuthoritativeState, EntityState, InventoryComponent
     from src.core.updates import ResourceTransferIntent
 
 @dataclass(frozen=True, slots=True)
@@ -16,6 +16,11 @@ class TransactionResult:
     inventory_update: Optional[InventoryUpdate] = None
     node_update: Optional[ResourceNodeUpdate] = None
     identity_update: Optional[IdentityUpdate] = None
+    biological_update: Optional[BiologicalUpdate] = None
+    attributes_update: Optional[AttributeUpdate] = None
+    combat_update: Optional[CombatUpdate] = None
+    strategic_update: Optional[StrategicUpdate] = None
+    home_storage_update: Optional[InventoryUpdate] = None
     ground_item_remove: Optional[int] = None
     corpse_remove: Optional[int] = None
     reason: str = ""
@@ -79,11 +84,11 @@ class ResourceTransactionResolver:
             )
 
         elif intent.source_kind == "CRAFTING":
-            if entity.inventory.gold < intent.gold_cost:
+            if target_inventory.gold < intent.gold_cost:
                 return TransactionResult(accepted=False, reason="INSUFFICIENT_GOLD")
             
             for mat in intent.items_remove:
-                have = sum(s.quantity for s in entity.inventory.items if s.item_id == mat.item_id)
+                have = sum(s.quantity for s in target_inventory.items if s.item_id == mat.item_id)
                 if have < mat.quantity:
                     return TransactionResult(accepted=False, reason="INSUFFICIENT_MATERIALS")
             
@@ -97,7 +102,7 @@ class ResourceTransactionResolver:
             )
 
         elif intent.source_kind == "SHOP_BUY":
-            if entity.inventory.gold < intent.gold_cost:
+            if target_inventory.gold < intent.gold_cost:
                 return TransactionResult(accepted=False, reason="INSUFFICIENT_GOLD")
             
             return TransactionResult(
@@ -110,7 +115,7 @@ class ResourceTransactionResolver:
 
         elif intent.source_kind == "SHOP_SELL":
             for item in intent.items_remove:
-                have = sum(s.quantity for s in entity.inventory.items if s.item_id == item.item_id)
+                have = sum(s.quantity for s in target_inventory.items if s.item_id == item.item_id)
                 if have < item.quantity:
                     return TransactionResult(accepted=False, reason="INSUFFICIENT_ITEMS")
             
@@ -123,17 +128,6 @@ class ResourceTransactionResolver:
             )
 
         elif intent.source_kind == "COMBAT":
-            # Law of Combat: Gold from kills
-            return TransactionResult(
-                accepted=True,
-                inventory_update=InventoryUpdate(
-                    gold_delta=intent.gold_delta
-                )
-            )
-
-        elif intent.source_kind == "QUEST":
-            # Law of Reward: Quests grant resources without cost
-            from src.core.updates import IdentityUpdate
             return TransactionResult(
                 accepted=True,
                 inventory_update=InventoryUpdate(
@@ -143,4 +137,65 @@ class ResourceTransactionResolver:
                 identity_update=IdentityUpdate(evolution_points_delta=intent.xp_reward)
             )
 
+        elif intent.source_kind == "QUEST":
+            return TransactionResult(
+                accepted=True,
+                inventory_update=InventoryUpdate(
+                    items_add=intent.items_add,
+                    gold_delta=intent.gold_delta
+                ),
+                identity_update=IdentityUpdate(evolution_points_delta=intent.xp_reward)
+            )
+
+        if intent.source_kind in ("TOWN_SERVICE", "RECRUIT", "TAX", "CHEST"):
+             return TransactionResult(
+                 accepted=True,
+                 inventory_update=InventoryUpdate(
+                      items_add=intent.items_add,
+                      gold_delta=intent.gold_delta
+                 ),
+                 identity_update=intent.identity_upd,
+                 biological_update=intent.biological_upd,
+                 attributes_update=intent.attributes_upd,
+                 combat_update=intent.combat_upd,
+                 strategic_update=intent.strategic_upd
+             )
+        
+        elif intent.source_kind == "HOME_STORAGE":
+             # Transfer between Entity and their private storage
+             storage_id = entity.id
+             storage = state.home_storage.get(storage_id)
+             if not storage:
+                  from src.core.state import InventoryComponent
+                  storage = InventoryComponent(max_slots=32, max_weight=200.0)
+             
+             # Validation: If Entity is Gaining (Withdraw), Storage must have items
+             for item in intent.items_add:
+                  have = sum(s.quantity for s in storage.items if s.item_id == item.item_id)
+                  if have < item.quantity:
+                       return TransactionResult(accepted=False, reason="INSUFFICIENT_STORAGE_ITEMS")
+             
+             # Validation: If Entity is Giving (Deposit), Storage must have capacity
+             if intent.items_remove:
+                  if not InventoryService.can_add_items(storage, intent.items_remove):
+                       return TransactionResult(accepted=False, reason="STORAGE_FULL")
+             
+             # Validation: If Entity is Giving (Deposit), Entity must have items
+             for item in intent.items_remove:
+                  have = sum(s.quantity for s in target_inventory.items if s.item_id == item.item_id)
+                  if have < item.quantity:
+                       return TransactionResult(accepted=False, reason="INSUFFICIENT_ITEMS")
+
+             return TransactionResult(
+                 accepted=True,
+                 inventory_update=InventoryUpdate(
+                      items_add=intent.items_add,
+                      items_remove=intent.items_remove
+                 ),
+                 home_storage_update=InventoryUpdate(
+                      items_add=intent.items_remove,
+                      items_remove=intent.items_add
+                 )
+             )
+             
         return TransactionResult(accepted=False, reason="UNKNOWN_SOURCE_KIND")

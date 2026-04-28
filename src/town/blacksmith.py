@@ -45,16 +45,22 @@ class BlacksmithService:
         # We assume space will be freed by removing materials, but let's be safe
         # (InventoryService.can_add_item doesn't know about the removal yet)
         
-        # 6. Generate Updates
+        # 6. Generate Transaction Intent
+        from src.core.updates import ResourceTransferIntent
+        intent = ResourceTransferIntent(
+            source_id=blacksmith.id,
+            source_kind="CRAFTING",
+            items_remove=mats_to_remove,
+            items_add=[ItemStack(recipe.result_item_id, recipe.result_quantity)],
+            gold_cost=recipe.gold_cost,
+            transfer_kind="CRAFT"
+        )
+        
         return StateUpdate(
             entity_updates={
                 entity.id: EntityUpdate(
                     entity_id=entity.id,
-                    inventory=InventoryUpdate(
-                        items_remove=mats_to_remove,
-                        items_add=[ItemStack(recipe.result_item_id, recipe.result_quantity)],
-                        gold_delta=-recipe.gold_cost
-                    )
+                    resource_transfers=[intent]
                 )
             }
         )

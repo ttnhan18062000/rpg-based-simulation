@@ -40,12 +40,21 @@ class HomeAction:
         if not resolved_blockers:
             return None
             
+        # 3. Transaction with Contingent Updates
+        from src.core.updates import ResourceTransferIntent
+        intent = ResourceTransferIntent(
+            source_id="HOME",
+            source_kind="TOWN_SERVICE",
+            gold_delta=-100,
+            transfer_kind="HOME_UPGRADE",
+            strategic_upd=StrategicUpdate(blockers_remove=resolved_blockers)
+        )
+        
         return StateUpdate(
             entity_updates={
                 entity.id: EntityUpdate(
                     entity_id=entity.id,
-                    inventory=InventoryUpdate(gold_delta=-100),
-                    strategic=StrategicUpdate(blockers_remove=resolved_blockers)
+                    resource_transfers=[intent]
                 )
             }
         )

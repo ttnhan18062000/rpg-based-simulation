@@ -3,11 +3,11 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Dict, Any, Optional, TYPE_CHECKING, List
 if TYPE_CHECKING:
-    from src.core.state import GroupRecord, ItemStack, EquipSlot, AttributeComponent, LocalScarState, ChestState, EntityState
+    from src.core.state import GroupRecord, ItemStack, EquipSlot, AttributeComponent, LocalScarState, ChestState, EntityState, GroundItemState, CorpseState
     from src.core.quests import QuestStatus
     from src.core.strategic import (
         ConcernState, CandidateZone, HypothesisState, SourceTrustEntry,
-        CognitionProfile, GroundItemState, CorpseState, BlockerState, LeadState, DirectiveState, ProjectState, ContractState, SocialContract
+        CognitionProfile, BlockerState, LeadState, DirectiveState, ProjectState, ContractState, SocialContract
     )
 from src.core.state import ItemStack, EquipSlot, AttributeComponent
 from src.core.movement_modes import MovementMode
@@ -46,6 +46,15 @@ class ResourceTransferIntent:
     gold_cost: int = 0
     xp_reward: int = 0
     transfer_kind: str = "AUTO" # "HARVEST", "LOOT", "PICKUP", "CRAFT", "BUY", "SELL"
+    transaction_id: Optional[str] = None
+    group_id: Optional[str] = None
+    is_group_required: bool = True
+    # Contingent updates (applied only on transaction success)
+    biological_upd: Optional[BiologicalUpdate] = None
+    attributes_upd: Optional[AttributeUpdate] = None
+    identity_upd: Optional[IdentityUpdate] = None
+    combat_upd: Optional[CombatUpdate] = None
+    strategic_upd: Optional[StrategicUpdate] = None
 
 @dataclass(frozen=True, slots=True)
 class CombatIntent:
@@ -65,8 +74,9 @@ class CombatUpdate:
     attacker_id: Optional[int] = None
     is_opportunity_attack: bool = False
     alive_set: Optional[bool] = None
-    outcome_kind: str = "SURVIVE" # SURVIVE, DEFEAT, KILL
+    outcome_kind: str = "SURVIVE" # SURVIVE, DEFEAT, KILL, REJECTED
     is_lethal: bool = False
+    failure_reason: Optional[str] = None
     max_hp_delta: int = 0
     atk_delta: int = 0
     def_delta: int = 0
@@ -86,6 +96,13 @@ class NavigationUpdate:
     moved_recently_set: Optional[bool] = None
     movement_mode_set: Optional[MovementMode] = None
     failure_reason: Optional[str] = None
+    clear_target: bool = False
+    clear_path: bool = False
+    
+    # Phase 4 additions
+    wait_count_delta: int = 0
+    oscillation_count_delta: int = 0
+    last_position_set: Optional[tuple[float, float]] = None
 
 @dataclass(frozen=True, slots=True)
 class TaskUpdate:
@@ -106,6 +123,7 @@ class IdentityUpdate:
     breakthroughs_add: list[str] = field(default_factory=list)
     unspent_ap_delta: int = 0
     unspent_ap_set: Optional[int] = None
+    learned_skills: list[str] = field(default_factory=list)
 
 @dataclass(frozen=True, slots=True)
 class SocialBondUpdate:
@@ -181,10 +199,11 @@ class QuestUpdate:
 
 @dataclass(frozen=True, slots=True)
 class RewardUpdate:
-    """Granting quest rewards."""
+    """
+    Non-inventory progression rewards (XP, evolution points).
+    Law: Gold and Items must use ResourceTransferIntent for authoritative conservation.
+    """
     xp_gain: int = 0
-    gold_gain: int = 0
-    items_gain: List[str] = field(default_factory=list)
 
 @dataclass(frozen=True, slots=True)
 class StrategicUpdate:
@@ -250,6 +269,7 @@ class EntityUpdate:
     navigation: Optional[NavigationUpdate] = None
     task: Optional[TaskUpdate] = None
     group_id_set: Optional[int] = None
+    intent_results: List[IntentResult] = field(default_factory=list)
     property_updates: Dict[str, Any] = field(default_factory=dict)
 
     def merge(self, other: EntityUpdate) -> EntityUpdate:
@@ -280,6 +300,7 @@ class EntityUpdate:
             navigation=other.navigation if other.navigation is not None else self.navigation, # Simplified
             task=other.task if other.task is not None else self.task, # Simplified
             group_id_set=other.group_id_set if other.group_id_set is not None else self.group_id_set,
+            intent_results=self.intent_results + other.intent_results,
             property_updates={**self.property_updates, **other.property_updates}
         )
         return res
@@ -351,6 +372,7 @@ class StateUpdate:
     entity_updates: Dict[int, EntityUpdate] = field(default_factory=dict)
     entities_add: List[EntityState] = field(default_factory=list)
     entities_remove: List[int] = field(default_factory=list)
+    nodes_add: List[ResourceNodeState] = field(default_factory=list)
     node_updates: Dict[int, ResourceNodeUpdate] = field(default_factory=dict)
     ground_items_add_or_update: List[GroundItemState] = field(default_factory=list)
     ground_items_remove: List[int] = field(default_factory=list)

@@ -2,7 +2,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Dict, List, Set
 from dataclasses import replace, dataclass
 
-from src.core.updates import EntityUpdate, InventoryUpdate, IdentityUpdate
+from src.core.updates import EntityUpdate, IdentityUpdate
 
 if TYPE_CHECKING:
     from src.core.state import AuthoritativeState, EntityState
@@ -213,32 +213,11 @@ class BlacksmithSystem:
                 transfer_kind="CRAFT"
             )
             
-            from src.core.conservation import ResourceTransactionResolver
-            result = ResourceTransactionResolver.resolve(state, entity, intent)
-            
-            if not result.accepted:
-                # ABORT due to pressure or missing resources (should have been caught above, 
-                # but resolver is the final authority)
-                from src.systems.strategic import StrategicIntelligenceSystem
-                existing_upd = refined_entity_updates.get(e_id, EntityUpdate(entity_id=e_id))
-                strat_up = StrategicIntelligenceSystem.generate_crafting_blockers(
-                    entity, recipe.materials if result.reason == "INSUFFICIENT_MATERIALS" else {}, 
-                    recipe.gold_cost if result.reason == "INSUFFICIENT_GOLD" else 0
-                )
-                refined_entity_updates[e_id] = replace(existing_upd, strategic=strat_up)
-                continue
-                
-            # SUCCESS: Apply crafting transformation
+            # SUCCESS: Queue crafting transformation
             existing_upd = refined_entity_updates.get(e_id, EntityUpdate(entity_id=e_id))
-            
-            # Reset Craft Target (Consumed)
-            existing_id = existing_upd.identity if existing_upd.identity else IdentityUpdate()
-            new_id = replace(existing_id, craft_target="")
-            
             refined_entity_updates[e_id] = replace(
                 existing_upd,
-                inventory=result.inventory_update,
-                identity=new_id
+                resource_transfers=list(existing_upd.resource_transfers) + [intent]
             )
 
         return replace(update, entity_updates=refined_entity_updates)

@@ -5,6 +5,7 @@ from src.core.updates import StateUpdate, EntityUpdate, InventoryUpdate, Identit
 from src.engine.shop import ShopSystem
 from src.engine.blacksmith import BlacksmithSystem
 from src.engine.town_resolution import TownResolutionSystem
+from src.engine.pipeline import AuthoritativeApplyPipeline
 
 def test_shop_sell_price_enforcement():
     """Law of Value: Verify that selling items results in exactly the expected gold delta."""
@@ -26,10 +27,11 @@ def test_shop_sell_price_enforcement():
     
     # Propose selling (ShopSystem auto-sells materials on enforce if at shop)
     update = StateUpdate(entity_updates={})
-    refined = ShopSystem.enforce(state, update)
+    refined = AuthoritativeApplyPipeline.refine(state, update)
     
     e_upd = refined.entity_updates[e_id]
-    assert e_upd.inventory.gold_delta == 10 # 5 * 2
+    
+    assert e_upd.inventory.gold_delta == 10
     actual_removed = sorted([i.item_id if hasattr(i, "item_id") else i for i in e_upd.inventory.items_remove])
     assert actual_removed == ["wood", "wood"]
 
@@ -52,9 +54,10 @@ def test_shop_junk_auto_sell():
     )
     
     update = StateUpdate(entity_updates={})
-    refined = ShopSystem.enforce(state, update)
+    refined = AuthoritativeApplyPipeline.refine(state, update)
     
     e_upd = refined.entity_updates[e_id]
+    
     # iron_sword is considered common junk in our M2/M3 logic, steel_sword is NOT (uncommon)
     actual_removed = sorted([i.item_id if hasattr(i, "item_id") else i for i in e_upd.inventory.items_remove])
     assert actual_removed == ["iron_sword", "wood"]
@@ -80,9 +83,10 @@ def test_blacksmith_material_consumption():
     )
     
     update = StateUpdate(entity_updates={})
-    refined = BlacksmithSystem.enforce(state, update)
+    refined = AuthoritativeApplyPipeline.refine(state, update)
     
     e_upd = refined.entity_updates[e_id]
+    
     assert e_upd.inventory.gold_delta == -60
     actual_removed = []
     for i in e_upd.inventory.items_remove:
@@ -114,7 +118,7 @@ def test_blacksmith_insufficient_materials():
     )
     
     update = StateUpdate(entity_updates={})
-    refined = BlacksmithSystem.enforce(state, update)
+    refined = AuthoritativeApplyPipeline.refine(state, update)
     
     # Should have no updates or at least no crafting updates
     assert e_id not in refined.entity_updates or refined.entity_updates[e_id].inventory is None
@@ -138,7 +142,7 @@ def test_blacksmith_insufficient_gold():
     )
     
     update = StateUpdate(entity_updates={})
-    refined = BlacksmithSystem.enforce(state, update)
+    refined = AuthoritativeApplyPipeline.refine(state, update)
     
     assert e_id not in refined.entity_updates or refined.entity_updates[e_id].inventory is None
 
@@ -161,7 +165,7 @@ def test_blacksmith_unknown_recipe():
     )
     
     update = StateUpdate(entity_updates={})
-    refined = BlacksmithSystem.enforce(state, update)
+    refined = AuthoritativeApplyPipeline.refine(state, update)
     
     # Wait, in BlacksmithSystem.enforce we have "wholesale learning" if at blacksmith
     # So if it fails crafting because it didn't learn, that matches one part of the law.
@@ -200,7 +204,7 @@ def test_blacksmith_recipe_learning_parity():
     )
     
     update = StateUpdate(entity_updates={})
-    refined = BlacksmithSystem.enforce(state, update)
+    refined = AuthoritativeApplyPipeline.refine(state, update)
     
     e_upd = refined.entity_updates[e_id]
     assert len(e_upd.identity.recipes_learned) == 14

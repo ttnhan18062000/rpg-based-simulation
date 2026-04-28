@@ -38,7 +38,6 @@ class EvolutionSystem:
                 raw_delta += ent_upd.reward.xp_gain
             
             if raw_delta == 0 and not ent_upd.identity:
-                # No XP change and no existing identity update, skip to save cycles
                 continue
                 
             # 2. Apply Multipliers (Pillar 2: Biological impacts)
@@ -68,7 +67,6 @@ class EvolutionSystem:
             # Law says cap is 100. Usually XP stays at 0 or maxed.
             if current_eval_level >= 100:
                 remaining_points = min(remaining_points, 0) # Cap XP too if at level 100?
-                # Actually, some games keep XP. I'll keep it for now but cap level.
             
             # 4. Finalize Components
             id_upd = ent_upd.identity or IdentityUpdate()
@@ -84,14 +82,13 @@ class EvolutionSystem:
             
             # Default state (no level up)
             new_kind = entity.kind
-            new_level = entity.identity.evolution_level
+            new_level = current_eval_level
             total_ap_gain = 0
             new_slots = eq_upd.slot_updates
             
             # Level Up Logic
             if levels_gained > 0:
                 old_level = entity.identity.evolution_level
-                new_level = old_level + levels_gained
                 
                 # Check for species evolution thresholds (EVO-001)
                 evolved = False
@@ -102,8 +99,7 @@ class EvolutionSystem:
                 
                 new_kind = EvolutionSystem._get_evolved_kind(entity.kind) if evolved else entity.kind
                 
-                # 4. Stat & Gear Growth
-                # Gear Refresh (Pillar 2.1)
+                # Stat & Gear Growth
                 if evolved:
                     new_slots = dict(eq_upd.slot_updates)
                     if "goblin" in new_kind.lower():
@@ -116,25 +112,32 @@ class EvolutionSystem:
                 
                 from src.core.enums import EntityRole
                 if entity.identity.role == EntityRole.HERO:
-                    # Hero Milestone AP: 5 per level + 5 extra every 5 levels
                     total_ap_gain = levels_gained * 5
+                    skills_to_learn = []
+                    
                     for lvl in range(old_level + 1, new_level + 1):
                         if lvl % 5 == 0:
                             total_ap_gain += 5
+                        if lvl == 5:
+                            skills_to_learn.append("power_strike")
+                        if lvl == 10:
+                            skills_to_learn.append("swift_reflexes")
                     
                     id_upd = replace(id_upd, 
-                        unspent_ap_delta=id_upd.unspent_ap_delta + total_ap_gain
+                        unspent_ap_delta=id_upd.unspent_ap_delta + total_ap_gain,
+                        learned_skills=list(set(id_upd.learned_skills + skills_to_learn))
                     )
                 else:
-                    # Non-Hero (Monster/Villager) Aptitude-scaled flat growth
-                    cb_upd = replace(cb_upd,
-                        hp_delta=cb_upd.hp_delta + (50 * levels_gained),
-                        max_hp_delta=cb_upd.max_hp_delta + int(20 * entity.aptitude.vit_apt * levels_gained),
-                        atk_delta=cb_upd.atk_delta + int(5 * entity.aptitude.str_apt * levels_gained),
-                        def_delta=cb_upd.def_delta + int(2 * entity.aptitude.end_apt * levels_gained)
-                    )
+                    from src.core.updates import AttributeUpdate
+                    attr_upd = ent_upd.attributes or AttributeUpdate()
+                    ent_upd = replace(ent_upd, attributes=replace(attr_upd,
+                        vitality_delta=attr_upd.vitality_delta + int(5 * entity.aptitude.vit_apt * levels_gained),
+                        strength_delta=attr_upd.strength_delta + int(5 * entity.aptitude.str_apt * levels_gained),
+                        endurance_delta=attr_upd.endurance_delta + int(2 * entity.aptitude.end_apt * levels_gained)
+                    ))
+                
+                cb_upd = replace(cb_upd, hp_delta=cb_upd.hp_delta + (20 * levels_gained))
 
-            # 5. Apply to Update
             update.entity_updates[e_id] = replace(
                 ent_upd,
                 kind_set=new_kind,
@@ -164,11 +167,8 @@ class EvolutionSystem:
             "WOLF": "DIRE_WOLF",
             "HERO": "LEGEND_HERO"
         }
-        # Handle race_tier pattern (e.g. goblin_0 -> goblin_1)
         if "_" in kind:
             parts = kind.rsplit("_", 1)
             if parts[1].isdigit():
                 return f"{parts[0]}_{int(parts[1]) + 1}"
-                
-        # Fallback to suffix if no mapping exists
         return mapping.get(kind.upper(), kind + "_EVOLVED")

@@ -1,7 +1,7 @@
 # Consolidated Certification Report
 
-**Last Run ID**: `5453342b-704e-4da3-b00d-079c8dc11073`
-**Commit SHA**: `6cd189a6add2f169d15838f7f4de5598131965e1`
+**Last Run ID**: `eb0b5a1d-562a-4ddd-a6d4-02fe5864989b`
+**Commit SHA**: `6353b6f3cf21673cd7f7232dcf2d766c86692c1d`
 
 ## Scenario Summary
 
@@ -14,7 +14,7 @@
 ## Latest Run Detail
 
 # Certification Report: COMBAT_ARENA_5V5
-**Commit SHA**: `6cd189a6add2f169d15838f7f4de5598131965e1`
+**Commit SHA**: `6353b6f3cf21673cd7f7232dcf2d766c86692c1d`
 **Status**: ✅ **PASS**
 **Allowed Failure Observed**: `False`
 
@@ -23,27 +23,27 @@
 - **Hardware Class**: `CLASS_B`
 - **Scenario**: `COMBAT_ARENA_5V5`
 - **Seed**: `42`
-- **Peak RAM (RSS)**: `78.7 MB`
-- **Total CPU Time**: `0.045 sec`
+- **Peak RAM (RSS)**: `79.4 MB`
+- **Total CPU Time**: `0.057 sec`
 
 ## 2. Resource Conformance Evidence
 | Tick | Mode | RAM (MB) | Compute (ms) | Worker % | Queue % |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| 1 | NORMAL | 78.7 | 1.0 | 0.00 | 0.00 |
-| 2 | NORMAL | 78.7 | 0.8 | 0.00 | 0.00 |
-| 3 | NORMAL | 78.7 | 0.8 | 0.00 | 0.00 |
-| 11 | NORMAL | 78.7 | 21.7 | 1.00 | 0.09 |
-| 12 | NORMAL | 78.7 | 1.9 | 0.00 | 0.00 |
-| 13 | NORMAL | 78.7 | 1.3 | 0.00 | 0.00 |
-| 17 | NORMAL | 78.7 | 2.0 | 0.00 | 0.00 |
-| 18 | NORMAL | 78.7 | 1.7 | 0.00 | 0.00 |
-| 19 | NORMAL | 78.7 | 1.7 | 0.00 | 0.00 |
-| 20 | NORMAL | 78.7 | 1.9 | 0.00 | 0.00 |
+| 1 | NORMAL | 79.4 | 2.0 | 0.00 | 0.00 |
+| 2 | NORMAL | 79.4 | 2.3 | 0.00 | 0.00 |
+| 3 | NORMAL | 79.4 | 1.7 | 0.00 | 0.00 |
+| 11 | NORMAL | 79.4 | 17.9 | 1.00 | 0.09 |
+| 12 | NORMAL | 79.4 | 2.5 | 0.00 | 0.00 |
+| 13 | NORMAL | 79.4 | 2.3 | 0.00 | 0.00 |
+| 17 | NORMAL | 79.4 | 2.2 | 0.00 | 0.00 |
+| 18 | NORMAL | 79.4 | 2.4 | 0.00 | 0.00 |
+| 19 | NORMAL | 79.4 | 1.1 | 0.00 | 0.00 |
+| 20 | NORMAL | 79.4 | 2.9 | 0.00 | 0.00 |
 | ... | ... | ... | ... | ... | ... |
 
 ## 3. Semantic Integrity Proof (Milestone D Law)
-- **Baseline Hash**: `851c77e3d4a45fb3c5f95a5c1277c8e9ba1701ace92d459147a47dfc09da1936`
-- **Final Hash**: `851c77e3d4a45fb3c5f95a5c1277c8e9ba1701ace92d459147a47dfc09da1936`
+- **Baseline Hash**: `752d9092d6cd8a263b2c02dba89285070bee2a7c1ca1a86c25e889bc091a7ccb`
+- **Final Hash**: `752d9092d6cd8a263b2c02dba89285070bee2a7c1ca1a86c25e889bc091a7ccb`
 - **Status**: MATCHED
 
 ## 4. Conformance Verdict

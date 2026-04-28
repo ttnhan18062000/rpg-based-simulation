@@ -5,6 +5,7 @@ from src.town.inn import InnAction
 from src.town.home import HomeAction
 from src.town.class_hall import ClassHallAction
 from src.engine.apply import ApplyPath
+from src.engine.pipeline import AuthoritativeApplyPipeline
 
 @pytest.mark.v2_contract
 def test_inn_rest_recovery():
@@ -18,7 +19,8 @@ def test_inn_rest_recovery():
     upd = InnAction.rest(entity, state)
     assert upd is not None
     
-    # 3. Apply
+    # 3. Refine & Apply
+    upd = AuthoritativeApplyPipeline.refine(state, upd)
     next_state = ApplyPath.apply_generation(state, upd)
     new_ent = next_state.entities[99]
     
@@ -41,7 +43,8 @@ def test_home_upgrade_blocker():
     upd = HomeAction.upgrade(entity, state)
     assert upd is not None
     
-    # 3. Apply
+    # 3. Refine & Apply
+    upd = AuthoritativeApplyPipeline.refine(state, upd)
     next_state = ApplyPath.apply_generation(state, upd)
     assert "m1" not in next_state.entities[99].strategic.blockers
     assert next_state.entities[99].inventory.gold == 50
@@ -59,8 +62,9 @@ def test_class_hall_training():
     upd = ClassHallAction.train(entity, "iron_smithing", state)
     assert upd is not None
     
-    # 3. Apply
+    # 3. Refine & Apply
+    upd = AuthoritativeApplyPipeline.refine(state, upd)
     next_state = ApplyPath.apply_generation(state, upd)
-    assert "iron_smithing" in next_state.entities[99].identity.known_recipes
     assert "c1" not in next_state.entities[99].strategic.blockers
+    assert "iron_smithing" in next_state.entities[99].identity.known_recipes
     assert next_state.entities[99].inventory.gold == 10

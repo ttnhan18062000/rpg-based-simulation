@@ -3,6 +3,8 @@ import random
 from typing import List, Optional
 from src.core.state import AuthoritativeState, EntityState, Faction
 from src.core.quests import QuestState, QuestKind, QuestStatus
+from src.core.enums import Domain
+from src.platform.rng import DeterministicRNG
 
 class QuestGenerator:
     """Generates dynamic quests based on the current world state."""
@@ -10,14 +12,14 @@ class QuestGenerator:
     @staticmethod
     def generate_for_entity(entity: EntityState, state: AuthoritativeState) -> List[QuestState]:
         """Generate a pool of potential quests for an entity."""
-        rng = random.Random(state.seed + state.tick + entity.id)
+        rng = DeterministicRNG(state.seed)
         quests = []
         
         # 1. Explore Quest
         # Find a region far from the entity or with low stability
         unstable_regions = [r for r in state.regions.values() if r.stability < 0.8]
         if unstable_regions:
-            target_region = rng.choice(unstable_regions)
+            target_region = rng.choice(Domain.QUEST, state.tick, entity.id, unstable_regions)
             quests.append(QuestState(
                 id=f"explore_{target_region.id}_{state.tick}",
                 kind=QuestKind.EXPLORE,

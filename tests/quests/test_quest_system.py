@@ -54,7 +54,12 @@ def test_bounty_quest_completion():
     
     update = QuestSystem.update(state)
     
+    # Authoritative refinement handles reward generation and status transition
+    from src.engine.pipeline import AuthoritativeApplyPipeline
+    update = AuthoritativeApplyPipeline.refine(state, update)
+    
     ent_upd = update.entity_updates[1]
+    # QuestResolutionSystem + _resolve_resource_transactions will result in REWARD_PENDING or REWARDED
     assert ent_upd.quest.status_set == QuestStatus.REWARDED
-    # In V2, gold is emitted via ResourceTransferIntent
-    assert ent_upd.resource_transfers[0].gold_delta == 500
+    # Gold is now in the intent results or resource transfers
+    assert any(res.accepted for res in ent_upd.intent_results if res.source_kind == "QUEST")

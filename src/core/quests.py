@@ -15,6 +15,7 @@ class QuestStatus(Enum):
     ACTIVE = 1
     COMPLETED = 2
     REWARDED = 3
+    REWARD_PENDING = 4
 
 @dataclass(frozen=True, slots=True)
 class RewardState:

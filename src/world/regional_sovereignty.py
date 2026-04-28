@@ -49,11 +49,16 @@ class RegionalSovereigntyService:
                         tax_amount = min(entity.inventory.gold, RegionalSovereigntyService.TAX_RATE_ENTITY)
                         if tax_amount > 0:
                             total_tax += tax_amount
-                            # Deduct from hero
-                            from src.core.updates import InventoryUpdate
+                            # Deduct from hero via Transaction Intent
+                            from src.core.updates import ResourceTransferIntent
                             ent_upd = entity_updates.get(e_id, EntityUpdate(entity_id=e_id))
-                            inv_upd = ent_upd.inventory or InventoryUpdate()
-                            entity_updates[e_id] = replace(ent_upd, inventory=replace(inv_upd, gold_delta=inv_upd.gold_delta - tax_amount))
+                            intent = ResourceTransferIntent(
+                                source_id=r_id,
+                                source_kind="TAX",
+                                gold_delta=-tax_amount,
+                                transfer_kind="TAX"
+                            )
+                            entity_updates[e_id] = replace(ent_upd, resource_transfers=ent_upd.resource_transfers + [intent])
             
             # 2. Tax Buildings in the region
             for b_id, building in state.buildings.items():
