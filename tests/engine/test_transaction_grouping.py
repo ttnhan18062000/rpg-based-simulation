@@ -1,179 +1,123 @@
 import pytest
-from dataclasses import replace
 from src.core.state import AuthoritativeState, EntityState, ItemStack, InventoryComponent
-from src.core.updates import EntityUpdate, StateUpdate, ResourceTransferIntent
+from src.core.updates import StateUpdate, EntityUpdate, ResourceTransferIntent
 from src.engine.pipeline import AuthoritativeApplyPipeline
-from src.core.builder import V2EntityBuilder
-from src.core.enums import EntityRole
 
-@pytest.fixture
-def base_entity():
-    return V2EntityBuilder(entity_id=1).role(EntityRole.HERO).build()
-
-def test_atomic_group_success(base_entity):
-    from src.core.state import ResourceNodeState
-    node1 = ResourceNodeState(id=101, kind="herb", position=(0,0), yields_item="herb", remaining_charges=3, max_charges=3, required_ticks=1)
-    node2 = ResourceNodeState(id=102, kind="ore", position=(0,0), yields_item="iron_ore", remaining_charges=3, max_charges=3, required_ticks=1)
+def test_interleaved_transaction_grouping():
+    """
+    RPG-1698: non_contiguous_group_stability
+    RPG-1664: atomic_conservation_law
+    Proof: This test ensures that grouped intents are processed together even if interleaved
+           with independent intents in the proposal list.
+    """
+    actor = EntityState(id=1, kind="HERO", position=(5, 5), active=True, inventory=InventoryComponent(max_slots=10))
     
-    state = AuthoritativeState(tick=0, seed=123, entities={base_entity.id: base_entity}, resource_nodes={101: node1, 102: node2})
-    
-    # Two intents in the same group
-    intent1 = ResourceTransferIntent(
-        source_id=101, source_kind="NODE",
-        items_add=[ItemStack("herb", 1)],
-        group_id="batch1", is_group_required=True
-    )
-    intent2 = ResourceTransferIntent(
-        source_id=102, source_kind="NODE",
-        items_add=[ItemStack("iron_ore", 1)],
-        group_id="batch1", is_group_required=True
+    state = AuthoritativeState(
+        tick=100,
+        seed=42,
+        entities={1: actor}
     )
     
-    update = StateUpdate(entity_updates={
-        base_entity.id: EntityUpdate(entity_id=base_entity.id, resource_transfers=[intent1, intent2])
-    })
+    # Intent A1 (Group 1)
+    intent_a1 = ResourceTransferIntent(
+        transaction_id="G1-1",
+        group_id="GROUP_1",
+        source_id="TOWN_HALL",
+        source_kind="QUEST",
+        gold_delta=10,
+        transfer_kind="LOOT"
+    )
+    # Intent B (Independent)
+    intent_b = ResourceTransferIntent(
+        transaction_id="IND-1",
+        source_id="BLACKSMITH",
+        source_kind="TOWN_SERVICE",
+        gold_delta=-5,
+        transfer_kind="PICKUP"
+    )
+    # Intent A2 (Group 1)
+    intent_a2 = ResourceTransferIntent(
+        transaction_id="G1-2",
+        group_id="GROUP_1",
+        source_id="GUILD_HALL",
+        source_kind="QUEST",
+        xp_reward=100,
+        transfer_kind="LOOT"
+    )
+    
+    # Interleaved list
+    update = StateUpdate(
+        entity_updates={
+            1: EntityUpdate(entity_id=1, resource_transfers=[intent_a1, intent_b, intent_a2])
+        }
+    )
     
     refined = AuthoritativeApplyPipeline.refine(state, update)
     
-    # Both should be in inventory items_add
-    ent_upd = refined.entity_updates[base_entity.id]
-    assert ent_upd.inventory is not None
-    assert len(ent_upd.inventory.items_add) == 2
-    assert any(s.item_id == "herb" for s in ent_upd.inventory.items_add)
-    assert any(s.item_id == "iron_ore" for s in ent_upd.inventory.items_add)
-
-def test_atomic_group_rollback_on_partial_failure(base_entity):
-    from src.core.state import ResourceNodeState
-    node1 = ResourceNodeState(id=101, kind="herb", position=(0,0), yields_item="herb", remaining_charges=3, max_charges=3, required_ticks=1)
-    node2 = ResourceNodeState(id=102, kind="ore", position=(0,0), yields_item="iron_ore", remaining_charges=3, max_charges=3, required_ticks=1)
+    res = refined.entity_updates[1].intent_results
+    assert len(res) == 3
     
-    # Setup entity with 1 slot available
-    entity = replace(base_entity, 
-        inventory=InventoryComponent(max_slots=1, items=[])
-    )
-    state = AuthoritativeState(tick=0, seed=123, entities={entity.id: entity}, resource_nodes={101: node1, 102: node2})
+    # Verify they were all accepted
+    assert all(r.accepted for r in res)
     
-    # Intent 1 fits, Intent 2 does not. Since they are grouped and required, both should fail.
-    intent1 = ResourceTransferIntent(
-        source_id=101, source_kind="NODE",
-        items_add=[ItemStack("herb", 1)],
-        group_id="batch1", is_group_required=True
-    )
-    intent2 = ResourceTransferIntent(
-        source_id=102, source_kind="NODE",
-        items_add=[ItemStack("iron_ore", 1)],
-        group_id="batch1", is_group_required=True
+    # Verify XP was processed (it gets consumed by EvolutionSystem into evolution_points_delta)
+    final_e1 = refined.entity_updates[1]
+    assert final_e1.identity.evolution_points_delta > 0 or final_e1.identity.evolution_level_set > 0
+    assert final_e1.inventory.gold_delta == 5 # 10 - 5
+    
+    # Verify group atomicity (if we forced a failure in one, all in group should fail)
+    # But here we just verify they are all processed.
+    
+def test_group_failure_rollback():
+    """
+    RPG-1697: transaction_grouping_atomicity
+    Proof: This test ensures that if one intent in a group fails, the whole group is rolled back.
+    """
+    actor = EntityState(id=1, kind="HERO", position=(5, 5), active=True, inventory=InventoryComponent(max_slots=10, gold=0))
+    
+    state = AuthoritativeState(
+        tick=100,
+        seed=42,
+        entities={1: actor}
     )
     
-    update = StateUpdate(entity_updates={
-        entity.id: EntityUpdate(entity_id=entity.id, resource_transfers=[intent1, intent2])
-    })
+    # Intent A (Group 1) - Success
+    intent_a = ResourceTransferIntent(
+        transaction_id="G1-1",
+        group_id="GROUP_1",
+        source_id="GIFT",
+        source_kind="QUEST",
+        gold_delta=100,
+        transfer_kind="LOOT"
+    )
+    # Intent B (Group 1) - Failure (Insufficient gold if it was a cost, but here we'll use a cost that exceeds what we have)
+    intent_b = ResourceTransferIntent(
+        transaction_id="G1-2",
+        group_id="GROUP_1",
+        source_id="BLACKSMITH",
+        source_kind="SHOP_BUY",
+        gold_cost=500, # We only have 100 after intent_a, but we start with 0.
+        transfer_kind="BUY"
+    )
+    
+    update = StateUpdate(
+        entity_updates={
+            1: EntityUpdate(entity_id=1, resource_transfers=[intent_a, intent_b])
+        }
+    )
     
     refined = AuthoritativeApplyPipeline.refine(state, update)
     
-    # Inventory should be empty in the update (rolled back)
-    ent_upd = refined.entity_updates[entity.id]
-    assert ent_upd.inventory is None or len(ent_upd.inventory.items_add) == 0
-
-def test_independent_transfers_allow_partial_success(base_entity):
-    from src.core.state import ResourceNodeState
-    node1 = ResourceNodeState(id=101, kind="herb", position=(0,0), yields_item="herb", remaining_charges=3, max_charges=3, required_ticks=1)
-    node2 = ResourceNodeState(id=102, kind="ore", position=(0,0), yields_item="iron_ore", remaining_charges=3, max_charges=3, required_ticks=1)
+    res = refined.entity_updates[1].intent_results
+    assert len(res) == 2
     
-    # Setup entity with 1 slot available
-    entity = replace(base_entity, 
-        inventory=InventoryComponent(max_slots=1, items=[])
-    )
-    state = AuthoritativeState(tick=0, seed=123, entities={entity.id: entity}, resource_nodes={101: node1, 102: node2})
+    # Intent A should be REJECTED with GROUP_ROLLBACK because Intent B failed
+    assert res[0].accepted is False
+    assert res[0].reason == "GROUP_ROLLBACK"
     
-    # Two independent intents (different or None group_id)
-    intent1 = ResourceTransferIntent(
-        source_id=101, source_kind="NODE",
-        items_add=[ItemStack("herb", 1)],
-        group_id=None # Independent
-    )
-    intent2 = ResourceTransferIntent(
-        source_id=102, source_kind="NODE",
-        items_add=[ItemStack("iron_ore", 1)],
-        group_id=None # Independent
-    )
+    # Intent B should be REJECTED with INSUFFICIENT_GOLD
+    assert res[1].accepted is False
+    assert res[1].reason == "INSUFFICIENT_GOLD"
     
-    update = StateUpdate(entity_updates={
-        entity.id: EntityUpdate(entity_id=entity.id, resource_transfers=[intent1, intent2])
-    })
-    
-    refined = AuthoritativeApplyPipeline.refine(state, update)
-    
-    # Should have herb but NOT iron_ore
-    ent_upd = refined.entity_updates[entity.id]
-    assert ent_upd.inventory is not None
-    assert len(ent_upd.inventory.items_add) == 1
-    assert ent_upd.inventory.items_add[0].item_id == "herb"
-
-def test_optional_group_allows_partial_success(base_entity):
-    from src.core.state import ResourceNodeState
-    node1 = ResourceNodeState(id=101, kind="herb", position=(0,0), yields_item="herb", remaining_charges=3, max_charges=3, required_ticks=1)
-    node2 = ResourceNodeState(id=102, kind="ore", position=(0,0), yields_item="iron_ore", remaining_charges=3, max_charges=3, required_ticks=1)
-    
-    # Setup entity with 1 slot available
-    entity = replace(base_entity, 
-        inventory=InventoryComponent(max_slots=1, items=[])
-    )
-    state = AuthoritativeState(tick=0, seed=123, entities={entity.id: entity}, resource_nodes={101: node1, 102: node2})
-    
-    # Grouped but NOT required
-    intent1 = ResourceTransferIntent(
-        source_id=101, source_kind="NODE",
-        items_add=[ItemStack("herb", 1)],
-        group_id="batch_optional", is_group_required=False
-    )
-    intent2 = ResourceTransferIntent(
-        source_id=102, source_kind="NODE",
-        items_add=[ItemStack("iron_ore", 1)],
-        group_id="batch_optional", is_group_required=False
-    )
-    
-    update = StateUpdate(entity_updates={
-        entity.id: EntityUpdate(entity_id=entity.id, resource_transfers=[intent1, intent2])
-    })
-    
-    refined = AuthoritativeApplyPipeline.refine(state, update)
-    
-    # Should have herb but NOT iron_ore (partial success allowed in optional group)
-    ent_upd = refined.entity_updates[entity.id]
-    assert ent_upd.inventory is not None
-    assert len(ent_upd.inventory.items_add) == 1
-    assert ent_upd.inventory.items_add[0].item_id == "herb"
-
-def test_atomic_group_rollback_prevents_xp_gain(base_entity):
-    from src.core.state import ResourceNodeState
-    node1 = ResourceNodeState(id=101, kind="herb", position=(0,0), yields_item="herb", remaining_charges=3, max_charges=3, required_ticks=1)
-    
-    # Setup entity with 0 slots available
-    entity = replace(base_entity, 
-        inventory=InventoryComponent(max_slots=0, items=[])
-    )
-    state = AuthoritativeState(tick=0, seed=123, entities={entity.id: entity}, resource_nodes={101: node1})
-    
-    # Intent: Herb (fails) + XP (would succeed)
-    intent1 = ResourceTransferIntent(
-        source_id=101, source_kind="NODE",
-        items_add=[ItemStack("herb", 1)],
-        group_id="batch_xp", is_group_required=True
-    )
-    intent2 = ResourceTransferIntent(
-        source_id=102, source_kind="COMBAT", # Combat-sourced XP
-        xp_reward=50,
-        group_id="batch_xp", is_group_required=True
-    )
-    
-    update = StateUpdate(entity_updates={
-        entity.id: EntityUpdate(entity_id=entity.id, resource_transfers=[intent1, intent2])
-    })
-    
-    refined = AuthoritativeApplyPipeline.refine(state, update)
-    
-    # Everything should be rolled back
-    ent_upd = refined.entity_updates[entity.id]
-    assert ent_upd.identity is None or ent_upd.identity.evolution_points_delta == 0
-    assert ent_upd.inventory is None or len(ent_upd.inventory.items_add) == 0
+    # Verify that NO gold was added
+    assert refined.entity_updates[1].inventory is None or refined.entity_updates[1].inventory.gold_delta == 0

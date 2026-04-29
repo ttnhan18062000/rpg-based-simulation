@@ -3,7 +3,6 @@ import argparse
 import sys
 import logging
 import time
-import random
 from pathlib import Path
 
 from src.config.profiles import RuntimeProfile, HardwareClass
@@ -74,8 +73,9 @@ def _run_cli(args):
     rng = DeterministicRNG(seed)
     gen = EntityGenerator(seed)
     
-    # Use deterministic random for positions
-    pos_rng = random.Random(seed)
+    # Use DeterministicRNG for initial positions (Phase 2 Law: No bare random)
+    from src.core.enums import Domain
+    init_rng = DeterministicRNG(seed)
     
     entities = {}
     # Spawn hero at center
@@ -83,10 +83,10 @@ def _run_cli(args):
     entities[hero.id] = hero
     
     # Spawn monsters
-    for _ in range(entities_count - 1):
+    for i in range(entities_count - 1):
         monster = gen.spawn_goblin((
-            64.0 + pos_rng.uniform(-20, 20), 
-            64.0 + pos_rng.uniform(-20, 20)
+            64.0 + (init_rng.get_float(Domain.INIT, 0, i, sub_id=0) * 40 - 20), 
+            64.0 + (init_rng.get_float(Domain.INIT, 0, i, sub_id=1) * 40 - 20)
         ))
         entities[monster.id] = monster
         

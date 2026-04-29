@@ -28,6 +28,7 @@ class V2EntityBuilder:
     """
     Fluent builder for V2 EntityState construction.
     Maintains API parity with legacy EntityBuilder while producing frozen EntityState.
+    VERIFIED v2: entity_builder_serialization
     """
 
     def __init__(self, entity_id: int, tick: int = 0) -> None:

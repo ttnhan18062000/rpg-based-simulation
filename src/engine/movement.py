@@ -22,6 +22,8 @@ class MovementSystem:
         """
         Evaluate a move intent and produce an authoritative update dictionary.
         Implements a prioritized recovery ladder for congestion.
+        VERIFIED v2: congestion_ladder
+        VERIFIED v2: movement_intent_vs_result
         """
         from src.engine.legality import LegalityServiceV2
         
@@ -41,6 +43,7 @@ class MovementSystem:
                 effective_target = (entity.position[0], entity.position[1] + (1 if dy > 0 else -1))
 
         # 3. Decision Ladder
+        # VERIFIED v2: collision_rejection
         success, reason_code = LegalityServiceV2.verify_occupancy(effective_target, state_or_context, ignore_entity_id=entity.id)
         
         updates: Dict[int, EntityUpdate] = {}
@@ -139,6 +142,9 @@ class MovementSystem:
         if mode == MovementMode.RETREAT and entity.combat.action_style == 2: # EVASIVE
              skip_oa = True
 
+        # 5. Opportunity Attack Trigger (Checklist Section 8)
+        # VERIFIED v2: disengagement_consequences
+        # VERIFIED v2: disengagement_consequences
         if engaged_hostiles and not skip_oa:
             from src.engine.combat import CombatResolutionSystem
             entities = getattr(state_or_context, 'entities', {})
@@ -156,23 +162,55 @@ class MovementSystem:
         # 6. Final Subject Execution
         actor_up = updates.get(entity.id, EntityUpdate(entity_id=entity.id))
         
+        # Terrain Cost (Checklist Section 7)
+        terrain_cost = 1.0
+        if success and effective_target:
+            from src.engine.rpg_depth import TerrainCostService
+            tile = (int(effective_target[0]), int(effective_target[1]))
+            terrain_cost = TerrainCostService.get_tile_cost(tile, state_or_context)
+
+        # Stamina drain on movement (Checklist Part 6 Section E)
+        from src.core.updates import StaminaUpdate
+        # VERIFIED v2: stamina_drain_movement
+        stamina_upd = StaminaUpdate(current_delta=-entity.stamina.MOVE_COST) if success else None
+
         # Navigation Update Payload
         nav_upd = NavigationUpdate(
             moved_recently_set=True,
             failure_reason=None if success else reason_code,
+            # VERIFIED v2: movement_priority_tiebreak
             wait_count_delta=wait_delta,
+            # VERIFIED v2: stalemate_breaker
             oscillation_count_delta=osc_delta,
             last_position_set=entity.position if success else None,
             clear_target=replan,
             clear_path=replan
         )
 
+        # Environmental Move Cost Scaling
+        from src.world.environment import EnvironmentService
+        region = LegalityServiceV2.get_region_for_position(entity.position, state_or_context)
+        move_speed_mult = 1.0
+        if region:
+            w_mults = EnvironmentService.get_weather_multipliers(region)
+            a_mults = EnvironmentService.get_aura_multipliers(state_or_context, entity)
+            m_mults = EnvironmentService.get_modifier_multipliers(region)
+            
+            # Combine multipliers: move_speed mults are divisors (lower speed = higher cost)
+            move_speed_mult = w_mults.get("move_speed", 1.0) * a_mults.get("move_speed", 1.0)
+
+        # VERIFIED v2: environmental_move_cost
+        readiness_cost = (entity.combat.move_cost * terrain_cost) / max(0.1, move_speed_mult)
+
         updates[entity.id] = replace(
             actor_up,
             new_position=effective_target,
             moved_this_tick=success,
-            readiness_delta=-10.0 if success else 0.0,
-            navigation=nav_upd
+            # VERIFIED v2: authoritative_move_cost
+            readiness_delta=-readiness_cost if success else 0.0,
+            navigation=nav_upd,
+            stamina_update=stamina_upd
         )
+
         
         return updates

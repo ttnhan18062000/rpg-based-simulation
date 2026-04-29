@@ -9,76 +9,93 @@ if TYPE_CHECKING:
 class EnvironmentService:
     """
     Manages the impact of regional hazards, weather, and auras on entities.
+    VERIFIED v2: EnvironmentService
     """
 
     @staticmethod
-    def calculate_hazard_drain(region: RegionState, entity: EntityState) -> float:
+    def calculate_hazard_drain(region: RegionState, entity: EntityState) -> int:
         """
         Calculates the HP/Readiness drain for an entity in a region.
         Scales with hazard_level and calamity_intensity.
         """
+        # Formula: hazard_level * (1.0 + calamity_intensity)
+        # Scaled to integer for HP damage
         base_drain = region.hazard_level * (1.0 + region.calamity_intensity)
         
-        # Certain modifiers increase drain
         if "MIASMA" in region.active_modifiers:
             base_drain *= 1.5
             
-        return base_drain
+        return int(base_drain * 10.0) # Scale by 10 for meaningful impact
 
     @staticmethod
-    def get_weather_modifiers(region: RegionState) -> Dict[str, float]:
+    def get_weather_multipliers(region: RegionState) -> Dict[str, float]:
         """
         Returns stat multipliers based on current weather.
         """
-        mods = {
+        mults = {
             "move_speed": 1.0,
             "perception": 1.0,
-            "evasion": 1.0
+            "evasion": 1.0,
+            "stamina_drain": 1.0
         }
         
         if region.weather == "STORM":
-            mods["perception"] = 0.7
-            mods["evasion"] = 0.8
+            mults["perception"] = 0.7
+            mults["evasion"] = 0.8
+            mults["move_speed"] = 0.8
         elif region.weather == "RAIN":
-            mods["perception"] = 0.9
+            mults["perception"] = 0.9
+            mults["evasion"] = 0.9
         elif region.weather == "SNOW":
-            mods["move_speed"] = 0.8
+            mults["move_speed"] = 0.7
+            mults["stamina_drain"] = 1.2
+        elif region.weather == "BLIZZARD":
+            mults["move_speed"] = 0.5
+            mults["perception"] = 0.5
+            mults["stamina_drain"] = 1.5
             
-        return mods
+        return mults
 
     @staticmethod
-    def get_aura_effects(state: AuthoritativeState, entity: EntityState) -> Dict[str, float]:
+    def get_aura_multipliers(state: AuthoritativeState, entity: EntityState) -> Dict[str, float]:
         """
         Returns stat multipliers based on nearby strongholds (Aura of Despair).
         """
-        mods = {
-            "move_speed": 1.0
+        mults = {
+            "move_speed": 1.0,
+            "readiness_regen": 1.0
         }
         
+        from src.core.enums import Faction
         if entity.identity.faction == Faction.HERO_GUILD:
             for s in state.entities.values():
+                # Any active monster stronghold
                 if s.kind == "stronghold" and s.combat.alive:
                     from src.engine.legality import LegalityServiceV2
                     dist = LegalityServiceV2.get_manhattan_dist(entity.position, s.position)
                     if dist < 12:
-                        # Aura of Despair: -30% speed
-                        mods["move_speed"] = min(mods["move_speed"], 0.7)
+                        # Aura of Despair: -30% speed, -20% readiness recovery
+                        mults["move_speed"] = min(mults["move_speed"], 0.7)
+                        mults["readiness_regen"] = min(mults["readiness_regen"], 0.8)
                         
-        return mods
+        return mults
 
     @staticmethod
-    def get_environmental_penalties(region: RegionState) -> Dict[str, float]:
+    def get_modifier_multipliers(region: RegionState) -> Dict[str, float]:
         """
-        Returns penalties based on active modifiers.
+        Returns penalties based on active regional modifiers.
         """
-        penalties = {
-            "hp_regen": 1.0,
-            "stamina_drain": 1.0
+        mults = {
+            "stamina_drain": 1.0,
+            "hp_regen": 1.0
         }
         
         if "FROST" in region.active_modifiers:
-            penalties["stamina_drain"] = 1.2
+            mults["stamina_drain"] *= 1.2
         if "HEAT" in region.active_modifiers:
-            penalties["stamina_drain"] = 1.3
+            mults["stamina_drain"] *= 1.3
+        if "CURSE" in region.active_modifiers:
+            mults["hp_regen"] = 0.0 # No healing
             
-        return penalties
+        return mults
+

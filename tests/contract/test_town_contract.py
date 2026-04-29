@@ -1,3 +1,10 @@
+"""
+Town contract and economy tests.
+- RPG-0034: shop_sell_price_enforcement
+- RPG-0035: blacksmith_material_consumption
+- RPG-1654: blacksmith_recipe_learning_parity
+- RPG-1660: shop_junk_auto_sell
+"""
 import pytest
 from dataclasses import replace
 from src.core.state import AuthoritativeState, EntityState, InventoryComponent, IdentityComponent, ItemStack

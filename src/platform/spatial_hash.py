@@ -7,6 +7,7 @@ class SpatialHashV2:
     """
     Deterministic spatial hash for RPG-core proximity and occupancy.
     Supports radius queries and cell-based lookups.
+    VERIFIED v2: SpatialHashV2
     """
 
     def __init__(self, cell_size: int = 10):

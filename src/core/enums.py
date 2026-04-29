@@ -41,6 +41,7 @@ class ActionType(IntEnum):
     MOVE = 1
     INTERACT = 2
     ATTACK = 3
+    SKILL = 4
 
 @unique
 class ActionStyle(IntEnum):
@@ -97,3 +98,6 @@ class Domain(IntEnum):
     TACTICAL = 6
     ECONOMY = 7
     QUEST = 8
+    COMBAT = 9     # Reserved: Combat is deterministic-by-formula (no RNG), but domain exists for future use
+    LOOT = 10      # Loot table rolls (future)
+    INIT = 11      # World initialization / entity placement

@@ -46,6 +46,7 @@ class DetourSuggestionSystem:
     ) -> List[DetourSuggestionResult]:
         """
         Generate detour suggestions from unresolved blockers paired with relevant leads.
+        VERIFIED v2: strategic_detour_suggestion
 
         Rules:
         1. Only considers unresolved blockers.
@@ -66,10 +67,11 @@ class DetourSuggestionSystem:
         if not unresolved_blockers:
             return []
 
-        # Collect usable leads (not tested-and-failed, not exhausted)
         usable_leads = [
             l for l in strategic.leads.values()
-            if not l.tested and l.certainty != LeadCertainty.EXHAUSTED
+            if (not l.tested or (l.test_outcome == 'FAILURE' and l.failure_count < 3))
+            and l.certainty != LeadCertainty.EXHAUSTED 
+            and l.suppression_until_tick < current_tick
         ]
 
         if not usable_leads:
@@ -89,11 +91,13 @@ class DetourSuggestionSystem:
 
                 objective_kind = DetourSuggestionSystem._infer_objective_kind(blocker, lead)
 
+                target = lead.detail if lead.kind == "location" and lead.detail else lead.subject
+
                 suggestions.append(DetourSuggestionResult(
                     blocker_id=blocker.id,
                     lead_id=lead.id,
                     objective_kind=objective_kind,
-                    target=lead.subject,
+                    target=target,
                     score=score
                 ))
 
@@ -102,17 +106,25 @@ class DetourSuggestionSystem:
         return suggestions[:profile.detour_breadth]
 
     @staticmethod
-    def suppress_exhausted_leads(entity: EntityState) -> StrategicUpdate:
+    def suppress_exhausted_leads(entity: EntityState, current_tick: int) -> StrategicUpdate:
         """
         Part 1 §Strategic: Rejected/tested leads are suppressed to avoid blind retries.
-
-        Marks tested-and-failed leads as EXHAUSTED.
+        Implements Phase 6 Strategic Memory.
         """
         leads_to_update = []
 
         for lead in entity.strategic.leads.values():
-            if lead.tested and lead.test_outcome == 'FAILURE' and lead.certainty != LeadCertainty.EXHAUSTED:
-                leads_to_update.append(replace(lead, certainty=LeadCertainty.EXHAUSTED))
+            if lead.tested and lead.test_outcome == 'FAILURE':
+                new_count = lead.failure_count + 1
+                # If failed 3 times, mark as EXHAUSTED
+                if new_count >= 3:
+                    if lead.certainty != LeadCertainty.EXHAUSTED:
+                        leads_to_update.append(replace(lead, certainty=LeadCertainty.EXHAUSTED, failure_count=new_count))
+                else:
+                    # Apply temporary suppression (e.g. 500 ticks as per Phase 6 spec)
+                    suppression_tick = current_tick + 500
+                    if lead.suppression_until_tick < suppression_tick:
+                        leads_to_update.append(replace(lead, suppression_until_tick=suppression_tick, failure_count=new_count))
 
         if not leads_to_update:
             return StrategicUpdate()
@@ -171,7 +183,17 @@ class DetourSuggestionSystem:
             return True
         # Material blocker + location lead for the material
         if blocker.kind == "material" and lead.kind == "location":
-            return blocker.subject in lead.detail
+            if not lead.detail: return False
+            return blocker.subject in lead.detail or lead.subject == "resource_node"
+            
+        # Inventory capacity blocker -> Location lead for town/shop/home
+        if blocker.kind == "inventory" and blocker.subject == "capacity":
+            return lead.kind == "location" and lead.subject in ("town", "shop", "home")
+            
+        # Danger/Safety blocker -> Location lead for safe zone/town
+        if blocker.kind == "danger":
+            return lead.kind == "location" and lead.subject in ("safe_zone", "town", "origin")
+            
         return False
 
     @staticmethod
@@ -198,6 +220,10 @@ class DetourSuggestionSystem:
             return "acquire_item"
         if blocker.kind == "access":
             return "reach_location"
+        if blocker.kind == "inventory":
+            return "reach_location" # Return to town to sell
+        if blocker.kind == "danger":
+            return "reach_location" # Retreat to safe zone
         if blocker.kind == "social" or blocker.kind == "group":
             return "social_engage"
         return "investigate"

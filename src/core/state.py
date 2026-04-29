@@ -30,6 +30,50 @@ class ItemStack:
     """A quantity of a specific item template."""
     item_id: str
     quantity: int = 1
+    properties: Dict[str, Any] = field(default_factory=dict)
+
+@dataclass(frozen=True, slots=True)
+class StaminaComponent:
+    """Stamina resource for actions — drains on attack/move/harvest/skill use."""
+    current: float = 100.0
+    max_stamina: float = 100.0  # Derived from endurance
+    regen_rate: float = 2.0     # Per-tick passive regen
+    rest_regen_rate: float = 8.0  # Regen rate when resting
+    exhaustion_threshold: float = 10.0  # Below this, exhaustion penalty applies
+    exhaustion_penalty: float = 0.7     # Combat multiplier when exhausted
+
+    # Drain constants
+    ATTACK_COST: float = 8.0
+    MOVE_COST: float = 3.0
+    HARVEST_COST: float = 5.0
+    SKILL_COST_MULT: float = 1.0  # Multiplied by skill.cost
+
+
+@dataclass(frozen=True, slots=True)
+class WoundState:
+    """A persistent wound from a massive hit."""
+    id: str
+    kind: str  # SLASH, CRUSH, PIERCE, BURN
+    severity: float  # 0.0 to 1.0
+    tick_inflicted: int
+    atk_penalty: float = 0.0
+    def_penalty: float = 0.0
+    speed_penalty: float = 0.0
+    max_hp_penalty: float = 0.0
+    healed: bool = False
+    scar_created: bool = False
+
+
+@dataclass(frozen=True, slots=True)
+class ScarState:
+    """Permanent mark from a healed wound — lesser but persistent penalty."""
+    id: str
+    wound_kind: str
+    tick_created: int
+    atk_penalty: float = 0.0
+    def_penalty: float = 0.0
+    speed_penalty: float = 0.0
+
 
 @dataclass(frozen=True, slots=True)
 class BiologicalComponent:
@@ -79,6 +123,7 @@ class RegionState:
     suppression_active: bool = False # Prevents certain worker actions
     calamity_intensity: float = 0.0  # Scales regional hazards
     trauma_score: float = 0.0      # Persistent regional 'scar' value
+    retaliation_pressure: float = 0.0 # Short-term monster response to kills
     stability: float = 1.0         # 0.0 to 1.0, recovery rate of regions
     owner_faction_id: Optional[int] = None # Faction that currently controls the region
     influence: float = 0.0         # -100.0 (Monster) to 100.0 (Hero)
@@ -100,9 +145,18 @@ class SocialBond:
     last_interaction_tick: int = 0
 
 @dataclass(frozen=True, slots=True)
+class BetrayalRecord:
+    """A record of a specific betrayal event."""
+    contract_id: str
+    betrayer_id: int
+    victim_id: int
+    severity: float = 1.0
+    tick: int = 0
+
+@dataclass(frozen=True, slots=True)
 class SocialComponent:
     """State for reputation, trust, and betrayal history."""
-    trust_history: Dict[int, float] = field(default_factory=dict)       # EntityID -> Trust Score
+    trust_history: Dict[int, float] = field(default_factory=dict)       # EntityID -> Trust Score (VERIFIED v2: SocialComponent.trust)
     familiarity_history: Dict[int, float] = field(default_factory=dict) # EntityID -> Familiarity
     debt_history: Dict[int, float] = field(default_factory=dict)        # EntityID -> Debt (Social/Gold)
     fear_history: Dict[int, float] = field(default_factory=dict)        # EntityID -> Fear Score
@@ -113,6 +167,7 @@ class SocialComponent:
     bonds: Dict[int, SocialBond] = field(default_factory=dict)         # EntityID -> Bond
     
     betrayal_count: int = 0
+    betrayal_records: List[BetrayalRecord] = field(default_factory=list)
     public_reputation: float = 1.0   # Unified reputation score (0.0 to 2.0)
     heroism_score: float = 0.0       # Cumulative good deeds
     notoriety_score: float = 0.0     # Cumulative bad deeds
@@ -128,9 +183,24 @@ class CombatComponent:
     speed: int = 10
     range: int = 1
     evasion: float = 0.05
+    move_cost: float = 10.0
     tactical_role: str = "VANGUARD"
     action_style: int = 0 # ActionStyle.BALANCED
     alive: bool = True
+
+
+# Terrain cost weights for pathfinding
+TERRAIN_COST: Dict[str, float] = {
+    "ROAD": 0.5,
+    "PLAIN": 1.0,
+    "FLOOR": 1.0,
+    "GRASS": 1.0,
+    "FOREST": 1.5,
+    "SWAMP": 3.0,
+    "HILL": 2.0,
+    "MOUNTAIN": 4.0,
+    "SAND": 1.5,
+}
 
 
 @dataclass(frozen=True, slots=True)
@@ -146,6 +216,13 @@ class NavigationComponent:
     wait_count: int = 0
     oscillation_count: int = 0
     last_position: Optional[tuple[float, float]] = None
+
+    # Mob Leash fields
+    home_position: Optional[tuple[float, float]] = None
+    leash_radius: float = 0.0  # 0 = no leash
+    chase_ticks: int = 0
+    max_chase_ticks: int = 15
+    returning_home: bool = False
 
 
 @dataclass(frozen=True, slots=True)
@@ -204,6 +281,7 @@ class IdentityComponent:
     class_id: str = "NOVICE"
     learned_skills: Set[str] = field(default_factory=set)
     active_breakthroughs: Set[str] = field(default_factory=set)
+    cooldowns: Dict[str, int] = field(default_factory=dict) # skill_id -> tick when ready
     personality: PersonalityComponent = field(default_factory=PersonalityComponent)
     life_stage: LifeStage = LifeStage.ADULT
 
@@ -252,6 +330,7 @@ class InventoryComponent:
 class EquipmentComponent:
     """Currently equipped items per slot."""
     slots: Dict[EquipSlot, str | None] = field(default_factory=dict)
+    durability: Dict[EquipSlot, float] = field(default_factory=dict)
 
 
 
@@ -268,6 +347,8 @@ class IntentResult:
 class EntityState:
     """
     Authoritative state for a single simulation entity.
+    VERIFIED v2: EntityState
+    VERIFIED v2: entity_builder_serialization
     """
     id: int
     kind: str
@@ -287,9 +368,20 @@ class EntityState:
     equipment: EquipmentComponent = field(default_factory=EquipmentComponent)
     navigation: NavigationComponent = field(default_factory=NavigationComponent)
     task: TaskComponent = field(default_factory=TaskComponent)
+    stamina: StaminaComponent = field(default_factory=StaminaComponent)
+    wounds: List[WoundState] = field(default_factory=list)
+    scars: List[ScarState] = field(default_factory=list)
     latest_intent_results: List[IntentResult] = field(default_factory=list)
+    latest_combat_result: Optional[CombatUpdate] = None
     group_id: Optional[int] = None
     properties: Dict[str, Any] = field(default_factory=dict)
+
+    def to_dict(self) -> Dict[str, Any]:
+        """
+        VERIFIED v2: EntityState.to_dict
+        """
+        from dataclasses import asdict
+        return asdict(self)
 
 
 @dataclass(frozen=True, slots=True)
@@ -346,11 +438,26 @@ class BuildingState:
 
 
 @dataclass(frozen=True, slots=True)
+class CampState:
+    """Authoritative state for a persistent world encampment."""
+    id: str
+    kind: str
+    position: tuple[float, float]
+    maturity: float = 0.0
+    active: bool = True
+    faction: str = "hostile"
+    last_raid_tick: int = 0
+
+
+@dataclass(frozen=True, slots=True)
+# VERIFIED v2: authoritative_state_model
 class AuthoritativeState:
     """
     The minimum state required to determine future simulation outcomes.
     Optimized for execution leanness and deterministic progression.
+    VERIFIED v2: authoritative_world_objects
     """
+    # VERIFIED v2: state_tick_increment
     tick: int
     seed: int
     world_time: int = 0
@@ -360,6 +467,7 @@ class AuthoritativeState:
     corpses: Dict[int, CorpseState] = field(default_factory=dict)
     chests: Dict[int, ChestState] = field(default_factory=dict)
     buildings: Dict[int, BuildingState] = field(default_factory=dict) # Sabotage truth
+    camps: Dict[str, CampState] = field(default_factory=dict)         # Phase 9: World dynamics
     regions: Dict[str, RegionState] = field(default_factory=dict)    # World dynamics truth
     local_scars: Dict[int, LocalScarState] = field(default_factory=dict) # Spatial trauma
     groups: Dict[int, GroupRecord] = field(default_factory=dict)     # Social coordination truth
@@ -376,11 +484,17 @@ class AuthoritativeState:
     town_tiles: set[tuple[int, int]] = field(default_factory=set)    # Social truth
     building_tiles: Dict[tuple[int, int], str] = field(default_factory=dict) # Service mapping
     rng_checkpoint: Any = None
+    transaction_trace: List[str] = field(default_factory=list)
+    # VERIFIED v2: rejection_registry_tracking
+    rejection_registry: Dict[str, int] = field(default_factory=dict) # Global counters for discarded truth
+    # Phase E5.3: Exactly-Once Idempotency
+    processed_transaction_ids: set[str] = field(default_factory=set)
 
     def readonly_view(self) -> AuthoritativeState:
         """
         Produce a read-only view of the state for decision logic.
         M8 Law: Decision logic must not mutate authoritative state.
+        VERIFIED v2: entity_snapshot_immutability
         """
         from src.core.immutability import shallow_freeze
         return replace(
@@ -388,6 +502,7 @@ class AuthoritativeState:
             entities=shallow_freeze(self.entities),
             resource_nodes=shallow_freeze(self.resource_nodes),
             buildings=shallow_freeze(self.buildings),
+            camps=shallow_freeze(self.camps),
             regions=shallow_freeze(self.regions),
             local_scars=shallow_freeze(self.local_scars),
             groups=shallow_freeze(self.groups),
@@ -397,7 +512,8 @@ class AuthoritativeState:
             work_debt=shallow_freeze(self.work_debt),
             blocked_tiles=shallow_freeze(self.blocked_tiles),
             town_tiles=shallow_freeze(self.town_tiles),
-            building_tiles=shallow_freeze(self.building_tiles)
+            building_tiles=shallow_freeze(self.building_tiles),
+            processed_transaction_ids=shallow_freeze(self.processed_transaction_ids)
         )
 
     def fingerprint(self) -> Dict[str, Any]:

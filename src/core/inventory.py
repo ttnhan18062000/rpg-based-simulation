@@ -65,6 +65,25 @@ class InventoryService:
         return True
 
     @staticmethod
+    def can_add_items_with_removals(inventory: InventoryComponent, items_add: List[ItemStack], items_remove: List[ItemStack]) -> bool:
+        """Check capacity after accounting for item removals (Phase 8)."""
+        from dataclasses import replace
+        # 1. Simulate removals
+        new_items = list(inventory.items)
+        for remove_stack in items_remove:
+             existing = next((s for s in new_items if s.item_id == remove_stack.item_id), None)
+             if existing:
+                 new_qty = max(0, existing.quantity - remove_stack.quantity)
+                 new_items.remove(existing)
+                 if new_qty > 0:
+                     new_items.append(ItemStack(remove_stack.item_id, new_qty))
+                     
+        # 2. Check adds on the simulated inventory
+        # We must create a temporary inventory object to use existing validation logic
+        temp_inv = replace(inventory, items=new_items)
+        return InventoryService.can_add_items(temp_inv, items_add)
+
+    @staticmethod
     def can_equip_item(entity: EntityState, item_id: str, slot: EquipSlot) -> bool:
         """Check if an item can be equipped in the specified slot."""
         defn = ItemRegistry.get(item_id)
@@ -84,30 +103,69 @@ class InventoryService:
         
         # 1. Handle Removals
         for remove_stack in update.items_remove:
-            existing = next((s for s in new_items if (s.item_id if hasattr(s, "item_id") else s) == remove_stack.item_id), None)
-            if existing:
-                existing_qty = existing.quantity if hasattr(existing, "quantity") else 1
-                new_qty = max(0, existing_qty - remove_stack.quantity)
-                new_items.remove(existing)
-                if new_qty > 0:
-                    new_items.append(ItemStack(remove_stack.item_id, new_qty))
+            # Multi-stack removal logic
+            remaining_to_remove = remove_stack.quantity
+            indices_to_remove = []
+            for i, existing in enumerate(new_items):
+                if existing.item_id == remove_stack.item_id:
+                    if existing.quantity <= remaining_to_remove:
+                        remaining_to_remove -= existing.quantity
+                        indices_to_remove.append(i)
+                    else:
+                        new_items[i] = replace(existing, quantity=existing.quantity - remaining_to_remove)
+                        remaining_to_remove = 0
+                        break
+            
+            # Remove indices in reverse to avoid shifting
+            for i in sorted(indices_to_remove, reverse=True):
+                new_items.pop(i)
+        
+        # Calculate current weight once for efficiency
+        current_weight = InventoryService.calculate_total_weight(replace(inventory, items=new_items))
         
         # 2. Handle Additions
         for add_stack in update.items_add:
-            # Check capacity
-            if not InventoryService.can_add_item(inventory, add_stack.item_id, add_stack.quantity):
-                # In M1, we skip addition if it exceeds capacity
+            defn = ItemRegistry.get(add_stack.item_id)
+            if not defn:
                 continue
                 
-            existing = next((s for s in new_items if (s.item_id if hasattr(s, "item_id") else s) == add_stack.item_id), None)
-            if existing:
-                existing_qty = existing.quantity if hasattr(existing, "quantity") else 1
-                new_qty = existing_qty + add_stack.quantity
-                new_items.remove(existing)
-                new_items.append(ItemStack(add_stack.item_id, new_qty))
-            else:
-                if len(new_items) < inventory.max_slots:
-                    new_items.append(add_stack)
+            remaining_to_add = add_stack.quantity
+            
+            # First, try to fill existing partially-filled stacks
+            for i, existing in enumerate(new_items):
+                if existing.item_id == add_stack.item_id and existing.quantity < defn.stack_size:
+                    space_in_stack = defn.stack_size - existing.quantity
+                    amount_to_add = min(remaining_to_add, space_in_stack)
+                    
+                    # Weight Check
+                    if current_weight + (defn.weight * amount_to_add) > inventory.max_weight:
+                        # Add as much as fits weight-wise
+                        max_fit = int((inventory.max_weight - current_weight) / defn.weight)
+                        amount_to_add = min(amount_to_add, max_fit)
+                        
+                    if amount_to_add > 0:
+                        new_items[i] = replace(existing, quantity=existing.quantity + amount_to_add)
+                        current_weight += defn.weight * amount_to_add
+                        remaining_to_add -= amount_to_add
+                        
+                if remaining_to_add <= 0:
+                    break
+            
+            # Second, create new stacks if there are slots remaining
+            while remaining_to_add > 0 and len(new_items) < inventory.max_slots:
+                amount_to_add = min(remaining_to_add, defn.stack_size)
+                
+                # Weight Check
+                if current_weight + (defn.weight * amount_to_add) > inventory.max_weight:
+                    max_fit = int((inventory.max_weight - current_weight) / defn.weight)
+                    amount_to_add = min(amount_to_add, max_fit)
+                
+                if amount_to_add <= 0:
+                    break
+                    
+                new_items.append(replace(add_stack, quantity=amount_to_add))
+                current_weight += defn.weight * amount_to_add
+                remaining_to_add -= amount_to_add
         
         return replace(
             inventory,

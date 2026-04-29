@@ -1,3 +1,11 @@
+"""
+Leveling and evolution tests.
+- RPG-0061: evolution_level_determinism
+- RPG-0062: evolution_point_accumulation
+- RPG-0063: evolution_threshold_scaling
+- RPG-0065: stat_recalculation_parity
+- RPG-0067: class_based_attribute_bias
+"""
 import pytest
 from src.core.state import AuthoritativeState, EntityState, IdentityComponent, CombatComponent
 from src.core.updates import StateUpdate, EntityUpdate, IdentityUpdate, RewardUpdate
@@ -33,9 +41,8 @@ def test_automatic_level_up():
     assert new_ent.combat.atk == 15
     assert new_ent.combat.def_stat == 8
     
-    # Note: HP restoration (hp_delta) is capped at OLD max_hp (100) 
-    # during the early part of apply_generation before the Recalculation Gate.
-    assert new_ent.combat.hp == 100
+    # RPG-0064: HP is refilled to NEW max_hp on level up
+    assert new_ent.combat.hp == 123
 
 @pytest.mark.v2_contract
 def test_multi_level_up():

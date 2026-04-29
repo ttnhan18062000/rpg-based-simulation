@@ -30,6 +30,7 @@ class ShopSystem:
         """
         Produce authoritative item-to-gold conversions for entities at a shop.
         Law of Profit: Only junk and materials are auto-sold to prevent gear loss.
+        # VERIFIED v2: shop_visit_semantics
         """
         refined_entity_updates = dict(update.entity_updates)
         

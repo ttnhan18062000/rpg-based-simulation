@@ -2,7 +2,7 @@
 import pytest
 from src.core.state import EntityState, SocialComponent, IdentityComponent, SocialBond
 from src.core.updates import SocialUpdate, SocialBondUpdate
-from src.systems.social import SocialAppraisalSystem
+from src.social.appraisal import SocialAppraisalSystem
 from src.social.relationships import RelationshipService
 
 def create_mock_social_entity(eid, cha=5):

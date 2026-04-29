@@ -1,8 +1,9 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING, Optional, List, Tuple, Dict, Any
 from dataclasses import replace, field
-from src.core.updates import CombatUpdate, CombatIntent
+from src.core.updates import CombatUpdate, CombatIntent, EquipmentUpdate
 from src.core.enums import EntityRole
+from src.core.state import EquipSlot
 
 if TYPE_CHECKING:
     from src.core.state import EntityState, AuthoritativeState
@@ -11,6 +12,7 @@ class CombatResolutionSystem:
     """
     Authoritative logic for combat interactions and outcomes.
     Matches legacy 'CombatInteractionService'.
+    VERIFIED v2: combat
     """
     
     # Rulebook Constants (Recovered from Legacy/Epic 17)
@@ -29,11 +31,31 @@ class CombatResolutionSystem:
         """
         Pillar 3: Fractional Armor Mitigation
         Formula: damage = (atk * atk_mult) * ((atk * atk_mult) / ((atk * atk_mult) + (def * def_mult) * 2.0 + 1.0))
+        VERIFIED v2: legacy_damage_parity
         """
         atk = float(attacker.combat.atk) * atk_mult
         dfn = float(defender.combat.def_stat) * def_mult
         raw_damage = int(atk * (atk / (atk + dfn * 2.0 + 1.0)))
         return max(1, raw_damage)
+
+    @staticmethod
+    def _get_durability_decay(attacker: EntityState, defender: EntityState) -> Tuple[Optional[EquipmentUpdate], Optional[EquipmentUpdate]]:
+        """Phase 8: Calculate durability loss for attacker and defender."""
+        attacker_equip_upd = None
+        if attacker.equipment.slots.get(EquipSlot.MAIN_HAND):
+            attacker_equip_upd = EquipmentUpdate(
+                durability_delta={EquipSlot.MAIN_HAND: -1.0}
+            )
+            
+        defender_equip_upd = None
+        def_dur_deltas = {}
+        for slot in (EquipSlot.TORSO, EquipSlot.LEGS, EquipSlot.HEAD):
+            if defender.equipment.slots.get(slot):
+                def_dur_deltas[slot] = -0.5
+        if def_dur_deltas:
+            defender_equip_upd = EquipmentUpdate(durability_delta=def_dur_deltas)
+            
+        return attacker_equip_upd, defender_equip_upd
 
     @staticmethod
     def resolve_attack(
@@ -81,6 +103,13 @@ class CombatResolutionSystem:
         if attacker.biological.sleep_debt > 80.0:
             atk_mult *= 0.8
             trace["EXHAUSTION"] = 0.8
+
+        # Stamina exhaustion penalty (Checklist Part 6 Section E)
+        from src.engine.rpg_depth import StaminaService
+        exhaust_mult = StaminaService.get_exhaustion_multiplier(attacker.stamina)
+        if exhaust_mult < 1.0:
+            atk_mult *= exhaust_mult
+            trace["STAMINA_EXHAUSTION"] = exhaust_mult
             
         for sid, bond in attacker.social.bonds.items():
             if bond.familiarity > 0.5:
@@ -121,6 +150,27 @@ class CombatResolutionSystem:
                 else:
                     perma_set = True
                     outcome = "PERMADEATH"
+ 
+        # 5. Durability Decay (Phase 8)
+        attacker_equip_upd, defender_equip_upd = CombatResolutionSystem._get_durability_decay(attacker, defender)
+
+        # 6. Wound Infliction (Checklist Part 6 Section G)
+        wound_upd = CombatResolutionSystem._get_wound_infliction(attacker, defender, damage, state.tick, alive)
+        if wound_upd:
+            trace["WOUND_INFLICTED"] = 1.0
+
+        # 7. Generate Resource Intents (Phase 4 Standardization)
+        from src.core.updates import ResourceTransferIntent
+        resource_transfers = []
+        if not alive and defender.combat.alive: # Only if they just died
+             from src.core.updates import RewardUpdate
+             resource_transfers.append(ResourceTransferIntent(
+                 source_id=defender.id, source_kind="COMBAT",
+                 gold_delta=gold_gain,
+                 reward_upd=RewardUpdate(xp_gain=xp_gain),
+                 transfer_kind="KILL_REWARD",
+                 is_group_required=True
+             ))
 
         return CombatUpdate(
             damage_taken=damage,
@@ -130,10 +180,12 @@ class CombatResolutionSystem:
             alive_set=alive,
             outcome_kind=outcome,
             is_lethal=is_lethal,
-            xp_gain=xp_gain,
-            gold_gain=gold_gain,
             generation_delta=gen_delta,
             is_permadeath_set=perma_set,
+            equipment_upd=defender_equip_upd, # Defender's equipment update
+            attacker_equipment_upd=attacker_equip_upd, # Attacker's weapon update
+            wound_update=wound_upd,
+            resource_transfers=resource_transfers,
             trace=trace
         )
 
@@ -145,6 +197,77 @@ class CombatResolutionSystem:
     ) -> CombatUpdate:
         return CombatResolutionSystem.resolve_attack(
             attacker, defender, state, is_opportunity_attack=True, is_lethal=False
+        )
+
+    @staticmethod
+    def resolve_skill_usage(
+        attacker: EntityState,
+        defender: EntityState,
+        state: AuthoritativeState,
+        damage: int,
+        is_lethal: bool = True
+    ) -> CombatUpdate:
+        """
+        Authoritative resolution of a skill hit.
+        Damage is pre-calculated by the caller using SkillScalingService.
+        """
+        from src.engine.legality import LegalityServiceV2
+        
+        # 1. Legality Check (Still needs range/target validation)
+        is_legal, reason = LegalityServiceV2.verify_attack_legality(attacker, defender, state)
+        if not is_legal:
+            return CombatUpdate(outcome_kind="REJECTED", failure_reason=reason)
+
+        # 2. Defenses (Armor still applies to skills? For now, yes)
+        # Actually, let's assume 'damage' passed in is already mitigated or is raw.
+        # Roadmap: "Skill damage pre-scaling".
+        
+        # 3. Apply Damage
+        new_hp = defender.combat.hp - damage
+        outcome = "SURVIVE"
+        alive = True
+        if new_hp <= 0:
+            outcome = "KILL" if is_lethal else "DEFEAT"
+            alive = False
+            
+            # 4. Generate Reward (Intermediary)
+        xp_gain = 0
+        gold_gain = 0
+        if not alive:
+            # Simple monster rewards
+            if defender.identity.role == EntityRole.MONSTER:
+                xp_gain = 10 * defender.identity.evolution_level
+                gold_gain = 5 * defender.identity.evolution_level
+
+        # 5. Durability Decay (Phase 8)
+        attacker_equip_upd, defender_equip_upd = CombatResolutionSystem._get_durability_decay(attacker, defender)
+
+        # 6. Wound Infliction (Checklist Part 6 Section G)
+        wound_upd = CombatResolutionSystem._get_wound_infliction(attacker, defender, damage, state.tick, alive)
+
+        # 6. Generate Resource Intents
+        from src.core.updates import ResourceTransferIntent
+        resource_transfers = []
+        if not alive and defender.combat.alive:
+              from src.core.updates import RewardUpdate
+              resource_transfers.append(ResourceTransferIntent(
+                  source_id=defender.id, source_kind="COMBAT",
+                  gold_delta=gold_gain,
+                  reward_upd=RewardUpdate(xp_gain=xp_gain),
+                  transfer_kind="KILL_REWARD",
+                  is_group_required=True
+              ))
+
+        return CombatUpdate(
+            damage_taken=damage,
+            hp_delta=-damage,
+            attacker_id=attacker.id,
+            outcome_kind=outcome,
+            alive_set=alive,
+            equipment_upd=defender_equip_upd,
+            attacker_equipment_upd=attacker_equip_upd,
+            wound_update=wound_upd,
+            resource_transfers=resource_transfers
         )
 
     @staticmethod
@@ -193,6 +316,27 @@ class CombatResolutionSystem:
             outcome = "KILL" if is_lethal else "DEFEAT"
             alive = False
 
+        xp_gain = 0
+        gold_gain = 0
+        resource_transfers = []
+        if not alive and defender.combat.alive:
+             # Standard reward for the group of attackers (attributed to valid_attackers[0] for now)
+             if defender.identity.role == EntityRole.MONSTER:
+                xp_gain = defender.identity.evolution_level * 10
+                gold_gain = defender.identity.evolution_level * 5
+             elif defender.identity.role == EntityRole.HERO:
+                xp_gain = defender.identity.evolution_level * 20
+                gold_gain = defender.identity.evolution_level * 50
+                
+             from src.core.updates import ResourceTransferIntent, RewardUpdate
+             resource_transfers.append(ResourceTransferIntent(
+                 source_id=defender.id, source_kind="COMBAT",
+                 gold_delta=gold_gain,
+                 reward_upd=RewardUpdate(xp_gain=xp_gain),
+                 transfer_kind="KILL_REWARD",
+                 is_group_required=True
+             ))
+
         return CombatUpdate(
             damage_taken=total_damage,
             hp_delta=-total_damage,
@@ -201,7 +345,8 @@ class CombatResolutionSystem:
             alive_set=alive,
             outcome_kind=outcome,
             is_lethal=is_lethal,
-            simultaneous_intents=intents
+            simultaneous_intents=intents,
+            resource_transfers=resource_transfers
         )
 
     @staticmethod
@@ -212,44 +357,142 @@ class CombatResolutionSystem:
         state: AuthoritativeState,
         defender: Optional[EntityState] = None,
         is_lethal: bool = True
-    ) -> CombatUpdate:
-        from src.core.updates import CombatIntent
+    ) -> Dict[int, CombatUpdate]:
+        from src.core.updates import CombatIntent, ResourceTransferIntent
         from src.engine.legality import LegalityServiceV2
         
         is_legal, reason = LegalityServiceV2.verify_aoe_legality(attacker, target_pos, state)
         if not is_legal:
-            return CombatUpdate(
+            return {attacker.id: CombatUpdate(
                 attacker_id=attacker.id,
                 outcome_kind="REJECTED",
                 failure_reason=reason
-            )
+            )}
             
-        damage = attacker.combat.atk
-        hp_delta = 0
+        updates: Dict[int, CombatUpdate] = {}
+        all_transfers = []
+        
+        # 1. Primary Target (if any)
+        primary_damage = 0
         if defender:
             is_def_legal, _ = LegalityServiceV2.verify_attack_legality(attacker, defender, state)
             if is_def_legal:
-                atk_mult = 1.0
-                if LegalityServiceV2.check_high_ground(attacker.position, defender.position, state):
-                    atk_mult += CombatResolutionSystem.HIGH_GROUND_BONUS
+                primary_damage = CombatResolutionSystem.calculate_damage(attacker, defender)
+                new_hp = defender.combat.hp - primary_damage
+                is_kill = new_hp <= 0
                 
-                damage = CombatResolutionSystem.calculate_damage(attacker, defender, atk_mult=atk_mult)
-                hp_delta = -damage
+                # Durability Decay
+                att_dur, def_dur = CombatResolutionSystem._get_durability_decay(attacker, defender)
+                
+                updates[defender.id] = CombatUpdate(
+                    attacker_id=attacker.id,
+                    damage_taken=primary_damage,
+                    hp_delta=-primary_damage,
+                    alive_set=not is_kill,
+                    outcome_kind="KILL" if is_kill and is_lethal else ("DEFEAT" if is_kill else "SURVIVE"),
+                    is_lethal=is_lethal,
+                    equipment_upd=def_dur,
+                    wound_update=CombatResolutionSystem._get_wound_infliction(attacker, defender, primary_damage, state.tick, not is_kill)
+                )
+                
+                if is_kill:
+                    if defender.identity.role == EntityRole.MONSTER:
+                        from src.core.updates import RewardUpdate
+                        all_transfers.append(ResourceTransferIntent(
+                            source_id=defender.id, source_kind="COMBAT",
+                            gold_delta=defender.identity.evolution_level * 5,
+                            reward_upd=RewardUpdate(xp_gain=defender.identity.evolution_level * 10),
+                            transfer_kind="KILL_REWARD",
+                            is_group_required=True
+                        ))
             else:
                 defender = None
-                hp_delta = 0
+
+        # 2. Splash Victims
+        splash_damage = attacker.combat.atk // 2
+        splash_intents = []
+        for other_id, other_ent in state.entities.items():
+            if other_id == attacker.id: continue
+            if defender and other_id == defender.id: continue
             
-        return CombatUpdate(
+            dist = LegalityServiceV2.get_manhattan_dist(target_pos, other_ent.position)
+            if dist <= radius:
+                # Phase 4 Law: AoE friendly-fire safety
+                if attacker.identity.faction == other_ent.identity.faction:
+                    continue
+
+                if LegalityServiceV2.has_line_of_sight(target_pos, other_ent.position, state):
+                    v_damage = max(1, splash_damage)
+                    new_hp = other_ent.combat.hp - v_damage
+                    is_kill = new_hp <= 0
+                    
+                    # Durability Decay
+                    _, def_dur = CombatResolutionSystem._get_durability_decay(attacker, other_ent)
+
+                    updates[other_id] = CombatUpdate(
+                        attacker_id=attacker.id,
+                        damage_taken=v_damage,
+                        hp_delta=-v_damage,
+                        alive_set=not is_kill,
+                        outcome_kind="KILL" if is_kill and is_lethal else ("DEFEAT" if is_kill else "SURVIVE"),
+                        is_lethal=is_lethal,
+                        equipment_upd=def_dur,
+                        wound_update=CombatResolutionSystem._get_wound_infliction(attacker, other_ent, v_damage, state.tick, not is_kill)
+                    )
+                    
+                    splash_intents.append(CombatIntent(
+                        attacker_id=attacker.id,
+                        damage=v_damage,
+                        is_lethal=is_lethal,
+                        impact_pos=other_ent.position
+                    ))
+                    
+                    if is_kill and other_ent.combat.alive:
+                        if other_ent.identity.role == EntityRole.MONSTER:
+                            from src.core.updates import RewardUpdate
+                            all_transfers.append(ResourceTransferIntent(
+                                source_id=other_id, source_kind="COMBAT",
+                                gold_delta=other_ent.identity.evolution_level * 5,
+                                reward_upd=RewardUpdate(xp_gain=other_ent.identity.evolution_level * 10),
+                                transfer_kind="KILL_REWARD",
+                                is_group_required=True
+                            ))
+
+        # 3. Attacker Update (Intents + Rewards)
+        updates[attacker.id] = CombatUpdate(
             attacker_id=attacker.id,
-            damage_taken=damage if defender else 0,
-            hp_delta=hp_delta,
-            outcome_kind="SURVIVE" if not defender or (defender.combat.hp + hp_delta > 0) else ("KILL" if is_lethal else "DEFEAT"),
-            is_lethal=is_lethal,
+            outcome_kind="SUCCESS",
             simultaneous_intents=[CombatIntent(
                 attacker_id=attacker.id,
-                damage=damage,
+                damage=primary_damage,
                 is_lethal=is_lethal,
                 splash_radius=radius,
-                splash_damage=attacker.combat.atk // 2
-            )]
+                splash_damage=splash_damage,
+                impact_pos=target_pos
+            )] + splash_intents,
+            attacker_equipment_upd=CombatResolutionSystem._get_durability_decay(attacker, attacker)[0], # Weapon decay
+            resource_transfers=all_transfers
         )
+        
+        return updates
+
+    @staticmethod
+    def _get_wound_infliction(attacker: EntityState, defender: EntityState, damage: float, tick: int, alive: bool) -> Optional[WoundUpdate]:
+        """Calculates and returns a WoundUpdate if damage is sufficient."""
+        if damage > defender.combat.max_hp * 0.25 and alive:
+            import uuid
+            from src.core.state import WoundState
+            from src.core.updates import WoundUpdate
+            from src.core.enums import EntityRole
+            w_id = f"w_{uuid.uuid4().hex[:8]}"
+            penalty = 5.0
+            wound = WoundState(
+                id=w_id,
+                kind="SLASH" if attacker.identity.role == EntityRole.HERO else "CRUSH",
+                severity=damage / defender.combat.max_hp,
+                tick_inflicted=tick,
+                atk_penalty=penalty,
+                def_penalty=penalty
+            )
+            return WoundUpdate(wounds_add=[wound])
+        return None

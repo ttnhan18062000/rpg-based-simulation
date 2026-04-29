@@ -1,6 +1,6 @@
 import pytest
 from src.core.state import EntityState, SocialComponent, IdentityComponent
-from src.systems.social import SocialAppraisalSystem
+from src.social.appraisal import SocialAppraisalSystem
 
 def test_recruitment_cost_scaling_with_level():
     """Verify that recruitment cost increases with candidate level."""
@@ -39,19 +39,30 @@ def test_recruitment_cost_discount_with_trust():
 
 def test_recruitment_acceptance_logic():
     """Verify that recruitment acceptance considers payout and trust."""
+    from src.core.strategic import ContractState, ContractKind, ContractStatus
+    from src.core.state import AuthoritativeState
+    
     candidate = EntityState(id=1, kind="HERO", position=(0.0, 0.0),
                             social=SocialComponent(trust_history={2: 0.8}))
     
+    state = AuthoritativeState(tick=0, seed=42)
+    
     # High payout, high trust -> Accept
-    accepted = SocialAppraisalSystem.evaluate_recruitment_offer(
-        candidate, recruiter_id=2, payout=150, risk=0.2
+    contract = ContractState(
+        id="c1", kind=ContractKind.RECRUITMENT, source_id=2, target_id=1,
+        terms={"daily_pay": 15, "risk_level": "LOW"}, # daily_pay 15 > 10 base
+        status=ContractStatus.OFFERED, created_tick=0
     )
-    assert accepted is True
+    status, reason, _ = SocialAppraisalSystem.appraise_contract(candidate, contract, state)
+    assert status == ContractStatus.ACCEPTED
     
     # Low payout, low trust -> Reject
     candidate_low = EntityState(id=1, kind="HERO", position=(0.0, 0.0),
                                 social=SocialComponent(trust_history={2: 0.2}))
-    rejected = SocialAppraisalSystem.evaluate_recruitment_offer(
-        candidate_low, recruiter_id=2, payout=20, risk=0.5
+    contract_low = ContractState(
+        id="c2", kind=ContractKind.RECRUITMENT, source_id=2, target_id=1,
+        terms={"daily_pay": 2, "risk_level": "HIGH"},
+        status=ContractStatus.OFFERED, created_tick=0
     )
-    assert rejected is False
+    status, reason, _ = SocialAppraisalSystem.appraise_contract(candidate_low, contract_low, state)
+    assert status == ContractStatus.CANCELLED

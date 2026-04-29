@@ -3,11 +3,12 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Dict, Any, Optional, TYPE_CHECKING, List
 if TYPE_CHECKING:
-    from src.core.state import GroupRecord, ItemStack, EquipSlot, AttributeComponent, LocalScarState, ChestState, EntityState, GroundItemState, CorpseState
+    from src.core.state import GroupRecord, ItemStack, EquipSlot, AttributeComponent, LocalScarState, ChestState, EntityState, GroundItemState, CorpseState, WoundState, ScarState
     from src.core.quests import QuestStatus
     from src.core.strategic import (
         ConcernState, CandidateZone, HypothesisState, SourceTrustEntry,
-        CognitionProfile, BlockerState, LeadState, DirectiveState, ProjectState, ContractState, SocialContract
+        CognitionProfile, BlockerState, LeadState, DirectiveState, ProjectState, 
+        ContractState, TurningPointState
     )
 from src.core.state import ItemStack, EquipSlot, AttributeComponent
 from src.core.movement_modes import MovementMode
@@ -15,7 +16,11 @@ from src.core.movement_modes import MovementMode
 
 @dataclass(frozen=True, slots=True)
 class InventoryUpdate:
-    """Updates to item container and currency."""
+    """
+    RESULT TYPE ONLY. 
+    Updates to item container and currency.
+    Law: Workers must NOT emit this directly for gold/items; use ResourceTransferIntent.
+    """
     items_add: List[ItemStack] = field(default_factory=list)
     items_remove: List[ItemStack] = field(default_factory=list)
     gold_delta: int = 0
@@ -24,6 +29,18 @@ class InventoryUpdate:
 class EquipmentUpdate:
     """Updates to equipped items."""
     slot_updates: Dict[EquipSlot, str | None] = field(default_factory=dict)
+    durability_delta: Dict[EquipSlot, float] = field(default_factory=dict)
+    durability_set: Dict[EquipSlot, float] = field(default_factory=dict)
+
+    def merge(self, other: EquipmentUpdate) -> EquipmentUpdate:
+        """Merge another EquipmentUpdate into this one."""
+        from dataclasses import replace
+        new_slots = {**self.slot_updates, **other.slot_updates}
+        new_deltas = dict(self.durability_delta)
+        for s, d in other.durability_delta.items():
+            new_deltas[s] = new_deltas.get(s, 0.0) + d
+        new_sets = {**self.durability_set, **other.durability_set}
+        return replace(self, slot_updates=new_slots, durability_delta=new_deltas, durability_set=new_sets)
 
 @dataclass(frozen=True, slots=True)
 class InteractionUpdate:
@@ -37,6 +54,7 @@ class ResourceTransferIntent:
     """
     Proposed atomic transfer between a world source and an entity.
     Used by ResourceTransactionResolver to enforce conservation laws.
+    VERIFIED v2: ResourceTransferIntent
     """
     source_id: str | int
     source_kind: str # "NODE", "GROUND_ITEM", "CORPSE", "CRAFTING", "SHOP_BUY", "SHOP_SELL"
@@ -55,6 +73,8 @@ class ResourceTransferIntent:
     identity_upd: Optional[IdentityUpdate] = None
     combat_upd: Optional[CombatUpdate] = None
     strategic_upd: Optional[StrategicUpdate] = None
+    equipment_upd: Optional[EquipmentUpdate] = None
+    reward_upd: Optional[RewardUpdate] = None
 
 @dataclass(frozen=True, slots=True)
 class CombatIntent:
@@ -65,6 +85,7 @@ class CombatIntent:
     is_lethal: bool = True
     splash_radius: int = 0
     splash_damage: int = 0
+    impact_pos: Optional[tuple[float, float]] = None
 
 @dataclass(frozen=True, slots=True)
 class CombatUpdate:
@@ -80,13 +101,40 @@ class CombatUpdate:
     max_hp_delta: int = 0
     atk_delta: int = 0
     def_delta: int = 0
-    xp_gain: int = 0 # Rewards for the attacker
-    gold_gain: int = 0
     speed_delta: int = 0
     generation_delta: int = 0 # Lifecycle changes for the defender
     is_permadeath_set: Optional[bool] = None
     simultaneous_intents: List[CombatIntent] = field(default_factory=list)
+    resource_transfers: List[ResourceTransferIntent] = field(default_factory=list)
+    equipment_upd: Optional[EquipmentUpdate] = None # For defender
+    attacker_equipment_upd: Optional[EquipmentUpdate] = None
+    wound_update: Optional[WoundUpdate] = None
     trace: Dict[str, float] = field(default_factory=dict) # Breakdown of modifiers
+
+    def merge(self, other: CombatUpdate) -> CombatUpdate:
+        """Merges another CombatUpdate into this one, aggregating results."""
+        from dataclasses import replace
+        return replace(self,
+            damage_taken=self.damage_taken + other.damage_taken,
+            hp_delta=self.hp_delta + other.hp_delta,
+            attacker_id=other.attacker_id if other.attacker_id is not None else self.attacker_id,
+            is_opportunity_attack=self.is_opportunity_attack or other.is_opportunity_attack,
+            alive_set=other.alive_set if other.alive_set is not None else self.alive_set,
+            outcome_kind=other.outcome_kind if (self.outcome_kind == "SURVIVE" or other.outcome_kind == "KILL") else self.outcome_kind,
+            is_lethal=self.is_lethal or other.is_lethal,
+            max_hp_delta=self.max_hp_delta + other.max_hp_delta,
+            atk_delta=self.atk_delta + other.atk_delta,
+            def_delta=self.def_delta + other.def_delta,
+            speed_delta=self.speed_delta + other.speed_delta,
+            generation_delta=self.generation_delta + other.generation_delta,
+            is_permadeath_set=other.is_permadeath_set if other.is_permadeath_set is not None else self.is_permadeath_set,
+            simultaneous_intents=self.simultaneous_intents + other.simultaneous_intents,
+            resource_transfers=self.resource_transfers + other.resource_transfers,
+            equipment_upd=other.equipment_upd if other.equipment_upd is not None else self.equipment_upd,
+            attacker_equipment_upd=other.attacker_equipment_upd if other.attacker_equipment_upd is not None else self.attacker_equipment_upd,
+            wound_update=other.wound_update if other.wound_update is not None else self.wound_update,
+            trace={**self.trace, **other.trace}
+        )
 
 @dataclass(frozen=True, slots=True)
 class NavigationUpdate:
@@ -124,6 +172,7 @@ class IdentityUpdate:
     unspent_ap_delta: int = 0
     unspent_ap_set: Optional[int] = None
     learned_skills: list[str] = field(default_factory=list)
+    cooldown_updates: Dict[str, int] = field(default_factory=dict) # skill_id -> tick_ready
 
 @dataclass(frozen=True, slots=True)
 class SocialBondUpdate:
@@ -145,11 +194,12 @@ class SocialUpdate:
     salience_delta: Dict[int, float] = field(default_factory=dict)
     
     betrayal_increment: int = 0
+    betrayal_records_add: List[Any] = field(default_factory=list) # List[BetrayalRecord]
     reputation_set: Optional[float] = None
     heroism_delta: float = 0.0
     notoriety_delta: float = 0.0
     
-    contracts_add: List[SocialContract] = field(default_factory=list)
+    contracts_add: List[ContractState] = field(default_factory=list)
     contracts_remove: List[str] = field(default_factory=list) # IDs
     
 @dataclass(frozen=True, slots=True)
@@ -201,9 +251,11 @@ class QuestUpdate:
 class RewardUpdate:
     """
     Non-inventory progression rewards (XP, evolution points).
+    Authority: Allowed from workers for pure progression, but verified by ApplyGate.
     Law: Gold and Items must use ResourceTransferIntent for authoritative conservation.
     """
     xp_gain: int = 0
+    evolution_points_delta: int = 0
 
 @dataclass(frozen=True, slots=True)
 class StrategicUpdate:
@@ -238,9 +290,25 @@ class StrategicUpdate:
     # Contracts
     contracts_add_or_update: list[ContractState] = field(default_factory=list)
     contracts_remove: list[str] = field(default_factory=list)
+    # Turning Points
+    turning_points_add: list[TurningPointState] = field(default_factory=list)
     # Overload
     overload_source_set: Optional[str] = None
     overload_tick_set: Optional[int] = None
+
+@dataclass(frozen=True, slots=True)
+class StaminaUpdate:
+    """Updates to stamina resource."""
+    current_delta: float = 0.0
+    current_set: Optional[float] = None
+    max_stamina_set: Optional[float] = None
+
+@dataclass(frozen=True, slots=True)
+class WoundUpdate:
+    """New wounds and scar transitions."""
+    wounds_add: List[WoundState] = field(default_factory=list)
+    wounds_heal: List[str] = field(default_factory=list)  # wound IDs to heal
+    scars_add: List[ScarState] = field(default_factory=list)
 
 @dataclass(frozen=True, slots=True)
 class EntityUpdate:
@@ -268,6 +336,8 @@ class EntityUpdate:
     equipment: Optional[EquipmentUpdate] = None
     navigation: Optional[NavigationUpdate] = None
     task: Optional[TaskUpdate] = None
+    stamina_update: Optional[StaminaUpdate] = None
+    wound_update: Optional[WoundUpdate] = None
     group_id_set: Optional[int] = None
     intent_results: List[IntentResult] = field(default_factory=list)
     property_updates: Dict[str, Any] = field(default_factory=dict)
@@ -278,27 +348,29 @@ class EntityUpdate:
         if self.entity_id != other.entity_id:
             raise ValueError("Cannot merge EntityUpdates for different entities")
             
-        return replace(self,
+        res = replace(self,
             kind_set=other.kind_set if other.kind_set is not None else self.kind_set,
             new_position=other.new_position if other.new_position is not None else self.new_position,
             moved_this_tick=self.moved_this_tick or other.moved_this_tick,
             readiness_delta=self.readiness_delta + other.readiness_delta,
             active=other.active if other.active is not None else self.active,
-            interaction=other.interaction if other.interaction is not None else self.interaction, # Simplified
+            interaction=other.interaction if other.interaction is not None else self.interaction,
             resource_transfers=self.resource_transfers + other.resource_transfers,
-            identity=other.identity if other.identity is not None else self.identity, # Simplified
-            attributes=other.attributes if other.attributes is not None else self.attributes, # Simplified
-            inventory=other.inventory if other.inventory is not None else self.inventory, # Simplified
-            strategic=other.strategic if other.strategic is not None else self.strategic, # Simplified
-            biological=other.biological if other.biological is not None else self.biological, # Simplified
-            social=other.social if other.social is not None else self.social, # Simplified
-            quest=other.quest if other.quest is not None else self.quest, # Simplified
-            reward=other.reward if other.reward is not None else self.reward, # Simplified
-            lifecycle=other.lifecycle if other.lifecycle is not None else self.lifecycle, # Simplified
-            combat=other.combat if other.combat is not None else self.combat, # Simplified
-            equipment=other.equipment if other.equipment is not None else self.equipment, # Simplified
-            navigation=other.navigation if other.navigation is not None else self.navigation, # Simplified
-            task=other.task if other.task is not None else self.task, # Simplified
+            identity=other.identity if other.identity is not None else self.identity,
+            attributes=other.attributes if other.attributes is not None else self.attributes,
+            inventory=other.inventory if other.inventory is not None else self.inventory,
+            strategic=other.strategic if other.strategic is not None else self.strategic,
+            biological=other.biological if other.biological is not None else self.biological,
+            social=other.social if other.social is not None else self.social,
+            quest=other.quest if other.quest is not None else self.quest,
+            reward=other.reward if other.reward is not None else self.reward,
+            lifecycle=other.lifecycle if other.lifecycle is not None else self.lifecycle,
+            combat=self.combat.merge(other.combat) if self.combat and other.combat else (other.combat or self.combat),
+            equipment=other.equipment if other.equipment is not None else self.equipment,
+            navigation=other.navigation if other.navigation is not None else self.navigation,
+            task=other.task if other.task is not None else self.task,
+            stamina_update=other.stamina_update if other.stamina_update is not None else self.stamina_update,
+            wound_update=other.wound_update if other.wound_update is not None else self.wound_update,
             group_id_set=other.group_id_set if other.group_id_set is not None else self.group_id_set,
             intent_results=self.intent_results + other.intent_results,
             property_updates={**self.property_updates, **other.property_updates}
@@ -330,6 +402,9 @@ class WorldUpdate:
     suppression_set: Optional[bool] = None
     calamity_intensity_set: Optional[float] = None
     trauma_delta: float = 0.0
+    trauma_score_set: Optional[float] = None
+    retaliation_pressure_delta: float = 0.0
+    retaliation_pressure_set: Optional[float] = None
     influence_delta: float = 0.0
     owner_faction_id_set: Optional[int] = None
     kind_set: Optional[str] = None
@@ -348,6 +423,9 @@ class WorldUpdate:
             suppression_set=other.suppression_set if other.suppression_set is not None else self.suppression_set,
             calamity_intensity_set=other.calamity_intensity_set if other.calamity_intensity_set is not None else self.calamity_intensity_set,
             trauma_delta=self.trauma_delta + other.trauma_delta,
+            trauma_score_set=other.trauma_score_set if other.trauma_score_set is not None else self.trauma_score_set,
+            retaliation_pressure_delta=self.retaliation_pressure_delta + other.retaliation_pressure_delta,
+            retaliation_pressure_set=other.retaliation_pressure_set if other.retaliation_pressure_set is not None else self.retaliation_pressure_set,
             influence_delta=self.influence_delta + other.influence_delta,
             owner_faction_id_set=other.owner_faction_id_set if other.owner_faction_id_set is not None else self.owner_faction_id_set,
             kind_set=other.kind_set if other.kind_set is not None else self.kind_set,
@@ -365,9 +443,19 @@ class ChestUpdate:
     items_set: Optional[List[ItemStack]] = None
 
 @dataclass(frozen=True, slots=True)
+class CampUpdate:
+    """Updates to a persistent encampment."""
+    id: str
+    maturity_delta: float = 0.0
+    active_set: Optional[bool] = None
+    last_raid_tick_set: Optional[int] = None
+
+
+@dataclass(frozen=True, slots=True)
 class StateUpdate:
     """
     A collection of authoritative changes to be applied to the world state.
+    VERIFIED v2: action_proposals_as_intents
     """
     entity_updates: Dict[int, EntityUpdate] = field(default_factory=dict)
     entities_add: List[EntityState] = field(default_factory=list)
@@ -383,6 +471,7 @@ class StateUpdate:
     chest_updates: Dict[int, ChestUpdate] = field(default_factory=dict)
     chest_add_or_update: List[ChestState] = field(default_factory=list)
     building_updates: Dict[int, BuildingUpdate] = field(default_factory=dict)
+    camp_updates: Dict[str, CampUpdate] = field(default_factory=dict)
     world_updates: Dict[str, WorldUpdate] = field(default_factory=dict)
     resource_updates: Dict[str, float] = field(default_factory=dict)
     home_storage_updates: Dict[int, InventoryUpdate] = field(default_factory=dict) # Milestone 5
@@ -393,6 +482,9 @@ class StateUpdate:
     maturity_set: Optional[int] = None
     last_calamity_tick_set: Optional[int] = None
     rng_checkpoint: Any = None
+    transaction_trace: List[str] = field(default_factory=list)
+    rejections_delta: Dict[str, int] = field(default_factory=dict) # Rejection counters for this tick
+    processed_transaction_ids: set[str] = field(default_factory=set)
     
     def replace(self, **kwargs) -> StateUpdate:
         from dataclasses import replace

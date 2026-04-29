@@ -56,6 +56,9 @@ class RelationshipService:
                 last_interaction_tick=b_upd.last_interaction_tick_set if b_upd.last_interaction_tick_set is not None else bond.last_interaction_tick
             )
 
+        new_betrayals = list(social.betrayal_records)
+        new_betrayals.extend(update.betrayal_records_add)
+
         return replace(
             social,
             trust_history=new_trust,
@@ -66,10 +69,12 @@ class RelationshipService:
             salience_history=new_salience,
             bonds=new_bonds,
             betrayal_count=social.betrayal_count + update.betrayal_increment,
+            betrayal_records=new_betrayals,
             public_reputation=update.reputation_set if update.reputation_set is not None else (
                 max(0.0, min(2.0, social.public_reputation + update.heroism_delta - update.notoriety_delta))
             ),
-            heroism_score=social.heroism_score + update.heroism_delta
+            heroism_score=social.heroism_score + update.heroism_delta,
+            notoriety_score=social.notoriety_score + update.notoriety_delta
         )
 
     @staticmethod

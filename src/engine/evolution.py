@@ -118,10 +118,7 @@ class EvolutionSystem:
                     for lvl in range(old_level + 1, new_level + 1):
                         if lvl % 5 == 0:
                             total_ap_gain += 5
-                        if lvl == 5:
-                            skills_to_learn.append("power_strike")
-                        if lvl == 10:
-                            skills_to_learn.append("swift_reflexes")
+                        skills_to_learn.extend(LevelingService.get_unlocked_skills(lvl))
                     
                     id_upd = replace(id_upd, 
                         unspent_ap_delta=id_upd.unspent_ap_delta + total_ap_gain,

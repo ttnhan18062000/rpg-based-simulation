@@ -6,8 +6,24 @@ Covers:
 - Part 1 §Strategic: Concerns are retained under profile-specific intake limits
 - Part 1 §Strategic: Detours suggested from blockers and leads within breadth/depth limits
 - Part 1 §Strategic: Rejected/tested leads are suppressed to avoid blind retries
+- RPG-0039: strategic_state_persistence
+- RPG-0043: strategic_blocker_inference
+- RPG-0044: strategic_lead_retainment
+- RPG-0045: biological_need_concerns
+- RPG-0046: strategic_detour_suggestion
+- RPG-0047: strategic_lead_suppression
+- RPG-0048: strategic_overload_visibility
+- RPG-0050: strategic_knowledge_uncertainty
+- RPG-0051: strategic_cognition_export
+- RPG-0068: target_stickiness_bias
+- RPG-0069: world_gen_determinism
+- RPG-0071: entity_snapshot_immutability
+- RPG-0072: no_hidden_mutation_leaks
+- RPG-0073: deterministic_replay_delta
+- RPG-0074: regional_hazard_hazards
 """
 import pytest
+from dataclasses import replace
 from src.core.state import EntityState
 from src.core.strategic import (
     StrategicComponent, CognitionProfile, BlockerState, LeadState, LeadCertainty,
@@ -159,10 +175,18 @@ class TestLeadSuppression:
         }
         strategic = StrategicComponent(leads=leads)
         entity = EntityState(id=1, kind="hero", position=(5.0, 5.0), strategic=strategic)
-        result = DetourSuggestionSystem.suppress_exhausted_leads(entity)
-        assert len(result.leads_add_or_update) == 1
-        assert result.leads_add_or_update[0].id == "tested_fail"
-        assert result.leads_add_or_update[0].certainty == LeadCertainty.EXHAUSTED
+        
+        # Phase 6: Needs 3 failures for exhaustion
+        r1 = DetourSuggestionSystem.suppress_exhausted_leads(entity, current_tick=100)
+        e1 = replace(entity, strategic=replace(entity.strategic, leads={"tested_fail": r1.leads_add_or_update[0]}))
+        
+        r2 = DetourSuggestionSystem.suppress_exhausted_leads(e1, current_tick=200)
+        e2 = replace(e1, strategic=replace(e1.strategic, leads={"tested_fail": r2.leads_add_or_update[0]}))
+        
+        r3 = DetourSuggestionSystem.suppress_exhausted_leads(e2, current_tick=300)
+        assert len(r3.leads_add_or_update) == 1
+        assert r3.leads_add_or_update[0].id == "tested_fail"
+        assert r3.leads_add_or_update[0].certainty == LeadCertainty.EXHAUSTED
 
     def test_exhausted_leads_excluded_from_detours(self):
         blockers = {"b1": BlockerState(id="b1", kind="material", subject="gold", severity=0.8)}

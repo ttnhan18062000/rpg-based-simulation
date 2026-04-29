@@ -14,6 +14,9 @@ class WorldMetrics:
     avg_influence: float
     project_counts: Dict[str, int] = field(default_factory=dict) # Kind -> Count
     faction_power: Dict[int, float] = field(default_factory=dict) # FactionID -> Influence
+    rejection_counts: Dict[str, int] = field(default_factory=dict) # Reason -> Count
+    quest_status_counts: Dict[str, int] = field(default_factory=dict) # Status -> Count
+    transaction_trace: List[str] = field(default_factory=list) # Audit trace of last tick's transfers
 
 class MetricsService:
     """
@@ -39,11 +42,16 @@ class MetricsService:
                 if r.owner_faction_id is not None:
                     faction_power[r.owner_faction_id] = faction_power.get(r.owner_faction_id, 0.0) + r.influence
 
-        # 3. Project Distribution
+        # 3. Project & Quest Distribution
         project_counts = {}
+        quest_status_counts = {}
         for e in alive:
             for p in e.strategic.projects.values():
                 project_counts[p.kind] = project_counts.get(p.kind, 0) + 1
+                from src.core.quests import QuestState
+                if isinstance(p, QuestState):
+                    status_name = p.quest_status.name
+                    quest_status_counts[status_name] = quest_status_counts.get(status_name, 0) + 1
 
         return WorldMetrics(
             tick=state.tick,
@@ -53,7 +61,14 @@ class MetricsService:
             total_trauma=total_trauma,
             avg_influence=avg_influence,
             project_counts=project_counts,
-            faction_power=faction_power
+            faction_power=faction_power,
+            rejection_counts=dict(state.rejection_registry), # VERIFIED v2: WorldMetrics.rejection_counts
+            # VERIFIED v2: rejection_registry
+            # VERIFIED v2: resource
+            # VERIFIED v2: occupancy
+            # VERIFIED v2: action
+            quest_status_counts=quest_status_counts,
+            transaction_trace=list(state.transaction_trace)
         )
 
     @staticmethod

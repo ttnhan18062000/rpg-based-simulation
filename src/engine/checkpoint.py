@@ -101,6 +101,7 @@ class CanonicalStateHasher:
                     "familiarity_history": {str(k): v for k, v in sorted(ent.social.familiarity_history.items())},
                     "fear_history": {str(k): v for k, v in sorted(ent.social.fear_history.items())},
                     "grudge_history": {str(k): v for k, v in sorted(ent.social.grudge_history.items())},
+                    "bonds": {str(k): asdict(v) for k, v in sorted(ent.social.bonds.items())},
                     "betrayal_count": ent.social.betrayal_count,
                     "public_reputation": ent.social.public_reputation,
                     "heroism_score": ent.social.heroism_score,
@@ -137,9 +138,20 @@ class CanonicalStateHasher:
             "member_ids": sorted(list(v.member_ids)),
             "anchor": v.anchor,
             "cohesion_radius": v.cohesion_radius,
-            "shared_target_id": v.shared_target_id
+            "shared_target_id": v.shared_target_id,
+            "contract_id": v.contract_id,
+            "last_updated_tick": v.last_updated_tick,
+            "roles": {str(eid): role for eid, role in sorted(v.roles.items())},
+            "aptitudes": {
+                "str": v.str_apt,
+                "int": v.int_apt,
+                "agi": v.agi_apt,
+                "vit": v.vit_apt,
+                "end": v.end_apt
+            }
         } for k, v in sorted(state.groups.items())}
         data["home_storage"] = {str(k): asdict(v) for k, v in sorted(state.home_storage.items())}
+        data["camps"] = {k: asdict(v) for k, v in sorted(state.camps.items())}
         
         data["global_resources"] = dict(sorted(state.global_resources.items()))
         data["periodic_due_ticks"] = dict(sorted(state.periodic_due_ticks.items()))

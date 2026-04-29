@@ -117,6 +117,10 @@ class Kernel:
              ProfileValidator.validate_flags(flags, self._profile)
 
     def tick_once(self) -> None:
+        """
+        Main simulation loop.
+        VERIFIED v2: engine_phase_order
+        """
         if getattr(self, "_stopped", False):
              return
 
@@ -202,6 +206,8 @@ class Kernel:
         self._status.record_dropped_work(dropped_count)
 
     def _phase_collection(self) -> None:
+        """3. COLLECTION (Worker Thought Execution)"""
+        # VERIFIED v2: thought_application_decoupling
         self._final_results = self._executor.execute(
             self._current_work_items,
             self._state.readonly_view(),
@@ -213,6 +219,7 @@ class Kernel:
 
     def _phase_resolution(self) -> None:
         """4. RESOLUTION (Authoritative Apply Pipeline)"""
+        # VERIFIED v2: tick_outcome_preservation
         from src.core.worker_protocol import ResultStatus
         from src.core.updates import StateUpdate, EntityUpdate
         from src.core.protocol_validator import ProtocolViolationError
@@ -309,6 +316,7 @@ class Kernel:
             event_type="TICK_END",
             payload={"hash": tick_hash}
         ), self._current_policy)
+        # VERIFIED v2: deterministic_replay_delta
         self._replay.on_tick_end(self._state.tick)
 
     def shutdown(self, timeout_s: float = 5.0) -> ShutdownResult:

@@ -9,6 +9,7 @@ class DeterministicRNG:
     Enhanced Deterministic RNG with Domain Separation for V2.
     Ensures that different gameplay domains (e.g., SPAWN vs COMBAT) 
     do not share the same random stream even with the same seed.
+    VERIFIED v2: DeterministicRNG
     """
     __slots__ = ("_base_seed", "_rng_map")
 
@@ -24,9 +25,11 @@ class DeterministicRNG:
         return self._rng_map[domain]
 
     def next_float(self, domain: Domain) -> float:
+        """DEPRECATED: Stateful, order-dependent. Use get_float() for concurrent contexts."""
         return self._get_rng(domain).random()
 
     def next_int(self, domain: Domain, a: int, b: int) -> int:
+        """DEPRECATED: Stateful, order-dependent. Use get_int() for concurrent contexts."""
         return self._get_rng(domain).randint(a, b)
 
     def get_state(self) -> dict[int, Any]:

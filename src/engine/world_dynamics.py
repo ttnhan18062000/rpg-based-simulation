@@ -14,6 +14,7 @@ class WorldDynamicsSystem:
     """
     Law: World-level consequences apply to all entities.
     Handles Regional Hazards and Calamity Scaling (LEG-RPG-071/139).
+    VERIFIED v2: passive_world_progression
     """
 
     @staticmethod
@@ -21,7 +22,10 @@ class WorldDynamicsSystem:
         """
         Apply regional effects to entities and update world markers.
         """
-        # 1. Resolve Hazards (Entity-level impact)
+        # 1. Resolve Hazards & Environment (Entity-level impact)
+        from src.world.environment import EnvironmentService
+        from src.core.updates import BiologicalUpdate
+        
         for e_id, entity in state.entities.items():
             if not entity.active: continue
             
@@ -29,28 +33,39 @@ class WorldDynamicsSystem:
             if not region:
                 continue
             
-            # 1.1 Readiness Drain from Suppression
+            ent_upd = update.entity_updates.get(e_id, EntityUpdate(entity_id=e_id))
+            
+            # 1.1 HP Drain from Hazards (Authoritative calculation)
+            # VERIFIED v2: regional_hazard_impact
+            damage = EnvironmentService.calculate_hazard_drain(region, entity)
+            if damage > 0:
+                comb_upd = ent_upd.combat or CombatUpdate()
+                ent_upd = replace(ent_upd,
+                    combat=replace(comb_upd, 
+                        hp_delta=comb_upd.hp_delta - damage,
+                        outcome_kind="HAZARD"
+                    )
+                )
+
+            # 1.2 Readiness Drain from Suppression
             if region.suppression_active:
-                ent_upd = update.entity_updates.get(e_id, EntityUpdate(entity_id=e_id))
-                update.entity_updates[e_id] = replace(
-                    ent_upd,
+                ent_upd = replace(ent_upd,
                     readiness_delta=ent_upd.readiness_delta - 5.0
                 )
                 
-            # 1.2 HP Drain from Hazards (LEG-RPG-071)
-            if region.hazard_level > 0:
-                # Formula: 0.5 * hazard * (1 + intensity)
-                damage = int(0.5 * region.hazard_level * (1.0 + region.calamity_intensity))
-                if damage > 0:
-                    ent_upd = update.entity_updates.get(e_id, EntityUpdate(entity_id=e_id))
-                    comb_upd = ent_upd.combat or CombatUpdate()
-                    update.entity_updates[e_id] = replace(
-                        ent_upd,
-                        combat=replace(comb_upd, 
-                            hp_delta=comb_upd.hp_delta - damage,
-                            outcome_kind="HAZARD"
-                        )
+            # 1.3 Environmental Exposure (Biological Pressure)
+            # Extreme weather adds to sleep debt (fatigue)
+            exposure_mults = EnvironmentService.get_weather_multipliers(region)
+            if exposure_mults.get("stamina_drain", 1.0) > 1.0:
+                bio_upd = ent_upd.biological or BiologicalUpdate()
+                ent_upd = replace(ent_upd,
+                    biological=replace(bio_upd,
+                        sleep_debt_delta=bio_upd.sleep_debt_delta + 1.0 # Extra fatigue
                     )
+                )
+            
+            update.entity_updates[e_id] = ent_upd
+
 
         # 2. Resolve Trauma and Calamity Progression
         # 2.1 Death-triggered Trauma (LEG-RPG-139)
@@ -92,16 +107,38 @@ class WorldDynamicsSystem:
         from src.world.ecology import ResourceEcologyService
         ecology_update = ResourceEcologyService.process_ecology(state, generator)
 
+        # 3.3 Threat Evolution (LEG-RPG-071 Hardening)
+        from src.world.threat import ThreatService
+        threat_updates = {}
+        for r_id, region in state.regions.items():
+            t_upd = ThreatService.process_threat_evolution(state, region)
+            if t_upd:
+                # Merge if existing
+                if r_id in update.world_updates:
+                    update.world_updates[r_id] = update.world_updates[r_id].merge(t_upd)
+                else:
+                    update.world_updates[r_id] = t_upd
+
+        # 3.4 Boss Spawning (Deterministic & Idempotent)
+        from src.world.boss import BossService
+        boss_spawn_update = BossService.check_for_boss_spawn(state, generator)
+
         # 3.5 Process Raids
         from src.world.raid import RaidService
         raid_update = RaidService.check_for_raid(state, generator)
+
+        # 3.6 Process Camps (Persistent Encampments)
+        from src.world.camp import CampService
+        camp_state_update = CampService.process_camps(state, generator)
         
         update = update.replace(
             maturity_set=calamity_update.maturity_set if calamity_update.maturity_set is not None else update.maturity_set,
             last_calamity_tick_set=calamity_update.last_calamity_tick_set if calamity_update.last_calamity_tick_set is not None else update.last_calamity_tick_set,
-            entities_add=update.entities_add + calamity_update.entities_add + raid_update.entities_add + spawn_update.entities_add,
-            nodes_add=update.nodes_add + ecology_update.nodes_add
+            entities_add=update.entities_add + calamity_update.entities_add + raid_update.entities_add + spawn_update.entities_add + boss_spawn_update.entities_add + camp_state_update.entities_add,
+            nodes_add=update.nodes_add + ecology_update.nodes_add,
+            camp_updates=camp_state_update.camp_updates
         )
+
 
         # 4. Regional Transformations (Type Shifting)
         from src.world.transformation import TransformationService

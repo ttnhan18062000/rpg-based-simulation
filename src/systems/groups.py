@@ -24,10 +24,10 @@ class GroupSystem:
 
         # 1. Process Existing Groups (Dissolution & Cohesion)
         for g_id, group in state.groups.items():
-            # Check leader
             leader = state.entities.get(group.leader_id)
             if not leader or not leader.combat.alive:
                 # Leader is gone, dissolve group
+                # VERIFIED v2: group_dissolution_leader_loss
                 groups_remove.append(g_id)
                 for m_id in group.member_ids:
                     if m_id in state.entities:
@@ -48,11 +48,13 @@ class GroupSystem:
                     continue
                 
                 # Cohesion check
+                # VERIFIED v2: group_cohesion_check
                 dx = member.position[0] - group.anchor[0]
                 dy = member.position[1] - group.anchor[1]
                 dist_sq = dx*dx + dy*dy
                 
                 # Phase 7: Contract validity check
+                # VERIFIED v2: group_contract_binding
                 contract_invalid = False
                 if group.contract_id:
                     from src.core.strategic import ContractStatus
@@ -87,16 +89,30 @@ class GroupSystem:
             
             # Actually, let's use the task payload target_id specifically for combat focus.
             
+            # Update Roles
+            new_roles = {group.leader_id: "LEADER"}
+            for m_id in new_member_ids:
+                if m_id == group.leader_id: continue
+                existing_role = group.roles.get(m_id)
+                if existing_role:
+                    new_roles[m_id] = existing_role
+                else:
+                    member = state.entities.get(m_id)
+                    role = member.combat.tactical_role if member and member.combat.tactical_role else "VANGUARD"
+                    new_roles[m_id] = role
+
             updated_group = replace(
                 group,
                 member_ids=new_member_ids,
                 anchor=(avg_x, avg_y),
                 shared_target_id=new_shared_target_id if isinstance(new_shared_target_id, int) else None,
+                roles=new_roles,
                 last_updated_tick=state.tick
             )
             groups_add_or_update.append(updated_group)
 
         # 2. Group Formation (Purpose-Driven)
+        # VERIFIED v2: group_formation_purpose_driven
         # Find entities without groups
         ungrouped_ids = [e_id for e_id, e in state.entities.items() 
                          if e.combat.alive and e.group_id is None]
@@ -135,12 +151,22 @@ class GroupSystem:
                 anchor_x = sum(state.entities[m_id].position[0] for m_id in new_group_members) / len(new_group_members)
                 anchor_y = sum(state.entities[m_id].position[1] for m_id in new_group_members) / len(new_group_members)
                 
+                # Assign Roles
+                roles = {leader_id: "LEADER"}
+                for m_id in new_group_members:
+                    if m_id == leader_id: continue
+                    member = state.entities[m_id]
+                    # Derive role from combat component or default
+                    role = member.combat.tactical_role if member.combat.tactical_role else "VANGUARD"
+                    roles[m_id] = role
+
                 new_group = GroupRecord(
                     id=new_g_id,
                     leader_id=leader_id,
                     member_ids=new_group_members,
                     anchor=(anchor_x, anchor_y),
                     contract_id=active_contract_id,
+                    roles=roles,
                     last_updated_tick=state.tick
                 )
                 groups_add_or_update.append(new_group)

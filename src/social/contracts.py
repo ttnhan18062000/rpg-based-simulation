@@ -1,8 +1,12 @@
 
 from __future__ import annotations
-from typing import Dict, Any, List, Optional, Tuple
-from src.core.strategic import ContractState, ContractKind, ContractStatus
-from src.core.updates import StrategicUpdate, SocialBondUpdate
+from typing import Dict, Any, List, Optional, Tuple, TYPE_CHECKING
+from src.core.strategic import ContractState, ContractKind, ContractStatus, RiskLevel, DirectiveKind, DirectivePriority
+from src.core.updates import StrategicUpdate, SocialBondUpdate, EntityUpdate, StateUpdate, SocialUpdate
+from dataclasses import replace
+
+if TYPE_CHECKING:
+    from src.core.state import AuthoritativeState
 
 class ContractService:
     """
@@ -42,7 +46,7 @@ class ContractService:
         target_id: int,
         daily_pay: int = 10,
         duration_ticks: int = 100,
-        risk_level: str = "NORMAL",
+        risk_level: RiskLevel = RiskLevel.NORMAL,
         tick: int = 0
     ) -> ContractState:
         return ContractState(
@@ -62,58 +66,51 @@ class ContractService:
 
     @staticmethod
     def accept_contract(
-        entity_id: int,
-        contract: ContractState,
+        entity: EntityState,
+        contract_id: str,
         tick: int
     ) -> StrategicUpdate:
         """
         Transition an OFFERED contract to ACTIVE.
         """
-        if contract.status != ContractStatus.OFFERED:
-            return StrategicUpdate()
-            
-        new_contract = ContractState(
-            id=contract.id,
-            kind=contract.kind,
-            source_id=contract.source_id,
-            target_id=contract.target_id,
-            terms=contract.terms,
-            status=ContractStatus.ACTIVE,
-            created_tick=tick,
-            expiry_tick=tick + contract.terms.get("duration", 100) if contract.kind == ContractKind.RECRUITMENT else -1
-        )
-        
-        return StrategicUpdate(
-            contracts_add_or_update=[new_contract]
+        from src.systems.social_contract import SocialContractSystem
+        return SocialContractSystem.transition_contract(
+            entity, contract_id, ContractStatus.ACTIVE, tick
         )
 
     @staticmethod
     def resolve_contract_outcome(
-        contract: ContractState,
+        entity: EntityState,
+        contract_id: str,
         success: bool,
-        betrayal: bool = False
-    ) -> Tuple[StrategicUpdate, List[SocialBondUpdate]]:
+        betrayal: bool = False,
+        betrayer_id: Optional[int] = None,
+        tick: int = 0
+    ) -> Tuple[StrategicUpdate, List[SocialUpdate]]:
         """
         Resolve an ACTIVE contract and update social relationships.
+        Part 1 §Social: Breaking/honoring contracts has persistent consequences.
         """
-        status = ContractStatus.COMPLETED if success else ContractStatus.FAILED
+        from src.systems.social_contract import SocialContractSystem
+        
+        contract = entity.strategic.contracts.get(contract_id)
+        if not contract:
+            return StrategicUpdate(), []
+
+        status = ContractStatus.FULFILLED if success else ContractStatus.FAILED
         if betrayal:
             status = ContractStatus.BETRAYED
             
-        resolved_contract = ContractState(
-            id=contract.id,
-            kind=contract.kind,
-            source_id=contract.source_id,
-            target_id=contract.target_id,
-            terms=contract.terms,
-            status=status,
-            created_tick=contract.created_tick,
-            expiry_tick=contract.expiry_tick
-        )
+        strat_up = SocialContractSystem.transition_contract(entity, contract_id, status, tick)
+        if not strat_up.contracts_add_or_update:
+            # Transition rejected
+            return StrategicUpdate(), []
+            
+        resolved_contract = strat_up.contracts_add_or_update[0]
         
         # Social Consequences
-        sentiment_delta = 0.1 if success else -0.1
-        familiarity_delta = 0.05
+        sentiment_delta = 0.2 if success else -0.2
+        familiarity_delta = 0.1
         
         if betrayal:
             sentiment_delta = -1.0 # Immediate max distrust
@@ -123,4 +120,113 @@ class ContractService:
             SocialBondUpdate(target_id=contract.target_id, sentiment_delta=sentiment_delta, familiarity_delta=familiarity_delta)
         ]
         
-        return StrategicUpdate(contracts_add_or_update=[resolved_contract]), bond_updates
+        # Reputation impact
+        heroism_delta = 0.05 if success else 0.0
+        notoriety_delta = 0.0 if success else 0.1
+        
+        # Emit social updates
+        from src.core.updates import SocialUpdate
+        
+        source_up = SocialUpdate(bond_updates=[bond_updates[1]], heroism_delta=heroism_delta, notoriety_delta=notoriety_delta)
+        target_up = SocialUpdate(bond_updates=[bond_updates[0]], heroism_delta=heroism_delta, notoriety_delta=notoriety_delta)
+
+        if betrayal and betrayer_id:
+             if betrayer_id == contract.source_id:
+                  source_up = replace(source_up, notoriety_delta=0.5, betrayal_increment=1)
+             elif betrayer_id == contract.target_id:
+                  target_up = replace(target_up, notoriety_delta=0.5, betrayal_increment=1)
+
+        # Strategic consequences (Betrayal -> Avenge Directive)
+        if betrayal and betrayer_id:
+            from src.core.strategic import DirectiveState, DirectiveKind, DirectivePriority
+            victim_id = contract.target_id if betrayer_id == contract.source_id else contract.source_id
+            avenge_directive = DirectiveState(
+                id=f"avenge_{contract.id}",
+                kind=DirectiveKind.COMBAT,
+                target=str(betrayer_id),
+                priority=DirectivePriority.HIGH,
+                salience=0.5
+            )
+            strat_up = replace(strat_up, directives_add_or_update=[avenge_directive])
+        
+        return strat_up, [source_up, target_up]
+
+    @staticmethod
+    def process_active_contracts(
+        state: AuthoritativeState,
+        update: StateUpdate
+    ) -> StateUpdate:
+        """
+        Processes ACTIVE contracts for expiration or completion.
+        Part 1 §Social: Completed/failed contract dissolves party.
+        """
+        refined_entity_updates = dict(update.entity_updates)
+        current_tick = state.tick
+        
+        for e_id, entity in state.entities.items():
+            for c_id, contract in entity.strategic.contracts.items():
+                if contract.status == ContractStatus.ACTIVE:
+                    # Expiration check
+                    if contract.expiry_tick != -1 and current_tick > contract.expiry_tick:
+                        # Auto-complete or fail based on context (default: success if recruitment expires)
+                        strat_up, bond_ups = ContractService.resolve_contract_outcome(entity, c_id, success=True, tick=current_tick)
+                        
+                        ent_upd = refined_entity_updates.get(e_id, EntityUpdate(entity_id=e_id))
+                        
+                        # Merge strategic update
+                        base_strat = ent_upd.strategic or StrategicUpdate()
+                        merged_strat = replace(base_strat,
+                            contracts_add_or_update=list(base_strat.contracts_add_or_update) + list(strat_up.contracts_add_or_update),
+                            directives_add_or_update=list(base_strat.directives_add_or_update) + list(strat_up.directives_add_or_update)
+                        )
+                        
+                        # Apply relevant SocialUpdate
+                        # ContractService.resolve_contract_outcome returns [source_up, target_up]
+                        my_social_up = bond_ups[0] if contract.source_id == e_id else bond_ups[1]
+                        
+                        # Merge with existing social update if any
+                        base_social = ent_upd.social or SocialUpdate()
+                        merged_social = replace(base_social,
+                            bond_updates=list(base_social.bond_updates) + list(my_social_up.bond_updates),
+                            heroism_delta=base_social.heroism_delta + my_social_up.heroism_delta,
+                            notoriety_delta=base_social.notoriety_delta + my_social_up.notoriety_delta
+                        )
+                        
+                        refined_entity_updates[e_id] = replace(ent_upd,
+                            strategic=merged_strat,
+                            social=merged_social
+                        )
+                        
+        return replace(update, entity_updates=refined_entity_updates)
+    @staticmethod
+    def reap_expired_offers(
+        state: AuthoritativeState,
+        update: StateUpdate
+    ) -> StateUpdate:
+        """
+        Reap any OFFERED contracts that have passed their expiry_tick.
+        """
+        refined_entity_updates = dict(update.entity_updates)
+        current_tick = state.tick
+        
+        for e_id, entity in state.entities.items():
+            expired_ids = []
+            for c_id, contract in entity.strategic.contracts.items():
+                if contract.status == ContractStatus.OFFERED and 0 < contract.expiry_tick <= current_tick:
+                    expired_ids.append(c_id)
+            
+            if expired_ids:
+                ent_upd = refined_entity_updates.get(e_id, EntityUpdate(entity_id=e_id))
+                strat_up = ent_upd.strategic or StrategicUpdate()
+                
+                # Mark as FAILED or remove
+                # For now, we'll mark as FAILED to maintain history if needed, 
+                # but the requirement says "cleanup".
+                # We'll use contracts_remove for cleanup.
+                refined_entity_updates[e_id] = replace(ent_upd,
+                    strategic=replace(strat_up,
+                        contracts_remove=list(strat_up.contracts_remove) + expired_ids
+                    )
+                )
+                
+        return replace(update, entity_updates=refined_entity_updates)

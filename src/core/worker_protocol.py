@@ -48,6 +48,7 @@ class WorkerPacket:
     # Deterministic Context (Defaulted for backwards compatibility/optional inclusion)
     blocked_tiles: List[Tuple[int, int]] = field(default_factory=list) # Spatial Law
     transient_claims: List[Tuple[int, int]] = field(default_factory=list) # Multi-agent conflict truth
+    terrain: Dict[Tuple[int, int], str] = field(default_factory=dict) # Tile terrain types
 
     @property
     def entities(self) -> Dict[int, EntityState]:

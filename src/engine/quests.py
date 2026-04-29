@@ -111,12 +111,13 @@ class QuestResolutionSystem:
                 from src.core.state import ItemStack
                 items = [ItemStack(item_id=tid, quantity=1) for tid in updated_quest.reward.items]
                 
-                intent = ResourceTransferIntent(
+                from src.core.updates import RewardUpdate
+                reward_intent = ResourceTransferIntent(
                     source_id=q_id,
                     source_kind="QUEST",
                     items_add=items,
                     gold_delta=updated_quest.reward.gold,
-                    xp_reward=updated_quest.reward.xp,
+                    reward_upd=RewardUpdate(xp_gain=updated_quest.reward.xp),
                     transfer_kind="QUEST_REWARD",
                     transaction_id=f"quest:{q_id}:reward",
                     group_id=f"quest:{q_id}:reward",
@@ -127,7 +128,7 @@ class QuestResolutionSystem:
                 # Note: We do NOT set status to REWARDED here. 
                 # Pipeline._resolve_resource_transactions will do that upon success.
                 refined_entity_updates[e_id] = replace(ent_upd, 
-                    resource_transfers=ent_upd.resource_transfers + [intent],
+                    resource_transfers=ent_upd.resource_transfers + [reward_intent],
                     quest=replace(ent_upd.quest, status_set=QuestStatus.REWARD_PENDING)
                 )
                 

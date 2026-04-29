@@ -4,6 +4,9 @@ Contract tests for Strategic Cognition: Interruption Resistance & Project Switch
 Covers:
 - Part 1 §Strategic: Project switching uses interruption resistance / margin logic
 - Part 1 §Strategic: Current project gets reservation/retention priority
+- RPG-0040: project_objective_continuity
+- RPG-0041: project_interruption_resistance
+- RPG-0042: current_project_retention
 """
 import pytest
 from src.core.state import EntityState

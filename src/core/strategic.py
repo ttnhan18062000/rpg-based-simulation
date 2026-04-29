@@ -39,10 +39,15 @@ class LeadCertainty(str, Enum):
 class ContractStatus(str, Enum):
     """Lifecycle status of a social contract."""
     OFFERED = "OFFERED"
+    ACCEPTED = "ACCEPTED"
+    COUNTERED = "COUNTERED"
     ACTIVE = "ACTIVE"
-    COMPLETED = "COMPLETED"
+    FULFILLED = "FULFILLED"
+    COMPLETED = "FULFILLED" # Alias for project-like completion
     FAILED = "FAILED"
     BETRAYED = "BETRAYED"
+    EXPIRED = "EXPIRED"
+    CANCELLED = "CANCELLED"
 
 
 class ContractKind(str, Enum):
@@ -53,9 +58,74 @@ class ContractKind(str, Enum):
     MERCHANT = "MERCHANT"
 
 
+class DirectiveKind(str, Enum):
+    """Types of strategic directives."""
+    AVENGE = "avenge"
+    EXPLORE = "explore"
+    STABILIZE = "stabilize"
+    ACQUIRE = "acquire"
+    PROTECT = "protect"
+    COMBAT = "combat"
+
+
+class BlockerKind(str, Enum):
+    """Types of strategic blockers."""
+    MATERIAL = "material"
+    CAPABILITY = "capability"
+    ACCESS = "access"
+    SOCIAL = "social"
+    GROUP = "group"
+
+
+class ObjectiveKind(str, Enum):
+    """Types of project objectives."""
+    REACH_LOCATION = "reach_location"
+    ACQUIRE_ITEM = "acquire_item"
+    DEFEAT_ENEMY = "defeat_enemy"
+    INVESTIGATE = "investigate"
+
+
+class ProjectKind(str, Enum):
+    """Types of strategic projects."""
+    CRAFTING = "crafting"
+    QUEST = "quest"
+    EXPLORATION = "exploration"
+    COMBAT = "combat"
+    SOCIAL = "social"
+
+
+class ConcernKind(str, Enum):
+    """Types of strategic concerns."""
+    DANGER = "danger"
+    HUNGER = "hunger"
+    FATIGUE = "fatigue"
+    SOCIAL_THREAT = "social_threat"
+    OPPORTUNITY = "opportunity"
+
+
+class TurningPointKind(str, Enum):
+    """Types of significant life events."""
+    BETRAYAL = "betrayal"
+    NEAR_DEATH = "near_death"
+    FIRST_KILL = "first_kill"
+    GREAT_VICTORY = "great_victory"
+    LOSS = "loss"
+
+
+class RiskLevel(str, Enum):
+    """Subjective risk assessment."""
+    LOW = "LOW"
+    NORMAL = "NORMAL"
+    HIGH = "HIGH"
+    EXTREME = "EXTREME"
+
+
 @dataclass(frozen=True, slots=True)
 class ContractState:
-    """A formal obligation between two or more parties."""
+    """
+    A formal obligation between two or more parties.
+    VERIFIED v2: ContractState
+    """
     id: str
     kind: ContractKind
     source_id: int
@@ -64,13 +134,14 @@ class ContractState:
     expiry_tick: int = -1
     status: ContractStatus = ContractStatus.OFFERED
     created_tick: int = 0
+    negotiation_count: int = 0
 
 
 @dataclass(frozen=True, slots=True)
 class BlockerState:
     """Explicit reason for strategic stalling."""
     id: str
-    kind: str  # 'material', 'capability', 'access', 'social', 'group'
+    kind: BlockerKind
     subject: str  # e.g. 'iron_ore', 'gold', 'ally'
     severity: float = 0.5
     resolved: bool = False
@@ -84,17 +155,19 @@ class LeadState:
     subject: str
     detail: str = ""
     discovered_tick: int = 0
-    certainty: LeadCertainty = LeadCertainty.VAGUE
+    certainty: LeadCertainty = LeadCertainty.VAGUE # VERIFIED v2: LeadState.certainty
     source_entity_id: Optional[int] = None
     tested: bool = False
     test_outcome: Optional[str] = None  # 'SUCCESS', 'FAILURE', None
+    failure_count: int = 0
+    suppression_until_tick: int = 0
 
 
 @dataclass(frozen=True, slots=True)
 class DirectiveState:
     """Enduring strategic intention (e.g. 'AVENGE', 'EXPLORE', 'STABILIZE')."""
     id: str
-    kind: str  # 'avenge', 'explore', 'stabilize', 'acquire', 'protect'
+    kind: DirectiveKind
     target: Optional[str] = None  # Target entity/region/item
     priority: DirectivePriority = DirectivePriority.NORMAL
     salience: float = 0.0  # Accumulated weight from repeated events
@@ -105,7 +178,7 @@ class DirectiveState:
 class ObjectiveState:
     """Concrete goal within a project."""
     id: str
-    kind: str  # 'reach_location', 'acquire_item', 'defeat_enemy', 'investigate'
+    kind: ObjectiveKind
     target: Optional[str] = None
     status: ObjectiveStatus = ObjectiveStatus.UNRESOLVED
     blocker_ids: List[str] = field(default_factory=list)
@@ -115,20 +188,21 @@ class ObjectiveState:
 class ProjectState:
     """A bounded strategic effort with objectives."""
     id: str
-    kind: str  # 'crafting', 'quest', 'exploration', 'combat', 'social'
+    kind: ProjectKind
     status: ProjectStatus = ProjectStatus.ACTIVE
     score: float = 0.0  # Current evaluation score
     lock_until_tick: int = 0  # Prevents switching before this tick
     objectives: List[ObjectiveState] = field(default_factory=list)
     active_objective_id: Optional[str] = None
     created_tick: int = 0
+    failure_count: int = 0
 
 
 @dataclass(frozen=True, slots=True)
 class ConcernState:
     """An environmental or social pressure on the entity."""
     id: str
-    kind: str  # 'danger', 'hunger', 'fatigue', 'social_threat', 'opportunity'
+    kind: ConcernKind
     source: str = ""  # Region/entity/event that caused it
     urgency: float = 0.0
     created_tick: int = 0
@@ -151,6 +225,19 @@ class HypothesisState:
     claim: str
     confidence: float = 0.5  # 0.0 to 1.0
     supporting_lead_ids: List[str] = field(default_factory=list)
+
+
+@dataclass(frozen=True, slots=True)
+class TurningPointState:
+    """
+    A significant life event that persistently biases future behavior.
+    VERIFIED v2: LifeEvent
+    """
+    id: str
+    kind: TurningPointKind
+    subject_id: Optional[int] = None  # Related entity
+    salience: float = 0.5  # How impactful (0.0 to 1.0)
+    tick: int = 0
 
 
 @dataclass(frozen=True, slots=True)
@@ -180,7 +267,10 @@ class CognitionProfile:
 
 @dataclass(frozen=True, slots=True)
 class StrategicComponent:
-    """Aggregate strategic stratum attached to an entity."""
+    """
+    Aggregate strategic stratum attached to an entity.
+    VERIFIED v2: StrategicComponent
+    """
     # Core state
     home_region_id: Optional[str] = None
     blockers: Dict[str, BlockerState] = field(default_factory=dict)
@@ -192,6 +282,7 @@ class StrategicComponent:
     hypotheses: Dict[str, HypothesisState] = field(default_factory=dict)
     source_trust: Dict[int, SourceTrustEntry] = field(default_factory=dict)
     contracts: Dict[str, ContractState] = field(default_factory=dict)
+    turning_points: List[TurningPointState] = field(default_factory=list)
 
     # Active tracking
     current_project_id: Optional[str] = None

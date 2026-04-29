@@ -1,3 +1,12 @@
+"""
+Interaction system and harvesting tests.
+- RPG-0027: harvesting_channeling_success
+- RPG-0028: interaction_interrupted_by_movement
+- RPG-0029: interaction_inventory_pressure
+- RPG-0030: interaction_resource_exhaustion
+- RPG-0032: interaction_range_enforcement
+- RPG-1678: interaction_determinism_contract
+"""
 import pytest
 from src.core.state import AuthoritativeState, EntityState, InteractionComponent, InventoryComponent, ResourceNodeState, ItemStack
 from src.core.updates import StateUpdate, EntityUpdate, InteractionUpdate, InventoryUpdate

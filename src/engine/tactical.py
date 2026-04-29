@@ -16,6 +16,7 @@ class TacticalDecisionSystem:
     """
     Authoritative logic for bounded local tactical decisions.
     Responsible for target selection, engagement commitment, and anti-stalemate.
+    VERIFIED v2: TacticalDecisionSystem
     """
 
     @staticmethod
@@ -143,8 +144,28 @@ class TacticalDecisionSystem:
                                     )
                                 )
             
-            # 4.1 Cohesion Check: If too far from group anchor, prioritize regrouping
+            # 4.1 Role-Based Obligation (Phase 7)
             group = state.groups.get(entity.group_id) if entity.group_id is not None else None
+            if group and not hostiles:
+                leader = state.entities.get(group.leader_id)
+                if leader and leader.combat.alive:
+                    role = group.roles.get(entity.id)
+                    # If leader is interacting with something, hirelings should guard/support
+                    if leader.task.work_kind == "ENTITY_ACT" and leader.task.payload.get("action") == "INTERACT":
+                        if role == "VANGUARD":
+                            # Guard position near leader
+                            guard_pos = PositioningService.find_guard_position(entity, leader, None, state)
+                            if guard_pos != entity.position:
+                                return EntityUpdate(
+                                    entity_id=entity.id,
+                                    navigation=NavigationUpdate(target_set=guard_pos, movement_mode_set=MovementMode.GUARD),
+                                    task=TaskUpdate(
+                                        work_kind_set="ENTITY_MOVE",
+                                        payload_set={"target_position": guard_pos, "reason": "CONTRACT_OBLIGATION_GUARD", "target_id": leader.id}
+                                    )
+                                )
+
+            # 4.2 Cohesion Check: If too far from group anchor, prioritize regrouping
             if group:
                 dx = entity.position[0] - group.anchor[0]
                 dy = entity.position[1] - group.anchor[1]
@@ -163,13 +184,27 @@ class TacticalDecisionSystem:
 
         # 4. Target Selection with Focus Fire
         group = state.groups.get(entity.group_id) if entity.group_id is not None else None
-        def target_score(h: EntityState) -> Tuple[int, int, float, int]:
+        def target_score(h: EntityState) -> Tuple[float, int, float, int, int]:
             dist = abs(h.position[0] - entity.position[0]) + abs(h.position[1] - entity.position[1])
-            # Bias: Group shared target gets -1 in the first tuple element (highest priority)
-            is_group_target = 0 if (group and group.shared_target_id == h.id) else 1
+            
+            # Bias: Group shared target influence depends on trust in leader
+            group_bias = 1.0
+            if group and group.shared_target_id == h.id:
+                # Get trust in leader
+                trust = 0.0
+                if entity.social and group.leader_id in entity.social.trust:
+                    trust = entity.social.trust[group.leader_id].trust
+                
+                # Trust ranges from -1.0 to 1.0. 
+                # If trust is 1.0, bias is 0.0 (highest priority).
+                # If trust is -1.0, bias is 2.0 (lowest priority).
+                # Default (0.0 trust) is 1.0 bias (neutral).
+                group_bias = 1.0 - trust
+            
             # Local Hysteresis: Previous target gets a small bonus
             is_current_target = 0 if h.id == entity.task.payload.get("target_id") else 1
-            return (is_group_target, is_current_target, h.combat.hp, dist, h.id)
+            
+            return (group_bias, is_current_target, h.combat.hp, dist, h.id)
 
         hostiles.sort(key=target_score)
         target = hostiles[0]

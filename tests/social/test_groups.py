@@ -1,3 +1,7 @@
+"""
+Group coordination tests.
+- RPG-0058: social_party_cooperation
+"""
 import pytest
 from src.core.state import AuthoritativeState, GroupRecord
 from src.core.updates import StateUpdate

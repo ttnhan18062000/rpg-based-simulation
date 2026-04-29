@@ -204,7 +204,8 @@ timestamp,ticket_id,title,status,summary,artifacts_path
 2026-04-27T05:55:00Z,TCK-20260427-RESOURCE-CONSERVATION-HARDENING,Hardening Resource Conservation Law (Phase 3.1),DONE,Implemented ResourceTransactionResolver and refactored systems to use atomic intents.,stored_artifacts/TCK-20260427-RESOURCE-CONSERVATION-HARDENING/
 2024: 2026-04-24,TCK-20260424-PH12-M1-READINESS,Phase 12 Milestone 1 Readiness Gate complete,DONE,stored_artifacts/TCK-20260424-PH12-M1-READINESS/
 205: 2026-04-24,TCK-20260424-PH12-M2-RUNTIME-CUTOVER,Phase 12 Milestone 2 Runtime Cutover complete,DONE,stored_artifacts/TCK-20260424-PH12-M2-RUNTIME-CUTOVER/
-206: 2026-04-24,TCK-20260424-PH12-M3-WORKFLOW-CUTOVER,Phase 12 Milestone 3 Workflow Cutover complete,DONE,stored_artifacts/TCK-20260424-PH12-M3-WORKFLOW-CUTOVER/
+256: 2026-05-01T11:47:00Z,TCK-20260501-V2-ENGINE-HARDENING,V2 Engine Logic Hardening & Audit Reconciliation,DONE,Reconciled logic checklist with source implementation and injected VERIFIED v2 markers across core subsystems.,stored_artifacts/TCK-20260501-V2-ENGINE-HARDENING/
+2026-04-24,TCK-20260424-PH12-M3-WORKFLOW-CUTOVER,Phase 12 Milestone 3 Workflow Cutover complete,DONE,stored_artifacts/TCK-20260424-PH12-M3-WORKFLOW-CUTOVER/
 207: 2026-04-24,TCK-20260424-PH12-M4-CUTOVER-VALIDATION,Phase 12 Milestone 4 Cutover Validation complete,DONE,stored_artifacts/TCK-20260424-PH12-M4-CUTOVER-VALIDATION/
 208: 2026-04-24,TCK-20260424-PH12-M5-AUTHORITY-TRANSITION,Phase 12 Milestone 5 Authority Transition complete,DONE,stored_artifacts/TCK-20260424-PH12-M5-AUTHORITY-TRANSITION/
 239: 2026-04-26T09:15:00Z,TCK-20260426-ARENA-QUESTS,Extend E2E Arena Testing for Quest Progression,DONE,Implemented COMBAT_ARENA_QUESTS scenario and verified full quest/reward/leveling lifecycle in 50-tick stress runs.,stored_artifacts/TCK-20260426-ARENA-QUESTS/
@@ -252,3 +253,17 @@ timestamp,ticket_id,title,status,summary,artifacts_path
 2026-04-28T19:00:00Z,TCK-20260428-PH10-EXTERNAL-TRUTH,External Truth and Replay Proof (Tracing & Metrics),DONE,Implemented transaction tracing and conservation metrics for external observability.,stored_artifacts/TCK-20260428-PH10-EXTERNAL-TRUTH/
 2026-04-28,TCK-20260428-QUEST-PROGRESSION-FIX,Resolved XP double-counting in pipeline
 2026-04-29T06:20:00Z,TCK-20260427-PH6-STRATEGIC-COGNITION,Strategic & Progression Stabilization,DONE,Stabilized Phase 6 strategic cognition and attribute-driven growth. Resolved partial rejection data loss.,stored_artifacts/TCK-20260427-PH6-STRATEGIC-COGNITION/
+2026-04-29T11:30:00Z,TCK-20260429-E3-MISSING-LOGIC,E3 Missing RPG Core Logic (Stamina/Wounds/Leash/Terrain/Stickiness/Scaling),DONE,Implemented 7 missing RPG depth systems: stamina drain/regen/exhaustion and wounds/scars/mob leash/terrain cost/target stickiness/skill scaling. 54 new tests. 669 total passed.,staging_artifacts/TCK-20260429-E3-MISSING-LOGIC/
+2026-05-01T11:47:00Z,TCK-20260501-V2-ENGINE-HARDENING,V2 Engine Logic Hardening & Audit Reconciliation,DONE,Reconciled logic checklist with source implementation and injected VERIFIED v2 markers across core subsystems.,stored_artifacts/TCK-20260501-V2-ENGINE-HARDENING/
+2026-05-01,TCK-20260501-E4-PHASE-ZERO,DONE,Reconciled ledger and reached 100% parity for V2 core.
+2026-05-01,Phase E4.3,Strategic Cognition Hardening completed with full lifecycle tests.,DONE
+2026-05-01,TCK-20260501-SOCIAL-LIFECYCLE,Phase E4.4 Complete - Social Lifecycle Hardening,Done
+2026-05-01,TCK-20260501-PROGRESSION-HARDENING,Phase E4.5 Complete - Progression/Equipment/Crafting Hardening,Done
+2026-05-01T10:33:42Z,TCK-20260501-E4.7-OBSERVABILITY-HARDENING,Finalize Phase E4.7 Observability and Certification,DONE,Exposed all important gameplay truth to API replay and certification reports. Verified with mixed-stress scenarios.,stored_artifacts/TCK-20260501-E4.7-OBSERVABILITY-HARDENING/
+2026-05-01T10:55:36Z,TCK-20260501-E4-PHASE-ONE,Phase E4.1 — Determinism and Replay Completion,DONE,Hardened RNG and canonical hashing for bit-identical replay fidelity. Verified with 1,000+ tick tests.,stored_artifacts/TCK-20260501-E4-PHASE-ONE/
+2026-05-01T10:55:46Z,TCK-20260430-PH5-COMBAT-LEGALITY-HARDENING,Phase E4.2 — Full Combat Legality Matrix,DONE,Unified authoritative combat legality and AoE splash LoS logic. Verified with exhaustive matrix tests.,stored_artifacts/TCK-20260430-PH5-COMBAT-LEGALITY-HARDENING/
+2026-05-01T10:56:20Z,TCK-20260501-E4.6-WORLD-LIFECYCLE,Phase E4.6 — World Lifecycle and Ecology,DONE,Integrated passive updates spawning and macro-threat lifecycles into the authoritative loop. Verified with long-run stability tests.,stored_artifacts/TCK-20260501-E4.6-WORLD-LIFECYCLE/
+2026-05-01T16:02:00Z,TCK-20260501-E5-HARDENING,Hardening RPG Engine E5 Implementation,DONE,Implemented race-condition safeguards and exactly-once transaction idempotency. Reached 100% verified checklist coverage.,stored_artifacts/TCK-20260501-E5-HARDENING/
+2026-05-02T10:00:00Z,TCK-20260502-E5-CLOSURE-HARDENING,Hardening Resource Conflicts,DONE,Hardened resource conflicts and transaction grouping.,stored_artifacts/TCK-20260502-E5-CLOSURE-HARDENING/
+2026-05-02T11:00:00Z,TCK-20260502-E5-FINAL-HARDENING,Final Hardening and Observability,DONE,Complete final hardening and observability expansion.,stored_artifacts/TCK-20260502-E5-FINAL-HARDENING/
+2026-05-02T12:00:00Z,TCK-20260502-E5-SEMANTIC-HARDENING,Hardening Social Contract Semantics,DONE,Hardened social contract state machine and verified event-level replay fidelity.,stored_artifacts/TCK-20260502-E5-SEMANTIC-HARDENING/

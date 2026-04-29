@@ -98,20 +98,19 @@ def test_aoe_legality():
     state = AuthoritativeState(entities={1: attacker}, tick=0, seed=1)
     
     # Legal AoE center
-    update = CombatResolutionSystem.resolve_aoe_attack(attacker, (3,0), 2, state)
-    assert update.outcome_kind != "REJECTED"
+    updates = CombatResolutionSystem.resolve_aoe_attack(attacker, (3,0), 2, state)
+    assert updates[attacker.id].outcome_kind != "REJECTED"
     
     # Illegal AoE center (Out of range)
-    update = CombatResolutionSystem.resolve_aoe_attack(attacker, (6,0), 2, state)
-    assert update.outcome_kind == "REJECTED"
-    assert update.failure_reason == "OUT_OF_RANGE"
+    updates = CombatResolutionSystem.resolve_aoe_attack(attacker, (6,0), 2, state)
+    assert updates[attacker.id].outcome_kind == "REJECTED"
+    assert updates[attacker.id].failure_reason == "OUT_OF_RANGE"
     
     # Illegal AoE (Readiness)
-    attacker_low = replace(attacker, readiness=50.0)
-    state_low = AuthoritativeState(entities={1: attacker_low}, tick=0, seed=1)
-    update = CombatResolutionSystem.resolve_aoe_attack(attacker_low, (3,0), 2, state_low)
-    assert update.outcome_kind == "REJECTED"
-    assert update.failure_reason == "INSUFFICIENT_READINESS"
+    attacker = replace(attacker, readiness=0)
+    updates = CombatResolutionSystem.resolve_aoe_attack(attacker, (3,0), 2, state)
+    assert updates[attacker.id].outcome_kind == "REJECTED"
+    assert updates[attacker.id].failure_reason == "INSUFFICIENT_READINESS"
 
 def test_multi_attack_filtering():
     a1 = create_mock_entity(1, pos=(0,0)) # Legal

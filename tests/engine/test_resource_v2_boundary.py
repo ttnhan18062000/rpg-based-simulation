@@ -136,8 +136,8 @@ def test_combat_reward_via_intent(base_state):
     assert attacker_up.reward is None
     intent = attacker_up.resource_transfers[0]
     assert intent.source_kind == "COMBAT"
-    assert intent.xp_reward == 10 # Monster level 1
-    assert intent.xp_reward > 0
+    assert intent.reward_upd.xp_gain == 10 # Monster level 1
+    assert intent.reward_upd.xp_gain > 0
     assert intent.gold_delta >= 0
 
 def test_recruitment_gold_handoff(base_state):

@@ -44,11 +44,12 @@ class StrategicIntelligenceSystem:
     ) -> StrategicUpdate:
         """
         Infer blockers based on recent failures.
+        VERIFIED v2: strategic_blocker_inference
         """
         blockers = []
         
         # 1. Navigation Failure (ACCESS blocker)
-        if navigation_failure == "PATH_NOT_FOUND":
+        if navigation_failure in ("PATH_NOT_FOUND", "STUCK", "OSCILLATING"):
             target_pos = last_payload.get("target_position")
             if target_pos:
                 subject = f"{target_pos}"
@@ -60,21 +61,56 @@ class StrategicIntelligenceSystem:
                     severity=0.8
                 ))
         
-        # 2. Material/Resource Failure
+        # Phase 4: Congestion Blocker
+        if entity.navigation.wait_count >= 5 or entity.navigation.oscillation_count >= 3:
+             blockers.append(BlockerState(
+                 id="blocker_congestion",
+                 kind="access",
+                 subject="congestion",
+                 severity=0.5
+             ))
+        
+        # 2. Material/Resource Failure (Interactions)
         if last_task == "ENTITY_ACT" and last_payload.get("action") == "INTERACT":
             target_id = last_payload.get("target_id")
             if target_id and current_project and current_project.kind == "harvesting":
-                blockers.append(BlockerState(
-                    id=f"blocker_node_{target_id}",
-                    kind="material",
-                    subject="wood", 
-                    severity=1.0
-                ))
+                # Check for capacity failure in latest intent results
+                capacity_fail = any(r.reason == "INSUFFICIENT_CAPACITY" or r.reason == "INVENTORY_FULL" for r in entity.latest_intent_results)
+                if capacity_fail:
+                    blockers.append(BlockerState(
+                        id="blocker_inventory_full",
+                        kind="inventory",
+                        subject="capacity",
+                        severity=1.0
+                    ))
+                else:
+                    blockers.append(BlockerState(
+                        id=f"blocker_node_{target_id}",
+                        kind="material",
+                        subject="resource", 
+                        severity=1.0
+                    ))
+
+        # 3. Transaction Failures (Generic)
+        for result in entity.latest_intent_results:
+            if not result.accepted:
+                if result.reason in ("INSUFFICIENT_CAPACITY", "INVENTORY_FULL"):
+                     blockers.append(BlockerState(
+                        id="blocker_inventory_full",
+                        kind="inventory",
+                        subject="capacity",
+                        severity=1.0
+                    ))
         
         if not blockers:
             return StrategicUpdate()
             
-        return StrategicUpdate(blockers_add_or_update=blockers)
+        # Deduplicate by ID
+        unique_blockers = {}
+        for b in blockers:
+            unique_blockers[b.id] = b
+            
+        return StrategicUpdate(blockers_add_or_update=list(unique_blockers.values()))
 
     @staticmethod
     def generate_crafting_blockers(
@@ -116,6 +152,7 @@ class StrategicIntelligenceSystem:
         """
         State-wide resolution of material and access blockers.
         Called by the Kernel in Phase 4 (Resolution).
+        VERIFIED v2: strategic_blocker_resolution
         """
         refined_entity_updates = dict(update.entity_updates)
 
@@ -199,7 +236,9 @@ class StrategicIntelligenceSystem:
         for e_id, entity in state.entities.items():
             concerns = RoutineService.evaluate_biological_needs(entity, state.world_time)
             anchored_concerns = RoutineService.evaluate_anchored_behavior(entity, state)
+            env_concerns = RoutineService.evaluate_environmental_concerns(entity)
             concerns.extend(anchored_concerns)
+            concerns.extend(env_concerns)
             
             if not concerns:
                 continue
@@ -232,6 +271,11 @@ class StrategicIntelligenceSystem:
         candidate_project: ProjectState,
         current_tick: int
     ) -> Optional[StrategicUpdate]:
+        """
+        Phase 9: Strategic interruption resistance and retention.
+        VERIFIED v2: project_interruption_resistance
+        VERIFIED v2: current_project_retention
+        """
         profile = entity.strategic.profile
         current_id = entity.strategic.current_project_id
 
@@ -285,21 +329,115 @@ class StrategicIntelligenceSystem:
         )
 
     @staticmethod
+    def process_project_outcome(
+        entity: EntityState,
+        project_id: str,
+        outcome: ProjectStatus,
+        current_tick: int
+    ) -> StrategicUpdate:
+        """
+        Record the final result of a project and apply learning effects.
+        """
+        project = entity.strategic.projects.get(project_id)
+        if not project:
+            return StrategicUpdate()
+
+        from src.core.strategic import TurningPointState
+        tps = []
+        boredom_delta = {}
+
+        if outcome == ProjectStatus.COMPLETED:
+            # Record Victory
+            tps.append(TurningPointState(
+                id=f"victory_{project.kind}_{current_tick}",
+                kind="great_victory" if project.score > 15.0 else "victory",
+                tick=current_tick,
+                salience=0.6
+            ))
+            # Decrement boredom for this kind (success makes it more rewarding)
+            boredom_delta[project.kind] = -2.0
+            
+        elif outcome == ProjectStatus.ABANDONED:
+            # Record Loss
+            tps.append(TurningPointState(
+                id=f"abandon_{project.kind}_{current_tick}",
+                kind="loss",
+                tick=current_tick,
+                salience=0.4
+            ))
+            # Increment boredom for this kind
+            boredom_delta[project.kind] = 5.0
+
+        updated_project = replace(project, status=outcome)
+        
+        return StrategicUpdate(
+            projects_add_or_update=[updated_project],
+            turning_points_add=tps,
+            boredom_delta=boredom_delta,
+            current_project_id_set="" if entity.strategic.current_project_id == project_id else None
+        )
+
+    @staticmethod
     def process_outcome(
         observer: EntityState,
         subject_id: int,
         success: bool
-    ) -> StrategicUpdate:
-        from src.systems.social import SocialAppraisalSystem
+    ) -> SocialUpdate:
+        """
+        VERIFIED v2: StrategicIntelligenceSystem.process_outcome
+        """
+        from src.social.appraisal import SocialAppraisalSystem
         outcome_quality = 1.0 if success else -1.0
-        social_up = SocialAppraisalSystem.recalibrate_trust(observer, subject_id, outcome_quality)
-        return social_up
+        # recalibrate_trust in appraisal.py takes observer.social
+        return SocialAppraisalSystem.recalibrate_trust(observer.social, subject_id, outcome_quality)
+
+    @staticmethod
+    def _resolve_active_objective(state: AuthoritativeState, entity: EntityState) -> Optional[StrategicUpdate]:
+        strat = entity.strategic
+        if not strat.current_project_id:
+            return None
+        
+        project = strat.projects.get(strat.current_project_id)
+        if not project or project.status != ProjectStatus.ACTIVE:
+            return None
+            
+        obj = next((o for o in project.objectives if o.id == project.active_objective_id), None)
+        if not obj or obj.status != ObjectiveStatus.ACTIVE:
+            return None
+            
+        # 1. Reach Location Resolution
+        if obj.kind == "reach_location" and obj.target:
+            try:
+                target_pos = eval(obj.target) if isinstance(obj.target, str) else obj.target
+                dist = abs(entity.position[0] - target_pos[0]) + abs(entity.position[1] - target_pos[1])
+                if dist < 1.0:
+                    resolved_obj = replace(obj, status=ObjectiveStatus.RESOLVED)
+                    # For now, we assume 1 objective per detour project
+                    return StrategicUpdate(
+                        projects_add_or_update=[replace(project, objectives=[resolved_obj], status=ProjectStatus.COMPLETED)],
+                        current_project_id_set="",
+                        current_objective_id_set=""
+                    )
+            except:
+                 pass
+        return None
 
     @staticmethod
     def evaluate_strategic_intent(
         state: AuthoritativeState,
         entity: EntityState
     ) -> StrategicUpdate:
+        # 0. Strategic Memory (PH6: Lead Suppression)
+        from src.systems.detour import DetourSuggestionSystem
+        memory_upd = DetourSuggestionSystem.suppress_exhausted_leads(entity, state.tick)
+        
+        res_up = StrategicIntelligenceSystem._resolve_active_objective(state, entity)
+        if res_up:
+            return replace(res_up, 
+                leads_add_or_update=memory_upd.leads_add_or_update,
+                leads_remove=memory_upd.leads_remove
+            )
+
         current_tick = state.tick
         strat = entity.strategic
         
@@ -309,38 +447,77 @@ class StrategicIntelligenceSystem:
             if proj and proj.status == ProjectStatus.ACTIVE:
                 boredom_upd[proj.kind] = 0.1
         
+        # 1. Detour Completion & Project Resumption
+        active_or_completed_detour = None
+        if strat.current_project_id:
+            p = strat.projects.get(strat.current_project_id)
+            if p and p.kind == "detour":
+                active_or_completed_detour = p
+        else:
+            # Check for a detour that just completed but isn't current anymore
+            active_or_completed_detour = next((p for p in strat.projects.values() if p.kind == "detour" and p.status == ProjectStatus.COMPLETED), None)
+
+        if active_or_completed_detour and active_or_completed_detour.status == ProjectStatus.COMPLETED:
+            # Phase 6: Resolve associated blockers
+            blockers_to_resolve = []
+            for obj in active_or_completed_detour.objectives:
+                if obj.status == ObjectiveStatus.RESOLVED:
+                     blockers_to_resolve.extend(obj.blocker_ids)
+            
+            blocker_updates = []
+            for b_id in blockers_to_resolve:
+                b = strat.blockers.get(b_id)
+                if b:
+                    blocker_updates.append(replace(b, resolved=True))
+
+            suspended = next((p for p in strat.projects.values() if p.status == ProjectStatus.SUSPENDED), None)
+            if suspended:
+                resumed_up = StrategicIntelligenceSystem.resume_project(entity, suspended.id)
+                if resumed_up:
+                    final_resumed = replace(
+                        resumed_up,
+                        projects_add_or_update=resumed_up.projects_add_or_update + [active_or_completed_detour],
+                        blockers_add_or_update=resumed_up.blockers_add_or_update + blocker_updates,
+                        boredom_delta=boredom_upd,
+                        leads_add_or_update=memory_upd.leads_add_or_update,
+                        leads_remove=memory_upd.leads_remove
+                    )
+                    return final_resumed
+
+        # 2. Project Abandonment (PH6)
         if strat.current_project_id:
             project = strat.projects.get(strat.current_project_id)
-            if project:
-                if project.kind == "detour" and project.status == ProjectStatus.COMPLETED:
-                    suspended = next((p for p in strat.projects.values() if p.status == ProjectStatus.SUSPENDED), None)
-                    if suspended:
-                        resumed_up = StrategicIntelligenceSystem.resume_project(entity, suspended.id)
-                        if resumed_up:
-                            if project.status != ProjectStatus.COMPLETED:
-                                resumed_up = replace(
-                                    resumed_up,
-                                    projects_add_or_update=resumed_up.projects_add_or_update + [replace(project, status=ProjectStatus.COMPLETED)]
-                                )
-                            if boredom_upd:
-                                resumed_up = replace(resumed_up, boredom_delta=boredom_upd)
-                            return resumed_up
+            if project and project.status == ProjectStatus.ACTIVE:
+                # If project has failed too many times, abandon it
+                if project.failure_count >= 3:
+                    abandoned = replace(project, status=ProjectStatus.ABANDONED)
+                    # Frustration penalty (Phase 6 spec)
+                    boredom_upd[project.kind] = boredom_upd.get(project.kind, 0.0) + 0.5
+                    return StrategicUpdate(
+                        projects_add_or_update=[abandoned],
+                        current_project_id_set="",
+                        current_objective_id_set="",
+                        boredom_delta=boredom_upd,
+                        leads_add_or_update=memory_upd.leads_add_or_update,
+                        leads_remove=memory_upd.leads_remove
+                    )
 
-                if project.status == ProjectStatus.ACTIVE:
-                    if project.kind == "harvesting" and project.active_objective_id:
-                        target_id_str = project.active_objective_id.split("_")[-1]
-                        try:
-                            target_id = int(target_id_str)
-                            node = state.resource_nodes.get(target_id)
-                            if not node or node.remaining_charges <= 0:
-                                return StrategicUpdate(
-                                    projects_add_or_update=[replace(project, status=ProjectStatus.COMPLETED)],
-                                    current_project_id_set="",
-                                    current_objective_id_set="",
-                                    boredom_delta=boredom_upd
-                                )
-                        except ValueError:
-                            pass
+                if project.kind == "harvesting" and project.active_objective_id:
+                    target_id_str = project.active_objective_id.split("_")[-1]
+                    try:
+                        target_id = int(target_id_str)
+                        node = state.resource_nodes.get(target_id)
+                        if not node or node.remaining_charges <= 0:
+                            return StrategicUpdate(
+                                projects_add_or_update=[replace(project, status=ProjectStatus.COMPLETED)],
+                                current_project_id_set="",
+                                current_objective_id_set="",
+                                boredom_delta=boredom_upd,
+                                leads_add_or_update=memory_upd.leads_add_or_update,
+                                leads_remove=memory_upd.leads_remove
+                            )
+                    except ValueError:
+                        pass
                 
                 if strat.blockers:
                     from src.systems.detour import DetourSuggestionSystem
@@ -351,7 +528,8 @@ class StrategicIntelligenceSystem:
                             id=f"detour_{best.blocker_id}_{current_tick}",
                             kind=best.objective_kind,
                             target=best.target,
-                            status=ObjectiveStatus.ACTIVE
+                            status=ObjectiveStatus.ACTIVE,
+                            blocker_ids=[best.blocker_id]
                         )
                         detour_proj = ProjectState(
                             id=f"proj_detour_{current_tick}",
@@ -365,13 +543,20 @@ class StrategicIntelligenceSystem:
                         )
                         detour_up = StrategicIntelligenceSystem.evaluate_project_switch(entity, detour_proj, current_tick)
                         if detour_up:
-                            if boredom_upd:
-                                detour_up = replace(detour_up, boredom_delta=boredom_upd)
-                            return detour_up
+                            final_detour = replace(detour_up, 
+                                boredom_delta=boredom_upd,
+                                leads_add_or_update=memory_upd.leads_add_or_update,
+                                leads_remove=memory_upd.leads_remove
+                            )
+                            return final_detour
         
         from src.ai.goals import GoalRegistry
         from src.ai.score_modifiers import ScoreModifierSystem
+        from src.systems.party import PartyCoordinationSystem
+        
         all_scores = GoalRegistry.get_all_scores(entity, state)
+        # PH7: Leadership Influence
+        all_scores = PartyCoordinationSystem.apply_leadership_influence(entity, state, all_scores)
         
         modified_scores = ScoreModifierSystem.apply_modifiers(entity, state, all_scores)
         modified_scores.sort(key=lambda x: x.utility, reverse=True)
@@ -389,9 +574,11 @@ class StrategicIntelligenceSystem:
             if existing and existing.status == ProjectStatus.SUSPENDED:
                 resumed_up = StrategicIntelligenceSystem.resume_project(entity, existing.id)
                 if resumed_up:
-                    if boredom_upd:
-                        resumed_up = replace(resumed_up, boredom_delta=boredom_upd)
-                    return resumed_up
+                    return replace(resumed_up,
+                        boredom_delta=boredom_upd,
+                        leads_add_or_update=memory_upd.leads_add_or_update,
+                        leads_remove=memory_upd.leads_remove
+                    )
             
             obj = ObjectiveState(
                 id=f"{best_candidate.kind}_{best_candidate.target_id}",
@@ -418,9 +605,14 @@ class StrategicIntelligenceSystem:
 
             switch_up = StrategicIntelligenceSystem.evaluate_project_switch(entity, candidate_proj, current_tick)
             if switch_up:
-                if boredom_upd:
-                    switch_up = replace(switch_up, boredom_delta=boredom_upd)
-                return switch_up
+                return replace(switch_up, 
+                    boredom_delta=boredom_upd,
+                    leads_add_or_update=memory_upd.leads_add_or_update,
+                    leads_remove=memory_upd.leads_remove
+                )
+
+        if memory_upd.leads_add_or_update or memory_upd.leads_remove:
+            return memory_upd
 
         if boredom_upd:
             return StrategicUpdate(boredom_delta=boredom_upd)
@@ -429,4 +621,7 @@ class StrategicIntelligenceSystem:
 
     @staticmethod
     def derive_cognition_profile(entity: EntityState) -> CognitionProfile:
+        """
+        VERIFIED v2: StrategicIntelligenceSystem.derive_cognition_profile
+        """
         return CapacityService.derive_profile(entity)

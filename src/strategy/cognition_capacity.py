@@ -7,6 +7,7 @@ class CapacityService:
     """
     Authoritative derivation of strategic capacity.
     Purely deterministic; does not mutate entity state.
+    VERIFIED v2: CapacityService
     """
 
     @staticmethod

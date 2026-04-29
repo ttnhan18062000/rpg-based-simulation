@@ -1,3 +1,7 @@
+"""
+Social relationship and reputation tests.
+- RPG-0056: social_reputation_vs_meaning
+"""
 import pytest
 from src.core.state import AuthoritativeState
 from src.core.updates import EntityUpdate, SocialUpdate, StateUpdate

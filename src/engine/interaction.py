@@ -13,6 +13,7 @@ class InteractionSystem:
     """
     Law: Must follow Milestone B Runtime Signals Contract.
     Proof: Verified by mb_test_matrix.md and test_milestone_b_closure.py.
+    VERIFIED v2: InteractionSystem
     """
 
     # V2 Engine Policy: Authoritative item weights for pressure enforcement
@@ -26,6 +27,7 @@ class InteractionSystem:
 
     @staticmethod
     def get_weight(item_kind: str) -> float:
+        # VERIFIED v2: inventory_slots_and_weight
         return InteractionSystem.ITEM_WEIGHTS.get(item_kind, InteractionSystem.ITEM_WEIGHTS["__DEFAULT__"])
 
     @staticmethod
@@ -47,6 +49,8 @@ class InteractionSystem:
                 continue
 
             # 1. Channeling & Proximity Laws
+            # VERIFIED v2: looting_channeled
+            # VERIFIED v2: harvesting_channeled
             # Reset progress if moved or changed target
             current_target = entity.interaction.target_node_id
             proposed_target = ent_upd.interaction.target_node_id

@@ -12,13 +12,13 @@ from dataclasses import dataclass, field
 from typing import List, Optional
 
 from src.core.state import EntityState
-from src.systems.social import TurningPoint
+from src.core.strategic import TurningPointState
 
 
 @dataclass(frozen=True, slots=True)
 class NarrativeMemory:
     """Persistent collection of turning points for an entity."""
-    turning_points: List[TurningPoint] = field(default_factory=list)
+    turning_points: List[TurningPointState] = field(default_factory=list)
     trauma_score: float = 0.0   # Accumulated trauma
     confidence: float = 0.5     # From victories and successes
 
@@ -32,7 +32,7 @@ class NarrativeMemorySystem:
     @staticmethod
     def record_turning_point(
         memory: NarrativeMemory,
-        turning_point: TurningPoint
+        turning_point: TurningPointState
     ) -> NarrativeMemory:
         """
         LEG-RPG-151: Turning points persist in narrative memory.

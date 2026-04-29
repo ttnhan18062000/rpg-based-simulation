@@ -4,11 +4,12 @@ Contract tests for Source Trust Recalibration.
 Covers:
 - LEG-RPG-123: Refutation drops trust
 - Part 1 §Social: Social learning updates trust bonds from interaction evidence
+- RPG-0053: social_learning_trust
 """
 import pytest
 from src.core.state import EntityState
 from src.core.strategic import StrategicComponent, SourceTrustEntry
-from src.systems.social import SocialAppraisalSystem
+from src.social.appraisal import SocialAppraisalSystem
 
 
 def _make_entity_with_trust(source_id, trust=0.5, interactions=0):
@@ -86,32 +87,33 @@ class TestSocialContracts:
     """Part 1 §Social: Social contracts as strategic objects with consequences."""
 
     def test_honored_contract_boosts_trust(self):
-        from src.systems.social import SocialContract
-        contract = SocialContract(
-            id="contract_001", kind="escort",
-            party_ids=[1, 2], status="ACTIVE", created_tick=10
+        from src.social.contracts import ContractService
+        from src.core.strategic import ContractState, ContractKind, ContractStatus
+        contract = ContractState(
+            id="contract_001", kind=ContractKind.RECRUITMENT,
+            source_id=1, target_id=2, status=ContractStatus.ACTIVE, created_tick=10
         )
-        social_up, turning_points = SocialAppraisalSystem.process_contract_outcome(
-            contract, outcome="HONORED", current_tick=50
+        strat_up, bond_updates = ContractService.resolve_contract_outcome(
+            contract, success=True
         )
-        assert 2 in social_up.trust_delta
-        assert social_up.trust_delta[2] > 0
-        assert len(turning_points) == 0
+        # Bond updates for both source and target
+        assert len(bond_updates) == 2
+        assert bond_updates[1].bond_updates[0].sentiment_delta > 0
 
-    def test_broken_contract_creates_betrayal_turning_points(self):
-        from src.systems.social import SocialContract
-        contract = SocialContract(
-            id="contract_002", kind="alliance",
-            party_ids=[1, 2, 3], status="ACTIVE", created_tick=10
+    def test_broken_contract_creates_betrayal_consequences(self):
+        from src.social.contracts import ContractService
+        from src.core.strategic import ContractState, ContractKind, ContractStatus
+        contract = ContractState(
+            id="contract_002", kind=ContractKind.RECRUITMENT,
+            source_id=1, target_id=2, status=ContractStatus.ACTIVE, created_tick=10
         )
-        social_up, turning_points = SocialAppraisalSystem.process_contract_outcome(
-            contract, outcome="BROKEN", current_tick=60
+        strat_up, bond_updates = ContractService.resolve_contract_outcome(
+            contract, success=False, betrayal=True
         )
         # Trust drops for all parties
-        assert any(v < 0 for v in social_up.trust_delta.values())
-        # Betrayal turning points created
-        assert len(turning_points) == 3  # One per party
-        assert all(tp.kind == "betrayal" for tp in turning_points)
+        assert all(bu.bond_updates[0].sentiment_delta < -0.8 for bu in bond_updates)
+        # Strategic update marks as BETRAYED
+        assert strat_up.contracts_add_or_update[0].status == ContractStatus.BETRAYED
 
 
 class TestFamiliarity:

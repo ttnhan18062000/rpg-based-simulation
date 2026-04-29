@@ -5,6 +5,7 @@ Covers:
 - LEG-RPG-116: Strategic pivot on regional danger
 - LEG-RPG-117: Scar detection
 - Part 1 §Strategic: Event interpretation can mutate directives
+- RPG-0049: strategic_outcome_processing
 """
 import pytest
 from src.core.state import EntityState, RegionState

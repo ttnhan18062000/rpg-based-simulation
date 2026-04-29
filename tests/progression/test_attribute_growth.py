@@ -1,3 +1,7 @@
+"""
+Attribute growth and AP allocation tests.
+- RPG-0066: attribute_growth_bandwidth
+"""
 import pytest
 from src.core.state import AuthoritativeState, EntityState, IdentityComponent, CombatComponent, AttributeComponent, AptitudeComponent
 from src.core.updates import StateUpdate, EntityUpdate, RewardUpdate
@@ -28,9 +32,11 @@ def test_hero_ap_grant_on_level_up():
     assert new_ent.identity.evolution_level == 2
     assert new_ent.identity.unspent_ap == 5 # Granted 5 AP
     
-    # Hero stats stay at 100/10 because no attributes changed (Recalc Gate skipped)
-    assert new_ent.combat.max_hp == 100
-    assert new_ent.combat.atk == 10
+    # Hero stats are recalculated on level up
+    # recalc: max_hp = 100 + 5*2 + floor(5*0.5) = 112
+    # atk = 10 + floor(5*0.5) = 12
+    assert new_ent.combat.max_hp == 112
+    assert new_ent.combat.atk == 12
 
 @pytest.mark.v2_contract
 def test_monster_no_ap_auto_scale():

@@ -1,6 +1,6 @@
 from __future__ import annotations
 from typing import Dict, List
-import random
+
 from src.core.state import AuthoritativeState, EntityState, BuildingState
 from src.core.updates import StateUpdate, EntityUpdate, InteractionUpdate, StrategicUpdate
 from src.core.strategic import LeadState, ConcernState

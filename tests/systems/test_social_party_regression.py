@@ -11,7 +11,7 @@ from src.core.strategic import (
     ContractState, ContractKind, ContractStatus
 )
 from src.core.updates import StateUpdate, EntityUpdate, TaskUpdate
-from src.systems.social import SocialAppraisalSystem, SocialContract
+from src.social.appraisal import SocialAppraisalSystem
 from src.systems.groups import GroupSystem
 from src.engine.pipeline import AuthoritativeApplyPipeline
 
@@ -50,21 +50,25 @@ def test_recruitment_logic_evaluation():
     # Add a betrayal history
     candidate = replace(candidate, social=replace(candidate.social, betrayal_count=1))
     
-    # Low payout + betrayal history = rejection
-    assert not SocialAppraisalSystem.evaluate_recruitment_offer(candidate, 2, payout=50, risk=0.1)
+    state = AuthoritativeState(tick=0, seed=42)
     
-    # Higher payout (600) + betrayal history = acceptance
-    # score = (0.5 * 0.5) + (min(1.0, 600/200) * 0.3) - (0.1 * 0.1) - 0.1 = 0.25 + 0.3 - 0.01 - 0.1 = 0.44
-    # Wait, my math was right. I need payout to be REALLY high or trust to be higher.
-    # Let's just use payout=1000 and trust=0.6
-    bond = SocialBond(target_id=2, sentiment=0.2) # sentiment 0.2 -> trust 0.6
-    candidate = replace(candidate, social=replace(candidate.social, bonds={2: bond}))
-    # score = (0.6 * 0.5) + (1.0 * 0.3) - (0.1 * 0.1) - 0.1 = 0.3 + 0.3 - 0.01 - 0.1 = 0.49
-    # Still 0.49! Let's use sentiment 0.4 -> trust 0.7
-    bond = SocialBond(target_id=2, sentiment=0.4)
-    candidate = replace(candidate, social=replace(candidate.social, bonds={2: bond}))
-    # score = (0.7 * 0.5) + 0.3 - 0.01 - 0.1 = 0.35 + 0.3 - 0.11 = 0.54 -> Accept!
-    assert SocialAppraisalSystem.evaluate_recruitment_offer(candidate, 2, payout=1000, risk=0.1)
+    # Low payout + betrayal history = rejection (via TOTAL_DISTRUST if trust < 0.4)
+    bond_low = SocialBond(target_id=2, sentiment=-0.5) # trust 0.25
+    candidate_low = replace(candidate, social=replace(candidate.social, bonds={2: bond_low}))
+    
+    c_low = ContractState(id="c_low", kind=ContractKind.RECRUITMENT, source_id=2, target_id=1,
+                          terms={"daily_pay": 5, "risk_level": "NORMAL"}, status=ContractStatus.OFFERED, created_tick=0)
+    accepted, reason = SocialAppraisalSystem.appraise_contract(candidate_low, c_low, state)
+    assert not accepted
+    
+    # Higher payout (100) + high trust (sentiment 0.8 -> trust 0.9) = acceptance
+    bond_high = SocialBond(target_id=2, sentiment=0.8)
+    candidate_high = replace(candidate, social=replace(candidate.social, bonds={2: bond_high}))
+    
+    c_high = ContractState(id="c_high", kind=ContractKind.RECRUITMENT, source_id=2, target_id=1,
+                           terms={"daily_pay": 100, "risk_level": "NORMAL"}, status=ContractStatus.OFFERED, created_tick=0)
+    accepted_high, reason = SocialAppraisalSystem.appraise_contract(candidate_high, c_high, state)
+    assert accepted_high
 
 def test_party_formation_from_contract():
     """Verify that a shared contract leads to group formation."""

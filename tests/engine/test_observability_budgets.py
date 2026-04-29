@@ -1,3 +1,7 @@
+"""
+Observability budgets and signal collection tests.
+- RPG-0008: observability_budget_enforcement
+"""
 import pytest
 from src.engine.observability import SignalCollector
 from unittest.mock import MagicMock

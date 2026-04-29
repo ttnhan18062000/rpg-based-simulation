@@ -1,3 +1,10 @@
+"""
+Milestone A closure and structural compliance tests.
+- RPG-0002: kernel_phase_determinism
+- RPG-0004: authoritative_state_immutability
+- RPG-0007: baseline_isolation_contract
+- RPG-0085: immutability_preservation
+"""
 import os
 import pytest
 from src.engine.kernel import Kernel

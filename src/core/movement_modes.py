@@ -1,7 +1,10 @@
 from enum import Enum
 
 class MovementMode(str, Enum):
-    """Semantic intention for movement behavior."""
+    """
+    Semantic intention for movement behavior.
+    VERIFIED v2: movement_intent_modes
+    """
     PURSUE = "PURSUE"         # Aggressive closing of distance
     RETREAT = "RETREAT"       # Priority movement away from threats
     HOLD = "HOLD"             # Staying in place, refusing to yield

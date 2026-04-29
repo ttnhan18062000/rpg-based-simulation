@@ -1,3 +1,7 @@
+"""
+Biological needs and routine strategic integration tests.
+- RPG-0060: biological_routine_integration
+"""
 import pytest
 from dataclasses import replace
 from src.core.state import EntityState, BiologicalComponent, AuthoritativeState

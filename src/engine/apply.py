@@ -42,20 +42,6 @@ class ApplyPath:
         
         new_ground_items = dict(prior_state.ground_items)
         
-        # Phase 16: Splash Damage Resolution (Pre-loop)
-        extra_damage = {} # entity_id -> total_splash_damage
-        from src.engine.legality import LegalityServiceV2
-        for e_id, ent_upd in update.entity_updates.items():
-            if ent_upd.combat:
-                for intent in ent_upd.combat.simultaneous_intents:
-                    if intent.splash_radius > 0:
-                        impact_pos = ent_upd.new_position or prior_state.entities[e_id].position
-                        for other_id, other_ent in prior_state.entities.items():
-                            if other_id == e_id: continue # Skip primary target (usually)
-                            dist = LegalityServiceV2.get_manhattan_dist(impact_pos, other_ent.position)
-                            if dist <= intent.splash_radius:
-                                extra_damage[other_id] = extra_damage.get(other_id, 0) + intent.splash_damage
-
         for e_id, entity in prior_state.entities.items():
             if e_id in update.entities_remove:
                 continue
@@ -82,7 +68,7 @@ class ApplyPath:
             if entity.biological.hunger >= 100.0:
                 starvation_damage = 5
             
-            new_hp = max(0, entity.combat.hp - hazard_damage - starvation_damage - extra_damage.get(e_id, 0))
+            new_hp = max(0, entity.combat.hp - hazard_damage - starvation_damage)
             new_combat = replace(entity.combat, hp=new_hp)
             
             # PH5 M2: Boredom Decay
@@ -92,6 +78,7 @@ class ApplyPath:
                 new_val = max(0.0, val - BOREDOM_DECAY)
                 if new_val > 0.001:
                     decayed_boredom[kind] = new_val
+            
             new_strategic = replace(entity.strategic, boredom=decayed_boredom)
 
             # Milestone 5 Law: Passive Advancement (Readiness gain)
@@ -109,6 +96,16 @@ class ApplyPath:
                 combat=new_combat,
                 strategic=new_strategic
             )
+
+            # Per-tick Stamina Passive Regen (Checklist Part 6 Section E)
+            is_resting = entity.task.work_kind in ("REST", "SLEEP")
+            from src.engine.rpg_depth import StaminaService
+            stam_regen = StaminaService.tick_regen(entity.stamina, is_resting=is_resting)
+            if stam_regen > 0:
+                entity = replace(entity, stamina=replace(
+                    entity.stamina,
+                    current=min(entity.stamina.max_stamina, entity.stamina.current + stam_regen)
+                ))
             
             if ent_upd:
                 final_entity = ApplyPath._apply_entity_update(
@@ -183,6 +180,19 @@ class ApplyPath:
                         current_r = new_regions[region.id]
                         new_regions[region.id] = replace(current_r, trauma_score=current_r.trauma_score + 2.0)
 
+        new_camps = dict(prior_state.camps)
+        sorted_camp_ids = sorted(update.camp_updates.keys())
+        for c_id in sorted_camp_ids:
+            c_upd = update.camp_updates[c_id]
+            if c_id in new_camps:
+                camp = new_camps[c_id]
+                new_camps[c_id] = replace(
+                    camp,
+                    maturity=max(0.0, camp.maturity + c_upd.maturity_delta),
+                    active=c_upd.active_set if c_upd.active_set is not None else camp.active,
+                    last_raid_tick=c_upd.last_raid_tick_set if c_upd.last_raid_tick_set is not None else camp.last_raid_tick
+                )
+
         new_groups = dict(prior_state.groups)
         for g in update.groups_add_or_update:
             new_groups[g.id] = g
@@ -199,7 +209,8 @@ class ApplyPath:
                     hazard_level=world_upd.hazard_level_set if world_upd.hazard_level_set is not None else region.hazard_level,
                     suppression_active=world_upd.suppression_set if world_upd.suppression_set is not None else region.suppression_active,
                     calamity_intensity=world_upd.calamity_intensity_set if world_upd.calamity_intensity_set is not None else region.calamity_intensity,
-                    trauma_score=region.trauma_score + world_upd.trauma_delta,
+                    trauma_score=max(0.0, min(100.0, world_upd.trauma_score_set if world_upd.trauma_score_set is not None else (region.trauma_score + world_upd.trauma_delta))),
+                    retaliation_pressure=max(0.0, min(100.0, world_upd.retaliation_pressure_set if world_upd.retaliation_pressure_set is not None else (region.retaliation_pressure + world_upd.retaliation_pressure_delta))),
                     influence=max(-100.0, min(100.0, region.influence + world_upd.influence_delta)),
                     owner_faction_id=(None if world_upd.owner_faction_id_set == -1 else world_upd.owner_faction_id_set) if world_upd.owner_faction_id_set is not None else region.owner_faction_id,
                     kind=world_upd.kind_set if world_upd.kind_set is not None else region.kind,
@@ -233,8 +244,9 @@ class ApplyPath:
             entities=new_entities,
             resource_nodes=new_nodes,
             buildings=new_buildings,
-            groups=new_groups,
+            camps=new_camps,
             regions=new_regions,
+            groups=new_groups,
             corpses=current_corpses,
             ground_items=new_ground_items,
             global_resources=new_resources,
@@ -242,7 +254,8 @@ class ApplyPath:
             work_debt=new_debt,
             maturity=update.maturity_set if update.maturity_set is not None else prior_state.maturity,
             last_calamity_tick=update.last_calamity_tick_set if update.last_calamity_tick_set is not None else prior_state.last_calamity_tick,
-            rng_checkpoint=update.rng_checkpoint or prior_state.rng_checkpoint
+            rng_checkpoint=update.rng_checkpoint or prior_state.rng_checkpoint,
+            transaction_trace=update.transaction_trace
         )
         
         # PH6 M2: Ground Items and Corpses
@@ -296,6 +309,19 @@ class ApplyPath:
             final_scars.pop(scar_id, None)
 
         new_state = replace(new_state, local_scars=final_scars)
+        
+        # Merge rejections (External Truth Phase E4.7)
+        if update.rejections_delta:
+            new_registry = dict(new_state.rejection_registry)
+            for key, delta in update.rejections_delta.items():
+                new_registry[key] = new_registry.get(key, 0) + delta
+            new_state = replace(new_state, rejection_registry=new_registry)
+            
+        if update.processed_transaction_ids:
+            new_processed = set(new_state.processed_transaction_ids)
+            new_processed.update(update.processed_transaction_ids)
+            new_state = replace(new_state, processed_transaction_ids=new_processed)
+            
         return new_state
 
     @staticmethod
@@ -340,11 +366,26 @@ class ApplyPath:
             new_slots = dict(entity.equipment.slots)
             for slot, item_id in update.equipment.slot_updates.items():
                 new_slots[slot] = item_id
-            new_equipment = replace(entity.equipment, slots=new_slots)
+            
+            # Phase 8: Durability Updates
+            new_durability = dict(entity.equipment.durability)
+            # 1. Deltas
+            for slot, delta in update.equipment.durability_delta.items():
+                new_durability[slot] = max(0.0, min(100.0, new_durability.get(slot, 100.0) + delta))
+            # 2. Sets
+            for slot, val in update.equipment.durability_set.items():
+                new_durability[slot] = max(0.0, min(100.0, val))
+                
+            new_equipment = replace(entity.equipment, slots=new_slots, durability=new_durability)
 
         if update.identity:
             new_recipes = set(entity.identity.known_recipes)
             new_recipes.update(update.identity.recipes_learned)
+            
+            new_cooldowns = dict(entity.identity.cooldowns)
+            for skill_id, tick in update.identity.cooldown_updates.items():
+                new_cooldowns[skill_id] = tick
+                
             new_identity = replace(
                 entity.identity,
                 role=update.identity.role_set if update.identity.role_set is not None else entity.identity.role,
@@ -354,7 +395,8 @@ class ApplyPath:
                 evolution_level=update.identity.evolution_level_set if update.identity.evolution_level_set is not None else entity.identity.evolution_level,
                 evolution_points=entity.identity.evolution_points + update.identity.evolution_points_delta,
                 unspent_ap=entity.identity.unspent_ap + update.identity.unspent_ap_delta,
-                learned_skills=entity.identity.learned_skills.union(update.identity.learned_skills)
+                learned_skills=entity.identity.learned_skills.union(update.identity.learned_skills),
+                cooldowns=new_cooldowns
             )
             if update.identity.breakthroughs_add:
                 new_breakthroughs = set(new_identity.active_breakthroughs)
@@ -369,15 +411,15 @@ class ApplyPath:
         if update.attributes:
             new_attributes = replace(
                 entity.attributes,
-                strength=max(0, min(100, entity.attributes.strength + update.attributes.strength_delta)),
-                agility=max(0, min(100, entity.attributes.agility + update.attributes.agility_delta)),
-                vitality=max(0, min(100, entity.attributes.vitality + update.attributes.vitality_delta)),
-                endurance=max(0, min(100, entity.attributes.endurance + update.attributes.endurance_delta)),
-                intelligence=max(0, min(100, entity.attributes.intelligence + update.attributes.intelligence_delta)),
-                spirit=max(0, min(100, entity.attributes.spirit + update.attributes.spirit_delta)),
-                wisdom=max(0, min(100, entity.attributes.wisdom + update.attributes.wisdom_delta)),
-                perception=max(0, min(100, entity.attributes.perception + update.attributes.perception_delta)),
-                charisma=max(0, min(100, entity.attributes.charisma + update.attributes.charisma_delta))
+                strength=max(1, min(100, entity.attributes.strength + update.attributes.strength_delta)),
+                agility=max(1, min(100, entity.attributes.agility + update.attributes.agility_delta)),
+                vitality=max(1, min(100, entity.attributes.vitality + update.attributes.vitality_delta)),
+                endurance=max(1, min(100, entity.attributes.endurance + update.attributes.endurance_delta)),
+                intelligence=max(1, min(100, entity.attributes.intelligence + update.attributes.intelligence_delta)),
+                spirit=max(1, min(100, entity.attributes.spirit + update.attributes.spirit_delta)),
+                wisdom=max(1, min(100, entity.attributes.wisdom + update.attributes.wisdom_delta)),
+                perception=max(1, min(100, entity.attributes.perception + update.attributes.perception_delta)),
+                charisma=max(1, min(100, entity.attributes.charisma + update.attributes.charisma_delta))
             )
             # Recalculate derived stats - REMOVED (Handled by FINAL RECALCULATION GATE)
 
@@ -493,6 +535,31 @@ class ApplyPath:
                 payload=update.task.payload_set if update.task.payload_set is not None else entity.task.payload
             )
 
+        # Stamina Update (Checklist Part 6 Section E)
+        new_stamina = entity.stamina
+        if update.stamina_update:
+            new_current = entity.stamina.current
+            if update.stamina_update.current_set is not None:
+                new_current = update.stamina_update.current_set
+            else:
+                new_current += update.stamina_update.current_delta
+            # VERIFIED v2: test_stamina_cannot_go_below_zero
+            new_current = max(0.0, min(entity.stamina.max_stamina, new_current))
+            new_stamina = replace(
+                entity.stamina,
+                current=new_current,
+                max_stamina=update.stamina_update.max_stamina_set if update.stamina_update.max_stamina_set is not None else entity.stamina.max_stamina
+            )
+
+        # Wound/Scar Update (Checklist Part 6 Section E)
+        new_wounds = list(entity.wounds)
+        new_scars = list(entity.scars)
+        if update.wound_update:
+            new_wounds.extend(update.wound_update.wounds_add)
+            new_scars.extend(update.wound_update.scars_add)
+            if update.wound_update.wounds_heal:
+                new_wounds = [w if w.id not in update.wound_update.wounds_heal else replace(w, healed=True) for w in new_wounds]
+
         if update.quest:
             from src.core.quests import QuestState, QuestStatus
             from src.quests.service import QuestService
@@ -511,13 +578,20 @@ class ApplyPath:
                     new_projs[q_id] = updated_quest
                     new_strategic = replace(new_strategic, projects=new_projs)
 
-        if update.reward:
-            # XP / Evolution points remain in RewardUpdate for now
+        if update.reward and update.reward.xp_gain > 0:
+            from src.progression.leveling import LevelingService
+            prog_upd = LevelingService.process_progression(new_identity, update.reward.xp_gain)
+            
+            # Merge progression update into new_identity
             new_identity = replace(
                 new_identity,
-                evolution_points=new_identity.evolution_points + update.reward.xp_gain
+                evolution_level=prog_upd.evolution_level_set if prog_upd.evolution_level_set is not None else new_identity.evolution_level,
+                evolution_points=new_identity.evolution_points + prog_upd.evolution_points_delta,
+                unspent_ap=new_identity.unspent_ap + prog_upd.unspent_ap_delta
             )
-            # Gold and Items MUST use ResourceTransferIntent (Phase 3 Law)
+            # Flag stats as dirty if level changed
+            if prog_upd.evolution_level_set is not None:
+                stats_dirty = True
 
         # ---------------------------------------------------------------------
         # FINAL RECALCULATION GATE (PH8: Derived Stats Law)
@@ -526,11 +600,17 @@ class ApplyPath:
         stats_dirty = (
             update.attributes is not None or 
             update.equipment is not None or 
-            (update.identity is not None and update.identity.learned_skills)
+            (update.identity is not None and update.identity.learned_skills) or
+            update.wound_update is not None
         )
         
         if stats_dirty:
-            derived = LevelingService.recalculate_combat_stats(new_attributes, new_equipment, new_identity.learned_skills)
+            from src.engine.rpg_depth import SkillScalingService
+            derived = SkillScalingService.get_effective_stats(
+                new_attributes, new_equipment,
+                wounds=new_wounds, scars=new_scars,
+                learned_skills=new_identity.learned_skills
+            )
             
             # Apply derived values. 
             # Note: We preserve the current HP (after deltas) but cap it at new max.
@@ -540,10 +620,22 @@ class ApplyPath:
                 atk=derived["atk"],
                 def_stat=derived["def_stat"],
                 evasion=derived["evasion"],
+                move_cost=derived.get("move_cost", new_combat.move_cost),
                 range=derived.get("range", new_combat.range)
             )
-            if new_combat.hp > new_combat.max_hp:
-                new_combat = replace(new_combat, hp=new_combat.max_hp)
+            
+            # RPG-0064: Level up results in resource refills
+            if update.identity and update.identity.evolution_level_set is not None:
+                new_combat = replace(new_combat, hp=derived["max_hp"])
+                new_stamina = replace(new_stamina, current=new_stamina.max_stamina)
+            elif (update.reward and update.reward.xp_gain > 0 and 
+                  new_identity.evolution_level > entity.identity.evolution_level):
+                # Also check for XP-triggered level ups
+                new_combat = replace(new_combat, hp=derived["max_hp"])
+                new_stamina = replace(new_stamina, current=new_stamina.max_stamina)
+            else:
+                if new_combat.hp > new_combat.max_hp:
+                    new_combat = replace(new_combat, hp=new_combat.max_hp)
 
         res = replace(
             entity,
@@ -563,7 +655,11 @@ class ApplyPath:
             equipment=new_equipment,
             navigation=new_navigation,
             task=new_task,
+            stamina=new_stamina,
+            wounds=new_wounds,
+            scars=new_scars,
             latest_intent_results=update.intent_results,
+            latest_combat_result=update.combat,
             group_id=update.group_id_set if update.group_id_set is not None and update.group_id_set != -1 else (None if update.group_id_set == -1 else entity.group_id),
             properties=new_properties
         )

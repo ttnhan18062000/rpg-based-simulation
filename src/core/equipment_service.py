@@ -2,6 +2,7 @@ from __future__ import annotations
 from typing import Dict, Any, Optional, List
 from src.core.state import EntityState, EquipSlot, ItemKind
 from src.core.items import ItemRegistry, ItemDefinition
+from src.core.updates import EquipmentUpdate
 
 class EquipmentService:
     """Service for ranking gear and making equipment decisions."""
@@ -53,3 +54,17 @@ class EquipmentService:
         new_score = EquipmentService.get_gear_score(entity, new_defn)
 
         return new_score > current_score
+    @staticmethod
+    def repair_equipment(entity: EntityState, slot: EquipSlot, current_tick: int) -> Optional[EquipmentUpdate]:
+        """Calculates repair cost and returns an EquipmentUpdate to restore durability."""
+        item_id = entity.equipment.slots.get(slot)
+        if not item_id:
+            return None
+            
+        current_durability = entity.equipment.durability.get(slot, 100.0)
+        if current_durability >= 100.0:
+            return None # Already at max
+            
+        return EquipmentUpdate(
+            durability_delta={slot: 100.0 - current_durability}
+        )

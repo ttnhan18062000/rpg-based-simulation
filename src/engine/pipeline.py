@@ -13,6 +13,9 @@ class AuthoritativeApplyPipeline:
         """
         Refines a proposed StateUpdate through the authoritative law pipeline.
         Consolidates Town, Shop, Blacksmith, Interaction, and Movement rules.
+        VERIFIED v2: authoritative_refinement_pipeline
+        VERIFIED v2: partial_rejection_support
+        VERIFIED v2: world_mutation_after_proposal
         """
         from src.engine.town_resolution import TownResolutionSystem
         from src.engine.shop import ShopSystem
@@ -35,47 +38,89 @@ class AuthoritativeApplyPipeline:
         # double-counting during authoritative re-execution in the Kernel.
         sanitized_entity_updates = {}
         for e_id, ent_upd in raw_update.entity_updates.items():
+            # Phase E5.1: Actor Validity Enforcement (Hardening)
+            # VERIFIED v2: actor_validity_enforcement
+            actor = state.entities.get(e_id)
+            if actor:
+                legal, reason = LegalityServiceV2.verify_action_legality(actor, "GLOBAL_PROPOSAL", state)
+                if not legal:
+                    # Strip all world-mutating proposals from incapacitated actors
+                    sanitized_entity_updates[e_id] = EntityUpdate(
+                        entity_id=e_id,
+                        navigation=NavigationUpdate(failure_reason=reason),
+                        task=replace(ent_upd.task, payload_set={**ent_upd.task.payload_set, "outcome": "FAILURE", "reason": reason}) if ent_upd.task else None
+                    )
+                    continue
+
+            # Stripping unauthorized fields:
+            # - inventory (gold/items)
+            # - reward (XP)
+            # - identity (role/faction/veterancy)
+            # - attributes (str/agi/etc)
+            # - stamina/wound updates (handled by RPG Depth System)
+            
             sanitized_transfers = [
                 t for t in ent_upd.resource_transfers 
                 if t.transfer_kind not in ("QUEST_REWARD", "KILL_REWARD", "REWARD", "TAX")
             ]
+            
+            # Sanitizing CombatUpdate: Strip direct rewards (Handled by model change)
+            clean_combat = ent_upd.combat
+
+            # Sanitizing QuestUpdate: Strip status_set (Authority Only)
+            clean_quest = None
+            if ent_upd.quest:
+                from src.core.updates import QuestUpdate
+                clean_quest = QuestUpdate(
+                    quest_id=ent_upd.quest.quest_id,
+                    progress_delta=ent_upd.quest.progress_delta,
+                    status_set=None 
+                )
+
             sanitized_entity_updates[e_id] = EntityUpdate(
                 entity_id=e_id,
                 task=ent_upd.task,
                 navigation=ent_upd.navigation,
                 interaction=ent_upd.interaction,
-                quest=ent_upd.quest,
+                quest=clean_quest,
                 property_updates=ent_upd.property_updates,
                 new_position=ent_upd.new_position,
                 moved_this_tick=ent_upd.moved_this_tick,
                 readiness_delta=ent_upd.readiness_delta,
-                combat=ent_upd.combat,
+                combat=clean_combat,
                 resource_transfers=sanitized_transfers,
                 group_id_set=ent_upd.group_id_set
             )
         update = replace(raw_update, entity_updates=sanitized_entity_updates)
         
         # 1. Territorial & Service Laws (Healing, Shopping, Crafting)
+        # VERIFIED v2: TownResolutionSystem
         update = TownResolutionSystem.resolve(state, update)
+        # VERIFIED v2: ShopSystem
         update = ShopSystem.enforce(state, update)
+        # VERIFIED v2: BlacksmithSystem
         update = BlacksmithSystem.enforce(state, update)
         
         # 1.2 Combat Laws (Attack resolution)
+        # VERIFIED v2: CombatResolutionSystem
         update = AuthoritativeApplyPipeline._route_combat_intent(state, update)
         update = AuthoritativeApplyPipeline._apply_near_death_hardening(state, update)
         
         # 1.5 World Dynamics
         from src.systems.generator import EntityGenerator
         generator = EntityGenerator(state.seed + state.tick)
+        # VERIFIED v2: WorldDynamicsSystem
         update = WorldDynamicsSystem.resolve_dynamics(state, update, generator)
         
         # 1.6 Building Sabotage (De-simulation)
+        # VERIFIED v2: BuildingSabotageSystem
         update = BuildingSabotageSystem.resolve(state, update)
         
         # 2. Intent Routing (Interaction)
         update = AuthoritativeApplyPipeline._route_interaction_intent(state, update)
         
         # 3. Interaction Enforcement
+        # VERIFIED v2: InteractionSystem
         update = InteractionSystem.enforce(state, update)
         
         # 5. Intent Routing (Movement)
@@ -86,9 +131,11 @@ class AuthoritativeApplyPipeline:
         
         # 7. Lifecycle
         from src.systems.lifecycle import LifecycleSystem
+        # VERIFIED v2: LifecycleSystem
         update = LifecycleSystem.resolve_lifecycle(state, update)
         # 8. Quest Completions & Rewards
         from src.engine.quests import QuestResolutionSystem
+        # VERIFIED v2: QuestResolutionSystem
         update = QuestResolutionSystem.enforce(state, update)
 
         # 9. Atomic Resource Transactions (Consolidated)
@@ -96,15 +143,24 @@ class AuthoritativeApplyPipeline:
         
         
         # 9.5 Strategic Logic (After resource resolution)
+        from src.social.contracts import ContractService
+        # VERIFIED v2: ContractService
+        update = ContractService.reap_expired_offers(state, update)
+        update = ContractService.process_active_contracts(state, update)
+        
+        # VERIFIED v2: StrategicIntelligenceSystem
         update = StrategicIntelligenceSystem.resolve_blockers(state, update)
         update = StrategicIntelligenceSystem.evaluate_biological_concerns(state, update)
+        # VERIFIED v2: StrategicRedirectionSystem
         update = StrategicRedirectionSystem.enforce(state, update)
         
         # 10. Evolution & Growth (Captures XP from all sources above)
         from src.engine.evolution import EvolutionSystem
+        # VERIFIED v2: EvolutionSystem
         update = EvolutionSystem.evaluate(state, update)
         
         # 11. Group Logic (Formation & Coordination)
+        # VERIFIED v2: GroupSystem
         group_update = GroupSystem.update_groups(state)
         update = AuthoritativeApplyPipeline._merge_state_updates(update, group_update)
         
@@ -124,9 +180,18 @@ class AuthoritativeApplyPipeline:
             if entity.biological.sleep_debt > 80.0:
                 passive_gain *= 0.5
                 
+            # Environmental Penalties (Aura of Despair)
+            from src.world.environment import EnvironmentService
+            from src.engine.legality import LegalityServiceV2
+            region = LegalityServiceV2.get_region_for_position(entity.position, state)
+            if region:
+                aura_mults = EnvironmentService.get_aura_multipliers(state, entity)
+                passive_gain *= aura_mults.get("readiness_regen", 1.0)
+
             refined_entity_updates[e_id] = replace(ent_upd, 
                 readiness_delta=ent_upd.readiness_delta + passive_gain
             )
+
         return replace(update, entity_updates=refined_entity_updates)
 
     @staticmethod
@@ -217,6 +282,11 @@ class AuthoritativeApplyPipeline:
                                 refined_entity_updates[e_id] = replace(curr_upd,
                                     strategic=replace(strat_up, blockers_add_or_update=[nav_blocker])
                                 )
+                                # Global rejection tracking (Phase E4.7)
+                                rej_delta = dict(update.rejections_delta)
+                                rej_key = f"MOVE_{merged_nav.failure_reason}"
+                                rej_delta[rej_key] = rej_delta.get(rej_key, 0) + 1
+                                update = replace(update, rejections_delta=rej_delta)
                         else:
                             # Merge other entities' updates (e.g. attackers in OA)
                             if u_id in refined_entity_updates:
@@ -237,11 +307,13 @@ class AuthoritativeApplyPipeline:
         from src.engine.domain_logic import SimulationDomainLogic
         
         refined_entity_updates = dict(update.entity_updates)
+        working_state = state
+        from src.engine.apply import ApplyPath
         
         # Phase 9 Fix: Use list(keys) to avoid "dictionary changed size during iteration"
-        for e_id in list(refined_entity_updates.keys()):
+        for e_id in sorted(list(refined_entity_updates.keys())):
             ent_upd = refined_entity_updates[e_id]
-            entity = state.entities.get(e_id)
+            entity = working_state.entities.get(e_id)
             if not entity or not entity.active: continue
             
             task_upd = ent_upd.task
@@ -260,9 +332,13 @@ class AuthoritativeApplyPipeline:
                          blockers_add_or_update=[BlockerState(id=f"blocker_act_{r_reason}", kind="access", subject=r_reason)]
                      )
                 )
+                # Global rejection tracking (Phase E4.7)
+                rej_delta = dict(update.rejections_delta)
+                rej_delta["READINESS_NOT_READY"] = rej_delta.get("READINESS_NOT_READY", 0) + 1
+                update = replace(update, rejections_delta=rej_delta)
                 continue
 
-            legal, reason = LegalityServiceV2.verify_action_legality(entity, action_kind, state)
+            legal, reason = LegalityServiceV2.verify_action_legality(entity, action_kind, working_state)
             
             if not legal:
                  # Suppression! Remove the task and record failure
@@ -274,54 +350,84 @@ class AuthoritativeApplyPipeline:
                         blockers_add_or_update=[BlockerState(id=f"blocker_act_{reason}", kind="access", subject=reason)]
                     )
                  )
+                 # Global rejection tracking (Phase E4.7)
+                 rej_delta = dict(update.rejections_delta)
+                 rej_delta["ACTION_ILLEGAL"] = rej_delta.get("ACTION_ILLEGAL", 0) + 1
+                 update = replace(update, rejections_delta=rej_delta)
                  continue
 
-            if action_kind == "ATTACK":
-                target_id = task_upd.payload_set.get("target_id")
-                if target_id is None: continue
+            if action_kind in ("ATTACK", "SKILL", "AOE_ATTACK"):
+                is_legal = False
+                reason = "UNKNOWN"
                 
-                target = state.entities.get(target_id)
-                if not target: continue
-                
-                # 1. Legality Check (LoS, Range, Faction)
-                is_legal, reason = LegalityServiceV2.verify_attack_legality(entity, target, state)
+                if action_kind in ("ATTACK", "SKILL"):
+                    target_id = task_upd.payload_set.get("target_id")
+                    if target_id is None: continue
+                    target = working_state.entities.get(target_id)
+                    if not target: continue
+                    
+                    is_legal, reason = LegalityServiceV2.verify_attack_legality(entity, target, working_state)
+                    if is_legal and action_kind == "SKILL":
+                        skill_id = task_upd.payload_set.get("skill_id")
+                        if not skill_id:
+                            is_legal, reason = False, "MISSING_SKILL_ID"
+                        else:
+                            is_legal, reason = LegalityServiceV2.verify_skill_legality(entity, skill_id, working_state)
+                elif action_kind == "AOE_ATTACK":
+                    target_pos = task_upd.payload_set.get("target_pos")
+                    if target_pos is None: continue
+                    is_legal, reason = LegalityServiceV2.verify_aoe_legality(entity, target_pos, working_state)
+
                 if not is_legal:
                      # Mark failure in task payload (Milestone 3 logic)
                      from src.core.strategic import BlockerState
                      from src.core.updates import StrategicUpdate
                      refined_entity_updates[e_id] = replace(ent_upd,
-                         task=replace(task_upd, payload_set={**task_upd.payload_set, "failure_reason": reason}),
+                         task=replace(task_upd, payload_set={**task_upd.payload_set, "outcome": "FAILURE", "reason": reason}),
                          strategic=replace(ent_upd.strategic or StrategicUpdate(), 
-                             blockers_add_or_update=[BlockerState(id=f"blocker_atk_{reason}", kind="access", subject=reason)]
+                             blockers_add_or_update=[BlockerState(id=f"blocker_{action_kind.lower()}_{reason}", kind="access", subject=reason)]
                          )
                      )
+                     # Global rejection tracking (Phase E4.7)
+                     rej_delta = dict(update.rejections_delta)
+                     rej_delta["ATTACK_ILLEGAL"] = rej_delta.get("ATTACK_ILLEGAL", 0) + 1
+                     update = replace(update, rejections_delta=rej_delta)
                      continue
                 
-                # 2. Execute Action via Domain Logic (Authoritative multi-entity resolution)
+                # 2. Execute Action via Domain Logic using SLIDING state
                 action_updates = SimulationDomainLogic.execute_action(
                     entity, 
                     payload=task_upd.payload_set, 
-                    current_tick=state.tick,
-                    neighbor_view=SimulationDomainLogic.get_neighbor_view(state, entity, radius=10.0),
-                    context=state
+                    current_tick=working_state.tick,
+                    neighbor_view=SimulationDomainLogic.get_neighbor_view(working_state, entity, radius=10.0),
+                    context=working_state
                 )
                 
                 # 3. Merge all updates from the action (Attacker + Target)
+                new_entities_to_sync = []
                 for eid, upd in action_updates.items():
                     existing = refined_entity_updates.get(eid, EntityUpdate(entity_id=eid))
-                    # Law: Readiness costs do not stack if multiple systems trigger on the same intent.
-                    # We take the most restrictive (most negative) delta.
                     merged = existing.merge(upd)
+                    # Law: Readiness costs do not stack
                     refined_entity_updates[eid] = replace(merged, 
                         readiness_delta=min(existing.readiness_delta, upd.readiness_delta)
                     )
+                    new_entities_to_sync.append(eid)
                 
-                # 4. Specific Strategic Overrides (if any)
-                # Ensure the task outcome is marked as SUCCESS on the attacker
+                # 4. Mark SUCCESS
                 final_ent_upd = refined_entity_updates[e_id]
                 refined_entity_updates[e_id] = replace(final_ent_upd,
                     task=replace(final_ent_upd.task or task_upd, payload_set={**task_upd.payload_set, "outcome": "SUCCESS"})
                 )
+                
+                # 5. UPDATE WORKING STATE for next entity in same tick (Sliding State)
+                new_working_entities = dict(working_state.entities)
+                for eid, upd in action_updates.items():
+                    if eid in new_working_entities:
+                        new_working_entities[eid] = ApplyPath._apply_entity_update(
+                            new_working_entities[eid], upd
+                        )
+                working_state = replace(working_state, entities=new_working_entities)
 
         return replace(update, entity_updates=refined_entity_updates)
 
@@ -352,6 +458,7 @@ class AuthoritativeApplyPipeline:
             return update
 
         refined_entity_updates = dict(update.entity_updates)
+        transaction_trace = list(update.transaction_trace)
         
         # 2. Sort targets and contenders for determinism
         sorted_targets = sorted(proposals.keys())
@@ -389,8 +496,14 @@ class AuthoritativeApplyPipeline:
                     navigation=replace(ent_upd.navigation or NavigationUpdate(), 
                                       failure_reason="OCCUPANCY_CONFLICT")
                 )
+                transaction_trace.append(f"MOVE_FAIL: Entity {loser_id} - OCCUPANCY_CONFLICT")
                 
-        return replace(update, entity_updates=refined_entity_updates)
+                # Global rejection tracking (Phase E4.7)
+                rej_delta = dict(update.rejections_delta)
+                rej_delta["OCCUPANCY_CONFLICT"] = rej_delta.get("OCCUPANCY_CONFLICT", 0) + 1
+                update = replace(update, rejections_delta=rej_delta)
+                
+        return replace(update, entity_updates=refined_entity_updates, transaction_trace=transaction_trace)
 
     @staticmethod
     def _apply_near_death_hardening(state: AuthoritativeState, update: StateUpdate) -> StateUpdate:
@@ -452,9 +565,15 @@ class AuthoritativeApplyPipeline:
         corpses_remove = list(update.corpses_remove)
         resource_updates = dict(update.resource_updates)
         current_home_storage_upds = dict(update.home_storage_updates)
+        transaction_trace = list(update.transaction_trace)
+        accepted_transaction_ids = set(update.processed_transaction_ids)
         
-        # Phase 9 Fix: Use list(keys) to avoid "dictionary changed size during iteration"
-        for e_id in list(refined_entity_updates.keys()):
+        # P0.2 Refinement: Global source reservation map for the tick
+        source_reservations: Dict[tuple[str, str|int], int] = {}
+        
+        # Phase 9 Fix: Use sorted(list(keys)) to ensure deterministic resolution order.
+        # Milestone 13 Law: Conflict resolution must be deterministic (Lowest ID wins).
+        for e_id in sorted(list(refined_entity_updates.keys())):
             ent_upd = refined_entity_updates[e_id]
             if not ent_upd.resource_transfers:
                 continue
@@ -471,24 +590,26 @@ class AuthoritativeApplyPipeline:
             current_combat_upd = ent_upd.combat
             current_strat_upd = ent_upd.strategic
             current_interaction_upd = ent_upd.interaction
+            current_equip_upd = ent_upd.equipment
+            current_reward_upd = ent_upd.reward
             
             intent_results = []
             
             has_any_accepted = False
-            i = 0
-            while i < len(ent_upd.resource_transfers):
-                # Identify intent group (None group_id means single-intent independent group)
-                group_id = ent_upd.resource_transfers[i].group_id
-                group_intents = []
-                if group_id is None:
-                    group_intents = [ent_upd.resource_transfers[i]]
-                    j = i + 1
-                else:
-                    j = i
-                    while j < len(ent_upd.resource_transfers) and ent_upd.resource_transfers[j].group_id == group_id:
-                        group_intents.append(ent_upd.resource_transfers[j])
-                        j += 1
-                
+            
+            # P0.3 Refinement: Group intents by group_id using OrderedDict for stability
+            from collections import OrderedDict
+            intent_groups = OrderedDict()
+            for intent in ent_upd.resource_transfers:
+                gid = intent.group_id
+                if gid is None:
+                    # Single-intent independent group
+                    gid = f"IND_{intent.transaction_id or id(intent)}"
+                if gid not in intent_groups:
+                    intent_groups[gid] = []
+                intent_groups[gid].append(intent)
+
+            for group_id, group_intents in intent_groups.items():
                 # Checkpoint for potential rollback
                 cp_inv = current_inv_upd
                 cp_id = current_id_upd
@@ -497,17 +618,47 @@ class AuthoritativeApplyPipeline:
                 cp_combat = current_combat_upd
                 cp_strat = current_strat_upd
                 cp_home_stor = dict(current_home_storage_upds)
+                cp_equip = current_equip_upd
+                cp_reward = current_reward_upd
                 cp_node_upds = dict(refined_node_updates)
                 cp_ground_rem = list(ground_items_remove)
                 cp_corpse_rem = list(corpses_remove)
                 cp_quest_upd = refined_entity_updates[e_id].quest
                 
                 group_success = True
+                group_source_reservations = {}
                 for intent in group_intents:
+                    # Phase E5.3: In-tick Idempotency check
+                    if intent.transaction_id and intent.transaction_id in accepted_transaction_ids:
+                        from src.core.state import IntentResult
+                        intent_results.append(IntentResult(
+                            transaction_id=intent.transaction_id,
+                            accepted=False,
+                            reason="ALREADY_PROCESSED",
+                            source_kind=intent.source_kind,
+                            source_id=intent.source_id
+                        ))
+                        transaction_trace.append(f"TRANS_REJECT: Entity {e_id} {intent.transfer_kind} {intent.source_kind}:{intent.source_id} - ALREADY_PROCESSED (In-tick)")
+                        continue
+
                     pending_inv = InventoryService.apply_update(entity.inventory, current_inv_upd)
-                    print(f"[DEBUG] Processing intent: source_kind={intent.source_kind} transfer_kind={intent.transfer_kind}")
-                    result = ResourceTransactionResolver.resolve(state, entity, intent, inventory_override=pending_inv)
-                    print(f"[DEBUG] Intent result: accepted={result.accepted} reason={result.reason} identity_update={result.identity_update}")
+                    
+                    # Merge global and group reservations for validation
+                    temp_reservations = {**source_reservations}
+                    for k, v in group_source_reservations.items():
+                        temp_reservations[k] = temp_reservations.get(k, 0) + v
+
+                    result = ResourceTransactionResolver.resolve(
+                        state, entity, intent, 
+                        inventory_override=pending_inv,
+                        node_overrides=refined_node_updates,
+                        reservations=temp_reservations
+                    )
+                    
+                    if result.accepted:
+                        transaction_trace.append(f"TRANS_ACCEPT: Entity {e_id} {intent.transfer_kind} {intent.source_kind}:{intent.source_id}")
+                    else:
+                        transaction_trace.append(f"TRANS_FAIL: Entity {e_id} {intent.transfer_kind} {intent.source_kind}:{intent.source_id} - {result.reason}")
                     
                     from src.core.state import IntentResult
                     intent_results.append(IntentResult(
@@ -519,6 +670,18 @@ class AuthoritativeApplyPipeline:
                     ))
                     
                     if result.accepted:
+                        if intent.transaction_id:
+                            accepted_transaction_ids.add(intent.transaction_id)
+                        
+                        # P0.2 Refinement: Update local group reservations
+                        s_key = (intent.source_kind, intent.source_id)
+                        requested = 0
+                        if intent.source_kind == "NODE":
+                            requested = 1 # charges
+                        elif intent.source_kind in ("GROUND_ITEM", "CORPSE", "COMBAT", "QUEST"):
+                            requested = 1 # lock
+                        group_source_reservations[s_key] = group_source_reservations.get(s_key, 0) + requested
+
                         # Accumulate updates within the group
                         current_inv_upd = replace(current_inv_upd,
                             items_add=list(current_inv_upd.items_add) + (result.inventory_update.items_add if result.inventory_update else []),
@@ -550,15 +713,19 @@ class AuthoritativeApplyPipeline:
                              else:
                                   current_attr_upd = result.attributes_update
                                   
+                        if result.equipment_update:
+                             if current_equip_upd:
+                                  current_equip_upd = current_equip_upd.merge(result.equipment_update)
+                             else:
+                                  current_equip_upd = result.equipment_update
+                                   
                         if result.identity_update:
-                             print(f"[DEBUG] e_id={e_id} result.identity_update={result.identity_update}")
                              current_id_upd = replace(current_id_upd,
                                   recipes_learned=list(current_id_upd.recipes_learned) + list(result.identity_update.recipes_learned),
                                   evolution_points_delta=current_id_upd.evolution_points_delta + result.identity_update.evolution_points_delta,
                                   unspent_ap_delta=current_id_upd.unspent_ap_delta + result.identity_update.unspent_ap_delta
                              )
                                   
-                             print(f"[DEBUG] e_id={e_id} current_id_upd={current_id_upd}")
                         if result.combat_update:
                              if current_combat_upd:
                                   current_combat_upd = replace(current_combat_upd,
@@ -580,6 +747,15 @@ class AuthoritativeApplyPipeline:
                                   )
                              else:
                                   current_strat_upd = result.strategic_update
+                                  
+                        if result.reward_update:
+                             if current_reward_upd:
+                                  current_reward_upd = replace(current_reward_upd,
+                                       xp_gain=current_reward_upd.xp_gain + result.reward_update.xp_gain,
+                                       evolution_points_delta=current_reward_upd.evolution_points_delta + result.reward_update.evolution_points_delta
+                                  )
+                             else:
+                                  current_reward_upd = result.reward_update
                                   
                         if result.home_storage_update:
                              existing = current_home_storage_upds.get(e_id)
@@ -647,13 +823,43 @@ class AuthoritativeApplyPipeline:
                                     m_key = f"metric_total_{item.item_id}"
                                     resource_updates[m_key] = resource_updates.get(m_key, 0.0) - item.quantity
                     else:
+                        # Global rejection tracking (Phase E4.7)
+                        rej_delta = dict(update.rejections_delta)
+                        rej_key = result.reason if result.reason else "UNKNOWN_REJECTION"
+                        rej_delta[rej_key] = rej_delta.get(rej_key, 0) + 1
+                        update = replace(update, rejections_delta=rej_delta)
+                        
                         # If any intent in the group fails, and it's required, fail the group
                         if intent.is_group_required:
                             group_success = False
+                            
+                            # Phase E5: Update previously accepted intents in THIS group to REJECTED
+                            for prev_intent in group_intents:
+                                # Find its result in the list (it might be the current one or a previous one)
+                                for idx, res in enumerate(intent_results):
+                                    if res.transaction_id == prev_intent.transaction_id:
+                                        if res.accepted:
+                                            intent_results[idx] = replace(res, accepted=False, reason="GROUP_ROLLBACK")
+                            
+                            # Phase E5: Record remaining intents as SKIPPED
+                            remaining_index = group_intents.index(intent) + 1
+                            for skipped_intent in group_intents[remaining_index:]:
+                                from src.core.state import IntentResult
+                                intent_results.append(IntentResult(
+                                    transaction_id=skipped_intent.transaction_id,
+                                    accepted=False,
+                                    reason="SKIPPED_DUE_TO_GROUP_FAILURE",
+                                    source_kind=skipped_intent.source_kind,
+                                    source_id=skipped_intent.source_id
+                                ))
+                                transaction_trace.append(f"TRANS_SKIP: Entity {e_id} {skipped_intent.transfer_kind} {skipped_intent.source_kind}:{skipped_intent.source_id} - GROUP_FAILED")
                             break
                 
                 if group_success:
                     has_any_accepted = True
+                    # P0.2 Refinement: Commit group reservations to global tick reservations
+                    for k, v in group_source_reservations.items():
+                        source_reservations[k] = source_reservations.get(k, 0) + v
                 else:
                     # Rollback group changes
                     current_inv_upd = cp_inv
@@ -661,6 +867,8 @@ class AuthoritativeApplyPipeline:
                     current_bio_upd = cp_bio
                     current_attr_upd = cp_attr
                     current_combat_upd = cp_combat
+                    current_equip_upd = cp_equip
+                    current_reward_upd = cp_reward
                     current_strat_upd = cp_strat
                     current_home_storage_upds = cp_home_stor
                     refined_node_updates = cp_node_upds
@@ -680,7 +888,7 @@ class AuthoritativeApplyPipeline:
                                 del refined_node_updates[intent.source_id]
                             break
                 
-                i = j
+                # P0.3: No i = j needed with iterator loop
                 
             # Update entity and CLEAR intents
             if has_any_accepted:
@@ -690,13 +898,16 @@ class AuthoritativeApplyPipeline:
                     biological=current_bio_upd,
                     attributes=current_attr_upd,
                     combat=current_combat_upd,
+                    equipment=current_equip_upd,
                     strategic=current_strat_upd,
                     interaction=current_interaction_upd,
+                    reward=current_reward_upd,
                     resource_transfers=[],
                     intent_results=intent_results
                 )
             else:
                 refined_entity_updates[e_id] = replace(refined_entity_updates[e_id], 
+                    reward=current_reward_upd, # Preserve rewards even if other intents failed (e.g. QUEST reward vs failed TRADE)
                     interaction=current_interaction_upd if current_interaction_upd else refined_entity_updates[e_id].interaction,
                     resource_transfers=[],
                     intent_results=intent_results
@@ -706,8 +917,10 @@ class AuthoritativeApplyPipeline:
             update,
             entity_updates=refined_entity_updates,
             node_updates=refined_node_updates,
+            transaction_trace=transaction_trace,
             ground_items_remove=ground_items_remove,
             corpses_remove=corpses_remove,
             resource_updates=resource_updates,
-            home_storage_updates=current_home_storage_upds
+            home_storage_updates=current_home_storage_upds,
+            processed_transaction_ids=accepted_transaction_ids
         )

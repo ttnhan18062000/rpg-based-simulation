@@ -151,12 +151,14 @@ class ConcurrentExecutionAdapter:
                     
                     from src.core.enums import Domain
                     packet_id = f"{state.tick}:{i}"
+                    # Phase 2 Law: Use stateless get_int for order-independent seed derivation
+                    packet_seed = rng.get_int(Domain.DEFAULT, state.tick, item.owner_id, 0, 1000000)
                     packet = WorkerPacket(
                         packet_id=packet_id,
                         work_id=f"{state.tick}:{item.owner_id}:{item.work_kind}",
                         tick=state.tick,
                         world_time=state.world_time,
-                        seed=rng.next_int(Domain.DEFAULT, 0, 1000000), 
+                        seed=packet_seed,
                         work_class=item.work_class,
                         subject=subject_snapshot,
                         neighbor_view=frozen_neighbor_view,
@@ -166,7 +168,8 @@ class ConcurrentExecutionAdapter:
                         resource_nodes=deep_freeze(state.resource_nodes),
                         buildings=deep_freeze(state.buildings),
                         groups=deep_freeze(state.groups),
-                        town_center=state.town_center
+                        town_center=state.town_center,
+                        terrain=deep_freeze(state.terrain)
                     )
                     packets.append(packet)
                     source_meta[packet_id] = (item, packet)

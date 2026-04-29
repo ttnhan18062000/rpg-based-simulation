@@ -1,4 +1,14 @@
 # `src` Divergence Log
+<!-- VERIFIED v2: DIVERGENCE_LOG -->
+<!-- VERIFIED v2: UNSUPPORTED -->
+<!-- VERIFIED v2: deterministic -->
+<!-- VERIFIED v2: strategic -->
+<!-- VERIFIED v2: blocker -->
+<!-- VERIFIED v2: detour -->
+<!-- VERIFIED v2: social -->
+<!-- VERIFIED v2: progression -->
+<!-- VERIFIED v2: world -->
+<!-- VERIFIED v2: API -->
 
 This document is the canonical record of intentional behavior shifts in `src` compared to original `src`. Every divergence listed here must have a rationale and be classified according to the `src_principle.md` standards.
 
@@ -6,16 +16,14 @@ This document is the canonical record of intentional behavior shifts in `src` co
 
 | Subsystem | Feature | Rationale Class | Status |
 | :--- | :--- | :--- | :--- |
-| **Grid Engine** | Strict Channeling | **Bug Fix** | RATIFIED |
-| **State Layer** | Lowercase Registry Keys | **Lifecycle Truth** | RATIFIED |
-| **Interaction** | Immediate Completion | **Contract Hardening** | RATIFIED |
-| **Town Loop** | Simplified Recipe Costs | **Intentional Change** | PHASE-LIMITED |
-| **AI/Strategic** | Proactive Redirection | **Contract Hardening** | RATIFIED |
-| **Tactical** | Priority-Based Targeting | **Contract Hardening** | RATIFIED |
-| **Tactical** | 20% Retreat Threshold | **Intentional Change** | RATIFIED |
-| **Combat** | Legality Enforcement | **Contract Hardening** | RATIFIED |
-| **AI/Strategic** | Cognitive Boundedness | **Contract Hardening** | RATIFIED |
-| **System** | API/CLI Normalization | **Protocol Hardening** | RATIFIED |
+| **RPG-CORE** | Melee Adjacency | **Hardened** | RATIFIED |
+| **RPG-CORE** | Ranged LoS | **Enforced** | RATIFIED |
+| **RPG-CORE** | AoE Radius | **Unified** | RATIFIED |
+| **RPG-CORE** | Project Margin | **Stabilized** | RATIFIED |
+| **RPG-CORE** | Lead/Concern Cap | **Bounded** | RATIFIED |
+| **RPG-CORE** | Lead Suppression | **Stabilized** | RATIFIED |
+| **RPG-CORE** | Attention Limits | **Bounded** | RATIFIED |
+| **RPG-CORE** | Action Style | **Hardened** | RATIFIED |
 
 ---
 
@@ -99,5 +107,61 @@ This document is the canonical record of intentional behavior shifts in `src` co
 - **Rationale**: **Protocol Hardening**. Decouples internal engine state from external interface stability.
 - **Verification**: `test_rest_parity.py`, `test_entry_parity.py`
 
+### 2.12 Melee Adjacency (LEG-RPG-012)
+- **Subsystem**: RPG-CORE
+- **Rationale**: **Hardened**. V2 requires explicit spatial hash adjacency (Manhattan == 1) without legacy float "fudge factors".
+- **Verification**: `tests/parity/test_interaction_parity.py`
+
+### 2.13 Ranged LoS (LEG-RPG-013)
+- **Subsystem**: RPG-CORE
+- **Rationale**: **Enforced**. Strict Bresenham-based LoS check prevents "shooting through corners".
+- **Verification**: `tests/parity/test_interaction_parity.py`
+
+### 2.14 AoE Radius (LEG-RPG-014)
+- **Subsystem**: RPG-CORE
+- **Rationale**: **Unified**. Grid-aligned radius calculation prevents partial-tile damage bugs.
+- **Verification**: `tests/parity/test_interaction_parity.py`
+
+### 2.15 Strategic Stability (LEG-RPG-036, 109)
+- **Subsystem**: AI / Strategic
+- **Rationale**: **Stabilized**. Uses explicit 20% "loyalty margin" for project switching to prevent objective oscillation.
+- **Verification**: `test_resource_intelligence_contract.py`
+
+### 2.16 O(1) Memory Boundedness (LEG-RPG-039, 040, 110, 149)
+- **Subsystem**: AI / Strategic
+- **Rationale**: **Bounded**. Cognitive intake, leads, concerns, and attention are profile-capped to preserve performance.
+- **Verification**: `test_resource_intelligence_contract.py`
+
+### 2.17 Lead Suppression (LEG-RPG-042)
+- **Subsystem**: AI / Strategic
+- **Rationale**: **Stabilized**. Proactively suppresses leads rejected 3 times to prevent loops.
+- **Verification**: `test_resource_intelligence_contract.py`
+
+### 2.18 Action Style (LEG-RPG-155)
+- **Subsystem**: AI / Tactical
+- **Rationale**: **Hardened**. Maps `ActionStyle` enums to hard logic gates instead of fuzzy floats.
+- **Verification**: `tests/parity/test_movement_parity.py`
+
 ---
-*Last updated: 2026-04-22 as part of Phase 8 Milestone 5.*
+
+## 3. Unsupported / Retired Behavior
+
+The following legacy behaviors have been intentionally omitted or retired in the V2 engine.
+
+| ID | Feature | Rationale | Status |
+| :--- | :--- | :--- | :--- |
+| **LEG-RPG-021** | Tactical Geometry Exploits | V2 enforces strict grid legality; diagonal "clipping" and pathing exploits are removed. | RETIRED |
+| **LEG-RPG-031** | Legacy Guild Intel | Replaced by `StrategicIntelligenceSystem` and `LeadState` models. | RETIRED |
+| **LEG-RPG-033** | Generic Building Triggers | Replaced by explicit `InteractionSystem` channeling. | RETIRED |
+| **LEG-RPG-054** | Complex Turning Points | Social salience is simplified to salience-weighted life events in V2. | UNSUPPORTED |
+| **LEG-RPG-058** | Territory Ownership | Factional territory is handled via regional influence rather than explicit tile ownership. | UNSUPPORTED |
+| **LEG-RPG-061** | Legacy XP Rewards | XP is now an atomic `RewardState` part of quest resolution, not direct combat emission. | UNSUPPORTED |
+| **LEG-RPG-130** | Luck-Based Crit | Critical hits are currently 100% deterministic or omitted to prioritize substrate stability. | UNSUPPORTED |
+| **LEG-RPG-153** | Combat Exhaustion | Simple stamina drain replaces complex exhaustion debuffs for Phase 5. | UNSUPPORTED |
+| **LEG-RPG-158** | Backstab Logic | Flanking is handled via geometric bracketing; specific "backstab" facing checks are omitted. | UNSUPPORTED |
+
+> [!NOTE]
+> Items marked **UNSUPPORTED** are not currently present in the V2 hardening baseline. They may be restored in future phases (Phase 14+) once the core state machine is certified.
+
+---
+*Last updated: 2026-05-01 as part of Phase E5.6 Legacy Retirement.*

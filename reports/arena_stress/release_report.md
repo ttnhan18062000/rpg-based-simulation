@@ -1,7 +1,7 @@
 # Consolidated Certification Report
 
-**Last Run ID**: `b794ee67-168c-404b-8e6b-e974934e79ca`
-**Commit SHA**: `6353b6f3cf21673cd7f7232dcf2d766c86692c1d`
+**Last Run ID**: `6055b0ab-21b9-4da3-b01e-4813e4965246`
+**Commit SHA**: `24ca4b4ef067795006e9c32c563f1b13071f3b33`
 
 ## Scenario Summary
 
@@ -14,7 +14,7 @@
 ## Latest Run Detail
 
 # Certification Report: COMBAT_ARENA_STRESS_50V50
-**Commit SHA**: `6353b6f3cf21673cd7f7232dcf2d766c86692c1d`
+**Commit SHA**: `24ca4b4ef067795006e9c32c563f1b13071f3b33`
 **Status**: ✅ **PASS**
 **Allowed Failure Observed**: `False`
 
@@ -23,22 +23,22 @@
 - **Hardware Class**: `CLASS_B`
 - **Scenario**: `COMBAT_ARENA_STRESS_50V50`
 - **Seed**: `42`
-- **Peak RAM (RSS)**: `75.4 MB`
-- **Total CPU Time**: `1.511 sec`
+- **Peak RAM (RSS)**: `76.3 MB`
+- **Total CPU Time**: `2.229 sec`
 
 ## 2. Resource Conformance Evidence
 | Tick | Mode | RAM (MB) | Compute (ms) | Worker % | Queue % |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| 1 | NORMAL | 69.6 | 12.6 | 0.00 | 0.00 |
-| 2 | NORMAL | 69.6 | 5.6 | 0.00 | 0.00 |
-| 3 | NORMAL | 69.6 | 7.4 | 0.00 | 0.00 |
-| 26 | NORMAL | 73.5 | 7.9 | 0.00 | 0.00 |
-| 27 | NORMAL | 73.5 | 8.4 | 0.00 | 0.00 |
-| 28 | NORMAL | 73.5 | 7.8 | 0.00 | 0.00 |
-| 47 | NORMAL | 74.5 | 7.5 | 0.00 | 0.00 |
-| 48 | NORMAL | 74.5 | 9.1 | 0.00 | 0.00 |
-| 49 | NORMAL | 74.5 | 10.8 | 0.00 | 0.00 |
-| 50 | NORMAL | 75.4 | 9.7 | 0.00 | 0.00 |
+| 1 | NORMAL | 70.1 | 14.2 | 0.00 | 0.00 |
+| 2 | NORMAL | 70.1 | 13.9 | 0.00 | 0.00 |
+| 3 | NORMAL | 70.1 | 9.4 | 0.00 | 0.00 |
+| 26 | DEGRADED | 74.2 | 13.0 | 0.00 | 0.00 |
+| 27 | CONSTRAINED | 74.2 | 16.7 | 0.00 | 0.00 |
+| 28 | CONSTRAINED | 74.2 | 13.9 | 0.00 | 0.00 |
+| 47 | DEGRADED | 75.2 | 10.2 | 0.00 | 0.00 |
+| 48 | DEGRADED | 75.2 | 14.1 | 0.00 | 0.00 |
+| 49 | DEGRADED | 75.2 | 12.3 | 0.00 | 0.00 |
+| 50 | DEGRADED | 76.3 | 11.5 | 0.00 | 0.00 |
 | ... | ... | ... | ... | ... | ... |
 
 ## 3. Semantic Integrity Proof (Milestone D Law)

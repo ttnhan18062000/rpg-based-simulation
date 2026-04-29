@@ -6,8 +6,9 @@ Covers:
 - Part 1 §Social: Turning points feed future behavior
 """
 import pytest
-from src.systems.social import TurningPoint
+from src.core.strategic import TurningPointState as TurningPoint
 from src.systems.narrative import NarrativeMemory, NarrativeMemorySystem
+from src.core.strategic import TurningPointState
 
 
 class TestTurningPointPersistence:

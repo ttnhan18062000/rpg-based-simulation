@@ -24,6 +24,9 @@ class ScoreModifierSystem:
         life_stage_mults = LifeStageService.get_goal_multipliers(entity.identity.life_stage)
         boredom = entity.strategic.boredom
         
+        from src.systems.learning import StrategicLearningService
+        tp_biases = StrategicLearningService.get_goal_biases(entity.strategic.turning_points)
+        
         for score in scores:
             utility = score.utility
             
@@ -41,7 +44,11 @@ class ScoreModifierSystem:
             boredom_score = boredom.get(score.kind, 0.0)
             utility -= (boredom_score * 0.5)
             
-            # 4. Blocker Suppression (Phase 6)
+            # 4. Strategic Learning Bias: utility + tp_bias
+            tp_bias = tp_biases.get(score.kind, 0.0)
+            utility += tp_bias
+            
+            # 5. Blocker Suppression (Phase 6)
             # If any blocker exists for this goal kind, apply heavy penalty
             for blocker in entity.strategic.blockers.values():
                  if not blocker.resolved and blocker.subject == score.kind:

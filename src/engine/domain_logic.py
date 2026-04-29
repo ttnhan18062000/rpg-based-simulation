@@ -142,11 +142,15 @@ class SimulationDomainLogic:
         neighbor_view: List[tuple[int, EntityState]] = None,
         context: Any = None
     ) -> Dict[int, EntityUpdate]:
-        """Standard action cost and routine logic."""
+        """
+        Standard action cost and routine logic.
+        VERIFIED v2: SimulationDomainLogic.execute_action
+        """
         action = payload.get("action") if payload else None
         from src.core.updates import (
             BiologicalUpdate, CombatUpdate, RewardUpdate, LifecycleUpdate,
-            NavigationUpdate, EntityUpdate
+            NavigationUpdate, EntityUpdate, IdentityUpdate, ResourceTransferIntent,
+            StaminaUpdate
         )
         
         # 0. Readiness Check
@@ -201,16 +205,23 @@ class SimulationDomainLogic:
                 from src.core.updates import NavigationUpdate
                 return {entity.id: EntityUpdate(entity_id=entity.id, navigation=NavigationUpdate(failure_reason="TARGET_NOT_FOUND"))}
             
-            from src.systems.social import SocialAppraisalSystem
+            from src.social.appraisal import SocialAppraisalSystem
             from src.core.strategic import ContractState, ContractKind, ContractStatus
             from src.core.updates import InventoryUpdate, StrategicUpdate
             
-            # Evaluate offer
-            success = SocialAppraisalSystem.evaluate_recruitment_offer(
-                target, entity.id, payout=payout, risk=0.1
+            # Evaluate offer using consolidated appraisal logic
+            temp_contract = ContractState(
+                id="temp_eval",
+                kind=ContractKind.RECRUITMENT,
+                source_id=entity.id,
+                target_id=target.id,
+                terms={"daily_pay": payout, "risk_level": "NORMAL"},
+                status=ContractStatus.OFFERED,
+                created_tick=current_tick
             )
+            status, reason, _ = SocialAppraisalSystem.appraise_contract(target, temp_contract, context)
             
-            if success:
+            if status == ContractStatus.ACCEPTED:
                 contract_id = f"contract_recruit_{entity.id}_{target_id}_{current_tick}"
                 contract = ContractState(
                     id=contract_id,
@@ -312,6 +323,35 @@ class SimulationDomainLogic:
                 readiness_delta=-100.0,
                 resource_transfers=[intent]
             )}
+        elif action == "REPAIR":
+            # Repair all equipped items (Phase 8)
+            total_cost = 0
+            repair_deltas = {}
+            for slot, dur in entity.equipment.durability.items():
+                if dur < 100.0:
+                    cost = int((100.0 - dur) * 0.5) # 0.5 gold per 1 durability point
+                    total_cost += cost
+                    repair_deltas[slot] = 100.0 # Set to max
+            
+            if not repair_deltas:
+                # Nothing to repair
+                return {entity.id: EntityUpdate(entity_id=entity.id, readiness_delta=-10.0)}
+                
+            from src.core.updates import ResourceTransferIntent, EquipmentUpdate
+            intent = ResourceTransferIntent(
+                source_id="BLACKSMITH",
+                source_kind="TOWN_SERVICE",
+                gold_delta=-total_cost,
+                gold_cost=total_cost,
+                transfer_kind="REPAIR",
+                equipment_upd=EquipmentUpdate(durability_set=repair_deltas)
+            )
+            
+            return {entity.id: EntityUpdate(
+                entity_id=entity.id,
+                readiness_delta=-100.0,
+                resource_transfers=[intent]
+            )}
         elif action == "INTERACT":
             from src.core.updates import InteractionUpdate
             target_id = payload.get("target_id")
@@ -345,13 +385,8 @@ class SimulationDomainLogic:
                 attacker_up = EntityUpdate(
                     entity_id=entity.id,
                     readiness_delta=-100.0,
-                    resource_transfers=[ResourceTransferIntent(
-                        source_id=target.id,
-                        source_kind="COMBAT",
-                        gold_delta=combat_up.gold_gain,
-                        xp_reward=combat_up.xp_gain,
-                        transfer_kind="REWARD"
-                    )]
+                    equipment=combat_up.attacker_equipment_upd,
+                    resource_transfers=combat_up.resource_transfers
                 )
                 
                 # Check HUNT quests if target was killed
@@ -363,8 +398,7 @@ class SimulationDomainLogic:
 
                 
                 # Defender Update: Damage + Mortality
-                # Note: We strip the rewards from the defender's update
-                defender_combat_up = replace(combat_up, xp_gain=0, gold_gain=0)
+                defender_combat_up = combat_up
                 
                 # Phase 7: Betrayal Check
                 from src.core.updates import StrategicUpdate, SocialUpdate
@@ -373,9 +407,9 @@ class SimulationDomainLogic:
                 group_dissolve_upd = None
                 
                 if entity.group_id is not None and entity.group_id == target.group_id:
-                    from src.systems.social import SocialAppraisalSystem
+                    from src.social.appraisal import SocialAppraisalSystem
                     s_up, st_up = SocialAppraisalSystem.process_betrayal(
-                        target, entity.id, salience=0.8, current_tick=current_tick
+                        target, entity.id, salience=0.8, current_tick=state.tick
                     )
                     # Merge s_up with social_up
                     social_up = replace(s_up, grudge_delta=social_up.grudge_delta)
@@ -385,6 +419,7 @@ class SimulationDomainLogic:
                 defender_up = EntityUpdate(
                     entity_id=target.id,
                     combat=defender_combat_up,
+                    wound_update=defender_combat_up.wound_update,
                     social=social_up,
                     strategic=strat_up if strat_up.directives_add_or_update else None,
                     group_id_set=group_dissolve_upd,
@@ -395,11 +430,134 @@ class SimulationDomainLogic:
                     ) if (combat_up.generation_delta != 0 or combat_up.is_permadeath_set is not None) else None
                 )
                 
-                # Attacker also leaves group on betrayal
-                if group_dissolve_upd is not None:
-                    attacker_up = replace(attacker_up, group_id_set=group_dissolve_upd)
+                # Stamina drain on attack (Checklist Part 6 Section E)
+                from src.core.updates import StaminaUpdate
+                stamina_cost = 5.0 # Standard attack cost
+                attacker_up = replace(attacker_up, stamina_update=StaminaUpdate(current_delta=-stamina_cost))
                 
                 return {entity.id: attacker_up, target.id: defender_up}
+        elif action == "SKILL":
+            from src.core.skills import SKILL_REGISTRY
+            from src.engine.rpg_depth import StaminaService, SkillScalingService
+            from src.engine.combat import CombatResolutionSystem
+            
+            skill_id = payload.get("skill_id")
+            target_id = payload.get("target_id")
+            skill = SKILL_REGISTRY.get(skill_id)
+            
+            # 1. Skill Exists and Known?
+            if not skill or skill_id not in entity.identity.learned_skills:
+                 return {entity.id: EntityUpdate(entity_id=entity.id, readiness_delta=-10.0)}
+            
+            # 2. Cooldown?
+            current_tick = getattr(context, "tick", 0) if context else 0
+            if current_tick < entity.identity.cooldowns.get(skill_id, 0):
+                 return {entity.id: EntityUpdate(entity_id=entity.id, readiness_delta=-10.0)}
+            
+            # 3. Stamina?
+            if not StaminaService.can_use_skill(entity.stamina, skill.cost):
+                 return {entity.id: EntityUpdate(entity_id=entity.id, readiness_delta=-10.0)}
+                 
+            # 4. Target?
+            target = None
+            if neighbor_view:
+                for eid, ent in neighbor_view:
+                    if eid == target_id:
+                        target = ent
+                        break
+            if not target and context and hasattr(context, "entities"):
+                target = context.entities.get(target_id)
+            
+            if not target or not target.combat.alive:
+                 return {entity.id: EntityUpdate(entity_id=entity.id, readiness_delta=-10.0)}
+
+            # 5. Resolve
+            skill_dmg = SkillScalingService.calculate_skill_damage(
+                skill.power, skill.category.name, entity.attributes, base_atk=entity.combat.atk
+            )
+            
+            combat_up = CombatResolutionSystem.resolve_skill_usage(
+                entity, target, context, skill_dmg
+            )
+            
+            if combat_up.outcome_kind == "REJECTED":
+                return {entity.id: EntityUpdate(entity_id=entity.id, readiness_delta=-10.0)}
+            
+            # 6. Apply Side Effects
+            next_ready_tick = current_tick + skill.cooldown
+            stamina_cost = StaminaService.drain_skill(entity.stamina, skill.cost)
+            
+            attacker_up = EntityUpdate(
+                entity_id=entity.id,
+                readiness_delta=-100.0,
+                identity=IdentityUpdate(cooldown_updates={skill_id: next_ready_tick}),
+                stamina_update=StaminaUpdate(current_delta=-stamina_cost),
+                equipment=combat_up.attacker_equipment_upd,
+                resource_transfers=combat_up.resource_transfers
+            )
+            
+            defender_up = EntityUpdate(
+                entity_id=target.id,
+                combat=combat_up,
+                wound_update=combat_up.wound_update,
+                equipment=combat_up.equipment_upd,
+                lifecycle=LifecycleUpdate(
+                    generation_delta=combat_up.generation_delta,
+                    is_permadeath_set=combat_up.is_permadeath_set
+                ) if (combat_up.generation_delta != 0 or combat_up.is_permadeath_set is not None) else None
+            )
+            
+            return {entity.id: attacker_up, target.id: defender_up}
+        elif action == "AOE_ATTACK":
+            from src.engine.combat import CombatResolutionSystem
+            target_pos = payload.get("target_pos")
+            radius = payload.get("radius", 1)
+            
+            # Identify primary target (if any) at that position
+            defender = None
+            for eid, ent in context.entities.items():
+                if ent.position == target_pos and ent.combat.alive:
+                    defender = ent
+                    break
+            
+            # resolve_aoe_attack returns Dict[int, CombatUpdate] for all affected entities
+            combat_updates = CombatResolutionSystem.resolve_aoe_attack(
+                entity, target_pos, radius, context, defender=defender
+            )
+            
+            attacker_combat = combat_updates.get(entity.id)
+            if attacker_combat and attacker_combat.outcome_kind == "REJECTED":
+                return {entity.id: EntityUpdate(entity_id=entity.id, readiness_delta=-10.0)}
+            
+            updates = {}
+            for eid, c_up in combat_updates.items():
+                if eid == entity.id:
+                    # Attacker Update: Readiness + Rewards
+                    updates[eid] = EntityUpdate(
+                        entity_id=eid,
+                        readiness_delta=-100.0,
+                        combat=c_up, # Holds simultaneous_intents
+                        resource_transfers=c_up.resource_transfers
+                    )
+                else:
+                    # Victim Update: Damage + Mortality + Durability
+                    updates[eid] = EntityUpdate(
+                        entity_id=eid,
+                        combat=c_up,
+                        wound_update=c_up.wound_update,
+                        equipment=c_up.equipment_upd,
+                        lifecycle=LifecycleUpdate(
+                            generation_delta=c_up.generation_delta,
+                            is_permadeath_set=c_up.is_permadeath_set
+                        ) if (c_up.generation_delta != 0 or c_up.is_permadeath_set is not None) else None
+                    )
+            
+            # Stamina drain on AOE attack
+            from src.core.updates import StaminaUpdate
+            stamina_cost = 10.0 # AOE cost
+            updates[entity.id] = replace(updates[entity.id], stamina_update=StaminaUpdate(current_delta=-stamina_cost))
+            
+            return updates
 
         return {entity.id: EntityUpdate(
             entity_id=entity.id,

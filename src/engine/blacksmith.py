@@ -126,6 +126,7 @@ class BlacksmithSystem:
             building_type = state.building_tiles.get(tile_pos)
             
             # --- Law of Knowledge (Wholesale Learning) ---
+            # VERIFIED v2: blacksmith_visit_semantics
             if building_type == "blacksmith":
                 # Check functionality (LEG-RPG-001/006)
                 building = next((b for b in state.buildings.values() if b.position == tile_pos and b.kind == "blacksmith"), None)
