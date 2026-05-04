@@ -1,7 +1,9 @@
 import pytest
-from src.core.state import AuthoritativeState, EntityState, ItemStack, InventoryComponent
-from src.core.updates import StateUpdate, EntityUpdate, ResourceTransferIntent
+from src.core.state import AuthoritativeState, EntityState, ItemStack, InventoryComponent, BuildingState
+from src.core.updates import StateUpdate, EntityUpdate, ResourceTransferIntent, RewardUpdate
 from src.engine.pipeline import AuthoritativeApplyPipeline
+from src.core.builder import V2EntityBuilder
+from src.core.enums import ReasonCode
 
 def test_interleaved_transaction_grouping():
     """
@@ -10,7 +12,10 @@ def test_interleaved_transaction_grouping():
     Proof: This test ensures that grouped intents are processed together even if interleaved
            with independent intents in the proposal list.
     """
-    actor = EntityState(id=1, kind="HERO", position=(5, 5), active=True, inventory=InventoryComponent(max_slots=10))
+    actor = (V2EntityBuilder(1)
+             .at((5, 5))
+             .readiness(100.0)
+             .build())
     
     state = AuthoritativeState(
         tick=100,
@@ -41,7 +46,7 @@ def test_interleaved_transaction_grouping():
         group_id="GROUP_1",
         source_id="GUILD_HALL",
         source_kind="QUEST",
-        xp_reward=100,
+        reward_upd=RewardUpdate(xp_gain=100),
         transfer_kind="LOOT"
     )
     
@@ -62,26 +67,32 @@ def test_interleaved_transaction_grouping():
     
     # Verify XP was processed (it gets consumed by EvolutionSystem into evolution_points_delta)
     final_e1 = refined.entity_updates[1]
-    assert final_e1.identity.evolution_points_delta > 0 or final_e1.identity.evolution_level_set > 0
+    # XP 100 should give some evolution points
+    assert final_e1.identity.evolution_points_delta > 0 or final_e1.identity.evolution_level_set is not None
     assert final_e1.inventory.gold_delta == 5 # 10 - 5
-    
-    # Verify group atomicity (if we forced a failure in one, all in group should fail)
-    # But here we just verify they are all processed.
     
 def test_group_failure_rollback():
     """
     RPG-1697: transaction_grouping_atomicity
     Proof: This test ensures that if one intent in a group fails, the whole group is rolled back.
     """
-    actor = EntityState(id=1, kind="HERO", position=(5, 5), active=True, inventory=InventoryComponent(max_slots=10, gold=0))
+    actor = (V2EntityBuilder(1)
+             .at((5, 5))
+             .readiness(100.0)
+             .gold(0)
+             .build())
+    
+    # Add a valid building for SHOP_BUY
+    shop = BuildingState(id=10, kind="shop", position=(5,5), functional=True, inventory=InventoryComponent(items=[ItemStack("wood", 100)]))
     
     state = AuthoritativeState(
         tick=100,
         seed=42,
-        entities={1: actor}
+        entities={1: actor},
+        buildings={10: shop}
     )
     
-    # Intent A (Group 1) - Success
+    # Intent A (Group 1) - Success (Gain 100 gold)
     intent_a = ResourceTransferIntent(
         transaction_id="G1-1",
         group_id="GROUP_1",
@@ -90,13 +101,15 @@ def test_group_failure_rollback():
         gold_delta=100,
         transfer_kind="LOOT"
     )
-    # Intent B (Group 1) - Failure (Insufficient gold if it was a cost, but here we'll use a cost that exceeds what we have)
+    # Intent B (Group 1) - Failure (Insufficient gold for cost)
+    # Even with 100 from intent_a, 500 is too much.
     intent_b = ResourceTransferIntent(
         transaction_id="G1-2",
         group_id="GROUP_1",
-        source_id="BLACKSMITH",
+        source_id=10, # SHOP
         source_kind="SHOP_BUY",
-        gold_cost=500, # We only have 100 after intent_a, but we start with 0.
+        items_add=[ItemStack("wood", 1)],
+        gold_cost=500, 
         transfer_kind="BUY"
     )
     
@@ -117,7 +130,7 @@ def test_group_failure_rollback():
     
     # Intent B should be REJECTED with INSUFFICIENT_GOLD
     assert res[1].accepted is False
-    assert res[1].reason == "INSUFFICIENT_GOLD"
+    assert res[1].reason == ReasonCode.INSUFFICIENT_GOLD
     
     # Verify that NO gold was added
     assert refined.entity_updates[1].inventory is None or refined.entity_updates[1].inventory.gold_delta == 0

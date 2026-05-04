@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING, Tuple, Optional, Any, List
 
 if TYPE_CHECKING:
     from src.core.state import AuthoritativeState, EntityState, RegionState
+from src.core.enums import ReasonCode
 
 class LegalityServiceV2:
     """ Authoritative simulation laws for V2. """
@@ -33,7 +34,7 @@ class LegalityServiceV2:
         pos: Tuple[float, float], 
         state_or_context: Any, 
         ignore_entity_id: Optional[int] = None
-    ) -> Tuple[bool, str]:
+    ) -> Tuple[bool, ReasonCode]:
         """
         V2 Authoritative Occupancy Rule:
         Enforces Static Terrain (WALL), Buildings, and Dynamic Entities.
@@ -42,25 +43,25 @@ class LegalityServiceV2:
         target_grid_pos = (int(pos[0]), int(pos[1]))
         
         # 1. Static Terrain (WALL / blocked_tiles)
-        terrain = getattr(state_or_context, 'terrain', {})
-        if terrain.get(target_grid_pos) == "WALL":
-            return False, "PATH_NOT_FOUND"
+        terrain_map = getattr(state_or_context, 'terrain', {})
+        if terrain_map.get(target_grid_pos) == "WALL":
+            return False, ReasonCode.TARGET_INVALID
             
         blocked_tiles = getattr(state_or_context, 'blocked_tiles', set())
         if target_grid_pos in blocked_tiles:
-            return False, "PATH_NOT_FOUND"
+            return False, ReasonCode.TARGET_INVALID
 
         # 2. Buildings (Solid structures)
         buildings = getattr(state_or_context, 'buildings', {})
         if buildings:
             for b in buildings.values():
                 if (int(b.position[0]), int(b.position[1])) == target_grid_pos:
-                    return False, "BUILDING_OBSTRUCTION"
+                    return False, ReasonCode.TARGET_INVALID
 
         # 3. Dynamic Claims (Position claimed this tick)
         claims = getattr(state_or_context, 'transient_claims', [])
         if target_grid_pos in claims:
-            return False, "OCCUPANCY_VIOLATION"
+            return False, ReasonCode.IDEMPOTENCY_VIOLATION
 
         # 4. Dynamic Entities
         entities = getattr(state_or_context, 'entities', None)
@@ -70,48 +71,82 @@ class LegalityServiceV2:
                 if eid == ignore_entity_id: continue
                 if not entity.active: continue
                 if (int(entity.position[0]), int(entity.position[1])) == target_grid_pos:
-                    return False, "OCCUPANCY_VIOLATION"
+                    return False, ReasonCode.OCCUPANCY_VIOLATION
         else:
             for eid, entity in entities.items():
                 if eid == ignore_entity_id: continue
                 if not entity.active: continue
                 if (int(entity.position[0]), int(entity.position[1])) == target_grid_pos:
-                    return False, "OCCUPANCY_VIOLATION"
+                    return False, ReasonCode.OCCUPANCY_VIOLATION
 
-        return True, "ADVANCING"
+        return True, ReasonCode.UNKNOWN # Placeholder for success
 
     @staticmethod
     def verify_action_legality(
         actor: EntityState,
         action_kind: str,
         state: AuthoritativeState
-    ) -> Tuple[bool, str]:
+    ) -> Tuple[bool, ReasonCode]:
         """
         Checks if the current region suppresses specific actions and enforces actor validity.
         """
         # 1. Actor Validity (Hardening)
         # VERIFIED v2: actor_validity_enforcement
         if not actor.active or not actor.combat.alive:
-            return False, "ATTACKER_INCAPACITATED"
+            return False, ReasonCode.TARGET_INVALID
             
         if actor.properties.get("status_frozen") or actor.properties.get("status_stunned"):
-            return False, "ATTACKER_STATUS_BLOCKED"
+            return False, ReasonCode.ATTACKER_STATUS_BLOCKED
 
-        # 2. Regional Suppression
+        # 2. Readiness (Law: Every ENTITY_ACT requires 100.0 readiness)
+        if actor.readiness < 100.0:
+            return False, ReasonCode.INSUFFICIENT_READINESS
+
+        # 3. Regional Suppression
         region = LegalityServiceV2.get_region_for_position(actor.position, state)
         if region and region.suppression_active:
             if action_kind in ["SABOTAGE", "RECRUIT", "THEFT"]:
-                 return False, "REGIONAL_SUPPRESSION"
-        return True, "LEGAL"
+                 return False, ReasonCode.REGIONAL_SUPPRESSION
+        return True, ReasonCode.UNKNOWN
         
     @staticmethod
-    def verify_readiness(entity: EntityState) -> Tuple[bool, str]:
+    def verify_readiness(entity: EntityState) -> Tuple[bool, ReasonCode]:
         """
         Action Readiness Law: Every ENTITY_ACT requires 100.0 readiness.
         """
         if entity.readiness < 100.0:
-            return False, "INSUFFICIENT_READINESS"
-        return True, "READY"
+            return False, ReasonCode.INSUFFICIENT_READINESS
+        return True, ReasonCode.UNKNOWN
+
+    @staticmethod
+    def verify_movement_legality(
+        entity: EntityState,
+        target_pos: Tuple[float, float],
+        state_or_context: Any,
+        move_speed_mult: float = 1.0
+    ) -> Tuple[bool, ReasonCode]:
+        """
+        V2 Authoritative Movement Law:
+        Validates if entity has enough readiness for the specific terrain cost of the target tile.
+        VERIFIED v2: movement_readiness_gating
+        """
+        # 1. Occupancy Check
+        ok, reason = LegalityServiceV2.verify_occupancy(target_pos, state_or_context, ignore_entity_id=entity.id)
+        if not ok:
+            return False, reason
+
+        # 2. Terrain Cost Check
+        from src.engine.rpg_depth import TerrainCostService
+        tile = (int(target_pos[0]), int(target_pos[1]))
+        terrain_cost = TerrainCostService.get_tile_cost(tile, state_or_context)
+        
+        # Combined cost
+        readiness_cost = (entity.combat.move_cost * terrain_cost) / max(0.1, move_speed_mult)
+        
+        if entity.readiness < readiness_cost:
+            return False, ReasonCode.ACTION_EXHAUSTION
+            
+        return True, ReasonCode.UNKNOWN
 
     # VERIFIED v2: melee_engagement_rules
     @staticmethod
@@ -120,29 +155,29 @@ class LegalityServiceV2:
         target: EntityState,
         state_or_context: Any,
         is_opportunity_attack: bool = False
-    ) -> Tuple[bool, str]:
+    ) -> Tuple[bool, ReasonCode]:
         """
         Authoritative validation for a combat interaction.
         """
         # 1. State Validity
         if not attacker.active or not attacker.combat.alive:
-            return False, "ATTACKER_INCAPACITATED"
+            return False, ReasonCode.ATTACKER_INCAPACITATED
         if not target.active or not target.combat.alive:
-            return False, "TARGET_INCAPACITATED"
+            return False, ReasonCode.TARGET_INCAPACITATED
         if attacker.id == target.id:
-            return False, "SELF_ATTACK_ILLEGAL"
+            return False, ReasonCode.SELF_ATTACK_ILLEGAL
 
         # 2. Readiness / Status Law
         # Opportunity Attacks bypass readiness (Milestone 8 P0)
         if not is_opportunity_attack and attacker.readiness < 100.0:
-            return False, "INSUFFICIENT_READINESS"
+            return False, ReasonCode.INSUFFICIENT_READINESS
         
         if attacker.properties.get("status_frozen") or attacker.properties.get("status_stunned"):
-            return False, "ATTACKER_STATUS_BLOCKED"
+            return False, ReasonCode.ATTACKER_STATUS_BLOCKED
 
         # 3. Faction Validity (Friendly Fire Law)
         if attacker.identity.faction == target.identity.faction:
-            return False, "FRIENDLY_FIRE_ILLEGAL"
+            return False, ReasonCode.FRIENDLY_FIRE_ILLEGAL
 
         # 4. Range Validity
         dist = LegalityServiceV2.get_manhattan_dist(attacker.position, target.position)
@@ -159,54 +194,54 @@ class LegalityServiceV2:
         
         # VERIFIED v2: ranged_legality_matrix
         if dist > effective_range:
-            return False, "OUT_OF_RANGE"
+            return False, ReasonCode.OUT_OF_RANGE
             
         # Specific Melee Law: Range must be 1
         if effective_range <= 1.5 and dist > 1:
-             return False, "MELEE_RANGE_VIOLATION"
+             return False, ReasonCode.OUT_OF_RANGE
 
 
         # 5. LoS / Obstruction
         if not LegalityServiceV2.has_line_of_sight(attacker.position, target.position, state_or_context):
-            return False, "LOS_OBSTRUCTED"
+            return False, ReasonCode.LOS_OBSTRUCTED
             
-        return True, "LEGAL"
+        return True, ReasonCode.UNKNOWN
 
     @staticmethod
     def verify_aoe_legality(
         attacker: EntityState,
         target_pos: Tuple[float, float],
         state_or_context: Any
-    ) -> Tuple[bool, str]:
+    ) -> Tuple[bool, ReasonCode]:
         """
         Validation for Area-of-Effect positioning and execution.
         """
         # VERIFIED v2: aoe_radius_legality
         # 1. Attacker Validity
         if not attacker.active or not attacker.combat.alive:
-            return False, "ATTACKER_INCAPACITATED"
+            return False, ReasonCode.ATTACKER_INCAPACITATED
         if attacker.readiness < 100.0:
-            return False, "INSUFFICIENT_READINESS"
+            return False, ReasonCode.INSUFFICIENT_READINESS
         if attacker.properties.get("status_frozen") or attacker.properties.get("status_stunned"):
-            return False, "ATTACKER_STATUS_BLOCKED"
+            return False, ReasonCode.ATTACKER_STATUS_BLOCKED
 
         # 2. Range Validity
         dist = LegalityServiceV2.get_manhattan_dist(attacker.position, target_pos)
         if dist > attacker.combat.range:
-            return False, "OUT_OF_RANGE"
+            return False, ReasonCode.OUT_OF_RANGE
 
         # 3. LoS / Obstruction (Check path to center of AoE)
         if not LegalityServiceV2.has_line_of_sight(attacker.position, target_pos, state_or_context):
-            return False, "LOS_OBSTRUCTED"
+            return False, ReasonCode.LOS_OBSTRUCTED
 
-        return True, "LEGAL"
+        return True, ReasonCode.UNKNOWN
 
     @staticmethod
     def verify_skill_legality(
         actor: EntityState,
         skill_id: str,
         state: AuthoritativeState
-    ) -> Tuple[bool, str]:
+    ) -> Tuple[bool, ReasonCode]:
         """
         Pillar 8: Skill Execution Law.
         Skills require cost and cooldown verification.
@@ -215,18 +250,18 @@ class LegalityServiceV2:
         
         # 1. Learned check
         if skill_id not in actor.identity.learned_skills:
-            return False, "SKILL_NOT_LEARNED"
+            return False, ReasonCode.SKILL_NOT_LEARNED
             
         # 2. Cooldown check
         if actor.identity.cooldowns.get(skill_id, 0) > 0:
-            return False, "SKILL_ON_COOLDOWN"
+            return False, ReasonCode.SKILL_ON_COOLDOWN
             
         # 3. Cost check
         skill = SKILL_REGISTRY.get(skill_id)
         if skill and actor.stamina.current < skill.cost:
-            return False, "INSUFFICIENT_STAMINA"
+            return False, ReasonCode.ACTION_EXHAUSTION
             
-        return True, "LEGAL"
+        return True, ReasonCode.UNKNOWN
 
     @staticmethod
     def has_line_of_sight(
@@ -287,14 +322,15 @@ class LegalityServiceV2:
         return state.engagements.get(entity_id)
 
     @staticmethod
-    def check_flanking(defender_id: int, state: AuthoritativeState) -> bool:
+    def check_flanking(defender_id: int, state: AuthoritativeState) -> Tuple[bool, bool]:
         """
         Authoritative geometric flanking check.
+        Returns: (is_flanked, is_surrounded)
         """
         # VERIFIED v2: flanking_geometric
         defender = state.entities.get(defender_id)
         if not defender or not defender.combat.alive:
-            return False
+            return False, False
             
         x, y = int(defender.position[0]), int(defender.position[1])
         
@@ -305,10 +341,21 @@ class LegalityServiceV2:
                     return entity.identity.faction != defender.identity.faction
             return False
 
-        has_ns = has_hostile_at((x, y - 1)) and has_hostile_at((x, y + 1))
-        has_ew = has_hostile_at((x - 1, y)) and has_hostile_at((x + 1, y))
+        n = has_hostile_at((x, y - 1))
+        s = has_hostile_at((x, y + 1))
+        e = has_hostile_at((x + 1, y))
+        w = has_hostile_at((x - 1, y))
+        ne = has_hostile_at((x + 1, y - 1))
+        nw = has_hostile_at((x - 1, y - 1))
+        se = has_hostile_at((x + 1, y + 1))
+        sw = has_hostile_at((x - 1, y + 1))
+
+        hostile_count = sum([n, s, e, w, ne, nw, se, sw])
+        # VERIFIED v2: RPG-COMBAT-200
+        is_flanked = (n and s) or (e and w) or (ne and sw) or (nw and se)
+        is_surrounded = hostile_count >= 3
         
-        return has_ns or has_ew
+        return is_flanked, is_surrounded
 
     @staticmethod
     def check_cover(attacker_pos: Tuple[float, float], defender_pos: Tuple[float, float], state: AuthoritativeState) -> bool:

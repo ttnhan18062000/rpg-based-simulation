@@ -30,8 +30,10 @@ class ShopService:
         if not item_def:
             return None
             
-        unit_price = item_def.value
+        from src.systems.economy import DynamicPriceService
+        unit_price = DynamicPriceService.calculate_buy_price(item_def.value, state)
         total_cost = unit_price * quantity
+        price_multiplier = unit_price / item_def.value if item_def.value > 0 else 1.0
         
         if entity.inventory.gold < total_cost:
             return None
@@ -51,6 +53,7 @@ class ShopService:
                         source_kind="SHOP_BUY",
                         items_add=[ItemStack(item_id, quantity)],
                         gold_cost=total_cost,
+                        price_multiplier=price_multiplier,
                         transfer_kind="BUY"
                     )]
                 )
@@ -96,6 +99,7 @@ class ShopService:
                         source_kind="SHOP_SELL",
                         items_remove=[ItemStack(item_id, quantity)],
                         gold_delta=total_gain,
+                        price_multiplier=1.0,
                         transfer_kind="SELL"
                     )]
                 )

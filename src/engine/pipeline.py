@@ -2,7 +2,8 @@ from __future__ import annotations
 from dataclasses import replace
 from typing import TYPE_CHECKING, Dict, List, Tuple
 
-from src.core.updates import StateUpdate, EntityUpdate, NavigationUpdate, IdentityUpdate
+from src.core.updates import StateUpdate, EntityUpdate, NavigationUpdate, IdentityUpdate, RejectionEvent
+from src.core.enums import ReasonCode
 
 if TYPE_CHECKING:
     from src.core.state import AuthoritativeState
@@ -50,6 +51,10 @@ class AuthoritativeApplyPipeline:
                         navigation=NavigationUpdate(failure_reason=reason),
                         task=replace(ent_upd.task, payload_set={**ent_upd.task.payload_set, "outcome": "FAILURE", "reason": reason}) if ent_upd.task else None
                     )
+                    # Global rejection tracking (Phase E5.4)
+                    raw_update.rejection_events.append(RejectionEvent(
+                        tick=state.tick, actor_id=e_id, action_kind="GLOBAL_PROPOSAL", reason=reason
+                    ))
                     continue
 
             # Stripping unauthorized fields:
@@ -89,7 +94,8 @@ class AuthoritativeApplyPipeline:
                 readiness_delta=ent_upd.readiness_delta,
                 combat=clean_combat,
                 resource_transfers=sanitized_transfers,
-                group_id_set=ent_upd.group_id_set
+                group_id_set=ent_upd.group_id_set,
+                social=ent_upd.social
             )
         update = replace(raw_update, entity_updates=sanitized_entity_updates)
         
@@ -101,6 +107,18 @@ class AuthoritativeApplyPipeline:
         # VERIFIED v2: BlacksmithSystem
         update = BlacksmithSystem.enforce(state, update)
         
+        # 1.1 Strategic Logic (Pre-Tactical Cognition)
+        from src.social.contracts import ContractService
+        # VERIFIED v2: ContractService
+        update = ContractService.reap_expired_offers(state, update)
+        update = ContractService.process_active_contracts(state, update)
+        
+        # VERIFIED v2: StrategicIntelligenceSystem (RPG-STRAT-200)
+        update = StrategicIntelligenceSystem.resolve_blockers(state, update)
+        update = StrategicIntelligenceSystem.evaluate_all_concerns(state, update)
+        # VERIFIED v2: StrategicRedirectionSystem
+        update = StrategicRedirectionSystem.enforce(state, update)
+
         # 1.2 Combat Laws (Attack resolution)
         # VERIFIED v2: CombatResolutionSystem
         update = AuthoritativeApplyPipeline._route_combat_intent(state, update)
@@ -142,17 +160,7 @@ class AuthoritativeApplyPipeline:
         update = AuthoritativeApplyPipeline._resolve_resource_transactions(state, update)
         
         
-        # 9.5 Strategic Logic (After resource resolution)
-        from src.social.contracts import ContractService
-        # VERIFIED v2: ContractService
-        update = ContractService.reap_expired_offers(state, update)
-        update = ContractService.process_active_contracts(state, update)
-        
-        # VERIFIED v2: StrategicIntelligenceSystem
-        update = StrategicIntelligenceSystem.resolve_blockers(state, update)
-        update = StrategicIntelligenceSystem.evaluate_biological_concerns(state, update)
-        # VERIFIED v2: StrategicRedirectionSystem
-        update = StrategicRedirectionSystem.enforce(state, update)
+
         
         # 10. Evolution & Growth (Captures XP from all sources above)
         from src.engine.evolution import EvolutionSystem
@@ -160,13 +168,21 @@ class AuthoritativeApplyPipeline:
         update = EvolutionSystem.evaluate(state, update)
         
         # 11. Group Logic (Formation & Coordination)
-        # VERIFIED v2: GroupSystem
-        group_update = GroupSystem.update_groups(state)
+        from src.engine.apply import ApplyPath
+        # VERIFIED v2: GroupSystem (RPG-SOC-200)
+        working_state_for_groups = ApplyPath.apply_generation(state, update)
+        group_update = GroupSystem.update_groups(working_state_for_groups, update)
         update = AuthoritativeApplyPipeline._merge_state_updates(update, group_update)
         
         # 12. Global Readiness Recovery (+10.0 per tick for all active entities)
+        # 12. Global Readiness Recovery (+10.0 per tick for all active entities)
         update = AuthoritativeApplyPipeline._apply_readiness_recovery(state, update)
-        
+
+        # 13. Transaction Trace Pruning (Hardening)
+        # VERIFIED v2: transaction_trace_pruning
+        if len(update.transaction_trace) > 200:
+            update = replace(update, transaction_trace=update.transaction_trace[-200:])
+            
         return update
 
     @staticmethod
@@ -263,7 +279,8 @@ class AuthoritativeApplyPipeline:
                                 moved_this_tick=u_upd.moved_this_tick,
                                 combat=u_upd.combat or ent_upd.combat,
                                 navigation=merged_nav,
-                                readiness_delta=min(ent_upd.readiness_delta, u_upd.readiness_delta)
+                                # Phase E5.8 Hardening: Readiness costs must stack across phases
+                                readiness_delta=ent_upd.readiness_delta + u_upd.readiness_delta
                             )
                             
                             # Phase 6: Navigation Blocker Inference
@@ -286,7 +303,12 @@ class AuthoritativeApplyPipeline:
                                 rej_delta = dict(update.rejections_delta)
                                 rej_key = f"MOVE_{merged_nav.failure_reason}"
                                 rej_delta[rej_key] = rej_delta.get(rej_key, 0) + 1
-                                update = replace(update, rejections_delta=rej_delta)
+                                update = replace(update, 
+                                    rejections_delta=rej_delta,
+                                    rejection_events=update.rejection_events + [RejectionEvent(
+                                        tick=state.tick, actor_id=e_id, action_kind="MOVE", reason=merged_nav.failure_reason
+                                    )]
+                                )
                         else:
                             # Merge other entities' updates (e.g. attackers in OA)
                             if u_id in refined_entity_updates:
@@ -335,7 +357,12 @@ class AuthoritativeApplyPipeline:
                 # Global rejection tracking (Phase E4.7)
                 rej_delta = dict(update.rejections_delta)
                 rej_delta["READINESS_NOT_READY"] = rej_delta.get("READINESS_NOT_READY", 0) + 1
-                update = replace(update, rejections_delta=rej_delta)
+                update = replace(update, 
+                    rejections_delta=rej_delta,
+                    rejection_events=update.rejection_events + [RejectionEvent(
+                        tick=state.tick, actor_id=e_id, action_kind="ENTITY_ACT", reason=r_reason
+                    )]
+                )
                 continue
 
             legal, reason = LegalityServiceV2.verify_action_legality(entity, action_kind, working_state)
@@ -353,7 +380,12 @@ class AuthoritativeApplyPipeline:
                  # Global rejection tracking (Phase E4.7)
                  rej_delta = dict(update.rejections_delta)
                  rej_delta["ACTION_ILLEGAL"] = rej_delta.get("ACTION_ILLEGAL", 0) + 1
-                 update = replace(update, rejections_delta=rej_delta)
+                 update = replace(update, 
+                     rejections_delta=rej_delta,
+                     rejection_events=update.rejection_events + [RejectionEvent(
+                         tick=state.tick, actor_id=e_id, action_kind=action_kind, reason=reason
+                     )]
+                 )
                  continue
 
             if action_kind in ("ATTACK", "SKILL", "AOE_ATTACK"):
@@ -391,7 +423,12 @@ class AuthoritativeApplyPipeline:
                      # Global rejection tracking (Phase E4.7)
                      rej_delta = dict(update.rejections_delta)
                      rej_delta["ATTACK_ILLEGAL"] = rej_delta.get("ATTACK_ILLEGAL", 0) + 1
-                     update = replace(update, rejections_delta=rej_delta)
+                     update = replace(update, 
+                         rejections_delta=rej_delta,
+                         rejection_events=update.rejection_events + [RejectionEvent(
+                             tick=state.tick, actor_id=e_id, action_kind=action_kind, reason=reason, target_id=target_id if action_kind != "AOE_ATTACK" else str(target_pos)
+                         )]
+                     )
                      continue
                 
                 # 2. Execute Action via Domain Logic using SLIDING state
@@ -408,9 +445,9 @@ class AuthoritativeApplyPipeline:
                 for eid, upd in action_updates.items():
                     existing = refined_entity_updates.get(eid, EntityUpdate(entity_id=eid))
                     merged = existing.merge(upd)
-                    # Law: Readiness costs do not stack
+                    # Phase E5.8 Hardening: Readiness costs must stack across phases
                     refined_entity_updates[eid] = replace(merged, 
-                        readiness_delta=min(existing.readiness_delta, upd.readiness_delta)
+                        readiness_delta=existing.readiness_delta + upd.readiness_delta
                     )
                     new_entities_to_sync.append(eid)
                 
@@ -501,7 +538,12 @@ class AuthoritativeApplyPipeline:
                 # Global rejection tracking (Phase E4.7)
                 rej_delta = dict(update.rejections_delta)
                 rej_delta["OCCUPANCY_CONFLICT"] = rej_delta.get("OCCUPANCY_CONFLICT", 0) + 1
-                update = replace(update, rejections_delta=rej_delta)
+                update = replace(update, 
+                    rejections_delta=rej_delta,
+                    rejection_events=update.rejection_events + [RejectionEvent(
+                        tick=state.tick, actor_id=loser_id, action_kind="MOVE", reason=ReasonCode.OCCUPANCY_VIOLATION
+                    )]
+                )
                 
         return replace(update, entity_updates=refined_entity_updates, transaction_trace=transaction_trace)
 
@@ -565,6 +607,7 @@ class AuthoritativeApplyPipeline:
         corpses_remove = list(update.corpses_remove)
         resource_updates = dict(update.resource_updates)
         current_home_storage_upds = dict(update.home_storage_updates)
+        refined_building_updates = dict(update.building_updates)
         transaction_trace = list(update.transaction_trace)
         accepted_transaction_ids = set(update.processed_transaction_ids)
         
@@ -624,6 +667,7 @@ class AuthoritativeApplyPipeline:
                 cp_ground_rem = list(ground_items_remove)
                 cp_corpse_rem = list(corpses_remove)
                 cp_quest_upd = refined_entity_updates[e_id].quest
+                cp_build_upds = dict(refined_building_updates)
                 
                 group_success = True
                 group_source_reservations = {}
@@ -634,11 +678,11 @@ class AuthoritativeApplyPipeline:
                         intent_results.append(IntentResult(
                             transaction_id=intent.transaction_id,
                             accepted=False,
-                            reason="ALREADY_PROCESSED",
+                            reason=ReasonCode.IDEMPOTENCY_VIOLATION,
                             source_kind=intent.source_kind,
                             source_id=intent.source_id
                         ))
-                        transaction_trace.append(f"TRANS_REJECT: Entity {e_id} {intent.transfer_kind} {intent.source_kind}:{intent.source_id} - ALREADY_PROCESSED (In-tick)")
+                        transaction_trace.append(f"TRANS_REJECT: Entity {e_id} {intent.transfer_kind} {intent.source_kind}:{intent.source_id} - {ReasonCode.IDEMPOTENCY_VIOLATION} (In-tick)")
                         continue
 
                     pending_inv = InventoryService.apply_update(entity.inventory, current_inv_upd)
@@ -659,6 +703,9 @@ class AuthoritativeApplyPipeline:
                         transaction_trace.append(f"TRANS_ACCEPT: Entity {e_id} {intent.transfer_kind} {intent.source_kind}:{intent.source_id}")
                     else:
                         transaction_trace.append(f"TRANS_FAIL: Entity {e_id} {intent.transfer_kind} {intent.source_kind}:{intent.source_id} - {result.reason}")
+                        update = replace(update, rejection_events=update.rejection_events + [RejectionEvent(
+                            tick=state.tick, actor_id=e_id, action_kind=intent.transfer_kind, reason=result.reason, target_id=f"{intent.source_kind}:{intent.source_id}"
+                        )])
                     
                     from src.core.state import IntentResult
                     intent_results.append(IntentResult(
@@ -777,6 +824,31 @@ class AuthoritativeApplyPipeline:
                             else:
                                 refined_node_updates[n_id] = result.node_update
                         
+                        if result.building_update:
+                             b_id = result.building_update.building_id
+                             existing_build = refined_building_updates.get(b_id)
+                             if existing_build:
+                                 from src.core.updates import BuildingUpdate
+                                 # Minimal merge for building updates
+                                 merged_inv = existing_build.inventory
+                                 if result.building_update.inventory:
+                                      if merged_inv:
+                                           merged_inv = replace(merged_inv,
+                                                items_add=list(merged_inv.items_add) + list(result.building_update.inventory.items_add),
+                                                items_remove=list(merged_inv.items_remove) + list(result.building_update.inventory.items_remove),
+                                                gold_delta=merged_inv.gold_delta + result.building_update.inventory.gold_delta
+                                           )
+                                      else:
+                                           merged_inv = result.building_update.inventory
+                                           
+                                 refined_building_updates[b_id] = replace(existing_build,
+                                     hp_delta=existing_build.hp_delta + result.building_update.hp_delta,
+                                     inventory=merged_inv,
+                                     price_modifiers_set=result.building_update.price_modifiers_set if result.building_update.price_modifiers_set is not None else existing_build.price_modifiers_set
+                                 )
+                             else:
+                                 refined_building_updates[b_id] = result.building_update
+                        
                         if result.ground_item_remove is not None:
                             ground_items_remove.append(result.ground_item_remove)
                         if result.corpse_remove is not None:
@@ -872,6 +944,7 @@ class AuthoritativeApplyPipeline:
                     current_strat_upd = cp_strat
                     current_home_storage_upds = cp_home_stor
                     refined_node_updates = cp_node_upds
+                    refined_building_updates = cp_build_upds
                     ground_items_remove = cp_ground_rem
                     corpses_remove = cp_corpse_rem
                     refined_entity_updates[e_id] = replace(refined_entity_updates[e_id], quest=cp_quest_upd)
@@ -917,6 +990,7 @@ class AuthoritativeApplyPipeline:
             update,
             entity_updates=refined_entity_updates,
             node_updates=refined_node_updates,
+            building_updates=refined_building_updates,
             transaction_trace=transaction_trace,
             ground_items_remove=ground_items_remove,
             corpses_remove=corpses_remove,

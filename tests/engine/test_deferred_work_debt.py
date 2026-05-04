@@ -1,7 +1,7 @@
 from src.core.state import AuthoritativeState
 from src.engine.scheduler import DeterministicScheduler
 from src.core.work import WorkClass
-
+from src.core.builder import V2EntityBuilder
 
 def test_deferred_drain_selection():
     """Verify that the scheduler selects DEFERRED work if debt exists."""
@@ -39,7 +39,7 @@ def test_deferred_vs_periodic_priority():
     
     p_def = PeriodicDefinition(subsystem_id="P", work_kind="ACT", cadence=1)
     state = AuthoritativeState(tick=1, seed=42, 
-        entities={1: EntityState(id=1, kind="hero", position=(0,0), readiness=100.0)},
+        entities={1: V2EntityBuilder(1).kind("hero").at((0.0, 0.0)).readiness(100.0).build()},
         periodic_due_ticks={"P": 1},
         work_debt={"D": 1}
     )

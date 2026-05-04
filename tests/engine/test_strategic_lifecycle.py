@@ -10,18 +10,15 @@ from src.core.strategic import (
 from src.systems.strategic import StrategicIntelligenceSystem
 from src.systems.routine import RoutineService
 from src.systems.detour import DetourSuggestionSystem
+from src.core.builder import V2EntityBuilder
 
 @pytest.fixture
 def base_state():
-    entity = EntityState(
-        id=1,
-        kind="hero",
-        position=(100, 100),
-        inventory=InventoryComponent(max_slots=2, items=[]),
-        combat=CombatComponent(hp=100, max_hp=100),
-        strategic=StrategicComponent(),
-        navigation=NavigationComponent()
-    )
+    entity = (V2EntityBuilder(1)
+              .kind("hero")
+              .at((100, 100))
+              .with_inventory_component(InventoryComponent(max_slots=2, items=[]))
+              .build())
     return AuthoritativeState(
         tick=1000,
         seed=42,
@@ -35,9 +32,9 @@ def test_inventory_full_to_town_detour(base_state):
     entity = replace(entity, inventory=replace(entity.inventory, items=[ItemStack("wood", 1), ItemStack("wood", 1)]))
     
     # Simulate a rejected intent in latest_intent_results
-    entity = replace(entity, latest_intent_results=[
+    entity = replace(entity, identity=replace(entity.identity, latest_intent_results=[
         IntentResult(transaction_id="t1", accepted=False, reason="INVENTORY_FULL", source_kind="NODE", source_id=101)
-    ])
+    ]))
     
     # 2. Infer Blocker
     upd = StrategicIntelligenceSystem.infer_blockers(

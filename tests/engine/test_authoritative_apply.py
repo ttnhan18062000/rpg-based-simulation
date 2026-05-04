@@ -1,24 +1,24 @@
 from src.core.state import AuthoritativeState, EntityState
 from src.core.updates import StateUpdate, EntityUpdate
 from src.engine.apply import ApplyPath
-
+from src.core.builder import V2EntityBuilder
 
 def test_generation_isolation():
     """Verify that apply_generation does not mutate the prior state."""
     state = AuthoritativeState(tick=1, seed=1, world_time=10, entities={
-        1: EntityState(id=1, kind="hero", position=(0,0))
+        1: V2EntityBuilder(1).kind("hero").at((0.0, 0.0)).build()
     })
     
     update = StateUpdate(entity_updates={
-        1: EntityUpdate(entity_id=1, new_position=(10,10))
+        1: EntityUpdate(entity_id=1, new_position=(10.0, 10.0))
     })
     
     next_state = ApplyPath.apply_generation(state, update, 2, 11)
     
     assert state.tick == 1
-    assert state.entities[1].position == (0,0)
+    assert state.entities[1].navigation.position == (0.0, 0.0)
     assert next_state.tick == 2
-    assert next_state.entities[1].position == (10,10)
+    assert next_state.entities[1].navigation.position == (10.0, 10.0)
 
 
 def test_deterministic_apply_order():

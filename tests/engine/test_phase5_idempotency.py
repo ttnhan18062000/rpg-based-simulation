@@ -1,19 +1,16 @@
-
 import pytest
 from dataclasses import replace
 from src.core.state import AuthoritativeState, EntityState, ResourceNodeState, IdentityComponent, InventoryComponent
 from src.core.updates import StateUpdate, EntityUpdate, ResourceTransferIntent
 from src.engine.pipeline import AuthoritativeApplyPipeline
+from src.core.builder import V2EntityBuilder
 
-def create_mock_entity(id, pos=(0,0)):
-    return EntityState(
-        id=id,
-        kind="ACTOR",
-        position=pos,
-        identity=IdentityComponent(faction="HERO_FACTION"),
-        inventory=InventoryComponent(max_slots=10, max_weight=100.0),
-        active=True
-    )
+def create_mock_entity(id, pos=(0.0, 0.0)):
+    return (V2EntityBuilder(id)
+            .kind("hero")
+            .at(pos)
+            .active(True)
+            .build())
 
 def test_resource_node_race():
     # Node with only 1 charge

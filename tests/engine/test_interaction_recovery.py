@@ -1,14 +1,22 @@
 import pytest
-from src.core.state import AuthoritativeState, EntityState, InventoryComponent, InteractionComponent, ResourceNodeState, ItemStack
+from dataclasses import replace
+from src.core.state import AuthoritativeState, EntityState, InventoryComponent, InteractionComponent, ResourceNodeState, ItemStack, BuildingState
 from src.core.updates import StateUpdate, EntityUpdate, InteractionUpdate, InventoryUpdate
 from src.engine.interaction import InteractionSystem
 from src.engine.town_resolution import TownResolutionSystem
 from src.engine.pipeline import AuthoritativeApplyPipeline
+from src.core.builder import V2EntityBuilder
 
 def test_weight_pressure_enforcement():
     # Setup state: Entity with limited weight capacity
-    inv = InventoryComponent(items=[ItemStack("wood", 2)], max_weight=5.0)
-    entity = EntityState(id=1, kind="HERO", position=(0,0), inventory=inv)
+    entity = (V2EntityBuilder(1)
+              .kind("hero")
+              .at((0.0, 0.0))
+              .with_inventory(items=["wood", "wood"])
+              .build())
+    
+    # max_weight=5.0 override (Default is 50)
+    entity = replace(entity, inventory=replace(entity.inventory, max_weight=5.0))
     
     state = AuthoritativeState(
         tick=1,
@@ -32,8 +40,13 @@ def test_weight_pressure_enforcement():
 
 def test_channeled_looting_one_shot():
     # Setup state: LOOT node
-    inv = InventoryComponent(items=[], max_weight=100.0)
-    entity = EntityState(id=1, kind="HERO", position=(0,0), inventory=inv, interaction=InteractionComponent(progress=9, target_node_id=10))
+    entity = (V2EntityBuilder(1)
+              .kind("hero")
+              .at((0.0, 0.0))
+              .build())
+    
+    # Set interaction state
+    entity = replace(entity, interaction=InteractionComponent(progress=9, target_node_id=10))
     
     state = AuthoritativeState(
         tick=1,
@@ -59,15 +72,25 @@ def test_channeled_looting_one_shot():
 
 def test_town_resolution_sell_on_entry():
     # Setup state: Entity with materials entering town
-    from src.core.state import ItemStack
-    inv = InventoryComponent(items=[ItemStack("wood", 1), ItemStack("ore", 1)], max_weight=100.0)
-    # Target position is (5,5) which we will mark as town
-    entity = EntityState(id=1, kind="HERO", position=(0,0), inventory=inv)
+    entity = (V2EntityBuilder(1)
+              .kind("hero")
+              .at((0.0, 0.0))
+              .with_inventory(items=["wood", "ore"])
+              .build())
+    
+    # Add a shop building with gold
+    shop = BuildingState(
+        id=100,
+        kind="shop",
+        position=(5.0, 5.0),
+        inventory=InventoryComponent(gold=1000)
+    )
     
     state = AuthoritativeState(
         tick=1,
         seed=42,
         entities={1: entity},
+        buildings={100: shop},
         town_tiles={(5,5)},
         building_tiles={(5,5): "shop"}
     )
@@ -78,10 +101,13 @@ def test_town_resolution_sell_on_entry():
     )
     
     # Resolve
-    from src.engine.pipeline import AuthoritativeApplyPipeline
     refined = AuthoritativeApplyPipeline.refine(state, upd)
     
     ent_upd = refined.entity_updates[1]
+    
+    # Check for inventory update (resolved from intent)
+    assert ent_upd.inventory is not None
+    
     actual_removed = [i.item_id if hasattr(i, "item_id") else i for i in ent_upd.inventory.items_remove]
     assert "wood" in actual_removed
     assert "ore" in actual_removed
@@ -91,7 +117,12 @@ def test_town_resolution_sell_on_entry():
 
 def test_movement_interruption():
     # Setup state: Channelling interaction
-    entity = EntityState(id=1, kind="HERO", position=(0,0), interaction=InteractionComponent(progress=5, target_node_id=10))
+    entity = (V2EntityBuilder(1)
+              .kind("hero")
+              .at((0.0, 0.0))
+              .build())
+    entity = replace(entity, interaction=InteractionComponent(progress=5, target_node_id=10))
+    
     state = AuthoritativeState(tick=1, seed=42, entities={1: entity})
     
     # Update: Move while channelling

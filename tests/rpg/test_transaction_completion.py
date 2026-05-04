@@ -299,11 +299,19 @@ class TestTransactionRejectionReasons:
         state = entity_with_inventory
         # Entity has 50 gold, trying to buy something for 100
         intent = ResourceTransferIntent(
-            source_id="shop_1", source_kind="SHOP_BUY",
+            source_id=301, source_kind="SHOP_BUY",
             items_add=[ItemStack("healing_potion", 1)],
             gold_cost=100,
             transfer_kind="BUY"
         )
+        # Add a building to the state so we pass the target check
+        from src.core.state import BuildingState, InventoryComponent
+        shop = BuildingState(
+            id=301, kind="shop", position=(0, 0),
+            inventory=InventoryComponent(items=[ItemStack("healing_potion", 1)])
+        )
+        state = replace(state, buildings={301: shop})
+        
         result = ResourceTransactionResolver.resolve(state, state.entities[1], intent)
 
         assert result.accepted is False
@@ -359,6 +367,7 @@ class TestTransactionRejectionReasons:
         ent_upd = refined.entity_updates[1]
 
         # Intent results should be populated
+        # RPG-RES-201: Standard reason propagation
         assert len(ent_upd.intent_results) == 1
         ir = ent_upd.intent_results[0]
         assert ir.accepted is False
@@ -447,7 +456,9 @@ class TestSourceMutationConservation:
         assert 301 in final_state.corpses
 
     def test_crafting_materials_not_consumed_on_full_inventory(self, entity_full_inventory):
-        """Law: Crafting materials must not be consumed if product cannot be added."""
+        """Law: Crafting materials must not be consumed if product cannot be added.
+        RPG-RES-200: Capacity enforcement must account for removals.
+        """
         state = entity_full_inventory
 
         update = StateUpdate(entity_updates={
@@ -456,7 +467,7 @@ class TestSourceMutationConservation:
                 resource_transfers=[ResourceTransferIntent(
                     source_id="forge",
                     source_kind="CRAFTING",
-                    items_add=[ItemStack("steel_sword", 1)],
+                    items_add=[ItemStack("steel_sword", 2)],
                     items_remove=[ItemStack("wood", 1)],
                     gold_cost=30,
                     transfer_kind="CRAFT"

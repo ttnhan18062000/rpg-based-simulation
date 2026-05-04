@@ -102,31 +102,54 @@ class RoutineService:
         Returns a utility boost for routine-related projects.
         VERIFIED v2: routine_goal_biasing
         """
+        age = entity.lifecycle.age_ticks
+        max_age = entity.lifecycle.max_age_ticks
+        is_elder = age > max_age * 0.7
+        is_young = age < max_age * 0.2
+
         if project_kind == "sleep":
             is_night = (world_time >= 1800 or world_time < 600)
             boost = (entity.biological.sleep_debt / 10.0) # 0 to 10
             if is_night:
                 boost *= 2.0
+            if is_elder:
+                boost *= 1.5 # Elders need more rest
             return boost
         
         if project_kind == "eating":
             return (entity.biological.hunger / 10.0) # 0 to 10
+            
+        if project_kind == "exploration" and is_young:
+            return 5.0 # Young entities are curious
+            
+        return 0.0
+
+    @staticmethod
+    def get_role_utility_boost(entity: EntityState, project_kind: str) -> float:
+        """
+        Returns a utility boost based on the entity's role identity.
+        """
+        from src.core.enums import EntityRole
+        role = entity.identity.role
+        pk = project_kind.upper()
+        
+        if role == EntityRole.SHOPKEEPER and pk == "SHOPKEEPING":
+            return 20.0
+        if role == EntityRole.HERO and pk == "QUEST":
+            return 10.0
+        if role == EntityRole.WORKER and pk == "HARVESTING":
+            return 15.0
+        if role == EntityRole.GUARD and pk == "PATROLLING":
+            return 12.0
             
         return 0.0
 
     @staticmethod
     def apply_role_based_biasing(entity: EntityState, projects: List[ProjectState], world_time: int) -> List[ProjectState]:
         biased_projects = []
-        from src.core.enums import EntityRole
         for p in projects:
             boost = RoutineService.get_routine_utility_boost(entity, p.kind, world_time)
-            
-            # Role Identity Biasing
-            role_boost = 0.0
-            if entity.identity.role == EntityRole.SHOPKEEPER:
-                if p.kind == "SHOPKEEPING": role_boost = 20.0
-            elif entity.identity.role == EntityRole.HERO:
-                if p.kind == "QUEST": role_boost = 10.0
+            role_boost = RoutineService.get_role_utility_boost(entity, p.kind)
             
             if boost > 0 or role_boost > 0:
                 biased_projects.append(replace(p, score=p.score + boost + role_boost))

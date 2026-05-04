@@ -4,6 +4,7 @@ from unittest.mock import MagicMock
 from src.engine.kernel import Kernel
 from src.config.profiles import RuntimeProfile, HardwareClass
 from src.core.state import AuthoritativeState, EntityState
+from src.core.builder import V2EntityBuilder
 from src.core.governance import RuntimeMode, PressureSignals
 from src.core.worker_protocol import WorkerPacket, WorkerResult, ResultStatus
 from src.engine.worker_logic import default_simulation_worker
@@ -87,7 +88,10 @@ def test_milestone_b_operational_gate(mb_profile, initial_state):
     packets = [
         WorkerPacket(packet_id=f"p{i}", work_id=f"w:{i}", tick=0, world_time=0, seed=i, 
                      work_class=WorkClass.CRITICAL,
-                     subject=EntityState(id=i+1, kind="TEST", position=(0,0), properties={}), 
+                     subject=(V2EntityBuilder(i+1)
+                              .kind("TEST")
+                              .at((0.0, 0.0))
+                              .build()), 
                      neighbor_view=[], work_kind="TEST", payload={})
         for i in range(10)
     ]

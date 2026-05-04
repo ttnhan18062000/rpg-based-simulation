@@ -3,10 +3,14 @@ from src.core.worker_protocol import WorkerPacket, WorkerResult, ResultStatus
 from src.core.protocol_validator import ProtocolValidator, ProtocolViolationError
 from src.core.updates import EntityUpdate
 from src.core.state import EntityState
+from src.core.builder import V2EntityBuilder
 
 @pytest.fixture
 def sample_packet():
-    subject = EntityState(id=1, kind="ACTOR", position=(0.0, 0.0))
+    subject = (V2EntityBuilder(1)
+               .kind("ACTOR")
+               .at((0.0, 0.0))
+               .build())
     from src.core.work import WorkClass
     return WorkerPacket(
         packet_id="100:0",
@@ -55,7 +59,10 @@ def test_protocol_canonical_context_rejection(sample_packet):
         world_time=1000,
         seed=43,
         work_class=WorkClass.CRITICAL,
-        subject=EntityState(id=2, kind="X", position=(1.0, 1.0)),
+        subject=(V2EntityBuilder(2)
+                 .kind("X")
+                 .at((1.0, 1.0))
+                 .build()),
         neighbor_view=[(10, None), (5, None)], # Unsorted
         work_kind="TEST",
         payload={}

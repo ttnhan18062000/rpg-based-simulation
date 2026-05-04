@@ -33,3 +33,71 @@ def test_entity_state_isolation():
     # Forbidden
     forbidden = {"last_action_reason", "debug_trace", "visual_cue"}
     assert not (entity_fields & forbidden)
+
+
+def test_mutation_tripwire_during_decision():
+    """
+    RPG-AUTH-009: Mutation tripwire during decision.
+    Verify that any attempt to mutate entities during the decision phase raises a ReadOnlyError.
+    """
+    from src.core.state import AuthoritativeState, EntityState, ReadOnlyError, InventoryComponent, ItemStack
+    import pytest
+    from dataclasses import FrozenInstanceError
+    
+    from src.core.builder import V2EntityBuilder
+    # Setup state with an entity that has mutable-looking fields
+    e1 = (V2EntityBuilder(1, "ACTOR")
+          .at((0, 0))
+          .with_inventory_component(InventoryComponent(items=[ItemStack("gold_coin", 10)]))
+          .with_property("can_mutate", True)
+          .build())
+    state = AuthoritativeState(tick=1, seed=1, entities={1: e1})
+    
+    # Obtain the readonly view used by workers
+    view = state.readonly_view()
+    view_entity = view.entities[1]
+    
+    # 1. Test top-level dataclass mutation (should raise FrozenInstanceError/AttributeError)
+    with pytest.raises((FrozenInstanceError, AttributeError)):
+        view_entity.position = (1, 1)
+        
+    # 2. Test dict mutation (properties)
+    # The current implementation of EntityState.to_readonly uses ReadOnlyDict for properties
+    # but readonly_view uses shallow_freeze which uses MappingProxyType.
+    # MappingProxyType raises TypeError, not ReadOnlyError.
+    with pytest.raises((ReadOnlyError, TypeError)):
+        view_entity.properties["new_key"] = "forbidden"
+
+    # 3. Test nested list mutation (inventory items) - THIS IS THE CRITICAL GAP
+    # If this doesn't raise an error, the tripwire is broken.
+    with pytest.raises((ReadOnlyError, TypeError, AttributeError)):
+        view_entity.inventory.items.append(ItemStack("stolen_gold", 999))
+
+    # 4. Test equipment mutation
+    from src.core.state import EquipSlot
+    with pytest.raises((ReadOnlyError, TypeError)):
+        view_entity.equipment.slots[EquipSlot.HEAD] = "forbidden_helmet"
+
+    # 5. Test wounds mutation
+    with pytest.raises((ReadOnlyError, TypeError, AttributeError)):
+        view_entity.wounds.append(None)
+
+
+def test_deep_freeze_behavior():
+    """
+    RPG-AUTH-023, RPG-AUTH-024: Deep freeze recursion and idempotency.
+    """
+    from src.core.immutability import deep_freeze
+    from types import MappingProxyType
+    
+    # 1. Recursion
+    data = {"a": [1, 2, {"b": 3}]}
+    frozen = deep_freeze(data)
+    assert isinstance(frozen, MappingProxyType)
+    assert isinstance(frozen["a"], tuple)
+    assert isinstance(frozen["a"][2], MappingProxyType)
+    
+    # 2. Idempotency
+    frozen2 = deep_freeze(frozen)
+    assert frozen2 == frozen
+    assert isinstance(frozen2["a"][2], MappingProxyType)

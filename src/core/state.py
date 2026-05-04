@@ -6,6 +6,25 @@ from typing import Dict, Any, Set, Optional, List, Tuple
 from src.core.strategic import StrategicComponent
 from src.core.enums import Faction, EntityRole
 from src.core.movement_modes import MovementMode
+from src.core.governance import RuntimeMode
+
+
+class ReadOnlyError(Exception):
+    """Raised when mutation is attempted on a read-only state view."""
+    pass
+
+class ReadOnlyDict(dict):
+    """A dictionary that raises ReadOnlyError on mutation attempts."""
+    def __setitem__(self, key, value):
+        raise ReadOnlyError("Authoritative mutation attempted during read-only phase.")
+    def __delitem__(self, key):
+        raise ReadOnlyError("Authoritative mutation attempted during read-only phase.")
+    def update(self, *args, **kwargs):
+        raise ReadOnlyError("Authoritative mutation attempted during read-only phase.")
+    def pop(self, *args, **kwargs):
+        raise ReadOnlyError("Authoritative mutation attempted during read-only phase.")
+    def clear(self):
+        raise ReadOnlyError("Authoritative mutation attempted during read-only phase.")
 
 
 class ItemKind(str, Enum):
@@ -97,6 +116,7 @@ class LifecycleComponent:
     generation: int = 1
     heir_entity_id: Optional[int] = None
     heirlooms: list[str] = field(default_factory=list)
+    active: bool = True
 
 
 @dataclass(frozen=True, slots=True)
@@ -129,6 +149,7 @@ class RegionState:
     influence: float = 0.0         # -100.0 (Monster) to 100.0 (Hero)
     weather: str = "CLEAR"
     active_modifiers: List[str] = field(default_factory=list)
+    price_modifiers: Dict[str, float] = field(default_factory=dict) # ItemKind -> Multiplier
 
     @property
     def center(self) -> tuple[float, float]:
@@ -166,11 +187,19 @@ class SocialComponent:
     # PH15 Recovery: First-class bonds
     bonds: Dict[int, SocialBond] = field(default_factory=dict)         # EntityID -> Bond
     
+    # Domain 4 Hardening: Nemesis & Place Memory
+    nemesis_ids: Set[int] = field(default_factory=set) # Promoted from grudge_history
+    place_attachment: Dict[str, float] = field(default_factory=dict) # RegionID -> Attachment Score
+    
     betrayal_count: int = 0
     betrayal_records: List[BetrayalRecord] = field(default_factory=list)
     public_reputation: float = 1.0   # Unified reputation score (0.0 to 2.0)
     heroism_score: float = 0.0       # Cumulative good deeds
     notoriety_score: float = 0.0     # Cumulative bad deeds
+    
+    # Domain 7 Hardening: Social Fatigue
+    last_offer_tick: int = -1
+    rejection_count: Dict[int, int] = field(default_factory=dict) # SourceID -> Count
 
 
 @dataclass(frozen=True, slots=True)
@@ -187,6 +216,10 @@ class CombatComponent:
     tactical_role: str = "VANGUARD"
     action_style: int = 0 # ActionStyle.BALANCED
     alive: bool = True
+    readiness: float = 0.0
+    wounds: List[WoundState] = field(default_factory=list)
+    scars: List[ScarState] = field(default_factory=list)
+    latest_result: Optional[CombatUpdate] = None
 
 
 # Terrain cost weights for pathfinding
@@ -206,6 +239,7 @@ TERRAIN_COST: Dict[str, float] = {
 @dataclass(frozen=True, slots=True)
 class NavigationComponent:
     """State for movement intent and pathfinding."""
+    position: tuple[float, float] = (0.0, 0.0)
     target: Optional[tuple[float, float]] = None
     path: List[tuple[float, float]] = field(default_factory=list)
     moved_recently: bool = False
@@ -280,10 +314,14 @@ class IdentityComponent:
     unspent_ap: int = 0
     class_id: str = "NOVICE"
     learned_skills: Set[str] = field(default_factory=set)
+    traits: Set[str] = field(default_factory=set)
     active_breakthroughs: Set[str] = field(default_factory=set)
     cooldowns: Dict[str, int] = field(default_factory=dict) # skill_id -> tick when ready
     personality: PersonalityComponent = field(default_factory=PersonalityComponent)
     life_stage: LifeStage = LifeStage.ADULT
+    group_id: Optional[int] = None
+    properties: Dict[str, Any] = field(default_factory=dict)
+    latest_intent_results: List[IntentResult] = field(default_factory=list)
 
 @dataclass(frozen=True, slots=True)
 class AptitudeComponent:
@@ -339,11 +377,11 @@ class IntentResult:
     """The outcome of a specific resource transfer intent."""
     transaction_id: str | None
     accepted: bool
-    reason: str
+    reason: ReasonCode
     source_kind: str
     source_id: str | int
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class EntityState:
     """
     Authoritative state for a single simulation entity.
@@ -352,9 +390,6 @@ class EntityState:
     """
     id: int
     kind: str
-    position: tuple[float, float]
-    readiness: float = 0.0
-    active: bool = True
     interaction: InteractionComponent = field(default_factory=InteractionComponent)
     identity: IdentityComponent = field(default_factory=IdentityComponent)
     attributes: AttributeComponent = field(default_factory=AttributeComponent)
@@ -369,12 +404,107 @@ class EntityState:
     navigation: NavigationComponent = field(default_factory=NavigationComponent)
     task: TaskComponent = field(default_factory=TaskComponent)
     stamina: StaminaComponent = field(default_factory=StaminaComponent)
-    wounds: List[WoundState] = field(default_factory=list)
-    scars: List[ScarState] = field(default_factory=list)
-    latest_intent_results: List[IntentResult] = field(default_factory=list)
-    latest_combat_result: Optional[CombatUpdate] = None
-    group_id: Optional[int] = None
-    properties: Dict[str, Any] = field(default_factory=dict)
+    
+    # Legacy InitVars for backward-compatible initialization (Milestone 10 Hardening)
+    position_init: InitVar[Optional[tuple[float, float]]] = None
+    readiness_init: InitVar[Optional[float]] = None
+    active_init: InitVar[Optional[bool]] = None
+    wounds_legacy: InitVar[Optional[List[WoundState]]] = None
+    scars_legacy: InitVar[Optional[List[ScarState]]] = None
+    group_id_legacy: InitVar[Optional[int]] = None
+    properties_init: InitVar[Optional[Dict[str, Any]]] = None
+    latest_combat_result_init: InitVar[Optional[CombatUpdate]] = None
+    latest_intent_results_init: InitVar[Optional[List[IntentResult]]] = None
+    hp_init: InitVar[Optional[int]] = None
+    max_hp_init: InitVar[Optional[int]] = None
+
+    def __post_init__(self, position_init=None, readiness_init=None, active_init=None, wounds_legacy=None, scars_legacy=None, group_id_legacy=None, properties_init=None, latest_combat_result_init=None, latest_intent_results_init=None, hp_init=None, max_hp_init=None):
+        # Since the dataclass is frozen, we use object.__setattr__ to populate components from legacy InitVars
+        if position_init is not None:
+             object.__setattr__(self, 'navigation', replace(self.navigation, position=position_init))
+        
+        if readiness_init is not None or wounds_legacy is not None or scars_legacy is not None or latest_combat_result_init is not None or hp_init is not None or max_hp_init is not None:
+             new_combat = self.combat
+             if readiness_init is not None: new_combat = replace(new_combat, readiness=readiness_init)
+             if wounds_legacy is not None: new_combat = replace(new_combat, wounds=wounds_legacy)
+             if scars_legacy is not None: new_combat = replace(new_combat, scars=scars_legacy)
+             if latest_combat_result_init is not None: new_combat = replace(new_combat, latest_result=latest_combat_result_init)
+             if hp_init is not None: new_combat = replace(new_combat, hp=hp_init)
+             if max_hp_init is not None: new_combat = replace(new_combat, max_hp=max_hp_init)
+             object.__setattr__(self, 'combat', new_combat)
+             
+        if active_init is not None:
+             object.__setattr__(self, 'lifecycle', replace(self.lifecycle, active=active_init))
+
+        if group_id_legacy is not None or properties_init is not None or latest_intent_results_init is not None:
+             new_identity = self.identity
+             if group_id_legacy is not None: new_identity = replace(new_identity, group_id=group_id_legacy)
+             if properties_init is not None: new_identity = replace(new_identity, properties=properties_init)
+             if latest_intent_results_init is not None: new_identity = replace(new_identity, latest_intent_results=latest_intent_results_init)
+             object.__setattr__(self, 'identity', new_identity)
+
+    @property
+    def position(self) -> tuple[float, float]:
+        return self.navigation.position
+    
+    @property
+    def readiness(self) -> float:
+        return self.combat.readiness
+
+    @property
+    def active(self) -> bool:
+        return self.lifecycle.active
+
+    @property
+    def wounds(self) -> List[WoundState]:
+        return self.combat.wounds
+
+    @property
+    def scars(self) -> List[ScarState]:
+        return self.combat.scars
+
+    @property
+    def group_id(self) -> Optional[int]:
+        return self.identity.group_id
+
+    @property
+    def properties(self) -> Dict[str, Any]:
+        return self.identity.properties
+
+    @property
+    def latest_intent_results(self) -> List[IntentResult]:
+        return self.identity.latest_intent_results
+
+    @property
+    def readiness(self) -> float:
+        return self.combat.readiness
+
+    @property
+    def hp(self) -> int:
+        return self.combat.hp
+
+    @property
+    def max_hp(self) -> int:
+        return self.combat.max_hp
+
+    def to_readonly(self) -> EntityState:
+        """Returns a read-only view of the entity state."""
+        from src.core.immutability import shallow_freeze
+        return replace(self, 
+            identity=replace(self.identity,
+                properties=ReadOnlyDict(self.identity.properties),
+                latest_intent_results=tuple(self.identity.latest_intent_results)
+            ),
+            inventory=replace(self.inventory, items=tuple(self.inventory.items)),
+            combat=replace(self.combat,
+                wounds=tuple(self.combat.wounds),
+                scars=tuple(self.combat.scars)
+            ),
+            equipment=replace(self.equipment, 
+                slots=shallow_freeze(self.equipment.slots),
+                durability=shallow_freeze(self.equipment.durability)
+            )
+        )
 
     def to_dict(self) -> Dict[str, Any]:
         """
@@ -435,6 +565,8 @@ class BuildingState:
     hp: int = 500
     max_hp: int = 500
     functional: bool = True
+    inventory: InventoryComponent = field(default_factory=InventoryComponent)
+    price_modifiers: Dict[str, float] = field(default_factory=dict) # ItemKind -> Multiplier
 
 
 @dataclass(frozen=True, slots=True)
@@ -487,8 +619,29 @@ class AuthoritativeState:
     transaction_trace: List[str] = field(default_factory=list)
     # VERIFIED v2: rejection_registry_tracking
     rejection_registry: Dict[str, int] = field(default_factory=dict) # Global counters for discarded truth
+    # Phase E5.6: Pressure-Aware Economy
+    pressure_signals: Dict[str, float] = field(default_factory=dict)
+    current_mode: RuntimeMode = RuntimeMode.NORMAL
     # Phase E5.3: Exactly-Once Idempotency
     processed_transaction_ids: set[str] = field(default_factory=set)
+    next_node_id: int = 1000
+    next_entity_id: int = 1
+
+    def to_readonly(self) -> AuthoritativeState:
+        """Returns a read-only view of the entire world state."""
+        return replace(self,
+            entities=ReadOnlyDict({eid: e.to_readonly() for eid, e in self.entities.items()}),
+            resource_nodes=ReadOnlyDict(self.resource_nodes),
+            ground_items=ReadOnlyDict(self.ground_items),
+            corpses=ReadOnlyDict(self.corpses),
+            chests=ReadOnlyDict(self.chests),
+            buildings=ReadOnlyDict(self.buildings),
+            camps=ReadOnlyDict(self.camps),
+            regions=ReadOnlyDict(self.regions),
+            local_scars=ReadOnlyDict(self.local_scars),
+            groups=ReadOnlyDict(self.groups),
+            terrain=ReadOnlyDict(self.terrain)
+        )
 
     def readonly_view(self) -> AuthoritativeState:
         """
@@ -499,7 +652,7 @@ class AuthoritativeState:
         from src.core.immutability import shallow_freeze
         return replace(
             self,
-            entities=shallow_freeze(self.entities),
+            entities=ReadOnlyDict({eid: e.to_readonly() for eid, e in self.entities.items()}),
             resource_nodes=shallow_freeze(self.resource_nodes),
             buildings=shallow_freeze(self.buildings),
             camps=shallow_freeze(self.camps),

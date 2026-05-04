@@ -1,19 +1,21 @@
 from src.core.state import AuthoritativeState, EntityState
 from src.engine.scheduler import DeterministicScheduler, PeriodicDefinition
 from src.core.work import WorkClass
+from src.core.builder import V2EntityBuilder
 
 
 def test_bucket_prioritization():
     """Verify that Critical work is always scheduled before Periodic work."""
     p_def = PeriodicDefinition(subsystem_id="cleanup", work_kind="GC", cadence=1)
     # Entity ID is 100, but it should come before "cleanup" if both are due.
+    e100 = V2EntityBuilder(100).readiness(100.0).build()
     state = AuthoritativeState(tick=1, seed=42, 
-        entities={100: EntityState(id=100, kind="hero", position=(0,0), readiness=100.0)},
+        entities={100: e100},
         periodic_due_ticks={"cleanup": 1}
     )
     
     scheduler = DeterministicScheduler(periodic_defs=[p_def])
-    work = scheduler.select_work(state)[0]
+    work, _ = scheduler.select_work(state)
     
     assert len(work) == 2
     assert work[0].work_class == WorkClass.CRITICAL
@@ -29,7 +31,7 @@ def test_dual_periodic_ordering():
     state = AuthoritativeState(tick=1, seed=42, periodic_due_ticks={"A_sys": 1, "B_sys": 1})
     
     scheduler = DeterministicScheduler(periodic_defs=defs)
-    work = scheduler.select_work(state)[0]
+    work, _ = scheduler.select_work(state)
     
     # Bucket 1: Critical (None)
     # Bucket 2: Periodic (A_sys, then B_sys)

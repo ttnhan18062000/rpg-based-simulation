@@ -64,6 +64,14 @@ class InteractionSystem:
             # Target switching
             if proposed_target is not None and current_target is not None and proposed_target != current_target:
                 should_reset = True
+            
+            # Law 159: Interaction interruption on significant damage
+            # Logic ID: 159
+            if ent_upd.combat and ent_upd.combat.damage_taken > 0:
+                damage = ent_upd.combat.damage_taken
+                max_hp = entity.combat.max_hp if entity.combat else 100
+                if damage > (max_hp * 0.05) or damage >= 10:
+                    should_reset = True
                 
             if should_reset:
                 # Force a reset update

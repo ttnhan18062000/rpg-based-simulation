@@ -101,6 +101,20 @@ class StrategicIntelligenceSystem:
                         subject="capacity",
                         severity=1.0
                     ))
+                elif result.reason == "OUT_OF_STOCK":
+                    blockers.append(BlockerState(
+                        id=f"blocker_out_of_stock_{result.source_id}",
+                        kind="material",
+                        subject="out_of_stock",
+                        severity=1.0
+                    ))
+                elif result.reason == "LIQUIDITY_EXHAUSTED":
+                    blockers.append(BlockerState(
+                        id=f"blocker_liquidity_{result.source_id}",
+                        kind="material",
+                        subject="liquidity",
+                        severity=1.0
+                    ))
         
         if not blockers:
             return StrategicUpdate()
@@ -221,24 +235,47 @@ class StrategicIntelligenceSystem:
             
         return replace(update, entity_updates=refined_entity_updates)
 
+
+
     @staticmethod
-    def evaluate_biological_concerns(
+    def evaluate_all_concerns(
         state: AuthoritativeState,
         update: StateUpdate
     ) -> StateUpdate:
         """
-        Phase 9: Routine, Biological Needs, and Life-Rhythm.
+        Phase 9: Routine, Biological Needs, and Salience Filtering.
+        VERIFIED v2: concern_intake_aggregation
         """
         from src.systems.routine import RoutineService
+        from src.systems.intake import ConcernIntakeSystem
+        from src.engine.domain_logic import SimulationDomainLogic
         
         refined_entity_updates = dict(update.entity_updates)
         
         for e_id, entity in state.entities.items():
+            # Phase 5: Bounded frequency and early exit (Hardening)
+            if not entity.active or not entity.combat.alive:
+                continue
+            
+            # Legality Guard: Incapacitated entities skip strategic cycles
+            if entity.properties.get("status_frozen") or entity.properties.get("status_stunned"):
+                continue
+
+            if (state.tick + e_id) % 10 != 0:
+                continue
+
+            # 1. Internal/Biological Concerns
             concerns = RoutineService.evaluate_biological_needs(entity, state.world_time)
             anchored_concerns = RoutineService.evaluate_anchored_behavior(entity, state)
             env_concerns = RoutineService.evaluate_environmental_concerns(entity)
+            
+            # 2. External Salience Concerns (Phase 9 Hardening)
+            neighbors = SimulationDomainLogic.get_neighbor_view(state, entity, radius=10.0)
+            salient_concerns = ConcernIntakeSystem.evaluate_salience(entity, neighbors, state)
+            
             concerns.extend(anchored_concerns)
             concerns.extend(env_concerns)
+            concerns.extend(salient_concerns)
             
             if not concerns:
                 continue
@@ -248,9 +285,18 @@ class StrategicIntelligenceSystem:
 
             new_concerns = list(set(strat_up.concerns_add_or_update + concerns))
             
+            # Law 194: Enforce Strategic Bandwidth for concerns
+            # Logic ID: 194
+            from src.systems.detour import DetourSuggestionSystem
+            bandwidth_upd = DetourSuggestionSystem.enforce_bandwidth(entity, state.tick)
+            if bandwidth_upd.concerns_remove:
+                to_remove = set(bandwidth_upd.concerns_remove)
+                new_concerns = [c for c in new_concerns if c.id not in to_remove]
+            
             new_strat_up = replace(
                 strat_up,
-                concerns_add_or_update=new_concerns
+                concerns_add_or_update=new_concerns,
+                concerns_remove=list(set(strat_up.concerns_remove + bandwidth_upd.concerns_remove))
             )
             refined_entity_updates[e_id] = replace(ent_upd, strategic=new_strat_up)
                 
@@ -260,10 +306,41 @@ class StrategicIntelligenceSystem:
     def apply_routine_biasing(
         entity: EntityState,
         world_time: int,
-        projects: List[ProjectState]
+        projects: List[ProjectState],
+        neighbors: List[EntityState] = []
     ) -> List[ProjectState]:
         from src.systems.routine import RoutineService
-        return RoutineService.apply_role_based_biasing(entity, projects, world_time)
+        from src.systems.learning import StrategicLearningService
+        from src.engine.cognition import AppraisalSystem
+        
+        # 1. Routine and Role Biasing
+        projects = RoutineService.apply_role_based_biasing(entity, projects, world_time)
+        
+        # 2. Strategic Memory (Learning) Biasing
+        memory_biases = StrategicLearningService.get_goal_biases(entity.strategic.turning_points)
+        
+        # 3. Emotional Appraisal (Short-term) Biasing
+        # We need neighbors for full appraisal, but can use defaults if empty
+        emotion = AppraisalSystem.evaluate_emotional_state(entity, neighbors)
+        
+        biased_projects = []
+        for p in projects:
+            score = p.score
+            
+            # Apply memory bias
+            kind_key = p.kind.lower()
+            if kind_key in memory_biases:
+                score += memory_biases[kind_key]
+                
+            # Apply emotional bias
+            if kind_key == "combat" or kind_key == "detour":
+                score *= emotion.aggression_mod
+                if emotion.is_fleeing:
+                    score -= 50.0 # Heavy penalty for combat if panicked
+            
+            biased_projects.append(replace(p, score=score))
+            
+        return biased_projects
 
     @staticmethod
     def evaluate_project_switch(
@@ -295,7 +372,11 @@ class StrategicIntelligenceSystem:
             )
 
         if current.lock_until_tick > current_tick:
-            return None 
+            # Bypass lock ONLY for high-urgency danger/safety projects
+            if candidate_project.kind == "danger" and candidate_project.score > 80:
+                pass 
+            else:
+                return None 
 
         retention_margin = profile.interruption_resistance * 30
         effective_current_score = current.score + retention_margin
@@ -427,6 +508,21 @@ class StrategicIntelligenceSystem:
         state: AuthoritativeState,
         entity: EntityState
     ) -> StrategicUpdate:
+        """
+        Main entry point for strategic decision making.
+        VERIFIED v2: strategic_intent_evaluation
+        """
+        # Phase 5: Bounded frequency and early exit (Hardening)
+        if not entity.active or not entity.combat.alive:
+            return StrategicUpdate()
+        
+        # Legality Guard: Incapacitated entities skip strategic cycles
+        if entity.properties.get("status_frozen") or entity.properties.get("status_stunned"):
+            return StrategicUpdate()
+
+        if (state.tick + entity.id) % 10 != 0:
+            return StrategicUpdate()
+
         # 0. Strategic Memory (PH6: Lead Suppression)
         from src.systems.detour import DetourSuggestionSystem
         memory_upd = DetourSuggestionSystem.suppress_exhausted_leads(entity, state.tick)
@@ -519,7 +615,25 @@ class StrategicIntelligenceSystem:
                     except ValueError:
                         pass
                 
-                if strat.blockers:
+                # Milestone 8: Shop scarcity feedback
+                if project.kind == "shopping" and project.active_objective_id:
+                     target_id_str = project.active_objective_id.split("_")[-1]
+                     try:
+                         b_id = int(target_id_str)
+                         building = state.buildings.get(b_id)
+                         if not building or not building.functional:
+                              return StrategicUpdate(
+                                 projects_add_or_update=[replace(project, status=ProjectStatus.ABANDONED)],
+                                 current_project_id_set="",
+                                 current_objective_id_set="",
+                                 boredom_delta=boredom_upd,
+                                 leads_add_or_update=memory_upd.leads_add_or_update,
+                                 leads_remove=memory_upd.leads_remove
+                             )
+                     except ValueError:
+                         pass
+                
+                if strat.blockers and entity.group_id is None:
                     from src.systems.detour import DetourSuggestionSystem
                     detours = DetourSuggestionSystem.suggest_detours(entity, current_tick)
                     if detours:
@@ -554,8 +668,20 @@ class StrategicIntelligenceSystem:
         from src.ai.score_modifiers import ScoreModifierSystem
         from src.systems.party import PartyCoordinationSystem
         
+        # 4. Goal Scoring & Routine Biasing
         all_scores = GoalRegistry.get_all_scores(entity, state)
+        
+        # PH9: Routine & Life-Rhythm Biasing
+        from src.systems.routine import RoutineService
+        all_scores = [
+            replace(s, utility=s.utility + 
+                    RoutineService.get_routine_utility_boost(entity, s.kind.lower(), state.world_time) +
+                    RoutineService.get_role_utility_boost(entity, s.kind.lower()))
+            for s in all_scores
+        ]
+        
         # PH7: Leadership Influence
+        from src.systems.party import PartyCoordinationSystem
         all_scores = PartyCoordinationSystem.apply_leadership_influence(entity, state, all_scores)
         
         modified_scores = ScoreModifierSystem.apply_modifiers(entity, state, all_scores)
@@ -609,6 +735,20 @@ class StrategicIntelligenceSystem:
                     boredom_delta=boredom_upd,
                     leads_add_or_update=memory_upd.leads_add_or_update,
                     leads_remove=memory_upd.leads_remove
+                )
+            
+            # Law 194-197: Enforce Strategic Bandwidth
+            # Logic ID: 195, 196
+            bandwidth_upd = DetourSuggestionSystem.enforce_bandwidth(entity, current_tick)
+            if bandwidth_upd.leads_remove or bandwidth_upd.concerns_remove:
+                # Merge with current state of updates
+                return StrategicUpdate(
+                    leads_add_or_update=memory_upd.leads_add_or_update,
+                    leads_remove=list(set(memory_upd.leads_remove + bandwidth_upd.leads_remove)),
+                    concerns_remove=bandwidth_upd.concerns_remove,
+                    overload_source_set=bandwidth_upd.overload_source_set,
+                    overload_tick_set=bandwidth_upd.overload_tick_set,
+                    boredom_delta=boredom_upd
                 )
 
         if memory_upd.leads_add_or_update or memory_upd.leads_remove:

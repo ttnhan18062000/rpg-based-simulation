@@ -13,13 +13,11 @@ def test_hash_invariance_to_governance_state():
     hash_0 = CanonicalStateHasher.get_hash(state)
     
     # 1. Simulate a mode change (NORMAL -> SURVIVAL)
-    # This should be isolated from AuthoritativeState.
+    # This should be isolated from AuthoritativeState's CANONICAL HASH.
+    # Note: AuthoritativeState now tracks current_mode for observability, 
+    # but it is excluded from the canonical hash.
     status = RuntimeStatus(current_mode=RuntimeMode.NORMAL)
     status.reset_dwell(RuntimeMode.SURVIVAL, 10)
-    
-    # Assert that the state object itself has no reference to mode
-    assert not hasattr(state, "current_mode")
-    assert not hasattr(state, "runtime_mode")
     
     # 2. Get hash again
     hash_1 = CanonicalStateHasher.get_hash(state)

@@ -56,11 +56,23 @@ class InventoryService:
             if total_weight > inventory.max_weight:
                 return False
                 
+            remaining_qty = stack.quantity
+            # 1. Fill existing stack
             existing = next((s for s in temp_items if s.item_id == stack.item_id), None)
-            if not existing:
+            if existing and existing.quantity < defn.stack_size:
+                space = defn.stack_size - existing.quantity
+                to_add = min(remaining_qty, space)
+                # Update existing stack in temp_items (optional for slot count, but good for completeness)
+                # For slots, we only care if we need NEW ones.
+                remaining_qty -= to_add
+            
+            # 2. Add new stacks
+            while remaining_qty > 0:
                 if len(temp_items) >= inventory.max_slots:
                     return False
-                temp_items.append(stack)
+                to_add = min(remaining_qty, defn.stack_size)
+                temp_items.append(ItemStack(stack.item_id, to_add))
+                remaining_qty -= to_add
                 
         return True
 

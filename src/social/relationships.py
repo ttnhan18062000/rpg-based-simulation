@@ -59,6 +59,13 @@ class RelationshipService:
         new_betrayals = list(social.betrayal_records)
         new_betrayals.extend(update.betrayal_records_add)
 
+        new_nemesis = set(social.nemesis_ids)
+        new_nemesis.update(update.nemesis_promotion)
+
+        new_places = dict(social.place_attachment)
+        for rid, delta in update.place_attachment_delta.items():
+            new_places[rid] = max(0.0, min(1.0, new_places.get(rid, 0.0) + delta))
+
         return replace(
             social,
             trust_history=new_trust,
@@ -68,13 +75,17 @@ class RelationshipService:
             grudge_history=new_grudge,
             salience_history=new_salience,
             bonds=new_bonds,
+            nemesis_ids=new_nemesis,
+            place_attachment=new_places,
             betrayal_count=social.betrayal_count + update.betrayal_increment,
             betrayal_records=new_betrayals,
             public_reputation=update.reputation_set if update.reputation_set is not None else (
                 max(0.0, min(2.0, social.public_reputation + update.heroism_delta - update.notoriety_delta))
             ),
             heroism_score=social.heroism_score + update.heroism_delta,
-            notoriety_score=social.notoriety_score + update.notoriety_delta
+            notoriety_score=social.notoriety_score + update.notoriety_delta,
+            last_offer_tick=update.last_offer_tick_set if update.last_offer_tick_set is not None else social.last_offer_tick,
+            rejection_count={k: social.rejection_count.get(k, 0) + v for k, v in update.rejection_increment.items()}
         )
 
     @staticmethod

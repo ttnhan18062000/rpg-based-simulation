@@ -2,18 +2,19 @@ import pytest
 from src.core.state import AuthoritativeState, EntityState
 from src.engine.scheduler import DeterministicScheduler, PeriodicDefinition
 from src.core.work import WorkClass
+from src.core.builder import V2EntityBuilder
 
 
 def test_readiness_driven_selection():
     """Verify that only entities at or above 100.0 readiness are selected."""
-    state = AuthoritativeState(tick=1, seed=42, entities={
-        1: EntityState(id=1, kind="hero", position=(0,0), readiness=100.0),
-        2: EntityState(id=2, kind="hero", position=(0,0), readiness=99.9),
-        3: EntityState(id=3, kind="hero", position=(0,0), readiness=150.0),
-    })
+    e1 = V2EntityBuilder(1).readiness(100.0).build()
+    e2 = V2EntityBuilder(2).readiness(99.9).build()
+    e3 = V2EntityBuilder(3).readiness(150.0).build()
+    
+    state = AuthoritativeState(tick=1, seed=42, entities={1: e1, 2: e2, 3: e3})
     
     scheduler = DeterministicScheduler()
-    work = scheduler.select_work(state)[0]
+    work, _ = scheduler.select_work(state)
     
     # Expect 2 entity actions (ID 1 and 3)
     # Order should be Readiness DESC (3 then 1)
@@ -24,14 +25,14 @@ def test_readiness_driven_selection():
 
 def test_deterministic_tiebreak():
     """Verify that same-readiness entities are sorted by EntityID ASC."""
-    state = AuthoritativeState(tick=1, seed=42, entities={
-        3: EntityState(id=3, kind="hero", position=(0,0), readiness=100.0),
-        1: EntityState(id=1, kind="hero", position=(0,0), readiness=100.0),
-        2: EntityState(id=2, kind="hero", position=(0,0), readiness=100.0),
-    })
+    e1 = V2EntityBuilder(1).readiness(100.0).build()
+    e2 = V2EntityBuilder(2).readiness(100.0).build()
+    e3 = V2EntityBuilder(3).readiness(100.0).build()
+    
+    state = AuthoritativeState(tick=1, seed=42, entities={3: e3, 1: e1, 2: e2})
     
     scheduler = DeterministicScheduler()
-    work = scheduler.select_work(state)[0]
+    work, _ = scheduler.select_work(state)
     
     assert [w.owner_id for w in work] == [1, 2, 3]
 
@@ -54,10 +55,11 @@ def test_periodic_selection():
 
 def test_full_work_hierarchy():
     """Verify Critical > Periodic > Deferred hierarchy."""
+    e1 = V2EntityBuilder(1).readiness(100.0).build()
     state = AuthoritativeState(
         tick=10, 
         seed=1,
-        entities={1: EntityState(id=1, kind="hero", position=(0,0), readiness=100.0)},
+        entities={1: e1},
         periodic_due_ticks={"weather": 10},
         work_debt={"system_x": 1}
     )

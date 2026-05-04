@@ -127,7 +127,7 @@ def test_crafting_full_inventory_does_not_consume_materials():
     from dataclasses import replace
     
     # 1. Setup entity with materials for a steel sword
-    inv = InventoryComponent(max_slots=2, items=[
+    inv = InventoryComponent(max_slots=1, items=[
         ItemStack("iron_ore", 2),
         ItemStack("wood", 1)
     ], gold=100)
@@ -143,27 +143,36 @@ def test_crafting_full_inventory_does_not_consume_materials():
     from src.core.state import BuildingState
     state = replace(state, buildings={501: BuildingState(id=501, kind="blacksmith", position=(0,0))})
     
-    # 2. Fill inventory (it has 2 slots, both taken by materials, but max_slots is 2)
-    # If we add one more material, it would be full.
-    # Actually, iron_ore(2) and wood(1) take 2 slots.
-    # If we craft, we remove these 2 and add 1 sword. It SHOULD fit.
-    # BUT my logic in BlacksmithSystem currently checks if it fits NOW (before removal).
-    # Since slots are 2/2, it will fail. This is a "strict" conservation check.
-    
-    # 3. Run BlacksmithSystem
+    # 2. Run BlacksmithSystem
     update = BlacksmithSystem.enforce(state, StateUpdate())
     
-    # 3.5 Refine (Enforce Conservation)
+    # 3. Refine (Enforce Conservation)
     from src.engine.pipeline import AuthoritativeApplyPipeline
     update = AuthoritativeApplyPipeline.refine(state, update)
     
     # 4. Apply
     final_state = ApplyPath.apply_generation(state, update)
     
-    # CHECK: Materials and Gold should NOT be consumed
-    assert final_state.entities[1].inventory.gold == 100
-    assert len(final_state.entities[1].inventory.items) == 2
-    assert "steel_sword" not in [i.item_id for i in final_state.entities[1].inventory.items]
+    # CHECK: Materials and Gold should NOT be consumed because 1 slot cannot hold the result 
+    # even if materials are removed (since materials themselves were already violating the 1-slot limit)
+    # Actually, can_add_items_with_removals(inv(1 slot, 2 items), add(1), remove(2)) ->
+    # remove 2 -> 0 items. add 1 -> 1 item. 1 <= 1. SUCCESS!
+    
+    # Wait, so even with 1 slot it succeeds if results <= max_slots.
+    # To FAIL, we need result > max_slots.
+    # Let's use max_slots=0 (impossible but works for test) or 1 and make the recipe output 2 items.
+    
+    # I'll update the test to use a recipe that outputs 2 items or just set max_slots to 0.
+    inv_invalid = replace(inv, max_slots=0)
+    state_invalid = replace(state, entities={1: replace(entity, inventory=inv_invalid)})
+    
+    update_invalid = BlacksmithSystem.enforce(state_invalid, StateUpdate())
+    update_invalid = AuthoritativeApplyPipeline.refine(state_invalid, update_invalid)
+    final_state_invalid = ApplyPath.apply_generation(state_invalid, update_invalid)
+    
+    assert final_state_invalid.entities[1].inventory.gold == 100
+    assert len(final_state_invalid.entities[1].inventory.items) == 2
+    assert "steel_sword" not in [i.item_id for i in final_state_invalid.entities[1].inventory.items]
 
 def test_quest_completion_full_inventory_does_not_grant_reward():
     from src.systems.quest_system import QuestSystem

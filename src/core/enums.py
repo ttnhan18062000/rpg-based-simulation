@@ -6,6 +6,8 @@ class EntityRole(IntEnum):
     SHOPKEEPER = 1
     MONSTER = 2
     CITIZEN = 3
+    WORKER = 4
+    GUARD = 5
 
 @unique
 class Faction(IntEnum):
@@ -50,8 +52,12 @@ class ActionStyle(IntEnum):
     AGGRESSIVE = 1
     EVASIVE = 2
 
-class ReasonCode(Enum):
-    """Stable identifiers for simulation decision drivers."""
+class ReasonCode(str, Enum):
+    """
+    Authoritative reason codes for all state changes.
+    Logic ID: 83
+    Stable identifiers for simulation decision drivers.
+    """
     # Movement
     ADVANCING = "advancing"
     OCCUPANCY_VIOLATION = "occupancy_violation"
@@ -64,11 +70,24 @@ class ReasonCode(Enum):
     TARGET_REACHED = "target_reached"
     
     # Combat/Interaction
-    OUT_OF_RANGE = "out_of_range"
-    TARGET_INVALID = "target_invalid"
+    OUT_OF_RANGE = "OUT_OF_RANGE"
+    TARGET_INVALID = "TARGET_INVALID"
     ACTION_EXHAUSTION = "exhaustion"
     INTERACTION_REJECTED = "interaction_rejected"
+    INTERACTION_INTERRUPTED = "interaction_interrupted"
     ENGAGED = "engaged"
+    
+    # Combat Legality Matrix (Hardening)
+    ATTACKER_INCAPACITATED = "ATTACKER_INCAPACITATED"
+    TARGET_INCAPACITATED = "TARGET_INCAPACITATED"
+    LOS_OBSTRUCTED = "LOS_OBSTRUCTED"
+    FRIENDLY_FIRE_ILLEGAL = "FRIENDLY_FIRE_ILLEGAL"
+    INSUFFICIENT_READINESS = "INSUFFICIENT_READINESS"
+    SELF_ATTACK_ILLEGAL = "SELF_ATTACK_ILLEGAL"
+    SKILL_ON_COOLDOWN = "SKILL_ON_COOLDOWN"
+    SKILL_NOT_LEARNED = "SKILL_NOT_LEARNED"
+    REGIONAL_SUPPRESSION = "REGIONAL_SUPPRESSION"
+    ATTACKER_STATUS_BLOCKED = "ATTACKER_STATUS_BLOCKED"
     
     # Tactical AI
     NO_TARGET = "no_target"
@@ -77,13 +96,50 @@ class ReasonCode(Enum):
     MAINTAIN_DISTANCE = "maintain_distance"
     ALLY_SPACING = "ally_spacing"
     CLOSING_RANGE = "closing_range"
+    GROUP_PRIORITY = "group_priority"
     
     # Routine / Biological
     HUNGER = "hunger"
     SLEEPY = "sleepy"
     FORCED_REST = "forced_rest"
     
+    # Strategic / Capacity
+    INSUFFICIENT_CAPACITY = "INSUFFICIENT_CAPACITY"
+    INVENTORY_FULL_DROPPED = "inventory_full_dropped"
+    BUDGET_EXHAUSTED = "budget_exhausted"
+    OUT_OF_STOCK = "OUT_OF_STOCK"
+    LIQUIDITY_EXHAUSTED = "liquidity_exhausted"
+    
+    # Conservation / Transaction
+    TARGET_LOCKED = "target_locked"
+    IDEMPOTENCY_VIOLATION = "idempotency_violation"
+    SOURCE_DEPLETED = "SOURCE_DEPLETED"
+    INSUFFICIENT_GOLD = "INSUFFICIENT_GOLD"
+    INSUFFICIENT_RESOURCES = "INSUFFICIENT_RESOURCES"
+    PRICE_STALE = "PRICE_STALE"
+    INVENTORY_FULL = "INVENTORY_FULL"
+    SOURCE_MISSING = "SOURCE_MISSING"
+    UNKNOWN_SOURCE_KIND = "UNKNOWN_SOURCE_KIND"
+    
+    # Social
+    TOTAL_DISTRUST = "total_distrust"
+    BETRAYAL_HISTORY = "betrayal_history"
+    LOYALTY_ACCEPTANCE = "loyalty_acceptance"
+    FAIR_COMPENSATION = "fair_compensation"
+    HAGGLING_FOR_PAY = "haggling_for_pay"
+    INSUFFICIENT_INCENTIVE = "insufficient_incentive"
+    USURY_REJECTION = "usury_rejection"
+    DESPERATION_ACCEPTANCE = "desperation_acceptance"
+    FRIENDLY_LOAN = "friendly_loan"
+    UNNECESSARY_DEBT = "unnecessary_debt"
+    
+    # Quest
+    QUEST_COMPLETED = "quest_completed"
+    QUEST_FAILED = "quest_failed"
+    QUEST_EXPIRED = "quest_expired"
+    
     # Legacy/Fallback
+    ILLEGAL_ACTION = "ILLEGAL_ACTION"
     UNKNOWN = "unknown"
 
 @unique

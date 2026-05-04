@@ -5,6 +5,7 @@ from src.core.work import WorkItem, WorkClass
 from src.core.protocol_validator import ProtocolViolationError
 from src.config.profiles import RuntimeProfile
 from src.platform.rng import DeterministicRNG
+from src.core.builder import V2EntityBuilder
 
 def test_neighbor_view_sorting():
     """Prove that neighbor views are deterministic and sorted by entity_id."""
@@ -19,12 +20,12 @@ def test_neighbor_view_sorting():
         max_observability_budget_percent=10.0,
         max_tick_budget_ms=10.0
     )
-    # 1. Setup entities in 2D space
+    # 1. Setup entities in 2D space via V2EntityBuilder
     entities = {
-        10: EntityState(id=10, kind="TEST", position=(1.0, 1.0)),
-        50: EntityState(id=50, kind="TEST", position=(50.0, 50.0)), # Out
-        5: EntityState(id=5, kind="TEST", position=(0.0, 0.0)),    # In
-        20: EntityState(id=20, kind="TEST", position=(5.0, 5.0)), # In
+        10: V2EntityBuilder(10).at((1.0, 1.0)).build(),
+        50: V2EntityBuilder(50).at((50.0, 50.0)).build(), # Out
+        5: V2EntityBuilder(5).at((0.0, 0.0)).build(),    # In
+        20: V2EntityBuilder(20).at((5.0, 5.0)).build(), # In
     }
     # Subject is Entity 10
     state = AuthoritativeState(tick=1, seed=42, entities=entities)
@@ -54,7 +55,7 @@ def test_duplicate_entity_update_rejection():
         max_tick_budget_ms=10.0
     )
     state = AuthoritativeState(tick=1, seed=42, entities={
-        1: EntityState(id=1, kind="TEST", position=(0,0))
+        1: V2EntityBuilder(1).at((0,0)).build()
     })
     rng = DeterministicRNG(42)
     kernel = Kernel(profile, state, rng)

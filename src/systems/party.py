@@ -82,26 +82,39 @@ class PartyCoordinationSystem:
         leader: EntityState,
         members: List[EntityState],
         tick: int
-    ) -> List[StrategicUpdate]:
+    ) -> List[Any]: # List[EntityUpdate]
         """
         Propagates the leader's current objective to all active party members.
+        In V2, this is primarily handled via apply_leadership_influence during scoring,
+        but we can use this for forced sync or state cleaning.
         """
-        proj_id = leader.strategic.current_project_id
-        if not proj_id:
-            return []
+        return []
+
+    @staticmethod
+    def validate_shared_target(
+        group_id: int,
+        state: AuthoritativeState
+    ) -> Optional[int]:
+        """
+        Ensures the shared party target is still alive and valid.
+        Clears if target is dead, inactive, or out of range.
+        """
+        group = state.groups.get(group_id)
+        if not group or group.shared_target_id is None:
+            return None
             
-        proj = leader.strategic.projects.get(proj_id)
-        if not proj or not proj.active_objective_id:
-            return []
+        target = state.entities.get(group.shared_target_id)
+        if not target or not target.combat.alive or not target.active:
+            # Clear target logic
+            return None
             
-        updates = []
-        for member in members:
-            # Create a 'Recruited' objective for the member that mirrors the leader's target
-            # but with higher priority/utility via apply_leadership_influence.
-            # Here we just ensure the member's StrategicComponent knows about the leader's goal.
-            pass
-            
-        return updates
+        # Optional: range check against group anchor
+        dx = target.position[0] - group.anchor[0]
+        dy = target.position[1] - group.anchor[1]
+        if (dx*dx + dy*dy) > (group.cohesion_radius * 2.0)**2:
+             return None
+             
+        return group.shared_target_id
 
     @staticmethod
     def issue_party_command(

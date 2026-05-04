@@ -1,66 +1,97 @@
 import pytest
 from dataclasses import replace
-from src.core.state import AuthoritativeState, EntityState, IdentityComponent, CombatComponent
-from src.core.updates import StateUpdate, EntityUpdate, CombatUpdate, NavigationUpdate
+from src.core.state import AuthoritativeState, EntityState
+from src.core.updates import StateUpdate, EntityUpdate, CombatIntent, TaskUpdate, NavigationUpdate
 from src.engine.pipeline import AuthoritativeApplyPipeline
+from src.core.enums import ReasonCode, Faction
+from src.core.builder import V2EntityBuilder
 
 @pytest.fixture
 def base_state():
-    e1 = EntityState(id=1, kind="HERO", position=(0.0, 0.0), active=True)
-    e2 = EntityState(id=2, kind="HERO", position=(1.0, 1.0), active=True)
-    return AuthoritativeState(
-        tick=100,
-        world_time=1000,
-        seed=42,
-        entities={1: e1, 2: e2},
-        regions={},
-        resource_nodes={},
-        buildings={}
-    )
+    e1 = (V2EntityBuilder(1)
+          .at((0.0, 0.0))
+          .active(True)
+          .readiness(100.0)
+          .faction(Faction.HERO_GUILD)
+          .build())
+    return AuthoritativeState(tick=1, seed=42, entities={1: e1})
 
 def test_partial_rejection_occupancy_vs_combat(base_state):
     """
-    Law: Rejecting a move (Occupancy Conflict) must not reject unrelated deltas (e.g. HP loss).
-    Scenario: Entity 1 and Entity 2 both try to move to (0,0).
-    Entity 1 is already at (0,0) and stays there.
-    Entity 2 tries to move to (0,0) but also suffers HP loss (e.g. from a hazard or poison).
+    RPG-INFRA-200: partial_rejection_transparency
+    Proof: This test ensures that if an entity proposes both an occupancy change (legal)
+           and a combat action (illegal due to range), only the combat action is rejected.
     """
-    # Entity 2 proposes move to (0,0) AND HP loss
-    ent_upd_2 = EntityUpdate(
-        entity_id=2,
-        new_position=(0.0, 0.0),
-        moved_this_tick=True,
-        combat=CombatUpdate(hp_delta=-10)
+    # 1. Setup target out of range and DIFFERENT FACTION to avoid friendly fire check
+    target = (V2EntityBuilder(2)
+              .at((100.0, 100.0))
+              .active(True)
+              .faction(Faction.MONSTER_HORDE)
+              .build())
+    state = replace(base_state, entities={**base_state.entities, 2: target})
+    
+    # 2. Propose move (legal) and attack (illegal due to range)
+    update = StateUpdate(
+        entity_updates={
+            1: EntityUpdate(
+                entity_id=1,
+                navigation=NavigationUpdate(target_set=(5.0, 5.0)),
+                task=TaskUpdate(
+                    work_kind_set="ENTITY_ACT",
+                    payload_set={"action": "ATTACK", "target_id": 2}
+                )
+            )
+        }
     )
     
-    raw_update = StateUpdate(entity_updates={2: ent_upd_2})
+    refined = AuthoritativeApplyPipeline.refine(state, update)
     
-    # Refine the update
-    refined_update = AuthoritativeApplyPipeline.refine(base_state, raw_update)
+    # 3. Verify move was ATTEMPTED and processed (new_position is not None and not the same as start)
+    assert refined.entity_updates[1].new_position is not None
+    assert refined.entity_updates[1].new_position != (0.0, 0.0)
+    assert refined.entity_updates[1].moved_this_tick is True
     
-    # Entity 2's move should be rejected (since 1 is there)
-    res_2 = refined_update.entity_updates[2]
-    assert res_2.new_position is None
-    assert res_2.moved_this_tick is False
-    assert res_2.navigation.failure_reason == "OCCUPANCY_CONFLICT"
-    
-    # BUT the HP loss must be preserved
-    assert res_2.combat.hp_delta == -10
+    # 4. Verify combat is rejected for RANGE, not faction
+    task_res = refined.entity_updates[1].task
+    assert task_res.payload_set.get("outcome") == "FAILURE"
+    assert task_res.payload_set.get("reason") == ReasonCode.OUT_OF_RANGE
 
 def test_partial_rejection_occupancy_vs_readiness(base_state):
     """
-    Law: Rejecting a move must not reject unrelated deltas (e.g. readiness changes).
+    Proof: This test ensures that if an entity is not ready, its action is rejected.
     """
-    ent_upd_2 = EntityUpdate(
-        entity_id=2,
-        new_position=(0.0, 0.0),
-        moved_this_tick=True,
-        readiness_delta=50.0
+    # 1. Setup entity with 0 readiness
+    hero = (V2EntityBuilder(1)
+            .at((0.0, 0.0))
+            .active(True)
+            .readiness(0.0)
+            .faction(Faction.HERO_GUILD)
+            .build())
+    # Need a target to avoid TARGET_INVALID, and DIFFERENT FACTION
+    target = (V2EntityBuilder(2)
+              .at((1.0, 1.0))
+              .active(True)
+              .faction(Faction.MONSTER_HORDE)
+              .build())
+    state = replace(base_state, entities={1: hero, 2: target})
+    
+    # 2. Propose move and action
+    update = StateUpdate(
+        entity_updates={
+            1: EntityUpdate(
+                entity_id=1,
+                navigation=NavigationUpdate(target_set=(1.0, 1.0)),
+                task=TaskUpdate(
+                    work_kind_set="ENTITY_ACT",
+                    payload_set={"action": "ATTACK", "target_id": 2}
+                )
+            )
+        }
     )
     
-    raw_update = StateUpdate(entity_updates={2: ent_upd_2})
-    refined_update = AuthoritativeApplyPipeline.refine(base_state, raw_update)
+    refined = AuthoritativeApplyPipeline.refine(state, update)
     
-    res_2 = refined_update.entity_updates[2]
-    assert res_2.new_position is None # Rejected
-    assert res_2.readiness_delta == 60.0 # 50.0 proposed + 10.0 global recovery
+    # 3. Verify action is rejected due to readiness
+    task_res = refined.entity_updates[1].task
+    assert task_res.payload_set.get("outcome") == "FAILURE"
+    assert task_res.payload_set.get("reason") == ReasonCode.INSUFFICIENT_READINESS

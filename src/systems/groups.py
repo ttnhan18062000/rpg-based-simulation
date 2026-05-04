@@ -14,7 +14,7 @@ class GroupSystem:
     """
 
     @staticmethod
-    def update_groups(state: AuthoritativeState) -> StateUpdate:
+    def update_groups(state: AuthoritativeState, current_update: Optional[StateUpdate] = None) -> StateUpdate:
         from src.core.updates import StateUpdate, EntityUpdate
         from src.core.state import GroupRecord
         
@@ -22,10 +22,17 @@ class GroupSystem:
         groups_remove: List[int] = []
         entity_updates: Dict[int, EntityUpdate] = {}
 
+        def is_alive(e_id: int) -> bool:
+            ent = state.entities.get(e_id)
+            return ent.combat.alive if ent else False
+
+        def get_pos(e_id: int) -> tuple[float, float]:
+            ent = state.entities.get(e_id)
+            return ent.position if ent else (0.0, 0.0)
+
         # 1. Process Existing Groups (Dissolution & Cohesion)
         for g_id, group in state.groups.items():
-            leader = state.entities.get(group.leader_id)
-            if not leader or not leader.combat.alive:
+            if not is_alive(group.leader_id):
                 # Leader is gone, dissolve group
                 # VERIFIED v2: group_dissolution_leader_loss
                 groups_remove.append(g_id)
@@ -34,29 +41,31 @@ class GroupSystem:
                         entity_updates[m_id] = EntityUpdate(entity_id=m_id, group_id_set=-1) # -1 means None/Reset
                 continue
 
+            leader = state.entities.get(group.leader_id)
             # Filter members (alive and within reasonable range)
             new_member_ids: Set[int] = {group.leader_id}
-            member_positions: List[tuple[float, float]] = [leader.position]
+            member_positions: List[tuple[float, float]] = [get_pos(group.leader_id)]
             
             for m_id in group.member_ids:
                 if m_id == group.leader_id:
                     continue
                 
-                member = state.entities.get(m_id)
-                if not member or not member.combat.alive:
+                if not is_alive(m_id):
                     entity_updates[m_id] = EntityUpdate(entity_id=m_id, group_id_set=-1)
                     continue
                 
                 # Cohesion check
                 # VERIFIED v2: group_cohesion_check
-                dx = member.position[0] - group.anchor[0]
-                dy = member.position[1] - group.anchor[1]
+                m_pos = get_pos(m_id)
+                dx = m_pos[0] - group.anchor[0]
+                dy = m_pos[1] - group.anchor[1]
                 dist_sq = dx*dx + dy*dy
                 
                 # Phase 7: Contract validity check
                 # VERIFIED v2: group_contract_binding
                 contract_invalid = False
-                if group.contract_id:
+                leader = state.entities.get(group.leader_id) # Needed for contract access
+                if group.contract_id and leader:
                     from src.core.strategic import ContractStatus
                     contract = leader.strategic.contracts.get(group.contract_id)
                     if not contract or contract.status != ContractStatus.ACTIVE:
@@ -69,7 +78,7 @@ class GroupSystem:
                     continue
                 
                 new_member_ids.add(m_id)
-                member_positions.append(member.position)
+                member_positions.append(m_pos)
 
             if len(new_member_ids) < 2:
                 groups_remove.append(g_id)
@@ -81,13 +90,19 @@ class GroupSystem:
             avg_x = sum(p[0] for p in member_positions) / len(member_positions)
             avg_y = sum(p[1] for p in member_positions) / len(member_positions)
             
-            # Propagate Shared Target from Leader
+            # Domain 7 Hardening: Shared Target Logic
             new_shared_target_id = leader.task.payload.get("target_id")
             if not new_shared_target_id:
-                # Fallback to navigation target if any
-                new_shared_target_id = leader.navigation.target # Wait, this is a tuple.
+                new_shared_target_id = leader.navigation.target
             
-            # Actually, let's use the task payload target_id specifically for combat focus.
+            # Hysteresis: Keep old target if new one is None but leader is still acting
+            if new_shared_target_id is None and group.shared_target_id is not None:
+                if leader.task.work_kind in ("ENTITY_ACT", "COMBAT_ACT"):
+                    new_shared_target_id = group.shared_target_id
+            
+            # Domain 4: Target Validity Check (Hardened)
+            from src.systems.party import PartyCoordinationSystem
+            new_shared_target_id = PartyCoordinationSystem.validate_shared_target(g_id, state)
             
             # Update Roles
             new_roles = {group.leader_id: "LEADER"}
@@ -110,6 +125,38 @@ class GroupSystem:
                 last_updated_tick=state.tick
             )
             groups_add_or_update.append(updated_group)
+            
+            # Domain 7: Directive Propagation
+            # Members inherit leader's project as a GROUP_OBJECTIVE directive
+            if leader.strategic.current_project_id:
+                project = leader.strategic.projects.get(leader.strategic.current_project_id)
+                if project:
+                    from src.core.strategic import DirectiveState, DirectivePriority
+                    from src.core.updates import StrategicUpdate
+                    for m_id in new_member_ids:
+                        if m_id == leader.id: continue
+                        
+                        # Only propagate if member trusts leader
+                        member = state.entities.get(m_id)
+                        bond = member.social.bonds.get(leader.id)
+                        trust = (bond.sentiment + 1.0) / 2.0 if bond else member.social.trust_history.get(leader.id, 0.5)
+                        
+                        if trust >= 0.3:
+                            directive = DirectiveState(
+                                id=f"group_obj_{group.id}_{m_id}",
+                                kind="GROUP_OBJECTIVE",
+                                target=project.kind,
+                                priority=DirectivePriority.NORMAL,
+                                salience=0.5,
+                                created_tick=state.tick
+                            )
+                            m_upd = entity_updates.get(m_id, EntityUpdate(entity_id=m_id))
+                            # Merge strategic updates
+                            existing_strat = m_upd.strategic if m_upd.strategic else StrategicUpdate()
+                            new_strat = replace(existing_strat,
+                                directives_add_or_update=existing_strat.directives_add_or_update + [directive]
+                            )
+                            entity_updates[m_id] = replace(m_upd, strategic=new_strat)
 
         # 2. Group Formation (Purpose-Driven)
         # VERIFIED v2: group_formation_purpose_driven

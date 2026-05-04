@@ -107,6 +107,7 @@ class Kernel:
         self._final_results = []
         self._final_compute_ms = 0.0
         self._phase_costs = {}
+        self._start_perf_ts = time.perf_counter_ns()
 
         self.validate(flags)
 
@@ -167,6 +168,27 @@ class Kernel:
         self._phase_costs["persistence"] = (time.perf_counter_ns() - t6) / 1e6
         
         self._final_compute_ms = (time.perf_counter_ns() - t0) / 1e6
+        
+        # Law 120: Tick budget enforcement
+        # Logic ID: 120
+        # Abort if compute exceeds 2x average (minimum 20ms) or 100ms hard cap.
+        avg_ms = (self._status.signal_history[-1].tick_compute_ms if self._status.signal_history else 10.0)
+        limit_ms = max(20.0, avg_ms * 2.0)
+        if self._final_compute_ms > min(100.0, limit_ms):
+             logger.warning(f"Tick {self._state.tick} exceeded budget: {self._final_compute_ms:.2f}ms vs limit {limit_ms:.2f}ms. Aborting next tick if sustained.")
+             # We can't easily 'abort' the CURRENT tick as it's mostly done, 
+             # but we can signal to the governor to throttle HARD next tick.
+             self._status.record_dropped_work(9999) # Signal extreme pressure
+
+        # Law 121: Frame pacing
+        # Logic ID: 121
+        # Maintain consistent frequency based on max_tick_budget_ms.
+        target_ms = self._profile.max_tick_budget_ms
+        if target_ms > 0:
+            elapsed_ms = (time.perf_counter_ns() - t0) / 1e6
+            sleep_ms = target_ms - elapsed_ms
+            if sleep_ms > 0:
+                time.sleep(sleep_ms / 1000.0)
 
     def _phase_init(self) -> None:
         self._worker_manager.reset_tick_stats()
@@ -230,7 +252,18 @@ class Kernel:
         
         work_debt_updates: Dict[str, int] = {}
         entity_updates: Dict[int, EntityUpdate] = {}
-        for res in self._final_results:
+        for i, res in enumerate(self._final_results):
+            # Mid-tick emergency throttle!
+            if i % 10 == 0:
+                elapsed = (time.perf_counter_ns() - self._start_perf_ts) / 1e6
+                if elapsed > 100.0:
+                    # VERIFIED v2: RPG-INFRA-203
+                    logger.warning(f"Mid-tick emergency throttle triggered at {elapsed:.2f}ms")
+                    self._status.record_dropped_work(len(self._final_results) - i)
+                    from src.core.governance import RuntimeMode
+                    self._governor.force_mode(RuntimeMode.DEGRADED, self._status, self._state.tick)
+                    break
+
             if res.work_debt_update is not None and res.subsystem_id:
                 work_debt_updates[res.subsystem_id] = res.work_debt_update
                 continue
@@ -244,7 +277,27 @@ class Kernel:
             else:
                 entity_updates[res.entity_id] = EntityUpdate(entity_id=res.entity_id)
 
-        raw_update = StateUpdate(entity_updates=entity_updates, work_debt_updates=work_debt_updates)
+        # Phase E5.6: Pressure-Aware Economy Signals
+        if self._current_signals is None:
+            debt_ratio = 0.0
+            compute_ratio = 0.0
+        else:
+            debt_ratio = self._current_signals.work_debt_total / self._profile.max_work_debt
+            compute_ratio = self._current_signals.tick_compute_ms / self._profile.max_tick_budget_ms
+        global_salience = min(2.0, debt_ratio + compute_ratio)
+        
+        pressure_dict = {
+            "global_salience": global_salience,
+            "debt_ratio": debt_ratio,
+            "compute_ratio": compute_ratio
+        }
+
+        raw_update = StateUpdate(
+            entity_updates=entity_updates, 
+            work_debt_updates=work_debt_updates,
+            pressure_signals_set=pressure_dict,
+            current_mode_set=self._current_policy.mode
+        )
         
         # M3 Law: Unified authoritative refinement pipeline
         refined_update = AuthoritativeApplyPipeline.refine(self._state, raw_update)

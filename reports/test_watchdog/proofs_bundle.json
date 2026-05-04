@@ -1,0 +1,23 @@
+{
+  "WATCHDOG_TEST:WATCHDOG_SCENARIO": {
+    "run_id": "86e5db02-d0b7-46c2-bd6b-72733939dd14",
+    "timestamp": "1777872743.702617",
+    "commit_sha": "20d6a1ef5bb632e343cbfaa8cb47d5cd8a5d5f66",
+    "profile_name": "WATCHDOG_TEST",
+    "scenario_id": "WATCHDOG_SCENARIO",
+    "seed": "42",
+    "environment": "{'detected_facts': \"{'os': 'Linux', 'os_release': '6.17.0-22-generic', 'python_version': '3.13.7', 'cpu_count_logical': 6, 'cpu_count_physical': 6, 'ram_total_gb': 11.18, 'cpu_freq_mhz': 2687.998}\", 'detected_class': 'class_b', 'effective_class': 'class_b', 'override_applied': 'False', 'os_name': 'linux', 'python_version': '3.13'}",
+    "measurements": "[]",
+    "baseline_hash": "84f767e6732554f939e9af1b25b7408eef242ad244e8efa66d05e75788ad9dd0",
+    "final_hash": "84f767e6732554f939e9af1b25b7408eef242ad244e8efa66d05e75788ad9dd0",
+    "governor_mode_sequence": "['NORMAL']",
+    "conformance_passed": "False",
+    "stop_condition": "watchdog",
+    "allowed_failure_observed": "False",
+    "failure_kind": "failed_reporting_incomplete",
+    "failure_reason": "No measurement points captured during scenario.",
+    "peak_rss_mb": "0.0",
+    "total_cpu_sec": "0.0",
+    "final_state": "{'tick': '100', 'seed': '42', 'world_time': '0', 'entities': '{}', 'resource_nodes': '{}', 'ground_items': '{}', 'corpses': '{}', 'chests': '{}', 'buildings': '{}', 'camps': '{}', 'regions': '{}', 'local_scars': '{}', 'groups': '{}', 'terrain': '{}', 'global_resources': '{}', 'home_storage': '{}', 'town_center': '(0.0, 0.0)', 'periodic_due_ticks': '{}', 'work_debt': '{}', 'movement_count': '0', 'maturity': '0', 'last_calamity_tick': '0', 'blocked_tiles': [], 'town_tiles': [], 'building_tiles': '{}', 'rng_checkpoint': 'None', 'transaction_trace': '[]', 'rejection_registry': '{}', 'pressure_signals': '{}', 'current_mode': 0, 'processed_transaction_ids': [], 'next_node_id': '1000', 'next_entity_id': '1'}"
+  }
+}

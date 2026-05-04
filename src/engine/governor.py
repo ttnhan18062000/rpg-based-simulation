@@ -55,6 +55,11 @@ class ResourceGovernor:
             
         return GovernorPolicy.from_mode(status.current_mode)
 
+    def force_mode(self, mode: RuntimeMode, status: RuntimeStatus, current_tick: int) -> None:
+        """Emergency override for mid-tick throttling."""
+        if mode > status.current_mode:
+            status.reset_dwell(mode, current_tick)
+
     def _get_indicated_mode(
         self, 
         profile: RuntimeProfile, 

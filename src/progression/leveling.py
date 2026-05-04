@@ -77,6 +77,8 @@ class LevelingService:
         attributes: AttributeComponent,
         equipment: Optional[EquipmentComponent] = None,
         learned_skills: Optional[Set[str]] = None,
+        traits: Optional[Set[str]] = None,
+        current_role: str = "VANGUARD",
         base_hp: int = 100,
         base_atk: int = 10,
         base_def: int = 5,
@@ -137,19 +139,47 @@ class LevelingService:
                         evasion += skill.power
                     # Add other passives here as they are added to registry
         
+        # 3.1. Add Trait Bonuses (Task 6.3)
+        if traits:
+            # Simple mapping for now
+            if "Tough" in traits:
+                max_hp += 20
+            if "Quick" in traits:
+                evasion += 0.02
+            if "Strong" in traits:
+                atk += 3
+        
         # 4. Movement Cost Scaling (PH8)
         # VERIFIED v2: encumbrance_movement_scaling
-        # Base cost is 10.0. Every 5kg of weight adds +1 cost.
-        # Agility reduces cost (1 agility = -0.1 cost).
         move_cost = 10.0 + (total_weight / 5.0) - (attributes.agility * 0.1)
         move_cost = max(5.0, move_cost) # Minimum cost 5.0
         
+        # 5. Tactical Role Derivation (Task 6.4)
+        # Logic: Highest primary attribute defines role
+        # Str -> VANGUARD, Agi -> SKIRMISHER, Vit -> PROTECTOR
+        role_scores = {
+            "VANGUARD": attributes.strength,
+            "SKIRMISHER": attributes.agility,
+            "PROTECTOR": attributes.vitality
+        }
+        # Get role with max score (deterministic fallback to VANGUARD)
+        new_role = max(role_scores, key=role_scores.get)
+        
+        # Apply Hysteresis (Task 6.4)
+        # Only switch if the new leader is at least 5 points ahead of current role's score
+        current_role_score = role_scores.get(current_role, 0)
+        if role_scores[new_role] <= current_role_score + 5:
+            derived_role = current_role
+        else:
+            derived_role = new_role
+            
         return {
             "max_hp": max_hp,
             "atk": atk,
             "def_stat": def_stat,
             "evasion": evasion,
             "range": atk_range,
-            "move_cost": move_cost
+            "move_cost": move_cost,
+            "tactical_role": derived_role
         }
 

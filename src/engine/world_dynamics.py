@@ -136,7 +136,9 @@ class WorldDynamicsSystem:
             last_calamity_tick_set=calamity_update.last_calamity_tick_set if calamity_update.last_calamity_tick_set is not None else update.last_calamity_tick_set,
             entities_add=update.entities_add + calamity_update.entities_add + raid_update.entities_add + spawn_update.entities_add + boss_spawn_update.entities_add + camp_state_update.entities_add,
             nodes_add=update.nodes_add + ecology_update.nodes_add,
-            camp_updates=camp_state_update.camp_updates
+            camp_updates=camp_state_update.camp_updates,
+            next_node_id_set=ecology_update.next_node_id_set or update.next_node_id_set,
+            next_entity_id_set=generator._last_id + 1 if (generator._last_id + 1) > state.next_entity_id else None
         )
 
 

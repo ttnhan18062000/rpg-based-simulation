@@ -4,7 +4,7 @@ from src.engine.scheduler import DeterministicScheduler, PeriodicDefinition
 from src.engine.policy import GovernorPolicy
 from src.core.governance import RuntimeMode
 from src.core.work import WorkClass
-
+from src.core.builder import V2EntityBuilder
 
 def test_survival_shedding():
     """Verify that only authoritative work survives in SURVIVAL mode."""
@@ -15,7 +15,7 @@ def test_survival_shedding():
     scheduler = DeterministicScheduler(periodic_defs=[p_auth, p_non_auth])
     
     state = AuthoritativeState(tick=1, seed=42, 
-        entities={1: EntityState(id=1, kind="hero", position=(0,0), readiness=100.0)},
+        entities={1: V2EntityBuilder(1).kind("hero").at((0.0, 0.0)).readiness(100.0).build()},
         periodic_due_ticks={"A": 1, "N": 1}
     )
     

@@ -22,6 +22,7 @@ class GovernorPolicy:
     replay_allowed: bool = True
     replay_richness: str = "FULL"       # "FULL", "MINIMAL", "OFF"
     allow_subsystem_traces: bool = True
+    mode: RuntimeMode = RuntimeMode.NORMAL
 
     @classmethod
     def from_mode(cls, mode: RuntimeMode) -> GovernorPolicy:
@@ -37,7 +38,8 @@ class GovernorPolicy:
                 concurrency_limit=1.0,
                 replay_allowed=True,
                 replay_richness="FULL",
-                allow_subsystem_traces=True
+                allow_subsystem_traces=True,
+                mode=RuntimeMode.NORMAL
             )
         
         if mode == RuntimeMode.CONSTRAINED:
@@ -49,7 +51,8 @@ class GovernorPolicy:
                 concurrency_limit=1.0,
                 replay_allowed=True,
                 replay_richness="FULL",
-                allow_subsystem_traces=False # Drop internal traces first
+                allow_subsystem_traces=False, # Drop internal traces first
+                mode=RuntimeMode.CONSTRAINED
             )
             
         if mode == RuntimeMode.DEGRADED:
@@ -61,7 +64,8 @@ class GovernorPolicy:
                 concurrency_limit=0.5,
                 replay_allowed=True,
                 replay_richness="MINIMAL",
-                allow_subsystem_traces=False
+                allow_subsystem_traces=False,
+                mode=RuntimeMode.DEGRADED
             )
             
         if mode == RuntimeMode.SURVIVAL:
@@ -73,7 +77,8 @@ class GovernorPolicy:
                 concurrency_limit=0.25,
                 replay_allowed=False,
                 replay_richness="OFF",
-                allow_subsystem_traces=False
+                allow_subsystem_traces=False,
+                mode=RuntimeMode.SURVIVAL
             )
             
         return cls()

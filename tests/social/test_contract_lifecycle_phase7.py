@@ -39,7 +39,8 @@ def test_appraisal_betrayal_rejection():
     
     status, reason, _ = SocialAppraisalSystem.appraise_contract(candidate, contract, state)
     assert status == ContractStatus.CANCELLED
-    assert reason in ("TOTAL_DISTRUST", "BETRAYAL_HISTORY")
+    from src.core.enums import ReasonCode
+    assert reason in (ReasonCode.TOTAL_DISTRUST, ReasonCode.BETRAYAL_HISTORY, "TOTAL_DISTRUST", "BETRAYAL_HISTORY")
 
 def test_appraisal_risk_vs_hp():
     """Verify that low HP actors reject high-risk contracts."""
@@ -50,7 +51,8 @@ def test_appraisal_risk_vs_hp():
     
     status, reason, _ = SocialAppraisalSystem.appraise_contract(low_hp_actor, contract, state)
     assert status == ContractStatus.FAILED
-    assert reason == "TOO_DANGEROUS"
+    from src.core.enums import ReasonCode
+    assert reason in (ReasonCode.LOW_HP_RETREAT, "TOO_DANGEROUS")
 
 def test_offer_expiration_logic():
     """Verify that the engine cleans up expired contract offers."""
@@ -85,8 +87,11 @@ def test_resolution_reputation_impact():
     contract = ContractService.create_recruitment_contract("c_rep", 99, 1, tick=100)
     contract = replace(contract, status=ContractStatus.ACTIVE)
     
-    s_upd, b_upds = ContractService.resolve_contract_outcome(contract, success=True)
+    e1 = create_mock_entity(1)
+    e1 = replace(e1, strategic=replace(e1.strategic, contracts={"c_rep": contract}))
+    
+    s_upd, b_upds = ContractService.resolve_contract_outcome(e1, "c_rep", success=True)
     
     # Check for reputation or turning point in s_upd
     # Phase 7 requirement: success improves trust/reputation
-    assert any(upd.bond_updates[0].sentiment_delta > 0 for upd in b_upds)
+    assert any(upd.sentiment_delta > 0 for upd in b_upds[0].bond_updates)

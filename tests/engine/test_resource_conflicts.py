@@ -3,12 +3,14 @@ from dataclasses import replace
 from src.core.state import AuthoritativeState, EntityState, CorpseState, ItemStack, InventoryComponent
 from src.core.updates import StateUpdate, EntityUpdate, ResourceTransferIntent
 from src.engine.pipeline import AuthoritativeApplyPipeline
+from src.core.enums import ReasonCode
+from src.core.builder import V2EntityBuilder
 
 def test_contested_corpse_loot_conflict():
     """
     Law: One accepted destructive transfer per source per tick.
     Proof: This test proves that if two actors try to loot the same corpse in the same tick,
-           only the first one (lowest ID) succeeds and the second one gets SOURCE_LOCKED.
+           only the first one (lowest ID) succeeds and the second one gets TARGET_LOCKED.
            
     RPG-1694: actor_validity_enforcement
     RPG-1695: source_locked_conflict
@@ -16,8 +18,17 @@ def test_contested_corpse_loot_conflict():
     """
     # 1. Setup state with a corpse and two actors
     corpse = CorpseState(id=10, original_entity_id=50, position=(5, 5), items=[ItemStack("wood", 10)], decay_tick=200)
-    actor_a = EntityState(id=1, kind="HERO", position=(5, 5), active=True, inventory=InventoryComponent(max_slots=10))
-    actor_b = EntityState(id=2, kind="HERO", position=(5, 5), active=True, inventory=InventoryComponent(max_slots=10))
+    
+    # Milestone 13 Law: Every ENTITY_ACT (including resource transfers) requires 100.0 readiness.
+    actor_a = (V2EntityBuilder(1)
+               .at((5, 5))
+               .readiness(100.0)
+               .build())
+    
+    actor_b = (V2EntityBuilder(2)
+               .at((5, 5))
+               .readiness(100.0)
+               .build())
     
     state = AuthoritativeState(
         tick=100,
@@ -58,11 +69,11 @@ def test_contested_corpse_loot_conflict():
     assert len(res_1) == 1
     assert res_1[0].accepted is True
     
-    # Actor 2 should fail with SOURCE_LOCKED
+    # Actor 2 should fail with TARGET_LOCKED
     res_2 = refined.entity_updates[2].intent_results
     assert len(res_2) == 1
     assert res_2[0].accepted is False
-    assert res_2[0].reason == "SOURCE_LOCKED"
+    assert res_2[0].reason == ReasonCode.TARGET_LOCKED
     
     # Only one corpse removal should be proposed
     assert len(refined.corpses_remove) == 1

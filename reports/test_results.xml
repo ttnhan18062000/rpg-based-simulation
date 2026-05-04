@@ -1,0 +1,1471 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites><testsuite name="pytest" errors="0" failures="63" skipped="0" tests="282" time="36.104" timestamp="2026-05-04T12:32:10.382569+07:00" hostname="ubuntu"><testcase classname="tests.engine.test_anti_thrashing" name="test_recovery_confidence_window" time="0.002" /><testcase classname="tests.engine.test_anti_thrashing" name="test_anti_thrashing_spiky_load" time="0.002" /><testcase classname="tests.engine.test_anti_thrashing" name="test_monotonic_recovery_step" time="0.000" /><testcase classname="tests.engine.test_arena_stop_conditions" name="test_arena_stop_condition_wipe" time="5.751" /><testcase classname="tests.engine.test_arena_stop_conditions" name="test_arena_stop_condition_timeout" time="1.071" /><testcase classname="tests.engine.test_authoritative_apply" name="test_generation_isolation" time="0.001" /><testcase classname="tests.engine.test_authoritative_apply" name="test_deterministic_apply_order" time="0.001" /><testcase classname="tests.engine.test_authoritative_apply" name="test_resource_update_determinism" time="0.000" /><testcase classname="tests.engine.test_authoritative_apply" name="test_periodic_update_determinism" time="0.000" /><testcase classname="tests.engine.test_certification_scenarios" name="test_rejection_tracking_certification" time="0.004" /><testcase classname="tests.engine.test_certification_scenarios" name="test_final_certification_report_generation" time="0.003" /><testcase classname="tests.engine.test_checkpoint_reproducibility" name="test_hash_construction_order_invariance" time="0.002" /><testcase classname="tests.engine.test_checkpoint_reproducibility" name="test_hash_compact_vs_pretty" time="0.001" /><testcase classname="tests.engine.test_checkpoint_reproducibility" name="test_property_sorting_in_hash" time="0.001" /><testcase classname="tests.engine.test_checkpoint_reproducibility" name="test_deep_property_sorting" time="0.001" /><testcase classname="tests.engine.test_checkpoint_reproducibility" name="test_hash_isolation" time="0.000" /><testcase classname="tests.engine.test_checkpoint_reproducibility" name="test_rng_hash_reproducibility" time="0.001" /><testcase classname="tests.engine.test_combat_matrix" name="test_melee_range_violation" time="0.001" /><testcase classname="tests.engine.test_combat_matrix" name="test_friendly_fire_single_attack" time="0.001" /><testcase classname="tests.engine.test_combat_matrix" name="test_aoe_friendly_fire_safety" time="0.001" /><testcase classname="tests.engine.test_combat_matrix" name="test_atomic_rewards_on_kill" time="0.001" /><testcase classname="tests.engine.test_combat_matrix" name="test_multi_attacker_kill_rewards" time="0.001" /><testcase classname="tests.engine.test_combat_matrix" name="test_xp_rejected_when_inventory_full" time="0.001" /><testcase classname="tests.engine.test_combat_matrix" name="test_no_double_kill_rewards" time="0.001" /><testcase classname="tests.engine.test_combat_reward_hardening" name="test_combat_reward_consolidation_xp_gold" time="0.002" /><testcase classname="tests.engine.test_combat_reward_hardening" name="test_skill_reward_consolidation" time="0.003" /><testcase classname="tests.engine.test_concern_intake" name="test_concern_intake_salience_filtering" time="0.001" /><testcase classname="tests.engine.test_deferred_work_debt" name="test_deferred_drain_selection" time="0.000" /><testcase classname="tests.engine.test_deferred_work_debt" name="test_deferred_drain_ordering" time="0.001" /><testcase classname="tests.engine.test_deferred_work_debt" name="test_deferred_vs_periodic_priority" time="0.001" /><testcase classname="tests.engine.test_degradation_order" name="test_survival_shedding" time="0.001" /><testcase classname="tests.engine.test_degradation_order" name="test_degraded_opportunistic_shedding" time="0.000" /><testcase classname="tests.engine.test_determinism_suite" name="test_reproducibility" time="0.001"><failure message="TypeError: EntityState.__init__() got an unexpected keyword argument 'position'">def test_reproducibility():
+        """Seed 42, 10 ticks, must yield identical final hashes across 10 runs."""
+        hashes = []
+    
+        for _ in range(10):
+            profile = RuntimeProfile(
+                name="det-test",
+                hardware_class=HardwareClass.CLASS_B,
+                max_ram_mb=1024,
+                max_cpu_percent=100.0,
+                max_worker_count=1,
+                max_queue_depth=100,
+                max_replay_buffer_kb=0,
+                max_observability_budget_percent=0.0,
+                max_tick_budget_ms=16.6
+            )
+            # Initial state with some entities to increase complexity
+            state = AuthoritativeState(tick=0, seed=42, world_time=0, entities={
+&gt;               1: EntityState(id=1, kind="hero", position=(0,0)),
+                2: EntityState(id=2, kind="mob", position=(5,5))
+            })
+E           TypeError: EntityState.__init__() got an unexpected keyword argument 'position'
+
+tests/engine/test_determinism_suite.py:26: TypeError</failure></testcase><testcase classname="tests.engine.test_determinism_suite" name="test_seed_divergence" time="0.002" /><testcase classname="tests.engine.test_determinism_suite" name="test_canonical_sorting_stability" time="0.001"><failure message="TypeError: EntityState.__init__() got an unexpected keyword argument 'position'">def test_canonical_sorting_stability():
+        """Verify that dict key order does not affect the hash."""
+        state_a = AuthoritativeState(tick=1, seed=1, entities={
+&gt;           1: EntityState(id=1, kind="a", position=(0,0)),
+            2: EntityState(id=2, kind="b", position=(1,1))
+        })
+E       TypeError: EntityState.__init__() got an unexpected keyword argument 'position'
+
+tests/engine/test_determinism_suite.py:57: TypeError</failure></testcase><testcase classname="tests.engine.test_determinism_suite" name="test_local_vs_concurrent_equivalence" time="0.001"><failure message="TypeError: EntityState.__init__() got an unexpected keyword argument 'position'">def test_local_vs_concurrent_equivalence():
+        """
+        Law: The local baseline and concurrent adapter must yield identical results.
+        Proof: Same seed, same state, different executors -&gt; same final hash.
+        """
+        from src.engine.executor import LocalSequentialExecutor, ConcurrentExecutionAdapter
+    
+        profile = RuntimeProfile(
+            name="equivalence-test",
+            hardware_class=HardwareClass.CLASS_B,
+            max_ram_mb=1024,
+            max_cpu_percent=100.0,
+            max_worker_count=1,
+            max_queue_depth=100,
+            max_replay_buffer_kb=0,
+            max_observability_budget_percent=0.0,
+            max_tick_budget_ms=100.0
+        )
+    
+        initial_state = AuthoritativeState(tick=0, seed=42, world_time=0, entities={
+&gt;           1: EntityState(id=1, kind="hero", position=(0,0), readiness=100),
+            2: EntityState(id=2, kind="mob", position=(5,5), readiness=100)
+        })
+E       TypeError: EntityState.__init__() got an unexpected keyword argument 'position'
+
+tests/engine/test_determinism_suite.py:93: TypeError</failure></testcase><testcase classname="tests.engine.test_executor_parity.TestExecutorParity" name="test_parity_idle_entities" time="0.001"><failure message="TypeError: EntityState.__init__() got an unexpected keyword argument 'position'">self = &lt;tests.engine.test_executor_parity.TestExecutorParity object at 0x6ffe61427250&gt;
+
+    def test_parity_idle_entities(self):
+        """Idle entities produce identical no-op updates across both executors."""
+&gt;       state = make_state(n_entities=5, seed=42)
+
+tests/engine/test_executor_parity.py:100: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+n_entities = 5, seed = 42
+
+    def make_state(n_entities=5, seed=42):
+        """Create a state with n entities spread across distinct positions."""
+        entities = {}
+        for i in range(1, n_entities + 1):
+&gt;           entities[i] = EntityState(
+                id=i, kind="HERO", position=(float(i * 2), float(i * 3)),
+                active=True,
+                identity=IdentityComponent(faction=0),
+                combat=CombatComponent(hp=100, max_hp=100, atk=10, def_stat=5, alive=True),
+                navigation=NavigationComponent(),
+                task=TaskComponent(work_kind="ENTITY_ACT", payload={"action": "idle"}),
+                inventory=InventoryComponent(max_slots=4, items=[], gold=100),
+                interaction=InteractionComponent()
+            )
+E           TypeError: EntityState.__init__() got an unexpected keyword argument 'position'
+
+tests/engine/test_executor_parity.py:33: TypeError</failure></testcase><testcase classname="tests.engine.test_executor_parity.TestExecutorParity" name="test_parity_across_multiple_seeds" time="0.001"><failure message="TypeError: EntityState.__init__() got an unexpected keyword argument 'position'">self = &lt;tests.engine.test_executor_parity.TestExecutorParity object at 0x6ffe61427390&gt;
+
+    def test_parity_across_multiple_seeds(self):
+        """Parity holds across different seed values."""
+        for seed in [1, 42, 999, 123456]:
+&gt;           state = make_state(n_entities=3, seed=seed)
+
+tests/engine/test_executor_parity.py:128: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+n_entities = 3, seed = 1
+
+    def make_state(n_entities=5, seed=42):
+        """Create a state with n entities spread across distinct positions."""
+        entities = {}
+        for i in range(1, n_entities + 1):
+&gt;           entities[i] = EntityState(
+                id=i, kind="HERO", position=(float(i * 2), float(i * 3)),
+                active=True,
+                identity=IdentityComponent(faction=0),
+                combat=CombatComponent(hp=100, max_hp=100, atk=10, def_stat=5, alive=True),
+                navigation=NavigationComponent(),
+                task=TaskComponent(work_kind="ENTITY_ACT", payload={"action": "idle"}),
+                inventory=InventoryComponent(max_slots=4, items=[], gold=100),
+                interaction=InteractionComponent()
+            )
+E           TypeError: EntityState.__init__() got an unexpected keyword argument 'position'
+
+tests/engine/test_executor_parity.py:33: TypeError</failure></testcase><testcase classname="tests.engine.test_executor_parity.TestExecutorParity" name="test_parity_with_multi_threaded_executor" time="0.001"><failure message="TypeError: EntityState.__init__() got an unexpected keyword argument 'position'">self = &lt;tests.engine.test_executor_parity.TestExecutorParity object at 0x6ffe61469e00&gt;
+
+    def test_parity_with_multi_threaded_executor(self):
+        """Even with multiple worker threads, results match local baseline."""
+&gt;       state = make_state(n_entities=8, seed=42)
+
+tests/engine/test_executor_parity.py:150: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+n_entities = 8, seed = 42
+
+    def make_state(n_entities=5, seed=42):
+        """Create a state with n entities spread across distinct positions."""
+        entities = {}
+        for i in range(1, n_entities + 1):
+&gt;           entities[i] = EntityState(
+                id=i, kind="HERO", position=(float(i * 2), float(i * 3)),
+                active=True,
+                identity=IdentityComponent(faction=0),
+                combat=CombatComponent(hp=100, max_hp=100, atk=10, def_stat=5, alive=True),
+                navigation=NavigationComponent(),
+                task=TaskComponent(work_kind="ENTITY_ACT", payload={"action": "idle"}),
+                inventory=InventoryComponent(max_slots=4, items=[], gold=100),
+                interaction=InteractionComponent()
+            )
+E           TypeError: EntityState.__init__() got an unexpected keyword argument 'position'
+
+tests/engine/test_executor_parity.py:33: TypeError</failure></testcase><testcase classname="tests.engine.test_executor_parity.TestExecutorParity" name="test_repeated_runs_are_deterministic" time="0.001"><failure message="TypeError: EntityState.__init__() got an unexpected keyword argument 'position'">self = &lt;tests.engine.test_executor_parity.TestExecutorParity object at 0x6ffe61469f30&gt;
+
+    def test_repeated_runs_are_deterministic(self):
+        """Running the same executor twice produces identical results."""
+&gt;       state = make_state(n_entities=5, seed=42)
+
+tests/engine/test_executor_parity.py:174: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+n_entities = 5, seed = 42
+
+    def make_state(n_entities=5, seed=42):
+        """Create a state with n entities spread across distinct positions."""
+        entities = {}
+        for i in range(1, n_entities + 1):
+&gt;           entities[i] = EntityState(
+                id=i, kind="HERO", position=(float(i * 2), float(i * 3)),
+                active=True,
+                identity=IdentityComponent(faction=0),
+                combat=CombatComponent(hp=100, max_hp=100, atk=10, def_stat=5, alive=True),
+                navigation=NavigationComponent(),
+                task=TaskComponent(work_kind="ENTITY_ACT", payload={"action": "idle"}),
+                inventory=InventoryComponent(max_slots=4, items=[], gold=100),
+                interaction=InteractionComponent()
+            )
+E           TypeError: EntityState.__init__() got an unexpected keyword argument 'position'
+
+tests/engine/test_executor_parity.py:33: TypeError</failure></testcase><testcase classname="tests.engine.test_fallback_hardening" name="test_local_fallback_preserves_metadata" time="0.013" /><testcase classname="tests.engine.test_fallback_hardening" name="test_crashed_worker_is_authoritative_noop" time="0.003" /><testcase classname="tests.engine.test_fallback_hardening" name="test_queue_overflow_preserves_total_count" time="0.510" /><testcase classname="tests.engine.test_flow_field_navigation" name="test_flow_field_long_distance" time="0.007" /><testcase classname="tests.engine.test_flow_field_navigation" name="test_local_navigation_fallback" time="0.001" /><testcase classname="tests.engine.test_goal_hysteresis" name="test_goal_hysteresis_and_detour_resumption" time="0.004" /><testcase classname="tests.engine.test_governance_isolation" name="test_hash_invariance_to_governance_state" time="0.001" /><testcase classname="tests.engine.test_governance_isolation" name="test_signal_history_bounding" time="0.004" /><testcase classname="tests.engine.test_graceful_shutdown" name="test_shutdown_sequence_suspension" time="0.002" /><testcase classname="tests.engine.test_graceful_shutdown" name="test_shutdown_timeout_logic" time="0.003" /><testcase classname="tests.engine.test_graceful_shutdown" name="test_final_hash_logged" time="0.002" /><testcase classname="tests.engine.test_hardening_e5" name="test_negative_case_stunned_actor_rejection" time="0.002"><failure message="AssertionError: assert &lt;ReasonCode.A...ATUS_BLOCKED'&gt; == &lt;ReasonCode.T...arget_locked'&gt;&#10;  &#10;  - target_locked&#10;  + ATTACKER_STATUS_BLOCKED">def test_negative_case_stunned_actor_rejection():
+        # RPG-1689: actor_validity_enforcement
+        # RPG-0001: action_proposals_as_intents
+        # RPG-0003: coerced_reason_models
+        # RPG-0005: partial_rejection_support
+        # RPG-0006: tick_outcome_preservation
+        e1 = create_mock_entity(1, hp=100)
+        # Give stun status via properties
+        e1 = replace(e1, identity=replace(e1.identity, properties={"status_stunned": True}))
+    
+        state = AuthoritativeState(tick=1, seed=1, entities={1: e1})
+        update = StateUpdate(entity_updates={
+            1: EntityUpdate(entity_id=1, new_position=(1,1))
+        })
+    
+        refined = AuthoritativeApplyPipeline.refine(state, update)
+        # Should be rejected in NavigationUpdate
+        assert refined.entity_updates[1].new_position is None
+&gt;       assert refined.entity_updates[1].navigation.failure_reason == ReasonCode.TARGET_LOCKED
+E       AssertionError: assert &lt;ReasonCode.A...ATUS_BLOCKED'&gt; == &lt;ReasonCode.T...arget_locked'&gt;
+E         
+E         - target_locked
+E         + ATTACKER_STATUS_BLOCKED
+
+tests/engine/test_hardening_e5.py:46: AssertionError</failure></testcase><testcase classname="tests.engine.test_hardening_e5" name="test_negative_case_depleted_node" time="0.001" /><testcase classname="tests.engine.test_hardening_e5" name="test_race_condition_occupancy" time="0.001" /><testcase classname="tests.engine.test_hardening_e5" name="test_race_condition_resource_access" time="0.002" /><testcase classname="tests.engine.test_hardening_e5" name="test_cross_tick_idempotency" time="0.003" /><testcase classname="tests.engine.test_hardening_e5" name="test_in_tick_idempotency" time="0.001" /><testcase classname="tests.engine.test_interaction_recovery" name="test_weight_pressure_enforcement" time="0.006"><failure message="AttributeError: 'NoneType' object has no attribute 'reset'">def test_weight_pressure_enforcement():
+        # Setup state: Entity with limited weight capacity
+        entity = (V2EntityBuilder(1)
+                  .kind("hero")
+                  .at((0.0, 0.0))
+                  .with_inventory(items=["wood", "wood"])
+                  .build())
+    
+        # max_weight=5.0 override (Default is 50)
+        entity = replace(entity, inventory=replace(entity.inventory, max_weight=5.0))
+    
+        state = AuthoritativeState(
+            tick=1,
+            seed=42,
+            entities={1: entity},
+            resource_nodes={10: ResourceNodeState(id=10, kind="ORE", position=(0,0), yields_item="ore", remaining_charges=1, max_charges=1, required_ticks=1)}
+        )
+    
+        # Interaction: Finish harvest of ORE (Weight 5.0)
+        # Total weight would be 4.0 + 5.0 = 9.0 &gt; 5.0
+        upd = StateUpdate(
+            entity_updates={1: EntityUpdate(entity_id=1, interaction=InteractionUpdate(progress_delta=1.0, target_node_id=10))}
+        )
+    
+        refined = AuthoritativeApplyPipeline.refine(state, upd)
+        ent_upd = refined.entity_updates[1]
+    
+        # Should have been reset due to weight pressure
+&gt;       assert ent_upd.interaction.reset is True
+E       AttributeError: 'NoneType' object has no attribute 'reset'
+
+tests/engine/test_interaction_recovery.py:38: AttributeError</failure></testcase><testcase classname="tests.engine.test_interaction_recovery" name="test_channeled_looting_one_shot" time="0.003"><failure message="KeyError: 10">def test_channeled_looting_one_shot():
+        # Setup state: LOOT node
+        entity = (V2EntityBuilder(1)
+                  .kind("hero")
+                  .at((0.0, 0.0))
+                  .build())
+    
+        # Set interaction state
+        entity = replace(entity, interaction=InteractionComponent(progress=9, target_node_id=10))
+    
+        state = AuthoritativeState(
+            tick=1,
+            seed=42,
+            entities={1: entity},
+            resource_nodes={10: ResourceNodeState(id=10, kind="LOOT", position=(0,0), yields_item="gold", remaining_charges=10, max_charges=10, required_ticks=10)}
+        )
+    
+        # Interaction: Finish looting
+        upd = StateUpdate(
+            entity_updates={1: EntityUpdate(entity_id=1, interaction=InteractionUpdate(progress_delta=1.0))}
+        )
+    
+        refined = AuthoritativeApplyPipeline.refine(state, upd)
+    
+        # Node update should have charges_delta = -10 (ALL charges consumed for LOOT)
+&gt;       node_upd = refined.node_updates[10]
+E       KeyError: 10
+
+tests/engine/test_interaction_recovery.py:66: KeyError</failure></testcase><testcase classname="tests.engine.test_interaction_recovery" name="test_town_resolution_sell_on_entry" time="0.002"><failure message="assert None is not None&#10; +  where None = EntityUpdate(entity_id=1, kind_set=None, new_position=None, moved_this_tick=False, readiness_delta=10.0, active=None, ...et=None), task=None, stamina_update=None, wound_update=None, group_id_set=None, intent_results=[], property_updates={}).inventory">def test_town_resolution_sell_on_entry():
+        # Setup state: Entity with materials entering town
+        entity = (V2EntityBuilder(1)
+                  .kind("hero")
+                  .at((0.0, 0.0))
+                  .with_inventory(items=["wood", "ore"])
+                  .build())
+    
+        # Add a shop building with gold
+        shop = BuildingState(
+            id=100,
+            kind="shop",
+            position=(5.0, 5.0),
+            inventory=InventoryComponent(gold=1000)
+        )
+    
+        state = AuthoritativeState(
+            tick=1,
+            seed=42,
+            entities={1: entity},
+            buildings={100: shop},
+            town_tiles={(5,5)},
+            building_tiles={(5,5): "shop"}
+        )
+    
+        # Update: Move to (5,5)
+        upd = StateUpdate(
+            entity_updates={1: EntityUpdate(entity_id=1, new_position=(5,5), moved_this_tick=True)}
+        )
+    
+        # Resolve
+        refined = AuthoritativeApplyPipeline.refine(state, upd)
+    
+        ent_upd = refined.entity_updates[1]
+    
+        # Check for inventory update (resolved from intent)
+&gt;       assert ent_upd.inventory is not None
+E       assert None is not None
+E        +  where None = EntityUpdate(entity_id=1, kind_set=None, new_position=None, moved_this_tick=False, readiness_delta=10.0, active=None, ...et=None), task=None, stamina_update=None, wound_update=None, group_id_set=None, intent_results=[], property_updates={}).inventory
+
+tests/engine/test_interaction_recovery.py:109: AssertionError</failure></testcase><testcase classname="tests.engine.test_interaction_recovery" name="test_movement_interruption" time="0.001" /><testcase classname="tests.engine.test_inventory_serialization" name="test_inventory_stack_merging" time="0.001" /><testcase classname="tests.engine.test_inventory_serialization" name="test_inventory_limits" time="0.001"><failure message="assert 10 == 5">def test_inventory_limits():
+        inv = InventoryComponent(max_slots=2, max_weight=10.0, items=[])
+    
+        # 1. Slot Limit
+        # Add 3 different items (only 2 should fit)
+        update = InventoryUpdate(items_add=[
+            ItemStack("iron_ore", 1),
+            ItemStack("herb", 1),
+            ItemStack("bread", 1)
+        ])
+        new_inv = InventoryService.apply_update(inv, update)
+        assert len(new_inv.items) == 2
+    
+        # 2. Weight Limit
+        # iron_ore weight is 2.0. max_weight 10.0.
+        # Add 10 iron_ore. Only 5 should fit.
+        inv_weight = InventoryComponent(max_slots=10, max_weight=10.0, items=[])
+        update_weight = InventoryUpdate(items_add=[ItemStack("iron_ore", 10)])
+        new_inv_weight = InventoryService.apply_update(inv_weight, update_weight)
+    
+        total_qty = sum(s.quantity for s in new_inv_weight.items)
+&gt;       assert total_qty == 5
+E       assert 10 == 5
+
+tests/engine/test_inventory_serialization.py:53: AssertionError</failure></testcase><testcase classname="tests.engine.test_inventory_serialization" name="test_entity_serialization_roundtrip" time="0.001" /><testcase classname="tests.engine.test_kernel_boundaries" name="test_hook_isolation_from_authoritative_state" time="0.020" /><testcase classname="tests.engine.test_kernel_boundaries" name="test_authoritative_hash_purity" time="0.024" /><testcase classname="tests.engine.test_local_executor" name="test_local_executor_movement" time="0.001"><failure message="TypeError: EntityState.__init__() got an unexpected keyword argument 'position'">def test_local_executor_movement():
+        """Verify that LocalSequentialExecutor handles ENTITY_MOVE correctly."""
+        executor = LocalSequentialExecutor()
+        entities = {
+&gt;           1: EntityState(id=1, kind="agent", position=(0.0, 0.0), readiness=100.0)
+        }
+E       TypeError: EntityState.__init__() got an unexpected keyword argument 'position'
+
+tests/engine/test_local_executor.py:11: TypeError</failure></testcase><testcase classname="tests.engine.test_local_executor" name="test_local_executor_action" time="0.001"><failure message="TypeError: EntityState.__init__() got an unexpected keyword argument 'position'">def test_local_executor_action():
+        """Verify that LocalSequentialExecutor handles ENTITY_ACT correctly."""
+        executor = LocalSequentialExecutor()
+        entities = {
+&gt;           1: EntityState(id=1, kind="agent", position=(0.0, 0.0), readiness=100.0)
+        }
+E       TypeError: EntityState.__init__() got an unexpected keyword argument 'position'
+
+tests/engine/test_local_executor.py:46: TypeError</failure></testcase><testcase classname="tests.engine.test_long_run_determinism" name="test_1000_tick_determinism" time="0.001"><failure message="TypeError: EntityState.__init__() got an unexpected keyword argument 'position'">@pytest.mark.slow
+    def test_1000_tick_determinism():
+        """
+        Pillar 1: Long-Run Stability
+        Verify that 1,000 ticks with a complex start state yields identical final hashes.
+        """
+        profile = RuntimeProfile(
+            name="long-run-test",
+            hardware_class=HardwareClass.CLASS_B,
+            max_ram_mb=1024,
+            max_cpu_percent=100.0,
+            max_worker_count=1, # Single worker to prove logic first
+            max_queue_depth=1000,
+            max_replay_buffer_kb=0,
+            max_observability_budget_percent=0.0,
+            max_tick_budget_ms=100.0
+        )
+    
+        # Complex initial state
+        entities = {}
+        for i in range(1, 11):
+&gt;           entities[i] = EntityState(
+                id=i,
+                kind="hero" if i &lt;= 5 else "mob",
+                position=(i, i),
+                readiness=100
+            )
+E           TypeError: EntityState.__init__() got an unexpected keyword argument 'position'
+
+tests/engine/test_long_run_determinism.py:29: TypeError</failure></testcase><testcase classname="tests.engine.test_long_run_stability" name="test_long_run_stability" time="0.001"><failure message="TypeError: EntityState.__init__() got an unexpected keyword argument 'position'">def test_long_run_stability():
+        """
+        Simulate 2,000 ticks and verify:
+        1. Determinism (Identical hash on repeat)
+        2. Memory Stability (No significant growth)
+        3. Population Stability (Entities spawning/dying loop)
+        VERIFIED v2: test_long_run_stability.py
+        """
+        TICKS = 2000
+        SEED = 999
+    
+        def run_sim(ticks, seed):
+            profile = RuntimeProfile(
+                name="stability-test",
+                hardware_class=HardwareClass.CLASS_B,
+                max_ram_mb=1024,
+                max_cpu_percent=100.0,
+                max_worker_count=1,
+                max_queue_depth=1000,
+                max_replay_buffer_kb=1024,
+                max_observability_budget_percent=5.0,
+                max_tick_budget_ms=100.0
+            )
+    
+    
+            # Initial state with a few heroes and a monster region
+            state = AuthoritativeState(
+                tick=0,
+                seed=seed,
+                world_time=0,
+                regions={
+                    "wilds": RegionState(
+                        id="wilds",
+                        name="The Wilds",
+                        bounds=(0, 0, 20, 20),
+                        hazard_level=0.4,
+                        calamity_intensity=0.1
+                    )
+                },
+                entities={
+                    1: EntityState(id=1, kind="hero", position=(2,2), readiness=100),
+                    2: EntityState(id=2, kind="hero", position=(3,3), readiness=100)
+                }
+            )
+    
+            rng = DeterministicRNG(seed)
+            kernel = Kernel(profile, state, rng)
+    
+            mem_samples = []
+            pop_samples = []
+    
+            for t in range(ticks):
+                kernel.tick_once()
+    
+                # Sample status every 100 ticks
+                if t % 100 == 0:
+                    status = kernel.status
+                    if status.signal_history:
+                        mem_samples.append(status.signal_history[-1].memory_estimate_mb)
+                    pop_samples.append(len(kernel.state.entities))
+    
+            final_hash = CanonicalStateHasher.get_hash(kernel.state)
+            return final_hash, mem_samples, pop_samples
+    
+        # 1. First Run
+        print("\nStarting Long-Run Stability Test (Run 1)...")
+        start_t = time.time()
+&gt;       hash1, mem1, pop1 = run_sim(TICKS, SEED)
+
+tests/engine/test_long_run_stability.py:77: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+ticks = 2000, seed = 999
+
+    def run_sim(ticks, seed):
+        profile = RuntimeProfile(
+            name="stability-test",
+            hardware_class=HardwareClass.CLASS_B,
+            max_ram_mb=1024,
+            max_cpu_percent=100.0,
+            max_worker_count=1,
+            max_queue_depth=1000,
+            max_replay_buffer_kb=1024,
+            max_observability_budget_percent=5.0,
+            max_tick_budget_ms=100.0
+        )
+    
+    
+        # Initial state with a few heroes and a monster region
+        state = AuthoritativeState(
+            tick=0,
+            seed=seed,
+            world_time=0,
+            regions={
+                "wilds": RegionState(
+                    id="wilds",
+                    name="The Wilds",
+                    bounds=(0, 0, 20, 20),
+                    hazard_level=0.4,
+                    calamity_intensity=0.1
+                )
+            },
+            entities={
+&gt;               1: EntityState(id=1, kind="hero", position=(2,2), readiness=100),
+                2: EntityState(id=2, kind="hero", position=(3,3), readiness=100)
+            }
+        )
+E       TypeError: EntityState.__init__() got an unexpected keyword argument 'position'
+
+tests/engine/test_long_run_stability.py:50: TypeError</failure></testcase><testcase classname="tests.engine.test_manifest_integrity" name="test_atomic_manifest_write" time="0.001" /><testcase classname="tests.engine.test_manifest_integrity" name="test_manifest_corrupt_prevention" time="0.001" /><testcase classname="tests.engine.test_migration_proof" name="test_ground_item_pickup_parity" time="0.001"><failure message="TypeError: EntityState.__init__() got an unexpected keyword argument 'position'">def test_ground_item_pickup_parity():
+        """Verify that InteractionSystem can pick up ground items."""
+        state = AuthoritativeState(tick=1, seed=42)
+&gt;       entity = EntityState(
+            id=1, kind="hero", position=(0.0, 0.0),
+            inventory=InventoryComponent(max_slots=10, max_weight=100),
+            interaction=InteractionComponent(),
+            navigation=NavigationComponent(target=(0.0, 0.0)),
+            combat=CombatComponent()
+        )
+E       TypeError: EntityState.__init__() got an unexpected keyword argument 'position'
+
+tests/engine/test_migration_proof.py:16: TypeError</failure></testcase><testcase classname="tests.engine.test_migration_proof" name="test_corpse_looting_parity" time="0.000"><failure message="TypeError: EntityState.__init__() got an unexpected keyword argument 'position'">def test_corpse_looting_parity():
+        """Verify that InteractionSystem can loot corpses."""
+        state = AuthoritativeState(tick=1, seed=42)
+&gt;       entity = EntityState(
+            id=1, kind="hero", position=(1.0, 1.0),
+            inventory=InventoryComponent(max_slots=10, max_weight=100),
+            interaction=InteractionComponent(),
+            navigation=NavigationComponent(target=(1.0, 1.0)),
+            combat=CombatComponent()
+        )
+E       TypeError: EntityState.__init__() got an unexpected keyword argument 'position'
+
+tests/engine/test_migration_proof.py:52: TypeError</failure></testcase><testcase classname="tests.engine.test_migration_proof" name="test_movement_sidestepping_parity" time="0.004"><failure message="TypeError: EntityState.__init__() got an unexpected keyword argument 'position'">def test_movement_sidestepping_parity():
+        """Verify that MovementSystem can sidestep blocked tiles."""
+        from src.engine.movement import MovementSystem
+        state = AuthoritativeState(tick=1, seed=42)
+    
+        # Mover at (0,0), Target at (1,0)
+&gt;       mover = EntityState(id=1, kind="hero", position=(0.0, 0.0), combat=CombatComponent())
+E       TypeError: EntityState.__init__() got an unexpected keyword argument 'position'
+
+tests/engine/test_migration_proof.py:92: TypeError</failure></testcase><testcase classname="tests.engine.test_migration_proof" name="test_movement_yielding_parity" time="0.001"><failure message="TypeError: EntityState.__init__() got an unexpected keyword argument 'position'">def test_movement_yielding_parity():
+        """Verify that MovementSystem can force lower priority entities to yield."""
+        from src.engine.movement import MovementSystem
+        state = AuthoritativeState(tick=1, seed=42)
+    
+        # Hero (High Priority) at (0,0), Target at (1,0)
+&gt;       hero = EntityState(
+            id=1, kind="hero", position=(0.0, 0.0),
+            identity=IdentityComponent(role=EntityRole.HERO),
+            combat=CombatComponent()
+        )
+E       TypeError: EntityState.__init__() got an unexpected keyword argument 'position'
+
+tests/engine/test_migration_proof.py:112: TypeError</failure></testcase><testcase classname="tests.engine.test_milestone_a_closure" name="test_closure_no_placeholders" time="0.001" /><testcase classname="tests.engine.test_milestone_a_closure" name="test_milestone_a_structural_compliance" time="0.000" /><testcase classname="tests.engine.test_milestone_a_closure" name="test_final_kernel_law_compliance" time="0.001" /><testcase classname="tests.engine.test_milestone_a_closure" name="test_milestone_a_baseline_isolation" time="0.103" /><testcase classname="tests.engine.test_milestone_b_closure" name="test_milestone_b_operational_gate" time="1.844" /><testcase classname="tests.engine.test_milestone_b_closure" name="test_milestone_b_memory_survival_gate" time="0.106" /><testcase classname="tests.engine.test_milestone_c_desimulation" name="test_debt_drainage_desimulation" time="0.166" /><testcase classname="tests.engine.test_milestone_c_desimulation" name="test_drain_debt_zero" time="0.106" /><testcase classname="tests.engine.test_milestone_d_closure" name="test_high_pressure_determinism_equivalence" time="0.003"><failure message="TypeError: EntityState.__init__() got an unexpected keyword argument 'position'">def test_high_pressure_determinism_equivalence():
+        """
+        Final Certification: Bit-identical state after multi-tick high-pressure run.
+        Uses REAL domain logic (Movement) and forces non-deterministic completion noise.
+        """
+        total_entities = 40
+        ticks_to_run = 5
+        seed = 42
+    
+        # 1. Setup Initial State
+        entities = {
+&gt;           i: EntityState(id=i, kind="TEST", position=(float(i), 0.0), readiness=100.0)
+            for i in range(1, total_entities + 1)
+        }
+E       TypeError: EntityState.__init__() got an unexpected keyword argument 'position'
+
+tests/engine/test_milestone_d_closure.py:41: TypeError</failure></testcase><testcase classname="tests.engine.test_milestone_d_closure" name="test_neighbor_view_bit_identical" time="0.004"><failure message="TypeError: EntityState.__init__() got an unexpected keyword argument 'position'">def test_neighbor_view_bit_identical():
+        """Prove that worker input context is identical regardless of engine internal order."""
+        profile = get_base_profile(0)
+        entities = {
+&gt;           i: EntityState(id=i, kind="TEST", position=(float(i), 0.0))
+            for i in [10, 5, 20, 1, 100]
+        }
+E       TypeError: EntityState.__init__() got an unexpected keyword argument 'position'
+
+tests/engine/test_milestone_d_closure.py:130: TypeError</failure></testcase><testcase classname="tests.engine.test_minimal_kernel" name="test_tick_advancement" time="0.038" /><testcase classname="tests.engine.test_minimal_kernel" name="test_quiet_tick_validity" time="0.104" /><testcase classname="tests.engine.test_mob_leashing" name="test_mob_beyond_leash_returns_home" time="0.001"><failure message="TypeError: EntityState.__init__() got an unexpected keyword argument 'position'">def test_mob_beyond_leash_returns_home():
+        state = AuthoritativeState(tick=100, seed=42)
+    
+        # Monster far from home (0,0), leash 5
+&gt;       m1 = EntityState(
+            id=1, kind="monster", position=(10.0, 0.0),
+            identity=IdentityComponent(faction=2),
+            combat=CombatComponent(hp=100, max_hp=100),
+            navigation=NavigationComponent(home_position=(0.0, 0.0), leash_radius=5.0),
+            strategic=StrategicComponent(),
+            task=TaskComponent(work_kind="IDLE")
+        )
+E       TypeError: EntityState.__init__() got an unexpected keyword argument 'position'
+
+tests/engine/test_mob_leashing.py:11: TypeError</failure></testcase><testcase classname="tests.engine.test_mob_leashing" name="test_mob_within_chase_radius_continues" time="0.001"><failure message="TypeError: EntityState.__init__() got an unexpected keyword argument 'position'">def test_mob_within_chase_radius_continues():
+        state = AuthoritativeState(tick=100, seed=42)
+    
+        # Monster at (6.0, 0), home (0,0), leash 5.
+        # Within 1.5x leash (7.5)
+&gt;       m1 = EntityState(
+            id=1, kind="monster", position=(6.0, 0.0),
+            identity=IdentityComponent(faction=2),
+            combat=CombatComponent(hp=100, max_hp=100),
+            navigation=NavigationComponent(home_position=(0.0, 0.0), leash_radius=5.0),
+            strategic=StrategicComponent(),
+            task=TaskComponent(work_kind="ENTITY_ACT", payload={"target_id": 2})
+        )
+E       TypeError: EntityState.__init__() got an unexpected keyword argument 'position'
+
+tests/engine/test_mob_leashing.py:46: TypeError</failure></testcase><testcase classname="tests.engine.test_mob_leashing" name="test_mob_beyond_chase_radius_returns_home" time="0.001"><failure message="TypeError: EntityState.__init__() got an unexpected keyword argument 'position'">def test_mob_beyond_chase_radius_returns_home():
+        state = AuthoritativeState(tick=100, seed=42)
+    
+        # Monster at (8.0, 0), home (0,0), leash 5.
+        # Beyond 1.5x leash (7.5)
+&gt;       m1 = EntityState(
+            id=1, kind="monster", position=(8.0, 0.0),
+            identity=IdentityComponent(faction=2),
+            combat=CombatComponent(hp=100, max_hp=100),
+            navigation=NavigationComponent(home_position=(0.0, 0.0), leash_radius=5.0),
+            strategic=StrategicComponent(),
+            task=TaskComponent(work_kind="ENTITY_ACT", payload={"target_id": 2})
+        )
+E       TypeError: EntityState.__init__() got an unexpected keyword argument 'position'
+
+tests/engine/test_mob_leashing.py:85: TypeError</failure></testcase><testcase classname="tests.engine.test_no_hidden_mutation" name="test_prior_state_purity_deep_properties" time="0.002" /><testcase classname="tests.engine.test_no_hidden_mutation" name="test_no_mutation_leak_from_worker_snapshot" time="0.002" /><testcase classname="tests.engine.test_no_hidden_mutation" name="test_apply_determinism_sorting" time="0.000" /><testcase classname="tests.engine.test_no_hidden_mutation" name="test_auth_state_is_frozen" time="0.001" /><testcase classname="tests.engine.test_no_hidden_mutation" name="test_entity_state_is_frozen" time="0.001" /><testcase classname="tests.engine.test_non_blocking_io" name="test_on_tick_end_is_non_blocking_on_io" time="0.708" /><testcase classname="tests.engine.test_observability_budgets" name="test_signal_collector_bounded_history" time="0.016" /><testcase classname="tests.engine.test_observability_budgets" name="test_sampling_cadence_enforced" time="0.001" /><testcase classname="tests.engine.test_operational_flags" name="test_safe_operational_flags_accepted" time="0.002" /><testcase classname="tests.engine.test_operational_flags" name="test_unsafe_flags_rejected" time="0.000" /><testcase classname="tests.engine.test_operational_flags" name="test_flags_cannot_alter_authoritative_semantics" time="0.040" /><testcase classname="tests.engine.test_overflow_determinism" name="test_eviction_determinism" time="0.002" /><testcase classname="tests.engine.test_overflow_determinism" name="test_sustained_memory_stability" time="0.023" /><testcase classname="tests.engine.test_partial_rejection" name="test_partial_rejection_occupancy_vs_combat" time="0.002" /><testcase classname="tests.engine.test_partial_rejection" name="test_partial_rejection_occupancy_vs_readiness" time="0.003" /><testcase classname="tests.engine.test_phase10_replay" name="test_transaction_tracing_and_replay" time="0.001"><failure message="TypeError: EntityState.__init__() got an unexpected keyword argument 'position'">def test_transaction_tracing_and_replay():
+        """
+        Verifies that:
+        1. Rejected transaction reasons are recorded in EntityState.
+        2. Successful transactions update global conservation metrics.
+        3. The trace is reproducible in a replay scenario.
+        """
+        generator = EntityGenerator(seed=42)
+    
+        # 1. Setup world with a full-inventory entity and a node
+        node = ResourceNodeState(
+            id=500, kind="WOOD", position=(10, 10), yields_item="wood_log",
+            remaining_charges=5, max_charges=5, required_ticks=10
+        )
+    
+        # Hero with full inventory (max_slots=1)
+&gt;       hero = generator.spawn_hero((10, 10))
+
+tests/engine/test_phase10_replay.py:25: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = &lt;src.systems.generator.EntityGenerator object at 0x6ffe5bf8fe30&gt;
+pos = (10, 10), state = None, name = 'Hero', difficulty_tier = 1
+
+    def spawn_hero(self, pos: tuple[float, float], state: AuthoritativeState | None = None, name: str = "Hero", difficulty_tier: int = 1) -&gt; EntityState:
+        """Spawn a new hero with role-specific base stats and difficulty-scaled starting power."""
+        entity_id = self.get_next_id()
+    
+        from src.world.spawn_config import DIFFICULTY_TIERS
+        mults = DIFFICULTY_TIERS.get(difficulty_tier, DIFFICULTY_TIERS[1])
+    
+        # Base stats (Legacy parity for testing)
+        base_hp = 100 * mults.hp
+        base_atk = 15 * mults.atk
+        base_def = 5 * mults.def_stat
+        base_gold = 50 * mults.gold
+    
+        tick = state.tick if state else 0
+        evolution_level = self.rng.get_int(Domain.SPAWN, tick, entity_id, mults.level_min, mults.level_max)
+    
+&gt;       return EntityState(
+            id=entity_id,
+            kind="hero",
+            position=pos,
+            identity=IdentityComponent(
+                role=EntityRole.HERO,
+                faction=Faction.HERO_GUILD,
+                evolution_level=evolution_level
+            ),
+            combat=CombatComponent(
+                hp=int(base_hp),
+                max_hp=int(base_hp),
+                atk=int(base_atk),
+                def_stat=int(base_def),
+                alive=True
+            ),
+            inventory=InventoryComponent(
+                gold=int(base_gold)
+            )
+        )
+E       TypeError: EntityState.__init__() got an unexpected keyword argument 'position'
+
+src/systems/generator.py:47: TypeError</failure></testcase><testcase classname="tests.engine.test_phase2_determinism.TestRNGBoundaryEnforcement" name="test_no_bare_random_in_engine" time="0.090" /><testcase classname="tests.engine.test_phase2_determinism.TestRNGBoundaryEnforcement" name="test_no_bare_random_in_systems" time="0.055" /><testcase classname="tests.engine.test_phase2_determinism.TestRNGBoundaryEnforcement" name="test_no_bare_random_in_world" time="0.012" /><testcase classname="tests.engine.test_phase2_determinism.TestRNGBoundaryEnforcement" name="test_no_bare_random_in_quests" time="0.003" /><testcase classname="tests.engine.test_phase2_determinism.TestRNGBoundaryEnforcement" name="test_no_bare_random_in_town" time="0.005" /><testcase classname="tests.engine.test_phase2_determinism.TestRNGBoundaryEnforcement" name="test_no_bare_random_in_core" time="0.029" /><testcase classname="tests.engine.test_phase2_determinism.TestRNGBoundaryEnforcement" name="test_no_bare_random_in_cli" time="0.002" /><testcase classname="tests.engine.test_phase2_determinism.TestRNGBoundaryEnforcement" name="test_rng_module_is_only_random_user" time="0.229" /><testcase classname="tests.engine.test_phase2_determinism.TestStatelessRNGDeterminism" name="test_order_independence_float" time="0.000" /><testcase classname="tests.engine.test_phase2_determinism.TestStatelessRNGDeterminism" name="test_order_independence_int" time="0.001" /><testcase classname="tests.engine.test_phase2_determinism.TestStatelessRNGDeterminism" name="test_domain_separation" time="0.000" /><testcase classname="tests.engine.test_phase2_determinism.TestStatelessRNGDeterminism" name="test_tick_separation" time="0.000" /><testcase classname="tests.engine.test_phase2_determinism.TestStatelessRNGDeterminism" name="test_entity_separation" time="0.000" /><testcase classname="tests.engine.test_phase2_determinism.TestStatelessRNGDeterminism" name="test_sub_id_separation" time="0.000" /><testcase classname="tests.engine.test_phase2_determinism.TestStatelessRNGDeterminism" name="test_cross_seed_independence" time="0.000" /><testcase classname="tests.engine.test_phase2_determinism.TestStatelessRNGDeterminism" name="test_repeated_call_stability" time="0.001" /><testcase classname="tests.engine.test_phase2_determinism.TestDomainEnum" name="test_combat_domain_exists" time="0.000" /><testcase classname="tests.engine.test_phase2_determinism.TestDomainEnum" name="test_loot_domain_exists" time="0.000" /><testcase classname="tests.engine.test_phase2_determinism.TestDomainEnum" name="test_init_domain_exists" time="0.000" /><testcase classname="tests.engine.test_phase2_determinism.TestDomainEnum" name="test_all_domains_unique" time="0.000" /><testcase classname="tests.engine.test_phase2_determinism.TestCLIDeterminism" name="test_init_rng_produces_stable_positions" time="0.001" /><testcase classname="tests.engine.test_phase2_determinism.TestCLIDeterminism" name="test_init_rng_different_seeds_differ" time="0.000" /><testcase classname="tests.engine.test_phase2_determinism.TestEntityGeneratorDeterminism" name="test_spawn_hero_deterministic" time="0.000"><failure message="TypeError: EntityState.__init__() got an unexpected keyword argument 'position'">self = &lt;tests.engine.test_phase2_determinism.TestEntityGeneratorDeterminism object at 0x6ffe61385310&gt;
+
+    def test_spawn_hero_deterministic(self):
+        from src.systems.generator import EntityGenerator
+        from src.core.state import AuthoritativeState
+    
+        state = AuthoritativeState(tick=5, seed=42)
+    
+        gen1 = EntityGenerator(42)
+&gt;       hero1 = gen1.spawn_hero((10, 10), state)
+
+tests/engine/test_phase2_determinism.py:262: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = &lt;src.systems.generator.EntityGenerator object at 0x6ffe5bf8ad50&gt;
+pos = (10, 10)
+state = AuthoritativeState(tick=5, seed=42, world_time=0, entities={}, resource_nodes={}, ground_items={}, corpses={}, chests=...signals={}, current_mode=&lt;RuntimeMode.NORMAL: 0&gt;, processed_transaction_ids=set(), next_node_id=1000, next_entity_id=1)
+name = 'Hero', difficulty_tier = 1
+
+    def spawn_hero(self, pos: tuple[float, float], state: AuthoritativeState | None = None, name: str = "Hero", difficulty_tier: int = 1) -&gt; EntityState:
+        """Spawn a new hero with role-specific base stats and difficulty-scaled starting power."""
+        entity_id = self.get_next_id()
+    
+        from src.world.spawn_config import DIFFICULTY_TIERS
+        mults = DIFFICULTY_TIERS.get(difficulty_tier, DIFFICULTY_TIERS[1])
+    
+        # Base stats (Legacy parity for testing)
+        base_hp = 100 * mults.hp
+        base_atk = 15 * mults.atk
+        base_def = 5 * mults.def_stat
+        base_gold = 50 * mults.gold
+    
+        tick = state.tick if state else 0
+        evolution_level = self.rng.get_int(Domain.SPAWN, tick, entity_id, mults.level_min, mults.level_max)
+    
+&gt;       return EntityState(
+            id=entity_id,
+            kind="hero",
+            position=pos,
+            identity=IdentityComponent(
+                role=EntityRole.HERO,
+                faction=Faction.HERO_GUILD,
+                evolution_level=evolution_level
+            ),
+            combat=CombatComponent(
+                hp=int(base_hp),
+                max_hp=int(base_hp),
+                atk=int(base_atk),
+                def_stat=int(base_def),
+                alive=True
+            ),
+            inventory=InventoryComponent(
+                gold=int(base_gold)
+            )
+        )
+E       TypeError: EntityState.__init__() got an unexpected keyword argument 'position'
+
+src/systems/generator.py:47: TypeError</failure></testcase><testcase classname="tests.engine.test_phase2_determinism.TestEntityGeneratorDeterminism" name="test_spawn_goblin_deterministic" time="0.001"><failure message="TypeError: EntityState.__init__() got an unexpected keyword argument 'position'">self = &lt;tests.engine.test_phase2_determinism.TestEntityGeneratorDeterminism object at 0x6ffe61385450&gt;
+
+    def test_spawn_goblin_deterministic(self):
+        from src.systems.generator import EntityGenerator
+        from src.core.state import AuthoritativeState
+    
+        state = AuthoritativeState(tick=5, seed=42)
+    
+        gen1 = EntityGenerator(42)
+&gt;       g1 = gen1.spawn_goblin((5, 5), state)
+
+tests/engine/test_phase2_determinism.py:278: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = &lt;src.systems.generator.EntityGenerator object at 0x6ffe5bf9e1b0&gt;
+pos = (5, 5)
+state = AuthoritativeState(tick=5, seed=42, world_time=0, entities={}, resource_nodes={}, ground_items={}, corpses={}, chests=...signals={}, current_mode=&lt;RuntimeMode.NORMAL: 0&gt;, processed_transaction_ids=set(), next_node_id=1000, next_entity_id=1)
+difficulty_tier = 1
+
+    def spawn_goblin(self, pos: tuple[float, float], state: AuthoritativeState | None = None, difficulty_tier: int = 1) -&gt; EntityState:
+        """Specialized goblin spawn with specific base stats for scaling tests."""
+        entity_id = self.get_next_id()
+    
+        from src.world.spawn_config import DIFFICULTY_TIERS
+        mults = DIFFICULTY_TIERS.get(difficulty_tier, DIFFICULTY_TIERS[1])
+    
+        tick = state.tick if state else 0
+        evolution_level = self.rng.get_int(Domain.SPAWN, tick, entity_id, mults.level_min, mults.level_max)
+    
+        # Goblin base: 30 HP, 8 ATK, 2 DEF, 5 Gold
+        base_hp = 30 * mults.hp
+        base_atk = 8 * mults.atk
+        base_def = 2 * mults.def_stat
+        base_gold = 5 * mults.gold
+    
+&gt;       return EntityState(
+            id=entity_id,
+            kind="goblin",
+            position=pos,
+            identity=IdentityComponent(
+                role=EntityRole.MONSTER,
+                faction=Faction.MONSTER_HORDE,
+                evolution_level=evolution_level
+            ),
+            navigation=NavigationComponent(
+                home_position=pos,
+                leash_radius=8.0 # Goblins have smaller leashes
+            ),
+            combat=CombatComponent(
+                hp=int(base_hp),
+                max_hp=int(base_hp),
+                atk=int(base_atk),
+                def_stat=int(base_def),
+                alive=True
+            ),
+            inventory=InventoryComponent(
+                gold=int(base_gold)
+            )
+        )
+E       TypeError: EntityState.__init__() got an unexpected keyword argument 'position'
+
+src/systems/generator.py:125: TypeError</failure></testcase><testcase classname="tests.engine.test_phase2_determinism.TestEntityGeneratorDeterminism" name="test_different_seeds_produce_different_entities" time="0.001"><failure message="TypeError: EntityState.__init__() got an unexpected keyword argument 'position'">self = &lt;tests.engine.test_phase2_determinism.TestEntityGeneratorDeterminism object at 0x6ffe613c0640&gt;
+
+    def test_different_seeds_produce_different_entities(self):
+        from src.systems.generator import EntityGenerator
+        from src.core.state import AuthoritativeState
+    
+        state = AuthoritativeState(tick=5, seed=42)
+    
+        gen1 = EntityGenerator(42)
+        gen2 = EntityGenerator(99)
+    
+&gt;       g1 = gen1.spawn_goblin((5, 5), state)
+
+tests/engine/test_phase2_determinism.py:295: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = &lt;src.systems.generator.EntityGenerator object at 0x6ffe5bf9ce30&gt;
+pos = (5, 5)
+state = AuthoritativeState(tick=5, seed=42, world_time=0, entities={}, resource_nodes={}, ground_items={}, corpses={}, chests=...signals={}, current_mode=&lt;RuntimeMode.NORMAL: 0&gt;, processed_transaction_ids=set(), next_node_id=1000, next_entity_id=1)
+difficulty_tier = 1
+
+    def spawn_goblin(self, pos: tuple[float, float], state: AuthoritativeState | None = None, difficulty_tier: int = 1) -&gt; EntityState:
+        """Specialized goblin spawn with specific base stats for scaling tests."""
+        entity_id = self.get_next_id()
+    
+        from src.world.spawn_config import DIFFICULTY_TIERS
+        mults = DIFFICULTY_TIERS.get(difficulty_tier, DIFFICULTY_TIERS[1])
+    
+        tick = state.tick if state else 0
+        evolution_level = self.rng.get_int(Domain.SPAWN, tick, entity_id, mults.level_min, mults.level_max)
+    
+        # Goblin base: 30 HP, 8 ATK, 2 DEF, 5 Gold
+        base_hp = 30 * mults.hp
+        base_atk = 8 * mults.atk
+        base_def = 2 * mults.def_stat
+        base_gold = 5 * mults.gold
+    
+&gt;       return EntityState(
+            id=entity_id,
+            kind="goblin",
+            position=pos,
+            identity=IdentityComponent(
+                role=EntityRole.MONSTER,
+                faction=Faction.MONSTER_HORDE,
+                evolution_level=evolution_level
+            ),
+            navigation=NavigationComponent(
+                home_position=pos,
+                leash_radius=8.0 # Goblins have smaller leashes
+            ),
+            combat=CombatComponent(
+                hp=int(base_hp),
+                max_hp=int(base_hp),
+                atk=int(base_atk),
+                def_stat=int(base_def),
+                alive=True
+            ),
+            inventory=InventoryComponent(
+                gold=int(base_gold)
+            )
+        )
+E       TypeError: EntityState.__init__() got an unexpected keyword argument 'position'
+
+src/systems/generator.py:125: TypeError</failure></testcase><testcase classname="tests.engine.test_phase4_movement" name="test_movement_wait_and_reroute" time="0.001"><failure message="AttributeError: 'V2EntityBuilder' object has no attribute 'with_navigation_v2'. Did you mean: 'with_navigation'?">def test_movement_wait_and_reroute():
+        # Setup: Hero blocked by a HOLD monster
+        hero = (V2EntityBuilder(1)
+                .kind("HERO")
+                .at((5, 5))
+                .readiness(100.0)
+                .target((7, 5))
+                .build())
+    
+        monster = (V2EntityBuilder(2)
+                   .kind("MONSTER")
+                   .at((6, 5))
+&gt;                  .with_navigation_v2(mode=MovementMode.HOLD)
+                   .build())
+E       AttributeError: 'V2EntityBuilder' object has no attribute 'with_navigation_v2'. Did you mean: 'with_navigation'?
+
+tests/engine/test_phase4_movement.py:22: AttributeError</failure></testcase><testcase classname="tests.engine.test_phase4_movement" name="test_anti_oscillation" time="0.001"><failure message="AttributeError: 'V2EntityBuilder' object has no attribute 'with_navigation_v2'. Did you mean: 'with_navigation'?">def test_anti_oscillation():
+        # Setup: Hero moving between two tiles
+        hero = (V2EntityBuilder(1)
+                .kind("HERO")
+                .at((5, 5))
+                .readiness(100.0)
+&gt;               .with_navigation_v2(last_pos=(6, 5))
+                .build())
+E       AttributeError: 'V2EntityBuilder' object has no attribute 'with_navigation_v2'. Did you mean: 'with_navigation'?
+
+tests/engine/test_phase4_movement.py:60: AttributeError</failure></testcase><testcase classname="tests.engine.test_phase5_combat_legality" name="test_melee_legality" time="0.001" /><testcase classname="tests.engine.test_phase5_combat_legality" name="test_ranged_legality" time="0.000" /><testcase classname="tests.engine.test_phase5_combat_legality" name="test_readiness_block" time="0.000" /><testcase classname="tests.engine.test_phase5_combat_legality" name="test_status_block" time="0.001"><failure message="AssertionError: assert &lt;ReasonCode.A...ATUS_BLOCKED'&gt; == &lt;ReasonCode.T...arget_locked'&gt;&#10;  &#10;  - target_locked&#10;  + ATTACKER_STATUS_BLOCKED">def test_status_block():
+        attacker = create_mock_entity(1)
+        attacker = replace(attacker, identity=replace(attacker.identity, properties={"status_frozen": True}))
+        target = create_mock_entity(2, faction="MONSTER_FACTION", pos=(1,0))
+        state = AuthoritativeState(entities={1: attacker, 2: target}, tick=0, seed=1)
+    
+        update = CombatResolutionSystem.resolve_attack(attacker, target, state)
+        assert update.outcome_kind == "REJECTED"
+&gt;       assert update.failure_reason == ReasonCode.TARGET_LOCKED
+E       AssertionError: assert &lt;ReasonCode.A...ATUS_BLOCKED'&gt; == &lt;ReasonCode.T...arget_locked'&gt;
+E         
+E         - target_locked
+E         + ATTACKER_STATUS_BLOCKED
+
+tests/engine/test_phase5_combat_legality.py:71: AssertionError</failure></testcase><testcase classname="tests.engine.test_phase5_combat_legality" name="test_dead_legality" time="0.001" /><testcase classname="tests.engine.test_phase5_combat_legality" name="test_friendly_fire" time="0.001" /><testcase classname="tests.engine.test_phase5_combat_legality" name="test_aoe_legality" time="0.000" /><testcase classname="tests.engine.test_phase5_combat_legality" name="test_multi_attack_filtering" time="0.001" /><testcase classname="tests.engine.test_phase5_idempotency" name="test_resource_node_race" time="0.002"><failure message="AssertionError: Expected exactly 1 entity to successfully harvest, but got 0&#10;assert 0 == 1">def test_resource_node_race():
+        # Node with only 1 charge
+        node = ResourceNodeState(
+            id=100, kind="MINE", position=(0,0),
+            yields_item="iron_ore", remaining_charges=1, max_charges=1,
+            required_ticks=1
+        )
+        e1 = create_mock_entity(1)
+        e2 = create_mock_entity(2)
+    
+        state = AuthoritativeState(
+            entities={1: e1, 2: e2},
+            resource_nodes={100: node},
+            tick=0, seed=1
+        )
+    
+        from src.core.state import ItemStack
+        intent1 = ResourceTransferIntent(
+            transfer_kind="HARVEST", source_kind="NODE", source_id=100,
+            items_add=[ItemStack(item_id="iron_ore", quantity=1)]
+        )
+        intent2 = replace(intent1)
+    
+        upd1 = EntityUpdate(entity_id=1, resource_transfers=[intent1])
+        upd2 = EntityUpdate(entity_id=2, resource_transfers=[intent2])
+    
+        raw_update = StateUpdate(entity_updates={1: upd1, 2: upd2})
+    
+        # Process through pipeline
+        refined = AuthoritativeApplyPipeline.refine(state, raw_update)
+    
+        # Check transaction trace for failures
+        trace = [t for t in refined.transaction_trace if "NODE" in t]
+        print("\nTransaction Trace:")
+        for t in trace:
+            print(f"  {t}")
+    
+        accepted_count = sum(1 for t in trace if "ACCEPT" in t)
+&gt;       assert accepted_count == 1, f"Expected exactly 1 entity to successfully harvest, but got {accepted_count}"
+E       AssertionError: Expected exactly 1 entity to successfully harvest, but got 0
+E       assert 0 == 1
+
+tests/engine/test_phase5_idempotency.py:53: AssertionError</failure></testcase><testcase classname="tests.engine.test_phase5_idempotency" name="test_quest_reward_idempotency" time="0.002"><failure message="AssertionError: Expected 1 acceptance, got 0&#10;assert 0 == 1">def test_quest_reward_idempotency():
+        e1 = create_mock_entity(1)
+        state = AuthoritativeState(entities={1: e1}, tick=0, seed=1)
+    
+        # Using 'HARVEST' with 'NODE' source twice to test internal group idempotency
+        from src.core.state import ItemStack
+        node = ResourceNodeState(
+            id=100, kind="MINE", position=(0,0),
+            yields_item="iron_ore", remaining_charges=1, max_charges=1,
+            required_ticks=1
+        )
+        state = replace(state, resource_nodes={100: node})
+    
+        intent = ResourceTransferIntent(
+            transfer_kind="HARVEST", source_kind="NODE", source_id=100,
+            items_add=[ItemStack(item_id="iron_ore", quantity=1)]
+        )
+    
+        # Two identical intents for the same entity in one tick
+        upd = EntityUpdate(entity_id=1, resource_transfers=[intent, intent])
+        raw_update = StateUpdate(entity_updates={1: upd})
+    
+        refined = AuthoritativeApplyPipeline.refine(state, raw_update)
+    
+        trace = [t for t in refined.transaction_trace if "NODE" in t]
+        accepted_count = sum(1 for t in trace if "ACCEPT" in t)
+    
+        # Should only accept ONE, because the first one depletes the node
+&gt;       assert accepted_count == 1, f"Expected 1 acceptance, got {accepted_count}"
+E       AssertionError: Expected 1 acceptance, got 0
+E       assert 0 == 1
+
+tests/engine/test_phase5_idempotency.py:83: AssertionError</failure></testcase><testcase classname="tests.engine.test_phase5_negative_cases" name="test_attacker_incapacitated" time="0.000" /><testcase classname="tests.engine.test_phase5_negative_cases" name="test_target_incapacitated" time="0.000" /><testcase classname="tests.engine.test_phase5_negative_cases" name="test_attacker_status_blocked" time="0.001" /><testcase classname="tests.engine.test_phase5_negative_cases" name="test_self_attack_rejection" time="0.001" /><testcase classname="tests.engine.test_phase5_negative_cases" name="test_regional_suppression" time="0.002" /><testcase classname="tests.engine.test_phase5_negative_cases" name="test_los_obstruction" time="0.000" /><testcase classname="tests.engine.test_phase5_negative_cases" name="test_aoe_negative_cases" time="0.001" /><testcase classname="tests.engine.test_phase5_negative_cases" name="test_execute_action_target_not_found" time="0.000" /><testcase classname="tests.engine.test_phase5_negative_cases" name="test_execute_action_legality_fail" time="0.000" /><testcase classname="tests.engine.test_phase6_strategic_cognition" name="test_blocker_inference_and_detour" time="0.000"><failure message="TypeError: EntityState.__init__() got an unexpected keyword argument 'position'">def test_blocker_inference_and_detour():
+        # 1. Setup project: Harvest Wood at (10,10)
+        obj = ObjectiveState(id="obj1", kind="reach_location", target="10", status=ObjectiveStatus.ACTIVE)
+        project = ProjectState(id="proj1", kind="harvesting", status=ProjectStatus.ACTIVE, objectives=[obj], active_objective_id="obj1")
+    
+&gt;       entity = create_mock_entity(1, pos=(10,10), project=project)
+
+tests/engine/test_phase6_strategic_cognition.py:32: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+id = 1, pos = (10, 10)
+project = ProjectState(id='proj1', kind='harvesting', status=&lt;ProjectStatus.ACTIVE: 'ACTIVE'&gt;, score=0.0, lock_until_tick=0, obj...atus=&lt;ObjectiveStatus.ACTIVE: 'ACTIVE'&gt;, blocker_ids=[])], active_objective_id='obj1', created_tick=0, failure_count=0)
+
+    def create_mock_entity(id, pos=(0,0), project=None):
+        strat = StrategicComponent()
+        if project:
+            strat = replace(strat, projects={project.id: project}, current_project_id=project.id, current_objective_id=project.active_objective_id)
+    
+&gt;       return EntityState(
+            id=id,
+            kind="ACTOR",
+            position=pos,
+            identity=IdentityComponent(faction="HERO_FACTION"),
+            combat=CombatComponent(hp=100, max_hp=100, atk=10),
+            strategic=strat,
+            navigation=NavigationComponent(),
+            interaction=InteractionComponent(),
+            active=True
+        )
+E       TypeError: EntityState.__init__() got an unexpected keyword argument 'position'
+
+tests/engine/test_phase6_strategic_cognition.py:15: TypeError</failure></testcase><testcase classname="tests.engine.test_phase6_strategic_cognition" name="test_detour_completion_and_resumption" time="0.001"><failure message="TypeError: EntityState.__init__() got an unexpected keyword argument 'position'">def test_detour_completion_and_resumption():
+        # 1. Setup: Suspended parent + Active detour
+        parent = ProjectState(id="parent", kind="harvesting", status=ProjectStatus.SUSPENDED)
+        detour_obj = ObjectiveState(id="d_obj", kind="reach_location", target="(5, 5)", status=ObjectiveStatus.ACTIVE)
+        detour = ProjectState(id="detour", kind="detour", status=ProjectStatus.ACTIVE, objectives=[detour_obj], active_objective_id="d_obj")
+    
+&gt;       entity = create_mock_entity(1, pos=(0,0))
+
+tests/engine/test_phase6_strategic_cognition.py:62: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+id = 1, pos = (0, 0), project = None
+
+    def create_mock_entity(id, pos=(0,0), project=None):
+        strat = StrategicComponent()
+        if project:
+            strat = replace(strat, projects={project.id: project}, current_project_id=project.id, current_objective_id=project.active_objective_id)
+    
+&gt;       return EntityState(
+            id=id,
+            kind="ACTOR",
+            position=pos,
+            identity=IdentityComponent(faction="HERO_FACTION"),
+            combat=CombatComponent(hp=100, max_hp=100, atk=10),
+            strategic=strat,
+            navigation=NavigationComponent(),
+            interaction=InteractionComponent(),
+            active=True
+        )
+E       TypeError: EntityState.__init__() got an unexpected keyword argument 'position'
+
+tests/engine/test_phase6_strategic_cognition.py:15: TypeError</failure></testcase><testcase classname="tests.engine.test_phase6_strategic_cognition" name="test_access_blocker_resolution" time="0.001"><failure message="TypeError: EntityState.__init__() got an unexpected keyword argument 'position'">def test_access_blocker_resolution():
+        # 1. Setup: Project blocked by ACCESS
+        blocker = BlockerState(id="b_acc", kind="access", subject="(10, 10)", severity=0.8)
+        parent = ProjectState(id="parent", kind="harvesting", status=ProjectStatus.ACTIVE)
+    
+&gt;       entity = create_mock_entity(1, pos=(0,0))
+
+tests/engine/test_phase6_strategic_cognition.py:86: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+id = 1, pos = (0, 0), project = None
+
+    def create_mock_entity(id, pos=(0,0), project=None):
+        strat = StrategicComponent()
+        if project:
+            strat = replace(strat, projects={project.id: project}, current_project_id=project.id, current_objective_id=project.active_objective_id)
+    
+&gt;       return EntityState(
+            id=id,
+            kind="ACTOR",
+            position=pos,
+            identity=IdentityComponent(faction="HERO_FACTION"),
+            combat=CombatComponent(hp=100, max_hp=100, atk=10),
+            strategic=strat,
+            navigation=NavigationComponent(),
+            interaction=InteractionComponent(),
+            active=True
+        )
+E       TypeError: EntityState.__init__() got an unexpected keyword argument 'position'
+
+tests/engine/test_phase6_strategic_cognition.py:15: TypeError</failure></testcase><testcase classname="tests.engine.test_phase8_progression" name="test_evolution_level_up_hero" time="0.001"><failure message="TypeError: EntityState.__init__() got an unexpected keyword argument 'position'">def test_evolution_level_up_hero():
+        """Verify that a Hero levels up and unlocks skills at milestones."""
+&gt;       entity = EntityState(
+            id=1,
+            kind="HERO",
+            position=(0, 0),
+            identity=IdentityComponent(role=EntityRole.HERO, evolution_level=1, evolution_points=0, unspent_ap=0),
+            attributes=AttributeComponent(vitality=5, strength=5),
+            combat=CombatComponent(hp=110, max_hp=110, atk=12),
+            aptitude=AptitudeComponent()
+        )
+E       TypeError: EntityState.__init__() got an unexpected keyword argument 'position'
+
+tests/engine/test_phase8_progression.py:12: TypeError</failure></testcase><testcase classname="tests.engine.test_phase8_progression" name="test_equipment_stat_derivation" time="0.001"><failure message="TypeError: EntityState.__init__() got an unexpected keyword argument 'position'">def test_equipment_stat_derivation():
+        """Verify that equipping items updates combat stats via ApplyPath."""
+&gt;       entity = EntityState(
+            id=1,
+            kind="HERO",
+            position=(0, 0),
+            identity=IdentityComponent(role=EntityRole.HERO),
+            attributes=AttributeComponent(strength=10), # Base ATK = 10 + 10*0.5 = 15
+            combat=CombatComponent(hp=100, max_hp=100, atk=15, range=1),
+            equipment=EquipmentComponent()
+        )
+E       TypeError: EntityState.__init__() got an unexpected keyword argument 'position'
+
+tests/engine/test_phase8_progression.py:44: TypeError</failure></testcase><testcase classname="tests.engine.test_phase8_progression" name="test_passive_skill_bonus" time="0.001"><failure message="TypeError: EntityState.__init__() got an unexpected keyword argument 'position'">def test_passive_skill_bonus():
+        """Verify that learning a passive skill updates combat stats."""
+&gt;       entity = EntityState(
+            id=1,
+            kind="HERO",
+            position=(0, 0),
+            identity=IdentityComponent(role=EntityRole.HERO, learned_skills=set()),
+            attributes=AttributeComponent(agility=10), # Base Evasion = 0.05 + 10*0.001 = 0.06
+            combat=CombatComponent(hp=100, max_hp=100, evasion=0.06),
+        )
+E       TypeError: EntityState.__init__() got an unexpected keyword argument 'position'
+
+tests/engine/test_phase8_progression.py:68: TypeError</failure></testcase><testcase classname="tests.engine.test_phase8_progression" name="test_attribute_stat_scaling" time="0.000"><failure message="TypeError: EntityState.__init__() got an unexpected keyword argument 'position'">def test_attribute_stat_scaling():
+        """Verify that increasing attributes updates combat stats."""
+&gt;       entity = EntityState(
+            id=1,
+            kind="HERO",
+            position=(0, 0),
+            attributes=AttributeComponent(strength=10), # Base ATK = 10 + 5 = 15
+            combat=CombatComponent(hp=100, max_hp=100, atk=15),
+        )
+E       TypeError: EntityState.__init__() got an unexpected keyword argument 'position'
+
+tests/engine/test_phase8_progression.py:90: TypeError</failure></testcase><testcase classname="tests.engine.test_phase9_stability" name="test_1000_tick_stability" time="0.001"><failure message="TypeError: EntityState.__init__() got an unexpected keyword argument 'position'">def test_1000_tick_stability():
+        """
+        Stress test to verify world stability over 1,000 ticks.
+        Checks for:
+        1. Entity count staying within reasonable bounds (No explosion/extinction).
+        2. Resource node replenishment.
+        3. Regional trauma and hazard progression.
+        """
+        # 1. Setup World
+        generator = EntityGenerator(seed=42)
+        regions = {
+            "forest_1": RegionState(id="forest_1", name="Dark Forest", bounds=(10, 10, 100, 100), kind="FOREST", stability=0.8),
+            "plains_1": RegionState(id="plains_1", name="Sun Plains", bounds=(-100, -100, -10, -10), kind="PLAINS", stability=0.9)
+        }
+    
+        # Spawn initial monsters
+        entities = {}
+        for i in range(10):
+&gt;           mob = generator.spawn_monster((20 + i, 20 + i), kind="wolf", difficulty_tier=1)
+
+tests/engine/test_phase9_stability.py:28: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = &lt;src.systems.generator.EntityGenerator object at 0x6ffe5bf431d0&gt;
+pos = (20, 20), state = None, kind = 'wolf', difficulty_tier = 1
+
+    def spawn_monster(self, pos: tuple[float, float], state: AuthoritativeState | None = None, kind: str = "monster", difficulty_tier: int = 1) -&gt; EntityState:
+        """Spawn a regular monster with difficulty-scaled stats."""
+        entity_id = self.get_next_id()
+    
+        from src.world.spawn_config import DIFFICULTY_TIERS
+        mults = DIFFICULTY_TIERS.get(difficulty_tier, DIFFICULTY_TIERS[1])
+    
+        tick = state.tick if state else 0
+        evolution_level = self.rng.get_int(Domain.SPAWN, tick, entity_id, mults.level_min, mults.level_max)
+    
+        # Generic monster base (fallback)
+        base_hp = 50 * mults.hp
+        base_atk = 10 * mults.atk
+        base_def = 5 * mults.def_stat
+        base_gold = 10 * mults.gold
+    
+&gt;       return EntityState(
+            id=entity_id,
+            kind=kind,
+            position=pos,
+            identity=IdentityComponent(
+                role=EntityRole.MONSTER,
+                faction=Faction.MONSTER_HORDE,
+                evolution_level=evolution_level
+            ),
+            navigation=NavigationComponent(
+                home_position=pos,
+                leash_radius=10.0 # Default leash for random spawns
+            ),
+            combat=CombatComponent(
+                hp=int(base_hp),
+                max_hp=int(base_hp),
+                atk=int(base_atk),
+                def_stat=int(base_def),
+                alive=True
+            ),
+            inventory=InventoryComponent(
+                gold=int(base_gold)
+            )
+        )
+E       TypeError: EntityState.__init__() got an unexpected keyword argument 'position'
+
+src/systems/generator.py:84: TypeError</failure></testcase><testcase classname="tests.engine.test_phase_order" name="test_kernel_authoritative_phase_sequence" time="0.025" /><testcase classname="tests.engine.test_phase_order_contract" name="test_phase_order_frozen" time="0.001" /><testcase classname="tests.engine.test_phase_order_contract" name="test_contractual_phase_sequence" time="0.000" /><testcase classname="tests.engine.test_progression_lifecycle" name="test_xp_separation_full_inventory" time="0.001" /><testcase classname="tests.engine.test_progression_lifecycle" name="test_durability_decay_combat" time="0.001" /><testcase classname="tests.engine.test_progression_lifecycle" name="test_crafting_gates" time="0.001" /><testcase classname="tests.engine.test_progression_lifecycle" name="test_crafting_success" time="0.001" /><testcase classname="tests.engine.test_progression_lifecycle" name="test_stat_derivation_broken_gear" time="0.001" /><testcase classname="tests.engine.test_race_conditions_v2" name="test_race_condition_node_depletion" time="0.001"><failure message="TypeError: EntityState.__init__() got an unexpected keyword argument 'position'">@pytest.mark.v2_contract
+    def test_race_condition_node_depletion():
+        """Verify that multiple entities cannot over-harvest a node in one tick."""
+&gt;       e1 = create_mock_entity(1, pos=(1,1))
+
+tests/engine/test_race_conditions_v2.py:30: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+id = 1, pos = (1, 1)
+
+    def create_mock_entity(id, pos=(0,0)):
+&gt;       return EntityState(
+            id=id,
+            kind="hero",
+            position=pos,
+            identity=IdentityComponent(role=EntityRole.HERO),
+            combat=CombatComponent(hp=100, max_hp=100, atk=10, alive=True),
+            inventory=InventoryComponent(max_slots=10, max_weight=100.0),
+            strategic=StrategicComponent()
+        )
+E       TypeError: EntityState.__init__() got an unexpected keyword argument 'position'
+
+tests/engine/test_race_conditions_v2.py:17: TypeError</failure></testcase><testcase classname="tests.engine.test_race_conditions_v2" name="test_race_condition_ground_item_lock" time="0.001"><failure message="TypeError: EntityState.__init__() got an unexpected keyword argument 'position'">@pytest.mark.v2_contract
+    def test_race_condition_ground_item_lock():
+        """Verify that only one entity can pick up a ground item in one tick."""
+&gt;       e1 = create_mock_entity(1, pos=(1,1))
+
+tests/engine/test_race_conditions_v2.py:59: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+id = 1, pos = (1, 1)
+
+    def create_mock_entity(id, pos=(0,0)):
+&gt;       return EntityState(
+            id=id,
+            kind="hero",
+            position=pos,
+            identity=IdentityComponent(role=EntityRole.HERO),
+            combat=CombatComponent(hp=100, max_hp=100, atk=10, alive=True),
+            inventory=InventoryComponent(max_slots=10, max_weight=100.0),
+            strategic=StrategicComponent()
+        )
+E       TypeError: EntityState.__init__() got an unexpected keyword argument 'position'
+
+tests/engine/test_race_conditions_v2.py:17: TypeError</failure></testcase><testcase classname="tests.engine.test_race_conditions_v2" name="test_race_condition_corpse_loot_lock" time="0.001"><failure message="TypeError: EntityState.__init__() got an unexpected keyword argument 'position'">@pytest.mark.v2_contract
+    def test_race_condition_corpse_loot_lock():
+        """Verify that only one entity can loot a corpse in one tick."""
+&gt;       e1 = create_mock_entity(1, pos=(1,1))
+
+tests/engine/test_race_conditions_v2.py:84: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+id = 1, pos = (1, 1)
+
+    def create_mock_entity(id, pos=(0,0)):
+&gt;       return EntityState(
+            id=id,
+            kind="hero",
+            position=pos,
+            identity=IdentityComponent(role=EntityRole.HERO),
+            combat=CombatComponent(hp=100, max_hp=100, atk=10, alive=True),
+            inventory=InventoryComponent(max_slots=10, max_weight=100.0),
+            strategic=StrategicComponent()
+        )
+E       TypeError: EntityState.__init__() got an unexpected keyword argument 'position'
+
+tests/engine/test_race_conditions_v2.py:17: TypeError</failure></testcase><testcase classname="tests.engine.test_race_conditions_v2" name="test_multi_intent_group_rollback_race" time="0.001"><failure message="TypeError: EntityState.__init__() got an unexpected keyword argument 'position'">@pytest.mark.v2_contract
+    def test_multi_intent_group_rollback_race():
+        """Verify that a failed group reservation is correctly rolled back for subsequent entities."""
+&gt;       e1 = create_mock_entity(1, pos=(1,1))
+
+tests/engine/test_race_conditions_v2.py:108: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+id = 1, pos = (1, 1)
+
+    def create_mock_entity(id, pos=(0,0)):
+&gt;       return EntityState(
+            id=id,
+            kind="hero",
+            position=pos,
+            identity=IdentityComponent(role=EntityRole.HERO),
+            combat=CombatComponent(hp=100, max_hp=100, atk=10, alive=True),
+            inventory=InventoryComponent(max_slots=10, max_weight=100.0),
+            strategic=StrategicComponent()
+        )
+E       TypeError: EntityState.__init__() got an unexpected keyword argument 'position'
+
+tests/engine/test_race_conditions_v2.py:17: TypeError</failure></testcase><testcase classname="tests.engine.test_read_only_guard" name="test_read_only_guard_enforcement" time="0.001"><failure message="TypeError: EntityState.__init__() got an unexpected keyword argument 'position'">def test_read_only_guard_enforcement():
+        # Setup state
+        state = AuthoritativeState(tick=100, seed=42)
+&gt;       entity = EntityState(id=1, kind="hero", position=(0.0, 0.0))
+E       TypeError: EntityState.__init__() got an unexpected keyword argument 'position'
+
+tests/engine/test_read_only_guard.py:11: TypeError</failure></testcase><testcase classname="tests.engine.test_read_only_guard" name="test_read_only_properties_mutation" time="0.001"><failure message="TypeError: EntityState.__init__() got an unexpected keyword argument 'position'">def test_read_only_properties_mutation():
+        # Entities themselves should have read-only properties
+        state = AuthoritativeState(tick=100, seed=42)
+&gt;       entity = EntityState(id=1, kind="hero", position=(0.0, 0.0), properties={"gold": 100})
+E       TypeError: EntityState.__init__() got an unexpected keyword argument 'position'
+
+tests/engine/test_read_only_guard.py:42: TypeError</failure></testcase><testcase classname="tests.engine.test_rejection_audit" name="test_rejection_audit_aggregation" time="0.002" /><testcase classname="tests.engine.test_replay_chunk_rotation" name="test_replay_chunk_rotation_logic" time="0.008" /><testcase classname="tests.engine.test_replay_chunk_rotation" name="test_manifest_integrity" time="0.636" /><testcase classname="tests.engine.test_replay_contract" name="test_replay_is_non_authoritative" time="0.060" /><testcase classname="tests.engine.test_replay_contract" name="test_replay_order_preservation" time="0.008" /><testcase classname="tests.engine.test_replay_determinism" name="test_transaction_trace_determinism" time="0.001"><failure message="TypeError: EntityState.__init__() got an unexpected keyword argument 'position'">def test_transaction_trace_determinism():
+        """
+        Law: Authoritative decision traces must be identical across same-seed executions.
+        This test verifies that rejected transactions are correctly logged and stable.
+        """
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            run_dir = Path(tmp_dir) / "run_1"
+    
+            profile = RuntimeProfile(
+                name="test",
+                hardware_class="class_b",
+                max_ram_mb=256,
+                max_cpu_percent=50.0,
+                max_worker_count=0,
+                max_queue_depth=100,
+                max_replay_buffer_kb=1024,
+                max_observability_budget_percent=10.0,
+                max_tick_budget_ms=100.0,
+                sampling_interval_ticks=1
+            )
+    
+            # 1. Setup world with a resource node and an entity with full inventory
+            region = RegionState(id="reg1", name="Region 1", bounds=(0, 0, 128, 128), owner_faction_id=1)
+    
+            from src.core.state import CombatComponent, InventoryComponent
+            # Entity 1: Full inventory (cap 2 is implicit in resolver logic, but here we just fill it)
+&gt;           ent1 = EntityState(
+                id=1,
+                kind="hero",
+                position=(10, 10),
+                combat=CombatComponent(hp=100, max_hp=100, alive=True),
+                inventory=InventoryComponent(
+                    items=[ItemStack(item_id="stone", quantity=1), ItemStack(item_id="wood", quantity=1)],
+                    gold=0
+                )
+            )
+E           TypeError: EntityState.__init__() got an unexpected keyword argument 'position'
+
+tests/engine/test_replay_determinism.py:38: TypeError</failure></testcase><testcase classname="tests.engine.test_replay_overflow" name="test_replay_staging_overflow_oldest_evicted" time="0.002" /><testcase classname="tests.engine.test_replay_overflow" name="test_replay_waterfall_degradation" time="0.002" /><testcase classname="tests.engine.test_replay_pressure" name="test_replay_mode_retention_windowed" time="0.001" /><testcase classname="tests.engine.test_replay_pressure" name="test_replay_mode_retention_forensic" time="0.000" /><testcase classname="tests.engine.test_replay_pressure" name="test_early_rotation_trigger" time="0.003" /><testcase classname="tests.engine.test_replay_pressure" name="test_atomic_manifest_write" time="0.001" /><testcase classname="tests.engine.test_replay_shutdown_budget" name="test_shutdown_skips_rotation_on_low_budget" time="0.003" /><testcase classname="tests.engine.test_replay_shutdown_budget" name="test_shutdown_performs_rotation_on_ample_budget" time="0.003" /><testcase classname="tests.engine.test_reputation_learning" name="test_public_vs_private_trust" time="0.003"><failure message="TypeError: EntityState.__init__() got an unexpected keyword argument 'position'">def test_public_vs_private_trust():
+        state = AuthoritativeState(tick=100, seed=42)
+    
+        # 1. Famous Hero (Public Rep = 1.8)
+&gt;       hero = EntityState(
+            id=1, kind="hero", position=(0,0),
+            social=SocialComponent(public_reputation=1.8)
+        )
+E       TypeError: EntityState.__init__() got an unexpected keyword argument 'position'
+
+tests/engine/test_reputation_learning.py:13: TypeError</failure></testcase><testcase classname="tests.engine.test_resource_conflicts" name="test_contested_corpse_loot_conflict" time="0.002" /><testcase classname="tests.engine.test_resource_governor_contract" name="test_escalation_path" time="0.001" /><testcase classname="tests.engine.test_resource_governor_contract" name="test_multi_signal_escalation" time="0.000" /><testcase classname="tests.engine.test_resource_v2_boundary" name="test_town_tax_refactor" time="0.002" /><testcase classname="tests.engine.test_resource_v2_boundary" name="test_shop_sell_refactor" time="0.006" /><testcase classname="tests.engine.test_resource_v2_boundary" name="test_blacksmith_craft_refactor" time="0.004" /><testcase classname="tests.engine.test_resource_v2_boundary" name="test_reward_update_hardening" time="0.001" /><testcase classname="tests.engine.test_resource_v2_boundary" name="test_combat_reward_via_intent" time="0.001" /><testcase classname="tests.engine.test_resource_v2_boundary" name="test_recruitment_gold_handoff" time="0.001" /><testcase classname="tests.engine.test_resource_v2_boundary" name="test_class_hall_train_refactor" time="0.001" /><testcase classname="tests.engine.test_resource_v2_boundary" name="test_chest_looting_and_cooldown" time="0.005" /><testcase classname="tests.engine.test_resource_v2_boundary" name="test_node_recharge_dynamics" time="0.001" /><testcase classname="tests.engine.test_routine_biasing" name="test_routine_and_role_biasing" time="0.001"><failure message="TypeError: EntityState.__init__() got an unexpected keyword argument 'position'">def test_routine_and_role_biasing():
+        # Setup state at Night (20:00)
+        state = AuthoritativeState(tick=100, seed=42, world_time=2000)
+    
+        # 1. Hero with sleep debt
+&gt;       hero = EntityState(
+            id=1, kind="hero", position=(0.0, 0.0),
+            identity=IdentityComponent(role=EntityRole.HERO),
+            biological=BiologicalComponent(sleep_debt=50.0)
+        )
+E       TypeError: EntityState.__init__() got an unexpected keyword argument 'position'
+
+tests/engine/test_routine_biasing.py:21: TypeError</failure></testcase><testcase classname="tests.engine.test_routine_biasing" name="test_role_biasing" time="0.001"><failure message="TypeError: EntityState.__init__() got an unexpected keyword argument 'position'">def test_role_biasing():
+         # Setup state at Day (12:00)
+        state = AuthoritativeState(tick=100, seed=42, world_time=1200)
+    
+&gt;       shopkeeper = EntityState(
+            id=2, kind="shopkeeper", position=(10.0, 10.0),
+            identity=IdentityComponent(role=EntityRole.SHOPKEEPER),
+            biological=BiologicalComponent(sleep_debt=0.0)
+        )
+E       TypeError: EntityState.__init__() got an unexpected keyword argument 'position'
+
+tests/engine/test_routine_biasing.py:61: TypeError</failure></testcase><testcase classname="tests.engine.test_rpg_math" name="test_level_up_mechanics" time="0.003" /><testcase classname="tests.engine.test_rpg_math" name="test_stat_recalculation" time="0.002" /><testcase classname="tests.engine.test_rpg_math" name="test_encumbrance_scaling" time="0.001" /><testcase classname="tests.engine.test_rpg_math" name="test_stamina_and_wounds" time="0.002" /><testcase classname="tests.engine.test_runtime_state_contract" name="test_hotpath_purity" time="0.000" /><testcase classname="tests.engine.test_runtime_state_contract" name="test_export_factory_isolation" time="0.001"><failure message="TypeError: EntityState.__init__() got an unexpected keyword argument 'position'">def test_export_factory_isolation():
+        """Verify that to_export_state produces a valid DTO without mutating source."""
+        state = AuthoritativeState(tick=1, seed=42, world_time=10, entities={
+&gt;           1: EntityState(id=1, kind="hero", position=(0,0))
+        })
+E       TypeError: EntityState.__init__() got an unexpected keyword argument 'position'
+
+tests/engine/test_runtime_state_contract.py:20: TypeError</failure></testcase><testcase classname="tests.engine.test_scheduler_contract" name="test_readiness_driven_selection" time="0.001"><failure message="TypeError: EntityState.__init__() got an unexpected keyword argument 'position'">def test_readiness_driven_selection():
+        """Verify that only entities at or above 100.0 readiness are selected."""
+        state = AuthoritativeState(tick=1, seed=42, entities={
+&gt;           1: EntityState(id=1, kind="hero", position=(0,0), readiness=100.0),
+            2: EntityState(id=2, kind="hero", position=(0,0), readiness=99.9),
+            3: EntityState(id=3, kind="hero", position=(0,0), readiness=150.0),
+        })
+E       TypeError: EntityState.__init__() got an unexpected keyword argument 'position'
+
+tests/engine/test_scheduler_contract.py:10: TypeError</failure></testcase><testcase classname="tests.engine.test_scheduler_contract" name="test_deterministic_tiebreak" time="0.001"><failure message="TypeError: EntityState.__init__() got an unexpected keyword argument 'position'">def test_deterministic_tiebreak():
+        """Verify that same-readiness entities are sorted by EntityID ASC."""
+        state = AuthoritativeState(tick=1, seed=42, entities={
+&gt;           3: EntityState(id=3, kind="hero", position=(0,0), readiness=100.0),
+            1: EntityState(id=1, kind="hero", position=(0,0), readiness=100.0),
+            2: EntityState(id=2, kind="hero", position=(0,0), readiness=100.0),
+        })
+E       TypeError: EntityState.__init__() got an unexpected keyword argument 'position'
+
+tests/engine/test_scheduler_contract.py:28: TypeError</failure></testcase><testcase classname="tests.engine.test_scheduler_contract" name="test_periodic_selection" time="0.000" /><testcase classname="tests.engine.test_scheduler_contract" name="test_full_work_hierarchy" time="0.000"><failure message="TypeError: EntityState.__init__() got an unexpected keyword argument 'position'">def test_full_work_hierarchy():
+        """Verify Critical &gt; Periodic &gt; Deferred hierarchy."""
+        state = AuthoritativeState(
+            tick=10,
+            seed=1,
+&gt;           entities={1: EntityState(id=1, kind="hero", position=(0,0), readiness=100.0)},
+            periodic_due_ticks={"weather": 10},
+            work_debt={"system_x": 1}
+        )
+E       TypeError: EntityState.__init__() got an unexpected keyword argument 'position'
+
+tests/engine/test_scheduler_contract.py:60: TypeError</failure></testcase><testcase classname="tests.engine.test_scheduler_contract" name="test_deferred_tiebreak" time="0.001" /><testcase classname="tests.engine.test_scheduler_contract" name="test_mixed_periodic_tiebreak" time="0.000" /><testcase classname="tests.engine.test_scheduler_contract" name="test_governor_gating_non_auth_periodic" time="0.000" /><testcase classname="tests.engine.test_signal_hardening" name="test_peak_utilization_accuracy" time="0.000"><failure message="TypeError: EntityState.__init__() got an unexpected keyword argument 'position'">def test_peak_utilization_accuracy():
+        """Verify that WorkerManager accurately captures peak active workers."""
+        manager = WorkerManager(max_workers=4, max_queue_depth=10)
+    
+        packets = [
+            WorkerPacket(
+                packet_id=f"p{i}",
+                work_id=f"w{i}",
+                tick=0,
+                world_time=0,
+                seed=i,
+                work_class=WorkClass.CRITICAL,
+&gt;               subject=EntityState(id=i, kind="test", position=(0,0)),
+                neighbor_view=[],
+                work_kind="TEST",
+                payload={}
+            ) for i in range(8)
+        ]
+E       TypeError: EntityState.__init__() got an unexpected keyword argument 'position'
+
+tests/engine/test_signal_hardening.py:33: TypeError</failure></testcase><testcase classname="tests.engine.test_signal_hardening" name="test_queue_overflow_shedding" time="0.001"><failure message="TypeError: EntityState.__init__() got an unexpected keyword argument 'position'">def test_queue_overflow_shedding():
+        """Verify that WorkerManager sheds load locally when queue is full."""
+        # Tiny queue to trigger it easily
+        manager = WorkerManager(max_workers=1, max_queue_depth=2)
+    
+        packets = [
+            WorkerPacket(
+                packet_id=f"p{i}",
+                work_id=f"w{i}",
+                tick=0,
+                world_time=0,
+                seed=i,
+                work_class=WorkClass.CRITICAL,
+&gt;               subject=EntityState(id=i, kind="test", position=(0,0)),
+                neighbor_view=[],
+                work_kind="TEST",
+                payload={}
+            ) for i in range(10)
+        ]
+E       TypeError: EntityState.__init__() got an unexpected keyword argument 'position'
+
+tests/engine/test_signal_hardening.py:72: TypeError</failure></testcase><testcase classname="tests.engine.test_signal_truth" name="test_signal_truth_peak_utilization" time="0.002" /><testcase classname="tests.engine.test_signal_truth" name="test_signal_truth_rolling_compute_average" time="0.002" /><testcase classname="tests.engine.test_signal_truth" name="test_signal_truth_windowed_memory_trend" time="0.004" /><testcase classname="tests.engine.test_signal_truth" name="test_signal_truth_dropped_work" time="0.020" /><testcase classname="tests.engine.test_simulation_kernel_contract" name="test_authoritative_phase_list" time="0.000" /><testcase classname="tests.engine.test_simulation_kernel_contract" name="test_kernel_tick_execution_order" time="0.019" /><testcase classname="tests.engine.test_social_contracts" name="test_contract_betrayal_consequences" time="0.001" /><testcase classname="tests.engine.test_social_lifecycle" name="test_contract_state_machine_valid" time="0.001" /><testcase classname="tests.engine.test_social_lifecycle" name="test_contract_state_machine_invalid" time="0.000" /><testcase classname="tests.engine.test_social_lifecycle" name="test_recruitment_appraisal_trust_impact" time="0.000" /><testcase classname="tests.engine.test_social_lifecycle" name="test_recruitment_appraisal_low_trust" time="0.000" /><testcase classname="tests.engine.test_social_lifecycle" name="test_betrayal_consequences" time="0.001" /><testcase classname="tests.engine.test_social_lifecycle" name="test_party_leadership_influence" time="0.001" /><testcase classname="tests.engine.test_spatial_index" name="test_spatial_grid_coarse_filtering" time="0.001" /><testcase classname="tests.engine.test_spatial_index" name="test_spatial_grid_rebuild_logic" time="0.001" /><testcase classname="tests.engine.test_state_isolation" name="test_state_mutation_protection" time="0.003" /><testcase classname="tests.engine.test_state_isolation" name="test_deep_freeze_efficacy" time="0.001" /><testcase classname="tests.engine.test_status_hardening" name="test_frozen_actor_skips_strategic_intent" time="0.006" /><testcase classname="tests.engine.test_status_hardening" name="test_stunned_actor_skips_strategic_concerns" time="0.001" /><testcase classname="tests.engine.test_status_hardening" name="test_staggered_frequency_distribution" time="0.008" /><testcase classname="tests.engine.test_strategic_hardening" name="test_concern_bandwidth_enforcement" time="0.000" /><testcase classname="tests.engine.test_strategic_hardening" name="test_detour_breadth_enforcement" time="0.000" /><testcase classname="tests.engine.test_strategic_hardening" name="test_failed_lead_suppression" time="0.000" /><testcase classname="tests.engine.test_strategic_hardening" name="test_strategic_update_staggering" time="0.001" /><testcase classname="tests.engine.test_strategic_hardening" name="test_incapacitated_strategic_exit" time="0.000" /><testcase classname="tests.engine.test_strategic_hardening" name="test_group_detour_suppression" time="0.002" /><testcase classname="tests.engine.test_strategic_lifecycle" name="test_inventory_full_to_town_detour" time="0.002" /><testcase classname="tests.engine.test_strategic_lifecycle" name="test_low_hp_retreat_detour" time="0.000" /><testcase classname="tests.engine.test_strategic_lifecycle" name="test_strategic_learning_bias" time="0.001" /><testcase classname="tests.engine.test_strategic_lifecycle" name="test_lead_suppression_and_exhaustion" time="0.026" /><testcase classname="tests.engine.test_substrate_freeze_m1.TestSubstrateFreezeM1" name="test_kernel_phase_execution_order" time="0.002" /><testcase classname="tests.engine.test_substrate_freeze_m1.TestSubstrateFreezeM1" name="test_apply_path_singular_authority" time="0.033" /><testcase classname="tests.engine.test_substrate_freeze_m1.TestSubstrateFreezeM1" name="test_pressure_signals_schema_lock" time="0.001" /><testcase classname="tests.engine.test_substrate_freeze_m1.TestSubstrateFreezeM1" name="test_authoritative_state_field_purity" time="0.001" /><testcase classname="tests.engine.test_substrate_freeze_m1.TestSubstrateFreezeM1" name="test_tick_phase_enum_completeness" time="0.000" /><testcase classname="tests.engine.test_tactical_hardening" name="test_frozen_state_mutation_tripwire" time="0.000" /><testcase classname="tests.engine.test_tactical_hardening" name="test_tactical_legality_envelope_mock" time="0.000" /><testcase classname="tests.engine.test_tactical_legality" name="test_tactical_legality_filtering" time="0.001" /><testcase classname="tests.engine.test_tactical_legality" name="test_tactical_blocked_kite" time="0.000" /><testcase classname="tests.engine.test_transaction_grouping" name="test_interleaved_transaction_grouping" time="0.002" /><testcase classname="tests.engine.test_transaction_grouping" name="test_group_failure_rollback" time="0.002" /><testcase classname="tests.engine.test_watchdog" name="test_arena_watchdog_trigger" time="22.110" /><testcase classname="tests.engine.test_work_classes" name="test_bucket_prioritization" time="0.000"><failure message="TypeError: EntityState.__init__() got an unexpected keyword argument 'position'">def test_bucket_prioritization():
+        """Verify that Critical work is always scheduled before Periodic work."""
+        p_def = PeriodicDefinition(subsystem_id="cleanup", work_kind="GC", cadence=1)
+        # Entity ID is 100, but it should come before "cleanup" if both are due.
+        state = AuthoritativeState(tick=1, seed=42,
+&gt;           entities={100: EntityState(id=100, kind="hero", position=(0,0), readiness=100.0)},
+            periodic_due_ticks={"cleanup": 1}
+        )
+E       TypeError: EntityState.__init__() got an unexpected keyword argument 'position'
+
+tests/engine/test_work_classes.py:11: TypeError</failure></testcase><testcase classname="tests.engine.test_work_classes" name="test_dual_periodic_ordering" time="0.001" /><testcase classname="tests.engine.test_worker_adaptation" name="test_worker_concurrency_throttling" time="0.002"><failure message="TypeError: EntityState.__init__() got an unexpected keyword argument 'position'">def test_worker_concurrency_throttling():
+        """Verify that WorkerManager respects the concurrency_limit."""
+        # Pool size 4
+        wm = WorkerManager(max_workers=4, max_queue_depth=100)
+    
+        from src.core.work import WorkClass
+        # 1. Full Capacity (concurrency_limit = 1.0)
+        packets = [
+            WorkerPacket(packet_id=f"p{i}", work_id=f"w{i}", tick=0, world_time=0, seed=i,
+                         work_class=WorkClass.CRITICAL,
+&gt;                        subject=EntityState(id=i+1, kind="TEST", position=(0,0), properties={}),
+                         neighbor_view=[], work_kind="TEST", payload={})
+            for i in range(10)
+        ]
+E       TypeError: EntityState.__init__() got an unexpected keyword argument 'position'
+
+tests/engine/test_worker_adaptation.py:31: TypeError</failure></testcase><testcase classname="tests.engine.test_worker_adaptation" name="test_worker_concurrency_rounding" time="0.001"><failure message="TypeError: EntityState.__init__() got an unexpected keyword argument 'position'">def test_worker_concurrency_rounding():
+        """Verify that rounding always allows at least 1 worker."""
+        wm = WorkerManager(max_workers=4, max_queue_depth=100)
+        from src.core.work import WorkClass
+        packets = [WorkerPacket(packet_id="p1", work_id="w1", tick=0, world_time=0, seed=0,
+                               work_class=WorkClass.CRITICAL,
+&gt;                              subject=EntityState(id=1, kind="TEST", position=(0,0), properties={}),
+                               neighbor_view=[], work_kind="TEST", payload={})]
+E       TypeError: EntityState.__init__() got an unexpected keyword argument 'position'
+
+tests/engine/test_worker_adaptation.py:67: TypeError</failure></testcase><testcase classname="tests.engine.test_worker_bounds" name="test_worker_count_upper_bound" time="0.218" /><testcase classname="tests.engine.test_worker_bounds" name="test_worker_pool_shutdown" time="0.001" /><testcase classname="tests.engine.test_worker_determinism" name="test_concurrency_determinism_equivalence" time="0.001"><failure message="TypeError: EntityState.__init__() got an unexpected keyword argument 'position'">def test_concurrency_determinism_equivalence():
+        """
+        M8 Law: Local Execution == Concurrent Execution.
+        Verifies that bit-identical authoritative state is produced regardless
+        of worker count, given the same seed and inputs.
+        """
+        profile_local = RuntimeProfile(
+            name="LOCAL", hardware_class=HardwareClass.CLASS_B,
+            max_ram_mb=512, max_cpu_percent=50.0, max_worker_count=0, # SEQUENTIAL
+            max_queue_depth=10, max_replay_buffer_kb=0, max_tick_budget_ms=10.0,
+            max_observability_budget_percent=5.0
+        )
+    
+        profile_concurrent = RuntimeProfile(
+            name="CONCURRENT", hardware_class=HardwareClass.CLASS_B,
+            max_ram_mb=512, max_cpu_percent=50.0, max_worker_count=4, # PARALLEL
+            max_queue_depth=10, max_replay_buffer_kb=0, max_tick_budget_ms=10.0,
+            max_observability_budget_percent=5.0
+        )
+    
+        # Setup identical initial state
+        entities = {
+&gt;           i: EntityState(id=i, kind="TEST", position=(0,0), readiness=100.0)
+            for i in range(1, 11)
+        }
+E       TypeError: EntityState.__init__() got an unexpected keyword argument 'position'
+
+tests/engine/test_worker_determinism.py:32: TypeError</failure></testcase><testcase classname="tests.engine.test_worker_determinism" name="test_race_resistance_via_sorting" time="0.120" /><testcase classname="tests.engine.test_worker_equivalence" name="test_authoritative_equivalence" time="0.003"><failure message="TypeError: EntityState.__init__() got an unexpected keyword argument 'position'">dual_kernel_setup = (&lt;src.engine.kernel.Kernel object at 0x6ffe61e45460&gt;, &lt;src.engine.kernel.Kernel object at 0x6ffe61e458c0&gt;)
+
+    def test_authoritative_equivalence(dual_kernel_setup):
+        """M8 Law: Local and Concurrent execution produce identical authoritative hashes."""
+        k_local, k_concurrent = dual_kernel_setup
+    
+        # Setup some initial entities to generate work
+        from src.core.state import EntityState
+        for i in range(1, 11):
+&gt;           k_local._state.entities[i] = EntityState(id=i, kind="ACTOR", position=(i, 0.0))
+E           TypeError: EntityState.__init__() got an unexpected keyword argument 'position'
+
+tests/engine/test_worker_equivalence.py:44: TypeError</failure></testcase><testcase classname="tests.engine.test_worker_equivalence" name="test_zero_worker_fallback_equivalence" time="0.036" /><testcase classname="tests.engine.test_worker_fallback" name="test_queue_saturation_triggers_local_fallback" time="0.208" /><testcase classname="tests.engine.test_worker_fallback" name="test_force_local_override" time="0.010" /><testcase classname="tests.engine.test_worker_harden" name="test_neighbor_view_sorting" time="0.002" /><testcase classname="tests.engine.test_worker_harden" name="test_duplicate_entity_update_rejection" time="0.005" /><testcase classname="tests.engine.test_worker_harden" name="test_priority_sorted_results" time="0.002" /><testcase classname="tests.engine.test_worker_integrity" name="test_protocol_duplicate_packet_rejection" time="0.001" /><testcase classname="tests.engine.test_worker_integrity" name="test_protocol_option_a_pre_dispatch_rejection" time="0.005" /><testcase classname="tests.engine.test_worker_integrity" name="test_protocol_canonical_context_rejection" time="0.001" /><testcase classname="tests.engine.test_worker_integrity" name="test_protocol_result_traceability_rejection" time="0.001" /><testcase classname="tests.engine.test_worker_integrity" name="test_protocol_result_id_mismatch_rejection" time="0.001" /><testcase classname="tests.engine.test_worker_integrity" name="test_protocol_duplicate_result_rejection" time="0.001" /></testsuite></testsuites>

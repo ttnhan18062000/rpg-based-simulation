@@ -1,19 +1,20 @@
 import pytest
 from src.core.state import AuthoritativeState, EntityState
 from src.engine.checkpoint import CanonicalStateHasher
+from src.core.builder import V2EntityBuilder
 
 def test_hash_construction_order_invariance():
     """Verify that the hash is identical regardless of how the dictionaries were built."""
     # Case A: Build entities 1 then 2
     state_a = AuthoritativeState(tick=1, seed=1, entities={
-        1: EntityState(id=1, kind="target", position=(0.0, 0.0)),
-        2: EntityState(id=2, kind="target", position=(1.0, 1.0))
+        1: V2EntityBuilder(1).kind("target").at((0.0, 0.0)).build(),
+        2: V2EntityBuilder(2).kind("target").at((1.0, 1.0)).build()
     })
     
     # Case B: Build entities 2 then 1 (dictionaries might have different internal order)
     entities_b = {}
-    entities_b[2] = EntityState(id=2, kind="target", position=(1.0, 1.0))
-    entities_b[1] = EntityState(id=1, kind="target", position=(0.0, 0.0))
+    entities_b[2] = V2EntityBuilder(2).kind("target").at((1.0, 1.0)).build()
+    entities_b[1] = V2EntityBuilder(1).kind("target").at((0.0, 0.0)).build()
     state_b = AuthoritativeState(tick=1, seed=1, entities=entities_b)
     
     hash_a = CanonicalStateHasher.get_hash(state_a)
@@ -25,7 +26,7 @@ def test_hash_construction_order_invariance():
 def test_hash_compact_vs_pretty():
     """Verify that pretty printing for debug doesn't change the authoritative hash."""
     state = AuthoritativeState(tick=1, seed=1, entities={
-        1: EntityState(id=1, kind="target", position=(0.0, 0.0))
+        1: V2EntityBuilder(1).kind("target").at((0.0, 0.0)).build()
     })
     
     compact_json = CanonicalStateHasher.to_canonical_json(state, pretty=False)
@@ -43,10 +44,10 @@ def test_hash_compact_vs_pretty():
 def test_property_sorting_in_hash():
     """Verify that entity properties are sorted before hashing."""
     state_a = AuthoritativeState(tick=1, seed=1, entities={
-        1: EntityState(id=1, kind="a", position=(0,0), properties={"z": 1, "a": 2})
+        1: V2EntityBuilder(1).kind("a").at((0.0, 0.0)).with_property("z", 1).with_property("a", 2).build()
     })
     state_b = AuthoritativeState(tick=1, seed=1, entities={
-        1: EntityState(id=1, kind="a", position=(0,0), properties={"a": 2, "z": 1})
+        1: V2EntityBuilder(1).kind("a").at((0.0, 0.0)).with_property("a", 2).with_property("z", 1).build()
     })
     
     assert CanonicalStateHasher.get_hash(state_a) == CanonicalStateHasher.get_hash(state_b)
@@ -55,14 +56,10 @@ def test_property_sorting_in_hash():
 def test_deep_property_sorting():
     """Verify that nested dictionaries in properties are sorted during hashing."""
     state_a = AuthoritativeState(tick=1, seed=1, entities={
-        1: EntityState(id=1, kind="a", position=(0,0), properties={
-            "meta": {"b": 2, "a": 1}
-        })
+        1: V2EntityBuilder(1).kind("a").at((0.0, 0.0)).with_property("meta", {"b": 2, "a": 1}).build()
     })
     state_b = AuthoritativeState(tick=1, seed=1, entities={
-        1: EntityState(id=1, kind="a", position=(0,0), properties={
-            "meta": {"a": 1, "b": 2}
-        })
+        1: V2EntityBuilder(1).kind("a").at((0.0, 0.0)).with_property("meta", {"a": 1, "b": 2}).build()
     })
     
     # Even if dictionary insertion order is different, sort_keys=True should save us.

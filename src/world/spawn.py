@@ -39,6 +39,7 @@ class SpawnService:
                     region_monster_count[region.id] += 1
         
         # 2. Check density and spawn
+        generator._last_id = state.next_entity_id - 1
         for r_id, region in state.regions.items():
             pool = SPAWN_POOLS.get(region.kind, [])
             if not pool:
@@ -57,8 +58,8 @@ class SpawnService:
                 kind = generator.rng.choice(Domain.SPAWN, state.tick, r_id, pool)
                 
                 # Get random position in bounds
-                rx = generator.rng.get_float(Domain.SPAWN, state.tick, r_id + "_x") * (xmax - xmin) + xmin
-                ry = generator.rng.get_float(Domain.SPAWN, state.tick, r_id + "_y") * (ymax - ymin) + ymin
+                rx = generator.rng.get_float(Domain.SPAWN, state.tick, f"x_{r_id}") * (xmax - xmin) + xmin
+                ry = generator.rng.get_float(Domain.SPAWN, state.tick, f"y_{r_id}") * (ymax - ymin) + ymin
                 
                 # Determine difficulty tier based on distance from (0,0)
                 dist = math.sqrt(rx**2 + ry**2)
@@ -76,4 +77,7 @@ class SpawnService:
                     
                 entities_add.append(mob)
                 
-        return StateUpdate(entities_add=entities_add)
+        return StateUpdate(
+            entities_add=entities_add,
+            next_entity_id_set=generator._last_id + 1 if entities_add else None
+        )

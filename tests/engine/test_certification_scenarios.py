@@ -7,6 +7,7 @@ from src.config.profiles import RuntimeProfile, HardwareClass
 from src.platform.rng import DeterministicRNG
 from src.core.updates import EntityUpdate, NavigationUpdate, StateUpdate
 from src.core.certification_reporter import CertificationReporter
+from src.core.builder import V2EntityBuilder
 
 def test_rejection_tracking_certification():
     """
@@ -28,8 +29,8 @@ def test_rejection_tracking_certification():
     state = AuthoritativeState(
         tick=0, seed=42,
         entities={
-            1: EntityState(id=1, kind="hero", position=(1.0, 2.0), active=True),
-            2: EntityState(id=2, kind="hero", position=(3.0, 2.0), active=True)
+            1: V2EntityBuilder(1).kind("hero").at((1.0, 2.0)).readiness(100.0).active(True).build(),
+            2: V2EntityBuilder(2).kind("hero").at((3.0, 2.0)).readiness(100.0).active(True).build()
         }
     )
     
@@ -68,7 +69,7 @@ def test_rejection_tracking_certification():
     kernel._state = AuthoritativeState(
         tick=1, seed=42,
         entities={
-            1: EntityState(id=1, kind="hero", position=(2.0, 2.0), readiness=0, active=True)
+            1: V2EntityBuilder(1).kind("hero").at((2.0, 2.0)).readiness(0.0).active(True).build()
         }
     )
     
@@ -119,7 +120,3 @@ def test_final_certification_report_generation():
     assert "social_shifts" in report["observability"]
     assert report["observability"]["strategic_blockers_active"] == 3
     print(f"Test Certification Report: {report}")
-
-if __name__ == "__main__":
-    test_rejection_tracking_certification()
-    test_final_certification_report_generation()

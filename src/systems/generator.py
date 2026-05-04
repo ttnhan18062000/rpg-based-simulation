@@ -24,15 +24,13 @@ class EntityGenerator:
         self.rng = DeterministicRNG(seed)
         self._last_id = 0
         
-    def get_next_id(self, state: AuthoritativeState | None = None) -> int:
-        if state and state.entities:
-            self._last_id = max(self._last_id, max(state.entities.keys()))
+    def get_next_id(self) -> int:
         self._last_id += 1
         return self._last_id
 
     def spawn_hero(self, pos: tuple[float, float], state: AuthoritativeState | None = None, name: str = "Hero", difficulty_tier: int = 1) -> EntityState:
         """Spawn a new hero with role-specific base stats and difficulty-scaled starting power."""
-        entity_id = self.get_next_id(state)
+        entity_id = self.get_next_id()
         
         from src.world.spawn_config import DIFFICULTY_TIERS
         mults = DIFFICULTY_TIERS.get(difficulty_tier, DIFFICULTY_TIERS[1])
@@ -69,7 +67,7 @@ class EntityGenerator:
 
     def spawn_monster(self, pos: tuple[float, float], state: AuthoritativeState | None = None, kind: str = "monster", difficulty_tier: int = 1) -> EntityState:
         """Spawn a regular monster with difficulty-scaled stats."""
-        entity_id = self.get_next_id(state)
+        entity_id = self.get_next_id()
         
         from src.world.spawn_config import DIFFICULTY_TIERS
         mults = DIFFICULTY_TIERS.get(difficulty_tier, DIFFICULTY_TIERS[1])
@@ -92,6 +90,10 @@ class EntityGenerator:
                 faction=Faction.MONSTER_HORDE,
                 evolution_level=evolution_level
             ),
+            navigation=NavigationComponent(
+                home_position=pos,
+                leash_radius=10.0 # Default leash for random spawns
+            ),
             combat=CombatComponent(
                 hp=int(base_hp),
                 max_hp=int(base_hp),
@@ -106,7 +108,7 @@ class EntityGenerator:
 
     def spawn_goblin(self, pos: tuple[float, float], state: AuthoritativeState | None = None, difficulty_tier: int = 1) -> EntityState:
         """Specialized goblin spawn with specific base stats for scaling tests."""
-        entity_id = self.get_next_id(state)
+        entity_id = self.get_next_id()
         
         from src.world.spawn_config import DIFFICULTY_TIERS
         mults = DIFFICULTY_TIERS.get(difficulty_tier, DIFFICULTY_TIERS[1])
@@ -129,6 +131,10 @@ class EntityGenerator:
                 faction=Faction.MONSTER_HORDE,
                 evolution_level=evolution_level
             ),
+            navigation=NavigationComponent(
+                home_position=pos,
+                leash_radius=8.0 # Goblins have smaller leashes
+            ),
             combat=CombatComponent(
                 hp=int(base_hp),
                 max_hp=int(base_hp),
@@ -143,7 +149,7 @@ class EntityGenerator:
 
     def spawn_calamity(self, state: AuthoritativeState, kind: str, pos: tuple[float, float]) -> EntityState:
         """Spawn a massive World Boss (Calamity) with elite scaling."""
-        entity_id = self.get_next_id(state)
+        entity_id = self.get_next_id()
         
         # Calamities are Tier 5 (implicit)
         hp = 5000 * (1.0 + state.maturity * 0.5)
@@ -174,7 +180,7 @@ class EntityGenerator:
 
     def spawn_stronghold(self, state: AuthoritativeState, pos: tuple[float, float]) -> EntityState:
         """Spawn a static stronghold building-entity."""
-        entity_id = self.get_next_id(state)
+        entity_id = self.get_next_id()
         
         # Strongholds are very tough buildings
         hp = 10000 * (1.0 + state.maturity * 0.5)

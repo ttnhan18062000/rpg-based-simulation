@@ -1,75 +1,84 @@
 import pytest
 from dataclasses import replace
-from src.core.state import EntityState, SocialComponent, InteractionComponent, IdentityComponent, AttributeComponent, InventoryComponent, StrategicComponent, CombatComponent, EquipmentComponent, NavigationComponent, TaskComponent, StaminaComponent, BiologicalComponent, LifecycleComponent, AptitudeComponent, BetrayalRecord
+from src.core.state import EntityState, AuthoritativeState, SocialComponent, InteractionComponent, IdentityComponent, AttributeComponent, InventoryComponent, StrategicComponent, CombatComponent, EquipmentComponent, NavigationComponent, TaskComponent, StaminaComponent, BiologicalComponent, LifecycleComponent, AptitudeComponent, BetrayalRecord
 from src.core.strategic import ContractState, ContractKind, ContractStatus, StrategicComponent
 from src.systems.social_contract import SocialContractSystem
 from src.social.appraisal import SocialAppraisalSystem
 from src.systems.party import PartyCoordinationSystem
 from src.core.updates import StrategicUpdate, SocialUpdate
+from src.core.builder import V2EntityBuilder
+from src.core.enums import ReasonCode
 
 @pytest.fixture
 def base_entity():
-    return EntityState(
-        id=1,
-        kind="hero",
-        position=(0, 0),
-        social=SocialComponent(),
-        strategic=StrategicComponent(),
-        combat=CombatComponent(),
-        inventory=InventoryComponent(),
-        identity=IdentityComponent(),
-        attributes=AttributeComponent(),
-        interaction=InteractionComponent(),
-        navigation=NavigationComponent(),
-        task=TaskComponent(),
-        stamina=StaminaComponent(),
-        biological=BiologicalComponent(),
-        lifecycle=LifecycleComponent(),
-        aptitude=AptitudeComponent()
-    )
+    return V2EntityBuilder(1).kind("hero").at((0, 0)).build()
 
 def test_contract_state_machine_valid():
     contract = ContractState(id="c1", kind=ContractKind.RECRUITMENT, source_id=1, target_id=2, status=ContractStatus.OFFERED)
-    entity = EntityState(id=2, kind="hero", position=(0,0), strategic=StrategicComponent(contracts={"c1": contract}))
+    entity = (V2EntityBuilder(2)
+              .kind("hero")
+              .at((0, 0))
+              .build())
+    entity = replace(entity, strategic=replace(entity.strategic, contracts={"c1": contract}))
     
     # Valid: OFFERED -> ACCEPTED
-    upd = SocialContractSystem.transition_contract(entity, "c1", ContractStatus.ACCEPTED, 100)
+    upd, _ = SocialContractSystem.transition_contract(entity, "c1", ContractStatus.ACCEPTED, 100)
     assert len(upd.contracts_add_or_update) == 1
     assert upd.contracts_add_or_update[0].status == ContractStatus.ACCEPTED
 
 def test_contract_state_machine_invalid():
     contract = ContractState(id="c1", kind=ContractKind.RECRUITMENT, source_id=1, target_id=2, status=ContractStatus.OFFERED)
-    entity = EntityState(id=2, kind="hero", position=(0,0), strategic=StrategicComponent(contracts={"c1": contract}))
+    entity = (V2EntityBuilder(2)
+              .kind("hero")
+              .at((0, 0))
+              .build())
+    entity = replace(entity, strategic=replace(entity.strategic, contracts={"c1": contract}))
     
     # Invalid: OFFERED -> FULFILLED
-    upd = SocialContractSystem.transition_contract(entity, "c1", ContractStatus.FULFILLED, 100)
+    upd, _ = SocialContractSystem.transition_contract(entity, "c1", ContractStatus.FULFILLED, 100)
     assert len(upd.contracts_add_or_update) == 0
 
 def test_recruitment_appraisal_trust_impact(base_entity):
-    # Offerer has high trust
+    # Offerer has high trust and high public reputation
     offerer_id = 10
+    offerer = (V2EntityBuilder(offerer_id)
+               .kind("hero")
+               .at((0, 0))
+               .build())
+    
     social = base_entity.social
     social = replace(social, trust_history={offerer_id: 0.9})
     entity = replace(base_entity, social=social)
     
+    state = AuthoritativeState(entities={1: entity, offerer_id: offerer}, tick=0, seed=42)
+    
     contract = ContractState(id="c1", kind=ContractKind.RECRUITMENT, source_id=offerer_id, target_id=1, terms={"daily_pay": 50})
     
-    status, reason, _ = SocialAppraisalSystem.appraise_contract(entity, contract, None)
+    status, reason, _ = SocialAppraisalSystem.appraise_contract(entity, contract, state)
     assert status == ContractStatus.ACCEPTED
-    assert reason == "FAIR_COMPENSATION"
+    assert reason == ReasonCode.FAIR_COMPENSATION
 
 def test_recruitment_appraisal_low_trust(base_entity):
-    # Offerer has very low trust
+    # Offerer has very low trust and low public reputation
     offerer_id = 10
+    offerer = (V2EntityBuilder(offerer_id)
+               .kind("hero")
+               .at((0, 0))
+               .build())
+    # Set low public reputation
+    offerer = replace(offerer, social=replace(offerer.social, public_reputation=0.1))
+    
     social = base_entity.social
     social = replace(social, trust_history={offerer_id: 0.1})
     entity = replace(base_entity, social=social)
     
+    state = AuthoritativeState(entities={1: entity, offerer_id: offerer}, tick=0, seed=42)
+    
     contract = ContractState(id="c1", kind=ContractKind.RECRUITMENT, source_id=offerer_id, target_id=1, terms={"daily_pay": 100})
     
-    status, reason, _ = SocialAppraisalSystem.appraise_contract(entity, contract, None)
+    status, reason, _ = SocialAppraisalSystem.appraise_contract(entity, contract, state)
     assert status == ContractStatus.CANCELLED
-    assert reason == "TOTAL_DISTRUST"
+    assert reason == ReasonCode.TOTAL_DISTRUST
 
 def test_betrayal_consequences(base_entity):
     betrayer_id = 10
@@ -95,7 +104,11 @@ def test_party_leadership_influence(base_entity):
     from src.core.strategic import ObjectiveState, ProjectState
     leader_obj = ObjectiveState(id="obj1", kind="HARVEST", target="node1")
     leader_proj = ProjectState(id="proj1", kind="HARVEST", objectives=[leader_obj], active_objective_id="obj1")
-    leader = replace(base_entity, id=leader_id, strategic=replace(base_entity.strategic, projects={"proj1": leader_proj}, current_project_id="proj1"))
+    leader = (V2EntityBuilder(leader_id)
+              .kind("hero")
+              .at((0, 0))
+              .build())
+    leader = replace(leader, strategic=replace(leader.strategic, projects={"proj1": leader_proj}, current_project_id="proj1"))
     
     from src.core.state import AuthoritativeState
     state = AuthoritativeState(entities={1: entity, leader_id: leader}, tick=100, seed=42)

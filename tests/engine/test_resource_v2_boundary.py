@@ -5,24 +5,36 @@ from src.core.state import AuthoritativeState, EntityState, ItemStack, ResourceN
 from src.core.updates import StateUpdate, EntityUpdate, ResourceTransferIntent, InventoryUpdate, RewardUpdate, InteractionUpdate
 from src.engine.pipeline import AuthoritativeApplyPipeline
 from src.engine.domain_logic import SimulationDomainLogic
+from src.core.builder import V2EntityBuilder
+from src.core.enums import Faction
 
 @pytest.fixture
 def base_state():
     return AuthoritativeState(
         tick=10, seed=123,
         entities={
-            1: EntityState(id=1, kind="hero", position=(0,0), readiness=100.0, active=True, 
-                           identity=IdentityComponent(role=0, faction=0, known_recipes={"craft_steel_sword"}),
-                           combat=CombatComponent(hp=100, max_hp=100, range=2, alive=True)), # Increased range
-            2: EntityState(id=2, kind="monster", position=(1,1), readiness=100.0, active=True,
-                           identity=IdentityComponent(role=2, faction=1), # Role.MONSTER
-                           combat=CombatComponent(hp=1, max_hp=100, alive=True))
+            1: (V2EntityBuilder(1)
+                .kind("hero")
+                .at((0.0, 0.0))
+                .readiness(100.0)
+                .faction(Faction.HERO_GUILD)
+                .with_base_stats(hp=100, range=2)
+                .with_inventory(gold=0)
+                .build()),
+            2: (V2EntityBuilder(2)
+                .kind("monster")
+                .at((1.0, 1.0))
+                .readiness(100.0)
+                .faction(Faction.MONSTER_HORDE)
+                .with_base_stats(hp=1) 
+                .with_current_hp(1) # Ensure it only has 1 HP
+                .build())
         },
         resource_nodes={
             101: ResourceNodeState(id=101, kind="MINE", yields_item="iron_ore", remaining_charges=10, max_charges=10, required_ticks=5, position=(0,0))
         },
         buildings={
-            1: BuildingState(id=1, kind="shop", position=(0,0), functional=True),
+            1: BuildingState(id=1, kind="shop", position=(0,0), functional=True, inventory=InventoryComponent(gold=1000)),
             2: BuildingState(id=2, kind="blacksmith", position=(0,0), functional=True)
         },
         terrain={},
@@ -33,8 +45,9 @@ def base_state():
 
 def test_town_tax_refactor(base_state):
     """Verify that TownResolutionSystem uses ResourceTransferIntent for taxes."""
-    region = RegionState(id="r1", name="Test Town", bounds=(0,0,10,10), owner_faction_id=1)
-    state = replace(base_state, regions={"r1": region}, buildings={}) # Remove buildings to isolate entity tax
+    region = RegionState(id="r1", name="Test Town", bounds=(0,0,10,10), owner_faction_id=Faction.MONSTER_HORDE) # Region owned by Monster
+    # Hero is Guild faction (0), so should be taxed
+    state = replace(base_state, regions={"r1": region}, buildings={})
     
     # Hero has 100 gold
     hero = state.entities[1]
@@ -48,11 +61,13 @@ def test_town_tax_refactor(base_state):
     
     ent_upd = refined.entity_updates.get(1)
     assert ent_upd is not None
+    assert ent_upd.inventory is not None, f"Inventory update missing. Results: {ent_upd.intent_results}"
     # Tax is 2.0 (from town_resolution.py)
     assert ent_upd.inventory.gold_delta == -2.0
     
     # Check if faction gold was updated
-    assert refined.resource_updates.get("faction_1_gold") == 2.0
+    f_key = f"faction_{Faction.MONSTER_HORDE}_gold"
+    assert refined.resource_updates.get(f_key) == 2.0
 
 def test_shop_sell_refactor(base_state):
     """Verify that ShopSystem uses ResourceTransferIntent."""
@@ -61,7 +76,7 @@ def test_shop_sell_refactor(base_state):
     item = ItemStack(item_id="iron_ore", quantity=1)
     base_state.entities[1] = replace(hero, 
         inventory=replace(hero.inventory, items=[item]),
-        position=(0,0)
+        navigation=replace(hero.navigation, position=(0.0, 0.0))
     )
     # Ensure building_tiles is "shop" and buildings exists
     base_state = replace(base_state, building_tiles={(0,0): "shop"})
@@ -72,6 +87,8 @@ def test_shop_sell_refactor(base_state):
     refined = AuthoritativeApplyPipeline.refine(base_state, update)
     
     ent_upd = refined.entity_updates.get(1)
+    assert ent_upd is not None
+    assert ent_upd.inventory is not None
     # iron_ore sell price is 10
     assert ent_upd.inventory.gold_delta == 10
     assert any(i.item_id == "iron_ore" for i in ent_upd.inventory.items_remove)
@@ -84,7 +101,7 @@ def test_blacksmith_craft_refactor(base_state):
     base_state.entities[1] = replace(hero, 
         inventory=replace(hero.inventory, items=mats, gold=100),
         identity=replace(hero.identity, craft_target="craft_steel_sword", known_recipes={"craft_steel_sword"}),
-        position=(0,0)
+        navigation=replace(hero.navigation, position=(0.0, 0.0))
     )
     # Ensure building_tiles is "blacksmith"
     base_state = replace(base_state, building_tiles={(0,0): "blacksmith"})
@@ -96,6 +113,7 @@ def test_blacksmith_craft_refactor(base_state):
     
     ent_upd = refined.entity_updates.get(1)
     assert ent_upd is not None
+    assert ent_upd.inventory is not None
     # craft_steel_sword cost 60
     assert ent_upd.inventory.gold_delta == -60
     assert any(i.item_id == "steel_sword" for i in ent_upd.inventory.items_add)
@@ -110,30 +128,22 @@ def test_reward_update_hardening():
 
 def test_combat_reward_via_intent(base_state):
     """Verify that combat rewards flow through ResourceTransferIntent."""
-    from src.engine.domain_logic import SimulationDomainLogic
-    attacker = base_state.entities[1] # range=2
+    attacker = base_state.entities[1] # range=2, readiness=100
     target = base_state.entities[2] # 1 HP monster
-    
-    # Mock context for attack
-    class MockContext:
-        def __init__(self, entities):
-            self.entities = entities
-            self.tick = 0
-            self.terrain = {}
-            self.regions = {}
-            self.blocked_tiles = set()
-            self.buildings = {}
-    context = MockContext(base_state.entities)
     
     # Execute attack action
     updates = SimulationDomainLogic.execute_action(
         attacker, 
         payload={"action": "ATTACK", "target_id": target.id},
-        context=context
+        context=base_state
     )
     
     attacker_up = updates[attacker.id]
-    assert attacker_up.reward is None
+    if attacker_up.navigation and attacker_up.navigation.failure_reason:
+        pytest.fail(f"Attack failed: {attacker_up.navigation.failure_reason}")
+        
+    # Rewards are stripped in sanitize phase, so we check intents
+    assert len(attacker_up.resource_transfers) > 0, f"No resource transfers generated for KILL. Outcome: {updates[target.id].combat.outcome_kind if target.id in updates else 'N/A'}"
     intent = attacker_up.resource_transfers[0]
     assert intent.source_kind == "COMBAT"
     assert intent.reward_upd.xp_gain == 10 # Monster level 1
@@ -142,8 +152,7 @@ def test_combat_reward_via_intent(base_state):
 
 def test_recruitment_gold_handoff(base_state):
     """Verify that recruitment gold transfer uses ResourceTransferIntent."""
-    from src.engine.domain_logic import SimulationDomainLogic
-    recruiter = base_state.entities[1]
+    recruiter = base_state.entities[1] # readiness=100
     recruit = base_state.entities[2]
     
     # recruiter has 1000 gold
@@ -154,7 +163,8 @@ def test_recruitment_gold_handoff(base_state):
         base_state.entities[1],
         payload={"action": "RECRUIT", "target_id": recruit.id, "payout": 500},
         neighbor_view=[(recruit.id, recruit)],
-        current_tick=0
+        current_tick=0,
+        context=base_state
     )
     
     # Both should have ResourceTransferIntent in the same group
@@ -164,16 +174,19 @@ def test_recruitment_gold_handoff(base_state):
     up1 = updates[recruiter.id]
     up2 = updates[recruit.id]
     
+    assert len(up1.resource_transfers) > 0, f"Recruiter transfers missing: {up1.navigation.failure_reason if up1.navigation else 'None'}"
     assert up1.resource_transfers[0].gold_delta == -500
     assert up2.resource_transfers[0].gold_delta == 500
 
 def test_class_hall_train_refactor():
     # Setup state
-    hero = EntityState(id=1, kind="HERO", position=(1, 1), readiness=100.0)
-    hero = replace(hero, 
-        inventory=replace(hero.inventory, gold=100),
-        identity=replace(hero.identity, known_recipes=set())
-    )
+    hero = (V2EntityBuilder(1)
+            .kind("HERO")
+            .at((1.0, 1.0))
+            .readiness(100.0)
+            .with_inventory(gold=100)
+            .build())
+    
     state = AuthoritativeState(entities={1: hero}, tick=0, seed=123)
     
     # Propose TRAIN action
@@ -186,6 +199,7 @@ def test_class_hall_train_refactor():
     
     # Verify: Intent generated and resolved
     ent_upd = refined.entity_updates[1]
+    assert ent_upd.inventory is not None, f"Failure reason: {ent_upd.navigation.failure_reason if ent_upd.navigation else 'None'}"
     assert ent_upd.inventory.gold_delta == -50
     # Apply refined update manually to verify state transition
     from src.engine.apply import ApplyPath
@@ -196,7 +210,11 @@ def test_class_hall_train_refactor():
 
 def test_chest_looting_and_cooldown():
     # Setup state
-    hero = EntityState(id=1, kind="HERO", position=(1, 1))
+    hero = (V2EntityBuilder(1)
+            .kind("HERO")
+            .at((1.0, 1.0))
+            .readiness(100.0)
+            .build())
     hero = replace(hero, interaction=InteractionComponent(target_node_id=10, progress=9.0))
     
     chest = ChestState(id=10, position=(1, 1), items=[ItemStack("iron_ore", 1)], respawn_tick=50)

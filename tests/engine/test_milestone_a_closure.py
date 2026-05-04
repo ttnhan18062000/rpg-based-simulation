@@ -88,6 +88,7 @@ def test_milestone_a_baseline_isolation():
     from unittest.mock import MagicMock
     from src.config.profiles import RuntimeProfile, HardwareClass
     from src.core.state import AuthoritativeState, EntityState
+    from src.core.builder import V2EntityBuilder
     from src.platform.rng import DeterministicRNG
     from src.engine.executor import LocalSequentialExecutor
     from src.engine.worker_manager import WorkerManager
@@ -106,7 +107,13 @@ def test_milestone_a_baseline_isolation():
     state = AuthoritativeState(
         tick=0,
         seed=42,
-        entities={1: EntityState(id=1, kind="agent", position=(0,0), readiness=100)}
+        entities={
+            1: (V2EntityBuilder(1)
+                .kind("agent")
+                .at((0.0, 0.0))
+                .readiness(100.0)
+                .build())
+        }
     )
     rng = DeterministicRNG(42)
     

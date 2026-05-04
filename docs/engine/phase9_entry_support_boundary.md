@@ -9,15 +9,17 @@ This document restates the honest current support level for strategic and social
 | Strategic state persistence (blockers, leads) | **SUPPORTED** | `src/core/strategic.py` |
 | Crafting blocker generation | **SUPPORTED** | `src/systems/strategic.py` |
 | Material blocker auto-resolution | **SUPPORTED** | `src/systems/strategic.py` |
-| Strategic outcome processing (stub) | **PARTIAL** | `process_outcome()` delegates to social trust only |
-| Directives | **UNSUPPORTED** | No model or mutation logic |
-| Projects / Objectives | **UNSUPPORTED** | No model or lifecycle |
-| Concerns | **UNSUPPORTED** | No model or intake logic |
-| Interruption resistance | **UNSUPPORTED** | No margin logic |
-| Lead bandwidth limits | **UNSUPPORTED** | No profile-capped retention |
-| Detour suggestion | **UNSUPPORTED** | No breadth/depth-bounded logic |
-| Event interpretation pipeline | **UNSUPPORTED** | No event-to-mutation flow |
-| Cognition graph export | **UNSUPPORTED** | No read-only presenter |
+| Strategic outcome processing | **SUPPORTED** | `StrategicIntelligenceSystem.process_outcome` |
+| Directives | **SUPPORTED** | `src/core/strategic.py`, `DirectiveState` |
+| Projects / Objectives | **SUPPORTED** | `src/core/strategic.py`, `ProjectState`, `ObjectiveState` |
+| Concerns | **SUPPORTED** | `src/core/strategic.py`, `ConcernState`, `RoutineService` |
+| Interruption resistance | **SUPPORTED** | `CapacityService.derive_profile` |
+| Lead bandwidth limits | **SUPPORTED** | `DetourSuggestionSystem.enforce_bandwidth` |
+| Detour suggestion | **SUPPORTED** | `DetourSuggestionSystem.suggest_detours` |
+| Event interpretation pipeline | **SUPPORTED** | `StrategicIntelligenceSystem.process_outcome` |
+| Cognition graph export | **SUPPORTED** | `src/systems/strategic.py`, `CognitionGraphExporter` |
+| Staggered frequency (10-tick) | **SUPPORTED** | `src/systems/strategic.py` (Hardened) |
+| Incapacitated early exit | **SUPPORTED** | `src/systems/strategic.py` (Hardened) |
 
 ## Current Social Support (Entering Phase 9)
 
@@ -25,13 +27,13 @@ This document restates the honest current support level for strategic and social
 | :--- | :--- | :--- |
 | Trust recalibration (harm/help) | **SUPPORTED** | `src/systems/social.py` |
 | Recruitment offer evaluation | **SUPPORTED** | `evaluate_recruitment_offer()` |
-| Betrayal recording (stub) | **PARTIAL** | Returns SocialUpdate with increment only |
-| Private betrayal overriding reputation | **UNSUPPORTED** | No private/public split |
-| Social contracts / obligations | **UNSUPPORTED** | No model or lifecycle |
-| Familiarity bonds | **UNSUPPORTED** | No tracking model |
-| Narrative memory / turning points | **UNSUPPORTED** | No persistence model |
-| Belief cycle / rumors | **UNSUPPORTED** | No belief decay or uncertainty |
-| Knowledge uncertainty | **UNSUPPORTED** | Leads have no certainty field |
+| Betrayal recording | **SUPPORTED** | `src/systems/social.py`, `SocialUpdate` |
+| Private betrayal overriding reputation | **PARTIAL** | Integrated into `trust` model |
+| Social contracts / obligations | **SUPPORTED** | `src/social/contracts.py`, `ContractState` |
+| Familiarity bonds | **SUPPORTED** | `src/core/state.py`, `SocialComponent` |
+| Narrative memory / turning points | **SUPPORTED** | `src/core/strategic.py`, `TurningPointState` |
+| Belief cycle / rumors | **PARTIAL** | `LeadCertainty` and `LeadSuppression` |
+| Knowledge uncertainty | **SUPPORTED** | `LeadState.certainty` (PRECISE/VAGUE) |
 
 ## Summary
 

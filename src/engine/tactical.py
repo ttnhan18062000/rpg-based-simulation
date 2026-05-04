@@ -15,6 +15,7 @@ if TYPE_CHECKING:
 class TacticalDecisionSystem:
     """
     Authoritative logic for bounded local tactical decisions.
+    Logic ID: 123
     Responsible for target selection, engagement commitment, and anti-stalemate.
     VERIFIED v2: TacticalDecisionSystem
     """
@@ -28,6 +29,12 @@ class TacticalDecisionSystem:
         Determines the next tactical intent for an entity.
         Bounded to local visibility and immediate combat state.
         """
+
+        # 0. Global Legality Guard (Task 2.2 Hardening)
+        # VERIFIED v2: tactical_legality_envelope
+        legal, reason = LegalityServiceV2.verify_action_legality(entity, "TACTICAL_EVAL", state)
+        if not legal:
+            return EntityUpdate(entity_id=entity.id)
 
         from src.engine.domain_logic import SimulationDomainLogic
         from src.engine.cognition import SensoryFilter, AppraisalSystem
@@ -73,6 +80,23 @@ class TacticalDecisionSystem:
                      payload_set={"target_position": (0.0, 0.0), "reason": "PANIC_RETREAT"}
                  )
              )
+
+        # Section 8: Mob Leashing (GAP-T08)
+        from src.engine.rpg_depth import LeashService
+        is_engaged = entity.task.payload.get("target_id") is not None
+        
+        # If beyond leash AND not chasing, or beyond chase limit
+        if (not is_engaged and LeashService.is_beyond_leash(entity)) or LeashService.should_give_up_chase(entity):
+             home_pos = LeashService.get_return_home_target(entity)
+             if home_pos:
+                  return EntityUpdate(
+                      entity_id=entity.id,
+                      navigation=NavigationUpdate(target_set=home_pos, movement_mode_set=MovementMode.RETREAT),
+                      task=TaskUpdate(
+                          work_kind_set="ENTITY_MOVE",
+                          payload_set={"target_position": home_pos, "reason": "LEASH_RETURN"}
+                      )
+                  )
 
         hostiles = [
             n for n in neighbors 
@@ -152,7 +176,7 @@ class TacticalDecisionSystem:
                     role = group.roles.get(entity.id)
                     # If leader is interacting with something, hirelings should guard/support
                     if leader.task.work_kind == "ENTITY_ACT" and leader.task.payload.get("action") == "INTERACT":
-                        if role == "VANGUARD":
+                        if role in ("VANGUARD", "PROTECTOR"):
                             # Guard position near leader
                             guard_pos = PositioningService.find_guard_position(entity, leader, None, state)
                             if guard_pos != entity.position:
@@ -187,27 +211,39 @@ class TacticalDecisionSystem:
         def target_score(h: EntityState) -> Tuple[float, int, float, int, int]:
             dist = abs(h.position[0] - entity.position[0]) + abs(h.position[1] - entity.position[1])
             
-            # Bias: Group shared target influence depends on trust in leader
+            # Domain 7 Hardening: Trust-based focus fire bias
             group_bias = 1.0
             if group and group.shared_target_id == h.id:
-                # Get trust in leader
-                trust = 0.0
-                if entity.social and group.leader_id in entity.social.trust:
-                    trust = entity.social.trust[group.leader_id].trust
+                bond = entity.social.bonds.get(group.leader_id)
+                trust = (bond.sentiment + 1.0) / 2.0 if bond else entity.social.trust_history.get(group.leader_id, 0.5)
                 
-                # Trust ranges from -1.0 to 1.0. 
-                # If trust is 1.0, bias is 0.0 (highest priority).
-                # If trust is -1.0, bias is 2.0 (lowest priority).
-                # Default (0.0 trust) is 1.0 bias (neutral).
-                group_bias = 1.0 - trust
-            
+                # Trust mapping:
+                # If trust is < 0.2, bias is 1.0 (neutral, ignoring leader).
+                # If trust is high, bias is lower (higher priority).
+                if trust >= 0.2:
+                    group_bias = 1.0 - trust
+                    
+                    # VANGUARDS are more likely to focus on the group target.
+                    if entity.combat.tactical_role == "VANGUARD":
+                        group_bias *= 0.5
+                
             # Local Hysteresis: Previous target gets a small bonus
             is_current_target = 0 if h.id == entity.task.payload.get("target_id") else 1
             
             return (group_bias, is_current_target, h.combat.hp, dist, h.id)
 
         hostiles.sort(key=target_score)
-        target = hostiles[0]
+        
+        # Phase E5.2: Tactical Legality Envelope (Hardening)
+        # Filter hostiles by actual attack legality (LoS, Range, Faction)
+        legal_attack_targets = []
+        for h in hostiles:
+            legal, _ = LegalityServiceV2.verify_attack_legality(entity, h, state)
+            if legal:
+                legal_attack_targets.append(h)
+        
+        target = legal_attack_targets[0] if legal_attack_targets else (hostiles[0] if hostiles else None)
+        is_attack_legal = target in legal_attack_targets
 
         # 5. Decision: Attack vs Positioning (Kiting/Closing)
         dist_to_target = abs(target.position[0] - entity.position[0]) + abs(target.position[1] - entity.position[1])
@@ -289,23 +325,35 @@ class TacticalDecisionSystem:
                          )
                      )
 
-        # 5.3 Guarding Logic (Task 4.1)
-        if group:
-             # If an ally is wounded (<50% HP), try to guard them
+        # 5.3 Guarding Logic (Task 4.1 / 6.5)
+        # PROTECTOR role prioritizes wounded allies over direct combat
+        if group and role == "PROTECTOR":
              ally_ids = [eid for eid in group.member_ids if eid != entity.id]
              allies = [state.entities[eid] for eid in ally_ids if eid in state.entities]
-             wounded_ally = next((a for a in allies if a.combat.hp / max(1, a.combat.max_hp) < 0.5), None)
+             
+             # Priority 1: Guard Leader if they are interacting or low HP
+             leader = state.entities.get(group.leader_id)
+             wounded_ally = None
+             if leader and leader.id != entity.id:
+                  hp_ratio = leader.combat.hp / max(1, leader.combat.max_hp)
+                  if leader.interaction.target_node_id is not None or hp_ratio < 0.8:
+                       wounded_ally = leader
+             
+             # Priority 2: Guard any other wounded ally
+             if not wounded_ally:
+                  wounded_ally = next((a for a in allies if a.combat.hp / max(1, a.combat.max_hp) < 0.7), None)
+             
              if wounded_ally:
-                 guard_pos = PositioningService.find_guard_position(entity, wounded_ally, target, state)
-                 if guard_pos != entity.position:
-                     return EntityUpdate(
-                         entity_id=entity.id,
-                         navigation=NavigationUpdate(target_set=guard_pos, movement_mode_set=MovementMode.GUARD),
-                         task=TaskUpdate(
-                             work_kind_set="ENTITY_MOVE",
-                             payload_set={"target_position": guard_pos, "reason": "GUARDING", "target_id": wounded_ally.id}
-                         )
-                     )
+                  guard_pos = PositioningService.find_guard_position(entity, wounded_ally, target, state)
+                  if guard_pos != entity.position:
+                      return EntityUpdate(
+                          entity_id=entity.id,
+                          navigation=NavigationUpdate(target_set=guard_pos, movement_mode_set=MovementMode.GUARD),
+                          task=TaskUpdate(
+                              work_kind_set="ENTITY_MOVE",
+                              payload_set={"target_position": guard_pos, "reason": "GUARDING_ALLY", "target_id": wounded_ally.id}
+                          )
+                      )
 
         # 5.4 Intercept Logic (Task 4.1)
         if dist_to_target > 3 and target.navigation.target:
@@ -342,8 +390,37 @@ class TacticalDecisionSystem:
             
             # ActionStyle Impact: Aggressive skirmishers kite less, Evasive kite MORE
             kite_dist = 2 if style == ActionStyle.AGGRESSIVE else 6 if style == ActionStyle.EVASIVE else 4
-            kite_pos = (entity.position[0] + (dx * kite_dist), entity.position[1] + (dy * kite_dist))
             
+            # Role-Based Kiting Enhancement (Task 6.5)
+            if role == "SKIRMISHER":
+                kite_dist += 2
+            
+            # Domain 7 Hardening: Kite towards group anchor if possible
+            base_kite_pos = (entity.position[0] + (dx * kite_dist), entity.position[1] + (dy * kite_dist))
+            if group:
+                # Weighted average: 70% away from target, 30% towards group anchor
+                anchor_dx = group.anchor[0] - entity.position[0]
+                anchor_dy = group.anchor[1] - entity.position[1]
+                kite_pos = (
+                    base_kite_pos[0] * 0.7 + (entity.position[0] + anchor_dx) * 0.3,
+                    base_kite_pos[1] * 0.7 + (entity.position[1] + anchor_dy) * 0.3
+                )
+            else:
+                kite_pos = base_kite_pos
+            
+            # Verify kite position is walkable (Phase E5.2)
+            kite_legal, _ = LegalityServiceV2.verify_occupancy(kite_pos, state, ignore_entity_id=entity.id)
+            if not kite_legal:
+                 # If kiting destination is blocked, fallback to pursuit
+                 return EntityUpdate(
+                     entity_id=entity.id,
+                     navigation=NavigationUpdate(target_set=target.position, movement_mode_set=MovementMode.PURSUE),
+                     task=TaskUpdate(
+                         work_kind_set="ENTITY_MOVE",
+                         payload_set={"target_position": target.position, "reason": "PURSUIT_BLOCKED_KITE", "target_id": target.id}
+                     )
+                 )
+
             return EntityUpdate(
                 entity_id=entity.id,
                 navigation=NavigationUpdate(target_set=kite_pos, movement_mode_set=MovementMode.RETREAT),
@@ -361,7 +438,7 @@ class TacticalDecisionSystem:
              # Evasive skirmishers might choose to reposition instead of attacking if too close
              pass
 
-        if dist_to_target <= attack_range:
+        if is_attack_legal and dist_to_target <= attack_range:
             # Attack
             return EntityUpdate(
                 entity_id=entity.id,
@@ -378,14 +455,26 @@ class TacticalDecisionSystem:
             )
         else:
             # Pursuit
+            target_pos = target.position
+            
+            # Domain 7 Hardening: Vanguard charge limit
+            if role == "VANGUARD" and group:
+                dx = target.position[0] - group.anchor[0]
+                dy = target.position[1] - group.anchor[1]
+                dist_from_anchor = (dx*dx + dy*dy)**0.5
+                if dist_from_anchor > group.cohesion_radius * 1.5:
+                    # Too far from group: only move to the edge of the cohesion zone
+                    scale = (group.cohesion_radius * 1.5) / dist_from_anchor
+                    target_pos = (group.anchor[0] + dx * scale, group.anchor[1] + dy * scale)
+                    
             return EntityUpdate(
                 entity_id=entity.id,
                 strategic=strat_up,
-                navigation=NavigationUpdate(target_set=target.position, movement_mode_set=MovementMode.PURSUE),
+                navigation=NavigationUpdate(target_set=target_pos, movement_mode_set=MovementMode.PURSUE),
                 task=TaskUpdate(
                     work_kind_set="ENTITY_MOVE",
                     payload_set={
-                        "target_position": target.position, 
+                        "target_position": target_pos, 
                         "target_id": target.id,
                         "stale_ticks": stale_ticks + 1,
                         "recent_positions": recent_positions

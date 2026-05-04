@@ -113,7 +113,7 @@ Relevant original source files:
 - [x] COMB-010: Anti-stalemate logic handles repeated chase/kite/step-back loops.
 - [x] COMB-011: Movement intentions exist as semantic modes (pursue, retreat, hold, reposition, intercept, guard, regroup).
 - [x] COMB-012: Congestion is handled through waiting/yielding/sidestepping/rerouting before weakening occupancy.
-- [x] COMB-013: Tactical choice is a bounded choice among legal actions, not a geometry exploit.
+- [x] COMB-013: Tactical choice is a bounded choice among legal actions, not a geometry exploit. <!-- ID: RPG-TACT-013 SOURCE: src/systems/tactical.py TEST: tests/engine/test_status_hardening.py PROOF: unit -->
 
 ### Resource interaction / inventory / buildings / town loop
 
@@ -178,13 +178,13 @@ Relevant original source files:
 - `core/models/strategy.py`
 - `systems/social/knowledge_propagation_system.py`
   Atomic checklist:
-- [x] STRAT-001: Strategic state is first-class and survives across ticks (directives, projects, objectives, concerns, blockers, obligations, contracts, offers, leads, candidate zones, hypotheses). <!-- RECOVERED: Full StrategicComponent with persistence -->
+- [x] STRAT-001: Strategic state is first-class and survives across ticks (directives, projects, objectives, concerns, blockers, obligations, contracts, offers, leads, candidate zones, hypotheses). <!-- ID: RPG-STRAT-001 SOURCE: src/core/strategic.py TEST: tests/engine/test_strategic_hardening.py PROOF: unit -->
 - [x] STRAT-002: Current project/objective continuity is explicit and bounded. <!-- RECOVERED: StrategicIntelligenceSystem handles retention and resumption -->
 - [x] STRAT-003: Project switching uses interruption resistance / margin logic, not full rescore every tick. <!-- RECOVERED: implemented in evaluate_project_switch -->
 - [x] STRAT-004: Current project gets reservation/retention priority inside bounded strategic slices. <!-- RECOVERED: Retention bonus applied in evaluate_project_switch -->
 - [x] STRAT-005: Blockers are inferred from project/objective state and can be accurate or misdiagnosed under bounded cognition. <!-- RECOVERED: generate_crafting_blockers and resolve_blockers implemented -->
 - [x] STRAT-006: Leads are retained under profile-specific bandwidth limits. <!-- RECOVERED: LeadService enforces capacity limits -->
-- [x] STRAT-007: Concerns are retained under profile-specific intake limits. <!-- RECOVERED: RoutineService integration -->
+- [x] STRAT-007: Concerns are retained under profile-specific intake limits. <!-- ID: RPG-STRAT-007 SOURCE: src/systems/strategic.py TEST: tests/engine/test_status_hardening.py PROOF: unit -->
 - [x] STRAT-008: Detours are suggested from blockers and leads within breadth/depth limits. <!-- RECOVERED: CapacityProfile defines detour limits -->
 - [x] STRAT-009: Rejected/tested leads are suppressed to avoid blind retries. <!-- RECOVERED: LeadState.tested and LeadCertainty.EXHAUSTED -->
 - [x] STRAT-010: Strategic overload is visible through bounded capacity metrics. <!-- RECOVERED: CapacityService derives profile from fatigue/attributes -->

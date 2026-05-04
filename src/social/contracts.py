@@ -74,9 +74,10 @@ class ContractService:
         Transition an OFFERED contract to ACTIVE.
         """
         from src.systems.social_contract import SocialContractSystem
-        return SocialContractSystem.transition_contract(
+        strat_up, _ = SocialContractSystem.transition_contract(
             entity, contract_id, ContractStatus.ACTIVE, tick
         )
+        return strat_up
 
     @staticmethod
     def resolve_contract_outcome(
@@ -100,46 +101,19 @@ class ContractService:
         status = ContractStatus.FULFILLED if success else ContractStatus.FAILED
         if betrayal:
             status = ContractStatus.BETRAYED
-            
-        strat_up = SocialContractSystem.transition_contract(entity, contract_id, status, tick)
+        strat_up, social_up = SocialContractSystem.transition_contract(entity, contract_id, status, tick)
         if not strat_up.contracts_add_or_update:
             # Transition rejected
             return StrategicUpdate(), []
             
-        resolved_contract = strat_up.contracts_add_or_update[0]
-        
-        # Social Consequences
-        sentiment_delta = 0.2 if success else -0.2
-        familiarity_delta = 0.1
-        
-        if betrayal:
-            sentiment_delta = -1.0 # Immediate max distrust
+        # Social Consequences (Emitted by System)
+        if not social_up:
+             return strat_up, []
+             
+        # Strategic consequences (Betrayal -> Avenge Directive and Turning Point)
+        if betrayal and betrayer_id:
+            from src.core.strategic import DirectiveState, DirectiveKind, DirectivePriority, TurningPointState, TurningPointKind
             
-        bond_updates = [
-            SocialBondUpdate(target_id=contract.source_id, sentiment_delta=sentiment_delta, familiarity_delta=familiarity_delta),
-            SocialBondUpdate(target_id=contract.target_id, sentiment_delta=sentiment_delta, familiarity_delta=familiarity_delta)
-        ]
-        
-        # Reputation impact
-        heroism_delta = 0.05 if success else 0.0
-        notoriety_delta = 0.0 if success else 0.1
-        
-        # Emit social updates
-        from src.core.updates import SocialUpdate
-        
-        source_up = SocialUpdate(bond_updates=[bond_updates[1]], heroism_delta=heroism_delta, notoriety_delta=notoriety_delta)
-        target_up = SocialUpdate(bond_updates=[bond_updates[0]], heroism_delta=heroism_delta, notoriety_delta=notoriety_delta)
-
-        if betrayal and betrayer_id:
-             if betrayer_id == contract.source_id:
-                  source_up = replace(source_up, notoriety_delta=0.5, betrayal_increment=1)
-             elif betrayer_id == contract.target_id:
-                  target_up = replace(target_up, notoriety_delta=0.5, betrayal_increment=1)
-
-        # Strategic consequences (Betrayal -> Avenge Directive)
-        if betrayal and betrayer_id:
-            from src.core.strategic import DirectiveState, DirectiveKind, DirectivePriority
-            victim_id = contract.target_id if betrayer_id == contract.source_id else contract.source_id
             avenge_directive = DirectiveState(
                 id=f"avenge_{contract.id}",
                 kind=DirectiveKind.COMBAT,
@@ -147,9 +121,25 @@ class ContractService:
                 priority=DirectivePriority.HIGH,
                 salience=0.5
             )
-            strat_up = replace(strat_up, directives_add_or_update=[avenge_directive])
+            
+            betrayal_tp = TurningPointState(
+                id=f"betrayal_{contract.id}_{tick}",
+                kind=TurningPointKind.BETRAYAL,
+                subject_id=betrayer_id,
+                salience=0.8,
+                tick=tick
+            )
+            
+            strat_up = replace(strat_up, 
+                directives_add_or_update=[avenge_directive],
+                turning_points_add=[betrayal_tp]
+            )
         
-        return strat_up, [source_up, target_up]
+        # We return the social update for the entity that owns this state.
+        # ContractService usually returns updates for the whole world in some contexts, 
+        # but here it's called per-entity.
+        return strat_up, [social_up]
+
 
     @staticmethod
     def process_active_contracts(
@@ -181,15 +171,15 @@ class ContractService:
                         )
                         
                         # Apply relevant SocialUpdate
-                        # ContractService.resolve_contract_outcome returns [source_up, target_up]
-                        my_social_up = bond_ups[0] if contract.source_id == e_id else bond_ups[1]
+                        my_social_up = bond_ups[0] if bond_ups else SocialUpdate()
                         
                         # Merge with existing social update if any
                         base_social = ent_upd.social or SocialUpdate()
                         merged_social = replace(base_social,
                             bond_updates=list(base_social.bond_updates) + list(my_social_up.bond_updates),
                             heroism_delta=base_social.heroism_delta + my_social_up.heroism_delta,
-                            notoriety_delta=base_social.notoriety_delta + my_social_up.notoriety_delta
+                            notoriety_delta=base_social.notoriety_delta + my_social_up.notoriety_delta,
+                            betrayal_increment=base_social.betrayal_increment + my_social_up.betrayal_increment
                         )
                         
                         refined_entity_updates[e_id] = replace(ent_upd,

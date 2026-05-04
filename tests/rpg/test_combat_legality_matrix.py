@@ -142,7 +142,8 @@ def test_aoe_and_friendly_fire(base_state):
     assert attacker_up.outcome_kind != "REJECTED"
     
     # Verify splash intents
-    assert len(attacker_up.simultaneous_intents) == 3
+    # V2: Ally is excluded from splash intents (FF Safety)
+    assert len(attacker_up.simultaneous_intents) == 2 # Primary + Enemy 3
     intent = attacker_up.simultaneous_intents[0]
     assert intent.splash_radius == 2
     assert intent.splash_damage > 0
@@ -196,16 +197,18 @@ def test_reward_atomicity(base_state):
     state = replace(base_state, entities={1: attacker, 2: target_tanky})
     update = CombatResolutionSystem.resolve_attack(attacker, target_tanky, state)
     assert update.outcome_kind == "SURVIVE"
-    assert update.xp_gain == 0
-    assert update.gold_gain == 0
+    # V2: Rewards are in resource_transfers
+    assert len(update.resource_transfers) == 0
     
     # V2: Lethal
     target_weak = create_mock_entity(3, pos=(11, 10), hp=1, faction="MONSTER", role=EntityRole.MONSTER)
     state_lethal = replace(base_state, entities={1: attacker, 3: target_weak})
     update_kill = CombatResolutionSystem.resolve_attack(attacker, target_weak, state_lethal)
     assert update_kill.outcome_kind == "KILL"
-    assert update_kill.xp_gain > 0
-    assert update_kill.gold_gain > 0
+    assert len(update_kill.resource_transfers) > 0
+    transfer = update_kill.resource_transfers[0]
+    assert transfer.reward_upd.xp_gain > 0
+    assert transfer.gold_delta > 0
     
     # Trace consistency
     assert update_kill.trace["FINAL_ATK_MULT"] > 0
@@ -244,7 +247,8 @@ def test_simultaneous_multi_attack_reward_limit(base_state):
     assert is_legal_1
     update_1 = CombatResolutionSystem.resolve_attack(a1, target, state)
     assert update_1.outcome_kind == "KILL"
-    assert update_1.xp_gain > 0
+    assert len(update_1.resource_transfers) > 0
+    assert update_1.resource_transfers[0].reward_upd.xp_gain > 0
     
     # Apply update_1 to target for the next check
     target_dead = replace(target, combat=replace(target.combat, hp=0, alive=False))

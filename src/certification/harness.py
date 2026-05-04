@@ -89,9 +89,50 @@ class CertificationHarness:
         
         # 2. RUN (Subject Execution)
         # Note: We capture measurements during this loop.
+        from src.certification.models import ArenaStopCondition
+        stop_condition = ArenaStopCondition.TIMEOUT
+        
+        import concurrent.futures
+        
         for t in range(1, ticks + 1):
-            kernel.tick_once()
+            # Arena WIPE check: Are all enemies or all allies dead?
+            alive_factions = {e.identity.faction for e in kernel.state.entities.values() if e.combat.alive}
+            if len(alive_factions) <= 1 and t > 1:
+                logger.info(f"Scenario {scenario_id}: WIPE detected at tick {t}. Terminating early.")
+                stop_condition = ArenaStopCondition.WIPE
+                break
             
+            # Watchdog: Run tick in executor with timeout
+            # M10 Law: Protect against tick hangs
+            t1 = time.perf_counter_ns()
+            with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+                future = executor.submit(kernel.tick_once)
+                try:
+                    # Timeout based on profile + buffer
+                    timeout = (self._profile.max_tick_budget_ms * 5.0) / 1000.0
+                    if timeout < 1.0: timeout = 1.0 # Minimum 1s for safety
+                    future.result(timeout=timeout)
+                except concurrent.futures.TimeoutError:
+                    logger.critical(f"Scenario {scenario_id}: Watchdog triggered at tick {t}. Tick hung.")
+                    stop_condition = ArenaStopCondition.WATCHDOG
+                    break
+                except Exception as e:
+                    logger.error(f"Scenario {scenario_id}: Tick failed with error: {e}")
+                    raise
+                
+            # M10 Law: Fast-Tick Watchdog (Task 5.4 Hardening)
+            # If compute is extremely low (< 0.1ms) for many consecutive ticks, 
+            # it might indicate a loop logic failure or 'ghost' simulation.
+            tick_ms = (time.perf_counter_ns() - t1) / 1e6
+            if tick_ms < 0.1:
+                 fast_tick_count = getattr(self, "_fast_tick_count", 0) + 1
+                 self._fast_tick_count = fast_tick_count
+                 if fast_tick_count > 100:
+                      logger.warning(f"Scenario {scenario_id}: Fast-Tick Watchdog triggered. 100 ticks at <0.1ms.")
+                      # We don't necessarily stop, but we record it.
+            else:
+                 self._fast_tick_count = 0
+                
             # M10 Law: required_sampling_interval_ticks enforcement
             if t % expectations.required_sampling_interval_ticks == 0:
                 snapshot = kernel.status.signal_history[-1] if kernel.status.signal_history else None
@@ -167,6 +208,7 @@ class CertificationHarness:
             final_hash=final_hash,
             governor_mode_sequence=mode_sequence,
             conformance_passed=passed,
+            stop_condition=stop_condition,
             allowed_failure_observed=allowed_failure_observed,
             failure_kind=fail_kind,
             failure_reason=fail_reason,

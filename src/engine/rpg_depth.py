@@ -249,7 +249,33 @@ class LeashService:
         if nav.home_position is None:
             return True
         from src.engine.legality import LegalityServiceV2
-        return LegalityServiceV2.get_manhattan_dist(entity.position, nav.home_position) <= 1
+        dist = LegalityServiceV2.get_manhattan_dist(entity.position, nav.home_position)
+        return dist <= 1.0
+
+# ─── Discovery and Medical Services ────────────────────────────────────────── (Task 10.1, 10.2)
+
+class DiscoveryService:
+    """Perception-based world interaction logic."""
+    
+    @staticmethod
+    def get_discovery_threshold(per: int) -> float:
+        """
+        Calculate perception-based discovery score.
+        VERIFIED v2: perception_discovery_math
+        """
+        return 0.05 + (per * 0.02) # Base 5% + 2% per perception point
+
+class MedicalService:
+    """Wisdom-based medical diagnosis and healing quality."""
+    
+    @staticmethod
+    def get_diagnosis_quality(wis: int) -> float:
+        """
+        Calculate diagnosis accuracy (0.0 to 1.0).
+        VERIFIED v2: wisdom_diagnosis_math
+        """
+        # Linear scaling: 10 Wisdom = 50% accuracy, 20 Wisdom = 100%
+        return min(1.0, wis * 0.05)
 
 
 # ─── Terrain Cost Service ────────────────────────────────────────────────────
@@ -353,6 +379,8 @@ class SkillScalingService:
         wounds=None,
         scars=None,
         learned_skills=None,
+        traits=None,
+        current_role: str = "VANGUARD",
         base_hp: int = 100,
         base_atk: int = 10,
         base_def: int = 5,
@@ -367,7 +395,8 @@ class SkillScalingService:
         # VERIFIED v2: scar_detection_logic
         from src.progression.leveling import LevelingService
         base_stats = LevelingService.recalculate_combat_stats(
-            attributes, equipment, learned_skills,
+            attributes, equipment, learned_skills, traits,
+            current_role=current_role,
             base_hp=base_hp, base_atk=base_atk, base_def=base_def,
             base_evasion=base_evasion
         )

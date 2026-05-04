@@ -2,7 +2,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Optional, List, Tuple, Dict, Any
 from dataclasses import replace, field
 from src.core.updates import CombatUpdate, CombatIntent, EquipmentUpdate
-from src.core.enums import EntityRole
+from src.core.enums import EntityRole, ReasonCode
 from src.core.state import EquipSlot
 
 if TYPE_CHECKING:
@@ -88,9 +88,15 @@ class CombatResolutionSystem:
             atk_mult += CombatResolutionSystem.HIGH_GROUND_BONUS
             trace["HIGH_GROUND"] = CombatResolutionSystem.HIGH_GROUND_BONUS
             
-        if LegalityServiceV2.check_flanking(defender.id, state):
+        is_flanked, is_surrounded = LegalityServiceV2.check_flanking(defender.id, state)
+        if is_flanked:
             atk_mult += CombatResolutionSystem.FLANKING_BONUS
             trace["FLANKING"] = CombatResolutionSystem.FLANKING_BONUS
+            
+        if is_surrounded:
+            # VERIFIED v2: RPG-COMBAT-200
+            atk_mult += 0.25
+            trace["SURROUNDED"] = 0.25
             
         if LegalityServiceV2.check_cover(attacker.position, defender.position, state):
             def_mult += CombatResolutionSystem.COVER_REDUCTION
@@ -159,7 +165,15 @@ class CombatResolutionSystem:
         if wound_upd:
             trace["WOUND_INFLICTED"] = 1.0
 
-        # 7. Generate Resource Intents (Phase 4 Standardization)
+        # 7. Social Consequences (Nemesis Logic)
+        from src.core.updates import SocialUpdate, SocialBondUpdate
+        # Defender gains a grudge against attacker
+        social_upd = SocialUpdate(
+            bond_updates=[SocialBondUpdate(target_id=attacker.id, sentiment_delta=-0.1, familiarity_delta=0.05)],
+            grudge_delta={attacker.id: damage / defender.combat.max_hp}
+        )
+
+        # 8. Generate Resource Intents (Phase 4 Standardization)
         from src.core.updates import ResourceTransferIntent
         resource_transfers = []
         if not alive and defender.combat.alive: # Only if they just died
@@ -185,6 +199,7 @@ class CombatResolutionSystem:
             equipment_upd=defender_equip_upd, # Defender's equipment update
             attacker_equipment_upd=attacker_equip_upd, # Attacker's weapon update
             wound_update=wound_upd,
+            social_upd=social_upd,
             resource_transfers=resource_transfers,
             trace=trace
         )
@@ -245,7 +260,14 @@ class CombatResolutionSystem:
         # 6. Wound Infliction (Checklist Part 6 Section G)
         wound_upd = CombatResolutionSystem._get_wound_infliction(attacker, defender, damage, state.tick, alive)
 
-        # 6. Generate Resource Intents
+        # 6. Social Consequences
+        from src.core.updates import SocialUpdate, SocialBondUpdate
+        social_upd = SocialUpdate(
+            bond_updates=[SocialBondUpdate(target_id=attacker.id, sentiment_delta=-0.1, familiarity_delta=0.05)],
+            grudge_delta={attacker.id: damage / defender.combat.max_hp}
+        )
+
+        # 7. Generate Resource Intents
         from src.core.updates import ResourceTransferIntent
         resource_transfers = []
         if not alive and defender.combat.alive:
@@ -267,6 +289,7 @@ class CombatResolutionSystem:
             equipment_upd=defender_equip_upd,
             attacker_equipment_upd=attacker_equip_upd,
             wound_update=wound_upd,
+            social_upd=social_upd,
             resource_transfers=resource_transfers
         )
 
@@ -306,7 +329,7 @@ class CombatResolutionSystem:
         if not intents:
             return CombatUpdate(
                 outcome_kind="REJECTED",
-                failure_reason="NO_LEGAL_ATTACKERS"
+                failure_reason=ReasonCode.TARGET_INVALID
             )
 
         new_hp = defender.combat.hp - total_damage
@@ -337,6 +360,16 @@ class CombatResolutionSystem:
                  is_group_required=True
              ))
 
+        # Social Consequences (Multi-attacker)
+        from src.core.updates import SocialUpdate, SocialBondUpdate
+        bond_ups = []
+        grudges = {}
+        for attacker in valid_attackers:
+            bond_ups.append(SocialBondUpdate(target_id=attacker.id, sentiment_delta=-0.1, familiarity_delta=0.05))
+            grudges[attacker.id] = (total_damage / len(valid_attackers)) / defender.combat.max_hp # Simplified distribution
+            
+        social_upd = SocialUpdate(bond_updates=bond_ups, grudge_delta=grudges)
+
         return CombatUpdate(
             damage_taken=total_damage,
             hp_delta=-total_damage,
@@ -346,6 +379,7 @@ class CombatResolutionSystem:
             outcome_kind=outcome,
             is_lethal=is_lethal,
             simultaneous_intents=intents,
+            social_upd=social_upd,
             resource_transfers=resource_transfers
         )
 
@@ -358,7 +392,7 @@ class CombatResolutionSystem:
         defender: Optional[EntityState] = None,
         is_lethal: bool = True
     ) -> Dict[int, CombatUpdate]:
-        from src.core.updates import CombatIntent, ResourceTransferIntent
+        from src.core.updates import CombatIntent, ResourceTransferIntent, SocialUpdate, SocialBondUpdate
         from src.engine.legality import LegalityServiceV2
         
         is_legal, reason = LegalityServiceV2.verify_aoe_legality(attacker, target_pos, state)
@@ -384,6 +418,12 @@ class CombatResolutionSystem:
                 # Durability Decay
                 att_dur, def_dur = CombatResolutionSystem._get_durability_decay(attacker, defender)
                 
+                # Social Update for primary
+                social_up = SocialUpdate(
+                    bond_updates=[SocialBondUpdate(target_id=attacker.id, sentiment_delta=-0.1, familiarity_delta=0.05)],
+                    grudge_delta={attacker.id: primary_damage / defender.combat.max_hp}
+                )
+
                 updates[defender.id] = CombatUpdate(
                     attacker_id=attacker.id,
                     damage_taken=primary_damage,
@@ -392,6 +432,7 @@ class CombatResolutionSystem:
                     outcome_kind="KILL" if is_kill and is_lethal else ("DEFEAT" if is_kill else "SURVIVE"),
                     is_lethal=is_lethal,
                     equipment_upd=def_dur,
+                    social_upd=social_up,
                     wound_update=CombatResolutionSystem._get_wound_infliction(attacker, defender, primary_damage, state.tick, not is_kill)
                 )
                 
@@ -429,6 +470,12 @@ class CombatResolutionSystem:
                     # Durability Decay
                     _, def_dur = CombatResolutionSystem._get_durability_decay(attacker, other_ent)
 
+                    # Social Update for splash victim
+                    social_up = SocialUpdate(
+                        bond_updates=[SocialBondUpdate(target_id=attacker.id, sentiment_delta=-0.05, familiarity_delta=0.02)],
+                        grudge_delta={attacker.id: v_damage / other_ent.combat.max_hp}
+                    )
+
                     updates[other_id] = CombatUpdate(
                         attacker_id=attacker.id,
                         damage_taken=v_damage,
@@ -437,6 +484,7 @@ class CombatResolutionSystem:
                         outcome_kind="KILL" if is_kill and is_lethal else ("DEFEAT" if is_kill else "SURVIVE"),
                         is_lethal=is_lethal,
                         equipment_upd=def_dur,
+                        social_upd=social_up,
                         wound_update=CombatResolutionSystem._get_wound_infliction(attacker, other_ent, v_damage, state.tick, not is_kill)
                     )
                     

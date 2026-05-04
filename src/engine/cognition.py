@@ -42,8 +42,13 @@ class SensoryFilter:
             # 2. Hostility
             if ent.identity.faction != subject.identity.faction:
                 score += 200.0
+                # Nemesis modifier (Domain 4)
+                if ent.id in subject.social.nemesis_ids:
+                    score += 500.0
+                
                 # Grudge modifier (if damaged by them recently)
-                # TODO: Implement relationship/grudge check
+                grudge = subject.social.grudge_history.get(ent.id, 0.0)
+                score += grudge * 50.0
             
             # 3. Focus (Current Target)
             if ent.id == current_target_id:
@@ -85,13 +90,15 @@ class AppraisalSystem:
         # 0.5 Social Context (Pillar 4.1 Nemesis System)
         if social_context:
             for neighbor in neighbors:
+                is_nemesis = neighbor.id in social_context.nemesis_ids
                 grudge = social_context.grudge_history.get(neighbor.id, 0.0)
-                if grudge > 0.5:
+                if is_nemesis or grudge > 0.5:
                     # Nemesis detected!
-                    if subject.combat.hp > subject.combat.max_hp * 0.5:
-                        aggression += grudge * 0.5
+                    mult = 2.0 if is_nemesis else 1.0
+                    if subject.combat.hp > subject.combat.max_hp * 0.4:
+                        aggression += grudge * mult * 0.5
                     else:
-                        panic += grudge * 0.3
+                        panic += grudge * mult * 0.3
         
         # 1. Personal Safety (HP check)
         hp_percent = subject.combat.hp / max(1, subject.combat.max_hp)

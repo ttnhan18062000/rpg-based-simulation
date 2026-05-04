@@ -1,42 +1,31 @@
 import pytest
 from dataclasses import replace
-from src.core.state import EntityState, IdentityComponent, InventoryComponent, StrategicComponent, CombatComponent, AttributeComponent, EquipmentComponent, NavigationComponent, TaskComponent, StaminaComponent, BiologicalComponent, LifecycleComponent, AptitudeComponent, InteractionComponent, ItemStack, EquipSlot
-from src.core.updates import IdentityUpdate, RewardUpdate, InventoryUpdate, EquipmentUpdate
+from src.core.state import AuthoritativeState, EntityState, ItemStack, EquipSlot, EquipmentComponent
+from src.core.updates import IdentityUpdate, RewardUpdate, InventoryUpdate, EquipmentUpdate, StateUpdate, EntityUpdate
 from src.progression.leveling import LevelingService
 from src.engine.evolution import EvolutionSystem
 from src.systems.crafting import CraftingSystem
-from src.core.state import AuthoritativeState
-from src.core.updates import StateUpdate, EntityUpdate
+from src.core.builder import V2EntityBuilder
+from src.core.enums import EntityRole
 
 @pytest.fixture
 def base_hero():
-    return EntityState(
-        id=1,
-        kind="hero",
-        position=(0, 0),
-        identity=IdentityComponent(role=0), # HERO
-        strategic=StrategicComponent(),
-        combat=CombatComponent(),
-        inventory=InventoryComponent(),
-        attributes=AttributeComponent(),
-        interaction=InteractionComponent(),
-        navigation=NavigationComponent(),
-        task=TaskComponent(),
-        stamina=StaminaComponent(),
-        biological=BiologicalComponent(),
-        lifecycle=LifecycleComponent(),
-        aptitude=AptitudeComponent()
-    )
+    return (V2EntityBuilder(1)
+            .at((0, 0))
+            .role(EntityRole.HERO)
+            .build())
 
 def test_xp_separation_full_inventory(base_hero):
     # Setup: Hero with full inventory
-    inv = InventoryComponent(items=[ItemStack(item_id="iron_ore", quantity=1)] * 16)
-    entity = replace(base_hero, inventory=inv)
+    # V2 builder default max_slots is 16
+    builder = (V2EntityBuilder(1)
+               .at((0,0))
+               .role(EntityRole.HERO)
+               .items([ItemStack(item_id="iron_ore", quantity=1)] * 16))
+    entity = builder.build()
     
-    # Reward update with XP and items
+    # Reward update with XP
     reward = RewardUpdate(xp_gain=100)
-    # Simulated item rejection wouldn't happen in EvolutionSystem, 
-    # but we want to prove XP is processed by apply_update.
     
     # We use EvolutionSystem to evaluate the update
     state = AuthoritativeState(entities={1: entity}, tick=1, seed=42)
@@ -44,7 +33,7 @@ def test_xp_separation_full_inventory(base_hero):
     
     final_upd = EvolutionSystem.evaluate(state, upd)
     
-    # Check if level up happened (100 XP is enough for level 2: 100 * (1 ** 1.5) = 100)
+    # Check if level up happened (100 XP is enough for level 2)
     ent_upd = final_upd.entity_updates[1]
     assert ent_upd.identity.evolution_level_set == 2
     assert ent_upd.identity.unspent_ap_delta == 5
@@ -52,9 +41,19 @@ def test_xp_separation_full_inventory(base_hero):
 
 def test_durability_decay_combat(base_hero):
     # Setup: Hero with a sword
-    equip = EquipmentComponent(slots={EquipSlot.MAIN_HAND: "iron_sword"}, durability={EquipSlot.MAIN_HAND: 100.0})
-    attacker = replace(base_hero, equipment=equip)
-    defender = replace(base_hero, id=2)
+    builder = (V2EntityBuilder(1)
+               .at((0,0))
+               .role(EntityRole.HERO))
+    attacker = builder.build()
+    # Patch equipment directly as builder doesn't have a specific method for durability yet
+    attacker = replace(attacker, 
+        equipment=replace(attacker.equipment, 
+            slots={EquipSlot.MAIN_HAND: "iron_sword"}, 
+            durability={EquipSlot.MAIN_HAND: 100.0}
+        )
+    )
+    
+    defender = V2EntityBuilder(2).at((1,1)).build()
     
     from src.engine.combat import CombatResolutionSystem
     att_dur, def_dur = CombatResolutionSystem._get_durability_decay(attacker, defender)
@@ -64,8 +63,12 @@ def test_durability_decay_combat(base_hero):
 
 def test_crafting_gates(base_hero):
     # Setup: Hero knows iron_sword recipe but has no materials
-    identity = replace(base_hero.identity, known_recipes={"iron_sword"})
-    entity = replace(base_hero, identity=identity)
+    entity = (V2EntityBuilder(1)
+              .at((0,0))
+              .role(EntityRole.HERO)
+              .build())
+    # Patch recipe knowledge
+    entity = replace(entity, identity=replace(entity.identity, known_recipes={"iron_sword"}))
     
     # Attempt to craft
     inv_upd, reason = CraftingSystem.craft(entity, "iron_sword", 100)
@@ -74,9 +77,14 @@ def test_crafting_gates(base_hero):
 
 def test_crafting_success(base_hero):
     # Setup: Hero has materials and knows recipe
-    identity = replace(base_hero.identity, known_recipes={"iron_sword"})
-    inv = InventoryComponent(items=[ItemStack(item_id="iron_ore", quantity=5), ItemStack(item_id="wood", quantity=2)], gold=100)
-    entity = replace(base_hero, identity=identity, inventory=inv)
+    entity = (V2EntityBuilder(1)
+              .at((0,0))
+              .role(EntityRole.HERO)
+              .gold(100)
+              .items([ItemStack(item_id="iron_ore", quantity=5), ItemStack(item_id="wood", quantity=2)])
+              .build())
+    # Patch recipe knowledge
+    entity = replace(entity, identity=replace(entity.identity, known_recipes={"iron_sword"}))
     
     # Attempt to craft
     inv_upd, reason = CraftingSystem.craft(entity, "iron_sword", 100)
@@ -88,14 +96,20 @@ def test_crafting_success(base_hero):
 def test_stat_derivation_broken_gear(base_hero):
     # Setup: Hero with broken sword
     # iron_sword usually gives ATK bonus (e.g. 10)
-    # We need to check what iron_sword gives in ItemRegistry
-    from src.core.items import ItemRegistry
-    
-    equip = EquipmentComponent(slots={EquipSlot.MAIN_HAND: "iron_sword"}, durability={EquipSlot.MAIN_HAND: 0.0})
-    entity = replace(base_hero, equipment=equip)
+    # Base hero attributes (STR=5) -> ATK=10 + 2.5 = 12
+    entity = (V2EntityBuilder(1)
+              .at((0,0))
+              .role(EntityRole.HERO)
+              .build())
+    entity = replace(entity, 
+        equipment=replace(entity.equipment, 
+            slots={EquipSlot.MAIN_HAND: "iron_sword"}, 
+            durability={EquipSlot.MAIN_HAND: 0.0}
+        )
+    )
     
     stats = LevelingService.recalculate_combat_stats(entity.attributes, entity.equipment)
     
     # Base ATK is 10 + (strength * 0.5) = 10 + (5 * 0.5) = 12
-    # If sword was NOT broken, it would be 12 + sword_atk
+    # If sword was broken, it should not contribute.
     assert stats["atk"] == 12 

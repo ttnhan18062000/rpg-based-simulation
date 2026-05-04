@@ -35,6 +35,7 @@ class ItemRegistry:
         ),
         "healing_potion": ItemDefinition(
             id="healing_potion", name="Healing Potion", kind=ItemKind.CONSUMABLE, weight=0.5,
+            value=100,
             properties={"heal_amount": 50}
         ),
         "iron_sword": ItemDefinition(

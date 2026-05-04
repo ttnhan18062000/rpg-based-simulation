@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Tuple, Dict, Any
 from dataclasses import replace
 from src.core.strategic import ContractState, ContractKind, ContractStatus
+from src.core.enums import ReasonCode
 
 if TYPE_CHECKING:
     from src.core.state import EntityState, AuthoritativeState
@@ -18,26 +19,37 @@ class SocialAppraisalSystem:
         entity: EntityState,
         contract: ContractState,
         state: AuthoritativeState
-    ) -> Tuple[ContractStatus, str, Dict[str, Any]]:
+    ) -> Tuple[ContractStatus, ReasonCode, Dict[str, Any]]:
         """
         Evaluate an OFFERED or COUNTERED contract.
         Returns (new_status, reason, counter_terms).
         """
         # 1. Trust Check
         source_id = contract.source_id
+        source_entity = state.entities.get(source_id)
         bond = entity.social.bonds.get(source_id)
         
-        # sentiment=1.0 -> trust=1.0, sentiment=-1.0 -> trust=0.0
-        trust_score = (bond.sentiment + 1.0) / 2.0 if bond else entity.social.trust_history.get(source_id, 0.5)
+        # Public Reputation Bias (Phase 9 Hardening)
+        public_trust = 0.5
+        if source_entity:
+            public_trust = source_entity.social.public_reputation / 2.0 # 0.0 to 1.0
+        
+        if bond:
+            # Private sentiment takes priority: sentiment=1.0 -> 1.0, -1.0 -> 0.0
+            trust_score = (bond.sentiment + 1.0) / 2.0
+        else:
+            # Blend history with public reputation
+            history_trust = entity.social.trust_history.get(source_id, 0.5)
+            trust_score = (public_trust * 0.7) + (history_trust * 0.3)
         
         # Persistent Distrust for betrayers
         if trust_score < 0.2 or (bond and bond.sentiment < -0.8):
-            return ContractStatus.CANCELLED, "TOTAL_DISTRUST", {}
+            return ContractStatus.CANCELLED, ReasonCode.TOTAL_DISTRUST, {}
             
         # Betrayal history check
         if entity.social.betrayal_count > 0:
             if trust_score < 0.4:
-                return ContractStatus.CANCELLED, "BETRAYAL_HISTORY", {}
+                return ContractStatus.CANCELLED, ReasonCode.BETRAYAL_HISTORY, {}
 
         # 2. Kind-Specific Appraisal
         if contract.kind == ContractKind.RECRUITMENT:
@@ -47,52 +59,77 @@ class SocialAppraisalSystem:
             ok, reason = SocialAppraisalSystem._appraise_loan(entity, contract, trust_score)
             return (ContractStatus.ACCEPTED if ok else ContractStatus.CANCELLED), reason, {}
             
-        return ContractStatus.CANCELLED, "UNKNOWN_CONTRACT_KIND", {}
+        return ContractStatus.CANCELLED, ReasonCode.UNKNOWN, {}
 
     @staticmethod
     def _appraise_recruitment(
         entity: EntityState,
         contract: ContractState,
         trust_score: float
-    ) -> Tuple[ContractStatus, str, Dict[str, Any]]:
+    ) -> Tuple[ContractStatus, ReasonCode, Dict[str, Any]]:
+        # Domain 7 Hardening: Social Fatigue
+        # Repeated offers within a short window increase rejection probability
+        recent_rejections = entity.social.rejection_count.get(contract.source_id, 0)
+        fatigue_penalty = 0.0
+        if recent_rejections > 0:
+            # -0.1 per recent rejection
+            fatigue_penalty = min(0.5, recent_rejections * 0.1)
+            
         # 0. Loyalty/Trust check (Immediate acceptance if extremely high)
-        if trust_score >= 0.9:
-            return ContractStatus.ACCEPTED, "LOYALTY_ACCEPTANCE", {}
+        if trust_score >= 0.9 and fatigue_penalty < 0.2:
+            return ContractStatus.ACCEPTED, ReasonCode.LOYALTY_ACCEPTANCE, {}
             
         pay = contract.terms.get("daily_pay", 0)
         risk = contract.terms.get("risk_level", "NORMAL")
         
         # 1. Utility vs Risk
-        utility = pay / 10.0 
+        # Base pay expectation scales with level
+        expected_pay = 10 * entity.identity.evolution_level
+        utility = pay / max(1, expected_pay)
+        
         risk_weight = 1.0 if risk == "HIGH" else (0.5 if risk == "NORMAL" else 0.1)
+        
+        # Domain 7 Hardening: Trait Modifiers
+        traits = entity.identity.traits
+        if "CAUTIOUS" in traits:
+            risk_weight *= 1.5
+            trust_score *= 0.8 # Requires higher trust
+            
+        if "LOYAL" in traits and trust_score > 0.6:
+            utility += 0.3 # Easier to recruit by friends
+            
+        if "GREEDY" in traits:
+            if utility < 1.0:
+                return ContractStatus.CANCELLED, ReasonCode.INSUFFICIENT_INCENTIVE, {}
+            utility *= 0.7 # Harder to satisfy even with high pay
+            
         hp_pct = entity.combat.hp / entity.combat.max_hp
         
         # 2. Hard Rejections
         if risk == "HIGH" and hp_pct < 0.5:
-            return ContractStatus.FAILED, "TOO_DANGEROUS", {}
+            return ContractStatus.FAILED, ReasonCode.LOW_HP_RETREAT, {} 
             
         # 3. Scoring
         # Greed check: desperate entities accept lower pay
         is_desperate = entity.inventory.gold < 5
         greed_threshold = 0.5 if is_desperate else 1.0
         
-        # Weighted score: (Trust * 0.4) + (Utility * 0.4) - (Risk * 0.2)
-        score = (trust_score * 0.4) + (utility * 0.4) - (risk_weight * 0.2)
+        # Weighted score: (Trust * 0.4) + (Utility * 0.4) - (Risk * 0.2) - Fatigue
+        score = (trust_score * 0.4) + (utility * 0.4) - (risk_weight * 0.2) - fatigue_penalty
         
         if score >= 0.5:
-            return ContractStatus.ACCEPTED, "FAIR_COMPENSATION", {}
+            return ContractStatus.ACCEPTED, ReasonCode.FAIR_COMPENSATION, {}
             
         # 4. Haggling (COUNTERED)
-        # If score is close to threshold and we haven't haggled too much
-        if score >= 0.3 and contract.negotiation_count < 2:
+        if score >= 0.3 and contract.negotiation_count < 2 and "GREEDY" not in traits:
             # Propose a fair pay
-            required_pay = int(max(pay, 10 * greed_threshold))
+            required_pay = int(max(pay, expected_pay * greed_threshold))
             if required_pay > pay:
                 counter_terms = dict(contract.terms)
                 counter_terms["daily_pay"] = required_pay
-                return ContractStatus.COUNTERED, "HAGGLING_FOR_PAY", counter_terms
+                return ContractStatus.COUNTERED, ReasonCode.HAGGLING_FOR_PAY, counter_terms
             
-        return ContractStatus.CANCELLED, "INSUFFICIENT_INCENTIVE", {}
+        return ContractStatus.CANCELLED, ReasonCode.INSUFFICIENT_INCENTIVE, {}
             
     @staticmethod
     def recalibrate_trust(
@@ -124,20 +161,20 @@ class SocialAppraisalSystem:
         entity: EntityState,
         contract: ContractState,
         trust_score: float
-    ) -> Tuple[bool, str]:
+    ) -> Tuple[bool, ReasonCode]:
         amount = contract.terms.get("amount", 0)
         interest = contract.terms.get("interest_rate", 0.0)
         
         if interest > 0.5: # Usury!
-            return False, "USURY_REJECTION"
+            return False, ReasonCode.USURY_REJECTION
             
         if entity.inventory.gold < 5 and amount > 20:
-            return True, "DESPERATION_ACCEPTANCE"
+            return True, ReasonCode.DESPERATION_ACCEPTANCE
             
         if trust_score > 0.5 and interest <= 0.1:
-            return True, "FRIENDLY_LOAN"
+            return True, ReasonCode.FRIENDLY_LOAN
             
-        return False, "UNNECESSARY_DEBT"
+        return False, ReasonCode.UNNECESSARY_DEBT
 
     @staticmethod
     def process_betrayal(
@@ -280,6 +317,6 @@ class RecruitmentAppraiser:
     VERIFIED v2: RecruitmentAppraiser.evaluate
     """
     @staticmethod
-    def evaluate(entity: EntityState, contract: ContractState, trust_score: float) -> Tuple[ContractStatus, str, Dict[str, Any]]:
+    def evaluate(entity: EntityState, contract: ContractState, trust_score: float) -> Tuple[ContractStatus, ReasonCode, Dict[str, Any]]:
         return SocialAppraisalSystem._appraise_recruitment(entity, contract, trust_score)
 

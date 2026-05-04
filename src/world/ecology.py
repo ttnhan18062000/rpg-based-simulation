@@ -47,20 +47,20 @@ class ResourceEcologyService:
             current_count = region_node_count[r_id]
             if current_count < target_count:
                 # Seed chance (50% per interval if under target)
-                if generator.rng.get_float(Domain.SPAWN, state.tick, r_id + "_seed") < 0.5:
+                if generator.rng.get_float(Domain.SPAWN, state.tick, f"seed_{r_id}") < 0.5:
                     # Determine node kind based on region
                     kind = "WOOD" if region.kind == "FOREST" else "STONE"
                     if region.kind == "MOUNTAIN": kind = "IRON"
                     
                     # Random position
-                    rx = generator.rng.get_float(Domain.SPAWN, state.tick, r_id + "_node_x") * (xmax - xmin) + xmin
-                    ry = generator.rng.get_float(Domain.SPAWN, state.tick, r_id + "_node_y") * (ymax - ymin) + ymin
+                    rx = generator.rng.get_float(Domain.SPAWN, state.tick, f"x_{r_id}") * (xmax - xmin) + xmin
+                    ry = generator.rng.get_float(Domain.SPAWN, state.tick, f"y_{r_id}") * (ymax - ymin) + ymin
                     
-                    # Create ResourceNodeState (Need ResourceNodeState import or generator method)
-                    # For now, let's just return a placeholder or assume we have a generator method
+                    # Create ResourceNodeState using next_node_id
                     from src.core.state import ResourceNodeState
+                    node_id = state.next_node_id + len(nodes_add)
                     new_node = ResourceNodeState(
-                        id=1000 + state.tick + int(rx), # Simplified ID generation
+                        id=node_id,
                         kind=kind,
                         position=(rx, ry),
                         yields_item=kind.lower() + "_ore" if kind != "WOOD" else "wood_log",
@@ -70,4 +70,7 @@ class ResourceEcologyService:
                     )
                     nodes_add.append(new_node)
                     
-        return StateUpdate(nodes_add=nodes_add)
+        return StateUpdate(
+            nodes_add=nodes_add,
+            next_node_id_set=state.next_node_id + len(nodes_add) if nodes_add else None
+        )

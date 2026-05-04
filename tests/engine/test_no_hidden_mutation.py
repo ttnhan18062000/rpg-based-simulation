@@ -2,6 +2,7 @@ from src.core.state import AuthoritativeState, EntityState
 from src.core.updates import StateUpdate, EntityUpdate
 from src.engine.apply import ApplyPath
 from src.engine.checkpoint import CanonicalStateHasher
+from src.core.builder import V2EntityBuilder
 import pytest
 
 def test_prior_state_purity_deep_properties():
@@ -11,7 +12,11 @@ def test_prior_state_purity_deep_properties():
     """
     initial_props = {"health": 100, "meta": {"temp": 0}}
     state = AuthoritativeState(tick=1, seed=1, entities={
-        1: EntityState(id=1, kind="hero", position=(0,0), properties=initial_props)
+        1: (V2EntityBuilder(1)
+            .kind("hero")
+            .at((0.0, 0.0))
+            .with_properties(initial_props)
+            .build())
     })
     
     # Update health, but don't touch 'meta'
@@ -41,12 +46,16 @@ def test_no_mutation_leak_from_worker_snapshot():
     """
     from dataclasses import replace
     state = AuthoritativeState(tick=1, seed=1, entities={
-        1: EntityState(id=1, kind="hero", position=(0,0), properties={"gold": 10})
+        1: (V2EntityBuilder(1)
+            .kind("hero")
+            .at((0.0, 0.0))
+            .with_property("gold", 10)
+            .build())
     })
     
     # Simulate what the Kernel does in Phase 3
     subject = state.entities[1]
-    subject_snapshot = replace(subject, properties=dict(subject.properties))
+    subject_snapshot = replace(subject, identity=replace(subject.identity, properties=dict(subject.properties)))
     
     # Simulate a "worker" mutating the snapshot
     subject_snapshot.properties["gold"] = 999
@@ -82,6 +91,14 @@ def test_auth_state_is_frozen():
 
 def test_entity_state_is_frozen():
     """Verify that EntityState itself cannot be mutated directly."""
-    ent = EntityState(id=1, kind="test", position=(0,0))
+    ent = (V2EntityBuilder(1)
+           .kind("test")
+           .at((0.0, 0.0))
+           .build())
     with pytest.raises(Exception):
-        ent.readiness = 100.0
+        ent.identity = replace(ent.identity, unspent_ap=100) # Wait! identity is a field.
+        # FrozenInstanceError if we try to set it.
+    
+    # Actually, let's test a direct field mutation
+    with pytest.raises(Exception):
+        ent.id = 2

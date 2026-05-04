@@ -142,7 +142,7 @@ def test_strategic_inventory_detour():
     assert "blocker_inventory_full" in h1.strategic.blockers
     
     # Evaluate strategic intent
-    state = AuthoritativeState(tick=1, seed=1, entities={1: h1})
+    state = AuthoritativeState(tick=9, seed=1, entities={1: h1})
     strat_upd = StrategicIntelligenceSystem.evaluate_strategic_intent(state, h1)
     
     # Should suggest and switch to a detour project to town
@@ -169,7 +169,7 @@ def test_strategic_reward_pending_detour():
     blocker = BlockerState(id="blocker_reward_pending", kind="inventory", subject="capacity", severity=1.0)
     h1 = replace(h1, strategic=replace(h1.strategic, blockers={blocker.id: blocker}))
     
-    state = AuthoritativeState(tick=1, seed=1, entities={1: h1})
+    state = AuthoritativeState(tick=9, seed=1, entities={1: h1})
     strat_upd = StrategicIntelligenceSystem.evaluate_strategic_intent(state, h1)
     
     detour = next((p for p in strat_upd.projects_add_or_update if p.kind == "detour"), None)
@@ -277,19 +277,19 @@ def test_social_contract_transitions():
     h1 = replace(h1, strategic=replace(h1.strategic, contracts={"c1": contract}))
     
     # 1. Valid: OFFERED -> ACCEPTED
-    upd = SocialContractSystem.transition_contract(h1, "c1", ContractStatus.ACCEPTED, tick=10)
+    upd, _ = SocialContractSystem.transition_contract(h1, "c1", ContractStatus.ACCEPTED, tick=10)
     assert upd.contracts_add_or_update[0].status == ContractStatus.ACCEPTED
     
     # 2. Invalid: FULFILLED -> ACTIVE (Terminal)
     contract_fulfilled = replace(contract, status=ContractStatus.FULFILLED)
     h1_fulfilled = replace(h1, strategic=replace(h1.strategic, contracts={"c1": contract_fulfilled}))
-    upd_invalid = SocialContractSystem.transition_contract(h1_fulfilled, "c1", ContractStatus.ACTIVE, tick=10)
+    upd_invalid, _ = SocialContractSystem.transition_contract(h1_fulfilled, "c1", ContractStatus.ACTIVE, tick=10)
     assert len(upd_invalid.contracts_add_or_update) == 0 # Rejected
     
     # 3. Valid: ACTIVE -> BETRAYED
     contract_active = replace(contract, status=ContractStatus.ACTIVE)
     h1_active = replace(h1, strategic=replace(h1.strategic, contracts={"c1": contract_active}))
-    upd_betrayal = SocialContractSystem.transition_contract(h1_active, "c1", ContractStatus.BETRAYED, tick=10)
+    upd_betrayal, _ = SocialContractSystem.transition_contract(h1_active, "c1", ContractStatus.BETRAYED, tick=10)
     assert upd_betrayal.contracts_add_or_update[0].status == ContractStatus.BETRAYED
 
 def test_contract_outcome_consequences():

@@ -49,6 +49,41 @@ class ShopSystem:
                 if building and not building.functional:
                     continue # Shop is sabotaged and non-functional
                 
+                # Phase E5.6: Price Hardening (Law of Value)
+                # Ensure proposed buy prices are not lower than dynamic Truth
+                from src.systems.economy import DynamicPriceService
+                from src.core.items import ItemRegistry
+                
+                sanitized_transfers = []
+                existing_upd = refined_entity_updates.get(e_id, EntityUpdate(entity_id=e_id))
+                for intent in existing_upd.resource_transfers:
+                    if intent.source_kind == "SHOP_BUY":
+                        if not intent.items_add:
+                            continue
+                        item_id = intent.items_add[0].item_id
+                        item_def = ItemRegistry.get(item_id)
+                        if not item_def:
+                            continue # Invalid item
+                            
+                        # Re-calculate Truth
+                        legal_price = DynamicPriceService.calculate_buy_price(item_def.value, state)
+                        quantity = sum(s.quantity for s in intent.items_add)
+                        legal_total = legal_price * quantity
+                        
+                        if intent.gold_cost < legal_total:
+                            # Price too low! Possible exploit or stale simulation.
+                            # We "harden" it by correcting the price instead of rejecting?
+                            # No, rejection is safer for determinism.
+                            from src.core.enums import ReasonCode
+                            from src.core.updates import RejectionEvent
+                            update = replace(update, rejection_events=update.rejection_events + [RejectionEvent(
+                                tick=state.tick, actor_id=e_id, action_kind="BUY", reason=ReasonCode.ILLEGAL_ACTION, target_id=item_id
+                            )])
+                            continue 
+                    sanitized_transfers.append(intent)
+                
+                existing_upd = replace(existing_upd, resource_transfers=sanitized_transfers)
+                
                 # Pillar 4.2 Dread Bias: Regional trauma increases prices
                 from src.engine.domain_logic import SimulationDomainLogic
                 region_trauma = SimulationDomainLogic.get_region_trauma(state, pos)
@@ -65,24 +100,23 @@ class ShopSystem:
                         gold_delta += price
                         items_to_remove.append(item)
                 
-                if not items_to_remove:
-                    continue
+                if gold_delta > 0:
+                    # Phase 3 Law: Resource Conservation (Atomic Shop)
+                    from src.core.updates import ResourceTransferIntent
+                    auto_sell_intent = ResourceTransferIntent(
+                        source_id=building.id if building else "AUTO_SELL",
+                        source_kind="SHOP_SELL",
+                        items_remove=items_to_remove,
+                        gold_delta=gold_delta,
+                        price_multiplier=1.0,
+                        transfer_kind="SELL"
+                    )
+                    existing_upd = replace(
+                        existing_upd,
+                        resource_transfers=list(existing_upd.resource_transfers) + [auto_sell_intent]
+                    )
                 
-                # Phase 3 Law: Resource Conservation (Atomic Shop)
-                from src.core.updates import ResourceTransferIntent
-                intent = ResourceTransferIntent(
-                    source_id="AUTO_SELL",
-                    source_kind="SHOP_SELL",
-                    items_remove=items_to_remove,
-                    gold_delta=gold_delta,
-                    transfer_kind="SELL"
-                )
-                
-                existing_upd = refined_entity_updates.get(e_id, EntityUpdate(entity_id=e_id))
-                refined_entity_updates[e_id] = replace(
-                    existing_upd,
-                    resource_transfers=list(existing_upd.resource_transfers) + [intent]
-                )
+                refined_entity_updates[e_id] = existing_upd
                 
         return replace(update, entity_updates=refined_entity_updates)
 

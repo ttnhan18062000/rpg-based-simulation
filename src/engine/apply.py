@@ -4,6 +4,7 @@ from dataclasses import replace
 from typing import TYPE_CHECKING, Dict, Any
 
 from src.core.state import AuthoritativeState, EntityState, InventoryComponent
+from src.core.inventory import InventoryService
 from src.core.enums import EntityRole, Faction
 
 if TYPE_CHECKING:
@@ -107,12 +108,29 @@ class ApplyPath:
                     current=min(entity.stamina.max_stamina, entity.stamina.current + stam_regen)
                 ))
             
+            # Domain 4: Social Passive Memory (Per-tick)
+            from src.systems.social_memory import SocialMemoryService
+            from src.core.updates import SocialUpdate, EntityUpdate
+            mem_up = SocialMemoryService.tick_place_attachment(entity, prior_state)
+            nem_up = SocialMemoryService.check_nemesis_promotion(entity)
+            
+            if mem_up or nem_up:
+                if ent_upd:
+                    merged_social = (ent_upd.social or SocialUpdate())
+                    if mem_up: merged_social = merged_social.merge(mem_up)
+                    if nem_up: merged_social = merged_social.merge(nem_up)
+                    ent_upd = replace(ent_upd, social=merged_social)
+                else:
+                    final_social = mem_up or nem_up
+                    if mem_up and nem_up: final_social = mem_up.merge(nem_up)
+                    ent_upd = EntityUpdate(entity_id=e_id, social=final_social)
+            
             if ent_upd:
                 final_entity = ApplyPath._apply_entity_update(
                     entity, ent_upd
                 )
                 # Override readiness with the post-action+passive value
-                final_entity = replace(final_entity, readiness=final_readiness)
+                final_entity = replace(final_entity, combat=replace(final_entity.combat, readiness=final_readiness))
                 
                 # PH6 M2: Corpse Spawning & Regional Trauma
                 was_alive = prior_state.entities[e_id].combat.alive
@@ -134,7 +152,7 @@ class ApplyPath:
                     
                 new_entities[e_id] = final_entity
             else:
-                new_entities[e_id] = replace(entity, readiness=final_readiness)
+                new_entities[e_id] = replace(entity, combat=replace(entity.combat, readiness=final_readiness))
         
         new_resources = dict(prior_state.global_resources)
                 
@@ -169,7 +187,9 @@ class ApplyPath:
                 new_buildings[b_id] = replace(
                     building,
                     hp=new_hp,
-                    functional=False if new_hp == 0 else (build_upd.functional_set if build_upd.functional_set is not None else building.functional)
+                    functional=False if new_hp == 0 else (build_upd.functional_set if build_upd.functional_set is not None else building.functional),
+                    inventory=InventoryService.apply_update(building.inventory, build_upd.inventory) if build_upd.inventory else building.inventory,
+                    price_modifiers=build_upd.price_modifiers_set if build_upd.price_modifiers_set is not None else building.price_modifiers
                 )
                 
                 # Regional Trauma for Building Destruction
@@ -215,7 +235,8 @@ class ApplyPath:
                     owner_faction_id=(None if world_upd.owner_faction_id_set == -1 else world_upd.owner_faction_id_set) if world_upd.owner_faction_id_set is not None else region.owner_faction_id,
                     kind=world_upd.kind_set if world_upd.kind_set is not None else region.kind,
                     weather=world_upd.weather_set if world_upd.weather_set is not None else region.weather,
-                    active_modifiers=[m for m in list(region.active_modifiers) + world_upd.modifiers_add if m not in world_upd.modifiers_remove]
+                    active_modifiers=[m for m in list(region.active_modifiers) + world_upd.modifiers_add if m not in world_upd.modifiers_remove],
+                    price_modifiers=world_upd.price_modifiers_set if world_upd.price_modifiers_set is not None else region.price_modifiers
                 )
 
         new_resources = dict(prior_state.global_resources)
@@ -254,8 +275,13 @@ class ApplyPath:
             work_debt=new_debt,
             maturity=update.maturity_set if update.maturity_set is not None else prior_state.maturity,
             last_calamity_tick=update.last_calamity_tick_set if update.last_calamity_tick_set is not None else prior_state.last_calamity_tick,
+            next_node_id=update.next_node_id_set if update.next_node_id_set is not None else prior_state.next_node_id,
+            next_entity_id=update.next_entity_id_set if update.next_entity_id_set is not None else prior_state.next_entity_id,
             rng_checkpoint=update.rng_checkpoint or prior_state.rng_checkpoint,
-            transaction_trace=update.transaction_trace
+            transaction_trace=update.transaction_trace,
+            pressure_signals=update.pressure_signals_set if update.pressure_signals_set is not None else prior_state.pressure_signals,
+            current_mode=update.current_mode_set if update.current_mode_set is not None else prior_state.current_mode,
+            rejection_registry={k: prior_state.rejection_registry.get(k, 0) + v for k, v in update.rejections_delta.items()} if update.rejections_delta else prior_state.rejection_registry
         )
         
         # PH6 M2: Ground Items and Corpses
@@ -290,7 +316,6 @@ class ApplyPath:
             s_upd = update.home_storage_updates[s_id]
             # Use InventoryService to apply update to storage component
             current_inv = new_storage.get(s_id) or InventoryComponent()
-            from src.core.inventory import InventoryService
             new_storage[s_id] = InventoryService.apply_update(current_inv, s_upd)
             
         new_state = replace(
@@ -359,7 +384,7 @@ class ApplyPath:
                 )
 
         if update.inventory:
-            from src.core.inventory import InventoryService
+            # RPG-RES-202: Atomic inventory application
             new_inventory = InventoryService.apply_update(entity.inventory, update.inventory)
 
         if update.equipment:
@@ -396,8 +421,14 @@ class ApplyPath:
                 evolution_points=entity.identity.evolution_points + update.identity.evolution_points_delta,
                 unspent_ap=entity.identity.unspent_ap + update.identity.unspent_ap_delta,
                 learned_skills=entity.identity.learned_skills.union(update.identity.learned_skills),
+                traits=set(list(entity.identity.traits) + update.identity.traits_add),
                 cooldowns=new_cooldowns
             )
+            if update.identity.traits_remove:
+                new_traits = set(new_identity.traits)
+                for t in update.identity.traits_remove:
+                    new_traits.discard(t)
+                new_identity = replace(new_identity, traits=new_traits)
             if update.identity.breakthroughs_add:
                 new_breakthroughs = set(new_identity.active_breakthroughs)
                 new_breakthroughs.update(update.identity.breakthroughs_add)
@@ -600,7 +631,11 @@ class ApplyPath:
         stats_dirty = (
             update.attributes is not None or 
             update.equipment is not None or 
-            (update.identity is not None and update.identity.learned_skills) or
+            (update.identity is not None and (
+                update.identity.learned_skills or 
+                update.identity.traits_add or 
+                update.identity.traits_remove
+            )) or
             update.wound_update is not None
         )
         
@@ -609,7 +644,9 @@ class ApplyPath:
             derived = SkillScalingService.get_effective_stats(
                 new_attributes, new_equipment,
                 wounds=new_wounds, scars=new_scars,
-                learned_skills=new_identity.learned_skills
+                learned_skills=new_identity.learned_skills,
+                traits=new_identity.traits,
+                current_role=entity.combat.tactical_role
             )
             
             # Apply derived values. 
@@ -621,7 +658,8 @@ class ApplyPath:
                 def_stat=derived["def_stat"],
                 evasion=derived["evasion"],
                 move_cost=derived.get("move_cost", new_combat.move_cost),
-                range=derived.get("range", new_combat.range)
+                range=derived.get("range", new_combat.range),
+                tactical_role=derived.get("tactical_role", new_combat.tactical_role)
             )
             
             # RPG-0064: Level up results in resource refills
@@ -637,30 +675,35 @@ class ApplyPath:
                 if new_combat.hp > new_combat.max_hp:
                     new_combat = replace(new_combat, hp=new_combat.max_hp)
 
+        # Final assembly with AOA compliance
         res = replace(
             entity,
             kind=update.kind_set if update.kind_set is not None else entity.kind,
-            position=update.new_position if update.new_position is not None else entity.position,
-            readiness=entity.readiness + update.readiness_delta,
-            active=update.active if update.active is not None else entity.active,
             interaction=new_interaction,
-            identity=new_identity,
+            identity=replace(new_identity, 
+                group_id=update.group_id_set if update.group_id_set is not None and update.group_id_set != -1 else (None if update.group_id_set == -1 else entity.group_id),
+                properties=new_properties,
+                latest_intent_results=update.intent_results
+            ),
             inventory=new_inventory,
             strategic=new_strategic,
             social=new_social,
             biological=new_biological,
-            lifecycle=new_lifecycle,
+            lifecycle=replace(new_lifecycle,
+                active=update.active if update.active is not None else entity.active
+            ),
             attributes=new_attributes,
-            combat=new_combat,
+            combat=replace(new_combat,
+                readiness=entity.combat.readiness + update.readiness_delta,
+                wounds=new_wounds,
+                scars=new_scars,
+                latest_result=update.combat
+            ),
             equipment=new_equipment,
-            navigation=new_navigation,
+            navigation=replace(new_navigation,
+                position=update.new_position if update.new_position is not None else entity.navigation.position
+            ),
             task=new_task,
-            stamina=new_stamina,
-            wounds=new_wounds,
-            scars=new_scars,
-            latest_intent_results=update.intent_results,
-            latest_combat_result=update.combat,
-            group_id=update.group_id_set if update.group_id_set is not None and update.group_id_set != -1 else (None if update.group_id_set == -1 else entity.group_id),
-            properties=new_properties
+            stamina=new_stamina
         )
         return res

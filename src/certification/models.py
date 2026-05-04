@@ -6,6 +6,13 @@ from dataclasses import dataclass, field, asdict
 from enum import Enum
 from typing import List, Dict, Any, Optional
 
+class ArenaStopCondition(str, Enum):
+    """Predicates for scenario termination in Arena Harness."""
+    WIPE = "wipe"           # One side eliminated
+    TIMEOUT = "timeout"     # Max ticks reached
+    STALL = "stall"         # No activity for too long
+    WATCHDOG = "watchdog"   # Tick hang detected
+    MANUAL = "manual"       # Explicitly stopped
 
 class FailureKind(str, Enum):
     """
@@ -104,6 +111,7 @@ class CertificationResult:
     
     # Outcome
     conformance_passed: bool
+    stop_condition: ArenaStopCondition = ArenaStopCondition.TIMEOUT
     allowed_failure_observed: bool = False # M10 Law: Honest Reporting Flag
     failure_kind: FailureKind = FailureKind.NONE
     failure_reason: Optional[str] = None

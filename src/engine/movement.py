@@ -5,6 +5,7 @@ from dataclasses import replace
 
 from src.core.movement_modes import MovementMode
 from src.core.updates import EntityUpdate, NavigationUpdate
+from src.core.enums import ReasonCode
 
 if TYPE_CHECKING:
     from src.core.state import AuthoritativeState, EntityState
@@ -31,20 +32,32 @@ class MovementSystem:
         if not entity.active:
             return {entity.id: EntityUpdate(entity_id=entity.id)}
 
-        # 2. Manhattan Adjacency / Step Calculation
-        dist = LegalityServiceV2.get_manhattan_dist(entity.position, target_pos)
-        effective_target = target_pos
-        if dist > 1:
-            dx = target_pos[0] - entity.position[0]
-            dy = target_pos[1] - entity.position[1]
-            if abs(dx) > abs(dy):
-                effective_target = (entity.position[0] + (1 if dx > 0 else -1), entity.position[1])
-            else:
-                effective_target = (entity.position[0], entity.position[1] + (1 if dy > 0 else -1))
+        # 2. Step Calculation
+        from src.systems.navigation import NavigationSystem
+        effective_target = NavigationSystem.get_next_step(entity, target_pos, state_or_context)
 
-        # 3. Decision Ladder
+        # 3. Environment & Mode Multipliers (Calculated early for readiness gating)
+        from src.world.environment import EnvironmentService
+        region = LegalityServiceV2.get_region_for_position(entity.position, state_or_context)
+        move_speed_mult = 1.0
+        if region:
+            w_mults = EnvironmentService.get_weather_multipliers(region)
+            a_mults = EnvironmentService.get_aura_multipliers(state_or_context, entity)
+            move_speed_mult = w_mults.get("move_speed", 1.0) * a_mults.get("move_speed", 1.0)
+            
+        mode_mults = {
+            MovementMode.PURSUE: 1.2, MovementMode.RETREAT: 1.5, MovementMode.WANDER: 0.8,
+            MovementMode.REPOSITION: 1.1, MovementMode.REGROUP: 1.0, MovementMode.GUARD: 1.0,
+            MovementMode.HOLD: 0.0,
+        }
+        move_speed_mult *= mode_mults.get(mode, 1.0)
+
+        # 4. Decision Ladder
         # VERIFIED v2: collision_rejection
-        success, reason_code = LegalityServiceV2.verify_occupancy(effective_target, state_or_context, ignore_entity_id=entity.id)
+        # VERIFIED v2: movement_readiness_gating
+        success, reason_code = LegalityServiceV2.verify_movement_legality(
+            entity, effective_target, state_or_context, move_speed_mult=move_speed_mult
+        )
         
         updates: Dict[int, EntityUpdate] = {}
         wait_delta = 0
@@ -66,7 +79,9 @@ class MovementSystem:
             ))
             
             for side_tile in sidesteps:
-                s_ok, s_reason = LegalityServiceV2.verify_occupancy(side_tile, state_or_context, ignore_entity_id=entity.id)
+                s_ok, s_reason = LegalityServiceV2.verify_movement_legality(
+                    entity, side_tile, state_or_context, move_speed_mult=move_speed_mult
+                )
                 if s_ok:
                     effective_target = side_tile
                     success = True; reason_code = None; break
@@ -186,18 +201,6 @@ class MovementSystem:
             clear_target=replan,
             clear_path=replan
         )
-
-        # Environmental Move Cost Scaling
-        from src.world.environment import EnvironmentService
-        region = LegalityServiceV2.get_region_for_position(entity.position, state_or_context)
-        move_speed_mult = 1.0
-        if region:
-            w_mults = EnvironmentService.get_weather_multipliers(region)
-            a_mults = EnvironmentService.get_aura_multipliers(state_or_context, entity)
-            m_mults = EnvironmentService.get_modifier_multipliers(region)
-            
-            # Combine multipliers: move_speed mults are divisors (lower speed = higher cost)
-            move_speed_mult = w_mults.get("move_speed", 1.0) * a_mults.get("move_speed", 1.0)
 
         # VERIFIED v2: environmental_move_cost
         readiness_cost = (entity.combat.move_cost * terrain_cost) / max(0.1, move_speed_mult)

@@ -12,6 +12,20 @@ if TYPE_CHECKING:
     )
 from src.core.state import ItemStack, EquipSlot, AttributeComponent
 from src.core.movement_modes import MovementMode
+from src.core.enums import ReasonCode
+
+
+@dataclass(frozen=True, slots=True)
+class RejectionEvent:
+    """
+    Structured record of an authoritative rejection.
+    Logic ID: RPG-AUTH-009
+    """
+    tick: int
+    actor_id: int
+    action_kind: str
+    reason: ReasonCode
+    target_id: Optional[int | str] = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -62,6 +76,7 @@ class ResourceTransferIntent:
     items_remove: List[ItemStack] = field(default_factory=list)
     gold_delta: int = 0
     gold_cost: int = 0
+    price_multiplier: float = 1.0
     xp_reward: int = 0
     transfer_kind: str = "AUTO" # "HARVEST", "LOOT", "PICKUP", "CRAFT", "BUY", "SELL"
     transaction_id: Optional[str] = None
@@ -109,6 +124,7 @@ class CombatUpdate:
     equipment_upd: Optional[EquipmentUpdate] = None # For defender
     attacker_equipment_upd: Optional[EquipmentUpdate] = None
     wound_update: Optional[WoundUpdate] = None
+    social_upd: Optional[SocialUpdate] = None
     trace: Dict[str, float] = field(default_factory=dict) # Breakdown of modifiers
 
     def merge(self, other: CombatUpdate) -> CombatUpdate:
@@ -133,6 +149,7 @@ class CombatUpdate:
             equipment_upd=other.equipment_upd if other.equipment_upd is not None else self.equipment_upd,
             attacker_equipment_upd=other.attacker_equipment_upd if other.attacker_equipment_upd is not None else self.attacker_equipment_upd,
             wound_update=other.wound_update if other.wound_update is not None else self.wound_update,
+            social_upd=other.social_upd if other.social_upd is not None else self.social_upd,
             trace={**self.trace, **other.trace}
         )
 
@@ -172,6 +189,8 @@ class IdentityUpdate:
     unspent_ap_delta: int = 0
     unspent_ap_set: Optional[int] = None
     learned_skills: list[str] = field(default_factory=list)
+    traits_add: list[str] = field(default_factory=list)
+    traits_remove: list[str] = field(default_factory=list)
     cooldown_updates: Dict[str, int] = field(default_factory=dict) # skill_id -> tick_ready
 
 @dataclass(frozen=True, slots=True)
@@ -199,8 +218,46 @@ class SocialUpdate:
     heroism_delta: float = 0.0
     notoriety_delta: float = 0.0
     
+    # Domain 7 Hardening: Social Fatigue
+    last_offer_tick_set: Optional[int] = None
+    rejection_increment: Dict[int, int] = field(default_factory=dict) # SourceID -> Increment
+    
+    # Domain 4 Hardening
+    nemesis_promotion: List[int] = field(default_factory=list) # EntityIDs to add to nemesis_ids
+    place_attachment_delta: Dict[str, float] = field(default_factory=dict) # RegionID -> Delta
+    
     contracts_add: List[ContractState] = field(default_factory=list)
     contracts_remove: List[str] = field(default_factory=list) # IDs
+    
+    def merge(self, other: SocialUpdate) -> SocialUpdate:
+        """Merges another SocialUpdate into this one."""
+        from dataclasses import replace
+        
+        # Merge dictionaries by summing values
+        new_trust = dict(self.trust_delta)
+        for k, v in other.trust_delta.items():
+            new_trust[k] = new_trust.get(k, 0.0) + v
+            
+        new_grudge = dict(self.grudge_delta)
+        for k, v in other.grudge_delta.items():
+            new_grudge[k] = new_grudge.get(k, 0.0) + v
+            
+        new_places = dict(self.place_attachment_delta)
+        for k, v in other.place_attachment_delta.items():
+            new_places[k] = new_places.get(k, 0.0) + v
+
+        return replace(self,
+            bond_updates=self.bond_updates + other.bond_updates,
+            trust_delta=new_trust,
+            grudge_delta=new_grudge,
+            nemesis_promotion=self.nemesis_promotion + other.nemesis_promotion,
+            place_attachment_delta=new_places,
+            betrayal_increment=self.betrayal_increment + other.betrayal_increment,
+            heroism_delta=self.heroism_delta + other.heroism_delta,
+            notoriety_delta=self.notoriety_delta + other.notoriety_delta,
+            contracts_add=self.contracts_add + other.contracts_add,
+            contracts_remove=self.contracts_remove + other.contracts_remove
+        )
     
 @dataclass(frozen=True, slots=True)
 class BiologicalUpdate:
@@ -361,7 +418,7 @@ class EntityUpdate:
             inventory=other.inventory if other.inventory is not None else self.inventory,
             strategic=other.strategic if other.strategic is not None else self.strategic,
             biological=other.biological if other.biological is not None else self.biological,
-            social=other.social if other.social is not None else self.social,
+            social=self.social.merge(other.social) if self.social and other.social else (other.social or self.social),
             quest=other.quest if other.quest is not None else self.quest,
             reward=other.reward if other.reward is not None else self.reward,
             lifecycle=other.lifecycle if other.lifecycle is not None else self.lifecycle,
@@ -392,6 +449,8 @@ class BuildingUpdate:
     building_id: int
     hp_delta: int = 0
     functional_set: Optional[bool] = None
+    inventory: Optional[InventoryUpdate] = None
+    price_modifiers_set: Optional[Dict[str, float]] = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -411,6 +470,7 @@ class WorldUpdate:
     weather_set: Optional[str] = None
     modifiers_add: List[str] = field(default_factory=list)
     modifiers_remove: List[str] = field(default_factory=list)
+    price_modifiers_set: Optional[Dict[str, float]] = None
     
     def merge(self, other: WorldUpdate) -> WorldUpdate:
         """Merges another WorldUpdate into this one, summing deltas and preferring non-None sets."""
@@ -431,7 +491,8 @@ class WorldUpdate:
             kind_set=other.kind_set if other.kind_set is not None else self.kind_set,
             weather_set=other.weather_set if other.weather_set is not None else self.weather_set,
             modifiers_add=list(set(self.modifiers_add + other.modifiers_add)),
-            modifiers_remove=list(set(self.modifiers_remove + other.modifiers_remove))
+            modifiers_remove=list(set(self.modifiers_remove + other.modifiers_remove)),
+            price_modifiers_set=other.price_modifiers_set if other.price_modifiers_set is not None else self.price_modifiers_set
         )
 
 
@@ -484,7 +545,12 @@ class StateUpdate:
     rng_checkpoint: Any = None
     transaction_trace: List[str] = field(default_factory=list)
     rejections_delta: Dict[str, int] = field(default_factory=dict) # Rejection counters for this tick
+    pressure_signals_set: Optional[Dict[str, float]] = None
+    current_mode_set: Optional[RuntimeMode] = None
+    rejection_events: List[RejectionEvent] = field(default_factory=list) # Detailed rejection audit
     processed_transaction_ids: set[str] = field(default_factory=set)
+    next_node_id_set: Optional[int] = None
+    next_entity_id_set: Optional[int] = None
     
     def replace(self, **kwargs) -> StateUpdate:
         from dataclasses import replace

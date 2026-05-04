@@ -1,31 +1,23 @@
-
 import pytest
 from dataclasses import replace
 from src.core.state import AuthoritativeState, EntityState, IdentityComponent, CombatComponent, ResourceNodeState, ItemStack, StrategicComponent, InventoryComponent, StaminaComponent, BiologicalComponent, LifecycleComponent, AptitudeComponent, SocialComponent, NavigationComponent, PersonalityComponent, TaskComponent
-from src.core.enums import EntityRole
+from src.core.enums import EntityRole, Faction
 from src.engine.pipeline import AuthoritativeApplyPipeline
 from src.engine.apply import ApplyPath
 from src.core.updates import StateUpdate, EntityUpdate, InteractionUpdate, ResourceTransferIntent, NavigationUpdate, TaskUpdate
+from src.core.builder import V2EntityBuilder
 
-def create_mock_entity(id, faction="HERO_FACTION", role=EntityRole.HERO, pos=(0,0), hp=100, readiness=100.0, evolution_level=1):
-    return EntityState(
-        id=id,
-        kind="ACTOR",
-        position=pos,
-        identity=IdentityComponent(faction=faction, role=role, evolution_level=evolution_level),
-        combat=CombatComponent(hp=hp, max_hp=100, atk=100, range=1, alive=hp > 0), # High attack to ensure kill
-        readiness=readiness,
-        active=True,
-        inventory=InventoryComponent(max_slots=10, max_weight=100.0, gold=0),
-        stamina=StaminaComponent(current=100.0),
-        strategic=StrategicComponent(),
-        biological=BiologicalComponent(),
-        lifecycle=LifecycleComponent(),
-        aptitude=AptitudeComponent(),
-        social=SocialComponent(),
-        navigation=NavigationComponent(),
-        task=TaskComponent()
-    )
+def create_mock_entity(id, faction=Faction.HERO_GUILD, role=EntityRole.HERO, pos=(0,0), hp=100, readiness=100.0, evolution_level=1):
+    return (V2EntityBuilder(id)
+            .kind("ACTOR")
+            .at(pos)
+            .faction(faction)
+            .role(role)
+            .readiness(readiness)
+            .evolution_level(evolution_level)
+            .with_base_stats(hp=hp, atk=100)
+            .with_current_hp(hp)
+            .build())
 
 def test_combat_reward_consolidation_xp_gold():
     """
@@ -34,7 +26,7 @@ def test_combat_reward_consolidation_xp_gold():
     """
     attacker = create_mock_entity(1, hp=100)
     # Monster with level 5
-    monster = create_mock_entity(2, faction="MONSTER_FACTION", role=EntityRole.MONSTER, hp=10, evolution_level=5)
+    monster = create_mock_entity(2, faction=Faction.MONSTER_HORDE, role=EntityRole.MONSTER, hp=10, evolution_level=5)
     
     state = AuthoritativeState(tick=1, seed=1, entities={1: attacker, 2: monster})
     
@@ -81,7 +73,7 @@ def test_skill_reward_consolidation():
     """
     attacker = create_mock_entity(1, hp=100)
     attacker = replace(attacker, identity=replace(attacker.identity, learned_skills={"power_strike"}))
-    monster = create_mock_entity(2, faction="MONSTER_FACTION", role=EntityRole.MONSTER, hp=10, evolution_level=2)
+    monster = create_mock_entity(2, faction=Faction.MONSTER_HORDE, role=EntityRole.MONSTER, hp=10, evolution_level=2)
     
     state = AuthoritativeState(tick=1, seed=1, entities={1: attacker, 2: monster})
     
