@@ -12,20 +12,21 @@ from src.social.appraisal import SocialAppraisalSystem
 from src.systems.groups import GroupSystem
 from src.engine.tactical import TacticalDecisionSystem
 from src.engine.domain_logic import SimulationDomainLogic
+from src.core.builder import V2EntityBuilder
 
 def test_appraisal_traits():
     # Base candidate (neutral)
-    c_neutral = EntityState(
-        id=1,
-        kind="human",
-        position=(0,0),
-        identity=IdentityComponent(evolution_level=1, traits=set()),
-        social=SocialComponent(),
-        combat=CombatComponent(hp=100, max_hp=100)
+    c_neutral = (V2EntityBuilder(1)
+        .kind("human")
+        .position(0, 0)
+        .trait(set()) # Ensure traits is a set
+        .hp(100)
+        .readiness(100.0)
+        .build()
     )
     
     # Recruiter
-    recruiter = EntityState(id=10, kind="human", position=(1,1), identity=IdentityComponent())
+    recruiter = V2EntityBuilder(10).kind("human").position(1, 1).readiness(100.0).build()
     
     state = AuthoritativeState(tick=1, seed=1, entities={1: c_neutral, 10: recruiter})
     
@@ -59,15 +60,14 @@ def test_appraisal_traits():
     assert status == ContractStatus.ACCEPTED # Accepted due to loyalty bonus
 
 def test_social_fatigue():
-    candidate = EntityState(
-        id=1,
-        kind="human",
-        position=(0,0),
-        identity=IdentityComponent(evolution_level=1),
-        social=SocialComponent(rejection_count={10: 3}), # Already rejected 3 times
-        combat=CombatComponent(hp=100, max_hp=100)
+    candidate = (V2EntityBuilder(1)
+        .kind("human")
+        .position(0, 0)
+        .social_rejection(10, 3)
+        .readiness(100.0)
+        .build()
     )
-    recruiter = EntityState(id=10, kind="human", position=(1,1))
+    recruiter = V2EntityBuilder(10).kind("human").position(1, 1).readiness(100.0).build()
     state = AuthoritativeState(tick=1, seed=1, entities={1: candidate, 10: recruiter})
     
     contract = ContractState(
@@ -83,16 +83,14 @@ def test_social_fatigue():
     assert status == ContractStatus.CANCELLED
 
 def test_group_directive_propagation():
-    leader = EntityState(
-        id=10,
-        kind="human",
-        position=(0,0),
-        strategic=StrategicComponent(
-            current_project_id="p1",
-            projects={"p1": ProjectState(id="p1", kind="EXPLORE", status=ProjectStatus.ACTIVE)}
-        )
+    leader = (V2EntityBuilder(10).kind("human")
+        .position(0, 0)
+        .strategic_project(ProjectState(id="p1", kind="EXPLORE", status=ProjectStatus.ACTIVE))
+        .current_project("p1")
+        .readiness(100.0)
+        .build()
     )
-    member = EntityState(id=1, kind="human", position=(1,1), social=SocialComponent())
+    member = V2EntityBuilder(1).kind("human").position(1, 1).readiness(100.0).build()
     group = GroupRecord(id=100, leader_id=10, member_ids={1, 10}, anchor=(0,0))
     state = AuthoritativeState(tick=1, seed=1, entities={1: member, 10: leader}, groups={100: group})
     
@@ -105,18 +103,25 @@ def test_group_directive_propagation():
 
 def test_tactical_trust_obedience():
     # Leader and Member
-    leader = EntityState(id=10, kind="human", position=(10,10), identity=IdentityComponent(faction="A"), task=TaskComponent(payload={"target_id": 99}))
-    # Member with TOTAL DISTRUST in leader
-    member = EntityState(
-        id=1, 
-        kind="human",
-        position=(1,1),
-        identity=IdentityComponent(faction="A"), 
-        social=SocialComponent(bonds={10: SocialBond(target_id=10, sentiment=-1.0)}), # trust = 0.0
-        combat=CombatComponent(tactical_role="VANGUARD")
+    leader = (V2EntityBuilder(10).kind("human")
+        .position(10, 10)
+        .faction("A")
+        .task("ENTITY_ACT", {"target_id": 99})
+        .readiness(100.0)
+        .build()
     )
-    hostile = EntityState(id=99, kind="monster", position=(2,2), identity=IdentityComponent(faction="B"), combat=CombatComponent(hp=100))
-    hostile_close = EntityState(id=98, kind="monster", position=(1.5,1.5), identity=IdentityComponent(faction="B"), combat=CombatComponent(hp=100))
+    # Member with TOTAL DISTRUST in leader
+    member = (V2EntityBuilder(1)
+        .kind("human")
+        .position(1, 1)
+        .faction("A")
+        .social_bond(10, -1.0)
+        .tactical_role("VANGUARD")
+        .readiness(100.0)
+        .build()
+    )
+    hostile = V2EntityBuilder(99).kind("monster").position(2, 2).faction("B").hp(100).readiness(100.0).build()
+    hostile_close = V2EntityBuilder(98).kind("monster").position(1.5, 1.5).faction("B").hp(100).readiness(100.0).build()
     
     group = GroupRecord(id=100, leader_id=10, member_ids={1, 10}, shared_target_id=99, anchor=(5,5))
     state = AuthoritativeState(tick=1, seed=1, entities={1: member, 10: leader, 99: hostile, 98: hostile_close}, groups={100: group})
@@ -127,13 +132,19 @@ def test_tactical_trust_obedience():
     assert update.task.payload_set["target_id"] == 98
 
 def test_protector_guarding():
-    leader = EntityState(id=10, kind="human", position=(10,10), task=TaskComponent(work_kind="ENTITY_ACT", payload={"action": "INTERACT", "target_id": 50}))
-    protector = EntityState(
-        id=1, 
-        kind="human",
-        position=(1,1),
-        group_id=100,
-        combat=CombatComponent(tactical_role="PROTECTOR")
+    leader = (V2EntityBuilder(10).kind("human")
+        .position(10, 10)
+        .task("ENTITY_ACT", {"action": "INTERACT", "target_id": 50})
+        .readiness(100.0)
+        .build()
+    )
+    protector = (V2EntityBuilder(1)
+        .kind("human")
+        .position(1, 1)
+        .group_id(100)
+        .tactical_role("PROTECTOR")
+        .readiness(100.0)
+        .build()
     )
     group = GroupRecord(id=100, leader_id=10, member_ids={1, 10}, anchor=(10,10), roles={1: "PROTECTOR"})
     state = AuthoritativeState(tick=1, seed=1, entities={1: protector, 10: leader}, groups={100: group})

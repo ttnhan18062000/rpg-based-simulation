@@ -18,18 +18,15 @@ def create_mock_entity(
     resistance: float = 0.5,
     current_proj_id: str = None
 ):
-    strat = StrategicComponent(
-        profile=CognitionProfile(interruption_resistance=resistance),
-        current_project_id=current_proj_id
-    )
-    return EntityState(
-        id=1,
-        kind="hero",
-        position=(0, 0),
-        attributes=AttributeComponent(intelligence=intelligence, wisdom=wisdom),
-        identity=IdentityComponent(personality=PersonalityComponent(industry=0.5)),
-        strategic=strat
-    )
+    from src.core.builder import V2EntityBuilder
+    return (V2EntityBuilder(1)
+        .kind("hero")
+        .at((0, 0))
+        .attributes(intelligence=intelligence, wisdom=wisdom)
+        .with_strategic_profile(resistance=resistance)
+        .current_project(current_proj_id)
+        .with_personality(industry=0.5)
+        .build())
 
 def test_interruption_resistance_margin():
     entity = create_mock_entity(resistance=0.8, current_proj_id="proj_A")

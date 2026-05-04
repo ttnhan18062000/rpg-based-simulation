@@ -5,6 +5,7 @@ from src.platform.rng import DeterministicRNG
 from src.engine.kernel import Kernel
 from src.core.work import WorkItem, WorkClass
 from unittest.mock import MagicMock
+from src.core.builder import V2EntityBuilder
 
 
 def test_concurrency_determinism_equivalence():
@@ -29,7 +30,7 @@ def test_concurrency_determinism_equivalence():
     
     # Setup identical initial state
     entities = {
-        i: EntityState(id=i, kind="TEST", position=(0,0), readiness=100.0)
+        i: V2EntityBuilder(i).at((0.0, 0.0)).readiness(100.0).build()
         for i in range(1, 11)
     }
     state_start = AuthoritativeState(tick=0, seed=42, entities=entities)
@@ -42,7 +43,7 @@ def test_concurrency_determinism_equivalence():
         for i in range(1, 11)
     ], 0))
     kernel_local.tick_once()
-    final_state_local = kernel_local.state
+    final_state_local = kernel_local._state
     
     # 2. Run Concurrently
     kernel_concurrent = Kernel(profile_concurrent, state_start, DeterministicRNG(42))
@@ -51,13 +52,14 @@ def test_concurrency_determinism_equivalence():
         for i in range(1, 11)
     ], 0))
     kernel_concurrent.tick_once()
-    final_state_concurrent = kernel_concurrent.state
+    final_state_concurrent = kernel_concurrent._state
     
     # VERIFY: Bit-identical outcomes
     assert final_state_local.tick == final_state_concurrent.tick
     for eid in range(1, 11):
-        assert final_state_local.entities[eid].readiness == final_state_concurrent.entities[eid].readiness
-        assert final_state_local.entities[eid].readiness == 10.0 # Standard -100 delta + 10 passive gain
+        assert final_state_local.entities[eid].combat.readiness == final_state_concurrent.entities[eid].combat.readiness
+        # Should be 10.0 (100 - 100 cost + 10 gain)
+        assert final_state_local.entities[eid].combat.readiness == 10.0
 
 
 def test_race_resistance_via_sorting():
@@ -69,7 +71,6 @@ def test_race_resistance_via_sorting():
     from src.core.worker_protocol import WorkerPacket, WorkerResult
     from src.core.updates import EntityUpdate
     import time
-    import random
     
     manager = WorkerManager(max_workers=4)
     
@@ -83,7 +84,7 @@ def test_race_resistance_via_sorting():
             work_id=packet.work_id,
             entity_id=packet.subject.id, 
             work_class=packet.work_class,
-            update=EntityUpdate(entity_id=packet.subject.id, readiness_delta=packet.subject.id)
+            update=EntityUpdate(entity_id=packet.subject.id, readiness_delta=float(packet.subject.id))
         )
 
     packets = [
@@ -92,7 +93,7 @@ def test_race_resistance_via_sorting():
             work_id=f"w:{i}",
             tick=0, world_time=0, seed=i, 
             work_class=WorkClass.CRITICAL,
-            subject=MagicMock(id=i), 
+            subject=V2EntityBuilder(i).build(), 
             neighbor_view=[], 
             work_kind="ACT", 
             payload={}
@@ -106,3 +107,4 @@ def test_race_resistance_via_sorting():
     # Even though ID 5 finished much earlier than ID 1.
     result_ids = [r.entity_id for r in results]
     assert result_ids == [1, 2, 3, 4, 5]
+    manager.shutdown()

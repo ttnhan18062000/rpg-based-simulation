@@ -19,8 +19,6 @@ def test_entity_field_integrity():
     """RPG-AUTH-030: Ensure Entity model_fields contains only the ID, Kind, and Aspects."""
     entity_fields = {f.name for f in fields(EntityState)}
     
-    # Identify aspect fields (they usually end with 'component' in their type name or are named after the aspect)
-    # Let's dynamically find them by looking at the types, or just list the known ones.
     aspects = {
         "interaction", "identity", "attributes", "inventory", 
         "strategic", "social", "biological", "lifecycle", 
@@ -28,17 +26,8 @@ def test_entity_field_integrity():
         "task", "stamina"
     }
     
-    # These are InitVars used for backward-compatible initialization. 
-    # They do not persist on the instance (especially with slots=True) and thus don't violate AOA purity.
-    legacy_shims = {
-        'position', 'readiness', 'active', 'wounds_legacy', 'scars_legacy', 
-        'group_id_legacy', 'properties', 'latest_combat_result'
-    }
+    extra_fields = entity_fields - REQUIRED_BASE_FIELDS - aspects
     
-    extra_fields = entity_fields - REQUIRED_BASE_FIELDS - aspects - legacy_shims
-    
-    # If the user wants STRICT adherence, extra_fields should be empty.
-    # We will assert this, and if it fails, we know we have work to do.
     assert not extra_fields, f"Unauthorized fields detected in EntityState: {extra_fields}"
 
 def test_entity_property_locking():

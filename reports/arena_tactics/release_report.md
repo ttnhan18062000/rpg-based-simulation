@@ -1,20 +1,20 @@
 # Consolidated Certification Report
 
-**Last Run ID**: `96a762ac-5e8c-420c-8a00-c4687900cf53`
-**Commit SHA**: `24ca4b4ef067795006e9c32c563f1b13071f3b33`
+**Last Run ID**: `e97edda7-3323-464a-a63b-e233b42668d5`
+**Commit SHA**: `5507b2b8d9a38c2ca5274a558307c73b7b4ca2a5`
 
 ## Scenario Summary
 
 | Profile | Scenario | Status | Fail Kind | Reason |
 | :--- | :--- | :--- | :--- | :--- |
-| TACTICS_TEST | COMBAT_ARENA_5V5 | ⚠️ | none | Certification PASS |
+| TACTICS_TEST | COMBAT_ARENA_5V5 | ✅ | none | Certification PASS |
 
 ---
 
 ## Latest Run Detail
 
 # Certification Report: COMBAT_ARENA_5V5
-**Commit SHA**: `24ca4b4ef067795006e9c32c563f1b13071f3b33`
+**Commit SHA**: `5507b2b8d9a38c2ca5274a558307c73b7b4ca2a5`
 **Status**: ✅ **PASS**
 **Allowed Failure Observed**: `False`
 
@@ -23,27 +23,27 @@
 - **Hardware Class**: `CLASS_B`
 - **Scenario**: `COMBAT_ARENA_5V5`
 - **Seed**: `42`
-- **Peak RAM (RSS)**: `80.1 MB`
-- **Total CPU Time**: `0.083 sec`
+- **Peak RAM (RSS)**: `83.8 MB`
+- **Total CPU Time**: `0.268 sec`
 
 ## 2. Resource Conformance Evidence
 | Tick | Mode | RAM (MB) | Compute (ms) | Worker % | Queue % |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| 1 | NORMAL | 80.0 | 3.1 | 0.00 | 0.00 |
-| 2 | NORMAL | 80.0 | 3.4 | 0.00 | 0.00 |
-| 3 | NORMAL | 80.0 | 2.2 | 0.00 | 0.00 |
-| 11 | NORMAL | 80.0 | 39.8 | 1.00 | 0.09 |
-| 12 | NORMAL | 80.0 | 1.6 | 0.00 | 0.00 |
-| 13 | NORMAL | 80.0 | 1.8 | 0.00 | 0.00 |
-| 17 | NORMAL | 80.0 | 2.0 | 0.00 | 0.00 |
-| 18 | NORMAL | 80.0 | 3.0 | 0.00 | 0.00 |
-| 19 | NORMAL | 80.0 | 2.9 | 0.00 | 0.00 |
-| 20 | NORMAL | 80.1 | 2.4 | 0.00 | 0.00 |
+| 1 | NORMAL | 83.7 | 10.7 | 1.00 | 0.09 |
+| 2 | NORMAL | 83.7 | 14.0 | 1.00 | 0.09 |
+| 3 | NORMAL | 83.7 | 17.3 | 1.00 | 0.09 |
+| 11 | NORMAL | 83.7 | 13.8 | 1.00 | 0.09 |
+| 12 | NORMAL | 83.7 | 14.4 | 1.00 | 0.09 |
+| 13 | NORMAL | 83.7 | 10.8 | 1.00 | 0.09 |
+| 17 | NORMAL | 83.7 | 8.8 | 1.00 | 0.09 |
+| 18 | NORMAL | 83.7 | 11.6 | 1.00 | 0.09 |
+| 19 | NORMAL | 83.7 | 11.6 | 1.00 | 0.09 |
+| 20 | NORMAL | 83.8 | 12.2 | 1.00 | 0.09 |
 | ... | ... | ... | ... | ... | ... |
 
 ## 3. Semantic Integrity Proof (Milestone D Law)
-- **Baseline Hash**: `752d9092d6cd8a263b2c02dba89285070bee2a7c1ca1a86c25e889bc091a7ccb`
-- **Final Hash**: `752d9092d6cd8a263b2c02dba89285070bee2a7c1ca1a86c25e889bc091a7ccb`
+- **Baseline Hash**: `a0da9525da468e44ae6b1e70ff551752e07e997ddce67cf2f734cd131002748b`
+- **Final Hash**: `a0da9525da468e44ae6b1e70ff551752e07e997ddce67cf2f734cd131002748b`
 - **Status**: MATCHED
 
 ## 4. Conformance Verdict

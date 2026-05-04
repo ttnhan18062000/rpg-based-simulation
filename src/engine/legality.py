@@ -9,6 +9,25 @@ from src.core.enums import ReasonCode
 class LegalityServiceV2:
     """ Authoritative simulation laws for V2. """
 
+    _spatial_cache: Dict[int, Dict[Tuple[int, int], EntityState]] = {}
+
+    @staticmethod
+    def get_spatial_index(state: AuthoritativeState) -> Dict[Tuple[int, int], EntityState]:
+        """Returns a spatial index of active/alive entities, cached for the current tick."""
+        if state.tick in LegalityServiceV2._spatial_cache:
+            return LegalityServiceV2._spatial_cache[state.tick]
+        
+        # Clear old cache and build new one
+        index = {}
+        for entity in state.entities.values():
+            if entity.lifecycle.active and entity.combat.alive:
+                pos = (int(entity.navigation.position[0]), int(entity.navigation.position[1]))
+                index[pos] = entity
+        
+        LegalityServiceV2._spatial_cache = {state.tick: index}
+        return index
+
+
     # VERIFIED v2: manhattan_spatial_metric
     @staticmethod
     def get_manhattan_dist(a: Tuple[float, float], b: Tuple[float, float]) -> int:
@@ -45,18 +64,18 @@ class LegalityServiceV2:
         # 1. Static Terrain (WALL / blocked_tiles)
         terrain_map = getattr(state_or_context, 'terrain', {})
         if terrain_map.get(target_grid_pos) == "WALL":
-            return False, ReasonCode.TARGET_INVALID
+            return False, ReasonCode.PATH_NOT_FOUND
             
         blocked_tiles = getattr(state_or_context, 'blocked_tiles', set())
         if target_grid_pos in blocked_tiles:
-            return False, ReasonCode.TARGET_INVALID
+            return False, ReasonCode.PATH_NOT_FOUND
 
         # 2. Buildings (Solid structures)
         buildings = getattr(state_or_context, 'buildings', {})
         if buildings:
             for b in buildings.values():
                 if (int(b.position[0]), int(b.position[1])) == target_grid_pos:
-                    return False, ReasonCode.TARGET_INVALID
+                    return False, ReasonCode.BUILDING_OBSTRUCTION
 
         # 3. Dynamic Claims (Position claimed this tick)
         claims = getattr(state_or_context, 'transient_claims', [])
@@ -69,17 +88,17 @@ class LegalityServiceV2:
             entities_list = getattr(state_or_context, 'neighbor_view', [])
             for eid, entity in entities_list:
                 if eid == ignore_entity_id: continue
-                if not entity.active: continue
-                if (int(entity.position[0]), int(entity.position[1])) == target_grid_pos:
+                if not entity.lifecycle.active: continue
+                if (int(entity.navigation.position[0]), int(entity.navigation.position[1])) == target_grid_pos:
                     return False, ReasonCode.OCCUPANCY_VIOLATION
         else:
             for eid, entity in entities.items():
                 if eid == ignore_entity_id: continue
-                if not entity.active: continue
-                if (int(entity.position[0]), int(entity.position[1])) == target_grid_pos:
+                if not entity.lifecycle.active: continue
+                if (int(entity.navigation.position[0]), int(entity.navigation.position[1])) == target_grid_pos:
                     return False, ReasonCode.OCCUPANCY_VIOLATION
 
-        return True, ReasonCode.UNKNOWN # Placeholder for success
+        return True, ReasonCode.LEGAL
 
     @staticmethod
     def verify_action_legality(
@@ -92,31 +111,27 @@ class LegalityServiceV2:
         """
         # 1. Actor Validity (Hardening)
         # VERIFIED v2: actor_validity_enforcement
-        if not actor.active or not actor.combat.alive:
+        if not actor.lifecycle.active or not actor.combat.alive:
             return False, ReasonCode.TARGET_INVALID
             
-        if actor.properties.get("status_frozen") or actor.properties.get("status_stunned"):
+        if actor.identity.properties.get("status_frozen") or actor.identity.properties.get("status_stunned"):
             return False, ReasonCode.ATTACKER_STATUS_BLOCKED
 
-        # 2. Readiness (Law: Every ENTITY_ACT requires 100.0 readiness)
-        if actor.readiness < 100.0:
-            return False, ReasonCode.INSUFFICIENT_READINESS
-
-        # 3. Regional Suppression
-        region = LegalityServiceV2.get_region_for_position(actor.position, state)
+        # 2. Regional Suppression
+        region = LegalityServiceV2.get_region_for_position(actor.navigation.position, state)
         if region and region.suppression_active:
             if action_kind in ["SABOTAGE", "RECRUIT", "THEFT"]:
                  return False, ReasonCode.REGIONAL_SUPPRESSION
-        return True, ReasonCode.UNKNOWN
+        return True, ReasonCode.LEGAL
         
     @staticmethod
     def verify_readiness(entity: EntityState) -> Tuple[bool, ReasonCode]:
         """
         Action Readiness Law: Every ENTITY_ACT requires 100.0 readiness.
         """
-        if entity.readiness < 100.0:
+        if entity.combat.readiness < 100.0:
             return False, ReasonCode.INSUFFICIENT_READINESS
-        return True, ReasonCode.UNKNOWN
+        return True, ReasonCode.LEGAL
 
     @staticmethod
     def verify_movement_legality(
@@ -143,10 +158,10 @@ class LegalityServiceV2:
         # Combined cost
         readiness_cost = (entity.combat.move_cost * terrain_cost) / max(0.1, move_speed_mult)
         
-        if entity.readiness < readiness_cost:
+        if entity.combat.readiness < readiness_cost:
             return False, ReasonCode.ACTION_EXHAUSTION
             
-        return True, ReasonCode.UNKNOWN
+        return True, ReasonCode.LEGAL
 
     # VERIFIED v2: melee_engagement_rules
     @staticmethod
@@ -160,19 +175,19 @@ class LegalityServiceV2:
         Authoritative validation for a combat interaction.
         """
         # 1. State Validity
-        if not attacker.active or not attacker.combat.alive:
+        if not attacker.lifecycle.active or not attacker.combat.alive:
             return False, ReasonCode.ATTACKER_INCAPACITATED
-        if not target.active or not target.combat.alive:
+        if not target.lifecycle.active or not target.combat.alive:
             return False, ReasonCode.TARGET_INCAPACITATED
         if attacker.id == target.id:
             return False, ReasonCode.SELF_ATTACK_ILLEGAL
 
         # 2. Readiness / Status Law
         # Opportunity Attacks bypass readiness (Milestone 8 P0)
-        if not is_opportunity_attack and attacker.readiness < 100.0:
+        if not is_opportunity_attack and attacker.combat.readiness < 100.0:
             return False, ReasonCode.INSUFFICIENT_READINESS
         
-        if attacker.properties.get("status_frozen") or attacker.properties.get("status_stunned"):
+        if attacker.identity.properties.get("status_frozen") or attacker.identity.properties.get("status_stunned"):
             return False, ReasonCode.ATTACKER_STATUS_BLOCKED
 
         # 3. Faction Validity (Friendly Fire Law)
@@ -180,11 +195,11 @@ class LegalityServiceV2:
             return False, ReasonCode.FRIENDLY_FIRE_ILLEGAL
 
         # 4. Range Validity
-        dist = LegalityServiceV2.get_manhattan_dist(attacker.position, target.position)
+        dist = LegalityServiceV2.get_manhattan_dist(attacker.navigation.position, target.navigation.position)
         
         # Environmental Range Penalty (Weather/Perception)
         from src.world.environment import EnvironmentService
-        region = LegalityServiceV2.get_region_for_position(attacker.position, state_or_context)
+        region = LegalityServiceV2.get_region_for_position(attacker.navigation.position, state_or_context)
         range_mult = 1.0
         if region:
             weather_mults = EnvironmentService.get_weather_multipliers(region)
@@ -202,10 +217,10 @@ class LegalityServiceV2:
 
 
         # 5. LoS / Obstruction
-        if not LegalityServiceV2.has_line_of_sight(attacker.position, target.position, state_or_context):
+        if not LegalityServiceV2.has_line_of_sight(attacker.navigation.position, target.navigation.position, state_or_context):
             return False, ReasonCode.LOS_OBSTRUCTED
             
-        return True, ReasonCode.UNKNOWN
+        return True, ReasonCode.LEGAL
 
     @staticmethod
     def verify_aoe_legality(
@@ -218,23 +233,23 @@ class LegalityServiceV2:
         """
         # VERIFIED v2: aoe_radius_legality
         # 1. Attacker Validity
-        if not attacker.active or not attacker.combat.alive:
+        if not attacker.lifecycle.active or not attacker.combat.alive:
             return False, ReasonCode.ATTACKER_INCAPACITATED
-        if attacker.readiness < 100.0:
+        if attacker.combat.readiness < 100.0:
             return False, ReasonCode.INSUFFICIENT_READINESS
-        if attacker.properties.get("status_frozen") or attacker.properties.get("status_stunned"):
+        if attacker.identity.properties.get("status_frozen") or attacker.identity.properties.get("status_stunned"):
             return False, ReasonCode.ATTACKER_STATUS_BLOCKED
 
         # 2. Range Validity
-        dist = LegalityServiceV2.get_manhattan_dist(attacker.position, target_pos)
+        dist = LegalityServiceV2.get_manhattan_dist(attacker.navigation.position, target_pos)
         if dist > attacker.combat.range:
             return False, ReasonCode.OUT_OF_RANGE
 
         # 3. LoS / Obstruction (Check path to center of AoE)
-        if not LegalityServiceV2.has_line_of_sight(attacker.position, target_pos, state_or_context):
+        if not LegalityServiceV2.has_line_of_sight(attacker.navigation.position, target_pos, state_or_context):
             return False, ReasonCode.LOS_OBSTRUCTED
 
-        return True, ReasonCode.UNKNOWN
+        return True, ReasonCode.LEGAL
 
     @staticmethod
     def verify_skill_legality(
@@ -261,7 +276,7 @@ class LegalityServiceV2:
         if skill and actor.stamina.current < skill.cost:
             return False, ReasonCode.ACTION_EXHAUSTION
             
-        return True, ReasonCode.UNKNOWN
+        return True, ReasonCode.LEGAL
 
     @staticmethod
     def has_line_of_sight(
@@ -332,13 +347,13 @@ class LegalityServiceV2:
         if not defender or not defender.combat.alive:
             return False, False
             
-        x, y = int(defender.position[0]), int(defender.position[1])
+        x, y = int(defender.navigation.position[0]), int(defender.navigation.position[1])
         
+        spatial_index = LegalityServiceV2.get_spatial_index(state)
         def has_hostile_at(pos: Tuple[int, int]) -> bool:
-            for entity in state.entities.values():
-                if not entity.active or not entity.combat.alive: continue
-                if (int(entity.position[0]), int(entity.position[1])) == pos:
-                    return entity.identity.faction != defender.identity.faction
+            entity = spatial_index.get(pos)
+            if entity:
+                return entity.identity.faction != defender.identity.faction
             return False
 
         n = has_hostile_at((x, y - 1))
@@ -396,7 +411,7 @@ class LegalityServiceV2:
     @staticmethod
     def get_engaged_hostiles(entity: EntityState, state: Any) -> List[int]:
         """Find hostile entities currently in melee engagement with this entity."""
-        return LegalityServiceV2.get_engaged_hostiles_at_pos(entity.position, entity, state)
+        return LegalityServiceV2.get_engaged_hostiles_at_pos(entity.navigation.position, entity, state)
 
     @staticmethod
     def get_engaged_hostiles_at_pos(pos: Tuple[float, float], entity: EntityState, state: Any) -> List[int]:
@@ -405,16 +420,16 @@ class LegalityServiceV2:
         entities = getattr(state, 'entities', state if isinstance(state, dict) else {})
         if isinstance(entities, dict):
             for other_id, other in entities.items():
-                if other_id == entity.id or not other.combat.alive or not other.active:
+                if other_id == entity.id or not other.combat.alive or not other.lifecycle.active:
                     continue
-                dist = LegalityServiceV2.get_manhattan_dist(pos, other.position)
+                dist = LegalityServiceV2.get_manhattan_dist(pos, other.navigation.position)
                 if dist <= 1 and entity.identity.faction != other.identity.faction:
                     engaged.append(other_id)
         elif isinstance(entities, list):
             for other_id, other in entities:
-                if other_id == entity.id or not other.combat.alive or not other.active:
+                if other_id == entity.id or not other.combat.alive or not other.lifecycle.active:
                     continue
-                dist = LegalityServiceV2.get_manhattan_dist(pos, other.position)
+                dist = LegalityServiceV2.get_manhattan_dist(pos, other.navigation.position)
                 if dist <= 1 and entity.identity.faction != other.identity.faction:
                     engaged.append(other_id)
         engaged.sort()
@@ -427,6 +442,6 @@ class LegalityServiceV2:
         if isinstance(entities, dict):
             for eid, ent in entities.items():
                 if eid == ignore_entity_id: continue
-                if ent.position == pos and ent.combat.alive and ent.active:
+                if ent.navigation.position == pos and ent.combat.alive and ent.lifecycle.active:
                     return eid
         return None

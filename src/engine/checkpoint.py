@@ -55,9 +55,9 @@ class CanonicalStateHasher:
             sorted_entities[str(eid)] = {
                 "id": ent.id,
                 "kind": ent.kind,
-                "position": ent.position,
-                "readiness": ent.readiness,
-                "active": ent.active,
+                "position": ent.navigation.position,
+                "readiness": ent.combat.readiness,
+                "active": ent.lifecycle.active,
                 "interaction": asdict(ent.interaction),
                 "identity": {
                     "role": ent.identity.role,
@@ -119,8 +119,8 @@ class CanonicalStateHasher:
                     "work_kind": ent.task.work_kind,
                     "payload": dict(sorted(ent.task.payload.items()))
                 },
-                "group_id": ent.group_id,
-                "properties": dict(sorted(ent.properties.items()))
+                "group_id": ent.identity.group_id,
+                "properties": dict(sorted(ent.identity.properties.items()))
             }
         data["entities"] = sorted_entities
         

@@ -8,15 +8,20 @@ from src.engine.pipeline import AuthoritativeApplyPipeline
 @pytest.fixture
 def group_state():
     # Setup a leader and a member in a group
-    leader = EntityState(
-        id=1, kind="hero", position=(0.0, 0.0), 
-        combat=CombatComponent(hp=10, alive=True),
-        group_id=101
+    from src.core.builder import V2EntityBuilder
+    leader = (V2EntityBuilder(1)
+        .kind("hero")
+        .at((0.0, 0.0))
+        .with_combat(hp=10, alive=True)
+        .group_id(101)
+        .build()
     )
-    member = EntityState(
-        id=2, kind="hero", position=(1.0, 1.0), 
-        combat=CombatComponent(hp=20, alive=True),
-        group_id=101
+    member = (V2EntityBuilder(2)
+        .kind("hero")
+        .at((1.0, 1.0))
+        .with_combat(hp=20, alive=True)
+        .group_id(101)
+        .build()
     )
     group = GroupRecord(
         id=101, leader_id=1, member_ids={1, 2}, anchor=(0.5, 0.5)

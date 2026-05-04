@@ -1,20 +1,13 @@
 {
   "profile": "cli_default",
   "mode": "2",
-  "start_time": 1777651898.5945632,
-  "chunks": [
-    {
-      "id": 0,
-      "start_tick": 0,
-      "end_tick": 0,
-      "event_count": 10
-    }
-  ],
+  "start_time": 1778048581.5463722,
+  "chunks": [],
   "status": "COMPLETED",
-  "end_time": 1777651898.6577785,
+  "end_time": 1778048581.8225036,
   "metrics": {
-    "bytes_written": 28706,
-    "chunks_persisted": 1,
+    "bytes_written": 0,
+    "chunks_persisted": 0,
     "dropped_events": 0
   }
 }

@@ -6,23 +6,21 @@ from src.systems.party import PartyCoordinationSystem
 from src.core.enums import EntityRole
 
 def create_mock_entity(eid: int):
-    return EntityState(
-        id=eid,
-        kind="hero",
-        active=True,
-        position=(0, 0),
-        identity=IdentityComponent(role=EntityRole.HERO, faction="player"),
-        combat=CombatComponent(hp=100, max_hp=100, atk=10, def_stat=5, alive=True),
-        inventory=InventoryComponent(gold=10),
-        social=SocialComponent(),
-        biological=BiologicalComponent(),
-        lifecycle=LifecycleComponent(),
-        strategic=StrategicComponent()
-    )
+    from src.core.builder import V2EntityBuilder
+    return (V2EntityBuilder(eid)
+        .kind("hero")
+        .position(0, 0)
+        .role(EntityRole.HERO)
+        .faction("player")
+        .hp(100, max_hp=100)
+        .alive(True)
+        .readiness(100.0)
+        .gold(10)
+        .build())
 
 def test_party_coordination_leadership_influence():
     # 1. Setup Leader
-    leader = create_mock_entity(1)
+    from src.core.builder import V2EntityBuilder
     obj = ObjectiveState(id="obj_l1", kind="harvesting", target="node_101", status=ObjectiveStatus.ACTIVE)
     proj = ProjectState(
         id="proj_l1", 
@@ -31,11 +29,14 @@ def test_party_coordination_leadership_influence():
         objectives=[obj],
         active_objective_id=obj.id
     )
-    new_strat = replace(leader.strategic, projects={proj.id: proj}, current_project_id=proj.id)
-    leader = replace(leader, strategic=new_strat)
+    leader = (V2EntityBuilder(1)
+        .kind("hero")
+        .strategic_project(proj)
+        .build())
+    # current_project_id needs to be set manually if builder doesn't support it yet
+    leader = replace(leader, strategic=replace(leader.strategic, current_project_id=proj.id))
     
     # 2. Setup Member
-    member = create_mock_entity(2)
     contract = ContractState(
         id="c1",
         kind=ContractKind.RECRUITMENT,
@@ -43,8 +44,10 @@ def test_party_coordination_leadership_influence():
         target_id=2,
         status=ContractStatus.ACTIVE
     )
-    new_member_strat = replace(member.strategic, contracts={contract.id: contract})
-    member = replace(member, strategic=new_member_strat)
+    member = (V2EntityBuilder(2)
+        .kind("hero")
+        .strategic_contract(contract)
+        .build())
     
     state = AuthoritativeState(tick=100, seed=42)
     state.entities[1] = leader

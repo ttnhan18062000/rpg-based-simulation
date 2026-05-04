@@ -5,22 +5,20 @@ Party agency and leadership tests.
 import pytest
 from dataclasses import replace
 from src.core.state import AuthoritativeState, GroupRecord, EntityState, IdentityComponent, CombatComponent, StrategicComponent, InventoryComponent
-from src.core.enums import EntityRole
+from src.core.enums import EntityRole, Faction
 from src.systems.groups import GroupSystem
 from src.core.updates import StateUpdate, EntityUpdate
 
-def create_mock_entity(id, pos=(0,0), hp=100):
-    return EntityState(
-        id=id,
-        kind="ACTOR",
-        position=pos,
-        identity=IdentityComponent(faction="HERO_FACTION", role=EntityRole.HERO),
-        combat=CombatComponent(hp=hp, max_hp=100, atk=10, range=1, alive=hp > 0),
-        readiness=100.0,
-        active=True,
-        inventory=InventoryComponent(max_slots=10, max_weight=100.0),
-        strategic=StrategicComponent()
-    )
+def create_mock_entity(e_id, pos=(0,0), hp=100):
+    from src.core.builder import V2EntityBuilder
+    return (V2EntityBuilder(e_id)
+        .kind("ACTOR")
+        .position(pos[0], pos[1])
+        .faction(Faction.HERO_GUILD)
+        .role(EntityRole.HERO)
+        .hp(hp, max_hp=100)
+        .alive(hp > 0)
+        .build())
 
 def test_party_leadership_loss_dissolution():
     """
@@ -58,6 +56,7 @@ def test_party_agency_target_propagation():
     # Leader has a target in task payload
     h1 = replace(h1, task=replace(h1.task, payload={"target_id": 999}))
     h2 = create_mock_entity(2, pos=(1,1))
+    target = create_mock_entity(999, pos=(5,5))
     
     group = GroupRecord(
         id=100,
@@ -66,7 +65,7 @@ def test_party_agency_target_propagation():
         anchor=(0,0)
     )
     
-    state = AuthoritativeState(tick=1, seed=1, entities={1: h1, 2: h2}, groups={100: group})
+    state = AuthoritativeState(tick=1, seed=1, entities={1: h1, 2: h2, 999: target}, groups={100: group})
     
     update = GroupSystem.update_groups(state)
     

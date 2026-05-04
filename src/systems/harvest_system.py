@@ -15,7 +15,7 @@ class HarvestSystem:
             if not entity.interaction or entity.interaction.target_node_id is None:
                 continue
                 
-            if entity.properties.get("interaction_kind") != "harvest":
+            if entity.identity.properties.get("interaction_kind") != "harvest":
                 continue
                 
             node_id = entity.interaction.target_node_id
@@ -29,7 +29,7 @@ class HarvestSystem:
                 )
                 continue
                 
-            dist = abs(entity.position[0] - node.position[0]) + abs(entity.position[1] - node.position[1])
+            dist = abs(entity.navigation.position[0] - node.position[0]) + abs(entity.navigation.position[1] - node.position[1])
             if dist > 1.5:
                 entity_updates[entity.id] = EntityUpdate(
                     entity_id=entity.id,
@@ -39,7 +39,7 @@ class HarvestSystem:
                 
             # Progress
             new_progress = entity.interaction.progress + 1.0
-            required = entity.properties.get("harvest_duration", 10.0)
+            required = entity.identity.properties.get("harvest_duration", 10.0)
             
             if new_progress >= required:
                 # COMPLETION (Proposed intent for refinement)

@@ -10,8 +10,8 @@ class SpatialGrid:
         self.cell_size = cell_size
         
         for eid, ent in entities.items():
-            cx = int(ent.position[0] // cell_size)
-            cy = int(ent.position[1] // cell_size)
+            cx = int(ent.navigation.position[0] // cell_size)
+            cy = int(ent.navigation.position[1] // cell_size)
             if (cx, cy) not in self.grid:
                 self.grid[(cx, cy)] = []
             self.grid[(cx, cy)].append(eid)

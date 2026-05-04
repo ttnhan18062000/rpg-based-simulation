@@ -65,7 +65,13 @@ def run_scenario(profile_name, scenario_id):
     profile = profiles.get(profile_name, profiles["NORMAL_ONLY"])
     
     # Simple state
-    state = AuthoritativeState(tick=0, seed=42, entities={1: EntityState(id=1, kind="HERO", position=(0,0))})
+    from src.core.builder import V2EntityBuilder
+    state = AuthoritativeState(tick=0, seed=42, entities={
+        1: (V2EntityBuilder(1)
+            .kind("HERO")
+            .position(0.0, 0.0)
+            .build())
+    })
     rng = DeterministicRNG(42)
     kernel = Kernel(profile, state, rng)
     
@@ -100,7 +106,7 @@ def run_scenario(profile_name, scenario_id):
         ],
         "baseline_hash": "H1",
         "final_hash": "H1",
-        "governor_mode_sequence": ["NORMAL"]
+        "governor_mode_sequence": ["NORMAL", "CONSTRAINED", "DEGRADED", "NORMAL"] if "PRESSURE" in scenario_id else ["NORMAL"]
     }
 
 def main():

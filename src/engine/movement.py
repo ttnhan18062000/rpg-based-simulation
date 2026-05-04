@@ -29,7 +29,7 @@ class MovementSystem:
         from src.engine.legality import LegalityServiceV2
         
         # 1. Subject Alive?
-        if not entity.active:
+        if not entity.lifecycle.active:
             return {entity.id: EntityUpdate(entity_id=entity.id)}
 
         # 2. Step Calculation
@@ -38,7 +38,7 @@ class MovementSystem:
 
         # 3. Environment & Mode Multipliers (Calculated early for readiness gating)
         from src.world.environment import EnvironmentService
-        region = LegalityServiceV2.get_region_for_position(entity.position, state_or_context)
+        region = LegalityServiceV2.get_region_for_position(entity.navigation.position, state_or_context)
         move_speed_mult = 1.0
         if region:
             w_mults = EnvironmentService.get_weather_multipliers(region)
@@ -46,7 +46,7 @@ class MovementSystem:
             move_speed_mult = w_mults.get("move_speed", 1.0) * a_mults.get("move_speed", 1.0)
             
         mode_mults = {
-            MovementMode.PURSUE: 1.2, MovementMode.RETREAT: 1.5, MovementMode.WANDER: 0.8,
+            MovementMode.PURSUE: 1.2, MovementMode.RETREAT: 1.5, MovementMode.WANDER: 0.5,
             MovementMode.REPOSITION: 1.1, MovementMode.REGROUP: 1.0, MovementMode.GUARD: 1.0,
             MovementMode.HOLD: 0.0,
         }
@@ -66,11 +66,11 @@ class MovementSystem:
         
         if not success:
             # 3.1 Sidestepping (Orthogonal)
-            dx = effective_target[0] - entity.position[0]
-            dy = effective_target[1] - entity.position[1]
+            dx = effective_target[0] - entity.navigation.position[0]
+            dy = effective_target[1] - entity.navigation.position[1]
             sidesteps = []
-            if dx != 0: sidesteps = [(entity.position[0], entity.position[1] + 1), (entity.position[0], entity.position[1] - 1)]
-            elif dy != 0: sidesteps = [(entity.position[0] + 1, entity.position[1]), (entity.position[0] - 1, entity.position[1])]
+            if dx != 0: sidesteps = [(entity.navigation.position[0], entity.navigation.position[1] + 1), (entity.navigation.position[0], entity.navigation.position[1] - 1)]
+            elif dy != 0: sidesteps = [(entity.navigation.position[0] + 1, entity.navigation.position[1]), (entity.navigation.position[0] - 1, entity.navigation.position[1])]
             
             # Threat-aware sorting: Prefer tiles that don't trigger OAs
             sidesteps.sort(key=lambda p: (
@@ -98,22 +98,22 @@ class MovementSystem:
                         if my_prio > occ_prio:
                             # Search for yield tile
                             for dx_y, dy_y in [(-1,0),(1,0),(0,-1),(0,1),(-1,-1),(-1,1),(1,-1),(1,1)]:
-                                yield_tile = (occupant.position[0] + dx_y, occupant.position[1] + dy_y)
-                                if yield_tile == entity.position: continue
+                                yield_tile = (occupant.navigation.position[0] + dx_y, occupant.navigation.position[1] + dy_y)
+                                if yield_tile == entity.navigation.position: continue
                                 y_ok, _ = LegalityServiceV2.verify_occupancy(yield_tile, state_or_context, ignore_entity_id=occupant_id)
                                 if y_ok:
                                     updates[occupant_id] = EntityUpdate(
                                         entity_id=occupant_id, new_position=yield_tile, moved_this_tick=True,
-                                        navigation=NavigationUpdate(moved_recently_set=True, failure_reason="YIELDED")
+                                        navigation=NavigationUpdate(moved_recently_set=True, failure_reason=ReasonCode.YIELDING)
                                     )
                                     success = True; reason_code = None; break
 
             # 3.3 Reroute (If waiting too long)
             if not success and entity.navigation.wait_count >= 2:
                 neighbors = [(-1,0),(1,0),(0,-1),(0,1)]
-                neighbors.sort(key=lambda d: LegalityServiceV2.get_manhattan_dist((entity.position[0]+d[0], entity.position[1]+d[1]), target_pos))
+                neighbors.sort(key=lambda d: LegalityServiceV2.get_manhattan_dist((entity.navigation.position[0]+d[0], entity.navigation.position[1]+d[1]), target_pos))
                 for dx_r, dy_r in neighbors:
-                    reroute_tile = (entity.position[0] + dx_r, entity.position[1] + dy_r)
+                    reroute_tile = (entity.navigation.position[0] + dx_r, entity.navigation.position[1] + dy_r)
                     r_ok, _ = LegalityServiceV2.verify_occupancy(reroute_tile, state_or_context, ignore_entity_id=entity.id)
                     if r_ok:
                         effective_target = reroute_tile
@@ -197,7 +197,7 @@ class MovementSystem:
             wait_count_delta=wait_delta,
             # VERIFIED v2: stalemate_breaker
             oscillation_count_delta=osc_delta,
-            last_position_set=entity.position if success else None,
+            last_position_set=entity.navigation.position if success else None,
             clear_target=replan,
             clear_path=replan
         )

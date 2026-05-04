@@ -3,23 +3,20 @@ from dataclasses import replace
 from src.core.state import AuthoritativeState, EntityState, IdentityComponent, InventoryComponent, CombatComponent, BiologicalComponent, AptitudeComponent, StaminaComponent
 from src.core.updates import StateUpdate, EntityUpdate, InventoryUpdate, RewardUpdate, CombatUpdate, ResourceTransferIntent, ItemStack, QuestUpdate
 from src.engine.pipeline import AuthoritativeApplyPipeline
+from src.core.builder import V2EntityBuilder
 
 def test_mutation_boundary_strips_unauthorized_gold():
     # Setup
-    state = AuthoritativeState(tick=100, seed=42)
     e_id = 1
-    entity = EntityState(
-        id=e_id,
-        kind="HERO",
-        position=(0, 0),
-        inventory=InventoryComponent(gold=100),
-        combat=CombatComponent(hp=100, max_hp=100),
-        identity=IdentityComponent(evolution_level=1),
-        biological=BiologicalComponent(),
-        aptitude=AptitudeComponent(),
-        stamina=StaminaComponent(current=100, max_stamina=100)
-    )
-    state.entities[e_id] = entity
+    entity = (V2EntityBuilder(e_id)
+        .kind("HERO")
+        .at((0, 0))
+        .with_inventory(gold=100)
+        .with_combat(hp=100, max_hp=100)
+        .with_identity(evolution_level=1)
+        .build())
+    
+    state = AuthoritativeState(tick=100, seed=42, entities={e_id: entity})
     
     # Unauthorized worker update trying to give self gold
     unauthorized_upd = EntityUpdate(
@@ -37,10 +34,9 @@ def test_mutation_boundary_strips_unauthorized_gold():
     assert ent_ref.inventory is None
     
 def test_mutation_boundary_strips_unauthorized_items():
-    state = AuthoritativeState(tick=100, seed=42)
     e_id = 1
-    entity = EntityState(id=e_id, kind="HERO", position=(0,0))
-    state.entities[e_id] = entity
+    entity = V2EntityBuilder(e_id).kind("HERO").at((0,0)).build()
+    state = AuthoritativeState(tick=100, seed=42, entities={e_id: entity})
     
     unauthorized_upd = EntityUpdate(
         entity_id=e_id,
@@ -52,10 +48,9 @@ def test_mutation_boundary_strips_unauthorized_items():
     assert refined.entity_updates[e_id].inventory is None
 
 def test_mutation_boundary_strips_unauthorized_xp():
-    state = AuthoritativeState(tick=100, seed=42)
     e_id = 1
-    entity = EntityState(id=e_id, kind="HERO", position=(0,0))
-    state.entities[e_id] = entity
+    entity = V2EntityBuilder(e_id).kind("HERO").at((0,0)).build()
+    state = AuthoritativeState(tick=100, seed=42, entities={e_id: entity})
     
     unauthorized_upd = EntityUpdate(
         entity_id=e_id,
@@ -67,30 +62,40 @@ def test_mutation_boundary_strips_unauthorized_xp():
     assert refined.entity_updates[e_id].reward is None
 
 def test_mutation_boundary_strips_combat_rewards():
-    state = AuthoritativeState(tick=100, seed=42)
     e_id = 1
-    entity = EntityState(id=e_id, kind="HERO", position=(0,0))
-    state.entities[e_id] = entity
+    entity = V2EntityBuilder(e_id).kind("HERO").at((0,0)).build()
+    state = AuthoritativeState(tick=100, seed=42, entities={e_id: entity})
     
-    # Worker trying to sneak in gold through a combat update
+    # Worker trying to sneak in gold through a combat intent
+    # Note: gold_gain/xp_gain moved to ResourceTransferIntent in V2
     unauthorized_upd = EntityUpdate(
         entity_id=e_id,
-        combat=CombatUpdate(gold_gain=100, xp_gain=50, damage_taken=5)
+        combat=CombatUpdate(damage_taken=5),
+        resource_transfers=[
+            ResourceTransferIntent(
+                source_id="KILL_1",
+                source_kind="KILL",
+                gold_delta=100,
+                transfer_kind="KILL_REWARD"
+            )
+        ]
     )
     raw_update = StateUpdate(entity_updates={e_id: unauthorized_upd})
     
     refined = AuthoritativeApplyPipeline.refine(state, raw_update)
+    
+    # Verify KILL_REWARD is stripped
+    assert len(refined.entity_updates[e_id].resource_transfers) == 0
+    
+    # Verify legitimate field preserved
     combat_ref = refined.entity_updates[e_id].combat
     assert combat_ref is not None
-    assert combat_ref.gold_gain == 0
-    assert combat_ref.xp_gain == 0
-    assert combat_ref.damage_taken == 5 # Legitimate field preserved
+    assert combat_ref.damage_taken == 5
 
 def test_mutation_boundary_allows_intents():
-    state = AuthoritativeState(tick=100, seed=42)
     e_id = 1
-    entity = EntityState(id=e_id, kind="HERO", position=(0,0))
-    state.entities[e_id] = entity
+    entity = V2EntityBuilder(e_id).kind("HERO").at((0,0)).build()
+    state = AuthoritativeState(tick=100, seed=42, entities={e_id: entity})
     
     # Intent should be preserved
     intent = ResourceTransferIntent(
@@ -111,10 +116,9 @@ def test_mutation_boundary_allows_intents():
     assert refined.entity_updates[e_id].intent_results[0].source_id == "NODE_1"
 
 def test_mutation_boundary_strips_unauthorized_intents():
-    state = AuthoritativeState(tick=100, seed=42)
     e_id = 1
-    entity = EntityState(id=e_id, kind="HERO", position=(0,0))
-    state.entities[e_id] = entity
+    entity = V2EntityBuilder(e_id).kind("HERO").at((0,0)).build()
+    state = AuthoritativeState(tick=100, seed=42, entities={e_id: entity})
     
     # QUEST_REWARD intent should be stripped from worker
     intent = ResourceTransferIntent(
@@ -134,10 +138,9 @@ def test_mutation_boundary_strips_unauthorized_intents():
 
 def test_mutation_boundary_strips_quest_status():
     from src.core.quests import QuestStatus
-    state = AuthoritativeState(tick=100, seed=42)
     e_id = 1
-    entity = EntityState(id=e_id, kind="HERO", position=(0,0))
-    state.entities[e_id] = entity
+    entity = V2EntityBuilder(e_id).kind("HERO").at((0,0)).build()
+    state = AuthoritativeState(tick=100, seed=42, entities={e_id: entity})
     
     # Worker trying to skip to COMPLETED
     unauthorized_upd = EntityUpdate(

@@ -3,20 +3,14 @@ from src.core.state import EntityState, AttributeComponent, BiologicalComponent,
 from src.strategy.cognition_capacity import CapacityService
 
 def create_mock_entity(intelligence: int = 5, wisdom: int = 5, perception: int = 5, sleep_debt: float = 0.0):
-    return EntityState(
-        id=1,
-        kind="hero",
-        position=(0, 0),
-        attributes=AttributeComponent(
-            intelligence=intelligence,
-            wisdom=wisdom,
-            perception=perception
-        ),
-        biological=BiologicalComponent(sleep_debt=sleep_debt),
-        identity=IdentityComponent(
-            personality=PersonalityComponent(industry=0.5)
-        )
-    )
+    from src.core.builder import V2EntityBuilder
+    return (V2EntityBuilder(1)
+        .kind("hero")
+        .at((0, 0))
+        .attributes(intelligence=intelligence, wisdom=wisdom, perception=perception)
+        .biological(sleep_debt=sleep_debt)
+        .with_personality(industry=0.5)
+        .build())
 
 def test_base_profile_derivation():
     entity = create_mock_entity(intelligence=10, wisdom=10, perception=10)

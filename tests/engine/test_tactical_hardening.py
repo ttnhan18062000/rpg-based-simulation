@@ -8,7 +8,7 @@ def test_frozen_state_mutation_tripwire():
     
     # Attempting to mutate a frozen dataclass should raise FrozenInstanceError
     with pytest.raises(Exception): # Usually FrozenInstanceError
-        entity.readiness = 100.0
+        entity.combat.readiness = 100.0
         
     with pytest.raises(Exception):
         entity.combat.hp = 0

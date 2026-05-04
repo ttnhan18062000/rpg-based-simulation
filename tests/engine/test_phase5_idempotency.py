@@ -10,6 +10,7 @@ def create_mock_entity(id, pos=(0.0, 0.0)):
             .kind("hero")
             .at(pos)
             .active(True)
+            .readiness(100.0)
             .build())
 
 def test_resource_node_race():

@@ -16,8 +16,9 @@ def test_hotpath_purity():
 
 def test_export_factory_isolation():
     """Verify that to_export_state produces a valid DTO without mutating source."""
+    from src.core.builder import V2EntityBuilder
     state = AuthoritativeState(tick=1, seed=42, world_time=10, entities={
-        1: EntityState(id=1, kind="hero", position=(0,0))
+        1: V2EntityBuilder(1).kind("hero").at((0.0, 0.0)).build()
     })
     
     dto = to_export_state(state)
@@ -31,6 +32,6 @@ def test_export_factory_isolation():
     
     # Verify source purity
     assert state.tick == 1
-    assert state.entities[1].position == (0,0)
+    assert state.entities[1].navigation.position == (0.0, 0.0)
     # Check that DTO didn't just copy the reference of the dict
-    assert dto.entities[0].props is not state.entities[1].properties
+    assert dto.entities[0].props is not state.entities[1].identity.properties

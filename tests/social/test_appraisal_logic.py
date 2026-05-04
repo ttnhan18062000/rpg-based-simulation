@@ -6,20 +6,17 @@ from src.social.appraisal import SocialAppraisalSystem
 from src.core.enums import EntityRole
 
 def create_mock_entity(eid: int, gold: int = 10, hp: int = 100):
-    from src.core.state import EntityState, CombatComponent, InventoryComponent, SocialComponent, IdentityComponent, BiologicalComponent, LifecycleComponent, StrategicComponent
-    return EntityState(
-        id=eid,
-        kind="hero",
-        active=True,
-        position=(0, 0),
-        identity=IdentityComponent(role=EntityRole.HERO, faction="player"),
-        combat=CombatComponent(hp=hp, max_hp=100, atk=10, def_stat=5, alive=True),
-        inventory=InventoryComponent(gold=gold),
-        social=SocialComponent(),
-        biological=BiologicalComponent(),
-        lifecycle=LifecycleComponent(),
-        strategic=StrategicComponent()
-    )
+    from src.core.builder import V2EntityBuilder
+    from src.core.enums import Faction
+    return (V2EntityBuilder(eid)
+        .kind("hero")
+        .position(0, 0)
+        .role(EntityRole.HERO)
+        .faction(Faction.HERO_GUILD)
+        .hp(hp, max_hp=100)
+        .gold(gold)
+        .alive(True)
+        .build())
 
 def test_appraise_recruitment_low_trust_low_pay():
     entity = create_mock_entity(1)
@@ -32,9 +29,10 @@ def test_appraise_recruitment_low_trust_low_pay():
     )
     state = AuthoritativeState(tick=100, seed=42)
     
+    from src.core.enums import ReasonCode
     status, reason, counter = SocialAppraisalSystem.appraise_contract(entity, contract, state)
     assert status == ContractStatus.CANCELLED
-    assert reason == "INSUFFICIENT_INCENTIVE"
+    assert reason == ReasonCode.INSUFFICIENT_INCENTIVE
 
 def test_appraise_recruitment_haggling():
     entity = create_mock_entity(1, gold=10) # Not desperate
@@ -47,9 +45,10 @@ def test_appraise_recruitment_haggling():
     )
     state = AuthoritativeState(tick=100, seed=42)
     
+    from src.core.enums import ReasonCode
     status, reason, counter = SocialAppraisalSystem.appraise_contract(entity, contract, state)
     assert status == ContractStatus.COUNTERED
-    assert reason == "HAGGLING_FOR_PAY"
+    assert reason == ReasonCode.HAGGLING_FOR_PAY
     assert counter["daily_pay"] == 10 # Should haggle for fair pay
 
 def test_appraise_recruitment_high_trust():
@@ -67,9 +66,10 @@ def test_appraise_recruitment_high_trust():
     )
     state = AuthoritativeState(tick=100, seed=42)
     
+    from src.core.enums import ReasonCode
     status, reason, counter = SocialAppraisalSystem.appraise_contract(entity, contract, state)
     assert status == ContractStatus.ACCEPTED
-    assert reason == "LOYALTY_ACCEPTANCE"
+    assert reason == ReasonCode.LOYALTY_ACCEPTANCE
 
 def test_appraise_recruitment_danger_low_hp():
     entity = create_mock_entity(1, hp=40) # Low HP (40%)
@@ -82,6 +82,7 @@ def test_appraise_recruitment_danger_low_hp():
     )
     state = AuthoritativeState(tick=100, seed=42)
     
+    from src.core.enums import ReasonCode
     status, reason, counter = SocialAppraisalSystem.appraise_contract(entity, contract, state)
     assert status == ContractStatus.FAILED
-    assert reason == "TOO_DANGEROUS"
+    assert reason == ReasonCode.LOW_HP_RETREAT

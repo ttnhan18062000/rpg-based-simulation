@@ -45,16 +45,21 @@ class DeterministicScheduler:
 
         critical_items: List[WorkItem] = []
         for ent in state.entities.values():
-            if ent.active and ent.readiness >= 100.0:
+            if ent.lifecycle.active and ent.combat.readiness >= 100.0:
                 # Milestone 2: Hardened TaskComponent intent
-                # In Phase 2, we dispatch BRAIN work to allow tactical appraisal.
+                # If the entity already has a committed intent (ACT/MOVE), dispatch that directly.
+                # Otherwise, dispatch BRAIN to allow tactical appraisal.
+                work_kind = ent.task.work_kind
+                if work_kind not in ("ENTITY_ACT", "ENTITY_MOVE"):
+                    work_kind = "ENTITY_BRAIN"
+                
                 critical_items.append(WorkItem(
                     owner_id=ent.id,
-                    work_id=f"{state.tick}:brain:{ent.id}",
+                    work_id=f"{state.tick}:{work_kind.lower()}:{ent.id}",
                     work_class=WorkClass.CRITICAL,
-                    work_kind="ENTITY_BRAIN",
-                    payload={}, # Brain will determine the payload
-                    readiness=ent.readiness
+                    work_kind=work_kind,
+                    payload=ent.task.payload,
+                    readiness=ent.combat.readiness
                 ))
         
         critical_items.sort(key=lambda x: (-x.readiness, x.owner_id))

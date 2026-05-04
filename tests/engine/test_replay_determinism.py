@@ -1,13 +1,13 @@
-
 import pytest
 from src.engine.kernel import Kernel
 from src.core.state import AuthoritativeState, RegionState, EntityState, ItemStack
 from src.platform.rng import DeterministicRNG
-from src.config.profiles import RuntimeProfile
+from src.config.profiles import RuntimeProfile, HardwareClass
 from src.core.updates import ResourceTransferIntent, EntityUpdate
 from pathlib import Path
 import tempfile
-import shutil
+from src.core.builder import V2EntityBuilder
+
 
 def test_transaction_trace_determinism():
     """
@@ -15,11 +15,9 @@ def test_transaction_trace_determinism():
     This test verifies that rejected transactions are correctly logged and stable.
     """
     with tempfile.TemporaryDirectory() as tmp_dir:
-        run_dir = Path(tmp_dir) / "run_1"
-        
         profile = RuntimeProfile(
             name="test",
-            hardware_class="class_b",
+            hardware_class=HardwareClass.CLASS_B,
             max_ram_mb=256,
             max_cpu_percent=50.0,
             max_worker_count=0,
@@ -31,20 +29,17 @@ def test_transaction_trace_determinism():
         )
         
         # 1. Setup world with a resource node and an entity with full inventory
-        region = RegionState(id="reg1", name="Region 1", bounds=(0, 0, 128, 128), owner_faction_id=1)
+        region = RegionState(id="reg1", name="Region 1", bounds=(0.0, 0.0, 128.0, 128.0), owner_faction_id=1)
         
-        from src.core.state import CombatComponent, InventoryComponent
-        # Entity 1: Full inventory (cap 2 is implicit in resolver logic, but here we just fill it)
-        ent1 = EntityState(
-            id=1,
-            kind="hero",
-            position=(10, 10),
-            combat=CombatComponent(hp=100, max_hp=100, alive=True),
-            inventory=InventoryComponent(
-                items=[ItemStack(item_id="stone", quantity=1), ItemStack(item_id="wood", quantity=1)],
-                gold=0
-            )
-        )
+        # Entity 1: Full inventory (cap 16 is default in V2EntityBuilder)
+        # We'll fill it with 16 items to trigger INVENTORY_FULL
+        items = [f"item_{i}" for i in range(16)]
+        ent1 = (V2EntityBuilder(1)
+                .at((10.0, 10.0))
+                .gold(100)
+                .readiness(100.0)
+                .items(items)
+                .build())
         
         state = AuthoritativeState(
             tick=1,
@@ -63,9 +58,6 @@ def test_transaction_trace_determinism():
             items_add=[ItemStack(item_id="iron", quantity=1)],
             transfer_kind="HARVEST"
         )
-        
-        # We need to bypass the scheduler to force this intent for testing
-        # We'll mock the executor result or just inject it into the pipeline
         
         from src.core.worker_protocol import WorkerResult, ResultStatus
         from src.core.updates import StateUpdate, EntityUpdate
@@ -87,6 +79,7 @@ def test_transaction_trace_determinism():
         # Check if trace contains the failure
         trace = kernel._state.transaction_trace
         assert len(trace) > 0, "No transaction trace recorded"
+        # In V2, inventory limit is strictly enforced in _resolve_resource_transactions
         assert any("FAIL" in t and "Entity 1" in t and "INVENTORY_FULL" in t for t in trace), f"Rejection not found in trace: {trace}"
         
         # 2. Replay Verification
@@ -103,7 +96,3 @@ def test_transaction_trace_determinism():
         kernel2._phase_resolution()
         
         assert kernel2._state.transaction_trace == kernel._state.transaction_trace, "Transaction traces differ across same-seed runs"
-        
-        # Verify it's in the REFINED_UPDATE event too (mock replay manager check)
-        # For simplicity, we just check the state update trace we added.
-        print(f"[DEBUG] Trace: {trace[0]}")

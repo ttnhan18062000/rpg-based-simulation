@@ -4,28 +4,29 @@ from src.core.state import EntityState, AuthoritativeState, IdentityComponent, C
 from src.engine.tactical import TacticalDecisionSystem
 from src.core.movement_modes import MovementMode
 
+from src.core.builder import V2EntityBuilder
+
 def test_mob_beyond_leash_returns_home():
     state = AuthoritativeState(tick=100, seed=42)
     
     # Monster far from home (0,0), leash 5
-    m1 = EntityState(
-        id=1, kind="monster", position=(10.0, 0.0),
-        identity=IdentityComponent(faction=2),
-        combat=CombatComponent(hp=100, max_hp=100),
-        navigation=NavigationComponent(home_position=(0.0, 0.0), leash_radius=5.0),
-        strategic=StrategicComponent(),
-        task=TaskComponent(work_kind="IDLE")
-    )
+    m1 = (V2EntityBuilder(1)
+          .kind("monster")
+          .at((8.0, 0.0))
+          .faction(2)
+          .hp(100)
+          .home_position((0.0, 0.0))
+          .leash_radius(5.0)
+          .readiness(100.0)
+          .build())
     
     # Add a hero nearby to trigger tactical intent
-    h1 = EntityState(
-        id=2, kind="hero", position=(11.0, 0.0),
-        identity=IdentityComponent(faction=1),
-        combat=CombatComponent(hp=100, max_hp=100),
-        navigation=NavigationComponent(),
-        strategic=StrategicComponent(),
-        task=TaskComponent(work_kind="IDLE")
-    )
+    h1 = (V2EntityBuilder(2)
+          .kind("hero")
+          .at((11.0, 0.0))
+          .faction(1)
+          .hp(100)
+          .build())
     
     state = replace(state, entities={1: m1, 2: h1})
     
@@ -43,23 +44,23 @@ def test_mob_within_chase_radius_continues():
     
     # Monster at (6.0, 0), home (0,0), leash 5. 
     # Within 1.5x leash (7.5)
-    m1 = EntityState(
-        id=1, kind="monster", position=(6.0, 0.0),
-        identity=IdentityComponent(faction=2),
-        combat=CombatComponent(hp=100, max_hp=100),
-        navigation=NavigationComponent(home_position=(0.0, 0.0), leash_radius=5.0),
-        strategic=StrategicComponent(),
-        task=TaskComponent(work_kind="ENTITY_ACT", payload={"target_id": 2})
-    )
+    m1 = (V2EntityBuilder(1)
+          .kind("monster")
+          .at((3.0, 0.0))
+          .faction(2)
+          .hp(100)
+          .home_position((0.0, 0.0))
+          .leash_radius(5.0)
+          .readiness(100.0)
+          .task("ENTITY_ACT", {"target_id": 2})
+          .build())
     
-    h1 = EntityState(
-        id=2, kind="hero", position=(5.0, 0.0),
-        identity=IdentityComponent(faction=1),
-        combat=CombatComponent(hp=100, max_hp=100),
-        navigation=NavigationComponent(),
-        strategic=StrategicComponent(),
-        task=TaskComponent(work_kind="IDLE")
-    )
+    h1 = (V2EntityBuilder(2)
+          .kind("hero")
+          .at((5.0, 0.0))
+          .faction(1)
+          .hp(100)
+          .build())
     
     state = replace(state, entities={1: m1, 2: h1})
     
@@ -82,23 +83,23 @@ def test_mob_beyond_chase_radius_returns_home():
     
     # Monster at (8.0, 0), home (0,0), leash 5. 
     # Beyond 1.5x leash (7.5)
-    m1 = EntityState(
-        id=1, kind="monster", position=(8.0, 0.0),
-        identity=IdentityComponent(faction=2),
-        combat=CombatComponent(hp=100, max_hp=100),
-        navigation=NavigationComponent(home_position=(0.0, 0.0), leash_radius=5.0),
-        strategic=StrategicComponent(),
-        task=TaskComponent(work_kind="ENTITY_ACT", payload={"target_id": 2})
-    )
+    m1 = (V2EntityBuilder(1)
+          .kind("monster")
+          .at((8.0, 0.0))
+          .faction(2)
+          .hp(100)
+          .home_position((0.0, 0.0))
+          .leash_radius(5.0)
+          .readiness(100.0)
+          .task("ENTITY_ACT", {"target_id": 2})
+          .build())
     
-    h1 = EntityState(
-        id=2, kind="hero", position=(9.0, 0.0),
-        identity=IdentityComponent(faction=1),
-        combat=CombatComponent(hp=100, max_hp=100),
-        navigation=NavigationComponent(),
-        strategic=StrategicComponent(),
-        task=TaskComponent(work_kind="IDLE")
-    )
+    h1 = (V2EntityBuilder(2)
+          .kind("hero")
+          .at((9.0, 0.0))
+          .faction(1)
+          .hp(100)
+          .build())
     
     state = replace(state, entities={1: m1, 2: h1})
     

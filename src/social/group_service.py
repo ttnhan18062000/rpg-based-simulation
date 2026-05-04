@@ -24,7 +24,7 @@ class GroupService:
             if not entity:
                 continue
                 
-            ex, ey = entity.position
+            ex, ey = entity.navigation.position
             dist_sq = (ex - anchor_x)**2 + (ey - anchor_y)**2
             if dist_sq <= group.cohesion_radius**2:
                 inside_count += 1

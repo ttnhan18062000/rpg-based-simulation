@@ -19,9 +19,7 @@ def test_xp_accumulation_and_level_up():
     # 1. Setup Entity (Level 1, 0 XP)
     builder = V2EntityBuilder(1).kind("hero").role(EntityRole.HERO)
     from src.core.enums import Faction
-    hero = builder.build()
-    hero = replace(hero, readiness=100.0, identity=replace(hero.identity, faction=Faction.HERO_GUILD))
-    hero = replace(hero, readiness=100.0)
+    hero = builder.faction(Faction.HERO_GUILD).readiness(100.0).build()
     assert hero.identity.evolution_level == 1
     assert hero.identity.evolution_points == 0
     assert hero.identity.unspent_ap == 0
@@ -46,8 +44,10 @@ def test_level_99_cap_enforcement():
     # 1. Setup Level 99 Entity
     builder = V2EntityBuilder(1).kind("hero").role(EntityRole.HERO)
     from src.core.enums import Faction
-    hero = builder.build()
-    hero = replace(hero, readiness=100.0, identity=replace(hero.identity, faction=Faction.HERO_GUILD, learned_skills={"power_strike"}, evolution_level=99, evolution_points=0))
+    hero = (builder.faction(Faction.HERO_GUILD)
+            .readiness(100.0)
+            .evolution(level=99, points=0)
+            .build())
     
     # 2. Add massive XP
     update = EntityUpdate(entity_id=1, reward=RewardUpdate(xp_gain=1000))
@@ -70,8 +70,10 @@ def test_xp_granted_even_if_inventory_full():
     # 16 slots total
     items = ["iron_ore"] * 16
     from src.core.enums import Faction
-    hero = builder.with_inventory(items=items).build()
-    hero = replace(hero, readiness=100.0, identity=replace(hero.identity, faction=Faction.HERO_GUILD))
+    hero = (builder.with_inventory(items=items)
+            .faction(Faction.HERO_GUILD)
+            .readiness(100.0)
+            .build())
     assert len(hero.inventory.items) == 16
     
     # 2. Setup Monster
@@ -86,7 +88,9 @@ def test_xp_granted_even_if_inventory_full():
     # Actually, let's just use the real execute_action.
     
     # We need to make sure the hero is strong enough to kill in one hit for the test
-    hero = replace(hero, combat=replace(hero.combat, atk=999))
+    hero = (V2EntityBuilder(1, hero)
+            .atk(999)
+            .build())
     state = AuthoritativeState(tick=0, seed=42, entities={1: hero, 2: monster})
     
     results = SimulationDomainLogic.execute_action(
@@ -117,8 +121,7 @@ def test_xp_granted_even_if_inventory_full():
 def test_equipment_stat_injection_move_cost():
     # 1. Setup Naked Hero (Agility 5, Move Cost should be 10 - 5*0.1 = 9.5)
     builder = V2EntityBuilder(1).kind("hero").with_attributes(agility=5)
-    hero = builder.build()
-    hero = replace(hero, readiness=100.0)
+    hero = builder.readiness(100.0).build()
     
     # Check initial move_cost
     # V2EntityBuilder doesn't use the new move_cost yet because it's hardcoded in build()
@@ -142,8 +145,10 @@ def test_skill_cooldown_gating():
     # 1. Setup Hero with 'power_strike'
     builder = V2EntityBuilder(1).kind("hero").role(EntityRole.HERO)
     from src.core.enums import Faction
-    hero = builder.build()
-    hero = replace(hero, readiness=100.0, identity=replace(hero.identity, faction=Faction.HERO_GUILD, learned_skills={"power_strike"}))
+    hero = (builder.faction(Faction.HERO_GUILD)
+            .readiness(100.0)
+            .skills({"power_strike"})
+            .build())
     
     # 2. Target Monster
     monster = V2EntityBuilder(2).monster("goblin").at((1,0)).build()
@@ -162,7 +167,9 @@ def test_skill_cooldown_gating():
     
     # 4. Try again immediately (should be rejected/ready_delta -10.0)
     # First apply the cooldown
-    hero = replace(hero, identity=replace(hero.identity, cooldowns={"power_strike": 13}))
+    hero = (V2EntityBuilder(1, hero)
+            .cooldowns({"power_strike": 13})
+            .build())
     state = AuthoritativeState(tick=10, seed=42, entities={1: hero, 2: monster})
     
     results_fail = SimulationDomainLogic.execute_action(

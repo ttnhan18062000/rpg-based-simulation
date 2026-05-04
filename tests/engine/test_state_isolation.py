@@ -79,12 +79,12 @@ def test_deep_freeze_efficacy():
     Verify that deep_freeze actually prevents mutation.
     """
     from src.core.immutability import deep_freeze
-    from types import MappingProxyType
+    from src.core.state import ReadOnlyDict
     
     d = {"a": [1, 2, 3], "b": {"c": 4}}
     frozen = deep_freeze(d)
     
-    assert isinstance(frozen, MappingProxyType)
+    assert isinstance(frozen, ReadOnlyDict)
     assert isinstance(frozen["a"], tuple)
     
     with pytest.raises(TypeError):

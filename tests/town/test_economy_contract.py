@@ -1,7 +1,8 @@
 import pytest
 from src.core.state import (
-    EntityState, AuthoritativeState, InventoryComponent, ItemStack, BuildingState
+    AuthoritativeState, ItemStack, BuildingState
 )
+from src.core.builder import V2EntityBuilder
 from src.core.updates import StateUpdate
 from src.town.shop import ShopAction
 from src.town.blacksmith import BlacksmithAction
@@ -11,8 +12,11 @@ from src.engine.pipeline import AuthoritativeApplyPipeline
 @pytest.mark.v2_contract
 def test_shop_buy_and_sell():
     # 1. Setup: Entity with 100 gold
-    inventory = InventoryComponent(gold=100, items=[])
-    entity = EntityState(id=1, kind="hero", position=(0,0), inventory=inventory)
+    entity = (V2EntityBuilder(1)
+        .kind("hero")
+        .at((0, 0))
+        .gold(100)
+        .build())
     shop = BuildingState(id=10, kind="shop", position=(0,0), functional=True)
     state = AuthoritativeState(tick=1, seed=42, entities={1: entity}, buildings={10: shop})
     
@@ -50,11 +54,13 @@ def test_shop_buy_and_sell():
 @pytest.mark.v2_contract
 def test_blacksmith_crafting():
     # 1. Setup: Entity with 5 iron ore and 100 gold
-    inventory = InventoryComponent(
-        gold=100, 
-        items=[ItemStack("iron_ore", 5), ItemStack("wood", 2)]
-    )
-    entity = EntityState(id=1, kind="hero", position=(0,0), inventory=inventory)
+    entity = (V2EntityBuilder(1)
+        .kind("hero")
+        .at((0, 0))
+        .gold(100)
+        .item("iron_ore", 5)
+        .item("wood", 2)
+        .build())
     blacksmith = BuildingState(id=11, kind="blacksmith", position=(0,0), functional=True)
     state = AuthoritativeState(tick=1, seed=42, entities={1: entity}, buildings={11: blacksmith})
     

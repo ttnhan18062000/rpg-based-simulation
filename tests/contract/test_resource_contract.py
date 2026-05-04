@@ -1,19 +1,22 @@
 import pytest
 from typing import Dict, Any
 
-from src.core.state import AuthoritativeState, EntityState, ResourceNodeState, InteractionComponent, InventoryComponent, ItemStack
-from src.core.updates import StateUpdate, EntityUpdate, InteractionUpdate, InventoryUpdate
-from src.engine.interaction import InteractionSystem
+from src.core.state import AuthoritativeState, ResourceNodeState, InteractionComponent, InventoryComponent, ItemStack
+from src.core.updates import StateUpdate, EntityUpdate, InteractionUpdate
 from src.engine.pipeline import AuthoritativeApplyPipeline
+from src.core.builder import V2EntityBuilder
 
 def test_law_of_capacity_enforcement():
     """Law of Capacity: Progress reset if slots are full."""
     # Entity with full inventory
-    actor = EntityState(
-        id=1, kind="hero", position=(1.0, 1.0),
-        interaction=InteractionComponent(target_node_id=500, progress=1),
-        inventory=InventoryComponent(max_slots=1, items=[ItemStack("stone", 1)])
-    )
+    actor = (V2EntityBuilder(1)
+        .kind("hero")
+        .at((1.0, 1.0))
+        .with_interaction(target_id=500, progress=1.0)
+        .with_inventory_component(InventoryComponent(max_slots=1, items=[ItemStack("stone", 1)]))
+        .readiness(100.0)
+        .build())
+    
     node = ResourceNodeState(
         id=500, kind="WOOD", position=(1.0, 1.0), yields_item="wood",
         remaining_charges=5, max_charges=5, required_ticks=2
@@ -36,11 +39,14 @@ def test_law_of_capacity_enforcement():
 def test_law_of_weight_enforcement():
     """Law of Weight: Progress reset if weight is exceeded."""
     # Entity with near-limit weight
-    actor = EntityState(
-        id=1, kind="hero", position=(1.0, 1.0),
-        interaction=InteractionComponent(target_node_id=500, progress=1),
-        inventory=InventoryComponent(max_weight=1.5, items=[ItemStack("wood", 1)]) # WOOD weight is 1.0
-    )
+    actor = (V2EntityBuilder(1)
+        .kind("hero")
+        .at((1.0, 1.0))
+        .with_interaction(target_id=500, progress=1.0)
+        .with_inventory_component(InventoryComponent(max_weight=1.5, items=[ItemStack("wood", 1)])) # WOOD weight is 1.0
+        .readiness(100.0)
+        .build())
+        
     node = ResourceNodeState(
         id=500, kind="WOOD", position=(1.0, 1.0), yields_item="wood",
         remaining_charges=5, max_charges=5, required_ticks=2
@@ -62,10 +68,13 @@ def test_law_of_weight_enforcement():
 
 def test_law_of_proximity_reset_on_move():
     """Law of Proximity: Progress reset if entity moves."""
-    actor = EntityState(
-        id=1, kind="hero", position=(1.0, 1.0),
-        interaction=InteractionComponent(target_node_id=500, progress=1)
-    )
+    actor = (V2EntityBuilder(1)
+        .kind("hero")
+        .at((1.0, 1.0))
+        .with_interaction(target_id=500, progress=1.0)
+        .readiness(100.0)
+        .build())
+        
     node = ResourceNodeState(
         id=500, kind="WOOD", position=(1.0, 1.0), yields_item="wood",
         remaining_charges=5, max_charges=5, required_ticks=2
@@ -86,10 +95,13 @@ def test_law_of_proximity_reset_on_move():
 
 def test_law_of_availability_node_depleted():
     """Law of Availability: Progress reset if node is depleted."""
-    actor = EntityState(
-        id=1, kind="hero", position=(1.0, 1.0),
-        interaction=InteractionComponent(target_node_id=500, progress=1)
-    )
+    actor = (V2EntityBuilder(1)
+        .kind("hero")
+        .at((1.0, 1.0))
+        .with_interaction(target_id=500, progress=1.0)
+        .readiness(100.0)
+        .build())
+        
     # Node with 0 charges
     node = ResourceNodeState(
         id=500, kind="WOOD", position=(1.0, 1.0), yields_item="wood",

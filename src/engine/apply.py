@@ -59,7 +59,7 @@ class ApplyPath:
             
             # Phase 9: Regional Hazard Drain
             from src.engine.legality import LegalityServiceV2
-            region = LegalityServiceV2.get_region_for_position(entity.position, prior_state)
+            region = LegalityServiceV2.get_region_for_position(entity.navigation.position, prior_state)
             hazard_damage = 0
             if region and region.hazard_level > 0:
                 hazard_damage = int(region.hazard_level * 10 * (1.0 + region.calamity_intensity))
@@ -84,7 +84,7 @@ class ApplyPath:
 
             # Milestone 5 Law: Passive Advancement (Readiness gain)
             # Global recovery (+10.0) is now provided by the AuthoritativeApplyPipeline.
-            readiness_after_upd = entity.readiness
+            readiness_after_upd = entity.combat.readiness
             ent_upd = update.entity_updates.get(e_id)
             if ent_upd:
                 readiness_after_upd += ent_upd.readiness_delta
@@ -144,7 +144,7 @@ class ApplyPath:
                     current_corpses[corpse_id] = CorpseState(
                         id=corpse_id,
                         original_entity_id=e_id,
-                        position=final_entity.position,
+                        position=final_entity.navigation.position,
                         items=list(final_entity.inventory.items), # V2: Drops all loot
                         decay_tick=prior_state.tick + 100, # Milestone 5 baseline
                         generation=final_entity.lifecycle.generation
@@ -355,9 +355,9 @@ class ApplyPath:
         Apply updates to a single entity, producing a new EntityState instance.
         """
         from src.progression.leveling import LevelingService
-        new_properties = entity.properties
+        new_properties = entity.identity.properties
         if update.property_updates:
-            new_properties = dict(entity.properties)
+            new_properties = dict(entity.identity.properties)
             new_properties.update(update.property_updates)
 
         new_interaction = entity.interaction
@@ -583,8 +583,8 @@ class ApplyPath:
             )
 
         # Wound/Scar Update (Checklist Part 6 Section E)
-        new_wounds = list(entity.wounds)
-        new_scars = list(entity.scars)
+        new_wounds = list(entity.combat.wounds)
+        new_scars = list(entity.combat.scars)
         if update.wound_update:
             new_wounds.extend(update.wound_update.wounds_add)
             new_scars.extend(update.wound_update.scars_add)
@@ -681,7 +681,7 @@ class ApplyPath:
             kind=update.kind_set if update.kind_set is not None else entity.kind,
             interaction=new_interaction,
             identity=replace(new_identity, 
-                group_id=update.group_id_set if update.group_id_set is not None and update.group_id_set != -1 else (None if update.group_id_set == -1 else entity.group_id),
+                group_id=update.group_id_set if update.group_id_set is not None and update.group_id_set != -1 else (None if update.group_id_set == -1 else entity.identity.group_id),
                 properties=new_properties,
                 latest_intent_results=update.intent_results
             ),
@@ -690,7 +690,7 @@ class ApplyPath:
             social=new_social,
             biological=new_biological,
             lifecycle=replace(new_lifecycle,
-                active=update.active if update.active is not None else entity.active
+                active=update.active if update.active is not None else entity.lifecycle.active
             ),
             attributes=new_attributes,
             combat=replace(new_combat,

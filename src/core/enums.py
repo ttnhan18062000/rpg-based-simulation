@@ -58,10 +58,14 @@ class ReasonCode(str, Enum):
     Logic ID: 83
     Stable identifiers for simulation decision drivers.
     """
+    # General
+    LEGAL = "LEGAL"
+    
     # Movement
     ADVANCING = "advancing"
     OCCUPANCY_VIOLATION = "occupancy_violation"
     PATH_NOT_FOUND = "path_not_found"
+    BUILDING_OBSTRUCTION = "BUILDING_OBSTRUCTION"
     YIELDING = "yielding"
     SIDESTEPPING = "sidestepping"
     WAITING = "waiting"

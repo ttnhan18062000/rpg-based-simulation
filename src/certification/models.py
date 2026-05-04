@@ -125,14 +125,11 @@ class CertificationResult:
     
     def to_json(self) -> str:
         def custom_serializer(obj):
-            if isinstance(obj, set):
-                return sorted(list(obj))
             if isinstance(obj, Enum):
                 return obj.value
-            if hasattr(obj, "__dict__"):
-                return asdict(obj)
-            if hasattr(obj, "to_dict"):
-                return obj.to_dict()
+            if isinstance(obj, (set, frozenset)):
+                return sorted(list(obj))
+            # Fallback for complex objects not handled by asdict
             return str(obj)
 
-        return json.dumps(asdict(self, dict_factory=lambda x: {k: custom_serializer(v) for k, v in x}), indent=2)
+        return json.dumps(asdict(self), default=custom_serializer, indent=2)

@@ -1,21 +1,18 @@
 import pytest
-from src.core.state import AuthoritativeState, EntityState, IdentityComponent, CombatComponent, BiologicalComponent, LifecycleComponent
+from src.core.state import AuthoritativeState
 from src.engine.combat import CombatResolutionSystem
+from src.core.builder import V2EntityBuilder
+from src.core.enums import EntityRole, Faction
 
-from src.core.enums import EntityRole
-
-def create_mock_entity(eid, faction=1, atk=10, dfn=5, hp=100, role=EntityRole.HERO):
-    return EntityState(
-        id=eid,
-        kind="hero",
-        position=(0, 0),
-        readiness=100.0,
-        active=True,
-        identity=IdentityComponent(faction=faction, role=role),
-        combat=CombatComponent(hp=hp, max_hp=hp, atk=atk, def_stat=dfn, range=1, alive=True),
-        biological=BiologicalComponent(),
-        lifecycle=LifecycleComponent()
-    )
+def create_mock_entity(eid, faction=Faction.HERO_GUILD, atk=10, dfn=5, hp=100, role=EntityRole.HERO):
+    return (V2EntityBuilder(eid)
+        .kind("hero")
+        .position(0.0, 0.0)
+        .readiness(100.0)
+        .with_identity(role=role, faction=faction)
+        .with_attributes(strength=0, vitality=0)
+        .with_combat(hp=hp, max_hp=hp, atk=atk, def_stat=dfn)
+        .build())
 
 def test_combat_damage_calculation():
     # Formula: damage = atk * (atk / (atk + def * 2.0 + 1.0))

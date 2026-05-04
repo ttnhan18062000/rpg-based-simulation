@@ -1,13 +1,15 @@
 import pytest
-from src.core.state import AuthoritativeState, EntityState, InventoryComponent, ItemStack
+from src.core.state import AuthoritativeState, InventoryComponent, ItemStack
+from src.core.builder import V2EntityBuilder
 from src.town.home_storage import HomeStorageService
 
 def test_transfer_to_home():
     # Setup entity with item
-    entity = EntityState(
-        id=1, kind="HERO", position=(0, 0), # At town center
-        inventory=InventoryComponent(items=[ItemStack("iron_ore", 5)])
-    )
+    entity = (V2EntityBuilder(1)
+        .kind("HERO")
+        .at((0, 0)) # At town center
+        .item("iron_ore", 5)
+        .build())
     
     state = AuthoritativeState(
         tick=100, seed=42,
@@ -30,10 +32,10 @@ def test_transfer_to_home():
 def test_transfer_from_home():
     # Setup home storage with item
     home_inv = InventoryComponent(items=[ItemStack("wood", 10)])
-    entity = EntityState(
-        id=1, kind="HERO", position=(0, 0),
-        inventory=InventoryComponent(items=[])
-    )
+    entity = (V2EntityBuilder(1)
+        .kind("HERO")
+        .at((0, 0))
+        .build())
     
     state = AuthoritativeState(
         tick=100, seed=42,

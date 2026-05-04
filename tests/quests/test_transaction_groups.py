@@ -14,7 +14,13 @@ def base_entity():
     return V2EntityBuilder(entity_id=1).role(EntityRole.HERO).build()
 
 def test_atomic_group_success(base_entity):
-    state = AuthoritativeState(tick=0, seed=123, entities={base_entity.id: base_entity})
+    from src.core.state import BuildingState, InventoryComponent, ItemStack
+    shop = BuildingState(
+        id="shop", kind="SHOP", functional=True,
+        position=(0,0),
+        inventory=InventoryComponent(items=[ItemStack(item_id="herb", quantity=10)])
+    )
+    state = AuthoritativeState(tick=0, seed=123, entities={base_entity.id: base_entity}, buildings={"shop": shop})
     
     intent_a = ResourceTransferIntent(
         source_id="shop", source_kind="SHOP_BUY", 
@@ -41,7 +47,12 @@ def test_atomic_group_rollback_on_inventory_full(base_entity):
     # Fill inventory (max_slots is 16)
     items = [ItemStack(item_id="iron_ore", quantity=1) for _ in range(16)]
     full_entity = replace(base_entity, inventory=replace(base_entity.inventory, items=items))
-    state = AuthoritativeState(tick=0, seed=123, entities={full_entity.id: full_entity})
+    from src.core.state import ResourceNodeState
+    node = ResourceNodeState(
+        id="loot", kind="LOOT", position=(0,0), 
+        yields_item="iron_sword", remaining_charges=1, max_charges=1, required_ticks=1
+    )
+    state = AuthoritativeState(tick=0, seed=123, entities={full_entity.id: full_entity}, resource_nodes={"loot": node})
     
     # Intent A succeeds (Gold), Intent B fails (Items)
     intent_a = ResourceTransferIntent(

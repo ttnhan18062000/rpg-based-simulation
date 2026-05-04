@@ -49,7 +49,7 @@ class ShopService:
                 entity.id: EntityUpdate(
                     entity_id=entity.id,
                     resource_transfers=[ResourceTransferIntent(
-                        source_id=item_id,
+                        source_id=shop.id,
                         source_kind="SHOP_BUY",
                         items_add=[ItemStack(item_id, quantity)],
                         gold_cost=total_cost,
@@ -95,7 +95,7 @@ class ShopService:
                 entity.id: EntityUpdate(
                     entity_id=entity.id,
                     resource_transfers=[ResourceTransferIntent(
-                        source_id=item_id,
+                        source_id=shop.id,
                         source_kind="SHOP_SELL",
                         items_remove=[ItemStack(item_id, quantity)],
                         gold_delta=total_gain,

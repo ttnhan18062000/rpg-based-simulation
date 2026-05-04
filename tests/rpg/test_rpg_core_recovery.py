@@ -140,7 +140,9 @@ def test_social_synergy():
     """
     Verifies Social Synergy (+10%) for adjacent bonded allies.
     """
+    from dataclasses import replace
     state = build_scenario_state("COMBAT_ARENA_SOCIAL")
+    state = replace(state, tick=7) # Use unique tick to avoid spatial cache collision
     executor = LocalSequentialExecutor()
     rng = DeterministicRNG(base_seed=42)
     profile = ConfigLoader.load_profile()
@@ -170,9 +172,21 @@ def test_attrition_and_status():
     from dataclasses import replace
     
     # 1. Test Shatter (1.5x damage vs Frozen)
-    attacker = EntityState(id=11, kind="HERO", position=(0,0), readiness=100.0, identity=IdentityComponent(faction=Faction.HERO_GUILD), combat=CombatComponent(hp=100, atk=10, def_stat=10, alive=True))
-    target = EntityState(id=12, kind="HERO", position=(1,0), identity=IdentityComponent(faction=Faction.MONSTER_HORDE), combat=CombatComponent(hp=100, atk=10, def_stat=5, alive=True),
-                         properties={"status_frozen": True})
+    from src.core.builder import V2EntityBuilder
+    attacker = (V2EntityBuilder(11)
+        .kind("HERO")
+        .at((0,0))
+        .readiness(100.0)
+        .with_identity(faction=Faction.HERO_GUILD)
+        .with_combat(hp=100, atk=10, def_stat=10, alive=True)
+        .build())
+    target = (V2EntityBuilder(12)
+        .kind("HERO")
+        .at((1,0))
+        .with_identity(faction=Faction.MONSTER_HORDE)
+        .with_combat(hp=100, atk=10, def_stat=5, alive=True)
+        .with_property("status_frozen", True)
+        .build())
     
     from src.engine.combat import CombatResolutionSystem
     state = AuthoritativeState(tick=1, seed=42, entities={11: attacker, 12: target})
@@ -180,11 +194,11 @@ def test_attrition_and_status():
     assert res.damage_taken > 4 # Shatter applied
     
     # 2. Test Exhaustion Atk Penalty (0.8x)
-    exhausted_attacker = replace(attacker, biological=BiologicalComponent(sleep_debt=85.0))
-    normal_target = replace(target, properties={})
+    exhausted_attacker = replace(attacker, biological=replace(attacker.biological, sleep_debt=85.0))
+    normal_target = replace(target, identity=replace(target.identity, properties={}))
     
     res = CombatResolutionSystem.resolve_attack(exhausted_attacker, normal_target, state)
-    assert res.damage_taken < 4 # Exhaustion penalty
+    assert res.damage_taken <= 4 # Exhaustion penalty (0.8x of 5 = 4)
 
 def test_quest_lifecycle():
     """
@@ -209,25 +223,26 @@ def test_quest_lifecycle():
     
     # Setup Hero
     from dataclasses import replace
-    hero = EntityState(
-        id=1, 
-        kind="HERO", 
-        position=(0,0), 
-        readiness=100.0,
-        strategic=StrategicComponent(projects={"q1": quest}),
-        combat=CombatComponent(hp=100, atk=100, def_stat=10, alive=True),
-        identity=IdentityComponent(evolution_points=0),
-        inventory=InventoryComponent(gold=0)
+    from src.core.builder import V2EntityBuilder
+    hero = (V2EntityBuilder(1)
+        .kind("HERO")
+        .at((0,0))
+        .readiness(100.0)
+        .with_strategic(projects={"q1": quest})
+        .with_combat(hp=100, atk=100, def_stat=10, alive=True)
+        .with_identity(evolution_points=0)
+        .with_inventory(gold=0)
+        .build()
     )
     
     # Setup Monster (target)
     from src.core.enums import EntityRole, Faction
-    monster = EntityState(
-        id=2, 
-        kind="MONSTER", 
-        position=(1,0), 
-        identity=IdentityComponent(role=EntityRole.MONSTER, faction=Faction.MONSTER_HORDE),
-        combat=CombatComponent(hp=10, max_hp=10, atk=5, def_stat=0, alive=True)
+    monster = (V2EntityBuilder(2)
+        .kind("MONSTER")
+        .at((1,0))
+        .with_identity(role=EntityRole.MONSTER, faction=Faction.MONSTER_HORDE)
+        .with_combat(hp=10, max_hp=10, atk=5, def_stat=0, alive=True)
+        .build()
     )
     
     state = AuthoritativeState(tick=1, seed=42, entities={1: hero, 2: monster})

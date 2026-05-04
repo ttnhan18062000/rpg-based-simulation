@@ -1,14 +1,18 @@
 import pytest
-from src.core.state import AuthoritativeState, EntityState, ResourceNodeState
+from src.core.state import AuthoritativeState, ResourceNodeState
+from src.core.builder import V2EntityBuilder
 from src.town.guild import GuildAction
-from src.core.strategic import StrategicComponent
 from src.engine.apply import ApplyPath
 
 @pytest.mark.v2_contract
 def test_guild_visit_leads():
     # 1. Setup: World with iron node
     node = ResourceNodeState(id=1, kind="iron", position=(50, 50), yields_item="iron_ore", remaining_charges=10, max_charges=10, required_ticks=10)
-    entity = EntityState(id=99, kind="hero", position=(0, 0), strategic=StrategicComponent())
+    entity = (V2EntityBuilder(99)
+        .kind("hero")
+        .at((0, 0))
+        .with_strategic()
+        .build())
     state = AuthoritativeState(tick=1, seed=42, entities={99: entity}, resource_nodes={1: node})
     
     # 2. Guild Visit
@@ -26,7 +30,11 @@ def test_guild_visit_leads():
 @pytest.mark.v2_contract
 def test_guild_visit_quests():
     # 1. Setup
-    entity = EntityState(id=99, kind="hero", position=(0, 0), strategic=StrategicComponent())
+    entity = (V2EntityBuilder(99)
+        .kind("hero")
+        .at((0, 0))
+        .with_strategic()
+        .build())
     state = AuthoritativeState(tick=1, seed=42, entities={99: entity})
     
     # 2. Guild Visit
@@ -44,7 +52,11 @@ def test_guild_visit_quests():
 def test_guild_visit_determinism():
     # 1. Setup: Same state, same entity
     node = ResourceNodeState(id=1, kind="iron", position=(50, 50), yields_item="iron_ore", remaining_charges=10, max_charges=10, required_ticks=10)
-    entity = EntityState(id=99, kind="hero", position=(0, 0), strategic=StrategicComponent())
+    entity = (V2EntityBuilder(99)
+        .kind("hero")
+        .at((0, 0))
+        .with_strategic()
+        .build())
     state = AuthoritativeState(tick=1, seed=42, entities={99: entity}, resource_nodes={1: node})
     
     # 2. Multiple visits in same tick/seed should be identical

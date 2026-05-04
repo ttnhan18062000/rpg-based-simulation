@@ -1,5 +1,6 @@
 import pytest
-from src.core.state import AuthoritativeState, EntityState, BuildingState, RegionState, CombatComponent
+from src.core.state import AuthoritativeState, BuildingState, RegionState, CombatComponent
+from src.core.builder import V2EntityBuilder
 from src.town.sabotage import SabotageAction
 from src.engine.apply import ApplyPath
 
@@ -7,8 +8,12 @@ from src.engine.apply import ApplyPath
 def test_building_sabotage_damage():
     # 1. Setup: Building at (10, 10), entity at (11, 11)
     building = BuildingState(id=1, kind="SHOP", position=(10, 10), hp=100)
-    combat = CombatComponent(atk=20)
-    entity = EntityState(id=99, kind="raider", position=(11, 11), combat=combat)
+    entity = (V2EntityBuilder(99)
+        .kind("raider")
+        .at((11, 11))
+        .with_attributes(strength=0)
+        .with_combat(atk=20)
+        .build())
     state = AuthoritativeState(tick=1, seed=42, entities={99: entity}, buildings={1: building})
     
     # 2. Sabotage
@@ -27,8 +32,12 @@ def test_building_destruction_and_trauma():
     # 1. Setup: Building with 10 HP, entity with 20 ATK in region "town"
     building = BuildingState(id=1, kind="INN", position=(10, 10), hp=10)
     region = RegionState(id="town", name="Town", bounds=(0, 0, 100, 100), trauma_score=0.0)
-    combat = CombatComponent(atk=20)
-    entity = EntityState(id=99, kind="raider", position=(10, 10), combat=combat)
+    entity = (V2EntityBuilder(99)
+        .kind("raider")
+        .at((10, 10))
+        .with_attributes(strength=0)
+        .with_combat(atk=20)
+        .build())
     state = AuthoritativeState(tick=1, seed=42, entities={99: entity}, buildings={1: building}, regions={"town": region})
     
     # 2. Destroy Building
@@ -46,7 +55,12 @@ def test_building_destruction_and_trauma():
 def test_sabotage_proximity_validation():
     # 1. Setup: Entity far away (50, 50)
     building = BuildingState(id=1, kind="SHOP", position=(0, 0), hp=100)
-    entity = EntityState(id=99, kind="raider", position=(50, 50), combat=CombatComponent())
+    entity = (V2EntityBuilder(99)
+        .kind("raider")
+        .at((50, 50))
+        .with_attributes(strength=0)
+        .with_combat(atk=0)
+        .build())
     state = AuthoritativeState(tick=1, seed=42, entities={99: entity}, buildings={1: building})
     
     # 2. Sabotage should fail

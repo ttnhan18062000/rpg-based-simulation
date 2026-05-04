@@ -1,31 +1,21 @@
 import pytest
 from dataclasses import replace
-from src.core.state import (
-    AuthoritativeState, EntityState, IdentityComponent, 
-    CombatComponent, InventoryComponent, StrategicComponent, 
-    BiologicalComponent, SocialComponent, NavigationComponent,
-    LifecycleComponent, EntityRole
-)
+from src.core.state import AuthoritativeState, EntityRole, BiologicalComponent
+from src.core.enums import ReasonCode
+from src.core.builder import V2EntityBuilder
 from src.engine.combat import CombatResolutionSystem
 from src.engine.domain_logic import SimulationDomainLogic
 
 def create_mock_entity(e_id, pos, faction=1, role=EntityRole.MONSTER):
-    return EntityState(
-        id=e_id,
-        kind="actor",
-        position=pos,
-        readiness=100.0,
-        identity=IdentityComponent(role=role, faction=faction),
-        combat=CombatComponent(hp=100, max_hp=100, atk=10, def_stat=5, range=1, alive=True),
-        inventory=InventoryComponent(),
-        strategic=StrategicComponent(),
-        biological=BiologicalComponent(),
-        social=SocialComponent(),
-        navigation=NavigationComponent(),
-        lifecycle=LifecycleComponent(),
-        properties={},
-        active=True
-    )
+    return (V2EntityBuilder(e_id)
+            .kind("actor")
+            .at(pos)
+            .faction(faction)
+            .role(role)
+            .hp(100)
+            .with_base_stats(atk=10, def_stat=5, range=1)
+            .readiness(100.0)
+            .build())
 
 def test_friendly_fire_legality():
     """Verify that attacking an ally is illegal."""
@@ -39,7 +29,7 @@ def test_friendly_fire_legality():
     update = updates[hero1.id]
     
     assert update.combat is None
-    assert update.navigation.failure_reason == "FRIENDLY_FIRE_ILLEGAL"
+    assert update.navigation.failure_reason == ReasonCode.FRIENDLY_FIRE_ILLEGAL
 
 def test_range_legality():
     """Verify that attacking out of range is illegal."""
@@ -53,14 +43,14 @@ def test_range_legality():
     update = updates[hero.id]
     
     assert update.combat is None
-    assert update.navigation.failure_reason == "OUT_OF_RANGE"
+    assert update.navigation.failure_reason == ReasonCode.OUT_OF_RANGE
 
 def test_shatter_logic():
     """Verify SHATTER damage bonus (1.5x) against frozen targets."""
     attacker = create_mock_entity(1, (1.0, 1.0))
     defender = create_mock_entity(2, (2.0, 1.0), faction=2)
     # Freeze the defender
-    defender = replace(defender, properties={"status_frozen": True})
+    defender = replace(defender, identity=replace(defender.identity, properties={"status_frozen": True}))
     
     state = AuthoritativeState(tick=1, seed=42, entities={1: attacker, 2: defender})
     
@@ -74,8 +64,11 @@ def test_shatter_logic():
 
 def test_exhaustion_debuff():
     """Verify EXHAUSTION damage reduction (0.8x) when sleep debt is high."""
-    attacker = create_mock_entity(1, (1.0, 1.0))
-    attacker = replace(attacker, biological=BiologicalComponent(sleep_debt=90.0))
+    attacker = (V2EntityBuilder(1)
+                .kind("actor")
+                .at((1.0, 1.0))
+                .sleep_debt(90.0)
+                .build())
     defender = create_mock_entity(2, (2.0, 1.0), faction=2)
     
     state = AuthoritativeState(tick=1, seed=42, entities={1: attacker, 2: defender})
@@ -101,7 +94,7 @@ def test_combat_trace_modifiers():
 def test_readiness_legality():
     """Verify that an entity with < 100 readiness cannot attack."""
     hero = create_mock_entity(1, (1.0, 1.0), role=EntityRole.HERO)
-    hero = replace(hero, readiness=50.0)
+    hero = replace(hero, combat=replace(hero.combat, readiness=50.0))
     monster = create_mock_entity(2, (2.0, 1.0), role=EntityRole.MONSTER, faction=2)
     
     state = AuthoritativeState(tick=1, seed=42, entities={1: hero, 2: monster})
@@ -111,7 +104,7 @@ def test_readiness_legality():
     update = updates[hero.id]
     
     assert update.combat is None
-    assert update.navigation.failure_reason == "INSUFFICIENT_READINESS"
+    assert update.navigation.failure_reason == ReasonCode.INSUFFICIENT_READINESS
 
 def test_los_legality():
     """Verify that attacking through a wall is illegal."""
@@ -128,4 +121,4 @@ def test_los_legality():
     update = updates[hero.id]
     
     assert update.combat is None
-    assert update.navigation.failure_reason == "LOS_OBSTRUCTED"
+    assert update.navigation.failure_reason == ReasonCode.LOS_OBSTRUCTED

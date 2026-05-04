@@ -43,7 +43,7 @@ def test_negative_case_stunned_actor_rejection():
     refined = AuthoritativeApplyPipeline.refine(state, update)
     # Should be rejected in NavigationUpdate
     assert refined.entity_updates[1].new_position is None
-    assert refined.entity_updates[1].navigation.failure_reason == ReasonCode.TARGET_LOCKED
+    assert refined.entity_updates[1].navigation.failure_reason == ReasonCode.ATTACKER_STATUS_BLOCKED
 
 def test_negative_case_depleted_node():
     # RPG-1690: negative_case_depleted_node

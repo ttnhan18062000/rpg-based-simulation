@@ -1,8 +1,22 @@
 import pytest
-from src.core.state import EntityState, RegionState, AuthoritativeState, CombatComponent
+from src.core.state import (
+    EntityState, RegionState, AuthoritativeState, CombatComponent,
+    NavigationComponent, LifecycleComponent, IdentityComponent,
+    BiologicalComponent, StrategicComponent, SocialComponent
+)
 from src.core.updates import StateUpdate, EntityUpdate, TaskUpdate
 from src.engine.apply import ApplyPath
 from src.engine.pipeline import AuthoritativeApplyPipeline
+
+def make_hero(eid: int, pos=(5.0, 5.0), hp=100):
+    from src.core.builder import V2EntityBuilder
+    return (V2EntityBuilder(eid)
+        .kind("HERO")
+        .position(pos[0], pos[1])
+        .hp(hp, 100)
+        .alive(True)
+        .readiness(100.0)
+        .build())
 
 def test_regional_hazard_drain():
     """Verify that entities in high hazard regions take passive HP damage."""
@@ -10,8 +24,7 @@ def test_regional_hazard_drain():
     region = RegionState(id="volcano", name="Volcano", bounds=(0, 0, 10, 10), hazard_level=0.5)
     
     # Entity at (5,5) with 100 HP
-    hero = EntityState(id=1, kind="HERO", position=(5.0, 5.0), 
-                       combat=CombatComponent(hp=100))
+    hero = make_hero(1, pos=(5.0, 5.0), hp=100)
     
     state = AuthoritativeState(tick=100, seed=42, 
                                regions={"volcano": region},
@@ -29,7 +42,7 @@ def test_regional_suppression_blocks_sabotage():
     # Region with suppression
     region = RegionState(id="holy_city", name="Holy City", bounds=(0, 0, 10, 10), suppression_active=True)
     
-    hero = EntityState(id=1, kind="HERO", position=(5.0, 5.0), readiness=100.0)
+    hero = make_hero(1, pos=(5.0, 5.0))
     state = AuthoritativeState(tick=100, seed=42, 
                                regions={"holy_city": region},
                                entities={1: hero})
@@ -49,7 +62,7 @@ def test_regional_suppression_allows_attack():
     """Verify that ATTACK is NOT blocked (only strategic actions like SABOTAGE/RECRUIT)."""
     region = RegionState(id="holy_city", name="Holy City", bounds=(0, 0, 10, 10), suppression_active=True)
     
-    hero = EntityState(id=1, kind="HERO", position=(5.0, 5.0))
+    hero = make_hero(1, pos=(5.0, 5.0))
     state = AuthoritativeState(tick=100, seed=42, 
                                regions={"holy_city": region},
                                entities={1: hero})

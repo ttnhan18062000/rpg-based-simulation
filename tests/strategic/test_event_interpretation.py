@@ -18,12 +18,24 @@ from src.systems.event_interpreter import EventInterpreter
 
 def _make_entity(entity_id=1, profile=None, current_project=None):
     """Helper to build a minimal entity for testing."""
-    strategic = StrategicComponent(
-        profile=profile or CognitionProfile(),
-        current_project_id=current_project.id if current_project else None,
-        projects={current_project.id: current_project} if current_project else {}
-    )
-    return EntityState(id=entity_id, kind="hero", position=(5.0, 5.0), strategic=strategic)
+    from src.core.builder import V2EntityBuilder
+    projects = {current_project.id: current_project} if current_project else {}
+    current_id = current_project.id if current_project else None
+    
+    builder = (V2EntityBuilder(entity_id)
+        .kind("hero")
+        .at((5.0, 5.0))
+        .with_strategic(projects=projects))
+    
+    if current_id:
+        builder.current_project(current_id)
+        
+    if profile:
+        builder.with_strategic_profile(
+            resistance=profile.interruption_resistance
+        )
+        
+    return builder.build()
 
 
 class TestStrategicPivotOnDanger:
@@ -129,14 +141,16 @@ class TestDirectiveEvent:
 
     def test_repeated_events_strengthen_directive(self):
         """Salience accumulates on repeated events."""
+        from src.core.builder import V2EntityBuilder
         existing = DirectiveState(
             id="directive_avenge_bandit_001", kind="avenge",
             target="bandit_001", priority=DirectivePriority.NORMAL, salience=0.6
         )
-        strategic = StrategicComponent(
-            directives={"directive_avenge_bandit_001": existing}
-        )
-        entity = EntityState(id=1, kind="hero", position=(5.0, 5.0), strategic=strategic)
+        entity = (V2EntityBuilder(1)
+            .kind("hero")
+            .at((5.0, 5.0))
+            .with_strategic(directives={"directive_avenge_bandit_001": existing})
+            .build())
 
         result = EventInterpreter.interpret_directive_event(
             entity, event_kind="avenge", target="bandit_001", salience=0.7, current_tick=10

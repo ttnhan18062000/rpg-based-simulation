@@ -27,7 +27,7 @@ class ThreatService:
         # 2. No active raid (tracked by high retaliation pressure)
         
         # Check if any boss exists in this region
-        has_boss = any(e.kind == "world_boss" and e.active and e.combat.alive 
+        has_boss = any(e.kind == "world_boss" and e.lifecycle.active and e.combat.alive 
                        for e in state.entities.values())
         
         w_upd = WorldUpdate(region_id=region.id)

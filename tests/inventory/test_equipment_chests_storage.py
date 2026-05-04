@@ -11,8 +11,12 @@ from src.engine.pipeline import AuthoritativeApplyPipeline
 @pytest.mark.v2_contract
 def test_auto_equip_ranking():
     # 1. Setup: Entity with Wood Sword equipped, Iron Sword in inventory
-    inventory = InventoryComponent(items=[ItemStack("iron_sword", 1)])
-    entity = EntityState(id=1, kind="hero", position=(0,0), inventory=inventory)
+    from src.core.builder import V2EntityBuilder
+    entity = (V2EntityBuilder(1)
+        .kind("hero")
+        .at((0, 0))
+        .with_inventory(items=[ItemStack("iron_sword", 1)])
+        .build())
     
     # 2. Test Ranking
     iron_power = EquipmentService.rank_item("iron_sword")
@@ -28,8 +32,12 @@ def test_auto_equip_ranking():
 @pytest.mark.v2_contract
 def test_home_storage_atomicity():
     # 1. Setup: Entity with 1 iron_ore
-    inventory = InventoryComponent(items=[ItemStack("iron_ore", 1)])
-    entity = EntityState(id=1, kind="hero", position=(0,0), inventory=inventory)
+    from src.core.builder import V2EntityBuilder
+    entity = (V2EntityBuilder(1)
+        .kind("hero")
+        .at((0, 0))
+        .with_inventory(items=[ItemStack("iron_ore", 1)])
+        .build())
     state = AuthoritativeState(tick=1, seed=42, entities={1: entity}, home_storage={})
     
     # 2. Deposit

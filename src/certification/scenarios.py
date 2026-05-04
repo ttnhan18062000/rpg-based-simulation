@@ -17,12 +17,12 @@ class PressureInjector:
         
         for i in range(1, count + 1):
             eid = current_max_id + i
-            new_entities[eid] = EntityState(
-                id=eid,
-                kind="PRESSURE_TARGET",
-                position=(0.0, 0.0),
-                readiness=100.0
-            )
+            from src.core.builder import V2EntityBuilder
+            new_entities[eid] = (V2EntityBuilder(eid)
+                .kind("PRESSURE_TARGET")
+                .position(0.0, 0.0)
+                .readiness(100.0)
+                .build())
         
         # We must return a new state as it's frozen (well, AuthoritativeState is dataclass)
         # Re-using the dictionary but creating a new state object.
@@ -108,30 +108,37 @@ class ArenaInjector:
         
         from src.core.enums import Faction
         
+        from src.core.builder import V2EntityBuilder
         # 1. Hero (Attacker)
-        hero = EntityState(
-            id=1, kind="HERO", position=(5.0, 5.0), readiness=100.0,
-            identity=IdentityComponent(evolution_level=1, evolution_points=0, faction=Faction.HERO_GUILD),
-            combat=CombatComponent(hp=100, max_hp=100, atk=50, def_stat=10, alive=True),
-            lifecycle=LifecycleComponent(generation=1),
-            inventory=InventoryComponent(max_slots=10, gold=0)
-        )
+        hero = (V2EntityBuilder(1)
+            .kind("HERO")
+            .position(5.0, 5.0)
+            .with_identity(evolution_level=1, evolution_points=0, faction=Faction.HERO_GUILD)
+            .hp(100, 100)
+            .with_combat(atk=50, def_stat=10)
+            .with_lifecycle(generation=1)
+            .with_inventory(max_slots=10, gold=0)
+            .readiness(100.0)
+            .build())
         
         # 2. Monster (Victim)
-        monster = EntityState(
-            id=2, kind="MONSTER", position=(6.0, 5.0), readiness=0.0,
-            identity=IdentityComponent(evolution_level=1, evolution_points=0, faction=Faction.MONSTER_HORDE),
-            combat=CombatComponent(hp=10, max_hp=10, atk=5, def_stat=5, alive=True),
-            lifecycle=LifecycleComponent(generation=1),
-            inventory=InventoryComponent(max_slots=10, items=[ItemStack("MONSTER_TOOTH", 1)])
-        )
+        monster = (V2EntityBuilder(2)
+            .kind("MONSTER")
+            .position(6.0, 5.0)
+            .with_identity(evolution_level=1, evolution_points=0, faction=Faction.MONSTER_HORDE)
+            .hp(10, 10)
+            .with_combat(atk=5, def_stat=5)
+            .with_lifecycle(generation=1)
+            .with_inventory(max_slots=10, items=[ItemStack("MONSTER_TOOTH", 1)])
+            .readiness(100.0) # Always set readiness to 100 in V2 unless testing illegality
+            .build())
         
         new_entities = dict(state.entities)
         new_entities[1] = hero
         new_entities[2] = monster
         
         # Inject the attack intent into the hero
-        new_entities[1] = replace(hero, properties={"work_kind": "ENTITY_ACT", "payload": {"action": "ATTACK", "target_id": 2}})
+        new_entities[1] = replace(hero, identity=replace(hero.identity, properties={"work_kind": "ENTITY_ACT", "payload": {"action": "ATTACK", "target_id": 2}}))
         
         return replace(state, entities=new_entities)
 
@@ -142,27 +149,34 @@ class ArenaInjector:
         from src.core.enums import Faction
         from dataclasses import replace
         
+        from src.core.builder import V2EntityBuilder
         # 1. Boss (Attacker)
-        boss = EntityState(
-            id=3, kind="MONSTER", position=(10.0, 10.0), readiness=100.0,
-            identity=IdentityComponent(evolution_level=10, faction=Faction.MONSTER_HORDE),
-            combat=CombatComponent(hp=1000, max_hp=1000, atk=500, def_stat=100, alive=True)
-        )
+        boss = (V2EntityBuilder(3)
+            .kind("MONSTER")
+            .position(10.0, 10.0)
+            .with_identity(evolution_level=10, faction=Faction.MONSTER_HORDE)
+            .hp(1000, 1000)
+            .with_combat(atk=500, def_stat=100)
+            .readiness(100.0)
+            .build())
         
         # 2. Hero (Victim)
-        hero = EntityState(
-            id=4, kind="HERO", position=(11.0, 10.0), readiness=0.0,
-            identity=IdentityComponent(evolution_level=1, faction=Faction.HERO_GUILD),
-            combat=CombatComponent(hp=5, max_hp=5, atk=1, def_stat=1, alive=True),
-            lifecycle=LifecycleComponent(generation=3) # One away from permadeath
-        )
+        hero = (V2EntityBuilder(4)
+            .kind("HERO")
+            .position(11.0, 10.0)
+            .with_identity(evolution_level=1, faction=Faction.HERO_GUILD)
+            .hp(5, 5)
+            .with_combat(atk=1, def_stat=1)
+            .with_lifecycle(generation=3) # One away from permadeath
+            .readiness(100.0)
+            .build())
         
         new_entities = dict(state.entities)
         new_entities[3] = boss
         new_entities[4] = hero
         
         # Boss attacks hero
-        new_entities[3] = replace(boss, properties={"work_kind": "ENTITY_ACT", "payload": {"action": "ATTACK", "target_id": 4}})
+        new_entities[3] = replace(boss, identity=replace(boss.identity, properties={"work_kind": "ENTITY_ACT", "payload": {"action": "ATTACK", "target_id": 4}}))
         
         return replace(state, entities=new_entities)
 
@@ -173,26 +187,36 @@ class ArenaInjector:
         from src.core.enums import Faction
         from dataclasses import replace
         
+        from src.core.builder import V2EntityBuilder
         # 1. Attacker 1 (North)
-        hero1 = EntityState(
-            id=5, kind="HERO", position=(10.0, 9.0), readiness=100.0,
-            identity=IdentityComponent(faction=Faction.HERO_GUILD),
-            combat=CombatComponent(hp=100, atk=10, def_stat=10, alive=True)
-        )
+        hero1 = (V2EntityBuilder(5)
+            .kind("HERO")
+            .position(10.0, 9.0)
+            .with_identity(faction=Faction.HERO_GUILD)
+            .hp(100, 100)
+            .with_combat(atk=10, def_stat=10)
+            .readiness(100.0)
+            .build())
         
         # 2. Attacker 2 (South)
-        hero2 = EntityState(
-            id=6, kind="HERO", position=(10.0, 11.0), readiness=100.0,
-            identity=IdentityComponent(faction=Faction.HERO_GUILD),
-            combat=CombatComponent(hp=100, atk=10, def_stat=10, alive=True)
-        )
+        hero2 = (V2EntityBuilder(6)
+            .kind("HERO")
+            .position(10.0, 11.0)
+            .with_identity(faction=Faction.HERO_GUILD)
+            .hp(100, 100)
+            .with_combat(atk=10, def_stat=10)
+            .readiness(100.0)
+            .build())
         
         # 3. Monster (Target in the middle at 10,10)
-        monster = EntityState(
-            id=7, kind="MONSTER", position=(10.0, 10.0), readiness=0.0,
-            identity=IdentityComponent(faction=Faction.MONSTER_HORDE),
-            combat=CombatComponent(hp=50, atk=5, def_stat=5, alive=True)
-        )
+        monster = (V2EntityBuilder(7)
+            .kind("MONSTER")
+            .position(10.0, 10.0)
+            .with_identity(faction=Faction.MONSTER_HORDE)
+            .hp(50, 50)
+            .with_combat(atk=5, def_stat=5)
+            .readiness(100.0)
+            .build())
         
         new_entities = dict(state.entities)
         new_entities[5] = hero1
@@ -212,27 +236,38 @@ class ArenaInjector:
         from src.core.enums import Faction
         from dataclasses import replace
         
+        from src.core.builder import V2EntityBuilder
+        from src.core.state import SocialBond
         # 1. Attacker (Hero 1)
-        hero1 = EntityState(
-            id=8, kind="HERO", position=(20.0, 20.0), readiness=100.0,
-            identity=IdentityComponent(faction=Faction.HERO_GUILD),
-            combat=CombatComponent(hp=100, atk=10, def_stat=10, alive=True),
-            social=SocialComponent(bonds={9: SocialBond(target_id=9, familiarity=0.8)})
-        )
+        hero1 = (V2EntityBuilder(8)
+            .kind("HERO")
+            .position(20.0, 20.0)
+            .with_identity(faction=Faction.HERO_GUILD)
+            .hp(100, 100)
+            .with_combat(atk=10, def_stat=10)
+            .social_bond(SocialBond(target_id=9, familiarity=0.8))
+            .readiness(100.0)
+            .build())
         
         # 2. Ally (Hero 2) - adjacent to Hero 1
-        hero2 = EntityState(
-            id=9, kind="HERO", position=(21.0, 20.0), readiness=100.0,
-            identity=IdentityComponent(faction=Faction.HERO_GUILD),
-            combat=CombatComponent(hp=100, atk=10, def_stat=10, alive=True)
-        )
+        hero2 = (V2EntityBuilder(9)
+            .kind("HERO")
+            .position(21.0, 20.0)
+            .with_identity(faction=Faction.HERO_GUILD)
+            .hp(100, 100)
+            .with_combat(atk=10, def_stat=10)
+            .readiness(100.0)
+            .build())
         
         # 3. Monster (Target)
-        monster = EntityState(
-            id=10, kind="MONSTER", position=(20.0, 21.0), readiness=0.0,
-            identity=IdentityComponent(faction=Faction.MONSTER_HORDE),
-            combat=CombatComponent(hp=50, atk=5, def_stat=5, alive=True)
-        )
+        monster = (V2EntityBuilder(10)
+            .kind("MONSTER")
+            .position(20.0, 21.0)
+            .with_identity(faction=Faction.MONSTER_HORDE)
+            .hp(50, 50)
+            .with_combat(atk=5, def_stat=5)
+            .readiness(100.0)
+            .build())
         
         new_entities = dict(state.entities)
         new_entities[8] = hero1
@@ -252,36 +287,41 @@ class ArenaInjector:
         from src.core.enums import Faction, EntityRole
         from dataclasses import replace
         
+        from src.core.builder import V2EntityBuilder
         # 1. Hero (Quester)
-        hero = EntityState(
-            id=11, kind="HERO", position=(5.0, 5.0), readiness=100.0,
-            identity=IdentityComponent(evolution_level=1, faction=Faction.HERO_GUILD),
-            combat=CombatComponent(hp=100, max_hp=100, atk=50, def_stat=10, alive=True),
-            lifecycle=LifecycleComponent(generation=1),
-            inventory=InventoryComponent(max_slots=10, gold=0),
-            strategic=StrategicComponent(
-                projects={
-                    "test_hunt": QuestState(
-                        id="test_hunt",
-                        kind="quest",
-                        quest_kind=QuestKind.HUNT,
-                        quest_status=QuestStatus.ACTIVE,
-                        goal_value=1.0,
-                        current_value=0.0,
-                        reward=RewardState(xp=100, gold=50),
-                        metadata={"target_kind": "GOBLIN"}
-                    )
-                }
-            )
-        )
+        hero = (V2EntityBuilder(11)
+            .kind("HERO")
+            .position(5.0, 5.0)
+            .with_identity(evolution_level=1, faction=Faction.HERO_GUILD)
+            .hp(100, 100)
+            .with_combat(atk=50, def_stat=10)
+            .with_lifecycle(generation=1)
+            .with_inventory(max_slots=10, gold=0)
+            .with_strategic(projects={
+                "test_hunt": QuestState(
+                    id="test_hunt",
+                    kind="quest",
+                    quest_kind=QuestKind.HUNT,
+                    quest_status=QuestStatus.ACTIVE,
+                    goal_value=1.0,
+                    current_value=0.0,
+                    reward=RewardState(xp=100, gold=50),
+                    metadata={"target_kind": "GOBLIN"}
+                )
+            })
+            .readiness(100.0)
+            .build())
         
         # 2. Monster (Target)
-        goblin = EntityState(
-            id=12, kind="GOBLIN", position=(6.0, 5.0), readiness=0.0,
-            identity=IdentityComponent(evolution_level=1, faction=Faction.MONSTER_HORDE, role=EntityRole.MONSTER),
-            combat=CombatComponent(hp=10, max_hp=10, atk=5, def_stat=5, alive=True),
-            lifecycle=LifecycleComponent(generation=1)
-        )
+        goblin = (V2EntityBuilder(12)
+            .kind("GOBLIN")
+            .position(6.0, 5.0)
+            .with_identity(evolution_level=1, faction=Faction.MONSTER_HORDE, role=EntityRole.MONSTER)
+            .hp(10, 10)
+            .with_combat(atk=5, def_stat=5)
+            .with_lifecycle(generation=1)
+            .readiness(100.0)
+            .build())
         
         from src.core.state import TaskComponent
         new_entities = dict(state.entities)
@@ -314,22 +354,29 @@ class ArenaInjector:
             owner_faction_id=None
         )
         
+        from src.core.builder import V2EntityBuilder
         # 2. Hero (Strong enough to kill)
-        hero = EntityState(
-            id=13, kind="HERO", position=(50.0, 50.0), readiness=100.0,
-            identity=IdentityComponent(evolution_level=5, faction=Faction.HERO_GUILD, role=EntityRole.HERO),
-            combat=CombatComponent(hp=100, max_hp=100, atk=100, def_stat=20, speed=10, alive=True),
-            lifecycle=LifecycleComponent(generation=1),
-            inventory=InventoryComponent(max_slots=10, gold=100)
-        )
+        hero = (V2EntityBuilder(13)
+            .kind("HERO")
+            .position(50.0, 50.0)
+            .with_identity(evolution_level=5, faction=Faction.HERO_GUILD, role=EntityRole.HERO)
+            .hp(100, 100)
+            .with_combat(atk=100, def_stat=20, speed=10)
+            .with_lifecycle(generation=1)
+            .with_inventory(max_slots=10, gold=100)
+            .readiness(100.0)
+            .build())
         
         # 3. Monster (Weak)
-        monster = EntityState(
-            id=14, kind="GOBLIN", position=(51.0, 50.0), readiness=0.0,
-            identity=IdentityComponent(evolution_level=1, faction=Faction.MONSTER_HORDE, role=EntityRole.MONSTER),
-            combat=CombatComponent(hp=1, max_hp=1, atk=1, def_stat=1, alive=True),
-            lifecycle=LifecycleComponent(generation=1)
-        )
+        monster = (V2EntityBuilder(14)
+            .kind("GOBLIN")
+            .position(51.0, 50.0)
+            .with_identity(evolution_level=1, faction=Faction.MONSTER_HORDE, role=EntityRole.MONSTER)
+            .hp(1, 1)
+            .with_combat(atk=1, def_stat=1)
+            .with_lifecycle(generation=1)
+            .readiness(100.0)
+            .build())
         
         new_entities = dict(state.entities)
         new_entities[13] = hero
@@ -364,11 +411,14 @@ class GameplayInjector:
         from src.core.state import EntityState
         from dataclasses import replace
         
+        from src.core.builder import V2EntityBuilder
         new_entities = dict(state.entities)
-        new_entities[1] = EntityState(
-            id=1, kind="actor", position=(0.0, 0.0), readiness=100.0,
-            properties={"work_kind": "ENTITY_MOVE", "payload": {"target_position": (0.0, float(distance))}}
-        )
+        new_entities[1] = (V2EntityBuilder(1)
+            .kind("actor")
+            .position(0.0, 0.0)
+            .with_properties({"work_kind": "ENTITY_MOVE", "payload": {"target_position": (0.0, float(distance))}})
+            .readiness(100.0)
+            .build())
         return replace(state, entities=new_entities)
 
     @staticmethod
@@ -382,11 +432,14 @@ class GameplayInjector:
             remaining_charges=1, max_charges=1, required_ticks=required_ticks
         )
         
-        actor = EntityState(
-            id=1, kind="actor", position=(0.0, 1.0), readiness=100.0,
-            interaction=InteractionComponent(target_node_id=100, progress=0),
-            inventory=InventoryComponent(max_slots=10)
-        )
+        from src.core.builder import V2EntityBuilder
+        actor = (V2EntityBuilder(1)
+            .kind("actor")
+            .position(0.0, 1.0)
+            .with_interaction(target_node_id=100, progress=0)
+            .with_inventory(max_slots=10)
+            .readiness(100.0)
+            .build())
         
         new_nodes = dict(state.resource_nodes)
         new_nodes[100] = node
@@ -418,25 +471,26 @@ class GameplayInjector:
             yields_item="iron_ore", remaining_charges=5, max_charges=5, required_ticks=2
         )
         
+        from src.core.builder import V2EntityBuilder
         # 2. Hero at Town (0.0, 0.0) with Craft Intent but no materials
-        actor = EntityState(
-            id=1, kind="hero", position=(0.0, 0.0), readiness=100.0,
-            identity=IdentityComponent(
+        actor = (V2EntityBuilder(1)
+            .kind("hero")
+            .position(0.0, 0.0)
+            .with_identity(
                 craft_target="craft_steel_sword",
-                known_recipes={"craft_steel_sword"} # Set for recipes
-            ),
-            navigation=NavigationComponent(target=(0.0, 0.0)),
-            strategic=StrategicComponent(
-                leads={
-                    "lead_ore": LeadState(id="lead_ore", kind="location", subject="iron_ore", detail="1.0,0.0")
-                }
-            ),
-            inventory=InventoryComponent(
+                known_recipes={"craft_steel_sword"}
+            )
+            .with_navigation(target=(0.0, 0.0))
+            .with_strategic(leads={
+                "lead_ore": LeadState(id="lead_ore", kind="location", subject="iron_ore", detail="1.0,0.0")
+            })
+            .with_inventory(
                 max_slots=10, 
                 gold=100, 
                 items=[ItemStack("wood", 1), ItemStack("iron_ore", 1)]
             )
-        )
+            .readiness(100.0)
+            .build())
         
         new_nodes = dict(state.resource_nodes)
         new_nodes[101] = node

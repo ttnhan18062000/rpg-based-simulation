@@ -46,16 +46,19 @@ def test_trait_composition():
 
 def test_apply_path_derived_propagation():
     """Verify that ApplyPath correctly propagates derived tactical_role."""
-    from src.core.state import EntityState, AuthoritativeState
+    from src.core.state import AuthoritativeState
     from src.core.enums import Faction, EntityRole
-    
+    from src.core.builder import V2EntityBuilder
     # Setup entity: Agi=10, Str=10 -> Role=VANGUARD
-    entity = EntityState(
-        id=1, kind="hero", position=(0,0),
-        identity=IdentityComponent(faction=Faction.HERO_GUILD, role=EntityRole.HERO),
-        attributes=AttributeComponent(strength=10, agility=10, vitality=10),
-        combat=CombatComponent(hp=100, max_hp=100, tactical_role="VANGUARD")
-    )
+    entity = (V2EntityBuilder(1)
+              .kind("hero")
+              .at((0,0))
+              .with_identity(role=EntityRole.HERO, faction=Faction.HERO_GUILD)
+              .with_attributes(strength=10, agility=10, vitality=10)
+              .with_combat(hp=100, max_hp=100)
+              .build())
+    # Note: V2EntityBuilder initializes tactical_role based on attributes.
+    # At 10/10/10 it should be VANGUARD.
     
     from src.core.updates import EntityUpdate, AttributeUpdate
     # Update Agi by +10 -> 10 + 10 = 20. Should trigger role shift to SKIRMISHER
@@ -82,16 +85,17 @@ def test_apply_path_derived_propagation():
 
 def test_apply_path_trait_updates():
     """Verify that trait updates are correctly applied and reflected in stats."""
-    from src.core.state import EntityState, AuthoritativeState
+    from src.core.state import AuthoritativeState
     from src.core.enums import Faction, EntityRole
     from src.core.updates import StateUpdate
-    
-    entity = EntityState(
-        id=1, kind="hero", position=(0,0),
-        identity=IdentityComponent(faction=Faction.HERO_GUILD, role=EntityRole.HERO, traits=set()),
-        attributes=AttributeComponent(strength=10, agility=10, vitality=10),
-        combat=CombatComponent(hp=100, max_hp=100)
-    )
+    from src.core.builder import V2EntityBuilder
+    entity = (V2EntityBuilder(1)
+              .kind("hero")
+              .at((0,0))
+              .with_identity(role=EntityRole.HERO, faction=Faction.HERO_GUILD)
+              .with_attributes(strength=10, agility=10, vitality=10)
+              .with_combat(hp=100, max_hp=100)
+              .build())
     
     # Add "Tough" trait
     upd = EntityUpdate(

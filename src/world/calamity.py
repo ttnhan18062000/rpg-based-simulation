@@ -65,7 +65,7 @@ class CalamityService:
         world_updates = {}
         for entity in recent_deaths:
             from src.engine.legality import LegalityServiceV2
-            region = LegalityServiceV2.get_region_for_position(entity.position, state)
+            region = LegalityServiceV2.get_region_for_position(entity.navigation.position, state)
             if not region:
                 continue
                 

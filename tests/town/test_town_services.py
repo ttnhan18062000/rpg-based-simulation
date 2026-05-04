@@ -1,20 +1,19 @@
 import pytest
-from src.core.state import (
-    AuthoritativeState, EntityState, BuildingState, 
-    InteractionComponent, BiologicalComponent, InventoryComponent, CombatComponent
-)
+from src.core.state import AuthoritativeState, BuildingState
+from src.core.builder import V2EntityBuilder
 from src.systems.town_service import TownServiceSystem
 
 def test_inn_restoration():
     # Setup entity with needs
-    entity = EntityState(
-        id=1, kind="HERO", position=(10, 10),
-        biological=BiologicalComponent(sleep_debt=80.0, hunger=20.0),
-        inventory=InventoryComponent(gold=100),
-        combat=CombatComponent(hp=10, max_hp=100),
-        interaction=InteractionComponent(target_node_id=1, progress=9.0),
-        properties={"interaction_kind": "inn"}
-    )
+    entity = (V2EntityBuilder(1)
+        .kind("HERO")
+        .at((10, 10))
+        .with_biological(sleep_debt=80.0, hunger=20.0)
+        .gold(100)
+        .with_combat(hp=10, max_hp=100)
+        .with_interaction(target_id=1, progress=9.0)
+        .with_property("interaction_kind", "inn")
+        .build())
     
     # Setup inn building
     inn = BuildingState(id=1, kind="inn", position=(10, 10))
@@ -33,18 +32,19 @@ def test_inn_restoration():
     assert len(ent_upd.resource_transfers) == 1
     intent = ent_upd.resource_transfers[0]
     assert intent.biological_upd.sleep_debt_set == 0.0
-    assert intent.combat_upd.hp_delta == 100
+    assert intent.combat_upd.hp_delta == entity.combat.max_hp
     assert intent.gold_delta == -10
     assert ent_upd.interaction.reset == True
 
 def test_tavern_nourishment():
-    entity = EntityState(
-        id=1, kind="HERO", position=(10, 10),
-        biological=BiologicalComponent(hunger=90.0),
-        inventory=InventoryComponent(gold=50),
-        interaction=InteractionComponent(target_node_id=2, progress=9.0),
-        properties={"interaction_kind": "tavern"}
-    )
+    entity = (V2EntityBuilder(1)
+        .kind("HERO")
+        .at((10, 10))
+        .with_biological(hunger=90.0)
+        .gold(50)
+        .with_interaction(target_id=2, progress=9.0)
+        .with_property("interaction_kind", "tavern")
+        .build())
     
     tavern = BuildingState(id=2, kind="tavern", position=(10, 10))
     

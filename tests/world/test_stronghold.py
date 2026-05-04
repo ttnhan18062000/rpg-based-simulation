@@ -1,5 +1,6 @@
 import pytest
 from src.core.state import AuthoritativeState, RegionState, EntityState, IdentityComponent, CombatComponent
+from src.core.builder import V2EntityBuilder
 from src.core.enums import Faction
 from src.systems.generator import EntityGenerator
 from src.world.influence import FactionInfluenceService
@@ -13,11 +14,13 @@ def test_stronghold_lifecycle():
     # Create 10 hero deaths
     deaths = []
     for i in range(10):
-        deaths.append(EntityState(
-            id=i+1, position=(5, 5), kind="hero",
-            identity=IdentityComponent(faction=Faction.HERO_GUILD),
-            combat=CombatComponent(hp=0, alive=False)
-        ))
+        deaths.append(V2EntityBuilder(i+1)
+            .kind("hero")
+            .position(5, 5)
+            .faction(Faction.HERO_GUILD)
+            .hp(0)
+            .alive(False)
+            .build())
         
     update = FactionInfluenceService.process_influence_shift(state, deaths)
     assert update.world_updates["wild"].owner_faction_id_set == Faction.MONSTER_HORDE
@@ -36,11 +39,13 @@ def test_stronghold_removal():
     region = RegionState(id="wild", name="Wild", bounds=(0, 0, 10, 10), influence=-50.0, owner_faction_id=Faction.MONSTER_HORDE)
     
     # Existing stronghold
-    stronghold = EntityState(
-        id=100, kind="stronghold", position=(5, 5),
-        identity=IdentityComponent(faction=Faction.MONSTER_HORDE),
-        combat=CombatComponent(hp=1000, alive=True)
-    )
+    stronghold = (V2EntityBuilder(100)
+        .kind("stronghold")
+        .position(5, 5)
+        .faction(Faction.MONSTER_HORDE)
+        .hp(1000)
+        .alive(True)
+        .build())
     
     state = AuthoritativeState(tick=100, seed=42, regions={"wild": region}, entities={100: stronghold})
     
@@ -48,11 +53,13 @@ def test_stronghold_removal():
     # Create 20 monster deaths (5 * 20 = 100, -50 + 100 = 50)
     deaths = []
     for i in range(20):
-        deaths.append(EntityState(
-            id=i+1, position=(5, 5), kind="monster",
-            identity=IdentityComponent(faction=Faction.MONSTER_HORDE),
-            combat=CombatComponent(hp=0, alive=False)
-        ))
+        deaths.append(V2EntityBuilder(i+1)
+            .kind("monster")
+            .position(5, 5)
+            .faction(Faction.MONSTER_HORDE)
+            .hp(0)
+            .alive(False)
+            .build())
         
     update = FactionInfluenceService.process_influence_shift(state, deaths)
     assert update.world_updates["wild"].owner_faction_id_set == -1 # Liberation

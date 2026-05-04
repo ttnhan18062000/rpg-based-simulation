@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING, Dict, List
 
 from src.core.updates import InteractionUpdate, ResourceNodeUpdate, IdentityUpdate
 
+
 if TYPE_CHECKING:
     from src.core.state import AuthoritativeState, EntityState
     from src.core.updates import StateUpdate, EntityUpdate
@@ -49,9 +50,6 @@ class InteractionSystem:
                 continue
 
             # 1. Channeling & Proximity Laws
-            # VERIFIED v2: looting_channeled
-            # VERIFIED v2: harvesting_channeled
-            # Reset progress if moved or changed target
             current_target = entity.interaction.target_node_id
             proposed_target = ent_upd.interaction.target_node_id
             
@@ -66,7 +64,6 @@ class InteractionSystem:
                 should_reset = True
             
             # Law 159: Interaction interruption on significant damage
-            # Logic ID: 159
             if ent_upd.combat and ent_upd.combat.damage_taken > 0:
                 damage = ent_upd.combat.damage_taken
                 max_hp = entity.combat.max_hp if entity.combat else 100
@@ -75,9 +72,10 @@ class InteractionSystem:
                 
             if should_reset:
                 # Force a reset update
+                res_upd = InteractionUpdate(reset=True)
                 refined_entity_updates[e_id] = replace(
                     ent_upd,
-                    interaction=InteractionUpdate(reset=True)
+                    interaction=res_upd
                 )
                 continue
 
@@ -94,13 +92,11 @@ class InteractionSystem:
                 chest = state.chests.get(target_id) if not node and not ground_item and not corpse else None
                 
                 if not node and not ground_item and not corpse and not chest:
-                    # Target gone: Reset
                     refined_entity_updates[e_id] = replace(ent_upd, interaction=InteractionUpdate(reset=True))
                     continue
 
                 # 3. Resource Transfer & Pressure Law
                 new_progress = entity.interaction.progress + ent_upd.interaction.progress_delta
-                # Chests have default 10 ticks, Nodes have custom
                 required_ticks = node.required_ticks if node else 10
                 
                 
@@ -122,7 +118,6 @@ class InteractionSystem:
                         source_kind = "CORPSE"
                     elif chest:
                         if chest.cooldown_remaining > 0:
-                            # Chest is empty/cooldown
                             refined_entity_updates[e_id] = replace(ent_upd, interaction=InteractionUpdate(reset=True))
                             continue
                         items = list(chest.items)
@@ -144,14 +139,12 @@ class InteractionSystem:
                     )]
 
                 if intents and len(intents) > len(ent_upd.resource_transfers):
-                    # Phase 1 Law: Systems only produce intent, deferred to Transaction Resolver
                     refined_entity_updates[e_id] = replace(
                         ent_upd,
                         resource_transfers=intents
                     )
-                    continue # Pipeline will handle the rest
+                    continue 
                 else:
-                    # Continue progress
                     pass
 
         return replace(

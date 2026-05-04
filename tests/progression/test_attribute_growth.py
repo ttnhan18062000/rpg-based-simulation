@@ -8,15 +8,19 @@ from src.core.updates import StateUpdate, EntityUpdate, RewardUpdate
 from src.engine.evolution import EvolutionSystem
 from src.engine.apply import ApplyPath
 from src.actions.attributes import AllocateAttributeAction
-from src.core.enums import EntityRole
+from src.core.enums import EntityRole, Faction
+from src.core.builder import V2EntityBuilder
 
 @pytest.mark.v2_contract
 def test_hero_ap_grant_on_level_up():
     # 1. Setup: Level 1 Hero with 0 XP. 
-    identity = IdentityComponent(role=EntityRole.HERO, evolution_level=1, evolution_points=0, unspent_ap=0)
-    combat = CombatComponent(hp=100, max_hp=100, atk=10, def_stat=5)
-    attributes = AttributeComponent(strength=5, vitality=5)
-    entity = EntityState(id=1, kind="hero", position=(0, 0), identity=identity, combat=combat, attributes=attributes)
+    entity = (V2EntityBuilder(1)
+              .kind("hero")
+              .at((0, 0))
+              .with_identity(role=EntityRole.HERO, faction=Faction.HERO_GUILD, evolution_level=1)
+              .with_combat(hp=100, max_hp=100, atk=10, def_stat=5)
+              .with_attributes(strength=5, vitality=5)
+              .build())
     state = AuthoritativeState(tick=1, seed=42, entities={1: entity})
     
     # 2. Grant 100 XP (Level 1 -> 2)
@@ -41,9 +45,12 @@ def test_hero_ap_grant_on_level_up():
 @pytest.mark.v2_contract
 def test_monster_no_ap_auto_scale():
     # 1. Setup: Level 1 Monster
-    identity = IdentityComponent(role=EntityRole.MONSTER, evolution_level=1, evolution_points=0)
-    combat = CombatComponent(hp=100, max_hp=100, atk=10, def_stat=10)
-    entity = EntityState(id=2, kind="monster", position=(0, 0), identity=identity, combat=combat)
+    entity = (V2EntityBuilder(2)
+              .kind("monster")
+              .at((0, 0))
+              .with_identity(role=EntityRole.MONSTER, faction=Faction.MONSTER_HORDE, evolution_level=1)
+              .with_combat(hp=100, max_hp=100, atk=10, def_stat=10)
+              .build())
     state = AuthoritativeState(tick=1, seed=42, entities={2: entity})
     
     # 2. Grant 100 XP
@@ -67,13 +74,15 @@ def test_monster_no_ap_auto_scale():
 @pytest.mark.v2_contract
 def test_attribute_allocation_and_recalc():
     # 1. Setup: Level 2 Hero with 5 AP
-    identity = IdentityComponent(role=EntityRole.HERO, evolution_level=2, unspent_ap=5)
-    attributes = AttributeComponent(strength=5, vitality=5, endurance=5)
-    # recalc: max_hp = 100 + 5*2 + floor(5*0.5) = 112
-    # atk = 10 + floor(5*0.5) = 12
-    # def = 5 + floor(5*0.3) = 6
-    combat = CombatComponent(hp=112, max_hp=112, atk=12, def_stat=6)
-    entity = EntityState(id=1, kind="hero", position=(0, 0), identity=identity, combat=combat, attributes=attributes)
+    # Note: V2EntityBuilder doesn't have unspent_ap setter, we use replace
+    from dataclasses import replace
+    entity = (V2EntityBuilder(1)
+              .kind("hero")
+              .at((0, 0))
+              .with_identity(role=EntityRole.HERO, faction=Faction.HERO_GUILD, evolution_level=2)
+              .with_attributes(strength=5, vitality=5, endurance=5)
+              .build())
+    entity = replace(entity, identity=replace(entity.identity, unspent_ap=5))
     state = AuthoritativeState(tick=1, seed=42, entities={1: entity})
     
     # 2. Action: Allocate 1 point to Strength
@@ -93,10 +102,14 @@ def test_attribute_allocation_and_recalc():
 
 @pytest.mark.v2_contract
 def test_aptitude_multiplier_PROG_015():
-    aptitude = AptitudeComponent(str_apt=2.0)
-    identity = IdentityComponent(role=EntityRole.HERO, unspent_ap=1)
-    attributes = AttributeComponent(strength=5)
-    entity = EntityState(id=1, kind="hero", position=(0, 0), identity=identity, attributes=attributes, aptitude=aptitude)
+    from dataclasses import replace
+    entity = (V2EntityBuilder(1)
+              .kind("hero")
+              .at((0, 0))
+              .with_aptitude(str_apt=2.0)
+              .with_attributes(strength=5)
+              .build())
+    entity = replace(entity, identity=replace(entity.identity, unspent_ap=1))
     state = AuthoritativeState(tick=1, seed=42, entities={1: entity})
     
     action = AllocateAttributeAction(attribute_name="strength")
@@ -109,9 +122,13 @@ def test_aptitude_multiplier_PROG_015():
 
 @pytest.mark.v2_contract
 def test_attribute_cap_PROG_046():
-    identity = IdentityComponent(role=EntityRole.HERO, unspent_ap=10)
-    attributes = AttributeComponent(strength=99)
-    entity = EntityState(id=1, kind="hero", position=(0, 0), identity=identity, attributes=attributes)
+    from dataclasses import replace
+    entity = (V2EntityBuilder(1)
+              .kind("hero")
+              .at((0, 0))
+              .with_attributes(strength=99)
+              .build())
+    entity = replace(entity, identity=replace(entity.identity, unspent_ap=10))
     state = AuthoritativeState(tick=1, seed=42, entities={1: entity})
     
     action = AllocateAttributeAction(attribute_name="strength")

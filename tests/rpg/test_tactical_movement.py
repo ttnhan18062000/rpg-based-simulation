@@ -21,15 +21,17 @@ def create_mock_state():
     )
 
 def create_mock_entity(id, pos, faction=0, role=0):
-    return EntityState(
-        id=id,
-        kind="hero",
-        position=pos,
-        identity=IdentityComponent(faction=faction, role=role),
-        combat=CombatComponent(hp=100, max_hp=100, atk=10, def_stat=5, alive=True),
-        navigation=NavigationComponent(),
-        task=TaskComponent(),
-        active=True
+    from src.core.builder import V2EntityBuilder
+    from src.core.enums import Faction, EntityRole
+    return (V2EntityBuilder(id)
+        .kind("hero")
+        .at(pos)
+        .with_identity(faction=Faction.HERO_GUILD if faction == 0 else Faction.MONSTER_HORDE, 
+                       role=EntityRole.HERO if role == 0 else EntityRole.MONSTER)
+        .with_combat(hp=100, max_hp=100, atk=10, def_stat=5, alive=True)
+        .with_navigation()
+        .readiness(100.0)
+        .build()
     )
 
 def test_opportunity_attack_on_egress():
@@ -89,7 +91,8 @@ def test_hold_mode_refuses_to_yield():
     # Check if E2 failed to move because E1 refused to yield
     upd2 = refined.entity_updates.get(2)
     assert upd2.new_position is None or upd2.new_position == (5.0, 4.0)
-    assert upd2.navigation.failure_reason == "OCCUPANCY_VIOLATION"
+    from src.core.enums import ReasonCode
+    assert upd2.navigation.failure_reason == ReasonCode.OCCUPANCY_VIOLATION
 
 def test_sidestepping_on_blocked_move():
     state = create_mock_state()
@@ -142,7 +145,7 @@ def test_regroup_movement():
     state = create_mock_state()
     # E1 at (10, 10), Group Anchor at (0, 0), Cohesion 5
     e1 = create_mock_entity(1, (10.0, 10.0))
-    e1 = replace(e1, group_id=1)
+    e1 = replace(e1, identity=replace(e1.identity, group_id=1))
     
     group = GroupRecord(
         id=1,

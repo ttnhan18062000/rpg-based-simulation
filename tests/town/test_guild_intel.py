@@ -1,14 +1,16 @@
 import pytest
-from src.core.state import AuthoritativeState, EntityState, BuildingState, InteractionComponent, RegionState
+from src.core.state import AuthoritativeState, BuildingState, RegionState
+from src.core.builder import V2EntityBuilder
 from src.systems.guild_system import GuildIntelSystem
 
 def test_guild_intel_emission():
     # Setup entity at guild
-    entity = EntityState(
-        id=1, kind="HERO", position=(10, 10),
-        interaction=InteractionComponent(target_node_id=1, progress=9.0),
-        properties={"interaction_kind": "guild"}
-    )
+    entity = (V2EntityBuilder(1)
+        .kind("HERO")
+        .at((10, 10))
+        .with_interaction(target_id=1, progress=9.0)
+        .with_property("interaction_kind", "guild")
+        .build())
     
     # Setup guild building
     guild = BuildingState(id=1, kind="guild", position=(10, 10))

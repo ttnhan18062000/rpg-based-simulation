@@ -32,6 +32,7 @@ def test_long_run_stability():
         )
 
         
+        from src.core.builder import V2EntityBuilder
         # Initial state with a few heroes and a monster region
         state = AuthoritativeState(
             tick=0, 
@@ -47,8 +48,8 @@ def test_long_run_stability():
                 )
             },
             entities={
-                1: EntityState(id=1, kind="hero", position=(2,2), readiness=100),
-                2: EntityState(id=2, kind="hero", position=(3,3), readiness=100)
+                1: V2EntityBuilder(1).kind("hero").at((2,2)).readiness(100.0).build(),
+                2: V2EntityBuilder(2).kind("hero").at((3,3)).readiness(100.0).build()
             }
         )
         

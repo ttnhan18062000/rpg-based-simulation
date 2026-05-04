@@ -48,8 +48,8 @@ def test_transaction_tracing_and_replay():
     
     # 4. Verify Tracing
     hero_post = new_state.entities[hero.id]
-    assert len(hero_post.latest_intent_results) == 1
-    res = hero_post.latest_intent_results[0]
+    assert len(hero_post.identity.latest_intent_results) == 1
+    res = hero_post.identity.latest_intent_results[0]
     assert res.transaction_id == "TX_FAIL_1"
     assert res.accepted is False
     assert res.reason == "INVENTORY_FULL"
@@ -81,4 +81,4 @@ def test_transaction_tracing_and_replay():
     # If we apply the SAME resolved_update_v2 to the SAME state_v2, we should get bit-identical state_v3
     state_replay = ApplyPath.apply_generation(state_v2, resolved_update_v2, next_tick=2)
     assert state_replay == state_v3
-    assert state_replay.entities[hero_ready.id].latest_intent_results[0].accepted is True
+    assert state_replay.entities[hero_ready.id].identity.latest_intent_results[0].accepted is True

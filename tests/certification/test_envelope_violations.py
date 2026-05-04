@@ -19,8 +19,13 @@ def test_harness_catches_ram_violation():
         max_observability_budget_percent=5.0
     )
     
+    from src.core.builder import V2EntityBuilder
     state = AuthoritativeState(tick=0, seed=42, entities={
-        i: EntityState(id=i, kind="TEST", position=(0,0), readiness=100.0)
+        i: (V2EntityBuilder(i)
+            .kind("TEST")
+            .position(0.0, 0.0)
+            .readiness(100.0)
+            .build())
         for i in range(1, 101) # 100 entities in 1MB limit should fail
     })
     
@@ -52,7 +57,8 @@ def test_harness_detects_missing_degradation_mode():
     
     # We use a scenario that EXPECTS a transition to DEGRADED
     # but run a perfectly idle simulation that stays in NORMAL.
-    expectations = get_scenario_expectations("RAM_PRESSURE") 
+    from dataclasses import replace
+    expectations = replace(get_scenario_expectations("RAM_PRESSURE"), required_sampling_interval_ticks=1)
     
     result = harness.run_scenario("RAM_PRESSURE", state, expectations, ticks=5)
     

@@ -1,6 +1,9 @@
 from __future__ import annotations
 from dataclasses import replace
 from typing import TYPE_CHECKING, Dict, List, Tuple
+import logging
+
+logger = logging.getLogger(__name__)
 
 from src.core.updates import StateUpdate, EntityUpdate, NavigationUpdate, IdentityUpdate, RejectionEvent
 from src.core.enums import ReasonCode
@@ -46,10 +49,13 @@ class AuthoritativeApplyPipeline:
                 legal, reason = LegalityServiceV2.verify_action_legality(actor, "GLOBAL_PROPOSAL", state)
                 if not legal:
                     # Strip all world-mutating proposals from incapacitated actors
+                    # BUT preserve interaction intent so law enforcement can see and reset it
                     sanitized_entity_updates[e_id] = EntityUpdate(
                         entity_id=e_id,
                         navigation=NavigationUpdate(failure_reason=reason),
-                        task=replace(ent_upd.task, payload_set={**ent_upd.task.payload_set, "outcome": "FAILURE", "reason": reason}) if ent_upd.task else None
+                        task=replace(ent_upd.task, payload_set={**ent_upd.task.payload_set, "outcome": "FAILURE", "reason": reason}) if ent_upd.task else None,
+                        interaction=ent_upd.interaction,
+                        moved_this_tick=ent_upd.moved_this_tick
                     )
                     # Global rejection tracking (Phase E5.4)
                     raw_update.rejection_events.append(RejectionEvent(
@@ -189,7 +195,7 @@ class AuthoritativeApplyPipeline:
     def _apply_readiness_recovery(state: AuthoritativeState, update: StateUpdate) -> StateUpdate:
         refined_entity_updates = dict(update.entity_updates)
         for e_id, entity in state.entities.items():
-            if not entity.active: continue
+            if not entity.lifecycle.active: continue
             ent_upd = refined_entity_updates.get(e_id, EntityUpdate(entity_id=e_id))
             
             passive_gain = 10.0
@@ -199,7 +205,7 @@ class AuthoritativeApplyPipeline:
             # Environmental Penalties (Aura of Despair)
             from src.world.environment import EnvironmentService
             from src.engine.legality import LegalityServiceV2
-            region = LegalityServiceV2.get_region_for_position(entity.position, state)
+            region = LegalityServiceV2.get_region_for_position(entity.navigation.position, state)
             if region:
                 aura_mults = EnvironmentService.get_aura_multipliers(state, entity)
                 passive_gain *= aura_mults.get("readiness_regen", 1.0)
@@ -220,7 +226,7 @@ class AuthoritativeApplyPipeline:
             if ent_upd.navigation and ent_upd.navigation.target_set is not None:
                 nav_target = ent_upd.navigation.target_set
             
-            if nav_target and (entity.position == nav_target):
+            if nav_target and (entity.navigation.position == nav_target):
                 # Search for interaction targets at the destination
                 target_node = next((n for n in state.resource_nodes.values() if n.position == nav_target and n.remaining_charges > 0), None)
                 target_ground = next((g for g in state.ground_items.values() if g.position == nav_target), None) if not target_node else None
@@ -252,7 +258,7 @@ class AuthoritativeApplyPipeline:
             if ent_upd.navigation and ent_upd.navigation.target_set is not None:
                 nav_target = ent_upd.navigation.target_set
             
-            if nav_target and (entity.position != nav_target):
+            if nav_target and (entity.navigation.position != nav_target):
                 # Only move if not already moved and not currently interacting (harvesting)
                 # Note: ent_upd.interaction might have been added in _route_interaction_intent
                 is_interacting = (ent_upd.interaction and ent_upd.interaction.progress_delta > 0)
@@ -264,36 +270,21 @@ class AuthoritativeApplyPipeline:
                     
                     for u_id, u_upd in move_updates.items():
                         if u_id == e_id:
-                            # Merge hero's navigation and combat
-                            base_nav = ent_upd.navigation or NavigationUpdate()
-                            move_nav = u_upd.navigation or NavigationUpdate()
-                            merged_nav = replace(base_nav,
-                                target_set=move_nav.target_set if move_nav.target_set is not None else base_nav.target_set,
-                                path_set=move_nav.path_set if move_nav.path_set is not None else base_nav.path_set,
-                                moved_recently_set=move_nav.moved_recently_set if move_nav.moved_recently_set is not None else base_nav.moved_recently_set,
-                                failure_reason=move_nav.failure_reason if move_nav.failure_reason is not None else base_nav.failure_reason
-                            )
-                            
-                            refined_entity_updates[e_id] = replace(ent_upd, 
-                                new_position=u_upd.new_position,
-                                moved_this_tick=u_upd.moved_this_tick,
-                                combat=u_upd.combat or ent_upd.combat,
-                                navigation=merged_nav,
-                                # Phase E5.8 Hardening: Readiness costs must stack across phases
-                                readiness_delta=ent_upd.readiness_delta + u_upd.readiness_delta
-                            )
+                            # Use full merge for subject to preserve combat/readiness (Phase E5.9 Fix)
+                            merged = ent_upd.merge(u_upd)
+                            refined_entity_updates[e_id] = merged
                             
                             # Phase 6: Navigation Blocker Inference
-                            if merged_nav.failure_reason:
+                            if merged.navigation and merged.navigation.failure_reason:
                                 from src.core.strategic import BlockerState
                                 from src.core.updates import StrategicUpdate
                                 curr_upd = refined_entity_updates[e_id]
                                 strat_up = curr_upd.strategic or StrategicUpdate()
-                                block_id = f"blocker_nav_{merged_nav.failure_reason}"
+                                block_id = f"blocker_nav_{merged.navigation.failure_reason}"
                                 nav_blocker = BlockerState(
                                     id=block_id,
                                     kind="access",
-                                    subject=merged_nav.failure_reason,
+                                    subject=merged.navigation.failure_reason,
                                     severity=0.8
                                 )
                                 refined_entity_updates[e_id] = replace(curr_upd,
@@ -301,12 +292,12 @@ class AuthoritativeApplyPipeline:
                                 )
                                 # Global rejection tracking (Phase E4.7)
                                 rej_delta = dict(update.rejections_delta)
-                                rej_key = f"MOVE_{merged_nav.failure_reason}"
+                                rej_key = f"MOVE_{merged.navigation.failure_reason}"
                                 rej_delta[rej_key] = rej_delta.get(rej_key, 0) + 1
                                 update = replace(update, 
                                     rejections_delta=rej_delta,
                                     rejection_events=update.rejection_events + [RejectionEvent(
-                                        tick=state.tick, actor_id=e_id, action_kind="MOVE", reason=merged_nav.failure_reason
+                                        tick=state.tick, actor_id=e_id, action_kind="MOVE", reason=merged.navigation.failure_reason
                                     )]
                                 )
                         else:
@@ -333,22 +324,27 @@ class AuthoritativeApplyPipeline:
         from src.engine.apply import ApplyPath
         
         # Phase 9 Fix: Use list(keys) to avoid "dictionary changed size during iteration"
-        for e_id in sorted(list(refined_entity_updates.keys())):
-            ent_upd = refined_entity_updates[e_id]
-            entity = working_state.entities.get(e_id)
-            if not entity or not entity.active: continue
-            
+        for eid in sorted(list(refined_entity_updates.keys())):
+            ent_upd = refined_entity_updates[eid]
             task_upd = ent_upd.task
             if not task_upd or task_upd.work_kind_set != "ENTITY_ACT": continue
             
-            action_kind = task_upd.payload_set.get("action")
+            logger.info(f"Pipeline: Routing ENTITY_ACT for {eid}")
+            payload = task_upd.payload_set
+            if not payload: continue
+            action = payload.get("action")
+            if not action: continue
+            
+            entity = working_state.entities.get(eid)
+            if not entity or not entity.lifecycle.active: continue
             
             # 1. Readiness Check (Standard Law)
             ready, r_reason = LegalityServiceV2.verify_readiness(entity)
             if not ready:
+                logger.warning(f"Pipeline: Entity {eid} NOT READY: {r_reason}")
                 from src.core.strategic import BlockerState
                 from src.core.updates import StrategicUpdate
-                refined_entity_updates[e_id] = replace(ent_upd,
+                refined_entity_updates[eid] = replace(ent_upd,
                      task=replace(task_upd, payload_set={**task_upd.payload_set, "outcome": "FAILURE", "reason": r_reason}),
                      strategic=replace(ent_upd.strategic or StrategicUpdate(), 
                          blockers_add_or_update=[BlockerState(id=f"blocker_act_{r_reason}", kind="access", subject=r_reason)]
@@ -360,18 +356,20 @@ class AuthoritativeApplyPipeline:
                 update = replace(update, 
                     rejections_delta=rej_delta,
                     rejection_events=update.rejection_events + [RejectionEvent(
-                        tick=state.tick, actor_id=e_id, action_kind="ENTITY_ACT", reason=r_reason
+                        tick=state.tick, actor_id=eid, action_kind="ENTITY_ACT", reason=r_reason
                     )]
                 )
                 continue
 
-            legal, reason = LegalityServiceV2.verify_action_legality(entity, action_kind, working_state)
+            # Readiness check and Action Legality (Suppression/Status) are enforced for ALL ENTITY_ACTs
+            # VERIFIED v2: action_legality_matrix
+            legal, reason = LegalityServiceV2.verify_action_legality(entity, action, working_state)
             
             if not legal:
                  # Suppression! Remove the task and record failure
                  from src.core.strategic import BlockerState
                  from src.core.updates import StrategicUpdate
-                 refined_entity_updates[e_id] = replace(ent_upd,
+                 refined_entity_updates[eid] = replace(ent_upd,
                     task=replace(task_upd, payload_set={**task_upd.payload_set, "outcome": "FAILURE", "reason": reason}),
                     strategic=replace(ent_upd.strategic or StrategicUpdate(), 
                         blockers_add_or_update=[BlockerState(id=f"blocker_act_{reason}", kind="access", subject=reason)]
@@ -383,29 +381,29 @@ class AuthoritativeApplyPipeline:
                  update = replace(update, 
                      rejections_delta=rej_delta,
                      rejection_events=update.rejection_events + [RejectionEvent(
-                         tick=state.tick, actor_id=e_id, action_kind=action_kind, reason=reason
+                         tick=state.tick, actor_id=eid, action_kind="ENTITY_ACT", reason=reason
                      )]
                  )
                  continue
 
-            if action_kind in ("ATTACK", "SKILL", "AOE_ATTACK"):
+            if action in ("ATTACK", "SKILL", "AOE_ATTACK"):
                 is_legal = False
                 reason = "UNKNOWN"
                 
-                if action_kind in ("ATTACK", "SKILL"):
+                if action in ("ATTACK", "SKILL"):
                     target_id = task_upd.payload_set.get("target_id")
                     if target_id is None: continue
                     target = working_state.entities.get(target_id)
                     if not target: continue
                     
                     is_legal, reason = LegalityServiceV2.verify_attack_legality(entity, target, working_state)
-                    if is_legal and action_kind == "SKILL":
+                    if is_legal and action == "SKILL":
                         skill_id = task_upd.payload_set.get("skill_id")
                         if not skill_id:
                             is_legal, reason = False, "MISSING_SKILL_ID"
                         else:
                             is_legal, reason = LegalityServiceV2.verify_skill_legality(entity, skill_id, working_state)
-                elif action_kind == "AOE_ATTACK":
+                elif action == "AOE_ATTACK":
                     target_pos = task_upd.payload_set.get("target_pos")
                     if target_pos is None: continue
                     is_legal, reason = LegalityServiceV2.verify_aoe_legality(entity, target_pos, working_state)
@@ -414,10 +412,10 @@ class AuthoritativeApplyPipeline:
                      # Mark failure in task payload (Milestone 3 logic)
                      from src.core.strategic import BlockerState
                      from src.core.updates import StrategicUpdate
-                     refined_entity_updates[e_id] = replace(ent_upd,
+                     refined_entity_updates[eid] = replace(ent_upd,
                          task=replace(task_upd, payload_set={**task_upd.payload_set, "outcome": "FAILURE", "reason": reason}),
                          strategic=replace(ent_upd.strategic or StrategicUpdate(), 
-                             blockers_add_or_update=[BlockerState(id=f"blocker_{action_kind.lower()}_{reason}", kind="access", subject=reason)]
+                             blockers_add_or_update=[BlockerState(id=f"blocker_{action.lower()}_{reason}", kind="access", subject=reason)]
                          )
                      )
                      # Global rejection tracking (Phase E4.7)
@@ -426,12 +424,13 @@ class AuthoritativeApplyPipeline:
                      update = replace(update, 
                          rejections_delta=rej_delta,
                          rejection_events=update.rejection_events + [RejectionEvent(
-                             tick=state.tick, actor_id=e_id, action_kind=action_kind, reason=reason, target_id=target_id if action_kind != "AOE_ATTACK" else str(target_pos)
+                             tick=state.tick, actor_id=eid, action_kind=action, reason=reason, target_id=target_id if action != "AOE_ATTACK" else str(target_pos)
                          )]
                      )
                      continue
                 
                 # 2. Execute Action via Domain Logic using SLIDING state
+                logger.info(f"Pipeline: Executing {action} for {eid}")
                 action_updates = SimulationDomainLogic.execute_action(
                     entity, 
                     payload=task_upd.payload_set, 
@@ -439,21 +438,20 @@ class AuthoritativeApplyPipeline:
                     neighbor_view=SimulationDomainLogic.get_neighbor_view(working_state, entity, radius=10.0),
                     context=working_state
                 )
+                logger.info(f"Pipeline: Action updates keys: {list(action_updates.keys())}")
                 
                 # 3. Merge all updates from the action (Attacker + Target)
-                new_entities_to_sync = []
-                for eid, upd in action_updates.items():
-                    existing = refined_entity_updates.get(eid, EntityUpdate(entity_id=eid))
-                    merged = existing.merge(upd)
+                for action_eid, action_upd in action_updates.items():
+                    existing = refined_entity_updates.get(action_eid, EntityUpdate(entity_id=action_eid))
+                    merged = existing.merge(action_upd)
                     # Phase E5.8 Hardening: Readiness costs must stack across phases
-                    refined_entity_updates[eid] = replace(merged, 
-                        readiness_delta=existing.readiness_delta + upd.readiness_delta
+                    refined_entity_updates[action_eid] = replace(merged, 
+                        readiness_delta=existing.readiness_delta + action_upd.readiness_delta
                     )
-                    new_entities_to_sync.append(eid)
                 
                 # 4. Mark SUCCESS
-                final_ent_upd = refined_entity_updates[e_id]
-                refined_entity_updates[e_id] = replace(final_ent_upd,
+                final_ent_upd = refined_entity_updates[eid]
+                refined_entity_updates[eid] = replace(final_ent_upd,
                     task=replace(final_ent_upd.task or task_upd, payload_set={**task_upd.payload_set, "outcome": "SUCCESS"})
                 )
                 
@@ -479,8 +477,8 @@ class AuthoritativeApplyPipeline:
         
         # Include current positions of entities that are NOT moving to block tiles
         # (Actually, only entities that ARE active block tiles)
-        current_occupied = { (int(e.position[0]), int(e.position[1])): e.id 
-                             for e in state.entities.values() if e.active }
+        current_occupied = { (int(e.navigation.position[0]), int(e.navigation.position[1])): e.id 
+                             for e in state.entities.values() if e.lifecycle.active }
         
         # entities_moving tracks who is proposing a NEW position
         entities_moving = []
@@ -560,7 +558,7 @@ class AuthoritativeApplyPipeline:
         for e_id, ent_upd in refined_entity_updates.items():
             if ent_upd.combat and ent_upd.combat.hp_delta < 0:
                 entity = state.entities.get(e_id)
-                if not entity or not entity.active: continue
+                if not entity or not entity.lifecycle.active: continue
                 if entity.identity.role != EntityRole.HERO: continue
                 
                 # Check if survival is below 10%

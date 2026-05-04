@@ -21,8 +21,10 @@ class StrategicRedirectionSystem:
         
         refined_entity_updates = dict(update.entity_updates)
         
-        for e_id, entity in state.entities.items():
-            if not entity.active:
+        # Phase 9 Fix: Deterministic entity iteration
+        for e_id in sorted(list(state.entities.keys())):
+            entity = state.entities[e_id]
+            if not entity.lifecycle.active:
                 continue
                 
             ent_upd = refined_entity_updates.get(e_id, EntityUpdate(entity_id=e_id))
@@ -76,12 +78,13 @@ class StrategicRedirectionSystem:
                 
                 if has_items:
                     # If not already at town
-                    tile_pos = (int(entity.position[0]), int(entity.position[1]))
+                    tile_pos = (int(entity.navigation.position[0]), int(entity.navigation.position[1]))
                     if tile_pos not in state.town_tiles:
                         # Redirection to town
                         # We pick any town tile for simplicity in proof
                         if state.town_tiles:
-                            town_pos = list(state.town_tiles)[0]
+                            # Phase 9 Fix: Deterministic selection from set
+                            town_pos = sorted(list(state.town_tiles))[0]
                             town_coords = (float(town_pos[0]), float(town_pos[1]))
                             
                             existing_nav = ent_upd.navigation or NavigationUpdate()

@@ -6,9 +6,13 @@ from src.systems.routine import RoutineService
 
 def test_role_identity_biasing():
     """Verify that different roles bias toward different project kinds."""
+    from src.core.builder import V2EntityBuilder
     # 1. Shopkeeper bias for Shopkeeping
-    shopkeeper = EntityState(id=1, kind="CITIZEN", position=(0.0, 0.0),
-                             identity=IdentityComponent(role=EntityRole.SHOPKEEPER))
+    shopkeeper = (V2EntityBuilder(1)
+        .kind("CITIZEN")
+        .at((0.0, 0.0))
+        .role(EntityRole.SHOPKEEPER)
+        .build())
     
     projects = [
         ProjectState(id="p1", kind="SHOPKEEPING", score=10.0),
@@ -26,8 +30,11 @@ def test_role_identity_biasing():
     assert p2_shop.score == 10.0
     
     # 2. Hero bias for Quests
-    hero = EntityState(id=2, kind="HERO", position=(0.0, 0.0),
-                       identity=IdentityComponent(role=EntityRole.HERO))
+    hero = (V2EntityBuilder(2)
+        .kind("HERO")
+        .at((0.0, 0.0))
+        .role(EntityRole.HERO)
+        .build())
     
     biased_hero = RoutineService.apply_role_based_biasing(hero, projects, 1200)
     

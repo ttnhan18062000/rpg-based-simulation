@@ -30,8 +30,10 @@ from src.core.state import (
 from src.core.enums import Faction, EntityRole
 from src.core.movement_modes import MovementMode
 from src.core.updates import (
-    EntityUpdate, CombatUpdate, StaminaUpdate, WoundUpdate, NavigationUpdate
+    EntityUpdate, CombatUpdate, StaminaUpdate, WoundUpdate, NavigationUpdate,
+    StateUpdate
 )
+from src.core.builder import V2EntityBuilder
 from src.engine.rpg_depth import (
     StaminaService, WoundService, LeashService, TerrainCostService,
     TargetStickinessService, SkillScalingService, ATTRIBUTE_CAP,
@@ -45,26 +47,31 @@ def make_entity(eid=1, pos=(5.0, 5.0), hp=100, max_hp=100, atk=10, def_stat=5,
                 stamina_current=100.0, stamina_max=100.0,
                 leash_radius=0.0, home_pos=None, chase_ticks=0, max_chase_ticks=15,
                 returning_home=False, endurance=5, strength=5, intelligence=5,
-                spirit=5):
-    return EntityState(
-        id=eid, kind="hero", position=pos,
-        readiness=100.0, active=True,
-        combat=CombatComponent(
-            hp=hp, max_hp=max_hp, atk=atk, def_stat=def_stat,
-            alive=alive, tactical_role="VANGUARD"
-        ),
-        identity=IdentityComponent(faction=faction, role=role),
-        navigation=NavigationComponent(
-            leash_radius=leash_radius,
-            home_position=home_pos,
-            chase_ticks=chase_ticks,
-            max_chase_ticks=max_chase_ticks,
-            returning_home=returning_home
-        ),
-        stamina=StaminaComponent(current=stamina_current, max_stamina=stamina_max),
-        attributes=AttributeComponent(endurance=endurance, strength=strength,
-                                      intelligence=intelligence, spirit=spirit),
+                spirit=5, active=True):
+    builder = (V2EntityBuilder(eid)
+               .kind("hero")
+               .at(pos)
+               .faction(faction)
+               .role(role)
+               .hp(hp)
+               .with_base_stats(atk=atk, def_stat=def_stat, range=1)
+               .readiness(100.0)
+               .stamina(stamina_current, stamina_max)
+               .attributes(endurance=endurance, strength=strength, 
+                          intelligence=intelligence, spirit=spirit))
+    
+    entity = builder.build()
+    
+    # Navigation overrides (leash/chase)
+    nav = replace(entity.navigation,
+        leash_radius=leash_radius,
+        home_position=home_pos,
+        chase_ticks=chase_ticks,
+        max_chase_ticks=max_chase_ticks,
+        returning_home=returning_home
     )
+    
+    return replace(entity, navigation=nav, lifecycle=replace(entity.lifecycle, active=active))
 
 
 def make_state(entities=None, terrain=None, regions=None):
@@ -526,8 +533,8 @@ class TestWoundApplyIntegration:
             wound_update=WoundUpdate(wounds_add=[wound])
         )
         result = ApplyPath._apply_entity_update(entity, update)
-        assert len(result.wounds) == 1
-        assert result.wounds[0].id == "w1"
+        assert len(result.combat.wounds) == 1
+        assert result.combat.wounds[0].id == "w1"
         # Recalculation gate derives base stats then applies wound penalty
         # With default attrs (str=5, vit=5, end=5):
         # base_atk = 10 + int(5*0.5) = 12, after wound: 12 - 5 = 7
@@ -547,8 +554,8 @@ class TestWoundApplyIntegration:
             wound_update=WoundUpdate(scars_add=[scar])
         )
         result = ApplyPath._apply_entity_update(entity, update)
-        assert len(result.scars) == 1
-        assert result.scars[0].id == "s1"
+        assert len(result.combat.scars) == 1
+        assert result.combat.scars[0].id == "s1"
 
     def test_wound_heal_through_apply(self):
         """WoundUpdate can heal existing wounds."""
@@ -557,13 +564,13 @@ class TestWoundApplyIntegration:
             id="w1", kind="SLASH", severity=0.5, tick_inflicted=1,
             atk_penalty=2.0, def_penalty=1.0, max_hp_penalty=5.0
         )
-        entity = replace(make_entity(), wounds=[wound])
+        entity = replace(make_entity(), combat=replace(make_entity().combat, wounds=[wound]))
         update = EntityUpdate(
             entity_id=1,
             wound_update=WoundUpdate(wounds_heal=["w1"])
         )
         result = ApplyPath._apply_entity_update(entity, update)
-        assert result.wounds[0].healed
+        assert result.combat.wounds[0].healed
 
 
 class TestPassiveStaminaRegen:

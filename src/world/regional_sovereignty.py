@@ -43,7 +43,7 @@ class RegionalSovereigntyService:
                     continue
                     
                 from src.engine.legality import LegalityServiceV2
-                if LegalityServiceV2.get_region_for_position(entity.position, state).id == r_id:
+                if LegalityServiceV2.get_region_for_position(entity.navigation.position, state).id == r_id:
                     # If entity is a Hero, they pay tax
                     if entity.identity.role == EntityRole.HERO:
                         tax_amount = min(entity.inventory.gold, RegionalSovereigntyService.TAX_RATE_ENTITY)
@@ -83,7 +83,7 @@ class RegionalSovereigntyService:
             return None
             
         from src.engine.legality import LegalityServiceV2
-        region = LegalityServiceV2.get_region_for_position(entity.position, state)
+        region = LegalityServiceV2.get_region_for_position(entity.navigation.position, state)
         
         if region and region.owner_faction_id == Faction.MONSTER_HORDE:
             # Check if debuff already applied (to avoid stacking or redundant updates if we used status effects)

@@ -75,7 +75,7 @@ class StrategicIntelligenceSystem:
             target_id = last_payload.get("target_id")
             if target_id and current_project and current_project.kind == "harvesting":
                 # Check for capacity failure in latest intent results
-                capacity_fail = any(r.reason == "INSUFFICIENT_CAPACITY" or r.reason == "INVENTORY_FULL" for r in entity.latest_intent_results)
+                capacity_fail = any(r.reason == "INSUFFICIENT_CAPACITY" or r.reason == "INVENTORY_FULL" for r in entity.identity.latest_intent_results)
                 if capacity_fail:
                     blockers.append(BlockerState(
                         id="blocker_inventory_full",
@@ -92,7 +92,7 @@ class StrategicIntelligenceSystem:
                     ))
 
         # 3. Transaction Failures (Generic)
-        for result in entity.latest_intent_results:
+        for result in entity.identity.latest_intent_results:
             if not result.accepted:
                 if result.reason in ("INSUFFICIENT_CAPACITY", "INVENTORY_FULL"):
                      blockers.append(BlockerState(
@@ -170,7 +170,9 @@ class StrategicIntelligenceSystem:
         """
         refined_entity_updates = dict(update.entity_updates)
 
-        for e_id, ent_upd in update.entity_updates.items():
+        # Phase 9 Fix: Deterministic entity iteration
+        for e_id in sorted(list(update.entity_updates.keys())):
+            ent_upd = update.entity_updates[e_id]
             if e_id not in state.entities:
                 continue
 
@@ -196,13 +198,13 @@ class StrategicIntelligenceSystem:
                 if blocker_id in active_blocker_ids:
                     resolved_ids.append(blocker_id)
 
-            # 2. Scan for access blockers (Resolved by proximity)
             for b_id, blocker in entity.strategic.blockers.items():
                 if blocker.kind == "access" and not blocker.resolved:
                     try:
                         # blocker.subject might be "(5.0, 6.0)"
-                        target_pos = eval(blocker.subject)
-                        dist = abs(entity.position[0] - target_pos[0]) + abs(entity.position[1] - target_pos[1])
+                        s = blocker.subject.strip("()").split(",")
+                        target_pos = (float(s[0]), float(s[1]))
+                        dist = abs(entity.navigation.position[0] - target_pos[0]) + abs(entity.navigation.position[1] - target_pos[1])
                         if dist < 1.0:
                             resolved_ids.append(b_id)
                     except:
@@ -252,13 +254,15 @@ class StrategicIntelligenceSystem:
         
         refined_entity_updates = dict(update.entity_updates)
         
-        for e_id, entity in state.entities.items():
+        # Phase 9 Fix: Deterministic entity iteration
+        for e_id in sorted(list(state.entities.keys())):
+            entity = state.entities[e_id]
             # Phase 5: Bounded frequency and early exit (Hardening)
-            if not entity.active or not entity.combat.alive:
+            if not entity.lifecycle.active or not entity.combat.alive:
                 continue
             
             # Legality Guard: Incapacitated entities skip strategic cycles
-            if entity.properties.get("status_frozen") or entity.properties.get("status_stunned"):
+            if entity.identity.properties.get("status_frozen") or entity.identity.properties.get("status_stunned"):
                 continue
 
             if (state.tick + e_id) % 10 != 0:
@@ -489,8 +493,15 @@ class StrategicIntelligenceSystem:
         # 1. Reach Location Resolution
         if obj.kind == "reach_location" and obj.target:
             try:
-                target_pos = eval(obj.target) if isinstance(obj.target, str) else obj.target
-                dist = abs(entity.position[0] - target_pos[0]) + abs(entity.position[1] - target_pos[1])
+                if isinstance(obj.target, str):
+                    try:
+                        import ast
+                        target_pos = ast.literal_eval(obj.target)
+                    except (ValueError, SyntaxError):
+                        target_pos = None
+                else:
+                    target_pos = obj.target
+                dist = abs(entity.navigation.position[0] - target_pos[0]) + abs(entity.navigation.position[1] - target_pos[1])
                 if dist < 1.0:
                     resolved_obj = replace(obj, status=ObjectiveStatus.RESOLVED)
                     # For now, we assume 1 objective per detour project
@@ -506,21 +517,21 @@ class StrategicIntelligenceSystem:
     @staticmethod
     def evaluate_strategic_intent(
         state: AuthoritativeState,
-        entity: EntityState
+        entity: EntityState,
+        force: bool = False
     ) -> StrategicUpdate:
         """
-        Main entry point for strategic decision making.
-        VERIFIED v2: strategic_intent_evaluation
+        Produce a collection of strategic intent updates for the next tick.
         """
         # Phase 5: Bounded frequency and early exit (Hardening)
-        if not entity.active or not entity.combat.alive:
+        if not entity.lifecycle.active or not entity.combat.alive:
             return StrategicUpdate()
         
         # Legality Guard: Incapacitated entities skip strategic cycles
-        if entity.properties.get("status_frozen") or entity.properties.get("status_stunned"):
+        if entity.identity.properties.get("status_frozen") or entity.identity.properties.get("status_stunned"):
             return StrategicUpdate()
 
-        if (state.tick + entity.id) % 10 != 0:
+        if not force and (state.tick + entity.id) % 10 != 0:
             return StrategicUpdate()
 
         # 0. Strategic Memory (PH6: Lead Suppression)
@@ -633,7 +644,7 @@ class StrategicIntelligenceSystem:
                      except ValueError:
                          pass
                 
-                if strat.blockers and entity.group_id is None:
+                if strat.blockers and entity.identity.group_id is None:
                     from src.systems.detour import DetourSuggestionSystem
                     detours = DetourSuggestionSystem.suggest_detours(entity, current_tick)
                     if detours:

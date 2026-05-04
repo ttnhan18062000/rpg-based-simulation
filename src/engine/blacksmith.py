@@ -117,7 +117,7 @@ class BlacksmithSystem:
         refined_entity_updates = dict(update.entity_updates)
         
         for e_id, entity in state.entities.items():
-            pos = entity.position
+            pos = entity.navigation.position
             ent_upd = refined_entity_updates.get(e_id)
             if ent_upd and ent_upd.new_position:
                 pos = ent_upd.new_position

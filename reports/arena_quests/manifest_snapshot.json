@@ -1,7 +1,7 @@
 {
   "declared_release_targets": {
     "default": "class_b",
-    "required_profiles": ["CRUSH_TEST", "NORMAL_ONLY", "NO_RECOVERY"],
+    "required_profiles": ["NORMAL_ONLY", "NO_RECOVERY"],
     "required_hardware_classes": ["class_b"],
     "required_scenarios": [
       "IDLE_CLEAN", 

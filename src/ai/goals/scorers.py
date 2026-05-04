@@ -10,7 +10,7 @@ class HarvestScorer(GoalScorer):
         for node in state.resource_nodes.values():
             if node.remaining_charges > 0 and node.cooldown_remaining <= 0:
                 # Proximity score
-                dist = max(1.0, abs(node.position[0] - entity.position[0]) + abs(node.position[1] - entity.position[1]))
+                dist = max(1.0, abs(node.position[0] - entity.navigation.position[0]) + abs(node.position[1] - entity.navigation.position[1]))
                 node_score = 50.0 / dist
                 if node_score > best_score:
                     best_score = node_score
@@ -33,7 +33,7 @@ class SleepScorer(GoalScorer):
         min_dist = 999.0
         for b in state.buildings.values():
             if b.kind == "inn":
-                dist = abs(b.position[0] - entity.position[0]) + abs(b.position[1] - entity.position[1])
+                dist = abs(b.position[0] - entity.navigation.position[0]) + abs(b.position[1] - entity.navigation.position[1])
                 if dist < min_dist:
                     min_dist = dist
                     best_building_id = str(b.id)
@@ -50,7 +50,7 @@ class EatScorer(GoalScorer):
         min_dist = 999.0
         for b in state.buildings.values():
             if b.kind == "tavern":
-                dist = abs(b.position[0] - entity.position[0]) + abs(b.position[1] - entity.position[1])
+                dist = abs(b.position[0] - entity.navigation.position[0]) + abs(b.position[1] - entity.navigation.position[1])
                 if dist < min_dist:
                     min_dist = dist
                     best_building_id = str(b.id)

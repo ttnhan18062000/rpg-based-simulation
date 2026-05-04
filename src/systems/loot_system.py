@@ -16,7 +16,7 @@ class LootSystem:
             if not entity.interaction or entity.interaction.target_node_id is None:
                 continue
                 
-            interaction_kind = entity.properties.get("interaction_kind")
+            interaction_kind = entity.identity.properties.get("interaction_kind")
             if interaction_kind not in ["ground_item", "corpse"]:
                 continue
                 
@@ -39,7 +39,7 @@ class LootSystem:
                 )
                 continue
                 
-            dist = abs(entity.position[0] - target_pos[0]) + abs(entity.position[1] - target_pos[1])
+            dist = abs(entity.navigation.position[0] - target_pos[0]) + abs(entity.navigation.position[1] - target_pos[1])
             if dist > 1.5:
                 # Interrupted by distance
                 entity_updates[entity.id] = EntityUpdate(

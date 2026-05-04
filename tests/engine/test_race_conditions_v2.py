@@ -1,28 +1,27 @@
 import pytest
 from dataclasses import replace
 from src.core.state import AuthoritativeState, EntityState, IdentityComponent, CombatComponent, ResourceNodeState, ItemStack, StrategicComponent, InventoryComponent, ItemKind
-from src.core.enums import EntityRole
+from src.core.enums import EntityRole, ReasonCode
 from src.engine.pipeline import AuthoritativeApplyPipeline
 from src.core.updates import StateUpdate, EntityUpdate, ResourceTransferIntent
 from src.core.items import ItemRegistry, ItemDefinition
 
 # Ensure items exist in registry for inventory validation
-ItemRegistry._items["iron_ore"] = ItemDefinition(id="iron_ore", name="Iron Ore", kind=ItemKind.MATERIAL, weight=1.0)
+ItemRegistry._items["iron_ore"] = ItemDefinition(id="iron_ore", name="Iron Ore", kind=ItemKind.MATERIAL, weight=2.0)
 ItemRegistry._items["gold_coin"] = ItemDefinition(id="gold_coin", name="Gold Coin", kind=ItemKind.CURRENCY, weight=0.01)
 ItemRegistry._items["bone"] = ItemDefinition(id="bone", name="Bone", kind=ItemKind.MATERIAL, weight=0.5)
 ItemRegistry._items["steel_sword"] = ItemDefinition(id="steel_sword", name="Steel Sword", kind=ItemKind.WEAPON, weight=5.0, stack_size=1, properties={"slot": "MAIN_HAND"})
 ItemRegistry._items["coal"] = ItemDefinition(id="coal", name="Coal", kind=ItemKind.MATERIAL, weight=0.5)
 
 def create_mock_entity(id, pos=(0,0)):
-    return EntityState(
-        id=id,
-        kind="hero",
-        position=pos,
-        identity=IdentityComponent(role=EntityRole.HERO),
-        combat=CombatComponent(hp=100, max_hp=100, atk=10, alive=True),
-        inventory=InventoryComponent(max_slots=10, max_weight=100.0),
-        strategic=StrategicComponent()
-    )
+    from src.core.builder import V2EntityBuilder
+    return (V2EntityBuilder(id)
+            .kind("hero")
+            .at(pos)
+            .with_identity(role=EntityRole.HERO)
+            .with_combat(hp=100)
+            .with_inventory_v2(max_slots=10, max_weight=100.0)
+            .build())
 
 @pytest.mark.v2_contract
 def test_race_condition_node_depletion():
@@ -74,9 +73,9 @@ def test_race_condition_ground_item_lock():
     
     # Entity 1 succeeds
     assert refined.entity_updates[1].intent_results[0].accepted is True
-    # Entity 2 fails with SOURCE_LOCKED
+    # Entity 2 fails with TARGET_LOCKED
     assert refined.entity_updates[2].intent_results[0].accepted is False
-    assert refined.entity_updates[2].intent_results[0].reason == "SOURCE_LOCKED"
+    assert refined.entity_updates[2].intent_results[0].reason == ReasonCode.TARGET_LOCKED
 
 @pytest.mark.v2_contract
 def test_race_condition_corpse_loot_lock():
@@ -100,7 +99,7 @@ def test_race_condition_corpse_loot_lock():
     
     assert refined.entity_updates[1].intent_results[0].accepted is True
     assert refined.entity_updates[2].intent_results[0].accepted is False
-    assert refined.entity_updates[2].intent_results[0].reason == "SOURCE_LOCKED"
+    assert refined.entity_updates[2].intent_results[0].reason == ReasonCode.TARGET_LOCKED
 
 @pytest.mark.v2_contract
 def test_multi_intent_group_rollback_race():

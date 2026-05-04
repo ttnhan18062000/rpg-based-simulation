@@ -13,13 +13,12 @@ from src.social.appraisal import SocialAppraisalSystem
 
 
 def _make_entity_with_trust(source_id, trust=0.5, interactions=0):
-    source_entry = SourceTrustEntry(
-        entity_id=source_id, trust=trust, interactions=interactions
-    )
-    strategic = StrategicComponent(
-        source_trust={source_id: source_entry}
-    )
-    return EntityState(id=1, kind="hero", position=(5.0, 5.0), strategic=strategic)
+    from src.core.builder import V2EntityBuilder
+    return (V2EntityBuilder(1)
+        .kind("hero")
+        .position(5.0, 5.0)
+        .source_trust(source_id, trust, interactions)
+        .build())
 
 
 class TestRefutationDropsTrust:
@@ -75,8 +74,8 @@ class TestRefutationDropsTrust:
         assert result.source_trust_updates[0].trust <= 1.0
 
     def test_unknown_source_defaults_to_half(self):
-        """Source not in source_trust starts at 0.5."""
-        entity = EntityState(id=1, kind="hero", position=(5.0, 5.0))
+        from src.core.builder import V2EntityBuilder
+        entity = V2EntityBuilder(1).kind("hero").position(5.0, 5.0).build()
         result = SocialAppraisalSystem.recalibrate_source_trust(entity, 99, "SUCCESS")
         updated = result.source_trust_updates[0]
         assert updated.trust == pytest.approx(0.6, abs=0.01)
@@ -93,8 +92,12 @@ class TestSocialContracts:
             id="contract_001", kind=ContractKind.RECRUITMENT,
             source_id=1, target_id=2, status=ContractStatus.ACTIVE, created_tick=10
         )
+        # Create entity that owns the contract
+        from src.core.builder import V2EntityBuilder
+        entity = V2EntityBuilder(1).strategic_contract(contract).build()
+        
         strat_up, bond_updates = ContractService.resolve_contract_outcome(
-            contract, success=True
+            entity, contract.id, success=True
         )
         # Bond updates for both source and target
         assert len(bond_updates) == 2
@@ -107,8 +110,12 @@ class TestSocialContracts:
             id="contract_002", kind=ContractKind.RECRUITMENT,
             source_id=1, target_id=2, status=ContractStatus.ACTIVE, created_tick=10
         )
+        # Create entity that owns the contract
+        from src.core.builder import V2EntityBuilder
+        entity = V2EntityBuilder(1).strategic_contract(contract).build()
+
         strat_up, bond_updates = ContractService.resolve_contract_outcome(
-            contract, success=False, betrayal=True
+            entity, contract.id, success=False, betrayal=True, betrayer_id=1
         )
         # Trust drops for all parties
         assert all(bu.bond_updates[0].sentiment_delta < -0.8 for bu in bond_updates)
@@ -120,7 +127,8 @@ class TestFamiliarity:
     """Part 1 §Social: Social learning updates familiarity bonds."""
 
     def test_positive_interaction_builds_familiarity(self):
-        entity = EntityState(id=1, kind="hero", position=(5.0, 5.0))
+        from src.core.builder import V2EntityBuilder
+        entity = V2EntityBuilder(1).kind("hero").position(5.0, 5.0).build()
         update = SocialAppraisalSystem.update_familiarity(
             observer=entity, subject_id=42,
             interaction_quality=1.0, current_tick=100
@@ -131,7 +139,8 @@ class TestFamiliarity:
         assert b_upd.sentiment_delta > 0
 
     def test_cha_modifier_scales_gain(self):
-        entity = EntityState(id=1, kind="hero", position=(5.0, 5.0))
+        from src.core.builder import V2EntityBuilder
+        entity = V2EntityBuilder(1).kind("hero").position(5.0, 5.0).build()
         upd_low = SocialAppraisalSystem.update_familiarity(
             entity, 42, 1.0, 100, cha_modifier=0.5
         )

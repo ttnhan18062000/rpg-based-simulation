@@ -4,6 +4,7 @@ from src.core.state import EntityState, IdentityComponent
 from src.core.worker_protocol import WorkerPacket, WorkerResult, ResultStatus
 from src.core.updates import EntityUpdate
 from src.core.work import WorkClass
+from src.core.builder import V2EntityBuilder
 
 def test_frozen_state_mutation_prevention():
     """Law: Authoritative state components must be frozen."""
@@ -14,7 +15,7 @@ def test_frozen_state_mutation_prevention():
 
 def test_worker_context_immutability():
     """Law: Workers must receive a context that cannot be mutated to affect the engine."""
-    subject = EntityState(id=1, kind="ACTOR", position=(0.0, 0.0))
+    subject = V2EntityBuilder(1).kind("ACTOR").at((0.0, 0.0)).build()
     packet = WorkerPacket(
         packet_id="1:0",
         work_id="1:1:TEST",
@@ -40,7 +41,7 @@ def test_local_executor_isolation_contract():
     from src.engine.executor import LocalSequentialExecutor
     executor = LocalSequentialExecutor()
     
-    subject = EntityState(id=1, kind="ORIGINAL", position=(0.0, 0.0))
+    subject = V2EntityBuilder(1).kind("ORIGINAL").at((0.0, 0.0)).build()
     
     # A malicious worker that tries to mutate its input
     class MaliciousWorker:

@@ -234,3 +234,8 @@ test_output.txt
 test_*_output.txt
 scratch/
 task.md
+
+graphify-out/cache/*
+graphify-out/.graphify_uncached.txt
+graphify-out/.graphify_root
+graphify-out/.graphify_python

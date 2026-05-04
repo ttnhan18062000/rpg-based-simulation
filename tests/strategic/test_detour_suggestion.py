@@ -33,6 +33,7 @@ from src.systems.detour import DetourSuggestionSystem
 
 
 def _make_entity_with_leads(num_leads, profile=None, blockers=None, concerns=None, source_trust=None):
+    from src.core.builder import V2EntityBuilder
     leads = {}
     for i in range(num_leads):
         lid = f"lead_{i}"
@@ -41,14 +42,22 @@ def _make_entity_with_leads(num_leads, profile=None, blockers=None, concerns=Non
             certainty=LeadCertainty.VAGUE,
             discovered_tick=i
         )
-    strategic = StrategicComponent(
-        profile=profile or CognitionProfile(max_leads=5, max_concerns=3),
-        leads=leads,
-        blockers=blockers or {},
-        concerns=concerns or {},
-        source_trust=source_trust or {}
-    )
-    return EntityState(id=1, kind="hero", position=(5.0, 5.0), strategic=strategic)
+    
+    builder = (V2EntityBuilder(1)
+        .kind("hero")
+        .at((5.0, 5.0))
+        .with_strategic(leads=leads, blockers=blockers, concerns=concerns))
+    
+    if profile:
+        builder.with_strategic_profile(
+            max_leads=profile.max_leads,
+            max_concerns=profile.max_concerns,
+            breadth=profile.detour_breadth
+        )
+    else:
+        builder.with_strategic_profile(max_leads=5, max_concerns=3)
+        
+    return builder.build()
 
 
 class TestLeadBandwidth:
@@ -66,17 +75,19 @@ class TestLeadBandwidth:
 
     def test_highest_certainty_leads_retained(self):
         """When truncating, highest certainty leads survive."""
+        from src.core.builder import V2EntityBuilder
         leads = {
             "precise": LeadState(id="precise", kind="location", subject="gold", certainty=LeadCertainty.PRECISE),
             "approx": LeadState(id="approx", kind="location", subject="iron", certainty=LeadCertainty.APPROXIMATE),
             "vague1": LeadState(id="vague1", kind="location", subject="wood", certainty=LeadCertainty.VAGUE),
             "vague2": LeadState(id="vague2", kind="location", subject="stone", certainty=LeadCertainty.VAGUE),
         }
-        strategic = StrategicComponent(
-            profile=CognitionProfile(max_leads=2),
-            leads=leads
-        )
-        entity = EntityState(id=1, kind="hero", position=(5.0, 5.0), strategic=strategic)
+        entity = (V2EntityBuilder(1)
+            .kind("hero")
+            .at((5.0, 5.0))
+            .with_strategic_profile(max_leads=2)
+            .with_strategic(leads=leads)
+            .build())
         result = DetourSuggestionSystem.enforce_bandwidth(entity, current_tick=10)
         assert len(result.leads_remove) == 2
         # Precise and Approximate should survive (highest certainty)
@@ -119,44 +130,50 @@ class TestDetourSuggestion:
         assert len(result) == 0
 
     def test_detour_matches_blocker_to_lead(self):
+        from src.core.builder import V2EntityBuilder
         blockers = {"b1": BlockerState(id="b1", kind="material", subject="iron_ore", severity=0.8)}
         leads = {
             "l1": LeadState(id="l1", kind="location", subject="iron_ore", certainty=LeadCertainty.APPROXIMATE)
         }
-        strategic = StrategicComponent(
-            profile=CognitionProfile(detour_breadth=3),
-            blockers=blockers, leads=leads
-        )
-        entity = EntityState(id=1, kind="hero", position=(5.0, 5.0), strategic=strategic)
+        entity = (V2EntityBuilder(1)
+            .kind("hero")
+            .at((5.0, 5.0))
+            .with_strategic_profile(breadth=3)
+            .with_strategic(blockers=blockers, leads=leads)
+            .build())
         result = DetourSuggestionSystem.suggest_detours(entity, current_tick=10)
         assert len(result) == 1
         assert result[0].blocker_id == "b1"
         assert result[0].lead_id == "l1"
 
     def test_breadth_limit_enforced(self):
+        from src.core.builder import V2EntityBuilder
         blockers = {f"b{i}": BlockerState(id=f"b{i}", kind="material", subject=f"mat_{i}", severity=0.5)
                      for i in range(5)}
         leads = {f"l{i}": LeadState(id=f"l{i}", kind="location", subject=f"mat_{i}", certainty=LeadCertainty.VAGUE)
                   for i in range(5)}
-        strategic = StrategicComponent(
-            profile=CognitionProfile(detour_breadth=2),
-            blockers=blockers, leads=leads
-        )
-        entity = EntityState(id=1, kind="hero", position=(5.0, 5.0), strategic=strategic)
+        entity = (V2EntityBuilder(1)
+            .kind("hero")
+            .at((5.0, 5.0))
+            .with_strategic_profile(breadth=2)
+            .with_strategic(blockers=blockers, leads=leads)
+            .build())
         result = DetourSuggestionSystem.suggest_detours(entity, current_tick=10)
         assert len(result) == 2  # Limited by breadth
 
     def test_higher_certainty_leads_score_higher(self):
+        from src.core.builder import V2EntityBuilder
         blockers = {"b1": BlockerState(id="b1", kind="material", subject="gold", severity=0.8)}
         leads = {
             "vague": LeadState(id="vague", kind="location", subject="gold", certainty=LeadCertainty.VAGUE),
             "precise": LeadState(id="precise", kind="location", subject="gold", certainty=LeadCertainty.PRECISE),
         }
-        strategic = StrategicComponent(
-            profile=CognitionProfile(detour_breadth=5),
-            blockers=blockers, leads=leads
-        )
-        entity = EntityState(id=1, kind="hero", position=(5.0, 5.0), strategic=strategic)
+        entity = (V2EntityBuilder(1)
+            .kind("hero")
+            .at((5.0, 5.0))
+            .with_strategic_profile(breadth=5)
+            .with_strategic(blockers=blockers, leads=leads)
+            .build())
         result = DetourSuggestionSystem.suggest_detours(entity, current_tick=10)
         assert len(result) == 2
         assert result[0].lead_id == "precise"  # Higher score first
@@ -166,6 +183,7 @@ class TestLeadSuppression:
     """Part 1 §Strategic: Rejected/tested leads are suppressed."""
 
     def test_failed_leads_become_exhausted(self):
+        from src.core.builder import V2EntityBuilder
         leads = {
             "tested_fail": LeadState(
                 id="tested_fail", kind="location", subject="gold",
@@ -173,8 +191,11 @@ class TestLeadSuppression:
             ),
             "untested": LeadState(id="untested", kind="location", subject="iron", certainty=LeadCertainty.VAGUE),
         }
-        strategic = StrategicComponent(leads=leads)
-        entity = EntityState(id=1, kind="hero", position=(5.0, 5.0), strategic=strategic)
+        entity = (V2EntityBuilder(1)
+            .kind("hero")
+            .at((5.0, 5.0))
+            .with_strategic(leads=leads)
+            .build())
         
         # Phase 6: Needs 3 failures for exhaustion
         r1 = DetourSuggestionSystem.suppress_exhausted_leads(entity, current_tick=100)
@@ -189,6 +210,7 @@ class TestLeadSuppression:
         assert r3.leads_add_or_update[0].certainty == LeadCertainty.EXHAUSTED
 
     def test_exhausted_leads_excluded_from_detours(self):
+        from src.core.builder import V2EntityBuilder
         blockers = {"b1": BlockerState(id="b1", kind="material", subject="gold", severity=0.8)}
         leads = {
             "exhausted": LeadState(
@@ -196,10 +218,11 @@ class TestLeadSuppression:
                 certainty=LeadCertainty.EXHAUSTED, tested=True, test_outcome="FAILURE"
             ),
         }
-        strategic = StrategicComponent(
-            profile=CognitionProfile(detour_breadth=5),
-            blockers=blockers, leads=leads
-        )
-        entity = EntityState(id=1, kind="hero", position=(5.0, 5.0), strategic=strategic)
+        entity = (V2EntityBuilder(1)
+            .kind("hero")
+            .at((5.0, 5.0))
+            .with_strategic_profile(breadth=5)
+            .with_strategic(blockers=blockers, leads=leads)
+            .build())
         result = DetourSuggestionSystem.suggest_detours(entity, current_tick=10)
         assert len(result) == 0  # Exhausted lead not used

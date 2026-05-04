@@ -19,16 +19,16 @@ def base_state():
         required_ticks=1
     )
     
-    entity = EntityState(
-        id=1,
-        kind="HERO",
-        position=(0, 0),
-        identity=IdentityComponent(role=EntityRole.HERO, faction=Faction.HERO_GUILD),
-        combat=CombatComponent(hp=100, max_hp=100),
-        navigation=NavigationComponent(),
-        inventory=InventoryComponent(max_slots=1, items=[]),
-        interaction=InteractionComponent(target_node_id=101, progress=0),
-        properties={"interaction_kind": "harvest", "harvest_duration": 1}
+    from src.core.builder import V2EntityBuilder
+    entity = (V2EntityBuilder(1)
+        .kind("HERO")
+        .at((0, 0))
+        .with_class("HERO")
+        .with_combat(hp=100, max_hp=100)
+        .with_inventory(max_slots=1)
+        .with_interaction(target_id=101, progress=0)
+        .with_properties({"interaction_kind": "harvest", "harvest_duration": 1})
+        .build()
     )
     
     return AuthoritativeState(

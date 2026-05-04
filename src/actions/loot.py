@@ -29,7 +29,7 @@ class LootAction:
         if not target_pos:
             return None
             
-        dist = abs(entity.position[0] - target_pos[0]) + abs(entity.position[1] - target_pos[1])
+        dist = abs(entity.navigation.position[0] - target_pos[0]) + abs(entity.navigation.position[1] - target_pos[1])
         if dist > 1.5:
             return None
             

@@ -35,23 +35,28 @@ def base_state():
 @pytest.fixture
 def entity_with_inventory(base_state):
     """Entity with a 2-slot inventory containing 50 gold, enough weight for 2 items."""
-    entity = EntityState(
-        id=1, kind="HERO", position=(0, 0),
-        inventory=InventoryComponent(max_slots=2, items=[], gold=50, max_weight=100.0)
-    )
+    from src.core.builder import V2EntityBuilder
+    entity = (V2EntityBuilder(1)
+              .kind("HERO")
+              .at((0, 0))
+              .gold(50)
+              .readiness(100.0)
+              .with_inventory_v2(max_slots=2, max_weight=100.0)
+              .build())
     return replace(base_state, entities={1: entity})
 
 @pytest.fixture
 def entity_full_inventory(base_state):
     """Entity with completely full inventory (2/2 slots)."""
-    entity = EntityState(
-        id=1, kind="HERO", position=(0, 0),
-        inventory=InventoryComponent(
-            max_slots=2,
-            items=[ItemStack("wood", 1), ItemStack("herb", 1)],
-            gold=50
-        )
-    )
+    from src.core.builder import V2EntityBuilder
+    entity = (V2EntityBuilder(1)
+              .kind("HERO")
+              .at((0, 0))
+              .gold(50)
+              .items([ItemStack("wood", 1), ItemStack("herb", 1)])
+              .readiness(100.0)
+              .with_inventory_v2(max_slots=2)
+              .build())
     return replace(base_state, entities={1: entity})
 
 
@@ -581,11 +586,16 @@ class TestQuestRewardAtomicity:
             id="q1", kind="quest", quest_status=QuestStatus.REWARD_PENDING,
             reward=RewardState(gold=100, xp=50, items=["herb"])
         )
-        e = EntityState(
-            id=1, kind="HERO", position=(0, 0),
-            inventory=InventoryComponent(max_slots=1, items=[ItemStack("wood", 1)], gold=50),
-            strategic=StrategicComponent(projects={"q1": quest_obj})
-        )
+        from src.core.builder import V2EntityBuilder
+        e = (V2EntityBuilder(1)
+             .kind("HERO")
+             .at((0, 0))
+             .gold(50)
+             .items([ItemStack("wood", 1)])
+             .with_inventory_v2(max_slots=1)
+             .readiness(100.0)
+             .with_strategic(projects={"q1": quest_obj})
+             .build())
         state = replace(state, entities={1: e})
         
         # 1. Tick 1: Try to resolve. Should fail because inventory is full.

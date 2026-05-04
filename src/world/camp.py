@@ -45,8 +45,8 @@ class CampService:
                 # Count monsters near camp
                 mobs_near = [e for e in state.entities.values() 
                              if e.identity.role == EntityRole.MONSTER and e.combat.alive
-                             and abs(e.position[0] - camp.position[0]) < 10
-                             and abs(e.position[1] - camp.position[1]) < 10]
+                             and abs(e.navigation.position[0] - camp.position[0]) < 10
+                             and abs(e.navigation.position[1] - camp.position[1]) < 10]
                 
                 # Rule: Camp spawns monsters up to maturity/10 (min 2)
                 cap = max(2, int(camp.maturity / 10.0))

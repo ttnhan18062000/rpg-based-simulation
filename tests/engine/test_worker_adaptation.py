@@ -3,6 +3,7 @@ from unittest.mock import MagicMock
 from src.engine.worker_manager import WorkerManager
 from src.core.worker_protocol import WorkerPacket, WorkerResult, ResultStatus
 from src.core.state import EntityState
+from src.core.builder import V2EntityBuilder
 
 def dummy_worker(packet: WorkerPacket) -> WorkerResult:
     # Simulate some work
@@ -28,7 +29,7 @@ def test_worker_concurrency_throttling():
     packets = [
         WorkerPacket(packet_id=f"p{i}", work_id=f"w{i}", tick=0, world_time=0, seed=i, 
                      work_class=WorkClass.CRITICAL,
-                     subject=EntityState(id=i+1, kind="TEST", position=(0,0), properties={}), 
+                     subject=V2EntityBuilder(i+1).build(), 
                      neighbor_view=[], work_kind="TEST", payload={})
         for i in range(10)
     ]
@@ -57,6 +58,7 @@ def test_worker_concurrency_throttling():
     # Peak active should be 1
     assert stats["peak_workers"] == 1
     assert len(results) == 10
+    wm.shutdown()
 
 def test_worker_concurrency_rounding():
     """Verify that rounding always allows at least 1 worker."""
@@ -64,10 +66,11 @@ def test_worker_concurrency_rounding():
     from src.core.work import WorkClass
     packets = [WorkerPacket(packet_id="p1", work_id="w1", tick=0, world_time=0, seed=0, 
                            work_class=WorkClass.CRITICAL,
-                           subject=EntityState(id=1, kind="TEST", position=(0,0), properties={}), 
+                           subject=V2EntityBuilder(1).build(), 
                            neighbor_view=[], work_kind="TEST", payload={})]
     
     # Extremely low limit (0.01) should still round up to 1 worker
     wm.execute_batch(packets, dummy_worker, concurrency_limit=0.01)
     stats = wm.get_stats()
     assert stats["peak_workers"] == 1
+    wm.shutdown()

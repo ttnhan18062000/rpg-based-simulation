@@ -33,17 +33,22 @@ def make_state(**kwargs):
 
 def make_entity(id, pos, faction=0, wait_count=0, osc_count=0,
                 last_pos=None, mode=MovementMode.WANDER, action_style=0):
-    return EntityState(
-        id=id, kind="HERO", position=pos, active=True,
-        identity=IdentityComponent(faction=faction),
-        combat=CombatComponent(hp=100, max_hp=100, atk=10, def_stat=5,
-                               alive=True, action_style=action_style),
-        navigation=NavigationComponent(
-            movement_mode=mode, wait_count=wait_count,
-            oscillation_count=osc_count, last_position=last_pos
-        ),
-        task=TaskComponent()
-    )
+    from src.core.builder import V2EntityBuilder
+    from src.core.enums import Faction
+    
+    # Map faction id to enum
+    f_enum = Faction(faction) if isinstance(faction, int) else faction
+    
+    builder = (V2EntityBuilder(id)
+               .kind("HERO")
+               .at(pos)
+               .with_identity(faction=f_enum)
+               .with_combat(hp=100, max_hp=100, atk=10, def_stat=5, alive=True)
+               .action_style(action_style)
+               .with_navigation(mode=mode, wait_count=wait_count, oscillation_count=osc_count, last_pos=last_pos)
+               .active(True))
+    
+    return builder.build()
 
 
 # ─── 1. Direct Step ─────────────────────────────────────────────────────────
@@ -67,7 +72,7 @@ class TestDirectStep:
     def test_dead_entity_does_not_move(self):
         """Inactive entities produce no-op updates."""
         e = make_entity(1, (5.0, 5.0))
-        e = replace(e, active=False)
+        e = replace(e, lifecycle=replace(e.lifecycle, active=False))
         state = make_state(entities={1: e})
         result = MovementSystem.resolve_move(state, e, (6.0, 5.0))
         assert result[1].new_position is None

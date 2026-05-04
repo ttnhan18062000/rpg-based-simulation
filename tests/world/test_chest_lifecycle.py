@@ -1,5 +1,5 @@
 import pytest
-from src.core.state import AuthoritativeState, EntityState, ChestState, InteractionComponent, ItemStack
+from src.core.state import AuthoritativeState, EntityState, ChestState, InteractionComponent, ItemStack, CombatComponent
 from src.systems.chest_system import ChestSystem
 from src.engine.pipeline import AuthoritativeApplyPipeline
 
@@ -8,6 +8,7 @@ def test_chest_looting():
     entity = EntityState(
         id=1, kind="HERO", position=(5, 5),
         interaction=InteractionComponent(target_node_id=1, progress=9.0),
+        combat=CombatComponent(readiness=100.0),
         properties={"interaction_kind": "chest"}
     )
     

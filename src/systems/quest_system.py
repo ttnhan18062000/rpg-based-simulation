@@ -31,7 +31,7 @@ class QuestSystem:
                     # Progress if entity is near target location
                     target_pos = quest.metadata.get("target_position") if hasattr(quest, "metadata") else None
                     if target_pos:
-                        dist = abs(entity.position[0] - target_pos[0]) + abs(entity.position[1] - target_pos[1])
+                        dist = abs(entity.navigation.position[0] - target_pos[0]) + abs(entity.navigation.position[1] - target_pos[1])
                         if dist < 5.0:
                             progress_delta = 1.0 # One tick of exploration
                             
@@ -49,6 +49,7 @@ class QuestSystem:
                         # Quest Completed!
                         q_updates.append(QuestUpdate(
                             quest_id=quest.id,
+                            progress_delta=progress_delta,
                             status_set=QuestStatus.COMPLETED
                         ))
                     else:

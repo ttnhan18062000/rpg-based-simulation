@@ -4,27 +4,26 @@ from src.core.state import (
     AuthoritativeState, EntityState, IdentityComponent, 
     CombatComponent, InventoryComponent, StrategicComponent, 
     BiologicalComponent, SocialComponent, NavigationComponent,
-    LifecycleComponent, EntityRole
+    LifecycleComponent
 )
+from src.core.enums import EntityRole, ReasonCode, Faction
 from src.core.movement_modes import MovementMode
 from src.engine.movement import MovementSystem
 from src.core.updates import StateUpdate, EntityUpdate
 
 def create_mock_entity(e_id, pos, faction=1, role=EntityRole.MONSTER, mode=MovementMode.WANDER):
-    return EntityState(
-        id=e_id,
-        kind="actor",
-        position=pos,
-        identity=IdentityComponent(role=role, faction=faction),
-        combat=CombatComponent(hp=100, max_hp=100, alive=True),
-        inventory=InventoryComponent(),
-        strategic=StrategicComponent(),
-        biological=BiologicalComponent(),
-        social=SocialComponent(),
-        navigation=NavigationComponent(movement_mode=mode),
-        lifecycle=LifecycleComponent(),
-        active=True
-    )
+    from src.core.builder import V2EntityBuilder
+    return (V2EntityBuilder(e_id)
+        .kind("actor")
+        .position(pos[0], pos[1])
+        .role(role)
+        .faction(faction)
+        .hp(100, max_hp=100)
+        .alive(True)
+        .readiness(100.0)
+        .movement_mode(mode)
+        .alive(True)
+        .build())
 
 def test_sidestep_recovery():
     """Verify that if forward move is blocked, actor tries sidestepping."""
@@ -66,7 +65,7 @@ def test_yielding_recovery():
     # Monster should have yielded
     assert 2 in updates
     assert updates[2].new_position != (2.0, 1.0)
-    assert updates[2].navigation.failure_reason == "YIELDED"
+    assert updates[2].navigation.failure_reason == ReasonCode.YIELDING
 
 def test_hold_mode_refusal():
     """Verify that HOLD mode prevents yielding."""
@@ -87,13 +86,18 @@ def test_hold_mode_refusal():
     updates = MovementSystem.resolve_move(state, hero, (2.0, 1.0))
     
     assert updates[1].new_position is None
-    assert updates[1].navigation.failure_reason == "OCCUPANCY_VIOLATION"
+    assert updates[1].navigation.failure_reason == ReasonCode.OCCUPANCY_VIOLATION
 
 def test_retreat_evasion_skips_oa():
     """Verify that RETREAT + EVASIVE skips opportunity attacks."""
-    hero = create_mock_entity(1, (1.0, 1.0), role=EntityRole.HERO, mode=MovementMode.RETREAT)
-    # Set evasive style
-    hero = replace(hero, combat=replace(hero.combat, action_style=2)) # 2 = EVASIVE
+    from src.core.builder import V2EntityBuilder
+    hero = (V2EntityBuilder(1)
+        .kind("actor")
+        .position(1.0, 1.0)
+        .role(EntityRole.HERO)
+        .movement_mode(MovementMode.RETREAT)
+        .action_style(2) # 2 = EVASIVE
+        .build())
     
     monster = create_mock_entity(2, (2.0, 1.0), faction=2) # Different faction
     

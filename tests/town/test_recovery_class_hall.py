@@ -1,5 +1,6 @@
 import pytest
-from src.core.state import AuthoritativeState, EntityState, BiologicalComponent, StrategicComponent, IdentityComponent, InventoryComponent
+from src.core.state import AuthoritativeState
+from src.core.builder import V2EntityBuilder
 from src.core.strategic import BlockerState
 from src.town.inn import InnAction
 from src.town.home import HomeAction
@@ -10,9 +11,12 @@ from src.engine.pipeline import AuthoritativeApplyPipeline
 @pytest.mark.v2_contract
 def test_inn_rest_recovery():
     # 1. Setup: High sleep debt, 10 gold
-    bio = BiologicalComponent(sleep_debt=80.0, hunger=50.0)
-    inv = InventoryComponent(gold=20)
-    entity = EntityState(id=99, kind="hero", position=(0, 0), biological=bio, inventory=inv)
+    entity = (V2EntityBuilder(99)
+        .kind("hero")
+        .at((0, 0))
+        .with_biological(sleep_debt=80.0, hunger=50.0)
+        .gold(20)
+        .build())
     state = AuthoritativeState(tick=100, seed=42, entities={99: entity})
     
     # 2. Inn Rest
@@ -34,9 +38,12 @@ def test_inn_rest_recovery():
 def test_home_upgrade_blocker():
     # 1. Setup: Maintenance blocker
     blocker = BlockerState(id="m1", kind="maintenance", subject="roof")
-    strat = StrategicComponent(blockers={"m1": blocker})
-    inv = InventoryComponent(gold=150)
-    entity = EntityState(id=99, kind="hero", position=(0, 0), strategic=strat, inventory=inv)
+    entity = (V2EntityBuilder(99)
+        .kind("hero")
+        .at((0, 0))
+        .with_strategic(blockers={"m1": blocker})
+        .gold(150)
+        .build())
     state = AuthoritativeState(tick=1, seed=42, entities={99: entity})
     
     # 2. Home Upgrade
@@ -53,9 +60,12 @@ def test_home_upgrade_blocker():
 def test_class_hall_training():
     # 1. Setup: Capability blocker
     blocker = BlockerState(id="c1", kind="capability", subject="iron_smithing")
-    strat = StrategicComponent(blockers={"c1": blocker})
-    inv = InventoryComponent(gold=60)
-    entity = EntityState(id=99, kind="hero", position=(0, 0), strategic=strat, inventory=inv)
+    entity = (V2EntityBuilder(99)
+        .kind("hero")
+        .at((0, 0))
+        .with_strategic(blockers={"c1": blocker})
+        .gold(60)
+        .build())
     state = AuthoritativeState(tick=1, seed=42, entities={99: entity})
     
     # 2. Train

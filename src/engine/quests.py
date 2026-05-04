@@ -32,7 +32,7 @@ class QuestResolutionSystem:
                 
             target_pos = project.metadata.get("target_pos")
             if target_pos:
-                dist = abs(entity.position[0] - target_pos[0]) + abs(entity.position[1] - target_pos[1])
+                dist = abs(entity.navigation.position[0] - target_pos[0]) + abs(entity.navigation.position[1] - target_pos[1])
                 
                 # If within 2 manhattan distance, quest completes
                 if dist <= 2.0:
@@ -53,7 +53,8 @@ class QuestResolutionSystem:
         """Advance HUNT quests when an enemy is defeated."""
         updates = []
         
-        for q_id, project in attacker.strategic.projects.items():
+        # Phase 9 Fix: Sort projects by ID for deterministic progress evaluation
+        for q_id, project in sorted(attacker.strategic.projects.items()):
             if not isinstance(project, QuestState):
                 continue
                 
@@ -85,7 +86,9 @@ class QuestResolutionSystem:
         
         refined_entity_updates = dict(update.entity_updates)
         
-        for e_id, ent_upd in update.entity_updates.items():
+        # Phase 9 Fix: Sort by entity ID for deterministic reward intent emission
+        for e_id in sorted(list(update.entity_updates.keys())):
+            ent_upd = update.entity_updates[e_id]
             if not ent_upd.quest:
                 continue
                 

@@ -1,24 +1,21 @@
-# tests/combat/test_aoe_splash.py
 import pytest
-from src.core.state import AuthoritativeState, EntityState, IdentityComponent, CombatComponent, BiologicalComponent, LifecycleComponent
+from src.core.state import AuthoritativeState
 from src.core.updates import StateUpdate, EntityUpdate, CombatUpdate, CombatIntent
 from src.engine.apply import ApplyPath
 from src.engine.combat import CombatResolutionSystem
 from src.engine.legality import LegalityServiceV2
+from src.core.builder import V2EntityBuilder
 from src.core.enums import Faction
 
 def create_mock_entity(eid, pos, faction=Faction.HERO_GUILD):
-    return EntityState(
-        id=eid,
-        kind="HERO",
-        position=pos,
-        readiness=100.0,
-        active=True,
-        identity=IdentityComponent(faction=faction),
-        combat=CombatComponent(hp=100, max_hp=100, atk=20, def_stat=5, range=10, alive=True),
-        biological=BiologicalComponent(),
-        lifecycle=LifecycleComponent()
-    )
+    return (V2EntityBuilder(eid)
+        .kind("HERO")
+        .position(pos)
+        .readiness(100.0)
+        .with_identity(faction=faction)
+        .with_attributes(strength=0, vitality=0)
+        .with_combat(hp=100, max_hp=100, atk=20, def_stat=5, range=10)
+        .build())
 
 @pytest.mark.v2_contract
 @pytest.mark.differential
@@ -40,18 +37,20 @@ def test_aoe_splash_damage():
     )
     
     # 2. Verify Legality
-    success, reason = LegalityServiceV2.verify_aoe_legality(attacker, target1.position, state)
+    success, reason = LegalityServiceV2.verify_aoe_legality(attacker, target1.navigation.position, state)
     assert success is True
     
     # 3. Resolve AoE Attack
     # radius 2, 20 atk -> primary takes damage (atk - def)
     # def=5, atk=20 -> dmg = 20 * (20 / (20 + 5*2 + 1)) = 20 * (20/31) = 12
-    combat_upd = CombatResolutionSystem.resolve_aoe_attack(attacker, target1.position, radius=2, state=state, defender=target1)
+    aoe_updates = CombatResolutionSystem.resolve_aoe_attack(attacker, target1.navigation.position, radius=2, state=state, defender=target1)
+    combat_upd = aoe_updates[2]
     
     # 4. Create StateUpdate
     update = StateUpdate(
         entity_updates={
-            2: EntityUpdate(entity_id=2, combat=combat_upd)
+            eid: EntityUpdate(entity_id=eid, combat=upd)
+            for eid, upd in aoe_updates.items()
         }
     )
     

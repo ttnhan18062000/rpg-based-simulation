@@ -16,7 +16,7 @@ class GuildIntelSystem:
             if not entity.interaction or entity.interaction.target_node_id is None:
                 continue
                 
-            if entity.properties.get("interaction_kind") != "guild":
+            if entity.identity.properties.get("interaction_kind") != "guild":
                 continue
                 
             building_id = entity.interaction.target_node_id

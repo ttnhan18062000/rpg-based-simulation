@@ -23,7 +23,7 @@ class BossService:
         """
         # Rule: Max 1 active boss per region
         active_bosses = [e for e in state.entities.values() 
-                         if e.kind == "world_boss" and e.active and e.combat.alive]
+                         if e.kind == "world_boss" and e.lifecycle.active and e.combat.alive]
         
         # Mapping regions to their bosses
         # For simplicity, we check if ANY boss is active if we only want 1 world boss total,
@@ -31,7 +31,7 @@ class BossService:
         region_boss_map = {}
         from src.engine.legality import LegalityServiceV2
         for b in active_bosses:
-            r = LegalityServiceV2.get_region_for_position(b.position, state)
+            r = LegalityServiceV2.get_region_for_position(b.navigation.position, state)
             if r: region_boss_map[r.id] = b
             
         entities_add = []
@@ -87,7 +87,7 @@ class BossService:
         if not boss: return StateUpdate()
         
         from src.engine.legality import LegalityServiceV2
-        region = LegalityServiceV2.get_region_for_position(boss.position, state)
+        region = LegalityServiceV2.get_region_for_position(boss.navigation.position, state)
         if not region: return StateUpdate()
         
         from src.core.updates import WorldUpdate

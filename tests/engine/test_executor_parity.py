@@ -11,35 +11,28 @@ is fully order-independent and replay-stable.
 """
 import pytest
 from dataclasses import replace
-from src.core.state import (
-    AuthoritativeState, EntityState, IdentityComponent, CombatComponent,
-    NavigationComponent, TaskComponent, InventoryComponent, ItemStack,
-    ResourceNodeState, InteractionComponent
-)
+from src.core.state import AuthoritativeState
 from src.core.work import WorkItem, WorkClass
 from src.core.worker_protocol import ResultStatus
 from src.engine.executor import LocalSequentialExecutor, ConcurrentExecutionAdapter
 from src.config.profiles import RuntimeProfile
 from src.engine.worker_manager import WorkerManager
 from src.platform.rng import DeterministicRNG
+from src.core.builder import V2EntityBuilder
 
 
 # ─── Helpers ─────────────────────────────────────────────────────────────────
 
 def make_state(n_entities=5, seed=42):
-    """Create a state with n entities spread across distinct positions."""
+    """Create a state with n entities spread across distinct positions using V2EntityBuilder."""
     entities = {}
     for i in range(1, n_entities + 1):
-        entities[i] = EntityState(
-            id=i, kind="HERO", position=(float(i * 2), float(i * 3)),
-            active=True,
-            identity=IdentityComponent(faction=0),
-            combat=CombatComponent(hp=100, max_hp=100, atk=10, def_stat=5, alive=True),
-            navigation=NavigationComponent(),
-            task=TaskComponent(work_kind="ENTITY_ACT", payload={"action": "idle"}),
-            inventory=InventoryComponent(max_slots=4, items=[], gold=100),
-            interaction=InteractionComponent()
-        )
+        entities[i] = (V2EntityBuilder(i)
+                       .at((float(i * 2), float(i * 3)))
+                       .active(True)
+                       .with_base_stats(hp=100)
+                       .gold(100)
+                       .build())
     return AuthoritativeState(tick=10, seed=seed, entities=entities)
 
 def make_work_items(state):

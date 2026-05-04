@@ -2,6 +2,9 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Optional, List, Tuple, Dict, Any
 from dataclasses import replace, field
 from src.core.updates import CombatUpdate, CombatIntent, EquipmentUpdate
+import logging
+
+logger = logging.getLogger(__name__)
 from src.core.enums import EntityRole, ReasonCode
 from src.core.state import EquipSlot
 
@@ -65,6 +68,7 @@ class CombatResolutionSystem:
         is_opportunity_attack: bool = False,
         is_lethal: bool = True
     ) -> CombatUpdate:
+        is_lethal = is_lethal and (defender.identity.role != EntityRole.HERO)
         """
         Core combat resolution logic with Tactical Modifiers.
         """
@@ -84,7 +88,7 @@ class CombatResolutionSystem:
         def_mult = 1.0
         trace = {}
         
-        if LegalityServiceV2.check_high_ground(attacker.position, defender.position, state):
+        if LegalityServiceV2.check_high_ground(attacker.navigation.position, defender.navigation.position, state):
             atk_mult += CombatResolutionSystem.HIGH_GROUND_BONUS
             trace["HIGH_GROUND"] = CombatResolutionSystem.HIGH_GROUND_BONUS
             
@@ -98,11 +102,11 @@ class CombatResolutionSystem:
             atk_mult += 0.25
             trace["SURROUNDED"] = 0.25
             
-        if LegalityServiceV2.check_cover(attacker.position, defender.position, state):
+        if LegalityServiceV2.check_cover(attacker.navigation.position, defender.navigation.position, state):
             def_mult += CombatResolutionSystem.COVER_REDUCTION
             trace["COVER_REDUCTION"] = CombatResolutionSystem.COVER_REDUCTION
             
-        if defender.properties.get("status_frozen"):
+        if defender.identity.properties.get("status_frozen"):
             atk_mult *= 1.5
             trace["SHATTER"] = 1.5
             
@@ -120,7 +124,7 @@ class CombatResolutionSystem:
         for sid, bond in attacker.social.bonds.items():
             if bond.familiarity > 0.5:
                 ally = state.entities.get(sid)
-                if ally and ally.combat.alive and LegalityServiceV2.is_adjacent(attacker.position, ally.position):
+                if ally and ally.combat.alive and LegalityServiceV2.is_adjacent(attacker.navigation.position, ally.navigation.position):
                     atk_mult += CombatResolutionSystem.BOND_SYNERGY_BONUS
                     trace["BOND_SYNERGY"] = CombatResolutionSystem.BOND_SYNERGY_BONUS
                     break
@@ -177,15 +181,23 @@ class CombatResolutionSystem:
         from src.core.updates import ResourceTransferIntent
         resource_transfers = []
         if not alive and defender.combat.alive: # Only if they just died
-             from src.core.updates import RewardUpdate
+             # XP is independent of inventory limits
              resource_transfers.append(ResourceTransferIntent(
                  source_id=defender.id, source_kind="COMBAT",
-                 gold_delta=gold_gain,
-                 reward_upd=RewardUpdate(xp_gain=xp_gain),
+                 xp_reward=xp_gain,
                  transfer_kind="KILL_REWARD",
-                 is_group_required=True
+                 is_group_required=False
              ))
+             # Gold is subject to inventory (though currently gold is not slot-limited)
+             if gold_gain > 0:
+                 resource_transfers.append(ResourceTransferIntent(
+                     source_id=defender.id, source_kind="COMBAT",
+                     gold_delta=gold_gain,
+                     transfer_kind="KILL_REWARD",
+                     is_group_required=True
+                 ))
 
+        # Outcome is already determined above (SURVIVE, KILL, DEFEAT, REBIRTH)
         return CombatUpdate(
             damage_taken=damage,
             hp_delta=-damage,
@@ -271,14 +283,21 @@ class CombatResolutionSystem:
         from src.core.updates import ResourceTransferIntent
         resource_transfers = []
         if not alive and defender.combat.alive:
-              from src.core.updates import RewardUpdate
+              # XP is independent of inventory limits
               resource_transfers.append(ResourceTransferIntent(
                   source_id=defender.id, source_kind="COMBAT",
-                  gold_delta=gold_gain,
-                  reward_upd=RewardUpdate(xp_gain=xp_gain),
+                  xp_reward=xp_gain,
                   transfer_kind="KILL_REWARD",
-                  is_group_required=True
+                  is_group_required=False
               ))
+              # Gold is subject to inventory
+              if gold_gain > 0:
+                  resource_transfers.append(ResourceTransferIntent(
+                      source_id=defender.id, source_kind="COMBAT",
+                      gold_delta=gold_gain,
+                      transfer_kind="KILL_REWARD",
+                      is_group_required=True
+                  ))
 
         return CombatUpdate(
             damage_taken=damage,
@@ -351,14 +370,22 @@ class CombatResolutionSystem:
                 xp_gain = defender.identity.evolution_level * 20
                 gold_gain = defender.identity.evolution_level * 50
                 
-             from src.core.updates import ResourceTransferIntent, RewardUpdate
+             from src.core.updates import ResourceTransferIntent
+             # XP Intent
              resource_transfers.append(ResourceTransferIntent(
                  source_id=defender.id, source_kind="COMBAT",
-                 gold_delta=gold_gain,
-                 reward_upd=RewardUpdate(xp_gain=xp_gain),
+                 xp_reward=xp_gain,
                  transfer_kind="KILL_REWARD",
-                 is_group_required=True
+                 is_group_required=False
              ))
+             # Gold Intent
+             if gold_gain > 0:
+                 resource_transfers.append(ResourceTransferIntent(
+                     source_id=defender.id, source_kind="COMBAT",
+                     gold_delta=gold_gain,
+                     transfer_kind="KILL_REWARD",
+                     is_group_required=True
+                 ))
 
         # Social Consequences (Multi-attacker)
         from src.core.updates import SocialUpdate, SocialBondUpdate
@@ -437,32 +464,42 @@ class CombatResolutionSystem:
                 )
                 
                 if is_kill:
-                    if defender.identity.role == EntityRole.MONSTER:
-                        from src.core.updates import RewardUpdate
-                        all_transfers.append(ResourceTransferIntent(
-                            source_id=defender.id, source_kind="COMBAT",
-                            gold_delta=defender.identity.evolution_level * 5,
-                            reward_upd=RewardUpdate(xp_gain=defender.identity.evolution_level * 10),
-                            transfer_kind="KILL_REWARD",
-                            is_group_required=True
-                        ))
+                    # XP intent
+                    all_transfers.append(ResourceTransferIntent(
+                        source_id=defender.id, source_kind="COMBAT",
+                        xp_reward=defender.identity.evolution_level * 10,
+                        transfer_kind="KILL_REWARD",
+                        is_group_required=False
+                    ))
+                    # Gold intent
+                    all_transfers.append(ResourceTransferIntent(
+                        source_id=defender.id, source_kind="COMBAT",
+                        gold_delta=defender.identity.evolution_level * 5,
+                        transfer_kind="KILL_REWARD",
+                        is_group_required=True
+                    ))
             else:
                 defender = None
 
         # 2. Splash Victims
         splash_damage = attacker.combat.atk // 2
         splash_intents = []
-        for other_id, other_ent in state.entities.items():
+        
+        # Phase 9 Fix: Sort by entity ID to ensure deterministic iteration order
+        # for splash victims, which affects reward intent order.
+        victim_ids = sorted(list(state.entities.keys()))
+        for other_id in victim_ids:
+            other_ent = state.entities[other_id]
             if other_id == attacker.id: continue
             if defender and other_id == defender.id: continue
             
-            dist = LegalityServiceV2.get_manhattan_dist(target_pos, other_ent.position)
+            dist = LegalityServiceV2.get_manhattan_dist(target_pos, other_ent.navigation.position)
             if dist <= radius:
                 # Phase 4 Law: AoE friendly-fire safety
                 if attacker.identity.faction == other_ent.identity.faction:
                     continue
 
-                if LegalityServiceV2.has_line_of_sight(target_pos, other_ent.position, state):
+                if LegalityServiceV2.has_line_of_sight(target_pos, other_ent.navigation.position, state):
                     v_damage = max(1, splash_damage)
                     new_hp = other_ent.combat.hp - v_damage
                     is_kill = new_hp <= 0
@@ -492,19 +529,24 @@ class CombatResolutionSystem:
                         attacker_id=attacker.id,
                         damage=v_damage,
                         is_lethal=is_lethal,
-                        impact_pos=other_ent.position
+                        impact_pos=other_ent.navigation.position
                     ))
                     
                     if is_kill and other_ent.combat.alive:
-                        if other_ent.identity.role == EntityRole.MONSTER:
-                            from src.core.updates import RewardUpdate
-                            all_transfers.append(ResourceTransferIntent(
-                                source_id=other_id, source_kind="COMBAT",
-                                gold_delta=other_ent.identity.evolution_level * 5,
-                                reward_upd=RewardUpdate(xp_gain=other_ent.identity.evolution_level * 10),
-                                transfer_kind="KILL_REWARD",
-                                is_group_required=True
-                            ))
+                        # XP intent
+                        all_transfers.append(ResourceTransferIntent(
+                            source_id=other_id, source_kind="COMBAT",
+                            xp_reward=other_ent.identity.evolution_level * 10,
+                            transfer_kind="KILL_REWARD",
+                            is_group_required=False
+                        ))
+                        # Gold intent
+                        all_transfers.append(ResourceTransferIntent(
+                            source_id=other_id, source_kind="COMBAT",
+                            gold_delta=other_ent.identity.evolution_level * 5,
+                            transfer_kind="KILL_REWARD",
+                            is_group_required=True
+                        ))
 
         # 3. Attacker Update (Intents + Rewards)
         updates[attacker.id] = CombatUpdate(
@@ -528,11 +570,10 @@ class CombatResolutionSystem:
     def _get_wound_infliction(attacker: EntityState, defender: EntityState, damage: float, tick: int, alive: bool) -> Optional[WoundUpdate]:
         """Calculates and returns a WoundUpdate if damage is sufficient."""
         if damage > defender.combat.max_hp * 0.25 and alive:
-            import uuid
             from src.core.state import WoundState
             from src.core.updates import WoundUpdate
             from src.core.enums import EntityRole
-            w_id = f"w_{uuid.uuid4().hex[:8]}"
+            w_id = f"w_{attacker.id}_{defender.id}_{tick}"
             penalty = 5.0
             wound = WoundState(
                 id=w_id,

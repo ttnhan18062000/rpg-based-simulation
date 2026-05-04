@@ -325,7 +325,7 @@ Each checkbox below is derived from one original test. Keep the original test na
 
 #### `arena/test_observability_audit.py`
 
-- [ ] `RPG-API-002` `test_rejection_audit_aggregation`: Rejection audit aggregation — Verify that authoritative rejections are captured in ScenarioReport. [Milestone 7].
+- [x] `RPG-API-002` `test_rejection_audit_aggregation`: Rejection audit aggregation — Verify that authoritative rejections are captured in ScenarioReport. [Milestone 7]. <!-- SOURCE: src/engine/pipeline.py TEST: tests/engine/test_replay_determinism.py PROOF: integration -->
 - [x] `RPG-API-003` `test_out_of_range_rejection`: Out of range rejection — Verify that combat out-of-range is explicitly rejected with structured reason. [Milestone 7]. <!-- SOURCE: src/engine/legality.py TEST: tests/engine/test_phase5_combat_legality.py PROOF: integration -->
 
 #### `arena/test_resource_isolation.py`
@@ -2194,7 +2194,7 @@ The checklist mentions entity aspects and spawning, but not the builder as an at
 Add:
 
 - [x] `RPG-COMBAT-112` EntityBuilder default entity has stable kind, faction, alive combat state, and wander AI state. <!-- SOURCE: src/engine/combat.py TEST: tests/rpg/test_combat_legality_matrix.py PROOF: integration -->
-- [ ] `RPG-DATA-092` `.kind()`, `.at()`, `.home()`, `.ai_state()`, `.faction()`, `.tier()` preserve exact field effects.
+- [x] `RPG-DATA-092` `.kind()`, `.at()`, `.home()`, `.ai_state()`, `.faction()`, `.tier()` preserve exact field effects. <!-- SOURCE: src/core/builder.py TEST: tests/engine/test_local_executor.py PROOF: unit -->
 - [x] `RPG-PROG-092` Hero kind enforces minimum stamina behavior. <!-- SOURCE: src/engine/rpg_depth.py TEST: tests/rpg/test_rpg_depth.py PROOF: integration -->
 - [x] `RPG-COMBAT-113` Base stats initialize combat and progression fields consistently. <!-- SOURCE: src/engine/combat.py TEST: tests/rpg/test_combat_legality_matrix.py PROOF: integration -->
 - [x] `RPG-WORLD-072` Randomized stats use deterministic spawn-domain RNG. <!-- SOURCE: src/engine/world_dynamics.py TEST: tests/rpg/test_living_world_ph9.py PROOF: longrun -->
@@ -3045,7 +3045,7 @@ These items are appended rather than replacing existing checklist items. They ar
 - [x] `RPG-INFRA-175` Logs include level. <!-- SOURCE: src/engine/rpg_depth.py TEST: tests/rpg/test_rpg_depth.py PROOF: integration -->
 - [ ] `RPG-INFRA-176` Logs include component.
 - [ ] `RPG-INFRA-177` Logs include message.
-- [ ] `RPG-INFRA-178` Logs include rejection reasons where relevant.
+- [x] `RPG-INFRA-178` Logs include rejection reasons where relevant. <!-- SOURCE: src/engine/pipeline.py TEST: tests/engine/test_replay_determinism.py PROOF: integration -->
 - [ ] `RPG-INFRA-179` Logs include final authoritative hash at shutdown.
 - [x] `RPG-INFRA-180` Metrics count accepted/rejected updates where relevant. <!-- SOURCE: src/api/presenters/state_presenter.py TEST: tests/api/test_rest_parity.py PROOF: integration -->
 - [x] `RPG-RES-116` Metrics count resource pressure rejection where relevant. <!-- SOURCE: src/core/conservation.py TEST: tests/rpg/test_resource_conservation.py PROOF: race -->

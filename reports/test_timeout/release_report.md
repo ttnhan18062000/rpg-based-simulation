@@ -1,20 +1,20 @@
 # Consolidated Certification Report
 
-**Last Run ID**: `fcf81ce3-1464-4495-8364-c1964875b4da`
-**Commit SHA**: `20d6a1ef5bb632e343cbfaa8cb47d5cd8a5d5f66`
+**Last Run ID**: `46374ced-f6f8-47f9-99d4-452b975e3960`
+**Commit SHA**: `5507b2b8d9a38c2ca5274a558307c73b7b4ca2a5`
 
 ## Scenario Summary
 
 | Profile | Scenario | Status | Fail Kind | Reason |
 | :--- | :--- | :--- | :--- | :--- |
-| ARENA_TEST | TIMEOUT_TEST | ⚠️ | none | Certification PASS |
+| ARENA_TEST | TIMEOUT_TEST | ✅ | none | Certification PASS |
 
 ---
 
 ## Latest Run Detail
 
 # Certification Report: TIMEOUT_TEST
-**Commit SHA**: `20d6a1ef5bb632e343cbfaa8cb47d5cd8a5d5f66`
+**Commit SHA**: `5507b2b8d9a38c2ca5274a558307c73b7b4ca2a5`
 **Status**: ✅ **PASS**
 **Allowed Failure Observed**: `False`
 
@@ -23,17 +23,17 @@
 - **Hardware Class**: `CLASS_B`
 - **Scenario**: `TIMEOUT_TEST`
 - **Seed**: `42`
-- **Peak RAM (RSS)**: `53.0 MB`
-- **Total CPU Time**: `0.001 sec`
+- **Peak RAM (RSS)**: `81.2 MB`
+- **Total CPU Time**: `0.002 sec`
 
 ## 2. Resource Conformance Evidence
 | Tick | Mode | RAM (MB) | Compute (ms) | Worker % | Queue % |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| 10 | DEGRADED | 53.0 | 1.1 | 1.00 | 0.00 |
+| 10 | DEGRADED | 81.2 | 2.5 | 1.00 | 0.00 |
 
 ## 3. Semantic Integrity Proof (Milestone D Law)
-- **Baseline Hash**: `8c4271a1b6e7347c85afe47545edb178c0ce0d22272cade88949647fb8d8a55d`
-- **Final Hash**: `8c4271a1b6e7347c85afe47545edb178c0ce0d22272cade88949647fb8d8a55d`
+- **Baseline Hash**: `86d00b1d29607dc7960047338fda216e4bad9d23218e7c419d77967b56233822`
+- **Final Hash**: `86d00b1d29607dc7960047338fda216e4bad9d23218e7c419d77967b56233822`
 - **Status**: MATCHED
 
 ## 4. Conformance Verdict

@@ -10,18 +10,17 @@ from src.engine.evolution import EvolutionSystem
 from src.engine.domain_logic import SimulationDomainLogic
 
 def create_mock_entity(e_id, pos=(0,0)):
-    return EntityState(
-        id=e_id,
-        kind="HERO",
-        position=pos,
-        readiness=100.0,
-        identity=IdentityComponent(evolution_level=1, evolution_points=0, unspent_ap=0),
-        attributes=AttributeComponent(strength=10, vitality=10),
-        aptitude=AptitudeComponent(str_apt=1.1, vit_apt=1.2),
-        combat=CombatComponent(hp=100, max_hp=100, atk=10, def_stat=5, alive=True),
-        biological=BiologicalComponent(),
-        task=TaskComponent()
-    )
+    from src.core.builder import V2EntityBuilder
+    return (V2EntityBuilder(e_id)
+        .kind("HERO")
+        .position(pos[0], pos[1])
+        .evolution(level=1, points=0, unspent_ap=0)
+        .strength(10).vitality(10)
+        .aptitude(str_apt=1.1, vit_apt=1.2)
+        .hp(100, max_hp=100)
+        .alive(True)
+        .readiness(100.0)
+        .build())
 
 def test_evolution_trigger_and_stat_boost():
     """Verify that reaching XP threshold triggers evolution and stat increases."""

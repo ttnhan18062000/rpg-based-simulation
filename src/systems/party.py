@@ -34,7 +34,7 @@ class PartyCoordinationSystem:
             
         # 2. Identify the Leader
         leader = state.entities.get(active_contract.source_id)
-        if not leader or not leader.combat.alive or not leader.active:
+        if not leader or not leader.combat.alive or not leader.lifecycle.active:
             return scores
             
         # 3. Retrieve Leader's Active Objective
@@ -104,13 +104,13 @@ class PartyCoordinationSystem:
             return None
             
         target = state.entities.get(group.shared_target_id)
-        if not target or not target.combat.alive or not target.active:
+        if not target or not target.combat.alive or not target.lifecycle.active:
             # Clear target logic
             return None
             
         # Optional: range check against group anchor
-        dx = target.position[0] - group.anchor[0]
-        dy = target.position[1] - group.anchor[1]
+        dx = target.navigation.position[0] - group.anchor[0]
+        dy = target.navigation.position[1] - group.anchor[1]
         if (dx*dx + dy*dy) > (group.cohesion_radius * 2.0)**2:
              return None
              

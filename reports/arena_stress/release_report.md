@@ -1,20 +1,20 @@
 # Consolidated Certification Report
 
-**Last Run ID**: `6055b0ab-21b9-4da3-b01e-4813e4965246`
-**Commit SHA**: `24ca4b4ef067795006e9c32c563f1b13071f3b33`
+**Last Run ID**: `e7ad15c2-76d5-4fbe-8695-e33c963e31b9`
+**Commit SHA**: `5507b2b8d9a38c2ca5274a558307c73b7b4ca2a5`
 
 ## Scenario Summary
 
 | Profile | Scenario | Status | Fail Kind | Reason |
 | :--- | :--- | :--- | :--- | :--- |
-| STRESS_TEST | COMBAT_ARENA_STRESS_50V50 | ⚠️ | none | Certification PASS |
+| STRESS_TEST | COMBAT_ARENA_STRESS_50V50 | ✅ | none | Certification PASS |
 
 ---
 
 ## Latest Run Detail
 
 # Certification Report: COMBAT_ARENA_STRESS_50V50
-**Commit SHA**: `24ca4b4ef067795006e9c32c563f1b13071f3b33`
+**Commit SHA**: `5507b2b8d9a38c2ca5274a558307c73b7b4ca2a5`
 **Status**: ✅ **PASS**
 **Allowed Failure Observed**: `False`
 
@@ -23,27 +23,27 @@
 - **Hardware Class**: `CLASS_B`
 - **Scenario**: `COMBAT_ARENA_STRESS_50V50`
 - **Seed**: `42`
-- **Peak RAM (RSS)**: `76.3 MB`
-- **Total CPU Time**: `2.229 sec`
+- **Peak RAM (RSS)**: `77.0 MB`
+- **Total CPU Time**: `5.154 sec`
 
 ## 2. Resource Conformance Evidence
 | Tick | Mode | RAM (MB) | Compute (ms) | Worker % | Queue % |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| 1 | NORMAL | 70.1 | 14.2 | 0.00 | 0.00 |
-| 2 | NORMAL | 70.1 | 13.9 | 0.00 | 0.00 |
-| 3 | NORMAL | 70.1 | 9.4 | 0.00 | 0.00 |
-| 26 | DEGRADED | 74.2 | 13.0 | 0.00 | 0.00 |
-| 27 | CONSTRAINED | 74.2 | 16.7 | 0.00 | 0.00 |
-| 28 | CONSTRAINED | 74.2 | 13.9 | 0.00 | 0.00 |
-| 47 | DEGRADED | 75.2 | 10.2 | 0.00 | 0.00 |
-| 48 | DEGRADED | 75.2 | 14.1 | 0.00 | 0.00 |
-| 49 | DEGRADED | 75.2 | 12.3 | 0.00 | 0.00 |
-| 50 | DEGRADED | 76.3 | 11.5 | 0.00 | 0.00 |
+| 1 | NORMAL | 74.5 | 39.4 | 1.00 | 0.20 |
+| 2 | DEGRADED | 74.5 | 136.2 | 1.00 | 0.20 |
+| 3 | DEGRADED | 74.5 | 96.0 | 1.00 | 0.20 |
+| 26 | DEGRADED | 75.1 | 108.8 | 1.00 | 0.20 |
+| 27 | DEGRADED | 75.1 | 95.5 | 1.00 | 0.20 |
+| 28 | DEGRADED | 75.1 | 126.3 | 1.00 | 0.20 |
+| 47 | DEGRADED | 76.2 | 111.9 | 1.00 | 0.20 |
+| 48 | DEGRADED | 76.2 | 77.1 | 1.00 | 0.20 |
+| 49 | DEGRADED | 76.2 | 108.7 | 1.00 | 0.20 |
+| 50 | DEGRADED | 77.0 | 85.6 | 1.00 | 0.20 |
 | ... | ... | ... | ... | ... | ... |
 
 ## 3. Semantic Integrity Proof (Milestone D Law)
-- **Baseline Hash**: `52070582c29b612978121bf1a1cd67466f07c8c04f05d540fd3ec111d2c9d29d`
-- **Final Hash**: `52070582c29b612978121bf1a1cd67466f07c8c04f05d540fd3ec111d2c9d29d`
+- **Baseline Hash**: `cd627a3c58fa37f9a2e1a8c575c72a228c0bbb36400b0f38f96a1aa053b19a58`
+- **Final Hash**: `cd627a3c58fa37f9a2e1a8c575c72a228c0bbb36400b0f38f96a1aa053b19a58`
 - **Status**: MATCHED
 
 ## 4. Conformance Verdict

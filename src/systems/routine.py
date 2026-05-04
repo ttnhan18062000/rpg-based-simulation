@@ -176,7 +176,7 @@ class RoutineService:
             
         # Check if already in home region
         from src.engine.legality import LegalityServiceV2
-        curr_region = LegalityServiceV2.get_region_for_position(entity.position, state)
+        curr_region = LegalityServiceV2.get_region_for_position(entity.navigation.position, state)
         if curr_region and curr_region.id == home_region.id:
             return []
             

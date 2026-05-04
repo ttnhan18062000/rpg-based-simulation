@@ -30,7 +30,7 @@ class ConcernIntakeSystem:
             if neighbor.identity.faction != entity.identity.faction:
                 if neighbor.combat.alive:
                     # Hostile is alive and nearby -> DANGER
-                    dist = abs(neighbor.position[0] - entity.position[0]) + abs(neighbor.position[1] - entity.position[1])
+                    dist = abs(neighbor.navigation.position[0] - entity.navigation.position[0]) + abs(neighbor.navigation.position[1] - entity.navigation.position[1])
                     if dist <= 3.0:
                         concerns.append(ConcernState(
                             id=f"danger_hostile_{neighbor.id}",
@@ -55,7 +55,7 @@ class ConcernIntakeSystem:
         # (This is often handled by goals, but can be a 'concern' if we are starving)
         if entity.biological.hunger > 60.0:
             for node_id, node in state.resource_nodes.items():
-                dist = abs(node.position[0] - entity.position[0]) + abs(node.position[1] - entity.position[1])
+                dist = abs(node.position[0] - entity.navigation.position[0]) + abs(node.position[1] - entity.navigation.position[1])
                 if dist <= 5.0 and node.remaining_charges > 0:
                      concerns.append(ConcernState(
                          id=f"opp_food_{node_id}",

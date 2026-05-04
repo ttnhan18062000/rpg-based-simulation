@@ -12,8 +12,12 @@ from src.engine.apply import ApplyPath
 
 def test_biological_decay_per_tick():
     """Verify that biological needs increase over time (decay)."""
-    bio = BiologicalComponent(hunger=10.0, sleep_debt=5.0)
-    ent = EntityState(id=1, kind="HERO", position=(0.0, 0.0), biological=bio)
+    from src.core.builder import V2EntityBuilder
+    ent = (V2EntityBuilder(1)
+        .kind("HERO")
+        .at((0.0, 0.0))
+        .biological(hunger=10.0, sleep_debt=5.0)
+        .build())
     state = AuthoritativeState(tick=100, seed=42, entities={1: ent})
     
     update = StateUpdate()
@@ -27,8 +31,12 @@ def test_biological_decay_per_tick():
 
 def test_hunger_concern_generation():
     """Verify that high hunger generates a strategic concern."""
-    bio = BiologicalComponent(hunger=60.0)
-    ent = EntityState(id=1, kind="HERO", position=(0.0, 0.0), biological=bio)
+    from src.core.builder import V2EntityBuilder
+    ent = (V2EntityBuilder(1)
+        .kind("HERO")
+        .at((0.0, 0.0))
+        .biological(hunger=60.0)
+        .build())
     state = AuthoritativeState(tick=100, seed=42, entities={1: ent}, world_time=1200)
     
     concerns = RoutineService.evaluate_biological_needs(ent, state.world_time)
@@ -37,8 +45,12 @@ def test_hunger_concern_generation():
 
 def test_sleep_bias_at_night():
     """Verify that sleep urgency is higher at night."""
-    bio = BiologicalComponent(sleep_debt=30.0)
-    ent = EntityState(id=1, kind="HERO", position=(0.0, 0.0), biological=bio)
+    from src.core.builder import V2EntityBuilder
+    ent = (V2EntityBuilder(1)
+        .kind("HERO")
+        .at((0.0, 0.0))
+        .biological(sleep_debt=30.0)
+        .build())
     
     # Daytime (12:00)
     concerns_day = RoutineService.evaluate_biological_needs(ent, 1200)
@@ -53,8 +65,12 @@ def test_sleep_bias_at_night():
 
 def test_routine_utility_boost():
     """Verify that routine-related projects get utility boosts."""
-    bio = BiologicalComponent(hunger=50.0, sleep_debt=40.0)
-    ent = EntityState(id=1, kind="HERO", position=(0.0, 0.0), biological=bio)
+    from src.core.builder import V2EntityBuilder
+    ent = (V2EntityBuilder(1)
+        .kind("HERO")
+        .at((0.0, 0.0))
+        .biological(hunger=50.0, sleep_debt=40.0)
+        .build())
     
     # Hunger boost: 50.0 / 10.0 = 5.0
     boost_eat = RoutineService.get_routine_utility_boost(ent, "eating", 1200)
@@ -67,10 +83,14 @@ def test_routine_utility_boost():
 def test_pipeline_integrates_biological_concerns():
     """Verify that the AuthoritativeApplyPipeline adds biological concerns."""
     from src.engine.pipeline import AuthoritativeApplyPipeline
+    from src.core.builder import V2EntityBuilder
     
-    bio = BiologicalComponent(hunger=80.0) # Should generate concern
-    ent = EntityState(id=1, kind="HERO", position=(0.0, 0.0), biological=bio)
-    state = AuthoritativeState(tick=100, seed=42, entities={1: ent}, world_time=1200)
+    ent = (V2EntityBuilder(1)
+        .kind("HERO")
+        .at((0.0, 0.0))
+        .biological(hunger=80.0)
+        .build())
+    state = AuthoritativeState(tick=99, seed=42, entities={1: ent}, world_time=1200)
     
     raw_update = StateUpdate()
     refined = AuthoritativeApplyPipeline.refine(state, raw_update)
@@ -82,9 +102,14 @@ def test_pipeline_integrates_biological_concerns():
 def test_routine_action_execution():
     """Verify that REST/EAT actions produce correct biological updates."""
     from src.engine.domain_logic import SimulationDomainLogic
+    from src.core.builder import V2EntityBuilder
     
-    bio = BiologicalComponent(hunger=50.0, sleep_debt=40.0)
-    ent = EntityState(id=1, kind="HERO", position=(0.0, 0.0), biological=bio, readiness=100.0)
+    ent = (V2EntityBuilder(1)
+        .kind("HERO")
+        .at((0.0, 0.0))
+        .biological(hunger=50.0, sleep_debt=40.0)
+        .readiness(100.0)
+        .build())
     
     # 1. Test REST
     upd_sleep = SimulationDomainLogic.execute_action(ent, {"action": "REST"}, current_tick=500)

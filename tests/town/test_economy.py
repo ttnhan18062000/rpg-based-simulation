@@ -1,13 +1,15 @@
 import pytest
-from src.core.state import AuthoritativeState, EntityState, BuildingState, InventoryComponent, ItemStack
+from src.core.state import AuthoritativeState, BuildingState, ItemStack
+from src.core.builder import V2EntityBuilder
 from src.town.shop import ShopService
 from src.town.blacksmith import BlacksmithService
 
 def test_shop_buy():
-    entity = EntityState(
-        id=1, kind="HERO", position=(10, 10),
-        inventory=InventoryComponent(gold=100)
-    )
+    entity = (V2EntityBuilder(1)
+        .kind("HERO")
+        .at((10, 10))
+        .gold(100)
+        .build())
     shop = BuildingState(id=1, kind="shop", position=(10, 10))
     state = AuthoritativeState(
         tick=100, seed=42,
@@ -15,26 +17,23 @@ def test_shop_buy():
         buildings={1: shop}
     )
     
-    # Buy healing_potion (Value 1)
-    update = ShopService.buy_item(entity, "healing_potion", 2, state)
+    # Buy bread (Value 1)
+    update = ShopService.buy_item(entity, "bread", 2, state)
     
     assert update is not None
     ent_upd = update.entity_updates[1]
     assert ent_upd.resource_transfers is not None
     assert ent_upd.resource_transfers[0].gold_cost == 2
-    assert ent_upd.resource_transfers[0].items_add[0].item_id == "healing_potion"
+    assert ent_upd.resource_transfers[0].items_add[0].item_id == "bread"
 
 def test_blacksmith_craft():
-    entity = EntityState(
-        id=1, kind="HERO", position=(5, 5),
-        inventory=InventoryComponent(
-            gold=100,
-            items=[
-                ItemStack("iron_ore", 10),
-                ItemStack("wood", 5)
-            ]
-        )
-    )
+    entity = (V2EntityBuilder(1)
+        .kind("HERO")
+        .at((5, 5))
+        .gold(100)
+        .item("iron_ore", 10)
+        .item("wood", 5)
+        .build())
     blacksmith = BuildingState(id=2, kind="blacksmith", position=(5, 5))
     state = AuthoritativeState(
         tick=100, seed=42,

@@ -11,14 +11,18 @@ from src.core.state import AuthoritativeState, EntityState, IdentityComponent, C
 from src.core.updates import StateUpdate, EntityUpdate, IdentityUpdate, RewardUpdate
 from src.engine.evolution import EvolutionSystem
 from src.engine.apply import ApplyPath
-from src.core.enums import EntityRole
+from src.core.enums import EntityRole, Faction
+from src.core.builder import V2EntityBuilder
 
 @pytest.mark.v2_contract
 def test_automatic_level_up():
     # 1. Setup: Level 1 entity with 0 XP. 
-    identity = IdentityComponent(role=EntityRole.MONSTER, evolution_level=1, evolution_points=0)
-    combat = CombatComponent(hp=100, max_hp=100, atk=10, def_stat=5)
-    entity = EntityState(id=99, kind="hero", position=(0, 0), identity=identity, combat=combat)
+    entity = (V2EntityBuilder(99)
+              .kind("monster")
+              .at((0, 0))
+              .with_identity(role=EntityRole.MONSTER, faction=Faction.MONSTER_HORDE, evolution_level=1)
+              .with_combat(hp=100, max_hp=100, atk=10, def_stat=5)
+              .build())
     state = AuthoritativeState(tick=1, seed=42, entities={99: entity})
     
     # 2. Grant 150 XP (via RewardUpdate)
@@ -47,9 +51,12 @@ def test_automatic_level_up():
 @pytest.mark.v2_contract
 def test_multi_level_up():
     # 1. Setup
-    identity = IdentityComponent(role=EntityRole.MONSTER, evolution_level=1, evolution_points=0)
-    combat = CombatComponent(hp=100, max_hp=100, atk=10, def_stat=10)
-    entity = EntityState(id=99, kind="hero", position=(0, 0), identity=identity, combat=combat)
+    entity = (V2EntityBuilder(99)
+              .kind("monster")
+              .at((0, 0))
+              .with_identity(role=EntityRole.MONSTER, faction=Faction.MONSTER_HORDE, evolution_level=1)
+              .with_combat(hp=100, max_hp=100, atk=10, def_stat=10)
+              .build())
     state = AuthoritativeState(tick=1, seed=42, entities={99: entity})
     
     # 2. Grant 500 XP

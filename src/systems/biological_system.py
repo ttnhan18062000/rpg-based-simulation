@@ -11,7 +11,7 @@ class BiologicalSystem:
         entity_updates = {}
         
         for entity in state.entities.values():
-            if not entity.active:
+            if not entity.lifecycle.active:
                 continue
                 
             # Only certain entities have biological needs (Heroes, maybe certain Monsters)

@@ -38,11 +38,14 @@ def test_calamity_intensity_shift():
     state = AuthoritativeState(tick=100, seed=42, regions={"wild": region})
     
     # Hero death in high-hazard region
-    hero = EntityState(
-        id=1, position=(5, 5), kind="hero", 
-        identity=IdentityComponent(faction=Faction.HERO_GUILD),
-        combat=CombatComponent(hp=0, alive=False)
-    )
+    from src.core.builder import V2EntityBuilder
+    hero = (V2EntityBuilder(1)
+        .kind("hero")
+        .position(5.0, 5.0)
+        .faction(Faction.HERO_GUILD)
+        .hp(0)
+        .alive(False)
+        .build())
     
     update = CalamityService.apply_calamity_consequences(state, [hero])
     assert update.world_updates["wild"].calamity_intensity_set == pytest.approx(0.15)

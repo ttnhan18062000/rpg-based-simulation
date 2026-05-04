@@ -3,25 +3,26 @@ from dataclasses import replace
 from src.core.state import AuthoritativeState, EntityState, IdentityComponent, CombatComponent, TaskComponent
 from src.engine.pipeline import AuthoritativeApplyPipeline
 from src.core.updates import StateUpdate, EntityUpdate, TaskUpdate
+from src.core.builder import V2EntityBuilder
+from src.core.enums import EntityRole, Faction
 
-def create_mock_entity(eid, faction, pos=(10, 10), hp=100):
-    return EntityState(
-        id=eid,
-        kind="hero",
-        position=pos,
-        readiness=100.0,
-        identity=IdentityComponent(faction=faction),
-        combat=CombatComponent(hp=hp, max_hp=100, atk=10, def_stat=0, alive=True),
-        task=TaskComponent()
-    )
+def create_mock_entity(eid, faction, pos=(10.0, 10.0), hp=100):
+    role = EntityRole.HERO if faction == 1 else EntityRole.MONSTER
+    return (V2EntityBuilder(eid)
+            .kind("hero" if role == EntityRole.HERO else "monster")
+            .at(pos)
+            .readiness(100.0)
+            .with_identity(role=role, faction=faction)
+            .with_combat(hp=hp, max_hp=100, atk=10, def_stat=0)
+            .build())
 
 def test_bracketing_bonus_application():
     # Target at (10,10)
-    target = create_mock_entity(1, 2, pos=(10, 10))
+    target = create_mock_entity(1, 2, pos=(10.0, 10.0))
     # Attacker A at (11,10)
-    attacker_a = create_mock_entity(2, 1, pos=(11, 10))
+    attacker_a = create_mock_entity(2, 1, pos=(11.0, 10.0))
     # Attacker B at (9,10) (Opposite side of A)
-    attacker_b = create_mock_entity(3, 1, pos=(9, 10))
+    attacker_b = create_mock_entity(3, 1, pos=(9.0, 10.0))
     
     state = AuthoritativeState(tick=1, seed=42, entities={1: target, 2: attacker_a, 3: attacker_b})
     

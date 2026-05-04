@@ -8,6 +8,7 @@ import pytest
 from src.core.state import EntityState, RegionState
 from src.core.strategic import StrategicComponent, BlockerState, ProjectStatus
 from src.systems.quests import QuestGenerationSystem
+from src.core.builder import V2EntityBuilder
 
 
 class TestQuestFromScar:
@@ -50,16 +51,16 @@ class TestQuestFromBlockers:
     """LEG-RPG-141: Quest generation from blocker state."""
 
     def test_no_quests_when_no_blockers(self):
-        entity = EntityState(id=1, kind="hero", position=(5.0, 5.0))
+        entity = V2EntityBuilder(1).at((5.0, 5.0)).build()
         result = QuestGenerationSystem.generate_from_blockers(entity, current_tick=100)
         assert len(result) == 0
 
     def test_material_blocker_generates_expedition(self):
         blockers = {"b1": BlockerState(id="b1", kind="material", subject="iron", severity=0.7)}
-        entity = EntityState(
-            id=1, kind="hero", position=(5.0, 5.0),
-            strategic=StrategicComponent(blockers=blockers)
-        )
+        entity = (V2EntityBuilder(1)
+                  .at((5.0, 5.0))
+                  .with_strategic(blockers=blockers)
+                  .build())
         result = QuestGenerationSystem.generate_from_blockers(entity, current_tick=100)
         assert len(result) == 1
         assert result[0].kind == "resource_expedition"
@@ -68,10 +69,10 @@ class TestQuestFromBlockers:
 
     def test_resolved_blockers_ignored(self):
         blockers = {"b1": BlockerState(id="b1", kind="material", subject="iron", severity=0.7, resolved=True)}
-        entity = EntityState(
-            id=1, kind="hero", position=(5.0, 5.0),
-            strategic=StrategicComponent(blockers=blockers)
-        )
+        entity = (V2EntityBuilder(1)
+                  .at((5.0, 5.0))
+                  .with_strategic(blockers=blockers)
+                  .build())
         result = QuestGenerationSystem.generate_from_blockers(entity, current_tick=100)
         assert len(result) == 0
 

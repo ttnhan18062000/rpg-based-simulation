@@ -11,7 +11,7 @@ class CertificationRecorder:
     M10 Law: Record machine-readable truth and generate MD derivatives.
     """
 
-    def __init__(self, output_dir: str = "reports/release_proof"):
+    def __init__(self, output_dir: str = "reports/certification"):
         self._output_dir = Path(output_dir)
         self._output_dir.mkdir(parents=True, exist_ok=True)
     def record(self, result: CertificationResult) -> str:

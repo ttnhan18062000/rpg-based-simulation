@@ -110,6 +110,52 @@ class ContractService:
         if not social_up:
              return strat_up, []
              
+        social_updates = [social_up]
+        
+        # Part 1 §Social: Both parties get updates
+        other_id = contract.target_id if contract.source_id == entity.id else contract.source_id
+        
+        # If betrayal, victim gets a specialized update
+        if betrayal and betrayer_id is not None:
+            # We already have the update for 'entity' (which might be betrayer or victim)
+            # If entity is betrayer, generate update for victim.
+            # If entity is victim, generate update for betrayer.
+            
+            victim_id = contract.target_id if contract.source_id == betrayer_id else contract.source_id
+            
+            # The 'social_up' from transition_contract is tied to 'entity'.
+            # We need to make sure 'notoriety_delta' and 'betrayal_increment' are only on betrayer.
+            if entity.id == betrayer_id:
+                # social_up is for betrayer. Keep notoriety and betrayal_increment.
+                # Generate victim update.
+                victim_social = SocialUpdate(
+                    bond_updates=[SocialBondUpdate(target_id=betrayer_id, sentiment_delta=-1.0, familiarity_delta=0.1)],
+                    notoriety_delta=0.1 # Victim notoriety from associated failure
+                )
+                social_updates = [social_up, victim_social]
+            else:
+                # entity is victim. social_up should NOT have betrayal_increment/high notoriety.
+                # We need to fix social_up and generate betrayer update.
+                victim_social = replace(social_up, notoriety_delta=0.1, betrayal_increment=0)
+                betrayer_social = SocialUpdate(
+                    bond_updates=[SocialBondUpdate(target_id=entity.id, sentiment_delta=-1.0, familiarity_delta=0.1)],
+                    notoriety_delta=0.5,
+                    betrayal_increment=1
+                )
+                social_updates = [victim_social, betrayer_social]
+        else:
+            # Normal success/failure: Both parties get similar bond updates
+            other_id = contract.target_id if contract.source_id == entity.id else contract.source_id
+            # Generate update for the OTHER party regarding 'entity'
+            other_social = SocialUpdate(
+                bond_updates=[SocialBondUpdate(
+                    target_id=entity.id, 
+                    sentiment_delta=0.2 if success else -0.1, 
+                    familiarity_delta=0.1
+                )]
+            )
+            social_updates = [social_up, other_social]
+        
         # Strategic consequences (Betrayal -> Avenge Directive and Turning Point)
         if betrayal and betrayer_id:
             from src.core.strategic import DirectiveState, DirectiveKind, DirectivePriority, TurningPointState, TurningPointKind
@@ -135,10 +181,7 @@ class ContractService:
                 turning_points_add=[betrayal_tp]
             )
         
-        # We return the social update for the entity that owns this state.
-        # ContractService usually returns updates for the whole world in some contexts, 
-        # but here it's called per-entity.
-        return strat_up, [social_up]
+        return strat_up, social_updates
 
 
     @staticmethod

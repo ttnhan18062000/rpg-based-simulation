@@ -17,11 +17,16 @@ def test_certification_detects_semantic_drift():
         max_observability_budget_percent=5.0
     )
     
+    from src.core.builder import V2EntityBuilder
     state = AuthoritativeState(tick=0, seed=42, entities={
-        1: EntityState(id=1, kind="TEST", position=(0,0), readiness=100.0)
+        1: (V2EntityBuilder(1)
+            .kind("TEST")
+            .position(0.0, 0.0)
+            .readiness(100.0)
+            .build())
     })
     
-    harness = CertificationHarness(profile, output_dir="tmp/test_harness")
+    harness = CertificationHarness(profile, output_dir="tmp/test_harness_contract")
     expectations = get_scenario_expectations("DET_EQUIV")
     
     # We will "break" the deterministic equivalence by mocking 

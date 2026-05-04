@@ -2,6 +2,9 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, List, Optional
 from dataclasses import replace
 from src.core.updates import StateUpdate, EntityUpdate, LifecycleUpdate, InventoryUpdate
+import logging
+
+logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from src.core.state import AuthoritativeState, EntityState
@@ -18,12 +21,13 @@ class LifecycleSystem:
         Identify entities that have died and process succession/permadeath.
         """
         refined_entity_updates = dict(update.entity_updates)
+        logger.info(f"Lifecycle: Starting resolution with keys: {list(refined_entity_updates.keys())}")
         
         # Collect deaths for influence processing (Task 11.4)
         recent_deaths: List[EntityState] = []
         
         for e_id, entity in state.entities.items():
-            if not entity.active: continue
+            if not entity.lifecycle.active: continue
             
             ent_upd = refined_entity_updates.get(e_id, EntityUpdate(entity_id=e_id))
             
@@ -36,6 +40,9 @@ class LifecycleSystem:
                 death_reason = "OLD_AGE"
             
             # Check for combat death
+            if ent_upd.combat:
+                logger.info(f"Lifecycle: Entity {e_id} combat outcome: {ent_upd.combat.outcome_kind}")
+            
             if ent_upd.combat and ent_upd.combat.outcome_kind == "KILL":
                 is_dead = True
                 death_reason = "COMBAT"

@@ -27,9 +27,9 @@ class WorldDynamicsSystem:
         from src.core.updates import BiologicalUpdate
         
         for e_id, entity in state.entities.items():
-            if not entity.active: continue
+            if not entity.lifecycle.active: continue
             
-            region = WorldDynamicsSystem._get_region_for_pos(state, entity.position)
+            region = WorldDynamicsSystem._get_region_for_pos(state, entity.navigation.position)
             if not region:
                 continue
             
@@ -73,7 +73,7 @@ class WorldDynamicsSystem:
             if ent_upd.combat and ent_upd.combat.alive_set is False:
                 entity = state.entities.get(e_id)
                 if entity:
-                    region = WorldDynamicsSystem._get_region_for_pos(state, entity.position)
+                    region = WorldDynamicsSystem._get_region_for_pos(state, entity.navigation.position)
                     if region:
                         world_upd = update.world_updates.get(region.id, WorldUpdate(region_id=region.id))
                         # Each death adds 1.0 trauma

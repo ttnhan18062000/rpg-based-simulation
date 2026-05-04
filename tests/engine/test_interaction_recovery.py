@@ -13,6 +13,7 @@ def test_weight_pressure_enforcement():
               .kind("hero")
               .at((0.0, 0.0))
               .with_inventory(items=["wood", "wood"])
+              .readiness(100.0)
               .build())
     
     # max_weight=5.0 override (Default is 50)
@@ -43,6 +44,7 @@ def test_channeled_looting_one_shot():
     entity = (V2EntityBuilder(1)
               .kind("hero")
               .at((0.0, 0.0))
+              .readiness(100.0)
               .build())
     
     # Set interaction state
@@ -76,6 +78,7 @@ def test_town_resolution_sell_on_entry():
               .kind("hero")
               .at((0.0, 0.0))
               .with_inventory(items=["wood", "ore"])
+              .readiness(100.0)
               .build())
     
     # Add a shop building with gold
@@ -120,6 +123,7 @@ def test_movement_interruption():
     entity = (V2EntityBuilder(1)
               .kind("hero")
               .at((0.0, 0.0))
+              .readiness(100.0)
               .build())
     entity = replace(entity, interaction=InteractionComponent(progress=5, target_node_id=10))
     

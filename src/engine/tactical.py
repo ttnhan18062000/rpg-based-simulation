@@ -62,7 +62,7 @@ class TacticalDecisionSystem:
         neighbors = SensoryFilter.filter_saliency(entity, raw_neighbors, max_targets=5)
         
         # 3. Emotional Appraisal (Pillar 1.1)
-        region_trauma = SimulationDomainLogic.get_region_trauma(state, entity.position)
+        region_trauma = SimulationDomainLogic.get_region_trauma(state, entity.navigation.position)
         emotion = AppraisalSystem.evaluate_emotional_state(
             entity, 
             neighbors, 
@@ -136,13 +136,15 @@ class TacticalDecisionSystem:
                                 target_pos = node.position
                         except ValueError:
                             # Not an int, try coordinate tuple
+                            # Safe coordinate parse: "(x, y)" -> (float, float)
                             try:
-                                target_pos = eval(obj.target)
-                            except:
-                                pass
+                                import ast
+                                target_pos = ast.literal_eval(obj.target)
+                            except (ValueError, SyntaxError):
+                                target_pos = None
                         
                         if target_pos:
-                            dist = abs(target_pos[0] - entity.position[0]) + abs(target_pos[1] - entity.position[1])
+                            dist = abs(target_pos[0] - entity.navigation.position[0]) + abs(target_pos[1] - entity.navigation.position[1])
                             if dist < 1.0:
                                 # At target: Interact if node, or just hold
                                 if node_id is not None:
@@ -169,7 +171,7 @@ class TacticalDecisionSystem:
                                 )
             
             # 4.1 Role-Based Obligation (Phase 7)
-            group = state.groups.get(entity.group_id) if entity.group_id is not None else None
+            group = state.groups.get(entity.identity.group_id) if entity.identity.group_id is not None else None
             if group and not hostiles:
                 leader = state.entities.get(group.leader_id)
                 if leader and leader.combat.alive:
@@ -179,7 +181,7 @@ class TacticalDecisionSystem:
                         if role in ("VANGUARD", "PROTECTOR"):
                             # Guard position near leader
                             guard_pos = PositioningService.find_guard_position(entity, leader, None, state)
-                            if guard_pos != entity.position:
+                            if guard_pos != entity.navigation.position:
                                 return EntityUpdate(
                                     entity_id=entity.id,
                                     navigation=NavigationUpdate(target_set=guard_pos, movement_mode_set=MovementMode.GUARD),
@@ -191,8 +193,8 @@ class TacticalDecisionSystem:
 
             # 4.2 Cohesion Check: If too far from group anchor, prioritize regrouping
             if group:
-                dx = entity.position[0] - group.anchor[0]
-                dy = entity.position[1] - group.anchor[1]
+                dx = entity.navigation.position[0] - group.anchor[0]
+                dy = entity.navigation.position[1] - group.anchor[1]
                 dist_sq = dx*dx + dy*dy
                 if dist_sq > group.cohesion_radius**2:
                     return EntityUpdate(
@@ -207,9 +209,9 @@ class TacticalDecisionSystem:
             return EntityUpdate(entity_id=entity.id)
 
         # 4. Target Selection with Focus Fire
-        group = state.groups.get(entity.group_id) if entity.group_id is not None else None
+        group = state.groups.get(entity.identity.group_id) if entity.identity.group_id is not None else None
         def target_score(h: EntityState) -> Tuple[float, int, float, int, int]:
-            dist = abs(h.position[0] - entity.position[0]) + abs(h.position[1] - entity.position[1])
+            dist = abs(h.navigation.position[0] - entity.navigation.position[0]) + abs(h.navigation.position[1] - entity.navigation.position[1])
             
             # Domain 7 Hardening: Trust-based focus fire bias
             group_bias = 1.0
@@ -246,14 +248,14 @@ class TacticalDecisionSystem:
         is_attack_legal = target in legal_attack_targets
 
         # 5. Decision: Attack vs Positioning (Kiting/Closing)
-        dist_to_target = abs(target.position[0] - entity.position[0]) + abs(target.position[1] - entity.position[1])
+        dist_to_target = abs(target.navigation.position[0] - entity.navigation.position[0]) + abs(target.navigation.position[1] - entity.navigation.position[1])
         
         # 4. Anti-Stalemate (GAP-T05)
         stale_ticks = entity.task.payload.get("stale_ticks", 0)
         recent_positions = list(entity.task.payload.get("recent_positions", []))
         
         # Detect Oscillation: A-B-A-B
-        curr_pos = (int(entity.position[0]), int(entity.position[1]))
+        curr_pos = (int(entity.navigation.position[0]), int(entity.navigation.position[1]))
         if curr_pos in recent_positions:
              # Oscillating: Break stalemate
              stale_ticks += 5 
@@ -282,7 +284,7 @@ class TacticalDecisionSystem:
              ranged_threats = [h for h in hostiles if h.combat.range > 2]
              if ranged_threats:
                  cover_pos = PositioningService.find_nearest_cover(entity, ranged_threats[0], state)
-                 if cover_pos and cover_pos != entity.position:
+                 if cover_pos and cover_pos != entity.navigation.position:
                      return EntityUpdate(
                          entity_id=entity.id,
                          navigation=NavigationUpdate(target_set=cover_pos, movement_mode_set=MovementMode.REPOSITION),
@@ -315,7 +317,7 @@ class TacticalDecisionSystem:
              if targeting_ally:
                  bracket_pos = PositioningService.get_bracketing_position(entity, targeting_ally, target)
                  is_walkable, _ = LegalityServiceV2.verify_occupancy(bracket_pos, state, ignore_entity_id=entity.id)
-                 if is_walkable and bracket_pos != entity.position:
+                 if is_walkable and bracket_pos != entity.navigation.position:
                      return EntityUpdate(
                          entity_id=entity.id,
                          navigation=NavigationUpdate(target_set=bracket_pos, movement_mode_set=MovementMode.REPOSITION),
@@ -345,7 +347,7 @@ class TacticalDecisionSystem:
              
              if wounded_ally:
                   guard_pos = PositioningService.find_guard_position(entity, wounded_ally, target, state)
-                  if guard_pos != entity.position:
+                  if guard_pos != entity.navigation.position:
                       return EntityUpdate(
                           entity_id=entity.id,
                           navigation=NavigationUpdate(target_set=guard_pos, movement_mode_set=MovementMode.GUARD),
@@ -358,7 +360,7 @@ class TacticalDecisionSystem:
         # 5.4 Intercept Logic (Task 4.1)
         if dist_to_target > 3 and target.navigation.target:
              intercept_pos = PositioningService.find_intercept_position(entity, target, state)
-             if intercept_pos != target.position:
+             if intercept_pos != target.navigation.position:
                  return EntityUpdate(
                      entity_id=entity.id,
                      navigation=NavigationUpdate(target_set=intercept_pos, movement_mode_set=MovementMode.INTERCEPT),
@@ -370,7 +372,7 @@ class TacticalDecisionSystem:
 
         if role == "VANGUARD" and dist_to_target <= 5:
              chokepoints = PositioningService.identify_chokepoints(entity, state)
-             curr_pos = (float(int(entity.position[0])), float(int(entity.position[1])))
+             curr_pos = (float(int(entity.navigation.position[0])), float(int(entity.navigation.position[1])))
              if curr_pos in chokepoints:
                   # Already at chokepoint: HOLD if target is still relatively close
                   if dist_to_target > entity.combat.range:
@@ -385,8 +387,8 @@ class TacticalDecisionSystem:
 
         if role == "SKIRMISHER" and dist_to_target < entity.combat.range:
             # Kiting: Move away from target
-            dx = entity.position[0] - target.position[0]
-            dy = entity.position[1] - target.position[1]
+            dx = entity.navigation.position[0] - target.navigation.position[0]
+            dy = entity.navigation.position[1] - target.navigation.position[1]
             
             # ActionStyle Impact: Aggressive skirmishers kite less, Evasive kite MORE
             kite_dist = 2 if style == ActionStyle.AGGRESSIVE else 6 if style == ActionStyle.EVASIVE else 4
@@ -396,14 +398,14 @@ class TacticalDecisionSystem:
                 kite_dist += 2
             
             # Domain 7 Hardening: Kite towards group anchor if possible
-            base_kite_pos = (entity.position[0] + (dx * kite_dist), entity.position[1] + (dy * kite_dist))
+            base_kite_pos = (entity.navigation.position[0] + (dx * kite_dist), entity.navigation.position[1] + (dy * kite_dist))
             if group:
                 # Weighted average: 70% away from target, 30% towards group anchor
-                anchor_dx = group.anchor[0] - entity.position[0]
-                anchor_dy = group.anchor[1] - entity.position[1]
+                anchor_dx = group.anchor[0] - entity.navigation.position[0]
+                anchor_dy = group.anchor[1] - entity.navigation.position[1]
                 kite_pos = (
-                    base_kite_pos[0] * 0.7 + (entity.position[0] + anchor_dx) * 0.3,
-                    base_kite_pos[1] * 0.7 + (entity.position[1] + anchor_dy) * 0.3
+                    base_kite_pos[0] * 0.7 + (entity.navigation.position[0] + anchor_dx) * 0.3,
+                    base_kite_pos[1] * 0.7 + (entity.navigation.position[1] + anchor_dy) * 0.3
                 )
             else:
                 kite_pos = base_kite_pos
@@ -414,10 +416,10 @@ class TacticalDecisionSystem:
                  # If kiting destination is blocked, fallback to pursuit
                  return EntityUpdate(
                      entity_id=entity.id,
-                     navigation=NavigationUpdate(target_set=target.position, movement_mode_set=MovementMode.PURSUE),
+                     navigation=NavigationUpdate(target_set=target.navigation.position, movement_mode_set=MovementMode.PURSUE),
                      task=TaskUpdate(
                          work_kind_set="ENTITY_MOVE",
-                         payload_set={"target_position": target.position, "reason": "PURSUIT_BLOCKED_KITE", "target_id": target.id}
+                         payload_set={"target_position": target.navigation.position, "reason": "PURSUIT_BLOCKED_KITE", "target_id": target.id}
                      )
                  )
 
@@ -455,12 +457,12 @@ class TacticalDecisionSystem:
             )
         else:
             # Pursuit
-            target_pos = target.position
+            target_pos = target.navigation.position
             
             # Domain 7 Hardening: Vanguard charge limit
             if role == "VANGUARD" and group:
-                dx = target.position[0] - group.anchor[0]
-                dy = target.position[1] - group.anchor[1]
+                dx = target.navigation.position[0] - group.anchor[0]
+                dy = target.navigation.position[1] - group.anchor[1]
                 dist_from_anchor = (dx*dx + dy*dy)**0.5
                 if dist_from_anchor > group.cohesion_radius * 1.5:
                     # Too far from group: only move to the edge of the cohesion zone
@@ -495,7 +497,7 @@ class TacticalDecisionSystem:
             return None
             
         def target_score(h: EntityState) -> Tuple[int, float, int]:
-            dist = abs(h.position[0] - attacker.position[0]) + abs(h.position[1] - attacker.position[1])
+            dist = abs(h.navigation.position[0] - attacker.navigation.position[0]) + abs(h.navigation.position[1] - attacker.navigation.position[1])
             return (h.combat.hp, dist, h.id)
             
         sorted_candidates = sorted(candidates, key=target_score)

@@ -1,19 +1,20 @@
 import pytest
 from dataclasses import replace
-from src.core.state import AuthoritativeState, EntityState, IdentityComponent, CombatComponent, BuildingState, TaskComponent
+from src.core.state import AuthoritativeState, EntityState, IdentityComponent, CombatComponent, BuildingState, TaskComponent, NavigationComponent
+from src.core.enums import ReasonCode
 from src.engine.legality import LegalityServiceV2
 from src.core.updates import StateUpdate, EntityUpdate, TaskUpdate
 
-def create_mock_entity(eid, faction, pos=(10, 10), hp=100):
-    return EntityState(
-        id=eid,
-        kind="hero",
-        position=pos,
-        identity=IdentityComponent(faction=faction),
-        combat=CombatComponent(hp=hp, max_hp=100, alive=True),
-        readiness=100.0,
-        task=TaskComponent()
-    )
+def create_mock_entity(eid, faction, pos=(10.0, 10.0), hp=100):
+    from src.core.builder import V2EntityBuilder
+    return (V2EntityBuilder(eid)
+        .kind("hero")
+        .position(pos[0], pos[1])
+        .faction(faction)
+        .hp(hp, max_hp=100)
+        .alive(True)
+        .readiness(100.0)
+        .build())
 
 def test_terrain_movement_blockage():
     # Target at (10,11), WALL at (10,11)
@@ -22,7 +23,7 @@ def test_terrain_movement_blockage():
     # Verify occupancy at (10,11) is illegal
     is_legal, reason = LegalityServiceV2.verify_occupancy((10, 11), state)
     assert not is_legal
-    assert reason == "PATH_NOT_FOUND"
+    assert reason == ReasonCode.PATH_NOT_FOUND
 
 def test_building_movement_blockage():
     # Target at (10,11), Building at (10,11)
@@ -31,7 +32,7 @@ def test_building_movement_blockage():
     
     is_legal, reason = LegalityServiceV2.verify_occupancy((10, 11), state)
     assert not is_legal
-    assert reason == "BUILDING_OBSTRUCTION"
+    assert reason == ReasonCode.BUILDING_OBSTRUCTION
 
 def test_combat_line_of_sight():
     attacker = create_mock_entity(1, 1, pos=(10, 10))
@@ -47,7 +48,7 @@ def test_combat_line_of_sight():
     state = AuthoritativeState(tick=1, seed=42, entities={1: attacker, 2: target}, terrain={(10, 11): "WALL"})
     is_legal, reason = LegalityServiceV2.verify_attack_legality(attacker, target, state)
     assert not is_legal
-    assert reason == "LOS_OBSTRUCTED"
+    assert reason == ReasonCode.LOS_OBSTRUCTED
 
 def test_high_ground_bonus():
     from src.engine.pipeline import AuthoritativeApplyPipeline

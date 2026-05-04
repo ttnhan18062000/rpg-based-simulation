@@ -3,7 +3,7 @@ from dataclasses import replace
 from src.core.state import (
     AuthoritativeState, EntityState, IdentityComponent, 
     SocialComponent, CombatComponent, NavigationComponent, TaskComponent,
-    InteractionComponent, SocialBond, AttributeComponent
+    InteractionComponent, SocialBond, AttributeComponent, LifecycleComponent
 )
 from src.core.enums import Faction, EntityRole
 from src.core.strategic import (
@@ -16,21 +16,16 @@ from src.systems.groups import GroupSystem
 from src.engine.pipeline import AuthoritativeApplyPipeline
 
 def create_mock_entity(e_id, pos, faction=Faction.HERO_GUILD):
-    return EntityState(
-        id=e_id,
-        kind="actor",
-        position=pos,
-        readiness=100.0,
-        active=True,
-        identity=IdentityComponent(role=EntityRole.HERO, faction=faction),
-        attributes=AttributeComponent(),
-        social=SocialComponent(),
-        combat=CombatComponent(hp=100, max_hp=100, alive=True),
-        navigation=NavigationComponent(),
-        task=TaskComponent(),
-        interaction=InteractionComponent(),
-        strategic=StrategicComponent()
-    )
+    from src.core.builder import V2EntityBuilder
+    return (V2EntityBuilder(e_id)
+        .kind("actor")
+        .position(pos[0], pos[1])
+        .role(EntityRole.HERO)
+        .faction(faction)
+        .hp(100, max_hp=100)
+        .alive(True)
+        .readiness(100.0)
+        .build())
 
 def test_no_proximity_only_groups():
     """Verify that groups do not form just by being near each other."""
@@ -46,35 +41,38 @@ def test_no_proximity_only_groups():
 
 def test_recruitment_logic_evaluation():
     """Verify that recruitment evaluates trust and betrayal history."""
-    candidate = create_mock_entity(1, (1.0, 1.0))
-    # Add a betrayal history
-    candidate = replace(candidate, social=replace(candidate.social, betrayal_count=1))
-    
+    from src.core.builder import V2EntityBuilder
     state = AuthoritativeState(tick=0, seed=42)
     
     # Low payout + betrayal history = rejection (via TOTAL_DISTRUST if trust < 0.4)
     bond_low = SocialBond(target_id=2, sentiment=-0.5) # trust 0.25
-    candidate_low = replace(candidate, social=replace(candidate.social, bonds={2: bond_low}))
+    candidate_low = (V2EntityBuilder(1)
+        .kind("actor")
+        .betrayal_count(1)
+        .bond(bond_low)
+        .build())
     
     c_low = ContractState(id="c_low", kind=ContractKind.RECRUITMENT, source_id=2, target_id=1,
                           terms={"daily_pay": 5, "risk_level": "NORMAL"}, status=ContractStatus.OFFERED, created_tick=0)
-    accepted, reason = SocialAppraisalSystem.appraise_contract(candidate_low, c_low, state)
-    assert not accepted
+    status, reason, _ = SocialAppraisalSystem.appraise_contract(candidate_low, c_low, state)
+    assert status != ContractStatus.ACCEPTED
     
     # Higher payout (100) + high trust (sentiment 0.8 -> trust 0.9) = acceptance
     bond_high = SocialBond(target_id=2, sentiment=0.8)
-    candidate_high = replace(candidate, social=replace(candidate.social, bonds={2: bond_high}))
+    candidate_high = (V2EntityBuilder(1)
+        .kind("actor")
+        .betrayal_count(1)
+        .bond(bond_high)
+        .build())
     
     c_high = ContractState(id="c_high", kind=ContractKind.RECRUITMENT, source_id=2, target_id=1,
                            terms={"daily_pay": 100, "risk_level": "NORMAL"}, status=ContractStatus.OFFERED, created_tick=0)
-    accepted_high, reason = SocialAppraisalSystem.appraise_contract(candidate_high, c_high, state)
-    assert accepted_high
+    status_high, reason, _ = SocialAppraisalSystem.appraise_contract(candidate_high, c_high, state)
+    assert status_high == ContractStatus.ACCEPTED
 
 def test_party_formation_from_contract():
     """Verify that a shared contract leads to group formation."""
-    hero = create_mock_entity(1, (1.0, 1.0))
-    merc = create_mock_entity(2, (1.2, 1.2))
-    
+    from src.core.builder import V2EntityBuilder
     # Give them a recruitment contract
     contract = ContractState(
         id="recruit_merc",
@@ -83,9 +81,16 @@ def test_party_formation_from_contract():
         target_id=2,
         status=ContractStatus.ACTIVE
     )
-    
-    hero = replace(hero, strategic=replace(hero.strategic, contracts={"recruit_merc": contract}))
-    merc = replace(merc, strategic=replace(merc.strategic, contracts={"recruit_merc": contract}))
+    hero = (V2EntityBuilder(1)
+        .kind("actor")
+        .position(1.0, 1.0)
+        .strategic_contract(contract)
+        .build())
+    merc = (V2EntityBuilder(2)
+        .kind("actor")
+        .position(1.2, 1.2)
+        .strategic_contract(contract)
+        .build())
     
     state = AuthoritativeState(tick=1, seed=42, entities={1: hero, 2: merc})
     
@@ -97,15 +102,21 @@ def test_party_formation_from_contract():
 
 def test_betrayal_dissolves_group_and_adds_directive():
     """Verify that attacking a group member dissolves the group and creates an avenge directive."""
-    hero = create_mock_entity(1, (1.0, 1.0))
-    merc = create_mock_entity(2, (1.0, 2.0))
+    from src.core.builder import V2EntityBuilder
+    hero = (V2EntityBuilder(1)
+        .kind("actor")
+        .position(1.0, 1.0)
+        .group_id(500)
+        .build())
+    merc = (V2EntityBuilder(2)
+        .kind("actor")
+        .position(1.0, 2.0)
+        .group_id(500)
+        .build())
     
     # Put them in a group
     from src.core.state import GroupRecord
     group = GroupRecord(id=500, leader_id=1, member_ids={1, 2}, anchor=(1.0, 1.5))
-    
-    hero = replace(hero, group_id=500)
-    merc = replace(merc, group_id=500)
     
     state = AuthoritativeState(tick=1, seed=42, entities={1: hero, 2: merc}, groups={500: group})
     

@@ -52,16 +52,12 @@ class LocalSequentialExecutor:
                 if not subject:
                     continue
                 
-                # M8 Law: Even in sequential baseline, logic must only receive frozen snapshots
-                from src.core.immutability import deep_freeze
-                frozen_subject = deep_freeze(subject)
-                # Note: We don't deep_freeze the entire state here for performance, 
-                # but we pass the frozen_subject which is the primary mutation target.
-                # The state dictionaries are already MappingProxyType if we use AuthoritativeState correctly.
+                # Optimization: state is already a readonly_view, so entities are already frozen
+                frozen_subject = subject
                 
                 # Execute Domain Logic Directly
                 if item.work_kind == "ENTITY_MOVE":
-                    target = item.payload.get("target_position", frozen_subject.position)
+                    target = item.payload.get("target_position", frozen_subject.navigation.position)
                     updates = SimulationDomainLogic.execute_move(state, frozen_subject, target)
                 elif item.work_kind == "ENTITY_ACT":
                     from src.core.updates import TaskUpdate
@@ -74,13 +70,20 @@ class LocalSequentialExecutor:
                     from src.core.updates import EntityUpdate
                     updates = {frozen_subject.id: EntityUpdate(entity_id=frozen_subject.id)}
                 for eid, upd in updates.items():
+                    # Option A Enforcement (Sequential)
+                    if eid != frozen_subject.id and eid != 0:
+                        continue
+                    
+                    from src.core.concurrency_law import ConcurrencyLaw
                     results.append(WorkerResult(
                         source_packet_id=f"local:{state.tick}:{i}",
                         work_id=f"{state.tick}:{item.owner_id}:{item.work_kind}",
                         entity_id=eid,
                         work_class=item.work_class,
                         update=upd,
-                        status=ResultStatus.SUCCESS
+                        status=ResultStatus.SUCCESS,
+                        class_priority=ConcurrencyLaw.get_class_priority(item.work_class),
+                        local_priority=item.priority
                     ))
             
             # 2. SYSTEM DEFERRED WORK (Milestone C: De-simulation)
@@ -142,12 +145,12 @@ class ConcurrentExecutionAdapter:
             if item.work_kind in ("ENTITY_MOVE", "ENTITY_ACT", "ENTITY_BRAIN") and isinstance(item.owner_id, int):
                 subject = state.entities.get(item.owner_id)
                 if subject:
-                    # M7/A Law: Deeply frozen snapshot context
-                    subject_snapshot = deep_freeze(subject)
+                    # Optimization: state is already a readonly_view, so entities are already frozen
+                    subject_snapshot = subject
                     
                     from src.engine.domain_logic import SimulationDomainLogic
                     neighbor_view = SimulationDomainLogic.get_neighbor_view(state, subject_snapshot, radius=10.0) # Default test radius
-                    frozen_neighbor_view = [tuple([eid, deep_freeze(ent)]) for eid, ent in neighbor_view]
+                    frozen_neighbor_view = neighbor_view # Already frozen by state pass
                     
                     from src.core.enums import Domain
                     packet_id = f"{state.tick}:{i}"

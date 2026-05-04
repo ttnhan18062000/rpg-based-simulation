@@ -6,16 +6,13 @@ from src.social.appraisal import SocialAppraisalSystem
 from src.social.relationships import RelationshipService
 
 def create_mock_social_entity(eid, cha=5):
-    from src.core.state import AttributeComponent
-    return EntityState(
-        id=eid,
-        kind="HERO",
-        position=(0, 0),
-        identity=IdentityComponent(),
-        attributes=AttributeComponent(charisma=cha),
-        social=SocialComponent(),
-        active=True
-    )
+    from src.core.builder import V2EntityBuilder
+    return (V2EntityBuilder(eid)
+        .kind("HERO")
+        .position(0, 0)
+        .with_attributes(charisma=cha)
+        .alive(True)
+        .build())
 
 @pytest.mark.v2_contract
 @pytest.mark.differential

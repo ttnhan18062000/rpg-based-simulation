@@ -1,17 +1,11 @@
 import pytest
 from dataclasses import replace
-from src.core.state import EntityState, IdentityComponent, CombatComponent, AuthoritativeState, TaskComponent
+from src.core.state import AuthoritativeState, TaskComponent
 from src.engine.tactical import TacticalDecisionSystem
+from src.core.builder import V2EntityBuilder
 
-def create_mock_entity(eid, faction, hp=100, pos=(10, 10)):
-    return EntityState(
-        id=eid,
-        kind="hero",
-        position=pos,
-        identity=IdentityComponent(faction=faction),
-        combat=CombatComponent(hp=hp, max_hp=100, alive=True),
-        task=TaskComponent()
-    )
+def create_mock_entity(eid, faction, hp=100, pos=(10.0, 10.0)):
+    return V2EntityBuilder(eid).kind("hero").faction(faction).hp(hp).at(pos).readiness(100.0).build()
 
 def test_stalemate_break():
     attacker = create_mock_entity(1, 1)

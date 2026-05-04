@@ -14,24 +14,17 @@ from src.engine.domain_logic import SimulationDomainLogic
 from src.systems.strategic import StrategicIntelligenceSystem
 
 def create_mock_entity(e_id, pos, faction=1, role=EntityRole.HERO):
-    return EntityState(
-        id=e_id,
-        kind="actor",
-        position=pos,
-        readiness=100.0,
-        identity=IdentityComponent(role=role, faction=faction),
-        combat=CombatComponent(hp=100, max_hp=100, atk=10, def_stat=5, range=1, alive=True),
-        inventory=InventoryComponent(),
-        strategic=StrategicComponent(
-            profile=CognitionProfile(interruption_resistance=0.5, detour_breadth=3)
-        ),
-        biological=BiologicalComponent(),
-        social=SocialComponent(),
-        navigation=NavigationComponent(),
-        lifecycle=LifecycleComponent(),
-        properties={},
-        active=True
-    )
+    from src.core.builder import V2EntityBuilder
+    return (V2EntityBuilder(e_id)
+        .kind("actor")
+        .position(pos[0], pos[1])
+        .role(role)
+        .faction(faction)
+        .hp(100, max_hp=100)
+        .alive(True)
+        .readiness(100.0)
+        .cognition(interruption_resistance=0.5, detour_breadth=3)
+        .build())
 
 def test_blocker_inference_on_failure():
     """Verify that a failed attack generates a blocker."""
@@ -75,7 +68,7 @@ def test_detour_suggestion_logic():
     
     state = AuthoritativeState(tick=1, seed=42, entities={1: hero})
     
-    strat_up = StrategicIntelligenceSystem.evaluate_strategic_intent(state, hero)
+    strat_up = StrategicIntelligenceSystem.evaluate_strategic_intent(state, hero, force=True)
     
     assert strat_up.current_project_id_set.startswith("proj_detour")
     assert strat_up.current_objective_id_set.startswith("detour_blocker_mat_iron")

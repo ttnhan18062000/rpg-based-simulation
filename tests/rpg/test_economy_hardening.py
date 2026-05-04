@@ -13,9 +13,12 @@ def base_state():
     shop = BuildingState(
         id=101, kind="shop", position=(0.0, 0.0), hp=100, functional=True
     )
-    entity = EntityState(
-        id=1, kind="hero", position=(0.5, 0.5), 
-        inventory=InventoryComponent(gold=1000)
+    from src.core.builder import V2EntityBuilder
+    entity = (V2EntityBuilder(1)
+        .kind("hero")
+        .at((0.5, 0.5))
+        .with_inventory(gold=1000)
+        .build()
     )
     
     return AuthoritativeState(

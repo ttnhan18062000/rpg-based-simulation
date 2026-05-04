@@ -19,31 +19,32 @@ from src.engine.combat import CombatResolutionSystem
 from src.engine.legality import LegalityServiceV2
 
 def create_mock_entity(id, faction="HERO_FACTION", role=EntityRole.HERO, pos=(0,0), hp=100, range=1, readiness=100.0):
-    from src.core.state import (
-        AttributeComponent, InventoryComponent, AptitudeComponent,
-        EquipmentComponent, TaskComponent, StaminaComponent
-    )
-    return EntityState(
-        id=id,
-        kind="ACTOR",
-        position=pos,
-        identity=IdentityComponent(faction=faction, role=role),
-        combat=CombatComponent(hp=hp, max_hp=100, atk=10, range=range, alive=hp > 0),
-        readiness=readiness,
-        active=True,
-        social=SocialComponent(),
-        navigation=NavigationComponent(),
-        biological=BiologicalComponent(),
-        strategic=StrategicComponent(),
-        lifecycle=LifecycleComponent(),
-        attributes=AttributeComponent(),
-        inventory=InventoryComponent(),
-        aptitude=AptitudeComponent(),
-        equipment=EquipmentComponent(),
-        task=TaskComponent(),
-        stamina=StaminaComponent(),
-        properties={}
-    )
+    from src.core.builder import V2EntityBuilder
+    from src.core.enums import Faction
+    
+    # Map string faction to enum
+    if isinstance(faction, Faction):
+        f_enum = faction
+    else:
+        mapping = {
+            "HERO_FACTION": Faction.HERO_GUILD,
+            "HERO": Faction.HERO_GUILD,
+            "MONSTER": Faction.MONSTER_HORDE,
+            "MONSTER_HORDE": Faction.MONSTER_HORDE,
+            "NEUTRAL": Faction.NEUTRAL
+        }
+        f_enum = mapping.get(str(faction).upper(), Faction.HERO_GUILD)
+    
+    builder = (V2EntityBuilder(id)
+              .kind("ACTOR")
+              .at(pos)
+              .with_identity(role=role, faction=f_enum)
+              .with_combat(hp=hp, max_hp=100, atk=10, range=range, alive=hp > 0)
+              .readiness(readiness)
+              .with_biological(hunger=0.0, sleep_debt=0.0)
+              .active(True))
+    
+    return builder.build()
 
 @pytest.fixture
 def base_state():
@@ -205,10 +206,14 @@ def test_reward_atomicity(base_state):
     state_lethal = replace(base_state, entities={1: attacker, 3: target_weak})
     update_kill = CombatResolutionSystem.resolve_attack(attacker, target_weak, state_lethal)
     assert update_kill.outcome_kind == "KILL"
-    assert len(update_kill.resource_transfers) > 0
-    transfer = update_kill.resource_transfers[0]
-    assert transfer.reward_upd.xp_gain > 0
-    assert transfer.gold_delta > 0
+    assert len(update_kill.resource_transfers) >= 2
+    # Find XP transfer
+    xp_transfer = next((t for t in update_kill.resource_transfers if t.xp_reward > 0), None)
+    assert xp_transfer is not None, "XP transfer missing"
+    
+    # Find Gold transfer
+    gold_transfer = next((t for t in update_kill.resource_transfers if t.gold_delta > 0), None)
+    assert gold_transfer is not None, "Gold transfer missing"
     
     # Trace consistency
     assert update_kill.trace["FINAL_ATK_MULT"] > 0
@@ -248,7 +253,7 @@ def test_simultaneous_multi_attack_reward_limit(base_state):
     update_1 = CombatResolutionSystem.resolve_attack(a1, target, state)
     assert update_1.outcome_kind == "KILL"
     assert len(update_1.resource_transfers) > 0
-    assert update_1.resource_transfers[0].reward_upd.xp_gain > 0
+    assert update_1.resource_transfers[0].xp_reward > 0
     
     # Apply update_1 to target for the next check
     target_dead = replace(target, combat=replace(target.combat, hp=0, alive=False))

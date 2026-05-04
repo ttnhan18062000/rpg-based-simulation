@@ -7,26 +7,21 @@ from src.engine.evolution import EvolutionSystem
 from src.engine.apply import ApplyPath
 from src.core.enums import EntityRole
 
+from src.core.builder import V2EntityBuilder
+
 def test_evolution_level_up_hero():
     """Verify that a Hero levels up and unlocks skills at milestones."""
-    entity = EntityState(
-        id=1,
-        kind="HERO",
-        position=(0, 0),
-        identity=IdentityComponent(role=EntityRole.HERO, evolution_level=1, evolution_points=0, unspent_ap=0),
-        attributes=AttributeComponent(vitality=5, strength=5),
-        combat=CombatComponent(hp=110, max_hp=110, atk=12),
-        aptitude=AptitudeComponent()
-    )
+    entity = (V2EntityBuilder(1)
+              .kind("HERO")
+              .at((0.0, 0.0))
+              .with_identity(role=EntityRole.HERO, evolution_level=1, evolution_points=0)
+              .with_attributes(vitality=5, strength=5)
+              .hp(110)
+              .with_combat(atk=12)
+              .build())
     state = AuthoritativeState(entities={1: entity}, tick=0, seed=0)
     
     # Give enough XP to reach Level 5
-    # Level 1 req: 100
-    # Level 2 req: 282
-    # Level 3 req: 519
-    # Level 4 req: 800
-    # Total needed to reach lvl 5: 100+282+519+800 = 1701
-    
     update = StateUpdate(entity_updates={
         1: EntityUpdate(entity_id=1, identity=IdentityUpdate(evolution_points_delta=1800))
     })
@@ -41,15 +36,12 @@ def test_evolution_level_up_hero():
 
 def test_equipment_stat_derivation():
     """Verify that equipping items updates combat stats via ApplyPath."""
-    entity = EntityState(
-        id=1,
-        kind="HERO",
-        position=(0, 0),
-        identity=IdentityComponent(role=EntityRole.HERO),
-        attributes=AttributeComponent(strength=10), # Base ATK = 10 + 10*0.5 = 15
-        combat=CombatComponent(hp=100, max_hp=100, atk=15, range=1),
-        equipment=EquipmentComponent()
-    )
+    entity = (V2EntityBuilder(1)
+              .kind("HERO")
+              .at((0.0, 0.0))
+              .with_attributes(strength=10)
+              .with_combat(atk=15, range=1)
+              .build())
     state = AuthoritativeState(entities={1: entity}, tick=0, seed=0)
     
     # Equip an iron_sword (+10 ATK, Range 1)
@@ -65,14 +57,12 @@ def test_equipment_stat_derivation():
 
 def test_passive_skill_bonus():
     """Verify that learning a passive skill updates combat stats."""
-    entity = EntityState(
-        id=1,
-        kind="HERO",
-        position=(0, 0),
-        identity=IdentityComponent(role=EntityRole.HERO, learned_skills=set()),
-        attributes=AttributeComponent(agility=10), # Base Evasion = 0.05 + 10*0.001 = 0.06
-        combat=CombatComponent(hp=100, max_hp=100, evasion=0.06),
-    )
+    entity = (V2EntityBuilder(1)
+              .kind("HERO")
+              .at((0.0, 0.0))
+              .with_attributes(agility=10)
+              .with_combat(evasion=0.06)
+              .build())
     state = AuthoritativeState(entities={1: entity}, tick=0, seed=0)
     
     # Learn swift_reflexes (+0.1 evasion)
@@ -87,13 +77,12 @@ def test_passive_skill_bonus():
 
 def test_attribute_stat_scaling():
     """Verify that increasing attributes updates combat stats."""
-    entity = EntityState(
-        id=1,
-        kind="HERO",
-        position=(0, 0),
-        attributes=AttributeComponent(strength=10), # Base ATK = 10 + 5 = 15
-        combat=CombatComponent(hp=100, max_hp=100, atk=15),
-    )
+    entity = (V2EntityBuilder(1)
+              .kind("HERO")
+              .at((0.0, 0.0))
+              .with_attributes(strength=10)
+              .with_combat(atk=15)
+              .build())
     state = AuthoritativeState(entities={1: entity}, tick=0, seed=0)
     
     # Increase strength by 20 -> ATK should increase by 10

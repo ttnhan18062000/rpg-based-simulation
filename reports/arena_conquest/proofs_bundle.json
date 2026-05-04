@@ -1,22 +1,934 @@
 {
   "CONQUEST_ARENA_TEST:COMBAT_ARENA_REGIONAL": {
-    "run_id": "9a2f491b-8e1b-42b6-a4b0-d1b2f74b68b9",
-    "timestamp": "1777651883.8757534",
-    "commit_sha": "24ca4b4ef067795006e9c32c563f1b13071f3b33",
+    "run_id": "867954bd-713b-45bc-8fd4-561a257ecbae",
+    "timestamp": 1778048500.9392684,
+    "commit_sha": "5507b2b8d9a38c2ca5274a558307c73b7b4ca2a5",
     "profile_name": "CONQUEST_ARENA_TEST",
     "scenario_id": "COMBAT_ARENA_REGIONAL",
-    "seed": "42",
-    "environment": "{'detected_facts': \"{'os': 'Linux', 'os_release': '6.17.0-22-generic', 'python_version': '3.13.7', 'cpu_count_logical': 6, 'cpu_count_physical': 6, 'ram_total_gb': 11.18, 'cpu_freq_mhz': 2687.998}\", 'detected_class': 'class_b', 'effective_class': 'class_b', 'override_applied': 'False', 'os_name': 'linux', 'python_version': '3.13'}",
-    "measurements": "[{'tick': '1', 'mode': 'NORMAL', 'memory_rss_mb': '68.0390625', 'memory_trend_mb_per_tick': '0.0', 'tick_compute_ms': '6.260909', 'tick_compute_ms_avg': '6.260909', 'work_debt': '0', 'worker_utilization': '1.0', 'queue_utilization': '0.0', 'replay_pressure': '0.0', 'active_workers': '0', 'timestamp': '1777651883.8907685'}]",
-    "baseline_hash": "564fc868c932d77318f809cf26596651af2ad44b57220dd3051d4872d768370d",
-    "final_hash": "564fc868c932d77318f809cf26596651af2ad44b57220dd3051d4872d768370d",
-    "governor_mode_sequence": "['NORMAL', 'NORMAL']",
-    "conformance_passed": "True",
-    "allowed_failure_observed": "False",
+    "seed": 42,
+    "environment": {
+      "detected_facts": {
+        "os": "Linux",
+        "os_release": "6.17.0-23-generic",
+        "python_version": "3.13.7",
+        "cpu_count_logical": 6,
+        "cpu_count_physical": 6,
+        "ram_total_gb": 11.18,
+        "cpu_freq_mhz": 2688.0
+      },
+      "detected_class": "class_b",
+      "effective_class": "class_b",
+      "override_applied": false,
+      "os_name": "linux",
+      "python_version": "3.13"
+    },
+    "measurements": [
+      {
+        "tick": 1,
+        "mode": "NORMAL",
+        "memory_rss_mb": 68.296875,
+        "memory_trend_mb_per_tick": 0.0,
+        "tick_compute_ms": 3.920632,
+        "tick_compute_ms_avg": 3.920632,
+        "work_debt": 0,
+        "worker_utilization": 1.0,
+        "queue_utilization": 0.01,
+        "replay_pressure": 0.0,
+        "active_workers": 0,
+        "timestamp": 1778048501.1447186
+      }
+    ],
+    "baseline_hash": "615a0a275bb5bd8107c4b1a1dd6665a927ce884b42b11ff39732f9de1d9a3e55",
+    "final_hash": "615a0a275bb5bd8107c4b1a1dd6665a927ce884b42b11ff39732f9de1d9a3e55",
+    "governor_mode_sequence": [
+      "NORMAL",
+      "NORMAL"
+    ],
+    "conformance_passed": true,
+    "stop_condition": "timeout",
+    "allowed_failure_observed": false,
     "failure_kind": "none",
     "failure_reason": "Certification PASS",
-    "peak_rss_mb": "68.0390625",
-    "total_cpu_sec": "0.006260909",
-    "final_state": "{'tick': '101', 'seed': '42', 'world_time': '1', 'entities': '{13: {\\'id\\': \\'13\\', \\'kind\\': \\'HERO\\', \\'position\\': \\'(50.0, 50.0)\\', \\'readiness\\': \\'5.0\\', \\'active\\': \\'True\\', \\'interaction\\': \"{\\'target_node_id\\': \\'None\\', \\'progress\\': \\'0\\', \\'start_tick\\': \\'0\\'}\", \\'identity\\': \\'{\\\\\\'role\\\\\\': 0, \\\\\\'faction\\\\\\': 0, \\\\\\'known_recipes\\\\\\': [], \\\\\\'craft_target\\\\\\': \\\\\\'None\\\\\\', \\\\\\'evolution_level\\\\\\': \\\\\\'5\\\\\\', \\\\\\'evolution_points\\\\\\': \\\\\\'10\\\\\\', \\\\\\'veterancy_points\\\\\\': \\\\\\'0\\\\\\', \\\\\\'veterancy_rank\\\\\\': \\\\\\'0\\\\\\', \\\\\\'unspent_ap\\\\\\': \\\\\\'0\\\\\\', \\\\\\'class_id\\\\\\': \\\\\\'NOVICE\\\\\\', \\\\\\'learned_skills\\\\\\': [], \\\\\\'active_breakthroughs\\\\\\': [], \\\\\\'cooldowns\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'personality\\\\\\': \"{\\\\\\'greed\\\\\\': \\\\\\'0.0\\\\\\', \\\\\\'bravery\\\\\\': \\\\\\'0.0\\\\\\', \\\\\\'sociability\\\\\\': \\\\\\'0.0\\\\\\', \\\\\\'industry\\\\\\': \\\\\\'0.0\\\\\\'}\", \\\\\\'life_stage\\\\\\': \\\\\\'ADULT\\\\\\'}\\', \\'attributes\\': \"{\\'strength\\': \\'5\\', \\'agility\\': \\'5\\', \\'vitality\\': \\'5\\', \\'endurance\\': \\'5\\', \\'intelligence\\': \\'5\\', \\'spirit\\': \\'5\\', \\'wisdom\\': \\'5\\', \\'perception\\': \\'5\\', \\'charisma\\': \\'5\\'}\", \\'inventory\\': \"{\\'items\\': \\'[]\\', \\'gold\\': \\'103.0\\', \\'max_slots\\': \\'10\\', \\'max_weight\\': \\'50.0\\'}\", \\'strategic\\': \\'{\\\\\\'home_region_id\\\\\\': \\\\\\'None\\\\\\', \\\\\\'blockers\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'leads\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'directives\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'projects\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'concerns\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'candidate_zones\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'hypotheses\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'source_trust\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'contracts\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'turning_points\\\\\\': \\\\\\'[]\\\\\\', \\\\\\'current_project_id\\\\\\': \\\\\\'None\\\\\\', \\\\\\'current_objective_id\\\\\\': \\\\\\'None\\\\\\', \\\\\\'profile\\\\\\': \"{\\\\\\'max_active_projects\\\\\\': \\\\\\'3\\\\\\', \\\\\\'max_leads\\\\\\': \\\\\\'8\\\\\\', \\\\\\'max_concerns\\\\\\': \\\\\\'5\\\\\\', \\\\\\'max_candidate_zones\\\\\\': \\\\\\'4\\\\\\', \\\\\\'max_hypotheses\\\\\\': \\\\\\'3\\\\\\', \\\\\\'interruption_resistance\\\\\\': \\\\\\'0.3\\\\\\', \\\\\\'detour_breadth\\\\\\': \\\\\\'3\\\\\\', \\\\\\'detour_depth\\\\\\': \\\\\\'2\\\\\\'}\", \\\\\\'primary_overload_source\\\\\\': \\\\\\'None\\\\\\', \\\\\\'last_overload_tick\\\\\\': \\\\\\'0\\\\\\', \\\\\\'boredom\\\\\\': \\\\\\'{}\\\\\\'}\\', \\'social\\': \"{\\'trust_history\\': \\'{}\\', \\'familiarity_history\\': \\'{}\\', \\'debt_history\\': \\'{}\\', \\'fear_history\\': \\'{}\\', \\'grudge_history\\': \\'{}\\', \\'salience_history\\': \\'{}\\', \\'bonds\\': \\'{}\\', \\'betrayal_count\\': \\'0\\', \\'betrayal_records\\': \\'[]\\', \\'public_reputation\\': \\'1.0\\', \\'heroism_score\\': \\'0.0\\', \\'notoriety_score\\': \\'0.0\\'}\", \\'biological\\': \"{\\'sleep_debt\\': \\'0.05\\', \\'hunger\\': \\'0.1\\', \\'rest_pressure\\': \\'0.0\\', \\'last_meal_tick\\': \\'0\\', \\'last_sleep_tick\\': \\'0\\', \\'well_rested_until\\': \\'-1\\'}\", \\'lifecycle\\': \"{\\'age_ticks\\': \\'1\\', \\'max_age_ticks\\': \\'10000\\', \\'is_permadeath\\': \\'False\\', \\'death_tick\\': \\'None\\', \\'death_reason\\': \\'None\\', \\'generation\\': \\'1\\', \\'heir_entity_id\\': \\'None\\', \\'heirlooms\\': \\'[]\\'}\", \\'aptitude\\': \"{\\'learning_rate\\': \\'1.0\\', \\'stamina_efficiency\\': \\'1.0\\', \\'str_apt\\': \\'1.0\\', \\'agi_apt\\': \\'1.0\\', \\'vit_apt\\': \\'1.0\\', \\'end_apt\\': \\'1.0\\', \\'int_apt\\': \\'1.0\\', \\'spi_apt\\': \\'1.0\\', \\'wis_apt\\': \\'1.0\\', \\'per_apt\\': \\'1.0\\', \\'cha_apt\\': \\'1.0\\'}\", \\'combat\\': \"{\\'hp\\': \\'100\\', \\'max_hp\\': \\'100\\', \\'atk\\': \\'80\\', \\'def_stat\\': \\'16\\', \\'speed\\': \\'9\\', \\'range\\': \\'1\\', \\'evasion\\': \\'0.05\\', \\'move_cost\\': \\'10.0\\', \\'tactical_role\\': \\'VANGUARD\\', \\'action_style\\': \\'0\\', \\'alive\\': \\'True\\'}\", \\'equipment\\': \"{\\'slots\\': \\'{}\\', \\'durability\\': \\'{}\\'}\", \\'navigation\\': \"{\\'target\\': \\'None\\', \\'path\\': \\'[]\\', \\'moved_recently\\': \\'False\\', \\'movement_mode\\': \\'WANDER\\', \\'last_failure_reason\\': \\'None\\', \\'wait_count\\': \\'0\\', \\'oscillation_count\\': \\'0\\', \\'last_position\\': \\'None\\', \\'home_position\\': \\'None\\', \\'leash_radius\\': \\'0.0\\', \\'chase_ticks\\': \\'0\\', \\'max_chase_ticks\\': \\'15\\', \\'returning_home\\': \\'False\\'}\", \\'task\\': \\'{\\\\\\'work_kind\\\\\\': \\\\\\'ENTITY_ACT\\\\\\', \\\\\\'payload\\\\\\': \"{\\\\\\'action\\\\\\': \\\\\\'ATTACK\\\\\\', \\\\\\'target_id\\\\\\': 14, \\\\\\'stale_ticks\\\\\\': 1, \\\\\\'recent_positions\\\\\\': [(50, 50)], \\\\\\'outcome\\\\\\': \\\\\\'SUCCESS\\\\\\'}\"}\\', \\'stamina\\': \"{\\'current\\': \\'95.0\\', \\'max_stamina\\': \\'100.0\\', \\'regen_rate\\': \\'2.0\\', \\'rest_regen_rate\\': \\'8.0\\', \\'exhaustion_threshold\\': \\'10.0\\', \\'exhaustion_penalty\\': \\'0.7\\', \\'ATTACK_COST\\': \\'8.0\\', \\'MOVE_COST\\': \\'3.0\\', \\'HARVEST_COST\\': \\'5.0\\', \\'SKILL_COST_MULT\\': \\'1.0\\'}\", \\'wounds\\': \\'[]\\', \\'scars\\': \\'[]\\', \\'latest_intent_results\\': \"[{\\'transaction_id\\': \\'None\\', \\'accepted\\': \\'True\\', \\'reason\\': \\'\\', \\'source_kind\\': \\'TAX\\', \\'source_id\\': \\'tax_test_wilderness\\'}, {\\'transaction_id\\': \\'None\\', \\'accepted\\': \\'True\\', \\'reason\\': \\'\\', \\'source_kind\\': \\'COMBAT\\', \\'source_id\\': \\'14\\'}]\", \\'group_id\\': \\'None\\', \\'properties\\': \"{\\'evolved_this_tick\\': False, \\'levels_gained\\': 0, \\'previous_kind\\': \\'HERO\\'}\"}, 14: {\\'id\\': \\'14\\', \\'kind\\': \\'GOBLIN\\', \\'position\\': \\'(51.0, 50.0)\\', \\'readiness\\': \\'5.0\\', \\'active\\': \\'False\\', \\'interaction\\': \"{\\'target_node_id\\': \\'None\\', \\'progress\\': \\'0\\', \\'start_tick\\': \\'0\\'}\", \\'identity\\': \\'{\\\\\\'role\\\\\\': 2, \\\\\\'faction\\\\\\': 1, \\\\\\'known_recipes\\\\\\': [], \\\\\\'craft_target\\\\\\': \\\\\\'None\\\\\\', \\\\\\'evolution_level\\\\\\': \\\\\\'1\\\\\\', \\\\\\'evolution_points\\\\\\': \\\\\\'0\\\\\\', \\\\\\'veterancy_points\\\\\\': \\\\\\'0\\\\\\', \\\\\\'veterancy_rank\\\\\\': \\\\\\'0\\\\\\', \\\\\\'unspent_ap\\\\\\': \\\\\\'0\\\\\\', \\\\\\'class_id\\\\\\': \\\\\\'NOVICE\\\\\\', \\\\\\'learned_skills\\\\\\': [], \\\\\\'active_breakthroughs\\\\\\': [], \\\\\\'cooldowns\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'personality\\\\\\': \"{\\\\\\'greed\\\\\\': \\\\\\'0.0\\\\\\', \\\\\\'bravery\\\\\\': \\\\\\'0.0\\\\\\', \\\\\\'sociability\\\\\\': \\\\\\'0.0\\\\\\', \\\\\\'industry\\\\\\': \\\\\\'0.0\\\\\\'}\", \\\\\\'life_stage\\\\\\': \\\\\\'ADULT\\\\\\'}\\', \\'attributes\\': \"{\\'strength\\': \\'5\\', \\'agility\\': \\'5\\', \\'vitality\\': \\'5\\', \\'endurance\\': \\'5\\', \\'intelligence\\': \\'5\\', \\'spirit\\': \\'5\\', \\'wisdom\\': \\'5\\', \\'perception\\': \\'5\\', \\'charisma\\': \\'5\\'}\", \\'inventory\\': \"{\\'items\\': \\'[]\\', \\'gold\\': \\'0\\', \\'max_slots\\': \\'16\\', \\'max_weight\\': \\'50.0\\'}\", \\'strategic\\': \\'{\\\\\\'home_region_id\\\\\\': \\\\\\'None\\\\\\', \\\\\\'blockers\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'leads\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'directives\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'projects\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'concerns\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'candidate_zones\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'hypotheses\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'source_trust\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'contracts\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'turning_points\\\\\\': \\\\\\'[]\\\\\\', \\\\\\'current_project_id\\\\\\': \\\\\\'None\\\\\\', \\\\\\'current_objective_id\\\\\\': \\\\\\'None\\\\\\', \\\\\\'profile\\\\\\': \"{\\\\\\'max_active_projects\\\\\\': \\\\\\'3\\\\\\', \\\\\\'max_leads\\\\\\': \\\\\\'8\\\\\\', \\\\\\'max_concerns\\\\\\': \\\\\\'5\\\\\\', \\\\\\'max_candidate_zones\\\\\\': \\\\\\'4\\\\\\', \\\\\\'max_hypotheses\\\\\\': \\\\\\'3\\\\\\', \\\\\\'interruption_resistance\\\\\\': \\\\\\'0.3\\\\\\', \\\\\\'detour_breadth\\\\\\': \\\\\\'3\\\\\\', \\\\\\'detour_depth\\\\\\': \\\\\\'2\\\\\\'}\", \\\\\\'primary_overload_source\\\\\\': \\\\\\'None\\\\\\', \\\\\\'last_overload_tick\\\\\\': \\\\\\'0\\\\\\', \\\\\\'boredom\\\\\\': \\\\\\'{}\\\\\\'}\\', \\'social\\': \"{\\'trust_history\\': \\'{}\\', \\'familiarity_history\\': \\'{}\\', \\'debt_history\\': \\'{}\\', \\'fear_history\\': \\'{}\\', \\'grudge_history\\': \\'{13: 5.0}\\', \\'salience_history\\': \\'{}\\', \\'bonds\\': \\'{}\\', \\'betrayal_count\\': \\'0\\', \\'betrayal_records\\': \\'[]\\', \\'public_reputation\\': \\'1.0\\', \\'heroism_score\\': \\'0.0\\', \\'notoriety_score\\': \\'0.0\\'}\", \\'biological\\': \"{\\'sleep_debt\\': \\'0.05\\', \\'hunger\\': \\'0.1\\', \\'rest_pressure\\': \\'0.0\\', \\'last_meal_tick\\': \\'0\\', \\'last_sleep_tick\\': \\'0\\', \\'well_rested_until\\': \\'-1\\'}\", \\'lifecycle\\': \"{\\'age_ticks\\': \\'1\\', \\'max_age_ticks\\': \\'10000\\', \\'is_permadeath\\': \\'True\\', \\'death_tick\\': \\'100\\', \\'death_reason\\': \\'COMBAT\\', \\'generation\\': \\'1\\', \\'heir_entity_id\\': \\'None\\', \\'heirlooms\\': \\'[]\\'}\", \\'aptitude\\': \"{\\'learning_rate\\': \\'1.0\\', \\'stamina_efficiency\\': \\'1.0\\', \\'str_apt\\': \\'1.0\\', \\'agi_apt\\': \\'1.0\\', \\'vit_apt\\': \\'1.0\\', \\'end_apt\\': \\'1.0\\', \\'int_apt\\': \\'1.0\\', \\'spi_apt\\': \\'1.0\\', \\'wis_apt\\': \\'1.0\\', \\'per_apt\\': \\'1.0\\', \\'cha_apt\\': \\'1.0\\'}\", \\'combat\\': \"{\\'hp\\': \\'0\\', \\'max_hp\\': \\'1\\', \\'atk\\': \\'1\\', \\'def_stat\\': \\'1\\', \\'speed\\': \\'10\\', \\'range\\': \\'1\\', \\'evasion\\': \\'0.05\\', \\'move_cost\\': \\'10.0\\', \\'tactical_role\\': \\'VANGUARD\\', \\'action_style\\': \\'0\\', \\'alive\\': \\'False\\'}\", \\'equipment\\': \"{\\'slots\\': \\'{}\\', \\'durability\\': \\'{}\\'}\", \\'navigation\\': \"{\\'target\\': \\'None\\', \\'path\\': \\'[]\\', \\'moved_recently\\': \\'False\\', \\'movement_mode\\': \\'WANDER\\', \\'last_failure_reason\\': \\'None\\', \\'wait_count\\': \\'0\\', \\'oscillation_count\\': \\'0\\', \\'last_position\\': \\'None\\', \\'home_position\\': \\'None\\', \\'leash_radius\\': \\'0.0\\', \\'chase_ticks\\': \\'0\\', \\'max_chase_ticks\\': \\'15\\', \\'returning_home\\': \\'False\\'}\", \\'task\\': \"{\\'work_kind\\': \\'ENTITY_ACT\\', \\'payload\\': \\'{}\\'}\", \\'stamina\\': \"{\\'current\\': \\'100.0\\', \\'max_stamina\\': \\'100.0\\', \\'regen_rate\\': \\'2.0\\', \\'rest_regen_rate\\': \\'8.0\\', \\'exhaustion_threshold\\': \\'10.0\\', \\'exhaustion_penalty\\': \\'0.7\\', \\'ATTACK_COST\\': \\'8.0\\', \\'MOVE_COST\\': \\'3.0\\', \\'HARVEST_COST\\': \\'5.0\\', \\'SKILL_COST_MULT\\': \\'1.0\\'}\", \\'wounds\\': \\'[]\\', \\'scars\\': \\'[]\\', \\'latest_intent_results\\': \\'[]\\', \\'group_id\\': \\'None\\', \\'properties\\': \\'{}\\'}, 15: {\\'id\\': \\'15\\', \\'kind\\': \\'goblin\\', \\'position\\': \\'(41.44708883316931, 95.2204564157732)\\', \\'readiness\\': \\'0.0\\', \\'active\\': \\'True\\', \\'interaction\\': \"{\\'target_node_id\\': \\'None\\', \\'progress\\': \\'0\\', \\'start_tick\\': \\'0\\'}\", \\'identity\\': \\'{\\\\\\'role\\\\\\': 2, \\\\\\'faction\\\\\\': 1, \\\\\\'known_recipes\\\\\\': [], \\\\\\'craft_target\\\\\\': \\\\\\'None\\\\\\', \\\\\\'evolution_level\\\\\\': \\\\\\'4\\\\\\', \\\\\\'evolution_points\\\\\\': \\\\\\'0\\\\\\', \\\\\\'veterancy_points\\\\\\': \\\\\\'0\\\\\\', \\\\\\'veterancy_rank\\\\\\': \\\\\\'0\\\\\\', \\\\\\'unspent_ap\\\\\\': \\\\\\'0\\\\\\', \\\\\\'class_id\\\\\\': \\\\\\'NOVICE\\\\\\', \\\\\\'learned_skills\\\\\\': [], \\\\\\'active_breakthroughs\\\\\\': [], \\\\\\'cooldowns\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'personality\\\\\\': \"{\\\\\\'greed\\\\\\': \\\\\\'0.0\\\\\\', \\\\\\'bravery\\\\\\': \\\\\\'0.0\\\\\\', \\\\\\'sociability\\\\\\': \\\\\\'0.0\\\\\\', \\\\\\'industry\\\\\\': \\\\\\'0.0\\\\\\'}\", \\\\\\'life_stage\\\\\\': \\\\\\'ADULT\\\\\\'}\\', \\'attributes\\': \"{\\'strength\\': \\'5\\', \\'agility\\': \\'5\\', \\'vitality\\': \\'5\\', \\'endurance\\': \\'5\\', \\'intelligence\\': \\'5\\', \\'spirit\\': \\'5\\', \\'wisdom\\': \\'5\\', \\'perception\\': \\'5\\', \\'charisma\\': \\'5\\'}\", \\'inventory\\': \"{\\'items\\': \\'[]\\', \\'gold\\': \\'7\\', \\'max_slots\\': \\'16\\', \\'max_weight\\': \\'50.0\\'}\", \\'strategic\\': \\'{\\\\\\'home_region_id\\\\\\': \\\\\\'None\\\\\\', \\\\\\'blockers\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'leads\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'directives\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'projects\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'concerns\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'candidate_zones\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'hypotheses\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'source_trust\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'contracts\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'turning_points\\\\\\': \\\\\\'[]\\\\\\', \\\\\\'current_project_id\\\\\\': \\\\\\'None\\\\\\', \\\\\\'current_objective_id\\\\\\': \\\\\\'None\\\\\\', \\\\\\'profile\\\\\\': \"{\\\\\\'max_active_projects\\\\\\': \\\\\\'3\\\\\\', \\\\\\'max_leads\\\\\\': \\\\\\'8\\\\\\', \\\\\\'max_concerns\\\\\\': \\\\\\'5\\\\\\', \\\\\\'max_candidate_zones\\\\\\': \\\\\\'4\\\\\\', \\\\\\'max_hypotheses\\\\\\': \\\\\\'3\\\\\\', \\\\\\'interruption_resistance\\\\\\': \\\\\\'0.3\\\\\\', \\\\\\'detour_breadth\\\\\\': \\\\\\'3\\\\\\', \\\\\\'detour_depth\\\\\\': \\\\\\'2\\\\\\'}\", \\\\\\'primary_overload_source\\\\\\': \\\\\\'None\\\\\\', \\\\\\'last_overload_tick\\\\\\': \\\\\\'0\\\\\\', \\\\\\'boredom\\\\\\': \\\\\\'{}\\\\\\'}\\', \\'social\\': \"{\\'trust_history\\': \\'{}\\', \\'familiarity_history\\': \\'{}\\', \\'debt_history\\': \\'{}\\', \\'fear_history\\': \\'{}\\', \\'grudge_history\\': \\'{}\\', \\'salience_history\\': \\'{}\\', \\'bonds\\': \\'{}\\', \\'betrayal_count\\': \\'0\\', \\'betrayal_records\\': \\'[]\\', \\'public_reputation\\': \\'1.0\\', \\'heroism_score\\': \\'0.0\\', \\'notoriety_score\\': \\'0.0\\'}\", \\'biological\\': \"{\\'sleep_debt\\': \\'0.0\\', \\'hunger\\': \\'0.0\\', \\'rest_pressure\\': \\'0.0\\', \\'last_meal_tick\\': \\'0\\', \\'last_sleep_tick\\': \\'0\\', \\'well_rested_until\\': \\'-1\\'}\", \\'lifecycle\\': \"{\\'age_ticks\\': \\'0\\', \\'max_age_ticks\\': \\'10000\\', \\'is_permadeath\\': \\'False\\', \\'death_tick\\': \\'None\\', \\'death_reason\\': \\'None\\', \\'generation\\': \\'1\\', \\'heir_entity_id\\': \\'None\\', \\'heirlooms\\': \\'[]\\'}\", \\'aptitude\\': \"{\\'learning_rate\\': \\'1.0\\', \\'stamina_efficiency\\': \\'1.0\\', \\'str_apt\\': \\'1.0\\', \\'agi_apt\\': \\'1.0\\', \\'vit_apt\\': \\'1.0\\', \\'end_apt\\': \\'1.0\\', \\'int_apt\\': \\'1.0\\', \\'spi_apt\\': \\'1.0\\', \\'wis_apt\\': \\'1.0\\', \\'per_apt\\': \\'1.0\\', \\'cha_apt\\': \\'1.0\\'}\", \\'combat\\': \"{\\'hp\\': \\'45\\', \\'max_hp\\': \\'45\\', \\'atk\\': \\'10\\', \\'def_stat\\': \\'2\\', \\'speed\\': \\'10\\', \\'range\\': \\'1\\', \\'evasion\\': \\'0.05\\', \\'move_cost\\': \\'10.0\\', \\'tactical_role\\': \\'VANGUARD\\', \\'action_style\\': \\'0\\', \\'alive\\': \\'True\\'}\", \\'equipment\\': \"{\\'slots\\': \\'{}\\', \\'durability\\': \\'{}\\'}\", \\'navigation\\': \"{\\'target\\': \\'None\\', \\'path\\': \\'[]\\', \\'moved_recently\\': \\'False\\', \\'movement_mode\\': \\'WANDER\\', \\'last_failure_reason\\': \\'None\\', \\'wait_count\\': \\'0\\', \\'oscillation_count\\': \\'0\\', \\'last_position\\': \\'None\\', \\'home_position\\': \\'None\\', \\'leash_radius\\': \\'0.0\\', \\'chase_ticks\\': \\'0\\', \\'max_chase_ticks\\': \\'15\\', \\'returning_home\\': \\'False\\'}\", \\'task\\': \"{\\'work_kind\\': \\'ENTITY_ACT\\', \\'payload\\': \\'{}\\'}\", \\'stamina\\': \"{\\'current\\': \\'100.0\\', \\'max_stamina\\': \\'100.0\\', \\'regen_rate\\': \\'2.0\\', \\'rest_regen_rate\\': \\'8.0\\', \\'exhaustion_threshold\\': \\'10.0\\', \\'exhaustion_penalty\\': \\'0.7\\', \\'ATTACK_COST\\': \\'8.0\\', \\'MOVE_COST\\': \\'3.0\\', \\'HARVEST_COST\\': \\'5.0\\', \\'SKILL_COST_MULT\\': \\'1.0\\'}\", \\'wounds\\': \\'[]\\', \\'scars\\': \\'[]\\', \\'latest_intent_results\\': \\'[]\\', \\'group_id\\': \\'None\\', \\'properties\\': \\'{}\\'}}', 'resource_nodes': '{}', 'ground_items': '{}', 'corpses': \"{1000014: {'id': '1000014', 'original_entity_id': '14', 'position': '(51.0, 50.0)', 'items': '[]', 'decay_tick': '200', 'generation': '1'}}\", 'chests': '{}', 'buildings': '{}', 'camps': '{}', 'regions': \"{'test_wilderness': {'id': 'test_wilderness', 'name': 'Test Wilderness', 'bounds': '(0, 0, 100, 100)', 'kind': 'FOREST', 'hazard_level': '0.0', 'suppression_active': 'True', 'calamity_intensity': '0.0', 'trauma_score': '1.0', 'retaliation_pressure': '0.0', 'stability': '1.0', 'owner_faction_id': 1, 'influence': '-55.0', 'weather': 'CLEAR', 'active_modifiers': '[]'}}\", 'local_scars': '{}', 'groups': '{}', 'terrain': '{}', 'global_resources': \"{'faction_1_gold': 2.0, 'metric_total_gold': 3.0, 'tax_test_wilderness_gold': 2.0}\", 'home_storage': '{}', 'town_center': '(0.0, 0.0)', 'periodic_due_ticks': '{}', 'work_debt': '{}', 'movement_count': '0', 'maturity': '0', 'last_calamity_tick': '0', 'blocked_tiles': [], 'town_tiles': [], 'building_tiles': '{}', 'rng_checkpoint': 'None', 'transaction_trace': \"['ACCEPT: Entity 13 TAX TAX:tax_test_wilderness - SUCCESS', 'ACCEPT: Entity 13 REWARD COMBAT:14 - SUCCESS']\", 'rejection_registry': '{}', 'processed_transaction_ids': []}"
+    "peak_rss_mb": 68.296875,
+    "total_cpu_sec": 0.003920632,
+    "final_state": {
+      "tick": 101,
+      "seed": 42,
+      "world_time": 1,
+      "entities": {
+        "13": {
+          "id": 13,
+          "kind": "HERO",
+          "interaction": {
+            "target_node_id": null,
+            "progress": 0.0,
+            "start_tick": 0
+          },
+          "identity": {
+            "role": 0,
+            "faction": 0,
+            "known_recipes": [],
+            "craft_target": null,
+            "evolution_level": 5,
+            "evolution_points": 10,
+            "veterancy_points": 0,
+            "veterancy_rank": 0,
+            "unspent_ap": 0,
+            "class_id": "NOVICE",
+            "learned_skills": [],
+            "traits": [],
+            "active_breakthroughs": [],
+            "cooldowns": {},
+            "personality": {
+              "greed": 0.0,
+              "bravery": 0.0,
+              "sociability": 0.0,
+              "industry": 0.0
+            },
+            "life_stage": "ADULT",
+            "group_id": null,
+            "properties": {
+              "evolved_this_tick": false,
+              "levels_gained": 0,
+              "previous_kind": "HERO"
+            },
+            "latest_intent_results": [
+              {
+                "transaction_id": null,
+                "accepted": true,
+                "reason": "unknown",
+                "source_kind": "TAX",
+                "source_id": "tax_test_wilderness"
+              },
+              {
+                "transaction_id": null,
+                "accepted": true,
+                "reason": "unknown",
+                "source_kind": "COMBAT",
+                "source_id": 14
+              },
+              {
+                "transaction_id": null,
+                "accepted": true,
+                "reason": "unknown",
+                "source_kind": "COMBAT",
+                "source_id": 14
+              }
+            ]
+          },
+          "attributes": {
+            "strength": 5,
+            "agility": 5,
+            "vitality": 5,
+            "endurance": 5,
+            "intelligence": 5,
+            "spirit": 5,
+            "wisdom": 5,
+            "perception": 5,
+            "charisma": 5
+          },
+          "inventory": {
+            "items": [],
+            "gold": 103.0,
+            "max_slots": 10,
+            "max_weight": 100.0
+          },
+          "strategic": {
+            "home_region_id": null,
+            "blockers": {},
+            "leads": {},
+            "directives": {},
+            "projects": {},
+            "concerns": {},
+            "candidate_zones": {},
+            "hypotheses": {},
+            "source_trust": {},
+            "contracts": {},
+            "turning_points": {},
+            "current_project_id": null,
+            "current_objective_id": null,
+            "profile": {
+              "max_active_projects": 3,
+              "max_leads": 8,
+              "max_concerns": 5,
+              "max_candidate_zones": 4,
+              "max_hypotheses": 3,
+              "interruption_resistance": 0.3,
+              "detour_breadth": 3,
+              "detour_depth": 2
+            },
+            "primary_overload_source": null,
+            "last_overload_tick": 0,
+            "boredom": {}
+          },
+          "social": {
+            "trust_history": {},
+            "familiarity_history": {},
+            "debt_history": {},
+            "fear_history": {},
+            "grudge_history": {},
+            "salience_history": {},
+            "bonds": {},
+            "nemesis_ids": [],
+            "place_attachment": {
+              "test_wilderness": 0.001
+            },
+            "betrayal_count": 0,
+            "betrayal_records": [],
+            "public_reputation": 1.0,
+            "heroism_score": 0.0,
+            "notoriety_score": 0.0,
+            "last_offer_tick": -1,
+            "rejection_count": {}
+          },
+          "biological": {
+            "sleep_debt": 0.05,
+            "hunger": 0.1,
+            "rest_pressure": 0.0,
+            "last_meal_tick": 0,
+            "last_sleep_tick": 0,
+            "well_rested_until": -1
+          },
+          "lifecycle": {
+            "age_ticks": 1,
+            "max_age_ticks": 10000,
+            "is_permadeath": false,
+            "death_tick": null,
+            "death_reason": null,
+            "generation": 1,
+            "heir_entity_id": null,
+            "heirlooms": [],
+            "active": true
+          },
+          "_readonly_cache": null,
+          "aptitude": {
+            "learning_rate": 1.0,
+            "stamina_efficiency": 1.0,
+            "str_apt": 1.0,
+            "agi_apt": 1.0,
+            "vit_apt": 1.0,
+            "end_apt": 1.0,
+            "int_apt": 1.0,
+            "spi_apt": 1.0,
+            "wis_apt": 1.0,
+            "per_apt": 1.0,
+            "cha_apt": 1.0
+          },
+          "combat": {
+            "hp": 100,
+            "max_hp": 112,
+            "atk": 81,
+            "def_stat": 16,
+            "speed": 9,
+            "range": 1,
+            "evasion": 0.05,
+            "move_cost": 10.0,
+            "tactical_role": "VANGUARD",
+            "action_style": 0,
+            "alive": true,
+            "readiness": -95.0,
+            "wounds": [],
+            "scars": [],
+            "latest_result": {
+              "damage_taken": 0,
+              "hp_delta": 0,
+              "attacker_id": null,
+              "is_opportunity_attack": false,
+              "alive_set": null,
+              "outcome_kind": "SURVIVE",
+              "is_lethal": false,
+              "failure_reason": null,
+              "max_hp_delta": 0,
+              "atk_delta": -20.399999999999995,
+              "def_delta": -4.199999999999999,
+              "speed_delta": -0.9999999999999998,
+              "generation_delta": 0,
+              "is_permadeath_set": null,
+              "simultaneous_intents": [],
+              "resource_transfers": [],
+              "equipment_upd": null,
+              "attacker_equipment_upd": null,
+              "wound_update": null,
+              "social_upd": null,
+              "trace": {}
+            }
+          },
+          "equipment": {
+            "slots": {},
+            "durability": {}
+          },
+          "navigation": {
+            "position": [
+              50.0,
+              50.0
+            ],
+            "target": null,
+            "path": [],
+            "moved_recently": false,
+            "movement_mode": "WANDER",
+            "last_failure_reason": null,
+            "wait_count": 0,
+            "oscillation_count": 0,
+            "last_position": null,
+            "home_position": [
+              50.0,
+              50.0
+            ],
+            "leash_radius": 0.0,
+            "chase_ticks": 0,
+            "max_chase_ticks": 15,
+            "returning_home": false
+          },
+          "task": {
+            "work_kind": "ENTITY_ACT",
+            "payload": {
+              "action": "ATTACK",
+              "target_id": 14,
+              "outcome": "SUCCESS"
+            }
+          },
+          "stamina": {
+            "current": 95.0,
+            "max_stamina": 100.0,
+            "regen_rate": 2.0,
+            "rest_regen_rate": 8.0,
+            "exhaustion_threshold": 10.0,
+            "exhaustion_penalty": 0.7,
+            "ATTACK_COST": 8.0,
+            "MOVE_COST": 3.0,
+            "HARVEST_COST": 5.0,
+            "SKILL_COST_MULT": 1.0
+          }
+        },
+        "14": {
+          "id": 14,
+          "kind": "GOBLIN",
+          "interaction": {
+            "target_node_id": null,
+            "progress": 0.0,
+            "start_tick": 0
+          },
+          "identity": {
+            "role": 2,
+            "faction": 1,
+            "known_recipes": [],
+            "craft_target": null,
+            "evolution_level": 1,
+            "evolution_points": 0,
+            "veterancy_points": 0,
+            "veterancy_rank": 0,
+            "unspent_ap": 0,
+            "class_id": "NOVICE",
+            "learned_skills": [],
+            "traits": [],
+            "active_breakthroughs": [],
+            "cooldowns": {},
+            "personality": {
+              "greed": 0.0,
+              "bravery": 0.0,
+              "sociability": 0.0,
+              "industry": 0.0
+            },
+            "life_stage": "ADULT",
+            "group_id": null,
+            "properties": {},
+            "latest_intent_results": []
+          },
+          "attributes": {
+            "strength": 5,
+            "agility": 5,
+            "vitality": 5,
+            "endurance": 5,
+            "intelligence": 5,
+            "spirit": 5,
+            "wisdom": 5,
+            "perception": 5,
+            "charisma": 5
+          },
+          "inventory": {
+            "items": [],
+            "gold": 0,
+            "max_slots": 16,
+            "max_weight": 50
+          },
+          "strategic": {
+            "home_region_id": null,
+            "blockers": {},
+            "leads": {},
+            "directives": {},
+            "projects": {},
+            "concerns": {},
+            "candidate_zones": {},
+            "hypotheses": {},
+            "source_trust": {},
+            "contracts": {},
+            "turning_points": {},
+            "current_project_id": null,
+            "current_objective_id": null,
+            "profile": {
+              "max_active_projects": 3,
+              "max_leads": 8,
+              "max_concerns": 5,
+              "max_candidate_zones": 4,
+              "max_hypotheses": 3,
+              "interruption_resistance": 0.3,
+              "detour_breadth": 3,
+              "detour_depth": 2
+            },
+            "primary_overload_source": null,
+            "last_overload_tick": 0,
+            "boredom": {}
+          },
+          "social": {
+            "trust_history": {},
+            "familiarity_history": {},
+            "debt_history": {},
+            "fear_history": {},
+            "grudge_history": {
+              "13": 5.0
+            },
+            "salience_history": {},
+            "bonds": {
+              "13": {
+                "target_id": 13,
+                "familiarity": 0.05,
+                "sentiment": -0.1,
+                "last_interaction_tick": 0
+              }
+            },
+            "nemesis_ids": [],
+            "place_attachment": {
+              "test_wilderness": 0.001
+            },
+            "betrayal_count": 0,
+            "betrayal_records": [],
+            "public_reputation": 1.0,
+            "heroism_score": 0.0,
+            "notoriety_score": 0.0,
+            "last_offer_tick": -1,
+            "rejection_count": {}
+          },
+          "biological": {
+            "sleep_debt": 0.05,
+            "hunger": 0.1,
+            "rest_pressure": 0.0,
+            "last_meal_tick": 0,
+            "last_sleep_tick": 0,
+            "well_rested_until": -1
+          },
+          "lifecycle": {
+            "age_ticks": 1,
+            "max_age_ticks": 10000,
+            "is_permadeath": true,
+            "death_tick": 100,
+            "death_reason": "COMBAT",
+            "generation": 1,
+            "heir_entity_id": null,
+            "heirlooms": [],
+            "active": false
+          },
+          "_readonly_cache": null,
+          "aptitude": {
+            "learning_rate": 1.0,
+            "stamina_efficiency": 1.0,
+            "str_apt": 1.0,
+            "agi_apt": 1.0,
+            "vit_apt": 1.0,
+            "end_apt": 1.0,
+            "int_apt": 1.0,
+            "spi_apt": 1.0,
+            "wis_apt": 1.0,
+            "per_apt": 1.0,
+            "cha_apt": 1.0
+          },
+          "combat": {
+            "hp": 0,
+            "max_hp": 13,
+            "atk": 3,
+            "def_stat": 2,
+            "speed": 10,
+            "range": 1,
+            "evasion": 0.05,
+            "move_cost": 10.0,
+            "tactical_role": "VANGUARD",
+            "action_style": 0,
+            "alive": false,
+            "readiness": 98.33333333333333,
+            "wounds": [],
+            "scars": [],
+            "latest_result": {
+              "damage_taken": 194,
+              "hp_delta": -194,
+              "attacker_id": 13,
+              "is_opportunity_attack": true,
+              "alive_set": false,
+              "outcome_kind": "KILL",
+              "is_lethal": true,
+              "failure_reason": null,
+              "max_hp_delta": 0,
+              "atk_delta": 0,
+              "def_delta": 0,
+              "speed_delta": 0,
+              "generation_delta": 0,
+              "is_permadeath_set": null,
+              "simultaneous_intents": [
+                {
+                  "attacker_id": 13,
+                  "damage": 97,
+                  "is_opportunity_attack": true,
+                  "is_lethal": false,
+                  "splash_radius": 0,
+                  "splash_damage": 0,
+                  "impact_pos": null
+                }
+              ],
+              "resource_transfers": [
+                {
+                  "source_id": 14,
+                  "source_kind": "COMBAT",
+                  "items_add": [],
+                  "items_remove": [],
+                  "gold_delta": 0,
+                  "gold_cost": 0,
+                  "price_multiplier": 1.0,
+                  "xp_reward": 10,
+                  "transfer_kind": "KILL_REWARD",
+                  "transaction_id": null,
+                  "group_id": null,
+                  "is_group_required": false,
+                  "biological_upd": null,
+                  "attributes_upd": null,
+                  "identity_upd": null,
+                  "combat_upd": null,
+                  "strategic_upd": null,
+                  "equipment_upd": null,
+                  "reward_upd": null
+                },
+                {
+                  "source_id": 14,
+                  "source_kind": "COMBAT",
+                  "items_add": [],
+                  "items_remove": [],
+                  "gold_delta": 5,
+                  "gold_cost": 0,
+                  "price_multiplier": 1.0,
+                  "xp_reward": 0,
+                  "transfer_kind": "KILL_REWARD",
+                  "transaction_id": null,
+                  "group_id": null,
+                  "is_group_required": true,
+                  "biological_upd": null,
+                  "attributes_upd": null,
+                  "identity_upd": null,
+                  "combat_upd": null,
+                  "strategic_upd": null,
+                  "equipment_upd": null,
+                  "reward_upd": null
+                },
+                {
+                  "source_id": 14,
+                  "source_kind": "COMBAT",
+                  "items_add": [],
+                  "items_remove": [],
+                  "gold_delta": 0,
+                  "gold_cost": 0,
+                  "price_multiplier": 1.0,
+                  "xp_reward": 10,
+                  "transfer_kind": "KILL_REWARD",
+                  "transaction_id": null,
+                  "group_id": null,
+                  "is_group_required": false,
+                  "biological_upd": null,
+                  "attributes_upd": null,
+                  "identity_upd": null,
+                  "combat_upd": null,
+                  "strategic_upd": null,
+                  "equipment_upd": null,
+                  "reward_upd": null
+                },
+                {
+                  "source_id": 14,
+                  "source_kind": "COMBAT",
+                  "items_add": [],
+                  "items_remove": [],
+                  "gold_delta": 5,
+                  "gold_cost": 0,
+                  "price_multiplier": 1.0,
+                  "xp_reward": 0,
+                  "transfer_kind": "KILL_REWARD",
+                  "transaction_id": null,
+                  "group_id": null,
+                  "is_group_required": true,
+                  "biological_upd": null,
+                  "attributes_upd": null,
+                  "identity_upd": null,
+                  "combat_upd": null,
+                  "strategic_upd": null,
+                  "equipment_upd": null,
+                  "reward_upd": null
+                }
+              ],
+              "equipment_upd": null,
+              "attacker_equipment_upd": null,
+              "wound_update": null,
+              "social_upd": {
+                "bond_updates": [
+                  {
+                    "target_id": 13,
+                    "familiarity_delta": 0.05,
+                    "sentiment_delta": -0.1,
+                    "last_interaction_tick_set": null
+                  }
+                ],
+                "trust_delta": {},
+                "familiarity_delta": {},
+                "debt_delta": {},
+                "fear_delta": {},
+                "grudge_delta": {
+                  "13": 7.461538461538462
+                },
+                "salience_delta": {},
+                "betrayal_increment": 0,
+                "betrayal_records_add": [],
+                "reputation_set": null,
+                "heroism_delta": 0.0,
+                "notoriety_delta": 0.0,
+                "last_offer_tick_set": null,
+                "rejection_increment": {},
+                "nemesis_promotion": [],
+                "place_attachment_delta": {},
+                "contracts_add": [],
+                "contracts_remove": []
+              },
+              "trace": {
+                "FINAL_ATK_MULT": 1.0,
+                "FINAL_DEF_MULT": 1.0
+              }
+            }
+          },
+          "equipment": {
+            "slots": {},
+            "durability": {}
+          },
+          "navigation": {
+            "position": [
+              51.699928582359654,
+              50.714212839142505
+            ],
+            "target": null,
+            "path": [],
+            "moved_recently": true,
+            "movement_mode": "WANDER",
+            "last_failure_reason": null,
+            "wait_count": 0,
+            "oscillation_count": 0,
+            "last_position": [
+              51.0,
+              50.0
+            ],
+            "home_position": [
+              51.0,
+              50.0
+            ],
+            "leash_radius": 0.0,
+            "chase_ticks": 0,
+            "max_chase_ticks": 15,
+            "returning_home": false
+          },
+          "task": {
+            "work_kind": "ENTITY_MOVE",
+            "payload": {
+              "target_position": [
+                0.0,
+                0.0
+              ],
+              "reason": "PANIC_RETREAT"
+            }
+          },
+          "stamina": {
+            "current": 97.0,
+            "max_stamina": 100.0,
+            "regen_rate": 2.0,
+            "rest_regen_rate": 8.0,
+            "exhaustion_threshold": 10.0,
+            "exhaustion_penalty": 0.7,
+            "ATTACK_COST": 8.0,
+            "MOVE_COST": 3.0,
+            "HARVEST_COST": 5.0,
+            "SKILL_COST_MULT": 1.0
+          }
+        },
+        "1": {
+          "id": 1,
+          "kind": "goblin",
+          "interaction": {
+            "target_node_id": null,
+            "progress": 0.0,
+            "start_tick": 0
+          },
+          "identity": {
+            "role": 2,
+            "faction": 1,
+            "known_recipes": [],
+            "craft_target": null,
+            "evolution_level": 5,
+            "evolution_points": 0,
+            "veterancy_points": 0,
+            "veterancy_rank": 0,
+            "unspent_ap": 0,
+            "class_id": "NOVICE",
+            "learned_skills": [],
+            "traits": [],
+            "active_breakthroughs": [],
+            "cooldowns": {},
+            "personality": {
+              "greed": 0.0,
+              "bravery": 0.0,
+              "sociability": 0.0,
+              "industry": 0.0
+            },
+            "life_stage": "ADULT",
+            "group_id": null,
+            "properties": {},
+            "latest_intent_results": []
+          },
+          "attributes": {
+            "strength": 5,
+            "agility": 5,
+            "vitality": 5,
+            "endurance": 5,
+            "intelligence": 5,
+            "spirit": 5,
+            "wisdom": 5,
+            "perception": 5,
+            "charisma": 5
+          },
+          "inventory": {
+            "items": [],
+            "gold": 7,
+            "max_slots": 16,
+            "max_weight": 50
+          },
+          "strategic": {
+            "home_region_id": null,
+            "blockers": {},
+            "leads": {},
+            "directives": {},
+            "projects": {},
+            "concerns": {},
+            "candidate_zones": {},
+            "hypotheses": {},
+            "source_trust": {},
+            "contracts": {},
+            "turning_points": {},
+            "current_project_id": null,
+            "current_objective_id": null,
+            "profile": {
+              "max_active_projects": 3,
+              "max_leads": 8,
+              "max_concerns": 5,
+              "max_candidate_zones": 4,
+              "max_hypotheses": 3,
+              "interruption_resistance": 0.3,
+              "detour_breadth": 3,
+              "detour_depth": 2
+            },
+            "primary_overload_source": null,
+            "last_overload_tick": 0,
+            "boredom": {}
+          },
+          "social": {
+            "trust_history": {},
+            "familiarity_history": {},
+            "debt_history": {},
+            "fear_history": {},
+            "grudge_history": {},
+            "salience_history": {},
+            "bonds": {},
+            "nemesis_ids": [],
+            "place_attachment": {},
+            "betrayal_count": 0,
+            "betrayal_records": [],
+            "public_reputation": 1.0,
+            "heroism_score": 0.0,
+            "notoriety_score": 0.0,
+            "last_offer_tick": -1,
+            "rejection_count": {}
+          },
+          "biological": {
+            "sleep_debt": 0.0,
+            "hunger": 0.0,
+            "rest_pressure": 0.0,
+            "last_meal_tick": 0,
+            "last_sleep_tick": 0,
+            "well_rested_until": -1
+          },
+          "lifecycle": {
+            "age_ticks": 0,
+            "max_age_ticks": 10000,
+            "is_permadeath": false,
+            "death_tick": null,
+            "death_reason": null,
+            "generation": 1,
+            "heir_entity_id": null,
+            "heirlooms": [],
+            "active": true
+          },
+          "_readonly_cache": null,
+          "aptitude": {
+            "learning_rate": 1.0,
+            "stamina_efficiency": 1.0,
+            "str_apt": 1.0,
+            "agi_apt": 1.0,
+            "vit_apt": 1.0,
+            "end_apt": 1.0,
+            "int_apt": 1.0,
+            "spi_apt": 1.0,
+            "wis_apt": 1.0,
+            "per_apt": 1.0,
+            "cha_apt": 1.0
+          },
+          "combat": {
+            "hp": 45,
+            "max_hp": 57,
+            "atk": 12,
+            "def_stat": 3,
+            "speed": 10,
+            "range": 1,
+            "evasion": 0.05,
+            "move_cost": 10.0,
+            "tactical_role": "VANGUARD",
+            "action_style": 0,
+            "alive": true,
+            "readiness": 100.0,
+            "wounds": [],
+            "scars": [],
+            "latest_result": null
+          },
+          "equipment": {
+            "slots": {},
+            "durability": {}
+          },
+          "navigation": {
+            "position": [
+              1.1985816030218088,
+              82.6395751921568
+            ],
+            "target": null,
+            "path": [],
+            "moved_recently": false,
+            "movement_mode": "WANDER",
+            "last_failure_reason": null,
+            "wait_count": 0,
+            "oscillation_count": 0,
+            "last_position": null,
+            "home_position": [
+              1.1985816030218088,
+              82.6395751921568
+            ],
+            "leash_radius": 8.0,
+            "chase_ticks": 0,
+            "max_chase_ticks": 15,
+            "returning_home": false
+          },
+          "task": {
+            "work_kind": "REST",
+            "payload": {}
+          },
+          "stamina": {
+            "current": 100.0,
+            "max_stamina": 100.0,
+            "regen_rate": 2.0,
+            "rest_regen_rate": 8.0,
+            "exhaustion_threshold": 10.0,
+            "exhaustion_penalty": 0.7,
+            "ATTACK_COST": 8.0,
+            "MOVE_COST": 3.0,
+            "HARVEST_COST": 5.0,
+            "SKILL_COST_MULT": 1.0
+          }
+        }
+      },
+      "resource_nodes": {},
+      "ground_items": {},
+      "corpses": {
+        "1000014": {
+          "id": 1000014,
+          "original_entity_id": 14,
+          "position": [
+            51.699928582359654,
+            50.714212839142505
+          ],
+          "items": [],
+          "decay_tick": 200,
+          "generation": 1
+        }
+      },
+      "chests": {},
+      "buildings": {},
+      "camps": {},
+      "regions": {
+        "test_wilderness": {
+          "id": "test_wilderness",
+          "name": "Test Wilderness",
+          "bounds": [
+            0,
+            0,
+            100,
+            100
+          ],
+          "kind": "FOREST",
+          "hazard_level": 0.0,
+          "suppression_active": true,
+          "calamity_intensity": 0.0,
+          "trauma_score": 1.0,
+          "retaliation_pressure": 0.0,
+          "stability": 1.0,
+          "owner_faction_id": 1,
+          "influence": -55.0,
+          "weather": "CLEAR",
+          "active_modifiers": [],
+          "price_modifiers": {}
+        }
+      },
+      "local_scars": {},
+      "_readonly_cache": null,
+      "groups": {},
+      "terrain": {},
+      "global_resources": {
+        "faction_1_gold": 2.0,
+        "metric_total_gold": 3.0,
+        "tax_test_wilderness_gold": 2.0
+      },
+      "home_storage": {},
+      "town_center": [
+        0.0,
+        0.0
+      ],
+      "periodic_due_ticks": {},
+      "work_debt": {},
+      "movement_count": 0,
+      "maturity": 0,
+      "last_calamity_tick": 0,
+      "blocked_tiles": [],
+      "town_tiles": [],
+      "building_tiles": {},
+      "rng_checkpoint": null,
+      "transaction_trace": [
+        "TRANS_ACCEPT: Entity 13 TAX TAX:tax_test_wilderness",
+        "TRANS_ACCEPT: Entity 13 KILL_REWARD COMBAT:14",
+        "TRANS_ACCEPT: Entity 13 KILL_REWARD COMBAT:14"
+      ],
+      "rejection_registry": {},
+      "pressure_signals": {
+        "global_salience": 0.0,
+        "debt_ratio": 0.0,
+        "compute_ratio": 0.0
+      },
+      "current_mode": 0,
+      "processed_transaction_ids": [],
+      "next_node_id": 1000,
+      "next_entity_id": 2
+    }
   }
 }

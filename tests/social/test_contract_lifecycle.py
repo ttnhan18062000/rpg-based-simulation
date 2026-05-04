@@ -8,21 +8,21 @@ Contract lifecycle and social evaluation tests.
 import pytest
 from dataclasses import replace
 from src.core.state import AuthoritativeState, EntityState, SocialComponent, SocialBond
+from src.core.builder import V2EntityBuilder
 from src.core.strategic import ContractState, ContractKind, ContractStatus
 from src.social.appraisal import SocialAppraisalSystem
 from src.social.contracts import ContractService
 
 def create_mock_entity(id, gold=10, sentiment=0.0):
-    entity = EntityState(
-        id=id,
-        kind="ACTOR",
-        position=(0,0),
-        social=SocialComponent(
-            bonds={99: SocialBond(target_id=99, sentiment=sentiment, familiarity=0.5)}
-        )
-    )
-    entity = replace(entity, inventory=replace(entity.inventory, gold=gold))
-    return entity
+    from src.core.builder import V2EntityBuilder
+    from src.core.state import SocialBond
+    return (V2EntityBuilder(id)
+        .kind("ACTOR")
+        .position(0, 0)
+        .gold(gold)
+        .bond(SocialBond(target_id=99, sentiment=sentiment, familiarity=0.5))
+        .alive(True)
+        .build())
 
 def test_contract_appraisal_trust():
     # Scenario: Trusted friend offers a low-pay recruitment
@@ -31,9 +31,10 @@ def test_contract_appraisal_trust():
     
     state = AuthoritativeState(entities={1: friend}, tick=100, seed=1)
     
+    from src.core.enums import ReasonCode
     status, reason, _ = SocialAppraisalSystem.appraise_contract(friend, contract, state)
     assert status == ContractStatus.ACCEPTED
-    assert reason == "LOYALTY_ACCEPTANCE"
+    assert reason == ReasonCode.LOYALTY_ACCEPTANCE
 
 def test_contract_appraisal_greed():
     # Scenario: Desperate for gold, accepts high pay recruitment from stranger
@@ -42,9 +43,10 @@ def test_contract_appraisal_greed():
     
     state = AuthoritativeState(entities={1: desperate}, tick=100, seed=1)
     
+    from src.core.enums import ReasonCode
     status, reason, _ = SocialAppraisalSystem.appraise_contract(desperate, contract, state)
     assert status == ContractStatus.ACCEPTED
-    assert reason == "FAIR_COMPENSATION"
+    assert reason == ReasonCode.FAIR_COMPENSATION
 
 def test_contract_appraisal_rejection():
     # Scenario: Low trust stranger offers low pay
@@ -53,16 +55,24 @@ def test_contract_appraisal_rejection():
     
     state = AuthoritativeState(entities={1: enemy}, tick=100, seed=1)
     
+    from src.core.enums import ReasonCode
     status, reason, _ = SocialAppraisalSystem.appraise_contract(enemy, contract, state)
     assert status == ContractStatus.CANCELLED
-    assert reason == "TOTAL_DISTRUST"
+    assert reason == ReasonCode.TOTAL_DISTRUST
 
 def test_contract_lifecycle_acceptance():
-    entity = create_mock_entity(1)
     contract = ContractService.create_recruitment_contract("c4", 99, 1, tick=100)
     
     # Accept
-    update = ContractService.accept_contract(1, contract, tick=100)
+    entity = create_mock_entity(1)
+    # The entity must have the contract in its strategic component to accept it
+    entity = (V2EntityBuilder(1)
+        .kind("ACTOR")
+        .position(0, 0)
+        .strategic_contract(contract)
+        .build())
+    
+    update = ContractService.accept_contract(entity, contract.id, tick=100)
     assert len(update.contracts_add_or_update) == 1
     new_contract = update.contracts_add_or_update[0]
     assert new_contract.status == ContractStatus.ACTIVE
@@ -72,12 +82,15 @@ def test_contract_lifecycle_resolution():
     contract = ContractService.create_recruitment_contract("c5", 99, 1, tick=100)
     contract = replace(contract, status=ContractStatus.ACTIVE)
     
+    # Create entity that owns the contract
+    entity = V2EntityBuilder(1).kind("ACTOR").position(0, 0).strategic_contract(contract).build()
+    
     # Success
-    s_upd, b_upds = ContractService.resolve_contract_outcome(contract, success=True)
-    assert s_upd.contracts_add_or_update[0].status == ContractStatus.COMPLETED
+    s_upd, b_upds = ContractService.resolve_contract_outcome(entity, contract.id, success=True)
+    assert s_upd.contracts_add_or_update[0].status == ContractStatus.FULFILLED
     assert b_upds[0].bond_updates[0].sentiment_delta == 0.2
     
     # Betrayal
-    s_upd, b_upds = ContractService.resolve_contract_outcome(contract, success=False, betrayal=True)
+    s_upd, b_upds = ContractService.resolve_contract_outcome(entity, contract.id, success=False, betrayal=True, betrayer_id=99)
     assert s_upd.contracts_add_or_update[0].status == ContractStatus.BETRAYED
     assert b_upds[0].bond_updates[0].sentiment_delta == -1.0

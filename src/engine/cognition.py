@@ -28,7 +28,7 @@ class SensoryFilter:
         Scores neighbors and returns the most salient ones.
         """
         scored: List[Tuple[float, EntityState]] = []
-        sx, sy = subject.position
+        sx, sy = subject.navigation.position
         
         current_target_id = subject.task.payload.get("target_id")
         
@@ -36,7 +36,7 @@ class SensoryFilter:
             score = 0.0
             
             # 1. Proximity (Inverse Distance)
-            dist = max(1.0, abs(ent.position[0] - sx) + abs(ent.position[1] - sy))
+            dist = max(1.0, abs(ent.navigation.position[0] - sx) + abs(ent.navigation.position[1] - sy))
             score += 100.0 / dist
             
             # 2. Hostility

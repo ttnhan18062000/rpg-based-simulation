@@ -47,7 +47,8 @@ class SimulationDomainLogic:
     @staticmethod
     def execute_brain(
         state: AuthoritativeState,
-        entity: EntityState
+        entity: EntityState,
+        force: bool = False
     ) -> Dict[int, EntityUpdate]:
         """RPG TACTICAL COGNITION."""
         # ... (brain logic remains same, just wrap return in dict)
@@ -57,12 +58,15 @@ class SimulationDomainLogic:
         from src.engine.tactical import TacticalDecisionSystem
         
         # Phase E5.3: Read-Only Guard (Hardening)
-        readonly_state = state.to_readonly()
+        # Ensure we are working with a read-only view for safety.
+        # We check if the state is already its own read-only cache to avoid double-conversion.
+        # getattr is used because WorkerPacket might not have the cache slot.
+        readonly_state = state if getattr(state, "_readonly_cache", None) is state else state.to_readonly()
         
         neighbors = SimulationDomainLogic.get_neighbor_view(readonly_state, entity, radius=10.0)
         salient_neighbors = SensoryFilter.filter_saliency(entity, neighbors)
         
-        trauma = SimulationDomainLogic.get_region_trauma(readonly_state, entity.position)
+        trauma = SimulationDomainLogic.get_region_trauma(readonly_state, entity.navigation.position)
         emotion = AppraisalSystem.evaluate_emotional_state(
             entity, 
             salient_neighbors, 
@@ -88,7 +92,7 @@ class SimulationDomainLogic:
                   temp_strat = replace(temp_strat, blockers={**temp_strat.blockers, b.id: b})
              temp_entity = replace(entity, strategic=temp_strat)
              
-        strat_up = StrategicIntelligenceSystem.evaluate_strategic_intent(readonly_state, temp_entity)
+        strat_up = StrategicIntelligenceSystem.evaluate_strategic_intent(readonly_state, temp_entity, force=force)
         
         # Merge inferred blockers into strat_up
         if inferred_up.blockers_add_or_update:
@@ -137,7 +141,7 @@ class SimulationDomainLogic:
         
         return {entity.id: replace(tactical_up, 
             strategic=final_strat, 
-            readiness_delta=-100.0
+            readiness_delta=0.0
         )}
 
     @staticmethod
@@ -190,7 +194,7 @@ class SimulationDomainLogic:
         elif action == "REST":
             return {entity.id: EntityUpdate(
                 entity_id=entity.id,
-                readiness_delta=-100.0,
+                readiness_delta=0.0,
                 biological=BiologicalUpdate(
                     rest_pressure_delta=-30.0
                 )
@@ -419,7 +423,7 @@ class SimulationDomainLogic:
                 strat_up = StrategicUpdate()
                 group_dissolve_upd = None
                 
-                if entity.group_id is not None and entity.group_id == target.group_id:
+                if entity.identity.group_id is not None and entity.identity.group_id == target.identity.group_id:
                     from src.social.appraisal import SocialAppraisalSystem
                     s_up, st_up = SocialAppraisalSystem.process_betrayal(
                         target, entity.id, salience=0.8, current_tick=current_tick
@@ -529,7 +533,7 @@ class SimulationDomainLogic:
             # Identify primary target (if any) at that position
             defender = None
             for eid, ent in context.entities.items():
-                if ent.position == target_pos and ent.combat.alive:
+                if ent.navigation.position == target_pos and ent.combat.alive:
                     defender = ent
                     break
             
@@ -574,7 +578,7 @@ class SimulationDomainLogic:
 
         return {entity.id: EntityUpdate(
             entity_id=entity.id,
-            readiness_delta=-100.0
+            readiness_delta=0.0
         )}
     @staticmethod
     def drain_debt(owner_id: str, profile) -> int:
@@ -597,16 +601,16 @@ class SimulationDomainLogic:
         VERIFIED v2: spatial_query_optimization
         """
         grid = SimulationDomainLogic._get_cached_spatial_grid(state)
-        candidate_ids = grid.get_neighbors(subject.position, radius)
+        candidate_ids = grid.get_neighbors(subject.navigation.position, radius)
         
         neighbors = []
-        sx, sy = subject.position
+        sx, sy = subject.navigation.position
         for e_id in candidate_ids:
             if e_id == subject.id:
                 continue
             
             ent = state.entities[e_id]
-            ex, ey = ent.position
+            ex, ey = ent.navigation.position
             dist = ((ex - sx)**2 + (ey - sy)**2)**0.5
             if dist <= radius:
                 neighbors.append((e_id, ent))
@@ -619,12 +623,13 @@ class SimulationDomainLogic:
     def _get_cached_spatial_grid(state: AuthoritativeState):
         """Internal helper to cache grid per tick."""
         if not hasattr(SimulationDomainLogic, "_grid_cache"):
-            SimulationDomainLogic._grid_cache = (None, None) # (state_id, grid)
+            SimulationDomainLogic._grid_cache = (None, None) # (cache_key, grid)
             
-        state_id = id(state)
-        if SimulationDomainLogic._grid_cache[0] != state_id:
+        # Hardening: Include tick, count, and seed to avoid id() collisions
+        cache_key = (id(state), state.tick, len(state.entities), state.seed)
+        if SimulationDomainLogic._grid_cache[0] != cache_key:
             from src.engine.spatial import SpatialGrid
-            SimulationDomainLogic._grid_cache = (state_id, SpatialGrid(state.entities))
+            SimulationDomainLogic._grid_cache = (cache_key, SpatialGrid(state.entities))
             
         return SimulationDomainLogic._grid_cache[1]
 

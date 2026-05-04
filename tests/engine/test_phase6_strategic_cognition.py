@@ -6,23 +6,20 @@ from src.core.updates import StateUpdate, EntityUpdate
 from src.core.strategic import ProjectState, ProjectStatus, ObjectiveState, ObjectiveStatus, LeadState, LeadCertainty, BlockerState
 from src.engine.domain_logic import SimulationDomainLogic
 from src.systems.strategic import StrategicIntelligenceSystem
+from src.core.builder import V2EntityBuilder
 
 def create_mock_entity(id, pos=(0,0), project=None):
-    strat = StrategicComponent()
-    if project:
-        strat = replace(strat, projects={project.id: project}, current_project_id=project.id, current_objective_id=project.active_objective_id)
+    builder = (V2EntityBuilder(id)
+               .kind("ACTOR")
+               .at(pos)
+               .with_base_stats(hp=100, atk=10)
+               .active(True))
     
-    return EntityState(
-        id=id,
-        kind="ACTOR",
-        position=pos,
-        identity=IdentityComponent(faction="HERO_FACTION"),
-        combat=CombatComponent(hp=100, max_hp=100, atk=10),
-        strategic=strat,
-        navigation=NavigationComponent(),
-        interaction=InteractionComponent(),
-        active=True
-    )
+    if project:
+        builder = (builder.strategic_project(project)
+                   .current_project(project.id))
+    
+    return builder.build()
 
 def test_blocker_inference_and_detour():
     # 1. Setup project: Harvest Wood at (10,10)
@@ -38,16 +35,16 @@ def test_blocker_inference_and_detour():
     
     state = AuthoritativeState(entities={1: entity}, tick=1, seed=1)
     
-    # 3. Setup lead for "wood"
-    lead = LeadState(id="lead1", kind="location", subject="(5, 5)", detail="Alternative wood source", certainty=LeadCertainty.PRECISE)
+    # 3. Setup lead for "resource"
+    lead = LeadState(id="lead1", kind="location", subject="(5, 5)", detail="Alternative resource source", certainty=LeadCertainty.PRECISE)
     entity = replace(entity, strategic=replace(entity.strategic, leads={"lead1": lead}))
     
     # 4. Execute Brain
-    updates = SimulationDomainLogic.execute_brain(state, entity)
+    updates = SimulationDomainLogic.execute_brain(state, entity, force=True)
     ent_up = updates[1]
     
     # Verify blocker was inferred
-    assert any(b.kind == "material" and b.subject == "wood" for b in ent_up.strategic.blockers_add_or_update)
+    assert any(b.kind == "material" and b.subject == "resource" for b in ent_up.strategic.blockers_add_or_update)
     
     # Verify detour project was suggested and switched to
     assert ent_up.strategic.current_project_id_set.startswith("proj_detour_")
@@ -72,7 +69,7 @@ def test_detour_completion_and_resumption():
     state = AuthoritativeState(entities={1: entity}, tick=100, seed=1)
     
     # 3. Execute Brain - should resume parent
-    updates = SimulationDomainLogic.execute_brain(state, entity)
+    updates = SimulationDomainLogic.execute_brain(state, entity, force=True)
     ent_up = updates[1]
     
     assert ent_up.strategic.current_project_id_set == "parent"
@@ -90,7 +87,7 @@ def test_access_blocker_resolution():
                                                current_project_id="parent"))
     
     # 2. Reach (10,10) - should resolve blocker
-    entity = replace(entity, position=(10, 10))
+    entity = replace(entity, navigation=replace(entity.navigation, position=(10, 10)))
     state = AuthoritativeState(entities={1: entity}, tick=100, seed=1)
     
     # 3. Execute Brain - resolve_blockers is called in domain_logic?

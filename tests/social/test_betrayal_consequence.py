@@ -16,11 +16,17 @@ from src.social.appraisal import SocialAppraisalSystem
 
 
 def _make_entity(entity_id=1, trust_history=None, betrayal_count=0):
-    social = SocialComponent(
-        trust_history=trust_history or {},
-        betrayal_count=betrayal_count
-    )
-    return EntityState(id=entity_id, kind="hero", position=(5.0, 5.0), social=social)
+    from src.core.builder import V2EntityBuilder
+    builder = (V2EntityBuilder(entity_id)
+        .kind("hero")
+        .position(5.0, 5.0)
+        .betrayal_count(betrayal_count))
+    
+    if trust_history:
+        for tid, score in trust_history.items():
+            builder.trust(tid, score)
+            
+    return builder.build()
 
 
 class TestBetrayalConsequence:

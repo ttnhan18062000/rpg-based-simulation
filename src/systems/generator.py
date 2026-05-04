@@ -44,26 +44,16 @@ class EntityGenerator:
         tick = state.tick if state else 0
         evolution_level = self.rng.get_int(Domain.SPAWN, tick, entity_id, mults.level_min, mults.level_max)
         
-        return EntityState(
-            id=entity_id,
-            kind="hero",
-            position=pos,
-            identity=IdentityComponent(
-                role=EntityRole.HERO,
-                faction=Faction.HERO_GUILD,
-                evolution_level=evolution_level
-            ),
-            combat=CombatComponent(
-                hp=int(base_hp),
-                max_hp=int(base_hp),
-                atk=int(base_atk),
-                def_stat=int(base_def),
-                alive=True
-            ),
-            inventory=InventoryComponent(
-                gold=int(base_gold)
-            )
-        )
+        from src.core.builder import V2EntityBuilder
+        return (V2EntityBuilder(entity_id)
+            .kind("hero")
+            .position(*pos)
+            .with_identity(role=EntityRole.HERO, faction=Faction.HERO_GUILD, evolution_level=evolution_level)
+            .hp(int(base_hp), int(base_hp))
+            .with_combat(atk=int(base_atk), def_stat=int(base_def))
+            .gold(int(base_gold))
+            .readiness(100.0)
+            .build())
 
     def spawn_monster(self, pos: tuple[float, float], state: AuthoritativeState | None = None, kind: str = "monster", difficulty_tier: int = 1) -> EntityState:
         """Spawn a regular monster with difficulty-scaled stats."""
@@ -81,30 +71,17 @@ class EntityGenerator:
         base_def = 5 * mults.def_stat
         base_gold = 10 * mults.gold
         
-        return EntityState(
-            id=entity_id,
-            kind=kind,
-            position=pos,
-            identity=IdentityComponent(
-                role=EntityRole.MONSTER,
-                faction=Faction.MONSTER_HORDE,
-                evolution_level=evolution_level
-            ),
-            navigation=NavigationComponent(
-                home_position=pos,
-                leash_radius=10.0 # Default leash for random spawns
-            ),
-            combat=CombatComponent(
-                hp=int(base_hp),
-                max_hp=int(base_hp),
-                atk=int(base_atk),
-                def_stat=int(base_def),
-                alive=True
-            ),
-            inventory=InventoryComponent(
-                gold=int(base_gold)
-            )
-        )
+        from src.core.builder import V2EntityBuilder
+        return (V2EntityBuilder(entity_id)
+            .kind(kind)
+            .position(*pos)
+            .with_identity(role=EntityRole.MONSTER, faction=Faction.MONSTER_HORDE, evolution_level=evolution_level)
+            .with_navigation(home_position=pos, leash_radius=10.0)
+            .hp(int(base_hp), int(base_hp))
+            .with_combat(atk=int(base_atk), def_stat=int(base_def))
+            .gold(int(base_gold))
+            .readiness(100.0)
+            .build())
 
     def spawn_goblin(self, pos: tuple[float, float], state: AuthoritativeState | None = None, difficulty_tier: int = 1) -> EntityState:
         """Specialized goblin spawn with specific base stats for scaling tests."""
@@ -122,30 +99,17 @@ class EntityGenerator:
         base_def = 2 * mults.def_stat
         base_gold = 5 * mults.gold
         
-        return EntityState(
-            id=entity_id,
-            kind="goblin",
-            position=pos,
-            identity=IdentityComponent(
-                role=EntityRole.MONSTER,
-                faction=Faction.MONSTER_HORDE,
-                evolution_level=evolution_level
-            ),
-            navigation=NavigationComponent(
-                home_position=pos,
-                leash_radius=8.0 # Goblins have smaller leashes
-            ),
-            combat=CombatComponent(
-                hp=int(base_hp),
-                max_hp=int(base_hp),
-                atk=int(base_atk),
-                def_stat=int(base_def),
-                alive=True
-            ),
-            inventory=InventoryComponent(
-                gold=int(base_gold)
-            )
-        )
+        from src.core.builder import V2EntityBuilder
+        return (V2EntityBuilder(entity_id)
+            .kind("goblin")
+            .position(*pos)
+            .with_identity(role=EntityRole.MONSTER, faction=Faction.MONSTER_HORDE, evolution_level=evolution_level)
+            .with_navigation(home_position=pos, leash_radius=8.0)
+            .hp(int(base_hp), int(base_hp))
+            .with_combat(atk=int(base_atk), def_stat=int(base_def))
+            .gold(int(base_gold))
+            .readiness(100.0)
+            .build())
 
     def spawn_calamity(self, state: AuthoritativeState, kind: str, pos: tuple[float, float]) -> EntityState:
         """Spawn a massive World Boss (Calamity) with elite scaling."""
@@ -170,13 +134,15 @@ class EntityGenerator:
             evolution_level=50 + state.maturity * 5
         )
         
-        return EntityState(
-            id=entity_id,
-            kind=kind,
-            position=pos,
-            combat=combat,
-            identity=identity
-        )
+        from src.core.builder import V2EntityBuilder
+        return (V2EntityBuilder(entity_id)
+            .kind(kind)
+            .position(*pos)
+            .with_identity(role=EntityRole.MONSTER, faction=Faction.MONSTER_HORDE, evolution_level=50 + state.maturity * 5)
+            .hp(int(hp), int(hp))
+            .with_combat(atk=int(atk), def_stat=int(def_val))
+            .readiness(100.0)
+            .build())
 
     def spawn_stronghold(self, state: AuthoritativeState, pos: tuple[float, float]) -> EntityState:
         """Spawn a static stronghold building-entity."""
@@ -200,10 +166,12 @@ class EntityGenerator:
             evolution_level=1
         )
         
-        return EntityState(
-            id=entity_id,
-            kind="stronghold",
-            position=pos,
-            combat=combat,
-            identity=identity
-        )
+        from src.core.builder import V2EntityBuilder
+        return (V2EntityBuilder(entity_id)
+            .kind("stronghold")
+            .position(*pos)
+            .with_identity(role=EntityRole.MONSTER, faction=Faction.MONSTER_HORDE, evolution_level=1)
+            .hp(int(hp), int(hp))
+            .with_combat(atk=0, def_stat=int(def_val))
+            .readiness(100.0)
+            .build())

@@ -8,20 +8,14 @@ from src.engine.pipeline import AuthoritativeApplyPipeline
 from src.engine.apply import ApplyPath
 
 def create_mock_entity(eid: int, gold: int = 10, hp: int = 100):
-    from src.core.state import CombatComponent, InventoryComponent, SocialComponent, IdentityComponent, BiologicalComponent, LifecycleComponent, StrategicComponent
-    from src.core.enums import EntityRole
-    return EntityState(
-        id=eid,
-        kind="hero",
-        active=True,
-        position=(0, 0),
-        identity=IdentityComponent(role=EntityRole.HERO, faction="player"),
-        combat=CombatComponent(hp=hp, max_hp=100, atk=10, def_stat=5, alive=True),
-        inventory=InventoryComponent(gold=gold),
-        social=SocialComponent(),
-        biological=BiologicalComponent(),
-        lifecycle=LifecycleComponent(),
-        strategic=StrategicComponent()
+    from src.core.builder import V2EntityBuilder
+    return (V2EntityBuilder(eid)
+        .kind("hero")
+        .at((0, 0))
+        .with_class("hero")
+        .with_combat(hp=hp, max_hp=100, atk=10, def_stat=5, alive=True)
+        .with_inventory(gold=gold)
+        .build()
     )
 
 def test_contract_expiration_resolves_and_dissolves():
@@ -91,9 +85,10 @@ def test_contract_betrayal_consequences():
     leader = create_mock_entity(1)
     member = create_mock_entity(2)
     contract = ContractState(id="c1", kind=ContractKind.RECRUITMENT, source_id=1, target_id=2, status=ContractStatus.ACTIVE)
+    leader = replace(leader, strategic=replace(leader.strategic, contracts={"c1": contract}))
     
     # 2. Resolve with Betrayal by Leader (1)
-    strat_up, social_ups = ContractService.resolve_contract_outcome(contract, success=False, betrayal=True, betrayer_id=1)
+    strat_up, social_ups = ContractService.resolve_contract_outcome(leader, contract.id, success=False, betrayal=True, betrayer_id=1)
     
     assert strat_up.contracts_add_or_update[0].status == ContractStatus.BETRAYED
     

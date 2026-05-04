@@ -143,5 +143,5 @@ def test_milestone_a_baseline_isolation():
     # If the thread pool or packetization logic is touched, this will fail.
     kernel.tick_once()
     
-    assert kernel.state.entities[1].readiness < 100
+    assert kernel.state.entities[1].combat.readiness < 100
     assert not mock_manager.execute_batch.called, "WorkerManager was touched during Milestone A baseline run!"

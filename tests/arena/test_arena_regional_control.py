@@ -76,9 +76,11 @@ def test_arena_conquest_and_debuff():
     hero = final_state.entities[13]
     
     # Verify DEBUFF (0.8x Atk/Def, 0.9x Spd)
-    # Base: Atk=100, Def=20, Spd=10
-    # Expected: Atk=80, Def=16, Spd=9
-    assert hero.combat.atk == 80
+    # Base attributes are 5 (Str=5 -> +2 Atk, Vit=5 -> +1 Def)
+    # Specified: Atk=100, Def=20, Spd=10
+    # Derived: Atk=102, Def=21, Spd=10
+    # Expected (Debuffed): Atk=floor(102*0.8)=81, Def=floor(21*0.8)=16, Spd=floor(10*0.9)=9
+    assert hero.combat.atk == 81
     assert hero.combat.def_stat == 16
     assert hero.combat.speed == 9
     

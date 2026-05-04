@@ -24,9 +24,9 @@ class StateFingerprinter:
             ent = state.entities[eid]
             # Include: ID, Kind, Position, HP, Gold, Current Project, Readiness, Active
             entity_parts.append(
-                f"{eid}:{ent.kind}:{ent.position}:{ent.combat.hp}:"
+                f"{eid}:{ent.kind}:{ent.navigation.position}:{ent.combat.hp}:"
                 f"{ent.inventory.gold}:{ent.strategic.current_project_id}:"
-                f"{ent.readiness}:{ent.active}:"
+                f"{ent.combat.readiness}:{ent.lifecycle.active}:"
                 f"{len(ent.strategic.projects)}:{len(ent.identity.learned_skills)}"
             )
         entity_ident = "|".join(entity_parts)

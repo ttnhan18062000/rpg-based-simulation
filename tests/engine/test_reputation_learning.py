@@ -1,5 +1,6 @@
 import pytest
 from dataclasses import replace
+from src.core.builder import V2EntityBuilder
 from src.core.state import EntityState, AuthoritativeState, IdentityComponent, SocialComponent, StrategicComponent, CombatComponent, InventoryComponent, SocialBond
 from src.core.strategic import ContractStatus, ProjectStatus
 from src.core.enums import ReasonCode
@@ -10,25 +11,26 @@ def test_public_vs_private_trust():
     state = AuthoritativeState(tick=100, seed=42)
     
     # 1. Famous Hero (Public Rep = 1.8)
-    hero = EntityState(
-        id=1, kind="hero", position=(0,0),
-        social=SocialComponent(public_reputation=1.8)
-    )
+    hero = (V2EntityBuilder(1)
+            .kind("hero")
+            .at((0.0, 0.0))
+            .social(public_reputation=1.8)
+            .build())
     
     # 2. Shady Rogue (Public Rep = 0.4)
-    rogue = EntityState(
-        id=2, kind="rogue", position=(0,0),
-        social=SocialComponent(public_reputation=0.4)
-    )
+    rogue = (V2EntityBuilder(2)
+             .kind("rogue")
+             .at((0.0, 0.0))
+             .social(public_reputation=0.4)
+             .build())
     
     # 3. Observer
-    observer = EntityState(
-        id=3, kind="villager", position=(5,5),
-        combat=CombatComponent(hp=100, max_hp=100),
-        inventory=InventoryComponent(gold=0), # Desperate
-        social=SocialComponent(),
-        strategic=StrategicComponent()
-    )
+    observer = (V2EntityBuilder(3)
+                .kind("villager")
+                .at((5.0, 5.0))
+                .hp(100, 100)
+                .gold(0)
+                .build())
     
     state = replace(state, entities={1: hero, 2: rogue, 3: observer})
     

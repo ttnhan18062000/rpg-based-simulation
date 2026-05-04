@@ -15,14 +15,14 @@ def test_terrain_readiness_rejection():
     """
     # 1. Setup State with a Mountain tile
     terrain = {(1, 1): "MOUNTAIN"}
-    entity = EntityState(
-        id=1,
-        kind="hero",
-        position=(1, 0),
-        readiness=20.0, # Not enough for 40.0 cost
-        combat=CombatComponent(move_cost=10.0, alive=True),
-        navigation=NavigationComponent(movement_mode=MovementMode.WANDER)
-    )
+    from src.core.builder import V2EntityBuilder
+    entity = (V2EntityBuilder(1)
+        .kind("hero")
+        .at((1, 0))
+        .readiness(20.0)
+        .with_combat(move_cost=10.0, alive=True)
+        .with_navigation(mode=MovementMode.WANDER)
+        .build())
     
     # 2. Attempt move to (1, 1)
     # Block sidesteps with WALLS to force the high-cost move check
@@ -49,14 +49,14 @@ def test_terrain_readiness_success():
     Test that movement into high-cost terrain succeeds if readiness is sufficient.
     """
     terrain = {(1, 1): "MOUNTAIN"}
-    entity = EntityState(
-        id=1,
-        kind="hero",
-        position=(1, 0),
-        readiness=100.0, # Plenty of readiness
-        combat=CombatComponent(move_cost=10.0, alive=True),
-        navigation=NavigationComponent(movement_mode=MovementMode.WANDER)
-    )
+    from src.core.builder import V2EntityBuilder
+    entity = (V2EntityBuilder(1)
+        .kind("hero")
+        .at((1, 0))
+        .readiness(100.0)
+        .with_combat(move_cost=10.0, alive=True)
+        .with_navigation(mode=MovementMode.WANDER)
+        .build())
     
     state = AuthoritativeState(
         tick=1,
@@ -71,4 +71,4 @@ def test_terrain_readiness_success():
     ent_upd = updates[1]
     assert ent_upd.moved_this_tick is True
     assert ent_upd.new_position == (1, 1)
-    assert ent_upd.readiness_delta == -50.0 # (10.0 * 4.0) / 0.8
+    assert ent_upd.readiness_delta == -80.0 # (10.0 * 4.0) / 0.5 (WANDER mode)

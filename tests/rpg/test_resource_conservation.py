@@ -17,13 +17,15 @@ def base_state():
         required_ticks=1
     )
     
-    entity = EntityState(
-        id=1,
-        kind="HERO",
-        position=(0, 0),
-        inventory=InventoryComponent(max_slots=1, items=[]),
-        interaction=InteractionComponent(target_node_id=101, progress=0),
-        properties={"interaction_kind": "harvest", "harvest_duration": 1}
+    from src.core.builder import V2EntityBuilder
+    entity = (V2EntityBuilder(1)
+        .kind("HERO")
+        .at((0, 0))
+        .with_inventory(max_slots=1)
+        .with_interaction(target_id=101, progress=0)
+        .with_property("interaction_kind", "harvest")
+        .with_property("harvest_duration", 1)
+        .build()
     )
     
     return AuthoritativeState(
@@ -67,8 +69,8 @@ def test_loot_ground_item_full_inventory_does_not_remove_item(base_state):
     base_state = replace(base_state, 
         ground_items={201: ground_item},
         entities={1: replace(base_state.entities[1], 
-            interaction=InteractionComponent(target_node_id=201, progress=9), # Progress 9, required 10
-            properties={"interaction_kind": "ground_item"}
+            interaction=replace(base_state.entities[1].interaction, target_node_id=201, progress=9),
+            identity=replace(base_state.entities[1].identity, properties={**base_state.entities[1].identity.properties, "interaction_kind": "ground_item"})
         )}
     )
     
@@ -97,8 +99,8 @@ def test_loot_corpse_full_inventory_does_not_remove_corpse(base_state):
     base_state = replace(base_state, 
         corpses={301: corpse},
         entities={1: replace(base_state.entities[1], 
-            interaction=InteractionComponent(target_node_id=301, progress=9),
-            properties={"interaction_kind": "corpse"}
+            interaction=replace(base_state.entities[1].interaction, target_node_id=301, progress=9),
+            identity=replace(base_state.entities[1].identity, properties={**base_state.entities[1].identity.properties, "interaction_kind": "corpse"})
         )}
     )
     
@@ -126,17 +128,16 @@ def test_crafting_full_inventory_does_not_consume_materials():
     from src.core.updates import StateUpdate, EntityUpdate
     from dataclasses import replace
     
-    # 1. Setup entity with materials for a steel sword
-    inv = InventoryComponent(max_slots=1, items=[
-        ItemStack("iron_ore", 2),
-        ItemStack("wood", 1)
-    ], gold=100)
-    
-    entity = EntityState(
-        id=1, kind="HERO", position=(0,0),
-        inventory=inv,
-        identity=IdentityComponent(known_recipes={"craft_steel_sword"}, craft_target="craft_steel_sword")
+    from src.core.builder import V2EntityBuilder
+    entity = (V2EntityBuilder(1)
+        .kind("HERO")
+        .at((0,0))
+        .with_inventory(gold=100, items=[ItemStack("iron_ore", 2), ItemStack("wood", 1)])
+        .with_properties({"known_recipes": {"craft_steel_sword"}, "craft_target": "craft_steel_sword"})
+        .build()
     )
+    # Fix the inventory max_slots separately if needed or just use the builder
+    entity = replace(entity, inventory=replace(entity.inventory, max_slots=1))
     
     state = AuthoritativeState(tick=1, seed=42, entities={1: entity}, building_tiles={(0,0): "blacksmith"})
     # Need to add a functional building too
@@ -163,7 +164,7 @@ def test_crafting_full_inventory_does_not_consume_materials():
     # Let's use max_slots=0 (impossible but works for test) or 1 and make the recipe output 2 items.
     
     # I'll update the test to use a recipe that outputs 2 items or just set max_slots to 0.
-    inv_invalid = replace(inv, max_slots=0)
+    inv_invalid = replace(entity.inventory, max_slots=0)
     state_invalid = replace(state, entities={1: replace(entity, inventory=inv_invalid)})
     
     update_invalid = BlacksmithSystem.enforce(state_invalid, StateUpdate())
@@ -188,10 +189,13 @@ def test_quest_completion_full_inventory_does_not_grant_reward():
         metadata={"target_position": (0,0)}
     )
     
-    entity = EntityState(
-        id=1, kind="HERO", position=(0,0),
-        inventory=InventoryComponent(max_slots=1, items=[ItemStack("wood", 1)]),
-        strategic=StrategicComponent(projects={"q1": quest})
+    from src.core.builder import V2EntityBuilder
+    entity = (V2EntityBuilder(1)
+        .kind("HERO")
+        .at((0,0))
+        .with_inventory(max_slots=1, items=[ItemStack("wood", 1)])
+        .with_strategic(projects={"q1": quest})
+        .build()
     )
     
     state = AuthoritativeState(tick=1, seed=42, entities={1: entity})

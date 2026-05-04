@@ -18,12 +18,25 @@ from src.systems.strategic import StrategicIntelligenceSystem
 
 
 def _make_entity(profile=None, current_project=None):
-    strategic = StrategicComponent(
-        profile=profile or CognitionProfile(),
-        current_project_id=current_project.id if current_project else None,
-        projects={current_project.id: current_project} if current_project else {}
-    )
-    return EntityState(id=1, kind="hero", position=(5.0, 5.0), strategic=strategic)
+    """Helper to build a minimal entity for testing."""
+    from src.core.builder import V2EntityBuilder
+    projects = {current_project.id: current_project} if current_project else {}
+    current_id = current_project.id if current_project else None
+    
+    builder = (V2EntityBuilder(1)
+        .kind("hero")
+        .at((5.0, 5.0))
+        .with_strategic(projects=projects))
+    
+    if current_id:
+        builder.current_project(current_id)
+        
+    if profile:
+        builder.with_strategic_profile(
+            resistance=profile.interruption_resistance
+        )
+        
+    return builder.build()
 
 
 class TestInterruptionResistance:
@@ -103,12 +116,16 @@ class TestInterruptionResistance:
 
     def test_resume_suspended_project(self):
         """Verify a suspended project can be resumed."""
+        from src.core.builder import V2EntityBuilder
         suspended = ProjectState(
             id="old_quest", kind="quest", status=ProjectStatus.SUSPENDED,
             score=40, active_objective_id="obj_1"
         )
-        strategic = StrategicComponent(projects={"old_quest": suspended})
-        entity = EntityState(id=1, kind="hero", position=(5.0, 5.0), strategic=strategic)
+        entity = (V2EntityBuilder(1)
+            .kind("hero")
+            .at((5.0, 5.0))
+            .with_strategic(projects={"old_quest": suspended})
+            .build())
 
         result = StrategicIntelligenceSystem.resume_project(entity, "old_quest")
         assert result is not None
@@ -123,25 +140,29 @@ class TestCognitionProfile:
 
     def test_profile_derivation_deterministic(self):
         """Same entity state always produces same profile."""
-        entity = EntityState(
-            id=1, kind="hero", position=(5.0, 5.0),
-            properties={"wis": 15, "int": 12}
-        )
+        from src.core.builder import V2EntityBuilder
+        entity = (V2EntityBuilder(1)
+            .kind("hero")
+            .at((5.0, 5.0))
+            .attributes(wisdom=15, intelligence=12)
+            .build())
         p1 = StrategicIntelligenceSystem.derive_cognition_profile(entity)
         p2 = StrategicIntelligenceSystem.derive_cognition_profile(entity)
         assert p1 == p2
 
     def test_higher_stats_produce_larger_capacities(self):
         """Higher WIS/INT → bigger strategic bandwidth."""
-        from src.core.state import AttributeComponent
-        entity_low = EntityState(
-            id=1, kind="hero", position=(5.0, 5.0),
-            attributes=AttributeComponent(wisdom=5, intelligence=5, perception=5)
-        )
-        entity_high = EntityState(
-            id=2, kind="hero", position=(5.0, 5.0),
-            attributes=AttributeComponent(wisdom=25, intelligence=25, perception=25)
-        )
+        from src.core.builder import V2EntityBuilder
+        entity_low = (V2EntityBuilder(1)
+            .kind("hero")
+            .at((5.0, 5.0))
+            .attributes(wisdom=5, intelligence=5, perception=5)
+            .build())
+        entity_high = (V2EntityBuilder(2)
+            .kind("hero")
+            .at((5.0, 5.0))
+            .attributes(wisdom=25, intelligence=25, perception=25)
+            .build())
         p_low = StrategicIntelligenceSystem.derive_cognition_profile(entity_low)
         p_high = StrategicIntelligenceSystem.derive_cognition_profile(entity_high)
 

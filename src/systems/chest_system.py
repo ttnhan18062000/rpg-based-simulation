@@ -16,7 +16,7 @@ class ChestSystem:
             if not entity.interaction or entity.interaction.target_node_id is None:
                 continue
                 
-            if entity.properties.get("interaction_kind") != "chest":
+            if entity.identity.properties.get("interaction_kind") != "chest":
                 continue
                 
             chest_id = entity.interaction.target_node_id
@@ -31,7 +31,7 @@ class ChestSystem:
                 continue
                 
             # Proximity
-            dist = abs(entity.position[0] - chest.position[0]) + abs(entity.position[1] - chest.position[1])
+            dist = abs(entity.navigation.position[0] - chest.position[0]) + abs(entity.navigation.position[1] - chest.position[1])
             if dist > 1.5:
                 entity_updates[entity.id] = EntityUpdate(
                     entity_id=entity.id,

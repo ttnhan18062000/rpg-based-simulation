@@ -4,11 +4,15 @@ from src.core.state import EntityState, LifecycleComponent, AuthoritativeState, 
 from src.core.updates import StateUpdate, EntityUpdate, CombatUpdate, InventoryUpdate
 from src.systems.lifecycle import LifecycleSystem
 from src.engine.apply import ApplyPath
+from src.core.builder import V2EntityBuilder
+from src.core.enums import EntityRole, Faction
 
 def test_aging_per_tick():
     """Verify that entities age by 1 tick every generation."""
-    life = LifecycleComponent(age_ticks=50)
-    ent = EntityState(id=1, kind="HERO", position=(0.0, 0.0), lifecycle=life)
+    ent = (V2EntityBuilder(1)
+           .at((0.0, 0.0))
+           .with_lifecycle(age_ticks=50)
+           .build())
     state = AuthoritativeState(tick=100, seed=42, entities={1: ent})
     
     update = StateUpdate()
@@ -18,8 +22,12 @@ def test_aging_per_tick():
 
 def test_death_by_old_age():
     """Verify that reaching max age triggers death."""
-    life = LifecycleComponent(age_ticks=1000, max_age_ticks=1000)
-    ent = EntityState(id=1, kind="HERO", position=(0.0, 0.0), lifecycle=life)
+    # Note: V2EntityBuilder doesn't have max_age_ticks setter, we use replace for now
+    ent = (V2EntityBuilder(1)
+           .at((0.0, 0.0))
+           .with_lifecycle(age_ticks=1000)
+           .build())
+    ent = replace(ent, lifecycle=replace(ent.lifecycle, max_age_ticks=1000))
     state = AuthoritativeState(tick=100, seed=42, entities={1: ent})
     
     update = StateUpdate()
@@ -32,8 +40,9 @@ def test_death_by_old_age():
 
 def test_combat_death_classification():
     """Verify that a KILL outcome is classified as a lifecycle death."""
-    life = LifecycleComponent()
-    ent = EntityState(id=1, kind="HERO", position=(0.0, 0.0), lifecycle=life)
+    ent = (V2EntityBuilder(1)
+           .at((0.0, 0.0))
+           .build())
     state = AuthoritativeState(tick=100, seed=42, entities={1: ent})
     
     # Simulate a KILL outcome from combat
@@ -48,14 +57,20 @@ def test_combat_death_classification():
 
 def test_succession_and_heirloom_transfer():
     """Verify that heirlooms are transferred to the heir upon death."""
+    # Build parent with heir and heirlooms
+    parent = (V2EntityBuilder(1)
+              .at((0.0, 0.0))
+              .build())
     parent_life = LifecycleComponent(
         age_ticks=100, max_age_ticks=100, 
         heir_entity_id=2, 
         heirlooms=["Excalibur"]
     )
-    parent = EntityState(id=1, kind="HERO", position=(0.0, 0.0), lifecycle=parent_life)
+    parent = replace(parent, lifecycle=parent_life)
     
-    heir = EntityState(id=2, kind="HERO", position=(1.0, 1.0))
+    heir = (V2EntityBuilder(2)
+            .at((1.0, 1.0))
+            .build())
     
     state = AuthoritativeState(tick=100, seed=42, entities={1: parent, 2: heir})
     
@@ -72,15 +87,20 @@ def test_near_death_hardening_logic():
     """Directly test the hardening logic in the pipeline."""
     from src.engine.pipeline import AuthoritativeApplyPipeline
     
-    from src.core.state import IdentityComponent
-    from src.core.enums import EntityRole
-    hero = EntityState(id=1, kind="HERO", position=(0.0, 0.0),
-                       identity=IdentityComponent(role=EntityRole.HERO, faction=0),
-                       combat=CombatComponent(hp=100, max_hp=100))
-    attacker = EntityState(id=2, kind="MONSTER", position=(1.0, 0.0),
-                           identity=IdentityComponent(role=EntityRole.MONSTER, faction=1),
-                           combat=CombatComponent(atk=105),
-                           readiness=100.0) # Required for ENTITY_ACT
+    hero = (V2EntityBuilder(1)
+            .kind("HERO")
+            .at((0.0, 0.0))
+            .with_identity(role=EntityRole.HERO, faction=Faction.HERO_GUILD)
+            .with_combat(hp=100, max_hp=100)
+            .build())
+            
+    attacker = (V2EntityBuilder(2)
+                .kind("MONSTER")
+                .at((1.0, 0.0))
+                .with_identity(role=EntityRole.MONSTER, faction=Faction.MONSTER_HORDE)
+                .with_combat(atk=105)
+                .readiness(100.0)
+                .build())
     
     state = AuthoritativeState(tick=100, seed=42, entities={1: hero, 2: attacker})
     

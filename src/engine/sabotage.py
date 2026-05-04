@@ -23,20 +23,23 @@ class BuildingSabotageSystem:
         refined_building_updates = dict(update.building_updates)
         
         for e_id, entity in state.entities.items():
-            if not entity.active: continue
+            if not entity.lifecycle.active: continue
             
             ent_upd = update.entity_updates.get(e_id)
             if not ent_upd or not ent_upd.task: continue
             
-            # Check for Sabotage Intent
+            # Check for Sabotage Intent (Standardized ENTITY_ACT or Legacy SABOTAGE)
             task_upd = ent_upd.task
-            if task_upd.work_kind_set == "SABOTAGE":
+            is_sabotage = (task_upd.work_kind_set == "SABOTAGE") or \
+                         (task_upd.work_kind_set == "ENTITY_ACT" and task_upd.payload_set.get("action") == "SABOTAGE")
+            
+            if is_sabotage:
                 target_pos = task_upd.payload_set.get("target_pos")
                 if not target_pos: continue
                 
                 # Verify Proximity (Adjacency required for sabotage)
-                dx = abs(entity.position[0] - target_pos[0])
-                dy = abs(entity.position[1] - target_pos[1])
+                dx = abs(entity.navigation.position[0] - target_pos[0])
+                dy = abs(entity.navigation.position[1] - target_pos[1])
                 if dx > 1 or dy > 1:
                     continue # Too far
                 
@@ -51,13 +54,13 @@ class BuildingSabotageSystem:
                 build_upd = refined_building_updates.get(building.id, BuildingUpdate(building_id=building.id))
                 
                 # Calculate resulting state for functionality check
-                current_hp_in_tick = building.hp + build_upd.hp_delta
+                current_hp_in_tick = building.hp + build_upd.combat.hp_delta
                 new_hp = max(0, current_hp_in_tick - damage)
                 is_functional = new_hp > 0
                 
                 refined_building_updates[building.id] = replace(
                     build_upd,
-                    hp_delta=build_upd.hp_delta - damage,
+                    hp_delta=build_upd.combat.hp_delta - damage,
                     functional_set=is_functional
                 )
         

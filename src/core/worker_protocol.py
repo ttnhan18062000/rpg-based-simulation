@@ -55,6 +55,13 @@ class WorkerPacket:
         """Milestone D Law: Property-based access to the canonical neighbor view."""
         return {eid: ent for eid, ent in self.neighbor_view}
 
+    def to_readonly(self) -> WorkerPacket:
+        """
+        Milestone D Law:Parity with AuthoritativeState for decision logic.
+        Since WorkerPacket is already frozen, this returns self.
+        """
+        return self
+
 
 @dataclass(frozen=True, slots=True)
 class WorkerResult:

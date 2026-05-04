@@ -34,7 +34,7 @@ class FlowFieldService:
             if target_kind == "WORLD_BOSS":
                 for e in state.entities.values():
                     if e.kind == "world_boss":
-                        anchors = [e.position]
+                        anchors = [e.navigation.position]
                         break
             
             if not anchors:
@@ -78,20 +78,20 @@ class NavigationSystem:
         target_pos: Tuple[float, float],
         state: AuthoritativeState
     ) -> Tuple[float, float]:
-        dx = target_pos[0] - entity.position[0]
-        dy = target_pos[1] - entity.position[1]
+        dx = target_pos[0] - entity.navigation.position[0]
+        dy = target_pos[1] - entity.navigation.position[1]
         dist = math.sqrt(dx*dx + dy*dy)
         
         # 1. Global Navigation (Dist > 50)
         if dist > 50.0:
             # Check if target is a known POI
             if target_pos == state.town_center:
-                flow = FlowFieldService.get_flow_direction(entity.position, "TOWN", state)
+                flow = FlowFieldService.get_flow_direction(entity.navigation.position, "TOWN", state)
                 if flow:
-                    return (entity.position[0] + flow[0], entity.position[1] + flow[1])
+                    return (entity.navigation.position[0] + flow[0], entity.navigation.position[1] + flow[1])
         
         # 2. Local Navigation (Linear stepping for now)
         if abs(dx) > abs(dy):
-            return (entity.position[0] + (1 if dx > 0 else -1), entity.position[1])
+            return (entity.navigation.position[0] + (1 if dx > 0 else -1), entity.navigation.position[1])
         else:
-            return (entity.position[0], entity.position[1] + (1 if dy > 0 else -1))
+            return (entity.navigation.position[0], entity.navigation.position[1] + (1 if dy > 0 else -1))

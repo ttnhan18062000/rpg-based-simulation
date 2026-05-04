@@ -23,12 +23,24 @@ class GroupSystem:
         entity_updates: Dict[int, EntityUpdate] = {}
 
         def is_alive(e_id: int) -> bool:
+            # Check for death in current update
+            if current_update and e_id in current_update.entity_updates:
+                upd = current_update.entity_updates[e_id]
+                if upd.combat and upd.combat.alive_set is False:
+                    return False
+            
             ent = state.entities.get(e_id)
             return ent.combat.alive if ent else False
 
         def get_pos(e_id: int) -> tuple[float, float]:
+            # Check for move in current update
+            if current_update and e_id in current_update.entity_updates:
+                upd = current_update.entity_updates[e_id]
+                if upd.new_position:
+                    return upd.new_position
+            
             ent = state.entities.get(e_id)
-            return ent.position if ent else (0.0, 0.0)
+            return ent.navigation.position if ent else (0.0, 0.0)
 
         # 1. Process Existing Groups (Dissolution & Cohesion)
         for g_id, group in state.groups.items():
@@ -101,8 +113,19 @@ class GroupSystem:
                     new_shared_target_id = group.shared_target_id
             
             # Domain 4: Target Validity Check (Hardened)
-            from src.systems.party import PartyCoordinationSystem
-            new_shared_target_id = PartyCoordinationSystem.validate_shared_target(g_id, state)
+            if new_shared_target_id:
+                 target_ent = state.entities.get(new_shared_target_id)
+                 if not target_ent or not target_ent.combat.alive or not target_ent.lifecycle.active:
+                     new_shared_target_id = None
+                 else:
+                     # Range check
+                     dx = target_ent.navigation.position[0] - avg_x
+                     dy = target_ent.navigation.position[1] - avg_y
+                     if (dx*dx + dy*dy) > (group.cohesion_radius * 2.0)**2:
+                         new_shared_target_id = None
+            else:
+                 from src.systems.party import PartyCoordinationSystem
+                 new_shared_target_id = PartyCoordinationSystem.validate_shared_target(g_id, state)
             
             # Update Roles
             new_roles = {group.leader_id: "LEADER"}
@@ -162,7 +185,7 @@ class GroupSystem:
         # VERIFIED v2: group_formation_purpose_driven
         # Find entities without groups
         ungrouped_ids = [e_id for e_id, e in state.entities.items() 
-                         if e.combat.alive and e.group_id is None]
+                         if e.combat.alive and e.identity.group_id is None]
         
         # Purpose-Driven Formation: Check for active social contracts (Recruitment/Protection)
         already_forming: Set[int] = set()
@@ -182,10 +205,10 @@ class GroupSystem:
                 other_id = contract.target_id if contract.source_id == id_a else contract.source_id
                 if other_id in state.entities:
                     other_entity = state.entities[other_id]
-                    if other_entity.combat.alive and other_entity.group_id is None:
+                    if other_entity.combat.alive and other_entity.identity.group_id is None:
                         # Cohesion check: only form group if they are within range
-                        dx = entity_a.position[0] - other_entity.position[0]
-                        dy = entity_a.position[1] - other_entity.position[1]
+                        dx = entity_a.navigation.position[0] - other_entity.navigation.position[0]
+                        dy = entity_a.navigation.position[1] - other_entity.navigation.position[1]
                         if (dx*dx + dy*dy) < (10.0**2):
                             new_group_members.add(other_id)
                             active_contract_id = c_id
@@ -195,8 +218,8 @@ class GroupSystem:
                 # Form new group
                 new_g_id = 10000 + len(state.groups) + len(groups_add_or_update)
                 leader_id = id_a # Simplified: initiator is leader
-                anchor_x = sum(state.entities[m_id].position[0] for m_id in new_group_members) / len(new_group_members)
-                anchor_y = sum(state.entities[m_id].position[1] for m_id in new_group_members) / len(new_group_members)
+                anchor_x = sum(state.entities[m_id].navigation.position[0] for m_id in new_group_members) / len(new_group_members)
+                anchor_y = sum(state.entities[m_id].navigation.position[1] for m_id in new_group_members) / len(new_group_members)
                 
                 # Assign Roles
                 roles = {leader_id: "LEADER"}

@@ -22,7 +22,7 @@ class PositioningService:
         Finds the nearest walkable tile that has NO line of sight to the threat.
         Used by Skirmishers or low-HP entities when facing ranged threats.
         """
-        start_x, start_y = int(entity.position[0]), int(entity.position[1])
+        start_x, start_y = int(entity.navigation.position[0]), int(entity.navigation.position[1])
         best_tile = None
         min_dist = float('inf')
 
@@ -39,7 +39,7 @@ class PositioningService:
                     continue
 
                 # 2. Cover check: No LoS to threat
-                if not LegalityServiceV2.has_line_of_sight((tx, ty), threat.position, state):
+                if not LegalityServiceV2.has_line_of_sight((tx, ty), threat.navigation.position, state):
                     if dist < min_dist:
                         min_dist = dist
                         best_tile = (float(tx), float(ty))
@@ -55,7 +55,7 @@ class PositioningService:
         """
         Identifies 'chokepoints' (1-tile gaps between walls) within a radius.
         """
-        center_x, center_y = int(entity.position[0]), int(entity.position[1])
+        center_x, center_y = int(entity.navigation.position[0]), int(entity.navigation.position[1])
         chokepoints = []
 
         terrain = getattr(state, 'terrain', {})
@@ -90,8 +90,8 @@ class PositioningService:
         Calculates a position to 'bracket' the target (opposite side from the ally).
         Formula: target_pos + (target_pos - ally_pos)
         """
-        tx, ty = target.position
-        ax, ay = ally.position
+        tx, ty = target.navigation.position
+        ax, ay = ally.navigation.position
         
         # Direction from ally to target
         dx = tx - ax
@@ -117,9 +117,9 @@ class PositioningService:
         If target has a navigation target, try to move towards a point on their path.
         """
         if not target.navigation.target:
-            return target.position
+            return target.navigation.position
             
-        tx, ty = target.position
+        tx, ty = target.navigation.position
         gx, gy = target.navigation.target
         
         # Vector from target to their goal
@@ -135,7 +135,7 @@ class PositioningService:
             if is_walkable:
                 return intercept_pos
                 
-        return target.position
+        return target.navigation.position
 
     @staticmethod
     def find_guard_position(
@@ -150,10 +150,10 @@ class PositioningService:
         """
         if not threat:
             # Just stay adjacent to ward
-            return (ward.position[0] + 1, ward.position[1])
+            return (ward.navigation.position[0] + 1, ward.navigation.position[1])
             
-        wx, wy = ward.position
-        tx, ty = threat.position
+        wx, wy = ward.navigation.position
+        tx, ty = threat.navigation.position
         
         # Direction from ward to threat
         dx = tx - wx
@@ -168,4 +168,4 @@ class PositioningService:
             if is_walkable:
                 return guard_pos
                 
-        return ward.position
+        return ward.navigation.position

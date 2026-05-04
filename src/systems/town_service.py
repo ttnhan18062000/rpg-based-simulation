@@ -14,7 +14,7 @@ class TownServiceSystem:
             if not entity.interaction or entity.interaction.target_node_id is None:
                 continue
                 
-            kind = entity.properties.get("interaction_kind")
+            kind = entity.identity.properties.get("interaction_kind")
             if kind not in ["inn", "tavern", "guild"]:
                 continue
                 
@@ -29,7 +29,7 @@ class TownServiceSystem:
                 continue
                 
             # Proximity
-            dist = abs(entity.position[0] - building.position[0]) + abs(entity.position[1] - building.position[1])
+            dist = abs(entity.navigation.position[0] - building.position[0]) + abs(entity.navigation.position[1] - building.position[1])
             if dist > 1.5:
                 entity_updates[entity.id] = EntityUpdate(
                     entity_id=entity.id,

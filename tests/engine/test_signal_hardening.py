@@ -22,6 +22,7 @@ def test_peak_utilization_accuracy():
     """Verify that WorkerManager accurately captures peak active workers."""
     manager = WorkerManager(max_workers=4, max_queue_depth=10)
     
+    from src.core.builder import V2EntityBuilder
     packets = [
         WorkerPacket(
             packet_id=f"p{i}",
@@ -30,7 +31,7 @@ def test_peak_utilization_accuracy():
             world_time=0,
             seed=i,
             work_class=WorkClass.CRITICAL,
-            subject=EntityState(id=i, kind="test", position=(0,0)),
+            subject=V2EntityBuilder(i).kind("test").at((0.0, 0.0)).build(),
             neighbor_view=[],
             work_kind="TEST",
             payload={}
@@ -61,6 +62,7 @@ def test_queue_overflow_shedding():
     # Tiny queue to trigger it easily
     manager = WorkerManager(max_workers=1, max_queue_depth=2)
     
+    from src.core.builder import V2EntityBuilder
     packets = [
         WorkerPacket(
             packet_id=f"p{i}",
@@ -69,7 +71,7 @@ def test_queue_overflow_shedding():
             world_time=0,
             seed=i,
             work_class=WorkClass.CRITICAL,
-            subject=EntityState(id=i, kind="test", position=(0,0)),
+            subject=V2EntityBuilder(i).kind("test").at((0.0, 0.0)).build(),
             neighbor_view=[],
             work_kind="TEST",
             payload={}

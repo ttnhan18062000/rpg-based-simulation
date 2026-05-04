@@ -11,10 +11,12 @@ def test_inventory_stack_size_enforcement():
     RPG-1649: inventory_slots_and_weight
     RPG-0031: item_inventory_contract
     """
-    # 1. Setup: 18 iron ore in inventory (stack_size is 20)
-    # Slots: 1/2 used
-    inv = InventoryComponent(items=[ItemStack("iron_ore", 18)], max_slots=2, max_weight=100.0)
-    entity = EntityState(id=1, kind="HERO", position=(0,0), inventory=inv)
+    from src.core.builder import V2EntityBuilder
+    entity = (V2EntityBuilder(1)
+        .kind("HERO")
+        .at((0, 0))
+        .with_inventory(items=[ItemStack("iron_ore", 18)], max_slots=2, max_weight=100.0)
+        .build())
     state = AuthoritativeState(tick=1, seed=42, entities={1: entity})
     
     # 2. Update: Add 5 more iron ore. 
@@ -35,9 +37,12 @@ def test_inventory_weight_preservation_delta():
     """
     Law: Inventory weight must be preserved and validated during deltas.
     """
-    # Max weight 5.0. Current weight 4.0 (2 iron ore * 2.0)
-    inv = InventoryComponent(items=[ItemStack("iron_ore", 2)], max_slots=10, max_weight=5.0)
-    entity = EntityState(id=1, kind="HERO", position=(0,0), inventory=inv)
+    from src.core.builder import V2EntityBuilder
+    entity = (V2EntityBuilder(1)
+        .kind("HERO")
+        .at((0, 0))
+        .with_inventory(items=[ItemStack("iron_ore", 2)], max_slots=10, max_weight=5.0)
+        .build())
     state = AuthoritativeState(tick=1, seed=42, entities={1: entity})
     
     # Adding 1 more iron ore (2.0) should fail as it exceeds 5.0
@@ -56,9 +61,12 @@ def test_partial_stack_fill_before_slot_rejection():
     """
     Law: Near-full stacks should be filled to capacity before rejecting due to slot limits.
     """
-    # 1. Setup: 1 slot used (19 iron_ore), 1 slot remaining. Stack size 20.
-    inv = InventoryComponent(items=[ItemStack("iron_ore", 19)], max_slots=2, max_weight=100.0)
-    entity = EntityState(id=1, kind="HERO", position=(0,0), inventory=inv)
+    from src.core.builder import V2EntityBuilder
+    entity = (V2EntityBuilder(1)
+        .kind("HERO")
+        .at((0, 0))
+        .with_inventory(items=[ItemStack("iron_ore", 19)], max_slots=2, max_weight=100.0)
+        .build())
     state = AuthoritativeState(tick=1, seed=42, entities={1: entity})
     
     # 2. Add 2 iron ore and 1 wood.

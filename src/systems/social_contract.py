@@ -30,7 +30,13 @@ class SocialContractSystem:
             return StrategicUpdate(), None
 
         # 2. Apply Update
-        updated_contract = replace(contract, status=new_status)
+        expiry_tick = contract.expiry_tick
+        if new_status == ContractStatus.ACTIVE:
+             duration = contract.terms.get("duration", 0)
+             if duration > 0:
+                 expiry_tick = tick + duration
+                 
+        updated_contract = replace(contract, status=new_status, expiry_tick=expiry_tick)
         
         # 3. Special side-effects
         social_upd = None
@@ -67,7 +73,7 @@ class SocialContractSystem:
     def _is_valid_transition(old: ContractStatus, new: ContractStatus) -> bool:
         """Strict state machine for contracts."""
         rules = {
-            ContractStatus.OFFERED: [ContractStatus.ACCEPTED, ContractStatus.CANCELLED, ContractStatus.COUNTERED, ContractStatus.EXPIRED],
+            ContractStatus.OFFERED: [ContractStatus.ACCEPTED, ContractStatus.ACTIVE, ContractStatus.CANCELLED, ContractStatus.COUNTERED, ContractStatus.EXPIRED],
             ContractStatus.COUNTERED: [ContractStatus.ACCEPTED, ContractStatus.CANCELLED, ContractStatus.EXPIRED],
             ContractStatus.ACCEPTED: [ContractStatus.ACTIVE, ContractStatus.CANCELLED],
             ContractStatus.ACTIVE: [ContractStatus.FULFILLED, ContractStatus.FAILED, ContractStatus.BETRAYED, ContractStatus.EXPIRED],

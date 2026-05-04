@@ -24,8 +24,10 @@ class TownResolutionSystem:
         # Town Configuration Constants (Parity with config.py)
         PASSIVE_HEAL_AMT = 1 # town_passive_heal
         
-        for e_id, entity in state.entities.items():
-            pos = entity.position
+        # Phase 9 Fix: Deterministic entity iteration
+        for e_id in sorted(list(state.entities.keys())):
+            entity = state.entities[e_id]
+            pos = entity.navigation.position
             ent_upd = refined_entity_updates.get(e_id)
             if ent_upd and ent_upd.new_position:
                 pos = ent_upd.new_position
@@ -147,10 +149,12 @@ class TownResolutionSystem:
         
         new_resource_updates = dict(update.resource_updates)
         
-        for e_id, entity in state.entities.items():
-            if not entity.active: continue
+        # Phase 9 Fix: Deterministic entity iteration
+        for e_id in sorted(list(state.entities.keys())):
+            entity = state.entities[e_id]
+            if not entity.lifecycle.active: continue
             
-            pos = entity.position
+            pos = entity.navigation.position
             ent_upd = refined_entity_updates.get(e_id)
             if ent_upd and ent_upd.new_position:
                 pos = ent_upd.new_position

@@ -17,7 +17,7 @@ class SocialMemoryService:
         """
         # Find current region
         region_id = None
-        ex, ey = entity.position
+        ex, ey = entity.navigation.position
         for rid, region in state.regions.items():
             xmin, ymin, xmax, ymax = region.bounds
             if xmin <= ex <= xmax and ymin <= ey <= ymax:

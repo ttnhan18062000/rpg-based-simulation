@@ -35,10 +35,10 @@ class ShopSystem:
         refined_entity_updates = dict(update.entity_updates)
         
         for e_id, entity in state.entities.items():
-            pos = entity.position
-            ent_upd = refined_entity_updates.get(e_id)
-            if ent_upd and ent_upd.new_position:
-                pos = ent_upd.new_position
+            pos = entity.navigation.position
+            existing_upd = refined_entity_updates.get(e_id, EntityUpdate(entity_id=e_id))
+            if existing_upd and existing_upd.new_position:
+                pos = existing_upd.new_position
                 
             tile_pos = (int(pos[0]), int(pos[1]))
             building_type = state.building_tiles.get(tile_pos)
@@ -55,7 +55,6 @@ class ShopSystem:
                 from src.core.items import ItemRegistry
                 
                 sanitized_transfers = []
-                existing_upd = refined_entity_updates.get(e_id, EntityUpdate(entity_id=e_id))
                 for intent in existing_upd.resource_transfers:
                     if intent.source_kind == "SHOP_BUY":
                         if not intent.items_add:
@@ -72,8 +71,6 @@ class ShopSystem:
                         
                         if intent.gold_cost < legal_total:
                             # Price too low! Possible exploit or stale simulation.
-                            # We "harden" it by correcting the price instead of rejecting?
-                            # No, rejection is safer for determinism.
                             from src.core.enums import ReasonCode
                             from src.core.updates import RejectionEvent
                             update = replace(update, rejection_events=update.rejection_events + [RejectionEvent(

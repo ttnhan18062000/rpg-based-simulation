@@ -13,10 +13,12 @@ def test_explore_quest_progress():
     # Add metadata for target pos
     quest = quest.replace(metadata={"target_position": (100, 100)})
     
-    entity = EntityState(
-        id=1, kind="HERO", position=(101, 101), # Near target
-        strategic=StrategicComponent(projects={"q1": quest})
-    )
+    from src.core.builder import V2EntityBuilder
+    entity = (V2EntityBuilder(1)
+              .kind("HERO")
+              .at((101, 101))
+              .strategic_project(quest)
+              .build())
     
     state = AuthoritativeState(
         tick=100, seed=42,
@@ -37,10 +39,12 @@ def test_bounty_quest_completion():
     )
     quest = quest.replace(metadata={"target_region_id": "forest"})
     
-    entity = EntityState(
-        id=1, kind="HERO", position=(0, 0),
-        strategic=StrategicComponent(projects={"q2": quest})
-    )
+    from src.core.builder import V2EntityBuilder
+    entity = (V2EntityBuilder(1)
+              .kind("HERO")
+              .at((0, 0))
+              .strategic_project(quest)
+              .build())
     
     # Forest is now owned by Neutral (0) or Hero (2), not Monster (1)
     from src.core.state import RegionState

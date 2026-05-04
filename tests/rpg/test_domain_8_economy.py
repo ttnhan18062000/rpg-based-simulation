@@ -2,8 +2,9 @@ import pytest
 from dataclasses import replace
 from src.core.state import (
     AuthoritativeState, EntityState, BuildingState, 
-    InventoryComponent, ItemStack, RegionState
+    InventoryComponent, ItemStack, RegionState, CombatComponent
 )
+from src.core.builder import V2EntityBuilder
 from src.core.updates import StateUpdate, EntityUpdate, ResourceTransferIntent
 from src.core.enums import ReasonCode
 from src.engine.pipeline import AuthoritativeApplyPipeline
@@ -32,11 +33,12 @@ def economic_state():
     )
     
     # Entity with gold
-    entity = EntityState(
-        id=1,
-        kind="HERO",
-        position=(5, 5),
-        inventory=InventoryComponent(gold=200, items=[])
+    entity = (V2EntityBuilder(1)
+        .kind("HERO")
+        .position(5, 5)
+        .gold(200)
+        .readiness(100.0)
+        .build()
     )
     
     return AuthoritativeState(
@@ -104,9 +106,15 @@ def test_shop_liquidity_depletion(economic_state):
     # 1. Give entity expensive items to sell
     from dataclasses import replace
     expensive_items = [ItemStack("iron_sword", 5)] # Base 50 each
-    economic_state = replace(economic_state, entities={1: replace(economic_state.entities[1], 
-        inventory=InventoryComponent(gold=0, items=expensive_items)
-    )})
+    new_entity = (V2EntityBuilder(1)
+        .kind("HERO")
+        .position(5, 5)
+        .gold(0)
+        .items(expensive_items)
+        .readiness(100.0)
+        .build()
+    )
+    economic_state = replace(economic_state, entities={1: new_entity})
     
     price = MarketSystem.calculate_price(economic_state, economic_state.buildings[501], "iron_sword", is_buy=False)
     # Base(50) * 1.0 (region mod for GEAR) * 0.8 (sell) = 40 gold each.

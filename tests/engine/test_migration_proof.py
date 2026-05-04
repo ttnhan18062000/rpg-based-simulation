@@ -1,4 +1,5 @@
 import pytest
+from src.core.enums import ReasonCode
 from src.core.state import (
     AuthoritativeState, EntityState, InteractionComponent, InventoryComponent, 
     GroundItemState, CorpseState, ItemStack, IdentityComponent, EntityRole,
@@ -9,17 +10,17 @@ from src.engine.interaction import InteractionSystem
 from src.engine.pipeline import AuthoritativeApplyPipeline
 from src.core.movement_modes import MovementMode
 from src.core.items import ItemRegistry
+from src.core.builder import V2EntityBuilder
 
 def test_ground_item_pickup_parity():
     """Verify that InteractionSystem can pick up ground items."""
     state = AuthoritativeState(tick=1, seed=42)
-    entity = EntityState(
-        id=1, kind="hero", position=(0.0, 0.0),
-        inventory=InventoryComponent(max_slots=10, max_weight=100),
-        interaction=InteractionComponent(),
-        navigation=NavigationComponent(target=(0.0, 0.0)),
-        combat=CombatComponent()
-    )
+    # Target must be set for _route_interaction_intent to trigger
+    entity = (V2EntityBuilder(1)
+              .at((0.0, 0.0))
+              .target((0.0, 0.0))
+              .readiness(100.0)
+              .build())
     state.entities[1] = entity
     
     ground_item = GroundItemState(id=100, item_id="iron_ore", quantity=1, position=(0.0, 0.0))
@@ -49,13 +50,11 @@ def test_ground_item_pickup_parity():
 def test_corpse_looting_parity():
     """Verify that InteractionSystem can loot corpses."""
     state = AuthoritativeState(tick=1, seed=42)
-    entity = EntityState(
-        id=1, kind="hero", position=(1.0, 1.0),
-        inventory=InventoryComponent(max_slots=10, max_weight=100),
-        interaction=InteractionComponent(),
-        navigation=NavigationComponent(target=(1.0, 1.0)),
-        combat=CombatComponent()
-    )
+    entity = (V2EntityBuilder(1)
+              .at((1.0, 1.0))
+              .target((1.0, 1.0))
+              .readiness(100.0)
+              .build())
     state.entities[1] = entity
     
     corpse = CorpseState(
@@ -89,11 +88,11 @@ def test_movement_sidestepping_parity():
     state = AuthoritativeState(tick=1, seed=42)
     
     # Mover at (0,0), Target at (1,0)
-    mover = EntityState(id=1, kind="hero", position=(0.0, 0.0), combat=CombatComponent())
+    mover = V2EntityBuilder(1).at((0.0, 0.0)).readiness(100.0).build()
     state.entities[1] = mover
     
     # Blocker at (1,0)
-    blocker = EntityState(id=2, kind="monster", position=(1.0, 0.0), combat=CombatComponent())
+    blocker = V2EntityBuilder(2).at((1.0, 0.0)).readiness(100.0).build()
     state.entities[2] = blocker
     
     # Call resolve_move
@@ -109,19 +108,19 @@ def test_movement_yielding_parity():
     state = AuthoritativeState(tick=1, seed=42)
     
     # Hero (High Priority) at (0,0), Target at (1,0)
-    hero = EntityState(
-        id=1, kind="hero", position=(0.0, 0.0),
-        identity=IdentityComponent(role=EntityRole.HERO),
-        combat=CombatComponent()
-    )
+    hero = (V2EntityBuilder(1)
+            .at((0.0, 0.0))
+            .role(EntityRole.HERO)
+            .readiness(100.0)
+            .build())
     state.entities[1] = hero
     
     # Monster (Lower Priority) at (1,0)
-    monster = EntityState(
-        id=2, kind="monster", position=(1.0, 0.0),
-        identity=IdentityComponent(role=EntityRole.MONSTER),
-        combat=CombatComponent()
-    )
+    monster = (V2EntityBuilder(2)
+               .at((1.0, 0.0))
+               .role(EntityRole.MONSTER)
+               .readiness(100.0)
+               .build())
     state.entities[2] = monster
     
     # BLOCK sidestepping tiles to force yielding
@@ -136,4 +135,4 @@ def test_movement_yielding_parity():
     # Monster should have a new position (yielded)
     assert 2 in updates
     assert updates[2].new_position != (1.0, 0.0)
-    assert updates[2].navigation.failure_reason == "YIELDED"
+    assert updates[2].navigation.failure_reason == ReasonCode.YIELDING

@@ -6,7 +6,7 @@ from src.core.state import (
     BiologicalComponent, SocialComponent, NavigationComponent,
     LifecycleComponent, EntityRole, AttributeComponent, TaskComponent, InteractionComponent
 )
-from src.core.enums import Faction, EntityRole
+from src.core.enums import Faction, EntityRole, ReasonCode
 from src.core.strategic import (
     ProjectState, ProjectStatus, ObjectiveState, ObjectiveStatus,
     BlockerState, LeadState, LeadCertainty, CognitionProfile
@@ -18,27 +18,17 @@ from src.engine.pipeline import AuthoritativeApplyPipeline
 from src.core.updates import StateUpdate, EntityUpdate, TaskUpdate, NavigationUpdate
 
 def create_mock_hero(e_id, pos):
-    return EntityState(
-        id=e_id,
-        kind="actor",
-        position=pos,
-        readiness=100.0,
-        active=True,
-        identity=IdentityComponent(role=EntityRole.HERO, faction=Faction.HERO_GUILD),
-        attributes=AttributeComponent(),
-        combat=CombatComponent(hp=100, max_hp=100, alive=True),
-        inventory=InventoryComponent(),
-        strategic=StrategicComponent(
-            profile=CognitionProfile(interruption_resistance=0.5, detour_breadth=3)
-        ),
-        biological=BiologicalComponent(),
-        social=SocialComponent(),
-        navigation=NavigationComponent(),
-        lifecycle=LifecycleComponent(),
-        task=TaskComponent(),
-        interaction=InteractionComponent(),
-        properties={}
-    )
+    from src.core.builder import V2EntityBuilder
+    return (V2EntityBuilder(e_id)
+        .kind("actor")
+        .position(pos[0], pos[1])
+        .role(EntityRole.HERO)
+        .faction(Faction.HERO_GUILD)
+        .hp(100, max_hp=100)
+        .alive(True)
+        .readiness(100.0)
+        .cognition(interruption_resistance=0.5, detour_breadth=3)
+        .build())
 
 @pytest.mark.strategic_loop
 def test_end_to_end_strategic_detour_lifecycle():
@@ -77,7 +67,7 @@ def test_end_to_end_strategic_detour_lifecycle():
     # --- TICK 1: Movement Attempt ---
     # Hero wants to move towards (10,10)
     # We put the blocker at (5,5) and hero at (4,5)
-    hero = replace(hero, position=(4.0, 5.0))
+    hero = replace(hero, navigation=replace(hero.navigation, position=(4.0, 5.0)))
     state = replace(state, entities={1: hero})
     
     # Propose movement to (5,5) or beyond
@@ -89,7 +79,7 @@ def test_end_to_end_strategic_detour_lifecycle():
     update_tick1 = AuthoritativeApplyPipeline._route_movement_intent(state, update)
     hero_upd1 = update_tick1.entity_updates[1]
     
-    assert hero_upd1.navigation.failure_reason == "PATH_NOT_FOUND"
+    assert hero_upd1.navigation.failure_reason == ReasonCode.PATH_NOT_FOUND
     assert hero_upd1.strategic is not None
     assert len(hero_upd1.strategic.blockers_add_or_update) > 0
     
@@ -112,7 +102,7 @@ def test_end_to_end_strategic_detour_lifecycle():
     assert best.objective_kind == "reach_location"
     
     # --- TICK 4: Switch to Detour Project ---
-    strat_upd = StrategicIntelligenceSystem.evaluate_strategic_intent(state, hero)
+    strat_upd = StrategicIntelligenceSystem.evaluate_strategic_intent(state, hero, force=True)
     print(f"DEBUG: strat_upd={strat_upd}")
     if not strat_upd.current_project_id_set:
         print("DEBUG: No project switch suggested")
@@ -142,12 +132,12 @@ def test_end_to_end_strategic_detour_lifecycle():
     
     # --- TICK 5-10: Execute Detour ---
     # Simulation: Hero reaches (2,2)
-    hero = replace(hero, position=(2.0, 2.0))
+    hero = replace(hero, navigation=replace(hero.navigation, position=(2.0, 2.0)))
     state = replace(state, entities={1: hero})
     
     # --- TICK 11: Resolution ---
     # Hero is at (2,2). evaluate_strategic_intent should complete the detour.
-    strat_upd_res = StrategicIntelligenceSystem.evaluate_strategic_intent(state, hero)
+    strat_upd_res = StrategicIntelligenceSystem.evaluate_strategic_intent(state, hero, force=True)
     assert strat_upd_res.current_project_id_set == "" # Project completed
     assert any(p.status == ProjectStatus.COMPLETED for p in strat_upd_res.projects_add_or_update)
     
@@ -161,7 +151,7 @@ def test_end_to_end_strategic_detour_lifecycle():
     
     # --- TICK 12: Resumption ---
     # Now that detour is COMPLETED, evaluate_strategic_intent should resolve blocker and resume harvesting.
-    strat_upd_resume = StrategicIntelligenceSystem.evaluate_strategic_intent(state, hero)
+    strat_upd_resume = StrategicIntelligenceSystem.evaluate_strategic_intent(state, hero, force=True)
     assert strat_upd_resume.current_project_id_set == proj_harvest.id
     assert any(b.id == blocker.id and b.resolved for b in strat_upd_resume.blockers_add_or_update)
     

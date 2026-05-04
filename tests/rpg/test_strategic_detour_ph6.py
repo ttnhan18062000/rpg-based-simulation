@@ -9,26 +9,17 @@ from src.systems.strategic import StrategicIntelligenceSystem
 from src.core.updates import StateUpdate
 
 def create_mock_entity(eid: int):
-    from src.core.state import CombatComponent, InventoryComponent, SocialComponent, IdentityComponent, BiologicalComponent, LifecycleComponent, StrategicComponent
-    from src.core.enums import EntityRole
-    return EntityState(
-        id=eid,
-        kind="hero",
-        active=True,
-        position=(0, 0),
-        identity=IdentityComponent(role=EntityRole.HERO, faction="player"),
-        combat=CombatComponent(hp=100, max_hp=100, atk=10, def_stat=5, alive=True),
-        inventory=InventoryComponent(gold=10),
-        social=SocialComponent(),
-        biological=BiologicalComponent(),
-        lifecycle=LifecycleComponent(),
-        strategic=StrategicComponent()
+    from src.core.builder import V2EntityBuilder
+    return (V2EntityBuilder(eid)
+        .kind("hero")
+        .at((0, 0))
+        .with_class("hero")
+        .with_combat(hp=100, max_hp=100, atk=10, def_stat=5, alive=True)
+        .with_inventory(gold=10)
+        .build()
     )
 
 def test_strategic_detour_creation_and_resumption():
-    # 1. Setup Entity with Blocker and Lead
-    entity = create_mock_entity(1)
-    
     # Existing project (harvesting)
     harvest_proj = ProjectState(
         id="proj_harvest",
@@ -49,17 +40,23 @@ def test_strategic_detour_creation_and_resumption():
         certainty=LeadCertainty.PRECISE
     )
     
-    entity = replace(entity, strategic=replace(entity.strategic,
-        projects={"proj_harvest": harvest_proj},
-        current_project_id="proj_harvest",
-        blockers={"blocker_mat_wood": blocker},
-        leads={"lead_wood": lead}
-    ))
+    from src.core.builder import V2EntityBuilder
+    entity = (V2EntityBuilder(1)
+        .kind("hero")
+        .at((0, 0))
+        .with_class("hero")
+        .with_strategic(
+            projects={"proj_harvest": harvest_proj},
+            blockers={"blocker_mat_wood": blocker},
+            leads={"lead_wood": lead}
+        )
+        .current_project("proj_harvest")
+        .build())
     
     state = AuthoritativeState(tick=100, seed=42)
     
     # 2. evaluate_strategic_intent should suggest a detour
-    update = StrategicIntelligenceSystem.evaluate_strategic_intent(state, entity)
+    update = StrategicIntelligenceSystem.evaluate_strategic_intent(state, entity, force=True)
     
     assert update.current_project_id_set is not None
     assert "proj_detour" in update.current_project_id_set
@@ -84,7 +81,7 @@ def test_strategic_detour_creation_and_resumption():
     ))
     
     # 4. evaluate_strategic_intent should resume harvest project
-    update_resume = StrategicIntelligenceSystem.evaluate_strategic_intent(state, entity)
+    update_resume = StrategicIntelligenceSystem.evaluate_strategic_intent(state, entity, force=True)
     
     assert update_resume.current_project_id_set == "proj_harvest"
     harvest_resumed = next((p for p in update_resume.projects_add_or_update if p.id == "proj_harvest"), None)

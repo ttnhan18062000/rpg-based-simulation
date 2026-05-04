@@ -213,7 +213,7 @@ class LeashService:
         if nav.leash_radius <= 0 or nav.home_position is None:
             return False
         from src.engine.legality import LegalityServiceV2
-        dist = LegalityServiceV2.get_manhattan_dist(entity.position, nav.home_position)
+        dist = LegalityServiceV2.get_manhattan_dist(entity.navigation.position, nav.home_position)
         return dist > nav.leash_radius
 
     @staticmethod
@@ -227,7 +227,7 @@ class LeashService:
             return False
         # Distance check: beyond 1.5x leash
         from src.engine.legality import LegalityServiceV2
-        dist = LegalityServiceV2.get_manhattan_dist(entity.position, nav.home_position)
+        dist = LegalityServiceV2.get_manhattan_dist(entity.navigation.position, nav.home_position)
         if dist > nav.leash_radius * LEASH_CHASE_MULTIPLIER:
             return True
         # Timeout check
@@ -249,7 +249,7 @@ class LeashService:
         if nav.home_position is None:
             return True
         from src.engine.legality import LegalityServiceV2
-        dist = LegalityServiceV2.get_manhattan_dist(entity.position, nav.home_position)
+        dist = LegalityServiceV2.get_manhattan_dist(entity.navigation.position, nav.home_position)
         return dist <= 1.0
 
 # ─── Discovery and Medical Services ────────────────────────────────────────── (Task 10.1, 10.2)

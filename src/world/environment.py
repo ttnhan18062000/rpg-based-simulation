@@ -72,7 +72,7 @@ class EnvironmentService:
                 # Any active monster stronghold
                 if s.kind == "stronghold" and s.combat.alive:
                     from src.engine.legality import LegalityServiceV2
-                    dist = LegalityServiceV2.get_manhattan_dist(entity.position, s.position)
+                    dist = LegalityServiceV2.get_manhattan_dist(entity.navigation.position, s.navigation.position)
                     if dist < 12:
                         # Aura of Despair: -30% speed, -20% readiness recovery
                         mults["move_speed"] = min(mults["move_speed"], 0.7)

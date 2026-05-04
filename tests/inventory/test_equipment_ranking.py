@@ -5,10 +5,12 @@ from src.core.equipment_service import EquipmentService
 
 def test_equipment_ranking_warrior():
     # Setup warrior
-    warrior = EntityState(
-        id=1, kind="HERO", position=(0,0),
-        identity=IdentityComponent(class_id="WARRIOR")
-    )
+    from src.core.builder import V2EntityBuilder
+    warrior = (V2EntityBuilder(1)
+        .kind("HERO")
+        .at((0, 0))
+        .with_class("WARRIOR")
+        .build())
     
     # Gear 1: Light sword (ATK 5)
     light_sword = ItemDefinition(
@@ -31,10 +33,12 @@ def test_equipment_ranking_warrior():
 
 def test_equipment_ranking_mage():
     # Setup mage
-    mage = EntityState(
-        id=2, kind="HERO", position=(0,0),
-        identity=IdentityComponent(class_id="MAGE")
-    )
+    from src.core.builder import V2EntityBuilder
+    mage = (V2EntityBuilder(2)
+        .kind("HERO")
+        .at((0, 0))
+        .with_class("MAGE")
+        .build())
     
     # Gear 1: Wand (ATK 5, INT 5)
     wand = ItemDefinition(
@@ -48,11 +52,13 @@ def test_equipment_ranking_mage():
     assert score == 27.5
 
 def test_should_replace():
-    entity = EntityState(
-        id=1, kind="HERO", position=(0,0),
-        identity=IdentityComponent(class_id="WARRIOR"),
-        equipment=EquipmentComponent(slots={EquipSlot.MAIN_HAND: "wooden_club"})
-    )
+    from src.core.builder import V2EntityBuilder
+    entity = (V2EntityBuilder(1)
+        .kind("HERO")
+        .at((0, 0))
+        .with_class("WARRIOR")
+        .with_equipment(slots={EquipSlot.MAIN_HAND: "wooden_club"})
+        .build())
     
     # iron_sword (ATK 10) vs wooden_club (ATK 3)
     assert EquipmentService.should_replace(entity, "iron_sword", EquipSlot.MAIN_HAND) == True

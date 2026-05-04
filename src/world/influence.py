@@ -26,7 +26,7 @@ class FactionInfluenceService:
         
         for entity in recent_deaths:
             from src.engine.legality import LegalityServiceV2
-            region = LegalityServiceV2.get_region_for_position(entity.position, state)
+            region = LegalityServiceV2.get_region_for_position(entity.navigation.position, state)
             if not region:
                 continue
                 
@@ -87,7 +87,7 @@ class FactionInfluenceService:
                 for e_id, entity in state.entities.items():
                     if entity.kind == "stronghold":
                         from src.engine.legality import LegalityServiceV2
-                        e_region = LegalityServiceV2.get_region_for_position(entity.position, state)
+                        e_region = LegalityServiceV2.get_region_for_position(entity.navigation.position, state)
                         if e_region and e_region.id == r_id:
                             entities_remove.append(e_id)
                             

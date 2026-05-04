@@ -8,8 +8,12 @@ from src.engine.apply import ApplyPath
 @pytest.mark.v2_contract
 def test_inventory_stacking():
     # Initial state: 5 iron ore
-    inventory = InventoryComponent(items=[ItemStack("iron_ore", 5)], gold=100)
-    entity = EntityState(id=1, kind="hero", position=(0,0), inventory=inventory)
+    from src.core.builder import V2EntityBuilder
+    entity = (V2EntityBuilder(1)
+        .kind("hero")
+        .at((0, 0))
+        .with_inventory(gold=100, items=[ItemStack("iron_ore", 5)])
+        .build())
     state = StateUpdate() # Placeholder
     
     # Update: add 5 more iron ore
@@ -33,12 +37,12 @@ def test_inventory_stacking():
 @pytest.mark.v2_contract
 def test_inventory_capacity_limits():
     # Inventory with 1 slot used and 2 max slots
-    inventory = InventoryComponent(
-        items=[ItemStack("wood", 1)], 
-        max_slots=2, 
-        max_weight=10.0
-    )
-    entity = EntityState(id=1, kind="hero", position=(0,0), inventory=inventory)
+    from src.core.builder import V2EntityBuilder
+    entity = (V2EntityBuilder(1)
+        .kind("hero")
+        .at((0, 0))
+        .with_inventory(items=[ItemStack("wood", 1)], max_slots=2, max_weight=10.0)
+        .build())
     prior_state = AuthoritativeState(tick=1, seed=42, entities={1: entity})
     
     # 1. Test Weight Limit (iron ore is 2.0 each, 10 iron ore = 20.0 weight)
@@ -47,9 +51,11 @@ def test_inventory_capacity_limits():
         inventory=InventoryUpdate(items_add=[ItemStack("iron_ore", 10)])
     )
     new_state_w = ApplyPath.apply_generation(prior_state, StateUpdate(entity_updates={1: ent_upd_weight}))
-    # Should NOT have added the iron ore (weight limit 10.0, iron 20.0)
-    assert len(new_state_w.entities[1].inventory.items) == 1
-    assert new_state_w.entities[1].inventory.items[0].item_id == "wood"
+    # Should have added 4 iron ore (8.0 weight) to reach 9.0 total, as 5 would exceed 10.0
+    assert len(new_state_w.entities[1].inventory.items) == 2
+    item_ids_w = [s.item_id for s in new_state_w.entities[1].inventory.items]
+    assert "iron_ore" in item_ids_w
+    assert any(s.item_id == "iron_ore" and s.quantity == 4 for s in new_state_w.entities[1].inventory.items)
     
     # 2. Test Slot Limit
     # Add iron ore (2.0) and bread (0.2). Both fit weight, but bread would take 3rd slot
@@ -66,7 +72,11 @@ def test_inventory_capacity_limits():
 
 @pytest.mark.v2_contract
 def test_equipment_and_gold_updates():
-    entity = EntityState(id=1, kind="hero", position=(0,0))
+    from src.core.builder import V2EntityBuilder
+    entity = (V2EntityBuilder(1)
+        .kind("hero")
+        .at((0, 0))
+        .build())
     prior_state = AuthoritativeState(tick=1, seed=42, entities={1: entity})
     
     ent_upd = EntityUpdate(

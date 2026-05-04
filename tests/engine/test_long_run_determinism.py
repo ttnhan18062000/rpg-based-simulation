@@ -23,15 +23,15 @@ def test_1000_tick_determinism():
         max_tick_budget_ms=100.0
     )
     
+    from src.core.builder import V2EntityBuilder
     # Complex initial state
     entities = {}
     for i in range(1, 11):
-        entities[i] = EntityState(
-            id=i, 
-            kind="hero" if i <= 5 else "mob", 
-            position=(i, i),
-            readiness=100
-        )
+        entities[i] = (V2EntityBuilder(i)
+                       .kind("hero" if i <= 5 else "mob")
+                       .at((float(i), float(i)))
+                       .readiness(100.0)
+                       .build())
     
     initial_state = AuthoritativeState(
         tick=0, 

@@ -34,7 +34,7 @@ class CertificationHarness:
     Generated evidence is the definitive source of truth for production readiness.
     """
 
-    def __init__(self, profile: RuntimeProfile, override_class: Optional[CertHardwareClass] = None, output_dir: str = "reports/release_proof"):
+    def __init__(self, profile: RuntimeProfile, override_class: Optional[CertHardwareClass] = None, output_dir: str = "reports/certification"):
         self._profile = profile
         self._output_dir = Path(output_dir)
         self._detected_facts = HardwareClassifier.get_detailed_telemetry()
@@ -132,9 +132,9 @@ class CertificationHarness:
                       # We don't necessarily stop, but we record it.
             else:
                  self._fast_tick_count = 0
-                
+            
             # M10 Law: required_sampling_interval_ticks enforcement
-            if t % expectations.required_sampling_interval_ticks == 0:
+            if t % expectations.required_sampling_interval_ticks == 0 or t == ticks:
                 snapshot = kernel.status.signal_history[-1] if kernel.status.signal_history else None
                 if snapshot:
                     # M10 Law: Capture TRUTHFUL signals
@@ -168,7 +168,12 @@ class CertificationHarness:
             logger.info(f"Scenario {scenario_id}: executing 2nd run for reproducibility proof.")
             # Fresh state, fresh RNG with same seed
             kernel2 = Kernel(self._profile, initial_state, DeterministicRNG(initial_state.seed))
-            for _ in range(ticks):
+            for t in range(1, ticks + 1):
+                # Phase 9 Fix: Reproducibility must respect the same stop conditions
+                alive_factions = {e.identity.faction for e in kernel2.state.entities.values() if e.combat.alive}
+                if len(alive_factions) <= 1 and t > 1:
+                    break
+                    
                 kernel2.tick_once()
             # We don't necessarily need a clean shutdown for the 2nd run's hash,
             # but we use the state hash directly for performance.
@@ -245,7 +250,12 @@ class CertificationHarness:
         baseline_profile = RuntimeProfile(**profile_dict)
         
         kernel = Kernel(baseline_profile, state, DeterministicRNG(state.seed))
-        for _ in range(ticks):
+        for t in range(1, ticks + 1):
+            # Phase 9 Fix: Baseline must respect the same stop conditions as the subject run
+            alive_factions = {e.identity.faction for e in kernel.state.entities.values() if e.combat.alive}
+            if len(alive_factions) <= 1 and t > 1:
+                break
+
             kernel.tick_once()
             
         from src.engine.checkpoint import CanonicalStateHasher

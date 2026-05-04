@@ -15,7 +15,11 @@ def test_harvest_channeling_and_yield():
         yields_item="wood", remaining_charges=1, max_charges=1, 
         required_ticks=10
     )
-    entity = EntityState(id=1, kind="hero", position=(0, 0))
+    from src.core.builder import V2EntityBuilder
+    entity = (V2EntityBuilder(1)
+        .kind("hero")
+        .at((0, 0))
+        .build())
     state = AuthoritativeState(tick=1, seed=42, entities={1: entity}, resource_nodes={501: node})
     
     # 2. Action: Start harvest
@@ -66,6 +70,10 @@ def test_harvest_node_cooldown():
     
     # 2. Action: Should now be able to start harvest if charges were > 0 
     # (Charges don't automatically refill in M3 system, but Action check works)
-    entity = EntityState(id=1, kind="hero", position=(0, 0))
+    from src.core.builder import V2EntityBuilder
+    entity = (V2EntityBuilder(1)
+        .kind("hero")
+        .at((0, 0))
+        .build())
     ent_upd = HarvestAction.start_harvest(entity, 501, state)
     assert ent_upd is None # Still 0 charges

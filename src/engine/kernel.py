@@ -248,17 +248,24 @@ class Kernel:
         from src.engine.pipeline import AuthoritativeApplyPipeline
         
         # M8 Law: Frozen Commit Key sorting
-        self._final_results.sort(key=lambda r: (r.class_priority, r.local_priority, r.entity_id))
+        # Descending local priority (higher value = earlier commit)
+        self._final_results.sort(key=lambda r: (r.class_priority, -r.local_priority, r.entity_id))
         
         work_debt_updates: Dict[str, int] = {}
         entity_updates: Dict[int, EntityUpdate] = {}
         for i, res in enumerate(self._final_results):
             # Mid-tick emergency throttle!
+            # M8 Law: Throttle must be deterministic in audit_mode.
             if i % 10 == 0:
+                # Always allow at least 100 items regardless of time if in audit_mode
+                # or if we haven't hit the hard limit yet.
                 elapsed = (time.perf_counter_ns() - self._start_perf_ts) / 1e6
-                if elapsed > 100.0:
+                # In audit_mode, we NEVER throttle based on time to preserve determinism.
+                should_throttle = not self._audit_mode and elapsed > 100.0
+                
+                if should_throttle:
                     # VERIFIED v2: RPG-INFRA-203
-                    logger.warning(f"Mid-tick emergency throttle triggered at {elapsed:.2f}ms")
+                    logger.warning(f"Mid-tick emergency throttle triggered at {elapsed:.2f}ms. Dropping {len(self._final_results) - i} items.")
                     self._status.record_dropped_work(len(self._final_results) - i)
                     from src.core.governance import RuntimeMode
                     self._governor.force_mode(RuntimeMode.DEGRADED, self._status, self._state.tick)
@@ -272,7 +279,6 @@ class Kernel:
                 raise ProtocolViolationError(f"Duplicate authoritative result for entity {res.entity_id}")
             
             if res.status == ResultStatus.SUCCESS:
-                print(f"[DEBUG] Resolution: Collected update for entity {res.entity_id}")
                 entity_updates[res.entity_id] = res.update
             else:
                 entity_updates[res.entity_id] = EntityUpdate(entity_id=res.entity_id)

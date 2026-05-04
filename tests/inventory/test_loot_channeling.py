@@ -11,7 +11,11 @@ from src.engine.apply import ApplyPath
 def test_loot_channeling_completion():
     # 1. Setup: Entity near a ground item
     ground_item = GroundItemState(id=101, item_id="iron_ore", quantity=5, position=(0, 1))
-    entity = EntityState(id=1, kind="hero", position=(0, 0))
+    from src.core.builder import V2EntityBuilder
+    entity = (V2EntityBuilder(1)
+        .kind("hero")
+        .at((0, 0))
+        .build())
     state = AuthoritativeState(tick=1, seed=42, entities={1: entity}, ground_items={101: ground_item})
     
     # 2. Action: Start loot
@@ -45,7 +49,11 @@ def test_loot_channeling_completion():
 def test_loot_interruption_by_distance():
     ground_item = GroundItemState(id=101, item_id="iron_ore", quantity=5, position=(0, 1))
     # Start near
-    entity = EntityState(id=1, kind="hero", position=(0, 0))
+    from src.core.builder import V2EntityBuilder
+    entity = (V2EntityBuilder(1)
+        .kind("hero")
+        .at((0, 0))
+        .build())
     state = AuthoritativeState(tick=1, seed=42, entities={1: entity}, ground_items={101: ground_item})
     
     ent_upd = LootAction.start_loot(entity, 101, "ground_item", state)

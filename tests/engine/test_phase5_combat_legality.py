@@ -68,7 +68,7 @@ def test_status_block():
     
     update = CombatResolutionSystem.resolve_attack(attacker, target, state)
     assert update.outcome_kind == "REJECTED"
-    assert update.failure_reason == ReasonCode.TARGET_LOCKED
+    assert update.failure_reason == ReasonCode.ATTACKER_STATUS_BLOCKED
 
 def test_dead_legality():
     # Attacker dead

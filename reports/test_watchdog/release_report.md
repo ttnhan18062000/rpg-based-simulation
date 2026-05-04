@@ -1,20 +1,20 @@
 # Consolidated Certification Report
 
-**Last Run ID**: `86e5db02-d0b7-46c2-bd6b-72733939dd14`
-**Commit SHA**: `20d6a1ef5bb632e343cbfaa8cb47d5cd8a5d5f66`
+**Last Run ID**: `23889d80-9451-4ce3-925b-cee943055274`
+**Commit SHA**: `5507b2b8d9a38c2ca5274a558307c73b7b4ca2a5`
 
 ## Scenario Summary
 
 | Profile | Scenario | Status | Fail Kind | Reason |
 | :--- | :--- | :--- | :--- | :--- |
-| WATCHDOG_TEST | WATCHDOG_SCENARIO | ⚠️ | failed_reporting_incomplete | No measurement points captured during scenario. |
+| WATCHDOG_TEST | WATCHDOG_SCENARIO | ❌ | failed_reporting_incomplete | No measurement points captured during scenario. |
 
 ---
 
 ## Latest Run Detail
 
 # Certification Report: WATCHDOG_SCENARIO
-**Commit SHA**: `20d6a1ef5bb632e343cbfaa8cb47d5cd8a5d5f66`
+**Commit SHA**: `5507b2b8d9a38c2ca5274a558307c73b7b4ca2a5`
 **Status**: ❌ **FAIL**
 **Allowed Failure Observed**: `False`
 

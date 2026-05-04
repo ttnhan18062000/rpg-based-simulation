@@ -2,17 +2,44 @@ import pytest
 from src.core.state import (
     AuthoritativeState, EntityState, ResourceNodeState, 
     InteractionComponent, InventoryComponent, ItemStack,
-    GroundItemState, CorpseState
+    GroundItemState, CorpseState, NavigationComponent, LifecycleComponent,
+    IdentityComponent, CombatComponent, BiologicalComponent,
+    StrategicComponent
 )
 from src.core.updates import StateUpdate, EntityUpdate, InteractionUpdate
 from src.engine.interaction import InteractionSystem
 from src.engine.pipeline import AuthoritativeApplyPipeline
 
+def make_actor(eid: int, pos=(1.0, 1.0), interaction=None, inventory=None):
+    from src.core.builder import V2EntityBuilder
+    from dataclasses import replace
+    builder = (V2EntityBuilder(eid)
+        .kind("hero")
+        .position(pos[0], pos[1])
+        .alive(True)
+        .readiness(100.0))
+    
+    if interaction:
+        # Manually set interaction since builder might not support all fields
+        pass
+        
+    if inventory:
+        builder.max_slots(inventory.max_slots)
+        builder.gold(inventory.gold)
+        for item in inventory.items:
+            builder.item(item.item_id, item.quantity)
+            
+    entity = builder.build()
+    
+    if interaction:
+        entity = replace(entity, interaction=interaction)
+        
+    return entity
+
 def test_harvest_conservation_full_inventory():
     """Law of Capacity: Progress reset and NO node depletion if inventory is full."""
     # Setup: Entity with full inventory (max 1 slot, 1 item)
-    actor = EntityState(
-        id=1, kind="hero", position=(1.0, 1.0),
+    actor = make_actor(1, pos=(1.0, 1.0),
         interaction=InteractionComponent(target_node_id=500, progress=9), # 1 tick left
         inventory=InventoryComponent(max_slots=1, items=[ItemStack("stone", 1)])
     )
@@ -39,15 +66,6 @@ def test_harvest_conservation_full_inventory():
     assert 500 not in refined.node_updates  # NO node depletion proposed or refined
     
     # Verify atomicity: if a system proposed depletion, it should be stripped
-    update_with_depletion = StateUpdate(
-        entity_updates={
-            1: EntityUpdate(entity_id=1, interaction=InteractionUpdate(progress_delta=1.0))
-        },
-        node_updates={
-            500: InteractionUpdate(target_node_id=500) # (Placeholder for node update)
-        }
-    )
-    # Note: node_updates in StateUpdate is a Dict[int, ResourceNodeUpdate]
     from src.core.updates import ResourceNodeUpdate
     update_with_depletion = StateUpdate(
         entity_updates={
@@ -63,8 +81,7 @@ def test_harvest_conservation_full_inventory():
 
 def test_loot_conservation_full_inventory():
     """Law of Capacity: Ground item remains if inventory is full."""
-    actor = EntityState(
-        id=1, kind="hero", position=(1.0, 1.0),
+    actor = make_actor(1, pos=(1.0, 1.0),
         interaction=InteractionComponent(target_node_id=600, progress=9),
         inventory=InventoryComponent(max_slots=1, items=[ItemStack("stone", 1)])
     )
@@ -86,8 +103,7 @@ def test_loot_conservation_full_inventory():
 
 def test_corpse_conservation_full_inventory():
     """Law of Capacity: Corpse remains if inventory is full."""
-    actor = EntityState(
-        id=1, kind="hero", position=(1.0, 1.0),
+    actor = make_actor(1, pos=(1.0, 1.0),
         interaction=InteractionComponent(target_node_id=700, progress=9),
         inventory=InventoryComponent(max_slots=1, items=[ItemStack("stone", 1)])
     )
@@ -110,8 +126,7 @@ def test_corpse_conservation_full_inventory():
 
 def test_explicit_intent_resolution():
     """Verify that explicit ResourceTransferIntent is correctly resolved."""
-    actor = EntityState(
-        id=1, kind="hero", position=(1.0, 1.0),
+    actor = make_actor(1, pos=(1.0, 1.0),
         interaction=InteractionComponent(target_node_id=500, progress=10),
         inventory=InventoryComponent(max_slots=10, items=[])
     )
@@ -144,8 +159,7 @@ def test_explicit_intent_resolution():
 
 def test_crafting_conservation_no_materials():
     """Law of Materials: Crafting fails if materials are missing."""
-    actor = EntityState(
-        id=1, kind="hero", position=(1.0, 1.0),
+    actor = make_actor(1, pos=(1.0, 1.0),
         inventory=InventoryComponent(gold=100, items=[]) # Missing materials
     )
     state = AuthoritativeState(tick=1, seed=42, entities={1: actor})
@@ -169,8 +183,7 @@ def test_crafting_conservation_no_materials():
 
 def test_shop_buy_conservation_insufficient_gold():
     """Law of Value: Shop buy fails if gold is insufficient."""
-    actor = EntityState(
-        id=1, kind="hero", position=(1.0, 1.0),
+    actor = make_actor(1, pos=(1.0, 1.0),
         inventory=InventoryComponent(gold=10, items=[])
     )
     state = AuthoritativeState(tick=1, seed=42, entities={1: actor})
@@ -193,8 +206,7 @@ def test_shop_buy_conservation_insufficient_gold():
 
 def test_shop_sell_conservation_missing_items():
     """Law of Property: Shop sell fails if items are missing."""
-    actor = EntityState(
-        id=1, kind="hero", position=(1.0, 1.0),
+    actor = make_actor(1, pos=(1.0, 1.0),
         inventory=InventoryComponent(gold=0, items=[])
     )
     state = AuthoritativeState(tick=1, seed=42, entities={1: actor})

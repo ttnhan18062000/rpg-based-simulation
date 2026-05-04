@@ -1,22 +1,2521 @@
 {
   "ARENA_TEST:COMBAT_ARENA_5V5": {
-    "run_id": "e0fb5bc1-6a2c-45df-a5dc-343d836d0e0e",
-    "timestamp": "1777462160.3494585",
-    "commit_sha": "24ca4b4ef067795006e9c32c563f1b13071f3b33",
+    "run_id": "3cb80636-742e-44a7-b713-130182ec5b77",
+    "timestamp": 1778048501.2733474,
+    "commit_sha": "5507b2b8d9a38c2ca5274a558307c73b7b4ca2a5",
     "profile_name": "ARENA_TEST",
     "scenario_id": "COMBAT_ARENA_5V5",
-    "seed": "42",
-    "environment": "{'detected_facts': \"{'os': 'Linux', 'os_release': '6.17.0-22-generic', 'python_version': '3.13.7', 'cpu_count_logical': 6, 'cpu_count_physical': 6, 'ram_total_gb': 11.18, 'cpu_freq_mhz': 2687.998}\", 'detected_class': 'class_b', 'effective_class': 'class_b', 'override_applied': 'False', 'os_name': 'linux', 'python_version': '3.13'}",
-    "measurements": "[{'tick': '1', 'mode': 'NORMAL', 'memory_rss_mb': '65.234375', 'memory_trend_mb_per_tick': '0.0', 'tick_compute_ms': '3.380839', 'tick_compute_ms_avg': '3.380839', 'work_debt': '0', 'worker_utilization': '0.0', 'queue_utilization': '0.0', 'replay_pressure': '0.00048828125', 'active_workers': '0', 'timestamp': '1777462160.4045923'}, {'tick': '2', 'mode': 'NORMAL', 'memory_rss_mb': '65.234375', 'memory_trend_mb_per_tick': '0.0', 'tick_compute_ms': '1.956669', 'tick_compute_ms_avg': '2.668754', 'work_debt': '0', 'worker_utilization': '0.0', 'queue_utilization': '0.0', 'replay_pressure': '0.0009765625', 'active_workers': '0', 'timestamp': '1777462160.408056'}, {'tick': '3', 'mode': 'NORMAL', 'memory_rss_mb': '65.234375', 'memory_trend_mb_per_tick': '0.0', 'tick_compute_ms': '3.381161', 'tick_compute_ms_avg': '2.9062230000000002', 'work_debt': '0', 'worker_utilization': '0.0', 'queue_utilization': '0.0', 'replay_pressure': '0.00146484375', 'active_workers': '0', 'timestamp': '1777462160.4126585'}, {'tick': '4', 'mode': 'NORMAL', 'memory_rss_mb': '65.234375', 'memory_trend_mb_per_tick': '0.0', 'tick_compute_ms': '2.266962', 'tick_compute_ms_avg': '2.74640775', 'work_debt': '0', 'worker_utilization': '0.0', 'queue_utilization': '0.0', 'replay_pressure': '0.001953125', 'active_workers': '0', 'timestamp': '1777462160.416168'}, {'tick': '5', 'mode': 'NORMAL', 'memory_rss_mb': '65.234375', 'memory_trend_mb_per_tick': '0.0', 'tick_compute_ms': '3.185726', 'tick_compute_ms_avg': '2.8342714', 'work_debt': '0', 'worker_utilization': '0.0', 'queue_utilization': '0.0', 'replay_pressure': '0.00244140625', 'active_workers': '0', 'timestamp': '1777462160.4206424'}, {'tick': '6', 'mode': 'NORMAL', 'memory_rss_mb': '65.234375', 'memory_trend_mb_per_tick': '0.0', 'tick_compute_ms': '4.748039', 'tick_compute_ms_avg': '3.1077114000000003', 'work_debt': '0', 'worker_utilization': '0.0', 'queue_utilization': '0.0', 'replay_pressure': '0.0029296875', 'active_workers': '0', 'timestamp': '1777462160.426671'}, {'tick': '7', 'mode': 'NORMAL', 'memory_rss_mb': '65.234375', 'memory_trend_mb_per_tick': '0.0', 'tick_compute_ms': '2.124061', 'tick_compute_ms_avg': '3.1411898000000003', 'work_debt': '0', 'worker_utilization': '0.0', 'queue_utilization': '0.0', 'replay_pressure': '0.00341796875', 'active_workers': '0', 'timestamp': '1777462160.4300056'}, {'tick': '8', 'mode': 'NORMAL', 'memory_rss_mb': '65.234375', 'memory_trend_mb_per_tick': '0.0', 'tick_compute_ms': '2.326607', 'tick_compute_ms_avg': '2.930279', 'work_debt': '0', 'worker_utilization': '0.0', 'queue_utilization': '0.0', 'replay_pressure': '0.00390625', 'active_workers': '0', 'timestamp': '1777462160.433086'}, {'tick': '9', 'mode': 'NORMAL', 'memory_rss_mb': '65.234375', 'memory_trend_mb_per_tick': '0.0', 'tick_compute_ms': '1.964254', 'tick_compute_ms_avg': '2.8697374', 'work_debt': '0', 'worker_utilization': '0.0', 'queue_utilization': '0.0', 'replay_pressure': '0.00439453125', 'active_workers': '0', 'timestamp': '1777462160.437959'}, {'tick': '10', 'mode': 'NORMAL', 'memory_rss_mb': '65.29296875', 'memory_trend_mb_per_tick': '0.05859375', 'tick_compute_ms': '2.913923', 'tick_compute_ms_avg': '2.8153768', 'work_debt': '0', 'worker_utilization': '0.0', 'queue_utilization': '0.0', 'replay_pressure': '0.0048828125', 'active_workers': '0', 'timestamp': '1777462160.4424272'}]",
-    "baseline_hash": "17678c3f95fd7c6c7e11443248253d152ee31f9a86f42d0943c370dfdececa03",
-    "final_hash": "17678c3f95fd7c6c7e11443248253d152ee31f9a86f42d0943c370dfdececa03",
-    "governor_mode_sequence": "['NORMAL', 'NORMAL', 'NORMAL', 'NORMAL', 'NORMAL', 'NORMAL', 'NORMAL', 'NORMAL', 'NORMAL', 'NORMAL', 'NORMAL']",
-    "conformance_passed": "True",
-    "allowed_failure_observed": "False",
+    "seed": 42,
+    "environment": {
+      "detected_facts": {
+        "os": "Linux",
+        "os_release": "6.17.0-23-generic",
+        "python_version": "3.13.7",
+        "cpu_count_logical": 6,
+        "cpu_count_physical": 6,
+        "ram_total_gb": 11.18,
+        "cpu_freq_mhz": 2688.0
+      },
+      "detected_class": "class_b",
+      "effective_class": "class_b",
+      "override_applied": false,
+      "os_name": "linux",
+      "python_version": "3.13"
+    },
+    "measurements": [
+      {
+        "tick": 1,
+        "mode": "NORMAL",
+        "memory_rss_mb": 68.6796875,
+        "memory_trend_mb_per_tick": 0.0,
+        "tick_compute_ms": 12.950137,
+        "tick_compute_ms_avg": 12.950137,
+        "work_debt": 0,
+        "worker_utilization": 1.0,
+        "queue_utilization": 0.09,
+        "replay_pressure": 0.00048828125,
+        "active_workers": 0,
+        "timestamp": 1778048501.838218
+      },
+      {
+        "tick": 2,
+        "mode": "NORMAL",
+        "memory_rss_mb": 68.6796875,
+        "memory_trend_mb_per_tick": 0.0,
+        "tick_compute_ms": 20.593516,
+        "tick_compute_ms_avg": 16.7718265,
+        "work_debt": 0,
+        "worker_utilization": 1.0,
+        "queue_utilization": 0.09,
+        "replay_pressure": 0.0009765625,
+        "active_workers": 0,
+        "timestamp": 1778048501.8915122
+      },
+      {
+        "tick": 3,
+        "mode": "NORMAL",
+        "memory_rss_mb": 68.6796875,
+        "memory_trend_mb_per_tick": 0.0,
+        "tick_compute_ms": 24.274608,
+        "tick_compute_ms_avg": 19.272753666666667,
+        "work_debt": 0,
+        "worker_utilization": 1.0,
+        "queue_utilization": 0.09,
+        "replay_pressure": 0.00146484375,
+        "active_workers": 0,
+        "timestamp": 1778048501.9428482
+      },
+      {
+        "tick": 4,
+        "mode": "NORMAL",
+        "memory_rss_mb": 68.6796875,
+        "memory_trend_mb_per_tick": 0.0,
+        "tick_compute_ms": 13.150644,
+        "tick_compute_ms_avg": 17.74222625,
+        "work_debt": 0,
+        "worker_utilization": 1.0,
+        "queue_utilization": 0.09,
+        "replay_pressure": 0.001953125,
+        "active_workers": 0,
+        "timestamp": 1778048501.9947705
+      },
+      {
+        "tick": 5,
+        "mode": "NORMAL",
+        "memory_rss_mb": 68.6796875,
+        "memory_trend_mb_per_tick": 0.0,
+        "tick_compute_ms": 10.683455,
+        "tick_compute_ms_avg": 16.330472,
+        "work_debt": 0,
+        "worker_utilization": 1.0,
+        "queue_utilization": 0.09,
+        "replay_pressure": 0.00244140625,
+        "active_workers": 0,
+        "timestamp": 1778048502.04666
+      },
+      {
+        "tick": 6,
+        "mode": "NORMAL",
+        "memory_rss_mb": 68.6796875,
+        "memory_trend_mb_per_tick": 0.0,
+        "tick_compute_ms": 15.429465,
+        "tick_compute_ms_avg": 16.8263376,
+        "work_debt": 0,
+        "worker_utilization": 1.0,
+        "queue_utilization": 0.09,
+        "replay_pressure": 0.0029296875,
+        "active_workers": 0,
+        "timestamp": 1778048502.098176
+      },
+      {
+        "tick": 7,
+        "mode": "NORMAL",
+        "memory_rss_mb": 68.6796875,
+        "memory_trend_mb_per_tick": 0.0,
+        "tick_compute_ms": 14.230282,
+        "tick_compute_ms_avg": 15.553690800000002,
+        "work_debt": 0,
+        "worker_utilization": 1.0,
+        "queue_utilization": 0.09,
+        "replay_pressure": 0.00341796875,
+        "active_workers": 0,
+        "timestamp": 1778048502.1520317
+      },
+      {
+        "tick": 8,
+        "mode": "NORMAL",
+        "memory_rss_mb": 68.6796875,
+        "memory_trend_mb_per_tick": 0.0,
+        "tick_compute_ms": 17.863631,
+        "tick_compute_ms_avg": 14.271495400000001,
+        "work_debt": 0,
+        "worker_utilization": 1.0,
+        "queue_utilization": 0.09,
+        "replay_pressure": 0.00390625,
+        "active_workers": 0,
+        "timestamp": 1778048502.2036355
+      },
+      {
+        "tick": 9,
+        "mode": "NORMAL",
+        "memory_rss_mb": 68.6796875,
+        "memory_trend_mb_per_tick": 0.0,
+        "tick_compute_ms": 13.151548,
+        "tick_compute_ms_avg": 14.271676200000002,
+        "work_debt": 0,
+        "worker_utilization": 1.0,
+        "queue_utilization": 0.09,
+        "replay_pressure": 0.00439453125,
+        "active_workers": 0,
+        "timestamp": 1778048502.2575414
+      },
+      {
+        "tick": 10,
+        "mode": "NORMAL",
+        "memory_rss_mb": 68.98046875,
+        "memory_trend_mb_per_tick": 0.30078125,
+        "tick_compute_ms": 16.298338,
+        "tick_compute_ms_avg": 15.3946528,
+        "work_debt": 0,
+        "worker_utilization": 1.0,
+        "queue_utilization": 0.09,
+        "replay_pressure": 0.0048828125,
+        "active_workers": 0,
+        "timestamp": 1778048502.309872
+      }
+    ],
+    "baseline_hash": "59ae289a8aadc791b118cc8725fd5b44ec253b3932785f9f9bd5fb466601e8ea",
+    "final_hash": "59ae289a8aadc791b118cc8725fd5b44ec253b3932785f9f9bd5fb466601e8ea",
+    "governor_mode_sequence": [
+      "NORMAL",
+      "NORMAL",
+      "NORMAL",
+      "NORMAL",
+      "NORMAL",
+      "NORMAL",
+      "NORMAL",
+      "NORMAL",
+      "NORMAL",
+      "NORMAL",
+      "NORMAL"
+    ],
+    "conformance_passed": true,
+    "stop_condition": "timeout",
+    "allowed_failure_observed": false,
     "failure_kind": "none",
     "failure_reason": "Certification PASS",
-    "peak_rss_mb": "65.29296875",
-    "total_cpu_sec": "0.028248241",
-    "final_state": "{'tick': '10', 'seed': '42', 'world_time': '10', 'entities': '{1: {\\'id\\': \\'1\\', \\'kind\\': \\'hero\\', \\'position\\': \\'(2.0, 5.0)\\', \\'readiness\\': \\'100.0\\', \\'active\\': \\'True\\', \\'interaction\\': \"{\\'target_node_id\\': \\'None\\', \\'progress\\': \\'0\\', \\'start_tick\\': \\'0\\'}\", \\'identity\\': \\'{\\\\\\'role\\\\\\': 0, \\\\\\'faction\\\\\\': 0, \\\\\\'known_recipes\\\\\\': [], \\\\\\'craft_target\\\\\\': \\\\\\'None\\\\\\', \\\\\\'evolution_level\\\\\\': \\\\\\'1\\\\\\', \\\\\\'evolution_points\\\\\\': \\\\\\'0\\\\\\', \\\\\\'veterancy_points\\\\\\': \\\\\\'0\\\\\\', \\\\\\'veterancy_rank\\\\\\': \\\\\\'0\\\\\\', \\\\\\'unspent_ap\\\\\\': \\\\\\'0\\\\\\', \\\\\\'class_id\\\\\\': \\\\\\'NOVICE\\\\\\', \\\\\\'learned_skills\\\\\\': [], \\\\\\'active_breakthroughs\\\\\\': [], \\\\\\'personality\\\\\\': \"{\\\\\\'greed\\\\\\': \\\\\\'0.0\\\\\\', \\\\\\'bravery\\\\\\': \\\\\\'0.0\\\\\\', \\\\\\'sociability\\\\\\': \\\\\\'0.0\\\\\\', \\\\\\'industry\\\\\\': \\\\\\'0.0\\\\\\'}\", \\\\\\'life_stage\\\\\\': \\\\\\'ADULT\\\\\\'}\\', \\'attributes\\': \"{\\'strength\\': \\'5\\', \\'agility\\': \\'5\\', \\'vitality\\': \\'5\\', \\'endurance\\': \\'5\\', \\'intelligence\\': \\'5\\', \\'spirit\\': \\'5\\', \\'wisdom\\': \\'5\\', \\'perception\\': \\'5\\', \\'charisma\\': \\'5\\'}\", \\'inventory\\': \"{\\'items\\': \\'[]\\', \\'gold\\': \\'50\\', \\'max_slots\\': \\'16\\', \\'max_weight\\': \\'50.0\\'}\", \\'strategic\\': \\'{\\\\\\'home_region_id\\\\\\': \\\\\\'None\\\\\\', \\\\\\'blockers\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'leads\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'directives\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'projects\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'concerns\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'candidate_zones\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'hypotheses\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'source_trust\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'contracts\\\\\\': \"{\\\\\\'team_a_contract_2\\\\\\': {\\\\\\'id\\\\\\': \\\\\\'team_a_contract_2\\\\\\', \\\\\\'kind\\\\\\': \\\\\\'PROTECTION\\\\\\', \\\\\\'source_id\\\\\\': \\\\\\'1\\\\\\', \\\\\\'target_id\\\\\\': \\\\\\'2\\\\\\', \\\\\\'terms\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'expiry_tick\\\\\\': \\\\\\'-1\\\\\\', \\\\\\'status\\\\\\': \\\\\\'ACTIVE\\\\\\', \\\\\\'created_tick\\\\\\': \\\\\\'0\\\\\\'}, \\\\\\'team_a_contract_3\\\\\\': {\\\\\\'id\\\\\\': \\\\\\'team_a_contract_3\\\\\\', \\\\\\'kind\\\\\\': \\\\\\'PROTECTION\\\\\\', \\\\\\'source_id\\\\\\': \\\\\\'1\\\\\\', \\\\\\'target_id\\\\\\': \\\\\\'3\\\\\\', \\\\\\'terms\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'expiry_tick\\\\\\': \\\\\\'-1\\\\\\', \\\\\\'status\\\\\\': \\\\\\'ACTIVE\\\\\\', \\\\\\'created_tick\\\\\\': \\\\\\'0\\\\\\'}, \\\\\\'team_a_contract_4\\\\\\': {\\\\\\'id\\\\\\': \\\\\\'team_a_contract_4\\\\\\', \\\\\\'kind\\\\\\': \\\\\\'PROTECTION\\\\\\', \\\\\\'source_id\\\\\\': \\\\\\'1\\\\\\', \\\\\\'target_id\\\\\\': \\\\\\'4\\\\\\', \\\\\\'terms\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'expiry_tick\\\\\\': \\\\\\'-1\\\\\\', \\\\\\'status\\\\\\': \\\\\\'ACTIVE\\\\\\', \\\\\\'created_tick\\\\\\': \\\\\\'0\\\\\\'}, \\\\\\'team_a_contract_5\\\\\\': {\\\\\\'id\\\\\\': \\\\\\'team_a_contract_5\\\\\\', \\\\\\'kind\\\\\\': \\\\\\'PROTECTION\\\\\\', \\\\\\'source_id\\\\\\': \\\\\\'1\\\\\\', \\\\\\'target_id\\\\\\': \\\\\\'5\\\\\\', \\\\\\'terms\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'expiry_tick\\\\\\': \\\\\\'-1\\\\\\', \\\\\\'status\\\\\\': \\\\\\'ACTIVE\\\\\\', \\\\\\'created_tick\\\\\\': \\\\\\'0\\\\\\'}}\", \\\\\\'current_project_id\\\\\\': \\\\\\'None\\\\\\', \\\\\\'current_objective_id\\\\\\': \\\\\\'None\\\\\\', \\\\\\'profile\\\\\\': \"{\\\\\\'max_active_projects\\\\\\': \\\\\\'3\\\\\\', \\\\\\'max_leads\\\\\\': \\\\\\'8\\\\\\', \\\\\\'max_concerns\\\\\\': \\\\\\'5\\\\\\', \\\\\\'max_candidate_zones\\\\\\': \\\\\\'4\\\\\\', \\\\\\'max_hypotheses\\\\\\': \\\\\\'3\\\\\\', \\\\\\'interruption_resistance\\\\\\': \\\\\\'0.3\\\\\\', \\\\\\'detour_breadth\\\\\\': \\\\\\'3\\\\\\', \\\\\\'detour_depth\\\\\\': \\\\\\'2\\\\\\'}\", \\\\\\'primary_overload_source\\\\\\': \\\\\\'None\\\\\\', \\\\\\'last_overload_tick\\\\\\': \\\\\\'0\\\\\\', \\\\\\'boredom\\\\\\': \\\\\\'{}\\\\\\'}\\', \\'social\\': \"{\\'trust_history\\': \\'{}\\', \\'familiarity_history\\': \\'{}\\', \\'debt_history\\': \\'{}\\', \\'fear_history\\': \\'{}\\', \\'grudge_history\\': \\'{}\\', \\'salience_history\\': \\'{}\\', \\'bonds\\': \\'{}\\', \\'betrayal_count\\': \\'0\\', \\'public_reputation\\': \\'1.0\\', \\'heroism_score\\': \\'0.0\\', \\'notoriety_score\\': \\'0.0\\'}\", \\'biological\\': \"{\\'sleep_debt\\': \\'0.49999999999999994\\', \\'hunger\\': \\'0.9999999999999999\\', \\'rest_pressure\\': \\'0.0\\', \\'last_meal_tick\\': \\'0\\', \\'last_sleep_tick\\': \\'0\\', \\'well_rested_until\\': \\'-1\\'}\", \\'lifecycle\\': \"{\\'age_ticks\\': \\'10\\', \\'max_age_ticks\\': \\'10000\\', \\'is_permadeath\\': \\'False\\', \\'death_tick\\': \\'None\\', \\'death_reason\\': \\'None\\', \\'generation\\': \\'1\\', \\'heir_entity_id\\': \\'None\\', \\'heirlooms\\': \\'[]\\'}\", \\'aptitude\\': \"{\\'learning_rate\\': \\'1.0\\', \\'stamina_efficiency\\': \\'1.0\\', \\'str_apt\\': \\'1.0\\', \\'agi_apt\\': \\'1.0\\', \\'vit_apt\\': \\'1.0\\', \\'end_apt\\': \\'1.0\\', \\'int_apt\\': \\'1.0\\', \\'spi_apt\\': \\'1.0\\', \\'wis_apt\\': \\'1.0\\', \\'per_apt\\': \\'1.0\\', \\'cha_apt\\': \\'1.0\\'}\", \\'combat\\': \"{\\'hp\\': \\'100\\', \\'max_hp\\': \\'100\\', \\'atk\\': \\'15\\', \\'def_stat\\': \\'5\\', \\'speed\\': \\'10\\', \\'range\\': \\'1\\', \\'evasion\\': \\'0.05\\', \\'tactical_role\\': \\'VANGUARD\\', \\'action_style\\': \\'0\\', \\'alive\\': \\'True\\'}\", \\'equipment\\': \"{\\'slots\\': \\'{}\\'}\", \\'navigation\\': \"{\\'target\\': \\'None\\', \\'path\\': \\'[]\\', \\'moved_recently\\': \\'False\\', \\'movement_mode\\': \\'WANDER\\', \\'last_failure_reason\\': \\'None\\', \\'wait_count\\': \\'0\\', \\'oscillation_count\\': \\'0\\', \\'last_position\\': \\'None\\', \\'home_position\\': \\'None\\', \\'leash_radius\\': \\'0.0\\', \\'chase_ticks\\': \\'0\\', \\'max_chase_ticks\\': \\'15\\', \\'returning_home\\': \\'False\\'}\", \\'task\\': \"{\\'work_kind\\': \\'ENTITY_ACT\\', \\'payload\\': \\'{}\\'}\", \\'stamina\\': \"{\\'current\\': \\'100.0\\', \\'max_stamina\\': \\'100.0\\', \\'regen_rate\\': \\'2.0\\', \\'rest_regen_rate\\': \\'8.0\\', \\'exhaustion_threshold\\': \\'10.0\\', \\'exhaustion_penalty\\': \\'0.7\\', \\'ATTACK_COST\\': \\'8.0\\', \\'MOVE_COST\\': \\'3.0\\', \\'HARVEST_COST\\': \\'5.0\\', \\'SKILL_COST_MULT\\': \\'1.0\\'}\", \\'wounds\\': \\'[]\\', \\'scars\\': \\'[]\\', \\'latest_intent_results\\': \\'[]\\', \\'group_id\\': \\'10003\\', \\'properties\\': \\'{}\\'}, 2: {\\'id\\': \\'2\\', \\'kind\\': \\'hero\\', \\'position\\': \\'(2.0, 7.0)\\', \\'readiness\\': \\'100.0\\', \\'active\\': \\'True\\', \\'interaction\\': \"{\\'target_node_id\\': \\'None\\', \\'progress\\': \\'0\\', \\'start_tick\\': \\'0\\'}\", \\'identity\\': \\'{\\\\\\'role\\\\\\': 0, \\\\\\'faction\\\\\\': 0, \\\\\\'known_recipes\\\\\\': [], \\\\\\'craft_target\\\\\\': \\\\\\'None\\\\\\', \\\\\\'evolution_level\\\\\\': \\\\\\'1\\\\\\', \\\\\\'evolution_points\\\\\\': \\\\\\'0\\\\\\', \\\\\\'veterancy_points\\\\\\': \\\\\\'0\\\\\\', \\\\\\'veterancy_rank\\\\\\': \\\\\\'0\\\\\\', \\\\\\'unspent_ap\\\\\\': \\\\\\'0\\\\\\', \\\\\\'class_id\\\\\\': \\\\\\'NOVICE\\\\\\', \\\\\\'learned_skills\\\\\\': [], \\\\\\'active_breakthroughs\\\\\\': [], \\\\\\'personality\\\\\\': \"{\\\\\\'greed\\\\\\': \\\\\\'0.0\\\\\\', \\\\\\'bravery\\\\\\': \\\\\\'0.0\\\\\\', \\\\\\'sociability\\\\\\': \\\\\\'0.0\\\\\\', \\\\\\'industry\\\\\\': \\\\\\'0.0\\\\\\'}\", \\\\\\'life_stage\\\\\\': \\\\\\'ADULT\\\\\\'}\\', \\'attributes\\': \"{\\'strength\\': \\'5\\', \\'agility\\': \\'5\\', \\'vitality\\': \\'5\\', \\'endurance\\': \\'5\\', \\'intelligence\\': \\'5\\', \\'spirit\\': \\'5\\', \\'wisdom\\': \\'5\\', \\'perception\\': \\'5\\', \\'charisma\\': \\'5\\'}\", \\'inventory\\': \"{\\'items\\': \\'[]\\', \\'gold\\': \\'50\\', \\'max_slots\\': \\'16\\', \\'max_weight\\': \\'50.0\\'}\", \\'strategic\\': \\'{\\\\\\'home_region_id\\\\\\': \\\\\\'None\\\\\\', \\\\\\'blockers\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'leads\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'directives\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'projects\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'concerns\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'candidate_zones\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'hypotheses\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'source_trust\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'contracts\\\\\\': \"{\\\\\\'team_a_contract_2\\\\\\': {\\\\\\'id\\\\\\': \\\\\\'team_a_contract_2\\\\\\', \\\\\\'kind\\\\\\': \\\\\\'PROTECTION\\\\\\', \\\\\\'source_id\\\\\\': \\\\\\'1\\\\\\', \\\\\\'target_id\\\\\\': \\\\\\'2\\\\\\', \\\\\\'terms\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'expiry_tick\\\\\\': \\\\\\'-1\\\\\\', \\\\\\'status\\\\\\': \\\\\\'ACTIVE\\\\\\', \\\\\\'created_tick\\\\\\': \\\\\\'0\\\\\\'}}\", \\\\\\'current_project_id\\\\\\': \\\\\\'None\\\\\\', \\\\\\'current_objective_id\\\\\\': \\\\\\'None\\\\\\', \\\\\\'profile\\\\\\': \"{\\\\\\'max_active_projects\\\\\\': \\\\\\'3\\\\\\', \\\\\\'max_leads\\\\\\': \\\\\\'8\\\\\\', \\\\\\'max_concerns\\\\\\': \\\\\\'5\\\\\\', \\\\\\'max_candidate_zones\\\\\\': \\\\\\'4\\\\\\', \\\\\\'max_hypotheses\\\\\\': \\\\\\'3\\\\\\', \\\\\\'interruption_resistance\\\\\\': \\\\\\'0.3\\\\\\', \\\\\\'detour_breadth\\\\\\': \\\\\\'3\\\\\\', \\\\\\'detour_depth\\\\\\': \\\\\\'2\\\\\\'}\", \\\\\\'primary_overload_source\\\\\\': \\\\\\'None\\\\\\', \\\\\\'last_overload_tick\\\\\\': \\\\\\'0\\\\\\', \\\\\\'boredom\\\\\\': \\\\\\'{}\\\\\\'}\\', \\'social\\': \"{\\'trust_history\\': \\'{}\\', \\'familiarity_history\\': \\'{}\\', \\'debt_history\\': \\'{}\\', \\'fear_history\\': \\'{}\\', \\'grudge_history\\': \\'{}\\', \\'salience_history\\': \\'{}\\', \\'bonds\\': \\'{}\\', \\'betrayal_count\\': \\'0\\', \\'public_reputation\\': \\'1.0\\', \\'heroism_score\\': \\'0.0\\', \\'notoriety_score\\': \\'0.0\\'}\", \\'biological\\': \"{\\'sleep_debt\\': \\'0.49999999999999994\\', \\'hunger\\': \\'0.9999999999999999\\', \\'rest_pressure\\': \\'0.0\\', \\'last_meal_tick\\': \\'0\\', \\'last_sleep_tick\\': \\'0\\', \\'well_rested_until\\': \\'-1\\'}\", \\'lifecycle\\': \"{\\'age_ticks\\': \\'10\\', \\'max_age_ticks\\': \\'10000\\', \\'is_permadeath\\': \\'False\\', \\'death_tick\\': \\'None\\', \\'death_reason\\': \\'None\\', \\'generation\\': \\'1\\', \\'heir_entity_id\\': \\'None\\', \\'heirlooms\\': \\'[]\\'}\", \\'aptitude\\': \"{\\'learning_rate\\': \\'1.0\\', \\'stamina_efficiency\\': \\'1.0\\', \\'str_apt\\': \\'1.0\\', \\'agi_apt\\': \\'1.0\\', \\'vit_apt\\': \\'1.0\\', \\'end_apt\\': \\'1.0\\', \\'int_apt\\': \\'1.0\\', \\'spi_apt\\': \\'1.0\\', \\'wis_apt\\': \\'1.0\\', \\'per_apt\\': \\'1.0\\', \\'cha_apt\\': \\'1.0\\'}\", \\'combat\\': \"{\\'hp\\': \\'100\\', \\'max_hp\\': \\'100\\', \\'atk\\': \\'15\\', \\'def_stat\\': \\'5\\', \\'speed\\': \\'10\\', \\'range\\': \\'1\\', \\'evasion\\': \\'0.05\\', \\'tactical_role\\': \\'VANGUARD\\', \\'action_style\\': \\'0\\', \\'alive\\': \\'True\\'}\", \\'equipment\\': \"{\\'slots\\': \\'{}\\'}\", \\'navigation\\': \"{\\'target\\': \\'None\\', \\'path\\': \\'[]\\', \\'moved_recently\\': \\'False\\', \\'movement_mode\\': \\'WANDER\\', \\'last_failure_reason\\': \\'None\\', \\'wait_count\\': \\'0\\', \\'oscillation_count\\': \\'0\\', \\'last_position\\': \\'None\\', \\'home_position\\': \\'None\\', \\'leash_radius\\': \\'0.0\\', \\'chase_ticks\\': \\'0\\', \\'max_chase_ticks\\': \\'15\\', \\'returning_home\\': \\'False\\'}\", \\'task\\': \"{\\'work_kind\\': \\'ENTITY_ACT\\', \\'payload\\': \\'{}\\'}\", \\'stamina\\': \"{\\'current\\': \\'100.0\\', \\'max_stamina\\': \\'100.0\\', \\'regen_rate\\': \\'2.0\\', \\'rest_regen_rate\\': \\'8.0\\', \\'exhaustion_threshold\\': \\'10.0\\', \\'exhaustion_penalty\\': \\'0.7\\', \\'ATTACK_COST\\': \\'8.0\\', \\'MOVE_COST\\': \\'3.0\\', \\'HARVEST_COST\\': \\'5.0\\', \\'SKILL_COST_MULT\\': \\'1.0\\'}\", \\'wounds\\': \\'[]\\', \\'scars\\': \\'[]\\', \\'latest_intent_results\\': \\'[]\\', \\'group_id\\': \\'10000\\', \\'properties\\': \\'{}\\'}, 3: {\\'id\\': \\'3\\', \\'kind\\': \\'hero\\', \\'position\\': \\'(2.0, 9.0)\\', \\'readiness\\': \\'100.0\\', \\'active\\': \\'True\\', \\'interaction\\': \"{\\'target_node_id\\': \\'None\\', \\'progress\\': \\'0\\', \\'start_tick\\': \\'0\\'}\", \\'identity\\': \\'{\\\\\\'role\\\\\\': 0, \\\\\\'faction\\\\\\': 0, \\\\\\'known_recipes\\\\\\': [], \\\\\\'craft_target\\\\\\': \\\\\\'None\\\\\\', \\\\\\'evolution_level\\\\\\': \\\\\\'2\\\\\\', \\\\\\'evolution_points\\\\\\': \\\\\\'0\\\\\\', \\\\\\'veterancy_points\\\\\\': \\\\\\'0\\\\\\', \\\\\\'veterancy_rank\\\\\\': \\\\\\'0\\\\\\', \\\\\\'unspent_ap\\\\\\': \\\\\\'0\\\\\\', \\\\\\'class_id\\\\\\': \\\\\\'NOVICE\\\\\\', \\\\\\'learned_skills\\\\\\': [], \\\\\\'active_breakthroughs\\\\\\': [], \\\\\\'personality\\\\\\': \"{\\\\\\'greed\\\\\\': \\\\\\'0.0\\\\\\', \\\\\\'bravery\\\\\\': \\\\\\'0.0\\\\\\', \\\\\\'sociability\\\\\\': \\\\\\'0.0\\\\\\', \\\\\\'industry\\\\\\': \\\\\\'0.0\\\\\\'}\", \\\\\\'life_stage\\\\\\': \\\\\\'ADULT\\\\\\'}\\', \\'attributes\\': \"{\\'strength\\': \\'5\\', \\'agility\\': \\'5\\', \\'vitality\\': \\'5\\', \\'endurance\\': \\'5\\', \\'intelligence\\': \\'5\\', \\'spirit\\': \\'5\\', \\'wisdom\\': \\'5\\', \\'perception\\': \\'5\\', \\'charisma\\': \\'5\\'}\", \\'inventory\\': \"{\\'items\\': \\'[]\\', \\'gold\\': \\'50\\', \\'max_slots\\': \\'16\\', \\'max_weight\\': \\'50.0\\'}\", \\'strategic\\': \\'{\\\\\\'home_region_id\\\\\\': \\\\\\'None\\\\\\', \\\\\\'blockers\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'leads\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'directives\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'projects\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'concerns\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'candidate_zones\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'hypotheses\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'source_trust\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'contracts\\\\\\': \"{\\\\\\'team_a_contract_3\\\\\\': {\\\\\\'id\\\\\\': \\\\\\'team_a_contract_3\\\\\\', \\\\\\'kind\\\\\\': \\\\\\'PROTECTION\\\\\\', \\\\\\'source_id\\\\\\': \\\\\\'1\\\\\\', \\\\\\'target_id\\\\\\': \\\\\\'3\\\\\\', \\\\\\'terms\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'expiry_tick\\\\\\': \\\\\\'-1\\\\\\', \\\\\\'status\\\\\\': \\\\\\'ACTIVE\\\\\\', \\\\\\'created_tick\\\\\\': \\\\\\'0\\\\\\'}}\", \\\\\\'current_project_id\\\\\\': \\\\\\'None\\\\\\', \\\\\\'current_objective_id\\\\\\': \\\\\\'None\\\\\\', \\\\\\'profile\\\\\\': \"{\\\\\\'max_active_projects\\\\\\': \\\\\\'3\\\\\\', \\\\\\'max_leads\\\\\\': \\\\\\'8\\\\\\', \\\\\\'max_concerns\\\\\\': \\\\\\'5\\\\\\', \\\\\\'max_candidate_zones\\\\\\': \\\\\\'4\\\\\\', \\\\\\'max_hypotheses\\\\\\': \\\\\\'3\\\\\\', \\\\\\'interruption_resistance\\\\\\': \\\\\\'0.3\\\\\\', \\\\\\'detour_breadth\\\\\\': \\\\\\'3\\\\\\', \\\\\\'detour_depth\\\\\\': \\\\\\'2\\\\\\'}\", \\\\\\'primary_overload_source\\\\\\': \\\\\\'None\\\\\\', \\\\\\'last_overload_tick\\\\\\': \\\\\\'0\\\\\\', \\\\\\'boredom\\\\\\': \\\\\\'{}\\\\\\'}\\', \\'social\\': \"{\\'trust_history\\': \\'{}\\', \\'familiarity_history\\': \\'{}\\', \\'debt_history\\': \\'{}\\', \\'fear_history\\': \\'{}\\', \\'grudge_history\\': \\'{}\\', \\'salience_history\\': \\'{}\\', \\'bonds\\': \\'{}\\', \\'betrayal_count\\': \\'0\\', \\'public_reputation\\': \\'1.0\\', \\'heroism_score\\': \\'0.0\\', \\'notoriety_score\\': \\'0.0\\'}\", \\'biological\\': \"{\\'sleep_debt\\': \\'0.49999999999999994\\', \\'hunger\\': \\'0.9999999999999999\\', \\'rest_pressure\\': \\'0.0\\', \\'last_meal_tick\\': \\'0\\', \\'last_sleep_tick\\': \\'0\\', \\'well_rested_until\\': \\'-1\\'}\", \\'lifecycle\\': \"{\\'age_ticks\\': \\'10\\', \\'max_age_ticks\\': \\'10000\\', \\'is_permadeath\\': \\'False\\', \\'death_tick\\': \\'None\\', \\'death_reason\\': \\'None\\', \\'generation\\': \\'1\\', \\'heir_entity_id\\': \\'None\\', \\'heirlooms\\': \\'[]\\'}\", \\'aptitude\\': \"{\\'learning_rate\\': \\'1.0\\', \\'stamina_efficiency\\': \\'1.0\\', \\'str_apt\\': \\'1.0\\', \\'agi_apt\\': \\'1.0\\', \\'vit_apt\\': \\'1.0\\', \\'end_apt\\': \\'1.0\\', \\'int_apt\\': \\'1.0\\', \\'spi_apt\\': \\'1.0\\', \\'wis_apt\\': \\'1.0\\', \\'per_apt\\': \\'1.0\\', \\'cha_apt\\': \\'1.0\\'}\", \\'combat\\': \"{\\'hp\\': \\'100\\', \\'max_hp\\': \\'100\\', \\'atk\\': \\'15\\', \\'def_stat\\': \\'5\\', \\'speed\\': \\'10\\', \\'range\\': \\'1\\', \\'evasion\\': \\'0.05\\', \\'tactical_role\\': \\'VANGUARD\\', \\'action_style\\': \\'0\\', \\'alive\\': \\'True\\'}\", \\'equipment\\': \"{\\'slots\\': \\'{}\\'}\", \\'navigation\\': \"{\\'target\\': \\'None\\', \\'path\\': \\'[]\\', \\'moved_recently\\': \\'False\\', \\'movement_mode\\': \\'WANDER\\', \\'last_failure_reason\\': \\'None\\', \\'wait_count\\': \\'0\\', \\'oscillation_count\\': \\'0\\', \\'last_position\\': \\'None\\', \\'home_position\\': \\'None\\', \\'leash_radius\\': \\'0.0\\', \\'chase_ticks\\': \\'0\\', \\'max_chase_ticks\\': \\'15\\', \\'returning_home\\': \\'False\\'}\", \\'task\\': \"{\\'work_kind\\': \\'ENTITY_ACT\\', \\'payload\\': \\'{}\\'}\", \\'stamina\\': \"{\\'current\\': \\'100.0\\', \\'max_stamina\\': \\'100.0\\', \\'regen_rate\\': \\'2.0\\', \\'rest_regen_rate\\': \\'8.0\\', \\'exhaustion_threshold\\': \\'10.0\\', \\'exhaustion_penalty\\': \\'0.7\\', \\'ATTACK_COST\\': \\'8.0\\', \\'MOVE_COST\\': \\'3.0\\', \\'HARVEST_COST\\': \\'5.0\\', \\'SKILL_COST_MULT\\': \\'1.0\\'}\", \\'wounds\\': \\'[]\\', \\'scars\\': \\'[]\\', \\'latest_intent_results\\': \\'[]\\', \\'group_id\\': \\'10001\\', \\'properties\\': \\'{}\\'}, 4: {\\'id\\': \\'4\\', \\'kind\\': \\'hero\\', \\'position\\': \\'(2.0, 11.0)\\', \\'readiness\\': \\'100.0\\', \\'active\\': \\'True\\', \\'interaction\\': \"{\\'target_node_id\\': \\'None\\', \\'progress\\': \\'0\\', \\'start_tick\\': \\'0\\'}\", \\'identity\\': \\'{\\\\\\'role\\\\\\': 0, \\\\\\'faction\\\\\\': 0, \\\\\\'known_recipes\\\\\\': [], \\\\\\'craft_target\\\\\\': \\\\\\'None\\\\\\', \\\\\\'evolution_level\\\\\\': \\\\\\'1\\\\\\', \\\\\\'evolution_points\\\\\\': \\\\\\'0\\\\\\', \\\\\\'veterancy_points\\\\\\': \\\\\\'0\\\\\\', \\\\\\'veterancy_rank\\\\\\': \\\\\\'0\\\\\\', \\\\\\'unspent_ap\\\\\\': \\\\\\'0\\\\\\', \\\\\\'class_id\\\\\\': \\\\\\'NOVICE\\\\\\', \\\\\\'learned_skills\\\\\\': [], \\\\\\'active_breakthroughs\\\\\\': [], \\\\\\'personality\\\\\\': \"{\\\\\\'greed\\\\\\': \\\\\\'0.0\\\\\\', \\\\\\'bravery\\\\\\': \\\\\\'0.0\\\\\\', \\\\\\'sociability\\\\\\': \\\\\\'0.0\\\\\\', \\\\\\'industry\\\\\\': \\\\\\'0.0\\\\\\'}\", \\\\\\'life_stage\\\\\\': \\\\\\'ADULT\\\\\\'}\\', \\'attributes\\': \"{\\'strength\\': \\'5\\', \\'agility\\': \\'5\\', \\'vitality\\': \\'5\\', \\'endurance\\': \\'5\\', \\'intelligence\\': \\'5\\', \\'spirit\\': \\'5\\', \\'wisdom\\': \\'5\\', \\'perception\\': \\'5\\', \\'charisma\\': \\'5\\'}\", \\'inventory\\': \"{\\'items\\': \\'[]\\', \\'gold\\': \\'50\\', \\'max_slots\\': \\'16\\', \\'max_weight\\': \\'50.0\\'}\", \\'strategic\\': \\'{\\\\\\'home_region_id\\\\\\': \\\\\\'None\\\\\\', \\\\\\'blockers\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'leads\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'directives\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'projects\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'concerns\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'candidate_zones\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'hypotheses\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'source_trust\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'contracts\\\\\\': \"{\\\\\\'team_a_contract_4\\\\\\': {\\\\\\'id\\\\\\': \\\\\\'team_a_contract_4\\\\\\', \\\\\\'kind\\\\\\': \\\\\\'PROTECTION\\\\\\', \\\\\\'source_id\\\\\\': \\\\\\'1\\\\\\', \\\\\\'target_id\\\\\\': \\\\\\'4\\\\\\', \\\\\\'terms\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'expiry_tick\\\\\\': \\\\\\'-1\\\\\\', \\\\\\'status\\\\\\': \\\\\\'ACTIVE\\\\\\', \\\\\\'created_tick\\\\\\': \\\\\\'0\\\\\\'}}\", \\\\\\'current_project_id\\\\\\': \\\\\\'None\\\\\\', \\\\\\'current_objective_id\\\\\\': \\\\\\'None\\\\\\', \\\\\\'profile\\\\\\': \"{\\\\\\'max_active_projects\\\\\\': \\\\\\'3\\\\\\', \\\\\\'max_leads\\\\\\': \\\\\\'8\\\\\\', \\\\\\'max_concerns\\\\\\': \\\\\\'5\\\\\\', \\\\\\'max_candidate_zones\\\\\\': \\\\\\'4\\\\\\', \\\\\\'max_hypotheses\\\\\\': \\\\\\'3\\\\\\', \\\\\\'interruption_resistance\\\\\\': \\\\\\'0.3\\\\\\', \\\\\\'detour_breadth\\\\\\': \\\\\\'3\\\\\\', \\\\\\'detour_depth\\\\\\': \\\\\\'2\\\\\\'}\", \\\\\\'primary_overload_source\\\\\\': \\\\\\'None\\\\\\', \\\\\\'last_overload_tick\\\\\\': \\\\\\'0\\\\\\', \\\\\\'boredom\\\\\\': \\\\\\'{}\\\\\\'}\\', \\'social\\': \"{\\'trust_history\\': \\'{}\\', \\'familiarity_history\\': \\'{}\\', \\'debt_history\\': \\'{}\\', \\'fear_history\\': \\'{}\\', \\'grudge_history\\': \\'{}\\', \\'salience_history\\': \\'{}\\', \\'bonds\\': \\'{}\\', \\'betrayal_count\\': \\'0\\', \\'public_reputation\\': \\'1.0\\', \\'heroism_score\\': \\'0.0\\', \\'notoriety_score\\': \\'0.0\\'}\", \\'biological\\': \"{\\'sleep_debt\\': \\'0.49999999999999994\\', \\'hunger\\': \\'0.9999999999999999\\', \\'rest_pressure\\': \\'0.0\\', \\'last_meal_tick\\': \\'0\\', \\'last_sleep_tick\\': \\'0\\', \\'well_rested_until\\': \\'-1\\'}\", \\'lifecycle\\': \"{\\'age_ticks\\': \\'10\\', \\'max_age_ticks\\': \\'10000\\', \\'is_permadeath\\': \\'False\\', \\'death_tick\\': \\'None\\', \\'death_reason\\': \\'None\\', \\'generation\\': \\'1\\', \\'heir_entity_id\\': \\'None\\', \\'heirlooms\\': \\'[]\\'}\", \\'aptitude\\': \"{\\'learning_rate\\': \\'1.0\\', \\'stamina_efficiency\\': \\'1.0\\', \\'str_apt\\': \\'1.0\\', \\'agi_apt\\': \\'1.0\\', \\'vit_apt\\': \\'1.0\\', \\'end_apt\\': \\'1.0\\', \\'int_apt\\': \\'1.0\\', \\'spi_apt\\': \\'1.0\\', \\'wis_apt\\': \\'1.0\\', \\'per_apt\\': \\'1.0\\', \\'cha_apt\\': \\'1.0\\'}\", \\'combat\\': \"{\\'hp\\': \\'100\\', \\'max_hp\\': \\'100\\', \\'atk\\': \\'15\\', \\'def_stat\\': \\'5\\', \\'speed\\': \\'10\\', \\'range\\': \\'1\\', \\'evasion\\': \\'0.05\\', \\'tactical_role\\': \\'VANGUARD\\', \\'action_style\\': \\'0\\', \\'alive\\': \\'True\\'}\", \\'equipment\\': \"{\\'slots\\': \\'{}\\'}\", \\'navigation\\': \"{\\'target\\': \\'None\\', \\'path\\': \\'[]\\', \\'moved_recently\\': \\'False\\', \\'movement_mode\\': \\'WANDER\\', \\'last_failure_reason\\': \\'None\\', \\'wait_count\\': \\'0\\', \\'oscillation_count\\': \\'0\\', \\'last_position\\': \\'None\\', \\'home_position\\': \\'None\\', \\'leash_radius\\': \\'0.0\\', \\'chase_ticks\\': \\'0\\', \\'max_chase_ticks\\': \\'15\\', \\'returning_home\\': \\'False\\'}\", \\'task\\': \"{\\'work_kind\\': \\'ENTITY_ACT\\', \\'payload\\': \\'{}\\'}\", \\'stamina\\': \"{\\'current\\': \\'100.0\\', \\'max_stamina\\': \\'100.0\\', \\'regen_rate\\': \\'2.0\\', \\'rest_regen_rate\\': \\'8.0\\', \\'exhaustion_threshold\\': \\'10.0\\', \\'exhaustion_penalty\\': \\'0.7\\', \\'ATTACK_COST\\': \\'8.0\\', \\'MOVE_COST\\': \\'3.0\\', \\'HARVEST_COST\\': \\'5.0\\', \\'SKILL_COST_MULT\\': \\'1.0\\'}\", \\'wounds\\': \\'[]\\', \\'scars\\': \\'[]\\', \\'latest_intent_results\\': \\'[]\\', \\'group_id\\': \\'10002\\', \\'properties\\': \\'{}\\'}, 5: {\\'id\\': \\'5\\', \\'kind\\': \\'hero\\', \\'position\\': \\'(2.0, 13.0)\\', \\'readiness\\': \\'100.0\\', \\'active\\': \\'True\\', \\'interaction\\': \"{\\'target_node_id\\': \\'None\\', \\'progress\\': \\'0\\', \\'start_tick\\': \\'0\\'}\", \\'identity\\': \\'{\\\\\\'role\\\\\\': 0, \\\\\\'faction\\\\\\': 0, \\\\\\'known_recipes\\\\\\': [], \\\\\\'craft_target\\\\\\': \\\\\\'None\\\\\\', \\\\\\'evolution_level\\\\\\': \\\\\\'2\\\\\\', \\\\\\'evolution_points\\\\\\': \\\\\\'0\\\\\\', \\\\\\'veterancy_points\\\\\\': \\\\\\'0\\\\\\', \\\\\\'veterancy_rank\\\\\\': \\\\\\'0\\\\\\', \\\\\\'unspent_ap\\\\\\': \\\\\\'0\\\\\\', \\\\\\'class_id\\\\\\': \\\\\\'NOVICE\\\\\\', \\\\\\'learned_skills\\\\\\': [], \\\\\\'active_breakthroughs\\\\\\': [], \\\\\\'personality\\\\\\': \"{\\\\\\'greed\\\\\\': \\\\\\'0.0\\\\\\', \\\\\\'bravery\\\\\\': \\\\\\'0.0\\\\\\', \\\\\\'sociability\\\\\\': \\\\\\'0.0\\\\\\', \\\\\\'industry\\\\\\': \\\\\\'0.0\\\\\\'}\", \\\\\\'life_stage\\\\\\': \\\\\\'ADULT\\\\\\'}\\', \\'attributes\\': \"{\\'strength\\': \\'5\\', \\'agility\\': \\'5\\', \\'vitality\\': \\'5\\', \\'endurance\\': \\'5\\', \\'intelligence\\': \\'5\\', \\'spirit\\': \\'5\\', \\'wisdom\\': \\'5\\', \\'perception\\': \\'5\\', \\'charisma\\': \\'5\\'}\", \\'inventory\\': \"{\\'items\\': \\'[]\\', \\'gold\\': \\'50\\', \\'max_slots\\': \\'16\\', \\'max_weight\\': \\'50.0\\'}\", \\'strategic\\': \\'{\\\\\\'home_region_id\\\\\\': \\\\\\'None\\\\\\', \\\\\\'blockers\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'leads\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'directives\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'projects\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'concerns\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'candidate_zones\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'hypotheses\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'source_trust\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'contracts\\\\\\': \"{\\\\\\'team_a_contract_5\\\\\\': {\\\\\\'id\\\\\\': \\\\\\'team_a_contract_5\\\\\\', \\\\\\'kind\\\\\\': \\\\\\'PROTECTION\\\\\\', \\\\\\'source_id\\\\\\': \\\\\\'1\\\\\\', \\\\\\'target_id\\\\\\': \\\\\\'5\\\\\\', \\\\\\'terms\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'expiry_tick\\\\\\': \\\\\\'-1\\\\\\', \\\\\\'status\\\\\\': \\\\\\'ACTIVE\\\\\\', \\\\\\'created_tick\\\\\\': \\\\\\'0\\\\\\'}}\", \\\\\\'current_project_id\\\\\\': \\\\\\'None\\\\\\', \\\\\\'current_objective_id\\\\\\': \\\\\\'None\\\\\\', \\\\\\'profile\\\\\\': \"{\\\\\\'max_active_projects\\\\\\': \\\\\\'3\\\\\\', \\\\\\'max_leads\\\\\\': \\\\\\'8\\\\\\', \\\\\\'max_concerns\\\\\\': \\\\\\'5\\\\\\', \\\\\\'max_candidate_zones\\\\\\': \\\\\\'4\\\\\\', \\\\\\'max_hypotheses\\\\\\': \\\\\\'3\\\\\\', \\\\\\'interruption_resistance\\\\\\': \\\\\\'0.3\\\\\\', \\\\\\'detour_breadth\\\\\\': \\\\\\'3\\\\\\', \\\\\\'detour_depth\\\\\\': \\\\\\'2\\\\\\'}\", \\\\\\'primary_overload_source\\\\\\': \\\\\\'None\\\\\\', \\\\\\'last_overload_tick\\\\\\': \\\\\\'0\\\\\\', \\\\\\'boredom\\\\\\': \\\\\\'{}\\\\\\'}\\', \\'social\\': \"{\\'trust_history\\': \\'{}\\', \\'familiarity_history\\': \\'{}\\', \\'debt_history\\': \\'{}\\', \\'fear_history\\': \\'{}\\', \\'grudge_history\\': \\'{}\\', \\'salience_history\\': \\'{}\\', \\'bonds\\': \\'{}\\', \\'betrayal_count\\': \\'0\\', \\'public_reputation\\': \\'1.0\\', \\'heroism_score\\': \\'0.0\\', \\'notoriety_score\\': \\'0.0\\'}\", \\'biological\\': \"{\\'sleep_debt\\': \\'0.49999999999999994\\', \\'hunger\\': \\'0.9999999999999999\\', \\'rest_pressure\\': \\'0.0\\', \\'last_meal_tick\\': \\'0\\', \\'last_sleep_tick\\': \\'0\\', \\'well_rested_until\\': \\'-1\\'}\", \\'lifecycle\\': \"{\\'age_ticks\\': \\'10\\', \\'max_age_ticks\\': \\'10000\\', \\'is_permadeath\\': \\'False\\', \\'death_tick\\': \\'None\\', \\'death_reason\\': \\'None\\', \\'generation\\': \\'1\\', \\'heir_entity_id\\': \\'None\\', \\'heirlooms\\': \\'[]\\'}\", \\'aptitude\\': \"{\\'learning_rate\\': \\'1.0\\', \\'stamina_efficiency\\': \\'1.0\\', \\'str_apt\\': \\'1.0\\', \\'agi_apt\\': \\'1.0\\', \\'vit_apt\\': \\'1.0\\', \\'end_apt\\': \\'1.0\\', \\'int_apt\\': \\'1.0\\', \\'spi_apt\\': \\'1.0\\', \\'wis_apt\\': \\'1.0\\', \\'per_apt\\': \\'1.0\\', \\'cha_apt\\': \\'1.0\\'}\", \\'combat\\': \"{\\'hp\\': \\'100\\', \\'max_hp\\': \\'100\\', \\'atk\\': \\'15\\', \\'def_stat\\': \\'5\\', \\'speed\\': \\'10\\', \\'range\\': \\'1\\', \\'evasion\\': \\'0.05\\', \\'tactical_role\\': \\'VANGUARD\\', \\'action_style\\': \\'0\\', \\'alive\\': \\'True\\'}\", \\'equipment\\': \"{\\'slots\\': \\'{}\\'}\", \\'navigation\\': \"{\\'target\\': \\'None\\', \\'path\\': \\'[]\\', \\'moved_recently\\': \\'False\\', \\'movement_mode\\': \\'WANDER\\', \\'last_failure_reason\\': \\'None\\', \\'wait_count\\': \\'0\\', \\'oscillation_count\\': \\'0\\', \\'last_position\\': \\'None\\', \\'home_position\\': \\'None\\', \\'leash_radius\\': \\'0.0\\', \\'chase_ticks\\': \\'0\\', \\'max_chase_ticks\\': \\'15\\', \\'returning_home\\': \\'False\\'}\", \\'task\\': \"{\\'work_kind\\': \\'ENTITY_ACT\\', \\'payload\\': \\'{}\\'}\", \\'stamina\\': \"{\\'current\\': \\'100.0\\', \\'max_stamina\\': \\'100.0\\', \\'regen_rate\\': \\'2.0\\', \\'rest_regen_rate\\': \\'8.0\\', \\'exhaustion_threshold\\': \\'10.0\\', \\'exhaustion_penalty\\': \\'0.7\\', \\'ATTACK_COST\\': \\'8.0\\', \\'MOVE_COST\\': \\'3.0\\', \\'HARVEST_COST\\': \\'5.0\\', \\'SKILL_COST_MULT\\': \\'1.0\\'}\", \\'wounds\\': \\'[]\\', \\'scars\\': \\'[]\\', \\'latest_intent_results\\': \\'[]\\', \\'group_id\\': \\'10003\\', \\'properties\\': \\'{}\\'}, 6: {\\'id\\': \\'6\\', \\'kind\\': \\'monster\\', \\'position\\': \\'(18.0, 5.0)\\', \\'readiness\\': \\'100.0\\', \\'active\\': \\'True\\', \\'interaction\\': \"{\\'target_node_id\\': \\'None\\', \\'progress\\': \\'0\\', \\'start_tick\\': \\'0\\'}\", \\'identity\\': \\'{\\\\\\'role\\\\\\': 2, \\\\\\'faction\\\\\\': 1, \\\\\\'known_recipes\\\\\\': [], \\\\\\'craft_target\\\\\\': \\\\\\'None\\\\\\', \\\\\\'evolution_level\\\\\\': \\\\\\'2\\\\\\', \\\\\\'evolution_points\\\\\\': \\\\\\'0\\\\\\', \\\\\\'veterancy_points\\\\\\': \\\\\\'0\\\\\\', \\\\\\'veterancy_rank\\\\\\': \\\\\\'0\\\\\\', \\\\\\'unspent_ap\\\\\\': \\\\\\'0\\\\\\', \\\\\\'class_id\\\\\\': \\\\\\'NOVICE\\\\\\', \\\\\\'learned_skills\\\\\\': [], \\\\\\'active_breakthroughs\\\\\\': [], \\\\\\'personality\\\\\\': \"{\\\\\\'greed\\\\\\': \\\\\\'0.0\\\\\\', \\\\\\'bravery\\\\\\': \\\\\\'0.0\\\\\\', \\\\\\'sociability\\\\\\': \\\\\\'0.0\\\\\\', \\\\\\'industry\\\\\\': \\\\\\'0.0\\\\\\'}\", \\\\\\'life_stage\\\\\\': \\\\\\'ADULT\\\\\\'}\\', \\'attributes\\': \"{\\'strength\\': \\'5\\', \\'agility\\': \\'5\\', \\'vitality\\': \\'5\\', \\'endurance\\': \\'5\\', \\'intelligence\\': \\'5\\', \\'spirit\\': \\'5\\', \\'wisdom\\': \\'5\\', \\'perception\\': \\'5\\', \\'charisma\\': \\'5\\'}\", \\'inventory\\': \"{\\'items\\': \\'[]\\', \\'gold\\': \\'10\\', \\'max_slots\\': \\'16\\', \\'max_weight\\': \\'50.0\\'}\", \\'strategic\\': \\'{\\\\\\'home_region_id\\\\\\': \\\\\\'None\\\\\\', \\\\\\'blockers\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'leads\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'directives\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'projects\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'concerns\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'candidate_zones\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'hypotheses\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'source_trust\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'contracts\\\\\\': \"{\\\\\\'team_b_contract_7\\\\\\': {\\\\\\'id\\\\\\': \\\\\\'team_b_contract_7\\\\\\', \\\\\\'kind\\\\\\': \\\\\\'PROTECTION\\\\\\', \\\\\\'source_id\\\\\\': \\\\\\'6\\\\\\', \\\\\\'target_id\\\\\\': \\\\\\'7\\\\\\', \\\\\\'terms\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'expiry_tick\\\\\\': \\\\\\'-1\\\\\\', \\\\\\'status\\\\\\': \\\\\\'ACTIVE\\\\\\', \\\\\\'created_tick\\\\\\': \\\\\\'0\\\\\\'}, \\\\\\'team_b_contract_8\\\\\\': {\\\\\\'id\\\\\\': \\\\\\'team_b_contract_8\\\\\\', \\\\\\'kind\\\\\\': \\\\\\'PROTECTION\\\\\\', \\\\\\'source_id\\\\\\': \\\\\\'6\\\\\\', \\\\\\'target_id\\\\\\': \\\\\\'8\\\\\\', \\\\\\'terms\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'expiry_tick\\\\\\': \\\\\\'-1\\\\\\', \\\\\\'status\\\\\\': \\\\\\'ACTIVE\\\\\\', \\\\\\'created_tick\\\\\\': \\\\\\'0\\\\\\'}, \\\\\\'team_b_contract_9\\\\\\': {\\\\\\'id\\\\\\': \\\\\\'team_b_contract_9\\\\\\', \\\\\\'kind\\\\\\': \\\\\\'PROTECTION\\\\\\', \\\\\\'source_id\\\\\\': \\\\\\'6\\\\\\', \\\\\\'target_id\\\\\\': \\\\\\'9\\\\\\', \\\\\\'terms\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'expiry_tick\\\\\\': \\\\\\'-1\\\\\\', \\\\\\'status\\\\\\': \\\\\\'ACTIVE\\\\\\', \\\\\\'created_tick\\\\\\': \\\\\\'0\\\\\\'}, \\\\\\'team_b_contract_10\\\\\\': {\\\\\\'id\\\\\\': \\\\\\'team_b_contract_10\\\\\\', \\\\\\'kind\\\\\\': \\\\\\'PROTECTION\\\\\\', \\\\\\'source_id\\\\\\': \\\\\\'6\\\\\\', \\\\\\'target_id\\\\\\': \\\\\\'10\\\\\\', \\\\\\'terms\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'expiry_tick\\\\\\': \\\\\\'-1\\\\\\', \\\\\\'status\\\\\\': \\\\\\'ACTIVE\\\\\\', \\\\\\'created_tick\\\\\\': \\\\\\'0\\\\\\'}}\", \\\\\\'current_project_id\\\\\\': \\\\\\'None\\\\\\', \\\\\\'current_objective_id\\\\\\': \\\\\\'None\\\\\\', \\\\\\'profile\\\\\\': \"{\\\\\\'max_active_projects\\\\\\': \\\\\\'3\\\\\\', \\\\\\'max_leads\\\\\\': \\\\\\'8\\\\\\', \\\\\\'max_concerns\\\\\\': \\\\\\'5\\\\\\', \\\\\\'max_candidate_zones\\\\\\': \\\\\\'4\\\\\\', \\\\\\'max_hypotheses\\\\\\': \\\\\\'3\\\\\\', \\\\\\'interruption_resistance\\\\\\': \\\\\\'0.3\\\\\\', \\\\\\'detour_breadth\\\\\\': \\\\\\'3\\\\\\', \\\\\\'detour_depth\\\\\\': \\\\\\'2\\\\\\'}\", \\\\\\'primary_overload_source\\\\\\': \\\\\\'None\\\\\\', \\\\\\'last_overload_tick\\\\\\': \\\\\\'0\\\\\\', \\\\\\'boredom\\\\\\': \\\\\\'{}\\\\\\'}\\', \\'social\\': \"{\\'trust_history\\': \\'{}\\', \\'familiarity_history\\': \\'{}\\', \\'debt_history\\': \\'{}\\', \\'fear_history\\': \\'{}\\', \\'grudge_history\\': \\'{}\\', \\'salience_history\\': \\'{}\\', \\'bonds\\': \\'{}\\', \\'betrayal_count\\': \\'0\\', \\'public_reputation\\': \\'1.0\\', \\'heroism_score\\': \\'0.0\\', \\'notoriety_score\\': \\'0.0\\'}\", \\'biological\\': \"{\\'sleep_debt\\': \\'0.49999999999999994\\', \\'hunger\\': \\'0.9999999999999999\\', \\'rest_pressure\\': \\'0.0\\', \\'last_meal_tick\\': \\'0\\', \\'last_sleep_tick\\': \\'0\\', \\'well_rested_until\\': \\'-1\\'}\", \\'lifecycle\\': \"{\\'age_ticks\\': \\'10\\', \\'max_age_ticks\\': \\'10000\\', \\'is_permadeath\\': \\'False\\', \\'death_tick\\': \\'None\\', \\'death_reason\\': \\'None\\', \\'generation\\': \\'1\\', \\'heir_entity_id\\': \\'None\\', \\'heirlooms\\': \\'[]\\'}\", \\'aptitude\\': \"{\\'learning_rate\\': \\'1.0\\', \\'stamina_efficiency\\': \\'1.0\\', \\'str_apt\\': \\'1.0\\', \\'agi_apt\\': \\'1.0\\', \\'vit_apt\\': \\'1.0\\', \\'end_apt\\': \\'1.0\\', \\'int_apt\\': \\'1.0\\', \\'spi_apt\\': \\'1.0\\', \\'wis_apt\\': \\'1.0\\', \\'per_apt\\': \\'1.0\\', \\'cha_apt\\': \\'1.0\\'}\", \\'combat\\': \"{\\'hp\\': \\'50\\', \\'max_hp\\': \\'50\\', \\'atk\\': \\'10\\', \\'def_stat\\': \\'5\\', \\'speed\\': \\'10\\', \\'range\\': \\'1\\', \\'evasion\\': \\'0.05\\', \\'tactical_role\\': \\'VANGUARD\\', \\'action_style\\': \\'0\\', \\'alive\\': \\'True\\'}\", \\'equipment\\': \"{\\'slots\\': \\'{}\\'}\", \\'navigation\\': \"{\\'target\\': \\'None\\', \\'path\\': \\'[]\\', \\'moved_recently\\': \\'False\\', \\'movement_mode\\': \\'WANDER\\', \\'last_failure_reason\\': \\'None\\', \\'wait_count\\': \\'0\\', \\'oscillation_count\\': \\'0\\', \\'last_position\\': \\'None\\', \\'home_position\\': \\'None\\', \\'leash_radius\\': \\'0.0\\', \\'chase_ticks\\': \\'0\\', \\'max_chase_ticks\\': \\'15\\', \\'returning_home\\': \\'False\\'}\", \\'task\\': \"{\\'work_kind\\': \\'ENTITY_ACT\\', \\'payload\\': \\'{}\\'}\", \\'stamina\\': \"{\\'current\\': \\'100.0\\', \\'max_stamina\\': \\'100.0\\', \\'regen_rate\\': \\'2.0\\', \\'rest_regen_rate\\': \\'8.0\\', \\'exhaustion_threshold\\': \\'10.0\\', \\'exhaustion_penalty\\': \\'0.7\\', \\'ATTACK_COST\\': \\'8.0\\', \\'MOVE_COST\\': \\'3.0\\', \\'HARVEST_COST\\': \\'5.0\\', \\'SKILL_COST_MULT\\': \\'1.0\\'}\", \\'wounds\\': \\'[]\\', \\'scars\\': \\'[]\\', \\'latest_intent_results\\': \\'[]\\', \\'group_id\\': \\'10007\\', \\'properties\\': \\'{}\\'}, 7: {\\'id\\': \\'7\\', \\'kind\\': \\'monster\\', \\'position\\': \\'(18.0, 7.0)\\', \\'readiness\\': \\'100.0\\', \\'active\\': \\'True\\', \\'interaction\\': \"{\\'target_node_id\\': \\'None\\', \\'progress\\': \\'0\\', \\'start_tick\\': \\'0\\'}\", \\'identity\\': \\'{\\\\\\'role\\\\\\': 2, \\\\\\'faction\\\\\\': 1, \\\\\\'known_recipes\\\\\\': [], \\\\\\'craft_target\\\\\\': \\\\\\'None\\\\\\', \\\\\\'evolution_level\\\\\\': \\\\\\'1\\\\\\', \\\\\\'evolution_points\\\\\\': \\\\\\'0\\\\\\', \\\\\\'veterancy_points\\\\\\': \\\\\\'0\\\\\\', \\\\\\'veterancy_rank\\\\\\': \\\\\\'0\\\\\\', \\\\\\'unspent_ap\\\\\\': \\\\\\'0\\\\\\', \\\\\\'class_id\\\\\\': \\\\\\'NOVICE\\\\\\', \\\\\\'learned_skills\\\\\\': [], \\\\\\'active_breakthroughs\\\\\\': [], \\\\\\'personality\\\\\\': \"{\\\\\\'greed\\\\\\': \\\\\\'0.0\\\\\\', \\\\\\'bravery\\\\\\': \\\\\\'0.0\\\\\\', \\\\\\'sociability\\\\\\': \\\\\\'0.0\\\\\\', \\\\\\'industry\\\\\\': \\\\\\'0.0\\\\\\'}\", \\\\\\'life_stage\\\\\\': \\\\\\'ADULT\\\\\\'}\\', \\'attributes\\': \"{\\'strength\\': \\'5\\', \\'agility\\': \\'5\\', \\'vitality\\': \\'5\\', \\'endurance\\': \\'5\\', \\'intelligence\\': \\'5\\', \\'spirit\\': \\'5\\', \\'wisdom\\': \\'5\\', \\'perception\\': \\'5\\', \\'charisma\\': \\'5\\'}\", \\'inventory\\': \"{\\'items\\': \\'[]\\', \\'gold\\': \\'10\\', \\'max_slots\\': \\'16\\', \\'max_weight\\': \\'50.0\\'}\", \\'strategic\\': \\'{\\\\\\'home_region_id\\\\\\': \\\\\\'None\\\\\\', \\\\\\'blockers\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'leads\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'directives\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'projects\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'concerns\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'candidate_zones\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'hypotheses\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'source_trust\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'contracts\\\\\\': \"{\\\\\\'team_b_contract_7\\\\\\': {\\\\\\'id\\\\\\': \\\\\\'team_b_contract_7\\\\\\', \\\\\\'kind\\\\\\': \\\\\\'PROTECTION\\\\\\', \\\\\\'source_id\\\\\\': \\\\\\'6\\\\\\', \\\\\\'target_id\\\\\\': \\\\\\'7\\\\\\', \\\\\\'terms\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'expiry_tick\\\\\\': \\\\\\'-1\\\\\\', \\\\\\'status\\\\\\': \\\\\\'ACTIVE\\\\\\', \\\\\\'created_tick\\\\\\': \\\\\\'0\\\\\\'}}\", \\\\\\'current_project_id\\\\\\': \\\\\\'None\\\\\\', \\\\\\'current_objective_id\\\\\\': \\\\\\'None\\\\\\', \\\\\\'profile\\\\\\': \"{\\\\\\'max_active_projects\\\\\\': \\\\\\'3\\\\\\', \\\\\\'max_leads\\\\\\': \\\\\\'8\\\\\\', \\\\\\'max_concerns\\\\\\': \\\\\\'5\\\\\\', \\\\\\'max_candidate_zones\\\\\\': \\\\\\'4\\\\\\', \\\\\\'max_hypotheses\\\\\\': \\\\\\'3\\\\\\', \\\\\\'interruption_resistance\\\\\\': \\\\\\'0.3\\\\\\', \\\\\\'detour_breadth\\\\\\': \\\\\\'3\\\\\\', \\\\\\'detour_depth\\\\\\': \\\\\\'2\\\\\\'}\", \\\\\\'primary_overload_source\\\\\\': \\\\\\'None\\\\\\', \\\\\\'last_overload_tick\\\\\\': \\\\\\'0\\\\\\', \\\\\\'boredom\\\\\\': \\\\\\'{}\\\\\\'}\\', \\'social\\': \"{\\'trust_history\\': \\'{}\\', \\'familiarity_history\\': \\'{}\\', \\'debt_history\\': \\'{}\\', \\'fear_history\\': \\'{}\\', \\'grudge_history\\': \\'{}\\', \\'salience_history\\': \\'{}\\', \\'bonds\\': \\'{}\\', \\'betrayal_count\\': \\'0\\', \\'public_reputation\\': \\'1.0\\', \\'heroism_score\\': \\'0.0\\', \\'notoriety_score\\': \\'0.0\\'}\", \\'biological\\': \"{\\'sleep_debt\\': \\'0.49999999999999994\\', \\'hunger\\': \\'0.9999999999999999\\', \\'rest_pressure\\': \\'0.0\\', \\'last_meal_tick\\': \\'0\\', \\'last_sleep_tick\\': \\'0\\', \\'well_rested_until\\': \\'-1\\'}\", \\'lifecycle\\': \"{\\'age_ticks\\': \\'10\\', \\'max_age_ticks\\': \\'10000\\', \\'is_permadeath\\': \\'False\\', \\'death_tick\\': \\'None\\', \\'death_reason\\': \\'None\\', \\'generation\\': \\'1\\', \\'heir_entity_id\\': \\'None\\', \\'heirlooms\\': \\'[]\\'}\", \\'aptitude\\': \"{\\'learning_rate\\': \\'1.0\\', \\'stamina_efficiency\\': \\'1.0\\', \\'str_apt\\': \\'1.0\\', \\'agi_apt\\': \\'1.0\\', \\'vit_apt\\': \\'1.0\\', \\'end_apt\\': \\'1.0\\', \\'int_apt\\': \\'1.0\\', \\'spi_apt\\': \\'1.0\\', \\'wis_apt\\': \\'1.0\\', \\'per_apt\\': \\'1.0\\', \\'cha_apt\\': \\'1.0\\'}\", \\'combat\\': \"{\\'hp\\': \\'50\\', \\'max_hp\\': \\'50\\', \\'atk\\': \\'10\\', \\'def_stat\\': \\'5\\', \\'speed\\': \\'10\\', \\'range\\': \\'1\\', \\'evasion\\': \\'0.05\\', \\'tactical_role\\': \\'VANGUARD\\', \\'action_style\\': \\'0\\', \\'alive\\': \\'True\\'}\", \\'equipment\\': \"{\\'slots\\': \\'{}\\'}\", \\'navigation\\': \"{\\'target\\': \\'None\\', \\'path\\': \\'[]\\', \\'moved_recently\\': \\'False\\', \\'movement_mode\\': \\'WANDER\\', \\'last_failure_reason\\': \\'None\\', \\'wait_count\\': \\'0\\', \\'oscillation_count\\': \\'0\\', \\'last_position\\': \\'None\\', \\'home_position\\': \\'None\\', \\'leash_radius\\': \\'0.0\\', \\'chase_ticks\\': \\'0\\', \\'max_chase_ticks\\': \\'15\\', \\'returning_home\\': \\'False\\'}\", \\'task\\': \"{\\'work_kind\\': \\'ENTITY_ACT\\', \\'payload\\': \\'{}\\'}\", \\'stamina\\': \"{\\'current\\': \\'100.0\\', \\'max_stamina\\': \\'100.0\\', \\'regen_rate\\': \\'2.0\\', \\'rest_regen_rate\\': \\'8.0\\', \\'exhaustion_threshold\\': \\'10.0\\', \\'exhaustion_penalty\\': \\'0.7\\', \\'ATTACK_COST\\': \\'8.0\\', \\'MOVE_COST\\': \\'3.0\\', \\'HARVEST_COST\\': \\'5.0\\', \\'SKILL_COST_MULT\\': \\'1.0\\'}\", \\'wounds\\': \\'[]\\', \\'scars\\': \\'[]\\', \\'latest_intent_results\\': \\'[]\\', \\'group_id\\': \\'10004\\', \\'properties\\': \\'{}\\'}, 8: {\\'id\\': \\'8\\', \\'kind\\': \\'monster\\', \\'position\\': \\'(18.0, 9.0)\\', \\'readiness\\': \\'100.0\\', \\'active\\': \\'True\\', \\'interaction\\': \"{\\'target_node_id\\': \\'None\\', \\'progress\\': \\'0\\', \\'start_tick\\': \\'0\\'}\", \\'identity\\': \\'{\\\\\\'role\\\\\\': 2, \\\\\\'faction\\\\\\': 1, \\\\\\'known_recipes\\\\\\': [], \\\\\\'craft_target\\\\\\': \\\\\\'None\\\\\\', \\\\\\'evolution_level\\\\\\': \\\\\\'1\\\\\\', \\\\\\'evolution_points\\\\\\': \\\\\\'0\\\\\\', \\\\\\'veterancy_points\\\\\\': \\\\\\'0\\\\\\', \\\\\\'veterancy_rank\\\\\\': \\\\\\'0\\\\\\', \\\\\\'unspent_ap\\\\\\': \\\\\\'0\\\\\\', \\\\\\'class_id\\\\\\': \\\\\\'NOVICE\\\\\\', \\\\\\'learned_skills\\\\\\': [], \\\\\\'active_breakthroughs\\\\\\': [], \\\\\\'personality\\\\\\': \"{\\\\\\'greed\\\\\\': \\\\\\'0.0\\\\\\', \\\\\\'bravery\\\\\\': \\\\\\'0.0\\\\\\', \\\\\\'sociability\\\\\\': \\\\\\'0.0\\\\\\', \\\\\\'industry\\\\\\': \\\\\\'0.0\\\\\\'}\", \\\\\\'life_stage\\\\\\': \\\\\\'ADULT\\\\\\'}\\', \\'attributes\\': \"{\\'strength\\': \\'5\\', \\'agility\\': \\'5\\', \\'vitality\\': \\'5\\', \\'endurance\\': \\'5\\', \\'intelligence\\': \\'5\\', \\'spirit\\': \\'5\\', \\'wisdom\\': \\'5\\', \\'perception\\': \\'5\\', \\'charisma\\': \\'5\\'}\", \\'inventory\\': \"{\\'items\\': \\'[]\\', \\'gold\\': \\'10\\', \\'max_slots\\': \\'16\\', \\'max_weight\\': \\'50.0\\'}\", \\'strategic\\': \\'{\\\\\\'home_region_id\\\\\\': \\\\\\'None\\\\\\', \\\\\\'blockers\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'leads\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'directives\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'projects\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'concerns\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'candidate_zones\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'hypotheses\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'source_trust\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'contracts\\\\\\': \"{\\\\\\'team_b_contract_8\\\\\\': {\\\\\\'id\\\\\\': \\\\\\'team_b_contract_8\\\\\\', \\\\\\'kind\\\\\\': \\\\\\'PROTECTION\\\\\\', \\\\\\'source_id\\\\\\': \\\\\\'6\\\\\\', \\\\\\'target_id\\\\\\': \\\\\\'8\\\\\\', \\\\\\'terms\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'expiry_tick\\\\\\': \\\\\\'-1\\\\\\', \\\\\\'status\\\\\\': \\\\\\'ACTIVE\\\\\\', \\\\\\'created_tick\\\\\\': \\\\\\'0\\\\\\'}}\", \\\\\\'current_project_id\\\\\\': \\\\\\'None\\\\\\', \\\\\\'current_objective_id\\\\\\': \\\\\\'None\\\\\\', \\\\\\'profile\\\\\\': \"{\\\\\\'max_active_projects\\\\\\': \\\\\\'3\\\\\\', \\\\\\'max_leads\\\\\\': \\\\\\'8\\\\\\', \\\\\\'max_concerns\\\\\\': \\\\\\'5\\\\\\', \\\\\\'max_candidate_zones\\\\\\': \\\\\\'4\\\\\\', \\\\\\'max_hypotheses\\\\\\': \\\\\\'3\\\\\\', \\\\\\'interruption_resistance\\\\\\': \\\\\\'0.3\\\\\\', \\\\\\'detour_breadth\\\\\\': \\\\\\'3\\\\\\', \\\\\\'detour_depth\\\\\\': \\\\\\'2\\\\\\'}\", \\\\\\'primary_overload_source\\\\\\': \\\\\\'None\\\\\\', \\\\\\'last_overload_tick\\\\\\': \\\\\\'0\\\\\\', \\\\\\'boredom\\\\\\': \\\\\\'{}\\\\\\'}\\', \\'social\\': \"{\\'trust_history\\': \\'{}\\', \\'familiarity_history\\': \\'{}\\', \\'debt_history\\': \\'{}\\', \\'fear_history\\': \\'{}\\', \\'grudge_history\\': \\'{}\\', \\'salience_history\\': \\'{}\\', \\'bonds\\': \\'{}\\', \\'betrayal_count\\': \\'0\\', \\'public_reputation\\': \\'1.0\\', \\'heroism_score\\': \\'0.0\\', \\'notoriety_score\\': \\'0.0\\'}\", \\'biological\\': \"{\\'sleep_debt\\': \\'0.49999999999999994\\', \\'hunger\\': \\'0.9999999999999999\\', \\'rest_pressure\\': \\'0.0\\', \\'last_meal_tick\\': \\'0\\', \\'last_sleep_tick\\': \\'0\\', \\'well_rested_until\\': \\'-1\\'}\", \\'lifecycle\\': \"{\\'age_ticks\\': \\'10\\', \\'max_age_ticks\\': \\'10000\\', \\'is_permadeath\\': \\'False\\', \\'death_tick\\': \\'None\\', \\'death_reason\\': \\'None\\', \\'generation\\': \\'1\\', \\'heir_entity_id\\': \\'None\\', \\'heirlooms\\': \\'[]\\'}\", \\'aptitude\\': \"{\\'learning_rate\\': \\'1.0\\', \\'stamina_efficiency\\': \\'1.0\\', \\'str_apt\\': \\'1.0\\', \\'agi_apt\\': \\'1.0\\', \\'vit_apt\\': \\'1.0\\', \\'end_apt\\': \\'1.0\\', \\'int_apt\\': \\'1.0\\', \\'spi_apt\\': \\'1.0\\', \\'wis_apt\\': \\'1.0\\', \\'per_apt\\': \\'1.0\\', \\'cha_apt\\': \\'1.0\\'}\", \\'combat\\': \"{\\'hp\\': \\'50\\', \\'max_hp\\': \\'50\\', \\'atk\\': \\'10\\', \\'def_stat\\': \\'5\\', \\'speed\\': \\'10\\', \\'range\\': \\'1\\', \\'evasion\\': \\'0.05\\', \\'tactical_role\\': \\'VANGUARD\\', \\'action_style\\': \\'0\\', \\'alive\\': \\'True\\'}\", \\'equipment\\': \"{\\'slots\\': \\'{}\\'}\", \\'navigation\\': \"{\\'target\\': \\'None\\', \\'path\\': \\'[]\\', \\'moved_recently\\': \\'False\\', \\'movement_mode\\': \\'WANDER\\', \\'last_failure_reason\\': \\'None\\', \\'wait_count\\': \\'0\\', \\'oscillation_count\\': \\'0\\', \\'last_position\\': \\'None\\', \\'home_position\\': \\'None\\', \\'leash_radius\\': \\'0.0\\', \\'chase_ticks\\': \\'0\\', \\'max_chase_ticks\\': \\'15\\', \\'returning_home\\': \\'False\\'}\", \\'task\\': \"{\\'work_kind\\': \\'ENTITY_ACT\\', \\'payload\\': \\'{}\\'}\", \\'stamina\\': \"{\\'current\\': \\'100.0\\', \\'max_stamina\\': \\'100.0\\', \\'regen_rate\\': \\'2.0\\', \\'rest_regen_rate\\': \\'8.0\\', \\'exhaustion_threshold\\': \\'10.0\\', \\'exhaustion_penalty\\': \\'0.7\\', \\'ATTACK_COST\\': \\'8.0\\', \\'MOVE_COST\\': \\'3.0\\', \\'HARVEST_COST\\': \\'5.0\\', \\'SKILL_COST_MULT\\': \\'1.0\\'}\", \\'wounds\\': \\'[]\\', \\'scars\\': \\'[]\\', \\'latest_intent_results\\': \\'[]\\', \\'group_id\\': \\'10005\\', \\'properties\\': \\'{}\\'}, 9: {\\'id\\': \\'9\\', \\'kind\\': \\'monster\\', \\'position\\': \\'(18.0, 11.0)\\', \\'readiness\\': \\'100.0\\', \\'active\\': \\'True\\', \\'interaction\\': \"{\\'target_node_id\\': \\'None\\', \\'progress\\': \\'0\\', \\'start_tick\\': \\'0\\'}\", \\'identity\\': \\'{\\\\\\'role\\\\\\': 2, \\\\\\'faction\\\\\\': 1, \\\\\\'known_recipes\\\\\\': [], \\\\\\'craft_target\\\\\\': \\\\\\'None\\\\\\', \\\\\\'evolution_level\\\\\\': \\\\\\'1\\\\\\', \\\\\\'evolution_points\\\\\\': \\\\\\'0\\\\\\', \\\\\\'veterancy_points\\\\\\': \\\\\\'0\\\\\\', \\\\\\'veterancy_rank\\\\\\': \\\\\\'0\\\\\\', \\\\\\'unspent_ap\\\\\\': \\\\\\'0\\\\\\', \\\\\\'class_id\\\\\\': \\\\\\'NOVICE\\\\\\', \\\\\\'learned_skills\\\\\\': [], \\\\\\'active_breakthroughs\\\\\\': [], \\\\\\'personality\\\\\\': \"{\\\\\\'greed\\\\\\': \\\\\\'0.0\\\\\\', \\\\\\'bravery\\\\\\': \\\\\\'0.0\\\\\\', \\\\\\'sociability\\\\\\': \\\\\\'0.0\\\\\\', \\\\\\'industry\\\\\\': \\\\\\'0.0\\\\\\'}\", \\\\\\'life_stage\\\\\\': \\\\\\'ADULT\\\\\\'}\\', \\'attributes\\': \"{\\'strength\\': \\'5\\', \\'agility\\': \\'5\\', \\'vitality\\': \\'5\\', \\'endurance\\': \\'5\\', \\'intelligence\\': \\'5\\', \\'spirit\\': \\'5\\', \\'wisdom\\': \\'5\\', \\'perception\\': \\'5\\', \\'charisma\\': \\'5\\'}\", \\'inventory\\': \"{\\'items\\': \\'[]\\', \\'gold\\': \\'10\\', \\'max_slots\\': \\'16\\', \\'max_weight\\': \\'50.0\\'}\", \\'strategic\\': \\'{\\\\\\'home_region_id\\\\\\': \\\\\\'None\\\\\\', \\\\\\'blockers\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'leads\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'directives\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'projects\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'concerns\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'candidate_zones\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'hypotheses\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'source_trust\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'contracts\\\\\\': \"{\\\\\\'team_b_contract_9\\\\\\': {\\\\\\'id\\\\\\': \\\\\\'team_b_contract_9\\\\\\', \\\\\\'kind\\\\\\': \\\\\\'PROTECTION\\\\\\', \\\\\\'source_id\\\\\\': \\\\\\'6\\\\\\', \\\\\\'target_id\\\\\\': \\\\\\'9\\\\\\', \\\\\\'terms\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'expiry_tick\\\\\\': \\\\\\'-1\\\\\\', \\\\\\'status\\\\\\': \\\\\\'ACTIVE\\\\\\', \\\\\\'created_tick\\\\\\': \\\\\\'0\\\\\\'}}\", \\\\\\'current_project_id\\\\\\': \\\\\\'None\\\\\\', \\\\\\'current_objective_id\\\\\\': \\\\\\'None\\\\\\', \\\\\\'profile\\\\\\': \"{\\\\\\'max_active_projects\\\\\\': \\\\\\'3\\\\\\', \\\\\\'max_leads\\\\\\': \\\\\\'8\\\\\\', \\\\\\'max_concerns\\\\\\': \\\\\\'5\\\\\\', \\\\\\'max_candidate_zones\\\\\\': \\\\\\'4\\\\\\', \\\\\\'max_hypotheses\\\\\\': \\\\\\'3\\\\\\', \\\\\\'interruption_resistance\\\\\\': \\\\\\'0.3\\\\\\', \\\\\\'detour_breadth\\\\\\': \\\\\\'3\\\\\\', \\\\\\'detour_depth\\\\\\': \\\\\\'2\\\\\\'}\", \\\\\\'primary_overload_source\\\\\\': \\\\\\'None\\\\\\', \\\\\\'last_overload_tick\\\\\\': \\\\\\'0\\\\\\', \\\\\\'boredom\\\\\\': \\\\\\'{}\\\\\\'}\\', \\'social\\': \"{\\'trust_history\\': \\'{}\\', \\'familiarity_history\\': \\'{}\\', \\'debt_history\\': \\'{}\\', \\'fear_history\\': \\'{}\\', \\'grudge_history\\': \\'{}\\', \\'salience_history\\': \\'{}\\', \\'bonds\\': \\'{}\\', \\'betrayal_count\\': \\'0\\', \\'public_reputation\\': \\'1.0\\', \\'heroism_score\\': \\'0.0\\', \\'notoriety_score\\': \\'0.0\\'}\", \\'biological\\': \"{\\'sleep_debt\\': \\'0.49999999999999994\\', \\'hunger\\': \\'0.9999999999999999\\', \\'rest_pressure\\': \\'0.0\\', \\'last_meal_tick\\': \\'0\\', \\'last_sleep_tick\\': \\'0\\', \\'well_rested_until\\': \\'-1\\'}\", \\'lifecycle\\': \"{\\'age_ticks\\': \\'10\\', \\'max_age_ticks\\': \\'10000\\', \\'is_permadeath\\': \\'False\\', \\'death_tick\\': \\'None\\', \\'death_reason\\': \\'None\\', \\'generation\\': \\'1\\', \\'heir_entity_id\\': \\'None\\', \\'heirlooms\\': \\'[]\\'}\", \\'aptitude\\': \"{\\'learning_rate\\': \\'1.0\\', \\'stamina_efficiency\\': \\'1.0\\', \\'str_apt\\': \\'1.0\\', \\'agi_apt\\': \\'1.0\\', \\'vit_apt\\': \\'1.0\\', \\'end_apt\\': \\'1.0\\', \\'int_apt\\': \\'1.0\\', \\'spi_apt\\': \\'1.0\\', \\'wis_apt\\': \\'1.0\\', \\'per_apt\\': \\'1.0\\', \\'cha_apt\\': \\'1.0\\'}\", \\'combat\\': \"{\\'hp\\': \\'50\\', \\'max_hp\\': \\'50\\', \\'atk\\': \\'10\\', \\'def_stat\\': \\'5\\', \\'speed\\': \\'10\\', \\'range\\': \\'1\\', \\'evasion\\': \\'0.05\\', \\'tactical_role\\': \\'VANGUARD\\', \\'action_style\\': \\'0\\', \\'alive\\': \\'True\\'}\", \\'equipment\\': \"{\\'slots\\': \\'{}\\'}\", \\'navigation\\': \"{\\'target\\': \\'None\\', \\'path\\': \\'[]\\', \\'moved_recently\\': \\'False\\', \\'movement_mode\\': \\'WANDER\\', \\'last_failure_reason\\': \\'None\\', \\'wait_count\\': \\'0\\', \\'oscillation_count\\': \\'0\\', \\'last_position\\': \\'None\\', \\'home_position\\': \\'None\\', \\'leash_radius\\': \\'0.0\\', \\'chase_ticks\\': \\'0\\', \\'max_chase_ticks\\': \\'15\\', \\'returning_home\\': \\'False\\'}\", \\'task\\': \"{\\'work_kind\\': \\'ENTITY_ACT\\', \\'payload\\': \\'{}\\'}\", \\'stamina\\': \"{\\'current\\': \\'100.0\\', \\'max_stamina\\': \\'100.0\\', \\'regen_rate\\': \\'2.0\\', \\'rest_regen_rate\\': \\'8.0\\', \\'exhaustion_threshold\\': \\'10.0\\', \\'exhaustion_penalty\\': \\'0.7\\', \\'ATTACK_COST\\': \\'8.0\\', \\'MOVE_COST\\': \\'3.0\\', \\'HARVEST_COST\\': \\'5.0\\', \\'SKILL_COST_MULT\\': \\'1.0\\'}\", \\'wounds\\': \\'[]\\', \\'scars\\': \\'[]\\', \\'latest_intent_results\\': \\'[]\\', \\'group_id\\': \\'10006\\', \\'properties\\': \\'{}\\'}, 10: {\\'id\\': \\'10\\', \\'kind\\': \\'monster\\', \\'position\\': \\'(18.0, 13.0)\\', \\'readiness\\': \\'100.0\\', \\'active\\': \\'True\\', \\'interaction\\': \"{\\'target_node_id\\': \\'None\\', \\'progress\\': \\'0\\', \\'start_tick\\': \\'0\\'}\", \\'identity\\': \\'{\\\\\\'role\\\\\\': 2, \\\\\\'faction\\\\\\': 1, \\\\\\'known_recipes\\\\\\': [], \\\\\\'craft_target\\\\\\': \\\\\\'None\\\\\\', \\\\\\'evolution_level\\\\\\': \\\\\\'2\\\\\\', \\\\\\'evolution_points\\\\\\': \\\\\\'0\\\\\\', \\\\\\'veterancy_points\\\\\\': \\\\\\'0\\\\\\', \\\\\\'veterancy_rank\\\\\\': \\\\\\'0\\\\\\', \\\\\\'unspent_ap\\\\\\': \\\\\\'0\\\\\\', \\\\\\'class_id\\\\\\': \\\\\\'NOVICE\\\\\\', \\\\\\'learned_skills\\\\\\': [], \\\\\\'active_breakthroughs\\\\\\': [], \\\\\\'personality\\\\\\': \"{\\\\\\'greed\\\\\\': \\\\\\'0.0\\\\\\', \\\\\\'bravery\\\\\\': \\\\\\'0.0\\\\\\', \\\\\\'sociability\\\\\\': \\\\\\'0.0\\\\\\', \\\\\\'industry\\\\\\': \\\\\\'0.0\\\\\\'}\", \\\\\\'life_stage\\\\\\': \\\\\\'ADULT\\\\\\'}\\', \\'attributes\\': \"{\\'strength\\': \\'5\\', \\'agility\\': \\'5\\', \\'vitality\\': \\'5\\', \\'endurance\\': \\'5\\', \\'intelligence\\': \\'5\\', \\'spirit\\': \\'5\\', \\'wisdom\\': \\'5\\', \\'perception\\': \\'5\\', \\'charisma\\': \\'5\\'}\", \\'inventory\\': \"{\\'items\\': \\'[]\\', \\'gold\\': \\'10\\', \\'max_slots\\': \\'16\\', \\'max_weight\\': \\'50.0\\'}\", \\'strategic\\': \\'{\\\\\\'home_region_id\\\\\\': \\\\\\'None\\\\\\', \\\\\\'blockers\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'leads\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'directives\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'projects\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'concerns\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'candidate_zones\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'hypotheses\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'source_trust\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'contracts\\\\\\': \"{\\\\\\'team_b_contract_10\\\\\\': {\\\\\\'id\\\\\\': \\\\\\'team_b_contract_10\\\\\\', \\\\\\'kind\\\\\\': \\\\\\'PROTECTION\\\\\\', \\\\\\'source_id\\\\\\': \\\\\\'6\\\\\\', \\\\\\'target_id\\\\\\': \\\\\\'10\\\\\\', \\\\\\'terms\\\\\\': \\\\\\'{}\\\\\\', \\\\\\'expiry_tick\\\\\\': \\\\\\'-1\\\\\\', \\\\\\'status\\\\\\': \\\\\\'ACTIVE\\\\\\', \\\\\\'created_tick\\\\\\': \\\\\\'0\\\\\\'}}\", \\\\\\'current_project_id\\\\\\': \\\\\\'None\\\\\\', \\\\\\'current_objective_id\\\\\\': \\\\\\'None\\\\\\', \\\\\\'profile\\\\\\': \"{\\\\\\'max_active_projects\\\\\\': \\\\\\'3\\\\\\', \\\\\\'max_leads\\\\\\': \\\\\\'8\\\\\\', \\\\\\'max_concerns\\\\\\': \\\\\\'5\\\\\\', \\\\\\'max_candidate_zones\\\\\\': \\\\\\'4\\\\\\', \\\\\\'max_hypotheses\\\\\\': \\\\\\'3\\\\\\', \\\\\\'interruption_resistance\\\\\\': \\\\\\'0.3\\\\\\', \\\\\\'detour_breadth\\\\\\': \\\\\\'3\\\\\\', \\\\\\'detour_depth\\\\\\': \\\\\\'2\\\\\\'}\", \\\\\\'primary_overload_source\\\\\\': \\\\\\'None\\\\\\', \\\\\\'last_overload_tick\\\\\\': \\\\\\'0\\\\\\', \\\\\\'boredom\\\\\\': \\\\\\'{}\\\\\\'}\\', \\'social\\': \"{\\'trust_history\\': \\'{}\\', \\'familiarity_history\\': \\'{}\\', \\'debt_history\\': \\'{}\\', \\'fear_history\\': \\'{}\\', \\'grudge_history\\': \\'{}\\', \\'salience_history\\': \\'{}\\', \\'bonds\\': \\'{}\\', \\'betrayal_count\\': \\'0\\', \\'public_reputation\\': \\'1.0\\', \\'heroism_score\\': \\'0.0\\', \\'notoriety_score\\': \\'0.0\\'}\", \\'biological\\': \"{\\'sleep_debt\\': \\'0.49999999999999994\\', \\'hunger\\': \\'0.9999999999999999\\', \\'rest_pressure\\': \\'0.0\\', \\'last_meal_tick\\': \\'0\\', \\'last_sleep_tick\\': \\'0\\', \\'well_rested_until\\': \\'-1\\'}\", \\'lifecycle\\': \"{\\'age_ticks\\': \\'10\\', \\'max_age_ticks\\': \\'10000\\', \\'is_permadeath\\': \\'False\\', \\'death_tick\\': \\'None\\', \\'death_reason\\': \\'None\\', \\'generation\\': \\'1\\', \\'heir_entity_id\\': \\'None\\', \\'heirlooms\\': \\'[]\\'}\", \\'aptitude\\': \"{\\'learning_rate\\': \\'1.0\\', \\'stamina_efficiency\\': \\'1.0\\', \\'str_apt\\': \\'1.0\\', \\'agi_apt\\': \\'1.0\\', \\'vit_apt\\': \\'1.0\\', \\'end_apt\\': \\'1.0\\', \\'int_apt\\': \\'1.0\\', \\'spi_apt\\': \\'1.0\\', \\'wis_apt\\': \\'1.0\\', \\'per_apt\\': \\'1.0\\', \\'cha_apt\\': \\'1.0\\'}\", \\'combat\\': \"{\\'hp\\': \\'50\\', \\'max_hp\\': \\'50\\', \\'atk\\': \\'10\\', \\'def_stat\\': \\'5\\', \\'speed\\': \\'10\\', \\'range\\': \\'1\\', \\'evasion\\': \\'0.05\\', \\'tactical_role\\': \\'VANGUARD\\', \\'action_style\\': \\'0\\', \\'alive\\': \\'True\\'}\", \\'equipment\\': \"{\\'slots\\': \\'{}\\'}\", \\'navigation\\': \"{\\'target\\': \\'None\\', \\'path\\': \\'[]\\', \\'moved_recently\\': \\'False\\', \\'movement_mode\\': \\'WANDER\\', \\'last_failure_reason\\': \\'None\\', \\'wait_count\\': \\'0\\', \\'oscillation_count\\': \\'0\\', \\'last_position\\': \\'None\\', \\'home_position\\': \\'None\\', \\'leash_radius\\': \\'0.0\\', \\'chase_ticks\\': \\'0\\', \\'max_chase_ticks\\': \\'15\\', \\'returning_home\\': \\'False\\'}\", \\'task\\': \"{\\'work_kind\\': \\'ENTITY_ACT\\', \\'payload\\': \\'{}\\'}\", \\'stamina\\': \"{\\'current\\': \\'100.0\\', \\'max_stamina\\': \\'100.0\\', \\'regen_rate\\': \\'2.0\\', \\'rest_regen_rate\\': \\'8.0\\', \\'exhaustion_threshold\\': \\'10.0\\', \\'exhaustion_penalty\\': \\'0.7\\', \\'ATTACK_COST\\': \\'8.0\\', \\'MOVE_COST\\': \\'3.0\\', \\'HARVEST_COST\\': \\'5.0\\', \\'SKILL_COST_MULT\\': \\'1.0\\'}\", \\'wounds\\': \\'[]\\', \\'scars\\': \\'[]\\', \\'latest_intent_results\\': \\'[]\\', \\'group_id\\': \\'10007\\', \\'properties\\': \\'{}\\'}}', 'resource_nodes': '{}', 'ground_items': '{}', 'corpses': '{}', 'chests': '{}', 'buildings': '{}', 'regions': '{}', 'local_scars': '{}', 'groups': \"{10000: {'id': '10000', 'leader_id': '1', 'member_ids': [1, 2], 'anchor': '(2.0, 6.0)', 'shared_target_id': 'None', 'contract_id': 'team_a_contract_2', 'cohesion_radius': '5.0', 'last_updated_tick': '9', 'roles': '{}', 'str_apt': '1.0', 'int_apt': '1.0', 'agi_apt': '1.0', 'vit_apt': '1.0', 'end_apt': '1.0'}, 10001: {'id': '10001', 'leader_id': '3', 'member_ids': [1, 3], 'anchor': '(2.0, 7.0)', 'shared_target_id': 'None', 'contract_id': 'team_a_contract_3', 'cohesion_radius': '5.0', 'last_updated_tick': '9', 'roles': '{}', 'str_apt': '1.0', 'int_apt': '1.0', 'agi_apt': '1.0', 'vit_apt': '1.0', 'end_apt': '1.0'}, 10002: {'id': '10002', 'leader_id': '4', 'member_ids': [1, 4], 'anchor': '(2.0, 8.0)', 'shared_target_id': 'None', 'contract_id': 'team_a_contract_4', 'cohesion_radius': '5.0', 'last_updated_tick': '9', 'roles': '{}', 'str_apt': '1.0', 'int_apt': '1.0', 'agi_apt': '1.0', 'vit_apt': '1.0', 'end_apt': '1.0'}, 10003: {'id': '10003', 'leader_id': '5', 'member_ids': [1, 5], 'anchor': '(2.0, 9.0)', 'shared_target_id': 'None', 'contract_id': 'team_a_contract_5', 'cohesion_radius': '5.0', 'last_updated_tick': '9', 'roles': '{}', 'str_apt': '1.0', 'int_apt': '1.0', 'agi_apt': '1.0', 'vit_apt': '1.0', 'end_apt': '1.0'}, 10004: {'id': '10004', 'leader_id': '6', 'member_ids': [6, 7], 'anchor': '(18.0, 6.0)', 'shared_target_id': 'None', 'contract_id': 'team_b_contract_7', 'cohesion_radius': '5.0', 'last_updated_tick': '9', 'roles': '{}', 'str_apt': '1.0', 'int_apt': '1.0', 'agi_apt': '1.0', 'vit_apt': '1.0', 'end_apt': '1.0'}, 10005: {'id': '10005', 'leader_id': '8', 'member_ids': [6, 8], 'anchor': '(18.0, 7.0)', 'shared_target_id': 'None', 'contract_id': 'team_b_contract_8', 'cohesion_radius': '5.0', 'last_updated_tick': '9', 'roles': '{}', 'str_apt': '1.0', 'int_apt': '1.0', 'agi_apt': '1.0', 'vit_apt': '1.0', 'end_apt': '1.0'}, 10006: {'id': '10006', 'leader_id': '9', 'member_ids': [6, 9], 'anchor': '(18.0, 8.0)', 'shared_target_id': 'None', 'contract_id': 'team_b_contract_9', 'cohesion_radius': '5.0', 'last_updated_tick': '9', 'roles': '{}', 'str_apt': '1.0', 'int_apt': '1.0', 'agi_apt': '1.0', 'vit_apt': '1.0', 'end_apt': '1.0'}, 10007: {'id': '10007', 'leader_id': '10', 'member_ids': [6, 10], 'anchor': '(18.0, 9.0)', 'shared_target_id': 'None', 'contract_id': 'team_b_contract_10', 'cohesion_radius': '5.0', 'last_updated_tick': '9', 'roles': '{}', 'str_apt': '1.0', 'int_apt': '1.0', 'agi_apt': '1.0', 'vit_apt': '1.0', 'end_apt': '1.0'}}\", 'terrain': '{}', 'global_resources': '{}', 'home_storage': '{}', 'town_center': '(0.0, 0.0)', 'periodic_due_ticks': '{}', 'work_debt': '{}', 'movement_count': '0', 'maturity': '0', 'last_calamity_tick': '0', 'blocked_tiles': [], 'town_tiles': [], 'building_tiles': '{}', 'rng_checkpoint': 'None'}"
+    "peak_rss_mb": 68.98046875,
+    "total_cpu_sec": 0.15862562400000002,
+    "final_state": {
+      "tick": 10,
+      "seed": 42,
+      "world_time": 10,
+      "entities": {
+        "1": {
+          "id": 1,
+          "kind": "hero",
+          "interaction": {
+            "target_node_id": null,
+            "progress": 0.0,
+            "start_tick": 0
+          },
+          "identity": {
+            "role": 0,
+            "faction": 0,
+            "known_recipes": [],
+            "craft_target": null,
+            "evolution_level": 1,
+            "evolution_points": 0,
+            "veterancy_points": 0,
+            "veterancy_rank": 0,
+            "unspent_ap": 0,
+            "class_id": "NOVICE",
+            "learned_skills": [],
+            "traits": [],
+            "active_breakthroughs": [],
+            "cooldowns": {},
+            "personality": {
+              "greed": 0.0,
+              "bravery": 0.0,
+              "sociability": 0.0,
+              "industry": 0.0
+            },
+            "life_stage": "ADULT",
+            "group_id": 10003,
+            "properties": {},
+            "latest_intent_results": []
+          },
+          "attributes": {
+            "strength": 5,
+            "agility": 5,
+            "vitality": 5,
+            "endurance": 5,
+            "intelligence": 5,
+            "spirit": 5,
+            "wisdom": 5,
+            "perception": 5,
+            "charisma": 5
+          },
+          "inventory": {
+            "items": [],
+            "gold": 50,
+            "max_slots": 16,
+            "max_weight": 50
+          },
+          "strategic": {
+            "home_region_id": null,
+            "blockers": {},
+            "leads": {},
+            "directives": {},
+            "projects": {},
+            "concerns": {},
+            "candidate_zones": {},
+            "hypotheses": {},
+            "source_trust": {},
+            "contracts": {
+              "team_a_contract_2": {
+                "id": "team_a_contract_2",
+                "kind": "PROTECTION",
+                "source_id": 1,
+                "target_id": 2,
+                "terms": {},
+                "expiry_tick": -1,
+                "status": "ACTIVE",
+                "created_tick": 0,
+                "negotiation_count": 0
+              },
+              "team_a_contract_3": {
+                "id": "team_a_contract_3",
+                "kind": "PROTECTION",
+                "source_id": 1,
+                "target_id": 3,
+                "terms": {},
+                "expiry_tick": -1,
+                "status": "ACTIVE",
+                "created_tick": 0,
+                "negotiation_count": 0
+              },
+              "team_a_contract_4": {
+                "id": "team_a_contract_4",
+                "kind": "PROTECTION",
+                "source_id": 1,
+                "target_id": 4,
+                "terms": {},
+                "expiry_tick": -1,
+                "status": "ACTIVE",
+                "created_tick": 0,
+                "negotiation_count": 0
+              },
+              "team_a_contract_5": {
+                "id": "team_a_contract_5",
+                "kind": "PROTECTION",
+                "source_id": 1,
+                "target_id": 5,
+                "terms": {},
+                "expiry_tick": -1,
+                "status": "ACTIVE",
+                "created_tick": 0,
+                "negotiation_count": 0
+              }
+            },
+            "turning_points": {},
+            "current_project_id": null,
+            "current_objective_id": null,
+            "profile": {
+              "max_active_projects": 3,
+              "max_leads": 8,
+              "max_concerns": 5,
+              "max_candidate_zones": 4,
+              "max_hypotheses": 3,
+              "interruption_resistance": 0.3,
+              "detour_breadth": 3,
+              "detour_depth": 2
+            },
+            "primary_overload_source": null,
+            "last_overload_tick": 0,
+            "boredom": {}
+          },
+          "social": {
+            "trust_history": {},
+            "familiarity_history": {},
+            "debt_history": {},
+            "fear_history": {},
+            "grudge_history": {},
+            "salience_history": {},
+            "bonds": {},
+            "nemesis_ids": [],
+            "place_attachment": {},
+            "betrayal_count": 0,
+            "betrayal_records": [],
+            "public_reputation": 1.0,
+            "heroism_score": 0.0,
+            "notoriety_score": 0.0,
+            "last_offer_tick": -1,
+            "rejection_count": {}
+          },
+          "biological": {
+            "sleep_debt": 0.49999999999999994,
+            "hunger": 0.9999999999999999,
+            "rest_pressure": 0.0,
+            "last_meal_tick": 0,
+            "last_sleep_tick": 0,
+            "well_rested_until": -1
+          },
+          "lifecycle": {
+            "age_ticks": 10,
+            "max_age_ticks": 10000,
+            "is_permadeath": false,
+            "death_tick": null,
+            "death_reason": null,
+            "generation": 1,
+            "heir_entity_id": null,
+            "heirlooms": [],
+            "active": true
+          },
+          "_readonly_cache": null,
+          "aptitude": {
+            "learning_rate": 1.0,
+            "stamina_efficiency": 1.0,
+            "str_apt": 1.0,
+            "agi_apt": 1.0,
+            "vit_apt": 1.0,
+            "end_apt": 1.0,
+            "int_apt": 1.0,
+            "spi_apt": 1.0,
+            "wis_apt": 1.0,
+            "per_apt": 1.0,
+            "cha_apt": 1.0
+          },
+          "combat": {
+            "hp": 100,
+            "max_hp": 112,
+            "atk": 17,
+            "def_stat": 6,
+            "speed": 10,
+            "range": 1,
+            "evasion": 0.05,
+            "move_cost": 10.0,
+            "tactical_role": "VANGUARD",
+            "action_style": 0,
+            "alive": true,
+            "readiness": 100.0,
+            "wounds": [],
+            "scars": [],
+            "latest_result": null
+          },
+          "equipment": {
+            "slots": {},
+            "durability": {}
+          },
+          "navigation": {
+            "position": [
+              2.0,
+              5.0
+            ],
+            "target": null,
+            "path": [],
+            "moved_recently": false,
+            "movement_mode": "WANDER",
+            "last_failure_reason": null,
+            "wait_count": 0,
+            "oscillation_count": 0,
+            "last_position": null,
+            "home_position": [
+              2.0,
+              5.0
+            ],
+            "leash_radius": 0.0,
+            "chase_ticks": 0,
+            "max_chase_ticks": 15,
+            "returning_home": false
+          },
+          "task": {
+            "work_kind": "REST",
+            "payload": {}
+          },
+          "stamina": {
+            "current": 100.0,
+            "max_stamina": 100.0,
+            "regen_rate": 2.0,
+            "rest_regen_rate": 8.0,
+            "exhaustion_threshold": 10.0,
+            "exhaustion_penalty": 0.7,
+            "ATTACK_COST": 8.0,
+            "MOVE_COST": 3.0,
+            "HARVEST_COST": 5.0,
+            "SKILL_COST_MULT": 1.0
+          }
+        },
+        "2": {
+          "id": 2,
+          "kind": "hero",
+          "interaction": {
+            "target_node_id": null,
+            "progress": 0.0,
+            "start_tick": 0
+          },
+          "identity": {
+            "role": 0,
+            "faction": 0,
+            "known_recipes": [],
+            "craft_target": null,
+            "evolution_level": 1,
+            "evolution_points": 0,
+            "veterancy_points": 0,
+            "veterancy_rank": 0,
+            "unspent_ap": 0,
+            "class_id": "NOVICE",
+            "learned_skills": [],
+            "traits": [],
+            "active_breakthroughs": [],
+            "cooldowns": {},
+            "personality": {
+              "greed": 0.0,
+              "bravery": 0.0,
+              "sociability": 0.0,
+              "industry": 0.0
+            },
+            "life_stage": "ADULT",
+            "group_id": 10000,
+            "properties": {},
+            "latest_intent_results": []
+          },
+          "attributes": {
+            "strength": 5,
+            "agility": 5,
+            "vitality": 5,
+            "endurance": 5,
+            "intelligence": 5,
+            "spirit": 5,
+            "wisdom": 5,
+            "perception": 5,
+            "charisma": 5
+          },
+          "inventory": {
+            "items": [],
+            "gold": 50,
+            "max_slots": 16,
+            "max_weight": 50
+          },
+          "strategic": {
+            "home_region_id": null,
+            "blockers": {},
+            "leads": {},
+            "directives": {},
+            "projects": {},
+            "concerns": {},
+            "candidate_zones": {},
+            "hypotheses": {},
+            "source_trust": {},
+            "contracts": {
+              "team_a_contract_2": {
+                "id": "team_a_contract_2",
+                "kind": "PROTECTION",
+                "source_id": 1,
+                "target_id": 2,
+                "terms": {},
+                "expiry_tick": -1,
+                "status": "ACTIVE",
+                "created_tick": 0,
+                "negotiation_count": 0
+              }
+            },
+            "turning_points": {},
+            "current_project_id": null,
+            "current_objective_id": null,
+            "profile": {
+              "max_active_projects": 3,
+              "max_leads": 8,
+              "max_concerns": 5,
+              "max_candidate_zones": 4,
+              "max_hypotheses": 3,
+              "interruption_resistance": 0.3,
+              "detour_breadth": 3,
+              "detour_depth": 2
+            },
+            "primary_overload_source": null,
+            "last_overload_tick": 0,
+            "boredom": {}
+          },
+          "social": {
+            "trust_history": {},
+            "familiarity_history": {},
+            "debt_history": {},
+            "fear_history": {},
+            "grudge_history": {},
+            "salience_history": {},
+            "bonds": {},
+            "nemesis_ids": [],
+            "place_attachment": {},
+            "betrayal_count": 0,
+            "betrayal_records": [],
+            "public_reputation": 1.0,
+            "heroism_score": 0.0,
+            "notoriety_score": 0.0,
+            "last_offer_tick": -1,
+            "rejection_count": {}
+          },
+          "biological": {
+            "sleep_debt": 0.49999999999999994,
+            "hunger": 0.9999999999999999,
+            "rest_pressure": 0.0,
+            "last_meal_tick": 0,
+            "last_sleep_tick": 0,
+            "well_rested_until": -1
+          },
+          "lifecycle": {
+            "age_ticks": 10,
+            "max_age_ticks": 10000,
+            "is_permadeath": false,
+            "death_tick": null,
+            "death_reason": null,
+            "generation": 1,
+            "heir_entity_id": null,
+            "heirlooms": [],
+            "active": true
+          },
+          "_readonly_cache": null,
+          "aptitude": {
+            "learning_rate": 1.0,
+            "stamina_efficiency": 1.0,
+            "str_apt": 1.0,
+            "agi_apt": 1.0,
+            "vit_apt": 1.0,
+            "end_apt": 1.0,
+            "int_apt": 1.0,
+            "spi_apt": 1.0,
+            "wis_apt": 1.0,
+            "per_apt": 1.0,
+            "cha_apt": 1.0
+          },
+          "combat": {
+            "hp": 100,
+            "max_hp": 112,
+            "atk": 17,
+            "def_stat": 6,
+            "speed": 10,
+            "range": 1,
+            "evasion": 0.05,
+            "move_cost": 10.0,
+            "tactical_role": "VANGUARD",
+            "action_style": 0,
+            "alive": true,
+            "readiness": 100.0,
+            "wounds": [],
+            "scars": [],
+            "latest_result": null
+          },
+          "equipment": {
+            "slots": {},
+            "durability": {}
+          },
+          "navigation": {
+            "position": [
+              2.0,
+              7.0
+            ],
+            "target": null,
+            "path": [],
+            "moved_recently": false,
+            "movement_mode": "WANDER",
+            "last_failure_reason": null,
+            "wait_count": 0,
+            "oscillation_count": 0,
+            "last_position": null,
+            "home_position": [
+              2.0,
+              7.0
+            ],
+            "leash_radius": 0.0,
+            "chase_ticks": 0,
+            "max_chase_ticks": 15,
+            "returning_home": false
+          },
+          "task": {
+            "work_kind": "REST",
+            "payload": {}
+          },
+          "stamina": {
+            "current": 100.0,
+            "max_stamina": 100.0,
+            "regen_rate": 2.0,
+            "rest_regen_rate": 8.0,
+            "exhaustion_threshold": 10.0,
+            "exhaustion_penalty": 0.7,
+            "ATTACK_COST": 8.0,
+            "MOVE_COST": 3.0,
+            "HARVEST_COST": 5.0,
+            "SKILL_COST_MULT": 1.0
+          }
+        },
+        "3": {
+          "id": 3,
+          "kind": "hero",
+          "interaction": {
+            "target_node_id": null,
+            "progress": 0.0,
+            "start_tick": 0
+          },
+          "identity": {
+            "role": 0,
+            "faction": 0,
+            "known_recipes": [],
+            "craft_target": null,
+            "evolution_level": 2,
+            "evolution_points": 0,
+            "veterancy_points": 0,
+            "veterancy_rank": 0,
+            "unspent_ap": 0,
+            "class_id": "NOVICE",
+            "learned_skills": [],
+            "traits": [],
+            "active_breakthroughs": [],
+            "cooldowns": {},
+            "personality": {
+              "greed": 0.0,
+              "bravery": 0.0,
+              "sociability": 0.0,
+              "industry": 0.0
+            },
+            "life_stage": "ADULT",
+            "group_id": 10001,
+            "properties": {},
+            "latest_intent_results": []
+          },
+          "attributes": {
+            "strength": 5,
+            "agility": 5,
+            "vitality": 5,
+            "endurance": 5,
+            "intelligence": 5,
+            "spirit": 5,
+            "wisdom": 5,
+            "perception": 5,
+            "charisma": 5
+          },
+          "inventory": {
+            "items": [],
+            "gold": 50,
+            "max_slots": 16,
+            "max_weight": 50
+          },
+          "strategic": {
+            "home_region_id": null,
+            "blockers": {},
+            "leads": {},
+            "directives": {},
+            "projects": {},
+            "concerns": {},
+            "candidate_zones": {},
+            "hypotheses": {},
+            "source_trust": {},
+            "contracts": {
+              "team_a_contract_3": {
+                "id": "team_a_contract_3",
+                "kind": "PROTECTION",
+                "source_id": 1,
+                "target_id": 3,
+                "terms": {},
+                "expiry_tick": -1,
+                "status": "ACTIVE",
+                "created_tick": 0,
+                "negotiation_count": 0
+              }
+            },
+            "turning_points": {},
+            "current_project_id": null,
+            "current_objective_id": null,
+            "profile": {
+              "max_active_projects": 3,
+              "max_leads": 8,
+              "max_concerns": 5,
+              "max_candidate_zones": 4,
+              "max_hypotheses": 3,
+              "interruption_resistance": 0.3,
+              "detour_breadth": 3,
+              "detour_depth": 2
+            },
+            "primary_overload_source": null,
+            "last_overload_tick": 0,
+            "boredom": {}
+          },
+          "social": {
+            "trust_history": {},
+            "familiarity_history": {},
+            "debt_history": {},
+            "fear_history": {},
+            "grudge_history": {},
+            "salience_history": {},
+            "bonds": {},
+            "nemesis_ids": [],
+            "place_attachment": {},
+            "betrayal_count": 0,
+            "betrayal_records": [],
+            "public_reputation": 1.0,
+            "heroism_score": 0.0,
+            "notoriety_score": 0.0,
+            "last_offer_tick": -1,
+            "rejection_count": {}
+          },
+          "biological": {
+            "sleep_debt": 0.49999999999999994,
+            "hunger": 0.9999999999999999,
+            "rest_pressure": 0.0,
+            "last_meal_tick": 0,
+            "last_sleep_tick": 0,
+            "well_rested_until": -1
+          },
+          "lifecycle": {
+            "age_ticks": 10,
+            "max_age_ticks": 10000,
+            "is_permadeath": false,
+            "death_tick": null,
+            "death_reason": null,
+            "generation": 1,
+            "heir_entity_id": null,
+            "heirlooms": [],
+            "active": true
+          },
+          "_readonly_cache": null,
+          "aptitude": {
+            "learning_rate": 1.0,
+            "stamina_efficiency": 1.0,
+            "str_apt": 1.0,
+            "agi_apt": 1.0,
+            "vit_apt": 1.0,
+            "end_apt": 1.0,
+            "int_apt": 1.0,
+            "spi_apt": 1.0,
+            "wis_apt": 1.0,
+            "per_apt": 1.0,
+            "cha_apt": 1.0
+          },
+          "combat": {
+            "hp": 100,
+            "max_hp": 112,
+            "atk": 17,
+            "def_stat": 6,
+            "speed": 10,
+            "range": 1,
+            "evasion": 0.05,
+            "move_cost": 10.0,
+            "tactical_role": "VANGUARD",
+            "action_style": 0,
+            "alive": true,
+            "readiness": 100.0,
+            "wounds": [],
+            "scars": [],
+            "latest_result": null
+          },
+          "equipment": {
+            "slots": {},
+            "durability": {}
+          },
+          "navigation": {
+            "position": [
+              2.0,
+              9.0
+            ],
+            "target": null,
+            "path": [],
+            "moved_recently": false,
+            "movement_mode": "WANDER",
+            "last_failure_reason": null,
+            "wait_count": 0,
+            "oscillation_count": 0,
+            "last_position": null,
+            "home_position": [
+              2.0,
+              9.0
+            ],
+            "leash_radius": 0.0,
+            "chase_ticks": 0,
+            "max_chase_ticks": 15,
+            "returning_home": false
+          },
+          "task": {
+            "work_kind": "REST",
+            "payload": {}
+          },
+          "stamina": {
+            "current": 100.0,
+            "max_stamina": 100.0,
+            "regen_rate": 2.0,
+            "rest_regen_rate": 8.0,
+            "exhaustion_threshold": 10.0,
+            "exhaustion_penalty": 0.7,
+            "ATTACK_COST": 8.0,
+            "MOVE_COST": 3.0,
+            "HARVEST_COST": 5.0,
+            "SKILL_COST_MULT": 1.0
+          }
+        },
+        "4": {
+          "id": 4,
+          "kind": "hero",
+          "interaction": {
+            "target_node_id": null,
+            "progress": 0.0,
+            "start_tick": 0
+          },
+          "identity": {
+            "role": 0,
+            "faction": 0,
+            "known_recipes": [],
+            "craft_target": null,
+            "evolution_level": 1,
+            "evolution_points": 0,
+            "veterancy_points": 0,
+            "veterancy_rank": 0,
+            "unspent_ap": 0,
+            "class_id": "NOVICE",
+            "learned_skills": [],
+            "traits": [],
+            "active_breakthroughs": [],
+            "cooldowns": {},
+            "personality": {
+              "greed": 0.0,
+              "bravery": 0.0,
+              "sociability": 0.0,
+              "industry": 0.0
+            },
+            "life_stage": "ADULT",
+            "group_id": 10002,
+            "properties": {},
+            "latest_intent_results": []
+          },
+          "attributes": {
+            "strength": 5,
+            "agility": 5,
+            "vitality": 5,
+            "endurance": 5,
+            "intelligence": 5,
+            "spirit": 5,
+            "wisdom": 5,
+            "perception": 5,
+            "charisma": 5
+          },
+          "inventory": {
+            "items": [],
+            "gold": 50,
+            "max_slots": 16,
+            "max_weight": 50
+          },
+          "strategic": {
+            "home_region_id": null,
+            "blockers": {},
+            "leads": {},
+            "directives": {},
+            "projects": {},
+            "concerns": {},
+            "candidate_zones": {},
+            "hypotheses": {},
+            "source_trust": {},
+            "contracts": {
+              "team_a_contract_4": {
+                "id": "team_a_contract_4",
+                "kind": "PROTECTION",
+                "source_id": 1,
+                "target_id": 4,
+                "terms": {},
+                "expiry_tick": -1,
+                "status": "ACTIVE",
+                "created_tick": 0,
+                "negotiation_count": 0
+              }
+            },
+            "turning_points": {},
+            "current_project_id": null,
+            "current_objective_id": null,
+            "profile": {
+              "max_active_projects": 3,
+              "max_leads": 8,
+              "max_concerns": 5,
+              "max_candidate_zones": 4,
+              "max_hypotheses": 3,
+              "interruption_resistance": 0.3,
+              "detour_breadth": 3,
+              "detour_depth": 2
+            },
+            "primary_overload_source": null,
+            "last_overload_tick": 0,
+            "boredom": {}
+          },
+          "social": {
+            "trust_history": {},
+            "familiarity_history": {},
+            "debt_history": {},
+            "fear_history": {},
+            "grudge_history": {},
+            "salience_history": {},
+            "bonds": {},
+            "nemesis_ids": [],
+            "place_attachment": {},
+            "betrayal_count": 0,
+            "betrayal_records": [],
+            "public_reputation": 1.0,
+            "heroism_score": 0.0,
+            "notoriety_score": 0.0,
+            "last_offer_tick": -1,
+            "rejection_count": {}
+          },
+          "biological": {
+            "sleep_debt": 0.49999999999999994,
+            "hunger": 0.9999999999999999,
+            "rest_pressure": 0.0,
+            "last_meal_tick": 0,
+            "last_sleep_tick": 0,
+            "well_rested_until": -1
+          },
+          "lifecycle": {
+            "age_ticks": 10,
+            "max_age_ticks": 10000,
+            "is_permadeath": false,
+            "death_tick": null,
+            "death_reason": null,
+            "generation": 1,
+            "heir_entity_id": null,
+            "heirlooms": [],
+            "active": true
+          },
+          "_readonly_cache": null,
+          "aptitude": {
+            "learning_rate": 1.0,
+            "stamina_efficiency": 1.0,
+            "str_apt": 1.0,
+            "agi_apt": 1.0,
+            "vit_apt": 1.0,
+            "end_apt": 1.0,
+            "int_apt": 1.0,
+            "spi_apt": 1.0,
+            "wis_apt": 1.0,
+            "per_apt": 1.0,
+            "cha_apt": 1.0
+          },
+          "combat": {
+            "hp": 100,
+            "max_hp": 112,
+            "atk": 17,
+            "def_stat": 6,
+            "speed": 10,
+            "range": 1,
+            "evasion": 0.05,
+            "move_cost": 10.0,
+            "tactical_role": "VANGUARD",
+            "action_style": 0,
+            "alive": true,
+            "readiness": 100.0,
+            "wounds": [],
+            "scars": [],
+            "latest_result": null
+          },
+          "equipment": {
+            "slots": {},
+            "durability": {}
+          },
+          "navigation": {
+            "position": [
+              2.0,
+              11.0
+            ],
+            "target": null,
+            "path": [],
+            "moved_recently": false,
+            "movement_mode": "WANDER",
+            "last_failure_reason": null,
+            "wait_count": 0,
+            "oscillation_count": 0,
+            "last_position": null,
+            "home_position": [
+              2.0,
+              11.0
+            ],
+            "leash_radius": 0.0,
+            "chase_ticks": 0,
+            "max_chase_ticks": 15,
+            "returning_home": false
+          },
+          "task": {
+            "work_kind": "REST",
+            "payload": {}
+          },
+          "stamina": {
+            "current": 100.0,
+            "max_stamina": 100.0,
+            "regen_rate": 2.0,
+            "rest_regen_rate": 8.0,
+            "exhaustion_threshold": 10.0,
+            "exhaustion_penalty": 0.7,
+            "ATTACK_COST": 8.0,
+            "MOVE_COST": 3.0,
+            "HARVEST_COST": 5.0,
+            "SKILL_COST_MULT": 1.0
+          }
+        },
+        "5": {
+          "id": 5,
+          "kind": "hero",
+          "interaction": {
+            "target_node_id": null,
+            "progress": 0.0,
+            "start_tick": 0
+          },
+          "identity": {
+            "role": 0,
+            "faction": 0,
+            "known_recipes": [],
+            "craft_target": null,
+            "evolution_level": 2,
+            "evolution_points": 0,
+            "veterancy_points": 0,
+            "veterancy_rank": 0,
+            "unspent_ap": 0,
+            "class_id": "NOVICE",
+            "learned_skills": [],
+            "traits": [],
+            "active_breakthroughs": [],
+            "cooldowns": {},
+            "personality": {
+              "greed": 0.0,
+              "bravery": 0.0,
+              "sociability": 0.0,
+              "industry": 0.0
+            },
+            "life_stage": "ADULT",
+            "group_id": 10003,
+            "properties": {},
+            "latest_intent_results": []
+          },
+          "attributes": {
+            "strength": 5,
+            "agility": 5,
+            "vitality": 5,
+            "endurance": 5,
+            "intelligence": 5,
+            "spirit": 5,
+            "wisdom": 5,
+            "perception": 5,
+            "charisma": 5
+          },
+          "inventory": {
+            "items": [],
+            "gold": 50,
+            "max_slots": 16,
+            "max_weight": 50
+          },
+          "strategic": {
+            "home_region_id": null,
+            "blockers": {},
+            "leads": {},
+            "directives": {},
+            "projects": {},
+            "concerns": {},
+            "candidate_zones": {},
+            "hypotheses": {},
+            "source_trust": {},
+            "contracts": {
+              "team_a_contract_5": {
+                "id": "team_a_contract_5",
+                "kind": "PROTECTION",
+                "source_id": 1,
+                "target_id": 5,
+                "terms": {},
+                "expiry_tick": -1,
+                "status": "ACTIVE",
+                "created_tick": 0,
+                "negotiation_count": 0
+              }
+            },
+            "turning_points": {},
+            "current_project_id": null,
+            "current_objective_id": null,
+            "profile": {
+              "max_active_projects": 3,
+              "max_leads": 8,
+              "max_concerns": 5,
+              "max_candidate_zones": 4,
+              "max_hypotheses": 3,
+              "interruption_resistance": 0.3,
+              "detour_breadth": 3,
+              "detour_depth": 2
+            },
+            "primary_overload_source": null,
+            "last_overload_tick": 0,
+            "boredom": {}
+          },
+          "social": {
+            "trust_history": {},
+            "familiarity_history": {},
+            "debt_history": {},
+            "fear_history": {},
+            "grudge_history": {},
+            "salience_history": {},
+            "bonds": {},
+            "nemesis_ids": [],
+            "place_attachment": {},
+            "betrayal_count": 0,
+            "betrayal_records": [],
+            "public_reputation": 1.0,
+            "heroism_score": 0.0,
+            "notoriety_score": 0.0,
+            "last_offer_tick": -1,
+            "rejection_count": {}
+          },
+          "biological": {
+            "sleep_debt": 0.49999999999999994,
+            "hunger": 0.9999999999999999,
+            "rest_pressure": 0.0,
+            "last_meal_tick": 0,
+            "last_sleep_tick": 0,
+            "well_rested_until": -1
+          },
+          "lifecycle": {
+            "age_ticks": 10,
+            "max_age_ticks": 10000,
+            "is_permadeath": false,
+            "death_tick": null,
+            "death_reason": null,
+            "generation": 1,
+            "heir_entity_id": null,
+            "heirlooms": [],
+            "active": true
+          },
+          "_readonly_cache": null,
+          "aptitude": {
+            "learning_rate": 1.0,
+            "stamina_efficiency": 1.0,
+            "str_apt": 1.0,
+            "agi_apt": 1.0,
+            "vit_apt": 1.0,
+            "end_apt": 1.0,
+            "int_apt": 1.0,
+            "spi_apt": 1.0,
+            "wis_apt": 1.0,
+            "per_apt": 1.0,
+            "cha_apt": 1.0
+          },
+          "combat": {
+            "hp": 100,
+            "max_hp": 112,
+            "atk": 17,
+            "def_stat": 6,
+            "speed": 10,
+            "range": 1,
+            "evasion": 0.05,
+            "move_cost": 10.0,
+            "tactical_role": "VANGUARD",
+            "action_style": 0,
+            "alive": true,
+            "readiness": 100.0,
+            "wounds": [],
+            "scars": [],
+            "latest_result": null
+          },
+          "equipment": {
+            "slots": {},
+            "durability": {}
+          },
+          "navigation": {
+            "position": [
+              2.0,
+              13.0
+            ],
+            "target": null,
+            "path": [],
+            "moved_recently": false,
+            "movement_mode": "WANDER",
+            "last_failure_reason": null,
+            "wait_count": 0,
+            "oscillation_count": 0,
+            "last_position": null,
+            "home_position": [
+              2.0,
+              13.0
+            ],
+            "leash_radius": 0.0,
+            "chase_ticks": 0,
+            "max_chase_ticks": 15,
+            "returning_home": false
+          },
+          "task": {
+            "work_kind": "REST",
+            "payload": {}
+          },
+          "stamina": {
+            "current": 100.0,
+            "max_stamina": 100.0,
+            "regen_rate": 2.0,
+            "rest_regen_rate": 8.0,
+            "exhaustion_threshold": 10.0,
+            "exhaustion_penalty": 0.7,
+            "ATTACK_COST": 8.0,
+            "MOVE_COST": 3.0,
+            "HARVEST_COST": 5.0,
+            "SKILL_COST_MULT": 1.0
+          }
+        },
+        "6": {
+          "id": 6,
+          "kind": "monster",
+          "interaction": {
+            "target_node_id": null,
+            "progress": 0.0,
+            "start_tick": 0
+          },
+          "identity": {
+            "role": 2,
+            "faction": 1,
+            "known_recipes": [],
+            "craft_target": null,
+            "evolution_level": 2,
+            "evolution_points": 0,
+            "veterancy_points": 0,
+            "veterancy_rank": 0,
+            "unspent_ap": 0,
+            "class_id": "NOVICE",
+            "learned_skills": [],
+            "traits": [],
+            "active_breakthroughs": [],
+            "cooldowns": {},
+            "personality": {
+              "greed": 0.0,
+              "bravery": 0.0,
+              "sociability": 0.0,
+              "industry": 0.0
+            },
+            "life_stage": "ADULT",
+            "group_id": 10007,
+            "properties": {},
+            "latest_intent_results": []
+          },
+          "attributes": {
+            "strength": 5,
+            "agility": 5,
+            "vitality": 5,
+            "endurance": 5,
+            "intelligence": 5,
+            "spirit": 5,
+            "wisdom": 5,
+            "perception": 5,
+            "charisma": 5
+          },
+          "inventory": {
+            "items": [],
+            "gold": 10,
+            "max_slots": 16,
+            "max_weight": 50
+          },
+          "strategic": {
+            "home_region_id": null,
+            "blockers": {},
+            "leads": {},
+            "directives": {},
+            "projects": {},
+            "concerns": {},
+            "candidate_zones": {},
+            "hypotheses": {},
+            "source_trust": {},
+            "contracts": {
+              "team_b_contract_7": {
+                "id": "team_b_contract_7",
+                "kind": "PROTECTION",
+                "source_id": 6,
+                "target_id": 7,
+                "terms": {},
+                "expiry_tick": -1,
+                "status": "ACTIVE",
+                "created_tick": 0,
+                "negotiation_count": 0
+              },
+              "team_b_contract_8": {
+                "id": "team_b_contract_8",
+                "kind": "PROTECTION",
+                "source_id": 6,
+                "target_id": 8,
+                "terms": {},
+                "expiry_tick": -1,
+                "status": "ACTIVE",
+                "created_tick": 0,
+                "negotiation_count": 0
+              },
+              "team_b_contract_9": {
+                "id": "team_b_contract_9",
+                "kind": "PROTECTION",
+                "source_id": 6,
+                "target_id": 9,
+                "terms": {},
+                "expiry_tick": -1,
+                "status": "ACTIVE",
+                "created_tick": 0,
+                "negotiation_count": 0
+              },
+              "team_b_contract_10": {
+                "id": "team_b_contract_10",
+                "kind": "PROTECTION",
+                "source_id": 6,
+                "target_id": 10,
+                "terms": {},
+                "expiry_tick": -1,
+                "status": "ACTIVE",
+                "created_tick": 0,
+                "negotiation_count": 0
+              }
+            },
+            "turning_points": {},
+            "current_project_id": null,
+            "current_objective_id": null,
+            "profile": {
+              "max_active_projects": 3,
+              "max_leads": 8,
+              "max_concerns": 5,
+              "max_candidate_zones": 4,
+              "max_hypotheses": 3,
+              "interruption_resistance": 0.3,
+              "detour_breadth": 3,
+              "detour_depth": 2
+            },
+            "primary_overload_source": null,
+            "last_overload_tick": 0,
+            "boredom": {}
+          },
+          "social": {
+            "trust_history": {},
+            "familiarity_history": {},
+            "debt_history": {},
+            "fear_history": {},
+            "grudge_history": {},
+            "salience_history": {},
+            "bonds": {},
+            "nemesis_ids": [],
+            "place_attachment": {},
+            "betrayal_count": 0,
+            "betrayal_records": [],
+            "public_reputation": 1.0,
+            "heroism_score": 0.0,
+            "notoriety_score": 0.0,
+            "last_offer_tick": -1,
+            "rejection_count": {}
+          },
+          "biological": {
+            "sleep_debt": 0.49999999999999994,
+            "hunger": 0.9999999999999999,
+            "rest_pressure": 0.0,
+            "last_meal_tick": 0,
+            "last_sleep_tick": 0,
+            "well_rested_until": -1
+          },
+          "lifecycle": {
+            "age_ticks": 10,
+            "max_age_ticks": 10000,
+            "is_permadeath": false,
+            "death_tick": null,
+            "death_reason": null,
+            "generation": 1,
+            "heir_entity_id": null,
+            "heirlooms": [],
+            "active": true
+          },
+          "_readonly_cache": null,
+          "aptitude": {
+            "learning_rate": 1.0,
+            "stamina_efficiency": 1.0,
+            "str_apt": 1.0,
+            "agi_apt": 1.0,
+            "vit_apt": 1.0,
+            "end_apt": 1.0,
+            "int_apt": 1.0,
+            "spi_apt": 1.0,
+            "wis_apt": 1.0,
+            "per_apt": 1.0,
+            "cha_apt": 1.0
+          },
+          "combat": {
+            "hp": 50,
+            "max_hp": 62,
+            "atk": 12,
+            "def_stat": 6,
+            "speed": 10,
+            "range": 1,
+            "evasion": 0.05,
+            "move_cost": 10.0,
+            "tactical_role": "VANGUARD",
+            "action_style": 0,
+            "alive": true,
+            "readiness": 100.0,
+            "wounds": [],
+            "scars": [],
+            "latest_result": null
+          },
+          "equipment": {
+            "slots": {},
+            "durability": {}
+          },
+          "navigation": {
+            "position": [
+              18.0,
+              5.0
+            ],
+            "target": null,
+            "path": [],
+            "moved_recently": false,
+            "movement_mode": "WANDER",
+            "last_failure_reason": null,
+            "wait_count": 0,
+            "oscillation_count": 0,
+            "last_position": null,
+            "home_position": [
+              18.0,
+              5.0
+            ],
+            "leash_radius": 10.0,
+            "chase_ticks": 0,
+            "max_chase_ticks": 15,
+            "returning_home": false
+          },
+          "task": {
+            "work_kind": "REST",
+            "payload": {}
+          },
+          "stamina": {
+            "current": 100.0,
+            "max_stamina": 100.0,
+            "regen_rate": 2.0,
+            "rest_regen_rate": 8.0,
+            "exhaustion_threshold": 10.0,
+            "exhaustion_penalty": 0.7,
+            "ATTACK_COST": 8.0,
+            "MOVE_COST": 3.0,
+            "HARVEST_COST": 5.0,
+            "SKILL_COST_MULT": 1.0
+          }
+        },
+        "7": {
+          "id": 7,
+          "kind": "monster",
+          "interaction": {
+            "target_node_id": null,
+            "progress": 0.0,
+            "start_tick": 0
+          },
+          "identity": {
+            "role": 2,
+            "faction": 1,
+            "known_recipes": [],
+            "craft_target": null,
+            "evolution_level": 1,
+            "evolution_points": 0,
+            "veterancy_points": 0,
+            "veterancy_rank": 0,
+            "unspent_ap": 0,
+            "class_id": "NOVICE",
+            "learned_skills": [],
+            "traits": [],
+            "active_breakthroughs": [],
+            "cooldowns": {},
+            "personality": {
+              "greed": 0.0,
+              "bravery": 0.0,
+              "sociability": 0.0,
+              "industry": 0.0
+            },
+            "life_stage": "ADULT",
+            "group_id": 10004,
+            "properties": {},
+            "latest_intent_results": []
+          },
+          "attributes": {
+            "strength": 5,
+            "agility": 5,
+            "vitality": 5,
+            "endurance": 5,
+            "intelligence": 5,
+            "spirit": 5,
+            "wisdom": 5,
+            "perception": 5,
+            "charisma": 5
+          },
+          "inventory": {
+            "items": [],
+            "gold": 10,
+            "max_slots": 16,
+            "max_weight": 50
+          },
+          "strategic": {
+            "home_region_id": null,
+            "blockers": {},
+            "leads": {},
+            "directives": {},
+            "projects": {},
+            "concerns": {},
+            "candidate_zones": {},
+            "hypotheses": {},
+            "source_trust": {},
+            "contracts": {
+              "team_b_contract_7": {
+                "id": "team_b_contract_7",
+                "kind": "PROTECTION",
+                "source_id": 6,
+                "target_id": 7,
+                "terms": {},
+                "expiry_tick": -1,
+                "status": "ACTIVE",
+                "created_tick": 0,
+                "negotiation_count": 0
+              }
+            },
+            "turning_points": {},
+            "current_project_id": null,
+            "current_objective_id": null,
+            "profile": {
+              "max_active_projects": 3,
+              "max_leads": 8,
+              "max_concerns": 5,
+              "max_candidate_zones": 4,
+              "max_hypotheses": 3,
+              "interruption_resistance": 0.3,
+              "detour_breadth": 3,
+              "detour_depth": 2
+            },
+            "primary_overload_source": null,
+            "last_overload_tick": 0,
+            "boredom": {}
+          },
+          "social": {
+            "trust_history": {},
+            "familiarity_history": {},
+            "debt_history": {},
+            "fear_history": {},
+            "grudge_history": {},
+            "salience_history": {},
+            "bonds": {},
+            "nemesis_ids": [],
+            "place_attachment": {},
+            "betrayal_count": 0,
+            "betrayal_records": [],
+            "public_reputation": 1.0,
+            "heroism_score": 0.0,
+            "notoriety_score": 0.0,
+            "last_offer_tick": -1,
+            "rejection_count": {}
+          },
+          "biological": {
+            "sleep_debt": 0.49999999999999994,
+            "hunger": 0.9999999999999999,
+            "rest_pressure": 0.0,
+            "last_meal_tick": 0,
+            "last_sleep_tick": 0,
+            "well_rested_until": -1
+          },
+          "lifecycle": {
+            "age_ticks": 10,
+            "max_age_ticks": 10000,
+            "is_permadeath": false,
+            "death_tick": null,
+            "death_reason": null,
+            "generation": 1,
+            "heir_entity_id": null,
+            "heirlooms": [],
+            "active": true
+          },
+          "_readonly_cache": null,
+          "aptitude": {
+            "learning_rate": 1.0,
+            "stamina_efficiency": 1.0,
+            "str_apt": 1.0,
+            "agi_apt": 1.0,
+            "vit_apt": 1.0,
+            "end_apt": 1.0,
+            "int_apt": 1.0,
+            "spi_apt": 1.0,
+            "wis_apt": 1.0,
+            "per_apt": 1.0,
+            "cha_apt": 1.0
+          },
+          "combat": {
+            "hp": 50,
+            "max_hp": 62,
+            "atk": 12,
+            "def_stat": 6,
+            "speed": 10,
+            "range": 1,
+            "evasion": 0.05,
+            "move_cost": 10.0,
+            "tactical_role": "VANGUARD",
+            "action_style": 0,
+            "alive": true,
+            "readiness": 100.0,
+            "wounds": [],
+            "scars": [],
+            "latest_result": null
+          },
+          "equipment": {
+            "slots": {},
+            "durability": {}
+          },
+          "navigation": {
+            "position": [
+              18.0,
+              7.0
+            ],
+            "target": null,
+            "path": [],
+            "moved_recently": false,
+            "movement_mode": "WANDER",
+            "last_failure_reason": null,
+            "wait_count": 0,
+            "oscillation_count": 0,
+            "last_position": null,
+            "home_position": [
+              18.0,
+              7.0
+            ],
+            "leash_radius": 10.0,
+            "chase_ticks": 0,
+            "max_chase_ticks": 15,
+            "returning_home": false
+          },
+          "task": {
+            "work_kind": "REST",
+            "payload": {}
+          },
+          "stamina": {
+            "current": 100.0,
+            "max_stamina": 100.0,
+            "regen_rate": 2.0,
+            "rest_regen_rate": 8.0,
+            "exhaustion_threshold": 10.0,
+            "exhaustion_penalty": 0.7,
+            "ATTACK_COST": 8.0,
+            "MOVE_COST": 3.0,
+            "HARVEST_COST": 5.0,
+            "SKILL_COST_MULT": 1.0
+          }
+        },
+        "8": {
+          "id": 8,
+          "kind": "monster",
+          "interaction": {
+            "target_node_id": null,
+            "progress": 0.0,
+            "start_tick": 0
+          },
+          "identity": {
+            "role": 2,
+            "faction": 1,
+            "known_recipes": [],
+            "craft_target": null,
+            "evolution_level": 1,
+            "evolution_points": 0,
+            "veterancy_points": 0,
+            "veterancy_rank": 0,
+            "unspent_ap": 0,
+            "class_id": "NOVICE",
+            "learned_skills": [],
+            "traits": [],
+            "active_breakthroughs": [],
+            "cooldowns": {},
+            "personality": {
+              "greed": 0.0,
+              "bravery": 0.0,
+              "sociability": 0.0,
+              "industry": 0.0
+            },
+            "life_stage": "ADULT",
+            "group_id": 10005,
+            "properties": {},
+            "latest_intent_results": []
+          },
+          "attributes": {
+            "strength": 5,
+            "agility": 5,
+            "vitality": 5,
+            "endurance": 5,
+            "intelligence": 5,
+            "spirit": 5,
+            "wisdom": 5,
+            "perception": 5,
+            "charisma": 5
+          },
+          "inventory": {
+            "items": [],
+            "gold": 10,
+            "max_slots": 16,
+            "max_weight": 50
+          },
+          "strategic": {
+            "home_region_id": null,
+            "blockers": {},
+            "leads": {},
+            "directives": {},
+            "projects": {},
+            "concerns": {},
+            "candidate_zones": {},
+            "hypotheses": {},
+            "source_trust": {},
+            "contracts": {
+              "team_b_contract_8": {
+                "id": "team_b_contract_8",
+                "kind": "PROTECTION",
+                "source_id": 6,
+                "target_id": 8,
+                "terms": {},
+                "expiry_tick": -1,
+                "status": "ACTIVE",
+                "created_tick": 0,
+                "negotiation_count": 0
+              }
+            },
+            "turning_points": {},
+            "current_project_id": null,
+            "current_objective_id": null,
+            "profile": {
+              "max_active_projects": 3,
+              "max_leads": 8,
+              "max_concerns": 5,
+              "max_candidate_zones": 4,
+              "max_hypotheses": 3,
+              "interruption_resistance": 0.3,
+              "detour_breadth": 3,
+              "detour_depth": 2
+            },
+            "primary_overload_source": null,
+            "last_overload_tick": 0,
+            "boredom": {}
+          },
+          "social": {
+            "trust_history": {},
+            "familiarity_history": {},
+            "debt_history": {},
+            "fear_history": {},
+            "grudge_history": {},
+            "salience_history": {},
+            "bonds": {},
+            "nemesis_ids": [],
+            "place_attachment": {},
+            "betrayal_count": 0,
+            "betrayal_records": [],
+            "public_reputation": 1.0,
+            "heroism_score": 0.0,
+            "notoriety_score": 0.0,
+            "last_offer_tick": -1,
+            "rejection_count": {}
+          },
+          "biological": {
+            "sleep_debt": 0.49999999999999994,
+            "hunger": 0.9999999999999999,
+            "rest_pressure": 0.0,
+            "last_meal_tick": 0,
+            "last_sleep_tick": 0,
+            "well_rested_until": -1
+          },
+          "lifecycle": {
+            "age_ticks": 10,
+            "max_age_ticks": 10000,
+            "is_permadeath": false,
+            "death_tick": null,
+            "death_reason": null,
+            "generation": 1,
+            "heir_entity_id": null,
+            "heirlooms": [],
+            "active": true
+          },
+          "_readonly_cache": null,
+          "aptitude": {
+            "learning_rate": 1.0,
+            "stamina_efficiency": 1.0,
+            "str_apt": 1.0,
+            "agi_apt": 1.0,
+            "vit_apt": 1.0,
+            "end_apt": 1.0,
+            "int_apt": 1.0,
+            "spi_apt": 1.0,
+            "wis_apt": 1.0,
+            "per_apt": 1.0,
+            "cha_apt": 1.0
+          },
+          "combat": {
+            "hp": 50,
+            "max_hp": 62,
+            "atk": 12,
+            "def_stat": 6,
+            "speed": 10,
+            "range": 1,
+            "evasion": 0.05,
+            "move_cost": 10.0,
+            "tactical_role": "VANGUARD",
+            "action_style": 0,
+            "alive": true,
+            "readiness": 100.0,
+            "wounds": [],
+            "scars": [],
+            "latest_result": null
+          },
+          "equipment": {
+            "slots": {},
+            "durability": {}
+          },
+          "navigation": {
+            "position": [
+              18.0,
+              9.0
+            ],
+            "target": null,
+            "path": [],
+            "moved_recently": false,
+            "movement_mode": "WANDER",
+            "last_failure_reason": null,
+            "wait_count": 0,
+            "oscillation_count": 0,
+            "last_position": null,
+            "home_position": [
+              18.0,
+              9.0
+            ],
+            "leash_radius": 10.0,
+            "chase_ticks": 0,
+            "max_chase_ticks": 15,
+            "returning_home": false
+          },
+          "task": {
+            "work_kind": "REST",
+            "payload": {}
+          },
+          "stamina": {
+            "current": 100.0,
+            "max_stamina": 100.0,
+            "regen_rate": 2.0,
+            "rest_regen_rate": 8.0,
+            "exhaustion_threshold": 10.0,
+            "exhaustion_penalty": 0.7,
+            "ATTACK_COST": 8.0,
+            "MOVE_COST": 3.0,
+            "HARVEST_COST": 5.0,
+            "SKILL_COST_MULT": 1.0
+          }
+        },
+        "9": {
+          "id": 9,
+          "kind": "monster",
+          "interaction": {
+            "target_node_id": null,
+            "progress": 0.0,
+            "start_tick": 0
+          },
+          "identity": {
+            "role": 2,
+            "faction": 1,
+            "known_recipes": [],
+            "craft_target": null,
+            "evolution_level": 1,
+            "evolution_points": 0,
+            "veterancy_points": 0,
+            "veterancy_rank": 0,
+            "unspent_ap": 0,
+            "class_id": "NOVICE",
+            "learned_skills": [],
+            "traits": [],
+            "active_breakthroughs": [],
+            "cooldowns": {},
+            "personality": {
+              "greed": 0.0,
+              "bravery": 0.0,
+              "sociability": 0.0,
+              "industry": 0.0
+            },
+            "life_stage": "ADULT",
+            "group_id": 10006,
+            "properties": {},
+            "latest_intent_results": []
+          },
+          "attributes": {
+            "strength": 5,
+            "agility": 5,
+            "vitality": 5,
+            "endurance": 5,
+            "intelligence": 5,
+            "spirit": 5,
+            "wisdom": 5,
+            "perception": 5,
+            "charisma": 5
+          },
+          "inventory": {
+            "items": [],
+            "gold": 10,
+            "max_slots": 16,
+            "max_weight": 50
+          },
+          "strategic": {
+            "home_region_id": null,
+            "blockers": {},
+            "leads": {},
+            "directives": {},
+            "projects": {},
+            "concerns": {},
+            "candidate_zones": {},
+            "hypotheses": {},
+            "source_trust": {},
+            "contracts": {
+              "team_b_contract_9": {
+                "id": "team_b_contract_9",
+                "kind": "PROTECTION",
+                "source_id": 6,
+                "target_id": 9,
+                "terms": {},
+                "expiry_tick": -1,
+                "status": "ACTIVE",
+                "created_tick": 0,
+                "negotiation_count": 0
+              }
+            },
+            "turning_points": {},
+            "current_project_id": null,
+            "current_objective_id": null,
+            "profile": {
+              "max_active_projects": 3,
+              "max_leads": 8,
+              "max_concerns": 5,
+              "max_candidate_zones": 4,
+              "max_hypotheses": 3,
+              "interruption_resistance": 0.3,
+              "detour_breadth": 3,
+              "detour_depth": 2
+            },
+            "primary_overload_source": null,
+            "last_overload_tick": 0,
+            "boredom": {}
+          },
+          "social": {
+            "trust_history": {},
+            "familiarity_history": {},
+            "debt_history": {},
+            "fear_history": {},
+            "grudge_history": {},
+            "salience_history": {},
+            "bonds": {},
+            "nemesis_ids": [],
+            "place_attachment": {},
+            "betrayal_count": 0,
+            "betrayal_records": [],
+            "public_reputation": 1.0,
+            "heroism_score": 0.0,
+            "notoriety_score": 0.0,
+            "last_offer_tick": -1,
+            "rejection_count": {}
+          },
+          "biological": {
+            "sleep_debt": 0.49999999999999994,
+            "hunger": 0.9999999999999999,
+            "rest_pressure": 0.0,
+            "last_meal_tick": 0,
+            "last_sleep_tick": 0,
+            "well_rested_until": -1
+          },
+          "lifecycle": {
+            "age_ticks": 10,
+            "max_age_ticks": 10000,
+            "is_permadeath": false,
+            "death_tick": null,
+            "death_reason": null,
+            "generation": 1,
+            "heir_entity_id": null,
+            "heirlooms": [],
+            "active": true
+          },
+          "_readonly_cache": null,
+          "aptitude": {
+            "learning_rate": 1.0,
+            "stamina_efficiency": 1.0,
+            "str_apt": 1.0,
+            "agi_apt": 1.0,
+            "vit_apt": 1.0,
+            "end_apt": 1.0,
+            "int_apt": 1.0,
+            "spi_apt": 1.0,
+            "wis_apt": 1.0,
+            "per_apt": 1.0,
+            "cha_apt": 1.0
+          },
+          "combat": {
+            "hp": 50,
+            "max_hp": 62,
+            "atk": 12,
+            "def_stat": 6,
+            "speed": 10,
+            "range": 1,
+            "evasion": 0.05,
+            "move_cost": 10.0,
+            "tactical_role": "VANGUARD",
+            "action_style": 0,
+            "alive": true,
+            "readiness": 100.0,
+            "wounds": [],
+            "scars": [],
+            "latest_result": null
+          },
+          "equipment": {
+            "slots": {},
+            "durability": {}
+          },
+          "navigation": {
+            "position": [
+              18.0,
+              11.0
+            ],
+            "target": null,
+            "path": [],
+            "moved_recently": false,
+            "movement_mode": "WANDER",
+            "last_failure_reason": null,
+            "wait_count": 0,
+            "oscillation_count": 0,
+            "last_position": null,
+            "home_position": [
+              18.0,
+              11.0
+            ],
+            "leash_radius": 10.0,
+            "chase_ticks": 0,
+            "max_chase_ticks": 15,
+            "returning_home": false
+          },
+          "task": {
+            "work_kind": "REST",
+            "payload": {}
+          },
+          "stamina": {
+            "current": 100.0,
+            "max_stamina": 100.0,
+            "regen_rate": 2.0,
+            "rest_regen_rate": 8.0,
+            "exhaustion_threshold": 10.0,
+            "exhaustion_penalty": 0.7,
+            "ATTACK_COST": 8.0,
+            "MOVE_COST": 3.0,
+            "HARVEST_COST": 5.0,
+            "SKILL_COST_MULT": 1.0
+          }
+        },
+        "10": {
+          "id": 10,
+          "kind": "monster",
+          "interaction": {
+            "target_node_id": null,
+            "progress": 0.0,
+            "start_tick": 0
+          },
+          "identity": {
+            "role": 2,
+            "faction": 1,
+            "known_recipes": [],
+            "craft_target": null,
+            "evolution_level": 2,
+            "evolution_points": 0,
+            "veterancy_points": 0,
+            "veterancy_rank": 0,
+            "unspent_ap": 0,
+            "class_id": "NOVICE",
+            "learned_skills": [],
+            "traits": [],
+            "active_breakthroughs": [],
+            "cooldowns": {},
+            "personality": {
+              "greed": 0.0,
+              "bravery": 0.0,
+              "sociability": 0.0,
+              "industry": 0.0
+            },
+            "life_stage": "ADULT",
+            "group_id": 10007,
+            "properties": {},
+            "latest_intent_results": []
+          },
+          "attributes": {
+            "strength": 5,
+            "agility": 5,
+            "vitality": 5,
+            "endurance": 5,
+            "intelligence": 5,
+            "spirit": 5,
+            "wisdom": 5,
+            "perception": 5,
+            "charisma": 5
+          },
+          "inventory": {
+            "items": [],
+            "gold": 10,
+            "max_slots": 16,
+            "max_weight": 50
+          },
+          "strategic": {
+            "home_region_id": null,
+            "blockers": {},
+            "leads": {},
+            "directives": {},
+            "projects": {},
+            "concerns": {},
+            "candidate_zones": {},
+            "hypotheses": {},
+            "source_trust": {},
+            "contracts": {
+              "team_b_contract_10": {
+                "id": "team_b_contract_10",
+                "kind": "PROTECTION",
+                "source_id": 6,
+                "target_id": 10,
+                "terms": {},
+                "expiry_tick": -1,
+                "status": "ACTIVE",
+                "created_tick": 0,
+                "negotiation_count": 0
+              }
+            },
+            "turning_points": {},
+            "current_project_id": null,
+            "current_objective_id": null,
+            "profile": {
+              "max_active_projects": 3,
+              "max_leads": 8,
+              "max_concerns": 5,
+              "max_candidate_zones": 4,
+              "max_hypotheses": 3,
+              "interruption_resistance": 0.3,
+              "detour_breadth": 3,
+              "detour_depth": 2
+            },
+            "primary_overload_source": null,
+            "last_overload_tick": 0,
+            "boredom": {}
+          },
+          "social": {
+            "trust_history": {},
+            "familiarity_history": {},
+            "debt_history": {},
+            "fear_history": {},
+            "grudge_history": {},
+            "salience_history": {},
+            "bonds": {},
+            "nemesis_ids": [],
+            "place_attachment": {},
+            "betrayal_count": 0,
+            "betrayal_records": [],
+            "public_reputation": 1.0,
+            "heroism_score": 0.0,
+            "notoriety_score": 0.0,
+            "last_offer_tick": -1,
+            "rejection_count": {}
+          },
+          "biological": {
+            "sleep_debt": 0.49999999999999994,
+            "hunger": 0.9999999999999999,
+            "rest_pressure": 0.0,
+            "last_meal_tick": 0,
+            "last_sleep_tick": 0,
+            "well_rested_until": -1
+          },
+          "lifecycle": {
+            "age_ticks": 10,
+            "max_age_ticks": 10000,
+            "is_permadeath": false,
+            "death_tick": null,
+            "death_reason": null,
+            "generation": 1,
+            "heir_entity_id": null,
+            "heirlooms": [],
+            "active": true
+          },
+          "_readonly_cache": null,
+          "aptitude": {
+            "learning_rate": 1.0,
+            "stamina_efficiency": 1.0,
+            "str_apt": 1.0,
+            "agi_apt": 1.0,
+            "vit_apt": 1.0,
+            "end_apt": 1.0,
+            "int_apt": 1.0,
+            "spi_apt": 1.0,
+            "wis_apt": 1.0,
+            "per_apt": 1.0,
+            "cha_apt": 1.0
+          },
+          "combat": {
+            "hp": 50,
+            "max_hp": 62,
+            "atk": 12,
+            "def_stat": 6,
+            "speed": 10,
+            "range": 1,
+            "evasion": 0.05,
+            "move_cost": 10.0,
+            "tactical_role": "VANGUARD",
+            "action_style": 0,
+            "alive": true,
+            "readiness": 100.0,
+            "wounds": [],
+            "scars": [],
+            "latest_result": null
+          },
+          "equipment": {
+            "slots": {},
+            "durability": {}
+          },
+          "navigation": {
+            "position": [
+              18.0,
+              13.0
+            ],
+            "target": null,
+            "path": [],
+            "moved_recently": false,
+            "movement_mode": "WANDER",
+            "last_failure_reason": null,
+            "wait_count": 0,
+            "oscillation_count": 0,
+            "last_position": null,
+            "home_position": [
+              18.0,
+              13.0
+            ],
+            "leash_radius": 10.0,
+            "chase_ticks": 0,
+            "max_chase_ticks": 15,
+            "returning_home": false
+          },
+          "task": {
+            "work_kind": "REST",
+            "payload": {}
+          },
+          "stamina": {
+            "current": 100.0,
+            "max_stamina": 100.0,
+            "regen_rate": 2.0,
+            "rest_regen_rate": 8.0,
+            "exhaustion_threshold": 10.0,
+            "exhaustion_penalty": 0.7,
+            "ATTACK_COST": 8.0,
+            "MOVE_COST": 3.0,
+            "HARVEST_COST": 5.0,
+            "SKILL_COST_MULT": 1.0
+          }
+        }
+      },
+      "resource_nodes": {},
+      "ground_items": {},
+      "corpses": {},
+      "chests": {},
+      "buildings": {},
+      "camps": {},
+      "regions": {},
+      "local_scars": {},
+      "_readonly_cache": null,
+      "groups": {
+        "10000": {
+          "id": 10000,
+          "leader_id": 1,
+          "member_ids": [
+            1,
+            2
+          ],
+          "anchor": [
+            2.0,
+            6.0
+          ],
+          "shared_target_id": null,
+          "contract_id": "team_a_contract_2",
+          "cohesion_radius": 5.0,
+          "last_updated_tick": 9,
+          "roles": {
+            "1": "LEADER",
+            "2": "VANGUARD"
+          },
+          "str_apt": 1.0,
+          "int_apt": 1.0,
+          "agi_apt": 1.0,
+          "vit_apt": 1.0,
+          "end_apt": 1.0
+        },
+        "10001": {
+          "id": 10001,
+          "leader_id": 3,
+          "member_ids": [
+            1,
+            3
+          ],
+          "anchor": [
+            2.0,
+            7.0
+          ],
+          "shared_target_id": null,
+          "contract_id": "team_a_contract_3",
+          "cohesion_radius": 5.0,
+          "last_updated_tick": 9,
+          "roles": {
+            "3": "LEADER",
+            "1": "VANGUARD"
+          },
+          "str_apt": 1.0,
+          "int_apt": 1.0,
+          "agi_apt": 1.0,
+          "vit_apt": 1.0,
+          "end_apt": 1.0
+        },
+        "10002": {
+          "id": 10002,
+          "leader_id": 4,
+          "member_ids": [
+            1,
+            4
+          ],
+          "anchor": [
+            2.0,
+            8.0
+          ],
+          "shared_target_id": null,
+          "contract_id": "team_a_contract_4",
+          "cohesion_radius": 5.0,
+          "last_updated_tick": 9,
+          "roles": {
+            "4": "LEADER",
+            "1": "VANGUARD"
+          },
+          "str_apt": 1.0,
+          "int_apt": 1.0,
+          "agi_apt": 1.0,
+          "vit_apt": 1.0,
+          "end_apt": 1.0
+        },
+        "10003": {
+          "id": 10003,
+          "leader_id": 5,
+          "member_ids": [
+            1,
+            5
+          ],
+          "anchor": [
+            2.0,
+            9.0
+          ],
+          "shared_target_id": null,
+          "contract_id": "team_a_contract_5",
+          "cohesion_radius": 5.0,
+          "last_updated_tick": 9,
+          "roles": {
+            "5": "LEADER",
+            "1": "VANGUARD"
+          },
+          "str_apt": 1.0,
+          "int_apt": 1.0,
+          "agi_apt": 1.0,
+          "vit_apt": 1.0,
+          "end_apt": 1.0
+        },
+        "10004": {
+          "id": 10004,
+          "leader_id": 6,
+          "member_ids": [
+            6,
+            7
+          ],
+          "anchor": [
+            18.0,
+            6.0
+          ],
+          "shared_target_id": null,
+          "contract_id": "team_b_contract_7",
+          "cohesion_radius": 5.0,
+          "last_updated_tick": 9,
+          "roles": {
+            "6": "LEADER",
+            "7": "VANGUARD"
+          },
+          "str_apt": 1.0,
+          "int_apt": 1.0,
+          "agi_apt": 1.0,
+          "vit_apt": 1.0,
+          "end_apt": 1.0
+        },
+        "10005": {
+          "id": 10005,
+          "leader_id": 8,
+          "member_ids": [
+            6,
+            8
+          ],
+          "anchor": [
+            18.0,
+            7.0
+          ],
+          "shared_target_id": null,
+          "contract_id": "team_b_contract_8",
+          "cohesion_radius": 5.0,
+          "last_updated_tick": 9,
+          "roles": {
+            "8": "LEADER",
+            "6": "VANGUARD"
+          },
+          "str_apt": 1.0,
+          "int_apt": 1.0,
+          "agi_apt": 1.0,
+          "vit_apt": 1.0,
+          "end_apt": 1.0
+        },
+        "10006": {
+          "id": 10006,
+          "leader_id": 9,
+          "member_ids": [
+            6,
+            9
+          ],
+          "anchor": [
+            18.0,
+            8.0
+          ],
+          "shared_target_id": null,
+          "contract_id": "team_b_contract_9",
+          "cohesion_radius": 5.0,
+          "last_updated_tick": 9,
+          "roles": {
+            "9": "LEADER",
+            "6": "VANGUARD"
+          },
+          "str_apt": 1.0,
+          "int_apt": 1.0,
+          "agi_apt": 1.0,
+          "vit_apt": 1.0,
+          "end_apt": 1.0
+        },
+        "10007": {
+          "id": 10007,
+          "leader_id": 10,
+          "member_ids": [
+            6,
+            10
+          ],
+          "anchor": [
+            18.0,
+            9.0
+          ],
+          "shared_target_id": null,
+          "contract_id": "team_b_contract_10",
+          "cohesion_radius": 5.0,
+          "last_updated_tick": 9,
+          "roles": {
+            "10": "LEADER",
+            "6": "VANGUARD"
+          },
+          "str_apt": 1.0,
+          "int_apt": 1.0,
+          "agi_apt": 1.0,
+          "vit_apt": 1.0,
+          "end_apt": 1.0
+        }
+      },
+      "terrain": {},
+      "global_resources": {},
+      "home_storage": {},
+      "town_center": [
+        0.0,
+        0.0
+      ],
+      "periodic_due_ticks": {},
+      "work_debt": {},
+      "movement_count": 0,
+      "maturity": 0,
+      "last_calamity_tick": 0,
+      "blocked_tiles": [],
+      "town_tiles": [],
+      "building_tiles": {},
+      "rng_checkpoint": null,
+      "transaction_trace": [],
+      "rejection_registry": {},
+      "pressure_signals": {
+        "global_salience": 0.26303096,
+        "debt_ratio": 0.0,
+        "compute_ratio": 0.26303096
+      },
+      "current_mode": 0,
+      "processed_transaction_ids": [],
+      "next_node_id": 1000,
+      "next_entity_id": 1
+    }
   }
 }
