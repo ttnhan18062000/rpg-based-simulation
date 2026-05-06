@@ -8,11 +8,11 @@ from src.core.enums import ReasonCode
 def create_mock_entity(eid, faction, hp=100, range=1, active=True):
     builder = (V2EntityBuilder(eid)
                .kind("hero")
-               .faction(faction)
+               .identity(faction=faction)
                .with_base_stats(range=range)
-               .hp(hp)
+               .combat(hp=hp)
                .active(active)
-               .readiness(100.0))
+               .combat(readiness=100.0))
     return builder.build()
 
 def test_melee_attack_legality():

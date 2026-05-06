@@ -18,10 +18,10 @@ def create_mock_entity(id, gold=10, sentiment=0.0):
     from src.core.state import SocialBond
     return (V2EntityBuilder(id)
         .kind("ACTOR")
-        .position(0, 0)
+        .location(0, 0)
         .gold(gold)
         .bond(SocialBond(target_id=99, sentiment=sentiment, familiarity=0.5))
-        .alive(True)
+        .combat(alive=True)
         .build())
 
 def test_contract_appraisal_trust():
@@ -68,7 +68,7 @@ def test_contract_lifecycle_acceptance():
     # The entity must have the contract in its strategic component to accept it
     entity = (V2EntityBuilder(1)
         .kind("ACTOR")
-        .position(0, 0)
+        .location(0, 0)
         .strategic_contract(contract)
         .build())
     
@@ -83,7 +83,7 @@ def test_contract_lifecycle_resolution():
     contract = replace(contract, status=ContractStatus.ACTIVE)
     
     # Create entity that owns the contract
-    entity = V2EntityBuilder(1).kind("ACTOR").position(0, 0).strategic_contract(contract).build()
+    entity = V2EntityBuilder(1).kind("ACTOR").location(0, 0).strategic_contract(contract).build()
     
     # Success
     s_upd, b_upds = ContractService.resolve_contract_outcome(entity, contract.id, success=True)

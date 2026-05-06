@@ -25,12 +25,12 @@ def create_mock_entity(id, pos, faction=0, role=0):
     from src.core.enums import Faction, EntityRole
     return (V2EntityBuilder(id)
         .kind("hero")
-        .at(pos)
-        .with_identity(faction=Faction.HERO_GUILD if faction == 0 else Faction.MONSTER_HORDE, 
+        .location(*pos)
+        .identity(faction=Faction.HERO_GUILD if faction == 0 else Faction.MONSTER_HORDE, 
                        role=EntityRole.HERO if role == 0 else EntityRole.MONSTER)
-        .with_combat(hp=100, max_hp=100, atk=10, def_stat=5, alive=True)
-        .with_navigation()
-        .readiness(100.0)
+        .combat(hp=100, max_hp=100, atk=10, def_stat=5, alive=True)
+        .navigation()
+        .combat(readiness=100.0)
         .build()
     )
 

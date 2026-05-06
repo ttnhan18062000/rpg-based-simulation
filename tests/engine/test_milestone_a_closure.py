@@ -110,8 +110,8 @@ def test_milestone_a_baseline_isolation():
         entities={
             1: (V2EntityBuilder(1)
                 .kind("agent")
-                .at((0.0, 0.0))
-                .readiness(100.0)
+                .location(0.0, 0.0)
+                .combat(readiness=100.0)
                 .build())
         }
     )
@@ -142,6 +142,9 @@ def test_milestone_a_baseline_isolation():
     # Run one tick
     # If the thread pool or packetization logic is touched, this will fail.
     kernel.tick_once()
+    
+    print(f"DEBUG: Entity 1 Readiness: {kernel.state.entities[1].combat.readiness}")
+    print(f"DEBUG: Mock Manager Calls: {mock_manager.method_calls}")
     
     assert kernel.state.entities[1].combat.readiness < 100
     assert not mock_manager.execute_batch.called, "WorkerManager was touched during Milestone A baseline run!"

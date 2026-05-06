@@ -10,8 +10,8 @@ from src.core.builder import V2EntityBuilder
 
 def test_group_formation():
     # Create two heroes
-    h1 = V2EntityBuilder(entity_id=1).role(0).build()
-    h2 = V2EntityBuilder(entity_id=2).role(0).build()
+    h1 = V2EntityBuilder(entity_id=1).identity(role=0).build()
+    h2 = V2EntityBuilder(entity_id=2).identity(role=0).build()
     
     state = AuthoritativeState(tick=0, seed=1, entities={1: h1, 2: h2})
     
@@ -46,8 +46,8 @@ def test_group_dissolution():
 def test_group_cohesion():
     from src.social.group_service import GroupService
     # h1 is inside (10, 10), h2 is outside (50, 50)
-    h1 = V2EntityBuilder(entity_id=1).role(0).at((10.0, 10.0)).build()
-    h2 = V2EntityBuilder(entity_id=2).role(0).at((50.0, 50.0)).build()
+    h1 = V2EntityBuilder(entity_id=1).identity(role=0).location(10.0, 10.0).build()
+    h2 = V2EntityBuilder(entity_id=2).identity(role=0).location(50.0, 50.0).build()
     
     group = GroupRecord(
         id=100,

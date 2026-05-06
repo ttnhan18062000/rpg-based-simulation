@@ -14,7 +14,7 @@ def test_prior_state_purity_deep_properties():
     state = AuthoritativeState(tick=1, seed=1, entities={
         1: (V2EntityBuilder(1)
             .kind("hero")
-            .at((0.0, 0.0))
+            .location(0.0, 0.0)
             .with_properties(initial_props)
             .build())
     })
@@ -48,7 +48,7 @@ def test_no_mutation_leak_from_worker_snapshot():
     state = AuthoritativeState(tick=1, seed=1, entities={
         1: (V2EntityBuilder(1)
             .kind("hero")
-            .at((0.0, 0.0))
+            .location(0.0, 0.0)
             .with_property("gold", 10)
             .build())
     })
@@ -93,7 +93,7 @@ def test_entity_state_is_frozen():
     """Verify that EntityState itself cannot be mutated directly."""
     ent = (V2EntityBuilder(1)
            .kind("test")
-           .at((0.0, 0.0))
+           .location(0.0, 0.0)
            .build())
     with pytest.raises(Exception):
         ent.identity = replace(ent.identity, unspent_ap=100) # Wait! identity is a field.

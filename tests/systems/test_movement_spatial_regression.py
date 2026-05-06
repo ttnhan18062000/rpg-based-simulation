@@ -15,14 +15,14 @@ def create_mock_entity(e_id, pos, faction=1, role=EntityRole.MONSTER, mode=Movem
     from src.core.builder import V2EntityBuilder
     return (V2EntityBuilder(e_id)
         .kind("actor")
-        .position(pos[0], pos[1])
-        .role(role)
-        .faction(faction)
-        .hp(100, max_hp=100)
-        .alive(True)
-        .readiness(100.0)
+        .location(pos[0], pos[1])
+        .identity(role=role)
+        .identity(faction=faction)
+        .combat(hp=100, max_hp=100)
+        .combat(alive=True)
+        .combat(readiness=100.0)
         .movement_mode(mode)
-        .alive(True)
+        .combat(alive=True)
         .build())
 
 def test_sidestep_recovery():
@@ -93,8 +93,8 @@ def test_retreat_evasion_skips_oa():
     from src.core.builder import V2EntityBuilder
     hero = (V2EntityBuilder(1)
         .kind("actor")
-        .position(1.0, 1.0)
-        .role(EntityRole.HERO)
+        .location(1.0, 1.0)
+        .identity(role=EntityRole.HERO)
         .movement_mode(MovementMode.RETREAT)
         .action_style(2) # 2 = EVASIVE
         .build())

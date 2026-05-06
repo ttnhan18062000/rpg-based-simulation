@@ -5,7 +5,7 @@ from src.core.builder import V2EntityBuilder
 
 def create_mock_entity(eid, pos):
     return (V2EntityBuilder(eid)
-            .at(pos)
+            .location(*pos)
             .build())
 
 def test_spatial_grid_coarse_filtering():
@@ -31,7 +31,7 @@ def test_spatial_grid_rebuild_logic():
 
     # Move entity 1 (rebuild grid)
     entities[1] = (V2EntityBuilder(1)
-                   .at((100, 100))
+                   .location(100, 100)
                    .build())
     grid_moved = SpatialGrid(entities, cell_size=10)
     assert not grid_moved.get_neighbors((5, 5), 5)

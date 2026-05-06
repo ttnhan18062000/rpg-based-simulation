@@ -18,15 +18,15 @@ def test_appraisal_traits():
     # Base candidate (neutral)
     c_neutral = (V2EntityBuilder(1)
         .kind("human")
-        .position(0, 0)
+        .location(0, 0)
         .trait(set()) # Ensure traits is a set
-        .hp(100)
-        .readiness(100.0)
+        .combat(hp=100)
+        .combat(readiness=100.0)
         .build()
     )
     
     # Recruiter
-    recruiter = V2EntityBuilder(10).kind("human").position(1, 1).readiness(100.0).build()
+    recruiter = V2EntityBuilder(10).kind("human").location(1, 1).combat(readiness=100.0).build()
     
     state = AuthoritativeState(tick=1, seed=1, entities={1: c_neutral, 10: recruiter})
     
@@ -62,12 +62,12 @@ def test_appraisal_traits():
 def test_social_fatigue():
     candidate = (V2EntityBuilder(1)
         .kind("human")
-        .position(0, 0)
+        .location(0, 0)
         .social_rejection(10, 3)
-        .readiness(100.0)
+        .combat(readiness=100.0)
         .build()
     )
-    recruiter = V2EntityBuilder(10).kind("human").position(1, 1).readiness(100.0).build()
+    recruiter = V2EntityBuilder(10).kind("human").location(1, 1).combat(readiness=100.0).build()
     state = AuthoritativeState(tick=1, seed=1, entities={1: candidate, 10: recruiter})
     
     contract = ContractState(
@@ -84,13 +84,13 @@ def test_social_fatigue():
 
 def test_group_directive_propagation():
     leader = (V2EntityBuilder(10).kind("human")
-        .position(0, 0)
+        .location(0, 0)
         .strategic_project(ProjectState(id="p1", kind="EXPLORE", status=ProjectStatus.ACTIVE))
         .current_project("p1")
-        .readiness(100.0)
+        .combat(readiness=100.0)
         .build()
     )
-    member = V2EntityBuilder(1).kind("human").position(1, 1).readiness(100.0).build()
+    member = V2EntityBuilder(1).kind("human").location(1, 1).combat(readiness=100.0).build()
     group = GroupRecord(id=100, leader_id=10, member_ids={1, 10}, anchor=(0,0))
     state = AuthoritativeState(tick=1, seed=1, entities={1: member, 10: leader}, groups={100: group})
     
@@ -104,24 +104,24 @@ def test_group_directive_propagation():
 def test_tactical_trust_obedience():
     # Leader and Member
     leader = (V2EntityBuilder(10).kind("human")
-        .position(10, 10)
-        .faction("A")
+        .location(10, 10)
+        .identity(faction="A")
         .task("ENTITY_ACT", {"target_id": 99})
-        .readiness(100.0)
+        .combat(readiness=100.0)
         .build()
     )
     # Member with TOTAL DISTRUST in leader
     member = (V2EntityBuilder(1)
         .kind("human")
-        .position(1, 1)
-        .faction("A")
+        .location(1, 1)
+        .identity(faction="A")
         .social_bond(10, -1.0)
         .tactical_role("VANGUARD")
-        .readiness(100.0)
+        .combat(readiness=100.0)
         .build()
     )
-    hostile = V2EntityBuilder(99).kind("monster").position(2, 2).faction("B").hp(100).readiness(100.0).build()
-    hostile_close = V2EntityBuilder(98).kind("monster").position(1.5, 1.5).faction("B").hp(100).readiness(100.0).build()
+    hostile = V2EntityBuilder(99).kind("monster").location(2, 2).identity(faction="B").combat(hp=100).combat(readiness=100.0).build()
+    hostile_close = V2EntityBuilder(98).kind("monster").location(1.5, 1.5).identity(faction="B").combat(hp=100).combat(readiness=100.0).build()
     
     group = GroupRecord(id=100, leader_id=10, member_ids={1, 10}, shared_target_id=99, anchor=(5,5))
     state = AuthoritativeState(tick=1, seed=1, entities={1: member, 10: leader, 99: hostile, 98: hostile_close}, groups={100: group})
@@ -133,17 +133,17 @@ def test_tactical_trust_obedience():
 
 def test_protector_guarding():
     leader = (V2EntityBuilder(10).kind("human")
-        .position(10, 10)
+        .location(10, 10)
         .task("ENTITY_ACT", {"action": "INTERACT", "target_id": 50})
-        .readiness(100.0)
+        .combat(readiness=100.0)
         .build()
     )
     protector = (V2EntityBuilder(1)
         .kind("human")
-        .position(1, 1)
+        .location(1, 1)
         .group_id(100)
         .tactical_role("PROTECTOR")
-        .readiness(100.0)
+        .combat(readiness=100.0)
         .build()
     )
     group = GroupRecord(id=100, leader_id=10, member_ids={1, 10}, anchor=(10,10), roles={1: "PROTECTOR"})

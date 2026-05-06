@@ -6,7 +6,7 @@ def create_mock_entity(intelligence: int = 5, wisdom: int = 5, perception: int =
     from src.core.builder import V2EntityBuilder
     return (V2EntityBuilder(1)
         .kind("hero")
-        .at((0, 0))
+        .location(0, 0)
         .attributes(intelligence=intelligence, wisdom=wisdom, perception=perception)
         .biological(sleep_debt=sleep_debt)
         .with_personality(industry=0.5)

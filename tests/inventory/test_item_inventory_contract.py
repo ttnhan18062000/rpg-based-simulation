@@ -11,8 +11,8 @@ def test_inventory_stacking():
     from src.core.builder import V2EntityBuilder
     entity = (V2EntityBuilder(1)
         .kind("hero")
-        .at((0, 0))
-        .with_inventory(gold=100, items=[ItemStack("iron_ore", 5)])
+        .location(0, 0)
+        .inventory(gold=100, items=[ItemStack("iron_ore", 5)])
         .build())
     state = StateUpdate() # Placeholder
     
@@ -40,8 +40,8 @@ def test_inventory_capacity_limits():
     from src.core.builder import V2EntityBuilder
     entity = (V2EntityBuilder(1)
         .kind("hero")
-        .at((0, 0))
-        .with_inventory(items=[ItemStack("wood", 1)], max_slots=2, max_weight=10.0)
+        .location(0, 0)
+        .inventory(items=[ItemStack("wood", 1)], max_slots=2, max_weight=10.0)
         .build())
     prior_state = AuthoritativeState(tick=1, seed=42, entities={1: entity})
     
@@ -75,7 +75,7 @@ def test_equipment_and_gold_updates():
     from src.core.builder import V2EntityBuilder
     entity = (V2EntityBuilder(1)
         .kind("hero")
-        .at((0, 0))
+        .location(0, 0)
         .build())
     prior_state = AuthoritativeState(tick=1, seed=42, entities={1: entity})
     

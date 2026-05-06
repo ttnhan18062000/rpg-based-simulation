@@ -14,8 +14,8 @@ def test_auto_equip_ranking():
     from src.core.builder import V2EntityBuilder
     entity = (V2EntityBuilder(1)
         .kind("hero")
-        .at((0, 0))
-        .with_inventory(items=[ItemStack("iron_sword", 1)])
+        .location(0, 0)
+        .inventory(items=[ItemStack("iron_sword", 1)])
         .build())
     
     # 2. Test Ranking
@@ -35,8 +35,8 @@ def test_home_storage_atomicity():
     from src.core.builder import V2EntityBuilder
     entity = (V2EntityBuilder(1)
         .kind("hero")
-        .at((0, 0))
-        .with_inventory(items=[ItemStack("iron_ore", 1)])
+        .location(0, 0)
+        .inventory(items=[ItemStack("iron_ore", 1)])
         .build())
     state = AuthoritativeState(tick=1, seed=42, entities={1: entity}, home_storage={})
     

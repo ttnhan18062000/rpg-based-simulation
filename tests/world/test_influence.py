@@ -18,8 +18,8 @@ def test_influence_shift_on_death():
     # 1. Hero death -> -5.0 influence
     hero = (V2EntityBuilder(1)
         .kind("hero")
-        .position(5.0, 5.0)
-        .faction(Faction.HERO_GUILD)
+        .location(5.0, 5.0)
+        .identity(faction=Faction.HERO_GUILD)
         .build())
     update = FactionInfluenceService.process_influence_shift(state, [hero])
     
@@ -29,8 +29,8 @@ def test_influence_shift_on_death():
     # 2. Monster death -> +5.0 influence
     monster = (V2EntityBuilder(2)
         .kind("goblin")
-        .position(6.0, 6.0)
-        .faction(Faction.MONSTER_HORDE)
+        .location(6.0, 6.0)
+        .identity(faction=Faction.MONSTER_HORDE)
         .build())
     update = FactionInfluenceService.process_influence_shift(state, [monster])
     assert update.world_updates["forest"].influence_delta == 5.0
@@ -48,8 +48,8 @@ def test_conquest_and_liberation_thresholds():
     # Hero death -> influence becomes -51.0 (<= -50.0) -> Conquered
     hero = (V2EntityBuilder(1)
         .kind("hero")
-        .position(5.0, 5.0)
-        .faction(Faction.HERO_GUILD)
+        .location(5.0, 5.0)
+        .identity(faction=Faction.HERO_GUILD)
         .build())
     update = FactionInfluenceService.process_influence_shift(state, [hero])
     
@@ -66,8 +66,8 @@ def test_conquest_and_liberation_thresholds():
     # Monster death -> influence becomes 51.0 (>= 50.0) -> Liberated
     monster = (V2EntityBuilder(2)
         .kind("goblin")
-        .position(6.0, 6.0)
-        .faction(Faction.MONSTER_HORDE)
+        .location(6.0, 6.0)
+        .identity(faction=Faction.MONSTER_HORDE)
         .build())
     update_lib = FactionInfluenceService.process_influence_shift(state_conquered, [monster])
     

@@ -7,7 +7,7 @@ from src.social.contracts import ContractService
 from src.core.strategic import ContractKind
 
 def test_contract_addition():
-    entity = V2EntityBuilder(entity_id=1).role(0).build()
+    entity = V2EntityBuilder(entity_id=1).identity(role=0).build()
     state = AuthoritativeState(tick=0, seed=1, entities={1: entity})
     
     # Create recruitment contract
@@ -33,7 +33,7 @@ def test_contract_addition():
 def test_contract_removal():
     # Initial state with a contract
     contract = ContractService.create_recruitment_contract("c1", 1, 99)
-    entity = V2EntityBuilder(entity_id=1).role(0).build()
+    entity = V2EntityBuilder(entity_id=1).identity(role=0).build()
     # Manual injection for test setup
     from dataclasses import replace
     entity = replace(entity, strategic=replace(entity.strategic, contracts={"c1": contract}))
@@ -53,7 +53,7 @@ def test_contract_removal():
     assert "c1" not in contracts
 
 def test_loan_contract():
-    entity = V2EntityBuilder(entity_id=1).role(0).build()
+    entity = V2EntityBuilder(entity_id=1).identity(role=0).build()
     state = AuthoritativeState(tick=0, seed=1, entities={1: entity})
     
     loan = ContractService.create_loan_contract("loan_1", 1, 2, amount=100)

@@ -19,12 +19,12 @@ def create_mock_entity(e_id, pos, faction=Faction.HERO_GUILD):
     from src.core.builder import V2EntityBuilder
     return (V2EntityBuilder(e_id)
         .kind("actor")
-        .position(pos[0], pos[1])
-        .role(EntityRole.HERO)
-        .faction(faction)
-        .hp(100, max_hp=100)
-        .alive(True)
-        .readiness(100.0)
+        .location(pos[0], pos[1])
+        .identity(role=EntityRole.HERO)
+        .identity(faction=faction)
+        .combat(hp=100, max_hp=100)
+        .combat(alive=True)
+        .combat(readiness=100.0)
         .build())
 
 def test_no_proximity_only_groups():
@@ -83,12 +83,12 @@ def test_party_formation_from_contract():
     )
     hero = (V2EntityBuilder(1)
         .kind("actor")
-        .position(1.0, 1.0)
+        .location(1.0, 1.0)
         .strategic_contract(contract)
         .build())
     merc = (V2EntityBuilder(2)
         .kind("actor")
-        .position(1.2, 1.2)
+        .location(1.2, 1.2)
         .strategic_contract(contract)
         .build())
     
@@ -105,12 +105,12 @@ def test_betrayal_dissolves_group_and_adds_directive():
     from src.core.builder import V2EntityBuilder
     hero = (V2EntityBuilder(1)
         .kind("actor")
-        .position(1.0, 1.0)
+        .location(1.0, 1.0)
         .group_id(500)
         .build())
     merc = (V2EntityBuilder(2)
         .kind("actor")
-        .position(1.0, 2.0)
+        .location(1.0, 2.0)
         .group_id(500)
         .build())
     

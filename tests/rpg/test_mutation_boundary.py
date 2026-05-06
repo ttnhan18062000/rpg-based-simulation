@@ -10,10 +10,10 @@ def test_mutation_boundary_strips_unauthorized_gold():
     e_id = 1
     entity = (V2EntityBuilder(e_id)
         .kind("HERO")
-        .at((0, 0))
-        .with_inventory(gold=100)
-        .with_combat(hp=100, max_hp=100)
-        .with_identity(evolution_level=1)
+        .location(0, 0)
+        .inventory(gold=100)
+        .combat(hp=100, max_hp=100)
+        .identity(evolution_level=1)
         .build())
     
     state = AuthoritativeState(tick=100, seed=42, entities={e_id: entity})
@@ -35,7 +35,7 @@ def test_mutation_boundary_strips_unauthorized_gold():
     
 def test_mutation_boundary_strips_unauthorized_items():
     e_id = 1
-    entity = V2EntityBuilder(e_id).kind("HERO").at((0,0)).build()
+    entity = V2EntityBuilder(e_id).kind("HERO").location(0, 0).build()
     state = AuthoritativeState(tick=100, seed=42, entities={e_id: entity})
     
     unauthorized_upd = EntityUpdate(
@@ -49,7 +49,7 @@ def test_mutation_boundary_strips_unauthorized_items():
 
 def test_mutation_boundary_strips_unauthorized_xp():
     e_id = 1
-    entity = V2EntityBuilder(e_id).kind("HERO").at((0,0)).build()
+    entity = V2EntityBuilder(e_id).kind("HERO").location(0, 0).build()
     state = AuthoritativeState(tick=100, seed=42, entities={e_id: entity})
     
     unauthorized_upd = EntityUpdate(
@@ -63,7 +63,7 @@ def test_mutation_boundary_strips_unauthorized_xp():
 
 def test_mutation_boundary_strips_combat_rewards():
     e_id = 1
-    entity = V2EntityBuilder(e_id).kind("HERO").at((0,0)).build()
+    entity = V2EntityBuilder(e_id).kind("HERO").location(0, 0).build()
     state = AuthoritativeState(tick=100, seed=42, entities={e_id: entity})
     
     # Worker trying to sneak in gold through a combat intent
@@ -94,7 +94,7 @@ def test_mutation_boundary_strips_combat_rewards():
 
 def test_mutation_boundary_allows_intents():
     e_id = 1
-    entity = V2EntityBuilder(e_id).kind("HERO").at((0,0)).build()
+    entity = V2EntityBuilder(e_id).kind("HERO").location(0, 0).build()
     state = AuthoritativeState(tick=100, seed=42, entities={e_id: entity})
     
     # Intent should be preserved
@@ -117,7 +117,7 @@ def test_mutation_boundary_allows_intents():
 
 def test_mutation_boundary_strips_unauthorized_intents():
     e_id = 1
-    entity = V2EntityBuilder(e_id).kind("HERO").at((0,0)).build()
+    entity = V2EntityBuilder(e_id).kind("HERO").location(0, 0).build()
     state = AuthoritativeState(tick=100, seed=42, entities={e_id: entity})
     
     # QUEST_REWARD intent should be stripped from worker
@@ -139,7 +139,7 @@ def test_mutation_boundary_strips_unauthorized_intents():
 def test_mutation_boundary_strips_quest_status():
     from src.core.quests import QuestStatus
     e_id = 1
-    entity = V2EntityBuilder(e_id).kind("HERO").at((0,0)).build()
+    entity = V2EntityBuilder(e_id).kind("HERO").location(0, 0).build()
     state = AuthoritativeState(tick=100, seed=42, entities={e_id: entity})
     
     # Worker trying to skip to COMPLETED

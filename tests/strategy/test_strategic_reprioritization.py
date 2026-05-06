@@ -18,9 +18,9 @@ def entity():
     from src.core.builder import V2EntityBuilder
     return (V2EntityBuilder(1)
         .kind("hero")
-        .at((0, 0))
+        .location(0, 0)
         .attributes(intelligence=15, wisdom=15)
-        .with_strategic_profile(resistance=0.5, max_projects=3)
+        .cognition(resistance=0.5, max_projects=3)
         .with_personality(industry=0.5)
         .build())
 

@@ -10,8 +10,8 @@ def test_role_identity_biasing():
     # 1. Shopkeeper bias for Shopkeeping
     shopkeeper = (V2EntityBuilder(1)
         .kind("CITIZEN")
-        .at((0.0, 0.0))
-        .role(EntityRole.SHOPKEEPER)
+        .location(0.0, 0.0)
+        .identity(role=EntityRole.SHOPKEEPER)
         .build())
     
     projects = [
@@ -32,8 +32,8 @@ def test_role_identity_biasing():
     # 2. Hero bias for Quests
     hero = (V2EntityBuilder(2)
         .kind("HERO")
-        .at((0.0, 0.0))
-        .role(EntityRole.HERO)
+        .location(0.0, 0.0)
+        .identity(role=EntityRole.HERO)
         .build())
     
     biased_hero = RoutineService.apply_role_based_biasing(hero, projects, 1200)

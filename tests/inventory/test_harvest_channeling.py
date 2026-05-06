@@ -18,7 +18,7 @@ def test_harvest_channeling_and_yield():
     from src.core.builder import V2EntityBuilder
     entity = (V2EntityBuilder(1)
         .kind("hero")
-        .at((0, 0))
+        .location(0, 0)
         .build())
     state = AuthoritativeState(tick=1, seed=42, entities={1: entity}, resource_nodes={501: node})
     
@@ -73,7 +73,7 @@ def test_harvest_node_cooldown():
     from src.core.builder import V2EntityBuilder
     entity = (V2EntityBuilder(1)
         .kind("hero")
-        .at((0, 0))
+        .location(0, 0)
         .build())
     ent_upd = HarvestAction.start_harvest(entity, 501, state)
     assert ent_upd is None # Still 0 charges

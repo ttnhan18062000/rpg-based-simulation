@@ -8,7 +8,7 @@ def test_bucket_prioritization():
     """Verify that Critical work is always scheduled before Periodic work."""
     p_def = PeriodicDefinition(subsystem_id="cleanup", work_kind="GC", cadence=1)
     # Entity ID is 100, but it should come before "cleanup" if both are due.
-    e100 = V2EntityBuilder(100).readiness(100.0).build()
+    e100 = V2EntityBuilder(100).combat(readiness=100.0).build()
     state = AuthoritativeState(tick=1, seed=42, 
         entities={100: e100},
         periodic_due_ticks={"cleanup": 1}

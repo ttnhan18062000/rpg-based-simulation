@@ -10,34 +10,34 @@ def test_concern_intake_salience_filtering():
     # Observer at (0, 0), Faction 1
     observer = (V2EntityBuilder(1)
                 .kind("hero")
-                .at((0.0, 0.0))
-                .faction(Faction.HERO_GUILD)
+                .location(0.0, 0.0)
+                .identity(faction=Faction.HERO_GUILD)
                 .with_base_stats(hp=100)
                 .build())
     
     # 1. Distant Hostile at (20, 0), Faction 2
     distant_hostile = (V2EntityBuilder(2)
                        .kind("monster")
-                       .at((20.0, 0.0))
-                       .faction(Faction.MONSTER_HORDE)
+                       .location(20.0, 0.0)
+                       .identity(faction=Faction.MONSTER_HORDE)
                        .with_base_stats(hp=100)
                        .build())
     
     # 2. Nearby Hostile at (2, 0), Faction 2
     nearby_hostile = (V2EntityBuilder(3)
                       .kind("monster")
-                      .at((2.0, 0.0))
-                      .faction(Faction.MONSTER_HORDE)
+                      .location(2.0, 0.0)
+                      .identity(faction=Faction.MONSTER_HORDE)
                       .with_base_stats(hp=100)
                       .build())
     
     # 3. Dead Ally at (1, 1), Faction 1
     dead_ally = (V2EntityBuilder(4)
                  .kind("hero")
-                 .at((1.0, 1.0))
-                 .faction(Faction.HERO_GUILD)
+                 .location(1.0, 1.0)
+                 .identity(faction=Faction.HERO_GUILD)
                  .with_current_hp(0)
-                 .alive(False)
+                 .combat(alive=False)
                  .build())
     
     state = AuthoritativeState(tick=99, seed=42, entities={1: observer, 2: distant_hostile, 3: nearby_hostile, 4: dead_ally})

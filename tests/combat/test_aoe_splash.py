@@ -10,11 +10,11 @@ from src.core.enums import Faction
 def create_mock_entity(eid, pos, faction=Faction.HERO_GUILD):
     return (V2EntityBuilder(eid)
         .kind("HERO")
-        .position(pos)
-        .readiness(100.0)
-        .with_identity(faction=faction)
-        .with_attributes(strength=0, vitality=0)
-        .with_combat(hp=100, max_hp=100, atk=20, def_stat=5, range=10)
+        .location(*pos)
+        .combat(readiness=100.0)
+        .identity(faction=faction)
+        .attributes(strength=0, vitality=0)
+        .combat(hp=100, max_hp=100, atk=20, def_stat=5, range=10)
         .build())
 
 @pytest.mark.v2_contract

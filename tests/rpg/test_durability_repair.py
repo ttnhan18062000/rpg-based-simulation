@@ -18,16 +18,16 @@ def make_entity(eid=1, hp=100, gold=100, slots=None, durability=None, faction=Fa
     from src.core.builder import V2EntityBuilder
     builder = (V2EntityBuilder(eid)
                .kind("hero")
-               .at((0,0))
-               .with_identity(role=role, faction=faction)
-               .with_combat(hp=hp, max_hp=100, atk=10, def_stat=5, alive=hp > 0)
-               .with_inventory(gold=gold)
-               .with_attributes(strength=10, vitality=10, agility=10, endurance=10)
+               .location(0, 0)
+               .identity(role=role, faction=faction)
+               .combat(hp=hp, max_hp=100, atk=10, def_stat=5, alive=hp > 0)
+               .inventory(gold=gold)
+               .attributes(strength=10, vitality=10, agility=10, endurance=10)
                .active(True)
-               .readiness(100.0))
+               .combat(readiness=100.0))
     
     if slots or durability:
-        builder.with_equipment(slots=slots or {}, durability=durability or {})
+        builder.equipment(slots=slots or {}, durability=durability or {})
         
     return builder.build()
 

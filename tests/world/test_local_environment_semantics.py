@@ -9,11 +9,11 @@ def create_mock_entity(eid, faction, pos=(10.0, 10.0), hp=100):
     from src.core.builder import V2EntityBuilder
     return (V2EntityBuilder(eid)
         .kind("hero")
-        .position(pos[0], pos[1])
-        .faction(faction)
-        .hp(hp, max_hp=100)
-        .alive(True)
-        .readiness(100.0)
+        .location(pos[0], pos[1])
+        .identity(faction=faction)
+        .combat(hp=hp, max_hp=100)
+        .combat(alive=True)
+        .combat(readiness=100.0)
         .build())
 
 def test_terrain_movement_blockage():

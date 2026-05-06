@@ -6,7 +6,7 @@ from src.core.builder import V2EntityBuilder
 def test_generation_isolation():
     """Verify that apply_generation does not mutate the prior state."""
     state = AuthoritativeState(tick=1, seed=1, world_time=10, entities={
-        1: V2EntityBuilder(1).kind("hero").at((0.0, 0.0)).build()
+        1: V2EntityBuilder(1).kind("hero").location(0.0, 0.0).build()
     })
     
     update = StateUpdate(entity_updates={

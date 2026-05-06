@@ -16,8 +16,8 @@ from src.core.builder import V2EntityBuilder
 def base_state():
     entity = (V2EntityBuilder(1)
               .kind("hero")
-              .at((100, 100))
-              .with_inventory_component(InventoryComponent(max_slots=2, items=[]))
+              .location(100, 100)
+              .replace_inventory(InventoryComponent(max_slots=2, items=[]))
               .build())
     return AuthoritativeState(
         tick=1000,

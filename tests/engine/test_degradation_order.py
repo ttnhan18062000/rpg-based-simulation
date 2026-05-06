@@ -15,7 +15,7 @@ def test_survival_shedding():
     scheduler = DeterministicScheduler(periodic_defs=[p_auth, p_non_auth])
     
     state = AuthoritativeState(tick=1, seed=42, 
-        entities={1: V2EntityBuilder(1).kind("hero").at((0.0, 0.0)).readiness(100.0).build()},
+        entities={1: V2EntityBuilder(1).kind("hero").location(0.0, 0.0).combat(readiness=100.0).build()},
         periodic_due_ticks={"A": 1, "N": 1}
     )
     

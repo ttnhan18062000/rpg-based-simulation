@@ -11,20 +11,20 @@ def test_movement_wait_and_reroute():
     # Setup: Hero blocked by a HOLD monster
     hero = (V2EntityBuilder(1)
             .kind("HERO")
-            .at((5, 5))
-            .readiness(100.0)
+            .location(5, 5)
+            .combat(readiness=100.0)
             .target((7, 5))
             .build())
     
     monster = (V2EntityBuilder(2)
                .kind("MONSTER")
-               .at((6, 5))
+               .location(6, 5)
                .with_navigation_v2(mode=MovementMode.HOLD)
                .build())
     
     # Block BOTH sidesteps (5,4 and 5,6)
-    wall1 = (V2EntityBuilder(3).kind("OBSTACLE").at((5, 4)).build())
-    wall2 = (V2EntityBuilder(4).kind("OBSTACLE").at((5, 6)).build())
+    wall1 = (V2EntityBuilder(3).kind("OBSTACLE").location(5, 4).build())
+    wall2 = (V2EntityBuilder(4).kind("OBSTACLE").location(5, 6).build())
     
     state = AuthoritativeState(entities={1: hero, 2: monster, 3: wall1, 4: wall2}, tick=0, seed=123)
     
@@ -55,8 +55,8 @@ def test_anti_oscillation():
     # Setup: Hero moving between two tiles
     hero = (V2EntityBuilder(1)
             .kind("HERO")
-            .at((5, 5))
-            .readiness(100.0)
+            .location(5, 5)
+            .combat(readiness=100.0)
             .with_navigation_v2(last_pos=(6, 5))
             .build())
     
@@ -69,8 +69,8 @@ def test_anti_oscillation():
     # If oscillation too high, should trigger replan
     hero = (V2EntityBuilder(1)
             .kind("HERO")
-            .at((5, 5))
-            .readiness(100.0)
+            .location(5, 5)
+            .combat(readiness=100.0)
             .with_navigation_v2(last_pos=(6, 5), oscillation_count=3)
             .build())
     state = replace(state, entities={1: hero})

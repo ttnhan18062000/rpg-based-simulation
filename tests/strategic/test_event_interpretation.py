@@ -24,14 +24,14 @@ def _make_entity(entity_id=1, profile=None, current_project=None):
     
     builder = (V2EntityBuilder(entity_id)
         .kind("hero")
-        .at((5.0, 5.0))
-        .with_strategic(projects=projects))
+        .location(5.0, 5.0)
+        .strategic(projects=projects))
     
     if current_id:
         builder.current_project(current_id)
         
     if profile:
-        builder.with_strategic_profile(
+        builder.cognition(
             resistance=profile.interruption_resistance
         )
         
@@ -148,8 +148,8 @@ class TestDirectiveEvent:
         )
         entity = (V2EntityBuilder(1)
             .kind("hero")
-            .at((5.0, 5.0))
-            .with_strategic(directives={"directive_avenge_bandit_001": existing})
+            .location(5.0, 5.0)
+            .strategic(directives={"directive_avenge_bandit_001": existing})
             .build())
 
         result = EventInterpreter.interpret_directive_event(

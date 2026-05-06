@@ -19,9 +19,9 @@ def test_automatic_level_up():
     # 1. Setup: Level 1 entity with 0 XP. 
     entity = (V2EntityBuilder(99)
               .kind("monster")
-              .at((0, 0))
-              .with_identity(role=EntityRole.MONSTER, faction=Faction.MONSTER_HORDE, evolution_level=1)
-              .with_combat(hp=100, max_hp=100, atk=10, def_stat=5)
+              .location(0, 0)
+              .identity(role=EntityRole.MONSTER, faction=Faction.MONSTER_HORDE, evolution_level=1)
+              .combat(hp=100, max_hp=100, atk=10, def_stat=5)
               .build())
     state = AuthoritativeState(tick=1, seed=42, entities={99: entity})
     
@@ -53,9 +53,9 @@ def test_multi_level_up():
     # 1. Setup
     entity = (V2EntityBuilder(99)
               .kind("monster")
-              .at((0, 0))
-              .with_identity(role=EntityRole.MONSTER, faction=Faction.MONSTER_HORDE, evolution_level=1)
-              .with_combat(hp=100, max_hp=100, atk=10, def_stat=10)
+              .location(0, 0)
+              .identity(role=EntityRole.MONSTER, faction=Faction.MONSTER_HORDE, evolution_level=1)
+              .combat(hp=100, max_hp=100, atk=10, def_stat=10)
               .build())
     state = AuthoritativeState(tick=1, seed=42, entities={99: entity})
     

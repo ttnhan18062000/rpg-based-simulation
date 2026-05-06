@@ -7,7 +7,7 @@ def test_transfer_to_home():
     # Setup entity with item
     entity = (V2EntityBuilder(1)
         .kind("HERO")
-        .at((0, 0)) # At town center
+        .location(0, 0) # At town center
         .item("iron_ore", 5)
         .build())
     
@@ -34,7 +34,7 @@ def test_transfer_from_home():
     home_inv = InventoryComponent(items=[ItemStack("wood", 10)])
     entity = (V2EntityBuilder(1)
         .kind("HERO")
-        .at((0, 0))
+        .location(0, 0)
         .build())
     
     state = AuthoritativeState(

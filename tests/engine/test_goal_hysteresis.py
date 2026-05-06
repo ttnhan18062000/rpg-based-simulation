@@ -18,7 +18,7 @@ def test_goal_hysteresis_and_detour_resumption():
     
     entity = (V2EntityBuilder(1)
               .kind("hero")
-              .at((0.0, 0.0))
+              .location(0.0, 0.0)
               .build())
 
     # 1. Active Main Project: Reach (100, 100)

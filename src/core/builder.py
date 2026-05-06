@@ -1,6 +1,7 @@
 from __future__ import annotations
-from dataclasses import replace
-from typing import Any, Dict, List, Optional, Set
+
+from dataclasses import fields, is_dataclass
+from typing import Any, Dict, Iterable, List, Mapping, Optional, Set
 
 from src.core.state import (
     EntityState,
@@ -14,7 +15,6 @@ from src.core.state import (
     InteractionComponent,
     TaskComponent,
     AptitudeComponent,
-    AptitudeComponent,
     AttributeComponent,
     EquipmentComponent,
     EquipSlot,
@@ -22,813 +22,767 @@ from src.core.state import (
     StaminaComponent,
     PersonalityComponent,
     LifeStage,
-    SocialBond
+    SocialBond,
+    BetrayalRecord,
+    WoundState,
+    ScarState,
 )
+
 from src.core.strategic import (
-    StrategicComponent, ProjectState, ProjectStatus, 
-    ObjectiveState, ObjectiveStatus, BlockerState, 
-    LeadState, DirectiveState, CognitionProfile,
-    SourceTrustEntry, TurningPointState
+    StrategicComponent,
+    CognitionProfile,
+    ProjectState,
+    BlockerState,
+    LeadState,
+    DirectiveState,
+    ConcernState,
+    CandidateZone,
+    HypothesisState,
+    SourceTrustEntry,
+    TurningPointState,
+    ContractState,
 )
-from src.core.movement_modes import MovementMode
+
 from src.core.enums import EntityRole, Faction
-from src.core.classes import CLASS_REGISTRY
+from src.core.movement_modes import MovementMode
+
+
+def _component(cls: type, **kwargs):
+    """
+    Build a dataclass component using only fields supported by the current model.
+    """
+    if not is_dataclass(cls):
+        raise TypeError(f"{cls!r} is not a dataclass component")
+
+    valid_fields = {f.name for f in fields(cls) if f.init}
+    filtered = {k: v for k, v in kwargs.items() if k in valid_fields}
+    return cls(**filtered)
+
+
+def _copy_dict(value: Optional[Mapping]) -> dict:
+    return dict(value) if value is not None else {}
+
+
+def _copy_list(value: Optional[Iterable]) -> list:
+    return list(value) if value is not None else []
+
+
+def _copy_set(value: Optional[Iterable]) -> set:
+    return set(value) if value is not None else set()
+
 
 class V2EntityBuilder:
     """
-    Fluent builder for V2 EntityState construction.
-    Maintains API parity with legacy EntityBuilder while producing frozen EntityState.
-    VERIFIED v2: entity_builder_serialization
+    Fresh V2 entity builder.
+
+    Rules:
+    - component methods construct component state from explicit fields
+    - replace_* methods inject exact existing components
+    - no legacy aliases
+    - no hidden conversion of ItemStack into plain strings
     """
 
-    def __init__(self, entity_id: int, tick: int = 0) -> None:
-        self._eid = entity_id
-        self._tick = tick
-        
-        # Identity
-        self._kind = "HERO"
-        self._role = EntityRole.HERO
-        self._faction = Faction.HERO_GUILD
-        self._evolution_level = 1
-        self._evolution_points = 0
-        self._class_id = "NOVICE"
-        self._learned_skills: Set[str] = set()
-        self._starting_gear: Dict[str, str] = {}
-        self._personality = PersonalityComponent()
-        self._life_stage = LifeStage.ADULT
-        
-        # Strategic
-        self._contracts: Dict[str, ContractState] = {}
-        self._directives: Dict[str, DirectiveState] = {}
-        self._leads: Dict[str, LeadState] = {}
-        self._projects: Dict[str, ProjectState] = {}
-        self._current_project_id: Optional[str] = None
-        self._turning_points: List[TurningPointState] = []
-        self._source_trust: Dict[int, SourceTrustEntry] = {}
-        
-        # Spatial
-        self._pos = (0.0, 0.0)
-        self._readiness = 100.0
-        
-        # Combat
-        self._hp_base = 100
-        self._hp_current = 100
-        self._atk_base = 10
-        self._def_base = 5
-        self._items = []
-        self._starting_gear = {}
-        self._durability = {}
-        self._max_slots = 10
-        self._speed = 10
-        self._range = 1
-        self._evasion = 0.05
-        self._tactical_role = "VANGUARD"
-        self._action_style = 0 # ActionStyle.BALANCED
-        self._hp_explicit = False
-        
-        # Navigation Advanced
-        self._target: Optional[tuple[float, float]] = None
-        self._home_pos: Optional[tuple[float, float]] = None
-        self._leash_radius = 0.0
-        self._movement_mode = MovementMode.WANDER
-        self._evolution_level = 1
-        self._evolution_points = 0
-        self._unspent_ap = 0
-        self._str_apt = 1.0
-        self._vit_apt = 1.0
-        self._agi_apt = 1.0
-        self._int_apt = 1.0
-        self._end_apt = 1.0
-        self._last_position: Optional[tuple[float, float]] = None
-        self._oscillation_count = 0
-        self._wait_count = 0
-        self._interruption_resistance = 0.3
-        self._detour_breadth = 3
-        self._detour_depth = 2
-        self._max_active_projects = 3
-        self._max_leads = 8
-        self._max_concerns = 5
-        self._max_candidate_zones = 4
-        self._max_hypotheses = 3
-        
-        # Inventory
-        self._max_slots = 16
-        self._max_weight = 50
-        self._gold = 0
-        self._items: List[ItemStack] = []
-        
-        # Lifecycle / Biological
-        self._generation = 1
-        self._age_ticks = 0
-        self._is_permadeath = False
-        self._active = True
-        self._alive = True
-        self._hunger = 0.0
-        self._sleep_debt = 0.0
-        self._trust_history: Dict[int, float] = {}
-        self._betrayal_count = 0
-        self._bonds: Dict[int, SocialBond] = {}
-        self._action_style = 0
-        
-        # Attributes (Default 5 as per legacy)
-        self._str = 5
-        self._agi = 5
-        self._vit = 5
-        self._end = 5
-        self._stamina_current = 100.0
-        self._stamina_max = 100.0
-        
-        # Aptitudes
-        self._str_apt = 1.0
-        self._int_apt = 1.0
-        self._agi_apt = 1.0
-        self._vit_apt = 1.0
-        self._end_apt = 1.0
-        self._int = 5
-        self._spi = 5
-        self._wis = 5
-        self._end = 5
-        self._per = 5
-        self._cha = 5
-        
-        # Components
-        self._properties: Dict[str, Any] = {}
-        self._target: Optional[tuple[float, float]] = None
-        self._home_pos: Optional[tuple[float, float]] = None
-        self._leash_radius: float = 0.0
-        
-        # Interaction
-        self._target_node_id: Optional[int] = None
-        self._interaction_progress: float = 0.0
-        self._interaction_target_id: Optional[int] = None
-        
-        # Strategic
-        self._directives: Dict[str, DirectiveState] = {}
-        self._projects: Dict[str, ProjectState] = {}
-        self._current_project_id: Optional[str] = None
-        self._contracts: Dict[str, ContractState] = {}
-        self._blockers: Dict[str, BlockerState] = {}
-        self._concerns: Dict[str, ConcernState] = {}
-        self._leads: Dict[str, LeadState] = {}
-        self._turning_points: Dict[str, TurningPointState] = {}
-        self._source_trust: Dict[int, SourceTrustEntry] = {}
-        self._move_cost = 10.0
-        self._public_reputation = 1.0
-        self._heroism_score = 0.0
-        self._notoriety_score = 0.0
+    def __init__(self, entity_id: int) -> None:
+        self._entity_id = entity_id
+        self._kind = "hero"
 
-    def kind(self, k: str) -> V2EntityBuilder:
-        self._kind = k
-        k_up = k.upper()
-        if k_up == "MONSTER" or "GOBLIN" in k_up or "ORC" in k_up or "WOLF" in k_up:
-            self._role = EntityRole.MONSTER
-            self._faction = Faction.MONSTER_HORDE
-        elif k_up == "HERO" or "LEGEND" in k_up:
-            self._role = EntityRole.HERO
-            self._faction = Faction.HERO_GUILD
+        self._location = (0.0, 0.0)
+
+        self._identity = IdentityComponent()
+        self._inventory = InventoryComponent()
+        self._combat = CombatComponent()
+        self._navigation = NavigationComponent()
+        self._strategic = StrategicComponent()
+        self._social = SocialComponent()
+        self._biological = BiologicalComponent()
+        self._lifecycle = LifecycleComponent()
+        self._attributes = AttributeComponent()
+        self._aptitude = AptitudeComponent()
+        self._equipment = EquipmentComponent()
+        self._interaction = InteractionComponent()
+        self._task = TaskComponent()
+        self._stamina = StaminaComponent()
+
+    def kind(self, value: str) -> V2EntityBuilder:
+        self._kind = value
         return self
 
-    def role(self, r: int | EntityRole) -> V2EntityBuilder:
-        # Map legacy int roles to V2 Enums if possible
-        if isinstance(r, int):
-            try:
-                self._role = EntityRole(r)
-            except ValueError:
-                # Fallback or keep as int if Enums differ
-                self._role = r
-        else:
-            self._role = r
-        return self
+    def location(self, x: float, y: float) -> V2EntityBuilder:
+        self._location = (float(x), float(y))
 
-    def faction(self, f: int | Faction) -> V2EntityBuilder:
-        if isinstance(f, int):
-            try:
-                self._faction = Faction(f)
-            except (ValueError, TypeError):
-                # If it's a legacy int that doesn't map, just use it
-                self._faction = f
-        else:
-            self._faction = f
-        return self
-
-    def evolution_level(self, level: int) -> V2EntityBuilder:
-        self._evolution_level = level
-        return self
-
-    def personality(self, p: PersonalityComponent) -> V2EntityBuilder:
-        self._personality = p
-        return self
-
-    def with_personality(self, greed: float = 0.0, bravery: float = 0.0, 
-                         sociability: float = 0.0, industry: float = 0.0) -> V2EntityBuilder:
-        self._personality = PersonalityComponent(
-            greed=greed, bravery=bravery, 
-            sociability=sociability, industry=industry
+        self._navigation = _component(
+            NavigationComponent,
+            **{
+                **self._navigation_to_dict(),
+                "position": self._location,
+            },
         )
         return self
 
-    def life_stage(self, ls: LifeStage) -> V2EntityBuilder:
-        self._life_stage = ls
-        return self
+    def identity(
+        self,
+        *,
+        role: int | EntityRole | None = None,
+        faction: int | Faction | None = None,
+        known_recipes: Optional[Set[str]] = None,
+        craft_target: Optional[str] = None,
+        evolution_level: Optional[int] = None,
+        evolution_points: Optional[int] = None,
+        veterancy_points: Optional[int] = None,
+        veterancy_rank: Optional[int] = None,
+        unspent_ap: Optional[int] = None,
+        class_id: Optional[str] = None,
+        learned_skills: Optional[Set[str]] = None,
+        traits: Optional[Set[str]] = None,
+        active_breakthroughs: Optional[Set[str]] = None,
+        cooldowns: Optional[Dict[str, int]] = None,
+        personality: Optional[PersonalityComponent] = None,
+        life_stage: Optional[LifeStage] = None,
+        group_id: Optional[int] = None,
+        properties: Optional[Dict[str, Any]] = None,
+    ) -> V2EntityBuilder:
+        current = self._identity_to_dict()
 
-    def trait(self, t: str | Set[str]) -> V2EntityBuilder:
-        if not hasattr(self, "_traits"):
-            self._traits: Set[str] = set()
-        if isinstance(t, str):
-            self._traits.add(t)
-        else:
-            self._traits.update(t)
-        return self
-
-    def with_identity(self, role: EntityRole = None, faction: Faction = None, 
-                      evolution_level: int = None, evolution_points: int = 0) -> V2EntityBuilder:
-        if role is not None: self._role = role
-        if faction is not None: self._faction = faction
-        if evolution_level is not None: self._evolution_level = evolution_level
-        self._evolution_points = evolution_points
-        return self
-
-    def with_combat(self, atk: int = None, def_stat: int = None, 
-                    range: int = None, evasion: float = None,
-                    speed: int = None, alive: bool = True,
-                    hp: int = None, max_hp: int = None,
-                    move_cost: float = None) -> V2EntityBuilder:
-        if atk is not None: self._atk_base = atk
-        if def_stat is not None: self._def_base = def_stat
-        if range is not None: self._range = range
-        if evasion is not None: self._evasion = evasion
-        if speed is not None: self._speed = speed
-        if hp is not None:
-            self._hp_current = hp
-            self._hp_explicit = True
-        if move_cost is not None:
-            self._move_cost = move_cost
-        if max_hp is not None:
-            self._hp_base = max_hp
-        self._alive = alive
-        return self
-
-    def move_cost(self, val: float) -> V2EntityBuilder:
-        self._move_cost = val
-        return self
-
-    def hp(self, current: int, max_hp: int = None) -> V2EntityBuilder:
-        self._hp_base = max_hp if max_hp is not None else current
-        self._hp_current = current
-        self._hp_explicit = True
-        return self
-
-    def atk(self, val: int) -> V2EntityBuilder:
-        self._atk_base = val
-        return self
-
-    def def_stat(self, val: int) -> V2EntityBuilder:
-        self._def_base = val
-        return self
-
-    def skills(self, learned_skills: Set[str]) -> V2EntityBuilder:
-        self._learned_skills = learned_skills
-        return self
-
-    def cooldowns(self, cooldown_dict: Dict[str, int]) -> V2EntityBuilder:
-        if not hasattr(self, "_cooldown_updates"):
-            self._cooldown_updates: Dict[str, int] = {}
-        self._cooldown_updates.update(cooldown_dict)
-        return self
-
-    def with_lifecycle(self, generation: int = 1, age_ticks: int = 0) -> V2EntityBuilder:
-        self._generation = generation
-        self._age_ticks = age_ticks
-        return self
-
-    def with_biological(self, sleep_debt: float = None, hunger: float = None) -> V2EntityBuilder:
-        if sleep_debt is not None: self._sleep_debt = sleep_debt
-        if hunger is not None: self._hunger = hunger
-        return self
-
-    def biological(self, sleep_debt: float = None, hunger: float = None) -> V2EntityBuilder:
-        """Alias for with_biological."""
-        return self.with_biological(sleep_debt=sleep_debt, hunger=hunger)
-
-    def sleep_debt(self, val: float) -> V2EntityBuilder:
-        self._sleep_debt = val
-        return self
-
-    def evolution(self, level: int = 1, points: int = 0, unspent_ap: int = 0) -> V2EntityBuilder:
-        self._evolution_level = level
-        self._evolution_points = points
-        self._unspent_ap = unspent_ap
-        return self
-
-    def aptitude(self, str_apt: float = 1.0, vit_apt: float = 1.0, agi_apt: float = 1.0, int_apt: float = 1.0, end_apt: float = 1.0) -> V2EntityBuilder:
-        self._str_apt = str_apt
-        self._vit_apt = vit_apt
-        self._agi_apt = agi_apt
-        self._int_apt = int_apt
-        self._end_apt = end_apt
-        return self
-
-    def with_aptitude(self, str_apt: float = 1.0, vit_apt: float = 1.0, agi_apt: float = 1.0, int_apt: float = 1.0, end_apt: float = 1.0) -> V2EntityBuilder:
-        return self.aptitude(str_apt, vit_apt, agi_apt, int_apt, end_apt)
-
-    def with_aptitudes(self, str_apt: float = 1.0, vit_apt: float = 1.0, agi_apt: float = 1.0, int_apt: float = 1.0, end_apt: float = 1.0) -> V2EntityBuilder:
-        return self.aptitude(str_apt, vit_apt, agi_apt, int_apt, end_apt)
-
-    def hunger(self, val: float) -> V2EntityBuilder:
-        self._hunger = val
-        return self
-
-    def with_inventory(self, gold: int = None, items: List[ItemStack] = None, max_slots: int = 10, max_weight: float = 100.0) -> V2EntityBuilder:
-        if gold is not None: self._gold = gold
-        if items is not None: self._items = items
-        self._max_slots = max_slots
-        if max_weight is not None: self._max_weight = max_weight
-        return self
-
-    def with_equipment(self, slots: Dict[EquipSlot, str] = None, durability: Dict[EquipSlot, float] = None) -> V2EntityBuilder:
-        if slots:
-            self._starting_gear.update({k.name if isinstance(k, EquipSlot) else str(k): v for k, v in slots.items()})
-        if durability:
-            self._durability.update({k.name if isinstance(k, EquipSlot) else str(k): v for k, v in durability.items()})
-        return self
-
-    def social_bond(self, target_or_bond: int | SocialBond, sentiment: float = 0.0) -> V2EntityBuilder:
-        if not hasattr(self, "_bonds"):
-            self._bonds = {}
-        
-        if isinstance(target_or_bond, SocialBond):
-            self._bonds[target_or_bond.target_id] = target_or_bond
-        else:
-            self._bonds[target_or_bond] = SocialBond(target_id=target_or_bond, sentiment=sentiment)
-        return self
-
-    def with_task(self, kind: str, payload: Dict[str, Any]) -> V2EntityBuilder:
-        self._task_kind = kind
-        self._task_payload = payload
-        return self
-
-    def with_navigation(self, target: tuple[float, float] = None, 
-                        home_position: tuple[float, float] = None,
-                        leash_radius: float = None,
-                        mode: MovementMode = None,
-                        wait_count: int = None,
-                        last_pos: tuple[float, float] = None,
-                        oscillation_count: int = None) -> V2EntityBuilder:
-        if target is not None: self._target = target
-        if home_position is not None: self._home_pos = home_position
-        if leash_radius is not None: self._leash_radius = leash_radius
-        if mode is not None: self._movement_mode = mode
-        if wait_count is not None: self._wait_count = wait_count
-        if last_pos is not None: self._last_position = last_pos
-        if oscillation_count is not None: self._oscillation_count = oscillation_count
-        return self
-
-    def at(self, pos: tuple[float, float] | list[float]) -> V2EntityBuilder:
-        self._pos = tuple(pos)
-        return self
-
-    def position(self, *args) -> V2EntityBuilder:
-        if len(args) == 1:
-            return self.at(args[0])
-        elif len(args) == 2:
-            return self.at((args[0], args[1]))
-        else:
-            raise TypeError(f"position() takes 1 or 2 positional arguments but {len(args)} were given")
-
-    def readiness(self, val: float) -> V2EntityBuilder:
-        self._readiness = val
-        return self
-
-    def action_style(self, style: int) -> V2EntityBuilder:
-        self._action_style = style
-        return self
-
-    def group_id(self, g_id: Optional[int]) -> V2EntityBuilder:
-        self._group_id = g_id
-        return self
-
-    def trust(self, target_id: int, score: float) -> V2EntityBuilder:
-        self._trust_history[target_id] = score
-        return self
-
-    def betrayal_count(self, count: int) -> V2EntityBuilder:
-        self._betrayal_count = count
-        return self
-
-    def bond(self, b: SocialBond) -> V2EntityBuilder:
-        self._bonds[b.target_id] = b
-        return self
-
-    def bonds(self, bond_dict: Dict[int, SocialBond]) -> V2EntityBuilder:
-        self._bonds.update(bond_dict)
-        return self
-
-    def gold(self, amount: int) -> V2EntityBuilder:
-        self._gold = amount
-        return self
-
-    def max_slots(self, val: int) -> V2EntityBuilder:
-        self._max_slots = val
-        return self
-
-    def item(self, item_id: str, quantity: int = 1) -> V2EntityBuilder:
-        self._items.append(ItemStack(item_id=item_id, quantity=quantity))
-        return self
-        
-    def items(self, item_list: List[ItemStack]) -> V2EntityBuilder:
-        self._items = list(item_list)
-        return self
-
-    def target(self, pos: tuple[float, float] | None) -> V2EntityBuilder:
-        self._target = pos
-        return self
-
-    def home_pos(self, x: float, y: float) -> V2EntityBuilder:
-        self._home_pos = (x, y)
-        return self
-
-    def movement_mode(self, mode: MovementMode) -> V2EntityBuilder:
-        self._movement_mode = mode
-        return self
-
-    def strength(self, val: int) -> V2EntityBuilder:
-        self._str = val
-        return self
-
-    def agility(self, val: int) -> V2EntityBuilder:
-        self._agi = val
-        return self
-
-    def vitality(self, val: int) -> V2EntityBuilder:
-        self._vit = val
-        return self
-
-    def endurance(self, val: int) -> V2EntityBuilder:
-        self._end = val
-        return self
-
-    def leash_radius(self, val: float) -> V2EntityBuilder:
-        self._leash_radius = val
-        return self
-
-    def with_strategic(self, contracts: Dict[str, ContractState] = None, 
-                       directives: Dict[str, DirectiveState] = None,
-                       leads: Dict[str, LeadState] = None,
-                       projects: Dict[str, ProjectState] = None,
-                       blockers: Dict[str, BlockerState] = None,
-                       concerns: Dict[str, ConcernState] = None) -> V2EntityBuilder:
-        if contracts is not None: self._contracts = contracts
-        if directives is not None: self._directives = directives
-        if leads is not None: self._leads = leads
-        if projects is not None: self._projects = projects
-        if blockers is not None: self._blockers = blockers
-        if concerns is not None: self._concerns = concerns
-        return self
-
-    def with_strategic_profile(self, max_projects: int = None, max_leads: int = None,
-                               max_concerns: int = None, max_zones: int = None,
-                               max_hypotheses: int = None, resistance: float = None,
-                               breadth: int = None, depth: int = None) -> V2EntityBuilder:
-        if max_projects is not None: self._max_active_projects = max_projects
-        if max_leads is not None: self._max_leads = max_leads
-        if max_concerns is not None: self._max_concerns = max_concerns
-        if max_zones is not None: self._max_candidate_zones = max_zones
-        if max_hypotheses is not None: self._max_hypotheses = max_hypotheses
-        if resistance is not None: self._interruption_resistance = resistance
-        if breadth is not None: self._detour_breadth = breadth
-        if depth is not None: self._detour_depth = depth
-        return self
-
-    def with_objective(self, objective_id: str) -> V2EntityBuilder:
-        self._current_objective_id = objective_id
-        return self
-
-    def source_trust(self, source_id: int, trust: float, interactions: int = 0) -> V2EntityBuilder:
-        self._source_trust[source_id] = SourceTrustEntry(
-            entity_id=source_id, trust=trust, interactions=interactions
-        )
-        return self
-
-    def strategic_project(self, project: ProjectState) -> V2EntityBuilder:
-        self._projects[project.id] = project
-        return self
-
-    def strategic_contract(self, contract: ContractState) -> V2EntityBuilder:
-        self._contracts[contract.id] = contract
-        return self
-
-    def strategic_directive(self, directive: DirectiveState) -> V2EntityBuilder:
-        self._directives[directive.id] = directive
-        return self
-
-    def current_project(self, project_id: str) -> V2EntityBuilder:
-        self._current_project_id = project_id
-        return self
-
-    def cognition(self, interruption_resistance: float = 0.5, detour_breadth: int = 3) -> V2EntityBuilder:
-        self._interruption_resistance = interruption_resistance
-        self._detour_breadth = detour_breadth
-        return self
-
-    def with_interaction(self, target_id: int = None, progress: float = 0.0) -> V2EntityBuilder:
-        self._target_node_id = target_id
-        self._interaction_progress = progress
-        return self
-
-
-    def with_class(self, class_id: str) -> V2EntityBuilder:
-        if class_id in CLASS_REGISTRY:
-            self._class_id = class_id
-            defn = CLASS_REGISTRY[class_id]
-            self._hp_base = defn.base_hp
-            self._atk_base = defn.base_atk
-            self._def_base = defn.base_def
-            self._learned_skills = set(defn.starting_skills)
-            self._starting_gear = dict(defn.starting_gear)
-        return self
-
-    def with_base_stats(self, hp: int = 100, atk: int = 10, def_stat: int = 5, 
-                        range: int = 1, evasion: float = 0.05, 
-                        tactical_role: str = "VANGUARD",
-                        action_style: int = 0) -> V2EntityBuilder:
-        self._hp_base = hp
-        self._atk_base = atk
-        self._def_base = def_stat
-        self._range = range
-        self._evasion = evasion
-        self._tactical_role = tactical_role
-        self._action_style = action_style
-        return self
-
-    def monster(self, race: str, tier: int = 0) -> V2EntityBuilder:
-        """Helper for standard monster construction."""
-        self._kind = f"{race}_{tier}" # e.g. goblin_0
-        self._role = EntityRole.MONSTER
-        self._faction = Faction.MONSTER_HORDE
-        
-        # Simple tier-based scaling
-        self._hp_base = 50 + (tier * 50)
-        self._atk_base = 5 + (tier * 5)
-        self._def_base = 2 + (tier * 3)
-        
-        # Loadout mapping (Placeholder)
-        if race == "goblin":
-            if tier == 0:
-                self._starting_gear = {"MAIN_HAND": "wooden_club"}
-            elif tier == 1:
-                self._starting_gear = {"MAIN_HAND": "iron_sword", "TORSO": "leather_armor"}
-        
-        return self
-
-    def with_attributes(self, **kwargs) -> V2EntityBuilder:
-        """Sets specific attribute values with long-to-short mapping."""
-        mapping = {
-            "strength": "_str",
-            "agility": "_agi",
-            "vitality": "_vit",
-            "endurance": "_end",
-            "intelligence": "_int",
-            "spirit": "_spi",
-            "wisdom": "_wis",
-            "perception": "_per",
-            "charisma": "_cha"
+        updates = {
+            "role": role,
+            "faction": faction,
+            "known_recipes": _copy_set(known_recipes) if known_recipes is not None else None,
+            "craft_target": craft_target,
+            "evolution_level": evolution_level,
+            "evolution_points": evolution_points,
+            "veterancy_points": veterancy_points,
+            "veterancy_rank": veterancy_rank,
+            "unspent_ap": unspent_ap,
+            "class_id": class_id,
+            "learned_skills": _copy_set(learned_skills) if learned_skills is not None else None,
+            "traits": _copy_set(traits) if traits is not None else None,
+            "active_breakthroughs": _copy_set(active_breakthroughs) if active_breakthroughs is not None else None,
+            "cooldowns": _copy_dict(cooldowns) if cooldowns is not None else None,
+            "personality": personality,
+            "life_stage": life_stage,
+            "group_id": group_id,
+            "properties": _copy_dict(properties) if properties is not None else None,
         }
-        for k, v in kwargs.items():
-            attr_name = mapping.get(k, f"_{k}")
-            if hasattr(self, attr_name):
-                setattr(self, attr_name, int(v))
+
+        for key, value in updates.items():
+            if value is not None:
+                current[key] = value
+
+        self._identity = _component(IdentityComponent, **current)
         return self
 
-    def with_aptitudes(self, **kwargs) -> V2EntityBuilder:
-        """Sets specific aptitude values."""
-        for k, v in kwargs.items():
-            attr_name = f"_{k}_apt"
-            if hasattr(self, attr_name):
-                setattr(self, attr_name, float(v))
+    def inventory(
+        self,
+        *,
+        items: Optional[List[ItemStack]] = None,
+        gold: Optional[int] = None,
+        max_slots: Optional[int] = None,
+        max_weight: Optional[float] = None,
+    ) -> V2EntityBuilder:
+        current = self._inventory_to_dict()
+
+        if items is not None:
+            current["items"] = list(items)
+        if gold is not None:
+            current["gold"] = int(gold)
+        if max_slots is not None:
+            current["max_slots"] = int(max_slots)
+        if max_weight is not None:
+            current["max_weight"] = float(max_weight)
+
+        self._inventory = _component(InventoryComponent, **current)
         return self
 
+    def combat(
+        self,
+        *,
+        hp: Optional[int] = None,
+        max_hp: Optional[int] = None,
+        atk: Optional[int] = None,
+        def_stat: Optional[int] = None,
+        speed: Optional[int] = None,
+        attack_range: Optional[int] = None,
+        evasion: Optional[float] = None,
+        move_cost: Optional[float] = None,
+        tactical_role: Optional[str] = None,
+        action_style: Optional[int] = None,
+        alive: Optional[bool] = None,
+        readiness: Optional[float] = None,
+        wounds: Optional[List[WoundState]] = None,
+        scars: Optional[List[ScarState]] = None,
+    ) -> V2EntityBuilder:
+        current = self._combat_to_dict()
 
-    def with_inventory_component(self, inv: InventoryComponent) -> V2EntityBuilder:
-        self._gold = inv.gold
-        self._max_slots = inv.max_slots
-        self._max_weight = inv.max_weight
-        # Convert ItemStack list back to item_id list for internal storage
-        self._items = [item.item_id for item in inv.items]
+        updates = {
+            "hp": hp,
+            "max_hp": max_hp,
+            "atk": atk,
+            "def_stat": def_stat,
+            "speed": speed,
+            "range": attack_range,
+            "evasion": evasion,
+            "move_cost": move_cost,
+            "tactical_role": tactical_role,
+            "action_style": action_style,
+            "alive": alive,
+            "readiness": readiness,
+            "wounds": list(wounds) if wounds is not None else None,
+            "scars": list(scars) if scars is not None else None,
+        }
+
+        for key, value in updates.items():
+            if value is not None:
+                current[key] = value
+
+        self._combat = _component(CombatComponent, **current)
         return self
 
-    def with_inventory_v2(self, max_slots: int = 16, max_weight: float = 50.0) -> V2EntityBuilder:
-        """Testing helper for V2 inventory schema."""
-        self._max_slots = max_slots
-        self._max_weight = max_weight
+    def attributes(
+        self,
+        *,
+        strength: Optional[int] = None,
+        agility: Optional[int] = None,
+        vitality: Optional[int] = None,
+        endurance: Optional[int] = None,
+        intelligence: Optional[int] = None,
+        spirit: Optional[int] = None,
+        wisdom: Optional[int] = None,
+        perception: Optional[int] = None,
+        charisma: Optional[int] = None,
+    ) -> V2EntityBuilder:
+        current = self._attributes_to_dict()
+
+        updates = {
+            "strength": strength,
+            "agility": agility,
+            "vitality": vitality,
+            "endurance": endurance,
+            "intelligence": intelligence,
+            "spirit": spirit,
+            "wisdom": wisdom,
+            "perception": perception,
+            "charisma": charisma,
+        }
+
+        for key, value in updates.items():
+            if value is not None:
+                current[key] = int(value)
+
+        self._attributes = _component(AttributeComponent, **current)
         return self
 
-    def with_navigation_v2(self, mode: MovementMode = MovementMode.WANDER, 
-                           last_pos: tuple[float, float] | None = None,
-                           oscillation_count: int = 0) -> V2EntityBuilder:
-        """Testing helper for V2 navigation schema."""
-        self._movement_mode = mode
-        self._last_position = last_pos
-        self._oscillation_count = oscillation_count
+    def aptitude(
+        self,
+        *,
+        learning_rate: Optional[float] = None,
+        stamina_efficiency: Optional[float] = None,
+        str_apt: Optional[float] = None,
+        agi_apt: Optional[float] = None,
+        vit_apt: Optional[float] = None,
+        end_apt: Optional[float] = None,
+        int_apt: Optional[float] = None,
+        spi_apt: Optional[float] = None,
+        wis_apt: Optional[float] = None,
+        per_apt: Optional[float] = None,
+        cha_apt: Optional[float] = None,
+    ) -> V2EntityBuilder:
+        current = self._aptitude_to_dict()
+
+        updates = {
+            "learning_rate": learning_rate,
+            "stamina_efficiency": stamina_efficiency,
+            "str_apt": str_apt,
+            "agi_apt": agi_apt,
+            "vit_apt": vit_apt,
+            "end_apt": end_apt,
+            "int_apt": int_apt,
+            "spi_apt": spi_apt,
+            "wis_apt": wis_apt,
+            "per_apt": per_apt,
+            "cha_apt": cha_apt,
+        }
+
+        for key, value in updates.items():
+            if value is not None:
+                current[key] = float(value)
+
+        self._aptitude = _component(AptitudeComponent, **current)
         return self
 
-    def social(self, public_reputation: float = None, heroism: float = None, notoriety: float = None) -> V2EntityBuilder:
-        if public_reputation is not None: self._public_reputation = public_reputation
-        if heroism is not None: self._heroism_score = heroism
-        if notoriety is not None: self._notoriety_score = notoriety
+    def navigation(
+        self,
+        *,
+        position: Optional[tuple[float, float]] = None,
+        target: Optional[tuple[float, float]] = None,
+        path: Optional[List[tuple[float, float]]] = None,
+        moved_recently: Optional[bool] = None,
+        movement_mode: Optional[MovementMode] = None,
+        last_failure_reason: Optional[str] = None,
+        wait_count: Optional[int] = None,
+        oscillation_count: Optional[int] = None,
+        last_position: Optional[tuple[float, float]] = None,
+        home_position: Optional[tuple[float, float]] = None,
+        leash_radius: Optional[float] = None,
+        chase_ticks: Optional[int] = None,
+        max_chase_ticks: Optional[int] = None,
+        returning_home: Optional[bool] = None,
+    ) -> V2EntityBuilder:
+        current = self._navigation_to_dict()
+
+        updates = {
+            "position": position,
+            "target": target,
+            "path": list(path) if path is not None else None,
+            "moved_recently": moved_recently,
+            "movement_mode": movement_mode,
+            "last_failure_reason": last_failure_reason,
+            "wait_count": wait_count,
+            "oscillation_count": oscillation_count,
+            "last_position": last_position,
+            "home_position": home_position,
+            "leash_radius": leash_radius,
+            "chase_ticks": chase_ticks,
+            "max_chase_ticks": max_chase_ticks,
+            "returning_home": returning_home,
+        }
+
+        for key, value in updates.items():
+            if value is not None:
+                current[key] = value
+
+        self._navigation = _component(NavigationComponent, **current)
+
+        if position is not None:
+            self._location = (float(position[0]), float(position[1]))
+
         return self
 
-    def social_rejection(self, source_id: int, count: int) -> V2EntityBuilder:
-        # We'll need to handle this in build() or add a _rejections dict
-        if not hasattr(self, "_rejections"):
-            self._rejections: Dict[int, int] = {}
-        self._rejections[source_id] = count
+    def cognition(
+        self,
+        *,
+        max_active_projects: Optional[int] = None,
+        max_leads: Optional[int] = None,
+        max_concerns: Optional[int] = None,
+        max_candidate_zones: Optional[int] = None,
+        max_hypotheses: Optional[int] = None,
+        interruption_resistance: Optional[float] = None,
+        detour_breadth: Optional[int] = None,
+        detour_depth: Optional[int] = None,
+    ) -> V2EntityBuilder:
+        current = self._cognition_to_dict(self._strategic.profile)
+
+        updates = {
+            "max_active_projects": max_active_projects,
+            "max_leads": max_leads,
+            "max_concerns": max_concerns,
+            "max_candidate_zones": max_candidate_zones,
+            "max_hypotheses": max_hypotheses,
+            "interruption_resistance": interruption_resistance,
+            "detour_breadth": detour_breadth,
+            "detour_depth": detour_depth,
+        }
+
+        for key, value in updates.items():
+            if value is not None:
+                current[key] = value
+
+        profile = _component(CognitionProfile, **current)
+
+        self._strategic = _component(
+            StrategicComponent,
+            **{
+                **self._strategic_to_dict(),
+                "profile": profile,
+            },
+        )
         return self
 
+    def strategic(
+        self,
+        *,
+        home_region_id: Optional[str] = None,
+        blockers: Optional[Dict[str, BlockerState]] = None,
+        leads: Optional[Dict[str, LeadState]] = None,
+        directives: Optional[Dict[str, DirectiveState]] = None,
+        projects: Optional[Dict[str, ProjectState]] = None,
+        concerns: Optional[Dict[str, ConcernState]] = None,
+        candidate_zones: Optional[Dict[str, CandidateZone]] = None,
+        hypotheses: Optional[Dict[str, HypothesisState]] = None,
+        source_trust: Optional[Dict[int, SourceTrustEntry]] = None,
+        contracts: Optional[Dict[str, ContractState]] = None,
+        turning_points: Optional[List[TurningPointState]] = None,
+        current_project_id: Optional[str] = None,
+        current_objective_id: Optional[str] = None,
+        primary_overload_source: Optional[str] = None,
+        last_overload_tick: Optional[int] = None,
+        boredom: Optional[Dict[str, float]] = None,
+    ) -> V2EntityBuilder:
+        current = self._strategic_to_dict()
 
-    def task(self, kind: str, payload: Dict[str, Any]) -> V2EntityBuilder:
-        self._task_kind = kind
-        self._task_payload = payload
+        updates = {
+            "home_region_id": home_region_id,
+            "blockers": _copy_dict(blockers) if blockers is not None else None,
+            "leads": _copy_dict(leads) if leads is not None else None,
+            "directives": _copy_dict(directives) if directives is not None else None,
+            "projects": _copy_dict(projects) if projects is not None else None,
+            "concerns": _copy_dict(concerns) if concerns is not None else None,
+            "candidate_zones": _copy_dict(candidate_zones) if candidate_zones is not None else None,
+            "hypotheses": _copy_dict(hypotheses) if hypotheses is not None else None,
+            "source_trust": _copy_dict(source_trust) if source_trust is not None else None,
+            "contracts": _copy_dict(contracts) if contracts is not None else None,
+            "turning_points": _copy_list(turning_points) if turning_points is not None else None,
+            "current_project_id": current_project_id,
+            "current_objective_id": current_objective_id,
+            "primary_overload_source": primary_overload_source,
+            "last_overload_tick": last_overload_tick,
+            "boredom": _copy_dict(boredom) if boredom is not None else None,
+        }
+
+        for key, value in updates.items():
+            if value is not None:
+                current[key] = value
+
+        self._strategic = _component(StrategicComponent, **current)
         return self
 
-    def tactical_role(self, role: str) -> V2EntityBuilder:
-        self._tactical_role = role
+    def social(
+        self,
+        *,
+        trust_history: Optional[Dict[int, float]] = None,
+        familiarity_history: Optional[Dict[int, float]] = None,
+        debt_history: Optional[Dict[int, float]] = None,
+        fear_history: Optional[Dict[int, float]] = None,
+        grudge_history: Optional[Dict[int, float]] = None,
+        salience_history: Optional[Dict[int, float]] = None,
+        bonds: Optional[Dict[int, SocialBond]] = None,
+        nemesis_ids: Optional[Set[int]] = None,
+        place_attachment: Optional[Dict[str, float]] = None,
+        betrayal_count: Optional[int] = None,
+        betrayal_records: Optional[List[BetrayalRecord]] = None,
+        public_reputation: Optional[float] = None,
+        heroism_score: Optional[float] = None,
+        notoriety_score: Optional[float] = None,
+        last_offer_tick: Optional[int] = None,
+        rejection_count: Optional[Dict[int, int]] = None,
+    ) -> V2EntityBuilder:
+        current = self._social_to_dict()
+
+        updates = {
+            "trust_history": _copy_dict(trust_history) if trust_history is not None else None,
+            "familiarity_history": _copy_dict(familiarity_history) if familiarity_history is not None else None,
+            "debt_history": _copy_dict(debt_history) if debt_history is not None else None,
+            "fear_history": _copy_dict(fear_history) if fear_history is not None else None,
+            "grudge_history": _copy_dict(grudge_history) if grudge_history is not None else None,
+            "salience_history": _copy_dict(salience_history) if salience_history is not None else None,
+            "bonds": _copy_dict(bonds) if bonds is not None else None,
+            "nemesis_ids": _copy_set(nemesis_ids) if nemesis_ids is not None else None,
+            "place_attachment": _copy_dict(place_attachment) if place_attachment is not None else None,
+            "betrayal_count": betrayal_count,
+            "betrayal_records": _copy_list(betrayal_records) if betrayal_records is not None else None,
+            "public_reputation": public_reputation,
+            "heroism_score": heroism_score,
+            "notoriety_score": notoriety_score,
+            "last_offer_tick": last_offer_tick,
+            "rejection_count": _copy_dict(rejection_count) if rejection_count is not None else None,
+        }
+
+        for key, value in updates.items():
+            if value is not None:
+                current[key] = value
+
+        self._social = _component(SocialComponent, **current)
         return self
 
+    def biological(
+        self,
+        *,
+        sleep_debt: Optional[float] = None,
+        hunger: Optional[float] = None,
+        rest_pressure: Optional[float] = None,
+        last_meal_tick: Optional[int] = None,
+        last_sleep_tick: Optional[int] = None,
+        well_rested_until: Optional[int] = None,
+    ) -> V2EntityBuilder:
+        current = self._biological_to_dict()
 
+        updates = {
+            "sleep_debt": sleep_debt,
+            "hunger": hunger,
+            "rest_pressure": rest_pressure,
+            "last_meal_tick": last_meal_tick,
+            "last_sleep_tick": last_sleep_tick,
+            "well_rested_until": well_rested_until,
+        }
 
-    def with_property(self, key: str, value: Any) -> V2EntityBuilder:
-        self._properties[key] = value
+        for key, value in updates.items():
+            if value is not None:
+                current[key] = value
+
+        self._biological = _component(BiologicalComponent, **current)
         return self
 
-    def with_properties(self, props: Dict[str, Any]) -> V2EntityBuilder:
-        self._properties.update(props)
+    def lifecycle(
+        self,
+        *,
+        active: Optional[bool] = None,
+        age_ticks: Optional[int] = None,
+        max_age_ticks: Optional[int] = None,
+        is_permadeath: Optional[bool] = None,
+        death_tick: Optional[int] = None,
+        death_reason: Optional[str] = None,
+        generation: Optional[int] = None,
+        heir_entity_id: Optional[int] = None,
+        heirlooms: Optional[List[str]] = None,
+    ) -> V2EntityBuilder:
+        current = self._lifecycle_to_dict()
+
+        updates = {
+            "active": active,
+            "age_ticks": age_ticks,
+            "max_age_ticks": max_age_ticks,
+            "is_permadeath": is_permadeath,
+            "death_tick": death_tick,
+            "death_reason": death_reason,
+            "generation": generation,
+            "heir_entity_id": heir_entity_id,
+            "heirlooms": _copy_list(heirlooms) if heirlooms is not None else None,
+        }
+
+        for key, value in updates.items():
+            if value is not None:
+                current[key] = value
+
+        self._lifecycle = _component(LifecycleComponent, **current)
         return self
 
-    def with_current_hp(self, hp: int) -> V2EntityBuilder:
-        self._hp_base = hp
+    def interaction(
+        self,
+        *,
+        target_node_id: Optional[int] = None,
+        progress: Optional[int] = None,
+        start_tick: Optional[int] = None,
+    ) -> V2EntityBuilder:
+        current = self._interaction_to_dict()
+
+        updates = {
+            "target_node_id": target_node_id,
+            "progress": progress,
+            "start_tick": start_tick,
+        }
+
+        for key, value in updates.items():
+            if value is not None:
+                current[key] = value
+
+        self._interaction = _component(InteractionComponent, **current)
         return self
 
-    def stamina(self, current: float, max_stamina: float = 100.0) -> V2EntityBuilder:
-        self._stamina_current = current
-        self._stamina_max = max_stamina
+    def task(
+        self,
+        *,
+        work_kind: Optional[str] = None,
+        payload: Optional[Dict[str, Any]] = None,
+    ) -> V2EntityBuilder:
+        current = self._task_to_dict()
+
+        if work_kind is not None:
+            current["work_kind"] = work_kind
+        if payload is not None:
+            current["payload"] = dict(payload)
+
+        self._task = _component(TaskComponent, **current)
         return self
 
-    def attributes(self, **kwargs) -> V2EntityBuilder:
-        """Alias for with_attributes."""
-        return self.with_attributes(**kwargs)
+    def stamina(
+        self,
+        *,
+        current: Optional[float] = None,
+        max_stamina: Optional[float] = None,
+        regen_rate: Optional[float] = None,
+        rest_regen_rate: Optional[float] = None,
+        exhaustion_threshold: Optional[float] = None,
+        exhaustion_penalty: Optional[float] = None,
+    ) -> V2EntityBuilder:
+        current_values = self._stamina_to_dict()
 
-    def alive(self, is_alive: bool) -> V2EntityBuilder:
-        self._alive = is_alive
+        updates = {
+            "current": current,
+            "max_stamina": max_stamina,
+            "regen_rate": regen_rate,
+            "rest_regen_rate": rest_regen_rate,
+            "exhaustion_threshold": exhaustion_threshold,
+            "exhaustion_penalty": exhaustion_penalty,
+        }
+
+        for key, value in updates.items():
+            if value is not None:
+                current_values[key] = value
+
+        self._stamina = _component(StaminaComponent, **current_values)
         return self
 
-    def with_contract(self, contract_id: str, contract: ContractState) -> V2EntityBuilder:
-        self._contracts[contract_id] = contract
+    def equipment(
+        self,
+        *,
+        slots: Optional[Dict[EquipSlot, str | None]] = None,
+        durability: Optional[Dict[EquipSlot, float]] = None,
+    ) -> V2EntityBuilder:
+        current = self._equipment_to_dict()
+
+        if slots is not None:
+            current["slots"] = dict(slots)
+        if durability is not None:
+            current["durability"] = dict(durability)
+
+        self._equipment = _component(EquipmentComponent, **current)
         return self
 
-    def with_directive(self, directive: DirectiveState) -> V2EntityBuilder:
-        self._directives[directive.id] = directive
+    def properties(self, values: Dict[str, Any]) -> V2EntityBuilder:
+        current = self._identity_to_dict()
+        current["properties"] = dict(values)
+        self._identity = _component(IdentityComponent, **current)
         return self
 
-    def active(self, is_active: bool) -> V2EntityBuilder:
-        self._active = is_active
+    def replace_identity(self, component: IdentityComponent) -> V2EntityBuilder:
+        self._identity = component
         return self
 
-    def _recalc(self):
-        """Mimics legacy recalc_derived_stats for initial build."""
-        self._max_hp_calc = self._hp_base + (self._vit * 2) + int(self._end * 0.5)
-        self._hp_calc = self._hp_current
-        if not getattr(self, "_hp_explicit", False):
-            self._hp_calc = self._max_hp_calc # Built entities start at full health
-        self._atk_calc = self._atk_base + int(self._str * 0.5)
-        self._def_calc = self._def_base + int(self._vit * 0.3)
+    def replace_inventory(self, component: InventoryComponent) -> V2EntityBuilder:
+        self._inventory = component
+        return self
+
+    def replace_combat(self, component: CombatComponent) -> V2EntityBuilder:
+        self._combat = component
+        return self
+
+    def replace_navigation(self, component: NavigationComponent) -> V2EntityBuilder:
+        self._navigation = component
+
+        if hasattr(component, "position"):
+            self._location = component.position
+
+        return self
+
+    def replace_strategic(self, component: StrategicComponent) -> V2EntityBuilder:
+        self._strategic = component
+        return self
+
+    def replace_social(self, component: SocialComponent) -> V2EntityBuilder:
+        self._social = component
+        return self
+
+    def replace_biological(self, component: BiologicalComponent) -> V2EntityBuilder:
+        self._biological = component
+        return self
+
+    def replace_lifecycle(self, component: LifecycleComponent) -> V2EntityBuilder:
+        self._lifecycle = component
+        return self
+
+    def replace_attributes(self, component: AttributeComponent) -> V2EntityBuilder:
+        self._attributes = component
+        return self
+
+    def replace_aptitude(self, component: AptitudeComponent) -> V2EntityBuilder:
+        self._aptitude = component
+        return self
+
+    def replace_equipment(self, component: EquipmentComponent) -> V2EntityBuilder:
+        self._equipment = component
+        return self
+
+    def replace_interaction(self, component: InteractionComponent) -> V2EntityBuilder:
+        self._interaction = component
+        return self
+
+    def replace_task(self, component: TaskComponent) -> V2EntityBuilder:
+        self._task = component
+        return self
+
+    def replace_stamina(self, component: StaminaComponent) -> V2EntityBuilder:
+        self._stamina = component
+        return self
 
     def build(self) -> EntityState:
-        """Constructs the frozen EntityState."""
-        self._recalc()
-        return EntityState(
-            id=self._eid,
-            kind=self._kind,
-            identity=IdentityComponent(
-                role=self._role,
-                faction=self._faction,
-                evolution_level=self._evolution_level,
-                evolution_points=self._evolution_points,
-                unspent_ap=self._unspent_ap,
-                class_id=self._class_id,
-                learned_skills=self._learned_skills,
-                traits=getattr(self, "_traits", set()),
-                personality=self._personality,
-                life_stage=self._life_stage,
-                cooldowns=getattr(self, "_cooldown_updates", {}),
-                group_id=getattr(self, "_group_id", None),
-                properties=self._properties
-            ),
-            attributes=AttributeComponent(
-                strength=self._str,
-                agility=self._agi,
-                vitality=self._vit,
-                endurance=self._end,
-                intelligence=self._int,
-                spirit=self._spi,
-                wisdom=self._wis,
-                perception=self._per,
-                charisma=self._cha
-            ),
-            combat=CombatComponent(
-                hp=self._hp_calc,
-                max_hp=self._max_hp_calc,
-                atk=self._atk_calc,
-                def_stat=self._def_calc,
-                speed=self._speed,
-                range=self._range,
-                evasion=self._evasion,
-                tactical_role=self._tactical_role,
-                action_style=self._action_style,
-                alive=self._alive and (self._hp_calc > 0),
-                readiness=self._readiness,
-                move_cost=self._move_cost
-            ),
-            inventory=InventoryComponent(
-                max_slots=self._max_slots,
-                max_weight=self._max_weight,
-                gold=self._gold,
-                items=[i if isinstance(i, ItemStack) else ItemStack(item_id=i, quantity=1) for i in self._items]
-            ),
-            lifecycle=LifecycleComponent(
-                generation=self._generation,
-                age_ticks=self._age_ticks,
-                is_permadeath=self._is_permadeath,
-                active=self._active
-            ),
-            equipment=EquipmentComponent(
-                slots={EquipSlot[k] if isinstance(k, str) else k: v for k, v in self._starting_gear.items()},
-                durability={EquipSlot[k] if isinstance(k, str) else k: v for k, v in self._durability.items()}
-            ),
-            aptitude=AptitudeComponent(
-                learning_rate=self._int_apt,
-                stamina_efficiency=self._vit_apt,
-                str_apt=self._str_apt,
-                vit_apt=self._vit_apt,
-                end_apt=self._end_apt
-            ),
-            navigation=NavigationComponent(
-                position=self._pos,
-                target=self._target,
-                home_position=self._home_pos or self._pos,
-                leash_radius=self._leash_radius,
-                movement_mode=self._movement_mode,
-                wait_count=self._wait_count,
-                last_position=self._last_position,
-                oscillation_count=self._oscillation_count
-            ),
-            strategic=StrategicComponent(
-                profile=CognitionProfile(
-                    max_active_projects=self._max_active_projects,
-                    max_leads=self._max_leads,
-                    max_concerns=self._max_concerns,
-                    max_candidate_zones=self._max_candidate_zones,
-                    max_hypotheses=self._max_hypotheses,
-                    interruption_resistance=self._interruption_resistance,
-                    detour_breadth=self._detour_breadth,
-                    detour_depth=self._detour_depth
-                ),
-                directives=self._directives,
-                projects=self._projects,
-                current_project_id=self._current_project_id,
-                contracts=self._contracts,
-                blockers=self._blockers,
-                concerns=self._concerns,
-                leads=self._leads,
-                turning_points=self._turning_points,
-                source_trust=self._source_trust
-            ),
-            interaction=InteractionComponent(
-                target_node_id=self._target_node_id,
-                progress=self._interaction_progress
-            ),
-            biological=BiologicalComponent(
-                hunger=self._hunger,
-                sleep_debt=self._sleep_debt
-            ),
-            social=SocialComponent(
-                public_reputation=self._public_reputation,
-                heroism_score=self._heroism_score,
-                notoriety_score=self._notoriety_score,
-                bonds=self._bonds,
-                trust_history=self._trust_history,
-                betrayal_count=self._betrayal_count,
-                rejection_count=getattr(self, "_rejections", {})
-            ),
-            task=TaskComponent(
-                work_kind=getattr(self, "_task_kind", "REST"),
-                payload=getattr(self, "_task_payload", {})
-            ),
-            stamina=StaminaComponent(
-                current=self._stamina_current,
-                max_stamina=self._stamina_max
-            )
+        navigation = _component(
+            NavigationComponent,
+            **{
+                **self._navigation_to_dict(),
+                "position": self._location,
+            },
         )
 
-    def group_id(self, g_id: Optional[int]) -> V2EntityBuilder:
-        self._group_id = g_id
-        return self
+        return EntityState(
+            id=self._entity_id,
+            kind=self._kind,
+            interaction=self._interaction,
+            identity=self._identity,
+            attributes=self._attributes,
+            inventory=self._inventory,
+            strategic=self._strategic,
+            social=self._social,
+            biological=self._biological,
+            lifecycle=self._lifecycle,
+            aptitude=self._aptitude,
+            combat=self._combat,
+            equipment=self._equipment,
+            navigation=navigation,
+            task=self._task,
+            stamina=self._stamina,
+        )
+
+    def _identity_to_dict(self) -> Dict[str, Any]:
+        return self._to_dict(self._identity)
+
+    def _inventory_to_dict(self) -> Dict[str, Any]:
+        return self._to_dict(self._inventory)
+
+    def _combat_to_dict(self) -> Dict[str, Any]:
+        return self._to_dict(self._combat)
+
+    def _navigation_to_dict(self) -> Dict[str, Any]:
+        return self._to_dict(self._navigation)
+
+    def _strategic_to_dict(self) -> Dict[str, Any]:
+        return self._to_dict(self._strategic)
+
+    def _cognition_to_dict(self, profile: CognitionProfile) -> Dict[str, Any]:
+        return self._to_dict(profile)
+
+    def _social_to_dict(self) -> Dict[str, Any]:
+        return self._to_dict(self._social)
+
+    def _biological_to_dict(self) -> Dict[str, Any]:
+        return self._to_dict(self._biological)
+
+    def _lifecycle_to_dict(self) -> Dict[str, Any]:
+        return self._to_dict(self._lifecycle)
+
+    def _attributes_to_dict(self) -> Dict[str, Any]:
+        return self._to_dict(self._attributes)
+
+    def _aptitude_to_dict(self) -> Dict[str, Any]:
+        return self._to_dict(self._aptitude)
+
+    def _equipment_to_dict(self) -> Dict[str, Any]:
+        return self._to_dict(self._equipment)
+
+    def _interaction_to_dict(self) -> Dict[str, Any]:
+        return self._to_dict(self._interaction)
+
+    def _task_to_dict(self) -> Dict[str, Any]:
+        return self._to_dict(self._task)
+
+    def _stamina_to_dict(self) -> Dict[str, Any]:
+        return self._to_dict(self._stamina)
+
+    @staticmethod
+    def _to_dict(component: Any) -> Dict[str, Any]:
+        if not is_dataclass(component):
+            raise TypeError(f"{component!r} is not a dataclass instance")
+
+        return {
+            f.name: getattr(component, f.name)
+            for f in fields(component)
+            if f.init
+        }

@@ -21,9 +21,9 @@ def create_mock_entity(
     from src.core.builder import V2EntityBuilder
     return (V2EntityBuilder(1)
         .kind("hero")
-        .at((0, 0))
+        .location(0, 0)
         .attributes(intelligence=intelligence, wisdom=wisdom)
-        .with_strategic_profile(resistance=resistance)
+        .cognition(resistance=resistance)
         .current_project(current_proj_id)
         .with_personality(industry=0.5)
         .build())

@@ -10,7 +10,7 @@ def test_action_suppression():
         suppression_active=True
     )
     # Actor inside the region
-    actor = V2EntityBuilder(entity_id=1).role(0).at((5.0, 5.0)).build()
+    actor = V2EntityBuilder(entity_id=1).identity(role=0).location(5.0, 5.0).build()
     
     state = AuthoritativeState(tick=0, seed=1, entities={1: actor}, regions={"reg_1": region})
     
@@ -30,7 +30,7 @@ def test_action_legality_outside_suppressed_region():
         suppression_active=True
     )
     # Actor OUTSIDE the region
-    actor = V2EntityBuilder(entity_id=1).role(0).at((50.0, 50.0)).build()
+    actor = V2EntityBuilder(entity_id=1).identity(role=0).location(50.0, 50.0).build()
     
     state = AuthoritativeState(tick=0, seed=1, entities={1: actor}, regions={"reg_1": region})
     

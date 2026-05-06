@@ -37,11 +37,11 @@ def create_mock_entity(id, faction="HERO_FACTION", role=EntityRole.HERO, pos=(0,
     
     builder = (V2EntityBuilder(id)
               .kind("ACTOR")
-              .at(pos)
-              .with_identity(role=role, faction=f_enum)
-              .with_combat(hp=hp, max_hp=100, atk=10, range=range, alive=hp > 0)
-              .readiness(readiness)
-              .with_biological(hunger=0.0, sleep_debt=0.0)
+              .location(*pos)
+              .identity(role=role, faction=f_enum)
+              .combat(hp=hp, max_hp=100, atk=10, range=range, alive=hp > 0)
+              .combat(readiness=readiness)
+              .biological(hunger=0.0, sleep_debt=0.0)
               .active(True))
     
     return builder.build()

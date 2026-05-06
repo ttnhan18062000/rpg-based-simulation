@@ -8,8 +8,8 @@ def test_flow_field_long_distance():
     # Observer at (0, 0)
     entity = (V2EntityBuilder(1)
               .kind("hero")
-              .at((0.0, 0.0))
-              .readiness(100.0)
+              .location(0.0, 0.0)
+              .combat(readiness=100.0)
               .target((100.0, 100.0))
               .build())
     
@@ -36,8 +36,8 @@ def test_local_navigation_fallback():
     # Observer at (0, 0)
     entity = (V2EntityBuilder(1)
               .kind("hero")
-              .at((0.0, 0.0))
-              .readiness(100.0)
+              .location(0.0, 0.0)
+              .combat(readiness=100.0)
               .target((10.0, 5.0))
               .build())
     

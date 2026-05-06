@@ -18,7 +18,7 @@ def test_export_factory_isolation():
     """Verify that to_export_state produces a valid DTO without mutating source."""
     from src.core.builder import V2EntityBuilder
     state = AuthoritativeState(tick=1, seed=42, world_time=10, entities={
-        1: V2EntityBuilder(1).kind("hero").at((0.0, 0.0)).build()
+        1: V2EntityBuilder(1).kind("hero").location(0.0, 0.0).build()
     })
     
     dto = to_export_state(state)

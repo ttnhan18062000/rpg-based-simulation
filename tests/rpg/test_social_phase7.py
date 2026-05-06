@@ -11,10 +11,10 @@ def create_mock_entity(eid: int, gold: int = 10, hp: int = 100):
     from src.core.builder import V2EntityBuilder
     return (V2EntityBuilder(eid)
         .kind("hero")
-        .at((0, 0))
+        .location(0, 0)
         .with_class("hero")
-        .with_combat(hp=hp, max_hp=100, atk=10, def_stat=5, alive=True)
-        .with_inventory(gold=gold)
+        .combat(hp=hp, max_hp=100, atk=10, def_stat=5, alive=True)
+        .inventory(gold=gold)
         .build()
     )
 

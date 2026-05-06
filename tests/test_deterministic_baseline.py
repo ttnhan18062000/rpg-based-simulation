@@ -1,4 +1,5 @@
 import pytest
+from src.core.builder import V2EntityBuilder
 from src.core.state import AuthoritativeState, EntityState, IdentityComponent, InventoryComponent
 
 def test_world_init_determinism():
@@ -6,8 +7,20 @@ def test_world_init_determinism():
     def create_test_world(seed: int):
         # Simulate a scenario setup
         entities = {
-            1: EntityState(id=1, kind="HERO", position=(10.0, 10.0), identity=IdentityComponent(role=1)),
-            2: EntityState(id=2, kind="NPC", position=(5.0, 5.0), inventory=InventoryComponent(gold=100))
+            1: (
+                V2EntityBuilder(1)
+                .kind("hero")
+                .location(10.0, 10.0)
+                .identity(role=1)
+                .build()
+            ),
+            2: (
+                V2EntityBuilder(2)
+                .kind("npc")
+                .location(5.0, 5.0)
+                .inventory(gold=100)
+                .build()
+            )
         }
         return AuthoritativeState(
             tick=0,
@@ -83,7 +96,12 @@ def test_full_tick_determinism():
     )
     
     def run_one_tick(seed: int):
-        e1 = EntityState(id=1, kind="H", position=(0.0, 0.0), active=True)
+        e1 = (
+                V2EntityBuilder(1)
+                .kind("hero")
+                .location(0.0, 0.0)
+                .build()
+            )
         from dataclasses import replace
         e1 = replace(e1, navigation=replace(e1.navigation, target=(1.0, 1.0)))
         

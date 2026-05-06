@@ -4,15 +4,14 @@ from src.core.state import AuthoritativeState, EntityState, IdentityComponent, C
 from src.engine.town_resolution import TownResolutionSystem
 from src.core.updates import StateUpdate, EntityUpdate, TaskUpdate
 
+from src.core.builder import V2EntityBuilder
+
 def create_mock_entity(eid, pos=(10, 10), hp=50):
-    return EntityState(
-        id=eid,
-        kind="hero",
-        position=pos,
-        identity=IdentityComponent(faction=0),
-        combat=CombatComponent(hp=hp, max_hp=100, alive=True),
-        task=TaskComponent()
-    )
+    return (V2EntityBuilder(eid)
+        .kind("hero")
+        .location(*pos)
+        .combat(hp=hp)
+        .build())
 
 def test_inn_rest_recovery():
     # Entity at (5,5), which is an INN

@@ -25,14 +25,14 @@ def _make_entity(profile=None, current_project=None):
     
     builder = (V2EntityBuilder(1)
         .kind("hero")
-        .at((5.0, 5.0))
-        .with_strategic(projects=projects))
+        .location(5.0, 5.0)
+        .strategic(projects=projects))
     
     if current_id:
         builder.current_project(current_id)
         
     if profile:
-        builder.with_strategic_profile(
+        builder.cognition(
             resistance=profile.interruption_resistance
         )
         
@@ -123,8 +123,8 @@ class TestInterruptionResistance:
         )
         entity = (V2EntityBuilder(1)
             .kind("hero")
-            .at((5.0, 5.0))
-            .with_strategic(projects={"old_quest": suspended})
+            .location(5.0, 5.0)
+            .strategic(projects={"old_quest": suspended})
             .build())
 
         result = StrategicIntelligenceSystem.resume_project(entity, "old_quest")
@@ -143,7 +143,7 @@ class TestCognitionProfile:
         from src.core.builder import V2EntityBuilder
         entity = (V2EntityBuilder(1)
             .kind("hero")
-            .at((5.0, 5.0))
+            .location(5.0, 5.0)
             .attributes(wisdom=15, intelligence=12)
             .build())
         p1 = StrategicIntelligenceSystem.derive_cognition_profile(entity)
@@ -155,12 +155,12 @@ class TestCognitionProfile:
         from src.core.builder import V2EntityBuilder
         entity_low = (V2EntityBuilder(1)
             .kind("hero")
-            .at((5.0, 5.0))
+            .location(5.0, 5.0)
             .attributes(wisdom=5, intelligence=5, perception=5)
             .build())
         entity_high = (V2EntityBuilder(2)
             .kind("hero")
-            .at((5.0, 5.0))
+            .location(5.0, 5.0)
             .attributes(wisdom=25, intelligence=25, perception=25)
             .build())
         p_low = StrategicIntelligenceSystem.derive_cognition_profile(entity_low)

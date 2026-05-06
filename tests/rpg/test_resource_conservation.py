@@ -20,8 +20,8 @@ def base_state():
     from src.core.builder import V2EntityBuilder
     entity = (V2EntityBuilder(1)
         .kind("HERO")
-        .at((0, 0))
-        .with_inventory(max_slots=1)
+        .location(0, 0)
+        .inventory(max_slots=1)
         .with_interaction(target_id=101, progress=0)
         .with_property("interaction_kind", "harvest")
         .with_property("harvest_duration", 1)
@@ -131,8 +131,8 @@ def test_crafting_full_inventory_does_not_consume_materials():
     from src.core.builder import V2EntityBuilder
     entity = (V2EntityBuilder(1)
         .kind("HERO")
-        .at((0,0))
-        .with_inventory(gold=100, items=[ItemStack("iron_ore", 2), ItemStack("wood", 1)])
+        .location(0, 0)
+        .inventory(gold=100, items=[ItemStack("iron_ore", 2), ItemStack("wood", 1)])
         .with_properties({"known_recipes": {"craft_steel_sword"}, "craft_target": "craft_steel_sword"})
         .build()
     )
@@ -192,9 +192,9 @@ def test_quest_completion_full_inventory_does_not_grant_reward():
     from src.core.builder import V2EntityBuilder
     entity = (V2EntityBuilder(1)
         .kind("HERO")
-        .at((0,0))
-        .with_inventory(max_slots=1, items=[ItemStack("wood", 1)])
-        .with_strategic(projects={"q1": quest})
+        .location(0, 0)
+        .inventory(max_slots=1, items=[ItemStack("wood", 1)])
+        .strategic(projects={"q1": quest})
         .build()
     )
     

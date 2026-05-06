@@ -12,10 +12,10 @@ def make_hero(eid: int, pos=(5.0, 5.0), hp=100):
     from src.core.builder import V2EntityBuilder
     return (V2EntityBuilder(eid)
         .kind("HERO")
-        .position(pos[0], pos[1])
-        .hp(hp, 100)
-        .alive(True)
-        .readiness(100.0)
+        .location(pos[0], pos[1])
+        .combat(hp=hp, max_hp=100)
+        .combat(alive=True)
+        .combat(readiness=100.0)
         .build())
 
 def test_regional_hazard_drain():

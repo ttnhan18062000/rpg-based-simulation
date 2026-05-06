@@ -7,8 +7,8 @@ def create_mock_entity_with_trust(trust_scores: dict[int, float]):
     from src.core.builder import V2EntityBuilder
     builder = (V2EntityBuilder(1)
         .kind("hero")
-        .at((0, 0))
-        .with_strategic_profile(max_leads=5))
+        .location(0, 0)
+        .cognition(max_leads=5))
     
     for eid, score in trust_scores.items():
         builder.source_trust(eid, score)

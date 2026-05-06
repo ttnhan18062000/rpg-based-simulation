@@ -9,9 +9,9 @@ def create_mock_entity(eid, faction, hp=100, pos=(0.0, 0.0), range=1):
     role = EntityRole.HERO if faction == 1 else EntityRole.MONSTER
     return (V2EntityBuilder(eid)
             .kind("hero" if role == EntityRole.HERO else "monster")
-            .at(pos)
-            .with_identity(role=role, faction=faction)
-            .with_combat(hp=hp, max_hp=100, range=range)
+            .location(*pos)
+            .identity(role=role, faction=faction)
+            .combat(hp=hp, max_hp=100, range=range)
             .build())
 
 def test_attack_vs_pursuit_intent():

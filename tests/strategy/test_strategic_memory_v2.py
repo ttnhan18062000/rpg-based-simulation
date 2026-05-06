@@ -11,10 +11,10 @@ def create_mock_entity(eid: int):
     return (V2EntityBuilder(eid)
         .kind("hero")
         .active(True)
-        .at((0, 0))
-        .with_identity(role=EntityRole.HERO, faction="player")
-        .with_combat(hp=100, max_hp=100, atk=10, def_stat=5)
-        .with_inventory(gold=10)
+        .location(0, 0)
+        .identity(role=EntityRole.HERO, faction="player")
+        .combat(hp=100, max_hp=100, atk=10, def_stat=5)
+        .inventory(gold=10)
         .build())
 
 def test_lead_failure_suppression():
@@ -23,8 +23,8 @@ def test_lead_failure_suppression():
     entity = (V2EntityBuilder(1)
         .kind("hero")
         .active(True)
-        .at((0, 0))
-        .with_strategic(leads={lead.id: lead})
+        .location(0, 0)
+        .strategic(leads={lead.id: lead})
         .build())
     
     state = AuthoritativeState(tick=100, seed=42)
@@ -44,8 +44,8 @@ def test_lead_exhaustion():
     entity = (V2EntityBuilder(1)
         .kind("hero")
         .active(True)
-        .at((0, 0))
-        .with_strategic(leads={lead.id: lead})
+        .location(0, 0)
+        .strategic(leads={lead.id: lead})
         .build())
     
     state = AuthoritativeState(tick=100, seed=42)
@@ -64,8 +64,8 @@ def test_project_abandonment():
     entity = (V2EntityBuilder(1)
         .kind("hero")
         .active(True)
-        .at((0, 0))
-        .with_strategic(projects={proj.id: proj})
+        .location(0, 0)
+        .strategic(projects={proj.id: proj})
         .current_project(proj.id)
         .build())
     

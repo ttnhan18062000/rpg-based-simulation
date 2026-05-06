@@ -23,8 +23,8 @@ def test_harness_catches_ram_violation():
     state = AuthoritativeState(tick=0, seed=42, entities={
         i: (V2EntityBuilder(i)
             .kind("TEST")
-            .position(0.0, 0.0)
-            .readiness(100.0)
+            .location(0.0, 0.0)
+            .combat(readiness=100.0)
             .build())
         for i in range(1, 101) # 100 entities in 1MB limit should fail
     })

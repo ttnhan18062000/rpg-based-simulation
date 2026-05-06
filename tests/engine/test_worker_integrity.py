@@ -9,7 +9,7 @@ from src.core.builder import V2EntityBuilder
 def sample_packet():
     subject = (V2EntityBuilder(1)
                .kind("ACTOR")
-               .at((0.0, 0.0))
+               .location(0.0, 0.0)
                .build())
     from src.core.work import WorkClass
     return WorkerPacket(
@@ -61,7 +61,7 @@ def test_protocol_canonical_context_rejection(sample_packet):
         work_class=WorkClass.CRITICAL,
         subject=(V2EntityBuilder(2)
                  .kind("X")
-                 .at((1.0, 1.0))
+                 .location(1.0, 1.0)
                  .build()),
         neighbor_view=[(10, None), (5, None)], # Unsorted
         work_kind="TEST",

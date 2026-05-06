@@ -15,9 +15,9 @@ def make_actor(eid: int, pos=(1.0, 1.0), interaction=None, inventory=None):
     from dataclasses import replace
     builder = (V2EntityBuilder(eid)
         .kind("hero")
-        .position(pos[0], pos[1])
-        .alive(True)
-        .readiness(100.0))
+        .location(pos[0], pos[1])
+        .combat(alive=True)
+        .combat(readiness=100.0))
     
     if interaction:
         # Manually set interaction since builder might not support all fields

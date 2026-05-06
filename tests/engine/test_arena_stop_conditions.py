@@ -20,16 +20,16 @@ def test_arena_stop_condition_wipe(base_profile):
     # 1. Team A (Strong)
     a1 = (V2EntityBuilder(1)
           .kind("hero")
-          .at((0.0, 0.0))
-          .faction(Faction.HERO_GUILD)
+          .location(0.0, 0.0)
+          .identity(faction=Faction.HERO_GUILD)
           .with_base_stats(hp=100, atk=50)
           .build())
     
     # 2. Team B (Weak)
     b1 = (V2EntityBuilder(2)
           .kind("monster")
-          .at((1.0, 0.0)) # Adjacent
-          .faction(Faction.MONSTER_HORDE)
+          .location(1.0, 0.0) # Adjacent
+          .identity(faction=Faction.MONSTER_HORDE)
           .with_base_stats(hp=1, atk=10)
           .build())
     
@@ -49,15 +49,15 @@ def test_arena_stop_condition_timeout(base_profile):
     # Far apart entities, won't interact
     a1 = (V2EntityBuilder(1)
           .kind("hero")
-          .at((0.0, 0.0))
-          .faction(Faction.HERO_GUILD)
+          .location(0.0, 0.0)
+          .identity(faction=Faction.HERO_GUILD)
           .with_base_stats(hp=100)
           .build())
     
     b1 = (V2EntityBuilder(2)
           .kind("hero")
-          .at((50.0, 50.0))
-          .faction(Faction.MONSTER_HORDE)
+          .location(50.0, 50.0)
+          .identity(faction=Faction.MONSTER_HORDE)
           .with_base_stats(hp=100)
           .build())
     

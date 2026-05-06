@@ -52,10 +52,10 @@ def test_apply_path_derived_propagation():
     # Setup entity: Agi=10, Str=10 -> Role=VANGUARD
     entity = (V2EntityBuilder(1)
               .kind("hero")
-              .at((0,0))
-              .with_identity(role=EntityRole.HERO, faction=Faction.HERO_GUILD)
-              .with_attributes(strength=10, agility=10, vitality=10)
-              .with_combat(hp=100, max_hp=100)
+              .location(0, 0)
+              .identity(role=EntityRole.HERO, faction=Faction.HERO_GUILD)
+              .attributes(strength=10, agility=10, vitality=10)
+              .combat(hp=100, max_hp=100)
               .build())
     # Note: V2EntityBuilder initializes tactical_role based on attributes.
     # At 10/10/10 it should be VANGUARD.
@@ -91,10 +91,10 @@ def test_apply_path_trait_updates():
     from src.core.builder import V2EntityBuilder
     entity = (V2EntityBuilder(1)
               .kind("hero")
-              .at((0,0))
-              .with_identity(role=EntityRole.HERO, faction=Faction.HERO_GUILD)
-              .with_attributes(strength=10, agility=10, vitality=10)
-              .with_combat(hp=100, max_hp=100)
+              .location(0, 0)
+              .identity(role=EntityRole.HERO, faction=Faction.HERO_GUILD)
+              .attributes(strength=10, agility=10, vitality=10)
+              .combat(hp=100, max_hp=100)
               .build())
     
     # Add "Tough" trait

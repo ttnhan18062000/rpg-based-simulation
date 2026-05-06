@@ -24,8 +24,8 @@ def test_reproducibility():
 
     for _ in range(10):
         # Initial state with some entities to increase complexity
-        e1 = V2EntityBuilder(1).at((0.0, 0.0)).role(EntityRole.HERO).build()
-        e2 = V2EntityBuilder(2).at((5.0, 5.0)).role(EntityRole.MONSTER).build()
+        e1 = V2EntityBuilder(1).location(0.0, 0.0).identity(role=EntityRole.HERO).build()
+        e2 = V2EntityBuilder(2).location(5.0, 5.0).identity(role=EntityRole.MONSTER).build()
         
         state = AuthoritativeState(tick=0, seed=42, world_time=0, entities={
             1: e1,
@@ -58,8 +58,8 @@ def test_seed_divergence():
 
 def test_canonical_sorting_stability():
     """Verify that dict key order does not affect the hash."""
-    e1 = V2EntityBuilder(1).at((0.0, 0.0)).role(EntityRole.HERO).build()
-    e2 = V2EntityBuilder(2).at((1.0, 1.0)).role(EntityRole.MONSTER).build()
+    e1 = V2EntityBuilder(1).location(0.0, 0.0).identity(role=EntityRole.HERO).build()
+    e2 = V2EntityBuilder(2).location(1.0, 1.0).identity(role=EntityRole.MONSTER).build()
 
     state_a = AuthoritativeState(tick=1, seed=1, entities={
         1: e1,
@@ -97,8 +97,8 @@ def test_local_vs_concurrent_equivalence():
         max_tick_budget_ms=100.0
     )
     
-    e1 = V2EntityBuilder(1).at((0.0, 0.0)).role(EntityRole.HERO).readiness(100.0).build()
-    e2 = V2EntityBuilder(2).at((5.0, 5.0)).role(EntityRole.MONSTER).readiness(100.0).build()
+    e1 = V2EntityBuilder(1).location(0.0, 0.0).identity(role=EntityRole.HERO).combat(readiness=100.0).build()
+    e2 = V2EntityBuilder(2).location(5.0, 5.0).identity(role=EntityRole.MONSTER).combat(readiness=100.0).build()
 
     initial_state = AuthoritativeState(tick=0, seed=42, world_time=0, entities={
         1: e1,

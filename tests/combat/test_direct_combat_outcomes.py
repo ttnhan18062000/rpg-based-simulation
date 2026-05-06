@@ -7,11 +7,11 @@ from src.core.enums import EntityRole, Faction
 def create_mock_entity(eid, faction=Faction.HERO_GUILD, atk=10, dfn=5, hp=100, role=EntityRole.HERO):
     return (V2EntityBuilder(eid)
         .kind("hero")
-        .position(0.0, 0.0)
-        .readiness(100.0)
-        .with_identity(role=role, faction=faction)
-        .with_attributes(strength=0, vitality=0)
-        .with_combat(hp=hp, max_hp=hp, atk=atk, def_stat=dfn)
+        .location(0.0, 0.0)
+        .combat(readiness=100.0)
+        .identity(role=role, faction=faction)
+        .attributes(strength=0, vitality=0)
+        .combat(hp=hp, max_hp=hp, atk=atk, def_stat=dfn)
         .build())
 
 def test_combat_damage_calculation():

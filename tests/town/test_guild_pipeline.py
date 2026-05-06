@@ -10,8 +10,8 @@ def test_guild_visit_leads():
     node = ResourceNodeState(id=1, kind="iron", position=(50, 50), yields_item="iron_ore", remaining_charges=10, max_charges=10, required_ticks=10)
     entity = (V2EntityBuilder(99)
         .kind("hero")
-        .at((0, 0))
-        .with_strategic()
+        .location(0, 0)
+        .strategic()
         .build())
     state = AuthoritativeState(tick=1, seed=42, entities={99: entity}, resource_nodes={1: node})
     
@@ -32,8 +32,8 @@ def test_guild_visit_quests():
     # 1. Setup
     entity = (V2EntityBuilder(99)
         .kind("hero")
-        .at((0, 0))
-        .with_strategic()
+        .location(0, 0)
+        .strategic()
         .build())
     state = AuthoritativeState(tick=1, seed=42, entities={99: entity})
     
@@ -54,8 +54,8 @@ def test_guild_visit_determinism():
     node = ResourceNodeState(id=1, kind="iron", position=(50, 50), yields_item="iron_ore", remaining_charges=10, max_charges=10, required_ticks=10)
     entity = (V2EntityBuilder(99)
         .kind("hero")
-        .at((0, 0))
-        .with_strategic()
+        .location(0, 0)
+        .strategic()
         .build())
     state = AuthoritativeState(tick=1, seed=42, entities={99: entity}, resource_nodes={1: node})
     

@@ -22,10 +22,10 @@ def test_neighbor_view_sorting():
     )
     # 1. Setup entities in 2D space via V2EntityBuilder
     entities = {
-        10: V2EntityBuilder(10).at((1.0, 1.0)).build(),
-        50: V2EntityBuilder(50).at((50.0, 50.0)).build(), # Out
-        5: V2EntityBuilder(5).at((0.0, 0.0)).build(),    # In
-        20: V2EntityBuilder(20).at((5.0, 5.0)).build(), # In
+        10: V2EntityBuilder(10).location(1.0, 1.0).build(),
+        50: V2EntityBuilder(50).location(50.0, 50.0).build(), # Out
+        5: V2EntityBuilder(5).location(0.0, 0.0).build(),    # In
+        20: V2EntityBuilder(20).location(5.0, 5.0).build(), # In
     }
     # Subject is Entity 10
     state = AuthoritativeState(tick=1, seed=42, entities=entities)
@@ -55,7 +55,7 @@ def test_duplicate_entity_update_rejection():
         max_tick_budget_ms=10.0
     )
     state = AuthoritativeState(tick=1, seed=42, entities={
-        1: V2EntityBuilder(1).at((0,0)).build()
+        1: V2EntityBuilder(1).location(0, 0).build()
     })
     rng = DeterministicRNG(42)
     kernel = Kernel(profile, state, rng)

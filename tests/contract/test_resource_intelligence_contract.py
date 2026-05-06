@@ -1,5 +1,6 @@
 import pytest
 from dataclasses import replace
+from src.core.builder import V2EntityBuilder
 from src.core.state import AuthoritativeState, EntityState, IdentityComponent, InventoryComponent
 from src.core.updates import StateUpdate, EntityUpdate, IdentityUpdate, InventoryUpdate
 from src.engine.kernel import Kernel
@@ -9,21 +10,19 @@ from src.core.strategic import StrategicComponent
 
 @pytest.fixture
 def base_state():
+    entity = (V2EntityBuilder(1)
+        .kind("hero")
+        .location(0, 0)
+        .gold(10)
+        .item("wood", 1)
+        .known_recipe("craft_steel_sword")
+        .craft_target("craft_steel_sword")
+        .build())
+    
     return AuthoritativeState(
         tick=1,
         seed=42,
-        entities={
-            1: EntityState(
-                id=1,
-                kind="hero",
-                position=(0, 0),
-                identity=IdentityComponent(
-                    craft_target="craft_steel_sword",
-                    known_recipes={"craft_steel_sword"}
-                ),
-                inventory=InventoryComponent(gold=10, items=["wood"]) # Missing iron_ore and gold
-            )
-        }
+        entities={1: entity}
     )
 
 @pytest.fixture

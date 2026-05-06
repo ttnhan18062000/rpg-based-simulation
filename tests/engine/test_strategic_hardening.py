@@ -7,7 +7,7 @@ from src.strategy.cognition_capacity import CapacityService
 
 def test_concern_bandwidth_enforcement():
     # Setup entity with low Wisdom (low max_concerns)
-    builder = V2EntityBuilder(1).with_attributes(wis=4).build()
+    builder = V2EntityBuilder(1).attributes(wis=4).build()
     # Wisdom 4 -> max_concerns = 3 + (4 // 4) = 4
     
     profile = CapacityService.derive_profile(builder)
@@ -33,7 +33,7 @@ def test_concern_bandwidth_enforcement():
 
 def test_detour_breadth_enforcement():
     # Setup entity with low Intelligence (low detour_breadth)
-    builder = V2EntityBuilder(1).with_attributes(int=6).build()
+    builder = V2EntityBuilder(1).attributes(int=6).build()
     # Intelligence 6 -> detour_breadth = 2 + (6 // 6) = 3
     
     profile = CapacityService.derive_profile(builder)

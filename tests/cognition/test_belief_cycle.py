@@ -6,6 +6,7 @@ Covers:
 - LEG-RPG-125: Contradiction degrades certainty
 """
 import pytest
+from src.core.builder import V2EntityBuilder
 from src.core.state import EntityState
 from src.core.strategic import (
     StrategicComponent, LeadState, LeadCertainty, HypothesisState, ConcernState
@@ -14,12 +15,14 @@ from src.systems.belief import BeliefCycleSystem
 
 
 def _make_entity_with_leads(leads=None, hypotheses=None, concerns=None):
-    strategic = StrategicComponent(
-        leads=leads or {},
-        hypotheses=hypotheses or {},
-        concerns=concerns or {}
-    )
-    return EntityState(id=1, kind="hero", position=(5.0, 5.0), strategic=strategic)
+    return (V2EntityBuilder(1)
+        .kind("hero")
+        .location(5.0, 5.0)
+        .strategic(leads=leads or {},      
+                        hypotheses=hypotheses or {},
+                        concerns=concerns or {}
+        )
+        .build())
 
 
 class TestBeliefDecay:

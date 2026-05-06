@@ -58,7 +58,7 @@ def test_entity_serialization_roundtrip():
     import json
     
     m1 = (V2EntityBuilder(1)
-          .at((5.0, 5.0))
+          .location(5.0, 5.0)
           .gold(100)
           .build())
     

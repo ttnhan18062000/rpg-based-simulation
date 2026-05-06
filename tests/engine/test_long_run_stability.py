@@ -48,8 +48,8 @@ def test_long_run_stability():
                 )
             },
             entities={
-                1: V2EntityBuilder(1).kind("hero").at((2,2)).readiness(100.0).build(),
-                2: V2EntityBuilder(2).kind("hero").at((3,3)).readiness(100.0).build()
+                1: V2EntityBuilder(1).kind("hero").location(2, 2).combat(readiness=100.0).build(),
+                2: V2EntityBuilder(2).kind("hero").location(3, 3).combat(readiness=100.0).build()
             }
         )
         

@@ -7,7 +7,7 @@ from src.town.blacksmith import BlacksmithService
 def test_shop_buy():
     entity = (V2EntityBuilder(1)
         .kind("HERO")
-        .at((10, 10))
+        .location(10, 10)
         .gold(100)
         .build())
     shop = BuildingState(id=1, kind="shop", position=(10, 10))
@@ -29,7 +29,7 @@ def test_shop_buy():
 def test_blacksmith_craft():
     entity = (V2EntityBuilder(1)
         .kind("HERO")
-        .at((5, 5))
+        .location(5, 5)
         .gold(100)
         .item("iron_ore", 10)
         .item("wood", 5)

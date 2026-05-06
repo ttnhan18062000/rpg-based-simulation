@@ -29,7 +29,7 @@ def test_town_navigation_service_lookup():
     # 2. Entity at (5, 5) should find shop1
     entity = (V2EntityBuilder(99)
         .kind("hero")
-        .at((5, 5))
+        .location(5, 5)
         .build())
     nearest = TownNavigation.get_nearest_service(entity, BuildingRegistry.SHOP, state)
     assert nearest is not None
@@ -38,7 +38,7 @@ def test_town_navigation_service_lookup():
     # 3. Entity at (110, 110) should find shop2
     entity2 = (V2EntityBuilder(100)
         .kind("hero")
-        .at((110, 110))
+        .location(110, 110)
         .build())
     nearest2 = TownNavigation.get_nearest_service(entity2, BuildingRegistry.SHOP, state)
     assert nearest2 is not None
@@ -51,14 +51,14 @@ def test_town_navigation_proximity():
     # 1. In town
     ent_in = (V2EntityBuilder(1)
         .kind("hero")
-        .at((10, 10))
+        .location(10, 10)
         .build())
     assert TownNavigation.is_in_town(ent_in, state) == True
     
     # 2. Out of town
     ent_out = (V2EntityBuilder(2)
         .kind("hero")
-        .at((100, 100))
+        .location(100, 100)
         .build())
     assert TownNavigation.is_in_town(ent_out, state) == False
 
@@ -70,7 +70,7 @@ def test_functional_building_requirement():
     
     entity = (V2EntityBuilder(99)
         .kind("hero")
-        .at((0, 0))
+        .location(0, 0)
         .build())
     nearest = TownNavigation.get_nearest_service(entity, BuildingRegistry.SHOP, state)
     

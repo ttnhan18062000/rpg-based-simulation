@@ -9,12 +9,12 @@ from src.engine.domain_logic import SimulationDomainLogic
 def create_mock_entity(e_id, pos, faction=1, role=EntityRole.MONSTER):
     return (V2EntityBuilder(e_id)
             .kind("actor")
-            .at(pos)
-            .faction(faction)
-            .role(role)
-            .hp(100)
+            .location(*pos)
+            .identity(faction=faction)
+            .identity(role=role)
+            .combat(hp=100)
             .with_base_stats(atk=10, def_stat=5, range=1)
-            .readiness(100.0)
+            .combat(readiness=100.0)
             .build())
 
 def test_friendly_fire_legality():
@@ -66,7 +66,7 @@ def test_exhaustion_debuff():
     """Verify EXHAUSTION damage reduction (0.8x) when sleep debt is high."""
     attacker = (V2EntityBuilder(1)
                 .kind("actor")
-                .at((1.0, 1.0))
+                .location(1.0, 1.0)
                 .sleep_debt(90.0)
                 .build())
     defender = create_mock_entity(2, (2.0, 1.0), faction=2)

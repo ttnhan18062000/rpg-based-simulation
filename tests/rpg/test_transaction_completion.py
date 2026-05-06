@@ -38,10 +38,10 @@ def entity_with_inventory(base_state):
     from src.core.builder import V2EntityBuilder
     entity = (V2EntityBuilder(1)
               .kind("HERO")
-              .at((0, 0))
+              .location(0, 0)
               .gold(50)
-              .readiness(100.0)
-              .with_inventory_v2(max_slots=2, max_weight=100.0)
+              .combat(readiness=100.0)
+              .inventory(max_slots=2, max_weight=100.0)
               .build())
     return replace(base_state, entities={1: entity})
 
@@ -51,11 +51,11 @@ def entity_full_inventory(base_state):
     from src.core.builder import V2EntityBuilder
     entity = (V2EntityBuilder(1)
               .kind("HERO")
-              .at((0, 0))
+              .location(0, 0)
               .gold(50)
               .items([ItemStack("wood", 1), ItemStack("herb", 1)])
-              .readiness(100.0)
-              .with_inventory_v2(max_slots=2)
+              .combat(readiness=100.0)
+              .inventory(max_slots=2)
               .build())
     return replace(base_state, entities={1: entity})
 
@@ -589,12 +589,12 @@ class TestQuestRewardAtomicity:
         from src.core.builder import V2EntityBuilder
         e = (V2EntityBuilder(1)
              .kind("HERO")
-             .at((0, 0))
+             .location(0, 0)
              .gold(50)
              .items([ItemStack("wood", 1)])
-             .with_inventory_v2(max_slots=1)
-             .readiness(100.0)
-             .with_strategic(projects={"q1": quest_obj})
+             .inventory(max_slots=1)
+             .combat(readiness=100.0)
+             .strategic(projects={"q1": quest_obj})
              .build())
         state = replace(state, entities={1: e})
         

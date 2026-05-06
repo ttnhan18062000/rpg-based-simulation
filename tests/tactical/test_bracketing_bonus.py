@@ -10,10 +10,10 @@ def create_mock_entity(eid, faction, pos=(10.0, 10.0), hp=100):
     role = EntityRole.HERO if faction == 1 else EntityRole.MONSTER
     return (V2EntityBuilder(eid)
             .kind("hero" if role == EntityRole.HERO else "monster")
-            .at(pos)
-            .readiness(100.0)
-            .with_identity(role=role, faction=faction)
-            .with_combat(hp=hp, max_hp=100, atk=10, def_stat=0)
+            .location(*pos)
+            .combat(readiness=100.0)
+            .identity(role=role, faction=faction)
+            .combat(hp=hp, max_hp=100, atk=10, def_stat=0)
             .build())
 
 def test_bracketing_bonus_application():

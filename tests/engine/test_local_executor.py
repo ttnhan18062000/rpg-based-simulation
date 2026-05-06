@@ -12,8 +12,8 @@ def test_local_executor_movement():
     executor = LocalSequentialExecutor()
     # Default mode is WANDER (0.8 mult). Cost = 10 / 0.8 = 12.5
     e1 = (V2EntityBuilder(1)
-          .at((0.0, 0.0))
-          .readiness(100.0)
+          .location(0.0, 0.0)
+          .combat(readiness=100.0)
           .build())
     state = AuthoritativeState(tick=0, seed=42, entities={1: e1})
     rng = DeterministicRNG(42)
@@ -47,7 +47,7 @@ def test_local_executor_movement():
 def test_local_executor_action():
     """Verify that LocalSequentialExecutor handles ENTITY_ACT correctly."""
     executor = LocalSequentialExecutor()
-    e1 = V2EntityBuilder(1).at((0.0, 0.0)).readiness(100.0).build()
+    e1 = V2EntityBuilder(1).location(0.0, 0.0).combat(readiness=100.0).build()
     state = AuthoritativeState(tick=0, seed=42, entities={1: e1})
     rng = DeterministicRNG(42)
     profile = RuntimeProfile(

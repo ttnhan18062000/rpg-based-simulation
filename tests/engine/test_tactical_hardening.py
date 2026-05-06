@@ -25,7 +25,7 @@ def test_tactical_legality_envelope_mock():
     
     # Setup a scenario where an entity is "frozen" or "stunned"
     hero = (V2EntityBuilder(1)
-            .at((5.0, 5.0))
+            .location(5.0, 5.0)
             .with_property("status_stunned", True)
             .build())
     

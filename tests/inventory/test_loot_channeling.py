@@ -14,7 +14,7 @@ def test_loot_channeling_completion():
     from src.core.builder import V2EntityBuilder
     entity = (V2EntityBuilder(1)
         .kind("hero")
-        .at((0, 0))
+        .location(0, 0)
         .build())
     state = AuthoritativeState(tick=1, seed=42, entities={1: entity}, ground_items={101: ground_item})
     
@@ -52,7 +52,7 @@ def test_loot_interruption_by_distance():
     from src.core.builder import V2EntityBuilder
     entity = (V2EntityBuilder(1)
         .kind("hero")
-        .at((0, 0))
+        .location(0, 0)
         .build())
     state = AuthoritativeState(tick=1, seed=42, entities={1: entity}, ground_items={101: ground_item})
     

@@ -13,11 +13,11 @@ def create_mock_entity(e_id, pos=(0,0), hp=100):
     from src.core.builder import V2EntityBuilder
     return (V2EntityBuilder(e_id)
         .kind("ACTOR")
-        .position(pos[0], pos[1])
-        .faction(Faction.HERO_GUILD)
-        .role(EntityRole.HERO)
-        .hp(hp, max_hp=100)
-        .alive(hp > 0)
+        .location(pos[0], pos[1])
+        .identity(faction=Faction.HERO_GUILD)
+        .identity(role=EntityRole.HERO)
+        .combat(hp=hp, max_hp=100)
+        .combat(alive=hp > 0)
         .build())
 
 def test_party_leadership_loss_dissolution():

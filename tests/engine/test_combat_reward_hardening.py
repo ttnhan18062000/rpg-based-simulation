@@ -10,11 +10,11 @@ from src.core.builder import V2EntityBuilder
 def create_mock_entity(id, faction=Faction.HERO_GUILD, role=EntityRole.HERO, pos=(0,0), hp=100, readiness=100.0, evolution_level=1):
     return (V2EntityBuilder(id)
             .kind("ACTOR")
-            .at(pos)
-            .faction(faction)
-            .role(role)
-            .readiness(readiness)
-            .evolution_level(evolution_level)
+            .location(*pos)
+            .identity(faction=faction)
+            .identity(role=role)
+            .combat(readiness=readiness)
+            .identity(evolution_level=evolution_level)
             .with_base_stats(hp=hp, atk=100)
             .with_current_hp(hp)
             .build())
@@ -50,9 +50,8 @@ def test_combat_reward_consolidation_xp_gold():
     with pytest.raises(AttributeError):
         _ = attacker_upd.combat.gold_gain
         
-    # Rewards should have been processed into the reward component
-    assert attacker_upd.reward is not None
-    assert attacker_upd.reward.xp_gain == 0 # Consumed by EvolutionSystem
+    # Rewards should have been processed into component updates
+    assert attacker_upd.identity.evolution_points_delta == 50
     assert attacker_upd.inventory.gold_delta == 25
     
     # Check that they came from a successful COMBAT intent
@@ -88,8 +87,7 @@ def test_skill_reward_consolidation():
     attacker_upd = refined.entity_updates[1]
     
     # Check processed rewards
-    assert attacker_upd.reward is not None
-    assert attacker_upd.reward.xp_gain == 0 # Consumed by EvolutionSystem
+    assert attacker_upd.identity.evolution_points_delta == 20
     assert any(res.source_kind == "COMBAT" and res.accepted for res in attacker_upd.intent_results)
     
     final_state = ApplyPath.apply_generation(state, refined)

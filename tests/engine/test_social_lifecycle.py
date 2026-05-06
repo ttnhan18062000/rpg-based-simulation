@@ -11,13 +11,13 @@ from src.core.enums import ReasonCode
 
 @pytest.fixture
 def base_entity():
-    return V2EntityBuilder(1).kind("hero").at((0, 0)).build()
+    return V2EntityBuilder(1).kind("hero").location(0, 0).build()
 
 def test_contract_state_machine_valid():
     contract = ContractState(id="c1", kind=ContractKind.RECRUITMENT, source_id=1, target_id=2, status=ContractStatus.OFFERED)
     entity = (V2EntityBuilder(2)
               .kind("hero")
-              .at((0, 0))
+              .location(0, 0)
               .build())
     entity = replace(entity, strategic=replace(entity.strategic, contracts={"c1": contract}))
     
@@ -30,7 +30,7 @@ def test_contract_state_machine_invalid():
     contract = ContractState(id="c1", kind=ContractKind.RECRUITMENT, source_id=1, target_id=2, status=ContractStatus.OFFERED)
     entity = (V2EntityBuilder(2)
               .kind("hero")
-              .at((0, 0))
+              .location(0, 0)
               .build())
     entity = replace(entity, strategic=replace(entity.strategic, contracts={"c1": contract}))
     
@@ -43,7 +43,7 @@ def test_recruitment_appraisal_trust_impact(base_entity):
     offerer_id = 10
     offerer = (V2EntityBuilder(offerer_id)
                .kind("hero")
-               .at((0, 0))
+               .location(0, 0)
                .build())
     
     social = base_entity.social
@@ -63,7 +63,7 @@ def test_recruitment_appraisal_low_trust(base_entity):
     offerer_id = 10
     offerer = (V2EntityBuilder(offerer_id)
                .kind("hero")
-               .at((0, 0))
+               .location(0, 0)
                .build())
     # Set low public reputation
     offerer = replace(offerer, social=replace(offerer.social, public_reputation=0.1))
@@ -106,7 +106,7 @@ def test_party_leadership_influence(base_entity):
     leader_proj = ProjectState(id="proj1", kind="HARVEST", objectives=[leader_obj], active_objective_id="obj1")
     leader = (V2EntityBuilder(leader_id)
               .kind("hero")
-              .at((0, 0))
+              .location(0, 0)
               .build())
     leader = replace(leader, strategic=replace(leader.strategic, projects={"proj1": leader_proj}, current_project_id="proj1"))
     

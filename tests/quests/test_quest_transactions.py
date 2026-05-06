@@ -11,7 +11,7 @@ from src.engine.pipeline import AuthoritativeApplyPipeline
 
 @pytest.fixture
 def base_entity():
-    return V2EntityBuilder(entity_id=1).role(EntityRole.HERO).build()
+    return V2EntityBuilder(entity_id=1).identity(role=EntityRole.HERO).build()
 
 @pytest.fixture
 def active_quest():

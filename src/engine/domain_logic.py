@@ -385,11 +385,13 @@ class SimulationDomainLogic:
                     if eid == target_id:
                         target = ent
                         break
-            
             if not target and context and hasattr(context, "entities"):
                 target = context.entities.get(target_id)
+                
+            if not target:
+                return {entity.id: EntityUpdate(entity_id=entity.id, readiness_delta=-10.0, navigation=NavigationUpdate(failure_reason="TARGET_NOT_FOUND"))}
             
-            if target and context:
+            if context:
                 from src.engine.legality import LegalityServiceV2
                 is_legal, reason = LegalityServiceV2.verify_attack_legality(entity, target, context)
                 if not is_legal:
@@ -475,7 +477,6 @@ class SimulationDomainLogic:
             if not StaminaService.can_use_skill(entity.stamina, skill.cost):
                  return {entity.id: EntityUpdate(entity_id=entity.id, readiness_delta=-10.0)}
                  
-            # 4. Target?
             target = None
             if neighbor_view:
                 for eid, ent in neighbor_view:
@@ -485,7 +486,10 @@ class SimulationDomainLogic:
             if not target and context and hasattr(context, "entities"):
                 target = context.entities.get(target_id)
             
-            if not target or not target.combat.alive:
+            if not target:
+                 return {entity.id: EntityUpdate(entity_id=entity.id, readiness_delta=-10.0, navigation=NavigationUpdate(failure_reason="TARGET_NOT_FOUND"))}
+            
+            if not target.combat.alive:
                  return {entity.id: EntityUpdate(entity_id=entity.id, readiness_delta=-10.0)}
 
             # 5. Resolve

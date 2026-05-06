@@ -16,13 +16,13 @@ def test_greedy_personality_bias():
     
     # Greedy entity
     greedy_entity = (V2EntityBuilder(1)
-        .at((0.0, 0.0))
+        .location(0.0, 0.0)
         .personality(PersonalityComponent(greed=1.0))
         .build())
     
     # Non-greedy entity
     neutral_entity = (V2EntityBuilder(2)
-        .at((0.0, 0.0))
+        .location(0.0, 0.0)
         .personality(PersonalityComponent(greed=0.0))
         .build())
     
@@ -49,7 +49,7 @@ def test_boredom_accumulation_and_switch():
     
     # Initial state with active project
     entity = (V2EntityBuilder(1)
-        .at((0.0, 0.0))
+        .location(0.0, 0.0)
         .build())
     
     # Add project manually since builder doesn't support active project injection yet
@@ -82,13 +82,13 @@ def test_boredom_accumulation_and_switch():
 def test_life_stage_multipliers():
     # Setup state
     entity_child = (V2EntityBuilder(1)
-        .at((0.0, 0.0))
+        .location(0.0, 0.0)
         .life_stage(LifeStage.CHILD)
         .biological(sleep_debt=50.0)
         .build())
         
     entity_elder = (V2EntityBuilder(2)
-        .at((0.0, 0.0))
+        .location(0.0, 0.0)
         .life_stage(LifeStage.ELDER)
         .biological(sleep_debt=50.0)
         .build())

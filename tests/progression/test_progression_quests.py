@@ -51,15 +51,15 @@ class TestQuestFromBlockers:
     """LEG-RPG-141: Quest generation from blocker state."""
 
     def test_no_quests_when_no_blockers(self):
-        entity = V2EntityBuilder(1).at((5.0, 5.0)).build()
+        entity = V2EntityBuilder(1).location(5.0, 5.0).build()
         result = QuestGenerationSystem.generate_from_blockers(entity, current_tick=100)
         assert len(result) == 0
 
     def test_material_blocker_generates_expedition(self):
         blockers = {"b1": BlockerState(id="b1", kind="material", subject="iron", severity=0.7)}
         entity = (V2EntityBuilder(1)
-                  .at((5.0, 5.0))
-                  .with_strategic(blockers=blockers)
+                  .location(5.0, 5.0)
+                  .strategic(blockers=blockers)
                   .build())
         result = QuestGenerationSystem.generate_from_blockers(entity, current_tick=100)
         assert len(result) == 1
@@ -70,8 +70,8 @@ class TestQuestFromBlockers:
     def test_resolved_blockers_ignored(self):
         blockers = {"b1": BlockerState(id="b1", kind="material", subject="iron", severity=0.7, resolved=True)}
         entity = (V2EntityBuilder(1)
-                  .at((5.0, 5.0))
-                  .with_strategic(blockers=blockers)
+                  .location(5.0, 5.0)
+                  .strategic(blockers=blockers)
                   .build())
         result = QuestGenerationSystem.generate_from_blockers(entity, current_tick=100)
         assert len(result) == 0

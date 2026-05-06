@@ -13,8 +13,8 @@ def test_interleaved_transaction_grouping():
            with independent intents in the proposal list.
     """
     actor = (V2EntityBuilder(1)
-             .at((5, 5))
-             .readiness(100.0)
+             .location(5, 5)
+             .combat(readiness=100.0)
              .build())
     
     state = AuthoritativeState(
@@ -77,8 +77,8 @@ def test_group_failure_rollback():
     Proof: This test ensures that if one intent in a group fails, the whole group is rolled back.
     """
     actor = (V2EntityBuilder(1)
-             .at((5, 5))
-             .readiness(100.0)
+             .location(5, 5)
+             .combat(readiness=100.0)
              .gold(0)
              .build())
     

@@ -16,7 +16,7 @@ def _make_entity_with_trust(source_id, trust=0.5, interactions=0):
     from src.core.builder import V2EntityBuilder
     return (V2EntityBuilder(1)
         .kind("hero")
-        .position(5.0, 5.0)
+        .location(5.0, 5.0)
         .source_trust(source_id, trust, interactions)
         .build())
 
@@ -75,7 +75,7 @@ class TestRefutationDropsTrust:
 
     def test_unknown_source_defaults_to_half(self):
         from src.core.builder import V2EntityBuilder
-        entity = V2EntityBuilder(1).kind("hero").position(5.0, 5.0).build()
+        entity = V2EntityBuilder(1).kind("hero").location(5.0, 5.0).build()
         result = SocialAppraisalSystem.recalibrate_source_trust(entity, 99, "SUCCESS")
         updated = result.source_trust_updates[0]
         assert updated.trust == pytest.approx(0.6, abs=0.01)
@@ -128,7 +128,7 @@ class TestFamiliarity:
 
     def test_positive_interaction_builds_familiarity(self):
         from src.core.builder import V2EntityBuilder
-        entity = V2EntityBuilder(1).kind("hero").position(5.0, 5.0).build()
+        entity = V2EntityBuilder(1).kind("hero").location(5.0, 5.0).build()
         update = SocialAppraisalSystem.update_familiarity(
             observer=entity, subject_id=42,
             interaction_quality=1.0, current_tick=100
@@ -140,7 +140,7 @@ class TestFamiliarity:
 
     def test_cha_modifier_scales_gain(self):
         from src.core.builder import V2EntityBuilder
-        entity = V2EntityBuilder(1).kind("hero").position(5.0, 5.0).build()
+        entity = V2EntityBuilder(1).kind("hero").location(5.0, 5.0).build()
         upd_low = SocialAppraisalSystem.update_familiarity(
             entity, 42, 1.0, 100, cha_modifier=0.5
         )

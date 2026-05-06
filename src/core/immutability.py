@@ -9,7 +9,7 @@ def deep_freeze(obj: Any) -> Any:
     Law: Decision logic must only operate on deeply frozen state.
     """
     from src.core.state import ReadOnlyDict
-    if isinstance(obj, (MappingProxyType, tuple, frozenset, int, float, str, bool)) or obj is None:
+    if isinstance(obj, (ReadOnlyDict, MappingProxyType, tuple, frozenset, int, float, str, bool)) or obj is None:
         return obj
     
     if isinstance(obj, dict):

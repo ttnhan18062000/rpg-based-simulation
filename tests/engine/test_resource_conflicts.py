@@ -21,13 +21,13 @@ def test_contested_corpse_loot_conflict():
     
     # Milestone 13 Law: Every ENTITY_ACT (including resource transfers) requires 100.0 readiness.
     actor_a = (V2EntityBuilder(1)
-               .at((5, 5))
-               .readiness(100.0)
+               .location(5, 5)
+               .combat(readiness=100.0)
                .build())
     
     actor_b = (V2EntityBuilder(2)
-               .at((5, 5))
-               .readiness(100.0)
+               .location(5, 5)
+               .combat(readiness=100.0)
                .build())
     
     state = AuthoritativeState(

@@ -10,12 +10,12 @@ from src.core.builder import V2EntityBuilder
 def create_mock_entity(id, faction=Faction.HERO_GUILD, role=EntityRole.HERO, pos=(0,0), hp=100, range=1, readiness=100.0):
     return (V2EntityBuilder(id)
             .kind("ACTOR")
-            .at(pos)
-            .faction(faction)
-            .role(role)
+            .location(*pos)
+            .identity(faction=faction)
+            .identity(role=role)
             .with_base_stats(hp=hp, range=range)
             .with_current_hp(hp)
-            .readiness(readiness)
+            .combat(readiness=readiness)
             .build())
 
 def test_attacker_incapacitated():
@@ -31,7 +31,7 @@ def test_attacker_incapacitated():
     # Inactive
     attacker_inactive = (V2EntityBuilder(1)
                          .kind("ACTOR")
-                         .at((0,0))
+                         .location(0, 0)
                          .active(False)
                          .build())
     is_legal, reason = LegalityServiceV2.verify_attack_legality(attacker_inactive, target, state)
@@ -51,8 +51,8 @@ def test_target_incapacitated():
     # Inactive
     target_inactive = (V2EntityBuilder(2)
                        .kind("ACTOR")
-                       .at((1,0))
-                       .faction(Faction.MONSTER_HORDE)
+                       .location(1, 0)
+                       .identity(faction=Faction.MONSTER_HORDE)
                        .active(False)
                        .build())
     is_legal, reason = LegalityServiceV2.verify_attack_legality(attacker, target_inactive, state)
@@ -67,7 +67,7 @@ def test_attacker_status_blocked():
     # Stunned
     attacker_stunned = (V2EntityBuilder(1)
                         .kind("ACTOR")
-                        .readiness(100.0)
+                        .combat(readiness=100.0)
                         .with_property("status_stunned", True)
                         .build())
     is_legal, reason = LegalityServiceV2.verify_attack_legality(attacker_stunned, target, state)
@@ -77,7 +77,7 @@ def test_attacker_status_blocked():
     # Frozen
     attacker_frozen = (V2EntityBuilder(1)
                        .kind("ACTOR")
-                       .readiness(100.0)
+                       .combat(readiness=100.0)
                        .with_property("status_frozen", True)
                        .build())
     is_legal, reason = LegalityServiceV2.verify_attack_legality(attacker_frozen, target, state)
@@ -137,8 +137,8 @@ def test_aoe_negative_cases():
     # Attacker status blocked (Stunned)
     attacker_stunned = (V2EntityBuilder(1)
                         .kind("ACTOR")
-                        .at((0,0))
-                        .readiness(100.0)
+                        .location(0, 0)
+                        .combat(readiness=100.0)
                         .with_property("status_stunned", True)
                         .build())
     res = CombatResolutionSystem.resolve_aoe_attack(attacker_stunned, (2,0), 2, state)
@@ -172,7 +172,7 @@ def test_execute_action_target_not_found():
     # ATTACK missing target
     updates = SimulationDomainLogic.execute_action(attacker, {"action": "ATTACK", "target_id": 999}, context=state)
     assert 1 in updates
-    assert updates[1].readiness_delta == -100.0
+    assert updates[1].readiness_delta == -10.0
 
 def test_execute_action_legality_fail():
     attacker = create_mock_entity(1)

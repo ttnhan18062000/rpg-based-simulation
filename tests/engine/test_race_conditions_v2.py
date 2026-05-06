@@ -17,10 +17,10 @@ def create_mock_entity(id, pos=(0,0)):
     from src.core.builder import V2EntityBuilder
     return (V2EntityBuilder(id)
             .kind("hero")
-            .at(pos)
-            .with_identity(role=EntityRole.HERO)
-            .with_combat(hp=100)
-            .with_inventory_v2(max_slots=10, max_weight=100.0)
+            .location(*pos)
+            .identity(role=EntityRole.HERO)
+            .combat(hp=100)
+            .inventory(max_slots=10, max_weight=100.0)
             .build())
 
 @pytest.mark.v2_contract

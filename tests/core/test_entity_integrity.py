@@ -26,7 +26,7 @@ def test_entity_field_integrity():
         "task", "stamina"
     }
     
-    extra_fields = entity_fields - REQUIRED_BASE_FIELDS - aspects
+    extra_fields = entity_fields - REQUIRED_BASE_FIELDS - aspects - {"_readonly_cache"}
     
     assert not extra_fields, f"Unauthorized fields detected in EntityState: {extra_fields}"
 

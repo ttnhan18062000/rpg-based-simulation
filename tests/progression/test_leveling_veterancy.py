@@ -9,7 +9,7 @@ from src.core.builder import V2EntityBuilder
 def test_level_cap_100():
     """Verify that level is capped at 100 even with massive XP."""
     # Create entity at level 99
-    entity = V2EntityBuilder(entity_id=1).role(0).build()
+    entity = V2EntityBuilder(entity_id=1).identity(role=0).build()
     entity = replace(entity, identity=replace(entity.identity, evolution_level=99, evolution_points=0))
 
     state = AuthoritativeState(tick=0, seed=1, entities={1: entity})
@@ -32,7 +32,7 @@ def test_level_cap_100():
 
 def test_veterancy_progression():
     """Verify rank progression through multiple ranks."""
-    entity = V2EntityBuilder(entity_id=1).role(0).build()
+    entity = V2EntityBuilder(entity_id=1).identity(role=0).build()
     state = AuthoritativeState(tick=0, seed=1, entities={1: entity})
 
     # Rank 0 -> 1 requires 10 points
@@ -51,7 +51,7 @@ def test_veterancy_progression():
 
 def test_veterancy_multi_rank():
     """Verify multiple rank-ups in a single tick."""
-    entity = V2EntityBuilder(entity_id=1).role(0).build()
+    entity = V2EntityBuilder(entity_id=1).identity(role=0).build()
     state = AuthoritativeState(tick=0, seed=1, entities={1: entity})
 
     # Rank 0->1 (10), Rank 1->2 (20) = Total 30

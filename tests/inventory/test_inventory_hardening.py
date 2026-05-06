@@ -14,8 +14,8 @@ def test_inventory_stack_size_enforcement():
     from src.core.builder import V2EntityBuilder
     entity = (V2EntityBuilder(1)
         .kind("HERO")
-        .at((0, 0))
-        .with_inventory(items=[ItemStack("iron_ore", 18)], max_slots=2, max_weight=100.0)
+        .location(0, 0)
+        .inventory(items=[ItemStack("iron_ore", 18)], max_slots=2, max_weight=100.0)
         .build())
     state = AuthoritativeState(tick=1, seed=42, entities={1: entity})
     
@@ -40,8 +40,8 @@ def test_inventory_weight_preservation_delta():
     from src.core.builder import V2EntityBuilder
     entity = (V2EntityBuilder(1)
         .kind("HERO")
-        .at((0, 0))
-        .with_inventory(items=[ItemStack("iron_ore", 2)], max_slots=10, max_weight=5.0)
+        .location(0, 0)
+        .inventory(items=[ItemStack("iron_ore", 2)], max_slots=10, max_weight=5.0)
         .build())
     state = AuthoritativeState(tick=1, seed=42, entities={1: entity})
     
@@ -64,8 +64,8 @@ def test_partial_stack_fill_before_slot_rejection():
     from src.core.builder import V2EntityBuilder
     entity = (V2EntityBuilder(1)
         .kind("HERO")
-        .at((0, 0))
-        .with_inventory(items=[ItemStack("iron_ore", 19)], max_slots=2, max_weight=100.0)
+        .location(0, 0)
+        .inventory(items=[ItemStack("iron_ore", 19)], max_slots=2, max_weight=100.0)
         .build())
     state = AuthoritativeState(tick=1, seed=42, entities={1: entity})
     

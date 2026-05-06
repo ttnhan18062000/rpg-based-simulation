@@ -7,7 +7,7 @@ def test_guild_intel_emission():
     # Setup entity at guild
     entity = (V2EntityBuilder(1)
         .kind("HERO")
-        .at((10, 10))
+        .location(10, 10)
         .with_interaction(target_id=1, progress=9.0)
         .with_property("interaction_kind", "guild")
         .build())

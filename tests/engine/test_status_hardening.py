@@ -77,7 +77,7 @@ def frozen_actor_state():
     actor_id = 42
     actor = (V2EntityBuilder(actor_id)
              .kind("hero")
-             .at((0.0, 0.0))
+             .location(0.0, 0.0)
              .build())
     
     state = AuthoritativeState(

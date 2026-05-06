@@ -11,9 +11,9 @@ def test_weight_pressure_enforcement():
     # Setup state: Entity with limited weight capacity
     entity = (V2EntityBuilder(1)
               .kind("hero")
-              .at((0.0, 0.0))
-              .with_inventory(items=["wood", "wood"])
-              .readiness(100.0)
+              .location(0.0, 0.0)
+              .inventory(items=["wood", "wood"])
+              .combat(readiness=100.0)
               .build())
     
     # max_weight=5.0 override (Default is 50)
@@ -43,8 +43,8 @@ def test_channeled_looting_one_shot():
     # Setup state: LOOT node
     entity = (V2EntityBuilder(1)
               .kind("hero")
-              .at((0.0, 0.0))
-              .readiness(100.0)
+              .location(0.0, 0.0)
+              .combat(readiness=100.0)
               .build())
     
     # Set interaction state
@@ -76,9 +76,9 @@ def test_town_resolution_sell_on_entry():
     # Setup state: Entity with materials entering town
     entity = (V2EntityBuilder(1)
               .kind("hero")
-              .at((0.0, 0.0))
-              .with_inventory(items=["wood", "ore"])
-              .readiness(100.0)
+              .location(0.0, 0.0)
+              .inventory(items=["wood", "ore"])
+              .combat(readiness=100.0)
               .build())
     
     # Add a shop building with gold
@@ -122,8 +122,8 @@ def test_movement_interruption():
     # Setup state: Channelling interaction
     entity = (V2EntityBuilder(1)
               .kind("hero")
-              .at((0.0, 0.0))
-              .readiness(100.0)
+              .location(0.0, 0.0)
+              .combat(readiness=100.0)
               .build())
     entity = replace(entity, interaction=InteractionComponent(progress=5, target_node_id=10))
     

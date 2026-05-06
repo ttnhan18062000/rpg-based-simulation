@@ -90,7 +90,7 @@ def test_milestone_b_operational_gate(mb_profile, initial_state):
                      work_class=WorkClass.CRITICAL,
                      subject=(V2EntityBuilder(i+1)
                               .kind("TEST")
-                              .at((0.0, 0.0))
+                              .location(0.0, 0.0)
                               .build()), 
                      neighbor_view=[], work_kind="TEST", payload={})
         for i in range(10)

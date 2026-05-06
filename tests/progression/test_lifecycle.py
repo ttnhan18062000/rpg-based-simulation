@@ -10,8 +10,8 @@ from src.core.enums import EntityRole, Faction
 def test_aging_per_tick():
     """Verify that entities age by 1 tick every generation."""
     ent = (V2EntityBuilder(1)
-           .at((0.0, 0.0))
-           .with_lifecycle(age_ticks=50)
+           .location(0.0, 0.0)
+           .lifecycle(age_ticks=50)
            .build())
     state = AuthoritativeState(tick=100, seed=42, entities={1: ent})
     
@@ -24,8 +24,8 @@ def test_death_by_old_age():
     """Verify that reaching max age triggers death."""
     # Note: V2EntityBuilder doesn't have max_age_ticks setter, we use replace for now
     ent = (V2EntityBuilder(1)
-           .at((0.0, 0.0))
-           .with_lifecycle(age_ticks=1000)
+           .location(0.0, 0.0)
+           .lifecycle(age_ticks=1000)
            .build())
     ent = replace(ent, lifecycle=replace(ent.lifecycle, max_age_ticks=1000))
     state = AuthoritativeState(tick=100, seed=42, entities={1: ent})
@@ -41,7 +41,7 @@ def test_death_by_old_age():
 def test_combat_death_classification():
     """Verify that a KILL outcome is classified as a lifecycle death."""
     ent = (V2EntityBuilder(1)
-           .at((0.0, 0.0))
+           .location(0.0, 0.0)
            .build())
     state = AuthoritativeState(tick=100, seed=42, entities={1: ent})
     
@@ -59,7 +59,7 @@ def test_succession_and_heirloom_transfer():
     """Verify that heirlooms are transferred to the heir upon death."""
     # Build parent with heir and heirlooms
     parent = (V2EntityBuilder(1)
-              .at((0.0, 0.0))
+              .location(0.0, 0.0)
               .build())
     parent_life = LifecycleComponent(
         age_ticks=100, max_age_ticks=100, 
@@ -69,7 +69,7 @@ def test_succession_and_heirloom_transfer():
     parent = replace(parent, lifecycle=parent_life)
     
     heir = (V2EntityBuilder(2)
-            .at((1.0, 1.0))
+            .location(1.0, 1.0)
             .build())
     
     state = AuthoritativeState(tick=100, seed=42, entities={1: parent, 2: heir})
@@ -89,17 +89,17 @@ def test_near_death_hardening_logic():
     
     hero = (V2EntityBuilder(1)
             .kind("HERO")
-            .at((0.0, 0.0))
-            .with_identity(role=EntityRole.HERO, faction=Faction.HERO_GUILD)
-            .with_combat(hp=100, max_hp=100)
+            .location(0.0, 0.0)
+            .identity(role=EntityRole.HERO, faction=Faction.HERO_GUILD)
+            .combat(hp=100, max_hp=100)
             .build())
             
     attacker = (V2EntityBuilder(2)
                 .kind("MONSTER")
-                .at((1.0, 0.0))
-                .with_identity(role=EntityRole.MONSTER, faction=Faction.MONSTER_HORDE)
-                .with_combat(atk=105)
-                .readiness(100.0)
+                .location(1.0, 0.0)
+                .identity(role=EntityRole.MONSTER, faction=Faction.MONSTER_HORDE)
+                .combat(atk=105)
+                .combat(readiness=100.0)
                 .build())
     
     state = AuthoritativeState(tick=100, seed=42, entities={1: hero, 2: attacker})

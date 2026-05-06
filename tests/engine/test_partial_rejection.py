@@ -9,10 +9,10 @@ from src.core.builder import V2EntityBuilder
 @pytest.fixture
 def base_state():
     e1 = (V2EntityBuilder(1)
-          .at((0.0, 0.0))
+          .location(0.0, 0.0)
           .active(True)
-          .readiness(100.0)
-          .faction(Faction.HERO_GUILD)
+          .combat(readiness=100.0)
+          .identity(faction=Faction.HERO_GUILD)
           .build())
     return AuthoritativeState(tick=1, seed=42, entities={1: e1})
 
@@ -24,9 +24,9 @@ def test_partial_rejection_occupancy_vs_combat(base_state):
     """
     # 1. Setup target out of range and DIFFERENT FACTION to avoid friendly fire check
     target = (V2EntityBuilder(2)
-              .at((100.0, 100.0))
+              .location(100.0, 100.0)
               .active(True)
-              .faction(Faction.MONSTER_HORDE)
+              .identity(faction=Faction.MONSTER_HORDE)
               .build())
     state = replace(base_state, entities={**base_state.entities, 2: target})
     
@@ -62,16 +62,16 @@ def test_partial_rejection_occupancy_vs_readiness(base_state):
     """
     # 1. Setup entity with 0 readiness
     hero = (V2EntityBuilder(1)
-            .at((0.0, 0.0))
+            .location(0.0, 0.0)
             .active(True)
-            .readiness(0.0)
-            .faction(Faction.HERO_GUILD)
+            .combat(readiness=0.0)
+            .identity(faction=Faction.HERO_GUILD)
             .build())
     # Need a target to avoid TARGET_INVALID, and DIFFERENT FACTION
     target = (V2EntityBuilder(2)
-              .at((1.0, 1.0))
+              .location(1.0, 1.0)
               .active(True)
-              .faction(Faction.MONSTER_HORDE)
+              .identity(faction=Faction.MONSTER_HORDE)
               .build())
     state = replace(base_state, entities={1: hero, 2: target})
     

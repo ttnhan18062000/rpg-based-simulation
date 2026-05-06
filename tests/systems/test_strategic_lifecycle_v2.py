@@ -21,12 +21,12 @@ def create_mock_hero(e_id, pos):
     from src.core.builder import V2EntityBuilder
     return (V2EntityBuilder(e_id)
         .kind("actor")
-        .position(pos[0], pos[1])
-        .role(EntityRole.HERO)
-        .faction(Faction.HERO_GUILD)
-        .hp(100, max_hp=100)
-        .alive(True)
-        .readiness(100.0)
+        .location(pos[0], pos[1])
+        .identity(role=EntityRole.HERO)
+        .identity(faction=Faction.HERO_GUILD)
+        .combat(hp=100, max_hp=100)
+        .combat(alive=True)
+        .combat(readiness=100.0)
         .cognition(interruption_resistance=0.5, detour_breadth=3)
         .build())
 

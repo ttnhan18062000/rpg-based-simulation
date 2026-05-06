@@ -13,13 +13,13 @@ def create_mock_entity(e_id, pos=(0,0)):
     from src.core.builder import V2EntityBuilder
     return (V2EntityBuilder(e_id)
         .kind("HERO")
-        .position(pos[0], pos[1])
+        .location(pos[0], pos[1])
         .evolution(level=1, points=0, unspent_ap=0)
         .strength(10).vitality(10)
         .aptitude(str_apt=1.1, vit_apt=1.2)
-        .hp(100, max_hp=100)
-        .alive(True)
-        .readiness(100.0)
+        .combat(hp=100, max_hp=100)
+        .combat(alive=True)
+        .combat(readiness=100.0)
         .build())
 
 def test_evolution_trigger_and_stat_boost():

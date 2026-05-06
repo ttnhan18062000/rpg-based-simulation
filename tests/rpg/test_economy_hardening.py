@@ -16,8 +16,8 @@ def base_state():
     from src.core.builder import V2EntityBuilder
     entity = (V2EntityBuilder(1)
         .kind("hero")
-        .at((0.5, 0.5))
-        .with_inventory(gold=1000)
+        .location(0.5, 0.5)
+        .inventory(gold=1000)
         .build()
     )
     

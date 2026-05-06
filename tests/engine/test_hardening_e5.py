@@ -16,11 +16,11 @@ from src.core.builder import V2EntityBuilder
 def create_mock_entity(id, faction="HERO_FACTION", role=EntityRole.HERO, pos=(0,0), hp=100, readiness=100.0):
     return (V2EntityBuilder(id)
             .kind("ACTOR")
-            .at(pos)
+            .location(*pos)
             .with_base_stats(hp=hp, range=1)
-            .readiness(readiness)
-            .role(role)
-            .faction(faction)
+            .combat(readiness=readiness)
+            .identity(role=role)
+            .identity(faction=faction)
             .build())
 
 # --- E5.1: Negative Case Hardening ---

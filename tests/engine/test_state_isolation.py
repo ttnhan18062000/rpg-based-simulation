@@ -27,8 +27,8 @@ def test_state_mutation_protection():
     """
     # 1. Setup state with one entity via V2EntityBuilder
     entity = (V2EntityBuilder(1)
-              .at((0, 0))
-              .readiness(100.0)
+              .location(0, 0)
+              .combat(readiness=100.0)
               .build())
               
     # Ensure entity is registered in scheduler/work_debt if needed
@@ -53,7 +53,7 @@ def test_state_mutation_protection():
         # Note: state_ctx.entities is a MappingProxyType in V2
         try:
             state_ctx.entities[1] = (V2EntityBuilder(1)
-                                     .at((666, 666))
+                                     .location(666, 666)
                                      .build())
         except Exception as e:
             # Re-raise so pytest.raises captures it

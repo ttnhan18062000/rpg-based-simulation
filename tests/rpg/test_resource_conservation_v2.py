@@ -22,10 +22,10 @@ def base_state():
     from src.core.builder import V2EntityBuilder
     entity = (V2EntityBuilder(1)
         .kind("HERO")
-        .at((0, 0))
+        .location(0, 0)
         .with_class("HERO")
-        .with_combat(hp=100, max_hp=100)
-        .with_inventory(max_slots=1)
+        .combat(hp=100, max_hp=100)
+        .inventory(max_slots=1)
         .with_interaction(target_id=101, progress=0)
         .with_properties({"interaction_kind": "harvest", "harvest_duration": 1})
         .build()

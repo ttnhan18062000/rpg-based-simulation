@@ -16,10 +16,10 @@ def test_stronghold_lifecycle():
     for i in range(10):
         deaths.append(V2EntityBuilder(i+1)
             .kind("hero")
-            .position(5, 5)
-            .faction(Faction.HERO_GUILD)
-            .hp(0)
-            .alive(False)
+            .location(5, 5)
+            .identity(faction=Faction.HERO_GUILD)
+            .combat(hp=0)
+            .combat(alive=False)
             .build())
         
     update = FactionInfluenceService.process_influence_shift(state, deaths)
@@ -41,10 +41,10 @@ def test_stronghold_removal():
     # Existing stronghold
     stronghold = (V2EntityBuilder(100)
         .kind("stronghold")
-        .position(5, 5)
-        .faction(Faction.MONSTER_HORDE)
-        .hp(1000)
-        .alive(True)
+        .location(5, 5)
+        .identity(faction=Faction.MONSTER_HORDE)
+        .combat(hp=1000)
+        .combat(alive=True)
         .build())
     
     state = AuthoritativeState(tick=100, seed=42, regions={"wild": region}, entities={100: stronghold})
@@ -55,10 +55,10 @@ def test_stronghold_removal():
     for i in range(20):
         deaths.append(V2EntityBuilder(i+1)
             .kind("monster")
-            .position(5, 5)
-            .faction(Faction.MONSTER_HORDE)
-            .hp(0)
-            .alive(False)
+            .location(5, 5)
+            .identity(faction=Faction.MONSTER_HORDE)
+            .combat(hp=0)
+            .combat(alive=False)
             .build())
         
     update = FactionInfluenceService.process_influence_shift(state, deaths)

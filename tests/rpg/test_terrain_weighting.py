@@ -18,10 +18,10 @@ def test_terrain_readiness_rejection():
     from src.core.builder import V2EntityBuilder
     entity = (V2EntityBuilder(1)
         .kind("hero")
-        .at((1, 0))
-        .readiness(20.0)
-        .with_combat(move_cost=10.0, alive=True)
-        .with_navigation(mode=MovementMode.WANDER)
+        .location(1, 0)
+        .combat(readiness=20.0)
+        .combat(move_cost=10.0, alive=True)
+        .navigation(mode=MovementMode.WANDER)
         .build())
     
     # 2. Attempt move to (1, 1)
@@ -52,10 +52,10 @@ def test_terrain_readiness_success():
     from src.core.builder import V2EntityBuilder
     entity = (V2EntityBuilder(1)
         .kind("hero")
-        .at((1, 0))
-        .readiness(100.0)
-        .with_combat(move_cost=10.0, alive=True)
-        .with_navigation(mode=MovementMode.WANDER)
+        .location(1, 0)
+        .combat(readiness=100.0)
+        .combat(move_cost=10.0, alive=True)
+        .navigation(mode=MovementMode.WANDER)
         .build())
     
     state = AuthoritativeState(

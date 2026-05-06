@@ -9,7 +9,7 @@ from src.engine.apply import ApplyPath
 from src.core.builder import V2EntityBuilder
 
 def test_relationship_familiarity_gain():
-    entity = V2EntityBuilder(entity_id=1).role(0).build()
+    entity = V2EntityBuilder(entity_id=1).identity(role=0).build()
     state = AuthoritativeState(tick=0, seed=1, entities={1: entity})
     
     # Increase familiarity with entity 99
@@ -25,7 +25,7 @@ def test_relationship_familiarity_gain():
     assert social.familiarity_history[99] == 0.1
 
 def test_relationship_trust_evidence():
-    entity = V2EntityBuilder(entity_id=1).role(0).build()
+    entity = V2EntityBuilder(entity_id=1).identity(role=0).build()
     state = AuthoritativeState(tick=0, seed=1, entities={1: entity})
     
     # Increase trust with entity 99
@@ -41,7 +41,7 @@ def test_relationship_trust_evidence():
     assert social.trust_history[99] == 0.5
 
 def test_relationship_debt_and_fear():
-    entity = V2EntityBuilder(entity_id=1).role(0).build()
+    entity = V2EntityBuilder(entity_id=1).identity(role=0).build()
     state = AuthoritativeState(tick=0, seed=1, entities={1: entity})
     
     # Increase debt and fear with entity 99
@@ -58,7 +58,7 @@ def test_relationship_debt_and_fear():
     assert social.fear_history[99] == 0.2
 
 def test_public_reputation_impact():
-    entity = V2EntityBuilder(entity_id=1).role(0).build()
+    entity = V2EntityBuilder(entity_id=1).identity(role=0).build()
     state = AuthoritativeState(tick=0, seed=1, entities={1: entity})
     
     # Perform heroic deed
@@ -76,7 +76,7 @@ def test_public_reputation_impact():
 
 def test_relationship_salience_pruning():
     from src.social.relationships import RelationshipService
-    entity = V2EntityBuilder(entity_id=1).role(0).build()
+    entity = V2EntityBuilder(entity_id=1).identity(role=0).build()
     
     # Add two entities: one salient, one not
     update = EntityUpdate(

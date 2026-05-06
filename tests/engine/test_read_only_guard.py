@@ -9,7 +9,7 @@ from src.core.builder import V2EntityBuilder
 
 def test_read_only_guard_enforcement():
     # Setup state
-    entity = V2EntityBuilder(1).at((0.0, 0.0)).build()
+    entity = V2EntityBuilder(1).location(0.0, 0.0).build()
     state = AuthoritativeState(tick=100, seed=42, entities={1: entity})
     
     # We need to mock or monkeypatch something in the brain to attempt mutation
@@ -38,7 +38,7 @@ def test_read_only_guard_enforcement():
 
 def test_read_only_properties_mutation():
     # Entities themselves should have read-only properties
-    entity = V2EntityBuilder(1).at((0.0, 0.0)).build()
+    entity = V2EntityBuilder(1).location(0.0, 0.0).build()
     state = AuthoritativeState(tick=100, seed=42, entities={1: entity})
     
     # V2 components are already frozen dataclasses, but ReadOnlyDict might be used for some nested fields

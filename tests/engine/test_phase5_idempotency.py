@@ -8,9 +8,9 @@ from src.core.builder import V2EntityBuilder
 def create_mock_entity(id, pos=(0.0, 0.0)):
     return (V2EntityBuilder(id)
             .kind("hero")
-            .at(pos)
+            .location(*pos)
             .active(True)
-            .readiness(100.0)
+            .combat(readiness=100.0)
             .build())
 
 def test_resource_node_race():

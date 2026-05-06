@@ -10,12 +10,12 @@ def create_mock_entity(eid: int, gold: int = 10, hp: int = 100):
     from src.core.enums import Faction
     return (V2EntityBuilder(eid)
         .kind("hero")
-        .position(0, 0)
-        .role(EntityRole.HERO)
-        .faction(Faction.HERO_GUILD)
-        .hp(hp, max_hp=100)
+        .location(0, 0)
+        .identity(role=EntityRole.HERO)
+        .identity(faction=Faction.HERO_GUILD)
+        .combat(hp=hp, max_hp=100)
         .gold(gold)
-        .alive(True)
+        .combat(alive=True)
         .build())
 
 def test_appraise_recruitment_low_trust_low_pay():

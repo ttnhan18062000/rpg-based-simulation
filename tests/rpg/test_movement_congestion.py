@@ -41,11 +41,11 @@ def make_entity(id, pos, faction=0, wait_count=0, osc_count=0,
     
     builder = (V2EntityBuilder(id)
                .kind("HERO")
-               .at(pos)
-               .with_identity(faction=f_enum)
-               .with_combat(hp=100, max_hp=100, atk=10, def_stat=5, alive=True)
+               .location(*pos)
+               .identity(faction=f_enum)
+               .combat(hp=100, max_hp=100, atk=10, def_stat=5, alive=True)
                .action_style(action_style)
-               .with_navigation(mode=mode, wait_count=wait_count, oscillation_count=osc_count, last_pos=last_pos)
+               .navigation(mode=mode, wait_count=wait_count, oscillation_count=osc_count, last_pos=last_pos)
                .active(True))
     
     return builder.build()

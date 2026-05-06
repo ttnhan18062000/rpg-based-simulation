@@ -22,11 +22,11 @@ def test_harness_catches_failed_recovery():
     state = AuthoritativeState(tick=0, seed=42, entities={
         1: (V2EntityBuilder(1)
             .kind("HERO")
-            .faction(Faction.HERO_GUILD)
+            .identity(faction=Faction.HERO_GUILD)
             .build()),
         2: (V2EntityBuilder(2)
             .kind("MONSTER")
-            .faction(Faction.MONSTER_HORDE)
+            .identity(faction=Faction.MONSTER_HORDE)
             .build())
     })
     harness = CertificationHarness(profile, output_dir="tmp/test_harness_resilience")

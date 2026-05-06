@@ -5,7 +5,7 @@ from src.engine.tactical import TacticalDecisionSystem
 from src.core.builder import V2EntityBuilder
 
 def create_mock_entity(eid, faction, hp=100, pos=(10.0, 10.0)):
-    return V2EntityBuilder(eid).kind("hero").faction(faction).hp(hp).at(pos).readiness(100.0).build()
+    return V2EntityBuilder(eid).kind("hero").identity(faction=faction).combat(hp=hp).location(*pos).combat(readiness=100.0).build()
 
 def test_stalemate_break():
     attacker = create_mock_entity(1, 1)

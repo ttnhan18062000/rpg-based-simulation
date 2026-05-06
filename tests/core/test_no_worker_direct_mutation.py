@@ -15,7 +15,7 @@ def test_frozen_state_mutation_prevention():
 
 def test_worker_context_immutability():
     """Law: Workers must receive a context that cannot be mutated to affect the engine."""
-    subject = V2EntityBuilder(1).kind("ACTOR").at((0.0, 0.0)).build()
+    subject = V2EntityBuilder(1).kind("ACTOR").location(0.0, 0.0).build()
     packet = WorkerPacket(
         packet_id="1:0",
         work_id="1:1:TEST",
@@ -41,7 +41,7 @@ def test_local_executor_isolation_contract():
     from src.engine.executor import LocalSequentialExecutor
     executor = LocalSequentialExecutor()
     
-    subject = V2EntityBuilder(1).kind("ORIGINAL").at((0.0, 0.0)).build()
+    subject = V2EntityBuilder(1).kind("ORIGINAL").location(0.0, 0.0).build()
     
     # A malicious worker that tries to mutate its input
     class MaliciousWorker:

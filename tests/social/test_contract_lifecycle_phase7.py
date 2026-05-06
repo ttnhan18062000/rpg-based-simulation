@@ -12,11 +12,11 @@ def create_mock_entity(id, gold=10, hp=100, sentiment=0.0):
     from src.core.state import SocialBond
     return (V2EntityBuilder(id)
         .kind("ACTOR")
-        .position(0, 0)
-        .hp(hp, max_hp=100)
+        .location(0, 0)
+        .combat(hp=hp, max_hp=100)
         .gold(gold)
         .bond(SocialBond(target_id=99, sentiment=sentiment, familiarity=0.5))
-        .alive(True)
+        .combat(alive=True)
         .build())
 
 def test_appraisal_betrayal_rejection():
@@ -25,11 +25,11 @@ def test_appraisal_betrayal_rejection():
     from src.core.state import SocialBond
     candidate = (V2EntityBuilder(1)
         .kind("ACTOR")
-        .position(0, 0)
+        .location(0, 0)
         .gold(0)
         .betrayal_count(1)
         .bond(SocialBond(target_id=99, sentiment=-1.0))
-        .alive(True)
+        .combat(alive=True)
         .build())
     
     # High-pay offer
@@ -65,9 +65,9 @@ def test_offer_expiration_logic():
     # It was created at tick 100, expires at 110
     e1 = (V2EntityBuilder(1)
         .kind("ACTOR")
-        .position(0, 0)
+        .location(0, 0)
         .strategic_contract(contract)
-        .alive(True)
+        .combat(alive=True)
         .build())
     
     state = AuthoritativeState(entities={1: e1}, tick=111, seed=42)
@@ -94,9 +94,9 @@ def test_resolution_reputation_impact():
     
     e1 = (V2EntityBuilder(1)
         .kind("ACTOR")
-        .position(0, 0)
+        .location(0, 0)
         .strategic_contract(contract)
-        .alive(True)
+        .combat(alive=True)
         .build())
     
     s_upd, b_upds = ContractService.resolve_contract_outcome(e1, "c_rep", success=True)

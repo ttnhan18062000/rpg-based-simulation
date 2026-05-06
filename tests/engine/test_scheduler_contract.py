@@ -7,9 +7,9 @@ from src.core.builder import V2EntityBuilder
 
 def test_readiness_driven_selection():
     """Verify that only entities at or above 100.0 readiness are selected."""
-    e1 = V2EntityBuilder(1).readiness(100.0).build()
-    e2 = V2EntityBuilder(2).readiness(99.9).build()
-    e3 = V2EntityBuilder(3).readiness(150.0).build()
+    e1 = V2EntityBuilder(1).combat(readiness=100.0).build()
+    e2 = V2EntityBuilder(2).combat(readiness=99.9).build()
+    e3 = V2EntityBuilder(3).combat(readiness=150.0).build()
     
     state = AuthoritativeState(tick=1, seed=42, entities={1: e1, 2: e2, 3: e3})
     
@@ -25,9 +25,9 @@ def test_readiness_driven_selection():
 
 def test_deterministic_tiebreak():
     """Verify that same-readiness entities are sorted by EntityID ASC."""
-    e1 = V2EntityBuilder(1).readiness(100.0).build()
-    e2 = V2EntityBuilder(2).readiness(100.0).build()
-    e3 = V2EntityBuilder(3).readiness(100.0).build()
+    e1 = V2EntityBuilder(1).combat(readiness=100.0).build()
+    e2 = V2EntityBuilder(2).combat(readiness=100.0).build()
+    e3 = V2EntityBuilder(3).combat(readiness=100.0).build()
     
     state = AuthoritativeState(tick=1, seed=42, entities={3: e3, 1: e1, 2: e2})
     
@@ -55,7 +55,7 @@ def test_periodic_selection():
 
 def test_full_work_hierarchy():
     """Verify Critical > Periodic > Deferred hierarchy."""
-    e1 = V2EntityBuilder(1).readiness(100.0).build()
+    e1 = V2EntityBuilder(1).combat(readiness=100.0).build()
     state = AuthoritativeState(
         tick=10, 
         seed=1,

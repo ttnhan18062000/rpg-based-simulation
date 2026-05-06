@@ -6,7 +6,7 @@ from src.engine.apply import ApplyPath
 from src.core.builder import V2EntityBuilder
 
 def test_breakthrough_addition():
-    entity = V2EntityBuilder(entity_id=1).role(0).build()
+    entity = V2EntityBuilder(entity_id=1).identity(role=0).build()
     state = AuthoritativeState(tick=0, seed=1, entities={1: entity})
     
     # Add breakthrough
@@ -22,7 +22,7 @@ def test_breakthrough_addition():
     assert "iron_will" in ident.active_breakthroughs
 
 def test_duplicate_breakthrough_suppression():
-    entity = V2EntityBuilder(entity_id=1).role(0).build()
+    entity = V2EntityBuilder(entity_id=1).identity(role=0).build()
     entity = replace(entity, identity=replace(entity.identity, active_breakthroughs={"iron_will"}))
     state = AuthoritativeState(tick=0, seed=1, entities={1: entity})
     

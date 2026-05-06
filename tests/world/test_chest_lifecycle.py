@@ -3,14 +3,16 @@ from src.core.state import AuthoritativeState, EntityState, ChestState, Interact
 from src.systems.chest_system import ChestSystem
 from src.engine.pipeline import AuthoritativeApplyPipeline
 
+from src.core.builder import V2EntityBuilder
+
 def test_chest_looting():
     # Setup entity looting
-    entity = EntityState(
-        id=1, kind="HERO", position=(5, 5),
-        interaction=InteractionComponent(target_node_id=1, progress=9.0),
-        combat=CombatComponent(readiness=100.0),
-        properties={"interaction_kind": "chest"}
-    )
+    entity = (V2EntityBuilder(1)
+        .kind("HERO")
+        .location(5, 5)
+        .with_interaction(target_id=1, progress=9.0)
+        .with_property("interaction_kind", "chest")
+        .build())
     
     # Setup chest
     chest = ChestState(

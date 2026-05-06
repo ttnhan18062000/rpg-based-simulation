@@ -11,7 +11,7 @@ from src.core.builder import V2EntityBuilder
 def create_mock_entity(id, pos=(0,0), project=None):
     builder = (V2EntityBuilder(id)
                .kind("ACTOR")
-               .at(pos)
+               .location(*pos)
                .with_base_stats(hp=100, atk=10)
                .active(True))
     

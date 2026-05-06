@@ -13,11 +13,11 @@ def test_evolution_level_up_hero():
     """Verify that a Hero levels up and unlocks skills at milestones."""
     entity = (V2EntityBuilder(1)
               .kind("HERO")
-              .at((0.0, 0.0))
-              .with_identity(role=EntityRole.HERO, evolution_level=1, evolution_points=0)
-              .with_attributes(vitality=5, strength=5)
-              .hp(110)
-              .with_combat(atk=12)
+              .location(0.0, 0.0)
+              .identity(role=EntityRole.HERO, evolution_level=1, evolution_points=0)
+              .attributes(vitality=5, strength=5)
+              .combat(hp=110)
+              .combat(atk=12)
               .build())
     state = AuthoritativeState(entities={1: entity}, tick=0, seed=0)
     
@@ -38,9 +38,9 @@ def test_equipment_stat_derivation():
     """Verify that equipping items updates combat stats via ApplyPath."""
     entity = (V2EntityBuilder(1)
               .kind("HERO")
-              .at((0.0, 0.0))
-              .with_attributes(strength=10)
-              .with_combat(atk=15, range=1)
+              .location(0.0, 0.0)
+              .attributes(strength=10)
+              .combat(atk=15, range=1)
               .build())
     state = AuthoritativeState(entities={1: entity}, tick=0, seed=0)
     
@@ -59,9 +59,9 @@ def test_passive_skill_bonus():
     """Verify that learning a passive skill updates combat stats."""
     entity = (V2EntityBuilder(1)
               .kind("HERO")
-              .at((0.0, 0.0))
-              .with_attributes(agility=10)
-              .with_combat(evasion=0.06)
+              .location(0.0, 0.0)
+              .attributes(agility=10)
+              .combat(evasion=0.06)
               .build())
     state = AuthoritativeState(entities={1: entity}, tick=0, seed=0)
     
@@ -79,9 +79,9 @@ def test_attribute_stat_scaling():
     """Verify that increasing attributes updates combat stats."""
     entity = (V2EntityBuilder(1)
               .kind("HERO")
-              .at((0.0, 0.0))
-              .with_attributes(strength=10)
-              .with_combat(atk=15)
+              .location(0.0, 0.0)
+              .attributes(strength=10)
+              .combat(atk=15)
               .build())
     state = AuthoritativeState(entities={1: entity}, tick=0, seed=0)
     

@@ -39,7 +39,7 @@ def test_deferred_vs_periodic_priority():
     
     p_def = PeriodicDefinition(subsystem_id="P", work_kind="ACT", cadence=1)
     state = AuthoritativeState(tick=1, seed=42, 
-        entities={1: V2EntityBuilder(1).kind("hero").at((0.0, 0.0)).readiness(100.0).build()},
+        entities={1: V2EntityBuilder(1).kind("hero").location(0.0, 0.0).combat(readiness=100.0).build()},
         periodic_due_ticks={"P": 1},
         work_debt={"D": 1}
     )

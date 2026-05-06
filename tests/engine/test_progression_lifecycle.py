@@ -11,16 +11,16 @@ from src.core.enums import EntityRole
 @pytest.fixture
 def base_hero():
     return (V2EntityBuilder(1)
-            .at((0, 0))
-            .role(EntityRole.HERO)
+            .location(0, 0)
+            .identity(role=EntityRole.HERO)
             .build())
 
 def test_xp_separation_full_inventory(base_hero):
     # Setup: Hero with full inventory
     # V2 builder default max_slots is 16
     builder = (V2EntityBuilder(1)
-               .at((0,0))
-               .role(EntityRole.HERO)
+               .location(0, 0)
+               .identity(role=EntityRole.HERO)
                .items([ItemStack(item_id="iron_ore", quantity=1)] * 16))
     entity = builder.build()
     
@@ -42,8 +42,8 @@ def test_xp_separation_full_inventory(base_hero):
 def test_durability_decay_combat(base_hero):
     # Setup: Hero with a sword
     builder = (V2EntityBuilder(1)
-               .at((0,0))
-               .role(EntityRole.HERO))
+               .location(0, 0)
+               .identity(role=EntityRole.HERO))
     attacker = builder.build()
     # Patch equipment directly as builder doesn't have a specific method for durability yet
     attacker = replace(attacker, 
@@ -53,7 +53,7 @@ def test_durability_decay_combat(base_hero):
         )
     )
     
-    defender = V2EntityBuilder(2).at((1,1)).build()
+    defender = V2EntityBuilder(2).location(1, 1).build()
     
     from src.engine.combat import CombatResolutionSystem
     att_dur, def_dur = CombatResolutionSystem._get_durability_decay(attacker, defender)
@@ -64,8 +64,8 @@ def test_durability_decay_combat(base_hero):
 def test_crafting_gates(base_hero):
     # Setup: Hero knows iron_sword recipe but has no materials
     entity = (V2EntityBuilder(1)
-              .at((0,0))
-              .role(EntityRole.HERO)
+              .location(0, 0)
+              .identity(role=EntityRole.HERO)
               .build())
     # Patch recipe knowledge
     entity = replace(entity, identity=replace(entity.identity, known_recipes={"iron_sword"}))
@@ -78,8 +78,8 @@ def test_crafting_gates(base_hero):
 def test_crafting_success(base_hero):
     # Setup: Hero has materials and knows recipe
     entity = (V2EntityBuilder(1)
-              .at((0,0))
-              .role(EntityRole.HERO)
+              .location(0, 0)
+              .identity(role=EntityRole.HERO)
               .gold(100)
               .items([ItemStack(item_id="iron_ore", quantity=5), ItemStack(item_id="wood", quantity=2)])
               .build())
@@ -98,8 +98,8 @@ def test_stat_derivation_broken_gear(base_hero):
     # iron_sword usually gives ATK bonus (e.g. 10)
     # Base hero attributes (STR=5) -> ATK=10 + 2.5 = 12
     entity = (V2EntityBuilder(1)
-              .at((0,0))
-              .role(EntityRole.HERO)
+              .location(0, 0)
+              .identity(role=EntityRole.HERO)
               .build())
     entity = replace(entity, 
         equipment=replace(entity.equipment, 

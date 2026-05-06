@@ -31,7 +31,7 @@ def test_peak_utilization_accuracy():
             world_time=0,
             seed=i,
             work_class=WorkClass.CRITICAL,
-            subject=V2EntityBuilder(i).kind("test").at((0.0, 0.0)).build(),
+            subject=V2EntityBuilder(i).kind("test").location(0.0, 0.0).build(),
             neighbor_view=[],
             work_kind="TEST",
             payload={}
@@ -71,7 +71,7 @@ def test_queue_overflow_shedding():
             world_time=0,
             seed=i,
             work_class=WorkClass.CRITICAL,
-            subject=V2EntityBuilder(i).kind("test").at((0.0, 0.0)).build(),
+            subject=V2EntityBuilder(i).kind("test").location(0.0, 0.0).build(),
             neighbor_view=[],
             work_kind="TEST",
             payload={}

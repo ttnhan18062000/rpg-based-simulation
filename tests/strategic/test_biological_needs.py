@@ -15,7 +15,7 @@ def test_biological_decay_per_tick():
     from src.core.builder import V2EntityBuilder
     ent = (V2EntityBuilder(1)
         .kind("HERO")
-        .at((0.0, 0.0))
+        .location(0.0, 0.0)
         .biological(hunger=10.0, sleep_debt=5.0)
         .build())
     state = AuthoritativeState(tick=100, seed=42, entities={1: ent})
@@ -34,7 +34,7 @@ def test_hunger_concern_generation():
     from src.core.builder import V2EntityBuilder
     ent = (V2EntityBuilder(1)
         .kind("HERO")
-        .at((0.0, 0.0))
+        .location(0.0, 0.0)
         .biological(hunger=60.0)
         .build())
     state = AuthoritativeState(tick=100, seed=42, entities={1: ent}, world_time=1200)
@@ -48,7 +48,7 @@ def test_sleep_bias_at_night():
     from src.core.builder import V2EntityBuilder
     ent = (V2EntityBuilder(1)
         .kind("HERO")
-        .at((0.0, 0.0))
+        .location(0.0, 0.0)
         .biological(sleep_debt=30.0)
         .build())
     
@@ -68,7 +68,7 @@ def test_routine_utility_boost():
     from src.core.builder import V2EntityBuilder
     ent = (V2EntityBuilder(1)
         .kind("HERO")
-        .at((0.0, 0.0))
+        .location(0.0, 0.0)
         .biological(hunger=50.0, sleep_debt=40.0)
         .build())
     
@@ -87,7 +87,7 @@ def test_pipeline_integrates_biological_concerns():
     
     ent = (V2EntityBuilder(1)
         .kind("HERO")
-        .at((0.0, 0.0))
+        .location(0.0, 0.0)
         .biological(hunger=80.0)
         .build())
     state = AuthoritativeState(tick=99, seed=42, entities={1: ent}, world_time=1200)
@@ -106,9 +106,9 @@ def test_routine_action_execution():
     
     ent = (V2EntityBuilder(1)
         .kind("HERO")
-        .at((0.0, 0.0))
+        .location(0.0, 0.0)
         .biological(hunger=50.0, sleep_debt=40.0)
-        .readiness(100.0)
+        .combat(readiness=100.0)
         .build())
     
     # 1. Test REST

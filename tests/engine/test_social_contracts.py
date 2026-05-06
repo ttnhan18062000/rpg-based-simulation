@@ -11,13 +11,13 @@ def test_contract_betrayal_consequences():
     # 1. Source (ID 1) recruits Target (ID 2)
     source_builder = (V2EntityBuilder(1)
                       .kind("hero")
-                      .at((0,0))
-                      .faction(1))
+                      .location(0, 0)
+                      .identity(faction=1))
     
     target_builder = (V2EntityBuilder(2)
                       .kind("hero")
-                      .at((1,1))
-                      .faction(2))
+                      .location(1, 1)
+                      .identity(faction=2))
     
     contract = ContractService.create_recruitment_contract("c1", 1, 2, tick=100)
     

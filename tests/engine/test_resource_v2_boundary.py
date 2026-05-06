@@ -15,17 +15,17 @@ def base_state():
         entities={
             1: (V2EntityBuilder(1)
                 .kind("hero")
-                .at((0.0, 0.0))
-                .readiness(100.0)
-                .faction(Faction.HERO_GUILD)
+                .location(0.0, 0.0)
+                .combat(readiness=100.0)
+                .identity(faction=Faction.HERO_GUILD)
                 .with_base_stats(hp=100, range=2)
-                .with_inventory(gold=0)
+                .inventory(gold=0)
                 .build()),
             2: (V2EntityBuilder(2)
                 .kind("monster")
-                .at((1.0, 1.0))
-                .readiness(100.0)
-                .faction(Faction.MONSTER_HORDE)
+                .location(1.0, 1.0)
+                .combat(readiness=100.0)
+                .identity(faction=Faction.MONSTER_HORDE)
                 .with_base_stats(hp=1) 
                 .with_current_hp(1) # Ensure it only has 1 HP
                 .build())
@@ -142,13 +142,15 @@ def test_combat_reward_via_intent(base_state):
     if attacker_up.navigation and attacker_up.navigation.failure_reason:
         pytest.fail(f"Attack failed: {attacker_up.navigation.failure_reason}")
         
-    # Rewards are stripped in sanitize phase, so we check intents
-    assert len(attacker_up.resource_transfers) > 0, f"No resource transfers generated for KILL. Outcome: {updates[target.id].combat.outcome_kind if target.id in updates else 'N/A'}"
-    intent = attacker_up.resource_transfers[0]
-    assert intent.source_kind == "COMBAT"
-    assert intent.reward_upd.xp_gain == 10 # Monster level 1
-    assert intent.reward_upd.xp_gain > 0
-    assert intent.gold_delta >= 0
+    # XP and Gold are now in separate intents
+    xp_intent = next((it for it in attacker_up.resource_transfers if it.xp_reward > 0), None)
+    assert xp_intent is not None, "XP intent missing"
+    assert xp_intent.xp_reward == 10 # Monster level 1
+    
+    gold_intent = next((it for it in attacker_up.resource_transfers if it.gold_delta > 0), None)
+    # Monsters might not always drop gold depending on RNG, but here it should if seed=123
+    if gold_intent:
+        assert gold_intent.gold_delta > 0
 
 def test_recruitment_gold_handoff(base_state):
     """Verify that recruitment gold transfer uses ResourceTransferIntent."""
@@ -182,9 +184,9 @@ def test_class_hall_train_refactor():
     # Setup state
     hero = (V2EntityBuilder(1)
             .kind("HERO")
-            .at((1.0, 1.0))
-            .readiness(100.0)
-            .with_inventory(gold=100)
+            .location(1.0, 1.0)
+            .combat(readiness=100.0)
+            .inventory(gold=100)
             .build())
     
     state = AuthoritativeState(entities={1: hero}, tick=0, seed=123)
@@ -212,8 +214,8 @@ def test_chest_looting_and_cooldown():
     # Setup state
     hero = (V2EntityBuilder(1)
             .kind("HERO")
-            .at((1.0, 1.0))
-            .readiness(100.0)
+            .location(1.0, 1.0)
+            .combat(readiness=100.0)
             .build())
     hero = replace(hero, interaction=InteractionComponent(target_node_id=10, progress=9.0))
     

@@ -4,21 +4,21 @@ from src.social.appraisal import SocialAppraisalSystem
 
 def test_recruitment_cost_scaling_with_level():
     """Verify that recruitment cost increases with candidate level."""
-    recruiter = V2EntityBuilder(1).kind("HERO").position(0.0, 0.0).build()
+    recruiter = V2EntityBuilder(1).kind("HERO").location(0.0, 0.0).build()
     
     # Candidate Level 1
     cand1 = (V2EntityBuilder(2)
         .kind("HERO")
-        .position(1.0, 0.0)
-        .with_identity(evolution_level=1)
+        .location(1.0, 0.0)
+        .identity(evolution_level=1)
         .build())
     cost1 = SocialAppraisalSystem.calculate_recruitment_cost(recruiter, cand1)
     
     # Candidate Level 5
     cand5 = (V2EntityBuilder(3)
         .kind("HERO")
-        .position(2.0, 0.0)
-        .with_identity(evolution_level=5)
+        .location(2.0, 0.0)
+        .identity(evolution_level=5)
         .build())
     cost5 = SocialAppraisalSystem.calculate_recruitment_cost(recruiter, cand5)
     
@@ -28,12 +28,12 @@ def test_recruitment_cost_scaling_with_level():
 
 def test_recruitment_cost_discount_with_trust():
     """Verify that high trust reduces recruitment cost."""
-    recruiter = V2EntityBuilder(1).kind("HERO").position(0.0, 0.0).build()
+    recruiter = V2EntityBuilder(1).kind("HERO").location(0.0, 0.0).build()
     
     # Low trust (0.0) -> mult 1.5
     cand_low = (V2EntityBuilder(2)
         .kind("HERO")
-        .position(1.0, 0.0)
+        .location(1.0, 0.0)
         .trust(1, 0.0)
         .build())
     cost_low = SocialAppraisalSystem.calculate_recruitment_cost(recruiter, cand_low)
@@ -41,7 +41,7 @@ def test_recruitment_cost_discount_with_trust():
     # High trust (1.0) -> mult 0.5
     cand_high = (V2EntityBuilder(3)
         .kind("HERO")
-        .position(2.0, 0.0)
+        .location(2.0, 0.0)
         .trust(1, 1.0)
         .build())
     cost_high = SocialAppraisalSystem.calculate_recruitment_cost(recruiter, cand_high)
@@ -56,7 +56,7 @@ def test_recruitment_acceptance_logic():
     
     candidate = (V2EntityBuilder(1)
         .kind("HERO")
-        .position(0.0, 0.0)
+        .location(0.0, 0.0)
         .trust(2, 0.8)
         .build())
     
@@ -74,7 +74,7 @@ def test_recruitment_acceptance_logic():
     # Low payout, low trust -> Reject
     candidate_low = (V2EntityBuilder(1)
         .kind("HERO")
-        .position(0.0, 0.0)
+        .location(0.0, 0.0)
         .trust(2, 0.2)
         .build())
     contract_low = ContractState(

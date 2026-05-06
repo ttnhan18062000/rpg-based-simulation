@@ -35,9 +35,9 @@ def test_transaction_trace_determinism():
         # We'll fill it with 16 items to trigger INVENTORY_FULL
         items = [f"item_{i}" for i in range(16)]
         ent1 = (V2EntityBuilder(1)
-                .at((10.0, 10.0))
+                .location(10.0, 10.0)
                 .gold(100)
-                .readiness(100.0)
+                .combat(readiness=100.0)
                 .items(items)
                 .build())
         

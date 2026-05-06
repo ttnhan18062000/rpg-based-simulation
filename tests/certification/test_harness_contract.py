@@ -21,8 +21,8 @@ def test_certification_detects_semantic_drift():
     state = AuthoritativeState(tick=0, seed=42, entities={
         1: (V2EntityBuilder(1)
             .kind("TEST")
-            .position(0.0, 0.0)
-            .readiness(100.0)
+            .location(0.0, 0.0)
+            .combat(readiness=100.0)
             .build())
     })
     

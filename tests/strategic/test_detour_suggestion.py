@@ -45,17 +45,17 @@ def _make_entity_with_leads(num_leads, profile=None, blockers=None, concerns=Non
     
     builder = (V2EntityBuilder(1)
         .kind("hero")
-        .at((5.0, 5.0))
-        .with_strategic(leads=leads, blockers=blockers, concerns=concerns))
+        .location(5.0, 5.0)
+        .strategic(leads=leads, blockers=blockers, concerns=concerns))
     
     if profile:
-        builder.with_strategic_profile(
+        builder.cognition(
             max_leads=profile.max_leads,
             max_concerns=profile.max_concerns,
             breadth=profile.detour_breadth
         )
     else:
-        builder.with_strategic_profile(max_leads=5, max_concerns=3)
+        builder.cognition(max_leads=5, max_concerns=3)
         
     return builder.build()
 
@@ -84,9 +84,9 @@ class TestLeadBandwidth:
         }
         entity = (V2EntityBuilder(1)
             .kind("hero")
-            .at((5.0, 5.0))
-            .with_strategic_profile(max_leads=2)
-            .with_strategic(leads=leads)
+            .location(5.0, 5.0)
+            .cognition(max_leads=2)
+            .strategic(leads=leads)
             .build())
         result = DetourSuggestionSystem.enforce_bandwidth(entity, current_tick=10)
         assert len(result.leads_remove) == 2
@@ -137,9 +137,9 @@ class TestDetourSuggestion:
         }
         entity = (V2EntityBuilder(1)
             .kind("hero")
-            .at((5.0, 5.0))
-            .with_strategic_profile(breadth=3)
-            .with_strategic(blockers=blockers, leads=leads)
+            .location(5.0, 5.0)
+            .cognition(breadth=3)
+            .strategic(blockers=blockers, leads=leads)
             .build())
         result = DetourSuggestionSystem.suggest_detours(entity, current_tick=10)
         assert len(result) == 1
@@ -154,9 +154,9 @@ class TestDetourSuggestion:
                   for i in range(5)}
         entity = (V2EntityBuilder(1)
             .kind("hero")
-            .at((5.0, 5.0))
-            .with_strategic_profile(breadth=2)
-            .with_strategic(blockers=blockers, leads=leads)
+            .location(5.0, 5.0)
+            .cognition(breadth=2)
+            .strategic(blockers=blockers, leads=leads)
             .build())
         result = DetourSuggestionSystem.suggest_detours(entity, current_tick=10)
         assert len(result) == 2  # Limited by breadth
@@ -170,9 +170,9 @@ class TestDetourSuggestion:
         }
         entity = (V2EntityBuilder(1)
             .kind("hero")
-            .at((5.0, 5.0))
-            .with_strategic_profile(breadth=5)
-            .with_strategic(blockers=blockers, leads=leads)
+            .location(5.0, 5.0)
+            .cognition(breadth=5)
+            .strategic(blockers=blockers, leads=leads)
             .build())
         result = DetourSuggestionSystem.suggest_detours(entity, current_tick=10)
         assert len(result) == 2
@@ -193,8 +193,8 @@ class TestLeadSuppression:
         }
         entity = (V2EntityBuilder(1)
             .kind("hero")
-            .at((5.0, 5.0))
-            .with_strategic(leads=leads)
+            .location(5.0, 5.0)
+            .strategic(leads=leads)
             .build())
         
         # Phase 6: Needs 3 failures for exhaustion
@@ -220,9 +220,9 @@ class TestLeadSuppression:
         }
         entity = (V2EntityBuilder(1)
             .kind("hero")
-            .at((5.0, 5.0))
-            .with_strategic_profile(breadth=5)
-            .with_strategic(blockers=blockers, leads=leads)
+            .location(5.0, 5.0)
+            .cognition(breadth=5)
+            .strategic(blockers=blockers, leads=leads)
             .build())
         result = DetourSuggestionSystem.suggest_detours(entity, current_tick=10)
         assert len(result) == 0  # Exhausted lead not used

@@ -16,7 +16,7 @@ def test_explore_quest_progress():
     from src.core.builder import V2EntityBuilder
     entity = (V2EntityBuilder(1)
               .kind("HERO")
-              .at((101, 101))
+              .location(101, 101)
               .strategic_project(quest)
               .build())
     
@@ -42,7 +42,7 @@ def test_bounty_quest_completion():
     from src.core.builder import V2EntityBuilder
     entity = (V2EntityBuilder(1)
               .kind("HERO")
-              .at((0, 0))
+              .location(0, 0)
               .strategic_project(quest)
               .build())
     

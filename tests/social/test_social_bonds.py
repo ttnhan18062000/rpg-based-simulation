@@ -9,9 +9,9 @@ def create_mock_social_entity(eid, cha=5):
     from src.core.builder import V2EntityBuilder
     return (V2EntityBuilder(eid)
         .kind("HERO")
-        .position(0, 0)
-        .with_attributes(charisma=cha)
-        .alive(True)
+        .location(0, 0)
+        .attributes(charisma=cha)
+        .combat(alive=True)
         .build())
 
 @pytest.mark.v2_contract

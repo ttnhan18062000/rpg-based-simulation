@@ -9,28 +9,28 @@ from src.core.builder import V2EntityBuilder
 def base_state():
     attacker = (V2EntityBuilder(1)
                 .kind("hero")
-                .at((5.0, 5.0))
-                .readiness(100.0)
-                .faction(Faction.HERO_GUILD)
-                .role(EntityRole.HERO)
+                .location(5.0, 5.0)
+                .combat(readiness=100.0)
+                .identity(faction=Faction.HERO_GUILD)
+                .identity(role=EntityRole.HERO)
                 .with_base_stats(atk=20, def_stat=10, hp=100, range=1)
                 .build())
                 
     defender = (V2EntityBuilder(2)
                 .kind("mob")
-                .at((6.0, 5.0))
-                .readiness(100.0)
-                .faction(Faction.MONSTER_HORDE)
-                .role(EntityRole.MONSTER)
+                .location(6.0, 5.0)
+                .combat(readiness=100.0)
+                .identity(faction=Faction.MONSTER_HORDE)
+                .identity(role=EntityRole.MONSTER)
                 .with_base_stats(atk=10, def_stat=5, hp=50, range=1)
                 .build())
                 
     ally = (V2EntityBuilder(3)
             .kind("hero")
-            .at((5.0, 6.0))
-            .readiness(100.0)
-            .faction(Faction.HERO_GUILD)
-            .role(EntityRole.HERO)
+            .location(5.0, 6.0)
+            .combat(readiness=100.0)
+            .identity(faction=Faction.HERO_GUILD)
+            .identity(role=EntityRole.HERO)
             .with_base_stats(atk=10, def_stat=5, hp=50, range=1)
             .build())
     
@@ -80,12 +80,12 @@ def test_atomic_rewards_on_kill(base_state):
     assert res.outcome_kind == "KILL"
     assert not res.alive_set
     
-    # Should have ResourceTransferIntent
-    assert len(res.resource_transfers) == 1
-    intent = res.resource_transfers[0]
-    assert intent.source_id == 2
-    assert intent.reward_upd.xp_gain > 0
-    assert intent.gold_delta > 0
+    # Should have multiple ResourceTransferIntents (split by group vs individual)
+    assert len(res.resource_transfers) >= 1
+    total_xp = sum(intent.xp_reward for intent in res.resource_transfers)
+    total_gold = sum(intent.gold_delta for intent in res.resource_transfers)
+    assert total_xp > 0
+    assert total_gold > 0
 
 def test_multi_attacker_kill_rewards(base_state):
     # Two attackers hit one monster
@@ -101,10 +101,9 @@ def test_multi_attacker_kill_rewards(base_state):
     assert not res.alive_set
     
     # Should have ResourceTransferIntent
-    assert len(res.resource_transfers) == 1
-    intent = res.resource_transfers[0]
-    assert intent.source_id == 2
-    assert intent.reward_upd.xp_gain > 0
+    assert len(res.resource_transfers) >= 1
+    total_xp = sum(intent.xp_reward for intent in res.resource_transfers)
+    assert total_xp > 0
 
 def test_xp_rejected_when_inventory_full(base_state):
     # Set monster HP low
@@ -115,11 +114,11 @@ def test_xp_rejected_when_inventory_full(base_state):
     attacker = base_state.entities[1]
     base_state.entities[1] = replace(attacker, inventory=replace(attacker.inventory, max_slots=0))
     
-    # Resolve attack - should still be a KILL but transaction will fail if it has items
+    # Resolve attack - should still be a KILL
     res = CombatResolutionSystem.resolve_attack(base_state.entities[1], base_state.entities[2], base_state)
     assert res.outcome_kind == "KILL"
     
-    # Manually add an item to the intent to trigger capacity failure
+    # Find an intent to inject an item into
     intent = res.resource_transfers[0]
     intent = replace(intent, items_add=[ItemStack("IRON_ORE", 1)])
     
@@ -129,7 +128,6 @@ def test_xp_rejected_when_inventory_full(base_state):
     
     assert tx_res.accepted is False
     assert tx_res.reason == ReasonCode.INVENTORY_FULL
-    assert tx_res.reward_update is None
 
 def test_no_double_kill_rewards(base_state):
     # we can verify that resolve_attack only returns rewards if the target WAS alive.

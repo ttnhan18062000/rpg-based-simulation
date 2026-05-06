@@ -50,12 +50,12 @@ def make_entity(eid=1, pos=(5.0, 5.0), hp=100, max_hp=100, atk=10, def_stat=5,
                 spirit=5, active=True):
     builder = (V2EntityBuilder(eid)
                .kind("hero")
-               .at(pos)
-               .faction(faction)
-               .role(role)
-               .hp(hp)
+               .location(*pos)
+               .identity(faction=faction)
+               .identity(role=role)
+               .combat(hp=hp)
                .with_base_stats(atk=atk, def_stat=def_stat, range=1)
-               .readiness(100.0)
+               .combat(readiness=100.0)
                .stamina(stamina_current, stamina_max)
                .attributes(endurance=endurance, strength=strength, 
                           intelligence=intelligence, spirit=spirit))

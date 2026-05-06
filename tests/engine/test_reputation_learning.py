@@ -13,22 +13,22 @@ def test_public_vs_private_trust():
     # 1. Famous Hero (Public Rep = 1.8)
     hero = (V2EntityBuilder(1)
             .kind("hero")
-            .at((0.0, 0.0))
+            .location(0.0, 0.0)
             .social(public_reputation=1.8)
             .build())
     
     # 2. Shady Rogue (Public Rep = 0.4)
     rogue = (V2EntityBuilder(2)
              .kind("rogue")
-             .at((0.0, 0.0))
+             .location(0.0, 0.0)
              .social(public_reputation=0.4)
              .build())
     
     # 3. Observer
     observer = (V2EntityBuilder(3)
                 .kind("villager")
-                .at((5.0, 5.0))
-                .hp(100, 100)
+                .location(5.0, 5.0)
+                .combat(hp=100, max_hp=100)
                 .gold(0)
                 .build())
     

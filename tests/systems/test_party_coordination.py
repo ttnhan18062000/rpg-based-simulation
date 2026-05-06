@@ -9,12 +9,12 @@ def create_mock_entity(eid: int):
     from src.core.builder import V2EntityBuilder
     return (V2EntityBuilder(eid)
         .kind("hero")
-        .position(0, 0)
-        .role(EntityRole.HERO)
-        .faction("player")
-        .hp(100, max_hp=100)
-        .alive(True)
-        .readiness(100.0)
+        .location(0, 0)
+        .identity(role=EntityRole.HERO)
+        .identity(faction="player")
+        .combat(hp=100, max_hp=100)
+        .combat(alive=True)
+        .combat(readiness=100.0)
         .gold(10)
         .build())
 

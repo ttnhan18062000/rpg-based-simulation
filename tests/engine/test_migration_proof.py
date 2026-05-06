@@ -17,9 +17,9 @@ def test_ground_item_pickup_parity():
     state = AuthoritativeState(tick=1, seed=42)
     # Target must be set for _route_interaction_intent to trigger
     entity = (V2EntityBuilder(1)
-              .at((0.0, 0.0))
+              .location(0.0, 0.0)
               .target((0.0, 0.0))
-              .readiness(100.0)
+              .combat(readiness=100.0)
               .build())
     state.entities[1] = entity
     
@@ -51,9 +51,9 @@ def test_corpse_looting_parity():
     """Verify that InteractionSystem can loot corpses."""
     state = AuthoritativeState(tick=1, seed=42)
     entity = (V2EntityBuilder(1)
-              .at((1.0, 1.0))
+              .location(1.0, 1.0)
               .target((1.0, 1.0))
-              .readiness(100.0)
+              .combat(readiness=100.0)
               .build())
     state.entities[1] = entity
     
@@ -88,11 +88,11 @@ def test_movement_sidestepping_parity():
     state = AuthoritativeState(tick=1, seed=42)
     
     # Mover at (0,0), Target at (1,0)
-    mover = V2EntityBuilder(1).at((0.0, 0.0)).readiness(100.0).build()
+    mover = V2EntityBuilder(1).location(0.0, 0.0).combat(readiness=100.0).build()
     state.entities[1] = mover
     
     # Blocker at (1,0)
-    blocker = V2EntityBuilder(2).at((1.0, 0.0)).readiness(100.0).build()
+    blocker = V2EntityBuilder(2).location(1.0, 0.0).combat(readiness=100.0).build()
     state.entities[2] = blocker
     
     # Call resolve_move
@@ -109,17 +109,17 @@ def test_movement_yielding_parity():
     
     # Hero (High Priority) at (0,0), Target at (1,0)
     hero = (V2EntityBuilder(1)
-            .at((0.0, 0.0))
-            .role(EntityRole.HERO)
-            .readiness(100.0)
+            .location(0.0, 0.0)
+            .identity(role=EntityRole.HERO)
+            .combat(readiness=100.0)
             .build())
     state.entities[1] = hero
     
     # Monster (Lower Priority) at (1,0)
     monster = (V2EntityBuilder(2)
-               .at((1.0, 0.0))
-               .role(EntityRole.MONSTER)
-               .readiness(100.0)
+               .location(1.0, 0.0)
+               .identity(role=EntityRole.MONSTER)
+               .combat(readiness=100.0)
                .build())
     state.entities[2] = monster
     

@@ -30,7 +30,7 @@ def test_1000_tick_determinism():
         entities[i] = (V2EntityBuilder(i)
                        .kind("hero" if i <= 5 else "mob")
                        .at((float(i), float(i)))
-                       .readiness(100.0)
+                       .combat(readiness=100.0)
                        .build())
     
     initial_state = AuthoritativeState(

@@ -69,7 +69,7 @@ def test_zero_worker_fallback_equivalence(base_profile):
     k2 = Kernel(profile=profile_zero, state=state2, rng=rng2)
     
     # Add an entity to both
-    ent = V2EntityBuilder(1).at((0.0, 0.0)).active(True).build()
+    ent = V2EntityBuilder(1).location(0.0, 0.0).active(True).build()
     k1._state.entities[1] = ent
     k2._state.entities[1] = ent
     

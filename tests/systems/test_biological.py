@@ -6,7 +6,7 @@ def test_biological_decay():
     from src.core.builder import V2EntityBuilder
     entity = (V2EntityBuilder(1)
         .kind("HERO")
-        .position(0, 0)
+        .location(0, 0)
         .hunger(10.0)
         .sleep_debt(10.0)
         .build())
@@ -22,7 +22,7 @@ def test_biological_penalties():
     from src.core.builder import V2EntityBuilder
     entity = (V2EntityBuilder(1)
         .kind("HERO")
-        .position(0, 0)
+        .location(0, 0)
         .hunger(95.0)
         .sleep_debt(98.0)
         .build())

@@ -35,9 +35,9 @@ def economic_state():
     # Entity with gold
     entity = (V2EntityBuilder(1)
         .kind("HERO")
-        .position(5, 5)
+        .location(5, 5)
         .gold(200)
-        .readiness(100.0)
+        .combat(readiness=100.0)
         .build()
     )
     
@@ -108,10 +108,10 @@ def test_shop_liquidity_depletion(economic_state):
     expensive_items = [ItemStack("iron_sword", 5)] # Base 50 each
     new_entity = (V2EntityBuilder(1)
         .kind("HERO")
-        .position(5, 5)
+        .location(5, 5)
         .gold(0)
         .items(expensive_items)
-        .readiness(100.0)
+        .combat(readiness=100.0)
         .build()
     )
     economic_state = replace(economic_state, entities={1: new_entity})

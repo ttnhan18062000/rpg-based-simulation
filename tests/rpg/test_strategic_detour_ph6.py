@@ -12,10 +12,10 @@ def create_mock_entity(eid: int):
     from src.core.builder import V2EntityBuilder
     return (V2EntityBuilder(eid)
         .kind("hero")
-        .at((0, 0))
+        .location(0, 0)
         .with_class("hero")
-        .with_combat(hp=100, max_hp=100, atk=10, def_stat=5, alive=True)
-        .with_inventory(gold=10)
+        .combat(hp=100, max_hp=100, atk=10, def_stat=5, alive=True)
+        .inventory(gold=10)
         .build()
     )
 
@@ -43,9 +43,9 @@ def test_strategic_detour_creation_and_resumption():
     from src.core.builder import V2EntityBuilder
     entity = (V2EntityBuilder(1)
         .kind("hero")
-        .at((0, 0))
+        .location(0, 0)
         .with_class("hero")
-        .with_strategic(
+        .strategic(
             projects={"proj_harvest": harvest_proj},
             blockers={"blocker_mat_wood": blocker},
             leads={"lead_wood": lead}

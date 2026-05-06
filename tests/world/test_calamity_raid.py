@@ -41,10 +41,10 @@ def test_calamity_intensity_shift():
     from src.core.builder import V2EntityBuilder
     hero = (V2EntityBuilder(1)
         .kind("hero")
-        .position(5.0, 5.0)
-        .faction(Faction.HERO_GUILD)
-        .hp(0)
-        .alive(False)
+        .location(5.0, 5.0)
+        .identity(faction=Faction.HERO_GUILD)
+        .combat(hp=0)
+        .combat(alive=False)
         .build())
     
     update = CalamityService.apply_calamity_consequences(state, [hero])

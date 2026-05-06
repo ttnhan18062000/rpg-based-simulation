@@ -30,7 +30,7 @@ def test_concurrency_determinism_equivalence():
     
     # Setup identical initial state
     entities = {
-        i: V2EntityBuilder(i).at((0.0, 0.0)).readiness(100.0).build()
+        i: V2EntityBuilder(i).location(0.0, 0.0).combat(readiness=100.0).build()
         for i in range(1, 11)
     }
     state_start = AuthoritativeState(tick=0, seed=42, entities=entities)
