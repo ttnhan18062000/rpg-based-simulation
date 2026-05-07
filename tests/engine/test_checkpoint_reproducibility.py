@@ -44,25 +44,53 @@ def test_hash_compact_vs_pretty():
 def test_property_sorting_in_hash():
     """Verify that entity properties are sorted before hashing."""
     state_a = AuthoritativeState(tick=1, seed=1, entities={
-        1: V2EntityBuilder(1).kind("a").location(0.0, 0.0).with_property("z", 1).with_property("a", 2).build()
+        1: V2EntityBuilder(1).kind("a").location(0.0, 0.0).identity(properties={"z": 1, "a": 2}).build()
     })
     state_b = AuthoritativeState(tick=1, seed=1, entities={
-        1: V2EntityBuilder(1).kind("a").location(0.0, 0.0).with_property("a", 2).with_property("z", 1).build()
+        1: V2EntityBuilder(1).kind("a").location(0.0, 0.0).identity(properties={"a": 2, "z": 1}).build()
     })
     
     assert CanonicalStateHasher.get_hash(state_a) == CanonicalStateHasher.get_hash(state_b)
 
 
 def test_deep_property_sorting():
-    """Verify that nested dictionaries in properties are sorted during hashing."""
-    state_a = AuthoritativeState(tick=1, seed=1, entities={
-        1: V2EntityBuilder(1).kind("a").location(0.0, 0.0).with_property("meta", {"b": 2, "a": 1}).build()
-    })
-    state_b = AuthoritativeState(tick=1, seed=1, entities={
-        1: V2EntityBuilder(1).kind("a").location(0.0, 0.0).with_property("meta", {"a": 1, "b": 2}).build()
-    })
-    
-    # Even if dictionary insertion order is different, sort_keys=True should save us.
+    """
+    Verify that nested dictionaries in identity.properties are sorted during
+    canonical hashing.
+
+    Fraud this catches:
+    - canonical hashing depends on dictionary insertion order
+    - nested properties are serialized inconsistently
+    - identity.properties is ignored or normalized incorrectly
+    """
+    state_a = AuthoritativeState(
+        tick=1,
+        seed=1,
+        entities={
+            1: (
+                V2EntityBuilder(1)
+                .kind("a")
+                .location(0.0, 0.0)
+                .identity(properties={"meta": {"b": 2, "a": 1}})
+                .build()
+            )
+        },
+    )
+
+    state_b = AuthoritativeState(
+        tick=1,
+        seed=1,
+        entities={
+            1: (
+                V2EntityBuilder(1)
+                .kind("a")
+                .location(0.0, 0.0)
+                .identity(properties={"meta": {"a": 1, "b": 2}})
+                .build()
+            )
+        },
+    )
+
     assert CanonicalStateHasher.get_hash(state_a) == CanonicalStateHasher.get_hash(state_b)
 
 

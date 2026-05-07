@@ -43,10 +43,11 @@ def make_entity(id, pos, faction=0, wait_count=0, osc_count=0,
                .kind("HERO")
                .location(*pos)
                .identity(faction=f_enum)
-               .combat(hp=100, max_hp=100, atk=10, def_stat=5, alive=True)
-               .action_style(action_style)
-               .navigation(mode=mode, wait_count=wait_count, oscillation_count=osc_count, last_pos=last_pos)
-               .active(True))
+               .combat(hp=100, max_hp=100, atk=10, def_stat=5, alive=True,
+                       action_style=action_style, readiness=100.0)
+               .navigation(movement_mode=mode, wait_count=wait_count,
+                          oscillation_count=osc_count, last_position=last_pos)
+               .lifecycle(active=True))
     
     return builder.build()
 

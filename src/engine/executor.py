@@ -1,6 +1,7 @@
 # src/engine/executor.py
 from __future__ import annotations
 from dataclasses import replace
+from types import MappingProxyType
 from typing import TYPE_CHECKING, List, Dict, Any, Protocol, Callable
 
 from src.core.worker_protocol import WorkerResult, ResultStatus, WorkerPacket
@@ -11,6 +12,49 @@ if TYPE_CHECKING:
     from src.core.state import AuthoritativeState
     from src.platform.rng import DeterministicRNG
     from src.engine.worker_manager import WorkerManager
+
+def _readonly_mapping(value):
+    """
+    Create a shallow read-only mapping.
+
+    This prevents:
+        state.entities[1] = ...
+        state.regions["x"] = ...
+        state.buildings[1] = ...
+
+    It does not make the dataclass objects inside the mapping deeply immutable.
+    """
+    if isinstance(value, MappingProxyType):
+        return value
+    return MappingProxyType(dict(value))
+
+
+def _readonly_state_view(state: AuthoritativeState) -> AuthoritativeState:
+    """
+    Create a read-only execution view for worker/domain logic.
+
+    Purpose:
+        Domain logic may inspect authoritative state, but must not mutate
+        authoritative containers directly.
+
+    Fraud this catches:
+        - brain/action/move logic mutates state.entities directly
+        - local sequential execution bypasses isolation protection
+        - comments claim readonly behavior but runtime state is still mutable
+    """
+    return replace(
+        state,
+        entities=_readonly_mapping(state.entities),
+        resource_nodes=_readonly_mapping(state.resource_nodes),
+        buildings=_readonly_mapping(state.buildings),
+        regions=_readonly_mapping(state.regions),
+        terrain=_readonly_mapping(state.terrain),
+        building_tiles=_readonly_mapping(state.building_tiles),
+        global_resources=_readonly_mapping(state.global_resources),
+        blocked_tiles=frozenset(state.blocked_tiles),
+        town_tiles=frozenset(state.town_tiles),
+    )
+
 
 class IWorkExecutor(Protocol):
     """
@@ -34,80 +78,128 @@ class LocalSequentialExecutor:
     Milestone A Law: The deterministic, single-process execution baseline.
     Bypasses all concurrency plumbing and packets for absolute semantic truth.
     """
+
     def execute(
-        self, 
-        work_items: List[WorkItem], 
-        state: AuthoritativeState, 
+        self,
+        work_items: List[WorkItem],
+        state: AuthoritativeState,
         rng: DeterministicRNG,
-        profile: RuntimeProfile
+        profile: RuntimeProfile,
     ) -> List[WorkerResult]:
         from src.engine.domain_logic import SimulationDomainLogic
-        from src.core.updates import EntityUpdate
+        from src.core.updates import TaskUpdate, EntityUpdate
+        from src.core.concurrency_law import ConcurrencyLaw
+
+        # Critical isolation boundary:
+        # All domain logic must receive this readonly state view, not the
+        # mutable authoritative state object owned by the kernel/apply path.
+        readonly_state = _readonly_state_view(state)
 
         results: List[WorkerResult] = []
+
         for i, item in enumerate(work_items):
-            # 1. ENTITY CRITICAL WORK (ENTITY_MOVE/ACT/BRAIN)
-            if item.work_kind in ("ENTITY_MOVE", "ENTITY_ACT", "ENTITY_BRAIN") and isinstance(item.owner_id, int):
-                subject = state.entities.get(item.owner_id)
+            # 1. ENTITY CRITICAL WORK: ENTITY_MOVE / ENTITY_ACT / ENTITY_BRAIN
+            if (
+                item.work_kind in ("ENTITY_MOVE", "ENTITY_ACT", "ENTITY_BRAIN")
+                and isinstance(item.owner_id, int)
+            ):
+                subject = readonly_state.entities.get(item.owner_id)
                 if not subject:
                     continue
-                
-                # Optimization: state is already a readonly_view, so entities are already frozen
+
                 frozen_subject = subject
-                
-                # Execute Domain Logic Directly
+
                 if item.work_kind == "ENTITY_MOVE":
-                    target = item.payload.get("target_position", frozen_subject.navigation.position)
-                    updates = SimulationDomainLogic.execute_move(state, frozen_subject, target)
+                    target = item.payload.get(
+                        "target_position",
+                        frozen_subject.navigation.position,
+                    )
+                    updates = SimulationDomainLogic.execute_move(
+                        readonly_state,
+                        frozen_subject,
+                        target,
+                    )
+
                 elif item.work_kind == "ENTITY_ACT":
-                    from src.core.updates import TaskUpdate
-                    updates = SimulationDomainLogic.execute_action(frozen_subject, item.payload, state.tick, context=state)
+                    updates = SimulationDomainLogic.execute_action(
+                        frozen_subject,
+                        item.payload,
+                        readonly_state.tick,
+                        context=readonly_state,
+                    )
+
                     if frozen_subject.id in updates:
-                        updates[frozen_subject.id] = replace(updates[frozen_subject.id], task=TaskUpdate(work_kind_set="ENTITY_ACT", payload_set=item.payload))
+                        updates[frozen_subject.id] = replace(
+                            updates[frozen_subject.id],
+                            task=TaskUpdate(
+                                work_kind_set="ENTITY_ACT",
+                                payload_set=item.payload,
+                            ),
+                        )
+
                 elif item.work_kind == "ENTITY_BRAIN":
-                    updates = SimulationDomainLogic.execute_brain(state, frozen_subject)
+                    updates = SimulationDomainLogic.execute_brain(
+                        readonly_state,
+                        frozen_subject,
+                    )
+
                 else:
-                    from src.core.updates import EntityUpdate
-                    updates = {frozen_subject.id: EntityUpdate(entity_id=frozen_subject.id)}
+                    updates = {
+                        frozen_subject.id: EntityUpdate(
+                            entity_id=frozen_subject.id,
+                        )
+                    }
+
                 for eid, upd in updates.items():
-                    # Option A Enforcement (Sequential)
+                    # Option A Enforcement:
+                    # Sequential entity work may only emit an update for itself
+                    # or system entity 0.
                     if eid != frozen_subject.id and eid != 0:
                         continue
-                    
-                    from src.core.concurrency_law import ConcurrencyLaw
-                    results.append(WorkerResult(
-                        source_packet_id=f"local:{state.tick}:{i}",
-                        work_id=f"{state.tick}:{item.owner_id}:{item.work_kind}",
-                        entity_id=eid,
-                        work_class=item.work_class,
-                        update=upd,
-                        status=ResultStatus.SUCCESS,
-                        class_priority=ConcurrencyLaw.get_class_priority(item.work_class),
-                        local_priority=item.priority
-                    ))
-            
-            # 2. SYSTEM DEFERRED WORK (Milestone C: De-simulation)
+
+                    results.append(
+                        WorkerResult(
+                            source_packet_id=f"local:{readonly_state.tick}:{i}",
+                            work_id=f"{readonly_state.tick}:{item.owner_id}:{item.work_kind}",
+                            entity_id=eid,
+                            work_class=item.work_class,
+                            update=upd,
+                            status=ResultStatus.SUCCESS,
+                            class_priority=ConcurrencyLaw.get_class_priority(
+                                item.work_class
+                            ),
+                            local_priority=item.priority,
+                        )
+                    )
+
+            # 2. SYSTEM DEFERRED WORK
             elif item.work_kind == "DRAIN_DEBT" and isinstance(item.owner_id, str):
                 from src.engine.domain_logic import SimulationDomainLogic
-                from src.core.concurrency_law import ConcurrencyLaw
                 from src.core.updates import EntityUpdate
-                
+                from src.core.concurrency_law import ConcurrencyLaw
+
                 drain = SimulationDomainLogic.drain_debt(item.owner_id, profile)
-                results.append(WorkerResult(
-                    source_packet_id=f"local:{state.tick}:{i}",
-                    work_id=item.work_id,
-                    entity_id=0, # System target
-                    work_class=item.work_class,
-                    update=EntityUpdate(entity_id=0),
-                    work_debt_update=drain,
-                    subsystem_id=item.owner_id,
-                    class_priority=ConcurrencyLaw.get_class_priority(item.work_class),
-                    local_priority=item.priority
-                ))
+
+                results.append(
+                    WorkerResult(
+                        source_packet_id=f"local:{readonly_state.tick}:{i}",
+                        work_id=item.work_id,
+                        entity_id=0,
+                        work_class=item.work_class,
+                        update=EntityUpdate(entity_id=0),
+                        work_debt_update=drain,
+                        subsystem_id=item.owner_id,
+                        class_priority=ConcurrencyLaw.get_class_priority(
+                            item.work_class
+                        ),
+                        local_priority=item.priority,
+                    )
+                )
+
         return results
 
     def set_concurrency_limit(self, limit: float) -> None:
-        """Local executor is always sequential (limit=0 effectively)."""
+        """Local executor is always sequential."""
         pass
 
 class ConcurrentExecutionAdapter:

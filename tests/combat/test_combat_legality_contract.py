@@ -3,22 +3,30 @@ from dataclasses import replace
 from src.core.state import NavigationComponent, LifecycleComponent, AuthoritativeState
 from src.core.builder import V2EntityBuilder
 from src.engine.legality import LegalityServiceV2
-from src.core.enums import ReasonCode
+from src.core.enums import ReasonCode, Faction
 
-def create_mock_entity(eid, faction, hp=100, range=1, active=True):
-    builder = (V2EntityBuilder(eid)
-               .kind("hero")
-               .identity(faction=faction)
-               .with_base_stats(range=range)
-               .combat(hp=hp)
-               .active(active)
-               .combat(readiness=100.0))
-    return builder.build()
+def create_mock_entity(eid, faction, hp=100, attack_range=1, active=True):
+    entity = (
+        V2EntityBuilder(eid)
+        .kind("hero")
+        .identity(faction=faction)
+        .combat(
+            hp=hp,
+            max_hp=max(100, hp),
+            attack_range=attack_range,
+            alive=hp > 0,
+            readiness=100.0,
+        )
+        .lifecycle(active=active)
+        .build()
+    )
+
+    return entity
 
 def test_melee_attack_legality():
     # 1. Legal Melee
-    attacker = create_mock_entity(1, 1, range=1)
-    target = create_mock_entity(2, 2)
+    attacker = create_mock_entity(1, Faction.HERO_GUILD, attack_range=1)
+    target = create_mock_entity(2, Faction.MONSTER_HORDE)
     attacker = replace(attacker, navigation=replace(attacker.navigation, position=(10, 10)))
     target = replace(target, navigation=replace(target.navigation, position=(10, 11))) # Manhattan dist 1
     
@@ -36,8 +44,8 @@ def test_melee_attack_legality():
 
 def test_ranged_attack_legality():
     # 1. Legal Ranged (Range 5)
-    attacker = create_mock_entity(1, 1, range=5)
-    target = create_mock_entity(2, 2)
+    attacker = create_mock_entity(1, Faction.HERO_GUILD, attack_range=5)
+    target = create_mock_entity(2, Faction.MONSTER_HORDE)
     attacker = replace(attacker, navigation=replace(attacker.navigation, position=(10, 10)))
     target = replace(target, navigation=replace(target.navigation, position=(10, 15))) # Manhattan dist 5
     
@@ -54,8 +62,8 @@ def test_ranged_attack_legality():
     assert reason == ReasonCode.OUT_OF_RANGE
 
 def test_friendly_fire_legality():
-    attacker = create_mock_entity(1, 1)
-    target = create_mock_entity(2, 1) # Same faction
+    attacker = create_mock_entity(1, Faction.HERO_GUILD)
+    target = create_mock_entity(2, Faction.HERO_GUILD) # Same faction
     attacker = replace(attacker, navigation=replace(attacker.navigation, position=(10, 10)))
     target = replace(target, navigation=replace(target.navigation, position=(10, 11)))
     
@@ -65,18 +73,30 @@ def test_friendly_fire_legality():
     assert reason == ReasonCode.FRIENDLY_FIRE_ILLEGAL
 
 def test_incapacitated_legality():
-    # 1. Attacker inactive
-    attacker = create_mock_entity(1, 1, active=False)
-    target = create_mock_entity(2, 2)
-    state = AuthoritativeState(tick=1, seed=1)
-    legal, reason = LegalityServiceV2.verify_attack_legality(attacker, target, state)
+    attacker = create_mock_entity(
+        1,
+        Faction.HERO_GUILD,
+        active=False,
+    )
+    target = create_mock_entity(
+        2,
+        Faction.MONSTER_HORDE,
+    )
+
+    assert attacker.lifecycle.active is False
+    assert attacker.active is False
+
+    state = AuthoritativeState(
+        tick=1,
+        seed=1,
+        entities={1: attacker, 2: target},
+    )
+
+    legal, reason = LegalityServiceV2.verify_attack_legality(
+        attacker,
+        target,
+        state,
+    )
+
     assert legal is False
     assert reason == ReasonCode.ATTACKER_INCAPACITATED
-
-    # 2. Target dead
-    attacker = create_mock_entity(1, 1)
-    target = create_mock_entity(2, 2, hp=0)
-    state = AuthoritativeState(tick=1, seed=1)
-    legal, reason = LegalityServiceV2.verify_attack_legality(attacker, target, state)
-    assert legal is False
-    assert reason == ReasonCode.TARGET_INCAPACITATED

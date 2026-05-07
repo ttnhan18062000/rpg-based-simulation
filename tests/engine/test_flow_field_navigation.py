@@ -10,7 +10,7 @@ def test_flow_field_long_distance():
               .kind("hero")
               .location(0.0, 0.0)
               .combat(readiness=100.0)
-              .target((100.0, 100.0))
+              .navigation(target=(100.0, 100.0))
               .build())
     
     # Setup Town far away
@@ -38,7 +38,7 @@ def test_local_navigation_fallback():
               .kind("hero")
               .location(0.0, 0.0)
               .combat(readiness=100.0)
-              .target((10.0, 5.0))
+              .navigation(target=(10.0, 5.0))
               .build())
     
     # Setup Target nearby

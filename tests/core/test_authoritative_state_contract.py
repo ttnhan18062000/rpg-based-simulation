@@ -50,7 +50,7 @@ def test_mutation_tripwire_during_decision():
           .kind("ACTOR")
           .location(0, 0)
           .replace_inventory(InventoryComponent(items=[ItemStack("gold_coin", 10)]))
-          .with_property("can_mutate", True)
+          .identity(properties={"can_mutate": True})
           .build())
     state = AuthoritativeState(tick=1, seed=1, entities={1: e1})
     

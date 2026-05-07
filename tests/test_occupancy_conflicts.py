@@ -1,4 +1,5 @@
 import pytest
+from src.core.builder import V2EntityBuilder
 from src.core.state import AuthoritativeState, EntityState
 from src.core.updates import StateUpdate, EntityUpdate
 from src.engine.pipeline import AuthoritativeApplyPipeline
@@ -6,8 +7,14 @@ from src.engine.pipeline import AuthoritativeApplyPipeline
 def test_occupancy_conflict_resolution():
     """Verify that two entities racing for the same tile resolve deterministically."""
     # Two entities at (0,0) and (2,0) both trying to move to (1,0)
-    ent1 = EntityState(id=1, kind="HERO", position=(0, 0))
-    ent2 = EntityState(id=2, kind="HERO", position=(2, 0))
+    ent1 = (V2EntityBuilder(1)
+        .kind("hero")
+        .location(0, 0)
+        .build())
+    ent2 = (V2EntityBuilder(2)
+        .kind("hero")
+        .location(2, 0)
+        .build())
     state = AuthoritativeState(tick=0, seed=1, entities={1: ent1, 2: ent2})
     
     # Proposal: Both move to (1,0)
@@ -25,8 +32,14 @@ def test_occupancy_conflict_resolution():
 
 def test_occupancy_conflict_with_static_entity():
     """Verify that a move is rejected if the target tile is occupied by a non-moving entity."""
-    ent1 = EntityState(id=1, kind="HERO", position=(0, 0))
-    ent2 = EntityState(id=2, kind="HERO", position=(1, 0)) # Already at target
+    ent1 = (V2EntityBuilder(1)
+        .kind("hero")
+        .location(0, 0)
+        .build())
+    ent2 = (V2EntityBuilder(2)
+        .kind("hero")
+        .location(1, 0)
+        .build()) # Already at target
     state = AuthoritativeState(tick=0, seed=1, entities={1: ent1, 2: ent2})
     
     # Proposal: Entity 1 moves to (1,0)

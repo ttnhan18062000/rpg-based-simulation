@@ -42,7 +42,7 @@ def test_authoritative_equivalence(dual_kernel_setup):
     
     # Setup some initial entities to generate work
     for i in range(1, 11):
-        ent = V2EntityBuilder(i).at((float(i), 0.0)).active(True).build()
+        ent = V2EntityBuilder(i).location(float(i), 0.0).lifecycle(active=True).build()
         k_local._state.entities[i] = ent
         k_concurrent._state.entities[i] = ent
         
@@ -69,7 +69,7 @@ def test_zero_worker_fallback_equivalence(base_profile):
     k2 = Kernel(profile=profile_zero, state=state2, rng=rng2)
     
     # Add an entity to both
-    ent = V2EntityBuilder(1).location(0.0, 0.0).active(True).build()
+    ent = V2EntityBuilder(1).location(0.0, 0.0).lifecycle(active=True).build()
     k1._state.entities[1] = ent
     k2._state.entities[1] = ent
     

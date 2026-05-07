@@ -21,7 +21,7 @@ def test_xp_separation_full_inventory(base_hero):
     builder = (V2EntityBuilder(1)
                .location(0, 0)
                .identity(role=EntityRole.HERO)
-               .items([ItemStack(item_id="iron_ore", quantity=1)] * 16))
+               .inventory(items=[ItemStack(item_id="iron_ore", quantity=1)] * 16))
     entity = builder.build()
     
     # Reward update with XP
@@ -80,8 +80,7 @@ def test_crafting_success(base_hero):
     entity = (V2EntityBuilder(1)
               .location(0, 0)
               .identity(role=EntityRole.HERO)
-              .gold(100)
-              .items([ItemStack(item_id="iron_ore", quantity=5), ItemStack(item_id="wood", quantity=2)])
+              .inventory(gold=100, items=[ItemStack(item_id="iron_ore", quantity=5), ItemStack(item_id="wood", quantity=2)])
               .build())
     # Patch recipe knowledge
     entity = replace(entity, identity=replace(entity.identity, known_recipes={"iron_sword"}))

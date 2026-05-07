@@ -22,14 +22,14 @@ def test_routine_and_role_biasing(monkeypatch):
     hero = (V2EntityBuilder(1)
             .kind("hero")
             .identity(role=EntityRole.HERO)
-            .sleep_debt(50.0)
+            .biological(sleep_debt=50.0)
             .build())
     
     # 2. Shopkeeper
     shopkeeper = (V2EntityBuilder(2)
                   .kind("shopkeeper")
                   .identity(role=EntityRole.SHOPKEEPER)
-                  .sleep_debt(0.0)
+                  .biological(sleep_debt=0.0)
                   .build())
     
     state = replace(state, entities={1: hero, 2: shopkeeper})
@@ -56,7 +56,7 @@ def test_role_biasing(monkeypatch):
     shopkeeper = (V2EntityBuilder(2)
                   .kind("shopkeeper")
                   .identity(role=EntityRole.SHOPKEEPER)
-                  .sleep_debt(0.0)
+                  .biological(sleep_debt=0.0)
                   .build())
     state = replace(state, entities={2: shopkeeper})
     

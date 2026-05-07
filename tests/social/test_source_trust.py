@@ -14,11 +14,23 @@ from src.social.appraisal import SocialAppraisalSystem
 
 def _make_entity_with_trust(source_id, trust=0.5, interactions=0):
     from src.core.builder import V2EntityBuilder
-    return (V2EntityBuilder(1)
+    from src.core.strategic import SourceTrustEntry
+
+    return (
+        V2EntityBuilder(1)
         .kind("hero")
         .location(5.0, 5.0)
-        .source_trust(source_id, trust, interactions)
-        .build())
+        .strategic(
+            source_trust={
+                source_id: SourceTrustEntry(
+                    entity_id=source_id,
+                    trust=trust,
+                    interactions=interactions,
+                )
+            }
+        )
+        .build()
+    )
 
 
 class TestRefutationDropsTrust:
@@ -94,7 +106,7 @@ class TestSocialContracts:
         )
         # Create entity that owns the contract
         from src.core.builder import V2EntityBuilder
-        entity = V2EntityBuilder(1).strategic_contract(contract).build()
+        entity = V2EntityBuilder(1).strategic(contracts={contract.id: contract}).build()
         
         strat_up, bond_updates = ContractService.resolve_contract_outcome(
             entity, contract.id, success=True
@@ -112,7 +124,7 @@ class TestSocialContracts:
         )
         # Create entity that owns the contract
         from src.core.builder import V2EntityBuilder
-        entity = V2EntityBuilder(1).strategic_contract(contract).build()
+        entity = V2EntityBuilder(1).strategic(contracts={contract.id: contract}).build()
 
         strat_up, bond_updates = ContractService.resolve_contract_outcome(
             entity, contract.id, success=False, betrayal=True, betrayer_id=1

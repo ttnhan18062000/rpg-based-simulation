@@ -1,4 +1,5 @@
 import pytest
+from src.core.builder import V2EntityBuilder
 from src.core.state import AuthoritativeState, EntityState, StrategicComponent
 from src.core.quests import QuestState, QuestKind, QuestStatus, RewardState
 from src.systems.quest_system import QuestSystem
@@ -13,11 +14,10 @@ def test_explore_quest_progress():
     # Add metadata for target pos
     quest = quest.replace(metadata={"target_position": (100, 100)})
     
-    from src.core.builder import V2EntityBuilder
     entity = (V2EntityBuilder(1)
               .kind("HERO")
               .location(101, 101)
-              .strategic_project(quest)
+              .strategic(projects={quest.id: quest})
               .build())
     
     state = AuthoritativeState(
@@ -39,11 +39,10 @@ def test_bounty_quest_completion():
     )
     quest = quest.replace(metadata={"target_region_id": "forest"})
     
-    from src.core.builder import V2EntityBuilder
     entity = (V2EntityBuilder(1)
               .kind("HERO")
               .location(0, 0)
-              .strategic_project(quest)
+              .strategic(projects={quest.id: quest})
               .build())
     
     # Forest is now owned by Neutral (0) or Hero (2), not Monster (1)

@@ -52,7 +52,7 @@ def _make_entity_with_leads(num_leads, profile=None, blockers=None, concerns=Non
         builder.cognition(
             max_leads=profile.max_leads,
             max_concerns=profile.max_concerns,
-            breadth=profile.detour_breadth
+            detour_breadth=profile.detour_breadth
         )
     else:
         builder.cognition(max_leads=5, max_concerns=3)
@@ -138,7 +138,7 @@ class TestDetourSuggestion:
         entity = (V2EntityBuilder(1)
             .kind("hero")
             .location(5.0, 5.0)
-            .cognition(breadth=3)
+            .cognition(detour_breadth=3)
             .strategic(blockers=blockers, leads=leads)
             .build())
         result = DetourSuggestionSystem.suggest_detours(entity, current_tick=10)
@@ -155,7 +155,7 @@ class TestDetourSuggestion:
         entity = (V2EntityBuilder(1)
             .kind("hero")
             .location(5.0, 5.0)
-            .cognition(breadth=2)
+            .cognition(detour_breadth=2)
             .strategic(blockers=blockers, leads=leads)
             .build())
         result = DetourSuggestionSystem.suggest_detours(entity, current_tick=10)
@@ -171,7 +171,7 @@ class TestDetourSuggestion:
         entity = (V2EntityBuilder(1)
             .kind("hero")
             .location(5.0, 5.0)
-            .cognition(breadth=5)
+            .cognition(detour_breadth=5)
             .strategic(blockers=blockers, leads=leads)
             .build())
         result = DetourSuggestionSystem.suggest_detours(entity, current_tick=10)
@@ -221,7 +221,7 @@ class TestLeadSuppression:
         entity = (V2EntityBuilder(1)
             .kind("hero")
             .location(5.0, 5.0)
-            .cognition(breadth=5)
+            .cognition(detour_breadth=5)
             .strategic(blockers=blockers, leads=leads)
             .build())
         result = DetourSuggestionSystem.suggest_detours(entity, current_tick=10)

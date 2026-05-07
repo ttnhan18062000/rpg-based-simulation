@@ -22,9 +22,8 @@ def base_state():
         .kind("HERO")
         .location(0, 0)
         .inventory(max_slots=1)
-        .with_interaction(target_id=101, progress=0)
-        .with_property("interaction_kind", "harvest")
-        .with_property("harvest_duration", 1)
+        .interaction(target_node_id=101, progress=0)
+        .properties({"interaction_kind": "harvest", "harvest_duration": 1})
         .build()
     )
     
@@ -133,7 +132,7 @@ def test_crafting_full_inventory_does_not_consume_materials():
         .kind("HERO")
         .location(0, 0)
         .inventory(gold=100, items=[ItemStack("iron_ore", 2), ItemStack("wood", 1)])
-        .with_properties({"known_recipes": {"craft_steel_sword"}, "craft_target": "craft_steel_sword"})
+        .properties({"known_recipes": {"craft_steel_sword"}, "craft_target": "craft_steel_sword"})
         .build()
     )
     # Fix the inventory max_slots separately if needed or just use the builder

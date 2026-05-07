@@ -23,9 +23,9 @@ def create_mock_entity(
         .kind("hero")
         .location(0, 0)
         .attributes(intelligence=intelligence, wisdom=wisdom)
-        .cognition(resistance=resistance)
-        .current_project(current_proj_id)
-        .with_personality(industry=0.5)
+        .cognition(interruption_resistance=resistance)
+        .strategic(current_project_id=current_proj_id)
+        .identity(personality=PersonalityComponent(industry=0.5))
         .build())
 
 def test_interruption_resistance_margin():

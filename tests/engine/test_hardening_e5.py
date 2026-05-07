@@ -6,21 +6,19 @@ E5 Pipeline Hardening Tests.
 import pytest
 from dataclasses import replace
 from src.core.state import AuthoritativeState, EntityState, IdentityComponent, CombatComponent, ResourceNodeState, ItemStack, StrategicComponent, InventoryComponent
-from src.core.enums import EntityRole, ReasonCode
+from src.core.enums import EntityRole, ReasonCode, Faction
 from src.engine.pipeline import AuthoritativeApplyPipeline
 from src.engine.apply import ApplyPath
 from src.core.updates import StateUpdate, EntityUpdate, InteractionUpdate, ResourceTransferIntent, NavigationUpdate
 
 from src.core.builder import V2EntityBuilder
 
-def create_mock_entity(id, faction="HERO_FACTION", role=EntityRole.HERO, pos=(0,0), hp=100, readiness=100.0):
+def create_mock_entity(id, faction=Faction.HERO_GUILD, role=EntityRole.HERO, pos=(0,0), hp=100, readiness=100.0):
     return (V2EntityBuilder(id)
             .kind("ACTOR")
             .location(*pos)
-            .with_base_stats(hp=hp, range=1)
-            .combat(readiness=readiness)
-            .identity(role=role)
-            .identity(faction=faction)
+            .combat(hp=hp, attack_range=1, readiness=readiness)
+            .identity(faction=faction, role=role)
             .build())
 
 # --- E5.1: Negative Case Hardening ---

@@ -29,8 +29,8 @@ def test_rejection_tracking_certification():
     state = AuthoritativeState(
         tick=0, seed=42,
         entities={
-            1: V2EntityBuilder(1).kind("hero").location(1.0, 2.0).combat(readiness=100.0).active(True).build(),
-            2: V2EntityBuilder(2).kind("hero").location(3.0, 2.0).combat(readiness=100.0).active(True).build()
+            1: V2EntityBuilder(1).kind("hero").location(1.0, 2.0).combat(readiness=100.0).lifecycle(active=True).build(),
+            2: V2EntityBuilder(2).kind("hero").location(3.0, 2.0).combat(readiness=100.0).lifecycle(active=True).build()
         }
     )
     
@@ -69,7 +69,7 @@ def test_rejection_tracking_certification():
     kernel._state = AuthoritativeState(
         tick=1, seed=42,
         entities={
-            1: V2EntityBuilder(1).kind("hero").location(2.0, 2.0).combat(readiness=0.0).active(True).build()
+            1: V2EntityBuilder(1).kind("hero").location(2.0, 2.0).combat(readiness=0.0).lifecycle(active=True).build()
         }
     )
     

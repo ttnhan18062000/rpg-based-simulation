@@ -79,7 +79,7 @@ def test_group_failure_rollback():
     actor = (V2EntityBuilder(1)
              .location(5, 5)
              .combat(readiness=100.0)
-             .gold(0)
+             .inventory(gold=0)
              .build())
     
     # Add a valid building for SHOP_BUY

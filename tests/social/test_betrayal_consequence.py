@@ -20,11 +20,11 @@ def _make_entity(entity_id=1, trust_history=None, betrayal_count=0):
     builder = (V2EntityBuilder(entity_id)
         .kind("hero")
         .location(5.0, 5.0)
-        .betrayal_count(betrayal_count))
+        .social(betrayal_count=betrayal_count))
     
     if trust_history:
         for tid, score in trust_history.items():
-            builder.trust(tid, score)
+            builder.social(trust_history={tid: score})
             
     return builder.build()
 

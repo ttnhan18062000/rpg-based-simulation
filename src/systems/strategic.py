@@ -161,80 +161,88 @@ class StrategicIntelligenceSystem:
     @staticmethod
     def resolve_blockers(
         state: AuthoritativeState,
-        update: StateUpdate
+        update: StateUpdate,
     ) -> StateUpdate:
         """
-        State-wide resolution of material and access blockers.
-        Called by the Kernel in Phase 4 (Resolution).
-        VERIFIED v2: strategic_blocker_resolution
+        Resolve strategic blockers that are satisfied by the current or pending
+        authoritative inventory state.
+
+        Important:
+            Do not only inspect items_add from this tick. A blocker may survive
+            from a previous tick even though the inventory already satisfies it.
         """
+        from dataclasses import replace
+        from src.core.updates import EntityUpdate, StrategicUpdate
+        from src.core.inventory import InventoryService
+
         refined_entity_updates = dict(update.entity_updates)
 
-        # Phase 9 Fix: Deterministic entity iteration
-        for e_id in sorted(list(update.entity_updates.keys())):
-            ent_upd = update.entity_updates[e_id]
-            if e_id not in state.entities:
-                continue
+        def has_item(inventory, item_id: str) -> bool:
+            return any(
+                stack.item_id == item_id and stack.quantity > 0
+                for stack in inventory.items
+            )
 
-            entity = state.entities[e_id]
-            resolved_ids = []
-            
-            # 1. Scan for material blockers matching added items
-            items_added = []
+        for e_id, entity in state.entities.items():
+            ent_upd = refined_entity_updates.get(e_id, EntityUpdate(entity_id=e_id))
+
+            pending_inventory = entity.inventory
             if ent_upd.inventory:
-                items_added.extend(ent_upd.inventory.items_add)
-            
-            # Milestone 7: Also check resource_transfers
-            for transfer in ent_upd.resource_transfers:
-                items_added.extend(transfer.items_add)
+                pending_inventory = InventoryService.apply_update(
+                    entity.inventory,
+                    ent_upd.inventory,
+                )
 
-            active_blocker_ids = set(entity.strategic.blockers.keys())
-            if ent_upd.strategic:
-                active_blocker_ids.update(b.id for b in ent_upd.strategic.blockers_add_or_update)
+            strat_up = ent_upd.strategic or StrategicUpdate()
 
-            for item in items_added:
-                item_id = item.item_id if hasattr(item, "item_id") else item
-                blocker_id = f"blocker_mat_{item_id}"
-                if blocker_id in active_blocker_ids:
+            candidate_blockers = dict(entity.strategic.blockers)
+
+            for blocker in strat_up.blockers_add_or_update:
+                if not blocker.resolved:
+                    candidate_blockers[blocker.id] = blocker
+
+            resolved_ids = []
+
+            for blocker_id, blocker in candidate_blockers.items():
+                if blocker_id in strat_up.blockers_remove:
+                    continue
+
+                if blocker.resolved:
                     resolved_ids.append(blocker_id)
+                    continue
 
-            for b_id, blocker in entity.strategic.blockers.items():
-                if blocker.kind == "access" and not blocker.resolved:
-                    try:
-                        # blocker.subject might be "(5.0, 6.0)"
-                        s = blocker.subject.strip("()").split(",")
-                        target_pos = (float(s[0]), float(s[1]))
-                        dist = abs(entity.navigation.position[0] - target_pos[0]) + abs(entity.navigation.position[1] - target_pos[1])
-                        if dist < 1.0:
-                            resolved_ids.append(b_id)
-                    except:
-                        pass
+                if blocker.kind != "material":
+                    continue
+
+                if blocker.subject == "gold":
+                    if pending_inventory.gold > 0:
+                        resolved_ids.append(blocker_id)
+                    continue
+
+                if has_item(pending_inventory, blocker.subject):
+                    resolved_ids.append(blocker_id)
 
             if not resolved_ids:
                 continue
 
-            # 3. Produce update
-            # V2 Law: Resolved blockers are REMOVED to maintain lean state (Pillar 1).
-            strat_up = ent_upd.strategic or StrategicUpdate()
-            
-            # Milestone 8 P0: Add resolved versions to add_or_update 
-            # to signal the event to other systems/tests.
-            new_additions = list(strat_up.blockers_add_or_update)
-            for b_id in resolved_ids:
-                original = entity.strategic.blockers.get(b_id)
-                if original:
-                    new_additions.append(replace(original, resolved=True))
-            
-            # Then ensure they are in the removal list for final purge
-            new_removals = list(set(strat_up.blockers_remove + resolved_ids))
+            new_additions = [
+                b for b in strat_up.blockers_add_or_update
+                if b.id not in resolved_ids
+            ]
 
-            new_strat_up = replace(
-                strat_up,
-                blockers_add_or_update=new_additions,
-                blockers_remove=new_removals
+            new_removals = list(
+                set(strat_up.blockers_remove + resolved_ids)
             )
-            refined_entity_updates[e_id] = replace(ent_upd, strategic=new_strat_up)
-            
+
+            refined_entity_updates[e_id] = replace(
+                ent_upd,
+                strategic=replace(
+                    strat_up,
+                    blockers_add_or_update=new_additions,
+                    blockers_remove=new_removals,
+                ),
+            )
+
         return replace(update, entity_updates=refined_entity_updates)
 
 

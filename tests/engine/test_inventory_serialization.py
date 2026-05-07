@@ -59,7 +59,7 @@ def test_entity_serialization_roundtrip():
     
     m1 = (V2EntityBuilder(1)
           .location(5.0, 5.0)
-          .gold(100)
+          .inventory(gold=100)
           .build())
     
     # Manually add an item for serialization check

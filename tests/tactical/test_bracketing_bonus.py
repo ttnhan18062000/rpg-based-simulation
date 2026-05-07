@@ -16,24 +16,54 @@ def create_mock_entity(eid, faction, pos=(10.0, 10.0), hp=100):
             .combat(hp=hp, max_hp=100, atk=10, def_stat=0)
             .build())
 
-def test_bracketing_bonus_application():
-    # Target at (10,10)
-    target = create_mock_entity(1, 2, pos=(10.0, 10.0))
-    # Attacker A at (11,10)
-    attacker_a = create_mock_entity(2, 1, pos=(11.0, 10.0))
-    # Attacker B at (9,10) (Opposite side of A)
-    attacker_b = create_mock_entity(3, 1, pos=(9.0, 10.0))
-    
-    state = AuthoritativeState(tick=1, seed=42, entities={1: target, 2: attacker_a, 3: attacker_b})
-    
-    # Attacker A proposes attack
-    raw_update = StateUpdate(entity_updates={
-        2: EntityUpdate(entity_id=2, task=TaskUpdate(work_kind_set="ENTITY_ACT", payload_set={"action": "ATTACK", "target_id": 1}))
-    })
-    
-    # Resolve
+def test_bracketing_bonus_requires_active_attackers():
+    """
+    Verify bracketing damage only when two allied attackers actively attack
+    the same target from opposite sides in the same tick.
+
+    Fraud this catches:
+    - bracketing counted from passive nearby allies
+    - bracketing ignored even when two attackers participate
+    - test accidentally creates only one attack intent
+    - builder fails to place attackers on opposite sides
+    """
+    target = create_mock_entity(1, Faction.MONSTER_HORDE, pos=(10.0, 10.0))
+    attacker_a = create_mock_entity(2, Faction.HERO_GUILD, pos=(11.0, 10.0))
+    attacker_b = create_mock_entity(3, Faction.HERO_GUILD, pos=(9.0, 10.0))
+
+    assert target.navigation.position == (10.0, 10.0)
+    assert attacker_a.navigation.position == (11.0, 10.0)
+    assert attacker_b.navigation.position == (9.0, 10.0)
+    assert attacker_a.identity.faction == attacker_b.identity.faction
+    assert attacker_a.identity.faction != target.identity.faction
+
+    state = AuthoritativeState(
+        tick=1,
+        seed=42,
+        entities={1: target, 2: attacker_a, 3: attacker_b},
+    )
+
+    raw_update = StateUpdate(
+        entity_updates={
+            2: EntityUpdate(
+                entity_id=2,
+                task=TaskUpdate(
+                    work_kind_set="ENTITY_ACT",
+                    payload_set={"action": "ATTACK", "target_id": 1},
+                ),
+            ),
+            3: EntityUpdate(
+                entity_id=3,
+                task=TaskUpdate(
+                    work_kind_set="ENTITY_ACT",
+                    payload_set={"action": "ATTACK", "target_id": 1},
+                ),
+            ),
+        }
+    )
+
     update = AuthoritativeApplyPipeline._route_combat_intent(state, raw_update)
-    
-    # Base damage ~9. Bracketing bonus is +3 (expected) -> actually ~10.58 in V2.
+
     combat_upd = update.entity_updates[1].combat
+    assert combat_upd is not None
     assert combat_upd.damage_taken >= 10

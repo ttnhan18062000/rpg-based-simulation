@@ -43,37 +43,74 @@ def test_world_init_determinism():
     assert f1["state_hash"] != f3["state_hash"]
 
 def test_subsystem_order_documentation():
-    """Verify that the AuthoritativeApplyPipeline follows the documented phase order (Hardened Phase 7)."""
-    from src.engine.pipeline import AuthoritativeApplyPipeline
-    
+    """
+    Verify that AuthoritativeApplyPipeline.refine follows the documented
+    hardened phase order.
+
+    Important ordering law:
+        Resource transactions must resolve before strategic blocker resolution.
+
+    Why:
+        Material blockers such as `blocker_mat_iron_ore` can only be cleared
+        correctly after the authoritative inventory/resource transaction phase
+        has applied pending item changes.
+
+    Fraud this catches:
+        - strategic blockers are resolved against stale inventory
+        - redirection runs before material acquisition is known
+        - crafting/resource loop gets stuck or returns home too early
+        - source comments claim one phase order while code runs another
+    """
     import inspect
+    from src.engine.pipeline import AuthoritativeApplyPipeline
+
     source = inspect.getsource(AuthoritativeApplyPipeline.refine)
-    
-    # We look for the actual usage patterns in the code block
+
     expected_order = [
         "TownResolutionSystem.resolve",
         "ShopSystem.enforce",
         "BlacksmithSystem.enforce",
+
+        # Combat may appear here in your local pipeline. Include it if present.
+        "AuthoritativeApplyPipeline._route_combat_intent",
+
         "WorldDynamicsSystem.resolve_dynamics",
         "BuildingSabotageSystem.resolve",
+
         "AuthoritativeApplyPipeline._route_interaction_intent",
         "InteractionSystem.enforce",
+
         "AuthoritativeApplyPipeline._route_movement_intent",
         "AuthoritativeApplyPipeline._resolve_occupancy_conflicts",
+
         "LifecycleSystem.resolve_lifecycle",
         "QuestResolutionSystem.enforce",
+
+        # Must be before blocker resolution.
         "AuthoritativeApplyPipeline._resolve_resource_transactions",
+
+        # Must be after resources, before redirection.
         "StrategicIntelligenceSystem.resolve_blockers",
+        "StrategicIntelligenceSystem.evaluate_biological_concerns",
         "StrategicRedirectionSystem.enforce",
-        "EvolutionSystem.evaluate"
+
+        "EvolutionSystem.evaluate",
     ]
-    
-    last_pos = -1
+
+    positions = {}
+
     for system in expected_order:
         pos = source.find(system)
         assert pos != -1, f"System call {system} not found in pipeline"
-        assert pos > last_pos, f"System call {system} is out of order"
-        last_pos = pos
+        positions[system] = pos
+
+    for earlier, later in zip(expected_order, expected_order[1:]):
+        assert positions[earlier] < positions[later], (
+            f"System call order is wrong:\n"
+            f"Expected `{earlier}` before `{later}`.\n"
+            f"Actual positions: {earlier}={positions[earlier]}, "
+            f"{later}={positions[later]}"
+        )
 
 def test_full_tick_determinism():
     """Law: A full simulation tick must be bit-identical given identical state and seed."""

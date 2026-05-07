@@ -1,4 +1,5 @@
 import pytest
+from src.core.builder import V2EntityBuilder
 from src.core.state import AuthoritativeState, EntityState, IdentityComponent, NavigationComponent, TaskComponent, CombatComponent
 from src.core.updates import StateUpdate, EntityUpdate, NavigationUpdate, TaskUpdate, CombatUpdate
 from src.engine.apply import ApplyPath
@@ -6,10 +7,11 @@ from src.engine.apply import ApplyPath
 def test_navigation_intent_hardening():
     """Verify that navigation intent is preserved across generations via typed components."""
     # Setup state with a navigation target
-    ent = EntityState(
-        id=1, kind="HERO", position=(0, 0),
-        navigation=NavigationComponent(target=(5, 5))
-    )
+    ent = (V2EntityBuilder(1)
+        .kind("hero")
+        .location(0, 0)
+        .navigation(target=(5, 5))
+        .build())
     state = AuthoritativeState(tick=0, seed=1, entities={1: ent})
     
     # Update position and set a new path
@@ -30,10 +32,11 @@ def test_navigation_intent_hardening():
 
 def test_task_intent_hardening():
     """Verify that task intent is preserved across generations via typed components."""
-    ent = EntityState(
-        id=1, kind="HERO", position=(0, 0),
-        task=TaskComponent(work_kind="OLD_ACT", payload={"key": "old"})
-    )
+    ent = (V2EntityBuilder(1)
+        .kind("hero")
+        .location(0, 0)
+        .task(work_kind="OLD_ACT", payload={"key": "old"})
+        .build())
     state = AuthoritativeState(tick=0, seed=1, entities={1: ent})
     
     upd = EntityUpdate(
@@ -50,7 +53,10 @@ def test_task_intent_hardening():
 
 def test_property_bypass_elimination():
     """Ensure that properties are not contaminated by typed state updates."""
-    ent = EntityState(id=1, kind="HERO", position=(0, 0))
+    ent = (V2EntityBuilder(1)
+        .kind("hero")
+        .location(0, 0)
+        .build())
     state = AuthoritativeState(tick=0, seed=1, entities={1: ent})
     
     # Attempt to update HP via CombatUpdate

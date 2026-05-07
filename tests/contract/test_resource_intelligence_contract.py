@@ -1,7 +1,7 @@
 import pytest
 from dataclasses import replace
 from src.core.builder import V2EntityBuilder
-from src.core.state import AuthoritativeState, EntityState, IdentityComponent, InventoryComponent
+from src.core.state import AuthoritativeState, EntityState, IdentityComponent, InventoryComponent, ItemStack
 from src.core.updates import StateUpdate, EntityUpdate, IdentityUpdate, InventoryUpdate
 from src.engine.kernel import Kernel
 from src.config.profiles import RuntimeProfile
@@ -13,10 +13,8 @@ def base_state():
     entity = (V2EntityBuilder(1)
         .kind("hero")
         .location(0, 0)
-        .gold(10)
-        .item("wood", 1)
-        .known_recipe("craft_steel_sword")
-        .craft_target("craft_steel_sword")
+        .inventory(gold=10, items=[ItemStack("wood", 1)])
+        .identity(known_recipes=("craft_steel_sword",), craft_target="craft_steel_sword")
         .build())
     
     return AuthoritativeState(

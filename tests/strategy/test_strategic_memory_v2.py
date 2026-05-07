@@ -3,16 +3,16 @@ from dataclasses import replace
 from src.core.state import AuthoritativeState, EntityState, CombatComponent, InventoryComponent, SocialComponent, IdentityComponent, BiologicalComponent, LifecycleComponent, StrategicComponent
 from src.core.strategic import LeadState, LeadCertainty, ProjectState, ProjectStatus, ObjectiveState, ObjectiveStatus
 from src.systems.strategic import StrategicIntelligenceSystem
-from src.core.enums import EntityRole
+from src.core.enums import EntityRole, Faction
 from src.core.builder import V2EntityBuilder
 
 def create_mock_entity(eid: int):
     from src.core.builder import V2EntityBuilder
     return (V2EntityBuilder(eid)
         .kind("hero")
-        .active(True)
         .location(0, 0)
-        .identity(role=EntityRole.HERO, faction="player")
+        .lifecycle(active=True)
+        .identity(role=EntityRole.HERO, faction=Faction.HERO_GUILD)
         .combat(hp=100, max_hp=100, atk=10, def_stat=5)
         .inventory(gold=10)
         .build())
@@ -22,8 +22,8 @@ def test_lead_failure_suppression():
     lead = LeadState(id="l1", kind="location", subject="forest", tested=True, test_outcome="FAILURE")
     entity = (V2EntityBuilder(1)
         .kind("hero")
-        .active(True)
         .location(0, 0)
+        .lifecycle(active=True)
         .strategic(leads={lead.id: lead})
         .build())
     
@@ -43,8 +43,8 @@ def test_lead_exhaustion():
     lead = LeadState(id="l1", kind="location", subject="forest", tested=True, test_outcome="FAILURE", failure_count=2)
     entity = (V2EntityBuilder(1)
         .kind("hero")
-        .active(True)
         .location(0, 0)
+        .lifecycle(active=True)
         .strategic(leads={lead.id: lead})
         .build())
     
@@ -59,23 +59,64 @@ def test_lead_exhaustion():
     assert updated_lead.certainty == LeadCertainty.EXHAUSTED
 
 def test_project_abandonment():
-    # Project that failed 3 times
-    proj = ProjectState(id="p1", kind="quest", status=ProjectStatus.ACTIVE, failure_count=3)
-    entity = (V2EntityBuilder(1)
+    """
+    Verify that the currently active project is abandoned after repeated failure.
+
+    Logic under test:
+        StrategicIntelligenceSystem only evaluates abandonment for
+        `entity.strategic.current_project_id`.
+
+        A project merely existing in `strategic.projects` is not enough.
+        It must be the active/current project.
+
+    Fraud this catches:
+        - abandoned-project logic exists but only scans all projects incorrectly
+        - failed projects are ignored even when they are current
+        - boredom/frustration penalty is not emitted when abandonment happens
+        - test accidentally inserts a failed project but forgets to make it current
+    """
+    proj = ProjectState(
+        id="p1",
+        kind="quest",
+        status=ProjectStatus.ACTIVE,
+        failure_count=3,
+    )
+
+    entity = (
+        V2EntityBuilder(1)
         .kind("hero")
-        .active(True)
         .location(0, 0)
-        .strategic(projects={proj.id: proj})
-        .current_project(proj.id)
-        .build())
-    
+        .lifecycle(active=True)
+        .strategic(
+            projects={proj.id: proj},
+            current_project_id=proj.id,
+        )
+        .build()
+    )
+
     state = AuthoritativeState(tick=100, seed=42)
-    
-    update = StrategicIntelligenceSystem.evaluate_strategic_intent(state, entity, force=True)
-    
-    # Should be ABANDONED
+
+    # Guard assertions:
+    # These prove the setup reaches the exact branch this test wants to verify.
+    assert entity.strategic.current_project_id == "p1"
+    assert entity.strategic.projects["p1"].status == ProjectStatus.ACTIVE
+    assert entity.strategic.projects["p1"].failure_count >= 3
+
+    update = StrategicIntelligenceSystem.evaluate_strategic_intent(
+        state,
+        entity,
+        force=True,
+    )
+
     assert len(update.projects_add_or_update) > 0
-    abandoned_proj = next(p for p in update.projects_add_or_update if p.id == "p1")
+
+    abandoned_proj = next(
+        p for p in update.projects_add_or_update
+        if p.id == "p1"
+    )
+
     assert abandoned_proj.status == ProjectStatus.ABANDONED
-    # Should have frustration boredom (0.1 base + 0.5 penalty = 0.6)
+
+    # 0.1 = normal active-project boredom
+    # 0.5 = frustration penalty for abandonment
     assert update.boredom_delta["quest"] == 0.6

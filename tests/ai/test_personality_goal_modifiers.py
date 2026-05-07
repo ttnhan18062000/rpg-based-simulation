@@ -17,13 +17,13 @@ def test_greedy_personality_bias():
     # Greedy entity
     greedy_entity = (V2EntityBuilder(1)
         .location(0.0, 0.0)
-        .personality(PersonalityComponent(greed=1.0))
+        .identity(personality=PersonalityComponent(greed=1.0))
         .build())
     
     # Non-greedy entity
     neutral_entity = (V2EntityBuilder(2)
         .location(0.0, 0.0)
-        .personality(PersonalityComponent(greed=0.0))
+        .identity(personality=PersonalityComponent(greed=0.0))
         .build())
     
     state = AuthoritativeState(tick=1, seed=42, entities={1: greedy_entity, 2: neutral_entity}, resource_nodes={1: node})
@@ -83,13 +83,13 @@ def test_life_stage_multipliers():
     # Setup state
     entity_child = (V2EntityBuilder(1)
         .location(0.0, 0.0)
-        .life_stage(LifeStage.CHILD)
+        .identity(life_stage=LifeStage.CHILD)
         .biological(sleep_debt=50.0)
         .build())
         
     entity_elder = (V2EntityBuilder(2)
         .location(0.0, 0.0)
-        .life_stage(LifeStage.ELDER)
+        .identity(life_stage=LifeStage.ELDER)
         .biological(sleep_debt=50.0)
         .build())
 

@@ -2,11 +2,21 @@ from __future__ import annotations
 
 from enum import Enum, IntEnum, auto
 from dataclasses import dataclass, field, replace, InitVar
+from types import MappingProxyType
 from typing import Dict, Any, Set, Optional, List, Tuple
 from src.core.strategic import StrategicComponent
 from src.core.enums import Faction, EntityRole
 from src.core.movement_modes import MovementMode
 from src.core.governance import RuntimeMode
+
+
+def _readonly_mapping(value):
+    if value is None:
+        return MappingProxyType({})
+    if isinstance(value, MappingProxyType):
+        return value
+    return MappingProxyType(dict(value))
+
 
 
 class ReadOnlyError(TypeError):
@@ -587,6 +597,7 @@ class AuthoritativeState:
     def __post_init__(self):
         # M10 Law: Ensure cache is cleared on every new object creation (including replace)
         object.__setattr__(self, "_readonly_cache", None)
+        object.__setattr__(self, "entities", _readonly_mapping(self.entities))
     current_mode: RuntimeMode = RuntimeMode.NORMAL
     # Phase E5.3: Exactly-Once Idempotency
     processed_transaction_ids: set[str] = field(default_factory=set)

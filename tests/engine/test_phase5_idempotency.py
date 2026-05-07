@@ -9,7 +9,7 @@ def create_mock_entity(id, pos=(0.0, 0.0)):
     return (V2EntityBuilder(id)
             .kind("hero")
             .location(*pos)
-            .active(True)
+            .lifecycle(active=True)
             .combat(readiness=100.0)
             .build())
 

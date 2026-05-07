@@ -10,8 +10,8 @@ def test_chest_looting():
     entity = (V2EntityBuilder(1)
         .kind("HERO")
         .location(5, 5)
-        .with_interaction(target_id=1, progress=9.0)
-        .with_property("interaction_kind", "chest")
+        .interaction(target_node_id=1, progress=9.0)
+        .identity(properties={"interaction_kind": "chest"})
         .build())
     
     # Setup chest

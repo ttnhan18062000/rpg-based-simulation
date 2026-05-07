@@ -12,7 +12,7 @@ def create_mock_entity(eid: int, gold: int = 10, hp: int = 100):
     return (V2EntityBuilder(eid)
         .kind("hero")
         .location(0, 0)
-        .with_class("hero")
+        .identity(class_id="hero")
         .combat(hp=hp, max_hp=100, atk=10, def_stat=5, alive=True)
         .inventory(gold=gold)
         .build()

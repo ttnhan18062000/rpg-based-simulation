@@ -40,7 +40,7 @@ def test_equipment_stat_derivation():
               .kind("HERO")
               .location(0.0, 0.0)
               .attributes(strength=10)
-              .combat(atk=15, range=1)
+              .combat(atk=15, attack_range=1)
               .build())
     state = AuthoritativeState(entities={1: entity}, tick=0, seed=0)
     

@@ -47,12 +47,10 @@ class EntityGenerator:
         from src.core.builder import V2EntityBuilder
         return (V2EntityBuilder(entity_id)
             .kind("hero")
-            .position(*pos)
+            .location(*pos)
             .identity(role=EntityRole.HERO, faction=Faction.HERO_GUILD, evolution_level=evolution_level)
-            .hp(int(base_hp), int(base_hp))
-            .combat(atk=int(base_atk), def_stat=int(base_def))
-            .gold(int(base_gold))
-            .combat(readiness=100.0)
+            .combat(hp=int(base_hp), max_hp=int(base_hp), atk=int(base_atk), def_stat=int(base_def), readiness=100.0)
+            .inventory(gold=int(base_gold))
             .build())
 
     def spawn_monster(self, pos: tuple[float, float], state: AuthoritativeState | None = None, kind: str = "monster", difficulty_tier: int = 1) -> EntityState:
@@ -74,13 +72,11 @@ class EntityGenerator:
         from src.core.builder import V2EntityBuilder
         return (V2EntityBuilder(entity_id)
             .kind(kind)
-            .position(*pos)
+            .location(*pos)
             .identity(role=EntityRole.MONSTER, faction=Faction.MONSTER_HORDE, evolution_level=evolution_level)
             .navigation(home_position=pos, leash_radius=10.0)
-            .hp(int(base_hp), int(base_hp))
-            .combat(atk=int(base_atk), def_stat=int(base_def))
-            .gold(int(base_gold))
-            .combat(readiness=100.0)
+            .combat(hp=int(base_hp), max_hp=int(base_hp), atk=int(base_atk), def_stat=int(base_def), readiness=100.0)
+            .inventory(gold=int(base_gold))
             .build())
 
     def spawn_goblin(self, pos: tuple[float, float], state: AuthoritativeState | None = None, difficulty_tier: int = 1) -> EntityState:
@@ -102,13 +98,11 @@ class EntityGenerator:
         from src.core.builder import V2EntityBuilder
         return (V2EntityBuilder(entity_id)
             .kind("goblin")
-            .position(*pos)
+            .location(*pos)
             .identity(role=EntityRole.MONSTER, faction=Faction.MONSTER_HORDE, evolution_level=evolution_level)
             .navigation(home_position=pos, leash_radius=8.0)
-            .hp(int(base_hp), int(base_hp))
-            .combat(atk=int(base_atk), def_stat=int(base_def))
-            .gold(int(base_gold))
-            .combat(readiness=100.0)
+            .combat(hp=int(base_hp), max_hp=int(base_hp), atk=int(base_atk), def_stat=int(base_def), readiness=100.0)
+            .inventory(gold=int(base_gold))
             .build())
 
     def spawn_calamity(self, state: AuthoritativeState, kind: str, pos: tuple[float, float]) -> EntityState:
@@ -120,28 +114,12 @@ class EntityGenerator:
         atk = 150 * (1.0 + state.maturity * 0.2)
         def_val = 100 * (1.0 + state.maturity * 0.2)
         
-        combat = CombatComponent(
-            hp=int(hp),
-            max_hp=int(hp),
-            atk=int(atk),
-            def_stat=int(def_val),
-            alive=True
-        )
-        
-        identity = IdentityComponent(
-            role=EntityRole.MONSTER,
-            faction=Faction.MONSTER_HORDE,
-            evolution_level=50 + state.maturity * 5
-        )
-        
         from src.core.builder import V2EntityBuilder
         return (V2EntityBuilder(entity_id)
             .kind(kind)
-            .position(*pos)
+            .location(*pos)
             .identity(role=EntityRole.MONSTER, faction=Faction.MONSTER_HORDE, evolution_level=50 + state.maturity * 5)
-            .hp(int(hp), int(hp))
-            .combat(atk=int(atk), def_stat=int(def_val))
-            .combat(readiness=100.0)
+            .combat(hp=int(hp), max_hp=int(hp), atk=int(atk), def_stat=int(def_val), readiness=100.0)
             .build())
 
     def spawn_stronghold(self, state: AuthoritativeState, pos: tuple[float, float]) -> EntityState:
@@ -152,26 +130,10 @@ class EntityGenerator:
         hp = 10000 * (1.0 + state.maturity * 0.5)
         def_val = 50 * (1.0 + state.maturity * 0.2)
         
-        combat = CombatComponent(
-            hp=int(hp),
-            max_hp=int(hp),
-            atk=0, # Strongholds don't attack directly
-            def_stat=int(def_val),
-            alive=True
-        )
-        
-        identity = IdentityComponent(
-            role=EntityRole.MONSTER,
-            faction=Faction.MONSTER_HORDE,
-            evolution_level=1
-        )
-        
         from src.core.builder import V2EntityBuilder
         return (V2EntityBuilder(entity_id)
             .kind("stronghold")
-            .position(*pos)
+            .location(*pos)
             .identity(role=EntityRole.MONSTER, faction=Faction.MONSTER_HORDE, evolution_level=1)
-            .hp(int(hp), int(hp))
-            .combat(atk=0, def_stat=int(def_val))
-            .combat(readiness=100.0)
+            .combat(hp=int(hp), max_hp=int(hp), atk=0, def_stat=int(def_val), readiness=100.0)
             .build())

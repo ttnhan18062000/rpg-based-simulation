@@ -1,4 +1,5 @@
 import pytest
+from src.core.builder import V2EntityBuilder
 from src.core.state import AuthoritativeState, EntityState, AttributeComponent, InventoryComponent, ItemStack, ResourceNodeState
 from src.core.updates import StateUpdate, EntityUpdate, ResourceTransferIntent, InteractionUpdate, CombatUpdate, StrategicUpdate
 from src.engine.interaction import InteractionSystem
@@ -8,13 +9,10 @@ from src.core.enums import ReasonCode
 
 def test_interaction_interrupted_by_damage():
     # Setup entity with interaction progress
-    ent = EntityState(
-        id=1,
-        kind="HERO",
-        position=(0, 0),
-        combat=None, # will use default
-        interaction=None # will use default (0 progress)
-    )
+    ent = (V2EntityBuilder(1)
+        .kind("hero")
+        .location(0, 0)
+        .build())
     # Manually set progress
     from src.core.state import InteractionComponent
     ent = replace_interaction(ent, 5)
@@ -57,9 +55,11 @@ def replace_interaction(ent, progress):
 
 def test_strategic_bandwidth_leads():
     # Setup entity with max_leads = 2
-    profile = CognitionProfile(max_leads=2, max_concerns=10)
-    strat = StrategicComponent(profile=profile)
-    ent = EntityState(id=1, kind="HERO", position=(0,0), strategic=strat)
+    ent = (V2EntityBuilder(1)
+        .kind("hero")
+        .location(0, 0)
+        .cognition(max_leads=2, max_concerns=10)
+        .build())
     
     # Generate 5 leads
     leads = [LeadState(id=f"L{i}", kind="location", subject=f"S{i}") for i in range(5)]

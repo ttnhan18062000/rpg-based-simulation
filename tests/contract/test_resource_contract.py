@@ -12,7 +12,7 @@ def test_law_of_capacity_enforcement():
     actor = (V2EntityBuilder(1)
         .kind("hero")
         .location(1.0, 1.0)
-        .with_interaction(target_id=500, progress=1.0)
+        .interaction(target_node_id=500, progress=1.0)
         .replace_inventory(InventoryComponent(max_slots=1, items=[ItemStack("stone", 1)]))
         .combat(readiness=100.0)
         .build())
@@ -42,7 +42,7 @@ def test_law_of_weight_enforcement():
     actor = (V2EntityBuilder(1)
         .kind("hero")
         .location(1.0, 1.0)
-        .with_interaction(target_id=500, progress=1.0)
+        .interaction(target_node_id=500, progress=1.0)
         .replace_inventory(InventoryComponent(max_weight=1.5, items=[ItemStack("wood", 1)])) # WOOD weight is 1.0
         .combat(readiness=100.0)
         .build())
@@ -71,7 +71,7 @@ def test_law_of_proximity_reset_on_move():
     actor = (V2EntityBuilder(1)
         .kind("hero")
         .location(1.0, 1.0)
-        .with_interaction(target_id=500, progress=1.0)
+        .interaction(target_node_id=500, progress=1.0)
         .combat(readiness=100.0)
         .build())
         
@@ -98,7 +98,7 @@ def test_law_of_availability_node_depleted():
     actor = (V2EntityBuilder(1)
         .kind("hero")
         .location(1.0, 1.0)
-        .with_interaction(target_id=500, progress=1.0)
+        .interaction(target_node_id=500, progress=1.0)
         .combat(readiness=100.0)
         .build())
         

@@ -6,6 +6,7 @@ from src.engine.interaction import InteractionSystem
 from src.engine.town_resolution import TownResolutionSystem
 from src.engine.pipeline import AuthoritativeApplyPipeline
 from src.core.builder import V2EntityBuilder
+from src.core.enums import EntityRole, Faction
 
 def test_weight_pressure_enforcement():
     # Setup state: Entity with limited weight capacity
@@ -72,50 +73,82 @@ def test_channeled_looting_one_shot():
     actual_added = [i.item_id if hasattr(i, "item_id") else i for i in refined.entity_updates[1].inventory.items_add]
     assert "gold" in actual_added
 
+def stack(item_id: str, quantity: int = 1) -> ItemStack:
+    return ItemStack(item_id=item_id, quantity=quantity)
+
+
 def test_town_resolution_sell_on_entry():
-    # Setup state: Entity with materials entering town
-    entity = (V2EntityBuilder(1)
-              .kind("hero")
-              .location(0.0, 0.0)
-              .inventory(items=["wood", "ore"])
-              .combat(readiness=100.0)
-              .build())
-    
-    # Add a shop building with gold
+    """
+    Verify that entering a town/shop tile triggers auto-sell resolution.
+
+    New V2 inventory rule:
+        inventory.items must contain ItemStack objects, not raw strings.
+
+    Fraud this catches:
+        - test accidentally uses legacy string inventory format
+        - shop entry creates sell intent but resource resolver crashes
+        - sell resolution removes sold items and grants correct gold
+    """
+    entity = (
+        V2EntityBuilder(1)
+        .kind("hero")
+        .location(0.0, 0.0)
+        .identity(
+            role=EntityRole.HERO,
+            faction=Faction.HERO_GUILD,
+        )
+        .inventory(items=[stack("wood"), stack("ore")])
+        .combat(
+            hp=100,
+            max_hp=100,
+            alive=True,
+            readiness=100.0,
+        )
+        .lifecycle(active=True)
+        .build()
+    )
+
     shop = BuildingState(
         id=100,
         kind="shop",
         position=(5.0, 5.0),
-        inventory=InventoryComponent(gold=1000)
+        inventory=InventoryComponent(gold=1000),
     )
-    
+
     state = AuthoritativeState(
         tick=1,
         seed=42,
         entities={1: entity},
         buildings={100: shop},
-        town_tiles={(5,5)},
-        building_tiles={(5,5): "shop"}
+        town_tiles={(5, 5)},
+        building_tiles={(5, 5): "shop"},
     )
-    
-    # Update: Move to (5,5)
+
     upd = StateUpdate(
-        entity_updates={1: EntityUpdate(entity_id=1, new_position=(5,5), moved_this_tick=True)}
+        entity_updates={
+            1: EntityUpdate(
+                entity_id=1,
+                new_position=(5, 5),
+                moved_this_tick=True,
+            )
+        }
     )
-    
-    # Resolve
+
     refined = AuthoritativeApplyPipeline.refine(state, upd)
-    
+
     ent_upd = refined.entity_updates[1]
-    
-    # Check for inventory update (resolved from intent)
+
     assert ent_upd.inventory is not None
-    
-    actual_removed = [i.item_id if hasattr(i, "item_id") else i for i in ent_upd.inventory.items_remove]
+
+    actual_removed = [
+        item.item_id
+        for item in ent_upd.inventory.items_remove
+    ]
+
     assert "wood" in actual_removed
     assert "ore" in actual_removed
-    
-    # Value: WOOD(5) + ORE(5) = 10 GOLD
+
+    # WOOD(5) + ORE(5) = 10 gold.
     assert ent_upd.inventory.gold_delta == 10
 
 def test_movement_interruption():

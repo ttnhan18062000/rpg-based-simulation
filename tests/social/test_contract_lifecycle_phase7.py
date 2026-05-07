@@ -14,8 +14,8 @@ def create_mock_entity(id, gold=10, hp=100, sentiment=0.0):
         .kind("ACTOR")
         .location(0, 0)
         .combat(hp=hp, max_hp=100)
-        .gold(gold)
-        .bond(SocialBond(target_id=99, sentiment=sentiment, familiarity=0.5))
+        .inventory(gold=gold)
+        .social(bonds={99: SocialBond(target_id=99, sentiment=sentiment, familiarity=0.5)})
         .combat(alive=True)
         .build())
 
@@ -26,9 +26,8 @@ def test_appraisal_betrayal_rejection():
     candidate = (V2EntityBuilder(1)
         .kind("ACTOR")
         .location(0, 0)
-        .gold(0)
-        .betrayal_count(1)
-        .bond(SocialBond(target_id=99, sentiment=-1.0))
+        .inventory(gold=0)
+        .social(betrayal_count=1, bonds={99: SocialBond(target_id=99, sentiment=-1.0)})
         .combat(alive=True)
         .build())
     
@@ -66,7 +65,7 @@ def test_offer_expiration_logic():
     e1 = (V2EntityBuilder(1)
         .kind("ACTOR")
         .location(0, 0)
-        .strategic_contract(contract)
+        .strategic(contracts={contract.id: contract})
         .combat(alive=True)
         .build())
     
@@ -95,7 +94,7 @@ def test_resolution_reputation_impact():
     e1 = (V2EntityBuilder(1)
         .kind("ACTOR")
         .location(0, 0)
-        .strategic_contract(contract)
+        .strategic(contracts={contract.id: contract})
         .combat(alive=True)
         .build())
     

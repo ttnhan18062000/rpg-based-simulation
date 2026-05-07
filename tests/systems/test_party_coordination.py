@@ -3,19 +3,16 @@ from dataclasses import replace
 from src.core.state import AuthoritativeState, EntityState, CombatComponent, InventoryComponent, SocialComponent, IdentityComponent, BiologicalComponent, LifecycleComponent, StrategicComponent
 from src.core.strategic import ContractState, ContractKind, ContractStatus, ProjectState, ProjectStatus, ObjectiveState, ObjectiveStatus
 from src.systems.party import PartyCoordinationSystem
-from src.core.enums import EntityRole
+from src.core.enums import EntityRole, Faction
 
 def create_mock_entity(eid: int):
     from src.core.builder import V2EntityBuilder
     return (V2EntityBuilder(eid)
         .kind("hero")
         .location(0, 0)
-        .identity(role=EntityRole.HERO)
-        .identity(faction="player")
-        .combat(hp=100, max_hp=100)
-        .combat(alive=True)
-        .combat(readiness=100.0)
-        .gold(10)
+        .identity(role=EntityRole.HERO, faction=Faction.HERO_GUILD)
+        .combat(hp=100, max_hp=100, alive=True, readiness=100.0)
+        .inventory(gold=10)
         .build())
 
 def test_party_coordination_leadership_influence():
@@ -31,7 +28,7 @@ def test_party_coordination_leadership_influence():
     )
     leader = (V2EntityBuilder(1)
         .kind("hero")
-        .strategic_project(proj)
+        .strategic(projects={"proj_l1": proj})
         .build())
     # current_project_id needs to be set manually if builder doesn't support it yet
     leader = replace(leader, strategic=replace(leader.strategic, current_project_id=proj.id))
@@ -46,7 +43,7 @@ def test_party_coordination_leadership_influence():
     )
     member = (V2EntityBuilder(2)
         .kind("hero")
-        .strategic_contract(contract)
+        .strategic(contracts={"c1": contract})
         .build())
     
     state = AuthoritativeState(tick=100, seed=42)

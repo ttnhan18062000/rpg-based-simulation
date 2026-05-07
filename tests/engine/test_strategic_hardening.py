@@ -7,7 +7,7 @@ from src.strategy.cognition_capacity import CapacityService
 
 def test_concern_bandwidth_enforcement():
     # Setup entity with low Wisdom (low max_concerns)
-    builder = V2EntityBuilder(1).attributes(wis=4).build()
+    builder = V2EntityBuilder(1).attributes(wisdom=4).build()
     # Wisdom 4 -> max_concerns = 3 + (4 // 4) = 4
     
     profile = CapacityService.derive_profile(builder)
@@ -33,7 +33,7 @@ def test_concern_bandwidth_enforcement():
 
 def test_detour_breadth_enforcement():
     # Setup entity with low Intelligence (low detour_breadth)
-    builder = V2EntityBuilder(1).attributes(int=6).build()
+    builder = V2EntityBuilder(1).attributes(intelligence=6).build()
     # Intelligence 6 -> detour_breadth = 2 + (6 // 6) = 3
     
     profile = CapacityService.derive_profile(builder)
@@ -154,7 +154,7 @@ def test_group_detour_suppression():
     from src.core.strategic import BlockerState, ProjectState, ProjectKind, ObjectiveState, ObjectiveKind
     
     # Setup entity in a group
-    builder = V2EntityBuilder(1).group_id(1001)
+    builder = V2EntityBuilder(1).identity(group_id=1001)
     blocker = BlockerState(id="b1", kind="access", subject="town", severity=1.0)
     lead = LeadState(id="l1", kind="location", subject="town", detail="A way in")
     

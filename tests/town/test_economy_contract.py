@@ -15,7 +15,7 @@ def test_shop_buy_and_sell():
     entity = (V2EntityBuilder(1)
         .kind("hero")
         .location(0, 0)
-        .gold(100)
+        .inventory(gold=100)
         .build())
     from src.core.state import InventoryComponent
     shop = BuildingState(
@@ -64,9 +64,8 @@ def test_blacksmith_crafting():
     entity = (V2EntityBuilder(1)
         .kind("hero")
         .location(0, 0)
-        .gold(100)
-        .item("iron_ore", 5)
-        .item("wood", 2)
+        .inventory(gold=100)
+        .inventory(items=[ItemStack("iron_ore", 5), ItemStack("wood", 2)])
         .build())
     blacksmith = BuildingState(id=11, kind="blacksmith", position=(0,0), functional=True)
     state = AuthoritativeState(tick=1, seed=42, entities={1: entity}, buildings={11: blacksmith})

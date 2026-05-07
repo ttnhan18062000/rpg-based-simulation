@@ -54,14 +54,14 @@ class BuildingSabotageSystem:
                 build_upd = refined_building_updates.get(building.id, BuildingUpdate(building_id=building.id))
                 
                 # Calculate resulting state for functionality check
-                current_hp_in_tick = building.hp + build_upd.combat.hp_delta
+                current_hp_in_tick = building.hp + build_upd.hp_delta
                 new_hp = max(0, current_hp_in_tick - damage)
                 is_functional = new_hp > 0
                 
                 refined_building_updates[building.id] = replace(
                     build_upd,
-                    hp_delta=build_upd.combat.hp_delta - damage,
-                    functional_set=is_functional
+                    hp_delta=build_upd.hp_delta - damage,
+                    functional_set=is_functional,
                 )
         
         return replace(update, building_updates=refined_building_updates)

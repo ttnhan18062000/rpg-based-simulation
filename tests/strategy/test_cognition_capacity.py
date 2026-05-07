@@ -9,7 +9,7 @@ def create_mock_entity(intelligence: int = 5, wisdom: int = 5, perception: int =
         .location(0, 0)
         .attributes(intelligence=intelligence, wisdom=wisdom, perception=perception)
         .biological(sleep_debt=sleep_debt)
-        .with_personality(industry=0.5)
+        .identity(personality=PersonalityComponent(industry=0.5))
         .build())
 
 def test_base_profile_derivation():

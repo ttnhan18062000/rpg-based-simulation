@@ -8,8 +8,8 @@ def test_guild_intel_emission():
     entity = (V2EntityBuilder(1)
         .kind("HERO")
         .location(10, 10)
-        .with_interaction(target_id=1, progress=9.0)
-        .with_property("interaction_kind", "guild")
+        .interaction(target_node_id=1, progress=9.0)
+        .identity(properties={"interaction_kind": "guild"})
         .build())
     
     # Setup guild building

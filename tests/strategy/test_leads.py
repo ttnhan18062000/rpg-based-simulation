@@ -4,16 +4,35 @@ from src.core.strategic import StrategicComponent, CognitionProfile, LeadCertain
 from src.strategy.leads import LeadService
 
 def create_mock_entity_with_trust(trust_scores: dict[int, float]):
+    """
+    Build a hero with preconfigured source-trust entries.
+
+    New builder rule:
+        source_trust belongs to StrategicComponent and must store
+        SourceTrustEntry objects, not raw float scores.
+
+    This replaces the old legacy builder shortcut:
+        builder.source_trust(eid, score)
+    """
     from src.core.builder import V2EntityBuilder
-    builder = (V2EntityBuilder(1)
+    from src.core.strategic import SourceTrustEntry
+
+    source_trust = {
+        eid: SourceTrustEntry(
+            entity_id=eid,
+            trust=score,
+        )
+        for eid, score in trust_scores.items()
+    }
+
+    return (
+        V2EntityBuilder(1)
         .kind("hero")
         .location(0, 0)
-        .cognition(max_leads=5))
-    
-    for eid, score in trust_scores.items():
-        builder.source_trust(eid, score)
-        
-    return builder.build()
+        .cognition(max_leads=5)
+        .strategic(source_trust=source_trust)
+        .build()
+    )
 
 def test_lead_creation_with_trust():
     entity = create_mock_entity_with_trust({10: 0.9, 11: 0.1})

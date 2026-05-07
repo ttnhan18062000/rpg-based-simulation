@@ -1,4 +1,5 @@
 import pytest
+from src.core.builder import V2EntityBuilder
 from src.core.state import AuthoritativeState, EntityState, RegionState, LocalScarState
 from src.core.updates import StateUpdate, EntityUpdate, InventoryUpdate, StrategicUpdate
 from src.core.state import ItemStack
@@ -6,7 +7,10 @@ from src.engine.apply import ApplyPath
 
 def test_fingerprint_captures_inventory_changes():
     """Verify that adding items to an entity changes the state fingerprint."""
-    e1 = EntityState(id=1, kind="H", position=(0, 0))
+    e1 = (V2EntityBuilder(1)
+        .kind("hero")
+        .location(0, 0)
+        .build())
     state = AuthoritativeState(tick=100, seed=42, entities={1: e1})
     
     fp1 = state.fingerprint()["state_hash"]
@@ -24,7 +28,10 @@ def test_fingerprint_captures_inventory_changes():
 def test_fingerprint_captures_strategic_changes():
     """Verify that adding strategic projects changes the state fingerprint."""
     from src.core.strategic import ProjectState
-    e1 = EntityState(id=1, kind="H", position=(0, 0))
+    e1 = (V2EntityBuilder(1)
+        .kind("hero")
+        .location(0, 0)
+        .build())
     state = AuthoritativeState(tick=100, seed=42, entities={1: e1})
     
     fp1 = state.fingerprint()["state_hash"]
@@ -60,7 +67,10 @@ def test_determinism_same_seed_same_hash():
     """Verify that two identical states produce the same hash via CanonicalStateHasher."""
     from src.engine.checkpoint import CanonicalStateHasher
     
-    e1 = EntityState(id=1, kind="H", position=(5, 5))
+    e1 = (V2EntityBuilder(1)
+        .kind("hero")
+        .location(5, 5)
+        .build())
     r1 = RegionState(id="town", name="Town", bounds=(0,0,20,20), influence=50.0)
     
     state_a = AuthoritativeState(tick=100, seed=42, entities={1: e1}, regions={"town": r1})

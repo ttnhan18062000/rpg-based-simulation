@@ -185,7 +185,7 @@ def test_attrition_and_status():
         .location(1, 0)
         .identity(faction=Faction.MONSTER_HORDE)
         .combat(hp=100, atk=10, def_stat=5, alive=True)
-        .with_property("status_frozen", True)
+        .properties({"status_frozen": True})
         .build())
     
     from src.engine.combat import CombatResolutionSystem

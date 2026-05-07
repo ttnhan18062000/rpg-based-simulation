@@ -40,7 +40,7 @@ def test_high_pressure_determinism_equivalence():
     # 1. Setup Initial State
     from src.core.builder import V2EntityBuilder
     entities = {
-        i: V2EntityBuilder(i).kind("TEST").at((float(i), 0.0)).combat(readiness=100.0).build()
+        i: V2EntityBuilder(i).kind("TEST").location(float(i), 0.0).combat(readiness=100.0).build()
         for i in range(1, total_entities + 1)
     }
     state_init = AuthoritativeState(tick=0, seed=seed, entities=entities)
@@ -126,7 +126,7 @@ def test_neighbor_view_bit_identical():
     """Prove that worker input context is identical regardless of engine internal order."""
     profile = get_base_profile(0)
     entities = {
-        i: V2EntityBuilder(i).kind("TEST").at((float(i), 0.0)).build()
+        i: V2EntityBuilder(i).kind("TEST").location(float(i), 0.0).build()
         for i in [10, 5, 20, 1, 100]
     }
     state = AuthoritativeState(tick=1, seed=42, entities=entities)

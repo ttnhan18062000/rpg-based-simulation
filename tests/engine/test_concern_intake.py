@@ -12,7 +12,7 @@ def test_concern_intake_salience_filtering():
                 .kind("hero")
                 .location(0.0, 0.0)
                 .identity(faction=Faction.HERO_GUILD)
-                .with_base_stats(hp=100)
+                .combat(hp=100)
                 .build())
     
     # 1. Distant Hostile at (20, 0), Faction 2
@@ -20,7 +20,7 @@ def test_concern_intake_salience_filtering():
                        .kind("monster")
                        .location(20.0, 0.0)
                        .identity(faction=Faction.MONSTER_HORDE)
-                       .with_base_stats(hp=100)
+                       .combat(hp=100)
                        .build())
     
     # 2. Nearby Hostile at (2, 0), Faction 2
@@ -28,7 +28,7 @@ def test_concern_intake_salience_filtering():
                       .kind("monster")
                       .location(2.0, 0.0)
                       .identity(faction=Faction.MONSTER_HORDE)
-                      .with_base_stats(hp=100)
+                      .combat(hp=100)
                       .build())
     
     # 3. Dead Ally at (1, 1), Faction 1
@@ -36,8 +36,7 @@ def test_concern_intake_salience_filtering():
                  .kind("hero")
                  .location(1.0, 1.0)
                  .identity(faction=Faction.HERO_GUILD)
-                 .with_current_hp(0)
-                 .combat(alive=False)
+                 .combat(hp=0, alive=False)
                  .build())
     
     state = AuthoritativeState(tick=99, seed=42, entities={1: observer, 2: distant_hostile, 3: nearby_hostile, 4: dead_ally})

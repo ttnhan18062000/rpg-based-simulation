@@ -29,7 +29,7 @@ def test_public_vs_private_trust():
                 .kind("villager")
                 .location(5.0, 5.0)
                 .combat(hp=100, max_hp=100)
-                .gold(0)
+                .inventory(gold=0)
                 .build())
     
     state = replace(state, entities={1: hero, 2: rogue, 3: observer})

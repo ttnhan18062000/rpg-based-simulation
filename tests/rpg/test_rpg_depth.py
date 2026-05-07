@@ -48,30 +48,21 @@ def make_entity(eid=1, pos=(5.0, 5.0), hp=100, max_hp=100, atk=10, def_stat=5,
                 leash_radius=0.0, home_pos=None, chase_ticks=0, max_chase_ticks=15,
                 returning_home=False, endurance=5, strength=5, intelligence=5,
                 spirit=5, active=True):
-    builder = (V2EntityBuilder(eid)
-               .kind("hero")
-               .location(*pos)
-               .identity(faction=faction)
-               .identity(role=role)
-               .combat(hp=hp)
-               .with_base_stats(atk=atk, def_stat=def_stat, range=1)
-               .combat(readiness=100.0)
-               .stamina(stamina_current, stamina_max)
-               .attributes(endurance=endurance, strength=strength, 
-                          intelligence=intelligence, spirit=spirit))
-    
-    entity = builder.build()
-    
-    # Navigation overrides (leash/chase)
-    nav = replace(entity.navigation,
-        leash_radius=leash_radius,
-        home_position=home_pos,
-        chase_ticks=chase_ticks,
-        max_chase_ticks=max_chase_ticks,
-        returning_home=returning_home
-    )
-    
-    return replace(entity, navigation=nav, lifecycle=replace(entity.lifecycle, active=active))
+    entity = (V2EntityBuilder(eid)
+              .kind("hero")
+              .location(*pos)
+              .identity(faction=faction, role=role)
+              .combat(hp=hp, max_hp=max_hp, atk=atk, def_stat=def_stat,
+                      attack_range=1, alive=alive, readiness=100.0)
+              .stamina(current=stamina_current, max_stamina=stamina_max)
+              .attributes(endurance=endurance, strength=strength,
+                         intelligence=intelligence, spirit=spirit)
+              .navigation(leash_radius=leash_radius, home_position=home_pos,
+                         chase_ticks=chase_ticks, max_chase_ticks=max_chase_ticks,
+                         returning_home=returning_home)
+              .lifecycle(active=active)
+              .build())
+    return entity
 
 
 def make_state(entities=None, terrain=None, regions=None):

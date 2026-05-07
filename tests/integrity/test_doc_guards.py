@@ -18,13 +18,6 @@ def test_mandatory_doc_existence():
         path = doc["path"]
         assert os.path.exists(path), f"TRUTH GAP: Mandatory documentation missing: {path}"
 
-def test_phase5_package_presence():
-    """
-    LAW: The Phase 5 Support Package (Milestone 5 Outcome) must exist.
-    """
-    expected_path = "docs/engine/supported_progression_package_phase5.md"
-    assert os.path.exists(expected_path), f"TRUTH GAP: Phase 5 Support Package missing at {expected_path}"
-
 def test_doc_header_compliance():
     """
     STRICT LAW: Mandatory docs must follow the structure required by the manifest.

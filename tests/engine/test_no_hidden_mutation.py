@@ -1,9 +1,10 @@
+import pytest
+from dataclasses import replace
 from src.core.state import AuthoritativeState, EntityState
 from src.core.updates import StateUpdate, EntityUpdate
 from src.engine.apply import ApplyPath
 from src.engine.checkpoint import CanonicalStateHasher
 from src.core.builder import V2EntityBuilder
-import pytest
 
 def test_prior_state_purity_deep_properties():
     """
@@ -15,7 +16,7 @@ def test_prior_state_purity_deep_properties():
         1: (V2EntityBuilder(1)
             .kind("hero")
             .location(0.0, 0.0)
-            .with_properties(initial_props)
+            .identity(properties=initial_props)
             .build())
     })
     
@@ -49,7 +50,7 @@ def test_no_mutation_leak_from_worker_snapshot():
         1: (V2EntityBuilder(1)
             .kind("hero")
             .location(0.0, 0.0)
-            .with_property("gold", 10)
+            .identity(properties={"gold": 10})
             .build())
     })
     

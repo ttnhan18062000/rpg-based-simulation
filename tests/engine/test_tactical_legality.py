@@ -15,9 +15,8 @@ def test_tactical_legality_filtering():
     attacker = (V2EntityBuilder(1)
                 .kind("hero")
                 .location(0.0, 0.0)
-                .combat(readiness=100.0)
+                .combat(readiness=100.0, attack_range=5)
                 .identity(faction=1)
-                .with_base_stats(range=5)
                 .build())
     
     # Target 1 (Illegal): Closest but behind wall at (2, 0), Faction 2
@@ -25,7 +24,7 @@ def test_tactical_legality_filtering():
           .kind("monster")
           .location(2.0, 0.0)
           .identity(faction=2)
-          .with_current_hp(10)
+          .combat(hp=10)
           .build())
     
     # Target 2 (Legal): Further away at (0, 2), no wall, Faction 2
@@ -33,7 +32,7 @@ def test_tactical_legality_filtering():
           .kind("monster")
           .location(0.0, 2.0)
           .identity(faction=2)
-          .with_current_hp(100)
+          .combat(hp=100)
           .build())
     
     state = replace(state, entities={1: attacker, 2: t1, 3: t2})
@@ -61,9 +60,8 @@ def test_tactical_blocked_kite():
     attacker = (V2EntityBuilder(1)
                 .kind("hero")
                 .location(0.0, 0.0)
-                .combat(readiness=100.0)
+                .combat(readiness=100.0, attack_range=5, tactical_role="SKIRMISHER")
                 .identity(faction=1)
-                .with_base_stats(range=5, tactical_role="SKIRMISHER")
                 .build())
     
     # Target at (1, 0), Faction 2
@@ -71,7 +69,7 @@ def test_tactical_blocked_kite():
               .kind("monster")
               .location(1.0, 0.0)
               .identity(faction=2)
-              .with_current_hp(100)
+              .combat(hp=100)
               .build())
     
     state = replace(state, entities={1: attacker, 2: target})

@@ -21,7 +21,7 @@ def test_terrain_readiness_rejection():
         .location(1, 0)
         .combat(readiness=20.0)
         .combat(move_cost=10.0, alive=True)
-        .navigation(mode=MovementMode.WANDER)
+        .navigation(movement_mode=MovementMode.WANDER)
         .build())
     
     # 2. Attempt move to (1, 1)
@@ -55,7 +55,7 @@ def test_terrain_readiness_success():
         .location(1, 0)
         .combat(readiness=100.0)
         .combat(move_cost=10.0, alive=True)
-        .navigation(mode=MovementMode.WANDER)
+        .navigation(movement_mode=MovementMode.WANDER)
         .build())
     
     state = AuthoritativeState(

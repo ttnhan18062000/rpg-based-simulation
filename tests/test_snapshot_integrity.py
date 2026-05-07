@@ -1,5 +1,6 @@
 import pytest
 import copy
+from src.core.builder import V2EntityBuilder
 from src.core.state import AuthoritativeState, EntityState, IdentityComponent
 from src.engine.checkpoint import CanonicalStateHasher
 
@@ -22,7 +23,10 @@ def test_hash_stability_with_dict_order():
 
 def test_snapshot_immutability():
     """Verify that components are frozen and cannot be mutated."""
-    ent = EntityState(id=1, kind="HERO", position=(0, 0))
+    ent = (V2EntityBuilder(1)
+        .kind("hero")
+        .location(0, 0)
+        .build())
     
     with pytest.raises(Exception): # Exact exception depends on dataclass implementation (FrozenInstanceError)
         ent.position = (1, 1)
@@ -35,7 +39,11 @@ def test_deep_isolation_in_collections():
     from src.engine.apply import ApplyPath
     from src.core.updates import StateUpdate, EntityUpdate, IdentityUpdate
     
-    ent = EntityState(id=1, kind="HERO", position=(0, 0), identity=IdentityComponent(known_recipes={"a"}))
+    ent = (V2EntityBuilder(1)
+        .kind("hero")
+        .location(0, 0)
+        .identity(known_recipes={"a"})
+        .build())
     state = AuthoritativeState(tick=0, seed=1, entities={1: ent})
     
     # Update state: add recipe "b"

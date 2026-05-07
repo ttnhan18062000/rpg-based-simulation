@@ -12,12 +12,14 @@ def create_mock_entity(id, pos=(0,0), project=None):
     builder = (V2EntityBuilder(id)
                .kind("ACTOR")
                .location(*pos)
-               .with_base_stats(hp=100, atk=10)
-               .active(True))
+               .combat(hp=100, atk=10)
+               .lifecycle(active=True))
     
     if project:
-        builder = (builder.strategic_project(project)
-                   .current_project(project.id))
+        builder = builder.strategic(
+            projects={project.id: project},
+            current_project_id=project.id
+        )
     
     return builder.build()
 

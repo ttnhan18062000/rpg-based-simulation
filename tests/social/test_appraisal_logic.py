@@ -14,7 +14,7 @@ def create_mock_entity(eid: int, gold: int = 10, hp: int = 100):
         .identity(role=EntityRole.HERO)
         .identity(faction=Faction.HERO_GUILD)
         .combat(hp=hp, max_hp=100)
-        .gold(gold)
+        .inventory(gold=gold)
         .combat(alive=True)
         .build())
 

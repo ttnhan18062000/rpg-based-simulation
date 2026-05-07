@@ -8,6 +8,7 @@ Interaction system and harvesting tests.
 - RPG-1678: interaction_determinism_contract
 """
 import pytest
+from src.core.builder import V2EntityBuilder
 from src.core.state import AuthoritativeState, EntityState, InteractionComponent, InventoryComponent, ResourceNodeState, ItemStack
 from src.core.updates import StateUpdate, EntityUpdate, InteractionUpdate, InventoryUpdate
 from src.engine.interaction import InteractionSystem
@@ -16,8 +17,13 @@ from src.engine.pipeline import AuthoritativeApplyPipeline
 def test_interaction_channeling_success():
     # Setup state: Entity at progress 2/3 for node 1
     node = ResourceNodeState(id=1, kind="herb", position=(0,0), yields_item="herb", remaining_charges=3, max_charges=3, required_ticks=3)
-    entity = EntityState(id=10, kind="hero", position=(0,0), 
-                         interaction=InteractionComponent(target_node_id=1, progress=2))
+    entity = (
+        V2EntityBuilder(1)
+        .kind("hero")
+        .location(0.0, 0.0)
+        .interaction(target_node_id=1, progress=2)
+        .build()
+    )
     state = AuthoritativeState(tick=10, seed=42, 
                                entities={10: entity}, 
                                resource_nodes={1: node})
@@ -40,8 +46,13 @@ def test_interaction_channeling_success():
 def test_interaction_interrupted_by_movement():
     # Setup state: Progress 1/3
     node = ResourceNodeState(id=1, kind="herb", position=(0,0), yields_item="herb", remaining_charges=3, max_charges=3, required_ticks=3)
-    entity = EntityState(id=10, kind="hero", position=(0,0), 
-                         interaction=InteractionComponent(target_node_id=1, progress=1))
+    entity = (
+        V2EntityBuilder(10)
+        .kind("hero")
+        .location(0.0, 0.0)
+        .interaction(target_node_id=1, progress=1)
+        .build()
+    )
     state = AuthoritativeState(tick=10, seed=42, 
                                entities={10: entity}, 
                                resource_nodes={1: node})
@@ -62,8 +73,13 @@ def test_interaction_interrupted_by_movement():
 def test_interaction_inventory_pressure():
     # Setup state: Entity inventory full
     node = ResourceNodeState(id=1, kind="herb", position=(0,0), yields_item="herb", remaining_charges=3, max_charges=3, required_ticks=1)
-    entity = EntityState(id=10, kind="hero", position=(0,0), 
-                         inventory=InventoryComponent(max_slots=1, items=[ItemStack("iron_ore", 1)]))
+    entity = (
+        V2EntityBuilder(10)
+        .kind("hero")
+        .location(0.0, 0.0)
+        .inventory(max_slots=1, items=[ItemStack("iron_ore", 1)])
+        .build()
+    )
     state = AuthoritativeState(tick=10, seed=42, 
                                entities={10: entity}, 
                                resource_nodes={1: node})

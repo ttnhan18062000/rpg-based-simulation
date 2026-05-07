@@ -13,13 +13,13 @@ def test_movement_wait_and_reroute():
             .kind("HERO")
             .location(5, 5)
             .combat(readiness=100.0)
-            .target((7, 5))
+            .navigation(target=(7, 5))
             .build())
     
     monster = (V2EntityBuilder(2)
                .kind("MONSTER")
                .location(6, 5)
-               .with_navigation_v2(mode=MovementMode.HOLD)
+               .navigation(movement_mode=MovementMode.HOLD)
                .build())
     
     # Block BOTH sidesteps (5,4 and 5,6)
@@ -57,7 +57,7 @@ def test_anti_oscillation():
             .kind("HERO")
             .location(5, 5)
             .combat(readiness=100.0)
-            .with_navigation_v2(last_pos=(6, 5))
+            .navigation(last_position=(6, 5))
             .build())
     
     state = AuthoritativeState(entities={1: hero}, tick=0, seed=123)
@@ -71,7 +71,7 @@ def test_anti_oscillation():
             .kind("HERO")
             .location(5, 5)
             .combat(readiness=100.0)
-            .with_navigation_v2(last_pos=(6, 5), oscillation_count=3)
+            .navigation(last_position=(6, 5), oscillation_count=3)
             .build())
     state = replace(state, entities={1: hero})
     

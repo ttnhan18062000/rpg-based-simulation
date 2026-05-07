@@ -16,18 +16,17 @@ def make_actor(eid: int, pos=(1.0, 1.0), interaction=None, inventory=None):
     builder = (V2EntityBuilder(eid)
         .kind("hero")
         .location(pos[0], pos[1])
-        .combat(alive=True)
-        .combat(readiness=100.0))
+        .combat(alive=True, readiness=100.0))
     
     if interaction:
         # Manually set interaction since builder might not support all fields
         pass
         
     if inventory:
-        builder.max_slots(inventory.max_slots)
-        builder.gold(inventory.gold)
+        items = []
         for item in inventory.items:
-            builder.item(item.item_id, item.quantity)
+            items.append(ItemStack(item_id=item.item_id, quantity=item.quantity))
+        builder.inventory(max_slots=inventory.max_slots, gold=inventory.gold, items=items)
             
     entity = builder.build()
     

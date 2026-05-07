@@ -13,7 +13,7 @@ def create_mock_entity(eid: int):
     return (V2EntityBuilder(eid)
         .kind("hero")
         .location(0, 0)
-        .with_class("hero")
+        .identity(class_id="hero")
         .combat(hp=100, max_hp=100, atk=10, def_stat=5, alive=True)
         .inventory(gold=10)
         .build()
@@ -44,13 +44,13 @@ def test_strategic_detour_creation_and_resumption():
     entity = (V2EntityBuilder(1)
         .kind("hero")
         .location(0, 0)
-        .with_class("hero")
+        .identity(class_id="hero")
         .strategic(
             projects={"proj_harvest": harvest_proj},
             blockers={"blocker_mat_wood": blocker},
-            leads={"lead_wood": lead}
+            leads={"lead_wood": lead},
+            current_project_id="proj_harvest"
         )
-        .current_project("proj_harvest")
         .build())
     
     state = AuthoritativeState(tick=100, seed=42)

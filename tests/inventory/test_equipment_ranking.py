@@ -9,7 +9,7 @@ def test_equipment_ranking_warrior():
     warrior = (V2EntityBuilder(1)
         .kind("HERO")
         .location(0, 0)
-        .with_class("WARRIOR")
+        .identity(class_id="WARRIOR")
         .build())
     
     # Gear 1: Light sword (ATK 5)
@@ -37,7 +37,7 @@ def test_equipment_ranking_mage():
     mage = (V2EntityBuilder(2)
         .kind("HERO")
         .location(0, 0)
-        .with_class("MAGE")
+        .identity(class_id="MAGE")
         .build())
     
     # Gear 1: Wand (ATK 5, INT 5)
@@ -56,7 +56,7 @@ def test_should_replace():
     entity = (V2EntityBuilder(1)
         .kind("HERO")
         .location(0, 0)
-        .with_class("WARRIOR")
+        .identity(class_id="WARRIOR")
         .equipment(slots={EquipSlot.MAIN_HAND: "wooden_club"})
         .build())
     

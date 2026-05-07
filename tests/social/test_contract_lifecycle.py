@@ -19,8 +19,8 @@ def create_mock_entity(id, gold=10, sentiment=0.0):
     return (V2EntityBuilder(id)
         .kind("ACTOR")
         .location(0, 0)
-        .gold(gold)
-        .bond(SocialBond(target_id=99, sentiment=sentiment, familiarity=0.5))
+        .inventory(gold=gold)
+        .social(bonds={99: SocialBond(target_id=99, sentiment=sentiment, familiarity=0.5)})
         .combat(alive=True)
         .build())
 
@@ -69,7 +69,7 @@ def test_contract_lifecycle_acceptance():
     entity = (V2EntityBuilder(1)
         .kind("ACTOR")
         .location(0, 0)
-        .strategic_contract(contract)
+        .strategic(contracts={contract.id: contract})
         .build())
     
     update = ContractService.accept_contract(entity, contract.id, tick=100)
@@ -83,7 +83,7 @@ def test_contract_lifecycle_resolution():
     contract = replace(contract, status=ContractStatus.ACTIVE)
     
     # Create entity that owns the contract
-    entity = V2EntityBuilder(1).kind("ACTOR").location(0, 0).strategic_contract(contract).build()
+    entity = V2EntityBuilder(1).kind("ACTOR").location(0, 0).strategic(contracts={contract.id: contract}).build()
     
     # Success
     s_upd, b_upds = ContractService.resolve_contract_outcome(entity, contract.id, success=True)

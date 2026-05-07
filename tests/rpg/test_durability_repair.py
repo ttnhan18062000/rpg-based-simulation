@@ -23,7 +23,7 @@ def make_entity(eid=1, hp=100, gold=100, slots=None, durability=None, faction=Fa
                .combat(hp=hp, max_hp=100, atk=10, def_stat=5, alive=hp > 0)
                .inventory(gold=gold)
                .attributes(strength=10, vitality=10, agility=10, endurance=10)
-               .active(True)
+               .lifecycle(active=True)
                .combat(readiness=100.0))
     
     if slots or durability:

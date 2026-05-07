@@ -33,12 +33,11 @@ def test_transaction_trace_determinism():
         
         # Entity 1: Full inventory (cap 16 is default in V2EntityBuilder)
         # We'll fill it with 16 items to trigger INVENTORY_FULL
-        items = [f"item_{i}" for i in range(16)]
+        items = [ItemStack(f"item_{i}") for i in range(16)]
         ent1 = (V2EntityBuilder(1)
                 .location(10.0, 10.0)
-                .gold(100)
+                .inventory(gold=100, items=items)
                 .combat(readiness=100.0)
-                .items(items)
                 .build())
         
         state = AuthoritativeState(

@@ -15,7 +15,7 @@ def test_inn_rest_recovery():
         .kind("hero")
         .location(0, 0)
         .biological(sleep_debt=80.0, hunger=50.0)
-        .gold(20)
+        .inventory(gold=20)
         .build())
     state = AuthoritativeState(tick=100, seed=42, entities={99: entity})
     
@@ -42,7 +42,7 @@ def test_home_upgrade_blocker():
         .kind("hero")
         .location(0, 0)
         .strategic(blockers={"m1": blocker})
-        .gold(150)
+        .inventory(gold=150)
         .build())
     state = AuthoritativeState(tick=1, seed=42, entities={99: entity})
     
@@ -64,7 +64,7 @@ def test_class_hall_training():
         .kind("hero")
         .location(0, 0)
         .strategic(blockers={"c1": blocker})
-        .gold(60)
+        .inventory(gold=60)
         .build())
     state = AuthoritativeState(tick=1, seed=42, entities={99: entity})
     

@@ -14,7 +14,7 @@ def create_mock_entity(eid, pos, faction=Faction.HERO_GUILD):
         .combat(readiness=100.0)
         .identity(faction=faction)
         .attributes(strength=0, vitality=0)
-        .combat(hp=100, max_hp=100, atk=20, def_stat=5, range=10)
+        .combat(hp=100, max_hp=100, atk=20, def_stat=5, attack_range=10)
         .build())
 
 @pytest.mark.v2_contract
@@ -74,6 +74,3 @@ def test_aoe_splash_damage():
     assert new_state.entities[5].combat.hp == 100 # No damage
     
     print("AoE Splash Verification Success: Nearby entities took partial damage.")
-
-if __name__ == "__main__":
-    test_aoe_splash_damage()

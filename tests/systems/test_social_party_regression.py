@@ -48,8 +48,7 @@ def test_recruitment_logic_evaluation():
     bond_low = SocialBond(target_id=2, sentiment=-0.5) # trust 0.25
     candidate_low = (V2EntityBuilder(1)
         .kind("actor")
-        .betrayal_count(1)
-        .bond(bond_low)
+        .social(betrayal_count=1, bonds={2: bond_low})
         .build())
     
     c_low = ContractState(id="c_low", kind=ContractKind.RECRUITMENT, source_id=2, target_id=1,
@@ -61,8 +60,7 @@ def test_recruitment_logic_evaluation():
     bond_high = SocialBond(target_id=2, sentiment=0.8)
     candidate_high = (V2EntityBuilder(1)
         .kind("actor")
-        .betrayal_count(1)
-        .bond(bond_high)
+        .social(betrayal_count=1, bonds={2: bond_high})
         .build())
     
     c_high = ContractState(id="c_high", kind=ContractKind.RECRUITMENT, source_id=2, target_id=1,
@@ -84,12 +82,12 @@ def test_party_formation_from_contract():
     hero = (V2EntityBuilder(1)
         .kind("actor")
         .location(1.0, 1.0)
-        .strategic_contract(contract)
+        .strategic(contracts={"recruit_merc": contract})
         .build())
     merc = (V2EntityBuilder(2)
         .kind("actor")
         .location(1.2, 1.2)
-        .strategic_contract(contract)
+        .strategic(contracts={"recruit_merc": contract})
         .build())
     
     state = AuthoritativeState(tick=1, seed=42, entities={1: hero, 2: merc})
@@ -106,12 +104,12 @@ def test_betrayal_dissolves_group_and_adds_directive():
     hero = (V2EntityBuilder(1)
         .kind("actor")
         .location(1.0, 1.0)
-        .group_id(500)
+        .identity(group_id=500)
         .build())
     merc = (V2EntityBuilder(2)
         .kind("actor")
         .location(1.0, 2.0)
-        .group_id(500)
+        .identity(group_id=500)
         .build())
     
     # Put them in a group

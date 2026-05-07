@@ -18,7 +18,7 @@ def test_ground_item_pickup_parity():
     # Target must be set for _route_interaction_intent to trigger
     entity = (V2EntityBuilder(1)
               .location(0.0, 0.0)
-              .target((0.0, 0.0))
+              .navigation(target=(0.0, 0.0))
               .combat(readiness=100.0)
               .build())
     state.entities[1] = entity
@@ -52,7 +52,7 @@ def test_corpse_looting_parity():
     state = AuthoritativeState(tick=1, seed=42)
     entity = (V2EntityBuilder(1)
               .location(1.0, 1.0)
-              .target((1.0, 1.0))
+              .navigation(target=(1.0, 1.0))
               .combat(readiness=100.0)
               .build())
     state.entities[1] = entity

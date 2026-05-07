@@ -1,20 +1,19 @@
 import pytest
+from src.core.builder import V2EntityBuilder
 from src.core.state import AuthoritativeState, EntityState, IdentityComponent, CombatComponent, ResourceNodeState, ItemStack, InventoryComponent
-from src.core.enums import EntityRole
+from src.core.enums import EntityRole, Faction
 from src.engine.pipeline import AuthoritativeApplyPipeline
 from src.core.updates import StateUpdate, EntityUpdate, ResourceTransferIntent
 
-def create_mock_entity(id, faction="HERO_FACTION", role=EntityRole.HERO, pos=(0,0), hp=100):
-    return EntityState(
-        id=id,
-        kind="ACTOR",
-        position=pos,
-        identity=IdentityComponent(faction=faction, role=role),
-        combat=CombatComponent(hp=hp, max_hp=100, atk=10, range=1, alive=hp > 0),
-        readiness=100.0,
-        active=True,
-        inventory=InventoryComponent(max_slots=10, max_weight=100.0)
-    )
+def create_mock_entity(id, faction=Faction.HERO_GUILD, role=EntityRole.HERO, pos=(0,0), hp=100):
+    return (V2EntityBuilder(id)
+        .kind("hero")
+        .location(pos[0], pos[1])
+        .identity(faction=faction, role=role)
+        .combat(hp=hp, max_hp=100, atk=10, attack_range=1, alive=hp > 0, readiness=100.0)
+        .inventory(max_slots=10, max_weight=100.0)
+        .lifecycle(active=True)
+        .build())
 
 def test_event_replay_fidelity():
     """

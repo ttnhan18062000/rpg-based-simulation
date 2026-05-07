@@ -6,13 +6,13 @@ from src.systems.town_service import TownServiceSystem
 def test_inn_restoration():
     # Setup entity with needs
     entity = (V2EntityBuilder(1)
-        .kind("HERO")
-        .location(10, 10)
+        .kind("hero")
+        .location(10.0, 10.0)
         .biological(sleep_debt=80.0, hunger=20.0)
-        .gold(100)
+        .inventory(gold=100)
         .combat(hp=10, max_hp=100)
-        .with_interaction(target_id=1, progress=9.0)
-        .with_property("interaction_kind", "inn")
+        .interaction(target_node_id=1, progress=9.0)
+        .identity(properties={"interaction_kind": "inn"})
         .build())
     
     # Setup inn building
@@ -38,12 +38,13 @@ def test_inn_restoration():
 
 def test_tavern_nourishment():
     entity = (V2EntityBuilder(1)
-        .kind("HERO")
-        .location(10, 10)
+        .kind("hero")
+        .location(10.0, 10.0)
         .biological(hunger=90.0)
-        .gold(50)
-        .with_interaction(target_id=2, progress=9.0)
-        .with_property("interaction_kind", "tavern")
+        .inventory(gold=50)
+        .combat(hp=10, max_hp=100)
+        .interaction(target_node_id=2, progress=9.0)
+        .identity(properties={"interaction_kind": "tavern"})
         .build())
     
     tavern = BuildingState(id=2, kind="tavern", position=(10, 10))

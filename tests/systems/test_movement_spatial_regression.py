@@ -1,5 +1,6 @@
 import pytest
 from dataclasses import replace
+from src.core.builder import V2EntityBuilder
 from src.core.state import (
     AuthoritativeState, EntityState, IdentityComponent, 
     CombatComponent, InventoryComponent, StrategicComponent, 
@@ -11,17 +12,13 @@ from src.core.movement_modes import MovementMode
 from src.engine.movement import MovementSystem
 from src.core.updates import StateUpdate, EntityUpdate
 
-def create_mock_entity(e_id, pos, faction=1, role=EntityRole.MONSTER, mode=MovementMode.WANDER):
-    from src.core.builder import V2EntityBuilder
+def create_mock_entity(e_id, pos, faction=Faction.HERO_GUILD, role=EntityRole.MONSTER, mode=MovementMode.WANDER):
     return (V2EntityBuilder(e_id)
         .kind("actor")
         .location(pos[0], pos[1])
-        .identity(role=role)
-        .identity(faction=faction)
-        .combat(hp=100, max_hp=100)
-        .combat(alive=True)
-        .combat(readiness=100.0)
-        .movement_mode(mode)
+        .identity(role=role, faction=faction)
+        .combat(hp=100, max_hp=100, alive=True, readiness=100.0)
+        .navigation(movement_mode=mode)
         .combat(alive=True)
         .build())
 
@@ -89,26 +86,79 @@ def test_hold_mode_refusal():
     assert updates[1].navigation.failure_reason == ReasonCode.OCCUPANCY_VIOLATION
 
 def test_retreat_evasion_skips_oa():
-    """Verify that RETREAT + EVASIVE skips opportunity attacks."""
-    from src.core.builder import V2EntityBuilder
-    hero = (V2EntityBuilder(1)
+    """
+    Verify that RETREAT + EVASIVE skips opportunity attacks while still allowing
+    the actor to move away from an adjacent hostile.
+
+    Fraud this catches:
+    - opportunity attack still fires during evasive retreat
+    - movement is silently rejected while the test only checks combat=None
+    - builder setup forgets readiness/alive/faction and creates an invalid mover
+    """
+    hero = (
+        V2EntityBuilder(1)
         .kind("actor")
         .location(1.0, 1.0)
-        .identity(role=EntityRole.HERO)
-        .movement_mode(MovementMode.RETREAT)
-        .action_style(2) # 2 = EVASIVE
-        .build())
-    
-    monster = create_mock_entity(2, (2.0, 1.0), faction=2) # Different faction
-    
-    state = AuthoritativeState(tick=1, seed=42, entities={1: hero, 2: monster})
-    
-    # Hero moves away from monster to (0,1)
-    updates = MovementSystem.resolve_move(state, hero, (0.0, 1.0), mode=MovementMode.RETREAT)
-    
-    # Should not have combat update in hero's entity update
-    assert updates[1].combat is None
-    assert updates[1].new_position == (0.0, 1.0)
+        .identity(role=EntityRole.HERO, faction=Faction.HERO_GUILD)
+        .combat(
+            hp=100,
+            max_hp=100,
+            alive=True,
+            readiness=100.0,
+            action_style=2,  # 2 = EVASIVE
+        )
+        .navigation(movement_mode=MovementMode.RETREAT)
+        .lifecycle(active=True)
+        .build()
+    )
+
+    monster = (
+        V2EntityBuilder(2)
+        .kind("actor")
+        .location(2.0, 1.0)
+        .identity(role=EntityRole.MONSTER, faction=Faction.MONSTER_HORDE)
+        .combat(
+            hp=100,
+            max_hp=100,
+            alive=True,
+            readiness=100.0,
+        )
+        .navigation(movement_mode=MovementMode.WANDER)
+        .lifecycle(active=True)
+        .build()
+    )
+
+    # Guard assertions: if these fail, the test setup is invalid.
+    assert hero.navigation.position == (1.0, 1.0)
+    assert monster.navigation.position == (2.0, 1.0)
+    assert hero.identity.faction != monster.identity.faction
+    assert hero.combat.alive is True
+    assert hero.combat.readiness >= 100.0
+    assert hero.lifecycle.active is True
+
+    state = AuthoritativeState(
+        tick=1,
+        seed=42,
+        entities={
+            1: hero,
+            2: monster,
+        },
+    )
+
+    updates = MovementSystem.resolve_move(
+        state,
+        hero,
+        (0.0, 1.0),
+        mode=MovementMode.RETREAT,
+    )
+
+    hero_update = updates[1]
+
+    # Evasive retreat should suppress opportunity attack.
+    assert hero_update.combat is None
+
+    # But the retreat must still move the actor.
+    assert hero_update.new_position == (0.0, 1.0)
 
 def test_normal_move_triggers_oa():
     """Verify that WANDER move triggers opportunity attacks when engaged."""

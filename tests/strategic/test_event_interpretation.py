@@ -28,11 +28,11 @@ def _make_entity(entity_id=1, profile=None, current_project=None):
         .strategic(projects=projects))
     
     if current_id:
-        builder.current_project(current_id)
+        builder.strategic(current_project_id=current_id)
         
     if profile:
         builder.cognition(
-            resistance=profile.interruption_resistance
+            interruption_resistance=profile.interruption_resistance
         )
         
     return builder.build()

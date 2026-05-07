@@ -26,8 +26,8 @@ def test_contract_betrayal_consequences():
     # Make ACTIVE
     contract = replace(contract, status=ContractStatus.ACTIVE)
     
-    source = source_builder.with_contract("c1", contract).build()
-    target = target_builder.with_contract("c1", contract).build()
+    source = source_builder.strategic(contracts={"c1": contract}).build()
+    target = target_builder.strategic(contracts={"c1": contract}).build()
     
     # 2. Source betrays Target
     strat_up, social_ups = ContractService.resolve_contract_outcome(

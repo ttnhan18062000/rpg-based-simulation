@@ -7,8 +7,7 @@ def test_biological_decay():
     entity = (V2EntityBuilder(1)
         .kind("HERO")
         .location(0, 0)
-        .hunger(10.0)
-        .sleep_debt(10.0)
+        .biological(hunger=10.0, sleep_debt=10.0)
         .build())
     state = AuthoritativeState(tick=1, seed=42, entities={1: entity})
     
@@ -23,8 +22,7 @@ def test_biological_penalties():
     entity = (V2EntityBuilder(1)
         .kind("HERO")
         .location(0, 0)
-        .hunger(95.0)
-        .sleep_debt(98.0)
+        .biological(hunger=95.0, sleep_debt=98.0)
         .build())
     state = AuthoritativeState(tick=1, seed=42, entities={1: entity})
     

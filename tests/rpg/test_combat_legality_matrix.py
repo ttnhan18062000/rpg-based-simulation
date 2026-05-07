@@ -39,10 +39,10 @@ def create_mock_entity(id, faction="HERO_FACTION", role=EntityRole.HERO, pos=(0,
               .kind("ACTOR")
               .location(*pos)
               .identity(role=role, faction=f_enum)
-              .combat(hp=hp, max_hp=100, atk=10, range=range, alive=hp > 0)
-              .combat(readiness=readiness)
+              .combat(hp=hp, max_hp=100, atk=10, attack_range=range, alive=hp > 0,
+                      readiness=readiness)
               .biological(hunger=0.0, sleep_debt=0.0)
-              .active(True))
+              .lifecycle(active=True))
     
     return builder.build()
 

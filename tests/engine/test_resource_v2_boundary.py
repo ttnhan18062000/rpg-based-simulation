@@ -6,41 +6,122 @@ from src.core.updates import StateUpdate, EntityUpdate, ResourceTransferIntent, 
 from src.engine.pipeline import AuthoritativeApplyPipeline
 from src.engine.domain_logic import SimulationDomainLogic
 from src.core.builder import V2EntityBuilder
-from src.core.enums import Faction
+from src.core.enums import EntityRole, Faction
+
+def make_actor(
+    entity_id,
+    *,
+    kind,
+    role,
+    faction,
+    pos,
+    hp=100,
+    max_hp=100,
+    atk=10,
+    def_stat=5,
+    attack_range=1,
+    readiness=100.0,
+    gold=0,
+    evolution_level=1,
+    active=True,
+):
+    entity = (
+        V2EntityBuilder(entity_id)
+        .kind(kind)
+        .location(*pos)
+        .identity(
+            role=role,
+            faction=faction,
+            evolution_level=evolution_level,
+        )
+        .combat(
+            hp=hp,
+            max_hp=max_hp,
+            atk=atk,
+            def_stat=def_stat,
+            attack_range=attack_range,
+            alive=hp > 0,
+            readiness=readiness,
+        )
+        .inventory(gold=gold)
+        .lifecycle(active=active)
+        .build()
+    )
+
+    return entity
+
 
 @pytest.fixture
 def base_state():
+    hero = make_actor(
+        1,
+        kind="hero",
+        role=EntityRole.HERO,
+        faction=Faction.HERO_GUILD,
+        pos=(0.0, 0.0),
+        hp=100,
+        max_hp=100,
+        atk=999,
+        def_stat=5,
+        attack_range=2,
+        readiness=100.0,
+        gold=0,
+        evolution_level=1,
+    )
+
+    monster = make_actor(
+        2,
+        kind="monster",
+        role=EntityRole.MONSTER,
+        faction=Faction.MONSTER_HORDE,
+        pos=(1.0, 1.0),
+        hp=1,
+        max_hp=1,
+        atk=8,
+        def_stat=2,
+        attack_range=1,
+        readiness=100.0,
+        gold=0,
+        evolution_level=1,
+    )
+
     return AuthoritativeState(
-        tick=10, seed=123,
+        tick=10,
+        seed=123,
         entities={
-            1: (V2EntityBuilder(1)
-                .kind("hero")
-                .location(0.0, 0.0)
-                .combat(readiness=100.0)
-                .identity(faction=Faction.HERO_GUILD)
-                .with_base_stats(hp=100, range=2)
-                .inventory(gold=0)
-                .build()),
-            2: (V2EntityBuilder(2)
-                .kind("monster")
-                .location(1.0, 1.0)
-                .combat(readiness=100.0)
-                .identity(faction=Faction.MONSTER_HORDE)
-                .with_base_stats(hp=1) 
-                .with_current_hp(1) # Ensure it only has 1 HP
-                .build())
+            1: hero,
+            2: monster,
         },
         resource_nodes={
-            101: ResourceNodeState(id=101, kind="MINE", yields_item="iron_ore", remaining_charges=10, max_charges=10, required_ticks=5, position=(0,0))
+            101: ResourceNodeState(
+                id=101,
+                kind="MINE",
+                yields_item="iron_ore",
+                remaining_charges=10,
+                max_charges=10,
+                required_ticks=5,
+                position=(0, 0),
+            )
         },
         buildings={
-            1: BuildingState(id=1, kind="shop", position=(0,0), functional=True, inventory=InventoryComponent(gold=1000)),
-            2: BuildingState(id=2, kind="blacksmith", position=(0,0), functional=True)
+            1: BuildingState(
+                id=1,
+                kind="shop",
+                position=(0, 0),
+                functional=True,
+                inventory=InventoryComponent(gold=1000),
+            ),
+            2: BuildingState(
+                id=2,
+                kind="blacksmith",
+                position=(0, 0),
+                functional=True,
+            ),
         },
         terrain={},
         blocked_tiles=set(),
-        town_tiles={(0,0), (1,1)},
-        building_tiles={}
+        town_tiles={(0, 0), (1, 1)},
+        building_tiles={},
     )
 
 def test_town_tax_refactor(base_state):
@@ -128,27 +209,36 @@ def test_reward_update_hardening():
 
 def test_combat_reward_via_intent(base_state):
     """Verify that combat rewards flow through ResourceTransferIntent."""
-    attacker = base_state.entities[1] # range=2, readiness=100
-    target = base_state.entities[2] # 1 HP monster
-    
-    # Execute attack action
+    attacker = base_state.entities[1]
+    target = base_state.entities[2]
+
     updates = SimulationDomainLogic.execute_action(
-        attacker, 
+        attacker,
         payload={"action": "ATTACK", "target_id": target.id},
-        context=base_state
+        context=base_state,
     )
-    
+
     attacker_up = updates[attacker.id]
+
     if attacker_up.navigation and attacker_up.navigation.failure_reason:
         pytest.fail(f"Attack failed: {attacker_up.navigation.failure_reason}")
-        
-    # XP and Gold are now in separate intents
-    xp_intent = next((it for it in attacker_up.resource_transfers if it.xp_reward > 0), None)
+
+    xp_intent = next(
+        (it for it in attacker_up.resource_transfers if it.xp_reward > 0),
+        None,
+    )
     assert xp_intent is not None, "XP intent missing"
-    assert xp_intent.xp_reward == 10 # Monster level 1
-    
-    gold_intent = next((it for it in attacker_up.resource_transfers if it.gold_delta > 0), None)
-    # Monsters might not always drop gold depending on RNG, but here it should if seed=123
+
+    assert target.identity.role == EntityRole.MONSTER
+    expected_xp = target.identity.evolution_level * 10
+
+    assert xp_intent.xp_reward == expected_xp
+
+    gold_intent = next(
+        (it for it in attacker_up.resource_transfers if it.gold_delta > 0),
+        None,
+    )
+
     if gold_intent:
         assert gold_intent.gold_delta > 0
 

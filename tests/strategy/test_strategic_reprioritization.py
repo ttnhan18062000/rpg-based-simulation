@@ -20,8 +20,8 @@ def entity():
         .kind("hero")
         .location(0, 0)
         .attributes(intelligence=15, wisdom=15)
-        .cognition(resistance=0.5, max_projects=3)
-        .with_personality(industry=0.5)
+        .cognition(interruption_resistance=0.5, max_active_projects=3)
+        .identity(personality=PersonalityComponent(industry=0.5))
         .build())
 
 def test_switch_from_harvesting_to_combat_on_high_threat(entity, state):

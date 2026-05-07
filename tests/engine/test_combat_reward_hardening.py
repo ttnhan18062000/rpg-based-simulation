@@ -13,10 +13,8 @@ def create_mock_entity(id, faction=Faction.HERO_GUILD, role=EntityRole.HERO, pos
             .location(*pos)
             .identity(faction=faction)
             .identity(role=role)
-            .combat(readiness=readiness)
+            .combat(hp=hp, max_hp=hp, atk=100, readiness=readiness)
             .identity(evolution_level=evolution_level)
-            .with_base_stats(hp=hp, atk=100)
-            .with_current_hp(hp)
             .build())
 
 def test_combat_reward_consolidation_xp_gold():

@@ -5,18 +5,28 @@ from src.engine.tactical import TacticalDecisionSystem
 from src.core.builder import V2EntityBuilder
 from src.core.enums import EntityRole, Faction
 
-def create_mock_entity(eid, faction, hp=100, pos=(0.0, 0.0), range=1):
-    role = EntityRole.HERO if faction == 1 else EntityRole.MONSTER
-    return (V2EntityBuilder(eid)
-            .kind("hero" if role == EntityRole.HERO else "monster")
-            .location(*pos)
-            .identity(role=role, faction=faction)
-            .combat(hp=hp, max_hp=100, range=range)
-            .build())
+def create_mock_entity(eid, faction, hp=100, pos=(0.0, 0.0), attack_range=1):
+    role = EntityRole.HERO if faction == Faction.HERO_GUILD else EntityRole.MONSTER
+
+    return (
+        V2EntityBuilder(eid)
+        .kind("hero" if role == EntityRole.HERO else "monster")
+        .location(*pos)
+        .identity(role=role, faction=faction)
+        .combat(
+            hp=hp,
+            max_hp=100,
+            attack_range=attack_range,
+            readiness=100.0,
+            alive=hp > 0,
+        )
+        .lifecycle(active=True)
+        .build()
+    )
 
 def test_attack_vs_pursuit_intent():
-    attacker = create_mock_entity(1, 1, pos=(10.0, 10.0), range=1)
-    target = create_mock_entity(2, 2, pos=(10.0, 11.0)) # Adjacency 1
+    attacker = create_mock_entity(1, Faction.HERO_GUILD, pos=(10.0, 10.0), attack_range=1)
+    target = create_mock_entity(2, Faction.MONSTER_HORDE, pos=(10.0, 11.0)) # Adjacency 1
     
     state = AuthoritativeState(tick=1, seed=42, world_time=1, entities={1: attacker, 2: target})
     
@@ -35,8 +45,8 @@ def test_attack_vs_pursuit_intent():
 
 def test_retreat_behavior():
     # Low HP (10/100 = 10%)
-    attacker = create_mock_entity(1, 1, hp=10, pos=(10.0, 10.0))
-    target = create_mock_entity(2, 2, pos=(10.0, 11.0))
+    attacker = create_mock_entity(1, Faction.HERO_GUILD, hp=10, pos=(10.0, 10.0))
+    target = create_mock_entity(2, Faction.MONSTER_HORDE, pos=(10.0, 11.0))
     
     state = AuthoritativeState(tick=1, seed=42, world_time=1, entities={1: attacker, 2: target})
     
@@ -46,9 +56,9 @@ def test_retreat_behavior():
     assert update.task.payload_set["target_position"] == (0.0, 0.0)
 
 def test_target_stickiness():
-    attacker = create_mock_entity(1, 1, pos=(10.0, 10.0))
-    target_a = create_mock_entity(2, 2, hp=50, pos=(10.0, 11.0)) # Current target
-    target_b = create_mock_entity(3, 2, hp=10, pos=(10.0, 12.0)) # "Better" target (lower HP)
+    attacker = create_mock_entity(1, Faction.HERO_GUILD, pos=(10.0, 10.0))
+    target_a = create_mock_entity(2, Faction.MONSTER_HORDE, hp=50, pos=(10.0, 11.0)) # Current target
+    target_b = create_mock_entity(3, Faction.MONSTER_HORDE, hp=10, pos=(10.0, 12.0)) # "Better" target (lower HP)
     
     # Pre-set target A in payload
     attacker = replace(attacker, task=replace(attacker.task, payload={"target_id": 2}))

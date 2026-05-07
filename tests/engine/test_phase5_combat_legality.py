@@ -11,11 +11,8 @@ def create_mock_entity(id, faction="HERO_FACTION", role=EntityRole.HERO, pos=(0,
     return (V2EntityBuilder(id)
             .kind("ACTOR")
             .location(*pos)
-            .with_base_stats(range=range)
-            .with_current_hp(hp)
-            .combat(readiness=readiness)
-            .identity(role=role)
-            .identity(faction=faction)
+            .combat(hp=hp, attack_range=range, readiness=readiness, alive=hp > 0)
+            .identity(role=role, faction=faction)
             .build())
 
 def test_melee_legality():

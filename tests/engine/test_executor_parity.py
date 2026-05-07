@@ -28,10 +28,11 @@ def make_state(n_entities=5, seed=42):
     entities = {}
     for i in range(1, n_entities + 1):
         entities[i] = (V2EntityBuilder(i)
-                       .at((float(i * 2), float(i * 3)))
-                       .active(True)
-                       .with_base_stats(hp=100)
-                       .gold(100)
+                       .kind("entity")
+                       .location(float(i * 2), float(i * 3))
+                       .lifecycle(active=True)
+                       .combat(hp=100)
+                       .inventory(gold=100)
                        .build())
     return AuthoritativeState(tick=10, seed=seed, entities=entities)
 

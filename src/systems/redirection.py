@@ -41,11 +41,24 @@ class StrategicRedirectionSystem:
                  removals = ent_upd.strategic.blockers_remove
                  additions = list(ent_upd.strategic.blockers_add_or_update)
             
-            active_blockers = [b for bId, b in entity.strategic.blockers.items() if bId not in removals]
-            active_blockers.extend(additions)
+            active_blockers = [
+                b
+                for b_id, b in entity.strategic.blockers.items()
+                if b_id not in removals and not b.resolved
+            ]
+
+            active_blockers.extend(
+                b
+                for b in additions
+                if b.id not in removals and not b.resolved
+            )
             
             # 2. Case: Blocked on Materials
-            mat_blockers = [b for b in active_blockers if b.kind == 'material']
+            mat_blockers = [
+                b
+                for b in active_blockers
+                if b.kind == "material" and not b.resolved
+            ]
             
             if mat_blockers:
                 # Seek a lead for the first material blocker
