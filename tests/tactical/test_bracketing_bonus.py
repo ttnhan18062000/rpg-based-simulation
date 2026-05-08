@@ -1,69 +1,171 @@
-import pytest
-from dataclasses import replace
-from src.core.state import AuthoritativeState, EntityState, IdentityComponent, CombatComponent, TaskComponent
-from src.engine.pipeline import AuthoritativeApplyPipeline
-from src.core.updates import StateUpdate, EntityUpdate, TaskUpdate
+from __future__ import annotations
+
 from src.core.builder import V2EntityBuilder
 from src.core.enums import EntityRole, Faction
+from src.core.state import AuthoritativeState
+from src.engine.combat import CombatResolutionSystem
+from src.engine.legality import LegalityServiceV2
 
-def create_mock_entity(eid, faction, pos=(10.0, 10.0), hp=100):
-    role = EntityRole.HERO if faction == 1 else EntityRole.MONSTER
-    return (V2EntityBuilder(eid)
-            .kind("hero" if role == EntityRole.HERO else "monster")
-            .location(*pos)
-            .combat(readiness=100.0)
-            .identity(role=role, faction=faction)
-            .combat(hp=hp, max_hp=100, atk=10, def_stat=0)
-            .build())
+
+def create_mock_entity(
+    eid: int,
+    faction,
+    pos: tuple[float, float] = (10.0, 10.0),
+    hp: int = 100,
+):
+    """
+    Build a minimal valid combat-capable entity for combat positioning tests.
+
+    Important setup:
+        - role/faction are set explicitly for hostility checks
+        - hp/alive are kept consistent
+        - readiness is set to 100 so combat is not rejected by readiness logic
+        - attack range is set to 1 because all attackers are adjacent
+        - lifecycle.active is set so spatial/flanking checks can treat the entity
+          as a real participant
+
+    Args:
+        eid: Entity id.
+        faction: Entity faction. Usually Faction.HERO_GUILD or
+            Faction.MONSTER_HORDE.
+        pos: Entity position.
+        hp: Current hit points.
+
+    Returns:
+        EntityState suitable for direct combat and flanking tests.
+    """
+    role = (
+        EntityRole.HERO
+        if faction == Faction.HERO_GUILD or faction == 1
+        else EntityRole.MONSTER
+    )
+
+    alive = hp > 0
+
+    return (
+        V2EntityBuilder(eid)
+        .kind("hero" if role == EntityRole.HERO else "monster")
+        .location(float(pos[0]), float(pos[1]))
+        .identity(role=role, faction=faction)
+        .combat(
+            hp=hp,
+            max_hp=max(100, hp),
+            atk=10,
+            def_stat=0,
+            attack_range=1,
+            alive=alive,
+            readiness=100.0,
+        )
+        .lifecycle(active=alive)
+        .build()
+    )
+
 
 def test_bracketing_bonus_requires_active_attackers():
     """
-    Verify bracketing damage only when two allied attackers actively attack
-    the same target from opposite sides in the same tick.
+    LAW:
+        Bracketing/flanking geometry requires hostile entities on opposite
+        sides of the defender.
+
+    Current latest-src behavior:
+        - `LegalityServiceV2.check_flanking(defender_id, state)` detects the
+          opposite-side geometry.
+        - `CombatResolutionSystem.resolve_multi_attack(...)` validates active
+          legal attackers and aggregates their damage.
+        - There is no public `_route_combat_intent(...)` pipeline method in the
+          latest source.
+
+    Scenario:
+        Monster stands at (10, 10).
+        Hero A stands east at (11, 10).
+        Hero B stands west at (9, 10).
+        Both heroes are alive, active, adjacent, allied with each other, and
+        hostile to the monster.
+
+    Expected:
+        - flanking geometry is detected
+        - both attackers are accepted as simultaneous combat intents
+        - total damage is greater than a single attack
 
     Fraud this catches:
-    - bracketing counted from passive nearby allies
-    - bracketing ignored even when two attackers participate
-    - test accidentally creates only one attack intent
-    - builder fails to place attackers on opposite sides
+        - test uses removed private pipeline method
+        - passive/non-positioned entities accidentally count as attackers
+        - opposite-side placement is broken
+        - multi-attacker combat ignores one of the active attackers
     """
-    target = create_mock_entity(1, Faction.MONSTER_HORDE, pos=(10.0, 10.0))
-    attacker_a = create_mock_entity(2, Faction.HERO_GUILD, pos=(11.0, 10.0))
-    attacker_b = create_mock_entity(3, Faction.HERO_GUILD, pos=(9.0, 10.0))
+    target = create_mock_entity(
+        1,
+        Faction.MONSTER_HORDE,
+        pos=(10.0, 10.0),
+    )
+    attacker_a = create_mock_entity(
+        2,
+        Faction.HERO_GUILD,
+        pos=(11.0, 10.0),
+    )
+    attacker_b = create_mock_entity(
+        3,
+        Faction.HERO_GUILD,
+        pos=(9.0, 10.0),
+    )
 
+    state = AuthoritativeState(
+        tick=1,
+        seed=42,
+        entities={
+            1: target,
+            2: attacker_a,
+            3: attacker_b,
+        },
+    )
+
+    # Guard the test setup before checking combat behavior.
     assert target.navigation.position == (10.0, 10.0)
     assert attacker_a.navigation.position == (11.0, 10.0)
     assert attacker_b.navigation.position == (9.0, 10.0)
     assert attacker_a.identity.faction == attacker_b.identity.faction
     assert attacker_a.identity.faction != target.identity.faction
+    assert attacker_a.lifecycle.active is True
+    assert attacker_b.lifecycle.active is True
+    assert target.combat.alive is True
 
-    state = AuthoritativeState(
-        tick=1,
-        seed=42,
-        entities={1: target, 2: attacker_a, 3: attacker_b},
+    flanking_result = LegalityServiceV2.check_flanking(target.id, state)
+
+    # Latest source may return either:
+    #   bool
+    # or:
+    #   tuple[bool, bool] = (is_flanked, is_surrounded)
+    # depending on the in-progress version.
+    if isinstance(flanking_result, tuple):
+        is_flanked = flanking_result[0]
+    else:
+        is_flanked = flanking_result
+
+    assert is_flanked is True
+
+    combat_upd = CombatResolutionSystem.resolve_multi_attack(
+        attackers=[attacker_a, attacker_b],
+        defender=target,
+        state=state,
     )
 
-    raw_update = StateUpdate(
-        entity_updates={
-            2: EntityUpdate(
-                entity_id=2,
-                task=TaskUpdate(
-                    work_kind_set="ENTITY_ACT",
-                    payload_set={"action": "ATTACK", "target_id": 1},
-                ),
-            ),
-            3: EntityUpdate(
-                entity_id=3,
-                task=TaskUpdate(
-                    work_kind_set="ENTITY_ACT",
-                    payload_set={"action": "ATTACK", "target_id": 1},
-                ),
-            ),
-        }
+    assert combat_upd.outcome_kind != "REJECTED", combat_upd.failure_reason
+    assert combat_upd.damage_taken > 0
+    assert combat_upd.simultaneous_intents is not None
+    assert len(combat_upd.simultaneous_intents) == 2
+
+    attacker_ids = {
+        intent.attacker_id
+        for intent in combat_upd.simultaneous_intents
+    }
+
+    assert attacker_ids == {2, 3}
+
+    # With atk=10 and def=0, one attacker does 9 damage using the fractional
+    # armor formula. Two active attackers should therefore do more than one hit.
+    single_hit_damage = CombatResolutionSystem.calculate_damage(
+        attacker_a,
+        target,
     )
-
-    update = AuthoritativeApplyPipeline._route_combat_intent(state, raw_update)
-
-    combat_upd = update.entity_updates[1].combat
-    assert combat_upd is not None
-    assert combat_upd.damage_taken >= 10
+    assert single_hit_damage == 9
+    assert combat_upd.damage_taken > single_hit_damage

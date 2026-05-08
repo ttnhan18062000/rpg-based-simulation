@@ -57,6 +57,10 @@ class ContractKind(str, Enum):
     PROTECTION = "PROTECTION"
     MERCHANT = "MERCHANT"
 
+    # Movement/social coordination:
+    # One entity asks another to swap adjacent positions.
+    POSITION_SWAP = "POSITION_SWAP"
+    
 
 class DirectiveKind(str, Enum):
     """Types of strategic directives."""
@@ -145,6 +149,7 @@ class BlockerState:
     subject: str  # e.g. 'iron_ore', 'gold', 'ally'
     severity: float = 0.5
     resolved: bool = False
+    target_quantity: int = 1
 
 
 @dataclass(frozen=True, slots=True)

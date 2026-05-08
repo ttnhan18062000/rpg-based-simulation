@@ -37,7 +37,9 @@ def base_state():
 def test_melee_range_violation(base_state):
     # Move defender 2 tiles away
     defender = base_state.entities[2]
-    base_state.entities[2] = replace(defender, navigation=replace(defender.navigation, position=(7.0, 5.0)))
+    new_entities = dict(base_state.entities)
+    new_entities[2] = replace(defender, navigation=replace(defender.navigation, position=(7.0, 5.0)))
+    base_state = replace(base_state, entities=new_entities)
     
     res = CombatResolutionSystem.resolve_attack(base_state.entities[1], base_state.entities[2], base_state)
     assert res.outcome_kind == "REJECTED"
@@ -68,7 +70,9 @@ def test_aoe_friendly_fire_safety(base_state):
 def test_atomic_rewards_on_kill(base_state):
     # Set monster HP very low
     defender = base_state.entities[2]
-    base_state.entities[2] = replace(defender, combat=replace(defender.combat, hp=1))
+    new_entities = dict(base_state.entities)
+    new_entities[2] = replace(defender, combat=replace(defender.combat, hp=1))
+    base_state = replace(base_state, entities=new_entities)
     
     res = CombatResolutionSystem.resolve_attack(base_state.entities[1], base_state.entities[2], base_state)
     assert res.outcome_kind == "KILL"
@@ -88,7 +92,9 @@ def test_multi_attacker_kill_rewards(base_state):
     defender = base_state.entities[2]
     
     # Set monster HP low
-    base_state.entities[2] = replace(defender, combat=replace(defender.combat, hp=5))
+    new_entities = dict(base_state.entities)
+    new_entities[2] = replace(defender, combat=replace(defender.combat, hp=5))
+    base_state = replace(base_state, entities=new_entities)
     
     res = CombatResolutionSystem.resolve_multi_attack([attacker1, attacker2], base_state.entities[2], base_state)
     assert res.outcome_kind == "KILL"
@@ -102,11 +108,12 @@ def test_multi_attacker_kill_rewards(base_state):
 def test_xp_rejected_when_inventory_full(base_state):
     # Set monster HP low
     defender = base_state.entities[2]
-    base_state.entities[2] = replace(defender, combat=replace(defender.combat, hp=1))
-    
-    # Set attacker inventory full
     attacker = base_state.entities[1]
-    base_state.entities[1] = replace(attacker, inventory=replace(attacker.inventory, max_slots=0))
+    
+    new_entities = dict(base_state.entities)
+    new_entities[2] = replace(defender, combat=replace(defender.combat, hp=1))
+    new_entities[1] = replace(attacker, inventory=replace(attacker.inventory, max_slots=0))
+    base_state = replace(base_state, entities=new_entities)
     
     # Resolve attack - should still be a KILL
     res = CombatResolutionSystem.resolve_attack(base_state.entities[1], base_state.entities[2], base_state)
@@ -126,7 +133,9 @@ def test_xp_rejected_when_inventory_full(base_state):
 def test_no_double_kill_rewards(base_state):
     # we can verify that resolve_attack only returns rewards if the target WAS alive.
     defender = base_state.entities[2]
-    base_state.entities[2] = replace(defender, combat=replace(defender.combat, hp=0, alive=False))
+    new_entities = dict(base_state.entities)
+    new_entities[2] = replace(defender, combat=replace(defender.combat, hp=0, alive=False))
+    base_state = replace(base_state, entities=new_entities)
     
     res = CombatResolutionSystem.resolve_attack(base_state.entities[1], base_state.entities[2], base_state)
     assert res.outcome_kind == "REJECTED"

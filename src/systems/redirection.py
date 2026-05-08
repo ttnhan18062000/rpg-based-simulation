@@ -4,7 +4,9 @@ from dataclasses import replace
 
 if TYPE_CHECKING:
     from src.core.state import AuthoritativeState, EntityState
-    from src.core.updates import StateUpdate, EntityUpdate
+    from src.core.updates import StateUpdate, EntityUpdate, StrategicUpdate
+from src.core.movement_modes import MovementMode
+from src.core.strategic import ProjectStatus, ObjectiveStatus
 
 class StrategicRedirectionSystem:
     """
@@ -17,7 +19,7 @@ class StrategicRedirectionSystem:
         """
         Scan entities for blockers and propose navigation targets to resolve them.
         """
-        from src.core.updates import EntityUpdate, NavigationUpdate
+        from src.core.updates import EntityUpdate, NavigationUpdate, StrategicUpdate
         
         refined_entity_updates = dict(update.entity_updates)
         
@@ -28,15 +30,21 @@ class StrategicRedirectionSystem:
                 continue
                 
             ent_upd = refined_entity_updates.get(e_id, EntityUpdate(entity_id=e_id))
+            strat_up = ent_upd.strategic or StrategicUpdate()
+            has_nav_update = ent_upd.navigation and ent_upd.navigation.target_set is not None
             
-            # 1. Identify active blockers
-            # Logic: If item added this tick, the blocker might be removed by StrategicIntelligenceSystem.
-            # However, we are running in the SAME resolution phase. 
-            # StrategicIntelligenceSystem.resolve_blockers runs before us in the Kernel.
+            # DEBUG
+            if e_id == 1:
+                inv_items = {item.item_id: item.quantity for item in entity.inventory.items}
+                print(f"DEBUG: Tick {state.tick} | Hero {e_id} at {entity.navigation.position} | Inv: {inv_items} | Target: {entity.navigation.target} | NavUpdate: {has_nav_update}")
+            
+            # Check for active project
+            current_project_id = strat_up.current_project_id_set if strat_up.current_project_id_set is not None else entity.strategic.current_project_id
+            
             
             # Check state AND proposed additions in this tick
-            additions = []
             removals = []
+            additions = []
             if ent_upd.strategic:
                  removals = ent_upd.strategic.blockers_remove
                  additions = list(ent_upd.strategic.blockers_add_or_update)
@@ -46,7 +54,6 @@ class StrategicRedirectionSystem:
                 for b_id, b in entity.strategic.blockers.items()
                 if b_id not in removals and not b.resolved
             ]
-
             active_blockers.extend(
                 b
                 for b in additions
@@ -70,39 +77,68 @@ class StrategicRedirectionSystem:
                         break
                 
                 if match_lead:
+                    if e_id == 1: print(f"DEBUG: Tick {state.tick} | Hero {e_id} | Case 2 (Material) | Lead: {match_lead.detail}")
                     # Found a way to resolve! Set target.
-                    # Detail usually contains "x,y" for location leads in Milestone 3/4
                     try:
                         coords = tuple(map(float, match_lead.detail.split(',')))
+                        has_nav_update = True
                         
-                        existing_nav = ent_upd.navigation or NavigationUpdate()
                         if entity.navigation.target != coords:
+                             existing_nav = ent_upd.navigation or NavigationUpdate()
                              new_nav = replace(existing_nav, target_set=coords)
-                             refined_entity_updates[e_id] = replace(ent_upd, navigation=new_nav)
+                             
+                             # RESET Interaction to prevent movement lock (Phase E5.10 Fix)
+                             from src.core.updates import InteractionUpdate
+                             ent_upd = replace(ent_upd, 
+                                 navigation=new_nav,
+                                 interaction=InteractionUpdate(reset=True)
+                             )
+                             refined_entity_updates[e_id] = ent_upd
                     except (ValueError, AttributeError):
                         pass # Vague or invalid lead
             
-            # 3. Case: No blockers but has items (Return to Town)
-            else:
-                has_items = bool(entity.inventory.items)
-                if ent_upd.inventory:
-                     if ent_upd.inventory.items_add or entity.inventory.items:
-                          has_items = True
-                
-                if has_items:
-                    # If not already at town
-                    tile_pos = (int(entity.navigation.position[0]), int(entity.navigation.position[1]))
-                    if tile_pos not in state.town_tiles:
-                        # Redirection to town
-                        # We pick any town tile for simplicity in proof
-                        if state.town_tiles:
-                            # Phase 9 Fix: Deterministic selection from set
-                            town_pos = sorted(list(state.town_tiles))[0]
-                            town_coords = (float(town_pos[0]), float(town_pos[1]))
-                            
-                            existing_nav = ent_upd.navigation or NavigationUpdate()
-                            if entity.navigation.target != town_coords:
-                                 new_nav = replace(existing_nav, target_set=town_coords)
-                                 refined_entity_updates[e_id] = replace(ent_upd, navigation=new_nav)
+            # 2.5. Case: Active Objective Target (RPG-STRAT-010)
+            if not has_nav_update and current_project_id:
+                project = entity.strategic.projects.get(current_project_id)
+                if project and project.status == ProjectStatus.ACTIVE:
+                    obj_id = strat_up.current_objective_id_set if strat_up.current_objective_id_set is not None else project.active_objective_id
+                    active_obj = next((o for o in project.objectives if o.id == obj_id), None)
+                    if active_obj and active_obj.status == ObjectiveStatus.ACTIVE:
+                        # If the objective has a target (e.g. harvesting node)
+                        target_pos = getattr(active_obj, 'target_position', None)
+                        if target_pos:
+                             if e_id == 1: print(f"DEBUG: Tick {state.tick} | Hero {e_id} | Case 2.5 (Objective) | Target: {target_pos}")
+                             has_nav_update = True
+                             if entity.navigation.target != target_pos:
+                                 existing_nav = ent_upd.navigation or NavigationUpdate()
+                                 new_nav = replace(existing_nav, target_set=target_pos)
+                                 ent_upd = replace(ent_upd, navigation=new_nav)
+                                 refined_entity_updates[e_id] = ent_upd
+            
+            # 3. Case: Return to Town (Fallback if no blockers or no leads)
+            # Only if no navigation target was set in this tick and we have items
+            if not has_nav_update:
+                has_items = len(entity.inventory.items) > 0
+                if has_items and entity.navigation.position != (0.0, 0.0):
+                    if e_id == 1: print(f"DEBUG: Tick {state.tick} | Hero {e_id} | Case 3 (Return to Town)")
+                    # Use town_center if town_tiles is empty
+                    target_coords = state.town_center
+                    if state.town_tiles:
+                        town_pos = sorted(list(state.town_tiles))[0]
+                        target_coords = (float(town_pos[0]), float(town_pos[1]))
+                    
+                    if entity.navigation.target != target_coords:
+                        existing_nav = ent_upd.navigation or NavigationUpdate()
+                        new_nav = replace(existing_nav, 
+                            target_set=target_coords,
+                            movement_mode_set=MovementMode.REGROUP
+                        )
+                        from src.core.updates import InteractionUpdate
+                        ent_upd = replace(ent_upd, 
+                            navigation=new_nav,
+                            interaction=InteractionUpdate(reset=True)
+                        )
+                        refined_entity_updates[e_id] = ent_upd
+                        has_nav_update = True
 
         return replace(update, entity_updates=refined_entity_updates)

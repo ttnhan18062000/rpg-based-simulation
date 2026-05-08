@@ -73,6 +73,11 @@ class ReasonCode(str, Enum):
     PATH_EXHAUSTED = "path_exhausted"
     TARGET_REACHED = "target_reached"
     
+    # Movement / position swap
+    POSITION_SWAP = "position_swap"
+    POSITION_SWAP_ACCEPTED = "position_swap_accepted"
+    POSITION_SWAP_REFUSED = "position_swap_refused"
+    
     # Combat/Interaction
     OUT_OF_RANGE = "OUT_OF_RANGE"
     TARGET_INVALID = "TARGET_INVALID"
@@ -124,6 +129,7 @@ class ReasonCode(str, Enum):
     INVENTORY_FULL = "INVENTORY_FULL"
     SOURCE_MISSING = "SOURCE_MISSING"
     UNKNOWN_SOURCE_KIND = "UNKNOWN_SOURCE_KIND"
+    GROUP_ROLLBACK = "GROUP_ROLLBACK"
     
     # Social
     TOTAL_DISTRUST = "total_distrust"

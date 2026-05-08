@@ -47,8 +47,7 @@ def test_party_coordination_leadership_influence():
         .build())
     
     state = AuthoritativeState(tick=100, seed=42)
-    state.entities[1] = leader
-    state.entities[2] = member
+    state = replace(state, entities={1: leader, 2: member})
     
     # 3. Apply influence
     scores = []

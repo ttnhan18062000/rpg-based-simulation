@@ -12,10 +12,10 @@ from src.core.governance import RuntimeMode
 
 def _readonly_mapping(value):
     if value is None:
-        return MappingProxyType({})
-    if isinstance(value, MappingProxyType):
+        return ReadOnlyDict({})
+    if isinstance(value, ReadOnlyDict):
         return value
-    return MappingProxyType(dict(value))
+    return ReadOnlyDict(dict(value))
 
 
 
@@ -35,6 +35,9 @@ class ReadOnlyDict(dict):
         raise ReadOnlyError("Authoritative mutation attempted during read-only phase.")
     def clear(self):
         raise ReadOnlyError("Authoritative mutation attempted during read-only phase.")
+    
+    def __reduce__(self):
+        return (self.__class__, (dict(self),))
 
 
 class ItemKind(str, Enum):

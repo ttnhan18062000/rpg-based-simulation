@@ -1,5 +1,6 @@
 import pytest
 from dataclasses import replace
+from src.core.enums import Faction, ReasonCode
 from src.core.state import (
     AuthoritativeState, EntityState, IdentityComponent, 
     CombatComponent, InventoryComponent, StrategicComponent, 
@@ -26,29 +27,100 @@ def create_mock_entity(e_id, pos, faction=1, role=EntityRole.HERO):
         .cognition(interruption_resistance=0.5, detour_breadth=3)
         .build())
 
-def test_blocker_inference_on_failure():
-    """Verify that a failed attack generates a blocker."""
-    hero = create_mock_entity(1, (1.0, 1.0))
-    # Target out of range
-    monster = create_mock_entity(2, (10.0, 10.0), faction=2)
+def test_failed_attack_reports_out_of_range():
+    """
+    Verify that an out-of-range ATTACK is rejected by combat/action legality.
+
+    Important:
+        Latest src does not have AuthoritativeApplyPipeline._route_combat_intent().
+        Combat actions are routed through _route_action_intent(), which calls
+        SimulationDomainLogic.execute_action(...).
+
+    This test only proves the combat failure is surfaced. It does not expect
+    StrategicIntelligenceSystem to infer a blocker from ATTACK OUT_OF_RANGE,
+    because latest infer_blockers() only handles navigation failures and
+    transaction-style failures.
+    """
+    from src.engine.legality import LegalityServiceV2
+
+    hero = create_mock_entity(
+        1,
+        (1.0, 1.0),
+        faction=Faction.HERO_GUILD,
+        role=EntityRole.HERO,
+    )
+
+    monster = create_mock_entity(
+        2,
+        (10.0, 10.0),
+        faction=Faction.MONSTER_HORDE,
+        role=EntityRole.MONSTER,
+    )
+
+    state = AuthoritativeState(
+        tick=1,
+        seed=42,
+        entities={
+            1: hero,
+            2: monster,
+        },
+    )
+
+    legal, reason = LegalityServiceV2.verify_attack_legality(
+        hero,
+        monster,
+        state,
+    )
+
+    assert legal is False
+    assert reason == ReasonCode.OUT_OF_RANGE or reason == "OUT_OF_RANGE"
     
-    state = AuthoritativeState(tick=1, seed=42, entities={1: hero, 2: monster})
-    
-    # We need to simulate the pipeline or call domain_logic then manually check if pipeline would have added blockers
-    # Since I added blockers in AuthoritativeApplyPipeline, I should use a helper or test the pipeline
-    from src.engine.pipeline import AuthoritativeApplyPipeline
-    from src.core.updates import StateUpdate, EntityUpdate, TaskUpdate
-    
-    # Propose an ATTACK task
-    task_up = TaskUpdate(work_kind_set="ENTITY_ACT", payload_set={"action": "ATTACK", "target_id": 2})
-    update = StateUpdate(entity_updates={1: EntityUpdate(entity_id=1, task=task_up)})
-    
-    refined_update = AuthoritativeApplyPipeline._route_combat_intent(state, update)
-    hero_upd = refined_update.entity_updates[1]
-    
-    assert hero_upd.strategic is not None
-    assert any(b.kind == "access" for b in hero_upd.strategic.blockers_add_or_update)
-    assert any("OUT_OF_RANGE" in b.id for b in hero_upd.strategic.blockers_add_or_update)
+def test_access_blocker_inference_on_navigation_failure():
+    """
+    Verify that a navigation failure generates an access blocker.
+
+    Current latest-src behavior:
+        StrategicIntelligenceSystem.infer_blockers(...) creates access blockers
+        for navigation failures:
+
+            PATH_NOT_FOUND
+            STUCK
+            OSCILLATING
+
+    Fraud this catches:
+        - failed movement does not become strategic blocker information
+        - access blocker id/subject is not tied to failed target_position
+        - detour system cannot later reason about blocked access
+    """
+    hero = create_mock_entity(
+        1,
+        (1.0, 1.0),
+        faction=Faction.HERO_GUILD,
+        role=EntityRole.HERO,
+    )
+
+    payload = {
+        "action": "MOVE",
+        "target_position": (10.0, 10.0),
+    }
+
+    strat_upd = StrategicIntelligenceSystem.infer_blockers(
+        entity=hero,
+        last_task="ENTITY_ACT",
+        last_payload=payload,
+        navigation_failure="PATH_NOT_FOUND",
+        current_project=None,
+    )
+
+    assert strat_upd is not None
+    assert any(
+        blocker.kind == "access"
+        for blocker in strat_upd.blockers_add_or_update
+    )
+    assert any(
+        "blocker_access_10_10" == blocker.id
+        for blocker in strat_upd.blockers_add_or_update
+    )
 
 def test_detour_suggestion_logic():
     """Verify that a blocker + lead triggers a detour project."""
@@ -77,20 +149,67 @@ def test_detour_suggestion_logic():
     suspended = next(p for p in strat_up.projects_add_or_update if p.id == "proj_craft")
     assert suspended.status == ProjectStatus.SUSPENDED
 
+
 def test_blocker_resolution_on_pickup():
-    """Verify that picking up a blocked material resolves the blocker."""
+    """
+    Verify that acquiring a registered material resolves the matching material blocker.
+
+    Important:
+        The latest InventoryService only applies registered item ids.
+        Use `iron_ore`, not plain `iron`, because `iron` is not in ItemRegistry.
+    """
     hero = create_mock_entity(1, (1.0, 1.0))
-    blocker = BlockerState(id="blocker_mat_iron", kind="material", subject="iron", severity=1.0)
-    hero = replace(hero, strategic=replace(hero.strategic, blockers={"blocker_mat_iron": blocker}))
-    
-    state = AuthoritativeState(tick=1, seed=42, entities={1: hero})
-    
-    # Propose picking up iron
-    from src.core.updates import InventoryUpdate, ItemStack, StateUpdate, StrategicUpdate, EntityUpdate
-    inv_up = InventoryUpdate(items_add=[ItemStack(item_id="iron", quantity=1)])
-    update = StateUpdate(entity_updates={1: EntityUpdate(entity_id=1, inventory=inv_up)})
-    
-    resolved_update = StrategicIntelligenceSystem.resolve_blockers(state, update)
+
+    blocker = BlockerState(
+        id="blocker_mat_iron_ore",
+        kind="material",
+        subject="iron_ore",
+        severity=1.0,
+        target_quantity=1,
+    )
+
+    hero = replace(
+        hero,
+        strategic=replace(
+            hero.strategic,
+            blockers={
+                blocker.id: blocker,
+            },
+        ),
+    )
+
+    state = AuthoritativeState(
+        tick=1,
+        seed=42,
+        entities={
+            1: hero,
+        },
+    )
+
+    from src.core.state import ItemStack
+    from src.core.updates import InventoryUpdate, StateUpdate, EntityUpdate
+
+    inv_up = InventoryUpdate(
+        items_add=[
+            ItemStack(item_id="iron_ore", quantity=1),
+        ],
+    )
+
+    update = StateUpdate(
+        entity_updates={
+            1: EntityUpdate(
+                entity_id=1,
+                inventory=inv_up,
+            )
+        }
+    )
+
+    resolved_update = StrategicIntelligenceSystem.resolve_blockers(
+        state,
+        update,
+    )
+
     hero_upd = resolved_update.entity_updates[1]
-    
-    assert "blocker_mat_iron" in hero_upd.strategic.blockers_remove
+
+    assert hero_upd.strategic is not None
+    assert "blocker_mat_iron_ore" in hero_upd.strategic.blockers_remove

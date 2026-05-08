@@ -82,6 +82,10 @@ class NavigationSystem:
         dy = target_pos[1] - entity.navigation.position[1]
         dist = math.sqrt(dx*dx + dy*dy)
         
+        # 0. Arrived?
+        if dist < 0.1:
+            return entity.navigation.position
+        
         # 1. Global Navigation (Dist > 50)
         if dist > 50.0:
             # Check if target is a known POI

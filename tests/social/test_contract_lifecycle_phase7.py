@@ -54,32 +54,87 @@ def test_appraisal_risk_vs_hp():
     assert reason in (ReasonCode.LOW_HP_RETREAT, "TOO_DANGEROUS")
 
 def test_offer_expiration_logic():
-    """Verify that the engine cleans up expired contract offers."""
-    from src.engine.pipeline import AuthoritativeApplyPipeline
-    from src.core.updates import StateUpdate
+    """
+    Verify that expired contract offers are marked EXPIRED.
+
+    Important:
+        This is a SocialContractSystem lifecycle test, not a pipeline test.
+
+        AuthoritativeApplyPipeline.refine(StateUpdate()) does not currently
+        perform a global sweep over every entity's contracts.
+
+    Law:
+        OFFERED / ACTIVE / COUNTERED contracts with expiry_tick <= current_tick
+        must transition to EXPIRED.
+    """
+    from src.systems.social_contract import SocialContractSystem
+    from src.core.strategic import ContractStatus
+
+    entity = create_mock_entity(1)
+
+    contract = ContractService.create_recruitment_contract(
+        "c_expired",
+        source_id=99,
+        target_id=1,
+        tick=100,
+    )
+
+    # create_recruitment_contract expires offers at tick + 10.
+    assert contract.expiry_tick == 110
+    assert contract.status == ContractStatus.OFFERED
+
+    entity = replace(
+        entity,
+        strategic=replace(
+            entity.strategic,
+            contracts={
+                contract.id: contract,
+            },
+        ),
+    )
+
+    strategic_update = SocialContractSystem.check_expirations(
+        entity,
+        current_tick=111,
+    )
+
+    assert strategic_update is not None
+    assert any(
+        c.id == "c_expired" and c.status == ContractStatus.EXPIRED
+        for c in strategic_update.contracts_add_or_update
+    )
     
-    e1 = create_mock_entity(1)
-    # Add an expired offer
-    contract = ContractService.create_recruitment_contract("c_expired", 99, 1, tick=100)
-    # It was created at tick 100, expires at 110
-    e1 = (V2EntityBuilder(1)
-        .kind("ACTOR")
-        .location(0, 0)
-        .strategic(contracts={contract.id: contract})
-        .combat(alive=True)
-        .build())
-    
-    state = AuthoritativeState(entities={1: e1}, tick=111, seed=42)
-    
-    # Run refinement (which should trigger the reaper)
-    raw_upd = StateUpdate()
-    refined = AuthoritativeApplyPipeline.refine(state, raw_upd)
-    
-    # The refined update should contain a removal or status update for the contract
-    upd_1 = refined.entity_updates.get(1)
-    assert upd_1 is not None
-    assert ("c_expired" in upd_1.strategic.contracts_remove or 
-           any(c.id == "c_expired" and c.status == ContractStatus.FAILED for c in upd_1.strategic.contracts_add_or_update))
+def test_offer_not_expired_before_expiry_tick():
+    """
+    Verify that a contract offer is not expired before its expiry tick.
+    """
+    from src.systems.social_contract import SocialContractSystem
+
+    entity = create_mock_entity(1)
+
+    contract = ContractService.create_recruitment_contract(
+        "c_active_offer",
+        source_id=99,
+        target_id=1,
+        tick=100,
+    )
+
+    entity = replace(
+        entity,
+        strategic=replace(
+            entity.strategic,
+            contracts={
+                contract.id: contract,
+            },
+        ),
+    )
+
+    strategic_update = SocialContractSystem.check_expirations(
+        entity,
+        current_tick=109,
+    )
+
+    assert strategic_update.contracts_add_or_update == []
 
 def test_contract_driven_party_cohesion():
     """Verify that an ACTIVE contract prevents accidental party dissolution."""

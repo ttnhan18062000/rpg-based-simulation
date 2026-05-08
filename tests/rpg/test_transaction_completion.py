@@ -11,6 +11,7 @@ Proves that:
 """
 import pytest
 from dataclasses import replace, field
+from src.core.builder import V2EntityBuilder
 from src.core.state import (
     AuthoritativeState, EntityState, InventoryComponent, ItemStack,
     ResourceNodeState, GroundItemState, CorpseState, IntentResult,
@@ -45,14 +46,34 @@ def entity_with_inventory(base_state):
 
 @pytest.fixture
 def entity_full_inventory(base_state):
-    """Entity with completely full inventory (2/2 slots)."""
+    """
+    Entity with completely full inventory.
+
+    Use registered item ids so InventoryService capacity checks are meaningful.
+    """
     from src.core.builder import V2EntityBuilder
-    entity = (V2EntityBuilder(1)
-              .kind("HERO")
-              .location(0, 0)
-              .inventory(gold=50, items=[ItemStack("wood", 1), ItemStack("herb", 1)], max_slots=2)
-              .build())
-    return replace(base_state, entities={1: entity})
+
+    entity = (
+        V2EntityBuilder(1)
+        .kind("HERO")
+        .location(0, 0)
+        .inventory(
+            gold=50,
+            items=[
+                ItemStack("wood", 1),
+                ItemStack("iron_ore", 1),
+            ],
+            max_slots=2,
+        )
+        .build()
+    )
+
+    return replace(
+        base_state,
+        entities={
+            1: entity,
+        },
+    )
 
 
 # ─── 1. Combat Loot Atomicity (Direct Resolver) ─────────────────────────────
@@ -550,83 +571,142 @@ class TestQuestRewardAtomicity:
         assert result.reason == "INVENTORY_FULL"
 
     def test_pipeline_strips_worker_quest_status(self, entity_with_inventory):
-        """Pipeline gate strips status_set from worker-submitted QuestUpdate."""
+        """
+        Pipeline gate strips status_set from worker-submitted QuestUpdate.
+
+        Law:
+            Workers may submit quest progress, but not authoritative quest status.
+        """
         from src.core.quests import QuestStatus
+
         state = entity_with_inventory
 
-        update = StateUpdate(entity_updates={
-            1: EntityUpdate(
-                entity_id=1,
-                quest=QuestUpdate(quest_id="q1", status_set=QuestStatus.REWARDED)
-            )
-        })
+        update = StateUpdate(
+            entity_updates={
+                1: EntityUpdate(
+                    entity_id=1,
+                    quest=QuestUpdate(
+                        quest_id="q1",
+                        status_set=QuestStatus.REWARDED,
+                    ),
+                )
+            }
+        )
 
         refined = AuthoritativeApplyPipeline.refine(state, update)
         quest_upd = refined.entity_updates[1].quest
+
         assert quest_upd is not None
-        assert quest_upd.status_set is None  # Stripped by gate
+        assert quest_upd.status_set is None
 
     def test_quest_reward_retry_after_freeing_inventory(self, base_state):
         """
         Verify that a quest in REWARD_PENDING state re-emits its reward intent
-        every tick until it succeeds (e.g. after inventory is freed).
+        every tick until it succeeds after inventory is freed.
         """
         from src.core.quests import QuestStatus, QuestState, RewardState
-        from src.core.inventory import InventoryComponent, ItemStack
-        from src.core.state import StrategicComponent
-        
-        state = base_state
-        # Entity with full inventory
+        from src.core.state import InventoryComponent, ItemStack
+        from src.core.strategic import StrategicComponent
+
         quest_obj = QuestState(
-            id="q1", kind="quest", quest_status=QuestStatus.REWARD_PENDING,
-            reward=RewardState(gold=100, xp=50, items=["herb"])
+            id="q1",
+            kind="quest",
+            quest_status=QuestStatus.REWARD_PENDING,
+            reward=RewardState(
+                gold=100,
+                xp=50,
+                items=["wood"],
+            ),
         )
-        from src.core.builder import V2EntityBuilder
-        e = (V2EntityBuilder(1)
-             .kind("HERO")
-             .location(0, 0)
-             .inventory(gold=50, items=[ItemStack("wood", 1)], max_slots=1)
-             .combat(readiness=100.0)
-             .strategic(projects={"q1": quest_obj})
-             .build())
-        state = replace(state, entities={1: e})
-        
-        # 1. Tick 1: Try to resolve. Should fail because inventory is full.
-        # Emit an empty worker update to trigger quest system
-        raw_update = StateUpdate(entity_updates={
-            1: EntityUpdate(entity_id=1, quest=QuestUpdate(quest_id="q1"))
-        })
-        
-        # Refine (runs QuestExecutionSystem which emits the intent)
+
+        e = (
+            V2EntityBuilder(1)
+            .kind("HERO")
+            .location(0, 0)
+            .inventory(
+                gold=50,
+                items=[
+                    ItemStack("iron_ore", 1),
+                ],
+                max_slots=1,
+            )
+            .combat(readiness=100.0)
+            .strategic(projects={"q1": quest_obj})
+            .build()
+        )
+
+        state = replace(
+            base_state,
+            entities={
+                1: e,
+            },
+        )
+
+        raw_update = StateUpdate(
+            entity_updates={
+                1: EntityUpdate(
+                    entity_id=1,
+                    quest=QuestUpdate(quest_id="q1"),
+                )
+            }
+        )
+
         refined = AuthoritativeApplyPipeline.refine(state, raw_update)
-        
-        # Check that it stayed in REWARD_PENDING
+
         upd = refined.entity_updates.get(1)
+        assert upd is not None
         assert upd.quest is not None
         assert upd.quest.status_set == QuestStatus.REWARD_PENDING
-        
-        # Apply the update to get new state
+
         new_state = ApplyPath.apply_generation(state, refined)
         final_quest = new_state.entities[1].strategic.projects["q1"]
         assert final_quest.quest_status == QuestStatus.REWARD_PENDING
-        
-        # 2. Tick 2: Free inventory space, then try again
-        e_ready = replace(new_state.entities[1],
-            inventory=InventoryComponent(max_slots=1, items=[], gold=50)
+
+        e_ready = replace(
+            new_state.entities[1],
+            inventory=InventoryComponent(
+                max_slots=1,
+                items=[],
+                gold=50,
+            ),
         )
-        state_ready = replace(new_state, entities={1: e_ready}, tick=11)
-        
-        raw_update_2 = StateUpdate(entity_updates={
-            1: EntityUpdate(entity_id=1, quest=QuestUpdate(quest_id="q1"))
-        })
-        refined_2 = AuthoritativeApplyPipeline.refine(state_ready, raw_update_2)
-        
-        # Should now be REWARDED
+
+        state_ready = replace(
+            new_state,
+            entities={
+                1: e_ready,
+            },
+            tick=11,
+        )
+
+        raw_update_2 = StateUpdate(
+            entity_updates={
+                1: EntityUpdate(
+                    entity_id=1,
+                    quest=QuestUpdate(quest_id="q1"),
+                )
+            }
+        )
+
+        refined_2 = AuthoritativeApplyPipeline.refine(
+            state_ready,
+            raw_update_2,
+        )
+
         upd_2 = refined_2.entity_updates.get(1)
+        assert upd_2 is not None
+        assert upd_2.quest is not None
         assert upd_2.quest.status_set == QuestStatus.REWARDED
-        
-        # Apply and verify final state
-        final_state = ApplyPath.apply_generation(state_ready, refined_2)
+
+        final_state = ApplyPath.apply_generation(
+            state_ready,
+            refined_2,
+        )
+
         final_quest_2 = final_state.entities[1].strategic.projects["q1"]
+
         assert final_quest_2.quest_status == QuestStatus.REWARDED
-        assert any(item.item_id == "herb" for item in final_state.entities[1].inventory.items)
+        assert any(
+            item.item_id == "wood"
+            for item in final_state.entities[1].inventory.items
+        )

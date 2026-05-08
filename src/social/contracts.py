@@ -263,3 +263,53 @@ class ContractService:
                 )
                 
         return replace(update, entity_updates=refined_entity_updates)
+
+
+    @staticmethod
+    def create_position_swap_contract(
+        contract_id: str,
+        source_id: int,
+        target_id: int,
+        source_from: tuple[float, float],
+        target_from: tuple[float, float],
+        tick: int = 0,
+        expiry_ticks: int = 1,
+    ) -> ContractState:
+        """
+        Create a short-lived contract asking another entity to swap adjacent tiles.
+
+        LAW:
+            Position swap is a consent-based movement contract. It allows two
+            adjacent entities to exchange places atomically when normal corridor
+            passing is impossible.
+
+        Terms:
+            source_from:
+                Current position of the requester.
+            source_to:
+                Current position of the responder.
+            target_from:
+                Current position of the responder.
+            target_to:
+                Current position of the requester.
+
+        The contract is intentionally short-lived because movement positions become
+        stale quickly.
+        """
+        return ContractState(
+            id=contract_id,
+            kind=ContractKind.POSITION_SWAP,
+            source_id=source_id,
+            target_id=target_id,
+            terms={
+                "source_from": source_from,
+                "source_to": target_from,
+                "target_from": target_from,
+                "target_to": source_from,
+                "duration": expiry_ticks,
+                "reason": "CORRIDOR_SWAP",
+            },
+            status=ContractStatus.OFFERED,
+            created_tick=tick,
+            expiry_tick=tick + expiry_ticks,
+        )

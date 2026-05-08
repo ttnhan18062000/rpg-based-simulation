@@ -132,7 +132,7 @@ def test_town_tax_refactor(base_state):
     
     # Hero has 100 gold
     hero = state.entities[1]
-    state.entities[1] = replace(hero, inventory=replace(hero.inventory, gold=100))
+    state = replace(state, entities={**state.entities, 1: replace(hero, inventory=replace(hero.inventory, gold=100))})
     
     # Proposed update (empty)
     update = StateUpdate()
@@ -155,10 +155,10 @@ def test_shop_sell_refactor(base_state):
     hero = base_state.entities[1]
     # Hero has an item to sell
     item = ItemStack(item_id="iron_ore", quantity=1)
-    base_state.entities[1] = replace(hero, 
+    base_state = replace(base_state, entities={**base_state.entities, 1: replace(hero, 
         inventory=replace(hero.inventory, items=[item]),
         navigation=replace(hero.navigation, position=(0.0, 0.0))
-    )
+    )})
     # Ensure building_tiles is "shop" and buildings exists
     base_state = replace(base_state, building_tiles={(0,0): "shop"})
     
@@ -179,11 +179,11 @@ def test_blacksmith_craft_refactor(base_state):
     hero = base_state.entities[1]
     # Hero has materials for craft_steel_sword: 2 iron_ore, 1 wood, 60 gold
     mats = [ItemStack(item_id="iron_ore", quantity=2), ItemStack(item_id="wood", quantity=1)]
-    base_state.entities[1] = replace(hero, 
+    base_state = replace(base_state, entities={**base_state.entities, 1: replace(hero, 
         inventory=replace(hero.inventory, items=mats, gold=100),
         identity=replace(hero.identity, craft_target="craft_steel_sword", known_recipes={"craft_steel_sword"}),
         navigation=replace(hero.navigation, position=(0.0, 0.0))
-    )
+    )})
     # Ensure building_tiles is "blacksmith"
     base_state = replace(base_state, building_tiles={(0,0): "blacksmith"})
     
@@ -199,6 +199,7 @@ def test_blacksmith_craft_refactor(base_state):
     assert ent_upd.inventory.gold_delta == -60
     assert any(i.item_id == "steel_sword" for i in ent_upd.inventory.items_add)
     # craft_target should be reset
+    assert ent_upd.identity is not None
     assert ent_upd.identity.craft_target == ""
 
 def test_reward_update_hardening():
@@ -248,7 +249,7 @@ def test_recruitment_gold_handoff(base_state):
     recruit = base_state.entities[2]
     
     # recruiter has 1000 gold
-    base_state.entities[1] = replace(recruiter, inventory=replace(recruiter.inventory, gold=1000))
+    base_state = replace(base_state, entities={**base_state.entities, 1: replace(recruiter, inventory=replace(recruiter.inventory, gold=1000))})
     
     # recruiter offers 500 gold (should succeed)
     updates = SimulationDomainLogic.execute_action(

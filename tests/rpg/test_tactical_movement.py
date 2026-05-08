@@ -39,8 +39,7 @@ def test_opportunity_attack_on_egress():
     # Entity 1 at (5, 5), Hostile at (5, 6)
     e1 = create_mock_entity(1, (5.0, 5.0), faction=0)
     e2 = create_mock_entity(2, (5.0, 6.0), faction=1)
-    state.entities[1] = e1
-    state.entities[2] = e2
+    state = replace(state, entities={1: e1, 2: e2})
     
     # E1 proposes to move to (4, 5) - leaving engagement
     raw_update = StateUpdate(
@@ -71,10 +70,7 @@ def test_hold_mode_refuses_to_yield():
     e3 = create_mock_entity(3, (4.0, 4.0), faction=0)
     e4 = create_mock_entity(4, (6.0, 4.0), faction=0)
     
-    state.entities[1] = e1
-    state.entities[2] = e2
-    state.entities[3] = e3
-    state.entities[4] = e4
+    state = replace(state, entities={1: e1, 2: e2, 3: e3, 4: e4})
     
     # E2 has higher priority (id 2 vs 1)
     # HERO role gets 100 base.
@@ -99,8 +95,7 @@ def test_sidestepping_on_blocked_move():
     # E1 at (5, 5), E2 at (6, 5) blocking horizontal move
     e1 = create_mock_entity(1, (5.0, 5.0), faction=0)
     e2 = create_mock_entity(2, (6.0, 5.0), faction=0) # Ally
-    state.entities[1] = e1
-    state.entities[2] = e2
+    state = replace(state, entities={1: e1, 2: e2})
     
     # E1 wants to move to (6, 5)
     raw_update = StateUpdate(
@@ -124,8 +119,7 @@ def test_evasive_retreat_skips_oa():
     e1 = replace(e1, combat=replace(e1.combat, action_style=2)) # ActionStyle.EVASIVE
     
     e2 = create_mock_entity(2, (5.0, 6.0), faction=1)
-    state.entities[1] = e1
-    state.entities[2] = e2
+    state = replace(state, entities={1: e1, 2: e2})
     
     # E1 proposes to move to (4, 5) with RETREAT mode
     raw_update = StateUpdate(
@@ -154,8 +148,7 @@ def test_regroup_movement():
         anchor=(0.0, 0.0),
         cohesion_radius=5.0
     )
-    state.groups[1] = group
-    state.entities[1] = e1
+    state = replace(state, groups={1: group}, entities={1: e1})
     
     # TacticalDecisionSystem should trigger REGROUP
     from src.engine.tactical import TacticalDecisionSystem

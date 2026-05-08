@@ -38,6 +38,15 @@ class InventoryUpdate:
     items_add: List[ItemStack] = field(default_factory=list)
     items_remove: List[ItemStack] = field(default_factory=list)
     gold_delta: int = 0
+    
+    def merge(self, other: InventoryUpdate) -> InventoryUpdate:
+        """Merge another InventoryUpdate into this one."""
+        from dataclasses import replace
+        return replace(self,
+            items_add=self.items_add + other.items_add,
+            items_remove=self.items_remove + other.items_remove,
+            gold_delta=self.gold_delta + other.gold_delta
+        )
 
 @dataclass(frozen=True, slots=True)
 class EquipmentUpdate:
@@ -157,6 +166,7 @@ class CombatUpdate:
 class NavigationUpdate:
     """Updates to movement intent and pathfinding."""
     target_set: Optional[tuple[float, float]] = None
+    target_clear: bool = False
     path_set: Optional[List[tuple[float, float]]] = None
     moved_recently_set: Optional[bool] = None
     movement_mode_set: Optional[MovementMode] = None
@@ -192,6 +202,25 @@ class IdentityUpdate:
     traits_add: list[str] = field(default_factory=list)
     traits_remove: list[str] = field(default_factory=list)
     cooldown_updates: Dict[str, int] = field(default_factory=dict) # skill_id -> tick_ready
+    
+    def merge(self, other: IdentityUpdate) -> IdentityUpdate:
+        from dataclasses import replace
+        return replace(self,
+            role_set=other.role_set if other.role_set is not None else self.role_set,
+            faction_set=other.faction_set if other.faction_set is not None else self.faction_set,
+            recipes_learned=list(set(self.recipes_learned + other.recipes_learned)),
+            craft_target=other.craft_target if other.craft_target is not None else self.craft_target,
+            evolution_level_set=other.evolution_level_set if other.evolution_level_set is not None else self.evolution_level_set,
+            evolution_points_delta=self.evolution_points_delta + other.evolution_points_delta,
+            veterancy_points_delta=self.veterancy_points_delta + other.veterancy_points_delta,
+            breakthroughs_add=list(set(self.breakthroughs_add + other.breakthroughs_add)),
+            unspent_ap_delta=self.unspent_ap_delta + other.unspent_ap_delta,
+            unspent_ap_set=other.unspent_ap_set if other.unspent_ap_set is not None else self.unspent_ap_set,
+            learned_skills=list(set(self.learned_skills + other.learned_skills)),
+            traits_add=list(set(self.traits_add + other.traits_add)),
+            traits_remove=list(set(self.traits_remove + other.traits_remove)),
+            cooldown_updates={**self.cooldown_updates, **other.cooldown_updates}
+        )
 
 @dataclass(frozen=True, slots=True)
 class SocialBondUpdate:
@@ -271,6 +300,19 @@ class BiologicalUpdate:
     last_sleep_tick_set: Optional[int] = None
     well_rested_until_set: Optional[int] = None
     
+    def merge(self, other: BiologicalUpdate) -> BiologicalUpdate:
+        from dataclasses import replace
+        return replace(self,
+            sleep_debt_delta=self.sleep_debt_delta + other.sleep_debt_delta,
+            sleep_debt_set=other.sleep_debt_set if other.sleep_debt_set is not None else self.sleep_debt_set,
+            hunger_delta=self.hunger_delta + other.hunger_delta,
+            hunger_set=other.hunger_set if other.hunger_set is not None else self.hunger_set,
+            rest_pressure_delta=self.rest_pressure_delta + other.rest_pressure_delta,
+            last_meal_tick_set=other.last_meal_tick_set if other.last_meal_tick_set is not None else self.last_meal_tick_set,
+            last_sleep_tick_set=other.last_sleep_tick_set if other.last_sleep_tick_set is not None else self.last_sleep_tick_set,
+            well_rested_until_set=other.well_rested_until_set if other.well_rested_until_set is not None else self.well_rested_until_set
+        )
+    
 
 @dataclass(frozen=True, slots=True)
 class AttributeUpdate:
@@ -284,6 +326,20 @@ class AttributeUpdate:
     wisdom_delta: int = 0
     perception_delta: int = 0
     charisma_delta: int = 0
+    
+    def merge(self, other: AttributeUpdate) -> AttributeUpdate:
+        from dataclasses import replace
+        return replace(self,
+            strength_delta=self.strength_delta + other.strength_delta,
+            agility_delta=self.agility_delta + other.agility_delta,
+            vitality_delta=self.vitality_delta + other.vitality_delta,
+            endurance_delta=self.endurance_delta + other.endurance_delta,
+            intelligence_delta=self.intelligence_delta + other.intelligence_delta,
+            spirit_delta=self.spirit_delta + other.spirit_delta,
+            wisdom_delta=self.wisdom_delta + other.wisdom_delta,
+            perception_delta=self.perception_delta + other.perception_delta,
+            charisma_delta=self.charisma_delta + other.charisma_delta
+        )
 
 @dataclass(frozen=True, slots=True)
 class LifecycleUpdate:
@@ -313,6 +369,13 @@ class RewardUpdate:
     """
     xp_gain: int = 0
     evolution_points_delta: int = 0
+    
+    def merge(self, other: RewardUpdate) -> RewardUpdate:
+        from dataclasses import replace
+        return replace(self,
+            xp_gain=self.xp_gain + other.xp_gain,
+            evolution_points_delta=self.evolution_points_delta + other.evolution_points_delta
+        )
 
 @dataclass(frozen=True, slots=True)
 class StrategicUpdate:
@@ -352,6 +415,40 @@ class StrategicUpdate:
     # Overload
     overload_source_set: Optional[str] = None
     overload_tick_set: Optional[int] = None
+
+    def merge(self, other: StrategicUpdate) -> StrategicUpdate:
+        """Merges another StrategicUpdate into this one."""
+        from dataclasses import replace
+        # Dictionaries sum deltas
+        new_boredom = dict(self.boredom_delta)
+        for k, v in other.boredom_delta.items():
+            new_boredom[k] = new_boredom.get(k, 0.0) + v
+            
+        return replace(self,
+            blockers_add_or_update=self.blockers_add_or_update + other.blockers_add_or_update,
+            blockers_remove=self.blockers_remove + other.blockers_remove,
+            leads_add_or_update=self.leads_add_or_update + other.leads_add_or_update,
+            leads_remove=self.leads_remove + other.leads_remove,
+            directives_add_or_update=self.directives_add_or_update + other.directives_add_or_update,
+            directives_remove=self.directives_remove + other.directives_remove,
+            projects_add_or_update=self.projects_add_or_update + other.projects_add_or_update,
+            projects_remove=self.projects_remove + other.projects_remove,
+            current_project_id_set=other.current_project_id_set if other.current_project_id_set is not None else self.current_project_id_set,
+            current_objective_id_set=other.current_objective_id_set if other.current_objective_id_set is not None else self.current_objective_id_set,
+            boredom_delta=new_boredom,
+            concerns_add_or_update=self.concerns_add_or_update + other.concerns_add_or_update,
+            concerns_remove=self.concerns_remove + other.concerns_remove,
+            candidate_zones_add_or_update=self.candidate_zones_add_or_update + other.candidate_zones_add_or_update,
+            candidate_zones_remove=self.candidate_zones_remove + other.candidate_zones_remove,
+            hypotheses_add_or_update=self.hypotheses_add_or_update + other.hypotheses_add_or_update,
+            hypotheses_remove=self.hypotheses_remove + other.hypotheses_remove,
+            source_trust_updates=self.source_trust_updates + other.source_trust_updates,
+            contracts_add_or_update=self.contracts_add_or_update + other.contracts_add_or_update,
+            contracts_remove=self.contracts_remove + other.contracts_remove,
+            turning_points_add=self.turning_points_add + other.turning_points_add,
+            overload_source_set=other.overload_source_set if other.overload_source_set is not None else self.overload_source_set,
+            overload_tick_set=other.overload_tick_set if other.overload_tick_set is not None else self.overload_tick_set
+        )
 
 @dataclass(frozen=True, slots=True)
 class StaminaUpdate:

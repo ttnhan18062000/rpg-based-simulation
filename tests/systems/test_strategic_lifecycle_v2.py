@@ -65,30 +65,82 @@ def test_end_to_end_strategic_detour_lifecycle():
     state.blocked_tiles.add((4, 4)) # Sidestep 2
     
     # --- TICK 1: Movement Attempt ---
-    # Hero wants to move towards (10,10)
-    # We put the blocker at (5,5) and hero at (4,5)
-    hero = replace(hero, navigation=replace(hero.navigation, position=(4.0, 5.0)))
-    state = replace(state, entities={1: hero})
-    
-    # Propose movement to (5,5) or beyond
-    # MovementSystem will try to step to (5,5) and fail
-    task_up = TaskUpdate(work_kind_set="ENTITY_ACT", payload_set={"action": "MOVE", "target_position": node_pos})
-    update = StateUpdate(entity_updates={1: EntityUpdate(entity_id=1, task=task_up, navigation=NavigationUpdate(target_set=node_pos))})
-    
-    # AuthoritativeApplyPipeline._route_movement_intent uses blocked_tiles
-    update_tick1 = AuthoritativeApplyPipeline._route_movement_intent(state, update)
+    hero = replace(
+        hero,
+        navigation=replace(
+            hero.navigation,
+            position=(4.0, 5.0),
+        ),
+    )
+
+    state = replace(
+        state,
+        entities={1: hero},
+    )
+
+    task_up = TaskUpdate(
+        work_kind_set="ENTITY_ACT",
+        payload_set={
+            "action": "MOVE",
+            "target_position": node_pos,
+        },
+    )
+
+    update = StateUpdate(
+        entity_updates={
+            1: EntityUpdate(
+                entity_id=1,
+                task=task_up,
+                navigation=NavigationUpdate(target_set=node_pos),
+            )
+        }
+    )
+
+    update_tick1 = AuthoritativeApplyPipeline._route_movement_intent(
+        state,
+        update,
+    )
+
     hero_upd1 = update_tick1.entity_updates[1]
-    
+
+    assert hero_upd1.navigation is not None
     assert hero_upd1.navigation.failure_reason == ReasonCode.PATH_NOT_FOUND
-    assert hero_upd1.strategic is not None
-    assert len(hero_upd1.strategic.blockers_add_or_update) > 0
-    
-    blocker = hero_upd1.strategic.blockers_add_or_update[0]
+
+    # Movement routing only reports the navigation failure.
+    # Strategic blocker inference is a separate strategic-intelligence step.
+    failure_reason = hero_upd1.navigation.failure_reason
+    failure_reason_name = (
+        failure_reason.name
+        if hasattr(failure_reason, "name")
+        else str(failure_reason)
+    )
+
+    strat_blocker_upd = StrategicIntelligenceSystem.infer_blockers(
+        entity=hero,
+        last_task=task_up.work_kind_set,
+        last_payload=task_up.payload_set,
+        navigation_failure=failure_reason_name,
+        current_project=proj_harvest,
+    )
+
+    assert strat_blocker_upd is not None
+    assert len(strat_blocker_upd.blockers_add_or_update) > 0
+
+    blocker = strat_blocker_upd.blockers_add_or_update[0]
     assert blocker.kind == "access"
     
     # --- TICK 2: Information Discovery ---
     # Apply the blocker to hero state
-    hero = replace(hero, strategic=replace(hero.strategic, blockers={blocker.id: blocker}))
+    hero = replace(
+        hero,
+        strategic=replace(
+            hero.strategic,
+            blockers={
+                **hero.strategic.blockers,
+                blocker.id: blocker,
+            },
+        ),
+    )
     
     # Injected rumor about alternate route "Ford"
     # Subject matches the failure reason

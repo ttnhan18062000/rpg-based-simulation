@@ -44,7 +44,7 @@ def test_long_run_simulation_ph9():
     from dataclasses import replace
     from src.core.state import IdentityComponent
     hero = replace(hero, identity=replace(hero.identity, role=EntityRole.HERO))
-    state.entities[hero.id] = hero
+    state = replace(state, entities={**state.entities, hero.id: hero})
     
     ticks_to_run = 1000
     max_entities_seen = 0

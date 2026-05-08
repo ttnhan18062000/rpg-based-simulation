@@ -2,7 +2,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Dict, List, Set
 from dataclasses import replace, dataclass
 
-from src.core.updates import EntityUpdate, IdentityUpdate
+from src.core.updates import EntityUpdate, IdentityUpdate, NavigationUpdate
+from src.core.movement_modes import MovementMode
 
 if TYPE_CHECKING:
     from src.core.state import AuthoritativeState, EntityState
@@ -216,9 +217,30 @@ class BlacksmithSystem:
             
             # SUCCESS: Queue crafting transformation
             existing_upd = refined_entity_updates.get(e_id, EntityUpdate(entity_id=e_id))
+
+            # Milestone 3 Law:
+            # Crafting target is cleared upon intent generation.
+            current_id_upd = existing_upd.identity or IdentityUpdate()
+            new_id_upd = replace(
+                current_id_upd,
+                craft_target="",
+            )
+
+            # Crafting completion must clear stale material-seeking navigation.
+            # Otherwise the entity may craft successfully, then keep following the old
+            # mine/resource target and continue harvesting after the craft is complete.
+            current_nav_upd = existing_upd.navigation or NavigationUpdate()
+            new_nav_upd = replace(
+                current_nav_upd,
+                clear_target=True,
+                movement_mode_set=MovementMode.WANDER,
+            )
+
             refined_entity_updates[e_id] = replace(
                 existing_upd,
-                resource_transfers=list(existing_upd.resource_transfers) + [intent]
+                identity=new_id_upd,
+                navigation=new_nav_upd,
+                resource_transfers=list(existing_upd.resource_transfers) + [intent],
             )
 
         return replace(update, entity_updates=refined_entity_updates)

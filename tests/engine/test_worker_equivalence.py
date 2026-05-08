@@ -1,5 +1,6 @@
 import pytest
 import time
+from dataclasses import replace
 from src.engine.kernel import Kernel
 from src.core.state import AuthoritativeState
 from src.platform.rng import DeterministicRNG
@@ -41,10 +42,13 @@ def test_authoritative_equivalence(dual_kernel_setup):
     k_local, k_concurrent = dual_kernel_setup
     
     # Setup some initial entities to generate work
+    new_entities = dict(k_local._state.entities)
     for i in range(1, 11):
         ent = V2EntityBuilder(i).location(float(i), 0.0).lifecycle(active=True).build()
-        k_local._state.entities[i] = ent
-        k_concurrent._state.entities[i] = ent
+        new_entities[i] = ent
+        
+    k_local._state = replace(k_local._state, entities=new_entities)
+    k_concurrent._state = replace(k_concurrent._state, entities=new_entities)
         
     # Run 10 ticks and compare hashes
     for tick in range(10):
@@ -70,8 +74,8 @@ def test_zero_worker_fallback_equivalence(base_profile):
     
     # Add an entity to both
     ent = V2EntityBuilder(1).location(0.0, 0.0).lifecycle(active=True).build()
-    k1._state.entities[1] = ent
-    k2._state.entities[1] = ent
+    k1._state = replace(k1._state, entities={**k1._state.entities, 1: ent})
+    k2._state = replace(k2._state, entities={**k2._state.entities, 1: ent})
     
     k1.tick_once()
     k2.tick_once()

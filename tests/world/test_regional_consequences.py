@@ -5,8 +5,10 @@ from src.core.state import (
     BiologicalComponent, StrategicComponent, SocialComponent
 )
 from src.core.updates import StateUpdate, EntityUpdate, TaskUpdate
+from src.core.enums import ReasonCode
 from src.engine.apply import ApplyPath
 from src.engine.pipeline import AuthoritativeApplyPipeline
+from src.engine.legality import LegalityServiceV2
 
 def make_hero(eid: int, pos=(5.0, 5.0), hp=100):
     from src.core.builder import V2EntityBuilder
@@ -37,26 +39,90 @@ def test_regional_hazard_drain():
     # damage = hazard(0.5) * 10 * (1 + calamity(0.0)) = 5
     assert next_state.entities[1].combat.hp == 95
 
-def test_regional_suppression_blocks_sabotage():
-    """Verify that SABOTAGE action is blocked in a suppressed region."""
-    # Region with suppression
-    region = RegionState(id="holy_city", name="Holy City", bounds=(0, 0, 10, 10), suppression_active=True)
-    
+def test_regional_suppression_blocks_sabotage_directly():
+    """
+    Law:
+        SABOTAGE is illegal inside a suppressed region.
+
+    This tests the real legality rule directly, without assuming the pipeline
+    rewrites TaskUpdate.payload_set.
+    """
+    region = RegionState(
+        id="holy_city",
+        name="Holy City",
+        bounds=(0, 0, 10, 10),
+        suppression_active=True,
+    )
+
     hero = make_hero(1, pos=(5.0, 5.0))
-    state = AuthoritativeState(tick=100, seed=42, 
-                               regions={"holy_city": region},
-                               entities={1: hero})
+
+    state = AuthoritativeState(
+        tick=100,
+        seed=42,
+        regions={"holy_city": region},
+        entities={1: hero},
+    )
+
+    legal, reason = LegalityServiceV2.verify_action_legality(
+        hero,
+        "SABOTAGE",
+        state,
+    )
+
+    assert legal is False
+    assert reason == ReasonCode.REGIONAL_SUPPRESSION or reason == "REGIONAL_SUPPRESSION"
     
-    # Try to SABOTAGE
-    task_upd = TaskUpdate(work_kind_set="ENTITY_ACT", payload_set={"action": "SABOTAGE", "target_id": 99})
-    update = StateUpdate(entity_updates={1: EntityUpdate(entity_id=1, task=task_upd)})
-    
+def test_regional_suppression_blocks_sabotage_pipeline_integration():
+    """
+    Pipeline integration law:
+        A suppressed SABOTAGE action should be rejected/audited by the
+        authoritative pipeline.
+
+    Important:
+        The pipeline should not need to mutate TaskUpdate.payload_set to prove
+        failure. RejectionEvent is the cleaner authoritative audit surface.
+    """
+    region = RegionState(
+        id="holy_city",
+        name="Holy City",
+        bounds=(0, 0, 10, 10),
+        suppression_active=True,
+    )
+
+    hero = make_hero(1, pos=(5.0, 5.0))
+
+    state = AuthoritativeState(
+        tick=100,
+        seed=42,
+        regions={"holy_city": region},
+        entities={1: hero},
+    )
+
+    task_upd = TaskUpdate(
+        work_kind_set="ENTITY_ACT",
+        payload_set={
+            "action": "SABOTAGE",
+            "target_id": 99,
+        },
+    )
+
+    update = StateUpdate(
+        entity_updates={
+            1: EntityUpdate(
+                entity_id=1,
+                task=task_upd,
+            )
+        }
+    )
+
     refined = AuthoritativeApplyPipeline.refine(state, update)
-    
-    # Should be FAILURE due to REGIONAL_SUPPRESSION
-    ent_upd = refined.entity_updates[1]
-    assert ent_upd.task.payload_set["outcome"] == "FAILURE"
-    assert ent_upd.task.payload_set["reason"] == "REGIONAL_SUPPRESSION"
+
+    assert any(
+        ev.actor_id == 1
+        and ev.action_kind == "SABOTAGE"
+        and ev.reason in (ReasonCode.REGIONAL_SUPPRESSION, "REGIONAL_SUPPRESSION")
+        for ev in refined.rejection_events
+    )
 
 def test_regional_suppression_allows_attack():
     """Verify that ATTACK is NOT blocked (only strategic actions like SABOTAGE/RECRUIT)."""

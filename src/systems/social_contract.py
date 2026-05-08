@@ -75,7 +75,7 @@ class SocialContractSystem:
         rules = {
             ContractStatus.OFFERED: [ContractStatus.ACCEPTED, ContractStatus.ACTIVE, ContractStatus.CANCELLED, ContractStatus.COUNTERED, ContractStatus.EXPIRED],
             ContractStatus.COUNTERED: [ContractStatus.ACCEPTED, ContractStatus.CANCELLED, ContractStatus.EXPIRED],
-            ContractStatus.ACCEPTED: [ContractStatus.ACTIVE, ContractStatus.CANCELLED],
+            ContractStatus.ACCEPTED: [ContractStatus.ACTIVE, ContractStatus.FULFILLED, ContractStatus.CANCELLED],
             ContractStatus.ACTIVE: [ContractStatus.FULFILLED, ContractStatus.FAILED, ContractStatus.BETRAYED, ContractStatus.EXPIRED],
             ContractStatus.FULFILLED: [], # Terminal
             ContractStatus.FAILED: [],    # Terminal

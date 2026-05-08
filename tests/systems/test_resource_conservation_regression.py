@@ -36,47 +36,95 @@ def make_actor(eid: int, pos=(1.0, 1.0), interaction=None, inventory=None):
     return entity
 
 def test_harvest_conservation_full_inventory():
-    """Law of Capacity: Progress reset and NO node depletion if inventory is full."""
-    # Setup: Entity with full inventory (max 1 slot, 1 item)
-    actor = make_actor(1, pos=(1.0, 1.0),
-        interaction=InteractionComponent(target_node_id=500, progress=9), # 1 tick left
-        inventory=InventoryComponent(max_slots=1, items=[ItemStack("stone", 1)])
+    """
+    Law of Capacity:
+        If inventory is full, finishing harvest must reset interaction progress
+        but must NOT add item and must NOT deplete the resource node.
+
+    Extra trust-boundary law:
+        Even if a raw proposal includes a malicious/stale ResourceNodeUpdate,
+        AuthoritativeApplyPipeline.refine(...) must strip it unless an accepted
+        ResourceTransferIntent generates it.
+    """
+    actor = make_actor(
+        1,
+        pos=(1.0, 1.0),
+        interaction=InteractionComponent(
+            target_node_id=500,
+            progress=9,
+        ),
+        inventory=InventoryComponent(
+            max_slots=1,
+            items=[
+                ItemStack("stone", 1),
+            ],
+        ),
     )
+
     node = ResourceNodeState(
-        id=500, kind="WOOD", position=(1.0, 1.0), yields_item="wood",
-        remaining_charges=5, max_charges=5, required_ticks=10
+        id=500,
+        kind="WOOD",
+        position=(1.0, 1.0),
+        yields_item="wood",
+        remaining_charges=5,
+        max_charges=5,
+        required_ticks=10,
     )
-    state = AuthoritativeState(tick=1, seed=42, entities={1: actor}, resource_nodes={500: node})
-    
-    # Propose finishing the harvest
-    # We use the pipeline refinement to simulate real engine behavior
+
+    state = AuthoritativeState(
+        tick=1,
+        seed=42,
+        entities={
+            1: actor,
+        },
+        resource_nodes={
+            500: node,
+        },
+    )
+
     update = StateUpdate(
         entity_updates={
-            1: EntityUpdate(entity_id=1, interaction=InteractionUpdate(progress_delta=1.0))
+            1: EntityUpdate(
+                entity_id=1,
+                interaction=InteractionUpdate(progress_delta=1.0),
+            )
         }
     )
-    
+
     refined = AuthoritativeApplyPipeline.refine(state, update)
     e_upd = refined.entity_updates[1]
-    
-    # Assertions
-    assert e_upd.interaction.reset == True
-    assert e_upd.inventory is None  # No items added
-    assert 500 not in refined.node_updates  # NO node depletion proposed or refined
-    
-    # Verify atomicity: if a system proposed depletion, it should be stripped
+
+    assert e_upd.interaction is not None
+    assert e_upd.interaction.reset is True
+    assert e_upd.inventory is None
+    assert 500 not in refined.node_updates
+
     from src.core.updates import ResourceNodeUpdate
-    update_with_depletion = StateUpdate(
+
+    malicious_update = StateUpdate(
         entity_updates={
-            1: EntityUpdate(entity_id=1, interaction=InteractionUpdate(progress_delta=1.0))
+            1: EntityUpdate(
+                entity_id=1,
+                interaction=InteractionUpdate(progress_delta=1.0),
+            )
         },
         node_updates={
-            500: ResourceNodeUpdate(node_id=500, charges_delta=-1)
-        }
+            500: ResourceNodeUpdate(
+                node_id=500,
+                charges_delta=-1,
+            )
+        },
     )
-    
-    refined_2 = AuthoritativeApplyPipeline.refine(state, update_with_depletion)
-    assert 500 not in refined_2.node_updates # MUST BE STRIPPED
+
+    refined_2 = AuthoritativeApplyPipeline.refine(
+        state,
+        malicious_update,
+    )
+
+    assert 500 not in refined_2.node_updates, (
+        "CONSERVATION FAILURE: raw node depletion survived even though the "
+        "harvest reward could not be accepted due to full inventory."
+    )
 
 def test_loot_conservation_full_inventory():
     """Law of Capacity: Ground item remains if inventory is full."""

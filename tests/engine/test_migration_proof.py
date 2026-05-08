@@ -1,4 +1,5 @@
 import pytest
+from dataclasses import replace
 from src.core.enums import ReasonCode
 from src.core.state import (
     AuthoritativeState, EntityState, InteractionComponent, InventoryComponent, 
@@ -21,10 +22,10 @@ def test_ground_item_pickup_parity():
               .navigation(target=(0.0, 0.0))
               .combat(readiness=100.0)
               .build())
-    state.entities[1] = entity
+    state = replace(state, entities={1: entity})
     
     ground_item = GroundItemState(id=100, item_id="iron_ore", quantity=1, position=(0.0, 0.0))
-    state.ground_items[100] = ground_item
+    state = replace(state, ground_items={100: ground_item})
     
     # 1. Propose interaction
     update = StateUpdate(entity_updates={
@@ -55,13 +56,13 @@ def test_corpse_looting_parity():
               .navigation(target=(1.0, 1.0))
               .combat(readiness=100.0)
               .build())
-    state.entities[1] = entity
+    state = replace(state, entities={1: entity})
     
     corpse = CorpseState(
         id=200, items=[ItemStack("gold_coin", 50)], position=(1.0, 1.0),
         original_entity_id=999, decay_tick=100
     )
-    state.corpses[200] = corpse
+    state = replace(state, corpses={200: corpse})
     
     # 1. Propose interaction
     update = StateUpdate(entity_updates={
@@ -89,11 +90,11 @@ def test_movement_sidestepping_parity():
     
     # Mover at (0,0), Target at (1,0)
     mover = V2EntityBuilder(1).location(0.0, 0.0).combat(readiness=100.0).build()
-    state.entities[1] = mover
+    state = replace(state, entities={**state.entities, 1: mover})
     
     # Blocker at (1,0)
     blocker = V2EntityBuilder(2).location(1.0, 0.0).combat(readiness=100.0).build()
-    state.entities[2] = blocker
+    state = replace(state, entities={**state.entities, 2: blocker})
     
     # Call resolve_move
     updates = MovementSystem.resolve_move(state, mover, (1.0, 0.0))
@@ -113,7 +114,7 @@ def test_movement_yielding_parity():
             .identity(role=EntityRole.HERO)
             .combat(readiness=100.0)
             .build())
-    state.entities[1] = hero
+    state = replace(state, entities={**state.entities, 1: hero})
     
     # Monster (Lower Priority) at (1,0)
     monster = (V2EntityBuilder(2)
@@ -121,7 +122,7 @@ def test_movement_yielding_parity():
                .identity(role=EntityRole.MONSTER)
                .combat(readiness=100.0)
                .build())
-    state.entities[2] = monster
+    state = replace(state, entities={**state.entities, 2: monster})
     
     # BLOCK sidestepping tiles to force yielding
     state.terrain[(0, 1)] = "WALL"

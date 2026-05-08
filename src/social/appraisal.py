@@ -54,10 +54,18 @@ class SocialAppraisalSystem:
         # 2. Kind-Specific Appraisal
         if contract.kind == ContractKind.RECRUITMENT:
             return SocialAppraisalSystem._appraise_recruitment(entity, contract, trust_score)
-        elif contract.kind == ContractKind.LOAN:
+        
+        if contract.kind == ContractKind.LOAN:
             # Simple wrapper for now
             ok, reason = SocialAppraisalSystem._appraise_loan(entity, contract, trust_score)
             return (ContractStatus.ACCEPTED if ok else ContractStatus.CANCELLED), reason, {}
+        
+        elif contract.kind == ContractKind.POSITION_SWAP:
+            return SocialAppraisalSystem._appraise_position_swap(
+                entity,
+                contract,
+                state,
+            )
             
         return ContractStatus.CANCELLED, ReasonCode.UNKNOWN, {}
 
@@ -175,6 +183,75 @@ class SocialAppraisalSystem:
             return True, ReasonCode.FRIENDLY_LOAN
             
         return False, ReasonCode.UNNECESSARY_DEBT
+    
+    
+    @staticmethod
+    def _appraise_position_swap(
+        entity: EntityState,
+        contract: ContractState,
+        state: AuthoritativeState,
+    ) -> tuple[ContractStatus, ReasonCode, dict[str, Any]]:
+        """
+        Evaluate whether the target entity accepts an adjacent position swap.
+
+        LAW:
+            An entity may accept a swap when:
+                - both parties exist
+                - both are active/alive
+                - both are adjacent
+                - neither party is in HOLD mode
+                - the contract has not expired
+                - the contract positions still match the current world state
+
+        This is intentionally simpler than recruitment/loan appraisal because a
+        one-tick corridor swap is a low-risk movement agreement, not a long-term
+        social obligation.
+        """
+        from src.core.movement_modes import MovementMode
+
+        source = state.entities.get(contract.source_id)
+        target = state.entities.get(contract.target_id)
+
+        if source is None or target is None:
+            return ContractStatus.CANCELLED, ReasonCode.TARGET_INVALID, {}
+
+        if contract.expiry_tick != -1 and state.tick > contract.expiry_tick:
+            return ContractStatus.EXPIRED, ReasonCode.PATH_EXHAUSTED, {}
+
+        if not source.lifecycle.active or not target.lifecycle.active:
+            return ContractStatus.CANCELLED, ReasonCode.POSITION_SWAP_REFUSED, {}
+
+        if not source.combat.alive or not target.combat.alive:
+            return ContractStatus.CANCELLED, ReasonCode.POSITION_SWAP_REFUSED, {}
+
+        if source.navigation.movement_mode == MovementMode.HOLD:
+            return ContractStatus.CANCELLED, ReasonCode.POSITION_SWAP_REFUSED, {}
+
+        if target.navigation.movement_mode == MovementMode.HOLD:
+            return ContractStatus.CANCELLED, ReasonCode.POSITION_SWAP_REFUSED, {}
+
+        source_pos = source.navigation.position
+        target_pos = target.navigation.position
+
+        dist = abs(source_pos[0] - target_pos[0]) + abs(source_pos[1] - target_pos[1])
+        if dist != 1:
+            return ContractStatus.CANCELLED, ReasonCode.OUT_OF_RANGE, {}
+
+        expected_terms = {
+            "source_from": source_pos,
+            "source_to": target_pos,
+            "target_from": target_pos,
+            "target_to": source_pos,
+        }
+
+        for key, expected_pos in expected_terms.items():
+            if key in contract.terms:
+                actual = tuple(contract.terms[key])
+                if actual != expected_pos:
+                    return ContractStatus.CANCELLED, ReasonCode.POSITION_SWAP_REFUSED, {}
+
+        return ContractStatus.ACCEPTED, ReasonCode.POSITION_SWAP_ACCEPTED, {}
+    
 
     @staticmethod
     def process_betrayal(

@@ -141,7 +141,8 @@ class InteractionSystem:
                 if intents and len(intents) > len(ent_upd.resource_transfers):
                     refined_entity_updates[e_id] = replace(
                         ent_upd,
-                        resource_transfers=intents
+                        resource_transfers=intents,
+                        interaction=InteractionUpdate(reset=True)
                     )
                     continue 
                 else:

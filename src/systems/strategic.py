@@ -16,7 +16,7 @@ from typing import Dict, List, Optional, Any, TYPE_CHECKING
 from src.core.state import EntityState, AuthoritativeState
 from src.core.updates import (
     StrategicUpdate, InventoryUpdate, EntityUpdate, StateUpdate,
-    CombatUpdate, BiologicalUpdate
+    CombatUpdate, BiologicalUpdate, IdentityUpdate
 )
 from src.core.strategic import (
     BlockerState, LeadState, LeadCertainty,
@@ -145,7 +145,8 @@ class StrategicIntelligenceSystem:
                     id=f"blocker_mat_{mat_id}",
                     kind="material",
                     subject=mat_id,
-                    severity=min(1.0, (needed - have) / needed)
+                    severity=min(1.0, (needed - have) / needed),
+                    target_quantity=needed
                 ))
 
         if inv.gold < gold_cost:
@@ -153,7 +154,8 @@ class StrategicIntelligenceSystem:
                 id="blocker_gold",
                 kind="material",
                 subject="gold",
-                severity=min(1.0, (gold_cost - inv.gold) / gold_cost)
+                severity=min(1.0, (gold_cost - inv.gold) / gold_cost),
+                target_quantity=gold_cost
             ))
 
         return StrategicUpdate(blockers_add_or_update=blockers)
@@ -177,9 +179,11 @@ class StrategicIntelligenceSystem:
 
         refined_entity_updates = dict(update.entity_updates)
 
-        def has_item(inventory, item_id: str) -> bool:
+        def has_item(inventory, item_id: str, quantity: int = 1) -> bool:
+            if item_id == "gold":
+                return inventory.gold >= quantity
             return any(
-                stack.item_id == item_id and stack.quantity > 0
+                stack.item_id == item_id and stack.quantity >= quantity
                 for stack in inventory.items
             )
 
@@ -194,35 +198,58 @@ class StrategicIntelligenceSystem:
                 )
 
             strat_up = ent_upd.strategic or StrategicUpdate()
-
-            candidate_blockers = dict(entity.strategic.blockers)
-
+            removals = set(strat_up.blockers_remove)
+            resolved_ids = set()
+            # 1. Passive resolution from existing state
+            # We ONLY check blockers from previous ticks. New blockers added this tick (in strat_up)
+            # are trusted to be accurate results of current-tick enforcement (e.g. Blacksmith).
+            for b_id, b in entity.strategic.blockers.items():
+                if b_id in removals or b.resolved: continue
+                if b.kind == "material" and has_item(pending_inventory, b.subject, b.target_quantity):
+                    resolved_ids.add(b_id)
+            
+            # 2. Check for newly resolved blockers (explicitly marked as resolved)
             for blocker in strat_up.blockers_add_or_update:
-                if not blocker.resolved:
-                    candidate_blockers[blocker.id] = blocker
-
-            resolved_ids = []
-
-            for blocker_id, blocker in candidate_blockers.items():
-                if blocker_id in strat_up.blockers_remove:
-                    continue
-
                 if blocker.resolved:
-                    resolved_ids.append(blocker_id)
-                    continue
+                    resolved_ids.add(blocker.id)
 
-                if blocker.kind != "material":
-                    continue
-
-                if blocker.subject == "gold":
-                    if pending_inventory.gold > 0:
-                        resolved_ids.append(blocker_id)
-                    continue
-
-                if has_item(pending_inventory, blocker.subject):
-                    resolved_ids.append(blocker_id)
-
-            if not resolved_ids:
+            # 3. Objective Resolution (RPG-STRAT-009 Fix)
+            # If a blocker was resolved, check if the active objective is also resolved
+            current_proj_id = strat_up.current_project_id_set if strat_up.current_project_id_set is not None else entity.strategic.current_project_id
+            project_upd = None
+            if current_proj_id:
+                project = entity.strategic.projects.get(current_proj_id)
+                if project and project.status == ProjectStatus.ACTIVE:
+                    obj_id = strat_up.current_objective_id_set if strat_up.current_objective_id_set is not None else project.active_objective_id
+                    active_obj = next((o for o in project.objectives if o.id == obj_id), None)
+                    if active_obj and active_obj.status == ObjectiveStatus.ACTIVE:
+                        # Check if all blockers for this objective are resolved
+                        all_blockers_resolved = True
+                        for b_id in active_obj.blocker_ids:
+                            if b_id not in entity.strategic.blockers and b_id not in [b.id for b in strat_up.blockers_add_or_update]:
+                                 # This blocker was never there or already removed?
+                                 continue
+                            
+                            is_now_resolved = (b_id in resolved_ids)
+                            if not is_now_resolved:
+                                 b_obj = entity.strategic.blockers.get(b_id)
+                                 if b_obj and not b_obj.resolved:
+                                      all_blockers_resolved = False
+                                      break
+                        
+                        # Special case: Crafting/Collecting objectives (Material-based)
+                        is_material_obj = active_obj.kind in ("craft", "collect")
+                        if is_material_obj:
+                             if has_item(pending_inventory, active_obj.target, 1):
+                                  all_blockers_resolved = True
+                        
+                        if all_blockers_resolved:
+                            # Resolve Objective and Complete Project
+                            new_obj = replace(active_obj, status=ObjectiveStatus.RESOLVED)
+                            new_project = replace(project, objectives=[new_obj if o.id == new_obj.id else o for o in project.objectives], status=ProjectStatus.COMPLETED)
+                            project_upd = new_project
+            
+            if not resolved_ids and not project_upd:
                 continue
 
             new_additions = [
@@ -231,15 +258,28 @@ class StrategicIntelligenceSystem:
             ]
 
             new_removals = list(
-                set(strat_up.blockers_remove + resolved_ids)
+                set(strat_up.blockers_remove) | resolved_ids
             )
+
+            new_projects = list(strat_up.projects_add_or_update)
+            if project_upd:
+                new_projects.append(project_upd)
+
+            final_identity_upd = ent_upd.identity
+            if project_upd and project_upd.status == ProjectStatus.COMPLETED:
+                # Milestone 3 Law: Complete means stop trying [INTEG-FIX]
+                final_identity_upd = (final_identity_upd or IdentityUpdate()).merge(IdentityUpdate(craft_target=""))
 
             refined_entity_updates[e_id] = replace(
                 ent_upd,
+                identity=final_identity_upd,
                 strategic=replace(
                     strat_up,
                     blockers_add_or_update=new_additions,
                     blockers_remove=new_removals,
+                    projects_add_or_update=new_projects,
+                    current_project_id_set="" if project_upd else strat_up.current_project_id_set,
+                    current_objective_id_set="" if project_upd else strat_up.current_objective_id_set
                 ),
             )
 
@@ -311,6 +351,44 @@ class StrategicIntelligenceSystem:
                 concerns_remove=list(set(strat_up.concerns_remove + bandwidth_upd.concerns_remove))
             )
             refined_entity_updates[e_id] = replace(ent_upd, strategic=new_strat_up)
+                
+        return replace(update, entity_updates=refined_entity_updates)
+
+    @staticmethod
+    def evaluate_all_strategic_intents(
+        state: AuthoritativeState,
+        update: StateUpdate
+    ) -> StateUpdate:
+        """
+        Phase 4.1: Strategic Intent Evaluation (Projects/Objectives).
+        Orchestrates the loop over evaluate_strategic_intent for all active entities.
+        """
+        refined_entity_updates = dict(update.entity_updates)
+        
+        for e_id in sorted(list(state.entities.keys())):
+            entity = state.entities[e_id]
+            if not entity.lifecycle.active or not entity.combat.alive:
+                continue
+            
+            # Legality Guard: Incapacitated entities skip strategic cycles
+            if entity.identity.properties.get("status_frozen") or entity.identity.properties.get("status_stunned"):
+                continue
+
+            # Staggered frequency (Phase 5/6 spec)
+            if (state.tick + e_id) % 10 != 0:
+                continue
+
+            ent_upd = refined_entity_updates.get(e_id, EntityUpdate(entity_id=e_id))
+            
+            # We must pass the "current best guess" of the entity state to evaluate_strategic_intent.
+            # However, evaluate_strategic_intent is designed to work on the static EntityState.
+            # For v2 consistency, we call it on the current state.
+            strat_up = StrategicIntelligenceSystem.evaluate_strategic_intent(state, entity)
+            if strat_up:
+                # Merge with existing updates if any
+                existing_strat = ent_upd.strategic or StrategicUpdate()
+                merged_strat = existing_strat.merge(strat_up)
+                refined_entity_updates[e_id] = replace(ent_upd, strategic=merged_strat)
                 
         return replace(update, entity_updates=refined_entity_updates)
 
