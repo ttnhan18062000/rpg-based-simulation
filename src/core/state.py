@@ -8,6 +8,8 @@ from src.core.strategic import StrategicComponent
 from src.core.enums import Faction, EntityRole
 from src.core.movement_modes import MovementMode
 from src.core.governance import RuntimeMode
+from src.core.models.inventory import ItemKind, EquipSlot, ItemStack, InventoryComponent
+from src.core.models.social import SocialBond, BetrayalRecord, SocialComponent
 
 
 def _readonly_mapping(value):
@@ -40,29 +42,8 @@ class ReadOnlyDict(dict):
         return (self.__class__, (dict(self),))
 
 
-class ItemKind(str, Enum):
-    """Broad categories of items."""
-    MATERIAL = "MATERIAL"
-    CONSUMABLE = "CONSUMABLE"
-    WEAPON = "WEAPON"
-    ARMOR = "ARMOR"
-    CURRENCY = "CURRENCY"
-
-class EquipSlot(str, Enum):
-    """Valid equipment locations on an entity."""
-    HEAD = "HEAD"
-    TORSO = "TORSO"
-    LEGS = "LEGS"
-    MAIN_HAND = "MAIN_HAND"
-    OFF_HAND = "OFF_HAND"
 
 
-@dataclass(frozen=True, slots=True)
-class ItemStack:
-    """A quantity of a specific item template."""
-    item_id: str
-    quantity: int = 1
-    properties: Dict[str, Any] = field(default_factory=dict)
 
 @dataclass(frozen=True, slots=True)
 class StaminaComponent:
@@ -170,49 +151,6 @@ class RegionState:
         return ((xmin + xmax) / 2.0, (ymin + ymax) / 2.0)
 
 
-@dataclass(frozen=True, slots=True)
-class SocialBond:
-    """A first-class directed relationship record."""
-    target_id: int
-    familiarity: float = 0.0 # Interaction depth (0.0 to 1.0)
-    sentiment: float = 0.0   # Bias/Liking (-1.0 to 1.0)
-    last_interaction_tick: int = 0
-
-@dataclass(frozen=True, slots=True)
-class BetrayalRecord:
-    """A record of a specific betrayal event."""
-    contract_id: str
-    betrayer_id: int
-    victim_id: int
-    severity: float = 1.0
-    tick: int = 0
-
-@dataclass(frozen=True, slots=True)
-class SocialComponent:
-    """State for reputation, trust, and betrayal history."""
-    trust_history: Dict[int, float] = field(default_factory=dict)       # EntityID -> Trust Score (VERIFIED v2: SocialComponent.trust)
-    familiarity_history: Dict[int, float] = field(default_factory=dict) # EntityID -> Familiarity
-    debt_history: Dict[int, float] = field(default_factory=dict)        # EntityID -> Debt (Social/Gold)
-    fear_history: Dict[int, float] = field(default_factory=dict)        # EntityID -> Fear Score
-    grudge_history: Dict[int, float] = field(default_factory=dict)      # EntityID -> Grudge Score (Nemesis)
-    salience_history: Dict[int, float] = field(default_factory=dict)    # EntityID -> Interaction Salience
-    
-    # PH15 Recovery: First-class bonds
-    bonds: Dict[int, SocialBond] = field(default_factory=dict)         # EntityID -> Bond
-    
-    # Domain 4 Hardening: Nemesis & Place Memory
-    nemesis_ids: Set[int] = field(default_factory=set) # Promoted from grudge_history
-    place_attachment: Dict[str, float] = field(default_factory=dict) # RegionID -> Attachment Score
-    
-    betrayal_count: int = 0
-    betrayal_records: List[BetrayalRecord] = field(default_factory=list)
-    public_reputation: float = 1.0   # Unified reputation score (0.0 to 2.0)
-    heroism_score: float = 0.0       # Cumulative good deeds
-    notoriety_score: float = 0.0     # Cumulative bad deeds
-    
-    # Domain 7 Hardening: Social Fatigue
-    last_offer_tick: int = -1
-    rejection_count: Dict[int, int] = field(default_factory=dict) # SourceID -> Count
 
 
 @dataclass(frozen=True, slots=True)
@@ -369,13 +307,6 @@ class GroupRecord:
     vit_apt: float = 1.0
     end_apt: float = 1.0
 
-@dataclass(frozen=True, slots=True)
-class InventoryComponent:
-    """Bounded container for items and gold."""
-    items: List[ItemStack] = field(default_factory=list)
-    gold: int = 0
-    max_slots: int = 16
-    max_weight: float = 50.0
 
 @dataclass(frozen=True, slots=True)
 class EquipmentComponent:

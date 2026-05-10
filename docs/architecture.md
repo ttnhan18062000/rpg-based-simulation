@@ -85,5 +85,28 @@ Throughput claims are never made in isolation. The engine certifies its performa
 - **Class B (Consumer)**: Standard profile (20 TPS).
 - **Class C (High-Performance)**: Enhanced observability profiles.
 
+---
+
+## 6. Domain-Driven System Organization (v2.1)
+
+In v2.1, the monolithic `src/systems/` directory was modularized into domain-specific packages to improve maintainability and prevent circular dependencies.
+
+- **Strategic Systems** (`src/systems/strategic_systems/`): High-level intention and redirection logic.
+- **Social Systems** (`src/systems/social_systems/`): Relationship management and collective behavior.
+- **World Systems** (`src/systems/world_systems/`): Environmental processes, quests, and spatial navigation.
+- **Economy Systems** (`src/systems/economy_systems/`): Resource flow, markets, and production.
+- **Lifecycle Systems** (`src/systems/lifecycle_systems/`): Biological pressures and entity evolution.
+
+Compatibility is maintained via wrappers in `src/systems/*.py`, which re-export the modular implementations.
+
+## 7. Decoupled Core Models
+
+To further harden the engine against "Graph Hub" fragility, core state and update models are being extracted from `state.py` and `updates.py` into specialized packages:
+
+- **State Models** (`src/core/models/`): Standalone components like `ItemStack`, `SocialBond`, and `QuestState`.
+- **Update Models** (`src/core/update_models/`): Standalone intents like `InventoryUpdate` and `ResourceTransferIntent`.
+
+This separation allows systems to depend on specific model definitions without importing the entire world state, reducing the impact of architectural changes.
+
 > [!NOTE]
 > All architectural claims in this document are pinned by the `tests/docs/` integrity suite.

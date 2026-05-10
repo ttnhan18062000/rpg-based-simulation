@@ -365,13 +365,13 @@ def test_subsystem_order_documentation():
         required by the current in-progress implementation.
 
     This test intentionally does NOT enforce the old Hardened Phase 7 list.
-    The latest pipeline no longer contains several old calls, including:
 
-        - TownResolutionSystem.resolve
-        - ShopSystem.enforce
-        - AuthoritativeApplyPipeline._route_combat_intent
-        - AuthoritativeApplyPipeline._resolve_occupancy_conflicts
-        - QuestResolutionSystem.enforce
+    Important current differences:
+        - combat is routed through _route_action_intent, not _route_combat_intent
+        - quest rewards are routed through _resolve_quest_rewards, not direct
+          QuestResolutionSystem.enforce in this test's ordering contract
+        - group updates are routed through _resolve_groups
+        - occupancy conflict resolution is still part of the current pipeline
 
     Critical causal laws:
         1. Resource transactions must resolve before strategic blocker cleanup.
@@ -395,32 +395,36 @@ def test_subsystem_order_documentation():
         "AuthoritativeApplyPipeline._strip_untrusted_world_effects",
         "AuthoritativeApplyPipeline._resolve_actor_validity",
         "AuthoritativeApplyPipeline._resolve_contract_expirations",
+
         "BlacksmithSystem.enforce",
         "AuthoritativeApplyPipeline._route_interaction_intent",
         "InteractionSystem.enforce",
+
         "AuthoritativeApplyPipeline._route_action_intent",
+        "AuthoritativeApplyPipeline._apply_near_death_hardening",
+
         "BuildingSabotageSystem.resolve",
+        "TownResolutionSystem.resolve",
         "WorldDynamicsSystem.resolve_dynamics",
+
+        "AuthoritativeApplyPipeline._resolve_quest_rewards",
+        "ShopSystem.enforce",
         "AuthoritativeApplyPipeline._resolve_resource_transactions",
+
         "EvolutionSystem.evaluate",
+
         "StrategicIntelligenceSystem.resolve_blockers",
         "StrategicIntelligenceSystem.evaluate_all_concerns",
         "StrategicIntelligenceSystem.evaluate_all_strategic_intents",
         "StrategicRedirectionSystem.enforce",
+
+        "AuthoritativeApplyPipeline._resolve_position_swaps",
         "AuthoritativeApplyPipeline._route_movement_intent",
+        "AuthoritativeApplyPipeline._resolve_occupancy_conflicts",
+
         "LifecycleSystem.resolve_lifecycle",
-        "GroupSystem.update_groups",
+        "AuthoritativeApplyPipeline._resolve_groups",
     ]
-
-    has_position_swap_phase = (
-        "AuthoritativeApplyPipeline._resolve_position_swaps" in source
-    )
-
-    if has_position_swap_phase:
-        required_calls.insert(
-            required_calls.index("AuthoritativeApplyPipeline._route_movement_intent"),
-            "AuthoritativeApplyPipeline._resolve_position_swaps",
-        )
 
     positions = {}
 
@@ -436,36 +440,25 @@ def test_subsystem_order_documentation():
     )
 
     assert (
-        positions["AuthoritativeApplyPipeline._resolve_resource_transactions"]
-        < positions["StrategicIntelligenceSystem.resolve_blockers"]
-    ), (
-        "Resource transactions must run before blocker resolution. "
-        "Otherwise material blockers can be cleared against stale inventory."
+        positions["AuthoritativeApplyPipeline._route_action_intent"]
+        < positions["AuthoritativeApplyPipeline._apply_near_death_hardening"]
+        < positions["BuildingSabotageSystem.resolve"]
     )
 
     assert (
-        positions["StrategicIntelligenceSystem.resolve_blockers"]
-        < positions["StrategicRedirectionSystem.enforce"]
-    ), (
-        "Blocker resolution must run before strategic redirection. "
-        "Otherwise redirection can react to already-resolved blockers."
+        positions["AuthoritativeApplyPipeline._resolve_quest_rewards"]
+        < positions["AuthoritativeApplyPipeline._resolve_resource_transactions"]
+    )
+
+    assert (
+        positions["AuthoritativeApplyPipeline._resolve_resource_transactions"]
+        < positions["StrategicIntelligenceSystem.resolve_blockers"]
     )
 
     assert (
         positions["StrategicRedirectionSystem.enforce"]
+        < positions["AuthoritativeApplyPipeline._resolve_position_swaps"]
         < positions["AuthoritativeApplyPipeline._route_movement_intent"]
-    ), (
-        "Strategic redirection must run before movement routing. "
-        "Otherwise movement may follow stale targets."
+        < positions["AuthoritativeApplyPipeline._resolve_occupancy_conflicts"]
+        < positions["LifecycleSystem.resolve_lifecycle"]
     )
-
-    if has_position_swap_phase:
-        assert (
-            positions["StrategicRedirectionSystem.enforce"]
-            < positions["AuthoritativeApplyPipeline._resolve_position_swaps"]
-            < positions["AuthoritativeApplyPipeline._route_movement_intent"]
-        ), (
-            "Position swaps must resolve after strategic redirection but before "
-            "normal movement routing. Otherwise a valid corridor swap can be "
-            "rejected as ordinary occupancy blockage."
-        )

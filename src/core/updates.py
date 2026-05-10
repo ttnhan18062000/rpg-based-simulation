@@ -13,6 +13,9 @@ if TYPE_CHECKING:
 from src.core.state import ItemStack, EquipSlot, AttributeComponent
 from src.core.movement_modes import MovementMode
 from src.core.enums import ReasonCode
+from src.core.update_models.inventory import InventoryUpdate
+from src.core.update_models.quests import QuestUpdate
+from src.core.update_models.resources import ResourceTransferIntent
 
 
 @dataclass(frozen=True, slots=True)
@@ -27,26 +30,6 @@ class RejectionEvent:
     reason: ReasonCode
     target_id: Optional[int | str] = None
 
-
-@dataclass(frozen=True, slots=True)
-class InventoryUpdate:
-    """
-    RESULT TYPE ONLY. 
-    Updates to item container and currency.
-    Law: Workers must NOT emit this directly for gold/items; use ResourceTransferIntent.
-    """
-    items_add: List[ItemStack] = field(default_factory=list)
-    items_remove: List[ItemStack] = field(default_factory=list)
-    gold_delta: int = 0
-    
-    def merge(self, other: InventoryUpdate) -> InventoryUpdate:
-        """Merge another InventoryUpdate into this one."""
-        from dataclasses import replace
-        return replace(self,
-            items_add=self.items_add + other.items_add,
-            items_remove=self.items_remove + other.items_remove,
-            gold_delta=self.gold_delta + other.gold_delta
-        )
 
 @dataclass(frozen=True, slots=True)
 class EquipmentUpdate:
@@ -79,34 +62,6 @@ class InteractionUpdate:
             progress_delta=self.progress_delta + other.progress_delta,
             reset=self.reset or other.reset
         )
-
-@dataclass(frozen=True, slots=True)
-class ResourceTransferIntent:
-    """
-    Proposed atomic transfer between a world source and an entity.
-    Used by ResourceTransactionResolver to enforce conservation laws.
-    VERIFIED v2: ResourceTransferIntent
-    """
-    source_id: str | int
-    source_kind: str # "NODE", "GROUND_ITEM", "CORPSE", "CRAFTING", "SHOP_BUY", "SHOP_SELL"
-    items_add: List[ItemStack] = field(default_factory=list)
-    items_remove: List[ItemStack] = field(default_factory=list)
-    gold_delta: int = 0
-    gold_cost: int = 0
-    price_multiplier: float = 1.0
-    xp_reward: int = 0
-    transfer_kind: str = "AUTO" # "HARVEST", "LOOT", "PICKUP", "CRAFT", "BUY", "SELL"
-    transaction_id: Optional[str] = None
-    group_id: Optional[str] = None
-    is_group_required: bool = True
-    # Contingent updates (applied only on transaction success)
-    biological_upd: Optional[BiologicalUpdate] = None
-    attributes_upd: Optional[AttributeUpdate] = None
-    identity_upd: Optional[IdentityUpdate] = None
-    combat_upd: Optional[CombatUpdate] = None
-    strategic_upd: Optional[StrategicUpdate] = None
-    equipment_upd: Optional[EquipmentUpdate] = None
-    reward_upd: Optional[RewardUpdate] = None
 
 @dataclass(frozen=True, slots=True)
 class CombatIntent:
@@ -399,49 +354,6 @@ class LifecycleUpdate:
         )
 
 
-@dataclass(frozen=True, slots=True)
-class QuestUpdate:
-    """Updates to quest progress and status."""
-    quest_id: str
-    progress_delta: float = 0.0
-    status_set: Optional[QuestStatus] = None
-    multi_updates: List[QuestUpdate] = field(default_factory=list)
-    def merge(self, other: 'QuestUpdate') -> 'QuestUpdate':
-        from dataclasses import replace
-        from typing import Dict
-        
-        # 1. If either is "MULTI", we need to handle list merging
-        if self.quest_id == "MULTI" or other.quest_id == "MULTI":
-            my_updates = self.multi_updates if self.quest_id == "MULTI" else [replace(self, multi_updates=[])]
-            their_updates = other.multi_updates if other.quest_id == "MULTI" else [replace(other, multi_updates=[])]
-            
-            # Merge by ID
-            by_id: Dict[str, QuestUpdate] = {}
-            for qu in my_updates + their_updates:
-                if qu.quest_id in by_id:
-                    by_id[qu.quest_id] = by_id[qu.quest_id].merge(qu)
-                else:
-                    by_id[qu.quest_id] = qu
-            
-            # If only one quest type remains, return it as a single update
-            if len(by_id) == 1:
-                return list(by_id.values())[0]
-            
-            # Otherwise return a MULTI update
-            return replace(self, quest_id="MULTI", multi_updates=list(by_id.values()), progress_delta=0.0)
-            
-        # 2. Both are single-quest updates. If same ID, sum deltas.
-        if self.quest_id == other.quest_id:
-            return replace(self,
-                progress_delta=self.progress_delta + other.progress_delta,
-                status_set=other.status_set if other.status_set is not None else self.status_set
-            )
-            
-        # 3. Different IDs, create a MULTI update
-        return replace(self, quest_id="MULTI", multi_updates=[
-            replace(self, multi_updates=[]),
-            replace(other, multi_updates=[])
-        ], progress_delta=0.0)
 
 @dataclass(frozen=True, slots=True)
 class RewardUpdate:
