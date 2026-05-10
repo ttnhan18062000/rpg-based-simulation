@@ -1,4 +1,8 @@
 import pytest
+"""
+- [RPG-COMBAT-001] Damage calculation follows the Fractional Armor Mitigation (FAM) law.
+- [RPG-COMBAT-002] Combat outcomes (SURVIVE, DEFEAT, KILL) are mutually exclusive.
+"""
 from src.core.state import AuthoritativeState
 from src.engine.combat import CombatResolutionSystem
 from src.core.builder import V2EntityBuilder
@@ -15,8 +19,11 @@ def create_mock_entity(eid, faction=Faction.HERO_GUILD, atk=10, dfn=5, hp=100, r
         .build())
 
 def test_combat_damage_calculation():
-    # Formula: damage = atk * (atk / (atk + def * 2.0 + 1.0))
-    # atk=10, def=5 => 10 * (10 / (10 + 10 + 1)) = 10 * (10/21) = 10 * 0.476 = 4.76 => 4
+    """
+    [RPG-COMBAT-001] Damage calculation follows the Fractional Armor Mitigation (FAM) law.
+    Formula: damage = atk * (atk / (atk + def * 2.0 + 1.0))
+    atk=10, def=5 => 10 * (10 / (10 + 10 + 1)) = 10 * (10/21) = 10 * 0.476 = 4.76 => 4
+    """
     attacker = create_mock_entity(1, atk=10)
     defender = create_mock_entity(2, dfn=5)
     

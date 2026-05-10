@@ -10,6 +10,7 @@ def test_1000_tick_determinism():
     """
     Pillar 1: Long-Run Stability
     Verify that 1,000 ticks with a complex start state yields identical final hashes.
+    [RPG-AUTH-004] Simulation is deterministic.
     """
     profile = RuntimeProfile(
         name="long-run-test",

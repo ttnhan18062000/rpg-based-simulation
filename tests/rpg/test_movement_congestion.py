@@ -56,7 +56,7 @@ def make_entity(id, pos, faction=0, wait_count=0, osc_count=0,
 
 class TestDirectStep:
     def test_direct_step_to_adjacent_empty_tile(self):
-        """Direct step succeeds when target tile is unoccupied."""
+        """[RPG-COMBAT-003] Direct step succeeds when target tile is unoccupied."""
         e = make_entity(1, (5.0, 5.0))
         state = make_state(entities={1: e})
         result = MovementSystem.resolve_move(state, e, (6.0, 5.0))
@@ -138,7 +138,7 @@ class TestReroute:
 
 class TestReplan:
     def test_replan_on_prolonged_wait(self):
-        """After wait_count >= 5, replan clears target and path."""
+        """[RPG-COMBAT-014] After wait_count >= 5, replan clears target and path."""
         # Completely surrounded — no movement possible at all
         e = make_entity(1, (5.0, 5.0), wait_count=5)
         blockers = {
@@ -156,7 +156,7 @@ class TestReplan:
         assert result[1].navigation.clear_path is True
 
     def test_replan_on_oscillation(self):
-        """After oscillation_count >= 3, movement replans."""
+        """[RPG-COMBAT-014] After oscillation_count >= 3, movement replans."""
         # Entity at (5,5) with last_position=(6,5) and osc=3
         # When it moves to (6,5) again, oscillation is detected
         e = make_entity(1, (5.0, 5.0), osc_count=3, last_pos=(6.0, 5.0))

@@ -36,6 +36,7 @@ def base_state():
     )
 
 def test_harvest_full_inventory_does_not_deplete_node(base_state):
+    """[RPG-RES-003] [RPG-RES-004] Harvest aborts on inventory pressure."""
     # 1. Fill inventory with something else
     from src.core.state import ItemStack
     full_inventory = InventoryComponent(max_slots=1, items=[ItemStack("wood", 1)])
@@ -62,6 +63,7 @@ def test_harvest_full_inventory_does_not_deplete_node(base_state):
     assert final_state.resource_nodes[101].remaining_charges == 5, "Node should not be depleted if item cannot be added"
 
 def test_loot_ground_item_full_inventory_does_not_remove_item(base_state):
+    """[RPG-RES-204] Ground item pickup fails on inventory pressure."""
     # 1. Setup ground item
     ground_item = GroundItemState(id=201, item_id="iron_ore", quantity=1, position=(1, 0))
     from dataclasses import replace
@@ -92,6 +94,7 @@ def test_loot_ground_item_full_inventory_does_not_remove_item(base_state):
     assert 201 in final_state.ground_items, "Ground item should not be removed if pickup fails"
 
 def test_loot_corpse_full_inventory_does_not_remove_corpse(base_state):
+    """[RPG-RES-203] Corpse looting fails on inventory pressure."""
     # 1. Setup corpse
     corpse = CorpseState(id=301, original_entity_id=99, position=(1, 0), items=[ItemStack("iron_ore", 1)], decay_tick=100)
     from dataclasses import replace
@@ -122,6 +125,7 @@ def test_loot_corpse_full_inventory_does_not_remove_corpse(base_state):
     assert 301 in final_state.corpses, "Corpse should not be removed if loot fails"
 
 def test_crafting_full_inventory_does_not_consume_materials():
+    """[RPG-RES-200] Crafting fails on inventory pressure."""
     from src.engine.blacksmith import BlacksmithSystem, V2Recipe
     from src.core.state import InventoryComponent, ItemStack, IdentityComponent, AuthoritativeState, EntityState
     from src.core.updates import StateUpdate, EntityUpdate

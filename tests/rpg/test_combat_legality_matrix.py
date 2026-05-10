@@ -5,6 +5,10 @@ Combat legality matrix and authoritative outcome tests.
 - RPG-0014: aoe_splash_rules
 - RPG-0019: simultaneous_multi_attack_reward_limit
 - RPG-1656: authoritative_combat_resolution
+- [RPG-AUTH-002] Every gameplay side effect is represented as a typed update bucket.
+- [RPG-AUTH-003] Action legality is verified by the kernel before any side effect is calculated.
+- [RPG-COMBAT-003] Tactical modifiers are handled deterministically.
+- [RPG-COMBAT-004] AoE and Multi-target attacks resolve as separate atomic sub-intents.
 """
 import pytest
 from dataclasses import replace

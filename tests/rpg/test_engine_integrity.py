@@ -94,6 +94,7 @@ def test_bit_identical_determinism(base_state):
 def test_id_generation_integrity(base_state):
     """
     Verify that next_entity_id and next_node_id increment correctly.
+    [RPG-AUTH-005] Every world object is identified by a stable unique ID.
     """
     from src.systems.generator import EntityGenerator
     from src.world.spawn import SpawnService

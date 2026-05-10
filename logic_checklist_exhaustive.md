@@ -106,7 +106,7 @@ Relevant original source files:
   Atomic checklist:
 - [x] `RPG-COMBAT-001` Manhattan distance is the shared spatial metric for movement and combat range where claimed. <!-- SOURCE: src/engine/combat.py TEST: tests/rpg/test_combat_legality_matrix.py PROOF: integration -->
 - [x] `RPG-COMBAT-002` Cardinal/tile movement and occupancy legality are explicit. <!-- SOURCE: src/engine/legality.py TEST: tests/engine/test_phase5_combat_legality.py PROOF: unit -->
-- [x] `RPG-COMBAT-003` Occupied-tile movement is rejected or redirected rather than silently overlapped. <!-- SOURCE: src/engine/legality.py TEST: tests/engine/test_phase5_combat_legality.py PROOF: unit -->
+- [x] `RPG-COMBAT-003` Occupied-tile movement is rejected or redirected rather than silently overlapped. <!-- SOURCE: src/engine/legality.py TEST: tests/rpg/test_movement_congestion.py PROOF: unit -->
 - [x] `RPG-COMBAT-004` Melee legality depends on adjacency/engagement rules, not raw damage stats. <!-- SOURCE: src/engine/combat.py TEST: tests/rpg/test_combat_legality_matrix.py PROOF: integration -->
 - [x] `RPG-COMBAT-005` Ranged legality depends on range and line-of-sight rules. <!-- SOURCE: src/engine/combat.py TEST: tests/rpg/test_combat_legality_matrix.py PROOF: integration -->
 - [x] `RPG-COMBAT-006` AoE legality is a function of target position and area-of-effect radius. <!-- SOURCE: src/engine/combat.py TEST: tests/rpg/test_combat_legality_matrix.py PROOF: integration -->
@@ -144,7 +144,7 @@ Relevant original source files:
   Atomic checklist:
 - [x] `RPG-RES-001` Looting is a channeled state with progress, interruption, and completion semantics. <!-- SOURCE: src/core/conservation.py TEST: tests/rpg/test_resource_conservation.py PROOF: race -->
 - [x] `RPG-RES-002` Harvesting is a channeled state tied to nearby resource-node legality and harvest duration. <!-- SOURCE: src/core/conservation.py TEST: tests/rpg/test_resource_conservation.py PROOF: race -->
-- [x] `RPG-RES-003` Loot/harvest can abort because of inventory slot pressure. <!-- SOURCE: src/core/conservation.py TEST: tests/rpg/test_resource_conservation.py PROOF: race -->
+- [x] `RPG-RES-003` Loot/harvest can abort because of inventory slot pressure. <!-- SOURCE: src/core/conservation.py TEST: tests/rpg/test_resource_conservation.py PROOF: unit -->
 - [x] `RPG-RES-004` Loot/harvest can abort because of inventory weight pressure. <!-- SOURCE: src/core/conservation.py TEST: tests/rpg/test_resource_conservation.py PROOF: race -->
 - [x] `RPG-RES-005` Inventory state tracks both slots and weight/carry burden. <!-- SOURCE: src/core/conservation.py TEST: tests/rpg/test_resource_conservation.py PROOF: race -->
 - [x] `RPG-RES-006` Ground items, node yields, and inventory additions/removals are authoritative side effects. <!-- SOURCE: src/core/conservation.py TEST: tests/rpg/test_resource_conservation.py PROOF: race -->

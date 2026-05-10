@@ -160,8 +160,8 @@
     "hash": "1aa18e03b5e295e91df0e1fac8b64e79"
   },
   "/home/vboxuser/Work/rpg-based-simulation/src/core/updates.py": {
-    "mtime": 1778391956.6896937,
-    "hash": "97c44ffa5ac23af63454779abcb7d0d9"
+    "mtime": 1778398019.4046586,
+    "hash": "9a0fe64b9af032a9cc861bc72b5a4f65"
   },
   "/home/vboxuser/Work/rpg-based-simulation/src/core/builder.py": {
     "mtime": 1778091068.3165483,
@@ -420,12 +420,12 @@
     "hash": "f2c6dff759b84a38253bb1374560e8fe"
   },
   "/home/vboxuser/Work/rpg-based-simulation/src/engine/legality.py": {
-    "mtime": 1778385331.8613038,
-    "hash": "635f0cbbab3ac63626594f0629fba3fb"
+    "mtime": 1778424209.5968149,
+    "hash": "0b5e585b93a8210ffcceef27bca3506e"
   },
   "/home/vboxuser/Work/rpg-based-simulation/src/engine/pipeline.py": {
-    "mtime": 1778392829.715076,
-    "hash": "583786f4ba57b9812fcbd4759ae5b775"
+    "mtime": 1778424209.5982897,
+    "hash": "00e49069b044cac92edca1e4333a9cd3"
   },
   "/home/vboxuser/Work/rpg-based-simulation/src/engine/executor.py": {
     "mtime": 1778171504.7822502,
@@ -444,8 +444,8 @@
     "hash": "2392d2eebbc658acd8cc71f04cce2fa1"
   },
   "/home/vboxuser/Work/rpg-based-simulation/src/engine/combat.py": {
-    "mtime": 1778037054.0926757,
-    "hash": "5f909f18b3cc29acc23045652ea99614"
+    "mtime": 1778394648.1167858,
+    "hash": "a5205ea02d329abd6fc2e59506939ef0"
   },
   "/home/vboxuser/Work/rpg-based-simulation/src/engine/tactical.py": {
     "mtime": 1777921450.2237866,
@@ -476,8 +476,8 @@
     "hash": "0f2a9e93e91a80e996ea36445af04a33"
   },
   "/home/vboxuser/Work/rpg-based-simulation/src/engine/domain_logic.py": {
-    "mtime": 1778390513.4833422,
-    "hash": "f5d8a34634065b118c5d9a02cdc4197a"
+    "mtime": 1778424209.595252,
+    "hash": "8222c0db0a81a92da58e60429d3a806a"
   },
   "/home/vboxuser/Work/rpg-based-simulation/src/engine/__init__.py": {
     "mtime": 1777233125.5903063,
@@ -612,8 +612,8 @@
     "hash": "e6a139e834e8c02a010e240f6dc98805"
   },
   "/home/vboxuser/Work/rpg-based-simulation/src/world/boss.py": {
-    "mtime": 1777901569.1822684,
-    "hash": "c1390cda542462ba7973e2000926c2e3"
+    "mtime": 1778424209.5988386,
+    "hash": "9be7cda7a4baaeb75caf9a144eecae2d"
   },
   "/home/vboxuser/Work/rpg-based-simulation/src/world/spawn.py": {
     "mtime": 1777901569.1837275,
@@ -968,8 +968,8 @@
     "hash": "4685b842ab9408d7ba1d5d8155499cdf"
   },
   "/home/vboxuser/Work/rpg-based-simulation/tests/tactical/test_bracketing_bonus.py": {
-    "mtime": 1778249195.521976,
-    "hash": "2f80b5f31f42d7254f5236f1a265313b"
+    "mtime": 1778394703.2806857,
+    "hash": "1d38dead5e57dff47f4fbbfe9391006a"
   },
   "/home/vboxuser/Work/rpg-based-simulation/tests/tactical/test_anti_stalemate.py": {
     "mtime": 1778091068.3345509,
@@ -1360,8 +1360,8 @@
     "hash": "0e4ed3a4326d4635c36f55e221053fe7"
   },
   "/home/vboxuser/Work/rpg-based-simulation/tests/engine/test_milestone_d_closure.py": {
-    "mtime": 1778171504.78425,
-    "hash": "0891a2e7802d72e0997389886c3f23d1"
+    "mtime": 1778424209.5991416,
+    "hash": "7d8436b357fdf1fc7e013738e740b293"
   },
   "/home/vboxuser/Work/rpg-based-simulation/tests/engine/test_race_conditions_v2.py": {
     "mtime": 1778091068.3217723,
@@ -1640,8 +1640,8 @@
     "hash": "0824d080b44f106f645c4c5f4ecee139"
   },
   "/home/vboxuser/Work/rpg-based-simulation/tests/integrity/test_logic_guards.py": {
-    "mtime": 1778249195.5209758,
-    "hash": "6296c2201441af25c4ecb7f109cf77e4"
+    "mtime": 1778424209.599252,
+    "hash": "410f71bff4d368712c23146d144f1e8f"
   },
   "/home/vboxuser/Work/rpg-based-simulation/tests/integrity/test_manifest_guards.py": {
     "mtime": 1777233125.607115,
@@ -1704,8 +1704,8 @@
     "hash": "089be2e95964010b4ce35887a3338f2d"
   },
   "/home/vboxuser/Work/rpg-based-simulation/tests/rpg/test_combat_legality_matrix.py": {
-    "mtime": 1778092911.4860888,
-    "hash": "6f62bf794cbf2b02d530f14ccf5ef8af"
+    "mtime": 1778424209.599252,
+    "hash": "1511a1f28aac2fb58b6de4202469c6a8"
   },
   "/home/vboxuser/Work/rpg-based-simulation/tests/rpg/test_domain_7_social.py": {
     "mtime": 1778093190.813915,
@@ -1740,8 +1740,8 @@
     "hash": "68dc4fd9a2bf207cc731287abde52e74"
   },
   "/home/vboxuser/Work/rpg-based-simulation/tests/rpg/test_rpg_core_recovery.py": {
-    "mtime": 1778390520.01733,
-    "hash": "45283ea157c916248e930ae45709dc2c"
+    "mtime": 1778424209.600252,
+    "hash": "36427b40704ccf2668debe59c7d667d1"
   },
   "/home/vboxuser/Work/rpg-based-simulation/tests/rpg/test_tactical_movement.py": {
     "mtime": 1778172883.9908133,
@@ -1756,8 +1756,8 @@
     "hash": "5ca15f56d6dcc48ca3944140f4a2b040"
   },
   "/home/vboxuser/Work/rpg-based-simulation/tests/rpg/test_living_world_ph9.py": {
-    "mtime": 1778172651.1793964,
-    "hash": "994da842f03bc2957001e5ea8f35e777"
+    "mtime": 1778424209.600252,
+    "hash": "ec28c1799fb197b0dcbccbed96d09771"
   },
   "/home/vboxuser/Work/rpg-based-simulation/tests/world/test_chest_lifecycle.py": {
     "mtime": 1778171504.80025,
@@ -1812,8 +1812,8 @@
     "hash": "030bd31cec498e191a1859c6e431092b"
   },
   "/home/vboxuser/Work/rpg-based-simulation/tests/world/test_world_dynamics.py": {
-    "mtime": 1777233125.6223695,
-    "hash": "d5a6beea94ae5e6ca89dbcb12e038a6b"
+    "mtime": 1778424209.600252,
+    "hash": "aae4d2c078ec889190854564b3a7e342"
   },
   "/home/vboxuser/Work/rpg-based-simulation/tests/world/test_building_interaction_contract.py": {
     "mtime": 1778091068.3385515,
@@ -1999,14 +1999,6 @@
     "mtime": 1777656440.7250414,
     "hash": "8f8138a3914936b6beacf630f426e7eb"
   },
-  "/home/vboxuser/Work/rpg-based-simulation/tests_output_2.txt": {
-    "mtime": 1778308647.9247785,
-    "hash": "f75c451ad99bd72ea8339d2424627679"
-  },
-  "/home/vboxuser/Work/rpg-based-simulation/unchecked_logic_implementation_plan.md": {
-    "mtime": 1777863995.7286477,
-    "hash": "bc41dc505027cf53f69b8d2448bccec0"
-  },
   "/home/vboxuser/Work/rpg-based-simulation/CONTRIBUTING.md": {
     "mtime": 1777164592.8453658,
     "hash": "2d95676fdaa8d0bc8728ed594c010685"
@@ -2019,41 +2011,13 @@
     "mtime": 1777297722.8075528,
     "hash": "2a03b6242a3240c11235beb43e93ab0d"
   },
-  "/home/vboxuser/Work/rpg-based-simulation/test_output.txt": {
-    "mtime": 1778307417.8697557,
-    "hash": "836688bb6d0c5efda16d36119108d7a3"
-  },
   "/home/vboxuser/Work/rpg-based-simulation/output.txt": {
     "mtime": 1777868566.128928,
     "hash": "86b857022160f57b0630bb0cd4cfe414"
   },
-  "/home/vboxuser/Work/rpg-based-simulation/test_output_4.txt": {
-    "mtime": 1778307665.30939,
-    "hash": "6c1cad1a7b3bc5efae9750a948f3431c"
-  },
   "/home/vboxuser/Work/rpg-based-simulation/prometheus.yml": {
     "mtime": 1775049610.160541,
     "hash": "1803b2e55c436780c3edcf3b0c2af410"
-  },
-  "/home/vboxuser/Work/rpg-based-simulation/tests_output.txt": {
-    "mtime": 1778308456.243926,
-    "hash": "c02e6cbf9b97897a31dc18f3ce37dcc8"
-  },
-  "/home/vboxuser/Work/rpg-based-simulation/test_output_5.txt": {
-    "mtime": 1778307840.4173589,
-    "hash": "2a383ae0a8b79213253cea5087a21113"
-  },
-  "/home/vboxuser/Work/rpg-based-simulation/test_output_3.txt": {
-    "mtime": 1778307603.8132107,
-    "hash": "f9321e677210f431548dc944caec8997"
-  },
-  "/home/vboxuser/Work/rpg-based-simulation/test_output_2.txt": {
-    "mtime": 1778307567.6793356,
-    "hash": "b7144f5bac90957cf3dbfa41759c68eb"
-  },
-  "/home/vboxuser/Work/rpg-based-simulation/src_v2_principle.md": {
-    "mtime": 1777164593.1512625,
-    "hash": "32ec3162e8f8412e0751fc835e450bfb"
   },
   "/home/vboxuser/Work/rpg-based-simulation/docker-compose.yml": {
     "mtime": 1775741100.114199,
@@ -2067,14 +2031,6 @@
     "mtime": 1777897641.5322454,
     "hash": "7273b919277bcabaa8d53cd9932db981"
   },
-  "/home/vboxuser/Work/rpg-based-simulation/src_v2_overview.md": {
-    "mtime": 1777164593.152773,
-    "hash": "7046a1e2e0916271328c3489c81a5f70"
-  },
-  "/home/vboxuser/Work/rpg-based-simulation/test_base_rework_plan.md": {
-    "mtime": 1778091068.3165483,
-    "hash": "852e09c8c2281995cd1b9acf3bc310af"
-  },
   "/home/vboxuser/Work/rpg-based-simulation/frontend/index.html": {
     "mtime": 1775049610.1570344,
     "hash": "1cceba56d96376787bcb066d34691feb"
@@ -2082,78 +2038,6 @@
   "/home/vboxuser/Work/rpg-based-simulation/frontend/README.md": {
     "mtime": 1777164592.8616574,
     "hash": "cac141da861c855e069a9c32557458ac"
-  },
-  "/home/vboxuser/Work/rpg-based-simulation/staging_artifacts/TCK-20260504-V2-ENGINE-REGRESSION-FIX/plan.md": {
-    "mtime": 1777897834.7388792,
-    "hash": "f1fd0f004ae3e74c9ab8e9edab67267a"
-  },
-  "/home/vboxuser/Work/rpg-based-simulation/staging_artifacts/TCK-20260504-V2-ENGINE-REGRESSION-FIX/test_plan.md": {
-    "mtime": 1777897857.965835,
-    "hash": "ed773b8a4540d208b31bb0b6524f34ca"
-  },
-  "/home/vboxuser/Work/rpg-based-simulation/staging_artifacts/TCK-20260504-V2-ENGINE-REGRESSION-FIX/investigation.md": {
-    "mtime": 1777897850.2018497,
-    "hash": "6831424dfbc1673f52d1db822cb83269"
-  },
-  "/home/vboxuser/Work/rpg-based-simulation/staging_artifacts/TCK-20260506-TOWN-TEST-STABILIZATION/plan.md": {
-    "mtime": 1778048689.1872432,
-    "hash": "f1c71e9b026f3cabdb31cd822bcf53dd"
-  },
-  "/home/vboxuser/Work/rpg-based-simulation/staging_artifacts/TCK-20260506-TOWN-TEST-STABILIZATION/test_plan.md": {
-    "mtime": 1778048702.8423846,
-    "hash": "fe0de3ce920fd9696ecc31b7fa397aa5"
-  },
-  "/home/vboxuser/Work/rpg-based-simulation/staging_artifacts/TCK-20260506-TOWN-TEST-STABILIZATION/investigation.md": {
-    "mtime": 1778048695.6857212,
-    "hash": "a15e1daf46a80c00fc4a3615b2346f7c"
-  },
-  "/home/vboxuser/Work/rpg-based-simulation/staging_artifacts/TCK-20260508-ECON-PIPELINE-FIX/plan.md": {
-    "mtime": 1778202460.966589,
-    "hash": "80b92806f9e8dc3fc6ae6dea7322dde9"
-  },
-  "/home/vboxuser/Work/rpg-based-simulation/staging_artifacts/TCK-20260508-ECON-PIPELINE-FIX/test_plan.md": {
-    "mtime": 1778202465.2335722,
-    "hash": "e35efec0da415357b85d86a72e67ef22"
-  },
-  "/home/vboxuser/Work/rpg-based-simulation/staging_artifacts/TCK-20260508-ECON-PIPELINE-FIX/investigation.md": {
-    "mtime": 1778202471.923546,
-    "hash": "1caf73bae0c84704dd3cc7f8361fb441"
-  },
-  "/home/vboxuser/Work/rpg-based-simulation/staging_artifacts/TCK-20260503-HARDEN-COGNITION/test_plan.md": {
-    "mtime": 1777772359.839147,
-    "hash": "d5b24e1833dcbc146e8ea1902a7f7bfd"
-  },
-  "/home/vboxuser/Work/rpg-based-simulation/staging_artifacts/TCK-20260503-HARDEN-COGNITION/investigation.md": {
-    "mtime": 1777772354.02716,
-    "hash": "a0e5af7eac5d96baf0cf96e3dd88022b"
-  },
-  "/home/vboxuser/Work/rpg-based-simulation/staging_artifacts/TCK-20260507-TEST-BASE-REWORK/plan.md": {
-    "mtime": 1778092770.4397504,
-    "hash": "53663d65cc23e9068c5efbd2b757eec1"
-  },
-  "/home/vboxuser/Work/rpg-based-simulation/staging_artifacts/TCK-20260507-TEST-BASE-REWORK/test_plan.md": {
-    "mtime": 1778092776.3377383,
-    "hash": "bec21bde4b717f9d362ed2087b80c791"
-  },
-  "/home/vboxuser/Work/rpg-based-simulation/staging_artifacts/TCK-20260507-TEST-BASE-REWORK/investigation.md": {
-    "mtime": 1778092774.3237424,
-    "hash": "e34d54488c832e03bd46011b4d7e6af3"
-  },
-  "/home/vboxuser/Work/rpg-based-simulation/staging_artifacts/TCK-20260502-E5-CLOSURE-HARDENING/plan.md": {
-    "mtime": 1777656379.9755664,
-    "hash": "7d97b3b6c90959d42d69affacfd285a0"
-  },
-  "/home/vboxuser/Work/rpg-based-simulation/staging_artifacts/TCK-20260502-STRATEGIC-HARDENING/plan.md": {
-    "mtime": 1777738276.8074958,
-    "hash": "b9a6cc5ea8edca770a4595f86f2ec187"
-  },
-  "/home/vboxuser/Work/rpg-based-simulation/staging_artifacts/TCK-20260502-STRATEGIC-HARDENING/test_plan.md": {
-    "mtime": 1777738269.5675118,
-    "hash": "270a3662e191506a6e67f6b711da4151"
-  },
-  "/home/vboxuser/Work/rpg-based-simulation/staging_artifacts/TCK-20260502-STRATEGIC-HARDENING/investigation.md": {
-    "mtime": 1777738248.756558,
-    "hash": "1f6c226dc9e94c0e8690eca086388a02"
   },
   "/home/vboxuser/Work/rpg-based-simulation/scratch/difficulty_scaling_output.txt": {
     "mtime": 1778030990.2289073,
@@ -2188,11 +2072,11 @@
     "hash": "9e2c39c37b641aa50ee67f2bcf6e450a"
   },
   "/home/vboxuser/Work/rpg-based-simulation/tmp/test_harness_contract/release_report.md": {
-    "mtime": 1778389190.1912994,
-    "hash": "687ba991d431716f038dd1b8c030dc14"
+    "mtime": 1778410790.5880156,
+    "hash": "a7a997d5d911b46e6dd0669b7dfdae23"
   },
   "/home/vboxuser/Work/rpg-based-simulation/tmp/test_harness_resilience/release_report.md": {
-    "mtime": 1778389193.2671556,
-    "hash": "34f5a0af8387470768cfaaec29182c7f"
+    "mtime": 1778410793.6723216,
+    "hash": "f2974c593c40db60f887847b9dc97687"
   }
 }

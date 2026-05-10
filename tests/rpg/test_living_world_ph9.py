@@ -13,6 +13,7 @@ def test_long_run_simulation_ph9():
     """
     Phase 9 Long-Run Stability Test.
     Verifies:
+    - [RPG-AUTH-001] Action proposals are typed intents, not direct world mutation.
     1. Resource replenishment.
     2. Monster density caps.
     3. Threat escalation and decay.

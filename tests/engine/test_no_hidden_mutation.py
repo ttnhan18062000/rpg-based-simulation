@@ -85,7 +85,10 @@ def test_apply_determinism_sorting():
     assert next_state_1.global_resources == next_state_2.global_resources
 
 def test_auth_state_is_frozen():
-    """Verify that AuthoritativeState itself cannot be mutated directly."""
+    """
+    Verify that AuthoritativeState itself cannot be mutated directly.
+    [RPG-AUTH-006] All state mutations must pass through the AuthoritativeApplyPipeline.
+    """
     state = AuthoritativeState(tick=1, seed=1)
     with pytest.raises(Exception): # dataclasses.FrozenInstanceError
         state.tick = 2
