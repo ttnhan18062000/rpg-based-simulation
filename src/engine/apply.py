@@ -594,20 +594,25 @@ class ApplyPath:
         if update.quest:
             from src.core.quests import QuestState, QuestStatus
             from src.quests.service import QuestService
-            q_id = update.quest.quest_id
-            if q_id in new_strategic.projects:
-                proj = new_strategic.projects[q_id]
-                if isinstance(proj, QuestState):
-                    # 1. Apply progress
-                    updated_quest = QuestService.add_progress(proj, update.quest.progress_delta)
-                    
-                    # 2. Manual status override (if any)
-                    if update.quest.status_set is not None:
-                        updated_quest = replace(updated_quest, quest_status=update.quest.status_set)
-                    
-                    new_projs = dict(new_strategic.projects)
-                    new_projs[q_id] = updated_quest
-                    new_strategic = replace(new_strategic, projects=new_projs)
+            
+            q_updates = update.quest.multi_updates if update.quest.multi_updates else [update.quest]
+            new_projs = dict(new_strategic.projects)
+            
+            for qu in q_updates:
+                q_id = qu.quest_id
+                if q_id in new_projs:
+                    proj = new_projs[q_id]
+                    if isinstance(proj, QuestState):
+                        # 1. Apply progress
+                        updated_quest = QuestService.add_progress(proj, qu.progress_delta)
+                        
+                        # 2. Manual status override (if any)
+                        if qu.status_set is not None:
+                            updated_quest = replace(updated_quest, quest_status=qu.status_set)
+                        
+                        new_projs[q_id] = updated_quest
+            
+            new_strategic = replace(new_strategic, projects=new_projs)
 
         if update.reward and update.reward.xp_gain > 0:
             from src.progression.leveling import LevelingService

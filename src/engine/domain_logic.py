@@ -6,8 +6,9 @@ from dataclasses import replace
 from src.core.updates import (
     EntityUpdate, IdentityUpdate, CombatUpdate, 
     LifecycleUpdate, StateUpdate, RewardUpdate,
-    SocialUpdate
+    SocialUpdate, NavigationUpdate
 )
+from src.core.enums import ReasonCode
 
 if TYPE_CHECKING:
     from src.core.state import EntityState
@@ -395,7 +396,11 @@ class SimulationDomainLogic:
                 from src.engine.legality import LegalityServiceV2
                 is_legal, reason = LegalityServiceV2.verify_attack_legality(entity, target, context)
                 if not is_legal:
-                    return {entity.id: EntityUpdate(entity_id=entity.id, readiness_delta=-50.0, navigation=NavigationUpdate(failure_reason=reason))}
+                    return {entity.id: EntityUpdate(
+                        entity_id=entity.id, 
+                        readiness_delta=-50.0, 
+                        navigation=NavigationUpdate(failure_reason=reason)
+                    )}
                 from src.engine.combat import CombatResolutionSystem
                 combat_up = CombatResolutionSystem.resolve_attack(entity, target, context)
                 
@@ -413,7 +418,10 @@ class SimulationDomainLogic:
                     from src.engine.quests import QuestResolutionSystem
                     q_updates = QuestResolutionSystem.evaluate_combat_victory(entity, target.kind)
                     if q_updates:
-                        attacker_up = replace(attacker_up, quest=q_updates[0])
+                        merged_qu = q_updates[0]
+                        for i in range(1, len(q_updates)):
+                            merged_qu = merged_qu.merge(q_updates[i])
+                        attacker_up = replace(attacker_up, quest=merged_qu)
 
                 
                 # Defender Update: Damage + Mortality
@@ -466,16 +474,16 @@ class SimulationDomainLogic:
             
             # 1. Skill Exists and Known?
             if not skill or skill_id not in entity.identity.learned_skills:
-                 return {entity.id: EntityUpdate(entity_id=entity.id, readiness_delta=-10.0)}
+                 return {entity.id: EntityUpdate(entity_id=entity.id, readiness_delta=-10.0, navigation=NavigationUpdate(failure_reason=ReasonCode.SKILL_NOT_LEARNED))}
             
             # 2. Cooldown?
             current_tick = getattr(context, "tick", 0) if context else 0
             if current_tick < entity.identity.cooldowns.get(skill_id, 0):
-                 return {entity.id: EntityUpdate(entity_id=entity.id, readiness_delta=-10.0)}
+                 return {entity.id: EntityUpdate(entity_id=entity.id, readiness_delta=-10.0, navigation=NavigationUpdate(failure_reason=ReasonCode.SKILL_ON_COOLDOWN))}
             
             # 3. Stamina?
             if not StaminaService.can_use_skill(entity.stamina, skill.cost):
-                 return {entity.id: EntityUpdate(entity_id=entity.id, readiness_delta=-10.0)}
+                 return {entity.id: EntityUpdate(entity_id=entity.id, readiness_delta=-10.0, navigation=NavigationUpdate(failure_reason=ReasonCode.ACTION_EXHAUSTION))}
                  
             target = None
             if neighbor_view:
@@ -490,7 +498,7 @@ class SimulationDomainLogic:
                  return {entity.id: EntityUpdate(entity_id=entity.id, readiness_delta=-10.0, navigation=NavigationUpdate(failure_reason="TARGET_NOT_FOUND"))}
             
             if not target.combat.alive:
-                 return {entity.id: EntityUpdate(entity_id=entity.id, readiness_delta=-10.0)}
+                 return {entity.id: EntityUpdate(entity_id=entity.id, readiness_delta=-10.0, navigation=NavigationUpdate(failure_reason=ReasonCode.TARGET_INCAPACITATED))}
 
             # 5. Resolve
             skill_dmg = SkillScalingService.calculate_skill_damage(
@@ -502,7 +510,15 @@ class SimulationDomainLogic:
             )
             
             if combat_up.outcome_kind == "REJECTED":
-                return {entity.id: EntityUpdate(entity_id=entity.id, readiness_delta=-10.0)}
+                return {
+                    entity.id: EntityUpdate(
+                        entity_id=entity.id,
+                        readiness_delta=-10.0,
+                        navigation=NavigationUpdate(
+                            failure_reason=combat_up.failure_reason,
+                        ),
+                    )
+                }
             
             # 6. Apply Side Effects
             next_ready_tick = current_tick + skill.cooldown
@@ -548,9 +564,15 @@ class SimulationDomainLogic:
             
             attacker_combat = combat_updates.get(entity.id)
             if attacker_combat and attacker_combat.outcome_kind == "REJECTED":
-                return {entity.id: EntityUpdate(entity_id=entity.id, readiness_delta=-10.0)}
+                return {entity.id: EntityUpdate(
+                    entity_id=entity.id, 
+                    readiness_delta=-10.0, 
+                    navigation=NavigationUpdate(failure_reason=attacker_combat.failure_reason)
+                )}
             
             updates = {}
+            attacker_q_updates = []
+            
             for eid, c_up in combat_updates.items():
                 if eid == entity.id:
                     # Attacker Update: Readiness + Rewards
@@ -572,6 +594,32 @@ class SimulationDomainLogic:
                             is_permadeath_set=c_up.is_permadeath_set
                         ) if (c_up.generation_delta != 0 or c_up.is_permadeath_set is not None) else None
                     )
+                    
+                    # Check HUNT quests if target was killed
+                    if c_up.alive_set is False:
+                        target = (
+                            context.entities.get(eid)
+                            if context and hasattr(context, "entities")
+                            else None
+                        )
+
+                        if target:
+                            from src.engine.quests import QuestResolutionSystem
+
+                            q_updates = QuestResolutionSystem.evaluate_combat_victory(
+                                entity,
+                                target.kind,
+                            )
+
+                            if q_updates:
+                                attacker_q_updates.extend(q_updates)
+            
+            # Merge all collected quest updates for the attacker
+            if attacker_q_updates and entity.id in updates:
+                merged_qu = attacker_q_updates[0]
+                for i in range(1, len(attacker_q_updates)):
+                    merged_qu = merged_qu.merge(attacker_q_updates[i])
+                updates[entity.id] = replace(updates[entity.id], quest=merged_qu)
             
             # Stamina drain on AOE attack
             from src.core.updates import StaminaUpdate

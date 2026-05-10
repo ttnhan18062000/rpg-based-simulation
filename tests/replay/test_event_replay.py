@@ -54,5 +54,5 @@ def test_event_replay_fidelity():
     
     # 5. Assert Fidelity
     assert full_log_original == full_log_replay
-    assert any("TRANS_ACCEPT" in event for event in log1)
-    assert any("TRANS_FAIL" in event for event in log2)
+    assert any("TRANSACTION ACCEPT" in event for event in log1)
+    assert any("TRANSACTION FAIL" in event for event in log2)

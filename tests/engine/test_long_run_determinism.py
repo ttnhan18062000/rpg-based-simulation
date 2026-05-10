@@ -29,7 +29,7 @@ def test_1000_tick_determinism():
     for i in range(1, 11):
         entities[i] = (V2EntityBuilder(i)
                        .kind("hero" if i <= 5 else "mob")
-                       .at((float(i), float(i)))
+                       .location(float(i), float(i))
                        .combat(readiness=100.0)
                        .build())
     

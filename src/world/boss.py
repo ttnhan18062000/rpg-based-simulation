@@ -17,64 +17,140 @@ class BossService:
     BOSS_SPAWN_THRESHOLD = 50.0 # Maturity or Threat threshold
     
     @staticmethod
-    def check_for_boss_spawn(state: AuthoritativeState, generator: EntityGenerator) -> StateUpdate:
+    def check_for_boss_spawn(
+        state: AuthoritativeState,
+        generator: EntityGenerator,
+    ) -> StateUpdate:
         """
         Deterministic, idempotent boss spawning.
+
+        LAW:
+            At most one active living world boss may exist per spawn/home region.
+
+        Important:
+            Boss idempotency must NOT depend only on current position. A boss can
+            move outside its original region after spawning. If we map bosses by
+            current position only, the original region may incorrectly spawn a
+            second boss.
+
+        Boss ownership source:
+            1. identity.properties["boss_region_id"]
+            2. strategic.home_region_id
+            3. fallback: current position region
         """
-        # Rule: Max 1 active boss per region
-        active_bosses = [e for e in state.entities.values() 
-                         if e.kind == "world_boss" and e.lifecycle.active and e.combat.alive]
-        
-        # Mapping regions to their bosses
-        # For simplicity, we check if ANY boss is active if we only want 1 world boss total,
-        # but rule says "per region".
-        region_boss_map = {}
+        from dataclasses import replace
+
+        from src.core.state import ItemStack
         from src.engine.legality import LegalityServiceV2
-        for b in active_bosses:
-            r = LegalityServiceV2.get_region_for_position(b.navigation.position, state)
-            if r: region_boss_map[r.id] = b
-            
-        entities_add = []
-        
-        for r_id, region in state.regions.items():
-            # print(f"DEBUG: Tick {state.tick} Region {r_id} Maturity {state.maturity} Trauma {region.trauma_score}")
-            if r_id in region_boss_map:
+
+        def _is_active_living_boss(entity) -> bool:
+            return (
+                entity.kind == "world_boss"
+                and entity.lifecycle.active
+                and entity.combat.alive
+            )
+
+        def _boss_region_id(entity) -> str | None:
+            # Primary: immutable spawn-region metadata.
+            region_id = entity.identity.properties.get("boss_region_id")
+            if region_id:
+                return region_id
+
+            # Secondary: strategic home region, if your strategic component uses it.
+            region_id = getattr(entity.strategic, "home_region_id", None)
+            if region_id:
+                return region_id
+
+            # Fallback only for old bosses that do not have metadata yet.
+            region = LegalityServiceV2.get_region_for_position(
+                entity.navigation.position,
+                state,
+            )
+
+            return region.id if region else None
+
+        region_boss_map = {}
+
+        for entity in state.entities.values():
+            if not _is_active_living_boss(entity):
                 continue
-                
-            # Deterministic Spawn Check
-            # Rule: maturity > 50 and regional threat is elevated
-            if state.maturity >= BossService.BOSS_SPAWN_THRESHOLD and region.trauma_score >= 20.0:
-                # Deterministic Location: near regional danger anchor (center for now)
-                xmin, ymin, xmax, ymax = region.bounds
-                cx, cy = (xmin + xmax) / 2.0, (ymin + ymax) / 2.0
-                
-                # Rule: never inside town/sanctuary (Town is at 0,0)
-                if abs(cx) < 20 and abs(cy) < 20:
-                    # Shift to edge if too close to town
-                    cx = math.copysign(25, cx)
-                    cy = math.copysign(25, cy)
-                
-                # Ensure deterministic valid tile (simple grid snap for now)
-                spawn_pos = (int(cx), int(cy))
-                
-                # Boss Metadata & Loot
-                from src.core.state import ItemStack
-                boss = generator.spawn_monster(
-                    spawn_pos,
-                    state=state,
-                    kind="ancient_sentinel",
-                    difficulty_tier=5 # Boss tier
-                )
-                # Mark as world_boss and add boss loot
-                from dataclasses import replace
-                boss = replace(boss, 
-                    kind="world_boss",
-                    inventory=replace(boss.inventory, items=[ItemStack(item_id="ancient_core", quantity=1)])
-                )
-                
-                entities_add.append(boss)
-                
-        return StateUpdate(entities_add=entities_add)
+
+            region_id = _boss_region_id(entity)
+
+            if region_id is not None:
+                region_boss_map[region_id] = entity
+
+        entities_add = []
+
+        for region_id, region in state.regions.items():
+            if region_id in region_boss_map:
+                continue
+
+            if not (
+                state.maturity >= BossService.BOSS_SPAWN_THRESHOLD
+                and region.trauma_score >= 20.0
+            ):
+                continue
+
+            xmin, ymin, xmax, ymax = region.bounds
+            cx = (xmin + xmax) / 2.0
+            cy = (ymin + ymax) / 2.0
+
+            # Rule: never inside town/sanctuary.
+            if abs(cx) < 20 and abs(cy) < 20:
+                cx = math.copysign(25, cx)
+                cy = math.copysign(25, cy)
+
+            spawn_pos = (
+                int(cx),
+                int(cy),
+            )
+
+            boss = generator.spawn_monster(
+                spawn_pos,
+                state=state,
+                kind="ancient_sentinel",
+                difficulty_tier=5,
+            )
+
+            boss = replace(
+                boss,
+                kind="world_boss",
+                lifecycle=replace(
+                    boss.lifecycle,
+                    active=True,
+                ),
+                identity=replace(
+                    boss.identity,
+                    properties={
+                        **boss.identity.properties,
+                        "boss_region_id": region_id,
+                        "boss_spawn_tick": state.tick,
+                    },
+                ),
+                strategic=replace(
+                    boss.strategic,
+                    home_region_id=region_id,
+                ),
+                inventory=replace(
+                    boss.inventory,
+                    items=[
+                        ItemStack(
+                            item_id="ancient_core",
+                            quantity=1,
+                        )
+                    ],
+                ),
+            )
+
+            entities_add.append(boss)
+
+            # Protect this same call too.
+            region_boss_map[region_id] = boss
+
+        return StateUpdate(
+            entities_add=entities_add,
+        )
 
     @staticmethod
     def resolve_boss_death(state: AuthoritativeState, boss_id: int) -> StateUpdate:

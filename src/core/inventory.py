@@ -65,14 +65,17 @@ class InventoryService:
                 # Update existing stack in temp_items (optional for slot count, but good for completeness)
                 # For slots, we only care if we need NEW ones.
                 remaining_qty -= to_add
+                print(f"DEBUG: Filling existing stack for {stack.item_id}. Space: {space}, to_add: {to_add}, remaining: {remaining_qty}")
             
             # 2. Add new stacks
             while remaining_qty > 0:
                 if len(temp_items) >= inventory.max_slots:
+                    print(f"DEBUG: Capacity FAIL for {stack.item_id}. Slots: {len(temp_items)}/{inventory.max_slots}")
                     return False
                 to_add = min(remaining_qty, defn.stack_size)
                 temp_items.append(ItemStack(stack.item_id, to_add))
                 remaining_qty -= to_add
+                print(f"DEBUG: Added new stack for {stack.item_id}. Slots: {len(temp_items)}")
                 
         return True
 

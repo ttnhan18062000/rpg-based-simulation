@@ -95,44 +95,59 @@ class QuestResolutionSystem:
             entity = state.entities.get(e_id)
             if not entity: continue
             
-            q_id = ent_upd.quest.quest_id
-            project = entity.strategic.projects.get(q_id)
-            if not project or not isinstance(project, QuestState):
-                continue
-                
-            # Simulate what the new state will be
-            updated_quest = QuestService.add_progress(project, ent_upd.quest.progress_delta)
-            if ent_upd.quest.status_set is not None:
-                updated_quest = replace(updated_quest, quest_status=ent_upd.quest.status_set)
-                
-            # 1. If transition to COMPLETED is happening OR quest is already REWARD_PENDING
-            # we emit an authoritative reward intent.
-            is_newly_completed = (updated_quest.quest_status == QuestStatus.COMPLETED and project.quest_status == QuestStatus.ACTIVE)
-            is_retry_pending = (project.quest_status == QuestStatus.REWARD_PENDING)
+            q_updates = ent_upd.quest.multi_updates if ent_upd.quest.multi_updates else [ent_upd.quest]
             
-            if is_newly_completed or is_retry_pending:
-                from src.core.state import ItemStack
-                items = [ItemStack(item_id=tid, quantity=1) for tid in updated_quest.reward.items]
+            current_quest_updates = []
+            current_resource_transfers = list(ent_upd.resource_transfers)
+            
+            for qu in q_updates:
+                q_id = qu.quest_id
+                project = entity.strategic.projects.get(q_id)
+                if not project or not isinstance(project, QuestState):
+                    current_quest_updates.append(qu)
+                    continue
+                    
+                # Simulate what the new state will be
+                updated_quest = QuestService.add_progress(project, qu.progress_delta)
+                if qu.status_set is not None:
+                    updated_quest = replace(updated_quest, quest_status=qu.status_set)
+                    
+                # 1. If transition to COMPLETED is happening OR quest is already REWARD_PENDING
+                # we emit an authoritative reward intent.
+                is_newly_completed = (updated_quest.quest_status == QuestStatus.COMPLETED and project.quest_status == QuestStatus.ACTIVE)
+                is_retry_pending = (project.quest_status == QuestStatus.REWARD_PENDING)
                 
-                from src.core.updates import RewardUpdate
-                reward_intent = ResourceTransferIntent(
-                    source_id=q_id,
-                    source_kind="QUEST",
-                    items_add=items,
-                    gold_delta=updated_quest.reward.gold,
-                    reward_upd=RewardUpdate(xp_gain=updated_quest.reward.xp),
-                    transfer_kind="QUEST_REWARD",
-                    transaction_id=f"quest:{q_id}:reward",
-                    group_id=f"quest:{q_id}:reward",
-                    is_group_required=True
-                )
+                if is_newly_completed or is_retry_pending:
+                    from src.core.state import ItemStack
+                    items = [ItemStack(item_id=tid, quantity=1) for tid in updated_quest.reward.items]
+                    
+                    from src.core.updates import RewardUpdate
+                    reward_intent = ResourceTransferIntent(
+                        source_id=q_id,
+                        source_kind="QUEST",
+                        items_add=items,
+                        gold_delta=updated_quest.reward.gold,
+                        reward_upd=RewardUpdate(xp_gain=updated_quest.reward.xp),
+                        transfer_kind="QUEST_REWARD",
+                        transaction_id=f"quest:{q_id}:reward",
+                        group_id=f"quest:{q_id}:reward",
+                        is_group_required=True
+                    )
+                    
+                    # Transition to REWARD_PENDING (if not already)
+                    current_resource_transfers.append(reward_intent)
+                    current_quest_updates.append(replace(qu, status_set=QuestStatus.REWARD_PENDING))
+                else:
+                    current_quest_updates.append(qu)
+
+            # Reconstruct the merged quest update if we have multiple
+            new_q_upd = current_quest_updates[0]
+            for i in range(1, len(current_quest_updates)):
+                new_q_upd = new_q_upd.merge(current_quest_updates[i])
                 
-                # Transition to REWARD_PENDING (if not already)
-                # Note: We do NOT set status to REWARDED here. 
-                # Pipeline._resolve_resource_transactions will do that upon success.
-                refined_entity_updates[e_id] = replace(ent_upd, 
-                    resource_transfers=ent_upd.resource_transfers + [reward_intent],
-                    quest=replace(ent_upd.quest, status_set=QuestStatus.REWARD_PENDING)
-                )
+            refined_entity_updates[e_id] = replace(ent_upd, 
+                resource_transfers=current_resource_transfers,
+                quest=new_q_upd
+            )
                 
         return replace(update, entity_updates=refined_entity_updates)

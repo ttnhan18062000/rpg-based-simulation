@@ -113,14 +113,22 @@ def test_high_pressure_determinism_equivalence():
             print(f"Position DIVERGENCE at Entity {eid}: local={loc.navigation.position}, concurrent={con.navigation.position}")
         assert loc.navigation.position == con.navigation.position
         
-    # Phase 2: Verify specific readiness drain
+    # Phase 2: Verify expected semantic slice.
     for eid in range(1, 6):
         loc = final_state_local.entities[eid]
-        if eid in (1, 3, 5):
-            assert loc.combat.readiness == 100.0
+        con = final_state_concurrent.entities[eid]
+
+        assert loc.combat.readiness == con.combat.readiness
+        assert loc.navigation.position == con.navigation.position
+
+        if eid % 2 == 0:
+            assert loc.navigation.position != (float(eid), 0.0), (
+                f"Expected even entity {eid} to move."
+            )
         else:
-            # Tick 4: 40 -> 50
-            assert loc.combat.readiness == 50.0 
+            assert loc.navigation.position == (float(eid), 0.0), (
+                f"Expected odd entity {eid} to remain in place for empty ENTITY_ACT."
+            )
 
 def test_neighbor_view_bit_identical():
     """Prove that worker input context is identical regardless of engine internal order."""

@@ -276,3 +276,8 @@ timestamp,ticket_id,title,status,summary,artifacts_path
 2026-05-06,TCK-20260506-INVENTORY-TEST-STABILIZATION,Migrate inventory test suites to V2EntityBuilder,DONE
 2026-05-06,TCK-20260506-STRATEGY-TEST-STABILIZATION,Migrate strategy test suites to V2EntityBuilder,DONE
 2026-05-06,TCK-20260506-STRATEGIC-HARDENING-TEST-STABILIZATION,Migrate strategic hardening test suites to V2EntityBuilder,DONE
+2026-05-10T04:57:00Z,TCK-20260510-HARDENING-PIPELINE,Hardening Authoritative Engine Pipeline,DONE,Stabilized pipeline sequence and hardened audit/rejection traceability.,tickets/done/TCK-20260510-HARDENING-PIPELINE.md
+2026-05-10,TCK-20260509-STRAT-BLOCKER-RESOLUTION,Stabilized engine lifecycle: combat atomicity and quest rewards
+2026-05-10,TCK-20260510-SOCIAL-EXPIRATION,Stabilizing Social Contract Expiration,DONE
+2026-05-10T13:56:00Z,TCK-20260510-TACTICAL-COMBAT-HARDENING,Hardening Tactical Combat Bonuses (Bracketing/Flanking),DONE,Unified tactical modifier application and implemented bracketing bonus in multi-attacks.,stored_artifacts/c6306454-56e4-4a14-b03f-7fc75ea22c2d/
+2026-05-10T14:56:00Z,TCK-20260510-QUEST-PROGRESS-STABILIZATION,RPG Engine Progression Hardening,DONE,Restored pipeline phases and hardened trust boundaries (Law 300.2). Resolved regressions in actor validity and interaction recovery.,stored_artifacts/c6306454-56e4-4a14-b03f-7fc75ea22c2d/

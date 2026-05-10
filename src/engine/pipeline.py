@@ -32,14 +32,22 @@ class AuthoritativeApplyPipeline:
         from src.systems.groups import GroupSystem
         from src.systems.lifecycle import LifecycleSystem
         from src.engine.legality import LegalityServiceV2
+        from src.core.updates import EntityUpdate
         
         # 0. Trust Boundary: strip raw world-side effects from worker proposals.
-        # Workers may propose intents, tasks, interaction progress, inventory requests,
-        # etc. They must NOT directly mutate world resources.
-        #
-        # Authoritative systems inside this pipeline may later add node/building/chest
-        # updates, but raw caller-provided world effects are untrusted.
         update = AuthoritativeApplyPipeline._strip_untrusted_world_effects(update)
+        
+        # 0.1 Actor Validity
+        # Reject proposals from dead/inactive/incapacitated actors before any subsystem
+        # can route their movement, actions, resource intents, or interaction progress.
+        #
+        # This must run after trust-boundary stripping because raw worker rewards/world
+        # mutations should already be removed, but before contract/quest/action/movement
+        # routing because invalid actors must not participate in the tick.
+        update = AuthoritativeApplyPipeline._resolve_actor_validity(state, update)
+
+        # 0.05 Actor Validity Enforcement (Status: Stunned, Frozen, Dead)
+        update = AuthoritativeApplyPipeline._resolve_actor_validity(state, update)
         
         # 0.1 Contract Lifecycle
         # Expire stale social contracts before any later system can consume them.
@@ -65,9 +73,17 @@ class AuthoritativeApplyPipeline:
         # 4. Action Enforcement (Combat, Abilities)
         update = AuthoritativeApplyPipeline._route_action_intent(state, update)
         
+        # 4.1 Near-Death Hardening
+        # Must run after action/combat routing, because it depends on CombatUpdate.hp_delta.
+        # Must run before lifecycle/evolution finalization so the hardened combat update
+        # is part of the same authoritative tick.
+        update = AuthoritativeApplyPipeline._apply_near_death_hardening(state, update)
+        
         # Phase 8: Infrastructure Sabotage (LEG-RPG-006)
         from src.engine.sabotage import BuildingSabotageSystem
+        from src.engine.town_resolution import TownResolutionSystem
         update = BuildingSabotageSystem.resolve(state, update)
+        update = TownResolutionSystem.resolve(state, update)
         
         # Phase 7 Implementation: World Dynamics (Hazards, Spawns, Decays)
         # VERIFIED v2: passive_world_progression
@@ -85,6 +101,8 @@ class AuthoritativeApplyPipeline:
         
         # 5. Resource Transaction Laws (Transfers, Drops)
         # Atomic Resource Transactions
+        from src.engine.shop import ShopSystem
+        update = ShopSystem.enforce(state, update)
         update = AuthoritativeApplyPipeline._resolve_resource_transactions(state, update)
         
         # Phase 8: Evolution & Leveling (LEG-RPG-143)
@@ -149,38 +167,41 @@ class AuthoritativeApplyPipeline:
         """
         Trust-boundary hardening.
 
-        LAW:
-            Worker/raw proposals may express intent, but they may not directly
-            submit authoritative outcomes.
+        LAW 300.2:
+            Worker/raw proposals may express intent, but they may NOT directly
+            submit authoritative economy, reward, quest-status, or world mutations.
 
-        Stripped from raw proposals:
-            - direct world mutations:
-                node_updates
-                building_updates
-                chest_updates
-                ground_items_remove
-                corpses_remove
+        Raw worker proposals are allowed to carry:
+            - movement/navigation intent
+            - task intent
+            - interaction intent/progress
+            - combat result fields, if produced by the combat/action route
 
-            - unauthorized quest reward/status effects:
-                QuestUpdate.status_set
-                worker-submitted QUEST_REWARD resource transfers
+        Raw worker proposals are NOT allowed to carry:
+            - direct InventoryUpdate gold/items
+            - direct RewardUpdate XP/evolution
+            - QUEST_REWARD / KILL_REWARD / TAX ResourceTransferIntent
+            - QuestUpdate.status_set
+            - direct node/building/chest/corpse/ground-item mutations
 
-        Why:
-            Quest status transitions such as COMPLETED, REWARD_PENDING, and
-            REWARDED must be produced by the authoritative quest/reward resolver,
-            not by workers.
-
-        Fraud this prevents:
-            - worker marks quest REWARDED without reward delivery
-            - worker injects QUEST_REWARD transfer directly
-            - inventory-full quest reward still marks REWARDED
-            - stale node/building/chest mutations bypass conservation checks
+        Why combat is preserved:
+            This boundary strips reward/economy payloads attached to combat, not the
+            combat damage itself. Combat reward must flow through authoritative
+            ResourceTransferIntent processing, but damage_taken can remain a combat
+            result.
         """
         from dataclasses import replace
 
-        from src.core.updates import EntityUpdate, QuestUpdate
+        from src.core.updates import QuestUpdate
 
         sanitized_entity_updates = {}
+
+        blocked_transfer_kinds = {
+            "QUEST_REWARD",
+            "REWARD",
+            "KILL_REWARD",
+            "TAX",
+        }
 
         for entity_id, entity_update in update.entity_updates.items():
             clean_quest = entity_update.quest
@@ -190,21 +211,30 @@ class AuthoritativeApplyPipeline:
                     quest_id=clean_quest.quest_id,
                     progress_delta=clean_quest.progress_delta,
                     status_set=None,
+                    multi_updates=getattr(clean_quest, "multi_updates", []),
                 )
 
             clean_resource_transfers = [
                 transfer
                 for transfer in entity_update.resource_transfers
-                if transfer.transfer_kind not in {
-                    "QUEST_REWARD",
-                    "REWARD",
-                    "KILL_REWARD",
-                    "TAX",
-                }
+                if transfer.transfer_kind not in blocked_transfer_kinds
             ]
 
             sanitized_entity_updates[entity_id] = replace(
                 entity_update,
+
+                # Direct economy/reward mutation is never trusted from raw workers.
+                inventory=None,
+                reward=None,
+
+                # Direct readiness/biological mutation is also not trusted.
+                readiness_delta=0.0,
+                biological=None,
+
+                # Preserve combat damage/effects, but strip attached rewards via
+                # clean_resource_transfers above.
+                combat=entity_update.combat,
+
                 quest=clean_quest,
                 resource_transfers=clean_resource_transfers,
             )
@@ -212,6 +242,8 @@ class AuthoritativeApplyPipeline:
         return replace(
             update,
             entity_updates=sanitized_entity_updates,
+
+            # Direct world-side effects are generated only by authoritative systems.
             node_updates={},
             building_updates={},
             chest_updates={},
@@ -220,62 +252,332 @@ class AuthoritativeApplyPipeline:
         )
         
     @staticmethod
+    def _resolve_actor_validity(
+        state: AuthoritativeState,
+        update: StateUpdate,
+    ) -> StateUpdate:
+        """
+        Law 300.1: Actor Validity.
+
+        Invalid actors may not submit authoritative proposals.
+
+        Invalid means:
+            - missing actor
+            - lifecycle inactive
+            - combat not alive
+            - frozen/stunned if legality service reports it
+
+        Effects:
+            - strip navigation target
+            - strip new_position
+            - strip task/action
+            - strip resource transfers
+            - preserve interaction reset visibility if needed
+            - emit GLOBAL_PROPOSAL RejectionEvent
+
+        Fraud this catches:
+            - dead actors move
+            - dead actors harvest/loot
+            - dead actors attack
+            - invalid proposals are silently stripped without audit
+        """
+        from dataclasses import replace
+
+        from src.core.updates import EntityUpdate, NavigationUpdate, RejectionEvent
+        from src.engine.legality import LegalityServiceV2
+
+        refined_entity_updates = dict(update.entity_updates)
+        new_rejections_delta = dict(update.rejections_delta)
+        new_rejection_events = list(update.rejection_events)
+
+        for entity_id, entity_update in sorted(update.entity_updates.items()):
+            actor = state.entities.get(entity_id)
+
+            if actor is None:
+                continue
+
+            legal, reason = LegalityServiceV2.verify_action_legality(
+                actor,
+                "GLOBAL_PROPOSAL",
+                state,
+            )
+
+            if legal:
+                continue
+
+            reason_value = reason.value if hasattr(reason, "value") else str(reason)
+
+            current_navigation = entity_update.navigation or NavigationUpdate()
+
+            refined_entity_updates[entity_id] = replace(
+                entity_update,
+                task=None,
+                navigation=replace(
+                    current_navigation,
+                    target_set=None,
+                    clear_target=True,
+                    failure_reason=reason,
+                ),
+                new_position=None,
+                moved_this_tick=False,
+                resource_transfers=[],
+                readiness_delta=0.0,
+            )
+
+            new_rejections_delta[reason_value] = new_rejections_delta.get(reason_value, 0) + 1
+
+            new_rejection_events.append(
+                RejectionEvent(
+                    tick=state.tick,
+                    actor_id=entity_id,
+                    action_kind="GLOBAL_PROPOSAL",
+                    reason=reason,
+                )
+            )
+
+        return replace(
+            update,
+            entity_updates=refined_entity_updates,
+            rejections_delta=new_rejections_delta,
+            rejection_events=new_rejection_events,
+        )
+
+    @staticmethod
+    def _resolve_actor_validity(
+        state: AuthoritativeState,
+        update: StateUpdate,
+    ) -> StateUpdate:
+        """
+        Law 300.1: Actor Validity.
+
+        Invalid actors may not submit any authoritative proposal.
+
+        Invalid means:
+            - combat.alive is False
+            - lifecycle.active is False
+            - status_stunned is True
+            - status_frozen is True
+
+        Important:
+            Navigation intent is also a proposal. A dead actor may not submit
+            NavigationUpdate(target_set=...), even if EntityUpdate.new_position is
+            still None.
+
+        Effects:
+            - strip task
+            - strip navigation target / direct movement
+            - strip resource transfers
+            - strip interaction progress
+            - emit one GLOBAL_PROPOSAL RejectionEvent
+        """
+        from dataclasses import replace
+
+        from src.core.enums import ReasonCode
+        from src.core.updates import (
+            EntityUpdate,
+            NavigationUpdate,
+            InteractionUpdate,
+            RejectionEvent,
+        )
+
+        refined_entity_updates = dict(update.entity_updates)
+        new_rejections_delta = dict(update.rejections_delta)
+        new_rejection_events = list(update.rejection_events)
+
+        for entity_id, entity_update in sorted(update.entity_updates.items()):
+            entity = state.entities.get(entity_id)
+
+            if entity is None:
+                continue
+
+            is_stunned = entity.identity.properties.get("status_stunned", False)
+            is_frozen = entity.identity.properties.get("status_frozen", False)
+            is_dead = not entity.combat.alive
+            is_inactive = not entity.lifecycle.active
+
+            if not (is_stunned or is_frozen or is_dead or is_inactive):
+                continue
+
+            reason = ReasonCode.ATTACKER_STATUS_BLOCKED
+
+            has_navigation_proposal = (
+                entity_update.navigation is not None
+                and (
+                    entity_update.navigation.target_set is not None
+                    or entity_update.navigation.path_set is not None
+                    or entity_update.navigation.movement_mode_set is not None
+                    or entity_update.navigation.clear_target
+                    or entity_update.navigation.clear_path
+                )
+            )
+
+            has_direct_movement = (
+                entity_update.new_position is not None
+                or entity_update.moved_this_tick
+            )
+
+            has_task = entity_update.task is not None
+            has_resource_transfer = bool(entity_update.resource_transfers)
+            has_interaction = entity_update.interaction is not None
+
+            has_any_proposal = (
+                has_navigation_proposal
+                or has_direct_movement
+                or has_task
+                or has_resource_transfer
+                or has_interaction
+            )
+
+            if not has_any_proposal:
+                continue
+
+            current_navigation = entity_update.navigation or NavigationUpdate()
+
+            clean_navigation = replace(
+                current_navigation,
+                target_set=None,
+                path_set=None,
+                movement_mode_set=None,
+                clear_target=True,
+                clear_path=True,
+                failure_reason=reason,
+            )
+
+            clean_interaction = None
+            if entity_update.interaction is not None:
+                clean_interaction = InteractionUpdate(
+                    reset=True,
+                )
+
+            refined_entity_updates[entity_id] = replace(
+                entity_update,
+                task=None,
+                navigation=clean_navigation,
+                new_position=None,
+                moved_this_tick=False,
+                resource_transfers=[],
+                interaction=clean_interaction,
+                readiness_delta=0.0,
+            )
+
+            reason_key = reason.value if hasattr(reason, "value") else str(reason)
+            new_rejections_delta[reason_key] = new_rejections_delta.get(reason_key, 0) + 1
+
+            new_rejection_events.append(
+                RejectionEvent(
+                    tick=state.tick,
+                    actor_id=entity_id,
+                    action_kind="GLOBAL_PROPOSAL",
+                    reason=reason,
+                )
+            )
+
+        return replace(
+            update,
+            entity_updates=refined_entity_updates,
+            rejections_delta=new_rejections_delta,
+            rejection_events=new_rejection_events,
+        )
+        
+    @staticmethod
     def _resolve_contract_expirations(
         state: AuthoritativeState,
         update: StateUpdate,
     ) -> StateUpdate:
         """
-        Expire stale social contracts during authoritative refinement.
+        Resolve stale social contracts during authoritative refinement.
 
         LAW:
-            Contracts with expiry_tick <= current tick must not be usable by later
-            systems in the same tick.
+            OFFERED / COUNTERED contracts that expire are EXPIRED.
 
-        Why this exists:
-            A contract can be stored on an entity from a previous tick. If the
-            pipeline does not expire it before routing social/strategic/movement
-            logic, stale consent can still influence the world.
+            ACTIVE contracts that reach expiry_tick are treated as successfully
+            completed duration contracts and become FULFILLED / COMPLETED.
 
-        Examples:
-            - expired recruitment offer should not be accepted
-            - expired POSITION_SWAP contract should not allow movement
-            - expired loan/protection contract should not affect strategy
+        Why:
+            An ACTIVE recruitment/protection/merchant contract reaching its end date
+            is not the same as an unanswered offer expiring. The active obligation
+            was honored until its duration ended.
 
-        This phase is status-only:
-            It updates contracts to EXPIRED, but does not remove them, move entities,
-            transfer inventory, or mutate world resources.
+        Effects:
+            - ACTIVE -> FULFILLED may create social reputation updates.
+            - OFFERED / COUNTERED -> EXPIRED is status-only.
+            - No movement, inventory transfer, or world mutation happens here.
         """
         from dataclasses import replace
 
-        from src.core.updates import EntityUpdate
+        from src.core.strategic import ContractStatus
+        from src.core.updates import EntityUpdate, StrategicUpdate, SocialUpdate
         from src.systems.social_contract import SocialContractSystem
 
         entity_updates = dict(update.entity_updates)
 
-        for entity_id, entity in state.entities.items():
-            strategic_update = SocialContractSystem.check_expirations(
-                entity,
-                state.tick,
-            )
-
-            if not strategic_update.contracts_add_or_update:
-                continue
-
+        def _merge_entity_update(entity_id: int, strategic_upd=None, social_upd=None):
             existing = entity_updates.get(
                 entity_id,
                 EntityUpdate(entity_id=entity_id),
             )
 
-            merged_strategic = (
-                existing.strategic.merge(strategic_update)
-                if existing.strategic is not None
-                else strategic_update
-            )
+            merged_strategic = existing.strategic
+            if strategic_upd is not None:
+                merged_strategic = (
+                    merged_strategic.merge(strategic_upd)
+                    if merged_strategic is not None
+                    else strategic_upd
+                )
+
+            merged_social = existing.social
+            if social_upd is not None:
+                merged_social = (
+                    merged_social.merge(social_upd)
+                    if merged_social is not None
+                    else social_upd
+                )
 
             entity_updates[entity_id] = replace(
                 existing,
                 strategic=merged_strategic,
+                social=merged_social,
             )
+
+        for entity_id, entity in state.entities.items():
+            for contract in entity.strategic.contracts.values():
+                if contract.expiry_tick == -1:
+                    continue
+
+                if state.tick < contract.expiry_tick:
+                    continue
+
+                if contract.status == ContractStatus.ACTIVE:
+                    # Active duration completed successfully.
+                    strat_upd, social_upd = SocialContractSystem.transition_contract(
+                        entity,
+                        contract.id,
+                        ContractStatus.FULFILLED,
+                        state.tick,
+                    )
+
+                    if strat_upd.contracts_add_or_update:
+                        _merge_entity_update(
+                            entity_id,
+                            strategic_upd=strat_upd,
+                            social_upd=social_upd,
+                        )
+
+                elif contract.status in (
+                    ContractStatus.OFFERED,
+                    ContractStatus.COUNTERED,
+                ):
+                    expired_contract = replace(
+                        contract,
+                        status=ContractStatus.EXPIRED,
+                    )
+
+                    _merge_entity_update(
+                        entity_id,
+                        strategic_upd=StrategicUpdate(
+                            contracts_add_or_update=[expired_contract],
+                        ),
+                    )
 
         return replace(
             update,
@@ -320,49 +622,126 @@ class AuthoritativeApplyPipeline:
     @staticmethod
     def _route_action_intent(state: AuthoritativeState, update: StateUpdate) -> StateUpdate:
         """
-        Law 300: Action Routing (Milestone E5.7)
-        Routes high-level entity tasks to low-level action execution.
+        Law 300: Action Routing.
+
+        Responsibilities:
+            - route ENTITY_ACT tasks into authoritative domain logic
+            - preserve the original task intent
+            - annotate the task with SUCCESS / FAILURE
+            - use sliding state so later actions in the same tick see earlier effects
+
+        Critical law:
+            If actor A kills target T earlier in this refinement pass, actor B must
+            see T as incapacitated later in the same pass and must not receive a
+            second kill reward.
         """
+        from dataclasses import replace
+
         from src.engine.legality import LegalityServiceV2
         from src.engine.domain_logic import SimulationDomainLogic
-        from src.core.updates import EntityUpdate, CombatUpdate, StrategicUpdate
+        from src.core.updates import (
+            EntityUpdate,
+            TaskUpdate,
+            NavigationUpdate,
+            RejectionEvent,
+            StrategicUpdate,
+        )
+        from src.core.strategic import BlockerState
         from src.engine.apply import ApplyPath
         
+        from src.core.enums import ReasonCode
+        from src.core.updates import RejectionEvent
+
+
+        def _normalize_reason(reason):
+            """
+            Normalize string/enum failure reasons into ReasonCode when possible.
+
+            Tests compare ev.reason == ReasonCode.OUT_OF_RANGE, so storing plain
+            'OUT_OF_RANGE' can make the audit look missing even when the event exists.
+            """
+            if reason is None:
+                return ReasonCode.UNKNOWN
+
+            if isinstance(reason, ReasonCode):
+                return reason
+
+            if hasattr(reason, "value"):
+                try:
+                    return ReasonCode(reason.value)
+                except Exception:
+                    return reason
+
+            reason_str = str(reason)
+
+            if reason_str.startswith("ReasonCode."):
+                reason_str = reason_str.split(".", 1)[1]
+
+            if reason_str in ReasonCode.__members__:
+                return ReasonCode[reason_str]
+
+            try:
+                return ReasonCode(reason_str)
+            except Exception:
+                return reason
+
+
+        def _reason_key(reason):
+            return reason.value if hasattr(reason, "value") else str(reason)
+
+
+        def _target_for_action(payload):
+            return payload.get("target_id") or payload.get("target_pos") or payload.get("target_position")
+
         refined_entity_updates = dict(update.entity_updates)
-        
-        # Use SLIDING state (Identity + Interaction + Blacksmith already applied in 'update')
-        # This ensures combat reflects the very latest state within the tick.
-        working_state = ApplyPath.apply_generation(state, update)
-        
-        for eid, entity in state.entities.items():
-            if not entity.lifecycle.active: continue
-            
-            ent_upd = refined_entity_updates.get(eid, EntityUpdate(entity_id=eid))
+
+        # Initial sliding state includes previous authoritative phases from update.
+        working_update = replace(update, entity_updates=refined_entity_updates)
+        working_state = ApplyPath.apply_generation(state, working_update)
+
+        # Deterministic action order.
+        for eid in sorted(state.entities.keys()):
+            entity = state.entities[eid]
+
+            if not entity.lifecycle.active:
+                continue
+
+            ent_upd = refined_entity_updates.get(
+                eid,
+                EntityUpdate(entity_id=eid),
+            )
+
             task_upd = ent_upd.task
-            if not task_upd or task_upd.work_kind_set != "ENTITY_ACT": continue
-            
-            payload = task_upd.payload_set
-            if not payload: continue
+
+            if not task_upd or task_upd.work_kind_set != "ENTITY_ACT":
+                continue
+
+            payload = dict(task_upd.payload_set or {})
             action = payload.get("action")
-            if not action: continue
-            
-            # 0. General action legality check
+
+            if not action:
+                continue
+
+            # Use the latest sliding version of this actor.
+            working_entity = working_state.entities.get(eid, entity)
+
+            # 0. General action legality check.
             legal, reason = LegalityServiceV2.verify_action_legality(
-                entity,
+                working_entity,
                 action,
                 working_state,
             )
 
             if not legal:
-                from src.core.updates import RejectionEvent
-
-                failed_payload = dict(task_upd.payload_set or {})
-                failed_payload["outcome"] = "FAILURE"
-                failed_payload["reason"] = reason.value if hasattr(reason, "value") else reason
+                reason_value = reason.value if hasattr(reason, "value") else str(reason)
 
                 failed_task = replace(
                     task_upd,
-                    payload_set=failed_payload,
+                    payload_set={
+                        **payload,
+                        "outcome": "FAILURE",
+                        "reason": reason_value,
+                    },
                 )
 
                 refined_entity_updates[eid] = replace(
@@ -370,163 +749,289 @@ class AuthoritativeApplyPipeline:
                     task=failed_task,
                 )
 
-                return_update_events = list(update.rejection_events)
-                return_update_events.append(
+                new_rejection_events = list(update.rejection_events)
+                new_rejections_delta = dict(update.rejections_delta)
+                new_rejections_delta[reason_value] = new_rejections_delta.get(reason_value, 0) + 1
+
+                new_rejection_events.append(
                     RejectionEvent(
                         tick=state.tick,
                         actor_id=eid,
                         action_kind=action,
                         reason=reason,
-                        target_id=failed_payload.get("target_id") or failed_payload.get("target_pos"),
+                        target_id=payload.get("target_id") or payload.get("target_pos"),
                     )
                 )
 
                 update = replace(
                     update,
-                    rejection_events=return_update_events,
+                    entity_updates=refined_entity_updates,
+                    rejection_events=new_rejection_events,
+                    rejections_delta=new_rejections_delta,
                 )
-                
+
+                working_update = replace(update, entity_updates=refined_entity_updates)
+                working_state = ApplyPath.apply_generation(state, working_update)
                 continue
 
-            # 1. Readiness Check (Standard Law)
-            ready, r_reason = LegalityServiceV2.verify_readiness(entity)
+            # 1. Readiness check.
+            ready, r_reason = LegalityServiceV2.verify_readiness(working_entity)
+
             if not ready:
-                from src.core.strategic import BlockerState
-                from src.core.updates import StrategicUpdate
-                refined_entity_updates[eid] = replace(ent_upd,
-                    strategic=StrategicUpdate(blockers_add_or_update=[
-                        BlockerState(id=f"blocker_nav_{r_reason}", kind="capability", subject=str(r_reason))
-                    ])
+                reason_value = r_reason.value if hasattr(r_reason, "value") else str(r_reason)
+
+                failed_task = replace(
+                    task_upd,
+                    payload_set={
+                        **payload,
+                        "outcome": "FAILURE",
+                        "reason": reason_value,
+                    },
                 )
+
+                new_rejection_events = list(update.rejection_events)
+                new_rejections_delta = dict(update.rejections_delta)
+                new_rejections_delta[reason_value] = new_rejections_delta.get(reason_value, 0) + 1
+
+                new_rejection_events.append(
+                    RejectionEvent(
+                        tick=state.tick,
+                        actor_id=eid,
+                        action_kind=action,
+                        reason=r_reason,
+                        target_id=payload.get("target_id") or payload.get("target_pos"),
+                    )
+                )
+
+                refined_entity_updates[eid] = replace(
+                    ent_upd,
+                    task=failed_task,
+                    strategic=StrategicUpdate(
+                        blockers_add_or_update=[
+                            BlockerState(
+                                id=f"blocker_nav_{reason_value}",
+                                kind="capability",
+                                subject=reason_value,
+                            )
+                        ]
+                    ),
+                )
+
+                update = replace(
+                    update,
+                    entity_updates=refined_entity_updates,
+                    rejection_events=new_rejection_events,
+                    rejections_delta=new_rejections_delta,
+                )
+
+                working_update = replace(update, entity_updates=refined_entity_updates)
+                working_state = ApplyPath.apply_generation(state, working_update)
                 continue
 
-            # 2. Execute Action via Domain Logic using SLIDING state
+            # 2. Execute action against the latest sliding state.
             action_updates = SimulationDomainLogic.execute_action(
-                entity, 
-                payload=task_upd.payload_set, 
-                neighbor_view=SimulationDomainLogic.get_neighbor_view(working_state, entity, radius=10.0),
-                context=working_state
-            )
-            
-            # 3. Merge all updates from the action (Attacker + Target)
-            for action_eid, action_upd in action_updates.items():
-                existing_upd = refined_entity_updates.get(action_eid, EntityUpdate(entity_id=action_eid))
-                refined_entity_updates[action_eid] = existing_upd.merge(action_upd)
-
-        return replace(update, entity_updates=refined_entity_updates)
-    
-    @staticmethod
-    def _resolve_quest_rewards(
-        state: AuthoritativeState,
-        update: StateUpdate,
-    ) -> StateUpdate:
-        """
-        Resolve quest completion and reward retry into authoritative reward intents.
-
-        LAW:
-            Quest status REWARDED may only be set after reward delivery succeeds.
-
-        Handles:
-            1. ACTIVE quest receives enough progress to complete.
-            2. REWARD_PENDING quest retries reward delivery every tick.
-            3. Full inventory keeps quest in REWARD_PENDING.
-            4. Freeing inventory later allows retry to become REWARDED.
-
-        This phase does not directly mutate inventory.
-        It only creates ResourceTransferIntent objects and tentative quest status.
-        _resolve_resource_transactions(...) decides final success/failure.
-        """
-        from dataclasses import replace
-
-        from src.core.quests import QuestState, QuestStatus
-        from src.core.state import ItemStack
-        from src.core.updates import EntityUpdate, QuestUpdate, ResourceTransferIntent
-
-        refined_entity_updates = dict(update.entity_updates)
-
-        for entity_id, entity in state.entities.items():
-            existing = refined_entity_updates.get(
-                entity_id,
-                EntityUpdate(entity_id=entity_id),
-            )
-
-            quest_update = existing.quest
-
-            # No quest update from worker/system, but entity may already have
-            # REWARD_PENDING quests that need retry.
-            pending_quests = [
-                q
-                for q in entity.strategic.projects.values()
-                if isinstance(q, QuestState)
-                and q.quest_status == QuestStatus.REWARD_PENDING
-            ]
-
-            candidate_quest = None
-            progress_delta = 0.0
-
-            if quest_update is not None:
-                candidate_quest = entity.strategic.projects.get(
-                    quest_update.quest_id,
-                )
-                progress_delta = quest_update.progress_delta or 0.0
-
-            elif pending_quests:
-                candidate_quest = pending_quests[0]
-                quest_update = QuestUpdate(
-                    quest_id=candidate_quest.id,
-                    progress_delta=0.0,
-                    status_set=None,
-                )
-
-            if not isinstance(candidate_quest, QuestState):
-                continue
-
-            quest = candidate_quest
-
-            is_reward_retry = quest.quest_status == QuestStatus.REWARD_PENDING
-
-            would_complete = (
-                quest.quest_status == QuestStatus.ACTIVE
-                and quest.current_value + progress_delta >= quest.goal_value
-            )
-
-            if not is_reward_retry and not would_complete:
-                continue
-
-            reward = quest.reward
-
-            reward_items = [
-                ItemStack(
-                    item_id=item_id,
-                    quantity=1,
-                )
-                for item_id in reward.items
-            ]
-
-            reward_intent = ResourceTransferIntent(
-                source_id=quest.id,
-                source_kind="QUEST",
-                items_add=reward_items,
-                gold_delta=reward.gold,
-                xp_reward=reward.xp,
-                transfer_kind="QUEST_REWARD",
-                transaction_id=f"quest:{quest.id}:reward",
-            )
-
-            refined_entity_updates[entity_id] = replace(
-                existing,
-                quest=QuestUpdate(
-                    quest_id=quest.id,
-                    progress_delta=progress_delta,
-                    status_set=QuestStatus.REWARD_PENDING,
+                working_entity,
+                payload=payload,
+                current_tick=state.tick,
+                neighbor_view=SimulationDomainLogic.get_neighbor_view(
+                    working_state,
+                    working_entity,
+                    radius=10.0,
                 ),
-                resource_transfers=list(existing.resource_transfers) + [reward_intent],
+                context=working_state,
+            )
+
+            actor_action_upd = action_updates.get(eid)
+            outcome = "SUCCESS"
+            failure_reason = None
+
+            if actor_action_upd is None:
+                outcome = "FAILURE"
+                failure_reason = "NO_ACTION_UPDATE"
+            elif actor_action_upd.navigation and actor_action_upd.navigation.failure_reason:
+                outcome = "FAILURE"
+                failure_reason = actor_action_upd.navigation.failure_reason
+            elif actor_action_upd.combat and actor_action_upd.combat.outcome_kind == "REJECTED":
+                outcome = "FAILURE"
+                failure_reason = actor_action_upd.combat.failure_reason
+                
+            if outcome == "FAILURE":
+                audit_reason = _normalize_reason(failure_reason)
+                audit_key = _reason_key(audit_reason)
+
+                new_rejection_events = list(update.rejection_events)
+                new_rejections_delta = dict(update.rejections_delta)
+
+                new_rejections_delta[audit_key] = new_rejections_delta.get(audit_key, 0) + 1
+
+                new_rejection_events.append(
+                    RejectionEvent(
+                        tick=state.tick,
+                        actor_id=eid,
+                        action_kind=action,
+                        reason=audit_reason,
+                        target_id=_target_for_action(payload),
+                    )
+                )
+
+                update = replace(
+                    update,
+                    rejection_events=new_rejection_events,
+                    rejections_delta=new_rejections_delta,
+                )
+
+            reason_value = (
+                failure_reason.value
+                if hasattr(failure_reason, "value")
+                else failure_reason
+            )
+
+            annotated_task = replace(
+                task_upd,
+                payload_set={
+                    **payload,
+                    "outcome": outcome,
+                    **({"reason": reason_value} if reason_value else {}),
+                },
+            )
+
+            # 3. Merge all action updates.
+            for action_eid, action_upd in action_updates.items():
+                existing_upd = refined_entity_updates.get(
+                    action_eid,
+                    EntityUpdate(entity_id=action_eid),
+                )
+
+                merged = existing_upd.merge(action_upd)
+
+                if action_eid == eid:
+                    merged = replace(
+                        merged,
+                        task=annotated_task,
+                    )
+
+                refined_entity_updates[action_eid] = merged
+
+            if eid not in action_updates:
+                refined_entity_updates[eid] = replace(
+                    ent_upd,
+                    task=annotated_task,
+                )
+
+            # 4. Refresh sliding state after each action.
+            # This is the important anti-double-kill step.
+            update = replace(
+                update,
+                entity_updates=refined_entity_updates,
+            )
+
+            working_update = replace(
+                update,
+                entity_updates=refined_entity_updates,
+            )
+
+            working_state = ApplyPath.apply_generation(
+                state,
+                working_update,
             )
 
         return replace(
             update,
             entity_updates=refined_entity_updates,
         )
+        
+    @staticmethod
+    def _apply_near_death_hardening(
+        state: AuthoritativeState,
+        update: StateUpdate,
+    ) -> StateUpdate:
+        """
+        Apply near-death hardening after authoritative combat resolution.
+
+        LAW:
+            If an entity survives a hit with critically low remaining HP, it gains
+            a small permanent max-HP increase in the same authoritative tick.
+
+        Trigger:
+            - entity has a CombatUpdate
+            - combat update is not REJECTED
+            - entity survives the hit
+            - projected HP is > 0
+            - projected HP is <= 10% of current max HP
+
+        Effect:
+            - CombatUpdate.max_hp_delta += 5
+
+        Why this runs in the pipeline:
+            This is not a worker reward. It is an authoritative consequence of
+            surviving a near-death combat event.
+        """
+        from dataclasses import replace
+
+        from src.core.updates import EntityUpdate, CombatUpdate
+
+        refined_entity_updates = dict(update.entity_updates)
+
+        for entity_id, entity_update in list(refined_entity_updates.items()):
+            entity = state.entities.get(entity_id)
+
+            if entity is None:
+                continue
+
+            combat_update = entity_update.combat
+
+            if combat_update is None:
+                continue
+
+            if combat_update.outcome_kind == "REJECTED":
+                continue
+
+            current_hp = entity.combat.hp
+            current_max_hp = entity.combat.max_hp
+
+            projected_hp = current_hp + combat_update.hp_delta
+
+            survived = (
+                projected_hp > 0
+                and combat_update.alive_set is not False
+            )
+
+            if not survived:
+                continue
+
+            near_death_threshold = max(1, int(current_max_hp * 0.10))
+
+            if projected_hp > near_death_threshold:
+                continue
+
+            hardened_combat = combat_update.merge(
+                CombatUpdate(
+                    max_hp_delta=5,
+                    trace={
+                        "NEAR_DEATH_HARDENING": 5.0,
+                        "NEAR_DEATH_PROJECTED_HP": float(projected_hp),
+                        "NEAR_DEATH_THRESHOLD": float(near_death_threshold),
+                    },
+                )
+            )
+
+            refined_entity_updates[entity_id] = replace(
+                entity_update,
+                combat=hardened_combat,
+            )
+
+        return replace(
+            update,
+            entity_updates=refined_entity_updates,
+        )
+    
+    @staticmethod
+    def _resolve_quest_rewards(
+        state: AuthoritativeState,
+        update: StateUpdate,
+    ) -> StateUpdate:
+        from src.engine.quests import QuestResolutionSystem
+        return QuestResolutionSystem.enforce(state, update)
 
     @staticmethod
     def _resolve_resource_transactions(state: AuthoritativeState, update: StateUpdate) -> StateUpdate:
@@ -1122,6 +1627,10 @@ class AuthoritativeApplyPipeline:
             for loser_id in contenders[1:]:
                 rejected_entity_ids.add(loser_id)
 
+        from src.core.updates import RejectionEvent
+        new_rejections_delta = dict(update.rejections_delta)
+        new_rejection_events = list(update.rejection_events)
+
         for entity_id in sorted(rejected_entity_ids):
             entity_update = refined_entity_updates.get(
                 entity_id,
@@ -1129,6 +1638,15 @@ class AuthoritativeApplyPipeline:
             )
 
             current_navigation_update = entity_update.navigation or NavigationUpdate()
+            reason = "OCCUPANCY_CONFLICT"
+            
+            new_rejections_delta[reason] = new_rejections_delta.get(reason, 0) + 1
+            new_rejection_events.append(RejectionEvent(
+                tick=state.tick,
+                actor_id=entity_id,
+                action_kind="MOVE",
+                reason=reason
+            ))
 
             refined_entity_updates[entity_id] = replace(
                 entity_update,
@@ -1136,11 +1654,13 @@ class AuthoritativeApplyPipeline:
                 moved_this_tick=False,
                 navigation=replace(
                     current_navigation_update,
-                    failure_reason="OCCUPANCY_CONFLICT",
+                    failure_reason=reason,
                 ),
             )
 
         return replace(
             update,
             entity_updates=refined_entity_updates,
+            rejections_delta=new_rejections_delta,
+            rejection_events=new_rejection_events
         )

@@ -22,6 +22,7 @@ class SkillDefinition:
     cooldown: int
     description: str
     category: SkillCategory = SkillCategory.PHYSICAL
+    range: int = 1
 
 SKILL_REGISTRY: Dict[str, SkillDefinition] = {
     "power_strike": SkillDefinition(
@@ -33,6 +34,17 @@ SKILL_REGISTRY: Dict[str, SkillDefinition] = {
         cooldown=3,
         description="A heavy blow dealing 150% damage.",
         category=SkillCategory.PHYSICAL
+    ),
+    "HEAVY_STRIKE": SkillDefinition(
+        id="HEAVY_STRIKE",
+        name="Heavy Strike",
+        kind=SkillKind.ACTIVE,
+        power=2.0,
+        cost=15,
+        cooldown=4,
+        description="A massive blow dealing 200% damage.",
+        category=SkillCategory.PHYSICAL,
+        range=1
     ),
     "fireball": SkillDefinition(
         id="fireball",

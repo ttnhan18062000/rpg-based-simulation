@@ -393,6 +393,7 @@ def test_subsystem_order_documentation():
 
     required_calls = [
         "AuthoritativeApplyPipeline._strip_untrusted_world_effects",
+        "AuthoritativeApplyPipeline._resolve_actor_validity",
         "AuthoritativeApplyPipeline._resolve_contract_expirations",
         "BlacksmithSystem.enforce",
         "AuthoritativeApplyPipeline._route_interaction_intent",
@@ -427,6 +428,12 @@ def test_subsystem_order_documentation():
         pos = source.find(call)
         assert pos != -1, f"System call not found in pipeline: {call}"
         positions[call] = pos
+        
+    assert (
+        positions["AuthoritativeApplyPipeline._strip_untrusted_world_effects"]
+        < positions["AuthoritativeApplyPipeline._resolve_actor_validity"]
+        < positions["AuthoritativeApplyPipeline._resolve_contract_expirations"]
+    )
 
     assert (
         positions["AuthoritativeApplyPipeline._resolve_resource_transactions"]

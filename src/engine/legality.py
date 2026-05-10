@@ -1,6 +1,6 @@
 # src/engine/legality.py
 from __future__ import annotations
-from typing import TYPE_CHECKING, Tuple, Optional, Any, List
+from typing import TYPE_CHECKING, Tuple, Optional, Any, List, Dict
 
 if TYPE_CHECKING:
     from src.core.state import AuthoritativeState, EntityState, RegionState
@@ -13,18 +13,24 @@ class LegalityServiceV2:
 
     @staticmethod
     def get_spatial_index(state: AuthoritativeState) -> Dict[Tuple[int, int], EntityState]:
-        """Returns a spatial index of active/alive entities, cached for the current tick."""
-        if state.tick in LegalityServiceV2._spatial_cache:
-            return LegalityServiceV2._spatial_cache[state.tick]
-        
-        # Clear old cache and build new one
+        """
+        Returns a spatial index of active/alive entities.
+
+        Important:
+            Do not cache only by tick. Unit tests and simulations often create
+            multiple independent AuthoritativeState objects with the same tick.
+            A tick-only cache leaks spatial data across states.
+        """
         index = {}
+
         for entity in state.entities.values():
             if entity.lifecycle.active and entity.combat.alive:
-                pos = (int(entity.navigation.position[0]), int(entity.navigation.position[1]))
+                pos = (
+                    int(entity.navigation.position[0]),
+                    int(entity.navigation.position[1]),
+                )
                 index[pos] = entity
-        
-        LegalityServiceV2._spatial_cache = {state.tick: index}
+
         return index
 
 
@@ -145,6 +151,9 @@ class LegalityServiceV2:
         Validates if entity has enough readiness for the specific terrain cost of the target tile.
         VERIFIED v2: movement_readiness_gating
         """
+        # 0. Status Check
+        if entity.identity.properties.get("status_stunned") or entity.identity.properties.get("status_frozen"):
+            return False, ReasonCode.ATTACKER_STATUS_BLOCKED
         # 1. Occupancy Check
         ok, reason = LegalityServiceV2.verify_occupancy(target_pos, state_or_context, ignore_entity_id=entity.id)
         if not ok:

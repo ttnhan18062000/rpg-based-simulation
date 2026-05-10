@@ -5,7 +5,7 @@
 Rework test base to remove legacy V2EntityBuilder API calls
 
 ## Status
-
+DONE
 INPROGRESS
 
 ## Request Summary

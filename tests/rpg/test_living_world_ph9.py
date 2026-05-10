@@ -7,6 +7,8 @@ from src.systems.generator import EntityGenerator
 from src.core.enums import EntityRole
 from src.core.inventory import InventoryComponent
 
+@pytest.mark.slow
+@pytest.mark.world_long_run
 def test_long_run_simulation_ph9():
     """
     Phase 9 Long-Run Stability Test.

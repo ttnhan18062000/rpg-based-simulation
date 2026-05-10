@@ -69,3 +69,76 @@ def test_raid_spawning():
     # Raiders should be added (default 3 + maturity 0 = 3)
     raiders = [e for e in refined.entities_add if e.kind == "goblin_raider"]
     assert len(raiders) == 3
+
+
+def test_boss_spawn_is_idempotent_even_if_existing_boss_left_region():
+    """
+    LAW:
+        A region must not spawn a second boss while its original boss is still
+        active/alive, even if that boss has moved outside the region bounds.
+
+    Fraud this catches:
+        - boss idempotency depends on current position
+        - original boss wanders out of region and region spawns duplicate boss
+    """
+    from dataclasses import replace
+
+    from src.core.builder import V2EntityBuilder
+    from src.core.state import AuthoritativeState, RegionState
+    from src.systems.generator import EntityGenerator
+    from src.world.boss import BossService
+
+    region = RegionState(
+        id="region_1",
+        name="Dark Forest",
+        bounds=(0, 0, 100, 100),
+        kind="FOREST",
+        trauma_score=30.0,
+    )
+
+    existing_boss = (
+        V2EntityBuilder(100)
+        .kind("world_boss")
+        .location(150.0, 150.0)  # Outside original region.
+        .combat(
+            hp=500,
+            max_hp=500,
+            alive=True,
+        )
+        .lifecycle(active=True)
+        .build()
+    )
+
+    existing_boss = replace(
+        existing_boss,
+        identity=replace(
+            existing_boss.identity,
+            properties={
+                **existing_boss.identity.properties,
+                "boss_region_id": "region_1",
+            },
+        ),
+        strategic=replace(
+            existing_boss.strategic,
+            home_region_id="region_1",
+        ),
+    )
+
+    state = AuthoritativeState(
+        tick=853,
+        seed=42,
+        maturity=90,
+        regions={
+            "region_1": region,
+        },
+        entities={
+            100: existing_boss,
+        },
+    )
+
+    update = BossService.check_for_boss_spawn(
+        state,
+        EntityGenerator(42),
+    )
+
+    assert update.entities_add == []

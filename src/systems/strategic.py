@@ -12,6 +12,7 @@ Covers:
 from __future__ import annotations
 from dataclasses import dataclass, field, replace
 from typing import Dict, List, Optional, Any, TYPE_CHECKING
+import ast
 
 from src.core.state import EntityState, AuthoritativeState
 from src.core.updates import (
@@ -205,8 +206,28 @@ class StrategicIntelligenceSystem:
             # are trusted to be accurate results of current-tick enforcement (e.g. Blacksmith).
             for b_id, b in entity.strategic.blockers.items():
                 if b_id in removals or b.resolved: continue
+                
+                # 1. Material Resolution
                 if b.kind == "material" and has_item(pending_inventory, b.subject, b.target_quantity):
                     resolved_ids.add(b_id)
+                
+                # 2. Access Resolution (RPG-STRAT-011)
+                elif b.kind == "access" and b.subject.startswith("("):
+                    try:
+                        coords = ast.literal_eval(b.subject)
+                        if isinstance(coords, tuple) and len(coords) == 2:
+                            dx = entity.navigation.position[0] - coords[0]
+                            dy = entity.navigation.position[1] - coords[1]
+                            dist = (dx*dx + dy*dy)**0.5
+                            if dist < 0.5:
+                                resolved_ids.add(b_id)
+                    except:
+                        pass
+                
+                # 3. Inventory Resolution
+                elif b.kind == "inventory" and b.subject == "capacity":
+                    if len(pending_inventory.items) < pending_inventory.max_slots:
+                        resolved_ids.add(b_id)
             
             # 2. Check for newly resolved blockers (explicitly marked as resolved)
             for blocker in strat_up.blockers_add_or_update:
@@ -252,10 +273,22 @@ class StrategicIntelligenceSystem:
             if not resolved_ids and not project_upd:
                 continue
 
-            new_additions = [
-                b for b in strat_up.blockers_add_or_update
-                if b.id not in resolved_ids
-            ]
+            # RPG-STRAT-011: Mark resolved blockers in the update for test observability
+            new_additions = list(strat_up.blockers_add_or_update)
+            for b_id in resolved_ids:
+                # 1. Update if already in additions
+                found_in_upd = False
+                for i, b in enumerate(new_additions):
+                    if b.id == b_id:
+                        new_additions[i] = replace(b, resolved=True)
+                        found_in_upd = True
+                        break
+                
+                # 2. Add if it was only in state
+                if not found_in_upd:
+                    b_obj = entity.strategic.blockers.get(b_id)
+                    if b_obj:
+                        new_additions.append(replace(b_obj, resolved=True))
 
             new_removals = list(
                 set(strat_up.blockers_remove) | resolved_ids

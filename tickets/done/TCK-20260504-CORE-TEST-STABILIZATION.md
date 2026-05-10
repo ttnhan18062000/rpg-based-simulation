@@ -5,7 +5,7 @@
 Fix all failed tests by restoring EntityState backward compatibility and updating tests
 
 ## Status
-
+DONE
 INPROGRESS
 
 ## Request Summary

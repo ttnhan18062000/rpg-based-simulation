@@ -457,38 +457,85 @@ def test_aoe_sliding_state_awareness(base_state):
     assert upd_3.task.payload_set.get("reason") == "TARGET_INCAPACITATED"
 
 def test_skill_pipeline_validation(base_state):
-    """Verify SKILL actions are correctly validated and routed by the pipeline."""
+    """
+    Verify SKILL actions are correctly validated and routed by the pipeline.
+    """
     from src.engine.pipeline import AuthoritativeApplyPipeline
     from src.core.updates import StateUpdate, EntityUpdate, TaskUpdate
-    from src.core.skills import SKILL_REGISTRY
-    
+    from src.core.enums import EntityRole
+
     attacker = create_mock_entity(1, pos=(10, 10))
-    # Give attacker a skill and enough stamina
-    attacker = replace(attacker, 
-        identity=replace(attacker.identity, learned_skills={"HEAVY_STRIKE"}),
-        stamina=replace(attacker.stamina, current=100.0)
+
+    attacker = replace(
+        attacker,
+        identity=replace(
+            attacker.identity,
+            learned_skills={"HEAVY_STRIKE"},
+        ),
+        stamina=replace(
+            attacker.stamina,
+            current=100.0,
+        ),
     )
-    target = create_mock_entity(2, pos=(11, 10), faction="MONSTER")
-    
-    state = replace(base_state, entities={1: attacker, 2: target})
-    
-    # 1. Legal SKILL
-    raw_upd = StateUpdate(entity_updates={
-        1: EntityUpdate(entity_id=1, task=TaskUpdate(
-            work_kind_set="ENTITY_ACT", 
-            payload_set={"action": "SKILL", "skill_id": "HEAVY_STRIKE", "target_id": 2}
-        ))
-    })
-    
+
+    target = create_mock_entity(
+        2,
+        pos=(11, 10),
+        faction="MONSTER",
+        role=EntityRole.MONSTER,
+    )
+
+    state = replace(
+        base_state,
+        entities={
+            1: attacker,
+            2: target,
+        },
+    )
+
+    raw_upd = StateUpdate(
+        entity_updates={
+            1: EntityUpdate(
+                entity_id=1,
+                task=TaskUpdate(
+                    work_kind_set="ENTITY_ACT",
+                    payload_set={
+                        "action": "SKILL",
+                        "skill_id": "HEAVY_STRIKE",
+                        "target_id": 2,
+                    },
+                ),
+            )
+        }
+    )
+
     refined = AuthoritativeApplyPipeline.refine(state, raw_upd)
-    assert refined.entity_updates[1].task.payload_set.get("outcome") == "SUCCESS"
-    
-    # 2. Skill on Cooldown
-    attacker_cd = replace(attacker, identity=replace(attacker.identity, cooldowns={"HEAVY_STRIKE": 200}))
-    state_cd = replace(base_state, entities={1: attacker_cd, 2: target})
-    
+
+    payload = refined.entity_updates[1].task.payload_set
+    assert payload.get("outcome") == "SUCCESS", payload
+
+    attacker_cd = replace(
+        attacker,
+        identity=replace(
+            attacker.identity,
+            cooldowns={"HEAVY_STRIKE": 200},
+        ),
+    )
+
+    state_cd = replace(
+        base_state,
+        entities={
+            1: attacker_cd,
+            2: target,
+        },
+    )
+
     refined_cd = AuthoritativeApplyPipeline.refine(state_cd, raw_upd)
-    assert refined_cd.entity_updates[1].task.payload_set.get("outcome") == "FAILURE"
-    assert refined_cd.entity_updates[1].task.payload_set.get("reason") in ("INSUFFICIENT_READINESS", "SKILL_ON_COOLDOWN")
 
-
+    payload_cd = refined_cd.entity_updates[1].task.payload_set
+    assert payload_cd.get("outcome") == "FAILURE"
+    assert payload_cd.get("reason") in (
+        "INSUFFICIENT_READINESS",
+        "SKILL_ON_COOLDOWN",
+        "ReasonCode.SKILL_ON_COOLDOWN",
+    )

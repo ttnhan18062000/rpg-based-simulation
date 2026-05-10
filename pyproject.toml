@@ -41,6 +41,7 @@ include = ["src*"]
 pythonpath = ["."]
 markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "world_long_run: long-run living-world stability tests",
     "legacy_characterization: proves legacy behavior in src",
     "v2_contract: defines a new V2-specific contract",
     "differential: parity test comparing src and src_legacy",

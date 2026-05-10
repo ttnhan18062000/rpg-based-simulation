@@ -90,7 +90,7 @@ class SocialContractSystem:
         """Auto-expire contracts that reached their tick limit."""
         to_update = []
         for contract in entity.strategic.contracts.values():
-            if contract.status in (ContractStatus.OFFERED, ContractStatus.ACTIVE, ContractStatus.COUNTERED):
+            if contract.status in (ContractStatus.OFFERED, ContractStatus.COUNTERED):
                 if contract.expiry_tick != -1 and current_tick >= contract.expiry_tick:
                     to_update.append(replace(contract, status=ContractStatus.EXPIRED))
         

@@ -13,7 +13,7 @@ def test_weight_pressure_enforcement():
     entity = (V2EntityBuilder(1)
               .kind("hero")
               .location(0.0, 0.0)
-              .inventory(items=["wood", "wood"])
+              .inventory(items=[ItemStack("wood", 1), ItemStack("wood", 1)])
               .combat(readiness=100.0)
               .build())
     

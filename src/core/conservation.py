@@ -4,7 +4,8 @@ from typing import List, Optional, TYPE_CHECKING, Dict, Any
 
 from src.core.inventory import InventoryService
 from src.core.enums import ReasonCode
-from src.core.updates import InventoryUpdate, ResourceNodeUpdate, InteractionUpdate, IdentityUpdate, BiologicalUpdate, AttributeUpdate, CombatUpdate, StrategicUpdate, RewardUpdate, EquipmentUpdate
+from src.core.updates import InventoryUpdate, ResourceNodeUpdate, InteractionUpdate, IdentityUpdate, BiologicalUpdate, AttributeUpdate, CombatUpdate, StrategicUpdate, RewardUpdate, EquipmentUpdate, QuestUpdate
+from src.core.quests import QuestStatus
 
 if TYPE_CHECKING:
     from src.core.state import AuthoritativeState, EntityState, InventoryComponent
@@ -23,6 +24,7 @@ class TransactionResult:
     strategic_update: Optional[StrategicUpdate] = None
     equipment_update: Optional[EquipmentUpdate] = None
     reward_update: Optional[RewardUpdate] = None
+    quest_update: Optional[QuestUpdate] = None
     home_storage_update: Optional[InventoryUpdate] = None
     building_update: Optional[BuildingUpdate] = None
     ground_item_remove: Optional[int] = None
@@ -242,7 +244,8 @@ class ResourceTransactionResolver:
                 accepted=True,
                 inventory_update=InventoryUpdate(items_add=intent.items_add, gold_delta=intent.gold_delta),
                 identity_update=IdentityUpdate(evolution_points_delta=intent.xp_reward),
-                reward_update=intent.reward_upd
+                reward_update=intent.reward_upd,
+                quest_update=QuestUpdate(quest_id=str(intent.source_id), status_set=QuestStatus.REWARDED)
             )
 
         # VERIFIED v2: authoritative_side_effects

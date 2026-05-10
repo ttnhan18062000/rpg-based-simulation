@@ -48,7 +48,7 @@ def test_harvest_full_inventory_does_not_deplete_node_v2(base_state):
     state = replace(base_state, entities={1: replace(entity, inventory=full_inventory)})
     
     # 2. Run HarvestSystem
-    state.entities[1] = replace(state.entities[1], interaction=InteractionComponent(target_node_id=101, progress=0))
+    state = replace(state, entities={1: replace(state.entities[1], interaction=InteractionComponent(target_node_id=101, progress=0))})
     raw_update = HarvestSystem.update(state)
     
     # 3. Refine the update

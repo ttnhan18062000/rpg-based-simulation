@@ -161,11 +161,51 @@ def test_bracketing_bonus_requires_active_attackers():
 
     assert attacker_ids == {2, 3}
 
-    # With atk=10 and def=0, one attacker does 9 damage using the fractional
-    # armor formula. Two active attackers should therefore do more than one hit.
-    single_hit_damage = CombatResolutionSystem.calculate_damage(
-        attacker_a,
-        target,
+    # With atk=10 and def=0, one attacker does 9 damage.
+    # Two attackers with flanking (atk_mult=1.15) should do 10 damage each.
+    # Formula: 11.5 * (11.5 / 12.5) = 10.58 -> 10.
+    assert combat_upd.damage_taken == 20
+    
+    # Verify trace markers are present for both attackers in multi-attack
+    assert combat_upd.trace.get("2_FLANKING") == 0.15
+    assert combat_upd.trace.get("3_FLANKING") == 0.15
+
+
+def test_bracketing_bonus_ignores_inactive_entities():
+    """
+    LAW: Bracketing bonus requires ACTIVE entities.
+    Inactive or dead entities should not contribute to the geometry check.
+    """
+    target = create_mock_entity(1, Faction.MONSTER_HORDE, pos=(10.0, 10.0))
+    attacker_a = create_mock_entity(2, Faction.HERO_GUILD, pos=(11.0, 10.0))
+    # Attacker B is on the opposite side but INACTIVE/DEAD
+    attacker_b = create_mock_entity(3, Faction.HERO_GUILD, pos=(9.0, 10.0), hp=0)
+
+    state = AuthoritativeState(
+        tick=2,
+        seed=42,
+        entities={
+            1: target,
+            2: attacker_a,
+            3: attacker_b,
+        },
     )
-    assert single_hit_damage == 9
-    assert combat_upd.damage_taken > single_hit_damage
+
+    # Legality check for flanking should fail because 3 is inactive
+    is_flanked, _ = LegalityServiceV2.check_flanking(target.id, state)
+    assert is_flanked is False
+
+    # Multi-attack with both (one is inactive)
+    combat_upd = CombatResolutionSystem.resolve_multi_attack(
+        attackers=[attacker_a, attacker_b],
+        defender=target,
+        state=state,
+    )
+
+    # Only attacker_a should be valid
+    assert len(combat_upd.simultaneous_intents) == 1
+    assert combat_upd.simultaneous_intents[0].attacker_id == 2
+    
+    # Damage should be 9 (no flanking bonus)
+    assert combat_upd.damage_taken == 9
+    assert "2_FLANKING" not in combat_upd.trace

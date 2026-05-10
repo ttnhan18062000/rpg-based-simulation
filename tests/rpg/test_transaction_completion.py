@@ -60,8 +60,8 @@ def entity_full_inventory(base_state):
         .inventory(
             gold=50,
             items=[
-                ItemStack("wood", 1),
-                ItemStack("iron_ore", 1),
+                ItemStack("wood", 20),
+                ItemStack("iron_ore", 20),
             ],
             max_slots=2,
         )

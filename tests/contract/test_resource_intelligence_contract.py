@@ -86,7 +86,7 @@ def test_law_of_discovery_blocker_resolution(kernel):
         entity_updates={
             1: EntityUpdate(
                 entity_id=1,
-                inventory=InventoryUpdate(items_add=["iron_ore"])
+                inventory=InventoryUpdate(items_add=[ItemStack("iron_ore", 1)])
             )
         }
     )

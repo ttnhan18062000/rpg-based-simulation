@@ -72,6 +72,14 @@ class InteractionUpdate:
     progress_delta: float = 0.0
     reset: bool = False
 
+    def merge(self, other: InteractionUpdate) -> InteractionUpdate:
+        from dataclasses import replace
+        return replace(self,
+            target_node_id=other.target_node_id if other.target_node_id is not None else self.target_node_id,
+            progress_delta=self.progress_delta + other.progress_delta,
+            reset=self.reset or other.reset
+        )
+
 @dataclass(frozen=True, slots=True)
 class ResourceTransferIntent:
     """
@@ -179,11 +187,37 @@ class NavigationUpdate:
     oscillation_count_delta: int = 0
     last_position_set: Optional[tuple[float, float]] = None
 
+    def merge(self, other: NavigationUpdate) -> NavigationUpdate:
+        from dataclasses import replace
+        return replace(self,
+            target_set=other.target_set if other.target_set is not None else self.target_set,
+            target_clear=self.target_clear or other.target_clear,
+            path_set=other.path_set if other.path_set is not None else self.path_set,
+            moved_recently_set=other.moved_recently_set if other.moved_recently_set is not None else self.moved_recently_set,
+            movement_mode_set=other.movement_mode_set if other.movement_mode_set is not None else self.movement_mode_set,
+            failure_reason=other.failure_reason if other.failure_reason is not None else self.failure_reason,
+            clear_target=self.clear_target or other.clear_target,
+            clear_path=self.clear_path or other.clear_path,
+            wait_count_delta=self.wait_count_delta + other.wait_count_delta,
+            oscillation_count_delta=self.oscillation_count_delta + other.oscillation_count_delta,
+            last_position_set=other.last_position_set if other.last_position_set is not None else self.last_position_set
+        )
+
 @dataclass(frozen=True, slots=True)
 class TaskUpdate:
     """Updates to next-tick work intent."""
     work_kind_set: Optional[str] = None
     payload_set: Optional[Dict[str, Any]] = None
+
+    def merge(self, other: TaskUpdate) -> TaskUpdate:
+        from dataclasses import replace
+        new_payload = dict(self.payload_set or {})
+        if other.payload_set:
+            new_payload.update(other.payload_set)
+        return replace(self,
+            work_kind_set=other.work_kind_set if other.work_kind_set is not None else self.work_kind_set,
+            payload_set=new_payload if new_payload else None
+        )
     
 @dataclass(frozen=True, slots=True)
 class IdentityUpdate:
@@ -352,6 +386,18 @@ class LifecycleUpdate:
     heir_entity_id_set: Optional[int] = None
     heirlooms_add: list[str] = field(default_factory=list)
 
+    def merge(self, other: LifecycleUpdate) -> LifecycleUpdate:
+        from dataclasses import replace
+        return replace(self,
+            age_delta=self.age_delta + other.age_delta,
+            generation_delta=self.generation_delta + other.generation_delta,
+            is_permadeath_set=other.is_permadeath_set if other.is_permadeath_set is not None else self.is_permadeath_set,
+            death_tick_set=other.death_tick_set if other.death_tick_set is not None else self.death_tick_set,
+            death_reason_set=other.death_reason_set if other.death_reason_set is not None else self.death_reason_set,
+            heir_entity_id_set=other.heir_entity_id_set if other.heir_entity_id_set is not None else self.heir_entity_id_set,
+            heirlooms_add=self.heirlooms_add + other.heirlooms_add
+        )
+
 
 @dataclass(frozen=True, slots=True)
 class QuestUpdate:
@@ -359,6 +405,43 @@ class QuestUpdate:
     quest_id: str
     progress_delta: float = 0.0
     status_set: Optional[QuestStatus] = None
+    multi_updates: List[QuestUpdate] = field(default_factory=list)
+    def merge(self, other: 'QuestUpdate') -> 'QuestUpdate':
+        from dataclasses import replace
+        from typing import Dict
+        
+        # 1. If either is "MULTI", we need to handle list merging
+        if self.quest_id == "MULTI" or other.quest_id == "MULTI":
+            my_updates = self.multi_updates if self.quest_id == "MULTI" else [replace(self, multi_updates=[])]
+            their_updates = other.multi_updates if other.quest_id == "MULTI" else [replace(other, multi_updates=[])]
+            
+            # Merge by ID
+            by_id: Dict[str, QuestUpdate] = {}
+            for qu in my_updates + their_updates:
+                if qu.quest_id in by_id:
+                    by_id[qu.quest_id] = by_id[qu.quest_id].merge(qu)
+                else:
+                    by_id[qu.quest_id] = qu
+            
+            # If only one quest type remains, return it as a single update
+            if len(by_id) == 1:
+                return list(by_id.values())[0]
+            
+            # Otherwise return a MULTI update
+            return replace(self, quest_id="MULTI", multi_updates=list(by_id.values()), progress_delta=0.0)
+            
+        # 2. Both are single-quest updates. If same ID, sum deltas.
+        if self.quest_id == other.quest_id:
+            return replace(self,
+                progress_delta=self.progress_delta + other.progress_delta,
+                status_set=other.status_set if other.status_set is not None else self.status_set
+            )
+            
+        # 3. Different IDs, create a MULTI update
+        return replace(self, quest_id="MULTI", multi_updates=[
+            replace(self, multi_updates=[]),
+            replace(other, multi_updates=[])
+        ], progress_delta=0.0)
 
 @dataclass(frozen=True, slots=True)
 class RewardUpdate:
@@ -457,12 +540,28 @@ class StaminaUpdate:
     current_set: Optional[float] = None
     max_stamina_set: Optional[float] = None
 
+    def merge(self, other: StaminaUpdate) -> StaminaUpdate:
+        from dataclasses import replace
+        return replace(self,
+            current_delta=self.current_delta + other.current_delta,
+            current_set=other.current_set if other.current_set is not None else self.current_set,
+            max_stamina_set=other.max_stamina_set if other.max_stamina_set is not None else self.max_stamina_set
+        )
+
 @dataclass(frozen=True, slots=True)
 class WoundUpdate:
     """New wounds and scar transitions."""
     wounds_add: List[WoundState] = field(default_factory=list)
     wounds_heal: List[str] = field(default_factory=list)  # wound IDs to heal
     scars_add: List[ScarState] = field(default_factory=list)
+
+    def merge(self, other: WoundUpdate) -> WoundUpdate:
+        from dataclasses import replace
+        return replace(self,
+            wounds_add=self.wounds_add + other.wounds_add,
+            wounds_heal=self.wounds_heal + other.wounds_heal,
+            scars_add=self.scars_add + other.scars_add
+        )
 
 @dataclass(frozen=True, slots=True)
 class EntityUpdate:
@@ -510,21 +609,21 @@ class EntityUpdate:
             active=other.active if other.active is not None else self.active,
             interaction=other.interaction if other.interaction is not None else self.interaction,
             resource_transfers=self.resource_transfers + other.resource_transfers,
-            identity=other.identity if other.identity is not None else self.identity,
-            attributes=other.attributes if other.attributes is not None else self.attributes,
-            inventory=other.inventory if other.inventory is not None else self.inventory,
-            strategic=other.strategic if other.strategic is not None else self.strategic,
-            biological=other.biological if other.biological is not None else self.biological,
+            identity=self.identity.merge(other.identity) if self.identity and other.identity else (other.identity or self.identity),
+            attributes=self.attributes.merge(other.attributes) if self.attributes and other.attributes else (other.attributes or self.attributes),
+            inventory=self.inventory.merge(other.inventory) if self.inventory and other.inventory else (other.inventory or self.inventory),
+            strategic=self.strategic.merge(other.strategic) if self.strategic and other.strategic else (other.strategic or self.strategic),
+            biological=self.biological.merge(other.biological) if self.biological and other.biological else (other.biological or self.biological),
             social=self.social.merge(other.social) if self.social and other.social else (other.social or self.social),
-            quest=other.quest if other.quest is not None else self.quest,
-            reward=other.reward if other.reward is not None else self.reward,
-            lifecycle=other.lifecycle if other.lifecycle is not None else self.lifecycle,
+            quest=self.quest.merge(other.quest) if self.quest and other.quest else (other.quest or self.quest),
+            reward=self.reward.merge(other.reward) if self.reward and other.reward else (other.reward or self.reward),
+            lifecycle=self.lifecycle.merge(other.lifecycle) if self.lifecycle and other.lifecycle else (other.lifecycle or self.lifecycle),
             combat=self.combat.merge(other.combat) if self.combat and other.combat else (other.combat or self.combat),
-            equipment=other.equipment if other.equipment is not None else self.equipment,
-            navigation=other.navigation if other.navigation is not None else self.navigation,
-            task=other.task if other.task is not None else self.task,
-            stamina_update=other.stamina_update if other.stamina_update is not None else self.stamina_update,
-            wound_update=other.wound_update if other.wound_update is not None else self.wound_update,
+            equipment=self.equipment.merge(other.equipment) if self.equipment and other.equipment else (other.equipment or self.equipment),
+            navigation=self.navigation.merge(other.navigation) if self.navigation and other.navigation else (other.navigation or self.navigation),
+            task=self.task.merge(other.task) if self.task and other.task else (other.task or self.task),
+            stamina_update=self.stamina_update.merge(other.stamina_update) if self.stamina_update and other.stamina_update else (other.stamina_update or self.stamina_update),
+            wound_update=self.wound_update.merge(other.wound_update) if self.wound_update and other.wound_update else (other.wound_update or self.wound_update),
             group_id_set=other.group_id_set if other.group_id_set is not None else self.group_id_set,
             intent_results=self.intent_results + other.intent_results,
             property_updates={**self.property_updates, **other.property_updates}

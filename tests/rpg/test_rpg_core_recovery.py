@@ -203,13 +203,23 @@ def test_attrition_and_status():
 def test_quest_lifecycle():
     """
     Verifies that HUNT quests advance when killing enemies, and that rewards are granted.
+
+    Important:
+        This is a pipeline-level test. Do not pre-execute
+        SimulationDomainLogic.execute_action(...), because that produces raw
+        combat/resource mutations that the pipeline trust boundary may strip.
+
+        Submit only the ATTACK intent. The pipeline must produce combat result,
+        quest progress, combat reward, quest reward, and evolution.
     """
-    from src.core.state import AuthoritativeState, EntityState, StrategicComponent, CombatComponent, IdentityComponent, InventoryComponent
+    from src.core.state import AuthoritativeState
     from src.core.quests import QuestState, QuestKind, QuestStatus, RewardState
-    from src.engine.domain_logic import SimulationDomainLogic
-    from src.core.updates import StateUpdate
-    
-    # Setup Quest
+    from src.core.updates import StateUpdate, EntityUpdate, TaskUpdate
+    from src.core.builder import V2EntityBuilder
+    from src.core.enums import EntityRole, Faction
+    from src.engine.pipeline import AuthoritativeApplyPipeline
+    from src.engine.apply import ApplyPath
+
     quest = QuestState(
         id="q1",
         kind="quest",
@@ -217,65 +227,104 @@ def test_quest_lifecycle():
         quest_status=QuestStatus.ACTIVE,
         goal_value=1.0,
         current_value=0.0,
-        reward=RewardState(xp=100, gold=50),
-        metadata={"target_kind": "MONSTER"}
+        reward=RewardState(
+            xp=100,
+            gold=50,
+        ),
+        metadata={
+            "target_kind": "MONSTER",
+        },
     )
-    
-    # Setup Hero
-    from dataclasses import replace
-    from src.core.builder import V2EntityBuilder
-    hero = (V2EntityBuilder(1)
+
+    hero = (
+        V2EntityBuilder(1)
         .kind("HERO")
         .location(0, 0)
-        .combat(readiness=100.0)
+        .identity(
+            role=EntityRole.HERO,
+            faction=Faction.HERO_GUILD,
+            evolution_level=1,
+            evolution_points=0,
+        )
         .strategic(projects={"q1": quest})
-        .combat(hp=100, atk=100, def_stat=10, alive=True)
-        .identity(evolution_points=0)
+        .combat(
+            hp=100,
+            max_hp=100,
+            atk=100,
+            def_stat=10,
+            attack_range=1,
+            alive=True,
+            readiness=100.0,
+        )
         .inventory(gold=0)
+        .lifecycle(active=True)
         .build()
     )
-    
-    # Setup Monster (target)
-    from src.core.enums import EntityRole, Faction
-    monster = (V2EntityBuilder(2)
+
+    monster = (
+        V2EntityBuilder(2)
         .kind("MONSTER")
         .location(1, 0)
-        .identity(role=EntityRole.MONSTER, faction=Faction.MONSTER_HORDE)
-        .combat(hp=10, max_hp=10, atk=5, def_stat=0, alive=True)
+        .identity(
+            role=EntityRole.MONSTER,
+            faction=Faction.MONSTER_HORDE,
+            evolution_level=1,
+        )
+        .combat(
+            hp=10,
+            max_hp=10,
+            atk=5,
+            def_stat=0,
+            alive=True,
+            readiness=100.0,
+        )
+        .lifecycle(active=True)
         .build()
     )
-    
-    state = AuthoritativeState(tick=1, seed=42, entities={1: hero, 2: monster})
-    
-    # Execute Attack
-    updates_dict = SimulationDomainLogic.execute_action(
-        entity=hero,
-        payload={"action": "ATTACK", "target_id": 2},
-        current_tick=1,
-        neighbor_view=[(2, monster)],
-        context=state
+
+    state = AuthoritativeState(
+        tick=1,
+        seed=42,
+        entities={
+            1: hero,
+            2: monster,
+        },
     )
-    # Ensure task is in proposal for kernel re-execution
-    from src.core.updates import TaskUpdate
-    if 1 in updates_dict:
-        updates_dict[1] = replace(updates_dict[1], task=TaskUpdate(work_kind_set="ENTITY_ACT", payload_set={"action": "ATTACK", "target_id": 2}))
-    
-    # Apply Updates
-    state_up = StateUpdate(entity_updates=updates_dict)
-    
-    refined = AuthoritativeApplyPipeline.refine(state, state_up)
-    new_state = ApplyPath.apply_generation(state, refined)
-    
+
+    raw_update = StateUpdate(
+        entity_updates={
+            1: EntityUpdate(
+                entity_id=1,
+                task=TaskUpdate(
+                    work_kind_set="ENTITY_ACT",
+                    payload_set={
+                        "action": "ATTACK",
+                        "target_id": 2,
+                    },
+                ),
+            )
+        }
+    )
+
+    refined = AuthoritativeApplyPipeline.refine(
+        state,
+        raw_update,
+    )
+
+    new_state = ApplyPath.apply_generation(
+        state,
+        refined,
+    )
+
     new_hero = new_state.entities[1]
-    
-    # Assert status is REWARDED
     updated_quest = new_hero.strategic.projects["q1"]
+
     assert updated_quest.quest_status == QuestStatus.REWARDED
-    
-    # Rewards should be applied
-    # XP: 100 (Quest) + 10 (Combat) = 110. Level 1->2 costs 100.
-    # Total points = 110, Level up consumed 100, remaining = 10.
+
+    # Quest XP 100 + combat XP 10 = 110.
+    # Level 1 -> 2 costs 100, so 10 remains.
     assert new_hero.identity.evolution_level == 2
     assert new_hero.identity.evolution_points == 10
-    # Gold: 50 (Quest) + 5 (Combat) = 55
+
+    # Quest gold 50 + combat gold 5 = 55.
     assert new_hero.inventory.gold == 55

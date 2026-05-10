@@ -207,23 +207,11 @@ class ContractService:
                         ent_upd = refined_entity_updates.get(e_id, EntityUpdate(entity_id=e_id))
                         
                         # Merge strategic update
-                        base_strat = ent_upd.strategic or StrategicUpdate()
-                        merged_strat = replace(base_strat,
-                            contracts_add_or_update=list(base_strat.contracts_add_or_update) + list(strat_up.contracts_add_or_update),
-                            directives_add_or_update=list(base_strat.directives_add_or_update) + list(strat_up.directives_add_or_update)
-                        )
-                        
-                        # Apply relevant SocialUpdate
                         my_social_up = bond_ups[0] if bond_ups else SocialUpdate()
                         
-                        # Merge with existing social update if any
-                        base_social = ent_upd.social or SocialUpdate()
-                        merged_social = replace(base_social,
-                            bond_updates=list(base_social.bond_updates) + list(my_social_up.bond_updates),
-                            heroism_delta=base_social.heroism_delta + my_social_up.heroism_delta,
-                            notoriety_delta=base_social.notoriety_delta + my_social_up.notoriety_delta,
-                            betrayal_increment=base_social.betrayal_increment + my_social_up.betrayal_increment
-                        )
+                        # Merge updates
+                        merged_strat = ent_upd.strategic.merge(strat_up) if ent_upd.strategic else strat_up
+                        merged_social = ent_upd.social.merge(my_social_up) if ent_upd.social else my_social_up
                         
                         refined_entity_updates[e_id] = replace(ent_upd,
                             strategic=merged_strat,

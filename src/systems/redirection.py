@@ -35,7 +35,11 @@ class StrategicRedirectionSystem:
             
             # DEBUG
             if e_id == 1:
-                inv_items = {item.item_id: item.quantity for item in entity.inventory.items}
+                inv_items = {
+                    (item.item_id if hasattr(item, "item_id") else item): 
+                    (item.quantity if hasattr(item, "quantity") else 1) 
+                    for item in entity.inventory.items
+                }
                 print(f"DEBUG: Tick {state.tick} | Hero {e_id} at {entity.navigation.position} | Inv: {inv_items} | Target: {entity.navigation.target} | NavUpdate: {has_nav_update}")
             
             # Check for active project

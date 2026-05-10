@@ -90,7 +90,7 @@ def test_rejection_tracking_certification():
     
     registry = kernel._state.rejection_registry
     print(f"Rejection Registry after act: {registry}")
-    assert registry.get("READINESS_NOT_READY", 0) > 0
+    assert registry.get("INSUFFICIENT_READINESS", 0) > 0
 
 def test_final_certification_report_generation():
     """
