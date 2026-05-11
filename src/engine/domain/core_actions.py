@@ -77,7 +77,7 @@ class CoreActions:
                 navigation=NavigationUpdate(failure_reason="TARGET_NOT_FOUND")
             )}
         
-        from src.social.appraisal import SocialAppraisalSystem
+        from src.systems.social_systems.appraisal import SocialAppraisalSystem
         from src.core.strategic import ContractState, ContractKind, ContractStatus
         from src.core.updates import ResourceTransferIntent, SocialUpdate, StrategicUpdate
         

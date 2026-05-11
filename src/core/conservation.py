@@ -1,3 +1,4 @@
+# Compliance IDs: TOWN-011
 from __future__ import annotations
 from dataclasses import dataclass, field, replace
 from typing import List, Optional, TYPE_CHECKING, Dict, Any
@@ -60,6 +61,7 @@ class ResourceTransactionResolver:
         
         # 1. Destination Capacity Check (Phase 8: Account for removals)
         # VERIFIED v2: inventory_slots_and_weight
+        # Logic ID: TOWN-011 (Loot/harvest abort because of inventory pressure)
         # VERIFIED v2: loot_abort_slot_pressure
         # VERIFIED v2: loot_abort_weight_pressure
         # RPG-RES-003, RPG-RES-004, RPG-RES-005, RPG-RES-201

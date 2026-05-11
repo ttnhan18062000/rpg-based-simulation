@@ -6,7 +6,7 @@ from src.core.updates import StateUpdate, WorldUpdate, EntityUpdate
 from src.core.enums import Faction, EntityRole
 
 if TYPE_CHECKING:
-    from src.systems.generator import EntityGenerator
+    from src.systems.world_systems.generator import EntityGenerator
 
 class RegionalSovereigntyService:
     """

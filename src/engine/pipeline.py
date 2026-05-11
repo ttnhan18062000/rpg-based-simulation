@@ -1,3 +1,5 @@
+# Compliance IDs: INFRA-001, INFRA-002, SOC-182, SOC-186, TOWN-004, TOWN-008, TOWN-147, TOWN-148, TOWN-149, TOWN-155, TOWN-164, TOWN-165, TOWN-166, TOWN-167
+# Compliance IDs: INFRA-001, INFRA-002
 from __future__ import annotations
 from typing import TYPE_CHECKING, List, Dict, Optional, Any, Set
 from dataclasses import replace
@@ -20,16 +22,20 @@ class AuthoritativeApplyPipeline:
     def refine(state: AuthoritativeState, update: StateUpdate) -> StateUpdate:
         """
         Singular entry point for authoritative state transition refinement.
+        Logic ID: TOWN-147 (Every update enters the same pipeline)
+        Logic ID: TOWN-148 (No AI/system mutates world state directly)
+        Logic ID: TOWN-004 (World mutation happens after proposal generation)
+        Logic ID: TOWN-008 (Observability consumes authoritative results)
         Orchestrates systems in the correct causal order.
         """
         # 1. Identity & Lifecycle (High Priority)
         # 2. Strategic Intents (Evaluating long-term projects)
         from src.systems.strategic import StrategicIntelligenceSystem
         from src.systems.redirection import StrategicRedirectionSystem
-        from src.systems.navigation import NavigationSystem
+        from src.systems.world_systems.navigation import NavigationSystem
         from src.engine.interaction import InteractionSystem
         from src.engine.blacksmith import BlacksmithSystem
-        from src.systems.groups import GroupSystem
+        from src.systems.world_systems.groups import GroupSystem
         from src.systems.lifecycle import LifecycleSystem
         from src.engine.legality import LegalityServiceV2
         from src.core.updates import EntityUpdate
@@ -84,7 +90,7 @@ class AuthoritativeApplyPipeline:
         
         # Phase 7 Implementation: World Dynamics (Hazards, Spawns, Decays)
         # VERIFIED v2: passive_world_progression
-        from src.systems.generator import EntityGenerator
+        from src.systems.world_systems.generator import EntityGenerator
         from src.engine.world_dynamics import WorldDynamicsSystem
         generator = EntityGenerator(state.seed + state.tick)
         generator._last_id = state.next_entity_id - 1

@@ -87,6 +87,8 @@ class TestRNGBoundaryEnforcement:
         violations = self._scan_for_bare_random(root, exclude_files=set())
         assert violations == [], f"Bare random usage found:\n" + "\n".join(violations)
 
+    # Logic ID: INFRA-003
+
     def test_rng_module_is_only_random_user(self):
         """Law: Only src/platform/rng.py may use `import random`."""
         root = Path("src")
@@ -253,7 +255,7 @@ class TestEntityGeneratorDeterminism:
     """Verify that entity generation is stable across repeated calls."""
 
     def test_spawn_hero_deterministic(self):
-        from src.systems.generator import EntityGenerator
+        from src.systems.world_systems.generator import EntityGenerator
         from src.core.state import AuthoritativeState
 
         state = AuthoritativeState(tick=5, seed=42)
@@ -269,7 +271,7 @@ class TestEntityGeneratorDeterminism:
         assert hero1.combat.atk == hero2.combat.atk
 
     def test_spawn_goblin_deterministic(self):
-        from src.systems.generator import EntityGenerator
+        from src.systems.world_systems.generator import EntityGenerator
         from src.core.state import AuthoritativeState
 
         state = AuthoritativeState(tick=5, seed=42)
@@ -284,7 +286,7 @@ class TestEntityGeneratorDeterminism:
         assert g1.combat.hp == g2.combat.hp
 
     def test_different_seeds_produce_different_entities(self):
-        from src.systems.generator import EntityGenerator
+        from src.systems.world_systems.generator import EntityGenerator
         from src.core.state import AuthoritativeState
 
         state = AuthoritativeState(tick=5, seed=42)

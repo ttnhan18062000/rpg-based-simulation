@@ -1,3 +1,5 @@
+# Compliance IDs: SOC-045, SOC-136, STRAT-002, STRAT-003, STRAT-004, STRAT-005, STRAT-011, STRAT-050, STRAT-072, STRAT-079, STRAT-141, STRAT-148, STRAT-149, STRAT-184, STRAT-185, STRAT-186, STRAT-187, STRAT-189, STRAT-190, STRAT-196, STRAT-197, STRAT-198, STRAT-199, STRAT-200, STRAT-213, STRAT-217, STRAT-218, SUB-024
+# Compliance IDs: SOC-045, SOC-136, STRAT-050, STRAT-072, STRAT-079, STRAT-141, STRAT-148, STRAT-149, SUB-024
 """
 Strategic Intelligence System.
 
@@ -33,6 +35,7 @@ class StrategicIntelligenceSystem:
     """
     Analyzes character outcomes to generate or resolve strategic markers.
     Phase 9: Full strategic lifecycle management.
+    Logic ID: STRAT-002 (Decision logic evaluates state / does not directly mutate)
     """
 
     @staticmethod
@@ -45,6 +48,10 @@ class StrategicIntelligenceSystem:
     ) -> StrategicUpdate:
         """
         Infer blockers based on recent failures.
+        Logic ID: STRAT-191 (Blockers have kind)
+        Logic ID: STRAT-192 (Blockers have subject/reference)
+        Logic ID: STRAT-193 (Blockers have severity)
+        Logic ID: STRAT-194 (Blockers have origin/spawned-from reference where useful)
         VERIFIED v2: strategic_blocker_inference
         """
         blockers = []
@@ -169,6 +176,10 @@ class StrategicIntelligenceSystem:
         """
         Resolve strategic blockers that are satisfied by the current or pending
         authoritative inventory state.
+
+        Logic ID: STRAT-196 (Blockers can be resolved by acquiring missing material)
+        Logic ID: STRAT-197 (Blockers can be resolved by acquiring missing gold/resource)
+        Logic ID: STRAT-198 (Blockers can be resolved by finding location/target)
 
         Important:
             Do not only inspect items_add from this tick. A blocker may survive
@@ -372,7 +383,7 @@ class StrategicIntelligenceSystem:
             
             # Law 194: Enforce Strategic Bandwidth for concerns
             # Logic ID: 194
-            from src.systems.detour import DetourSuggestionSystem
+            from src.systems.strategic_systems.detour import DetourSuggestionSystem
             bandwidth_upd = DetourSuggestionSystem.enforce_bandwidth(entity, state.tick)
             if bandwidth_upd.concerns_remove:
                 to_remove = set(bandwidth_upd.concerns_remove)
@@ -473,9 +484,13 @@ class StrategicIntelligenceSystem:
     ) -> Optional[StrategicUpdate]:
         """
         Phase 9: Strategic interruption resistance and retention.
+        Logic ID: STRAT-185 (Strategic project retention is bounded by interruption resistance)
+        Logic ID: STRAT-186 (Strategic project switching requires margin or explicit emergency)
+        Logic ID: STRAT-187 (Current project has reservation priority)
         VERIFIED v2: project_interruption_resistance
         VERIFIED v2: current_project_retention
         """
+        # Logic ID: STRAT-003 (Cognition profiles enforce bandwidth)
         profile = entity.strategic.profile
         current_id = entity.strategic.current_project_id
 
@@ -501,7 +516,9 @@ class StrategicIntelligenceSystem:
             else:
                 return None 
 
+        # Logic ID: STRAT-005 (Project switching uses interruption resistance)
         retention_margin = profile.interruption_resistance * 30
+        # Logic ID: STRAT-006 (Current project gets retention priority)
         effective_current_score = current.score + retention_margin
 
         if candidate_project.score > effective_current_score:
@@ -590,7 +607,7 @@ class StrategicIntelligenceSystem:
         """
         VERIFIED v2: StrategicIntelligenceSystem.process_outcome
         """
-        from src.social.appraisal import SocialAppraisalSystem
+        from src.systems.social_systems.appraisal import SocialAppraisalSystem
         outcome_quality = 1.0 if success else -1.0
         # recalibrate_trust in appraisal.py takes observer.social
         return SocialAppraisalSystem.recalibrate_trust(observer.social, subject_id, outcome_quality)
@@ -654,7 +671,7 @@ class StrategicIntelligenceSystem:
             return StrategicUpdate()
 
         # 0. Strategic Memory (PH6: Lead Suppression)
-        from src.systems.detour import DetourSuggestionSystem
+        from src.systems.strategic_systems.detour import DetourSuggestionSystem
         memory_upd = DetourSuggestionSystem.suppress_exhausted_leads(entity, state.tick)
         
         res_up = StrategicIntelligenceSystem._resolve_active_objective(state, entity)
@@ -764,7 +781,7 @@ class StrategicIntelligenceSystem:
                          pass
                 
                 if strat.blockers and entity.identity.group_id is None:
-                    from src.systems.detour import DetourSuggestionSystem
+                    from src.systems.strategic_systems.detour import DetourSuggestionSystem
                     detours = DetourSuggestionSystem.suggest_detours(entity, current_tick)
                     if detours:
                         best = detours[0]

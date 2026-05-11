@@ -1,9 +1,7 @@
-from __future__ import annotations
-
 from src.core.builder import V2EntityBuilder
 from src.core.state import AuthoritativeState
-from src.core.updates import StateUpdate, EntityUpdate
-from src.engine.pipeline import AuthoritativeApplyPipeline
+from src.core.updates import EntityUpdate, StateUpdate
+from src.engine.pipeline_phases.occupancy import OccupancyPhase
 
 
 def make_actor(
@@ -21,7 +19,12 @@ def make_actor(
         V2EntityBuilder(entity_id)
         .kind("hero")
         .location(float(pos[0]), float(pos[1]))
-        .combat(hp=100, max_hp=100, alive=True, readiness=100.0)
+        .combat(
+            hp=100,
+            max_hp=100,
+            alive=True,
+            readiness=100.0,
+        )
         .lifecycle(active=True)
         .build()
     )
@@ -31,21 +34,34 @@ def test_occupancy_conflict_resolution():
     """
     LAW:
         If two active entities claim the same destination tile in the same
-        authoritative update, the conflict must resolve deterministically.
+        authoritative movement result, the conflict must resolve
+        deterministically.
+
+    Scope:
+        This is an OccupancyPhase test, not a full-pipeline trust-boundary test.
+
+    Why this calls OccupancyPhase directly:
+        AuthoritativeApplyPipeline.refine(...) begins with TrustBoundaryPhase.
+        Raw worker proposals are not allowed to directly set new_position, so
+        full pipeline would reject these updates as UNTRUSTED_DIRECT_MOVEMENT
+        before occupancy can inspect them.
+
+        This test intentionally passes already-authoritative movement results
+        directly into OccupancyPhase.
 
     Scenario:
         Entity 1 starts at (0, 0).
         Entity 2 starts at (2, 0).
-        Both propose moving to (1, 0).
+        Both authoritative movement results claim (1, 0).
 
     Expected:
         Entity 1 wins because it has the lower entity id.
-        Entity 2 loses and its movement is rejected.
+        Entity 2 loses and receives OCCUPANCY_CONFLICT.
 
     Fraud this catches:
         - two entities can occupy the same final tile
         - conflict winner depends on dictionary iteration order
-        - raw worker-proposed new_position bypasses authoritative validation
+        - occupancy phase fails to deterministically reject loser
     """
     ent1 = make_actor(1, pos=(0.0, 0.0))
     ent2 = make_actor(2, pos=(2.0, 0.0))
@@ -59,7 +75,7 @@ def test_occupancy_conflict_resolution():
         },
     )
 
-    raw_update = StateUpdate(
+    authoritative_movement_update = StateUpdate(
         entity_updates={
             1: EntityUpdate(
                 entity_id=1,
@@ -74,12 +90,14 @@ def test_occupancy_conflict_resolution():
         }
     )
 
-    refined_update = AuthoritativeApplyPipeline.refine(
+    refined_update = OccupancyPhase.resolve(
         state,
-        raw_update,
+        authoritative_movement_update,
     )
 
-    assert refined_update.entity_updates[1].new_position == (1.0, 0.0)
+    winning_update = refined_update.entity_updates[1]
+    assert winning_update.new_position == (1.0, 0.0)
+    assert winning_update.moved_this_tick is True
 
     rejected_update = refined_update.entity_updates[2]
     assert rejected_update.new_position is None
@@ -87,18 +105,35 @@ def test_occupancy_conflict_resolution():
     assert rejected_update.navigation is not None
     assert rejected_update.navigation.failure_reason == "OCCUPANCY_CONFLICT"
 
+    assert refined_update.rejections_delta.get("OCCUPANCY_CONFLICT", 0) == 1
+
+    assert any(
+        event.actor_id == 2
+        and event.action_kind == "MOVE"
+        and event.reason == "OCCUPANCY_CONFLICT"
+        for event in refined_update.rejection_events
+    )
+
 
 def test_occupancy_conflict_with_static_entity():
     """
     LAW:
         An entity must not move into a tile occupied by another active entity
-        that is not moving away during the same authoritative update.
+        that is not moving away during the same authoritative movement result.
+
+    Scope:
+        This is an OccupancyPhase test, not a full-pipeline trust-boundary test.
+
+    Why this calls OccupancyPhase directly:
+        Full pipeline rejects raw direct new_position proposals at the trust
+        boundary. OCCUPANCY_CONFLICT only applies after an authoritative movement
+        phase has produced final movement results.
 
     Scenario:
         Entity 1 starts at (0, 0).
         Entity 2 is already standing at (1, 0).
-        Entity 1 proposes moving to (1, 0).
-        Entity 2 has no movement proposal.
+        Entity 1's authoritative movement result claims (1, 0).
+        Entity 2 has no movement result.
 
     Expected:
         Entity 1's move is rejected because the target tile is statically
@@ -106,7 +141,7 @@ def test_occupancy_conflict_with_static_entity():
 
     Fraud this catches:
         - movement into occupied static tiles is allowed
-        - raw new_position proposals bypass movement legality
+        - occupancy phase ignores stationary active entities
         - final apply path can commit overlapping entity positions
     """
     ent1 = make_actor(1, pos=(0.0, 0.0))
@@ -121,7 +156,7 @@ def test_occupancy_conflict_with_static_entity():
         },
     )
 
-    raw_update = StateUpdate(
+    authoritative_movement_update = StateUpdate(
         entity_updates={
             1: EntityUpdate(
                 entity_id=1,
@@ -131,13 +166,23 @@ def test_occupancy_conflict_with_static_entity():
         }
     )
 
-    refined_update = AuthoritativeApplyPipeline.refine(
+    refined_update = OccupancyPhase.resolve(
         state,
-        raw_update,
+        authoritative_movement_update,
     )
 
     rejected_update = refined_update.entity_updates[1]
+
     assert rejected_update.new_position is None
     assert rejected_update.moved_this_tick is False
     assert rejected_update.navigation is not None
     assert rejected_update.navigation.failure_reason == "OCCUPANCY_CONFLICT"
+
+    assert refined_update.rejections_delta.get("OCCUPANCY_CONFLICT", 0) == 1
+
+    assert any(
+        event.actor_id == 1
+        and event.action_kind == "MOVE"
+        and event.reason == "OCCUPANCY_CONFLICT"
+        for event in refined_update.rejection_events
+    )

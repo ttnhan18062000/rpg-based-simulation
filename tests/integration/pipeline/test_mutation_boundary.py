@@ -1,3 +1,4 @@
+# Compliance IDs: TOWN-168, TOWN-169
 import pytest
 from dataclasses import replace
 from src.core.state import AuthoritativeState, EntityState, IdentityComponent, InventoryComponent, CombatComponent, BiologicalComponent, AptitudeComponent, StaminaComponent
@@ -6,6 +7,10 @@ from src.engine.pipeline import AuthoritativeApplyPipeline
 from src.core.builder import V2EntityBuilder
 
 def test_mutation_boundary_strips_unauthorized_gold():
+    """
+    Proof of TOWN-004: Worker thoughts cannot directly mutate world state.
+    Proof of TOWN-149: No standalone system can change world without pipeline validation.
+    """
     # Setup
     e_id = 1
     entity = (V2EntityBuilder(e_id)
@@ -62,35 +67,87 @@ def test_mutation_boundary_strips_unauthorized_xp():
     assert refined.entity_updates[e_id].reward is None
 
 def test_mutation_boundary_strips_combat_rewards():
-    e_id = 1
-    entity = V2EntityBuilder(e_id).kind("HERO").location(0, 0).build()
-    state = AuthoritativeState(tick=100, seed=42, entities={e_id: entity})
-    
-    # Worker trying to sneak in gold through a combat intent
-    # Note: gold_gain/xp_gain moved to ResourceTransferIntent in V2
-    unauthorized_upd = EntityUpdate(
-        entity_id=e_id,
-        combat=CombatUpdate(damage_taken=5),
+    """
+    Law:
+        Raw worker proposals must not directly mutate combat rewards or combat
+        state.
+
+    Scenario:
+        A worker attempts to sneak in:
+            - direct combat damage
+            - kill reward gold
+
+    Expected:
+        The authoritative trust boundary strips both:
+            - CombatUpdate is removed
+            - KILL_REWARD ResourceTransferIntent is removed
+
+    Important:
+        In V2, legitimate combat damage must be produced by authoritative
+        action routing / domain combat execution, not by raw worker-provided
+        CombatUpdate.
+
+    Fraud this catches:
+        - workers inject kill rewards directly
+        - workers bypass authoritative combat resolution
+        - combat rewards are applied outside ResourceTransferIntent authority
+        - trust boundary preserves unsafe CombatUpdate payloads
+    """
+    entity_id = 1
+
+    entity = (
+        V2EntityBuilder(entity_id)
+        .kind("HERO")
+        .location(0, 0)
+        .build()
+    )
+
+    state = AuthoritativeState(
+        tick=100,
+        seed=42,
+        entities={
+            entity_id: entity,
+        },
+    )
+
+    unauthorized_update = EntityUpdate(
+        entity_id=entity_id,
+
+        # Raw worker direct combat mutation is not trusted.
+        combat=CombatUpdate(
+            damage_taken=5,
+        ),
+
+        # Raw worker kill rewards are not trusted. Rewards must be resolved
+        # through the authoritative resource transaction path.
         resource_transfers=[
             ResourceTransferIntent(
                 source_id="KILL_1",
                 source_kind="KILL",
                 gold_delta=100,
-                transfer_kind="KILL_REWARD"
+                transfer_kind="KILL_REWARD",
             )
-        ]
+        ],
     )
-    raw_update = StateUpdate(entity_updates={e_id: unauthorized_upd})
-    
-    refined = AuthoritativeApplyPipeline.refine(state, raw_update)
-    
-    # Verify KILL_REWARD is stripped
-    assert len(refined.entity_updates[e_id].resource_transfers) == 0
-    
-    # Verify legitimate field preserved
-    combat_ref = refined.entity_updates[e_id].combat
-    assert combat_ref is not None
-    assert combat_ref.damage_taken == 5
+
+    raw_update = StateUpdate(
+        entity_updates={
+            entity_id: unauthorized_update,
+        }
+    )
+
+    refined = AuthoritativeApplyPipeline.refine(
+        state,
+        raw_update,
+    )
+
+    refined_entity_update = refined.entity_updates[entity_id]
+
+    # KILL_REWARD must be stripped.
+    assert refined_entity_update.resource_transfers == []
+
+    # Direct raw CombatUpdate must also be stripped.
+    assert refined_entity_update.combat is None
 
 def test_mutation_boundary_allows_intents():
     e_id = 1

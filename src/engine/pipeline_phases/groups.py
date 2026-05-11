@@ -13,7 +13,7 @@ class GroupPhase:
     @staticmethod
     def resolve(state: AuthoritativeState, update: StateUpdate) -> StateUpdate:
         from src.engine.apply import ApplyPath
-        from src.systems.groups import GroupSystem
+        from src.systems.world_systems.groups import GroupSystem
         from src.core.updates import EntityUpdate
 
         # Calculate group updates based on the current tick's generation (sliding state)

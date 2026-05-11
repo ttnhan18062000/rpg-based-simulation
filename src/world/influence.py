@@ -6,7 +6,7 @@ from src.core.updates import StateUpdate, WorldUpdate
 from src.core.enums import Faction
 
 if TYPE_CHECKING:
-    from src.systems.generator import EntityGenerator
+    from src.systems.world_systems.generator import EntityGenerator
 
 class FactionInfluenceService:
     """

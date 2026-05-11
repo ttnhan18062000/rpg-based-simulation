@@ -1,3 +1,4 @@
+# Compliance IDs: TOWN-005, TOWN-010, TOWN-020
 from __future__ import annotations
 from dataclasses import replace
 from typing import TYPE_CHECKING, Dict, List
@@ -35,6 +36,7 @@ class InteractionSystem:
     def enforce(state: AuthoritativeState, update: StateUpdate) -> StateUpdate:
         """
         Refine the proposed update according to authoritative interaction laws.
+        Logic ID: TOWN-005 (Partial rejection support via refined updates)
         Returns a new StateUpdate with enforced interaction outcomes.
         """
         refined_entity_updates = dict(update.entity_updates)
@@ -70,6 +72,7 @@ class InteractionSystem:
                 if damage > (max_hp * 0.05) or damage >= 10:
                     should_reset = True
                 
+            # Logic ID: TOWN-009 / TOWN-010 (Interrupted by damage or distance)
             if should_reset:
                 # Force a reset update
                 res_upd = InteractionUpdate(reset=True)
@@ -96,27 +99,34 @@ class InteractionSystem:
                     continue
 
                 # 3. Resource Transfer & Pressure Law
+                # Logic ID: TOWN-010 (Harvesting progress is authoritative)
                 new_progress = entity.interaction.progress + ent_upd.interaction.progress_delta
                 required_ticks = node.required_ticks if node else 10
                 
                 
                 intents = list(ent_upd.resource_transfers)
                 if not intents and new_progress >= required_ticks:
+                    # Logic ID: TOWN-006 (Completion triggers intent)
                     # Implicit completion: Create intent from current target
                     from src.core.updates import ResourceTransferIntent
                     from src.core.state import ItemStack
                     items = []
                     source_kind = ""
                     if node:
+                        # Logic ID: TOWN-007 (Resource transfer intent for node)
                         items = [ItemStack(node.yields_item, 1)]
                         source_kind = "NODE"
                     elif ground_item:
+                        # Logic ID: TOWN-007 (Resource transfer intent for ground item)
                         items = [ItemStack(ground_item.item_id, ground_item.quantity)]
                         source_kind = "GROUND_ITEM"
                     elif corpse:
+                        # Logic ID: TOWN-007 (Resource transfer intent for corpse)
                         items = list(corpse.items)
                         source_kind = "CORPSE"
                     elif chest:
+                        # Logic ID: TOWN-009 (Looting completion triggers intent)
+                        # Logic ID: TOWN-020 (Explicit building interaction)
                         if chest.cooldown_remaining > 0:
                             refined_entity_updates[e_id] = replace(ent_upd, interaction=InteractionUpdate(reset=True))
                             continue

@@ -1,3 +1,4 @@
+# Compliance IDs: INFRA-017
 from __future__ import annotations
 
 import time
@@ -47,6 +48,7 @@ class WorkerManager:
         Adaptive Cap: Parallelism is capped by concurrency_limit * max_workers.
         """
         if self._pool is None or force_local:
+            # Logic ID: INFRA-017 (Worker pool fallback to inline/local)
             return self._execute_locally(packets, worker_fn)
 
         results: List[WorkerResult] = []

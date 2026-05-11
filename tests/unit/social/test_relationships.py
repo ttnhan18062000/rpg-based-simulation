@@ -75,7 +75,7 @@ def test_public_reputation_impact():
     assert social.public_reputation == 1.5 # Base 1.0 + 0.5
 
 def test_relationship_salience_pruning():
-    from src.social.relationships import RelationshipService
+    from src.systems.social_systems.relationships import RelationshipService
     entity = V2EntityBuilder(entity_id=1).identity(role=0).build()
     
     # Add two entities: one salient, one not

@@ -2,8 +2,8 @@
 import pytest
 from src.core.state import EntityState, SocialComponent, IdentityComponent, SocialBond
 from src.core.updates import SocialUpdate, SocialBondUpdate
-from src.social.appraisal import SocialAppraisalSystem
-from src.social.relationships import RelationshipService
+from src.systems.social_systems.appraisal import SocialAppraisalSystem
+from src.systems.social_systems.relationships import RelationshipService
 
 def create_mock_social_entity(eid, cha=5):
     from src.core.builder import V2EntityBuilder
@@ -19,6 +19,8 @@ def create_mock_social_entity(eid, cha=5):
 def test_social_bond_learning():
     """
     Verifies that update_familiarity produces a first-class bond record.
+    Logic ID: SOC-195 (Familiarity changes through interaction evidence)
+    Logic ID: SOC-196 (Trust/sentiment changes through interaction evidence)
     """
     hero = create_mock_social_entity(1, cha=10) # High charisma
     subject_id = 2

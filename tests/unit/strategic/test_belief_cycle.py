@@ -11,7 +11,7 @@ from src.core.state import EntityState
 from src.core.strategic import (
     StrategicComponent, LeadState, LeadCertainty, HypothesisState, ConcernState
 )
-from src.systems.belief import BeliefCycleSystem
+from src.systems.strategic_systems.belief import BeliefCycleSystem
 
 
 def _make_entity_with_leads(leads=None, hypotheses=None, concerns=None):

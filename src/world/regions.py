@@ -1,3 +1,4 @@
+# Compliance IDs: SUB-275, SUB-276, SUB-277, SUB-278, SUB-279, WORLD-038, WORLD-041, WORLD-043, WORLD-052, WORLD-053, WORLD-054, WORLD-055, WORLD-056, WORLD-057, WORLD-058, WORLD-059
 from __future__ import annotations
 from typing import Optional, TYPE_CHECKING
 from src.core.state import RegionState

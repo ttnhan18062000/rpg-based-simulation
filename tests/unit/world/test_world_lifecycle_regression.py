@@ -4,7 +4,10 @@ from src.core.updates import StateUpdate
 from src.engine.apply import ApplyPath
 
 def test_corpse_decay():
-    """Verify that corpses are removed after their decay_tick."""
+    """
+    Verify that corpses are removed after their decay_tick.
+    Logic ID: WORLD-003 (Corpse decay after fixed duration)
+    """
     corpse = CorpseState(
         id=1,
         original_entity_id=10,

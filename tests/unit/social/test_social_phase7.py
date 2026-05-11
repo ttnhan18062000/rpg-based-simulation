@@ -3,7 +3,7 @@ from dataclasses import replace
 from src.core.state import AuthoritativeState, EntityState, GroupRecord, SocialBond
 from src.core.strategic import ContractState, ContractKind, ContractStatus
 from src.core.updates import StateUpdate, EntityUpdate
-from src.social.contracts import ContractService
+from src.systems.social_systems.contracts import ContractService
 from src.engine.pipeline import AuthoritativeApplyPipeline
 from src.engine.apply import ApplyPath
 

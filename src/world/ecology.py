@@ -6,7 +6,7 @@ from src.core.enums import Domain
 
 if TYPE_CHECKING:
     from src.core.state import AuthoritativeState
-    from src.systems.generator import EntityGenerator
+    from src.systems.world_systems.generator import EntityGenerator
 
 class ResourceEcologyService:
     """

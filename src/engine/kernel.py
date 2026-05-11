@@ -1,3 +1,5 @@
+# Compliance IDs: COMB-007, COMB-008, INFRA-018, INFRA-101, INFRA-102, INFRA-103, INFRA-104, INFRA-105, INFRA-106, INFRA-117, PROG-102, STRAT-041, STRAT-064, STRAT-065, STRAT-216, SUB-005, SUB-008, SUB-010, SUB-011, SUB-012, SUB-013, SUB-020, SUB-021, SUB-023, TOWN-007, TOWN-133, TOWN-134, TOWN-135, TOWN-158
+# Compliance IDs: STRAT-041, STRAT-064, STRAT-065, SUB-010, SUB-011, SUB-012, SUB-013, SUB-020, SUB-021, SUB-023
 from __future__ import annotations
 
 from dataclasses import replace
@@ -91,8 +93,10 @@ class Kernel:
         if executor:
             self._executor = executor
         elif profile.max_worker_count > 0:
+            # Logic ID: INFRA-017 (Worker pool fallbacks)
             self._executor = ConcurrentExecutionAdapter(self._worker_manager)
         else:
+            # Logic ID: INFRA-018 (No live broker required for local simulation)
             self._executor = LocalSequentialExecutor()
 
         self._current_world_time = state.world_time
@@ -230,6 +234,7 @@ class Kernel:
     def _phase_collection(self) -> None:
         """3. COLLECTION (Worker Thought Execution)"""
         # VERIFIED v2: thought_application_decoupling
+        # Logic ID: TOWN-007 (Worker decision-making is decoupled from authoritative application)
         self._final_results = self._executor.execute(
             self._current_work_items,
             self._state.readonly_view(),
@@ -242,6 +247,8 @@ class Kernel:
     def _phase_resolution(self) -> None:
         """4. RESOLUTION (Authoritative Apply Pipeline)"""
         # VERIFIED v2: tick_outcome_preservation
+        # Logic ID: COMB-007 (World-time progression is distinct from readiness-based cadence)
+        # Logic ID: COMB-008 (Quiet ticks still advance passive world consequences)
         from src.core.worker_protocol import ResultStatus
         from src.core.updates import StateUpdate, EntityUpdate
         from src.core.protocol_validator import ProtocolViolationError

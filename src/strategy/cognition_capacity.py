@@ -1,3 +1,4 @@
+# Compliance IDs: STRAT-010
 from __future__ import annotations
 from src.core.state import EntityState
 from src.core.strategic import CognitionProfile

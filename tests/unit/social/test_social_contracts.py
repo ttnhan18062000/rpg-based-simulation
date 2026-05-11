@@ -2,7 +2,7 @@ import pytest
 from dataclasses import replace
 from src.core.state import EntityState, AuthoritativeState, IdentityComponent, SocialComponent, StrategicComponent
 from src.core.strategic import ContractStatus, DirectiveKind, TurningPointKind
-from src.social.contracts import ContractService
+from src.systems.social_systems.contracts import ContractService
 from src.core.builder import V2EntityBuilder
 
 def test_social_contract_betrayal_consequences():

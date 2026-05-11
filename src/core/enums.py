@@ -1,3 +1,4 @@
+# Compliance IDs: TOWN-003
 from enum import Enum, IntEnum, unique
 
 @unique
@@ -55,7 +56,7 @@ class ActionStyle(IntEnum):
 class ReasonCode(str, Enum):
     """
     Authoritative reason codes for all state changes.
-    Logic ID: 83
+    Logic ID: TOWN-003 (Structured authoritative reason models)
     Stable identifiers for simulation decision drivers.
     """
     # General

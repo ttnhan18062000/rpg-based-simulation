@@ -94,7 +94,7 @@ class CognitionDomain:
         tactical_up = TacticalDecisionSystem.evaluate_entity_intent(readonly_state, temp_entity)
         
         # 7. Bandwidth Enforcement
-        from src.systems.detour import DetourSuggestionSystem
+        from src.systems.strategic_systems.detour import DetourSuggestionSystem
         bandwidth_up = DetourSuggestionSystem.enforce_bandwidth(temp_entity, state.tick)
         
         final_strat = strat_up

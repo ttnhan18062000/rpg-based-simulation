@@ -1,3 +1,4 @@
+# Compliance IDs: STRAT-013
 """
 Cognition Graph Export (Read-Only Presenter).
 

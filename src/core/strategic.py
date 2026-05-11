@@ -1,3 +1,5 @@
+# Compliance IDs: SOC-003, SOC-006, STRAT-001, STRAT-060, STRAT-061, STRAT-062, STRAT-063, STRAT-191, STRAT-192, STRAT-193, STRAT-194, STRAT-201, STRAT-202, STRAT-203, STRAT-214, SUB-022
+# Compliance IDs: STRAT-060, STRAT-061, STRAT-062, STRAT-063, SUB-022
 from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Dict, Any, Optional, List

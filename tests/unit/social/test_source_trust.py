@@ -9,7 +9,7 @@ Covers:
 import pytest
 from src.core.state import EntityState
 from src.core.strategic import StrategicComponent, SourceTrustEntry
-from src.social.appraisal import SocialAppraisalSystem
+from src.systems.social_systems.appraisal import SocialAppraisalSystem
 
 
 def _make_entity_with_trust(source_id, trust=0.5, interactions=0):
@@ -98,7 +98,7 @@ class TestSocialContracts:
     """Part 1 §Social: Social contracts as strategic objects with consequences."""
 
     def test_honored_contract_boosts_trust(self):
-        from src.social.contracts import ContractService
+        from src.systems.social_systems.contracts import ContractService
         from src.core.strategic import ContractState, ContractKind, ContractStatus
         contract = ContractState(
             id="contract_001", kind=ContractKind.RECRUITMENT,
@@ -116,7 +116,7 @@ class TestSocialContracts:
         assert bond_updates[1].bond_updates[0].sentiment_delta > 0
 
     def test_broken_contract_creates_betrayal_consequences(self):
-        from src.social.contracts import ContractService
+        from src.systems.social_systems.contracts import ContractService
         from src.core.strategic import ContractState, ContractKind, ContractStatus
         contract = ContractState(
             id="contract_002", kind=ContractKind.RECRUITMENT,

@@ -1,3 +1,4 @@
+# Compliance IDs: COMB-003, COMB-227, COMB-228, COMB-229, COMB-230, COMB-244, COMB-245, TOWN-006
 from __future__ import annotations
 
 from dataclasses import replace
@@ -17,6 +18,8 @@ if TYPE_CHECKING:
 class OccupancyPhase:
     """
     Resolves occupancy conflicts in final proposed positions.
+    Logic ID: TOWN-006 (Conflict resolution preserves one authoritative outcome per tick)
+    Logic ID: COMB-003 (Occupied-tile movement is rejected)
     """
 
     @staticmethod

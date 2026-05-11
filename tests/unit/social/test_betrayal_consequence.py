@@ -12,7 +12,7 @@ from src.core.state import EntityState, SocialComponent
 from src.core.strategic import (
     StrategicComponent, DirectivePriority
 )
-from src.social.appraisal import SocialAppraisalSystem
+from src.systems.social_systems.appraisal import SocialAppraisalSystem
 
 
 def _make_entity(entity_id=1, trust_history=None, betrayal_count=0):

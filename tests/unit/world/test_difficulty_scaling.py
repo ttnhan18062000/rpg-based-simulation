@@ -1,5 +1,5 @@
 from src.core.state import AuthoritativeState
-from src.systems.generator import EntityGenerator
+from src.systems.world_systems.generator import EntityGenerator
 from src.world.spawn_config import DIFFICULTY_TIERS
 
 def test_difficulty_tier_1_baseline():

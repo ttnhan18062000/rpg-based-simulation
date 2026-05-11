@@ -1,3 +1,4 @@
+# Compliance IDs: TOWN-073
 from __future__ import annotations
 from src.core.state import AuthoritativeState, ItemStack
 from src.core.updates import StateUpdate, EntityUpdate, InteractionUpdate, InventoryUpdate, ResourceNodeUpdate

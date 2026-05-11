@@ -1,7 +1,7 @@
 import pytest
 from src.core.state import EntityState, IdentityComponent, EquipmentComponent, EquipSlot, ItemKind
 from src.core.items import ItemDefinition
-from src.core.equipment_service import EquipmentService
+from src.core.equipment import EquipmentService
 
 def test_equipment_ranking_warrior():
     # Setup warrior

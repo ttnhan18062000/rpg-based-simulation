@@ -1,8 +1,9 @@
+# Compliance IDs: SOC-189, SOC-190
 import pytest
 from dataclasses import replace
 from src.core.state import AuthoritativeState, EntityState, GroupRecord, InventoryComponent, CombatComponent
 from src.core.updates import StateUpdate, EntityUpdate, CombatUpdate
-from src.systems.groups import GroupSystem
+from src.systems.world_systems.groups import GroupSystem
 from src.engine.pipeline import AuthoritativeApplyPipeline
 
 @pytest.fixture
@@ -36,6 +37,7 @@ def group_state():
 def test_phantom_leader_bug(group_state):
     """
     Verify that if a leader dies in the same tick, the group is dissolved.
+    Logic ID: SOC-189 (Group dissolution test covers dead leader)
     Currently, GroupSystem only looks at the start-of-tick state, so it will fail this.
     """
     # 1. Propose an update where the leader dies
@@ -53,6 +55,7 @@ def test_phantom_leader_bug(group_state):
 def test_phantom_member_removal(group_state):
     """
     Verify that if a member dies in the same tick, they are removed from the group.
+    Logic ID: SOC-190 (Group dissolution test covers scattered members)
     """
     # 1. Propose an update where the member dies
     member_death_upd = EntityUpdate(

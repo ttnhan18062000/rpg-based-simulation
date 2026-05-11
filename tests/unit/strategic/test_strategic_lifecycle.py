@@ -9,7 +9,7 @@ from src.core.strategic import (
 )
 from src.systems.strategic import StrategicIntelligenceSystem
 from src.systems.routine import RoutineService
-from src.systems.detour import DetourSuggestionSystem
+from src.systems.strategic_systems.detour import DetourSuggestionSystem
 from src.core.builder import V2EntityBuilder
 
 @pytest.fixture

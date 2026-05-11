@@ -1,3 +1,4 @@
+# Compliance IDs: STRAT-006, STRAT-008, STRAT-009, STRAT-012, STRAT-204, STRAT-205, STRAT-206, STRAT-207, STRAT-208, STRAT-209, STRAT-210, STRAT-211, STRAT-212
 """
 Detour Suggestion System for Strategic Cognition.
 
@@ -37,6 +38,7 @@ class DetourSuggestionSystem:
     """
     Pure decision logic: reads entity state, returns detour suggestions.
     Does NOT mutate any state directly.
+    Logic ID: STRAT-004 (Leads are typed records with provenance and expiration)
     """
 
     @staticmethod
@@ -46,6 +48,10 @@ class DetourSuggestionSystem:
     ) -> List[DetourSuggestionResult]:
         """
         Generate detour suggestions from unresolved blockers paired with relevant leads.
+        Logic ID: STRAT-201 (Leads have kind)
+        Logic ID: STRAT-202 (Leads have subject)
+        Logic ID: STRAT-203 (Leads have certainty)
+        Logic ID: STRAT-204 (Leads have source trust)
         VERIFIED v2: strategic_detour_suggestion
 
         Rules:
@@ -110,6 +116,7 @@ class DetourSuggestionSystem:
         """
         Part 1 §Strategic: Rejected/tested leads are suppressed to avoid blind retries.
         Implements Phase 6 Strategic Memory.
+        Logic ID: STRAT-205 (Leads can be tested)
         """
         leads_to_update = []
 

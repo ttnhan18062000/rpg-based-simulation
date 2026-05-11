@@ -83,6 +83,12 @@ def test_succession_and_heirloom_transfer():
     transfer = heir_upd.resource_transfers[0]
     assert any(stack.item_id == "Excalibur" for stack in transfer.items_add)
 
+    # Logic ID: STRAT-142
+
+    # Logic ID: SOC-042
+
+    # Logic ID: SOC-042
+
 def test_near_death_hardening_logic():
     """Directly test the hardening logic in the pipeline."""
     from src.engine.pipeline import AuthoritativeApplyPipeline

@@ -1,3 +1,5 @@
+# Compliance IDs: SOC-135, SOC-138, SOC-139, SOC-140, STRAT-044, STRAT-049, STRAT-051, STRAT-052, STRAT-069, STRAT-075, STRAT-076, STRAT-142, STRAT-195
+# Compliance IDs: SOC-135, SOC-138, SOC-139, SOC-140, STRAT-044, STRAT-049, STRAT-051, STRAT-052, STRAT-069, STRAT-075, STRAT-076, STRAT-142
 from __future__ import annotations
 from typing import Dict, List
 from src.core.strategic import TurningPointState

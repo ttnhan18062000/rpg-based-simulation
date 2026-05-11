@@ -1,3 +1,4 @@
+# Compliance IDs: SOC-193, SOC-194, SOC-195, SOC-196, SOC-217
 from __future__ import annotations
 from typing import Dict, Any, TYPE_CHECKING
 from src.core.state import SocialComponent
@@ -15,6 +16,7 @@ class RelationshipService:
     def process_update(social: SocialComponent, update: SocialUpdate) -> SocialComponent:
         """
         Authoritatively apply deltas to social histories.
+        Logic ID: SOC-217 (Social updates are authoritative / not direct mutation)
         """
         from dataclasses import replace
         
@@ -27,9 +29,11 @@ class RelationshipService:
         
         # Apply deltas with clamping (-1.0 to 1.0 or 0.0 to 1.0)
         for eid, delta in update.trust_delta.items():
+            # Logic ID: SOC-196 (Trust/sentiment changes through interaction evidence)
             new_trust[eid] = max(-1.0, min(1.0, new_trust.get(eid, 0.0) + delta))
             
         for eid, delta in update.familiarity_delta.items():
+            # Logic ID: SOC-195 (Familiarity changes through interaction evidence)
             new_fam[eid] = max(0.0, min(1.0, new_fam.get(eid, 0.0) + delta))
             
         for eid, delta in update.debt_delta.items():
@@ -79,6 +83,7 @@ class RelationshipService:
             place_attachment=new_places,
             betrayal_count=social.betrayal_count + update.betrayal_increment,
             betrayal_records=new_betrayals,
+            # Logic ID: SOC-193 (Public reputation and private relationship are separate)
             public_reputation=update.reputation_set if update.reputation_set is not None else (
                 max(0.0, min(2.0, social.public_reputation + update.heroism_delta - update.notoriety_delta))
             ),

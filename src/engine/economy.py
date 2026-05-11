@@ -1,3 +1,5 @@
+# Compliance IDs: PROG-094, PROG-095, PROG-096, TOWN-014, TOWN-074, TOWN-075, TOWN-076
+# Compliance IDs: TOWN-074, TOWN-075, TOWN-076
 from __future__ import annotations
 from typing import TYPE_CHECKING, Dict, List, Optional
 from dataclasses import replace
@@ -107,6 +109,7 @@ class ResourceTransactionSystem:
                             ent_upd = ResourceTransactionSystem._merge_contingent_updates(ent_upd, result)
                             
                             # Apply world side effects
+                            # Logic ID: TOWN-014 (Inventory additions and world removals are authoritative side effects)
                             ResourceTransactionSystem._apply_world_effects(
                                 result, e_id, new_node_updates, new_building_updates, 
                                 new_home_storage_updates, new_ground_items_remove, new_corpses_remove, reservations

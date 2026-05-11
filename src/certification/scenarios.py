@@ -44,7 +44,7 @@ class ArenaInjector:
     @staticmethod
     def build_team_battle(state: AuthoritativeState, team_size: int = 5) -> AuthoritativeState:
         """Setup a balanced team battle on opposite sides of a 20x20 area."""
-        from src.systems.generator import EntityGenerator
+        from src.systems.world_systems.generator import EntityGenerator
         from dataclasses import replace
         
         generator = EntityGenerator(state.seed)

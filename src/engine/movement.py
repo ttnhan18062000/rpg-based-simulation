@@ -1,3 +1,4 @@
+# Compliance IDs: COMB-009, COMB-010, COMB-011, COMB-012, COMB-188, COMB-189, COMB-190, COMB-199, COMB-201, COMB-202, COMB-203, COMB-204, COMB-205, COMB-206, COMB-207, COMB-208, COMB-211, COMB-212, COMB-213, COMB-214, COMB-219, COMB-220, COMB-221, COMB-222, COMB-223, COMB-224, COMB-225, COMB-226, COMB-231, COMB-232, COMB-233, COMB-234, COMB-235, COMB-236, COMB-238, COMB-239, COMB-240, COMB-241, COMB-242, COMB-243, COMB-272, COMB-273
 # src/engine/movement.py
 from __future__ import annotations
 from typing import TYPE_CHECKING, Tuple, Optional, Any, Dict, List
@@ -24,7 +25,9 @@ class MovementSystem:
         Evaluate a move intent and produce an authoritative update dictionary.
         Implements a prioritized recovery ladder for congestion.
         VERIFIED v2: congestion_ladder
+        Logic ID: COMB-012 (Congestion is handled via ladder)
         VERIFIED v2: movement_intent_vs_result
+        Logic ID: COMB-201 (Movement intentions are distinct from results)
         """
         from src.engine.legality import LegalityServiceV2
         
@@ -33,7 +36,7 @@ class MovementSystem:
             return {entity.id: EntityUpdate(entity_id=entity.id)}
 
         # 2. Step Calculation
-        from src.systems.navigation import NavigationSystem
+        from src.systems.world_systems.navigation import NavigationSystem
         effective_target = NavigationSystem.get_next_step(entity, target_pos, state_or_context)
 
         # 3. Environment & Mode Multipliers (Calculated early for readiness gating)
@@ -50,6 +53,7 @@ class MovementSystem:
             MovementMode.REPOSITION: 1.1, MovementMode.REGROUP: 1.0, MovementMode.GUARD: 1.0,
             MovementMode.HOLD: 0.0,
         }
+        # Logic ID: COMB-011 (Movement intentions exist as semantic modes)
         move_speed_mult *= mode_mults.get(mode, 1.0)
 
         # 4. Decision Ladder
@@ -140,6 +144,7 @@ class MovementSystem:
                 wait_delta = -entity.navigation.wait_count
                 osc_delta = -entity.navigation.oscillation_count
 
+        # Logic ID: COMB-010 (Anti-stalemate logic handles chase/kite loops)
         if not success and not replan:
             return {entity.id: EntityUpdate(
                 entity_id=entity.id,
@@ -158,8 +163,10 @@ class MovementSystem:
              skip_oa = True
 
         # 5. Opportunity Attack Trigger (Checklist Section 8)
+        # Logic ID: COMB-009 (Disengagement, pursuit, target stickiness are explicit rules)
+        # Logic ID: COMB-272 (Disengagement has explicit consequence)
         # VERIFIED v2: disengagement_consequences
-        # VERIFIED v2: disengagement_consequences
+        # Logic ID: COMB-273 (Opportunity consequences apply only under legal conditions)
         if engaged_hostiles and not skip_oa:
             from src.engine.combat import CombatResolutionSystem
             entities = getattr(state_or_context, 'entities', {})
@@ -203,6 +210,7 @@ class MovementSystem:
         )
 
         # VERIFIED v2: environmental_move_cost
+        # Logic ID: COMB-199 (Movement cost applied during authoritative application)
         readiness_cost = (entity.combat.move_cost * terrain_cost) / max(0.1, move_speed_mult)
 
         updates[entity.id] = replace(

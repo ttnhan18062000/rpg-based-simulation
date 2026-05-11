@@ -3,7 +3,7 @@ from src.core.state import AuthoritativeState
 from src.core.updates import EntityUpdate, StrategicUpdate, StateUpdate
 from src.engine.apply import ApplyPath
 from src.core.builder import V2EntityBuilder
-from src.social.contracts import ContractService
+from src.systems.social_systems.contracts import ContractService
 from src.core.strategic import ContractKind
 
 def test_contract_addition():

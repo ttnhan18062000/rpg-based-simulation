@@ -1,3 +1,4 @@
+# Compliance IDs: TOWN-016
 from __future__ import annotations
 from typing import TYPE_CHECKING, Dict
 from dataclasses import replace
@@ -31,6 +32,7 @@ class ShopSystem:
         Produce authoritative item-to-gold conversions for entities at a shop.
         Law of Profit: Only junk and materials are auto-sold to prevent gear loss.
         # VERIFIED v2: shop_visit_semantics
+        Logic ID: TOWN-016 (Shop visits resolve bounded buy/sell behavior)
         """
         refined_entity_updates = dict(update.entity_updates)
         

@@ -1,3 +1,4 @@
+# Compliance IDs: TOWN-015, TOWN-018, TOWN-019
 from __future__ import annotations
 from typing import TYPE_CHECKING, Dict, Set, Tuple
 from dataclasses import replace
@@ -37,6 +38,7 @@ class TownResolutionSystem:
             
             # 1. Passive Healing Law (Always active in town)
             # VERIFIED v2: town_return_semantics
+            # Logic ID: TOWN-015 (Town return provides passive healing)
             if tile_pos in state.town_tiles:
                 current_hp = entity.combat.hp
                 max_hp = entity.combat.max_hp
@@ -53,6 +55,7 @@ class TownResolutionSystem:
 
             # 2. Explicit REST Intent (Only in INN/HOME)
             # VERIFIED v2: inn_visit_semantics
+            # Logic ID: TOWN-019 (REST gives bonus healing and sleep recovery)
             if building_type in ("inn", "home"):
                 ent_upd = refined_entity_updates.get(e_id, EntityUpdate(entity_id=e_id))
                 if ent_upd.task and ent_upd.task.work_kind_set == "ENTITY_ACT" and ent_upd.task.payload_set.get("action") == "REST":
@@ -124,6 +127,7 @@ class TownResolutionSystem:
 
             # 4. Explicit GUILD Intent (Intel and Quests)
             # VERIFIED v2: guild_visit_semantics
+            # Logic ID: TOWN-018 (Guild visits produce intel)
             if building_type == "guild":
                 ent_upd = refined_entity_updates.get(e_id, EntityUpdate(entity_id=e_id))
                 if ent_upd.task and ent_upd.task.work_kind_set == "ENTITY_ACT" and ent_upd.task.payload_set.get("action") == "GATHER_INTEL":

@@ -1,6 +1,7 @@
+# Compliance IDs: SOC-221
 import pytest
 from src.core.builder import V2EntityBuilder
-from src.social.appraisal import SocialAppraisalSystem
+from src.systems.social_systems.appraisal import SocialAppraisalSystem
 
 def test_recruitment_cost_scaling_with_level():
     """Verify that recruitment cost increases with candidate level."""

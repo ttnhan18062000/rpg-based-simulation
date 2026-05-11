@@ -79,6 +79,8 @@ def make_state(entities=None, terrain=None, regions=None):
 # ═══════════════════════════════════════════════════════════════════════════════
 
 class TestStaminaDrainOnAttack:
+    # Logic ID: COMB-109
+
     def test_stamina_drain_on_attack(self):
         """test_stamina_drain_on_attack: attack drains stamina by ATTACK_COST."""
         # VERIFIED v2: stamina_drain_attack
@@ -86,6 +88,8 @@ class TestStaminaDrainOnAttack:
         cost = StaminaService.drain_attack(stamina)
         assert cost == stamina.ATTACK_COST
         assert cost == 8.0
+
+    # Logic ID: COMB-110
 
     def test_stamina_decreases_on_move(self):
         """test_stamina_decreases_on_move: movement drains stamina by MOVE_COST."""
@@ -95,6 +99,8 @@ class TestStaminaDrainOnAttack:
         assert cost == stamina.MOVE_COST
         assert cost == 3.0
 
+    # Logic ID: COMB-111
+
     def test_stamina_decreases_on_harvest(self):
         """test_stamina_decreases_on_harvest: harvesting drains stamina by HARVEST_COST."""
         # VERIFIED v2: stamina_drain_harvest
@@ -102,6 +108,8 @@ class TestStaminaDrainOnAttack:
         cost = StaminaService.drain_harvest(stamina)
         assert cost == stamina.HARVEST_COST
         assert cost == 5.0
+
+    # Logic ID: COMB-112
 
     def test_skill_use_costs_stamina(self):
         """test_skill_use_costs_stamina: skill use drains stamina proportional to skill cost."""
@@ -111,6 +119,8 @@ class TestStaminaDrainOnAttack:
         drain = StaminaService.drain_skill(stamina, skill_cost)
         assert drain == 25.0
 
+    # Logic ID: COMB-117
+
     def test_best_ready_skill_skips_insufficient_stamina(self):
         """test_best_ready_skill_skips_insufficient_stamina: can_use_skill returns False when insufficient."""
         stamina = StaminaComponent(current=5.0)
@@ -119,6 +129,8 @@ class TestStaminaDrainOnAttack:
 
 
 class TestStaminaRegen:
+    # Logic ID: COMB-113
+
     def test_stamina_regen_resting(self):
         """test_stamina_regen_resting: rest gives faster stamina regen."""
         # VERIFIED v2: stamina_regen_resting
@@ -126,12 +138,16 @@ class TestStaminaRegen:
         regen = StaminaService.tick_regen(stamina, is_resting=True)
         assert regen == 8.0
 
+    # Logic ID: COMB-114
+
     def test_stamina_regen_active(self):
         """test_stamina_regen_active: active gives base regen rate."""
         # VERIFIED v2: stamina_regen_active
         stamina = StaminaComponent(current=50.0, max_stamina=100.0, regen_rate=2.0)
         regen = StaminaService.tick_regen(stamina, is_resting=False)
         assert regen == 2.0
+
+    # Logic ID: COMB-115
 
     def test_stamina_regen_capped(self):
         """test_stamina_regen_capped: regen does not exceed max_stamina."""
@@ -148,6 +164,8 @@ class TestStaminaRegen:
 
 
 class TestExhaustion:
+    # Logic ID: COMB-116
+
     def test_exhaustion_penalty_application(self):
         """test_exhaustion_penalty_application: below threshold applies penalty multiplier."""
         stamina = StaminaComponent(current=5.0, exhaustion_threshold=10.0, exhaustion_penalty=0.7)
@@ -173,12 +191,16 @@ class TestExhaustion:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 class TestWoundInfliction:
+    # Logic ID: COMB-102
+
     def test_wound_infliction_massive_hit(self):
         """test_wound_infliction_massive_hit: 40%+ max HP in one hit creates wound."""
         # VERIFIED v2: wound_infliction_massive_hit
         assert WoundService.should_inflict_wound(40, 100)  # exactly 40%
         assert WoundService.should_inflict_wound(60, 100)  # above 40%
         assert not WoundService.should_inflict_wound(30, 100)  # below 40%
+
+    # Logic ID: COMB-103
 
     def test_wound_stat_impact(self):
         """test_wound_stat_impact: wounds apply atk/def/speed/hp penalties."""
@@ -207,6 +229,8 @@ class TestWoundInfliction:
 
 
 class TestScarPermanence:
+    # Logic ID: COMB-104
+
     def test_scar_permanence(self):
         """test_scar_permanence: scars persist after wound heals."""
         # VERIFIED v2: scar_permanence_logic

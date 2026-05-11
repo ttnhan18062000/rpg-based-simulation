@@ -1,3 +1,4 @@
+# Compliance IDs: WORLD-030, WORLD-031
 # src/world/camp.py
 from __future__ import annotations
 from typing import TYPE_CHECKING, Dict, List
@@ -6,7 +7,7 @@ from src.core.enums import Domain, EntityRole
 
 if TYPE_CHECKING:
     from src.core.state import AuthoritativeState, CampState
-    from src.systems.generator import EntityGenerator
+    from src.systems.world_systems.generator import EntityGenerator
 
 class CampService:
     """

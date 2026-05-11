@@ -2,7 +2,7 @@ import pytest
 from dataclasses import replace
 from src.core.state import AuthoritativeState, EntityState
 from src.core.strategic import ContractState, ContractKind, ContractStatus
-from src.social.appraisal import SocialAppraisalSystem
+from src.systems.social_systems.appraisal import SocialAppraisalSystem
 from src.core.enums import EntityRole
 
 def create_mock_entity(eid: int, gold: int = 10, hp: int = 100):

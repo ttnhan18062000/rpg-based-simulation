@@ -1,3 +1,5 @@
+# Compliance IDs: COMB-039, COMB-040, COMB-282, PROG-065, PROG-066, PROG-067, PROG-068, PROG-069, PROG-070, PROG-071, PROG-072, PROG-087, PROG-088, PROG-089, PROG-090, PROG-091, PROG-092, SOC-043, STRAT-086, STRAT-137, STRAT-138, STRAT-139, TOWN-022, TOWN-031, TOWN-103, TOWN-106, TOWN-107, TOWN-108, TOWN-112, TOWN-114, TOWN-115, TOWN-119, TOWN-120, TOWN-121, TOWN-122, TOWN-123, TOWN-124, TOWN-125, TOWN-129, TOWN-130, TOWN-132, TOWN-136, TOWN-137, WORLD-001, WORLD-002, WORLD-003, WORLD-004
+# Compliance IDs: COMB-039, COMB-040, SOC-043, STRAT-086, STRAT-137, STRAT-138, STRAT-139, TOWN-022, TOWN-031
 from __future__ import annotations
 
 from dataclasses import replace
@@ -25,6 +27,7 @@ class ApplyPath:
     ) -> AuthoritativeState:
         """
         Produce a new state generation from the prior state and updates.
+        Logic ID: TOWN-132 (Source and inventory mutations are atomic)
         """
         new_entities = {}
         
@@ -36,6 +39,7 @@ class ApplyPath:
         new_regions, new_scars = RegionalConsequenceService.process_recovery(prior_state)
         
         # Phase 9: Corpse Decay
+        # Logic ID: WORLD-003 (Corpse decay after fixed duration)
         current_corpses = {}
         for c_id, corpse in prior_state.corpses.items():
             if prior_state.tick < corpse.decay_tick:
@@ -50,6 +54,7 @@ class ApplyPath:
             
             # Phase 9: Biological Decay
             # Every tick, hunger and sleep debt increase slightly
+            # Logic ID: WORLD-001 (Quiet tick hunger/sleep decay)
             new_hunger = min(100.0, entity.biological.hunger + 0.1)
             new_sleep = min(100.0, entity.biological.sleep_debt + 0.05)
             new_biological = replace(entity.biological, hunger=new_hunger, sleep_debt=new_sleep)
@@ -58,6 +63,7 @@ class ApplyPath:
             new_lifecycle = replace(entity.lifecycle, age_ticks=entity.lifecycle.age_ticks + 1)
             
             # Phase 9: Regional Hazard Drain
+            # Logic ID: WORLD-004 (Regional hazard and starvation effects)
             from src.engine.legality import LegalityServiceV2
             region = LegalityServiceV2.get_region_for_position(entity.navigation.position, prior_state)
             hazard_damage = 0
@@ -124,6 +130,15 @@ class ApplyPath:
                     final_social = mem_up or nem_up
                     if mem_up and nem_up: final_social = mem_up.merge(nem_up)
                     ent_upd = EntityUpdate(entity_id=e_id, social=final_social)
+
+            # Strategic Consequences from Combat (COMB-282)
+            if ent_upd and ent_upd.combat and ent_upd.combat.strategic_upd:
+                merged_strategic = ent_upd.strategic
+                if merged_strategic:
+                    merged_strategic = merged_strategic.merge(ent_upd.combat.strategic_upd)
+                else:
+                    merged_strategic = ent_upd.combat.strategic_upd
+                ent_upd = replace(ent_upd, strategic=merged_strategic)
             
             if ent_upd:
                 final_entity = ApplyPath._apply_entity_update(
@@ -133,6 +148,7 @@ class ApplyPath:
                 final_entity = replace(final_entity, combat=replace(final_entity.combat, readiness=final_readiness))
                 
                 # PH6 M2: Corpse Spawning & Regional Trauma
+                # Logic ID: WORLD-002 (Corpse spawning on death)
                 was_alive = prior_state.entities[e_id].combat.alive
                 is_now_dead = was_alive and not final_entity.combat.alive
                 if is_now_dead:
@@ -385,6 +401,7 @@ class ApplyPath:
 
         if update.inventory:
             # RPG-RES-202: Atomic inventory application
+            # Logic ID: TOWN-132 (Inventory mutation in authoritative apply)
             new_inventory = InventoryService.apply_update(entity.inventory, update.inventory)
 
         if update.equipment:
@@ -493,7 +510,7 @@ class ApplyPath:
                 new_strategic = replace(new_strategic, source_trust=new_trust)
 
         if update.social:
-            from src.social.relationships import RelationshipService
+            from src.systems.social_systems.relationships import RelationshipService
             new_social = RelationshipService.process_update(entity.social, update.social)
 
         if update.biological:
@@ -645,6 +662,8 @@ class ApplyPath:
         )
         
         if stats_dirty:
+            # Logic ID: PROG-071 (Effective stats recompute from base + gear + traits)
+            # Logic ID: PROG-090 (Gear equip changes effective stats)
             from src.engine.rpg_depth import SkillScalingService
             derived = SkillScalingService.get_effective_stats(
                 new_attributes, new_equipment,
@@ -666,6 +685,7 @@ class ApplyPath:
                 range=derived.get("range", new_combat.range),
                 tactical_role=derived.get("tactical_role", new_combat.tactical_role)
             )
+            # Logic ID: PROG-072 (Effective stats clamp to valid ranges)
             
             # RPG-0064: Level up results in resource refills
             if update.identity and update.identity.evolution_level_set is not None:

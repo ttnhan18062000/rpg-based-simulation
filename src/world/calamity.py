@@ -1,3 +1,4 @@
+# Compliance IDs: SUB-006, WORLD-023, WORLD-024, WORLD-025, WORLD-026, WORLD-027, WORLD-028, WORLD-063
 from __future__ import annotations
 from typing import List, Optional, TYPE_CHECKING, Dict
 from src.core.state import AuthoritativeState, EntityState
@@ -6,7 +7,7 @@ from src.core.enums import Domain
 
 if TYPE_CHECKING:
     from src.core.state import AuthoritativeState
-    from src.systems.generator import EntityGenerator
+    from src.systems.world_systems.generator import EntityGenerator
 
 class CalamityService:
     """

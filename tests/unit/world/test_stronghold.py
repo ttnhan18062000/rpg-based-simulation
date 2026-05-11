@@ -2,7 +2,7 @@ import pytest
 from src.core.state import AuthoritativeState, RegionState, EntityState, IdentityComponent, CombatComponent
 from src.core.builder import V2EntityBuilder
 from src.core.enums import Faction
-from src.systems.generator import EntityGenerator
+from src.systems.world_systems.generator import EntityGenerator
 from src.world.influence import FactionInfluenceService
 
 def test_stronghold_lifecycle():

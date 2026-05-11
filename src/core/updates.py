@@ -1,3 +1,4 @@
+# Compliance IDs: TOWN-001, TOWN-002, TOWN-131, TOWN-156, TOWN-157, TOWN-159, TOWN-160, TOWN-161, TOWN-162, TOWN-163
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -97,6 +98,7 @@ class CombatUpdate:
     attacker_equipment_upd: Optional[EquipmentUpdate] = None
     wound_update: Optional[WoundUpdate] = None
     social_upd: Optional[SocialUpdate] = None
+    strategic_upd: Optional[StrategicUpdate] = None
     trace: Dict[str, float] = field(default_factory=dict) # Breakdown of modifiers
 
     def merge(self, other: CombatUpdate) -> CombatUpdate:
@@ -121,7 +123,8 @@ class CombatUpdate:
             equipment_upd=other.equipment_upd if other.equipment_upd is not None else self.equipment_upd,
             attacker_equipment_upd=other.attacker_equipment_upd if other.attacker_equipment_upd is not None else self.attacker_equipment_upd,
             wound_update=other.wound_update if other.wound_update is not None else self.wound_update,
-            social_upd=other.social_upd if other.social_upd is not None else self.social_upd,
+            social_upd=self.social_upd.merge(other.social_upd) if self.social_upd and other.social_upd else (other.social_upd or self.social_upd),
+            strategic_upd=self.strategic_upd.merge(other.strategic_upd) if self.strategic_upd and other.strategic_upd else (other.strategic_upd or self.strategic_upd),
             trace={**self.trace, **other.trace}
         )
 
@@ -479,6 +482,8 @@ class WoundUpdate:
 class EntityUpdate:
     """
     Authoritative update for a single entity.
+    Logic ID: TOWN-001 (Action proposals are typed intents)
+    Logic ID: TOWN-002 (Every side effect is represented as a typed update bucket)
     """
     entity_id: int
     kind_set: Optional[str] = None

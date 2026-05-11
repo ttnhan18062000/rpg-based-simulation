@@ -17,10 +17,10 @@ def test_system_public_facades():
     from src.systems.redirection import StrategicRedirectionSystem
     from src.systems.social_contract import SocialContractSystem
     from src.systems.social_memory import SocialMemoryService
-    from src.systems.belief import BeliefCycleSystem
+    from src.systems.strategic_systems.belief import BeliefCycleSystem
     from src.systems.genetics import GeneticsSystem
     from src.systems.narrative import NarrativeMemorySystem
-    from src.systems.groups import GroupSystem
+    from src.systems.world_systems.groups import GroupSystem
     from src.systems.lifecycle import LifecycleSystem
     
     assert StrategicIntelligenceSystem is not None

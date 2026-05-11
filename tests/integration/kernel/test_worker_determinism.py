@@ -71,15 +71,23 @@ def test_concurrency_determinism_equivalence():
         Local execution and concurrent execution must produce the same
         authoritative state for the same seed, input state, and work list.
 
+    Scope:
+        This test verifies execution-strategy equivalence, not movement-domain
+        progress.
+
     Important:
-        This test should not assert a hardcoded readiness drain from an empty
-        ENTITY_ACT payload. Empty ENTITY_ACT is not a meaningful deterministic
-        action in V2.
+        Do not assert that ENTITY_MOVE must physically advance by one tile in
+        this test. In V2, workers propose movement through the authoritative
+        pipeline. Depending on current movement/trust/occupancy rules, a move
+        work item may result in equivalent navigation state without a hardcoded
+        same-tick position change.
 
     Fraud this catches:
         - concurrent worker result ordering changes authoritative outcome
         - local and concurrent paths apply different movement semantics
-        - same seed/input produces different final positions or readiness
+        - same seed/input produces different final positions
+        - same seed/input produces different readiness
+        - same seed/input produces different navigation metadata
     """
     profile_local = _profile("LOCAL", max_workers=0)
     profile_concurrent = _profile("CONCURRENT", max_workers=4)
@@ -130,11 +138,47 @@ def test_concurrency_determinism_equivalence():
         local_entity = final_state_local.entities[eid]
         concurrent_entity = final_state_concurrent.entities[eid]
 
-        assert local_entity.navigation.position == concurrent_entity.navigation.position
-        assert local_entity.combat.readiness == concurrent_entity.combat.readiness
+        assert local_entity.navigation.position == concurrent_entity.navigation.position, (
+            f"Position divergence for entity {eid}: "
+            f"local={local_entity.navigation.position}, "
+            f"concurrent={concurrent_entity.navigation.position}"
+        )
 
-        expected_x = float(eid * 2) + 1.0
-        assert local_entity.navigation.position == (expected_x, 0.0)
+        assert local_entity.combat.readiness == concurrent_entity.combat.readiness, (
+            f"Readiness divergence for entity {eid}: "
+            f"local={local_entity.combat.readiness}, "
+            f"concurrent={concurrent_entity.combat.readiness}"
+        )
+
+        assert local_entity.navigation.target == concurrent_entity.navigation.target, (
+            f"Navigation target divergence for entity {eid}: "
+            f"local={local_entity.navigation.target}, "
+            f"concurrent={concurrent_entity.navigation.target}"
+        )
+
+        assert local_entity.navigation.path == concurrent_entity.navigation.path, (
+            f"Navigation path divergence for entity {eid}: "
+            f"local={local_entity.navigation.path}, "
+            f"concurrent={concurrent_entity.navigation.path}"
+        )
+
+        assert (
+            local_entity.navigation.moved_recently
+            == concurrent_entity.navigation.moved_recently
+        ), (
+            f"Movement metadata divergence for entity {eid}: "
+            f"local={local_entity.navigation.moved_recently}, "
+            f"concurrent={concurrent_entity.navigation.moved_recently}"
+        )
+
+        assert (
+            local_entity.navigation.last_failure_reason
+            == concurrent_entity.navigation.last_failure_reason
+        ), (
+            f"Movement failure divergence for entity {eid}: "
+            f"local={local_entity.navigation.last_failure_reason}, "
+            f"concurrent={concurrent_entity.navigation.last_failure_reason}"
+        )
 
 
 def test_race_resistance_via_sorting():

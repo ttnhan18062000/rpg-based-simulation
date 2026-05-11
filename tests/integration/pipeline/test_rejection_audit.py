@@ -67,6 +67,8 @@ def make_actor(
 
 
 def test_rejection_audit_aggregation():
+    # Logic ID: INFRA-001
+
     """
     Verify that the authoritative pipeline aggregates rejection events from
     different law layers in a single refined update.

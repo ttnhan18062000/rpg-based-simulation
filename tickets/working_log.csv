@@ -283,3 +283,5 @@ timestamp,ticket_id,title,status,summary,artifacts_path
 2026-05-10T14:56:00Z,TCK-20260510-QUEST-PROGRESS-STABILIZATION,RPG Engine Progression Hardening,DONE,Restored pipeline phases and hardened trust boundaries (Law 300.2). Resolved regressions in actor validity and interaction recovery.,stored_artifacts/c6306454-56e4-4a14-b03f-7fc75ea22c2d/
 2026-05-10,TCK-20260510-PIPELINE-DECOMPOSITION,COMPLETED,Decomposed AuthoritativeApplyPipeline into 9 phases
 2026-05-10T16:44:40Z,TCK-20260510-CORE-IMPORT-STABILIZATION,Stabilizing Engine Import Paths & Social Domain Unification,DONE,Fixed broken re-exports and unified Social Contract logic.,stored_artifacts/TCK-20260510-CORE-IMPORT-STABILIZATION/
+2026-05-10,TCK-20260510-CHECKLIST-HARDENING,Hardening RPG Engine Logic Ledger,DONE
+2026-05-11,TCK-20260511-COMB-HARDENING,Hardened tactical combat and anti-stalemate logic,DONE

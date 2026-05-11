@@ -1,9 +1,10 @@
+# Compliance IDs: SOC-222, SOC-223
 import pytest
 from dataclasses import replace
 from src.core.state import EntityState, AuthoritativeState, SocialComponent, InteractionComponent, IdentityComponent, AttributeComponent, InventoryComponent, StrategicComponent, CombatComponent, EquipmentComponent, NavigationComponent, TaskComponent, StaminaComponent, BiologicalComponent, LifecycleComponent, AptitudeComponent, BetrayalRecord
 from src.core.strategic import ContractState, ContractKind, ContractStatus, StrategicComponent
 from src.systems.social_contract import SocialContractSystem
-from src.social.appraisal import SocialAppraisalSystem
+from src.systems.social_systems.appraisal import SocialAppraisalSystem
 from src.systems.party import PartyCoordinationSystem
 from src.core.updates import StrategicUpdate, SocialUpdate
 from src.core.builder import V2EntityBuilder
@@ -14,6 +15,10 @@ def base_entity():
     return V2EntityBuilder(1).kind("hero").location(0, 0).build()
 
 def test_contract_state_machine_valid():
+    """
+    Logic ID: SOC-217 (Social updates are authoritative / not direct mutation)
+    Logic ID: SOC-208 (Accepted contract creates explicit obligation)
+    """
     contract = ContractState(id="c1", kind=ContractKind.RECRUITMENT, source_id=1, target_id=2, status=ContractStatus.OFFERED)
     entity = (V2EntityBuilder(2)
               .kind("hero")
@@ -39,6 +44,10 @@ def test_contract_state_machine_invalid():
     assert len(upd.contracts_add_or_update) == 0
 
 def test_recruitment_appraisal_trust_impact(base_entity):
+    """
+    Logic ID: SOC-204 (Contract appraisal uses trust/private bond)
+    Logic ID: SOC-193 (Public reputation and private relationship are separate)
+    """
     # Offerer has high trust and high public reputation
     offerer_id = 10
     offerer = (V2EntityBuilder(offerer_id)
@@ -81,6 +90,10 @@ def test_recruitment_appraisal_low_trust(base_entity):
     assert reason == ReasonCode.TOTAL_DISTRUST
 
 def test_betrayal_consequences(base_entity):
+    """
+    Logic ID: SOC-194 (Private betrayal can override public reputation)
+    Logic ID: SOC-198 (Turning points persist as narrative/life-event records)
+    """
     betrayer_id = 10
     victim = base_entity
     

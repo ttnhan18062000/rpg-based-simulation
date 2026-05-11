@@ -1,3 +1,4 @@
+# Compliance IDs: WORLD-006
 from __future__ import annotations
 from dataclasses import replace
 from typing import Dict, List, Optional, Tuple
@@ -10,7 +11,10 @@ class RegionalConsequenceService:
 
     @staticmethod
     def process_recovery(state: AuthoritativeState) -> Tuple[Dict[str, RegionState], Dict[int, LocalScarState]]:
-        """Process time-based recovery for regional danger and local scars."""
+        """
+        Process time-based recovery for regional danger and local scars.
+        Logic ID: WORLD-006 (Regional trauma and stability recovery over time)
+        """
         new_regions = {}
         new_scars = {}
 

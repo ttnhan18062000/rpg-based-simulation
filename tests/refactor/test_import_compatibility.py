@@ -33,15 +33,15 @@ def test_engine_import_compatibility():
 def test_systems_import_compatibility():
     from src.systems.strategic import StrategicIntelligenceSystem
     from src.systems.redirection import StrategicRedirectionSystem
-    from src.systems.detour import DetourSuggestionSystem
-    from src.systems.belief import BeliefCycleSystem
+    from src.systems.strategic_systems.detour import DetourSuggestionSystem
+    from src.systems.strategic_systems.belief import BeliefCycleSystem
     from src.systems.learning import StrategicLearningService
     from src.systems.social_contract import SocialContractSystem
     from src.systems.social_memory import SocialMemoryService
     from src.systems.party import PartyCoordinationSystem
-    from src.systems.generator import EntityGenerator
-    from src.systems.navigation import NavigationSystem
-    from src.systems.groups import GroupSystem
+    from src.systems.world_systems.generator import EntityGenerator
+    from src.systems.world_systems.navigation import NavigationSystem
+    from src.systems.world_systems.groups import GroupSystem
 
     assert StrategicIntelligenceSystem is not None
     assert StrategicRedirectionSystem is not None

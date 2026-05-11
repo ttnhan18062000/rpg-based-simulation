@@ -1,3 +1,4 @@
+# Compliance IDs: PROG-107
 import pytest
 from dataclasses import replace
 from src.core.state import AuthoritativeState, EntityState, ItemStack, EquipSlot, EquipmentComponent

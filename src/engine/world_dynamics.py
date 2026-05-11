@@ -8,7 +8,7 @@ from src.core.updates import WorldUpdate, EntityUpdate, CombatUpdate
 if TYPE_CHECKING:
     from src.core.state import AuthoritativeState, RegionState, EntityState
     from src.core.updates import StateUpdate
-    from src.systems.generator import EntityGenerator
+    from src.systems.world_systems.generator import EntityGenerator
 
 class WorldDynamicsSystem:
     """

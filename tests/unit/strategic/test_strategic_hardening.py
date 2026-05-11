@@ -1,3 +1,4 @@
+# Compliance IDs: STRAT-221, STRAT-222, STRAT-223, STRAT-224
 import pytest
 from src.core.builder import V2EntityBuilder
 from src.core.state import AuthoritativeState, EntityState, AttributeComponent, InventoryComponent, ItemStack, ResourceNodeState
@@ -65,7 +66,7 @@ def test_strategic_bandwidth_leads():
     leads = [LeadState(id=f"L{i}", kind="location", subject=f"S{i}") for i in range(5)]
     
     # Test bandwidth enforcement
-    from src.systems.detour import DetourSuggestionSystem
+    from src.systems.strategic_systems.detour import DetourSuggestionSystem
     strat_upd = StrategicUpdate(leads_add_or_update=leads)
     refined = DetourSuggestionSystem.enforce_bandwidth(ent, 10)
     

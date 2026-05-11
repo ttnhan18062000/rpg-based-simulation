@@ -1,3 +1,4 @@
+# Compliance IDs: COMB-100, COMB-101, SOC-137
 # src/engine/cognition.py
 from __future__ import annotations
 from dataclasses import dataclass

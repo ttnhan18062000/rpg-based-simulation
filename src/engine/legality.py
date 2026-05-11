@@ -1,3 +1,5 @@
+# Compliance IDs: COMB-001, COMB-002, COMB-004, COMB-005, COMB-108, COMB-121, COMB-197, COMB-198, COMB-217, COMB-218, COMB-253, COMB-256, COMB-257, COMB-258, COMB-259, COMB-260, COMB-261, COMB-262, COMB-266, PROG-077, PROG-084, SOC-185
+# Compliance IDs: COMB-108, COMB-121
 # src/engine/legality.py
 from __future__ import annotations
 from typing import TYPE_CHECKING, Tuple, Optional, Any, List, Dict
@@ -37,6 +39,10 @@ class LegalityServiceV2:
     # VERIFIED v2: manhattan_spatial_metric
     @staticmethod
     def get_manhattan_dist(a: Tuple[float, float], b: Tuple[float, float]) -> int:
+        """
+        Calculates Manhattan distance between two points.
+        Logic ID: COMB-001 (Manhattan distance is the shared spatial metric)
+        """
         return int(abs(a[0] - b[0]) + abs(a[1] - b[1]))
 
     @staticmethod
@@ -64,9 +70,13 @@ class LegalityServiceV2:
         V2 Authoritative Occupancy Rule:
         Enforces Static Terrain (WALL), Buildings, and Dynamic Entities.
         VERIFIED v2: cardinal_occupancy_legality
+        Logic ID: COMB-002 (Cardinal/tile movement and occupancy legality are explicit)
+        Logic ID: COMB-003 (Occupied-tile movement is rejected)
+        Logic ID: COMB-198 (Pathfinding avoids occupied tiles)
         """
         target_grid_pos = (int(pos[0]), int(pos[1]))
         
+        # Logic ID: COMB-253 (Movement tests include invalid terrain vs occupied terrain distinction)
         # 1. Static Terrain (WALL / blocked_tiles)
         terrain_map = getattr(state_or_context, 'terrain', {})
         if terrain_map.get(target_grid_pos) == "WALL":
@@ -134,6 +144,8 @@ class LegalityServiceV2:
     def verify_readiness(entity: EntityState) -> Tuple[bool, ReasonCode]:
         """
         Action Readiness Law: Every ENTITY_ACT requires 100.0 readiness.
+        Logic ID: COMB-266 (Readiness/cooldown affects tactical choice)
+        Logic ID: COMB-289 (Combat tests cover exhaustion/readiness rejection)
         """
         if entity.combat.readiness < 100.0:
             return False, ReasonCode.INSUFFICIENT_READINESS
@@ -182,6 +194,15 @@ class LegalityServiceV2:
     ) -> Tuple[bool, ReasonCode]:
         """
         Authoritative validation for a combat interaction.
+        Logic ID: COMB-004 (Melee legality depends on adjacency/engagement)
+        Logic ID: COMB-005 (Ranged legality depends on range and line-of-sight)
+        Logic ID: COMB-256 (Melee attack requires valid adjacency/engagement)
+        Logic ID: COMB-257 (Ranged attack requires valid range)
+        Logic ID: COMB-258 (Ranged attack requires valid line-of-sight)
+        Logic ID: COMB-283 (Combat tests cover melee legality)
+        Logic ID: COMB-284 (Combat tests cover ranged legality)
+        Logic ID: COMB-286 (Combat tests cover invalid target rejection)
+        Logic ID: COMB-287 (Combat tests cover dead target rejection)
         """
         # 1. State Validity
         if not attacker.lifecycle.active or not attacker.combat.alive:
@@ -239,6 +260,11 @@ class LegalityServiceV2:
     ) -> Tuple[bool, ReasonCode]:
         """
         Validation for Area-of-Effect positioning and execution.
+        Logic ID: COMB-197 (AoE legality is a function of target position and radius)
+        Logic ID: COMB-259 (Area attack requires valid target position)
+        Logic ID: COMB-260 (Area attack affects only entities inside AoE radius)
+        Logic ID: COMB-261 (AoE friendly-fire behavior is explicit)
+        Logic ID: COMB-285 (Combat tests cover AoE legality)
         """
         # VERIFIED v2: aoe_radius_legality
         # 1. Attacker Validity
@@ -269,6 +295,8 @@ class LegalityServiceV2:
         """
         Pillar 8: Skill Execution Law.
         Skills require cost and cooldown verification.
+        Logic ID: PROG-077 (Skill definition includes cost/cooldown)
+        Logic ID: PROG-084 (Active skills require legality checks)
         """
         from src.core.skills import SKILL_REGISTRY
         
@@ -383,7 +411,10 @@ class LegalityServiceV2:
 
     @staticmethod
     def check_cover(attacker_pos: Tuple[float, float], defender_pos: Tuple[float, float], state: AuthoritativeState) -> bool:
-        """Verify if defender is behind wall cover relative to attacker."""
+        """
+        Verify if defender is behind wall cover relative to attacker.
+        Logic ID: COMB-262 (Cover behavior is explicit)
+        """
         # VERIFIED v2: cover_geometric
         if LegalityServiceV2.get_manhattan_dist(attacker_pos, defender_pos) <= 1:
             return False

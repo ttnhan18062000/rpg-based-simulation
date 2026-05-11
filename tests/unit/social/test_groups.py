@@ -1,3 +1,4 @@
+# Compliance IDs: SOC-191, SOC-225
 """
 Group coordination tests.
 - RPG-0058: social_party_cooperation
@@ -9,6 +10,7 @@ from src.engine.apply import ApplyPath
 from src.core.builder import V2EntityBuilder
 
 def test_group_formation():
+    """Logic ID: SOC-166 (Contract party has founder/leader)"""
     # Create two heroes
     h1 = V2EntityBuilder(entity_id=1).identity(role=0).build()
     h2 = V2EntityBuilder(entity_id=2).identity(role=0).build()
@@ -23,6 +25,7 @@ def test_group_formation():
         anchor=(10.0, 10.0),
         roles={1: "TANK", 2: "HEALER"}
     )
+    # Logic ID: SOC-167 (Contract party has member roles)
     
     state_upd = StateUpdate(groups_add_or_update=[group])
     
@@ -44,7 +47,8 @@ def test_group_dissolution():
     assert 100 not in new_state.groups
 
 def test_group_cohesion():
-    from src.social.group_service import GroupService
+    """Logic ID: SOC-173 (Party cohesion is updated from member positions)"""
+    from src.systems.social_systems.group_service import GroupService
     # h1 is inside (10, 10), h2 is outside (50, 50)
     h1 = V2EntityBuilder(entity_id=1).identity(role=0).location(10.0, 10.0).build()
     h2 = V2EntityBuilder(entity_id=2).identity(role=0).location(50.0, 50.0).build()

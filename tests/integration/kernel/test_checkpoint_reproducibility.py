@@ -107,6 +107,8 @@ def test_hash_isolation():
     assert hash_init == CanonicalStateHasher.get_hash(state_same)
 
 
+    # Logic ID: INFRA-003
+
 def test_rng_hash_reproducibility():
     """Verify that RNG state checkpoints are stable and reproducible in the hash."""
     from src.platform.rng import DeterministicRNG

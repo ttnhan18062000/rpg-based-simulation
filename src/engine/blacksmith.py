@@ -1,3 +1,4 @@
+# Compliance IDs: TOWN-017
 from __future__ import annotations
 from typing import TYPE_CHECKING, Dict, List, Set
 from dataclasses import replace, dataclass
@@ -114,6 +115,7 @@ class BlacksmithSystem:
     def enforce(state: AuthoritativeState, update: StateUpdate) -> StateUpdate:
         """
         Refine the proposed update according to crafting and knowledge laws.
+        Logic ID: TOWN-017 (Blacksmith visits resolve crafting behavior)
         """
         refined_entity_updates = dict(update.entity_updates)
         

@@ -84,7 +84,7 @@ class CombatActions:
             group_dissolve_upd = None
             
             if entity.identity.group_id is not None and entity.identity.group_id == target.identity.group_id:
-                from src.social.appraisal import SocialAppraisalSystem
+                from src.systems.social_systems.appraisal import SocialAppraisalSystem
                 s_up, st_up = SocialAppraisalSystem.process_betrayal(
                     target, entity.id, salience=0.8, current_tick=current_tick
                 )

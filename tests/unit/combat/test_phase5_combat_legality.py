@@ -93,6 +93,8 @@ def test_friendly_fire():
     assert update.outcome_kind == "REJECTED"
     assert update.failure_reason == ReasonCode.FRIENDLY_FIRE_ILLEGAL
 
+    # Logic ID: COMB-029
+
 def test_aoe_legality():
     attacker = create_mock_entity(1, pos=(0,0), range=5)
     state = AuthoritativeState(entities={1: attacker}, tick=0, seed=1)

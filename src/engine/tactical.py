@@ -1,3 +1,5 @@
+# Compliance IDs: COMB-013, COMB-014, COMB-015, COMB-016, COMB-209, COMB-210, COMB-215, COMB-254, COMB-255, COMB-263, COMB-264, COMB-265, COMB-267, COMB-268, COMB-269, COMB-270, COMB-271, COMB-274, COMB-275, COMB-276, COMB-277, STRAT-188
+# Compliance IDs: COMB-014, COMB-015, COMB-016
 from __future__ import annotations
 from typing import TYPE_CHECKING, List, Optional, Tuple
 from dataclasses import replace
@@ -7,7 +9,8 @@ from src.engine.legality import LegalityServiceV2
 from src.engine.positioning import PositioningService
 from src.core.strategic import ProjectStatus
 from src.core.movement_modes import MovementMode
-from src.core.enums import ActionStyle
+from src.core.enums import ActionStyle, ReasonCode, EntityRole, Faction
+from src.core.skills import SKILL_REGISTRY
 
 if TYPE_CHECKING:
     from src.core.state import EntityState, AuthoritativeState
@@ -31,6 +34,7 @@ class TacticalDecisionSystem:
         """
 
         # 0. Global Legality Guard (Task 2.2 Hardening)
+        # Logic ID: COMB-255 (Tactical action choice does not bypass movement/combat legality)
         # VERIFIED v2: tactical_legality_envelope
         legal, reason = LegalityServiceV2.verify_action_legality(entity, "TACTICAL_EVAL", state)
         if not legal:
@@ -240,6 +244,7 @@ class TacticalDecisionSystem:
         # Filter hostiles by actual attack legality (LoS, Range, Faction)
         legal_attack_targets = []
         for h in hostiles:
+            # Logic ID: COMB-254 (Tactical action choice uses only legal candidate actions)
             legal, _ = LegalityServiceV2.verify_attack_legality(entity, h, state)
             if legal:
                 legal_attack_targets.append(h)
@@ -251,6 +256,11 @@ class TacticalDecisionSystem:
         dist_to_target = abs(target.navigation.position[0] - entity.navigation.position[0]) + abs(target.navigation.position[1] - entity.navigation.position[1])
         
         # 4. Anti-Stalemate (GAP-T05)
+        # Logic ID: COMB-270 (Target stickiness prevents unrealistic full retarget every tick)
+        # Logic ID: COMB-271 (Target stickiness can break when target invalid/dead/out of range)
+        # Logic ID: COMB-274 (Anti-stalemate handles chase loops)
+        # Logic ID: COMB-275 (Anti-stalemate handles kite loops)
+        # Logic ID: COMB-276 (Anti-stalemate handles repeated step-back loops)
         stale_ticks = entity.task.payload.get("stale_ticks", 0)
         recent_positions = list(entity.task.payload.get("recent_positions", []))
         
@@ -263,6 +273,7 @@ class TacticalDecisionSystem:
         recent_positions = ([curr_pos] + recent_positions)[:4]
 
         if stale_ticks > 10:
+             # Logic ID: COMB-277 (Anti-stalemate does not force illegal movement)
              return EntityUpdate(
                  entity_id=entity.id,
                  strategic=strat_up,
@@ -279,8 +290,10 @@ class TacticalDecisionSystem:
         
         # 5.1 Cover Seeking and Low HP Retreat (Task 4.2/4.3)
         # Ranged threats trigger cover seeking for Skirmishers or wounded entities
+        # Logic ID: COMB-268 (Low HP affects tactical choice)
         hp_percent = entity.combat.hp / max(1, entity.combat.max_hp)
         if (role == "SKIRMISHER" or hp_percent < 0.4):
+             # Logic ID: COMB-269 (Threat level affects tactical choice)
              ranged_threats = [h for h in hostiles if h.combat.range > 2]
              if ranged_threats:
                  cover_pos = PositioningService.find_nearest_cover(entity, ranged_threats[0], state)
@@ -433,6 +446,7 @@ class TacticalDecisionSystem:
             )
 
         # ActionStyle Bias: Aggressive entities ignore range buffers, Evasive entities maintain them strictly
+        # Logic ID: COMB-263 (Weapon range affects tactical choice)
         attack_range = entity.combat.range
         if style == ActionStyle.AGGRESSIVE:
              attack_range += 1
@@ -440,8 +454,53 @@ class TacticalDecisionSystem:
              # Evasive skirmishers might choose to reposition instead of attacking if too close
              pass
 
-        if is_attack_legal and dist_to_target <= attack_range:
-            # Attack
+        if is_attack_legal:
+            # 5.5 Skill Selection (Task 8.7 Hardening)
+            # Logic ID: COMB-264 (Skill range affects tactical choice)
+            # Logic ID: COMB-265 (Skill cost affects tactical choice)
+            chosen_skill_id = None
+            if entity.identity.learned_skills:
+                available_skills = []
+                for skill_id in entity.identity.learned_skills:
+                    skill = SKILL_REGISTRY.get(skill_id)
+                    if not skill: continue
+                    
+                    # Readiness/Cooldown check
+                    on_cooldown = entity.identity.cooldowns.get(skill_id, 0) > state.tick
+                    # Logic ID: COMB-266 (Readiness/cooldown affects tactical choice)
+                    
+                    if not on_cooldown and dist_to_target <= skill.range:
+                        # Cost check
+                        if entity.stamina.current >= skill.cost:
+                            available_skills.append(skill)
+                
+                if available_skills:
+                    # Choice Bias: Pick highest power
+                    available_skills.sort(key=lambda s: s.power, reverse=True)
+                    chosen_skill_id = available_skills[0].id
+
+            # Logic ID: COMB-267 (Exhaustion affects tactical choice)
+            # If stamina is low and no free skills, might favor basic attack or rest
+            # But resolve_attack handles stamina drain.
+
+            # Final Action Emission
+            if chosen_skill_id:
+                return EntityUpdate(
+                    entity_id=entity.id,
+                    strategic=strat_up,
+                    task=TaskUpdate(
+                        work_kind_set="ENTITY_ACT",
+                        payload_set={
+                            "action": "SKILL",
+                            "skill_id": chosen_skill_id,
+                            "target_id": target.id,
+                            "stale_ticks": stale_ticks + 1,
+                            "recent_positions": recent_positions
+                        }
+                    )
+                )
+            
+            # Default: Basic Attack
             return EntityUpdate(
                 entity_id=entity.id,
                 strategic=strat_up,

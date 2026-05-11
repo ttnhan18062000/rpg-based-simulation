@@ -4,8 +4,8 @@ from src.core.builder import V2EntityBuilder
 from src.core.state import EntityState, AuthoritativeState, IdentityComponent, SocialComponent, StrategicComponent, CombatComponent, InventoryComponent, SocialBond
 from src.core.strategic import ContractStatus, ProjectStatus
 from src.core.enums import ReasonCode
-from src.social.appraisal import SocialAppraisalSystem
-from src.social.contracts import ContractService
+from src.systems.social_systems.appraisal import SocialAppraisalSystem
+from src.systems.social_systems.contracts import ContractService
 
 def test_public_vs_private_trust():
     state = AuthoritativeState(tick=100, seed=42)

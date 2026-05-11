@@ -1,3 +1,5 @@
+# Compliance IDs: PROG-005, TOWN-012, TOWN-079, TOWN-080, TOWN-081, TOWN-104, TOWN-105, TOWN-109, TOWN-110, TOWN-111, TOWN-126, TOWN-127, TOWN-128
+# Compliance IDs: TOWN-079, TOWN-080, TOWN-081
 from __future__ import annotations
 from typing import List, Optional, Tuple
 from src.core.state import InventoryComponent, ItemStack, EntityState, EquipSlot
@@ -23,7 +25,10 @@ class InventoryService:
 
     @staticmethod
     def can_add_item(inventory: InventoryComponent, item_id: str, quantity: int) -> bool:
-        """Check if an item can be added without exceeding slots or weight."""
+        """
+        Check if an item can be added without exceeding slots or weight.
+        Logic ID: TOWN-013 (Bounded capacity check)
+        """
         defn = ItemRegistry.get(item_id)
         if not defn:
             return False
@@ -52,6 +57,7 @@ class InventoryService:
             if not defn:
                 return False # Law: Unknown items cannot be added
                 
+            # Logic ID: TOWN-012 (Weight pressure check)
             total_weight += defn.weight * stack.quantity
             if total_weight > inventory.max_weight:
                 return False

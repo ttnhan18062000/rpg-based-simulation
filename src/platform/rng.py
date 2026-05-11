@@ -1,3 +1,5 @@
+# Compliance IDs: INFRA-003, INFRA-107, INFRA-108, INFRA-109, INFRA-110, INFRA-111, INFRA-112, INFRA-113, INFRA-114, INFRA-115, SUB-272, SUB-273, SUB-274
+# Compliance IDs: INFRA-003
 # src/platform/rng.py
 from __future__ import annotations
 import random
@@ -10,6 +12,8 @@ class DeterministicRNG:
     Ensures that different gameplay domains (e.g., SPAWN vs COMBAT) 
     do not share the same random stream even with the same seed.
     VERIFIED v2: DeterministicRNG
+    Logic ID: INFRA-003 (Deterministic RNG)
+    Logic ID: INFRA-107 (RNG API supports domain separation)
     """
     __slots__ = ("_base_seed", "_rng_map")
 
@@ -44,7 +48,10 @@ class DeterministicRNG:
 
     @staticmethod
     def _composite_seed(base_seed: int, domain: Domain, tick: int, entity_id: int, sub_id: int) -> int:
-        """Generates a stable, order-independent composite seed."""
+        """
+        Generates a stable, order-independent composite seed.
+        Logic ID: INFRA-108 (RNG calls are scoped by deterministic context)
+        """
         # Simple fast integer hash composition
         seed = base_seed
         seed ^= (domain.value << 48)

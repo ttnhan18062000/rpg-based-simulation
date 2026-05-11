@@ -9,7 +9,7 @@ from src.core.state import AuthoritativeState
 from src.engine.kernel import Kernel
 from src.platform.rng import DeterministicRNG
 from src.config.profiles import RuntimeProfile
-from src.systems.generator import EntityGenerator
+from src.systems.world_systems.generator import EntityGenerator
 
 logger = logging.getLogger(__name__)
 

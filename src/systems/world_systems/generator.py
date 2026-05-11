@@ -1,3 +1,5 @@
+# Compliance IDs: COMB-166, PROG-057, PROG-086, STRAT-145, STRAT-146, STRAT-147, SUB-001, TOWN-077, WORLD-005, WORLD-009, WORLD-010, WORLD-011, WORLD-012, WORLD-013, WORLD-014, WORLD-015, WORLD-016, WORLD-017, WORLD-018, WORLD-019, WORLD-044, WORLD-045, WORLD-046, WORLD-047, WORLD-050, WORLD-051
+# Compliance IDs: PROG-057, STRAT-145, STRAT-146, STRAT-147, TOWN-077, WORLD-009, WORLD-010, WORLD-011, WORLD-012, WORLD-013, WORLD-014, WORLD-015, WORLD-016, WORLD-017, WORLD-018, WORLD-019, WORLD-051
 from __future__ import annotations
 
 from typing import Dict, List, Optional, TYPE_CHECKING, Any
@@ -18,6 +20,7 @@ if TYPE_CHECKING:
 class EntityGenerator:
     """
     Authoritative factory for creating new entity generations.
+    Logic ID: WORLD-005 (Spawn rules are deterministic / seeded generator)
     """
     
     def __init__(self, seed: int):

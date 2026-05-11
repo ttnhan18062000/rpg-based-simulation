@@ -10,8 +10,8 @@ from dataclasses import replace
 from src.core.state import AuthoritativeState, EntityState, SocialComponent, SocialBond
 from src.core.builder import V2EntityBuilder
 from src.core.strategic import ContractState, ContractKind, ContractStatus
-from src.social.appraisal import SocialAppraisalSystem
-from src.social.contracts import ContractService
+from src.systems.social_systems.appraisal import SocialAppraisalSystem
+from src.systems.social_systems.contracts import ContractService
 
 def create_mock_entity(id, gold=10, sentiment=0.0):
     from src.core.builder import V2EntityBuilder

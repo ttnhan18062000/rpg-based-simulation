@@ -1,3 +1,5 @@
+# Compliance IDs: SOC-025, SOC-145, SOC-146, SOC-147, SOC-148, SOC-149, SOC-150, SOC-151, SOC-152, SOC-153, SOC-154, SOC-155, SOC-156, SOC-157, SOC-160, SOC-162, SOC-163, SOC-164, SOC-172, SOC-173, SOC-174, SOC-176, SOC-177, SOC-178, SOC-179, SOC-183, SOC-184
+# Compliance IDs: SOC-025
 from __future__ import annotations
 from dataclasses import replace
 from typing import Dict, List, Set, Optional, TYPE_CHECKING
@@ -15,6 +17,11 @@ class GroupSystem:
 
     @staticmethod
     def update_groups(state: AuthoritativeState, current_update: Optional[StateUpdate] = None) -> StateUpdate:
+        """
+        Main authoritative group coordination logic.
+        Logic ID: SOC-182 (Party target propagation occurs inside authoritative tick pipeline)
+        Logic ID: SOC-192 (Group coordination test runs through normal kernel tick)
+        """
         from src.core.updates import StateUpdate, EntityUpdate
         from src.core.state import GroupRecord
         
@@ -31,6 +38,23 @@ class GroupSystem:
             
             ent = state.entities.get(e_id)
             return ent.combat.alive if ent else False
+        
+        def is_active(e_id: int) -> bool:
+            """
+            Return whether an entity is active after applying same-tick updates.
+
+            Group lifecycle must use the effective same-tick state, not only the
+            start-of-tick state. Otherwise a leader/member that becomes inactive during
+            the tick can incorrectly remain in a group until the next tick.
+            """
+            if current_update and e_id in current_update.entity_updates:
+                upd = current_update.entity_updates[e_id]
+
+                if upd.active is False:
+                    return False
+
+            ent = state.entities.get(e_id)
+            return ent.lifecycle.active if ent else False
 
         def get_pos(e_id: int) -> tuple[float, float]:
             # Check for move in current update
@@ -44,16 +68,37 @@ class GroupSystem:
 
         # 1. Process Existing Groups (Dissolution & Cohesion)
         for g_id, group in state.groups.items():
-            if not is_alive(group.leader_id):
-                # Leader is gone, dissolve group
-                # VERIFIED v2: group_dissolution_leader_loss
+            leader = state.entities.get(group.leader_id)
+
+            # Logic ID: SOC-176 (Party dissolves when leader is dead/missing)
+            # Logic ID: SOC-189 (Group dissolution test covers dead leader)
+            #
+            # Important:
+            #   Use is_alive(...) / is_active(...) instead of reading only the
+            #   start-of-tick entity.
+            #
+            # Why:
+            #   GroupSystem runs near the end of the authoritative pipeline and receives
+            #   the current same-tick StateUpdate. If the leader died earlier in this same
+            #   tick, the start-of-tick state may still show leader.combat.alive=True.
+            #   Therefore same-tick CombatUpdate(alive_set=False) must be respected here.
+            if (
+                leader is None
+                or not is_alive(group.leader_id)
+                or not is_active(group.leader_id)
+            ):
                 groups_remove.append(g_id)
+
                 for m_id in group.member_ids:
+                    # Logic ID: SOC-179 (Party dissolution updates member group IDs)
                     if m_id in state.entities:
-                        entity_updates[m_id] = EntityUpdate(entity_id=m_id, group_id_set=-1) # -1 means None/Reset
+                        entity_updates[m_id] = EntityUpdate(
+                            entity_id=m_id,
+                            group_id_set=-1,
+                        )
+
                 continue
 
-            leader = state.entities.get(group.leader_id)
             # Filter members (alive and within reasonable range)
             new_member_ids: Set[int] = {group.leader_id}
             member_positions: List[tuple[float, float]] = [get_pos(group.leader_id)]
@@ -62,8 +107,11 @@ class GroupSystem:
                 if m_id == group.leader_id:
                     continue
                 
-                if not is_alive(m_id):
-                    entity_updates[m_id] = EntityUpdate(entity_id=m_id, group_id_set=-1)
+                if not is_alive(m_id) or not is_active(m_id):
+                    entity_updates[m_id] = EntityUpdate(
+                        entity_id=m_id,
+                        group_id_set=-1,
+                    )
                     continue
                 
                 # Cohesion check
@@ -99,10 +147,13 @@ class GroupSystem:
                 continue
 
             # Update Anchor
+            # Logic ID: SOC-172 (Party anchor follows leader or agreed anchor rule)
             avg_x = sum(p[0] for p in member_positions) / len(member_positions)
             avg_y = sum(p[1] for p in member_positions) / len(member_positions)
             
             # Domain 7 Hardening: Shared Target Logic
+            # Logic ID: SOC-183 (Shared target is valid and alive when assigned)
+            # Logic ID: SOC-184 (Shared target clears when invalid/dead)
             new_shared_target_id = leader.task.payload.get("target_id")
             if not new_shared_target_id:
                 new_shared_target_id = leader.navigation.target
@@ -198,6 +249,10 @@ class GroupSystem:
             active_contract_id = None
             
             # Check for contracts where id_a is source or target
+            # Logic ID: SOC-160 (Party formation can be driven by accepted social contract)
+            # Logic ID: SOC-187 (Group formation test covers accepted contract)
+            # Logic ID: SOC-188 (Group formation test covers no contract / proximity-only rejection)
+            # Logic ID: SOC-164 (Proximity alone does not create a party)
             for c_id, contract in entity_a.strategic.contracts.items():
                 from src.core.strategic import ContractStatus
                 if contract.status != ContractStatus.ACTIVE: continue

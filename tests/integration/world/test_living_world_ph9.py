@@ -3,7 +3,7 @@ import pytest
 from src.core.state import AuthoritativeState, RegionState, EntityState
 from src.core.updates import StateUpdate, EntityUpdate, TaskUpdate, CombatUpdate
 from src.engine.pipeline import AuthoritativeApplyPipeline
-from src.systems.generator import EntityGenerator
+from src.systems.world_systems.generator import EntityGenerator
 from src.core.enums import EntityRole
 from src.core.inventory import InventoryComponent
 

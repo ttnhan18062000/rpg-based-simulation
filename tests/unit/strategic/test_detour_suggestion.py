@@ -29,7 +29,7 @@ from src.core.strategic import (
     StrategicComponent, CognitionProfile, BlockerState, LeadState, LeadCertainty,
     ConcernState, SourceTrustEntry
 )
-from src.systems.detour import DetourSuggestionSystem
+from src.systems.strategic_systems.detour import DetourSuggestionSystem
 
 
 def _make_entity_with_leads(num_leads, profile=None, blockers=None, concerns=None, source_trust=None):

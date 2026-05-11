@@ -1,3 +1,4 @@
+# Compliance IDs: PROG-001, PROG-002, PROG-003, PROG-004, PROG-007, PROG-008
 # src/engine/evolution.py
 # Phase 8 Implementation: Handles Entity Growth Milestones and Role Transformations (LEG-RPG-143).
 from __future__ import annotations

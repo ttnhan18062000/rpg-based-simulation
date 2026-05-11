@@ -4,7 +4,7 @@ from src.core.state import AuthoritativeState, EntityState, ResourceNodeState
 from src.core.updates import StateUpdate, EntityUpdate, ResourceTransferIntent, ItemStack
 from src.engine.pipeline import AuthoritativeApplyPipeline
 from src.engine.apply import ApplyPath
-from src.systems.generator import EntityGenerator
+from src.systems.world_systems.generator import EntityGenerator
 
 def test_transaction_tracing_and_replay():
     """

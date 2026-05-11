@@ -1,3 +1,4 @@
+# Compliance IDs: WORLD-032, WORLD-033, WORLD-034
 from __future__ import annotations
 import math
 from dataclasses import replace
@@ -8,7 +9,7 @@ from src.core.enums import Faction, Domain
 from src.platform.rng import DeterministicRNG
 
 if TYPE_CHECKING:
-    from src.systems.generator import EntityGenerator
+    from src.systems.world_systems.generator import EntityGenerator
 
 class RaidService:
     """

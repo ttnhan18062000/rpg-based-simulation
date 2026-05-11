@@ -1,3 +1,4 @@
+# Compliance IDs: COMB-283, COMB-284, COMB-285, COMB-286, COMB-287, COMB-288, COMB-289, PROG-105
 """
 Combat legality matrix and authoritative outcome tests.
 - RPG-0012: melee_adjacency_parity
@@ -9,6 +10,11 @@ Combat legality matrix and authoritative outcome tests.
 - [RPG-AUTH-003] Action legality is verified by the kernel before any side effect is calculated.
 - [RPG-COMBAT-003] Tactical modifiers are handled deterministically.
 - [RPG-COMBAT-004] AoE and Multi-target attacks resolve as separate atomic sub-intents.
+- Logic ID: COMB-283 (Combat tests cover melee legality)
+- Logic ID: COMB-284 (Combat tests cover ranged legality)
+- Logic ID: COMB-285 (Combat tests cover AoE legality)
+- Logic ID: COMB-286 (Combat tests cover invalid target rejection)
+- Logic ID: COMB-287 (Combat tests cover dead target rejection)
 """
 import pytest
 from dataclasses import replace

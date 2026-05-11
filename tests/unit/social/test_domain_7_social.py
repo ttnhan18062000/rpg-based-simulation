@@ -1,3 +1,4 @@
+# Compliance IDs: SOC-192
 
 import pytest
 from dataclasses import replace
@@ -8,8 +9,8 @@ from src.core.state import (
 )
 from src.core.strategic import ContractState, ContractKind, ContractStatus, ProjectState, DirectiveState, ProjectStatus
 from src.core.updates import StateUpdate, EntityUpdate, SocialUpdate
-from src.social.appraisal import SocialAppraisalSystem
-from src.systems.groups import GroupSystem
+from src.systems.social_systems.appraisal import SocialAppraisalSystem
+from src.systems.world_systems.groups import GroupSystem
 from src.engine.tactical import TacticalDecisionSystem
 from src.engine.domain_logic import SimulationDomainLogic
 from src.core.builder import V2EntityBuilder

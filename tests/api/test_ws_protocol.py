@@ -1,3 +1,4 @@
+import pytest
 import asyncio
 import json
 import subprocess
@@ -6,6 +7,7 @@ import websockets
 import msgpack
 import os
 
+@pytest.mark.asyncio
 async def test_ws_json_handshake():
     """Verify WebSocket handshake and streaming in JSON mode."""
     port = 8004
@@ -33,6 +35,7 @@ async def test_ws_json_handshake():
         server.terminate()
         server.wait()
 
+@pytest.mark.asyncio
 async def test_ws_msgpack_handshake():
     """Verify WebSocket handshake and streaming in MessagePack mode."""
     port = 8005

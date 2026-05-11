@@ -2,6 +2,8 @@ from src.platform.rng import DeterministicRNG
 from src.core.enums import Domain
 
 
+    # Logic ID: INFRA-003
+
 def test_rng_reproducibility():
     """Seed 42 must yield the same 1k sequence every time."""
     seed = 42

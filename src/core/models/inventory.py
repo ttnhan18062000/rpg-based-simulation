@@ -1,3 +1,4 @@
+# Compliance IDs: TOWN-013
 from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Dict, List, Any
@@ -28,7 +29,10 @@ class ItemStack:
 
 @dataclass(frozen=True, slots=True)
 class InventoryComponent:
-    """Bounded container for items and gold."""
+    """
+    Bounded container for items and gold.
+    Logic ID: TOWN-013 (Inventory is bounded by slots and weight)
+    """
     items: List[ItemStack] = field(default_factory=list)
     gold: int = 0
     max_slots: int = 16

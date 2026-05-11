@@ -1,3 +1,4 @@
+# Compliance IDs: COMB-093, COMB-094, COMB-095, COMB-096, COMB-097, COMB-098, COMB-099
 from __future__ import annotations
 from typing import List
 from src.ai.goals.base import GoalScore

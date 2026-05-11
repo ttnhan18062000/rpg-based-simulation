@@ -87,6 +87,16 @@ def validate_bundle(manifest_path, bundle_dir):
 def main():
     print("--- RPG V2 Release Gate Validator ---")
     
+    # 1. Checklist Validation
+    print("Validating Logic Checklist...")
+    try:
+        subprocess.check_call([sys.executable, "scripts/validate_checklist.py"])
+        print("[PASS] Checklist is valid.")
+    except subprocess.CalledProcessError:
+        print("[FAILURE] Logic checklist validation failed.")
+        sys.exit(1)
+
+    # 2. Bundle Validation
     if not os.path.isdir(REAL_PROOF_DIR):
         print(f"[FAIL] Release proof directory '{REAL_PROOF_DIR}' is missing.")
         print("Run 'scripts/generate_release_proof.py' first.")

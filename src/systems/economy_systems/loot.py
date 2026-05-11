@@ -1,3 +1,4 @@
+# Compliance IDs: TOWN-009
 from __future__ import annotations
 from typing import List
 from src.core.state import AuthoritativeState, EntityState, ItemStack
@@ -49,11 +50,13 @@ class LootSystem:
                 continue
                 
             # 2. Progress Increment
+            # Logic ID: TOWN-009 (Looting progress is authoritative)
             new_progress = entity.interaction.progress + 1.0
             
             # 3. Completion Check (required_ticks default to 10 if not set)
             required = 10.0
             if new_progress >= required:
+                # Logic ID: TOWN-009 (Looting completion triggers intent)
                 # AUTHORITATIVE HANDOFF (Proposed intent for refinement)
                 items_to_add = []
                 source_kind = ""

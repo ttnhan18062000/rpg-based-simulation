@@ -1,7 +1,7 @@
 # tests/world/test_camp_lifecycle.py
 import pytest
 from src.core.state import AuthoritativeState, RegionState, CampState
-from src.systems.generator import EntityGenerator
+from src.systems.world_systems.generator import EntityGenerator
 from src.engine.world_dynamics import WorldDynamicsSystem
 from src.core.updates import StateUpdate
 

@@ -91,7 +91,7 @@ class LifecycleSystem:
             # Influence Shift
             inf_update = FactionInfluenceService.process_influence_shift(state, recent_deaths)
             # Conquest/Stronghold Lifecycle (Requires generator)
-            from src.systems.generator import EntityGenerator
+            from src.systems.world_systems.generator import EntityGenerator
             generator = EntityGenerator(state.seed + state.tick)
             inf_update = FactionInfluenceService.process_conquest_lifecycle(state, inf_update, generator)
             

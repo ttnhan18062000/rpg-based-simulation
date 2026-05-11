@@ -94,6 +94,8 @@ def _make_rich_entity():
 class TestCognitionGraphExport:
     """Part 1 §Strategic: Cognition graph export."""
 
+    # Logic ID: STRAT-056
+
     def test_export_empty_strategy(self):
         entity = V2EntityBuilder(1).kind("hero").location(5.0, 5.0).build()
         graph = CognitionGraphExporter.export(entity)
@@ -108,6 +110,8 @@ class TestCognitionGraphExport:
         assert len(graph.nodes) == 7
         # Edges: project→objective, blocker→objective, lead→hypothesis = 3
         assert len(graph.edges) == 3
+
+    # Logic ID: STRAT-058
 
     def test_export_determinism(self):
         entity = _make_rich_entity()

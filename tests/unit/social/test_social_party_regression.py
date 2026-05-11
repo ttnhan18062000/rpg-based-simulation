@@ -1,3 +1,4 @@
+# Compliance IDs: SOC-187, SOC-188
 import pytest
 from dataclasses import replace
 from src.core.state import (
@@ -11,8 +12,8 @@ from src.core.strategic import (
     ContractState, ContractKind, ContractStatus
 )
 from src.core.updates import StateUpdate, EntityUpdate, TaskUpdate
-from src.social.appraisal import SocialAppraisalSystem
-from src.systems.groups import GroupSystem
+from src.systems.social_systems.appraisal import SocialAppraisalSystem
+from src.systems.world_systems.groups import GroupSystem
 from src.engine.pipeline import AuthoritativeApplyPipeline
 
 def create_mock_entity(e_id, pos, faction=Faction.HERO_GUILD):
@@ -28,7 +29,11 @@ def create_mock_entity(e_id, pos, faction=Faction.HERO_GUILD):
         .build())
 
 def test_no_proximity_only_groups():
-    """Verify that groups do not form just by being near each other."""
+    """
+    Verify that groups do not form just by being near each other.
+    Logic ID: SOC-164 (Proximity alone does not create a party)
+    Logic ID: SOC-188 (Group formation test covers no contract / proximity-only rejection)
+    """
     hero = create_mock_entity(1, (1.0, 1.0))
     merc = create_mock_entity(2, (1.5, 1.5)) # Close but no shared purpose
     
@@ -69,7 +74,11 @@ def test_recruitment_logic_evaluation():
     assert status_high == ContractStatus.ACCEPTED
 
 def test_party_formation_from_contract():
-    """Verify that a shared contract leads to group formation."""
+    """
+    Verify that a shared contract leads to group formation.
+    Logic ID: SOC-160 (Party formation can be driven by accepted social contract)
+    Logic ID: SOC-187 (Group formation test covers accepted contract)
+    """
     from src.core.builder import V2EntityBuilder
     # Give them a recruitment contract
     contract = ContractState(

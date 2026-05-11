@@ -45,6 +45,60 @@ def test_fingerprint_captures_strategic_changes():
     fp2 = new_state.fingerprint()["state_hash"]
     assert fp1 != fp2
     assert "p1" in new_state.entities[1].strategic.projects
+    
+def test_fingerprint_captures_project_id_changes():
+    """
+    Verify that the fingerprint tracks project identity, not only project count.
+    """
+    from src.core.strategic import ProjectState
+
+    e1 = (
+        V2EntityBuilder(1)
+        .kind("hero")
+        .location(0, 0)
+        .build()
+    )
+
+    state = AuthoritativeState(
+        tick=100,
+        seed=42,
+        entities={1: e1},
+    )
+
+    project_a = ProjectState(id="p1", kind="quest")
+    project_b = ProjectState(id="p2", kind="quest")
+
+    state_a = ApplyPath.apply_generation(
+        state,
+        StateUpdate(
+            entity_updates={
+                1: EntityUpdate(
+                    entity_id=1,
+                    strategic=StrategicUpdate(
+                        projects_add_or_update=[project_a],
+                    ),
+                )
+            }
+        ),
+    )
+
+    state_b = ApplyPath.apply_generation(
+        state,
+        StateUpdate(
+            entity_updates={
+                1: EntityUpdate(
+                    entity_id=1,
+                    strategic=StrategicUpdate(
+                        projects_add_or_update=[project_b],
+                    ),
+                )
+            }
+        ),
+    )
+
+    assert "p1" in state_a.entities[1].strategic.projects
+    assert "p2" in state_b.entities[1].strategic.projects
+    assert state_a.fingerprint()["state_hash"] != state_b.fingerprint()["state_hash"]
 
 def test_fingerprint_captures_world_dynamics():
     """Verify that regional influence changes the state fingerprint."""

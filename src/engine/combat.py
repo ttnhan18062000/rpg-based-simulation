@@ -1,3 +1,5 @@
+# Compliance IDs: COMB-118, COMB-119, COMB-120, COMB-122, COMB-200, COMB-278, COMB-279, COMB-280, COMB-281, PROG-064
+# Compliance IDs: COMB-118, COMB-119, COMB-120, COMB-122
 from __future__ import annotations
 from typing import TYPE_CHECKING, Optional, List, Tuple, Dict, Any
 from dataclasses import replace, field
@@ -35,6 +37,7 @@ class CombatResolutionSystem:
         Pillar 3: Fractional Armor Mitigation
         Formula: damage = (atk * atk_mult) * ((atk * atk_mult) / ((atk * atk_mult) + (def * def_mult) * 2.0 + 1.0))
         VERIFIED v2: legacy_damage_parity
+        Logic ID: COMB-200 (Damage calculation math is consistent with legacy rules)
         """
         atk = float(attacker.combat.atk) * atk_mult
         dfn = float(defender.combat.def_stat) * def_mult
@@ -73,6 +76,7 @@ class CombatResolutionSystem:
             trace["SURROUNDED"] = 0.25
             
         if LegalityServiceV2.check_cover(attacker.navigation.position, defender.navigation.position, state):
+            # Logic ID: COMB-262 (Cover behavior is explicit)
             def_mult += CombatResolutionSystem.COVER_REDUCTION
             trace["COVER_REDUCTION"] = CombatResolutionSystem.COVER_REDUCTION
             
@@ -152,6 +156,7 @@ class CombatResolutionSystem:
         damage = CombatResolutionSystem.calculate_damage(attacker, defender, atk_mult=atk_mult, def_mult=def_mult)
         trace["FINAL_ATK_MULT"] = atk_mult
         trace["FINAL_DEF_MULT"] = def_mult
+        # Logic ID: COMB-278 (Combat result emits damage trace)
         
         # 4. Determine Outcome
         new_hp = defender.combat.hp - damage
@@ -212,6 +217,9 @@ class CombatResolutionSystem:
                      transfer_kind="KILL_REWARD",
                      is_group_required=True
                  ))
+        # Logic ID: COMB-279 (Combat result emits kill/death consequence)
+        # Logic ID: COMB-280 (Combat result emits reward/progression consequence)
+        # Logic ID: PROG-064 (XP/reward grant is authoritative and traceable)
 
         return CombatUpdate(
             damage_taken=damage,

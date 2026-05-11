@@ -1,3 +1,4 @@
+# Compliance IDs: SOC-142, STRAT-166, STRAT-169, STRAT-170, STRAT-171, STRAT-172, STRAT-173, STRAT-174, STRAT-178, STRAT-179, SUB-156
 from __future__ import annotations
 from typing import Dict
 from src.core.state import PersonalityComponent

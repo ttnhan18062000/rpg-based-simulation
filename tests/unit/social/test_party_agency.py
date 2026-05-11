@@ -6,7 +6,7 @@ import pytest
 from dataclasses import replace
 from src.core.state import AuthoritativeState, GroupRecord, EntityState, IdentityComponent, CombatComponent, StrategicComponent, InventoryComponent
 from src.core.enums import EntityRole, Faction
-from src.systems.groups import GroupSystem
+from src.systems.world_systems.groups import GroupSystem
 from src.core.updates import StateUpdate, EntityUpdate
 
 def create_mock_entity(e_id, pos=(0,0), hp=100):

@@ -2,7 +2,7 @@ import pytest
 from src.core.state import AuthoritativeState, RegionState
 from src.core.updates import StateUpdate
 from src.engine.world_dynamics import WorldDynamicsSystem
-from src.systems.generator import EntityGenerator
+from src.systems.world_systems.generator import EntityGenerator
 
 def test_world_dynamics_maturity_advancement():
     # Setup state at tick 1000 (MATURITY_INTERVAL)
@@ -85,7 +85,7 @@ def test_boss_spawn_is_idempotent_even_if_existing_boss_left_region():
 
     from src.core.builder import V2EntityBuilder
     from src.core.state import AuthoritativeState, RegionState
-    from src.systems.generator import EntityGenerator
+    from src.systems.world_systems.generator import EntityGenerator
     from src.world.boss import BossService
 
     region = RegionState(

@@ -12,8 +12,8 @@ from src.core.strategic import (
     BlockerState, LeadState, LeadCertainty, CognitionProfile
 )
 from src.systems.strategic import StrategicIntelligenceSystem
-from src.systems.detour import DetourSuggestionSystem
-from src.systems.belief import BeliefCycleSystem
+from src.systems.strategic_systems.detour import DetourSuggestionSystem
+from src.systems.strategic_systems.belief import BeliefCycleSystem
 from src.engine.pipeline import AuthoritativeApplyPipeline
 from src.core.updates import StateUpdate, EntityUpdate, TaskUpdate, NavigationUpdate
 

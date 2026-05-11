@@ -1,3 +1,4 @@
+# Compliance IDs: WORLD-035, WORLD-036, WORLD-037
 # src/world/boss.py
 from __future__ import annotations
 import math
@@ -7,7 +8,7 @@ from src.core.updates import StateUpdate
 
 if TYPE_CHECKING:
     from src.core.state import AuthoritativeState, RegionState
-    from src.systems.generator import EntityGenerator
+    from src.systems.world_systems.generator import EntityGenerator
 
 class BossService:
     """

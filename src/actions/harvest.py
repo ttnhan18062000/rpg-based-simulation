@@ -23,7 +23,7 @@ class HarvestAction:
         if node.remaining_charges <= 0 or node.cooldown_remaining > 0:
             return None
             
-        dist = abs(entity.position[0] - node.position[0]) + abs(entity.position[1] - node.position[1])
+        dist = abs(entity.navigation.position[0] - node.position[0]) + abs(entity.navigation.position[1] - node.position[1])
         if dist > 1.5:
             return None
             

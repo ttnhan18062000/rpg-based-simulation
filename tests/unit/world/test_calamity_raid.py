@@ -1,7 +1,7 @@
 import pytest
 from dataclasses import replace
 from src.core.state import AuthoritativeState, RegionState
-from src.systems.generator import EntityGenerator
+from src.systems.world_systems.generator import EntityGenerator
 from src.world.calamity import CalamityService
 from src.world.raid import RaidService
 

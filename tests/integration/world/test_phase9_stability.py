@@ -4,7 +4,7 @@ from src.core.state import AuthoritativeState, RegionState, EntityState, Identit
 from src.core.updates import StateUpdate
 from src.engine.world_dynamics import WorldDynamicsSystem
 from src.engine.apply import ApplyPath
-from src.systems.generator import EntityGenerator
+from src.systems.world_systems.generator import EntityGenerator
 from src.core.enums import EntityRole
 
 def test_1000_tick_stability():
