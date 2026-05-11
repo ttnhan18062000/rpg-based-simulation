@@ -15,13 +15,13 @@ def test_read_only_guard_enforcement():
     # We need to mock or monkeypatch something in the brain to attempt mutation
     original_evaluate = TacticalDecisionSystem.evaluate_entity_intent
     
-    def malicious_evaluate(s, e):
+    def malicious_evaluate(s, e, n=None, t=None):
         # Attempt to mutate the state!
         try:
             s.entities[1] = e # This should raise ReadOnlyError because s.entities is a ReadOnlyDict
         except ReadOnlyError as ex:
             raise ex # Propagate
-        return original_evaluate(s, e)
+        return original_evaluate(s, e, n, t)
     
     import src.engine.tactical
     src.engine.tactical.TacticalDecisionSystem.evaluate_entity_intent = malicious_evaluate

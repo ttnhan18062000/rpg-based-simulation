@@ -27,6 +27,8 @@ class TestSubstrateFreezeM1:
         profile.utilization_survival_threshold = 0.95
         profile.max_tick_budget_ms = 10.0
         profile.max_ram_mb = 1024.0
+        from src.engine.cadence import SystemCadence
+        profile.cadence = SystemCadence()
         
         state = AuthoritativeState(tick=0, seed=42)
         rng = MagicMock()

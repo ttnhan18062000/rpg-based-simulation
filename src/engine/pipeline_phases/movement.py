@@ -47,19 +47,36 @@ class MovementPhase:
         refined_entity_updates = dict(update.entity_updates)
         consumed_entities: set[int] = set()
 
-        entity_ids = sorted(state.entities.keys())
+        from src.engine.domain.view import DomainView
+        grid = DomainView._get_cached_spatial_grid(state)
 
-        for i, a_id in enumerate(entity_ids):
+        for a_id, a in state.entities.items():
             if a_id in consumed_entities:
                 continue
 
-            a = state.entities[a_id]
+            # Performance Optimization: Skip entities that are definitely not moving
+            # (No target in state AND no navigation update this tick)
+            ent_upd = refined_entity_updates.get(a_id)
+            has_nav_upd = ent_upd and ent_upd.navigation and (ent_upd.navigation.target_set or ent_upd.navigation.path_set)
+            if not a.navigation.target and not has_nav_upd:
+                continue
 
-            for b_id in entity_ids[i + 1:]:
-                if b_id in consumed_entities:
+            # Only entities that MIGHT want to move or have a swap contract are relevant.
+            # But simpler to just check neighbors within distance 1.0.
+            neighbor_ids = grid.get_neighbors(a.navigation.position, 1.1)
+            
+            for b_id in neighbor_ids:
+                if b_id == a_id or b_id in consumed_entities:
                     continue
 
                 b = state.entities[b_id]
+                
+                # Double check adjacency (Manhattan distance 1)
+                a_pos = a.navigation.position
+                b_pos = b.navigation.position
+                dist = abs(a_pos[0] - b_pos[0]) + abs(a_pos[1] - b_pos[1])
+                if dist != 1:
+                    continue
 
                 if not MovementPhase._can_attempt_position_swap_pair(
                     state,
@@ -146,6 +163,7 @@ class MovementPhase:
 
                 consumed_entities.add(a_id)
                 consumed_entities.add(b_id)
+                # Break inner loop for entity 'a' since it has swapped.
                 break
 
         return replace(
@@ -160,33 +178,49 @@ class MovementPhase:
     ) -> StateUpdate:
         """
         Route normal navigation intent via MovementSystem.
+        Optimized v2: reduced overhead for stationary entities.
         """
         refined_entity_updates = dict(update.entity_updates)
-        for e_id, entity in state.entities.items():
-            ent_upd = refined_entity_updates.get(e_id, EntityUpdate(entity_id=e_id))
+        
+        # Primary pass: entities with updates this tick.
+        for e_id, ent_upd in list(refined_entity_updates.items()):
+            entity = state.entities.get(e_id)
+            if not entity: continue
             
-            nav_target = entity.navigation.target
-            if ent_upd.navigation and ent_upd.navigation.target_set is not None:
-                nav_target = ent_upd.navigation.target_set
+            nav_target = ent_upd.navigation.target_set if (ent_upd.navigation and ent_upd.navigation.target_set is not None) else entity.navigation.target
+            if not nav_target: continue
             
-            if nav_target and (entity.navigation.position != nav_target):
-                # Only move if not already moved and not currently interacting (harvesting)
-                is_interacting = (ent_upd.interaction and ent_upd.interaction.progress_delta > 0)
-                if not ent_upd.moved_this_tick and not is_interacting:
-                    mode = entity.navigation.movement_mode
-                    if ent_upd.navigation and ent_upd.navigation.movement_mode_set is not None:
-                        mode = ent_upd.navigation.movement_mode_set
-                    move_updates = MovementSystem.resolve_move(state, entity, nav_target, mode=mode)
-                    
-                    for u_id, u_upd in move_updates.items():
-                        if u_id == e_id:
-                            # Use full merge for subject to preserve combat/readiness (Phase E5.9 Fix)
-                            merged = ent_upd.merge(u_upd)
-                            refined_entity_updates[e_id] = merged
-                        else:
-                            # Neighbor collision updates (usually just navigation stats)
-                            neighbor_upd = refined_entity_updates.get(u_id, EntityUpdate(entity_id=u_id))
-                            refined_entity_updates[u_id] = neighbor_upd.merge(u_upd)
+            # Already moved?
+            if ent_upd.moved_this_tick:
+                continue
+                
+            if entity.navigation.position != nav_target:
+                mode = ent_upd.navigation.movement_mode_set if (ent_upd.navigation and ent_upd.navigation.movement_mode_set is not None) else entity.navigation.movement_mode
+                move_updates = MovementSystem.resolve_move(state, entity, nav_target, mode=mode)
+                for u_id, u_upd in move_updates.items():
+                    if u_id == e_id:
+                        refined_entity_updates[e_id] = ent_upd.merge(u_upd)
+                    else:
+                        neighbor_upd = refined_entity_updates.get(u_id, EntityUpdate(entity_id=u_id))
+                        refined_entity_updates[u_id] = neighbor_upd.merge(u_upd)
+
+        # Secondary pass: entities that didn't have updates this tick but HAVE a target in state.
+        # This is rare but possible if they were already moving.
+        # But in IDLE_1000, most have a target but are already at it.
+        # To avoid O(N) over ALL entities, we could skip this if the target is already reached.
+        # For now, let's just make it faster by checking position vs target early.
+        
+        for e_id in sorted(state.entities.keys()):
+            entity = state.entities[e_id]
+            if e_id in refined_entity_updates: continue
+            if not entity.navigation.target: continue
+            if entity.navigation.position == entity.navigation.target: continue
+            
+            # This entity wants to move but has no update this tick.
+            move_updates = MovementSystem.resolve_move(state, entity, entity.navigation.target, mode=entity.navigation.movement_mode)
+            for u_id, u_upd in move_updates.items():
+                existing = refined_entity_updates.get(u_id, EntityUpdate(entity_id=u_id))
+                refined_entity_updates[u_id] = existing.merge(u_upd)
                             
         return replace(update, entity_updates=refined_entity_updates)
 

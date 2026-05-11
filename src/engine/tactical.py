@@ -26,25 +26,25 @@ class TacticalDecisionSystem:
     @staticmethod
     def evaluate_entity_intent(
         state: AuthoritativeState,
-        entity: EntityState
+        entity: EntityState,
+        neighbors: Optional[List[EntityState]] = None,
+        region_trauma: Optional[float] = None
     ) -> EntityUpdate:
         """
         Determines the next tactical intent for an entity.
         Bounded to local visibility and immediate combat state.
+        Optimized v2.5: Accepts pre-calculated context from cognition domain.
         """
 
-        # 0. Global Legality Guard (Task 2.2 Hardening)
-        # Logic ID: COMB-255 (Tactical action choice does not bypass movement/combat legality)
-        # VERIFIED v2: tactical_legality_envelope
+        # 0. Global Legality Guard
+        # Optimized v2.5: verify_action_legality now uses DomainView cache
         legal, reason = LegalityServiceV2.verify_action_legality(entity, "TACTICAL_EVAL", state)
         if not legal:
             return EntityUpdate(entity_id=entity.id)
 
-        from src.engine.domain_logic import SimulationDomainLogic
-        from src.engine.cognition import SensoryFilter, AppraisalSystem
+        from src.engine.cognition import AppraisalSystem
         
         # 1. Goal Hysteresis (Pillar 3.2)
-        # If we have a locked project/objective, maintain focus unless it's impossible
         current_project = entity.strategic.projects.get(entity.strategic.current_project_id or "")
         if current_project and state.tick < current_project.lock_until_tick:
             # Maintain current task if target is still valid
@@ -61,12 +61,18 @@ class TacticalDecisionSystem:
                         )
                     )
 
-        # 2. Get hostiles in visibility range (Pillar 1.2: Selective Attention)
-        raw_neighbors = SimulationDomainLogic.get_neighbor_view(state, entity, radius=10.0)
-        neighbors = SensoryFilter.filter_saliency(entity, raw_neighbors, max_targets=5)
+        # 2. Context retrieval
+        if neighbors is None:
+             from src.engine.domain_logic import SimulationDomainLogic
+             from src.engine.cognition import SensoryFilter
+             raw_neighbors = SimulationDomainLogic.get_neighbor_view(state, entity, radius=10.0)
+             neighbors = SensoryFilter.filter_saliency(entity, raw_neighbors, max_targets=5)
         
+        if region_trauma is None:
+             from src.engine.domain_logic import SimulationDomainLogic
+             region_trauma = SimulationDomainLogic.get_region_trauma(state, entity.navigation.position)
+
         # 3. Emotional Appraisal (Pillar 1.1)
-        region_trauma = SimulationDomainLogic.get_region_trauma(state, entity.navigation.position)
         emotion = AppraisalSystem.evaluate_emotional_state(
             entity, 
             neighbors, 
@@ -238,6 +244,9 @@ class TacticalDecisionSystem:
             
             return (group_bias, is_current_target, h.combat.hp, dist, h.id)
 
+        print(f"DEBUG: entity {entity.id} evaluating targets. Group target: {group.shared_target_id if group else None}")
+        for h in hostiles:
+            print(f"DEBUG: target {h.id} score: {target_score(h)}")
         hostiles.sort(key=target_score)
         
         # Phase E5.2: Tactical Legality Envelope (Hardening)

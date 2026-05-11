@@ -17,6 +17,7 @@ from src.core.enums import ReasonCode
 from src.core.update_models.inventory import InventoryUpdate
 from src.core.update_models.quests import QuestUpdate
 from src.core.update_models.resources import ResourceTransferIntent
+from src.core.dirty import DirtySet
 
 
 @dataclass(frozen=True, slots=True)
@@ -39,15 +40,25 @@ class EquipmentUpdate:
     durability_delta: Dict[EquipSlot, float] = field(default_factory=dict)
     durability_set: Dict[EquipSlot, float] = field(default_factory=dict)
 
+    def is_noop(self) -> bool:
+        return not self.slot_updates and not self.durability_delta and not self.durability_set
+
     def merge(self, other: EquipmentUpdate) -> EquipmentUpdate:
         """Merge another EquipmentUpdate into this one."""
+        if not other or other.is_noop():
+            return self
         from dataclasses import replace
-        new_slots = {**self.slot_updates, **other.slot_updates}
-        new_deltas = dict(self.durability_delta)
-        for s, d in other.durability_delta.items():
-            new_deltas[s] = new_deltas.get(s, 0.0) + d
-        new_sets = {**self.durability_set, **other.durability_set}
-        return replace(self, slot_updates=new_slots, durability_delta=new_deltas, durability_set=new_sets)
+        changes = {}
+        if other.slot_updates:
+            changes["slot_updates"] = {**self.slot_updates, **other.slot_updates}
+        if other.durability_delta:
+            new_deltas = dict(self.durability_delta)
+            for s, d in other.durability_delta.items():
+                new_deltas[s] = new_deltas.get(s, 0.0) + d
+            changes["durability_delta"] = new_deltas
+        if other.durability_set:
+            changes["durability_set"] = {**self.durability_set, **other.durability_set}
+        return replace(self, **changes)
 
 @dataclass(frozen=True, slots=True)
 class InteractionUpdate:
@@ -56,13 +67,18 @@ class InteractionUpdate:
     progress_delta: float = 0.0
     reset: bool = False
 
+    def is_noop(self) -> bool:
+        return self.target_node_id is None and self.progress_delta == 0.0 and not self.reset
+
     def merge(self, other: InteractionUpdate) -> InteractionUpdate:
+        if not other or other.is_noop():
+            return self
         from dataclasses import replace
-        return replace(self,
-            target_node_id=other.target_node_id if other.target_node_id is not None else self.target_node_id,
-            progress_delta=self.progress_delta + other.progress_delta,
-            reset=self.reset or other.reset
-        )
+        changes = {}
+        if other.target_node_id is not None: changes["target_node_id"] = other.target_node_id
+        if other.progress_delta != 0.0: changes["progress_delta"] = self.progress_delta + other.progress_delta
+        if other.reset: changes["reset"] = True
+        return replace(self, **changes)
 
 @dataclass(frozen=True, slots=True)
 class CombatIntent:
@@ -101,32 +117,41 @@ class CombatUpdate:
     strategic_upd: Optional[StrategicUpdate] = None
     trace: Dict[str, float] = field(default_factory=dict) # Breakdown of modifiers
 
+    def is_noop(self) -> bool:
+        return (self.damage_taken == 0 and self.hp_delta == 0 and self.attacker_id is None and 
+                self.alive_set is None and self.max_hp_delta == 0 and self.atk_delta == 0 and 
+                self.def_delta == 0 and self.speed_delta == 0 and self.generation_delta == 0 and 
+                not self.simultaneous_intents and not self.resource_transfers)
+
     def merge(self, other: CombatUpdate) -> CombatUpdate:
         """Merges another CombatUpdate into this one, aggregating results."""
+        if not other or other.is_noop():
+            return self
         from dataclasses import replace
-        return replace(self,
-            damage_taken=self.damage_taken + other.damage_taken,
-            hp_delta=self.hp_delta + other.hp_delta,
-            attacker_id=other.attacker_id if other.attacker_id is not None else self.attacker_id,
-            is_opportunity_attack=self.is_opportunity_attack or other.is_opportunity_attack,
-            alive_set=other.alive_set if other.alive_set is not None else self.alive_set,
-            outcome_kind=other.outcome_kind if (self.outcome_kind == "SURVIVE" or other.outcome_kind == "KILL") else self.outcome_kind,
-            is_lethal=self.is_lethal or other.is_lethal,
-            max_hp_delta=self.max_hp_delta + other.max_hp_delta,
-            atk_delta=self.atk_delta + other.atk_delta,
-            def_delta=self.def_delta + other.def_delta,
-            speed_delta=self.speed_delta + other.speed_delta,
-            generation_delta=self.generation_delta + other.generation_delta,
-            is_permadeath_set=other.is_permadeath_set if other.is_permadeath_set is not None else self.is_permadeath_set,
-            simultaneous_intents=self.simultaneous_intents + other.simultaneous_intents,
-            resource_transfers=self.resource_transfers + other.resource_transfers,
-            equipment_upd=other.equipment_upd if other.equipment_upd is not None else self.equipment_upd,
-            attacker_equipment_upd=other.attacker_equipment_upd if other.attacker_equipment_upd is not None else self.attacker_equipment_upd,
-            wound_update=other.wound_update if other.wound_update is not None else self.wound_update,
-            social_upd=self.social_upd.merge(other.social_upd) if self.social_upd and other.social_upd else (other.social_upd or self.social_upd),
-            strategic_upd=self.strategic_upd.merge(other.strategic_upd) if self.strategic_upd and other.strategic_upd else (other.strategic_upd or self.strategic_upd),
-            trace={**self.trace, **other.trace}
-        )
+        changes = {}
+        if other.damage_taken != 0: changes["damage_taken"] = self.damage_taken + other.damage_taken
+        if other.hp_delta != 0: changes["hp_delta"] = self.hp_delta + other.hp_delta
+        if other.attacker_id is not None: changes["attacker_id"] = other.attacker_id
+        if other.is_opportunity_attack: changes["is_opportunity_attack"] = True
+        if other.alive_set is not None: changes["alive_set"] = other.alive_set
+        if other.outcome_kind != "SURVIVE":
+             changes["outcome_kind"] = other.outcome_kind if (self.outcome_kind == "SURVIVE" or other.outcome_kind == "KILL") else self.outcome_kind
+        if other.is_lethal: changes["is_lethal"] = True
+        if other.max_hp_delta != 0: changes["max_hp_delta"] = self.max_hp_delta + other.max_hp_delta
+        if other.atk_delta != 0: changes["atk_delta"] = self.atk_delta + other.atk_delta
+        if other.def_delta != 0: changes["def_delta"] = self.def_delta + other.def_delta
+        if other.speed_delta != 0: changes["speed_delta"] = self.speed_delta + other.speed_delta
+        if other.generation_delta != 0: changes["generation_delta"] = self.generation_delta + other.generation_delta
+        if other.is_permadeath_set is not None: changes["is_permadeath_set"] = other.is_permadeath_set
+        if other.simultaneous_intents: changes["simultaneous_intents"] = self.simultaneous_intents + other.simultaneous_intents
+        if other.resource_transfers: changes["resource_transfers"] = self.resource_transfers + other.resource_transfers
+        if other.equipment_upd: changes["equipment_upd"] = other.equipment_upd
+        if other.attacker_equipment_upd: changes["attacker_equipment_upd"] = other.attacker_equipment_upd
+        if other.wound_update: changes["wound_update"] = other.wound_update
+        if other.social_upd: changes["social_upd"] = self.social_upd.merge(other.social_upd) if self.social_upd else other.social_upd
+        if other.strategic_upd: changes["strategic_upd"] = self.strategic_upd.merge(other.strategic_upd) if self.strategic_upd else other.strategic_upd
+        if other.trace: changes["trace"] = {**self.trace, **other.trace}
+        return replace(self, **changes)
 
 @dataclass(frozen=True, slots=True)
 class NavigationUpdate:
@@ -145,21 +170,30 @@ class NavigationUpdate:
     oscillation_count_delta: int = 0
     last_position_set: Optional[tuple[float, float]] = None
 
+    def is_noop(self) -> bool:
+        return (self.target_set is None and not self.target_clear and self.path_set is None and 
+                self.moved_recently_set is None and self.movement_mode_set is None and 
+                self.failure_reason is None and not self.clear_target and not self.clear_path and 
+                self.wait_count_delta == 0 and self.oscillation_count_delta == 0 and 
+                self.last_position_set is None)
+
     def merge(self, other: NavigationUpdate) -> NavigationUpdate:
+        if not other or other.is_noop():
+            return self
         from dataclasses import replace
-        return replace(self,
-            target_set=other.target_set if other.target_set is not None else self.target_set,
-            target_clear=self.target_clear or other.target_clear,
-            path_set=other.path_set if other.path_set is not None else self.path_set,
-            moved_recently_set=other.moved_recently_set if other.moved_recently_set is not None else self.moved_recently_set,
-            movement_mode_set=other.movement_mode_set if other.movement_mode_set is not None else self.movement_mode_set,
-            failure_reason=other.failure_reason if other.failure_reason is not None else self.failure_reason,
-            clear_target=self.clear_target or other.clear_target,
-            clear_path=self.clear_path or other.clear_path,
-            wait_count_delta=self.wait_count_delta + other.wait_count_delta,
-            oscillation_count_delta=self.oscillation_count_delta + other.oscillation_count_delta,
-            last_position_set=other.last_position_set if other.last_position_set is not None else self.last_position_set
-        )
+        changes = {}
+        if other.target_set is not None: changes["target_set"] = other.target_set
+        if other.target_clear: changes["target_clear"] = True
+        if other.path_set is not None: changes["path_set"] = other.path_set
+        if other.moved_recently_set is not None: changes["moved_recently_set"] = other.moved_recently_set
+        if other.movement_mode_set is not None: changes["movement_mode_set"] = other.movement_mode_set
+        if other.failure_reason is not None: changes["failure_reason"] = other.failure_reason
+        if other.clear_target: changes["clear_target"] = True
+        if other.clear_path: changes["clear_path"] = True
+        if other.wait_count_delta != 0: changes["wait_count_delta"] = self.wait_count_delta + other.wait_count_delta
+        if other.oscillation_count_delta != 0: changes["oscillation_count_delta"] = self.oscillation_count_delta + other.oscillation_count_delta
+        if other.last_position_set is not None: changes["last_position_set"] = other.last_position_set
+        return replace(self, **changes)
 
 @dataclass(frozen=True, slots=True)
 class TaskUpdate:
@@ -167,15 +201,20 @@ class TaskUpdate:
     work_kind_set: Optional[str] = None
     payload_set: Optional[Dict[str, Any]] = None
 
+    def is_noop(self) -> bool:
+        return self.work_kind_set is None and not self.payload_set
+
     def merge(self, other: TaskUpdate) -> TaskUpdate:
+        if not other or other.is_noop():
+            return self
         from dataclasses import replace
-        new_payload = dict(self.payload_set or {})
+        changes = {}
+        if other.work_kind_set is not None: changes["work_kind_set"] = other.work_kind_set
         if other.payload_set:
+            new_payload = dict(self.payload_set or {})
             new_payload.update(other.payload_set)
-        return replace(self,
-            work_kind_set=other.work_kind_set if other.work_kind_set is not None else self.work_kind_set,
-            payload_set=new_payload if new_payload else None
-        )
+            changes["payload_set"] = new_payload
+        return replace(self, **changes)
     
 @dataclass(frozen=True, slots=True)
 class IdentityUpdate:
@@ -195,24 +234,34 @@ class IdentityUpdate:
     traits_remove: list[str] = field(default_factory=list)
     cooldown_updates: Dict[str, int] = field(default_factory=dict) # skill_id -> tick_ready
     
+    def is_noop(self) -> bool:
+        return (self.role_set is None and self.faction_set is None and not self.recipes_learned and 
+                self.craft_target is None and self.evolution_level_set is None and 
+                self.evolution_points_delta == 0 and self.veterancy_points_delta == 0 and 
+                not self.breakthroughs_add and self.unspent_ap_delta == 0 and 
+                self.unspent_ap_set is None and not self.learned_skills and 
+                not self.traits_add and not self.traits_remove and not self.cooldown_updates)
+
     def merge(self, other: IdentityUpdate) -> IdentityUpdate:
+        if not other or other.is_noop():
+            return self
         from dataclasses import replace
-        return replace(self,
-            role_set=other.role_set if other.role_set is not None else self.role_set,
-            faction_set=other.faction_set if other.faction_set is not None else self.faction_set,
-            recipes_learned=list(set(self.recipes_learned + other.recipes_learned)),
-            craft_target=other.craft_target if other.craft_target is not None else self.craft_target,
-            evolution_level_set=other.evolution_level_set if other.evolution_level_set is not None else self.evolution_level_set,
-            evolution_points_delta=self.evolution_points_delta + other.evolution_points_delta,
-            veterancy_points_delta=self.veterancy_points_delta + other.veterancy_points_delta,
-            breakthroughs_add=list(set(self.breakthroughs_add + other.breakthroughs_add)),
-            unspent_ap_delta=self.unspent_ap_delta + other.unspent_ap_delta,
-            unspent_ap_set=other.unspent_ap_set if other.unspent_ap_set is not None else self.unspent_ap_set,
-            learned_skills=list(set(self.learned_skills + other.learned_skills)),
-            traits_add=list(set(self.traits_add + other.traits_add)),
-            traits_remove=list(set(self.traits_remove + other.traits_remove)),
-            cooldown_updates={**self.cooldown_updates, **other.cooldown_updates}
-        )
+        changes = {}
+        if other.role_set is not None: changes["role_set"] = other.role_set
+        if other.faction_set is not None: changes["faction_set"] = other.faction_set
+        if other.recipes_learned: changes["recipes_learned"] = list(set(self.recipes_learned + other.recipes_learned))
+        if other.craft_target is not None: changes["craft_target"] = other.craft_target
+        if other.evolution_level_set is not None: changes["evolution_level_set"] = other.evolution_level_set
+        if other.evolution_points_delta != 0: changes["evolution_points_delta"] = self.evolution_points_delta + other.evolution_points_delta
+        if other.veterancy_points_delta != 0: changes["veterancy_points_delta"] = self.veterancy_points_delta + other.veterancy_points_delta
+        if other.breakthroughs_add: changes["breakthroughs_add"] = list(set(self.breakthroughs_add + other.breakthroughs_add))
+        if other.unspent_ap_delta != 0: changes["unspent_ap_delta"] = self.unspent_ap_delta + other.unspent_ap_delta
+        if other.unspent_ap_set is not None: changes["unspent_ap_set"] = other.unspent_ap_set
+        if other.learned_skills: changes["learned_skills"] = list(set(self.learned_skills + other.learned_skills))
+        if other.traits_add: changes["traits_add"] = list(set(self.traits_add + other.traits_add))
+        if other.traits_remove: changes["traits_remove"] = list(set(self.traits_remove + other.traits_remove))
+        if other.cooldown_updates: changes["cooldown_updates"] = {**self.cooldown_updates, **other.cooldown_updates}
+        return replace(self, **changes)
 
 @dataclass(frozen=True, slots=True)
 class SocialBondUpdate:
@@ -250,9 +299,20 @@ class SocialUpdate:
     contracts_add: List[ContractState] = field(default_factory=list)
     contracts_remove: List[str] = field(default_factory=list) # IDs
     
+    def is_noop(self) -> bool:
+        return (not self.bond_updates and not self.trust_delta and not self.familiarity_delta and 
+                not self.debt_delta and not self.fear_delta and not self.grudge_delta and 
+                not self.salience_delta and self.betrayal_increment == 0 and 
+                not self.betrayal_records_add and self.reputation_set is None and 
+                self.heroism_delta == 0.0 and self.notoriety_delta == 0.0 and 
+                self.last_offer_tick_set is None and not self.rejection_increment and 
+                not self.nemesis_promotion and not self.place_attachment_delta and 
+                not self.contracts_add and not self.contracts_remove)
+
     def merge(self, other: SocialUpdate) -> SocialUpdate:
         """Merges another SocialUpdate into this one."""
-        from dataclasses import replace
+        if not other or other.is_noop():
+            return self
         
         # Merge dictionaries by summing values
         new_trust = dict(self.trust_delta)
@@ -267,15 +327,23 @@ class SocialUpdate:
         for k, v in other.place_attachment_delta.items():
             new_places[k] = new_places.get(k, 0.0) + v
 
-        return replace(self,
+        return SocialUpdate(
             bond_updates=self.bond_updates + other.bond_updates,
             trust_delta=new_trust,
+            familiarity_delta={**self.familiarity_delta, **other.familiarity_delta},
+            debt_delta={**self.debt_delta, **other.debt_delta},
+            fear_delta={**self.fear_delta, **other.fear_delta},
             grudge_delta=new_grudge,
-            nemesis_promotion=self.nemesis_promotion + other.nemesis_promotion,
-            place_attachment_delta=new_places,
+            salience_delta={**self.salience_delta, **other.salience_delta},
             betrayal_increment=self.betrayal_increment + other.betrayal_increment,
+            betrayal_records_add=self.betrayal_records_add + other.betrayal_records_add,
+            reputation_set=other.reputation_set if other.reputation_set is not None else self.reputation_set,
             heroism_delta=self.heroism_delta + other.heroism_delta,
             notoriety_delta=self.notoriety_delta + other.notoriety_delta,
+            last_offer_tick_set=other.last_offer_tick_set if other.last_offer_tick_set is not None else self.last_offer_tick_set,
+            rejection_increment={**self.rejection_increment, **other.rejection_increment},
+            nemesis_promotion=self.nemesis_promotion + other.nemesis_promotion,
+            place_attachment_delta=new_places,
             contracts_add=self.contracts_add + other.contracts_add,
             contracts_remove=self.contracts_remove + other.contracts_remove
         )
@@ -292,9 +360,16 @@ class BiologicalUpdate:
     last_sleep_tick_set: Optional[int] = None
     well_rested_until_set: Optional[int] = None
     
+    def is_noop(self) -> bool:
+        return (self.sleep_debt_delta == 0.0 and self.sleep_debt_set is None and 
+                self.hunger_delta == 0.0 and self.hunger_set is None and 
+                self.rest_pressure_delta == 0.0 and self.last_meal_tick_set is None and 
+                self.last_sleep_tick_set is None and self.well_rested_until_set is None)
+
     def merge(self, other: BiologicalUpdate) -> BiologicalUpdate:
-        from dataclasses import replace
-        return replace(self,
+        if not other or other.is_noop():
+            return self
+        return BiologicalUpdate(
             sleep_debt_delta=self.sleep_debt_delta + other.sleep_debt_delta,
             sleep_debt_set=other.sleep_debt_set if other.sleep_debt_set is not None else self.sleep_debt_set,
             hunger_delta=self.hunger_delta + other.hunger_delta,
@@ -305,7 +380,6 @@ class BiologicalUpdate:
             well_rested_until_set=other.well_rested_until_set if other.well_rested_until_set is not None else self.well_rested_until_set
         )
     
-
 @dataclass(frozen=True, slots=True)
 class AttributeUpdate:
     """Updates to base attributes."""
@@ -319,19 +393,27 @@ class AttributeUpdate:
     perception_delta: int = 0
     charisma_delta: int = 0
     
+    def is_noop(self) -> bool:
+        return (self.strength_delta == 0 and self.agility_delta == 0 and self.vitality_delta == 0 and 
+                self.endurance_delta == 0 and self.intelligence_delta == 0 and 
+                self.spirit_delta == 0 and self.wisdom_delta == 0 and 
+                self.perception_delta == 0 and self.charisma_delta == 0)
+
     def merge(self, other: AttributeUpdate) -> AttributeUpdate:
+        if not other or other.is_noop():
+            return self
         from dataclasses import replace
-        return replace(self,
-            strength_delta=self.strength_delta + other.strength_delta,
-            agility_delta=self.agility_delta + other.agility_delta,
-            vitality_delta=self.vitality_delta + other.vitality_delta,
-            endurance_delta=self.endurance_delta + other.endurance_delta,
-            intelligence_delta=self.intelligence_delta + other.intelligence_delta,
-            spirit_delta=self.spirit_delta + other.spirit_delta,
-            wisdom_delta=self.wisdom_delta + other.wisdom_delta,
-            perception_delta=self.perception_delta + other.perception_delta,
-            charisma_delta=self.charisma_delta + other.charisma_delta
-        )
+        changes = {}
+        if other.strength_delta != 0: changes["strength_delta"] = self.strength_delta + other.strength_delta
+        if other.agility_delta != 0: changes["agility_delta"] = self.agility_delta + other.agility_delta
+        if other.vitality_delta != 0: changes["vitality_delta"] = self.vitality_delta + other.vitality_delta
+        if other.endurance_delta != 0: changes["endurance_delta"] = self.endurance_delta + other.endurance_delta
+        if other.intelligence_delta != 0: changes["intelligence_delta"] = self.intelligence_delta + other.intelligence_delta
+        if other.spirit_delta != 0: changes["spirit_delta"] = self.spirit_delta + other.spirit_delta
+        if other.wisdom_delta != 0: changes["wisdom_delta"] = self.wisdom_delta + other.wisdom_delta
+        if other.perception_delta != 0: changes["perception_delta"] = self.perception_delta + other.perception_delta
+        if other.charisma_delta != 0: changes["charisma_delta"] = self.charisma_delta + other.charisma_delta
+        return replace(self, **changes)
 
 @dataclass(frozen=True, slots=True)
 class LifecycleUpdate:
@@ -344,19 +426,25 @@ class LifecycleUpdate:
     heir_entity_id_set: Optional[int] = None
     heirlooms_add: list[str] = field(default_factory=list)
 
+    def is_noop(self) -> bool:
+        return (self.age_delta == 0 and self.generation_delta == 0 and 
+                self.is_permadeath_set is None and self.death_tick_set is None and 
+                self.death_reason_set is None and self.heir_entity_id_set is None and 
+                not self.heirlooms_add)
+
     def merge(self, other: LifecycleUpdate) -> LifecycleUpdate:
+        if not other or other.is_noop():
+            return self
         from dataclasses import replace
-        return replace(self,
-            age_delta=self.age_delta + other.age_delta,
-            generation_delta=self.generation_delta + other.generation_delta,
-            is_permadeath_set=other.is_permadeath_set if other.is_permadeath_set is not None else self.is_permadeath_set,
-            death_tick_set=other.death_tick_set if other.death_tick_set is not None else self.death_tick_set,
-            death_reason_set=other.death_reason_set if other.death_reason_set is not None else self.death_reason_set,
-            heir_entity_id_set=other.heir_entity_id_set if other.heir_entity_id_set is not None else self.heir_entity_id_set,
-            heirlooms_add=self.heirlooms_add + other.heirlooms_add
-        )
-
-
+        changes = {}
+        if other.age_delta != 0: changes["age_delta"] = self.age_delta + other.age_delta
+        if other.generation_delta != 0: changes["generation_delta"] = self.generation_delta + other.generation_delta
+        if other.is_permadeath_set is not None: changes["is_permadeath_set"] = other.is_permadeath_set
+        if other.death_tick_set is not None: changes["death_tick_set"] = other.death_tick_set
+        if other.death_reason_set is not None: changes["death_reason_set"] = other.death_reason_set
+        if other.heir_entity_id_set is not None: changes["heir_entity_id_set"] = other.heir_entity_id_set
+        if other.heirlooms_add: changes["heirlooms_add"] = self.heirlooms_add + other.heirlooms_add
+        return replace(self, **changes)
 
 @dataclass(frozen=True, slots=True)
 class RewardUpdate:
@@ -368,12 +456,17 @@ class RewardUpdate:
     xp_gain: int = 0
     evolution_points_delta: int = 0
     
+    def is_noop(self) -> bool:
+        return self.xp_gain == 0 and self.evolution_points_delta == 0
+
     def merge(self, other: RewardUpdate) -> RewardUpdate:
+        if not other or other.is_noop():
+            return self
         from dataclasses import replace
-        return replace(self,
-            xp_gain=self.xp_gain + other.xp_gain,
-            evolution_points_delta=self.evolution_points_delta + other.evolution_points_delta
-        )
+        changes = {}
+        if other.xp_gain != 0: changes["xp_gain"] = self.xp_gain + other.xp_gain
+        if other.evolution_points_delta != 0: changes["evolution_points_delta"] = self.evolution_points_delta + other.evolution_points_delta
+        return replace(self, **changes)
 
 @dataclass(frozen=True, slots=True)
 class StrategicUpdate:
@@ -414,15 +507,31 @@ class StrategicUpdate:
     overload_source_set: Optional[str] = None
     overload_tick_set: Optional[int] = None
 
+    def is_noop(self) -> bool:
+        return (not self.blockers_add_or_update and not self.blockers_remove and 
+                not self.leads_add_or_update and not self.leads_remove and 
+                not self.directives_add_or_update and not self.directives_remove and 
+                not self.projects_add_or_update and not self.projects_remove and 
+                self.current_project_id_set is None and self.current_objective_id_set is None and 
+                not self.boredom_delta and not self.concerns_add_or_update and 
+                not self.concerns_remove and not self.candidate_zones_add_or_update and 
+                not self.candidate_zones_remove and not self.hypotheses_add_or_update and 
+                not self.hypotheses_remove and not self.source_trust_updates and 
+                not self.contracts_add_or_update and not self.contracts_remove and 
+                not self.turning_points_add and self.overload_source_set is None and 
+                self.overload_tick_set is None)
+
     def merge(self, other: StrategicUpdate) -> StrategicUpdate:
         """Merges another StrategicUpdate into this one."""
-        from dataclasses import replace
+        if not other or other.is_noop():
+            return self
+            
         # Dictionaries sum deltas
         new_boredom = dict(self.boredom_delta)
         for k, v in other.boredom_delta.items():
             new_boredom[k] = new_boredom.get(k, 0.0) + v
             
-        return replace(self,
+        return StrategicUpdate(
             blockers_add_or_update=self.blockers_add_or_update + other.blockers_add_or_update,
             blockers_remove=self.blockers_remove + other.blockers_remove,
             leads_add_or_update=self.leads_add_or_update + other.leads_add_or_update,
@@ -455,13 +564,18 @@ class StaminaUpdate:
     current_set: Optional[float] = None
     max_stamina_set: Optional[float] = None
 
+    def is_noop(self) -> bool:
+        return self.current_delta == 0.0 and self.current_set is None and self.max_stamina_set is None
+
     def merge(self, other: StaminaUpdate) -> StaminaUpdate:
+        if not other or other.is_noop():
+            return self
         from dataclasses import replace
-        return replace(self,
-            current_delta=self.current_delta + other.current_delta,
-            current_set=other.current_set if other.current_set is not None else self.current_set,
-            max_stamina_set=other.max_stamina_set if other.max_stamina_set is not None else self.max_stamina_set
-        )
+        changes = {}
+        if other.current_delta != 0.0: changes["current_delta"] = self.current_delta + other.current_delta
+        if other.current_set is not None: changes["current_set"] = other.current_set
+        if other.max_stamina_set is not None: changes["max_stamina_set"] = other.max_stamina_set
+        return replace(self, **changes)
 
 @dataclass(frozen=True, slots=True)
 class WoundUpdate:
@@ -470,13 +584,18 @@ class WoundUpdate:
     wounds_heal: List[str] = field(default_factory=list)  # wound IDs to heal
     scars_add: List[ScarState] = field(default_factory=list)
 
+    def is_noop(self) -> bool:
+        return not self.wounds_add and not self.wounds_heal and not self.scars_add
+
     def merge(self, other: WoundUpdate) -> WoundUpdate:
+        if not other or other.is_noop():
+            return self
         from dataclasses import replace
-        return replace(self,
-            wounds_add=self.wounds_add + other.wounds_add,
-            wounds_heal=self.wounds_heal + other.wounds_heal,
-            scars_add=self.scars_add + other.scars_add
-        )
+        changes = {}
+        if other.wounds_add: changes["wounds_add"] = self.wounds_add + other.wounds_add
+        if other.wounds_heal: changes["wounds_heal"] = self.wounds_heal + other.wounds_heal
+        if other.scars_add: changes["scars_add"] = self.scars_add + other.scars_add
+        return replace(self, **changes)
 
 @dataclass(frozen=True, slots=True)
 class EntityUpdate:
@@ -512,40 +631,63 @@ class EntityUpdate:
     intent_results: List[IntentResult] = field(default_factory=list)
     property_updates: Dict[str, Any] = field(default_factory=dict)
 
+    def is_noop(self) -> bool:
+        return (self.kind_set is None and self.new_position is None and 
+                not self.moved_this_tick and self.readiness_delta == 0.0 and 
+                self.active is None and (self.interaction is None or self.interaction.is_noop()) and 
+                not self.resource_transfers and (self.identity is None or self.identity.is_noop()) and 
+                (self.attributes is None or self.attributes.is_noop()) and 
+                (self.inventory is None or self.inventory.is_noop()) and 
+                (self.strategic is None or self.strategic.is_noop()) and 
+                (self.biological is None or self.biological.is_noop()) and 
+                (self.social is None or self.social.is_noop()) and 
+                (self.quest is None or self.quest.is_noop()) and 
+                (self.reward is None or self.reward.is_noop()) and 
+                (self.lifecycle is None or self.lifecycle.is_noop()) and 
+                (self.combat is None or self.combat.is_noop()) and 
+                (self.equipment is None or self.equipment.is_noop()) and 
+                (self.navigation is None or self.navigation.is_noop()) and 
+                (self.task is None or self.task.is_noop()) and 
+                (self.stamina_update is None or self.stamina_update.is_noop()) and 
+                (self.wound_update is None or self.wound_update.is_noop()) and 
+                self.group_id_set is None and not self.intent_results and 
+                not self.property_updates)
+
     def merge(self, other: EntityUpdate) -> EntityUpdate:
         """Merges another EntityUpdate into this one, summing deltas and preferring non-None sets."""
-        from dataclasses import replace
+        if not other or other.is_noop():
+            return self
         if self.entity_id != other.entity_id:
             raise ValueError("Cannot merge EntityUpdates for different entities")
             
-        res = replace(self,
-            kind_set=other.kind_set if other.kind_set is not None else self.kind_set,
-            new_position=other.new_position if other.new_position is not None else self.new_position,
-            moved_this_tick=self.moved_this_tick or other.moved_this_tick,
-            readiness_delta=self.readiness_delta + other.readiness_delta,
-            active=other.active if other.active is not None else self.active,
-            interaction=other.interaction if other.interaction is not None else self.interaction,
-            resource_transfers=self.resource_transfers + other.resource_transfers,
-            identity=self.identity.merge(other.identity) if self.identity and other.identity else (other.identity or self.identity),
-            attributes=self.attributes.merge(other.attributes) if self.attributes and other.attributes else (other.attributes or self.attributes),
-            inventory=self.inventory.merge(other.inventory) if self.inventory and other.inventory else (other.inventory or self.inventory),
-            strategic=self.strategic.merge(other.strategic) if self.strategic and other.strategic else (other.strategic or self.strategic),
-            biological=self.biological.merge(other.biological) if self.biological and other.biological else (other.biological or self.biological),
-            social=self.social.merge(other.social) if self.social and other.social else (other.social or self.social),
-            quest=self.quest.merge(other.quest) if self.quest and other.quest else (other.quest or self.quest),
-            reward=self.reward.merge(other.reward) if self.reward and other.reward else (other.reward or self.reward),
-            lifecycle=self.lifecycle.merge(other.lifecycle) if self.lifecycle and other.lifecycle else (other.lifecycle or self.lifecycle),
-            combat=self.combat.merge(other.combat) if self.combat and other.combat else (other.combat or self.combat),
-            equipment=self.equipment.merge(other.equipment) if self.equipment and other.equipment else (other.equipment or self.equipment),
-            navigation=self.navigation.merge(other.navigation) if self.navigation and other.navigation else (other.navigation or self.navigation),
-            task=self.task.merge(other.task) if self.task and other.task else (other.task or self.task),
-            stamina_update=self.stamina_update.merge(other.stamina_update) if self.stamina_update and other.stamina_update else (other.stamina_update or self.stamina_update),
-            wound_update=self.wound_update.merge(other.wound_update) if self.wound_update and other.wound_update else (other.wound_update or self.wound_update),
-            group_id_set=other.group_id_set if other.group_id_set is not None else self.group_id_set,
-            intent_results=self.intent_results + other.intent_results,
-            property_updates={**self.property_updates, **other.property_updates}
-        )
-        return res
+        from dataclasses import replace
+        changes = {}
+        if other.kind_set is not None: changes["kind_set"] = other.kind_set
+        if other.new_position is not None: changes["new_position"] = other.new_position
+        if other.moved_this_tick: changes["moved_this_tick"] = True
+        if other.readiness_delta != 0.0: changes["readiness_delta"] = self.readiness_delta + other.readiness_delta
+        if other.active is not None: changes["active"] = other.active
+        if other.interaction: changes["interaction"] = self.interaction.merge(other.interaction) if self.interaction else other.interaction
+        if other.resource_transfers: changes["resource_transfers"] = self.resource_transfers + other.resource_transfers
+        if other.identity: changes["identity"] = self.identity.merge(other.identity) if self.identity else other.identity
+        if other.attributes: changes["attributes"] = self.attributes.merge(other.attributes) if self.attributes else other.attributes
+        if other.inventory: changes["inventory"] = self.inventory.merge(other.inventory) if self.inventory else other.inventory
+        if other.strategic: changes["strategic"] = self.strategic.merge(other.strategic) if self.strategic else other.strategic
+        if other.biological: changes["biological"] = self.biological.merge(other.biological) if self.biological else other.biological
+        if other.social: changes["social"] = self.social.merge(other.social) if self.social else other.social
+        if other.quest: changes["quest"] = self.quest.merge(other.quest) if self.quest else other.quest
+        if other.reward: changes["reward"] = self.reward.merge(other.reward) if self.reward else other.reward
+        if other.lifecycle: changes["lifecycle"] = self.lifecycle.merge(other.lifecycle) if self.lifecycle else other.lifecycle
+        if other.combat: changes["combat"] = self.combat.merge(other.combat) if self.combat else other.combat
+        if other.equipment: changes["equipment"] = self.equipment.merge(other.equipment) if self.equipment else other.equipment
+        if other.navigation: changes["navigation"] = self.navigation.merge(other.navigation) if self.navigation else other.navigation
+        if other.task: changes["task"] = self.task.merge(other.task) if self.task else other.task
+        if other.stamina_update: changes["stamina_update"] = self.stamina_update.merge(other.stamina_update) if self.stamina_update else other.stamina_update
+        if other.wound_update: changes["wound_update"] = self.wound_update.merge(other.wound_update) if self.wound_update else other.wound_update
+        if other.group_id_set is not None: changes["group_id_set"] = other.group_id_set
+        if other.intent_results: changes["intent_results"] = self.intent_results + other.intent_results
+        if other.property_updates: changes["property_updates"] = {**self.property_updates, **other.property_updates}
+        return replace(self, **changes)
 
 
 @dataclass(frozen=True, slots=True)
@@ -661,9 +803,186 @@ class StateUpdate:
     pressure_signals_set: Optional[Dict[str, float]] = None
     current_mode_set: Optional[RuntimeMode] = None
     rejection_events: List[RejectionEvent] = field(default_factory=list) # Detailed rejection audit
-    processed_transaction_ids: set[str] = field(default_factory=set)
+    processed_transaction_ids: List[str] = field(default_factory=list)
     next_node_id_set: Optional[int] = None
     next_entity_id_set: Optional[int] = None
+    dirty_set: Optional[DirtySet] = None
+
+    def is_noop(self) -> bool:
+        """True if this update contains absolutely no changes."""
+        return (not self.entity_updates and not self.entities_add and not self.entities_remove and 
+                not self.nodes_add and not self.node_updates and not self.ground_items_add_or_update and 
+                not self.ground_items_remove and not self.corpses_add_or_update and 
+                not self.corpses_remove and not self.scars_add_or_update and 
+                not self.scars_remove and not self.chest_updates and 
+                not self.chest_add_or_update and not self.building_updates and 
+                not self.camp_updates and not self.world_updates and 
+                not self.resource_updates and not self.home_storage_updates and 
+                not self.periodic_updates and not self.work_debt_updates and 
+                not self.groups_add_or_update and not self.groups_remove and 
+                self.maturity_set is None and self.last_calamity_tick_set is None and 
+                self.rng_checkpoint is None and not self.transaction_trace and 
+                not self.rejections_delta and self.pressure_signals_set is None and 
+                self.current_mode_set is None and not self.rejection_events and 
+                not self.processed_transaction_ids and self.next_node_id_set is None and 
+                self.next_entity_id_set is None)
+    def merge(self, other: StateUpdate) -> StateUpdate:
+        """Merge another StateUpdate into this one."""
+        if not other or other.is_noop():
+            return self
+        return self.merge_many([other])
+
+    def merge_many(self, others: Iterable[StateUpdate]) -> StateUpdate:
+        """
+        Merge multiple updates into this one with minimal intermediate allocations.
+        Logic ID: TOWN-204 (Batch merge optimization)
+        """
+        # Filter no-ops
+        valid_others = [o for o in others if o and not o.is_noop()]
+        if not valid_others:
+            return self
+
+        from dataclasses import replace
+        
+        # 1. Merge dictionaries
+        new_entity_updates = dict(self.entity_updates)
+        new_world_updates = dict(self.world_updates)
+        new_node_updates = dict(self.node_updates)
+        new_building_updates = dict(self.building_updates)
+        new_camp_updates = dict(self.camp_updates)
+        new_chest_updates = dict(self.chest_updates)
+        new_home_storage_updates = dict(self.home_storage_updates)
+        new_rejections_delta = dict(self.rejections_delta)
+        new_resource_updates = dict(self.resource_updates)
+        new_periodic_updates = dict(self.periodic_updates)
+        new_work_debt_updates = dict(self.work_debt_updates)
+
+        # Non-dict collections
+        new_entities_add = list(self.entities_add)
+        new_entities_remove = set(self.entities_remove)
+        new_nodes_add = list(self.nodes_add)
+        new_groups_add_or_update = list(self.groups_add_or_update)
+        new_groups_remove = set(self.groups_remove)
+        new_ground_items_add_or_update = list(self.ground_items_add_or_update)
+        new_ground_items_remove = set(self.ground_items_remove)
+        new_corpses_add_or_update = list(self.corpses_add_or_update)
+        new_corpses_remove = set(self.corpses_remove)
+        new_chest_add_or_update = list(self.chest_add_or_update)
+        new_scars_add_or_update = list(self.scars_add_or_update)
+        new_scars_remove = set(self.scars_remove)
+        new_trace = list(self.transaction_trace)
+        new_processed_ids = set(self.processed_transaction_ids)
+        new_rejection_events = list(self.rejection_events)
+
+        # Single values
+        maturity = self.maturity_set
+        calamity = self.last_calamity_tick_set
+        node_id = self.next_node_id_set
+        ent_id = self.next_entity_id_set
+        rng = self.rng_checkpoint
+        pressure = self.pressure_signals_set
+        mode = self.current_mode_set
+        dirty = self.dirty_set
+
+        for other in valid_others:
+            # Dictionaries
+            for e_id, upd in other.entity_updates.items():
+                new_entity_updates[e_id] = new_entity_updates[e_id].merge(upd) if e_id in new_entity_updates else upd
+            for r_id, upd in other.world_updates.items():
+                new_world_updates[r_id] = new_world_updates[r_id].merge(upd) if r_id in new_world_updates else upd
+            for n_id, upd in other.node_updates.items():
+                new_node_updates[n_id] = new_node_updates[n_id].merge(upd) if n_id in new_node_updates else upd
+            for b_id, upd in other.building_updates.items():
+                new_building_updates[b_id] = new_building_updates[b_id].merge(upd) if b_id in new_building_updates else upd
+            for c_id, upd in other.camp_updates.items():
+                new_camp_updates[c_id] = new_camp_updates[c_id].merge(upd) if c_id in new_camp_updates else upd
+            for ch_id, upd in other.chest_updates.items():
+                new_chest_updates[ch_id] = new_chest_updates[ch_id].merge(upd) if ch_id in new_chest_updates else upd
+            for s_id, upd in other.home_storage_updates.items():
+                new_home_storage_updates[s_id] = new_home_storage_updates[s_id].merge(upd) if s_id in new_home_storage_updates else upd
+            for k, v in other.rejections_delta.items():
+                new_rejections_delta[k] = new_rejections_delta.get(k, 0) + v
+            for k, v in other.resource_updates.items():
+                new_resource_updates[k] = new_resource_updates.get(k, 0.0) + v
+            for k, v in other.periodic_updates.items():
+                new_periodic_updates[k] = v
+            for k, v in other.work_debt_updates.items():
+                new_work_debt_updates[k] = new_work_debt_updates.get(k, 0) + v
+
+            # Lists / Sets
+            new_entities_add.extend(other.entities_add)
+            new_entities_remove.update(other.entities_remove)
+            new_nodes_add.extend(other.nodes_add)
+            new_groups_add_or_update.extend(other.groups_add_or_update)
+            new_groups_remove.update(other.groups_remove)
+            new_ground_items_add_or_update.extend(other.ground_items_add_or_update)
+            new_ground_items_remove.update(other.ground_items_remove)
+            new_corpses_add_or_update.extend(other.corpses_add_or_update)
+            new_corpses_remove.update(other.corpses_remove)
+            new_chest_add_or_update.extend(other.chest_add_or_update)
+            new_scars_add_or_update.extend(other.scars_add_or_update)
+            new_scars_remove.update(other.scars_remove)
+            new_trace.extend(other.transaction_trace)
+            new_processed_ids.update(other.processed_transaction_ids)
+            new_rejection_events.extend(other.rejection_events)
+
+            # Single values
+            if other.maturity_set is not None: maturity = other.maturity_set
+            if other.last_calamity_tick_set is not None: calamity = other.last_calamity_tick_set
+            if other.next_node_id_set is not None: node_id = other.next_node_id_set
+            if other.next_entity_id_set is not None: ent_id = other.next_entity_id_set
+            if other.rng_checkpoint: rng = other.rng_checkpoint
+            if other.pressure_signals_set is not None: pressure = other.pressure_signals_set
+            if other.current_mode_set is not None: mode = other.current_mode_set
+            if other.dirty_set: dirty = dirty.merge(other.dirty_set) if dirty else other.dirty_set
+
+        return replace(self,
+            entity_updates=new_entity_updates,
+            world_updates=new_world_updates,
+            node_updates=new_node_updates,
+            building_updates=new_building_updates,
+            camp_updates=new_camp_updates,
+            chest_updates=new_chest_updates,
+            home_storage_updates=new_home_storage_updates,
+            rejections_delta=new_rejections_delta,
+            resource_updates=new_resource_updates,
+            periodic_updates=new_periodic_updates,
+            work_debt_updates=new_work_debt_updates,
+            entities_add=new_entities_add,
+            entities_remove=list(new_entities_remove),
+            nodes_add=new_nodes_add,
+            groups_add_or_update=new_groups_add_or_update,
+            groups_remove=list(new_groups_remove),
+            ground_items_add_or_update=new_ground_items_add_or_update,
+            ground_items_remove=list(new_ground_items_remove),
+            corpses_add_or_update=new_corpses_add_or_update,
+            corpses_remove=list(new_corpses_remove),
+            chest_add_or_update=new_chest_add_or_update,
+            scars_add_or_update=new_scars_add_or_update,
+            scars_remove=list(new_scars_remove),
+            transaction_trace=new_trace,
+            rejection_events=new_rejection_events,
+            processed_transaction_ids=list(new_processed_ids),
+            maturity_set=maturity,
+            last_calamity_tick_set=calamity,
+            next_node_id_set=node_id,
+            next_entity_id_set=ent_id,
+            rng_checkpoint=rng,
+            pressure_signals_set=pressure,
+            current_mode_set=mode,
+            dirty_set=dirty
+        )
+
+    def compact(self) -> StateUpdate:
+        """Remove no-op entity updates to reduce processing overhead."""
+        compacted_entity_updates = {
+            e_id: upd for e_id, upd in self.entity_updates.items()
+            if not upd.is_noop()
+        }
+        if len(compacted_entity_updates) == len(self.entity_updates):
+            return self
+        from dataclasses import replace
+        return replace(self, entity_updates=compacted_entity_updates)
     
     def replace(self, **kwargs) -> StateUpdate:
         from dataclasses import replace

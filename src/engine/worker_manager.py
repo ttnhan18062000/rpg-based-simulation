@@ -43,70 +43,66 @@ class WorkerManager:
         concurrency_limit: float = 1.0
     ) -> List[WorkerResult]:
         """
-        Execute a batch of worker packets.
+        Execute a batch of worker packets with chunked dispatch.
         M8 Law: If queue is full, fall back to synchronous execution.
-        Adaptive Cap: Parallelism is capped by concurrency_limit * max_workers.
         """
         if self._pool is None or force_local:
-            # Logic ID: INFRA-017 (Worker pool fallback to inline/local)
             return self._execute_locally(packets, worker_fn)
 
         results: List[WorkerResult] = []
         futures: List[Future] = []
         
-        # Effective concurrency cap for this batch
         effective_cap = max(1, math.ceil(self._max_workers * concurrency_limit))
-        # We use a local semaphore to throttle submission to the executor.
         throttle = threading.Semaphore(effective_cap)
         
-        for packet in packets:
+        # Chunking Optimization: Reduce submit() overhead and lock contention
+        # Adaptive chunk size: ensures at least 2 tasks per worker for small batches
+        chunk_size = max(1, min(50, len(packets) // (self._max_workers * 2 if self._max_workers > 0 else 1)))
+        chunks = [packets[i:i + chunk_size] for i in range(0, len(packets), chunk_size)]
+        
+        for chunk in chunks:
             with self._stats_lock:
                 q_depth = self._inflight_count
             
-            # Check if we are over the queue limit
             if q_depth >= self._max_queue_depth:
-                # Force local execution for excess items (Pressure shedding)
-                res = self._wrap_work(packet, worker_fn)
-                if isinstance(res, list): results.extend(res)
-                else: results.append(res)
+                # Force local execution for this chunk
+                results.extend(self._execute_locally(chunk, worker_fn))
             else:
                 try:
                     with self._stats_lock:
                         self._inflight_count += 1
-                        # Real queue depth is inflight minus what's capable of running
+                        # Track queue pressure
                         queued_now = max(0, self._inflight_count - effective_cap)
                         self._peak_queued = max(self._peak_queued, queued_now)
                     
-                    # Throttle parallelism before submission
-                    throttle.acquire()
-                    
-                    def throttled_work(p=packet, f=worker_fn, t=throttle):
+                    def chunk_worker(c=chunk, f=worker_fn, t=throttle):
+                        # Throttle inside the pool thread, not the main thread
+                        t.acquire()
                         try:
-                            return self._wrap_work(p, f)
+                            chunk_results = []
+                            for p in c:
+                                res = self._wrap_work(p, f)
+                                if isinstance(res, list): chunk_results.extend(res)
+                                else: chunk_results.append(res)
+                            return chunk_results
                         finally:
                             t.release()
 
-                    future = self._pool.submit(throttled_work)
+                    future = self._pool.submit(chunk_worker)
                     futures.append(future)
                 except Exception as e:
-                    logger.error("Worker submission failed: %s. Falling back.", e)
-                    res = self._wrap_work(packet, worker_fn)
-                    if isinstance(res, list): results.extend(res)
-                    else: results.append(res)
+                    logger.error("Chunk submission failed: %s", e)
+                    results.extend(self._execute_locally(chunk, worker_fn))
                     with self._stats_lock:
                         self._inflight_count -= 1
 
-        # Collect results from futures
+        # Collect results
         for future in futures:
             try:
-                result = future.result()
-                if isinstance(result, list):
-                    results.extend(result)
-                else:
-                    results.append(result)
+                chunk_results = future.result()
+                results.extend(chunk_results)
             except Exception as e:
-                logger.error("Unexpected worker future failure: %s", e)
-                pass
+                logger.error("Chunk future failure: %s", e)
             finally:
                 with self._stats_lock:
                     self._inflight_count -= 1

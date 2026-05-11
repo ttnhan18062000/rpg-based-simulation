@@ -15,8 +15,9 @@ def test_camp_maturity_and_spawn():
     )
     generator = EntityGenerator(seed=42)
     
-    # 1. Process dynamics
-    update = WorldDynamicsSystem.resolve_dynamics(state, StateUpdate(), generator)
+    from src.engine.cadence import SystemCadence
+    # 1. Process dynamics (Force world_dynamics to run at tick 30)
+    update = WorldDynamicsSystem.resolve_dynamics(state, StateUpdate(), generator, cadence=SystemCadence(world_dynamics=30))
     
     # 2. Verify maturity increase (boosted by trauma)
     # Base 0.05 * 1.5 = 0.075

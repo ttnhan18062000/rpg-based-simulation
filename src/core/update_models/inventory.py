@@ -24,3 +24,6 @@ class InventoryUpdate:
             items_remove=self.items_remove + other.items_remove,
             gold_delta=self.gold_delta + other.gold_delta
         )
+
+    def is_noop(self) -> bool:
+        return not self.items_add and not self.items_remove and self.gold_delta == 0

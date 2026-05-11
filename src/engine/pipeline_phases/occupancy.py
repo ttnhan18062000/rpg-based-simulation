@@ -59,19 +59,28 @@ class OccupancyPhase:
         if not moving_entity_ids:
             return update
 
-        # Current occupied tiles in authoritative state.
+        # We only care about tiles that are destinations.
+        destination_tiles = {
+            (int(refined_entity_updates[eid].new_position[0]), int(refined_entity_updates[eid].new_position[1]))
+            for eid in moving_entity_ids
+        }
+
+        # Current occupied tiles for only relevant entities.
+        # Optimized v2: Use SpatialGrid to avoid full-world scan.
+        from src.engine.domain.view import DomainView
+        grid = DomainView._get_cached_spatial_grid(state)
+        
         current_occupied: dict[tuple[int, int], int] = {}
-
-        for entity_id, entity in state.entities.items():
-            if not entity.lifecycle.active:
-                continue
-
-            current_occupied[
-                (
-                    int(entity.navigation.position[0]),
-                    int(entity.navigation.position[1]),
-                )
-            ] = entity_id
+        for tile in destination_tiles:
+            # Query grid for entities at this tile
+            cell_entities = grid.get_neighbors(tile, radius=0.5) # radius 0.5 should pick up anything on the same tile
+            for e_id in cell_entities:
+                entity = state.entities.get(e_id)
+                if entity and entity.lifecycle.active:
+                    epos = (int(entity.navigation.position[0]), int(entity.navigation.position[1]))
+                    if epos == tile:
+                        current_occupied[tile] = e_id
+                        break
 
         # Destination claims from proposed movement results.
         claims_by_tile: dict[tuple[int, int], list[int]] = {}

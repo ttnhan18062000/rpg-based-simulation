@@ -94,7 +94,7 @@ class LocalSequentialExecutor:
         # Critical isolation boundary:
         # All domain logic must receive this readonly state view, not the
         # mutable authoritative state object owned by the kernel/apply path.
-        readonly_state = _readonly_state_view(state)
+        readonly_state = state.readonly_view()
 
         results: List[WorkerResult] = []
 
@@ -115,11 +115,13 @@ class LocalSequentialExecutor:
                         "target_position",
                         frozen_subject.navigation.position,
                     )
-                    updates = SimulationDomainLogic.execute_move(
-                        readonly_state,
-                        frozen_subject,
-                        target,
-                    )
+                    from src.core.updates import NavigationUpdate
+                    updates = {
+                        frozen_subject.id: EntityUpdate(
+                            entity_id=frozen_subject.id,
+                            navigation=NavigationUpdate(target_set=target)
+                        )
+                    }
 
                 elif item.work_kind == "ENTITY_ACT":
                     updates = SimulationDomainLogic.execute_action(
@@ -234,6 +236,22 @@ class ConcurrentExecutionAdapter:
         source_meta: Dict[str, Tuple[WorkItem, WorkerPacket]] = {}
         final_results: List[WorkerResult] = []
 
+        # Pre-freeze shared world state components to avoid O(N^2) redundant deep_freeze calls
+        from src.core.immutability import deep_freeze
+        frozen_regions = deep_freeze(state.regions)
+        frozen_resource_nodes = deep_freeze(state.resource_nodes)
+        frozen_buildings = deep_freeze(state.buildings)
+        frozen_groups = deep_freeze(state.groups)
+        frozen_terrain = deep_freeze(state.terrain)
+        
+        from src.engine.domain.view import DomainView
+        from src.engine.spatial_query import SpatialQueryService
+        frozen_grid = DomainView._get_cached_spatial_grid(state)
+        frozen_occ_map = SpatialQueryService.get_occupancy_map(state)
+        frozen_regions_list = DomainView.get_region_for_position(state, (0,0)) # Dummy call to build cache
+        frozen_regions_list = getattr(state, "_region_list_cache")
+        frozen_building_map = SpatialQueryService._get_building_map(state)
+
         for i, item in enumerate(work_items):
             if item.work_kind in ("ENTITY_MOVE", "ENTITY_ACT", "ENTITY_BRAIN") and isinstance(item.owner_id, int):
                 subject = state.entities.get(item.owner_id)
@@ -241,13 +259,9 @@ class ConcurrentExecutionAdapter:
                     # Optimization: state is already a readonly_view, so entities are already frozen
                     subject_snapshot = subject
                     
-                    from src.engine.domain_logic import SimulationDomainLogic
-                    neighbor_view = SimulationDomainLogic.get_neighbor_view(state, subject_snapshot, radius=10.0) # Default test radius
-                    frozen_neighbor_view = neighbor_view # Already frozen by state pass
-                    
                     from src.core.enums import Domain
+                    # Pass a reference to the read-only entities dictionary instead of computing subset here
                     packet_id = f"{state.tick}:{i}"
-                    # Phase 2 Law: Use stateless get_int for order-independent seed derivation
                     packet_seed = rng.get_int(Domain.DEFAULT, state.tick, item.owner_id, 0, 1000000)
                     packet = WorkerPacket(
                         packet_id=packet_id,
@@ -257,15 +271,22 @@ class ConcurrentExecutionAdapter:
                         seed=packet_seed,
                         work_class=item.work_class,
                         subject=subject_snapshot,
-                        neighbor_view=frozen_neighbor_view,
+                        neighbor_view=[], # Computed lazily by worker if needed
                         work_kind=item.work_kind,
                         payload=item.payload,
-                        regions=deep_freeze(state.regions),
-                        resource_nodes=deep_freeze(state.resource_nodes),
-                        buildings=deep_freeze(state.buildings),
-                        groups=deep_freeze(state.groups),
+                        class_priority=ConcurrencyLaw.get_class_priority(item.work_class),
+                        local_priority=item.priority,
+                        regions=frozen_regions,
+                        resource_nodes=frozen_resource_nodes,
+                        buildings=frozen_buildings,
+                        groups=frozen_groups,
                         town_center=state.town_center,
-                        terrain=deep_freeze(state.terrain)
+                        terrain=frozen_terrain,
+                        all_entities=state.entities, # Pass shared read-only reference
+                        spatial_grid=frozen_grid,
+                        occupancy_map=frozen_occ_map,
+                        region_list=frozen_regions_list,
+                        building_map=frozen_building_map
                     )
                     packets.append(packet)
                     source_meta[packet_id] = (item, packet)
@@ -300,16 +321,13 @@ class ConcurrentExecutionAdapter:
             concurrency_limit=self._concurrency_limit
         )
 
+        # Optimization: Map work_id to priority in O(1)
+        priority_map = {item.work_id: item.priority for item in work_items}
+
         for res in raw_results:
             source_packet = self._source_packets.get(res.source_packet_id)
             if source_packet:
-                # Find the corresponding work item for priority injection
-                # (In a cleaner version, we'd map this better, but this works for Sprint 1)
-                item_priority = 0
-                for item in work_items:
-                    if f"{state.tick}:{item.owner_id}:{item.work_kind}" == source_packet.work_id:
-                        item_priority = item.priority
-                        break
+                item_priority = priority_map.get(source_packet.work_id, 0)
 
                 final_results.append(WorkerResult(
                     source_packet_id=res.source_packet_id,

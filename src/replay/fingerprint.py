@@ -197,8 +197,8 @@ class StateFingerprinter:
         concern_ident = "|".join(
             f"{concern_id}:"
             f"{concern.kind}:"
-            f"{concern.subject}:"
-            f"{concern.severity:.3f}"
+            f"{concern.source}:"
+            f"{concern.urgency:.3f}"
             for concern_id, concern in sorted(strategic.concerns.items())
         )
 

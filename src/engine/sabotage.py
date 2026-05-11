@@ -19,16 +19,18 @@ class BuildingSabotageSystem:
     def resolve(state: AuthoritativeState, update: StateUpdate) -> StateUpdate:
         """
         Handle SABOTAGE intents directed at buildings.
+        Optimized: Iterate over entity updates only.
         """
         refined_building_updates = dict(update.building_updates)
+        from src.engine.spatial_query import SpatialQueryService
         
-        for e_id, entity in state.entities.items():
-            if not entity.lifecycle.active: continue
+        for e_id, ent_upd in update.entity_updates.items():
+            if not ent_upd.task: continue
             
-            ent_upd = update.entity_updates.get(e_id)
-            if not ent_upd or not ent_upd.task: continue
+            entity = state.entities.get(e_id)
+            if not entity or not entity.lifecycle.active: continue
             
-            # Check for Sabotage Intent (Standardized ENTITY_ACT or Legacy SABOTAGE)
+            # Check for Sabotage Intent
             task_upd = ent_upd.task
             is_sabotage = (task_upd.work_kind_set == "SABOTAGE") or \
                          (task_upd.work_kind_set == "ENTITY_ACT" and task_upd.payload_set.get("action") == "SABOTAGE")
@@ -37,31 +39,25 @@ class BuildingSabotageSystem:
                 target_pos = task_upd.payload_set.get("target_pos")
                 if not target_pos: continue
                 
-                # Verify Proximity (Adjacency required for sabotage)
+                # Verify Proximity
                 dx = abs(entity.navigation.position[0] - target_pos[0])
                 dy = abs(entity.navigation.position[1] - target_pos[1])
                 if dx > 1 or dy > 1:
-                    continue # Too far
+                    continue
                 
-                # Identify Building at target position
-                building = next((b for b in state.buildings.values() if b.position == target_pos), None)
+                # Identify Building via lookup
+                building = SpatialQueryService.get_building_at(state, target_pos)
                 if not building:
                     continue
                 
-                # Apply Authoritative Damage
-                # Standard sabotage tick deals 50 damage
                 damage = 50
                 build_upd = refined_building_updates.get(building.id, BuildingUpdate(building_id=building.id))
                 
-                # Calculate resulting state for functionality check
-                current_hp_in_tick = building.hp + build_upd.hp_delta
-                new_hp = max(0, current_hp_in_tick - damage)
-                is_functional = new_hp > 0
-                
+                new_hp = max(0, building.hp + build_upd.hp_delta - damage)
                 refined_building_updates[building.id] = replace(
                     build_upd,
                     hp_delta=build_upd.hp_delta - damage,
-                    functional_set=is_functional,
+                    functional_set=(new_hp > 0),
                 )
         
         return replace(update, building_updates=refined_building_updates)

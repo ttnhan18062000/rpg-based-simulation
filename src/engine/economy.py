@@ -4,11 +4,13 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Dict, List, Optional
 from dataclasses import replace
 
-from src.core.conservation import ResourceTransactionResolver
-from src.core.updates import EntityUpdate, StateUpdate, InventoryUpdate
+from src.core.enums import ReasonCode
+from src.core.state import IntentResult, ItemStack
+from src.core.updates import EntityUpdate, StateUpdate, InventoryUpdate, RejectionEvent, ResourceTransferIntent, ChestUpdate
+from src.core.inventory import InventoryService
 
 if TYPE_CHECKING:
-    from src.core.state import AuthoritativeState
+    from src.core.state import AuthoritativeState, EntityState
 
 class ResourceTransactionSystem:
     """
@@ -22,9 +24,7 @@ class ResourceTransactionSystem:
         Processes all ResourceTransferIntents for all entities in the update.
         VERIFIED v2: resource_transaction_resolution
         """
-        from src.core.updates import RejectionEvent
-        from src.core.state import IntentResult
-        from src.core.enums import ReasonCode
+        from src.core.conservation import ResourceTransactionResolver
         
         refined_entity_updates = dict(update.entity_updates)
         new_node_updates = dict(update.node_updates)
@@ -46,16 +46,17 @@ class ResourceTransactionSystem:
         in_tick_processed_ids = set()
 
         # Phase E5.8 Fix: Deterministic resolution order (by ID)
-        for e_id in sorted(list(state.entities.keys())):
-            entity = state.entities[e_id]
-            ent_upd = refined_entity_updates.get(e_id)
-            if not ent_upd or not ent_upd.resource_transfers:
+        for e_id in sorted(refined_entity_updates.keys()):
+            entity = state.entities.get(e_id)
+            if not entity: continue
+            
+            ent_upd = refined_entity_updates[e_id]
+            if not ent_upd.resource_transfers:
                 continue
 
             current_inventory = entity.inventory
             # If there was a sliding inventory update already (e.g. from previous intent)
             if ent_upd.inventory:
-                from src.core.inventory import InventoryService
                 current_inventory = InventoryService.apply_update(entity.inventory, ent_upd.inventory)
 
             # Phase 8: Transaction Grouping (LEG-RPG-1697)
@@ -80,8 +81,6 @@ class ResourceTransactionSystem:
                 # If gid is None, these are independent intents
                 if gid is None:
                     for intent in group_intents:
-                        from src.core.enums import ReasonCode
-                        from src.core.state import IntentResult
                         # 0. In-tick idempotency check
                         if intent.transaction_id and (intent.transaction_id in processed_ids or intent.transaction_id in in_tick_processed_ids):
                             final_intent_results.append(IntentResult(
@@ -102,7 +101,6 @@ class ResourceTransactionSystem:
                             # Apply success (sliding)
                             if result.inventory_update:
                                 final_accumulated_inv_upd = result.inventory_update.merge(final_accumulated_inv_upd) if final_accumulated_inv_upd else result.inventory_update
-                                from src.core.inventory import InventoryService
                                 current_inventory = InventoryService.apply_update(current_inventory, result.inventory_update)
                             
                             # Apply other contingent updates
@@ -160,7 +158,6 @@ class ResourceTransactionSystem:
                             all_accepted = False
                             break
                         if res.inventory_update:
-                            from src.core.inventory import InventoryService
                             group_current_inventory = InventoryService.apply_update(group_current_inventory, res.inventory_update)
                             
                     if all_accepted:
@@ -169,7 +166,6 @@ class ResourceTransactionSystem:
                             new_trace.append(f"TRANSACTION ACCEPT (GROUP): {intent.source_kind} {intent.source_id} for entity {e_id}")
                             if res.inventory_update:
                                 final_accumulated_inv_upd = res.inventory_update.merge(final_accumulated_inv_upd) if final_accumulated_inv_upd else res.inventory_update
-                                from src.core.inventory import InventoryService
                                 current_inventory = InventoryService.apply_update(current_inventory, res.inventory_update)
                             
                             ent_upd = ResourceTransactionSystem._merge_contingent_updates(ent_upd, res)
@@ -193,7 +189,6 @@ class ResourceTransactionSystem:
                             ))
                     else:
                         # Rollback all (Reject all with GROUP_ROLLBACK or original reason)
-                        from src.core.enums import ReasonCode
                         for intent in group_intents:
                             # Find if this specific intent failed or was just rolled back
                             fail_res = next((r for i, r in trial_results if i == intent), None)

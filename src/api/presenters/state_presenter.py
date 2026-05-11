@@ -51,8 +51,8 @@ class StatePresenter:
                 "def": entity.combat.def_stat,
                 "alive": entity.combat.alive,
                 "tactical_role": entity.combat.tactical_role,
-                "last_legality_result": entity.latest_combat_result.failure_reason if entity.latest_combat_result else None,
-                "damage_trace": entity.latest_combat_result.trace if entity.latest_combat_result else {}
+                "last_legality_result": entity.combat.latest_result.reason if entity.combat.latest_result else None,
+                "damage_trace": {} # Trace removed in V2 to save memory
             },
             "inventory": {
                 "gold": entity.inventory.gold,
@@ -123,7 +123,7 @@ class StatePresenter:
                     "reason": r.reason,
                     "source": f"{r.source_kind}:{r.source_id}",
                     "transaction_id": r.transaction_id
-                } for r in entity.latest_intent_results
+                } for r in entity.identity.latest_intent_results
             ]
         }
 

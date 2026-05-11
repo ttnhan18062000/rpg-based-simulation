@@ -27,6 +27,12 @@ class ItemStack:
     quantity: int = 1
     properties: Dict[str, Any] = field(default_factory=dict)
 
+    def to_canonical_dict(self) -> Dict[str, Any]:
+        return {
+            "id": self.item_id,
+            "q": self.quantity
+        }
+
 @dataclass(frozen=True, slots=True)
 class InventoryComponent:
     """
@@ -37,3 +43,15 @@ class InventoryComponent:
     gold: int = 0
     max_slots: int = 16
     max_weight: float = 50.0
+    _canonical_cache: Any = field(default=None, init=False, repr=False, compare=False)
+
+    def to_canonical_dict(self) -> Dict[str, Any]:
+        if self._canonical_cache is not None:
+            return self._canonical_cache
+        res = {
+            "gold": self.gold,
+            "items": [i.to_canonical_dict() for i in sorted(self.items, key=lambda x: x.item_id)],
+            "max_slots": self.max_slots
+        }
+        object.__setattr__(self, "_canonical_cache", res)
+        return res

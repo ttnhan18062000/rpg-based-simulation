@@ -10,25 +10,28 @@ class SocialMemoryService:
     """
 
     @staticmethod
-    def tick_place_attachment(entity: EntityState, state: AuthoritativeState) -> Optional[SocialUpdate]:
+    def tick_place_attachment(
+        entity: EntityState, 
+        state: AuthoritativeState, 
+        region_id: Optional[str] = None
+    ) -> Optional[SocialUpdate]:
         """
         Increments attachment to the current region based on presence.
         PH4 Law: Long-term presence creates 'Home' attachment.
         """
-        # Find current region
-        region_id = None
-        ex, ey = entity.navigation.position
-        for rid, region in state.regions.items():
-            xmin, ymin, xmax, ymax = region.bounds
-            if xmin <= ex <= xmax and ymin <= ey <= ymax:
-                region_id = rid
-                break
+        # Optimized v2: Use pre-calculated region_id if available.
+        if not region_id:
+            ex, ey = entity.navigation.position
+            for rid, region in state.regions.items():
+                xmin, ymin, xmax, ymax = region.bounds
+                if xmin <= ex <= xmax and ymin <= ey <= ymax:
+                    region_id = rid
+                    break
         
         if not region_id:
             return None
             
         # Passive increment: 0.001 per tick while in region
-        # This means 1000 ticks (approx 10-15 mins of sim) gives 1.0 attachment.
         return SocialUpdate(place_attachment_delta={region_id: 0.001})
 
     @staticmethod

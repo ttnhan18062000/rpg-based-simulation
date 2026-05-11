@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Tuple, Optional, Any, List, Dict
 
 if TYPE_CHECKING:
     from src.core.state import AuthoritativeState, EntityState, RegionState
+from src.engine.domain.view import DomainView
 from src.core.enums import ReasonCode
 
 class LegalityServiceV2:
@@ -17,23 +18,10 @@ class LegalityServiceV2:
     def get_spatial_index(state: AuthoritativeState) -> Dict[Tuple[int, int], EntityState]:
         """
         Returns a spatial index of active/alive entities.
-
-        Important:
-            Do not cache only by tick. Unit tests and simulations often create
-            multiple independent AuthoritativeState objects with the same tick.
-            A tick-only cache leaks spatial data across states.
         """
-        index = {}
-
-        for entity in state.entities.values():
-            if entity.lifecycle.active and entity.combat.alive:
-                pos = (
-                    int(entity.navigation.position[0]),
-                    int(entity.navigation.position[1]),
-                )
-                index[pos] = entity
-
-        return index
+        from src.engine.spatial_query import SpatialQueryService
+        occ_map = SpatialQueryService.get_occupancy_map(state)
+        return {pos: state.entities[e_id] for pos, e_id in occ_map.items()}
 
 
     # VERIFIED v2: manhattan_spatial_metric
@@ -48,12 +36,8 @@ class LegalityServiceV2:
     @staticmethod
     def get_region_for_position(pos: Tuple[float, float], state: AuthoritativeState) -> Optional[RegionState]:
         """Returns the region containing the given position."""
-        from src.core.state import RegionState
-        for region in state.regions.values():
-            x_min, y_min, x_max, y_max = region.bounds
-            if x_min <= pos[0] <= x_max and y_min <= pos[1] <= y_max:
-                return region
-        return None
+        from src.engine.domain.view import DomainView
+        return DomainView.get_region_for_position(state, pos)
 
     @staticmethod
     def is_adjacent(a: Tuple[float, float], b: Tuple[float, float]) -> bool:
@@ -87,8 +71,13 @@ class LegalityServiceV2:
             return False, ReasonCode.PATH_NOT_FOUND
 
         # 2. Buildings (Solid structures)
-        buildings = getattr(state_or_context, 'buildings', {})
-        if buildings:
+        # Optimization: Use building_tiles map for O(1) if available, otherwise fallback.
+        building_tiles = getattr(state_or_context, 'building_tiles', None)
+        if building_tiles is not None:
+            if target_grid_pos in building_tiles:
+                return False, ReasonCode.BUILDING_OBSTRUCTION
+        else:
+            buildings = getattr(state_or_context, 'buildings', {})
             for b in buildings.values():
                 if (int(b.position[0]), int(b.position[1])) == target_grid_pos:
                     return False, ReasonCode.BUILDING_OBSTRUCTION
@@ -99,19 +88,21 @@ class LegalityServiceV2:
             return False, ReasonCode.IDEMPOTENCY_VIOLATION
 
         # 4. Dynamic Entities
-        entities = getattr(state_or_context, 'entities', None)
-        if entities is None:
-            entities_list = getattr(state_or_context, 'neighbor_view', [])
-            for eid, entity in entities_list:
-                if eid == ignore_entity_id: continue
-                if not entity.lifecycle.active: continue
-                if (int(entity.navigation.position[0]), int(entity.navigation.position[1])) == target_grid_pos:
-                    return False, ReasonCode.OCCUPANCY_VIOLATION
-        else:
-            for eid, entity in entities.items():
-                if eid == ignore_entity_id: continue
-                if not entity.lifecycle.active: continue
-                if (int(entity.navigation.position[0]), int(entity.navigation.position[1])) == target_grid_pos:
+        # Optimization: Use SpatialQueryService for O(1) lookup in all worlds.
+        # Logic ID: PERF-007 (Spatial Query Service)
+        from src.engine.spatial_query import SpatialQueryService
+        try:
+            occ_map = SpatialQueryService.get_occupancy_map(state_or_context)
+            occ_id = occ_map.get(target_grid_pos)
+            if occ_id is not None and occ_id != ignore_entity_id:
+                return False, ReasonCode.OCCUPANCY_VIOLATION
+        except (AttributeError, TypeError):
+             # Fallback context handling
+             entities = getattr(state_or_context, 'entities', {})
+             for eid, ent in entities.items():
+                if eid == ignore_entity_id or not ent.lifecycle.active:
+                    continue
+                if (int(ent.navigation.position[0]), int(ent.navigation.position[1])) == target_grid_pos:
                     return False, ReasonCode.OCCUPANCY_VIOLATION
 
         return True, ReasonCode.LEGAL
@@ -342,16 +333,20 @@ class LegalityServiceV2:
             curr_x += step_x
             if (curr_x, curr_y) == (x1, y1): break
             if terrain.get((curr_x, curr_y)) == "WALL": return False
-            for build in buildings.values():
-                if (int(build.position[0]), int(build.position[1])) == (curr_x, curr_y): return False
+            # CORE-PERF-017: O(1) building check via spatial index
+            building_tiles = getattr(state_or_context, 'building_tiles', {})
+            if building_tiles and (curr_x, curr_y) in building_tiles:
+                return False
                 
         curr_x = x1
         while curr_y != y1:
             curr_y += step_y
             if (curr_x, curr_y) == (x1, y1): break
             if terrain.get((curr_x, curr_y)) == "WALL": return False
-            for build in buildings.values():
-                if (int(build.position[0]), int(build.position[1])) == (curr_x, curr_y): return False
+            # CORE-PERF-017: O(1) building check via spatial index
+            building_tiles = getattr(state_or_context, 'building_tiles', {})
+            if building_tiles and (curr_x, curr_y) in building_tiles:
+                return False
                 
         return True
 
@@ -456,32 +451,52 @@ class LegalityServiceV2:
     @staticmethod
     def get_engaged_hostiles_at_pos(pos: Tuple[float, float], entity: EntityState, state: Any) -> List[int]:
         """Find hostile entities that would be in melee engagement with this entity at a hypothetical position."""
-        engaged = []
-        entities = getattr(state, 'entities', state if isinstance(state, dict) else {})
-        if isinstance(entities, dict):
-            for other_id, other in entities.items():
-                if other_id == entity.id or not other.combat.alive or not other.lifecycle.active:
+        from src.engine.spatial_query import SpatialQueryService
+        try:
+            # Range 1.5 ensures we catch all cardinal neighbors (Manhattan 1)
+            candidate_ids = SpatialQueryService.get_entities_near(state, pos, 1.5)
+            engaged = []
+            for other_id in candidate_ids:
+                if other_id == entity.id:
+                    continue
+                other = state.entities.get(other_id)
+                if not other or not other.combat.alive or not other.lifecycle.active:
                     continue
                 dist = LegalityServiceV2.get_manhattan_dist(pos, other.navigation.position)
                 if dist <= 1 and entity.identity.faction != other.identity.faction:
                     engaged.append(other_id)
-        elif isinstance(entities, list):
-            for other_id, other in entities:
-                if other_id == entity.id or not other.combat.alive or not other.lifecycle.active:
-                    continue
-                dist = LegalityServiceV2.get_manhattan_dist(pos, other.navigation.position)
-                if dist <= 1 and entity.identity.faction != other.identity.faction:
-                    engaged.append(other_id)
-        engaged.sort()
-        return engaged
+            engaged.sort()
+            return engaged
+        except (AttributeError, TypeError):
+            # Fallback
+            engaged = []
+            entities = getattr(state, 'entities', state if isinstance(state, dict) else {})
+            if isinstance(entities, dict):
+                for other_id, other in entities.items():
+                    if other_id == entity.id or not other.combat.alive or not other.lifecycle.active:
+                        continue
+                    dist = LegalityServiceV2.get_manhattan_dist(pos, other.navigation.position)
+                    if dist <= 1 and entity.identity.faction != other.identity.faction:
+                        engaged.append(other_id)
+            engaged.sort()
+            return engaged
 
     @staticmethod
     def get_occupant(pos: Tuple[float, float], state: Any, ignore_entity_id: Optional[int] = None) -> Optional[int]:
         """Return the ID of the entity occupying the specified tile."""
-        entities = getattr(state, 'entities', state if isinstance(state, dict) else {})
-        if isinstance(entities, dict):
-            for eid, ent in entities.items():
-                if eid == ignore_entity_id: continue
-                if ent.navigation.position == pos and ent.combat.alive and ent.lifecycle.active:
-                    return eid
+        target_grid_pos = (int(pos[0]), int(pos[1]))
+        from src.engine.spatial_query import SpatialQueryService
+        try:
+            occ_map = SpatialQueryService.get_occupancy_map(state)
+            occ_id = occ_map.get(target_grid_pos)
+            if occ_id is not None and occ_id != ignore_entity_id:
+                return occ_id
+        except (AttributeError, TypeError):
+             # Fallback
+             entities = getattr(state, 'entities', state if isinstance(state, dict) else {})
+             if isinstance(entities, dict):
+                 for eid, ent in entities.items():
+                     if eid == ignore_entity_id: continue
+                     if (int(ent.navigation.position[0]), int(ent.navigation.position[1])) == target_grid_pos and ent.combat.alive and ent.lifecycle.active:
+                         return eid
         return None

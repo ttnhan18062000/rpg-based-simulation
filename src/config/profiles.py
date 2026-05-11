@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from enum import Enum
 from pydantic import BaseModel, Field, field_validator, ConfigDict
+from src.engine.cadence import SystemCadence
 
 
 class HardwareClass(str, Enum):
@@ -46,9 +47,93 @@ class RuntimeProfile(BaseModel):
     degradation_threshold_ram: float = Field(0.85, ge=0.5, le=1.0, description="RAM pressure to trigger shedding")
     degradation_threshold_cpu: float = Field(0.90, ge=0.5, le=1.0, description="CPU pressure to trigger shedding")
 
+    # Cadence (Scheduling)
+    cadence: SystemCadence = Field(default_factory=SystemCadence, description="System execution frequencies")
+
+    # Optimization (Milestone 7)
+    lod_enabled: bool = Field(True, description="Enable adaptive Level of Detail for entity simulation")
+
     @field_validator("name")
     @classmethod
     def name_must_not_be_empty(cls, v: str) -> str:
         if not v.strip():
             raise ValueError("Profile name cannot be empty")
         return v
+
+
+# Milestone 10: Formal Production Profiles
+PROD_SMALL = RuntimeProfile(
+    name="PROD_SMALL",
+    hardware_class=HardwareClass.CLASS_C,
+    max_ram_mb=1024,
+    max_cpu_percent=70.0,
+    max_worker_count=2,
+    max_queue_depth=2000,
+    max_replay_buffer_kb=16384,
+    max_observability_budget_percent=2.0,
+    max_tick_budget_ms=100.0,
+    max_work_debt=1000,
+    lod_enabled=True,
+    cadence=SystemCadence(
+        strategic_intelligence=20,
+        world_dynamics=100,
+        town_resolution=10
+    )
+)
+
+PROD_DEFAULT = RuntimeProfile(
+    name="PROD_DEFAULT",
+    hardware_class=HardwareClass.CLASS_B,
+    max_ram_mb=2048,
+    max_cpu_percent=85.0,
+    max_worker_count=4,
+    max_queue_depth=5000,
+    max_replay_buffer_kb=65536,
+    max_observability_budget_percent=5.0,
+    max_tick_budget_ms=50.0,
+    max_work_debt=5000,
+    lod_enabled=True,
+    cadence=SystemCadence(
+        strategic_intelligence=10,
+        world_dynamics=50,
+        town_resolution=5
+    )
+)
+
+PROD_LARGE = RuntimeProfile(
+    name="PROD_LARGE",
+    hardware_class=HardwareClass.CLASS_A,
+    max_ram_mb=4096,
+    max_cpu_percent=95.0,
+    max_worker_count=8,
+    max_queue_depth=10000,
+    max_replay_buffer_kb=131072,
+    max_observability_budget_percent=10.0,
+    max_tick_budget_ms=50.0,
+    max_work_debt=10000,
+    lod_enabled=True,
+    cadence=SystemCadence(
+        strategic_intelligence=10,
+        world_dynamics=50,
+        town_resolution=5
+    )
+)
+
+PROD_STRESS = RuntimeProfile(
+    name="PROD_STRESS",
+    hardware_class=HardwareClass.CLASS_A,
+    max_ram_mb=8192,
+    max_cpu_percent=100.0,
+    max_worker_count=16,
+    max_queue_depth=50000,
+    max_replay_buffer_kb=524288,
+    max_observability_budget_percent=15.0,
+    max_tick_budget_ms=250.0, # Stress test allows longer ticks
+    max_work_debt=50000,
+    lod_enabled=True,
+    cadence=SystemCadence(
+        strategic_intelligence=5,
+        world_dynamics=20,
+        town_resolution=2
+    )
+)

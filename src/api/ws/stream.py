@@ -43,18 +43,16 @@ async def stream_ws(
 
     from src.api.presenters.state_presenter import StatePresenter
 
-    def on_tick(state: AuthoritativeState):
+    def on_tick(snapshot: Dict[str, Any]):
         # This runs in the engine thread, so we use call_soon_threadsafe
-        payload = StatePresenter.present_minimal(state)
-        loop.call_soon_threadsafe(queue.put_nowait, payload)
+        loop.call_soon_threadsafe(queue.put_nowait, snapshot)
 
     manager.add_tick_listener(on_tick)
 
     try:
         # Send initial state
-        initial_state = manager.get_state()
-        if initial_state:
-            initial_payload = StatePresenter.present_minimal(initial_state)
+        initial_payload = manager.get_state()
+        if initial_payload:
             if fmt == "msgpack":
                 await websocket.send_bytes(msgpack.packb(jsonable_encoder(initial_payload)))
             else:

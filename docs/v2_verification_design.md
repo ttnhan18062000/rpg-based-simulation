@@ -32,6 +32,14 @@ For each subsystem:
 5. World / Deterministic Substrate
 6. Progression / Rewards
 
+## Tools: Certification Harness
+
+The **Certification Harness** (`src/certification/harness.py`) is the primary tool for verifying full scenario compliance. Unlike standard unit tests, the harness:
+- Executes the engine in a **resource-bounded environment**.
+- Captures **detailed performance telemetry** (RSS, compute).
+- Verifies **absolute reproducibility** across multiple runs.
+- Generates a **Proof Bundle** (JSON + MD) for every run, serving as the machine-readable evidence for the Verification Ledger.
+
 ## Success Criteria
 - 100% of items marked `[x]` in `legacy_checklist_marked.md` are audited.
 - Every audited item has a clear `VERIFIED` status with evidence or a `PROOF_GAP` status with a remediation note.

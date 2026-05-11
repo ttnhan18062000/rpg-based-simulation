@@ -16,9 +16,8 @@ class GroupPhase:
         from src.systems.world_systems.groups import GroupSystem
         from src.core.updates import EntityUpdate
 
-        # Calculate group updates based on the current tick's generation (sliding state)
-        working_state = ApplyPath.apply_generation(state, update)
-        group_update = GroupSystem.update_groups(working_state, update)
+        # Optimization: Pass state and update directly, let GroupSystem handle sliding positions
+        group_update = GroupSystem.update_groups(state, update)
 
         # Merge group additions/updates
         new_groups_add = list(update.groups_add_or_update)

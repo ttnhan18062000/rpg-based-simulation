@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, List, Tuple
+from typing import TYPE_CHECKING, List, Tuple, Optional, Any
 
 if TYPE_CHECKING:
     from src.core.state import AuthoritativeState, EntityState
-
+from src.engine.spatial import SpatialGrid
 
 class DomainView:
     """
@@ -18,42 +18,71 @@ class DomainView:
         radius: float = 10.0
     ) -> List[tuple[int, EntityState]]:
         """
-        Produce a deterministic, ID-sorted view of nearby entities.
+        Produce a deterministic view of nearby entities.
         Uses a spatial grid to optimize O(N^2) lookups.
         VERIFIED v2: spatial_query_optimization
         """
         grid = DomainView._get_cached_spatial_grid(state)
         candidate_ids = grid.get_neighbors(subject.navigation.position, radius)
         
-        neighbors = []
-        sx, sy = subject.navigation.position
+        results: List[tuple[int, EntityState]] = []
         for e_id in candidate_ids:
             if e_id == subject.id:
                 continue
             
-            ent = state.entities[e_id]
-            ex, ey = ent.navigation.position
-            dist = ((ex - sx)**2 + (ey - sy)**2)**0.5
-            if dist <= radius:
-                neighbors.append((e_id, ent))
-                
-        # Sort by ID for determinism
-        neighbors.sort(key=lambda x: x[0])
-        return neighbors
+            ent = state.entities.get(e_id)
+            if ent:
+                results.append((e_id, ent))
+        
+        # Sort by ID for absolute determinism in tactical selection
+        results.sort(key=lambda x: x[0])
+        return results
 
     @staticmethod
-    def _get_cached_spatial_grid(state: AuthoritativeState):
-        """Internal helper to cache grid per tick."""
-        if not hasattr(DomainView, "_grid_cache"):
-            DomainView._grid_cache = (None, None) # (cache_key, grid)
+    def _get_cached_spatial_grid(state: AuthoritativeState) -> SpatialGrid:
+        """
+        Retrieves or creates a SpatialGrid for the given state.
+        Uses a per-object cache to ensure thread-safety and avoid collisions.
+        """
+        # Milestone 8: Per-object caching for multi-threaded safety.
+        # This prevents race conditions in MultiThreadedExecutor where different
+        # threads might be processing different states (or the same state) concurrently.
+        
+        # Check if it's a WorkerPacket with a pre-computed grid
+        if hasattr(state, "spatial_grid") and state.spatial_grid is not None:
+            return state.spatial_grid
+
+        grid = getattr(state, "_spatial_grid_cache", None)
+        if grid is None:
+            grid = SpatialGrid(state.entities)
+            # Use object.__setattr__ to bypass frozen dataclass restrictions
+            object.__setattr__(state, "_spatial_grid_cache", grid)
+        return grid
+
+    @staticmethod
+    def get_region_for_position(
+        state: AuthoritativeState,
+        pos: Tuple[float, float]
+    ) -> Optional[Any]:
+        """
+        Fast lookup for the region containing a position.
+        Uses a per-object regional list cache for isolation and safety.
+        """
+        # Milestone 8: Per-object caching for regional lookups.
+        if hasattr(state, "region_list") and state.region_list is not None:
+            region_list = state.region_list
+        else:
+            region_list = getattr(state, "_region_list_cache", None)
+            if region_list is None:
+                region_list = list(state.regions.values())
+                object.__setattr__(state, "_region_list_cache", region_list)
             
-        # Hardening: Include tick, count, and seed to avoid id() collisions
-        cache_key = (id(state), state.tick, len(state.entities), state.seed)
-        if DomainView._grid_cache[0] != cache_key:
-            from src.engine.spatial import SpatialGrid
-            DomainView._grid_cache = (cache_key, SpatialGrid(state.entities))
-            
-        return DomainView._grid_cache[1]
+        px, py = pos
+        for region in region_list:
+            x_min, y_min, x_max, y_max = region.bounds
+            if x_min <= px <= x_max and y_min <= py <= y_max:
+                return region
+        return None
 
     @staticmethod
     def get_region_trauma(
@@ -63,9 +92,5 @@ class DomainView:
         """
         Finds the trauma score of the region containing the given position.
         """
-        px, py = pos
-        for region in state.regions.values():
-            xmin, ymin, xmax, ymax = region.bounds
-            if xmin <= px <= xmax and ymin <= py <= ymax:
-                return region.trauma_score
-        return 0.0
+        region = DomainView.get_region_for_position(state, pos)
+        return region.trauma_score if region else 0.0

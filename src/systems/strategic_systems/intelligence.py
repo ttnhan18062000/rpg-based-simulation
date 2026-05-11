@@ -16,6 +16,9 @@ from dataclasses import dataclass, field, replace
 from typing import Dict, List, Optional, Any, TYPE_CHECKING
 import ast
 
+if TYPE_CHECKING:
+    from src.engine.cadence import SystemCadence
+
 from src.core.state import EntityState, AuthoritativeState
 from src.core.updates import (
     StrategicUpdate, InventoryUpdate, EntityUpdate, StateUpdate,
@@ -27,6 +30,8 @@ from src.core.strategic import (
     CognitionProfile
 )
 from src.strategy.cognition_capacity import CapacityService
+from src.core.inventory import InventoryService
+from src.engine.cadence import should_run, SystemCadence
 
 if TYPE_CHECKING:
     from src.core.state import AuthoritativeState, EntityState
@@ -169,22 +174,232 @@ class StrategicIntelligenceSystem:
         return StrategicUpdate(blockers_add_or_update=blockers)
 
     @staticmethod
+    def fused_strategic_pass(
+        state: AuthoritativeState,
+        update: StateUpdate,
+        cadence: SystemCadence = None
+    ) -> StateUpdate:
+        """
+        Fused pass for strategic intelligence (Blockers, Concerns, Intents).
+        Logic ID: STRAT-PERF-001 (Consolidated O(N) pass for strategic state)
+        """
+        cadence = cadence or SystemCadence()
+        cad_val = cadence.strategic_intelligence
+
+        refined_entity_updates = dict(update.entity_updates)
+
+        def has_item(inventory, item_id: str, quantity: int = 1) -> bool:
+            if item_id == "gold":
+                return inventory.gold >= quantity
+            for stack in inventory.items:
+                sid = getattr(stack, "item_id", stack)
+                if sid == item_id:
+                    sqty = getattr(stack, "quantity", 1)
+                    if sqty >= quantity:
+                        return True
+            return False
+
+        # Optimization: Only process entities that were marked as strategic-dirty or had relevant changes
+        # Logic ID: PERF-006 (Dirty Entity Tracking)
+        relevant_ids_raw = update.dirty_set.strategic_entities if update.dirty_set else state.entities.keys()
+        relevant_ids = sorted(list(relevant_ids_raw))
+        
+        for e_id in relevant_ids:
+            entity = state.entities.get(e_id)
+            if not entity: continue
+            
+            # --- 1. Blockers (Fast, runs every tick) ---
+            ent_upd = refined_entity_updates.get(e_id)
+            has_existing_upd = ent_upd is not None
+            if not has_existing_upd:
+                ent_upd = EntityUpdate(entity_id=e_id)
+            pending_inventory = entity.inventory
+            if ent_upd.inventory:
+                pending_inventory = InventoryService.apply_update(entity.inventory, ent_upd.inventory)
+
+            strat_up = ent_upd.strategic or StrategicUpdate()
+            removals = set(strat_up.blockers_remove)
+            resolved_ids = set()
+            for b_id, b in entity.strategic.blockers.items():
+                if b_id in removals or b.resolved: continue
+                if b.kind == "material" and has_item(pending_inventory, b.subject, b.target_quantity):
+                    resolved_ids.add(b_id)
+                elif b.kind == "access" and b.subject.startswith("("):
+                    try:
+                        coords = ast.literal_eval(b.subject)
+                        if isinstance(coords, tuple) and len(coords) == 2:
+                            dx = entity.navigation.position[0] - coords[0]
+                            dy = entity.navigation.position[1] - coords[1]
+                            if (dx*dx + dy*dy)**0.5 < 0.5: resolved_ids.add(b_id)
+                    except: pass
+                elif b.kind == "inventory" and b.subject == "capacity":
+                    if len(pending_inventory.items) < pending_inventory.max_slots:
+                        resolved_ids.add(b_id)
+            
+            for blocker in strat_up.blockers_add_or_update:
+                if blocker.resolved: resolved_ids.add(blocker.id)
+
+            project_upd = None
+            current_proj_id = strat_up.current_project_id_set if strat_up.current_project_id_set is not None else entity.strategic.current_project_id
+            if current_proj_id:
+                project = entity.strategic.projects.get(current_proj_id)
+                if project and project.status == ProjectStatus.ACTIVE:
+                    obj_id = strat_up.current_objective_id_set if strat_up.current_objective_id_set is not None else project.active_objective_id
+                    active_obj = next((o for o in project.objectives if o.id == obj_id), None)
+                    if active_obj and active_obj.status == ObjectiveStatus.ACTIVE:
+                        all_blockers_resolved = True
+                        for b_id in active_obj.blocker_ids:
+                            if b_id not in entity.strategic.blockers and b_id not in [b.id for b in strat_up.blockers_add_or_update]: continue
+                            b_obj = entity.strategic.blockers.get(b_id)
+                            # Check if resolved this tick or already resolved in state
+                            if b_id not in resolved_ids and not (b_obj and b_obj.resolved):
+                                all_blockers_resolved = False; break
+                        if active_obj.kind in ("craft", "collect") and has_item(pending_inventory, active_obj.target, 1):
+                            all_blockers_resolved = True
+                        if all_blockers_resolved:
+                            new_obj = replace(active_obj, status=ObjectiveStatus.RESOLVED)
+                            project_upd = replace(project, objectives=[new_obj if o.id == new_obj.id else o for o in project.objectives], status=ProjectStatus.COMPLETED)
+
+            # (Update strat_up with results)
+            new_additions = list(strat_up.blockers_add_or_update)
+            for b_id in resolved_ids:
+                found = False
+                for i, b in enumerate(new_additions):
+                    if b.id == b_id: new_additions[i] = replace(b, resolved=True); found = True; break
+                if not found:
+                    b_obj = entity.strategic.blockers.get(b_id)
+                    if b_obj: new_additions.append(replace(b_obj, resolved=True))
+            
+            new_removals = list(set(strat_up.blockers_remove) | resolved_ids)
+            new_projects = list(strat_up.projects_add_or_update)
+            if project_upd: new_projects.append(project_upd)
+            
+            final_identity_upd = ent_upd.identity
+            if project_upd and project_upd.status == ProjectStatus.COMPLETED:
+                final_identity_upd = (final_identity_upd or IdentityUpdate()).merge(IdentityUpdate(craft_target=""))
+
+            # Only replace if actual changes occurred
+            if new_additions != list(strat_up.blockers_add_or_update) or \
+               new_removals != list(strat_up.blockers_remove) or \
+               new_projects != list(strat_up.projects_add_or_update) or \
+               (project_upd and (strat_up.current_project_id_set == "" or strat_up.current_objective_id_set == "")):
+                
+                strat_up = replace(strat_up,
+                    blockers_add_or_update=new_additions,
+                    blockers_remove=new_removals,
+                    projects_add_or_update=new_projects,
+                    current_project_id_set="" if project_upd else strat_up.current_project_id_set,
+                    current_objective_id_set="" if project_upd else strat_up.current_objective_id_set
+                )
+            
+            # --- 2. Concerns ---
+            concerns_to_add = list(strat_up.concerns_add_or_update)
+            if should_run(state.tick, e_id, cadence.concern_evaluation):
+                from src.systems.world_systems.routine import RoutineService
+                from src.systems.world_systems.intake import ConcernIntakeSystem
+                from src.engine.domain_logic import SimulationDomainLogic
+                
+                # Combine all routine evaluation logic
+                routine_concerns = (
+                    RoutineService.evaluate_biological_needs(entity, state.tick % 2400) +
+                    RoutineService.evaluate_environmental_concerns(entity) +
+                    RoutineService.evaluate_anchored_behavior(entity, state)
+                )
+                
+                # Optimization: only evaluate salience if we have neighbors
+                neighbors = SimulationDomainLogic.get_neighbor_view(state, entity, radius=10.0)
+                salience_concerns = ConcernIntakeSystem.evaluate_salience(entity, neighbors, state)
+                
+                existing_concern_ids = set(entity.strategic.concerns.keys()) | {c.id for c in concerns_to_add}
+                for c in routine_concerns + salience_concerns:
+                    if c.id not in existing_concern_ids:
+                        concerns_to_add.append(c)
+                        existing_concern_ids.add(c.id)
+            
+            if concerns_to_add != list(strat_up.concerns_add_or_update):
+                strat_up = replace(strat_up, concerns_add_or_update=concerns_to_add)
+
+            # --- 3. Strategic Intents ---
+            if should_run(state.tick, e_id, cadence.strategic_intelligence):
+                # Call original intent evaluation but with force=True to bypass its own cadence check
+                # (since we already checked cadence here)
+                intent_up = StrategicIntelligenceSystem.evaluate_strategic_intent(state, entity, force=True, cadence=cadence)
+                strat_up = strat_up.merge(intent_up)
+            
+            # --- 4. Redirection (Bridge to Navigation) ---
+            # (Hoisted logic from StrategicRedirectionSystem)
+            from src.core.movement_modes import MovementMode
+            from src.core.updates import NavigationUpdate, InteractionUpdate
+            
+            town_target = state.town_center
+            if not town_target and state.town_tiles:
+                town_pos = sorted(list(state.town_tiles))[0]
+                town_target = (float(town_pos[0]), float(town_pos[1]))
+            
+            has_nav_update = ent_upd.navigation and ent_upd.navigation.target_set is not None
+            current_project_id = strat_up.current_project_id_set if strat_up.current_project_id_set is not None else entity.strategic.current_project_id
+            
+            active_blockers = [b for b_id, b in entity.strategic.blockers.items() if b_id not in new_removals and not b.resolved]
+            active_blockers.extend([b for b in new_additions if b.id not in new_removals and not b.resolved])
+            
+            mat_blockers = [b for b in active_blockers if b.kind == "material" and not b.resolved]
+            if mat_blockers:
+                target_mat = mat_blockers[0].subject
+                match_lead = next((l for l in entity.strategic.leads.values() if l.subject == target_mat and l.kind == 'location'), None)
+                if match_lead:
+                    try:
+                        coords = tuple(map(float, match_lead.detail.split(',')))
+                        if entity.navigation.target != coords:
+                            has_nav_update = True
+                            existing_nav = ent_upd.navigation or NavigationUpdate()
+                            ent_upd = replace(ent_upd, navigation=replace(existing_nav, target_set=coords), interaction=InteractionUpdate(reset=True))
+                    except: pass
+            
+            if not has_nav_update and current_project_id:
+                project = entity.strategic.projects.get(current_project_id)
+                if project and project.status == ProjectStatus.ACTIVE:
+                    obj_id = strat_up.current_objective_id_set if strat_up.current_objective_id_set is not None else project.active_objective_id
+                    active_obj = next((o for o in project.objectives if o.id == obj_id), None)
+                    if active_obj and active_obj.status == ObjectiveStatus.ACTIVE:
+                        target_pos = getattr(active_obj, 'target_position', None)
+                        if target_pos and entity.navigation.target != target_pos:
+                             has_nav_update = True
+                             ent_upd = replace(ent_upd, navigation=replace(ent_upd.navigation or NavigationUpdate(), target_set=target_pos))
+            
+            if not has_nav_update:
+                if len(pending_inventory.items) > 0 and entity.navigation.position != (0.0, 0.0) and town_target:
+                    if entity.navigation.target != town_target:
+                        ent_upd = replace(ent_upd, 
+                            navigation=replace(ent_upd.navigation or NavigationUpdate(), target_set=town_target, movement_mode_set=MovementMode.REGROUP),
+                            interaction=InteractionUpdate(reset=True)
+                        )
+            
+            # Finalize entity update - only if changed
+            if final_identity_upd is not ent_upd.identity or strat_up is not ent_upd.strategic or has_nav_update:
+                final_upd = replace(ent_upd, identity=final_identity_upd, strategic=strat_up)
+                if not final_upd.is_noop():
+                    refined_entity_updates[e_id] = final_upd
+                elif has_existing_upd:
+                    # If it was existing but now it's a no-op (unlikely but possible), remove it
+                    refined_entity_updates.pop(e_id, None)
+
+        if refined_entity_updates == update.entity_updates:
+            return update
+        return replace(update, entity_updates=refined_entity_updates)
+
+    @staticmethod
     def resolve_blockers(
         state: AuthoritativeState,
         update: StateUpdate,
+        cadence: SystemCadence = None
     ) -> StateUpdate:
         """
         Resolve strategic blockers that are satisfied by the current or pending
         authoritative inventory state.
-
-        Logic ID: STRAT-196 (Blockers can be resolved by acquiring missing material)
-        Logic ID: STRAT-197 (Blockers can be resolved by acquiring missing gold/resource)
-        Logic ID: STRAT-198 (Blockers can be resolved by finding location/target)
-
-        Important:
-            Do not only inspect items_add from this tick. A blocker may survive
-            from a previous tick even though the inventory already satisfies it.
         """
+        from src.engine.cadence import should_run
+        cadence = cadence or SystemCadence()
+        
         from dataclasses import replace
         from src.core.updates import EntityUpdate, StrategicUpdate
         from src.core.inventory import InventoryService
@@ -199,7 +414,8 @@ class StrategicIntelligenceSystem:
                 for stack in inventory.items
             )
 
-        for e_id, entity in state.entities.items():
+        for e_id in sorted(state.entities.keys()):
+            entity = state.entities[e_id]
             ent_upd = refined_entity_updates.get(e_id, EntityUpdate(entity_id=e_id))
 
             pending_inventory = entity.inventory
@@ -334,7 +550,8 @@ class StrategicIntelligenceSystem:
     @staticmethod
     def evaluate_all_concerns(
         state: AuthoritativeState,
-        update: StateUpdate
+        update: StateUpdate,
+        cadence: SystemCadence | None = None
     ) -> StateUpdate:
         """
         Phase 9: Routine, Biological Needs, and Salience Filtering.
@@ -345,6 +562,10 @@ class StrategicIntelligenceSystem:
         from src.engine.domain_logic import SimulationDomainLogic
         
         refined_entity_updates = dict(update.entity_updates)
+        
+        from src.engine.cadence import should_run, SystemCadence as DefaultCadence
+        
+        from src.systems.strategic_systems.detour import DetourSuggestionSystem
         
         # Phase 9 Fix: Deterministic entity iteration
         for e_id in sorted(list(state.entities.keys())):
@@ -357,7 +578,8 @@ class StrategicIntelligenceSystem:
             if entity.identity.properties.get("status_frozen") or entity.identity.properties.get("status_stunned"):
                 continue
 
-            if (state.tick + e_id) % 10 != 0:
+            cad_val = (cadence.concern_evaluation if cadence else DefaultCadence().concern_evaluation)
+            if not should_run(state.tick, e_id, cad_val):
                 continue
 
             # 1. Internal/Biological Concerns
@@ -383,7 +605,6 @@ class StrategicIntelligenceSystem:
             
             # Law 194: Enforce Strategic Bandwidth for concerns
             # Logic ID: 194
-            from src.systems.strategic_systems.detour import DetourSuggestionSystem
             bandwidth_upd = DetourSuggestionSystem.enforce_bandwidth(entity, state.tick)
             if bandwidth_upd.concerns_remove:
                 to_remove = set(bandwidth_upd.concerns_remove)
@@ -401,13 +622,16 @@ class StrategicIntelligenceSystem:
     @staticmethod
     def evaluate_all_strategic_intents(
         state: AuthoritativeState,
-        update: StateUpdate
+        update: StateUpdate,
+        cadence: SystemCadence | None = None
     ) -> StateUpdate:
         """
         Phase 4.1: Strategic Intent Evaluation (Projects/Objectives).
         Orchestrates the loop over evaluate_strategic_intent for all active entities.
         """
         refined_entity_updates = dict(update.entity_updates)
+        
+        from src.engine.cadence import should_run, SystemCadence as DefaultCadence
         
         for e_id in sorted(list(state.entities.keys())):
             entity = state.entities[e_id]
@@ -419,7 +643,8 @@ class StrategicIntelligenceSystem:
                 continue
 
             # Staggered frequency (Phase 5/6 spec)
-            if (state.tick + e_id) % 10 != 0:
+            cad_val = (cadence.strategic_intelligence if cadence else DefaultCadence().strategic_intelligence)
+            if not should_run(state.tick, e_id, cad_val):
                 continue
 
             ent_upd = refined_entity_updates.get(e_id, EntityUpdate(entity_id=e_id))
@@ -654,7 +879,8 @@ class StrategicIntelligenceSystem:
     def evaluate_strategic_intent(
         state: AuthoritativeState,
         entity: EntityState,
-        force: bool = False
+        force: bool = False,
+        cadence: SystemCadence | None = None
     ) -> StrategicUpdate:
         """
         Produce a collection of strategic intent updates for the next tick.
@@ -665,9 +891,6 @@ class StrategicIntelligenceSystem:
         
         # Legality Guard: Incapacitated entities skip strategic cycles
         if entity.identity.properties.get("status_frozen") or entity.identity.properties.get("status_stunned"):
-            return StrategicUpdate()
-
-        if not force and (state.tick + entity.id) % 10 != 0:
             return StrategicUpdate()
 
         # 0. Strategic Memory (PH6: Lead Suppression)

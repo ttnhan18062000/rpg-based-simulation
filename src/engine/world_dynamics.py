@@ -9,6 +9,7 @@ if TYPE_CHECKING:
     from src.core.state import AuthoritativeState, RegionState, EntityState
     from src.core.updates import StateUpdate
     from src.systems.world_systems.generator import EntityGenerator
+    from src.engine.cadence import SystemCadence
 
 class WorldDynamicsSystem:
     """
@@ -18,7 +19,7 @@ class WorldDynamicsSystem:
     """
 
     @staticmethod
-    def resolve_dynamics(state: AuthoritativeState, update: StateUpdate, generator: EntityGenerator) -> StateUpdate:
+    def resolve_dynamics(state: AuthoritativeState, update: StateUpdate, generator: EntityGenerator, cadence: SystemCadence | None = None) -> StateUpdate:
         """
         Apply regional effects to entities and update world markers.
         """
@@ -96,50 +97,57 @@ class WorldDynamicsSystem:
                     update.world_updates[r_id] = replace(world_upd, hazard_level_set=new_hazard)
 
         # 3. Process Macro World Dynamics (Calamity Spawns, Maturity)
-        from src.world.calamity import CalamityService
-        calamity_update = CalamityService.process_world_dynamics(state, generator)
+        from src.engine.cadence import SystemCadence as DefaultCadence, should_run
+        cadence = cadence or DefaultCadence()
         
-        # 3.1 Standard Monster Replenishment
-        from src.world.spawn import SpawnService
-        spawn_update = SpawnService.process_spawns(state, generator)
-        
-        # 3.2 Resource Ecology (Replenishment)
-        from src.world.ecology import ResourceEcologyService
-        ecology_update = ResourceEcologyService.process_ecology(state, generator)
+        if should_run(state.tick, None, cadence.world_dynamics):
+            from src.world.calamity import CalamityService
+            calamity_update = CalamityService.process_world_dynamics(state, generator)
+            
+            # 3.1 Standard Monster Replenishment
+            from src.world.spawn import SpawnService
+            spawn_update = SpawnService.process_spawns(state, generator)
+            
+            # 3.2 Resource Ecology (Replenishment)
+            from src.world.ecology import ResourceEcologyService
+            ecology_update = ResourceEcologyService.process_ecology(state, generator)
 
-        # 3.3 Threat Evolution (LEG-RPG-071 Hardening)
-        from src.world.threat import ThreatService
-        threat_updates = {}
-        for r_id, region in state.regions.items():
-            t_upd = ThreatService.process_threat_evolution(state, region)
-            if t_upd:
-                # Merge if existing
-                if r_id in update.world_updates:
-                    update.world_updates[r_id] = update.world_updates[r_id].merge(t_upd)
-                else:
-                    update.world_updates[r_id] = t_upd
+            # 3.3 Threat Evolution (LEG-RPG-071 Hardening)
+            from src.world.threat import ThreatService
+            for r_id, region in state.regions.items():
+                t_upd = ThreatService.process_threat_evolution(state, region)
+                if t_upd:
+                    # Merge if existing
+                    if r_id in update.world_updates:
+                        update.world_updates[r_id] = update.world_updates[r_id].merge(t_upd)
+                    else:
+                        update.world_updates[r_id] = t_upd
 
-        # 3.4 Boss Spawning (Deterministic & Idempotent)
-        from src.world.boss import BossService
-        boss_spawn_update = BossService.check_for_boss_spawn(state, generator)
+            # 3.4 Boss Spawning (Deterministic & Idempotent)
+            if should_run(state.tick, None, cadence.boss_spawn):
+                from src.world.boss import BossService
+                boss_spawn_update = BossService.check_for_boss_spawn(state, generator)
+            else:
+                from src.core.updates import StateUpdate as NewStateUpdate
+                boss_spawn_update = NewStateUpdate()
 
-        # 3.5 Process Raids
-        from src.world.raid import RaidService
-        raid_update = RaidService.check_for_raid(state, generator)
+            # 3.5 Process Raids
+            from src.world.raid import RaidService
+            raid_update = RaidService.check_for_raid(state, generator)
 
-        # 3.6 Process Camps (Persistent Encampments)
-        from src.world.camp import CampService
-        camp_state_update = CampService.process_camps(state, generator)
-        
-        update = update.replace(
-            maturity_set=calamity_update.maturity_set if calamity_update.maturity_set is not None else update.maturity_set,
-            last_calamity_tick_set=calamity_update.last_calamity_tick_set if calamity_update.last_calamity_tick_set is not None else update.last_calamity_tick_set,
-            entities_add=update.entities_add + calamity_update.entities_add + raid_update.entities_add + spawn_update.entities_add + boss_spawn_update.entities_add + camp_state_update.entities_add,
-            nodes_add=update.nodes_add + ecology_update.nodes_add,
-            camp_updates=camp_state_update.camp_updates,
-            next_node_id_set=ecology_update.next_node_id_set or update.next_node_id_set,
-            next_entity_id_set=generator._last_id + 1 if (generator._last_id + 1) > state.next_entity_id else None
-        )
+            # 3.6 Process Camps (Persistent Encampments)
+            from src.world.camp import CampService
+            camp_state_update = CampService.process_camps(state, generator)
+            
+            update = update.replace(
+                maturity_set=calamity_update.maturity_set if calamity_update.maturity_set is not None else update.maturity_set,
+                last_calamity_tick_set=calamity_update.last_calamity_tick_set if calamity_update.last_calamity_tick_set is not None else update.last_calamity_tick_set,
+                entities_add=update.entities_add + calamity_update.entities_add + raid_update.entities_add + spawn_update.entities_add + boss_spawn_update.entities_add + camp_state_update.entities_add,
+                nodes_add=update.nodes_add + ecology_update.nodes_add,
+                camp_updates=camp_state_update.camp_updates,
+                next_node_id_set=ecology_update.next_node_id_set or update.next_node_id_set,
+                next_entity_id_set=generator._last_id + 1 if (generator._last_id + 1) > state.next_entity_id else None
+            )
 
 
         # 4. Regional Transformations (Type Shifting)

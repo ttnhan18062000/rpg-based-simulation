@@ -202,6 +202,9 @@ timestamp,ticket_id,title,status,summary,artifacts_path
 2026-04-24,TCK-20260424-PH11-M5-VERDICT,Phase 11 Milestone 5 Final Verdict complete,DONE,stored_artifacts/TCK-20260424-PH11-M1-READINESS/
 2026-04-24,TCK-20260424-PH11-M6-EXIT,Phase 11 Milestone 6 Phase 11 Exit Package complete - PHASE 11 CLOSED,DONE,stored_artifacts/TCK-20260424-PH11-M1-READINESS/
 2026-04-27T05:55:00Z,TCK-20260427-RESOURCE-CONSERVATION-HARDENING,Hardening Resource Conservation Law (Phase 3.1),DONE,Implemented ResourceTransactionResolver and refactored systems to use atomic intents.,stored_artifacts/TCK-20260427-RESOURCE-CONSERVATION-HARDENING/
+295: 2026-05-13,TCK-20260513-PERF-HARDENING-LOD,Completed Milestone 7 (Level of Detail: Spatial Gating),DONE,Implemented adaptive LOD 0-3 gating in DeterministicScheduler reducing work items by ~45%.,stored_artifacts/TCK-20260513-PERF-HARDENING-LOD/
+296: 2026-05-13,TCK-20260513-PERF-APPLY-PATH,Completed Milestone 8 (ApplyPath Efficiency: No-Op & Compaction),DONE,Optimized hot-path with no-op detection and state compaction reducing overhead by 11x.,stored_artifacts/TCK-20260513-PERF-APPLY-PATH/
+297: 2026-05-13,TCK-20260513-PERF-PROFILES-TUNING,Completed Milestone 10 (Final Production Profile Tuning),DONE,Defined standardized resource envelopes (SMALL to STRESS) for optimized engine.,stored_artifacts/TCK-20260513-PERF-PROFILES-TUNING/
 2024: 2026-04-24,TCK-20260424-PH12-M1-READINESS,Phase 12 Milestone 1 Readiness Gate complete,DONE,stored_artifacts/TCK-20260424-PH12-M1-READINESS/
 205: 2026-04-24,TCK-20260424-PH12-M2-RUNTIME-CUTOVER,Phase 12 Milestone 2 Runtime Cutover complete,DONE,stored_artifacts/TCK-20260424-PH12-M2-RUNTIME-CUTOVER/
 256: 2026-05-01T11:47:00Z,TCK-20260501-V2-ENGINE-HARDENING,V2 Engine Logic Hardening & Audit Reconciliation,DONE,Reconciled logic checklist with source implementation and injected VERIFIED v2 markers across core subsystems.,stored_artifacts/TCK-20260501-V2-ENGINE-HARDENING/
@@ -285,3 +288,12 @@ timestamp,ticket_id,title,status,summary,artifacts_path
 2026-05-10T16:44:40Z,TCK-20260510-CORE-IMPORT-STABILIZATION,Stabilizing Engine Import Paths & Social Domain Unification,DONE,Fixed broken re-exports and unified Social Contract logic.,stored_artifacts/TCK-20260510-CORE-IMPORT-STABILIZATION/
 2026-05-10,TCK-20260510-CHECKLIST-HARDENING,Hardening RPG Engine Logic Ledger,DONE
 2026-05-11,TCK-20260511-COMB-HARDENING,Hardened tactical combat and anti-stalemate logic,DONE
+2026-05-12T16:54:00Z,TCK-20260512-PERF-COMPLETION,Completing Performance Test Suite (P1/P2),DONE,Completed Milestone P1 and P2 of the performance hardening roadmap.,stored_artifacts/TCK-20260512-PERF-COMPLETION/
+2026-05-12T16:54:00Z,TCK-20260512-PERF-HARDENING,V2 Engine Performance Hardening & CI Integration,DONE,Successfully certified the V2 engine for the 2GB RAM/50ms latency envelope.,stored_artifacts/TCK-20260512-PERF-HARDENING/
+2026-05-13T01:46:00Z,TCK-20260513-PERF-HARDENING,V2 RPG Engine Performance Hardening,DONE,Optimized passive apply path and kernel tracing for production throughput.,stored_artifacts/TCK-20260513-PERF-HARDENING/
+2026-05-13,TCK-20260513-PERF-HARDENING-DIRTY-SPATIAL,Completed Milestones 3 & 4 (Dirty Tracking & Spatial Queries)
+2026-05-13,TCK-20260513-PERF-API-SNAPSHOTS,Completed Milestone 5 (API Paging & Trace Gating)
+2026-05-13,TCK-20260513-PERF-WORKER-HARDENING,Completed Milestone 6 (Worker Throughput Hardening: Parallelism & Chunking),DONE,Achieved 3.3x simulation throughput speedup via parallel spatial queries and chunked dispatch.,stored_artifacts/TCK-20260513-PERF-WORKER-HARDENING/
+2026-05-13,TCK-20260513-PERF-CI-GUARD,Completed Milestone 9 (CI Performance Regression Guard),DONE,Implemented baseline management and regression detection scripts with 15% threshold.,stored_artifacts/TCK-20260513-PERF-CI-GUARD/
+2026-05-14T07:58:54Z,TCK-20260514-ENGINE-PERF-HARDENING,V2 Engine Performance Hardening (Phase 3),DONE,Implemented lazy state reconstruction cached regional lookups and spatial indexing for LoS. Optimized AuthoritativeState.to_readonly with internal caching.,stored_artifacts/TCK-20260514-ENGINE-PERF-HARDENING/
+2026-05-14T08:22:45Z,TCK-20260514-PERSISTENCE-OPT,Persistence Layer Optimization (Hashing),DONE,Optimized CanonicalStateHasher performance from ~200ms to <1ms using component-level caching.,stored_artifacts/TCK-20260514-PERSISTENCE-OPT/

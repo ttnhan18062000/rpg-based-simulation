@@ -40,7 +40,8 @@ class NearDeathHardeningPhase:
         """
         refined_entity_updates = dict(update.entity_updates)
 
-        for entity_id, entity_update in list(refined_entity_updates.items()):
+        for entity_id in sorted(refined_entity_updates.keys()):
+            entity_update = refined_entity_updates[entity_id]
             entity = state.entities.get(entity_id)
 
             if entity is None:

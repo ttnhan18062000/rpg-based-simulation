@@ -124,12 +124,60 @@ class CertificationResult:
     final_state: Optional[Any] = None
     
     def to_json(self) -> str:
+        import json
+        from dataclasses import asdict, is_dataclass
+        from enum import Enum
+
+        def safe_asdict(obj, memo=None):
+            if memo is None: memo = set()
+            
+            # Basic types
+            if obj is None or isinstance(obj, (int, float, str, bool)):
+                return obj
+
+            if id(obj) in memo:
+                return f"<CYCLE DETECTED: {type(obj).__name__}>"
+            
+            if is_dataclass(obj):
+                memo.add(id(obj))
+                res = {}
+                for f in obj.__dataclass_fields__.values():
+                    # M10 Law: Skip internal caches/private fields for serialization
+                    if f.name.startswith("_"):
+                        continue
+                    val = getattr(obj, f.name)
+                    res[f.name] = safe_asdict(val, memo)
+                memo.remove(id(obj))
+                return res
+            elif isinstance(obj, dict):
+                memo.add(id(obj))
+                # Use str(k) to ensure keys are serializable in JSON
+                res = {str(k): safe_asdict(v, memo) for k, v in obj.items()}
+                memo.remove(id(obj))
+                return res
+            elif isinstance(obj, (list, tuple, set, frozenset)):
+                memo.add(id(obj))
+                res = [safe_asdict(x, memo) for x in obj]
+                memo.remove(id(obj))
+                return res
+            elif isinstance(obj, Enum):
+                return obj.value
+            elif hasattr(obj, "__dict__"):
+                return f"<{type(obj).__name__}>"
+            return str(obj)
+
+        try:
+            # Try standard asdict first (faster)
+            data = asdict(self)
+        except RecursionError:
+            # Fallback to safe version if depth is too great or cycle exists
+            data = safe_asdict(self)
+
         def custom_serializer(obj):
             if isinstance(obj, Enum):
                 return obj.value
             if isinstance(obj, (set, frozenset)):
                 return sorted(list(obj))
-            # Fallback for complex objects not handled by asdict
             return str(obj)
 
-        return json.dumps(asdict(self), default=custom_serializer, indent=2)
+        return json.dumps(data, default=custom_serializer, indent=2)

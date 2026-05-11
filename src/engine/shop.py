@@ -34,9 +34,17 @@ class ShopSystem:
         # VERIFIED v2: shop_visit_semantics
         Logic ID: TOWN-016 (Shop visits resolve bounded buy/sell behavior)
         """
+        from src.engine.spatial_query import SpatialQueryService
         refined_entity_updates = dict(update.entity_updates)
         
-        for e_id, entity in state.entities.items():
+        # Optimization: Only process entities that moved or had inventory changes
+        # Logic ID: PERF-006 (Dirty Entity Tracking)
+        relevant_ids = update.dirty_set.movement_entities | update.dirty_set.inventory_entities if update.dirty_set else state.entities.keys()
+        
+        for e_id in relevant_ids:
+            entity = state.entities.get(e_id)
+            if not entity: continue
+            
             pos = entity.navigation.position
             existing_upd = refined_entity_updates.get(e_id, EntityUpdate(entity_id=e_id))
             if existing_upd and existing_upd.new_position:
@@ -47,7 +55,7 @@ class ShopSystem:
             
             if building_type == "shop":
                 # Check functionality (LEG-RPG-001/006)
-                building = next((b for b in state.buildings.values() if b.position == tile_pos and b.kind == "shop"), None)
+                building = SpatialQueryService.get_building_at(state, tile_pos)
                 if building and not building.functional:
                     continue # Shop is sabotaged and non-functional
                 

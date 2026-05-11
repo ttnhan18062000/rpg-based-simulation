@@ -26,11 +26,10 @@ class EvolutionSystem:
         Check for evolution triggers (level cap or XP thresholds) and apply transformations.
         Consolidates all XP sources and applies multipliers (e.g. Well Rested).
         """
-        for e_id in sorted(list(state.entities.keys())):
-            entity = state.entities[e_id]
-            if not entity.lifecycle.active: continue
-            
-            ent_upd = update.entity_updates.get(e_id, EntityUpdate(entity_id=e_id))
+        for e_id, ent_upd in update.entity_updates.items():
+            entity = state.entities.get(e_id)
+            if not entity or not entity.lifecycle.active:
+                continue
             
             # 1. Consolidate XP Sources
             raw_delta = 0

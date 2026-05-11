@@ -4,12 +4,18 @@ from src.core.state import EntityState, AuthoritativeState
 
 class HarvestScorer(GoalScorer):
     def score(self, entity: EntityState, state: AuthoritativeState) -> GoalScore:
+        # Optimized v2: Early exit if entity is at capacity
+        if len(entity.inventory.items) >= entity.inventory.max_slots:
+            return GoalScore(kind="harvesting", utility=0.0)
+
         best_node_id = None
         best_score = 0.0
         
+        # O(N) over nodes is acceptable if N is small (<100)
+        # For larger worlds, we would use a spatial index.
         for node in state.resource_nodes.values():
             if node.remaining_charges > 0 and node.cooldown_remaining <= 0:
-                # Proximity score
+                # Proximity score (Manhattan distance)
                 dist = max(1.0, abs(node.position[0] - entity.navigation.position[0]) + abs(node.position[1] - entity.navigation.position[1]))
                 node_score = 50.0 / dist
                 if node_score > best_score:
@@ -21,7 +27,11 @@ class HarvestScorer(GoalScorer):
 class SleepScorer(GoalScorer):
     def score(self, entity: EntityState, state: AuthoritativeState) -> GoalScore:
         bio = entity.biological
-        utility = bio.sleep_debt # Base utility is sleep debt
+        # Early exit: if sleep debt is low, don't bother searching
+        if bio.sleep_debt < 20.0:
+            return GoalScore(kind="fatigue", utility=bio.sleep_debt)
+
+        utility = bio.sleep_debt
         
         # Night bias
         is_night = (state.world_time >= 1800 or state.world_time < 600)
@@ -43,6 +53,10 @@ class SleepScorer(GoalScorer):
 class EatScorer(GoalScorer):
     def score(self, entity: EntityState, state: AuthoritativeState) -> GoalScore:
         bio = entity.biological
+        # Early exit: if hunger is low, don't bother searching
+        if bio.hunger < 20.0:
+            return GoalScore(kind="hunger", utility=bio.hunger)
+
         utility = bio.hunger
         
         # Find nearest tavern

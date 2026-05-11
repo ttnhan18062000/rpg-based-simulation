@@ -16,22 +16,29 @@ class InteractionPhase:
         from src.core.updates import InteractionUpdate, EntityUpdate
         refined_entity_updates = dict(update.entity_updates)
         
-        for e_id, entity in state.entities.items():
-            if not entity.lifecycle.active:
+        from src.engine.spatial_query import SpatialQueryService
+        
+        # Optimization: Only process entities that moved or proposed navigation changes
+        # Logic ID: PERF-006 (Dirty Entity Tracking)
+        relevant_ids_raw = update.dirty_set.movement_entities | update.dirty_set.strategic_entities if update.dirty_set else state.entities.keys()
+        relevant_ids = sorted(list(relevant_ids_raw))
+        
+        for e_id in relevant_ids:
+            entity = state.entities.get(e_id)
+            if not entity or not entity.lifecycle.active:
                 continue
             
-            # Identify if entity is at a location that triggers automatic interaction
-            # Or if they have an explicit target set
-            ent_upd = refined_entity_updates.get(e_id, EntityUpdate(entity_id=e_id))
+            ent_upd = refined_entity_updates.get(e_id)
             target_pos = entity.navigation.target
-            if ent_upd.navigation and ent_upd.navigation.target_set:
+            if ent_upd and ent_upd.navigation and ent_upd.navigation.target_set:
                 target_pos = ent_upd.navigation.target_set
             
             if target_pos:
-                # Find if any node is at the target
-                target_node = next((n for n in state.resource_nodes.values() if n.position == target_pos), None)
-                target_ground = next((g for g in state.ground_items.values() if g.position == target_pos), None)
-                target_corpse = next((c for c in state.corpses.values() if c.position == target_pos), None)
+                # Use optimized spatial lookups
+                # Logic ID: PERF-007 (Spatial Query Service)
+                target_node = SpatialQueryService.get_node_at(state, target_pos)
+                target_ground = SpatialQueryService.get_ground_item_at(state, target_pos)
+                target_corpse = SpatialQueryService.get_corpse_at(state, target_pos)
                 
                 final_target_id = None
                 if target_node:
@@ -42,6 +49,7 @@ class InteractionPhase:
                     final_target_id = target_corpse.id
                 
                 if final_target_id is not None:
+                    ent_upd = ent_upd or EntityUpdate(entity_id=e_id)
                     current_int = ent_upd.interaction or InteractionUpdate()
                     if not current_int.reset:
                         p_delta = current_int.progress_delta if current_int.progress_delta > 0 else 1

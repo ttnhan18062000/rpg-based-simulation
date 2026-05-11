@@ -104,6 +104,11 @@ class Kernel:
         from src.engine.policy import GovernorPolicy
         from src.core.governance import RuntimeMode
         self._current_policy = GovernorPolicy.from_mode(RuntimeMode.NORMAL)
+        
+        # Performance/Benchmarking: Allow disabling replay via flags
+        if flags and flags.get("no_replay", False):
+            self._current_policy = replace(self._current_policy, replay_allowed=False)
+            
         self._current_signals = None
         self._current_work_items = []
         self._source_packets = {}
@@ -175,11 +180,12 @@ class Kernel:
         
         # Law 120: Tick budget enforcement
         # Logic ID: 120
-        # Abort if compute exceeds 2x average (minimum 20ms) or 100ms hard cap.
+        # Abort if compute exceeds 2x average (minimum 20ms) or profile hard cap.
         avg_ms = (self._status.signal_history[-1].tick_compute_ms if self._status.signal_history else 10.0)
         limit_ms = max(20.0, avg_ms * 2.0)
-        if self._final_compute_ms > min(100.0, limit_ms):
-             logger.warning(f"Tick {self._state.tick} exceeded budget: {self._final_compute_ms:.2f}ms vs limit {limit_ms:.2f}ms. Aborting next tick if sustained.")
+        hard_cap = self._profile.max_tick_budget_ms
+        if not self._audit_mode and self._final_compute_ms > min(hard_cap, limit_ms):
+             logger.warning(f"Tick {self._state.tick} exceeded budget: {self._final_compute_ms:.2f}ms vs limit {min(hard_cap, limit_ms):.2f}ms. Aborting next tick if sustained.")
              # We can't easily 'abort' the CURRENT tick as it's mostly done, 
              # but we can signal to the governor to throttle HARD next tick.
              self._status.record_dropped_work(9999) # Signal extreme pressure
@@ -205,19 +211,35 @@ class Kernel:
             interval_override=self._profile.sampling_interval_ticks
         )
         
-        self._current_signals = PressureSignals(
-            work_debt_total=sum(self._state.work_debt.values()),
-            tick_compute_ms=(self._status.signal_history[-1].tick_compute_ms 
-                             if self._status.signal_history else 0.0),
-            worker_utilization=worker_stats["worker_utilization"],
-            queue_utilization=worker_stats["queue_utilization"],
-            memory_estimate_mb=self._platform_signals["rss_mb"],
-            replay_backlog_kb=replay_stats["backlog_kb"],
-            active_workers=worker_stats["active_workers"],
-            dropped_work_delta=self._status.dropped_work_delta,
-            phase_costs_ms=(self._status.signal_history[-1].phase_costs_ms 
-                            if self._status.signal_history else {})
-        )
+        # M10 Law: Deterministic Signals in audit_mode
+        # Time-based and hardware-based signals are zeroed to ensure
+        # that governance decisions are bit-identical across machines.
+        if self._audit_mode:
+            self._current_signals = PressureSignals(
+                work_debt_total=sum(self._state.work_debt.values()),
+                tick_compute_ms=0.0,
+                worker_utilization=0.0,
+                queue_utilization=0.0,
+                memory_estimate_mb=0.0,
+                replay_backlog_kb=0,
+                active_workers=0,
+                dropped_work_delta=self._status.dropped_work_delta,
+                phase_costs_ms={}
+            )
+        else:
+            self._current_signals = PressureSignals(
+                work_debt_total=sum(self._state.work_debt.values()),
+                tick_compute_ms=(self._status.signal_history[-1].tick_compute_ms 
+                                 if self._status.signal_history else 0.0),
+                worker_utilization=worker_stats["worker_utilization"],
+                queue_utilization=worker_stats["queue_utilization"],
+                memory_estimate_mb=self._platform_signals["rss_mb"],
+                replay_backlog_kb=replay_stats["backlog_kb"],
+                active_workers=worker_stats["active_workers"],
+                dropped_work_delta=self._status.dropped_work_delta,
+                phase_costs_ms=(self._status.signal_history[-1].phase_costs_ms 
+                                if self._status.signal_history else {})
+            )
         
         self._current_policy = self._governor.evaluate(
             self._profile, 
@@ -235,9 +257,12 @@ class Kernel:
         """3. COLLECTION (Worker Thought Execution)"""
         # VERIFIED v2: thought_application_decoupling
         # Logic ID: TOWN-007 (Worker decision-making is decoupled from authoritative application)
+        # Optimization: Avoid expensive state freezing if NO workers need to run
+        state_view = self._state.readonly_view()
+        
         self._final_results = self._executor.execute(
             self._current_work_items,
-            self._state.readonly_view(),
+            state_view,
             self._rng,
             self._profile
         )
@@ -268,7 +293,8 @@ class Kernel:
                 # or if we haven't hit the hard limit yet.
                 elapsed = (time.perf_counter_ns() - self._start_perf_ts) / 1e6
                 # In audit_mode, we NEVER throttle based on time to preserve determinism.
-                should_throttle = not self._audit_mode and elapsed > 100.0
+                hard_cap = self._profile.max_tick_budget_ms
+                should_throttle = not self._audit_mode and elapsed > hard_cap
                 
                 if should_throttle:
                     # VERIFIED v2: RPG-INFRA-203
@@ -313,21 +339,22 @@ class Kernel:
         )
         
         # M3 Law: Unified authoritative refinement pipeline
-        refined_update = AuthoritativeApplyPipeline.refine(self._state, raw_update)
+        refined_update = AuthoritativeApplyPipeline.refine(self._state, raw_update, cadence=self._profile.cadence)
         
-        # M6 Law: Trace refined update for auditability
-        self._replay.emit(TraceEvent(
-            tick=self._state.tick,
-            system="KERNEL",
-            event_type="REFINED_UPDATE",
-            payload={
-                "tick": self._state.tick,
-                "world_time": self._state.world_time,
-                "seed": self._state.seed,
-                "update": refined_update,
-                "fingerprint": self._state.fingerprint()
-            }
-        ), self._current_policy)
+        # M6 Law: Trace refined update for auditability (Gated by policy for performance)
+        if self._current_policy.replay_allowed:
+            self._replay.emit(TraceEvent(
+                tick=self._state.tick,
+                system="KERNEL",
+                event_type="REFINED_UPDATE",
+                payload={
+                    "tick": self._state.tick,
+                    "world_time": self._state.world_time,
+                    "seed": self._state.seed,
+                    "update": refined_update,
+                    "fingerprint": self._state.fingerprint()
+                }
+            ), self._current_policy)
         
         from src.engine.apply import ApplyPath
         # Milestone 8 Law: Clock advancement and entity updates applied in a singular authoritative step.
@@ -335,7 +362,9 @@ class Kernel:
             self._state, 
             refined_update,
             next_tick=self._state.tick + 1,
-            next_world_time=self._current_world_time
+            next_world_time=self._current_world_time,
+            cadence=self._profile.cadence,
+            audit_mode=self._audit_mode
         )
 
     def _phase_cleanup(self) -> None:
@@ -374,14 +403,21 @@ class Kernel:
              )
 
     def _phase_persistence(self) -> None:
-        from src.engine.checkpoint import CanonicalStateHasher
-        tick_hash = CanonicalStateHasher.get_hash(self._state)
-        self._replay.emit(TraceEvent(
-            tick=self._state.tick,
-            system="KERNEL",
-            event_type="TICK_END",
-            payload={"hash": tick_hash}
-        ), self._current_policy)
+        # Milestone 3 Optimization: Skip expensive hashing in high-performance runs
+        # unless audit_mode is explicitly enabled or richness is FULL.
+        tick_hash = "SKIPPED"
+        if self._current_policy.replay_allowed and (self._audit_mode or self._current_policy.replay_richness == "FULL"):
+            from src.engine.checkpoint import CanonicalStateHasher
+            tick_hash = CanonicalStateHasher.get_hash(self._state)
+            
+        if self._current_policy.replay_allowed:
+            self._replay.emit(TraceEvent(
+                tick=self._state.tick,
+                system="KERNEL",
+                event_type="TICK_END",
+                payload={"hash": tick_hash}
+            ), self._current_policy)
+            
         # VERIFIED v2: deterministic_replay_delta
         self._replay.on_tick_end(self._state.tick)
 

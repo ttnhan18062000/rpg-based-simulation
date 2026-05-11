@@ -267,6 +267,7 @@ class CognitionProfile:
     max_concerns: int = 5
     max_candidate_zones: int = 4
     max_hypotheses: int = 3
+    max_turning_points: int = 20
     interruption_resistance: float = 0.3  # 0.0 (easy switch) to 1.0 (never switch)
     detour_breadth: int = 3  # Max detour suggestions per tick
     detour_depth: int = 2    # Max nesting depth for detour chains

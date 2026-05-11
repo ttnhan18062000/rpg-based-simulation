@@ -48,4 +48,5 @@ markers = [
     "intentional_divergence: asserts a documented behavioral difference",
     "regression: targets a specific bug identified during porting",
     "certification: engine integrity proof for milestone gates",
+    "perf: performance measurement tests",
 ]

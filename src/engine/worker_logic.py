@@ -12,9 +12,18 @@ def default_simulation_worker(packet: WorkerPacket) -> List[WorkerResult]:
     """
     if packet.work_kind == "ENTITY_MOVE":
         target = packet.payload.get("target_position", packet.subject.navigation.position)
-        updates = SimulationDomainLogic.execute_move(packet, packet.subject, target)
+        from src.core.updates import EntityUpdate, NavigationUpdate
+        updates = {packet.subject.id: EntityUpdate(
+            entity_id=packet.subject.id,
+            navigation=NavigationUpdate(target_set=target)
+        )}
     elif packet.work_kind == "ENTITY_ACT":
-        updates = SimulationDomainLogic.execute_action(packet.subject, packet.payload, packet.tick, packet.neighbor_view, context=packet)
+        neighbor_view = packet.neighbor_view
+        if not neighbor_view and packet.all_entities:
+            # Lazy parallel computation of neighbor view
+            neighbor_view = SimulationDomainLogic.get_neighbor_view(packet, packet.subject, radius=10.0)
+            
+        updates = SimulationDomainLogic.execute_action(packet.subject, packet.payload, packet.tick, neighbor_view, context=packet)
         if packet.subject.id in updates:
             from src.core.updates import TaskUpdate
             updates[packet.subject.id] = replace(updates[packet.subject.id], 
@@ -41,6 +50,8 @@ def default_simulation_worker(packet: WorkerPacket) -> List[WorkerResult]:
             entity_id=eid,
             work_class=packet.work_class,
             update=upd,
-            status=ResultStatus.SUCCESS
+            status=ResultStatus.SUCCESS,
+            class_priority=packet.class_priority,
+            local_priority=packet.local_priority
         ))
     return results

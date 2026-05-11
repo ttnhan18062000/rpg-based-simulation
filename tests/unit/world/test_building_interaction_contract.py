@@ -1,6 +1,6 @@
 import pytest
 from dataclasses import replace
-from src.core.state import AuthoritativeState, EntityState, IdentityComponent, CombatComponent, TaskComponent
+from src.core.state import AuthoritativeState, EntityState, IdentityComponent, CombatComponent, TaskComponent, BuildingState
 from src.engine.town_resolution import TownResolutionSystem
 from src.core.updates import StateUpdate, EntityUpdate, TaskUpdate
 
@@ -20,7 +20,8 @@ def test_building_interaction_inn_rest_recovery():
         tick=1, seed=42, 
         entities={1: entity},
         town_tiles={(5, 5)},
-        building_tiles={(5, 5): "inn"}
+        building_tiles={(5, 5): "inn"},
+        buildings={10: BuildingState(id=10, kind="inn", position=(5.0, 5.0), functional=True)}
     )
     
     # Propose REST

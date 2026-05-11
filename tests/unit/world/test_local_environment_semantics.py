@@ -117,6 +117,7 @@ def test_building_movement_blockage():
         tick=1,
         seed=42,
         buildings={1: building},
+        building_tiles={(10, 11): "shop"}
     )
 
     is_legal, reason = LegalityServiceV2.verify_occupancy(

@@ -20,7 +20,8 @@ class QuestResolutionSystem:
         updates = []
         
         # In V2, active quests are stored as ProjectState inside entity.strategic.projects
-        for q_id, project in entity.strategic.projects.items():
+        for q_id in sorted(entity.strategic.projects.keys()):
+            project = entity.strategic.projects[q_id]
             if not isinstance(project, QuestState):
                 continue
                 

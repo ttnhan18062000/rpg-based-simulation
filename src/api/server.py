@@ -55,16 +55,35 @@ def create_v2_app(profile: RuntimeProfile) -> FastAPI:
         state = manager.get_state()
         if not state:
             return {"error": "State not available"}
-        from src.api.presenters.state_presenter import StatePresenter
-        return StatePresenter.present_minimal(state)
+        return state
 
     @app.get("/api/v1/inspect")
     async def inspect_state(manager: V2EngineManager = Depends(get_engine_manager)):
-        state = manager.get_state()
-        if not state:
+        """Complete state view (Deprecated: Use granular endpoints for large worlds)."""
+        snapshot = manager.get_full_snapshot()
+        if not snapshot:
             return {"error": "State not available"}
-        from src.api.presenters.state_presenter import StatePresenter
-        return StatePresenter.present_full(state)
+        return snapshot
+
+    @app.get("/api/v1/entities")
+    async def get_entities(
+        offset: int = 0, 
+        limit: int = 100, 
+        manager: V2EngineManager = Depends(get_engine_manager)
+    ):
+        """Paged entity retrieval."""
+        return manager.get_entities_paged(offset, limit)
+
+    @app.get("/api/v1/entities/{entity_id}")
+    async def get_entity(
+        entity_id: int, 
+        manager: V2EngineManager = Depends(get_engine_manager)
+    ):
+        """Single entity lookup."""
+        entity = manager.get_entity(entity_id)
+        if not entity:
+            return {"error": f"Entity {entity_id} not found"}
+        return entity
 
     @app.post("/api/v1/control/pause")
     async def pause_sim(manager: V2EngineManager = Depends(get_engine_manager)):

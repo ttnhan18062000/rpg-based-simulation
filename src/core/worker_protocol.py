@@ -16,7 +16,7 @@ class ResultStatus(Enum):
     TIMEOUT = "timeout"
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class WorkerPacket:
     """
     Law: A worker must receive a compact, bounded, and read-only context.
@@ -39,11 +39,21 @@ class WorkerPacket:
     # Work Type details
     work_kind: str
     payload: Dict[str, Any]
+    
+    # Priority Metadata (M8 Law: Determinism requires sorting by priority)
+    class_priority: int = 0
+    local_priority: int = 0
+    
     regions: Dict[str, Any] = field(default_factory=dict)
     resource_nodes: Dict[int, Any] = field(default_factory=dict)
     buildings: Dict[int, Any] = field(default_factory=dict)
     groups: Dict[int, Any] = field(default_factory=dict)
     town_center: Tuple[float, float] = (0.0, 0.0)
+    all_entities: Dict[int, EntityState] = field(default_factory=dict)
+    spatial_grid: Optional[Any] = None
+    occupancy_map: Optional[Dict[Tuple[int, int], int]] = None
+    region_list: Optional[List[Any]] = None
+    building_map: Optional[Dict[Tuple[int, int], Any]] = None
 
     # Deterministic Context (Defaulted for backwards compatibility/optional inclusion)
     blocked_tiles: List[Tuple[int, int]] = field(default_factory=list) # Spatial Law
@@ -53,6 +63,8 @@ class WorkerPacket:
     @property
     def entities(self) -> Dict[int, EntityState]:
         """Milestone D Law: Property-based access to the canonical neighbor view."""
+        if self.all_entities:
+            return self.all_entities
         return {eid: ent for eid, ent in self.neighbor_view}
 
     def to_readonly(self) -> WorkerPacket:

@@ -67,7 +67,14 @@ class GroupSystem:
             return ent.navigation.position if ent else (0.0, 0.0)
 
         # 1. Process Existing Groups (Dissolution & Cohesion)
-        for g_id, group in state.groups.items():
+        # Optimization: Only process groups that were explicitly modified or had member changes
+        # Logic ID: PERF-006 (Dirty Entity Tracking)
+        relevant_groups = current_update.dirty_set.group_ids if current_update and current_update.dirty_set else state.groups.keys()
+        
+        for g_id in sorted(relevant_groups):
+            group = state.groups.get(g_id)
+            if not group: continue
+            
             leader = state.entities.get(group.leader_id)
 
             # Logic ID: SOC-176 (Party dissolves when leader is dead/missing)
@@ -235,8 +242,9 @@ class GroupSystem:
         # 2. Group Formation (Purpose-Driven)
         # VERIFIED v2: group_formation_purpose_driven
         # Find entities without groups
-        ungrouped_ids = [e_id for e_id, e in state.entities.items() 
-                         if e.combat.alive and e.identity.group_id is None]
+        # Logic ID: PERF-006 (Dirty Entity Tracking - Relaxed for ungrouped entities)
+        ungrouped_ids = sorted([e_id for e_id, e in state.entities.items() 
+                                if e.combat.alive and e.identity.group_id is None])
         
         # Purpose-Driven Formation: Check for active social contracts (Recruitment/Protection)
         already_forming: Set[int] = set()
@@ -253,21 +261,27 @@ class GroupSystem:
             # Logic ID: SOC-187 (Group formation test covers accepted contract)
             # Logic ID: SOC-188 (Group formation test covers no contract / proximity-only rejection)
             # Logic ID: SOC-164 (Proximity alone does not create a party)
-            for c_id, contract in entity_a.strategic.contracts.items():
+            for c_id in sorted(entity_a.strategic.contracts.keys()):
+                contract = entity_a.strategic.contracts[c_id]
                 from src.core.strategic import ContractStatus
                 if contract.status != ContractStatus.ACTIVE: continue
                 
                 other_id = contract.target_id if contract.source_id == id_a else contract.source_id
                 if other_id in state.entities:
                     other_entity = state.entities[other_id]
-                    if other_entity.combat.alive and other_entity.identity.group_id is None:
+                    # Law: Entity must be alive, ungrouped, and NOT already being assigned a group this tick
+                    if (other_entity.combat.alive and 
+                        other_entity.identity.group_id is None and 
+                        other_id not in already_forming):
+                        
                         # Cohesion check: only form group if they are within range
                         dx = entity_a.navigation.position[0] - other_entity.navigation.position[0]
                         dy = entity_a.navigation.position[1] - other_entity.navigation.position[1]
                         if (dx*dx + dy*dy) < (10.0**2):
                             new_group_members.add(other_id)
-                            active_contract_id = c_id
-                            break # Simplified: stop at first contract
+                            # Use the first contract ID as the primary group contract
+                            if active_contract_id is None:
+                                active_contract_id = c_id
             
             if len(new_group_members) >= 2:
                 # Form new group

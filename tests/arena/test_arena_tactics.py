@@ -20,6 +20,25 @@ def test_arena_group_coordination():
     # Run for 20 ticks to allow group formation and engagement
     result = harness.run_scenario(scenario_id, state, expectations, ticks=20)
     
+    if not result.conformance_passed:
+        print(f"FAILURE KIND: {result.failure_kind}")
+        print(f"FAILURE REASON: {result.failure_reason}")
+        
+        # Baseline run is hidden inside run_scenario, so we have to re-run it here to diff
+        # Or we can just check what we have in result
+        from tests.arena.state_diff import diff_states
+        # We don't have the baseline state easily, but we can reconstruct it
+        profile_dict = profile.model_dump()
+        profile_dict["max_worker_count"] = 0
+        from src.engine.kernel import Kernel
+        from src.platform.rng import DeterministicRNG
+        baseline_kernel = Kernel(RuntimeProfile(**profile_dict), state, DeterministicRNG(state.seed), flags={"no_replay": True, "audit_mode": True})
+        for _ in range(20):
+            baseline_kernel.tick_once()
+        
+        diffs = diff_states(baseline_kernel.state, result.final_state)
+        print(f"ALL DIFFS: {diffs}")
+
     assert result.conformance_passed
     
     # Verify group formation (should have at least 2 groups: one per team)
@@ -29,6 +48,6 @@ def test_arena_group_coordination():
     # Check shared targets
     for group in final_state.groups.values():
         if group.shared_target_id:
-            print(f"Group {group.id} (Faction {group.member_ids}) focus firing on {group.shared_target_id}")
+            pass
             # Ensure the target is actually an entity
             assert group.shared_target_id in final_state.entities

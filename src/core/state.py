@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from enum import Enum, IntEnum, auto
-from dataclasses import dataclass, field, replace, InitVar
+from dataclasses import dataclass, field, replace, InitVar, asdict
 from types import MappingProxyType
 from typing import Dict, Any, Set, Optional, List, Tuple
 from src.core.strategic import StrategicComponent
@@ -12,6 +12,7 @@ from src.core.movement_modes import MovementMode
 from src.core.governance import RuntimeMode
 from src.core.models.inventory import ItemKind, EquipSlot, ItemStack, InventoryComponent
 from src.core.models.social import SocialBond, BetrayalRecord, SocialComponent
+from src.core.immutability import shallow_freeze
 
 
 def _readonly_mapping(value):
@@ -56,6 +57,22 @@ class StaminaComponent:
     rest_regen_rate: float = 8.0  # Regen rate when resting
     exhaustion_threshold: float = 10.0  # Below this, exhaustion penalty applies
     exhaustion_penalty: float = 0.7     # Combat multiplier when exhausted
+    _canonical_cache: Any = field(default=None, init=False, repr=False, compare=False)
+
+    def to_canonical_dict(self) -> Dict[str, Any]:
+        if self._canonical_cache is not None:
+            return self._canonical_cache
+        res = {
+            "current": self.current,
+            "max_stamina": self.max_stamina,
+            "regen_rate": self.regen_rate,
+            "rest_regen_rate": self.rest_regen_rate,
+            "exhaustion_threshold": self.exhaustion_threshold,
+            "exhaustion_penalty": self.exhaustion_penalty
+        }
+        object.__setattr__(self, "_canonical_cache", res)
+        return res
+
 
     # Drain constants
     ATTACK_COST: float = 8.0
@@ -99,6 +116,22 @@ class BiologicalComponent:
     last_meal_tick: int = 0
     last_sleep_tick: int = 0
     well_rested_until: int = -1   # Tick until which well-rested buff applies
+    _canonical_cache: Any = field(default=None, init=False, repr=False, compare=False)
+
+    def to_canonical_dict(self) -> Dict[str, Any]:
+        if self._canonical_cache is not None:
+            return self._canonical_cache
+        res = {
+            "sleep_debt": self.sleep_debt,
+            "hunger": self.hunger,
+            "rest_pressure": self.rest_pressure,
+            "last_meal_tick": self.last_meal_tick,
+            "last_sleep_tick": self.last_sleep_tick,
+            "well_rested_until": self.well_rested_until
+        }
+        object.__setattr__(self, "_canonical_cache", res)
+        return res
+
 
 
 @dataclass(frozen=True, slots=True)
@@ -113,6 +146,25 @@ class LifecycleComponent:
     heir_entity_id: Optional[int] = None
     heirlooms: list[str] = field(default_factory=list)
     active: bool = True
+    _canonical_cache: Any = field(default=None, init=False, repr=False, compare=False)
+
+    def to_canonical_dict(self) -> Dict[str, Any]:
+        if self._canonical_cache is not None:
+            return self._canonical_cache
+        res = {
+            "age_ticks": self.age_ticks,
+            "max_age_ticks": self.max_age_ticks,
+            "is_permadeath": self.is_permadeath,
+            "death_tick": self.death_tick,
+            "death_reason": self.death_reason,
+            "generation": self.generation,
+            "heir_entity_id": self.heir_entity_id,
+            "heirlooms": sorted(list(self.heirlooms)),
+            "active": self.active
+        }
+        object.__setattr__(self, "_canonical_cache", res)
+        return res
+
 
 
 @dataclass(frozen=True, slots=True)
@@ -126,6 +178,23 @@ class LocalScarState:
     recovery_rate: float = 0.0005
     source_event_id: Optional[str] = None
     behavioral_modifiers: Dict[str, float] = field(default_factory=dict)
+    _canonical_cache: Any = field(default=None, init=False, repr=False, compare=False)
+
+    def to_canonical_dict(self) -> Dict[str, Any]:
+        if self._canonical_cache is not None:
+            return self._canonical_cache
+        res = {
+            "id": self.id,
+            "position": self.position,
+            "kind": self.kind,
+            "severity": self.severity,
+            "created_tick": self.created_tick,
+            "recovery_rate": self.recovery_rate,
+            "source_event_id": self.source_event_id,
+            "behavioral_modifiers": dict(sorted(self.behavioral_modifiers.items()))
+        }
+        object.__setattr__(self, "_canonical_cache", res)
+        return res
 
 
 @dataclass(frozen=True, slots=True)
@@ -146,6 +215,30 @@ class RegionState:
     weather: str = "CLEAR"
     active_modifiers: List[str] = field(default_factory=list)
     price_modifiers: Dict[str, float] = field(default_factory=dict) # ItemKind -> Multiplier
+    _canonical_cache: Any = field(default=None, init=False, repr=False, compare=False)
+
+    def to_canonical_dict(self) -> Dict[str, Any]:
+        if self._canonical_cache is not None:
+            return self._canonical_cache
+        res = {
+            "id": self.id,
+            "name": self.name,
+            "bounds": self.bounds,
+            "kind": self.kind,
+            "hazard_level": self.hazard_level,
+            "suppression_active": self.suppression_active,
+            "calamity_intensity": self.calamity_intensity,
+            "trauma_score": self.trauma_score,
+            "retaliation_pressure": self.retaliation_pressure,
+            "stability": self.stability,
+            "owner_faction_id": self.owner_faction_id,
+            "influence": self.influence,
+            "weather": self.weather,
+            "active_modifiers": sorted(list(self.active_modifiers)),
+            "price_modifiers": dict(sorted(self.price_modifiers.items()))
+        }
+        object.__setattr__(self, "_canonical_cache", res)
+        return res
 
     @property
     def center(self) -> tuple[float, float]:
@@ -173,6 +266,31 @@ class CombatComponent:
     wounds: List[WoundState] = field(default_factory=list)
     scars: List[ScarState] = field(default_factory=list)
     latest_result: Optional["IntentResult"] = None
+    _canonical_cache: Any = field(default=None, init=False, repr=False, compare=False)
+
+    def to_canonical_dict(self) -> Dict[str, Any]:
+        if self._canonical_cache is not None:
+            return self._canonical_cache
+        res = {
+            "hp": self.hp,
+            "max_hp": self.max_hp,
+            "atk": self.atk,
+            "def_stat": self.def_stat,
+            "speed": self.speed,
+            "range": self.range,
+            "evasion": self.evasion,
+            "move_cost": self.move_cost,
+            "tactical_role": self.tactical_role,
+            "action_style": self.action_style,
+            "alive": self.alive,
+            "readiness": self.readiness,
+            "wounds": [asdict(w) for w in self.wounds],
+            "scars": [asdict(s) for s in self.scars],
+            "latest_result": asdict(self.latest_result) if self.latest_result else None
+        }
+        object.__setattr__(self, "_canonical_cache", res)
+        return res
+
 
 
 # Terrain cost weights for pathfinding
@@ -207,6 +325,9 @@ class NavigationComponent:
     # Mob Leash fields
     home_position: Optional[tuple[float, float]] = None
     leash_radius: float = 0.0  # 0 = no leash
+    
+    # Phase 3 Hardening: Cache region_id to avoid O(N) scans
+    region_id: Optional[str] = None
     chase_ticks: int = 0
     max_chase_ticks: int = 15
     returning_home: bool = False
@@ -225,6 +346,19 @@ class InteractionComponent:
     target_node_id: int | None = None
     progress: int = 0
     start_tick: int = 0
+    _canonical_cache: Any = field(default=None, init=False, repr=False, compare=False)
+
+    def to_canonical_dict(self) -> Dict[str, Any]:
+        if self._canonical_cache is not None:
+            return self._canonical_cache
+        res = {
+            "target_node_id": self.target_node_id,
+            "progress": self.progress,
+            "start_tick": self.start_tick
+        }
+        object.__setattr__(self, "_canonical_cache", res)
+        return res
+
 
 class LifeStage(str, Enum):
     """Developmental stage of an entity."""
@@ -239,6 +373,20 @@ class PersonalityComponent:
     bravery: float = 0.0    # Biases combat vs flee
     sociability: float = 0.0 # Biases social goals
     industry: float = 0.0    # Biases work/harvest goals
+    _canonical_cache: Any = field(default=None, init=False, repr=False, compare=False)
+
+    def to_canonical_dict(self) -> Dict[str, Any]:
+        if self._canonical_cache is not None:
+            return self._canonical_cache
+        res = {
+            "greed": self.greed,
+            "bravery": self.bravery,
+            "sociability": self.sociability,
+            "industry": self.industry
+        }
+        object.__setattr__(self, "_canonical_cache", res)
+        return res
+
 
 @dataclass(frozen=True, slots=True)
 class AttributeComponent:
@@ -252,6 +400,25 @@ class AttributeComponent:
     wisdom: int = 5
     perception: int = 5
     charisma: int = 5
+    _canonical_cache: Any = field(default=None, init=False, repr=False, compare=False)
+
+    def to_canonical_dict(self) -> Dict[str, Any]:
+        if self._canonical_cache is not None:
+            return self._canonical_cache
+        res = {
+            "strength": self.strength,
+            "agility": self.agility,
+            "vitality": self.vitality,
+            "endurance": self.endurance,
+            "intelligence": self.intelligence,
+            "spirit": self.spirit,
+            "wisdom": self.wisdom,
+            "perception": self.perception,
+            "charisma": self.charisma
+        }
+        object.__setattr__(self, "_canonical_cache", res)
+        return res
+
 
 @dataclass(frozen=True, slots=True)
 class IdentityComponent:
@@ -275,6 +442,27 @@ class IdentityComponent:
     group_id: Optional[int] = None
     properties: Dict[str, Any] = field(default_factory=dict)
     latest_intent_results: List["IntentResult"] = field(default_factory=list)
+    _canonical_cache: Any = field(default=None, init=False, repr=False, compare=False)
+
+    def to_canonical_dict(self) -> Dict[str, Any]:
+        if self._canonical_cache is not None:
+            return self._canonical_cache
+        res = {
+            "role": self.role,
+            "faction": self.faction,
+            "class_id": self.class_id,
+            "evolution_level": self.evolution_level,
+            "evolution_points": self.evolution_points,
+            "veterancy_rank": self.veterancy_rank,
+            "unspent_ap": self.unspent_ap,
+            "known_recipes": sorted(list(self.known_recipes)),
+            "learned_skills": sorted(list(self.learned_skills)),
+            "active_breakthroughs": sorted(list(self.active_breakthroughs)),
+            "personality": self.personality.to_canonical_dict(),
+            "life_stage": str(self.life_stage)
+        }
+        object.__setattr__(self, "_canonical_cache", res)
+        return res
 
 @dataclass(frozen=True, slots=True)
 class AptitudeComponent:
@@ -290,6 +478,27 @@ class AptitudeComponent:
     wis_apt: float = 1.0
     per_apt: float = 1.0
     cha_apt: float = 1.0
+    _canonical_cache: Any = field(default=None, init=False, repr=False, compare=False)
+
+    def to_canonical_dict(self) -> Dict[str, Any]:
+        if self._canonical_cache is not None:
+            return self._canonical_cache
+        res = {
+            "learning_rate": self.learning_rate,
+            "stamina_efficiency": self.stamina_efficiency,
+            "str_apt": self.str_apt,
+            "agi_apt": self.agi_apt,
+            "vit_apt": self.vit_apt,
+            "end_apt": self.end_apt,
+            "int_apt": self.int_apt,
+            "spi_apt": self.spi_apt,
+            "wis_apt": self.wis_apt,
+            "per_apt": self.per_apt,
+            "cha_apt": self.cha_apt
+        }
+        object.__setattr__(self, "_canonical_cache", res)
+        return res
+
 
 @dataclass(frozen=True, slots=True)
 class GroupRecord:
@@ -308,6 +517,31 @@ class GroupRecord:
     agi_apt: float = 1.0
     vit_apt: float = 1.0
     end_apt: float = 1.0
+    _canonical_cache: Any = field(default=None, init=False, repr=False, compare=False)
+
+    def to_canonical_dict(self) -> Dict[str, Any]:
+        if self._canonical_cache is not None:
+            return self._canonical_cache
+        res = {
+            "id": self.id,
+            "leader_id": self.leader_id,
+            "member_ids": sorted(list(self.member_ids)),
+            "anchor": self.anchor,
+            "shared_target_id": self.shared_target_id,
+            "contract_id": self.contract_id,
+            "cohesion_radius": self.cohesion_radius,
+            "last_updated_tick": self.last_updated_tick,
+            "roles": {str(k): v for k, v in sorted(self.roles.items())},
+            "aptitudes": {
+                "str": self.str_apt,
+                "int": self.int_apt,
+                "agi": self.agi_apt,
+                "vit": self.vit_apt,
+                "end": self.end_apt
+            }
+        }
+        object.__setattr__(self, "_canonical_cache", res)
+        return res
 
 
 @dataclass(frozen=True, slots=True)
@@ -344,12 +578,74 @@ class EntityState:
     biological: BiologicalComponent = field(default_factory=BiologicalComponent)
     lifecycle: LifecycleComponent = field(default_factory=LifecycleComponent)
     _readonly_cache: Any = field(default=None, repr=False, compare=False)
+    _spatial_grid_cache: Any = field(default=None, repr=False, compare=False)
     aptitude: AptitudeComponent = field(default_factory=AptitudeComponent)
     combat: CombatComponent = field(default_factory=CombatComponent)
     equipment: EquipmentComponent = field(default_factory=EquipmentComponent)
     navigation: NavigationComponent = field(default_factory=NavigationComponent)
     task: TaskComponent = field(default_factory=TaskComponent)
     stamina: StaminaComponent = field(default_factory=StaminaComponent)
+    _canonical_cache: Any = field(default=None, init=False, repr=False, compare=False)
+
+    def to_canonical_dict(self) -> Dict[str, Any]:
+        if self._canonical_cache is not None:
+            return self._canonical_cache
+        
+        res = {
+            "id": self.id,
+            "kind": self.kind,
+            "position": self.navigation.position,
+            "readiness": self.combat.readiness,
+            "active": self.lifecycle.active,
+            "interaction": self.interaction.to_canonical_dict(),
+            "identity": self.identity.to_canonical_dict(),
+            "attributes": self.attributes.to_canonical_dict(),
+            "aptitude": self.aptitude.to_canonical_dict(),
+            "inventory": self.inventory.to_canonical_dict(),
+            "equipment": {str(k): v for k, v in sorted(self.equipment.slots.items())},
+            "strategic": {
+                "current_project_id": self.strategic.current_project_id,
+                "current_objective_id": self.strategic.current_objective_id,
+                "projects": {k: {
+                    "kind": v.kind, 
+                    "status": str(v.status),
+                    "active_objective_id": v.active_objective_id,
+                    "objectives": [asdict(o) for o in v.objectives]
+                } for k, v in sorted(self.strategic.projects.items())},
+                "directives": {k: asdict(v) for k, v in sorted(self.strategic.directives.items())},
+                "blockers": {k: asdict(v) for k, v in sorted(self.strategic.blockers.items())},
+                "leads": {k: asdict(v) for k, v in sorted(self.strategic.leads.items())},
+                "concerns": {k: asdict(v) for k, v in sorted(self.strategic.concerns.items())},
+                "boredom": dict(sorted(self.strategic.boredom.items()))
+            },
+            "social": {
+                "trust_history": {str(k): v for k, v in sorted(self.social.trust_history.items())},
+                "familiarity_history": {str(k): v for k, v in sorted(self.social.familiarity_history.items())},
+                "fear_history": {str(k): v for k, v in sorted(self.social.fear_history.items())},
+                "grudge_history": {str(k): v for k, v in sorted(self.social.grudge_history.items())},
+                "bonds": {str(k): asdict(v) for k, v in sorted(self.social.bonds.items())},
+                "betrayal_count": self.social.betrayal_count,
+                "public_reputation": self.social.public_reputation,
+                "heroism_score": self.social.heroism_score,
+                "notoriety_score": self.social.notoriety_score
+            },
+            "combat": self.combat.to_canonical_dict(),
+            "biological": self.biological.to_canonical_dict(),
+            "lifecycle": self.lifecycle.to_canonical_dict(),
+            "navigation": {
+                "target": self.navigation.target,
+                "path": self.navigation.path,
+                "moved_recently": self.navigation.moved_recently
+            },
+            "task": {
+                "work_kind": self.task.work_kind,
+                "payload": dict(sorted(self.task.payload.items()))
+            },
+            "group_id": self.identity.group_id,
+            "properties": dict(sorted(self.identity.properties.items()))
+        }
+        object.__setattr__(self, "_canonical_cache", res)
+        return res
     
     # Legacy properties for backward compatibility
     @property
@@ -374,8 +670,8 @@ class EntityState:
 
     # No legacy InitVars or __post_init__ - strictly component-based initialization.
     def __post_init__(self, init_position: Optional[tuple[float, float]], init_group_id: Optional[int], init_properties: Optional[Dict[str, Any]]):
-        # M10 Law: Ensure cache is cleared on every new object creation (including replace)
         object.__setattr__(self, "_readonly_cache", None)
+        object.__setattr__(self, "_canonical_cache", None)
         
         if init_position is not None:
             if self.navigation.position == (0.0, 0.0):
@@ -389,26 +685,91 @@ class EntityState:
 
     def to_readonly(self) -> "EntityState":
         """Returns a read-only view of the entity state."""
-        from src.core.immutability import shallow_freeze
-        res = replace(self, 
+        if self._readonly_cache is not None:
+            return self._readonly_cache
+            
+        
+        # Identity Component Optimization
+        # Logic ID: CORE-PERF-010 (Manual constructor is faster than replace)
+        id_comp = self.identity
+        if type(id_comp.properties) is not ReadOnlyDict or type(id_comp.latest_intent_results) is not tuple:
+             id_comp = IdentityComponent(
+                role=id_comp.role,
+                faction=id_comp.faction,
+                known_recipes=frozenset(id_comp.known_recipes),
+                craft_target=id_comp.craft_target,
+                evolution_level=id_comp.evolution_level,
+                evolution_points=id_comp.evolution_points,
+                veterancy_points=id_comp.veterancy_points,
+                veterancy_rank=id_comp.veterancy_rank,
+                unspent_ap=id_comp.unspent_ap,
+                class_id=id_comp.class_id,
+                learned_skills=frozenset(id_comp.learned_skills),
+                traits=frozenset(id_comp.traits),
+                active_breakthroughs=frozenset(id_comp.active_breakthroughs),
+                cooldowns=ReadOnlyDict(id_comp.cooldowns),
+                personality=id_comp.personality,
+                life_stage=id_comp.life_stage,
+                group_id=id_comp.group_id,
+                properties=ReadOnlyDict(id_comp.properties),
+                latest_intent_results=tuple(id_comp.latest_intent_results)
+            )
+
+        inv_comp = self.inventory
+        if type(inv_comp.items) is not tuple:
+            inv_comp = InventoryComponent(
+                max_slots=inv_comp.max_slots,
+                items=tuple(inv_comp.items),
+                gold=inv_comp.gold
+            )
+            
+        combat_comp = self.combat
+        if type(combat_comp.wounds) is not tuple or type(combat_comp.scars) is not tuple:
+            combat_comp = CombatComponent(
+                hp=combat_comp.hp,
+                max_hp=combat_comp.max_hp,
+                atk=combat_comp.atk,
+                def_stat=combat_comp.def_stat,
+                speed=combat_comp.speed,
+                range=combat_comp.range,
+                evasion=combat_comp.evasion,
+                move_cost=combat_comp.move_cost,
+                tactical_role=combat_comp.tactical_role,
+                action_style=combat_comp.action_style,
+                alive=combat_comp.alive,
+                readiness=combat_comp.readiness,
+                wounds=tuple(combat_comp.wounds),
+                scars=tuple(combat_comp.scars),
+                latest_result=combat_comp.latest_result
+            )
+
+        equip_comp = self.equipment
+        if type(equip_comp.slots) is not ReadOnlyDict or type(equip_comp.durability) is not ReadOnlyDict:
+            equip_comp = replace(equip_comp, 
+                slots=shallow_freeze(equip_comp.slots),
+                durability=shallow_freeze(equip_comp.durability)
+            )
+
+        res = EntityState(
+            id=self.id,
+            kind=self.kind,
             interaction=shallow_freeze(self.interaction),
-            identity=replace(self.identity, 
-                properties=ReadOnlyDict(self.identity.properties),
-                latest_intent_results=tuple(self.identity.latest_intent_results)
-            ),
+            identity=id_comp,
+            attributes=self.attributes,
+            inventory=inv_comp,
+            strategic=self.strategic,
+            social=self.social,
+            biological=self.biological,
+            lifecycle=self.lifecycle,
+            aptitude=self.aptitude,
+            combat=combat_comp,
+            equipment=equip_comp,
             navigation=shallow_freeze(self.navigation),
             task=shallow_freeze(self.task),
-            inventory=replace(self.inventory, items=tuple(self.inventory.items)),
-            combat=replace(self.combat,
-                wounds=tuple(self.combat.wounds),
-                scars=tuple(self.combat.scars)
-            ),
-            equipment=replace(self.equipment, 
-                slots=shallow_freeze(self.equipment.slots),
-                durability=shallow_freeze(self.equipment.durability)
-            )
+            stamina=self.stamina
         )
-        # object.__setattr__(res, "_readonly_cache", res)
+        object.__setattr__(self, "_readonly_cache", res)
+        object.__setattr__(res, "_readonly_cache", res)
         return res
 
     def to_dict(self) -> Dict[str, Any]:
@@ -433,6 +794,24 @@ class ResourceNodeState:
     required_ticks: int
     respawn_cooldown: int = 100
     cooldown_remaining: int = 0
+    _canonical_cache: Any = field(default=None, init=False, repr=False, compare=False)
+
+    def to_canonical_dict(self) -> Dict[str, Any]:
+        if self._canonical_cache is not None:
+            return self._canonical_cache
+        res = {
+            "id": self.id,
+            "kind": self.kind,
+            "position": self.position,
+            "yields_item": self.yields_item,
+            "remaining_charges": self.remaining_charges,
+            "max_charges": self.max_charges,
+            "required_ticks": self.required_ticks,
+            "respawn_cooldown": self.respawn_cooldown,
+            "cooldown_remaining": self.cooldown_remaining
+        }
+        object.__setattr__(self, "_canonical_cache", res)
+        return res
 
 @dataclass(frozen=True, slots=True)
 class GroundItemState:
@@ -441,6 +820,19 @@ class GroundItemState:
     item_id: str
     quantity: int
     position: tuple[float, float]
+    _canonical_cache: Any = field(default=None, init=False, repr=False, compare=False)
+
+    def to_canonical_dict(self) -> Dict[str, Any]:
+        if self._canonical_cache is not None:
+            return self._canonical_cache
+        res = {
+            "id": self.id,
+            "item_id": self.item_id,
+            "quantity": self.quantity,
+            "position": self.position
+        }
+        object.__setattr__(self, "_canonical_cache", res)
+        return res
 
 @dataclass(frozen=True, slots=True)
 class CorpseState:
@@ -451,6 +843,21 @@ class CorpseState:
     items: List[ItemStack]
     decay_tick: int
     generation: int = 1
+    _canonical_cache: Any = field(default=None, init=False, repr=False, compare=False)
+
+    def to_canonical_dict(self) -> Dict[str, Any]:
+        if self._canonical_cache is not None:
+            return self._canonical_cache
+        res = {
+            "id": self.id,
+            "original_entity_id": self.original_entity_id,
+            "position": self.position,
+            "items": [i.to_canonical_dict() for i in sorted(self.items, key=lambda x: x.item_id)],
+            "decay_tick": self.decay_tick,
+            "generation": self.generation
+        }
+        object.__setattr__(self, "_canonical_cache", res)
+        return res
 
 
 @dataclass(frozen=True, slots=True)
@@ -461,6 +868,20 @@ class ChestState:
     items: List[ItemStack]
     respawn_tick: int = 0
     cooldown_remaining: int = 0
+    _canonical_cache: Any = field(default=None, init=False, repr=False, compare=False)
+
+    def to_canonical_dict(self) -> Dict[str, Any]:
+        if self._canonical_cache is not None:
+            return self._canonical_cache
+        res = {
+            "id": self.id,
+            "position": self.position,
+            "items": [i.to_canonical_dict() for i in sorted(self.items, key=lambda x: x.item_id)],
+            "respawn_tick": self.respawn_tick,
+            "cooldown_remaining": self.cooldown_remaining
+        }
+        object.__setattr__(self, "_canonical_cache", res)
+        return res
 
 
 @dataclass(frozen=True, slots=True)
@@ -474,6 +895,23 @@ class BuildingState:
     functional: bool = True
     inventory: InventoryComponent = field(default_factory=InventoryComponent)
     price_modifiers: Dict[str, float] = field(default_factory=dict) # ItemKind -> Multiplier
+    _canonical_cache: Any = field(default=None, init=False, repr=False, compare=False)
+
+    def to_canonical_dict(self) -> Dict[str, Any]:
+        if self._canonical_cache is not None:
+            return self._canonical_cache
+        res = {
+            "id": self.id,
+            "kind": self.kind,
+            "position": self.position,
+            "hp": self.hp,
+            "max_hp": self.max_hp,
+            "functional": self.functional,
+            "inventory": self.inventory.to_canonical_dict(),
+            "price_modifiers": dict(sorted(self.price_modifiers.items()))
+        }
+        object.__setattr__(self, "_canonical_cache", res)
+        return res
 
 
 @dataclass(frozen=True, slots=True)
@@ -486,6 +924,22 @@ class CampState:
     active: bool = True
     faction: str = "hostile"
     last_raid_tick: int = 0
+    _canonical_cache: Any = field(default=None, init=False, repr=False, compare=False)
+
+    def to_canonical_dict(self) -> Dict[str, Any]:
+        if self._canonical_cache is not None:
+            return self._canonical_cache
+        res = {
+            "id": self.id,
+            "kind": self.kind,
+            "position": self.position,
+            "maturity": self.maturity,
+            "active": self.active,
+            "faction": self.faction,
+            "last_raid_tick": self.last_raid_tick
+        }
+        object.__setattr__(self, "_canonical_cache", res)
+        return res
 
 
 @dataclass(frozen=True, slots=True)
@@ -500,6 +954,8 @@ class AuthoritativeState:
     tick: int
     seed: int
     world_time: int = 0
+    MAX_PROCESSED_IDS: int = 1000
+    MAX_TRACE_SIZE: int = 100
     entities: Dict[int, EntityState] = field(default_factory=dict)
     resource_nodes: Dict[int, ResourceNodeState] = field(default_factory=dict)
     ground_items: Dict[int, GroundItemState] = field(default_factory=dict)
@@ -510,6 +966,14 @@ class AuthoritativeState:
     regions: Dict[str, RegionState] = field(default_factory=dict)
     local_scars: Dict[int, LocalScarState] = field(default_factory=dict)
     _readonly_cache: Any = field(default=None, repr=False, compare=False)
+    _readonly_entities_cache: Any = field(default=None, repr=False, compare=False)
+    _spatial_grid_cache: Any = field(default=None, repr=False, compare=False)
+    _region_list_cache: Any = field(default=None, repr=False, compare=False)
+    _occupancy_map_cache: Any = field(default=None, repr=False, compare=False)
+    _node_map_cache: Any = field(default=None, repr=False, compare=False)
+    _corpse_map_cache: Any = field(default=None, repr=False, compare=False)
+    _ground_item_map_cache: Any = field(default=None, repr=False, compare=False)
+    _building_map_cache: Any = field(default=None, repr=False, compare=False)
     groups: Dict[int, GroupRecord] = field(default_factory=dict)     # Social coordination truth
     terrain: Dict[tuple[int, int], str] = field(default_factory=dict) # Local tile truth (WALL, FOREST, etc)
     global_resources: Dict[str, float] = field(default_factory=dict)
@@ -523,6 +987,7 @@ class AuthoritativeState:
     blocked_tiles: set[tuple[int, int]] = field(default_factory=set) # Spatial truth
     town_tiles: set[tuple[int, int]] = field(default_factory=set)    # Social truth
     building_tiles: Dict[tuple[int, int], str] = field(default_factory=dict) # Service mapping
+    town_entity_ids: set[int] = field(default_factory=set) # Optimization: Cached IDs of entities currently in town
     rng_checkpoint: Any = None
     transaction_trace: List[str] = field(default_factory=list)
     # VERIFIED v2: rejection_registry_tracking
@@ -533,10 +998,21 @@ class AuthoritativeState:
     def __post_init__(self):
         # M10 Law: Ensure cache is cleared on every new object creation (including replace)
         object.__setattr__(self, "_readonly_cache", None)
+        object.__setattr__(self, "_readonly_entities_cache", None)
+        object.__setattr__(self, "_spatial_grid_cache", None)
+        object.__setattr__(self, "_region_list_cache", None)
+        object.__setattr__(self, "_occupancy_map_cache", None)
+        object.__setattr__(self, "_node_map_cache", None)
+        object.__setattr__(self, "_corpse_map_cache", None)
+        object.__setattr__(self, "_ground_item_map_cache", None)
+        object.__setattr__(self, "_building_map_cache", None)
         object.__setattr__(self, "entities", _readonly_mapping(self.entities))
+        # Ensure town_entity_ids is frozen if in readonly mode
+        if isinstance(self.entities, ReadOnlyDict):
+             object.__setattr__(self, "town_entity_ids", shallow_freeze(self.town_entity_ids))
     current_mode: RuntimeMode = RuntimeMode.NORMAL
     # Phase E5.3: Exactly-Once Idempotency
-    processed_transaction_ids: set[str] = field(default_factory=set)
+    processed_transaction_ids: List[str] = field(default_factory=list)
     next_node_id: int = 1000
     next_entity_id: int = 1
 
@@ -546,8 +1022,16 @@ class AuthoritativeState:
             return self._readonly_cache
             
         from src.core.immutability import shallow_freeze
+        
+        # CORE-PERF-015: Cache entities dictionary separately to avoid reconstruction
+        if self._readonly_entities_cache is None:
+            ro_entities = ReadOnlyDict({eid: e.to_readonly() for eid, e in self.entities.items()})
+            object.__setattr__(self, "_readonly_entities_cache", ro_entities)
+        else:
+            ro_entities = self._readonly_entities_cache
+
         res = replace(self,
-            entities=ReadOnlyDict({eid: e.to_readonly() for eid, e in self.entities.items()}),
+            entities=ro_entities,
             resource_nodes=ReadOnlyDict(self.resource_nodes),
             corpses=ReadOnlyDict(self.corpses),
             chests=ReadOnlyDict(self.chests),

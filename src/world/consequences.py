@@ -13,39 +13,46 @@ class RegionalConsequenceService:
     def process_recovery(state: AuthoritativeState) -> Tuple[Dict[str, RegionState], Dict[int, LocalScarState]]:
         """
         Process time-based recovery for regional danger and local scars.
-        Logic ID: WORLD-006 (Regional trauma and stability recovery over time)
+        Optimized v2.1: Identity preservation for unchanged collections.
         """
         new_regions = {}
         new_scars = {}
+        
+        regions_changed = False
+        scars_changed = False
 
         # 1. Local Scars Recovery
         for scar_id, scar in state.local_scars.items():
             if state.tick > scar.created_tick:
                 new_severity = max(0.0, scar.severity - scar.recovery_rate)
                 if new_severity > 0.01:
-                    new_scars[scar_id] = replace(scar, severity=new_severity)
-                # Scars below 0.01 are implicitly removed by not being added to new_scars
+                    if new_severity != scar.severity:
+                        new_scars[scar_id] = replace(scar, severity=new_severity)
+                        scars_changed = True
+                    else:
+                        new_scars[scar_id] = scar
+                else:
+                    # Scars below 0.01 are implicitly removed
+                    scars_changed = True
             else:
                 new_scars[scar_id] = scar
 
         # 2. Regional Consequences Recovery
         for region_id, region in state.regions.items():
-            new_trauma = region.trauma_score
-            new_stability = region.stability
-
-            if new_trauma > 0:
-                # Decay towards zero
-                new_trauma = max(0.0, new_trauma - 0.0005)
-            
-            # Stability slowly recovers towards 1.0
-            new_stability = min(1.0, new_stability + 0.0001)
+            new_trauma = max(0.0, region.trauma_score - 0.0005) if region.trauma_score > 0 else 0.0
+            new_stability = min(1.0, region.stability + 0.0001)
 
             if new_trauma != region.trauma_score or new_stability != region.stability:
                 new_regions[region_id] = replace(region, trauma_score=new_trauma, stability=new_stability)
+                regions_changed = True
             else:
                 new_regions[region_id] = region
 
-        return new_regions, new_scars
+        # Result preservation
+        final_regions = new_regions if regions_changed or len(new_regions) != len(state.regions) else state.regions
+        final_scars = new_scars if scars_changed or len(new_scars) != len(state.local_scars) else state.local_scars
+        
+        return final_regions, final_scars
 
     @staticmethod
     def create_battlefield_scar(

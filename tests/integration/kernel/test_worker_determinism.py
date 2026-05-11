@@ -112,6 +112,7 @@ def test_concurrency_determinism_equivalence():
         profile_local,
         state_start,
         DeterministicRNG(42),
+        flags={"audit_mode": True}
     )
     kernel_local._scheduler.select_work = MagicMock(
         return_value=(work_items, 0)
@@ -124,6 +125,7 @@ def test_concurrency_determinism_equivalence():
         profile_concurrent,
         state_start,
         DeterministicRNG(42),
+        flags={"audit_mode": True}
     )
     kernel_concurrent._scheduler.select_work = MagicMock(
         return_value=(work_items, 0)

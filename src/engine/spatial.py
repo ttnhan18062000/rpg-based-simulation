@@ -29,3 +29,18 @@ class SpatialGrid:
                 if (x, y) in self.grid:
                     results.extend(self.grid[(x, y)])
         return results
+
+    def get_in_bounds(self, bounds: Tuple[float, float, float, float]) -> List[int]:
+        """Returns IDs of entities within the rectangular bounds (xmin, ymin, xmax, ymax)."""
+        xmin, ymin, xmax, ymax = bounds
+        cx_min = int(xmin // self.cell_size)
+        cy_min = int(ymin // self.cell_size)
+        cx_max = int(xmax // self.cell_size)
+        cy_max = int(ymax // self.cell_size)
+        
+        results = []
+        for x in range(cx_min, cx_max + 1):
+            for y in range(cy_min, cy_max + 1):
+                if (x, y) in self.grid:
+                    results.extend(self.grid[(x, y)])
+        return results

@@ -71,8 +71,10 @@ class ContractLifecyclePhase:
                 social=merged_social,
             )
 
-        for entity_id, entity in state.entities.items():
-            for contract in entity.strategic.contracts.values():
+        for entity_id in sorted(state.entities.keys()):
+            entity = state.entities[entity_id]
+            for contract_id in sorted(entity.strategic.contracts.keys()):
+                contract = entity.strategic.contracts[contract_id]
                 if contract.expiry_tick == -1:
                     continue
 

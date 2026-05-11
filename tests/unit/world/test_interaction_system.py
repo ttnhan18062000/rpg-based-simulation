@@ -10,7 +10,7 @@ Interaction system and harvesting tests.
 import pytest
 from src.core.builder import V2EntityBuilder
 from src.core.state import AuthoritativeState, EntityState, InteractionComponent, InventoryComponent, ResourceNodeState, ItemStack
-from src.core.updates import StateUpdate, EntityUpdate, InteractionUpdate, InventoryUpdate
+from src.core.updates import StateUpdate, EntityUpdate, InteractionUpdate, InventoryUpdate, NavigationUpdate
 from src.engine.interaction import InteractionSystem
 from src.engine.pipeline import AuthoritativeApplyPipeline
 
@@ -51,6 +51,7 @@ def test_interaction_interrupted_by_movement():
         .kind("hero")
         .location(0.0, 0.0)
         .interaction(target_node_id=1, progress=1)
+        .combat(readiness=100.0)
         .build()
     )
     state = AuthoritativeState(tick=10, seed=42, 
@@ -59,7 +60,8 @@ def test_interaction_interrupted_by_movement():
     
     # Proposal: Move and try to advance progress
     update = StateUpdate(entity_updates={
-        10: EntityUpdate(entity_id=10, new_position=(1,1), moved_this_tick=True, 
+        10: EntityUpdate(entity_id=10, 
+                         navigation=NavigationUpdate(target_set=(1.0, 1.0)),
                          interaction=InteractionUpdate(target_node_id=1, progress_delta=1))
     })
     

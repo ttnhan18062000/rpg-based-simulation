@@ -40,19 +40,38 @@ class DeterministicScheduler:
         """
         from src.engine.policy import GovernorPolicy
         
+        from src.engine.cadence import should_run
+        from src.engine.lod import LODService
+        
         policy = policy or GovernorPolicy()
+        cadence = policy.system_cadence
+        
+        # M7 Law: Adaptive Level of Detail (LOD)
+        # Focus points can be expanded in the future (e.g. from active regions or players)
+        focus_points = [state.town_center]
+        
         work_sequence: List[WorkItem] = []
         dropped_count = 0
 
         critical_items: List[WorkItem] = []
         for ent in state.entities.values():
             if ent.lifecycle.active and ent.combat.readiness >= 100.0:
+                # Milestone 7: Level of Detail Gating
+                if policy.lod_enabled:
+                    if not LODService.should_execute(state.tick, ent, focus_points):
+                        continue
+
                 # Milestone 2: Hardened TaskComponent intent
-                # If the entity already has a committed intent (ACT/MOVE), dispatch that directly.
-                # Otherwise, dispatch BRAIN to allow tactical appraisal.
                 work_kind = ent.task.work_kind
                 if work_kind not in ("ENTITY_ACT", "ENTITY_MOVE"):
                     work_kind = "ENTITY_BRAIN"
+                
+                # Milestone 3: Staggered Entity Execution
+                # Gating non-critical work items based on strategic cadence.
+                is_idle_act = (work_kind == "ENTITY_ACT" and not ent.task.payload)
+                if work_kind == "ENTITY_BRAIN" or is_idle_act:
+                    if not should_run(state.tick, ent.id, cadence.strategic_intelligence):
+                        continue
                 
                 critical_items.append(WorkItem(
                     owner_id=ent.id,

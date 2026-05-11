@@ -8,6 +8,7 @@ import logging
 if TYPE_CHECKING:
     from src.core.state import AuthoritativeState
     from src.core.updates import StateUpdate, EntityUpdate
+    from src.engine.cadence import SystemCadence
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +20,7 @@ class AuthoritativeApplyPipeline:
     """
 
     @staticmethod
-    def refine(state: AuthoritativeState, update: StateUpdate) -> StateUpdate:
+    def refine(state: AuthoritativeState, update: StateUpdate, cadence: SystemCadence | None = None) -> StateUpdate:
         """
         Singular entry point for authoritative state transition refinement.
         Logic ID: TOWN-147 (Every update enters the same pipeline)
@@ -30,6 +31,8 @@ class AuthoritativeApplyPipeline:
         """
         # 1. Identity & Lifecycle (High Priority)
         # 2. Strategic Intents (Evaluating long-term projects)
+        from src.engine.cadence import SystemCadence as DefaultCadence, should_run
+        cadence = cadence or DefaultCadence()
         from src.systems.strategic import StrategicIntelligenceSystem
         from src.systems.redirection import StrategicRedirectionSystem
         from src.systems.world_systems.navigation import NavigationSystem
@@ -67,14 +70,24 @@ class AuthoritativeApplyPipeline:
         # 1. Apply Blacksmith/Crafting Laws (Milestone 3)
         update = BlacksmithSystem.enforce(state, update)
         
-        # 2. Task/Intent Routing (Converting high-level tasks to low-level intents)
+        # 2. Action Enforcement (Combat, Abilities)
+        update = AuthoritativeApplyPipeline._route_action_intent(state, update)
+        
+        from src.core.dirty import DirtySet
+        update = update.replace(dirty_set=DirtySet.from_update(state, update))
+        
+        # 3.0 Position Swap Contracts / Mutual Corridor Passing
+        # This must run before normal movement routing.
+        update = AuthoritativeApplyPipeline._resolve_position_swaps(state, update)
+        
+        # 3.1 Navigation & Movement (Pathfinding, Obstacles)
+        update = AuthoritativeApplyPipeline._route_movement_intent(state, update)
+
+        # 4. Task/Intent Routing (Converting high-level tasks to low-level intents)
         update = AuthoritativeApplyPipeline._route_interaction_intent(state, update)
         
-        # 3. Interaction Enforcement (Harvesting, Chests)
+        # 5. Interaction Enforcement (Harvesting, Chests)
         update = InteractionSystem.enforce(state, update)
-        
-        # 4. Action Enforcement (Combat, Abilities)
-        update = AuthoritativeApplyPipeline._route_action_intent(state, update)
         
         # 4.1 Near-Death Hardening
         # Must run after action/combat routing, because it depends on CombatUpdate.hp_delta.
@@ -85,16 +98,16 @@ class AuthoritativeApplyPipeline:
         # Phase 8: Infrastructure Sabotage (LEG-RPG-006)
         from src.engine.sabotage import BuildingSabotageSystem
         from src.engine.town_resolution import TownResolutionSystem
-        update = BuildingSabotageSystem.resolve(state, update)
-        update = TownResolutionSystem.resolve(state, update)
+        if should_run(state.tick, None, cadence.building_sabotage):
+            update = BuildingSabotageSystem.resolve(state, update)
+        if should_run(state.tick, None, cadence.town_resolution):
+            update = TownResolutionSystem.resolve(state, update, cadence=cadence)
         
-        # Phase 7 Implementation: World Dynamics (Hazards, Spawns, Decays)
-        # VERIFIED v2: passive_world_progression
         from src.systems.world_systems.generator import EntityGenerator
         from src.engine.world_dynamics import WorldDynamicsSystem
         generator = EntityGenerator(state.seed + state.tick)
         generator._last_id = state.next_entity_id - 1
-        update = WorldDynamicsSystem.resolve_dynamics(state, update, generator)
+        update = WorldDynamicsSystem.resolve_dynamics(state, update, generator, cadence=cadence)
         
         # 4.5 Quest Reward Authority
         # Converts quest completion / reward retry into ResourceTransferIntent.
@@ -113,19 +126,9 @@ class AuthoritativeApplyPipeline:
         update = EvolutionSystem.evaluate(state, update)
         
         # 6. Strategic Evaluation (Blockers, Projects, Concerns)
-        update = StrategicIntelligenceSystem.resolve_blockers(state, update)
-        update = StrategicIntelligenceSystem.evaluate_all_concerns(state, update)
-        update = StrategicIntelligenceSystem.evaluate_all_strategic_intents(state, update)
-        update = StrategicRedirectionSystem.enforce(state, update)
+        update = StrategicIntelligenceSystem.fused_strategic_pass(state, update, cadence=cadence)
         
-        # 7.0 Position Swap Contracts / Mutual Corridor Passing
-        # This must run before normal movement routing. Otherwise MovementSystem sees
-        # the target tile as occupied and may choose sidestep/yield/failure instead of
-        # the explicit consensual adjacent swap.
-        update = AuthoritativeApplyPipeline._resolve_position_swaps(state, update)
-        
-        # 7.1 Navigation & Movement (Pathfinding, Obstacles)
-        update = AuthoritativeApplyPipeline._route_movement_intent(state, update)
+        # 7.0 (Moved to Step 3.0)
 
         # 7.5 Final Occupancy Conflict Resolution
         # This protects the authoritative apply path from invalid worker proposals
@@ -137,6 +140,10 @@ class AuthoritativeApplyPipeline:
         
         # 9. Group Logic (Formation & Coordination)
         update = AuthoritativeApplyPipeline._resolve_groups(state, update)
+
+        # 10. Capacity & Bandwidth Enforcement
+        from src.engine.pipeline_phases.capacity_enforcement import CapacityEnforcementPhase
+        update = CapacityEnforcementPhase.enforce(state, update)
 
         return update
     

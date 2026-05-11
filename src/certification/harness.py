@@ -82,7 +82,7 @@ class CertificationHarness:
         
         # 1. Reproducibility Check (Run 1)
         baseline_hash = self._get_baseline_hash(initial_state, ticks)
-        kernel = Kernel(self._profile, initial_state, DeterministicRNG(initial_state.seed))
+        kernel = Kernel(self._profile, initial_state, DeterministicRNG(initial_state.seed), flags={"audit_mode": True})
         
         # M10 Law: Boot state must be captured before tick mutations
         mode_sequence = [kernel.status.current_mode.name]
@@ -167,7 +167,7 @@ class CertificationHarness:
         if expectations.reproducibility_required:
             logger.info(f"Scenario {scenario_id}: executing 2nd run for reproducibility proof.")
             # Fresh state, fresh RNG with same seed
-            kernel2 = Kernel(self._profile, initial_state, DeterministicRNG(initial_state.seed))
+            kernel2 = Kernel(self._profile, initial_state, DeterministicRNG(initial_state.seed), flags={"audit_mode": True})
             for t in range(1, ticks + 1):
                 # Phase 9 Fix: Reproducibility must respect the same stop conditions
                 alive_factions = {e.identity.faction for e in kernel2.state.entities.values() if e.combat.alive}
@@ -249,7 +249,7 @@ class CertificationHarness:
         profile_dict["max_worker_count"] = 0 # Forced sequential
         baseline_profile = RuntimeProfile(**profile_dict)
         
-        kernel = Kernel(baseline_profile, state, DeterministicRNG(state.seed))
+        kernel = Kernel(baseline_profile, state, DeterministicRNG(state.seed), flags={"audit_mode": True})
         for t in range(1, ticks + 1):
             # Phase 9 Fix: Baseline must respect the same stop conditions as the subject run
             alive_factions = {e.identity.faction for e in kernel.state.entities.values() if e.combat.alive}

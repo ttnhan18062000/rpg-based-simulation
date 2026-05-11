@@ -48,7 +48,7 @@ def test_transaction_trace_determinism():
         )
         
         rng = DeterministicRNG(42)
-        kernel = Kernel(profile, state, rng)
+        kernel = Kernel(profile, state, rng, flags={"audit_mode": True})
         
         # Manually inject a failing intent (Harvesting while full)
         intent = ResourceTransferIntent(
@@ -90,7 +90,7 @@ def test_transaction_trace_determinism():
             regions={"reg1": region}
         )
         rng2 = DeterministicRNG(42)
-        kernel2 = Kernel(profile, state2, rng2)
+        kernel2 = Kernel(profile, state2, rng2, flags={"audit_mode": True})
         kernel2._final_results = [res]
         kernel2._phase_resolution()
         

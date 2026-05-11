@@ -53,7 +53,10 @@ class ResourceGovernor:
             # Stability: Continue dwelling
             status.increment_dwell()
             
-        return GovernorPolicy.from_mode(status.current_mode)
+        policy = GovernorPolicy.from_mode(status.current_mode)
+        # Optimization: Propagate profile-level controls (Milestone 7)
+        from dataclasses import replace
+        return replace(policy, lod_enabled=profile.lod_enabled)
 
     def force_mode(self, mode: RuntimeMode, status: RuntimeStatus, current_tick: int) -> None:
         """Emergency override for mid-tick throttling."""
