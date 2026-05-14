@@ -8,7 +8,7 @@ Technical documentation for the global difficulty scaling, faction aggression, b
 
 As the simulation progresses, the world undergoes "Evolution" (becoming more dangerous) and "Pressure" (factions attacking the town). To counter this, "Resilience" mechanics allow heroes to defend and repair the town, and "Historical Legacy" ensures that fallen legends empower future generations.
 
-**Primary files:** `src/engine/world_loop.py`, `src/core/world_state.py`, `src/core/buildings.py`, `src/core/monuments.py`, `src/actions/raid.py`, `src/actions/repair.py`
+**Primary files:** `src/engine/world_dynamics.py`, `src/core/world_state.py`, `src/core/buildings.py`, `src/core/monuments.py`, `src/actions/raid.py`, `src/actions/repair.py`
 
 ---
 

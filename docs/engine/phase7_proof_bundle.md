@@ -3,10 +3,10 @@
 This bundle aggregates all technical evidence supporting the closure of the Phase 7 substrate hardening milestone.
 
 ## 1. Architectural Contracts (The "Laws")
-- [Task/Result/Update Substrate Contract](task_result_update_substrate_contract.md): Defines the 3-stage authoritative flow.
-- [Authoritative Refinement Contract](authoritative_refinement_contract.md): Defines the 6-phase resolution order.
-- [Authoritative Apply Contract](authoritative_apply_contract.md): Defines singular mutation and commit keys.
-- [Authoritative Export Contract](authoritative_export_contract.md): Defines structured fingerprints for replay.
+- [Task/Result/Update Substrate Contract](../engine/task_result_update_substrate_contract.md): Defines the 3-stage authoritative flow.
+- [Authoritative Refinement Contract](../engine/authoritative_refinement_contract.md): Defines the 6-phase resolution order.
+- [Authoritative Apply Contract](../engine/authoritative_apply_contract.md): Defines singular mutation and commit keys.
+- [Authoritative Export Contract](../engine/authoritative_export_contract.md): Defines structured fingerprints for replay.
 
 ## 2. Verification Proofs (The "Evidence")
 
@@ -23,7 +23,7 @@ This bundle aggregates all technical evidence supporting the closure of the Phas
 - `tests/replay/test_authoritative_outcome_truth.py`: Proves replay truth sources from post-apply outcomes.
 
 ## 3. Structural Audits
-- [Pipeline Scope Audit](phase7_pipeline_scope_audit.md): Classifies all systems in the refinement pipeline and identifies semantic bleed.
+- [Pipeline Scope Audit](../engine/phase7_pipeline_scope_audit.md): Classifies all systems in the refinement pipeline and identifies semantic bleed.
 
 ## 4. Status Matrix Alignment
 - All Phase 7 recovery gaps in `docs/engine/legacy_replacement_ledger.md` are verified as **SUPPORTED** by the above evidence.

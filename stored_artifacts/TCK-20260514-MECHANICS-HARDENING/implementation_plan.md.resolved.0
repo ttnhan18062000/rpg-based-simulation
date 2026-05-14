@@ -1,0 +1,59 @@
+# Implementation Plan - RPG Documentation Rework
+
+This plan outlines the restructuring of the V2 RPG Engine documentation into a hierarchical, developer-first suite. It aims to provide 100% clarity on the authoritative refinement process and the underlying state architecture.
+
+## User Review Required
+
+> [!IMPORTANT]
+> **Nested Hierarchy**: I am moving existing files (e.g., `architecture.md` -> `docs/engine/architecture.md`). Please confirm if you have any existing workflows or scripts that depend on the old paths.
+> **Logic Discrepancies**: I have identified a few missing checks in `ActorValidityPhase` (e.g., `CombatUpdate` checks for dead/stunned actors, `status_sleeping` check). I will be adding `TODO:` comments in the code to flag these for future implementation.
+
+## Proposed Changes
+
+### Documentation Restructuring
+
+I will establish the following structure to mirror the `src/` organization:
+
+#### [NEW] docs/core/
+- **[NEW] state.md**: Technical specification of `AuthoritativeState`, component composition, and the "Frozen Lifecycle" law.
+- **[NEW] updates.py**: Documentation of `StateUpdate`, `EntityUpdate`, and the "Intent-based Mutation" pattern.
+
+#### [NEW] docs/engine/
+- **[NEW] authoritative_pipeline.md**: A high-resolution dive into the 17 refinement phases, including causal interdependencies and Logic IDs.
+- **[NEW] kernel.md**: Detailed breakdown of the 6-phase deterministic simulation loop.
+- **[MODIFY] architecture.md**: Relocated from `docs/` and updated to include the "Immediate Halt" law and certification proof paths.
+
+#### [NEW] docs/systems/
+- **[MODIFY] combat_and_progression.md**: Relocated and updated to link explicitly to the `CombatRoutingPhase` and `RewardPhase`.
+- **[MODIFY] strategic_cognition.md**: Relocated and updated to define the "Cognition Capacity" and "Interruption Resistance" laws.
+- **[NEW] world_simulation.md**: (Drafting) Documenting regional suppression, weather effects, and temporal decay.
+
+#### [NEW] docs/guidelines/
+- **[NEW] development.md**: Standards for adding new phases, component composition, and maintaining determinism.
+
+---
+
+### Phase-by-Phase Documentation (authoritative_pipeline.md)
+
+I will document each of the 17 phases with:
+1. **Semantic Goal**: What does this phase achieve?
+2. **Logic ID mapping**: (e.g., `COMB-028`).
+3. **Primary Classes/Functions**: (e.g., `MovementPhase.resolve_position_swaps`).
+4. **Causal Impact**: How does this phase affect subsequent phases (e.g., Phase 10 Combat seeing Phase 4 Movement results).
+
+### Audit & TODO Integration
+
+I will perform a final audit of the `src/` code against the new documentation and add `TODO:` tags for:
+- Missing `status_sleeping` checks in `ActorValidityPhase`.
+- Missing `CombatUpdate` rejection for dead actors in `ActorValidityPhase`.
+- SILENT failure cases in `Blacksmith` crafting (e.g., insufficient gold reporting).
+
+## Verification Plan
+
+### Automated Verification
+- **Link Check**: I will use a custom script or grep to ensure zero broken internal links in the new `.md` files.
+- **Logic ID Audit**: Cross-reference the new docs with `logic_checklist_exhaustive.md` to ensure 100% coverage.
+
+### Manual Verification
+- **Visual Review**: Request user feedback on the clarity of the 17-phase causal chain.
+- **TODO Review**: Present the list of identified logic gaps for developer confirmation.

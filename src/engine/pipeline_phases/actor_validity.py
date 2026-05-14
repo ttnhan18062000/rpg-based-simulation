@@ -57,10 +57,11 @@ class ActorValidityPhase:
 
             is_stunned = entity.identity.properties.get("status_stunned", False)
             is_frozen = entity.identity.properties.get("status_frozen", False)
+            is_sleeping = entity.identity.properties.get("status_sleeping", False)
             is_dead = not entity.combat.alive
             is_inactive = not entity.lifecycle.active
 
-            if not (is_stunned or is_frozen or is_dead or is_inactive):
+            if not (is_stunned or is_frozen or is_sleeping or is_dead or is_inactive):
                 continue
 
             reason = ReasonCode.ATTACKER_STATUS_BLOCKED
@@ -84,6 +85,13 @@ class ActorValidityPhase:
             has_task = entity_update.task is not None
             has_resource_transfer = bool(entity_update.resource_transfers)
             has_interaction = entity_update.interaction is not None
+            has_combat_proposal = (
+                entity_update.combat is not None
+                and (
+                    entity_update.combat.hp_delta != 0.0
+                    or entity_update.combat.alive_set is not None
+                )
+            )
 
             has_any_proposal = (
                 has_navigation_proposal
@@ -91,6 +99,7 @@ class ActorValidityPhase:
                 or has_task
                 or has_resource_transfer
                 or has_interaction
+                or has_combat_proposal
             )
 
             if not has_any_proposal:
@@ -122,6 +131,7 @@ class ActorValidityPhase:
                 moved_this_tick=False,
                 resource_transfers=[],
                 interaction=clean_interaction,
+                combat=None,
                 readiness_delta=0.0,
             )
 

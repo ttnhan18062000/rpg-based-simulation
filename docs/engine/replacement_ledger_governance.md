@@ -1,6 +1,6 @@
 # Replacement Ledger Governance & Change Control
 
-This document defines the formal rules for managing the [Authoritative Replacement Ledger](legacy_replacement_ledger.md) across all future phases of the engine transition.
+This document defines the formal rules for managing the [Authoritative Replacement Ledger](../engine/legacy_replacement_ledger.md) across all future phases of the engine transition.
 
 ## 1. Principle of Ledger Primacy
 The ledger is the singular project artifact allowed to represent replacement truth. Narratives, tickets, and summaries must be derived from the ledger, never the inverse.
@@ -17,9 +17,9 @@ The ledger is the singular project artifact allowed to represent replacement tru
 
 ## 3. Mandatory Artifact Updates
 Any modification to the ledger must be accompanied by an update to:
-- The [Maturity Snapshot](legacy_replacement_ledger.md#phase-6-maturity-snapshot) (Totals).
-- The [Remaining Replacement Scope](remaining_replacement_scope.md) (if phase or count changes).
-- The [Audit Log](legacy_replacement_ledger.md#audit-log).
+- The [Maturity Snapshot](../engine/legacy_replacement_ledger.md) (Totals).
+- The [Remaining Replacement Scope](../engine/remaining_replacement_scope.md) (if phase or count changes).
+- The [Audit Log](../engine/legacy_replacement_ledger.md).
 
 ## 4. Constraint Enforcement
 Planning for Phases 7 through 10 is formally constrained by this baseline. A feature cannot be declared "Supported" in a future phase unless its corresponding row in the ledger is marked as **SUPPORTED** with a linked **Proof Artifact**.

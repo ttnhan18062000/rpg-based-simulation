@@ -8,10 +8,10 @@ This document tracks the authoritative "Hardened" status of the V2 engine subsys
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | **Movement** | Milestone 2 | [Gate 1](file:///home/vboxuser/Work/rpg-based-simulation/docs/engine/attach_gate1_movement_scope.md) | `test_movement_parity.py` | `test_movement_contract.py` | **HARDENED** |
 | **Resource** | Milestone 1 | [Gate 2](file:///home/vboxuser/Work/rpg-based-simulation/docs/engine/attach_gate2_resource_scope.md) | `test_resource_interaction_parity.py` | `test_resource_contract.py` | **HARDENED** |
-| **Strategic** | Phase 9 | [PH9 Entry](file:///home/vboxuser/Work/rpg-based-simulation/docs/engine/phase9_entry_support_boundary.md) | `test_recruitment.py` | `test_resource_intelligence_contract.py` | **HARDENED** |
-| **Legality** | Phase 10 | [PH10 Entry](file:///home/vboxuser/Work/rpg-based-simulation/docs/engine/phase10_entry_support_boundary.md) | `test_legality.py` | `test_legality.py` | **HARDENED** |
-| **Compatibility**| Phase 10 | [PH10 Entry](file:///home/vboxuser/Work/rpg-based-simulation/docs/engine/phase10_entry_support_boundary.md) | `test_entry_parity.py` | `test_infra_isolation.py` | **HARDENED** |
-| **Observability**| Phase 10 | [PH10 Entry](file:///home/vboxuser/Work/rpg-based-simulation/docs/engine/phase10_entry_support_boundary.md) | `test_observability.py` | `test_observability.py` | **HARDENED** |
+| **Strategic** | Phase 9 | [PH9 Entry](../engine/phase9_entry_support_boundary.md) | `test_recruitment.py` | `test_resource_intelligence_contract.py` | **HARDENED** |
+| **Legality** | Phase 10 | [PH10 Entry](../engine/phase10_entry_support_boundary.md) | `test_legality.py` | `test_legality.py` | **HARDENED** |
+| **Compatibility**| Phase 10 | [PH10 Entry](../engine/phase10_entry_support_boundary.md) | `test_entry_parity.py` | `test_infra_isolation.py` | **HARDENED** |
+| **Observability**| Phase 10 | [PH10 Entry](../engine/phase10_entry_support_boundary.md) | `test_observability.py` | `test_observability.py` | **HARDENED** |
 
 ## Compliance Standard
 Every hardened slice satisfies the following:

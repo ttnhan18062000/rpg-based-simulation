@@ -29,6 +29,6 @@ By splitting Refinement from Apply, the engine achieves:
 - **Concurrency Safety**: Workers can run in parallel (Proposal) while resolution (Refine) and commitment (Apply) remain strictly sequential and deterministic.
 
 ## 5. Verification Bundle
-- [Refinement Contract](authoritative_refinement_contract.md)
-- [Apply Contract](authoritative_apply_contract.md)
+- [Refinement Contract](../engine/authoritative_refinement_contract.md)
+- [Apply Contract](../engine/authoritative_apply_contract.md)
 - `tests/engine/test_pipeline_contract.py`

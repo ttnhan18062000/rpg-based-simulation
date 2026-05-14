@@ -26,8 +26,8 @@ The following systems are now formally RATIFIED as project authorities:
 
 ## 5. Phase 13 Readiness
 The repository is now in a **"Ready for Phase 13"** state. The following retirement assets have been identified:
-- [Phase 13 Retirement Manifest](phase13_retirement_manifest.md)
-- [Authoritative Legacy Replacement Ledger](legacy_replacement_ledger.md) (100% Phase 12 Coverage)
+- [Phase 13 Retirement Manifest](../engine/phase13_retirement_manifest.md)
+- [Authoritative Legacy Replacement Ledger](../engine/legacy_replacement_ledger.md) (100% Phase 12 Coverage)
 
 ## 6. Final Verdict
 **PASS**. The operational cutover is complete and stable. Phase 12 is officially CLOSED.

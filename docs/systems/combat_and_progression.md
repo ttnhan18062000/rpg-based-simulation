@@ -1,5 +1,8 @@
 # Combat & Progression
 
+> [!NOTE]
+> **Compliance Status**: This system is 95% certified. See the [Gap Analysis](../compliance/gap_analysis.md) for known logic issues regarding `status_sleeping` and dead actor rejection.
+
 Technical documentation for combat formulas, damage types, elements, leveling, death/respawn, and the speed/delay system.
 
 ---
@@ -8,10 +11,10 @@ Technical documentation for combat formulas, damage types, elements, leveling, d
 
 Combat is resolved deterministically using effective stats (base + equipment + attribute bonuses + status effects). The system supports dual damage types (physical/magical), elemental vulnerabilities, evasion, critical hits, potion use, and skill-based attacks. Killing enemies awards XP and gold, with level-ups granting permanent stat and attribute growth. All logic is encapsulated in **Aspects** (`CombatAspect`, `ProgressionAspect`, `MindAspect`).
 
-**Primary files:** `src/actions/combat.py`, `src/actions/damage.py`, `src/engine/world_loop.py`, `src/actions/base.py` (Proposals)
+**Primary files:** `src/actions/combat.py`, `src/actions/damage.py`, `src/engine/world_dynamics.py`, `src/actions/base.py` (Proposals)
 
 ### Global Scaling
-As the world ages, the difficulty scales globally. All spawned entities receive a stat multiplier based on the current world age. See [World Evolution & Resilience](file:///d:/Projects/rpg-based-simulation/docs/world_evolution_and_resilience.md) for the scaling formula.
+As the world ages, the difficulty scales globally. All spawned entities receive a stat multiplier based on the current world age. See [World Evolution & Resilience](../systems/world_evolution_and_resilience.md) for the scaling formula.
 
 ---
 

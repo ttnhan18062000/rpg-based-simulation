@@ -18,9 +18,9 @@ The following integrated loops have been verified through high-fidelity parity a
 
 | Scenario | Matrix | Verification Code |
 | :--- | :--- | :--- |
-| **Integrated Progression**| [support_matrix.md](support_matrix.md) | `tests/parity/test_progression_loop_parity.py` |
-| **Kernel Determinism** | [m1_test_matrix.md](m1_test_matrix.md) | `tests/engine/test_determinism_suite.py` |
-| **Authoritative Apply** | [m7_test_matrix.md](m7_test_matrix.md) | `tests/engine/test_authoritative_apply.py` |
+| **Integrated Progression**| [support_matrix.md](../engine/support_matrix.md) | `tests/parity/test_progression_loop_parity.py` |
+| **Kernel Determinism** | [m1_test_matrix.md](../engine/m1_test_matrix.md) | `tests/engine/test_determinism_suite.py` |
+| **Authoritative Apply** | [m7_test_matrix.md](../engine/m7_test_matrix.md) | `tests/engine/test_authoritative_apply.py` |
 
 ## 3. Contract & Lifecycle Integrity
 
@@ -28,10 +28,10 @@ The following V2 core contracts have been formally validated against the runtime
 
 | Contract | Matrix | Verification Code |
 | :--- | :--- | :--- |
-| **Strategic Intelligence**| [ma_test_matrix.md](ma_test_matrix.md) | `tests/contract/test_resource_intelligence_contract.py` |
-| **Governor & Boundedness**| [m5_test_matrix.md](m5_test_matrix.md) | `tests/engine/test_resource_governor_contract.py` |
-| **Lifecycle & Shutdown** | [mc_test_matrix.md](mc_test_matrix.md) | `tests/engine/test_graceful_shutdown.py` |
-| **Worker Equivalence** | [m8_test_matrix.md](m8_test_matrix.md) | `tests/engine/test_worker_equivalence.py` |
+| **Strategic Intelligence**| [ma_test_matrix.md](../engine/ma_test_matrix.md) | `tests/contract/test_resource_intelligence_contract.py` |
+| **Governor & Boundedness**| [m5_test_matrix.md](../engine/m5_test_matrix.md) | `tests/engine/test_resource_governor_contract.py` |
+| **Lifecycle & Shutdown** | [mc_test_matrix.md](../engine/mc_test_matrix.md) | `tests/engine/test_graceful_shutdown.py` |
+| **Worker Equivalence** | [m8_test_matrix.md](../engine/m8_test_matrix.md) | `tests/engine/test_worker_equivalence.py` |
 
 ## 4. Performance & Certification Gates
 
@@ -39,9 +39,9 @@ The final exit gates for Phase 5 (Milestone E Hardening) are represented by thes
 
 | Layer | Baseline / Report | Verification Code |
 | :--- | :--- | :--- |
-| **Performance Profile B** | [performance_contract.md](performance_contract.md) | `tests/verify_profile_b.py` |
-| **API Payload Truth** | [performance-report-api-payload.md](../performance-report-api-payload.md) | `tests/engine/test_signal_truth.py` |
-| **Final Release Gate** | [me_test_matrix.md](me_test_matrix.md) | `tests/certification/test_final_gate.py` |
+| **Performance Profile B** | [performance_contract.md](../engine/performance_contract.md) | `tests/verify_profile_b.py` |
+| **API Payload Truth** | [performance-report-api-payload.md](../performance/performance-report-api-payload.md) | `tests/engine/test_signal_truth.py` |
+| **Final Release Gate** | [me_test_matrix.md](../engine/me_test_matrix.md) | `tests/certification/test_final_gate.py` |
 
 ---
 *Created: 2026-04-21 as part of Phase 6 Milestone 1 — Entry Gate Proof Package.*

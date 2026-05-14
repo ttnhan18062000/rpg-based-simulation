@@ -29,7 +29,7 @@ Phase 7 takes final ownership of the following rows to ensure bit-identical dete
 
 ## Substrate Truth Standards
 
-All verification must adhere to the [Substrate Truth Standard](substrate_truth_standard.md).
+All verification must adhere to the [Substrate Truth Standard](../engine/substrate_truth_standard.md).
 
 ## Downstream Dependencies
 

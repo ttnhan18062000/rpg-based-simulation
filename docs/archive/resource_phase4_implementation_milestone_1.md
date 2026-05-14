@@ -130,7 +130,7 @@ Freeze the repaired baseline.
 - [x] Operational state is separated from authoritative state
 - [x] Tests still match the frozen law
 
-**Implementation**: [project_lawbook_m10.md](file:///home/vboxuser/Work/rpg-based-simulation/docs/engine/project_lawbook_m10.md) and [kernel.py](file:///home/vboxuser/Work/rpg-based-simulation/src/engine/kernel.py).
+**Implementation**: [project_lawbook_m10.md](../engine/project_lawbook_m10.md) and [kernel.py](file:///home/vboxuser/Work/rpg-based-simulation/src/engine/kernel.py).
 
 #### [Task acceptance criteria]
 

@@ -8,10 +8,10 @@ Phase 10 successfully completed the hardening of the engine's operational surfac
 ## 2. Input Artifacts
 The following artifacts are the primary inputs for Phase 11 review:
 
-- **[Ratification Baseline](file:///home/vboxuser/Work/rpg-based-simulation/docs/engine/phase11_ratification_baseline.md)**: Frozen row set.
-- **[Entry Support Boundary](file:///home/vboxuser/Work/rpg-based-simulation/docs/engine/phase11_entry_support_boundary.md)**: Honest support claims.
+- **[Ratification Baseline](../engine/phase11_ratification_baseline.md)**: Frozen row set.
+- **[Entry Support Boundary](../engine/phase11_entry_support_boundary.md)**: Honest support claims.
 - **[API Protocol Contract](file:///home/vboxuser/Work/rpg-based-simulation/docs/engine/api_protocol_contract.md)**: Published interface truth.
-- **[Phase 10 Closure Report](file:///home/vboxuser/Work/rpg-based-simulation/docs/engine/phase10_closure_report.md)**: Proof of infra parity.
+- **[Phase 10 Closure Report](../engine/phase10_closure_report.md)**: Proof of infra parity.
 
 ## 3. Readiness Checklist (Milestone 1)
 - [x] Ratification row-set frozen.

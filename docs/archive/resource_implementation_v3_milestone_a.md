@@ -744,7 +744,7 @@ Do not finish Milestone A with only code and green tests.
 - [x] Cross-check docs against current code and tests
 
 **Implementation Comment**:
-Finalized the [Core Runtime Contract](file:///home/vboxuser/Work/rpg-based-simulation/docs/engine/runtime_completion_contract_ma.md) and [Test Matrix](file:///home/vboxuser/Work/rpg-based-simulation/docs/engine/ma_test_matrix.md). Contract is officially marked as **CLOSED**.
+Finalized the [Core Runtime Contract](../engine/runtime_completion_contract_ma.md) and [Test Matrix](../engine/ma_test_matrix.md). Contract is officially marked as **CLOSED**.
 
 ### [Task acceptance criteria]
 

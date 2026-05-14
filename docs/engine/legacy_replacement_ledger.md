@@ -4,7 +4,7 @@
 This ledger is the singular source of truth for the replacement status of every legacy system behavior.
 
 > [!NOTE]
-> This document is managed under the **Phase 6 Canonical Inventory** protocol. All entries must adhere to the [Legder Schema](replacement_ledger_schema.md).
+> This document is managed under the **Phase 6 Canonical Inventory** protocol. All entries must adhere to the [Legder Schema](../engine/replacement_ledger_schema.md).
 
 ## Replacement Ledger
 

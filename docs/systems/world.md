@@ -1,6 +1,6 @@
 # World Design: Biomes, Regions & Towns
 
-The WorldLoop simulation generates a 100x100 (default) grid-based world where terrain, difficulty, and resource placement are derived from a single `world_seed`.
+The world_dynamics.py simulation generates a 100x100 (default) grid-based world where terrain, difficulty, and resource placement are derived from a single `world_seed`.
 
 ---
 

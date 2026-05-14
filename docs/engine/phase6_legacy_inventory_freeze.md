@@ -6,7 +6,7 @@ This document marks the formal freeze of the **Authoritative Replacement Ledger*
 
 - **Freeze Date**: 2026-04-21
 - **Snapshot Version**: Initial Phase 6 Baseline
-- **Ledger Path**: [legacy_replacement_ledger.md](legacy_replacement_ledger.md)
+- **Ledger Path**: [legacy_replacement_ledger.md](../engine/legacy_replacement_ledger.md)
 - **Total Rows**: 185 (RPG-CORE: 165, SYS-COMPAT: 20)
 
 ## Inventory Summary

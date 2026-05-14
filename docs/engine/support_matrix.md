@@ -4,18 +4,18 @@
 This matrix provides a detailed view of supported features, their verification level, and their parity status against the legacy `src` system.
 
 ## 2. Core System Support
-See [Phase 5 Truth Package](phase5_truth_package.md) for detailed divergences and [Phase 5 Proof Bundle](phase5_proof_bundle.md) for evidence.
+See [Phase 5 Truth Package](../engine/phase5_truth_package.md) for detailed divergences and [Phase 5 Proof Bundle](../engine/phase5_proof_bundle.md) for evidence.
 
 | Subsystem | Feature | Status | Parity | Verification Artifact |
 | :--- | :--- | :--- | :--- | :--- |
-| **Grid** | Tile Movement | **OFFICIAL** | Bit-Identical | [Proof Bundle](phase5_proof_bundle.md) |
-| **Grid** | Cardinal Step | **OFFICIAL** | Bit-Identical | [Proof Bundle](phase5_proof_bundle.md) |
-| **Grid** | Collision | **EXPERIMENTAL**| Divergent | [Divergence Log](divergence_log.md) |
-| **Interaction**| Looting | **OFFICIAL** | Bit-Identical | [Proof Bundle](phase5_proof_bundle.md) |
-| **Interaction**| Harvesting | **OFFICIAL** | Bit-Identical | [Proof Bundle](phase5_proof_bundle.md) |
-| **Town** | Blacksmithing | **SUPPORTED**| Simplified | [Divergence Log](divergence_log.md) |
-| **Town** | Redirection | **OFFICIAL** | Bit-Identical | [Proof Bundle](phase5_proof_bundle.md) |
-| **AI** | Seek Loop | **OFFICIAL** | Bit-Identical | [Proof Bundle](phase5_proof_bundle.md) |
+| **Grid** | Tile Movement | **OFFICIAL** | Bit-Identical | [Proof Bundle](../engine/phase5_proof_bundle.md) |
+| **Grid** | Cardinal Step | **OFFICIAL** | Bit-Identical | [Proof Bundle](../engine/phase5_proof_bundle.md) |
+| **Grid** | Collision | **EXPERIMENTAL**| Divergent | [Divergence Log](../engine/divergence_log.md) |
+| **Interaction**| Looting | **OFFICIAL** | Bit-Identical | [Proof Bundle](../engine/phase5_proof_bundle.md) |
+| **Interaction**| Harvesting | **OFFICIAL** | Bit-Identical | [Proof Bundle](../engine/phase5_proof_bundle.md) |
+| **Town** | Blacksmithing | **SUPPORTED**| Simplified | [Divergence Log](../engine/divergence_log.md) |
+| **Town** | Redirection | **OFFICIAL** | Bit-Identical | [Proof Bundle](../engine/phase5_proof_bundle.md) |
+| **AI** | Seek Loop | **OFFICIAL** | Bit-Identical | [Proof Bundle](../engine/phase5_proof_bundle.md) |
 | **AI** | Combat Tactics | **SUPPORTED**| Divergent | [TCK-20260424-FIX-TEST-REGRESSIONS](file:///home/vboxuser/Work/rpg-based-simulation/tickets/done/TCK-20260424-FIX-TEST-REGRESSIONS.md) |
 | **Social** | Recruitment | **OFFICIAL** | Contractual | `test_recruitment.py` |
 | **Cognition** | Strategic Bias | **OFFICIAL** | Divergent | `test_resource_intelligence_contract.py` |

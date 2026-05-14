@@ -8,10 +8,10 @@ Phase 5 successfully transitioned the `src` engine from "experimental recovery" 
 ## 2. Canonical Truth & Proof Surface
 The following artifacts constitute the hardened truth baseline. They must be considered the final word on Phase 5 status.
 
-- **[Truth Package](phase5_truth_package.md)**: Master index of all divergences and limitations.
-- **[Divergence Log](divergence_log.md)**: Record of intentional shifts from legacy behavior.
-- **[Proof Bundle](phase5_proof_bundle.md)**: Discoverable index of all parity and contract evidence.
-- **[Support Boundary](phase5_exit_support_boundary.md)**: The restated "Official Support" surface.
+- **[Truth Package](../engine/phase5_truth_package.md)**: Master index of all divergences and limitations.
+- **[Divergence Log](../engine/divergence_log.md)**: Record of intentional shifts from legacy behavior.
+- **[Proof Bundle](../engine/phase5_proof_bundle.md)**: Discoverable index of all parity and contract evidence.
+- **[Support Boundary](../engine/phase5_exit_support_boundary.md)**: The restated "Official Support" surface.
 
 ## 3. Verified Gameplay Baseline
 The following subsystems are formally certified as **OFFICIAL** or **SUPPORTED**:

@@ -1,0 +1,26 @@
+# Tasks
+
+## 📖 RPG Simulation Mechanics Manual
+- [x] Brainstorming & Requirements Gathering
+    - [x] Explore current mechanic documentation
+    - [x] Offer visual companion (for diagrams)
+    - [x] Clarify scope (formulas vs logic vs behavior)
+- [x] Design Selection
+    - [x] Propose 2-3 approaches for the manual structure
+    - [x] Design specific manual sections
+- [x] Specification & Implementation
+    - [x] Write Design Spec
+    - [x] Draft the "Mechanics Bible" (docs/mechanics/)
+    - [x] Review and Verify links
+
+## 🛡️ Logic Hardening
+- [x] Identify gaps in `ActorValidityPhase` and `StrategicIntelligenceSystem`
+- [x] Fix `status_sleeping` check in `actor_validity.py`
+- [x] Refactor strategic magic number in `intelligence.py`
+- [x] Implement Regional Sovereignty in `world_dynamics.py`
+
+## 🏗️ Architectural Documentation Reorg
+- [x] Expand `authoritative_pipeline.md` (17 phases)
+- [x] Expand `kernel.md` (7-phase loop)
+- [x] Expand `state.md` (Immutability & Composition)
+- [x] Update `gap_analysis.md` (Mark as RESOLVED)

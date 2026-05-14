@@ -17,7 +17,7 @@ This document defines the canonical schema for the **Authoritative Replacement L
 | **Maturity** | `IMPLEMENTED`, `TESTED`, `PROOF-BACKED`, `SUPPORTED`. |
 | **Status** | `SUPPORTED`, `DIVERGENT`, `UNSUPPORTED`, `RETIRED`. |
 | **Note**| Divergence rationale or classification note. |
-| **Proof Path** | Assigned path from [Proof-Path Taxonomy](proof_path_taxonomy.md). |
+| **Proof Path** | Assigned path from [Proof-Path Taxonomy](../engine/proof_path_taxonomy.md). |
 | **Target Phase** | High-level phase for final closure (Phases 7-10). |
 | **Dependency** | Cross-phase or substrate blockers. |
 | **Closure Condition**| Specific requirement for formal "DONE" status. |

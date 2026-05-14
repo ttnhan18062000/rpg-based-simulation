@@ -10,11 +10,11 @@ Phase 6 has successfully transitioned the engine transition from a descriptive/i
 
 | Artifact | Purpose | Location |
 | :--- | :--- | :--- |
-| **Master Replacement Ledger** | Singular source of truth for all 185 items. | [legacy_replacement_ledger.md](legacy_replacement_ledger.md) |
-| **Phase-Allocation Map** | Roadmap for Phases 7-10 recovery. | [phase_allocation_map.md](phase_allocation_map.md) |
-| **Execution Backlog** | Actionable phase-level scope breakdown. | [remaining_replacement_scope.md](remaining_replacement_scope.md) |
-| **Ledger Governance** | Change-control and primacy rules. | [replacement_ledger_governance.md](replacement_ledger_governance.md) |
-| **Proof Taxonomy** | Controlled vocabulary for closure evidence. | [proof_path_taxonomy.md](proof_path_taxonomy.md) |
+| **Master Replacement Ledger** | Singular source of truth for all 185 items. | [legacy_replacement_ledger.md](../engine/legacy_replacement_ledger.md) |
+| **Phase-Allocation Map** | Roadmap for Phases 7-10 recovery. | [phase_allocation_map.md](../engine/phase_allocation_map.md) |
+| **Execution Backlog** | Actionable phase-level scope breakdown. | [remaining_replacement_scope.md](../engine/remaining_replacement_scope.md) |
+| **Ledger Governance** | Change-control and primacy rules. | [replacement_ledger_governance.md](../engine/replacement_ledger_governance.md) |
+| **Proof Taxonomy** | Controlled vocabulary for closure evidence. | [proof_path_taxonomy.md](../engine/proof_path_taxonomy.md) |
 
 ## 3. Statistical Baseline
 

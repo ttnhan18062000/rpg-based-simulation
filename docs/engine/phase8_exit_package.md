@@ -8,11 +8,11 @@ Phase 8 has successfully recovered the authoritative moment-to-moment gameplay l
 ## 2. Settled Contracts
 The following contracts are now frozen and authoritative:
 - **Combat Resolution**: [Fractional Armor Mitigation Law](file:///home/vboxuser/Work/rpg-based-simulation/docs/engine/combat_resolution_contract.md).
-- **Tactical AI**: [Bounded Pursuit & Retreat Semantics](file:///home/vboxuser/Work/rpg-based-simulation/docs/engine/tactical_contract.md).
-- **Local World**: [Spatial Legality & LoS Blocking](file:///home/vboxuser/Work/rpg-based-simulation/docs/engine/local_world_interaction_contract.md).
+- **Tactical AI**: [Bounded Pursuit & Retreat Semantics](../engine/tactical_contract.md).
+- **Local World**: [Spatial Legality & LoS Blocking](../engine/local_world_interaction_contract.md).
 
 ## 3. Proof Index
-Evidence of recovery is consolidated in the [Phase 8 Proof Bundle](file:///home/vboxuser/Work/rpg-based-simulation/docs/engine/phase8_proof_bundle.md).
+Evidence of recovery is consolidated in the [Phase 8 Proof Bundle](../engine/phase8_proof_bundle.md).
 - **100% Pass Rate** on Tactical and World interaction contract tests.
 - **Bit-Identical Parity** on the core damage resolution formula.
 - **Ratified Divergences** for AI prioritization and retreat thresholds.

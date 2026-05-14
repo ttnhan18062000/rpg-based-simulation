@@ -1,5 +1,8 @@
 # Strategic Cognition: The Mind's Hierarchy
 
+> [!NOTE]
+> **Compliance Status**: This system is 90% certified. See the [Gap Analysis](../compliance/gap_analysis.md) for known issues regarding hardcoded interruption thresholds and missing sovereignty transitions.
+
 The Strategic Cognition system (Phase 7) provides the simulation with **Long-Term Continuity**. It ensures that entities don't just react to their immediate surroundings, but follow persistent, motive-driven "projects" across hundreds of ticks.
 
 ---

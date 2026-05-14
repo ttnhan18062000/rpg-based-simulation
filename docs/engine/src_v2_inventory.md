@@ -4,7 +4,7 @@ This document tracks the current state of the `src` implementation. It is used a
 
 ## Schema Reference
 
-See [replacement_ledger_schema.md](replacement_ledger_schema.md) for detailed maturity dimension and column definitions.
+See [replacement_ledger_schema.md](../engine/replacement_ledger_schema.md) for detailed maturity dimension and column definitions.
 
 ## Inventory Ledger
 

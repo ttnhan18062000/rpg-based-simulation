@@ -6,17 +6,17 @@ This document consolidates all proof artifacts required for the V2 replacement v
 
 | Phase | Focus | Artifact | Status |
 | :--- | :--- | :--- | :--- |
-| **Phase 5** | Movement & Resource | [PH5 Proof Bundle](phase5_proof_bundle.md) | HARDENED |
-| **Phase 7** | Substrate Closure | [PH7 Proof Bundle](phase7_proof_bundle.md) | HARDENED |
-| **Phase 8** | Tactical & Regional | [PH8 Proof Bundle](phase8_proof_bundle.md) | HARDENED |
+| **Phase 5** | Movement & Resource | [PH5 Proof Bundle](../engine/phase5_proof_bundle.md) | HARDENED |
+| **Phase 7** | Substrate Closure | [PH7 Proof Bundle](../engine/phase7_proof_bundle.md) | HARDENED |
+| **Phase 8** | Tactical & Regional | [PH8 Proof Bundle](../engine/phase8_proof_bundle.md) | HARDENED |
 
 ## 2. Ratification Proof Baselines (Phase 11)
 
 | Baseline | Focus | Artifact | Status |
 | :--- | :--- | :--- | :--- |
-| **Preserved Surface** | Row-level parity | [Preserved Baseline](phase11_preserved_baseline.md) | RATIFIED |
-| **Non-Preserved Scope** | Justified non-parity | [Non-Preserved Baseline](phase11_non_preserved_baseline.md) | RATIFIED |
-| **Governance Sync** | Alignment verification | [Governance Reconciliation](phase11_governance_reconciliation.md) | RATIFIED |
+| **Preserved Surface** | Row-level parity | [Preserved Baseline](../engine/phase11_preserved_baseline.md) | RATIFIED |
+| **Non-Preserved Scope** | Justified non-parity | [Non-Preserved Baseline](../engine/phase11_non_preserved_baseline.md) | RATIFIED |
+| **Governance Sync** | Alignment verification | [Governance Reconciliation](../engine/phase11_governance_reconciliation.md) | RATIFIED |
 
 ## 3. Key Evidence Index (Master Verdict Input)
 

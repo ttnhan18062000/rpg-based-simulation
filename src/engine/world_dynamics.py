@@ -68,8 +68,8 @@ class WorldDynamicsSystem:
             update.entity_updates[e_id] = ent_upd
 
 
-        # 2. Resolve Trauma and Calamity Progression
-        # 2.1 Death-triggered Trauma (LEG-RPG-139)
+        # 2.1 Death-triggered Trauma & Sovereignty (LEG-RPG-071/139)
+        from src.core.enums import Faction
         for e_id, ent_upd in update.entity_updates.items():
             if ent_upd.combat and ent_upd.combat.alive_set is False:
                 entity = state.entities.get(e_id)
@@ -77,24 +77,52 @@ class WorldDynamicsSystem:
                     region = WorldDynamicsSystem._get_region_for_pos(state, entity.navigation.position)
                     if region:
                         world_upd = update.world_updates.get(region.id, WorldUpdate(region_id=region.id))
+                        
                         # Each death adds 1.0 trauma
+                        new_trauma_delta = world_upd.trauma_delta + 1.0
+                        
+                        # Sovereignty: Monster death increases Hero influence (+1.0)
+                        # Hero death decreases Hero influence (-1.0)
+                        inf_delta = 0.0
+                        if entity.identity.faction == Faction.MONSTER_HORDE:
+                            inf_delta = 1.0
+                        elif entity.identity.faction == Faction.HERO_GUILD:
+                            inf_delta = -1.0
+                            
                         update.world_updates[region.id] = replace(
                             world_upd, 
-                            trauma_delta=world_upd.trauma_delta + 1.0
+                            trauma_delta=new_trauma_delta,
+                            influence_delta=world_upd.influence_delta + inf_delta
                         )
 
-        # 2.2 Calamity Progression (Hazard scaling)
-        # Intense trauma scores (LEG-RPG-139) gradually increase hazard levels
+        # 2.2 Ownership & Calamity Progression
         for r_id, region in state.regions.items():
-            # Apply proposed trauma if any
             w_upd = update.world_updates.get(r_id)
-            current_trauma = region.trauma_score + (w_upd.trauma_delta if w_upd else 0.0)
             
+            # Apply proposed trauma/influence if any
+            current_trauma = region.trauma_score + (w_upd.trauma_delta if w_upd else 0.0)
+            current_influence = region.influence + (w_upd.influence_delta if w_upd else 0.0)
+            
+            world_upd = w_upd or WorldUpdate(region_id=r_id)
+            changed = False
+
+            # Ownership Law: Threshold of 100/-100 for control
+            if current_influence >= 100.0 and region.owner_faction_id != Faction.HERO_GUILD:
+                world_upd = replace(world_upd, owner_faction_id_set=Faction.HERO_GUILD)
+                changed = True
+            elif current_influence <= -100.0 and region.owner_faction_id != Faction.MONSTER_HORDE:
+                world_upd = replace(world_upd, owner_faction_id_set=Faction.MONSTER_HORDE)
+                changed = True
+            
+            # Hazard scaling (LEG-RPG-139)
             if current_trauma > 50.0:
                 new_hazard = min(1.0, region.hazard_level + 0.01)
                 if new_hazard > region.hazard_level:
-                    world_upd = update.world_updates.get(r_id, WorldUpdate(region_id=r_id))
-                    update.world_updates[r_id] = replace(world_upd, hazard_level_set=new_hazard)
+                    world_upd = replace(world_upd, hazard_level_set=new_hazard)
+                    changed = True
+            
+            if changed or w_upd:
+                update.world_updates[r_id] = world_upd
 
         # 3. Process Macro World Dynamics (Calamity Spawns, Maturity)
         from src.engine.cadence import SystemCadence as DefaultCadence, should_run

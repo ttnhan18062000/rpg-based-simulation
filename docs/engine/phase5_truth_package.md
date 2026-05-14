@@ -6,9 +6,9 @@ This document serves as the authoritative container for the truth state of `src`
 
 The Phase 5 truth is split into three primary artifacts:
 
-- **[Divergence Log](divergence_log.md)**: Every intentional shift from legacy `src` behavior.
-- **[Known Limitations](known_limitations.md)**: What the engine cannot do or does only partially in the current slice.
-- **[Support Boundary](phase5_exit_support_boundary.md)**: The final restatement of exactly what is "Officially Supported."
+- **[Divergence Log](../engine/divergence_log.md)**: Every intentional shift from legacy `src` behavior.
+- **[Known Limitations](../engine/known_limitations.md)**: What the engine cannot do or does only partially in the current slice.
+- **[Support Boundary](../engine/phase5_exit_support_boundary.md)**: The final restatement of exactly what is "Officially Supported."
 
 ## 2. Decision Rationale Standard
 

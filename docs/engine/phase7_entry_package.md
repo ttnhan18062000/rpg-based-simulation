@@ -12,10 +12,10 @@ The following artifacts constitute the foundational truth for Phase 7 implementa
 
 | Artifact | Purpose | Location |
 | :--- | :--- | :--- |
-| **Phase 7 Backlog** | Actionable implementation targets and closure conditions. | [phase7_backlog.md](phase7_backlog.md) |
-| **Substrate Truth Standard** | Verification levels (Bit-Identical, Structural, Contract). | [substrate_truth_standard.md](substrate_truth_standard.md) |
-| **Phase Allocation Map** | Global project counts and target phase mappings. | [phase_allocation_map.md](phase_allocation_map.md) |
-| **Replacement Ledger** | The master list of all 185 legacy items. | [legacy_replacement_ledger.md](legacy_replacement_ledger.md) |
+| **Phase 7 Backlog** | Actionable implementation targets and closure conditions. | [phase7_backlog.md](../engine/phase7_backlog.md) |
+| **Substrate Truth Standard** | Verification levels (Bit-Identical, Structural, Contract). | [substrate_truth_standard.md](../engine/substrate_truth_standard.md) |
+| **Phase Allocation Map** | Global project counts and target phase mappings. | [phase_allocation_map.md](../engine/phase_allocation_map.md) |
+| **Replacement Ledger** | The master list of all 185 legacy items. | [legacy_replacement_ledger.md](../engine/legacy_replacement_ledger.md) |
 
 ## 3. Scope Summary
 

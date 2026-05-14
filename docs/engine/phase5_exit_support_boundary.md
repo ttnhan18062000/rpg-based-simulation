@@ -23,7 +23,7 @@ The following gameplay and runtime behaviors are **Officially Supported**, prove
 - **Scope**: Basic item crafting (Blacksmith only) and town-return logic.
 - **Contract**: `RedirectionSystem` handles return-to-base; `BlacksmithSystem` handles resource-to-item conversion.
 - **Verification**: [Town Resolution Parity Proof](../../tests/parity/test_town_resolution_parity.py)
-- **Evidence Index**: See [Phase 5 Proof Bundle](phase5_proof_bundle.md) for full evidence indexing.
+- **Evidence Index**: See [Phase 5 Proof Bundle](../engine/phase5_proof_bundle.md) for full evidence indexing.
 
 ### D. Autonomous Progression Loop
 - **Scope**: Integrated Seek-Move-Harvest-Resolve-Craft loop for 100+ entities.
@@ -32,15 +32,15 @@ The following gameplay and runtime behaviors are **Officially Supported**, prove
 ## 3. Explicitly Unsupported / Divergent Remainder
 
 ### A. Intentional Divergences
-- See [Divergence Log](divergence_log.md) for the full record of intentional parity shifts.
+- See [Divergence Log](../engine/divergence_log.md) for the full record of intentional parity shifts.
 - Key items: Strict channeling, normalized registry keys, Tick 0 resolution.
 
 ### B. Unsupported Logic (Phase 6 Ledger Targets)
-- See [Known Limitations](known_limitations.md) for the full record of unsupported features.
+- See [Known Limitations](../engine/known_limitations.md) for the full record of unsupported features.
 - Key items: Advanced pathfinding, combat AI, complex economy, tiered buildings.
 
 ## 4. Truth Baseline
-This document is supported by the **[Phase 5 Truth Package](phase5_truth_package.md)**, which acts as the authoritative ledger for divergences and limitations.
+This document is supported by the **[Phase 5 Truth Package](../engine/phase5_truth_package.md)**, which acts as the authoritative ledger for divergences and limitations.
 
 ## 4. Execution Mode Assumptions
 - **Supported**: Sequential execution (Deterministic baseline).

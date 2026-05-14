@@ -742,7 +742,7 @@ class StrategicIntelligenceSystem:
                 return None 
 
         # Logic ID: STRAT-005 (Project switching uses interruption resistance)
-        retention_margin = profile.interruption_resistance * 30
+        retention_margin = profile.interruption_resistance * profile.resistance_multiplier
         # Logic ID: STRAT-006 (Current project gets retention priority)
         effective_current_score = current.score + retention_margin
 

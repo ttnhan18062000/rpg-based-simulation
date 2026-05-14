@@ -98,7 +98,7 @@ Do not start optimizing before the benchmark contract is stable.
 - [x] Claim boundaries are defined
 - [x] Result format is defined
 
-**Implementation**: [performance_contract.md](file:///home/vboxuser/Work/rpg-based-simulation/docs/engine/performance_contract.md)
+**Implementation**: [performance_contract.md](../engine/performance_contract.md)
 
 #### [Task acceptance criteria]
 

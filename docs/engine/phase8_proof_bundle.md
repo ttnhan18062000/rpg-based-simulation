@@ -9,8 +9,8 @@ Phase 8 has successfully recovered authoritative combat, bounded tactical AI, an
 
 ### 2.1 Authoritative Contracts
 - [Combat Resolution Contract](file:///home/vboxuser/Work/rpg-based-simulation/docs/engine/combat_resolution_contract.md)
-- [Tactical AI Contract](file:///home/vboxuser/Work/rpg-based-simulation/docs/engine/tactical_contract.md)
-- [Local World Interaction Contract](file:///home/vboxuser/Work/rpg-based-simulation/docs/engine/local_world_interaction_contract.md)
+- [Tactical AI Contract](../engine/tactical_contract.md)
+- [Local World Interaction Contract](../engine/local_world_interaction_contract.md)
 
 ### 2.2 Contract Test Suites
 | Suite | Coverage | Status |
@@ -24,7 +24,7 @@ Phase 8 has successfully recovered authoritative combat, bounded tactical AI, an
 - [Tactical Parity Proof](file:///home/vboxuser/Work/rpg-based-simulation/tests/parity/test_tactical_parity.py)
 
 ## 3. Ratified Divergences
-Refer to the [Divergence Log](file:///home/vboxuser/Work/rpg-based-simulation/docs/engine/divergence_log.md) for detailed records:
+Refer to the [Divergence Log](../engine/divergence_log.md) for detailed records:
 - **DIV-2.6**: Priority-Based Targeting (Hardened focus).
 - **DIV-2.7**: 20% Retreat Threshold (Scenario alignment).
 - **DIV-2.8**: Omitted Variance/Evasion (Substrate clarity).

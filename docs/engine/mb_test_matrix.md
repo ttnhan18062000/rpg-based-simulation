@@ -39,6 +39,6 @@ Verify separation between Control and Authority.
 ## 5. Documentation Matrix
 | Artifact | Link | Purpose |
 | :--- | :--- | :--- |
-| Signals Contract | [runtime_signals_contract_mb.md](./runtime_signals_contract_mb.md) | The Law |
-| Governor Law | [runtime_signals_contract_mb.md](./runtime_signals_contract_mb.md#5-governor-transition-law) | The Logic |
+| Signals Contract | [runtime_signals_contract_mb.md](../engine/runtime_signals_contract_mb.md) | The Law |
+| Governor Law | [runtime_signals_contract_mb.md](../engine/runtime_signals_contract_mb.md) | The Logic |
 | Closure Proof | [test_milestone_b_closure.py](../../tests/governance/test_milestone_b_closure.py) | The Gate |

@@ -69,7 +69,7 @@ While the map starts as a static grid, it evolves through two primary systems:
 1.  **Global Scaling**: Stats and difficulty increase with world age.
 2.  **Strategic Shift**: Factions conquer/liberate regions based on combat deaths.
 
-For detailed formulas on difficulty scaling, aggression, and regional conquest, see [World Evolution & Resilience](file:///d:/Projects/rpg-based-simulation/docs/world_evolution_and_resilience.md).
+For detailed formulas on difficulty scaling, aggression, and regional conquest, see [World Evolution & Resilience](../systems/world_evolution_and_resilience.md).
 
 ---
 

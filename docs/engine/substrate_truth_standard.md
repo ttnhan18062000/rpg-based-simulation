@@ -22,7 +22,7 @@ This document defines the authoritative truth levels and verification standards 
 
 ### DIFFERENTIAL Proof
 - Requires a side-by-side comparison between legacy `src` and `src` using the **Parity Oracle**.
-- Divergences must be explicitly logged in the [Divergence Log](divergence_log.md).
+- Divergences must be explicitly logged in the [Divergence Log](../engine/divergence_log.md).
 
 ## Substrate Invariants (The "Golden Rules")
 
