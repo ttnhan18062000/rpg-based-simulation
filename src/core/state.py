@@ -5,7 +5,7 @@ from __future__ import annotations
 from enum import Enum, IntEnum, auto
 from dataclasses import dataclass, field, replace, InitVar, asdict
 from types import MappingProxyType
-from typing import Dict, Any, Set, Optional, List, Tuple
+from typing import Dict, Any, Set, Optional, List, Tuple, ClassVar
 from src.core.strategic import StrategicComponent
 from src.core.enums import Faction, EntityRole
 from src.core.movement_modes import MovementMode
@@ -75,10 +75,10 @@ class StaminaComponent:
 
 
     # Drain constants
-    ATTACK_COST: float = 8.0
-    MOVE_COST: float = 3.0
-    HARVEST_COST: float = 5.0
-    SKILL_COST_MULT: float = 1.0  # Multiplied by skill.cost
+    ATTACK_COST: ClassVar[float] = 8.0
+    MOVE_COST: ClassVar[float] = 3.0
+    HARVEST_COST: ClassVar[float] = 5.0
+    SKILL_COST_MULT: ClassVar[float] = 1.0  # Multiplied by skill.cost
 
 
 @dataclass(frozen=True, slots=True)
@@ -688,6 +688,15 @@ class EntityState:
         if self._readonly_cache is not None:
             return self._readonly_cache
             
+        if (type(self.identity.properties) is ReadOnlyDict and 
+            type(self.identity.latest_intent_results) is tuple and 
+            type(self.inventory.items) is tuple and 
+            type(self.combat.wounds) is tuple and 
+            type(self.combat.scars) is tuple and 
+            type(self.equipment.slots) is ReadOnlyDict and 
+            type(self.equipment.durability) is ReadOnlyDict):
+            object.__setattr__(self, "_readonly_cache", self)
+            return self
         
         # Identity Component Optimization
         # Logic ID: CORE-PERF-010 (Manual constructor is faster than replace)
@@ -795,6 +804,10 @@ class ResourceNodeState:
     respawn_cooldown: int = 100
     cooldown_remaining: int = 0
     _canonical_cache: Any = field(default=None, init=False, repr=False, compare=False)
+    _readonly_cache: Any = field(default=None, init=False, repr=False, compare=False)
+
+    def __post_init__(self):
+        object.__setattr__(self, "_readonly_cache", self)
 
     def to_canonical_dict(self) -> Dict[str, Any]:
         if self._canonical_cache is not None:
@@ -821,6 +834,10 @@ class GroundItemState:
     quantity: int
     position: tuple[float, float]
     _canonical_cache: Any = field(default=None, init=False, repr=False, compare=False)
+    _readonly_cache: Any = field(default=None, init=False, repr=False, compare=False)
+
+    def __post_init__(self):
+        object.__setattr__(self, "_readonly_cache", self)
 
     def to_canonical_dict(self) -> Dict[str, Any]:
         if self._canonical_cache is not None:
@@ -925,6 +942,10 @@ class CampState:
     faction: str = "hostile"
     last_raid_tick: int = 0
     _canonical_cache: Any = field(default=None, init=False, repr=False, compare=False)
+    _readonly_cache: Any = field(default=None, init=False, repr=False, compare=False)
+
+    def __post_init__(self):
+        object.__setattr__(self, "_readonly_cache", self)
 
     def to_canonical_dict(self) -> Dict[str, Any]:
         if self._canonical_cache is not None:
@@ -970,10 +991,17 @@ class AuthoritativeState:
     _spatial_grid_cache: Any = field(default=None, repr=False, compare=False)
     _region_list_cache: Any = field(default=None, repr=False, compare=False)
     _occupancy_map_cache: Any = field(default=None, repr=False, compare=False)
+    transient_claims: Any = field(default=None, repr=False, compare=False)
     _node_map_cache: Any = field(default=None, repr=False, compare=False)
+    _active_nodes_grid: Any = field(default=None, repr=False, compare=False)
     _corpse_map_cache: Any = field(default=None, repr=False, compare=False)
     _ground_item_map_cache: Any = field(default=None, repr=False, compare=False)
     _building_map_cache: Any = field(default=None, repr=False, compare=False)
+    _region_index_cache: Any = field(default=None, repr=False, compare=False)
+    _building_region_map_cache: Any = field(default=None, repr=False, compare=False)
+    _regions_global_bounds: Any = field(default=None, repr=False, compare=False)
+    _has_hostiles_or_dead_cache: Any = field(default=None, repr=False, compare=False)
+    _has_contracts_cache: Any = field(default=None, repr=False, compare=False)
     groups: Dict[int, GroupRecord] = field(default_factory=dict)     # Social coordination truth
     terrain: Dict[tuple[int, int], str] = field(default_factory=dict) # Local tile truth (WALL, FOREST, etc)
     global_resources: Dict[str, float] = field(default_factory=dict)
@@ -1002,11 +1030,38 @@ class AuthoritativeState:
         object.__setattr__(self, "_spatial_grid_cache", None)
         object.__setattr__(self, "_region_list_cache", None)
         object.__setattr__(self, "_occupancy_map_cache", None)
+        object.__setattr__(self, "transient_claims", None)
         object.__setattr__(self, "_node_map_cache", None)
+        if getattr(self, "_active_nodes_grid", None) is None:
+            object.__setattr__(self, "_active_nodes_grid", None)
         object.__setattr__(self, "_corpse_map_cache", None)
         object.__setattr__(self, "_ground_item_map_cache", None)
-        object.__setattr__(self, "_building_map_cache", None)
+        if getattr(self, "_building_map_cache", None) is None:
+            object.__setattr__(self, "_building_map_cache", None)
+        object.__setattr__(self, "_region_index_cache", None)
+        object.__setattr__(self, "_building_region_map_cache", None)
+        object.__setattr__(self, "_regions_global_bounds", None)
         object.__setattr__(self, "entities", _readonly_mapping(self.entities))
+        has_hostile = False
+        has_contracts = False
+        if self.entities:
+            int_e_keys = [k for k in self.entities.keys() if isinstance(k, int)]
+            if int_e_keys and self.next_entity_id <= max(int_e_keys):
+                object.__setattr__(self, "next_entity_id", max(int_e_keys) + 1)
+            first_fac = next(iter(self.entities.values())).identity.faction
+            for ent in self.entities.values():
+                if ent.identity.faction != first_fac or not ent.combat.alive:
+                    has_hostile = True
+                if ent.strategic and ent.strategic.contracts:
+                    has_contracts = True
+                if has_hostile and has_contracts:
+                    break
+        if self.resource_nodes:
+            int_n_keys = [k for k in self.resource_nodes.keys() if isinstance(k, int)]
+            if int_n_keys and self.next_node_id <= max(int_n_keys):
+                object.__setattr__(self, "next_node_id", max(int_n_keys) + 1)
+        object.__setattr__(self, "_has_hostiles_or_dead_cache", has_hostile)
+        object.__setattr__(self, "_has_contracts_cache", has_contracts)
         # Ensure town_entity_ids is frozen if in readonly mode
         if isinstance(self.entities, ReadOnlyDict):
              object.__setattr__(self, "town_entity_ids", shallow_freeze(self.town_entity_ids))
@@ -1027,6 +1082,7 @@ class AuthoritativeState:
         if self._readonly_entities_cache is None:
             ro_entities = ReadOnlyDict({eid: e.to_readonly() for eid, e in self.entities.items()})
             object.__setattr__(self, "_readonly_entities_cache", ro_entities)
+            object.__setattr__(self, "entities", ro_entities)
         else:
             ro_entities = self._readonly_entities_cache
 
@@ -1048,7 +1104,11 @@ class AuthoritativeState:
             blocked_tiles=shallow_freeze(self.blocked_tiles),
             town_tiles=shallow_freeze(self.town_tiles),
             building_tiles=shallow_freeze(self.building_tiles),
-            processed_transaction_ids=shallow_freeze(self.processed_transaction_ids)
+            processed_transaction_ids=shallow_freeze(self.processed_transaction_ids),
+            _has_hostiles_or_dead_cache=self._has_hostiles_or_dead_cache,
+            _has_contracts_cache=self._has_contracts_cache,
+            _active_nodes_grid=self._active_nodes_grid,
+            _building_map_cache=self._building_map_cache
         )
         # M10 Law: Cache the view on the mutable source
         object.__setattr__(self, "_readonly_cache", res)
@@ -1066,3 +1126,67 @@ class AuthoritativeState:
         """
         from src.replay.fingerprint import StateFingerprinter
         return StateFingerprinter.get_fingerprint(self)
+
+    def validate_dirty_set(self, prior_state: AuthoritativeState, dirty_set: DirtySet) -> None:
+        """
+        Verify that all changes between prior_state and self are captured in dirty_set.
+        Logic ID: PERF-006-AUDIT
+        """
+        from src.core.dirty import DirtySetLeakError
+        
+        # 1. Entities
+        all_dirty = dirty_set.all_dirty_entities
+        for e_id, entity in self.entities.items():
+            prior = prior_state.entities.get(e_id)
+            if prior is None:
+                if e_id not in all_dirty:
+                    raise DirtySetLeakError(f"Entity {e_id} added but not in DirtySet")
+                continue
+            if entity is not prior:
+                if e_id not in all_dirty:
+                    diff = self._find_entity_diff(prior, entity)
+                    raise DirtySetLeakError(f"Entity {e_id} changed but not in DirtySet. Diff: {diff}")
+
+        # 2. Resource Nodes
+        for n_id, node in self.resource_nodes.items():
+            prior = prior_state.resource_nodes.get(n_id)
+            if prior is None or node is not prior:
+                if n_id not in dirty_set.resource_node_ids:
+                    raise DirtySetLeakError(f"ResourceNode {n_id} changed/added but not in DirtySet")
+
+        # 3. Buildings
+        for b_id, building in self.buildings.items():
+            prior = prior_state.buildings.get(b_id)
+            if prior is None or building is not prior:
+                if b_id not in dirty_set.building_ids:
+                    raise DirtySetLeakError(f"Building {b_id} changed/added but not in DirtySet")
+
+        # 4. Regions
+        for r_id, region in self.regions.items():
+            prior = prior_state.regions.get(r_id)
+            if prior is None or region is not prior:
+                if r_id not in dirty_set.region_ids:
+                    raise DirtySetLeakError(f"Region {r_id} changed/added but not in DirtySet")
+
+        # 5. Groups
+        for g_id, group in self.groups.items():
+            prior = prior_state.groups.get(g_id)
+            if prior is None or group is not prior:
+                if g_id not in dirty_set.group_ids:
+                    raise DirtySetLeakError(f"Group {g_id} changed/added but not in DirtySet")
+
+    def _find_entity_diff(self, prior: EntityState, current: EntityState) -> List[str]:
+        """Diagnostic helper to find which components diverged."""
+        diffs = []
+        if prior.navigation is not current.navigation: diffs.append("navigation")
+        if prior.identity is not current.identity: diffs.append("identity")
+        if prior.combat is not current.combat: diffs.append("combat")
+        if prior.inventory is not current.inventory: diffs.append("inventory")
+        if prior.strategic is not current.strategic: diffs.append("strategic")
+        if prior.social is not current.social: diffs.append("social")
+        if prior.biological is not current.biological: diffs.append("biological")
+        if prior.lifecycle is not current.lifecycle: diffs.append("lifecycle")
+        if prior.task is not current.task: diffs.append("task")
+        if prior.stamina is not current.stamina: diffs.append("stamina")
+        if prior.attributes is not current.attributes: diffs.append("attributes")
+        return diffs

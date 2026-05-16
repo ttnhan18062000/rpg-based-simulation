@@ -5,27 +5,68 @@ import time
 import logging
 import math
 import threading
-from concurrent.futures import ThreadPoolExecutor, Future
+from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor, Future
 from typing import List, Dict, Any, Optional, Callable
-from src.core.worker_protocol import WorkerPacket, WorkerResult
-from src.core.updates import EntityUpdate
+import multiprocessing
 
 logger = logging.getLogger(__name__)
+
+
+def _process_chunk_wrapper(packets, worker_fn):
+    """
+    Handles a chunk of packets in a single process call.
+    """
+    import time
+    from src.core.worker_protocol import ResultStatus, WorkerResult
+    from src.core.updates import EntityUpdate
+    from dataclasses import replace
+
+    chunk_results = []
+    for packet in packets:
+        start = time.perf_counter_ns()
+        try:
+            results = worker_fn(packet)
+            elapsed = time.perf_counter_ns() - start
+            
+            if isinstance(results, list):
+                chunk_results.extend([replace(r, compute_time_ns=elapsed // len(results)) for r in results])
+            elif isinstance(results, WorkerResult):
+                chunk_results.append(replace(results, compute_time_ns=elapsed))
+            else:
+                chunk_results.append(results)
+        except Exception:
+            chunk_results.append(WorkerResult(
+                source_packet_id=packet.packet_id,
+                work_id=packet.work_id,
+                entity_id=packet.subject.id,
+                work_class=packet.work_class,
+                update=EntityUpdate(entity_id=packet.subject.id),
+                status=ResultStatus.FAILURE
+            ))
+    return chunk_results
 
 
 class WorkerManager:
     """
     Law: Concurrency must be bounded and profile-controlled. (M8 Rule 6)
-    Orchestrates execution across a thread pool with deterministic local fallback.
+    Orchestrates execution across a thread or process pool.
     """
 
-    def __init__(self, max_workers: int = 1, max_queue_depth: int = 100):
+    def __init__(self, max_workers: int = 1, max_queue_depth: int = 100, use_processes: bool = False):
         self._max_workers = max_workers
         self._max_queue_depth = max_queue_depth
+        self._use_processes = use_processes
         
         # Initialize pool only if workers > 0
-        self._pool = (ThreadPoolExecutor(max_workers=max_workers) 
-                      if max_workers > 0 else None)
+        if max_workers > 0:
+            if use_processes:
+                # Use spawn or forkserver for safety if on Windows/macOS, 
+                # but fork is default and fastest on Linux.
+                self._pool = ProcessPoolExecutor(max_workers=max_workers)
+            else:
+                self._pool = ThreadPoolExecutor(max_workers=max_workers)
+        else:
+            self._pool = None
         
         # Track peak usage for the current tick (Operational Truth)
         # M10 Law: Protect stats with a lock to ensure thread-safety under high pressure.
@@ -52,12 +93,25 @@ class WorkerManager:
         results: List[WorkerResult] = []
         futures: List[Future] = []
         
+        # Adaptive Pool Selection (M8 Rule: Optimize for IPC overhead)
+        if self._use_processes and len(packets) < self._max_workers * 10:
+            # Scale too small for process overhead, fallback to local/threaded
+            logger.debug("Workload scale too small for processes (%d), using local fallback.", len(packets))
+            return self._execute_locally(packets, worker_fn)
+
         effective_cap = max(1, math.ceil(self._max_workers * concurrency_limit))
-        throttle = threading.Semaphore(effective_cap)
+        
+        # Threading-only throttle (Processes manage their own pool limits)
+        throttle = threading.Semaphore(effective_cap) if not self._use_processes else None
         
         # Chunking Optimization: Reduce submit() overhead and lock contention
-        # Adaptive chunk size: ensures at least 2 tasks per worker for small batches
-        chunk_size = max(1, min(50, len(packets) // (self._max_workers * 2 if self._max_workers > 0 else 1)))
+        if self._use_processes:
+            # Mega-chunks for processes: minimize IPC calls
+            chunk_size = max(1, len(packets) // self._max_workers)
+        else:
+            # Micro-chunks for threads: better load balancing
+            chunk_size = max(1, min(50, len(packets) // (self._max_workers * 2 if self._max_workers > 0 else 1)))
+            
         chunks = [packets[i:i + chunk_size] for i in range(0, len(packets), chunk_size)]
         
         for chunk in chunks:
@@ -75,23 +129,27 @@ class WorkerManager:
                         queued_now = max(0, self._inflight_count - effective_cap)
                         self._peak_queued = max(self._peak_queued, queued_now)
                     
-                    def chunk_worker(c=chunk, f=worker_fn, t=throttle):
-                        # Throttle inside the pool thread, not the main thread
-                        t.acquire()
-                        try:
-                            chunk_results = []
-                            for p in c:
-                                res = self._wrap_work(p, f)
-                                if isinstance(res, list): chunk_results.extend(res)
-                                else: chunk_results.append(res)
-                            return chunk_results
-                        finally:
-                            t.release()
+                    if self._use_processes:
+                        future = self._pool.submit(_process_chunk_wrapper, chunk, worker_fn)
+                        futures.append(future)
+                    else:
+                        # Thread Pool Dispatch
+                        def chunk_worker(c=chunk, f=worker_fn, t=throttle):
+                            t.acquire()
+                            try:
+                                chunk_results = []
+                                for p in c:
+                                    res = self._wrap_work(p, f)
+                                    if isinstance(res, list): chunk_results.extend(res)
+                                    else: chunk_results.append(res)
+                                return chunk_results
+                            finally:
+                                t.release()
 
-                    future = self._pool.submit(chunk_worker)
-                    futures.append(future)
+                        future = self._pool.submit(chunk_worker)
+                        futures.append(future)
                 except Exception as e:
-                    logger.error("Chunk submission failed: %s", e)
+                    logger.error("Submission failed: %s", e)
                     results.extend(self._execute_locally(chunk, worker_fn))
                     with self._stats_lock:
                         self._inflight_count -= 1
@@ -124,7 +182,8 @@ class WorkerManager:
 
     def _wrap_work(self, packet: WorkerPacket, fn: Callable) -> List[WorkerResult] | WorkerResult:
         """Helper to capture compute time and handle errors inside the pool."""
-        from src.core.worker_protocol import ResultStatus
+        from src.core.worker_protocol import ResultStatus, WorkerResult
+        from src.core.updates import EntityUpdate
         
         with self._stats_lock:
             self._active_count += 1

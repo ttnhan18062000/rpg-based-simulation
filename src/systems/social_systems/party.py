@@ -22,6 +22,9 @@ class PartyCoordinationSystem:
         Injects the leader's active objective as a candidate goal for the member.
         Follows Section 1 of Phase 7 design.
         """
+        if getattr(state, "_has_contracts_cache", None) is False or not entity.strategic.contracts:
+            return scores
+
         # 1. Find active party contract where entity is target (member)
         active_contract = None
         for contract in entity.strategic.contracts.values():

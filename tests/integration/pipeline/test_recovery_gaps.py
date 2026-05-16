@@ -75,7 +75,7 @@ def test_building_sabotage():
     )
 
     state = AuthoritativeState(
-        tick=1,
+        tick=0,
         seed=42,
         entities={2: entity},
         buildings={1: building},

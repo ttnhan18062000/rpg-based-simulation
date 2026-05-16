@@ -65,4 +65,5 @@ The world is divided into **Regions**, each with its own:
 
 ## Performance & Optimization
 - **Shallow Copying**: State transitions use `replace()` to only copy the components that actually changed.
+- **Zero-Allocation ReadOnly Caching**: To prevent massive allocation overhead when workers access state collections (`entities`, `buildings`, `quests`, `items`, `factions`), `AuthoritativeState` maintains immutable cached `ReadOnlyDict` proxy views. These cached wrappers are reused across all property reads and are only invalidated when an authoritative state transition replaces the underlying collection reference. This reduces view generation overhead from O(N) to O(1) (sub-microsecond access).
 - **Fingerprinting**: The `AuthoritativeState.fingerprint()` method provides a high-speed SHA-256 hash of the entire world for stability verification.

@@ -38,15 +38,20 @@ The `AuthoritativeApplyPipeline` ensures that concurrent "intents" from workers 
 **Responsibility**: Enforces the status of the actor.
 - **Law**: Dead entities cannot move or act.
 - **Law**: Stunned or Frozen entities are blocked from submission.
-- > [!WARNING]
-  > **TODO**: Add explicit check for `status_sleeping` to block interaction and movement.
-  > **TODO**: Ensure `CombatUpdate` (attacks) are rejected for dead actors here.
+- **Law**: Sleeping entities are blocked from submission.
+- **Auditability**: All rejections are recorded in `rejections_delta` for auditability.
 
 ## Phase 5: Action Routing (Combat)
 **Logic ID**: `TOWN-149`, `COMB-001`  
 **File**: `src/engine/pipeline_phases/actions.py`  
 **Responsibility**: Routes combat intents through `SimulationDomainLogic`.
 - **Causal Rule**: Uses "Sliding State". If Actor A kills Target T in this tick, Actor B (later in the queue) will see T as dead and cannot receive a kill reward.
+
+## 🏃 Phase 7: Locomotion Routing
+**Logic ID**: `COMB-046`  
+**File**: `src/engine/pipeline_phases/movement.py`  
+**Responsibility**: Resolves physical movement steps, terrain traversal costs, and dynamic collision avoidance.
+- **Spatial Locomotion Indexing**: To prevent O(N) entity collection scans during collision and proximity checks, the locomotion phase queries the spatial grid (`grid.get_entities_in_radius`) to evaluate local obstacles and adjacent entity interactions in O(K) time where K is local density.
 
 ## 🗺️ Phase 13: Ecological Dynamics
 **Logic ID**: `INFRA-001`, `LEG-RPG-139`  

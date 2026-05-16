@@ -74,6 +74,7 @@ def test_transaction_trace_determinism():
         # Manually run the resolution phase with this result
         kernel._final_results = [res]
         kernel._phase_resolution()
+        kernel._phase_advancement()
         
         # Check if trace contains the failure
         trace = kernel._state.transaction_trace
@@ -93,5 +94,6 @@ def test_transaction_trace_determinism():
         kernel2 = Kernel(profile, state2, rng2, flags={"audit_mode": True})
         kernel2._final_results = [res]
         kernel2._phase_resolution()
+        kernel2._phase_advancement()
         
         assert kernel2._state.transaction_trace == kernel._state.transaction_trace, "Transaction traces differ across same-seed runs"

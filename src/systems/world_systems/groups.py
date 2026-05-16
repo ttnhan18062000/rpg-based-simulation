@@ -69,7 +69,8 @@ class GroupSystem:
         # 1. Process Existing Groups (Dissolution & Cohesion)
         # Optimization: Only process groups that were explicitly modified or had member changes
         # Logic ID: PERF-006 (Dirty Entity Tracking)
-        relevant_groups = current_update.dirty_set.group_ids if current_update and current_update.dirty_set else state.groups.keys()
+        from src.core.dirty import get_relevant_group_ids
+        relevant_groups = get_relevant_group_ids(state, current_update)
         
         for g_id in sorted(relevant_groups):
             group = state.groups.get(g_id)
@@ -134,7 +135,13 @@ class GroupSystem:
                 leader = state.entities.get(group.leader_id) # Needed for contract access
                 if group.contract_id and leader:
                     from src.core.strategic import ContractStatus
-                    contract = leader.strategic.contracts.get(group.contract_id)
+                    contract = None
+                    if current_update and group.leader_id in current_update.entity_updates:
+                        leader_up = current_update.entity_updates[group.leader_id]
+                        if leader_up.strategic:
+                            contract = next((c for c in leader_up.strategic.contracts_add_or_update if c.id == group.contract_id), None)
+                    if not contract:
+                        contract = leader.strategic.contracts.get(group.contract_id)
                     if not contract or contract.status != ContractStatus.ACTIVE:
                         contract_invalid = True
                     elif contract.expiry_tick != -1 and state.tick > contract.expiry_tick:
@@ -243,76 +250,77 @@ class GroupSystem:
         # VERIFIED v2: group_formation_purpose_driven
         # Find entities without groups
         # Logic ID: PERF-006 (Dirty Entity Tracking - Relaxed for ungrouped entities)
-        ungrouped_ids = sorted([e_id for e_id, e in state.entities.items() 
-                                if e.combat.alive and e.identity.group_id is None])
-        
-        # Purpose-Driven Formation: Check for active social contracts (Recruitment/Protection)
-        already_forming: Set[int] = set()
-        for i, id_a in enumerate(ungrouped_ids):
-            if id_a in already_forming:
-                continue
+        if getattr(state, "_has_contracts_cache", True):
+            ungrouped_ids = sorted([e_id for e_id, e in state.entities.items() 
+                                    if e.combat.alive and e.identity.group_id is None])
             
-            entity_a = state.entities[id_a]
-            new_group_members = {id_a}
-            active_contract_id = None
-            
-            # Check for contracts where id_a is source or target
-            # Logic ID: SOC-160 (Party formation can be driven by accepted social contract)
-            # Logic ID: SOC-187 (Group formation test covers accepted contract)
-            # Logic ID: SOC-188 (Group formation test covers no contract / proximity-only rejection)
-            # Logic ID: SOC-164 (Proximity alone does not create a party)
-            for c_id in sorted(entity_a.strategic.contracts.keys()):
-                contract = entity_a.strategic.contracts[c_id]
-                from src.core.strategic import ContractStatus
-                if contract.status != ContractStatus.ACTIVE: continue
+            # Purpose-Driven Formation: Check for active social contracts (Recruitment/Protection)
+            already_forming: Set[int] = set()
+            for i, id_a in enumerate(ungrouped_ids):
+                if id_a in already_forming:
+                    continue
                 
-                other_id = contract.target_id if contract.source_id == id_a else contract.source_id
-                if other_id in state.entities:
-                    other_entity = state.entities[other_id]
-                    # Law: Entity must be alive, ungrouped, and NOT already being assigned a group this tick
-                    if (other_entity.combat.alive and 
-                        other_entity.identity.group_id is None and 
-                        other_id not in already_forming):
-                        
-                        # Cohesion check: only form group if they are within range
-                        dx = entity_a.navigation.position[0] - other_entity.navigation.position[0]
-                        dy = entity_a.navigation.position[1] - other_entity.navigation.position[1]
-                        if (dx*dx + dy*dy) < (10.0**2):
-                            new_group_members.add(other_id)
-                            # Use the first contract ID as the primary group contract
-                            if active_contract_id is None:
-                                active_contract_id = c_id
-            
-            if len(new_group_members) >= 2:
-                # Form new group
-                new_g_id = 10000 + len(state.groups) + len(groups_add_or_update)
-                leader_id = id_a # Simplified: initiator is leader
-                anchor_x = sum(state.entities[m_id].navigation.position[0] for m_id in new_group_members) / len(new_group_members)
-                anchor_y = sum(state.entities[m_id].navigation.position[1] for m_id in new_group_members) / len(new_group_members)
+                entity_a = state.entities[id_a]
+                new_group_members = {id_a}
+                active_contract_id = None
                 
-                # Assign Roles
-                roles = {leader_id: "LEADER"}
-                for m_id in new_group_members:
-                    if m_id == leader_id: continue
-                    member = state.entities[m_id]
-                    # Derive role from combat component or default
-                    role = member.combat.tactical_role if member.combat.tactical_role else "VANGUARD"
-                    roles[m_id] = role
+                # Check for contracts where id_a is source or target
+                # Logic ID: SOC-160 (Party formation can be driven by accepted social contract)
+                # Logic ID: SOC-187 (Group formation test covers accepted contract)
+                # Logic ID: SOC-188 (Group formation test covers no contract / proximity-only rejection)
+                # Logic ID: SOC-164 (Proximity alone does not create a party)
+                for c_id in sorted(entity_a.strategic.contracts.keys()):
+                    contract = entity_a.strategic.contracts[c_id]
+                    from src.core.strategic import ContractStatus
+                    if contract.status != ContractStatus.ACTIVE: continue
+                    
+                    other_id = contract.target_id if contract.source_id == id_a else contract.source_id
+                    if other_id in state.entities:
+                        other_entity = state.entities[other_id]
+                        # Law: Entity must be alive, ungrouped, and NOT already being assigned a group this tick
+                        if (other_entity.combat.alive and 
+                            other_entity.identity.group_id is None and 
+                            other_id not in already_forming):
+                            
+                            # Cohesion check: only form group if they are within range
+                            dx = entity_a.navigation.position[0] - other_entity.navigation.position[0]
+                            dy = entity_a.navigation.position[1] - other_entity.navigation.position[1]
+                            if (dx*dx + dy*dy) < (10.0**2):
+                                new_group_members.add(other_id)
+                                # Use the first contract ID as the primary group contract
+                                if active_contract_id is None:
+                                    active_contract_id = c_id
+                
+                if len(new_group_members) >= 2:
+                    # Form new group
+                    new_g_id = 10000 + len(state.groups) + len(groups_add_or_update)
+                    leader_id = id_a # Simplified: initiator is leader
+                    anchor_x = sum(state.entities[m_id].navigation.position[0] for m_id in new_group_members) / len(new_group_members)
+                    anchor_y = sum(state.entities[m_id].navigation.position[1] for m_id in new_group_members) / len(new_group_members)
+                    
+                    # Assign Roles
+                    roles = {leader_id: "LEADER"}
+                    for m_id in new_group_members:
+                        if m_id == leader_id: continue
+                        member = state.entities[m_id]
+                        # Derive role from combat component or default
+                        role = member.combat.tactical_role if member.combat.tactical_role else "VANGUARD"
+                        roles[m_id] = role
 
-                new_group = GroupRecord(
-                    id=new_g_id,
-                    leader_id=leader_id,
-                    member_ids=new_group_members,
-                    anchor=(anchor_x, anchor_y),
-                    contract_id=active_contract_id,
-                    roles=roles,
-                    last_updated_tick=state.tick
-                )
-                groups_add_or_update.append(new_group)
-                
-                for m_id in new_group_members:
-                    already_forming.add(m_id)
-                    entity_updates[m_id] = EntityUpdate(entity_id=m_id, group_id_set=new_g_id)
+                    new_group = GroupRecord(
+                        id=new_g_id,
+                        leader_id=leader_id,
+                        member_ids=new_group_members,
+                        anchor=(anchor_x, anchor_y),
+                        contract_id=active_contract_id,
+                        roles=roles,
+                        last_updated_tick=state.tick
+                    )
+                    groups_add_or_update.append(new_group)
+                    
+                    for m_id in new_group_members:
+                        already_forming.add(m_id)
+                        entity_updates[m_id] = EntityUpdate(entity_id=m_id, group_id_set=new_g_id)
 
         return StateUpdate(
             entity_updates=entity_updates,

@@ -1,16 +1,16 @@
 timestamp,ticket_id,title,status,summary,artifacts_path
-2026-03-21T12:56:34Z,enhance-01,Enrich Event Information,DONE,Implemented Domain EventBus + Dataclass Telemetry,stored_artifacts/enhance-01/
+2026-03-21T12:56:34Z,,Enrich Event Information,DONE,Implemented Domain EventBus + Dataclass Telemetry,stored_artifacts/enhance-01/
 2026-03-31T23:45:00Z,TCK-20260330-AOA-COMPOSITION-COMPLETED,Baseline Architectural Foundation,DONE,Consolidated and finalized the AOA Aspect composition and Mind-state decomposition.,stored_artifacts/TCK-20260330-AOA-COMPOSITION-COMPLETED/
 2026-04-02T14:55:00Z,TCK-20260401-ACTION-CONVERGENCE,Unify Action Application Pipeline,DONE,Unified resolver/action system/replay via authoritative update-driven pipeline.,stored_artifacts/TCK-20260401-ACTION-CONVERGENCE/
 2026-04-02T14:55:00Z,TCK-20260401-TEST-STABILIZATION,Architecture Locking & Determinism Tests,DONE,Implemented AOA integrity locks and deterministic convergence test suite.,stored_artifacts/TCK-20260401-TEST-STABILIZATION/
-2026-04-02T14:55:00Z,TCK-20260401-INTROSPECTION-LAYER,Rendering & Explainability Endpoints,DONE,Finalized rich introspection services (Combat Traces, Stat Breakdown
+2026-04-02T14:55:00Z,TCK-20260401-INTROSPECTION-LAYER,Rendering & Explainability Endpoints,DONE,"Finalized rich introspection services (Combat Traces, Stat Breakdown",
 2026-04-02T14:55:00Z,TCK-20260401-HARDENING-PERF,Infrastructure Safety & Performance Optimization,DONE,Implemented recursive freeze guards and StaticData payload caching.,stored_artifacts/TCK-20260401-HARDENING-PERF/
-2026-04-06T15:00:00Z,TCK-20260406-RPG-CORE-STABILIZE,RPG Core Stabilization & AOA Hardening,DONE,Enforced Phase contracts, implemented authoritative building sabotage
-2026-03-21T07:10:00Z,epic-17-multi-hero,Phase 1: Multi-Hero & Escalating Death,DONE,Extracted and tested Hero Lifecycle System supporting 4 heroes and permadeath,stored_artifacts/epic-17-multi-hero/
-2026-03-21T14:48:00Z,epic-17-phase-2,World Evolutions,DONE,Implemented global day scaling scalar formulas & orchestrated Raids/Reinforcements inside CalamitySystem,stored_artifacts/epic-17-phase-2/
+2026-04-06T15:00:00Z,TCK-20260406-RPG-CORE-STABILIZE,RPG Core Stabilization & AOA Hardening,DONE,"Enforced Phase contracts, implemented authoritative building sabotage",
+2026-03-21T07:10:00Z,,Phase 1: Multi-Hero & Escalating Death,DONE,Extracted and tested Hero Lifecycle System supporting 4 heroes and permadeath,stored_artifacts/epic-17-multi-hero/
+2026-03-21T14:48:00Z,,World Evolutions,DONE,Implemented global day scaling scalar formulas & orchestrated Raids/Reinforcements inside CalamitySystem,stored_artifacts/epic-17-phase-2/
 2026-03-22T05:40:00Z,TCK-20260322-PERF_OPT,Optimize Engine Performance,DONE,Restored TPS to >10 and reduced CPU usage by 75%. Optimized Entity.copy and Grid serialization.,stored_artifacts/TCK-20260322-PERF_OPT/
 2026-03-22T06:00:00Z,TCK-20260322-BWS_PROTO,Binary WebSocket Protocol,DONE,Implemented MessagePack over WebSockets with 95.3% payload reduction. Added GZip middleware.,stored_artifacts/TCK-20260322-BWS_PROTO/
-2026-03-22T21:23:00Z,TCK-20260322-INDIVIDUAL_SPIRIT,The Individual Spirit (AI Personality),DONE,Implemented persistent grudges (Nemesis), mood-driven behavior
+2026-03-22T21:23:00Z,TCK-20260322-INDIVIDUAL_SPIRIT,The Individual Spirit (AI Personality),DONE,"Implemented persistent grudges (Nemesis), mood-driven behavior",
 2026-03-22T22:38:46Z,TCK-20260322-GRAND_STRATEGY,Grand Strategy implementation,DONE,Implemented StrategySystem with influence/war/siege mechanics,stored_artifacts/TCK-20260322-GRAND_STRATEGY/
 2026-03-24T17:58:00Z,TCK-20260324-DEBUG_TESTS,Stabilize WorldLoop Test Suite,DONE,100% Unit Test Pass (584/584). Implemented Dynamic Port Isolation & Robust Loki Ingestion infrastructure.,stored_artifacts/TCK-20260324-DEBUG_TESTS/
 2026-03-25T00:10:00Z,TCK-20260325-FINAL_E2E_SMOKE,Final E2E Test Stabilization,DONE,Achieved 10/10 E2E pass rate with hybrid Loki audit filtering.,stored_artifacts/TCK-20260325-FINAL_E2E_SMOKE/
@@ -20,10 +20,10 @@ timestamp,ticket_id,title,status,summary,artifacts_path
 2026-03-27T10:30:00Z,TCK-20260327-WINDBIGMOD,Models and Navigation Refactor,DONE,Extracted StatsProxy and implemented Bilinear Flow Fields,stored_artifacts/TCK-20260327-WINDBIGMOD/
 2026-03-27T13:30:00Z,TCK-20260327-AIREF,Stabilize AI Three Pillars,DONE,Achieved 100% pass rate in AI Refinement E2E suite,stored_artifacts/TCK-20260327-AIREF/
 2026-03-28T05:37:43Z,TCK-20260328,Simulation Backend Modularization,DONE,Extracted Telemetry and World Evolution subsystems + cleaned up StatsProxy,stored_artifacts/TCK-20260328/
-2026-03-28T08:06:50Z,TCK-20260328,Stabilize Combat Simulation Backend,DONE,Fixed AOE hit registration, target ID persistence
+2026-03-28T08:06:50Z,TCK-20260328,Stabilize Combat Simulation Backend,DONE,"Fixed AOE hit registration, target ID persistence",
 2026-03-28T12:18:00Z,TCK-20260322-RPG_REFINEMENT,RPG Core Refinement,DONE,Implemented 4 Pillars (Soul/Body/Action/Social) and verified 749 tests passed.,stored_artifacts/TCK-20260322-RPG_REFINEMENT/
-2026-04-02T12:25:00Z,TCK-20260401-FINAL-NON-PARTIAL-TASKS,Address FINAL-NON-PARTIAL-TASKS,DONE,Purged intent_metadata shims, enforced Mind typing
-2026-04-02T12:54:00Z,TCK-20260401-FINAL-CONVERGENCE,Final Convergence and Stabilization,DONE,Unified action application pipeline, finalized API presenter migration
+2026-04-02T12:25:00Z,TCK-20260401-FINAL-NON-PARTIAL-TASKS,Address FINAL-NON-PARTIAL-TASKS,DONE,"Purged intent_metadata shims, enforced Mind typing",
+2026-04-02T12:54:00Z,TCK-20260401-FINAL-CONVERGENCE,Final Convergence and Stabilization,DONE,"Unified action application pipeline, finalized API presenter migration",
 2026-04-02T14:26:00Z,TCK-20260401-FINAL-CONVERGENCE,AOA Introspection Hardening,DONE,Hardened Mind/Combat introspection with typed records and resolved circular imports.,stored_artifacts/TCK-20260401-FINAL-CONVERGENCE/
 2026-04-02T14:34:00Z,TCK-20260401-FINAL-CONVERGENCE,API Presenter Convergence,DONE,Unified REST and WebSocket presentation layers and purged legacy encoder.,stored_artifacts/TCK-20260401-FINAL-CONVERGENCE/
 2026-04-02T14:40:00Z,TCK-20260401-FINAL-ENFORCEMENT,Phase-Boundary Enforcement,DONE,Implemented recursive freeze guards and ActionProposalGuard context manager.,stored_artifacts/TCK-20260401-FINAL-ENFORCEMENT/
@@ -31,10 +31,10 @@ timestamp,ticket_id,title,status,summary,artifacts_path
 2026-04-02T14:52:00Z,TCK-20260402-CONV,AOA Action Convergence,DONE,Unified action application and resolved duplicate item bug,stored_artifacts/TCK-20260402-CONV/
 2026-04-02T17:45:00Z,TCK-20260402-HARDENING,AOA Architectural Hardening,DONE,Hardened Pydantic boundaries for Building/Grid and unified worker serialization.,stored_artifacts/TCK-20260402-HARDENING/
 2026-04-03T02:25:00Z,TCK-20260403-PHASE-DECOMP,WorldLoop Phase Decomposition & Typed Records,DONE,Separated Finalization/Persistence phases and implemented structured IntentUpdate records.,stored_artifacts/TCK-20260403-PHASE-DECOMP/
-2026-04-03T04:00:00Z,TCK-20260403-RECOVERY,AOA Test Recovery & Stabilization,DONE,Resolving 26 integration test failures across lifecycle, invariants
+2026-04-03T04:00:00Z,TCK-20260403-RECOVERY,AOA Test Recovery & Stabilization,DONE,"Resolving 26 integration test failures across lifecycle, invariants",
 2026-04-03T15:19:17Z,TCK-20260403-FINAL-CONVERGENCE,Final Architectural Stability & Convergence,DONE,Implemented architectural pivot (sharing combat models) to break circular dependencies + deeper immutability + typed action records.,stored_artifacts/TCK-20260403-FINAL-CONVERGENCE/
 2026-04-04T18:08:26Z,TCK-20260404-STABILIZATION,Final AOA Combat and AI Stabilization,DONE,Achieved 100% pass rate in E2E and API suites by resolving logic regressions and Pydantic freezing issues.,stored_artifacts/TCK-20260404-STABILIZATION/
-2026-04-05T04:29:00Z,TCK-20260405-CONVERGENCE,Full-Suite Stability and Convergence,DONE,Achieved 100% pass rate (1,227/1
+2026-04-05T04:29:00Z,TCK-20260405-CONVERGENCE,Full-Suite Stability and Convergence,DONE,"Achieved 100% pass rate (1,227/1",
 2026-04-05T04:30:00Z,TCK-20260330-CORE-STABILIZATION,AOA Hardening & Simulation Purity,DONE,Refactored Entity to typed aspects and purged legacy shims. 100% test pass.,stored_artifacts/TCK-20260330-CORE-STABILIZATION/
 2026-04-05T04:30:10Z,TCK-20260402-VALIDATION,Post-Hardening Validation & Performance Benchmarking,DONE,Verified deterministic integrity and performance (0.7 TPS at 500 scale).,stored_artifacts/TCK-20260402-VALIDATION/
 2026-04-05T04:30:20Z,TCK-20260327-WINDBIGMOD-CLEANUP,Architectural Stat Logic Refactor (BigMod),DONE,Removed all effective_* legacy shims and StatsProxy pattern.,stored_artifacts/TCK-20260327-WINDBIGMOD-CLEANUP/
@@ -42,23 +42,23 @@ timestamp,ticket_id,title,status,summary,artifacts_path
 2026-04-05T11:59:03Z,TCK-20260405-TEST-RECOVERY,AOA Combat Test Recovery,DONE,Restored AI brain stabilization and corrected shatter effect synchronization,stored_artifacts/TCK-20260405-TEST-RECOVERY/
 2026-04-05T16:10:00Z,TCK-20260405-B,Final AOA Test Stabilization,DONE,Fixed RabbitMQ batching and AI mock TypeErrors,stored_artifacts/TCK-20260405-B/
 2026-04-05T16:39:00Z,TCK-20260405-LOGFIX,Fix E2E Logging Timeouts,DONE,Disabled Kafka and added CLI grid scaling to resolve timeouts in test_logging_structure.py.,stored_artifacts/TCK-20260405-LOGFIX/
-2026-04-05T16:54:00Z,TCK-20260405-DOCS,Comprehensive Documentation Update (AOA Pivot),DONE,Restructured docs/ into domain-driven modular guides (architecture, entities
-2026-04-05T17:16:00Z,enhance-03,Extend Simulation Maximum Tick to 50000,DONE,Extended the default simulation maximum tick limit to 50000 in config.py.,tickets/done/enhance-03-extend-max-tick-limit.md
-2026-04-05T17:16:00Z,enhance-04,Mob Roaming Leash Distance,DONE,Implemented home-based leashing and return-home logic for mobs.,tickets/done/enhance-04-mob-roaming-leash.md
-2026-04-05T17:16:00Z,design-02,Revise Ticking Mechanism,DONE,Implemented variable subsystem tick rates for core/env/economy systems.,tickets/done/design-02-revise-ticking-mechanism.md
-2026-04-05T17:16:00Z,design-03,Data-Driven Content Registries,DONE,Externalized item/class/skill definitions into JSON via registry_loader.py.,tickets/done/design-03-data-driven-registries.md
-2026-04-04T12:00:00Z,infra-06,Hardening and Chaos Testing,DONE,Implemented Chaos Mode fault injection and invariant property-based testing.,stored_artifacts/infra_06/
+2026-04-05T16:54:00Z,TCK-20260405-DOCS,Comprehensive Documentation Update (AOA Pivot),DONE,"Restructured docs/ into domain-driven modular guides (architecture, entities",
+2026-04-05T17:16:00Z,,Extend Simulation Maximum Tick to 50000,DONE,Extended the default simulation maximum tick limit to 50000 in config.py.,tickets/done/enhance-03-extend-max-tick-limit.md
+2026-04-05T17:16:00Z,,Mob Roaming Leash Distance,DONE,Implemented home-based leashing and return-home logic for mobs.,tickets/done/enhance-04-mob-roaming-leash.md
+2026-04-05T17:16:00Z,,Revise Ticking Mechanism,DONE,Implemented variable subsystem tick rates for core/env/economy systems.,tickets/done/design-02-revise-ticking-mechanism.md
+2026-04-05T17:16:00Z,,Data-Driven Content Registries,DONE,Externalized item/class/skill definitions into JSON via registry_loader.py.,tickets/done/design-03-data-driven-registries.md
+2026-04-04T12:00:00Z,,Hardening and Chaos Testing,DONE,Implemented Chaos Mode fault injection and invariant property-based testing.,stored_artifacts/infra_06/
 2026-04-01T10:00:00Z,TCK-20260401-AOA-STABILIZE,AOA Integrity & Performance,DONE,Implemented recursive freeze guards and StaticData payload caching.,stored_artifacts/TCK-20260401-AOA-STABILIZE/
 2026-04-06T11:28:29Z,TCK-20260405-PROD-STACK-STABILIZE,E2E Production Stack Stabilization,DONE,Restored full production test suite; fixed ActionSystem and EventPresenter regressions,stored_artifacts/TCK-20260405-PROD-STACK-STABILIZE/
 2026-04-06T16:22:30Z,TCK-20260406-PHASE0,Archetype & Ownership Phase 0,DONE,Locked foundational constraints/vocabulary and consolidated identity/mind state.,stored_artifacts/TCK-20260406-PHASE0/
-2026-04-07T01:45:00Z,TCK-20260407-PHASE0-CONTINUE,Phase 0 Foundations Alignment,DONE,Aligned IdentityAspect, MindAspect
-2026-04-07T02:00:00Z,TCK-20260407-PHASE1-PERSONALITY,Phase 1: Personality & Relationships,DONE,Implemented OCEAN traits, Motive Appraisal pipeline
+2026-04-07T01:45:00Z,TCK-20260407-PHASE0-CONTINUE,Phase 0 Foundations Alignment,DONE,"Aligned IdentityAspect, MindAspect",
+2026-04-07T02:00:00Z,TCK-20260407-PHASE1-PERSONALITY,Phase 1: Personality & Relationships,DONE,"Implemented OCEAN traits, Motive Appraisal pipeline",
 2026-04-07T12:59:46Z,TCK-20260407-PH0-FIX,Corrective Alignment & Misdirection Fix,DONE,Implemented authoritative memory salience and curated inspector lens,stored_artifacts/TCK-20260407-PH0-FIX
 2026-04-08T09:03:00Z,TCK-20260407-PHASE1-DS,Phase 1: Behavioral Realism Implementation,DONE,Implemented personality traits motives and belief-based perception; stabilized AOA perception pipeline.,stored_artifacts/TCK-20260407-PHASE1-DS/
 2026-04-08T02:50:29Z,TCK-20260408-PHASE2-DS,Phase 2 Design Shift — Social Meaning,DONE,Implemented Turning Points Reputation Relationships and Gossip pipeline,stored_artifacts/TCK-20260408-PHASE2-DS/
 2026-04-08T04:35:00Z,TCK-20260408-PH2-STG3-ROUTINE,Phase 2 Stage 3: Routine and Biological Needs,DONE,Implemented authoritative biological decay forced sleep and update-driven Eat/Sleep actions.,stored_artifacts/TCK-20260408-PH2-STG3-ROUTINE/
 2026-04-08T05:00:00Z,TCK-20260408-PH2-STG4-SOCIAL,Phase 2 Stage 4: Social Convergence & Causal Analysis,DONE,Implemented gossip propagation knowledge merging and narrative explanation correlation.,stored_artifacts/TCK-20260408-PH2-STG4-SOCIAL/
-2026-04-08T12:01:00Z,TCK-20260408-PH1-2-DS-REMEDIATION,Behavioral Realism Remediation,DONE,Remediated Ph1-2 Design Shift issues (Reputation Unification, Serialization
+2026-04-08T12:01:00Z,TCK-20260408-PH1-2-DS-REMEDIATION,Behavioral Realism Remediation,DONE,"Remediated Ph1-2 Design Shift issues (Reputation Unification, Serialization",
 2026-04-09T01:10:00Z,TCK-20260408-PH3-PASS3-BEHAVIOR,Phase 3: Behavioral Integration,DONE,Implemented role-based AI biases group coordinated consensus and combat disruption. Verified with 21 tests.,stored_artifacts/TCK-20260408-PH3-PASS3-BEHAVIOR/
 2026-04-09T11:00:00Z,TCK-20260409-PH4-STG1-CORE-MODELS,Phase 4: Core Continuity & Consequence Models,DONE,Implemented Successor/Household/Scar models and regional registries.,stored_artifacts/TCK-20260409-PH4-STG1-CORE-MODELS/
 2026-04-09T11:15:00Z,TCK-20260409-PH4-STG2-SUCCESSION-LOGIC,Phase 4: Succession Logic & Hero Inheritance,DONE,Implemented authoritative heir designation and motive transfer. Integrated with HeroLifecycleSystem.,stored_artifacts/TCK-20260409-PH4-STG2-SUCCESSION-LOGIC/
@@ -76,12 +76,12 @@ timestamp,ticket_id,title,status,summary,artifacts_path
 2026-04-10T01:00:00Z,TCK-20260409-PH1-STG13-14,Succession and Consequences logic,DONE,Implemented motive/wealth transfer and world scars,stored_artifacts/TCK-20260409-PH1-STG13-14/
 2026-04-09T17:40:00Z,TCK-20260410-PH1-STG-AUDIT,Phase 1 Stage Audit & Reconciliation,DONE,Synchronized all Strategic Design Shift work under a single flattened sequence. Verified snapshot safety.,stored_artifacts/TCK-20260410-PH1-STG-AUDIT/
 2026-04-09T15:30:00Z,TCK-20260409-PH1-STG1-STRATEGIC-STATE,Phase 1 Stage 1: Strategic State Foundation,DONE,Established the core StrategicState models and MindAspect integration.,stored_artifacts/TCK-20260409-PH1-STG1-STRATEGIC-STATE/
-2026-04-10T07:56:00Z,TCK-20260410-PHASE-2-ALIGNMENT,Phase 2 Strategic Verification and Alignment,DONE,Refactored strategic cognition engine, standardized stage markers
+2026-04-10T07:56:00Z,TCK-20260410-PHASE-2-ALIGNMENT,Phase 2 Strategic Verification and Alignment,DONE,"Refactored strategic cognition engine, standardized stage markers",
 2026-04-10T08:44:00Z,TCK-20260410-PH3-STRATEGIC-KNOWLEDGE,Phase 3: Strategic Knowledge Leads and Blockers,DONE,Implemented structural uncertainty via leads candidate zones and typed blockers with detour spawning. Verified with integration tests.,stored_artifacts/TCK-20260410-PH3-STRATEGIC-KNOWLEDGE/
-2026-04-10T12:22:00Z,TCK-20260410-PH4-SOCIAL-CONTRACTS,Phase 4: Social Contract and Party Formation,DONE,Implemented negotiated recruitment, authoritative party formation
+2026-04-10T12:22:00Z,TCK-20260410-PH4-SOCIAL-CONTRACTS,Phase 4: Social Contract and Party Formation,DONE,"Implemented negotiated recruitment, authoritative party formation",
 2026-04-10T12:41:00Z,TCK-20260410-PH5-STRATEGIC-CONSEQUENCES,Phase 5: Event-Driven Reprioritization and Durable Consequences,DONE,Implemented StrategicConsequenceService for translating life events/scars into strategic state and directive mutations. Verified with integration tests.,stored_artifacts/TCK-20260410-PH5-STRATEGIC-CONSEQUENCES/
-2026-04-10,TCK-20260410-PH6-ENGINE-INTEGRATION,DONE,Finalized Phase 6: Engine Integration and Observability. Integration tests passing.,,
-2026-04-10T15:03:00Z,TCK-20260410-STRAT-REFACTOR,Improvement Phase 1: Strategic Consistency,DONE,Reconciled StrategicUpdate schema, eliminated live-mutation exceptions in services
+2026-04-10,TCK-20260410-PH6-ENGINE-INTEGRATION,,DONE,"Finalized Phase 6: Engine Integration and Observability. Integration tests passing.,,",
+2026-04-10T15:03:00Z,TCK-20260410-STRAT-REFACTOR,Improvement Phase 1: Strategic Consistency,DONE,"Reconciled StrategicUpdate schema, eliminated live-mutation exceptions in services",
 2026-04-11T00:11:53Z,TCK-20260410-BUILDING-UNIFICATION,Strategic Knowledge Unification (Building Handlers),DONE,Standardized town handlers to use strategic stratum and hardened detour matching logic. All building visit decisions now flow through directed strategic records. Verified zero legacy goal strings in AI state handlers.,stored_artifacts/TCK-20260410-BUILDING-UNIFICATION/
 2026-04-11T00:30:00Z,TCK-20260411-PH4-STRAT-STABILIZATION,Phase 4 Strategic Pipeline Stabilization & Observability,DONE,Stabilized the strategic consequence pipeline and verified project pivoting and observability.,tickets/done/TCK-20260411-PH4-STRAT-STABILIZATION.md
 2026-04-11T12:00:00Z,TCK-20260411-AI-FIX-SYNTAX-ERROR,Fix AI Syntax Error,DONE,Fixed syntax error and missing mocks in test_stuck.py,stored_artifacts/TCK-20260411-AI-FIX-SYNTAX-ERROR/
@@ -99,7 +99,7 @@ timestamp,ticket_id,title,status,summary,artifacts_path
 2026-04-15T10:00:00Z,TCK-20260415-PIPELINE-IDEMPOTENCY,Strategic Pipeline Idempotency Hardening,DONE,Removed broken ContractOutcomeService call; added transition-guarded metrics; verified with 12 tests.,stored_artifacts/TCK-20260415-PIPELINE-IDEMPOTENCY/
 2026-04-15T10:55:00Z,TCK-20260415-CORRECTIVE-PLANS,Strategic Cognition Pipeline Hardening,DONE,Implemented directive promotion; synced replay/graph parity; added doc integrity tests.,stored_artifacts/TCK-20260415-CORRECTIVE-PLANS/
 2026-04-15T16:30:00Z,TCK-20260415-HARDENING-FINALIZE,Strategic Cognition Hardening (Final),DONE,Stabilized the full regression suite (308 tests). Hardened directive mutation history thresholds and implemented same-tick biological concern appraisal.,stored_artifacts/TCK-20260415-HARDENING-FINALIZE/
-2026-04-15T16:47:00Z,TCK-20260415-WS-CLEANUP,Workspace Cleanup,DONE,Removed Python/Pytest caches and Next.js build artifacts while preserving tmp/. ,stored_artifacts/TCK-20260415-WS-CLEANUP/
+2026-04-15T16:47:00Z,TCK-20260415-WS-CLEANUP,Workspace Cleanup,DONE,Removed Python/Pytest caches and Next.js build artifacts while preserving tmp/.,stored_artifacts/TCK-20260415-WS-CLEANUP/
 2026-04-18T03:35:49Z,TCK-20260418-TEST-STABILITY-HARDENING,Test Stability and Coverage Restoration,DONE,Implemented wall-clock watchdog (SIGKILL) + fixed registry loader alignment + restored 71 missing test cases.,stored_artifacts/TCK-20260418-TEST-STABILITY-HARDENING/
 2026-04-17T12:00:00Z,TCK-20260417-ARENA-PERF-HARDENING,Arena Simulation Performance Hardening,DONE,Implemented universal shallow-snapshot and hardened WorkerPool resource cleanup. Established pytest memory hooks.,stored_artifacts/TCK-20260417-ARENA-PERF-HARDENING/
 2026-04-17T15:00:00Z,TCK-20260417-COMBAT-MOVEMENT-FINALIZE,Combat and Movement Overhaul Finalization,DONE,Finalized Milestone 7 (Observability & Rollout Hardening) and consolidated overhaul documentation pack.,stored_artifacts/TCK-20260417-COMBAT-MOVEMENT-FINALIZE/
@@ -113,26 +113,26 @@ timestamp,ticket_id,title,status,summary,artifacts_path
 2026-04-18T14:10:00Z,TCK-20260418-RESOURCE-KERNEL-M2,Milestone 2: Minimal Deterministic Single-Thread Kernel,DONE,Implemented minimal runnable kernel with generation-based apply path and provable bit-identical determinism.,stored_artifacts/TCK-20260418-RESOURCE-KERNEL-M2/
 2026-04-18T14:20:00Z,TCK-20260418-RESOURCE-KERNEL-M3,Milestone 3: Bounded Runtime State and Lean Hot-Path Models,DONE,Implemented structural model separation and enforced bounded retention on all long-lived containers.,stored_artifacts/TCK-20260418-RESOURCE-KERNEL-M3/
 2026-04-18T14:30:00Z,TCK-20260418-RESOURCE-KERNEL-M4,Milestone 4: Deterministic Scheduler and Work Model,DONE,Implemented deterministic bucketized scheduler with authoritative debt and periodic state tracking.,stored_artifacts/TCK-20260418-RESOURCE-KERNEL-M4/
-2026-04-18,TCK-20260418-RESOURCE-KERNEL-M5,Milestone 5: Resource Governor,DONE
-2026-04-18,TCK-20260418-RESOURCE-PERSISTENCE-M6,Milestone 6: Streaming Replay,DONE
-2026-04-18,TCK-20260418-RESOURCE-OBSERVABILITY-M7,Milestone 7: Observability and Operational Controls,DONE
+2026-04-18,TCK-20260418-RESOURCE-KERNEL-M5,Milestone 5: Resource Governor,,DONE,
+2026-04-18,TCK-20260418-RESOURCE-PERSISTENCE-M6,Milestone 6: Streaming Replay,,DONE,
+2026-04-18,TCK-20260418-RESOURCE-OBSERVABILITY-M7,Milestone 7: Observability and Operational Controls,,DONE,
 2026-04-18T15:45:00Z,TCK-20260418-RESOURCE-CONCURRENCY-M8,Safe Concurrency and Bounded Worker Execution,DONE,Implemented WorkerPool with explicit queue bounds and deterministic local fallback.,stored_artifacts/TCK-20260418-RESOURCE-ENGINE-FINALIZE/
 2026-04-18T15:46:00Z,TCK-20260418-RESOURCE-CERTIFICATION-M9,Resource Certification and Resilience Harness,DONE,Built certification metrics harness and verified safe degradation under debt pressure.,stored_artifacts/TCK-20260418-RESOURCE-ENGINE-FINALIZE/
 2026-04-18T15:47:00Z,TCK-20260418-RESOURCE-STABILIZATION-M10,Documentation Pack and Engineering Playbook,DONE,Finalized 10-milestone audit and established automated documentation integrity gates.,stored_artifacts/TCK-20260418-RESOURCE-ENGINE-FINALIZE/
 2026-04-18T15:50:00Z,,Project Documentation Alignment (v2),DONE,Overhauled high-level docs to align with the Resource-Safe Engine architecture.,stored_artifacts/TCK-20260418-RESOURCE-ENGINE-FINALIZE/
-2026-04-19,TCK-20260419-MILESTONE-A-CORE-RUNTIME,DONE,Core runtime hardened to 6-phase contract and canonical hashing.
+2026-04-19,TCK-20260419-MILESTONE-A-CORE-RUNTIME,,DONE,Core runtime hardened to 6-phase contract and canonical hashing.,
 2026-04-19T12:22:00Z,TCK-20260419-MILESTONE-E-PROOF-SYSTEM,Final Certification Proof and Production Readiness Gate,DONE,Implemented Honest Reporting Quadrant and production readiness gate (M11 Certification),stored_artifacts/TCK-20260419-MILESTONE-E-PROOF-SYSTEM/
-2026-04-19T09:40:10Z,TCK-20260419-V2-CONSOLIDATION-FINAL-HARDENING,Final signal disaggregation and trending hardened. V2 Engine closed at 100% truthfulness.
-2026-04-19,TCK-20260419-MA-TASK1-FREEZE-LAW,Freeze Milestone A runtime law set,DONE
-2026-04-19,TCK-20260419-MA-TASK2-AUDIT-MUTATION,Audit and close mutation paths,DONE
-2026-04-19,TCK-20260419-MA-TASK3-PIN-SCHEDULER,Pin deterministic scheduler classes,DONE
-2026-04-19,TCK-20260419-MA-TASK4-HARDEN-HASHING,Audit and harden canonical hashing,DONE
-2026-04-19,TCK-20260419-MA-TASK5-FINAL-CLOSURE,Complete Milestone A closure gating,DONE
-2026-04-19,TCK-20260419-MB-TASK1-FREEZE-LAW,Freeze Milestone B runtime law set,DONE
-2026-04-19,TCK-20260419-MB-TASK2-REAL-SIGNALS,Replace Weak Signals with Real Accounting,DONE
-2026-04-19,TCK-20260419-MB-TASK3-GOVERNOR-HARDENING,Harden Governor Transitions,DONE
-2026-04-19,TCK-20260419-MB-TASK4-ADAPTIVE-POOL,Implement Adaptive Saturated-Pool,DONE
-2026-04-19,TCK-20260419-MB-TASK5-FINAL-VALIDATION,DONE,Finalized Milestone B hardening and operational gate validation. All laws verified.
+2026-04-19T09:40:10Z,TCK-20260419-V2-CONSOLIDATION-FINAL-HARDENING,Final signal disaggregation and trending hardened. V2 Engine closed at 100% truthfulness.,,,
+2026-04-19,TCK-20260419-MA-TASK1-FREEZE-LAW,Freeze Milestone A runtime law set,,DONE,
+2026-04-19,TCK-20260419-MA-TASK2-AUDIT-MUTATION,Audit and close mutation paths,,DONE,
+2026-04-19,TCK-20260419-MA-TASK3-PIN-SCHEDULER,Pin deterministic scheduler classes,,DONE,
+2026-04-19,TCK-20260419-MA-TASK4-HARDEN-HASHING,Audit and harden canonical hashing,,DONE,
+2026-04-19,TCK-20260419-MA-TASK5-FINAL-CLOSURE,Complete Milestone A closure gating,,DONE,
+2026-04-19,TCK-20260419-MB-TASK1-FREEZE-LAW,Freeze Milestone B runtime law set,,DONE,
+2026-04-19,TCK-20260419-MB-TASK2-REAL-SIGNALS,Replace Weak Signals with Real Accounting,,DONE,
+2026-04-19,TCK-20260419-MB-TASK3-GOVERNOR-HARDENING,Harden Governor Transitions,,DONE,
+2026-04-19,TCK-20260419-MB-TASK4-ADAPTIVE-POOL,Implement Adaptive Saturated-Pool,,DONE,
+2026-04-19,TCK-20260419-MB-TASK5-FINAL-VALIDATION,,DONE,Finalized Milestone B hardening and operational gate validation. All laws verified.,
 2026-04-19,TCK-20260419-MC-TASK1-FREEZE-LIFECYCLE-LAW,Freeze Milestone C runtime law set,DONE,Formalized the operational lifecycle contract (MC) and aligned manifest terminology.,stored_artifacts/D145C3D0-MILESTONE-C/
 2026-04-19,TCK-20260419-MC-TASK2-HARDEN-REPLAY-STAGING,Harden Replay Staging and Rotation,DONE,Verified bounded buffer capacity and saturation-based chunk rotation.,stored_artifacts/D145C3D0-MILESTONE-C/
 2026-04-19,TCK-20260419-MC-TASK3-CORE-STARTUP-VALIDATION,Complete Startup Validation and Flag Enforcement,DONE,Implemented contradictory flag rejection and forbidden override guards.,stored_artifacts/D145C3D0-MILESTONE-C/
@@ -145,11 +145,11 @@ timestamp,ticket_id,title,status,summary,artifacts_path
 2026-04-19,TCK-20260419-MD-TASK4-DETERMINISTIC-SUITE,Complete deterministic test suite,DONE,Verified 100% bit-identical equivalence under high-pressure chaos.,stored_artifacts/D145C3D0-MILESTONE-D-TASK4/
 2026-04-19T15:35:00Z,TCK-20260419-MD-TASK4-DETERMINISTIC-SUITE,Complete deterministic test suite and Real Domain Slice,DONE,Verified 100% bit-identical equivalence with real movement domain logic.,stored_artifacts/MD-FINAL/
 2026-04-20T00:58:00Z,TCK-20260420-ME-CERT-TRUST,Hardening Engine Certification and Release Trust,DONE,Expanded certification scenario catalog to 15 scenarios and hardened release gate trust.,stored_artifacts/TCK-20260420-ME-CERT-TRUST/
-2026-04-20T10:45:00Z,TCK-20260420-MA-BASELINE-ISOLATION,Substrate Hardening (MA/MB/MC),DONE,Isolated the semantic baseline from concurrency plumbing (MA), hardened operational signals (MB), and de-simulated debt logic (MC).,stored_artifacts/TCK-20260420-MA-BASELINE-ISOLATION/
-2026-04-20T01:47:00Z,TCK-20260420-V2-ENGINE-STABILIZATION,V2 Resource Engine Test Stabilization,DONE,Resolved test regressions, aligned protocol signatures, and enforced system ID reservation. 100% test pass.,stored_artifacts/TCK-20260420-V2-ENGINE-STABILIZATION/
+2026-04-20T10:45:00Z,TCK-20260420-MA-BASELINE-ISOLATION,Substrate Hardening (MA/MB/MC),DONE,"Isolated the semantic baseline from concurrency plumbing (MA), hardened operational signals (MB), and de-simulated debt logic (MC).",stored_artifacts/TCK-20260420-MA-BASELINE-ISOLATION/
+2026-04-20T01:47:00Z,TCK-20260420-V2-ENGINE-STABILIZATION,V2 Resource Engine Test Stabilization,DONE,"Resolved test regressions, aligned protocol signatures, and enforced system ID reservation. 100% test pass.",stored_artifacts/TCK-20260420-V2-ENGINE-STABILIZATION/
 2026-04-20T13:00:00Z,TCK-20260420-CORE-MOVEMENT-SLICE,Deterministic Grid Movement Substrate,DONE,Implemented authoritative grid movement resolve logic with bit-identical parity to src engine.,stored_artifacts/TCK-20260420-CORE-MOVEMENT-SLICE/
 2026-04-20T14:45:00Z,TCK-20260420-CERT-CONSOLIDATION,Certification Artifact Consolidation,DONE,Reduced report clutter from 60+ files to 3 bundled files while maintaining 100% Gate pass.,stored_artifacts/TCK-20260420-CERT-CONSOLIDATION/
-2026-04-20,TCK-20260420-PERF-FOUNDATION,Established performance contract; instrumented Kernel phase timing; created BenchHarness and initial baseline.
+2026-04-20,TCK-20260420-PERF-FOUNDATION,Established performance contract; instrumented Kernel phase timing; created BenchHarness and initial baseline.,,,
 2026-04-20T15:45:00Z,TCK-20260420-RESOURCE-PHASE4-M5,Milestone 5: Supported Gameplay Surface Consolidation,DONE,Unified Movement and Resource Interaction into a single certifiable surface with hardened release gates. Phase 4 Complete.,stored_artifacts/TCK-20260420-RESOURCE-PHASE4-M5/
 2026-04-20T16:00:00Z,TCK-20260420-M1-CORE-FREEZE,Substrate Baseline and Vocabulary Freeze,DONE,Frozen 6-phase contract and operational signals. Verified via final gate.,tickets/done/TCK-20260420-M1-CORE-FREEZE.md
 2026-04-20T16:00:00Z,TCK-20260420-RESOURCE-INTERACTION,Deterministic Resource Interaction Core,DONE,Implemented multi-tick interaction and inventory pressure laws. Verified parity.,tickets/done/TCK-20260420-RESOURCE-INTERACTION.md
@@ -160,7 +160,7 @@ timestamp,ticket_id,title,status,summary,artifacts_path
 2026-04-20T16:33:00Z,TCK-20260420-INTERACT-PRESS,Inventory Weight Pressure,DONE,Implemented authoritative item weight enforcement.,stored_artifacts/TCK-20260420-INTERACT-PRESS/
 2026-04-20T16:34:00Z,TCK-20260420-INTERACT-LOOT,Channeled Looting,DONE,Implement one-shot ground item looting with channeling reset.,stored_artifacts/TCK-20260420-INTERACT-LOOT/
 2026-04-20T16:35:00Z,TCK-20260420-TOWN-LOOP,Town Resource Resolution,DONE,Implemented sell-on-entry material conversion logic.,stored_artifacts/TCK-20260420-TOWN-LOOP/
-2026-04-21,TCK-20260421-V2-TEST-HARDENING,V2 Test Verification and Hardening complete (168/168 passed)
+2026-04-21,TCK-20260421-V2-TEST-HARDENING,V2 Test Verification and Hardening complete (168/168 passed),,,
 2026-04-21T08:30:00Z,TCK-20260421-RESOURCE-INTERACT-PARITY,Implement Initial Resource Interaction Differential Parity Proof,DONE,Implemented bit-identical harvest and loot outcomes.,stored_artifacts/TCK-20260421-RESOURCE-INTERACT-PARITY/
 2026-04-21T08:30:10Z,TCK-20260421-TOWN-RESOLUTION-SCOPE,Town Resource Resolution Recovery,DONE,Implemented legal blacksmith and shop resolution with full legacy parity.,stored_artifacts/TCK-20260421-TOWN-RESOLUTION-SCOPE/
 2026-04-21T08:30:20Z,TCK-20260421-RESOURCE-CONTRACT,Resource Contract and Domain invariants,DONE,Enforced weight and slot pressure laws in InteractionSystem.,stored_artifacts/TCK-20260421-RESOURCE-CONTRACT/
@@ -177,74 +177,74 @@ timestamp,ticket_id,title,status,summary,artifacts_path
 2026-04-22T08:35:00Z,TCK-20260422-RESOURCE-PH7-M1-T3-DOWNSTREAM-BLOCKERS,Identify Phase 7 Downstream Blockers,DONE,Documented critical path dependencies for Phases 8 and 9.,stored_artifacts/TCK-20260422-RESOURCE-PH7-M1-T3-DOWNSTREAM-BLOCKERS/
 2026-04-22T08:38:00Z,TCK-20260422-RESOURCE-PH7-M1-T4-ENTRY-PACKAGE,Publish Phase 7 Entry Package,DONE,Formally opened the Phase 7 implementation gate.,stored_artifacts/TCK-20260422-RESOURCE-PH7-M1-T4-ENTRY-PACKAGE/
 2026-04-22T08:48:00Z,TCK-20260422-RESOURCE-PH7-M2-T1-ACTION-UPDATE-AUDIT,Audit Phase 7 Action/Update Rows,DONE,Identified critical gaps in Intent model and Kernel routing.,stored_artifacts/TCK-20260422-RESOURCE-PH7-M2-T1-ACTION-UPDATE-AUDIT/
-2026-04-22,TCK-20260422-PH6-M7-M8-HARDENING,Phase 6 Hardening,DONE
-2026-04-22,TCK-20260422-PH7-M2-SUBSTRATE-CLOSURE,Phase 7 M2 Substrate Hardening,DONE
-2026-04-22,TCK-20260422-PH7-M3-KERNEL-STABILITY,Phase 7 M3 Authoritative Apply Path,DONE
-2026-04-22,TCK-20260422-PH7-M4-SNAPSHOT-INTEGRITY,Phase 7 M4 Snapshot Integrity,DONE
-2026-04-22,TCK-20260422-PH7-M5-DETERMINISTIC-WORLD-GEN,Phase 7 M5 Deterministic World Gen,DONE
-2026-04-22,PHASE-7-CLOSURE,Hardened substrate intent models and published exit package.
-2026-04-22T14:00:00Z,TCK-20260422-RECOVERY-GAPS,Implementing Phase 7 & 8 Recovery Gaps (Hazards, Calamities, Evolution, Sabotage),DONE,Implemented and integrated Regional Hazards, Entity Evolution, and Building Sabotage into the authoritative engine. Verified with 100% test pass.,stored_artifacts/TCK-20260422-RECOVERY-GAPS/
-2026-04-22,TCK-20260422-PH7-HARDENING-CLOSURE,DONE,Closed Phase 7 Substrate Hardening with full proof bundle
+2026-04-22,TCK-20260422-PH6-M7-M8-HARDENING,Phase 6 Hardening,,DONE,
+2026-04-22,TCK-20260422-PH7-M2-SUBSTRATE-CLOSURE,Phase 7 M2 Substrate Hardening,,DONE,
+2026-04-22,TCK-20260422-PH7-M3-KERNEL-STABILITY,Phase 7 M3 Authoritative Apply Path,,DONE,
+2026-04-22,TCK-20260422-PH7-M4-SNAPSHOT-INTEGRITY,Phase 7 M4 Snapshot Integrity,,DONE,
+2026-04-22,TCK-20260422-PH7-M5-DETERMINISTIC-WORLD-GEN,Phase 7 M5 Deterministic World Gen,,DONE,
+2026-04-22,PHASE-7-CLOSURE,Hardened substrate intent models and published exit package.,,,
+2026-04-22T14:00:00Z,TCK-20260422-RECOVERY-GAPS,Implementing Phase 7 & 8 Recovery Gaps (Hazards, Calamities," Evolution, Sabotage),DONE,Implemented and integrated Regional Hazards, Entity Evolution, and Building Sabotage into the authoritative engine. Verified with 100% test pass.,stored_artifacts/TCK-20260422-RECOVERY-GAPS/",
+2026-04-22,TCK-20260422-PH7-HARDENING-CLOSURE,,DONE,Closed Phase 7 Substrate Hardening with full proof bundle,
 2026-04-22T23:37:00Z,TCK-20260422-PH8-STRATEGIC-RECOVERY,Phase 8 Strategic Recovery Completion,DONE,Finalized authoritative gameplay layer recovery (Combat/Tactical/Local World) and published exit package.,stored_artifacts/TCK-20260422-PH8-STRATEGIC-RECOVERY/
 2026-04-22T17:03:00Z,TCK-20260422-PH9-M1-READINESS,Phase 9 Milestone 1 Readiness Gate,DONE,Established Phase 9 entry gate with 10 ledger rows and 16 atomic checklist items.,docs/engine/phase9_entry_package.md
 2026-04-22T17:18:00Z,TCK-20260422-PH9-COGNITION,Phase 9 Strategic & Social Cognition,DONE,Implemented strategic cognition deepening - event interpretation - social narrative - belief cycle - narrative memory - quest generation - genetics - skill scaling. 92 new tests all passing.,docs/engine/legacy_replacement_ledger.md
-2026-04-23T17:47:00Z,TCK-20260424-PH9-FINAL-CLOSURE,Phase 9 Final Strategic & Social Closure,DONE,Implemented biological decay, hero lifecycle, recruitment negotiation, and regional dynamics. 19 contract tests passing.,stored_artifacts/TCK-20260424-PH9-FINAL-CLOSURE/
+2026-04-23T17:47:00Z,TCK-20260424-PH9-FINAL-CLOSURE,Phase 9 Final Strategic & Social Closure,DONE,"Implemented biological decay, hero lifecycle, recruitment negotiation, and regional dynamics. 19 contract tests passing.",stored_artifacts/TCK-20260424-PH9-FINAL-CLOSURE/
 2026-04-23T17:53:00Z,TCK-20260424-FIX-TEST-REGRESSIONS,Fix Test Regressions in tests_v2/,DONE,Resolved API drift - import errors - and double-damage bug. 375 tests passing.,stored_artifacts/TCK-20260424-FIX-TEST-REGRESSIONS/
 2026-04-23T18:00:00Z,TCK-20260424-PH10-M1-READINESS,Phase 10 Milestone 1 Readiness Gate,DONE,Established compatibility backlog and entry gate.,stored_artifacts/TCK-20260424-PH10-M1-READINESS/
 2026-04-23T18:04:30Z,TCK-20260424-PH10-M2-CLI-COMPAT,Phase 10 Milestone 2 CLI Compatibility,DONE,Recovered CLI entrypoint and arguments.,stored_artifacts/TCK-20260424-PH10-M2-CLI-COMPAT/
 2026-04-23T18:11:00Z,TCK-20260424-PH10-M3-INFRA-ISOLATION,Phase 10 Milestone 3 Infra Isolation,DONE,Recovered env flags and broker-disabled logic.,stored_artifacts/TCK-20260424-PH10-M3-INFRA-ISOLATION/
 2026-04-23T18:11:05Z,TCK-20260424-PH10-M4-OBSERVABILITY,Phase 10 Milestone 4 Observability,DONE,Recovered JSON logging and telemetry toggles.,stored_artifacts/TCK-20260424-PH10-M4-OBSERVABILITY/
-2026-04-24,Phase 10,Infrastructure compatibility and API recovery completed,DONE
-2026-04-24,TCK-20260424-PH11-M1-READINESS,Phase 11 Milestone 1 Readiness Gate complete,DONE,stored_artifacts/TCK-20260424-PH11-M1-READINESS/
-2026-04-24,TCK-20260424-PH11-M2-PROOF,Phase 11 Milestone 2 Preserved Proof complete,DONE,stored_artifacts/TCK-20260424-PH11-M1-READINESS/
-2026-04-24,TCK-20260424-PH11-M3-RATIFICATION,Phase 11 Milestone 3 Non-Preserved Ratification complete,DONE,stored_artifacts/TCK-20260424-PH11-M1-READINESS/
-2026-04-24,TCK-20260424-PH11-M4-GOVERNANCE,Phase 11 Milestone 4 Governance Reconciliation complete,DONE,stored_artifacts/TCK-20260424-PH11-M1-READINESS/
-2026-04-24,TCK-20260424-PH11-M5-VERDICT,Phase 11 Milestone 5 Final Verdict complete,DONE,stored_artifacts/TCK-20260424-PH11-M1-READINESS/
-2026-04-24,TCK-20260424-PH11-M6-EXIT,Phase 11 Milestone 6 Phase 11 Exit Package complete - PHASE 11 CLOSED,DONE,stored_artifacts/TCK-20260424-PH11-M1-READINESS/
+2026-04-24,Phase 10,Infrastructure compatibility and API recovery completed,,DONE,
+2026-04-24,TCK-20260424-PH11-M1-READINESS,Phase 11 Milestone 1 Readiness Gate complete,DONE,stored_artifacts/TCK-20260424-PH11-M1-READINESS/,
+2026-04-24,TCK-20260424-PH11-M2-PROOF,Phase 11 Milestone 2 Preserved Proof complete,DONE,stored_artifacts/TCK-20260424-PH11-M1-READINESS/,
+2026-04-24,TCK-20260424-PH11-M3-RATIFICATION,Phase 11 Milestone 3 Non-Preserved Ratification complete,DONE,stored_artifacts/TCK-20260424-PH11-M1-READINESS/,
+2026-04-24,TCK-20260424-PH11-M4-GOVERNANCE,Phase 11 Milestone 4 Governance Reconciliation complete,DONE,stored_artifacts/TCK-20260424-PH11-M1-READINESS/,
+2026-04-24,TCK-20260424-PH11-M5-VERDICT,Phase 11 Milestone 5 Final Verdict complete,DONE,stored_artifacts/TCK-20260424-PH11-M1-READINESS/,
+2026-04-24,TCK-20260424-PH11-M6-EXIT,Phase 11 Milestone 6 Phase 11 Exit Package complete - PHASE 11 CLOSED,DONE,stored_artifacts/TCK-20260424-PH11-M1-READINESS/,
 2026-04-27T05:55:00Z,TCK-20260427-RESOURCE-CONSERVATION-HARDENING,Hardening Resource Conservation Law (Phase 3.1),DONE,Implemented ResourceTransactionResolver and refactored systems to use atomic intents.,stored_artifacts/TCK-20260427-RESOURCE-CONSERVATION-HARDENING/
-295: 2026-05-13,TCK-20260513-PERF-HARDENING-LOD,Completed Milestone 7 (Level of Detail: Spatial Gating),DONE,Implemented adaptive LOD 0-3 gating in DeterministicScheduler reducing work items by ~45%.,stored_artifacts/TCK-20260513-PERF-HARDENING-LOD/
-296: 2026-05-13,TCK-20260513-PERF-APPLY-PATH,Completed Milestone 8 (ApplyPath Efficiency: No-Op & Compaction),DONE,Optimized hot-path with no-op detection and state compaction reducing overhead by 11x.,stored_artifacts/TCK-20260513-PERF-APPLY-PATH/
-297: 2026-05-13,TCK-20260513-PERF-PROFILES-TUNING,Completed Milestone 10 (Final Production Profile Tuning),DONE,Defined standardized resource envelopes (SMALL to STRESS) for optimized engine.,stored_artifacts/TCK-20260513-PERF-PROFILES-TUNING/
-2024: 2026-04-24,TCK-20260424-PH12-M1-READINESS,Phase 12 Milestone 1 Readiness Gate complete,DONE,stored_artifacts/TCK-20260424-PH12-M1-READINESS/
-205: 2026-04-24,TCK-20260424-PH12-M2-RUNTIME-CUTOVER,Phase 12 Milestone 2 Runtime Cutover complete,DONE,stored_artifacts/TCK-20260424-PH12-M2-RUNTIME-CUTOVER/
-256: 2026-05-01T11:47:00Z,TCK-20260501-V2-ENGINE-HARDENING,V2 Engine Logic Hardening & Audit Reconciliation,DONE,Reconciled logic checklist with source implementation and injected VERIFIED v2 markers across core subsystems.,stored_artifacts/TCK-20260501-V2-ENGINE-HARDENING/
-2026-04-24,TCK-20260424-PH12-M3-WORKFLOW-CUTOVER,Phase 12 Milestone 3 Workflow Cutover complete,DONE,stored_artifacts/TCK-20260424-PH12-M3-WORKFLOW-CUTOVER/
-207: 2026-04-24,TCK-20260424-PH12-M4-CUTOVER-VALIDATION,Phase 12 Milestone 4 Cutover Validation complete,DONE,stored_artifacts/TCK-20260424-PH12-M4-CUTOVER-VALIDATION/
-208: 2026-04-24,TCK-20260424-PH12-M5-AUTHORITY-TRANSITION,Phase 12 Milestone 5 Authority Transition complete,DONE,stored_artifacts/TCK-20260424-PH12-M5-AUTHORITY-TRANSITION/
-239: 2026-04-26T09:15:00Z,TCK-20260426-ARENA-QUESTS,Extend E2E Arena Testing for Quest Progression,DONE,Implemented COMBAT_ARENA_QUESTS scenario and verified full quest/reward/leveling lifecycle in 50-tick stress runs.,stored_artifacts/TCK-20260426-ARENA-QUESTS/
-2026-04-24,TCK-20260424-PH12-M6-EXIT-PACKAGE,Phase 12 Milestone 6 Exit Package complete - PHASE 12 CLOSED,DONE,stored_artifacts/TCK-20260424-PH12-M6-EXIT-PACKAGE/
-2026-04-24,TCK-20260424-PH3-M1-STRATEGIC-PERSISTENCE,Phase 3 Milestone 1: Strategic Objective Persistence,DONE
-2026-04-24,TCK-20260424-PH3-M1-STRATEGIC-PERSISTENCE,DONE,Implemented strategic project lifecycle and fixed scheduler bugs.
-2026-04-25,TCK-20260425-PH4-TACTICAL-AI,Phase 4: Tactical AI and Combat Behavior complete,DONE
-2026-04-25,TCK-20260425-PH5-MIND-AND-NEEDS,PHASE 5 milestone 1 complete. Goal Registry implemented. Biological needs (Eat/Sleep) verified. Cognition pipeline (Saliency/Appraisal) verified.
-2026-04-25,TCK-20260425-PH5-M2-PERSONALITY,PHASE 5 Milestone 2 complete. Personality, Boredom, and Life Stage modifiers implemented and verified.
-2026-04-25,TCK-20260425-PH6-M1-INVENTORY,PHASE 6 Milestone 1 complete. Item Registry, Inventory Service, and Authoritative Mutation implemented.
-2026-04-25,TCK-20260425-PH6-M2-LOOT,PHASE 6 Milestone 2 complete. Channeled loot, ground items, and corpses implemented with authoritative transfer.
-2026-04-25,TCK-20260425-PH6-M3-HARVEST,PHASE 6 Milestone 3 complete. Channeled harvesting, node depletion, and respawn cooldowns implemented.
-2026-04-25,TCK-20260425-PH6-M4-ECONOMY,PHASE 6 Milestone 4 complete. Shop, blacksmith, and crafting recipes implemented with authoritative exchange.
-2026-04-25,TCK-20260425-PH6-M5-STORAGE,PHASE 6 Milestone 5 complete. Advanced equipment ranking, auto-equip, world chests, and persistent home storage implemented.
-2026-04-25,TCK-20260425-PH6-M6-CLOSURE,PHASE 6 complete. All 12 tests passed. Inventory, Loot, Harvesting, Economy, and Storage domains verified and documentation finalized.
-2026-04-25,TCK-20260425-PH7-M1-TOWN,PHASE 7 Milestone 1 complete. Town center landmarks, BuildingRegistry with service templates, and TownNavigation helpers implemented.
-2026-04-25,TCK-20260425-PH7-M2-GUILD,PHASE 7 Milestone 2 complete. GuildAction for lead generation and QuestGenerator for strategic projects implemented.
-2026-04-25,TCK-20260425-PH7-M3-RECOVERY,PHASE 7 Milestone 3 complete. Inn/Home recovery services and ClassHall progression implemented. Strategic blockers (maintenance/capability) resolved through town actions.
-2026-04-25,TCK-20260425-PH7-M4-SABOTAGE,PHASE 7 Milestone 4 complete. SabotageAction for building damage and regional trauma propagation implemented. Phase 7 (Town, Buildings, and Services) fully complete.
-2026-04-25,PH8-M1,Implemented authoritative quest lifecycle and reward models,tests_v2/quests/test_quest_lifecycle.py
-2026-04-25,PH8-M2,Implemented deterministic level-scaled quest generation,tests_v2/quests/test_quest_generation.py
-2026-04-25,PH8-M3,Implemented authoritative auto-leveling and stat growth,tests_v2/progression/test_leveling.py
-2026-04-25,PH8-M4,Implemented registry-backed classes and skills,tests_v2/core/test_class_registry.py
-2026-04-25,TCK-20260425-PROG-ATTRIBUTE-POINTS,Implemented Attribute Points and Manual Growth system
+2026-05-13,TCK-20260513-PERF-HARDENING-LOD,Completed Milestone 7 (Level of Detail: Spatial Gating),DONE,Implemented adaptive LOD 0-3 gating in DeterministicScheduler reducing work items by ~45%.,stored_artifacts/TCK-20260513-PERF-HARDENING-LOD/
+2026-05-13,TCK-20260513-PERF-APPLY-PATH,Completed Milestone 8 (ApplyPath Efficiency: No-Op & Compaction),DONE,Optimized hot-path with no-op detection and state compaction reducing overhead by 11x.,stored_artifacts/TCK-20260513-PERF-APPLY-PATH/
+2026-05-13,TCK-20260513-PERF-PROFILES-TUNING,Completed Milestone 10 (Final Production Profile Tuning),DONE,Defined standardized resource envelopes (SMALL to STRESS) for optimized engine.,stored_artifacts/TCK-20260513-PERF-PROFILES-TUNING/
+2026-04-24,TCK-20260424-PH12-M1-READINESS,Phase 12 Milestone 1 Readiness Gate complete,DONE,stored_artifacts/TCK-20260424-PH12-M1-READINESS/,
+2026-04-24,TCK-20260424-PH12-M2-RUNTIME-CUTOVER,Phase 12 Milestone 2 Runtime Cutover complete,DONE,stored_artifacts/TCK-20260424-PH12-M2-RUNTIME-CUTOVER/,
+2026-05-01T11:47:00Z,TCK-20260501-V2-ENGINE-HARDENING,V2 Engine Logic Hardening & Audit Reconciliation,DONE,Reconciled logic checklist with source implementation and injected VERIFIED v2 markers across core subsystems.,stored_artifacts/TCK-20260501-V2-ENGINE-HARDENING/
+2026-04-24,TCK-20260424-PH12-M3-WORKFLOW-CUTOVER,Phase 12 Milestone 3 Workflow Cutover complete,DONE,stored_artifacts/TCK-20260424-PH12-M3-WORKFLOW-CUTOVER/,
+2026-04-24,TCK-20260424-PH12-M4-CUTOVER-VALIDATION,Phase 12 Milestone 4 Cutover Validation complete,DONE,stored_artifacts/TCK-20260424-PH12-M4-CUTOVER-VALIDATION/,
+2026-04-24,TCK-20260424-PH12-M5-AUTHORITY-TRANSITION,Phase 12 Milestone 5 Authority Transition complete,DONE,stored_artifacts/TCK-20260424-PH12-M5-AUTHORITY-TRANSITION/,
+2026-04-26T09:15:00Z,TCK-20260426-ARENA-QUESTS,Extend E2E Arena Testing for Quest Progression,DONE,Implemented COMBAT_ARENA_QUESTS scenario and verified full quest/reward/leveling lifecycle in 50-tick stress runs.,stored_artifacts/TCK-20260426-ARENA-QUESTS/
+2026-04-24,TCK-20260424-PH12-M6-EXIT-PACKAGE,Phase 12 Milestone 6 Exit Package complete - PHASE 12 CLOSED,DONE,stored_artifacts/TCK-20260424-PH12-M6-EXIT-PACKAGE/,
+2026-04-24,TCK-20260424-PH3-M1-STRATEGIC-PERSISTENCE,Phase 3 Milestone 1: Strategic Objective Persistence,,DONE,
+2026-04-24,TCK-20260424-PH3-M1-STRATEGIC-PERSISTENCE,,DONE,Implemented strategic project lifecycle and fixed scheduler bugs.,
+2026-04-25,TCK-20260425-PH4-TACTICAL-AI,Phase 4: Tactical AI and Combat Behavior complete,,DONE,
+2026-04-25,TCK-20260425-PH5-MIND-AND-NEEDS,PHASE 5 milestone 1 complete. Goal Registry implemented. Biological needs (Eat/Sleep) verified. Cognition pipeline (Saliency/Appraisal) verified.,,,
+2026-04-25,TCK-20260425-PH5-M2-PERSONALITY,PHASE 5 Milestone 2 complete. Personality, Boredom, and Life Stage modifiers implemented and verified.,
+2026-04-25,TCK-20260425-PH6-M1-INVENTORY,PHASE 6 Milestone 1 complete. Item Registry, Inventory Service, and Authoritative Mutation implemented.,
+2026-04-25,TCK-20260425-PH6-M2-LOOT,PHASE 6 Milestone 2 complete. Channeled loot, ground items, and corpses implemented with authoritative transfer.,
+2026-04-25,TCK-20260425-PH6-M3-HARVEST,PHASE 6 Milestone 3 complete. Channeled harvesting, node depletion, and respawn cooldowns implemented.,
+2026-04-25,TCK-20260425-PH6-M4-ECONOMY,PHASE 6 Milestone 4 complete. Shop, blacksmith, and crafting recipes implemented with authoritative exchange.,
+2026-04-25,TCK-20260425-PH6-M5-STORAGE,PHASE 6 Milestone 5 complete. Advanced equipment ranking, auto-equip," world chests, and persistent home storage implemented.",
+2026-04-25,TCK-20260425-PH6-M6-CLOSURE,PHASE 6 complete. All 12 tests passed. Inventory, Loot," Harvesting, Economy, and Storage domains verified and documentation finalized.",
+2026-04-25,TCK-20260425-PH7-M1-TOWN,PHASE 7 Milestone 1 complete. Town center landmarks, BuildingRegistry with service templates, and TownNavigation helpers implemented.,
+2026-04-25,TCK-20260425-PH7-M2-GUILD,PHASE 7 Milestone 2 complete. GuildAction for lead generation and QuestGenerator for strategic projects implemented.,,,
+2026-04-25,TCK-20260425-PH7-M3-RECOVERY,PHASE 7 Milestone 3 complete. Inn/Home recovery services and ClassHall progression implemented. Strategic blockers (maintenance/capability) resolved through town actions.,,,
+2026-04-25,TCK-20260425-PH7-M4-SABOTAGE,PHASE 7 Milestone 4 complete. SabotageAction for building damage and regional trauma propagation implemented. Phase 7 (Town, Buildings, and Services) fully complete.,
+2026-04-25,PH8-M1,Implemented authoritative quest lifecycle and reward models,,tests_v2/quests/test_quest_lifecycle.py,
+2026-04-25,PH8-M2,Implemented deterministic level-scaled quest generation,,tests_v2/quests/test_quest_generation.py,
+2026-04-25,PH8-M3,Implemented authoritative auto-leveling and stat growth,,tests_v2/progression/test_leveling.py,
+2026-04-25,PH8-M4,Implemented registry-backed classes and skills,,tests_v2/core/test_class_registry.py,
+2026-04-25,TCK-20260425-PROG-ATTRIBUTE-POINTS,Implemented Attribute Points and Manual Growth system,,,
 2026-04-25T15:20:00Z,TCK-20260425-PH10-WORLD-DYNAMICS,Phase 10: Environmental Hazards & Calamity Recovery,DONE,Implemented RegionState expansion - EnvironmentService for hazard/weather drain - TransformationService for regional kind shifting - and LegalityServiceV2 suppression logic. Verified with 100% test pass.,stored_artifacts/TCK-20260425-PH10-WORLD-DYNAMICS/
-2026-04-25,Phase 11: World Dynamics,Implemented EnvironmentService TransformationService and ApplyPath integration for regional hazards and kind shifting. All tests passed.
-2026-04-25,Phase 10: Strategic Cognition,Implemented CapacityService LeadService and refactored StrategicIntelligenceSystem for project continuity and switching. All tests passed.
+2026-04-25,Phase 11: World Dynamics,Implemented EnvironmentService TransformationService and ApplyPath integration for regional hazards and kind shifting. All tests passed.,,,
+2026-04-25,Phase 10: Strategic Cognition,Implemented CapacityService LeadService and refactored StrategicIntelligenceSystem for project continuity and switching. All tests passed.,,,
 2026-04-25T16:00:00Z,TCK-20260425-WORLD-DYNAMICS,Phase 11: World Dynamics - Influence and Macro Threats,DONE,Implemented faction influence shifts - territory conquest/liberation - stronghold lifecycles with Aura of Despair - and macro threats (Raids/Calamities). Verified with 100% test pass.,stored_artifacts/TCK-20260425-WORLD-DYNAMICS/
-2026-04-25,TCK-20260425-REPLAY-INSPECTION,DONE,Implemented replay fidelity fingerprints and API presenters for Phase 12
-2026-04-25,Substrate Hardening,Phases 6-9,Completed inventory/economy/town/biological systems
+2026-04-25,TCK-20260425-REPLAY-INSPECTION,,DONE,Implemented replay fidelity fingerprints and API presenters for Phase 12,
+2026-04-25,Substrate Hardening,Phases 6-9,,Completed inventory/economy/town/biological systems,
 2026-04-25T16:48:00Z,TCK-20260425-PH11-WORLD-DYNAMICS,Phase 11: World Dynamics Hardening,DONE,Integrated Calamity and Raid systems into authoritative engine loop.,stored_artifacts/TCK-20260425-PH11-WORLD-DYNAMICS/
 2026-04-26T05:05:00Z,TCK-20260426-PH14-16-RECOVERY,RPG-Core Parity (Multi-OA Social Bonds AoE),DONE,Implemented Multi-Attacker OA First-Class Social Bonds and Authoritative AoE Splash logic. 100% logic parity achieved.,stored_artifacts/TCK-20260426-PH14-16-RECOVERY/
 2026-04-26T07:13:00Z,TCK-20260426-RPG-CORE-HARDENING,RPG Core Life-Loop & Arena Hardening,DONE,Recovered authoritative RPG rewards mortality attrition and status effects. Extended E2E Arena suite with 5 new scenarios.,stored_artifacts/TCK-20260426-RPG-CORE-HARDENING/
 2026-04-26T09:15:00Z,TCK-20260426-ARENA-QUESTS,Extend E2E Arena Testing for Quest Progression,DONE,Implemented COMBAT_ARENA_QUESTS scenario and verified full quest/reward/leveling lifecycle in 50-tick stress runs.,stored_artifacts/TCK-20260426-ARENA-QUESTS/
-2026-04-26,TCK-20260426-PHASE-24-SOVEREIGNTY,DONE,Regional Sovereignty and Taxation integrated into V2
-2026-04-26T21:20:00Z,TCK-20260426-FIX-PARITY-REGRESSIONS,Fix RPG Progression and Action Readiness Regressions,DONE,Resolved readiness double-subtraction and Evolution XP reward blind spot. 100% test pass.,docs/stored_artifacts/TCK-20260426-FIX-PARITY-REGRESSIONS/
+2026-04-26,TCK-20260426-PHASE-24-SOVEREIGNTY,,DONE,Regional Sovereignty and Taxation integrated into V2,
+2026-04-26T21:20:00Z,TCK-20260426-FIX-PARITY-REGRESSIONS,Fix RPG Progression and Action Readiness Regressions,DONE,"Resolved readiness double-subtraction and Evolution XP reward blind spot. 100% test pass.,docs/stored_artifacts/TCK-20260426-FIX-PARITY-REGRESSIONS/",
 2026-04-26T07:50:00Z,TCK-20260426-PH13-LEGACY-RETIREMENT,Execute Phase 13 Legacy Retirement and Canonical Refactor,DONE,Renamed legacy src/tests to src_legacy/tests_legacy and promoted V2 engine to canonical namespace.,docs/engine/phase13_retirement_manifest.md
 2026-04-27T12:50:00Z,TCK-20260427-QUEST-IDENTITY,Fixing Quest Identity Paradox and Hardening Authoritative Rewards,DONE,Resolved quest identity paradox (faction block) and implemented global ResourceTransferIntent resolution. 100% test pass.,stored_artifacts/TCK-20260427-QUEST-IDENTITY/
 2026-04-27T13:45:00Z,TCK-20260427-PHASE3-RESOURCE-CONSERVATION,Implement Authoritative Resource Conservation (Phase 3),DONE,Hardened InventoryService and Refinement Pipeline to enforce atomic capacity-aware resource transfers. 100% test pass.,stored_artifacts/TCK-20260427-PHASE3-RESOURCE-CONSERVATION/
@@ -254,48 +254,256 @@ timestamp,ticket_id,title,status,summary,artifacts_path
 2026-04-28T12:30:00Z,TCK-20260428-RESOURCE-TRANSACTION-GROUPS,Multi-Transfer Transaction Semantics (Atomic Groups),DONE,Implemented atomic grouping for resource transfers with rollback logic.,stored_artifacts/TCK-20260428-RESOURCE-TRANSACTION-GROUPS/
 2026-04-28T18:30:00Z,TCK-20260428-PH9-WORLD-LIFECYCLE,World Lifecycle Dynamics (Spawning & Ecology),DONE,Implemented SpawnService and ResourceEcologyService for regional population health.,stored_artifacts/TCK-20260428-PH9-WORLD-LIFECYCLE/
 2026-04-28T19:00:00Z,TCK-20260428-PH10-EXTERNAL-TRUTH,External Truth and Replay Proof (Tracing & Metrics),DONE,Implemented transaction tracing and conservation metrics for external observability.,stored_artifacts/TCK-20260428-PH10-EXTERNAL-TRUTH/
-2026-04-28,TCK-20260428-QUEST-PROGRESSION-FIX,Resolved XP double-counting in pipeline
+2026-04-28,TCK-20260428-QUEST-PROGRESSION-FIX,Resolved XP double-counting in pipeline,,,
 2026-04-29T06:20:00Z,TCK-20260427-PH6-STRATEGIC-COGNITION,Strategic & Progression Stabilization,DONE,Stabilized Phase 6 strategic cognition and attribute-driven growth. Resolved partial rejection data loss.,stored_artifacts/TCK-20260427-PH6-STRATEGIC-COGNITION/
 2026-04-29T11:30:00Z,TCK-20260429-E3-MISSING-LOGIC,E3 Missing RPG Core Logic (Stamina/Wounds/Leash/Terrain/Stickiness/Scaling),DONE,Implemented 7 missing RPG depth systems: stamina drain/regen/exhaustion and wounds/scars/mob leash/terrain cost/target stickiness/skill scaling. 54 new tests. 669 total passed.,staging_artifacts/TCK-20260429-E3-MISSING-LOGIC/
 2026-05-01T11:47:00Z,TCK-20260501-V2-ENGINE-HARDENING,V2 Engine Logic Hardening & Audit Reconciliation,DONE,Reconciled logic checklist with source implementation and injected VERIFIED v2 markers across core subsystems.,stored_artifacts/TCK-20260501-V2-ENGINE-HARDENING/
-2026-05-01,TCK-20260501-E4-PHASE-ZERO,DONE,Reconciled ledger and reached 100% parity for V2 core.
-2026-05-01,Phase E4.3,Strategic Cognition Hardening completed with full lifecycle tests.,DONE
-2026-05-01,TCK-20260501-SOCIAL-LIFECYCLE,Phase E4.4 Complete - Social Lifecycle Hardening,Done
-2026-05-01,TCK-20260501-PROGRESSION-HARDENING,Phase E4.5 Complete - Progression/Equipment/Crafting Hardening,Done
+2026-05-01,TCK-20260501-E4-PHASE-ZERO,,DONE,Reconciled ledger and reached 100% parity for V2 core.,
+2026-05-01,Phase E4.3,Strategic Cognition Hardening completed with full lifecycle tests.,,DONE,
+2026-05-01,TCK-20260501-SOCIAL-LIFECYCLE,Phase E4.4 Complete - Social Lifecycle Hardening,,Done,
+2026-05-01,TCK-20260501-PROGRESSION-HARDENING,Phase E4.5 Complete - Progression/Equipment/Crafting Hardening,,Done,
 2026-05-01T10:33:42Z,TCK-20260501-E4.7-OBSERVABILITY-HARDENING,Finalize Phase E4.7 Observability and Certification,DONE,Exposed all important gameplay truth to API replay and certification reports. Verified with mixed-stress scenarios.,stored_artifacts/TCK-20260501-E4.7-OBSERVABILITY-HARDENING/
-2026-05-01T10:55:36Z,TCK-20260501-E4-PHASE-ONE,Phase E4.1 — Determinism and Replay Completion,DONE,Hardened RNG and canonical hashing for bit-identical replay fidelity. Verified with 1,000+ tick tests.,stored_artifacts/TCK-20260501-E4-PHASE-ONE/
+2026-05-01T10:55:36Z,TCK-20260501-E4-PHASE-ONE,Phase E4.1 — Determinism and Replay Completion,DONE,"Hardened RNG and canonical hashing for bit-identical replay fidelity. Verified with 1,000+ tick tests.",stored_artifacts/TCK-20260501-E4-PHASE-ONE/
 2026-05-01T10:55:46Z,TCK-20260430-PH5-COMBAT-LEGALITY-HARDENING,Phase E4.2 — Full Combat Legality Matrix,DONE,Unified authoritative combat legality and AoE splash LoS logic. Verified with exhaustive matrix tests.,stored_artifacts/TCK-20260430-PH5-COMBAT-LEGALITY-HARDENING/
 2026-05-01T10:56:20Z,TCK-20260501-E4.6-WORLD-LIFECYCLE,Phase E4.6 — World Lifecycle and Ecology,DONE,Integrated passive updates spawning and macro-threat lifecycles into the authoritative loop. Verified with long-run stability tests.,stored_artifacts/TCK-20260501-E4.6-WORLD-LIFECYCLE/
 2026-05-01T16:02:00Z,TCK-20260501-E5-HARDENING,Hardening RPG Engine E5 Implementation,DONE,Implemented race-condition safeguards and exactly-once transaction idempotency. Reached 100% verified checklist coverage.,stored_artifacts/TCK-20260501-E5-HARDENING/
 2026-05-02T10:00:00Z,TCK-20260502-E5-CLOSURE-HARDENING,Hardening Resource Conflicts,DONE,Hardened resource conflicts and transaction grouping.,stored_artifacts/TCK-20260502-E5-CLOSURE-HARDENING/
 2026-05-02T11:00:00Z,TCK-20260502-E5-FINAL-HARDENING,Final Hardening and Observability,DONE,Complete final hardening and observability expansion.,stored_artifacts/TCK-20260502-E5-FINAL-HARDENING/
 2026-05-02T12:00:00Z,TCK-20260502-E5-SEMANTIC-HARDENING,Hardening Social Contract Semantics,DONE,Hardened social contract state machine and verified event-level replay fidelity.,stored_artifacts/TCK-20260502-E5-SEMANTIC-HARDENING/
-270: 2026-05-02T17:20:00Z,TCK-20260502-STRATEGIC-HARDENING,RPG V2 Strategic Hardening & Phase E5.5 Closure,DONE,Finalized authoritative ReasonCode migration, enforced strategic bandwidth (Laws 194-197), implemented frame pacing (Law 121), group priority (Law 128), and attribute scaling (Law 239). Achieved 100% logic ID coverage.,stored_artifacts/TCK-20260502-STRATEGIC-HARDENING/
+2026-05-02T17:20:00Z,TCK-20260502-STRATEGIC-HARDENING,RPG V2 Strategic Hardening & Phase E5.5 Closure,DONE,"Finalized authoritative ReasonCode migration, enforced strategic bandwidth (Laws 194-197), implemented frame pacing (Law 121), group priority (Law 128), and attribute scaling (Law 239). Achieved 100% logic ID coverage.",stored_artifacts/TCK-20260502-STRATEGIC-HARDENING/
 2026-05-03T14:45:49Z,TCK-20260503-AUTH-TRIPWIRE,Authoritative Mutation Tripwire Hardening,DONE,Implemented mutation tripwire (RPG-AUTH-009) and verified deep-freeze immutability. Fixed Kernel/Policy integration crash.,stored_artifacts/TCK-20260503-AUTH-TRIPWIRE/
 2026-05-03T16:40:00Z,TCK-20260503-V2-HARDENING,Authoritative V2 RPG Hardening,DONE,Resolved Phantom Leader Bug and Terrain Cost Legality. Added Flanking geometry and Governor Throttle checks.,stored_artifacts/TCK-20260503-V2-HARDENING/
 2026-05-04T11:47:24Z,TCK-20260504-V2-TEST-HARDENING,Hardening Legacy Test Suites via V2EntityBuilder,DONE,Refactored 17 engine tests to V2 architecture and hardened spatial grid caching.,stored_artifacts/TCK-20260504-V2-TEST-HARDENING/
 2026-05-06T03:04:00Z,TCK-20260505-TEST-STABILIZATION,Hardening World Domain Positionality,INPROGRESS,Migrated world tests to V2EntityBuilder and fixed regional sabotage routing.,stored_artifacts/17050e90-2d4b-4075-80af-f7cb7dd9c2c1/
 2026-05-06T03:22:00Z,TCK-20260505-TEST-STABILIZATION,Hardening Progression and Quest Logic Stabilization,DONE,Stabilized V2 progression and quest logic with 100% test pass rate. Hardened V2EntityBuilder and refactored combat rewards.,stored_artifacts/17050e90-2d4b-4075-80af-f7cb7dd9c2c1/
-2026-05-06,TCK-20260506-INVENTORY-TEST-STABILIZATION,Migrate inventory test suites to V2EntityBuilder,DONE
-2026-05-06,TCK-20260506-STRATEGY-TEST-STABILIZATION,Migrate strategy test suites to V2EntityBuilder,DONE
-2026-05-06,TCK-20260506-STRATEGIC-HARDENING-TEST-STABILIZATION,Migrate strategic hardening test suites to V2EntityBuilder,DONE
+2026-05-06,TCK-20260506-INVENTORY-TEST-STABILIZATION,Migrate inventory test suites to V2EntityBuilder,,DONE,
+2026-05-06,TCK-20260506-STRATEGY-TEST-STABILIZATION,Migrate strategy test suites to V2EntityBuilder,,DONE,
+2026-04-11T00:30:00Z,TCK-20260411-PH4-STRAT-STABILIZATION,Phase 4 Strategic Pipeline Stabilization & Observability,DONE,Stabilized the strategic consequence pipeline and verified project pivoting and observability.,tickets/done/TCK-20260411-PH4-STRAT-STABILIZATION.md
+2026-04-11T12:00:00Z,TCK-20260411-AI-FIX-SYNTAX-ERROR,Fix AI Syntax Error,DONE,Fixed syntax error and missing mocks in test_stuck.py,stored_artifacts/TCK-20260411-AI-FIX-SYNTAX-ERROR/
+2026-04-12T01:50:00Z,TCK-20260412-REGRESSION-FIX,Simulation Regression Stabilization,DONE,Resolved 9 critical failures across unit and E2E suites including performance scaling and combat jitter.,stored_artifacts/TCK-20260412-REGRESSION-FIX/
+2026-04-11T23:59:00Z,TCK-20260411-AI-STABILIZATION,Stabilizing Combat AI Decision Loop,DONE,Resolved 9 regression failures involving pathfinding and goal logic; verified 100% test pass.,stored_artifacts/TCK-20260411-AI-STABILIZATION/
+2026-04-12T10:07:00Z,TCK-20260412-STRAT-GRAPH-EXPORT,Implement Exportable Entity Cognition Graph (Milestone 6),DONE,Implemented deterministic cognition graph exporter with Cytoscape adapter and regression integration.,stored_artifacts/TCK-20260412-STRAT-GRAPH-EXPORT/
+2026-04-12T13:30:00Z,TCK-20260412-STRATEGY-IMPLEMENTATION,Strategic Cognition Layer (Milestones 0-7),DONE,Implemented and verified the full strategic mind stratum including project continuity and cognition graph export. 100% stability achieved.,stored_artifacts/TCK-20260412-STRATEGY-IMPLEMENTATION/
+2026-04-13T00:22:00Z,TCK-20260413-INFRA-LOG-ROTATION,Automated HeadlessRunner Log Rotation,DONE,Implemented chronological artifact pruning in HeadlessRunner to maintain lean logs/ directory. Verified 100% pass rate.,stored_artifacts/TCK-20260413-INFRA-LOG-ROTATION/
+2026-04-13T13:20:00Z,TCK-20260413-STRAT-STRUCTURAL-SECURITY,Strategic Engine Hardening,DONE,Remediated structural weaknesses in snapshot isolation and update merging. Verified with 28 tests.,stored_artifacts/TCK-20260413-STRAT-STRUCTURAL-SECURITY/
+2026-04-13T13:40:00Z,TCK-20260413-STRAT-REPLAY-DETERMINISM,Strategic Replay & Graph Hardening,DONE,Finalized byte-identical replay and causal cognition graph links. Verified with determinism suite.,stored_artifacts/TCK-20260413-STRAT-REPLAY-DETERMINISM/
+2026-04-13T13:44:00Z,TCK-20260413-STRAT-DEPTH-VISIBILITY,Strategic Depth & Observability Hardening,DONE,Expanded cognition graph with narrative elements and verified history-sensitive reprioritization. Fixed Python 3.13 pickling error.,stored_artifacts/TCK-20260413-STRAT-DEPTH-VISIBILITY/
+2026-04-14T06:24:44Z,TCK-20260413-INTEL-CAPACITY-IMPLEMENTATION,Intel Capacity Engine (Bounded Cognition),DONE,Implemented 8-phase bounded-intelligence engine with deterministic profile derivation strategic appraisal pressure social/uncertainty limits and full API/CLI/Graph observability. Verified with 100% test pass rate.,stored_artifacts/TCK-20260413-INTEL-CAPACITY-IMPLEMENTATION/
+2026-04-14T13:10:00Z,TCK-20260414-STRAT-HARDENING,Strategic Cognition Pipeline Hardening,DONE,Implemented stress-aware cognition derivation cognitive overload observability and infrastructure isolation resilience. Verified with 100% test pass.,stored_artifacts/TCK-20260414-STRAT-HARDENING/
+2026-04-14T13:10:00Z,TCK-20260414-COGNITION-EXPLAINABILITY-HARDENING,Strategic Cognition Hardening,DONE,Hardened strategic cognition pipeline with strict bounding and transparent observability metrics.,stored_artifacts/TCK-20260414-COGNITION-EXPLAINABILITY-HARDENING/
+2026-04-15T10:00:00Z,TCK-20260415-PIPELINE-IDEMPOTENCY,Strategic Pipeline Idempotency Hardening,DONE,Removed broken ContractOutcomeService call; added transition-guarded metrics; verified with 12 tests.,stored_artifacts/TCK-20260415-PIPELINE-IDEMPOTENCY/
+2026-04-15T10:55:00Z,TCK-20260415-CORRECTIVE-PLANS,Strategic Cognition Pipeline Hardening,DONE,Implemented directive promotion; synced replay/graph parity; added doc integrity tests.,stored_artifacts/TCK-20260415-CORRECTIVE-PLANS/
+2026-04-15T16:30:00Z,TCK-20260415-HARDENING-FINALIZE,Strategic Cognition Hardening (Final),DONE,Stabilized the full regression suite (308 tests). Hardened directive mutation history thresholds and implemented same-tick biological concern appraisal.,stored_artifacts/TCK-20260415-HARDENING-FINALIZE/
+2026-04-15T16:47:00Z,TCK-20260415-WS-CLEANUP,Workspace Cleanup,DONE,Removed Python/Pytest caches and Next.js build artifacts while preserving tmp/.,stored_artifacts/TCK-20260415-WS-CLEANUP/
+2026-04-18T03:35:49Z,TCK-20260418-TEST-STABILITY-HARDENING,Test Stability and Coverage Restoration,DONE,Implemented wall-clock watchdog (SIGKILL) + fixed registry loader alignment + restored 71 missing test cases.,stored_artifacts/TCK-20260418-TEST-STABILITY-HARDENING/
+2026-04-17T12:00:00Z,TCK-20260417-ARENA-PERF-HARDENING,Arena Simulation Performance Hardening,DONE,Implemented universal shallow-snapshot and hardened WorkerPool resource cleanup. Established pytest memory hooks.,stored_artifacts/TCK-20260417-ARENA-PERF-HARDENING/
+2026-04-17T15:00:00Z,TCK-20260417-COMBAT-MOVEMENT-FINALIZE,Combat and Movement Overhaul Finalization,DONE,Finalized Milestone 7 (Observability & Rollout Hardening) and consolidated overhaul documentation pack.,stored_artifacts/TCK-20260417-COMBAT-MOVEMENT-FINALIZE/
+2026-04-17T18:00:00Z,TCK-20260417-COMBAT-MOVEMENT-RULEBOOK,Combat and Movement Rulebook Implementation,DONE,Implemented LegalityService and decoupled world-time from entity action turns in the engine loop.,stored_artifacts/TCK-20260417-COMBAT-MOVEMENT-RULEBOOK/
+2026-04-18T05:00:00Z,TCK-20260418-TEST-STABILITY-HARDENING,Test Stability and Coverage Restoration,DONE,Implemented real-time wall-clock watchdog and fixed registry loader alignment. Restored 71+ tests.,stored_artifacts/TCK-20260418-TEST-STABILITY-HARDENING/
+2026-04-18T06:00:00Z,TCK-20260418-CORE-RULEBOOK-HARDENING,Harden Authoritative Rulebook and Quiet-Tick Lifecycle Contract,DONE,Consolidated legality logic into LegalityService and implemented drift guards.,stored_artifacts/TCK-20260418-CORE-RULEBOOK-HARDENING/
+2026-04-18T07:00:00Z,TCK-20260418-MOV-CONGESTION,Milestone 3: Congestion & Advanced Anti-Oscillation,DONE,Implemented rhythmic oscillation detection and coordinated yielding.,stored_artifacts/TCK-20260418-MOV-CONGESTION/
+2026-04-18T08:00:00Z,TCK-20260418-COMBAT-MOVEMENT-CORRECTION,Implement Combat and Movement Overhaul Corrective Update,DONE,Completed all 7 milestones including structured reasoning and rejection auditing.,stored_artifacts/TCK-20260418-COMBAT-MOVEMENT-CORRECTION/
+2026-04-18T11:40:00Z,TCK-20260418-STRAT-LEARNING-REGRESSION,Resolve Strategic Learning Regression,DONE,Hardened StrategicState.apply_update and consolidated updates in NavigationHandler to prevent persistence loss.,stored_artifacts/TCK-20260418-STRAT-LEARNING-REGRESSION/
+2026-04-18T13:58:00Z,TCK-20260418-RESOURCE-KERNEL-M1,Milestone 1: Simulation Kernel Contract and Resource-Envelope Rulebook,DONE,Established foundational laws contracts and skeletal engine structure for src_v2.,stored_artifacts/TCK-20260418-RESOURCE-KERNEL-M1/
+2026-04-18T14:10:00Z,TCK-20260418-RESOURCE-KERNEL-M2,Milestone 2: Minimal Deterministic Single-Thread Kernel,DONE,Implemented minimal runnable kernel with generation-based apply path and provable bit-identical determinism.,stored_artifacts/TCK-20260418-RESOURCE-KERNEL-M2/
+2026-04-18T14:20:00Z,TCK-20260418-RESOURCE-KERNEL-M3,Milestone 3: Bounded Runtime State and Lean Hot-Path Models,DONE,Implemented structural model separation and enforced bounded retention on all long-lived containers.,stored_artifacts/TCK-20260418-RESOURCE-KERNEL-M3/
+2026-04-18T14:30:00Z,TCK-20260418-RESOURCE-KERNEL-M4,Milestone 4: Deterministic Scheduler and Work Model,DONE,Implemented deterministic bucketized scheduler with authoritative debt and periodic state tracking.,stored_artifacts/TCK-20260418-RESOURCE-KERNEL-M4/
+2026-04-18,TCK-20260418-RESOURCE-KERNEL-M5,Milestone 5: Resource Governor,,DONE,
+2026-04-18,TCK-20260418-RESOURCE-PERSISTENCE-M6,Milestone 6: Streaming Replay,,DONE,
+2026-04-18,TCK-20260418-RESOURCE-OBSERVABILITY-M7,Milestone 7: Observability and Operational Controls,,DONE,
+2026-04-18T15:45:00Z,TCK-20260418-RESOURCE-CONCURRENCY-M8,Safe Concurrency and Bounded Worker Execution,DONE,Implemented WorkerPool with explicit queue bounds and deterministic local fallback.,stored_artifacts/TCK-20260418-RESOURCE-ENGINE-FINALIZE/
+2026-04-18T15:46:00Z,TCK-20260418-RESOURCE-CERTIFICATION-M9,Resource Certification and Resilience Harness,DONE,Built certification metrics harness and verified safe degradation under debt pressure.,stored_artifacts/TCK-20260418-RESOURCE-ENGINE-FINALIZE/
+2026-04-18T15:47:00Z,TCK-20260418-RESOURCE-STABILIZATION-M10,Documentation Pack and Engineering Playbook,DONE,Finalized 10-milestone audit and established automated documentation integrity gates.,stored_artifacts/TCK-20260418-RESOURCE-ENGINE-FINALIZE/
+2026-04-18T15:50:00Z,,Project Documentation Alignment (v2),DONE,Overhauled high-level docs to align with the Resource-Safe Engine architecture.,stored_artifacts/TCK-20260418-RESOURCE-ENGINE-FINALIZE/
+2026-04-19,TCK-20260419-MILESTONE-A-CORE-RUNTIME,,DONE,Core runtime hardened to 6-phase contract and canonical hashing.,
+2026-04-19T12:22:00Z,TCK-20260419-MILESTONE-E-PROOF-SYSTEM,Final Certification Proof and Production Readiness Gate,DONE,Implemented Honest Reporting Quadrant and production readiness gate (M11 Certification),stored_artifacts/TCK-20260419-MILESTONE-E-PROOF-SYSTEM/
+2026-04-19T09:40:10Z,TCK-20260419-V2-CONSOLIDATION-FINAL-HARDENING,Final signal disaggregation and trending hardened. V2 Engine closed at 100% truthfulness.,,,
+2026-04-19,TCK-20260419-MA-TASK1-FREEZE-LAW,Freeze Milestone A runtime law set,,DONE,
+2026-04-19,TCK-20260419-MA-TASK2-AUDIT-MUTATION,Audit and close mutation paths,,DONE,
+2026-04-19,TCK-20260419-MA-TASK3-PIN-SCHEDULER,Pin deterministic scheduler classes,,DONE,
+2026-04-19,TCK-20260419-MA-TASK4-HARDEN-HASHING,Audit and harden canonical hashing,,DONE,
+2026-04-19,TCK-20260419-MA-TASK5-FINAL-CLOSURE,Complete Milestone A closure gating,,DONE,
+2026-04-19,TCK-20260419-MB-TASK1-FREEZE-LAW,Freeze Milestone B runtime law set,,DONE,
+2026-04-19,TCK-20260419-MB-TASK2-REAL-SIGNALS,Replace Weak Signals with Real Accounting,,DONE,
+2026-04-19,TCK-20260419-MB-TASK3-GOVERNOR-HARDENING,Harden Governor Transitions,,DONE,
+2026-04-19,TCK-20260419-MB-TASK4-ADAPTIVE-POOL,Implement Adaptive Saturated-Pool,,DONE,
+2026-04-19,TCK-20260419-MB-TASK5-FINAL-VALIDATION,,DONE,Finalized Milestone B hardening and operational gate validation. All laws verified.,
+2026-04-19,TCK-20260419-MC-TASK1-FREEZE-LIFECYCLE-LAW,Freeze Milestone C runtime law set,DONE,Formalized the operational lifecycle contract (MC) and aligned manifest terminology.,stored_artifacts/D145C3D0-MILESTONE-C/
+2026-04-19,TCK-20260419-MC-TASK2-HARDEN-REPLAY-STAGING,Harden Replay Staging and Rotation,DONE,Verified bounded buffer capacity and saturation-based chunk rotation.,stored_artifacts/D145C3D0-MILESTONE-C/
+2026-04-19,TCK-20260419-MC-TASK3-CORE-STARTUP-VALIDATION,Complete Startup Validation and Flag Enforcement,DONE,Implemented contradictory flag rejection and forbidden override guards.,stored_artifacts/D145C3D0-MILESTONE-C/
+2026-04-19,TCK-20260419-MC-TASK4-SHUTDOWN-TIMEOUT-HARDENING,Implement Shutdown Timeout and Manifest Integrity,DONE,Implemented 5.0s hard-cap for non-authoritative flushes and atomic manifest write-rename.,stored_artifacts/D145C3D0-MILESTONE-C/
+2026-04-19,TCK-20260419-MC-TASK5-OPERATIONAL-TEST-SUITE,Complete Operational-Integrity Test Suite,DONE,Certified 100% pass rate across 24 lifecycle and persistence safety tests.,stored_artifacts/D145C3D0-MILESTONE-C/
+2026-04-19,TCK-20260419-MC-TASK6-FINAL-DOC-PACK,Final Milestone C Documentation Pack,DONE,Finalized Operational Integrity Contract (MC) and terminology alignment pack.,stored_artifacts/D145C3D0-MILESTONE-C/
+2026-04-19,TCK-20260419-MD-TASK1-FREEZE-CONCURRENCY-CONTRACT,Freeze Milestone D concurrency contract,DONE,Aligned WorkClass terminology and locked the deterministic commit law.,stored_artifacts/D145C3D0-MILESTONE-D-TASK1/
+2026-04-19,TCK-20260419-MD-TASK2-HARDEN-PROTOCOL-AND-COMMIT-LAW,Harden worker protocol and commit law,DONE,Implemented deterministic neighbor views and explicit work-id tracking. Hardened commit resolution.,stored_artifacts/D145C3D0-MILESTONE-D-TASK2/
+2026-04-19,TCK-20260419-MD-TASK3-HARDEN-FALLBACK-AND-BOUNDS,Harden fallback and bounds,DONE,Implemented universal _wrap_work and Failure-to-No-Op law.,stored_artifacts/D145C3D0-MILESTONE-D-TASK3/
+2026-04-19,TCK-20260419-MD-TASK4-DETERMINISTIC-SUITE,Complete deterministic test suite,DONE,Verified 100% bit-identical equivalence under high-pressure chaos.,stored_artifacts/D145C3D0-MILESTONE-D-TASK4/
+2026-04-19T15:35:00Z,TCK-20260419-MD-TASK4-DETERMINISTIC-SUITE,Complete deterministic test suite and Real Domain Slice,DONE,Verified 100% bit-identical equivalence with real movement domain logic.,stored_artifacts/MD-FINAL/
+2026-04-20T00:58:00Z,TCK-20260420-ME-CERT-TRUST,Hardening Engine Certification and Release Trust,DONE,Expanded certification scenario catalog to 15 scenarios and hardened release gate trust.,stored_artifacts/TCK-20260420-ME-CERT-TRUST/
+2026-04-20T10:45:00Z,TCK-20260420-MA-BASELINE-ISOLATION,Substrate Hardening (MA/MB/MC),DONE,"Isolated the semantic baseline from concurrency plumbing (MA), hardened operational signals (MB), and de-simulated debt logic (MC).",stored_artifacts/TCK-20260420-MA-BASELINE-ISOLATION/
+2026-04-20T01:47:00Z,TCK-20260420-V2-ENGINE-STABILIZATION,V2 Resource Engine Test Stabilization,DONE,"Resolved test regressions, aligned protocol signatures, and enforced system ID reservation. 100% test pass.",stored_artifacts/TCK-20260420-V2-ENGINE-STABILIZATION/
+2026-04-20T13:00:00Z,TCK-20260420-CORE-MOVEMENT-SLICE,Deterministic Grid Movement Substrate,DONE,Implemented authoritative grid movement resolve logic with bit-identical parity to src engine.,stored_artifacts/TCK-20260420-CORE-MOVEMENT-SLICE/
+2026-04-20T14:45:00Z,TCK-20260420-CERT-CONSOLIDATION,Certification Artifact Consolidation,DONE,Reduced report clutter from 60+ files to 3 bundled files while maintaining 100% Gate pass.,stored_artifacts/TCK-20260420-CERT-CONSOLIDATION/
+2026-04-20,TCK-20260420-PERF-FOUNDATION,Established performance contract; instrumented Kernel phase timing; created BenchHarness and initial baseline.,,,
+2026-04-20T15:45:00Z,TCK-20260420-RESOURCE-PHASE4-M5,Milestone 5: Supported Gameplay Surface Consolidation,DONE,Unified Movement and Resource Interaction into a single certifiable surface with hardened release gates. Phase 4 Complete.,stored_artifacts/TCK-20260420-RESOURCE-PHASE4-M5/
+2026-04-20T16:00:00Z,TCK-20260420-M1-CORE-FREEZE,Substrate Baseline and Vocabulary Freeze,DONE,Frozen 6-phase contract and operational signals. Verified via final gate.,tickets/done/TCK-20260420-M1-CORE-FREEZE.md
+2026-04-20T16:00:00Z,TCK-20260420-RESOURCE-INTERACTION,Deterministic Resource Interaction Core,DONE,Implemented multi-tick interaction and inventory pressure laws. Verified parity.,tickets/done/TCK-20260420-RESOURCE-INTERACTION.md
+2026-04-20T16:00:00Z,TCK-20260420-PHASE4-FINAL-VERIF,Phase 4 Final Verification & Closure,DONE,Successfully audited all milestones and finalized the certifiable engine substrate.,tickets/done/TCK-20260420-RESOURCE-PHASE4-WALKTHROUGH.md
+2026-04-20T16:30:00Z,TCK-20260420-REPLAY-RACE,Resolve Replay Manager Thread-Safety,DONE,Implemented thread-safe manifest updates and chunk snapshots.,stored_artifacts/TCK-20260420-REPLAY-RACE/
+2026-04-20T16:31:00Z,TCK-20260420-STARTUP-VAL,Hardened Startup Validation,DONE,Decoupled profile validation into explicit evaluate() method.,stored_artifacts/TCK-20260420-STARTUP-VAL/
+2026-04-20T16:32:00Z,TCK-20260420-CPU-GOV,CPU Concurrency Shedding,DONE,Implemented Governor-to-Executor limit propagation.,stored_artifacts/TCK-20260420-CPU-GOV/
+2026-04-20T16:33:00Z,TCK-20260420-INTERACT-PRESS,Inventory Weight Pressure,DONE,Implemented authoritative item weight enforcement.,stored_artifacts/TCK-20260420-INTERACT-PRESS/
+2026-04-20T16:34:00Z,TCK-20260420-INTERACT-LOOT,Channeled Looting,DONE,Implement one-shot ground item looting with channeling reset.,stored_artifacts/TCK-20260420-INTERACT-LOOT/
+2026-04-20T16:35:00Z,TCK-20260420-TOWN-LOOP,Town Resource Resolution,DONE,Implemented sell-on-entry material conversion logic.,stored_artifacts/TCK-20260420-TOWN-LOOP/
+2026-04-21,TCK-20260421-V2-TEST-HARDENING,V2 Test Verification and Hardening complete (168/168 passed),,,
+2026-04-21T08:30:00Z,TCK-20260421-RESOURCE-INTERACT-PARITY,Implement Initial Resource Interaction Differential Parity Proof,DONE,Implemented bit-identical harvest and loot outcomes.,stored_artifacts/TCK-20260421-RESOURCE-INTERACT-PARITY/
+2026-04-21T08:30:10Z,TCK-20260421-TOWN-RESOLUTION-SCOPE,Town Resource Resolution Recovery,DONE,Implemented legal blacksmith and shop resolution with full legacy parity.,stored_artifacts/TCK-20260421-TOWN-RESOLUTION-SCOPE/
+2026-04-21T08:30:20Z,TCK-20260421-RESOURCE-CONTRACT,Resource Contract and Domain invariants,DONE,Enforced weight and slot pressure laws in InteractionSystem.,stored_artifacts/TCK-20260421-RESOURCE-CONTRACT/
+2026-04-21T08:30:30Z,TCK-20260421-PROGRESSION-LOOP-PROOF,Integrated Resource Progression Proof,DONE,Verified bit-identical autonomous progression loop.,stored_artifacts/TCK-20260421-PROGRESSION-LOOP-PROOF/
+2026-04-21T08:30:40Z,TCK-20260421-PHASE5-MILESTONE-5,Supported Progression Surface Consolidation,DONE,Published Phase 5 truth package and hardened certification.,stored_artifacts/TCK-20260421-PHASE5-MILESTONE-5/
+2026-04-21,TCK-20260421-P6-M1-T2-TRUTH-CONSOLIDATION,Truth Consolidation (Inventory Merge),DONE,Merged disparate checklists into a single inventory surface.,tickets/done/TCK-20260421-P6-M1-T2-TRUTH-CONSOLIDATION.md
+2026-04-21,TCK-20260421-P6-M1-T5-EXIT-PACKAGE,Phase 6 Exit Package,DONE,Published formal certification of Phase 6 strategic baseline.,tickets/done/TCK-20260421-P6-M1-T5-EXIT-PACKAGE.md
+2026-04-21,TCK-20260421-P6-M2-T1-LEDGER-SCHEMA,Ledger Schema Establishment,DONE,Defined the 15-column canonical replacement schema.,tickets/done/TCK-20260421-P6-M2-T1-LEDGER-SCHEMA.md
+2026-04-21,TCK-20260421-P6-M2-T2-RPG-CORE-POPULATION,RPG-CORE Population,DONE,Restored all 185 items into the Master Ledger.,tickets/done/TCK-20260421-P6-M2-T2-RPG-CORE-POPULATION.md
+2026-04-21,TCK-20260421-P6-M3-T1-V2-LEDGER-SCHEMA,V2 Ledger Schema Alignment,DONE,Synchronized V2 maturity metrics with canonical schema.,tickets/done/TCK-20260421-P6-M3-T1-V2-LEDGER-SCHEMA.md
+2026-04-21,TCK-20260421-P6-M7-M8-P0-RECOVERY,P0 Logic Recovery (Social/Tactical),DONE,Implemented Social Trust and Opportunity Attack mechanisms.,tickets/done/TCK-20260421-P6-M7-M8-P0-RECOVERY.md
+2026-04-22T08:15:00Z,TCK-20260422-RESOURCE-PH7-M1-T1-BACKLOG-FREEZE,Freeze Phase 7 Replacement Ledger Row Set,DONE,Triaged 185 rows and published official Phase 7 substrate backlog.,stored_artifacts/TCK-20260422-RESOURCE-PH7-M1-T1-BACKLOG-FREEZE/
+2026-04-22T08:25:00Z,TCK-20260422-RESOURCE-PH7-M1-T2-CLOSURE-CONDITIONS,Define Phase 7 Closure Conditions,DONE,Established Substrate Truth Standard and published backlog closure conditions.,stored_artifacts/TCK-20260422-RESOURCE-PH7-M1-T2-CLOSURE-CONDITIONS/
+2026-04-22T08:35:00Z,TCK-20260422-RESOURCE-PH7-M1-T3-DOWNSTREAM-BLOCKERS,Identify Phase 7 Downstream Blockers,DONE,Documented critical path dependencies for Phases 8 and 9.,stored_artifacts/TCK-20260422-RESOURCE-PH7-M1-T3-DOWNSTREAM-BLOCKERS/
+2026-04-22T08:38:00Z,TCK-20260422-RESOURCE-PH7-M1-T4-ENTRY-PACKAGE,Publish Phase 7 Entry Package,DONE,Formally opened the Phase 7 implementation gate.,stored_artifacts/TCK-20260422-RESOURCE-PH7-M1-T4-ENTRY-PACKAGE/
+2026-04-22T08:48:00Z,TCK-20260422-RESOURCE-PH7-M2-T1-ACTION-UPDATE-AUDIT,Audit Phase 7 Action/Update Rows,DONE,Identified critical gaps in Intent model and Kernel routing.,stored_artifacts/TCK-20260422-RESOURCE-PH7-M2-T1-ACTION-UPDATE-AUDIT/
+2026-04-22,TCK-20260422-PH6-M7-M8-HARDENING,Phase 6 Hardening,,DONE,
+2026-04-22,TCK-20260422-PH7-M2-SUBSTRATE-CLOSURE,Phase 7 M2 Substrate Hardening,,DONE,
+2026-04-22,TCK-20260422-PH7-M3-KERNEL-STABILITY,Phase 7 M3 Authoritative Apply Path,,DONE,
+2026-04-22,TCK-20260422-PH7-M4-SNAPSHOT-INTEGRITY,Phase 7 M4 Snapshot Integrity,,DONE,
+2026-04-22,TCK-20260422-PH7-M5-DETERMINISTIC-WORLD-GEN,Phase 7 M5 Deterministic World Gen,,DONE,
+2026-04-22,PHASE-7-CLOSURE,Hardened substrate intent models and published exit package.,,,
+2026-04-22T14:00:00Z,TCK-20260422-RECOVERY-GAPS,Implementing Phase 7 & 8 Recovery Gaps (Hazards, Calamities," Evolution, Sabotage),DONE,Implemented and integrated Regional Hazards, Entity Evolution, and Building Sabotage into the authoritative engine. Verified with 100% test pass.,stored_artifacts/TCK-20260422-RECOVERY-GAPS/",
+2026-04-22,TCK-20260422-PH7-HARDENING-CLOSURE,,DONE,Closed Phase 7 Substrate Hardening with full proof bundle,
+2026-04-22T23:37:00Z,TCK-20260422-PH8-STRATEGIC-RECOVERY,Phase 8 Strategic Recovery Completion,DONE,Finalized authoritative gameplay layer recovery (Combat/Tactical/Local World) and published exit package.,stored_artifacts/TCK-20260422-PH8-STRATEGIC-RECOVERY/
+2026-04-22T17:03:00Z,TCK-20260422-PH9-M1-READINESS,Phase 9 Milestone 1 Readiness Gate,DONE,Established Phase 9 entry gate with 10 ledger rows and 16 atomic checklist items.,docs/engine/phase9_entry_package.md
+2026-04-22T17:18:00Z,TCK-20260422-PH9-COGNITION,Phase 9 Strategic & Social Cognition,DONE,Implemented strategic cognition deepening - event interpretation - social narrative - belief cycle - narrative memory - quest generation - genetics - skill scaling. 92 new tests all passing.,docs/engine/legacy_replacement_ledger.md
+2026-04-23T17:47:00Z,TCK-20260424-PH9-FINAL-CLOSURE,Phase 9 Final Strategic & Social Closure,DONE,"Implemented biological decay, hero lifecycle, recruitment negotiation, and regional dynamics. 19 contract tests passing.",stored_artifacts/TCK-20260424-PH9-FINAL-CLOSURE/
+2026-04-23T17:53:00Z,TCK-20260424-FIX-TEST-REGRESSIONS,Fix Test Regressions in tests_v2/,DONE,Resolved API drift - import errors - and double-damage bug. 375 tests passing.,stored_artifacts/TCK-20260424-FIX-TEST-REGRESSIONS/
+2026-04-23T18:00:00Z,TCK-20260424-PH10-M1-READINESS,Phase 10 Milestone 1 Readiness Gate,DONE,Established compatibility backlog and entry gate.,stored_artifacts/TCK-20260424-PH10-M1-READINESS/
+2026-04-23T18:04:30Z,TCK-20260424-PH10-M2-CLI-COMPAT,Phase 10 Milestone 2 CLI Compatibility,DONE,Recovered CLI entrypoint and arguments.,stored_artifacts/TCK-20260424-PH10-M2-CLI-COMPAT/
+2026-04-23T18:11:00Z,TCK-20260424-PH10-M3-INFRA-ISOLATION,Phase 10 Milestone 3 Infra Isolation,DONE,Recovered env flags and broker-disabled logic.,stored_artifacts/TCK-20260424-PH10-M3-INFRA-ISOLATION/
+2026-04-23T18:11:05Z,TCK-20260424-PH10-M4-OBSERVABILITY,Phase 10 Milestone 4 Observability,DONE,Recovered JSON logging and telemetry toggles.,stored_artifacts/TCK-20260424-PH10-M4-OBSERVABILITY/
+2026-04-24,Phase 10,Infrastructure compatibility and API recovery completed,,DONE,
+2026-04-24,TCK-20260424-PH11-M1-READINESS,Phase 11 Milestone 1 Readiness Gate complete,DONE,stored_artifacts/TCK-20260424-PH11-M1-READINESS/,
+2026-04-24,TCK-20260424-PH11-M2-PROOF,Phase 11 Milestone 2 Preserved Proof complete,DONE,stored_artifacts/TCK-20260424-PH11-M1-READINESS/,
+2026-04-24,TCK-20260424-PH11-M3-RATIFICATION,Phase 11 Milestone 3 Non-Preserved Ratification complete,DONE,stored_artifacts/TCK-20260424-PH11-M1-READINESS/,
+2026-04-24,TCK-20260424-PH11-M4-GOVERNANCE,Phase 11 Milestone 4 Governance Reconciliation complete,DONE,stored_artifacts/TCK-20260424-PH11-M1-READINESS/,
+2026-04-24,TCK-20260424-PH11-M5-VERDICT,Phase 11 Milestone 5 Final Verdict complete,DONE,stored_artifacts/TCK-20260424-PH11-M1-READINESS/,
+2026-04-24,TCK-20260424-PH11-M6-EXIT,Phase 11 Milestone 6 Phase 11 Exit Package complete - PHASE 11 CLOSED,DONE,stored_artifacts/TCK-20260424-PH11-M1-READINESS/,
+2026-04-27T05:55:00Z,TCK-20260427-RESOURCE-CONSERVATION-HARDENING,Hardening Resource Conservation Law (Phase 3.1),DONE,Implemented ResourceTransactionResolver and refactored systems to use atomic intents.,stored_artifacts/TCK-20260427-RESOURCE-CONSERVATION-HARDENING/
+2026-05-13,TCK-20260513-PERF-HARDENING-LOD,Completed Milestone 7 (Level of Detail: Spatial Gating),DONE,Implemented adaptive LOD 0-3 gating in DeterministicScheduler reducing work items by ~45%.,stored_artifacts/TCK-20260513-PERF-HARDENING-LOD/
+2026-05-13,TCK-20260513-PERF-APPLY-PATH,Completed Milestone 8 (ApplyPath Efficiency: No-Op & Compaction),DONE,Optimized hot-path with no-op detection and state compaction reducing overhead by 11x.,stored_artifacts/TCK-20260513-PERF-APPLY-PATH/
+2026-05-13,TCK-20260513-PERF-PROFILES-TUNING,Completed Milestone 10 (Final Production Profile Tuning),DONE,Defined standardized resource envelopes (SMALL to STRESS) for optimized engine.,stored_artifacts/TCK-20260513-PERF-PROFILES-TUNING/
+2026-04-24,TCK-20260424-PH12-M1-READINESS,Phase 12 Milestone 1 Readiness Gate complete,DONE,stored_artifacts/TCK-20260424-PH12-M1-READINESS/,
+2026-04-24,TCK-20260424-PH12-M2-RUNTIME-CUTOVER,Phase 12 Milestone 2 Runtime Cutover complete,DONE,stored_artifacts/TCK-20260424-PH12-M2-RUNTIME-CUTOVER/,
+2026-05-01T11:47:00Z,TCK-20260501-V2-ENGINE-HARDENING,V2 Engine Logic Hardening & Audit Reconciliation,DONE,Reconciled logic checklist with source implementation and injected VERIFIED v2 markers across core subsystems.,stored_artifacts/TCK-20260501-V2-ENGINE-HARDENING/
+2026-04-24,TCK-20260424-PH12-M3-WORKFLOW-CUTOVER,Phase 12 Milestone 3 Workflow Cutover complete,DONE,stored_artifacts/TCK-20260424-PH12-M3-WORKFLOW-CUTOVER/,
+2026-04-24,TCK-20260424-PH12-M4-CUTOVER-VALIDATION,Phase 12 Milestone 4 Cutover Validation complete,DONE,stored_artifacts/TCK-20260424-PH12-M4-CUTOVER-VALIDATION/,
+2026-04-24,TCK-20260424-PH12-M5-AUTHORITY-TRANSITION,Phase 12 Milestone 5 Authority Transition complete,DONE,stored_artifacts/TCK-20260424-PH12-M5-AUTHORITY-TRANSITION/,
+2026-04-26T09:15:00Z,TCK-20260426-ARENA-QUESTS,Extend E2E Arena Testing for Quest Progression,DONE,Implemented COMBAT_ARENA_QUESTS scenario and verified full quest/reward/leveling lifecycle in 50-tick stress runs.,stored_artifacts/TCK-20260426-ARENA-QUESTS/
+2026-04-24,TCK-20260424-PH12-M6-EXIT-PACKAGE,Phase 12 Milestone 6 Exit Package complete - PHASE 12 CLOSED,DONE,stored_artifacts/TCK-20260424-PH12-M6-EXIT-PACKAGE/,
+2026-04-24,TCK-20260424-PH3-M1-STRATEGIC-PERSISTENCE,Phase 3 Milestone 1: Strategic Objective Persistence,,DONE,
+2026-04-24,TCK-20260424-PH3-M1-STRATEGIC-PERSISTENCE,,DONE,Implemented strategic project lifecycle and fixed scheduler bugs.,
+2026-04-25,TCK-20260425-PH4-TACTICAL-AI,Phase 4: Tactical AI and Combat Behavior complete,,DONE,
+2026-04-25,TCK-20260425-PH5-MIND-AND-NEEDS,PHASE 5 milestone 1 complete. Goal Registry implemented. Biological needs (Eat/Sleep) verified. Cognition pipeline (Saliency/Appraisal) verified.,,,
+2026-04-25,TCK-20260425-PH5-M2-PERSONALITY,PHASE 5 Milestone 2 complete. Personality, Boredom, and Life Stage modifiers implemented and verified.,
+2026-04-25,TCK-20260425-PH6-M1-INVENTORY,PHASE 6 Milestone 1 complete. Item Registry, Inventory Service, and Authoritative Mutation implemented.,
+2026-04-25,TCK-20260425-PH6-M2-LOOT,PHASE 6 Milestone 2 complete. Channeled loot, ground items, and corpses implemented with authoritative transfer.,
+2026-04-25,TCK-20260425-PH6-M3-HARVEST,PHASE 6 Milestone 3 complete. Channeled harvesting, node depletion, and respawn cooldowns implemented.,
+2026-04-25,TCK-20260425-PH6-M4-ECONOMY,PHASE 6 Milestone 4 complete. Shop, blacksmith, and crafting recipes implemented with authoritative exchange.,
+2026-04-25,TCK-20260425-PH6-M5-STORAGE,PHASE 6 Milestone 5 complete. Advanced equipment ranking, auto-equip," world chests, and persistent home storage implemented.",
+2026-04-25,TCK-20260425-PH6-M6-CLOSURE,PHASE 6 complete. All 12 tests passed. Inventory, Loot," Harvesting, Economy, and Storage domains verified and documentation finalized.",
+2026-04-25,TCK-20260425-PH7-M1-TOWN,PHASE 7 Milestone 1 complete. Town center landmarks, BuildingRegistry with service templates, and TownNavigation helpers implemented.,
+2026-04-25,TCK-20260425-PH7-M2-GUILD,PHASE 7 Milestone 2 complete. GuildAction for lead generation and QuestGenerator for strategic projects implemented.,,,
+2026-04-25,TCK-20260425-PH7-M3-RECOVERY,PHASE 7 Milestone 3 complete. Inn/Home recovery services and ClassHall progression implemented. Strategic blockers (maintenance/capability) resolved through town actions.,,,
+2026-04-25,TCK-20260425-PH7-M4-SABOTAGE,PHASE 7 Milestone 4 complete. SabotageAction for building damage and regional trauma propagation implemented. Phase 7 (Town, Buildings, and Services) fully complete.,
+2026-04-25,PH8-M1,Implemented authoritative quest lifecycle and reward models,,tests_v2/quests/test_quest_lifecycle.py,
+2026-04-25,PH8-M2,Implemented deterministic level-scaled quest generation,,tests_v2/quests/test_quest_generation.py,
+2026-04-25,PH8-M3,Implemented authoritative auto-leveling and stat growth,,tests_v2/progression/test_leveling.py,
+2026-04-25,PH8-M4,Implemented registry-backed classes and skills,,tests_v2/core/test_class_registry.py,
+2026-04-25,TCK-20260425-PROG-ATTRIBUTE-POINTS,Implemented Attribute Points and Manual Growth system,,,
+2026-04-25T15:20:00Z,TCK-20260425-PH10-WORLD-DYNAMICS,Phase 10: Environmental Hazards & Calamity Recovery,DONE,Implemented RegionState expansion - EnvironmentService for hazard/weather drain - TransformationService for regional kind shifting - and LegalityServiceV2 suppression logic. Verified with 100% test pass.,stored_artifacts/TCK-20260425-PH10-WORLD-DYNAMICS/
+2026-04-25,Phase 11: World Dynamics,Implemented EnvironmentService TransformationService and ApplyPath integration for regional hazards and kind shifting. All tests passed.,,,
+2026-04-25,Phase 10: Strategic Cognition,Implemented CapacityService LeadService and refactored StrategicIntelligenceSystem for project continuity and switching. All tests passed.,,,
+2026-04-25T16:00:00Z,TCK-20260425-WORLD-DYNAMICS,Phase 11: World Dynamics - Influence and Macro Threats,DONE,Implemented faction influence shifts - territory conquest/liberation - stronghold lifecycles with Aura of Despair - and macro threats (Raids/Calamities). Verified with 100% test pass.,stored_artifacts/TCK-20260425-WORLD-DYNAMICS/
+2026-04-25,TCK-20260425-REPLAY-INSPECTION,,DONE,Implemented replay fidelity fingerprints and API presenters for Phase 12,
+2026-04-25,Substrate Hardening,Phases 6-9,,Completed inventory/economy/town/biological systems,
+2026-04-25T16:48:00Z,TCK-20260425-PH11-WORLD-DYNAMICS,Phase 11: World Dynamics Hardening,DONE,Integrated Calamity and Raid systems into authoritative engine loop.,stored_artifacts/TCK-20260425-PH11-WORLD-DYNAMICS/
+2026-04-26T05:05:00Z,TCK-20260426-PH14-16-RECOVERY,RPG-Core Parity (Multi-OA Social Bonds AoE),DONE,Implemented Multi-Attacker OA First-Class Social Bonds and Authoritative AoE Splash logic. 100% logic parity achieved.,stored_artifacts/TCK-20260426-PH14-16-RECOVERY/
+2026-04-26T07:13:00Z,TCK-20260426-RPG-CORE-HARDENING,RPG Core Life-Loop & Arena Hardening,DONE,Recovered authoritative RPG rewards mortality attrition and status effects. Extended E2E Arena suite with 5 new scenarios.,stored_artifacts/TCK-20260426-RPG-CORE-HARDENING/
+2026-04-26T09:15:00Z,TCK-20260426-ARENA-QUESTS,Extend E2E Arena Testing for Quest Progression,DONE,Implemented COMBAT_ARENA_QUESTS scenario and verified full quest/reward/leveling lifecycle in 50-tick stress runs.,stored_artifacts/TCK-20260426-ARENA-QUESTS/
+2026-04-26,TCK-20260426-PHASE-24-SOVEREIGNTY,,DONE,Regional Sovereignty and Taxation integrated into V2,
+2026-04-26T21:20:00Z,TCK-20260426-FIX-PARITY-REGRESSIONS,Fix RPG Progression and Action Readiness Regressions,DONE,"Resolved readiness double-subtraction and Evolution XP reward blind spot. 100% test pass.,docs/stored_artifacts/TCK-20260426-FIX-PARITY-REGRESSIONS/",
+2026-04-26T07:50:00Z,TCK-20260426-PH13-LEGACY-RETIREMENT,Execute Phase 13 Legacy Retirement and Canonical Refactor,DONE,Renamed legacy src/tests to src_legacy/tests_legacy and promoted V2 engine to canonical namespace.,docs/engine/phase13_retirement_manifest.md
+2026-04-27T12:50:00Z,TCK-20260427-QUEST-IDENTITY,Fixing Quest Identity Paradox and Hardening Authoritative Rewards,DONE,Resolved quest identity paradox (faction block) and implemented global ResourceTransferIntent resolution. 100% test pass.,stored_artifacts/TCK-20260427-QUEST-IDENTITY/
+2026-04-27T13:45:00Z,TCK-20260427-PHASE3-RESOURCE-CONSERVATION,Implement Authoritative Resource Conservation (Phase 3),DONE,Hardened InventoryService and Refinement Pipeline to enforce atomic capacity-aware resource transfers. 100% test pass.,stored_artifacts/TCK-20260427-PHASE3-RESOURCE-CONSERVATION/
+2026-04-27T13:47:00Z,TCK-20260427-LEGACY-RESTORATION,Legacy Code Restoration and Test Environment Hardening,DONE,Restored src_legacy and tests_legacy to root. Migrated namespaces and verified V2 engine integrity.,stored_artifacts/TCK-20260427-LEGACY-RESTORATION/
+2026-04-27T20:38:00Z,TCK-20260427-RPG-CORE-MIGRATION,Migrate and Harden RPG Core Logic (Phases 1-11),DONE,Remediated all V2 engine test failures and hardened authoritative laws.,stored_artifacts/TCK-20260427-RPG-CORE-MIGRATION/
+2026-04-27T21:09:00Z,TCK-20260428-RESOURCE-QUEST-TRANSACTIONS,Quest Reward Transaction Hardening,DONE,Implemented REWARD_PENDING status and atomic resource transfer for quest rewards.,stored_artifacts/TCK-20260428-RESOURCE-QUEST-TRANSACTIONS/
+2026-04-28T12:30:00Z,TCK-20260428-RESOURCE-TRANSACTION-GROUPS,Multi-Transfer Transaction Semantics (Atomic Groups),DONE,Implemented atomic grouping for resource transfers with rollback logic.,stored_artifacts/TCK-20260428-RESOURCE-TRANSACTION-GROUPS/
+2026-04-28T18:30:00Z,TCK-20260428-PH9-WORLD-LIFECYCLE,World Lifecycle Dynamics (Spawning & Ecology),DONE,Implemented SpawnService and ResourceEcologyService for regional population health.,stored_artifacts/TCK-20260428-PH9-WORLD-LIFECYCLE/
+2026-04-28T19:00:00Z,TCK-20260428-PH10-EXTERNAL-TRUTH,External Truth and Replay Proof (Tracing & Metrics),DONE,Implemented transaction tracing and conservation metrics for external observability.,stored_artifacts/TCK-20260428-PH10-EXTERNAL-TRUTH/
+2026-04-28,TCK-20260428-QUEST-PROGRESSION-FIX,Resolved XP double-counting in pipeline,,,
+2026-04-29T06:20:00Z,TCK-20260427-PH6-STRATEGIC-COGNITION,Strategic & Progression Stabilization,DONE,Stabilized Phase 6 strategic cognition and attribute-driven growth. Resolved partial rejection data loss.,stored_artifacts/TCK-20260427-PH6-STRATEGIC-COGNITION/
+2026-04-29T11:30:00Z,TCK-20260429-E3-MISSING-LOGIC,E3 Missing RPG Core Logic (Stamina/Wounds/Leash/Terrain/Stickiness/Scaling),DONE,Implemented 7 missing RPG depth systems: stamina drain/regen/exhaustion and wounds/scars/mob leash/terrain cost/target stickiness/skill scaling. 54 new tests. 669 total passed.,staging_artifacts/TCK-20260429-E3-MISSING-LOGIC/
+2026-05-01T11:47:00Z,TCK-20260501-V2-ENGINE-HARDENING,V2 Engine Logic Hardening & Audit Reconciliation,DONE,Reconciled logic checklist with source implementation and injected VERIFIED v2 markers across core subsystems.,stored_artifacts/TCK-20260501-V2-ENGINE-HARDENING/
+2026-05-01,TCK-20260501-E4-PHASE-ZERO,,DONE,Reconciled ledger and reached 100% parity for V2 core.,
+2026-05-01,Phase E4.3,Strategic Cognition Hardening completed with full lifecycle tests.,,DONE,
+2026-05-01,TCK-20260501-SOCIAL-LIFECYCLE,Phase E4.4 Complete - Social Lifecycle Hardening,,Done,
+2026-05-01,TCK-20260501-PROGRESSION-HARDENING,Phase E4.5 Complete - Progression/Equipment/Crafting Hardening,,Done,
+2026-05-01T10:33:42Z,TCK-20260501-E4.7-OBSERVABILITY-HARDENING,Finalize Phase E4.7 Observability and Certification,DONE,Exposed all important gameplay truth to API replay and certification reports. Verified with mixed-stress scenarios.,stored_artifacts/TCK-20260501-E4.7-OBSERVABILITY-HARDENING/
+2026-05-01T10:55:36Z,TCK-20260501-E4-PHASE-ONE,Phase E4.1 — Determinism and Replay Completion,DONE,"Hardened RNG and canonical hashing for bit-identical replay fidelity. Verified with 1,000+ tick tests.",stored_artifacts/TCK-20260501-E4-PHASE-ONE/
+2026-05-01T10:55:46Z,TCK-20260430-PH5-COMBAT-LEGALITY-HARDENING,Phase E4.2 — Full Combat Legality Matrix,DONE,Unified authoritative combat legality and AoE splash LoS logic. Verified with exhaustive matrix tests.,stored_artifacts/TCK-20260430-PH5-COMBAT-LEGALITY-HARDENING/
+2026-05-01T10:56:20Z,TCK-20260501-E4.6-WORLD-LIFECYCLE,Phase E4.6 — World Lifecycle and Ecology,DONE,Integrated passive updates spawning and macro-threat lifecycles into the authoritative loop. Verified with long-run stability tests.,stored_artifacts/TCK-20260501-E4.6-WORLD-LIFECYCLE/
+2026-05-01T16:02:00Z,TCK-20260501-E5-HARDENING,Hardening RPG Engine E5 Implementation,DONE,Implemented race-condition safeguards and exactly-once transaction idempotency. Reached 100% verified checklist coverage.,stored_artifacts/TCK-20260501-E5-HARDENING/
+2026-05-02T10:00:00Z,TCK-20260502-E5-CLOSURE-HARDENING,Hardening Resource Conflicts,DONE,Hardened resource conflicts and transaction grouping.,stored_artifacts/TCK-20260502-E5-CLOSURE-HARDENING/
+2026-05-02T11:00:00Z,TCK-20260502-E5-FINAL-HARDENING,Final Hardening and Observability,DONE,Complete final hardening and observability expansion.,stored_artifacts/TCK-20260502-E5-FINAL-HARDENING/
+2026-05-02T12:00:00Z,TCK-20260502-E5-SEMANTIC-HARDENING,Hardening Social Contract Semantics,DONE,Hardened social contract state machine and verified event-level replay fidelity.,stored_artifacts/TCK-20260502-E5-SEMANTIC-HARDENING/
+2026-05-02T17:20:00Z,TCK-20260502-STRATEGIC-HARDENING,RPG V2 Strategic Hardening & Phase E5.5 Closure,DONE,"Finalized authoritative ReasonCode migration, enforced strategic bandwidth (Laws 194-197), implemented frame pacing (Law 121), group priority (Law 128), and attribute scaling (Law 239). Achieved 100% logic ID coverage.",stored_artifacts/TCK-20260502-STRATEGIC-HARDENING/
+2026-05-03T14:45:49Z,TCK-20260503-AUTH-TRIPWIRE,Authoritative Mutation Tripwire Hardening,DONE,Implemented mutation tripwire (RPG-AUTH-009) and verified deep-freeze immutability. Fixed Kernel/Policy integration crash.,stored_artifacts/TCK-20260503-AUTH-TRIPWIRE/
+2026-05-03T16:40:00Z,TCK-20260503-V2-HARDENING,Authoritative V2 RPG Hardening,DONE,Resolved Phantom Leader Bug and Terrain Cost Legality. Added Flanking geometry and Governor Throttle checks.,stored_artifacts/TCK-20260503-V2-HARDENING/
+2026-05-04T11:47:24Z,TCK-20260504-V2-TEST-HARDENING,Hardening Legacy Test Suites via V2EntityBuilder,DONE,Refactored 17 engine tests to V2 architecture and hardened spatial grid caching.,stored_artifacts/TCK-20260504-V2-TEST-HARDENING/
+2026-05-06T03:04:00Z,TCK-20260505-TEST-STABILIZATION,Hardening World Domain Positionality,INPROGRESS,Migrated world tests to V2EntityBuilder and fixed regional sabotage routing.,stored_artifacts/17050e90-2d4b-4075-80af-f7cb7dd9c2c1/
+2026-05-06T03:22:00Z,TCK-20260505-TEST-STABILIZATION,Hardening Progression and Quest Logic Stabilization,DONE,Stabilized V2 progression and quest logic with 100% test pass rate. Hardened V2EntityBuilder and refactored combat rewards.,stored_artifacts/17050e90-2d4b-4075-80af-f7cb7dd9c2c1/
+2026-05-06,TCK-20260506-INVENTORY-TEST-STABILIZATION,Migrate inventory test suites to V2EntityBuilder,,DONE,
+2026-05-06,TCK-20260506-STRATEGY-TEST-STABILIZATION,Migrate strategy test suites to V2EntityBuilder,,DONE,
+2026-05-06,TCK-20260506-STRATEGIC-HARDENING-TEST-STABILIZATION,Migrate strategic hardening test suites to V2EntityBuilder,,DONE,
 2026-05-10T04:57:00Z,TCK-20260510-HARDENING-PIPELINE,Hardening Authoritative Engine Pipeline,DONE,Stabilized pipeline sequence and hardened audit/rejection traceability.,tickets/done/TCK-20260510-HARDENING-PIPELINE.md
-2026-05-10,TCK-20260509-STRAT-BLOCKER-RESOLUTION,Stabilized engine lifecycle: combat atomicity and quest rewards
-2026-05-10,TCK-20260510-SOCIAL-EXPIRATION,Stabilizing Social Contract Expiration,DONE
+2026-05-10,TCK-20260509-STRAT-BLOCKER-RESOLUTION,Stabilized engine lifecycle: combat atomicity and quest rewards,,,
+2026-05-10,TCK-20260510-SOCIAL-EXPIRATION,Stabilizing Social Contract Expiration,,DONE,
 2026-05-10T13:56:00Z,TCK-20260510-TACTICAL-COMBAT-HARDENING,Hardening Tactical Combat Bonuses (Bracketing/Flanking),DONE,Unified tactical modifier application and implemented bracketing bonus in multi-attacks.,stored_artifacts/c6306454-56e4-4a14-b03f-7fc75ea22c2d/
 2026-05-10T14:56:00Z,TCK-20260510-QUEST-PROGRESS-STABILIZATION,RPG Engine Progression Hardening,DONE,Restored pipeline phases and hardened trust boundaries (Law 300.2). Resolved regressions in actor validity and interaction recovery.,stored_artifacts/c6306454-56e4-4a14-b03f-7fc75ea22c2d/
-2026-05-10,TCK-20260510-PIPELINE-DECOMPOSITION,COMPLETED,Decomposed AuthoritativeApplyPipeline into 9 phases
+2026-05-10,TCK-20260510-PIPELINE-DECOMPOSITION,,COMPLETED,Decomposed AuthoritativeApplyPipeline into 9 phases,
 2026-05-10T16:44:40Z,TCK-20260510-CORE-IMPORT-STABILIZATION,Stabilizing Engine Import Paths & Social Domain Unification,DONE,Fixed broken re-exports and unified Social Contract logic.,stored_artifacts/TCK-20260510-CORE-IMPORT-STABILIZATION/
-2026-05-10,TCK-20260510-CHECKLIST-HARDENING,Hardening RPG Engine Logic Ledger,DONE
-2026-05-11,TCK-20260511-COMB-HARDENING,Hardened tactical combat and anti-stalemate logic,DONE
+2026-05-10,TCK-20260510-CHECKLIST-HARDENING,Hardening RPG Engine Logic Ledger,,DONE,
+2026-05-11,TCK-20260511-COMB-HARDENING,Hardened tactical combat and anti-stalemate logic,,DONE,
 2026-05-12T16:54:00Z,TCK-20260512-PERF-COMPLETION,Completing Performance Test Suite (P1/P2),DONE,Completed Milestone P1 and P2 of the performance hardening roadmap.,stored_artifacts/TCK-20260512-PERF-COMPLETION/
 2026-05-12T16:54:00Z,TCK-20260512-PERF-HARDENING,V2 Engine Performance Hardening & CI Integration,DONE,Successfully certified the V2 engine for the 2GB RAM/50ms latency envelope.,stored_artifacts/TCK-20260512-PERF-HARDENING/
 2026-05-13T01:46:00Z,TCK-20260513-PERF-HARDENING,V2 RPG Engine Performance Hardening,DONE,Optimized passive apply path and kernel tracing for production throughput.,stored_artifacts/TCK-20260513-PERF-HARDENING/
-2026-05-13,TCK-20260513-PERF-HARDENING-DIRTY-SPATIAL,Completed Milestones 3 & 4 (Dirty Tracking & Spatial Queries)
-2026-05-13,TCK-20260513-PERF-API-SNAPSHOTS,Completed Milestone 5 (API Paging & Trace Gating)
+2026-05-13,TCK-20260513-PERF-HARDENING-DIRTY-SPATIAL,Completed Milestones 3 & 4 (Dirty Tracking & Spatial Queries),,,
+2026-05-13,TCK-20260513-PERF-API-SNAPSHOTS,Completed Milestone 5 (API Paging & Trace Gating),,,
 2026-05-13,TCK-20260513-PERF-WORKER-HARDENING,Completed Milestone 6 (Worker Throughput Hardening: Parallelism & Chunking),DONE,Achieved 3.3x simulation throughput speedup via parallel spatial queries and chunked dispatch.,stored_artifacts/TCK-20260513-PERF-WORKER-HARDENING/
 2026-05-13,TCK-20260513-PERF-CI-GUARD,Completed Milestone 9 (CI Performance Regression Guard),DONE,Implemented baseline management and regression detection scripts with 15% threshold.,stored_artifacts/TCK-20260513-PERF-CI-GUARD/
 2026-05-14T07:58:54Z,TCK-20260514-ENGINE-PERF-HARDENING,V2 Engine Performance Hardening (Phase 3),DONE,Implemented lazy state reconstruction cached regional lookups and spatial indexing for LoS. Optimized AuthoritativeState.to_readonly with internal caching.,stored_artifacts/TCK-20260514-ENGINE-PERF-HARDENING/
 2026-05-14T08:22:45Z,TCK-20260514-PERSISTENCE-OPT,Persistence Layer Optimization (Hashing),DONE,Optimized CanonicalStateHasher performance from ~200ms to <1ms using component-level caching.,stored_artifacts/TCK-20260514-PERSISTENCE-OPT/
 2026-05-14T14:05:00Z,TCK-20260514-DOCS-REORG,RPG Engine V2 Documentation Hierarchy Audit & Implementation,DONE,Reorganized documentation into a developer-first nested hierarchy mirrored to src/ and tests/. Drafted core architectural specs for Authoritative Pipeline and Kernel. Audited and tagged logic gaps in source code.,stored_artifacts/TCK-20260514-DOCS-REORG/
 2026-05-14T17:30:00Z,TCK-20260514-MECHANICS-HARDENING,RPG Engine Mechanics Bible & Logic Hardening,DONE,Codified core simulation laws into a formula-centric Mechanics Bible. Refactored logic gaps including sleeping actor validation strategic multipliers and regional sovereignty.,stored_artifacts/TCK-20260514-MECHANICS-HARDENING/
+2026-05-15T05:53:00Z,TCK-20260515-ENGINE-MEMORY-POOLING,Milestone 9: Memory Management & Pooling,DONE,"Implemented differential readonly caching, deep_freeze caching, and EMPTY_ENTITY_UPDATE singletons. Verified 22x speedup in state view generation.",stored_artifacts/TCK-20260515-ENGINE-MEMORY-POOLING/
+2026-05-15,TCK-20260515-PROD-HARDENING,Milestone 10: Production Tuning,DONE,Milestone 10 complete: calibrated production profiles and implemented incremental GC for 10k entity stability.,stored_artifacts/TCK-20260515-PROD-HARDENING/
+2026-05-15,TCK-20260515-LOGIC-HARDENING,Milestone 11: Logic Hardening,DONE,Started Milestone 11: Logic Hardening (17-Phase Pipeline & Rejection Registry).,
+2026-05-15,TCK-20260515-LOGIC-HARDENING,Milestone 11: Logic Hardening,COMPLETED,Formalized 17-phase pipeline and RejectionRegistry integration.,stored_artifacts/TCK-20260515-LOGIC-HARDENING/
+2026-05-15,TCK-20260515-WORLD-GOVERNANCE,INPROGRESS,Milestone 12: Regional Sovereignty and Governance Logic started.
+2026-05-15,3dd06813-34e4-4246-a910-07feb838ed3e,Completed Regional Sovereignty and Governance implementation (Milestone 12),ttnhan18062000/rpg-based-simulation
+2026-05-15 12:00,Performance Hardening,TCK-20260515-GOV-PERF,DONE,Optimized regional governance with spatial indexing and caching.
+2026-05-16T04:27:00Z,TCK-20260516-ENGINE-PERFORMANCE-PHASE2,V2 Engine Latency Optimization (Phase 2),DONE,Eliminated Collection phase reconstruction overhead via ReadOnlyDict caching and optimized locomotion spatial queries.,stored_artifacts/TCK-20260516-ENGINE-PERFORMANCE-PHASE2/
+2026-05-16T05:40:00Z,TCK-20260515-WORLD-GOVERNANCE,Milestone 12: Regional Sovereignty and Governance Logic,DONE,Regional Sovereignty and Faction Governance fully implemented and verified.,stored_artifacts/TCK-20260515-WORLD-GOVERNANCE/
+2026-05-16T09:34:00Z,TCK-20260516-FIX-PERF-REGRESSION,Fixing Unit Test Regressions from Phase 2 Performance Optimization,DONE,Successfully resolved all 82 unit test regressions while preserving performance gains.,None
+2026-05-17T01:24:00Z,TCK-20260516-PERF-OPTIMIZATION-FINAL,Resolving Performance Benchmark Bottlenecks and Monkeypatch Regressions,DONE,Successfully eliminated all remaining computational bottlenecks across final_integrity advancement and locomotion by implementing O(1) incremental spatial grid updates and short-circuiting redundant strategic evaluations for active worker entities.,stored_artifacts/TCK-20260516-PERF-OPTIMIZATION-FINAL/
+2026-05-17T03:54:00Z,TCK-20260515-PIPELINE-ALIGNMENT,Reconcile Authoritative Pipeline with Staggered Cadence Regressions,DONE,Successfully reconciled the authoritative 17-phase pipeline with staggered cadence performance hardening while maintaining 100% test pass rate across unit and integration suites.,None
+2026-05-17T18:15:00Z,TCK-20260517-PERF-OPT-HARDENING,Performance Optimization Hardening and Measurement Integrity,DONE,Successfully completed all 8 milestones of the Performance Optimization Hardening plan fixing force_full_scan logic budget enforcement print pollution and CI regression guards.,stored_artifacts/TCK-20260517-PERF-OPT-HARDENING/

@@ -16,13 +16,12 @@ from typing import Dict, List, Any
 # Ensure project root is on path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from src.config.profiles import PROD_LARGE, RuntimeProfile, HardwareClass
-from src.core.builder import V2EntityBuilder
-from src.core.enums import EntityRole, Faction
+from src.config.profiles import PROD_LARGE, RuntimeProfile
 from src.core.state import AuthoritativeState
-from src.core.strategic import ProjectState, ProjectKind, ProjectStatus, ObjectiveState, ObjectiveKind
+from src.core.strategic import ProjectStatus
 from src.engine.kernel import Kernel
 from src.platform.rng import DeterministicRNG
+from src.perf.scenarios import SCENARIO_BUILDERS
 
 OUT_DIR = Path("reports/profile")
 
@@ -58,8 +57,11 @@ class ProfilingHarness:
         profiler = cProfile.Profile()
         profiler.enable()
 
-        for _ in range(ticks):
+        for t in range(ticks):
             kernel.tick_once()
+            if self._is_scenario_completed(scenario_name, kernel._state):
+                print(f"[*] Scenario {scenario_name.upper()} successfully completed early at tick {t + 1}/{ticks}")
+                break
 
         profiler.disable()
         profiler.dump_stats(profile_path)
@@ -75,65 +77,66 @@ class ProfilingHarness:
 
     def _make_state(self, scenario_name: str, entity_count: int) -> AuthoritativeState:
         """Generates a world state tailored to the scenario."""
-        entities = {}
-        for entity_id in range(1, entity_count + 1):
-            builder = V2EntityBuilder(entity_id).kind("hero")
-            
-            # Scenario-specific customization
-            if scenario_name == "idle":
-                # Static heroes, no work
-                builder.location(float(entity_id % 100), float(entity_id // 100))
-            
-            elif scenario_name == "movement":
-                # Heroes with random movement targets
-                builder.location(0.0, 0.0)
-                builder.navigation(target=(100.0, 100.0))
-            
-            elif scenario_name == "strategic":
-                # Heroes with active projects
-                builder.location(float(entity_id % 50), float(entity_id // 50))
-                project = ProjectState(
-                    id=f"proj_{entity_id}",
-                    kind=ProjectKind.QUEST,
-                    status=ProjectStatus.ACTIVE,
-                    objectives=[
-                        ObjectiveState(id="obj_1", kind=ObjectiveKind.REACH_LOCATION, target="100,100")
-                    ],
-                    active_objective_id="obj_1"
-                )
-                builder.strategic(
-                    projects={project.id: project},
-                    current_project_id=project.id
-                )
-            
-            elif scenario_name == "resource":
-                # Heroes with gold/items to stress transaction logic
-                builder.inventory(gold=1000)
+        builder_fn = SCENARIO_BUILDERS[scenario_name]
+        if scenario_name == "resource":
+            return builder_fn(entity_count=int(entity_count * 0.7), node_count=int(entity_count * 0.3))
+        elif scenario_name == "combat":
+            side_count = max(1, entity_count // 2)
+            return builder_fn(team_a_count=side_count, team_b_count=side_count)
+        else:
+            return builder_fn(entity_count=entity_count)
 
-            # Common components
-            builder.identity(role=EntityRole.HERO, faction=Faction.HERO_GUILD)
-            builder.combat(hp=100, max_hp=100, alive=True, readiness=100.0)
-            builder.lifecycle(active=True)
+    def _is_scenario_completed(self, scenario_name: str, state: AuthoritativeState) -> bool:
+        if scenario_name == "combat":
+            # Check if all entities on one side are dead or incapacitated
+            factions_alive = set()
+            for entity in state.entities.values():
+                if entity.combat and entity.combat.alive and entity.combat.hp > 0:
+                    factions_alive.add(entity.identity.faction)
+            return len(factions_alive) <= 1
             
-            entities[entity_id] = builder.build()
+        elif scenario_name == "movement":
+            # Check if all moving entities have reached their target or have no target
+            for entity in state.entities.values():
+                if entity.navigation and entity.navigation.target is not None:
+                    px, py = entity.navigation.position
+                    tx, ty = entity.navigation.target
+                    if abs(px - tx) > 0.5 or abs(py - ty) > 0.5:
+                        return False
+            return True
+            
+        elif scenario_name == "resource":
+            # Check if all resource nodes are fully depleted
+            if not state.resource_nodes:
+                return True
+            return all(node.remaining_charges <= 0 for node in state.resource_nodes.values())
+            
+        elif scenario_name == "strategic":
+            # Check if all strategic projects are completed
+            has_active_projects = False
+            for entity in state.entities.values():
+                if entity.strategic and entity.strategic.projects:
+                    for proj in entity.strategic.projects.values():
+                        if proj.status == ProjectStatus.ACTIVE:
+                            has_active_projects = True
+                            break
+                    if has_active_projects:
+                        break
+            return not has_active_projects
 
-        return AuthoritativeState(
-            tick=0,
-            seed=42,
-            entities=entities
-        )
+        return False
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="RPG Engine Profiler")
     parser.add_argument(
         "--scenario", 
-        choices=["idle", "movement", "resource", "strategic"], 
+        choices=list(SCENARIO_BUILDERS.keys()), 
         default="idle",
         help="Simulation scenario to profile"
     )
     parser.add_argument("--entities", type=int, default=1000, help="Number of entities")
-    parser.add_argument("--ticks", type=int, default=100, help="Number of ticks to run")
+    parser.add_argument("--ticks", type=int, default=500, help="Number of ticks to run")
     args = parser.parse_args()
 
     harness = ProfilingHarness(OUT_DIR)

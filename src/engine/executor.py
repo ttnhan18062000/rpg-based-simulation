@@ -88,7 +88,7 @@ class LocalSequentialExecutor:
         profile: RuntimeProfile,
     ) -> List[WorkerResult]:
         from src.engine.domain_logic import SimulationDomainLogic
-        from src.core.updates import TaskUpdate, EntityUpdate
+        from src.core.updates import TaskUpdate, EntityUpdate, EMPTY_ENTITY_UPDATE
         from src.core.concurrency_law import ConcurrencyLaw
 
         # Critical isolation boundary:
@@ -147,11 +147,8 @@ class LocalSequentialExecutor:
                     )
 
                 else:
-                    updates = {
-                        frozen_subject.id: EntityUpdate(
-                            entity_id=frozen_subject.id,
-                        )
-                    }
+                    # Logic ID: CORE-PERF-018
+                    updates = {frozen_subject.id: EMPTY_ENTITY_UPDATE}
 
                 for eid, upd in updates.items():
                     # Option A Enforcement:
@@ -228,7 +225,7 @@ class ConcurrentExecutionAdapter:
         from src.engine.worker_logic import default_simulation_worker
         from src.core.protocol_validator import ProtocolValidator
         from src.core.concurrency_law import ConcurrencyLaw
-        from src.core.updates import EntityUpdate
+        from src.core.updates import EntityUpdate, EMPTY_ENTITY_UPDATE
         from src.core.immutability import deep_freeze
         from dataclasses import replace
 
@@ -236,21 +233,45 @@ class ConcurrentExecutionAdapter:
         source_meta: Dict[str, Tuple[WorkItem, WorkerPacket]] = {}
         final_results: List[WorkerResult] = []
 
-        # Pre-freeze shared world state components to avoid O(N^2) redundant deep_freeze calls
-        from src.core.immutability import deep_freeze
-        frozen_regions = deep_freeze(state.regions)
-        frozen_resource_nodes = deep_freeze(state.resource_nodes)
-        frozen_buildings = deep_freeze(state.buildings)
-        frozen_groups = deep_freeze(state.groups)
-        frozen_terrain = deep_freeze(state.terrain)
+        # Logic ID: CORE-PERF-020 (Persistent deep_freeze caching)
+        if not hasattr(self, "_freeze_cache"):
+            self._freeze_cache = {}
+
+        def get_frozen(obj, key):
+            obj_id = id(obj)
+            cached_id, cached_obj = self._freeze_cache.get(key, (None, None))
+            if cached_id == obj_id:
+                return cached_obj
+            frozen = deep_freeze(obj)
+            self._freeze_cache[key] = (obj_id, frozen)
+            return frozen
+
+        frozen_regions = get_frozen(state.regions, "regions")
+        frozen_resource_nodes = get_frozen(state.resource_nodes, "nodes")
+        frozen_buildings = get_frozen(state.buildings, "buildings")
+        frozen_groups = get_frozen(state.groups, "groups")
+        frozen_corpses = get_frozen(state.corpses, "corpses")
+        frozen_ground_items = get_frozen(state.ground_items, "ground_items")
+        frozen_terrain = get_frozen(state.terrain, "terrain")
         
         from src.engine.domain.view import DomainView
         from src.engine.spatial_query import SpatialQueryService
         frozen_grid = DomainView._get_cached_spatial_grid(state)
         frozen_occ_map = SpatialQueryService.get_occupancy_map(state)
-        frozen_regions_list = DomainView.get_region_for_position(state, (0,0)) # Dummy call to build cache
-        frozen_regions_list = getattr(state, "_region_list_cache")
+        
+        # CORE-PERF-021: Reuse region list cache
+        frozen_regions_list = getattr(state, "_region_list_cache", None)
+        if frozen_regions_list is None:
+             DomainView.get_region_for_position(state, (0,0)) # Build cache
+             frozen_regions_list = getattr(state, "_region_list_cache")
+             
         frozen_building_map = SpatialQueryService._get_building_map(state)
+        frozen_regions_bounds = SpatialQueryService._get_regions_global_bounds(state)
+        frozen_region_index = SpatialQueryService._get_region_index(state)
+        frozen_building_region_map = SpatialQueryService._get_building_region_map(state)
+        frozen_node_map = SpatialQueryService._get_node_map(state)
+        frozen_corpse_map = SpatialQueryService._get_corpse_map(state)
+        frozen_ground_item_map = SpatialQueryService._get_ground_item_map(state)
 
         for i, item in enumerate(work_items):
             if item.work_kind in ("ENTITY_MOVE", "ENTITY_ACT", "ENTITY_BRAIN") and isinstance(item.owner_id, int):
@@ -260,7 +281,6 @@ class ConcurrentExecutionAdapter:
                     subject_snapshot = subject
                     
                     from src.core.enums import Domain
-                    # Pass a reference to the read-only entities dictionary instead of computing subset here
                     packet_id = f"{state.tick}:{i}"
                     packet_seed = rng.get_int(Domain.DEFAULT, state.tick, item.owner_id, 0, 1000000)
                     packet = WorkerPacket(
@@ -271,7 +291,7 @@ class ConcurrentExecutionAdapter:
                         seed=packet_seed,
                         work_class=item.work_class,
                         subject=subject_snapshot,
-                        neighbor_view=[], # Computed lazily by worker if needed
+                        neighbor_view=[], # Computed lazily by worker
                         work_kind=item.work_kind,
                         payload=item.payload,
                         class_priority=ConcurrencyLaw.get_class_priority(item.work_class),
@@ -280,13 +300,21 @@ class ConcurrentExecutionAdapter:
                         resource_nodes=frozen_resource_nodes,
                         buildings=frozen_buildings,
                         groups=frozen_groups,
+                        corpses=frozen_corpses,
+                        ground_items=frozen_ground_items,
                         town_center=state.town_center,
                         terrain=frozen_terrain,
-                        all_entities=state.entities, # Pass shared read-only reference
+                        all_entities=state.entities, # Full state (efficient in Mega-Chunks)
                         spatial_grid=frozen_grid,
                         occupancy_map=frozen_occ_map,
                         region_list=frozen_regions_list,
-                        building_map=frozen_building_map
+                        building_map=frozen_building_map,
+                        _region_index_cache=frozen_region_index,
+                        _regions_global_bounds=frozen_regions_bounds,
+                        _building_region_map_cache=frozen_building_region_map,
+                        _node_map_cache=frozen_node_map,
+                        _corpse_map_cache=frozen_corpse_map,
+                        _ground_item_map_cache=frozen_ground_item_map
                     )
                     packets.append(packet)
                     source_meta[packet_id] = (item, packet)

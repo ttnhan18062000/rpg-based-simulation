@@ -8,139 +8,81 @@ from pathlib import Path
 sys.path.append(os.getcwd())
 
 from src.perf.bench_harness import BenchHarness
-from src.core.state import AuthoritativeState, EntityState
-from src.config.profiles import RuntimeProfile, HardwareClass
-from src.core.enums import Direction, MovementIntention
+from src.perf.scenarios import SCENARIO_BUILDERS
+from src.perf.profiles import PERF_MATRIX, PERF_PROFILES
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-def create_idle_state() -> AuthoritativeState:
-    return AuthoritativeState(tick=1, seed=42, entities={})
-
-def create_movement_stress_state(count: int = 100) -> AuthoritativeState:
-    entities = {}
-    for i in range(count):
-        eid = 100 + i
-        x, y = float(i % 10), float(i // 10)
-        entities[eid] = EntityState(
-            id=eid, kind="actor", position=(x, y), readiness=100.0,
-            properties={"work_kind": "ENTITY_MOVE", "payload": {"target_position": (x, y + 1)}}
-        )
-    return AuthoritativeState(tick=1, seed=42, entities=entities)
-
-def create_harvest_stress_state(count: int = 100) -> AuthoritativeState:
-    from src.core.state import ResourceNodeState, InteractionComponent, InventoryComponent
-    entities = {}
-    nodes = {}
-    for i in range(count):
-        eid = 200 + i
-        nid = 1000 + i
-        x, y = float(i % 10), float(i // 10)
-        nodes[nid] = ResourceNodeState(id=nid, kind="iron", position=(x, y), yields_item="iron", remaining_charges=10, max_charges=10, required_ticks=3)
-        entities[eid] = EntityState(
-            id=eid, kind="miner", position=(x, y), readiness=100.0,
-            interaction=InteractionComponent(target_node_id=nid, progress=0),
-            inventory=InventoryComponent(max_slots=20)
-        )
-    return AuthoritativeState(tick=1, seed=42, entities=entities, resource_nodes=nodes)
-
-def create_integrated_loop_state(count: int = 100) -> AuthoritativeState:
+def run_matrix(smoke=False):
     """
-    Autonomous Stress Test: 
-    Large number of entities completing full Seek-Harvest-Return loops.
+    Execute the standardized performance matrix.
+    M5 Law: All benchmarks must use the explicit PERF_MATRIX and SCENARIO_BUILDERS.
     """
-    from src.core.state import (
-        ResourceNodeState, InteractionComponent, InventoryComponent, 
-        IdentityComponent
-    )
-    from src.core.strategic import StrategicComponent, LeadState
-    entities = {}
-    nodes = {}
-    
-    # 1. Place a few dense resource clusters
-    for i in range(10):
-        nid = 2000 + i
-        nx, ny = 10.0 + (i % 3), 10.0 + (i // 3)
-        nodes[nid] = ResourceNodeState(
-            id=nid, kind="iron", position=(nx, ny), 
-            yields_item="iron_ore", remaining_charges=1000, max_charges=1000, required_ticks=3
-        )
-    
-    # 2. Hero Entities spread around town (0,0)
-    for i in range(count):
-        eid = 300 + i
-        # Spread entities slightly to reduce movement congestion in benchmark
-        spawn_x, spawn_y = float(i % 5), float(i // 5)
-        
-        entities[eid] = EntityState(
-            id=eid, kind="hero", position=(spawn_x, spawn_y), readiness=100.0, 
-            identity=IdentityComponent(
-                craft_target="craft_steel_sword",
-                known_recipes={"craft_steel_sword"},
-                navigation_target=(spawn_x, spawn_y)
-            ),
-            strategic=StrategicComponent(
-                leads={
-                    "lead_ore": LeadState(id=f"lead_ore_{eid}", kind="location", subject="iron_ore", detail="10.0,10.0")
-                }
-            ),
-            inventory=InventoryComponent(max_slots=10, gold=100)
-        )
-        
-    return AuthoritativeState(
-        tick=1, seed=42, 
-        entities=entities, 
-        resource_nodes=nodes,
-        town_tiles={(0,0), (1,0), (0,1), (1,1)}, # Larger town area for benchmark
-        building_tiles={(0,0): "blacksmith"}
-    )
-
-def get_profile(name, max_workers=0):
-    return RuntimeProfile(
-        name=name,
-        hardware_class=HardwareClass.CLASS_B,
-        max_ram_mb=1024,
-        max_cpu_percent=80.0,
-        max_worker_count=max_workers,
-        max_queue_depth=500,
-        max_tick_budget_ms=16.6,
-        max_replay_buffer_kb=1024,
-        max_observability_budget_percent=5.0
-    )
-
-def run_all_benchmarks():
-    # 1. Define Profiles to test
-    profiles = [
-        get_profile("bench_sequential", max_workers=0),
-        get_profile("bench_concurrent", max_workers=4)
-    ]
-
-    # 2. Scenarios
-    scenarios = [
-        ("IDLE_BASELINE", create_idle_state()),
-        ("MOVEMENT_STRESS_100", create_movement_stress_state(100)),
-        ("HARVEST_STRESS_100", create_harvest_stress_state(100)),
-        ("INTEGRATED_LOOP_100", create_integrated_loop_state(100))
-    ]
-
-    results = []
-    output_dir = Path("reports/performance")
+    output_dir = Path("reports/perf")
     output_dir.mkdir(parents=True, exist_ok=True)
-
-    for profile in profiles:
-        harness = BenchHarness(profile)
-        for name, state in scenarios:
-            res = harness.run_benchmark(name, state, warmup_ticks=50, sample_ticks=200)
-            results.append(res)
-            logger.info(f"Done: {profile.name} x {name} -> {res['avg_tps']:.1f} TPS")
-
-    # 3. Export Baseline
-    baseline_path = output_dir / "baseline.json"
-    with open(baseline_path, "w") as f:
+    
+    results = []
+    
+    for scenario_name, scales in PERF_MATRIX.items():
+        builder = SCENARIO_BUILDERS[scenario_name]
+        
+        for scale, modes in scales.items():
+            # Smoke filter: Only smallest scale for each scenario/mode
+            if smoke and scale != min(scales.keys()):
+                continue
+            
+            for mode, profile_name in modes.items():
+                profile = PERF_PROFILES[profile_name]
+                
+                # Setup state based on scenario signature
+                if scenario_name == "combat":
+                    state = builder(team_a_count=scale, team_b_count=scale)
+                elif scenario_name == "resource":
+                    state = builder(entity_count=scale, node_count=scale // 2)
+                else:
+                    state = builder(entity_count=scale)
+                
+                harness = BenchHarness(profile)
+                
+                # Reduce ticks for smoke tests to fit CI budgets
+                warmup = 10 if smoke else 50
+                sample = 20 if smoke else 200
+                
+                logger.info(f"Running {scenario_name} scale={scale} mode={mode} ({profile_name})...")
+                try:
+                    res = harness.run_benchmark(
+                        f"{scenario_name}_{scale}_{mode}", 
+                        state, 
+                        warmup_ticks=warmup, 
+                        sample_ticks=sample
+                    )
+                except Exception as e:
+                    logger.error(f"Benchmark failed for {scenario_name}_{scale}_{mode}: {e}")
+                    continue
+                
+                # Add matrix metadata for aggregator
+                res["matrix_scenario"] = scenario_name
+                res["matrix_scale"] = scale
+                res["matrix_mode"] = mode
+                
+                # Save individual JSON for granular traceability
+                filename = f"{scenario_name}_{scale}_{mode}.json"
+                with open(output_dir / filename, "w") as f:
+                    json.dump(res, f, indent=2)
+                
+                results.append(res)
+    
+    # Save full matrix result for summary report
+    with open(output_dir / "matrix_full.json", "w") as f:
         json.dump(results, f, indent=2)
     
-    logger.info(f"Performance baseline saved to {baseline_path}")
+    logger.info(f"Benchmark run complete. Results in {output_dir}")
 
 if __name__ == "__main__":
-    run_all_benchmarks()
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--smoke", action="store_true", help="Run only the smallest scale for CI/Smoke tests.")
+    args = parser.parse_args()
+    
+    run_matrix(smoke=args.smoke)

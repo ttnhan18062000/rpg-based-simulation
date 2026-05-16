@@ -3,6 +3,9 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING, List, Optional, Tuple
 from dataclasses import replace
+import logging
+
+logger = logging.getLogger(__name__)
 
 from src.core.updates import EntityUpdate, TaskUpdate, NavigationUpdate
 from src.engine.legality import LegalityServiceV2
@@ -244,9 +247,9 @@ class TacticalDecisionSystem:
             
             return (group_bias, is_current_target, h.combat.hp, dist, h.id)
 
-        print(f"DEBUG: entity {entity.id} evaluating targets. Group target: {group.shared_target_id if group else None}")
+        logger.debug(f"DEBUG: entity {entity.id} evaluating targets. Group target: {group.shared_target_id if group else None}")
         for h in hostiles:
-            print(f"DEBUG: target {h.id} score: {target_score(h)}")
+            logger.debug(f"DEBUG: target {h.id} score: {target_score(h)}")
         hostiles.sort(key=target_score)
         
         # Phase E5.2: Tactical Legality Envelope (Hardening)

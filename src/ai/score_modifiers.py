@@ -26,7 +26,7 @@ class ScoreModifierSystem:
         boredom = entity.strategic.boredom
         
         from src.systems.learning import StrategicLearningService
-        tp_biases = StrategicLearningService.get_goal_biases(entity.strategic.turning_points)
+        tp_biases = StrategicLearningService.get_goal_biases(entity.strategic.turning_points) if entity.strategic.turning_points else {}
         
         for score in scores:
             utility = score.utility
@@ -40,23 +40,22 @@ class ScoreModifierSystem:
             utility *= mult
             
             # 3. Boredom Tax: utility - boredom
-            # Boredom value is accumulated score of repeated activity
-            # Penalty weight: 0.5 per boredom unit
             boredom_score = boredom.get(score.kind, 0.0)
-            utility -= (boredom_score * 0.5)
+            if boredom_score > 0.0:
+                utility -= (boredom_score * 0.5)
             
             # 4. Strategic Learning Bias: utility + tp_bias
-            tp_bias = tp_biases.get(score.kind, 0.0)
-            utility += tp_bias
+            if tp_biases:
+                tp_bias = tp_biases.get(score.kind, 0.0)
+                utility += tp_bias
             
             # 5. Blocker Suppression (Phase 6)
-            # If any blocker exists for this goal kind, apply heavy penalty
-            for blocker in entity.strategic.blockers.values():
-                 if not blocker.resolved and blocker.subject == score.kind:
-                      utility *= (1.0 - blocker.severity)
-                 elif not blocker.resolved and blocker.kind == "access" and score.target_id == blocker.subject:
-                      # If target ID is specifically blocked
-                      utility *= 0.1
+            if entity.strategic.blockers:
+                for blocker in entity.strategic.blockers.values():
+                     if not blocker.resolved and blocker.subject == score.kind:
+                          utility *= (1.0 - blocker.severity)
+                     elif not blocker.resolved and blocker.kind == "access" and score.target_id == blocker.subject:
+                          utility *= 0.1
             
             # Ensure utility doesn't go below absolute minimum for critical needs
             if score.kind in ("fatigue", "hunger"):
@@ -64,7 +63,12 @@ class ScoreModifierSystem:
             else:
                  utility = max(0.0, utility)
             
-            from dataclasses import replace
-            modified_scores.append(replace(score, utility=utility))
+            modified_scores.append(GoalScore(
+                kind=score.kind,
+                utility=utility,
+                target_id=score.target_id,
+                target_pos=score.target_pos,
+                metadata=score.metadata
+            ))
             
         return modified_scores

@@ -20,7 +20,8 @@ class InteractionPhase:
         
         # Optimization: Only process entities that moved or proposed navigation changes
         # Logic ID: PERF-006 (Dirty Entity Tracking)
-        relevant_ids_raw = update.dirty_set.movement_entities | update.dirty_set.strategic_entities if update.dirty_set else state.entities.keys()
+        from src.core.dirty import get_relevant_entity_ids
+        relevant_ids_raw = get_relevant_entity_ids(state, update, "interactions")
         relevant_ids = sorted(list(relevant_ids_raw))
         
         for e_id in relevant_ids:

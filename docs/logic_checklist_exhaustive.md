@@ -86,6 +86,7 @@ Relevant original source files:
 - [x] `RPG-AUTH-006` Conflict resolution preserves one authoritative outcome per tick. <!-- SOURCE: src/core/updates.py TEST: tests/engine/test_hardening_e5.py PROOF: integration -->
 - [x] `RPG-AUTH-007` Worker decision-making is decoupled from authoritative application. <!-- SOURCE: src/core/updates.py TEST: tests/engine/test_hardening_e5.py PROOF: integration -->
 - [x] `RPG-AUTH-008` Replay and observability consume authoritative results rather than defining them. <!-- SOURCE: src/platform/rng.py TEST: tests/engine/test_long_run_determinism.py PROOF: longrun -->
+- [x] `RPG-AUTH-010` Action proposals for sleeping actors are rejected in `ActorValidityPhase`. <!-- SOURCE: src/engine/pipeline_phases/actor_validity.py TEST: tests/engine/pipeline/test_actor_validity.py PROOF: contract -->
 
 ### Combat / movement / legality / tactics
 
@@ -201,6 +202,7 @@ Relevant original source files:
 - [x] `RPG-STRAT-012` Event interpretation can mutate directives, projects, concerns, and source trust. <!-- SOURCE: src/core/strategic.py TEST: tests/engine/test_phase6_strategic_cognition.py PROOF: integration -->
 - [x] `RPG-STRAT-013` Knowledge remains uncertain (leads/candidate zones/hypotheses) until resolved. <!-- SOURCE: src/core/strategic.py TEST: tests/engine/test_phase6_strategic_cognition.py PROOF: integration -->
 - [x] `RPG-STRAT-014` Cognition graph export exposes persisted strategic state without becoming the source of truth. <!-- SOURCE: src/core/strategic.py TEST: tests/engine/test_phase6_strategic_cognition.py PROOF: integration -->
+- [x] `RPG-STRAT-021` Strategic project switching uses a configurable `resistance_multiplier` from the `CognitionProfile`. <!-- SOURCE: src/systems/strategic_systems/intelligence.py TEST: tests/test_strategic_hardening.py PROOF: unit -->
 
 ### Social / contracts / relationships / reputation
 
@@ -286,6 +288,7 @@ Relevant original source files:
 - [x] **RPG-COMBAT-049**: CombatResolutionSystem resolves AOE attacks with splash damage. [src/engine/combat.py:L387]
 - [x] **RPG-COMBAT-050**: CombatResolutionSystem resolves multi-attack simultaneous intents. [src/engine/combat.py:L297]
 - [x] `RPG-WORLD-008` Engine phase order preserves gameplay semantics and subsystem tick integrity. <!-- SOURCE: src/engine/kernel.py TEST: tests/engine/test_phase_order_contract.py PROOF: integration -->
+- [x] `RPG-WORLD-014` Regional deaths shift influence and trigger faction sovereignty transitions (±100 threshold). <!-- SOURCE: src/engine/world_dynamics.py TEST: tests/rpg/test_living_world_ph9.py PROOF: longrun -->
 
 ## B. Test-derived atomic checklist (every included RPG-core test)
 
@@ -3122,6 +3125,26 @@ These items are appended rather than replacing existing checklist items. They ar
 - [x] `RPG-INFRA-203` Emergency governor throttle drops non-critical subsystems when tick budget exceeds 100ms limit. <!-- SOURCE: src/engine/governor.py TEST: tests/engine/test_hardening_e5.py PROOF: integration -->
 - [x] `RPG-STRAT-200` Strategic intelligence phase realigned upstream of combat to inform single-tick intent. <!-- SOURCE: src/engine/pipeline.py TEST: tests/engine/test_phase_order_contract.py PROOF: integration -->
 - [x] `RPG-SOC-200` Phantom leader dissolution immediately updates group sliding state during resolution. <!-- SOURCE: src/engine/pipeline.py TEST: tests/social/test_contract_lifecycle_phase7.py PROOF: integration -->
+
+## Z19. Performance Measurement Integrity
+
+- [x] `RPG-PERF-001` `test_benchmark_disables_replay_by_default`: Benchmark replay isolation — Verify BenchHarness disables replay overhead by default. <!-- SOURCE: src/perf/bench_harness.py TEST: tests/perf/test_profiler_integrity.py PROOF: characterization -->
+- [x] `RPG-PERF-002` `test_benchmark_disables_frame_pacing_by_default`: Benchmark frame pacing isolation — Verify BenchHarness disables frame pacing sleep by default. <!-- SOURCE: src/perf/bench_harness.py TEST: tests/perf/test_profiler_integrity.py PROOF: characterization -->
+- [x] `RPG-PERF-003` `test_recorded_tick_compute_includes_all_phases`: Complete phase accounting — Verify Kernel status recording captures all phases including persistence. <!-- SOURCE: src/engine/kernel.py TEST: tests/perf/test_profiler_integrity.py PROOF: characterization -->
+- [x] `RPG-PERF-004` `test_benchmark_schema_contains_compute_and_wall_clock_metrics`: TPS metric distinction — Verify benchmark report distinguishes wall-clock TPS from compute-only TPS. <!-- SOURCE: src/perf/bench_harness.py TEST: tests/perf/test_profiler_integrity.py PROOF: characterization -->
+- [x] `RPG-PERF-005` DirtySet Lifecycle Integrity: Every engine mutation must be exhaustively tracked in the DirtySet; shadow mutations trigger `DirtySetLeakError` in audit mode. <!-- SOURCE: src/core/dirty.py TEST: tests/perf/test_dirty_set_integrity.py PROOF: audit -->
+- [x] `RPG-PERF-006` O(Dirty) vs O(N) Reference Parity: Optimized incremental paths produce bit-identical results compared to full-scan reference paths across all systems. <!-- SOURCE: src/engine/kernel.py TEST: tests/perf/test_dirty_parity.py PROOF: differential -->
+- [x] `RPG-PERF-007` Full-Scan Fallback Infrastructure: Engine supports bit-identical full-scan execution via `force_full_scan` propagation across the authoritative pipeline. <!-- SOURCE: src/engine/pipeline.py TEST: tests/perf/test_dirty_parity.py PROOF: characterization -->
+- [x] `RPG-PERF-008` Concurrency Parity Law: Local sequential execution and concurrent worker-based execution produce bit-identical final state hashes for the same seed. <!-- SOURCE: src/engine/executor.py TEST: tests/perf/test_concurrency_parity.py PROOF: differential -->
+- [x] `RPG-PERF-009` Deterministic Result Resolution: Authoritative proposal resolution sorts worker results by (class_priority, -local_priority, entity_id) to ensure execution order invariance. <!-- SOURCE: src/engine/kernel.py TEST: tests/perf/test_concurrency_parity.py PROOF: audit -->
+- [x] `RPG-PERF-010` Chunk Boundary Stability: Adaptive worker chunking (MB M4.6) is proven stable at entity-count boundaries (49, 50, 51, 99, 100, 101). <!-- SOURCE: src/engine/worker_manager.py TEST: tests/perf/test_concurrency_parity.py PROOF: boundary -->
+- [x] `RPG-PERF-011` Benchmark Matrix Integrity: Performance must be measured across standardized scenario/scale/mode matrix (MB M5.1, M5.2). <!-- SOURCE: src/perf/scenarios.py TEST: scripts/run_benchmarks.py PROOF: characterization -->
+- [x] `RPG-PERF-012` Granular Phase Observability: Compute costs must be recorded at granular sub-phase levels (combat, movement, etc) within the authoritative pipeline. <!-- SOURCE: src/engine/pipeline.py TEST: scripts/perf_report.py PROOF: audit -->
+- [x] `RPG-PERF-013` Performance Regression Gate: CI must fail if compute metrics regress beyond dual threshold (max(3ms, baseline * 1.15)). <!-- SOURCE: scripts/check_perf_regression.py TEST: scripts/perf_ci.py PROOF: audit -->
+- [x] `RPG-PERF-014` Baseline Persistence: Performance baselines must be committed to the repository and only updated intentionally. <!-- SOURCE: tests/perf/baselines/ TEST: scripts/check_perf_regression.py PROOF: governance -->
+- [x] `RPG-PERF-015` Incremental DirtySet Derivation: Pipeline dirty set must support incremental updates to avoid O(N) full-state scans during multi-phase ticks. <!-- SOURCE: src/core/dirty.py TEST: scripts/run_benchmarks.py PROOF: optimization -->
+- [x] `RPG-PERF-016` O(1) Strategic Intelligence Lookups: Strategic loops must utilize pre-parsed coordinate caches and O(1) inventory count indexing to minimize compute churn. <!-- SOURCE: src/systems/strategic_systems/intelligence.py TEST: scripts/run_benchmarks.py PROOF: optimization -->
+- [x] `RPG-PERF-017` Spatial Metadata Propagation: Navigation systems must propagate `region_id` metadata through updates to bypass redundant spatial region scans during state application. <!-- SOURCE: src/engine/apply.py TEST: scripts/run_benchmarks.py PROOF: optimization -->
 
 ---
 

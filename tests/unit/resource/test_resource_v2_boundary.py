@@ -114,7 +114,7 @@ def base_state():
             2: BuildingState(
                 id=2,
                 kind="blacksmith",
-                position=(0, 0),
+                position=(0, 5),
                 functional=True,
             ),
         },
@@ -147,7 +147,7 @@ def test_town_tax_refactor(base_state):
     assert ent_upd.inventory.gold_delta == -2.0
     
     # Check if faction gold was updated
-    f_key = f"faction_{Faction.MONSTER_HORDE}_gold"
+    f_key = f"faction_{Faction.MONSTER_HORDE.name.lower()}_gold"
     assert refined.resource_updates.get(f_key) == 2.0
 
 def test_shop_sell_refactor(base_state):
@@ -163,7 +163,7 @@ def test_shop_sell_refactor(base_state):
     base_state = replace(base_state, building_tiles={(0,0): "shop"})
     
     # ShopSystem reacts to inventory state
-    update = StateUpdate()
+    update = StateUpdate(force_full_scan=True)
     
     refined = AuthoritativeApplyPipeline.refine(base_state, update)
     

@@ -4,7 +4,7 @@ from src.perf.profiles import PERF_PROFILES
 from src.perf.scenarios import build_combat_arena_state
 
 @pytest.mark.perf
-@pytest.mark.parametrize("side_count", [10, 50, 100])
+@pytest.mark.parametrize("side_count", [10, 50, 100, 500])
 def test_perf_combat(side_count, perf_report_dir):
     profile = PERF_PROFILES["PERF_2GB_LOCAL"]
     state = build_combat_arena_state(team_a_count=side_count, team_b_count=side_count)
@@ -16,4 +16,5 @@ def test_perf_combat(side_count, perf_report_dir):
         sample_ticks=50
     )
     
+    print(f"\n[COMBAT {side_count}v{side_count}] p95={result['p95_tick_compute_ms']:.2f}ms. BREAKDOWN:", result["phase_breakdown"])
     assert result["p95_tick_compute_ms"] < 200.0 # Combat is more expensive

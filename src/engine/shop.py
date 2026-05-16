@@ -39,7 +39,8 @@ class ShopSystem:
         
         # Optimization: Only process entities that moved or had inventory changes
         # Logic ID: PERF-006 (Dirty Entity Tracking)
-        relevant_ids = update.dirty_set.movement_entities | update.dirty_set.inventory_entities if update.dirty_set else state.entities.keys()
+        from src.core.dirty import get_relevant_entity_ids
+        relevant_ids = get_relevant_entity_ids(state, update, "shop")
         
         for e_id in relevant_ids:
             entity = state.entities.get(e_id)

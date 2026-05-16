@@ -66,21 +66,12 @@ class OccupancyPhase:
         }
 
         # Current occupied tiles for only relevant entities.
-        # Optimized v2: Use SpatialGrid to avoid full-world scan.
-        from src.engine.domain.view import DomainView
-        grid = DomainView._get_cached_spatial_grid(state)
-        
-        current_occupied: dict[tuple[int, int], int] = {}
-        for tile in destination_tiles:
-            # Query grid for entities at this tile
-            cell_entities = grid.get_neighbors(tile, radius=0.5) # radius 0.5 should pick up anything on the same tile
-            for e_id in cell_entities:
-                entity = state.entities.get(e_id)
-                if entity and entity.lifecycle.active:
-                    epos = (int(entity.navigation.position[0]), int(entity.navigation.position[1]))
-                    if epos == tile:
-                        current_occupied[tile] = e_id
-                        break
+        # Optimized v3: Use cached occupancy map for O(1) lookup.
+        from src.engine.spatial_query import SpatialQueryService
+        occ_map = SpatialQueryService.get_occupancy_map(state)
+        current_occupied: dict[tuple[int, int], int] = {
+            tile: occ_map[tile] for tile in destination_tiles if tile in occ_map
+        }
 
         # Destination claims from proposed movement results.
         claims_by_tile: dict[tuple[int, int], list[int]] = {}
@@ -130,12 +121,13 @@ class OccupancyPhase:
             reason = "OCCUPANCY_CONFLICT"
             
             new_rejections_delta[reason] = new_rejections_delta.get(reason, 0) + 1
-            new_rejection_events.append(RejectionEvent(
-                tick=state.tick,
-                actor_id=entity_id,
-                action_kind="MOVE",
-                reason=reason
-            ))
+            if len(new_rejection_events) < 50:
+                new_rejection_events.append(RejectionEvent(
+                    tick=state.tick,
+                    actor_id=entity_id,
+                    action_kind="MOVE",
+                    reason=reason
+                ))
 
             refined_entity_updates[entity_id] = replace(
                 entity_update,

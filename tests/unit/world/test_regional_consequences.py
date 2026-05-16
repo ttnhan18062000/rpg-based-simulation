@@ -33,8 +33,9 @@ def test_regional_hazard_drain():
                                entities={1: hero})
     
     update = StateUpdate()
+    refined = AuthoritativeApplyPipeline.refine(state, update)
     # Apply one tick
-    next_state = ApplyPath.apply_generation(state, update, 101, 101)
+    next_state = ApplyPath.apply_generation(state, refined, 101, 101)
     
     # damage = hazard(0.5) * 10 * (1 + calamity(0.0)) = 5
     assert next_state.entities[1].combat.hp == 95

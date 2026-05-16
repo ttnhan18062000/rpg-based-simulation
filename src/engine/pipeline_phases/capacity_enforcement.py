@@ -22,11 +22,8 @@ class CapacityEnforcementPhase:
         
         # Milestone 5 Optimization: Only enforce on strategic-dirty entities
         # Logic ID: PERF-007 (O(Dirty) enforcement)
-        if update.dirty_set is None:
-            # Fallback for safety (e.g. in tests or specialized pipelines)
-            relevant_ids = state.entities.keys()
-        else:
-            relevant_ids = update.dirty_set.strategic_entities
+        from src.core.dirty import get_relevant_entity_ids
+        relevant_ids = get_relevant_entity_ids(state, update, "capacity")
 
         for e_id in relevant_ids:
             entity = state.entities.get(e_id)
@@ -156,16 +153,23 @@ class CapacityEnforcementPhase:
                 )
             )
             
-            if lead_removals:
+            if lead_removals or concern_removals or project_removals or hypo_removals or zone_removals:
+                # Audit rejections due to capacity
+                reason = "STRATEGIC_CAPACITY_TRIM"
+                new_rejections_delta = dict(update.rejections_delta)
+                new_rejections_delta[reason] = new_rejections_delta.get(reason, 0) + 1
+                update = replace(update, rejections_delta=new_rejections_delta)
+
                 # Mark as overloaded if we had to drop leads
-                refined_entity_updates[e_id] = replace(
-                    refined_entity_updates[e_id],
-                    strategic=replace(
-                        refined_entity_updates[e_id].strategic,
-                        overload_source_set="bandwidth",
-                        overload_tick_set=state.tick
+                if lead_removals:
+                    refined_entity_updates[e_id] = replace(
+                        refined_entity_updates[e_id],
+                        strategic=replace(
+                            refined_entity_updates[e_id].strategic,
+                            overload_source_set="bandwidth",
+                            overload_tick_set=state.tick
+                        )
                     )
-                )
 
         return replace(update, entity_updates=refined_entity_updates)
 

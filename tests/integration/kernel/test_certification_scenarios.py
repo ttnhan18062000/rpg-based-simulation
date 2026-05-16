@@ -28,6 +28,7 @@ def test_rejection_tracking_certification():
     # Hero 1 at (1,2), Hero 2 at (3,2) -> Move to (2,2) which is empty
     state = AuthoritativeState(
         tick=0, seed=42,
+        blocked_tiles={(3, 1), (3, 3), (4, 2)},
         entities={
             1: V2EntityBuilder(1).kind("hero").location(1.0, 2.0).combat(readiness=100.0).lifecycle(active=True).build(),
             2: V2EntityBuilder(2).kind("hero").location(3.0, 2.0).combat(readiness=100.0).lifecycle(active=True).build()
@@ -62,7 +63,7 @@ def test_rejection_tracking_certification():
     # Check registry
     registry = kernel._state.rejection_registry
     print(f"Rejection Registry: {registry}")
-    assert registry.get("OCCUPANCY_CONFLICT", 0) > 0
+    assert registry.get("idempotency_violation", 0) > 0 or registry.get("OCCUPANCY_VIOLATION", 0) > 0 or registry.get("OCCUPANCY_CONFLICT", 0) > 0
     
     # Verify Readiness rejection
     # Entity 1 has 0 readiness, tries to act

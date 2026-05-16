@@ -187,6 +187,7 @@ class ObjectiveState:
     id: str
     kind: ObjectiveKind
     target: Optional[str] = None
+    target_position: Optional[tuple[float, float]] = None
     status: ObjectiveStatus = ObjectiveStatus.UNRESOLVED
     blocker_ids: List[str] = field(default_factory=list)
 

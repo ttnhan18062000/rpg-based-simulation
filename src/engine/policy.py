@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from src.core.governance import RuntimeMode
 from src.engine.cadence import SystemCadence
 
@@ -25,7 +25,7 @@ class GovernorPolicy:
     replay_richness: str = "FULL"       # "FULL", "MINIMAL", "OFF"
     allow_subsystem_traces: bool = True
     mode: RuntimeMode = RuntimeMode.NORMAL
-    system_cadence: SystemCadence = SystemCadence()
+    system_cadence: SystemCadence = field(default_factory=lambda: SystemCadence(strategic_intelligence=1))
 
     @classmethod
     def from_mode(cls, mode: RuntimeMode) -> GovernorPolicy:

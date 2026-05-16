@@ -39,9 +39,10 @@ def test_local_executor_movement():
     assert len(results) == 1
     res = results[0]
     assert res.entity_id == 1
-    assert res.update.new_position == (1.0, 0.0) # Clamped step
-    # V2 Law: Movement cost in WANDER mode is 20.0 (10.0 base / 0.5 mult)
-    assert res.update.readiness_delta == -20.0
+    # V2 Law: Local executor routes high-level movement to NavigationUpdate
+    assert res.update.navigation.target_set == (10.0, 0.0)
+    # V2 Law: Movement intent itself has no readiness cost until refined into steps
+    assert res.update.readiness_delta == 0.0
     assert "local:" in res.source_packet_id # Proof of local path
 
 def test_local_executor_action():

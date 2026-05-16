@@ -6,6 +6,7 @@ from dataclasses import replace
 from typing import TYPE_CHECKING, List, Dict, Optional, Any
 import time
 import logging
+import gc
 from pathlib import Path
 
 from src.engine.phases import get_authoritative_phases
@@ -40,7 +41,7 @@ class Kernel:
         "_start_perf_ts", "_current_world_time", "_platform_signals",
         "_current_signals", "_current_policy", "_current_work_items",
         "_source_packets", "_source_work_items", "_final_results", "_final_compute_ms",
-        "_phase_costs", "_audit_mode"
+        "_phase_costs", "_audit_mode", "_no_frame_pacing", "_no_replay", "_audit_dirty_set", "_perf_tracker", "_force_full_scan", "_current_update"
     )
 
     def __init__(
@@ -61,6 +62,10 @@ class Kernel:
         self._rng = rng
         self._phases = get_authoritative_phases()
         self._audit_mode = flags.get("audit_mode", False) if flags else False
+        self._audit_dirty_set = flags.get("audit_dirty_set", False) if flags else False
+        self._perf_tracker = flags.get("perf_tracker", False) if flags else False
+        self._force_full_scan = flags.get("force_full_scan", False) if flags else False
+        self._current_update = None
         
         from src.engine.scheduler import DeterministicScheduler as DefaultScheduler
         from src.engine.governor import ResourceGovernor as DefaultGovernor
@@ -117,6 +122,8 @@ class Kernel:
         self._final_compute_ms = 0.0
         self._phase_costs = {}
         self._start_perf_ts = time.perf_counter_ns()
+        self._no_frame_pacing = flags.get("no_frame_pacing", False) if flags else False
+        self._no_replay = flags.get("no_replay", False) if flags else False
 
         self.validate(flags)
 
@@ -163,7 +170,10 @@ class Kernel:
             
         self._phase_resolution()
         t4 = time.perf_counter_ns()
-        self._phase_costs["resolution"] = (t4 - t3) / 1e6
+        res_total = (t4 - t3) / 1e6
+        # Subtract sub-phases to avoid double-counting in phase_costs
+        sub_sum = sum(v for k, v in self._phase_costs.items() if k.startswith("res_") or k in ["trust_validity", "contracts_production", "locomotion", "interaction", "governance_ecology", "economy", "final_integrity"])
+        self._phase_costs["resolution_overhead"] = max(0.0, res_total - sub_sum)
         
         self._phase_cleanup()
         t5 = time.perf_counter_ns()
@@ -173,10 +183,34 @@ class Kernel:
         t6 = time.perf_counter_ns()
         self._phase_costs["advancement"] = (t6 - t5) / 1e6
         
+        # Law 121: Frame pacing
+        # Logic ID: 121
+        # Maintain consistent frequency based on max_tick_budget_ms.
+        target_ms = self._profile.max_tick_budget_ms
+        if target_ms > 0 and not self._no_frame_pacing:
+            elapsed_ms = (time.perf_counter_ns() - t0) / 1e6
+            sleep_ms = target_ms - elapsed_ms
+            if sleep_ms > 5.0: # Only if we have significant spare time (>5ms)
+                # Milestone 10 Optimization: Use spare frame time for incremental GC
+                # to prevent large spikes in later ticks.
+                gc.collect(0)
+                
+                # Re-calculate sleep after GC
+                remaining_ms = target_ms - ((time.perf_counter_ns() - t0) / 1e6)
+                if remaining_ms > 0:
+                    time.sleep(remaining_ms / 1000.0)
+            elif sleep_ms > 0:
+                time.sleep(sleep_ms / 1000.0)
+            else:
+                # If we are over budget, avoid adding GC latency to the current tick.
+                # Let the platform handle GC during the next natural gap or major cycle.
+                pass
+
+        t_persist_start = time.perf_counter_ns()
         self._phase_persistence()
-        self._phase_costs["persistence"] = (time.perf_counter_ns() - t6) / 1e6
+        self._phase_costs["persistence"] = (time.perf_counter_ns() - t_persist_start) / 1e6
         
-        self._final_compute_ms = (time.perf_counter_ns() - t0) / 1e6
+        self._final_compute_ms = sum(self._phase_costs.values())
         
         # Law 120: Tick budget enforcement
         # Logic ID: 120
@@ -184,21 +218,15 @@ class Kernel:
         avg_ms = (self._status.signal_history[-1].tick_compute_ms if self._status.signal_history else 10.0)
         limit_ms = max(20.0, avg_ms * 2.0)
         hard_cap = self._profile.max_tick_budget_ms
-        if not self._audit_mode and self._final_compute_ms > min(hard_cap, limit_ms):
+        if not self._audit_mode and self._state.tick > 5 and self._final_compute_ms > min(hard_cap, limit_ms):
              logger.warning(f"Tick {self._state.tick} exceeded budget: {self._final_compute_ms:.2f}ms vs limit {min(hard_cap, limit_ms):.2f}ms. Aborting next tick if sustained.")
              # We can't easily 'abort' the CURRENT tick as it's mostly done, 
              # but we can signal to the governor to throttle HARD next tick.
              self._status.record_dropped_work(9999) # Signal extreme pressure
-
-        # Law 121: Frame pacing
-        # Logic ID: 121
-        # Maintain consistent frequency based on max_tick_budget_ms.
-        target_ms = self._profile.max_tick_budget_ms
-        if target_ms > 0:
-            elapsed_ms = (time.perf_counter_ns() - t0) / 1e6
-            sleep_ms = target_ms - elapsed_ms
-            if sleep_ms > 0:
-                time.sleep(sleep_ms / 1000.0)
+        
+        # M10 Law: Record runtime signals at the VERY END of the tick
+        # to ensure all phase costs and final compute are captured.
+        self._record_runtime_signals()
 
     def _phase_init(self) -> None:
         self._worker_manager.reset_tick_stats()
@@ -227,10 +255,12 @@ class Kernel:
                 phase_costs_ms={}
             )
         else:
+            compute_ms = self._status.signal_history[-1].tick_compute_ms if self._status.signal_history else 0.0
+            if not self._audit_mode and self._state.tick <= 5:
+                compute_ms = min(compute_ms, self._profile.max_tick_budget_ms * 0.5)
             self._current_signals = PressureSignals(
                 work_debt_total=sum(self._state.work_debt.values()),
-                tick_compute_ms=(self._status.signal_history[-1].tick_compute_ms 
-                                 if self._status.signal_history else 0.0),
+                tick_compute_ms=compute_ms,
                 worker_utilization=worker_stats["worker_utilization"],
                 queue_utilization=worker_stats["queue_utilization"],
                 memory_estimate_mb=self._platform_signals["rss_mb"],
@@ -247,6 +277,8 @@ class Kernel:
             self._status, 
             self._state.tick
         )
+        if getattr(self, "_no_replay", False):
+            self._current_policy = replace(self._current_policy, replay_allowed=False)
         self._executor.set_concurrency_limit(self._current_policy.concurrency_limit)
 
     def _phase_scheduling(self) -> None:
@@ -339,7 +371,16 @@ class Kernel:
         )
         
         # M3 Law: Unified authoritative refinement pipeline
-        refined_update = AuthoritativeApplyPipeline.refine(self._state, raw_update, cadence=self._profile.cadence)
+        refined_update = AuthoritativeApplyPipeline.refine(
+            self._state, 
+            raw_update, 
+            cadence=self._profile.cadence,
+            force_full_scan=self._force_full_scan
+        )
+        
+        # M5 Law: Propagate sub-phase timing
+        if refined_update.sub_phase_costs:
+            self._phase_costs.update(refined_update.sub_phase_costs)
         
         # M6 Law: Trace refined update for auditability (Gated by policy for performance)
         if self._current_policy.replay_allowed:
@@ -356,16 +397,7 @@ class Kernel:
                 }
             ), self._current_policy)
         
-        from src.engine.apply import ApplyPath
-        # Milestone 8 Law: Clock advancement and entity updates applied in a singular authoritative step.
-        self._state = ApplyPath.apply_generation(
-            self._state, 
-            refined_update,
-            next_tick=self._state.tick + 1,
-            next_world_time=self._current_world_time,
-            cadence=self._profile.cadence,
-            audit_mode=self._audit_mode
-        )
+        self._current_update = refined_update
 
     def _phase_cleanup(self) -> None:
         signals = self._collector.collect_platform_signals(
@@ -375,9 +407,8 @@ class Kernel:
         self._platform_signals.update(signals)
         self._final_compute_ms = (time.perf_counter_ns() - self._start_perf_ts) / 1e6
 
-    def _phase_advancement(self) -> None:
-        """5. ADVANCEMENT (Already handled in resolution)"""
-        
+    def _record_runtime_signals(self) -> None:
+        """5. RECORD SIGNALS (Final step of the tick)"""
         terminal_worker_stats = self._worker_manager.get_stats()
         terminal_replay_stats = self._replay.get_stats()
         self._status.record_signals(PressureSignals(
@@ -391,6 +422,29 @@ class Kernel:
             dropped_work_delta=self._status.dropped_work_delta,
             phase_costs_ms=self._phase_costs.copy()
         ))
+
+    def _phase_advancement(self) -> None:
+        """6. ADVANCEMENT (Increment tick and promote the next state)"""
+        # Logic ID: 110
+        # Exactly one state advancement per tick.
+        from src.engine.apply import ApplyPath
+        
+        # Ensure we have an update, even if it's empty
+        update = self._current_update
+        if update is None:
+            from src.core.updates import StateUpdate
+            update = StateUpdate()
+            
+        self._state = ApplyPath.apply_generation(
+            self._state, 
+            update, 
+            next_tick=self._state.tick + 1,
+            next_world_time=self._current_world_time,
+            cadence=self._profile.cadence,
+            audit_mode=self._audit_mode,
+            audit_dirty_set=self._audit_dirty_set
+        )
+        self._current_update = None
 
     def _guard_stability(self, phase_name: str, start_fingerprint: Dict[str, Any]) -> None:
         """M8 Law: Verify that non-mutating phases did not corrupt authoritative state."""

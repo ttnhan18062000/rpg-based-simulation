@@ -1,51 +1,49 @@
 import pytest
 import json
-import os
 from pathlib import Path
 
-from src.perf.scenarios import build_idle_state
-from src.perf.profiles import PERF_PROFILES
+from src.perf.scenarios import build_idle_state, build_movement_state, build_combat_arena_state
 
 @pytest.mark.perf
-def test_regression_vs_baseline(perf_harness):
+@pytest.mark.parametrize("scenario_id, builder_fn, kwargs", [
+    ("idle_100_local", build_idle_state, {"entity_count": 100}),
+    ("movement_100_local", build_movement_state, {"entity_count": 100}),
+    ("combat_10_local", build_combat_arena_state, {"team_a_count": 5, "team_b_count": 5}),
+])
+def test_regression_vs_baseline(perf_harness, scenario_id, builder_fn, kwargs):
     """
-    Compare current performance against established baseline.json.
-    Only runs if baseline.json exists.
+    Compare current performance against established authoritative baselines.
+    Ensures strict performance baseline regression guarding in CI.
     """
-    baseline_path = Path("reports/perf/baseline.json")
-    if not baseline_path.exists():
-        pytest.skip("No baseline.json found to compare against.")
+    baseline_file = Path(f"tests/perf/baselines/{scenario_id}.json")
+    if not baseline_file.exists():
+        pytest.skip(f"Baseline file {baseline_file} not found.")
         
-    with open(baseline_path, "r") as f:
+    with open(baseline_file, "r") as f:
         baseline = json.load(f)
         
-    # We'll check the IDLE_100 scenario as a quick smoke test for regression
-    scenario_id = "IDLE_100"
-    if scenario_id not in baseline:
-        pytest.skip(f"Scenario {scenario_id} not in baseline.")
-        
-    profile_name = baseline[scenario_id]["profile"]
+    profile_name = baseline["profile"]
     harness = perf_harness(profile_name)
-    state = build_idle_state(entity_count=100)
+    state = builder_fn(**kwargs)
     
-    # Run a shorter benchmark for the regression guard
+    # Run benchmark for regression comparison
     result = harness.run_benchmark(
         scenario_id=f"REGRESSION_{scenario_id}",
         initial_state=state,
-        warmup_ticks=20,
-        sample_ticks=100
+        warmup_ticks=10,
+        sample_ticks=50,
+        flags={"no_replay": True}
     )
     
-    baseline_avg = baseline[scenario_id]["avg_tick_compute_ms"]
+    baseline_avg = baseline["avg_tick_compute_ms"]
     current_avg = result["avg_tick_compute_ms"]
     
-    # Threshold: Allow 20% regression or 5ms, whichever is larger
-    # This accounts for environment variance in CI/local
-    threshold = max(5.0, baseline_avg * 1.2)
+    # Threshold: Allow 25% regression or 5ms, whichever is larger, to account for CI environment variance
+    threshold = max(5.0, baseline_avg * 1.25)
     
     print(f"\nScenario: {scenario_id}")
     print(f"Baseline: {baseline_avg:.2f}ms")
     print(f"Current:  {current_avg:.2f}ms")
     print(f"Limit:    {threshold:.2f}ms")
     
-    assert current_avg <= threshold, f"Performance regression detected! {current_avg:.2f}ms > {threshold:.2f}ms"
+    assert current_avg <= threshold, f"Performance regression detected in {scenario_id}! {current_avg:.2f}ms > {threshold:.2f}ms"

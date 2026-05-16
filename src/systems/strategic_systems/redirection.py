@@ -34,7 +34,8 @@ class StrategicRedirectionSystem:
         
         # Optimization: Only process entities that had strategic changes or are relevant for redirection
         # Logic ID: PERF-006 (Dirty Entity Tracking)
-        relevant_ids = update.dirty_set.strategic_entities if update.dirty_set else state.entities.keys()
+        from src.core.dirty import get_relevant_entity_ids
+        relevant_ids = get_relevant_entity_ids(state, update, "redirection")
         
         # Sort for determinism
         entity_ids = sorted(list(relevant_ids))

@@ -15,17 +15,17 @@ class SystemCadence(BaseModel):
     resource_transactions: int = Field(1, ge=1)
 
     # Medium Frequency
-    shop: int = Field(5, ge=1)
-    town_resolution: int = Field(5, ge=1)
-    lifecycle: int = Field(10, ge=1)
-    biological: int = Field(10, ge=1)
-    groups: int = Field(5, ge=1)
+    shop: int = Field(1, ge=1)
+    town_resolution: int = Field(1, ge=1)
+    lifecycle: int = Field(1, ge=1)
+    biological: int = Field(1, ge=1)
+    groups: int = Field(1, ge=1)
 
     # Strategic / Cognition (High Cost)
     strategic_intelligence: int = Field(10, ge=1)
     concern_evaluation: int = Field(10, ge=1)
     detour_suggestion: int = Field(10, ge=1)
-    social_memory: int = Field(20, ge=1)
+    social_memory: int = Field(10, ge=1)
 
     # World / Environmental (Very Slow)
     world_dynamics: int = Field(50, ge=1)

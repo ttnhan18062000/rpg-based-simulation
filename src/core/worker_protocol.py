@@ -16,7 +16,7 @@ class ResultStatus(Enum):
     TIMEOUT = "timeout"
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class WorkerPacket:
     """
     Law: A worker must receive a compact, bounded, and read-only context.
@@ -48,12 +48,20 @@ class WorkerPacket:
     resource_nodes: Dict[int, Any] = field(default_factory=dict)
     buildings: Dict[int, Any] = field(default_factory=dict)
     groups: Dict[int, Any] = field(default_factory=dict)
+    corpses: Dict[int, Any] = field(default_factory=dict)
+    ground_items: Dict[int, Any] = field(default_factory=dict)
     town_center: Tuple[float, float] = (0.0, 0.0)
     all_entities: Dict[int, EntityState] = field(default_factory=dict)
     spatial_grid: Optional[Any] = None
     occupancy_map: Optional[Dict[Tuple[int, int], int]] = None
     region_list: Optional[List[Any]] = None
     building_map: Optional[Dict[Tuple[int, int], Any]] = None
+    _region_index_cache: Optional[Any] = field(default=None, repr=False, compare=False)
+    _regions_global_bounds: Optional[Any] = field(default=None, repr=False, compare=False)
+    _building_region_map_cache: Optional[Any] = field(default=None, repr=False, compare=False)
+    _node_map_cache: Optional[Any] = field(default=None, repr=False, compare=False)
+    _corpse_map_cache: Optional[Any] = field(default=None, repr=False, compare=False)
+    _ground_item_map_cache: Optional[Any] = field(default=None, repr=False, compare=False)
 
     # Deterministic Context (Defaulted for backwards compatibility/optional inclusion)
     blocked_tiles: List[Tuple[int, int]] = field(default_factory=list) # Spatial Law

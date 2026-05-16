@@ -140,6 +140,11 @@ class ResourceTransactionSystem:
                                 reason=result.reason,
                                 target_id=f"{intent.source_kind}:{intent.source_id}"
                             ))
+                            # Audit rejections_delta
+                            reason_key = result.reason.value if hasattr(result.reason, "value") else str(result.reason)
+                            new_rejections_delta = dict(update.rejections_delta)
+                            new_rejections_delta[reason_key] = new_rejections_delta.get(reason_key, 0) + 1
+                            update = replace(update, rejections_delta=new_rejections_delta)
                 else:
                     # Resolve group together
                     trial_results = []
@@ -209,6 +214,11 @@ class ResourceTransactionSystem:
                                 reason=reason,
                                 target_id=f"{intent.source_kind}:{intent.source_id}"
                             ))
+                            # Audit rejections_delta
+                            reason_key = reason.value if hasattr(reason, "value") else str(reason)
+                            new_rejections_delta = dict(update.rejections_delta)
+                            new_rejections_delta[reason_key] = new_rejections_delta.get(reason_key, 0) + 1
+                            update = replace(update, rejections_delta=new_rejections_delta)
 
             # Update the refined update for this entity
             refined_entity_updates[e_id] = replace(ent_upd, 

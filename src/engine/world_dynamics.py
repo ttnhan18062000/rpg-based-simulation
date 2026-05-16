@@ -23,49 +23,21 @@ class WorldDynamicsSystem:
         """
         Apply regional effects to entities and update world markers.
         """
-        # 1. Resolve Hazards & Environment (Entity-level impact)
+        # Regional hazards and environment impact evaluation
         from src.world.environment import EnvironmentService
-        from src.core.updates import BiologicalUpdate
-        
+        refined_entity_updates = dict(update.entity_updates)
         for e_id, entity in state.entities.items():
-            if not entity.lifecycle.active: continue
-            
-            region = WorldDynamicsSystem._get_region_for_pos(state, entity.navigation.position)
-            if not region:
-                continue
-            
-            ent_upd = update.entity_updates.get(e_id, EntityUpdate(entity_id=e_id))
-            
-            # 1.1 HP Drain from Hazards (Authoritative calculation)
-            # VERIFIED v2: regional_hazard_impact
-            damage = EnvironmentService.calculate_hazard_drain(region, entity)
-            if damage > 0:
-                comb_upd = ent_upd.combat or CombatUpdate()
-                ent_upd = replace(ent_upd,
-                    combat=replace(comb_upd, 
-                        hp_delta=comb_upd.hp_delta - damage,
-                        outcome_kind="HAZARD"
-                    )
-                )
-
-            # 1.2 Readiness Drain from Suppression
-            if region.suppression_active:
-                ent_upd = replace(ent_upd,
-                    readiness_delta=ent_upd.readiness_delta - 5.0
-                )
-                
-            # 1.3 Environmental Exposure (Biological Pressure)
-            # Extreme weather adds to sleep debt (fatigue)
-            exposure_mults = EnvironmentService.get_weather_multipliers(region)
-            if exposure_mults.get("stamina_drain", 1.0) > 1.0:
-                bio_upd = ent_upd.biological or BiologicalUpdate()
-                ent_upd = replace(ent_upd,
-                    biological=replace(bio_upd,
-                        sleep_debt_delta=bio_upd.sleep_debt_delta + 1.0 # Extra fatigue
-                    )
-                )
-            
-            update.entity_updates[e_id] = ent_upd
+            if entity.combat and entity.combat.alive and entity.lifecycle and entity.lifecycle.active:
+                region = WorldDynamicsSystem._get_region_for_pos(state, entity.navigation.position)
+                if region:
+                    hazard_dmg = EnvironmentService.calculate_hazard_drain(region, entity)
+                    if hazard_dmg > 0:
+                        e_upd = refined_entity_updates.get(e_id, EntityUpdate(entity_id=e_id))
+                        c_upd = e_upd.combat or CombatUpdate()
+                        new_hp = max(0, entity.combat.hp + c_upd.hp_delta - hazard_dmg)
+                        c_upd = replace(c_upd, hp_delta=c_upd.hp_delta - hazard_dmg, outcome_kind="HAZARD", alive_set=(new_hp > 0))
+                        refined_entity_updates[e_id] = replace(e_upd, combat=c_upd)
+        update = update.replace(entity_updates=refined_entity_updates)
 
 
         # 2.1 Death-triggered Trauma & Sovereignty (LEG-RPG-071/139)
@@ -80,19 +52,10 @@ class WorldDynamicsSystem:
                         
                         # Each death adds 1.0 trauma
                         new_trauma_delta = world_upd.trauma_delta + 1.0
-                        
-                        # Sovereignty: Monster death increases Hero influence (+1.0)
-                        # Hero death decreases Hero influence (-1.0)
-                        inf_delta = 0.0
-                        if entity.identity.faction == Faction.MONSTER_HORDE:
-                            inf_delta = 1.0
-                        elif entity.identity.faction == Faction.HERO_GUILD:
-                            inf_delta = -1.0
                             
                         update.world_updates[region.id] = replace(
                             world_upd, 
-                            trauma_delta=new_trauma_delta,
-                            influence_delta=world_upd.influence_delta + inf_delta
+                            trauma_delta=new_trauma_delta
                         )
 
         # 2.2 Ownership & Calamity Progression
@@ -226,9 +189,5 @@ class WorldDynamicsSystem:
 
     @staticmethod
     def _get_region_for_pos(state: AuthoritativeState, pos: tuple[float, float]) -> RegionState | None:
-        px, py = pos
-        for region in state.regions.values():
-            xmin, ymin, xmax, ymax = region.bounds
-            if xmin <= px <= xmax and ymin <= py <= ymax:
-                return region
-        return None
+        from src.engine.spatial_query import SpatialQueryService
+        return SpatialQueryService.get_region_at(state, pos)

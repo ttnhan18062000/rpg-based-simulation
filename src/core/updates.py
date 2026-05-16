@@ -1,7 +1,7 @@
 # Compliance IDs: TOWN-001, TOWN-002, TOWN-131, TOWN-156, TOWN-157, TOWN-159, TOWN-160, TOWN-161, TOWN-162, TOWN-163
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import Dict, Any, Optional, TYPE_CHECKING, List
 if TYPE_CHECKING:
     from src.core.state import GroupRecord, ItemStack, EquipSlot, AttributeComponent, LocalScarState, ChestState, EntityState, GroundItemState, CorpseState, WoundState, ScarState
@@ -47,7 +47,6 @@ class EquipmentUpdate:
         """Merge another EquipmentUpdate into this one."""
         if not other or other.is_noop():
             return self
-        from dataclasses import replace
         changes = {}
         if other.slot_updates:
             changes["slot_updates"] = {**self.slot_updates, **other.slot_updates}
@@ -73,7 +72,6 @@ class InteractionUpdate:
     def merge(self, other: InteractionUpdate) -> InteractionUpdate:
         if not other or other.is_noop():
             return self
-        from dataclasses import replace
         changes = {}
         if other.target_node_id is not None: changes["target_node_id"] = other.target_node_id
         if other.progress_delta != 0.0: changes["progress_delta"] = self.progress_delta + other.progress_delta
@@ -127,7 +125,6 @@ class CombatUpdate:
         """Merges another CombatUpdate into this one, aggregating results."""
         if not other or other.is_noop():
             return self
-        from dataclasses import replace
         changes = {}
         if other.damage_taken != 0: changes["damage_taken"] = self.damage_taken + other.damage_taken
         if other.hp_delta != 0: changes["hp_delta"] = self.hp_delta + other.hp_delta
@@ -169,18 +166,18 @@ class NavigationUpdate:
     wait_count_delta: int = 0
     oscillation_count_delta: int = 0
     last_position_set: Optional[tuple[float, float]] = None
+    region_id_set: Optional[str] = None
 
     def is_noop(self) -> bool:
         return (self.target_set is None and not self.target_clear and self.path_set is None and 
                 self.moved_recently_set is None and self.movement_mode_set is None and 
                 self.failure_reason is None and not self.clear_target and not self.clear_path and 
                 self.wait_count_delta == 0 and self.oscillation_count_delta == 0 and 
-                self.last_position_set is None)
+                self.last_position_set is None and self.region_id_set is None)
 
     def merge(self, other: NavigationUpdate) -> NavigationUpdate:
         if not other or other.is_noop():
             return self
-        from dataclasses import replace
         changes = {}
         if other.target_set is not None: changes["target_set"] = other.target_set
         if other.target_clear: changes["target_clear"] = True
@@ -193,6 +190,7 @@ class NavigationUpdate:
         if other.wait_count_delta != 0: changes["wait_count_delta"] = self.wait_count_delta + other.wait_count_delta
         if other.oscillation_count_delta != 0: changes["oscillation_count_delta"] = self.oscillation_count_delta + other.oscillation_count_delta
         if other.last_position_set is not None: changes["last_position_set"] = other.last_position_set
+        if other.region_id_set is not None: changes["region_id_set"] = other.region_id_set
         return replace(self, **changes)
 
 @dataclass(frozen=True, slots=True)
@@ -207,7 +205,6 @@ class TaskUpdate:
     def merge(self, other: TaskUpdate) -> TaskUpdate:
         if not other or other.is_noop():
             return self
-        from dataclasses import replace
         changes = {}
         if other.work_kind_set is not None: changes["work_kind_set"] = other.work_kind_set
         if other.payload_set:
@@ -245,7 +242,6 @@ class IdentityUpdate:
     def merge(self, other: IdentityUpdate) -> IdentityUpdate:
         if not other or other.is_noop():
             return self
-        from dataclasses import replace
         changes = {}
         if other.role_set is not None: changes["role_set"] = other.role_set
         if other.faction_set is not None: changes["faction_set"] = other.faction_set
@@ -402,7 +398,6 @@ class AttributeUpdate:
     def merge(self, other: AttributeUpdate) -> AttributeUpdate:
         if not other or other.is_noop():
             return self
-        from dataclasses import replace
         changes = {}
         if other.strength_delta != 0: changes["strength_delta"] = self.strength_delta + other.strength_delta
         if other.agility_delta != 0: changes["agility_delta"] = self.agility_delta + other.agility_delta
@@ -435,7 +430,6 @@ class LifecycleUpdate:
     def merge(self, other: LifecycleUpdate) -> LifecycleUpdate:
         if not other or other.is_noop():
             return self
-        from dataclasses import replace
         changes = {}
         if other.age_delta != 0: changes["age_delta"] = self.age_delta + other.age_delta
         if other.generation_delta != 0: changes["generation_delta"] = self.generation_delta + other.generation_delta
@@ -462,7 +456,6 @@ class RewardUpdate:
     def merge(self, other: RewardUpdate) -> RewardUpdate:
         if not other or other.is_noop():
             return self
-        from dataclasses import replace
         changes = {}
         if other.xp_gain != 0: changes["xp_gain"] = self.xp_gain + other.xp_gain
         if other.evolution_points_delta != 0: changes["evolution_points_delta"] = self.evolution_points_delta + other.evolution_points_delta
@@ -570,7 +563,6 @@ class StaminaUpdate:
     def merge(self, other: StaminaUpdate) -> StaminaUpdate:
         if not other or other.is_noop():
             return self
-        from dataclasses import replace
         changes = {}
         if other.current_delta != 0.0: changes["current_delta"] = self.current_delta + other.current_delta
         if other.current_set is not None: changes["current_set"] = other.current_set
@@ -590,7 +582,6 @@ class WoundUpdate:
     def merge(self, other: WoundUpdate) -> WoundUpdate:
         if not other or other.is_noop():
             return self
-        from dataclasses import replace
         changes = {}
         if other.wounds_add: changes["wounds_add"] = self.wounds_add + other.wounds_add
         if other.wounds_heal: changes["wounds_heal"] = self.wounds_heal + other.wounds_heal
@@ -660,7 +651,6 @@ class EntityUpdate:
         if self.entity_id != other.entity_id:
             raise ValueError("Cannot merge EntityUpdates for different entities")
             
-        from dataclasses import replace
         changes = {}
         if other.kind_set is not None: changes["kind_set"] = other.kind_set
         if other.new_position is not None: changes["new_position"] = other.new_position
@@ -729,7 +719,6 @@ class WorldUpdate:
     
     def merge(self, other: WorldUpdate) -> WorldUpdate:
         """Merges another WorldUpdate into this one, summing deltas and preferring non-None sets."""
-        from dataclasses import replace
         if self.region_id != other.region_id:
             raise ValueError("Cannot merge WorldUpdates for different regions")
             
@@ -807,6 +796,8 @@ class StateUpdate:
     next_node_id_set: Optional[int] = None
     next_entity_id_set: Optional[int] = None
     dirty_set: Optional[DirtySet] = None
+    force_full_scan: bool = False
+    sub_phase_costs: Dict[str, float] = field(default_factory=dict)
 
     def is_noop(self) -> bool:
         """True if this update contains absolutely no changes."""
@@ -825,7 +816,8 @@ class StateUpdate:
                 not self.rejections_delta and self.pressure_signals_set is None and 
                 self.current_mode_set is None and not self.rejection_events and 
                 not self.processed_transaction_ids and self.next_node_id_set is None and 
-                self.next_entity_id_set is None)
+                self.next_entity_id_set is None and not self.force_full_scan and
+                not self.sub_phase_costs)
     def merge(self, other: StateUpdate) -> StateUpdate:
         """Merge another StateUpdate into this one."""
         if not other or other.is_noop():
@@ -842,7 +834,6 @@ class StateUpdate:
         if not valid_others:
             return self
 
-        from dataclasses import replace
         
         # 1. Merge dictionaries
         new_entity_updates = dict(self.entity_updates)
@@ -883,6 +874,7 @@ class StateUpdate:
         pressure = self.pressure_signals_set
         mode = self.current_mode_set
         dirty = self.dirty_set
+        sub_costs = dict(self.sub_phase_costs)
 
         for other in valid_others:
             # Dictionaries
@@ -935,6 +927,9 @@ class StateUpdate:
             if other.pressure_signals_set is not None: pressure = other.pressure_signals_set
             if other.current_mode_set is not None: mode = other.current_mode_set
             if other.dirty_set: dirty = dirty.merge(other.dirty_set) if dirty else other.dirty_set
+            if other.sub_phase_costs:
+                for k, v in other.sub_phase_costs.items():
+                    sub_costs[k] = sub_costs.get(k, 0.0) + v
 
         return replace(self,
             entity_updates=new_entity_updates,
@@ -970,7 +965,8 @@ class StateUpdate:
             rng_checkpoint=rng,
             pressure_signals_set=pressure,
             current_mode_set=mode,
-            dirty_set=dirty
+            dirty_set=dirty,
+            sub_phase_costs=sub_costs
         )
 
     def compact(self) -> StateUpdate:
@@ -981,9 +977,10 @@ class StateUpdate:
         }
         if len(compacted_entity_updates) == len(self.entity_updates):
             return self
-        from dataclasses import replace
         return replace(self, entity_updates=compacted_entity_updates)
     
     def replace(self, **kwargs) -> StateUpdate:
-        from dataclasses import replace
         return replace(self, **kwargs)
+
+# Logic ID: CORE-PERF-018 (Singleton for no-op entity updates)
+EMPTY_ENTITY_UPDATE = EntityUpdate(entity_id=-1)

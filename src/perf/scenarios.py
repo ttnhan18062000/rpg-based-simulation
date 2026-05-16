@@ -71,7 +71,7 @@ def build_resource_state(
             .kind("hero")
             .location(float(entity_id % 100), float(entity_id // 100))
             .identity(
-                role=EntityRole.HERO,
+                role=EntityRole.WORKER,
                 faction=Faction.HERO_GUILD,
             )
             .inventory(
@@ -301,7 +301,13 @@ def build_mixed_state(
     # Offset monster IDs to avoid collision
     for eid, monster in state_combat.entities.items():
         new_id = hero_count + eid
-        entities[new_id] = V2EntityBuilder(new_id).replace_identity(monster.identity).replace_combat(monster.combat).location(*monster.position).build()
+        entities[new_id] = (
+            V2EntityBuilder(new_id)
+            .replace_identity(monster.identity)
+            .replace_combat(monster.combat)
+            .location(*monster.navigation.position)
+            .build()
+        )
         
     return AuthoritativeState(
         tick=0,
@@ -309,3 +315,107 @@ def build_mixed_state(
         entities=entities,
         resource_nodes=state_res.resource_nodes,
     )
+
+
+def build_metropolis_state(
+    *,
+    entity_count: int = 1000,
+    region_count: int = 50,
+    buildings_per_region: int = 20,
+    seed: int = 42
+) -> AuthoritativeState:
+    """
+    Build a massive metropolis state with governance, buildings, and mixed work.
+    """
+    from src.core.state import RegionState, BuildingState
+    
+    # 1. Base Mixed State
+    state = build_mixed_state(entity_count=entity_count, seed=seed)
+    entities = dict(state.entities) # Ensure mutable copy
+    
+    # 2. Add Regions
+    regions = {}
+    for i in range(region_count):
+        r_id = f"region_{i}"
+        x = (i % 10) * 100
+        y = (i // 10) * 100
+        regions[r_id] = RegionState(
+            id=r_id,
+            name=f"District {i}",
+            bounds=(float(x), float(y), float(x + 100), float(y + 100)),
+            owner_faction_id=Faction.HERO_GUILD if i % 2 == 0 else Faction.MONSTER_HORDE,
+            hazard_level=0.1 if i % 5 == 0 else 0.0
+        )
+        
+    # 3. Add Buildings
+    buildings = {}
+    b_id_counter = 1
+    for r_id, region in regions.items():
+        for b in range(buildings_per_region):
+            bx = region.bounds[0] + (b % 5) * 10 + 5
+            by = region.bounds[1] + (b // 5) * 10 + 5
+            buildings[b_id_counter] = BuildingState(
+                id=b_id_counter,
+                kind="inn" if b % 2 == 0 else "tavern",
+                position=(bx, by),
+                functional=True
+            )
+            b_id_counter += 1
+            
+    # 4. Global Resources
+    global_resources = {
+        "faction_hero_guild_gold": 1000000.0,
+        "faction_monster_horde_gold": 1000000.0
+    }
+    
+    # 5. Distribute entities into regions
+    # Actually, build_mixed_state already positioned them near 0,0.
+    # We should spread them out for a better test.
+    for i, entity in enumerate(entities.values()):
+        r_idx = i % region_count
+        region = regions[f"region_{r_idx}"]
+        new_pos = (
+            region.bounds[0] + 5.0 + (i % 10) * 5,
+            region.bounds[1] + 5.0 + (i // 10) % 10 * 5
+        )
+        # We need to update the position in the builder or just replace it
+        entities[entity.id] = (
+            V2EntityBuilder(entity.id)
+            .replace_navigation(entity.navigation)
+            .replace_identity(entity.identity)
+            .replace_combat(entity.combat)
+            .replace_inventory(entity.inventory)
+            .replace_lifecycle(entity.lifecycle)
+            .location(*new_pos)
+            .build()
+        )
+
+    # 6. Mark town tiles
+    town_tiles = set()
+    building_tiles = {}
+    for b in buildings.values():
+        bx, by = int(b.position[0]), int(b.position[1])
+        town_tiles.add((bx, by))
+        building_tiles[(bx, by)] = b.kind
+
+    return AuthoritativeState(
+        tick=0,
+        seed=seed,
+        entities=entities,
+        regions=regions,
+        buildings=buildings,
+        global_resources=global_resources,
+        town_tiles=town_tiles,
+        building_tiles=building_tiles
+    )
+
+
+SCENARIO_BUILDERS = {
+    "idle": build_idle_state,
+    "movement": build_movement_state,
+    "resource": build_resource_state,
+    "combat": build_combat_arena_state,
+    "strategic": build_strategic_state,
+    "mixed": build_mixed_state,
+    "metropolis": build_metropolis_state,
+}

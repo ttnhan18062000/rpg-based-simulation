@@ -171,7 +171,7 @@ def test_shop_sell_refactor():
 
     refined = AuthoritativeApplyPipeline.refine(
         state,
-        StateUpdate(),
+        StateUpdate(force_full_scan=True),
     )
 
     ent_upd = refined.entity_updates.get(1)

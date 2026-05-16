@@ -5,8 +5,14 @@ from typing import TYPE_CHECKING, Tuple, Optional, Any, Dict, List
 from dataclasses import replace
 
 from src.core.movement_modes import MovementMode
-from src.core.updates import EntityUpdate, NavigationUpdate
+from src.core.updates import EntityUpdate, NavigationUpdate, StaminaUpdate
 from src.core.enums import ReasonCode
+
+from src.engine.legality import LegalityServiceV2
+from src.systems.world_systems.navigation import NavigationSystem
+from src.world.environment import EnvironmentService
+from src.engine.combat import CombatResolutionSystem
+from src.engine.rpg_depth import TerrainCostService
 
 if TYPE_CHECKING:
     from src.core.state import AuthoritativeState, EntityState
@@ -29,18 +35,14 @@ class MovementSystem:
         VERIFIED v2: movement_intent_vs_result
         Logic ID: COMB-201 (Movement intentions are distinct from results)
         """
-        from src.engine.legality import LegalityServiceV2
-        
         # 1. Subject Alive?
         if not entity.lifecycle.active:
             return {entity.id: EntityUpdate(entity_id=entity.id)}
 
         # 2. Step Calculation
-        from src.systems.world_systems.navigation import NavigationSystem
         effective_target = NavigationSystem.get_next_step(entity, target_pos, state_or_context)
 
         # 3. Environment & Mode Multipliers (Calculated early for readiness gating)
-        from src.world.environment import EnvironmentService
         region = LegalityServiceV2.get_region_for_position(entity.navigation.position, state_or_context)
         move_speed_mult = 1.0
         if region:
@@ -168,7 +170,6 @@ class MovementSystem:
         # VERIFIED v2: disengagement_consequences
         # Logic ID: COMB-273 (Opportunity consequences apply only under legal conditions)
         if engaged_hostiles and not skip_oa:
-            from src.engine.combat import CombatResolutionSystem
             entities = getattr(state_or_context, 'entities', {})
             attackers = []
             for eid in engaged_hostiles:
@@ -187,16 +188,20 @@ class MovementSystem:
         # Terrain Cost (Checklist Section 7)
         terrain_cost = 1.0
         if success and effective_target:
-            from src.engine.rpg_depth import TerrainCostService
             tile = (int(effective_target[0]), int(effective_target[1]))
             terrain_cost = TerrainCostService.get_tile_cost(tile, state_or_context)
 
         # Stamina drain on movement (Checklist Part 6 Section E)
-        from src.core.updates import StaminaUpdate
         # VERIFIED v2: stamina_drain_movement
         stamina_upd = StaminaUpdate(current_delta=-entity.stamina.MOVE_COST) if success else None
 
         # Navigation Update Payload
+        new_region_id = None
+        if success and effective_target and effective_target != entity.navigation.position:
+             new_region = LegalityServiceV2.get_region_for_position(effective_target, state_or_context)
+             if new_region:
+                 new_region_id = new_region.id
+
         nav_upd = NavigationUpdate(
             moved_recently_set=True,
             failure_reason=None if success else reason_code,
@@ -206,7 +211,8 @@ class MovementSystem:
             oscillation_count_delta=osc_delta,
             last_position_set=entity.navigation.position if success else None,
             clear_target=replan,
-            clear_path=replan
+            clear_path=replan,
+            region_id_set=new_region_id
         )
 
         # VERIFIED v2: environmental_move_cost

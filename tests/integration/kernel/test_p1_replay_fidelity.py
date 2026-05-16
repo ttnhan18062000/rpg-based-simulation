@@ -121,8 +121,8 @@ def test_event_level_replay_fidelity():
         id=10,
         kind="iron_ore",
         position=(0.0, 0.0),
-        remaining_charges=1,
-        max_charges=1,
+        remaining_charges=10,
+        max_charges=10,
         yields_item="iron_ore",
         required_ticks=1,
     )

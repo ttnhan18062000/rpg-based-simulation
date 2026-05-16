@@ -68,7 +68,7 @@ def _make_town_state(actor, pos, building_kind):
 def _refine(state):
     return AuthoritativeApplyPipeline.refine(
         state,
-        StateUpdate(entity_updates={}),
+        StateUpdate(force_full_scan=True, entity_updates={}),
     )
 
 
@@ -146,7 +146,7 @@ def test_shop_sell_price_enforcement():
         building_tiles={pos: "shop"},
     )
 
-    update = StateUpdate(entity_updates={})
+    update = StateUpdate(force_full_scan=True, entity_updates={})
     refined = AuthoritativeApplyPipeline.refine(state, update)
 
     e_upd = refined.entity_updates[e_id]

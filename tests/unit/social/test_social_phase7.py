@@ -56,7 +56,7 @@ def test_contract_expiration_resolves_and_dissolves():
     )
     
     # 4. Run Pipeline
-    update = StateUpdate()
+    update = StateUpdate(force_full_scan=True)
     update = AuthoritativeApplyPipeline.refine(state, update)
     
     # Verify Contract Status changed in update

@@ -80,6 +80,12 @@ class InteractionSystem:
                     ent_upd,
                     interaction=res_upd
                 )
+                
+                # Audit rejections
+                reason = "INTERACTION_RESET"
+                new_rejections_delta = dict(update.rejections_delta)
+                new_rejections_delta[reason] = new_rejections_delta.get(reason, 0) + 1
+                update = replace(update, rejections_delta=new_rejections_delta)
                 continue
 
             # 2. Progress Advancement

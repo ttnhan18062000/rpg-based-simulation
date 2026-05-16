@@ -18,6 +18,7 @@ class GoalScorer(Protocol):
 
 class GoalRegistry:
     _scorers: Dict[str, GoalScorer] = {}
+    _sorted_keys: Optional[List[str]] = None
 
     @classmethod
     def register(cls, kind: str, scorer: GoalScorer):
@@ -31,9 +32,12 @@ class GoalRegistry:
                 raise ValueError(f"GoalRegistry conflict: kind '{kind}' already registered to {existing.__class__}")
             return
         cls._scorers[kind] = scorer
+        cls._sorted_keys = None
 
     @classmethod
     def get_all_scores(cls, entity: EntityState, state: AuthoritativeState) -> List[GoalScore]:
         # Return sorted by key to ensure deterministic order across ticks
-        sorted_keys = sorted(cls._scorers.keys())
-        return [cls._scorers[k].score(entity, state) for k in sorted_keys]
+        if cls._sorted_keys is None or len(cls._sorted_keys) != len(cls._scorers) or any(k not in cls._scorers for k in cls._sorted_keys):
+            cls._sorted_keys = sorted(cls._scorers.keys())
+        return [cls._scorers[k].score(entity, state) for k in cls._sorted_keys]
+

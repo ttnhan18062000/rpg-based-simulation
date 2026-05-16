@@ -60,15 +60,13 @@ def test_milestone_b_operational_gate(mb_profile, initial_state):
     
     from unittest.mock import patch
     
-    # Each tick calling Init (start) and Cleanup (end)
-    # We want (end - start) / 1e6 = 120ms -> end - start = 120,000,000 ns
+    # Each call to perf_counter_ns advances by 4ms. Across 31 phase timestamps per tick,
+    # total compute time is exactly 124ms (perfectly between 100ms DEGRADED and 150ms SURVIVAL).
     def time_gen():
         t = 0
         while True:
-            t += 1_000_000_000 # 1s between ticks
+            t += 4_000_000
             yield t
-            for _ in range(20): # Up to 20 sub-tick calls
-                yield t + 120_000_000
     
     with patch('time.perf_counter_ns', side_effect=time_gen()):
         # Ticks 5-9: Normal -> DEGRADED

@@ -50,17 +50,19 @@ class SpatialQueryService:
     def get_occupancy_map(state: AuthoritativeState) -> Dict[tuple[int, int], int]:
         """Returns a map of (x, y) to entity ID for all active/alive entities."""
         cache_key = "_occupancy_map_cache"
-        if hasattr(state, "occupancy_map") and state.occupancy_map is not None:
+        mapping = getattr(state, cache_key, None)
+        if mapping is not None:
+            return mapping
+            
+        if getattr(state, "occupancy_map", None) is not None:
             return state.occupancy_map
             
-        mapping = getattr(state, cache_key, None)
-        if mapping is None:
-            mapping = {}
-            for e_id, entity in state.entities.items():
-                if entity.lifecycle.active and entity.combat.alive:
-                    pos = (int(entity.navigation.position[0]), int(entity.navigation.position[1]))
-                    mapping[pos] = e_id
-            object.__setattr__(state, cache_key, mapping)
+        mapping = {}
+        for e_id, entity in state.entities.items():
+            if entity.lifecycle.active and entity.combat.alive:
+                pos = (int(entity.navigation.position[0]), int(entity.navigation.position[1]))
+                mapping[pos] = e_id
+        object.__setattr__(state, cache_key, mapping)
         return mapping
 
     @staticmethod
@@ -109,13 +111,106 @@ class SpatialQueryService:
         return mapping
 
     @staticmethod
-    def _get_building_map(state: AuthoritativeState) -> Dict[tuple[int, int], BuildingState]:
-        cache_key = "_building_map_cache"
-        if hasattr(state, "building_map") and state.building_map is not None:
-            return state.building_map
+    def get_region_at(state: AuthoritativeState, pos: tuple[float, float]) -> Optional[RegionState]:
+        """Returns the region containing the given position."""
+        if not state.regions:
+            return None
+        # Quick exit if outside all regions
+        bounds = SpatialQueryService._get_regions_global_bounds(state)
+        if bounds:
+             if not (bounds[0] <= pos[0] < bounds[2] and bounds[1] <= pos[1] < bounds[3]):
+                 return None
+                 
+        index = SpatialQueryService._get_region_index(state)
+        if index:
+             cell_size = 50.0
+             cx = int(pos[0] // cell_size)
+             cy = int(pos[1] // cell_size)
+             r_ids = index.get((cx, cy), [])
+             for r_id in r_ids:
+                 r = state.regions.get(r_id)
+                 if r:
+                     x_min, y_min, x_max, y_max = r.bounds
+                     if x_min <= pos[0] < x_max and y_min <= pos[1] < y_max:
+                         return r
+        return None
+
+    @staticmethod
+    def _get_region_index(state: AuthoritativeState) -> Any:
+        cache_key = "_region_index_cache"
+        index = getattr(state, cache_key, None)
+        if index is None:
+            if not state.regions:
+                return None
             
+            # Use a simple grid index
+            cell_size = 50.0
+            index = {}
+            for r_id, r in state.regions.items():
+                x_min, y_min, x_max, y_max = r.bounds
+                cx_start = int(x_min // cell_size)
+                cy_start = int(y_min // cell_size)
+                cx_end = int(x_max // cell_size)
+                cy_end = int(y_max // cell_size)
+                
+                for cx in range(cx_start, cx_end + 1):
+                    for cy in range(cy_start, cy_end + 1):
+                        index.setdefault((cx, cy), []).append(r_id)
+            
+            object.__setattr__(state, cache_key, index)
+        return index
+
+    @staticmethod
+    def _get_regions_global_bounds(state: AuthoritativeState) -> Optional[tuple[float, float, float, float]]:
+        cache_key = "_regions_global_bounds"
+        bounds = getattr(state, cache_key, None)
+        if bounds is False:
+            return None
+        if bounds is None:
+            if not state.regions:
+                object.__setattr__(state, cache_key, False)
+                return None
+            x_min = y_min = float('inf')
+            x_max = y_max = float('-inf')
+            for r in state.regions.values():
+                x_min = min(x_min, r.bounds[0])
+                y_min = min(y_min, r.bounds[1])
+                x_max = max(x_max, r.bounds[2])
+                y_max = max(y_max, r.bounds[3])
+            bounds = (x_min, y_min, x_max, y_max)
+            object.__setattr__(state, cache_key, bounds)
+        return bounds
+
+    @staticmethod
+    def get_building_region(state: AuthoritativeState, building_id: int) -> Optional[RegionState]:
+        """Returns the region containing a building, using a cached map."""
+        mapping = SpatialQueryService._get_building_region_map(state)
+        region_id = mapping.get(building_id)
+        return state.regions.get(region_id) if region_id else None
+
+    @staticmethod
+    def _get_building_region_map(state: AuthoritativeState) -> Dict[int, str]:
+        cache_key = "_building_region_map_cache"
         mapping = getattr(state, cache_key, None)
         if mapping is None:
-            mapping = {b.position: b for b in state.buildings.values()}
+            mapping = {}
+            for b_id, b in state.buildings.items():
+                r = SpatialQueryService.get_region_at(state, b.position)
+                if r:
+                    mapping[b_id] = r.id
             object.__setattr__(state, cache_key, mapping)
+        return mapping
+
+    @staticmethod
+    def _get_building_map(state: AuthoritativeState) -> Dict[tuple[int, int], BuildingState]:
+        cache_key = "_building_map_cache"
+        mapping = getattr(state, cache_key, None)
+        if mapping is not None:
+            return mapping
+            
+        if getattr(state, "building_map", None) is not None:
+            return state.building_map
+            
+        mapping = {b.position: b for b in state.buildings.values()}
+        object.__setattr__(state, cache_key, mapping)
         return mapping

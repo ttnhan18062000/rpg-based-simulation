@@ -137,5 +137,5 @@ def test_arena_conquest_and_debuff():
     # Final: 100 - 2 + 5 = 103.
     assert hero.inventory.gold == 103
 
-    faction_key = f"faction_{Faction.MONSTER_HORDE}_gold"
+    faction_key = f"faction_{Faction.MONSTER_HORDE.name.lower()}_gold"
     assert final_state.global_resources.get(faction_key, 0.0) == 2.0

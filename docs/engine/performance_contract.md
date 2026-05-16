@@ -48,3 +48,9 @@ Timing instrumentation itself must stay bounded (< 1% of total tick time).
 ## 5. Regression Enforcement
 - Any commit that increases `avg_tick_compute_ms` by > 5% on a stable scenario must be flagged.
 - Significant regressions require a "Divergence Reason" in the performance log.
+
+## 6. Memory Management & Pooling
+- **Differential Caching**: AuthoritativeState must utilize differential caching for read-only views. Reconstruction of views should be O(Dirty) rather than O(N).
+- **Singleton Singletons**: High-frequency no-op updates (e.g. EMPTY_ENTITY_UPDATE) must be implemented as singletons to minimize object allocation spikes.
+- **Deep-Freeze Caching**: Shared world components that are immutable for the duration of a simulation tick should be cached in their "frozen" state to avoid redundant recursive traversals.
+- **Incremental GC**: The Kernel must utilize frame-pacing idle windows to perform shallow garbage collection (`gc.collect(0)`). This prevents the accumulation of short-lived objects into expensive generation 1/2 collections, smoothing the latency p95/p99 envelope.

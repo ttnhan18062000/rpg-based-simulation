@@ -3,12 +3,22 @@ from typing import Any
 from types import MappingProxyType
 from dataclasses import is_dataclass, fields, replace
 
+# Lazy module-level cache to avoid circular import
+_ReadOnlyDict = None
+
+def _get_readonly_dict():
+    global _ReadOnlyDict
+    if _ReadOnlyDict is None:
+        from src.core.state import ReadOnlyDict
+        _ReadOnlyDict = ReadOnlyDict
+    return _ReadOnlyDict
+
 def deep_freeze(obj: Any) -> Any:
     """
     Recursively transform mutable structures into their immutable counterparts.
     Law: Decision logic must only operate on deeply frozen state.
     """
-    from src.core.state import ReadOnlyDict
+    ReadOnlyDict = _get_readonly_dict()
     if isinstance(obj, (ReadOnlyDict, MappingProxyType, tuple, frozenset, int, float, str, bool)) or obj is None:
         return obj
     
@@ -25,6 +35,8 @@ def deep_freeze(obj: Any) -> Any:
         # Optimization: If dataclass is already frozen and has a cache, use it
         if hasattr(obj, "_readonly_cache") and obj._readonly_cache is not None:
             return obj._readonly_cache
+        if hasattr(obj, "to_readonly"):
+            return obj.to_readonly()
             
         new_values = {}
         changed = False
@@ -50,7 +62,9 @@ def shallow_freeze(obj: Any) -> Any:
     Shallow transform mutable structures into their immutable counterparts.
     Used for high-frequency state views where deep_freeze is too expensive.
     """
-    from src.core.state import ReadOnlyDict
+    ReadOnlyDict = _get_readonly_dict()
+    if isinstance(obj, (ReadOnlyDict, tuple, frozenset)):
+        return obj
     if isinstance(obj, dict):
         return ReadOnlyDict(obj)
     if isinstance(obj, list):
@@ -58,3 +72,4 @@ def shallow_freeze(obj: Any) -> Any:
     if isinstance(obj, set):
         return frozenset(obj)
     return obj
+

@@ -14,6 +14,7 @@ These fill the gaps identified in logic_checklist_exhaustive_v2.md sections:
 from __future__ import annotations
 from dataclasses import replace
 from typing import TYPE_CHECKING, Optional, Dict, Any, List, Tuple
+from src.core.state import TERRAIN_COST
 
 if TYPE_CHECKING:
     from src.core.state import EntityState, AuthoritativeState, StaminaComponent
@@ -96,10 +97,8 @@ class StaminaService:
 
     @staticmethod
     def tick_regen(stamina: StaminaComponent, is_resting: bool = False) -> float:
-        """Returns the stamina delta for passive/rest regeneration."""
-        # VERIFIED v2: stamina_regen_resting
-        # VERIFIED v2: stamina_regen_active
-        # VERIFIED v2: stamina_regen_capped
+        if stamina.current >= stamina.max_stamina:
+            return 0.0
         rate = stamina.rest_regen_rate if is_resting else stamina.regen_rate
         headroom = stamina.max_stamina - stamina.current
         return min(rate, max(0.0, headroom))
@@ -291,9 +290,10 @@ class TerrainCostService:
         Get movement cost for a tile based on terrain type.
         VERIFIED v2: terrain_cost_pathfinding
         """
-        from src.core.state import TERRAIN_COST
         terrain = getattr(state, 'terrain', {})
-        terrain_type = terrain.get(pos, "PLAIN") if terrain else "PLAIN"
+        if not terrain:
+            return 1.0
+        terrain_type = terrain.get(pos, "PLAIN")
         return TERRAIN_COST.get(terrain_type, 1.0)
 
     @staticmethod

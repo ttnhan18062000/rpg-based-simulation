@@ -47,8 +47,14 @@ class MovementPhase:
         refined_entity_updates = dict(update.entity_updates)
         consumed_entities: set[int] = set()
 
-        from src.engine.domain.view import DomainView
-        grid = DomainView._get_cached_spatial_grid(state)
+        from src.engine.spatial_query import SpatialQueryService
+        occ_map = SpatialQueryService.get_occupancy_map(state)
+
+        next_step_cache = {}
+        def get_next_step(ent):
+            if ent.id not in next_step_cache:
+                next_step_cache[ent.id] = MovementPhase._desired_next_step_for_swap(state, update, ent)
+            return next_step_cache[ent.id]
 
         for a_id, a in state.entities.items():
             if a_id in consumed_entities:
@@ -60,111 +66,107 @@ class MovementPhase:
             has_nav_upd = ent_upd and ent_upd.navigation and (ent_upd.navigation.target_set or ent_upd.navigation.path_set)
             if not a.navigation.target and not has_nav_upd:
                 continue
-
-            # Only entities that MIGHT want to move or have a swap contract are relevant.
-            # But simpler to just check neighbors within distance 1.0.
-            neighbor_ids = grid.get_neighbors(a.navigation.position, 1.1)
             
-            for b_id in neighbor_ids:
-                if b_id == a_id or b_id in consumed_entities:
-                    continue
+            # Skip inactive/dead entities
+            if not a.lifecycle.active or not a.combat.alive:
+                continue
 
-                b = state.entities[b_id]
+            a_next = get_next_step(a)
+            if a_next is None:
+                continue
+
+            # Performance Optimization: The only entity 'a' could swap with is whoever currently occupies a_next
+            b_id = occ_map.get((int(a_next[0]), int(a_next[1])))
+            if b_id is None or b_id == a_id or b_id in consumed_entities:
+                continue
+
+            b = state.entities.get(b_id)
+            if b is None:
+                continue
                 
-                # Double check adjacency (Manhattan distance 1)
-                a_pos = a.navigation.position
-                b_pos = b.navigation.position
-                dist = abs(a_pos[0] - b_pos[0]) + abs(a_pos[1] - b_pos[1])
-                if dist != 1:
-                    continue
+            # Double check adjacency (Manhattan distance 1)
+            a_pos = a.navigation.position
+            b_pos = b.navigation.position
+            dist = abs(a_pos[0] - b_pos[0]) + abs(a_pos[1] - b_pos[1])
+            if dist != 1:
+                continue
 
-                if not MovementPhase._can_attempt_position_swap_pair(
-                    state,
-                    a,
-                    b,
-                ):
-                    continue
+            if not MovementPhase._can_attempt_position_swap_pair(
+                state,
+                a,
+                b,
+            ):
+                continue
 
-                a_old = a.navigation.position
-                b_old = b.navigation.position
+            a_old = a.navigation.position
+            b_old = b.navigation.position
 
-                a_next = MovementPhase._desired_next_step_for_swap(
-                    state,
-                    update,
-                    a,
-                )
-                b_next = MovementPhase._desired_next_step_for_swap(
-                    state,
-                    update,
-                    b,
-                )
+            b_next = get_next_step(b)
 
-                mutual_swap = (
-                    a_next == b_old
-                    and b_next == a_old
-                )
+            mutual_swap = (
+                a_next == b_old
+                and b_next == a_old
+            )
 
-                active_contract = None
+            active_contract = None
 
-                if not mutual_swap:
-                    if a_next == b_old:
-                        active_contract = MovementPhase._find_valid_position_swap_contract(
-                            state=state,
-                            requester_id=a_id,
-                            responder_id=b_id,
-                        )
-                    elif b_next == a_old:
-                        active_contract = MovementPhase._find_valid_position_swap_contract(
-                            state=state,
-                            requester_id=b_id,
-                            responder_id=a_id,
-                        )
-
-                if not mutual_swap and active_contract is None:
-                    continue
-
-                if not MovementPhase._position_swap_destinations_are_safe(
-                    state,
-                    a_old,
-                    b_old,
-                ):
-                    continue
-
-                # Apply atomic swap.
-                a_existing = refined_entity_updates.get(
-                    a_id,
-                    EntityUpdate(entity_id=a_id),
-                )
-                b_existing = refined_entity_updates.get(
-                    b_id,
-                    EntityUpdate(entity_id=b_id),
-                )
-
-                a_swap = MovementPhase._build_position_swap_entity_update(
-                    entity=a,
-                    new_position=b_old,
-                    reason=ReasonCode.POSITION_SWAP,
-                )
-
-                b_swap = MovementPhase._build_position_swap_entity_update(
-                    entity=b,
-                    new_position=a_old,
-                    reason=ReasonCode.POSITION_SWAP,
-                )
-
-                refined_entity_updates[a_id] = a_existing.merge(a_swap)
-                refined_entity_updates[b_id] = b_existing.merge(b_swap)
-
-                if active_contract is not None:
-                    MovementPhase._mark_position_swap_contract_fulfilled(
-                        refined_entity_updates,
-                        active_contract,
+            if not mutual_swap:
+                if a_next == b_old:
+                    active_contract = MovementPhase._find_valid_position_swap_contract(
+                        state=state,
+                        requester_id=a_id,
+                        responder_id=b_id,
+                    )
+                elif b_next == a_old:
+                    active_contract = MovementPhase._find_valid_position_swap_contract(
+                        state=state,
+                        requester_id=b_id,
+                        responder_id=a_id,
                     )
 
-                consumed_entities.add(a_id)
-                consumed_entities.add(b_id)
-                # Break inner loop for entity 'a' since it has swapped.
-                break
+            if not mutual_swap and active_contract is None:
+                continue
+
+            if not MovementPhase._position_swap_destinations_are_safe(
+                state,
+                a_old,
+                b_old,
+            ):
+                continue
+
+            # Apply atomic swap.
+            a_existing = refined_entity_updates.get(
+                a_id,
+                EntityUpdate(entity_id=a_id),
+            )
+            b_existing = refined_entity_updates.get(
+                b_id,
+                EntityUpdate(entity_id=b_id),
+            )
+
+            a_swap = MovementPhase._build_position_swap_entity_update(
+                entity=a,
+                new_position=b_old,
+                reason=ReasonCode.POSITION_SWAP,
+            )
+
+            b_swap = MovementPhase._build_position_swap_entity_update(
+                entity=b,
+                new_position=a_old,
+                reason=ReasonCode.POSITION_SWAP,
+            )
+
+            refined_entity_updates[a_id] = a_existing.merge(a_swap)
+            refined_entity_updates[b_id] = b_existing.merge(b_swap)
+
+            if active_contract is not None:
+                MovementPhase._mark_position_swap_contract_fulfilled(
+                    refined_entity_updates,
+                    active_contract,
+                )
+
+            consumed_entities.add(a_id)
+            consumed_entities.add(b_id)
 
         return replace(
             update,
@@ -178,51 +180,109 @@ class MovementPhase:
     ) -> StateUpdate:
         """
         Route normal navigation intent via MovementSystem.
-        Optimized v2: reduced overhead for stationary entities.
+        Optimized v3: reduced dictionary copies and avoided sorted() overhead.
         """
+        # Start with entity_updates already present in the update
         refined_entity_updates = dict(update.entity_updates)
+        new_rejections_delta = dict(update.rejections_delta)
         
-        # Primary pass: entities with updates this tick.
-        for e_id, ent_upd in list(refined_entity_updates.items()):
+        from src.engine.spatial_query import SpatialQueryService
+        live_occ_map = dict(SpatialQueryService.get_occupancy_map(state))
+        live_claims = set()
+        
+        # Populate live claims with already updated positions from prior phases or Pass 0
+        for ent_upd in refined_entity_updates.values():
+            if ent_upd.new_position is not None:
+                new_pos = (int(ent_upd.new_position[0]), int(ent_upd.new_position[1]))
+                live_claims.add(new_pos)
+                live_occ_map[new_pos] = ent_upd.entity_id
+
+        object.__setattr__(state, "_occupancy_map_cache", live_occ_map)
+        object.__setattr__(state, "transient_claims", live_claims)
+        
+        # Pass 1: Handle entities that ALREADY have an update this tick.
+        for e_id in list(refined_entity_updates.keys()):
+            ent_upd = refined_entity_updates[e_id]
             entity = state.entities.get(e_id)
-            if not entity: continue
+            if not entity or not entity.lifecycle.active:
+                continue
             
-            nav_target = ent_upd.navigation.target_set if (ent_upd.navigation and ent_upd.navigation.target_set is not None) else entity.navigation.target
-            if not nav_target: continue
-            
-            # Already moved?
+            # Already moved by a prior phase or this one?
             if ent_upd.moved_this_tick:
                 continue
                 
-            if entity.navigation.position != nav_target:
-                mode = ent_upd.navigation.movement_mode_set if (ent_upd.navigation and ent_upd.navigation.movement_mode_set is not None) else entity.navigation.movement_mode
-                move_updates = MovementSystem.resolve_move(state, entity, nav_target, mode=mode)
-                for u_id, u_upd in move_updates.items():
-                    if u_id == e_id:
-                        refined_entity_updates[e_id] = ent_upd.merge(u_upd)
-                    else:
-                        neighbor_upd = refined_entity_updates.get(u_id, EntityUpdate(entity_id=u_id))
-                        refined_entity_updates[u_id] = neighbor_upd.merge(u_upd)
-
-        # Secondary pass: entities that didn't have updates this tick but HAVE a target in state.
-        # This is rare but possible if they were already moving.
-        # But in IDLE_1000, most have a target but are already at it.
-        # To avoid O(N) over ALL entities, we could skip this if the target is already reached.
-        # For now, let's just make it faster by checking position vs target early.
-        
-        for e_id in sorted(state.entities.keys()):
-            entity = state.entities[e_id]
-            if e_id in refined_entity_updates: continue
-            if not entity.navigation.target: continue
-            if entity.navigation.position == entity.navigation.target: continue
+            # Determine target and mode (prefer update if present)
+            nav_target = ent_upd.navigation.target_set if (ent_upd.navigation and ent_upd.navigation.target_set is not None) else entity.navigation.target
+            if not nav_target or entity.navigation.position == nav_target:
+                continue
+                
+            mode = ent_upd.navigation.movement_mode_set if (ent_upd.navigation and ent_upd.navigation.movement_mode_set is not None) else entity.navigation.movement_mode
             
-            # This entity wants to move but has no update this tick.
+            move_updates = MovementSystem.resolve_move(state, entity, nav_target, mode=mode)
+            for u_id, u_upd in move_updates.items():
+                existing = refined_entity_updates.get(u_id)
+                if existing is not None:
+                    refined_entity_updates[u_id] = existing.merge(u_upd)
+                else:
+                    refined_entity_updates[u_id] = u_upd
+                    
+                if u_upd.new_position is not None:
+                    u_ent = state.entities.get(u_id)
+                    if u_ent:
+                        old_pos = (int(u_ent.navigation.position[0]), int(u_ent.navigation.position[1]))
+                        if old_pos in live_occ_map and live_occ_map[old_pos] == u_id:
+                            del live_occ_map[old_pos]
+                    new_pos = (int(u_upd.new_position[0]), int(u_upd.new_position[1]))
+                    live_occ_map[new_pos] = u_id
+                    live_claims.add(new_pos)
+                
+                # Record rejections
+                if u_upd.navigation and u_upd.navigation.failure_reason:
+                    reason_key = u_upd.navigation.failure_reason.value if hasattr(u_upd.navigation.failure_reason, "value") else str(u_upd.navigation.failure_reason)
+                    new_rejections_delta[reason_key] = new_rejections_delta.get(reason_key, 0) + 1
+
+        # Pass 2: Handle entities that DON'T have an update but HAVE a target in state.
+        # Optimization: Instead of sorted keys, just iterate values. 
+        # Determinism is maintained by using entity_id order if needed, but here it's not strictly required by logic.
+        for entity in state.entities.values():
+            e_id = entity.id
+            if e_id in refined_entity_updates:
+                continue
+            if not entity.navigation.target or not entity.lifecycle.active:
+                continue
+            if entity.navigation.position == entity.navigation.target:
+                continue
+            
             move_updates = MovementSystem.resolve_move(state, entity, entity.navigation.target, mode=entity.navigation.movement_mode)
             for u_id, u_upd in move_updates.items():
-                existing = refined_entity_updates.get(u_id, EntityUpdate(entity_id=u_id))
-                refined_entity_updates[u_id] = existing.merge(u_upd)
-                            
-        return replace(update, entity_updates=refined_entity_updates)
+                existing = refined_entity_updates.get(u_id)
+                if existing is not None:
+                    refined_entity_updates[u_id] = existing.merge(u_upd)
+                else:
+                    refined_entity_updates[u_id] = u_upd
+                    
+                if u_upd.new_position is not None:
+                    u_ent = state.entities.get(u_id)
+                    if u_ent:
+                        old_pos = (int(u_ent.navigation.position[0]), int(u_ent.navigation.position[1]))
+                        if old_pos in live_occ_map and live_occ_map[old_pos] == u_id:
+                            del live_occ_map[old_pos]
+                    new_pos = (int(u_upd.new_position[0]), int(u_upd.new_position[1]))
+                    live_occ_map[new_pos] = u_id
+                    live_claims.add(new_pos)
+                
+                # Record rejections
+                if u_upd.navigation and u_upd.navigation.failure_reason:
+                    reason_key = u_upd.navigation.failure_reason.value if hasattr(u_upd.navigation.failure_reason, "value") else str(u_upd.navigation.failure_reason)
+                    new_rejections_delta[reason_key] = new_rejections_delta.get(reason_key, 0) + 1
+
+        try:
+            object.__setattr__(state, "_occupancy_map_cache", live_occ_map)
+            object.__setattr__(state, "transient_claims", live_claims)
+        except AttributeError:
+            pass
+            
+        return replace(update, entity_updates=refined_entity_updates, rejections_delta=new_rejections_delta)
 
     # --- Helpers ---
 

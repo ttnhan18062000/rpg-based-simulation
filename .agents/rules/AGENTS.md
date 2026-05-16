@@ -32,7 +32,7 @@
 Before any implementation, check:
 
 * `tickets/`
-* `docs/`
+* `docs/` (Specifically the Mechanics Bible in `docs/mechanics/`)
 * `stored_artifacts/`
 * relevant code and tests
 

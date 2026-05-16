@@ -12,8 +12,8 @@ def test_queue_saturation_triggers_local_fallback():
     """
     M8 Law: If queue is full, fall back to synchronous execution.
     """
-    # Max depth of 2.
-    manager = WorkerManager(max_workers=1, max_queue_depth=2)
+    # Max depth of 1 to ensure fallback triggers quickly with chunks
+    manager = WorkerManager(max_workers=1, max_queue_depth=1)
     
     main_thread_id = threading.current_thread().ident
     execution_threads = []

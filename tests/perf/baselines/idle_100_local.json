@@ -1,0 +1,133 @@
+{
+  "scenario_id": "idle_100_local",
+  "profile": "PERF_512MB_LOCAL",
+  "sample_ticks": 20,
+  "wall_clock_s": 2.0241,
+  "wall_clock_tps": 9.88,
+  "compute_tps": 87.76,
+  "avg_tps": 87.76,
+  "tick_ms": {
+    "avg": 1.0,
+    "p50": 1.0,
+    "p95": 1.0,
+    "p99": 1.0,
+    "max": 1.0,
+    "min": 1.0
+  },
+  "mem_rss_mb": {
+    "avg": 38.29,
+    "max": 38.43,
+    "delta": 0.3
+  },
+  "phase_breakdown": {
+    "init": {
+      "avg": 0.371,
+      "p50": 0.252,
+      "p95": 2.032,
+      "p99": 2.032,
+      "max": 2.032,
+      "min": 0.13
+    },
+    "scheduling": {
+      "avg": 0.677,
+      "p50": 0.482,
+      "p95": 2.336,
+      "p99": 2.336,
+      "max": 2.336,
+      "min": 0.143
+    },
+    "collection": {
+      "avg": 0.911,
+      "p50": 0.584,
+      "p95": 5.641,
+      "p99": 5.641,
+      "max": 5.641,
+      "min": 0.319
+    },
+    "apply": {
+      "avg": 0.242,
+      "p50": 0.18,
+      "p95": 0.799,
+      "p99": 0.799,
+      "max": 0.799,
+      "min": 0.077
+    },
+    "resource": {
+      "avg": 0.063,
+      "p50": 0.06,
+      "p95": 0.164,
+      "p99": 0.164,
+      "max": 0.164,
+      "min": 0.027
+    },
+    "combat": {
+      "avg": 0.583,
+      "p50": 0.466,
+      "p95": 1.781,
+      "p99": 1.781,
+      "max": 1.781,
+      "min": 0.205
+    },
+    "movement": {
+      "avg": 0.04,
+      "p50": 0.026,
+      "p95": 0.29,
+      "p99": 0.29,
+      "max": 0.29,
+      "min": 0.016
+    },
+    "strategic": {
+      "avg": 2.22,
+      "p50": 1.48,
+      "p95": 7.975,
+      "p99": 7.975,
+      "max": 7.975,
+      "min": 0.733
+    },
+    "resolution": {
+      "avg": 9.387,
+      "p50": 8.99,
+      "p95": 17.777,
+      "p99": 17.777,
+      "max": 17.777,
+      "min": 4.029
+    },
+    "cleanup": {
+      "avg": 0.05,
+      "p50": 0.016,
+      "p95": 0.471,
+      "p99": 0.471,
+      "max": 0.471,
+      "min": 0.01
+    },
+    "advancement": {
+      "avg": 0.039,
+      "p50": 0.039,
+      "p95": 0.056,
+      "p99": 0.056,
+      "max": 0.056,
+      "min": 0.028
+    },
+    "persistence": {
+      "avg": 0.012,
+      "p50": 0.01,
+      "p95": 0.05,
+      "p99": 0.05,
+      "max": 0.05,
+      "min": 0.005
+    }
+  },
+  "replay_enabled": false,
+  "frame_pacing_enabled": false,
+  "timestamp": 1778820924.8707616,
+  "avg_tick_compute_ms": 11.395,
+  "p50_tick_compute_ms": 10.41,
+  "p95_tick_compute_ms": 22.85,
+  "p99_tick_compute_ms": 22.85,
+  "max_tick_compute_ms": 22.85,
+  "peak_rss_mb": 38.43,
+  "memory_delta_mb": 0.3,
+  "matrix_scenario": "idle",
+  "matrix_scale": 100,
+  "matrix_mode": "local"
+}

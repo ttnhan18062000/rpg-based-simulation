@@ -47,37 +47,59 @@ class BenchHarness:
     ) -> Dict[str, Any]:
         """
         Execute a stable measurement run: Warmup -> Sample -> Collate.
+        
+        M1 Law: Benchmarks default to no_replay and no_frame_pacing to measure 
+        raw engine compute throughput.
         """
+        # Set M1 defaults
+        effective_flags = {"no_replay": True, "no_frame_pacing": True}
+        if flags:
+            effective_flags.update(flags)
+            
         logger.info(f"Starting Benchmark: {scenario_id} ({self._profile.name})")
+        logger.info(f"Flags: {effective_flags}")
         
         # Initialize Kernel
         rng = DeterministicRNG(initial_state.seed)
-        kernel = Kernel(self._profile, initial_state, rng, flags=flags)
+        kernel = Kernel(self._profile, initial_state, rng, flags=effective_flags)
+        
+        import gc
         
         # 1. WARMUP
         for _ in range(warmup_ticks):
             kernel.tick_once()
             
+        gc.collect()
+        gc_was_enabled = gc.isenabled()
+        gc.disable()
+        
         # 2. SAMPLING
         rss_samples: List[float] = []
-        start_ts = time.perf_counter()
+        wall_start_ts = time.perf_counter()
         
-        for i in range(sample_ticks):
-            kernel.tick_once()
-            
-            # Sample memory every 10 ticks to reduce overhead
-            if i % 10 == 0:
-                rss_samples.append(self._process.memory_info().rss / (1024 * 1024))
+        try:
+            for i in range(sample_ticks):
+                kernel.tick_once()
                 
-        end_ts = time.perf_counter()
+                # Sample memory every 10 ticks to reduce overhead
+                if i % 10 == 0:
+                    rss_samples.append(self._process.memory_info().rss / (1024 * 1024))
+        finally:
+            if gc_was_enabled:
+                gc.enable()
+                
+        wall_end_ts = time.perf_counter()
         
-        total_time_s = end_ts - start_ts
-        avg_tps = sample_ticks / total_time_s
+        wall_clock_s = wall_end_ts - wall_start_ts
+        wall_clock_tps = sample_ticks / wall_clock_s if wall_clock_s > 0 else 0
         
         # 3. COLLATION
         history = kernel.status.get_recent_history(sample_ticks)
-        
         tick_times = [s.tick_compute_ms for s in history]
+        
+        # Compute TPS: Theoretical throughput if no wall-clock overhead
+        total_compute_ms = sum(tick_times)
+        compute_tps = (sample_ticks * 1000.0) / total_compute_ms if total_compute_ms > 0 else 0
         
         phase_aggregates: Dict[str, List[float]] = {}
         for signals in history:
@@ -94,8 +116,10 @@ class BenchHarness:
             "scenario_id": scenario_id,
             "profile": self._profile.name,
             "sample_ticks": sample_ticks,
-            "total_time_s": total_time_s,
-            "avg_tps": round(avg_tps, 2),
+            "wall_clock_s": round(wall_clock_s, 4),
+            "wall_clock_tps": round(wall_clock_tps, 2),
+            "compute_tps": round(compute_tps, 2),
+            "avg_tps": round(compute_tps, 2), # Legacy compat
             "tick_ms": self._calculate_stats(tick_times),
             "mem_rss_mb": {
                 "avg": round(sum(rss_samples) / len(rss_samples), 2) if rss_samples else 0.0,
@@ -103,6 +127,8 @@ class BenchHarness:
                 "delta": round(max(rss_samples) - min(rss_samples), 2) if rss_samples else 0.0,
             },
             "phase_breakdown": phase_stats,
+            "replay_enabled": not effective_flags.get("no_replay", False),
+            "frame_pacing_enabled": not effective_flags.get("no_frame_pacing", False),
             "timestamp": time.time()
         }
         

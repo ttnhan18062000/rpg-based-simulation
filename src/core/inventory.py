@@ -5,11 +5,25 @@ from typing import List, Optional, Tuple
 from src.core.state import InventoryComponent, ItemStack, EntityState, EquipSlot
 from src.core.items import ItemRegistry
 from typing import TYPE_CHECKING
+import logging
+
+logger = logging.getLogger(__name__)
 if TYPE_CHECKING:
     from src.core.updates import InventoryUpdate
+    from src.core.update_models.resources import ResourceTransferIntent
 
 class InventoryService:
     """Service for managing inventory state and validation."""
+
+    @staticmethod
+    def apply_transfer(inventory: InventoryComponent, transfer: ResourceTransferIntent) -> InventoryComponent:
+        from src.core.updates import InventoryUpdate
+        upd = InventoryUpdate(
+            items_add=transfer.items_add,
+            items_remove=transfer.items_remove,
+            gold_delta=transfer.gold_delta - transfer.gold_cost
+        )
+        return InventoryService.apply_update(inventory, upd)
 
     @staticmethod
     def calculate_total_weight(inventory: InventoryComponent) -> float:
@@ -71,17 +85,17 @@ class InventoryService:
                 # Update existing stack in temp_items (optional for slot count, but good for completeness)
                 # For slots, we only care if we need NEW ones.
                 remaining_qty -= to_add
-                print(f"DEBUG: Filling existing stack for {stack.item_id}. Space: {space}, to_add: {to_add}, remaining: {remaining_qty}")
+                logger.debug(f"DEBUG: Filling existing stack for {stack.item_id}. Space: {space}, to_add: {to_add}, remaining: {remaining_qty}")
             
             # 2. Add new stacks
             while remaining_qty > 0:
                 if len(temp_items) >= inventory.max_slots:
-                    print(f"DEBUG: Capacity FAIL for {stack.item_id}. Slots: {len(temp_items)}/{inventory.max_slots}")
+                    logger.debug(f"DEBUG: Capacity FAIL for {stack.item_id}. Slots: {len(temp_items)}/{inventory.max_slots}")
                     return False
                 to_add = min(remaining_qty, defn.stack_size)
                 temp_items.append(ItemStack(stack.item_id, to_add))
                 remaining_qty -= to_add
-                print(f"DEBUG: Added new stack for {stack.item_id}. Slots: {len(temp_items)}")
+                logger.debug(f"DEBUG: Added new stack for {stack.item_id}. Slots: {len(temp_items)}")
                 
         return True
 
@@ -119,6 +133,12 @@ class InventoryService:
     @staticmethod
     def apply_update(inventory: InventoryComponent, update: InventoryUpdate) -> InventoryComponent:
         """Apply authoritative updates to inventory, merging stacks and enforcing limits."""
+        if not update.items_remove and not update.items_add:
+            if update.gold_delta == 0:
+                return inventory
+            from dataclasses import replace
+            return replace(inventory, gold=inventory.gold + update.gold_delta)
+            
         from dataclasses import replace
         new_items = list(inventory.items)
         

@@ -43,11 +43,19 @@ class BuildingSabotageSystem:
                 dx = abs(entity.navigation.position[0] - target_pos[0])
                 dy = abs(entity.navigation.position[1] - target_pos[1])
                 if dx > 1 or dy > 1:
+                    reason = "SABOTAGE_OUT_OF_RANGE"
+                    new_rejections_delta = dict(update.rejections_delta)
+                    new_rejections_delta[reason] = new_rejections_delta.get(reason, 0) + 1
+                    update = replace(update, rejections_delta=new_rejections_delta)
                     continue
                 
                 # Identify Building via lookup
                 building = SpatialQueryService.get_building_at(state, target_pos)
                 if not building:
+                    reason = "SABOTAGE_NO_TARGET"
+                    new_rejections_delta = dict(update.rejections_delta)
+                    new_rejections_delta[reason] = new_rejections_delta.get(reason, 0) + 1
+                    update = replace(update, rejections_delta=new_rejections_delta)
                     continue
                 
                 damage = 50

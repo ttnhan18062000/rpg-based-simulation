@@ -10,6 +10,7 @@ from src.core.updates import (
     RejectionEvent,
 )
 from src.core.strategic import BlockerState
+from src.core.state import _readonly_mapping
 from src.engine.domain_logic import SimulationDomainLogic
 from src.engine.legality import LegalityServiceV2
 from src.engine.apply import ApplyPath
@@ -93,19 +94,16 @@ class ActionRoutingPhase:
         if not actors_with_tasks:
             return update
 
-        # 1. Calculate passive state ONCE.
-        # This includes aging, biological decay, and regional recovery.
-        passive_state = ApplyPath.apply_passive(state)
-
-        # Optimization: Use a sliding entity dictionary to avoid redundant state re-application.
-        working_entities = dict(passive_state.entities)
+        # Optimization: Use the original state as the base for action routing.
+        # Passive logic is handled by the final Fused Apply pass.
+        working_entities = dict(state.entities)
         for eid in sorted(update.entity_updates.keys()):
             ent_upd = update.entity_updates[eid]
             if eid in working_entities:
                 working_entities[eid] = ApplyPath._apply_entity_update(working_entities[eid], ent_upd)
 
         # Create a sliding state proxy that updates its entity map.
-        sliding_state = replace(passive_state, entities=working_entities)
+        sliding_state = replace(state, entities=working_entities)
 
         for eid, ent_upd in sorted(actors_with_tasks):
             entity = state.entities.get(eid)
@@ -119,9 +117,6 @@ class ActionRoutingPhase:
                 continue
 
             working_entity = working_entities.get(eid, entity)
-            
-            # Refresh sliding state entities if they changed.
-            sliding_state = replace(sliding_state, entities=working_entities)
 
             legal, reason = LegalityServiceV2.verify_action_legality(
                 working_entity, action, sliding_state
@@ -198,6 +193,14 @@ class ActionRoutingPhase:
                 # Update sliding entities for later actors
                 if action_eid in working_entities:
                     working_entities[action_eid] = ApplyPath._apply_entity_update(working_entities[action_eid], action_upd)
+                    try:
+                        object.__setattr__(sliding_state, "entities", _readonly_mapping(working_entities))
+                        object.__setattr__(sliding_state, "_spatial_grid_cache", None)
+                        object.__setattr__(sliding_state, "_occupancy_map_cache", None)
+                        object.__setattr__(sliding_state, "_has_hostiles_or_dead_cache", None)
+                        object.__setattr__(sliding_state, "_readonly_entities_cache", None)
+                    except AttributeError:
+                        pass
 
             if eid not in action_updates:
                 refined_entity_updates[eid] = replace(ent_upd, task=annotated_task)

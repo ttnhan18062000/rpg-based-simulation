@@ -15,6 +15,9 @@ from __future__ import annotations
 from dataclasses import dataclass, field, replace
 from typing import Dict, List, Optional, Any, TYPE_CHECKING
 import ast
+import logging
+
+logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from src.engine.cadence import SystemCadence
@@ -32,6 +35,15 @@ from src.core.strategic import (
 from src.strategy.cognition_capacity import CapacityService
 from src.core.inventory import InventoryService
 from src.engine.cadence import should_run, SystemCadence
+from src.core.movement_modes import MovementMode
+from src.core.updates import NavigationUpdate, InteractionUpdate
+from src.systems.world_systems.routine import RoutineService
+from src.systems.world_systems.intake import ConcernIntakeSystem
+from src.engine.domain_logic import SimulationDomainLogic
+from src.ai.goals import GoalRegistry
+from src.ai.score_modifiers import ScoreModifierSystem
+from src.systems.party import PartyCoordinationSystem
+from src.systems.strategic_systems.detour import DetourSuggestionSystem
 
 if TYPE_CHECKING:
     from src.core.state import AuthoritativeState, EntityState
@@ -199,25 +211,87 @@ class StrategicIntelligenceSystem:
                         return True
             return False
 
-        # Optimization: Only process entities that were marked as strategic-dirty or had relevant changes
-        # Logic ID: PERF-006 (Dirty Entity Tracking)
-        relevant_ids_raw = update.dirty_set.strategic_entities if update.dirty_set else state.entities.keys()
-        relevant_ids = sorted(list(relevant_ids_raw))
-        
-        for e_id in relevant_ids:
-            entity = state.entities.get(e_id)
-            if not entity: continue
+        has_hostiles_or_dead = getattr(state, "_has_hostiles_or_dead_cache", None)
+        if has_hostiles_or_dead is None:
+            first_fac = None
+            has_diff = False
+            has_dead = False
+            for ent in state.entities.values():
+                if not ent.combat.alive:
+                    has_dead = True
+                if first_fac is None:
+                    first_fac = ent.identity.faction
+                elif ent.identity.faction != first_fac:
+                    has_diff = True
+                if has_dead and has_diff:
+                    break
+            has_hostiles_or_dead = (has_diff or has_dead)
+            try: object.__setattr__(state, "_has_hostiles_or_dead_cache", has_hostiles_or_dead)
+            except: pass
+
+        town_target = state.town_center
+        if not town_target and state.town_tiles:
+            town_pos = next(iter(state.town_tiles))
+            town_target = (float(town_pos[0]), float(town_pos[1]))
+
+        # Evaluation of routine blockers and concerns must run across all active entities
+        # Logic ID: PERF-006 (Dirty Entity Tracking for specific sub-phases, but routine pass is global)
+        fast_hits = 0
+        fast_misses = 0
+        for e_id, entity in state.entities.items():
+            # Early exit: Skip inactive/dead entities entirely
+            if not entity.lifecycle.active or not entity.combat.alive:
+                continue
             
-            # --- 1. Blockers (Fast, runs every tick) ---
             ent_upd = refined_entity_updates.get(e_id)
             has_existing_upd = ent_upd is not None
+            strat_up = ent_upd.strategic if ent_upd else None
+            
+            pending_inventory = entity.inventory
+            if ent_upd and ent_upd.inventory:
+                pending_inventory = InventoryService.apply_update(entity.inventory, ent_upd.inventory)
+            
+            eval_concerns = should_run(state.tick, e_id, cadence.concern_evaluation)
+            eval_intents = should_run(state.tick, e_id, cadence.strategic_intelligence)
+            
+            if not eval_concerns and not eval_intents and strat_up is None and not entity.strategic.blockers and not entity.strategic.leads:
+                nav_changed = False
+                proj_resolved = False
+                curr_proj_id = entity.strategic.current_project_id
+                project = None
+                active_obj = None
+                if curr_proj_id:
+                    project = entity.strategic.projects.get(curr_proj_id)
+                    if project and project.status == ProjectStatus.ACTIVE:
+                        active_obj = next((o for o in project.objectives if o.id == project.active_objective_id), None)
+                        if active_obj and active_obj.status == ObjectiveStatus.ACTIVE:
+                            if active_obj.kind in ("craft", "collect") and has_item(pending_inventory, active_obj.target, 1):
+                                proj_resolved = True
+                            target_pos = getattr(active_obj, 'target_position', None)
+                            if target_pos and entity.navigation.target != target_pos:
+                                nav_changed = True
+                if not nav_changed and not proj_resolved:
+                    if not (curr_proj_id and project and project.status == ProjectStatus.ACTIVE and active_obj and getattr(active_obj, 'target_position', None) is not None):
+                        if len(pending_inventory.items) > 0 and entity.navigation.position != (0.0, 0.0) and town_target and entity.navigation.target != town_target:
+                            if ent_upd:
+                                refined_entity_updates[e_id] = replace(ent_upd,
+                                    navigation=NavigationUpdate(target_set=town_target, movement_mode_set=MovementMode.REGROUP),
+                                    interaction=InteractionUpdate(reset=True)
+                                )
+                            else:
+                                refined_entity_updates[e_id] = EntityUpdate(
+                                    entity_id=e_id,
+                                    navigation=NavigationUpdate(target_set=town_target, movement_mode_set=MovementMode.REGROUP),
+                                    interaction=InteractionUpdate(reset=True)
+                                )
+                    fast_hits += 1
+                    continue
+            fast_misses += 1
+
             if not has_existing_upd:
                 ent_upd = EntityUpdate(entity_id=e_id)
-            pending_inventory = entity.inventory
-            if ent_upd.inventory:
-                pending_inventory = InventoryService.apply_update(entity.inventory, ent_upd.inventory)
-
-            strat_up = ent_upd.strategic or StrategicUpdate()
+            
+            strat_up = strat_up or StrategicUpdate()
             removals = set(strat_up.blockers_remove)
             resolved_ids = set()
             for b_id, b in entity.strategic.blockers.items():
@@ -242,18 +316,21 @@ class StrategicIntelligenceSystem:
             project_upd = None
             current_proj_id = strat_up.current_project_id_set if strat_up.current_project_id_set is not None else entity.strategic.current_project_id
             if current_proj_id:
-                project = entity.strategic.projects.get(current_proj_id)
+                project = next((p for p in strat_up.projects_add_or_update if p.id == current_proj_id), None) or entity.strategic.projects.get(current_proj_id)
                 if project and project.status == ProjectStatus.ACTIVE:
                     obj_id = strat_up.current_objective_id_set if strat_up.current_objective_id_set is not None else project.active_objective_id
                     active_obj = next((o for o in project.objectives if o.id == obj_id), None)
                     if active_obj and active_obj.status == ObjectiveStatus.ACTIVE:
-                        all_blockers_resolved = True
-                        for b_id in active_obj.blocker_ids:
-                            if b_id not in entity.strategic.blockers and b_id not in [b.id for b in strat_up.blockers_add_or_update]: continue
-                            b_obj = entity.strategic.blockers.get(b_id)
-                            # Check if resolved this tick or already resolved in state
-                            if b_id not in resolved_ids and not (b_obj and b_obj.resolved):
-                                all_blockers_resolved = False; break
+                        if not active_obj.blocker_ids:
+                            all_blockers_resolved = False
+                        else:
+                            all_blockers_resolved = True
+                            for b_id in active_obj.blocker_ids:
+                                if b_id not in entity.strategic.blockers and b_id not in [b.id for b in strat_up.blockers_add_or_update]: continue
+                                b_obj = entity.strategic.blockers.get(b_id)
+                                # Check if resolved this tick or already resolved in state
+                                if b_id not in resolved_ids and not (b_obj and b_obj.resolved):
+                                    all_blockers_resolved = False; break
                         if active_obj.kind in ("craft", "collect") and has_item(pending_inventory, active_obj.target, 1):
                             all_blockers_resolved = True
                         if all_blockers_resolved:
@@ -295,10 +372,6 @@ class StrategicIntelligenceSystem:
             # --- 2. Concerns ---
             concerns_to_add = list(strat_up.concerns_add_or_update)
             if should_run(state.tick, e_id, cadence.concern_evaluation):
-                from src.systems.world_systems.routine import RoutineService
-                from src.systems.world_systems.intake import ConcernIntakeSystem
-                from src.engine.domain_logic import SimulationDomainLogic
-                
                 # Combine all routine evaluation logic
                 routine_concerns = (
                     RoutineService.evaluate_biological_needs(entity, state.tick % 2400) +
@@ -307,8 +380,10 @@ class StrategicIntelligenceSystem:
                 )
                 
                 # Optimization: only evaluate salience if we have neighbors
-                neighbors = SimulationDomainLogic.get_neighbor_view(state, entity, radius=10.0)
-                salience_concerns = ConcernIntakeSystem.evaluate_salience(entity, neighbors, state)
+                salience_concerns = []
+                if has_hostiles_or_dead or entity.biological.hunger > 60.0:
+                    neighbors = SimulationDomainLogic.get_neighbor_view(state, entity, radius=3.0)
+                    salience_concerns = ConcernIntakeSystem.evaluate_salience(entity, neighbors, state)
                 
                 existing_concern_ids = set(entity.strategic.concerns.keys()) | {c.id for c in concerns_to_add}
                 for c in routine_concerns + salience_concerns:
@@ -328,13 +403,6 @@ class StrategicIntelligenceSystem:
             
             # --- 4. Redirection (Bridge to Navigation) ---
             # (Hoisted logic from StrategicRedirectionSystem)
-            from src.core.movement_modes import MovementMode
-            from src.core.updates import NavigationUpdate, InteractionUpdate
-            
-            town_target = state.town_center
-            if not town_target and state.town_tiles:
-                town_pos = sorted(list(state.town_tiles))[0]
-                town_target = (float(town_pos[0]), float(town_pos[1]))
             
             has_nav_update = ent_upd.navigation and ent_upd.navigation.target_set is not None
             current_project_id = strat_up.current_project_id_set if strat_up.current_project_id_set is not None else entity.strategic.current_project_id
@@ -356,32 +424,38 @@ class StrategicIntelligenceSystem:
                     except: pass
             
             if not has_nav_update and current_project_id:
-                project = entity.strategic.projects.get(current_project_id)
+                project = next((p for p in strat_up.projects_add_or_update if p.id == current_project_id), None) or entity.strategic.projects.get(current_project_id)
                 if project and project.status == ProjectStatus.ACTIVE:
                     obj_id = strat_up.current_objective_id_set if strat_up.current_objective_id_set is not None else project.active_objective_id
                     active_obj = next((o for o in project.objectives if o.id == obj_id), None)
                     if active_obj and active_obj.status == ObjectiveStatus.ACTIVE:
                         target_pos = getattr(active_obj, 'target_position', None)
-                        if target_pos and entity.navigation.target != target_pos:
+                        if target_pos:
                              has_nav_update = True
-                             ent_upd = replace(ent_upd, navigation=replace(ent_upd.navigation or NavigationUpdate(), target_set=target_pos))
+                             if entity.navigation.target != target_pos:
+                                 ent_upd = replace(ent_upd, navigation=replace(ent_upd.navigation or NavigationUpdate(), target_set=target_pos))
             
             if not has_nav_update:
                 if len(pending_inventory.items) > 0 and entity.navigation.position != (0.0, 0.0) and town_target:
                     if entity.navigation.target != town_target:
+                        has_nav_update = True
                         ent_upd = replace(ent_upd, 
                             navigation=replace(ent_upd.navigation or NavigationUpdate(), target_set=town_target, movement_mode_set=MovementMode.REGROUP),
                             interaction=InteractionUpdate(reset=True)
                         )
             
             # Finalize entity update - only if changed
-            if final_identity_upd is not ent_upd.identity or strat_up is not ent_upd.strategic or has_nav_update:
+            if strat_up is not None and strat_up.is_noop():
+                strat_up = None
+            if final_identity_upd is not None and final_identity_upd.is_noop():
+                final_identity_upd = None
+
+            if final_identity_upd is not ent_upd.identity or strat_up is not ent_upd.strategic or ent_upd.navigation is not None or ent_upd.interaction is not None or has_existing_upd:
                 final_upd = replace(ent_upd, identity=final_identity_upd, strategic=strat_up)
-                if not final_upd.is_noop():
-                    refined_entity_updates[e_id] = final_upd
-                elif has_existing_upd:
-                    # If it was existing but now it's a no-op (unlikely but possible), remove it
-                    refined_entity_updates.pop(e_id, None)
+                refined_entity_updates[e_id] = final_upd
+        
+        if state.tick % 10 == 0:
+            logger.debug(f"[Tick {state.tick}] fused fast path: hits={fast_hits}, misses={fast_misses}")
 
         if refined_entity_updates == update.entity_updates:
             return update
@@ -565,8 +639,6 @@ class StrategicIntelligenceSystem:
         
         from src.engine.cadence import should_run, SystemCadence as DefaultCadence
         
-        from src.systems.strategic_systems.detour import DetourSuggestionSystem
-        
         # Phase 9 Fix: Deterministic entity iteration
         for e_id in sorted(list(state.entities.keys())):
             entity = state.entities[e_id]
@@ -588,7 +660,7 @@ class StrategicIntelligenceSystem:
             env_concerns = RoutineService.evaluate_environmental_concerns(entity)
             
             # 2. External Salience Concerns (Phase 9 Hardening)
-            neighbors = SimulationDomainLogic.get_neighbor_view(state, entity, radius=10.0)
+            neighbors = SimulationDomainLogic.get_neighbor_view(state, entity, radius=3.0)
             salient_concerns = ConcernIntakeSystem.evaluate_salience(entity, neighbors, state)
             
             concerns.extend(anchored_concerns)
@@ -736,7 +808,7 @@ class StrategicIntelligenceSystem:
 
         if current.lock_until_tick > current_tick:
             # Bypass lock ONLY for high-urgency danger/safety projects
-            if candidate_project.kind == "danger" and candidate_project.score > 80:
+            if (candidate_project.kind == "danger" and candidate_project.score > 80) or candidate_project.kind == "detour":
                 pass 
             else:
                 return None 
@@ -852,16 +924,22 @@ class StrategicIntelligenceSystem:
             return None
             
         # 1. Reach Location Resolution
-        if obj.kind == "reach_location" and obj.target:
-            try:
-                if isinstance(obj.target, str):
-                    try:
-                        import ast
-                        target_pos = ast.literal_eval(obj.target)
-                    except (ValueError, SyntaxError):
-                        target_pos = None
-                else:
-                    target_pos = obj.target
+        if project.kind == "detour" and obj.kind == "reach_location":
+            target_pos = obj.target_position
+            if not target_pos and obj.target:
+                try:
+                    if isinstance(obj.target, str):
+                        try:
+                            import ast
+                            target_pos = ast.literal_eval(obj.target)
+                        except (ValueError, SyntaxError):
+                            target_pos = None
+                    else:
+                        target_pos = obj.target
+                except:
+                    target_pos = None
+            
+            if target_pos:
                 dist = abs(entity.navigation.position[0] - target_pos[0]) + abs(entity.navigation.position[1] - target_pos[1])
                 if dist < 1.0:
                     resolved_obj = replace(obj, status=ObjectiveStatus.RESOLVED)
@@ -871,8 +949,6 @@ class StrategicIntelligenceSystem:
                         current_project_id_set="",
                         current_objective_id_set=""
                     )
-            except:
-                 pass
         return None
 
     @staticmethod
@@ -893,8 +969,23 @@ class StrategicIntelligenceSystem:
         if entity.identity.properties.get("status_frozen") or entity.identity.properties.get("status_stunned"):
             return StrategicUpdate()
 
+        # Worker Fast-Path: If entity is a worker with an active, unblocked harvesting project and navigation target,
+        # and biological needs are low, short-circuit redundant strategic evaluation.
+        curr_proj_id = entity.strategic.current_project_id
+        if curr_proj_id and entity.navigation.target:
+            bio = entity.biological
+            if bio.hunger < 50.0 and bio.sleep_debt < 50.0 and not entity.strategic.blockers:
+                proj = entity.strategic.projects.get(curr_proj_id)
+                if proj and proj.status == ProjectStatus.ACTIVE and proj.kind == "harvesting" and proj.active_objective_id:
+                    try:
+                        nid = int(proj.active_objective_id.split("_")[-1])
+                        node = state.resource_nodes.get(nid)
+                        if node and node.remaining_charges > 0 and node.cooldown_remaining <= 0:
+                            return StrategicUpdate()
+                    except Exception:
+                        pass
+
         # 0. Strategic Memory (PH6: Lead Suppression)
-        from src.systems.strategic_systems.detour import DetourSuggestionSystem
         memory_upd = DetourSuggestionSystem.suppress_exhausted_leads(entity, state.tick)
         
         res_up = StrategicIntelligenceSystem._resolve_active_objective(state, entity)
@@ -1004,7 +1095,6 @@ class StrategicIntelligenceSystem:
                          pass
                 
                 if strat.blockers and entity.identity.group_id is None:
-                    from src.systems.strategic_systems.detour import DetourSuggestionSystem
                     detours = DetourSuggestionSystem.suggest_detours(entity, current_tick)
                     if detours:
                         best = detours[0]
@@ -1034,15 +1124,10 @@ class StrategicIntelligenceSystem:
                             )
                             return final_detour
         
-        from src.ai.goals import GoalRegistry
-        from src.ai.score_modifiers import ScoreModifierSystem
-        from src.systems.party import PartyCoordinationSystem
-        
         # 4. Goal Scoring & Routine Biasing
         all_scores = GoalRegistry.get_all_scores(entity, state)
         
         # PH9: Routine & Life-Rhythm Biasing
-        from src.systems.routine import RoutineService
         all_scores = [
             replace(s, utility=s.utility + 
                     RoutineService.get_routine_utility_boost(entity, s.kind.lower(), state.world_time) +
@@ -1051,7 +1136,6 @@ class StrategicIntelligenceSystem:
         ]
         
         # PH7: Leadership Influence
-        from src.systems.party import PartyCoordinationSystem
         all_scores = PartyCoordinationSystem.apply_leadership_influence(entity, state, all_scores)
         
         modified_scores = ScoreModifierSystem.apply_modifiers(entity, state, all_scores)
@@ -1080,6 +1164,7 @@ class StrategicIntelligenceSystem:
                 id=f"{best_candidate.kind}_{best_candidate.target_id}",
                 kind="reach_location",
                 target=best_candidate.target_id,
+                target_position=best_candidate.target_pos,
                 status=ObjectiveStatus.ACTIVE
             )
             candidate_proj = ProjectState(

@@ -10,8 +10,10 @@ def test_entity_identity_preservation_passive():
     e1 = V2EntityBuilder(1).location(10, 10).build()
     state = AuthoritativeState(tick=1, seed=42, entities={1: e1})
     
-    # Tick with NO changes
-    new_state = ApplyPath.apply_passive(state)
+    # Tick with NO changes (using high cadence to avoid staggered updates)
+    from src.engine.cadence import SystemCadence
+    high_cadence = SystemCadence(biological=100, lifecycle=100, strategic_intelligence=100)
+    new_state = ApplyPath.apply_passive(state, cadence=high_cadence)
     
     assert new_state.entities[1] is e1, "Entity identity should be preserved when no changes occur"
 

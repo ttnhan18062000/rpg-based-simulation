@@ -2,6 +2,7 @@
 # Compliance IDs: INFRA-001, INFRA-002
 from __future__ import annotations
 from typing import TYPE_CHECKING, List, Dict, Optional, Any, Set
+import time
 from dataclasses import replace
 import logging
 
@@ -9,6 +10,20 @@ if TYPE_CHECKING:
     from src.core.state import AuthoritativeState
     from src.core.updates import StateUpdate, EntityUpdate
     from src.engine.cadence import SystemCadence
+
+from src.engine.cadence import SystemCadence as DefaultCadence, should_run
+from src.engine.blacksmith import BlacksmithSystem
+from src.engine.interaction import InteractionSystem
+from src.engine.legality import LegalityServiceV2
+from src.engine.sabotage import BuildingSabotageSystem
+from src.engine.town_resolution import TownResolutionSystem
+from src.engine.world_dynamics import WorldDynamicsSystem
+from src.engine.shop import ShopSystem
+from src.engine.evolution import EvolutionSystem
+from src.systems.strategic import StrategicIntelligenceSystem
+from src.systems.lifecycle import LifecycleSystem
+from src.engine.pipeline_phases.capacity_enforcement import CapacityEnforcementPhase
+from src.systems.world_systems.generator import EntityGenerator
 
 logger = logging.getLogger(__name__)
 
@@ -20,132 +35,135 @@ class AuthoritativeApplyPipeline:
     """
 
     @staticmethod
-    def refine(state: AuthoritativeState, update: StateUpdate, cadence: SystemCadence | None = None) -> StateUpdate:
+    def refine(state: AuthoritativeState, update: StateUpdate, cadence: SystemCadence | None = None, force_full_scan: bool = False) -> StateUpdate:
         """
         Singular entry point for authoritative state transition refinement.
         Logic ID: TOWN-147 (Every update enters the same pipeline)
         Logic ID: TOWN-148 (No AI/system mutates world state directly)
-        Logic ID: TOWN-004 (World mutation happens after proposal generation)
-        Logic ID: TOWN-008 (Observability consumes authoritative results)
-        Orchestrates systems in the correct causal order.
+        Orchestrates systems in the correct causal order across 17 distinct phases.
         """
-        # 1. Identity & Lifecycle (High Priority)
-        # 2. Strategic Intents (Evaluating long-term projects)
-        from src.engine.cadence import SystemCadence as DefaultCadence, should_run
-        cadence = cadence or DefaultCadence()
-        from src.systems.strategic import StrategicIntelligenceSystem
-        from src.systems.redirection import StrategicRedirectionSystem
-        from src.systems.world_systems.navigation import NavigationSystem
-        from src.engine.interaction import InteractionSystem
-        from src.engine.blacksmith import BlacksmithSystem
-        from src.systems.world_systems.groups import GroupSystem
-        from src.systems.lifecycle import LifecycleSystem
-        from src.engine.legality import LegalityServiceV2
-        from src.core.updates import EntityUpdate
-        
-        # 0. Trust Boundary: strip raw world-side effects from worker proposals.
-        update = AuthoritativeApplyPipeline._strip_untrusted_world_effects(update)
-        
-        # 0.1 Actor Validity
-        # Reject proposals from dead/inactive/incapacitated actors before any subsystem
-        # can route their movement, actions, resource intents, or interaction progress.
-        #
-        # This must run after trust-boundary stripping because raw worker rewards/world
-        # mutations should already be removed, but before contract/quest/action/movement
-        # routing because invalid actors must not participate in the tick.
-        update = AuthoritativeApplyPipeline._resolve_actor_validity(state, update)
-        
-        # 0.1 Contract Lifecycle
-        # Expire stale social contracts before any later system can consume them.
-        #
-        # Why this must run early:
-        #   - expired recruitment offers should not be accepted
-        #   - expired POSITION_SWAP contracts should not move entities
-        #   - expired loan/protection/merchant contracts should not affect strategy
-        #
-        # This phase only updates contract statuses. It should not move entities,
-        # transfer inventory, or mutate world resources.
-        update = AuthoritativeApplyPipeline._resolve_contract_expirations(state, update)
-        
-        # 1. Apply Blacksmith/Crafting Laws (Milestone 3)
-        update = BlacksmithSystem.enforce(state, update)
-        
-        # 2. Action Enforcement (Combat, Abilities)
-        update = AuthoritativeApplyPipeline._route_action_intent(state, update)
-        
-        from src.core.dirty import DirtySet
-        update = update.replace(dirty_set=DirtySet.from_update(state, update))
-        
-        # 3.0 Position Swap Contracts / Mutual Corridor Passing
-        # This must run before normal movement routing.
-        update = AuthoritativeApplyPipeline._resolve_position_swaps(state, update)
-        
-        # 3.1 Navigation & Movement (Pathfinding, Obstacles)
-        update = AuthoritativeApplyPipeline._route_movement_intent(state, update)
+        if force_full_scan:
+             update = replace(update, force_full_scan=True)
+        if getattr(state, "_force_full_scan", False):
+             update = replace(update, force_full_scan=True)
 
-        # 4. Task/Intent Routing (Converting high-level tasks to low-level intents)
+        cadence = cadence or DefaultCadence(strategic_intelligence=1)
+
+        # M7 Optimization: Use a builder to avoid redundant set cloning.
+        from src.core.dirty import DirtySetBuilder
+        dirty_builder = DirtySetBuilder(update.dirty_set)
+        if update.dirty_set is None:
+            dirty_builder.mark_from_update(state, update)
+
+        costs = {}
+
+        # --- Phase 1: Trust & Validity ---
+        t_start = time.perf_counter_ns()
+        update = AuthoritativeApplyPipeline._strip_untrusted_world_effects(update)
+        update = AuthoritativeApplyPipeline._resolve_actor_validity(state, update)
+        costs["trust_validity"] = (time.perf_counter_ns() - t_start) / 1e6
+
+        # --- Phase 2: Contracts & Production ---
+        t_start = time.perf_counter_ns()
+        update = AuthoritativeApplyPipeline._resolve_contract_expirations(state, update)
+        update = BlacksmithSystem.enforce(state, update)
+        costs["contracts_production"] = (time.perf_counter_ns() - t_start) / 1e6
+
+        # --- Phase 3: Action & Movement Routing ---
+        t_start = time.perf_counter_ns()
+        update = AuthoritativeApplyPipeline._route_action_intent(state, update)
+        update = AuthoritativeApplyPipeline._resolve_position_swaps(state, update)
+        update = AuthoritativeApplyPipeline._route_movement_intent(state, update)
+        costs["locomotion"] = (time.perf_counter_ns() - t_start) / 1e6
+
+        # --- Phase 4: Interaction & World Effects ---
+        t_start = time.perf_counter_ns()
+        # InteractionSystem and TownResolution need an accurate dirty set
+        dirty_builder.mark_from_update(state, update)
+        update = update.replace(dirty_set=dirty_builder.build())
+        
         update = AuthoritativeApplyPipeline._route_interaction_intent(state, update)
-        
-        # 5. Interaction Enforcement (Harvesting, Chests)
         update = InteractionSystem.enforce(state, update)
-        
-        # 4.1 Near-Death Hardening
-        # Must run after action/combat routing, because it depends on CombatUpdate.hp_delta.
-        # Must run before lifecycle/evolution finalization so the hardened combat update
-        # is part of the same authoritative tick.
-        update = AuthoritativeApplyPipeline._apply_near_death_hardening(state, update)
-        
-        # Phase 8: Infrastructure Sabotage (LEG-RPG-006)
-        from src.engine.sabotage import BuildingSabotageSystem
-        from src.engine.town_resolution import TownResolutionSystem
         if should_run(state.tick, None, cadence.building_sabotage):
             update = BuildingSabotageSystem.resolve(state, update)
+        costs["interaction"] = (time.perf_counter_ns() - t_start) / 1e6
+
+        # --- Phase 5: Governance & Ecology ---
+        t_start = time.perf_counter_ns()
         if should_run(state.tick, None, cadence.town_resolution):
             update = TownResolutionSystem.resolve(state, update, cadence=cadence)
         
-        from src.systems.world_systems.generator import EntityGenerator
-        from src.engine.world_dynamics import WorldDynamicsSystem
         generator = EntityGenerator(state.seed + state.tick)
         generator._last_id = state.next_entity_id - 1
         update = WorldDynamicsSystem.resolve_dynamics(state, update, generator, cadence=cadence)
-        
-        # 4.5 Quest Reward Authority
-        # Converts quest completion / reward retry into ResourceTransferIntent.
-        # This must run before _resolve_resource_transactions so reward delivery is
-        # capacity-checked atomically.
+        costs["governance_ecology"] = (time.perf_counter_ns() - t_start) / 1e6
+
+        # --- Phase 6: Economy & Evolution ---
+        t_start = time.perf_counter_ns()
         update = AuthoritativeApplyPipeline._resolve_quest_rewards(state, update)
-        
-        # 5. Resource Transaction Laws (Transfers, Drops)
-        # Atomic Resource Transactions
-        from src.engine.shop import ShopSystem
         update = ShopSystem.enforce(state, update)
         update = AuthoritativeApplyPipeline._resolve_resource_transactions(state, update)
-        
-        # Phase 8: Evolution & Leveling (LEG-RPG-143)
-        from src.engine.evolution import EvolutionSystem
         update = EvolutionSystem.evaluate(state, update)
+        costs["economy"] = (time.perf_counter_ns() - t_start) / 1e6
+
+        # --- Phase 7: Cognitive & Final Integrity ---
+        t_start = time.perf_counter_ns()
+        # Refresh dirty set before final strategic pass
+        t0 = time.perf_counter_ns()
+        dirty_builder.mark_from_update(state, update)
+        update = update.replace(dirty_set=dirty_builder.build())
+        t1 = time.perf_counter_ns()
         
-        # 6. Strategic Evaluation (Blockers, Projects, Concerns)
         update = StrategicIntelligenceSystem.fused_strategic_pass(state, update, cadence=cadence)
-        
-        # 7.0 (Moved to Step 3.0)
-
-        # 7.5 Final Occupancy Conflict Resolution
-        # This protects the authoritative apply path from invalid worker proposals
-        # that directly set EntityUpdate.new_position.
+        t2 = time.perf_counter_ns()
+        update = AuthoritativeApplyPipeline._apply_near_death_hardening(state, update)
+        t3 = time.perf_counter_ns()
         update = AuthoritativeApplyPipeline._resolve_occupancy_conflicts(state, update)
-        
-        # 8. Lifecycle Enforcement (Death, Respawn)
+        t4 = time.perf_counter_ns()
         update = LifecycleSystem.resolve_lifecycle(state, update)
-        
-        # 9. Group Logic (Formation & Coordination)
+        t5 = time.perf_counter_ns()
         update = AuthoritativeApplyPipeline._resolve_groups(state, update)
-
-        # 10. Capacity & Bandwidth Enforcement
-        from src.engine.pipeline_phases.capacity_enforcement import CapacityEnforcementPhase
+        t6 = time.perf_counter_ns()
         update = CapacityEnforcementPhase.enforce(state, update)
+        t7 = time.perf_counter_ns()
+        
+        # Final dirty set for result application
+        dirty_builder.mark_from_update(state, update)
+        update = update.replace(dirty_set=dirty_builder.build())
+        t8 = time.perf_counter_ns()
+        costs["final_integrity"] = (t8 - t_start) / 1e6
+        if state.tick in (10, 20, 30, 40, 50) and len(state.entities) >= 500:
+            logger.debug(f"[Tick {state.tick}] final_integrity breakdown (ms): dirty1={(t1-t0)/1e6:.2f}, fused={(t2-t1)/1e6:.2f}, hardening={(t3-t2)/1e6:.2f}, occupancy={(t4-t3)/1e6:.2f}, lifecycle={(t5-t4)/1e6:.2f}, groups={(t6-t5)/1e6:.2f}, capacity={(t7-t6)/1e6:.2f}, dirty2={(t8-t7)/1e6:.2f}")
 
-        return update
+
+        return update.replace(sub_phase_costs=costs)
+    @staticmethod
+    def _refresh_dirty_set(state: AuthoritativeState, update: StateUpdate) -> StateUpdate:
+        """
+        Hardening Phase: Ensure DirtySet is always current.
+        Logic ID: PERF-006-REFRESH
+        M7 Optimization: Incremental derivation.
+        """
+        from src.core.dirty import DirtySet
+        
+        # Phase 17 Law: If force_full_scan is True, the dirty set must include ALL entities.
+        if update.force_full_scan:
+            all_ids = set(state.entities.keys())
+            new_dirty = DirtySet(
+                movement_entities=all_ids,
+                combat_entities=all_ids,
+                inventory_entities=all_ids,
+                strategic_entities=all_ids,
+                social_entities=all_ids,
+                lifecycle_entities=all_ids,
+                town_entities=state.town_entity_ids,
+                biological_entities=all_ids,
+                attribute_entities=all_ids
+            )
+            return update.replace(dirty_set=new_dirty)
+            
+        new_dirty = DirtySet.from_update(state, update, base_dirty=update.dirty_set)
+        return update.replace(dirty_set=new_dirty)
     
     @staticmethod
     def _strip_untrusted_world_effects(update: StateUpdate) -> StateUpdate:

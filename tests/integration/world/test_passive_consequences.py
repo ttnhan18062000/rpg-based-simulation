@@ -63,7 +63,7 @@ def test_corpse_spawning_on_death():
     corpse = next_state.corpses[1000001]
     assert corpse.original_entity_id == 1
     assert corpse.position == (5.0, 5.0)
-    assert corpse.decay_tick == 1 + 100 # Tick 1 + 100
+    assert corpse.decay_tick == 2 + 100 # Tick 2 + 100
 
 def test_regional_hazard_and_starvation():
     """
@@ -95,10 +95,12 @@ def test_regional_hazard_and_starvation():
         regions={"hazard": hazard_region}
     )
     
-    next_state = ApplyPath.apply_generation(state, StateUpdate(), next_tick=2)
+    from src.engine.pipeline import AuthoritativeApplyPipeline
+    update = AuthoritativeApplyPipeline.refine(state, StateUpdate())
+    next_state = ApplyPath.apply_generation(state, update, next_tick=2)
     
-    # Damage = 10 (hazard) + 5 (starvation) = 15
-    assert next_state.entities[1].combat.hp == 85
+    # Damage = 10 (hazard) + 2 (starvation) = 12
+    assert next_state.entities[1].combat.hp == 88
 
 def test_regional_recovery():
     """

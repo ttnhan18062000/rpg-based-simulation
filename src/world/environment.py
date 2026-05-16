@@ -68,11 +68,16 @@ class EnvironmentService:
         
         from src.core.enums import Faction
         if entity.identity.faction == Faction.HERO_GUILD:
-            for s in state.entities.values():
-                # Any active monster stronghold
-                if s.kind == "stronghold" and s.combat.alive:
-                    from src.engine.legality import LegalityServiceV2
-                    dist = LegalityServiceV2.get_manhattan_dist(entity.navigation.position, s.navigation.position)
+            strongholds = getattr(state, "_strongholds_cache", None)
+            if strongholds is None:
+                strongholds = [s for s in state.entities.values() if getattr(s, "kind", "") == "stronghold" and s.combat.alive]
+                try: object.__setattr__(state, "_strongholds_cache", strongholds)
+                except: pass
+
+            if strongholds:
+                px, py = entity.navigation.position
+                for s in strongholds:
+                    dist = abs(px - s.navigation.position[0]) + abs(py - s.navigation.position[1])
                     if dist < 12:
                         # Aura of Despair: -30% speed, -20% readiness recovery
                         mults["move_speed"] = min(mults["move_speed"], 0.7)
