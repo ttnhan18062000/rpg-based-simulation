@@ -1,3 +1,4 @@
+# Compliance IDs: ECON-203, STRAT-007, STRAT-010
 """
 Compatibility wrapper.
 

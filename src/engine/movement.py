@@ -1,3 +1,4 @@
+# Compliance IDs: AUTH-022, COMBAT-008, COMBAT-009, COMBAT-011, COMBAT-014, COMBAT-015, COMBAT-021, COMBAT-024, COMBAT-025, COMBAT-044, COMBAT-056, COMBAT-057, COMBAT-058, COMBAT-059, COMBAT-067, COMBAT-068, COMBAT-069, PROG-090, PROG-091, RES-028, SOC-049, STRAT-041, STRAT-042, STRAT-055, STRAT-057, STRAT-093, WORLD-023, WORLD-024, WORLD-026, WORLD-033, WORLD-034, WORLD-069, WORLD-071, WORLD-088, WORLD-094, WORLD-095, WORLD-096, WORLD-098, WORLD-101, WORLD-119, WORLD-139, WORLD-140, WORLD-141, WORLD-142, WORLD-143, WORLD-144, WORLD-145, WORLD-146, WORLD-147, WORLD-148, WORLD-149, WORLD-150, WORLD-151, WORLD-152, WORLD-153, WORLD-154, WORLD-155, WORLD-156, WORLD-157, WORLD-158, WORLD-159, WORLD-161, WORLD-162, WORLD-163, WORLD-165, WORLD-166, WORLD-167, WORLD-168, WORLD-169, WORLD-174, WORLD-175, WORLD-176, WORLD-177, WORLD-178, WORLD-179, WORLD-180, WORLD-181, WORLD-182, WORLD-183, WORLD-184, WORLD-185, WORLD-186, WORLD-187, WORLD-188, WORLD-189, WORLD-190, WORLD-191, WORLD-192, WORLD-193, WORLD-194, WORLD-195, WORLD-196, WORLD-197, WORLD-198, WORLD-199, WORLD-200, WORLD-201, WORLD-204, WORLD-205, WORLD-206, WORLD-221, WORLD-230, WORLD-231, WORLD-232, WORLD-233, WORLD-234, WORLD-235, WORLD-236, WORLD-237, WORLD-238, WORLD-239, WORLD-240, WORLD-241, WORLD-242, WORLD-243, WORLD-244, WORLD-245, WORLD-246, WORLD-249
 # Compliance IDs: COMB-009, COMB-010, COMB-011, COMB-012, COMB-188, COMB-189, COMB-190, COMB-199, COMB-201, COMB-202, COMB-203, COMB-204, COMB-205, COMB-206, COMB-207, COMB-208, COMB-211, COMB-212, COMB-213, COMB-214, COMB-219, COMB-220, COMB-221, COMB-222, COMB-223, COMB-224, COMB-225, COMB-226, COMB-231, COMB-232, COMB-233, COMB-234, COMB-235, COMB-236, COMB-238, COMB-239, COMB-240, COMB-241, COMB-242, COMB-243, COMB-272, COMB-273
 # src/engine/movement.py
 from __future__ import annotations
@@ -13,6 +14,8 @@ from src.systems.world_systems.navigation import NavigationSystem
 from src.world.environment import EnvironmentService
 from src.engine.combat import CombatResolutionSystem
 from src.engine.rpg_depth import TerrainCostService
+
+from src.engine.movement_cache import MovementPlanKey, MovementPlan
 
 if TYPE_CHECKING:
     from src.core.state import AuthoritativeState, EntityState
@@ -39,8 +42,22 @@ class MovementSystem:
         if not entity.lifecycle.active:
             return {entity.id: EntityUpdate(entity_id=entity.id)}
 
-        # 2. Step Calculation
-        effective_target = NavigationSystem.get_next_step(entity, target_pos, state_or_context)
+        # 2. Cache Lookup & Step Calculation
+        m_cache = getattr(state_or_context, "movement_cache", None)
+        current_tile = (int(entity.navigation.position[0]), int(entity.navigation.position[1]))
+        target_tile = (int(target_pos[0]), int(target_pos[1]))
+        current_tick = getattr(state_or_context, "tick", 0)
+
+        cache_key = None
+        cached_plan = None
+        if m_cache is not None:
+            cache_key = MovementPlanKey(entity.id, current_tile, target_tile, m_cache.occupancy_version)
+            cached_plan = m_cache.get(cache_key, current_tick)
+
+        if cached_plan is not None:
+            effective_target = cached_plan.next_step
+        else:
+            effective_target = NavigationSystem.get_next_step(entity, target_pos, state_or_context)
 
         # 3. Environment & Mode Multipliers (Calculated early for readiness gating)
         region = LegalityServiceV2.get_region_for_position(entity.navigation.position, state_or_context)
@@ -99,8 +116,8 @@ class MovementSystem:
                     entities = getattr(state_or_context, 'entities', {})
                     occupant = entities.get(occupant_id)
                     if occupant and occupant.navigation.movement_mode != MovementMode.HOLD:
-                        my_prio = LegalityServiceV2.get_entity_priority(entity)
-                        occ_prio = LegalityServiceV2.get_entity_priority(occupant)
+                        my_prio = LegalityServiceV2.get_entity_priority(entity, state_or_context)
+                        occ_prio = LegalityServiceV2.get_entity_priority(occupant, state_or_context)
                         if my_prio > occ_prio:
                             # Search for yield tile
                             for dx_y, dy_y in [(-1,0),(1,0),(0,-1),(0,1),(-1,-1),(-1,1),(1,-1),(1,1)]:
@@ -145,6 +162,10 @@ class MovementSystem:
                 # Normal success: Reset counters
                 wait_delta = -entity.navigation.wait_count
                 osc_delta = -entity.navigation.oscillation_count
+
+                # Cache successful move on cache miss
+                if m_cache is not None and cache_key is not None and cached_plan is None and effective_target is not None:
+                    m_cache.put(cache_key, MovementPlan(next_step=effective_target, valid_until_tick=current_tick + 10))
 
         # Logic ID: COMB-010 (Anti-stalemate logic handles chase/kite loops)
         if not success and not replan:

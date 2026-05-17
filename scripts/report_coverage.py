@@ -2,7 +2,7 @@ import re
 from pathlib import Path
 from collections import defaultdict
 
-CHECKLIST = Path("logic_checklist_exhaustive.md")
+CHECKLIST = Path("docs/logic_checklist_exhaustive.md")
 
 def report():
     if not CHECKLIST.exists():

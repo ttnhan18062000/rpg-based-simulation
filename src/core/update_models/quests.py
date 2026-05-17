@@ -65,4 +65,4 @@ class QuestUpdate:
     def is_noop(self) -> bool:
         if self.quest_id == "MULTI":
             return not self.multi_updates or all(qu.is_noop() for qu in self.multi_updates)
-        return self.progress_delta == 0.0 and self.status_set is None
+        return not bool(self.quest_id) and self.progress_delta == 0.0 and self.status_set is None

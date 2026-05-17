@@ -32,27 +32,37 @@ class ProfilingHarness:
     def __init__(self, out_dir: Path):
         self.out_dir = out_dir
         self.out_dir.mkdir(parents=True, exist_ok=True)
+        self.last_kernel: Any = None
 
     def run_scenario(
         self, 
         scenario_name: str, 
         entity_count: int, 
         ticks: int,
-        profile: RuntimeProfile = PROD_LARGE
+        profile: RuntimeProfile = PROD_LARGE,
+        mode: str = "pure"
     ) -> None:
         """Executes a named scenario under cProfile."""
-        print(f"--- Running Scenario: {scenario_name.upper()} ({entity_count} entities, {ticks} ticks) ---")
+        flags = {
+            "pure": {"no_replay": True, "no_frame_pacing": True, "audit_mode": False},
+            "runtime": {"no_replay": False, "no_frame_pacing": False, "audit_mode": False},
+            "audit": {"no_replay": False, "no_frame_pacing": True, "audit_mode": True},
+        }.get(mode, {"no_replay": True, "no_frame_pacing": True, "audit_mode": False})
+
+        print(f"--- Running Scenario: {scenario_name.upper()} ({entity_count} entities, {ticks} ticks, mode: {mode}) ---")
         
         state = self._make_state(scenario_name, entity_count)
         kernel = Kernel(
             profile,
             state,
             DeterministicRNG(42),
-            flags={"audit_mode": False}
+            flags=flags
         )
+        self.last_kernel = kernel
 
-        profile_path = self.out_dir / f"{scenario_name}_{entity_count}.prof"
-        text_path = self.out_dir / f"{scenario_name}_{entity_count}.txt"
+        profile_path = self.out_dir / f"{scenario_name}_{entity_count}_{mode}.prof"
+        text_path = self.out_dir / f"{scenario_name}_{entity_count}_{mode}.txt"
+        report_path = self.out_dir / "report.md"
 
         profiler = cProfile.Profile()
         profiler.enable()
@@ -67,13 +77,36 @@ class ProfilingHarness:
         profiler.dump_stats(profile_path)
 
         with text_path.open("w", encoding="utf-8") as f:
+            f.write("=== RPG Engine Profile Report ===\n")
+            f.write(f"Scenario: {scenario_name} | Entities: {entity_count} | Ticks: {ticks}\n")
+            f.write(f"Mode: {mode} | Flags: {flags}\n")
+            f.write("=================================\n\n")
             stats = pstats.Stats(profiler, stream=f)
             stats.strip_dirs()
             stats.sort_stats("cumtime")
             stats.print_stats(80)
 
+        with report_path.open("w", encoding="utf-8") as f:
+            f.write("# V2 RPG Engine Profiling Report\n\n")
+            f.write("## Scenario Execution Summary\n")
+            f.write(f"- **Scenario**: {scenario_name}\n")
+            f.write(f"- **Entities**: {entity_count}\n")
+            f.write(f"- **Ticks**: {ticks}\n")
+            f.write(f"- **Mode**: {mode}\n")
+            f.write(f"- **Flags**: `{flags}`\n\n")
+            f.write("## Generated Output Artifacts\n")
+            f.write(f"- **Binary Profile**: `{profile_path}`\n")
+            f.write(f"- **Text Summary**: `{text_path}`\n\n")
+            f.write("## Memory & Garbage Collection Statement\n")
+            f.write("> [!IMPORTANT]\n")
+            f.write("> **Memory & GC Verification Notice**: This profiling run evaluates compute execution efficiency under cProfile. ")
+            f.write("It does **not** collect active Garbage Collection (GC) metrics or Physical RSS memory snapshots. \n")
+            f.write("> Consequently, **no claims regarding GC resilience, lack of memory leaks, or absence of heap fragmentation ")
+            f.write("can be made from this report** without explicit GC and RSS telemetry verification.\n")
+
         print(f"  Binary Profile: {profile_path}")
         print(f"  Human Report:   {text_path}")
+        print(f"  Markdown Report:{report_path}")
 
     def _make_state(self, scenario_name: str, entity_count: int) -> AuthoritativeState:
         """Generates a world state tailored to the scenario."""
@@ -137,11 +170,18 @@ def main() -> None:
     )
     parser.add_argument("--entities", type=int, default=1000, help="Number of entities")
     parser.add_argument("--ticks", type=int, default=500, help="Number of ticks to run")
+    parser.add_argument(
+        "--mode",
+        choices=["pure", "runtime", "audit"],
+        default="pure",
+        help="Profiling harness isolation mode"
+    )
     args = parser.parse_args()
 
     harness = ProfilingHarness(OUT_DIR)
-    harness.run_scenario(args.scenario, args.entities, args.ticks)
+    harness.run_scenario(args.scenario, args.entities, args.ticks, mode=args.mode)
 
 
 if __name__ == "__main__":
     main()
+

@@ -1,3 +1,4 @@
+# Compliance IDs: AUTH-010
 from __future__ import annotations
 
 from dataclasses import replace

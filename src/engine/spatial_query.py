@@ -11,6 +11,60 @@ class SpatialQueryService:
     """
 
     @staticmethod
+    def nearest_resource_node(state: AuthoritativeState, pos: tuple[float, float], dirty: Optional[Any] = None) -> Optional[ResourceNodeState]:
+        from src.engine.world_index import WorldIndexService
+        indexes = WorldIndexService.get_indexes(state, dirty)
+        best_node = None
+        best_dist = float('inf')
+        for n_ids in indexes.active_resource_nodes.grid.values():
+            for n_id in n_ids:
+                node = state.resource_nodes.get(n_id)
+                if node:
+                    dist = max(1.0, abs(node.position[0] - pos[0]) + abs(node.position[1] - pos[1]))
+                    if dist < best_dist:
+                        best_dist = dist
+                        best_node = node
+        return best_node
+
+    @staticmethod
+    def nearest_building(state: AuthoritativeState, pos: tuple[float, float], kind: str, dirty: Optional[Any] = None) -> Optional[BuildingState]:
+        from src.engine.world_index import WorldIndexService
+        indexes = WorldIndexService.get_indexes(state, dirty)
+        b_ids = indexes.buildings_by_kind.get(kind, ())
+        best_bldg = None
+        best_dist = float('inf')
+        for b_id in b_ids:
+            b = state.buildings.get(b_id)
+            if b:
+                dist = abs(b.position[0] - pos[0]) + abs(b.position[1] - pos[1])
+                if dist < best_dist:
+                    best_dist = dist
+                    best_bldg = b
+        return best_bldg
+
+    @staticmethod
+    def nearby_entities(state: AuthoritativeState, pos: tuple[float, float], radius: float, dirty: Optional[Any] = None) -> List[int]:
+        from src.engine.world_index import WorldIndexService
+        indexes = WorldIndexService.get_indexes(state, dirty)
+        res = []
+        r2 = radius * radius
+        min_x = int(pos[0] - radius)
+        max_x = int(pos[0] + radius)
+        min_y = int(pos[1] - radius)
+        max_y = int(pos[1] + radius)
+        for tx in range(min_x, max_x + 1):
+            for ty in range(min_y, max_y + 1):
+                e_ids = indexes.entities_by_tile.get((tx, ty), ())
+                for e_id in e_ids:
+                    e = state.entities.get(e_id)
+                    if e:
+                        dx = e.navigation.position[0] - pos[0]
+                        dy = e.navigation.position[1] - pos[1]
+                        if dx*dx + dy*dy <= r2:
+                            res.append(e_id)
+        return res
+
+    @staticmethod
     def get_entities_near(state: AuthoritativeState, pos: tuple[float, float], radius: float) -> List[int]:
         """Returns IDs of entities within radius of pos."""
         from src.engine.domain.view import DomainView

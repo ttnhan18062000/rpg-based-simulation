@@ -2,10 +2,13 @@ from __future__ import annotations
 
 import os
 import json
+import logging
 from pathlib import Path
 from dataclasses import dataclass, asdict
 from typing import List, Dict, Any, Optional
 from src.core.diagnostic import TraceEvent
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -32,16 +35,26 @@ class ReplaySink:
     def _clean_for_json(self, obj: Any) -> Any:
         """Deeply convert for JSON compatibility, ensuring all keys are strings."""
         from dataclasses import is_dataclass, asdict
+        from collections.abc import Mapping
+        from enum import Enum
+        from uuid import UUID
+        from pathlib import Path
         
-        if isinstance(obj, dict):
+        if isinstance(obj, (str, int, float, bool, type(None))):
+            return obj
+        if isinstance(obj, Enum):
+            return obj.name
+        if isinstance(obj, (UUID, Path)):
+            return str(obj)
+        if isinstance(obj, Mapping):
             return {str(k): self._clean_for_json(v) for k, v in obj.items()}
-        if isinstance(obj, (list, tuple, set)):
+        if isinstance(obj, (list, tuple, set, frozenset)):
             return [self._clean_for_json(x) for x in obj]
         if is_dataclass(obj):
             return self._clean_for_json(asdict(obj))
         if hasattr(obj, '__dict__'):
             return self._clean_for_json(obj.__dict__)
-        return obj
+        return str(obj)
 
     def persist_chunk(self, chunk_id: int, events: List[TraceEvent]) -> bool:
         """
@@ -71,8 +84,9 @@ class ReplaySink:
             )
             return True
             
-        except Exception:
+        except Exception as e:
             # M6 Law: Non-authoritative fallback
+            logger.error(f"Persist chunk failed: {e}", exc_info=True)
             return False
 
     def write_manifest(self, manifest_data: Dict[str, Any]) -> bool:

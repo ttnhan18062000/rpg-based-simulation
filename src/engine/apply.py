@@ -1,3 +1,4 @@
+# Compliance IDs: PERF-017, RES-202
 from __future__ import annotations
 
 import logging
@@ -394,8 +395,11 @@ class ApplyPath:
         for k, delta in update.work_debt_updates.items():
             new_work_debt[k] = max(0, new_work_debt.get(k, 0) + delta)
 
-        new_trace = list(prior_state.transaction_trace)
-        new_trace.extend(update.transaction_trace)
+        if audit_mode:
+            new_trace = list(prior_state.transaction_trace)
+            new_trace.extend(update.transaction_trace)
+        else:
+            new_trace = []
 
         new_processed = list(prior_state.processed_transaction_ids)
         new_processed.extend(update.processed_transaction_ids)
@@ -422,6 +426,10 @@ class ApplyPath:
         pass_contracts = getattr(prior_state, "_has_contracts_cache", None)
         if update.entities_add or any(u.strategic is not None and (u.strategic.contracts_add_or_update or u.strategic.contracts_remove) for u in update.entity_updates.values()):
             pass_contracts = None
+
+        m_cache = getattr(prior_state, "movement_cache", None)
+        if m_cache is not None and update.dirty_set is not None:
+            m_cache.invalidate_for_dirty(update.dirty_set)
 
         new_state = AuthoritativeState(
             tick=tick,
@@ -461,8 +469,11 @@ class ApplyPath:
             _active_nodes_grid=new_active_nodes,
             _building_map_cache=new_bldg_map,
             _has_hostiles_or_dead_cache=pass_hostile,
-            _has_contracts_cache=pass_contracts
+            _has_contracts_cache=pass_contracts,
+            movement_cache=m_cache,
+            world_indexes=getattr(prior_state, "world_indexes", None)
         )
+
 
         if not any_entity_changed and getattr(prior_state, "_readonly_entities_cache", None) is not None:
             object.__setattr__(new_state, "_readonly_entities_cache", prior_state._readonly_entities_cache)
@@ -807,6 +818,7 @@ class ApplyPath:
             changes["combat"] = new_com
 
         # PH8 Derived Stats Re-calc
+        curr_id = changes.get("identity", entity.identity)
         stats_dirty = (
             update.attributes is not None or 
             update.equipment is not None or 
@@ -814,16 +826,16 @@ class ApplyPath:
                 update.identity.learned_skills or 
                 update.identity.traits_add or 
                 update.identity.traits_remove or
-                update.identity.evolution_level_set is not None
+                (update.identity.evolution_level_set is not None and update.identity.evolution_level_set > entity.identity.evolution_level)
             )) or
-            (update.reward is not None and update.reward.xp_gain > 0) or
+            (curr_id.evolution_level > entity.identity.evolution_level) or
             update.wound_update is not None
         )
 
         if stats_dirty:
             new_att = changes.get("attributes", entity.attributes)
             new_eq = changes.get("equipment", entity.equipment)
-            new_id = changes.get("identity", entity.identity)
+            new_id = curr_id
             new_com = changes.get("combat", entity.combat)
             
             derived = SkillScalingService.get_effective_stats(

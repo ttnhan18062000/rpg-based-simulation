@@ -1,3 +1,4 @@
+# Compliance IDs: PERF-008
 # Compliance IDs: INFRA-071, INFRA-072, INFRA-073, INFRA-074, INFRA-075, INFRA-076, INFRA-077, SUB-003, SUB-004, SUB-280, SUB-281, SUB-282, SUB-283, SUB-284, SUB-285, SUB-286, SUB-287, SUB-288
 # src/engine/executor.py
 from __future__ import annotations

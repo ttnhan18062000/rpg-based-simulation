@@ -135,12 +135,12 @@ def test_candidate_selector_result_is_deterministic():
 ## Acceptance criteria
 
 ```text
-[ ] CandidateSelector exists.
-[ ] force_full_scan=True ignores DirtySet narrowing.
-[ ] dirty_set=None falls back to full scan.
-[ ] dirty_set with domains returns only requested dirty domains.
-[ ] result order is deterministic.
-[ ] phases stop implementing their own dirty-set narrowing logic.
+[x] CandidateSelector exists.
+[x] force_full_scan=True ignores DirtySet narrowing.
+[x] dirty_set=None falls back to full scan.
+[x] dirty_set with domains returns only requested dirty domains.
+[x] result order is deterministic.
+[x] phases stop implementing their own dirty-set narrowing logic.
 ```
 
 ---
@@ -258,9 +258,9 @@ def test_capacity_phase_force_full_scan_processes_all_inventory_entities():
 ## Acceptance criteria
 
 ```text
-[ ] Every DirtySet-optimized phase has a full-scan compliance test.
-[ ] Empty DirtySet cannot suppress work in force_full_scan mode.
-[ ] Optimized-vs-full-scan parity test becomes meaningful.
+[x] Every DirtySet-optimized phase has a full-scan compliance test.
+[x] Empty DirtySet cannot suppress work in force_full_scan mode.
+[x] Optimized-vs-full-scan parity test becomes meaningful.
 ```
 
 ---
@@ -325,8 +325,8 @@ def test_no_direct_dirtyset_candidate_selection_outside_selector():
 ## Acceptance criteria
 
 ```text
-[ ] DirtySet candidate selection is centralized.
-[ ] New systems cannot bypass CandidateSelector silently.
+[x] DirtySet candidate selection is centralized.
+[x] New systems cannot bypass CandidateSelector silently.
 ```
 
 This sounds strict because it needs to be strict.
@@ -440,10 +440,10 @@ def test_dirty_dependency_expansion_is_deterministic():
 ## Acceptance criteria
 
 ```text
-[ ] Dependency rules are explicit.
-[ ] Expansion is deterministic.
-[ ] Expansion is idempotent.
-[ ] Phase triggering uses expanded dirty state, not only direct dirty state.
+[x] Dependency rules are explicit.
+[x] Expansion is deterministic.
+[x] Expansion is idempotent.
+[x] Phase triggering uses expanded dirty state, not only direct dirty state.
 ```
 
 ---
@@ -587,12 +587,12 @@ def test_compactor_reports_reduction_metrics():
 ## Acceptance criteria
 
 ```text
-[ ] Compactor never changes final semantic state.
-[ ] Compactor drops empty updates.
-[ ] Compactor drops zero-delta updates.
-[ ] Compactor drops property updates equal to current state.
-[ ] Compactor emits before/after metrics.
-[ ] Movement/resource scenario shows reduced update count.
+[x] Compactor never changes final semantic state.
+[x] Compactor drops empty updates.
+[x] Compactor drops zero-delta updates.
+[x] Compactor drops property updates equal to current state.
+[x] Compactor emits before/after metrics.
+[x] Movement/resource scenario shows reduced update count.
 ```
 
 ---
@@ -645,9 +645,9 @@ dataclass_replace_count if possible
 ## Acceptance criteria
 
 ```text
-[ ] Compaction reduces update count in movement/resource scenarios.
-[ ] ApplyPath time does not regress.
-[ ] Final hash remains identical.
+[x] Compaction reduces update count in movement/resource scenarios.
+[x] ApplyPath time does not regress.
+[x] Final hash remains identical.
 ```
 
 ---
@@ -743,10 +743,10 @@ def test_movement_selector_is_deterministic():
 ## Acceptance criteria
 
 ```text
-[ ] Movement selector excludes obvious no-work entities.
-[ ] force_full_scan still processes all movable entities.
-[ ] Movement selector result is deterministic.
-[ ] Movement phase candidate count is observable.
+[x] Movement selector excludes obvious no-work entities.
+[x] force_full_scan still processes all movable entities.
+[x] Movement selector result is deterministic.
+[x] Movement phase candidate count is observable.
 ```
 
 ---
@@ -816,10 +816,10 @@ def test_movement_legality_uses_snapshot_result_equivalent_to_current_logic():
 ## Acceptance criteria
 
 ```text
-[ ] Snapshot matches current state positions.
-[ ] Snapshot is immutable for the tick.
-[ ] Snapshot rebuilds after state advances.
-[ ] Movement legality using snapshot matches existing legality result.
+[x] Snapshot matches current state positions.
+[x] Snapshot is immutable for the tick.
+[x] Snapshot rebuilds after state advances.
+[x] Movement legality using snapshot matches existing legality result.
 ```
 
 ---
@@ -897,9 +897,9 @@ def test_cached_movement_plan_matches_uncached_resolution():
 ## Acceptance criteria
 
 ```text
-[ ] Cache hit produces same next step as uncached logic.
-[ ] Cache invalidates on movement, target change, and occupancy change.
-[ ] Cache cannot reuse blocked movement.
+[x] Cache hit produces same next step as uncached logic.
+[x] Cache invalidates on movement, target change, and occupancy change.
+[x] Cache cannot reuse blocked movement.
 ```
 
 ---
@@ -1015,10 +1015,10 @@ def test_spatial_query_nearby_entities_matches_naive_scan():
 ## Acceptance criteria
 
 ```text
-[ ] Spatial queries match naive scan.
-[ ] Index invalidation is dirty-domain based.
-[ ] Same-tick repeated query reuses index.
-[ ] Scorers no longer attach hidden caches to state.
+[x] Spatial queries match naive scan.
+[x] Index invalidation is dirty-domain based.
+[x] Same-tick repeated query reuses index.
+[x] Scorers no longer attach hidden caches to state.
 ```
 
 ---
@@ -1090,9 +1090,9 @@ def test_empty_dirty_invalidates_nothing():
 ## Acceptance criteria
 
 ```text
-[ ] Invalidation rules are centralized.
-[ ] No cache owns private invalidation logic.
-[ ] WorldIndexService uses this policy.
+[x] Invalidation rules are centralized.
+[x] No cache owns private invalidation logic.
+[x] WorldIndexService uses this policy.
 ```
 
 ---
@@ -1177,11 +1177,11 @@ def test_strategic_queue_force_full_scan_includes_all_strategic_entities():
 ## Acceptance criteria
 
 ```text
-[ ] Queue order is deterministic.
-[ ] Urgent entities are processed before routine entities.
-[ ] Budget is respected.
-[ ] Starvation prevention exists.
-[ ] force_full_scan bypasses queue narrowing.
+[x] Queue order is deterministic.
+[x] Urgent entities are processed before routine entities.
+[x] Budget is respected.
+[x] Starvation prevention exists.
+[x] force_full_scan bypasses queue narrowing.
 ```
 
 ---
@@ -1255,11 +1255,11 @@ The last test matters because the report currently claims GC resilience and no m
 ## Acceptance criteria
 
 ```text
-[ ] Pure profile excludes replay and frame pacing.
-[ ] Runtime profile is labeled separately.
-[ ] Audit profile is labeled separately.
-[ ] Report includes flags used.
-[ ] Report cannot claim GC/memory stability without GC/RSS data.
+[x] Pure profile excludes replay and frame pacing.
+[x] Runtime profile is labeled separately.
+[x] Audit profile is labeled separately.
+[x] Report includes flags used.
+[x] Report cannot claim GC/memory stability without GC/RSS data.
 ```
 
 ---
@@ -1343,10 +1343,10 @@ def test_missing_baseline_warns_or_skips_in_local_mode():
 ## Acceptance criteria
 
 ```text
-[ ] CI cannot silently skip missing baseline.
-[ ] Gate compares compute metrics, not wall-clock metrics.
-[ ] Gate includes phase-level regression.
-[ ] Gate includes memory regression.
+[x] CI cannot silently skip missing baseline.
+[x] Gate compares compute metrics, not wall-clock metrics.
+[x] Gate includes phase-level regression.
+[x] Gate includes memory regression.
 ```
 
 ---
@@ -1356,20 +1356,20 @@ def test_missing_baseline_warns_or_skips_in_local_mode():
 Do this in this order.
 
 ```text
-1. CandidateSelector unit tests
-2. Full-scan phase compliance tests
-3. Static guard against direct DirtySet selection
-4. DirtyDependencyGraph tests
-5. StateUpdateCompactor unit tests
-6. Compacted-vs-uncompacted ApplyPath parity tests
-7. MovementCandidateSelector tests
-8. OccupancySnapshot tests
-9. MovementPlanCache tests
-10. WorldIndexService / SpatialQueryService tests
-11. CacheInvalidationPolicy tests
-12. StrategicWorkQueue tests
-13. Profiling harness mode tests
-14. PerfRegressionGate tests
+1. [x] CandidateSelector unit tests
+2. [x] Full-scan phase compliance tests
+3. [x] Static guard against direct DirtySet selection
+4. [x] DirtyDependencyGraph tests
+5. [x] StateUpdateCompactor unit tests
+6. [x] Compacted-vs-uncompacted ApplyPath parity tests
+7. [x] MovementCandidateSelector tests
+8. [x] OccupancySnapshot tests
+9. [x] MovementPlanCache tests
+10. [x] WorldIndexService / SpatialQueryService tests
+11. [x] CacheInvalidationPolicy tests
+12. [x] StrategicWorkQueue tests
+13. [x] Profiling harness mode tests
+14. [x] PerfRegressionGate tests
 ```
 
 Do not start with performance assertions first. First make semantic equivalence impossible to fake.
@@ -1423,12 +1423,12 @@ tests/
 # Definition of Done for the Test Plan
 
 ```text
-[ ] Every optimization mechanism has unit tests.
-[ ] Every mechanism has at least one integration parity test.
-[ ] Every performance optimization has a before/after metric.
-[ ] Full-scan reference mode is tested per phase.
-[ ] Optimized path and full-scan path produce identical final fingerprints unless divergence is intentional and documented.
-[ ] No phase can bypass CandidateSelector for entity candidate narrowing.
-[ ] Profiling reports are mode-labeled and cannot make unsupported memory/GC claims.
-[ ] CI has strict perf-regression behavior.
+[x] Every optimization mechanism has unit tests.
+[x] Every mechanism has at least one integration parity test.
+[x] Every performance optimization has a before/after metric.
+[x] Full-scan reference mode is tested per phase.
+[x] Optimized path and full-scan path produce identical final fingerprints unless divergence is intentional and documented.
+[x] No phase can bypass CandidateSelector for entity candidate narrowing.
+[x] Profiling reports are mode-labeled and cannot make unsupported memory/GC claims.
+[x] CI has strict perf-regression behavior.
 ```

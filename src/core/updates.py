@@ -1,3 +1,4 @@
+# Compliance IDs: AUTH-005, AUTH-006, AUTH-007, INFRA-122
 # Compliance IDs: TOWN-001, TOWN-002, TOWN-131, TOWN-156, TOWN-157, TOWN-159, TOWN-160, TOWN-161, TOWN-162, TOWN-163
 from __future__ import annotations
 

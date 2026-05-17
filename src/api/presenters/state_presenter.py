@@ -1,3 +1,4 @@
+# Compliance IDs: API-001, API-009, API-013, API-018, API-019, API-020, API-021, API-022, API-023, API-024, DATA-023, DATA-041, DATA-045, DATA-129, DATA-130, DATA-131, DATA-132, DATA-133, DATA-134, DATA-135, INFRA-019, INFRA-056, INFRA-057, INFRA-167, INFRA-180, RES-021, STRAT-035, STRAT-044, STRAT-060, STRAT-068, WORLD-015
 from __future__ import annotations
 from typing import Dict, Any, List
 from src.core.state import AuthoritativeState, EntityState, RegionState

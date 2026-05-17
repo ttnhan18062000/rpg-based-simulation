@@ -6,7 +6,7 @@ trigger: always_on
 
 ## General
 
-- Run relevant existing tests before claiming completion.
+- Run relevant existing tests before claiming completion. Do not run the entire test suite (`pytest tests/`) all at once, as full test runs take too long. Always scope test runs to the narrow domain under modification or use markers (`pytest -m "not slow"`).
 - Add or update tests whenever behavior changes.
 - Prefer deterministic, isolated, readable tests.
 - Test meaningful behavior, not superficial coverage.

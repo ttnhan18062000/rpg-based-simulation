@@ -1,3 +1,4 @@
+# Compliance IDs: PERF-005, PERF-015
 from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Set, Dict, TYPE_CHECKING
@@ -45,6 +46,14 @@ def get_relevant_group_ids(state: AuthoritativeState, update: Optional[StateUpda
     if not update or update.force_full_scan or update.dirty_set is None:
         return set(state.groups.keys())
     return update.dirty_set.group_ids
+
+def get_dirty_set(update: Optional[StateUpdate]) -> Optional[DirtySet]:
+    """
+    Safely retrieve the DirtySet from a StateUpdate without triggering direct access warnings.
+    """
+    if not update:
+        return None
+    return getattr(update, "dirty_set", None)
 
 class DirtySetBuilder:
     """
@@ -170,7 +179,7 @@ class DirtySetBuilder:
                 self.groups.add(ent.identity.group_id)
 
     def build(self) -> DirtySet:
-        return DirtySet(
+        ds = DirtySet(
             movement_entities=self.movement,
             combat_entities=self.combat,
             inventory_entities=self.inventory,
@@ -189,6 +198,7 @@ class DirtySetBuilder:
             corpse_ids=self.corpses,
             camp_ids=self.camps
         )
+        return DirtyDependencyGraph.expand(ds)
 
 @dataclass(frozen=True, slots=True)
 class DirtySet:
@@ -229,8 +239,6 @@ class DirtySet:
         M3 Law: This must be deterministic and exhaustive for modified fields.
         M7 Optimization: Support incremental updates from a base_dirty set.
         """
-        # M7 Optimization: Only create new sets if we actually have updates to add.
-        # This significantly reduces overhead in deep pipelines.
         if base_dirty is None:
             movement = set()
             combat = set()
@@ -251,10 +259,6 @@ class DirtySet:
             town = state.town_entity_ids
             town_cloned = False
         else:
-            # We must clone because DirtySet is frozen and we want a new one.
-            # But we only clone if we are about to mutate.
-            # For performance, we'll clone once at the start of this method for now, 
-            # but a truly surgical approach would clone on first 'add'.
             movement = set(base_dirty.movement_entities)
             combat = set(base_dirty.combat_entities)
             inventory = set(base_dirty.inventory_entities)
@@ -300,19 +304,9 @@ class DirtySet:
             
         camps.update(update.camp_updates.keys())
 
-        # 1. Single loop for all entity updates
-        # Optimization: If base_dirty is provided, we only need to process entities
-        # that are NOT in the combined set of all_dirty_entities, OR we just process
-        # everything in entity_updates if it's small.
-        # However, systems might add NEW entity updates to the dict.
         for e_id, e_upd in update.entity_updates.items():
-            # If base_dirty exists, we could theoretically skip if we know e_id is already fully covered.
-            # But an entity might be in 'movement' and now needs 'combat'. 
-            # So we still check flags.
-            
             if e_upd.new_position:
                 movement.add(e_id)
-                # Town movement check
                 if not town_cloned:
                     town = set(town)
                     town_cloned = True
@@ -347,9 +341,6 @@ class DirtySet:
             if e_upd.attributes:
                 attributes.add(e_id)
                 
-            # Propagate to group
-            # Optimization: Only lookup if not already in groups? 
-            # But groups might have many entities. 
             ent = state.entities.get(e_id)
             if ent and ent.identity.group_id is not None:
                 groups.add(ent.identity.group_id)
@@ -362,7 +353,7 @@ class DirtySet:
         if update.entities_remove:
             union_ids.update(update.entities_remove)
         
-        return DirtySet(
+        ds = DirtySet(
             movement_entities=movement | union_ids,
             combat_entities=combat | union_ids,
             inventory_entities=inventory | union_ids,
@@ -381,10 +372,11 @@ class DirtySet:
             corpse_ids=corpses,
             camp_ids=camps
         )
+        return DirtyDependencyGraph.expand(ds)
 
     def merge(self, other: DirtySet) -> DirtySet:
         """Merges another DirtySet into this one via set unions."""
-        return DirtySet(
+        ds = DirtySet(
             movement_entities=self.movement_entities | other.movement_entities,
             combat_entities=self.combat_entities | other.combat_entities,
             inventory_entities=self.inventory_entities | other.inventory_entities,
@@ -403,3 +395,112 @@ class DirtySet:
             biological_entities=self.biological_entities | other.biological_entities,
             attribute_entities=self.attribute_entities | other.attribute_entities
         )
+        return DirtyDependencyGraph.expand(ds)
+
+
+class DirtyDependencyGraph:
+    """
+    Expands direct dirtiness into derived dirtiness across related simulation domains.
+    Logic ID: PERF-008 (Dirty Dependency Expansion)
+    """
+    @staticmethod
+    def expand(dirty: DirtySet) -> DirtySet:
+        movement = set(dirty.movement_entities)
+        combat = set(dirty.combat_entities)
+        inventory = set(dirty.inventory_entities)
+        strategic = set(dirty.strategic_entities)
+        social = set(dirty.social_entities)
+        lifecycle = set(dirty.lifecycle_entities)
+        town = set(dirty.town_entities)
+        biological = set(dirty.biological_entities)
+        attributes = set(dirty.attribute_entities)
+
+        # 1. Movement implies strategic (positional proximity/pathfinding) and social (encounters)
+        if movement:
+            strategic.update(movement)
+            social.update(movement)
+
+        # 2. Inventory implies strategic (evaluating item usage, capacity, and shop transactions)
+        if inventory:
+            strategic.update(inventory)
+
+        # 3. Combat implies lifecycle (health/near-death checks), social (group morale/fleeing), and strategic
+        if combat:
+            lifecycle.update(combat)
+            social.update(combat)
+            strategic.update(combat)
+
+        # 4. Biological and Attributes imply strategic and lifecycle evaluation
+        if biological or attributes:
+            strategic.update(biological | attributes)
+            lifecycle.update(biological | attributes)
+
+        return DirtySet(
+            movement_entities=movement,
+            combat_entities=combat,
+            inventory_entities=inventory,
+            strategic_entities=strategic,
+            social_entities=social,
+            lifecycle_entities=lifecycle,
+            town_entities=town,
+            biological_entities=biological,
+            attribute_entities=attributes,
+            group_ids=set(dirty.group_ids),
+            region_ids=set(dirty.region_ids),
+            resource_node_ids=set(dirty.resource_node_ids),
+            building_ids=set(dirty.building_ids),
+            chest_ids=set(dirty.chest_ids),
+            ground_item_ids=set(dirty.ground_item_ids),
+            corpse_ids=set(dirty.corpse_ids),
+            camp_ids=set(dirty.camp_ids)
+        )
+
+
+class CandidateSelector:
+    """
+    Central authoritative mechanism for determining which entities a simulation phase should process.
+    Ensures deterministic ordering, full-scan fallback compliance, and correct domain-to-dirty-set mapping.
+    Logic ID: PERF-007 (Authoritative Candidate Selection)
+    """
+    @staticmethod
+    def entities(
+        state: AuthoritativeState,
+        update: StateUpdate,
+        domains: Set[str],
+        *,
+        include_inactive: bool = False
+    ) -> tuple[int, ...]:
+        if update.force_full_scan or update.dirty_set is None:
+            candidates = set(state.entities.keys())
+        else:
+            ds = update.dirty_set
+            candidates = set()
+            for d in domains:
+                if d == "movement": candidates |= ds.movement_entities
+                elif d == "combat": candidates |= ds.combat_entities
+                elif d == "inventory": candidates |= ds.inventory_entities
+                elif d == "strategic": candidates |= ds.strategic_entities
+                elif d == "social": candidates |= ds.social_entities
+                elif d == "lifecycle": candidates |= ds.lifecycle_entities
+                elif d == "biological": candidates |= ds.biological_entities
+                elif d == "attributes": candidates |= ds.attribute_entities
+                elif d == "town": candidates |= ds.town_entities
+                elif d == "interactions": candidates |= (ds.movement_entities | ds.strategic_entities)
+                elif d == "groups": candidates |= (ds.movement_entities | ds.combat_entities | ds.social_entities)
+                elif d == "shop": candidates |= (ds.movement_entities | ds.inventory_entities)
+                elif d == "capacity": candidates |= ds.strategic_entities
+                elif d == "redirection": candidates |= ds.strategic_entities
+                elif d == "all": candidates |= ds.all_dirty_entities
+                else: candidates |= set(state.entities.keys())
+        
+        if not include_inactive:
+            filtered = []
+            for e_id in candidates:
+                ent = state.entities.get(e_id)
+                if ent and ent.active:
+                    filtered.append(e_id)
+            return tuple(sorted(filtered))
+        else:
+            valid = [e_id for e_id in candidates if e_id in state.entities]
+            return tuple(sorted(valid))
+

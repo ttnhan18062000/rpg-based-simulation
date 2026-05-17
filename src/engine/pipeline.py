@@ -1,3 +1,4 @@
+# Compliance IDs: API-002, INFRA-178, PERF-007, PERF-012, SOC-200, STRAT-200
 # Compliance IDs: INFRA-001, INFRA-002, SOC-182, SOC-186, TOWN-004, TOWN-008, TOWN-147, TOWN-148, TOWN-149, TOWN-155, TOWN-164, TOWN-165, TOWN-166, TOWN-167
 # Compliance IDs: INFRA-001, INFRA-002
 from __future__ import annotations
@@ -24,6 +25,7 @@ from src.systems.strategic import StrategicIntelligenceSystem
 from src.systems.lifecycle import LifecycleSystem
 from src.engine.pipeline_phases.capacity_enforcement import CapacityEnforcementPhase
 from src.systems.world_systems.generator import EntityGenerator
+from src.engine.compactor import StateUpdateCompactor
 
 logger = logging.getLogger(__name__)
 
@@ -55,12 +57,19 @@ class AuthoritativeApplyPipeline:
         if update.dirty_set is None:
             dirty_builder.mark_from_update(state, update)
 
+        # M8 Optimization: Ensure per-tick stable occupancy snapshot is initialized.
+        from src.engine.occupancy_snapshot import OccupancySnapshot
+        if getattr(state, "occupancy_snapshot", None) is None or getattr(state, "occupancy_snapshot").tick != state.tick:
+            object.__setattr__(state, "occupancy_snapshot", OccupancySnapshot.from_state(state))
+
         costs = {}
 
         # --- Phase 1: Trust & Validity ---
         t_start = time.perf_counter_ns()
+        update = StateUpdateCompactor.compact(state, update)
         update = AuthoritativeApplyPipeline._strip_untrusted_world_effects(update)
         update = AuthoritativeApplyPipeline._resolve_actor_validity(state, update)
+
         costs["trust_validity"] = (time.perf_counter_ns() - t_start) / 1e6
 
         # --- Phase 2: Contracts & Production ---
@@ -80,7 +89,10 @@ class AuthoritativeApplyPipeline:
         t_start = time.perf_counter_ns()
         # InteractionSystem and TownResolution need an accurate dirty set
         dirty_builder.mark_from_update(state, update)
-        update = update.replace(dirty_set=dirty_builder.build())
+        built_dirty = dirty_builder.build()
+        update = update.replace(dirty_set=built_dirty)
+        if getattr(state, "movement_cache", None) is not None:
+            state.movement_cache.invalidate_for_dirty(built_dirty)
         
         update = AuthoritativeApplyPipeline._route_interaction_intent(state, update)
         update = InteractionSystem.enforce(state, update)

@@ -5,7 +5,7 @@ import sys
 
 # Approved domain prefixes for RPG Engine V2
 DOMAINS = {
-    "AUTH", "COMBAT", "WORLD", "STRAT", "SOC", "PROG", "RES", "ECON", "DATA", "INFRA", "API", "MED", "CLI", "GOV"
+    "AUTH", "COMBAT", "WORLD", "STRAT", "SOC", "PROG", "RES", "ECON", "DATA", "INFRA", "API", "MED", "CLI", "GOV", "PERF", "OPT"
 }
 
 def validate_ledger(file_path):
@@ -112,7 +112,7 @@ def validate_ledger(file_path):
 
 if __name__ == "__main__":
     # Default to exhaustive checklist
-    checklist_path = "logic_checklist_exhaustive.md"
+    checklist_path = "docs/logic_checklist_exhaustive.md"
     if len(sys.argv) > 1:
         checklist_path = sys.argv[1]
     

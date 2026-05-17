@@ -1,3 +1,4 @@
+# Compliance IDs: COMBAT-017, COMBAT-018, COMBAT-034, INFRA-003, PERF-003, PERF-006, PERF-009, WORLD-008, WORLD-018
 # Compliance IDs: COMB-007, COMB-008, INFRA-018, INFRA-101, INFRA-102, INFRA-103, INFRA-104, INFRA-105, INFRA-106, INFRA-117, PROG-102, STRAT-041, STRAT-064, STRAT-065, STRAT-216, SUB-005, SUB-008, SUB-010, SUB-011, SUB-012, SUB-013, SUB-020, SUB-021, SUB-023, TOWN-007, TOWN-133, TOWN-134, TOWN-135, TOWN-158
 # Compliance IDs: STRAT-041, STRAT-064, STRAT-065, SUB-010, SUB-011, SUB-012, SUB-013, SUB-020, SUB-021, SUB-023
 from __future__ import annotations
@@ -229,6 +230,8 @@ class Kernel:
         self._record_runtime_signals()
 
     def _phase_init(self) -> None:
+        from src.engine.occupancy_snapshot import OccupancySnapshot
+        object.__setattr__(self._state, "occupancy_snapshot", OccupancySnapshot.from_state(self._state))
         self._worker_manager.reset_tick_stats()
         self._current_world_time = self._state.world_time + 1
         

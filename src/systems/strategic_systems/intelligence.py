@@ -1,3 +1,4 @@
+# Compliance IDs: PERF-016, STRAT-021
 # Compliance IDs: SOC-045, SOC-136, STRAT-002, STRAT-003, STRAT-004, STRAT-005, STRAT-011, STRAT-050, STRAT-072, STRAT-079, STRAT-141, STRAT-148, STRAT-149, STRAT-184, STRAT-185, STRAT-186, STRAT-187, STRAT-189, STRAT-190, STRAT-196, STRAT-197, STRAT-198, STRAT-199, STRAT-200, STRAT-213, STRAT-217, STRAT-218, SUB-024
 # Compliance IDs: SOC-045, SOC-136, STRAT-050, STRAT-072, STRAT-079, STRAT-141, STRAT-148, STRAT-149, SUB-024
 """
@@ -44,6 +45,8 @@ from src.ai.goals import GoalRegistry
 from src.ai.score_modifiers import ScoreModifierSystem
 from src.systems.party import PartyCoordinationSystem
 from src.systems.strategic_systems.detour import DetourSuggestionSystem
+from src.systems.strategic_systems.work_queue import StrategicWorkQueue
+from src.core.dirty import get_dirty_set
 
 if TYPE_CHECKING:
     from src.core.state import AuthoritativeState, EntityState
@@ -234,11 +237,13 @@ class StrategicIntelligenceSystem:
             town_pos = next(iter(state.town_tiles))
             town_target = (float(town_pos[0]), float(town_pos[1]))
 
-        # Evaluation of routine blockers and concerns must run across all active entities
+        # Evaluation of routine blockers and concerns must run across candidate entities
         # Logic ID: PERF-006 (Dirty Entity Tracking for specific sub-phases, but routine pass is global)
         fast_hits = 0
         fast_misses = 0
-        for e_id, entity in state.entities.items():
+        candidate_ids = StrategicWorkQueue.build(state, update, get_dirty_set(update), budget=50)
+        for e_id in candidate_ids:
+            entity = state.entities[e_id]
             # Early exit: Skip inactive/dead entities entirely
             if not entity.lifecycle.active or not entity.combat.alive:
                 continue
@@ -639,8 +644,9 @@ class StrategicIntelligenceSystem:
         
         from src.engine.cadence import should_run, SystemCadence as DefaultCadence
         
-        # Phase 9 Fix: Deterministic entity iteration
-        for e_id in sorted(list(state.entities.keys())):
+        # Phase 9 Fix: Deterministic entity iteration via StrategicWorkQueue
+        candidate_ids = StrategicWorkQueue.build(state, update, get_dirty_set(update), budget=50)
+        for e_id in candidate_ids:
             entity = state.entities[e_id]
             # Phase 5: Bounded frequency and early exit (Hardening)
             if not entity.lifecycle.active or not entity.combat.alive:
@@ -705,7 +711,8 @@ class StrategicIntelligenceSystem:
         
         from src.engine.cadence import should_run, SystemCadence as DefaultCadence
         
-        for e_id in sorted(list(state.entities.keys())):
+        candidate_ids = StrategicWorkQueue.build(state, update, get_dirty_set(update), budget=50)
+        for e_id in candidate_ids:
             entity = state.entities[e_id]
             if not entity.lifecycle.active or not entity.combat.alive:
                 continue

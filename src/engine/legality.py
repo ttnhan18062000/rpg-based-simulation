@@ -1,3 +1,4 @@
+# Compliance IDs: API-003, COMBAT-002, COMBAT-003, COMBAT-016, COMBAT-030, COMBAT-031, COMBAT-033, COMBAT-036, WORLD-118, WORLD-160, WORLD-170, WORLD-171, WORLD-172, WORLD-173
 # Compliance IDs: COMB-001, COMB-002, COMB-004, COMB-005, COMB-108, COMB-121, COMB-197, COMB-198, COMB-217, COMB-218, COMB-253, COMB-256, COMB-257, COMB-258, COMB-259, COMB-260, COMB-261, COMB-262, COMB-266, PROG-077, PROG-084, SOC-185
 # Compliance IDs: COMB-108, COMB-121
 # src/engine/legality.py
@@ -24,6 +25,8 @@ class LegalityServiceV2:
         """
         Returns a spatial index of active/alive entities.
         """
+        if hasattr(state, "occupancy_snapshot") and state.occupancy_snapshot is not None:
+            return {pos: state.entities[e_id] for pos, e_id in state.occupancy_snapshot.occupancy_by_tile.items() if e_id in state.entities}
         occ_map = SpatialQueryService.get_occupancy_map(state)
         return {pos: state.entities[e_id] for pos, e_id in occ_map.items()}
 
@@ -91,21 +94,24 @@ class LegalityServiceV2:
             return False, ReasonCode.IDEMPOTENCY_VIOLATION
 
         # 4. Dynamic Entities
-        # Optimization: Use SpatialQueryService for O(1) lookup in all worlds.
-        # Logic ID: PERF-007 (Spatial Query Service)
-        try:
-            occ_map = SpatialQueryService.get_occupancy_map(state_or_context)
-            occ_id = occ_map.get(target_grid_pos)
+        if hasattr(state_or_context, "occupancy_snapshot") and state_or_context.occupancy_snapshot is not None:
+            occ_id = state_or_context.occupancy_snapshot.occupant_at(target_grid_pos)
             if occ_id is not None and occ_id != ignore_entity_id:
                 return False, ReasonCode.OCCUPANCY_VIOLATION
-        except (AttributeError, TypeError):
-             # Fallback context handling
-             entities = getattr(state_or_context, 'entities', {})
-             for eid, ent in entities.items():
-                if eid == ignore_entity_id or not ent.lifecycle.active:
-                    continue
-                if (int(ent.navigation.position[0]), int(ent.navigation.position[1])) == target_grid_pos:
+        else:
+            try:
+                occ_map = SpatialQueryService.get_occupancy_map(state_or_context)
+                occ_id = occ_map.get(target_grid_pos)
+                if occ_id is not None and occ_id != ignore_entity_id:
                     return False, ReasonCode.OCCUPANCY_VIOLATION
+            except (AttributeError, TypeError):
+                 # Fallback context handling
+                 entities = getattr(state_or_context, 'entities', {})
+                 for eid, ent in entities.items():
+                    if eid == ignore_entity_id or not ent.lifecycle.active:
+                        continue
+                    if (int(ent.navigation.position[0]), int(ent.navigation.position[1])) == target_grid_pos:
+                        return False, ReasonCode.OCCUPANCY_VIOLATION
 
         return True, ReasonCode.LEGAL
 
@@ -443,8 +449,11 @@ class LegalityServiceV2:
         return False
 
     @staticmethod
-    def get_entity_priority(entity: EntityState) -> int:
+    def get_entity_priority(entity: EntityState, state: Optional[Any] = None) -> int:
         """Calculate movement/tie-breaking priority."""
+        if state is not None and hasattr(state, "occupancy_snapshot") and state.occupancy_snapshot is not None:
+            return state.occupancy_snapshot.get_priority(entity.id)
+
         base = 0
         if entity.identity.role == EntityRole.HERO: base = 100
         elif entity.identity.role == EntityRole.MONSTER: base = 50
@@ -462,12 +471,22 @@ class LegalityServiceV2:
         """Find hostile entities that would be in melee engagement with this entity at a hypothetical position."""
         if getattr(state, "_has_hostiles_or_dead_cache", None) is False:
             return []
+        my_faction = entity.identity.faction
+        px, py = int(pos[0]), int(pos[1])
+        engaged = []
+
+        if hasattr(state, "occupancy_snapshot") and state.occupancy_snapshot is not None:
+            for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
+                other_id = state.occupancy_snapshot.occupant_at((px + dx, py + dy))
+                if other_id and other_id != entity.id:
+                    other = state.entities.get(other_id)
+                    if other and other.combat.alive and other.lifecycle.active and my_faction != other.identity.faction:
+                        engaged.append(other_id)
+            engaged.sort()
+            return engaged
+
         try:
             occ_map = SpatialQueryService.get_occupancy_map(state)
-            engaged = []
-            my_faction = entity.identity.faction
-            px, py = int(pos[0]), int(pos[1])
-            
             # Check the 4 cardinal directions (Manhattan distance 1)
             for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
                 other_id = occ_map.get((px + dx, py + dy))
@@ -481,7 +500,6 @@ class LegalityServiceV2:
             return engaged
         except (AttributeError, TypeError):
             # Fallback
-            engaged = []
             entities = getattr(state, 'entities', state if isinstance(state, dict) else {})
             if isinstance(entities, dict):
                 for other_id, other in entities.items():
@@ -497,6 +515,12 @@ class LegalityServiceV2:
     def get_occupant(pos: Tuple[float, float], state: Any, ignore_entity_id: Optional[int] = None) -> Optional[int]:
         """Return the ID of the entity occupying the specified tile."""
         target_grid_pos = (int(pos[0]), int(pos[1]))
+        if hasattr(state, "occupancy_snapshot") and state.occupancy_snapshot is not None:
+            occ_id = state.occupancy_snapshot.occupant_at(target_grid_pos)
+            if occ_id is not None and occ_id != ignore_entity_id:
+                return occ_id
+            return None
+
         try:
             occ_map = SpatialQueryService.get_occupancy_map(state)
             occ_id = occ_map.get(target_grid_pos)

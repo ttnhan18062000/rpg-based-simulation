@@ -1,3 +1,4 @@
+# Compliance IDs: AUTH-009
 # Compliance IDs: COMB-106, PROG-053, PROG-056, PROG-058, PROG-059, PROG-093, SOC-005, SOC-166, SOC-167, SOC-169, SOC-170, STRAT-042, STRAT-140, STRAT-165, STRAT-167, STRAT-168, STRAT-175, STRAT-176, STRAT-215, SUB-002, SUB-123, TOWN-024, TOWN-138, TOWN-139, TOWN-140, WORLD-039, WORLD-040
 # Compliance IDs: COMB-106, PROG-053, PROG-056, PROG-058, PROG-059, STRAT-042, STRAT-140, STRAT-165, STRAT-167, STRAT-168, STRAT-175, STRAT-176, SUB-123, TOWN-024
 from __future__ import annotations
@@ -991,6 +992,9 @@ class AuthoritativeState:
     _spatial_grid_cache: Any = field(default=None, repr=False, compare=False)
     _region_list_cache: Any = field(default=None, repr=False, compare=False)
     _occupancy_map_cache: Any = field(default=None, repr=False, compare=False)
+    occupancy_snapshot: Any = field(default=None, repr=False, compare=False)
+    movement_cache: Any = field(default=None, repr=False, compare=False)
+    world_indexes: Any = field(default=None, repr=False, compare=False)
     transient_claims: Any = field(default=None, repr=False, compare=False)
     _node_map_cache: Any = field(default=None, repr=False, compare=False)
     _active_nodes_grid: Any = field(default=None, repr=False, compare=False)
@@ -1030,6 +1034,9 @@ class AuthoritativeState:
         object.__setattr__(self, "_spatial_grid_cache", None)
         object.__setattr__(self, "_region_list_cache", None)
         object.__setattr__(self, "_occupancy_map_cache", None)
+        if getattr(self, "movement_cache", None) is None:
+            from src.engine.movement_cache import MovementPlanCache
+            object.__setattr__(self, "movement_cache", MovementPlanCache())
         object.__setattr__(self, "transient_claims", None)
         object.__setattr__(self, "_node_map_cache", None)
         if getattr(self, "_active_nodes_grid", None) is None:
@@ -1108,7 +1115,10 @@ class AuthoritativeState:
             _has_hostiles_or_dead_cache=self._has_hostiles_or_dead_cache,
             _has_contracts_cache=self._has_contracts_cache,
             _active_nodes_grid=self._active_nodes_grid,
-            _building_map_cache=self._building_map_cache
+            _building_map_cache=self._building_map_cache,
+            occupancy_snapshot=self.occupancy_snapshot,
+            movement_cache=self.movement_cache,
+            world_indexes=self.world_indexes
         )
         # M10 Law: Cache the view on the mutable source
         object.__setattr__(self, "_readonly_cache", res)

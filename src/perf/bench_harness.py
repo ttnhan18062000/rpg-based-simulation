@@ -1,3 +1,4 @@
+# Compliance IDs: PERF-001, PERF-002, PERF-004
 from __future__ import annotations
 
 import time

@@ -1,3 +1,4 @@
+# Compliance IDs: COMBAT-083, COMBAT-084, COMBAT-085, DATA-050, DATA-064, ECON-001, ECON-002, ECON-004, ECON-005, ECON-006, ECON-007, ECON-008, ECON-009, ECON-010, ECON-011, ECON-012, RES-007, RES-009, RES-011, RES-014, RES-015, RES-022, RES-023, RES-045, RES-065, SOC-012, STRAT-015, STRAT-016, STRAT-017, STRAT-022, STRAT-201
 from __future__ import annotations
 from typing import Optional, List, Dict
 from src.core.state import AuthoritativeState, EntityState, BuildingState, ItemStack

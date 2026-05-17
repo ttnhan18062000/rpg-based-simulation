@@ -4,7 +4,7 @@ from pathlib import Path
 from collections import defaultdict
 import subprocess
 
-CHECKLIST = Path("logic_checklist_exhaustive.md")
+CHECKLIST = Path("docs/logic_checklist_exhaustive.md")
 
 def parse_checklist():
     if not CHECKLIST.exists():
@@ -115,7 +115,7 @@ def apply_traceability():
     # Source files
     for source_path, mappings in source_mappings.items():
         p = Path(source_path)
-        if not p.exists(): continue
+        if not p.is_file(): continue
         content = p.read_text()
         ids = sorted(list(set(m[0] for m in mappings)))
         id_list = ", ".join(ids)

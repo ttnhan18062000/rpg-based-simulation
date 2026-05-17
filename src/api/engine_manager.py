@@ -10,6 +10,7 @@ from src.engine.kernel import Kernel
 from src.platform.rng import DeterministicRNG
 from src.config.profiles import RuntimeProfile
 from src.systems.world_systems.generator import EntityGenerator
+from src.api.read_model_cache import ReadModelCache
 
 logger = logging.getLogger(__name__)
 
@@ -34,12 +35,17 @@ class V2EngineManager:
         
         self._latest_state: Optional[AuthoritativeState] = None
         self._latest_snapshot: Dict[str, Any] = {}
+        self._read_cache = ReadModelCache()
         self._state_lock = threading.Lock()
         
         self._listeners: List[Callable[[Dict[str, Any]], None]] = []
         self._listeners_lock = threading.Lock()
         
         self._build()
+
+    @property
+    def read_cache(self) -> ReadModelCache:
+        return self._read_cache
 
     def add_tick_listener(self, cb: Callable[[Dict[str, Any]], None]):
         with self._listeners_lock:
@@ -85,16 +91,18 @@ class V2EngineManager:
         self._update_latest_state(state)
 
     def _update_latest_state(self, state: AuthoritativeState):
-        from src.api.presenters.state_presenter import StatePresenter
         with self._state_lock:
-            # Law: Update minimal snapshot every tick (O(1)).
-            # Full snapshots should be generated only on demand to save O(N) overhead.
             self._latest_state = state
-            self._latest_snapshot = StatePresenter.present_minimal(state)
+            dirty_set = getattr(self._kernel.status, "dirty_set", None) if self._kernel else None
+            force_full = getattr(self._kernel.status, "force_full_scan", False) if self._kernel else False
+            self._read_cache.update(state, dirty_set, force_full)
+            self._latest_snapshot = self._read_cache.get_minimal_summary()
 
     def get_state(self) -> Dict[str, Any]:
         """Returns the latest minimal snapshot."""
         with self._state_lock:
+            if not self._latest_snapshot and self._latest_state:
+                self._latest_snapshot = self._read_cache.get_minimal_summary(self._latest_state)
             return self._latest_snapshot
 
     def get_full_snapshot(self) -> Dict[str, Any]:
@@ -107,33 +115,17 @@ class V2EngineManager:
 
     def get_entities_paged(self, offset: int = 0, limit: int = 100) -> Dict[str, Any]:
         """Returns a paged list of entities."""
-        from src.api.presenters.state_presenter import StatePresenter
         with self._state_lock:
             if not self._latest_state:
-                return {"entities": [], "total": 0}
-            
-            all_ids = sorted(self._latest_state.entities.keys())
-            paged_ids = all_ids[offset : offset + limit]
-            
-            entities = [
-                StatePresenter.present_entity(self._latest_state.entities[eid])
-                for eid in paged_ids
-            ]
-            
-            return {
-                "entities": entities,
-                "total": len(all_ids),
-                "offset": offset,
-                "limit": limit
-            }
+                return {"entities": [], "total": 0, "offset": offset, "limit": limit}
+            return self._read_cache.get_entities_paged(self._latest_state, offset, limit)
 
     def get_entity(self, entity_id: int) -> Optional[Dict[str, Any]]:
         """Returns a single entity snapshot."""
-        from src.api.presenters.state_presenter import StatePresenter
         with self._state_lock:
             if not self._latest_state or entity_id not in self._latest_state.entities:
                 return None
-            return StatePresenter.present_entity(self._latest_state.entities[entity_id])
+            return self._read_cache.get_entity_dto(self._latest_state.entities[entity_id])
 
     def start(self):
         if self._running.is_set():

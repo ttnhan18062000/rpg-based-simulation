@@ -69,7 +69,7 @@ def run_scenario(profile_name, scenario_id):
     state = AuthoritativeState(tick=0, seed=42, entities={
         1: (V2EntityBuilder(1)
             .kind("HERO")
-            .position(0.0, 0.0)
+            .location(0.0, 0.0)
             .build())
     })
     rng = DeterministicRNG(42)
@@ -143,13 +143,14 @@ def main():
     # Write report
     report_path = os.path.join(PROOF_BUNDLE_DIR, "release_report.md")
     with open(report_path, "w") as f:
-        f.write(f"# V2 Release Certification Report\n\n")
-        f.write(f"Generated: {datetime.utcnow().isoformat()}Z\n")
+        f.write("# V2 Release Certification Report\n\n")
+        f.write(f"Generated: {datetime.now().isoformat()}Z\n")
+        f.write(f"Commit SHA: {get_current_sha()}\n")
         f.write(f"Targets Validated: {len(bundle)}\n\n")
-        f.write("| Target | Status | Memory (MB) |\n")
-        f.write("| --- | --- | --- |\n")
+        f.write("| Profile | Scenario | Hardware Class | Status | Memory (MB) |\n")
+        f.write("| --- | --- | --- | --- | --- |\n")
         for k, v in bundle.items():
-            f.write(f"| {k} | PASSED | {v['measurements'][0]['memory_rss_mb']} |\n")
+            f.write(f"| {v['profile_name']} | {v['scenario_id']} | {v['environment']['effective_class']} | PASSED | {v['measurements'][0]['memory_rss_mb']} |\n")
 
     print(f"\nArtifacts generated in {PROOF_BUNDLE_DIR}")
 

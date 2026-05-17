@@ -200,60 +200,32 @@ class MovementPhase:
         object.__setattr__(state, "_occupancy_map_cache", live_occ_map)
         object.__setattr__(state, "transient_claims", live_claims)
         
-        # Pass 1: Handle entities that ALREADY have an update this tick.
-        for e_id in list(refined_entity_updates.keys()):
-            ent_upd = refined_entity_updates[e_id]
+        from src.engine.candidate_selector import MovementCandidateSelector
+        selected_ids = MovementCandidateSelector.select(state, update, state.entities.keys())
+        
+        # Record candidate count for observability
+        sub_costs = dict(update.sub_phase_costs) if getattr(update, "sub_phase_costs", None) is not None else {}
+        sub_costs["movement_candidates"] = len(selected_ids)
+        
+        # Unified Pass over selected candidate IDs
+        for e_id in selected_ids:
+            ent_upd = refined_entity_updates.get(e_id)
             entity = state.entities.get(e_id)
             if not entity or not entity.lifecycle.active:
                 continue
             
-            # Already moved by a prior phase or this one?
-            if ent_upd.moved_this_tick:
+            # Already moved by a prior phase or position swap?
+            if ent_upd and ent_upd.moved_this_tick:
                 continue
                 
             # Determine target and mode (prefer update if present)
-            nav_target = ent_upd.navigation.target_set if (ent_upd.navigation and ent_upd.navigation.target_set is not None) else entity.navigation.target
+            nav_target = ent_upd.navigation.target_set if (ent_upd and ent_upd.navigation and ent_upd.navigation.target_set is not None) else entity.navigation.target
             if not nav_target or entity.navigation.position == nav_target:
                 continue
                 
-            mode = ent_upd.navigation.movement_mode_set if (ent_upd.navigation and ent_upd.navigation.movement_mode_set is not None) else entity.navigation.movement_mode
+            mode = ent_upd.navigation.movement_mode_set if (ent_upd and ent_upd.navigation and ent_upd.navigation.movement_mode_set is not None) else entity.navigation.movement_mode
             
             move_updates = MovementSystem.resolve_move(state, entity, nav_target, mode=mode)
-            for u_id, u_upd in move_updates.items():
-                existing = refined_entity_updates.get(u_id)
-                if existing is not None:
-                    refined_entity_updates[u_id] = existing.merge(u_upd)
-                else:
-                    refined_entity_updates[u_id] = u_upd
-                    
-                if u_upd.new_position is not None:
-                    u_ent = state.entities.get(u_id)
-                    if u_ent:
-                        old_pos = (int(u_ent.navigation.position[0]), int(u_ent.navigation.position[1]))
-                        if old_pos in live_occ_map and live_occ_map[old_pos] == u_id:
-                            del live_occ_map[old_pos]
-                    new_pos = (int(u_upd.new_position[0]), int(u_upd.new_position[1]))
-                    live_occ_map[new_pos] = u_id
-                    live_claims.add(new_pos)
-                
-                # Record rejections
-                if u_upd.navigation and u_upd.navigation.failure_reason:
-                    reason_key = u_upd.navigation.failure_reason.value if hasattr(u_upd.navigation.failure_reason, "value") else str(u_upd.navigation.failure_reason)
-                    new_rejections_delta[reason_key] = new_rejections_delta.get(reason_key, 0) + 1
-
-        # Pass 2: Handle entities that DON'T have an update but HAVE a target in state.
-        # Optimization: Instead of sorted keys, just iterate values. 
-        # Determinism is maintained by using entity_id order if needed, but here it's not strictly required by logic.
-        for entity in state.entities.values():
-            e_id = entity.id
-            if e_id in refined_entity_updates:
-                continue
-            if not entity.navigation.target or not entity.lifecycle.active:
-                continue
-            if entity.navigation.position == entity.navigation.target:
-                continue
-            
-            move_updates = MovementSystem.resolve_move(state, entity, entity.navigation.target, mode=entity.navigation.movement_mode)
             for u_id, u_upd in move_updates.items():
                 existing = refined_entity_updates.get(u_id)
                 if existing is not None:
@@ -282,7 +254,7 @@ class MovementPhase:
         except AttributeError:
             pass
             
-        return replace(update, entity_updates=refined_entity_updates, rejections_delta=new_rejections_delta)
+        return replace(update, entity_updates=refined_entity_updates, rejections_delta=new_rejections_delta, sub_phase_costs=sub_costs)
 
     # --- Helpers ---
 
