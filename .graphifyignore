@@ -1,0 +1,7 @@
+docs/
+src_legacy/
+tests_legacy/
+tickets/
+stored_artifacts/
+reviews/
+reports/

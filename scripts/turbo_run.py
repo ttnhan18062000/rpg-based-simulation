@@ -6,7 +6,7 @@ import logging
 from pythonjsonlogger import jsonlogger
 from src.config import SimulationConfig
 from src.api.engine_manager import EngineManager
-from src.utils.logging import StructuredJsonFormatter, ContextFilter
+from src_legacy.utils.logging import StructuredJsonFormatter, ContextFilter
 
 def setup_turbo_logging(log_file: str):
     """Bypass Docker Loki routing and dump JSON directly to a flat file."""

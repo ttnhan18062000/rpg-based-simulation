@@ -220,3 +220,22 @@ reviews/*
 logs/*
 
 .gemini/*
+
+# Test Replays and Large Data
+replay.json
+replay_*.json
+replay_v2.json/
+replay_v2_test/
+stored_artifacts/**/*.json
+!stored_artifacts/**/manifest.json
+
+# Temporary Test Outputs and Scratch Scripts
+test_output.txt
+test_*_output.txt
+scratch/
+task.md
+
+graphify-out/cache/*
+graphify-out/.graphify_uncached.txt
+graphify-out/.graphify_root
+graphify-out/.graphify_python

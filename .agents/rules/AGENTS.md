@@ -1,175 +1,168 @@
 ---
-trigger: always_on
----
+
+## trigger: always_on
 
 # AI Agent Core Rule
 
 ## 0. Priority Order
 
-Follow this order when rules compete:
-
 1. Safety and user instruction
 2. Repository architecture integrity
 3. Traceability and workflow discipline
 4. Tests and verification
-5. Local implementation convenience
+5. Local convenience
 
 ---
 
-## 1. Hard Non-Negotiables
+## 1. Hard Rules
 
-- Do not execute blindly. Validate context before acting.
-- Do not silently guess when missing information would materially change architecture, behavior, or scope.
-- Do not ask trivial questions when existing repo patterns already answer them.
-- Do not create durable behavior through prose strings, hidden metadata, or temporary reasoning.
-- Do not mutate live durable state inside read-only decision logic.
-- Do not bypass authoritative update/application flows.
-- Do not break deterministic behavior for convenience.
-- Do not expose raw domain models directly from API routes; use presenters/schemas.
-- Do not leave meaningful changes untested, undocumented, or untraceable.
+* Do not act without validating context.
+* Do not guess when uncertainty affects behavior or architecture.
+* Do not ask questions already answered by repo patterns.
+* Do not create hidden or implicit durable behavior.
+* Do not mutate durable state outside authoritative flows.
+* Do not break determinism.
+* Do not expose raw domain models from APIs.
+* Do not leave changes untested or untraceable.
 
 ---
 
-## 2. Mandatory Context Scan
+## 2. Context Scan (Mandatory)
 
-Before implementation, scan all relevant sources:
+Before any implementation, check:
 
-- `tickets/inprogress/`
-- `tickets/done/`
-- `docs/`
-- `stored_artifacts/`
-- relevant code modules
-- relevant tests
+* `tickets/`
+* `docs/` (Specifically the Mechanics Bible in `docs/mechanics/`)
+* `stored_artifacts/`
+* relevant code and tests
 
-Check for:
+Also use Graphify when available to understand:
 
-- duplicate work
-- overlapping scope
-- conflicting requirements
-- prior solutions
-- architectural mismatches
-- existing patterns that should be reused
+* dependencies
+* call chains
+* impact surface
 
-If conflict or duplication exists, stop and report it clearly before proceeding.
+Detect and stop on:
+
+* duplicate work
+* conflicting requirements
+* architectural mismatch
 
 ---
 
 ## 3. Clarification Rule
 
-Ask the user only when uncertainty is meaningful.
+Ask only if it changes outcomes:
 
-Ask when:
+* multiple valid implementations
+* unclear acceptance criteria
+* conflict with existing system
+* missing critical context
 
-- multiple materially different implementations are possible
-- acceptance criteria are unclear
-- request conflicts with docs, tickets, or existing architecture
-- missing information changes scope, behavior, or data model
-
-Do not ask when the decision is local and already implied by repo patterns.
+Otherwise, follow existing patterns.
 
 ---
 
 ## 4. Traceability Rule
 
-Before implementation, create:
+Before coding:
 
-- `tickets/inprogress/{ticket_id}.md`
-- `staging_artifacts/{ticket_id}/`
+* create `tickets/inprogress/{id}.md`
+* create `staging_artifacts/{id}/`
 
-Minimum staging artifacts:
+Minimum:
 
-- `plan.md`
-- `investigation.md`
-- `test_plan.md`
+* `plan.md`
+* `investigation.md`
+* `test_plan.md`
 
-All critical working knowledge must be written into ticket/artifacts.
-Do not keep essential implementation context only in temporary reasoning.
+All key decisions must be written. No hidden reasoning.
 
 ---
 
 ## 5. Architecture Rule
 
-When adding or changing durable behavior:
+All durable behavior must:
 
-- durable state must use typed models
-- durable mutations must flow through typed authoritative update/application paths
-- read-only decision logic must stay read-only
-- world/shared behavior should prefer systems/registries over ad hoc local hacks
-- tactical logic must not become a substitute for strategic/domain state
-- uncertainty must remain uncertain until verified
-- contracts/social coordination must be explicit if they persist beyond the current moment
+* use typed models
+* mutate via authoritative flows
+* separate read vs write logic
+* follow existing system boundaries
+* avoid ad hoc coupling
 
-If a feature cannot answer:
+Must be able to answer:
 
-- where durable state lives
-- how mutation is applied authoritatively
-- how it is inspected/presented
-- how it is tested
-  then it is not ready to implement.
+* where state lives
+* how it mutates
+* how it is exposed
+* how it is tested
+
+If not, do not implement.
 
 ---
 
-## 6. During Work
+## 6. Graph Awareness Rule
+
+When modifying code:
+
+* check dependencies and usages via Graphify
+* identify impacted modules before changes
+* avoid breaking unseen connections
+
+Do not change behavior without understanding its graph impact.
+
+---
+
+## 7. During Work
 
 Continuously verify:
 
-- implementation still matches `plan.md`
-- no new conflict/duplication appeared
-- assumptions are still valid
-- architecture rules are still being respected
-- acceptance criteria are still being satisfied
+* alignment with `plan.md`
+* no new conflicts or duplication
+* assumptions still hold
+* architecture remains valid
 
-Update ticket and staging artifacts whenever implementation direction changes.
-
----
-
-## 7. Testing Rule
-
-Run relevant existing tests during work, not only at the end.
-
-When behavior changes:
-
-- add or update tests
-- cover normal flow
-- cover edge cases
-- cover likely regressions
-- keep tests deterministic, isolated, and meaningful
-
-Do not add shallow tests only to inflate coverage.
+Update artifacts if direction changes.
 
 ---
 
-## 8. Completion Rule
+## 8. Testing Rule
 
-Before closing work, verify:
+* run relevant tests during work
+* update or add tests for all behavior changes
+* cover edge cases and regressions
+* keep tests deterministic and meaningful
 
-- ticket is complete
-- artifacts are complete
-- tests were run and updated
-- docs were updated
-- no important decision is undocumented
-- no staging artifact is left behind
-- no temporary files remain
-- repo state is consistent
+---
+
+## 9. Completion Rule
+
+Before closing:
+
+* tickets and artifacts complete
+* tests updated and passing
+* docs updated
+* no undocumented decisions
+* no leftover temp files
 
 Then:
 
-- move ticket to `tickets/done/`
-- append `tickets/working_log.csv`
-- move staging artifacts to `stored_artifacts/`
+* move to `tickets/done/`
+* update logs
+* archive artifacts
 
 ---
 
-## 9. Stop / Escalation Conditions
+## 10. Stop Conditions
 
-Stop and report when any of these occurs:
+Stop and report if:
 
-- conflicting requirements
-- duplicate active work
-- missing critical context
-- architecture violation risk
-- unresolved failing tests
-- docs/tickets/artifacts disagree
-- request is materially ambiguous
+* conflicting requirements
+* duplicate work
+* missing critical context
+* architecture risk
+* failing tests
+* inconsistency across docs/tickets/artifacts
+* ambiguous request
 
-Do not continue by guessing.
+Do not proceed by guessing.

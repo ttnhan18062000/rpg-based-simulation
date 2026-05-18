@@ -1,0 +1,1765 @@
+- id: TOWN-001
+  text: Action proposals are typed intents, not direct world mutation.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: '`src/core/actions.py` (`ActionProposal` class, `frozen=True`)'
+  proof_type: parity
+  test_path: '`tests_v2/test_deterministic_baseline.py` (indirectly via `WorkerResult`
+    and `EntityUpdate` flow)'
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-002
+  text: Every gameplay side effect is represented as a typed update bucket (mind,
+    perception, navigation, progression, identity, routine, interaction, spatial,
+    building, social, social-event, reputation, strategic, world, combat-trace).
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-003
+  text: Legacy reason strings and targets are coerced into structured authoritative
+    reason/target models.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-004
+  text: World mutation happens after proposal generation, not inside worker thought
+    code.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: '`src/engine/apply.py` (`ApplyPath.apply_generation` uses immutable
+    `replace`)'
+  proof_type: parity
+  test_path: '`tests_v2/test_deterministic_baseline.py` (`test_full_tick_determinism`
+    verifies state transition)'
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-005
+  text: Action application supports partial rejection without corrupting unrelated
+    update domains.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: '`src/engine/pipeline.py` (suppression logic in `_route_combat_intent`
+    and `_resolve_occupancy_conflicts`)'
+  proof_type: parity
+  test_path: '`tests_v2/test_occupancy_conflicts.py` (verifies conflict resolution
+    and move reversion)'
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-006
+  text: Conflict resolution preserves one authoritative outcome per tick.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: '`src/engine/pipeline.py` (`_resolve_occupancy_conflicts` with deterministic
+    sorting)'
+  proof_type: parity
+  test_path: '`tests_v2/test_occupancy_conflicts.py`'
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-007
+  text: Worker decision-making is decoupled from authoritative application.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: '`src/engine/kernel.py` (orchestrates `_phase_scheduling` then `_phase_resolution`)'
+  proof_type: parity
+  test_path: '`tests_v2/test_deterministic_baseline.py` (`test_subsystem_order_documentation`)'
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-008
+  text: Replay and observability consume authoritative results rather than defining
+    them.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: '`src/engine/replay_buffer.py`, `src/engine/observability.py`'
+  proof_type: parity
+  test_path: '`tests_v2/replay/` (multiple tests verify replay capture of authoritative
+    state)'
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-009
+  text: Looting is a channeled state with progress, interruption, and completion semantics.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: '`src/engine/interaction.py` (`InteractionSystem.enforce` handles `node.kind
+    == "LOOT"`)'
+  proof_type: parity
+  test_path: '`tests_v2/parity/test_resource_interaction_parity.py`'
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-010
+  text: Harvesting is a channeled state tied to nearby resource-node legality and
+    harvest duration.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: '`src/engine/interaction.py` (`InteractionSystem.enforce` checks `new_progress
+    >= node.required_ticks`)'
+  proof_type: parity
+  test_path: '`tests_v2/parity/test_resource_interaction_parity.py`'
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-011
+  text: Loot/harvest can abort because of inventory slot pressure.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: '`src/core/conservation.py` (`ResourceTransactionResolver.resolve` checks `can_add_items` against pending state)'
+  proof_type: parity
+  test_path: '`tests/rpg/test_resource_conservation_v2.py` (proves node is not depleted if inventory is full)'
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-012
+  text: Loot/harvest can abort because of inventory weight pressure.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: '`src/core/conservation.py` (`ResourceTransactionResolver.resolve` checks `can_add_items` against pending state)'
+  proof_type: parity
+  test_path: '`tests/rpg/test_resource_conservation_v2.py`'
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-013
+  text: Inventory state tracks both slots and weight/carry burden.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: '`src/core/state.py` (`InventoryComponent`), `src/engine/apply.py`
+    (updates `current_slots_used` and `current_weight`)'
+  proof_type: parity
+  test_path: '`tests_v2/parity/test_resource_interaction_parity.py`'
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-014
+  text: Ground items, node yields, and inventory additions/removals are authoritative
+    side effects.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: '`src/engine/apply.py` (`_apply_entity_update` handles `InventoryUpdate`),
+    `src/engine/interaction.py` (emits updates)'
+  proof_type: parity
+  test_path: '`tests_v2/parity/test_resource_interaction_parity.py`'
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-015
+  text: Town return is a real gameplay state, not a cosmetic teleport.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: '`src/engine/town_resolution.py` (checks `tile_pos in state.town_tiles`)'
+  proof_type: parity
+  test_path: '`tests_v2/parity/test_town_resolution_parity.py`'
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-016
+  text: Shop visits resolve bounded buy/sell behavior using inventory/gold truth.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: '`src/engine/shop.py` (`ShopSystem.enforce`)'
+  proof_type: parity
+  test_path: '`tests_v2/parity/test_town_resolution_parity.py` (covers shop scenarios)'
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-017
+  text: Blacksmith visits resolve recipe/crafting/material-gating behavior.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: '`src/engine/blacksmith.py` (`BlacksmithSystem.enforce`)'
+  proof_type: parity
+  test_path: '`tests_v2/parity/test_town_resolution_parity.py` (covers blacksmith
+    scenarios)'
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-018
+  text: Guild visits produce intel, quests, and material/resource hints.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-019
+  text: Inn/home/class-hall visits have distinct progression or recovery semantics.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: '`src/engine/town_resolution.py` (checks `building_type in ("inn",
+    "home")` and `action == "REST"`)'
+  proof_type: parity
+  test_path: '`tests_v2/parity/test_town_resolution_parity.py`'
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-020
+  text: Building interactions are explicit gameplay slices, not generic proximity
+    triggers.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: '`src/engine/town_resolution.py`, `src/engine/shop.py`, `src/engine/blacksmith.py`
+    (all use `building_tiles` and `building.kind`)'
+  proof_type: parity
+  test_path: '`tests_v2/parity/test_town_resolution_parity.py`'
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-021
+  text: "`test_near_death_hardening`: Near death hardening \u2014 Verify that surviving\
+    \ at low HP increases Max HP.."
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-022
+  text: "`test_stat_decay_inactivity`: Stat decay inactivity \u2014 Verify that stat\
+    \ decay can be triggered.."
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-023
+  text: "`test_toughness_hardening_integration`: Toughness hardening integration \u2014\
+    \ Integration test for the restored hardening logic in CombatAction.."
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-024
+  text: '`test_actor`: Actor.'
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-025
+  text: "`test_visit_guild_no_legacy_goals`: Visit guild no legacy goals \u2014 Verify\
+    \ that visiting the guild produces StrategicUpdate and PerceptionUpdate, but no\
+    \ string goals.."
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-026
+  text: "`test_visit_blacksmith_blocker_emission`: Visit blacksmith blocker emission\
+    \ \u2014 Verify that visiting the blacksmith without materials generates a BlockerRecord,\
+    \ not a string state.."
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-027
+  text: "`test_visit_class_hall_resolution`: Visit class hall resolution \u2014 Verify\
+    \ that learning a skill emits a strategic resolution for the corresponding capability\
+    \ blocker.."
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-028
+  text: "`test_visit_blacksmith_crafting_resolution`: Visit blacksmith crafting resolution\
+    \ \u2014 Verify that crafting an item emits a strategic resolution for the material\
+    \ blocker.."
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-029
+  text: "`test_visit_home_upgrade_resolution`: Visit home upgrade resolution \u2014\
+    \ Verify that home storage upgrade emits a strategic resolution for home maintenance.."
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-030
+  text: "`test_detour_suggestion_lifecycle_awareness`: Detour suggestion lifecycle\
+    \ awareness \u2014 Verify DetourSuggestionService ignores exhausted leads and\
+    \ prioritizes untested ones.."
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-031
+  text: '`test_biological_decay_authoritative`: Biological decay authoritative.'
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-032
+  text: '`test_sleep_goal_utility_at_night`: Sleep goal utility at night.'
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-033
+  text: '`test_nocturnal_predator_bonus`: Nocturnal predator bonus.'
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-034
+  text: '`test_biological_utility_biasing`: Biological utility biasing.'
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-035
+  text: '`test_inn_visit_leads_to_sleeping`: Inn visit leads to sleeping.'
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-036
+  text: '`test_home_visit_leads_to_eating`: Home visit leads to eating.'
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-037
+  text: '`test_sleeping_recovery_cycle`: Sleeping recovery cycle.'
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-038
+  text: "`test_warrior_prefers_defensive_gear`: Warrior prefers defensive gear \u2014\
+    \ Verify that a Warrior weights defensive stats higher than a Mage.."
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-039
+  text: "`test_hero_starting_gear_integrity`: Hero starting gear integrity \u2014\
+    \ Verify that each hero class has the correct starting gear defined.."
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-040
+  text: '`test_rng`: Rng.'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-041
+  text: '`test_entity`: Entity.'
+  status: missing
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-042
+  text: "`test_guild_intel_to_strategy_visible_pipeline`: Guild intel to strategy\
+    \ visible pipeline \u2014 Verify that guild intel produces leads/zones that are\
+    \ visible in API schemas.."
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-043
+  text: "`test_blacksmith_blocker_resolution_pipeline`: Blacksmith blocker resolution\
+    \ pipeline \u2014 Verify that blacksmith constraints produce blockers that are\
+    \ resolved by acquisition.."
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-044
+  text: "`test_milestone_3_lead_testing_and_persistence`: Milestone 3 lead testing\
+    \ and persistence \u2014 Verify that exhausted search marks leads as tested and\
+    \ persists them.."
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-045
+  text: "`test_milestone_4_social_filtering`: Milestone 4 social filtering \u2014\
+    \ Verify that social candidate selection filters hostiles and uses debt.."
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-046
+  text: "`test_strategic_uncertainty_and_anti_cheating`: Strategic uncertainty and\
+    \ anti cheating \u2014 Verify that rumors have lower certainty and vague leads\
+    \ don't 'cheat' with perfect coords.."
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-047
+  text: "`test_source_trust_recalibration`: Source trust recalibration \u2014 Verify\
+    \ that a 'False' lead outcome reduces source trust.."
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-048
+  text: "`test_severe_failure_abandonment_impact`: Severe failure abandonment impact\
+    \ \u2014 Verify that a project switch/abandonment reflects in strategic drivers.."
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-049
+  text: '`test_routine_service_sleep_bias`: Routine service sleep bias.'
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-050
+  text: '`test_routine_service_forced_rest_during_off_hours`: Routine service forced
+    rest during off hours.'
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-051
+  text: '`test_routine_service_hunger_bias`: Routine service hunger bias.'
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-052
+  text: '`test_history_registry_serialization`: History registry serialization.'
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-053
+  text: '`test_household_record`: Household record.'
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-054
+  text: '`test_local_scar_record`: Local scar record.'
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-055
+  text: '`test_region_consequence_record`: Region consequence record.'
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-056
+  text: '`test_world_state_integration_phase4`: World state integration phase4.'
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-057
+  text: '`test_sleep_goal_utility_at_night`: sleep utility at night'
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-058
+  text: '`test_rest_to_sleep_transition`: rest-to-sleep transition'
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-059
+  text: '`test_routine_service_sleep_bias`: sleep bias'
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-060
+  text: '`test_routine_service_forced_rest_during_off_hours`: forced off-hours rest'
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-061
+  text: '`test_routine_service_hunger_bias`: hunger bias'
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-062
+  text: '`test_home_visit_leads_to_eating`: eating behavior from routine/home visit'
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-063
+  text: '`test_inn_visit_leads_to_sleeping`: inn visit leads to sleeping'
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-064
+  text: '`test_biological_decay_and_forced_sleep`: biological decay and forced sleep'
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-065
+  text: '`test_sleeping_recovery_cycle`: sleeping recovery cycle'
+  status: legacy_verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-066
+  text: '`test_hunger_reduces_stability`: hunger consequence'
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-067
+  text: '`test_routine_goal_priority`: routine goal priority'
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-068
+  text: '`test_routine_disruption_panic`: disruption panic'
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-069
+  text: '`test_attack_disruption_suppresses_routines`: attack suppresses routine'
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-070
+  text: '`test_routine_priority_archetype_bias`: archetype-based routine bias'
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-071
+  text: '`test_life_stage_priority_shift`: life-stage priority shift'
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-072
+  text: '`test_luck_impacts_loot_modifier`: loot modifier from luck/perception'
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-073
+  text: '`test_per_based_hidden_discovery`: hidden discovery from perception'
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-074
+  text: '`test_loot_recovery_consistency`: loot recovery consistency'
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-075
+  text: '`test_loot_no_duplication`: no duplicated loot'
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-076
+  text: '`test_corpse_loot_convergence`: corpse loot convergence'
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-077
+  text: '`test_loot_and_respawn`: loot and respawn interaction'
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-078
+  text: '`test_loot_tables_exist`: loot table integrity'
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-079
+  text: '`test_full_bag_aborts_looting`: abort looting when full'
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-080
+  text: '`test_overweight_aborts_looting`: abort looting when overweight'
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-081
+  text: '`test_near_weight_limit_penalizes_loot`: weight-limit penalty on looting'
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-082
+  text: '`recalc_derived_stats()` creation mode applies attribute bonuses.'
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-083
+  text: '`recalc_derived_stats()` delta mode removes old bonuses before applying new
+    ones.'
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-084
+  text: HP clamps to new max HP after stat recalculation.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-085
+  text: Noncombat derived stats update vision, HP regen, trade bonus, and loot bonus.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-086
+  text: '`auto_equip_best()` equips into empty slot.'
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-087
+  text: Better equipment replaces worse equipment and returns old item to inventory.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-088
+  text: Worse equipment is not auto-equipped.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-089
+  text: Non-equipment items are ignored by auto-equip.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-090
+  text: Unknown item power returns zero.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-091
+  text: Stronger item power ordering is stable.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-092
+  text: Home storage add/remove/full/copy behavior is preserved.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-093
+  text: Shop contains expanded item set.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-094
+  text: Buff potion item types are consumable.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-095
+  text: Skill learning respects level, prerequisites, and mastery.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-096
+  text: All hero classes expose at least one available skill chain.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-097
+  text: Treasure chests start available.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-098
+  text: Chest loot sets respawn tick and unavailable state.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-099
+  text: Chest respawns only at or after respawn tick.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-100
+  text: Chest loot tables exist for expected tiers.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-101
+  text: Entity copy preserves home storage deeply.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-102
+  text: Training that increments an attribute immediately recomputes derived stats.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-103
+  text: All active resource acquisition paths share one conservation law.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-104
+  text: '`InteractionSystem` harvest path and any standalone `HarvestSystem` path
+    cannot diverge on capacity rules.'
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-105
+  text: '`InteractionSystem` loot path and any standalone `LootSystem` path cannot
+    diverge on capacity rules.'
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-106
+  text: A resource node charge is not decremented until inventory receipt is proven
+    possible.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-107
+  text: A ground item is not removed until inventory receipt is proven possible.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-108
+  text: A corpse loot record is not consumed until inventory receipt is proven possible.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-109
+  text: Inventory slot capacity is checked before source mutation.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-110
+  text: Inventory weight capacity is checked before source mutation.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-111
+  text: Inventory stackability is checked before rejecting for slot pressure.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-112
+  text: Inventory add failure preserves the source item/node/corpse.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-113
+  text: Inventory add failure resets or preserves the interaction channel according
+    to an explicit rule.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-114
+  text: Harvest completion emits both inventory addition and node depletion atomically.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-115
+  text: Loot completion emits both inventory addition and source removal atomically.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-116
+  text: Partial channel progress does not create items.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-117
+  text: Interrupted channel progress does not create items.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-118
+  text: Interrupted channel progress does not remove source items.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-119
+  text: Failed capacity check does not remove source items.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-120
+  text: Failed capacity check does not decrement node charges.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-121
+  text: Two actors completing the same loot target in the same tick cannot duplicate
+    the item.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-122
+  text: Two actors completing the same resource-node charge in the same tick cannot
+    duplicate the yield.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-123
+  text: Two actors completing the same corpse loot in the same tick cannot duplicate
+    corpse rewards.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-124
+  text: Conflict resolution decides one authoritative winner for contested loot completion.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-125
+  text: Conflict resolution decides one authoritative winner per limited resource
+    charge when required.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-126
+  text: Item quantity is preserved through pickup, stacking, selling, crafting, and
+    dropping.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-127
+  text: Item weight is preserved through pickup, stacking, selling, crafting, and
+    dropping.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-128
+  text: Item identity/kind is preserved through pickup, stacking, selling, crafting,
+    and dropping.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-129
+  text: Harvest yield uses the node definition, not caller-provided arbitrary item
+    data.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-130
+  text: Loot yield uses the ground/corpse source definition, not caller-provided arbitrary
+    item data.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-131
+  text: Capacity failure reason is structured and observable.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-132
+  text: Resource source mutation and inventory mutation appear in the same authoritative
+    update/apply transaction.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-133
+  text: Resource acquisition replay includes both source and inventory state.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-134
+  text: Resource acquisition replay can prove no duplication across identical seed
+    runs.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-135
+  text: Resource acquisition replay can prove no item loss under capacity failure.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-136
+  text: Resource-node cooldown behavior is deterministic.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-137
+  text: Resource-node recharge behavior is deterministic.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-138
+  text: Resource-node depletion state survives serialization.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-139
+  text: Ground item state survives serialization.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-140
+  text: Corpse loot state survives serialization.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-141
+  text: Loot/harvest tests include slot pressure.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-142
+  text: Loot/harvest tests include weight pressure.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-143
+  text: Loot/harvest tests include stack merge under near-full inventory.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-144
+  text: Loot/harvest tests include two actors racing for one item.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-145
+  text: Loot/harvest tests include failure preserving source state.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-146
+  text: Loot/harvest tests include success mutating inventory and source together.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-147
+  text: Every gameplay update enters the same authoritative refinement/apply pipeline.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-148
+  text: No AI/state system mutates authoritative world state directly during proposal
+    generation.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-149
+  text: No standalone gameplay system can remove world objects without apply pipeline
+    validation.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-150
+  text: No standalone gameplay system can add inventory without apply pipeline validation.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-151
+  text: No standalone gameplay system can change combat HP without combat legality
+    validation.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-152
+  text: No standalone gameplay system can change position without movement legality
+    validation.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-153
+  text: No standalone gameplay system can change reputation/social state without social
+    consequence validation.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-154
+  text: No standalone gameplay system can complete quests without quest lifecycle
+    validation.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-155
+  text: Every raw update is either accepted, refined, rejected, or marked unsupported.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-156
+  text: Rejected updates preserve unrelated update domains.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-157
+  text: Rejected updates expose structured rejection reason.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-158
+  text: Rejection reasons are replay-visible or log-visible.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-159
+  text: Merge logic for multiple `StateUpdate`s is deterministic.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-160
+  text: Merge logic has stable precedence for conflicting entity updates.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-161
+  text: Merge logic has stable precedence for conflicting world updates.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-162
+  text: Merge logic does not accidentally drop independent updates.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-163
+  text: Merge logic detects incompatible updates where required.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-164
+  text: Apply order is documented.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-165
+  text: Apply order is tested for cross-domain interactions.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-166
+  text: Apply order cannot depend on dictionary iteration where ordering matters.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-167
+  text: Apply order cannot depend on thread completion order where gameplay outcome
+    matters.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-168
+  text: Pipeline tests include direct old-system calls if such calls remain importable.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-169
+  text: Pipeline tests prove dead/bypassed systems cannot create different gameplay
+    laws.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null

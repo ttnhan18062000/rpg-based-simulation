@@ -45,4 +45,5 @@ Ticket must include:
 - append `tickets/working_log.csv`
 - move staging artifacts to `stored_artifacts/`
 - update related docs
+- clean up temporary run data: `rm -rf data/runs/* reports/release_proof/*`
 - verify no leftover staging/temp files remain

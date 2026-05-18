@@ -1,247 +1,172 @@
-"""Enumerations used throughout the engine."""
-
-from __future__ import annotations
-
-from enum import IntEnum, unique
-
+# Compliance IDs: AUTH-003
+# Compliance IDs: TOWN-003
+from enum import Enum, IntEnum, unique
 
 @unique
-class ActionType(IntEnum):
-    """Types of actions an entity can propose."""
-
-    REST = 0
-    MOVE = 1
-    ATTACK = 2
-    USE_ITEM = 3
-    LOOT = 4
-    HARVEST = 5
-    USE_SKILL = 6
-
+class EntityRole(IntEnum):
+    HERO = 0
+    SHOPKEEPER = 1
+    MONSTER = 2
+    CITIZEN = 3
+    WORKER = 4
+    GUARD = 5
 
 @unique
-class AIState(IntEnum):
-    """Finite-state-machine states for entity AI."""
-
-    IDLE = 0
-    WANDER = 1
-    HUNT = 2
-    COMBAT = 3
-    FLEE = 4
-    RETURN_TO_TOWN = 5
-    RESTING_IN_TOWN = 6
-    RETURN_TO_CAMP = 7
-    GUARD_CAMP = 8
-    LOOTING = 9
-    ALERT = 10          # Responding to territory intrusion
-    VISIT_SHOP = 11     # Going to / interacting with shop
-    VISIT_BLACKSMITH = 12  # Going to / interacting with blacksmith
-    VISIT_GUILD = 13    # Going to / interacting with guild hall
-    HARVESTING = 14     # Channeling resource harvest
-    VISIT_CLASS_HALL = 15  # Going to / interacting with class building
-    VISIT_INN = 16         # Going to / interacting with inn
-    VISIT_HOME = 17        # Going to / interacting with home storage
-
+class Faction(IntEnum):
+    HERO_GUILD = 0
+    MONSTER_HORDE = 1
+    TOWN_COUNCIL = 2
+    NEUTRAL = 3
 
 @unique
 class Direction(IntEnum):
-    """Cardinal movement directions."""
-
+    """Cardinal directions for grid movement."""
     NORTH = 0
     EAST = 1
     SOUTH = 2
     WEST = 3
 
+@unique
+class MovementIntention(IntEnum):
+    """Explicit purpose of the current movement."""
+    NONE = 0
+    PURSUE = 1
+    RETREAT = 2
+    HOLD = 3
+    REPOSITION = 4
+    INTERCEPT = 5
+    GUARD = 6
+    WANDER = 7
+    REGROUP = 8
+@unique
+class ActionType(IntEnum):
+    """Authoritative action categories."""
+    REST = 0
+    MOVE = 1
+    INTERACT = 2
+    ATTACK = 3
+    SKILL = 4
+
+@unique
+class ActionStyle(IntEnum):
+    """Tactical bias for action selection."""
+    BALANCED = 0
+    AGGRESSIVE = 1
+    EVASIVE = 2
+
+class ReasonCode(str, Enum):
+    """
+    Authoritative reason codes for all state changes.
+    Logic ID: TOWN-003 (Structured authoritative reason models)
+    Stable identifiers for simulation decision drivers.
+    """
+    # General
+    LEGAL = "LEGAL"
+    
+    # Movement
+    ADVANCING = "advancing"
+    OCCUPANCY_VIOLATION = "occupancy_violation"
+    PATH_NOT_FOUND = "path_not_found"
+    BUILDING_OBSTRUCTION = "BUILDING_OBSTRUCTION"
+    YIELDING = "yielding"
+    SIDESTEPPING = "sidestepping"
+    WAITING = "waiting"
+    CONGESTION = "congestion"
+    PATH_EXHAUSTED = "path_exhausted"
+    TARGET_REACHED = "target_reached"
+    
+    # Movement / position swap
+    POSITION_SWAP = "position_swap"
+    POSITION_SWAP_ACCEPTED = "position_swap_accepted"
+    POSITION_SWAP_REFUSED = "position_swap_refused"
+    
+    # Combat/Interaction
+    OUT_OF_RANGE = "OUT_OF_RANGE"
+    TARGET_INVALID = "TARGET_INVALID"
+    ACTION_EXHAUSTION = "exhaustion"
+    INTERACTION_REJECTED = "interaction_rejected"
+    INTERACTION_INTERRUPTED = "interaction_interrupted"
+    ENGAGED = "engaged"
+    
+    # Combat Legality Matrix (Hardening)
+    ATTACKER_INCAPACITATED = "ATTACKER_INCAPACITATED"
+    TARGET_INCAPACITATED = "TARGET_INCAPACITATED"
+    LOS_OBSTRUCTED = "LOS_OBSTRUCTED"
+    FRIENDLY_FIRE_ILLEGAL = "FRIENDLY_FIRE_ILLEGAL"
+    INSUFFICIENT_READINESS = "INSUFFICIENT_READINESS"
+    READINESS_NOT_READY = "READINESS_NOT_READY"
+    SELF_ATTACK_ILLEGAL = "SELF_ATTACK_ILLEGAL"
+    SKILL_ON_COOLDOWN = "SKILL_ON_COOLDOWN"
+    SKILL_NOT_LEARNED = "SKILL_NOT_LEARNED"
+    REGIONAL_SUPPRESSION = "REGIONAL_SUPPRESSION"
+    ATTACKER_STATUS_BLOCKED = "ATTACKER_STATUS_BLOCKED"
+    
+    # Tactical AI
+    NO_TARGET = "no_target"
+    LOW_HP_RETREAT = "low_hp_retreat"
+    KITING = "kiting"
+    MAINTAIN_DISTANCE = "maintain_distance"
+    ALLY_SPACING = "ally_spacing"
+    CLOSING_RANGE = "closing_range"
+    GROUP_PRIORITY = "group_priority"
+    
+    # Routine / Biological
+    HUNGER = "hunger"
+    SLEEPY = "sleepy"
+    FORCED_REST = "forced_rest"
+    
+    # Strategic / Capacity
+    INSUFFICIENT_CAPACITY = "INSUFFICIENT_CAPACITY"
+    INVENTORY_FULL_DROPPED = "inventory_full_dropped"
+    BUDGET_EXHAUSTED = "budget_exhausted"
+    OUT_OF_STOCK = "OUT_OF_STOCK"
+    LIQUIDITY_EXHAUSTED = "liquidity_exhausted"
+    
+    # Conservation / Transaction
+    TARGET_LOCKED = "target_locked"
+    IDEMPOTENCY_VIOLATION = "idempotency_violation"
+    SOURCE_DEPLETED = "SOURCE_DEPLETED"
+    INSUFFICIENT_GOLD = "INSUFFICIENT_GOLD"
+    INSUFFICIENT_RESOURCES = "INSUFFICIENT_RESOURCES"
+    PRICE_STALE = "PRICE_STALE"
+    INVENTORY_FULL = "INVENTORY_FULL"
+    SOURCE_MISSING = "SOURCE_MISSING"
+    UNKNOWN_SOURCE_KIND = "UNKNOWN_SOURCE_KIND"
+    GROUP_ROLLBACK = "GROUP_ROLLBACK"
+    
+    # Social
+    TOTAL_DISTRUST = "total_distrust"
+    BETRAYAL_HISTORY = "betrayal_history"
+    LOYALTY_ACCEPTANCE = "loyalty_acceptance"
+    FAIR_COMPENSATION = "fair_compensation"
+    HAGGLING_FOR_PAY = "haggling_for_pay"
+    INSUFFICIENT_INCENTIVE = "insufficient_incentive"
+    USURY_REJECTION = "usury_rejection"
+    DESPERATION_ACCEPTANCE = "desperation_acceptance"
+    FRIENDLY_LOAN = "friendly_loan"
+    UNNECESSARY_DEBT = "unnecessary_debt"
+    
+    # Quest
+    QUEST_COMPLETED = "quest_completed"
+    QUEST_FAILED = "quest_failed"
+    QUEST_EXPIRED = "quest_expired"
+    
+    # Legacy/Fallback
+    ILLEGAL_ACTION = "ILLEGAL_ACTION"
+    UNKNOWN = "unknown"
 
 @unique
 class Domain(IntEnum):
-    """RNG domains for deterministic randomness isolation."""
-
-    COMBAT = 0
-    LOOT = 1
-    AI_DECISION = 2
-    SPAWN = 3
-    WEATHER = 4
-    LEVEL_UP = 5
-    ITEM = 6
-    HARVEST = 7
-    MAP_GEN = 8
-    SOCIAL = 9
-
-
-@unique
-class Material(IntEnum):
-    """Tile materials on the grid."""
-
-    FLOOR = 0
-    WALL = 1
-    WATER = 2
-    TOWN = 3
-    CAMP = 4
-    SANCTUARY = 5
-    FOREST = 6
-    DESERT = 7
-    SWAMP = 8
-    MOUNTAIN = 9
-    ROAD = 10
-    BRIDGE = 11
-    RUINS = 12
-    DUNGEON_ENTRANCE = 13
-    LAVA = 14
-    GRASSLAND = 15
-    SNOW = 16
-    JUNGLE = 17
-    SHALLOW_WATER = 18
-    FARMLAND = 19
-    CAVE = 20
-    VOLCANIC = 21
-    GRAVEYARD = 22
-
-
-@unique
-class ItemType(IntEnum):
-    """Item categories."""
-
-    WEAPON = 0
-    ARMOR = 1
-    ACCESSORY = 2
-    CONSUMABLE = 3
-    MATERIAL = 4
-
-
-@unique
-class Rarity(IntEnum):
-    """Item rarity tiers."""
-
-    COMMON = 0
-    UNCOMMON = 1
-    RARE = 2
-    EPIC = 3
-
-
-@unique
-class EntityRole(IntEnum):
-    """What role an entity plays — determines building access, AI behavior pools, etc.
-
-    HERO:  Can use town buildings (shop, guild, blacksmith, class hall, inn, home).
-    MOB:   Wild creature / enemy. Cannot use buildings. Guards territory.
-    NPC:   Town resident (future). Can use some buildings, trade with heroes.
-    """
-
-    HERO = 0
-    MOB = 1
-    NPC = 2
-
-
-@unique
-class EnemyTier(IntEnum):
-    """Enemy difficulty tiers — affects stats, behavior, and loot."""
-
-    BASIC = 0
-    SCOUT = 1
-    WARRIOR = 2
-    ELITE = 3
-
-
-@unique
-class DamageType(IntEnum):
-    """Core damage categories for attacks and skills."""
-
-    PHYSICAL = 0
-    MAGICAL = 1
-
-
-@unique
-class Element(IntEnum):
-    """Elemental tags applied to skills/weapons for vulnerability modifiers."""
-
-    NONE = 0
-    FIRE = 1
-    ICE = 2
-    LIGHTNING = 3
-    DARK = 4
-    HOLY = 5
-
-
-@unique
-class TraitType(IntEnum):
-    """Discrete personality traits assigned to entities (Rimworld-style).
-
-    Each entity gets 2-4 traits at spawn.  Traits modify utility scores
-    in the goal-evaluation layer and can gate special behaviours.
-    """
-
-    # Combat disposition
-    AGGRESSIVE = 0      # Higher hunt/combat utility, lower flee threshold
-    CAUTIOUS = 1        # Higher flee/retreat utility, prefers safe routes
-    BRAVE = 2           # Resists fleeing even at low HP, bonus morale
-    COWARDLY = 3        # Flees earlier, avoids strong enemies
-    BLOODTHIRSTY = 4    # Seeks combat even when not necessary, bonus crit
-
-    # Social / economic
-    GREEDY = 5          # Prioritises loot/gold, hoards items
-    GENEROUS = 6        # Shares loot, lower sell threshold
-    CHARISMATIC = 7     # Better trade prices, higher recruitment chance
-    LONER = 8           # Avoids allies, prefers solo exploration
-
-    # Work ethic
-    DILIGENT = 9        # Faster interaction/harvest, lower rest need
-    LAZY = 10           # Slower interaction, higher rest utility
-    CURIOUS = 11        # Explores unknown areas, higher frontier utility
-
-    # Combat style
-    BERSERKER = 12      # Bonus damage at low HP, ignores some defense
-    TACTICAL = 13       # Prefers skills over basic attacks, better positioning
-    RESILIENT = 14      # Faster HP regen, higher effective VIT
-
-    # Magical affinity
-    ARCANE_GIFTED = 15  # Bonus MATK, higher skill utility
-    SPIRIT_TOUCHED = 16 # Bonus MDEF, resist dark/holy elements
-    ELEMENTALIST = 17   # Bonus elemental damage, varied element preference
-
-    # Perception / awareness
-    KEEN_EYED = 18      # Bonus vision range, detects hidden enemies
-    OBLIVIOUS = 19      # Reduced vision, but higher focus on current task
-
-
-@unique
-class VeterancyRank(IntEnum):
-    """Combat experience ranks for entities."""
-
-    GREEN = 0
-    BLOODED = 1
-    VETERAN = 2
-    ELITE = 3
-    LEGEND = 4
-
-
-from dataclasses import dataclass
-
-@dataclass(frozen=True)
-class RaceProfile:
-    """Racial growth profile determining how an entity levels up."""
-    train_rate: float
-    level_cap: int
-    evolves: bool
-
-
-RACE_PROFILES: dict[str, RaceProfile] = {
-    "hero": RaceProfile(1.0, 30, False),
-    "goblin": RaceProfile(1.3, 12, True),
-    "goblin_scout": RaceProfile(1.3, 12, True),
-    "goblin_warrior": RaceProfile(1.3, 12, True),
-    "goblin_chief": RaceProfile(1.3, 12, False),
-    "wolf": RaceProfile(0.7, 8, True),
-    "dire_wolf": RaceProfile(0.7, 8, True),
-    "alpha_wolf": RaceProfile(0.7, 8, False),
-    "bandit": RaceProfile(1.0, 15, True),
-    "bandit_archer": RaceProfile(1.0, 15, True),
-    "bandit_chief": RaceProfile(1.0, 15, False),
-    "undead": RaceProfile(0.0, 1, False),  # Cannot level up
-    "skeleton": RaceProfile(0.0, 1, False),
-    "skeleton_mage": RaceProfile(0.0, 1, False),
-    "zombie": RaceProfile(0.0, 1, False),
-    "lich": RaceProfile(0.0, 1, False),
-    "orc": RaceProfile(0.6, 15, True),
-    "orc_warrior": RaceProfile(0.6, 15, True),
-    "orc_warlord": RaceProfile(0.6, 15, False),
-}
+    """Scoping for deterministic RNG."""
+    DEFAULT = 0
+    SPAWN = 1
+    WORLD = 2
+    CALAMITY = 3
+    SOCIAL = 4
+    STRATEGIC = 5
+    TACTICAL = 6
+    ECONOMY = 7
+    QUEST = 8
+    COMBAT = 9     # Reserved: Combat is deterministic-by-formula (no RNG), but domain exists for future use
+    LOOT = 10      # Loot table rolls (future)
+    INIT = 11      # World initialization / entity placement

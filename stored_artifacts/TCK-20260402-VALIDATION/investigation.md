@@ -4,7 +4,7 @@
 
 ### Profiler Regression
 - `scripts/profile_simulation.py` fails with `ModuleNotFoundError: No module named 'src.core.snapshot'`.
-- AOA migration moved this to `src.core.models.snapshot`.
+- AOA migration moved this to `src_legacy.core.models.snapshot`.
 
 ### Performance Concerns
 - `Entity.property_shims` uses `hasattr` and `getattr` which can be slow in hot-loops.

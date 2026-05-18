@@ -1,0 +1,133 @@
+{
+  "scenario_id": "strategic_100_local",
+  "profile": "PERF_2GB_LOCAL",
+  "sample_ticks": 20,
+  "wall_clock_s": 2.0236,
+  "wall_clock_tps": 9.88,
+  "compute_tps": 75.7,
+  "avg_tps": 75.7,
+  "tick_ms": {
+    "avg": 13.21,
+    "p50": 12.978,
+    "p95": 22.012,
+    "p99": 22.012,
+    "max": 22.012,
+    "min": 6.783
+  },
+  "mem_rss_mb": {
+    "avg": 47.58,
+    "max": 47.58,
+    "delta": 0.0
+  },
+  "phase_breakdown": {
+    "init": {
+      "avg": 0.317,
+      "p50": 0.31,
+      "p95": 0.812,
+      "p99": 0.812,
+      "max": 0.812,
+      "min": 0.115
+    },
+    "scheduling": {
+      "avg": 0.557,
+      "p50": 0.309,
+      "p95": 3.609,
+      "p99": 3.609,
+      "max": 3.609,
+      "min": 0.19
+    },
+    "collection": {
+      "avg": 1.011,
+      "p50": 0.724,
+      "p95": 2.726,
+      "p99": 2.726,
+      "max": 2.726,
+      "min": 0.317
+    },
+    "apply": {
+      "avg": 0.264,
+      "p50": 0.175,
+      "p95": 0.915,
+      "p99": 0.915,
+      "max": 0.915,
+      "min": 0.105
+    },
+    "resource": {
+      "avg": 0.135,
+      "p50": 0.125,
+      "p95": 0.336,
+      "p99": 0.336,
+      "max": 0.336,
+      "min": 0.046
+    },
+    "combat": {
+      "avg": 0.947,
+      "p50": 0.782,
+      "p95": 3.4,
+      "p99": 3.4,
+      "max": 3.4,
+      "min": 0.237
+    },
+    "movement": {
+      "avg": 0.061,
+      "p50": 0.029,
+      "p95": 0.383,
+      "p99": 0.383,
+      "max": 0.383,
+      "min": 0.017
+    },
+    "strategic": {
+      "avg": 1.804,
+      "p50": 1.456,
+      "p95": 5.934,
+      "p99": 5.934,
+      "max": 5.934,
+      "min": 0.77
+    },
+    "resolution": {
+      "avg": 11.289,
+      "p50": 10.804,
+      "p95": 17.192,
+      "p99": 17.192,
+      "max": 17.192,
+      "min": 6.003
+    },
+    "cleanup": {
+      "avg": 0.037,
+      "p50": 0.017,
+      "p95": 0.14,
+      "p99": 0.14,
+      "max": 0.14,
+      "min": 0.01
+    },
+    "advancement": {
+      "avg": 0.05,
+      "p50": 0.044,
+      "p95": 0.118,
+      "p99": 0.118,
+      "max": 0.118,
+      "min": 0.033
+    },
+    "persistence": {
+      "avg": 0.014,
+      "p50": 0.013,
+      "p95": 0.034,
+      "p99": 0.034,
+      "max": 0.034,
+      "min": 0.008
+    }
+  },
+  "replay_enabled": false,
+  "frame_pacing_enabled": false,
+  "timestamp": 1778820949.306285,
+  "avg_tick_compute_ms": 13.21,
+  "p50_tick_compute_ms": 12.978,
+  "p95_tick_compute_ms": 22.012,
+  "p99_tick_compute_ms": 22.012,
+  "max_tick_compute_ms": 22.012,
+  "peak_rss_mb": 47.58,
+  "memory_delta_mb": 0.0,
+  "matrix_scenario": "strategic",
+  "matrix_scale": 100,
+  "matrix_mode": "local"
+}

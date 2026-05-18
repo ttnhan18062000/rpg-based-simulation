@@ -1,64 +1,65 @@
-"""Spatial hashing for O(1) neighbor lookups."""
-
+# src/platform/spatial_hash.py
 from __future__ import annotations
+from typing import Dict, Set, Tuple, List, Optional
+import math
 
-from collections import defaultdict
+class SpatialHashV2:
+    """
+    Deterministic spatial hash for RPG-core proximity and occupancy.
+    Supports radius queries and cell-based lookups.
+    VERIFIED v2: SpatialHashV2
+    """
 
-from src.core.models import Vector2
+    def __init__(self, cell_size: int = 10):
+        self.cell_size = cell_size
+        self.grid: Dict[Tuple[int, int], Set[int]] = {}
+        self.entity_pos: Dict[int, Tuple[float, float]] = {} # Precise positions
 
+    def _get_cell(self, pos: Tuple[float, float]) -> Tuple[int, int]:
+        return (int(pos[0] // self.cell_size), int(pos[1] // self.cell_size))
 
-class SpatialHash:
-    """Grid-based spatial index mapping cell keys to sets of entity IDs."""
+    def update_entity(self, entity_id: int, pos: Tuple[float, float]):
+        new_cell = self._get_cell(pos)
+        old_pos = self.entity_pos.get(entity_id)
+        old_cell = self._get_cell(old_pos) if old_pos else None
+        
+        if old_cell != new_cell:
+            if old_cell is not None:
+                if old_cell in self.grid:
+                    self.grid[old_cell].discard(entity_id)
+                    if not self.grid[old_cell]: del self.grid[old_cell]
+            if new_cell not in self.grid: self.grid[new_cell] = set()
+            self.grid[new_cell].add(entity_id)
+            
+        self.entity_pos[entity_id] = pos
 
-    __slots__ = ("_cell_size", "_cells")
+    def remove_entity(self, entity_id: int):
+        old_pos = self.entity_pos.pop(entity_id, None)
+        if old_pos:
+            old_cell = self._get_cell(old_pos)
+            if old_cell in self.grid:
+                self.grid[old_cell].discard(entity_id)
+                if not self.grid[old_cell]: del self.grid[old_cell]
 
-    def __init__(self, cell_size: int = 8) -> None:
-        self._cell_size = cell_size
-        self._cells: dict[tuple[int, int], set[int]] = defaultdict(set)
-
-    def _key(self, pos: Vector2) -> tuple[int, int]:
-        return pos.x // self._cell_size, pos.y // self._cell_size
-
-    def insert(self, entity_id: int, pos: Vector2) -> None:
-        self._cells[self._key(pos)].add(entity_id)
-
-    def remove(self, entity_id: int, pos: Vector2) -> None:
-        key = self._key(pos)
-        bucket = self._cells.get(key)
-        if bucket is not None:
-            bucket.discard(entity_id)
-            if not bucket:
-                del self._cells[key]
-
-    def move(self, entity_id: int, old_pos: Vector2, new_pos: Vector2) -> None:
-        old_key = self._key(old_pos)
-        new_key = self._key(new_pos)
-        if old_key != new_key:
-            self.remove(entity_id, old_pos)
-            self.insert(entity_id, new_pos)
-
-    def query_cell(self, pos: Vector2) -> set[int]:
-        """Return entity IDs in the same cell as *pos*."""
-        return set(self._cells.get(self._key(pos), set()))
-
-    def query_radius(self, pos: Vector2, radius: int) -> set[int]:
-        """Return entity IDs within *radius* cells of *pos*."""
-        cx, cy = self._key(pos)
-        r = (radius // self._cell_size) + 1
-        result: set[int] = set()
-        for dx in range(-r, r + 1):
-            for dy in range(-r, r + 1):
-                bucket = self._cells.get((cx + dx, cy + dy))
-                if bucket:
-                    result.update(bucket)
-        return result
-
-    def clear(self) -> None:
-        self._cells.clear()
-
-    def rebuild(self, entities: Iterable[Entity]) -> None:
-        """Clear and re-insert all entities to ensure index consistency."""
-        self.clear()
-        for entity in entities:
-            if hasattr(entity, "spatial") and entity.spatial:
-                self.insert(entity.id, entity.spatial.pos)
+    def query_radius(self, pos: Tuple[float, float], radius: float) -> List[int]:
+        min_cell_x = int((pos[0] - radius) // self.cell_size)
+        max_cell_x = int((pos[0] + radius) // self.cell_size)
+        min_cell_y = int((pos[1] - radius) // self.cell_size)
+        max_cell_y = int((pos[1] + radius) // self.cell_size)
+        
+        candidates = []
+        for cx in range(min_cell_x, max_cell_x + 1):
+            for cy in range(min_cell_y, max_cell_y + 1):
+                cell = (cx, cy)
+                if cell in self.grid: candidates.extend(self.grid[cell])
+        
+        # Exact distance check
+        results = []
+        r_sq = radius * radius
+        for eid in candidates:
+            epos = self.entity_pos[eid]
+            dist_sq = (pos[0] - epos[0])**2 + (pos[1] - epos[1])**2
+            if dist_sq <= r_sq:
+                results.append(eid)
+                
+        return sorted(list(set(results)))

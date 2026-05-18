@@ -1,131 +1,57 @@
+# Compliance IDs: TOWN-013
 from __future__ import annotations
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING
+from typing import Dict, List, Any
+from enum import Enum
 
-if TYPE_CHECKING:
-    from src.core.gameplay.items.item_registry import ITEM_REGISTRY
-    from src.core.gameplay.items.items import ItemType
+class ItemKind(str, Enum):
+    """Broad categories of items."""
+    MATERIAL = "MATERIAL"
+    CONSUMABLE = "CONSUMABLE"
+    WEAPON = "WEAPON"
+    ARMOR = "ARMOR"
+    CURRENCY = "CURRENCY"
 
-@dataclass(slots=True)
-class Inventory:
-    """Mutable item container with slot and weight limits."""
-    items: list[str] = field(default_factory=list)
-    max_slots: int = 8
-    max_weight: float = 20.0
-    weapon: str | None = None
-    armor: str | None = None
-    accessory: str | None = None
+class EquipSlot(str, Enum):
+    """Valid equipment locations on an entity."""
+    HEAD = "HEAD"
+    TORSO = "TORSO"
+    LEGS = "LEGS"
+    MAIN_HAND = "MAIN_HAND"
+    OFF_HAND = "OFF_HAND"
 
-    @property
-    def current_weight(self) -> float:
-        total = 0.0
-        from src.core.gameplay.items.item_registry import ITEM_REGISTRY
-        for iid in self.items:
-            t = ITEM_REGISTRY.get(iid)
-            if t: total += t.weight
-        for slot_id in (self.weapon, self.armor, self.accessory):
-            if slot_id:
-                t = ITEM_REGISTRY.get(slot_id)
-                if t: total += t.weight
-        return total
+@dataclass(frozen=True, slots=True)
+class ItemStack:
+    """A quantity of a specific item template."""
+    item_id: str
+    quantity: int = 1
+    properties: Dict[str, Any] = field(default_factory=dict)
 
-    @property
-    def total_weight(self) -> float:
-        return self.current_weight
+    def to_canonical_dict(self) -> Dict[str, Any]:
+        return {
+            "id": self.item_id,
+            "q": self.quantity
+        }
 
-    @property
-    def used_slots(self) -> int: return len(self.items)
+@dataclass(frozen=True, slots=True)
+class InventoryComponent:
+    """
+    Bounded container for items and gold.
+    Logic ID: TOWN-013 (Inventory is bounded by slots and weight)
+    """
+    items: List[ItemStack] = field(default_factory=list)
+    gold: int = 0
+    max_slots: int = 16
+    max_weight: float = 50.0
+    _canonical_cache: Any = field(default=None, init=False, repr=False, compare=False)
 
-    @property
-    def is_full(self) -> bool:
-        return self.used_slots >= self.max_slots
-
-    @property
-    def is_effectively_full(self) -> bool:
-        """True if inventory is full by slots or near weight limit."""
-        return self.is_full or (self.current_weight >= self.max_weight * 0.9)
-
-    @property
-    def weight_ratio(self) -> float:
-        """Ratio of current weight to max weight (0.0 to 1.0+)."""
-        if self.max_weight <= 0:
-            return 1.0
-        return self.current_weight / self.max_weight
-
-    def count_item(self, item_id: str) -> int:
-        """Count how many copies of item_id are in the bag."""
-        return self.items.count(item_id)
-
-    def has_consumable(self, item_id: str) -> bool:
-        """Check if item_id is in inventory."""
-        return item_id in self.items
-    
-    def can_add(self, item_id: str) -> bool:
-        if self.used_slots >= self.max_slots: return False
-        from src.core.gameplay.items.item_registry import ITEM_REGISTRY
-        t = ITEM_REGISTRY.get(item_id)
-        if t is None: return False
-        return self.current_weight + t.weight <= self.max_weight
-
-    def add_item(self, item_id: str) -> bool:
-        if not self.can_add(item_id): return False
-        self.items.append(item_id)
-        return True
-
-    def remove_item(self, item_id: str) -> bool:
-        if item_id in self.items:
-            self.items.remove(item_id)
-            return True
-        return False
-
-    def equip(self, item_id: str) -> bool:
-        from src.core.gameplay.items.item_registry import ITEM_REGISTRY
-        from src.core.gameplay.items.items import ItemType
-        t = ITEM_REGISTRY.get(item_id)
-        if t is None or item_id not in self.items: return False
-        if t.item_type == ItemType.WEAPON:
-            if self.weapon: self.items.append(self.weapon)
-            self.weapon = item_id
-        elif t.item_type == ItemType.ARMOR:
-            if self.armor: self.items.append(self.armor)
-            self.armor = item_id
-        elif t.item_type == ItemType.ACCESSORY:
-            if self.accessory: self.items.append(self.accessory)
-            self.accessory = item_id
-        else: return False
-        self.items.remove(item_id)
-        return True
-
-    def auto_equip_best(self, item_id: str) -> bool:
-        from src.core.gameplay.items.item_registry import ITEM_REGISTRY
-        from src.core.gameplay.items.items import ItemType, _item_power
-        t = ITEM_REGISTRY.get(item_id)
-        if t is None or item_id not in self.items: return False
-        if t.item_type not in (ItemType.WEAPON, ItemType.ARMOR, ItemType.ACCESSORY): return False
-        if t.item_type == ItemType.WEAPON: current_id = self.weapon
-        elif t.item_type == ItemType.ARMOR: current_id = self.armor
-        else: current_id = self.accessory
-        if current_id is None: return self.equip(item_id)
-        current_t = ITEM_REGISTRY.get(current_id)
-        if current_t is None or _item_power(t) > _item_power(current_t):
-            return self.equip(item_id)
-        return False
-
-    def copy(self) -> Inventory:
-        return Inventory(items=list(self.items), max_slots=self.max_slots, max_weight=self.max_weight, weapon=self.weapon, armor=self.armor, accessory=self.accessory)
-
-    def equipment_bonus(self, stat: str) -> int | float:
-        total = 0
-        from src.core.gameplay.items.items import ITEM_REGISTRY
-        for slot_id in (self.weapon, self.armor, self.accessory):
-            if slot_id:
-                t = ITEM_REGISTRY.get(slot_id)
-                if t: total += getattr(t, stat, 0)
-        return total
-
-    def get_all_item_ids(self) -> list[str]:
-        result = list(self.items)
-        if self.weapon: result.append(self.weapon)
-        if self.armor: result.append(self.armor)
-        if self.accessory: result.append(self.accessory)
-        return result
+    def to_canonical_dict(self) -> Dict[str, Any]:
+        if self._canonical_cache is not None:
+            return self._canonical_cache
+        res = {
+            "gold": self.gold,
+            "items": [i.to_canonical_dict() for i in sorted(self.items, key=lambda x: x.item_id)],
+            "max_slots": self.max_slots
+        }
+        object.__setattr__(self, "_canonical_cache", res)
+        return res

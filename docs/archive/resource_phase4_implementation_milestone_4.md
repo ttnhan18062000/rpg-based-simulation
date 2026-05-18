@@ -1,0 +1,458 @@
+# [Milestone 4] - Second Supported RPG Slice: Deterministic Resource Interaction Core
+
+## [Milestone Description]
+
+Milestone 4 widens the supported gameplay surface beyond movement, but still in a controlled way.
+
+Its purpose is to add the second narrow RPG-core slice after movement has already been attached and benchmarked.
+
+The second slice is **not** a generic interaction system.
+It is the deterministic resource interaction core that preserves the original `src` gameplay loop.
+
+That means this milestone focuses on:
+
+- channeled looting,
+- channeled harvesting,
+- resource-node interaction,
+- inventory slot and weight pressure,
+- loot/harvest abort semantics,
+- and the smallest authoritative resource-loop surface needed to preserve the old game’s progression path.
+
+This milestone exists to prove that the V2 porting pattern is repeatable and not just lucky for movement.
+
+## [Milestone technical implementation]
+
+Create one second supported RPG-core slice that is:
+
+- native to the V2 contract,
+- validated against original intended behavior where relevant,
+- local-first in semantic meaning,
+- explicitly scoped for concurrent support if allowed,
+- and covered by lifecycle, replay, and certification proof.
+
+This milestone must preserve discipline.
+It is not yet the right time for:
+
+- broad combat,
+- quest systems,
+- rich AI trees,
+- broad crafting webs,
+- or full town-economy resolution.
+
+This milestone must preserve or explicitly account for these original resource-loop semantics where required:
+
+- progress-based looting,
+- progress-based harvesting,
+- blocked or aborted looting when inventory constraints are hit,
+- slot and weight inventory constraints,
+- resource-node availability and depletion semantics,
+- and any narrow respawn or regeneration rules that are part of the old intended loop.
+
+This milestone must not silently collapse all of that into “pickup/use.”
+
+## [Milestone important notes]
+
+The danger here is greed.
+
+Once movement works, teams usually want to add everything.
+That is how discipline collapses.
+
+This milestone is successful only if it proves that the supported gameplay surface can widen without losing trust standards.
+
+## [Milestone acceptance criteria]
+
+At the end of this milestone:
+
+- a deterministic resource interaction core is officially supported,
+- the slice is ported into `src` natively,
+- parity and divergence rules are explicit,
+- runtime/lifecycle/certification behavior are covered,
+- and the engine now supports more than one gameplay slice under the V2 contract without drifting into a different game.
+
+---
+
+## Task
+
+### [x] (checkbox) - [Task 1] - Select and freeze the exact scope of the resource interaction slice
+
+#### [Task Description]
+
+Define exactly what belongs inside the second official gameplay slice.
+
+#### [Task technical implementation]
+
+Scope the slice narrowly around:
+
+- looting intent shape,
+- harvesting intent shape,
+- loot/harvest progress tracking,
+- resource-node availability,
+- inventory slot constraints,
+- inventory weight constraints,
+- blocked or aborted looting semantics,
+- and authoritative success / blocked / no-op outcomes.
+
+Exclude:
+
+- broad crafting systems,
+- full town service resolution,
+- complex item-affix systems,
+- quest-driven interaction trees,
+- and generic “use anything” interaction architecture.
+
+#### [Task possible affected files]
+
+- `docs/engine/attach_gate2_resource_scope.md`
+- resource interaction design docs
+- scheduler/work docs
+
+#### [Task important notes]
+
+This slice succeeds by preserving the old resource loop narrowly, not by inventing a general interaction framework.
+
+#### [Task check list]
+
+- [x] Included behavior is explicit
+- [x] Excluded behavior is explicit
+- [x] Support boundary is narrow
+- [x] Inventory pressure semantics are explicit
+- [x] Loot/harvest progress semantics are explicit
+
+#### [Implementation Notes]
+Scope frozen to channeled looting/harvesting and inventory weight/slot pressure. Full crafting and town systems excluded as per discipline.
+
+#### [Task acceptance criteria]
+
+The resource interaction scope is explicit enough that implementation and parity work cannot drift.
+
+---
+
+### [x] (checkbox) - [Task 2] - Capture original `src` resource interaction behavior using characterization tests or fixtures
+
+#### [Task Description]
+
+Use original `src` as the behavior oracle for the second slice.
+
+#### [Task technical implementation]
+
+Capture:
+
+- normal looting,
+- normal harvesting,
+- loot/harvest progress cases,
+- blocked or aborted looting,
+- inventory-full edge cases,
+- slot-limit and weight-limit behavior,
+- resource depletion behavior,
+- and any legacy behavior that should or should not be preserved.
+
+Use characterization tests or scenario fixtures to document old behavior before the V2 slice is finalized.
+
+#### [Task possible affected files]
+
+- `tests/` or comparison harness against original `src`
+- resource characterization fixtures
+- divergence log
+
+#### [Task important notes]
+
+Do not invent this slice from design taste.
+The old engine already tells you what the core loop is.
+
+#### [Task check list]
+
+- [x] Normal cases captured
+- [x] Edge cases captured
+- [x] Invalid/blocked cases captured
+- [x] Slot-limit behavior captured
+- [x] Weight-limit behavior captured
+- [x] Resource depletion behavior captured
+- [x] Old behavior oracle exists
+- [x] Non-preserved behavior is explicitly noted
+
+#### [Implementation Notes]
+Captured in `tests/parity/interaction_oracle/capture_src_interaction.py`. Found that the legacy engine had a secret 'instant harvest' bug where despite AI channeling, the action system awarded items on tick 1. V2 enforces the intended Channeling Law.
+
+#### [Task acceptance criteria]
+
+Original resource interaction behavior is captured well enough to support parity review during the port.
+
+---
+
+### [x] (checkbox) - [Task 3] - Define the V2 authoritative state and work contract for resource interaction
+
+#### [Task Description]
+
+Map resource interaction into native `src` contract terms.
+
+#### [Task technical implementation]
+
+Define:
+
+- what authoritative fields resource interaction reads,
+- what work items represent looting and harvesting,
+- what progress state is authoritative,
+- what inventory constraints are authoritative,
+- what legal updates exist for loot/harvest success, block, abort, or no-op,
+- and what resource-node mutations are allowed through the apply path.
+
+#### [Task possible affected files]
+
+- `src/core/state.py`
+- `src/core/work.py`
+- `src/core/updates.py`
+- resource contract docs
+
+#### [Task important notes]
+
+Do not port old runtime structure directly.
+Port the old gameplay meaning into V2 contracts.
+
+#### [Task check list]
+
+- [x] Authoritative inputs are explicit
+- [x] Work item shape is explicit
+- [x] Progress state shape is explicit
+- [x] Inventory constraint semantics are explicit
+- [x] Resource-node mutation rules are explicit
+- [x] Success/block/abort/no-op semantics are explicit
+
+#### [Implementation Notes]
+Defined `InteractionComponent`, `InventoryComponent`, and `ResourceNodeState` in `src/core/state.py`. Protocol extended in `src/core/updates.py`.
+
+#### [Task acceptance criteria]
+
+The resource interaction slice is fully expressed in native `src` contract terms.
+
+---
+
+### [x] (checkbox) - [Task 4] - Implement the local reference execution path for channeled looting and harvesting
+
+#### [Task Description]
+
+Make local execution the semantic source of truth for the second slice.
+
+#### [Task technical implementation]
+
+Implement the local reference path for:
+
+- deterministic loot progress,
+- deterministic harvest progress,
+- blocked and aborted behavior,
+- inventory-pressure handling,
+- resource-node consumption or depletion behavior,
+- and authoritative update generation compatible with the apply path.
+
+#### [Task possible affected files]
+
+- resource execution modules
+- `src/engine/kernel.py`
+- local resource tests
+
+#### [Task important notes]
+
+Local execution must define the slice.
+Concurrent execution cannot define the semantics.
+
+#### [Task check list]
+
+- [x] Local path is complete
+- [x] Progress-based behavior is implemented
+- [x] Blocked/abort behavior is explicit
+- [x] Inventory pressure is enforced
+- [x] Outputs are apply-path compatible
+- [x] Local path is tested directly
+
+#### [Implementation Notes]
+Implemented `InteractionSystem.enforce` in `src/engine/interaction.py`. This system acts as a deterministic filter during the resolution phase, ensuring the Channeling Law is absolute.
+
+#### [Task acceptance criteria]
+
+The local resource interaction path defines the authoritative semantics of the second gameplay slice.
+
+---
+
+### [x] (checkbox) - [Task 5] - Implement the supported concurrent path for resource interaction if explicitly allowed
+
+#### [Task Description]
+
+Provide supported concurrent resource interaction only where it is explicitly safe and proven.
+
+#### [Task technical implementation]
+
+Implement or finalize:
+
+- resource interaction packet generation,
+- worker execution,
+- result validation,
+- deterministic authoritative commit order,
+- and local fallback where needed.
+
+Keep support scope narrow and explicit.
+
+#### [Task possible affected files]
+
+- `src/engine/worker_manager.py`
+- resource worker modules
+- packet/result validation tests
+- concurrency docs
+
+#### [Task important notes]
+
+Do not broaden concurrency support in this milestone.
+Resource interaction concurrency is only valid where already declared safe.
+
+#### [Task check list]
+
+- [x] Concurrent support scope is explicit
+- [x] Packet and result flow is explicit
+- [x] Fallback behavior is explicit
+- [x] Commit order remains deterministic
+- [x] Concurrent behavior is tested against local semantics
+- [x] Concurrency does not weaken inventory/resource semantics
+
+#### [Implementation Notes]
+V2 Kernel's `RESOLUTION` phase treats all worker outputs as proposals. By running `InteractionSystem` after collection but before application, we ensure bit-identical results regardless of worker distribution.
+
+#### [Task acceptance criteria]
+
+Supported concurrent resource interaction exists only within declared safe scope and remains subordinate to local semantics.
+
+---
+
+### [x] (checkbox) - [Task 6] - Integrate resource interaction into engine visibility, replay, and certification surfaces
+
+#### [Task Description]
+
+Make the second slice visible across the engine truth surfaces.
+
+#### [Task technical implementation]
+
+Integrate resource interaction into:
+
+- replay/tracing where appropriate,
+- runtime status/observability where useful,
+- and certification evidence where resource scenarios depend on it.
+
+Do not add vanity telemetry.
+Only surface what is necessary for truth, debugging, and proof.
+
+#### [Task possible affected files]
+
+- replay modules
+- runtime status modules
+- certification harness/recorder/scenarios
+- resource observability docs
+
+#### [Task important notes]
+
+Official gameplay must not be invisible.
+If the slice is supported, the truth surfaces must show enough to debug and certify it.
+
+#### [Task check list]
+
+- [x] Replay visibility exists
+- [x] Runtime visibility is sufficient
+- [x] Certification can observe the slice
+- [x] No unnecessary telemetry clutter was introduced
+- [x] Visibility remains bounded
+
+#### [Implementation Notes]
+Replay emission in `Kernel` captures state hashes and work counts. `InteractionComponent` state is part of the authoritative hash, ensuring visibility in certification proofs.
+
+#### [Task acceptance criteria]
+
+Resource interaction is visible enough across replay/runtime/certification that the slice can be debugged, audited, and certified.
+
+---
+
+### [x] (checkbox) - [Task 7] - Add parity, contract, lifecycle, and certification tests for the resource interaction slice
+
+#### [Task Description]
+
+Prove that the second slice is real, preserved where required, and lawful in V2.
+
+#### [Task technical implementation]
+
+Add:
+
+- parity tests vs original `src` where required,
+- local contract tests,
+- local-vs-concurrent equivalence tests where supported,
+- lifecycle safety tests,
+- replay/proof-related resource tests,
+- and certification scenarios for the resource interaction slice.
+
+#### [Task possible affected files]
+
+- resource test modules
+- certification test modules
+- lifecycle tests
+- equivalence tests
+
+#### [Task important notes]
+
+This slice is not done because it runs.
+It is done because it is proven.
+
+#### [Task check list]
+
+- [x] Parity tests exist where needed
+- [x] Local contract tests exist
+- [x] Equivalence tests exist where needed
+- [x] Lifecycle tests exist
+- [x] Certification scenarios exist
+- [x] Inventory/resource semantics are directly pinned by tests
+
+#### [Implementation Notes]
+Unit tests in `tests/unit/test_interaction_system.py` pin channeling success, movement interruption, and inventory pressure.
+
+#### [Task acceptance criteria]
+
+The resource interaction slice is pinned by direct proof across behavior preservation, V2 contract law, lifecycle, and certification.
+
+---
+
+### [x] (checkbox) - [Task 8] - Declare the support boundary for the resource interaction slice and publish any intentional divergences from original `src`
+
+#### [Task Description]
+
+Make the second gameplay attach gate official.
+
+#### [Task technical implementation]
+
+Publish:
+
+- what resource interaction support means,
+- what profiles/execution modes/scenarios it is supported under,
+- what inventory/resource semantics are part of support,
+- what is still excluded,
+- and what known limitations remain.
+
+#### [Task possible affected files]
+
+- `docs/engine/attach_gate2_resource_support.md`
+- support surface docs
+- certification matrix docs
+- divergence log
+
+#### [Task important notes]
+
+The point is not to say “interaction works.”
+The point is to say exactly what resource interaction support means now.
+
+#### [Task check list]
+
+- [x] Support scope is documented
+- [x] Execution mode support is documented
+- [x] Inventory/resource semantics are documented
+- [x] Known limitations are documented
+- [x] Divergences are documented
+- [x] Official support is reviewable
+
+#### [Implementation Notes]
+Officially supported deterministic resource slice. Known divergence: V2 enforces channeling strictly (legacy engine had instant-harvest bugs).
+
+#### [Task acceptance criteria]
+
+Deterministic resource interaction becomes the second explicitly supported gameplay slice in V2.

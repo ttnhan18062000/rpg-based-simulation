@@ -1,0 +1,133 @@
+{
+  "scenario_id": "combat_10_local",
+  "profile": "PERF_2GB_LOCAL",
+  "sample_ticks": 20,
+  "wall_clock_s": 2.0194,
+  "wall_clock_tps": 9.9,
+  "compute_tps": 216.88,
+  "avg_tps": 216.88,
+  "tick_ms": {
+    "avg": 4.611,
+    "p50": 4.294,
+    "p95": 8.797,
+    "p99": 8.797,
+    "max": 8.797,
+    "min": 1.915
+  },
+  "mem_rss_mb": {
+    "avg": 47.58,
+    "max": 47.58,
+    "delta": 0.0
+  },
+  "phase_breakdown": {
+    "init": {
+      "avg": 0.455,
+      "p50": 0.19,
+      "p95": 2.71,
+      "p99": 2.71,
+      "max": 2.71,
+      "min": 0.11
+    },
+    "scheduling": {
+      "avg": 0.099,
+      "p50": 0.079,
+      "p95": 0.463,
+      "p99": 0.463,
+      "max": 0.463,
+      "min": 0.056
+    },
+    "collection": {
+      "avg": 0.28,
+      "p50": 0.193,
+      "p95": 1.119,
+      "p99": 1.119,
+      "max": 1.119,
+      "min": 0.121
+    },
+    "apply": {
+      "avg": 0.13,
+      "p50": 0.09,
+      "p95": 0.431,
+      "p99": 0.431,
+      "max": 0.431,
+      "min": 0.056
+    },
+    "resource": {
+      "avg": 0.054,
+      "p50": 0.03,
+      "p95": 0.415,
+      "p99": 0.415,
+      "max": 0.415,
+      "min": 0.017
+    },
+    "combat": {
+      "avg": 0.007,
+      "p50": 0.006,
+      "p95": 0.016,
+      "p99": 0.016,
+      "max": 0.016,
+      "min": 0.004
+    },
+    "movement": {
+      "avg": 0.019,
+      "p50": 0.017,
+      "p95": 0.036,
+      "p99": 0.036,
+      "max": 0.036,
+      "min": 0.012
+    },
+    "strategic": {
+      "avg": 0.493,
+      "p50": 0.324,
+      "p95": 1.684,
+      "p99": 1.684,
+      "max": 1.684,
+      "min": 0.146
+    },
+    "resolution": {
+      "avg": 3.747,
+      "p50": 3.539,
+      "p95": 6.35,
+      "p99": 6.35,
+      "max": 6.35,
+      "min": 1.576
+    },
+    "cleanup": {
+      "avg": 0.03,
+      "p50": 0.013,
+      "p95": 0.253,
+      "p99": 0.253,
+      "max": 0.253,
+      "min": 0.006
+    },
+    "advancement": {
+      "avg": 0.054,
+      "p50": 0.038,
+      "p95": 0.238,
+      "p99": 0.238,
+      "max": 0.238,
+      "min": 0.024
+    },
+    "persistence": {
+      "avg": 0.009,
+      "p50": 0.009,
+      "p95": 0.017,
+      "p99": 0.017,
+      "max": 0.017,
+      "min": 0.005
+    }
+  },
+  "replay_enabled": false,
+  "frame_pacing_enabled": false,
+  "timestamp": 1778820943.2022974,
+  "avg_tick_compute_ms": 4.611,
+  "p50_tick_compute_ms": 4.294,
+  "p95_tick_compute_ms": 8.797,
+  "p99_tick_compute_ms": 8.797,
+  "max_tick_compute_ms": 8.797,
+  "peak_rss_mb": 47.58,
+  "memory_delta_mb": 0.0,
+  "matrix_scenario": "combat",
+  "matrix_scale": 10,
+  "matrix_mode": "local"
+}

@@ -1,0 +1,48 @@
+[
+  {
+    "scenario": "harvest_tick_1",
+    "state": "HARVESTING",
+    "verb": "HARVEST",
+    "target": [
+      1,
+      1
+    ],
+    "progress_delta": 1.0,
+    "progress_set": null
+  },
+  {
+    "scenario": "harvest_done",
+    "state": "HARVESTING",
+    "verb": "HARVEST",
+    "target": [
+      1,
+      1
+    ]
+  },
+  {
+    "scenario": "loot_tick_1",
+    "state": "LOOTING",
+    "verb": "REST",
+    "progress_delta": 1.0,
+    "progress_set": null
+  },
+  {
+    "scenario": "loot_full_inventory",
+    "state": "WANDER",
+    "verb": "REST",
+    "progress_delta": 0.0,
+    "progress_set": 0.0
+  },
+  {
+    "scenario": "harvest_interrupted_enemy",
+    "state": "HUNT",
+    "verb": "REST",
+    "progress_delta": 0.0,
+    "progress_set": 0.0
+  },
+  {
+    "scenario": "harvest_interrupted_hp",
+    "state": "WANDER",
+    "verb": "REST"
+  }
+]

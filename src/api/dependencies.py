@@ -1,18 +1,14 @@
-"""FastAPI dependency injection — provides the EngineManager singleton."""
-
 from __future__ import annotations
+from typing import Optional
+from src.api.engine_manager import V2EngineManager
 
-from src.api.engine_manager import EngineManager
+_engine_manager: Optional[V2EngineManager] = None
 
-_engine_manager: EngineManager | None = None
-
-
-def set_engine_manager(manager: EngineManager) -> None:
+def set_engine_manager(manager: V2EngineManager):
     global _engine_manager
     _engine_manager = manager
 
-
-def get_engine_manager() -> EngineManager:
+def get_engine_manager() -> V2EngineManager:
     if _engine_manager is None:
-        raise RuntimeError("EngineManager not initialized — server not started correctly.")
+        raise RuntimeError("V2EngineManager not initialized.")
     return _engine_manager

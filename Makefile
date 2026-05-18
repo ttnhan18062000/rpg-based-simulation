@@ -30,12 +30,12 @@ dev: ## Start backend + frontend dev server (hot reload)
 	@echo "Starting backend on :8000 and frontend on :5173..."
 	@echo "Press Ctrl+C to stop both."
 	@trap 'kill 0' INT; \
-		python -m src serve --port 8000 & \
+		python3 -m src serve --port 8000 & \
 		(cd frontend && npm run dev) & \
 		wait
 
 dev-backend: ## Start only the backend server
-	python -m src serve --port 8000
+	python3 -m src serve --port 8000
 
 dev-frontend: ## Start only the frontend dev server
 	cd frontend && npm run dev
@@ -43,10 +43,10 @@ dev-frontend: ## Start only the frontend dev server
 # ── Production ───────────────────────────────────────────
 
 serve: build ## Build frontend + start production server
-	python -m src serve --port 8000
+	python3 -m src serve --port 8000
 
 serve-only: ## Start production server (assumes frontend already built)
-	python -m src serve --port 8000
+	python3 -m src serve --port 8000
 
 # ── Infrastructure & Testing ─────────────────────────────
 
@@ -60,40 +60,40 @@ docker-logs: ## Tail logs for all Docker Compose containers
 	docker compose logs -f
 
 run-worker: ## Start the AI Worker Daemon locally
-	uv run python -m src.workers.ai_worker_daemon
+	uv run python3 -m src.workers.ai_worker_daemon
 
 run-engine: ## Start the Backend Engine locally
-	uv run python -m src serve --host 0.0.0.0 --port 8000
+	uv run python3 -m src serve --host 0.0.0.0 --port 8000
 
 # ── CLI ──────────────────────────────────────────────────
 
 cli: ## Run headless simulation (200 ticks)
-	python -m src cli --ticks 200 --seed 42
+	python3 -m src cli --ticks 200 --seed 42
 
 # ── Testing ──────────────────────────────────────────────
 
-test: ## Run all Python tests
-	python -m pytest tests/ -v --tb=short
+test: ## Run all Python tests (V2)
+	python3 -m pytest tests_v2/ -v --tb=short
 
 test-quick: ## Run fast tests only (skip slow integration)
-	python -m pytest tests/ -v --tb=short -m "not slow"
+	python3 -m pytest tests/ -v --tb=short -m "not slow"
 
-test-cov: ## Run tests with coverage report
-	python -m pytest tests/ -v --tb=short --cov=src --cov-report=term-missing
+test-cov: ## Run tests with coverage report (V2)
+	python3 -m pytest tests_v2/ -v --tb=short --cov=src_v2 --cov-report=term-missing
 
 # ── Profiling ────────────────────────────────────────────
 
 profile: ## Run automated performance profile (500 ticks, prints report)
-	python scripts/profile_simulation.py --ticks 500 --seed 42
+	python3 scripts/profile_simulation.py --ticks 500 --seed 42
 
 profile-full: ## Run extended profile (2000 ticks, saves flamegraph-ready output)
-	python scripts/profile_simulation.py --ticks 2000 --seed 42 --cprofile profile_output.prof
+	python3 scripts/profile_simulation.py --ticks 2000 --seed 42 --cprofile profile_output.prof
 
 profile-memory: ## Run memory profiling (500 ticks)
-	python scripts/profile_simulation.py --ticks 500 --seed 42 --memory
+	python3 scripts/profile_simulation.py --ticks 500 --seed 42 --memory
 
 profile-api: ## Measure API payload sizes (map, static, state endpoints)
-	python scripts/profile_api_payload.py --ticks 10 --seed 42
+	python3 scripts/profile_api_payload.py --ticks 10 --seed 42
 
 # ── Quality ──────────────────────────────────────────────
 

@@ -1,117 +1,47 @@
-from typing import Any
-from pydantic import Field, ConfigDict
-from src.core.models.base import SimulationModel
+from __future__ import annotations
+from dataclasses import dataclass, field
+from typing import Dict, List, Set, Optional
 
-class SocialBond(SimulationModel):
-    """A directed social bond between two entities. [PHASE 1]"""
-    model_config = ConfigDict(extra='forbid')
-    
-    source_id: int
+@dataclass(frozen=True, slots=True)
+class SocialBond:
+    """A first-class directed relationship record."""
     target_id: int
-    
-    # Bond dimensions (-1.0 to 1.0)
-    trust: float = Field(default=0.0, ge=-1.0, le=1.0)
-    fear: float = Field(default=0.0, ge=-1.0, le=1.0)
-    rivalry: float = Field(default=0.0, ge=-1.0, le=1.0)
-    familiarity: float = Field(default=0.0, ge=0.0, le=1.0) # [PHASE 1]
-    
-    # [PHASE 2] Extended relationship dimensions
-    loyalty: float = Field(default=0.0, ge=-1.0, le=1.0)
-    resentment: float = Field(default=0.0, ge=0.0, le=1.0)
-    admiration: float = Field(default=0.0, ge=0.0, le=1.0)
-    debt: float = Field(default=0.0, ge=-1.0, le=1.0)
-    
-    # Metadata
+    familiarity: float = 0.0 # Interaction depth (0.0 to 1.0)
+    sentiment: float = 0.0   # Bias/Liking (-1.0 to 1.0)
     last_interaction_tick: int = 0
-    interaction_count: int = 0
 
-class SocialRegistry(SimulationModel):
-    """Authoritative global registry for directed social bonds. [PHASE 1]"""
-    model_config = ConfigDict(extra='forbid')
+@dataclass(frozen=True, slots=True)
+class BetrayalRecord:
+    """A record of a specific betrayal event."""
+    contract_id: str
+    betrayer_id: int
+    victim_id: int
+    severity: float = 1.0
+    tick: int = 0
+
+@dataclass(frozen=True, slots=True)
+class SocialComponent:
+    """State for reputation, trust, and betrayal history."""
+    trust_history: Dict[int, float] = field(default_factory=dict)       # EntityID -> Trust Score (VERIFIED v2: SocialComponent.trust)
+    familiarity_history: Dict[int, float] = field(default_factory=dict) # EntityID -> Familiarity
+    debt_history: Dict[int, float] = field(default_factory=dict)        # EntityID -> Debt (Social/Gold)
+    fear_history: Dict[int, float] = field(default_factory=dict)        # EntityID -> Fear Score
+    grudge_history: Dict[int, float] = field(default_factory=dict)      # EntityID -> Grudge Score (Nemesis)
+    salience_history: Dict[int, float] = field(default_factory=dict)    # EntityID -> Interaction Salience
     
-    # Keyed by f"{source_id}:{target_id}"
-    bonds: dict[str, SocialBond] = Field(default_factory=dict)
-    # Global standing: Keyed by Entity ID string
-    reputation: dict[str, float] = Field(default_factory=dict)
-    max_bonds_per_source: int = 20
+    # PH15 Recovery: First-class bonds
+    bonds: Dict[int, SocialBond] = field(default_factory=dict)         # EntityID -> Bond
     
-    def get_bond(self, source_id: int, target_id: int) -> SocialBond:
-        key = f"{source_id}:{target_id}"
-        if key not in self.bonds:
-            self._ensure_bond_capacity(source_id)
-            self.bonds[key] = SocialBond(source_id=source_id, target_id=target_id)
-        return self.bonds[key]
-
-    def get_bond_or_none(self, source_id: int, target_id: int) -> SocialBond | None:
-        """Read-only bond lookup — safe on frozen snapshots. Returns None if no bond exists."""
-        key = f"{source_id}:{target_id}"
-        bonds = self.bonds
-        if isinstance(bonds, dict):
-            return bonds.get(key)
-        # MappingProxyType (frozen)
-        return bonds.get(key) if hasattr(bonds, 'get') else None
-
-
-    def _ensure_bond_capacity(self, source_id: int):
-        """Prunes least relevant bonds if over limit."""
-        prefix = f"{source_id}:"
-        source_bonds = [(k, b) for k, b in self.bonds.items() if k.startswith(prefix)]
-        if len(source_bonds) >= self.max_bonds_per_source:
-            # Sort by last_interaction_tick ascending (oldest first)
-            source_bonds.sort(key=lambda x: x[1].last_interaction_tick)
-            del self.bonds[source_bonds[0][0]]
-
-    def update_bond(self, source_id: int, target_id: int, trust_delta: float = 0.0, fear_delta: float = 0.0, rivalry_delta: float = 0.0, familiarity_delta: float = 0.0, loyalty_delta: float = 0.0, resentment_delta: float = 0.0, admiration_delta: float = 0.0, debt_delta: float = 0.0, tick: int = 0) -> tuple[dict[str, float], dict[str, float]]:
-        """Update emotional stance and last interaction tick."""
-        bond = self.get_bond(source_id, target_id)
-        
-        old_vals = {
-            "trust": bond.trust,
-            "fear": bond.fear,
-            "rivalry": bond.rivalry,
-            "familiarity": bond.familiarity,
-            "loyalty": bond.loyalty,
-            "resentment": bond.resentment,
-            "admiration": bond.admiration,
-            "debt": bond.debt,
-        }
-        
-        bond.trust = max(-1.0, min(1.0, bond.trust + trust_delta))
-        bond.fear = max(0.0, min(1.0, bond.fear + fear_delta))
-        bond.rivalry = max(0.0, min(1.0, bond.rivalry + rivalry_delta))
-        bond.familiarity = max(0.0, min(1.0, bond.familiarity + familiarity_delta))
-        bond.loyalty = max(-1.0, min(1.0, bond.loyalty + loyalty_delta))
-        bond.resentment = max(0.0, min(1.0, bond.resentment + resentment_delta))
-        bond.admiration = max(0.0, min(1.0, bond.admiration + admiration_delta))
-        bond.debt = max(-1.0, min(1.0, bond.debt + debt_delta))
-        bond.last_interaction_tick = tick
-        bond.interaction_count += 1
-        
-        new_vals = {
-            "trust": bond.trust,
-            "fear": bond.fear,
-            "rivalry": bond.rivalry,
-            "familiarity": bond.familiarity,
-            "loyalty": bond.loyalty,
-            "resentment": bond.resentment,
-            "admiration": bond.admiration,
-            "debt": bond.debt,
-        }
-        return old_vals, new_vals
-
-    def get_reputation(self, entity_id: int) -> float:
-        return self.reputation.get(str(entity_id), 0.0)
-
-    def update_reputation(self, entity_id: int, delta: float):
-        eid_str = str(entity_id)
-        curr = self.reputation.get(eid_str, 0.0)
-        self.reputation[eid_str] = max(-100.0, min(100.0, curr + delta))
-
-    def copy(self) -> "SocialRegistry":
-        """Manual deep copy for snapshotting."""
-        new_registry = SocialRegistry(
-            bonds={k: b.model_copy(deep=True) for k, b in self.bonds.items()},
-            reputation=dict(self.reputation),
-            max_bonds_per_source=self.max_bonds_per_source
-        )
-        return new_registry
+    # Domain 4 Hardening: Nemesis & Place Memory
+    nemesis_ids: Set[int] = field(default_factory=set) # Promoted from grudge_history
+    place_attachment: Dict[str, float] = field(default_factory=dict) # RegionID -> Attachment Score
+    
+    betrayal_count: int = 0
+    betrayal_records: List[BetrayalRecord] = field(default_factory=list)
+    public_reputation: float = 1.0   # Unified reputation score (0.0 to 2.0)
+    heroism_score: float = 0.0       # Cumulative good deeds
+    notoriety_score: float = 0.0     # Cumulative bad deeds
+    
+    # Domain 7 Hardening: Social Fatigue
+    last_offer_tick: int = -1
+    rejection_count: Dict[int, int] = field(default_factory=dict) # SourceID -> Count

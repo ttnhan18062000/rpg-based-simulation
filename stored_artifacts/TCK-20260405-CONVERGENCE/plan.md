@@ -14,7 +14,7 @@
 4. **Perception & Emotions**: Repath `test_attention.py` and `test_emotions.py` to modular `MindAspect` sub-models.
 
 ## Affected Components
-- `src.core.entities.entity_builder`
+- `src_legacy.core.entities.entity_builder`
 - `src.core.aspects.combat`
 - `tests.test_quests`
 - `tests.unit.ai.*`

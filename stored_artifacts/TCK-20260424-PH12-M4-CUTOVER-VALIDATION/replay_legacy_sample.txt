@@ -1,0 +1,50 @@
+{
+  "version": "2.0",
+  "seed": 42,
+  "total_ticks": 100,
+  "ticks": [
+    {
+      "tick": 0,
+      "actions": [
+        {
+          "actor": 8,
+          "verb": "MOVE",
+          "target": [
+            97,
+            77
+          ],
+          "reason": {
+            "code": "legacy_fallback",
+            "metadata": {
+              "detail": "Exploring unknown territory"
+            },
+            "is_rejection": false
+          }
+        },
+        {
+          "actor": 20,
+          "verb": "MOVE",
+          "target": [
+            17,
+            18
+          ],
+          "reason": {
+            "code": "legacy_fallback",
+            "metadata": {
+              "detail": "Exploring unknown territory"
+            },
+            "is_rejection": false
+          }
+        },
+        {
+          "actor": 26,
+          "verb": "MOVE",
+          "target": [
+            104,
+            25
+          ],
+          "reason": {
+            "code": "legacy_fallback",
+            "metadata": {
+              "detail": "Exploring unknown territory"
+            },
