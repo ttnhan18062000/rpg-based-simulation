@@ -29,6 +29,8 @@ class MovementPlanCache:
     def __init__(self) -> None:
         self._cache: Dict[MovementPlanKey, MovementPlan] = {}
         self._occupancy_version: int = 0
+        self.hits: int = 0
+        self.misses: int = 0
 
     @property
     def occupancy_version(self) -> int:
@@ -38,9 +40,11 @@ class MovementPlanCache:
         plan = self._cache.get(key)
         if plan is not None:
             if plan.valid_until_tick >= current_tick and key.occupancy_version == self._occupancy_version:
+                self.hits += 1
                 return plan
             # Expired or version mismatch: evict
             self._cache.pop(key, None)
+        self.misses += 1
         return None
 
     def put(self, key: MovementPlanKey, plan: MovementPlan) -> None:

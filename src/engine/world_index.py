@@ -85,6 +85,10 @@ class WorldIndexService:
         existing: Optional[WorldIndexes] = getattr(state, "world_indexes", None)
         
         if existing is not None and existing.tick == state.tick:
+            try:
+                object.__setattr__(state, "_index_hits", getattr(state, "_index_hits", 0) + 1)
+            except AttributeError:
+                pass
             return existing
 
         # Rebuild or reuse based on CacheInvalidationPolicy
@@ -105,6 +109,7 @@ class WorldIndexService:
         
         try:
             object.__setattr__(state, "world_indexes", new_indexes)
+            object.__setattr__(state, "_index_misses", getattr(state, "_index_misses", 0) + 1)
         except AttributeError:
             pass
             

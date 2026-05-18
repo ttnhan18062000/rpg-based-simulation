@@ -995,6 +995,8 @@ class AuthoritativeState:
     occupancy_snapshot: Any = field(default=None, repr=False, compare=False)
     movement_cache: Any = field(default=None, repr=False, compare=False)
     world_indexes: Any = field(default=None, repr=False, compare=False)
+    _index_hits: int = field(default=0, repr=False, compare=False)
+    _index_misses: int = field(default=0, repr=False, compare=False)
     transient_claims: Any = field(default=None, repr=False, compare=False)
     _node_map_cache: Any = field(default=None, repr=False, compare=False)
     _active_nodes_grid: Any = field(default=None, repr=False, compare=False)

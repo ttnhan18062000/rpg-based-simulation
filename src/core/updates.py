@@ -799,6 +799,7 @@ class StateUpdate:
     dirty_set: Optional[DirtySet] = None
     force_full_scan: bool = False
     sub_phase_costs: Dict[str, float] = field(default_factory=dict)
+    metric_counters: Dict[str, int] = field(default_factory=dict)
 
     def is_noop(self) -> bool:
         """True if this update contains absolutely no changes."""
@@ -818,7 +819,7 @@ class StateUpdate:
                 self.current_mode_set is None and not self.rejection_events and 
                 not self.processed_transaction_ids and self.next_node_id_set is None and 
                 self.next_entity_id_set is None and not self.force_full_scan and
-                not self.sub_phase_costs)
+                not self.sub_phase_costs and not self.metric_counters)
     def merge(self, other: StateUpdate) -> StateUpdate:
         """Merge another StateUpdate into this one."""
         if not other or other.is_noop():
@@ -877,6 +878,8 @@ class StateUpdate:
         dirty = self.dirty_set
         sub_costs = dict(self.sub_phase_costs)
 
+        new_metric_counters = dict(self.metric_counters)
+
         for other in valid_others:
             # Dictionaries
             for e_id, upd in other.entity_updates.items():
@@ -901,6 +904,9 @@ class StateUpdate:
                 new_periodic_updates[k] = v
             for k, v in other.work_debt_updates.items():
                 new_work_debt_updates[k] = new_work_debt_updates.get(k, 0) + v
+            if other.metric_counters:
+                for k, v in other.metric_counters.items():
+                    new_metric_counters[k] = new_metric_counters.get(k, 0) + v
 
             # Lists / Sets
             new_entities_add.extend(other.entities_add)
@@ -967,7 +973,8 @@ class StateUpdate:
             pressure_signals_set=pressure,
             current_mode_set=mode,
             dirty_set=dirty,
-            sub_phase_costs=sub_costs
+            sub_phase_costs=sub_costs,
+            metric_counters=new_metric_counters
         )
 
     def compact(self) -> StateUpdate:

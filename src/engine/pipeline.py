@@ -66,7 +66,11 @@ class AuthoritativeApplyPipeline:
 
         # --- Phase 1: Trust & Validity ---
         t_start = time.perf_counter_ns()
-        update = StateUpdateCompactor.compact(state, update)
+        update, compaction_metrics = StateUpdateCompactor.compact_with_metrics(state, update)
+        metric_counters = dict(update.metric_counters) if getattr(update, "metric_counters", None) is not None else {}
+        metric_counters["raw_entity_updates"] = compaction_metrics.raw_entity_updates
+        metric_counters["compacted_entity_updates"] = compaction_metrics.compacted_entity_updates
+        update = replace(update, metric_counters=metric_counters)
         update = AuthoritativeApplyPipeline._strip_untrusted_world_effects(update)
         update = AuthoritativeApplyPipeline._resolve_actor_validity(state, update)
 

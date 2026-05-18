@@ -49,6 +49,7 @@ class PressureSignals:
     
     # 7. Performance Breakdown (Milestone 3)
     phase_costs_ms: Dict[str, float] = field(default_factory=dict)
+    metrics: Dict[str, float] = field(default_factory=dict)
 
 
 @dataclass(frozen=True, slots=True)

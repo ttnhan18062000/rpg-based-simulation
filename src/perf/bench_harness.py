@@ -103,15 +103,25 @@ class BenchHarness:
         compute_tps = (sample_ticks * 1000.0) / total_compute_ms if total_compute_ms > 0 else 0
         
         phase_aggregates: Dict[str, List[float]] = {}
+        metric_aggregates: Dict[str, List[float]] = {}
         for signals in history:
             for phase, cost in signals.phase_costs_ms.items():
                 if phase not in phase_aggregates:
                     phase_aggregates[phase] = []
                 phase_aggregates[phase].append(cost)
+            if hasattr(signals, "metrics") and signals.metrics:
+                for k, v in signals.metrics.items():
+                    if k not in metric_aggregates:
+                        metric_aggregates[k] = []
+                    metric_aggregates[k].append(float(v))
         
         phase_stats = {}
         for phase, costs in phase_aggregates.items():
             phase_stats[phase] = self._calculate_stats(costs)
+            
+        metric_stats = {}
+        for k, vals in metric_aggregates.items():
+            metric_stats[k] = round(sum(vals) / len(vals), 2) if vals else 0.0
             
         result = {
             "scenario_id": scenario_id,
@@ -128,6 +138,7 @@ class BenchHarness:
                 "delta": round(max(rss_samples) - min(rss_samples), 2) if rss_samples else 0.0,
             },
             "phase_breakdown": phase_stats,
+            "metrics": metric_stats,
             "replay_enabled": not effective_flags.get("no_replay", False),
             "frame_pacing_enabled": not effective_flags.get("no_frame_pacing", False),
             "timestamp": time.time()

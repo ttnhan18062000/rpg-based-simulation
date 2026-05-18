@@ -622,7 +622,9 @@ class StrategicIntelligenceSystem:
                 ),
             )
 
-        return replace(update, entity_updates=refined_entity_updates)
+        metric_counters = dict(update.metric_counters) if getattr(update, "metric_counters", None) is not None else {}
+        metric_counters["strategic_candidates"] = len(candidate_ids)
+        return replace(update, entity_updates=refined_entity_updates, metric_counters=metric_counters)
 
 
 

@@ -42,7 +42,7 @@ class Kernel:
         "_start_perf_ts", "_current_world_time", "_platform_signals",
         "_current_signals", "_current_policy", "_current_work_items",
         "_source_packets", "_source_work_items", "_final_results", "_final_compute_ms",
-        "_phase_costs", "_audit_mode", "_no_frame_pacing", "_no_replay", "_audit_dirty_set", "_perf_tracker", "_force_full_scan", "_current_update"
+        "_phase_costs", "_metrics", "_audit_mode", "_no_frame_pacing", "_no_replay", "_audit_dirty_set", "_perf_tracker", "_force_full_scan", "_current_update"
     )
 
     def __init__(
@@ -122,6 +122,7 @@ class Kernel:
         self._final_results = []
         self._final_compute_ms = 0.0
         self._phase_costs = {}
+        self._metrics = {}
         self._start_perf_ts = time.perf_counter_ns()
         self._no_frame_pacing = flags.get("no_frame_pacing", False) if flags else False
         self._no_replay = flags.get("no_replay", False) if flags else False
@@ -255,7 +256,8 @@ class Kernel:
                 replay_backlog_kb=0,
                 active_workers=0,
                 dropped_work_delta=self._status.dropped_work_delta,
-                phase_costs_ms={}
+                phase_costs_ms={},
+                metrics=self._metrics.copy()
             )
         else:
             compute_ms = self._status.signal_history[-1].tick_compute_ms if self._status.signal_history else 0.0
@@ -271,7 +273,8 @@ class Kernel:
                 active_workers=worker_stats["active_workers"],
                 dropped_work_delta=self._status.dropped_work_delta,
                 phase_costs_ms=(self._status.signal_history[-1].phase_costs_ms 
-                                if self._status.signal_history else {})
+                                if self._status.signal_history else {}),
+                metrics=self._metrics.copy()
             )
         
         self._current_policy = self._governor.evaluate(
@@ -384,6 +387,13 @@ class Kernel:
         # M5 Law: Propagate sub-phase timing
         if refined_update.sub_phase_costs:
             self._phase_costs.update(refined_update.sub_phase_costs)
+
+        self._metrics = dict(refined_update.metric_counters) if getattr(refined_update, "metric_counters", None) is not None else {}
+        if getattr(self._state, "movement_cache", None) is not None:
+            self._metrics["movement_cache_hits"] = getattr(self._state.movement_cache, "hits", 0)
+            self._metrics["movement_cache_misses"] = getattr(self._state.movement_cache, "misses", 0)
+        self._metrics["spatial_index_hits"] = getattr(self._state, "_index_hits", 0)
+        self._metrics["spatial_index_misses"] = getattr(self._state, "_index_misses", 0)
         
         # M6 Law: Trace refined update for auditability (Gated by policy for performance)
         if self._current_policy.replay_allowed:
@@ -423,7 +433,8 @@ class Kernel:
             replay_backlog_kb=terminal_replay_stats["backlog_kb"],
             active_workers=terminal_worker_stats["active_workers"],
             dropped_work_delta=self._status.dropped_work_delta,
-            phase_costs_ms=self._phase_costs.copy()
+            phase_costs_ms=self._phase_costs.copy(),
+            metrics=self._metrics.copy()
         ))
 
     def _phase_advancement(self) -> None:
