@@ -141,14 +141,15 @@ class DirtySetBuilder:
             if upd_id in self._processed_upd_ids:
                 continue
             self._processed_upd_ids.add(upd_id)
-            if e_upd.new_position:
+            if e_upd.new_position or e_upd.navigation:
                 self.movement.add(e_id)
-                # Town movement check
-                tile_pos = (int(e_upd.new_position[0]), int(e_upd.new_position[1]))
-                if tile_pos in state.town_tiles:
-                    self.town.add(e_id)
-                else:
-                    self.town.discard(e_id)
+                if e_upd.new_position:
+                    # Town movement check
+                    tile_pos = (int(e_upd.new_position[0]), int(e_upd.new_position[1]))
+                    if tile_pos in state.town_tiles:
+                        self.town.add(e_id)
+                    else:
+                        self.town.discard(e_id)
             
             if e_upd.combat:
                 self.combat.add(e_id)
@@ -158,7 +159,7 @@ class DirtySetBuilder:
                 self.inventory.add(e_id)
                 self.strategic.add(e_id)
             
-            if e_upd.strategic:
+            if e_upd.strategic or e_upd.task:
                 self.strategic.add(e_id)
             
             if e_upd.social:

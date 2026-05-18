@@ -28,6 +28,7 @@ from src.core.updates import (
     StrategicUpdate, InventoryUpdate, EntityUpdate, StateUpdate,
     CombatUpdate, BiologicalUpdate, IdentityUpdate
 )
+from src.engine.policy import GovernorPolicy
 from src.core.strategic import (
     BlockerState, LeadState, LeadCertainty,
     ProjectState, ProjectStatus, ObjectiveState, ObjectiveStatus,
@@ -241,7 +242,12 @@ class StrategicIntelligenceSystem:
         # Logic ID: PERF-006 (Dirty Entity Tracking for specific sub-phases, but routine pass is global)
         fast_hits = 0
         fast_misses = 0
-        candidate_ids = StrategicWorkQueue.build(state, update, get_dirty_set(update), budget=50)
+        policy = getattr(update, "current_policy_set", None) or GovernorPolicy()
+        candidate_ids = StrategicWorkQueue.build(
+            state, update, get_dirty_set(update), 
+            budget=policy.strategic_budget, 
+            sweep_interval=policy.background_sweep_interval
+        )
         for e_id in candidate_ids:
             entity = state.entities[e_id]
             # Early exit: Skip inactive/dead entities entirely
@@ -647,7 +653,12 @@ class StrategicIntelligenceSystem:
         from src.engine.cadence import should_run, SystemCadence as DefaultCadence
         
         # Phase 9 Fix: Deterministic entity iteration via StrategicWorkQueue
-        candidate_ids = StrategicWorkQueue.build(state, update, get_dirty_set(update), budget=50)
+        policy = getattr(update, "current_policy_set", None) or GovernorPolicy()
+        candidate_ids = StrategicWorkQueue.build(
+            state, update, get_dirty_set(update), 
+            budget=policy.strategic_budget, 
+            sweep_interval=policy.background_sweep_interval
+        )
         for e_id in candidate_ids:
             entity = state.entities[e_id]
             # Phase 5: Bounded frequency and early exit (Hardening)
@@ -713,7 +724,12 @@ class StrategicIntelligenceSystem:
         
         from src.engine.cadence import should_run, SystemCadence as DefaultCadence
         
-        candidate_ids = StrategicWorkQueue.build(state, update, get_dirty_set(update), budget=50)
+        policy = getattr(update, "current_policy_set", None) or GovernorPolicy()
+        candidate_ids = StrategicWorkQueue.build(
+            state, update, get_dirty_set(update), 
+            budget=policy.strategic_budget, 
+            sweep_interval=policy.background_sweep_interval
+        )
         for e_id in candidate_ids:
             entity = state.entities[e_id]
             if not entity.lifecycle.active or not entity.combat.alive:

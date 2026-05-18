@@ -1,6 +1,8 @@
+# Compliance IDs: PERF-001, PERF-017
 from __future__ import annotations
 from dataclasses import dataclass, replace
 from typing import Dict, Any, TYPE_CHECKING, Tuple
+from src.engine.policy import GovernorPolicy
 
 if TYPE_CHECKING:
     from src.core.state import AuthoritativeState
@@ -20,6 +22,7 @@ class StateUpdateCompactor:
     """
     Filters out no-op and redundant entity updates before state application.
     Reduces memory churn and dataclass replacement overhead in ApplyPath.
+    Milestone 17 Law: Supports aggressive pruning under compute pressure.
     """
 
     @staticmethod
@@ -42,6 +45,9 @@ class StateUpdateCompactor:
 
         metrics = CompactionMetrics(raw_entity_updates=len(update.entity_updates))
         new_updates: Dict[int, EntityUpdate] = {}
+
+        policy = getattr(update, "current_policy_set", None) or GovernorPolicy()
+        aggressive = (policy.compaction_level == "AGGRESSIVE")
 
         subcomponent_names = (
             "interaction",
@@ -108,9 +114,22 @@ class StateUpdateCompactor:
                 if len(new_props) != len(e_upd.property_updates):
                     changes["property_updates"] = new_props
 
+            # Milestone 17 Aggressive Compaction Pruning
+            if aggressive:
+                props_dict = changes.get("property_updates", e_upd.property_updates)
+                if props_dict:
+                    pruned_props = {k: v for k, v in props_dict.items() if k not in ("cosmetic_fx", "chat_bubble", "last_animation")}
+                    if len(pruned_props) != len(props_dict):
+                        changes["property_updates"] = pruned_props
+                        metrics.property_prunings += (len(props_dict) - len(pruned_props))
+
+                if e_upd.stamina_update and abs(e_upd.stamina_update.current_delta) < 0.1 and e_upd.stamina_update.current_set is None and e_upd.stamina_update.max_stamina_set is None:
+                    changes["stamina_update"] = None
+                    metrics.subcomponent_prunings += 1
+
             # 3. Prune no-op subcomponents
             for sub_name in subcomponent_names:
-                sub_val = getattr(e_upd, sub_name, None)
+                sub_val = changes.get(sub_name, getattr(e_upd, sub_name, None))
                 if sub_val is not None and hasattr(sub_val, "is_noop"):
                     if sub_val.is_noop():
                         changes[sub_name] = None

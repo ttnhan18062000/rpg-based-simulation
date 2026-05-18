@@ -1,6 +1,6 @@
 # Compliance IDs: COMBAT-017, COMBAT-018, COMBAT-034, INFRA-003, PERF-003, PERF-006, PERF-009, WORLD-008, WORLD-018
 # Compliance IDs: COMB-007, COMB-008, INFRA-018, INFRA-101, INFRA-102, INFRA-103, INFRA-104, INFRA-105, INFRA-106, INFRA-117, PROG-102, STRAT-041, STRAT-064, STRAT-065, STRAT-216, SUB-005, SUB-008, SUB-010, SUB-011, SUB-012, SUB-013, SUB-020, SUB-021, SUB-023, TOWN-007, TOWN-133, TOWN-134, TOWN-135, TOWN-158
-# Compliance IDs: STRAT-041, STRAT-064, STRAT-065, SUB-010, SUB-011, SUB-012, SUB-013, SUB-020, SUB-021, SUB-023
+# Compliance IDs: STRAT-041, STRAT-064, STRAT-065, SUB-010, SUB-011, SUB-012, SUB-013, SUB-020, SUB-021, SUB-023, PERF-019
 from __future__ import annotations
 
 from dataclasses import replace
@@ -17,6 +17,7 @@ from src.core.diagnostic import TraceEvent
 from src.core.lifecycle import LifecycleOutcome, ShutdownResult
 
 from src.engine.executor import IWorkExecutor, LocalSequentialExecutor, ConcurrentExecutionAdapter
+from src.engine.cache_registry import CacheRegistry, CacheBudgetPolicy
 
 if TYPE_CHECKING:
     from src.config.profiles import RuntimeProfile
@@ -42,7 +43,7 @@ class Kernel:
         "_start_perf_ts", "_current_world_time", "_platform_signals",
         "_current_signals", "_current_policy", "_current_work_items",
         "_source_packets", "_source_work_items", "_final_results", "_final_compute_ms",
-        "_phase_costs", "_metrics", "_audit_mode", "_no_frame_pacing", "_no_replay", "_audit_dirty_set", "_perf_tracker", "_force_full_scan", "_current_update"
+        "_phase_costs", "_metrics", "_audit_mode", "_no_frame_pacing", "_no_replay", "_audit_dirty_set", "_perf_tracker", "_force_full_scan", "_current_update", "_cache_registry", "_cache_policy", "_opt_profile"
     )
 
     def __init__(
@@ -55,7 +56,7 @@ class Kernel:
         status: Optional[RuntimeStatus] = None,
         replay: Optional[ReplayManager] = None,
         executor: Optional[IWorkExecutor] = None,
-        flags: Optional[Dict[str, bool]] = None
+        flags: Optional[Dict[str, Any]] = None
     ) -> None:
         self._stopped = False
         self._profile = profile
@@ -67,6 +68,19 @@ class Kernel:
         self._perf_tracker = flags.get("perf_tracker", False) if flags else False
         self._force_full_scan = flags.get("force_full_scan", False) if flags else False
         self._current_update = None
+        
+        from src.config.optimization_profiles import OptimizationProfileResolver
+        self._opt_profile = OptimizationProfileResolver.resolve(profile, flags)
+        try:
+            object.__setattr__(self._state, "_opt_profile", self._opt_profile)
+            object.__setattr__(self._state, "_force_full_scan", self._force_full_scan)
+        except Exception:
+            pass
+
+        self._cache_registry = CacheRegistry()
+        self._cache_policy = self._opt_profile.cache_budget_policy
+        if getattr(self._state, "movement_cache", None) is not None:
+            self._cache_registry.register_cache("movement_plan_cache", self._state.movement_cache)
         
         from src.engine.scheduler import DeterministicScheduler as DefaultScheduler
         from src.engine.governor import ResourceGovernor as DefaultGovernor
@@ -99,10 +113,8 @@ class Kernel:
         if executor:
             self._executor = executor
         elif profile.max_worker_count > 0:
-            # Logic ID: INFRA-017 (Worker pool fallbacks)
             self._executor = ConcurrentExecutionAdapter(self._worker_manager)
         else:
-            # Logic ID: INFRA-018 (No live broker required for local simulation)
             self._executor = LocalSequentialExecutor()
 
         self._current_world_time = state.world_time
@@ -111,7 +123,6 @@ class Kernel:
         from src.core.governance import RuntimeMode
         self._current_policy = GovernorPolicy.from_mode(RuntimeMode.NORMAL)
         
-        # Performance/Benchmarking: Allow disabling replay via flags
         if flags and flags.get("no_replay", False):
             self._current_policy = replace(self._current_policy, replay_allowed=False)
             
@@ -149,7 +160,6 @@ class Kernel:
         t1 = time.perf_counter_ns()
         self._phase_costs["init"] = (t1 - t0) / 1e6
         
-        # M8 Law: Capture fingerprint for stability guard if in audit mode
         start_fingerprint = None
         if self._audit_mode:
             start_fingerprint = self._state.fingerprint()
@@ -158,7 +168,6 @@ class Kernel:
         t2 = time.perf_counter_ns()
         self._phase_costs["scheduling"] = (t2 - t1) / 1e6
         
-        # M8 Law: Verify scheduling stability
         if self._audit_mode and start_fingerprint:
             self._guard_stability("Scheduling", start_fingerprint)
             
@@ -166,14 +175,12 @@ class Kernel:
         t3 = time.perf_counter_ns()
         self._phase_costs["collection"] = (t3 - t2) / 1e6
         
-        # M8 Law: Verify collection stability
         if self._audit_mode and start_fingerprint:
             self._guard_stability("Collection", start_fingerprint)
             
         self._phase_resolution()
         t4 = time.perf_counter_ns()
         res_total = (t4 - t3) / 1e6
-        # Subtract sub-phases to avoid double-counting in phase_costs
         sub_sum = sum(v for k, v in self._phase_costs.items() if k.startswith("res_") or k in ["trust_validity", "contracts_production", "locomotion", "interaction", "governance_ecology", "economy", "final_integrity"])
         self._phase_costs["resolution_overhead"] = max(0.0, res_total - sub_sum)
         
@@ -185,27 +192,18 @@ class Kernel:
         t6 = time.perf_counter_ns()
         self._phase_costs["advancement"] = (t6 - t5) / 1e6
         
-        # Law 121: Frame pacing
-        # Logic ID: 121
-        # Maintain consistent frequency based on max_tick_budget_ms.
         target_ms = self._profile.max_tick_budget_ms
         if target_ms > 0 and not self._no_frame_pacing:
             elapsed_ms = (time.perf_counter_ns() - t0) / 1e6
             sleep_ms = target_ms - elapsed_ms
-            if sleep_ms > 5.0: # Only if we have significant spare time (>5ms)
-                # Milestone 10 Optimization: Use spare frame time for incremental GC
-                # to prevent large spikes in later ticks.
+            if sleep_ms > 5.0:
                 gc.collect(0)
-                
-                # Re-calculate sleep after GC
                 remaining_ms = target_ms - ((time.perf_counter_ns() - t0) / 1e6)
                 if remaining_ms > 0:
                     time.sleep(remaining_ms / 1000.0)
             elif sleep_ms > 0:
                 time.sleep(sleep_ms / 1000.0)
             else:
-                # If we are over budget, avoid adding GC latency to the current tick.
-                # Let the platform handle GC during the next natural gap or major cycle.
                 pass
 
         t_persist_start = time.perf_counter_ns()
@@ -214,20 +212,13 @@ class Kernel:
         
         self._final_compute_ms = sum(self._phase_costs.values())
         
-        # Law 120: Tick budget enforcement
-        # Logic ID: 120
-        # Abort if compute exceeds 2x average (minimum 20ms) or profile hard cap.
         avg_ms = (self._status.signal_history[-1].tick_compute_ms if self._status.signal_history else 10.0)
         limit_ms = max(20.0, avg_ms * 2.0)
         hard_cap = self._profile.max_tick_budget_ms
         if not self._audit_mode and self._state.tick > 5 and self._final_compute_ms > min(hard_cap, limit_ms):
              logger.warning(f"Tick {self._state.tick} exceeded budget: {self._final_compute_ms:.2f}ms vs limit {min(hard_cap, limit_ms):.2f}ms. Aborting next tick if sustained.")
-             # We can't easily 'abort' the CURRENT tick as it's mostly done, 
-             # but we can signal to the governor to throttle HARD next tick.
-             self._status.record_dropped_work(9999) # Signal extreme pressure
+             self._status.record_dropped_work(9999)
         
-        # M10 Law: Record runtime signals at the VERY END of the tick
-        # to ensure all phase costs and final compute are captured.
         self._record_runtime_signals()
 
     def _phase_init(self) -> None:
@@ -243,9 +234,6 @@ class Kernel:
             interval_override=self._profile.sampling_interval_ticks
         )
         
-        # M10 Law: Deterministic Signals in audit_mode
-        # Time-based and hardware-based signals are zeroed to ensure
-        # that governance decisions are bit-identical across machines.
         if self._audit_mode:
             self._current_signals = PressureSignals(
                 work_debt_total=sum(self._state.work_debt.values()),
@@ -281,7 +269,8 @@ class Kernel:
             self._profile, 
             self._current_signals, 
             self._status, 
-            self._state.tick
+            self._state.tick,
+            opt_profile=getattr(self, "_opt_profile", None)
         )
         if getattr(self, "_no_replay", False):
             self._current_policy = replace(self._current_policy, replay_allowed=False)
@@ -292,10 +281,6 @@ class Kernel:
         self._status.record_dropped_work(dropped_count)
 
     def _phase_collection(self) -> None:
-        """3. COLLECTION (Worker Thought Execution)"""
-        # VERIFIED v2: thought_application_decoupling
-        # Logic ID: TOWN-007 (Worker decision-making is decoupled from authoritative application)
-        # Optimization: Avoid expensive state freezing if NO workers need to run
         state_view = self._state.readonly_view()
         
         self._final_results = self._executor.execute(
@@ -308,34 +293,22 @@ class Kernel:
         ProtocolValidator.validate_result_batch(self._final_results, getattr(self._executor, "_source_packets", {}))
 
     def _phase_resolution(self) -> None:
-        """4. RESOLUTION (Authoritative Apply Pipeline)"""
-        # VERIFIED v2: tick_outcome_preservation
-        # Logic ID: COMB-007 (World-time progression is distinct from readiness-based cadence)
-        # Logic ID: COMB-008 (Quiet ticks still advance passive world consequences)
         from src.core.worker_protocol import ResultStatus
         from src.core.updates import StateUpdate, EntityUpdate
         from src.core.protocol_validator import ProtocolViolationError
         from src.engine.pipeline import AuthoritativeApplyPipeline
         
-        # M8 Law: Frozen Commit Key sorting
-        # Descending local priority (higher value = earlier commit)
         self._final_results.sort(key=lambda r: (r.class_priority, -r.local_priority, r.entity_id))
         
         work_debt_updates: Dict[str, int] = {}
         entity_updates: Dict[int, EntityUpdate] = {}
         for i, res in enumerate(self._final_results):
-            # Mid-tick emergency throttle!
-            # M8 Law: Throttle must be deterministic in audit_mode.
             if i % 10 == 0:
-                # Always allow at least 100 items regardless of time if in audit_mode
-                # or if we haven't hit the hard limit yet.
                 elapsed = (time.perf_counter_ns() - self._start_perf_ts) / 1e6
-                # In audit_mode, we NEVER throttle based on time to preserve determinism.
                 hard_cap = self._profile.max_tick_budget_ms
                 should_throttle = not self._audit_mode and elapsed > hard_cap
                 
                 if should_throttle:
-                    # VERIFIED v2: RPG-INFRA-203
                     logger.warning(f"Mid-tick emergency throttle triggered at {elapsed:.2f}ms. Dropping {len(self._final_results) - i} items.")
                     self._status.record_dropped_work(len(self._final_results) - i)
                     from src.core.governance import RuntimeMode
@@ -354,7 +327,6 @@ class Kernel:
             else:
                 entity_updates[res.entity_id] = EntityUpdate(entity_id=res.entity_id)
 
-        # Phase E5.6: Pressure-Aware Economy Signals
         if self._current_signals is None:
             debt_ratio = 0.0
             compute_ratio = 0.0
@@ -373,10 +345,10 @@ class Kernel:
             entity_updates=entity_updates, 
             work_debt_updates=work_debt_updates,
             pressure_signals_set=pressure_dict,
-            current_mode_set=self._current_policy.mode
+            current_mode_set=self._current_policy.mode,
+            current_policy_set=self._current_policy
         )
         
-        # M3 Law: Unified authoritative refinement pipeline
         refined_update = AuthoritativeApplyPipeline.refine(
             self._state, 
             raw_update, 
@@ -384,7 +356,6 @@ class Kernel:
             force_full_scan=self._force_full_scan
         )
         
-        # M5 Law: Propagate sub-phase timing
         if refined_update.sub_phase_costs:
             self._phase_costs.update(refined_update.sub_phase_costs)
 
@@ -395,7 +366,6 @@ class Kernel:
         self._metrics["spatial_index_hits"] = getattr(self._state, "_index_hits", 0)
         self._metrics["spatial_index_misses"] = getattr(self._state, "_index_misses", 0)
         
-        # M6 Law: Trace refined update for auditability (Gated by policy for performance)
         if self._current_policy.replay_allowed:
             self._replay.emit(TraceEvent(
                 tick=self._state.tick,
@@ -418,10 +388,17 @@ class Kernel:
             interval_override=self._profile.sampling_interval_ticks
         )
         self._platform_signals.update(signals)
+        
+        # M19 Law: Centralized optimization cache sweep
+        if self._state.tick % self._cache_policy.sweep_interval_ticks == 0:
+            pruned_map = self._cache_registry.sweep_caches(self._state.tick, self._cache_policy)
+            if pruned_map:
+                for c_name, count in pruned_map.items():
+                    self._metrics[f"{c_name}_pruned"] = count
+                    
         self._final_compute_ms = (time.perf_counter_ns() - self._start_perf_ts) / 1e6
 
     def _record_runtime_signals(self) -> None:
-        """5. RECORD SIGNALS (Final step of the tick)"""
         terminal_worker_stats = self._worker_manager.get_stats()
         terminal_replay_stats = self._replay.get_stats()
         self._status.record_signals(PressureSignals(
@@ -438,12 +415,8 @@ class Kernel:
         ))
 
     def _phase_advancement(self) -> None:
-        """6. ADVANCEMENT (Increment tick and promote the next state)"""
-        # Logic ID: 110
-        # Exactly one state advancement per tick.
         from src.engine.apply import ApplyPath
         
-        # Ensure we have an update, even if it's empty
         update = self._current_update
         if update is None:
             from src.core.updates import StateUpdate
@@ -459,9 +432,17 @@ class Kernel:
             audit_dirty_set=self._audit_dirty_set
         )
         self._current_update = None
+        try:
+            object.__setattr__(self._state, "_opt_profile", self._opt_profile)
+            object.__setattr__(self._state, "_force_full_scan", self._force_full_scan)
+        except Exception:
+            pass
+        
+        # Keep movement_cache registered across state advancements
+        if getattr(self._state, "movement_cache", None) is not None:
+            self._cache_registry.register_cache("movement_plan_cache", self._state.movement_cache)
 
     def _guard_stability(self, phase_name: str, start_fingerprint: Dict[str, Any]) -> None:
-        """M8 Law: Verify that non-mutating phases did not corrupt authoritative state."""
         from src.core.protocol_validator import ProtocolViolationError
         current = self._state.fingerprint()
         if current["state_hash"] != start_fingerprint["state_hash"]:
@@ -471,8 +452,6 @@ class Kernel:
              )
 
     def _phase_persistence(self) -> None:
-        # Milestone 3 Optimization: Skip expensive hashing in high-performance runs
-        # unless audit_mode is explicitly enabled or richness is FULL.
         tick_hash = "SKIPPED"
         if self._current_policy.replay_allowed and (self._audit_mode or self._current_policy.replay_richness == "FULL"):
             from src.engine.checkpoint import CanonicalStateHasher
@@ -486,7 +465,6 @@ class Kernel:
                 payload={"hash": tick_hash}
             ), self._current_policy)
             
-        # VERIFIED v2: deterministic_replay_delta
         self._replay.on_tick_end(self._state.tick)
 
     def shutdown(self, timeout_s: float = 5.0) -> ShutdownResult:
@@ -496,6 +474,7 @@ class Kernel:
         final_hash = CanonicalStateHasher.get_hash(self._state)
         logger.info(f"Final Auth Hash: {final_hash}")
         replay_outcome = self._replay.finalize(timeout_s=timeout_s)
+        self._cache_registry.clear_all()
         return ShutdownResult(
             final_tick=self._state.tick,
             final_hash=final_hash,
@@ -509,6 +488,12 @@ class Kernel:
 
     @property
     def state(self) -> AuthoritativeState:
+        try:
+            if getattr(self._state, "_opt_profile", None) is None:
+                object.__setattr__(self._state, "_opt_profile", self._opt_profile)
+                object.__setattr__(self._state, "_force_full_scan", self._force_full_scan)
+        except Exception:
+            pass
         return self._state
 
     def _get_deterministic_neighbor_view(
@@ -516,9 +501,5 @@ class Kernel:
         subject: EntityState, 
         radius: float
     ) -> List[tuple[int, EntityState]]:
-        """
-        Produce a deterministic, ID-sorted view of nearby entities.
-        Milestone D Law: Views must be bit-identical across parallel executions.
-        """
         from src.engine.domain_logic import SimulationDomainLogic
         return SimulationDomainLogic.get_neighbor_view(self._state, subject, radius)

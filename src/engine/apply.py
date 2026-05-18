@@ -349,7 +349,9 @@ class ApplyPath:
             movement_cache=m_cache,
             world_indexes=getattr(prior_state, "world_indexes", None),
             _index_hits=getattr(prior_state, "_index_hits", 0),
-            _index_misses=getattr(prior_state, "_index_misses", 0)
+            _index_misses=getattr(prior_state, "_index_misses", 0),
+            _opt_profile=getattr(prior_state, "_opt_profile", None),
+            _force_full_scan=getattr(prior_state, "_force_full_scan", False)
         )
 
         if not any_entity_changed and getattr(prior_state, "_readonly_entities_cache", None) is not None:

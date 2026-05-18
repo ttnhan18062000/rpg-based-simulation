@@ -366,11 +366,11 @@ tests/integration/optimization/test_phase_skip_parity.py
 Acceptance:
 
 ```text
-[ ] Phase skip decisions are deterministic.
-[ ] Required phases cannot be skipped.
-[ ] Optional phases can skip when no relevant dirty domain exists.
-[ ] Skipped optimized run matches full reference run.
-[ ] Phase skip metrics are reported.
+[x] Phase skip decisions are deterministic.
+[x] Required phases cannot be skipped.
+[x] Optional phases can skip when no relevant dirty domain exists.
+[x] Skipped optimized run matches full reference run.
+[x] Phase skip metrics are reported.
 ```
 
 ---
@@ -459,11 +459,11 @@ tests/integration/optimization/test_degraded_mode_correctness.py
 Acceptance:
 
 ```text
-[ ] Governor lowers optional work under pressure.
-[ ] Urgent work still runs under pressure.
-[ ] Degraded mode remains deterministic.
-[ ] Full recovery occurs when pressure drops.
-[ ] No correctness-critical phase is skipped.
+[x] Governor lowers optional work under pressure.
+[x] Urgent work still runs under pressure.
+[x] Degraded mode remains deterministic.
+[x] Full recovery occurs when pressure drops.
+[x] No correctness-critical phase is skipped.
 ```
 
 ---
@@ -523,10 +523,10 @@ tests/certification/test_long_run_stability.py
 Acceptance:
 
 ```text
-[ ] Long-run report includes RSS and GC.
-[ ] Cache sizes are bounded.
-[ ] p95 tick cost has no uncontrolled upward trend.
-[ ] Final state remains deterministic for same seed.
+[x] Long-run report includes RSS and GC.
+[x] Cache sizes are bounded.
+[x] p95 tick cost has no uncontrolled upward trend.
+[x] Final state remains deterministic for same seed.
 ```
 
 ---
@@ -584,10 +584,10 @@ tests/integration/optimization/test_cache_memory_bounds.py
 Acceptance:
 
 ```text
-[ ] Every optimization cache is registered.
-[ ] Cache size is observable.
-[ ] Cache eviction is deterministic.
-[ ] Long-run scenario does not grow cache unbounded.
+[x] Every optimization cache is registered.
+[x] Cache size is observable.
+[x] Cache eviction is deterministic.
+[x] Long-run scenario does not grow cache unbounded.
 ```
 
 ---
@@ -641,11 +641,11 @@ tests/integration/optimization/test_profile_specific_behavior.py
 Acceptance:
 
 ```text
-[ ] Profiles are deterministic.
-[ ] Debug/reference profile disables unsafe narrowing.
-[ ] Low-memory profile reduces cache sizes.
-[ ] Movement-heavy profile prioritizes movement optimization.
-[ ] Resource-heavy profile prioritizes world index/resource query optimization.
+[x] Profiles are deterministic.
+[x] Debug/reference profile disables unsafe narrowing.
+[x] Low-memory profile reduces cache sizes.
+[x] Movement-heavy profile prioritizes movement optimization.
+[x] Resource-heavy profile prioritizes world index/resource query optimization.
 ```
 
 ---
@@ -659,9 +659,9 @@ After all these mechanisms, documentation becomes mandatory.
 Create:
 
 ```text
-docs/optimization_architecture.md
-docs/optimization_invariants.md
-docs/perf_baseline_policy.md
+docs/performance/optimization_architecture.md
+docs/performance/optimization_invariants.md
+docs/performance/perf_baseline_policy.md
 ```
 
 ## Must document
@@ -681,9 +681,9 @@ PerfRegressionGate thresholds
 ## Acceptance
 
 ```text
-[ ] Every optimization mechanism has an invariant section.
-[ ] Every invariant references at least one test.
-[ ] Every perf baseline has update instructions.
+[x] Every optimization mechanism has an invariant section.
+[x] Every invariant references at least one test.
+[x] Every perf baseline has update instructions.
 ```
 
 ---

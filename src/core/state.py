@@ -1028,6 +1028,8 @@ class AuthoritativeState:
     rejection_registry: Dict[str, int] = field(default_factory=dict) # Global counters for discarded truth
     # Phase E5.6: Pressure-Aware Economy
     pressure_signals: Dict[str, float] = field(default_factory=dict)
+    _opt_profile: Any = field(default=None, repr=False, compare=False)
+    _force_full_scan: bool = field(default=False, repr=False, compare=False)
 
     def __post_init__(self):
         # M10 Law: Ensure cache is cleared on every new object creation (including replace)

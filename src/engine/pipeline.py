@@ -26,6 +26,7 @@ from src.systems.lifecycle import LifecycleSystem
 from src.engine.pipeline_phases.capacity_enforcement import CapacityEnforcementPhase
 from src.systems.world_systems.generator import EntityGenerator
 from src.engine.compactor import StateUpdateCompactor
+from src.engine.phase_graph import PhaseDependencyGraph
 
 logger = logging.getLogger(__name__)
 
@@ -71,22 +72,33 @@ class AuthoritativeApplyPipeline:
         metric_counters["raw_entity_updates"] = compaction_metrics.raw_entity_updates
         metric_counters["compacted_entity_updates"] = compaction_metrics.compacted_entity_updates
         update = replace(update, metric_counters=metric_counters)
-        update = AuthoritativeApplyPipeline._strip_untrusted_world_effects(update)
-        update = AuthoritativeApplyPipeline._resolve_actor_validity(state, update)
+
+        def run_phase(phase_name: str, upd: StateUpdate, phase_fn) -> StateUpdate:
+            if PhaseDependencyGraph.should_run_phase(phase_name, state, upd, cadence):
+                metric_counters["phase_runs"] = metric_counters.get("phase_runs", 0) + 1
+                metric_counters[f"run_{phase_name}"] = metric_counters.get(f"run_{phase_name}", 0) + 1
+                return phase_fn(upd)
+            else:
+                metric_counters["phase_skips"] = metric_counters.get("phase_skips", 0) + 1
+                metric_counters[f"skip_{phase_name}"] = metric_counters.get(f"skip_{phase_name}", 0) + 1
+                return upd
+
+        update = run_phase("trust_boundary", update, lambda u: AuthoritativeApplyPipeline._strip_untrusted_world_effects(u))
+        update = run_phase("actor_validity", update, lambda u: AuthoritativeApplyPipeline._resolve_actor_validity(state, u))
 
         costs["trust_validity"] = (time.perf_counter_ns() - t_start) / 1e6
 
         # --- Phase 2: Contracts & Production ---
         t_start = time.perf_counter_ns()
-        update = AuthoritativeApplyPipeline._resolve_contract_expirations(state, update)
-        update = BlacksmithSystem.enforce(state, update)
+        update = run_phase("contracts", update, lambda u: AuthoritativeApplyPipeline._resolve_contract_expirations(state, u))
+        update = run_phase("blacksmith", update, lambda u: BlacksmithSystem.enforce(state, u))
         costs["contracts_production"] = (time.perf_counter_ns() - t_start) / 1e6
 
         # --- Phase 3: Action & Movement Routing ---
         t_start = time.perf_counter_ns()
-        update = AuthoritativeApplyPipeline._route_action_intent(state, update)
-        update = AuthoritativeApplyPipeline._resolve_position_swaps(state, update)
-        update = AuthoritativeApplyPipeline._route_movement_intent(state, update)
+        update = run_phase("action_routing", update, lambda u: AuthoritativeApplyPipeline._route_action_intent(state, u))
+        update = run_phase("position_swaps", update, lambda u: AuthoritativeApplyPipeline._resolve_position_swaps(state, u))
+        update = run_phase("movement_routing", update, lambda u: AuthoritativeApplyPipeline._route_movement_intent(state, u))
         costs["locomotion"] = (time.perf_counter_ns() - t_start) / 1e6
 
         # --- Phase 4: Interaction & World Effects ---
@@ -98,28 +110,26 @@ class AuthoritativeApplyPipeline:
         if getattr(state, "movement_cache", None) is not None:
             state.movement_cache.invalidate_for_dirty(built_dirty)
         
-        update = AuthoritativeApplyPipeline._route_interaction_intent(state, update)
-        update = InteractionSystem.enforce(state, update)
-        if should_run(state.tick, None, cadence.building_sabotage):
-            update = BuildingSabotageSystem.resolve(state, update)
+        update = run_phase("interaction_routing", update, lambda u: AuthoritativeApplyPipeline._route_interaction_intent(state, u))
+        update = run_phase("interaction_enforcement", update, lambda u: InteractionSystem.enforce(state, u))
+        update = run_phase("building_sabotage", update, lambda u: BuildingSabotageSystem.resolve(state, u))
         costs["interaction"] = (time.perf_counter_ns() - t_start) / 1e6
 
         # --- Phase 5: Governance & Ecology ---
         t_start = time.perf_counter_ns()
-        if should_run(state.tick, None, cadence.town_resolution):
-            update = TownResolutionSystem.resolve(state, update, cadence=cadence)
+        update = run_phase("town_resolution", update, lambda u: TownResolutionSystem.resolve(state, u, cadence=cadence))
         
         generator = EntityGenerator(state.seed + state.tick)
         generator._last_id = state.next_entity_id - 1
-        update = WorldDynamicsSystem.resolve_dynamics(state, update, generator, cadence=cadence)
+        update = run_phase("world_dynamics", update, lambda u: WorldDynamicsSystem.resolve_dynamics(state, u, generator, cadence=cadence))
         costs["governance_ecology"] = (time.perf_counter_ns() - t_start) / 1e6
 
         # --- Phase 6: Economy & Evolution ---
         t_start = time.perf_counter_ns()
-        update = AuthoritativeApplyPipeline._resolve_quest_rewards(state, update)
-        update = ShopSystem.enforce(state, update)
-        update = AuthoritativeApplyPipeline._resolve_resource_transactions(state, update)
-        update = EvolutionSystem.evaluate(state, update)
+        update = run_phase("quest_rewards", update, lambda u: AuthoritativeApplyPipeline._resolve_quest_rewards(state, u))
+        update = run_phase("shop", update, lambda u: ShopSystem.enforce(state, u))
+        update = run_phase("resource_transactions", update, lambda u: AuthoritativeApplyPipeline._resolve_resource_transactions(state, u))
+        update = run_phase("evolution", update, lambda u: EvolutionSystem.evaluate(state, u))
         costs["economy"] = (time.perf_counter_ns() - t_start) / 1e6
 
         # --- Phase 7: Cognitive & Final Integrity ---
@@ -130,17 +140,17 @@ class AuthoritativeApplyPipeline:
         update = update.replace(dirty_set=dirty_builder.build())
         t1 = time.perf_counter_ns()
         
-        update = StrategicIntelligenceSystem.fused_strategic_pass(state, update, cadence=cadence)
+        update = run_phase("strategic_intelligence", update, lambda u: StrategicIntelligenceSystem.fused_strategic_pass(state, u, cadence=cadence))
         t2 = time.perf_counter_ns()
-        update = AuthoritativeApplyPipeline._apply_near_death_hardening(state, update)
+        update = run_phase("near_death_hardening", update, lambda u: AuthoritativeApplyPipeline._apply_near_death_hardening(state, u))
         t3 = time.perf_counter_ns()
-        update = AuthoritativeApplyPipeline._resolve_occupancy_conflicts(state, update)
+        update = run_phase("occupancy_resolution", update, lambda u: AuthoritativeApplyPipeline._resolve_occupancy_conflicts(state, u))
         t4 = time.perf_counter_ns()
-        update = LifecycleSystem.resolve_lifecycle(state, update)
+        update = run_phase("lifecycle", update, lambda u: LifecycleSystem.resolve_lifecycle(state, u))
         t5 = time.perf_counter_ns()
-        update = AuthoritativeApplyPipeline._resolve_groups(state, update)
+        update = run_phase("groups", update, lambda u: AuthoritativeApplyPipeline._resolve_groups(state, u))
         t6 = time.perf_counter_ns()
-        update = CapacityEnforcementPhase.enforce(state, update)
+        update = run_phase("capacity_enforcement", update, lambda u: CapacityEnforcementPhase.enforce(state, u))
         t7 = time.perf_counter_ns()
         
         # Final dirty set for result application
@@ -151,8 +161,9 @@ class AuthoritativeApplyPipeline:
         if state.tick in (10, 20, 30, 40, 50) and len(state.entities) >= 500:
             logger.debug(f"[Tick {state.tick}] final_integrity breakdown (ms): dirty1={(t1-t0)/1e6:.2f}, fused={(t2-t1)/1e6:.2f}, hardening={(t3-t2)/1e6:.2f}, occupancy={(t4-t3)/1e6:.2f}, lifecycle={(t5-t4)/1e6:.2f}, groups={(t6-t5)/1e6:.2f}, capacity={(t7-t6)/1e6:.2f}, dirty2={(t8-t7)/1e6:.2f}")
 
-
-        return update.replace(sub_phase_costs=costs)
+        final_metrics = dict(update.metric_counters) if getattr(update, "metric_counters", None) is not None else {}
+        final_metrics.update(metric_counters)
+        return update.replace(sub_phase_costs=costs, metric_counters=final_metrics)
     @staticmethod
     def _refresh_dirty_set(state: AuthoritativeState, update: StateUpdate) -> StateUpdate:
         """

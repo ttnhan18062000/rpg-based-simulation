@@ -14,6 +14,7 @@ from src.core.updates import (
     StaminaUpdate,
 )
 from src.engine.movement import MovementSystem
+from src.engine.policy import GovernorPolicy
 
 if TYPE_CHECKING:
     from src.core.state import AuthoritativeState, EntityState
@@ -201,7 +202,12 @@ class MovementPhase:
         object.__setattr__(state, "transient_claims", live_claims)
         
         from src.engine.candidate_selector import MovementCandidateSelector
-        selected_ids = MovementCandidateSelector.select(state, update, state.entities.keys())
+        policy = getattr(update, "current_policy_set", None) or GovernorPolicy()
+        selected_ids = MovementCandidateSelector.select(
+            state, update, state.entities.keys(), 
+            budget=policy.movement_budget, 
+            scan_policy=policy.scan_policy
+        )
         
         # Record candidate count for observability
         sub_costs = dict(update.sub_phase_costs) if getattr(update, "sub_phase_costs", None) is not None else {}

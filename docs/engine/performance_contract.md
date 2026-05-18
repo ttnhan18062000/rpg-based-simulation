@@ -54,3 +54,17 @@ Timing instrumentation itself must stay bounded (< 1% of total tick time).
 - **Singleton Singletons**: High-frequency no-op updates (e.g. EMPTY_ENTITY_UPDATE) must be implemented as singletons to minimize object allocation spikes.
 - **Deep-Freeze Caching**: Shared world components that are immutable for the duration of a simulation tick should be cached in their "frozen" state to avoid redundant recursive traversals.
 - **Incremental GC**: The Kernel must utilize frame-pacing idle windows to perform shallow garbage collection (`gc.collect(0)`). This prevents the accumulation of short-lived objects into expensive generation 1/2 collections, smoothing the latency p95/p99 envelope.
+
+## 7. Adaptive Phase Budget Governor (Milestone 17)
+
+### 7.1 Granular Sub-Phase Budgets
+Under system pressure or high work debt, the engine must not rely solely on macro concurrency limits. The `PhaseBudgetGovernor` monitors real-time sub-phase compute costs (e.g., Locomotion vs. Strategic Intelligence) and dynamically emits granular `PhaseBudgets`.
+
+### 7.2 Sub-Phase Budget Parameters
+- `candidate_budget`: Caps the maximum number of entities evaluated per tick during movement and action routing.
+- `movement_budget`: Caps the number of spatial pathfinding operations per tick.
+- `strategic_budget`: Caps the number of high-cost cognition cycles per tick.
+- `scan_policy`: Governs candidate evaluation rigor (`FULL`, `THROTTLED`, `EXACT_DIRTY`). Under heavy pressure, systems bypass O(N) full scans and evaluate ONLY entities marked in the authoritative `DirtySet`.
+- `background_sweep_interval`: Modulates the cadence of background entity sweeps (e.g., from every tick up to every 10 ticks under `SURVIVAL` mode).
+- `compaction_level`: Modulates state update compaction (`NORMAL` vs `AGGRESSIVE`) to aggressively prune redundant or no-op updates before authoritative application.
+
