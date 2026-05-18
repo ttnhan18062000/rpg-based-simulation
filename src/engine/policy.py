@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from src.core.governance import RuntimeMode
 from src.engine.cadence import SystemCadence
+from src.engine.phase_governor import PhaseBudgets, PhaseBudgetGovernor, ScanPolicy
 
 
 @dataclass(frozen=True, slots=True)
@@ -26,12 +27,40 @@ class GovernorPolicy:
     allow_subsystem_traces: bool = True
     mode: RuntimeMode = RuntimeMode.NORMAL
     system_cadence: SystemCadence = field(default_factory=lambda: SystemCadence(strategic_intelligence=1))
+    
+    # Milestone 17 Adaptive Phase Budgets
+    phase_budgets: PhaseBudgets = field(default_factory=PhaseBudgets)
+
+    @property
+    def scan_policy(self) -> ScanPolicy:
+        return self.phase_budgets.scan_policy
+
+    @property
+    def candidate_budget(self) -> int:
+        return self.phase_budgets.candidate_budget
+
+    @property
+    def strategic_budget(self) -> int:
+        return self.phase_budgets.strategic_budget
+
+    @property
+    def movement_budget(self) -> int:
+        return self.phase_budgets.movement_budget
+
+    @property
+    def background_sweep_interval(self) -> int:
+        return self.phase_budgets.background_sweep_interval
+
+    @property
+    def compaction_level(self) -> str:
+        return self.phase_budgets.compaction_level
 
     @classmethod
     def from_mode(cls, mode: RuntimeMode) -> GovernorPolicy:
         """
         Policy Waterfall according to Milestone 5/6 Degradation Matrix.
         """
+        budgets = PhaseBudgetGovernor.evaluate(None, None, mode, 0)
         if mode == RuntimeMode.NORMAL:
             return cls(
                 allow_opportunistic=True,
@@ -49,7 +78,8 @@ class GovernorPolicy:
                     town_resolution=20,
                     social_propagation=30,
                     concern_evaluation=10
-                )
+                ),
+                phase_budgets=budgets,
             )
         
         if mode == RuntimeMode.CONSTRAINED:
@@ -69,7 +99,8 @@ class GovernorPolicy:
                     town_resolution=40,
                     social_propagation=60,
                     concern_evaluation=20
-                )
+                ),
+                phase_budgets=budgets,
             )
             
         if mode == RuntimeMode.DEGRADED:
@@ -89,7 +120,8 @@ class GovernorPolicy:
                     town_resolution=100,
                     social_propagation=150,
                     concern_evaluation=50
-                )
+                ),
+                phase_budgets=budgets,
             )
             
         if mode == RuntimeMode.SURVIVAL:
@@ -109,7 +141,8 @@ class GovernorPolicy:
                     town_resolution=200,
                     social_propagation=300,
                     concern_evaluation=100
-                )
+                ),
+                phase_budgets=budgets,
             )
             
-        return cls()
+        return cls(phase_budgets=budgets)

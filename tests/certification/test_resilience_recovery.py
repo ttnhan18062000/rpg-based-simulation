@@ -45,7 +45,7 @@ def test_harness_catches_failed_recovery():
         from src.core.governance import RuntimeMode
         from src.engine.policy import GovernorPolicy
         
-        def g_eval_side_effect(profile, signals, status, current_tick):
+        def g_eval_side_effect(profile, signals, status, current_tick, **kwargs):
             g_eval_side_effect.call_count += 1
             if g_eval_side_effect.call_count <= 5: 
                 mode = RuntimeMode.NORMAL

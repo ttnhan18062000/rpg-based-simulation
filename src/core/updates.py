@@ -12,6 +12,7 @@ if TYPE_CHECKING:
         CognitionProfile, BlockerState, LeadState, DirectiveState, ProjectState, 
         ContractState, TurningPointState
     )
+    from src.engine.policy import GovernorPolicy
 from src.core.state import ItemStack, EquipSlot, AttributeComponent
 from src.core.movement_modes import MovementMode
 from src.core.enums import ReasonCode
@@ -792,6 +793,7 @@ class StateUpdate:
     rejections_delta: Dict[str, int] = field(default_factory=dict) # Rejection counters for this tick
     pressure_signals_set: Optional[Dict[str, float]] = None
     current_mode_set: Optional[RuntimeMode] = None
+    current_policy_set: Optional[GovernorPolicy] = None
     rejection_events: List[RejectionEvent] = field(default_factory=list) # Detailed rejection audit
     processed_transaction_ids: List[str] = field(default_factory=list)
     next_node_id_set: Optional[int] = None
@@ -799,6 +801,7 @@ class StateUpdate:
     dirty_set: Optional[DirtySet] = None
     force_full_scan: bool = False
     sub_phase_costs: Dict[str, float] = field(default_factory=dict)
+    metric_counters: Dict[str, int] = field(default_factory=dict)
 
     def is_noop(self) -> bool:
         """True if this update contains absolutely no changes."""
@@ -815,10 +818,11 @@ class StateUpdate:
                 self.maturity_set is None and self.last_calamity_tick_set is None and 
                 self.rng_checkpoint is None and not self.transaction_trace and 
                 not self.rejections_delta and self.pressure_signals_set is None and 
-                self.current_mode_set is None and not self.rejection_events and 
+                self.current_mode_set is None and self.current_policy_set is None and
+                not self.rejection_events and 
                 not self.processed_transaction_ids and self.next_node_id_set is None and 
                 self.next_entity_id_set is None and not self.force_full_scan and
-                not self.sub_phase_costs)
+                not self.sub_phase_costs and not self.metric_counters)
     def merge(self, other: StateUpdate) -> StateUpdate:
         """Merge another StateUpdate into this one."""
         if not other or other.is_noop():
@@ -874,8 +878,11 @@ class StateUpdate:
         rng = self.rng_checkpoint
         pressure = self.pressure_signals_set
         mode = self.current_mode_set
+        policy = self.current_policy_set
         dirty = self.dirty_set
         sub_costs = dict(self.sub_phase_costs)
+
+        new_metric_counters = dict(self.metric_counters)
 
         for other in valid_others:
             # Dictionaries
@@ -901,6 +908,9 @@ class StateUpdate:
                 new_periodic_updates[k] = v
             for k, v in other.work_debt_updates.items():
                 new_work_debt_updates[k] = new_work_debt_updates.get(k, 0) + v
+            if other.metric_counters:
+                for k, v in other.metric_counters.items():
+                    new_metric_counters[k] = new_metric_counters.get(k, 0) + v
 
             # Lists / Sets
             new_entities_add.extend(other.entities_add)
@@ -927,6 +937,7 @@ class StateUpdate:
             if other.rng_checkpoint: rng = other.rng_checkpoint
             if other.pressure_signals_set is not None: pressure = other.pressure_signals_set
             if other.current_mode_set is not None: mode = other.current_mode_set
+            if other.current_policy_set is not None: policy = other.current_policy_set
             if other.dirty_set: dirty = dirty.merge(other.dirty_set) if dirty else other.dirty_set
             if other.sub_phase_costs:
                 for k, v in other.sub_phase_costs.items():
@@ -966,8 +977,10 @@ class StateUpdate:
             rng_checkpoint=rng,
             pressure_signals_set=pressure,
             current_mode_set=mode,
+            current_policy_set=policy,
             dirty_set=dirty,
-            sub_phase_costs=sub_costs
+            sub_phase_costs=sub_costs,
+            metric_counters=new_metric_counters
         )
 
     def compact(self) -> StateUpdate:

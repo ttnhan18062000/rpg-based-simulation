@@ -14,6 +14,7 @@ from src.core.updates import (
     StaminaUpdate,
 )
 from src.engine.movement import MovementSystem
+from src.engine.policy import GovernorPolicy
 
 if TYPE_CHECKING:
     from src.core.state import AuthoritativeState, EntityState
@@ -201,11 +202,17 @@ class MovementPhase:
         object.__setattr__(state, "transient_claims", live_claims)
         
         from src.engine.candidate_selector import MovementCandidateSelector
-        selected_ids = MovementCandidateSelector.select(state, update, state.entities.keys())
+        policy = getattr(update, "current_policy_set", None) or GovernorPolicy()
+        selected_ids = MovementCandidateSelector.select(
+            state, update, state.entities.keys(), 
+            budget=policy.movement_budget, 
+            scan_policy=policy.scan_policy
+        )
         
         # Record candidate count for observability
         sub_costs = dict(update.sub_phase_costs) if getattr(update, "sub_phase_costs", None) is not None else {}
-        sub_costs["movement_candidates"] = len(selected_ids)
+        metric_counters = dict(update.metric_counters) if getattr(update, "metric_counters", None) is not None else {}
+        metric_counters["movement_candidates"] = len(selected_ids)
         
         # Unified Pass over selected candidate IDs
         for e_id in selected_ids:
@@ -254,7 +261,7 @@ class MovementPhase:
         except AttributeError:
             pass
             
-        return replace(update, entity_updates=refined_entity_updates, rejections_delta=new_rejections_delta, sub_phase_costs=sub_costs)
+        return replace(update, entity_updates=refined_entity_updates, rejections_delta=new_rejections_delta, sub_phase_costs=sub_costs, metric_counters=metric_counters)
 
     # --- Helpers ---
 

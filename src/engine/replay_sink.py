@@ -4,7 +4,7 @@ import os
 import json
 import logging
 from pathlib import Path
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass, fields
 from typing import List, Dict, Any, Optional
 from src.core.diagnostic import TraceEvent
 
@@ -34,7 +34,7 @@ class ReplaySink:
 
     def _clean_for_json(self, obj: Any) -> Any:
         """Deeply convert for JSON compatibility, ensuring all keys are strings."""
-        from dataclasses import is_dataclass, asdict
+        from dataclasses import is_dataclass, fields
         from collections.abc import Mapping
         from enum import Enum
         from uuid import UUID
@@ -47,13 +47,15 @@ class ReplaySink:
         if isinstance(obj, (UUID, Path)):
             return str(obj)
         if isinstance(obj, Mapping):
-            return {str(k): self._clean_for_json(v) for k, v in obj.items()}
+            return {str(k): self._clean_for_json(v) for k, v in obj.items() if not str(k).startswith('_')}
         if isinstance(obj, (list, tuple, set, frozenset)):
             return [self._clean_for_json(x) for x in obj]
         if is_dataclass(obj):
-            return self._clean_for_json(asdict(obj))
+            d = {f.name: getattr(obj, f.name) for f in fields(obj) if not f.name.startswith('_')}
+            return self._clean_for_json(d)
         if hasattr(obj, '__dict__'):
-            return self._clean_for_json(obj.__dict__)
+            d = {k: v for k, v in obj.__dict__.items() if not k.startswith('_')}
+            return self._clean_for_json(d)
         return str(obj)
 
     def persist_chunk(self, chunk_id: int, events: List[TraceEvent]) -> bool:
@@ -67,8 +69,7 @@ class ReplaySink:
             
             # Serialize events to compact JSON (no whitespace)
             # M6 Law: Sanitize for environment-specific JSON constraints
-            raw_data = [asdict(e) for e in events]
-            clean_data = self._clean_for_json(raw_data)
+            clean_data = [self._clean_for_json(e) for e in events]
             
             json_data = json.dumps(clean_data, separators=(',', ':'))
             encoded_data = json_data.encode('utf-8')

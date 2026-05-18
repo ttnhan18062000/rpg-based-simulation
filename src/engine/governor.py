@@ -29,7 +29,8 @@ class ResourceGovernor:
         profile: RuntimeProfile, 
         signals: PressureSignals, 
         status: RuntimeStatus,
-        current_tick: int
+        current_tick: int,
+        opt_profile: Any = None,
     ) -> GovernorPolicy:
         """
         Determine the next operational mode and return the derived policy.
@@ -55,9 +56,11 @@ class ResourceGovernor:
             status.increment_dwell()
             
         policy = GovernorPolicy.from_mode(status.current_mode)
-        # Optimization: Propagate profile-level controls (Milestone 7)
+        # Optimization: Propagate profile-level controls and dynamic phase budgets (Milestone 17)
         from dataclasses import replace
-        return replace(policy, lod_enabled=profile.lod_enabled)
+        from src.engine.phase_governor import PhaseBudgetGovernor
+        budgets = PhaseBudgetGovernor.evaluate(profile, signals, status.current_mode, current_tick, opt_profile=opt_profile)
+        return replace(policy, lod_enabled=profile.lod_enabled, phase_budgets=budgets)
 
     def force_mode(self, mode: RuntimeMode, status: RuntimeStatus, current_tick: int) -> None:
         """Emergency override for mid-tick throttling."""

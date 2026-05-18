@@ -1,8 +1,10 @@
-# Compliance IDs: API-001, API-009, API-018, API-019, PERF-005, PERF-006, PERF-015
+# Compliance IDs: API-001, API-009, API-018, API-019, PERF-005, PERF-006, PERF-015, PERF-019
 from __future__ import annotations
 import logging
 import threading
 from typing import Dict, Any, Optional, Set, List, Tuple, TYPE_CHECKING
+
+from src.engine.cache_registry import ICacheable, CacheMetrics, CacheBudgetPolicy
 
 if TYPE_CHECKING:
     from src.core.state import AuthoritativeState, EntityState
@@ -26,10 +28,11 @@ class ReadModelInvalidationPolicy:
         return set(dirty_set.all_dirty_entities)
 
 
-class ReadModelCache:
+class ReadModelCache(ICacheable):
     """
     Authoritative read model cache for API/UI projections.
     Eliminates expensive O(N) full-state DTO recalculations by reusing clean entity dictionaries.
+    Implements ICacheable protocol for centralized budget enforcement and deterministic eviction.
     """
     def __init__(self):
         self._minimal_summary: Dict[str, Any] = {}
@@ -40,6 +43,46 @@ class ReadModelCache:
         self._hits: int = 0
         self._misses: int = 0
         self._invalidations: int = 0
+        self._last_invalidation_tick: int = 0
+
+    def get_metrics(self) -> CacheMetrics:
+        """Returns standardized cache observability telemetry."""
+        with self._lock:
+            return CacheMetrics(
+                name="read_model_cache",
+                current_size=len(self._entity_dtos),
+                hit_count=self._hits,
+                miss_count=self._misses,
+                eviction_count=self._invalidations,
+                last_invalidation_tick=self._last_invalidation_tick
+            )
+
+    def evict_expired(self, current_tick: int, policy: CacheBudgetPolicy) -> int:
+        """
+        Enforce deterministic capacity boundaries.
+        Prunes excess DTOs if size exceeds policy.max_read_dtos.
+        """
+        with self._lock:
+            initial_size = len(self._entity_dtos)
+            excess = initial_size - policy.max_read_dtos
+            if excess > 0:
+                # FIFO eviction by popping oldest keys
+                sorted_keys = sorted(self._entity_dtos.keys())
+                for k in sorted_keys[:excess]:
+                    self._entity_dtos.pop(k, None)
+                    self._invalidations += 1
+                return excess
+            return 0
+
+    def clear(self) -> None:
+        """Purge all cached entries."""
+        with self._lock:
+            pruned = len(self._entity_dtos)
+            self._minimal_summary.clear()
+            self._entity_dtos.clear()
+            if pruned > 0:
+                self._invalidations += pruned
+            self.reset_metrics()
 
     def update(self, state: AuthoritativeState, dirty_set: Optional[DirtySet] = None, force_full_scan: bool = False) -> Set[int]:
         """
@@ -49,6 +92,7 @@ class ReadModelCache:
         from src.api.presenters.state_presenter import StatePresenter
         
         with self._lock:
+            self._last_invalidation_tick = state.tick
             # Law: Minimal summary is updated every tick (O(1)).
             self._minimal_summary = StatePresenter.present_minimal(state)
             
@@ -87,7 +131,7 @@ class ReadModelCache:
         with self._lock:
             if entity.id in self._entity_dtos:
                 self._hits += 1
-                return self._entity_dtos[entity.id] # Return cached dictionary directly
+                return self._entity_dtos[entity.id]
                 
             self._misses += 1
             dto = StatePresenter.present_entity(entity)
@@ -114,24 +158,8 @@ class ReadModelCache:
                 "limit": limit
             }
 
-    def get_metrics(self) -> Dict[str, int]:
-        """Returns cache observability metrics."""
-        with self._lock:
-            return {
-                "hits": self._hits,
-                "misses": self._misses,
-                "invalidations": self._invalidations,
-                "cached_entities": len(self._entity_dtos)
-            }
-
     def reset_metrics(self):
         with self._lock:
             self._hits = 0
             self._misses = 0
             self._invalidations = 0
-
-    def clear(self):
-        with self._lock:
-            self._minimal_summary.clear()
-            self._entity_dtos.clear()
-            self.reset_metrics()

@@ -995,6 +995,8 @@ class AuthoritativeState:
     occupancy_snapshot: Any = field(default=None, repr=False, compare=False)
     movement_cache: Any = field(default=None, repr=False, compare=False)
     world_indexes: Any = field(default=None, repr=False, compare=False)
+    _index_hits: int = field(default=0, repr=False, compare=False)
+    _index_misses: int = field(default=0, repr=False, compare=False)
     transient_claims: Any = field(default=None, repr=False, compare=False)
     _node_map_cache: Any = field(default=None, repr=False, compare=False)
     _active_nodes_grid: Any = field(default=None, repr=False, compare=False)
@@ -1026,6 +1028,8 @@ class AuthoritativeState:
     rejection_registry: Dict[str, int] = field(default_factory=dict) # Global counters for discarded truth
     # Phase E5.6: Pressure-Aware Economy
     pressure_signals: Dict[str, float] = field(default_factory=dict)
+    _opt_profile: Any = field(default=None, repr=False, compare=False)
+    _force_full_scan: bool = field(default=False, repr=False, compare=False)
 
     def __post_init__(self):
         # M10 Law: Ensure cache is cleared on every new object creation (including replace)

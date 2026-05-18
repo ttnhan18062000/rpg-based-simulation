@@ -9,7 +9,8 @@ A high-fidelity 2D RPG simulation engine with parallel AI, deterministic replay,
 
 > [!IMPORTANT]
 > **Operational Cutover & Hardening Complete**: The engine has successfully transitioned to the **src** authoritative runtime. **Phase 11 (Reconciliation)** and **Phase 12 (Operational Hardening)** are complete. The V2 engine now satisfies all 1653 documented RPG-core laws with 100% parity and machine-verifiable evidence. **Phase 13 (Legacy Retirement)** has been explicitly skipped to preserve legacy assets for ongoing parity verification.
-> **Performance Hardening (Phase 6)**: The engine now features **Batch Merge Optimization** (8.6x speedup) and **Atomic Apply Pipelines**, ensuring stable 50ms ticks even under extreme entity stress.
+> **Deep Engine Optimization & Governance (Milestones 13–21)**: Features a robust 5-Layer Optimization Stack (`ApplyPlan`, `ComponentPatch`, `PhaseDependencyGraph`, `CacheRegistry`, and Adaptive Phase Governance). Includes 6 hardware-tailored optimization profiles (`COMBAT_HEAVY`, `METROPOLIS`, `LOW_MEMORY`, etc.) ensuring RSS containment and sub-50ms tick stability across multi-thousand tick runs.
+> **V2 Engine Semantic Compliance Certification & Long-Run Hardening (Phase 22)**: Complete compliance certification verified across all engine operational laws. Fully hardened non-authoritative replay persistence with robust cycle-safe serialization, achieving flawless stability and zero recursion across continuous multi-thousand tick stress tests.
 
 ```
 src/
@@ -297,6 +298,9 @@ The following milestones define the **Simulation Substrate** (Kernel, Scheduling
 - **[Project Lawbook](docs/engine/project_lawbook_m10.md)** — The canonical summary of all engine laws.
 - **[Engineering Playbook](docs/engine/engineering_playbook_m10.md)** — Guidelines for extending the engine safely.
 - **[Architecture Guide](docs/architecture.md)** — High-level technical overview of the AOA design.
+- **[Optimization Architecture](docs/performance/optimization_architecture.md)** — 5-layer performance optimization stack and memory boundaries.
+- **[Optimization Invariants](docs/performance/optimization_invariants.md)** — Guaranteed performance bounds and differential test matrix.
+- **[Performance Baseline Policy](docs/performance/perf_baseline_policy.md)** — Empirical benchmarking and regression gating protocols.
 
 ## Requirements
 

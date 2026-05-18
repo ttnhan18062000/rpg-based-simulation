@@ -1,8 +1,9 @@
-# Compliance IDs: COMB-028, PERF-009
+# Compliance IDs: COMB-028, PERF-009, PERF-017
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Iterable, Optional
 from src.core.movement_modes import MovementMode
+from src.engine.phase_governor import ScanPolicy
 
 if TYPE_CHECKING:
     from src.core.state import AuthoritativeState
@@ -13,6 +14,7 @@ class MovementCandidateSelector:
     """
     Authoritatively selects candidate entity IDs eligible for movement routing and spatial resolution.
     Logic ID: PERF-009 (Movement Candidate Selection)
+    Milestone 17 Law: Enforces candidate budget and adaptive scan policy under pressure.
     """
 
     @staticmethod
@@ -20,8 +22,11 @@ class MovementCandidateSelector:
         state: AuthoritativeState,
         update: StateUpdate,
         candidates: Iterable[int],
+        budget: int = 1000,
+        scan_policy: ScanPolicy = ScanPolicy.FULL,
     ) -> tuple[int, ...]:
-        selected: set[int] = set()
+        urgent_selected: set[int] = set()
+        normal_selected: list[int] = []
 
         dirty_movement_ids: set[int] = set()
         if update and update.dirty_set:
@@ -52,12 +57,12 @@ class MovementCandidateSelector:
             if nav_target is None or entity.navigation.position == nav_target:
                 continue
 
-            # In force_full_scan, include all movable entities that have target != position
+            # In force_full_scan, include all movable entities that have target != position as urgent
             if update and update.force_full_scan:
-                selected.add(e_id)
+                urgent_selected.add(e_id)
                 continue
 
-            # Explicit inclusion bypasses:
+            # Explicit inclusion bypasses (Urgent / Dirty work):
             # 1. Target changed in update
             target_changed = (ent_upd and ent_upd.navigation and ent_upd.navigation.target_set is not None)
             
@@ -74,7 +79,12 @@ class MovementCandidateSelector:
             strategic_req = (ent_upd and ent_upd.strategic is not None) or (entity.strategic and entity.strategic.current_project_id is not None)
 
             if target_changed or is_dirty or tile_blocked or interaction_req or strategic_req:
-                selected.add(e_id)
+                urgent_selected.add(e_id)
+                continue
+
+            # Non-urgent candidate evaluation:
+            if scan_policy == ScanPolicy.EXACT_DIRTY:
+                # Under heavy degraded mode, skip non-urgent moves entirely
                 continue
 
             # Otherwise, evaluate readiness gating and movement mode cadence
@@ -83,12 +93,20 @@ class MovementCandidateSelector:
                 continue
 
             if mode == MovementMode.WANDER:
-                if (state.tick + e_id) % 3 != 0:
+                modulo = 6 if scan_policy == ScanPolicy.THROTTLED else 3
+                if (state.tick + e_id) % modulo != 0:
                     continue
 
-            selected.add(e_id)
+            normal_selected.append(e_id)
 
-        return tuple(sorted(selected))
+        # Enforce budget while protecting urgent candidates
+        if len(urgent_selected) + len(normal_selected) <= budget:
+            final_set = urgent_selected.union(normal_selected)
+        else:
+            rem = max(0, budget - len(urgent_selected))
+            final_set = urgent_selected.union(normal_selected[:rem])
+
+        return tuple(sorted(final_set))
 
     @staticmethod
     def _is_static_position_blocked(state: AuthoritativeState, pos: tuple[float, float]) -> bool:

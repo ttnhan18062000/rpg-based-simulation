@@ -3163,6 +3163,25 @@ These items are appended rather than replacing existing checklist items. They ar
 - [x] `RPG-OPT-013` Profiling Harness Execution Modes: Provides pure runtime and audit profiling modes to decouple compute accounting from artificial overhead. <!-- SOURCE: scripts/profile_engine.py TEST: tests/unit/perf/test_profiling_harness_modes.py PROOF: characterization -->
 - [x] `RPG-OPT-014` PerfRegressionGate Compute Latency and Memory Baseline Gate: Automated CI regression gate checking p95/p99 compute latency and memory stability against baselines. <!-- SOURCE: src/perf/regression_gate.py TEST: tests/unit/perf/test_perf_regression_gate.py PROOF: audit -->
 
+## Z21. Deep Engine Optimization & Adaptive Governance Laws (Milestones 13–21)
+
+- [x] `RPG-OPT-015` ApplyPlan Structural Redesign: Replaces ad-hoc state dictionary mutation with a structured `ApplyPlan` and `ApplyPlanBuilder`, decoupling state generation from verification. <!-- SOURCE: src/engine/apply_plan.py TEST: tests/unit/optimization/test_apply_plan_builder.py PROOF: optimization -->
+- [x] `RPG-OPT-016` ApplyPlan Bit-Identical Apply Parity: Proves 100% exact state hash parity between the structured `ApplyPlan` application pipeline and baseline uncompacted application. <!-- SOURCE: src/engine/apply.py TEST: tests/integration/optimization/test_apply_plan_parity.py PROOF: differential -->
+- [x] `RPG-OPT-017` Component-Level Patch Model: Structures granular state modifications across domain components (`ComponentPatch`, `IdentityPatch`, `CombatPatch`, etc.) with chronological compaction ordering. <!-- SOURCE: src/engine/patches.py TEST: tests/unit/optimization/test_component_patches.py PROOF: optimization -->
+- [x] `RPG-OPT-018` ComponentPatch State Generation Parity: Proves that applying compacted component patches produces bit-identical `AuthoritativeState` generations across all entity attributes. <!-- SOURCE: src/engine/apply.py TEST: tests/integration/optimization/test_component_patch_apply_parity.py PROOF: differential -->
+- [x] `RPG-OPT-019` Phase Dependency Graph & Execution Skipping: Evaluates dirty domain flags and dependencies via `PhaseDependencyGraph` to skip clean simulation phases when `force_full_scan=False`. <!-- SOURCE: src/engine/phase_graph.py TEST: tests/unit/optimization/test_phase_dependency_graph.py PROOF: optimization -->
+- [x] `RPG-OPT-020` Phase Execution Skipping Determinism Parity: Proves that dynamically skipping clean phases via the dependency graph maintains 100% bit-identical state simulation parity. <!-- SOURCE: src/engine/kernel.py TEST: tests/integration/optimization/test_phase_skip_parity.py PROOF: differential -->
+- [x] `RPG-OPT-021` Adaptive Phase Budget Governor: Monitors tick latency signals to dynamically throttle or defer discretionary sub-phase work (e.g. background sweeps) during compute pressure. <!-- SOURCE: src/engine/phase_governor.py TEST: tests/unit/optimization/test_phase_budget_governor.py PROOF: governance -->
+- [x] `RPG-OPT-022` CacheRegistry Lifecycle & Bounded Memory Policy: Centralizes engine cache allocations with strict memory eviction thresholds (`CacheBudgetPolicy`) preventing OOM across multi-thousand tick runs. <!-- SOURCE: src/engine/cache_registry.py TEST: tests/unit/optimization/test_cache_registry.py PROOF: optimization -->
+- [x] `RPG-OPT-023` Multi-Thousand Tick Cache Containment Verification: Empirically verifies that `CacheRegistry` bounds RSS memory growth and maintains stable p95 latency drift over 5,000+ continuous ticks. <!-- SOURCE: src/engine/cache_registry.py TEST: tests/integration/optimization/test_cache_memory_bounds.py PROOF: integration -->
+- [x] `RPG-OPT-024` Scenario-Specific Optimization Profiles: Configures 6 hardware-tailored optimization profiles (`COMBAT_HEAVY`, `METROPOLIS`, `LOW_MEMORY`, etc.) with dynamic runtime resolution. <!-- SOURCE: src/config/optimization_profiles.py TEST: tests/unit/optimization/test_optimization_profiles.py PROOF: configuration -->
+- [x] `RPG-OPT-025` Profile-Specific Dynamic Engine Adaptation: Integrates optimization profiles into the Kernel, scaling cache envelopes, phase skipping policies, and budget governors per scenario. <!-- SOURCE: src/engine/kernel.py TEST: tests/integration/optimization/test_profile_specific_behavior.py PROOF: integration -->
+
+## Z22. V2 Engine Semantic Compliance Certification & Long-Run Hardening (Final Verification)
+
+- [x] `RPG-CERT-001` Replay Serialization Cycle-Breaking: Protects non-authoritative replay persistence from infinite dataclass recursion by filtering internal cache attributes. <!-- SOURCE: src/engine/replay_sink.py TEST: tests/certification/test_cert_long_run_stability.py PROOF: certification -->
+- [x] `RPG-CERT-002` Continuous Long-Run Multi-Thousand Tick Stability: Proves complete execution stability, bounded memory usage, and zero crash/recursion over continuous multi-thousand tick simulation runs. <!-- SOURCE: src/engine/kernel.py TEST: tests/integration/world/test_long_run_stability.py PROOF: longrun -->
+
 ---
 
 # Final audit note

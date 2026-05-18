@@ -1,4 +1,4 @@
-# Compliance IDs: PERF-006, STRAT-PERF-001
+# Compliance IDs: PERF-006, STRAT-PERF-001, PERF-017
 from __future__ import annotations
 from typing import Tuple, List, Set, Optional, TYPE_CHECKING
 from src.core.strategic import ProjectStatus, ObjectiveStatus, ContractStatus
@@ -13,6 +13,7 @@ class StrategicWorkQueue:
     """
     Decides which entities require strategic intelligence work this tick based on urgency.
     Logic ID: STRAT-PERF-001 (Consolidated O(N) pass for strategic state)
+    Milestone 17 Law: Enforces strategic budget and adaptive background sweep interval under pressure.
     """
 
     @staticmethod
@@ -21,6 +22,7 @@ class StrategicWorkQueue:
         update: StateUpdate,
         dirty: Optional[DirtySet],
         budget: int = 50,
+        sweep_interval: int = 1,
     ) -> Tuple[int, ...]:
         eligible_ids: List[int] = []
         for e_id in sorted(state.entities.keys()):
@@ -96,7 +98,8 @@ class StrategicWorkQueue:
 
             # 7. Background sweep
             if not added:
-                tier7.append(e_id)
+                if (state.tick + e_id) % sweep_interval == 0:
+                    tier7.append(e_id)
 
         # Deterministic round-robin rotation for starvation prevention in tier 7
         if tier7:
@@ -106,11 +109,17 @@ class StrategicWorkQueue:
         combined: List[int] = []
         seen: Set[int] = set()
 
-        for cur_id in (tier1 + tier2 + tier3 + tier4 + tier5 + tier6 + tier7):
+        urgent = tier1 + tier2 + tier3 + tier4 + tier5 + tier6
+        for cur_id in urgent:
             if cur_id not in seen:
                 seen.add(cur_id)
                 combined.append(cur_id)
-                if len(combined) >= budget:
+
+        for cur_id in tier7:
+            if cur_id not in seen:
+                seen.add(cur_id)
+                combined.append(cur_id)
+                if len(combined) >= max(budget, len(urgent)):
                     break
 
         return tuple(combined)

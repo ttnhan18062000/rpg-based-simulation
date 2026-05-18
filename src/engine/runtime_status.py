@@ -61,7 +61,8 @@ class RuntimeStatus:
             replay_backlog_kb = signals.replay_backlog_kb,
             active_workers = signals.active_workers,
             dropped_work_delta = signals.dropped_work_delta,
-            phase_costs_ms = signals.phase_costs_ms
+            phase_costs_ms = signals.phase_costs_ms,
+            metrics = signals.metrics
         )
         
         self.signal_history.append(enriched)
