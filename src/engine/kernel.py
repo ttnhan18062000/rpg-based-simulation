@@ -43,7 +43,7 @@ class Kernel:
         "_start_perf_ts", "_current_world_time", "_platform_signals",
         "_current_signals", "_current_policy", "_current_work_items",
         "_source_packets", "_source_work_items", "_final_results", "_final_compute_ms",
-        "_phase_costs", "_metrics", "_audit_mode", "_no_frame_pacing", "_no_replay", "_audit_dirty_set", "_perf_tracker", "_force_full_scan", "_current_update", "_cache_registry", "_cache_policy", "_opt_profile", "_event_listeners"
+        "_phase_costs", "_metrics", "_audit_mode", "_no_frame_pacing", "_no_replay", "_audit_dirty_set", "_perf_tracker", "_force_full_scan", "_current_update", "_cache_registry", "_cache_policy", "_opt_profile", "_event_listeners", "_event_recorder", "_entity_timeline_store"
     )
 
     def __init__(
@@ -138,6 +138,18 @@ class Kernel:
         self._no_frame_pacing = flags.get("no_frame_pacing", False) if flags else False
         self._no_replay = flags.get("no_replay", False) if flags else False
         self._event_listeners = []
+
+        from src.observability.config import ObservabilityConfig, ObservabilityMode
+        from src.observability.event_recorder import EventRecorder
+        from src.observability.entity_timeline import EntityTimelineStore
+
+        obs_mode = ObservabilityConfig.get_mode()
+        self._event_recorder = EventRecorder(
+            run_dir=str(self._replay.run_dir) if hasattr(self._replay, "run_dir") else None,
+            max_events=5000,
+            enabled=(obs_mode != ObservabilityMode.OFF)
+        )
+        self._entity_timeline_store = EntityTimelineStore(mode=obs_mode)
 
         self.validate(flags)
 
@@ -464,6 +476,7 @@ class Kernel:
                 delattr(self._status, "dirty_set")
 
         violations = HardLawMonitor.check(self._state, dirty_set)
+        self._status.current_tick_violations = violations
         if not violations:
             return
 
@@ -486,125 +499,49 @@ class Kernel:
 
     def _phase_observability(self, prior_state: AuthoritativeState, update: Any) -> None:
         from src.observability.config import ObservabilityConfig, ObservabilityMode
-        if ObservabilityConfig.get_mode() == ObservabilityMode.OFF:
+        obs_mode = ObservabilityConfig.get_mode()
+        if obs_mode == ObservabilityMode.OFF:
             return
 
-        from src.observability.events import (
-            CombatDamageEvent, CombatKillEvent, GoldTransactionEvent,
-            QuestEvent, MovementEvent, LifecycleEvent
-        )
-        import time
-        
+        from src.observability.event_extractor import EventExtractor
+        from src.observability.events import SimulationEvent
+
         tick = self._state.tick
-        now = time.time()
-        generated_events = []
+        
+        # 1. Extract domain events
+        generated_events = EventExtractor.extract(prior_state, self._state, update, obs_mode)
 
-        # Scoped to active entity updates list for O(1) performance
-        dirty_entity_ids = update.entity_updates.keys() if (update and hasattr(update, "entity_updates")) else []
-        if not dirty_entity_ids:
-            dirty_entity_ids = self._state.entities.keys()
+        # 2. Convert hard law violations to SimulationEvents
+        current_violations = getattr(self._status, "current_tick_violations", [])
+        for v in current_violations:
+            event = SimulationEvent(
+                event_type="InvariantViolation",
+                event_category="hard_law",
+                tick=tick,
+                severity=v.severity,
+                source_system="hard_law_monitor",
+                message=v.message,
+                entity_id=v.entity_id,
+                payload=v.details
+            )
+            generated_events.append(event)
 
-        for eid in dirty_entity_ids:
-            entity = self._state.entities.get(eid)
-            prior_ent = prior_state.entities.get(eid)
+        # Clear current tick violations from status
+        if hasattr(self._status, "current_tick_violations"):
+            delattr(self._status, "current_tick_violations")
 
-            if entity is None:
-                if prior_ent is not None:
-                    event = LifecycleEvent(
-                        tick=tick, timestamp=now, entity_id=eid,
-                        action="despawn", details={"kind": prior_ent.kind, "position": prior_ent.navigation.position}
-                    )
-                    generated_events.append(event)
-                continue
+        # 3. Record events to buffers and timeline store
+        for event in generated_events:
+            self._event_recorder.record(event)
+            self._entity_timeline_store.record(event)
 
-            if prior_ent is None:
-                event = LifecycleEvent(
-                    tick=tick, timestamp=now, entity_id=eid,
-                    action="spawn", details={"kind": entity.kind, "position": entity.navigation.position}
-                )
-                generated_events.append(event)
-                if hasattr(entity, "timeline") and entity.timeline is not None:
-                    entity.timeline.append(event)
-                continue
-
-            # Movement event
-            if prior_ent.navigation.position != entity.navigation.position:
-                event = MovementEvent(
-                    tick=tick, timestamp=now, entity_id=eid,
-                    start_pos=prior_ent.navigation.position,
-                    end_pos=entity.navigation.position
-                )
-                generated_events.append(event)
-                if hasattr(entity, "timeline") and entity.timeline is not None:
+            # Fallback for backwards compatibility with legacy tests/code accessing entity.timeline
+            if event.entity_id is not None:
+                entity = self._state.entities.get(event.entity_id)
+                if entity and hasattr(entity, "timeline") and entity.timeline is not None:
                     entity.timeline.append(event)
 
-            # HP / Combat damage events
-            hp_diff = entity.combat.hp - prior_ent.combat.hp
-            if hp_diff < 0:
-                attacker_id = None
-                e_upd = update.entity_updates.get(eid) if update and hasattr(update, "entity_updates") else None
-                if e_upd and getattr(e_upd, "combat_upd", None):
-                    attacker_id = e_upd.combat_upd.attacker_id
-                
-                event = CombatDamageEvent(
-                    tick=tick, timestamp=now, entity_id=eid,
-                    attacker_id=attacker_id, damage=int(-hp_diff),
-                    is_lethal=(entity.combat.hp <= 0 or not entity.lifecycle.active)
-                )
-                generated_events.append(event)
-                if hasattr(entity, "timeline") and entity.timeline is not None:
-                    entity.timeline.append(event)
-
-            # Defeat / Kill event
-            if prior_ent.lifecycle.active and not entity.lifecycle.active:
-                killer_id = None
-                e_upd = update.entity_updates.get(eid) if update and hasattr(update, "entity_updates") else None
-                if e_upd and getattr(e_upd, "combat_upd", None):
-                    killer_id = e_upd.combat_upd.attacker_id
-                
-                event = CombatKillEvent(
-                    tick=tick, timestamp=now, entity_id=eid,
-                    killer_id=killer_id
-                )
-                generated_events.append(event)
-                if hasattr(entity, "timeline") and entity.timeline is not None:
-                    entity.timeline.append(event)
-
-            # Gold transaction event
-            gold_diff = entity.inventory.gold - prior_ent.inventory.gold
-            if gold_diff != 0:
-                kind = "gain" if gold_diff > 0 else "loss"
-                event = GoldTransactionEvent(
-                    tick=tick, timestamp=now, entity_id=eid,
-                    amount=float(abs(gold_diff)), transaction_kind=kind
-                )
-                generated_events.append(event)
-                if hasattr(entity, "timeline") and entity.timeline is not None:
-                    entity.timeline.append(event)
-
-            # Quest event
-            prior_quests = prior_ent.strategic.projects
-            current_quests = entity.strategic.projects
-            for qid, qstate in current_quests.items():
-                prior_qstate = prior_quests.get(qid)
-                if prior_qstate is None:
-                    event = QuestEvent(
-                        tick=tick, timestamp=now, entity_id=eid,
-                        quest_id=qid, status="started"
-                    )
-                    generated_events.append(event)
-                    if hasattr(entity, "timeline") and entity.timeline is not None:
-                        entity.timeline.append(event)
-                elif prior_qstate.status != qstate.status:
-                    event = QuestEvent(
-                        tick=tick, timestamp=now, entity_id=eid,
-                        quest_id=qid, status=str(qstate.status)
-                    )
-                    generated_events.append(event)
-                    if hasattr(entity, "timeline") and entity.timeline is not None:
-                        entity.timeline.append(event)
-
-        # Notify any external event listeners
+        # 4. Notify any external event listeners
         if generated_events and hasattr(self, "_event_listeners"):
             for listener in self._event_listeners:
                 try:
@@ -640,6 +577,8 @@ class Kernel:
     def shutdown(self, timeout_s: float = 5.0) -> ShutdownResult:
         self._stopped = True
         self._worker_manager.shutdown()
+        if hasattr(self, "_event_recorder") and self._event_recorder:
+            self._event_recorder.shutdown()
         from src.engine.checkpoint import CanonicalStateHasher
         final_hash = CanonicalStateHasher.get_hash(self._state)
         logger.info(f"Final Auth Hash: {final_hash}")
