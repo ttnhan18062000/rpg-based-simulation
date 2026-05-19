@@ -33,4 +33,3 @@ scrape_configs:
     - labels:
         level:
         component:
-        tick:

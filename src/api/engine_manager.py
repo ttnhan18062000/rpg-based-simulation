@@ -39,13 +39,53 @@ class V2EngineManager:
         self._state_lock = threading.Lock()
         
         self._listeners: List[Callable[[Dict[str, Any]], None]] = []
+        self._event_listeners = []
         self._listeners_lock = threading.Lock()
+        
+        # Observability Metrics Initialization
+        from collections import deque
+        from prometheus_client import CollectorRegistry
+        from src.observability.prometheus_collector import PrometheusMetricsCollector
+        
+        self._tick_times = deque(maxlen=100)
+        self._latest_metrics_snapshot: Dict[str, Any] = {}
+        self._metrics_registry = CollectorRegistry()
+        self._metrics_collector = PrometheusMetricsCollector(self)
+        self._metrics_registry.register(self._metrics_collector)
+        self._errors_total = 0
         
         self._build()
 
     @property
+    def metrics_registry(self) -> Any:
+        return self._metrics_registry
+
+    def get_tps(self) -> float:
+        """Returns the empirical TPS over the sliding window."""
+        if len(self._tick_times) < 2:
+            return 0.0
+        delta = self._tick_times[-1] - self._tick_times[0]
+        if delta <= 0:
+            return 0.0
+        return (len(self._tick_times) - 1) / delta
+
+    def get_metrics_snapshot(self) -> Dict[str, Any]:
+        """Returns a copy of the latest metrics snapshot."""
+        with self._state_lock:
+            return self._latest_metrics_snapshot.copy()
+
+    @property
     def read_cache(self) -> ReadModelCache:
         return self._read_cache
+
+    def add_event_listener(self, cb: Callable[[List[Any]], None]):
+        with self._listeners_lock:
+            self._event_listeners.append(cb)
+
+    def remove_event_listener(self, cb: Callable[[List[Any]], None]):
+        with self._listeners_lock:
+            if cb in self._event_listeners:
+                self._event_listeners.remove(cb)
 
     def add_tick_listener(self, cb: Callable[[Dict[str, Any]], None]):
         with self._listeners_lock:
@@ -88,6 +128,7 @@ class V2EngineManager:
         )
         
         self._kernel = Kernel(profile=self._profile, state=state, rng=rng)
+        self._kernel._event_listeners = self._event_listeners
         self._update_latest_state(state)
 
     def _update_latest_state(self, state: AuthoritativeState):
@@ -97,6 +138,39 @@ class V2EngineManager:
             force_full = getattr(self._kernel.status, "force_full_scan", False) if self._kernel else False
             self._read_cache.update(state, dirty_set, force_full)
             self._latest_snapshot = self._read_cache.get_minimal_summary()
+            
+            # Extract and update current snapshot for Prometheus metrics in an thread-safe manner
+            from src.engine.metrics import MetricsService
+            try:
+                world_metrics = MetricsService.extract_metrics(state)
+            except Exception:
+                logger.exception("Error extracting metrics in V2EngineManager")
+                world_metrics = None
+
+            # Get recent status signals from kernel
+            kernel_status = self._kernel.status if self._kernel else None
+            recent_signals = kernel_status.signal_history[-1] if (kernel_status and kernel_status.signal_history) else None
+            
+            # Build current metrics snapshot
+            self._latest_metrics_snapshot = {
+                "tick": state.tick,
+                "active_entities": world_metrics.alive_entities if world_metrics else len(state.entities),
+                "tps": self.get_tps(),
+                "tick_compute_ms": recent_signals.tick_compute_ms if recent_signals else 0.0,
+                "worker_utilization": recent_signals.worker_utilization if recent_signals else 0.0,
+                "queue_utilization": recent_signals.queue_utilization if recent_signals else 0.0,
+                "memory_rss_bytes": (recent_signals.memory_estimate_mb * 1024 * 1024) if recent_signals else 0.0,
+                "work_debt_total": recent_signals.work_debt_total if recent_signals else 0,
+                "governor_mode": int(kernel_status.current_mode) if kernel_status else 0,
+                "gold_circulation_total": world_metrics.total_gold if world_metrics else 0.0,
+                "rejection_counts": world_metrics.rejection_counts if world_metrics else {},
+                "quest_status_counts": world_metrics.quest_status_counts if world_metrics else {},
+                "dropped_work_delta": kernel_status.dropped_work_delta if kernel_status else 0,
+                "errors_total": self._errors_total,
+                "phase_costs_ms": recent_signals.phase_costs_ms if recent_signals else {},
+                "hard_law_violations_cumulative": getattr(kernel_status, "cumulative_violations", {}) if kernel_status else {},
+                "last_hard_law_violation_tick": getattr(kernel_status, "last_hard_law_violation_tick", -1) if kernel_status else -1,
+            }
 
     def get_state(self) -> Dict[str, Any]:
         """Returns the latest minimal snapshot."""
@@ -177,10 +251,14 @@ class V2EngineManager:
             # Execute one tick
             try:
                 self._kernel.tick_once()
+                with self._state_lock:
+                    self._tick_times.append(time.time())
                 self._update_latest_state(self._kernel.state)
                 self._notify_listeners(self._latest_snapshot)
             except Exception as e:
                 logger.exception("V2 Kernel tick failed: %s", e)
+                with self._state_lock:
+                    self._errors_total += 1
                 break
                 
             if not single_step:

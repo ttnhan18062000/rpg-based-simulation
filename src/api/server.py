@@ -46,6 +46,19 @@ def create_v2_app(profile: RuntimeProfile) -> FastAPI:
     from src.api.ws import stream
     app.include_router(stream.router, prefix="/api/v1")
 
+    from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
+    from fastapi import Response
+
+    @app.get("/metrics")
+    async def get_metrics(manager: V2EngineManager = Depends(get_engine_manager)):
+        """Expose Prometheus text format metrics from V2EngineManager."""
+        try:
+            data = generate_latest(manager.metrics_registry)
+            return Response(content=data, media_type=CONTENT_TYPE_LATEST)
+        except Exception as e:
+            logger.exception("Failed to generate metrics")
+            return Response(content=f"# Error: {e}", status_code=500, media_type="text/plain")
+
     @app.get("/health")
     async def health_check():
         return {"status": "ok", "version": "v2", "timestamp": time.time()}

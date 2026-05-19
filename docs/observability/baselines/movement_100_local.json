@@ -1,0 +1,183 @@
+{
+  "scenario_id": "movement_100_local",
+  "profile": "PERF_1GB_LOCAL",
+  "sample_ticks": 20,
+  "wall_clock_s": 0.0587,
+  "wall_clock_tps": 340.87,
+  "compute_tps": 346.99,
+  "avg_tps": 346.99,
+  "tick_ms": {
+    "avg": 2.882,
+    "p50": 2.564,
+    "p95": 7.942,
+    "p99": 7.942,
+    "max": 7.942,
+    "min": 0.962
+  },
+  "mem_rss_mb": {
+    "avg": 38.32,
+    "max": 38.32,
+    "delta": 0.0
+  },
+  "phase_breakdown": {
+    "init": {
+      "avg": 0.232,
+      "p50": 0.125,
+      "p95": 1.019,
+      "p99": 1.019,
+      "max": 1.019,
+      "min": 0.068
+    },
+    "scheduling": {
+      "avg": 0.142,
+      "p50": 0.111,
+      "p95": 0.452,
+      "p99": 0.452,
+      "max": 0.452,
+      "min": 0.069
+    },
+    "collection": {
+      "avg": 0.25,
+      "p50": 0.151,
+      "p95": 0.932,
+      "p99": 0.932,
+      "max": 0.932,
+      "min": 0.077
+    },
+    "trust_validity": {
+      "avg": 0.085,
+      "p50": 0.079,
+      "p95": 0.189,
+      "p99": 0.189,
+      "max": 0.189,
+      "min": 0.057
+    },
+    "contracts_production": {
+      "avg": 0.098,
+      "p50": 0.082,
+      "p95": 0.385,
+      "p99": 0.385,
+      "max": 0.385,
+      "min": 0.052
+    },
+    "locomotion": {
+      "avg": 0.411,
+      "p50": 0.312,
+      "p95": 1.395,
+      "p99": 1.395,
+      "max": 1.395,
+      "min": 0.239
+    },
+    "interaction": {
+      "avg": 0.098,
+      "p50": 0.069,
+      "p95": 0.524,
+      "p99": 0.524,
+      "max": 0.524,
+      "min": 0.049
+    },
+    "governance_ecology": {
+      "avg": 0.101,
+      "p50": 0.07,
+      "p95": 0.316,
+      "p99": 0.316,
+      "max": 0.316,
+      "min": 0.052
+    },
+    "economy": {
+      "avg": 0.046,
+      "p50": 0.044,
+      "p95": 0.08,
+      "p99": 0.08,
+      "max": 0.08,
+      "min": 0.03
+    },
+    "final_integrity": {
+      "avg": 0.371,
+      "p50": 0.103,
+      "p95": 1.571,
+      "p99": 1.571,
+      "max": 1.571,
+      "min": 0.068
+    },
+    "resolution_overhead": {
+      "avg": 0.061,
+      "p50": 0.053,
+      "p95": 0.185,
+      "p99": 0.185,
+      "max": 0.185,
+      "min": 0.033
+    },
+    "cleanup": {
+      "avg": 0.034,
+      "p50": 0.018,
+      "p95": 0.299,
+      "p99": 0.299,
+      "max": 0.299,
+      "min": 0.008
+    },
+    "advancement": {
+      "avg": 0.946,
+      "p50": 0.2,
+      "p95": 6.382,
+      "p99": 6.382,
+      "max": 6.382,
+      "min": 0.081
+    },
+    "persistence": {
+      "avg": 0.009,
+      "p50": 0.009,
+      "p95": 0.02,
+      "p99": 0.02,
+      "max": 0.02,
+      "min": 0.003
+    }
+  },
+  "metrics": {
+    "raw_entity_updates": 2.0,
+    "compacted_entity_updates": 2.0,
+    "phase_runs": 14.3,
+    "run_trust_boundary": 1.0,
+    "run_actor_validity": 1.0,
+    "run_contracts": 1.0,
+    "run_blacksmith": 1.0,
+    "run_action_routing": 1.0,
+    "run_position_swaps": 1.0,
+    "run_movement_routing": 1.0,
+    "movement_candidates": 0.0,
+    "run_interaction_routing": 1.0,
+    "run_interaction_enforcement": 1.0,
+    "phase_skips": 7.7,
+    "skip_building_sabotage": 1.0,
+    "skip_town_resolution": 1.0,
+    "run_world_dynamics": 1.0,
+    "run_quest_rewards": 1.0,
+    "skip_shop": 1.0,
+    "run_resource_transactions": 1.0,
+    "skip_evolution": 1.0,
+    "skip_strategic_intelligence": 1.0,
+    "skip_near_death_hardening": 1.0,
+    "skip_occupancy_resolution": 1.0,
+    "run_lifecycle": 1.0,
+    "skip_groups": 1.0,
+    "run_capacity_enforcement": 1.0,
+    "movement_cache_hits": 0.0,
+    "movement_cache_misses": 0.0,
+    "spatial_index_hits": 12.55,
+    "spatial_index_misses": 7.15,
+    "run_strategic_intelligence": 1.0
+  },
+  "replay_enabled": false,
+  "frame_pacing_enabled": false,
+  "timestamp": 1779190618.1125278,
+  "avg_tick_compute_ms": 2.882,
+  "p50_tick_compute_ms": 2.564,
+  "p95_tick_compute_ms": 7.942,
+  "p99_tick_compute_ms": 7.942,
+  "max_tick_compute_ms": 7.942,
+  "peak_rss_mb": 38.32,
+  "memory_delta_mb": 0.0,
+  "matrix_scenario": "movement",
+  "matrix_scale": 100,
+  "matrix_mode": "local"
+}

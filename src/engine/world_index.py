@@ -134,11 +134,14 @@ class WorldIndexService:
 
     @staticmethod
     def _build_entity_index(state: AuthoritativeState) -> Dict[Tuple[int, int], Tuple[int, ...]]:
+        import math
         tiles: Dict[Tuple[int, int], List[int]] = {}
         for e_id, e in state.entities.items():
             if e.lifecycle.active and e.combat.alive:
-                pos = (int(e.navigation.position[0]), int(e.navigation.position[1]))
-                tiles.setdefault(pos, []).append(e_id)
+                x, y = e.navigation.position
+                if math.isfinite(x) and math.isfinite(y):
+                    pos = (int(x), int(y))
+                    tiles.setdefault(pos, []).append(e_id)
         return {k: tuple(v) for k, v in tiles.items()}
 
     @staticmethod

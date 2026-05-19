@@ -1,0 +1,180 @@
+{
+  "scenario_id": "IDLE_100",
+  "profile": "PERF_512MB_LOCAL",
+  "sample_ticks": 500,
+  "wall_clock_s": 1.4907,
+  "wall_clock_tps": 335.42,
+  "compute_tps": 1773.7,
+  "avg_tps": 1773.7,
+  "tick_ms": {
+    "avg": 2.819,
+    "p50": 2.525,
+    "p95": 5.184,
+    "p99": 6.141,
+    "max": 6.141,
+    "min": 1.245
+  },
+  "mem_rss_mb": {
+    "avg": 58.44,
+    "max": 66.36,
+    "delta": 15.35
+  },
+  "phase_breakdown": {
+    "init": {
+      "avg": 0.226,
+      "p50": 0.179,
+      "p95": 0.494,
+      "p99": 0.672,
+      "max": 0.672,
+      "min": 0.078
+    },
+    "scheduling": {
+      "avg": 0.197,
+      "p50": 0.15,
+      "p95": 0.39,
+      "p99": 1.65,
+      "max": 1.65,
+      "min": 0.076
+    },
+    "collection": {
+      "avg": 0.239,
+      "p50": 0.176,
+      "p95": 0.44,
+      "p99": 1.539,
+      "max": 1.539,
+      "min": 0.082
+    },
+    "trust_validity": {
+      "avg": 0.138,
+      "p50": 0.106,
+      "p95": 0.431,
+      "p99": 0.596,
+      "max": 0.596,
+      "min": 0.064
+    },
+    "contracts_production": {
+      "avg": 0.116,
+      "p50": 0.1,
+      "p95": 0.198,
+      "p99": 1.134,
+      "max": 1.134,
+      "min": 0.055
+    },
+    "locomotion": {
+      "avg": 0.314,
+      "p50": 0.252,
+      "p95": 0.645,
+      "p99": 1.204,
+      "max": 1.204,
+      "min": 0.132
+    },
+    "interaction": {
+      "avg": 0.105,
+      "p50": 0.085,
+      "p95": 0.256,
+      "p99": 0.609,
+      "max": 0.609,
+      "min": 0.049
+    },
+    "governance_ecology": {
+      "avg": 0.121,
+      "p50": 0.09,
+      "p95": 0.325,
+      "p99": 1.124,
+      "max": 1.124,
+      "min": 0.053
+    },
+    "economy": {
+      "avg": 0.071,
+      "p50": 0.058,
+      "p95": 0.193,
+      "p99": 0.372,
+      "max": 0.372,
+      "min": 0.031
+    },
+    "final_integrity": {
+      "avg": 0.532,
+      "p50": 0.134,
+      "p95": 1.775,
+      "p99": 4.713,
+      "max": 4.713,
+      "min": 0.07
+    },
+    "resolution_overhead": {
+      "avg": 0.083,
+      "p50": 0.075,
+      "p95": 0.186,
+      "p99": 0.291,
+      "max": 0.291,
+      "min": 0.038
+    },
+    "cleanup": {
+      "avg": 0.034,
+      "p50": 0.021,
+      "p95": 0.132,
+      "p99": 0.301,
+      "max": 0.301,
+      "min": 0.008
+    },
+    "advancement": {
+      "avg": 0.632,
+      "p50": 0.23,
+      "p95": 2.494,
+      "p99": 3.264,
+      "max": 3.264,
+      "min": 0.097
+    },
+    "persistence": {
+      "avg": 0.009,
+      "p50": 0.008,
+      "p95": 0.012,
+      "p99": 0.158,
+      "max": 0.158,
+      "min": 0.004
+    }
+  },
+  "metrics": {
+    "raw_entity_updates": 2.03,
+    "compacted_entity_updates": 2.03,
+    "phase_runs": 14.34,
+    "run_trust_boundary": 1.0,
+    "run_actor_validity": 1.0,
+    "run_contracts": 1.0,
+    "run_blacksmith": 1.0,
+    "run_action_routing": 1.0,
+    "run_position_swaps": 1.0,
+    "run_movement_routing": 1.0,
+    "movement_candidates": 0.0,
+    "run_interaction_routing": 1.0,
+    "run_interaction_enforcement": 1.0,
+    "phase_skips": 7.66,
+    "skip_building_sabotage": 1.0,
+    "skip_town_resolution": 1.0,
+    "run_world_dynamics": 1.0,
+    "run_quest_rewards": 1.0,
+    "skip_shop": 1.0,
+    "run_resource_transactions": 1.0,
+    "skip_evolution": 1.0,
+    "run_strategic_intelligence": 1.0,
+    "skip_near_death_hardening": 1.0,
+    "skip_occupancy_resolution": 1.0,
+    "run_lifecycle": 1.0,
+    "skip_groups": 1.0,
+    "run_capacity_enforcement": 1.0,
+    "movement_cache_hits": 0.0,
+    "movement_cache_misses": 0.0,
+    "spatial_index_hits": 828.26,
+    "spatial_index_misses": 167.17,
+    "skip_strategic_intelligence": 1.0
+  },
+  "replay_enabled": false,
+  "frame_pacing_enabled": false,
+  "timestamp": 1779197924.7382758,
+  "avg_tick_compute_ms": 2.819,
+  "p50_tick_compute_ms": 2.525,
+  "p95_tick_compute_ms": 5.184,
+  "p99_tick_compute_ms": 6.141,
+  "max_tick_compute_ms": 6.141,
+  "peak_rss_mb": 66.36,
+  "memory_delta_mb": 15.35
+}
