@@ -165209,9 +165209,9 @@
       "source_file": "src/engine/replay_sink.py",
       "source_location": "L62",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "engine_replay_sink_rationale_62",
-      "target": "engine_replay_sink_replaysink_persist_chunk",
-      "confidence_score": 1.0
+      "target": "engine_replay_sink_replaysink_persist_chunk"
     },
     {
       "relation": "rationale_for",
@@ -165239,9 +165239,9 @@
       "source_file": "src/engine/replay_sink.py",
       "source_location": "L94",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "engine_replay_sink_rationale_94",
-      "target": "engine_replay_sink_replaysink_write_manifest",
-      "confidence_score": 1.0
+      "target": "engine_replay_sink_replaysink_write_manifest"
     },
     {
       "relation": "rationale_for",
@@ -165269,9 +165269,9 @@
       "source_file": "src/engine/replay_sink.py",
       "source_location": "L112",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "engine_replay_sink_rationale_112",
-      "target": "engine_replay_sink_replaysink_check_quota",
-      "confidence_score": 1.0
+      "target": "engine_replay_sink_replaysink_check_quota"
     },
     {
       "relation": "rationale_for",
@@ -176957,9 +176957,9 @@
       "source_file": "tests/certification/test_cert_long_run_stability.py",
       "source_location": "L13",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "tests_certification_test_cert_long_run_stability_py",
-      "target": "certification_test_cert_long_run_stability_cert_profile",
-      "confidence_score": 1.0
+      "target": "certification_test_cert_long_run_stability_cert_profile"
     },
     {
       "relation": "contains",
@@ -176967,9 +176967,9 @@
       "source_file": "tests/certification/test_cert_long_run_stability.py",
       "source_location": "L28",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "tests_certification_test_cert_long_run_stability_py",
-      "target": "certification_test_cert_long_run_stability_harness",
-      "confidence_score": 1.0
+      "target": "certification_test_cert_long_run_stability_harness"
     },
     {
       "relation": "contains",
@@ -176977,9 +176977,9 @@
       "source_file": "tests/certification/test_cert_long_run_stability.py",
       "source_location": "L33",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "tests_certification_test_cert_long_run_stability_py",
-      "target": "certification_test_cert_long_run_stability_test_long_run_pure_stability",
-      "confidence_score": 1.0
+      "target": "certification_test_cert_long_run_stability_test_long_run_pure_stability"
     },
     {
       "relation": "contains",
@@ -176987,9 +176987,9 @@
       "source_file": "tests/certification/test_cert_long_run_stability.py",
       "source_location": "L64",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "tests_certification_test_cert_long_run_stability_py",
-      "target": "certification_test_cert_long_run_stability_test_long_run_runtime_stability",
-      "confidence_score": 1.0
+      "target": "certification_test_cert_long_run_stability_test_long_run_runtime_stability"
     },
     {
       "relation": "contains",
@@ -176997,9 +176997,9 @@
       "source_file": "tests/certification/test_cert_long_run_stability.py",
       "source_location": "L89",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "tests_certification_test_cert_long_run_stability_py",
-      "target": "certification_test_cert_long_run_stability_test_long_run_determinism_parity",
-      "confidence_score": 1.0
+      "target": "certification_test_cert_long_run_stability_test_long_run_determinism_parity"
     },
     {
       "relation": "rationale_for",
@@ -177007,9 +177007,9 @@
       "source_file": "tests/certification/test_cert_long_run_stability.py",
       "source_location": "L34",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "certification_test_cert_long_run_stability_rationale_34",
-      "target": "certification_test_cert_long_run_stability_test_long_run_pure_stability",
-      "confidence_score": 1.0
+      "target": "certification_test_cert_long_run_stability_test_long_run_pure_stability"
     },
     {
       "relation": "rationale_for",
@@ -177017,9 +177017,9 @@
       "source_file": "tests/certification/test_cert_long_run_stability.py",
       "source_location": "L65",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "certification_test_cert_long_run_stability_rationale_65",
-      "target": "certification_test_cert_long_run_stability_test_long_run_runtime_stability",
-      "confidence_score": 1.0
+      "target": "certification_test_cert_long_run_stability_test_long_run_runtime_stability"
     },
     {
       "relation": "rationale_for",
@@ -177027,9 +177027,9 @@
       "source_file": "tests/certification/test_cert_long_run_stability.py",
       "source_location": "L90",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "certification_test_cert_long_run_stability_rationale_90",
-      "target": "certification_test_cert_long_run_stability_test_long_run_determinism_parity",
-      "confidence_score": 1.0
+      "target": "certification_test_cert_long_run_stability_test_long_run_determinism_parity"
     },
     {
       "relation": "contains",
