@@ -43,7 +43,8 @@ class Kernel:
         "_start_perf_ts", "_current_world_time", "_platform_signals",
         "_current_signals", "_current_policy", "_current_work_items",
         "_source_packets", "_source_work_items", "_final_results", "_final_compute_ms",
-        "_phase_costs", "_metrics", "_audit_mode", "_no_frame_pacing", "_no_replay", "_audit_dirty_set", "_perf_tracker", "_force_full_scan", "_current_update", "_cache_registry", "_cache_policy", "_opt_profile", "_event_listeners", "_event_recorder", "_entity_timeline_store"
+        "_phase_costs", "_metrics", "_audit_mode", "_no_frame_pacing", "_no_replay", "_audit_dirty_set", "_perf_tracker", "_force_full_scan", "_current_update", "_cache_registry", "_cache_policy", "_opt_profile", "_event_listeners", "_event_recorder", "_entity_timeline_store",
+        "_run_id", "_artifact_repo", "_metric_recorder", "_current_tick_event_count", "_current_tick_violation_count"
     )
 
     def __init__(
@@ -56,7 +57,8 @@ class Kernel:
         status: Optional[RuntimeStatus] = None,
         replay: Optional[ReplayManager] = None,
         executor: Optional[IWorkExecutor] = None,
-        flags: Optional[Dict[str, Any]] = None
+        flags: Optional[Dict[str, Any]] = None,
+        run_id: Optional[str] = None
     ) -> None:
         self._stopped = False
         self._profile = profile
@@ -99,9 +101,37 @@ class Kernel:
             max_queue_depth=profile.max_queue_depth
         )
         
+        from src.observability.config import ObservabilityConfig, ObservabilityMode
+        obs_mode = ObservabilityConfig.get_mode()
+
+        self._run_id = run_id
+        if self._run_id is None:
+            self._run_id = f"run_{int(time.time())}"
+
+        self._artifact_repo = None
+        if obs_mode != ObservabilityMode.OFF:
+            from datetime import datetime, timezone
+            import os
+            from src.observability.reporting.artifact_repository import RunArtifactRepository, RunManifest
+            self._artifact_repo = RunArtifactRepository()
+            
+            # Create standard manifest
+            manifest = RunManifest(
+                run_id=self._run_id,
+                scenario_name=profile.name,
+                scenario_type="mixed_sandbox",
+                seed=state.seed,
+                observability_mode=obs_mode.value,
+                started_at=datetime.now(timezone.utc).isoformat(),
+                ticks_requested=profile.cadence.max_ticks if hasattr(profile, "cadence") and hasattr(profile.cadence, "max_ticks") else 100,
+                status="CREATED"
+            )
+            self._artifact_repo.create_run(self._run_id, manifest, overwrite=True)
+            self._artifact_repo.update_manifest(self._run_id, status="RUNNING")
+
         if replay is None:
-            run_id = int(time.time())
-            run_dir = Path(f"data/runs/run_{run_id}")
+            import os
+            run_dir = Path(self._artifact_repo.resolve_path(self._run_id, "manifest")).parent if self._artifact_repo else Path(f"data/runs/{self._run_id}")
             self._replay = DefaultReplayManager(
                 run_dir=run_dir,
                 profile_name=profile.name,
@@ -139,17 +169,34 @@ class Kernel:
         self._no_replay = flags.get("no_replay", False) if flags else False
         self._event_listeners = []
 
-        from src.observability.config import ObservabilityConfig, ObservabilityMode
         from src.observability.event_recorder import EventRecorder
         from src.observability.entity_timeline import EntityTimelineStore
 
-        obs_mode = ObservabilityConfig.get_mode()
+        run_dir_str = None
+        if self._artifact_repo:
+            run_dir_str = os.path.join(self._artifact_repo.base_dir, self._run_id)
+        elif hasattr(self._replay, "_run_dir"):
+            run_dir_str = str(self._replay._run_dir)
+
         self._event_recorder = EventRecorder(
-            run_dir=str(self._replay.run_dir) if hasattr(self._replay, "run_dir") else None,
+            run_dir=run_dir_str,
             max_events=5000,
             enabled=(obs_mode != ObservabilityMode.OFF)
         )
         self._entity_timeline_store = EntityTimelineStore(mode=obs_mode)
+
+        self._metric_recorder = None
+        if obs_mode != ObservabilityMode.OFF:
+            from src.observability.reporting.metric_recorder import MetricWindowRecorder
+            self._metric_recorder = MetricWindowRecorder(
+                run_id=self._run_id,
+                run_dir=run_dir_str,
+                window_size=100,
+                enabled=True
+            )
+
+        self._current_tick_event_count = 0
+        self._current_tick_violation_count = 0
 
         self.validate(flags)
 
@@ -233,6 +280,27 @@ class Kernel:
              self._status.record_dropped_work(9999)
         
         self._record_runtime_signals()
+
+        if self._metric_recorder:
+            try:
+                from src.engine.metrics import MetricsService
+                world_metrics = MetricsService.extract_metrics(self._state)
+            except Exception:
+                logger.exception("Failed to extract WorldMetrics")
+                world_metrics = None
+
+            signals = self._status.signal_history[-1] if self._status.signal_history else None
+            event_count = getattr(self, "_current_tick_event_count", 0)
+            violation_count = getattr(self, "_current_tick_violation_count", 0)
+
+            self._metric_recorder.record_tick(
+                tick=self._state.tick,
+                world_metrics=world_metrics,
+                pressure_signals=signals,
+                runtime_status=self._status,
+                event_count_delta=event_count,
+                violation_count_delta=violation_count
+            )
 
     def _phase_init(self) -> None:
         from src.engine.occupancy_snapshot import OccupancySnapshot
@@ -526,6 +594,9 @@ class Kernel:
             )
             generated_events.append(event)
 
+        self._current_tick_event_count = len(generated_events)
+        self._current_tick_violation_count = len(current_violations)
+
         # Clear current tick violations from status
         if hasattr(self._status, "current_tick_violations"):
             delattr(self._status, "current_tick_violations")
@@ -579,10 +650,24 @@ class Kernel:
         self._worker_manager.shutdown()
         if hasattr(self, "_event_recorder") and self._event_recorder:
             self._event_recorder.shutdown()
+        if hasattr(self, "_metric_recorder") and self._metric_recorder:
+            self._metric_recorder.shutdown(self._state.tick)
         from src.engine.checkpoint import CanonicalStateHasher
         final_hash = CanonicalStateHasher.get_hash(self._state)
         logger.info(f"Final Auth Hash: {final_hash}")
         replay_outcome = self._replay.finalize(timeout_s=timeout_s)
+        
+        # Update manifest status to COMPLETED/FAILED
+        if hasattr(self, "_artifact_repo") and self._artifact_repo and self._run_id:
+            from datetime import datetime, timezone
+            status = "COMPLETED" if replay_outcome != LifecycleOutcome.FAILED else "FAILED"
+            self._artifact_repo.update_manifest(
+                self._run_id,
+                status=status,
+                ticks_completed=self._state.tick,
+                ended_at=datetime.now(timezone.utc).isoformat()
+            )
+
         self._cache_registry.clear_all()
         return ShutdownResult(
             final_tick=self._state.tick,

@@ -6,6 +6,10 @@ import time
 from typing import Any, Dict, List, Optional
 from src.core.lifecycle import ShutdownResult
 from src.observability.entity_timeline import EntityTimelineStore
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from src.observability.anomaly.rules_engine import RuleResult
+    from src.observability.anomaly.triage import AnomalyCluster
 
 logger = logging.getLogger(__name__)
 
@@ -15,21 +19,63 @@ class RunReportGenerator:
     def generate(
         run_dir: str,
         shutdown_result: Optional[Any] = None,
-        timeline_store: Optional[EntityTimelineStore] = None
+        timeline_store: Optional[EntityTimelineStore] = None,
+        rule_results: Optional[List[RuleResult]] = None,
+        clusters: Optional[List[AnomalyCluster]] = None,
+        anomalies: Optional[List[Any]] = None
     ) -> Dict[str, Any]:
         """Orchestrates post-run report generation, saving run_report.md and run_report.json."""
         # Ensure run directory exists
         os.makedirs(run_dir, exist_ok=True)
 
-        # 1. Load anomalies
-        anomalies: List[Dict[str, Any]] = []
-        anomalies_path = os.path.join(run_dir, "anomalies.json")
-        if os.path.exists(anomalies_path):
-            try:
-                with open(anomalies_path, "r", encoding="utf-8") as f:
-                    anomalies = json.load(f)
-            except Exception as e:
-                logger.error(f"Failed loading anomalies.json: {e}")
+        # 1. Load or extract anomalies
+        combined_anomalies: List[Dict[str, Any]] = []
+
+        if anomalies is not None:
+            for a in anomalies:
+                if isinstance(a, dict):
+                    combined_anomalies.append(a)
+                else:
+                    combined_anomalies.append({
+                        "rule_name": getattr(a, "rule_name", ""),
+                        "severity": getattr(a, "severity", "WARNING"),
+                        "tick_detected": getattr(a, "tick_detected", 0),
+                        "message": getattr(a, "message", ""),
+                        "entity_id": getattr(a, "entity_id", None),
+                        "context": getattr(a, "context", {})
+                    })
+
+        if rule_results is not None:
+            for r in rule_results:
+                if r.anomalies:
+                    for a in r.anomalies:
+                        norm_msg = a.message.lower().replace("hard law violation detected:", "").replace("invariant violation logged:", "").strip()
+                        exists = any(
+                            existing.get("tick_detected") == a.tick_start and
+                            existing.get("entity_id") == (a.affected_entity_ids[0] if a.affected_entity_ids else None) and
+                            existing.get("message", "").lower().replace("hard law violation detected:", "").replace("invariant violation logged:", "").strip() == norm_msg
+                            for existing in combined_anomalies
+                        )
+                        if not exists:
+                            combined_anomalies.append({
+                                "rule_name": r.rule_id,
+                                "severity": a.severity,
+                                "tick_detected": a.tick_start,
+                                "message": a.message,
+                                "entity_id": a.affected_entity_ids[0] if a.affected_entity_ids else None,
+                                "context": a.evidence
+                            })
+
+        if not combined_anomalies and rule_results is None:
+            anomalies_path = os.path.join(run_dir, "anomalies.json")
+            if os.path.exists(anomalies_path):
+                try:
+                    with open(anomalies_path, "r", encoding="utf-8") as f:
+                        combined_anomalies = json.load(f)
+                except Exception as e:
+                    logger.error(f"Failed loading anomalies.json: {e}")
+
+        anomalies = combined_anomalies
 
         # 2. Compute Health Score
         health_score = 100.0
@@ -40,7 +86,7 @@ class RunReportGenerator:
         for a in anomalies:
             severity = a.get("severity", "WARNING")
             rule_name = a.get("rule_name", "")
-            if severity == "CRITICAL" or rule_name == "HardLawViolationRule":
+            if severity == "CRITICAL" or rule_name == "HardLawViolationRule" or rule_name == "HardLawViolationDetected":
                 health_score -= 40.0
                 hard_law_violations_count += 1
             elif severity == "ERROR":
@@ -98,10 +144,40 @@ class RunReportGenerator:
         for eid in flagged_timelines:
             flagged_timelines[eid] = flagged_timelines[eid][-15:]
 
+        # Serialize rule results and clusters if present
+        serialized_rule_results = []
+        if rule_results:
+            for r in rule_results:
+                serialized_rule_results.append({
+                    "rule_id": r.rule_id,
+                    "status": r.status.value if hasattr(r.status, "value") else str(r.status),
+                    "anomalies_count": len(r.anomalies) if r.anomalies else 0
+                })
+
+        serialized_clusters = []
+        if clusters:
+            for c in clusters:
+                serialized_clusters.append({
+                    "cluster_id": c.cluster_id,
+                    "rule_id": c.rule_id,
+                    "severity": c.severity,
+                    "region_id": c.region_id,
+                    "resource_id": c.resource_id,
+                    "quest_id": c.quest_id,
+                    "affected_entity_ids": c.affected_entity_ids,
+                    "tick_start": c.tick_start,
+                    "tick_end": c.tick_end,
+                    "evidence_samples": c.evidence_samples,
+                    "suggested_causes": c.suggested_causes,
+                    "anomalies_count": len(c.anomalies)
+                })
+
         report_data = {
             "metadata": metadata,
             "anomalies": anomalies,
-            "flagged_timelines": flagged_timelines
+            "flagged_timelines": flagged_timelines,
+            "rule_execution": serialized_rule_results,
+            "anomaly_clusters": serialized_clusters
         }
 
         # Save run_report.json
@@ -129,6 +205,8 @@ class RunReportGenerator:
         meta = data["metadata"]
         anomalies = data["anomalies"]
         timelines = data["flagged_timelines"]
+        rules = data.get("rule_execution", [])
+        clusters = data.get("anomaly_clusters", [])
 
         # Health score badge selection
         score = meta["health_score"]
@@ -159,6 +237,26 @@ class RunReportGenerator:
             f.write(f"| 🟧 Behavioral Errors | {meta['errors_count']} | {'🔴 REFACTOR NEEDED' if meta['errors_count'] > 0 else '🟢 PASS'} |\n")
             f.write(f"| 🟨 Diagnostic Warnings | {meta['warnings_count']} | {'🟡 MONITORING' if meta['warnings_count'] > 0 else '🟢 PASS'} |\n\n")
 
+            # Rule Execution Table
+            if rules:
+                f.write("## 📋 Rule Engine Execution Summary\n\n")
+                f.write("| Rule ID | Status | Anomalies Triggered |\n")
+                f.write("| :--- | :--- | :--- |\n")
+                for r in rules:
+                    status_str = r["status"]
+                    if status_str == "PASSED":
+                        status_badge = "🟢 PASSED"
+                    elif status_str == "FAILED":
+                        status_badge = "🔴 FAILED"
+                    elif status_str == "SKIPPED_MISSING_SIGNAL":
+                        status_badge = "⚪ SKIPPED (MISSING SIGNAL)"
+                    elif status_str == "SKIPPED_SCENARIO_TYPE":
+                        status_badge = "⚪ SKIPPED (SCENARIO TYPE)"
+                    else:
+                        status_badge = f"⚪ SKIPPED ({status_str})"
+                    f.write(f"| `{r['rule_id']}` | {status_badge} | `{r['anomalies_count']}` |\n")
+                f.write("\n")
+
             f.write("## 🔍 Actionable Triage & Investigation Guide\n\n")
             if not anomalies:
                 f.write("🟢 **Triage Clear**: No action needed. System meets all stability and behavioral criteria.\n\n")
@@ -171,21 +269,63 @@ class RunReportGenerator:
                 if meta['warnings_count'] > 0:
                     f.write("3. 🟨 **Analyze Quest Stalls & Node Crowding**: Quests are taking too long or too many agents gather at resource nodes. Optimize spawning density and target choice.\n\n")
 
-            f.write("## ⚠️ Top Anomaly Breakdowns\n\n")
-            if not anomalies:
+            # Upgraded Report V2 Clustered Anomaly Details
+            f.write("## ⚠️ Top Anomaly Breakdowns & Clustered Details (Report V2)\n\n")
+            
+            if not anomalies and not clusters:
                 f.write("> Zero anomalies triggered during this run.\n\n")
             else:
-                for idx, a in enumerate(anomalies[:5], 1):
-                    emoji = "🟥" if a.get("severity") == "CRITICAL" else "🟧" if a.get("severity") == "ERROR" else "🟨"
-                    f.write(f"### {idx}. {emoji} {a.get('rule_name')} (Tick `{a.get('tick_detected')}`)\n")
-                    f.write(f"- **Message**: {a.get('message')}\n")
-                    f.write(f"- **Entity ID**: `{a.get('entity_id')}`\n")
-                    if a.get("context"):
-                        f.write("- **Telemetric context**:\n")
-                        f.write("  ```json\n")
-                        f.write(json.dumps(a.get("context"), indent=2) + "\n")
-                        f.write("  ```\n")
+                if anomalies:
+                    f.write("### Raw Anomaly Logs:\n")
+                    for a in anomalies:
+                        f.write(f"- {a.get('message', '')} (Tick `{a.get('tick_detected', 0)}`, Severity: `{a.get('severity', '')}`)\n")
                     f.write("\n")
+
+                if clusters:
+                    f.write("### Spacetime Clustered Anomalies:\n")
+                    for idx, c in enumerate(clusters, 1):
+                        emoji = "🟥" if c["severity"] == "CRITICAL" else "🟧" if c["severity"] == "ERROR" else "🟨"
+                        f.write(f"#### {idx}. {emoji} {c['rule_id']} — {c['severity']}\n")
+                        f.write(f"- **Cluster ID**: `{c['cluster_id']}`\n")
+                        f.write(f"- **Spacetime Span**: Ticks `{c['tick_start']} - {c['tick_end']}`\n")
+                        
+                        context_items = []
+                        if c.get("region_id"):
+                            context_items.append(f"Region: `{c['region_id']}`")
+                        if c.get("resource_id"):
+                            context_items.append(f"Resource: `{c['resource_id']}`")
+                        if c.get("quest_id"):
+                            context_items.append(f"Quest: `{c['quest_id']}`")
+                        
+                        if context_items:
+                            f.write(f"- **Context**: {', '.join(context_items)}\n")
+                        
+                        if c.get("affected_entity_ids"):
+                            f.write(f"- **Affected Entity IDs**: `{c['affected_entity_ids']}`\n")
+                        
+                        # Suggested Causes
+                        if c.get("suggested_causes"):
+                            f.write("- **Primary Suggested Causes**:\n")
+                            for cause in c["suggested_causes"]:
+                                f.write(f"  - {cause}\n")
+
+                        # Troubleshooting hints
+                        from src.observability.anomaly.triage import InvestigationHint
+                        hints = InvestigationHint.get_hints(c["rule_id"])
+                        f.write("- **Troubleshooting Hints**:\n")
+                        for hint in hints:
+                            f.write(f"  - {hint}\n")
+
+                        # Collapsible Evidence
+                        if c.get("evidence_samples"):
+                            f.write("- **Evidence Payload Context**:\n")
+                            f.write("  <details>\n")
+                            f.write(f"  <summary>View Evidence Payloads (Matches: {len(c['evidence_samples'])})</summary>\n\n")
+                            f.write("  ```json\n")
+                            f.write(json.dumps(c["evidence_samples"], indent=2) + "\n")
+                            f.write("  ```\n")
+                            f.write("  </details>\n")
+                        f.write("\n")
 
             f.write("## 📜 Diagnostic Entity Timelines\n\n")
             if not timelines:
@@ -196,7 +336,6 @@ class RunReportGenerator:
                     f.write("| Tick | Category | Event Type | Diagnostic Message |\n")
                     f.write("| :--- | :--- | :--- | :--- |\n")
                     for ev in events:
-                        # Translate category / severity for easy display
                         cat = str(ev.get("event_category", "")).upper()
                         ev_type = str(ev.get("event_type", ""))
                         msg = str(ev.get("message", ""))
