@@ -8,6 +8,7 @@ from typing import List, Dict, Any, Optional, TYPE_CHECKING
 from pydantic import BaseModel, Field
 
 from src.observability.events import SimulationEvent
+from src.observability.reporting.balance_envelope import BalanceEnvelope
 
 if TYPE_CHECKING:
     from src.observability.anomaly.pipeline import AnalysisContext
@@ -375,6 +376,53 @@ class RuleEngine:
                     logger.error(f"Failed parsing rule config for '{rule_id}': {e}")
         except Exception as e:
             logger.error(f"Error loading rule engine config file: {e}")
+
+    def apply_envelope(self, envelope: BalanceEnvelope) -> None:
+        """
+        Dynamically overlays envelope expectations onto rule configs.
+        """
+        # Map standard expectation keys to rule IDs:
+        rule_id_map = {
+            "HardLawViolationDetected": "HardLawViolationDetected",
+            "hard_law_violation_count": "HardLawViolationDetected",
+            "NavigationStuckBasic": "NavigationStuckBasic",
+            "stuck_ticks": "NavigationStuckBasic",
+            "QuestStalledBasic": "QuestStalledBasic",
+            "stalled_ticks": "QuestStalledBasic",
+            "ResourceProductionZero": "ResourceProductionZero",
+            "zero_production_windows": "ResourceProductionZero",
+            "GovernorDegradedTooLong": "GovernorDegradedTooLong",
+            "degraded_windows": "GovernorDegradedTooLong"
+        }
+
+        for expectation_key, expectation in envelope.expectations.items():
+            mapped_rule_id = rule_id_map.get(expectation_key)
+            if not mapped_rule_id:
+                continue
+
+            rule_config = self.config.setdefault(mapped_rule_id, RuleConfig())
+
+            # Scenario type check: if envelope specifies a scenario type, we can add it to rule_config.scenario_types
+            if envelope.scenario_type:
+                if envelope.scenario_type not in rule_config.scenario_types:
+                    rule_config.scenario_types.append(envelope.scenario_type)
+
+            # Severity mapping: "FAIL" -> "ERROR" or "CRITICAL", "WARNING" -> "WARNING"
+            if expectation.severity:
+                sev = expectation.severity
+                if sev == "FAIL":
+                    rule_config.severity_override = "CRITICAL"
+                else:
+                    rule_config.severity_override = sev
+
+            # Value mapping
+            # Map max/min/equals to threshold variables:
+            limit_val = expectation.max if expectation.max is not None else (expectation.equals if expectation.equals is not None else expectation.min)
+            if limit_val is not None:
+                if mapped_rule_id in ("NavigationStuckBasic", "QuestStalledBasic"):
+                    rule_config.thresholds["tick_threshold"] = int(limit_val)
+                elif mapped_rule_id in ("ResourceProductionZero", "GovernorDegradedTooLong"):
+                    rule_config.thresholds["window_threshold"] = int(limit_val)
 
     def evaluate_all(self, context: AnalysisContext) -> List[RuleResult]:
         """
