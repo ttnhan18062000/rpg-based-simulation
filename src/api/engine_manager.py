@@ -53,6 +53,7 @@ class V2EngineManager:
         self._metrics_collector = PrometheusMetricsCollector(self)
         self._metrics_registry.register(self._metrics_collector)
         self._errors_total = 0
+        self._started_at: Optional[float] = None
         
         self._build()
 
@@ -201,9 +202,16 @@ class V2EngineManager:
                 return None
             return self._read_cache.get_entity_dto(self._latest_state.entities[entity_id])
 
+    @property
+    def latest_state(self) -> Optional[AuthoritativeState]:
+        """Thread-safe access to the latest completed tick state."""
+        with self._state_lock:
+            return self._latest_state
+
     def start(self):
         if self._running.is_set():
             return
+        self._started_at = time.time()
         self._stop_requested.clear()
         self._paused.clear()
         self._running.set()
@@ -271,3 +279,31 @@ class V2EngineManager:
     def tick(self) -> int:
         snapshot = self.get_state()
         return snapshot.get("tick", 0) if snapshot else 0
+
+    @property
+    def is_running(self) -> bool:
+        return self._running.is_set() and not self._paused.is_set()
+
+    @property
+    def is_paused(self) -> bool:
+        return self._running.is_set() and self._paused.is_set()
+
+    @property
+    def is_stopped(self) -> bool:
+        return not self._running.is_set() and not self._stop_requested.is_set()
+
+    @property
+    def is_stopping(self) -> bool:
+        return self._stop_requested.is_set()
+
+    @property
+    def kernel(self) -> Optional[Kernel]:
+        return self._kernel
+
+    @property
+    def started_at(self) -> Optional[float]:
+        return self._started_at
+
+    @property
+    def errors_total(self) -> int:
+        return self._errors_total

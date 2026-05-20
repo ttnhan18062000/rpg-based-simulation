@@ -681,6 +681,18 @@ class Kernel:
         return self._status
 
     @property
+    def event_recorder(self) -> Any:
+        return self._event_recorder
+
+    @property
+    def run_id(self) -> str:
+        return self._run_id
+
+    @property
+    def entity_timeline_store(self) -> Any:
+        return self._entity_timeline_store
+
+    @property
     def state(self) -> AuthoritativeState:
         try:
             if getattr(self._state, "_opt_profile", None) is None:

@@ -78,6 +78,13 @@ class EventRecorder:
             except Exception as e:
                 logger.error(f"Failed to write to simulation_events.jsonl: {e}")
 
+        # Publish live event (Milestone 23)
+        try:
+            from src.observability.live.event_publisher import LiveEventPublisher
+            LiveEventPublisher.get_instance().publish(event)
+        except Exception as e:
+            logger.error(f"LiveEventPublisher error isolated: {e}")
+
     def get_stats(self) -> Dict[str, Any]:
         """Returns diagnostic statistics of the recorder."""
         return {
