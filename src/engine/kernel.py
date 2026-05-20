@@ -278,6 +278,23 @@ class Kernel:
         if not self._audit_mode and self._state.tick > 5 and self._final_compute_ms > min(hard_cap, limit_ms):
              logger.warning(f"Tick {self._state.tick} exceeded budget: {self._final_compute_ms:.2f}ms vs limit {min(hard_cap, limit_ms):.2f}ms. Aborting next tick if sustained.")
              self._status.record_dropped_work(9999)
+             try:
+                 from src.observability.alerts.manager import AlertsManager
+                 from src.observability.alerts.models import AlertEvent
+                 router = AlertsManager.get_router()
+                 event = AlertEvent.create_watchdog_trip(
+                     run_id=self._run_id,
+                     tick=self._state.tick,
+                     message=f"Tick compute time {self._final_compute_ms:.2f}ms exceeded watchdog threshold of {min(hard_cap, limit_ms):.2f}ms",
+                     details={
+                         "compute_ms": self._final_compute_ms,
+                         "threshold_ms": min(hard_cap, limit_ms),
+                         "phase_costs": self._phase_costs.copy()
+                     }
+                 )
+                 router.route(event)
+             except Exception:
+                 logger.exception("Failed to route watchdog budget alert")
         
         self._record_runtime_signals()
 
@@ -346,6 +363,7 @@ class Kernel:
                 metrics=self._metrics.copy()
             )
         
+        prior_mode = self._status.current_mode
         self._current_policy = self._governor.evaluate(
             self._profile, 
             self._current_signals, 
@@ -353,6 +371,8 @@ class Kernel:
             self._state.tick,
             opt_profile=getattr(self, "_opt_profile", None)
         )
+        if prior_mode != self._status.current_mode:
+            self._status.previous_mode = prior_mode.name
         if getattr(self, "_no_replay", False):
             self._current_policy = replace(self._current_policy, replay_allowed=False)
         self._executor.set_concurrency_limit(self._current_policy.concurrency_limit)
@@ -394,6 +414,22 @@ class Kernel:
                     self._status.record_dropped_work(len(self._final_results) - i)
                     from src.core.governance import RuntimeMode
                     self._governor.force_mode(RuntimeMode.DEGRADED, self._status, self._state.tick)
+                    try:
+                        from src.observability.alerts.manager import AlertsManager
+                        from src.observability.alerts.models import AlertEvent
+                        router = AlertsManager.get_router()
+                        event = AlertEvent.create_watchdog_trip(
+                            run_id=self._run_id,
+                            tick=self._state.tick,
+                            message=f"Mid-tick emergency throttle triggered: tick compute took {elapsed:.2f}ms, forced governor DEGRADED",
+                            details={
+                                "elapsed_ms": elapsed,
+                                "dropped_count": len(self._final_results) - i
+                            }
+                        )
+                        router.route(event)
+                    except Exception:
+                        logger.exception("Failed to route emergency throttle alert")
                     break
 
             if res.work_debt_update is not None and res.subsystem_id:
@@ -559,6 +595,17 @@ class Kernel:
         for v in violations:
             self._status.cumulative_violations[v.law_id] = self._status.cumulative_violations.get(v.law_id, 0) + 1
 
+        # Route hard law violations to alerts
+        try:
+            from src.observability.alerts.manager import AlertsManager
+            from src.observability.alerts.models import AlertEvent
+            router = AlertsManager.get_router()
+            for v in violations:
+                event = AlertEvent.create_hard_law_violation(self._run_id, self._state.tick, v)
+                router.route(event)
+        except Exception:
+            logger.exception("Failed to route hard law violation alerts")
+
         if mode in (ObservabilityMode.DEBUG, ObservabilityMode.CERTIFICATION):
             raise HardLawViolationError(violations)
         elif mode == ObservabilityMode.LIGHT:
@@ -591,6 +638,24 @@ class Kernel:
                 message=v.message,
                 entity_id=v.entity_id,
                 payload=v.details
+            )
+            generated_events.append(event)
+
+        # Emit GovernorModeChanged if a transition happened this tick
+        if getattr(self._status, "last_transition_tick", -1) == tick:
+            prev_mode = getattr(self._status, "previous_mode", "NORMAL")
+            event = SimulationEvent(
+                event_type="GovernorModeChanged",
+                event_category="infrastructure",
+                tick=tick,
+                severity="WARNING" if self._status.current_mode.name != "NORMAL" else "INFO",
+                source_system="resource_governor",
+                message=f"Governor operational mode transitioned from {prev_mode} to {self._status.current_mode.name}",
+                payload={
+                    "previous_mode": prev_mode,
+                    "current_mode": self._status.current_mode.name,
+                    "mode_dwell_ticks": self._status.mode_dwell_ticks
+                }
             )
             generated_events.append(event)
 

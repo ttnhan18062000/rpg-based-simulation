@@ -110,6 +110,32 @@ def _build_parser():
     ret_clean = ret_sub.add_parser("clean", help="Perform confirmation clean of expired logs")
     ret_clean.add_argument("--confirm", action="store_true", help="Confirm execution of prunes")
 
+    # Warehouse subcommand
+    wh_parser = sub.add_parser("warehouse", help="Database warehouse ingestion management")
+    wh_sub = wh_parser.add_subparsers(dest="warehouse_command", required=True)
+    
+    wh_sub.add_parser("init", help="Initialize database warehouse schemas")
+    
+    wh_ing = wh_sub.add_parser("ingest-run", help="Ingest a single run artifact set")
+    wh_ing.add_argument("run_id", type=str, help="ID of the completed run to ingest")
+    wh_ing.add_argument("--dry-run", action="store_true", help="Perform schema mapping validation without writes")
+    wh_ing.add_argument("--force", action="store_true", help="Overwrite existing database records for this run")
+    
+    wh_swp = wh_sub.add_parser("ingest-sweep", help="Ingest a multi-run sweep")
+    wh_swp.add_argument("sweep_id", type=str, help="ID of the sweep to ingest")
+    wh_swp.add_argument("--dry-run", action="store_true", help="Perform schema mapping validation without writes")
+    wh_swp.add_argument("--force", action="store_true", help="Overwrite existing database records for this sweep")
+
+    wh_qry = wh_sub.add_parser("query", help="Execute analytical database query")
+    wh_qry_sub = wh_qry.add_subparsers(dest="query_command", required=True)
+    
+    wh_qry_worst = wh_qry_sub.add_parser("worst-runs", help="Fetch worst runs by health score")
+    wh_qry_worst.add_argument("--limit", type=int, default=10, help="Max run records to return")
+    
+    wh_qry_events = wh_qry_sub.add_parser("entity-events", help="Fetch simulation event log of an entity")
+    wh_qry_events.add_argument("--entity-id", type=str, required=True, help="Target entity unique ID")
+    wh_qry_events.add_argument("--limit", type=int, default=50, help="Max events to return")
+
     # Global options
     parser.add_argument("--config", type=str, default=None, help="Path to YAML config file")
     parser.add_argument("--json-logs", action="store_true", help="Enable JSON-formatted logging")
@@ -669,6 +695,86 @@ def _run_retention(args):
         print(f"Purged run directories: {logs.get('purged_runs_count', 0)}")
         sys.exit(0)
 
+def _run_warehouse(args):
+    """Executes database warehouse operations."""
+    import sys
+    from src.observability.warehouse.factory import get_warehouse_adapter
+    adapter = get_warehouse_adapter()
+    
+    if args.warehouse_command == "init":
+        print("Initializing database warehouse schema...")
+        try:
+            if hasattr(adapter, "init_schema"):
+                adapter.init_schema()
+                print("Schema initialization completed successfully.")
+            else:
+                print("Schema initialization not supported by the active warehouse backend.")
+            sys.exit(0)
+        except Exception as e:
+            print(f"Schema initialization failed: {e}")
+            sys.exit(1)
+            
+    elif args.warehouse_command == "ingest-run":
+        print(f"Ingesting run {args.run_id} (dry_run={args.dry_run}, force={args.force})...")
+        result = adapter.ingest_run(args.run_id, dry_run=args.dry_run, force=args.force)
+        
+    elif args.warehouse_command == "ingest-sweep":
+        print(f"Ingesting sweep {args.sweep_id} (dry_run={args.dry_run}, force={args.force})...")
+        result = adapter.ingest_sweep(args.sweep_id, dry_run=args.dry_run, force=args.force)
+        
+    elif args.warehouse_command == "query":
+        try:
+            if args.query_command == "worst-runs":
+                print(f"Querying worst runs by health score (limit={args.limit})...")
+                results = adapter.query_runs({"sort": "health_score_asc", "limit": args.limit})
+                if not results:
+                    print("Query returned 0 records.")
+                    sys.exit(0)
+                print(f"{'Run ID':<40} | {'Scenario Name':<25} | {'Health Score':<12}")
+                print("-" * 85)
+                for r in results:
+                    print(f"{r.run_id:<40} | {r.scenario_name:<25} | {r.health_score:<12.2f}")
+                sys.exit(0)
+                
+            elif args.query_command == "entity-events":
+                print(f"Querying events for entity {args.entity_id} (limit={args.limit})...")
+                results = adapter.query_events({"entity_id": args.entity_id, "limit": args.limit})
+                if not results:
+                    print("Query returned 0 records.")
+                    sys.exit(0)
+                print(f"{'Tick':<6} | {'Event Type':<25} | {'Severity':<8} | {'Message':<60}")
+                print("-" * 105)
+                for ev in results:
+                    print(f"{ev.tick:<6} | {ev.event_type:<25} | {ev.severity:<8} | {ev.message[:60]:<60}")
+                sys.exit(0)
+                
+            else:
+                print(f"Unknown query command: {args.query_command}")
+                sys.exit(1)
+        except Exception as e:
+            print(f"Query execution failed: {e}")
+            sys.exit(1)
+            
+    else:
+        print(f"Unknown warehouse command: {args.warehouse_command}")
+        sys.exit(1)
+        
+    print(f"\nIngestion Status: {result.status}")
+    print(f"Ingestion ID: {result.ingestion_id}")
+    print(f"Duration: {result.duration_ms:.2f}ms")
+    print("\nRecords Processed:")
+    for k, v in result.records_ingested.items():
+        print(f"  - {k}: {v}")
+        
+    if result.errors:
+        print("\nErrors encountered:")
+        for err in result.errors:
+            print(f"  - {err}")
+        sys.exit(1)
+    else:
+        print("\nIngestion complete successfully.")
+        sys.exit(0)
+
 def main():
     parser = _build_parser()
     
@@ -708,6 +814,8 @@ def main():
         _run_worker(args)
     elif args.command == "retention":
         _run_retention(args)
+    elif args.command == "warehouse":
+        _run_warehouse(args)
     elif args.command == "inspect":
         print("V2 Inspect mode not yet fully implemented. Entity state inspection logic pending M4.")
     else:

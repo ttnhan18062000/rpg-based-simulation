@@ -158,3 +158,23 @@ class LiveEventPublisher:
                 if sub in self.subscribers:
                     self.subscribers.remove(sub)
                     self.total_dropped += sub.dropped_count
+                    # Route backpressure alert
+                    try:
+                        from src.observability.alerts.manager import AlertsManager
+                        from src.observability.alerts.models import AlertEvent
+                        router = AlertsManager.get_router()
+                        run_id = getattr(event, "run_id", "unknown")
+                        tick = getattr(event, "tick", None)
+                        alert = AlertEvent.create_stream_backpressure(
+                            run_id=run_id,
+                            tick=tick,
+                            message=f"Subscriber disconnected due to backpressure: {sub.dropped_count} events dropped",
+                            details={
+                                "dropped_count": sub.dropped_count,
+                                "total_dropped": self.total_dropped,
+                                "total_published": self.total_published
+                            }
+                        )
+                        router.route(alert)
+                    except Exception:
+                        pass  # Never let alert routing break publishing

@@ -206,3 +206,181 @@ class ResourceNodeCrowdingRule(AnomalyRule):
                         context={"node_id": node_id, "entities_count": len(unique_entities), "entity_ids": unique_entities}
                     ))
         return anomalies
+
+
+class RollingEventWindow:
+    """Manages sliding in-memory tick window to enforce bounded resource usage."""
+    def __init__(self, window_ticks: int = 100) -> None:
+        self.window_ticks = window_ticks
+        self.current_live_tick = 0
+        self.events_by_tick: Dict[int, List[SimulationEvent]] = {}
+
+    def push(self, event: SimulationEvent) -> None:
+        self.current_live_tick = max(self.current_live_tick, event.tick)
+        self.events_by_tick.setdefault(event.tick, []).append(event)
+        self.evict_expired()
+
+    def evict_expired(self) -> None:
+        threshold = self.current_live_tick - self.window_ticks
+        expired_ticks = [t for t in self.events_by_tick if t <= threshold]
+        for t in expired_ticks:
+            del self.events_by_tick[t]
+
+    def get_all_events(self) -> List[SimulationEvent]:
+        all_ev = []
+        for tick_events in self.events_by_tick.values():
+            all_ev.extend(tick_events)
+        return all_ev
+
+
+class LiveAnomalyRule:
+    """Base interface for live streaming simulation diagnostic rules."""
+    def evaluate_event(self, event: SimulationEvent, window: RollingEventWindow) -> List[Anomaly]:
+        raise NotImplementedError
+
+
+class HardLawViolationLive(LiveAnomalyRule):
+    """Flags any hard law violations observed in the live event stream."""
+    def evaluate_event(self, event: SimulationEvent, window: RollingEventWindow) -> List[Anomaly]:
+        if event.event_category == "hard_law" or event.event_type == "InvariantViolation":
+            return [Anomaly(
+                rule_name="HardLawViolationLive",
+                severity="CRITICAL",
+                entity_id=event.entity_id,
+                tick_detected=event.tick,
+                message=f"Live Hard Law Violation detected: {event.message}",
+                context=event.payload
+            )]
+        return []
+
+
+class NavigationStuckLive(LiveAnomalyRule):
+    """Detects if an active entity's position is frozen over a long window of ticks in the live stream."""
+    def __init__(self, tick_threshold: int = 50) -> None:
+        self.tick_threshold = tick_threshold
+        self.entity_states: Dict[int, Dict[str, Any]] = {}
+
+    def evaluate_event(self, event: SimulationEvent, window: RollingEventWindow) -> List[Anomaly]:
+        if event.event_type != "movement" or event.entity_id is None:
+            return []
+            
+        eid = event.entity_id
+        end_pos = event.payload.get("end_pos") or getattr(event, "end_pos", None)
+        if not end_pos:
+            return []
+            
+        anomalies = []
+        state = self.entity_states.get(eid)
+        if state is None:
+            self.entity_states[eid] = {
+                "last_pos": end_pos,
+                "last_tick": event.tick,
+                "consecutive_stuck_ticks": 0
+            }
+            return []
+            
+        last_pos = state["last_pos"]
+        last_tick = state["last_tick"]
+        consecutive_stuck_ticks = state["consecutive_stuck_ticks"]
+        
+        # Check if coordinates match
+        if last_pos == end_pos:
+            consecutive_stuck_ticks += (event.tick - last_tick)
+            if consecutive_stuck_ticks >= self.tick_threshold:
+                anomalies.append(Anomaly(
+                    rule_name="NavigationStuckLive",
+                    severity="ERROR",
+                    entity_id=eid,
+                    tick_detected=event.tick,
+                    message=f"Live Entity {eid} stuck at position {end_pos} for {consecutive_stuck_ticks} ticks",
+                    context={"position": end_pos, "stuck_duration_ticks": consecutive_stuck_ticks}
+                ))
+                # Reset to avoid spamming
+                consecutive_stuck_ticks = 0
+        else:
+            consecutive_stuck_ticks = 0
+            
+        self.entity_states[eid] = {
+            "last_pos": end_pos,
+            "last_tick": event.tick,
+            "consecutive_stuck_ticks": consecutive_stuck_ticks
+        }
+        return anomalies
+
+
+class EventDropRateHigh(LiveAnomalyRule):
+    """Flags if there is a high rate of dropped events detected in the stream."""
+    def __init__(self, limit_per_window: int = 10) -> None:
+        self.limit_per_window = limit_per_window
+
+    def evaluate_event(self, event: SimulationEvent, window: RollingEventWindow) -> List[Anomaly]:
+        # Count drop-related events in the rolling window
+        is_drop = event.event_type in ("EventDropped", "StreamEventDropped") or "dropped event" in event.message.lower()
+        if not is_drop:
+            return []
+            
+        drop_events = [
+            e for e in window.get_all_events()
+            if e.event_type in ("EventDropped", "StreamEventDropped") or "dropped event" in e.message.lower()
+        ]
+        
+        if len(drop_events) >= self.limit_per_window:
+            return [Anomaly(
+                rule_name="EventDropRateHigh",
+                severity="WARNING",
+                tick_detected=event.tick,
+                message=f"High event drop rate detected: {len(drop_events)} drops in rolling window",
+                context={"drop_count": len(drop_events), "window_ticks": window.window_ticks}
+            )]
+        return []
+
+
+class GovernorDegradedLive(LiveAnomalyRule):
+    """Flags if the governor remains in degraded or survival operational mode for too long."""
+    def __init__(self, tick_threshold: int = 5) -> None:
+        self.tick_threshold = tick_threshold
+        self.degraded_since_tick: Optional[int] = None
+        self.current_mode: str = "NORMAL"
+
+    def evaluate_event(self, event: SimulationEvent, window: RollingEventWindow) -> List[Anomaly]:
+        # Listen for GovernorModeChanged events
+        if event.event_type == "GovernorModeChanged":
+            mode = event.payload.get("current_mode") or "NORMAL"
+            self.current_mode = mode
+            if mode in ("DEGRADED", "SURVIVAL"):
+                if self.degraded_since_tick is None:
+                    self.degraded_since_tick = event.tick
+            else:
+                self.degraded_since_tick = None
+                
+        # Also continuously evaluate duration based on current event tick
+        if self.current_mode in ("DEGRADED", "SURVIVAL") and self.degraded_since_tick is not None:
+            duration = event.tick - self.degraded_since_tick
+            if duration >= self.tick_threshold:
+                anomaly = Anomaly(
+                    rule_name="GovernorDegradedLive",
+                    severity="WARNING",
+                    tick_detected=event.tick,
+                    message=f"Governor degraded/survival mode sustained for {duration} ticks (limit={self.tick_threshold})",
+                    context={"current_mode": self.current_mode, "sustained_ticks": duration}
+                )
+                self.degraded_since_tick = event.tick # reset sustained counter after emitting
+                return [anomaly]
+                
+        return []
+
+
+class CriticalEventObserved(LiveAnomalyRule):
+    """Flags any simulation event with CRITICAL severity."""
+    def evaluate_event(self, event: SimulationEvent, window: RollingEventWindow) -> List[Anomaly]:
+        if event.severity == "CRITICAL":
+            return [Anomaly(
+                rule_name="CriticalEventObserved",
+                severity="CRITICAL",
+                entity_id=event.entity_id,
+                tick_detected=event.tick,
+                message=f"Critical event observed: {event.message}",
+                context=event.payload
+            )]
+        return []
+

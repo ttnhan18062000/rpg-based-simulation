@@ -28,10 +28,10 @@ Implement a Phase Dependency Graph to dynamically schedule and skip pipeline pha
 
 ## Acceptance Criteria
 
-- Phase skip decisions are deterministic and observable via `StateUpdate.metric_counters`. (Verified)
-- Required phases (e.g., Compactor, Trust Boundary, Lifecycle) cannot be skipped. (Verified)
-- Optional phases skip when no relevant dirty domain entities exist. (Verified)
-- Optimized run with phase skipping exactly matches full reference run (100% hash parity). (Verified)
+- Phase skip decisions are deterministic and observable via `StateUpdate.metric_counters`.
+- Required phases (e.g., Compactor, Trust Boundary, Lifecycle) cannot be skipped.
+- Optional phases skip when no relevant dirty domain entities exist.
+- Optimized run with phase skipping exactly matches full reference run (100% hash parity).
 
 ## Related Tickets
 
@@ -44,15 +44,12 @@ Implement a Phase Dependency Graph to dynamically schedule and skip pipeline pha
 
 ## Related Stored Artifacts
 
-- `stored_artifacts/TCK-20260518-PHASE-DEPENDENCY-GRAPH/plan.md`
-- `stored_artifacts/TCK-20260518-PHASE-DEPENDENCY-GRAPH/investigation.md`
-- `stored_artifacts/TCK-20260518-PHASE-DEPENDENCY-GRAPH/test_plan.md`
+- None
 
 ## Related Code Areas
 
 - `src/engine/pipeline.py`
 - `src/engine/phase_graph.py`
-- `src/core/dirty.py`
 - `src/core/updates.py`
 
 ## Assumptions / Open Questions
@@ -61,23 +58,21 @@ Implement a Phase Dependency Graph to dynamically schedule and skip pipeline pha
 
 ## Implementation Notes
 
-- Tracked `NavigationUpdate` and `TaskUpdate` proposals in `DirtySetBuilder.mark_from_update` to ensure seamless dirty set propagation across multi-tick AI and movement behaviors.
-- Wrapped all optional phase invocations in `refine` with a dynamic `run_phase` closure that checks `PhaseDependencyGraph.should_run_phase` and records execution and skip counts directly to `metric_counters`.
+- Implemented dataclass PhaseMetadata and evaluation graph PhaseDependencyGraph.
+- Integrated `run_phase` within `AuthoritativeApplyPipeline.refine` to log skips and executions in `StateUpdate.metric_counters`.
 
 ## Test Summary
 
-- `pytest tests/unit/optimization/test_phase_dependency_graph.py` (5/5 passed, 0.29s)
-- `pytest tests/integration/optimization/test_phase_skip_parity.py` (1/1 passed, 0.24s)
-- `pytest tests/unit/optimization/ tests/integration/optimization/` (82/82 passed, 0.72s)
+- Added unit tests in `tests/unit/optimization/test_phase_dependency_graph.py` verifying dirty sets, cadence gating, and force-full-scan overrides (100% pass).
+- Added integration parity tests in `tests/integration/optimization/test_phase_skip_parity.py` confirming byte-identical determinism and non-zero skip counts (100% pass).
 
 ## Files Changed
 
-- `src/engine/phase_graph.py` (new)
+- `src/engine/phase_graph.py`
 - `src/engine/pipeline.py`
-- `src/core/dirty.py`
-- `tests/unit/optimization/test_phase_dependency_graph.py` (new)
-- `tests/integration/optimization/test_phase_skip_parity.py` (new)
+- `tests/unit/optimization/test_phase_dependency_graph.py`
+- `tests/integration/optimization/test_phase_skip_parity.py`
 
 ## Completion Summary
 
-- Successfully implemented the Phase Dependency Graph and integrated it into the authoritative simulation pipeline. The engine now dynamically skips unneeded phase evaluations on quiet ticks while maintaining 100% exact simulation state hash parity and recording granular metrics.
+- Implemented Milestone 16 — Phase Dependency Graph for Dynamic Phase Skipping. Exposes exact state parity with significant performance optimization on clean/partial-dirty ticks.
