@@ -78,6 +78,38 @@ def _build_parser():
     gate_cmd.add_argument("--warn-as-fail", action="store_true", help="Fail CI if warnings are raised")
     gate_cmd.add_argument("--insufficient-as-fail", action="store_true", help="Fail CI if insufficient data is detected")
 
+    # Export subcommand
+    exp_parser = sub.add_parser("export", help="Export a single run artifact set")
+    exp_parser.add_argument("run_id", type=str, help="ID of the run to export")
+    exp_parser.add_argument("--format", type=str, choices=["jsonl", "parquet"], default="parquet", help="Target serialization format")
+
+    # Export sweep subcommand
+    exp_swp = sub.add_parser("export-sweep", help="Export a scenario sweep artifact set")
+    exp_swp.add_argument("sweep_id", type=str, help="ID of the sweep to export")
+    exp_swp.add_argument("--format", type=str, choices=["jsonl", "parquet"], default="parquet", help="Target serialization format")
+
+    # Build dataset subcommand
+    bld_ds = sub.add_parser("build-dataset", help="Compile scenario sweep artifacts into a local Parquet dataset")
+    bld_ds.add_argument("sweep_id", type=str, help="ID of the sweep to compile")
+
+    # Query dataset subcommand
+    qry_ds = sub.add_parser("query-dataset", help="Execute a predefined DuckDB query on a built dataset")
+    qry_ds.add_argument("dataset_id", type=str, help="ID of the dataset to query")
+    qry_ds.add_argument("--query", type=str, choices=["worst-runs", "anomaly-summary"], required=True, help="Target predefined query")
+
+    # Worker subcommand
+    wrk_parser = sub.add_parser("worker", help="Standalone off-loop worker management")
+    wrk_sub = wrk_parser.add_subparsers(dest="worker_command", required=True)
+    wrk_an = wrk_sub.add_parser("analyze-run", help="Analyze a single run out-of-process")
+    wrk_an.add_argument("run_id", type=str, help="ID of the completed run to analyze")
+
+    # Retention subcommand
+    ret_parser = sub.add_parser("retention", help="Retention and data lifecycle management")
+    ret_sub = ret_parser.add_subparsers(dest="retention_command", required=True)
+    ret_sub.add_parser("plan", help="Dry-run scan of expired/prunable observability files")
+    ret_clean = ret_sub.add_parser("clean", help="Perform confirmation clean of expired logs")
+    ret_clean.add_argument("--confirm", action="store_true", help="Confirm execution of prunes")
+
     # Global options
     parser.add_argument("--config", type=str, default=None, help="Path to YAML config file")
     parser.add_argument("--json-logs", action="store_true", help="Enable JSON-formatted logging")
@@ -447,6 +479,196 @@ def _run_gate(args):
         sys.exit(1)
     sys.exit(0)
 
+def _run_export(args):
+    """Export a single run artifact set."""
+    import os
+    import sys
+    from src.observability.reporting.artifact_repository import RunArtifactRepository
+    from src.observability.analytics.exporter import ExportJob, ExportManager
+
+    run_id = args.run_id
+    fmt = args.format
+
+    repo = RunArtifactRepository()
+    run_dir = os.path.join(repo.base_dir, run_id)
+    if not os.path.exists(run_dir):
+        print(f"Run directory not found for ID: {run_id}")
+        sys.exit(1)
+
+    print(f"Exporting run {run_id} to format: {fmt}...")
+    try:
+        manager = ExportManager()
+        job = ExportJob(
+            source_run_id=run_id,
+            source_path=run_dir,
+            output_path=os.path.abspath(os.path.join("data/exports", f"export_{run_id}_{fmt}")),
+            format=fmt,
+            artifact_types=["simulation_events", "metric_windows", "hard_law_violations", "anomalies", "run_manifest"]
+        )
+        manifest = manager.execute_job(job)
+        print(f"Export COMPLETED. Manifest saved: data/exports/{job.export_id}/export_manifest.json")
+        print(f"Exported records: {manifest.record_counts}")
+        if manifest.skipped_artifacts:
+            print(f"Skipped artifacts: {manifest.skipped_artifacts}")
+    except Exception as e:
+        print(f"Export failed: {e}")
+        sys.exit(1)
+
+def _run_export_sweep(args):
+    """Export an entire scenario sweep artifact set."""
+    import os
+    import sys
+    from src.observability.reporting.run_set_repository import RunSetArtifactRepository
+    from src.observability.analytics.exporter import ExportJob, ExportManager
+
+    sweep_id = args.sweep_id
+    fmt = args.format
+
+    repo = RunSetArtifactRepository()
+    sweep_dir = os.path.join(repo.base_dir, sweep_id)
+    if not os.path.exists(sweep_dir):
+        print(f"Sweep directory not found for ID: {sweep_id}")
+        sys.exit(1)
+
+    print(f"Exporting sweep {sweep_id} to format: {fmt}...")
+    try:
+        manager = ExportManager()
+        job = ExportJob(
+            source_sweep_id=sweep_id,
+            source_path=sweep_dir,
+            output_path=os.path.abspath(os.path.join("data/exports", f"export_{sweep_id}_{fmt}")),
+            format=fmt,
+            artifact_types=["simulation_events", "metric_windows", "hard_law_violations", "anomalies", "run_manifest", "run_index"]
+        )
+        manifest = manager.execute_job(job)
+        print(f"Export COMPLETED. Manifest saved: data/exports/{job.export_id}/export_manifest.json")
+        print(f"Exported files count: {len(manifest.output_files)}")
+        if manifest.skipped_artifacts:
+            print(f"Skipped artifacts: {manifest.skipped_artifacts}")
+    except Exception as e:
+        print(f"Sweep export failed: {e}")
+        sys.exit(1)
+
+def _run_build_dataset(args):
+    """Compile scenario sweep artifacts into a local Parquet dataset."""
+    import os
+    import sys
+    from src.observability.reporting.run_set_repository import RunSetArtifactRepository
+    from src.observability.analytics.dataset import AnalyticsDatasetBuilder
+
+    sweep_id = args.sweep_id
+    repo = RunSetArtifactRepository()
+    sweep_dir = os.path.join(repo.base_dir, sweep_id)
+    if not os.path.exists(sweep_dir):
+        print(f"Sweep directory not found for ID: {sweep_id}")
+        sys.exit(1)
+
+    print(f"Compiling Parquet analytics dataset for sweep {sweep_id}...")
+    try:
+        builder = AnalyticsDatasetBuilder()
+        manifest = builder.build_dataset(sweep_id=sweep_id, source_sweep_dir=sweep_dir)
+        print(f"Dataset successfully compiled: {manifest.dataset_id}")
+        print(f"Table files: {manifest.table_files}")
+        print(f"Record counts: {manifest.record_counts}")
+    except Exception as e:
+        print(f"Failed to build dataset: {e}")
+        sys.exit(1)
+
+def _run_query_dataset(args):
+    """Execute a predefined DuckDB query on a built dataset."""
+    import os
+    import sys
+    from src.observability.analytics.query import DuckDBQueryService
+
+    dataset_id = args.dataset_id
+    query_name = args.query
+
+    dataset_dir = os.path.join("data/analytics", dataset_id)
+    if not os.path.exists(dataset_dir):
+        print(f"Dataset directory not found: {dataset_dir}")
+        sys.exit(1)
+
+    print(f"Running predefined query '{query_name}' on dataset '{dataset_id}'...")
+    try:
+        service = DuckDBQueryService(dataset_dir=dataset_dir)
+        results = service.execute_predefined_query(query_name)
+        
+        if not results:
+            print("Query returned 0 records.")
+            return
+
+        # Print beautiful ASCII table
+        keys = list(results[0].keys())
+        # Calculate max widths
+        widths = {k: max(len(str(r.get(k) or "")) for r in results) for k in keys}
+        widths = {k: max(widths[k], len(k)) for k in keys}
+
+        # Print header
+        header = " | ".join(f"{k:<{widths[k]}}" for k in keys)
+        print(header)
+        print("-" * len(header))
+        for r in results:
+            row = " | ".join(f"{str(r.get(k) or ''):<{widths[k]}}" for k in keys)
+            print(row)
+            
+        print(f"\nTotal rows returned: {len(results)}")
+    except Exception as e:
+        print(f"Query execution failed: {e}")
+        sys.exit(1)
+
+def _run_worker(args):
+    """Executes standalone worker operations."""
+    import sys
+    if args.worker_command == "analyze-run":
+        print(f"Starting standalone worker to analyze run {args.run_id}...")
+        from src.observability.anomaly.worker import ExternalAnomalyWorker
+        worker = ExternalAnomalyWorker(mode="artifact")
+        result = worker.analyze_run(args.run_id, allow_partial=True)
+        
+        print(f"\nAnalysis Status: {result.status}")
+        print(f"Anomalies Found: {result.anomaly_count}")
+        print(f"Health Score: {result.health_score}")
+        if result.errors:
+            print("Errors encountered:")
+            for err in result.errors:
+                print(f"  - {err}")
+            sys.exit(1)
+        else:
+            print("Analysis complete. Worker status updated successfully.")
+            sys.exit(0)
+
+def _run_retention(args):
+    """Executes data retention operations."""
+    import sys
+    from src.observability.reporting.retention import RetentionManager
+    manager = RetentionManager()
+    
+    if args.retention_command == "plan":
+        print("Scanning simulation runs for expired or redundant files (Dry Run)...")
+        plan = manager.generate_cleanup_plan()
+        print(f"\nTotal eligible runs scanned: {plan.get('scanned_runs_count', 0)}")
+        print(f"Prunable runs classified: {len(plan.get('eligible_runs', []))}")
+        print(f"Protected runs classified: {len(plan.get('protected_runs', []))}")
+        print("\nPruning Plan details:")
+        for r_id, details in plan.get("eligible_runs", []):
+            print(f"  - Run {r_id}: reason={details.get('reason')}, files={details.get('files')}")
+        print("\nProtected Runs:")
+        for r_id, details in plan.get("protected_runs", []):
+            print(f"  - Run {r_id}: reason={details.get('reason')}")
+        print("\nDry run completed. Run with 'retention clean --confirm' to prune files.")
+        sys.exit(0)
+        
+    elif args.retention_command == "clean":
+        if not args.confirm:
+            print("ERROR: --confirm flag is required to execute deletion.")
+            sys.exit(1)
+        print("Executing cleanup of expired observability artifacts...")
+        logs = manager.execute_cleanup()
+        print(f"\nCleanup successfully completed.")
+        print(f"Total files pruned: {logs.get('deleted_files_count', 0)}")
+        print(f"Purged run directories: {logs.get('purged_runs_count', 0)}")
+        sys.exit(0)
+
 def main():
     parser = _build_parser()
     
@@ -474,6 +696,18 @@ def main():
         _run_compare_sweep(args)
     elif args.command == "gate":
         _run_gate(args)
+    elif args.command == "export":
+        _run_export(args)
+    elif args.command == "export-sweep":
+        _run_export_sweep(args)
+    elif args.command == "build-dataset":
+        _run_build_dataset(args)
+    elif args.command == "query-dataset":
+        _run_query_dataset(args)
+    elif args.command == "worker":
+        _run_worker(args)
+    elif args.command == "retention":
+        _run_retention(args)
     elif args.command == "inspect":
         print("V2 Inspect mode not yet fully implemented. Entity state inspection logic pending M4.")
     else:

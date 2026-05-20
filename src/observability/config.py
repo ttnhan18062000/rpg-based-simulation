@@ -46,3 +46,48 @@ class ObservabilityConfig:
                 pass
 
         return ObservabilityMode.LIGHT
+
+    @classmethod
+    def get_deployment_profile(cls) -> str:
+        """Resolves the active deployment profile (local-dev, production, scale-test)."""
+        return os.environ.get("SIM_DEPLOYMENT_PROFILE") or os.environ.get("RPG_DEPLOYMENT_PROFILE") or "local-dev"
+
+    @classmethod
+    def get_stream_backend(cls) -> str:
+        """Resolves the event stream backend from env or active deployment profile default."""
+        val = os.environ.get("SIM_STREAM_BACKEND") or os.environ.get("RPG_STREAM_BACKEND")
+        if val:
+            return val
+        profile = cls.get_deployment_profile().lower().strip()
+        if profile == "production":
+            return "redis"
+        elif profile == "scale-test":
+            return "null"
+        return "in_process"
+
+    @classmethod
+    def get_redis_url(cls) -> str:
+        """Resolves the Redis connection string from env, defaulting to default local."""
+        return os.environ.get("SIM_REDIS_URL") or os.environ.get("RPG_REDIS_URL") or "redis://localhost:6379/0"
+
+    @classmethod
+    def get_stream_name(cls) -> str:
+        """Resolves the target stream key name from env, defaulting to 'simulation:events'."""
+        return os.environ.get("SIM_STREAM_NAME") or os.environ.get("RPG_STREAM_NAME") or "simulation:events"
+
+    @classmethod
+    def get_max_queue_size(cls) -> int:
+        """Resolves maximum event cap size from env or active deployment profile default."""
+        val = os.environ.get("SIM_MAX_QUEUE_SIZE") or os.environ.get("RPG_MAX_QUEUE_SIZE")
+        if val:
+            try:
+                return int(val)
+            except ValueError:
+                pass
+        profile = cls.get_deployment_profile().lower().strip()
+        if profile == "production":
+            return 5000
+        elif profile == "scale-test":
+            return 0
+        return 1000
+

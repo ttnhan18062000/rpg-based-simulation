@@ -78,12 +78,12 @@ class EventRecorder:
             except Exception as e:
                 logger.error(f"Failed to write to simulation_events.jsonl: {e}")
 
-        # Publish live event (Milestone 23)
+        # Publish event using EventStreamAdapter (Milestone 29)
         try:
-            from src.observability.live.event_publisher import LiveEventPublisher
-            LiveEventPublisher.get_instance().publish(event)
+            from src.observability.stream.factory import get_event_stream_adapter
+            get_event_stream_adapter().publish(event)
         except Exception as e:
-            logger.error(f"LiveEventPublisher error isolated: {e}")
+            logger.error(f"EventStreamAdapter error isolated: {e}")
 
     def get_stats(self) -> Dict[str, Any]:
         """Returns diagnostic statistics of the recorder."""
