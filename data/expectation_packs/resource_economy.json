@@ -1,0 +1,44 @@
+{
+  "scenario_type": "resource_economy",
+  "version": "1.0",
+  "description": "Worker-heavy resource gathering and economy scenario. Production and circulation must remain active.",
+  "hard_fail_rules": [
+    {
+      "rule_id": "no_hard_law_violations",
+      "description": "Hard law violations must be zero",
+      "metric_key": "hard_law_violations_count",
+      "operator": "==",
+      "threshold": 0.0,
+      "severity_if_violated": "CRITICAL"
+    }
+  ],
+  "warning_rules": [
+    {
+      "rule_id": "stuck_worker_ratio_low",
+      "description": "Stuck worker ratio should stay below 30%",
+      "metric_key": "stuck_ratio",
+      "operator": "<",
+      "threshold": 0.3,
+      "severity_if_violated": "ERROR"
+    },
+    {
+      "rule_id": "economy_events_present",
+      "description": "Economy (gold transaction) events must occur — production must be active",
+      "metric_key": "economy_events_count",
+      "operator": ">",
+      "threshold": 0.0,
+      "severity_if_violated": "ERROR"
+    },
+    {
+      "rule_id": "resource_crowding_incidents_low",
+      "description": "Resource node crowding incidents should be low",
+      "metric_key": "crowding_anomalies_count",
+      "operator": "<=",
+      "threshold": 5.0,
+      "severity_if_violated": "WARNING"
+    }
+  ],
+  "acceptable_anomaly_types": [],
+  "ignored_metrics": ["combat_events_count", "kill_rate"],
+  "required_signals": ["economy"]
+}

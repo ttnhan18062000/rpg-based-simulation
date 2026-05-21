@@ -1,0 +1,44 @@
+{
+  "scenario_type": "peaceful_village",
+  "version": "1.0",
+  "description": "Low-conflict village scenario. High death or combat rates are suspicious. Resource circulation and quest progress are expected.",
+  "hard_fail_rules": [
+    {
+      "rule_id": "no_hard_law_violations",
+      "description": "Hard law violations must be zero",
+      "metric_key": "hard_law_violations_count",
+      "operator": "==",
+      "threshold": 0.0,
+      "severity_if_violated": "CRITICAL"
+    },
+    {
+      "rule_id": "no_high_combat_rate",
+      "description": "Combat events should not dominate in a peaceful village",
+      "metric_key": "combat_events_count",
+      "operator": "<=",
+      "threshold": 5.0,
+      "severity_if_violated": "ERROR"
+    }
+  ],
+  "warning_rules": [
+    {
+      "rule_id": "quest_progress_expected",
+      "description": "Quest events should occur — quests must be progressing",
+      "metric_key": "quest_events_count",
+      "operator": ">",
+      "threshold": 0.0,
+      "severity_if_violated": "WARNING"
+    },
+    {
+      "rule_id": "resource_circulation_active",
+      "description": "Resource/economy events should occur — economy must be circulating",
+      "metric_key": "economy_events_count",
+      "operator": ">",
+      "threshold": 0.0,
+      "severity_if_violated": "WARNING"
+    }
+  ],
+  "acceptable_anomaly_types": [],
+  "ignored_metrics": [],
+  "required_signals": ["quest"]
+}

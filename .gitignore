@@ -229,6 +229,16 @@ replay_v2_test/
 stored_artifacts/**/*.json
 !stored_artifacts/**/manifest.json
 
+# Runtime simulation data (transient, regenerated each run)
+data/runs/
+data/exports/
+# Phase 8 pipeline outputs inside run dirs
+data/*/understanding_report.json
+data/*/understanding_report.md
+data/*/finding_reviews.jsonl
+# Keep expectation pack configs — these are source-controlled
+!data/expectation_packs/
+
 # Temporary Test Outputs and Scratch Scripts
 test_output.txt
 test_*_output.txt

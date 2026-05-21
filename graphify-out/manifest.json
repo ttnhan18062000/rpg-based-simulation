@@ -1195,6 +1195,130 @@
     "mtime": 1779198334.21869,
     "hash": "cd64f709e632ee2b485bb33da414515f"
   },
+  "/home/vboxuser/Work/rpg-based-simulation/src/observability/understanding/context.py": {
+    "mtime": 1779324186.4563527,
+    "hash": "b0b7dd4fadc32012cd0a345a8b5faefa"
+  },
+  "/home/vboxuser/Work/rpg-based-simulation/src/observability/understanding/pipeline.py": {
+    "mtime": 1779325788.9670455,
+    "hash": "57d00acdc622518f5e537353edf710ce"
+  },
+  "/home/vboxuser/Work/rpg-based-simulation/src/observability/understanding/__init__.py": {
+    "mtime": 1779325941.499745,
+    "hash": "4757f4d0a0b41909f524c22dc0dff8ee"
+  },
+  "/home/vboxuser/Work/rpg-based-simulation/src/observability/understanding/domain/movement.py": {
+    "mtime": 1779324259.9167027,
+    "hash": "d6a5c685b4d62134b66f2b5af981f9aa"
+  },
+  "/home/vboxuser/Work/rpg-based-simulation/src/observability/understanding/domain/economy.py": {
+    "mtime": 1779324289.5366852,
+    "hash": "ecd28fad37fff319c1b2f3888f0d7797"
+  },
+  "/home/vboxuser/Work/rpg-based-simulation/src/observability/understanding/domain/runtime.py": {
+    "mtime": 1779324352.1085975,
+    "hash": "93d561851aa3b4a311ffa3da46f03daa"
+  },
+  "/home/vboxuser/Work/rpg-based-simulation/src/observability/understanding/domain/base.py": {
+    "mtime": 1779324227.2607641,
+    "hash": "b1aaab2cc3a998e8b97c42a914b199e8"
+  },
+  "/home/vboxuser/Work/rpg-based-simulation/src/observability/understanding/domain/__init__.py": {
+    "mtime": 1779324195.5118272,
+    "hash": "6bf4d7167abf670191b189c19c220c1a"
+  },
+  "/home/vboxuser/Work/rpg-based-simulation/src/observability/understanding/domain/quest.py": {
+    "mtime": 1779324321.4526663,
+    "hash": "75c78c72314e7a1c4bbde28cb6bb77e4"
+  },
+  "/home/vboxuser/Work/rpg-based-simulation/src/observability/understanding/balance/engine.py": {
+    "mtime": 1779324853.3280916,
+    "hash": "95d387abbc28818cd7b5959692cdb0de"
+  },
+  "/home/vboxuser/Work/rpg-based-simulation/src/observability/understanding/balance/__init__.py": {
+    "mtime": 1779324861.0090718,
+    "hash": "48cf6982fe47d8ae4fde5650243bfb8e"
+  },
+  "/home/vboxuser/Work/rpg-based-simulation/src/observability/understanding/balance/models.py": {
+    "mtime": 1779324819.4602537,
+    "hash": "267fb5f6680508eae17bfbc792d739e1"
+  },
+  "/home/vboxuser/Work/rpg-based-simulation/src/observability/understanding/quality/stale_detector.py": {
+    "mtime": 1779325717.6511805,
+    "hash": "4f14e6e0201bed5b8e83f86fc056bff1"
+  },
+  "/home/vboxuser/Work/rpg-based-simulation/src/observability/understanding/quality/quality_report.py": {
+    "mtime": 1779325679.1462524,
+    "hash": "f233498df0bf04aa40cc62f2afc5c66a"
+  },
+  "/home/vboxuser/Work/rpg-based-simulation/src/observability/understanding/quality/__init__.py": {
+    "mtime": 1779325727.462162,
+    "hash": "54c2ee1ac2aa64d64860f730d0be28c3"
+  },
+  "/home/vboxuser/Work/rpg-based-simulation/src/observability/understanding/quality/models.py": {
+    "mtime": 1779325660.6712828,
+    "hash": "8eafd4b318d6b7adb306268cc98679b5"
+  },
+  "/home/vboxuser/Work/rpg-based-simulation/src/observability/understanding/quality/baseline_evolution.py": {
+    "mtime": 1779325700.470213,
+    "hash": "b027a6c4bd9c8b9ac9de7e51a85b5e38"
+  },
+  "/home/vboxuser/Work/rpg-based-simulation/src/observability/understanding/rootcause/engine.py": {
+    "mtime": 1779324718.052645,
+    "hash": "9eb013f4b3d58f816ae9fa4c3939fd91"
+  },
+  "/home/vboxuser/Work/rpg-based-simulation/src/observability/understanding/rootcause/__init__.py": {
+    "mtime": 1779324724.1836336,
+    "hash": "e200afa4ab75f043a1eac1b5b5ce7e00"
+  },
+  "/home/vboxuser/Work/rpg-based-simulation/src/observability/understanding/rootcause/models.py": {
+    "mtime": 1779324633.458917,
+    "hash": "99a15a3d71d879ab0ec756a6bc1e260c"
+  },
+  "/home/vboxuser/Work/rpg-based-simulation/src/observability/understanding/rootcause/rules.py": {
+    "mtime": 1779324696.7667074,
+    "hash": "09f5404c800779c0ef5f21277681bbf8"
+  },
+  "/home/vboxuser/Work/rpg-based-simulation/src/observability/understanding/stories/detector.py": {
+    "mtime": 1779324924.320906,
+    "hash": "a1b54aec31667439c2c5f10ca170e017"
+  },
+  "/home/vboxuser/Work/rpg-based-simulation/src/observability/understanding/stories/patterns.py": {
+    "mtime": 1779324914.5049326,
+    "hash": "90a7c9d37472f969de3392b644135946"
+  },
+  "/home/vboxuser/Work/rpg-based-simulation/src/observability/understanding/stories/__init__.py": {
+    "mtime": 1779324930.9148881,
+    "hash": "0fbdea598c1c05990821dbb283ad5a42"
+  },
+  "/home/vboxuser/Work/rpg-based-simulation/src/observability/understanding/stories/models.py": {
+    "mtime": 1779324870.701047,
+    "hash": "f93307710047b731e4b974fb93cdc12e"
+  },
+  "/home/vboxuser/Work/rpg-based-simulation/src/observability/understanding/review/store.py": {
+    "mtime": 1779324962.4338026,
+    "hash": "8834ba29ebae492a8e9c0c8cbe9b4768"
+  },
+  "/home/vboxuser/Work/rpg-based-simulation/src/observability/understanding/review/__init__.py": {
+    "mtime": 1779324968.862785,
+    "hash": "43b4084b6025086f87c21252b49c38df"
+  },
+  "/home/vboxuser/Work/rpg-based-simulation/src/observability/understanding/review/models.py": {
+    "mtime": 1779324944.3008518,
+    "hash": "8f2845db6d8d9377a9b1423e128f7943"
+  },
+  "/home/vboxuser/Work/rpg-based-simulation/src/observability/understanding/expectations/loader.py": {
+    "mtime": 1779324523.9710805,
+    "hash": "1ecd2354e75a9ba824d4334c01f2fc07"
+  },
+  "/home/vboxuser/Work/rpg-based-simulation/src/observability/understanding/expectations/__init__.py": {
+    "mtime": 1779324574.964109,
+    "hash": "f4f4e7728822214a1c200feb5b8e9ed8"
+  },
+  "/home/vboxuser/Work/rpg-based-simulation/src/observability/understanding/expectations/models.py": {
+    "mtime": 1779324501.9490936,
+    "hash": "f91f587116226770d8f58491ff05be2a"
+  },
   "/home/vboxuser/Work/rpg-based-simulation/src/observability/analytics/query.py": {
     "mtime": 1779254854.8827221,
     "hash": "002eed00f57a92a2e7a0a910659c97a2"
@@ -2527,9 +2651,17 @@
     "mtime": 1779257342.131062,
     "hash": "8aea6d443299ff96ff3959c496a99abe"
   },
+  "/home/vboxuser/Work/rpg-based-simulation/tests/unit/observability/test_expectation_pack_loader.py": {
+    "mtime": 1779324604.4059877,
+    "hash": "43be52eba57c3d6f7c4ab58913b37ca9"
+  },
   "/home/vboxuser/Work/rpg-based-simulation/tests/unit/observability/test_evidence_builder.py": {
     "mtime": 1779210117.888161,
     "hash": "603256bf7a3c9afadd470ade97b6f7ec"
+  },
+  "/home/vboxuser/Work/rpg-based-simulation/tests/unit/observability/test_balance_diagnosis_engine.py": {
+    "mtime": 1779325819.4169872,
+    "hash": "186872cdf49859e73e2e8acedd7f5d4b"
   },
   "/home/vboxuser/Work/rpg-based-simulation/tests/unit/observability/test_sweep_report_generator.py": {
     "mtime": 1779245000.3629498,
@@ -2550,6 +2682,10 @@
   "/home/vboxuser/Work/rpg-based-simulation/tests/unit/observability/test_artifact_exporter.py": {
     "mtime": 1779254893.0436215,
     "hash": "af50de74349cf75cca64e83293a98eb7"
+  },
+  "/home/vboxuser/Work/rpg-based-simulation/tests/unit/observability/test_domain_analyzer_registry.py": {
+    "mtime": 1779324380.8995326,
+    "hash": "4bc25b0bb0f5bfb648644166fd7bf9a4"
   },
   "/home/vboxuser/Work/rpg-based-simulation/tests/unit/observability/test_anomaly_rules.py": {
     "mtime": 1779205922.9626884,
@@ -2583,9 +2719,17 @@
     "mtime": 1779210067.8608277,
     "hash": "6d696b6a4ef27f05ab8a62d2c4d2c988"
   },
+  "/home/vboxuser/Work/rpg-based-simulation/tests/unit/observability/test_movement_domain_analyzer.py": {
+    "mtime": 1779324407.8225353,
+    "hash": "e88dce3dae020ab35adaa0b6188dc3d7"
+  },
   "/home/vboxuser/Work/rpg-based-simulation/tests/unit/observability/test_entity_timeline.py": {
     "mtime": 1779205916.4867015,
     "hash": "c00130eb661fe943763bb22a375bdd26"
+  },
+  "/home/vboxuser/Work/rpg-based-simulation/tests/unit/observability/test_economy_domain_analyzer.py": {
+    "mtime": 1779324427.34355,
+    "hash": "c3f33cfc30e54ad9c52128310b5c708b"
   },
   "/home/vboxuser/Work/rpg-based-simulation/tests/unit/observability/test_duckdb_query_service.py": {
     "mtime": 1779254901.8434067,
@@ -2618,6 +2762,10 @@
   "/home/vboxuser/Work/rpg-based-simulation/tests/unit/observability/test_rule_engine.py": {
     "mtime": 1779209736.119271,
     "hash": "49fd3bdd048a91c25303ffd3d2897fcd"
+  },
+  "/home/vboxuser/Work/rpg-based-simulation/tests/unit/observability/test_phase8_m46_m47_m48.py": {
+    "mtime": 1779325871.482884,
+    "hash": "c66e2f2fbe6f5405deef05e95c7242e4"
   },
   "/home/vboxuser/Work/rpg-based-simulation/tests/unit/observability/test_historical_search_service.py": {
     "mtime": 1779276541.2661111,
@@ -2654,6 +2802,10 @@
   "/home/vboxuser/Work/rpg-based-simulation/tests/unit/observability/test_warehouse_adapter_interface.py": {
     "mtime": 1779299130.6113837,
     "hash": "d221ee6334d2999415dac0ab943a953b"
+  },
+  "/home/vboxuser/Work/rpg-based-simulation/tests/unit/observability/test_root_cause_engine.py": {
+    "mtime": 1779324790.0444398,
+    "hash": "2bdf172e4451f5b4a2e090b6042f115c"
   },
   "/home/vboxuser/Work/rpg-based-simulation/tests/unit/observability/test_run_index_builder.py": {
     "mtime": 1779242391.2806227,
@@ -3015,9 +3167,17 @@
     "mtime": 1779243214.1434908,
     "hash": "fec164542c9f5a6750c3707abc3152d1"
   },
+  "/home/vboxuser/Work/rpg-based-simulation/tests/integration/observability/test_domain_analysis_flow.py": {
+    "mtime": 1779324457.509837,
+    "hash": "555920e5bd40ab5c890f60b17b415d8e"
+  },
   "/home/vboxuser/Work/rpg-based-simulation/tests/integration/observability/test_run_report_generator.py": {
     "mtime": 1779205973.8215873,
     "hash": "19767fa1985ff8316885c3dd1ba3a3ae"
+  },
+  "/home/vboxuser/Work/rpg-based-simulation/tests/integration/observability/test_understanding_pipeline.py": {
+    "mtime": 1779325903.233821,
+    "hash": "9cb1c9b3631585414dbd622720df01d8"
   },
   "/home/vboxuser/Work/rpg-based-simulation/tests/integration/observability/test_stream_consumer_basic.py": {
     "mtime": 1779258722.593186,
@@ -3223,10 +3383,6 @@
     "mtime": 1779125524.3897417,
     "hash": "2f3a777919817773c621b7c22811e831"
   },
-  "/home/vboxuser/Work/rpg-based-simulation/obs_sim_phase7.md": {
-    "mtime": 1779299236.7380748,
-    "hash": "fda726a1e3d6809475ca8974ff332128"
-  },
   "/home/vboxuser/Work/rpg-based-simulation/prometheus.yml": {
     "mtime": 1775049610.160541,
     "hash": "1803b2e55c436780c3edcf3b0c2af410"
@@ -3234,6 +3390,10 @@
   "/home/vboxuser/Work/rpg-based-simulation/docker-compose.yml": {
     "mtime": 1775741100.114199,
     "hash": "0009259818be5233b611f7df62eb67ef"
+  },
+  "/home/vboxuser/Work/rpg-based-simulation/obs_sim_phase8.md": {
+    "mtime": 1779327315.341994,
+    "hash": "f97973082698cf2ee99f375efa9f40c8"
   },
   "/home/vboxuser/Work/rpg-based-simulation/requirements.txt": {
     "mtime": 1775741100.140199,

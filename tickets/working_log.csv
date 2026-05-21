@@ -372,3 +372,10 @@ timestamp,ticket_id,title,status,summary,artifacts_path
 
 TCK-20260520-SIM-OBS-M40,Alert Routing and Incident Workflow (Milestone 40),DONE,2026-05-20
 TCK-20260520-SIM-OBS-M41,Production Readiness Validation (Milestone 41),DONE,2026-05-20
+TCK-20260521-SIM-OBS-M42,Domain Analyzer Framework,DONE,2026-05-21
+TCK-20260521-SIM-OBS-M43,Scenario Expectation Packs,DONE,2026-05-21
+TCK-20260521-SIM-OBS-M44,Root-Cause Hypothesis Engine,DONE,2026-05-21
+TCK-20260521-SIM-OBS-M45,Balance Diagnosis Engine,DONE,2026-05-21
+TCK-20260521-SIM-OBS-M46,Emergent Story Detector,DONE,2026-05-21
+TCK-20260521-SIM-OBS-M47,Human Review Workflow,DONE,2026-05-21
+TCK-20260521-SIM-OBS-M48,Analyzer Quality and Baseline Evolution,DONE,2026-05-21
