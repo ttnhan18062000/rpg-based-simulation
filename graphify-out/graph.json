@@ -124862,9 +124862,9 @@
       "source_file": "src/observability/mining/controller.py",
       "source_location": "L26",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "mining_controller_miningexperimentconfig",
-      "target": "basemodel",
-      "confidence_score": 1.0
+      "target": "basemodel"
     },
     {
       "relation": "inherits",
@@ -124872,9 +124872,9 @@
       "source_file": "src/observability/mining/controller.py",
       "source_location": "L57",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "mining_controller_miningrunspec",
-      "target": "basemodel",
-      "confidence_score": 1.0
+      "target": "basemodel"
     },
     {
       "relation": "inherits",
@@ -124882,9 +124882,9 @@
       "source_file": "src/observability/mining/controller.py",
       "source_location": "L69",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "mining_controller_miningexperimentmanifest",
-      "target": "basemodel",
-      "confidence_score": 1.0
+      "target": "basemodel"
     },
     {
       "relation": "inherits",
@@ -177403,9 +177403,9 @@
       "source_file": "src/observability/mining/controller.py",
       "source_location": "L21",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "mining_controller_miningexperimentconfig",
-      "target": "engine_kernel_kernel",
-      "confidence_score": 0.5
+      "target": "engine_kernel_kernel"
     },
     {
       "relation": "uses",
@@ -177413,9 +177413,9 @@
       "source_file": "src/observability/mining/controller.py",
       "source_location": "L21",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "mining_controller_miningrunspec",
-      "target": "engine_kernel_kernel",
-      "confidence_score": 0.5
+      "target": "engine_kernel_kernel"
     },
     {
       "relation": "uses",
@@ -177423,9 +177423,9 @@
       "source_file": "src/observability/mining/controller.py",
       "source_location": "L21",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "mining_controller_miningexperimentmanifest",
-      "target": "engine_kernel_kernel",
-      "confidence_score": 0.5
+      "target": "engine_kernel_kernel"
     },
     {
       "relation": "uses",
@@ -177433,9 +177433,9 @@
       "source_file": "src/observability/mining/controller.py",
       "source_location": "L21",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "mining_controller_miningrunmatrixbuilder",
-      "target": "engine_kernel_kernel",
-      "confidence_score": 0.5
+      "target": "engine_kernel_kernel"
     },
     {
       "relation": "uses",
@@ -177443,9 +177443,9 @@
       "source_file": "src/observability/mining/controller.py",
       "source_location": "L21",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "mining_controller_miningexperimentcontroller",
-      "target": "engine_kernel_kernel",
-      "confidence_score": 0.5
+      "target": "engine_kernel_kernel"
     },
     {
       "relation": "uses",
@@ -191967,9 +191967,9 @@
       "source_file": "src/observability/mining/controller.py",
       "source_location": "L20",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "mining_controller_miningexperimentconfig",
-      "target": "platform_rng_deterministicrng",
-      "confidence_score": 0.5
+      "target": "platform_rng_deterministicrng"
     },
     {
       "relation": "uses",
@@ -191977,9 +191977,9 @@
       "source_file": "src/observability/mining/controller.py",
       "source_location": "L20",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "mining_controller_miningrunspec",
-      "target": "platform_rng_deterministicrng",
-      "confidence_score": 0.5
+      "target": "platform_rng_deterministicrng"
     },
     {
       "relation": "uses",
@@ -191987,9 +191987,9 @@
       "source_file": "src/observability/mining/controller.py",
       "source_location": "L20",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "mining_controller_miningexperimentmanifest",
-      "target": "platform_rng_deterministicrng",
-      "confidence_score": 0.5
+      "target": "platform_rng_deterministicrng"
     },
     {
       "relation": "uses",
@@ -191997,9 +191997,9 @@
       "source_file": "src/observability/mining/controller.py",
       "source_location": "L20",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "mining_controller_miningrunmatrixbuilder",
-      "target": "platform_rng_deterministicrng",
-      "confidence_score": 0.5
+      "target": "platform_rng_deterministicrng"
     },
     {
       "relation": "uses",
@@ -192007,9 +192007,9 @@
       "source_file": "src/observability/mining/controller.py",
       "source_location": "L20",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "mining_controller_miningexperimentcontroller",
-      "target": "platform_rng_deterministicrng",
-      "confidence_score": 0.5
+      "target": "platform_rng_deterministicrng"
     },
     {
       "relation": "uses",
@@ -194363,9 +194363,9 @@
       "source_file": "src/observability/mining/controller.py",
       "source_location": "L18",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "mining_controller_miningexperimentconfig",
-      "target": "config_loader_configloader",
-      "confidence_score": 0.5
+      "target": "config_loader_configloader"
     },
     {
       "relation": "uses",
@@ -194373,9 +194373,9 @@
       "source_file": "src/observability/mining/controller.py",
       "source_location": "L18",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "mining_controller_miningrunspec",
-      "target": "config_loader_configloader",
-      "confidence_score": 0.5
+      "target": "config_loader_configloader"
     },
     {
       "relation": "uses",
@@ -194383,9 +194383,9 @@
       "source_file": "src/observability/mining/controller.py",
       "source_location": "L18",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "mining_controller_miningexperimentmanifest",
-      "target": "config_loader_configloader",
-      "confidence_score": 0.5
+      "target": "config_loader_configloader"
     },
     {
       "relation": "uses",
@@ -194393,9 +194393,9 @@
       "source_file": "src/observability/mining/controller.py",
       "source_location": "L18",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "mining_controller_miningrunmatrixbuilder",
-      "target": "config_loader_configloader",
-      "confidence_score": 0.5
+      "target": "config_loader_configloader"
     },
     {
       "relation": "uses",
@@ -194403,9 +194403,9 @@
       "source_file": "src/observability/mining/controller.py",
       "source_location": "L18",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "mining_controller_miningexperimentcontroller",
-      "target": "config_loader_configloader",
-      "confidence_score": 0.5
+      "target": "config_loader_configloader"
     },
     {
       "relation": "calls",
@@ -194794,9 +194794,9 @@
       "source_file": "src/observability/mining/controller.py",
       "source_location": "L17",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "mining_controller_miningexperimentconfig",
-      "target": "config_profiles_runtimeprofile",
-      "confidence_score": 0.5
+      "target": "config_profiles_runtimeprofile"
     },
     {
       "relation": "uses",
@@ -194804,9 +194804,9 @@
       "source_file": "src/observability/mining/controller.py",
       "source_location": "L17",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "mining_controller_miningrunspec",
-      "target": "config_profiles_runtimeprofile",
-      "confidence_score": 0.5
+      "target": "config_profiles_runtimeprofile"
     },
     {
       "relation": "uses",
@@ -194814,9 +194814,9 @@
       "source_file": "src/observability/mining/controller.py",
       "source_location": "L17",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "mining_controller_miningexperimentmanifest",
-      "target": "config_profiles_runtimeprofile",
-      "confidence_score": 0.5
+      "target": "config_profiles_runtimeprofile"
     },
     {
       "relation": "uses",
@@ -194824,9 +194824,9 @@
       "source_file": "src/observability/mining/controller.py",
       "source_location": "L17",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "mining_controller_miningrunmatrixbuilder",
-      "target": "config_profiles_runtimeprofile",
-      "confidence_score": 0.5
+      "target": "config_profiles_runtimeprofile"
     },
     {
       "relation": "uses",
@@ -194834,9 +194834,9 @@
       "source_file": "src/observability/mining/controller.py",
       "source_location": "L17",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "mining_controller_miningexperimentcontroller",
-      "target": "config_profiles_runtimeprofile",
-      "confidence_score": 0.5
+      "target": "config_profiles_runtimeprofile"
     },
     {
       "relation": "uses",
@@ -202582,9 +202582,9 @@
       "source_file": "src/observability/mining/controller.py",
       "source_location": "L15",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "mining_controller_miningexperimentconfig",
-      "target": "observability_config_observabilitymode",
-      "confidence_score": 0.5
+      "target": "observability_config_observabilitymode"
     },
     {
       "relation": "uses",
@@ -202592,9 +202592,9 @@
       "source_file": "src/observability/mining/controller.py",
       "source_location": "L15",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "mining_controller_miningrunspec",
-      "target": "observability_config_observabilitymode",
-      "confidence_score": 0.5
+      "target": "observability_config_observabilitymode"
     },
     {
       "relation": "uses",
@@ -202602,9 +202602,9 @@
       "source_file": "src/observability/mining/controller.py",
       "source_location": "L15",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "mining_controller_miningexperimentmanifest",
-      "target": "observability_config_observabilitymode",
-      "confidence_score": 0.5
+      "target": "observability_config_observabilitymode"
     },
     {
       "relation": "uses",
@@ -202612,9 +202612,9 @@
       "source_file": "src/observability/mining/controller.py",
       "source_location": "L15",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "mining_controller_miningrunmatrixbuilder",
-      "target": "observability_config_observabilitymode",
-      "confidence_score": 0.5
+      "target": "observability_config_observabilitymode"
     },
     {
       "relation": "uses",
@@ -202622,9 +202622,9 @@
       "source_file": "src/observability/mining/controller.py",
       "source_location": "L15",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "mining_controller_miningexperimentcontroller",
-      "target": "observability_config_observabilitymode",
-      "confidence_score": 0.5
+      "target": "observability_config_observabilitymode"
     },
     {
       "relation": "uses",
@@ -202752,9 +202752,9 @@
       "source_file": "src/observability/mining/controller.py",
       "source_location": "L15",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "mining_controller_miningexperimentconfig",
-      "target": "observability_config_observabilityconfig",
-      "confidence_score": 0.5
+      "target": "observability_config_observabilityconfig"
     },
     {
       "relation": "uses",
@@ -202762,9 +202762,9 @@
       "source_file": "src/observability/mining/controller.py",
       "source_location": "L15",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "mining_controller_miningrunspec",
-      "target": "observability_config_observabilityconfig",
-      "confidence_score": 0.5
+      "target": "observability_config_observabilityconfig"
     },
     {
       "relation": "uses",
@@ -202772,9 +202772,9 @@
       "source_file": "src/observability/mining/controller.py",
       "source_location": "L15",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "mining_controller_miningexperimentmanifest",
-      "target": "observability_config_observabilityconfig",
-      "confidence_score": 0.5
+      "target": "observability_config_observabilityconfig"
     },
     {
       "relation": "uses",
@@ -202782,9 +202782,9 @@
       "source_file": "src/observability/mining/controller.py",
       "source_location": "L15",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "mining_controller_miningrunmatrixbuilder",
-      "target": "observability_config_observabilityconfig",
-      "confidence_score": 0.5
+      "target": "observability_config_observabilityconfig"
     },
     {
       "relation": "uses",
@@ -202792,9 +202792,9 @@
       "source_file": "src/observability/mining/controller.py",
       "source_location": "L15",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "mining_controller_miningexperimentcontroller",
-      "target": "observability_config_observabilityconfig",
-      "confidence_score": 0.5
+      "target": "observability_config_observabilityconfig"
     },
     {
       "relation": "uses",
@@ -203757,9 +203757,9 @@
       "source_file": "src/observability/mining/workflow.py",
       "source_location": "L13",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_observability_mining_workflow_py",
-      "target": "mining_workflow_miningreviewworkflow",
-      "confidence_score": 1.0
+      "target": "mining_workflow_miningreviewworkflow"
     },
     {
       "relation": "contains",
@@ -203767,9 +203767,9 @@
       "source_file": "src/observability/mining/workflow.py",
       "source_location": "L17",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_observability_mining_workflow_py",
-      "target": "mining_workflow_apply_review_label",
-      "confidence_score": 1.0
+      "target": "mining_workflow_apply_review_label"
     },
     {
       "relation": "contains",
@@ -203777,9 +203777,9 @@
       "source_file": "src/observability/mining/workflow.py",
       "source_location": "L58",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_observability_mining_workflow_py",
-      "target": "mining_workflow_write_markdown_backlog",
-      "confidence_score": 1.0
+      "target": "mining_workflow_write_markdown_backlog"
     },
     {
       "relation": "contains",
@@ -203787,9 +203787,9 @@
       "source_file": "src/observability/mining/workflow.py",
       "source_location": "L83",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_observability_mining_workflow_py",
-      "target": "mining_workflow_miningqualitygate",
-      "confidence_score": 1.0
+      "target": "mining_workflow_miningqualitygate"
     },
     {
       "relation": "contains",
@@ -203797,9 +203797,9 @@
       "source_file": "src/observability/mining/workflow.py",
       "source_location": "L87",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_observability_mining_workflow_py",
-      "target": "mining_workflow_evaluate_gate",
-      "confidence_score": 1.0
+      "target": "mining_workflow_evaluate_gate"
     },
     {
       "relation": "contains",
@@ -203807,9 +203807,9 @@
       "source_file": "src/observability/mining/workflow.py",
       "source_location": "L150",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_observability_mining_workflow_py",
-      "target": "mining_workflow_write_markdown_gate",
-      "confidence_score": 1.0
+      "target": "mining_workflow_write_markdown_gate"
     },
     {
       "relation": "rationale_for",
@@ -203817,9 +203817,9 @@
       "source_file": "src/observability/mining/workflow.py",
       "source_location": "L14",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "mining_workflow_rationale_14",
-      "target": "mining_workflow_miningreviewworkflow",
-      "confidence_score": 1.0
+      "target": "mining_workflow_miningreviewworkflow"
     },
     {
       "relation": "calls",
@@ -203828,9 +203828,9 @@
       "source_file": "src/observability/mining/workflow.py",
       "source_location": "L53",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "mining_workflow_apply_review_label",
-      "target": "mining_workflow_write_markdown_backlog",
-      "confidence_score": 1.0
+      "target": "mining_workflow_write_markdown_backlog"
     },
     {
       "relation": "calls",
@@ -203849,9 +203849,9 @@
       "source_file": "src/observability/mining/workflow.py",
       "source_location": "L84",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "mining_workflow_rationale_84",
-      "target": "mining_workflow_miningqualitygate",
-      "confidence_score": 1.0
+      "target": "mining_workflow_miningqualitygate"
     },
     {
       "relation": "calls",
@@ -203860,9 +203860,9 @@
       "source_file": "src/observability/mining/workflow.py",
       "source_location": "L145",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "mining_workflow_evaluate_gate",
-      "target": "mining_workflow_write_markdown_gate",
-      "confidence_score": 1.0
+      "target": "mining_workflow_write_markdown_gate"
     },
     {
       "relation": "contains",
@@ -203870,9 +203870,9 @@
       "source_file": "src/observability/mining/priority.py",
       "source_location": "L13",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_observability_mining_priority_py",
-      "target": "mining_priority_priorityscorer",
-      "confidence_score": 1.0
+      "target": "mining_priority_priorityscorer"
     },
     {
       "relation": "contains",
@@ -203880,9 +203880,9 @@
       "source_file": "src/observability/mining/priority.py",
       "source_location": "L17",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_observability_mining_priority_py",
-      "target": "mining_priority_calculate_priority",
-      "confidence_score": 1.0
+      "target": "mining_priority_calculate_priority"
     },
     {
       "relation": "contains",
@@ -203890,9 +203890,9 @@
       "source_file": "src/observability/mining/priority.py",
       "source_location": "L42",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_observability_mining_priority_py",
-      "target": "mining_priority_engineeringbackloggenerator",
-      "confidence_score": 1.0
+      "target": "mining_priority_engineeringbackloggenerator"
     },
     {
       "relation": "contains",
@@ -203900,9 +203900,9 @@
       "source_file": "src/observability/mining/priority.py",
       "source_location": "L46",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_observability_mining_priority_py",
-      "target": "mining_priority_generate_backlog",
-      "confidence_score": 1.0
+      "target": "mining_priority_generate_backlog"
     },
     {
       "relation": "contains",
@@ -203910,9 +203910,9 @@
       "source_file": "src/observability/mining/priority.py",
       "source_location": "L144",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_observability_mining_priority_py",
-      "target": "mining_priority_write_markdown_backlog",
-      "confidence_score": 1.0
+      "target": "mining_priority_write_markdown_backlog"
     },
     {
       "relation": "rationale_for",
@@ -203920,9 +203920,9 @@
       "source_file": "src/observability/mining/priority.py",
       "source_location": "L14",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "mining_priority_rationale_14",
-      "target": "mining_priority_priorityscorer",
-      "confidence_score": 1.0
+      "target": "mining_priority_priorityscorer"
     },
     {
       "relation": "calls",
@@ -203931,9 +203931,9 @@
       "source_file": "src/observability/mining/priority.py",
       "source_location": "L122",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "mining_priority_generate_backlog",
-      "target": "mining_priority_calculate_priority",
-      "confidence_score": 1.0
+      "target": "mining_priority_calculate_priority"
     },
     {
       "relation": "rationale_for",
@@ -203941,9 +203941,9 @@
       "source_file": "src/observability/mining/priority.py",
       "source_location": "L43",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "mining_priority_rationale_43",
-      "target": "mining_priority_engineeringbackloggenerator",
-      "confidence_score": 1.0
+      "target": "mining_priority_engineeringbackloggenerator"
     },
     {
       "relation": "calls",
@@ -203952,9 +203952,9 @@
       "source_file": "src/observability/mining/priority.py",
       "source_location": "L139",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "mining_priority_generate_backlog",
-      "target": "mining_priority_write_markdown_backlog",
-      "confidence_score": 1.0
+      "target": "mining_priority_write_markdown_backlog"
     },
     {
       "relation": "contains",
@@ -203962,9 +203962,9 @@
       "source_file": "src/observability/mining/evidence.py",
       "source_location": "L13",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_observability_mining_evidence_py",
-      "target": "mining_evidence_evidencepackbuilder",
-      "confidence_score": 1.0
+      "target": "mining_evidence_evidencepackbuilder"
     },
     {
       "relation": "contains",
@@ -203972,9 +203972,9 @@
       "source_file": "src/observability/mining/evidence.py",
       "source_location": "L17",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_observability_mining_evidence_py",
-      "target": "mining_evidence_build_evidence_pack",
-      "confidence_score": 1.0
+      "target": "mining_evidence_build_evidence_pack"
     },
     {
       "relation": "rationale_for",
@@ -203982,9 +203982,9 @@
       "source_file": "src/observability/mining/evidence.py",
       "source_location": "L14",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "mining_evidence_rationale_14",
-      "target": "mining_evidence_evidencepackbuilder",
-      "confidence_score": 1.0
+      "target": "mining_evidence_evidencepackbuilder"
     },
     {
       "relation": "calls",
@@ -204003,9 +204003,9 @@
       "source_file": "src/observability/mining/recommender.py",
       "source_location": "L13",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_observability_mining_recommender_py",
-      "target": "mining_recommender_instrumentationgapdetector",
-      "confidence_score": 1.0
+      "target": "mining_recommender_instrumentationgapdetector"
     },
     {
       "relation": "contains",
@@ -204013,9 +204013,9 @@
       "source_file": "src/observability/mining/recommender.py",
       "source_location": "L17",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_observability_mining_recommender_py",
-      "target": "mining_recommender_detect_gaps",
-      "confidence_score": 1.0
+      "target": "mining_recommender_detect_gaps"
     },
     {
       "relation": "contains",
@@ -204023,9 +204023,9 @@
       "source_file": "src/observability/mining/recommender.py",
       "source_location": "L58",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_observability_mining_recommender_py",
-      "target": "mining_recommender_nextexperimentrecommender",
-      "confidence_score": 1.0
+      "target": "mining_recommender_nextexperimentrecommender"
     },
     {
       "relation": "contains",
@@ -204033,9 +204033,9 @@
       "source_file": "src/observability/mining/recommender.py",
       "source_location": "L62",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_observability_mining_recommender_py",
-      "target": "mining_recommender_recommend_next",
-      "confidence_score": 1.0
+      "target": "mining_recommender_recommend_next"
     },
     {
       "relation": "contains",
@@ -204043,9 +204043,9 @@
       "source_file": "src/observability/mining/recommender.py",
       "source_location": "L121",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_observability_mining_recommender_py",
-      "target": "mining_recommender_write_markdown_report",
-      "confidence_score": 1.0
+      "target": "mining_recommender_write_markdown_report"
     },
     {
       "relation": "rationale_for",
@@ -204053,9 +204053,9 @@
       "source_file": "src/observability/mining/recommender.py",
       "source_location": "L14",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "mining_recommender_rationale_14",
-      "target": "mining_recommender_instrumentationgapdetector",
-      "confidence_score": 1.0
+      "target": "mining_recommender_instrumentationgapdetector"
     },
     {
       "relation": "calls",
@@ -204064,9 +204064,9 @@
       "source_file": "src/observability/mining/recommender.py",
       "source_location": "L65",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "mining_recommender_recommend_next",
-      "target": "mining_recommender_detect_gaps",
-      "confidence_score": 1.0
+      "target": "mining_recommender_detect_gaps"
     },
     {
       "relation": "rationale_for",
@@ -204074,9 +204074,9 @@
       "source_file": "src/observability/mining/recommender.py",
       "source_location": "L59",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "mining_recommender_rationale_59",
-      "target": "mining_recommender_nextexperimentrecommender",
-      "confidence_score": 1.0
+      "target": "mining_recommender_nextexperimentrecommender"
     },
     {
       "relation": "calls",
@@ -204085,9 +204085,9 @@
       "source_file": "src/observability/mining/recommender.py",
       "source_location": "L116",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "mining_recommender_recommend_next",
-      "target": "mining_recommender_write_markdown_report",
-      "confidence_score": 1.0
+      "target": "mining_recommender_write_markdown_report"
     },
     {
       "relation": "contains",
@@ -204095,9 +204095,9 @@
       "source_file": "src/observability/mining/controller.py",
       "source_location": "L26",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_observability_mining_controller_py",
-      "target": "mining_controller_miningexperimentconfig",
-      "confidence_score": 1.0
+      "target": "mining_controller_miningexperimentconfig"
     },
     {
       "relation": "contains",
@@ -204105,9 +204105,9 @@
       "source_file": "src/observability/mining/controller.py",
       "source_location": "L44",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_observability_mining_controller_py",
-      "target": "mining_controller_validate_seeds",
-      "confidence_score": 1.0
+      "target": "mining_controller_validate_seeds"
     },
     {
       "relation": "contains",
@@ -204115,9 +204115,9 @@
       "source_file": "src/observability/mining/controller.py",
       "source_location": "L51",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_observability_mining_controller_py",
-      "target": "mining_controller_validate_ticks",
-      "confidence_score": 1.0
+      "target": "mining_controller_validate_ticks"
     },
     {
       "relation": "contains",
@@ -204125,9 +204125,9 @@
       "source_file": "src/observability/mining/controller.py",
       "source_location": "L57",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_observability_mining_controller_py",
-      "target": "mining_controller_miningrunspec",
-      "confidence_score": 1.0
+      "target": "mining_controller_miningrunspec"
     },
     {
       "relation": "contains",
@@ -204135,9 +204135,9 @@
       "source_file": "src/observability/mining/controller.py",
       "source_location": "L69",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_observability_mining_controller_py",
-      "target": "mining_controller_miningexperimentmanifest",
-      "confidence_score": 1.0
+      "target": "mining_controller_miningexperimentmanifest"
     },
     {
       "relation": "contains",
@@ -204145,9 +204145,9 @@
       "source_file": "src/observability/mining/controller.py",
       "source_location": "L86",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_observability_mining_controller_py",
-      "target": "mining_controller_miningrunmatrixbuilder",
-      "confidence_score": 1.0
+      "target": "mining_controller_miningrunmatrixbuilder"
     },
     {
       "relation": "contains",
@@ -204155,9 +204155,9 @@
       "source_file": "src/observability/mining/controller.py",
       "source_location": "L90",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_observability_mining_controller_py",
-      "target": "mining_controller_build_matrix",
-      "confidence_score": 1.0
+      "target": "mining_controller_build_matrix"
     },
     {
       "relation": "contains",
@@ -204165,9 +204165,9 @@
       "source_file": "src/observability/mining/controller.py",
       "source_location": "L135",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_observability_mining_controller_py",
-      "target": "mining_controller_miningexperimentcontroller",
-      "confidence_score": 1.0
+      "target": "mining_controller_miningexperimentcontroller"
     },
     {
       "relation": "contains",
@@ -204175,9 +204175,9 @@
       "source_file": "src/observability/mining/controller.py",
       "source_location": "L139",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_observability_mining_controller_py",
-      "target": "mining_controller_execute_experiment",
-      "confidence_score": 1.0
+      "target": "mining_controller_execute_experiment"
     },
     {
       "relation": "contains",
@@ -204185,9 +204185,9 @@
       "source_file": "src/observability/mining/controller.py",
       "source_location": "L296",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_observability_mining_controller_py",
-      "target": "mining_controller_write_manifest",
-      "confidence_score": 1.0
+      "target": "mining_controller_write_manifest"
     },
     {
       "relation": "contains",
@@ -204195,9 +204195,9 @@
       "source_file": "src/observability/mining/controller.py",
       "source_location": "L301",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_observability_mining_controller_py",
-      "target": "mining_controller_write_status",
-      "confidence_score": 1.0
+      "target": "mining_controller_write_status"
     },
     {
       "relation": "rationale_for",
@@ -204205,9 +204205,9 @@
       "source_file": "src/observability/mining/controller.py",
       "source_location": "L27",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "mining_controller_rationale_27",
-      "target": "mining_controller_miningexperimentconfig",
-      "confidence_score": 1.0
+      "target": "mining_controller_miningexperimentconfig"
     },
     {
       "relation": "uses",
@@ -204215,9 +204215,9 @@
       "source_file": "src/observability/mining/controller.py",
       "source_location": "L16",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "mining_controller_miningexperimentconfig",
-      "target": "reporting_artifact_repository_runartifactrepository",
-      "confidence_score": 0.5
+      "target": "reporting_artifact_repository_runartifactrepository"
     },
     {
       "relation": "calls",
@@ -204270,9 +204270,9 @@
       "source_file": "src/observability/mining/controller.py",
       "source_location": "L99",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "mining_controller_build_matrix",
-      "target": "mining_controller_miningrunspec",
-      "confidence_score": 1.0
+      "target": "mining_controller_miningrunspec"
     },
     {
       "relation": "rationale_for",
@@ -204280,9 +204280,9 @@
       "source_file": "src/observability/mining/controller.py",
       "source_location": "L58",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "mining_controller_rationale_58",
-      "target": "mining_controller_miningrunspec",
-      "confidence_score": 1.0
+      "target": "mining_controller_miningrunspec"
     },
     {
       "relation": "uses",
@@ -204290,9 +204290,9 @@
       "source_file": "src/observability/mining/controller.py",
       "source_location": "L16",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "mining_controller_miningrunspec",
-      "target": "reporting_artifact_repository_runartifactrepository",
-      "confidence_score": 0.5
+      "target": "reporting_artifact_repository_runartifactrepository"
     },
     {
       "relation": "calls",
@@ -204301,9 +204301,9 @@
       "source_file": "src/observability/mining/controller.py",
       "source_location": "L158",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "mining_controller_execute_experiment",
-      "target": "mining_controller_miningexperimentmanifest",
-      "confidence_score": 1.0
+      "target": "mining_controller_miningexperimentmanifest"
     },
     {
       "relation": "rationale_for",
@@ -204311,9 +204311,9 @@
       "source_file": "src/observability/mining/controller.py",
       "source_location": "L70",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "mining_controller_rationale_70",
-      "target": "mining_controller_miningexperimentmanifest",
-      "confidence_score": 1.0
+      "target": "mining_controller_miningexperimentmanifest"
     },
     {
       "relation": "uses",
@@ -204321,9 +204321,9 @@
       "source_file": "src/observability/mining/controller.py",
       "source_location": "L16",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "mining_controller_miningexperimentmanifest",
-      "target": "reporting_artifact_repository_runartifactrepository",
-      "confidence_score": 0.5
+      "target": "reporting_artifact_repository_runartifactrepository"
     },
     {
       "relation": "rationale_for",
@@ -204331,9 +204331,9 @@
       "source_file": "src/observability/mining/controller.py",
       "source_location": "L87",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "mining_controller_rationale_87",
-      "target": "mining_controller_miningrunmatrixbuilder",
-      "confidence_score": 1.0
+      "target": "mining_controller_miningrunmatrixbuilder"
     },
     {
       "relation": "uses",
@@ -204341,9 +204341,9 @@
       "source_file": "src/observability/mining/controller.py",
       "source_location": "L16",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "mining_controller_miningrunmatrixbuilder",
-      "target": "reporting_artifact_repository_runartifactrepository",
-      "confidence_score": 0.5
+      "target": "reporting_artifact_repository_runartifactrepository"
     },
     {
       "relation": "calls",
@@ -204352,9 +204352,9 @@
       "source_file": "src/observability/mining/controller.py",
       "source_location": "L156",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "mining_controller_execute_experiment",
-      "target": "mining_controller_build_matrix",
-      "confidence_score": 1.0
+      "target": "mining_controller_build_matrix"
     },
     {
       "relation": "rationale_for",
@@ -204362,9 +204362,9 @@
       "source_file": "src/observability/mining/controller.py",
       "source_location": "L136",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "mining_controller_rationale_136",
-      "target": "mining_controller_miningexperimentcontroller",
-      "confidence_score": 1.0
+      "target": "mining_controller_miningexperimentcontroller"
     },
     {
       "relation": "uses",
@@ -204372,9 +204372,9 @@
       "source_file": "src/observability/mining/controller.py",
       "source_location": "L16",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "mining_controller_miningexperimentcontroller",
-      "target": "reporting_artifact_repository_runartifactrepository",
-      "confidence_score": 0.5
+      "target": "reporting_artifact_repository_runartifactrepository"
     },
     {
       "relation": "calls",
@@ -204383,9 +204383,9 @@
       "source_file": "src/observability/mining/controller.py",
       "source_location": "L171",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "mining_controller_execute_experiment",
-      "target": "mining_controller_write_manifest",
-      "confidence_score": 1.0
+      "target": "mining_controller_write_manifest"
     },
     {
       "relation": "calls",
@@ -204394,9 +204394,9 @@
       "source_file": "src/observability/mining/controller.py",
       "source_location": "L175",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "mining_controller_execute_experiment",
-      "target": "mining_controller_write_status",
-      "confidence_score": 1.0
+      "target": "mining_controller_write_status"
     },
     {
       "relation": "calls",
@@ -204415,9 +204415,9 @@
       "source_file": "src/observability/mining/dataset.py",
       "source_location": "L13",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_observability_mining_dataset_py",
-      "target": "mining_dataset_runfeatureextractor",
-      "confidence_score": 1.0
+      "target": "mining_dataset_runfeatureextractor"
     },
     {
       "relation": "contains",
@@ -204425,9 +204425,9 @@
       "source_file": "src/observability/mining/dataset.py",
       "source_location": "L17",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_observability_mining_dataset_py",
-      "target": "mining_dataset_extract_features",
-      "confidence_score": 1.0
+      "target": "mining_dataset_extract_features"
     },
     {
       "relation": "contains",
@@ -204435,9 +204435,9 @@
       "source_file": "src/observability/mining/dataset.py",
       "source_location": "L191",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_observability_mining_dataset_py",
-      "target": "mining_dataset_miningdatasetbuilder",
-      "confidence_score": 1.0
+      "target": "mining_dataset_miningdatasetbuilder"
     },
     {
       "relation": "contains",
@@ -204445,9 +204445,9 @@
       "source_file": "src/observability/mining/dataset.py",
       "source_location": "L195",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_observability_mining_dataset_py",
-      "target": "mining_dataset_build_dataset",
-      "confidence_score": 1.0
+      "target": "mining_dataset_build_dataset"
     },
     {
       "relation": "contains",
@@ -204455,9 +204455,9 @@
       "source_file": "src/observability/mining/dataset.py",
       "source_location": "L355",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_observability_mining_dataset_py",
-      "target": "mining_dataset_datasetqueryservice",
-      "confidence_score": 1.0
+      "target": "mining_dataset_datasetqueryservice"
     },
     {
       "relation": "rationale_for",
@@ -204465,9 +204465,9 @@
       "source_file": "src/observability/mining/dataset.py",
       "source_location": "L14",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "mining_dataset_rationale_14",
-      "target": "mining_dataset_runfeatureextractor",
-      "confidence_score": 1.0
+      "target": "mining_dataset_runfeatureextractor"
     },
     {
       "relation": "calls",
@@ -204476,9 +204476,9 @@
       "source_file": "src/observability/mining/dataset.py",
       "source_location": "L246",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "mining_dataset_build_dataset",
-      "target": "mining_dataset_extract_features",
-      "confidence_score": 1.0
+      "target": "mining_dataset_extract_features"
     },
     {
       "relation": "rationale_for",
@@ -204486,9 +204486,9 @@
       "source_file": "src/observability/mining/dataset.py",
       "source_location": "L192",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "mining_dataset_rationale_192",
-      "target": "mining_dataset_miningdatasetbuilder",
-      "confidence_score": 1.0
+      "target": "mining_dataset_miningdatasetbuilder"
     },
     {
       "relation": "method",
@@ -204496,9 +204496,9 @@
       "source_file": "src/observability/mining/dataset.py",
       "source_location": "L358",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "mining_dataset_datasetqueryservice",
-      "target": "mining_dataset_datasetqueryservice_init",
-      "confidence_score": 1.0
+      "target": "mining_dataset_datasetqueryservice_init"
     },
     {
       "relation": "method",
@@ -204506,9 +204506,9 @@
       "source_file": "src/observability/mining/dataset.py",
       "source_location": "L369",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "mining_dataset_datasetqueryservice",
-      "target": "mining_dataset_datasetqueryservice_query",
-      "confidence_score": 1.0
+      "target": "mining_dataset_datasetqueryservice_query"
     },
     {
       "relation": "method",
@@ -204516,9 +204516,9 @@
       "source_file": "src/observability/mining/dataset.py",
       "source_location": "L408",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "mining_dataset_datasetqueryservice",
-      "target": "mining_dataset_datasetqueryservice_python_fallback_query",
-      "confidence_score": 1.0
+      "target": "mining_dataset_datasetqueryservice_python_fallback_query"
     },
     {
       "relation": "rationale_for",
@@ -204526,9 +204526,9 @@
       "source_file": "src/observability/mining/dataset.py",
       "source_location": "L356",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "mining_dataset_rationale_356",
-      "target": "mining_dataset_datasetqueryservice",
-      "confidence_score": 1.0
+      "target": "mining_dataset_datasetqueryservice"
     },
     {
       "relation": "uses",
@@ -204536,9 +204536,9 @@
       "source_file": "src/observability/mining/patterns.py",
       "source_location": "L10",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "mining_patterns_patternminingengine",
-      "target": "mining_dataset_datasetqueryservice",
-      "confidence_score": 0.5
+      "target": "mining_dataset_datasetqueryservice"
     },
     {
       "relation": "calls",
@@ -204569,9 +204569,9 @@
       "source_file": "src/observability/mining/dataset.py",
       "source_location": "L372",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "mining_dataset_datasetqueryservice_query",
-      "target": "mining_dataset_datasetqueryservice_python_fallback_query",
-      "confidence_score": 1.0
+      "target": "mining_dataset_datasetqueryservice_python_fallback_query"
     },
     {
       "relation": "contains",
@@ -204579,9 +204579,9 @@
       "source_file": "src/observability/mining/auditor.py",
       "source_location": "L13",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_observability_mining_auditor_py",
-      "target": "mining_auditor_datacompletenessauditor",
-      "confidence_score": 1.0
+      "target": "mining_auditor_datacompletenessauditor"
     },
     {
       "relation": "contains",
@@ -204589,9 +204589,9 @@
       "source_file": "src/observability/mining/auditor.py",
       "source_location": "L17",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_observability_mining_auditor_py",
-      "target": "mining_auditor_audit_completeness",
-      "confidence_score": 1.0
+      "target": "mining_auditor_audit_completeness"
     },
     {
       "relation": "contains",
@@ -204599,9 +204599,9 @@
       "source_file": "src/observability/mining/auditor.py",
       "source_location": "L265",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_observability_mining_auditor_py",
-      "target": "mining_auditor_write_markdown_report",
-      "confidence_score": 1.0
+      "target": "mining_auditor_write_markdown_report"
     },
     {
       "relation": "contains",
@@ -204609,9 +204609,9 @@
       "source_file": "src/observability/mining/auditor.py",
       "source_location": "L132",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_observability_mining_auditor_py",
-      "target": "mining_auditor_determinismauditor",
-      "confidence_score": 1.0
+      "target": "mining_auditor_determinismauditor"
     },
     {
       "relation": "contains",
@@ -204619,9 +204619,9 @@
       "source_file": "src/observability/mining/auditor.py",
       "source_location": "L136",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_observability_mining_auditor_py",
-      "target": "mining_auditor_audit_determinism",
-      "confidence_score": 1.0
+      "target": "mining_auditor_audit_determinism"
     },
     {
       "relation": "contains",
@@ -204629,9 +204629,9 @@
       "source_file": "src/observability/mining/auditor.py",
       "source_location": "L220",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_observability_mining_auditor_py",
-      "target": "mining_auditor_find_earliest_divergence",
-      "confidence_score": 1.0
+      "target": "mining_auditor_find_earliest_divergence"
     },
     {
       "relation": "rationale_for",
@@ -204639,9 +204639,9 @@
       "source_file": "src/observability/mining/auditor.py",
       "source_location": "L14",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "mining_auditor_rationale_14",
-      "target": "mining_auditor_datacompletenessauditor",
-      "confidence_score": 1.0
+      "target": "mining_auditor_datacompletenessauditor"
     },
     {
       "relation": "calls",
@@ -204650,9 +204650,9 @@
       "source_file": "src/observability/mining/auditor.py",
       "source_location": "L98",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "mining_auditor_audit_completeness",
-      "target": "mining_auditor_write_markdown_report",
-      "confidence_score": 1.0
+      "target": "mining_auditor_write_markdown_report"
     },
     {
       "relation": "calls",
@@ -204661,9 +204661,9 @@
       "source_file": "src/observability/mining/auditor.py",
       "source_location": "L215",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "mining_auditor_audit_determinism",
-      "target": "mining_auditor_write_markdown_report",
-      "confidence_score": 1.0
+      "target": "mining_auditor_write_markdown_report"
     },
     {
       "relation": "rationale_for",
@@ -204671,9 +204671,9 @@
       "source_file": "src/observability/mining/auditor.py",
       "source_location": "L133",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "mining_auditor_rationale_133",
-      "target": "mining_auditor_determinismauditor",
-      "confidence_score": 1.0
+      "target": "mining_auditor_determinismauditor"
     },
     {
       "relation": "calls",
@@ -204682,9 +204682,9 @@
       "source_file": "src/observability/mining/auditor.py",
       "source_location": "L189",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "mining_auditor_audit_determinism",
-      "target": "mining_auditor_find_earliest_divergence",
-      "confidence_score": 1.0
+      "target": "mining_auditor_find_earliest_divergence"
     },
     {
       "relation": "contains",
@@ -204692,9 +204692,9 @@
       "source_file": "src/observability/mining/patterns.py",
       "source_location": "L15",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_observability_mining_patterns_py",
-      "target": "mining_patterns_patternminingengine",
-      "confidence_score": 1.0
+      "target": "mining_patterns_patternminingengine"
     },
     {
       "relation": "contains",
@@ -204702,9 +204702,9 @@
       "source_file": "src/observability/mining/patterns.py",
       "source_location": "L19",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_observability_mining_patterns_py",
-      "target": "mining_patterns_mine_patterns",
-      "confidence_score": 1.0
+      "target": "mining_patterns_mine_patterns"
     },
     {
       "relation": "contains",
@@ -204712,9 +204712,9 @@
       "source_file": "src/observability/mining/patterns.py",
       "source_location": "L117",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_observability_mining_patterns_py",
-      "target": "mining_patterns_write_markdown_report",
-      "confidence_score": 1.0
+      "target": "mining_patterns_write_markdown_report"
     },
     {
       "relation": "rationale_for",
@@ -204722,9 +204722,9 @@
       "source_file": "src/observability/mining/patterns.py",
       "source_location": "L16",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "mining_patterns_rationale_16",
-      "target": "mining_patterns_patternminingengine",
-      "confidence_score": 1.0
+      "target": "mining_patterns_patternminingengine"
     },
     {
       "relation": "calls",
@@ -204733,9 +204733,9 @@
       "source_file": "src/observability/mining/patterns.py",
       "source_location": "L112",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "mining_patterns_mine_patterns",
-      "target": "mining_patterns_write_markdown_report",
-      "confidence_score": 1.0
+      "target": "mining_patterns_write_markdown_report"
     },
     {
       "relation": "contains",
@@ -204743,9 +204743,9 @@
       "source_file": "src/observability/mining/orchestrator.py",
       "source_location": "L14",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_observability_mining_orchestrator_py",
-      "target": "mining_orchestrator_agentoutputvalidator",
-      "confidence_score": 1.0
+      "target": "mining_orchestrator_agentoutputvalidator"
     },
     {
       "relation": "contains",
@@ -204753,9 +204753,9 @@
       "source_file": "src/observability/mining/orchestrator.py",
       "source_location": "L18",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_observability_mining_orchestrator_py",
-      "target": "mining_orchestrator_validate_output",
-      "confidence_score": 1.0
+      "target": "mining_orchestrator_validate_output"
     },
     {
       "relation": "contains",
@@ -204763,9 +204763,9 @@
       "source_file": "src/observability/mining/orchestrator.py",
       "source_location": "L50",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_observability_mining_orchestrator_py",
-      "target": "mining_orchestrator_aiagentinvestigationrunner",
-      "confidence_score": 1.0
+      "target": "mining_orchestrator_aiagentinvestigationrunner"
     },
     {
       "relation": "contains",
@@ -204773,9 +204773,9 @@
       "source_file": "src/observability/mining/orchestrator.py",
       "source_location": "L54",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_observability_mining_orchestrator_py",
-      "target": "mining_orchestrator_run_investigation",
-      "confidence_score": 1.0
+      "target": "mining_orchestrator_run_investigation"
     },
     {
       "relation": "contains",
@@ -204783,9 +204783,9 @@
       "source_file": "src/observability/mining/orchestrator.py",
       "source_location": "L142",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_observability_mining_orchestrator_py",
-      "target": "mining_orchestrator_write_markdown_finding",
-      "confidence_score": 1.0
+      "target": "mining_orchestrator_write_markdown_finding"
     },
     {
       "relation": "rationale_for",
@@ -204793,9 +204793,9 @@
       "source_file": "src/observability/mining/orchestrator.py",
       "source_location": "L15",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "mining_orchestrator_rationale_15",
-      "target": "mining_orchestrator_agentoutputvalidator",
-      "confidence_score": 1.0
+      "target": "mining_orchestrator_agentoutputvalidator"
     },
     {
       "relation": "calls",
@@ -204804,9 +204804,9 @@
       "source_file": "src/observability/mining/orchestrator.py",
       "source_location": "L128",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "mining_orchestrator_run_investigation",
-      "target": "mining_orchestrator_validate_output",
-      "confidence_score": 1.0
+      "target": "mining_orchestrator_validate_output"
     },
     {
       "relation": "rationale_for",
@@ -204814,9 +204814,9 @@
       "source_file": "src/observability/mining/orchestrator.py",
       "source_location": "L51",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "mining_orchestrator_rationale_51",
-      "target": "mining_orchestrator_aiagentinvestigationrunner",
-      "confidence_score": 1.0
+      "target": "mining_orchestrator_aiagentinvestigationrunner"
     },
     {
       "relation": "calls",
@@ -204825,9 +204825,9 @@
       "source_file": "src/observability/mining/orchestrator.py",
       "source_location": "L137",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "mining_orchestrator_run_investigation",
-      "target": "mining_orchestrator_write_markdown_finding",
-      "confidence_score": 1.0
+      "target": "mining_orchestrator_write_markdown_finding"
     },
     {
       "relation": "calls",
@@ -255212,9 +255212,9 @@
       "source_file": "tests/unit/observability/test_phase9_mining.py",
       "source_location": "L36",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "tests_unit_observability_test_phase9_mining_py",
-      "target": "observability_test_phase9_mining_temp_experiment_workspace",
-      "confidence_score": 1.0
+      "target": "observability_test_phase9_mining_temp_experiment_workspace"
     },
     {
       "relation": "contains",
@@ -255222,9 +255222,9 @@
       "source_file": "tests/unit/observability/test_phase9_mining.py",
       "source_location": "L140",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "tests_unit_observability_test_phase9_mining_py",
-      "target": "observability_test_phase9_mining_test_mining_config_validation",
-      "confidence_score": 1.0
+      "target": "observability_test_phase9_mining_test_mining_config_validation"
     },
     {
       "relation": "contains",
@@ -255232,9 +255232,9 @@
       "source_file": "tests/unit/observability/test_phase9_mining.py",
       "source_location": "L172",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "tests_unit_observability_test_phase9_mining_py",
-      "target": "observability_test_phase9_mining_test_matrix_builder_generates_matrix",
-      "confidence_score": 1.0
+      "target": "observability_test_phase9_mining_test_matrix_builder_generates_matrix"
     },
     {
       "relation": "contains",
@@ -255242,9 +255242,9 @@
       "source_file": "tests/unit/observability/test_phase9_mining.py",
       "source_location": "L193",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "tests_unit_observability_test_phase9_mining_py",
-      "target": "observability_test_phase9_mining_test_dataset_builder_compiles_data",
-      "confidence_score": 1.0
+      "target": "observability_test_phase9_mining_test_dataset_builder_compiles_data"
     },
     {
       "relation": "contains",
@@ -255252,9 +255252,9 @@
       "source_file": "tests/unit/observability/test_phase9_mining.py",
       "source_location": "L212",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "tests_unit_observability_test_phase9_mining_py",
-      "target": "observability_test_phase9_mining_test_query_service_executes_queries",
-      "confidence_score": 1.0
+      "target": "observability_test_phase9_mining_test_query_service_executes_queries"
     },
     {
       "relation": "contains",
@@ -255262,9 +255262,9 @@
       "source_file": "tests/unit/observability/test_phase9_mining.py",
       "source_location": "L232",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "tests_unit_observability_test_phase9_mining_py",
-      "target": "observability_test_phase9_mining_test_data_completeness_auditor",
-      "confidence_score": 1.0
+      "target": "observability_test_phase9_mining_test_data_completeness_auditor"
     },
     {
       "relation": "contains",
@@ -255272,9 +255272,9 @@
       "source_file": "tests/unit/observability/test_phase9_mining.py",
       "source_location": "L246",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "tests_unit_observability_test_phase9_mining_py",
-      "target": "observability_test_phase9_mining_test_determinism_auditor_finds_divergence",
-      "confidence_score": 1.0
+      "target": "observability_test_phase9_mining_test_determinism_auditor_finds_divergence"
     },
     {
       "relation": "contains",
@@ -255282,9 +255282,9 @@
       "source_file": "tests/unit/observability/test_phase9_mining.py",
       "source_location": "L263",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "tests_unit_observability_test_phase9_mining_py",
-      "target": "observability_test_phase9_mining_test_pattern_mining_engine",
-      "confidence_score": 1.0
+      "target": "observability_test_phase9_mining_test_pattern_mining_engine"
     },
     {
       "relation": "contains",
@@ -255292,9 +255292,9 @@
       "source_file": "tests/unit/observability/test_phase9_mining.py",
       "source_location": "L280",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "tests_unit_observability_test_phase9_mining_py",
-      "target": "observability_test_phase9_mining_test_priority_scorer_and_backlog",
-      "confidence_score": 1.0
+      "target": "observability_test_phase9_mining_test_priority_scorer_and_backlog"
     },
     {
       "relation": "contains",
@@ -255302,9 +255302,9 @@
       "source_file": "tests/unit/observability/test_phase9_mining.py",
       "source_location": "L301",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "tests_unit_observability_test_phase9_mining_py",
-      "target": "observability_test_phase9_mining_test_evidence_pack_builder",
-      "confidence_score": 1.0
+      "target": "observability_test_phase9_mining_test_evidence_pack_builder"
     },
     {
       "relation": "contains",
@@ -255312,9 +255312,9 @@
       "source_file": "tests/unit/observability/test_phase9_mining.py",
       "source_location": "L324",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "tests_unit_observability_test_phase9_mining_py",
-      "target": "observability_test_phase9_mining_test_ai_agent_investigation_orchestrator",
-      "confidence_score": 1.0
+      "target": "observability_test_phase9_mining_test_ai_agent_investigation_orchestrator"
     },
     {
       "relation": "contains",
@@ -255322,9 +255322,9 @@
       "source_file": "tests/unit/observability/test_phase9_mining.py",
       "source_location": "L349",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "tests_unit_observability_test_phase9_mining_py",
-      "target": "observability_test_phase9_mining_test_next_experiment_recommender",
-      "confidence_score": 1.0
+      "target": "observability_test_phase9_mining_test_next_experiment_recommender"
     },
     {
       "relation": "contains",
@@ -255332,9 +255332,9 @@
       "source_file": "tests/unit/observability/test_phase9_mining.py",
       "source_location": "L367",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "tests_unit_observability_test_phase9_mining_py",
-      "target": "observability_test_phase9_mining_test_review_workflow_and_quality_gate",
-      "confidence_score": 1.0
+      "target": "observability_test_phase9_mining_test_review_workflow_and_quality_gate"
     },
     {
       "relation": "rationale_for",
@@ -255342,9 +255342,9 @@
       "source_file": "tests/unit/observability/test_phase9_mining.py",
       "source_location": "L37",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "observability_test_phase9_mining_rationale_37",
-      "target": "observability_test_phase9_mining_temp_experiment_workspace",
-      "confidence_score": 1.0
+      "target": "observability_test_phase9_mining_temp_experiment_workspace"
     },
     {
       "relation": "rationale_for",
@@ -255352,9 +255352,9 @@
       "source_file": "tests/unit/observability/test_phase9_mining.py",
       "source_location": "L141",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "observability_test_phase9_mining_rationale_141",
-      "target": "observability_test_phase9_mining_test_mining_config_validation",
-      "confidence_score": 1.0
+      "target": "observability_test_phase9_mining_test_mining_config_validation"
     },
     {
       "relation": "rationale_for",
@@ -255362,9 +255362,9 @@
       "source_file": "tests/unit/observability/test_phase9_mining.py",
       "source_location": "L173",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "observability_test_phase9_mining_rationale_173",
-      "target": "observability_test_phase9_mining_test_matrix_builder_generates_matrix",
-      "confidence_score": 1.0
+      "target": "observability_test_phase9_mining_test_matrix_builder_generates_matrix"
     },
     {
       "relation": "rationale_for",
@@ -255372,9 +255372,9 @@
       "source_file": "tests/unit/observability/test_phase9_mining.py",
       "source_location": "L194",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "observability_test_phase9_mining_rationale_194",
-      "target": "observability_test_phase9_mining_test_dataset_builder_compiles_data",
-      "confidence_score": 1.0
+      "target": "observability_test_phase9_mining_test_dataset_builder_compiles_data"
     },
     {
       "relation": "rationale_for",
@@ -255382,9 +255382,9 @@
       "source_file": "tests/unit/observability/test_phase9_mining.py",
       "source_location": "L213",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "observability_test_phase9_mining_rationale_213",
-      "target": "observability_test_phase9_mining_test_query_service_executes_queries",
-      "confidence_score": 1.0
+      "target": "observability_test_phase9_mining_test_query_service_executes_queries"
     },
     {
       "relation": "rationale_for",
@@ -255392,9 +255392,9 @@
       "source_file": "tests/unit/observability/test_phase9_mining.py",
       "source_location": "L233",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "observability_test_phase9_mining_rationale_233",
-      "target": "observability_test_phase9_mining_test_data_completeness_auditor",
-      "confidence_score": 1.0
+      "target": "observability_test_phase9_mining_test_data_completeness_auditor"
     },
     {
       "relation": "rationale_for",
@@ -255402,9 +255402,9 @@
       "source_file": "tests/unit/observability/test_phase9_mining.py",
       "source_location": "L247",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "observability_test_phase9_mining_rationale_247",
-      "target": "observability_test_phase9_mining_test_determinism_auditor_finds_divergence",
-      "confidence_score": 1.0
+      "target": "observability_test_phase9_mining_test_determinism_auditor_finds_divergence"
     },
     {
       "relation": "rationale_for",
@@ -255412,9 +255412,9 @@
       "source_file": "tests/unit/observability/test_phase9_mining.py",
       "source_location": "L264",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "observability_test_phase9_mining_rationale_264",
-      "target": "observability_test_phase9_mining_test_pattern_mining_engine",
-      "confidence_score": 1.0
+      "target": "observability_test_phase9_mining_test_pattern_mining_engine"
     },
     {
       "relation": "rationale_for",
@@ -255422,9 +255422,9 @@
       "source_file": "tests/unit/observability/test_phase9_mining.py",
       "source_location": "L281",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "observability_test_phase9_mining_rationale_281",
-      "target": "observability_test_phase9_mining_test_priority_scorer_and_backlog",
-      "confidence_score": 1.0
+      "target": "observability_test_phase9_mining_test_priority_scorer_and_backlog"
     },
     {
       "relation": "rationale_for",
@@ -255432,9 +255432,9 @@
       "source_file": "tests/unit/observability/test_phase9_mining.py",
       "source_location": "L302",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "observability_test_phase9_mining_rationale_302",
-      "target": "observability_test_phase9_mining_test_evidence_pack_builder",
-      "confidence_score": 1.0
+      "target": "observability_test_phase9_mining_test_evidence_pack_builder"
     },
     {
       "relation": "rationale_for",
@@ -255442,9 +255442,9 @@
       "source_file": "tests/unit/observability/test_phase9_mining.py",
       "source_location": "L325",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "observability_test_phase9_mining_rationale_325",
-      "target": "observability_test_phase9_mining_test_ai_agent_investigation_orchestrator",
-      "confidence_score": 1.0
+      "target": "observability_test_phase9_mining_test_ai_agent_investigation_orchestrator"
     },
     {
       "relation": "rationale_for",
@@ -255452,9 +255452,9 @@
       "source_file": "tests/unit/observability/test_phase9_mining.py",
       "source_location": "L350",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "observability_test_phase9_mining_rationale_350",
-      "target": "observability_test_phase9_mining_test_next_experiment_recommender",
-      "confidence_score": 1.0
+      "target": "observability_test_phase9_mining_test_next_experiment_recommender"
     },
     {
       "relation": "rationale_for",
@@ -255462,9 +255462,9 @@
       "source_file": "tests/unit/observability/test_phase9_mining.py",
       "source_location": "L368",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "observability_test_phase9_mining_rationale_368",
-      "target": "observability_test_phase9_mining_test_review_workflow_and_quality_gate",
-      "confidence_score": 1.0
+      "target": "observability_test_phase9_mining_test_review_workflow_and_quality_gate"
     },
     {
       "relation": "contains",

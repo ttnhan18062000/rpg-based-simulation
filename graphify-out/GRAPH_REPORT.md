@@ -1,7 +1,7 @@
 # Graph Report - rpg-based-simulation  (2026-05-21)
 
 ## Corpus Check
-- 854 files · ~359,532 words
+- 854 files · ~352,672 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
