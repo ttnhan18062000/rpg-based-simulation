@@ -122,6 +122,7 @@ For deep technical specs, architecture guides, and checklists, see the dedicated
 *   **[Phase 6: Externalization and Scale Readiness](docs/observability/phase_6.md)**
 *   **[Phase 7: Production-Grade Observatory Platform](docs/observability/phase_7.md)**
 *   **[Phase 8: Advanced Simulation Understanding Framework](docs/observability/phase_8.md)**
+*   **[Phase 9: Simulation Mining & AI-Assisted Investigation](docs/observability/phase_9.md)**
 
 ---
 
