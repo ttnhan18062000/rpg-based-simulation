@@ -194,6 +194,11 @@ class MovementPhase:
         # Populate live claims with already updated positions from prior phases or Pass 0
         for ent_upd in refined_entity_updates.values():
             if ent_upd.new_position is not None:
+                u_ent = state.entities.get(ent_upd.entity_id)
+                if u_ent:
+                    old_pos = (int(u_ent.navigation.position[0]), int(u_ent.navigation.position[1]))
+                    if old_pos in live_occ_map and live_occ_map[old_pos] == ent_upd.entity_id:
+                        del live_occ_map[old_pos]
                 new_pos = (int(ent_upd.new_position[0]), int(ent_upd.new_position[1]))
                 live_claims.add(new_pos)
                 live_occ_map[new_pos] = ent_upd.entity_id
@@ -235,6 +240,15 @@ class MovementPhase:
             move_updates = MovementSystem.resolve_move(state, entity, nav_target, mode=mode)
             for u_id, u_upd in move_updates.items():
                 existing = refined_entity_updates.get(u_id)
+                if existing is not None and existing.new_position is not None and u_upd.new_position is not None:
+                    prev_new_pos = (int(existing.new_position[0]), int(existing.new_position[1]))
+                    next_new_pos = (int(u_upd.new_position[0]), int(u_upd.new_position[1]))
+                    if prev_new_pos != next_new_pos:
+                        if prev_new_pos in live_occ_map and live_occ_map[prev_new_pos] == u_id:
+                            del live_occ_map[prev_new_pos]
+                        if prev_new_pos in live_claims:
+                            live_claims.discard(prev_new_pos)
+
                 if existing is not None:
                     refined_entity_updates[u_id] = existing.merge(u_upd)
                 else:

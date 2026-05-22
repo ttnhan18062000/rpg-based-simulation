@@ -1,0 +1,12 @@
+{
+  "sweep_id": "long_run_complex_sweep_2026",
+  "scenario_name": "metropolis",
+  "scenario_type": "metropolis",
+  "seeds": [1234],
+  "ticks": 20000,
+  "observability_mode": "CERTIFICATION",
+  "profile_name": "cli_default",
+  "max_parallel_runs": 1,
+  "stop_on_first_critical": true,
+  "output_dir": "data/run_sets"
+}

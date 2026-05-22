@@ -186,3 +186,61 @@ def test_occupancy_conflict_with_static_entity():
         and event.reason == "OCCUPANCY_CONFLICT"
         for event in refined_update.rejection_events
     )
+
+
+def test_cascading_occupancy_rejection():
+    """
+    LAW:
+        If Entity B (209) is rejected from moving to Tile Y because Tile Y is occupied
+        by static Entity C (208), then Entity A (210) trying to move to Entity B's
+        start-of-tick Tile X must also be rejected.
+    """
+    ent1 = make_actor(1, pos=(0.0, 0.0))
+    ent2 = make_actor(2, pos=(1.0, 0.0))
+    ent3 = make_actor(3, pos=(2.0, 0.0))
+
+    state = AuthoritativeState(
+        tick=0,
+        seed=1,
+        entities={
+            1: ent1,
+            2: ent2,
+            3: ent3,
+        },
+    )
+
+    # Ent 1 (210 equivalent) claims Ent 2's start-of-tick tile (1.0, 0.0)
+    # Ent 2 (209 equivalent) claims Ent 3's start-of-tick tile (2.0, 0.0)
+    # Ent 3 (208 equivalent) is static (no update)
+    authoritative_movement_update = StateUpdate(
+        entity_updates={
+            1: EntityUpdate(
+                entity_id=1,
+                new_position=(1.0, 0.0),
+                moved_this_tick=True,
+            ),
+            2: EntityUpdate(
+                entity_id=2,
+                new_position=(2.0, 0.0),
+                moved_this_tick=True,
+            ),
+        }
+    )
+
+    refined_update = OccupancyPhase.resolve(
+        state,
+        authoritative_movement_update,
+    )
+
+    # Both Ent 1 and Ent 2 must be rejected
+    rejected_update_1 = refined_update.entity_updates[1]
+    assert rejected_update_1.new_position is None
+    assert rejected_update_1.moved_this_tick is False
+    assert rejected_update_1.navigation.failure_reason == "OCCUPANCY_CONFLICT"
+
+    rejected_update_2 = refined_update.entity_updates[2]
+    assert rejected_update_2.new_position is None
+    assert rejected_update_2.moved_this_tick is False
+    assert rejected_update_2.navigation.failure_reason == "OCCUPANCY_CONFLICT"
+
+    assert refined_update.rejections_delta.get("OCCUPANCY_CONFLICT", 0) == 2

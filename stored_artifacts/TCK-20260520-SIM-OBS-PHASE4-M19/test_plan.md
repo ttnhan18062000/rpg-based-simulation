@@ -1,18 +1,16 @@
-# Test Plan and Verification Report - Minimal Balance Envelope Config
+# Test Plan: Minimal Balance Envelope Config
 
-## Unit Testing
-- Covered parsing and validation of valid/invalid envelopes in `tests/unit/observability/test_balance_envelope.py`.
-- Covered baseline comparator overrides (overriding standard comparator outcomes).
-- Covered multiplier-relative bounds (`max_multiplier_from_baseline` triggering warnings/fails correctly).
-- Covered rules engine overrides (mapping expectations to specific rules and overriding thresholds/severities).
+## Unit Verification
 
-## Integration Testing
-- Covered end-to-end integration flow in `tests/integration/observability/test_balance_envelope_comparison.py`.
-- Verified CLI execution paths for both `compare-run` and `compare-sweep` subcommands using sample envelope and baseline payloads.
+### `tests/unit/observability/test_balance_envelope.py`
+- **Load Valid JSON Envelope**: Verify that `BalanceEnvelopeLoader.load_from_file` parses a valid configuration completely.
+- **Reject Invalid Envelope**: Test that schemas with missing scenario names, scenario types, or empty expectation bounds raise clear validation exceptions.
+- **Envelope Comparator Override**: Verify that the comparator successfully overrides baseline static bounds with envelope values.
+- **Baseline Multiplier Calculation**: Confirm that `max_multiplier_from_baseline` scales baseline metrics correctly and triggers fails/warnings accordingly.
 
-## Verification Run Status
-- Completed full observability test execution:
-```bash
-pytest tests/unit/observability/ tests/integration/observability/
-```
-Result: 81 tests passed in 5.36s (100% success rate).
+## Integration Verification
+
+### `tests/integration/observability/test_balance_envelope_comparison.py`
+- Run dynamic simulations producing full metric and event telemetry logs.
+- Trigger `rpg-observe compare-run` with custom envelopes.
+- Verify that custom threshold overrides successfully govern the CLI exit code and output results.

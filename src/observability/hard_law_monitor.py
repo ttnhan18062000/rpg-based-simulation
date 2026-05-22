@@ -143,6 +143,13 @@ class HardLawMonitor:
         if not dirty_set or not dirty_set.movement_entities:
             return violations
 
+        # Force fresh index rebuild to bypass cached start-of-tick positions
+        if hasattr(state, "world_indexes"):
+            try:
+                delattr(state, "world_indexes")
+            except AttributeError:
+                pass
+
         # Query spatial grid index (O(1) cached lookup or quick O(N) rebuild scoped to current tick)
         indexes = WorldIndexService.get_indexes(state, dirty_set)
         
