@@ -30,6 +30,8 @@ class RegionSpec(BaseModel):
     id: str = Field(..., min_length=1, description="Unique identifier for the region")
     type: str = Field(..., min_length=1, description="Atmospheric or ecological type of the region")
     bounds: tuple[int, int, int, int] = Field(..., description="Bounds of the region as [min_x, min_y, max_x, max_y]")
+    terrain: Optional[str] = Field("GRASS", description="Ecological terrain type of the region")
+    hazard_level: Optional[float] = Field(0.0, description="Hazard difficulty factor of the region")
 
     @model_validator(mode="after")
     def validate_bounds(self) -> RegionSpec:
@@ -70,6 +72,15 @@ class BuildingSpec(BaseModel):
     type: str = Field(..., min_length=1, description="Building construction category")
     region: str = Field(..., min_length=1, description="Region containing this building")
 
+class BudgetSpec(BaseModel):
+    model_config = ConfigDict(frozen=True)
+
+    max_entities: Optional[int] = Field(None, ge=0, description="Maximum total entities allowed")
+    max_regions: Optional[int] = Field(None, ge=0, description="Maximum total regions allowed")
+    max_resource_nodes: Optional[int] = Field(None, ge=0, description="Maximum total resource nodes allowed")
+    max_buildings: Optional[int] = Field(None, ge=0, description="Maximum total buildings allowed")
+    max_expected_artifact_mb: Optional[float] = Field(None, ge=0.0, description="Maximum expected artifact size in MB")
+
 class ValidationSpec(BaseModel):
     model_config = ConfigDict(frozen=True)
 
@@ -92,6 +103,8 @@ class WorldSpec(BaseModel):
     buildings: list[BuildingSpec] = Field(default_factory=list)
     quests: list[dict[str, Any]] = Field(default_factory=list)
     validation: ValidationSpec = Field(default_factory=ValidationSpec)
+    budgets: Optional[BudgetSpec] = Field(None, description="Optional resource limits and budget controls")
+
 
     @field_validator("schema_version")
     @classmethod

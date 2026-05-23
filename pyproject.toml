@@ -33,6 +33,8 @@ dev = [
 
 [project.scripts]
 rpg-sim = "src.__main__:main"
+rpg-world = "src.worldbuilding.cli:main"
+
 
 [tool.setuptools.packages.find]
 include = ["src*"]
