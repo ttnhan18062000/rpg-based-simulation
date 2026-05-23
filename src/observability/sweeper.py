@@ -36,6 +36,28 @@ class ScenarioSweepConfig(BaseModel):
     stop_on_first_critical: bool = False
     output_dir: str = "data/run_sets"
 
+    @field_validator("observability_mode", mode="before")
+    @classmethod
+    def parse_observability_mode(cls, v: Any) -> Any:
+        if isinstance(v, str):
+            normalized = v.strip().lower()
+            mapping = {
+                "none": "OFF",
+                "off": "OFF",
+                "light": "LIGHT",
+                "production": "LIGHT",
+                "full": "DEBUG",
+                "debug": "DEBUG",
+                "cert": "CERTIFICATION",
+                "certification": "CERTIFICATION",
+                "long_run": "LONG_RUN",
+                "longrun": "LONG_RUN"
+            }
+            mapped = mapping.get(normalized)
+            if mapped:
+                return ObservabilityMode(mapped)
+        return v
+
     @field_validator("seeds")
     @classmethod
     def validate_seeds(cls, v: List[int]) -> List[int]:
@@ -199,14 +221,22 @@ class ScenarioSweeper:
                     except Exception:
                         pass
 
-                # Move run artifacts to the localized sweep runs folder
+                # Run post-simulation analysis pipeline to generate run_report.json, anomalies.json, etc.
+                try:
+                    from src.observability.anomaly.pipeline import AnalysisPipeline
+                    pipeline = AnalysisPipeline()
+                    pipeline.run(spec.run_id, allow_partial=True)
+                except Exception as ap_err:
+                    logger.error(f"Failed running AnalysisPipeline for run {spec.run_id}: {ap_err}")
+
+                # Copy run artifacts to the localized sweep runs folder and keep under data/runs
                 target_run_dir = os.path.join(sweep_dir, "runs", spec.run_id)
                 os.makedirs(os.path.dirname(target_run_dir), exist_ok=True)
                 
                 if os.path.exists(temp_run_dir):
                     if os.path.exists(target_run_dir):
                         shutil.rmtree(target_run_dir)
-                    shutil.move(temp_run_dir, target_run_dir)
+                    shutil.copytree(temp_run_dir, target_run_dir)
 
                 if run_success:
                     completed_count += 1
@@ -279,7 +309,7 @@ class ScenarioSweeper:
                         except Exception:
                             pass
                     else:
-                        if r_status == "COMPLETED":
+                        if r_status in ("COMPLETED", "ANALYZED"):
                             health_score = 100.0
 
                     records.append(RunIndexRecord(
@@ -301,7 +331,7 @@ class ScenarioSweeper:
                 
                 # Build Sweep Summary
                 total_runs = len(records)
-                completed_runs = sum(1 for r in records if r.status == "COMPLETED")
+                completed_runs = sum(1 for r in records if r.status in ("COMPLETED", "ANALYZED"))
                 failed_runs = sum(1 for r in records if r.status == "FAILED")
                 avg_health = sum(r.health_score for r in records) / total_runs if total_runs > 0 else 0.0
                 
@@ -313,14 +343,14 @@ class ScenarioSweeper:
                 if records:
                     sorted_best = sorted(
                         records,
-                        key=lambda r: (r.status == "COMPLETED", r.health_score, r.ticks_completed),
+                        key=lambda r: (r.status in ("COMPLETED", "ANALYZED"), r.health_score, r.ticks_completed),
                         reverse=True
                     )
                     best_run_id = sorted_best[0].run_id
                     
                     sorted_worst = sorted(
                         records,
-                        key=lambda r: (r.status == "COMPLETED", r.health_score, r.ticks_completed)
+                        key=lambda r: (r.status in ("COMPLETED", "ANALYZED"), r.health_score, r.ticks_completed)
                     )
                     worst_run_id = sorted_worst[0].run_id
 

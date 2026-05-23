@@ -58,8 +58,8 @@ services:
     build:
       context: .
       dockerfile: backend.Dockerfile
-    # Override FastAPI command to run the independent worker daemon
-    command: python -m src.workers.ai_worker_daemon
+    # Override FastAPI command to run the V2 live anomaly worker
+    command: python -m src.observability.anomaly.worker
     environment:
       - REDIS_URL=redis://redis:6379/0
       - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
@@ -176,7 +176,7 @@ services:
     build:
       context: .
       dockerfile: backend.Dockerfile
-    command: python -m src.utils.watchdog
+    command: python -m src.observability.watchdog
     environment:
       - BACKEND_URL=http://backend:8000
       - LOKI_URL=http://loki:3100

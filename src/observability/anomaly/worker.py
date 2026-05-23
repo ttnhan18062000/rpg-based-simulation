@@ -406,3 +406,29 @@ class LiveAnomalyWorker:
                 f.write(self.status_record.model_dump_json(indent=2))
         except Exception as e:
             logger.error(f"Failed to write worker status file: {e}")
+
+
+if __name__ == "__main__":
+    from src.logging.formatter import setup_v2_logging
+    setup_v2_logging(os.environ.get("LOG_LEVEL", "INFO"))
+    
+    # Load settings from environment variables
+    config = LiveWorkerConfig(
+        stream_backend=os.environ.get("SIM_STREAM_BACKEND", "redis"),
+        stream_name=os.environ.get("SIM_STREAM_NAME", "simulation:events"),
+        redis_url=os.environ.get("SIM_REDIS_URL", "redis://redis:6379/0"),
+        consumer_group=os.environ.get("SIM_CONSUMER_GROUP", "observatory:consumers"),
+    )
+    
+    logger.info("Starting LiveAnomalyWorker with config: %s", config)
+    worker = LiveAnomalyWorker(config=config)
+    worker.start()
+    
+    # Block main thread
+    try:
+        while True:
+            time.sleep(1)
+    except KeyboardInterrupt:
+        logger.info("Stopping LiveAnomalyWorker...")
+        worker.stop()
+

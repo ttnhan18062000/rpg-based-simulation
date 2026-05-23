@@ -256,8 +256,24 @@ class ResourceProductionZero(BaseRule):
         anomalies = []
 
         for w in context.metric_windows:
-            # Check gold_total_avg as primary proxy for resource production
-            if w.gold_total_avg == 0:
+            is_zero_production = False
+            if context.events:
+                window_events = [
+                    ev for ev in context.events
+                    if w.window_start_tick <= ev.tick <= w.window_end_tick
+                ]
+                production_events = [
+                    ev for ev in window_events
+                    if ev.event_category in ("resource", "economy") or any(
+                        sig in ev.event_type.lower()
+                        for sig in ("harvest", "craft", "gather", "produce", "deplet", "gold_transaction")
+                    )
+                ]
+                is_zero_production = (len(production_events) == 0)
+            else:
+                is_zero_production = (w.gold_total_avg == 0)
+
+            if is_zero_production:
                 if zero_start_tick is None:
                     zero_start_tick = w.window_start_tick
                 consecutive_zero_windows += 1

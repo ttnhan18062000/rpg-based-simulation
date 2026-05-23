@@ -110,9 +110,13 @@ class RunReportGenerator:
             "final_hash": final_hash,
             "overall_outcome": overall_outcome,
             "health_score": health_score,
+            "hard_law_violation_count": hard_law_violations_count,
             "hard_law_violations_count": hard_law_violations_count,
+            "critical_count": hard_law_violations_count,
             "errors_count": errors_count,
+            "error_count": errors_count,
             "warnings_count": warnings_count,
+            "warning_count": warnings_count,
             "total_anomalies_count": len(anomalies)
         }
 
@@ -177,7 +181,16 @@ class RunReportGenerator:
             "anomalies": anomalies,
             "flagged_timelines": flagged_timelines,
             "rule_execution": serialized_rule_results,
-            "anomaly_clusters": serialized_clusters
+            "anomaly_clusters": serialized_clusters,
+            "health_score": health_score,
+            "critical_count": hard_law_violations_count,
+            "warning_count": warnings_count,
+            "hard_law_violation_count": hard_law_violations_count,
+            "hard_law_violations_count": hard_law_violations_count,
+            "errors_count": errors_count,
+            "error_count": errors_count,
+            "warnings_count": warnings_count,
+            "total_anomalies_count": len(anomalies)
         }
 
         # Save run_report.json

@@ -164,6 +164,9 @@ class DeterminismAuditor:
         determinism_failures = []
         divergence_reports = []
         
+        evaluated_groups_with_hashes = 0
+        total_hashes_found = 0
+        
         for seed, group_runs in runs_by_seed.items():
             if len(group_runs) < 2:
                 continue
@@ -181,6 +184,10 @@ class DeterminismAuditor:
                                 hashes[r_id] = h
                     except Exception:
                         pass
+            
+            if len(hashes) >= 2:
+                evaluated_groups_with_hashes += 1
+            total_hashes_found += len(hashes)
                         
             # Detect divergence
             unique_hashes = set(hashes.values())
@@ -196,7 +203,9 @@ class DeterminismAuditor:
                 })
                 
         verdict = "DETERMINISTIC"
-        if determinism_failures:
+        if evaluated_groups_with_hashes == 0 or total_hashes_found == 0:
+            verdict = "INSUFFICIENT_DATA"
+        elif determinism_failures:
             verdict = "CONFIRMED_NONDETERMINISM"
             
         report = {

@@ -388,7 +388,7 @@ class BaselineComparator:
             )
             run_statuses[r.run_id] = comp.status
 
-            if r.status == "COMPLETED":
+            if r.status in ("COMPLETED", "ANALYZED"):
                 # Check for outliers
                 # 1. Health score < p10
                 baseline_p10_health = baseline.metrics["health_score"].p10
@@ -427,7 +427,7 @@ class BaselineComparator:
 
         # Outliers check based on telemetry metrics
         for r in records:
-            if r.status == "COMPLETED" and r.run_id not in outlier_runs:
+            if r.status in ("COMPLETED", "ANALYZED") and r.run_id not in outlier_runs:
                 # 2. Anomaly count > baseline p95
                 baseline_p95_anom = baseline.metrics["anomaly_count"].p95
                 anoms = r.critical_count + r.warning_count

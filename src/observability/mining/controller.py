@@ -178,12 +178,13 @@ class MiningExperimentController:
         original_mode = ObservabilityConfig.get_mode()
         # Map profile mode strings to Pydantic-valid ObservabilityMode
         obs_mode_mapping = {
-            "production": ObservabilityMode.PRODUCTION if hasattr(ObservabilityMode, "PRODUCTION") else ObservabilityMode.FULL,
-            "full": ObservabilityMode.FULL,
+            "production": ObservabilityMode.LONG_RUN,
+            "full": ObservabilityMode.DEBUG,
             "light": ObservabilityMode.LIGHT,
-            "none": ObservabilityMode.NONE
+            "none": ObservabilityMode.OFF,
+            "cert": ObservabilityMode.CERTIFICATION
         }
-        target_mode = obs_mode_mapping.get(config.observability_profile.lower(), ObservabilityMode.FULL)
+        target_mode = obs_mode_mapping.get(config.observability_profile.lower(), ObservabilityMode.DEBUG)
         ObservabilityConfig.set_override_mode(target_mode)
         
         completed_count = 0

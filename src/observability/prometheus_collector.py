@@ -121,3 +121,64 @@ class PrometheusMetricsCollector:
         )
         last_violation.add_metric([], snapshot.get("last_hard_law_violation_tick", -1))
         yield last_violation
+
+        # Grafana Dashboard Alignment metrics
+        # 17. sim_world_difficulty_mult
+        world_diff = GaugeMetricFamily(
+            "sim_world_difficulty_mult",
+            "Active world simulation difficulty multiplier coefficient"
+        )
+        world_diff.add_metric([], snapshot.get("world_difficulty_mult", 1.0))
+        yield world_diff
+
+        # 18. sim_faction_population
+        faction_pop = GaugeMetricFamily(
+            "sim_faction_population",
+            "Current entity populations grouped by faction",
+            labels=["faction_id"]
+        )
+        for fid, count in snapshot.get("faction_population", {}).items():
+            faction_pop.add_metric([str(fid)], count)
+        yield faction_pop
+
+        # 19. sim_entity_level_distribution
+        lvl_dist = GaugeMetricFamily(
+            "sim_entity_level_distribution",
+            "Current entity count distribution grouped by level",
+            labels=["level"]
+        )
+        for lvl, count in snapshot.get("entity_level_distribution", {}).items():
+            lvl_dist.add_metric([str(lvl)], count)
+        yield lvl_dist
+
+        # 20. sim_items_crafted_total
+        items_crafted = CounterMetricFamily(
+            "sim_items_crafted_total",
+            "Cumulative count of crafted items total"
+        )
+        items_crafted.add_metric([], snapshot.get("items_crafted_total", 0))
+        yield items_crafted
+
+        # 21. sim_shop_transactions_total
+        shop_trans = CounterMetricFamily(
+            "sim_shop_transactions_total",
+            "Cumulative count of shop transactions total"
+        )
+        shop_trans.add_metric([], snapshot.get("shop_transactions_total", 0))
+        yield shop_trans
+
+        # 22. sim_combat_events_total
+        combat_total = CounterMetricFamily(
+            "sim_combat_events_total",
+            "Cumulative count of combat events total"
+        )
+        combat_total.add_metric([], snapshot.get("combat_events_total", 0))
+        yield combat_total
+
+        # 23. sim_skill_events_total
+        skill_total = CounterMetricFamily(
+            "sim_skill_events_total",
+            "Cumulative count of skill events total"
+        )
+        skill_total.add_metric([], snapshot.get("skill_events_total", 0))
+        yield skill_total

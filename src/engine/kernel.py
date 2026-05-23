@@ -595,7 +595,27 @@ class Kernel:
         for v in violations:
             self._status.cumulative_violations[v.law_id] = self._status.cumulative_violations.get(v.law_id, 0) + 1
 
-        # Route hard law violations to alerts
+        # Route hard law violations to alerts and persist them to jsonl
+        if self._artifact_repo and self._run_id:
+            try:
+                import os
+                import json
+                v_path = self._artifact_repo.resolve_path(self._run_id, "violations")
+                os.makedirs(os.path.dirname(v_path), exist_ok=True)
+                with open(v_path, "a", encoding="utf-8") as f:
+                    for v in violations:
+                        record = {
+                            "tick": self._state.tick,
+                            "law_id": v.law_id,
+                            "entity_id": v.entity_id,
+                            "severity": v.severity,
+                            "message": v.message,
+                            "details": v.details
+                        }
+                        f.write(json.dumps(record) + "\n")
+            except Exception:
+                logger.exception("Failed to write to hard_law_violations.jsonl")
+
         try:
             from src.observability.alerts.manager import AlertsManager
             from src.observability.alerts.models import AlertEvent

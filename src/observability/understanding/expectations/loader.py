@@ -53,6 +53,12 @@ class ExpectationPackLoader:
         """
         pack_path = os.path.join(self.pack_dir, f"{scenario_type}.json")
         if not os.path.exists(pack_path):
+            known_scenarios = {"resource_economy", "combat_heavy", "mixed_sandbox", "peaceful_village"}
+            if scenario_type in known_scenarios:
+                raise FileNotFoundError(
+                    f"Required expectation pack not found for known scenario_type={scenario_type!r} "
+                    f"at {pack_path}."
+                )
             logger.warning(
                 f"Expectation pack not found for scenario_type={scenario_type!r} "
                 f"at {pack_path}. Using default pack."

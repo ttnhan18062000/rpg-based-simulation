@@ -474,6 +474,11 @@ class ParquetArtifactExporter(ArtifactExporter):
         dest_dir: str,
         artifact_types: List[str]
     ) -> tuple[Dict[str, str], Dict[str, int], List[str]]:
+        if not self.enabled:
+            logger.warning("pyarrow is not installed in the environment. Falling back to JSONL format for export.")
+            jsonl_exporter = JSONLArtifactExporter()
+            return jsonl_exporter.export_run(run_id, source_dir, dest_dir, artifact_types)
+
         self._ensure_enabled()
         
         output_files = {}
@@ -518,6 +523,11 @@ class ParquetArtifactExporter(ArtifactExporter):
         dest_dir: str,
         artifact_types: List[str]
     ) -> tuple[Dict[str, str], Dict[str, int], List[str]]:
+        if not self.enabled:
+            logger.warning("pyarrow is not installed in the environment. Falling back to JSONL format for export.")
+            jsonl_exporter = JSONLArtifactExporter()
+            return jsonl_exporter.export_sweep(sweep_id, source_dir, dest_dir, artifact_types)
+
         self._ensure_enabled()
 
         output_files = {}

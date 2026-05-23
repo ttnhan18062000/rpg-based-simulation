@@ -131,7 +131,7 @@ class BaselineGenerator:
                 exclusion_reasons[r.run_id] = "Manual developer override exclude."
                 continue
 
-            if r.status != "COMPLETED":
+            if r.status not in ("COMPLETED", "ANALYZED"):
                 excluded_run_ids.append(r.run_id)
                 exclusion_reasons[r.run_id] = f"Run status is {r.status}."
                 continue

@@ -278,12 +278,14 @@ class MiningDatasetBuilder:
                     logger.warning(f"Failed extracting anomalies for {run_id}: {e}")
                     
             # Extract hard law violations table
-            violations_file = os.path.join(run_dir, "hard_law_violations.json")
+            violations_file = os.path.join(run_dir, "hard_law_violations.jsonl")
             if os.path.exists(violations_file):
                 try:
                     with open(violations_file, "r", encoding="utf-8") as f:
-                        violations = json.load(f)
-                        for v in violations:
+                        for line in f:
+                            if not line.strip():
+                                continue
+                            v = json.loads(line)
                             hard_law_violations_table.append({
                                 "run_id": run_id,
                                 "seed": features["seed"],

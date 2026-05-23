@@ -20,6 +20,14 @@
       "operator": ">=",
       "threshold": 60.0,
       "severity_if_violated": "WARNING"
+    },
+    {
+      "rule_id": "stuck_worker_ratio_low",
+      "description": "Stuck worker ratio should stay below 50% in general sandbox",
+      "metric_key": "stuck_ratio",
+      "operator": "<",
+      "threshold": 0.5,
+      "severity_if_violated": "WARNING"
     }
   ],
   "acceptable_anomaly_types": ["ResourceNodeCrowdingRule", "NavigationStuckRule"],

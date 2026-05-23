@@ -83,7 +83,14 @@ def test_balance_envelope_integration_and_cli_flow(tmp_path):
     def mock_init(self, base_dir="data/run_sets"):
         original_init(self, base_dir=output_dir)
 
+    original_compare_run = BaselineComparator.compare_run
+    def mock_compare_run(run_id, baseline_path, run_dir="data/runs", envelope_path=None):
+        if run_dir == "data/runs":
+            run_dir = os.path.join(output_dir, sweep_id, "runs")
+        return original_compare_run(run_id, baseline_path, run_dir=run_dir, envelope_path=envelope_path)
+
     with patch.object(RunSetArtifactRepository, "__init__", mock_init), \
+         patch.object(BaselineComparator, "compare_run", mock_compare_run), \
          patch("sys.exit") as mock_exit:
          
         cli_args = MagicMock()
