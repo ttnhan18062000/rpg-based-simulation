@@ -46,6 +46,13 @@ The macro-scale laws of the environment.
 *   Ecology & Replenishment
 *   Calamities & World Threats
 
+### [06: Worldbuilding Foundation](06_worldbuilding_foundation.md)
+The structural laws of data-driven setup.
+*   Declarative World Topology
+*   Regional Boundaries & Sovereignty
+*   Entity & Resource Distribution
+*   Integrity Validation Laws
+
 ---
 
 ## 📜 Compliance Status
