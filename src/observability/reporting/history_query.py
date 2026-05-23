@@ -1,4 +1,6 @@
 from __future__ import annotations
+import os
+import json
 import re
 from typing import List, Dict, Any, Optional
 from src.observability.reporting.artifact_repository import RunArtifactRepository, RunManifest
@@ -26,6 +28,125 @@ class HistoricalRunQueryService:
     def get_run_manifest(self, run_id: str) -> RunManifest:
         run_id = sanitize_id(run_id)
         return self.repo.read_manifest(run_id)
+
+    def get_entity_snapshots(
+        self, run_id: str, entity_id: str, page: int = 1, page_size: int = 20, full_graph: bool = False
+    ) -> Dict[str, Any]:
+        run_id = sanitize_id(run_id)
+        entity_id = sanitize_id(entity_id)
+        
+        # Verify run manifest exists
+        self.get_run_manifest(run_id)
+        
+        run_dir = os.path.join(self.repo.base_dir, run_id)
+        snapshots_path = os.path.join(run_dir, "cognition_graph_snapshots.jsonl")
+        
+        if not os.path.exists(snapshots_path):
+            raise FileNotFoundError(f"Cognition snapshots file not found for run: {run_id}")
+            
+        matching = []
+        try:
+            entity_id_int = int(entity_id)
+        except ValueError:
+            entity_id_int = None
+
+        with open(snapshots_path, "r", encoding="utf-8") as f:
+            for line in f:
+                if line.strip():
+                    data = json.loads(line)
+                    if str(data.get("entity_id")) == entity_id or (entity_id_int is not None and data.get("entity_id") == entity_id_int):
+                        if not full_graph:
+                            data_stripped = data.copy()
+                            data_stripped.pop("nodes", None)
+                            data_stripped.pop("edges", None)
+                            data_stripped["nodes_count"] = len(data.get("nodes", []))
+                            data_stripped["edges_count"] = len(data.get("edges", []))
+                            matching.append(data_stripped)
+                        else:
+                            matching.append(data)
+
+        total = len(matching)
+        start = (page - 1) * page_size
+        end = start + page_size
+        paginated = matching[start:end]
+        
+        return {
+            "snapshots": paginated,
+            "total": total,
+            "page": page,
+            "page_size": page_size
+        }
+
+    def get_entity_diffs(self, run_id: str, entity_id: str) -> List[Dict[str, Any]]:
+        run_id = sanitize_id(run_id)
+        entity_id = sanitize_id(entity_id)
+        
+        # Verify run manifest exists
+        self.get_run_manifest(run_id)
+        
+        run_dir = os.path.join(self.repo.base_dir, run_id)
+        diffs_path = os.path.join(run_dir, "cognition_graph_diffs.jsonl")
+        
+        if not os.path.exists(diffs_path):
+            raise FileNotFoundError(f"Cognition diffs file not found for run: {run_id}")
+            
+        matching = []
+        try:
+            entity_id_int = int(entity_id)
+        except ValueError:
+            entity_id_int = None
+
+        with open(diffs_path, "r", encoding="utf-8") as f:
+            for line in f:
+                if line.strip():
+                    data = json.loads(line)
+                    if str(data.get("entity_id")) == entity_id or (entity_id_int is not None and data.get("entity_id") == entity_id_int):
+                        matching.append(data)
+                        
+        return matching
+
+    def get_entity_features(self, run_id: str, entity_id: str) -> List[Dict[str, Any]]:
+        run_id = sanitize_id(run_id)
+        entity_id = sanitize_id(entity_id)
+        
+        # Verify run manifest exists
+        self.get_run_manifest(run_id)
+        
+        run_dir = os.path.join(self.repo.base_dir, run_id)
+        features_path = os.path.join(run_dir, "cognition_features.jsonl")
+        
+        if not os.path.exists(features_path):
+            raise FileNotFoundError(f"Cognition features file not found for run: {run_id}")
+            
+        matching = []
+        try:
+            entity_id_int = int(entity_id)
+        except ValueError:
+            entity_id_int = None
+
+        with open(features_path, "r", encoding="utf-8") as f:
+            for line in f:
+                if line.strip():
+                    data = json.loads(line)
+                    if str(data.get("entity_id")) == entity_id or (entity_id_int is not None and data.get("entity_id") == entity_id_int):
+                        matching.append(data)
+                        
+        return matching
+
+    def get_run_patterns(self, run_id: str) -> List[Dict[str, Any]]:
+        run_id = sanitize_id(run_id)
+        
+        # Verify run manifest exists
+        self.get_run_manifest(run_id)
+        
+        run_dir = os.path.join(self.repo.base_dir, run_id)
+        patterns_path = os.path.join(run_dir, "cognition_patterns.json")
+        
+        if not os.path.exists(patterns_path):
+            raise FileNotFoundError(f"Cognition patterns file not found for run: {run_id}")
+            
+        with open(patterns_path, "r", encoding="utf-8") as f:
+            return json.load(f)
 
     def list_historical_runs(self, limit: int = 50, offset: int = 0) -> List[RunManifest]:
         """Lists historical runs with sorted pagination support."""

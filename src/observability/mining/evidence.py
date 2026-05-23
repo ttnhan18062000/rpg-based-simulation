@@ -120,6 +120,200 @@ class EvidencePackBuilder:
                 except Exception:
                     pass
                     
+        # Collect matched anomalies to extract their entity_ids and trigger ticks
+        matched_anomalies = []
+        if os.path.exists(anomalies_json):
+            try:
+                with open(anomalies_json, "r", encoding="utf-8") as f:
+                    anomalies = json.load(f)
+                    for a in anomalies:
+                        match = False
+                        if "anomaly_pattern" in candidate_id:
+                            target_rule = candidate_id.replace("anomaly_pattern_", "")
+                            match = a.get("rule_id") == target_rule
+                        else:
+                            match = str(a.get("seed")) in candidate_id
+                        
+                        if match:
+                            matched_anomalies.append(a)
+            except Exception as e:
+                logger.warning(f"Error filtering anomalies for matching: {e}")
+
+        # Identify representative target entity
+        target_eid = None
+        for a in matched_anomalies:
+            if a.get("entity_id") is not None:
+                target_eid = a.get("entity_id")
+                break
+
+        # Collect cognition evidence for representative runs
+        cognition_summary_manifest = {
+            "top_affected_entities": [],
+            "current_projects": {},
+            "unresolved_blockers_count": 0,
+            "known_leads_count": 0,
+            "project_switch_count": 0,
+            "detour_count": 0,
+            "overload_count": 0,
+            "graph_diff_summary": {}
+        }
+
+        # We will loop through the representative runs to gather the actual cognition files and output them
+        for r_id in rep_runs:
+            run_dir = os.path.join(experiment_dir, "runs", r_id)
+            trigger_tick = trigger_ticks.get(r_id, 1000)
+            
+            # Load files
+            snapshots_file = os.path.join(run_dir, "cognition_graph_snapshots.jsonl")
+            diffs_file = os.path.join(run_dir, "cognition_graph_diffs.jsonl")
+            features_file = os.path.join(run_dir, "cognition_features.jsonl")
+            patterns_file = os.path.join(run_dir, "cognition_patterns.json")
+
+            snaps = []
+            if os.path.exists(snapshots_file):
+                try:
+                    with open(snapshots_file, "r", encoding="utf-8") as f:
+                        for line in f:
+                            if line.strip():
+                                snaps.append(json.loads(line))
+                except Exception:
+                    pass
+
+            diffs = []
+            if os.path.exists(diffs_file):
+                try:
+                    with open(diffs_file, "r", encoding="utf-8") as f:
+                        for line in f:
+                            if line.strip():
+                                diffs.append(json.loads(line))
+                except Exception:
+                    pass
+
+            feats = []
+            if os.path.exists(features_file):
+                try:
+                    with open(features_file, "r", encoding="utf-8") as f:
+                        for line in f:
+                            if line.strip():
+                                feats.append(json.loads(line))
+                except Exception:
+                    pass
+
+            patterns = []
+            if os.path.exists(patterns_file):
+                try:
+                    with open(patterns_file, "r", encoding="utf-8") as f:
+                        patterns = json.load(f)
+                except Exception:
+                    pass
+
+            # Write before/after/diff/feature/pattern summaries for target_eid
+            if target_eid is not None:
+                # Find before snapshot (tick <= trigger_tick)
+                before_snap = None
+                for snap in reversed(snaps):
+                    if snap.get("entity_id") == target_eid and snap.get("tick", 0) <= trigger_tick:
+                        before_snap = snap
+                        break
+                
+                # Find after snapshot (tick > trigger_tick or closest >= trigger_tick)
+                after_snap = None
+                for snap in snaps:
+                    if snap.get("entity_id") == target_eid and snap.get("tick", 0) > trigger_tick:
+                        after_snap = snap
+                        break
+                if not after_snap and snaps:
+                    # fallback to latest snap for target_eid
+                    for snap in reversed(snaps):
+                        if snap.get("entity_id") == target_eid:
+                            after_snap = snap
+                            break
+
+                # Find diff
+                matched_diff = None
+                for d in diffs:
+                    if d.get("entity_id") == target_eid and d.get("tick", 0) == (after_snap.get("tick") if after_snap else -1):
+                        matched_diff = d
+                        break
+
+                # Target features
+                target_feats = [f for f in feats if f.get("entity_id") == target_eid]
+                # Target patterns
+                target_patterns = [p for p in patterns if p.get("entity_id") == target_eid]
+
+                if before_snap:
+                    with open(os.path.join(evidence_dir, "cognition_snapshot_before.json"), "w", encoding="utf-8") as f:
+                        json.dump(before_snap, f, indent=2)
+                if after_snap:
+                    with open(os.path.join(evidence_dir, "cognition_snapshot_after.json"), "w", encoding="utf-8") as f:
+                        json.dump(after_snap, f, indent=2)
+                if matched_diff:
+                    with open(os.path.join(evidence_dir, "cognition_diff.json"), "w", encoding="utf-8") as f:
+                        json.dump(matched_diff, f, indent=2)
+                
+                with open(os.path.join(evidence_dir, "cognition_feature_summary.json"), "w", encoding="utf-8") as f:
+                    json.dump(target_feats, f, indent=2)
+                with open(os.path.join(evidence_dir, "cognition_pattern_summary.json"), "w", encoding="utf-8") as f:
+                    json.dump(target_patterns, f, indent=2)
+
+            # Build affected_entities_cognition_summary.json across all entities
+            affected_summary = {}
+            for snap in snaps:
+                eid = snap.get("entity_id")
+                tick = snap.get("tick")
+                if eid not in affected_summary or tick > affected_summary[eid]["tick"]:
+                    nodes = snap.get("nodes", [])
+                    blockers_cnt = sum(1 for n in nodes if n.get("kind") == "blocker")
+                    leads_cnt = sum(1 for n in nodes if n.get("kind") == "lead")
+                    concerns_cnt = sum(1 for n in nodes if n.get("kind") == "concern")
+                    
+                    affected_summary[eid] = {
+                        "entity_id": eid,
+                        "tick": tick,
+                        "current_project": snap.get("current_project_id"),
+                        "current_objective": snap.get("current_objective_id"),
+                        "blocker_count": blockers_cnt,
+                        "lead_count": leads_cnt,
+                        "concern_count": concerns_cnt,
+                        "overload_source": snap.get("overload_source")
+                    }
+
+            with open(os.path.join(evidence_dir, "affected_entities_cognition_summary.json"), "w", encoding="utf-8") as f:
+                json.dump(list(affected_summary.values()), f, indent=2)
+
+            # Aggregate into the compressed cognition_summary manifest
+            unique_eids = list(affected_summary.keys())
+            cognition_summary_manifest["top_affected_entities"].extend(unique_eids[:5])
+            for eid, summary in affected_summary.items():
+                if summary["current_project"]:
+                    cognition_summary_manifest["current_projects"][str(eid)] = {
+                        "project": summary["current_project"],
+                        "objective": summary["current_objective"]
+                    }
+                cognition_summary_manifest["unresolved_blockers_count"] += summary["blocker_count"]
+                cognition_summary_manifest["known_leads_count"] += summary["lead_count"]
+                if summary["overload_source"]:
+                    cognition_summary_manifest["overload_count"] += 1
+
+            # Project switch count, detour count, diff summary
+            project_switch_count = 0
+            detour_count = 0
+            added_nodes_tot = 0
+            removed_nodes_tot = 0
+            for d in diffs:
+                if d.get("current_project_changed"):
+                    project_switch_count += 1
+                detour_count += d.get("detour_delta_count", 0)
+                added_nodes_tot += len(d.get("added_nodes", []))
+                removed_nodes_tot += len(d.get("removed_nodes", []))
+
+            cognition_summary_manifest["project_switch_count"] += project_switch_count
+            cognition_summary_manifest["detour_count"] += detour_count
+            cognition_summary_manifest["graph_diff_summary"] = {
+                "added_nodes_count": added_nodes_tot,
+                "removed_nodes_count": removed_nodes_tot
+            }
+
         # Write files
         with open(os.path.join(evidence_dir, "affected_runs.json"), "w", encoding="utf-8") as f:
             json.dump(affected_runs, f, indent=2)
@@ -166,6 +360,7 @@ To reproduce this specific diagnostic candidate, execute the following CLI comma
                 "events_count": len(events_excerpt),
                 "metrics_count": len(metrics_excerpt)
             },
+            "cognition_summary": cognition_summary_manifest,
             "created_at": datetime.now(timezone.utc).isoformat()
         }
         

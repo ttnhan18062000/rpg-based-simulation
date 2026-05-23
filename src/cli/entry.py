@@ -136,6 +136,32 @@ def _build_parser():
     wh_qry_events.add_argument("--entity-id", type=str, required=True, help="Target entity unique ID")
     wh_qry_events.add_argument("--limit", type=int, default=50, help="Max events to return")
 
+    # Cognition subcommand group
+    cog_parser = sub.add_parser("cognition", help="Inspect strategic cognition data")
+    cog_sub = cog_parser.add_subparsers(dest="cognition_command", required=True)
+    
+    # Snapshot sub-subcommand
+    cog_snap = cog_sub.add_parser("snapshot", help="Query paginated cognition snapshots for an entity")
+    cog_snap.add_argument("run_id", type=str, help="ID of the completed simulation run")
+    cog_snap.add_argument("entity_id", type=str, help="ID of the target entity")
+    cog_snap.add_argument("--page", type=int, default=1, help="Page number")
+    cog_snap.add_argument("--page-size", type=int, default=20, help="Page size")
+    cog_snap.add_argument("--full-graph", action="store_true", help="Include full nodes and edges details")
+
+    # Diff sub-subcommand
+    cog_diff = cog_sub.add_parser("diff", help="Retrieve all strategic graph diffs for an entity")
+    cog_diff.add_argument("run_id", type=str, help="ID of the completed simulation run")
+    cog_diff.add_argument("entity_id", type=str, help="ID of the target entity")
+
+    # Features sub-subcommand
+    cog_feat = cog_sub.add_parser("features", help="Retrieve feature timeline data for an entity")
+    cog_feat.add_argument("run_id", type=str, help="ID of the completed simulation run")
+    cog_feat.add_argument("entity_id", type=str, help="ID of the target entity")
+
+    # Patterns sub-subcommand
+    cog_patt = cog_sub.add_parser("patterns", help="Retrieve all strategic failure patterns for a run")
+    cog_patt.add_argument("run_id", type=str, help="ID of the completed simulation run")
+
     # Global options
     parser.add_argument("--config", type=str, default=None, help="Path to YAML config file")
     parser.add_argument("--json-logs", action="store_true", help="Enable JSON-formatted logging")
@@ -775,6 +801,79 @@ def _run_warehouse(args):
         print("\nIngestion complete successfully.")
         sys.exit(0)
 
+def _run_cognition(args):
+    from src.observability.reporting.history_query import HistoricalRunQueryService, sanitize_id
+    import sys
+    import json
+    
+    query_service = HistoricalRunQueryService()
+    
+    try:
+        if hasattr(args, "run_id") and args.run_id:
+            sanitize_id(args.run_id)
+        if hasattr(args, "entity_id") and args.entity_id:
+            sanitize_id(args.entity_id)
+    except ValueError as e:
+        print(f"Security Error: {e}", file=sys.stderr)
+        sys.exit(1)
+        
+    try:
+        if args.cognition_command == "snapshot":
+            print(f"Querying cognition snapshots for run {args.run_id}, entity {args.entity_id} (page={args.page}, page_size={args.page_size}, full_graph={args.full_graph})...")
+            result = query_service.get_entity_snapshots(
+                run_id=args.run_id,
+                entity_id=args.entity_id,
+                page=args.page,
+                page_size=args.page_size,
+                full_graph=args.full_graph
+            )
+            print(f"Total Snapshots Matching: {result['total']}")
+            print(json.dumps(result["snapshots"], indent=2))
+            sys.exit(0)
+            
+        elif args.cognition_command == "diff":
+            print(f"Querying cognition graph diffs for run {args.run_id}, entity {args.entity_id}...")
+            result = query_service.get_entity_diffs(
+                run_id=args.run_id,
+                entity_id=args.entity_id
+            )
+            print(f"Total Diffs Found: {len(result)}")
+            print(json.dumps(result, indent=2))
+            sys.exit(0)
+            
+        elif args.cognition_command == "features":
+            print(f"Querying cognition features for run {args.run_id}, entity {args.entity_id}...")
+            result = query_service.get_entity_features(
+                run_id=args.run_id,
+                entity_id=args.entity_id
+            )
+            print(f"Total Feature Records: {len(result)}")
+            print(json.dumps(result, indent=2))
+            sys.exit(0)
+            
+        elif args.cognition_command == "patterns":
+            print(f"Querying strategic failure patterns for run {args.run_id}...")
+            result = query_service.get_run_patterns(
+                run_id=args.run_id
+            )
+            print(f"Total Patterns Found: {len(result)}")
+            print(json.dumps(result, indent=2))
+            sys.exit(0)
+            
+        else:
+            print(f"Unknown cognition command: {args.cognition_command}", file=sys.stderr)
+            sys.exit(1)
+            
+    except FileNotFoundError as e:
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(1)
+    except ValueError as e:
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(1)
+    except Exception as e:
+        print(f"Unexpected Error: {e}", file=sys.stderr)
+        sys.exit(1)
+
 def main():
     parser = _build_parser()
     
@@ -816,6 +915,8 @@ def main():
         _run_retention(args)
     elif args.command == "warehouse":
         _run_warehouse(args)
+    elif args.command == "cognition":
+        _run_cognition(args)
     elif args.command == "inspect":
         print("V2 Inspect mode not yet fully implemented. Entity state inspection logic pending M4.")
     else:

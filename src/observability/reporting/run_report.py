@@ -176,6 +176,64 @@ class RunReportGenerator:
                     "anomalies_count": len(c.anomalies)
                 })
 
+        # Load cognition artifacts securely
+        cognition_summary = {
+            "available": False,
+            "patterns": [],
+            "features": [],
+            "snapshots": [],
+            "diffs": []
+        }
+        
+        patterns_path = os.path.join(run_dir, "cognition_patterns.json")
+        features_path = os.path.join(run_dir, "cognition_features.jsonl")
+        snapshots_path = os.path.join(run_dir, "cognition_graph_snapshots.jsonl")
+        diffs_path = os.path.join(run_dir, "cognition_graph_diffs.jsonl")
+
+        if os.path.exists(patterns_path):
+            try:
+                with open(patterns_path, "r", encoding="utf-8") as f:
+                    cognition_summary["patterns"] = json.load(f)
+                    cognition_summary["available"] = True
+            except Exception as e:
+                logger.error(f"Failed loading cognition_patterns.json: {e}")
+        
+        if os.path.exists(features_path):
+            try:
+                feats = []
+                with open(features_path, "r", encoding="utf-8") as f:
+                    for line in f:
+                        if line.strip():
+                            feats.append(json.loads(line))
+                cognition_summary["features"] = feats
+                cognition_summary["available"] = True
+            except Exception as e:
+                logger.error(f"Failed loading cognition_features.jsonl: {e}")
+
+        if os.path.exists(snapshots_path):
+            try:
+                snaps = []
+                with open(snapshots_path, "r", encoding="utf-8") as f:
+                    for line in f:
+                        if line.strip():
+                            snaps.append(json.loads(line))
+                cognition_summary["snapshots"] = snaps
+                cognition_summary["available"] = True
+            except Exception as e:
+                logger.error(f"Failed loading cognition_graph_snapshots.jsonl: {e}")
+
+        if os.path.exists(diffs_path):
+            try:
+                dfs = []
+                with open(diffs_path, "r", encoding="utf-8") as f:
+                    for line in f:
+                        if line.strip():
+                            dfs.append(json.loads(line))
+                cognition_summary["diffs"] = dfs
+                cognition_summary["available"] = True
+            except Exception as e:
+                logger.error(f"Failed loading cognition_graph_diffs.jsonl: {e}")
+
         report_data = {
             "metadata": metadata,
             "anomalies": anomalies,
@@ -190,7 +248,8 @@ class RunReportGenerator:
             "errors_count": errors_count,
             "error_count": errors_count,
             "warnings_count": warnings_count,
-            "total_anomalies_count": len(anomalies)
+            "total_anomalies_count": len(anomalies),
+            "cognition": cognition_summary
         }
 
         # Save run_report.json
@@ -339,6 +398,120 @@ class RunReportGenerator:
                             f.write("  ```\n")
                             f.write("  </details>\n")
                         f.write("\n")
+
+            # Render Strategic Cognition Evidence
+            cognition = data.get("cognition", {})
+            f.write("## 🧠 Strategic Cognition Evidence\n\n")
+            if not cognition or not cognition.get("available", False):
+                f.write("> Strategic cognition data is missing or unavailable for this run.\n\n")
+            else:
+                snaps = cognition.get("snapshots", [])
+                diffs = cognition.get("diffs", [])
+                features = cognition.get("features", [])
+                patterns = cognition.get("patterns", [])
+
+                # Get latest snapshot per entity
+                latest_snaps = {}
+                for snap in snaps:
+                    eid = snap.get("entity_id")
+                    tick = snap.get("tick")
+                    if eid not in latest_snaps or tick > latest_snaps[eid]["tick"]:
+                        latest_snaps[eid] = snap
+
+                if not latest_snaps:
+                    f.write("> No active cognition snapshots recorded in this run.\n\n")
+                else:
+                    for eid, snap in latest_snaps.items():
+                        f.write(f"### Entity `{eid}` Strategic Status (Tick `{snap['tick']}`)\n\n")
+                        f.write(f"- **Current Project**: `{snap.get('current_project_id') or 'None'}`\n")
+                        f.write(f"- **Current Objective**: `{snap.get('current_objective_id') or 'None'}`\n")
+                        f.write(f"- **Primary Overload Source**: `{snap.get('overload_source') or 'None'}`\n\n")
+
+                        # Extract nodes
+                        nodes = snap.get("nodes", [])
+                        
+                        blockers = [n for n in nodes if n.get("kind") == "blocker"]
+                        leads = [n for n in nodes if n.get("kind") == "lead"]
+                        concerns = [n for n in nodes if n.get("kind") == "concern"]
+                        hypotheses = [n for n in nodes if n.get("kind") == "hypothesis"]
+
+                        # Blockers
+                        f.write("#### Active Blockers\n")
+                        if not blockers:
+                            f.write("- *None*\n")
+                        for b in blockers:
+                            label = b.get("label", "")
+                            meta = b.get("metadata", {})
+                            sev = meta.get("severity", "unknown")
+                            res = "Resolved" if meta.get("resolved") else "Active"
+                            f.write(f"- `{b['node_id']}`: {label} (Severity: `{sev}`, Status: `{res}`)\n")
+                        f.write("\n")
+
+                        # Leads
+                        f.write("#### Known Leads\n")
+                        if not leads:
+                            f.write("- *None*\n")
+                        for l in leads:
+                            label = l.get("label", "")
+                            meta = l.get("metadata", {})
+                            cert = meta.get("certainty", "unknown")
+                            tst = "Tested" if meta.get("tested") else "Untested"
+                            f.write(f"- `{l['node_id']}`: {label} (Certainty: `{cert}`, Status: `{tst}`)\n")
+                        f.write("\n")
+
+                        # Concerns
+                        f.write("#### Concerns\n")
+                        if not concerns:
+                            f.write("- *None*\n")
+                        for c in concerns:
+                            label = c.get("label", "")
+                            meta = c.get("metadata", {})
+                            urg = meta.get("urgency", 0)
+                            f.write(f"- `{c['node_id']}`: {label} (Urgency: `{urg}`)\n")
+                        f.write("\n")
+
+                        # Hypotheses
+                        f.write("#### Hypotheses\n")
+                        if not hypotheses:
+                            f.write("- *None*\n")
+                        for h in hypotheses:
+                            label = h.get("label", "")
+                            meta = h.get("metadata", {})
+                            conf = meta.get("confidence", 0.0)
+                            f.write(f"- `{h['node_id']}`: {label} (Confidence: `{conf}`)\n")
+                        f.write("\n")
+
+                # Recent cognition changes
+                f.write("### Recent Strategic Cognition Changes\n\n")
+                if not diffs:
+                    f.write("- *No strategic cognition changes recorded.*\n\n")
+                else:
+                    for d in diffs[-10:]: # last 10 diffs
+                        eid = d.get("entity_id")
+                        tick = d.get("tick")
+                        reason = d.get("reason", "unknown")
+                        f.write(f"- **Tick {tick} (Entity {eid})** [{reason}]:\n")
+                        f.write(f"  - Added nodes: `{d.get('added_nodes', [])}`\n")
+                        f.write(f"  - Removed nodes: `{d.get('removed_nodes', [])}`\n")
+                        if d.get("current_project_changed"):
+                            f.write(f"  - Project changed to: `{d.get('current_project_id')}`\n")
+                        if d.get("current_objective_changed"):
+                            f.write(f"  - Objective changed to: `{d.get('current_objective_id')}`\n")
+                    f.write("\n")
+
+                # Potential cognition patterns
+                f.write("### Potential Cognition Patterns\n\n")
+                if not patterns:
+                    f.write("- *No strategic cognition failure patterns identified.*\n\n")
+                else:
+                    for p in patterns:
+                        eid = p.get("entity_id")
+                        ptype = p.get("pattern_type", "unknown")
+                        sev = p.get("severity", "WARNING")
+                        desc = p.get("description", "")
+                        tick = p.get("tick_detected")
+                        f.write(f"- `{ptype}` ({sev}) on Entity `{eid}` at Tick `{tick}`: {desc}\n")
+                    f.write("\n")
 
             f.write("## 📜 Diagnostic Entity Timelines\n\n")
             if not timelines:

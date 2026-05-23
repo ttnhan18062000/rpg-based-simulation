@@ -88,3 +88,83 @@ async def get_sweep(sweep_id: str):
         raise HTTPException(status_code=404, detail=f"Sweep '{sweep_id}' not found.")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get(
+    "/runs/{run_id}/cognition/entities/{entity_id}/snapshots",
+    response_model=dict,
+    summary="Get paginated cognition snapshots for an entity",
+    responses={404: {"model": ErrorResponse}, 400: {"model": ErrorResponse}}
+)
+async def get_entity_snapshots(
+    run_id: str,
+    entity_id: str,
+    page: int = Query(default=1, ge=1, description="Page number"),
+    page_size: int = Query(default=20, ge=1, le=100, description="Page size"),
+    full_graph: bool = Query(default=False, description="Whether to include full nodes and edges arrays")
+):
+    try:
+        return run_service.get_entity_snapshots(
+            run_id=run_id,
+            entity_id=entity_id,
+            page=page,
+            page_size=page_size,
+            full_graph=full_graph
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except FileNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get(
+    "/runs/{run_id}/cognition/entities/{entity_id}/diffs",
+    response_model=List[dict],
+    summary="Get cognition graph diffs for an entity",
+    responses={404: {"model": ErrorResponse}, 400: {"model": ErrorResponse}}
+)
+async def get_entity_diffs(run_id: str, entity_id: str):
+    try:
+        return run_service.get_entity_diffs(run_id=run_id, entity_id=entity_id)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except FileNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get(
+    "/runs/{run_id}/cognition/entities/{entity_id}/features",
+    response_model=List[dict],
+    summary="Get cognition features for an entity",
+    responses={404: {"model": ErrorResponse}, 400: {"model": ErrorResponse}}
+)
+async def get_entity_features(run_id: str, entity_id: str):
+    try:
+        return run_service.get_entity_features(run_id=run_id, entity_id=entity_id)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except FileNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get(
+    "/runs/{run_id}/cognition/patterns",
+    response_model=List[dict],
+    summary="Get cognition failure patterns for a run",
+    responses={404: {"model": ErrorResponse}, 400: {"model": ErrorResponse}}
+)
+async def get_run_patterns(run_id: str):
+    try:
+        return run_service.get_run_patterns(run_id=run_id)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except FileNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

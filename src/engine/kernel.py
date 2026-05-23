@@ -44,7 +44,7 @@ class Kernel:
         "_current_signals", "_current_policy", "_current_work_items",
         "_source_packets", "_source_work_items", "_final_results", "_final_compute_ms",
         "_phase_costs", "_metrics", "_audit_mode", "_no_frame_pacing", "_no_replay", "_audit_dirty_set", "_perf_tracker", "_force_full_scan", "_current_update", "_cache_registry", "_cache_policy", "_opt_profile", "_event_listeners", "_event_recorder", "_entity_timeline_store",
-        "_run_id", "_artifact_repo", "_metric_recorder", "_current_tick_event_count", "_current_tick_violation_count"
+        "_run_id", "_artifact_repo", "_metric_recorder", "_current_tick_event_count", "_current_tick_violation_count", "_cognition_recorder"
     )
 
     def __init__(
@@ -186,13 +186,19 @@ class Kernel:
         self._entity_timeline_store = EntityTimelineStore(mode=obs_mode)
 
         self._metric_recorder = None
+        self._cognition_recorder = None
         if obs_mode != ObservabilityMode.OFF:
             from src.observability.reporting.metric_recorder import MetricWindowRecorder
+            from src.observability.cognition.recorder import ObservabilityCognitionRecorder
             self._metric_recorder = MetricWindowRecorder(
                 run_id=self._run_id,
                 run_dir=run_dir_str,
                 window_size=100,
                 enabled=True
+            )
+            self._cognition_recorder = ObservabilityCognitionRecorder(
+                run_id=self._run_id,
+                run_dir=run_dir_str
             )
 
         self._current_tick_event_count = 0
@@ -704,6 +710,18 @@ class Kernel:
                     listener(generated_events)
                 except Exception:
                     logger.exception("Error notifying event listener in Kernel")
+
+        # 5. Record strategic cognition snapshots post-commit
+        if getattr(self, "_cognition_recorder", None) is not None:
+            try:
+                self._cognition_recorder.record_tick(
+                    state=self._state,
+                    tick=tick,
+                    events=generated_events,
+                    event_recorder=self._event_recorder
+                )
+            except Exception:
+                logger.exception("Failed to record strategic cognition snapshot in Kernel")
 
     def _guard_stability(self, phase_name: str, start_fingerprint: Dict[str, Any]) -> None:
         from src.core.protocol_validator import ProtocolViolationError

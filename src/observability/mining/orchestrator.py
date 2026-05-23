@@ -110,6 +110,13 @@ class AIAgentInvestigationRunner:
             confidence = 0.75
             evidence_used.append("ResourceProductionZero")
             
+        cognition_notes = ""
+        if pack.get("cognition_summary"):
+            cog = pack["cognition_summary"]
+            blockers = cog.get("unresolved_blockers_count", 0)
+            leads = cog.get("known_leads_count", 0)
+            cognition_notes = f" Cognition analysis shows strategic state is likely related to unresolved blocker ({blockers} blockers, {leads} leads observed). This is an evidence-based insight rather than a definitive root cause."
+
         finding = {
             "finding_id": f"finding_{candidate_id}_{uuid.uuid4().hex[:6]}",
             "candidate_id": candidate_id,
@@ -120,7 +127,7 @@ class AIAgentInvestigationRunner:
             "likely_subsystems": likely_subsystems,
             "recommended_first_step": recommended_first_step,
             "recommended_reproduction": pack.get("reproduction_command", ""),
-            "agent_notes": f"Automated analysis executed successfully on representative run excerpts.",
+            "agent_notes": f"Automated analysis executed successfully on representative run excerpts.{cognition_notes}",
             "created_at": datetime.now(timezone.utc).isoformat()
         }
         
