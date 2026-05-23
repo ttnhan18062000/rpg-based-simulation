@@ -17,7 +17,9 @@ from src.lab import (
     LabResultStoreError,
     LabRunManifest,
     BudgetBlockedError,
-    BudgetWarningError
+    BudgetWarningError,
+    MutationRepository,
+    MutationLabOrchestrator
 )
 
 def main(args=None):
@@ -31,6 +33,7 @@ def main(args=None):
     parser.add_argument("--scenarios-dir", default="data/scenarios", help="Path to scenarios specifications directory")
     parser.add_argument("--experiments-dir", default="data/experiments", help="Path to experiments specifications directory")
     parser.add_argument("--lab-runs-dir", default="data/lab_runs", help="Path to lab runs output directory")
+    parser.add_argument("--mutations-dir", default="data/mutations", help="Path to mutations specifications directory")
     
     subparsers = parser.add_subparsers(dest="command", help="Subcommand to run")
     
@@ -68,8 +71,30 @@ def main(args=None):
     # 8. inspect
     p_inspect = subparsers.add_parser("inspect", help="Output raw JSON of a lab summary")
     p_inspect.add_argument("lab_run_id", help="Lab run identifier")
+
+    # 9. validate-mutation
+    p_val_mut = subparsers.add_parser("validate-mutation", help="Validate a mutation specification")
+    p_val_mut.add_argument("mutation_id", help="Mutation spec identifier")
+    
+    # 10. preview-mutation
+    p_prev_mut = subparsers.add_parser("preview-mutation", help="Preview variant matrix combinations")
+    p_prev_mut.add_argument("mutation_id", help="Mutation spec identifier")
+    
+    # 11. run-mutation
+    p_run_mut = subparsers.add_parser("run-mutation", help="Run a mutation lab sweep")
+    p_run_mut.add_argument("mutation_id", help="Mutation spec identifier")
+    p_run_mut.add_argument("--experiment", required=True, help="Experiment spec identifier")
+    p_run_mut.add_argument("--mutation-lab-id", help="Optional custom mutation lab ID")
+    p_run_mut.add_argument("--profile", default="local_dev", help="Lab security/execution profile")
+    p_run_mut.add_argument("--force", action="store_true", help="Bypass blocked budget checks")
+    p_run_mut.add_argument("--confirm", action="store_true", help="Confirm execution under warning checks")
+    
+    # 12. report-mutation
+    p_rep_mut = subparsers.add_parser("report-mutation", help="Locate and show the mutation lab summary report")
+    p_rep_mut.add_argument("mutation_lab_id", help="Mutation lab identifier")
     
     parsed = parser.parse_args(args)
+
     if not parsed.command:
         parser.print_help()
         sys.exit(0)
@@ -197,6 +222,104 @@ def main(args=None):
             summary = result_store.load_lab_summary(parsed.lab_run_id)
             print(json.dumps(summary, indent=2))
             sys.exit(0)
+            
+        elif parsed.command == "validate-mutation":
+            try:
+                mutation_repo = MutationRepository(parsed.mutations_dir)
+                mutation_spec = mutation_repo.load_mutation(parsed.mutation_id)
+                
+                from src.lab.validator import MutationValidator
+                validator = MutationValidator(world_repo, scenario_repo)
+                issues = validator.validate(mutation_spec)
+                print(f"Mutation spec '{parsed.mutation_id}' is VALID.")
+                for issue in issues:
+                    if issue.severity == "WARNING":
+                        print(f"  - WARNING: [{issue.rule_id}] {issue.message}")
+                sys.exit(0)
+            except Exception as e:
+                print(f"Mutation spec '{parsed.mutation_id}' is INVALID: {e}", file=sys.stderr)
+                sys.exit(1)
+            
+        elif parsed.command == "preview-mutation":
+            try:
+                mutation_repo = MutationRepository(parsed.mutations_dir)
+                mutation_spec = mutation_repo.load_mutation(parsed.mutation_id)
+                
+                base_world = world_repo.load_world(mutation_spec.base_world_id)
+                base_scenario = scenario_repo.load_scenario(mutation_spec.base_scenario_id)
+                
+                from src.lab.mutation import VariantMatrixBuilder
+                builder = VariantMatrixBuilder()
+                import tempfile
+                with tempfile.TemporaryDirectory() as tmpdir:
+                    variants = builder.build_matrix(base_world, base_scenario, mutation_spec, Path(tmpdir))
+                    print(f"Mutation ID: {mutation_spec.mutation_id}")
+                    print(f"Name: {mutation_spec.name}")
+                    print(f"Base World: {mutation_spec.base_world_id}")
+                    print(f"Base Scenario: {mutation_spec.base_scenario_id}")
+                    print(f"Matrix Mode: {mutation_spec.matrix.mode}")
+                    print(f"Number of mutations defined: {len(mutation_spec.mutations)}")
+                    print(f"Expected variant matrix combinations: {len(variants)}")
+                    print()
+                    print(f"| Variant ID | Status | Mutations Applied |")
+                    print(f"| :--- | :--- | :--- |")
+                    for v in variants:
+                        muts_str = ", ".join(v.mutation_ids) if v.mutation_ids else "None (Base)"
+                        print(f"| `{v.variant_id}` | `{v.status}` | {muts_str} |")
+                sys.exit(0)
+            except Exception as e:
+                print(f"Mutation preview failed: {e}", file=sys.stderr)
+                sys.exit(1)
+            
+        elif parsed.command == "run-mutation":
+            mutation_lab_id = parsed.mutation_lab_id
+            if not mutation_lab_id:
+                timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+                mutation_lab_id = f"mutlab_{timestamp}"
+
+            print(f"Executing mutation lab sweep '{parsed.mutation_id}' (Mutation Lab ID: {mutation_lab_id})...")
+            
+            mutation_repo = MutationRepository(parsed.mutations_dir)
+            orchestrator = MutationLabOrchestrator(
+                world_repo=world_repo,
+                scenario_repo=scenario_repo,
+                experiment_repo=experiment_repo,
+                lab_run_repo=lab_run_repo,
+                mutation_repo=mutation_repo
+            )
+
+            try:
+                manifest = orchestrator.run_mutation_lab(
+                    mutation_id=parsed.mutation_id,
+                    experiment_id=parsed.experiment,
+                    mutation_lab_id=mutation_lab_id,
+                    profile=parsed.profile,
+                    force=parsed.force,
+                    confirm=parsed.confirm
+                )
+            except BudgetBlockedError as e:
+                print(f"Budget Error: {e}", file=sys.stderr)
+                print("To bypass this block, you must run with --force (if the execution profile permits it).", file=sys.stderr)
+                sys.exit(2)
+            except Exception as e:
+                print(f"Mutation sweep failed: {e}", file=sys.stderr)
+                sys.exit(1)
+
+            print(f"Mutation sweep executed successfully.")
+            print(f"Overall Status: {manifest['status']}")
+            print(f"Cost profile: {json.dumps(manifest['cost'], indent=2)}")
+            if manifest["status"] == "FAILED":
+                sys.exit(1)
+            sys.exit(0)
+            
+        elif parsed.command == "report-mutation":
+            report_path = Path("data/mutation_labs") / parsed.mutation_lab_id / "analysis" / "mutation_lab_report.md"
+            if not report_path.is_file():
+                print(f"Error: Mutation lab report markdown file not found for '{parsed.mutation_lab_id}'", file=sys.stderr)
+                sys.exit(1)
+            print(f"Mutation Lab Report Path: {report_path.resolve()}")
+            sys.exit(0)
+
             
     except FileNotFoundError as e:
         print(f"Error: File or resource not found: {e}", file=sys.stderr)

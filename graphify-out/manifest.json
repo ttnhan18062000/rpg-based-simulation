@@ -403,33 +403,49 @@
     "mtime": 1779125377.6516008,
     "hash": "d41d8cd98f00b204e9800998ecf8427e"
   },
+  "/home/vboxuser/Work/rpg-based-simulation/src/lab/mutation.py": {
+    "mtime": 1779552958.6953986,
+    "hash": "dcf7bf91352be5199609353cbcf2078b"
+  },
   "/home/vboxuser/Work/rpg-based-simulation/src/lab/repository.py": {
-    "mtime": 1779538461.04675,
-    "hash": "0f7e05be3d5fd2b64aa28e2d61756162"
+    "mtime": 1779552697.2068746,
+    "hash": "06fe9896d85a58474fbba04bcb31e8cd"
+  },
+  "/home/vboxuser/Work/rpg-based-simulation/src/lab/mutation_orchestrator.py": {
+    "mtime": 1779552856.29839,
+    "hash": "f9165faef2f93a980c55bc9e5fe2e341"
   },
   "/home/vboxuser/Work/rpg-based-simulation/src/lab/cli.py": {
-    "mtime": 1779540815.5867915,
-    "hash": "0ac9317705441688b8a0161ac229f175"
+    "mtime": 1779552765.1236672,
+    "hash": "3033671a29046d7b0191d8a6b29e4094"
   },
   "/home/vboxuser/Work/rpg-based-simulation/src/lab/schema.py": {
-    "mtime": 1779540774.1319222,
-    "hash": "f0ecda08bb84e6f71aa66545fef58f87"
+    "mtime": 1779551961.655245,
+    "hash": "0942f9cd6c26a5592e15ed19e8918df5"
   },
   "/home/vboxuser/Work/rpg-based-simulation/src/lab/store.py": {
     "mtime": 1779540449.3979468,
     "hash": "24ef6a05707b2d17874385116992e2f0"
   },
+  "/home/vboxuser/Work/rpg-based-simulation/src/lab/comparison.py": {
+    "mtime": 1779552424.7837236,
+    "hash": "f685d3b5948e0d4ec8f757aac1008063"
+  },
+  "/home/vboxuser/Work/rpg-based-simulation/src/lab/metamorphic.py": {
+    "mtime": 1779551929.452355,
+    "hash": "145badf449d63793e3c95b5b7e433f48"
+  },
   "/home/vboxuser/Work/rpg-based-simulation/src/lab/__init__.py": {
-    "mtime": 1779540789.8448727,
-    "hash": "b8aaefb8a524fe494f6ba693c15191f6"
+    "mtime": 1779552738.00075,
+    "hash": "f9cd52f70642131d57b1f342d12eada2"
   },
   "/home/vboxuser/Work/rpg-based-simulation/src/lab/orchestrator.py": {
     "mtime": 1779540805.0998244,
     "hash": "951bc3c7adc4e55ee861272130c8b8e3"
   },
   "/home/vboxuser/Work/rpg-based-simulation/src/lab/validator.py": {
-    "mtime": 1779535888.7580953,
-    "hash": "fcd56a95e4df7b96284a6c4ba245c9b4"
+    "mtime": 1779544107.147477,
+    "hash": "fb0ff3834d1dbf6ab52ea318170eaa2f"
   },
   "/home/vboxuser/Work/rpg-based-simulation/src/lab/guardrails.py": {
     "mtime": 1779540782.9365678,
@@ -2231,9 +2247,17 @@
     "mtime": 1779535922.077002,
     "hash": "f9ee0621d46a84f7c4c0e9aa89ad8ff5"
   },
+  "/home/vboxuser/Work/rpg-based-simulation/tests/unit/lab/test_metamorphic_rules.py": {
+    "mtime": 1779551947.4357345,
+    "hash": "787a225c0893091626f6c7f54550cbb1"
+  },
   "/home/vboxuser/Work/rpg-based-simulation/tests/unit/lab/test_lab_artifact_layout.py": {
     "mtime": 1779538482.5526884,
     "hash": "83dcaba2493e44124667fca911cb4238"
+  },
+  "/home/vboxuser/Work/rpg-based-simulation/tests/unit/lab/test_mutation_engine.py": {
+    "mtime": 1779544612.4797509,
+    "hash": "ff53597fcdfdb1ee5b7004647582870a"
   },
   "/home/vboxuser/Work/rpg-based-simulation/tests/unit/lab/test_scenariospec_schema.py": {
     "mtime": 1779532790.40784,
@@ -2243,9 +2267,17 @@
     "mtime": 1779540463.3369029,
     "hash": "fbc572258449a22ec1811b7427ad04a6"
   },
+  "/home/vboxuser/Work/rpg-based-simulation/tests/unit/lab/test_mutationspec_validator.py": {
+    "mtime": 1779544126.2520926,
+    "hash": "9b2fd6100df5a2552fcf9cc8af922bcb"
+  },
   "/home/vboxuser/Work/rpg-based-simulation/tests/unit/lab/test_scenario_repository.py": {
     "mtime": 1779532799.1241024,
     "hash": "c14a98bcdb7ecbcefab9f1db2f90df8e"
+  },
+  "/home/vboxuser/Work/rpg-based-simulation/tests/unit/lab/test_variant_matrix_builder.py": {
+    "mtime": 1779551489.7448196,
+    "hash": "e46d5039582dae4da6535d4e6534350f"
   },
   "/home/vboxuser/Work/rpg-based-simulation/tests/unit/lab/test_experimentspec_schema.py": {
     "mtime": 1779535915.5770202,
@@ -2254,6 +2286,10 @@
   "/home/vboxuser/Work/rpg-based-simulation/tests/unit/lab/test_scenariospec_validator.py": {
     "mtime": 1779532794.8848271,
     "hash": "02005d6fc28b7b9e8a1ee64ac5856d19"
+  },
+  "/home/vboxuser/Work/rpg-based-simulation/tests/unit/lab/test_mutationspec_schema.py": {
+    "mtime": 1779544116.4991195,
+    "hash": "bea8bf3ad01982e8594929051a79b010"
   },
   "/home/vboxuser/Work/rpg-based-simulation/tests/unit/lab/test_experiment_repository.py": {
     "mtime": 1779535928.165985,
@@ -2266,6 +2302,10 @@
   "/home/vboxuser/Work/rpg-based-simulation/tests/unit/lab/test_scenario_lab_orchestrator.py": {
     "mtime": 1779539880.0376503,
     "hash": "ccc50d57347d0b8547c77d9901a5f3a7"
+  },
+  "/home/vboxuser/Work/rpg-based-simulation/tests/unit/lab/test_balance_comparison_engine.py": {
+    "mtime": 1779552435.020691,
+    "hash": "e840fe470db027d70f165ebf5b9681c1"
   },
   "/home/vboxuser/Work/rpg-based-simulation/tests/unit/lab/test_labrun_manifest.py": {
     "mtime": 1779538478.8593566,
@@ -3247,6 +3287,14 @@
     "mtime": 1779539894.971607,
     "hash": "afa613de77d51d3c5c3a2e71c3b8a199"
   },
+  "/home/vboxuser/Work/rpg-based-simulation/tests/integration/lab/test_metamorphic_validation_flow.py": {
+    "mtime": 1779551951.40528,
+    "hash": "62cffd072f4456fecb93af2004e30078"
+  },
+  "/home/vboxuser/Work/rpg-based-simulation/tests/integration/lab/test_mutation_lab_orchestrator.py": {
+    "mtime": 1779552863.166369,
+    "hash": "4f725545f38709c7ba1483e9ad576550"
+  },
   "/home/vboxuser/Work/rpg-based-simulation/tests/integration/lab/test_scenario_lab_multi_seed_flow.py": {
     "mtime": 1779539902.7015843,
     "hash": "2f2e5dd16af15138d13e59f434bbe810"
@@ -3707,6 +3755,10 @@
     "mtime": 1775049610.160541,
     "hash": "1803b2e55c436780c3edcf3b0c2af410"
   },
+  "/home/vboxuser/Work/rpg-based-simulation/lab_phase13.md": {
+    "mtime": 1779541225.3975203,
+    "hash": "77b0be0bada3587162fa94ba71f32375"
+  },
   "/home/vboxuser/Work/rpg-based-simulation/docker-compose.yml": {
     "mtime": 1779471217.2824256,
     "hash": "226e4482716b06291b15ecdd0cade696"
@@ -3714,10 +3766,6 @@
   "/home/vboxuser/Work/rpg-based-simulation/requirements.txt": {
     "mtime": 1775741100.140199,
     "hash": "46f1cacd4f444340013b47b256b1432e"
-  },
-  "/home/vboxuser/Work/rpg-based-simulation/lab_phase12.md": {
-    "mtime": 1779530178.587521,
-    "hash": "1cbccc84535fc0855ce49a4749ecdda5"
   },
   "/home/vboxuser/Work/rpg-based-simulation/frontend/index.html": {
     "mtime": 1775049610.1570344,
@@ -3755,6 +3803,18 @@
     "mtime": 1779125377.867701,
     "hash": "fedd35fc074b50f99f4b6674be58379d"
   },
+  "/home/vboxuser/Work/rpg-based-simulation/staging_artifacts/TCK-20260523-MUTATION-ORCHESTRATION/plan.md": {
+    "mtime": 1779552610.2471402,
+    "hash": "b4bcce89833ffd42441b6982fd4ea57f"
+  },
+  "/home/vboxuser/Work/rpg-based-simulation/staging_artifacts/TCK-20260523-MUTATION-ORCHESTRATION/test_plan.md": {
+    "mtime": 1779552614.1230116,
+    "hash": "07c4e78e23d83cd6ac387a01818f4158"
+  },
+  "/home/vboxuser/Work/rpg-based-simulation/staging_artifacts/TCK-20260523-MUTATION-ORCHESTRATION/investigation.md": {
+    "mtime": 1779552603.380161,
+    "hash": "760e312f87d3ea1c1a54c0e73026adf4"
+  },
   "/home/vboxuser/Work/rpg-based-simulation/scratch/perf_out.txt": {
     "mtime": 1778939096.1487992,
     "hash": "f9087941652a09eadbbc1b43e61b1e57"
@@ -3775,29 +3835,37 @@
     "mtime": 1779526058.0174844,
     "hash": "a3d58d69d90da2f9052cf517c9d64a23"
   },
-  "/home/vboxuser/Work/rpg-based-simulation/data/runs/run_cli_lab_run_01_seed_2/anomaly_summary.md": {
-    "mtime": 1779540935.6492047,
+  "/home/vboxuser/Work/rpg-based-simulation/data/runs/run_lab_run_seed_42/anomaly_summary.md": {
+    "mtime": 1779552979.952851,
     "hash": "cfc82f4c9895795047524a8ba999fb97"
   },
-  "/home/vboxuser/Work/rpg-based-simulation/data/runs/run_cli_lab_run_01_seed_2/run_report.md": {
-    "mtime": 1779540935.6494398,
-    "hash": "2fce3fa924332a1e4b993d33a05448b0"
+  "/home/vboxuser/Work/rpg-based-simulation/data/runs/run_lab_run_seed_42/run_report.md": {
+    "mtime": 1779552979.9532325,
+    "hash": "3aec713354cc3ed32df067e021c40632"
   },
   "/home/vboxuser/Work/rpg-based-simulation/data/runs/run_lab_run_001_seed_42/anomaly_summary.md": {
-    "mtime": 1779540476.2037313,
+    "mtime": 1779552981.48429,
     "hash": "cfc82f4c9895795047524a8ba999fb97"
   },
   "/home/vboxuser/Work/rpg-based-simulation/data/runs/run_lab_run_001_seed_42/run_report.md": {
-    "mtime": 1779540476.205638,
+    "mtime": 1779552981.4850104,
     "hash": "228f577bf3d0eb13c5c66f197138425a"
   },
-  "/home/vboxuser/Work/rpg-based-simulation/data/runs/run_cli_lab_run_01_seed_1/anomaly_summary.md": {
-    "mtime": 1779540933.0181167,
+  "/home/vboxuser/Work/rpg-based-simulation/data/runs/run_lab_run_seed_44/anomaly_summary.md": {
+    "mtime": 1779552980.5261195,
     "hash": "cfc82f4c9895795047524a8ba999fb97"
   },
-  "/home/vboxuser/Work/rpg-based-simulation/data/runs/run_cli_lab_run_01_seed_1/run_report.md": {
-    "mtime": 1779540933.0183694,
-    "hash": "8f5fefb3b01061f213bd8d305f6e5dc3"
+  "/home/vboxuser/Work/rpg-based-simulation/data/runs/run_lab_run_seed_44/run_report.md": {
+    "mtime": 1779552980.5269878,
+    "hash": "9dc7d13ea9d820faef71d56a3bc63a28"
+  },
+  "/home/vboxuser/Work/rpg-based-simulation/data/runs/run_lab_run_seed_43/anomaly_summary.md": {
+    "mtime": 1779552980.240137,
+    "hash": "cfc82f4c9895795047524a8ba999fb97"
+  },
+  "/home/vboxuser/Work/rpg-based-simulation/data/runs/run_lab_run_seed_43/run_report.md": {
+    "mtime": 1779552980.2404387,
+    "hash": "c6f2c0f9384337f9567377b8813618af"
   },
   "/home/vboxuser/Work/rpg-based-simulation/grafana/provisioning/datasources/datasource.yml": {
     "mtime": 1775741100.1309867,

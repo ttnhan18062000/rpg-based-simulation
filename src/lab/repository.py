@@ -14,7 +14,9 @@ from src.lab.schema import (
     ExperimentSpec,
     load_experiment_spec_from_yaml,
     LabRunManifest,
-    InvalidLabRunManifestError
+    InvalidLabRunManifestError,
+    MutationSpec,
+    load_mutation_spec_from_yaml
 )
 
 class ScenarioRepositoryError(Exception):
@@ -481,5 +483,146 @@ class LabRunRepository:
             self.rebuild_index()
             with open(self.index_path, "r") as f:
                 return json.load(f)
+
+
+class MutationRepositoryError(Exception):
+    """Base exception for MutationRepository operations."""
+    pass
+
+
+class MutationRepository:
+    """
+    File-based repository layer for loading, saving, listing, and index-tracking
+    mutation specifications under a safe mutations root directory.
+    """
+    def __init__(self, mutations_dir: str | Path):
+        self.mutations_dir = Path(mutations_dir).resolve()
+        self.index_path = self.mutations_dir / "mutation_index.json"
+
+    def _validate_mutation_id(self, mutation_id: str) -> None:
+        """Enforces a strict safe pattern on mutation identifier strings."""
+        if not mutation_id or not re.match(r"^[a-zA-Z0-9_-]+$", mutation_id):
+            raise ValueError(f"Invalid or unsafe mutation_id pattern: '{mutation_id}'")
+
+    def _resolve_mutation_path(self, mutation_id: str) -> Path:
+        """
+        Safely resolves a mutation's target folder and YAML path, blocking path traversal.
+        """
+        self._validate_mutation_id(mutation_id)
+        target_dir = (self.mutations_dir / mutation_id).resolve()
+        
+        # Verify target is strictly a descendant of mutations_dir
+        try:
+            if not target_dir.is_relative_to(self.mutations_dir) or target_dir == self.mutations_dir:
+                raise PermissionError(f"Path traversal attempt blocked for mutation_id: '{mutation_id}'")
+        except ValueError as e:
+            raise PermissionError(f"Path traversal attempt blocked for mutation_id: '{mutation_id}'") from e
+            
+        return target_dir / "mutation.yaml"
+
+    def list_mutations(self) -> list[str]:
+        """Lists IDs of all available mutations that have a valid directory and mutation.yaml."""
+        if not self.mutations_dir.is_dir():
+            return []
+        
+        mutations = []
+        for path in self.mutations_dir.iterdir():
+            if path.is_dir():
+                try:
+                    self._validate_mutation_id(path.name)
+                    if (path / "mutation.yaml").is_file():
+                        mutations.append(path.name)
+                except ValueError:
+                    continue
+        return sorted(mutations)
+
+    def load_mutation(self, mutation_id: str) -> MutationSpec:
+        """Safely loads and parses a mutation specification by its ID."""
+        yaml_path = self._resolve_mutation_path(mutation_id)
+        if not yaml_path.is_file():
+            raise FileNotFoundError(f"Mutation file not found for mutation_id: '{mutation_id}'")
+        try:
+            return load_mutation_spec_from_yaml(yaml_path)
+        except Exception as e:
+            raise MutationRepositoryError(f"Failed to load mutation '{mutation_id}': {e}") from e
+
+    def save_mutation(self, spec: MutationSpec) -> None:
+        """Safely serializes and saves a mutation specification to the filesystem."""
+        mutation_id = spec.mutation_id
+        yaml_path = self._resolve_mutation_path(mutation_id)
+        
+        # Ensure parent folder exists
+        yaml_path.parent.mkdir(parents=True, exist_ok=True)
+        
+        try:
+            # Dump to YAML safely using pure dictionaries
+            data = json.loads(spec.model_dump_json())
+            with open(yaml_path, "w") as f:
+                yaml.safe_dump(data, f, default_flow_style=False, sort_keys=False)
+        except Exception as e:
+            raise MutationRepositoryError(f"Failed to save mutation '{mutation_id}': {e}") from e
+            
+        # Rebuild index to keep metadata synchronized
+        self.rebuild_index()
+
+    def rebuild_index(self) -> None:
+        """
+        Scans the mutations directory, loads and validates each mutation,
+        and saves a consolidated mutation_index.json manifest.
+        """
+        self.mutations_dir.mkdir(parents=True, exist_ok=True)
+        index_data = {}
+        
+        mutation_ids = self.list_mutations()
+        for m_id in mutation_ids:
+            try:
+                spec = self.load_mutation(m_id)
+                status = "VALIDATED"
+            except Exception:
+                status = "BROKEN"
+                spec = None
+
+            if spec:
+                index_data[m_id] = {
+                    "mutation_id": m_id,
+                    "name": spec.name,
+                    "base_world_id": spec.base_world_id,
+                    "base_scenario_id": spec.base_scenario_id,
+                    "schema_version": spec.schema_version,
+                    "updated_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+                    "status": status,
+                    "tags": spec.tags
+                }
+            else:
+                index_data[m_id] = {
+                    "mutation_id": m_id,
+                    "name": "Unknown (Broken)",
+                    "base_world_id": "Unknown",
+                    "base_scenario_id": "Unknown",
+                    "schema_version": "Unknown",
+                    "updated_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+                    "status": status,
+                    "tags": []
+                }
+                
+        # Write cleanly to index file
+        try:
+            with open(self.index_path, "w") as f:
+                json.dump(index_data, f, indent=2)
+        except Exception as e:
+            raise MutationRepositoryError(f"Failed to write index manifest: {e}") from e
+
+    def get_index(self) -> dict:
+        """Loads and returns the mutation manifest index data."""
+        if not self.index_path.is_file():
+            self.rebuild_index()
+        try:
+            with open(self.index_path, "r") as f:
+                return json.load(f)
+        except Exception:
+            self.rebuild_index()
+            with open(self.index_path, "r") as f:
+                return json.load(f)
+
 
 

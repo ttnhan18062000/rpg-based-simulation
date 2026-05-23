@@ -4,7 +4,15 @@ from __future__ import annotations
 from typing import Optional, Any
 from src.worldbuilding.validator import ValidationIssue
 from src.worldbuilding.repository import WorldRepository
-from src.lab.schema import ScenarioSpec, InvalidScenarioSpecError, ExperimentSpec, InvalidExperimentSpecError
+from src.lab.schema import (
+    ScenarioSpec,
+    InvalidScenarioSpecError,
+    ExperimentSpec,
+    InvalidExperimentSpecError,
+    MutationSpec,
+    InvalidMutationSpecError
+)
+
 
 class ScenarioValidationRule:
     """Base class for all pluggable scenario specification validation rules."""
@@ -298,4 +306,133 @@ class ExperimentValidator:
             raise InvalidExperimentSpecError(f"Experiment strict validation failed with {len(warnings)} warnings: " + ", ".join(w.message for w in warnings))
             
         return issues
+
+
+class MutationValidationRule:
+    """Base class for all pluggable mutation specification validation rules."""
+    rule_id: str
+    severity: str  # "ERROR", "WARNING", "INFO"
+    description: str
+
+    def validate(
+        self, 
+        spec: MutationSpec, 
+        world_repo: Optional[WorldRepository] = None, 
+        scenario_repo: Optional[Any] = None
+    ) -> list[ValidationIssue]:
+        raise NotImplementedError
+
+
+class BaseReferencesRule(MutationValidationRule):
+    rule_id = "MUTATION-REF-001"
+    severity = "ERROR"
+    description = "Verify that the base world and scenario specs referenced actually exist."
+
+    def validate(
+        self, 
+        spec: MutationSpec, 
+        world_repo: Optional[WorldRepository] = None, 
+        scenario_repo: Optional[Any] = None
+    ) -> list[ValidationIssue]:
+        issues = []
+        if world_repo is not None:
+            if spec.base_world_id not in world_repo.list_worlds():
+                issues.append(ValidationIssue(
+                    rule_id=self.rule_id,
+                    severity=self.severity,
+                    message=f"MutationSpec references a non-existent base_world_id: '{spec.base_world_id}'",
+                    path="base_world_id"
+                ))
+        if scenario_repo is not None:
+            if spec.base_scenario_id not in scenario_repo.list_scenarios():
+                issues.append(ValidationIssue(
+                    rule_id=self.rule_id,
+                    severity=self.severity,
+                    message=f"MutationSpec references a non-existent base_scenario_id: '{spec.base_scenario_id}'",
+                    path="base_scenario_id"
+                ))
+        return issues
+
+
+class MetamorphicRelationshipRule(MutationValidationRule):
+    rule_id = "MUTATION-META-001"
+    severity = "ERROR"
+    description = "Verify that metamorphic rules reference known variant IDs and valid standard metrics."
+
+    def validate(
+        self, 
+        spec: MutationSpec, 
+        world_repo: Optional[WorldRepository] = None, 
+        scenario_repo: Optional[Any] = None
+    ) -> list[ValidationIssue]:
+        issues = []
+        defined_mutation_ids = {m.id for m in spec.mutations}
+        defined_mutation_ids.add("base")
+
+        for i, rel in enumerate(spec.expected_relationships):
+            if rel.baseline_variant not in defined_mutation_ids:
+                issues.append(ValidationIssue(
+                    rule_id=self.rule_id,
+                    severity="ERROR",
+                    message=f"Metamorphic rule '{rel.id}' references an undefined baseline variant ID: '{rel.baseline_variant}'",
+                    path=f"expected_relationships.{i}.baseline_variant"
+                ))
+            if rel.compared_variant not in defined_mutation_ids:
+                issues.append(ValidationIssue(
+                    rule_id=self.rule_id,
+                    severity="ERROR",
+                    message=f"Metamorphic rule '{rel.id}' references an undefined compared variant ID: '{rel.compared_variant}'",
+                    path=f"expected_relationships.{i}.compared_variant"
+                ))
+            if rel.metric not in STANDARD_METRICS:
+                issues.append(ValidationIssue(
+                    rule_id="MUTATION-META-WARN",
+                    severity="WARNING",
+                    message=f"Metamorphic rule '{rel.id}' references unrecognized metric '{rel.metric}'. Metamorphic validation may result in INSUFFICIENT_DATA if telemetry is missing.",
+                    path=f"expected_relationships.{i}.metric"
+                ))
+        return issues
+
+
+class MutationValidator:
+    """
+    Orchestrates MutationValidationRule checks against a loaded MutationSpec.
+    Ensures structural and logical safety prior to mutation run execution.
+    """
+    def __init__(
+        self, 
+        world_repo: Optional[WorldRepository] = None, 
+        scenario_repo: Optional[Any] = None, 
+        rules: Optional[list[MutationValidationRule]] = None
+    ):
+        self.world_repo = world_repo
+        self.scenario_repo = scenario_repo
+        if rules is None:
+            self.rules = [
+                BaseReferencesRule(),
+                MetamorphicRelationshipRule()
+            ]
+        else:
+            self.rules = rules
+
+    def validate(self, spec: MutationSpec, strict: bool = False) -> list[ValidationIssue]:
+        issues = []
+        for rule in self.rules:
+            issues.extend(rule.validate(spec, self.world_repo, self.scenario_repo))
+            
+        errors = [x for x in issues if x.severity == "ERROR"]
+        warnings = [x for x in issues if x.severity == "WARNING"]
+        
+        if errors:
+            raise InvalidMutationSpecError(
+                f"MutationSpec validation failed with {len(errors)} errors: " + 
+                ", ".join(e.message for e in errors)
+            )
+        if strict and warnings:
+            raise InvalidMutationSpecError(
+                f"MutationSpec strict validation failed with {len(warnings)} warnings: " + 
+                ", ".join(w.message for w in warnings)
+            )
+        return issues
+
 

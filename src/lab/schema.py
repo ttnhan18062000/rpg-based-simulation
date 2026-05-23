@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import yaml
 from pathlib import Path
-from typing import Optional, Any
+from typing import Optional, Any, Annotated, Literal, Union
 from pydantic import BaseModel, Field, ConfigDict, model_validator, field_validator, ValidationError
 
 class InvalidScenarioSpecError(Exception):
@@ -243,5 +243,178 @@ class LabRunManifest(BaseModel):
         if v not in VALID_LABRUN_STATUSES:
             raise ValueError(f"status must be one of: {sorted(list(VALID_LABRUN_STATUSES))}")
         return v
+
+
+# --- Mutation Spec ---
+
+class InvalidMutationSpecError(Exception):
+    """Custom exception raised when a mutation specification is structurally invalid or missing files."""
+    pass
+
+
+class BaseMutation(BaseModel):
+    model_config = ConfigDict(frozen=True)
+    id: str = Field(..., min_length=1, pattern="^[a-zA-Z0-9_-]+$", description="Unique ID for this mutation variant segment")
+    target: str = Field(..., min_length=1, description="Dot-notation path targeting WorldSpec or ScenarioSpec")
+
+
+class NumericMutation(BaseMutation):
+    value: float = Field(..., description="Numeric operand value")
+
+
+class SetMutation(BaseMutation):
+    operation: Literal["set"] = "set"
+    value: Any = Field(..., description="Value to replace target with")
+
+
+class AddMutation(NumericMutation):
+    operation: Literal["add"] = "add"
+
+
+class MultiplyMutation(NumericMutation):
+    operation: Literal["multiply"] = "multiply"
+
+
+class ToggleMutation(BaseMutation):
+    operation: Literal["toggle"] = "toggle"
+    value: Optional[bool] = Field(None, description="Optional target boolean state override")
+
+
+class RemoveMutation(BaseMutation):
+    operation: Literal["remove"] = "remove"
+
+
+class DuplicateMutation(BaseMutation):
+    operation: Literal["duplicate"] = "duplicate"
+    value: str = Field(..., min_length=1, description="New identifier for the duplicated object")
+
+
+MutationItem = Annotated[
+    Union[
+        SetMutation,
+        AddMutation,
+        MultiplyMutation,
+        ToggleMutation,
+        RemoveMutation,
+        DuplicateMutation
+    ],
+    Field(discriminator="operation")
+]
+
+
+class MatrixSpec(BaseModel):
+    model_config = ConfigDict(frozen=True)
+    mode: str = Field(..., description="Matrix sweep mode: 'one_at_a_time', 'combined', or 'factorial_limited'")
+    max_variants: int = Field(50, gt=0, description="Hard ceiling on generated variants count to prevent combinatorial explosion")
+
+    @field_validator("mode")
+    @classmethod
+    def validate_mode(cls, v: str) -> str:
+        valid_modes = {"one_at_a_time", "combined", "factorial_limited"}
+        if v not in valid_modes:
+            raise ValueError(f"mode must be one of {sorted(list(valid_modes))}")
+        return v
+
+
+class ExpectedRelationshipSpec(BaseModel):
+    model_config = ConfigDict(frozen=True)
+    id: str = Field(..., min_length=1, description="Unique relationship expectation identifier")
+    type: str = Field(..., description="Metamorphic rule type")
+    metric: str = Field(..., min_length=1, description="Observability metric name to monitor")
+    baseline_variant: str = Field("base", description="Variant ID serving as the baseline")
+    compared_variant: str = Field(..., description="Variant ID to compare against baseline")
+    tolerance: Optional[float] = Field(None, ge=0.0, description="Tolerance band for 'within_tolerance'")
+
+    @field_validator("type")
+    @classmethod
+    def validate_type(cls, v: str) -> str:
+        valid_types = {
+            "monotonic_non_decreasing",
+            "monotonic_non_increasing",
+            "within_tolerance",
+            "expected_worse",
+            "expected_better",
+            "no_new_hard_law_violation"
+        }
+        if v not in valid_types:
+            raise ValueError(f"type must be one of {sorted(list(valid_types))}")
+        return v
+
+
+class MutationBudgetsSpec(BaseModel):
+    model_config = ConfigDict(frozen=True)
+    max_variant_count: int = Field(20, gt=0, description="Maximum variants permitted across this lab run")
+    max_total_ticks: int = Field(100000, gt=0, description="Cumulative tick limit allowed for all runs combined")
+
+
+class MutationSpec(BaseModel):
+    model_config = ConfigDict(frozen=True, extra="allow")
+    
+    schema_version: str = Field(..., description="Schema version identifier, strictly 'mutationspec.v1'")
+    mutation_id: str = Field(..., min_length=1, pattern="^[a-zA-Z0-9_-]+$", description="Unique mutation matrix identifier")
+    name: str = Field(..., min_length=1, description="Human-readable description of this mutation sweep")
+    
+    base_world_id: str = Field(..., min_length=1, description="Target base world template identifier")
+    base_scenario_id: str = Field(..., min_length=1, description="Target base scenario configuration")
+    
+    mutations: list[MutationItem] = Field(default_factory=list, description="List of mutations to apply")
+    matrix: MatrixSpec = Field(..., description="Variant matrix configuration")
+    expected_relationships: list[ExpectedRelationshipSpec] = Field(default_factory=list, description="Metamorphic assertions")
+    budgets: Optional[MutationBudgetsSpec] = Field(None, description="Optional safety guardrail budgets")
+    tags: list[str] = Field(default_factory=list, description="Optional metadata search tags")
+
+    @field_validator("schema_version")
+    @classmethod
+    def validate_schema_version(cls, v: str) -> str:
+        if v != "mutationspec.v1":
+            raise ValueError("schema_version must strictly be 'mutationspec.v1'")
+        return v
+
+
+def load_mutation_spec_from_yaml(path: str | Path) -> MutationSpec:
+    """
+    Safely opens, parses, and validates a MutationSpec from a YAML file.
+    """
+    p = Path(path)
+    if not p.is_file():
+        raise InvalidMutationSpecError(f"Mutation spec file not found: {p}")
+        
+    try:
+        with open(p, "r", encoding="utf-8") as f:
+            raw_data = yaml.safe_load(f)
+    except yaml.YAMLError as e:
+        raise InvalidMutationSpecError(f"YAML parsing error loading '{p}': {e}") from e
+    except Exception as e:
+        raise InvalidMutationSpecError(f"Failed to read file '{p}': {e}") from e
+
+    if not isinstance(raw_data, dict):
+        raise InvalidMutationSpecError(f"Mutation spec YAML must root in a dictionary element: '{p}'")
+
+    try:
+        return MutationSpec.model_validate(raw_data)
+    except ValidationError as e:
+        errors_summary = []
+        for error in e.errors():
+            loc = ".".join(str(x) for x in error["loc"])
+            msg = error["msg"]
+            errors_summary.append(f"Field '{loc}': {msg}")
+        joined_errors = "; ".join(errors_summary)
+        raise InvalidMutationSpecError(
+            f"MutationSpec validation failed for '{p}':\n{joined_errors}"
+        ) from e
+
+
+class VariantManifest(BaseModel):
+    model_config = ConfigDict(frozen=True)
+    variant_id: str = Field(..., description="Unique generated variant identifier")
+    base_world_id: str = Field(..., description="Referenced baseline world spec ID")
+    base_scenario_id: str = Field(..., description="Referenced baseline scenario spec ID")
+    applied_mutations: list[str] = Field(default_factory=list, description="List of mutation IDs applied to this variant")
+    world_spec_path: str = Field(..., description="Path to the mutated world specification file")
+    scenario_spec_path: str = Field(..., description="Path to the mutated scenario specification file")
+    status: str = Field(..., description="Outcome status, strictly 'VALIDATED' or 'FAILED'")
+    validation_result: Optional[dict] = Field(None, description="Detailed validation error dictionary if status is FAILED")
+
+
 
 

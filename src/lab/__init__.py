@@ -14,7 +14,8 @@ from src.lab.schema import (
     load_experiment_spec_from_yaml,
     InvalidExperimentSpecError,
     LabRunManifest,
-    InvalidLabRunManifestError
+    InvalidLabRunManifestError,
+    VariantManifest
 )
 
 from src.lab.validator import (
@@ -37,10 +38,13 @@ from src.lab.repository import (
     ExperimentRepository,
     ExperimentRepositoryError,
     LabRunRepository,
-    LabRunRepositoryError
+    LabRunRepositoryError,
+    MutationRepository,
+    MutationRepositoryError
 )
 
 from src.lab.orchestrator import ScenarioLabOrchestrator
+from src.lab.mutation_orchestrator import MutationLabOrchestrator
 
 from src.lab.store import (
     LabResultStore,
@@ -53,6 +57,24 @@ from src.lab.guardrails import (
     BudgetCheckResult,
     BudgetBlockedError,
     BudgetWarningError
+)
+
+from src.lab.mutation import (
+    MutationEngine,
+    MutationApplyReport,
+    InvalidMutationTargetError,
+    VariantMatrixBuilder
+)
+
+from src.lab.metamorphic import (
+    MetamorphicRule,
+    MetamorphicRuleEngine,
+    MetamorphicComparisonResult
+)
+
+from src.lab.comparison import (
+    BalanceComparisonReport,
+    BalanceComparisonEngine
 )
 
 __all__ = [
@@ -86,13 +108,27 @@ __all__ = [
     "InvalidLabRunManifestError",
     "LabRunRepository",
     "LabRunRepositoryError",
+    "MutationRepository",
+    "MutationRepositoryError",
     "ScenarioLabOrchestrator",
+    "MutationLabOrchestrator",
     "LabResultStore",
     "LabResultStoreError",
     "LabBudgetGuardrails",
     "BudgetEstimation",
     "BudgetCheckResult",
     "BudgetBlockedError",
-    "BudgetWarningError"
+    "BudgetWarningError",
+    "MutationEngine",
+    "MutationApplyReport",
+    "InvalidMutationTargetError",
+    "VariantManifest",
+    "VariantMatrixBuilder",
+    "MetamorphicRule",
+    "MetamorphicRuleEngine",
+    "MetamorphicComparisonResult",
+    "BalanceComparisonReport",
+    "BalanceComparisonEngine"
 ]
+
 
