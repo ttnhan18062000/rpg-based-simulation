@@ -4,7 +4,7 @@ from __future__ import annotations
 from typing import Optional, Any
 from src.worldbuilding.validator import ValidationIssue
 from src.worldbuilding.repository import WorldRepository
-from src.lab.schema import ScenarioSpec, InvalidScenarioSpecError
+from src.lab.schema import ScenarioSpec, InvalidScenarioSpecError, ExperimentSpec, InvalidExperimentSpecError
 
 class ScenarioValidationRule:
     """Base class for all pluggable scenario specification validation rules."""
@@ -172,3 +172,130 @@ class ScenarioValidator:
             raise InvalidScenarioSpecError(f"Scenario strict validation failed with {len(warnings)} warnings: " + ", ".join(w.message for w in warnings))
             
         return issues
+
+
+class ExperimentValidationRule:
+    """Base class for all pluggable experiment specification validation rules."""
+    rule_id: str
+    severity: str
+    description: str
+
+    def validate(self, spec: ExperimentSpec, scenario_repo: Optional[Any] = None) -> list[ValidationIssue]:
+        raise NotImplementedError
+
+
+class ScenarioExistenceRule(ExperimentValidationRule):
+    rule_id = "EXPERIMENT-REF-001"
+    severity = "ERROR"
+    description = "Verify that the referenced scenario_id exists in the scenario repository."
+
+    def validate(self, spec: ExperimentSpec, scenario_repo: Optional[Any] = None) -> list[ValidationIssue]:
+        if scenario_repo is None:
+            return []
+            
+        if spec.scenario_id not in scenario_repo.list_scenarios():
+            return [ValidationIssue(
+                rule_id=self.rule_id,
+                severity=self.severity,
+                message=f"Experiment references a non-existent scenario_id: '{spec.scenario_id}'",
+                path="scenario_id"
+            )]
+        return []
+
+
+class ExperimentParameterRule(ExperimentValidationRule):
+    rule_id = "EXPERIMENT-PARAM-001"
+    severity = "ERROR"
+    description = "Verify execution constraints based on experiment type."
+
+    def validate(self, spec: ExperimentSpec, scenario_repo: Optional[Any] = None) -> list[ValidationIssue]:
+        issues = []
+        
+        # 1. same_seed_repeat checks
+        if spec.experiment_type == "same_seed_repeat":
+            if spec.run.repeat_count <= 1:
+                issues.append(ValidationIssue(
+                    rule_id=self.rule_id,
+                    severity=self.severity,
+                    message="Experiment type 'same_seed_repeat' requires repeat_count to be greater than 1.",
+                    path="run.repeat_count"
+                ))
+            if len(spec.run.seeds) != 1:
+                issues.append(ValidationIssue(
+                    rule_id=self.rule_id,
+                    severity="WARNING",
+                    message="Experiment type 'same_seed_repeat' typically runs a single seed repeated. Found multiple seeds.",
+                    path="run.seeds"
+                ))
+
+        # 2. baseline_comparison checks
+        if spec.experiment_type == "baseline_comparison":
+            if not spec.analysis.compare_baseline:
+                issues.append(ValidationIssue(
+                    rule_id=self.rule_id,
+                    severity=self.severity,
+                    message="Experiment type 'baseline_comparison' requires analysis.compare_baseline to be set to True.",
+                    path="analysis.compare_baseline"
+                ))
+            if not spec.analysis.baseline_id:
+                issues.append(ValidationIssue(
+                    rule_id=self.rule_id,
+                    severity=self.severity,
+                    message="Experiment type 'baseline_comparison' requires analysis.baseline_id to be specified.",
+                    path="analysis.baseline_id"
+                ))
+
+        return issues
+
+
+VALID_OBSERVABILITY_MODES = {"LIGHTWEIGHT", "MINIMAL", "STANDARD", "LONG_RUN"}
+
+
+class ExperimentObservabilityRule(ExperimentValidationRule):
+    rule_id = "EXPERIMENT-OBS-001"
+    severity = "ERROR"
+    description = "Verify that the observability mode matches engine capabilities."
+
+    def validate(self, spec: ExperimentSpec, scenario_repo: Optional[Any] = None) -> list[ValidationIssue]:
+        if spec.observability.mode not in VALID_OBSERVABILITY_MODES:
+            return [ValidationIssue(
+                rule_id=self.rule_id,
+                severity=self.severity,
+                message=f"Observability mode '{spec.observability.mode}' is invalid. Must be one of: {sorted(list(VALID_OBSERVABILITY_MODES))}",
+                path="observability.mode"
+            )]
+        return []
+
+
+class ExperimentValidator:
+    """
+    Orchestrates ExperimentValidationRule logic against loaded ExperimentSpec specifications.
+    Blocks run configuration if validation errors occur.
+    """
+    def __init__(self, scenario_repo: Optional[Any] = None, rules: Optional[list[ExperimentValidationRule]] = None):
+        self.scenario_repo = scenario_repo
+        if rules is None:
+            self.rules = [
+                ScenarioExistenceRule(),
+                ExperimentParameterRule(),
+                ExperimentObservabilityRule()
+            ]
+        else:
+            self.rules = rules
+
+    def validate(self, spec: ExperimentSpec, strict: bool = False) -> list[ValidationIssue]:
+        issues = []
+        for rule in self.rules:
+            issues.extend(rule.validate(spec, self.scenario_repo))
+            
+        errors = [x for x in issues if x.severity == "ERROR"]
+        warnings = [x for x in issues if x.severity == "WARNING"]
+        
+        if errors:
+            raise InvalidExperimentSpecError(f"Experiment validation failed with {len(errors)} errors: " + ", ".join(e.message for e in errors))
+            
+        if strict and warnings:
+            raise InvalidExperimentSpecError(f"Experiment strict validation failed with {len(warnings)} warnings: " + ", ".join(w.message for w in warnings))
+            
+        return issues
+
