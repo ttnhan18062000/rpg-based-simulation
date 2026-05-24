@@ -51,6 +51,35 @@ from src.lab.store import (
     LabResultStoreError
 )
 
+from src.lab.session import (
+    LabSessionManifest,
+    LabSessionStore,
+    LabSessionError
+)
+
+from src.lab.registry import (
+    WorkflowSkill,
+    WorkflowRegistry
+)
+
+from src.lab.request import WorkflowRequest
+from src.lab.context import ContextPackBuilder
+from src.lab.workflows import (
+    GenerateSimulationSetupWorkflow,
+    PrepareSimulationExecutionWorkflow,
+    RegisterSimulationResultWorkflow,
+    CompactSimulationDataWorkflow,
+    InvestigateSimulationResultWorkflow,
+    ProposeSimulationEnhancementsWorkflow,
+    UpdateSimulationKnowledgeWorkflow
+)
+
+from src.lab.audit import (
+    LabApprovalGate,
+    LabAuditTrail
+)
+
+
 from src.lab.guardrails import (
     LabBudgetGuardrails,
     BudgetEstimation,
@@ -114,6 +143,22 @@ __all__ = [
     "MutationLabOrchestrator",
     "LabResultStore",
     "LabResultStoreError",
+    "LabSessionManifest",
+    "LabSessionStore",
+    "LabSessionError",
+    "WorkflowSkill",
+    "WorkflowRegistry",
+    "WorkflowRequest",
+    "ContextPackBuilder",
+    "LabApprovalGate",
+    "LabAuditTrail",
+    "GenerateSimulationSetupWorkflow",
+    "PrepareSimulationExecutionWorkflow",
+    "RegisterSimulationResultWorkflow",
+    "CompactSimulationDataWorkflow",
+    "InvestigateSimulationResultWorkflow",
+    "ProposeSimulationEnhancementsWorkflow",
+    "UpdateSimulationKnowledgeWorkflow",
     "LabBudgetGuardrails",
     "BudgetEstimation",
     "BudgetCheckResult",

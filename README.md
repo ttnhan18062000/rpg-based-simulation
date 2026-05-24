@@ -125,6 +125,7 @@ For deep technical specs, architecture guides, and checklists, see the dedicated
 *   **[Phase 9: Simulation Mining & AI-Assisted Investigation (Architecture)](docs/observability/phase_9.md)** | **[Usage & Run Guide](docs/observability/phase_9_usage.md)**
 *   **[Ecosystem Infrastructure: Distributed UI & Visualization Stack Overview](docs/engine/infrastructure_overview.md)**
 *   **[Scenario Sweeping: Multi-Run Sweep Config & Execution Guide](docs/engine/sweep_configuration.md)**
+*   **[Phase 14: Human-Gated Agentic Simulation Lab Guideline](docs/observability/phase_14_agentic_lab.md)**
 
 ---
 
