@@ -1,0 +1,183 @@
+{
+  "scenario_id": "idle_100_concurrent",
+  "profile": "PERF_1GB_CONC",
+  "sample_ticks": 20,
+  "wall_clock_s": 0.2025,
+  "wall_clock_tps": 98.77,
+  "compute_tps": 99.53,
+  "avg_tps": 99.53,
+  "tick_ms": {
+    "avg": 10.047,
+    "p50": 6.78,
+    "p95": 27.474,
+    "p99": 27.474,
+    "max": 27.474,
+    "min": 3.877
+  },
+  "mem_rss_mb": {
+    "avg": 37.89,
+    "max": 37.89,
+    "delta": 0.0
+  },
+  "phase_breakdown": {
+    "init": {
+      "avg": 0.287,
+      "p50": 0.174,
+      "p95": 2.162,
+      "p99": 2.162,
+      "max": 2.162,
+      "min": 0.107
+    },
+    "scheduling": {
+      "avg": 0.175,
+      "p50": 0.139,
+      "p95": 0.514,
+      "p99": 0.514,
+      "max": 0.514,
+      "min": 0.107
+    },
+    "collection": {
+      "avg": 6.141,
+      "p50": 3.931,
+      "p95": 24.6,
+      "p99": 24.6,
+      "max": 24.6,
+      "min": 2.01
+    },
+    "trust_validity": {
+      "avg": 0.202,
+      "p50": 0.162,
+      "p95": 0.506,
+      "p99": 0.506,
+      "max": 0.506,
+      "min": 0.146
+    },
+    "contracts_production": {
+      "avg": 0.166,
+      "p50": 0.115,
+      "p95": 0.444,
+      "p99": 0.444,
+      "max": 0.444,
+      "min": 0.086
+    },
+    "locomotion": {
+      "avg": 0.335,
+      "p50": 0.287,
+      "p95": 0.758,
+      "p99": 0.758,
+      "max": 0.758,
+      "min": 0.207
+    },
+    "interaction": {
+      "avg": 0.167,
+      "p50": 0.084,
+      "p95": 1.636,
+      "p99": 1.636,
+      "max": 1.636,
+      "min": 0.068
+    },
+    "governance_ecology": {
+      "avg": 0.079,
+      "p50": 0.071,
+      "p95": 0.142,
+      "p99": 0.142,
+      "max": 0.142,
+      "min": 0.062
+    },
+    "economy": {
+      "avg": 0.385,
+      "p50": 0.048,
+      "p95": 6.711,
+      "p99": 6.711,
+      "max": 6.711,
+      "min": 0.043
+    },
+    "final_integrity": {
+      "avg": 0.879,
+      "p50": 0.136,
+      "p95": 5.014,
+      "p99": 5.014,
+      "max": 5.014,
+      "min": 0.077
+    },
+    "resolution_overhead": {
+      "avg": 0.111,
+      "p50": 0.094,
+      "p95": 0.23,
+      "p99": 0.23,
+      "max": 0.23,
+      "min": 0.073
+    },
+    "cleanup": {
+      "avg": 0.039,
+      "p50": 0.021,
+      "p95": 0.148,
+      "p99": 0.148,
+      "max": 0.148,
+      "min": 0.012
+    },
+    "advancement": {
+      "avg": 0.645,
+      "p50": 0.327,
+      "p95": 2.276,
+      "p99": 2.276,
+      "max": 2.276,
+      "min": 0.138
+    },
+    "persistence": {
+      "avg": 0.435,
+      "p50": 0.011,
+      "p95": 8.362,
+      "p99": 8.362,
+      "max": 8.362,
+      "min": 0.008
+    }
+  },
+  "metrics": {
+    "raw_entity_updates": 10.0,
+    "compacted_entity_updates": 10.0,
+    "phase_runs": 14.3,
+    "run_trust_boundary": 1.0,
+    "run_actor_validity": 1.0,
+    "run_contracts": 1.0,
+    "run_blacksmith": 1.0,
+    "run_action_routing": 1.0,
+    "run_position_swaps": 1.0,
+    "run_movement_routing": 1.0,
+    "movement_candidates": 0.0,
+    "run_interaction_routing": 1.0,
+    "run_interaction_enforcement": 1.0,
+    "phase_skips": 7.7,
+    "skip_building_sabotage": 1.0,
+    "skip_town_resolution": 1.0,
+    "run_world_dynamics": 1.0,
+    "run_quest_rewards": 1.0,
+    "skip_shop": 1.0,
+    "run_resource_transactions": 1.0,
+    "skip_evolution": 1.0,
+    "skip_strategic_intelligence": 1.0,
+    "skip_near_death_hardening": 1.0,
+    "skip_occupancy_resolution": 1.0,
+    "run_lifecycle": 1.0,
+    "skip_groups": 1.0,
+    "run_capacity_enforcement": 1.0,
+    "movement_cache_hits": 0.0,
+    "movement_cache_misses": 0.0,
+    "spatial_index_hits": 18.7,
+    "spatial_index_misses": 7.15,
+    "run_strategic_intelligence": 1.0
+  },
+  "replay_enabled": false,
+  "frame_pacing_enabled": false,
+  "timestamp": 1779190617.8901877,
+  "avg_tick_compute_ms": 10.047,
+  "p50_tick_compute_ms": 6.78,
+  "p95_tick_compute_ms": 27.474,
+  "p99_tick_compute_ms": 27.474,
+  "max_tick_compute_ms": 27.474,
+  "peak_rss_mb": 37.89,
+  "memory_delta_mb": 0.0,
+  "matrix_scenario": "idle",
+  "matrix_scale": 100,
+  "matrix_mode": "concurrent"
+}

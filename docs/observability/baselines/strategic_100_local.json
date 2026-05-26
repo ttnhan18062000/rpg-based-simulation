@@ -1,0 +1,183 @@
+{
+  "scenario_id": "strategic_100_local",
+  "profile": "PERF_2GB_LOCAL",
+  "sample_ticks": 20,
+  "wall_clock_s": 0.0596,
+  "wall_clock_tps": 335.53,
+  "compute_tps": 339.5,
+  "avg_tps": 339.5,
+  "tick_ms": {
+    "avg": 2.946,
+    "p50": 1.782,
+    "p95": 8.199,
+    "p99": 8.199,
+    "max": 8.199,
+    "min": 0.944
+  },
+  "mem_rss_mb": {
+    "avg": 39.0,
+    "max": 39.0,
+    "delta": 0.0
+  },
+  "phase_breakdown": {
+    "init": {
+      "avg": 0.183,
+      "p50": 0.146,
+      "p95": 0.493,
+      "p99": 0.493,
+      "max": 0.493,
+      "min": 0.074
+    },
+    "scheduling": {
+      "avg": 0.118,
+      "p50": 0.096,
+      "p95": 0.531,
+      "p99": 0.531,
+      "max": 0.531,
+      "min": 0.071
+    },
+    "collection": {
+      "avg": 0.119,
+      "p50": 0.111,
+      "p95": 0.237,
+      "p99": 0.237,
+      "max": 0.237,
+      "min": 0.074
+    },
+    "trust_validity": {
+      "avg": 0.076,
+      "p50": 0.071,
+      "p95": 0.191,
+      "p99": 0.191,
+      "max": 0.191,
+      "min": 0.058
+    },
+    "contracts_production": {
+      "avg": 0.073,
+      "p50": 0.059,
+      "p95": 0.259,
+      "p99": 0.259,
+      "max": 0.259,
+      "min": 0.052
+    },
+    "locomotion": {
+      "avg": 0.235,
+      "p50": 0.167,
+      "p95": 0.892,
+      "p99": 0.892,
+      "max": 0.892,
+      "min": 0.124
+    },
+    "interaction": {
+      "avg": 0.064,
+      "p50": 0.056,
+      "p95": 0.186,
+      "p99": 0.186,
+      "max": 0.186,
+      "min": 0.045
+    },
+    "governance_ecology": {
+      "avg": 0.06,
+      "p50": 0.06,
+      "p95": 0.08,
+      "p99": 0.08,
+      "max": 0.08,
+      "min": 0.052
+    },
+    "economy": {
+      "avg": 0.047,
+      "p50": 0.037,
+      "p95": 0.202,
+      "p99": 0.202,
+      "max": 0.202,
+      "min": 0.031
+    },
+    "final_integrity": {
+      "avg": 1.489,
+      "p50": 0.078,
+      "p95": 7.225,
+      "p99": 7.225,
+      "max": 7.225,
+      "min": 0.068
+    },
+    "resolution_overhead": {
+      "avg": 0.049,
+      "p50": 0.048,
+      "p95": 0.067,
+      "p99": 0.067,
+      "max": 0.067,
+      "min": 0.038
+    },
+    "cleanup": {
+      "avg": 0.018,
+      "p50": 0.013,
+      "p95": 0.078,
+      "p99": 0.078,
+      "max": 0.078,
+      "min": 0.007
+    },
+    "advancement": {
+      "avg": 0.408,
+      "p50": 0.153,
+      "p95": 1.702,
+      "p99": 1.702,
+      "max": 1.702,
+      "min": 0.09
+    },
+    "persistence": {
+      "avg": 0.007,
+      "p50": 0.008,
+      "p95": 0.01,
+      "p99": 0.01,
+      "max": 0.01,
+      "min": 0.004
+    }
+  },
+  "metrics": {
+    "raw_entity_updates": 2.0,
+    "compacted_entity_updates": 2.0,
+    "phase_runs": 14.3,
+    "run_trust_boundary": 1.0,
+    "run_actor_validity": 1.0,
+    "run_contracts": 1.0,
+    "run_blacksmith": 1.0,
+    "run_action_routing": 1.0,
+    "run_position_swaps": 1.0,
+    "run_movement_routing": 1.0,
+    "movement_candidates": 0.0,
+    "run_interaction_routing": 1.0,
+    "run_interaction_enforcement": 1.0,
+    "phase_skips": 7.7,
+    "skip_building_sabotage": 1.0,
+    "skip_town_resolution": 1.0,
+    "run_world_dynamics": 1.0,
+    "run_quest_rewards": 1.0,
+    "skip_shop": 1.0,
+    "run_resource_transactions": 1.0,
+    "skip_evolution": 1.0,
+    "skip_strategic_intelligence": 1.0,
+    "skip_near_death_hardening": 1.0,
+    "skip_occupancy_resolution": 1.0,
+    "run_lifecycle": 1.0,
+    "skip_groups": 1.0,
+    "run_capacity_enforcement": 1.0,
+    "movement_cache_hits": 0.0,
+    "movement_cache_misses": 0.0,
+    "spatial_index_hits": 228.8,
+    "spatial_index_misses": 7.15,
+    "run_strategic_intelligence": 1.0
+  },
+  "replay_enabled": false,
+  "frame_pacing_enabled": false,
+  "timestamp": 1779190619.2779577,
+  "avg_tick_compute_ms": 2.946,
+  "p50_tick_compute_ms": 1.782,
+  "p95_tick_compute_ms": 8.199,
+  "p99_tick_compute_ms": 8.199,
+  "max_tick_compute_ms": 8.199,
+  "peak_rss_mb": 39.0,
+  "memory_delta_mb": 0.0,
+  "matrix_scenario": "strategic",
+  "matrix_scale": 100,
+  "matrix_mode": "local"
+}

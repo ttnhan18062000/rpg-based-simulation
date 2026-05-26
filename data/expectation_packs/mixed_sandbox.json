@@ -1,0 +1,36 @@
+{
+  "scenario_type": "mixed_sandbox",
+  "version": "1.0",
+  "description": "General-purpose sandbox scenario. No single activity type is required. Hard law violations are the only hard failure.",
+  "hard_fail_rules": [
+    {
+      "rule_id": "no_hard_law_violations",
+      "description": "Hard law violations must be zero",
+      "metric_key": "hard_law_violations_count",
+      "operator": "==",
+      "threshold": 0.0,
+      "severity_if_violated": "CRITICAL"
+    }
+  ],
+  "warning_rules": [
+    {
+      "rule_id": "health_score_acceptable",
+      "description": "Overall health score should not fall below 60",
+      "metric_key": "health_score",
+      "operator": ">=",
+      "threshold": 60.0,
+      "severity_if_violated": "WARNING"
+    },
+    {
+      "rule_id": "stuck_worker_ratio_low",
+      "description": "Stuck worker ratio should stay below 50% in general sandbox",
+      "metric_key": "stuck_ratio",
+      "operator": "<",
+      "threshold": 0.5,
+      "severity_if_violated": "WARNING"
+    }
+  ],
+  "acceptable_anomaly_types": ["ResourceNodeCrowdingRule", "NavigationStuckRule"],
+  "ignored_metrics": [],
+  "required_signals": []
+}

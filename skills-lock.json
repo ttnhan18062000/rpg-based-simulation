@@ -36,6 +36,11 @@
       "sourceType": "github",
       "computedHash": "6390cbb0df21130adea16a0bd854131213733e7df2e027743c29033985811aa9"
     },
+    "create-skill": {
+      "source": "siviter-xyz/dot-agent",
+      "sourceType": "github",
+      "computedHash": "117464d5a01acfbf3c7d3939a90df78e2196025f545bdded831aa4aa63a80080"
+    },
     "debugging-strategies": {
       "source": "wshobson/agents",
       "sourceType": "github",

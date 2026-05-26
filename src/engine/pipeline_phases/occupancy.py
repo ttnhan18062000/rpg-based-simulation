@@ -59,19 +59,16 @@ class OccupancyPhase:
         if not moving_entity_ids:
             return update
 
-        # We only care about tiles that are destinations.
-        destination_tiles = {
-            (int(refined_entity_updates[eid].new_position[0]), int(refined_entity_updates[eid].new_position[1]))
-            for eid in moving_entity_ids
-        }
-
-        # Current occupied tiles for only relevant entities.
-        # Optimized v3: Use cached occupancy map for O(1) lookup.
-        from src.engine.spatial_query import SpatialQueryService
-        occ_map = SpatialQueryService.get_occupancy_map(state)
-        current_occupied: dict[tuple[int, int], int] = {
-            tile: occ_map[tile] for tile in destination_tiles if tile in occ_map
-        }
+        # Build clean start-of-tick occupancy map directly from actual entity positions.
+        # This bypasses any transient occupancy caches from prior movement phases.
+        occ_map: dict[tuple[int, int], int] = {}
+        for e_id, entity in state.entities.items():
+            if entity.lifecycle.active and entity.combat.alive:
+                pos = (
+                    int(entity.navigation.position[0]),
+                    int(entity.navigation.position[1]),
+                )
+                occ_map[pos] = e_id
 
         # Destination claims from proposed movement results.
         claims_by_tile: dict[tuple[int, int], list[int]] = {}
@@ -88,25 +85,45 @@ class OccupancyPhase:
             claims_by_tile.setdefault(tile, []).append(entity_id)
 
         rejected_entity_ids: set[int] = set()
+        active_moving = set(moving_entity_ids)
 
-        for tile in sorted(claims_by_tile):
-            contenders = sorted(claims_by_tile[tile])
+        while True:
+            newly_rejected = set()
 
-            existing_occupant_id = current_occupied.get(tile)
+            # Re-group active claims by tile for the current iteration
+            claims_by_tile: dict[tuple[int, int], list[int]] = {}
+            for entity_id in active_moving:
+                entity_update = refined_entity_updates[entity_id]
+                tile = (
+                    int(entity_update.new_position[0]),
+                    int(entity_update.new_position[1]),
+                )
+                claims_by_tile.setdefault(tile, []).append(entity_id)
 
-            # If the tile is occupied by an entity that is not moving away, nobody
-            # may move into that tile.
-            if (
-                existing_occupant_id is not None
-                and existing_occupant_id not in moving_entity_ids
-            ):
-                rejected_entity_ids.update(contenders)
-                continue
+            for tile in sorted(claims_by_tile):
+                contenders = sorted(claims_by_tile[tile])
+                existing_occupant_id = occ_map.get(tile)
 
-            # If multiple entities claim the same destination, lowest id wins.
-            winner_id = contenders[0]
-            for loser_id in contenders[1:]:
-                rejected_entity_ids.add(loser_id)
+                # If the tile is occupied by an entity that is not moving away
+                # (either it is not in the set of moving entities, or its move
+                # has already been rejected in a previous iteration).
+                if (
+                    existing_occupant_id is not None
+                    and existing_occupant_id not in active_moving
+                ):
+                    newly_rejected.update(contenders)
+                    continue
+
+                # If multiple entities claim the same destination, lowest id wins.
+                if len(contenders) > 1:
+                    for loser_id in contenders[1:]:
+                        newly_rejected.add(loser_id)
+
+            if not newly_rejected:
+                break
+
+            rejected_entity_ids.update(newly_rejected)
+            active_moving.difference_update(newly_rejected)
 
         new_rejections_delta = dict(update.rejections_delta)
         new_rejection_events = list(update.rejection_events)

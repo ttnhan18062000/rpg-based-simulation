@@ -1,0 +1,36 @@
+{
+  "scenario_type": "combat_heavy",
+  "version": "1.0",
+  "description": "Combat-dominated scenario. Engagements are expected and must eventually resolve. Resource economy is secondary.",
+  "hard_fail_rules": [
+    {
+      "rule_id": "no_hard_law_violations",
+      "description": "Hard law violations must be zero",
+      "metric_key": "hard_law_violations_count",
+      "operator": "==",
+      "threshold": 0.0,
+      "severity_if_violated": "CRITICAL"
+    },
+    {
+      "rule_id": "combat_must_occur",
+      "description": "Combat events must occur in a combat-heavy scenario",
+      "metric_key": "combat_events_count",
+      "operator": ">",
+      "threshold": 0.0,
+      "severity_if_violated": "ERROR"
+    }
+  ],
+  "warning_rules": [
+    {
+      "rule_id": "combat_resolution_rate_acceptable",
+      "description": "Unresolved combat engagements should not dominate — CombatNeverEndsRule anomalies should be low",
+      "metric_key": "combat_never_ends_anomalies_count",
+      "operator": "<=",
+      "threshold": 3.0,
+      "severity_if_violated": "WARNING"
+    }
+  ],
+  "acceptable_anomaly_types": ["ResourceNodeCrowdingRule"],
+  "ignored_metrics": ["stuck_ratio", "economy_events_count"],
+  "required_signals": ["combat"]
+}

@@ -38,6 +38,13 @@ When running in `audit_mode`, the Kernel enforces strict isolation.
 - **Verification**: After non-mutating phases (Scheduling, Collection), the fingerprint is re-verified.
 - **Halt Law**: If the hash changes during a read-only phase, the Kernel triggers an **Immediate Halt** to prevent state corruption and identify "leakage" in system logic.
 
+## 🛡️ The "Hard Law Compliance Guard" Law
+During the **Advancement** phase, before the state is committed and persisted:
+- **Active Validation**: The Kernel invokes the `HardLawMonitor` on the tick's `dirty_set` and refined state.
+- **Mode-Specific Policies**:
+  - **`LIGHT`**: Increments cumulative counts and logs structured warnings without aborting tick progression.
+  - **`DEBUG` / `CERTIFICATION`**: Immediately throws `HardLawViolationError` and halts loop execution, preventing the corrupt state from being persisted or exposed to APIs.
+
 ## ⚡ Concurrency & The Resolution Bottleneck
 
 - **Concurrent Collection**: Phase 3 is the only window for parallel execution. Workers analyze the world state in parallel using **Immutable Snapshots**.

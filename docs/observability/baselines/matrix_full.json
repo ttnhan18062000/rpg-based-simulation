@@ -1,0 +1,2210 @@
+[
+  {
+    "scenario_id": "idle_100_local",
+    "profile": "PERF_512MB_LOCAL",
+    "sample_ticks": 20,
+    "wall_clock_s": 0.0309,
+    "wall_clock_tps": 646.94,
+    "compute_tps": 657.88,
+    "avg_tps": 657.88,
+    "tick_ms": {
+      "avg": 1.52,
+      "p50": 1.346,
+      "p95": 3.104,
+      "p99": 3.104,
+      "max": 3.104,
+      "min": 0.822
+    },
+    "mem_rss_mb": {
+      "avg": 37.04,
+      "max": 37.04,
+      "delta": 0.01
+    },
+    "phase_breakdown": {
+      "init": {
+        "avg": 0.168,
+        "p50": 0.093,
+        "p95": 1.382,
+        "p99": 1.382,
+        "max": 1.382,
+        "min": 0.065
+      },
+      "scheduling": {
+        "avg": 0.125,
+        "p50": 0.078,
+        "p95": 0.3,
+        "p99": 0.3,
+        "max": 0.3,
+        "min": 0.066
+      },
+      "collection": {
+        "avg": 0.101,
+        "p50": 0.09,
+        "p95": 0.14,
+        "p99": 0.14,
+        "max": 0.14,
+        "min": 0.073
+      },
+      "trust_validity": {
+        "avg": 0.073,
+        "p50": 0.068,
+        "p95": 0.13,
+        "p99": 0.13,
+        "max": 0.13,
+        "min": 0.057
+      },
+      "contracts_production": {
+        "avg": 0.086,
+        "p50": 0.056,
+        "p95": 0.267,
+        "p99": 0.267,
+        "max": 0.267,
+        "min": 0.051
+      },
+      "locomotion": {
+        "avg": 0.2,
+        "p50": 0.151,
+        "p95": 1.024,
+        "p99": 1.024,
+        "max": 1.024,
+        "min": 0.129
+      },
+      "interaction": {
+        "avg": 0.057,
+        "p50": 0.055,
+        "p95": 0.092,
+        "p99": 0.092,
+        "max": 0.092,
+        "min": 0.044
+      },
+      "governance_ecology": {
+        "avg": 0.078,
+        "p50": 0.058,
+        "p95": 0.312,
+        "p99": 0.312,
+        "max": 0.312,
+        "min": 0.052
+      },
+      "economy": {
+        "avg": 0.05,
+        "p50": 0.04,
+        "p95": 0.222,
+        "p99": 0.222,
+        "max": 0.222,
+        "min": 0.03
+      },
+      "final_integrity": {
+        "avg": 0.215,
+        "p50": 0.078,
+        "p95": 0.74,
+        "p99": 0.74,
+        "max": 0.74,
+        "min": 0.067
+      },
+      "resolution_overhead": {
+        "avg": 0.053,
+        "p50": 0.043,
+        "p95": 0.238,
+        "p99": 0.238,
+        "max": 0.238,
+        "min": 0.031
+      },
+      "cleanup": {
+        "avg": 0.017,
+        "p50": 0.012,
+        "p95": 0.081,
+        "p99": 0.081,
+        "max": 0.081,
+        "min": 0.006
+      },
+      "advancement": {
+        "avg": 0.291,
+        "p50": 0.114,
+        "p95": 1.174,
+        "p99": 1.174,
+        "max": 1.174,
+        "min": 0.077
+      },
+      "persistence": {
+        "avg": 0.006,
+        "p50": 0.005,
+        "p95": 0.024,
+        "p99": 0.024,
+        "max": 0.024,
+        "min": 0.003
+      }
+    },
+    "metrics": {
+      "raw_entity_updates": 2.0,
+      "compacted_entity_updates": 2.0,
+      "phase_runs": 14.3,
+      "run_trust_boundary": 1.0,
+      "run_actor_validity": 1.0,
+      "run_contracts": 1.0,
+      "run_blacksmith": 1.0,
+      "run_action_routing": 1.0,
+      "run_position_swaps": 1.0,
+      "run_movement_routing": 1.0,
+      "movement_candidates": 0.0,
+      "run_interaction_routing": 1.0,
+      "run_interaction_enforcement": 1.0,
+      "phase_skips": 7.7,
+      "skip_building_sabotage": 1.0,
+      "skip_town_resolution": 1.0,
+      "run_world_dynamics": 1.0,
+      "run_quest_rewards": 1.0,
+      "skip_shop": 1.0,
+      "run_resource_transactions": 1.0,
+      "skip_evolution": 1.0,
+      "skip_strategic_intelligence": 1.0,
+      "skip_near_death_hardening": 1.0,
+      "skip_occupancy_resolution": 1.0,
+      "run_lifecycle": 1.0,
+      "skip_groups": 1.0,
+      "run_capacity_enforcement": 1.0,
+      "movement_cache_hits": 0.0,
+      "movement_cache_misses": 0.0,
+      "spatial_index_hits": 11.55,
+      "spatial_index_misses": 6.15,
+      "run_strategic_intelligence": 1.0
+    },
+    "replay_enabled": false,
+    "frame_pacing_enabled": false,
+    "timestamp": 1779190617.5665462,
+    "avg_tick_compute_ms": 1.52,
+    "p50_tick_compute_ms": 1.346,
+    "p95_tick_compute_ms": 3.104,
+    "p99_tick_compute_ms": 3.104,
+    "max_tick_compute_ms": 3.104,
+    "peak_rss_mb": 37.04,
+    "memory_delta_mb": 0.01,
+    "matrix_scenario": "idle",
+    "matrix_scale": 100,
+    "matrix_mode": "local"
+  },
+  {
+    "scenario_id": "idle_100_concurrent",
+    "profile": "PERF_1GB_CONC",
+    "sample_ticks": 20,
+    "wall_clock_s": 0.2025,
+    "wall_clock_tps": 98.77,
+    "compute_tps": 99.53,
+    "avg_tps": 99.53,
+    "tick_ms": {
+      "avg": 10.047,
+      "p50": 6.78,
+      "p95": 27.474,
+      "p99": 27.474,
+      "max": 27.474,
+      "min": 3.877
+    },
+    "mem_rss_mb": {
+      "avg": 37.89,
+      "max": 37.89,
+      "delta": 0.0
+    },
+    "phase_breakdown": {
+      "init": {
+        "avg": 0.287,
+        "p50": 0.174,
+        "p95": 2.162,
+        "p99": 2.162,
+        "max": 2.162,
+        "min": 0.107
+      },
+      "scheduling": {
+        "avg": 0.175,
+        "p50": 0.139,
+        "p95": 0.514,
+        "p99": 0.514,
+        "max": 0.514,
+        "min": 0.107
+      },
+      "collection": {
+        "avg": 6.141,
+        "p50": 3.931,
+        "p95": 24.6,
+        "p99": 24.6,
+        "max": 24.6,
+        "min": 2.01
+      },
+      "trust_validity": {
+        "avg": 0.202,
+        "p50": 0.162,
+        "p95": 0.506,
+        "p99": 0.506,
+        "max": 0.506,
+        "min": 0.146
+      },
+      "contracts_production": {
+        "avg": 0.166,
+        "p50": 0.115,
+        "p95": 0.444,
+        "p99": 0.444,
+        "max": 0.444,
+        "min": 0.086
+      },
+      "locomotion": {
+        "avg": 0.335,
+        "p50": 0.287,
+        "p95": 0.758,
+        "p99": 0.758,
+        "max": 0.758,
+        "min": 0.207
+      },
+      "interaction": {
+        "avg": 0.167,
+        "p50": 0.084,
+        "p95": 1.636,
+        "p99": 1.636,
+        "max": 1.636,
+        "min": 0.068
+      },
+      "governance_ecology": {
+        "avg": 0.079,
+        "p50": 0.071,
+        "p95": 0.142,
+        "p99": 0.142,
+        "max": 0.142,
+        "min": 0.062
+      },
+      "economy": {
+        "avg": 0.385,
+        "p50": 0.048,
+        "p95": 6.711,
+        "p99": 6.711,
+        "max": 6.711,
+        "min": 0.043
+      },
+      "final_integrity": {
+        "avg": 0.879,
+        "p50": 0.136,
+        "p95": 5.014,
+        "p99": 5.014,
+        "max": 5.014,
+        "min": 0.077
+      },
+      "resolution_overhead": {
+        "avg": 0.111,
+        "p50": 0.094,
+        "p95": 0.23,
+        "p99": 0.23,
+        "max": 0.23,
+        "min": 0.073
+      },
+      "cleanup": {
+        "avg": 0.039,
+        "p50": 0.021,
+        "p95": 0.148,
+        "p99": 0.148,
+        "max": 0.148,
+        "min": 0.012
+      },
+      "advancement": {
+        "avg": 0.645,
+        "p50": 0.327,
+        "p95": 2.276,
+        "p99": 2.276,
+        "max": 2.276,
+        "min": 0.138
+      },
+      "persistence": {
+        "avg": 0.435,
+        "p50": 0.011,
+        "p95": 8.362,
+        "p99": 8.362,
+        "max": 8.362,
+        "min": 0.008
+      }
+    },
+    "metrics": {
+      "raw_entity_updates": 10.0,
+      "compacted_entity_updates": 10.0,
+      "phase_runs": 14.3,
+      "run_trust_boundary": 1.0,
+      "run_actor_validity": 1.0,
+      "run_contracts": 1.0,
+      "run_blacksmith": 1.0,
+      "run_action_routing": 1.0,
+      "run_position_swaps": 1.0,
+      "run_movement_routing": 1.0,
+      "movement_candidates": 0.0,
+      "run_interaction_routing": 1.0,
+      "run_interaction_enforcement": 1.0,
+      "phase_skips": 7.7,
+      "skip_building_sabotage": 1.0,
+      "skip_town_resolution": 1.0,
+      "run_world_dynamics": 1.0,
+      "run_quest_rewards": 1.0,
+      "skip_shop": 1.0,
+      "run_resource_transactions": 1.0,
+      "skip_evolution": 1.0,
+      "skip_strategic_intelligence": 1.0,
+      "skip_near_death_hardening": 1.0,
+      "skip_occupancy_resolution": 1.0,
+      "run_lifecycle": 1.0,
+      "skip_groups": 1.0,
+      "run_capacity_enforcement": 1.0,
+      "movement_cache_hits": 0.0,
+      "movement_cache_misses": 0.0,
+      "spatial_index_hits": 18.7,
+      "spatial_index_misses": 7.15,
+      "run_strategic_intelligence": 1.0
+    },
+    "replay_enabled": false,
+    "frame_pacing_enabled": false,
+    "timestamp": 1779190617.8901877,
+    "avg_tick_compute_ms": 10.047,
+    "p50_tick_compute_ms": 6.78,
+    "p95_tick_compute_ms": 27.474,
+    "p99_tick_compute_ms": 27.474,
+    "max_tick_compute_ms": 27.474,
+    "peak_rss_mb": 37.89,
+    "memory_delta_mb": 0.0,
+    "matrix_scenario": "idle",
+    "matrix_scale": 100,
+    "matrix_mode": "concurrent"
+  },
+  {
+    "scenario_id": "movement_100_local",
+    "profile": "PERF_1GB_LOCAL",
+    "sample_ticks": 20,
+    "wall_clock_s": 0.0587,
+    "wall_clock_tps": 340.87,
+    "compute_tps": 346.99,
+    "avg_tps": 346.99,
+    "tick_ms": {
+      "avg": 2.882,
+      "p50": 2.564,
+      "p95": 7.942,
+      "p99": 7.942,
+      "max": 7.942,
+      "min": 0.962
+    },
+    "mem_rss_mb": {
+      "avg": 38.32,
+      "max": 38.32,
+      "delta": 0.0
+    },
+    "phase_breakdown": {
+      "init": {
+        "avg": 0.232,
+        "p50": 0.125,
+        "p95": 1.019,
+        "p99": 1.019,
+        "max": 1.019,
+        "min": 0.068
+      },
+      "scheduling": {
+        "avg": 0.142,
+        "p50": 0.111,
+        "p95": 0.452,
+        "p99": 0.452,
+        "max": 0.452,
+        "min": 0.069
+      },
+      "collection": {
+        "avg": 0.25,
+        "p50": 0.151,
+        "p95": 0.932,
+        "p99": 0.932,
+        "max": 0.932,
+        "min": 0.077
+      },
+      "trust_validity": {
+        "avg": 0.085,
+        "p50": 0.079,
+        "p95": 0.189,
+        "p99": 0.189,
+        "max": 0.189,
+        "min": 0.057
+      },
+      "contracts_production": {
+        "avg": 0.098,
+        "p50": 0.082,
+        "p95": 0.385,
+        "p99": 0.385,
+        "max": 0.385,
+        "min": 0.052
+      },
+      "locomotion": {
+        "avg": 0.411,
+        "p50": 0.312,
+        "p95": 1.395,
+        "p99": 1.395,
+        "max": 1.395,
+        "min": 0.239
+      },
+      "interaction": {
+        "avg": 0.098,
+        "p50": 0.069,
+        "p95": 0.524,
+        "p99": 0.524,
+        "max": 0.524,
+        "min": 0.049
+      },
+      "governance_ecology": {
+        "avg": 0.101,
+        "p50": 0.07,
+        "p95": 0.316,
+        "p99": 0.316,
+        "max": 0.316,
+        "min": 0.052
+      },
+      "economy": {
+        "avg": 0.046,
+        "p50": 0.044,
+        "p95": 0.08,
+        "p99": 0.08,
+        "max": 0.08,
+        "min": 0.03
+      },
+      "final_integrity": {
+        "avg": 0.371,
+        "p50": 0.103,
+        "p95": 1.571,
+        "p99": 1.571,
+        "max": 1.571,
+        "min": 0.068
+      },
+      "resolution_overhead": {
+        "avg": 0.061,
+        "p50": 0.053,
+        "p95": 0.185,
+        "p99": 0.185,
+        "max": 0.185,
+        "min": 0.033
+      },
+      "cleanup": {
+        "avg": 0.034,
+        "p50": 0.018,
+        "p95": 0.299,
+        "p99": 0.299,
+        "max": 0.299,
+        "min": 0.008
+      },
+      "advancement": {
+        "avg": 0.946,
+        "p50": 0.2,
+        "p95": 6.382,
+        "p99": 6.382,
+        "max": 6.382,
+        "min": 0.081
+      },
+      "persistence": {
+        "avg": 0.009,
+        "p50": 0.009,
+        "p95": 0.02,
+        "p99": 0.02,
+        "max": 0.02,
+        "min": 0.003
+      }
+    },
+    "metrics": {
+      "raw_entity_updates": 2.0,
+      "compacted_entity_updates": 2.0,
+      "phase_runs": 14.3,
+      "run_trust_boundary": 1.0,
+      "run_actor_validity": 1.0,
+      "run_contracts": 1.0,
+      "run_blacksmith": 1.0,
+      "run_action_routing": 1.0,
+      "run_position_swaps": 1.0,
+      "run_movement_routing": 1.0,
+      "movement_candidates": 0.0,
+      "run_interaction_routing": 1.0,
+      "run_interaction_enforcement": 1.0,
+      "phase_skips": 7.7,
+      "skip_building_sabotage": 1.0,
+      "skip_town_resolution": 1.0,
+      "run_world_dynamics": 1.0,
+      "run_quest_rewards": 1.0,
+      "skip_shop": 1.0,
+      "run_resource_transactions": 1.0,
+      "skip_evolution": 1.0,
+      "skip_strategic_intelligence": 1.0,
+      "skip_near_death_hardening": 1.0,
+      "skip_occupancy_resolution": 1.0,
+      "run_lifecycle": 1.0,
+      "skip_groups": 1.0,
+      "run_capacity_enforcement": 1.0,
+      "movement_cache_hits": 0.0,
+      "movement_cache_misses": 0.0,
+      "spatial_index_hits": 12.55,
+      "spatial_index_misses": 7.15,
+      "run_strategic_intelligence": 1.0
+    },
+    "replay_enabled": false,
+    "frame_pacing_enabled": false,
+    "timestamp": 1779190618.1125278,
+    "avg_tick_compute_ms": 2.882,
+    "p50_tick_compute_ms": 2.564,
+    "p95_tick_compute_ms": 7.942,
+    "p99_tick_compute_ms": 7.942,
+    "max_tick_compute_ms": 7.942,
+    "peak_rss_mb": 38.32,
+    "memory_delta_mb": 0.0,
+    "matrix_scenario": "movement",
+    "matrix_scale": 100,
+    "matrix_mode": "local"
+  },
+  {
+    "scenario_id": "movement_100_concurrent",
+    "profile": "PERF_2GB_CONC",
+    "sample_ticks": 20,
+    "wall_clock_s": 0.059,
+    "wall_clock_tps": 339.24,
+    "compute_tps": 343.5,
+    "avg_tps": 343.5,
+    "tick_ms": {
+      "avg": 2.911,
+      "p50": 2.768,
+      "p95": 6.893,
+      "p99": 6.893,
+      "max": 6.893,
+      "min": 0.806
+    },
+    "mem_rss_mb": {
+      "avg": 38.42,
+      "max": 38.43,
+      "delta": 0.01
+    },
+    "phase_breakdown": {
+      "init": {
+        "avg": 0.18,
+        "p50": 0.146,
+        "p95": 0.463,
+        "p99": 0.463,
+        "max": 0.463,
+        "min": 0.063
+      },
+      "scheduling": {
+        "avg": 0.056,
+        "p50": 0.016,
+        "p95": 0.591,
+        "p99": 0.591,
+        "max": 0.591,
+        "min": 0.008
+      },
+      "collection": {
+        "avg": 0.302,
+        "p50": 0.175,
+        "p95": 1.777,
+        "p99": 1.777,
+        "max": 1.777,
+        "min": 0.099
+      },
+      "trust_validity": {
+        "avg": 0.08,
+        "p50": 0.051,
+        "p95": 0.347,
+        "p99": 0.347,
+        "max": 0.347,
+        "min": 0.035
+      },
+      "contracts_production": {
+        "avg": 0.104,
+        "p50": 0.065,
+        "p95": 0.371,
+        "p99": 0.371,
+        "max": 0.371,
+        "min": 0.05
+      },
+      "locomotion": {
+        "avg": 0.615,
+        "p50": 0.45,
+        "p95": 1.87,
+        "p99": 1.87,
+        "max": 1.87,
+        "min": 0.279
+      },
+      "interaction": {
+        "avg": 0.068,
+        "p50": 0.038,
+        "p95": 0.309,
+        "p99": 0.309,
+        "max": 0.309,
+        "min": 0.023
+      },
+      "governance_ecology": {
+        "avg": 0.08,
+        "p50": 0.067,
+        "p95": 0.22,
+        "p99": 0.22,
+        "max": 0.22,
+        "min": 0.051
+      },
+      "economy": {
+        "avg": 0.038,
+        "p50": 0.007,
+        "p95": 0.437,
+        "p99": 0.437,
+        "max": 0.437,
+        "min": 0.005
+      },
+      "final_integrity": {
+        "avg": 0.301,
+        "p50": 0.082,
+        "p95": 2.357,
+        "p99": 2.357,
+        "max": 2.357,
+        "min": 0.064
+      },
+      "resolution_overhead": {
+        "avg": 0.074,
+        "p50": 0.057,
+        "p95": 0.309,
+        "p99": 0.309,
+        "max": 0.309,
+        "min": 0.028
+      },
+      "cleanup": {
+        "avg": 0.029,
+        "p50": 0.014,
+        "p95": 0.149,
+        "p99": 0.149,
+        "max": 0.149,
+        "min": 0.006
+      },
+      "advancement": {
+        "avg": 0.975,
+        "p50": 0.487,
+        "p95": 3.777,
+        "p99": 3.777,
+        "max": 3.777,
+        "min": 0.06
+      },
+      "persistence": {
+        "avg": 0.009,
+        "p50": 0.008,
+        "p95": 0.015,
+        "p99": 0.015,
+        "max": 0.015,
+        "min": 0.003
+      }
+    },
+    "metrics": {
+      "raw_entity_updates": 0.0,
+      "compacted_entity_updates": 0.0,
+      "phase_runs": 11.8,
+      "run_trust_boundary": 1.0,
+      "run_actor_validity": 1.0,
+      "run_contracts": 1.0,
+      "run_blacksmith": 1.0,
+      "run_action_routing": 1.0,
+      "run_position_swaps": 1.0,
+      "run_movement_routing": 1.0,
+      "movement_candidates": 8.35,
+      "run_interaction_routing": 1.0,
+      "run_interaction_enforcement": 1.0,
+      "phase_skips": 10.2,
+      "skip_building_sabotage": 1.0,
+      "run_town_resolution": 1.0,
+      "run_world_dynamics": 1.0,
+      "run_quest_rewards": 1.0,
+      "skip_shop": 1.0,
+      "run_resource_transactions": 1.0,
+      "skip_evolution": 1.0,
+      "skip_strategic_intelligence": 1.0,
+      "skip_near_death_hardening": 1.0,
+      "run_occupancy_resolution": 1.0,
+      "run_lifecycle": 1.0,
+      "run_groups": 1.0,
+      "run_capacity_enforcement": 1.0,
+      "movement_cache_hits": 0.0,
+      "movement_cache_misses": 483.25,
+      "spatial_index_hits": 156.8,
+      "spatial_index_misses": 4.9,
+      "run_strategic_intelligence": 1.0,
+      "skip_interaction_routing": 1.0,
+      "skip_interaction_enforcement": 1.0,
+      "skip_town_resolution": 1.0,
+      "skip_quest_rewards": 1.0,
+      "skip_resource_transactions": 1.0,
+      "skip_occupancy_resolution": 1.0,
+      "skip_groups": 1.0
+    },
+    "replay_enabled": false,
+    "frame_pacing_enabled": false,
+    "timestamp": 1779190618.3319433,
+    "avg_tick_compute_ms": 2.911,
+    "p50_tick_compute_ms": 2.768,
+    "p95_tick_compute_ms": 6.893,
+    "p99_tick_compute_ms": 6.893,
+    "max_tick_compute_ms": 6.893,
+    "peak_rss_mb": 38.43,
+    "memory_delta_mb": 0.01,
+    "matrix_scenario": "movement",
+    "matrix_scale": 100,
+    "matrix_mode": "concurrent"
+  },
+  {
+    "scenario_id": "resource_100_local",
+    "profile": "PERF_1GB_LOCAL",
+    "sample_ticks": 20,
+    "wall_clock_s": 0.0577,
+    "wall_clock_tps": 346.38,
+    "compute_tps": 350.98,
+    "avg_tps": 350.98,
+    "tick_ms": {
+      "avg": 2.849,
+      "p50": 2.852,
+      "p95": 5.442,
+      "p99": 5.442,
+      "max": 5.442,
+      "min": 1.754
+    },
+    "mem_rss_mb": {
+      "avg": 38.47,
+      "max": 38.47,
+      "delta": 0.0
+    },
+    "phase_breakdown": {
+      "init": {
+        "avg": 0.169,
+        "p50": 0.132,
+        "p95": 0.493,
+        "p99": 0.493,
+        "max": 0.493,
+        "min": 0.094
+      },
+      "scheduling": {
+        "avg": 0.116,
+        "p50": 0.099,
+        "p95": 0.187,
+        "p99": 0.187,
+        "max": 0.187,
+        "min": 0.081
+      },
+      "collection": {
+        "avg": 0.164,
+        "p50": 0.16,
+        "p95": 0.327,
+        "p99": 0.327,
+        "max": 0.327,
+        "min": 0.097
+      },
+      "trust_validity": {
+        "avg": 0.076,
+        "p50": 0.075,
+        "p95": 0.104,
+        "p99": 0.104,
+        "max": 0.104,
+        "min": 0.061
+      },
+      "contracts_production": {
+        "avg": 0.083,
+        "p50": 0.065,
+        "p95": 0.239,
+        "p99": 0.239,
+        "max": 0.239,
+        "min": 0.056
+      },
+      "locomotion": {
+        "avg": 0.524,
+        "p50": 0.408,
+        "p95": 1.125,
+        "p99": 1.125,
+        "max": 1.125,
+        "min": 0.325
+      },
+      "interaction": {
+        "avg": 0.235,
+        "p50": 0.214,
+        "p95": 0.43,
+        "p99": 0.43,
+        "max": 0.43,
+        "min": 0.161
+      },
+      "governance_ecology": {
+        "avg": 0.102,
+        "p50": 0.073,
+        "p95": 0.25,
+        "p99": 0.25,
+        "max": 0.25,
+        "min": 0.062
+      },
+      "economy": {
+        "avg": 0.175,
+        "p50": 0.166,
+        "p95": 0.39,
+        "p99": 0.39,
+        "max": 0.39,
+        "min": 0.039
+      },
+      "final_integrity": {
+        "avg": 0.384,
+        "p50": 0.155,
+        "p95": 1.516,
+        "p99": 1.516,
+        "max": 1.516,
+        "min": 0.125
+      },
+      "resolution_overhead": {
+        "avg": 0.073,
+        "p50": 0.06,
+        "p95": 0.291,
+        "p99": 0.291,
+        "max": 0.291,
+        "min": 0.043
+      },
+      "cleanup": {
+        "avg": 0.023,
+        "p50": 0.016,
+        "p95": 0.106,
+        "p99": 0.106,
+        "max": 0.106,
+        "min": 0.01
+      },
+      "advancement": {
+        "avg": 0.717,
+        "p50": 0.473,
+        "p95": 2.682,
+        "p99": 2.682,
+        "max": 2.682,
+        "min": 0.266
+      },
+      "persistence": {
+        "avg": 0.009,
+        "p50": 0.009,
+        "p95": 0.012,
+        "p99": 0.012,
+        "max": 0.012,
+        "min": 0.006
+      }
+    },
+    "metrics": {
+      "raw_entity_updates": 1.8,
+      "compacted_entity_updates": 1.8,
+      "phase_runs": 17.3,
+      "run_trust_boundary": 1.0,
+      "run_actor_validity": 1.0,
+      "run_contracts": 1.0,
+      "run_blacksmith": 1.0,
+      "run_action_routing": 1.0,
+      "run_position_swaps": 1.0,
+      "run_movement_routing": 1.0,
+      "movement_candidates": 4.55,
+      "run_interaction_routing": 1.0,
+      "run_interaction_enforcement": 1.0,
+      "phase_skips": 4.7,
+      "skip_building_sabotage": 1.0,
+      "run_town_resolution": 1.0,
+      "run_world_dynamics": 1.0,
+      "run_quest_rewards": 1.0,
+      "skip_shop": 1.0,
+      "run_resource_transactions": 1.0,
+      "skip_evolution": 1.0,
+      "skip_strategic_intelligence": 1.0,
+      "skip_near_death_hardening": 1.0,
+      "run_occupancy_resolution": 1.0,
+      "run_lifecycle": 1.0,
+      "run_groups": 1.0,
+      "run_capacity_enforcement": 1.0,
+      "movement_cache_hits": 0.0,
+      "movement_cache_misses": 84.45,
+      "spatial_index_hits": 3.45,
+      "spatial_index_misses": 6.4,
+      "run_strategic_intelligence": 1.0
+    },
+    "replay_enabled": false,
+    "frame_pacing_enabled": false,
+    "timestamp": 1779190618.4709525,
+    "avg_tick_compute_ms": 2.849,
+    "p50_tick_compute_ms": 2.852,
+    "p95_tick_compute_ms": 5.442,
+    "p99_tick_compute_ms": 5.442,
+    "max_tick_compute_ms": 5.442,
+    "peak_rss_mb": 38.47,
+    "memory_delta_mb": 0.0,
+    "matrix_scenario": "resource",
+    "matrix_scale": 100,
+    "matrix_mode": "local"
+  },
+  {
+    "scenario_id": "resource_100_concurrent",
+    "profile": "PERF_2GB_CONC",
+    "sample_ticks": 20,
+    "wall_clock_s": 0.181,
+    "wall_clock_tps": 110.49,
+    "compute_tps": 111.96,
+    "avg_tps": 111.96,
+    "tick_ms": {
+      "avg": 8.931,
+      "p50": 7.038,
+      "p95": 26.822,
+      "p99": 26.822,
+      "max": 26.822,
+      "min": 3.738
+    },
+    "mem_rss_mb": {
+      "avg": 38.55,
+      "max": 38.55,
+      "delta": 0.02
+    },
+    "phase_breakdown": {
+      "init": {
+        "avg": 0.22,
+        "p50": 0.189,
+        "p95": 0.513,
+        "p99": 0.513,
+        "max": 0.513,
+        "min": 0.122
+      },
+      "scheduling": {
+        "avg": 0.069,
+        "p50": 0.054,
+        "p95": 0.409,
+        "p99": 0.409,
+        "max": 0.409,
+        "min": 0.016
+      },
+      "collection": {
+        "avg": 2.867,
+        "p50": 0.684,
+        "p95": 22.158,
+        "p99": 22.158,
+        "max": 22.158,
+        "min": 0.169
+      },
+      "trust_validity": {
+        "avg": 0.091,
+        "p50": 0.084,
+        "p95": 0.148,
+        "p99": 0.148,
+        "max": 0.148,
+        "min": 0.048
+      },
+      "contracts_production": {
+        "avg": 0.131,
+        "p50": 0.115,
+        "p95": 0.544,
+        "p99": 0.544,
+        "max": 0.544,
+        "min": 0.056
+      },
+      "locomotion": {
+        "avg": 1.34,
+        "p50": 1.267,
+        "p95": 3.75,
+        "p99": 3.75,
+        "max": 3.75,
+        "min": 0.586
+      },
+      "interaction": {
+        "avg": 0.457,
+        "p50": 0.459,
+        "p95": 0.857,
+        "p99": 0.857,
+        "max": 0.857,
+        "min": 0.18
+      },
+      "governance_ecology": {
+        "avg": 0.123,
+        "p50": 0.093,
+        "p95": 0.406,
+        "p99": 0.406,
+        "max": 0.406,
+        "min": 0.067
+      },
+      "economy": {
+        "avg": 0.262,
+        "p50": 0.181,
+        "p95": 0.736,
+        "p99": 0.736,
+        "max": 0.736,
+        "min": 0.061
+      },
+      "final_integrity": {
+        "avg": 1.183,
+        "p50": 0.228,
+        "p95": 10.558,
+        "p99": 10.558,
+        "max": 10.558,
+        "min": 0.149
+      },
+      "resolution_overhead": {
+        "avg": 0.117,
+        "p50": 0.081,
+        "p95": 0.76,
+        "p99": 0.76,
+        "max": 0.76,
+        "min": 0.044
+      },
+      "cleanup": {
+        "avg": 0.042,
+        "p50": 0.016,
+        "p95": 0.371,
+        "p99": 0.371,
+        "max": 0.371,
+        "min": 0.01
+      },
+      "advancement": {
+        "avg": 2.016,
+        "p50": 2.019,
+        "p95": 4.028,
+        "p99": 4.028,
+        "max": 4.028,
+        "min": 0.875
+      },
+      "persistence": {
+        "avg": 0.011,
+        "p50": 0.011,
+        "p95": 0.021,
+        "p99": 0.021,
+        "max": 0.021,
+        "min": 0.007
+      }
+    },
+    "metrics": {
+      "raw_entity_updates": 2.3,
+      "compacted_entity_updates": 2.3,
+      "phase_runs": 17.3,
+      "run_trust_boundary": 1.0,
+      "run_actor_validity": 1.0,
+      "run_contracts": 1.0,
+      "run_blacksmith": 1.0,
+      "run_action_routing": 1.0,
+      "run_position_swaps": 1.0,
+      "run_movement_routing": 1.0,
+      "movement_candidates": 30.55,
+      "run_interaction_routing": 1.0,
+      "run_interaction_enforcement": 1.0,
+      "phase_skips": 4.7,
+      "skip_building_sabotage": 1.0,
+      "run_town_resolution": 1.0,
+      "run_world_dynamics": 1.0,
+      "run_quest_rewards": 1.0,
+      "skip_shop": 1.0,
+      "run_resource_transactions": 1.0,
+      "skip_evolution": 1.0,
+      "skip_strategic_intelligence": 1.0,
+      "skip_near_death_hardening": 1.0,
+      "run_occupancy_resolution": 1.0,
+      "run_lifecycle": 1.0,
+      "run_groups": 1.0,
+      "run_capacity_enforcement": 1.0,
+      "movement_cache_hits": 0.0,
+      "movement_cache_misses": 871.5,
+      "spatial_index_hits": 50.2,
+      "spatial_index_misses": 7.15,
+      "run_strategic_intelligence": 1.0
+    },
+    "replay_enabled": false,
+    "frame_pacing_enabled": false,
+    "timestamp": 1779190618.8354785,
+    "avg_tick_compute_ms": 8.931,
+    "p50_tick_compute_ms": 7.038,
+    "p95_tick_compute_ms": 26.822,
+    "p99_tick_compute_ms": 26.822,
+    "max_tick_compute_ms": 26.822,
+    "peak_rss_mb": 38.55,
+    "memory_delta_mb": 0.02,
+    "matrix_scenario": "resource",
+    "matrix_scale": 100,
+    "matrix_mode": "concurrent"
+  },
+  {
+    "scenario_id": "combat_10_local",
+    "profile": "PERF_2GB_LOCAL",
+    "sample_ticks": 20,
+    "wall_clock_s": 0.0129,
+    "wall_clock_tps": 1555.89,
+    "compute_tps": 1599.36,
+    "avg_tps": 1599.36,
+    "tick_ms": {
+      "avg": 0.625,
+      "p50": 0.49,
+      "p95": 1.506,
+      "p99": 1.506,
+      "max": 1.506,
+      "min": 0.353
+    },
+    "mem_rss_mb": {
+      "avg": 39.0,
+      "max": 39.0,
+      "delta": 0.0
+    },
+    "phase_breakdown": {
+      "init": {
+        "avg": 0.105,
+        "p50": 0.043,
+        "p95": 0.914,
+        "p99": 0.914,
+        "max": 0.914,
+        "min": 0.035
+      },
+      "scheduling": {
+        "avg": 0.026,
+        "p50": 0.018,
+        "p95": 0.166,
+        "p99": 0.166,
+        "max": 0.166,
+        "min": 0.016
+      },
+      "collection": {
+        "avg": 0.035,
+        "p50": 0.031,
+        "p95": 0.074,
+        "p99": 0.074,
+        "max": 0.074,
+        "min": 0.027
+      },
+      "trust_validity": {
+        "avg": 0.037,
+        "p50": 0.035,
+        "p95": 0.058,
+        "p99": 0.058,
+        "max": 0.058,
+        "min": 0.031
+      },
+      "contracts_production": {
+        "avg": 0.037,
+        "p50": 0.029,
+        "p95": 0.155,
+        "p99": 0.155,
+        "max": 0.155,
+        "min": 0.027
+      },
+      "locomotion": {
+        "avg": 0.051,
+        "p50": 0.038,
+        "p95": 0.234,
+        "p99": 0.234,
+        "max": 0.234,
+        "min": 0.034
+      },
+      "interaction": {
+        "avg": 0.024,
+        "p50": 0.022,
+        "p95": 0.036,
+        "p99": 0.036,
+        "max": 0.036,
+        "min": 0.02
+      },
+      "governance_ecology": {
+        "avg": 0.033,
+        "p50": 0.03,
+        "p95": 0.057,
+        "p99": 0.057,
+        "max": 0.057,
+        "min": 0.028
+      },
+      "economy": {
+        "avg": 0.005,
+        "p50": 0.005,
+        "p95": 0.008,
+        "p99": 0.008,
+        "max": 0.008,
+        "min": 0.004
+      },
+      "final_integrity": {
+        "avg": 0.074,
+        "p50": 0.058,
+        "p95": 0.332,
+        "p99": 0.332,
+        "max": 0.332,
+        "min": 0.055
+      },
+      "resolution_overhead": {
+        "avg": 0.038,
+        "p50": 0.028,
+        "p95": 0.167,
+        "p99": 0.167,
+        "max": 0.167,
+        "min": 0.023
+      },
+      "cleanup": {
+        "avg": 0.012,
+        "p50": 0.007,
+        "p95": 0.073,
+        "p99": 0.073,
+        "max": 0.073,
+        "min": 0.005
+      },
+      "advancement": {
+        "avg": 0.143,
+        "p50": 0.051,
+        "p95": 1.026,
+        "p99": 1.026,
+        "max": 1.026,
+        "min": 0.039
+      },
+      "persistence": {
+        "avg": 0.003,
+        "p50": 0.002,
+        "p95": 0.012,
+        "p99": 0.012,
+        "max": 0.012,
+        "min": 0.002
+      }
+    },
+    "metrics": {
+      "raw_entity_updates": 0.0,
+      "compacted_entity_updates": 0.0,
+      "phase_runs": 10.0,
+      "run_trust_boundary": 1.0,
+      "run_actor_validity": 1.0,
+      "run_contracts": 1.0,
+      "run_blacksmith": 1.0,
+      "run_action_routing": 1.0,
+      "run_position_swaps": 1.0,
+      "run_movement_routing": 1.0,
+      "movement_candidates": 0.0,
+      "phase_skips": 12.0,
+      "skip_interaction_routing": 1.0,
+      "skip_interaction_enforcement": 1.0,
+      "skip_building_sabotage": 1.0,
+      "skip_town_resolution": 1.0,
+      "run_world_dynamics": 1.0,
+      "skip_quest_rewards": 1.0,
+      "skip_shop": 1.0,
+      "skip_resource_transactions": 1.0,
+      "skip_evolution": 1.0,
+      "skip_strategic_intelligence": 1.0,
+      "skip_near_death_hardening": 1.0,
+      "skip_occupancy_resolution": 1.0,
+      "run_lifecycle": 1.0,
+      "skip_groups": 1.0,
+      "run_capacity_enforcement": 1.0,
+      "movement_cache_hits": 0.0,
+      "movement_cache_misses": 0.0,
+      "spatial_index_hits": 0.0,
+      "spatial_index_misses": 0.0
+    },
+    "replay_enabled": false,
+    "frame_pacing_enabled": false,
+    "timestamp": 1779190618.8982272,
+    "avg_tick_compute_ms": 0.625,
+    "p50_tick_compute_ms": 0.49,
+    "p95_tick_compute_ms": 1.506,
+    "p99_tick_compute_ms": 1.506,
+    "max_tick_compute_ms": 1.506,
+    "peak_rss_mb": 39.0,
+    "memory_delta_mb": 0.0,
+    "matrix_scenario": "combat",
+    "matrix_scale": 10,
+    "matrix_mode": "local"
+  },
+  {
+    "scenario_id": "combat_10_concurrent",
+    "profile": "PERF_2GB_CONC",
+    "sample_ticks": 20,
+    "wall_clock_s": 0.1793,
+    "wall_clock_tps": 111.52,
+    "compute_tps": 119.11,
+    "avg_tps": 119.11,
+    "tick_ms": {
+      "avg": 8.396,
+      "p50": 6.512,
+      "p95": 36.31,
+      "p99": 36.31,
+      "max": 36.31,
+      "min": 1.902
+    },
+    "mem_rss_mb": {
+      "avg": 39.01,
+      "max": 39.01,
+      "delta": 0.0
+    },
+    "phase_breakdown": {
+      "init": {
+        "avg": 0.295,
+        "p50": 0.096,
+        "p95": 2.315,
+        "p99": 2.315,
+        "max": 2.315,
+        "min": 0.077
+      },
+      "scheduling": {
+        "avg": 0.077,
+        "p50": 0.046,
+        "p95": 0.505,
+        "p99": 0.505,
+        "max": 0.505,
+        "min": 0.038
+      },
+      "collection": {
+        "avg": 3.859,
+        "p50": 2.014,
+        "p95": 9.977,
+        "p99": 9.977,
+        "max": 9.977,
+        "min": 0.745
+      },
+      "trust_validity": {
+        "avg": 0.612,
+        "p50": 0.101,
+        "p95": 8.463,
+        "p99": 8.463,
+        "max": 8.463,
+        "min": 0.084
+      },
+      "contracts_production": {
+        "avg": 0.072,
+        "p50": 0.048,
+        "p95": 0.312,
+        "p99": 0.312,
+        "max": 0.312,
+        "min": 0.039
+      },
+      "locomotion": {
+        "avg": 0.726,
+        "p50": 0.164,
+        "p95": 9.745,
+        "p99": 9.745,
+        "max": 9.745,
+        "min": 0.131
+      },
+      "interaction": {
+        "avg": 0.556,
+        "p50": 0.071,
+        "p95": 6.313,
+        "p99": 6.313,
+        "max": 6.313,
+        "min": 0.059
+      },
+      "governance_ecology": {
+        "avg": 0.163,
+        "p50": 0.046,
+        "p95": 2.096,
+        "p99": 2.096,
+        "max": 2.096,
+        "min": 0.04
+      },
+      "economy": {
+        "avg": 0.816,
+        "p50": 0.047,
+        "p95": 15.341,
+        "p99": 15.341,
+        "max": 15.341,
+        "min": 0.04
+      },
+      "final_integrity": {
+        "avg": 0.616,
+        "p50": 0.086,
+        "p95": 2.719,
+        "p99": 2.719,
+        "max": 2.719,
+        "min": 0.067
+      },
+      "resolution_overhead": {
+        "avg": 0.1,
+        "p50": 0.078,
+        "p95": 0.36,
+        "p99": 0.36,
+        "max": 0.36,
+        "min": 0.057
+      },
+      "cleanup": {
+        "avg": 0.03,
+        "p50": 0.015,
+        "p95": 0.131,
+        "p99": 0.131,
+        "max": 0.131,
+        "min": 0.011
+      },
+      "advancement": {
+        "avg": 0.444,
+        "p50": 0.207,
+        "p95": 2.144,
+        "p99": 2.144,
+        "max": 2.144,
+        "min": 0.082
+      },
+      "persistence": {
+        "avg": 0.03,
+        "p50": 0.009,
+        "p95": 0.434,
+        "p99": 0.434,
+        "max": 0.434,
+        "min": 0.007
+      }
+    },
+    "metrics": {
+      "raw_entity_updates": 2.0,
+      "compacted_entity_updates": 2.0,
+      "phase_runs": 14.3,
+      "run_trust_boundary": 1.0,
+      "run_actor_validity": 1.0,
+      "run_contracts": 1.0,
+      "run_blacksmith": 1.0,
+      "run_action_routing": 1.0,
+      "run_position_swaps": 1.0,
+      "run_movement_routing": 1.0,
+      "movement_candidates": 0.0,
+      "run_interaction_routing": 1.0,
+      "run_interaction_enforcement": 1.0,
+      "phase_skips": 7.7,
+      "skip_building_sabotage": 1.0,
+      "skip_town_resolution": 1.0,
+      "run_world_dynamics": 1.0,
+      "run_quest_rewards": 1.0,
+      "skip_shop": 1.0,
+      "run_resource_transactions": 1.0,
+      "skip_evolution": 1.0,
+      "skip_strategic_intelligence": 1.0,
+      "skip_near_death_hardening": 1.0,
+      "skip_occupancy_resolution": 1.0,
+      "run_lifecycle": 1.0,
+      "skip_groups": 1.0,
+      "run_capacity_enforcement": 1.0,
+      "movement_cache_hits": 0.0,
+      "movement_cache_misses": 0.0,
+      "spatial_index_hits": 35.75,
+      "spatial_index_misses": 7.15,
+      "run_strategic_intelligence": 1.0
+    },
+    "replay_enabled": false,
+    "frame_pacing_enabled": false,
+    "timestamp": 1779190619.1317432,
+    "avg_tick_compute_ms": 8.396,
+    "p50_tick_compute_ms": 6.512,
+    "p95_tick_compute_ms": 36.31,
+    "p99_tick_compute_ms": 36.31,
+    "max_tick_compute_ms": 36.31,
+    "peak_rss_mb": 39.01,
+    "memory_delta_mb": 0.0,
+    "matrix_scenario": "combat",
+    "matrix_scale": 10,
+    "matrix_mode": "concurrent"
+  },
+  {
+    "scenario_id": "strategic_100_local",
+    "profile": "PERF_2GB_LOCAL",
+    "sample_ticks": 20,
+    "wall_clock_s": 0.0596,
+    "wall_clock_tps": 335.53,
+    "compute_tps": 339.5,
+    "avg_tps": 339.5,
+    "tick_ms": {
+      "avg": 2.946,
+      "p50": 1.782,
+      "p95": 8.199,
+      "p99": 8.199,
+      "max": 8.199,
+      "min": 0.944
+    },
+    "mem_rss_mb": {
+      "avg": 39.0,
+      "max": 39.0,
+      "delta": 0.0
+    },
+    "phase_breakdown": {
+      "init": {
+        "avg": 0.183,
+        "p50": 0.146,
+        "p95": 0.493,
+        "p99": 0.493,
+        "max": 0.493,
+        "min": 0.074
+      },
+      "scheduling": {
+        "avg": 0.118,
+        "p50": 0.096,
+        "p95": 0.531,
+        "p99": 0.531,
+        "max": 0.531,
+        "min": 0.071
+      },
+      "collection": {
+        "avg": 0.119,
+        "p50": 0.111,
+        "p95": 0.237,
+        "p99": 0.237,
+        "max": 0.237,
+        "min": 0.074
+      },
+      "trust_validity": {
+        "avg": 0.076,
+        "p50": 0.071,
+        "p95": 0.191,
+        "p99": 0.191,
+        "max": 0.191,
+        "min": 0.058
+      },
+      "contracts_production": {
+        "avg": 0.073,
+        "p50": 0.059,
+        "p95": 0.259,
+        "p99": 0.259,
+        "max": 0.259,
+        "min": 0.052
+      },
+      "locomotion": {
+        "avg": 0.235,
+        "p50": 0.167,
+        "p95": 0.892,
+        "p99": 0.892,
+        "max": 0.892,
+        "min": 0.124
+      },
+      "interaction": {
+        "avg": 0.064,
+        "p50": 0.056,
+        "p95": 0.186,
+        "p99": 0.186,
+        "max": 0.186,
+        "min": 0.045
+      },
+      "governance_ecology": {
+        "avg": 0.06,
+        "p50": 0.06,
+        "p95": 0.08,
+        "p99": 0.08,
+        "max": 0.08,
+        "min": 0.052
+      },
+      "economy": {
+        "avg": 0.047,
+        "p50": 0.037,
+        "p95": 0.202,
+        "p99": 0.202,
+        "max": 0.202,
+        "min": 0.031
+      },
+      "final_integrity": {
+        "avg": 1.489,
+        "p50": 0.078,
+        "p95": 7.225,
+        "p99": 7.225,
+        "max": 7.225,
+        "min": 0.068
+      },
+      "resolution_overhead": {
+        "avg": 0.049,
+        "p50": 0.048,
+        "p95": 0.067,
+        "p99": 0.067,
+        "max": 0.067,
+        "min": 0.038
+      },
+      "cleanup": {
+        "avg": 0.018,
+        "p50": 0.013,
+        "p95": 0.078,
+        "p99": 0.078,
+        "max": 0.078,
+        "min": 0.007
+      },
+      "advancement": {
+        "avg": 0.408,
+        "p50": 0.153,
+        "p95": 1.702,
+        "p99": 1.702,
+        "max": 1.702,
+        "min": 0.09
+      },
+      "persistence": {
+        "avg": 0.007,
+        "p50": 0.008,
+        "p95": 0.01,
+        "p99": 0.01,
+        "max": 0.01,
+        "min": 0.004
+      }
+    },
+    "metrics": {
+      "raw_entity_updates": 2.0,
+      "compacted_entity_updates": 2.0,
+      "phase_runs": 14.3,
+      "run_trust_boundary": 1.0,
+      "run_actor_validity": 1.0,
+      "run_contracts": 1.0,
+      "run_blacksmith": 1.0,
+      "run_action_routing": 1.0,
+      "run_position_swaps": 1.0,
+      "run_movement_routing": 1.0,
+      "movement_candidates": 0.0,
+      "run_interaction_routing": 1.0,
+      "run_interaction_enforcement": 1.0,
+      "phase_skips": 7.7,
+      "skip_building_sabotage": 1.0,
+      "skip_town_resolution": 1.0,
+      "run_world_dynamics": 1.0,
+      "run_quest_rewards": 1.0,
+      "skip_shop": 1.0,
+      "run_resource_transactions": 1.0,
+      "skip_evolution": 1.0,
+      "skip_strategic_intelligence": 1.0,
+      "skip_near_death_hardening": 1.0,
+      "skip_occupancy_resolution": 1.0,
+      "run_lifecycle": 1.0,
+      "skip_groups": 1.0,
+      "run_capacity_enforcement": 1.0,
+      "movement_cache_hits": 0.0,
+      "movement_cache_misses": 0.0,
+      "spatial_index_hits": 228.8,
+      "spatial_index_misses": 7.15,
+      "run_strategic_intelligence": 1.0
+    },
+    "replay_enabled": false,
+    "frame_pacing_enabled": false,
+    "timestamp": 1779190619.2779577,
+    "avg_tick_compute_ms": 2.946,
+    "p50_tick_compute_ms": 1.782,
+    "p95_tick_compute_ms": 8.199,
+    "p99_tick_compute_ms": 8.199,
+    "max_tick_compute_ms": 8.199,
+    "peak_rss_mb": 39.0,
+    "memory_delta_mb": 0.0,
+    "matrix_scenario": "strategic",
+    "matrix_scale": 100,
+    "matrix_mode": "local"
+  },
+  {
+    "scenario_id": "strategic_100_concurrent",
+    "profile": "PERF_2GB_CONC",
+    "sample_ticks": 20,
+    "wall_clock_s": 0.1664,
+    "wall_clock_tps": 120.17,
+    "compute_tps": 121.04,
+    "avg_tps": 121.04,
+    "tick_ms": {
+      "avg": 8.262,
+      "p50": 7.688,
+      "p95": 26.132,
+      "p99": 26.132,
+      "max": 26.132,
+      "min": 3.133
+    },
+    "mem_rss_mb": {
+      "avg": 39.03,
+      "max": 39.03,
+      "delta": 0.0
+    },
+    "phase_breakdown": {
+      "init": {
+        "avg": 0.285,
+        "p50": 0.173,
+        "p95": 1.142,
+        "p99": 1.142,
+        "max": 1.142,
+        "min": 0.112
+      },
+      "scheduling": {
+        "avg": 0.176,
+        "p50": 0.134,
+        "p95": 0.381,
+        "p99": 0.381,
+        "max": 0.381,
+        "min": 0.113
+      },
+      "collection": {
+        "avg": 4.789,
+        "p50": 3.035,
+        "p95": 19.991,
+        "p99": 19.991,
+        "max": 19.991,
+        "min": 1.588
+      },
+      "trust_validity": {
+        "avg": 0.211,
+        "p50": 0.155,
+        "p95": 0.597,
+        "p99": 0.597,
+        "max": 0.597,
+        "min": 0.136
+      },
+      "contracts_production": {
+        "avg": 0.133,
+        "p50": 0.118,
+        "p95": 0.316,
+        "p99": 0.316,
+        "max": 0.316,
+        "min": 0.074
+      },
+      "locomotion": {
+        "avg": 0.44,
+        "p50": 0.243,
+        "p95": 2.192,
+        "p99": 2.192,
+        "max": 2.192,
+        "min": 0.181
+      },
+      "interaction": {
+        "avg": 0.096,
+        "p50": 0.078,
+        "p95": 0.237,
+        "p99": 0.237,
+        "max": 0.237,
+        "min": 0.062
+      },
+      "governance_ecology": {
+        "avg": 0.086,
+        "p50": 0.065,
+        "p95": 0.264,
+        "p99": 0.264,
+        "max": 0.264,
+        "min": 0.057
+      },
+      "economy": {
+        "avg": 0.097,
+        "p50": 0.046,
+        "p95": 0.819,
+        "p99": 0.819,
+        "max": 0.819,
+        "min": 0.037
+      },
+      "final_integrity": {
+        "avg": 1.259,
+        "p50": 0.112,
+        "p95": 4.515,
+        "p99": 4.515,
+        "max": 4.515,
+        "min": 0.078
+      },
+      "resolution_overhead": {
+        "avg": 0.096,
+        "p50": 0.089,
+        "p95": 0.22,
+        "p99": 0.22,
+        "max": 0.22,
+        "min": 0.067
+      },
+      "cleanup": {
+        "avg": 0.025,
+        "p50": 0.016,
+        "p95": 0.114,
+        "p99": 0.114,
+        "max": 0.114,
+        "min": 0.013
+      },
+      "advancement": {
+        "avg": 0.558,
+        "p50": 0.241,
+        "p95": 2.171,
+        "p99": 2.171,
+        "max": 2.171,
+        "min": 0.151
+      },
+      "persistence": {
+        "avg": 0.01,
+        "p50": 0.01,
+        "p95": 0.014,
+        "p99": 0.014,
+        "max": 0.014,
+        "min": 0.008
+      }
+    },
+    "metrics": {
+      "raw_entity_updates": 10.0,
+      "compacted_entity_updates": 10.0,
+      "phase_runs": 14.3,
+      "run_trust_boundary": 1.0,
+      "run_actor_validity": 1.0,
+      "run_contracts": 1.0,
+      "run_blacksmith": 1.0,
+      "run_action_routing": 1.0,
+      "run_position_swaps": 1.0,
+      "run_movement_routing": 1.0,
+      "movement_candidates": 0.0,
+      "run_interaction_routing": 1.0,
+      "run_interaction_enforcement": 1.0,
+      "phase_skips": 7.7,
+      "skip_building_sabotage": 1.0,
+      "skip_town_resolution": 1.0,
+      "run_world_dynamics": 1.0,
+      "run_quest_rewards": 1.0,
+      "skip_shop": 1.0,
+      "run_resource_transactions": 1.0,
+      "skip_evolution": 1.0,
+      "skip_strategic_intelligence": 1.0,
+      "skip_near_death_hardening": 1.0,
+      "skip_occupancy_resolution": 1.0,
+      "run_lifecycle": 1.0,
+      "skip_groups": 1.0,
+      "run_capacity_enforcement": 1.0,
+      "movement_cache_hits": 0.0,
+      "movement_cache_misses": 0.0,
+      "spatial_index_hits": 228.8,
+      "spatial_index_misses": 7.15,
+      "run_strategic_intelligence": 1.0
+    },
+    "replay_enabled": false,
+    "frame_pacing_enabled": false,
+    "timestamp": 1779190619.5733736,
+    "avg_tick_compute_ms": 8.262,
+    "p50_tick_compute_ms": 7.688,
+    "p95_tick_compute_ms": 26.132,
+    "p99_tick_compute_ms": 26.132,
+    "max_tick_compute_ms": 26.132,
+    "peak_rss_mb": 39.03,
+    "memory_delta_mb": 0.0,
+    "matrix_scenario": "strategic",
+    "matrix_scale": 100,
+    "matrix_mode": "concurrent"
+  },
+  {
+    "scenario_id": "mixed_200_local",
+    "profile": "PERF_1GB_LOCAL",
+    "sample_ticks": 20,
+    "wall_clock_s": 0.0572,
+    "wall_clock_tps": 349.52,
+    "compute_tps": 355.05,
+    "avg_tps": 355.05,
+    "tick_ms": {
+      "avg": 2.817,
+      "p50": 2.455,
+      "p95": 5.14,
+      "p99": 5.14,
+      "max": 5.14,
+      "min": 1.394
+    },
+    "mem_rss_mb": {
+      "avg": 39.02,
+      "max": 39.02,
+      "delta": 0.0
+    },
+    "phase_breakdown": {
+      "init": {
+        "avg": 0.196,
+        "p50": 0.156,
+        "p95": 0.392,
+        "p99": 0.392,
+        "max": 0.392,
+        "min": 0.099
+      },
+      "scheduling": {
+        "avg": 0.166,
+        "p50": 0.139,
+        "p95": 0.263,
+        "p99": 0.263,
+        "max": 0.263,
+        "min": 0.106
+      },
+      "collection": {
+        "avg": 0.185,
+        "p50": 0.157,
+        "p95": 0.468,
+        "p99": 0.468,
+        "max": 0.468,
+        "min": 0.116
+      },
+      "trust_validity": {
+        "avg": 0.099,
+        "p50": 0.089,
+        "p95": 0.29,
+        "p99": 0.29,
+        "max": 0.29,
+        "min": 0.07
+      },
+      "contracts_production": {
+        "avg": 0.104,
+        "p50": 0.083,
+        "p95": 0.331,
+        "p99": 0.331,
+        "max": 0.331,
+        "min": 0.066
+      },
+      "locomotion": {
+        "avg": 0.427,
+        "p50": 0.279,
+        "p95": 1.589,
+        "p99": 1.589,
+        "max": 1.589,
+        "min": 0.175
+      },
+      "interaction": {
+        "avg": 0.125,
+        "p50": 0.125,
+        "p95": 0.226,
+        "p99": 0.226,
+        "max": 0.226,
+        "min": 0.055
+      },
+      "governance_ecology": {
+        "avg": 0.085,
+        "p50": 0.076,
+        "p95": 0.133,
+        "p99": 0.133,
+        "max": 0.133,
+        "min": 0.07
+      },
+      "economy": {
+        "avg": 0.134,
+        "p50": 0.084,
+        "p95": 0.524,
+        "p99": 0.524,
+        "max": 0.524,
+        "min": 0.038
+      },
+      "final_integrity": {
+        "avg": 0.531,
+        "p50": 0.213,
+        "p95": 2.569,
+        "p99": 2.569,
+        "max": 2.569,
+        "min": 0.08
+      },
+      "resolution_overhead": {
+        "avg": 0.065,
+        "p50": 0.05,
+        "p95": 0.253,
+        "p99": 0.253,
+        "max": 0.253,
+        "min": 0.036
+      },
+      "cleanup": {
+        "avg": 0.022,
+        "p50": 0.015,
+        "p95": 0.093,
+        "p99": 0.093,
+        "max": 0.093,
+        "min": 0.008
+      },
+      "advancement": {
+        "avg": 0.669,
+        "p50": 0.368,
+        "p95": 2.365,
+        "p99": 2.365,
+        "max": 2.365,
+        "min": 0.162
+      },
+      "persistence": {
+        "avg": 0.008,
+        "p50": 0.008,
+        "p95": 0.013,
+        "p99": 0.013,
+        "max": 0.013,
+        "min": 0.005
+      }
+    },
+    "metrics": {
+      "raw_entity_updates": 3.0,
+      "compacted_entity_updates": 3.0,
+      "phase_runs": 16.85,
+      "run_trust_boundary": 1.0,
+      "run_actor_validity": 1.0,
+      "run_contracts": 1.0,
+      "run_blacksmith": 1.0,
+      "run_action_routing": 1.0,
+      "run_position_swaps": 1.0,
+      "run_movement_routing": 1.0,
+      "movement_candidates": 1.55,
+      "run_interaction_routing": 1.0,
+      "run_interaction_enforcement": 1.0,
+      "phase_skips": 5.15,
+      "skip_building_sabotage": 1.0,
+      "skip_town_resolution": 1.0,
+      "run_world_dynamics": 1.0,
+      "run_quest_rewards": 1.0,
+      "skip_shop": 1.0,
+      "run_resource_transactions": 1.0,
+      "skip_evolution": 1.0,
+      "skip_strategic_intelligence": 1.0,
+      "skip_near_death_hardening": 1.0,
+      "skip_occupancy_resolution": 1.0,
+      "run_lifecycle": 1.0,
+      "skip_groups": 1.0,
+      "run_capacity_enforcement": 1.0,
+      "movement_cache_hits": 0.0,
+      "movement_cache_misses": 12.9,
+      "spatial_index_hits": 12.1,
+      "spatial_index_misses": 7.15,
+      "run_strategic_intelligence": 1.0,
+      "run_town_resolution": 1.0,
+      "run_occupancy_resolution": 1.0,
+      "run_groups": 1.0
+    },
+    "replay_enabled": false,
+    "frame_pacing_enabled": false,
+    "timestamp": 1779190619.7111459,
+    "avg_tick_compute_ms": 2.817,
+    "p50_tick_compute_ms": 2.455,
+    "p95_tick_compute_ms": 5.14,
+    "p99_tick_compute_ms": 5.14,
+    "max_tick_compute_ms": 5.14,
+    "peak_rss_mb": 39.02,
+    "memory_delta_mb": 0.0,
+    "matrix_scenario": "mixed",
+    "matrix_scale": 200,
+    "matrix_mode": "local"
+  },
+  {
+    "scenario_id": "mixed_200_concurrent",
+    "profile": "PERF_2GB_CONC",
+    "sample_ticks": 20,
+    "wall_clock_s": 0.1514,
+    "wall_clock_tps": 132.06,
+    "compute_tps": 133.0,
+    "avg_tps": 133.0,
+    "tick_ms": {
+      "avg": 7.519,
+      "p50": 6.754,
+      "p95": 12.955,
+      "p99": 12.955,
+      "max": 12.955,
+      "min": 4.119
+    },
+    "mem_rss_mb": {
+      "avg": 39.04,
+      "max": 39.04,
+      "delta": 0.0
+    },
+    "phase_breakdown": {
+      "init": {
+        "avg": 0.206,
+        "p50": 0.17,
+        "p95": 0.561,
+        "p99": 0.561,
+        "max": 0.561,
+        "min": 0.134
+      },
+      "scheduling": {
+        "avg": 0.192,
+        "p50": 0.167,
+        "p95": 0.354,
+        "p99": 0.354,
+        "max": 0.354,
+        "min": 0.142
+      },
+      "collection": {
+        "avg": 3.65,
+        "p50": 3.315,
+        "p95": 8.567,
+        "p99": 8.567,
+        "max": 8.567,
+        "min": 2.257
+      },
+      "trust_validity": {
+        "avg": 0.236,
+        "p50": 0.184,
+        "p95": 0.431,
+        "p99": 0.431,
+        "max": 0.431,
+        "min": 0.171
+      },
+      "contracts_production": {
+        "avg": 0.147,
+        "p50": 0.139,
+        "p95": 0.313,
+        "p99": 0.313,
+        "max": 0.313,
+        "min": 0.11
+      },
+      "locomotion": {
+        "avg": 0.445,
+        "p50": 0.353,
+        "p95": 0.854,
+        "p99": 0.854,
+        "max": 0.854,
+        "min": 0.276
+      },
+      "interaction": {
+        "avg": 0.434,
+        "p50": 0.137,
+        "p95": 3.304,
+        "p99": 3.304,
+        "max": 3.304,
+        "min": 0.1
+      },
+      "governance_ecology": {
+        "avg": 0.177,
+        "p50": 0.086,
+        "p95": 0.781,
+        "p99": 0.781,
+        "max": 0.781,
+        "min": 0.076
+      },
+      "economy": {
+        "avg": 0.103,
+        "p50": 0.059,
+        "p95": 0.393,
+        "p99": 0.393,
+        "max": 0.393,
+        "min": 0.044
+      },
+      "final_integrity": {
+        "avg": 0.829,
+        "p50": 0.153,
+        "p95": 2.692,
+        "p99": 2.692,
+        "max": 2.692,
+        "min": 0.091
+      },
+      "resolution_overhead": {
+        "avg": 0.12,
+        "p50": 0.09,
+        "p95": 0.448,
+        "p99": 0.448,
+        "max": 0.448,
+        "min": 0.075
+      },
+      "cleanup": {
+        "avg": 0.026,
+        "p50": 0.015,
+        "p95": 0.115,
+        "p99": 0.115,
+        "max": 0.115,
+        "min": 0.013
+      },
+      "advancement": {
+        "avg": 0.927,
+        "p50": 0.53,
+        "p95": 2.867,
+        "p99": 2.867,
+        "max": 2.867,
+        "min": 0.299
+      },
+      "persistence": {
+        "avg": 0.028,
+        "p50": 0.01,
+        "p95": 0.204,
+        "p99": 0.204,
+        "max": 0.204,
+        "min": 0.008
+      }
+    },
+    "metrics": {
+      "raw_entity_updates": 13.9,
+      "compacted_entity_updates": 13.9,
+      "phase_runs": 17.15,
+      "run_trust_boundary": 1.0,
+      "run_actor_validity": 1.0,
+      "run_contracts": 1.0,
+      "run_blacksmith": 1.0,
+      "run_action_routing": 1.0,
+      "run_position_swaps": 1.0,
+      "run_movement_routing": 1.0,
+      "movement_candidates": 0.95,
+      "run_interaction_routing": 1.0,
+      "run_interaction_enforcement": 1.0,
+      "phase_skips": 4.85,
+      "skip_building_sabotage": 1.0,
+      "run_town_resolution": 1.0,
+      "run_world_dynamics": 1.0,
+      "run_quest_rewards": 1.0,
+      "skip_shop": 1.0,
+      "run_resource_transactions": 1.0,
+      "skip_evolution": 1.0,
+      "skip_strategic_intelligence": 1.0,
+      "skip_near_death_hardening": 1.0,
+      "run_occupancy_resolution": 1.0,
+      "run_lifecycle": 1.0,
+      "run_groups": 1.0,
+      "run_capacity_enforcement": 1.0,
+      "movement_cache_hits": 0.0,
+      "movement_cache_misses": 19.45,
+      "spatial_index_hits": 109.2,
+      "spatial_index_misses": 7.15,
+      "run_strategic_intelligence": 1.0,
+      "skip_town_resolution": 1.0,
+      "skip_occupancy_resolution": 1.0,
+      "skip_groups": 1.0
+    },
+    "replay_enabled": false,
+    "frame_pacing_enabled": false,
+    "timestamp": 1779190620.0059304,
+    "avg_tick_compute_ms": 7.519,
+    "p50_tick_compute_ms": 6.754,
+    "p95_tick_compute_ms": 12.955,
+    "p99_tick_compute_ms": 12.955,
+    "max_tick_compute_ms": 12.955,
+    "peak_rss_mb": 39.04,
+    "memory_delta_mb": 0.0,
+    "matrix_scenario": "mixed",
+    "matrix_scale": 200,
+    "matrix_mode": "concurrent"
+  }
+]

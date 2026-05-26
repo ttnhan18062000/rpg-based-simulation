@@ -229,6 +229,14 @@ replay_v2_test/
 stored_artifacts/**/*.json
 !stored_artifacts/**/manifest.json
 
+# Runtime simulation data (transient, regenerated each run)
+# Runtime simulation data (transient, regenerated each run)
+data/*
+!data/expectation_packs/
+
+# Observability reports and transient run verification logs
+reports/*
+
 # Temporary Test Outputs and Scratch Scripts
 test_output.txt
 test_*_output.txt

@@ -587,6 +587,7 @@ class EntityState:
     task: TaskComponent = field(default_factory=TaskComponent)
     stamina: StaminaComponent = field(default_factory=StaminaComponent)
     _canonical_cache: Any = field(default=None, init=False, repr=False, compare=False)
+    timeline: Any = field(default=None, init=False, repr=False, compare=False)
 
     def to_canonical_dict(self) -> Dict[str, Any]:
         if self._canonical_cache is not None:
@@ -673,6 +674,8 @@ class EntityState:
     def __post_init__(self, init_position: Optional[tuple[float, float]], init_group_id: Optional[int], init_properties: Optional[Dict[str, Any]]):
         object.__setattr__(self, "_readonly_cache", None)
         object.__setattr__(self, "_canonical_cache", None)
+        from collections import deque
+        object.__setattr__(self, "timeline", deque(maxlen=200))
         
         if init_position is not None:
             if self.navigation.position == (0.0, 0.0):

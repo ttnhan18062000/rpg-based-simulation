@@ -43,7 +43,8 @@ class Kernel:
         "_start_perf_ts", "_current_world_time", "_platform_signals",
         "_current_signals", "_current_policy", "_current_work_items",
         "_source_packets", "_source_work_items", "_final_results", "_final_compute_ms",
-        "_phase_costs", "_metrics", "_audit_mode", "_no_frame_pacing", "_no_replay", "_audit_dirty_set", "_perf_tracker", "_force_full_scan", "_current_update", "_cache_registry", "_cache_policy", "_opt_profile"
+        "_phase_costs", "_metrics", "_audit_mode", "_no_frame_pacing", "_no_replay", "_audit_dirty_set", "_perf_tracker", "_force_full_scan", "_current_update", "_cache_registry", "_cache_policy", "_opt_profile", "_event_listeners", "_event_recorder", "_entity_timeline_store",
+        "_run_id", "_artifact_repo", "_metric_recorder", "_current_tick_event_count", "_current_tick_violation_count", "_cognition_recorder"
     )
 
     def __init__(
@@ -56,7 +57,8 @@ class Kernel:
         status: Optional[RuntimeStatus] = None,
         replay: Optional[ReplayManager] = None,
         executor: Optional[IWorkExecutor] = None,
-        flags: Optional[Dict[str, Any]] = None
+        flags: Optional[Dict[str, Any]] = None,
+        run_id: Optional[str] = None
     ) -> None:
         self._stopped = False
         self._profile = profile
@@ -99,9 +101,37 @@ class Kernel:
             max_queue_depth=profile.max_queue_depth
         )
         
+        from src.observability.config import ObservabilityConfig, ObservabilityMode
+        obs_mode = ObservabilityConfig.get_mode()
+
+        self._run_id = run_id
+        if self._run_id is None:
+            self._run_id = f"run_{int(time.time())}"
+
+        self._artifact_repo = None
+        if obs_mode != ObservabilityMode.OFF:
+            from datetime import datetime, timezone
+            import os
+            from src.observability.reporting.artifact_repository import RunArtifactRepository, RunManifest
+            self._artifact_repo = RunArtifactRepository()
+            
+            # Create standard manifest
+            manifest = RunManifest(
+                run_id=self._run_id,
+                scenario_name=profile.name,
+                scenario_type="mixed_sandbox",
+                seed=state.seed,
+                observability_mode=obs_mode.value,
+                started_at=datetime.now(timezone.utc).isoformat(),
+                ticks_requested=profile.cadence.max_ticks if hasattr(profile, "cadence") and hasattr(profile.cadence, "max_ticks") else 100,
+                status="CREATED"
+            )
+            self._artifact_repo.create_run(self._run_id, manifest, overwrite=True)
+            self._artifact_repo.update_manifest(self._run_id, status="RUNNING")
+
         if replay is None:
-            run_id = int(time.time())
-            run_dir = Path(f"data/runs/run_{run_id}")
+            import os
+            run_dir = Path(self._artifact_repo.resolve_path(self._run_id, "manifest")).parent if self._artifact_repo else Path(f"data/runs/{self._run_id}")
             self._replay = DefaultReplayManager(
                 run_dir=run_dir,
                 profile_name=profile.name,
@@ -137,6 +167,42 @@ class Kernel:
         self._start_perf_ts = time.perf_counter_ns()
         self._no_frame_pacing = flags.get("no_frame_pacing", False) if flags else False
         self._no_replay = flags.get("no_replay", False) if flags else False
+        self._event_listeners = []
+
+        from src.observability.event_recorder import EventRecorder
+        from src.observability.entity_timeline import EntityTimelineStore
+
+        run_dir_str = None
+        if self._artifact_repo:
+            run_dir_str = os.path.join(self._artifact_repo.base_dir, self._run_id)
+        elif hasattr(self._replay, "_run_dir"):
+            run_dir_str = str(self._replay._run_dir)
+
+        self._event_recorder = EventRecorder(
+            run_dir=run_dir_str,
+            max_events=5000,
+            enabled=(obs_mode != ObservabilityMode.OFF)
+        )
+        self._entity_timeline_store = EntityTimelineStore(mode=obs_mode)
+
+        self._metric_recorder = None
+        self._cognition_recorder = None
+        if obs_mode != ObservabilityMode.OFF:
+            from src.observability.reporting.metric_recorder import MetricWindowRecorder
+            from src.observability.cognition.recorder import ObservabilityCognitionRecorder
+            self._metric_recorder = MetricWindowRecorder(
+                run_id=self._run_id,
+                run_dir=run_dir_str,
+                window_size=100,
+                enabled=True
+            )
+            self._cognition_recorder = ObservabilityCognitionRecorder(
+                run_id=self._run_id,
+                run_dir=run_dir_str
+            )
+
+        self._current_tick_event_count = 0
+        self._current_tick_violation_count = 0
 
         self.validate(flags)
 
@@ -218,8 +284,46 @@ class Kernel:
         if not self._audit_mode and self._state.tick > 5 and self._final_compute_ms > min(hard_cap, limit_ms):
              logger.warning(f"Tick {self._state.tick} exceeded budget: {self._final_compute_ms:.2f}ms vs limit {min(hard_cap, limit_ms):.2f}ms. Aborting next tick if sustained.")
              self._status.record_dropped_work(9999)
+             try:
+                 from src.observability.alerts.manager import AlertsManager
+                 from src.observability.alerts.models import AlertEvent
+                 router = AlertsManager.get_router()
+                 event = AlertEvent.create_watchdog_trip(
+                     run_id=self._run_id,
+                     tick=self._state.tick,
+                     message=f"Tick compute time {self._final_compute_ms:.2f}ms exceeded watchdog threshold of {min(hard_cap, limit_ms):.2f}ms",
+                     details={
+                         "compute_ms": self._final_compute_ms,
+                         "threshold_ms": min(hard_cap, limit_ms),
+                         "phase_costs": self._phase_costs.copy()
+                     }
+                 )
+                 router.route(event)
+             except Exception:
+                 logger.exception("Failed to route watchdog budget alert")
         
         self._record_runtime_signals()
+
+        if self._metric_recorder:
+            try:
+                from src.engine.metrics import MetricsService
+                world_metrics = MetricsService.extract_metrics(self._state)
+            except Exception:
+                logger.exception("Failed to extract WorldMetrics")
+                world_metrics = None
+
+            signals = self._status.signal_history[-1] if self._status.signal_history else None
+            event_count = getattr(self, "_current_tick_event_count", 0)
+            violation_count = getattr(self, "_current_tick_violation_count", 0)
+
+            self._metric_recorder.record_tick(
+                tick=self._state.tick,
+                world_metrics=world_metrics,
+                pressure_signals=signals,
+                runtime_status=self._status,
+                event_count_delta=event_count,
+                violation_count_delta=violation_count
+            )
 
     def _phase_init(self) -> None:
         from src.engine.occupancy_snapshot import OccupancySnapshot
@@ -265,6 +369,7 @@ class Kernel:
                 metrics=self._metrics.copy()
             )
         
+        prior_mode = self._status.current_mode
         self._current_policy = self._governor.evaluate(
             self._profile, 
             self._current_signals, 
@@ -272,6 +377,8 @@ class Kernel:
             self._state.tick,
             opt_profile=getattr(self, "_opt_profile", None)
         )
+        if prior_mode != self._status.current_mode:
+            self._status.previous_mode = prior_mode.name
         if getattr(self, "_no_replay", False):
             self._current_policy = replace(self._current_policy, replay_allowed=False)
         self._executor.set_concurrency_limit(self._current_policy.concurrency_limit)
@@ -313,6 +420,22 @@ class Kernel:
                     self._status.record_dropped_work(len(self._final_results) - i)
                     from src.core.governance import RuntimeMode
                     self._governor.force_mode(RuntimeMode.DEGRADED, self._status, self._state.tick)
+                    try:
+                        from src.observability.alerts.manager import AlertsManager
+                        from src.observability.alerts.models import AlertEvent
+                        router = AlertsManager.get_router()
+                        event = AlertEvent.create_watchdog_trip(
+                            run_id=self._run_id,
+                            tick=self._state.tick,
+                            message=f"Mid-tick emergency throttle triggered: tick compute took {elapsed:.2f}ms, forced governor DEGRADED",
+                            details={
+                                "elapsed_ms": elapsed,
+                                "dropped_count": len(self._final_results) - i
+                            }
+                        )
+                        router.route(event)
+                    except Exception:
+                        logger.exception("Failed to route emergency throttle alert")
                     break
 
             if res.work_debt_update is not None and res.subsystem_id:
@@ -422,6 +545,7 @@ class Kernel:
             from src.core.updates import StateUpdate
             update = StateUpdate()
             
+        prior_state = self._state
         self._state = ApplyPath.apply_generation(
             self._state, 
             update, 
@@ -431,6 +555,10 @@ class Kernel:
             audit_mode=self._audit_mode,
             audit_dirty_set=self._audit_dirty_set
         )
+        
+        self._run_hard_law_checks(update.dirty_set)
+        self._phase_observability(prior_state, update)
+        
         self._current_update = None
         try:
             object.__setattr__(self._state, "_opt_profile", self._opt_profile)
@@ -441,6 +569,159 @@ class Kernel:
         # Keep movement_cache registered across state advancements
         if getattr(self._state, "movement_cache", None) is not None:
             self._cache_registry.register_cache("movement_plan_cache", self._state.movement_cache)
+
+    def _run_hard_law_checks(self, dirty_set: Optional[Any]) -> None:
+        from src.observability.config import ObservabilityConfig, ObservabilityMode
+        from src.observability.hard_law_monitor import HardLawMonitor, HardLawViolationError
+
+        mode = ObservabilityConfig.get_mode()
+        if mode == ObservabilityMode.OFF:
+            return
+
+        # Expose dirty set on status for ReadModelCache/V2EngineManager access
+        if dirty_set is not None:
+            self._status.dirty_set = dirty_set
+        else:
+            if hasattr(self._status, "dirty_set"):
+                delattr(self._status, "dirty_set")
+
+        violations = HardLawMonitor.check(self._state, dirty_set)
+        self._status.current_tick_violations = violations
+        if not violations:
+            return
+
+        if not hasattr(self._status, "cumulative_violations"):
+            self._status.cumulative_violations = {}
+        if not hasattr(self._status, "hard_law_violations"):
+            self._status.hard_law_violations = []
+
+        self._status.hard_law_violations.extend(violations)
+        self._status.last_hard_law_violation_tick = self._state.tick
+
+        for v in violations:
+            self._status.cumulative_violations[v.law_id] = self._status.cumulative_violations.get(v.law_id, 0) + 1
+
+        # Route hard law violations to alerts and persist them to jsonl
+        if self._artifact_repo and self._run_id:
+            try:
+                import os
+                import json
+                v_path = self._artifact_repo.resolve_path(self._run_id, "violations")
+                os.makedirs(os.path.dirname(v_path), exist_ok=True)
+                with open(v_path, "a", encoding="utf-8") as f:
+                    for v in violations:
+                        record = {
+                            "tick": self._state.tick,
+                            "law_id": v.law_id,
+                            "entity_id": v.entity_id,
+                            "severity": v.severity,
+                            "message": v.message,
+                            "details": v.details
+                        }
+                        f.write(json.dumps(record) + "\n")
+            except Exception:
+                logger.exception("Failed to write to hard_law_violations.jsonl")
+
+        try:
+            from src.observability.alerts.manager import AlertsManager
+            from src.observability.alerts.models import AlertEvent
+            router = AlertsManager.get_router()
+            for v in violations:
+                event = AlertEvent.create_hard_law_violation(self._run_id, self._state.tick, v)
+                router.route(event)
+        except Exception:
+            logger.exception("Failed to route hard law violation alerts")
+
+        if mode in (ObservabilityMode.DEBUG, ObservabilityMode.CERTIFICATION):
+            raise HardLawViolationError(violations)
+        elif mode == ObservabilityMode.LIGHT:
+            for v in violations:
+                logger.warning(f"[{v.severity}] Hard Law Violation: {v.law_id} on entity {v.entity_id}: {v.message}")
+
+    def _phase_observability(self, prior_state: AuthoritativeState, update: Any) -> None:
+        from src.observability.config import ObservabilityConfig, ObservabilityMode
+        obs_mode = ObservabilityConfig.get_mode()
+        if obs_mode == ObservabilityMode.OFF:
+            return
+
+        from src.observability.event_extractor import EventExtractor
+        from src.observability.events import SimulationEvent
+
+        tick = self._state.tick
+        
+        # 1. Extract domain events
+        generated_events = EventExtractor.extract(prior_state, self._state, update, obs_mode)
+
+        # 2. Convert hard law violations to SimulationEvents
+        current_violations = getattr(self._status, "current_tick_violations", [])
+        for v in current_violations:
+            event = SimulationEvent(
+                event_type="InvariantViolation",
+                event_category="hard_law",
+                tick=tick,
+                severity=v.severity,
+                source_system="hard_law_monitor",
+                message=v.message,
+                entity_id=v.entity_id,
+                payload=v.details
+            )
+            generated_events.append(event)
+
+        # Emit GovernorModeChanged if a transition happened this tick
+        if getattr(self._status, "last_transition_tick", -1) == tick:
+            prev_mode = getattr(self._status, "previous_mode", "NORMAL")
+            event = SimulationEvent(
+                event_type="GovernorModeChanged",
+                event_category="infrastructure",
+                tick=tick,
+                severity="WARNING" if self._status.current_mode.name != "NORMAL" else "INFO",
+                source_system="resource_governor",
+                message=f"Governor operational mode transitioned from {prev_mode} to {self._status.current_mode.name}",
+                payload={
+                    "previous_mode": prev_mode,
+                    "current_mode": self._status.current_mode.name,
+                    "mode_dwell_ticks": self._status.mode_dwell_ticks
+                }
+            )
+            generated_events.append(event)
+
+        self._current_tick_event_count = len(generated_events)
+        self._current_tick_violation_count = len(current_violations)
+
+        # Clear current tick violations from status
+        if hasattr(self._status, "current_tick_violations"):
+            delattr(self._status, "current_tick_violations")
+
+        # 3. Record events to buffers and timeline store
+        for event in generated_events:
+            self._event_recorder.record(event)
+            self._entity_timeline_store.record(event)
+
+            # Fallback for backwards compatibility with legacy tests/code accessing entity.timeline
+            if event.entity_id is not None:
+                entity = self._state.entities.get(event.entity_id)
+                if entity and hasattr(entity, "timeline") and entity.timeline is not None:
+                    entity.timeline.append(event)
+
+        # 4. Notify any external event listeners
+        if generated_events and hasattr(self, "_event_listeners"):
+            for listener in self._event_listeners:
+                try:
+                    listener(generated_events)
+                except Exception:
+                    logger.exception("Error notifying event listener in Kernel")
+
+        # 5. Record strategic cognition snapshots post-commit
+        if getattr(self, "_cognition_recorder", None) is not None:
+            try:
+                self._cognition_recorder.record_tick(
+                    state=self._state,
+                    tick=tick,
+                    events=generated_events,
+                    event_recorder=self._event_recorder
+                )
+            except Exception:
+                logger.exception("Failed to record strategic cognition snapshot in Kernel")
 
     def _guard_stability(self, phase_name: str, start_fingerprint: Dict[str, Any]) -> None:
         from src.core.protocol_validator import ProtocolViolationError
@@ -470,10 +751,26 @@ class Kernel:
     def shutdown(self, timeout_s: float = 5.0) -> ShutdownResult:
         self._stopped = True
         self._worker_manager.shutdown()
+        if hasattr(self, "_event_recorder") and self._event_recorder:
+            self._event_recorder.shutdown()
+        if hasattr(self, "_metric_recorder") and self._metric_recorder:
+            self._metric_recorder.shutdown(self._state.tick)
         from src.engine.checkpoint import CanonicalStateHasher
         final_hash = CanonicalStateHasher.get_hash(self._state)
         logger.info(f"Final Auth Hash: {final_hash}")
         replay_outcome = self._replay.finalize(timeout_s=timeout_s)
+        
+        # Update manifest status to COMPLETED/FAILED
+        if hasattr(self, "_artifact_repo") and self._artifact_repo and self._run_id:
+            from datetime import datetime, timezone
+            status = "COMPLETED" if replay_outcome != LifecycleOutcome.FAILED else "FAILED"
+            self._artifact_repo.update_manifest(
+                self._run_id,
+                status=status,
+                ticks_completed=self._state.tick,
+                ended_at=datetime.now(timezone.utc).isoformat()
+            )
+
         self._cache_registry.clear_all()
         return ShutdownResult(
             final_tick=self._state.tick,
@@ -485,6 +782,18 @@ class Kernel:
     @property
     def status(self) -> RuntimeStatus:
         return self._status
+
+    @property
+    def event_recorder(self) -> Any:
+        return self._event_recorder
+
+    @property
+    def run_id(self) -> str:
+        return self._run_id
+
+    @property
+    def entity_timeline_store(self) -> Any:
+        return self._entity_timeline_store
 
     @property
     def state(self) -> AuthoritativeState:

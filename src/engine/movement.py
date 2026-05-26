@@ -121,7 +121,7 @@ class MovementSystem:
                         if my_prio > occ_prio:
                             # Search for yield tile
                             for dx_y, dy_y in [(-1,0),(1,0),(0,-1),(0,1),(-1,-1),(-1,1),(1,-1),(1,1)]:
-                                yield_tile = (occupant.navigation.position[0] + dx_y, occupant.navigation.position[1] + dy_y)
+                                yield_tile = (int(occupant.navigation.position[0]) + dx_y, int(occupant.navigation.position[1]) + dy_y)
                                 if yield_tile == entity.navigation.position: continue
                                 y_ok, _ = LegalityServiceV2.verify_occupancy(yield_tile, state_or_context, ignore_entity_id=occupant_id)
                                 if y_ok:

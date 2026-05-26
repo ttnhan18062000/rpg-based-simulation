@@ -1,0 +1,183 @@
+{
+  "scenario_id": "idle_100_local",
+  "profile": "PERF_512MB_LOCAL",
+  "sample_ticks": 20,
+  "wall_clock_s": 0.0309,
+  "wall_clock_tps": 646.94,
+  "compute_tps": 657.88,
+  "avg_tps": 657.88,
+  "tick_ms": {
+    "avg": 1.52,
+    "p50": 1.346,
+    "p95": 3.104,
+    "p99": 3.104,
+    "max": 3.104,
+    "min": 0.822
+  },
+  "mem_rss_mb": {
+    "avg": 37.04,
+    "max": 37.04,
+    "delta": 0.01
+  },
+  "phase_breakdown": {
+    "init": {
+      "avg": 0.168,
+      "p50": 0.093,
+      "p95": 1.382,
+      "p99": 1.382,
+      "max": 1.382,
+      "min": 0.065
+    },
+    "scheduling": {
+      "avg": 0.125,
+      "p50": 0.078,
+      "p95": 0.3,
+      "p99": 0.3,
+      "max": 0.3,
+      "min": 0.066
+    },
+    "collection": {
+      "avg": 0.101,
+      "p50": 0.09,
+      "p95": 0.14,
+      "p99": 0.14,
+      "max": 0.14,
+      "min": 0.073
+    },
+    "trust_validity": {
+      "avg": 0.073,
+      "p50": 0.068,
+      "p95": 0.13,
+      "p99": 0.13,
+      "max": 0.13,
+      "min": 0.057
+    },
+    "contracts_production": {
+      "avg": 0.086,
+      "p50": 0.056,
+      "p95": 0.267,
+      "p99": 0.267,
+      "max": 0.267,
+      "min": 0.051
+    },
+    "locomotion": {
+      "avg": 0.2,
+      "p50": 0.151,
+      "p95": 1.024,
+      "p99": 1.024,
+      "max": 1.024,
+      "min": 0.129
+    },
+    "interaction": {
+      "avg": 0.057,
+      "p50": 0.055,
+      "p95": 0.092,
+      "p99": 0.092,
+      "max": 0.092,
+      "min": 0.044
+    },
+    "governance_ecology": {
+      "avg": 0.078,
+      "p50": 0.058,
+      "p95": 0.312,
+      "p99": 0.312,
+      "max": 0.312,
+      "min": 0.052
+    },
+    "economy": {
+      "avg": 0.05,
+      "p50": 0.04,
+      "p95": 0.222,
+      "p99": 0.222,
+      "max": 0.222,
+      "min": 0.03
+    },
+    "final_integrity": {
+      "avg": 0.215,
+      "p50": 0.078,
+      "p95": 0.74,
+      "p99": 0.74,
+      "max": 0.74,
+      "min": 0.067
+    },
+    "resolution_overhead": {
+      "avg": 0.053,
+      "p50": 0.043,
+      "p95": 0.238,
+      "p99": 0.238,
+      "max": 0.238,
+      "min": 0.031
+    },
+    "cleanup": {
+      "avg": 0.017,
+      "p50": 0.012,
+      "p95": 0.081,
+      "p99": 0.081,
+      "max": 0.081,
+      "min": 0.006
+    },
+    "advancement": {
+      "avg": 0.291,
+      "p50": 0.114,
+      "p95": 1.174,
+      "p99": 1.174,
+      "max": 1.174,
+      "min": 0.077
+    },
+    "persistence": {
+      "avg": 0.006,
+      "p50": 0.005,
+      "p95": 0.024,
+      "p99": 0.024,
+      "max": 0.024,
+      "min": 0.003
+    }
+  },
+  "metrics": {
+    "raw_entity_updates": 2.0,
+    "compacted_entity_updates": 2.0,
+    "phase_runs": 14.3,
+    "run_trust_boundary": 1.0,
+    "run_actor_validity": 1.0,
+    "run_contracts": 1.0,
+    "run_blacksmith": 1.0,
+    "run_action_routing": 1.0,
+    "run_position_swaps": 1.0,
+    "run_movement_routing": 1.0,
+    "movement_candidates": 0.0,
+    "run_interaction_routing": 1.0,
+    "run_interaction_enforcement": 1.0,
+    "phase_skips": 7.7,
+    "skip_building_sabotage": 1.0,
+    "skip_town_resolution": 1.0,
+    "run_world_dynamics": 1.0,
+    "run_quest_rewards": 1.0,
+    "skip_shop": 1.0,
+    "run_resource_transactions": 1.0,
+    "skip_evolution": 1.0,
+    "skip_strategic_intelligence": 1.0,
+    "skip_near_death_hardening": 1.0,
+    "skip_occupancy_resolution": 1.0,
+    "run_lifecycle": 1.0,
+    "skip_groups": 1.0,
+    "run_capacity_enforcement": 1.0,
+    "movement_cache_hits": 0.0,
+    "movement_cache_misses": 0.0,
+    "spatial_index_hits": 11.55,
+    "spatial_index_misses": 6.15,
+    "run_strategic_intelligence": 1.0
+  },
+  "replay_enabled": false,
+  "frame_pacing_enabled": false,
+  "timestamp": 1779190617.5665462,
+  "avg_tick_compute_ms": 1.52,
+  "p50_tick_compute_ms": 1.346,
+  "p95_tick_compute_ms": 3.104,
+  "p99_tick_compute_ms": 3.104,
+  "max_tick_compute_ms": 3.104,
+  "peak_rss_mb": 37.04,
+  "memory_delta_mb": 0.01,
+  "matrix_scenario": "idle",
+  "matrix_scale": 100,
+  "matrix_mode": "local"
+}

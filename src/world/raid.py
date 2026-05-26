@@ -46,11 +46,15 @@ class RaidService:
         
         entities_add = []
         for i in range(raid_size):
+            # Scatter coordinates in a small grid around the base spawn position to avoid overlap
+            ox = spawn_pos[0] + (i % 3) - 1
+            oy = spawn_pos[1] + (i // 3) - 1
+            
             # Spawn raid mobs (Tier 3-4 difficulty)
             mob = generator.spawn_monster(
                 state=state,
                 kind="goblin_raider",
-                pos=spawn_pos,
+                pos=(ox, oy),
                 difficulty_tier=4
             )
             # Raiders target the town (0,0)

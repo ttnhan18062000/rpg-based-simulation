@@ -1,0 +1,182 @@
+{
+  "scenario_id": "combat_10_local",
+  "profile": "PERF_2GB_LOCAL",
+  "sample_ticks": 20,
+  "wall_clock_s": 0.0129,
+  "wall_clock_tps": 1555.89,
+  "compute_tps": 1599.36,
+  "avg_tps": 1599.36,
+  "tick_ms": {
+    "avg": 0.625,
+    "p50": 0.49,
+    "p95": 1.506,
+    "p99": 1.506,
+    "max": 1.506,
+    "min": 0.353
+  },
+  "mem_rss_mb": {
+    "avg": 39.0,
+    "max": 39.0,
+    "delta": 0.0
+  },
+  "phase_breakdown": {
+    "init": {
+      "avg": 0.105,
+      "p50": 0.043,
+      "p95": 0.914,
+      "p99": 0.914,
+      "max": 0.914,
+      "min": 0.035
+    },
+    "scheduling": {
+      "avg": 0.026,
+      "p50": 0.018,
+      "p95": 0.166,
+      "p99": 0.166,
+      "max": 0.166,
+      "min": 0.016
+    },
+    "collection": {
+      "avg": 0.035,
+      "p50": 0.031,
+      "p95": 0.074,
+      "p99": 0.074,
+      "max": 0.074,
+      "min": 0.027
+    },
+    "trust_validity": {
+      "avg": 0.037,
+      "p50": 0.035,
+      "p95": 0.058,
+      "p99": 0.058,
+      "max": 0.058,
+      "min": 0.031
+    },
+    "contracts_production": {
+      "avg": 0.037,
+      "p50": 0.029,
+      "p95": 0.155,
+      "p99": 0.155,
+      "max": 0.155,
+      "min": 0.027
+    },
+    "locomotion": {
+      "avg": 0.051,
+      "p50": 0.038,
+      "p95": 0.234,
+      "p99": 0.234,
+      "max": 0.234,
+      "min": 0.034
+    },
+    "interaction": {
+      "avg": 0.024,
+      "p50": 0.022,
+      "p95": 0.036,
+      "p99": 0.036,
+      "max": 0.036,
+      "min": 0.02
+    },
+    "governance_ecology": {
+      "avg": 0.033,
+      "p50": 0.03,
+      "p95": 0.057,
+      "p99": 0.057,
+      "max": 0.057,
+      "min": 0.028
+    },
+    "economy": {
+      "avg": 0.005,
+      "p50": 0.005,
+      "p95": 0.008,
+      "p99": 0.008,
+      "max": 0.008,
+      "min": 0.004
+    },
+    "final_integrity": {
+      "avg": 0.074,
+      "p50": 0.058,
+      "p95": 0.332,
+      "p99": 0.332,
+      "max": 0.332,
+      "min": 0.055
+    },
+    "resolution_overhead": {
+      "avg": 0.038,
+      "p50": 0.028,
+      "p95": 0.167,
+      "p99": 0.167,
+      "max": 0.167,
+      "min": 0.023
+    },
+    "cleanup": {
+      "avg": 0.012,
+      "p50": 0.007,
+      "p95": 0.073,
+      "p99": 0.073,
+      "max": 0.073,
+      "min": 0.005
+    },
+    "advancement": {
+      "avg": 0.143,
+      "p50": 0.051,
+      "p95": 1.026,
+      "p99": 1.026,
+      "max": 1.026,
+      "min": 0.039
+    },
+    "persistence": {
+      "avg": 0.003,
+      "p50": 0.002,
+      "p95": 0.012,
+      "p99": 0.012,
+      "max": 0.012,
+      "min": 0.002
+    }
+  },
+  "metrics": {
+    "raw_entity_updates": 0.0,
+    "compacted_entity_updates": 0.0,
+    "phase_runs": 10.0,
+    "run_trust_boundary": 1.0,
+    "run_actor_validity": 1.0,
+    "run_contracts": 1.0,
+    "run_blacksmith": 1.0,
+    "run_action_routing": 1.0,
+    "run_position_swaps": 1.0,
+    "run_movement_routing": 1.0,
+    "movement_candidates": 0.0,
+    "phase_skips": 12.0,
+    "skip_interaction_routing": 1.0,
+    "skip_interaction_enforcement": 1.0,
+    "skip_building_sabotage": 1.0,
+    "skip_town_resolution": 1.0,
+    "run_world_dynamics": 1.0,
+    "skip_quest_rewards": 1.0,
+    "skip_shop": 1.0,
+    "skip_resource_transactions": 1.0,
+    "skip_evolution": 1.0,
+    "skip_strategic_intelligence": 1.0,
+    "skip_near_death_hardening": 1.0,
+    "skip_occupancy_resolution": 1.0,
+    "run_lifecycle": 1.0,
+    "skip_groups": 1.0,
+    "run_capacity_enforcement": 1.0,
+    "movement_cache_hits": 0.0,
+    "movement_cache_misses": 0.0,
+    "spatial_index_hits": 0.0,
+    "spatial_index_misses": 0.0
+  },
+  "replay_enabled": false,
+  "frame_pacing_enabled": false,
+  "timestamp": 1779190618.8982272,
+  "avg_tick_compute_ms": 0.625,
+  "p50_tick_compute_ms": 0.49,
+  "p95_tick_compute_ms": 1.506,
+  "p99_tick_compute_ms": 1.506,
+  "max_tick_compute_ms": 1.506,
+  "peak_rss_mb": 39.0,
+  "memory_delta_mb": 0.0,
+  "matrix_scenario": "combat",
+  "matrix_scale": 10,
+  "matrix_mode": "local"
+}

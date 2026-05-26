@@ -1,0 +1,183 @@
+{
+  "scenario_id": "resource_100_concurrent",
+  "profile": "PERF_2GB_CONC",
+  "sample_ticks": 20,
+  "wall_clock_s": 0.181,
+  "wall_clock_tps": 110.49,
+  "compute_tps": 111.96,
+  "avg_tps": 111.96,
+  "tick_ms": {
+    "avg": 8.931,
+    "p50": 7.038,
+    "p95": 26.822,
+    "p99": 26.822,
+    "max": 26.822,
+    "min": 3.738
+  },
+  "mem_rss_mb": {
+    "avg": 38.55,
+    "max": 38.55,
+    "delta": 0.02
+  },
+  "phase_breakdown": {
+    "init": {
+      "avg": 0.22,
+      "p50": 0.189,
+      "p95": 0.513,
+      "p99": 0.513,
+      "max": 0.513,
+      "min": 0.122
+    },
+    "scheduling": {
+      "avg": 0.069,
+      "p50": 0.054,
+      "p95": 0.409,
+      "p99": 0.409,
+      "max": 0.409,
+      "min": 0.016
+    },
+    "collection": {
+      "avg": 2.867,
+      "p50": 0.684,
+      "p95": 22.158,
+      "p99": 22.158,
+      "max": 22.158,
+      "min": 0.169
+    },
+    "trust_validity": {
+      "avg": 0.091,
+      "p50": 0.084,
+      "p95": 0.148,
+      "p99": 0.148,
+      "max": 0.148,
+      "min": 0.048
+    },
+    "contracts_production": {
+      "avg": 0.131,
+      "p50": 0.115,
+      "p95": 0.544,
+      "p99": 0.544,
+      "max": 0.544,
+      "min": 0.056
+    },
+    "locomotion": {
+      "avg": 1.34,
+      "p50": 1.267,
+      "p95": 3.75,
+      "p99": 3.75,
+      "max": 3.75,
+      "min": 0.586
+    },
+    "interaction": {
+      "avg": 0.457,
+      "p50": 0.459,
+      "p95": 0.857,
+      "p99": 0.857,
+      "max": 0.857,
+      "min": 0.18
+    },
+    "governance_ecology": {
+      "avg": 0.123,
+      "p50": 0.093,
+      "p95": 0.406,
+      "p99": 0.406,
+      "max": 0.406,
+      "min": 0.067
+    },
+    "economy": {
+      "avg": 0.262,
+      "p50": 0.181,
+      "p95": 0.736,
+      "p99": 0.736,
+      "max": 0.736,
+      "min": 0.061
+    },
+    "final_integrity": {
+      "avg": 1.183,
+      "p50": 0.228,
+      "p95": 10.558,
+      "p99": 10.558,
+      "max": 10.558,
+      "min": 0.149
+    },
+    "resolution_overhead": {
+      "avg": 0.117,
+      "p50": 0.081,
+      "p95": 0.76,
+      "p99": 0.76,
+      "max": 0.76,
+      "min": 0.044
+    },
+    "cleanup": {
+      "avg": 0.042,
+      "p50": 0.016,
+      "p95": 0.371,
+      "p99": 0.371,
+      "max": 0.371,
+      "min": 0.01
+    },
+    "advancement": {
+      "avg": 2.016,
+      "p50": 2.019,
+      "p95": 4.028,
+      "p99": 4.028,
+      "max": 4.028,
+      "min": 0.875
+    },
+    "persistence": {
+      "avg": 0.011,
+      "p50": 0.011,
+      "p95": 0.021,
+      "p99": 0.021,
+      "max": 0.021,
+      "min": 0.007
+    }
+  },
+  "metrics": {
+    "raw_entity_updates": 2.3,
+    "compacted_entity_updates": 2.3,
+    "phase_runs": 17.3,
+    "run_trust_boundary": 1.0,
+    "run_actor_validity": 1.0,
+    "run_contracts": 1.0,
+    "run_blacksmith": 1.0,
+    "run_action_routing": 1.0,
+    "run_position_swaps": 1.0,
+    "run_movement_routing": 1.0,
+    "movement_candidates": 30.55,
+    "run_interaction_routing": 1.0,
+    "run_interaction_enforcement": 1.0,
+    "phase_skips": 4.7,
+    "skip_building_sabotage": 1.0,
+    "run_town_resolution": 1.0,
+    "run_world_dynamics": 1.0,
+    "run_quest_rewards": 1.0,
+    "skip_shop": 1.0,
+    "run_resource_transactions": 1.0,
+    "skip_evolution": 1.0,
+    "skip_strategic_intelligence": 1.0,
+    "skip_near_death_hardening": 1.0,
+    "run_occupancy_resolution": 1.0,
+    "run_lifecycle": 1.0,
+    "run_groups": 1.0,
+    "run_capacity_enforcement": 1.0,
+    "movement_cache_hits": 0.0,
+    "movement_cache_misses": 871.5,
+    "spatial_index_hits": 50.2,
+    "spatial_index_misses": 7.15,
+    "run_strategic_intelligence": 1.0
+  },
+  "replay_enabled": false,
+  "frame_pacing_enabled": false,
+  "timestamp": 1779190618.8354785,
+  "avg_tick_compute_ms": 8.931,
+  "p50_tick_compute_ms": 7.038,
+  "p95_tick_compute_ms": 26.822,
+  "p99_tick_compute_ms": 26.822,
+  "max_tick_compute_ms": 26.822,
+  "peak_rss_mb": 38.55,
+  "memory_delta_mb": 0.02,
+  "matrix_scenario": "resource",
+  "matrix_scale": 100,
+  "matrix_mode": "concurrent"
+}

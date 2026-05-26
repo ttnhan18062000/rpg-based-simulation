@@ -523,6 +523,12 @@ class ApplyPath:
         object.__setattr__(res, "task", changes.get("task", entity.task))
         object.__setattr__(res, "stamina", changes.get("stamina", entity.stamina))
         
+        timeline = getattr(entity, "timeline", None)
+        if timeline is None:
+            from collections import deque
+            timeline = deque(maxlen=200)
+        object.__setattr__(res, "timeline", timeline)
+        
         # Clear transient caches
         object.__setattr__(res, "_readonly_cache", res)
         object.__setattr__(res, "_spatial_grid_cache", None)
