@@ -34,6 +34,9 @@ class StrategicProjectChanged(StrategicCognitionEvent):
     previous_project_id: Optional[str] = None
     new_project_id: Optional[str] = None
     reason: str = ""
+    source_goal_score: Optional[float] = None
+    resulting_action: Optional[str] = None
+    target_pos: Optional[list[float]] = None
 
     def __init__(self, **data: Any) -> None:
         if "message" not in data:
@@ -41,7 +44,12 @@ class StrategicProjectChanged(StrategicCognitionEvent):
             prev = data.get("previous_project_id")
             new = data.get("new_project_id")
             reason_str = f" due to: {data.get('reason')}" if data.get("reason") else ""
-            data["message"] = f"Entity {ent} project shifted from {prev} to {new}{reason_str}"
+            extra = ""
+            if "source_goal_score" in data and data["source_goal_score"] is not None:
+                extra += f" (score: {data['source_goal_score']:.1f})"
+            if "resulting_action" in data and data["resulting_action"] is not None:
+                extra += f" resulting in action: {data['resulting_action']}"
+            data["message"] = f"Entity {ent} project shifted from {prev} to {new}{reason_str}{extra}"
         super().__init__(**data)
 
 

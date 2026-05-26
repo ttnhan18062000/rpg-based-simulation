@@ -369,7 +369,7 @@ class V2EntityBuilder:
         max_hypotheses: Optional[int] = None,
         interruption_resistance: Optional[float] = None,
         detour_breadth: Optional[int] = None,
-        detour_depth: Optional[int] = None,
+        reserved_detour_depth: Optional[int] = None,
     ) -> V2EntityBuilder:
         current = self._cognition_to_dict(self._strategic.profile)
 
@@ -381,7 +381,7 @@ class V2EntityBuilder:
             "max_hypotheses": max_hypotheses,
             "interruption_resistance": interruption_resistance,
             "detour_breadth": detour_breadth,
-            "detour_depth": detour_depth,
+            "reserved_detour_depth": reserved_detour_depth,
         }
 
         for key, value in updates.items():

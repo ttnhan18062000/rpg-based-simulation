@@ -92,7 +92,7 @@ class DetourSuggestionSystem:
                     continue
 
                 score = DetourSuggestionSystem._score_detour(
-                    blocker, lead, strategic.source_trust
+                    blocker, lead, strategic.source_trust, strategic.beliefs
                 )
 
                 objective_kind = DetourSuggestionSystem._infer_objective_kind(blocker, lead)
@@ -148,9 +148,14 @@ class DetourSuggestionSystem:
 
         Drops the lowest-scoring excess items when over capacity.
         """
+        import logging
+        logger = logging.getLogger(__name__)
+
         profile = entity.strategic.profile
         leads_to_remove: list[str] = []
         concerns_to_remove: list[str] = []
+        hypotheses_to_remove: list[str] = []
+        projects_to_remove: list[str] = []
 
         # Enforce lead bandwidth
         active_leads = sorted(
@@ -172,12 +177,66 @@ class DetourSuggestionSystem:
             excess = active_concerns[profile.max_concerns:]
             concerns_to_remove = [c.id for c in excess]
 
-        if not leads_to_remove and not concerns_to_remove:
+        # Enforce hypothesis capacity
+        active_hypotheses = sorted(
+            entity.strategic.hypotheses.values(),
+            key=lambda h: h.confidence,
+            reverse=True
+        )
+        if len(active_hypotheses) > profile.max_hypotheses:
+            excess = active_hypotheses[profile.max_hypotheses:]
+            hypotheses_to_remove = [h.id for h in excess]
+
+        # Enforce project capacity
+        active_proj_id = entity.strategic.current_project_id
+        def _proj_priority(p):
+            if p.id == active_proj_id:
+                return (1, p.id)
+            return (0, p.id)
+            
+        all_projects = sorted(
+            entity.strategic.projects.values(),
+            key=_proj_priority,
+            reverse=True
+        )
+        if len(all_projects) > profile.max_active_projects:
+            excess = all_projects[profile.max_active_projects:]
+            projects_to_remove = [p.id for p in excess]
+
+        # Logging observability events
+        if leads_to_remove:
+            logger.debug(
+                f"[Tick {current_tick}] CognitionCapacityTrimmed: Entity {entity.id} "
+                f"trimmed leads. Before: {len(active_leads)}, After: {len(active_leads) - len(leads_to_remove)}, "
+                f"Dropped: {leads_to_remove}"
+            )
+        if concerns_to_remove:
+            logger.debug(
+                f"[Tick {current_tick}] CognitionCapacityTrimmed: Entity {entity.id} "
+                f"trimmed concerns. Before: {len(active_concerns)}, After: {len(active_concerns) - len(concerns_to_remove)}, "
+                f"Dropped: {concerns_to_remove}"
+            )
+        if hypotheses_to_remove:
+            logger.debug(
+                f"[Tick {current_tick}] CognitionCapacityTrimmed: Entity {entity.id} "
+                f"trimmed hypotheses. Before: {len(active_hypotheses)}, After: {len(active_hypotheses) - len(hypotheses_to_remove)}, "
+                f"Dropped: {hypotheses_to_remove}"
+            )
+        if projects_to_remove:
+            logger.debug(
+                f"[Tick {current_tick}] CognitionCapacityTrimmed: Entity {entity.id} "
+                f"trimmed projects. Before: {len(all_projects)}, After: {len(all_projects) - len(projects_to_remove)}, "
+                f"Dropped: {projects_to_remove}"
+            )
+
+        if not leads_to_remove and not concerns_to_remove and not hypotheses_to_remove and not projects_to_remove:
             return StrategicUpdate()
 
         return StrategicUpdate(
             leads_remove=leads_to_remove,
             concerns_remove=concerns_to_remove,
+            hypotheses_remove=hypotheses_to_remove,
+            projects_remove=projects_to_remove,
             overload_source_set="bandwidth" if leads_to_remove else None,
             overload_tick_set=current_tick if leads_to_remove else None
         )
@@ -204,7 +263,7 @@ class DetourSuggestionSystem:
         return False
 
     @staticmethod
-    def _score_detour(blocker, lead, source_trust) -> float:
+    def _score_detour(blocker, lead, source_trust, beliefs) -> float:
         """Score a detour suggestion."""
         base = blocker.severity * 50
 
@@ -216,7 +275,13 @@ class DetourSuggestionSystem:
         if lead.source_entity_id and lead.source_entity_id in source_trust:
             trust_bonus = source_trust[lead.source_entity_id].trust * 20
 
-        return base + certainty_bonus + trust_bonus
+        # Contradiction penalty
+        contradiction_penalty = 0.0
+        matching_belief = next((b for b in beliefs.values() if b.subject == lead.subject), None)
+        if matching_belief:
+            contradiction_penalty = matching_belief.contradictions * 25.0
+
+        return base + certainty_bonus + trust_bonus - contradiction_penalty
 
     @staticmethod
     def _infer_objective_kind(blocker: BlockerState, lead: LeadState) -> str:

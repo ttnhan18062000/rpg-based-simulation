@@ -228,6 +228,19 @@ class ObservabilityCognitionRecorder:
 
                 # Fetch extra details
                 meta = trigger_meta.get(eid, {})
+                curr_proj_id = graph.metadata.get("current_project")
+                source_goal_score = None
+                target_pos = None
+                if curr_proj_id:
+                    proj = entity.strategic.projects.get(curr_proj_id)
+                    if proj:
+                        source_goal_score = proj.score
+                        if proj.objectives:
+                            active_obj = next((o for o in proj.objectives if o.id == proj.active_objective_id), proj.objectives[0])
+                            target_pos = list(active_obj.target_position) if active_obj.target_position else None
+
+                resulting_action = entity.task.work_kind if entity.task else None
+                
                 curr_snapshot = build_snapshot_record(
                     run_id=self.run_id,
                     tick=tick,
@@ -237,9 +250,12 @@ class ObservabilityCognitionRecorder:
                     edges=edges_list,
                     trigger_event_id=meta.get("trigger_event_id"),
                     trigger_anomaly_id=meta.get("trigger_anomaly_id"),
-                    current_project_id=graph.metadata.get("current_project"),
+                    current_project_id=curr_proj_id,
                     current_objective_id=graph.metadata.get("current_objective"),
-                    overload_source=graph.metadata.get("overload_source")
+                    overload_source=graph.metadata.get("overload_source"),
+                    source_goal_score=source_goal_score,
+                    resulting_action=resulting_action,
+                    target_pos=target_pos,
                 )
                 records_to_write.append(curr_snapshot)
 

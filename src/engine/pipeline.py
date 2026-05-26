@@ -150,6 +150,11 @@ class AuthoritativeApplyPipeline:
         t5 = time.perf_counter_ns()
         update = run_phase("groups", update, lambda u: AuthoritativeApplyPipeline._resolve_groups(state, u))
         t6 = time.perf_counter_ns()
+        
+        from src.systems.social_systems.contracts import ContractService
+        update = run_phase("active_contracts", update, lambda u: ContractService.process_active_contracts(state, u))
+        update = run_phase("expired_offers", update, lambda u: ContractService.reap_expired_offers(state, u))
+        
         update = run_phase("capacity_enforcement", update, lambda u: CapacityEnforcementPhase.enforce(state, u))
         t7 = time.perf_counter_ns()
         

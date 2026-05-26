@@ -35,7 +35,7 @@ class CapacityService:
         
         # 5. Detour Depth/Breadth: Derived from Intelligence
         detour_breadth = int(2 + (attrs.intelligence // 6))
-        detour_depth = int(1 + (attrs.intelligence // 8))
+        reserved_detour_depth = int(1 + (attrs.intelligence // 8))
         
         # 6. Fatigue Penalty: High sleep debt or hunger reduces limits
         fatigue_multiplier = 1.0
@@ -52,5 +52,5 @@ class CapacityService:
             max_hypotheses=max(1, int(3 * fatigue_multiplier)),
             interruption_resistance=interruption_resistance * fatigue_multiplier,
             detour_breadth=max(1, detour_breadth),
-            detour_depth=max(1, detour_depth)
+            reserved_detour_depth=max(1, reserved_detour_depth)
         )

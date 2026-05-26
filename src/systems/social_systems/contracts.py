@@ -139,11 +139,54 @@ class ContractService:
         tick: int
     ) -> StrategicUpdate:
         """
-        Transition an OFFERED contract to ACTIVE.
+        Transition an OFFERED contract to ACTIVE and spawn active strategic project/objective.
         """
         strat_up, _ = SocialContractSystem.transition_contract(
             entity, contract_id, ContractStatus.ACTIVE, tick
         )
+        
+        contract = entity.strategic.contracts.get(contract_id)
+        if contract and strat_up.contracts_add_or_update:
+            from src.core.strategic import ProjectState, ProjectKind, ProjectStatus, ObjectiveState, ObjectiveKind, ObjectiveStatus
+            projects_add = []
+            obj = None
+            proj_kind = ProjectKind.SOCIAL
+            
+            if contract.kind == ContractKind.RECRUITMENT:
+                proj_kind = ProjectKind.COMBAT
+                obj = ObjectiveState(
+                    id=f"obj_recruit_{contract.id}",
+                    kind=ObjectiveKind.REACH_LOCATION,
+                    target=str(contract.source_id),
+                    status=ObjectiveStatus.ACTIVE
+                )
+            elif contract.kind == ContractKind.LOAN:
+                proj_kind = ProjectKind.SOCIAL
+                obj = ObjectiveState(
+                    id=f"obj_loan_{contract.id}",
+                    kind=ObjectiveKind.REACH_LOCATION,
+                    target=str(contract.source_id),
+                    status=ObjectiveStatus.ACTIVE
+                )
+                
+            if obj:
+                proj = ProjectState(
+                    id=f"proj_contract_{contract.id}",
+                    kind=proj_kind,
+                    status=ProjectStatus.ACTIVE,
+                    objectives=[obj],
+                    active_objective_id=obj.id,
+                    created_tick=tick,
+                    lock_until_tick=tick + 50
+                )
+                projects_add.append(proj)
+                
+            if projects_add:
+                strat_up = replace(strat_up,
+                    projects_add_or_update=list(strat_up.projects_add_or_update) + projects_add,
+                    current_project_id_set=projects_add[0].id
+                )
+                
         return strat_up
 
     @staticmethod

@@ -501,6 +501,9 @@ class StrategicUpdate:
     # Overload
     overload_source_set: Optional[str] = None
     overload_tick_set: Optional[int] = None
+    # Beliefs
+    beliefs_add_or_update: list[Any] = field(default_factory=list)
+    beliefs_remove: list[str] = field(default_factory=list)
 
     def is_noop(self) -> bool:
         return (not self.blockers_add_or_update and not self.blockers_remove and 
@@ -514,7 +517,8 @@ class StrategicUpdate:
                 not self.hypotheses_remove and not self.source_trust_updates and 
                 not self.contracts_add_or_update and not self.contracts_remove and 
                 not self.turning_points_add and self.overload_source_set is None and 
-                self.overload_tick_set is None)
+                self.overload_tick_set is None and not self.beliefs_add_or_update and 
+                not self.beliefs_remove)
 
     def merge(self, other: StrategicUpdate) -> StrategicUpdate:
         """Merges another StrategicUpdate into this one."""
@@ -549,7 +553,9 @@ class StrategicUpdate:
             contracts_remove=self.contracts_remove + other.contracts_remove,
             turning_points_add=self.turning_points_add + other.turning_points_add,
             overload_source_set=other.overload_source_set if other.overload_source_set is not None else self.overload_source_set,
-            overload_tick_set=other.overload_tick_set if other.overload_tick_set is not None else self.overload_tick_set
+            overload_tick_set=other.overload_tick_set if other.overload_tick_set is not None else self.overload_tick_set,
+            beliefs_add_or_update=self.beliefs_add_or_update + other.beliefs_add_or_update,
+            beliefs_remove=self.beliefs_remove + other.beliefs_remove
         )
 
 @dataclass(frozen=True, slots=True)

@@ -103,10 +103,12 @@ class AppraisalSystem:
         
         # 1. Personal Safety (HP check)
         hp_percent = subject.combat.hp / max(1, subject.combat.max_hp)
-        if hp_percent < 0.2:
-            panic += 0.5
-        elif hp_percent < 0.1:
+        if hp_percent < 0.1:
             panic += 0.8
+        elif hp_percent < 0.2:
+            panic += 0.5
+        elif hp_percent < 0.4:
+            panic += 0.2
             
         # 2. Faction Ratio (Outnumbered)
         allies = 1 # Subject is their own ally

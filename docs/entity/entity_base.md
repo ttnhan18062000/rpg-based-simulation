@@ -138,13 +138,17 @@ Implemented in `CoreActions.execute_train`.
 
 It requires `skill_id`, charges 50 gold through a `ResourceTransferIntent`, and removes capability blockers for that skill.
 
-### Likely bug
+### Verified Bug
 
-Training adds the skill into `recipes_learned`, but `SkillActions.execute_skill` checks `entity.identity.learned_skills`.
+This is a **verified bug** in the codebase. 
 
-So unless another apply layer maps recipe learning to learned skills, **training may not actually unlock skill usage**.
-
-That is a serious adventure-progression bug candidate.
+- **Source:** Both `CoreActions.execute_train` ([core_actions.py:L199](file:///home/vboxuser/Work/rpg-based-simulation/src/engine/domain/core_actions.py#L199)) and `ClassHallAction.train` ([class_hall.py:L33](file:///home/vboxuser/Work/rpg-based-simulation/src/town/class_hall.py#L33)) set:
+  ```python
+  identity_upd=IdentityUpdate(recipes_learned=[skill_id])
+  ```
+- **Result:** In `IdentityPatch.apply` ([patches.py:L194](file:///home/vboxuser/Work/rpg-based-simulation/src/engine/patches.py#L194)), this maps strictly to `known_recipes` (crafting).
+- **The Failure:** `SkillActions.execute_skill` ([skill_actions.py:L40](file:///home/vboxuser/Work/rpg-based-simulation/src/engine/domain/skill_actions.py#L40)) checks against `entity.identity.learned_skills` and fails with `SKILL_NOT_LEARNED`.
+- **Verdict:** Training fails to unlock skill usage because the skill is stored in `known_recipes` instead of `learned_skills`.
 
 ---
 
@@ -501,13 +505,17 @@ Current registered/basic scorers include:
 | `SocialScorer`  | placeholder social utility                         |
 | `TownScorer`    | return town based on needs, full inventory, low HP |
 
-## Critical issue: TownScorer may not create project
+## Verified Bug: TownScorer fails to create project
 
-`TownScorer` returns a `target_pos`, but `StrategicIntelligenceSystem.evaluate_strategic_intent` skips goal scores with `target_id is None`.
+This is a **verified bug** in the codebase.
 
-So a high town-return score may fail to become a project.
-
-That is not a small bug. For adventure loops, return-to-town is central.
+- **Source:** `TownScorer.score` ([scorers.py:L97](file:///home/vboxuser/Work/rpg-based-simulation/src/ai/goals/scorers.py#L97)) returns a `GoalScore` with `target_pos=state.town_center`, but **`target_id` is None**.
+- **Result:** In `StrategicIntelligenceSystem.evaluate_strategic_intent` ([intelligence.py:L1171](file:///home/vboxuser/Work/rpg-based-simulation/src/systems/strategic_systems/intelligence.py#L1171)), any goal score with `target_id is None` is skipped:
+  ```python
+  if g_score.utility < 20.0 or g_score.target_id is None:
+      continue
+  ```
+- **Verdict:** Because `target_id` is never set, the town-return goal score is discarded on every strategic update, meaning `town_return` projects are never created. This fundamentally breaks the leave-town/return-town adventure loop.
 
 ---
 
@@ -754,21 +762,19 @@ town_return
 
 That is not enough for adventure RPG behavior.
 
-## 15.4 Training likely does not unlock skill usage
+## 15.4 Training does not unlock skill usage (VERIFIED BUG)
 
-Training writes `recipes_learned`, while skill execution checks `learned_skills`. That must be verified and likely fixed.
+Training writes `recipes_learned` (which updates crafting recipes), while skill execution checks `learned_skills`. They do not intersect. This is a verified bug and must be fixed.
 
-## 15.5 Return-to-town may be strategically broken
+## 15.5 Return-to-town is strategically broken (VERIFIED BUG)
 
-`TownScorer` returns only `target_pos`, while strategic project creation skips scores without `target_id`.
-
-For an adventure loop, this is critical. Adventure requires:
+`TownScorer` returns only `target_pos` and omits `target_id`. Because strategic project creation filters out scores where `target_id is None`, return-to-town projects are never active, breaking the loop:
 
 ```text
 leave town -> adventure -> return town -> recover/sell/upgrade -> next adventure
 ```
 
-If return-to-town does not become a project reliably, the whole loop weakens.
+This is a verified bug in `scorers.py` and `intelligence.py`.
 
 ---
 

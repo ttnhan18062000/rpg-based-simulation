@@ -16,19 +16,19 @@ classDef action fill:#ffe8e8,stroke:#b71c1c,stroke-width:1px,color:#3a0000
 classDef view fill:#f5f5f5,stroke:#666,stroke-width:1px,stroke-dasharray: 2 2,color:#111
 
 subgraph EntityState["EntityState [IMPL] - core actor aggregate"]
-  Identity["IdentityComponent [IMPL]<br/>role, faction, class, level/evolution,<br/>personality-like traits, group_id,<br/>learned data, status flags"]
-  Attributes["AttributeComponent [IMPL]<br/>STR, AGI, VIT, END, INT,<br/>SPI, WIS, PER, CHA"]
+  Identity["IdentityComponent [IMPL]<br/>role, faction, class_id, level/evolution,<br/>unspent_ap, personality, group_id,<br/>learned_skills, known_recipes, cooldowns"]
+  Attributes["AttributeComponent [IMPL]<br/>strength, agility, vitality, endurance, intelligence,<br/>spirit, wisdom, perception, charisma"]
   Aptitude["AptitudeComponent [IMPL]<br/>learning rate, stat aptitudes,<br/>stamina efficiency"]
   Biological["BiologicalComponent [IMPL]<br/>hunger, sleep debt, rest pressure,<br/>meal/sleep timestamps"]
   Lifecycle["LifecycleComponent [IMPL]<br/>active/dead, age, death reason,<br/>generation/heir fields"]
-  Combat["CombatComponent [IMPL]<br/>hp, max_hp, atk, def, speed, range,<br/>readiness, wounds, scars, tactical role"]
-  Stamina["StaminaComponent [IMPL]<br/>current, max, regen,<br/>attack/move/harvest/skill costs"]
-  Equipment["EquipmentComponent [IMPL]<br/>slots, durability, equipped items"]
-  Inventory["InventoryComponent [IMPL]<br/>items, gold, capacity/slots/weight"]
-  Navigation["NavigationComponent [IMPL]<br/>position, target, path,<br/>movement intention, failure reason,<br/>home/leash"]
-  Interaction["InteractionComponent [IMPL]<br/>target, progress, start_tick,<br/>interaction kind/payload"]
+  Combat["CombatComponent [IMPL]<br/>hp, max_hp, atk, def_stat, speed, range,<br/>readiness, wounds, scars, tactical role, alive"]
+  Stamina["StaminaComponent [IMPL]<br/>current, max_stamina, regen_rate,<br/>exhaustion limits & costs"]
+  Equipment["EquipmentComponent [IMPL]<br/>slots, durability"]
+  Inventory["InventoryComponent [IMPL]<br/>items, gold, slots/weight bounds"]
+  Navigation["NavigationComponent [IMPL]<br/>position, target, path, movement mode,<br/>failure reason, home/leash, wait/oscillation count"]
+  Interaction["InteractionComponent [IMPL]<br/>target_node_id, progress, start_tick"]
   Task["TaskComponent [IMPL]<br/>work_kind, payload"]
-  Social["SocialComponent [IMPL]<br/>trust/familiarity/fear/grudge,<br/>bonds, betrayal_count,<br/>reputation-like scores"]
+  Social["SocialComponent [IMPL]<br/>trust/familiarity/debt/fear/grudge,<br/>bonds, nemesis_ids, place_attachment,<br/>betrayal_records, reputation scores"]
   Strategic["StrategicComponent [IMPL]<br/>projects, objectives, blockers, leads,<br/>concerns, directives, hypotheses,<br/>contracts, source_trust, turning_points,<br/>cognition_profile"]
 end
 

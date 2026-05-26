@@ -3,9 +3,11 @@ from dataclasses import dataclass, field
 from typing import List, Protocol, Dict, Any, Optional
 from src.core.state import EntityState, AuthoritativeState
 
+from src.core.strategic import GoalKind
+
 @dataclass(frozen=True)
 class GoalScore:
-    kind: str
+    kind: GoalKind | str
     utility: float
     target_id: Optional[str] = None
     target_pos: Optional[tuple[float, float]] = None
@@ -21,17 +23,23 @@ class GoalRegistry:
     _sorted_keys: Optional[List[str]] = None
 
     @classmethod
-    def register(cls, kind: str, scorer: GoalScorer):
+    def register(cls, kind: GoalKind | str, scorer: GoalScorer):
         """
         Registers a scorer for a specific goal kind.
         Logic ID: RPG-GOAL-001
         """
-        if kind in cls._scorers:
-            existing = cls._scorers[kind]
+        # Validate that the kind is a valid GoalKind
+        try:
+            valid_kind = GoalKind(kind)
+        except ValueError:
+            raise ValueError(f"Invalid goal kind '{kind}'. Must be a valid GoalKind enum or value.")
+
+        if valid_kind in cls._scorers:
+            existing = cls._scorers[valid_kind]
             if existing.__class__ != scorer.__class__:
-                raise ValueError(f"GoalRegistry conflict: kind '{kind}' already registered to {existing.__class__}")
+                raise ValueError(f"GoalRegistry conflict: kind '{valid_kind}' already registered to {existing.__class__}")
             return
-        cls._scorers[kind] = scorer
+        cls._scorers[valid_kind] = scorer
         cls._sorted_keys = None
 
     @classmethod
