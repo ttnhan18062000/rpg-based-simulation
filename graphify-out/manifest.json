@@ -595,6 +595,46 @@
     "mtime": 1779901610.4922965,
     "hash": "cb6f920ebbe394c31967ab1cf6942d47"
   },
+  "/home/vboxuser/Work/rpg-based-simulation/src/domains/combat_engagement/service.py": {
+    "mtime": 1779905126.205251,
+    "hash": "ae588bfc84050f02b6bb79c1483041f2"
+  },
+  "/home/vboxuser/Work/rpg-based-simulation/src/domains/combat_engagement/phase.py": {
+    "mtime": 1779905351.1908312,
+    "hash": "4b0e752f20bc8b24e78307b44d0b1b2b"
+  },
+  "/home/vboxuser/Work/rpg-based-simulation/src/domains/combat_engagement/self_estimate.py": {
+    "mtime": 1779905215.5190837,
+    "hash": "c7df2a6c5dfd226978d721b9ac7f5cf2"
+  },
+  "/home/vboxuser/Work/rpg-based-simulation/src/domains/combat_engagement/schema.py": {
+    "mtime": 1779905098.8903039,
+    "hash": "c84ee4cdf25996d3bc450cb6db3fb48d"
+  },
+  "/home/vboxuser/Work/rpg-based-simulation/src/domains/combat_engagement/selector.py": {
+    "mtime": 1779905113.855275,
+    "hash": "41eb0c6fd8fc39bc4c6bfaaa922c7f4f"
+  },
+  "/home/vboxuser/Work/rpg-based-simulation/src/domains/combat_engagement/learning.py": {
+    "mtime": 1779905260.7299995,
+    "hash": "37f7d27dda53b8ebb0c4b77001f2b2f7"
+  },
+  "/home/vboxuser/Work/rpg-based-simulation/src/domains/combat_engagement/perception.py": {
+    "mtime": 1779905175.159159,
+    "hash": "5ef547eea3f0def4bfbfd4a36e71fac1"
+  },
+  "/home/vboxuser/Work/rpg-based-simulation/src/domains/combat_engagement/risk_evaluator.py": {
+    "mtime": 1779905110.9072804,
+    "hash": "409c4259c37f2c7e82dd2e2ae77983c8"
+  },
+  "/home/vboxuser/Work/rpg-based-simulation/src/domains/combat_engagement/resolver.py": {
+    "mtime": 1779905235.240047,
+    "hash": "9d995e4c362842e036bb9f98a7dfb926"
+  },
+  "/home/vboxuser/Work/rpg-based-simulation/src/domains/combat_engagement/reassessment.py": {
+    "mtime": 1779905327.695875,
+    "hash": "93662c84ba74abefd3ab63b204892107"
+  },
   "/home/vboxuser/Work/rpg-based-simulation/src/domains/adventure/generator.py": {
     "mtime": 1779903897.9176493,
     "hash": "dd535d0a3ff0fe9e9b2c9d7cd1d79415"
@@ -1999,6 +2039,10 @@
     "mtime": 1779125378.1892805,
     "hash": "8ccef95998bf49c1991218774e7c86d8"
   },
+  "/home/vboxuser/Work/rpg-based-simulation/tests/perf/test_phase4_combat_engagement_budget.py": {
+    "mtime": 1779905354.6848247,
+    "hash": "5257e835d75be151a3d2df206868602e"
+  },
   "/home/vboxuser/Work/rpg-based-simulation/tests/perf/test_profiler_integrity.py": {
     "mtime": 1779125378.19315,
     "hash": "6f982a22a1da8cfb8ee6b43a04970ff7"
@@ -2494,6 +2538,46 @@
   "/home/vboxuser/Work/rpg-based-simulation/tests/unit/cognition/test_phase2_need_interpretation_service.py": {
     "mtime": 1779901544.3854716,
     "hash": "b631807f4b62148b6a6e471a041814d6"
+  },
+  "/home/vboxuser/Work/rpg-based-simulation/tests/unit/domains/combat_engagement/test_phase4_combat_reassessment.py": {
+    "mtime": 1779905254.5100112,
+    "hash": "8c0800a53f5485896293878a22b18012"
+  },
+  "/home/vboxuser/Work/rpg-based-simulation/tests/unit/domains/combat_engagement/test_phase4_combat_engagement_events.py": {
+    "mtime": 1779905310.609907,
+    "hash": "a39d1a9d8642bc783f546138a333a171"
+  },
+  "/home/vboxuser/Work/rpg-based-simulation/tests/unit/domains/combat_engagement/test_phase4_opponent_perception.py": {
+    "mtime": 1779905164.2841792,
+    "hash": "3f4681630b62b26539d7ae0a39b8f845"
+  },
+  "/home/vboxuser/Work/rpg-based-simulation/tests/unit/domains/combat_engagement/test_phase4_posture_selector.py": {
+    "mtime": 1779905229.1190584,
+    "hash": "9d083b26005ff79c7162d719f39053e4"
+  },
+  "/home/vboxuser/Work/rpg-based-simulation/tests/unit/domains/combat_engagement/test_phase4_posture_to_intent.py": {
+    "mtime": 1779905237.510043,
+    "hash": "7e06e1bba6f4b5aa8f0261924944a081"
+  },
+  "/home/vboxuser/Work/rpg-based-simulation/tests/unit/domains/combat_engagement/test_phase4_combat_postures.py": {
+    "mtime": 1779905140.6142232,
+    "hash": "7456aa29210cac23cd6c22a899588b71"
+  },
+  "/home/vboxuser/Work/rpg-based-simulation/tests/unit/domains/combat_engagement/test_phase4_combat_learning.py": {
+    "mtime": 1779905262.6479962,
+    "hash": "0a30216d0c6fc612a1781c3f75e3fa4f"
+  },
+  "/home/vboxuser/Work/rpg-based-simulation/tests/unit/domains/combat_engagement/test_phase4_combat_engagement_boundary.py": {
+    "mtime": 1779905134.5912347,
+    "hash": "dfdcfc8f135bc50f5b39a54ba47728a0"
+  },
+  "/home/vboxuser/Work/rpg-based-simulation/tests/unit/domains/combat_engagement/test_phase4_engagement_risk.py": {
+    "mtime": 1779905222.9540699,
+    "hash": "e4e5d0164a995492182c3f77a29996de"
+  },
+  "/home/vboxuser/Work/rpg-based-simulation/tests/unit/domains/combat_engagement/test_phase4_self_combat_estimate.py": {
+    "mtime": 1779905179.93015,
+    "hash": "1dfe3de4803e3e214d5e7d4201c76842"
   },
   "/home/vboxuser/Work/rpg-based-simulation/tests/unit/domains/adventure/test_phase3_adventure_decision_service.py": {
     "mtime": 1779903974.2214947,
@@ -3575,6 +3659,10 @@
     "mtime": 1779812486.061857,
     "hash": "c6c3c70650d281176e85d3bea9c27ee8"
   },
+  "/home/vboxuser/Work/rpg-based-simulation/tests/integration/domains/combat_engagement/test_phase4_combat_engagement_phase.py": {
+    "mtime": 1779905271.9639788,
+    "hash": "4e316f8f46044fb69e28215ccb4c2eae"
+  },
   "/home/vboxuser/Work/rpg-based-simulation/tests/integration/domains/adventure/test_phase3_adventure_decision_phase.py": {
     "mtime": 1779904021.9913979,
     "hash": "7c120b75301854fc7e99fea691c88a81"
@@ -3827,6 +3915,10 @@
     "mtime": 1779901638.0832233,
     "hash": "20dfb31e157f5ccfb2b9db227be2ab6b"
   },
+  "/home/vboxuser/Work/rpg-based-simulation/tests/integration/scenarios/test_phase4_combat_engagement_scenarios.py": {
+    "mtime": 1779905334.717862,
+    "hash": "61c14133aef51fdf409dd2b4a2791df5"
+  },
   "/home/vboxuser/Work/rpg-based-simulation/tests/integration/scenarios/test_phase3_adventure_decision_scenarios.py": {
     "mtime": 1779904042.2483568,
     "hash": "494400ed2ba2371e979ab1ffcbea75d5"
@@ -4071,13 +4163,13 @@
     "mtime": 1779812485.4458592,
     "hash": "bbe6a6e08ad7c0535cc3718637dd6352"
   },
-  "/home/vboxuser/Work/rpg-based-simulation/entity_enhance_phase3.md": {
-    "mtime": 1779903520.2264967,
-    "hash": "b6f682a8249b3354abffbfb2642584db"
-  },
   "/home/vboxuser/Work/rpg-based-simulation/prometheus.yml": {
     "mtime": 1775049610.160541,
     "hash": "1803b2e55c436780c3edcf3b0c2af410"
+  },
+  "/home/vboxuser/Work/rpg-based-simulation/entity_enhance_phase4.md": {
+    "mtime": 1779904413.5256324,
+    "hash": "169f064bdce7af078790ee9ce220f856"
   },
   "/home/vboxuser/Work/rpg-based-simulation/docker-compose.yml": {
     "mtime": 1779812485.455859,

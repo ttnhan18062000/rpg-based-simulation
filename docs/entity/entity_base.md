@@ -12,6 +12,8 @@ There are three different action surfaces:
 | **Domain/system actions**  | Movement, interaction, blacksmith/shop/guild systems                | Real mechanics, but not always routed as direct actions                     |
 | **Wrapper/test actions**   | `BlacksmithAction`, `ShopAction`, `GuildAction`, `HomeAction`, etc. | Useful, but do not assume they are all part of the main runtime action loop |
 | **Phase 3 Subjective Routing**| Route candidate evaluation, imperfect personality-biased scoring, strategic mapping, and resolution to first intent | Fully implemented in `src/domains/adventure/` with 33 TDD/perf tests passing |
+| **Phase 4 Combat Cognition**| Subjective target estimate, self capability estimate, risk evaluations, combat postures selection (`PROBE`, `AVOID`, `RETREAT`, `ENGAGE`, etc.), mid-combat reassessment, and capacity-limited combat memory updates | Fully implemented in `src/domains/combat_engagement/` with 36 TDD/perf tests passing |
+
 
 The uncomfortable truth: **the engine has action capability, but not yet a clean adventure action model**. You have mechanics for fighting, moving, crafting, buying, selling, resting, looting, training, recruiting, and interacting. But there is no single canonical “adventurer action vocabulary” yet.
 
