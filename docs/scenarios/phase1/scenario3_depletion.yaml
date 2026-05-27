@@ -1,0 +1,21 @@
+scenario_id: scenario3_depletion
+world_pack: phase1_adventure_seed
+actors:
+  - id: 1
+    name: Arl
+    role: HERO
+    level: 1
+    class_id: warrior
+    start_region: hometown
+    gold: 60
+    equipment:
+      weapon: rusted_sword
+initial_pressure:
+  - need_iron_ore
+  - known_iron_node_depleted
+valid_route_families:
+  - ask_information
+  - seek_alternative_mine
+forbidden_behavior:
+  - repeated_depleted_harvest
+  - magically_know_old_mine

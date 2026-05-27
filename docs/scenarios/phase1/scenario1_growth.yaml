@@ -1,0 +1,26 @@
+scenario_id: scenario1_growth
+world_pack: phase1_adventure_seed
+actors:
+  - id: 1
+    name: Arl
+    role: HERO
+    level: 1
+    class_id: warrior
+    start_region: hometown
+    gold: 60
+    equipment:
+      weapon: rusted_sword
+initial_pressure:
+  - weak_weapon
+  - nearby_easy_quest_available
+valid_route_families:
+  - gather_for_gold
+  - craft_upgrade
+  - ask_blacksmith
+  - buy_upgrade_after_gold
+  - defer_with_reason
+forbidden_behavior:
+  - buy_without_gold
+  - craft_without_materials
+  - hidden_material_knowledge
+  - same_failed_action_repeated
