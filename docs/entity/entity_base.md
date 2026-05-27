@@ -926,3 +926,63 @@ but no clean route from strategic intent to executable action
 ```
 
 That is how a simulation becomes impressive on paper and broken in runs.
+
+---
+
+# 18. Phase 2: Bottom-Up Entity Self Model
+
+To solve the mismatch between raw entity parameters and high-level strategic reasoning, Phase 2 implements a bottom-up self-assessment and interpretation layer. This provides entities with subjective self-awareness, need prioritization, capability estimation, and personal knowledge retention, completely decoupled from action execution.
+
+## 18.1 Architecture and Design Rationale
+
+Unlike brittle top-down components like an "AdventureReadinessComponent" (which would hardcode transient tactical assumptions), Phase 2 implements a pure **bottom-up interpretation layer**. 
+
+```mermaid
+graph TD
+    RawState["Raw EntityState Components (HP, Inventory, Hunger)"] --> SelfAssess["SelfAssessmentService"]
+    SelfAssess --> SelfAwareness["SelfAwarenessComponent"]
+    SelfAwareness --> NeedInterpret["NeedInterpretationService"]
+    NeedInterpret --> NeedComponent["NeedInterpretationComponent"]
+    
+    SelfModelBundle["SelfModelBundle"]
+    SelfAwareness --> SelfModelBundle
+    NeedComponent --> SelfModelBundle
+    
+    CapabilityContext["CapabilityContext (Scoped Request)"] --> CapEstimate["CapabilityEstimateService"]
+    CapEstimate --> CapComponent["CapabilityEstimateComponent"]
+    CapComponent --> SelfModelBundle
+    
+    InfoEvent["InformationResponse Event"] --> KnowModel["KnowledgeModelService"]
+    KnowModel --> KnowComponent["KnowledgeModelComponent"]
+    KnowComponent --> SelfModelBundle
+```
+
+All self-model data is kept inside `SelfModelBundle` as a single top-level field on `EntityState`. Since this is derived state, it is excluded from the authoritative canonical state hash, but remains included in serializations for debugging and inspection.
+
+## 18.2 Schema Components
+
+### 18.2.1 SelfAwarenessComponent
+Converts raw physical states into subjective wellness assessments:
+* **Perceived Condition**: Rounded float metrics tracking HP percentage (`"health"`), stamina percentage (`"stamina"`), slots utilized percentage (`"carrying_load"`), and gear health (`"gear_quality"`).
+* **Perceived Weaknesses**: Tuple of detected vulnerabilities (e.g. `"low_health"`, `"low_stamina"`, `"hunger_pressure"`, `"weak_weapon"`).
+* **Confidence & Stress Levels**: Composite scores computed from physical status and severity of weaknesses.
+
+### 18.2.2 NeedInterpretationComponent
+Maps self-awareness into active desires and a single dominant need:
+* **Healing**: Becomes critical when health is severely low, dominating all other desires.
+* **Survival (Food, Rest)**: Outranks all growth needs under stress.
+* **Growth (Gold, Equipment, Information)**: Active during stable conditions but deflated under vulnerability.
+
+### 18.2.3 CapabilityEstimateComponent
+Generates scoped capability estimates (0.0 to 1.0) for potential actions. To avoid expensive O(N) world-scans, estimates are strictly requested through a `CapabilityContext`:
+* **Combat**: Compares entity stats (atk, defense, hp) vs expected enemy levels.
+* **Gathering/Crafting**: Verifies tool requirements, recipe availability, gold, and component inventories.
+
+### 18.2.4 KnowledgeModelComponent
+Stores what the entity explicitly has learned (KnowledgeFacts) or knows it doesn't know (UnknownFacts).
+* **Information Opacity**: Preservation of uncertainty is guaranteed — hidden world truth is never leaked; providers only return low-certainty "LeadState" facts.
+
+## 18.3 SelfModelUpdatePhase & Performance Skip
+
+Updates are orchestrated efficiently via the `SelfModelUpdatePhase.run` loop. A high-performance dirty-check ensures that Need Interpretation and Capability Estimation are skipped entirely if no raw stats changed and no information events were assimilated, executing in **under 5 microseconds** for clean ticks.
+

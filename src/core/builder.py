@@ -47,6 +47,7 @@ from src.core.strategic import (
 
 from src.core.enums import EntityRole, Faction
 from src.core.movement_modes import MovementMode
+from src.core.self_model import SelfModelBundle
 
 
 def _component(cls: type, **kwargs):
@@ -104,6 +105,7 @@ class V2EntityBuilder:
         self._interaction = InteractionComponent()
         self._task = TaskComponent()
         self._stamina = StaminaComponent()
+        self._self_model = SelfModelBundle()
 
     def kind(self, value: str) -> V2EntityBuilder:
         self._kind = value
@@ -705,6 +707,10 @@ class V2EntityBuilder:
         self._stamina = component
         return self
 
+    def replace_self_model(self, component: SelfModelBundle) -> V2EntityBuilder:
+        self._self_model = component
+        return self
+
     def build(self) -> EntityState:
         navigation = _component(
             NavigationComponent,
@@ -731,6 +737,7 @@ class V2EntityBuilder:
             navigation=navigation,
             task=self._task,
             stamina=self._stamina,
+            self_model=self._self_model,
         )
 
     def _identity_to_dict(self) -> Dict[str, Any]:

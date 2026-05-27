@@ -34,11 +34,11 @@ end
 
 class Identity,Attributes,Aptitude,Biological,Lifecycle,Combat,Stamina,Equipment,Inventory,Navigation,Interaction,Task,Social,Strategic impl
 
-subgraph ProposedSelfModel["Bottom-up self model [NI] - proposed entity aspects"]
-  SelfAwareness["NI: SelfAwarenessComponent<br/>perceived_condition, perceived_strengths,<br/>perceived_weaknesses, confidence,<br/>stress, uncertainty"]
-  NeedInterpretation["NI: NeedInterpretationComponent<br/>active_needs, urgency,<br/>dominant_need, reason, confidence"]
-  CapabilityEstimate["NI: CapabilityEstimateComponent<br/>capability_key, estimate,<br/>confidence, source, last_updated_tick"]
-  KnowledgeModel["NI: KnowledgeModelComponent<br/>facts, unknowns, certainty,<br/>source_id, verified_tick,<br/>contradiction_count"]
+subgraph ProposedSelfModel["Bottom-up self model [IMPL] - entity self model layer"]
+  SelfAwareness["SelfAwarenessComponent [IMPL]<br/>perceived_condition, perceived_strengths,<br/>perceived_weaknesses, confidence,<br/>stress, uncertainty"]
+  NeedInterpretation["NeedInterpretationComponent [IMPL]<br/>active_needs, urgency,<br/>dominant_need, reason, confidence"]
+  CapabilityEstimate["CapabilityEstimateComponent [IMPL]<br/>capability_key, estimate,<br/>confidence, source, last_updated_tick"]
+  KnowledgeModel["KnowledgeModelComponent [IMPL]<br/>facts, unknowns, certainty,<br/>source_id, verified_tick,<br/>contradiction_count"]
   ExperienceMemory["NI: ExperienceMemoryComponent<br/>important lived events, outcome,<br/>emotional_weight, learned_tick, tags"]
   RiskBelief["NI: RiskBeliefComponent<br/>risk subject, severity,<br/>confidence, evidence_count,<br/>last_updated_tick"]
   PossessionUnderstanding["NI: PossessionUnderstandingComponent<br/>item meaning, known_uses,<br/>estimated_value, keep/sell priority"]
@@ -47,7 +47,8 @@ subgraph ProposedSelfModel["Bottom-up self model [NI] - proposed entity aspects"
   TemporalAwareness["NI: TemporalAwarenessComponent<br/>deadlines, recurring patterns,<br/>urgency bias, last_time_check"]
 end
 
-class SelfAwareness,NeedInterpretation,CapabilityEstimate,KnowledgeModel,ExperienceMemory,RiskBelief,PossessionUnderstanding,IntentPressure,PlanContext,TemporalAwareness ni
+class SelfAwareness,NeedInterpretation,CapabilityEstimate,KnowledgeModel impl
+class ExperienceMemory,RiskBelief,PossessionUnderstanding,IntentPressure,PlanContext,TemporalAwareness ni
 
 subgraph DerivedViews["Derived views [NI] - services/evaluators, not stored entity components"]
   SurvivalReadiness["NI View: SurvivalReadiness<br/>needs + body + risk"]

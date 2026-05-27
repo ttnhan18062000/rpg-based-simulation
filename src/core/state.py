@@ -14,6 +14,7 @@ from src.core.governance import RuntimeMode
 from src.core.models.inventory import ItemKind, EquipSlot, ItemStack, InventoryComponent
 from src.core.models.social import SocialBond, BetrayalRecord, SocialComponent
 from src.core.immutability import shallow_freeze
+from src.core.self_model import SelfModelBundle
 
 
 def _readonly_mapping(value):
@@ -586,6 +587,7 @@ class EntityState:
     navigation: NavigationComponent = field(default_factory=NavigationComponent)
     task: TaskComponent = field(default_factory=TaskComponent)
     stamina: StaminaComponent = field(default_factory=StaminaComponent)
+    self_model: SelfModelBundle = field(default_factory=SelfModelBundle)
     _canonical_cache: Any = field(default=None, init=False, repr=False, compare=False)
     timeline: Any = field(default=None, init=False, repr=False, compare=False)
 
@@ -645,7 +647,8 @@ class EntityState:
                 "payload": dict(sorted(self.task.payload.items()))
             },
             "group_id": self.identity.group_id,
-            "properties": dict(sorted(self.identity.properties.items()))
+            "properties": dict(sorted(self.identity.properties.items())),
+            "self_model": self.self_model.to_canonical_dict(),
         }
         object.__setattr__(self, "_canonical_cache", res)
         return res
