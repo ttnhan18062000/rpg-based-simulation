@@ -208,8 +208,8 @@
     "hash": "1e3b3e04cb612bdf1b42b2dd864820ab"
   },
   "/home/vboxuser/Work/rpg-based-simulation/src/core/strategic.py": {
-    "mtime": 1779893574.1496472,
-    "hash": "690f765d3c9937efd0c2a48fd53bbc6a"
+    "mtime": 1779903870.2097054,
+    "hash": "b021ffbb884ffffaae774ccae7143ce7"
   },
   "/home/vboxuser/Work/rpg-based-simulation/src/core/reason.py": {
     "mtime": 1779125377.6691515,
@@ -594,6 +594,34 @@
   "/home/vboxuser/Work/rpg-based-simulation/src/cognition/__init__.py": {
     "mtime": 1779901610.4922965,
     "hash": "cb6f920ebbe394c31967ab1cf6942d47"
+  },
+  "/home/vboxuser/Work/rpg-based-simulation/src/domains/adventure/generator.py": {
+    "mtime": 1779903897.9176493,
+    "hash": "dd535d0a3ff0fe9e9b2c9d7cd1d79415"
+  },
+  "/home/vboxuser/Work/rpg-based-simulation/src/domains/adventure/mapper.py": {
+    "mtime": 1779903873.6026986,
+    "hash": "e38c2264a5ec94b9c88e9d21b87015cc"
+  },
+  "/home/vboxuser/Work/rpg-based-simulation/src/domains/adventure/service.py": {
+    "mtime": 1779903971.5045002,
+    "hash": "bfbe0be7fa959f777f6acf30bfaeac06"
+  },
+  "/home/vboxuser/Work/rpg-based-simulation/src/domains/adventure/phase.py": {
+    "mtime": 1779904018.8354044,
+    "hash": "6b87206c98065881ed12da8312aa2c4f"
+  },
+  "/home/vboxuser/Work/rpg-based-simulation/src/domains/adventure/schema.py": {
+    "mtime": 1779903859.7257266,
+    "hash": "32159717896723e1f42708fd3666ea6b"
+  },
+  "/home/vboxuser/Work/rpg-based-simulation/src/domains/adventure/scoring.py": {
+    "mtime": 1779903956.1625314,
+    "hash": "98517ef7b9dc903679462d769b6e7de9"
+  },
+  "/home/vboxuser/Work/rpg-based-simulation/src/domains/adventure/resolver.py": {
+    "mtime": 1779903982.9404771,
+    "hash": "b1c8669f0e4259dcb822cc2c792ca64f"
   },
   "/home/vboxuser/Work/rpg-based-simulation/src/engine/tick.py": {
     "mtime": 1779125377.7361512,
@@ -1959,6 +1987,10 @@
     "mtime": 1779125378.17915,
     "hash": "7ac56dd6914e1308d3340f6b6c7e90e9"
   },
+  "/home/vboxuser/Work/rpg-based-simulation/tests/perf/test_phase3_adventure_decision_budget.py": {
+    "mtime": 1779904049.8533416,
+    "hash": "2cb4ef7567c5f29eff2e22a7f09d7b9b"
+  },
   "/home/vboxuser/Work/rpg-based-simulation/tests/perf/test_perf_stress.py": {
     "mtime": 1779125378.1927748,
     "hash": "8f652d418f24a594be603143d3b72839"
@@ -2462,6 +2494,30 @@
   "/home/vboxuser/Work/rpg-based-simulation/tests/unit/cognition/test_phase2_need_interpretation_service.py": {
     "mtime": 1779901544.3854716,
     "hash": "b631807f4b62148b6a6e471a041814d6"
+  },
+  "/home/vboxuser/Work/rpg-based-simulation/tests/unit/domains/adventure/test_phase3_adventure_decision_service.py": {
+    "mtime": 1779903974.2214947,
+    "hash": "c1980316474e3c9763ce791c9564c0a8"
+  },
+  "/home/vboxuser/Work/rpg-based-simulation/tests/unit/domains/adventure/test_phase3_adventure_decision_boundary.py": {
+    "mtime": 1779903854.1737378,
+    "hash": "a0630814b575976d927f32cb3756927f"
+  },
+  "/home/vboxuser/Work/rpg-based-simulation/tests/unit/domains/adventure/test_phase3_objective_intent_resolver.py": {
+    "mtime": 1779903988.3244662,
+    "hash": "a5e4603a7068e6db5d36f869955f0718"
+  },
+  "/home/vboxuser/Work/rpg-based-simulation/tests/unit/domains/adventure/test_phase3_route_scoring.py": {
+    "mtime": 1779903960.0595233,
+    "hash": "926d1cca8fec630f0077995a85d8143c"
+  },
+  "/home/vboxuser/Work/rpg-based-simulation/tests/unit/domains/adventure/test_phase3_route_families.py": {
+    "mtime": 1779903863.2547195,
+    "hash": "4861d1f2c4ee71803ea6c1e196124cff"
+  },
+  "/home/vboxuser/Work/rpg-based-simulation/tests/unit/domains/adventure/test_phase3_route_generator.py": {
+    "mtime": 1779903888.112669,
+    "hash": "f152471c0a3b0505b116a1bc9c5cfdc0"
   },
   "/home/vboxuser/Work/rpg-based-simulation/tests/unit/strategic/test_belief_cycle.py": {
     "mtime": 1779125378.2361498,
@@ -3519,6 +3575,10 @@
     "mtime": 1779812486.061857,
     "hash": "c6c3c70650d281176e85d3bea9c27ee8"
   },
+  "/home/vboxuser/Work/rpg-based-simulation/tests/integration/domains/adventure/test_phase3_adventure_decision_phase.py": {
+    "mtime": 1779904021.9913979,
+    "hash": "7c120b75301854fc7e99fea691c88a81"
+  },
   "/home/vboxuser/Work/rpg-based-simulation/tests/integration/pipeline/test_phase5_idempotency.py": {
     "mtime": 1779125378.1451502,
     "hash": "99f765793e282c44929107b7ce96d478"
@@ -3767,6 +3827,10 @@
     "mtime": 1779901638.0832233,
     "hash": "20dfb31e157f5ccfb2b9db227be2ab6b"
   },
+  "/home/vboxuser/Work/rpg-based-simulation/tests/integration/scenarios/test_phase3_adventure_decision_scenarios.py": {
+    "mtime": 1779904042.2483568,
+    "hash": "494400ed2ba2371e979ab1ffcbea75d5"
+  },
   "/home/vboxuser/Work/rpg-based-simulation/tests/integration/scenarios/__init__.py": {
     "mtime": 1779898747.3818748,
     "hash": "d41d8cd98f00b204e9800998ecf8427e"
@@ -4007,13 +4071,13 @@
     "mtime": 1779812485.4458592,
     "hash": "bbe6a6e08ad7c0535cc3718637dd6352"
   },
+  "/home/vboxuser/Work/rpg-based-simulation/entity_enhance_phase3.md": {
+    "mtime": 1779903520.2264967,
+    "hash": "b6f682a8249b3354abffbfb2642584db"
+  },
   "/home/vboxuser/Work/rpg-based-simulation/prometheus.yml": {
     "mtime": 1775049610.160541,
     "hash": "1803b2e55c436780c3edcf3b0c2af410"
-  },
-  "/home/vboxuser/Work/rpg-based-simulation/entity_enhance_phase2.md": {
-    "mtime": 1779898498.8535423,
-    "hash": "56e4cbf22b1be3a8c518939625a67c0e"
   },
   "/home/vboxuser/Work/rpg-based-simulation/docker-compose.yml": {
     "mtime": 1779812485.455859,
@@ -4070,6 +4134,18 @@
   "/home/vboxuser/Work/rpg-based-simulation/staging_artifacts/TCK-20260527-COG-OBSERVABILITY-TRACE/investigation.md": {
     "mtime": 1779893531.2287035,
     "hash": "7c9eef7c1ea7ce57725afcfb23235ed3"
+  },
+  "/home/vboxuser/Work/rpg-based-simulation/staging_artifacts/TCK-20260528-COG-PHASE3-DECISION/plan.md": {
+    "mtime": 1779903587.8052773,
+    "hash": "954b20391215623694802418d48a0f85"
+  },
+  "/home/vboxuser/Work/rpg-based-simulation/staging_artifacts/TCK-20260528-COG-PHASE3-DECISION/test_plan.md": {
+    "mtime": 1779903583.3462863,
+    "hash": "fe6ed4aa5c3a2e5ac24a13b7e30aea6b"
+  },
+  "/home/vboxuser/Work/rpg-based-simulation/staging_artifacts/TCK-20260528-COG-PHASE3-DECISION/investigation.md": {
+    "mtime": 1779903580.8342915,
+    "hash": "d46048443a26353ce8dcdc180805a17a"
   },
   "/home/vboxuser/Work/rpg-based-simulation/scratch/perf_out.txt": {
     "mtime": 1778939096.1487992,

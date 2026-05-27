@@ -1,12 +1,12 @@
 # Graph Report - rpg-based-simulation  (2026-05-28)
 
 ## Corpus Check
-- 999 files · ~460,880 words
+- 1015 files · ~466,334 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 11137 nodes · 23701 edges · 1156 communities detected
-- Extraction: 48% EXTRACTED · 52% INFERRED · 0% AMBIGUOUS · INFERRED: 12258 edges (avg confidence: 0.63)
+- 11275 nodes · 23976 edges · 1155 communities detected
+- Extraction: 48% EXTRACTED · 52% INFERRED · 0% AMBIGUOUS · INFERRED: 12382 edges (avg confidence: 0.63)
 - Token cost: 0 input · 0 output
 
 ## Community Hubs (Navigation)
@@ -93,32 +93,31 @@
 - [[_COMMUNITY_Community 80|Community 80]]
 - [[_COMMUNITY_Community 81|Community 81]]
 - [[_COMMUNITY_Community 82|Community 82]]
-- [[_COMMUNITY_Community 83|Community 83]]
 - [[_COMMUNITY_Community 84|Community 84]]
 - [[_COMMUNITY_Community 85|Community 85]]
 - [[_COMMUNITY_Community 86|Community 86]]
 - [[_COMMUNITY_Community 87|Community 87]]
 - [[_COMMUNITY_Community 88|Community 88]]
 - [[_COMMUNITY_Community 89|Community 89]]
-- [[_COMMUNITY_Community 90|Community 90]]
 - [[_COMMUNITY_Community 91|Community 91]]
 - [[_COMMUNITY_Community 92|Community 92]]
+- [[_COMMUNITY_Community 93|Community 93]]
 - [[_COMMUNITY_Community 94|Community 94]]
 - [[_COMMUNITY_Community 95|Community 95]]
-- [[_COMMUNITY_Community 96|Community 96]]
 - [[_COMMUNITY_Community 97|Community 97]]
 - [[_COMMUNITY_Community 98|Community 98]]
+- [[_COMMUNITY_Community 99|Community 99]]
 - [[_COMMUNITY_Community 100|Community 100]]
-- [[_COMMUNITY_Community 101|Community 101]]
 - [[_COMMUNITY_Community 102|Community 102]]
-- [[_COMMUNITY_Community 103|Community 103]]
+- [[_COMMUNITY_Community 104|Community 104]]
 - [[_COMMUNITY_Community 105|Community 105]]
+- [[_COMMUNITY_Community 106|Community 106]]
 - [[_COMMUNITY_Community 107|Community 107]]
 - [[_COMMUNITY_Community 108|Community 108]]
 - [[_COMMUNITY_Community 109|Community 109]]
-- [[_COMMUNITY_Community 110|Community 110]]
 - [[_COMMUNITY_Community 111|Community 111]]
 - [[_COMMUNITY_Community 112|Community 112]]
+- [[_COMMUNITY_Community 113|Community 113]]
 - [[_COMMUNITY_Community 114|Community 114]]
 - [[_COMMUNITY_Community 115|Community 115]]
 - [[_COMMUNITY_Community 116|Community 116]]
@@ -127,44 +126,45 @@
 - [[_COMMUNITY_Community 119|Community 119]]
 - [[_COMMUNITY_Community 120|Community 120]]
 - [[_COMMUNITY_Community 121|Community 121]]
-- [[_COMMUNITY_Community 122|Community 122]]
 - [[_COMMUNITY_Community 123|Community 123]]
 - [[_COMMUNITY_Community 124|Community 124]]
 - [[_COMMUNITY_Community 125|Community 125]]
 - [[_COMMUNITY_Community 126|Community 126]]
-- [[_COMMUNITY_Community 128|Community 128]]
-- [[_COMMUNITY_Community 129|Community 129]]
+- [[_COMMUNITY_Community 127|Community 127]]
 - [[_COMMUNITY_Community 130|Community 130]]
-- [[_COMMUNITY_Community 131|Community 131]]
 - [[_COMMUNITY_Community 132|Community 132]]
+- [[_COMMUNITY_Community 133|Community 133]]
+- [[_COMMUNITY_Community 134|Community 134]]
 - [[_COMMUNITY_Community 135|Community 135]]
-- [[_COMMUNITY_Community 137|Community 137]]
 - [[_COMMUNITY_Community 138|Community 138]]
 - [[_COMMUNITY_Community 139|Community 139]]
 - [[_COMMUNITY_Community 140|Community 140]]
+- [[_COMMUNITY_Community 141|Community 141]]
+- [[_COMMUNITY_Community 142|Community 142]]
+- [[_COMMUNITY_Community 143|Community 143]]
+- [[_COMMUNITY_Community 144|Community 144]]
 - [[_COMMUNITY_Community 145|Community 145]]
-- [[_COMMUNITY_Community 146|Community 146]]
 - [[_COMMUNITY_Community 147|Community 147]]
 - [[_COMMUNITY_Community 148|Community 148]]
 - [[_COMMUNITY_Community 149|Community 149]]
 - [[_COMMUNITY_Community 150|Community 150]]
-- [[_COMMUNITY_Community 151|Community 151]]
 - [[_COMMUNITY_Community 152|Community 152]]
 - [[_COMMUNITY_Community 153|Community 153]]
 - [[_COMMUNITY_Community 154|Community 154]]
-- [[_COMMUNITY_Community 156|Community 156]]
-- [[_COMMUNITY_Community 157|Community 157]]
-- [[_COMMUNITY_Community 158|Community 158]]
-- [[_COMMUNITY_Community 159|Community 159]]
+- [[_COMMUNITY_Community 160|Community 160]]
 - [[_COMMUNITY_Community 161|Community 161]]
 - [[_COMMUNITY_Community 162|Community 162]]
 - [[_COMMUNITY_Community 163|Community 163]]
-- [[_COMMUNITY_Community 169|Community 169]]
-- [[_COMMUNITY_Community 170|Community 170]]
-- [[_COMMUNITY_Community 171|Community 171]]
-- [[_COMMUNITY_Community 172|Community 172]]
+- [[_COMMUNITY_Community 192|Community 192]]
+- [[_COMMUNITY_Community 193|Community 193]]
+- [[_COMMUNITY_Community 194|Community 194]]
+- [[_COMMUNITY_Community 195|Community 195]]
+- [[_COMMUNITY_Community 196|Community 196]]
+- [[_COMMUNITY_Community 197|Community 197]]
+- [[_COMMUNITY_Community 198|Community 198]]
+- [[_COMMUNITY_Community 199|Community 199]]
+- [[_COMMUNITY_Community 200|Community 200]]
 - [[_COMMUNITY_Community 201|Community 201]]
-- [[_COMMUNITY_Community 202|Community 202]]
 - [[_COMMUNITY_Community 203|Community 203]]
 - [[_COMMUNITY_Community 204|Community 204]]
 - [[_COMMUNITY_Community 205|Community 205]]
@@ -173,28 +173,28 @@
 - [[_COMMUNITY_Community 208|Community 208]]
 - [[_COMMUNITY_Community 209|Community 209]]
 - [[_COMMUNITY_Community 210|Community 210]]
+- [[_COMMUNITY_Community 211|Community 211]]
 - [[_COMMUNITY_Community 212|Community 212]]
 - [[_COMMUNITY_Community 213|Community 213]]
 - [[_COMMUNITY_Community 214|Community 214]]
-- [[_COMMUNITY_Community 215|Community 215]]
-- [[_COMMUNITY_Community 216|Community 216]]
 - [[_COMMUNITY_Community 217|Community 217]]
 - [[_COMMUNITY_Community 218|Community 218]]
-- [[_COMMUNITY_Community 219|Community 219]]
 - [[_COMMUNITY_Community 220|Community 220]]
 - [[_COMMUNITY_Community 221|Community 221]]
 - [[_COMMUNITY_Community 222|Community 222]]
 - [[_COMMUNITY_Community 223|Community 223]]
-- [[_COMMUNITY_Community 226|Community 226]]
-- [[_COMMUNITY_Community 227|Community 227]]
 - [[_COMMUNITY_Community 229|Community 229]]
 - [[_COMMUNITY_Community 230|Community 230]]
 - [[_COMMUNITY_Community 231|Community 231]]
 - [[_COMMUNITY_Community 232|Community 232]]
+- [[_COMMUNITY_Community 233|Community 233]]
+- [[_COMMUNITY_Community 234|Community 234]]
+- [[_COMMUNITY_Community 235|Community 235]]
+- [[_COMMUNITY_Community 236|Community 236]]
+- [[_COMMUNITY_Community 237|Community 237]]
 - [[_COMMUNITY_Community 238|Community 238]]
 - [[_COMMUNITY_Community 239|Community 239]]
 - [[_COMMUNITY_Community 240|Community 240]]
-- [[_COMMUNITY_Community 241|Community 241]]
 - [[_COMMUNITY_Community 242|Community 242]]
 - [[_COMMUNITY_Community 243|Community 243]]
 - [[_COMMUNITY_Community 244|Community 244]]
@@ -203,6 +203,7 @@
 - [[_COMMUNITY_Community 247|Community 247]]
 - [[_COMMUNITY_Community 248|Community 248]]
 - [[_COMMUNITY_Community 249|Community 249]]
+- [[_COMMUNITY_Community 250|Community 250]]
 - [[_COMMUNITY_Community 251|Community 251]]
 - [[_COMMUNITY_Community 252|Community 252]]
 - [[_COMMUNITY_Community 253|Community 253]]
@@ -212,19 +213,19 @@
 - [[_COMMUNITY_Community 257|Community 257]]
 - [[_COMMUNITY_Community 258|Community 258]]
 - [[_COMMUNITY_Community 259|Community 259]]
-- [[_COMMUNITY_Community 260|Community 260]]
 - [[_COMMUNITY_Community 261|Community 261]]
 - [[_COMMUNITY_Community 262|Community 262]]
 - [[_COMMUNITY_Community 263|Community 263]]
 - [[_COMMUNITY_Community 264|Community 264]]
-- [[_COMMUNITY_Community 265|Community 265]]
 - [[_COMMUNITY_Community 266|Community 266]]
 - [[_COMMUNITY_Community 267|Community 267]]
 - [[_COMMUNITY_Community 268|Community 268]]
+- [[_COMMUNITY_Community 269|Community 269]]
 - [[_COMMUNITY_Community 270|Community 270]]
 - [[_COMMUNITY_Community 271|Community 271]]
 - [[_COMMUNITY_Community 272|Community 272]]
 - [[_COMMUNITY_Community 273|Community 273]]
+- [[_COMMUNITY_Community 274|Community 274]]
 - [[_COMMUNITY_Community 275|Community 275]]
 - [[_COMMUNITY_Community 276|Community 276]]
 - [[_COMMUNITY_Community 277|Community 277]]
@@ -236,20 +237,20 @@
 - [[_COMMUNITY_Community 283|Community 283]]
 - [[_COMMUNITY_Community 284|Community 284]]
 - [[_COMMUNITY_Community 285|Community 285]]
-- [[_COMMUNITY_Community 286|Community 286]]
 - [[_COMMUNITY_Community 287|Community 287]]
 - [[_COMMUNITY_Community 288|Community 288]]
 - [[_COMMUNITY_Community 289|Community 289]]
 - [[_COMMUNITY_Community 290|Community 290]]
 - [[_COMMUNITY_Community 291|Community 291]]
-- [[_COMMUNITY_Community 292|Community 292]]
 - [[_COMMUNITY_Community 293|Community 293]]
 - [[_COMMUNITY_Community 294|Community 294]]
+- [[_COMMUNITY_Community 295|Community 295]]
 - [[_COMMUNITY_Community 296|Community 296]]
 - [[_COMMUNITY_Community 297|Community 297]]
 - [[_COMMUNITY_Community 298|Community 298]]
 - [[_COMMUNITY_Community 299|Community 299]]
 - [[_COMMUNITY_Community 300|Community 300]]
+- [[_COMMUNITY_Community 301|Community 301]]
 - [[_COMMUNITY_Community 302|Community 302]]
 - [[_COMMUNITY_Community 303|Community 303]]
 - [[_COMMUNITY_Community 304|Community 304]]
@@ -340,8 +341,8 @@
 - [[_COMMUNITY_Community 389|Community 389]]
 - [[_COMMUNITY_Community 390|Community 390]]
 - [[_COMMUNITY_Community 391|Community 391]]
-- [[_COMMUNITY_Community 392|Community 392]]
 - [[_COMMUNITY_Community 393|Community 393]]
+- [[_COMMUNITY_Community 394|Community 394]]
 - [[_COMMUNITY_Community 395|Community 395]]
 - [[_COMMUNITY_Community 396|Community 396]]
 - [[_COMMUNITY_Community 397|Community 397]]
@@ -358,8 +359,8 @@
 - [[_COMMUNITY_Community 408|Community 408]]
 - [[_COMMUNITY_Community 409|Community 409]]
 - [[_COMMUNITY_Community 410|Community 410]]
-- [[_COMMUNITY_Community 411|Community 411]]
 - [[_COMMUNITY_Community 412|Community 412]]
+- [[_COMMUNITY_Community 413|Community 413]]
 - [[_COMMUNITY_Community 414|Community 414]]
 - [[_COMMUNITY_Community 415|Community 415]]
 - [[_COMMUNITY_Community 416|Community 416]]
@@ -373,20 +374,20 @@
 - [[_COMMUNITY_Community 424|Community 424]]
 - [[_COMMUNITY_Community 425|Community 425]]
 - [[_COMMUNITY_Community 426|Community 426]]
-- [[_COMMUNITY_Community 427|Community 427]]
 - [[_COMMUNITY_Community 428|Community 428]]
+- [[_COMMUNITY_Community 429|Community 429]]
 - [[_COMMUNITY_Community 430|Community 430]]
 - [[_COMMUNITY_Community 431|Community 431]]
 - [[_COMMUNITY_Community 432|Community 432]]
-- [[_COMMUNITY_Community 433|Community 433]]
 - [[_COMMUNITY_Community 434|Community 434]]
+- [[_COMMUNITY_Community 435|Community 435]]
 - [[_COMMUNITY_Community 436|Community 436]]
 - [[_COMMUNITY_Community 437|Community 437]]
-- [[_COMMUNITY_Community 438|Community 438]]
 - [[_COMMUNITY_Community 439|Community 439]]
+- [[_COMMUNITY_Community 440|Community 440]]
 - [[_COMMUNITY_Community 441|Community 441]]
-- [[_COMMUNITY_Community 442|Community 442]]
 - [[_COMMUNITY_Community 443|Community 443]]
+- [[_COMMUNITY_Community 444|Community 444]]
 - [[_COMMUNITY_Community 445|Community 445]]
 - [[_COMMUNITY_Community 446|Community 446]]
 - [[_COMMUNITY_Community 447|Community 447]]
@@ -416,14 +417,14 @@
 - [[_COMMUNITY_Community 471|Community 471]]
 - [[_COMMUNITY_Community 472|Community 472]]
 - [[_COMMUNITY_Community 473|Community 473]]
-- [[_COMMUNITY_Community 474|Community 474]]
 - [[_COMMUNITY_Community 475|Community 475]]
 - [[_COMMUNITY_Community 477|Community 477]]
-- [[_COMMUNITY_Community 479|Community 479]]
-- [[_COMMUNITY_Community 480|Community 480]]
+- [[_COMMUNITY_Community 478|Community 478]]
+- [[_COMMUNITY_Community 503|Community 503]]
+- [[_COMMUNITY_Community 504|Community 504]]
 - [[_COMMUNITY_Community 505|Community 505]]
-- [[_COMMUNITY_Community 506|Community 506]]
 - [[_COMMUNITY_Community 507|Community 507]]
+- [[_COMMUNITY_Community 508|Community 508]]
 - [[_COMMUNITY_Community 509|Community 509]]
 - [[_COMMUNITY_Community 510|Community 510]]
 - [[_COMMUNITY_Community 511|Community 511]]
@@ -443,8 +444,8 @@
 - [[_COMMUNITY_Community 525|Community 525]]
 - [[_COMMUNITY_Community 526|Community 526]]
 - [[_COMMUNITY_Community 527|Community 527]]
-- [[_COMMUNITY_Community 528|Community 528]]
 - [[_COMMUNITY_Community 529|Community 529]]
+- [[_COMMUNITY_Community 530|Community 530]]
 - [[_COMMUNITY_Community 531|Community 531]]
 - [[_COMMUNITY_Community 532|Community 532]]
 - [[_COMMUNITY_Community 533|Community 533]]
@@ -462,8 +463,8 @@
 - [[_COMMUNITY_Community 545|Community 545]]
 - [[_COMMUNITY_Community 546|Community 546]]
 - [[_COMMUNITY_Community 547|Community 547]]
-- [[_COMMUNITY_Community 548|Community 548]]
 - [[_COMMUNITY_Community 549|Community 549]]
+- [[_COMMUNITY_Community 550|Community 550]]
 - [[_COMMUNITY_Community 551|Community 551]]
 - [[_COMMUNITY_Community 552|Community 552]]
 - [[_COMMUNITY_Community 553|Community 553]]
@@ -474,8 +475,8 @@
 - [[_COMMUNITY_Community 558|Community 558]]
 - [[_COMMUNITY_Community 559|Community 559]]
 - [[_COMMUNITY_Community 560|Community 560]]
-- [[_COMMUNITY_Community 561|Community 561]]
 - [[_COMMUNITY_Community 562|Community 562]]
+- [[_COMMUNITY_Community 563|Community 563]]
 - [[_COMMUNITY_Community 564|Community 564]]
 - [[_COMMUNITY_Community 565|Community 565]]
 - [[_COMMUNITY_Community 566|Community 566]]
@@ -519,20 +520,20 @@
 - [[_COMMUNITY_Community 604|Community 604]]
 - [[_COMMUNITY_Community 605|Community 605]]
 - [[_COMMUNITY_Community 606|Community 606]]
-- [[_COMMUNITY_Community 607|Community 607]]
 - [[_COMMUNITY_Community 608|Community 608]]
-- [[_COMMUNITY_Community 610|Community 610]]
-- [[_COMMUNITY_Community 611|Community 611]]
+- [[_COMMUNITY_Community 609|Community 609]]
+- [[_COMMUNITY_Community 613|Community 613]]
 - [[_COMMUNITY_Community 615|Community 615]]
-- [[_COMMUNITY_Community 617|Community 617]]
+- [[_COMMUNITY_Community 619|Community 619]]
 - [[_COMMUNITY_Community 621|Community 621]]
+- [[_COMMUNITY_Community 622|Community 622]]
 - [[_COMMUNITY_Community 623|Community 623]]
 - [[_COMMUNITY_Community 624|Community 624]]
 - [[_COMMUNITY_Community 625|Community 625]]
 - [[_COMMUNITY_Community 626|Community 626]]
 - [[_COMMUNITY_Community 627|Community 627]]
-- [[_COMMUNITY_Community 628|Community 628]]
 - [[_COMMUNITY_Community 629|Community 629]]
+- [[_COMMUNITY_Community 630|Community 630]]
 - [[_COMMUNITY_Community 631|Community 631]]
 - [[_COMMUNITY_Community 632|Community 632]]
 - [[_COMMUNITY_Community 633|Community 633]]
@@ -543,8 +544,8 @@
 - [[_COMMUNITY_Community 638|Community 638]]
 - [[_COMMUNITY_Community 639|Community 639]]
 - [[_COMMUNITY_Community 640|Community 640]]
-- [[_COMMUNITY_Community 641|Community 641]]
 - [[_COMMUNITY_Community 642|Community 642]]
+- [[_COMMUNITY_Community 643|Community 643]]
 - [[_COMMUNITY_Community 644|Community 644]]
 - [[_COMMUNITY_Community 645|Community 645]]
 - [[_COMMUNITY_Community 646|Community 646]]
@@ -558,16 +559,16 @@
 - [[_COMMUNITY_Community 654|Community 654]]
 - [[_COMMUNITY_Community 655|Community 655]]
 - [[_COMMUNITY_Community 656|Community 656]]
-- [[_COMMUNITY_Community 657|Community 657]]
 - [[_COMMUNITY_Community 658|Community 658]]
+- [[_COMMUNITY_Community 659|Community 659]]
 - [[_COMMUNITY_Community 660|Community 660]]
 - [[_COMMUNITY_Community 661|Community 661]]
 - [[_COMMUNITY_Community 662|Community 662]]
-- [[_COMMUNITY_Community 663|Community 663]]
 - [[_COMMUNITY_Community 664|Community 664]]
-- [[_COMMUNITY_Community 666|Community 666]]
-- [[_COMMUNITY_Community 689|Community 689]]
-- [[_COMMUNITY_Community 690|Community 690]]
+- [[_COMMUNITY_Community 687|Community 687]]
+- [[_COMMUNITY_Community 688|Community 688]]
+- [[_COMMUNITY_Community 692|Community 692]]
+- [[_COMMUNITY_Community 693|Community 693]]
 - [[_COMMUNITY_Community 694|Community 694]]
 - [[_COMMUNITY_Community 695|Community 695]]
 - [[_COMMUNITY_Community 696|Community 696]]
@@ -622,8 +623,8 @@
 - [[_COMMUNITY_Community 745|Community 745]]
 - [[_COMMUNITY_Community 746|Community 746]]
 - [[_COMMUNITY_Community 747|Community 747]]
-- [[_COMMUNITY_Community 748|Community 748]]
 - [[_COMMUNITY_Community 749|Community 749]]
+- [[_COMMUNITY_Community 750|Community 750]]
 - [[_COMMUNITY_Community 751|Community 751]]
 - [[_COMMUNITY_Community 752|Community 752]]
 - [[_COMMUNITY_Community 753|Community 753]]
@@ -880,8 +881,8 @@
 - [[_COMMUNITY_Community 1004|Community 1004]]
 - [[_COMMUNITY_Community 1005|Community 1005]]
 - [[_COMMUNITY_Community 1006|Community 1006]]
-- [[_COMMUNITY_Community 1007|Community 1007]]
-- [[_COMMUNITY_Community 1008|Community 1008]]
+- [[_COMMUNITY_Community 1010|Community 1010]]
+- [[_COMMUNITY_Community 1011|Community 1011]]
 - [[_COMMUNITY_Community 1012|Community 1012]]
 - [[_COMMUNITY_Community 1013|Community 1013]]
 - [[_COMMUNITY_Community 1014|Community 1014]]
@@ -1164,19 +1165,17 @@
 - [[_COMMUNITY_Community 1291|Community 1291]]
 - [[_COMMUNITY_Community 1292|Community 1292]]
 - [[_COMMUNITY_Community 1293|Community 1293]]
-- [[_COMMUNITY_Community 1294|Community 1294]]
-- [[_COMMUNITY_Community 1295|Community 1295]]
 
 ## God Nodes (most connected - your core abstractions)
-1. `AuthoritativeState` - 838 edges
-2. `V2EntityBuilder` - 710 edges
-3. `StateUpdate` - 483 edges
-4. `EntityUpdate` - 451 edges
-5. `EntityState` - 286 edges
+1. `AuthoritativeState` - 841 edges
+2. `V2EntityBuilder` - 719 edges
+3. `StateUpdate` - 485 edges
+4. `EntityUpdate` - 453 edges
+5. `EntityState` - 290 edges
 6. `ItemStack` - 170 edges
 7. `DeterministicRNG` - 163 edges
 8. `SimulationEvent` - 158 edges
-9. `StrategicUpdate` - 144 edges
+9. `StrategicUpdate` - 146 edges
 10. `NavigationUpdate` - 141 edges
 
 ## Surprising Connections (you probably didn't know these)
@@ -1184,62 +1183,62 @@
   tests/unit/api/test_read_model_cache.py → src/core/dirty.py
 - `create_mock_entity()` --calls--> `V2EntityBuilder`  [INFERRED]
   tests/unit/strategic/test_strategic_detour_ph6.py → src/core/builder.py
-- `test_contract_lifecycle_resolution()` --calls--> `V2EntityBuilder`  [INFERRED]
-  tests/unit/social/test_contract_lifecycle.py → src/core/builder.py
 - `test_should_replace()` --calls--> `V2EntityBuilder`  [INFERRED]
   tests/unit/resource/test_equipment_ranking.py → src/core/builder.py
 - `base_state()` --calls--> `AuthoritativeState`  [INFERRED]
   tests/perf/test_profiler_integrity.py → src/core/state.py
+- `initial_state()` --calls--> `AuthoritativeState`  [INFERRED]
+  tests/unit/core/test_signal_truth.py → src/core/state.py
 
 ## Communities
 
 ### Community 0 - "Community 0"
 Cohesion: 0.0
-Nodes (1317): AllocateAttributeAction, Action to spend unspent AP on a specific attribute., HarvestAction, Action to start harvesting a resource node., start_harvest(), LootAction, Action to start looting a ground item or corpse., start_loot() (+1309 more)
+Nodes (1136): AllocateAttributeAction, Action to spend unspent AP on a specific attribute., M9 Law: Harness must catch envelope ceiling violations., test_harness_catches_ram_violation(), M9 Law: Harness must catch hash mismatch vs sequential baseline., test_certification_detects_semantic_drift(), TestNeedInventory, create_mock_entity() (+1128 more)
 
 ### Community 1 - "Community 1"
-Cohesion: 0.0
-Nodes (863): BaseModel, name_must_not_be_empty(), EntityDTO, Export-ready DTO for the simulation state.     Used for persistence and external, Factory function to build a StateDTO from AuthoritativeState.     Isolation: Aut, Export-ready Data Transfer Object for an Entity.     Supports validation and API, StateDTO, to_export_state() (+855 more)
+Cohesion: 0.01
+Nodes (923): HarvestAction, Action to start harvesting a resource node., start_harvest(), LootAction, Action to start looting a ground item or corpse., start_loot(), tests/integration/domains/adventure/test_phase3_adventure_decision_phase.py  Pha, _state() (+915 more)
 
 ### Community 2 - "Community 2"
 Cohesion: 0.0
-Nodes (808): NeedInterpretationService, Interprets raw state + self-awareness into structured needs.      Survival needs, Converts raw entity state into a subjective SelfAwarenessComponent.      Phase 2, SelfAssessmentService, _entity_with_awareness(), tests/unit/cognition/test_phase2_need_interpretation_service.py  Phase 2 — NeedI, Even equipment desire stays below survival., Build entity, run SelfAssessment, return (entity_after, awareness). (+800 more)
+Nodes (862): BaseModel, name_must_not_be_empty(), EntityDTO, Export-ready DTO for the simulation state.     Used for persistence and external, Factory function to build a StateDTO from AuthoritativeState.     Isolation: Aut, Export-ready Data Transfer Object for an Entity.     Supports validation and API, StateDTO, to_export_state() (+854 more)
 
 ### Community 3 - "Community 3"
 Cohesion: 0.0
-Nodes (665): diff_states(), base_profile(), Verify that entities form groups and propagate targets during a battle., test_arena_group_coordination(), Establish source of truth via deterministic sequential execution., Establish source of truth via deterministic sequential execution., cert_profile(), harness() (+657 more)
+Nodes (744): AlertDeduplicator, Check if the alert with the given dedup_key should be suppressed.         If not, Remove any entries from the seen map that are older than the suppression window., Clear all registered alerts., Thread-safe in-memory alert deduplicator that suppresses identical alerts     wi, AlertsManager, get_router(), Central coordinator for initializing, configuring, and exposing the     Alert Ro (+736 more)
 
 ### Community 4 - "Community 4"
 Cohesion: 0.01
-Nodes (456): ABC, AlertDeduplicator, Check if the alert with the given dedup_key should be suppressed.         If not, Remove any entries from the seen map that are older than the suppression window., Clear all registered alerts., Thread-safe in-memory alert deduplicator that suppresses identical alerts     wi, AlertsManager, get_router() (+448 more)
+Nodes (491): AdventureRouteGenerator, State-free generator producing subjective candidate route options.     Does not, get_kinds(), map_to_states(), src/domains/adventure/mapper.py ────────────────────────────────────────────────, Data-driven bridge connecting an Adventure RouteFamily to standard     strategic, RouteToProjectMapper, AdventureDecisionPhase (+483 more)
 
 ### Community 5 - "Community 5"
 Cohesion: 0.01
-Nodes (367): BalanceDimension, Balance Diagnosis models., ConformanceEvaluator, evaluate(), M10 Law: Multi-dimensional conformance evaluation.     Enforces precise resource, HardwareClassifier, M9 Law: Explicit and deterministic hardware classification., CertificationHarness (+359 more)
+Nodes (287): AnalysisContext, AnalysisInputLoader, AnalysisPipeline, AnalysisResult, AnalyzerRegistry, BaseAnalyzer, BasicEconomyAnalyzer, BasicMovementAnalyzer (+279 more)
 
 ### Community 6 - "Community 6"
 Cohesion: 0.01
-Nodes (200): Anomaly, Represents a detected behavioral or system anomaly in the simulation run., BalanceDiagnosisEngine, BalanceDiagnosisEngine — evaluates four balance dimensions post-run.  Dimensions, Detect extreme one-sided outcomes.         Currently skipped unless combat event, Detect sustained runtime degradation., Evaluates simulation run balance across four dimensions.     Non-applicable dime, Detect expected activity types completely absent.         Driven by expectation (+192 more)
+Nodes (203): ABC, Anomaly, Represents a detected behavioral or system anomaly in the simulation run., BalanceDiagnosisEngine, BalanceDiagnosisEngine — evaluates four balance dimensions post-run.  Dimensions, Detect extreme one-sided outcomes.         Currently skipped unless combat event, Detect sustained runtime degradation., Evaluates simulation run balance across four dimensions.     Non-applicable dime (+195 more)
 
 ### Community 7 - "Community 7"
 Cohesion: 0.01
-Nodes (218): AnalyticsDatasetBuilder, DatasetManifest, Consolidates scenario sweep artifacts and individual run data into a local Parqu, ArtifactExporter, ExportJob, ExportManager, ExportManifest, get_exporter() (+210 more)
+Nodes (238): generate(), src/domains/adventure/generator.py ─────────────────────────────────────────────, AdventureRouteOption, Subjective route option generated by AdventureRouteGenerator.          Fields:, tests/unit/domains/adventure/test_phase3_adventure_decision_boundary.py  Phase 3, Asserts EntityState is completely free of any adventure-specific components., Asserts the decision interface accepts generic self-model inputs     rather than, Asserts that calling the service returns a result without mutating entity state. (+230 more)
 
 ### Community 8 - "Community 8"
 Cohesion: 0.01
-Nodes (192): Verify that a hero in the arena can progress and complete quests., test_arena_quest_progression(), Verify that monster-owned conquered regions apply hero combat debuffs     and ta, Verify regional influence, conquest, and taxation., test_arena_conquest_and_debuff(), test_arena_regional_control(), Verify that the 50v50 Stress Arena spawns 100 entities., Verify that the 5v5 Arena spawns entities and runs for 10 ticks. (+184 more)
+Nodes (232): Verify that a hero in the arena can progress and complete quests., test_arena_quest_progression(), Verify that monster-owned conquered regions apply hero combat debuffs     and ta, Verify regional influence, conquest, and taxation., test_arena_conquest_and_debuff(), test_arena_regional_control(), base_profile(), make_arena_actor() (+224 more)
 
 ### Community 9 - "Community 9"
 Cohesion: 0.01
-Nodes (180): DiagnosticReport, A collection of traces and metrics for a simulation window.     Strictly non-aut, Experimental diagnostic trace of a single kernel event., TraceEvent, get_dirty_set(), Safely retrieve the DirtySet from a StateUpdate without triggering direct access, Control modes for simulation forensics.     M6 Law: Replay richness must be prof, ReplayMode (+172 more)
+Nodes (244): AnalyticsDatasetBuilder, DatasetManifest, Consolidates scenario sweep artifacts and individual run data into a local Parqu, ArtifactExporter, ExportJob, ExportManager, ExportManifest, get_exporter() (+236 more)
 
 ### Community 10 - "Community 10"
-Cohesion: 0.02
-Nodes (161): CapabilityContext, CapabilityEstimateService, estimate(), src/cognition/capability_estimate.py ───────────────────────────────────────────, Caller-provided context: which capabilities to estimate and their data.      com, Produces scoped, deterministic capability estimates from entity state.      Phas, assimilate(), KnowledgeModelService (+153 more)
+Cohesion: 0.01
+Nodes (217): src/domains/adventure/resolver.py ──────────────────────────────────────────────, resolve(), Verify that the 50v50 Stress Arena spawns 100 entities., Verify that the 5v5 Arena spawns entities and runs for 10 ticks., test_arena_50v50_scaling(), test_arena_5v5_startup(), build_harvest_test(), build_integrated_loop() (+209 more)
 
 ### Community 11 - "Community 11"
 Cohesion: 0.01
-Nodes (144): kernel(), Returns a complete DTO snapshot (Expensive O(N))., Returns the latest minimal snapshot., Construct the initial kernel and state., Construct the initial kernel and state., Returns a paged list of entities., Returns a single entity snapshot., Returns a single entity snapshot. (+136 more)
+Nodes (131): kernel(), Returns a complete DTO snapshot (Expensive O(N))., Returns the latest minimal snapshot., Construct the initial kernel and state., Construct the initial kernel and state., Returns a paged list of entities., Returns a single entity snapshot., Returns a single entity snapshot. (+123 more)
 
 ### Community 12 - "Community 12"
 Cohesion: 0.02
@@ -1247,43 +1246,43 @@ Nodes (105): test_api_entity_timeline(), test_api_metric_trend(), test_api_searc
 
 ### Community 13 - "Community 13"
 Cohesion: 0.02
-Nodes (103): LifeStageService, Provides utility multipliers based on life stage., PersonalityService, Provides utility modifiers based on personality traits., Provides utility modifiers based on personality traits., apply_modifiers(), Orchestrates all goal utility modifiers., Orchestrates all goal utility modifiers. (+95 more)
+Nodes (84): DiagnosticReport, A collection of traces and metrics for a simulation window.     Strictly non-aut, Experimental diagnostic trace of a single kernel event., TraceEvent, Control modes for simulation forensics.     M6 Law: Replay richness must be prof, ReplayMode, BoundedBuffer, OverflowPolicy (+76 more)
 
 ### Community 14 - "Community 14"
 Cohesion: 0.02
-Nodes (114): run_profile(), BenchHarness, PerformanceRegressionError, Calculate distribution statistics for a set of values., Calculate distribution statistics for a set of values., Calculate distribution statistics for a set of values., Calculate distribution statistics for a set of values., Calculate distribution statistics for a set of values. (+106 more)
+Nodes (91): OptimizationProfile, Scenario-aware optimization configuration contract (Milestone 20).     Tailors c, EnvironmentCapture, PressureSignals, Operational measurements used for governing decisions.     Status: FROZEN (Resou, Law M10: Truthful representation of the execution context.     Distinguishes bet, Law M10: Truthful representation of the execution context.     Distinguishes bet, Observability budgets and signal collection tests. - RPG-0008: observability_bud (+83 more)
 
 ### Community 15 - "Community 15"
+Cohesion: 0.03
+Nodes (71): CognitionGraphDiffBuilder, compute_diff(), Cognition Graph Diff Builder for computing differences between cognition snapsho, Computes deterministic deltas between subsequent strategic cognition snapshots, CognitionEventMapper, Translates strategic cognition graph diffs into concrete SimulationEvents., Searches snapshot edges to identify the blocker linked to this detour project., Searches snapshot edges to identify the blocker linked to this detour project. (+63 more)
+
+### Community 16 - "Community 16"
 Cohesion: 0.02
 Nodes (81): Merges another CombatUpdate into this one, aggregating results., Merges another CombatUpdate into this one, aggregating results., Merges another CombatUpdate into this one, aggregating results., Merges another CombatUpdate into this one, aggregating results., Merges another CombatUpdate into this one, aggregating results., Merges another CombatUpdate into this one, aggregating results., Merges another CombatUpdate into this one, aggregating results., Merges another SocialUpdate into this one. (+73 more)
 
-### Community 16 - "Community 16"
-Cohesion: 0.03
-Nodes (72): OptimizationProfile, Scenario-aware optimization configuration contract (Milestone 20).     Tailors c, EnvironmentCapture, PressureSignals, Operational measurements used for governing decisions.     Status: FROZEN (Resou, Law M10: Truthful representation of the execution context.     Distinguishes bet, Law M10: Truthful representation of the execution context.     Distinguishes bet, _is_static_position_blocked() (+64 more)
-
 ### Community 17 - "Community 17"
-Cohesion: 0.03
-Nodes (76): deep_freeze(), _get_readonly_dict(), Recursively transform mutable structures into their immutable counterparts., Recursively transform mutable structures into their immutable counterparts., Shallow transform mutable structures into their immutable counterparts.     Used, Shallow transform mutable structures into their immutable counterparts.     Used, Shallow transform mutable structures into their immutable counterparts.     Used, Shallow transform mutable structures into their immutable counterparts.     Used (+68 more)
+Cohesion: 0.04
+Nodes (68): LifeStageService, Provides utility multipliers based on life stage., PersonalityService, Provides utility modifiers based on personality traits., Provides utility modifiers based on personality traits., apply_modifiers(), Orchestrates all goal utility modifiers., Orchestrates all goal utility modifiers. (+60 more)
 
 ### Community 18 - "Community 18"
-Cohesion: 0.05
-Nodes (26): ExpectationPackLoader, ExpectationPackLoader — Loads scenario expectation packs from JSON files.  Pack, Parse and validate a single rule dict., Loads and validates scenario expectation packs from JSON files.      Usage:, Locate data/expectation_packs/ relative to the project root., Load a pack for the given scenario type.         Falls back to the default pack, Parse and validate a pack dict into a ScenarioExpectationPack., Parse and validate a pack dict into a ScenarioExpectationPack. (+18 more)
+Cohesion: 0.02
+Nodes (84): deep_freeze(), _get_readonly_dict(), Recursively transform mutable structures into their immutable counterparts., Recursively transform mutable structures into their immutable counterparts., Shallow transform mutable structures into their immutable counterparts.     Used, Shallow transform mutable structures into their immutable counterparts.     Used, Shallow transform mutable structures into their immutable counterparts.     Used, Shallow transform mutable structures into their immutable counterparts.     Used (+76 more)
 
 ### Community 19 - "Community 19"
-Cohesion: 0.05
-Nodes (44): CandidateSelector, DirtyDependencyGraph, DirtySetBuilder, expand(), from_update(), get_relevant_group_ids(), Incremental update from a StateUpdate., Incremental update from a StateUpdate. (+36 more)
+Cohesion: 0.04
+Nodes (39): EventStreamAdapter, Records a single SimulationEvent, enforcing bounds and overflow policies., Ensures RedisStreamAdapter handles the absence of redis library gracefully., Ensures RedisStreamAdapter handles connection drops gracefully without loop stal, test_factory_resolutions(), test_in_process_adapter(), test_null_adapter(), test_redis_adapter_publish_resilience() (+31 more)
 
 ### Community 20 - "Community 20"
-Cohesion: 0.05
-Nodes (29): compute_diff(), Cognition Graph Diff Builder for computing differences between cognition snapsho, build_diff_record(), build_snapshot_record(), compute_stable_graph_hash(), Cognition Graph Artifact Schema contracts and serialization., Constructs a compliant compact cognition graph diff record., Constructs a compliant compact cognition graph diff record. (+21 more)
+Cohesion: 0.04
+Nodes (47): BenchHarness, PerformanceRegressionError, Calculate distribution statistics for a set of values., Calculate distribution statistics for a set of values., Calculate distribution statistics for a set of values., Calculate distribution statistics for a set of values., Calculate distribution statistics for a set of values., Dedicated harness for high-frequency performance measurement.     Adheres to the (+39 more)
 
 ### Community 21 - "Community 21"
 Cohesion: 0.12
 Nodes (46): accepted_position_swap_contract(), assert_no_overlap(), attach_contract_to_both(), corridor_with_passing_bay(), make_actor(), make_state(), move_intent(), one_tile_corridor_walls() (+38 more)
 
 ### Community 22 - "Community 22"
-Cohesion: 0.07
-Nodes (33): Searches snapshot edges to identify the blocker linked to this detour project., Searches snapshot edges to identify the blocker linked to this detour project., Processes a diff and the active snapshots to produce an ordered list of Simulati, Strategic cognition simulation event models and schema contracts., Emitted when a strategic investigation lead is exhausted/invalidated., Emitted when a strategic threat/concern is appraised., Emitted when a strategic threat/concern is appraised., Emitted when strategic overload gates are breached. (+25 more)
+Cohesion: 0.06
+Nodes (45): base_state(), create_mock_entity(), Combat legality matrix and authoritative outcome tests. - RPG-0012: melee_adjace, A1-A5: AoE center and splash rules., A1-A5: AoE center and splash rules., S1-S5: Dead/Inactive/Self rejections., S1-S5: Dead/Inactive/Self rejections., V1-V3: Reward emission only on death. (+37 more)
 
 ### Community 23 - "Community 23"
 Cohesion: 0.05
@@ -1298,2300 +1297,2304 @@ Cohesion: 0.09
 Nodes (36): MockedArgs, Verify that a completely valid world specification validates successfully., Verify that a world spec containing business ERROR violations triggers a non-zer, Verify that strict mode elevates warning diagnostics to fail validation checks., Helper to mock argparse attributes., Verify that compiling a valid world writes state hashes and compile reports., Verify that compilation immediately aborts and fails if ERROR level violations e, Verify that inspecting a world prints correct structural counts and coordinate p (+28 more)
 
 ### Community 26 - "Community 26"
+Cohesion: 0.07
+Nodes (19): No deltas when all attributes in valid range., No deltas when all attributes in valid range., can_use_skill(), create_wound(), drain_skill(), enforce_attribute_caps(), get_effective_stats(), get_exhaustion_multiplier() (+11 more)
+
+### Community 27 - "Community 27"
 Cohesion: 0.06
 Nodes (22): CognitionFeatureExtractor, Cognition Feature Extractor for aggregating strategic metrics from cognition sna, Extracts run-entity-level strategic features from cognition snapshot and diff lo, CognitionPatternMiner, mine_patterns(), Cognition Pattern Miner for detecting strategic behavior anomalies across ticks, Analyzes strategic cognition features to detect 5 critical behavioral failure pa, Unit tests for the CognitionFeatureExtractor. (+14 more)
 
-### Community 27 - "Community 27"
-Cohesion: 0.1
-Nodes (22): MockPressureSignals, MockRuntimeStatus, MockWorldMetrics, Assert deterministic p95 calculation matches percentile math., Verify MetricWindowRecorder manages window size boundaries and appends cleanly., Verify MetricWindowRecord compiles and serializes correctly., Verify MetricWindowAccumulator aggregates lists and computes correct mathematica, test_metric_window_accumulator_aggregation() (+14 more)
-
 ### Community 28 - "Community 28"
-Cohesion: 0.1
-Nodes (27): MissingBaselineError, PerfBaseline, PerfGateResult, PerfRegressionGate, PerfResult, Committed performance baseline metrics for a specific simulation scenario., Benchmarked performance metrics from an active execution run., Outcome of a performance regression gate evaluation. (+19 more)
+Cohesion: 0.09
+Nodes (18): generate_profile_from_seed(), GeneticProfile, GeneticsSystem, Genetics and Skill Scaling Systems.  Covers: - LEG-RPG-144: Innate Talents (Gene, Computes skill power based on skill type and attribute ownership., Innate talent multipliers derived from genetics.     These are permanent and do, Definition of a learnable skill., Derives effective attribute values from base stats + genetic multipliers. (+10 more)
 
 ### Community 29 - "Community 29"
-Cohesion: 0.08
-Nodes (17): generate_profile_from_seed(), GeneticProfile, GeneticsSystem, Genetics and Skill Scaling Systems.  Covers: - LEG-RPG-144: Innate Talents (Gene, Computes skill power based on skill type and attribute ownership., Innate talent multipliers derived from genetics.     These are permanent and do, Definition of a learnable skill., Derives effective attribute values from base stats + genetic multipliers. (+9 more)
+Cohesion: 0.1
+Nodes (27): MissingBaselineError, PerfBaseline, PerfGateResult, PerfRegressionGate, PerfResult, Committed performance baseline metrics for a specific simulation scenario., Benchmarked performance metrics from an active execution run., Outcome of a performance regression gate evaluation. (+19 more)
 
 ### Community 30 - "Community 30"
 Cohesion: 0.11
 Nodes (14): Contract tests for Narrative Memory.  Covers: - LEG-RPG-151: Narrative memory lo, LEG-RPG-151: Turning points persist in narrative memory., LEG-RPG-151: Narrative memory biases future utility scoring., Bias never goes below 0.1 to prevent division by zero., Track trauma with specific subjects., TestTraumaTracking, TestTurningPointPersistence, TestUtilityBiasing (+6 more)
 
 ### Community 31 - "Community 31"
-Cohesion: 0.09
-Nodes (16): Phase 2 Determinism Hardening Tests Proves that: 1. No bare `import random` usag, Prove that no gameplay code uses bare `random` module directly., Verify Domain enum completeness., Verify Domain enum completeness., Law: Engine modules must not import random directly., Law: System modules must not import random directly., Law: World modules must not import random directly., Law: Quest modules must not import random directly. (+8 more)
+Cohesion: 0.08
+Nodes (21): perf_harness(), perf_report_dir(), perf_reporter(), Returns a factory for BenchHarness with a specific profile., Automatically logs performance results to a JSON file if the test is marked 'per, Directory for performance reports., Baseline test: 100 entities in idle state.     Goal: Verify minimal engine overh, test_perf_idle_baseline() (+13 more)
 
 ### Community 32 - "Community 32"
 Cohesion: 0.09
 Nodes (16): Verify scanning and parsing of valid YAML frontmatter contracts., Verify that defaults are populated and description is correctly mapped to purpos, Verify ValueError is raised when querying unregistered commands., Verify the actual Phase 14 workflow contracts registered in the project., test_real_registry_contracts(), test_scan_and_register_success(), test_unknown_workflow_rejected(), test_workflow_fields_validation() (+8 more)
 
 ### Community 33 - "Community 33"
+Cohesion: 0.12
+Nodes (13): make_entity(), make_state(), When all movement options fail, wait_count increments., After wait_count >= 2, reroute tries alternative adjacent tiles., [RPG-COMBAT-014] After wait_count >= 5, replan clears target and path., [RPG-COMBAT-014] After oscillation_count >= 3, movement replans., Moving back to last_position increments oscillation count., Moving to a genuinely new tile resets oscillation count. (+5 more)
+
+### Community 34 - "Community 34"
 Cohesion: 0.21
 Nodes (22): _added_item_ids(), _assert_no_inventory_update(), _get_entity_update(), _make_actor(), _make_inventory(), _make_town_state(), Town contract and economy tests. - RPG-0034: shop_sell_price_enforcement - RPG-0, Law of Value: Verify only junk/materials are auto-sold. (+14 more)
 
-### Community 34 - "Community 34"
+### Community 35 - "Community 35"
 Cohesion: 0.12
 Nodes (14): Unit contract tests for Cognition Graph Artifact Schemas.  Covers: - Milestone 5, Milestone 58: Cognition schema validation checks., Verify standard rich snapshot serializes and passes validation rules., Verify validation fails when a required field is missing., Verify validation rejects unknown reasons., Verify validation rejects invalid or empty graph hash., Verify an empty graph is syntactically valid., Verify huge metadata block causes a validation failure. (+6 more)
 
-### Community 35 - "Community 35"
+### Community 36 - "Community 36"
 Cohesion: 0.15
 Nodes (14): check_cover(), check_flanking(), get_engaged_hostiles(), get_engaged_hostiles_at_pos(), get_manhattan_dist(), get_region_for_position(), get_spatial_index(), has_line_of_sight() (+6 more)
 
-### Community 36 - "Community 36"
+### Community 37 - "Community 37"
+Cohesion: 0.13
+Nodes (13): get_building_at(), _get_building_map(), get_building_region(), _get_building_region_map(), get_corpse_at(), _get_corpse_map(), get_ground_item_at(), _get_ground_item_map() (+5 more)
+
+### Community 38 - "Community 38"
 Cohesion: 0.17
 Nodes (10): apply_replacements(), BuilderChainScanner, collect_replacements(), iter_python_files(), line_offsets(), main(), node_span(), True for:             V2EntityBuilder(...)             V2EntityBuilder(...).kind (+2 more)
 
-### Community 37 - "Community 37"
+### Community 39 - "Community 39"
 Cohesion: 0.21
 Nodes (11): get_snapshot(), get_status(), LiveRunSnapshot, LiveRunStatus, LiveSnapshotProvider, Provides thread-safe read-only status and metrics snapshots of the running simul, DummyEngineManager, DummyEventRecorder (+3 more)
 
-### Community 38 - "Community 38"
+### Community 40 - "Community 40"
+Cohesion: 0.14
+Nodes (11): _get_cached_spatial_grid(), get_neighbor_view(), get_region_for_position(), get_region_trauma(), Returns IDs of entities within the rectangular bounds (xmin, ymin, xmax, ymax)., Utility for $O(1)$ spatial lookups., Returns IDs of entities within the rectangular bounds (xmin, ymin, xmax, ymax)., SpatialGrid (+3 more)
+
+### Community 41 - "Community 41"
 Cohesion: 0.12
 Nodes (16): lab_setup(), Sets up a fully configured temporary environment with valid specifications., Verify that validate-scenario returns 0 on success and non-zero on failure., Verify that validate-experiment returns 0 on success and non-zero on failure., Verify that execution run command successfully spawns runs and exits zero., Verify that status command successfully displays executed run state., Verify that report command prints the correct absolute path to the lab summary s, Verify listing and raw summary JSON inspection subcommands. (+8 more)
 
-### Community 39 - "Community 39"
+### Community 42 - "Community 42"
 Cohesion: 0.12
 Nodes (16): Verify that a variant with a strictly better health score and no regressions is, Verify that a failed associated metamorphic validation rule forces a REGRESSED s, Verify that write_reports correctly creates balance_comparison.json and .md file, Verify that a variant introducing a hard law violation is strictly classified as, Verify that a variant with a mix of improved and regressed dimensions produces M, Verify that missing crucial metric data produces INSUFFICIENT_DATA., Verify that the balance comparison report maps and reports the full structured e, Verify that the explanation strictly avoids causal claims and maintains scientif (+8 more)
 
-### Community 40 - "Community 40"
+### Community 43 - "Community 43"
 Cohesion: 0.15
 Nodes (16): assert_completed_replay_dir(), get_free_port(), module_cmd(), parse_json_lines(), python_executable(), Extract JSON log lines from mixed stdout/stderr output., Assert replay directory contains a completed manifest and at least one chunk., Return the exact Python executable running the current pytest process. (+8 more)
 
-### Community 41 - "Community 41"
-Cohesion: 0.21
-Nodes (14): compile(), get_faction_enum(), get_quest_kind(), get_role_enum(), Map raw role string to EntityRole enum., Map raw faction string to Faction enum., Map raw quest kind string to QuestKind enum., create_base_valid_spec() (+6 more)
-
-### Community 42 - "Community 42"
+### Community 44 - "Community 44"
 Cohesion: 0.18
 Nodes (15): create_base_template_data(), Verify that a building recipe of count N expands to exactly N building specs., Verify that identical template specifications compile to identical WorldSpec, Verify that region recipe boundaries outside topological bounds trigger clear va, Verify that generated ID names are stable, repeatable, and easily traced., Verify that expanded WorldSpec still passes through the validator engine,     an, Verify that population recipe converts to PopulationSpec with expected counts, Verify that a resource recipe of count N expands to exactly N distinct resource (+7 more)
-
-### Community 43 - "Community 43"
-Cohesion: 0.13
-Nodes (12): get_authoritative_phases(), Returns exactly the 6 phases required for authoritative simulation semantics., The authoritative order of operations inside a single simulation tick.     Statu, TickPhase, Ensure the authoritative phase list matches the Milestone A contract., Verify that the kernel tick executes phases in the strict contractual order., test_authoritative_phase_list(), test_kernel_tick_execution_order() (+4 more)
-
-### Community 44 - "Community 44"
-Cohesion: 0.22
-Nodes (14): _build_building_index(), _build_corpse_index(), _build_entity_index(), _build_ground_item_index(), _build_resource_index(), get_indexes(), invalidated_indexes(), Spatial grid index chunking space into 20x20 tile buckets. (+6 more)
 
 ### Community 45 - "Community 45"
 Cohesion: 0.18
 Nodes (14): create_mock_entity(), Normalize a legality reason for assertions.      Some in-progress source paths m, LAW:         Ranged/melee attack legality must respect line-of-sight obstruction, LAW:         Ranged/melee attack legality must respect line-of-sight obstruction, LAW:         An attacker standing on high ground must receive the high-ground co, LAW:         An attacker standing on high ground must receive the high-ground co, Build a minimal valid combat-capable entity for local environment tests.      Th, LAW:         A WALL terrain tile must not be occupiable.      Scenario: (+6 more)
 
 ### Community 46 - "Community 46"
-Cohesion: 0.18
-Nodes (13): create_mock_entity(), Verify that a contract offer is not expired before its expiry tick., Verify that an ACTIVE contract prevents accidental party dissolution., Verify that completing a contract boosts reputation., Verify that a previous betrayal prevents contract acceptance regardless of payou, Verify that low HP actors reject high-risk contracts., Verify that expired contract offers are marked EXPIRED.      Important:, test_appraisal_betrayal_rejection() (+5 more)
+Cohesion: 0.16
+Nodes (6): test_get_entity_snapshots_path_traversal(), make_class_entity(), Build a classed hero with explicit class loadout.      New builder rule:, test_mage_starting_gear(), test_rogue_starting_gear(), test_warrior_starting_gear()
 
 ### Community 47 - "Community 47"
 Cohesion: 0.21
-Nodes (13): create_mock_entity(), Verify that multiple modifiers are recorded in the trace., Verify that an entity with < 100 readiness cannot attack., Verify that attacking through a wall is illegal., Verify that attacking an ally is illegal., Verify that attacking out of range is illegal., Verify SHATTER damage bonus (1.5x) against frozen targets., test_combat_trace_modifiers() (+5 more)
+Nodes (12): CognitionGraph, CognitionGraphEdge, CognitionGraphNode, export(), is_deterministic(), Cognition Graph Export (Read-Only Presenter).  Exposes persisted strategic state, A single node in the cognition graph., A single node in the cognition graph. (+4 more)
 
 ### Community 48 - "Community 48"
 Cohesion: 0.21
-Nodes (12): CognitionGraph, CognitionGraphEdge, CognitionGraphNode, export(), is_deterministic(), Cognition Graph Export (Read-Only Presenter).  Exposes persisted strategic state, A single node in the cognition graph., A single node in the cognition graph. (+4 more)
-
-### Community 49 - "Community 49"
-Cohesion: 0.21
 Nodes (6): Persistent monitor that audits the simulation stack's health., Poll the /health endpoint., Poll metrics to ensure the simulation is actually ticking., Query Loki for any error/fail logs and return specific messages., Execute one full monitoring cycle with detailed reasons., SimulationWatchdog
 
-### Community 50 - "Community 50"
+### Community 49 - "Community 49"
 Cohesion: 0.18
 Nodes (8): Verify that ScenarioRunner executes and compiles rich diagnostic scorecard repor, Verify that ScenarioRunner loads YAML scenario spec and parses config fields cor, test_scenario_execution_and_reports(), test_scenario_spec_loading(), Load scenario spec from YAML file., Execute deterministic synchronous simulation loop for N ticks.         Returns a, ScenarioRunner orchestrates deterministic scenario executions,     tracing activ, ScenarioRunner
 
+### Community 50 - "Community 50"
+Cohesion: 0.29
+Nodes (11): _build_building_index(), _build_corpse_index(), _build_entity_index(), _build_ground_item_index(), _build_resource_index(), get_indexes(), invalidated_indexes(), Immutable spatial indices over world state for a single tick.     Logic ID: PERF (+3 more)
+
 ### Community 51 - "Community 51"
-Cohesion: 0.15
-Nodes (12): Inventory dirty should trigger strategic systems (capacity evaluation/shop)., Combat dirty should trigger lifecycle (health checks), social (morale), and stra, Biological or attribute changes must trigger strategic and lifecycle passes., Movement dirty should imply strategic (proximity/pathfinding) and social (encoun, expand(expand(dirty)) must equal expand(dirty)., Same input must always produce identical output across multiple runs., test_dirty_dependency_biological_and_attributes_mark_strategic_and_lifecycle(), test_dirty_dependency_combat_marks_lifecycle_social_and_strategic() (+4 more)
+Cohesion: 0.21
+Nodes (11): create_mock_entity(), Verify that a contract offer is not expired before its expiry tick., Verify that an ACTIVE contract prevents accidental party dissolution., Verify that completing a contract boosts reputation., Verify that low HP actors reject high-risk contracts., Verify that expired contract offers are marked EXPIRED.      Important:, test_appraisal_risk_vs_hp(), test_contract_driven_party_cohesion() (+3 more)
 
 ### Community 52 - "Community 52"
-Cohesion: 0.27
-Nodes (12): create_mock_entity(), Verify dead or inactive targets cannot be attacked.      Fraud this catches:, Verify dead or inactive attackers cannot attack.      Fraud this catches:     -, test_aoe_negative_cases(), test_attacker_incapacitated(), test_attacker_status_blocked(), test_execute_action_legality_fail(), test_execute_action_target_not_found() (+4 more)
-
-### Community 53 - "Community 53"
-Cohesion: 0.24
-Nodes (5): _make_entity_with_trust(), Contract tests for Source Trust Recalibration.  Covers: - LEG-RPG-123: Refutatio, LEG-RPG-123: Refutation drops trust., Multiple failures compound trust degradation., TestRefutationDropsTrust
-
-### Community 54 - "Community 54"
 Cohesion: 0.26
 Nodes (11): _estimate_old_state(), _fmt(), main(), _measure_map(), _measure_state(), _measure_static(), Measure /state endpoint payload., Estimate old /state payload (all entities full, includes static data). (+3 more)
 
-### Community 55 - "Community 55"
+### Community 53 - "Community 53"
 Cohesion: 0.24
 Nodes (8): make_class_entity(), _normalize_gear_slots(), Normalize CLASS_REGISTRY starting gear into EquipmentComponent slot format., Build a classed hero using the new explicit V2 builder style.      New builder r, Verify the clean builder only stores class_id.      This intentionally replaces, test_builder_stores_class_id_without_hidden_registry_application(), test_explicit_mage_class_application(), test_explicit_warrior_class_application()
 
-### Community 56 - "Community 56"
+### Community 54 - "Community 54"
 Cohesion: 0.18
 Nodes (10): Verify that PhaseBudgetGovernor propagates OptimizationProfile baseline budgets, Verify that all standard profiles are deterministic and adhere to expected bound, Verify that DEBUG_REFERENCE correctly disables narrowing, compaction, and phase, Verify that LOW_MEMORY correctly constrains cache boundaries and increases sweep, Verify that OptimizationProfileResolver resolves correctly from runtime flags or, test_debug_reference_disables_unsafe_optimizations(), test_low_memory_reduces_cache_envelopes(), test_optimization_profile_resolver() (+2 more)
 
-### Community 57 - "Community 57"
+### Community 55 - "Community 55"
+Cohesion: 0.24
+Nodes (9): _make_broken_adapter(), Stream Outage Resilience — Integration test.  Validates that when the event stre, Publishing events to a broken adapter must not raise exceptions., Create a RedisStreamAdapter that is permanently disconnected., Engine completes ticks normally despite broken stream adapter., Broken stream adapter reports degraded health status., test_engine_continues_during_stream_outage(), test_stream_outage_health_shows_degraded() (+1 more)
+
+### Community 56 - "Community 56"
 Cohesion: 0.2
 Nodes (4): BuildingPanel(), ControlPanel(), EventLog(), Legend()
 
-### Community 58 - "Community 58"
+### Community 57 - "Community 57"
 Cohesion: 0.2
 Nodes (9): VERIFIED v2: EntityState.to_dict, VERIFIED v2: EntityState.to_dict, VERIFIED v2: EntityState.to_dict, VERIFIED v2: EntityState.to_dict, VERIFIED v2: EntityState.to_dict, VERIFIED v2: EntityState.to_dict, VERIFIED v2: EntityState.to_dict, VERIFIED v2: EntityState.to_dict (+1 more)
 
-### Community 59 - "Community 59"
+### Community 58 - "Community 58"
 Cohesion: 0.24
 Nodes (3): test_spatial_hash_contract(), Deterministic spatial hash for RPG-core proximity and occupancy.     Supports ra, SpatialHashV2
 
+### Community 59 - "Community 59"
+Cohesion: 0.2
+Nodes (9): Verify that high trust reduces recruitment cost., Verify that high trust reduces recruitment cost., Verify that recruitment cost increases with candidate level., Verify that recruitment cost increases with candidate level., Verify that recruitment acceptance considers payout and trust., Verify that recruitment acceptance considers payout and trust., test_recruitment_acceptance_logic(), test_recruitment_cost_discount_with_trust() (+1 more)
+
 ### Community 60 - "Community 60"
-Cohesion: 0.38
-Nodes (9): create_mock_entity(), test_aoe_legality(), test_dead_legality(), test_friendly_fire(), test_melee_legality(), test_multi_attack_filtering(), test_ranged_legality(), test_readiness_block() (+1 more)
-
-### Community 61 - "Community 61"
-Cohesion: 0.29
-Nodes (9): create_mock_entity(), Verify that WANDER move triggers opportunity attacks when engaged., Verify that if forward move is blocked, actor tries sidestepping., Verify that high-priority entity can force a low-priority entity to yield., Verify that HOLD mode prevents yielding., test_hold_mode_refusal(), test_normal_move_triggers_oa(), test_sidestep_recovery() (+1 more)
-
-### Community 62 - "Community 62"
 Cohesion: 0.31
 Nodes (5): assert_inventory_delta(), expanded_item_ids(), item_id(), item_ids(), item_quantity()
 
-### Community 63 - "Community 63"
-Cohesion: 0.22
-Nodes (4): ActionProposal, An authoritative intent produced by a worker.     Represents 'Actor + Verb + Tar, ActionReason, Structured reason for an action proposal or intent update.
-
-### Community 64 - "Community 64"
-Cohesion: 0.25
-Nodes (5): Central registry for all craftable items., Recipe, RecipeRegistry, CraftingSystem, Authoritative system for item creation and resource consumption.     Enforces re
-
-### Community 65 - "Community 65"
+### Community 61 - "Community 61"
 Cohesion: 0.28
 Nodes (8): apply_review_label(), evaluate_gate(), MiningQualityGate, MiningReviewWorkflow, Enables human verification labeling and promotes accepted findings to the core e, CI verification quality gate evaluating experiment outcomes against critical sim, _write_markdown_backlog(), _write_markdown_gate()
 
-### Community 66 - "Community 66"
+### Community 62 - "Community 62"
 Cohesion: 0.31
 Nodes (8): audit_completeness(), audit_determinism(), DataCompletenessAuditor, DeterminismAuditor, _find_earliest_divergence(), Audits repeat runs of identical seeds to identify state drift and trace structur, Audits experiment directories for schema alignment, corrupted payloads, and miss, _write_markdown_report()
 
-### Community 67 - "Community 67"
+### Community 63 - "Community 63"
 Cohesion: 0.33
 Nodes (7): load_manifest(), Refactored logic for validation, decoupled from global paths for testing., M10 Law: The release gate must validate PRE-EXISTING artifacts in the real repor, test_gate_rejects_malformed_bundle(), test_gate_rejects_missing_artifacts(), test_real_release_proof_is_valid(), validate_bundle_logic()
 
-### Community 68 - "Community 68"
+### Community 64 - "Community 64"
 Cohesion: 0.22
 Nodes (8): Verify that TELEMETRY_DISABLED=1 disables observability budget., Verify that context fields (tick, component) are present in logs.     This requi, Verify that the replay directory contains the expected V2 manifest and chunks., Verify that --json-logs produces parseable JSON with required fields., test_json_logging_format(), test_logging_context_injection(), test_replay_artifact_integrity(), test_telemetry_disabled_flag()
 
-### Community 69 - "Community 69"
+### Community 65 - "Community 65"
 Cohesion: 0.22
 Nodes (8): Verify that BROKER_DISABLED=1 forces sequential execution., Verify that YAML config is respected., Verify that the engine can be imported even if 'optional' libraries are missing., Verify that RPG_ env vars are respected over defaults but overridden by CLI., test_broker_disabled_flag(), test_env_precedence(), test_safe_import_isolation(), test_yaml_precedence()
 
-### Community 70 - "Community 70"
+### Community 66 - "Community 66"
 Cohesion: 0.22
 Nodes (8): RPG-AUTH-030: Ensure Entity model_fields contains only the ID, Kind, and Aspects, RPG-AUTH-031: Ensure no forbidden legacy properties have been re-introduced as s, RPG-AUTH-032: Ensure aspects themselves stay clean of Cross-Aspect dependencies., RPG-AUTH-033: Aspects must be named exactly as their type (lowercase)., test_aspect_model_purity(), test_entity_field_integrity(), test_entity_property_locking(), test_mandatory_aspect_naming()
 
-### Community 71 - "Community 71"
-Cohesion: 0.22
-Nodes (8): Verify ResourceOpportunityProvider returns sorted, capped resource opportunities, Verify ResourceOpportunityProvider boosts reward for needed resources., Verify ServiceOpportunityProvider returns town service options., Verify ServiceOpportunityProvider handles rest and repair dynamically., test_resource_opportunities_basic(), test_resource_opportunities_with_blocker(), test_service_opportunities_basic(), test_service_opportunities_rest_and_repair()
-
-### Community 72 - "Community 72"
+### Community 67 - "Community 67"
 Cohesion: 0.31
 Nodes (8): create_mock_entity(), Party agency and leadership tests. - RPG-0058: social_party_cooperation, Law: If the leader dies or is removed, the group dissolves.     RPG-1676: group_, Law: Group members inherit the shared target from the leader., Law: Members too far from the anchor are removed from the group.     RPG-1674: g, test_party_agency_target_propagation(), test_party_leadership_loss_dissolution(), test_party_member_abandonment_on_distance()
 
-### Community 73 - "Community 73"
+### Community 68 - "Community 68"
 Cohesion: 0.22
 Nodes (8): Test pricing when pressure is zero., Test that price scales with global_salience., Test that price cap (3.0x) is enforced even if pressure is higher., Test that selling price remains static (half of base)., test_arbitrage_prevention(), test_normal_pricing(), test_pressure_scaling(), test_price_cap_enforcement()
 
-### Community 74 - "Community 74"
+### Community 69 - "Community 69"
 Cohesion: 0.39
 Nodes (5): parseSpec(), resolveRef(), resolveSchema(), SchemaBlock(), schemaToTypeString()
 
-### Community 75 - "Community 75"
+### Community 70 - "Community 70"
 Cohesion: 0.43
 Nodes (6): apply_transfer(), apply_update(), calculate_total_weight(), can_add_item(), can_add_items(), can_add_items_with_removals()
 
-### Community 76 - "Community 76"
+### Community 71 - "Community 71"
+Cohesion: 0.29
+Nodes (5): ItemDefinition, Static template for an item., test_equipment_ranking_mage(), test_equipment_ranking_warrior(), test_should_replace()
+
+### Community 72 - "Community 72"
+Cohesion: 0.25
+Nodes (1): from_mode()
+
+### Community 73 - "Community 73"
 Cohesion: 0.32
 Nodes (7): calculate_priority(), EngineeringBacklogGenerator, generate_backlog(), PriorityScorer, Calculates prioritized score rankings for investigation candidates based on freq, Ranks mined pattern candidates and compiles a structured developer action catalo, _write_markdown_backlog()
 
-### Community 77 - "Community 77"
+### Community 74 - "Community 74"
 Cohesion: 0.32
 Nodes (7): detect_gaps(), InstrumentationGapDetector, NextExperimentRecommender, Identifies missing telemetry spans or signal gaps in collected run events., Formulates next experiment specifications based on structural data completeness, recommend_next(), _write_markdown_report()
 
-### Community 78 - "Community 78"
-Cohesion: 0.25
-Nodes (7): Milestone A closure and structural compliance tests. - RPG-0002: kernel_phase_de, Milestone A Guard: Ensure no unacknowledged placeholders in core runtime.     Ga, Verify that all contractual files and classes exist., Verify the 6-phase authoritative order is the primary structure.     Checks that, test_closure_no_placeholders(), test_final_kernel_law_compliance(), test_milestone_a_structural_compliance()
-
-### Community 79 - "Community 79"
+### Community 75 - "Community 75"
 Cohesion: 0.32
 Nodes (7): AgentOutputValidator, AIAgentInvestigationRunner, Strictly validates AI-generated diagnostic output schemas and evidence traceabil, Orchestrates structured LLM-driven diagnostic sweeps over target candidate evide, run_investigation(), validate_output(), _write_markdown_finding()
 
-### Community 80 - "Community 80"
-Cohesion: 0.25
-Nodes (1): test_get_entity_snapshots_path_traversal()
-
-### Community 81 - "Community 81"
+### Community 76 - "Community 76"
 Cohesion: 0.36
 Nodes (7): create_certification_base_spec(), Verify that compiling the same world spec twice with the exact same seed     pro, Verify that compiling the same world spec with two different seeds     produces, Verify that the generated compile report contains all required metrics., test_compile_report_contents(), test_compiler_layout_variation_under_different_seeds(), test_compiler_seeding_determinism()
 
-### Community 82 - "Community 82"
+### Community 77 - "Community 77"
 Cohesion: 0.36
 Nodes (7): make_entity(), LAW: COMB-270 - Target stickiness prevents unrealistic full retarget every tick., LAW: COMB-271 - Target stickiness can break when target invalid/dead., LAW: COMB-271 - Target stickiness can break when target out of range beyond thre, test_target_stickiness_breaks_on_death(), test_target_stickiness_breaks_on_distance_threshold(), test_target_stickiness_maintained()
 
-### Community 83 - "Community 83"
-Cohesion: 0.39
-Nodes (7): create_mock_entity(), Contract lifecycle and social evaluation tests. - RPG-0054: social_contracts_exp, test_contract_appraisal_greed(), test_contract_appraisal_rejection(), test_contract_appraisal_trust(), test_contract_lifecycle_acceptance(), test_contract_lifecycle_resolution()
-
-### Community 84 - "Community 84"
-Cohesion: 0.43
-Nodes (7): create_mock_entity(), [RPG-COMBAT-001] Damage calculation follows the Fractional Armor Mitigation (FAM, test_combat_damage_calculation(), test_defeat_outcome(), test_kill_outcome(), test_opportunity_attack_outcome(), test_survival_outcome()
-
-### Community 85 - "Community 85"
-Cohesion: 0.61
-Nodes (7): create_mock_entity(), create_mock_state(), test_evasive_retreat_skips_oa(), test_hold_mode_refuses_to_yield(), test_opportunity_attack_on_egress(), test_regroup_movement(), test_sidestepping_on_blocked_move()
-
-### Community 86 - "Community 86"
+### Community 78 - "Community 78"
 Cohesion: 0.36
 Nodes (7): load_manifest(), STRICT LAW: Every document listed in manifest.json must exist in the workspace., STRICT LAW: Mandatory docs must follow the structure required by the manifest., LAW: Documentation must have valid local links.     Broken links erode the truth, test_doc_header_compliance(), test_mandatory_doc_existence(), test_no_broken_internal_links()
 
-### Community 87 - "Community 87"
+### Community 79 - "Community 79"
+Cohesion: 0.25
+Nodes (7): Milestone A closure and structural compliance tests. - RPG-0002: kernel_phase_de, Milestone A Guard: Ensure no unacknowledged placeholders in core runtime.     Ga, Verify that all contractual files and classes exist., Verify the 6-phase authoritative order is the primary structure.     Checks that, test_closure_no_placeholders(), test_final_kernel_law_compliance(), test_milestone_a_structural_compliance()
+
+### Community 80 - "Community 80"
+Cohesion: 0.25
+Nodes (6): initial_state(), mock_profile(), Verify that post-tick hooks cannot influence the authoritative state.     We'll, Verify that the authoritative hash remains identical regardless of      non-auth, test_authoritative_hash_purity(), test_hook_isolation_from_authoritative_state()
+
+### Community 81 - "Community 81"
 Cohesion: 0.29
 Nodes (2): useSimulation(), MockEventSource
 
-### Community 88 - "Community 88"
+### Community 82 - "Community 82"
 Cohesion: 0.48
 Nodes (6): auto_equip(), get_gear_score(), _normalize_slot(), rank_item(), repair_equipment(), should_replace()
 
-### Community 89 - "Community 89"
+### Community 84 - "Community 84"
 Cohesion: 0.29
 Nodes (2): OccupancySnapshot, Stable per-tick read model for entity tile occupancy and tie-breaking priority.
 
-### Community 90 - "Community 90"
+### Community 85 - "Community 85"
 Cohesion: 0.33
 Nodes (6): _find_scenario(), generate(), ReadinessReportGenerator — Formats ProductionReadinessHarness results into a str, Generates a structured markdown production readiness report., Find a scenario result by name prefix., ReadinessReportGenerator
 
-### Community 91 - "Community 91"
+### Community 86 - "Community 86"
+Cohesion: 0.38
+Nodes (6): Compares the cost of different state snapshot mechanisms:     1. copy.deepcopy(s, CI-safe comparison of state snapshot mechanisms for small to medium entity count, Stress comparison of state snapshot mechanisms for massive entity counts (5,000+, _run_snapshot_benchmark(), test_api_snapshot_performance_comparison(), test_api_snapshot_performance_stress()
+
+### Community 87 - "Community 87"
 Cohesion: 0.29
 Nodes (6): Verify that a query for non-existent run ID returns a clean error and exits with, Verify that patterns sub-command prints clean error for missing file., Verify that path traversal attempts are blocked by security sanitization at CLI, test_cli_cognition_missing_run(), test_cli_cognition_patterns_missing(), test_cli_cognition_security_violation()
 
-### Community 92 - "Community 92"
+### Community 88 - "Community 88"
+Cohesion: 0.29
+Nodes (6): Only diagnostic or observational flags are permitted., Law: Contradictory config (REPLAY_ENABLED + 0KB buffer) MUST be rejected., Law: Forbidden operational flags MUST be rejected at startup., test_contradictory_replay_config(), test_hard_forbidden_flags(), test_safe_flags_allowed()
+
+### Community 89 - "Community 89"
 Cohesion: 0.29
 Nodes (6): Law: Incapacitated (frozen) actors must not evaluate strategic intent., Law: Incapacitated (stunned) actors must not evaluate strategic concerns., Law: Strategic evaluation must follow a strict 10-tick staggered frequency., test_frozen_actor_skips_strategic_intent(), test_staggered_frequency_distribution(), test_stunned_actor_skips_strategic_concerns()
 
-### Community 94 - "Community 94"
-Cohesion: 0.29
-Nodes (6): Verify that high trust reduces recruitment cost., Verify that high trust reduces recruitment cost., Verify that recruitment cost increases with candidate level., Verify that recruitment cost increases with candidate level., test_recruitment_cost_discount_with_trust(), test_recruitment_cost_scaling_with_level()
-
-### Community 95 - "Community 95"
+### Community 91 - "Community 91"
 Cohesion: 0.38
 Nodes (6): create_mock_entity(), Build a minimal valid combat-capable entity for combat positioning tests.      I, LAW: Bracketing bonus requires ACTIVE entities.     Inactive or dead entities sh, LAW:         Bracketing/flanking geometry requires hostile entities on opposite, test_bracketing_bonus_ignores_inactive_entities(), test_bracketing_bonus_requires_active_attackers()
 
-### Community 96 - "Community 96"
+### Community 92 - "Community 92"
 Cohesion: 0.29
 Nodes (6): STRICT LAW: Every oracle directory required for parity must contain a results.js, LAW: Oracle results.json must be valid JSON and follow the expected list-of-scen, LAW: High-priority Phase 5 scenarios must be present in the oracles., test_critical_parity_scenarios_presence(), test_oracle_artifact_existence(), test_oracle_schema_integrity()
 
-### Community 97 - "Community 97"
+### Community 93 - "Community 93"
 Cohesion: 0.29
 Nodes (6): Lock in the public entry points for authoritative systems., Lock in the public entry points for the engine domain., Lock in the public entry points for core state and updates., test_core_public_facades(), test_engine_public_facades(), test_system_public_facades()
 
-### Community 98 - "Community 98"
-Cohesion: 0.53
-Nodes (4): _execute_level_up(), get_unlocked_skills(), get_xp_required(), process_progression()
-
-### Community 100 - "Community 100"
-Cohesion: 0.33
-Nodes (3): Authoritative service for regional topology and point-of-interest logic., Authoritative service for regional topology and point-of-interest logic., RegionService
-
-### Community 101 - "Community 101"
-Cohesion: 0.53
-Nodes (5): make_class_entity(), Build a classed hero with explicit class loadout.      New builder rule:, test_mage_starting_gear(), test_rogue_starting_gear(), test_warrior_starting_gear()
-
-### Community 102 - "Community 102"
-Cohesion: 0.6
-Nodes (5): create_mock_entity(), test_base_profile_derivation(), test_determinism(), test_fatigue_penalty(), test_high_intelligence_scaling()
-
-### Community 103 - "Community 103"
+### Community 94 - "Community 94"
 Cohesion: 0.53
 Nodes (5): create_mock_entity(), create_mock_state(), test_interruption_resistance_margin(), test_project_continuity_resume_suspended(), test_project_lock()
 
-### Community 105 - "Community 105"
+### Community 95 - "Community 95"
+Cohesion: 0.53
+Nodes (4): _execute_level_up(), get_unlocked_skills(), get_xp_required(), process_progression()
+
+### Community 97 - "Community 97"
+Cohesion: 0.33
+Nodes (4): Invalidate cached plans based on dirty entity modifications., Invalidate cached plans based on dirty entity modifications., Invalidate cached plans based on dirty entity modifications., Purge all cached entries.
+
+### Community 98 - "Community 98"
+Cohesion: 0.33
+Nodes (3): Authoritative service for regional topology and point-of-interest logic., Authoritative service for regional topology and point-of-interest logic., RegionService
+
+### Community 99 - "Community 99"
+Cohesion: 0.6
+Nodes (5): create_mock_entity(), test_base_profile_derivation(), test_determinism(), test_fatigue_penalty(), test_high_intelligence_scaling()
+
+### Community 100 - "Community 100"
+Cohesion: 0.53
+Nodes (5): create_mock_entity_with_trust(), Build a hero with preconfigured source-trust entries.      New builder rule:, test_lead_capacity_limit(), test_lead_creation_with_trust(), test_lead_outcome_evaluation()
+
+### Community 102 - "Community 102"
 Cohesion: 0.47
 Nodes (5): create_base_integration_spec(), Verify that a compiled world can run for 10 ticks in the engine     without imme, Verify that invalid references in quests do not crash compilation     but yield, test_compiled_world_quest_warning_validation(), test_compiled_world_ticks_stability()
 
-### Community 107 - "Community 107"
+### Community 104 - "Community 104"
 Cohesion: 0.5
 Nodes (4): _analyze_checklist(), CertificationReporter, generate_report(), Generates the final V2 Authoritative Certification Report.
 
-### Community 108 - "Community 108"
+### Community 105 - "Community 105"
 Cohesion: 0.4
 Nodes (2): Handles serialization of AuthoritativeState to/from JSON.     Ensures that gamep, StateSerializer
 
-### Community 109 - "Community 109"
+### Community 106 - "Community 106"
 Cohesion: 0.4
 Nodes (2): EvolutionService, Handles entity transformation (e.g. Goblin -> Goblin Elite).
 
-### Community 110 - "Community 110"
+### Community 107 - "Community 107"
 Cohesion: 0.4
 Nodes (2): BreakthroughService, Handles special passive perks (Breakthroughs) earned at milestones.
 
-### Community 111 - "Community 111"
+### Community 108 - "Community 108"
 Cohesion: 0.4
 Nodes (2): CapacityService, Utility for enforcing collection limits based on priority or recency.     Logic
 
-### Community 112 - "Community 112"
+### Community 109 - "Community 109"
 Cohesion: 0.5
 Nodes (4): BuildingRegistry, get_services(), get_template(), Registry for static building data and service templates.
 
-### Community 114 - "Community 114"
+### Community 111 - "Community 111"
 Cohesion: 0.7
 Nodes (4): get_fingerprint(), _group_identity(), _inventory_identity(), _strategic_identity()
 
-### Community 115 - "Community 115"
+### Community 112 - "Community 112"
 Cohesion: 0.4
 Nodes (2): Handles public standing and witnessed behavior consequences., ReputationService
 
-### Community 116 - "Community 116"
+### Community 113 - "Community 113"
 Cohesion: 0.4
 Nodes (2): RouteFamilyClassifier classifies low-level trace events and ActionIntent logs, RouteFamilyClassifier
 
-### Community 117 - "Community 117"
+### Community 114 - "Community 114"
 Cohesion: 0.4
 Nodes (4): Verify WebSocket handshake and streaming in JSON mode., Verify WebSocket handshake and streaming in MessagePack mode., test_ws_json_handshake(), test_ws_msgpack_handshake()
 
-### Community 118 - "Community 118"
+### Community 115 - "Community 115"
 Cohesion: 0.4
 Nodes (4): Verify that GZip compression is working for large responses., Verify that V2 API responds with expected JSON shapes., test_api_compression(), test_api_rest_parity()
 
-### Community 119 - "Community 119"
+### Community 116 - "Community 116"
 Cohesion: 0.4
 Nodes (4): Verify live status and snapshot endpoints when manager is uninitialized., Verify live status and snapshot endpoints under running server., test_live_observability_endpoints(), test_live_observability_endpoints_idle()
 
-### Community 120 - "Community 120"
-Cohesion: 0.4
-Nodes (2): entity(), state()
-
-### Community 121 - "Community 121"
+### Community 117 - "Community 117"
 Cohesion: 0.4
 Nodes (4): Verify referential integrity across resources, enemies, and recipes in the seede, Verify registries successfully bootstrap Phase 1 seed content and support O(1) q, test_referential_integrity(), test_registry_bootstrap_and_lookups()
 
-### Community 122 - "Community 122"
-Cohesion: 0.7
-Nodes (4): create_mock_entity(), test_attack_vs_pursuit_intent(), test_retreat_behavior(), test_target_stickiness()
-
-### Community 123 - "Community 123"
+### Community 118 - "Community 118"
 Cohesion: 0.4
 Nodes (4): Scans src/ directory for forbidden 'import random' or 'from random import'., Scans src/ directory for forbidden numpy.random usage., test_rng_hygiene_no_global_random_in_src(), test_rng_hygiene_no_numpy_random_in_src()
 
-### Community 124 - "Community 124"
+### Community 119 - "Community 119"
 Cohesion: 0.4
 Nodes (4): Verify that a concrete class implementing the WarehouseAdapter interface can be, Verify that WarehouseAdapter cannot be directly instantiated because it is an ab, test_cannot_instantiate_base_warehouse_adapter(), test_concrete_subclass_instantiation()
 
-### Community 125 - "Community 125"
+### Community 120 - "Community 120"
 Cohesion: 0.7
 Nodes (4): apply_traceability(), find_func_in_dir(), parse_checklist(), update_python_file()
 
-### Community 126 - "Community 126"
+### Community 121 - "Community 121"
 Cohesion: 0.6
 Nodes (4): get_current_sha(), main(), Validates the certification bundle against the manifest requirements., validate_bundle()
 
-### Community 128 - "Community 128"
+### Community 123 - "Community 123"
 Cohesion: 0.67
 Nodes (2): get_points_to_next_rank(), process_points()
 
-### Community 129 - "Community 129"
+### Community 124 - "Community 124"
 Cohesion: 0.5
 Nodes (3): DifficultyMultipliers, Stat multipliers for a given difficulty tier., Stat multipliers for a given difficulty tier.
 
-### Community 130 - "Community 130"
+### Community 125 - "Community 125"
 Cohesion: 0.83
 Nodes (3): calculate_price(), get_item_base_value(), get_item_kind()
 
-### Community 131 - "Community 131"
+### Community 126 - "Community 126"
 Cohesion: 0.5
 Nodes (1): EntityState
 
-### Community 132 - "Community 132"
+### Community 127 - "Community 127"
 Cohesion: 0.67
 Nodes (3): create_mock_social_entity(), Verifies that update_familiarity produces a first-class bond record.     Logic I, test_social_bond_learning()
 
-### Community 135 - "Community 135"
+### Community 130 - "Community 130"
 Cohesion: 0.5
 Nodes (3): Verifies that the CertificationReporter pulls from real kernel results including, Verifies that the CertificationReporter pulls from real kernel results including, test_final_certification_report_generation()
 
-### Community 137 - "Community 137"
+### Community 132 - "Community 132"
+Cohesion: 0.67
+Nodes (3): Convert filename into safe stem.     Example:         optimization_implementat, slugify_filename(), split_milestones()
+
+### Community 133 - "Community 133"
+Cohesion: 0.67
+Nodes (3): cleanup(), get_processes(), Find all processes for the current user matching 'pytest' or 'ai_worker'.
+
+### Community 134 - "Community 134"
+Cohesion: 0.5
+Nodes (3): check_regression(), Compare current performance reports against committed baselines.     Returns Tru, Compare current performance reports against committed baselines.     Returns Tru
+
+### Community 135 - "Community 135"
 Cohesion: 0.67
 Nodes (3): Convert filename into safe stem.     Example:         optimization_implementat, slugify_filename(), split_milestones()
 
 ### Community 138 - "Community 138"
-Cohesion: 0.67
-Nodes (3): cleanup(), get_processes(), Find all processes for the current user matching 'pytest' or 'ai_worker'.
+Cohesion: 1.0
+Nodes (2): determine_lod(), should_execute()
 
 ### Community 139 - "Community 139"
-Cohesion: 0.5
-Nodes (3): check_regression(), Compare current performance reports against committed baselines.     Returns Tru, Compare current performance reports against committed baselines.     Returns Tru
-
-### Community 140 - "Community 140"
-Cohesion: 0.67
-Nodes (3): Convert filename into safe stem.     Example:         optimization_implementat, slugify_filename(), split_milestones()
-
-### Community 145 - "Community 145"
 Cohesion: 0.67
 Nodes (1): TestConflict
 
-### Community 146 - "Community 146"
+### Community 140 - "Community 140"
 Cohesion: 1.0
 Nodes (2): main(), run_command()
 
-### Community 147 - "Community 147"
+### Community 141 - "Community 141"
 Cohesion: 0.67
 Nodes (2): pytest_collection_modifyitems(), Enforces taxonomy markers for all tests in tests/parity/.     Also enforces 'id'
 
-### Community 148 - "Community 148"
+### Community 142 - "Community 142"
 Cohesion: 0.67
 Nodes (2): Exhaustively verify WebSocket live events API handshake, filtering, heartbeats,, test_observability_websocket_suite()
 
-### Community 149 - "Community 149"
+### Community 143 - "Community 143"
 Cohesion: 0.67
 Nodes (2): Verify live entity inspection endpoints under a running server., test_live_entity_inspection()
 
-### Community 150 - "Community 150"
+### Community 144 - "Community 144"
 Cohesion: 0.67
 Nodes (2): Exhaustively verify Live Health, Observatory UI, and redirection endpoints., test_live_health_api_suite()
 
-### Community 151 - "Community 151"
-Cohesion: 0.67
-Nodes (2): Verify that state.py does not import from export or diagnostic modules., test_hotpath_purity()
-
-### Community 152 - "Community 152"
-Cohesion: 0.67
-Nodes (2): Verify that different roles bias toward different project kinds., test_role_identity_biasing()
-
-### Community 153 - "Community 153"
-Cohesion: 0.67
-Nodes (3): Logic ID: SOC-194 (Private betrayal can override public reputation)     Logic ID, Logic ID: SOC-194 (Private betrayal can override public reputation)     Logic ID, test_betrayal_consequences()
-
-### Community 154 - "Community 154"
+### Community 145 - "Community 145"
 Cohesion: 1.0
 Nodes (2): create_mock_entity(), test_target_selection_priority()
 
-### Community 156 - "Community 156"
+### Community 147 - "Community 147"
 Cohesion: 0.67
 Nodes (2): Ensures that simulation phases, systems, and AI modules do not directly access, test_no_direct_dirtyset_candidate_selection_outside_selector()
 
-### Community 157 - "Community 157"
+### Community 148 - "Community 148"
 Cohesion: 0.67
 Nodes (2): Verify WebSocket connection, handshake, and receipt of initial timeline buffer., test_ws_events_stream()
 
-### Community 158 - "Community 158"
+### Community 149 - "Community 149"
 Cohesion: 0.67
 Nodes (2): Run identical multi-tick scenarios with dynamic phase skipping enabled versus di, test_phase_skip_parity()
 
-### Community 159 - "Community 159"
+### Community 150 - "Community 150"
 Cohesion: 0.67
 Nodes (2): Simulate 2,000 ticks and verify:     1. Determinism (Identical hash on repeat), test_long_run_stability()
 
-### Community 161 - "Community 161"
+### Community 152 - "Community 152"
 Cohesion: 0.67
 Nodes (2): generate_report(), Generate a summary performance report from the matrix JSON results.     M5 Law:
 
-### Community 162 - "Community 162"
+### Community 153 - "Community 153"
 Cohesion: 0.67
 Nodes (1): Foo
 
-### Community 163 - "Community 163"
+### Community 154 - "Community 154"
 Cohesion: 0.67
 Nodes (1): GoalScore
 
-### Community 169 - "Community 169"
+### Community 160 - "Community 160"
 Cohesion: 1.0
 Nodes (1): ClassDefinition
 
-### Community 170 - "Community 170"
+### Community 161 - "Community 161"
 Cohesion: 1.0
 Nodes (1): Compatibility wrapper.  Public import path:     from src.systems.strategic impor
 
-### Community 171 - "Community 171"
+### Community 162 - "Community 162"
 Cohesion: 1.0
 Nodes (1): Phase 8 — Advanced Simulation Understanding package.  Provides post-run simulati
 
-### Community 172 - "Community 172"
+### Community 163 - "Community 163"
 Cohesion: 1.0
 Nodes (1): Cognition Graph Observability package.
 
-### Community 201 - "Community 201"
+### Community 192 - "Community 192"
 Cohesion: 1.0
 Nodes (1): Calculate a gear score for an item based on entity class.          Only weapons
 
-### Community 202 - "Community 202"
+### Community 193 - "Community 193"
 Cohesion: 1.0
 Nodes (1): Compatibility scoring API.          Older code/tests may call:              Equi
 
-### Community 203 - "Community 203"
+### Community 194 - "Community 194"
 Cohesion: 1.0
 Nodes (1): Determine whether a candidate item should replace the currently equipped
 
-### Community 204 - "Community 204"
+### Community 195 - "Community 195"
 Cohesion: 1.0
 Nodes (1): Scan inventory for better equipment and return an EntityUpdate if any         sl
 
-### Community 205 - "Community 205"
+### Community 196 - "Community 196"
 Cohesion: 1.0
 Nodes (1): Return an EquipmentUpdate that restores durability for one equipped slot.
 
-### Community 206 - "Community 206"
+### Community 197 - "Community 197"
 Cohesion: 1.0
 Nodes (1): Normalize registry slot metadata into EquipSlot.          Supports:
 
-### Community 207 - "Community 207"
+### Community 198 - "Community 198"
 Cohesion: 1.0
 Nodes (1): Derive a DirtySet from a StateUpdate.         M3 Law: This must be deterministic
 
-### Community 208 - "Community 208"
+### Community 199 - "Community 199"
 Cohesion: 1.0
 Nodes (1): Law: Critical work is never deferrable.
 
-### Community 209 - "Community 209"
+### Community 200 - "Community 200"
 Cohesion: 1.0
 Nodes (1): Aggregates data into a JSON report.
 
-### Community 210 - "Community 210"
+### Community 201 - "Community 201"
 Cohesion: 1.0
 Nodes (1): Scans the checklist for [x] VERIFIED v2 markers.
 
-### Community 212 - "Community 212"
+### Community 203 - "Community 203"
 Cohesion: 1.0
 Nodes (1): Calculate total weight of all items in inventory.
 
-### Community 213 - "Community 213"
+### Community 204 - "Community 204"
 Cohesion: 1.0
 Nodes (1): Check if an item can be added without exceeding slots or weight.         Logic I
 
-### Community 214 - "Community 214"
+### Community 205 - "Community 205"
 Cohesion: 1.0
 Nodes (1): Check if a list of item stacks can be added without exceeding slots or weight.
 
-### Community 215 - "Community 215"
+### Community 206 - "Community 206"
 Cohesion: 1.0
 Nodes (1): Check capacity after accounting for item removals (Phase 8).
 
-### Community 216 - "Community 216"
+### Community 207 - "Community 207"
 Cohesion: 1.0
 Nodes (1): Check if an item can be equipped in the specified slot.
 
-### Community 217 - "Community 217"
+### Community 208 - "Community 208"
 Cohesion: 1.0
 Nodes (1): Apply authoritative updates to inventory, merging stacks and enforcing limits.
 
-### Community 218 - "Community 218"
+### Community 209 - "Community 209"
 Cohesion: 1.0
 Nodes (1): Return a fully default empty self-model bundle.
 
-### Community 219 - "Community 219"
+### Community 210 - "Community 210"
 Cohesion: 1.0
 Nodes (1): Validates an intent and produces the necessary updates.
 
-### Community 220 - "Community 220"
+### Community 211 - "Community 211"
 Cohesion: 1.0
 Nodes (1): Verify a batch of packets for identity uniqueness and canonical context.
 
-### Community 221 - "Community 221"
+### Community 212 - "Community 212"
 Cohesion: 1.0
 Nodes (1): Verify results against their source packets and enforce Option A.
 
-### Community 222 - "Community 222"
+### Community 213 - "Community 213"
 Cohesion: 1.0
 Nodes (1): Milestone D Law: Property-based access to the canonical neighbor view.
 
-### Community 223 - "Community 223"
+### Community 214 - "Community 214"
 Cohesion: 1.0
 Nodes (1): Get the authoritative priority for a work class.
 
-### Community 226 - "Community 226"
+### Community 217 - "Community 217"
 Cohesion: 1.0
 Nodes (1): Thread-safe access to the latest completed tick state.
 
-### Community 227 - "Community 227"
+### Community 218 - "Community 218"
 Cohesion: 1.0
 Nodes (1): Returns the set of entity IDs that were modified across any simulation domain.
 
-### Community 229 - "Community 229"
+### Community 220 - "Community 220"
 Cohesion: 1.0
 Nodes (1): Summarized world view.
 
-### Community 230 - "Community 230"
+### Community 221 - "Community 221"
 Cohesion: 1.0
 Nodes (1): Complete inspectable world view.
 
-### Community 231 - "Community 231"
+### Community 222 - "Community 222"
 Cohesion: 1.0
 Nodes (1): Detailed entity model.
 
-### Community 232 - "Community 232"
+### Community 223 - "Community 223"
 Cohesion: 1.0
 Nodes (1): Detailed regional model.
 
-### Community 238 - "Community 238"
+### Community 229 - "Community 229"
 Cohesion: 1.0
 Nodes (1): Calculate the effective power of a skill based on entity attributes.         Fol
 
-### Community 239 - "Community 239"
+### Community 230 - "Community 230"
 Cohesion: 1.0
 Nodes (1): Calculate passive bonus (e.g. evasion, crit) from passive skills.
 
-### Community 240 - "Community 240"
+### Community 231 - "Community 231"
 Cohesion: 1.0
 Nodes (1): Returns the new kind if evolution is possible.
 
-### Community 241 - "Community 241"
+### Community 232 - "Community 232"
 Cohesion: 1.0
 Nodes (1): Returns equipment for the new form.
 
-### Community 242 - "Community 242"
+### Community 233 - "Community 233"
 Cohesion: 1.0
 Nodes (1): Points required to reach the next veterancy rank.         Formula: 10 * (2 ** ra
 
-### Community 243 - "Community 243"
+### Community 234 - "Community 234"
 Cohesion: 1.0
 Nodes (1): Combat bonus multiplier based on rank.         Each rank provides +5% to physica
 
-### Community 244 - "Community 244"
+### Community 235 - "Community 235"
 Cohesion: 1.0
 Nodes (1): Authoritatively add points and handle rank-ups.
 
-### Community 245 - "Community 245"
+### Community 236 - "Community 236"
 Cohesion: 1.0
 Nodes (1): Calculate XP required to REACH the next level.         Formula: 100 * (level **
 
-### Community 246 - "Community 246"
+### Community 237 - "Community 237"
 Cohesion: 1.0
 Nodes (1): Authoritative entry point for progression updates.         Handles XP accumulati
 
-### Community 247 - "Community 247"
+### Community 238 - "Community 238"
 Cohesion: 1.0
 Nodes (1): Returns skills that unlock at a specific level.
 
-### Community 248 - "Community 248"
+### Community 239 - "Community 239"
 Cohesion: 1.0
 Nodes (1): Handles the actual level-up state change.
 
-### Community 249 - "Community 249"
+### Community 240 - "Community 240"
 Cohesion: 1.0
 Nodes (1): Derive combat stats from attributes, equipment, and passive skills.         VERI
 
-### Community 251 - "Community 251"
+### Community 242 - "Community 242"
 Cohesion: 1.0
 Nodes (1): In a real implementation, this might return a derived stat proxy.         For Ph
 
-### Community 252 - "Community 252"
+### Community 243 - "Community 243"
 Cohesion: 1.0
 Nodes (1): Construct a PerfResult from the dictionary returned by BenchHarness.run_benchmar
 
-### Community 253 - "Community 253"
+### Community 244 - "Community 244"
 Cohesion: 1.0
 Nodes (1): Comprehensive pass/fail proof evaluation.         M10 Law: Returns (conformance_
 
-### Community 254 - "Community 254"
+### Community 245 - "Community 245"
 Cohesion: 1.0
 Nodes (1): CLASS_A: >= 16 Cores AND >= 32GB RAM         CLASS_B: >= 4 Cores AND >= 8GB RAM
 
-### Community 255 - "Community 255"
+### Community 246 - "Community 246"
 Cohesion: 1.0
 Nodes (1): Capture host environment metadata.
 
-### Community 256 - "Community 256"
+### Community 247 - "Community 247"
 Cohesion: 1.0
 Nodes (1): Inject a large number of entities to stress memory.
 
-### Community 257 - "Community 257"
+### Community 248 - "Community 248"
 Cohesion: 1.0
 Nodes (1): Inject work debt to stress the governor.
 
-### Community 258 - "Community 258"
+### Community 249 - "Community 249"
 Cohesion: 1.0
 Nodes (1): Setup a balanced team battle on opposite sides of a 20x20 area.
 
-### Community 259 - "Community 259"
+### Community 250 - "Community 250"
 Cohesion: 1.0
 Nodes (1): Setup a hero vs monster fight to verify XP, Gold, and Mortality.
 
-### Community 260 - "Community 260"
+### Community 251 - "Community 251"
 Cohesion: 1.0
 Nodes (1): Setup a hero dying to verify rebirth/permadeath.
 
-### Community 261 - "Community 261"
+### Community 252 - "Community 252"
 Cohesion: 1.0
 Nodes (1): Setup a flanking scenario for tactical bonus verification.
 
-### Community 262 - "Community 262"
+### Community 253 - "Community 253"
 Cohesion: 1.0
 Nodes (1): Setup a synergy scenario for social bond verification.
 
-### Community 263 - "Community 263"
+### Community 254 - "Community 254"
 Cohesion: 1.0
 Nodes (1): Setup a hero with a HUNT quest against a specific monster kind.
 
-### Community 264 - "Community 264"
+### Community 255 - "Community 255"
 Cohesion: 1.0
 Nodes (1): Setup regional control test: Hero vs Monster in a named region.
 
-### Community 265 - "Community 265"
+### Community 256 - "Community 256"
 Cohesion: 1.0
 Nodes (1): Register all authoritative test scenarios.
 
-### Community 266 - "Community 266"
+### Community 257 - "Community 257"
 Cohesion: 1.0
 Nodes (1): Setup an entity moving in a straight line.
 
-### Community 267 - "Community 267"
+### Community 258 - "Community 258"
 Cohesion: 1.0
 Nodes (1): Setup an entity harvesting a resource node.
 
-### Community 268 - "Community 268"
+### Community 259 - "Community 259"
 Cohesion: 1.0
 Nodes (1): Autonomous Progression Loop:          1. Entity at Town (0,0) wants to craft a s
 
-### Community 270 - "Community 270"
+### Community 261 - "Community 261"
 Cohesion: 1.0
 Nodes (1): Enforces mode-specific required fields directly during Pydantic instantiation.
 
-### Community 271 - "Community 271"
+### Community 262 - "Community 262"
 Cohesion: 1.0
 Nodes (1): Performs a differential analysis comparing mutated_metrics against baseline_metr
 
-### Community 272 - "Community 272"
+### Community 263 - "Community 263"
 Cohesion: 1.0
 Nodes (1): Serializes and writes the balance comparison report to:         - balance_compar
 
-### Community 273 - "Community 273"
+### Community 264 - "Community 264"
 Cohesion: 1.0
 Nodes (1): Evaluates a sequence of metamorphic rules against the loaded variant metrics col
 
-### Community 275 - "Community 275"
+### Community 266 - "Community 266"
 Cohesion: 1.0
 Nodes (1): Create a new lead if within capacity limits.         Certainty is derived from s
 
-### Community 276 - "Community 276"
+### Community 267 - "Community 267"
 Cohesion: 1.0
 Nodes (1): Update lead state based on a test/investigation outcome.
 
-### Community 277 - "Community 277"
+### Community 268 - "Community 268"
 Cohesion: 1.0
 Nodes (1): Identify keys to remove to satisfy max_size.         Drops items with the lowest
 
-### Community 278 - "Community 278"
+### Community 269 - "Community 269"
 Cohesion: 1.0
 Nodes (1): Trim a list to max_size.          If score_func is provided, drops lowest scores
 
-### Community 279 - "Community 279"
+### Community 270 - "Community 270"
 Cohesion: 1.0
 Nodes (1): Derive strategic limits from entity attributes, needs, and personality.
 
-### Community 280 - "Community 280"
+### Community 271 - "Community 271"
 Cohesion: 1.0
 Nodes (1): Reset biological debt and apply 'well-rested' status.         Cost: 10 gold.
 
-### Community 281 - "Community 281"
+### Community 272 - "Community 272"
 Cohesion: 1.0
 Nodes (1): Entity crafts an item using materials.
 
-### Community 282 - "Community 282"
+### Community 273 - "Community 273"
 Cohesion: 1.0
 Nodes (1): Move item from entity inventory to their home storage.
 
-### Community 283 - "Community 283"
+### Community 274 - "Community 274"
 Cohesion: 1.0
 Nodes (1): Move item from home storage to entity inventory.
 
-### Community 284 - "Community 284"
+### Community 275 - "Community 275"
 Cohesion: 1.0
 Nodes (1): Private rest (Free, but only reduces debt by 40%).
 
-### Community 285 - "Community 285"
+### Community 276 - "Community 276"
 Cohesion: 1.0
 Nodes (1): Upgrade home to resolve maintenance blockers.         Cost: 100 gold.
 
-### Community 286 - "Community 286"
+### Community 277 - "Community 277"
 Cohesion: 1.0
 Nodes (1): Scan world state and provide 1-2 new strategic leads.         Deterministic: Use
 
-### Community 287 - "Community 287"
+### Community 278 - "Community 278"
 Cohesion: 1.0
 Nodes (1): Reduce building HP based on entity ATK.         Requires proximity (distance < 5
 
-### Community 288 - "Community 288"
+### Community 279 - "Community 279"
 Cohesion: 1.0
 Nodes (1): Find the closest functional building of the requested kind.
 
-### Community 289 - "Community 289"
+### Community 280 - "Community 280"
 Cohesion: 1.0
 Nodes (1): Simple check if entity is within town radius (landmark based).
 
-### Community 290 - "Community 290"
+### Community 281 - "Community 281"
 Cohesion: 1.0
 Nodes (1): Entity buys item from a nearby shop.
 
-### Community 291 - "Community 291"
+### Community 282 - "Community 282"
 Cohesion: 1.0
 Nodes (1): Entity sells item to a nearby shop.
 
-### Community 292 - "Community 292"
+### Community 283 - "Community 283"
 Cohesion: 1.0
 Nodes (1): Train a specific skill/recipe.         Cost: 50 gold.         Resolves 'capabili
 
-### Community 293 - "Community 293"
+### Community 284 - "Community 284"
 Cohesion: 1.0
 Nodes (1): Deterministic expansion of WorldTemplateSpec into WorldSpec.
 
-### Community 294 - "Community 294"
+### Community 285 - "Community 285"
 Cohesion: 1.0
 Nodes (1): Compile the given WorldSpec into a fully populated AuthoritativeState.
 
-### Community 296 - "Community 296"
+### Community 287 - "Community 287"
 Cohesion: 1.0
 Nodes (1): Produce NeedInterpretationComponent.          Args:             entity:
 
-### Community 297 - "Community 297"
+### Community 288 - "Community 288"
 Cohesion: 1.0
 Nodes (1): Orchestrates self-model update with dirty checking.                  Args:
 
-### Community 298 - "Community 298"
+### Community 289 - "Community 289"
 Cohesion: 1.0
 Nodes (1): Produce CapabilityEstimateComponent scoped to the provided context.          Arg
 
-### Community 299 - "Community 299"
+### Community 290 - "Community 290"
 Cohesion: 1.0
 Nodes (1): Merge an InformationResponse into an updated KnowledgeModelComponent.          S
 
-### Community 300 - "Community 300"
+### Community 291 - "Community 291"
 Cohesion: 1.0
 Nodes (1): Produce SelfAwarenessComponent from entity's raw state.          Args:
 
-### Community 302 - "Community 302"
+### Community 293 - "Community 293"
+Cohesion: 1.0
+Nodes (1): Generate candidate RouteOption instances for the given entity.         Capped to
+
+### Community 294 - "Community 294"
+Cohesion: 1.0
+Nodes (1): Return the ProjectKind and ObjectiveKind for the given RouteFamily.         Rais
+
+### Community 295 - "Community 295"
+Cohesion: 1.0
+Nodes (1): Produce deterministic ProjectState and ObjectiveState instances based         on
+
+### Community 296 - "Community 296"
+Cohesion: 1.0
+Nodes (1): Evaluate candidates, score them using Personality biased heuristics,         and
+
+### Community 297 - "Community 297"
+Cohesion: 1.0
+Nodes (1): Evaluate eligible heroes on the current tick, execute subjective routing,
+
+### Community 298 - "Community 298"
+Cohesion: 1.0
+Nodes (1): Calculate subjective score for the route option and return updated option.
+
+### Community 299 - "Community 299"
+Cohesion: 1.0
+Nodes (1): Generate the adapted ActionIntent corresponding to the objective state.
+
+### Community 300 - "Community 300"
 Cohesion: 1.0
 Nodes (1): Standard compaction entry point returning the optimized StateUpdate.
 
-### Community 303 - "Community 303"
+### Community 301 - "Community 301"
 Cohesion: 1.0
 Nodes (1): Compacts the StateUpdate and returns both the optimized update and detailed redu
 
-### Community 304 - "Community 304"
+### Community 302 - "Community 302"
 Cohesion: 1.0
 Nodes (1): Evaluate a move intent and produce an authoritative update dictionary.         I
 
-### Community 305 - "Community 305"
+### Community 303 - "Community 303"
 Cohesion: 1.0
 Nodes (1): Analyze current state and produce metrics snapshot.
 
-### Community 306 - "Community 306"
+### Community 304 - "Community 304"
 Cohesion: 1.0
 Nodes (1): Detect significant shifts in global strategy or dynamics.
 
-### Community 307 - "Community 307"
+### Community 305 - "Community 305"
 Cohesion: 1.0
 Nodes (1): Check EXPLORE quests for proximity to target.
 
-### Community 308 - "Community 308"
+### Community 306 - "Community 306"
 Cohesion: 1.0
 Nodes (1): Advance HUNT quests when an enemy is defeated.
 
-### Community 309 - "Community 309"
+### Community 307 - "Community 307"
 Cohesion: 1.0
 Nodes (1): Enforces quest completion rules and emits authoritative reward intents.
 
-### Community 310 - "Community 310"
+### Community 308 - "Community 308"
 Cohesion: 1.0
 Nodes (1): Refine the proposed update according to authoritative interaction laws.
 
-### Community 311 - "Community 311"
+### Community 309 - "Community 309"
 Cohesion: 1.0
 Nodes (1): Finds the nearest walkable tile that has NO line of sight to the threat.
 
-### Community 312 - "Community 312"
+### Community 310 - "Community 310"
 Cohesion: 1.0
 Nodes (1): Identifies 'chokepoints' (1-tile gaps between walls) within a radius.
 
-### Community 313 - "Community 313"
+### Community 311 - "Community 311"
 Cohesion: 1.0
 Nodes (1): Calculates a position to 'bracket' the target (opposite side from the ally).
 
-### Community 314 - "Community 314"
+### Community 312 - "Community 312"
 Cohesion: 1.0
 Nodes (1): Calculates a position to intercept a moving target.         If target has a navi
 
-### Community 315 - "Community 315"
+### Community 313 - "Community 313"
 Cohesion: 1.0
 Nodes (1): Finds a position to guard the 'ward' entity.         Prefer a position between t
 
-### Community 316 - "Community 316"
+### Community 314 - "Community 314"
 Cohesion: 1.0
 Nodes (1): Check for evolution triggers (level cap or XP thresholds) and apply transformati
 
-### Community 317 - "Community 317"
+### Community 315 - "Community 315"
 Cohesion: 1.0
 Nodes (1): Determines the next semantic stage for an entity kind.
 
-### Community 318 - "Community 318"
+### Community 316 - "Community 316"
 Cohesion: 1.0
 Nodes (1): Builds the comprehensive execution plan.
 
-### Community 319 - "Community 319"
+### Community 317 - "Community 317"
 Cohesion: 1.0
 Nodes (1): Refine the proposed update according to crafting and knowledge laws.         Log
 
-### Community 320 - "Community 320"
+### Community 318 - "Community 318"
 Cohesion: 1.0
 Nodes (1): Processes all ResourceTransferIntents for all entities in the update.         VE
 
-### Community 321 - "Community 321"
+### Community 319 - "Community 319"
 Cohesion: 1.0
 Nodes (1): Helper to merge all contingent updates from a transaction result into an entity
 
-### Community 322 - "Community 322"
+### Community 320 - "Community 320"
 Cohesion: 1.0
 Nodes (1): Helper to apply world side effects from a successful resolution.
 
-### Community 323 - "Community 323"
+### Community 321 - "Community 321"
 Cohesion: 1.0
 Nodes (1): Determines whether a specific phase should be executed for the current tick.
 
-### Community 324 - "Community 324"
+### Community 322 - "Community 322"
 Cohesion: 1.0
 Nodes (1): Returns a spatial index of active/alive entities.
 
-### Community 325 - "Community 325"
+### Community 323 - "Community 323"
 Cohesion: 1.0
 Nodes (1): Calculates Manhattan distance between two points.         Logic ID: COMB-001 (Ma
 
-### Community 326 - "Community 326"
+### Community 324 - "Community 324"
 Cohesion: 1.0
 Nodes (1): Returns the region containing the given position.
 
-### Community 327 - "Community 327"
+### Community 325 - "Community 325"
 Cohesion: 1.0
 Nodes (1): V2 Authoritative Occupancy Rule:         Enforces Static Terrain (WALL), Buildin
 
-### Community 328 - "Community 328"
+### Community 326 - "Community 326"
 Cohesion: 1.0
 Nodes (1): Checks if the current region suppresses specific actions and enforces actor vali
 
-### Community 329 - "Community 329"
+### Community 327 - "Community 327"
 Cohesion: 1.0
 Nodes (1): Action Readiness Law: Every ENTITY_ACT requires 100.0 readiness.         Logic I
 
-### Community 330 - "Community 330"
+### Community 328 - "Community 328"
 Cohesion: 1.0
 Nodes (1): V2 Authoritative Movement Law:         Validates if entity has enough readiness
 
-### Community 331 - "Community 331"
+### Community 329 - "Community 329"
 Cohesion: 1.0
 Nodes (1): Authoritative validation for a combat interaction.         Logic ID: COMB-004 (M
 
-### Community 332 - "Community 332"
+### Community 330 - "Community 330"
 Cohesion: 1.0
 Nodes (1): Validation for Area-of-Effect positioning and execution.         Logic ID: COMB-
 
-### Community 333 - "Community 333"
+### Community 331 - "Community 331"
 Cohesion: 1.0
 Nodes (1): Pillar 8: Skill Execution Law.         Skills require cost and cooldown verifica
 
-### Community 334 - "Community 334"
+### Community 332 - "Community 332"
 Cohesion: 1.0
 Nodes (1): Simple Bresenham-like LoS check for WALL/Building obstructions.
 
-### Community 335 - "Community 335"
+### Community 333 - "Community 333"
 Cohesion: 1.0
 Nodes (1): Verify if attacker has clear elevation advantage (Terrain-based).
 
-### Community 336 - "Community 336"
+### Community 334 - "Community 334"
 Cohesion: 1.0
 Nodes (1): Returns the current engagement record for an entity.
 
-### Community 337 - "Community 337"
+### Community 335 - "Community 335"
 Cohesion: 1.0
 Nodes (1): Authoritative geometric flanking check.         Returns: (is_flanked, is_surroun
 
-### Community 338 - "Community 338"
+### Community 336 - "Community 336"
 Cohesion: 1.0
 Nodes (1): Verify if defender is behind wall cover relative to attacker.         Logic ID:
 
-### Community 339 - "Community 339"
+### Community 337 - "Community 337"
 Cohesion: 1.0
 Nodes (1): Calculate movement/tie-breaking priority.
 
-### Community 340 - "Community 340"
+### Community 338 - "Community 338"
 Cohesion: 1.0
 Nodes (1): Find hostile entities currently in melee engagement with this entity.
 
-### Community 341 - "Community 341"
+### Community 339 - "Community 339"
 Cohesion: 1.0
 Nodes (1): Find hostile entities that would be in melee engagement with this entity at a hy
 
-### Community 342 - "Community 342"
+### Community 340 - "Community 340"
 Cohesion: 1.0
 Nodes (1): Return the ID of the entity occupying the specified tile.
 
-### Community 343 - "Community 343"
+### Community 341 - "Community 341"
 Cohesion: 1.0
 Nodes (1): Singular entry point for authoritative state transition refinement.         Logi
 
-### Community 344 - "Community 344"
+### Community 342 - "Community 342"
 Cohesion: 1.0
 Nodes (1): Hardening Phase: Ensure DirtySet is always current.         Logic ID: PERF-006-R
 
-### Community 345 - "Community 345"
+### Community 343 - "Community 343"
 Cohesion: 1.0
 Nodes (1): Calculates the LOD level for an entity based on its distance to focus points.
 
-### Community 346 - "Community 346"
+### Community 344 - "Community 344"
 Cohesion: 1.0
 Nodes (1): Determines if the entity should execute its behavior this tick based on its LOD.
 
-### Community 347 - "Community 347"
+### Community 345 - "Community 345"
 Cohesion: 1.0
 Nodes (1): The root entry point for advancing the world state.         Milestone 14: Precom
 
-### Community 348 - "Community 348"
+### Community 346 - "Community 346"
 Cohesion: 1.0
 Nodes (1): Compatibility wrapper for apply_partial.
 
+### Community 347 - "Community 347"
+Cohesion: 1.0
+Nodes (1): Compatibility wrapper for ActionRoutingPhase.
+
+### Community 348 - "Community 348"
+Cohesion: 1.0
+Nodes (1): Compatibility wrapper for ActionRoutingPhase.
+
 ### Community 349 - "Community 349"
-Cohesion: 1.0
-Nodes (1): Compatibility wrapper for ActionRoutingPhase.
-
-### Community 350 - "Community 350"
-Cohesion: 1.0
-Nodes (1): Compatibility wrapper for ActionRoutingPhase.
-
-### Community 351 - "Community 351"
 Cohesion: 1.0
 Nodes (1): Authoritative mapping from EntityUpdate to changes dict.         Merged v5 logic
 
-### Community 352 - "Community 352"
+### Community 350 - "Community 350"
 Cohesion: 1.0
 Nodes (1): Low-level reconstruction bypasses frozen dataclass __init__ overhead.
 
-### Community 353 - "Community 353"
+### Community 351 - "Community 351"
 Cohesion: 1.0
 Nodes (1): Detect entities in town and apply general passive laws (Healing).         Also h
 
-### Community 354 - "Community 354"
+### Community 352 - "Community 352"
 Cohesion: 1.0
 Nodes (1): Pillar 3: Fractional Armor Mitigation         Formula: damage = (atk * atk_mult)
 
-### Community 355 - "Community 355"
+### Community 353 - "Community 353"
 Cohesion: 1.0
 Nodes (1): Calculates all tactical multipliers for an attack.         Consolidated from res
 
-### Community 356 - "Community 356"
+### Community 354 - "Community 354"
 Cohesion: 1.0
 Nodes (1): Phase 8: Calculate durability loss for attacker and defender.
 
-### Community 357 - "Community 357"
+### Community 355 - "Community 355"
 Cohesion: 1.0
 Nodes (1): Resolves multiple attackers hitting a single defender in the same tick.
 
-### Community 358 - "Community 358"
+### Community 356 - "Community 356"
 Cohesion: 1.0
 Nodes (1): Calculates and returns a WoundUpdate if damage is sufficient.
 
-### Community 359 - "Community 359"
+### Community 357 - "Community 357"
 Cohesion: 1.0
 Nodes (1): Determines the next tactical intent for an entity.         Bounded to local visi
 
-### Community 360 - "Community 360"
+### Community 358 - "Community 358"
 Cohesion: 1.0
 Nodes (1): Public helper for deterministic target selection.         Matches legacy 'Tactic
 
-### Community 361 - "Community 361"
+### Community 359 - "Community 359"
 Cohesion: 1.0
 Nodes (1): Produce a SHA256 hash of the compact canonical JSON representation.
 
-### Community 362 - "Community 362"
+### Community 360 - "Community 360"
 Cohesion: 1.0
 Nodes (1): Convert AuthoritativeState into a canonical JSON representation.
 
-### Community 363 - "Community 363"
+### Community 361 - "Community 361"
 Cohesion: 1.0
 Nodes (1): Convert AuthoritativeState into a sortable dictionary structure.
 
-### Community 364 - "Community 364"
+### Community 362 - "Community 362"
 Cohesion: 1.0
 Nodes (1): Scores neighbors and returns the most salient ones.
 
-### Community 365 - "Community 365"
+### Community 363 - "Community 363"
 Cohesion: 1.0
 Nodes (1): Calculates Panic and Aggression levels.
 
-### Community 366 - "Community 366"
+### Community 364 - "Community 364"
 Cohesion: 1.0
 Nodes (1): Policy Waterfall according to Milestone 5/6 Degradation Matrix.
 
-### Community 367 - "Community 367"
+### Community 365 - "Community 365"
 Cohesion: 1.0
 Nodes (1): Max stamina = 50 + endurance * 5.
 
-### Community 368 - "Community 368"
+### Community 366 - "Community 366"
 Cohesion: 1.0
 Nodes (1): Returns the stamina cost for an attack action.
 
-### Community 369 - "Community 369"
+### Community 367 - "Community 367"
 Cohesion: 1.0
 Nodes (1): Returns the stamina cost for a movement action.
 
-### Community 370 - "Community 370"
+### Community 368 - "Community 368"
 Cohesion: 1.0
 Nodes (1): Returns the stamina cost for a harvest tick.
 
-### Community 371 - "Community 371"
+### Community 369 - "Community 369"
 Cohesion: 1.0
 Nodes (1): Returns the stamina cost for using a skill.
 
-### Community 372 - "Community 372"
+### Community 370 - "Community 370"
 Cohesion: 1.0
 Nodes (1): Check if entity has enough stamina for a skill.
 
-### Community 373 - "Community 373"
+### Community 371 - "Community 371"
 Cohesion: 1.0
 Nodes (1): Check if entity is in exhaustion state.
 
-### Community 374 - "Community 374"
+### Community 372 - "Community 372"
 Cohesion: 1.0
 Nodes (1): Combat damage multiplier when exhausted.
 
-### Community 375 - "Community 375"
+### Community 373 - "Community 373"
 Cohesion: 1.0
 Nodes (1): Check if a single hit is massive enough to cause a wound.
 
-### Community 376 - "Community 376"
+### Community 374 - "Community 374"
 Cohesion: 1.0
 Nodes (1): Create a wound record from a massive hit.
 
-### Community 377 - "Community 377"
+### Community 375 - "Community 375"
 Cohesion: 1.0
 Nodes (1): Sum all active (unhealed) wound penalties.
 
-### Community 378 - "Community 378"
+### Community 376 - "Community 376"
 Cohesion: 1.0
 Nodes (1): Sum all permanent scar penalties (lesser than wounds).
 
-### Community 379 - "Community 379"
+### Community 377 - "Community 377"
 Cohesion: 1.0
 Nodes (1): Heal a wound and create a scar. Returns (healed_wound, scar).
 
-### Community 380 - "Community 380"
+### Community 378 - "Community 378"
 Cohesion: 1.0
 Nodes (1): Check if entity is beyond its leash radius.         VERIFIED v2: mob_leash_radiu
 
-### Community 381 - "Community 381"
+### Community 379 - "Community 379"
 Cohesion: 1.0
 Nodes (1): Check if a chasing mob should abandon pursuit.         VERIFIED v2: mob_chase_gi
 
-### Community 382 - "Community 382"
+### Community 380 - "Community 380"
 Cohesion: 1.0
 Nodes (1): Get the home position for return-to-camp behavior.
 
-### Community 383 - "Community 383"
+### Community 381 - "Community 381"
 Cohesion: 1.0
 Nodes (1): Check if entity has reached home.
 
-### Community 384 - "Community 384"
+### Community 382 - "Community 382"
 Cohesion: 1.0
 Nodes (1): Calculate perception-based discovery score.         VERIFIED v2: perception_disc
 
-### Community 385 - "Community 385"
+### Community 383 - "Community 383"
 Cohesion: 1.0
 Nodes (1): Calculate diagnosis accuracy (0.0 to 1.0).         VERIFIED v2: wisdom_diagnosis
 
-### Community 386 - "Community 386"
+### Community 384 - "Community 384"
 Cohesion: 1.0
 Nodes (1): Get movement cost for a tile based on terrain type.         VERIFIED v2: terrain
 
-### Community 387 - "Community 387"
+### Community 385 - "Community 385"
 Cohesion: 1.0
 Nodes (1): Calculate total movement cost for a path.
 
-### Community 388 - "Community 388"
+### Community 386 - "Community 386"
 Cohesion: 1.0
 Nodes (1): Only switch targets if the new one is significantly better.         Uses margin
 
-### Community 389 - "Community 389"
+### Community 387 - "Community 387"
 Cohesion: 1.0
 Nodes (1): Physical: base_atk + strength * 0.8 * power         Magical:  base_atk + intelli
 
-### Community 390 - "Community 390"
+### Community 388 - "Community 388"
 Cohesion: 1.0
 Nodes (1): Full effective stat recomputation:         base stats + gear + traits + wound pe
 
-### Community 391 - "Community 391"
+### Community 389 - "Community 389"
 Cohesion: 1.0
 Nodes (1): RPG TACTICAL COGNITION.
 
-### Community 392 - "Community 392"
+### Community 390 - "Community 390"
 Cohesion: 1.0
 Nodes (1): Standard action cost and routine logic.         Delegates to ActionRouter for do
 
-### Community 393 - "Community 393"
+### Community 391 - "Community 391"
 Cohesion: 1.0
 Nodes (1): Milestone C Law: Authoritative Drain Logic.         Determines how much work deb
 
-### Community 395 - "Community 395"
+### Community 393 - "Community 393"
 Cohesion: 1.0
 Nodes (1): Determine dynamic phase budgets based on operational mode and real-time phase pr
 
-### Community 396 - "Community 396"
+### Community 394 - "Community 394"
 Cohesion: 1.0
 Nodes (1): Returns IDs of entities within radius of pos.
 
-### Community 397 - "Community 397"
+### Community 395 - "Community 395"
 Cohesion: 1.0
 Nodes (1): Returns IDs of entities within the rectangular bounds.
 
-### Community 398 - "Community 398"
+### Community 396 - "Community 396"
 Cohesion: 1.0
 Nodes (1): Returns IDs of resource nodes within radius of pos.
 
-### Community 399 - "Community 399"
+### Community 397 - "Community 397"
 Cohesion: 1.0
 Nodes (1): Returns the building at a specific tile coordinate.
 
-### Community 400 - "Community 400"
+### Community 398 - "Community 398"
 Cohesion: 1.0
 Nodes (1): Returns a map of (x, y) to entity ID for all active/alive entities.
 
-### Community 401 - "Community 401"
+### Community 399 - "Community 399"
 Cohesion: 1.0
 Nodes (1): Returns the resource node at a specific position.
 
-### Community 402 - "Community 402"
+### Community 400 - "Community 400"
 Cohesion: 1.0
 Nodes (1): Returns the corpse at a specific position.
 
-### Community 403 - "Community 403"
+### Community 401 - "Community 401"
 Cohesion: 1.0
 Nodes (1): Returns the ground item at a specific position.
 
-### Community 404 - "Community 404"
+### Community 402 - "Community 402"
 Cohesion: 1.0
 Nodes (1): Returns the region containing the given position.
 
-### Community 405 - "Community 405"
+### Community 403 - "Community 403"
 Cohesion: 1.0
 Nodes (1): Returns the region containing a building, using a cached map.
 
-### Community 406 - "Community 406"
+### Community 404 - "Community 404"
 Cohesion: 1.0
 Nodes (1): Apply regional effects to entities and update world markers.
 
-### Community 407 - "Community 407"
+### Community 405 - "Community 405"
 Cohesion: 1.0
 Nodes (1): Handle SABOTAGE intents directed at buildings.         Optimized: Iterate over e
 
-### Community 408 - "Community 408"
+### Community 406 - "Community 406"
 Cohesion: 1.0
 Nodes (1): Produce authoritative item-to-gold conversions for entities at a shop.         L
 
-### Community 409 - "Community 409"
+### Community 407 - "Community 407"
 Cohesion: 1.0
 Nodes (1): Handle the ATTACK action.
 
-### Community 410 - "Community 410"
+### Community 408 - "Community 408"
 Cohesion: 1.0
 Nodes (1): Routes the action to the correct handler.
 
-### Community 411 - "Community 411"
+### Community 409 - "Community 409"
 Cohesion: 1.0
 Nodes (1): GRID-BASED AUTHORITATIVE MOVEMENT.
 
-### Community 412 - "Community 412"
+### Community 410 - "Community 410"
 Cohesion: 1.0
 Nodes (1): RPG TACTICAL COGNITION.         Determines tactical intent and emotional apprais
 
-### Community 414 - "Community 414"
+### Community 412 - "Community 412"
 Cohesion: 1.0
 Nodes (1): Handle the SKILL action.
 
-### Community 415 - "Community 415"
+### Community 413 - "Community 413"
 Cohesion: 1.0
 Nodes (1): Produce a deterministic view of nearby entities.         Uses a spatial grid to
 
-### Community 416 - "Community 416"
+### Community 414 - "Community 414"
 Cohesion: 1.0
 Nodes (1): Retrieves or creates a SpatialGrid for the given state.         Uses a per-objec
 
-### Community 417 - "Community 417"
+### Community 415 - "Community 415"
 Cohesion: 1.0
 Nodes (1): Fast lookup for the region containing a position.         Uses a per-object regi
 
-### Community 418 - "Community 418"
+### Community 416 - "Community 416"
 Cohesion: 1.0
 Nodes (1): Finds the trauma score of the region containing the given position.
 
-### Community 419 - "Community 419"
+### Community 417 - "Community 417"
 Cohesion: 1.0
 Nodes (1): Handle the AOE_ATTACK action.
 
-### Community 420 - "Community 420"
+### Community 418 - "Community 418"
 Cohesion: 1.0
 Nodes (1): Resolve adjacent position swaps before normal movement routing.          LAW:
 
-### Community 421 - "Community 421"
+### Community 419 - "Community 419"
 Cohesion: 1.0
 Nodes (1): Route normal navigation intent via MovementSystem.         Optimized v3: reduced
 
-### Community 422 - "Community 422"
+### Community 420 - "Community 420"
 Cohesion: 1.0
 Nodes (1): Law 300: Action Routing.          Responsibilities:             - route ENTITY_A
 
-### Community 423 - "Community 423"
+### Community 421 - "Community 421"
 Cohesion: 1.0
 Nodes (1): Resolve all resource transactions.
 
-### Community 424 - "Community 424"
+### Community 422 - "Community 422"
 Cohesion: 1.0
 Nodes (1): Law 300.1: Actor Validity.          Invalid actors may not submit any authoritat
 
-### Community 425 - "Community 425"
+### Community 423 - "Community 423"
 Cohesion: 1.0
 Nodes (1): Enforce quest rewards.
 
-### Community 426 - "Community 426"
+### Community 424 - "Community 424"
 Cohesion: 1.0
 Nodes (1): Apply near-death hardening after authoritative combat resolution.          LAW:
 
-### Community 427 - "Community 427"
+### Community 425 - "Community 425"
 Cohesion: 1.0
 Nodes (1): LAW:             Final movement results must not place two active entities on th
 
-### Community 428 - "Community 428"
+### Community 426 - "Community 426"
 Cohesion: 1.0
 Nodes (1): Strip unauthorized raw worker effects.          Allowed from raw workers:
 
-### Community 430 - "Community 430"
+### Community 428 - "Community 428"
 Cohesion: 1.0
 Nodes (1): Resolve stale social contracts during authoritative refinement.          LAW:
 
-### Community 431 - "Community 431"
+### Community 429 - "Community 429"
 Cohesion: 1.0
 Nodes (1): Generate a level-appropriate quest deterministically.
 
-### Community 432 - "Community 432"
+### Community 430 - "Community 430"
 Cohesion: 1.0
 Nodes (1): Generate multiple quests for a building.
 
-### Community 433 - "Community 433"
+### Community 431 - "Community 431"
 Cohesion: 1.0
 Nodes (1): Produce a new QuestState with updated progress.         Handles auto-completion
 
-### Community 434 - "Community 434"
+### Community 432 - "Community 432"
 Cohesion: 1.0
 Nodes (1): Transition a quest to REWARDED status.         Ensures rewards can only be grant
 
-### Community 436 - "Community 436"
+### Community 434 - "Community 434"
 Cohesion: 1.0
 Nodes (1): Returns a map of GoalKind -> multiplier.         Base multiplier is 1.0.
 
-### Community 437 - "Community 437"
+### Community 435 - "Community 435"
 Cohesion: 1.0
 Nodes (1): Returns a map of GoalKind -> utility_modifier.         Modifier is a float added
 
-### Community 438 - "Community 438"
+### Community 436 - "Community 436"
 Cohesion: 1.0
 Nodes (1): Applies personality, life stage, and boredom modifiers to goal scores.
 
-### Community 439 - "Community 439"
+### Community 437 - "Community 437"
 Cohesion: 1.0
 Nodes (1): Registers a scorer for a specific goal kind.         Logic ID: RPG-GOAL-001
 
-### Community 441 - "Community 441"
+### Community 439 - "Community 439"
 Cohesion: 1.0
 Nodes (1): Initialize a harvesting interaction if within proximity and node is active.
 
-### Community 442 - "Community 442"
+### Community 440 - "Community 440"
 Cohesion: 1.0
 Nodes (1): Initialize a looting interaction if within proximity.         target_kind: 'grou
 
-### Community 443 - "Community 443"
+### Community 441 - "Community 441"
 Cohesion: 1.0
 Nodes (1): Generates a stable, order-independent composite seed.         Logic ID: INFRA-10
 
-### Community 445 - "Community 445"
+### Community 443 - "Community 443"
 Cohesion: 1.0
 Nodes (1): Checks if a raid should spawn and returns the update.
 
-### Community 446 - "Community 446"
+### Community 444 - "Community 444"
 Cohesion: 1.0
 Nodes (1): Deterministic, idempotent boss spawning.          LAW:             At most one a
 
-### Community 447 - "Community 447"
+### Community 445 - "Community 445"
 Cohesion: 1.0
 Nodes (1): Rule: Boss death provides high-tier loot via transaction law.
 
-### Community 448 - "Community 448"
+### Community 446 - "Community 446"
 Cohesion: 1.0
 Nodes (1): Check regional monster density and spawn new ones if needed.
 
-### Community 449 - "Community 449"
+### Community 447 - "Community 447"
 Cohesion: 1.0
 Nodes (1): Periodically attempt to seed new resources in valid regions.
 
-### Community 450 - "Community 450"
+### Community 448 - "Community 448"
 Cohesion: 1.0
 Nodes (1): Calculates influence deltas based on entity deaths.
 
-### Community 451 - "Community 451"
+### Community 449 - "Community 449"
 Cohesion: 1.0
 Nodes (1): Handles spawning/removing strongholds based on world updates.
 
-### Community 452 - "Community 452"
+### Community 450 - "Community 450"
 Cohesion: 1.0
 Nodes (1): Finds the region containing the given position.          Uses bounds if defined,
 
-### Community 453 - "Community 453"
+### Community 451 - "Community 451"
 Cohesion: 1.0
 Nodes (1): Calculates difficulty tier based on distance from town center.
 
-### Community 454 - "Community 454"
+### Community 452 - "Community 452"
 Cohesion: 1.0
 Nodes (1): Calculates threat decay and retaliation cooling for a region.
 
-### Community 455 - "Community 455"
+### Community 453 - "Community 453"
 Cohesion: 1.0
 Nodes (1): Increases retaliation pressure when a faction member is killed.
 
-### Community 456 - "Community 456"
+### Community 454 - "Community 454"
 Cohesion: 1.0
 Nodes (1): Process time-based recovery for regional danger and local scars.         Optimiz
 
-### Community 457 - "Community 457"
+### Community 455 - "Community 455"
 Cohesion: 1.0
 Nodes (1): Create a battlefield scar from a death event.
 
-### Community 458 - "Community 458"
+### Community 456 - "Community 456"
 Cohesion: 1.0
 Nodes (1): Create a raid damage scar from a town raid.
 
-### Community 459 - "Community 459"
+### Community 457 - "Community 457"
 Cohesion: 1.0
 Nodes (1): Evolve camps and spawn monsters or raids.
 
-### Community 460 - "Community 460"
+### Community 458 - "Community 458"
 Cohesion: 1.0
 Nodes (1): Rule: Clearing a camp provides rewards and reduces threat.
 
-### Community 461 - "Community 461"
+### Community 459 - "Community 459"
 Cohesion: 1.0
 Nodes (1): Processes maturity, calamity spawns, and regional intensity shifts.
 
-### Community 462 - "Community 462"
+### Community 460 - "Community 460"
 Cohesion: 1.0
 Nodes (1): Increases regional calamity intensity when significant entities die.
 
-### Community 463 - "Community 463"
+### Community 461 - "Community 461"
 Cohesion: 1.0
 Nodes (1): Determines if the region should transform based on its current state.         Re
 
-### Community 464 - "Community 464"
+### Community 462 - "Community 462"
 Cohesion: 1.0
 Nodes (1): Checks for and applies regional transformations.
 
-### Community 465 - "Community 465"
+### Community 463 - "Community 463"
 Cohesion: 1.0
 Nodes (1): Calculates the HP/Readiness drain for an entity in a region.         Scales with
 
-### Community 466 - "Community 466"
+### Community 464 - "Community 464"
 Cohesion: 1.0
 Nodes (1): Returns stat multipliers based on current weather.
 
-### Community 467 - "Community 467"
+### Community 465 - "Community 465"
 Cohesion: 1.0
 Nodes (1): Returns stat multipliers based on nearby strongholds (Aura of Despair).
 
-### Community 468 - "Community 468"
+### Community 466 - "Community 466"
 Cohesion: 1.0
 Nodes (1): Returns penalties based on active regional modifiers.
 
-### Community 469 - "Community 469"
+### Community 467 - "Community 467"
 Cohesion: 1.0
 Nodes (1): Collects taxes from regions based on ownership.
 
-### Community 470 - "Community 470"
+### Community 468 - "Community 468"
 Cohesion: 1.0
 Nodes (1): Applies CONQUERED_DEBUFF if the hero is in a monster-owned region.
 
-### Community 471 - "Community 471"
+### Community 469 - "Community 469"
 Cohesion: 1.0
 Nodes (1): Evaluate a single constraint against the entity and world state.         Returns
 
-### Community 472 - "Community 472"
+### Community 470 - "Community 470"
 Cohesion: 1.0
 Nodes (1): Produce a deterministic fingerprint of the current state.          Included doma
 
-### Community 473 - "Community 473"
+### Community 471 - "Community 471"
 Cohesion: 1.0
 Nodes (1): Return deterministic inventory identity.          Count-only inventory fingerpri
 
-### Community 474 - "Community 474"
+### Community 472 - "Community 472"
 Cohesion: 1.0
 Nodes (1): Return deterministic strategic identity for replay-visible planning         stat
 
-### Community 475 - "Community 475"
+### Community 473 - "Community 473"
 Cohesion: 1.0
 Nodes (1): Return deterministic group coordination identity.          Important:
 
-### Community 477 - "Community 477"
+### Community 475 - "Community 475"
 Cohesion: 1.0
 Nodes (1): Loads a RuntimeProfile with full precedence resolution.
 
-### Community 479 - "Community 479"
+### Community 477 - "Community 477"
 Cohesion: 1.0
 Nodes (1): Verify that a profile is internally consistent and within          declared reso
 
-### Community 480 - "Community 480"
+### Community 478 - "Community 478"
 Cohesion: 1.0
 Nodes (1): Verify that operational flags are safe and do not bypass          authoritative
 
-### Community 505 - "Community 505"
+### Community 503 - "Community 503"
 Cohesion: 1.0
 Nodes (1): Calculate the dynamic buy price for an item.         Law: Same State + Same Pres
 
-### Community 506 - "Community 506"
+### Community 504 - "Community 504"
 Cohesion: 1.0
 Nodes (1): Calculate the sell price for an item (currently static 50%).         PH5 E5.6 Ou
 
-### Community 507 - "Community 507"
+### Community 505 - "Community 505"
 Cohesion: 1.0
 Nodes (1): Processes a crafting attempt.         Returns (InventoryUpdate, reason).
 
-### Community 509 - "Community 509"
+### Community 507 - "Community 507"
 Cohesion: 1.0
 Nodes (1): Returns the static base value for an item.
 
-### Community 510 - "Community 510"
+### Community 508 - "Community 508"
 Cohesion: 1.0
 Nodes (1): Calculates the final gold price for an item at a specific shop.
 
-### Community 511 - "Community 511"
+### Community 509 - "Community 509"
 Cohesion: 1.0
 Nodes (1): Maps item IDs to broader categories for modifiers.
 
-### Community 512 - "Community 512"
+### Community 510 - "Community 510"
 Cohesion: 1.0
 Nodes (1): LEG-RPG-151: Turning points persist in narrative memory.
 
-### Community 513 - "Community 513"
+### Community 511 - "Community 511"
 Cohesion: 1.0
 Nodes (1): LEG-RPG-151: Narrative memory biases future utility scoring.          Returns a
 
-### Community 514 - "Community 514"
+### Community 512 - "Community 512"
 Cohesion: 1.0
 Nodes (1): Check if entity has betrayal/negative turning point with a specific subject.
 
-### Community 515 - "Community 515"
+### Community 513 - "Community 513"
 Cohesion: 1.0
 Nodes (1): Aggregate trauma from turning points in a specific region.
 
-### Community 516 - "Community 516"
+### Community 514 - "Community 514"
 Cohesion: 1.0
 Nodes (1): Returns a normalized direction vector towards the target kind using         weig
 
-### Community 517 - "Community 517"
+### Community 515 - "Community 515"
 Cohesion: 1.0
 Nodes (1): Main authoritative group coordination logic.         Logic ID: SOC-182 (Party ta
 
-### Community 518 - "Community 518"
+### Community 516 - "Community 516"
 Cohesion: 1.0
 Nodes (1): LEG-RPG-141: Quest generation from scar/trauma state.         Regions with high
 
-### Community 519 - "Community 519"
+### Community 517 - "Community 517"
 Cohesion: 1.0
 Nodes (1): LEG-RPG-141: Quest generation from strategic blockers.         Material blockers
 
-### Community 520 - "Community 520"
+### Community 518 - "Community 518"
 Cohesion: 1.0
 Nodes (1): Convert a quest template to a strategic project.
 
-### Community 521 - "Community 521"
+### Community 519 - "Community 519"
 Cohesion: 1.0
 Nodes (1): Generate concerns based on hunger, sleep debt, and rest pressure.         VERIFI
 
-### Community 522 - "Community 522"
+### Community 520 - "Community 520"
 Cohesion: 1.0
 Nodes (1): Generate concerns based on inventory status and pending goals.
 
-### Community 523 - "Community 523"
+### Community 521 - "Community 521"
 Cohesion: 1.0
 Nodes (1): Returns a utility boost for routine-related projects.         VERIFIED v2: routi
 
-### Community 524 - "Community 524"
+### Community 522 - "Community 522"
 Cohesion: 1.0
 Nodes (1): Returns a utility boost based on the entity's role identity.
 
-### Community 525 - "Community 525"
+### Community 523 - "Community 523"
 Cohesion: 1.0
 Nodes (1): Phase 9: Anchored-World Behavior.         If entity is idle and away from home,
 
-### Community 526 - "Community 526"
+### Community 524 - "Community 524"
 Cohesion: 1.0
 Nodes (1): LEG-RPG-116: Strategic pivot on regional danger.          If hazard_level > 0.7,
 
-### Community 527 - "Community 527"
+### Community 525 - "Community 525"
 Cohesion: 1.0
 Nodes (1): LEG-RPG-117: Scar detection.          If a nearby region has trauma_score > 0.5,
 
-### Community 528 - "Community 528"
+### Community 526 - "Community 526"
 Cohesion: 1.0
 Nodes (1): Near-death event: generates a survival concern and may suspend current project.
 
-### Community 529 - "Community 529"
+### Community 527 - "Community 527"
 Cohesion: 1.0
 Nodes (1): Part 1 §Strategic: Event interpretation can mutate directives.          Only hig
 
-### Community 531 - "Community 531"
+### Community 529 - "Community 529"
 Cohesion: 1.0
 Nodes (1): Scan neighbors for high-salience events (Combat, Death, Plunder).         VERIFI
 
-### Community 532 - "Community 532"
+### Community 530 - "Community 530"
 Cohesion: 1.0
 Nodes (1): Generate a pool of potential quests for an entity.
 
-### Community 533 - "Community 533"
+### Community 531 - "Community 531"
 Cohesion: 1.0
 Nodes (1): Authoritatively apply deltas to social histories.         Logic ID: SOC-217 (Soc
 
-### Community 534 - "Community 534"
+### Community 532 - "Community 532"
 Cohesion: 1.0
 Nodes (1): Prunes social records for entities with low salience to keep state lean.
 
-### Community 535 - "Community 535"
+### Community 533 - "Community 533"
 Cohesion: 1.0
 Nodes (1): Evaluate an OFFERED or COUNTERED contract.         Returns (new_status, reason,
 
-### Community 536 - "Community 536"
+### Community 534 - "Community 534"
 Cohesion: 1.0
 Nodes (1): Recalculate trust based on a concrete interaction outcome.         VERIFIED v2:
 
-### Community 537 - "Community 537"
+### Community 535 - "Community 535"
 Cohesion: 1.0
 Nodes (1): Evaluate whether the target entity accepts an adjacent position swap.          L
 
-### Community 538 - "Community 538"
+### Community 536 - "Community 536"
 Cohesion: 1.0
 Nodes (1): LEG-RPG-119: Betrayal (Avenge).         Part 1 §Social: Private betrayal history
 
-### Community 539 - "Community 539"
+### Community 537 - "Community 537"
 Cohesion: 1.0
 Nodes (1): LEG-RPG-123: Refutation drops trust.
 
-### Community 540 - "Community 540"
+### Community 538 - "Community 538"
 Cohesion: 1.0
 Nodes (1): Part 1 §Social: Social learning updates familiarity/trust-like bonds.         VE
 
-### Community 541 - "Community 541"
+### Community 539 - "Community 539"
 Cohesion: 1.0
 Nodes (1): Part 1 §Social: Recruitment evaluates trust, level, and greed.         Scales co
 
-### Community 542 - "Community 542"
+### Community 540 - "Community 540"
 Cohesion: 1.0
 Nodes (1): Returns a cohesion score (0.0 to 1.0) based on how many members are          wit
 
-### Community 543 - "Community 543"
+### Community 541 - "Community 541"
 Cohesion: 1.0
 Nodes (1): Helper to return a new GroupRecord with a role assigned.
 
-### Community 544 - "Community 544"
+### Community 542 - "Community 542"
 Cohesion: 1.0
 Nodes (1): Injects the leader's active objective as a candidate goal for the member.
 
-### Community 545 - "Community 545"
+### Community 543 - "Community 543"
 Cohesion: 1.0
 Nodes (1): Propagates the leader's current objective to all active party members.         I
 
-### Community 546 - "Community 546"
+### Community 544 - "Community 544"
 Cohesion: 1.0
 Nodes (1): Ensures the shared party target is still alive and valid.         Clears if targ
 
-### Community 547 - "Community 547"
+### Community 545 - "Community 545"
 Cohesion: 1.0
 Nodes (1): Creates a high-priority directive for all party members.
 
-### Community 548 - "Community 548"
+### Community 546 - "Community 546"
 Cohesion: 1.0
 Nodes (1): Increments attachment to the current region based on presence.         PH4 Law:
 
-### Community 549 - "Community 549"
+### Community 547 - "Community 547"
 Cohesion: 1.0
 Nodes (1): Promotes enemies from grudge_history to nemesis_ids if hostility threshold met.
 
-### Community 551 - "Community 551"
+### Community 549 - "Community 549"
 Cohesion: 1.0
 Nodes (1): Validates and applies a state transition for a contract.
 
-### Community 552 - "Community 552"
+### Community 550 - "Community 550"
 Cohesion: 1.0
 Nodes (1): Strict state machine for contracts.
 
-### Community 553 - "Community 553"
+### Community 551 - "Community 551"
 Cohesion: 1.0
 Nodes (1): Auto-expire contracts that reached their tick limit.
 
-### Community 554 - "Community 554"
+### Community 552 - "Community 552"
 Cohesion: 1.0
 Nodes (1): Transition an OFFERED contract to ACTIVE and spawn active strategic project/obje
 
-### Community 555 - "Community 555"
+### Community 553 - "Community 553"
 Cohesion: 1.0
 Nodes (1): Resolve an ACTIVE contract and update social relationships.         First return
 
-### Community 556 - "Community 556"
+### Community 554 - "Community 554"
 Cohesion: 1.0
 Nodes (1): Processes ACTIVE contracts for expiration or completion.
 
-### Community 557 - "Community 557"
+### Community 555 - "Community 555"
 Cohesion: 1.0
 Nodes (1): Reap any OFFERED contracts that have passed their expiry_tick.
 
-### Community 558 - "Community 558"
+### Community 556 - "Community 556"
 Cohesion: 1.0
 Nodes (1): Low reputation increases caution in others (defensive posture).         Formula:
 
-### Community 559 - "Community 559"
+### Community 557 - "Community 557"
 Cohesion: 1.0
 Nodes (1): LEG-RPG-144: Talent multipliers from genetic profile affect attribute scaling.
 
-### Community 560 - "Community 560"
+### Community 558 - "Community 558"
 Cohesion: 1.0
 Nodes (1): Generate a deterministic genetic profile from a seed.         Each multiplier ra
 
-### Community 561 - "Community 561"
+### Community 559 - "Community 559"
 Cohesion: 1.0
 Nodes (1): LEG-RPG-145: Physical/Magical/Elemental skills scale differently.          Scali
 
-### Community 562 - "Community 562"
+### Community 560 - "Community 560"
 Cohesion: 1.0
 Nodes (1): Identify entities that have died and process succession/permadeath.
 
-### Community 564 - "Community 564"
+### Community 562 - "Community 562"
 Cohesion: 1.0
 Nodes (1): Export the entity's strategic state as a typed graph.
 
-### Community 565 - "Community 565"
+### Community 563 - "Community 563"
 Cohesion: 1.0
 Nodes (1): Verify that multiple exports from the same state are identical.
 
-### Community 566 - "Community 566"
+### Community 564 - "Community 564"
 Cohesion: 1.0
 Nodes (1): Scan entities for blockers and propose navigation targets to resolve them.
 
-### Community 567 - "Community 567"
+### Community 565 - "Community 565"
 Cohesion: 1.0
 Nodes (1): Generate detour suggestions from unresolved blockers paired with relevant leads.
 
-### Community 568 - "Community 568"
+### Community 566 - "Community 566"
 Cohesion: 1.0
 Nodes (1): Part 1 §Strategic: Rejected/tested leads are suppressed to avoid blind retries.
 
-### Community 569 - "Community 569"
+### Community 567 - "Community 567"
 Cohesion: 1.0
 Nodes (1): Part 1 §Strategic: Leads and concerns are retained under profile-specific limits
 
-### Community 570 - "Community 570"
+### Community 568 - "Community 568"
 Cohesion: 1.0
 Nodes (1): Score a detour suggestion.
+
+### Community 569 - "Community 569"
+Cohesion: 1.0
+Nodes (1): Infer the right objective kind from a blocker+lead pair.
+
+### Community 570 - "Community 570"
+Cohesion: 1.0
+Nodes (1): Infer blockers based on recent failures.         Logic ID: STRAT-191 (Blockers h
 
 ### Community 571 - "Community 571"
 Cohesion: 1.0
-Nodes (1): Infer the right objective kind from a blocker+lead pair.
+Nodes (1): Produce a StrategicUpdate containing blockers for missing requirements.
 
 ### Community 572 - "Community 572"
 Cohesion: 1.0
-Nodes (1): Infer blockers based on recent failures.         Logic ID: STRAT-191 (Blockers h
+Nodes (1): Fused pass for strategic intelligence (Blockers, Concerns, Intents).         Log
 
 ### Community 573 - "Community 573"
 Cohesion: 1.0
-Nodes (1): Produce a StrategicUpdate containing blockers for missing requirements.
+Nodes (1): Resolve strategic blockers that are satisfied by the current or pending
 
 ### Community 574 - "Community 574"
 Cohesion: 1.0
-Nodes (1): Fused pass for strategic intelligence (Blockers, Concerns, Intents).         Log
+Nodes (1): Phase 9: Routine, Biological Needs, and Salience Filtering.         VERIFIED v2:
 
 ### Community 575 - "Community 575"
 Cohesion: 1.0
-Nodes (1): Resolve strategic blockers that are satisfied by the current or pending
+Nodes (1): Phase 4.1: Strategic Intent Evaluation (Projects/Objectives).         Orchestrat
 
 ### Community 576 - "Community 576"
 Cohesion: 1.0
-Nodes (1): Phase 9: Routine, Biological Needs, and Salience Filtering.         VERIFIED v2:
+Nodes (1): Phase 9: Strategic interruption resistance and retention.         Logic ID: STRA
 
 ### Community 577 - "Community 577"
 Cohesion: 1.0
-Nodes (1): Phase 4.1: Strategic Intent Evaluation (Projects/Objectives).         Orchestrat
+Nodes (1): Record the final result of a project and apply learning effects.
 
 ### Community 578 - "Community 578"
 Cohesion: 1.0
-Nodes (1): Phase 9: Strategic interruption resistance and retention.         Logic ID: STRA
+Nodes (1): VERIFIED v2: StrategicIntelligenceSystem.process_outcome
 
 ### Community 579 - "Community 579"
 Cohesion: 1.0
-Nodes (1): Record the final result of a project and apply learning effects.
+Nodes (1): Produce a collection of strategic intent updates for the next tick.
 
 ### Community 580 - "Community 580"
 Cohesion: 1.0
-Nodes (1): VERIFIED v2: StrategicIntelligenceSystem.process_outcome
+Nodes (1): VERIFIED v2: StrategicIntelligenceSystem.derive_cognition_profile
 
 ### Community 581 - "Community 581"
 Cohesion: 1.0
-Nodes (1): Produce a collection of strategic intent updates for the next tick.
+Nodes (1): Returns a map of GoalKind -> utility_delta.
 
 ### Community 582 - "Community 582"
 Cohesion: 1.0
-Nodes (1): VERIFIED v2: StrategicIntelligenceSystem.derive_cognition_profile
+Nodes (1): LEG-RPG-150: Beliefs decay over time.         Leads that haven't been refreshed
 
 ### Community 583 - "Community 583"
 Cohesion: 1.0
-Nodes (1): Returns a map of GoalKind -> utility_delta.
+Nodes (1): LEG-RPG-150: Rumors have lower certainty than direct observation.
 
 ### Community 584 - "Community 584"
 Cohesion: 1.0
-Nodes (1): LEG-RPG-150: Beliefs decay over time.         Leads that haven't been refreshed
+Nodes (1): Direct observations create PRECISE leads.
 
 ### Community 585 - "Community 585"
 Cohesion: 1.0
-Nodes (1): LEG-RPG-150: Rumors have lower certainty than direct observation.
+Nodes (1): LEG-RPG-125: Contradiction degrades certainty.
 
 ### Community 586 - "Community 586"
 Cohesion: 1.0
-Nodes (1): Direct observations create PRECISE leads.
+Nodes (1): LEG-RPG-150: Threat estimation from belief state.         Aggregates danger-rela
 
 ### Community 587 - "Community 587"
 Cohesion: 1.0
-Nodes (1): LEG-RPG-125: Contradiction degrades certainty.
+Nodes (1): Compares state transitions to produce semantic events matching volume policies.
 
 ### Community 588 - "Community 588"
 Cohesion: 1.0
-Nodes (1): LEG-RPG-150: Threat estimation from belief state.         Aggregates danger-rela
+Nodes (1): Sets a programmatic override mode, e.g. for specific tests.
 
 ### Community 589 - "Community 589"
 Cohesion: 1.0
-Nodes (1): Compares state transitions to produce semantic events matching volume policies.
+Nodes (1): Resolves the current active observability mode with precedence.
 
 ### Community 590 - "Community 590"
 Cohesion: 1.0
-Nodes (1): Sets a programmatic override mode, e.g. for specific tests.
+Nodes (1): Resolves the active deployment profile (local-dev, production, scale-test).
 
 ### Community 591 - "Community 591"
 Cohesion: 1.0
-Nodes (1): Resolves the current active observability mode with precedence.
+Nodes (1): Resolves the event stream backend from env or active deployment profile default.
 
 ### Community 592 - "Community 592"
 Cohesion: 1.0
-Nodes (1): Resolves the active deployment profile (local-dev, production, scale-test).
+Nodes (1): Resolves the Redis connection string from env, defaulting to default local.
 
 ### Community 593 - "Community 593"
 Cohesion: 1.0
-Nodes (1): Resolves the event stream backend from env or active deployment profile default.
+Nodes (1): Resolves the target stream key name from env, defaulting to 'simulation:events'.
 
 ### Community 594 - "Community 594"
 Cohesion: 1.0
-Nodes (1): Resolves the Redis connection string from env, defaulting to default local.
+Nodes (1): Resolves maximum event cap size from env or active deployment profile default.
 
 ### Community 595 - "Community 595"
 Cohesion: 1.0
-Nodes (1): Resolves the target stream key name from env, defaulting to 'simulation:events'.
+Nodes (1): Resolves the event warehouse backend from env or active deployment profile defau
 
 ### Community 596 - "Community 596"
 Cohesion: 1.0
-Nodes (1): Resolves maximum event cap size from env or active deployment profile default.
+Nodes (1): Resolves ClickHouse server host address.
 
 ### Community 597 - "Community 597"
 Cohesion: 1.0
-Nodes (1): Resolves the event warehouse backend from env or active deployment profile defau
+Nodes (1): Resolves ClickHouse server HTTP port.
 
 ### Community 598 - "Community 598"
 Cohesion: 1.0
-Nodes (1): Resolves ClickHouse server host address.
+Nodes (1): Resolves ClickHouse target database name.
 
 ### Community 599 - "Community 599"
 Cohesion: 1.0
-Nodes (1): Resolves ClickHouse server HTTP port.
+Nodes (1): Resolves ClickHouse database login username.
 
 ### Community 600 - "Community 600"
 Cohesion: 1.0
-Nodes (1): Resolves ClickHouse target database name.
+Nodes (1): Resolves ClickHouse database login password.
 
 ### Community 601 - "Community 601"
 Cohesion: 1.0
-Nodes (1): Resolves ClickHouse database login username.
+Nodes (1): Resolves whether to establish secure SSL connections to ClickHouse.
 
 ### Community 602 - "Community 602"
 Cohesion: 1.0
-Nodes (1): Resolves ClickHouse database login password.
+Nodes (1): Resolves batch chunk sizing for telemetry insertions.
 
 ### Community 603 - "Community 603"
 Cohesion: 1.0
-Nodes (1): Resolves whether to establish secure SSL connections to ClickHouse.
+Nodes (1): Orchestrates entity state and occupancy collision checks.
 
 ### Community 604 - "Community 604"
 Cohesion: 1.0
-Nodes (1): Resolves batch chunk sizing for telemetry insertions.
+Nodes (1): Performs scoped attribute/property checks on dirty active and alive entities.
 
 ### Community 605 - "Community 605"
 Cohesion: 1.0
-Nodes (1): Orchestrates entity state and occupancy collision checks.
+Nodes (1): Performs scoped tile collision checks on dirty moving entities.
 
 ### Community 606 - "Community 606"
 Cohesion: 1.0
-Nodes (1): Performs scoped attribute/property checks on dirty active and alive entities.
-
-### Community 607 - "Community 607"
-Cohesion: 1.0
-Nodes (1): Performs scoped tile collision checks on dirty moving entities.
+Nodes (1): Compares event logs tick-by-tick across runs to pin the exact tick of logical di
 
 ### Community 608 - "Community 608"
 Cohesion: 1.0
-Nodes (1): Compares event logs tick-by-tick across runs to pin the exact tick of logical di
-
-### Community 610 - "Community 610"
-Cohesion: 1.0
 Nodes (1): Run domain analysis against the given context.
 
-### Community 611 - "Community 611"
+### Community 609 - "Community 609"
 Cohesion: 1.0
 Nodes (1): Build a registry with all four standard Phase 8 domain analyzers.
 
-### Community 615 - "Community 615"
+### Community 613 - "Community 613"
 Cohesion: 1.0
 Nodes (1): Fraction of reviews that are actionable (bug or balance issue).
 
-### Community 617 - "Community 617"
+### Community 615 - "Community 615"
 Cohesion: 1.0
 Nodes (1): Generate hypotheses from the analysis context. Return [] if not applicable.
 
-### Community 621 - "Community 621"
+### Community 619 - "Community 619"
 Cohesion: 1.0
 Nodes (1): Return a minimal default pack with only hard law constraint.
 
-### Community 623 - "Community 623"
+### Community 621 - "Community 621"
 Cohesion: 1.0
 Nodes (1): Extracts strategic cognition features for each active strategic entity in the ru
 
-### Community 624 - "Community 624"
+### Community 622 - "Community 622"
 Cohesion: 1.0
 Nodes (1): Compares prev_snapshot and curr_snapshot deterministically.         Returns a va
 
-### Community 625 - "Community 625"
+### Community 623 - "Community 623"
 Cohesion: 1.0
 Nodes (1): Runs feature extraction over the run directory, applies pattern matching rules,
 
-### Community 626 - "Community 626"
+### Community 624 - "Community 624"
 Cohesion: 1.0
 Nodes (1): Orchestrates post-run report generation, saving run_report.md and run_report.jso
 
-### Community 627 - "Community 627"
+### Community 625 - "Community 625"
 Cohesion: 1.0
 Nodes (1): Writes a beautifully styled Markdown report for executive review and continuous
 
-### Community 628 - "Community 628"
+### Community 626 - "Community 626"
 Cohesion: 1.0
 Nodes (1): Orchestrates scenario-level sweep comparison, generates report files, and evalua
 
-### Community 629 - "Community 629"
+### Community 627 - "Community 627"
 Cohesion: 1.0
 Nodes (1): Return a dictionary of routing metrics.
 
-### Community 631 - "Community 631"
+### Community 629 - "Community 629"
 Cohesion: 1.0
 Nodes (1): Synchronously or asynchronously process and route the alert event.         Retur
 
-### Community 632 - "Community 632"
+### Community 630 - "Community 630"
 Cohesion: 1.0
 Nodes (1): Factory to create a Hard Law violation alert event.
 
-### Community 633 - "Community 633"
+### Community 631 - "Community 631"
 Cohesion: 1.0
 Nodes (1): Factory to create a watchdog trip alert event.
 
-### Community 634 - "Community 634"
+### Community 632 - "Community 632"
 Cohesion: 1.0
 Nodes (1): Factory to create a critical anomaly alert event from the worker/rules engine.
 
-### Community 635 - "Community 635"
+### Community 633 - "Community 633"
 Cohesion: 1.0
 Nodes (1): Factory to create an event stream backpressure alert event.
 
-### Community 636 - "Community 636"
+### Community 634 - "Community 634"
 Cohesion: 1.0
 Nodes (1): Returns the current number of unique non-expired alerts tracked.
 
-### Community 637 - "Community 637"
+### Community 635 - "Community 635"
 Cohesion: 1.0
 Nodes (1): Resolves and returns the globally shared thread-safe AlertRouter instance.
 
-### Community 638 - "Community 638"
+### Community 636 - "Community 636"
 Cohesion: 1.0
 Nodes (1): Reset the shared singleton (mainly useful for testing configurations).
 
-### Community 639 - "Community 639"
+### Community 637 - "Community 637"
 Cohesion: 1.0
 Nodes (1): Resolves a compact inspection snapshot for the given entity ID.
 
-### Community 640 - "Community 640"
+### Community 638 - "Community 638"
 Cohesion: 1.0
 Nodes (1): Resolves the current LiveRunStatus of the engine manager.
 
-### Community 641 - "Community 641"
+### Community 639 - "Community 639"
 Cohesion: 1.0
 Nodes (1): Resolves the complete LiveRunSnapshot of the engine manager.
 
-### Community 642 - "Community 642"
+### Community 640 - "Community 640"
 Cohesion: 1.0
 Nodes (1): Resets the singleton instance (useful for unit tests).
 
-### Community 644 - "Community 644"
+### Community 642 - "Community 642"
 Cohesion: 1.0
 Nodes (1): Builds and returns a compact, JSON-serializable evidence context payload.
 
-### Community 645 - "Community 645"
+### Community 643 - "Community 643"
 Cohesion: 1.0
 Nodes (1): Clusters a flat list of anomalies by rule ID, severity, spatial/quest context, a
 
-### Community 646 - "Community 646"
+### Community 644 - "Community 644"
 Cohesion: 1.0
 Nodes (1): Validates that a run manifest dict has the correct, supported schema version.
 
-### Community 647 - "Community 647"
+### Community 645 - "Community 645"
 Cohesion: 1.0
 Nodes (1): Validates a sweep manifest or sweep index record.
 
-### Community 648 - "Community 648"
+### Community 646 - "Community 646"
 Cohesion: 1.0
 Nodes (1): Resolves and caches the active warehouse adapter instance.
 
-### Community 649 - "Community 649"
+### Community 647 - "Community 647"
 Cohesion: 1.0
 Nodes (1): Resets the cached instance, e.g. for dynamic testing overrides.
 
-### Community 650 - "Community 650"
+### Community 648 - "Community 648"
 Cohesion: 1.0
 Nodes (1): Parses and validates local run artifacts (manifest, events, anomalies, violation
 
-### Community 651 - "Community 651"
+### Community 649 - "Community 649"
 Cohesion: 1.0
 Nodes (1): Parses and validates a multi-run sweep (including sweep summaries and indexes)
 
-### Community 652 - "Community 652"
+### Community 650 - "Community 650"
 Cohesion: 1.0
 Nodes (1): Queries historical runs filtered by given parameters (limit, scenario_name, heal
 
-### Community 653 - "Community 653"
+### Community 651 - "Community 651"
 Cohesion: 1.0
 Nodes (1): Queries historical simulation events (severity, event_type, tick range).
 
-### Community 654 - "Community 654"
+### Community 652 - "Community 652"
 Cohesion: 1.0
 Nodes (1): Queries historical anomalies.
 
-### Community 655 - "Community 655"
+### Community 653 - "Community 653"
 Cohesion: 1.0
 Nodes (1): Queries historical metric windows.
 
-### Community 656 - "Community 656"
+### Community 654 - "Community 654"
 Cohesion: 1.0
 Nodes (1): Queries historical hard law violations.
 
-### Community 657 - "Community 657"
+### Community 655 - "Community 655"
 Cohesion: 1.0
 Nodes (1): Checks database connection status and latencies.
 
-### Community 658 - "Community 658"
+### Community 656 - "Community 656"
 Cohesion: 1.0
 Nodes (1): Flushes background queues and safely terminates database connection pools.
 
-### Community 660 - "Community 660"
+### Community 658 - "Community 658"
 Cohesion: 1.0
 Nodes (1): Publishes a single event to the stream backend.
 
-### Community 661 - "Community 661"
+### Community 659 - "Community 659"
 Cohesion: 1.0
 Nodes (1): Publishes a batch of events to the stream backend.
 
-### Community 662 - "Community 662"
+### Community 660 - "Community 660"
 Cohesion: 1.0
 Nodes (1): Returns health diagnostics, connection status, and backpressure metrics.
 
-### Community 663 - "Community 663"
+### Community 661 - "Community 661"
 Cohesion: 1.0
 Nodes (1): Flushes any buffered events to the stream backend.
 
-### Community 664 - "Community 664"
+### Community 662 - "Community 662"
 Cohesion: 1.0
 Nodes (1): Closes the stream adapter and cleans up active resources.
 
-### Community 666 - "Community 666"
+### Community 664 - "Community 664"
 Cohesion: 1.0
 Nodes (1): Generate a markdown readiness report from aggregated results.         If output_
 
-### Community 689 - "Community 689"
+### Community 687 - "Community 687"
 Cohesion: 1.0
 Nodes (1): Verify that state mutation is gated exclusively by ApplyPath.
 
-### Community 690 - "Community 690"
+### Community 688 - "Community 688"
 Cohesion: 1.0
 Nodes (1): AST-based scan for bare random module usage.
 
-### Community 694 - "Community 694"
+### Community 692 - "Community 692"
 Cohesion: 1.0
 Nodes (1): Evaluate a single constraint against the entity and world state.         Returns
 
-### Community 695 - "Community 695"
+### Community 693 - "Community 693"
 Cohesion: 1.0
 Nodes (1): Hardening Phase: Ensure DirtySet is always current.         Logic ID: PERF-006-R
 
-### Community 696 - "Community 696"
+### Community 694 - "Community 694"
 Cohesion: 1.0
 Nodes (1): Resolve an ACTIVE contract and update social relationships.         First return
 
-### Community 697 - "Community 697"
+### Community 695 - "Community 695"
 Cohesion: 1.0
 Nodes (1): Processes ACTIVE contracts for expiration or completion.
 
-### Community 698 - "Community 698"
+### Community 696 - "Community 696"
 Cohesion: 1.0
 Nodes (1): Determines the next tactical intent for an entity.         Bounded to local visi
 
-### Community 699 - "Community 699"
+### Community 697 - "Community 697"
 Cohesion: 1.0
 Nodes (1): Public helper for deterministic target selection.         Matches legacy 'Tactic
 
-### Community 700 - "Community 700"
+### Community 698 - "Community 698"
 Cohesion: 1.0
 Nodes (1): RPG TACTICAL COGNITION.         Determines tactical intent and emotional apprais
 
-### Community 701 - "Community 701"
+### Community 699 - "Community 699"
 Cohesion: 1.0
 Nodes (1): Registers a scorer for a specific goal kind.         Logic ID: RPG-GOAL-001
 
-### Community 702 - "Community 702"
+### Community 700 - "Community 700"
 Cohesion: 1.0
 Nodes (1): Check if a lead might resolve a blocker.
 
-### Community 703 - "Community 703"
+### Community 701 - "Community 701"
 Cohesion: 1.0
 Nodes (1): Score a detour suggestion.
 
-### Community 704 - "Community 704"
+### Community 702 - "Community 702"
 Cohesion: 1.0
 Nodes (1): Infer the right objective kind from a blocker+lead pair.
+
+### Community 703 - "Community 703"
+Cohesion: 1.0
+Nodes (1): Resolve strategic blockers that are satisfied by the current or pending
+
+### Community 704 - "Community 704"
+Cohesion: 1.0
+Nodes (1): Phase 9: Routine, Biological Needs, and Salience Filtering.         VERIFIED v2:
 
 ### Community 705 - "Community 705"
 Cohesion: 1.0
-Nodes (1): Resolve strategic blockers that are satisfied by the current or pending
+Nodes (1): Phase 4.1: Strategic Intent Evaluation (Projects/Objectives).         Orchestrat
 
 ### Community 706 - "Community 706"
 Cohesion: 1.0
-Nodes (1): Phase 9: Routine, Biological Needs, and Salience Filtering.         VERIFIED v2:
+Nodes (1): Phase 9: Strategic interruption resistance and retention.         Logic ID: STRA
 
 ### Community 707 - "Community 707"
 Cohesion: 1.0
-Nodes (1): Phase 4.1: Strategic Intent Evaluation (Projects/Objectives).         Orchestrat
+Nodes (1): Record the final result of a project and apply learning effects.
 
 ### Community 708 - "Community 708"
 Cohesion: 1.0
-Nodes (1): Phase 9: Strategic interruption resistance and retention.         Logic ID: STRA
+Nodes (1): VERIFIED v2: StrategicIntelligenceSystem.process_outcome
 
 ### Community 709 - "Community 709"
 Cohesion: 1.0
-Nodes (1): Record the final result of a project and apply learning effects.
+Nodes (1): Produce a collection of strategic intent updates for the next tick.
 
 ### Community 710 - "Community 710"
 Cohesion: 1.0
-Nodes (1): VERIFIED v2: StrategicIntelligenceSystem.process_outcome
+Nodes (1): VERIFIED v2: StrategicIntelligenceSystem.derive_cognition_profile
 
 ### Community 711 - "Community 711"
 Cohesion: 1.0
-Nodes (1): Produce a collection of strategic intent updates for the next tick.
+Nodes (1): Infer the right objective kind from a blocker+lead pair.
 
 ### Community 712 - "Community 712"
 Cohesion: 1.0
-Nodes (1): VERIFIED v2: StrategicIntelligenceSystem.derive_cognition_profile
+Nodes (1): Infer blockers based on recent failures.         Logic ID: STRAT-191 (Blockers h
 
 ### Community 713 - "Community 713"
 Cohesion: 1.0
-Nodes (1): Infer the right objective kind from a blocker+lead pair.
+Nodes (1): Produce a StrategicUpdate containing blockers for missing requirements.
 
 ### Community 714 - "Community 714"
 Cohesion: 1.0
-Nodes (1): Infer blockers based on recent failures.         Logic ID: STRAT-191 (Blockers h
+Nodes (1): Fused pass for strategic intelligence (Blockers, Concerns, Intents).         Log
 
 ### Community 715 - "Community 715"
 Cohesion: 1.0
-Nodes (1): Produce a StrategicUpdate containing blockers for missing requirements.
+Nodes (1): Resolve strategic blockers that are satisfied by the current or pending
 
 ### Community 716 - "Community 716"
 Cohesion: 1.0
-Nodes (1): Fused pass for strategic intelligence (Blockers, Concerns, Intents).         Log
+Nodes (1): Phase 9: Routine, Biological Needs, and Salience Filtering.         VERIFIED v2:
 
 ### Community 717 - "Community 717"
 Cohesion: 1.0
-Nodes (1): Resolve strategic blockers that are satisfied by the current or pending
+Nodes (1): Phase 4.1: Strategic Intent Evaluation (Projects/Objectives).         Orchestrat
 
 ### Community 718 - "Community 718"
 Cohesion: 1.0
-Nodes (1): Phase 9: Routine, Biological Needs, and Salience Filtering.         VERIFIED v2:
+Nodes (1): Phase 9: Strategic interruption resistance and retention.         Logic ID: STRA
 
 ### Community 719 - "Community 719"
 Cohesion: 1.0
-Nodes (1): Phase 4.1: Strategic Intent Evaluation (Projects/Objectives).         Orchestrat
+Nodes (1): Record the final result of a project and apply learning effects.
 
 ### Community 720 - "Community 720"
 Cohesion: 1.0
-Nodes (1): Phase 9: Strategic interruption resistance and retention.         Logic ID: STRA
+Nodes (1): VERIFIED v2: StrategicIntelligenceSystem.process_outcome
 
 ### Community 721 - "Community 721"
 Cohesion: 1.0
-Nodes (1): Record the final result of a project and apply learning effects.
+Nodes (1): Produce a collection of strategic intent updates for the next tick.
 
 ### Community 722 - "Community 722"
 Cohesion: 1.0
-Nodes (1): VERIFIED v2: StrategicIntelligenceSystem.process_outcome
+Nodes (1): VERIFIED v2: StrategicIntelligenceSystem.derive_cognition_profile
 
 ### Community 723 - "Community 723"
 Cohesion: 1.0
-Nodes (1): Produce a collection of strategic intent updates for the next tick.
+Nodes (1): Direct observations create PRECISE leads.
 
 ### Community 724 - "Community 724"
 Cohesion: 1.0
-Nodes (1): VERIFIED v2: StrategicIntelligenceSystem.derive_cognition_profile
+Nodes (1): LEG-RPG-125: Contradiction degrades certainty.
 
 ### Community 725 - "Community 725"
 Cohesion: 1.0
-Nodes (1): Direct observations create PRECISE leads.
+Nodes (1): LEG-RPG-150: Threat estimation from belief state.         Aggregates danger-rela
 
 ### Community 726 - "Community 726"
 Cohesion: 1.0
-Nodes (1): LEG-RPG-125: Contradiction degrades certainty.
+Nodes (1): Resolve strategic blockers that are satisfied by the current or pending
 
 ### Community 727 - "Community 727"
 Cohesion: 1.0
-Nodes (1): LEG-RPG-150: Threat estimation from belief state.         Aggregates danger-rela
+Nodes (1): Phase 9: Routine, Biological Needs, and Salience Filtering.         VERIFIED v2:
 
 ### Community 728 - "Community 728"
 Cohesion: 1.0
-Nodes (1): Resolve strategic blockers that are satisfied by the current or pending
+Nodes (1): Phase 4.1: Strategic Intent Evaluation (Projects/Objectives).         Orchestrat
 
 ### Community 729 - "Community 729"
 Cohesion: 1.0
-Nodes (1): Phase 9: Routine, Biological Needs, and Salience Filtering.         VERIFIED v2:
+Nodes (1): Phase 9: Strategic interruption resistance and retention.         Logic ID: STRA
 
 ### Community 730 - "Community 730"
 Cohesion: 1.0
-Nodes (1): Phase 4.1: Strategic Intent Evaluation (Projects/Objectives).         Orchestrat
+Nodes (1): Record the final result of a project and apply learning effects.
 
 ### Community 731 - "Community 731"
 Cohesion: 1.0
-Nodes (1): Phase 9: Strategic interruption resistance and retention.         Logic ID: STRA
+Nodes (1): VERIFIED v2: StrategicIntelligenceSystem.process_outcome
 
 ### Community 732 - "Community 732"
 Cohesion: 1.0
-Nodes (1): Record the final result of a project and apply learning effects.
+Nodes (1): Produce a collection of strategic intent updates for the next tick.
 
 ### Community 733 - "Community 733"
 Cohesion: 1.0
-Nodes (1): VERIFIED v2: StrategicIntelligenceSystem.process_outcome
+Nodes (1): VERIFIED v2: StrategicIntelligenceSystem.derive_cognition_profile
 
 ### Community 734 - "Community 734"
 Cohesion: 1.0
-Nodes (1): Produce a collection of strategic intent updates for the next tick.
+Nodes (1): Writes a beautifully styled Markdown report for executive review and continuous
 
 ### Community 735 - "Community 735"
 Cohesion: 1.0
-Nodes (1): VERIFIED v2: StrategicIntelligenceSystem.derive_cognition_profile
+Nodes (1): Compares event logs tick-by-tick across runs to pin the exact tick of logical di
 
 ### Community 736 - "Community 736"
 Cohesion: 1.0
@@ -3599,751 +3602,751 @@ Nodes (1): Writes a beautifully styled Markdown report for executive review and 
 
 ### Community 737 - "Community 737"
 Cohesion: 1.0
-Nodes (1): Compares event logs tick-by-tick across runs to pin the exact tick of logical di
+Nodes (1): Parses and validates local run artifacts (manifest, events, anomalies, violation
 
 ### Community 738 - "Community 738"
 Cohesion: 1.0
-Nodes (1): Writes a beautifully styled Markdown report for executive review and continuous
+Nodes (1): Parses and validates a multi-run sweep (including sweep summaries and indexes)
 
 ### Community 739 - "Community 739"
 Cohesion: 1.0
-Nodes (1): Parses and validates local run artifacts (manifest, events, anomalies, violation
+Nodes (1): Queries historical runs filtered by given parameters (limit, scenario_name, heal
 
 ### Community 740 - "Community 740"
 Cohesion: 1.0
-Nodes (1): Parses and validates a multi-run sweep (including sweep summaries and indexes)
+Nodes (1): Queries historical simulation events (severity, event_type, tick range).
 
 ### Community 741 - "Community 741"
 Cohesion: 1.0
-Nodes (1): Queries historical runs filtered by given parameters (limit, scenario_name, heal
+Nodes (1): Queries historical anomalies.
 
 ### Community 742 - "Community 742"
 Cohesion: 1.0
-Nodes (1): Queries historical simulation events (severity, event_type, tick range).
+Nodes (1): Checks database connection status and latencies.
 
 ### Community 743 - "Community 743"
 Cohesion: 1.0
-Nodes (1): Queries historical anomalies.
+Nodes (1): Flushes background queues and safely terminates database connection pools.
 
 ### Community 744 - "Community 744"
 Cohesion: 1.0
-Nodes (1): Checks database connection status and latencies.
+Nodes (1): Resolves and caches the active warehouse adapter instance.
 
 ### Community 745 - "Community 745"
 Cohesion: 1.0
-Nodes (1): Flushes background queues and safely terminates database connection pools.
+Nodes (1): Resets the cached instance, e.g. for dynamic testing overrides.
 
 ### Community 746 - "Community 746"
 Cohesion: 1.0
-Nodes (1): Resolves and caches the active warehouse adapter instance.
+Nodes (1): Orchestrates post-run report generation, saving run_report.md and run_report.jso
 
 ### Community 747 - "Community 747"
 Cohesion: 1.0
-Nodes (1): Resets the cached instance, e.g. for dynamic testing overrides.
-
-### Community 748 - "Community 748"
-Cohesion: 1.0
-Nodes (1): Orchestrates post-run report generation, saving run_report.md and run_report.jso
+Nodes (1): Writes a beautifully styled Markdown report for executive review and continuous
 
 ### Community 749 - "Community 749"
 Cohesion: 1.0
-Nodes (1): Writes a beautifully styled Markdown report for executive review and continuous
+Nodes (1): Compatibility wrapper for apply_partial.
+
+### Community 750 - "Community 750"
+Cohesion: 1.0
+Nodes (1): Compatibility wrapper for ActionRoutingPhase.
 
 ### Community 751 - "Community 751"
 Cohesion: 1.0
-Nodes (1): Compatibility wrapper for apply_partial.
+Nodes (1): Compatibility wrapper for ActionRoutingPhase.
 
 ### Community 752 - "Community 752"
 Cohesion: 1.0
-Nodes (1): Compatibility wrapper for ActionRoutingPhase.
+Nodes (1): Authoritative mapping from EntityUpdate to changes dict.         Merged v5 logic
 
 ### Community 753 - "Community 753"
 Cohesion: 1.0
-Nodes (1): Compatibility wrapper for ActionRoutingPhase.
+Nodes (1): Low-level reconstruction bypasses frozen dataclass __init__ overhead.
 
 ### Community 754 - "Community 754"
 Cohesion: 1.0
-Nodes (1): Authoritative mapping from EntityUpdate to changes dict.         Merged v5 logic
+Nodes (1): Determine dynamic phase budgets based on operational mode and real-time phase pr
 
 ### Community 755 - "Community 755"
 Cohesion: 1.0
-Nodes (1): Low-level reconstruction bypasses frozen dataclass __init__ overhead.
+Nodes (1): Returns the set of entity IDs that were modified across any simulation domain.
 
 ### Community 756 - "Community 756"
 Cohesion: 1.0
-Nodes (1): Determine dynamic phase budgets based on operational mode and real-time phase pr
+Nodes (1): Standard compaction entry point returning the optimized StateUpdate.
 
 ### Community 757 - "Community 757"
 Cohesion: 1.0
-Nodes (1): Returns the set of entity IDs that were modified across any simulation domain.
+Nodes (1): Compacts the StateUpdate and returns both the optimized update and detailed redu
 
 ### Community 758 - "Community 758"
 Cohesion: 1.0
-Nodes (1): Standard compaction entry point returning the optimized StateUpdate.
+Nodes (1): Policy Waterfall according to Milestone 5/6 Degradation Matrix.
 
 ### Community 759 - "Community 759"
 Cohesion: 1.0
-Nodes (1): Compacts the StateUpdate and returns both the optimized update and detailed redu
+Nodes (1): Resolve adjacent position swaps before normal movement routing.          LAW:
 
 ### Community 760 - "Community 760"
 Cohesion: 1.0
-Nodes (1): Policy Waterfall according to Milestone 5/6 Degradation Matrix.
+Nodes (1): Route normal navigation intent via MovementSystem.         Optimized v3: reduced
 
 ### Community 761 - "Community 761"
 Cohesion: 1.0
-Nodes (1): Resolve adjacent position swaps before normal movement routing.          LAW:
+Nodes (1): Infer blockers based on recent failures.         Logic ID: STRAT-191 (Blockers h
 
 ### Community 762 - "Community 762"
 Cohesion: 1.0
-Nodes (1): Route normal navigation intent via MovementSystem.         Optimized v3: reduced
+Nodes (1): Produce a StrategicUpdate containing blockers for missing requirements.
 
 ### Community 763 - "Community 763"
 Cohesion: 1.0
-Nodes (1): Infer blockers based on recent failures.         Logic ID: STRAT-191 (Blockers h
+Nodes (1): Fused pass for strategic intelligence (Blockers, Concerns, Intents).         Log
 
 ### Community 764 - "Community 764"
 Cohesion: 1.0
-Nodes (1): Produce a StrategicUpdate containing blockers for missing requirements.
+Nodes (1): Resolve strategic blockers that are satisfied by the current or pending
 
 ### Community 765 - "Community 765"
 Cohesion: 1.0
-Nodes (1): Fused pass for strategic intelligence (Blockers, Concerns, Intents).         Log
+Nodes (1): Phase 9: Routine, Biological Needs, and Salience Filtering.         VERIFIED v2:
 
 ### Community 766 - "Community 766"
 Cohesion: 1.0
-Nodes (1): Resolve strategic blockers that are satisfied by the current or pending
+Nodes (1): Phase 4.1: Strategic Intent Evaluation (Projects/Objectives).         Orchestrat
 
 ### Community 767 - "Community 767"
 Cohesion: 1.0
-Nodes (1): Phase 9: Routine, Biological Needs, and Salience Filtering.         VERIFIED v2:
+Nodes (1): Phase 9: Strategic interruption resistance and retention.         Logic ID: STRA
 
 ### Community 768 - "Community 768"
 Cohesion: 1.0
-Nodes (1): Phase 4.1: Strategic Intent Evaluation (Projects/Objectives).         Orchestrat
+Nodes (1): Record the final result of a project and apply learning effects.
 
 ### Community 769 - "Community 769"
 Cohesion: 1.0
-Nodes (1): Phase 9: Strategic interruption resistance and retention.         Logic ID: STRA
+Nodes (1): VERIFIED v2: StrategicIntelligenceSystem.process_outcome
 
 ### Community 770 - "Community 770"
 Cohesion: 1.0
-Nodes (1): Record the final result of a project and apply learning effects.
+Nodes (1): Produce a collection of strategic intent updates for the next tick.
 
 ### Community 771 - "Community 771"
 Cohesion: 1.0
-Nodes (1): VERIFIED v2: StrategicIntelligenceSystem.process_outcome
+Nodes (1): VERIFIED v2: StrategicIntelligenceSystem.derive_cognition_profile
 
 ### Community 772 - "Community 772"
 Cohesion: 1.0
-Nodes (1): Produce a collection of strategic intent updates for the next tick.
+Nodes (1): Derive a DirtySet from a StateUpdate.         M3 Law: This must be deterministic
 
 ### Community 773 - "Community 773"
 Cohesion: 1.0
-Nodes (1): VERIFIED v2: StrategicIntelligenceSystem.derive_cognition_profile
+Nodes (1): Singular entry point for authoritative state transition refinement.         Logi
 
 ### Community 774 - "Community 774"
 Cohesion: 1.0
-Nodes (1): Derive a DirtySet from a StateUpdate.         M3 Law: This must be deterministic
+Nodes (1): Hardening Phase: Ensure DirtySet is always current.         Logic ID: PERF-006-R
 
 ### Community 775 - "Community 775"
 Cohesion: 1.0
-Nodes (1): Singular entry point for authoritative state transition refinement.         Logi
+Nodes (1): Low-level reconstruction bypasses frozen dataclass __init__ overhead.
 
 ### Community 776 - "Community 776"
 Cohesion: 1.0
-Nodes (1): Hardening Phase: Ensure DirtySet is always current.         Logic ID: PERF-006-R
+Nodes (1): The root entry point for advancing the world state.         Fuses passive advanc
 
 ### Community 777 - "Community 777"
 Cohesion: 1.0
-Nodes (1): Low-level reconstruction bypasses frozen dataclass __init__ overhead.
+Nodes (1): Compatibility wrapper for apply_partial.
 
 ### Community 778 - "Community 778"
 Cohesion: 1.0
-Nodes (1): The root entry point for advancing the world state.         Fuses passive advanc
+Nodes (1): Compatibility wrapper for ActionRoutingPhase.
 
 ### Community 779 - "Community 779"
 Cohesion: 1.0
-Nodes (1): Compatibility wrapper for apply_partial.
+Nodes (1): Authoritative mapping from EntityUpdate to changes dict.         Merged v5 logic
 
 ### Community 780 - "Community 780"
 Cohesion: 1.0
-Nodes (1): Compatibility wrapper for ActionRoutingPhase.
+Nodes (1): Low-level reconstruction bypasses frozen dataclass __init__ overhead.
 
 ### Community 781 - "Community 781"
 Cohesion: 1.0
-Nodes (1): Authoritative mapping from EntityUpdate to changes dict.         Merged v5 logic
+Nodes (1): Hardening Phase: Ensure DirtySet is always current.         Logic ID: PERF-006-R
 
 ### Community 782 - "Community 782"
 Cohesion: 1.0
-Nodes (1): Low-level reconstruction bypasses frozen dataclass __init__ overhead.
+Nodes (1): Compatibility wrapper for apply_partial.
 
 ### Community 783 - "Community 783"
 Cohesion: 1.0
-Nodes (1): Hardening Phase: Ensure DirtySet is always current.         Logic ID: PERF-006-R
+Nodes (1): Compatibility wrapper for ActionRoutingPhase.
 
 ### Community 784 - "Community 784"
 Cohesion: 1.0
-Nodes (1): Compatibility wrapper for apply_partial.
+Nodes (1): Compatibility wrapper for ActionRoutingPhase.
 
 ### Community 785 - "Community 785"
 Cohesion: 1.0
-Nodes (1): Compatibility wrapper for ActionRoutingPhase.
+Nodes (1): Authoritative mapping from EntityUpdate to changes dict.         Merged v5 logic
 
 ### Community 786 - "Community 786"
 Cohesion: 1.0
-Nodes (1): Compatibility wrapper for ActionRoutingPhase.
+Nodes (1): Low-level reconstruction bypasses frozen dataclass __init__ overhead.
 
 ### Community 787 - "Community 787"
 Cohesion: 1.0
-Nodes (1): Authoritative mapping from EntityUpdate to changes dict.         Merged v5 logic
+Nodes (1): Phase 9: Routine, Biological Needs, and Salience Filtering.         VERIFIED v2:
 
 ### Community 788 - "Community 788"
 Cohesion: 1.0
-Nodes (1): Low-level reconstruction bypasses frozen dataclass __init__ overhead.
+Nodes (1): Phase 4.1: Strategic Intent Evaluation (Projects/Objectives).         Orchestrat
 
 ### Community 789 - "Community 789"
 Cohesion: 1.0
-Nodes (1): Phase 9: Routine, Biological Needs, and Salience Filtering.         VERIFIED v2:
+Nodes (1): Phase 9: Strategic interruption resistance and retention.         Logic ID: STRA
 
 ### Community 790 - "Community 790"
 Cohesion: 1.0
-Nodes (1): Phase 4.1: Strategic Intent Evaluation (Projects/Objectives).         Orchestrat
+Nodes (1): Record the final result of a project and apply learning effects.
 
 ### Community 791 - "Community 791"
 Cohesion: 1.0
-Nodes (1): Phase 9: Strategic interruption resistance and retention.         Logic ID: STRA
+Nodes (1): VERIFIED v2: StrategicIntelligenceSystem.process_outcome
 
 ### Community 792 - "Community 792"
 Cohesion: 1.0
-Nodes (1): Record the final result of a project and apply learning effects.
+Nodes (1): Produce a collection of strategic intent updates for the next tick.
 
 ### Community 793 - "Community 793"
 Cohesion: 1.0
-Nodes (1): VERIFIED v2: StrategicIntelligenceSystem.process_outcome
+Nodes (1): VERIFIED v2: StrategicIntelligenceSystem.derive_cognition_profile
 
 ### Community 794 - "Community 794"
 Cohesion: 1.0
-Nodes (1): Produce a collection of strategic intent updates for the next tick.
+Nodes (1): Derive a DirtySet from a StateUpdate.         M3 Law: This must be deterministic
 
 ### Community 795 - "Community 795"
 Cohesion: 1.0
-Nodes (1): VERIFIED v2: StrategicIntelligenceSystem.derive_cognition_profile
+Nodes (1): Validates an intent and produces the necessary updates.
 
 ### Community 796 - "Community 796"
 Cohesion: 1.0
-Nodes (1): Derive a DirtySet from a StateUpdate.         M3 Law: This must be deterministic
+Nodes (1): Summarized world view.
 
 ### Community 797 - "Community 797"
 Cohesion: 1.0
-Nodes (1): Validates an intent and produces the necessary updates.
+Nodes (1): Complete inspectable world view.
 
 ### Community 798 - "Community 798"
 Cohesion: 1.0
-Nodes (1): Summarized world view.
+Nodes (1): Detailed entity model.
 
 ### Community 799 - "Community 799"
 Cohesion: 1.0
-Nodes (1): Complete inspectable world view.
+Nodes (1): Detailed regional model.
 
 ### Community 800 - "Community 800"
 Cohesion: 1.0
-Nodes (1): Detailed entity model.
+Nodes (1): Entity buys item from a nearby shop.
 
 ### Community 801 - "Community 801"
 Cohesion: 1.0
-Nodes (1): Detailed regional model.
+Nodes (1): Entity sells item to a nearby shop.
 
 ### Community 802 - "Community 802"
 Cohesion: 1.0
-Nodes (1): Entity buys item from a nearby shop.
+Nodes (1): Evaluate a move intent and produce an authoritative update dictionary.         I
 
 ### Community 803 - "Community 803"
 Cohesion: 1.0
-Nodes (1): Entity sells item to a nearby shop.
+Nodes (1): Check EXPLORE quests for proximity to target.
 
 ### Community 804 - "Community 804"
 Cohesion: 1.0
-Nodes (1): Evaluate a move intent and produce an authoritative update dictionary.         I
+Nodes (1): Advance HUNT quests when an enemy is defeated.
 
 ### Community 805 - "Community 805"
 Cohesion: 1.0
-Nodes (1): Check EXPLORE quests for proximity to target.
+Nodes (1): Enforces quest completion rules and emits authoritative reward intents.
 
 ### Community 806 - "Community 806"
 Cohesion: 1.0
-Nodes (1): Advance HUNT quests when an enemy is defeated.
+Nodes (1): Returns a spatial index of active/alive entities.
 
 ### Community 807 - "Community 807"
 Cohesion: 1.0
-Nodes (1): Enforces quest completion rules and emits authoritative reward intents.
+Nodes (1): Calculates Manhattan distance between two points.         Logic ID: COMB-001 (Ma
 
 ### Community 808 - "Community 808"
 Cohesion: 1.0
-Nodes (1): Returns a spatial index of active/alive entities.
+Nodes (1): Returns the region containing the given position.
 
 ### Community 809 - "Community 809"
 Cohesion: 1.0
-Nodes (1): Calculates Manhattan distance between two points.         Logic ID: COMB-001 (Ma
+Nodes (1): V2 Authoritative Occupancy Rule:         Enforces Static Terrain (WALL), Buildin
 
 ### Community 810 - "Community 810"
 Cohesion: 1.0
-Nodes (1): Returns the region containing the given position.
+Nodes (1): Checks if the current region suppresses specific actions and enforces actor vali
 
 ### Community 811 - "Community 811"
 Cohesion: 1.0
-Nodes (1): V2 Authoritative Occupancy Rule:         Enforces Static Terrain (WALL), Buildin
+Nodes (1): Action Readiness Law: Every ENTITY_ACT requires 100.0 readiness.         Logic I
 
 ### Community 812 - "Community 812"
 Cohesion: 1.0
-Nodes (1): Checks if the current region suppresses specific actions and enforces actor vali
+Nodes (1): V2 Authoritative Movement Law:         Validates if entity has enough readiness
 
 ### Community 813 - "Community 813"
 Cohesion: 1.0
-Nodes (1): Action Readiness Law: Every ENTITY_ACT requires 100.0 readiness.         Logic I
+Nodes (1): Authoritative validation for a combat interaction.         Logic ID: COMB-004 (M
 
 ### Community 814 - "Community 814"
 Cohesion: 1.0
-Nodes (1): V2 Authoritative Movement Law:         Validates if entity has enough readiness
+Nodes (1): Validation for Area-of-Effect positioning and execution.         Logic ID: COMB-
 
 ### Community 815 - "Community 815"
 Cohesion: 1.0
-Nodes (1): Authoritative validation for a combat interaction.         Logic ID: COMB-004 (M
+Nodes (1): Pillar 8: Skill Execution Law.         Skills require cost and cooldown verifica
 
 ### Community 816 - "Community 816"
 Cohesion: 1.0
-Nodes (1): Validation for Area-of-Effect positioning and execution.         Logic ID: COMB-
+Nodes (1): Simple Bresenham-like LoS check for WALL/Building obstructions.
 
 ### Community 817 - "Community 817"
 Cohesion: 1.0
-Nodes (1): Pillar 8: Skill Execution Law.         Skills require cost and cooldown verifica
+Nodes (1): Verify if attacker has clear elevation advantage (Terrain-based).
 
 ### Community 818 - "Community 818"
 Cohesion: 1.0
-Nodes (1): Simple Bresenham-like LoS check for WALL/Building obstructions.
+Nodes (1): Returns the current engagement record for an entity.
 
 ### Community 819 - "Community 819"
 Cohesion: 1.0
-Nodes (1): Verify if attacker has clear elevation advantage (Terrain-based).
+Nodes (1): Authoritative geometric flanking check.         Returns: (is_flanked, is_surroun
 
 ### Community 820 - "Community 820"
 Cohesion: 1.0
-Nodes (1): Returns the current engagement record for an entity.
+Nodes (1): Verify if defender is behind wall cover relative to attacker.         Logic ID:
 
 ### Community 821 - "Community 821"
 Cohesion: 1.0
-Nodes (1): Authoritative geometric flanking check.         Returns: (is_flanked, is_surroun
+Nodes (1): Calculate movement/tie-breaking priority.
 
 ### Community 822 - "Community 822"
 Cohesion: 1.0
-Nodes (1): Verify if defender is behind wall cover relative to attacker.         Logic ID:
+Nodes (1): Find hostile entities currently in melee engagement with this entity.
 
 ### Community 823 - "Community 823"
 Cohesion: 1.0
-Nodes (1): Calculate movement/tie-breaking priority.
+Nodes (1): Find hostile entities that would be in melee engagement with this entity at a hy
 
 ### Community 824 - "Community 824"
 Cohesion: 1.0
-Nodes (1): Find hostile entities currently in melee engagement with this entity.
+Nodes (1): Return the ID of the entity occupying the specified tile.
 
 ### Community 825 - "Community 825"
 Cohesion: 1.0
-Nodes (1): Find hostile entities that would be in melee engagement with this entity at a hy
+Nodes (1): Singular entry point for authoritative state transition refinement.         Logi
 
 ### Community 826 - "Community 826"
 Cohesion: 1.0
-Nodes (1): Return the ID of the entity occupying the specified tile.
+Nodes (1): Hardening Phase: Ensure DirtySet is always current.         Logic ID: PERF-006-R
 
 ### Community 827 - "Community 827"
 Cohesion: 1.0
-Nodes (1): Singular entry point for authoritative state transition refinement.         Logi
+Nodes (1): The root entry point for advancing the world state.         Fuses passive advanc
 
 ### Community 828 - "Community 828"
 Cohesion: 1.0
-Nodes (1): Hardening Phase: Ensure DirtySet is always current.         Logic ID: PERF-006-R
+Nodes (1): Compatibility wrapper for apply_partial.
 
 ### Community 829 - "Community 829"
 Cohesion: 1.0
-Nodes (1): The root entry point for advancing the world state.         Fuses passive advanc
+Nodes (1): Compatibility wrapper for ActionRoutingPhase.
 
 ### Community 830 - "Community 830"
 Cohesion: 1.0
-Nodes (1): Compatibility wrapper for apply_partial.
+Nodes (1): Compatibility wrapper for ActionRoutingPhase.
 
 ### Community 831 - "Community 831"
 Cohesion: 1.0
-Nodes (1): Compatibility wrapper for ActionRoutingPhase.
+Nodes (1): Low-level reconstruction bypasses frozen dataclass __init__ overhead.
 
 ### Community 832 - "Community 832"
 Cohesion: 1.0
-Nodes (1): Compatibility wrapper for ActionRoutingPhase.
+Nodes (1): Pillar 3: Fractional Armor Mitigation         Formula: damage = (atk * atk_mult)
 
 ### Community 833 - "Community 833"
 Cohesion: 1.0
-Nodes (1): Low-level reconstruction bypasses frozen dataclass __init__ overhead.
+Nodes (1): Calculates all tactical multipliers for an attack.         Consolidated from res
 
 ### Community 834 - "Community 834"
 Cohesion: 1.0
-Nodes (1): Pillar 3: Fractional Armor Mitigation         Formula: damage = (atk * atk_mult)
+Nodes (1): Phase 8: Calculate durability loss for attacker and defender.
 
 ### Community 835 - "Community 835"
 Cohesion: 1.0
-Nodes (1): Calculates all tactical multipliers for an attack.         Consolidated from res
+Nodes (1): Resolves multiple attackers hitting a single defender in the same tick.
 
 ### Community 836 - "Community 836"
 Cohesion: 1.0
-Nodes (1): Phase 8: Calculate durability loss for attacker and defender.
+Nodes (1): Calculates and returns a WoundUpdate if damage is sufficient.
 
 ### Community 837 - "Community 837"
 Cohesion: 1.0
-Nodes (1): Resolves multiple attackers hitting a single defender in the same tick.
+Nodes (1): Determines the next tactical intent for an entity.         Bounded to local visi
 
 ### Community 838 - "Community 838"
 Cohesion: 1.0
-Nodes (1): Calculates and returns a WoundUpdate if damage is sufficient.
+Nodes (1): Public helper for deterministic target selection.         Matches legacy 'Tactic
 
 ### Community 839 - "Community 839"
 Cohesion: 1.0
-Nodes (1): Determines the next tactical intent for an entity.         Bounded to local visi
+Nodes (1): Max stamina = 50 + endurance * 5.
 
 ### Community 840 - "Community 840"
 Cohesion: 1.0
-Nodes (1): Public helper for deterministic target selection.         Matches legacy 'Tactic
+Nodes (1): Returns the stamina cost for an attack action.
 
 ### Community 841 - "Community 841"
 Cohesion: 1.0
-Nodes (1): Max stamina = 50 + endurance * 5.
+Nodes (1): Returns the stamina cost for a movement action.
 
 ### Community 842 - "Community 842"
 Cohesion: 1.0
-Nodes (1): Returns the stamina cost for an attack action.
+Nodes (1): Returns the stamina cost for a harvest tick.
 
 ### Community 843 - "Community 843"
 Cohesion: 1.0
-Nodes (1): Returns the stamina cost for a movement action.
+Nodes (1): Returns the stamina cost for using a skill.
 
 ### Community 844 - "Community 844"
 Cohesion: 1.0
-Nodes (1): Returns the stamina cost for a harvest tick.
+Nodes (1): Check if entity has enough stamina for a skill.
 
 ### Community 845 - "Community 845"
 Cohesion: 1.0
-Nodes (1): Returns the stamina cost for using a skill.
+Nodes (1): Check if entity is in exhaustion state.
 
 ### Community 846 - "Community 846"
 Cohesion: 1.0
-Nodes (1): Check if entity has enough stamina for a skill.
+Nodes (1): Combat damage multiplier when exhausted.
 
 ### Community 847 - "Community 847"
 Cohesion: 1.0
-Nodes (1): Check if entity is in exhaustion state.
+Nodes (1): Check if a single hit is massive enough to cause a wound.
 
 ### Community 848 - "Community 848"
 Cohesion: 1.0
-Nodes (1): Combat damage multiplier when exhausted.
+Nodes (1): Create a wound record from a massive hit.
 
 ### Community 849 - "Community 849"
 Cohesion: 1.0
-Nodes (1): Check if a single hit is massive enough to cause a wound.
+Nodes (1): Sum all active (unhealed) wound penalties.
 
 ### Community 850 - "Community 850"
 Cohesion: 1.0
-Nodes (1): Create a wound record from a massive hit.
+Nodes (1): Sum all permanent scar penalties (lesser than wounds).
 
 ### Community 851 - "Community 851"
 Cohesion: 1.0
-Nodes (1): Sum all active (unhealed) wound penalties.
+Nodes (1): Heal a wound and create a scar. Returns (healed_wound, scar).
 
 ### Community 852 - "Community 852"
 Cohesion: 1.0
-Nodes (1): Sum all permanent scar penalties (lesser than wounds).
+Nodes (1): Check if entity is beyond its leash radius.         VERIFIED v2: mob_leash_radiu
 
 ### Community 853 - "Community 853"
 Cohesion: 1.0
-Nodes (1): Heal a wound and create a scar. Returns (healed_wound, scar).
+Nodes (1): Check if a chasing mob should abandon pursuit.         VERIFIED v2: mob_chase_gi
 
 ### Community 854 - "Community 854"
 Cohesion: 1.0
-Nodes (1): Check if entity is beyond its leash radius.         VERIFIED v2: mob_leash_radiu
+Nodes (1): Get the home position for return-to-camp behavior.
 
 ### Community 855 - "Community 855"
 Cohesion: 1.0
-Nodes (1): Check if a chasing mob should abandon pursuit.         VERIFIED v2: mob_chase_gi
+Nodes (1): Check if entity has reached home.
 
 ### Community 856 - "Community 856"
 Cohesion: 1.0
-Nodes (1): Get the home position for return-to-camp behavior.
+Nodes (1): Calculate perception-based discovery score.         VERIFIED v2: perception_disc
 
 ### Community 857 - "Community 857"
 Cohesion: 1.0
-Nodes (1): Check if entity has reached home.
+Nodes (1): Calculate diagnosis accuracy (0.0 to 1.0).         VERIFIED v2: wisdom_diagnosis
 
 ### Community 858 - "Community 858"
 Cohesion: 1.0
-Nodes (1): Calculate perception-based discovery score.         VERIFIED v2: perception_disc
+Nodes (1): Get movement cost for a tile based on terrain type.         VERIFIED v2: terrain
 
 ### Community 859 - "Community 859"
 Cohesion: 1.0
-Nodes (1): Calculate diagnosis accuracy (0.0 to 1.0).         VERIFIED v2: wisdom_diagnosis
+Nodes (1): Calculate total movement cost for a path.
 
 ### Community 860 - "Community 860"
 Cohesion: 1.0
-Nodes (1): Get movement cost for a tile based on terrain type.         VERIFIED v2: terrain
+Nodes (1): Only switch targets if the new one is significantly better.         Uses margin
 
 ### Community 861 - "Community 861"
 Cohesion: 1.0
-Nodes (1): Calculate total movement cost for a path.
+Nodes (1): Physical: base_atk + strength * 0.8 * power         Magical:  base_atk + intelli
 
 ### Community 862 - "Community 862"
 Cohesion: 1.0
-Nodes (1): Only switch targets if the new one is significantly better.         Uses margin
+Nodes (1): Full effective stat recomputation:         base stats + gear + traits + wound pe
 
 ### Community 863 - "Community 863"
 Cohesion: 1.0
-Nodes (1): Physical: base_atk + strength * 0.8 * power         Magical:  base_atk + intelli
+Nodes (1): Apply regional effects to entities and update world markers.
 
 ### Community 864 - "Community 864"
 Cohesion: 1.0
-Nodes (1): Full effective stat recomputation:         base stats + gear + traits + wound pe
+Nodes (1): Law 300.1: Actor Validity.          Invalid actors may not submit any authoritat
 
 ### Community 865 - "Community 865"
 Cohesion: 1.0
-Nodes (1): Apply regional effects to entities and update world markers.
+Nodes (1): Generates a stable, order-independent composite seed.         Logic ID: INFRA-10
 
 ### Community 866 - "Community 866"
 Cohesion: 1.0
-Nodes (1): Law 300.1: Actor Validity.          Invalid actors may not submit any authoritat
+Nodes (1): Infer blockers based on recent failures.         Logic ID: STRAT-191 (Blockers h
 
 ### Community 867 - "Community 867"
 Cohesion: 1.0
-Nodes (1): Generates a stable, order-independent composite seed.         Logic ID: INFRA-10
+Nodes (1): Produce a StrategicUpdate containing blockers for missing requirements.
 
 ### Community 868 - "Community 868"
 Cohesion: 1.0
-Nodes (1): Infer blockers based on recent failures.         Logic ID: STRAT-191 (Blockers h
+Nodes (1): Fused pass for strategic intelligence (Blockers, Concerns, Intents).         Log
 
 ### Community 869 - "Community 869"
 Cohesion: 1.0
-Nodes (1): Produce a StrategicUpdate containing blockers for missing requirements.
+Nodes (1): Resolve strategic blockers that are satisfied by the current or pending
 
 ### Community 870 - "Community 870"
 Cohesion: 1.0
-Nodes (1): Fused pass for strategic intelligence (Blockers, Concerns, Intents).         Log
+Nodes (1): Phase 9: Routine, Biological Needs, and Salience Filtering.         VERIFIED v2:
 
 ### Community 871 - "Community 871"
 Cohesion: 1.0
-Nodes (1): Resolve strategic blockers that are satisfied by the current or pending
+Nodes (1): Phase 4.1: Strategic Intent Evaluation (Projects/Objectives).         Orchestrat
 
 ### Community 872 - "Community 872"
 Cohesion: 1.0
-Nodes (1): Phase 9: Routine, Biological Needs, and Salience Filtering.         VERIFIED v2:
+Nodes (1): Phase 9: Strategic interruption resistance and retention.         Logic ID: STRA
 
 ### Community 873 - "Community 873"
 Cohesion: 1.0
-Nodes (1): Phase 4.1: Strategic Intent Evaluation (Projects/Objectives).         Orchestrat
+Nodes (1): Record the final result of a project and apply learning effects.
 
 ### Community 874 - "Community 874"
 Cohesion: 1.0
-Nodes (1): Phase 9: Strategic interruption resistance and retention.         Logic ID: STRA
+Nodes (1): Produce a collection of strategic intent updates for the next tick.
 
 ### Community 875 - "Community 875"
 Cohesion: 1.0
-Nodes (1): Record the final result of a project and apply learning effects.
+Nodes (1): VERIFIED v2: StrategicIntelligenceSystem.derive_cognition_profile
 
 ### Community 876 - "Community 876"
 Cohesion: 1.0
-Nodes (1): Produce a collection of strategic intent updates for the next tick.
+Nodes (1): Infer blockers based on recent failures.         Logic ID: STRAT-191 (Blockers h
 
 ### Community 877 - "Community 877"
 Cohesion: 1.0
-Nodes (1): VERIFIED v2: StrategicIntelligenceSystem.derive_cognition_profile
+Nodes (1): Produce a StrategicUpdate containing blockers for missing requirements.
 
 ### Community 878 - "Community 878"
 Cohesion: 1.0
-Nodes (1): Infer blockers based on recent failures.         Logic ID: STRAT-191 (Blockers h
+Nodes (1): Fused pass for strategic intelligence (Blockers, Concerns, Intents).         Log
 
 ### Community 879 - "Community 879"
 Cohesion: 1.0
-Nodes (1): Produce a StrategicUpdate containing blockers for missing requirements.
+Nodes (1): Resolve strategic blockers that are satisfied by the current or pending
 
 ### Community 880 - "Community 880"
 Cohesion: 1.0
-Nodes (1): Fused pass for strategic intelligence (Blockers, Concerns, Intents).         Log
+Nodes (1): Phase 9: Routine, Biological Needs, and Salience Filtering.         VERIFIED v2:
 
 ### Community 881 - "Community 881"
 Cohesion: 1.0
-Nodes (1): Resolve strategic blockers that are satisfied by the current or pending
+Nodes (1): Phase 4.1: Strategic Intent Evaluation (Projects/Objectives).         Orchestrat
 
 ### Community 882 - "Community 882"
 Cohesion: 1.0
-Nodes (1): Phase 9: Routine, Biological Needs, and Salience Filtering.         VERIFIED v2:
+Nodes (1): Phase 9: Strategic interruption resistance and retention.         Logic ID: STRA
 
 ### Community 883 - "Community 883"
 Cohesion: 1.0
-Nodes (1): Phase 4.1: Strategic Intent Evaluation (Projects/Objectives).         Orchestrat
+Nodes (1): Record the final result of a project and apply learning effects.
 
 ### Community 884 - "Community 884"
 Cohesion: 1.0
-Nodes (1): Phase 9: Strategic interruption resistance and retention.         Logic ID: STRA
+Nodes (1): VERIFIED v2: StrategicIntelligenceSystem.process_outcome
 
 ### Community 885 - "Community 885"
 Cohesion: 1.0
-Nodes (1): Record the final result of a project and apply learning effects.
+Nodes (1): Produce a collection of strategic intent updates for the next tick.
 
 ### Community 886 - "Community 886"
 Cohesion: 1.0
-Nodes (1): VERIFIED v2: StrategicIntelligenceSystem.process_outcome
+Nodes (1): VERIFIED v2: StrategicIntelligenceSystem.derive_cognition_profile
 
 ### Community 887 - "Community 887"
 Cohesion: 1.0
-Nodes (1): Produce a collection of strategic intent updates for the next tick.
+Nodes (1): Compatibility wrapper for apply_partial.
 
 ### Community 888 - "Community 888"
 Cohesion: 1.0
-Nodes (1): VERIFIED v2: StrategicIntelligenceSystem.derive_cognition_profile
+Nodes (1): Compatibility wrapper for ActionRoutingPhase.
 
 ### Community 889 - "Community 889"
 Cohesion: 1.0
-Nodes (1): Compatibility wrapper for apply_partial.
+Nodes (1): Authoritative mapping from EntityUpdate to changes dict.         Merged v5 logic
 
 ### Community 890 - "Community 890"
 Cohesion: 1.0
-Nodes (1): Compatibility wrapper for ActionRoutingPhase.
+Nodes (1): Low-level reconstruction bypasses frozen dataclass __init__ overhead.
 
 ### Community 891 - "Community 891"
 Cohesion: 1.0
-Nodes (1): Authoritative mapping from EntityUpdate to changes dict.         Merged v5 logic
+Nodes (1): Returns IDs of entities within radius of pos.
 
 ### Community 892 - "Community 892"
 Cohesion: 1.0
-Nodes (1): Low-level reconstruction bypasses frozen dataclass __init__ overhead.
+Nodes (1): Returns IDs of entities within the rectangular bounds.
 
 ### Community 893 - "Community 893"
 Cohesion: 1.0
-Nodes (1): Returns IDs of entities within radius of pos.
+Nodes (1): Returns IDs of resource nodes within radius of pos.
 
 ### Community 894 - "Community 894"
 Cohesion: 1.0
-Nodes (1): Returns IDs of entities within the rectangular bounds.
+Nodes (1): Returns the building at a specific tile coordinate.
 
 ### Community 895 - "Community 895"
 Cohesion: 1.0
-Nodes (1): Returns IDs of resource nodes within radius of pos.
+Nodes (1): Returns a map of (x, y) to entity ID for all active/alive entities.
 
 ### Community 896 - "Community 896"
 Cohesion: 1.0
-Nodes (1): Returns the building at a specific tile coordinate.
+Nodes (1): Returns the resource node at a specific position.
 
 ### Community 897 - "Community 897"
 Cohesion: 1.0
-Nodes (1): Returns a map of (x, y) to entity ID for all active/alive entities.
+Nodes (1): Returns the ground item at a specific position.
 
 ### Community 898 - "Community 898"
 Cohesion: 1.0
-Nodes (1): Returns the resource node at a specific position.
+Nodes (1): Returns the region containing the given position.
 
 ### Community 899 - "Community 899"
 Cohesion: 1.0
-Nodes (1): Returns the ground item at a specific position.
+Nodes (1): Returns the region containing a building, using a cached map.
 
 ### Community 900 - "Community 900"
 Cohesion: 1.0
-Nodes (1): Returns the region containing the given position.
+Nodes (1): Evaluate a move intent and produce an authoritative update dictionary.         I
 
 ### Community 901 - "Community 901"
 Cohesion: 1.0
-Nodes (1): Returns the region containing a building, using a cached map.
+Nodes (1): Hardening Phase: Ensure DirtySet is always current.         Logic ID: PERF-006-R
 
 ### Community 902 - "Community 902"
 Cohesion: 1.0
-Nodes (1): Evaluate a move intent and produce an authoritative update dictionary.         I
+Nodes (1): Compatibility wrapper for apply_partial.
 
 ### Community 903 - "Community 903"
 Cohesion: 1.0
-Nodes (1): Hardening Phase: Ensure DirtySet is always current.         Logic ID: PERF-006-R
+Nodes (1): Compatibility wrapper for ActionRoutingPhase.
 
 ### Community 904 - "Community 904"
 Cohesion: 1.0
-Nodes (1): Compatibility wrapper for apply_partial.
+Nodes (1): Authoritative mapping from EntityUpdate to changes dict.         Merged v5 logic
 
 ### Community 905 - "Community 905"
 Cohesion: 1.0
-Nodes (1): Compatibility wrapper for ActionRoutingPhase.
+Nodes (1): Low-level reconstruction bypasses frozen dataclass __init__ overhead.
 
 ### Community 906 - "Community 906"
 Cohesion: 1.0
-Nodes (1): Authoritative mapping from EntityUpdate to changes dict.         Merged v5 logic
+Nodes (1): Calculates Manhattan distance between two points.         Logic ID: COMB-001 (Ma
 
 ### Community 907 - "Community 907"
 Cohesion: 1.0
-Nodes (1): Low-level reconstruction bypasses frozen dataclass __init__ overhead.
+Nodes (1): Returns the region containing the given position.
 
 ### Community 908 - "Community 908"
 Cohesion: 1.0
-Nodes (1): Calculates Manhattan distance between two points.         Logic ID: COMB-001 (Ma
+Nodes (1): V2 Authoritative Occupancy Rule:         Enforces Static Terrain (WALL), Buildin
 
 ### Community 909 - "Community 909"
 Cohesion: 1.0
-Nodes (1): Returns the region containing the given position.
+Nodes (1): Checks if the current region suppresses specific actions and enforces actor vali
 
 ### Community 910 - "Community 910"
 Cohesion: 1.0
-Nodes (1): V2 Authoritative Occupancy Rule:         Enforces Static Terrain (WALL), Buildin
+Nodes (1): Action Readiness Law: Every ENTITY_ACT requires 100.0 readiness.         Logic I
 
 ### Community 911 - "Community 911"
 Cohesion: 1.0
-Nodes (1): Checks if the current region suppresses specific actions and enforces actor vali
+Nodes (1): V2 Authoritative Movement Law:         Validates if entity has enough readiness
 
 ### Community 912 - "Community 912"
 Cohesion: 1.0
-Nodes (1): Action Readiness Law: Every ENTITY_ACT requires 100.0 readiness.         Logic I
+Nodes (1): Authoritative validation for a combat interaction.         Logic ID: COMB-004 (M
 
 ### Community 913 - "Community 913"
 Cohesion: 1.0
-Nodes (1): V2 Authoritative Movement Law:         Validates if entity has enough readiness
+Nodes (1): Validation for Area-of-Effect positioning and execution.         Logic ID: COMB-
 
 ### Community 914 - "Community 914"
 Cohesion: 1.0
-Nodes (1): Authoritative validation for a combat interaction.         Logic ID: COMB-004 (M
+Nodes (1): Pillar 8: Skill Execution Law.         Skills require cost and cooldown verifica
 
 ### Community 915 - "Community 915"
 Cohesion: 1.0
-Nodes (1): Validation for Area-of-Effect positioning and execution.         Logic ID: COMB-
+Nodes (1): Simple Bresenham-like LoS check for WALL/Building obstructions.
 
 ### Community 916 - "Community 916"
 Cohesion: 1.0
-Nodes (1): Pillar 8: Skill Execution Law.         Skills require cost and cooldown verifica
+Nodes (1): Verify if attacker has clear elevation advantage (Terrain-based).
 
 ### Community 917 - "Community 917"
 Cohesion: 1.0
-Nodes (1): Simple Bresenham-like LoS check for WALL/Building obstructions.
+Nodes (1): Returns the current engagement record for an entity.
 
 ### Community 918 - "Community 918"
 Cohesion: 1.0
-Nodes (1): Verify if attacker has clear elevation advantage (Terrain-based).
+Nodes (1): Verify if defender is behind wall cover relative to attacker.         Logic ID:
 
 ### Community 919 - "Community 919"
 Cohesion: 1.0
-Nodes (1): Returns the current engagement record for an entity.
+Nodes (1): Calculate movement/tie-breaking priority.
 
 ### Community 920 - "Community 920"
 Cohesion: 1.0
-Nodes (1): Verify if defender is behind wall cover relative to attacker.         Logic ID:
+Nodes (1): Find hostile entities currently in melee engagement with this entity.
 
 ### Community 921 - "Community 921"
 Cohesion: 1.0
-Nodes (1): Calculate movement/tie-breaking priority.
+Nodes (1): Find hostile entities that would be in melee engagement with this entity at a hy
 
 ### Community 922 - "Community 922"
 Cohesion: 1.0
-Nodes (1): Find hostile entities currently in melee engagement with this entity.
+Nodes (1): Return the ID of the entity occupying the specified tile.
 
 ### Community 923 - "Community 923"
 Cohesion: 1.0
-Nodes (1): Find hostile entities that would be in melee engagement with this entity at a hy
+Nodes (1): Hardening Phase: Ensure DirtySet is always current.         Logic ID: PERF-006-R
 
 ### Community 924 - "Community 924"
 Cohesion: 1.0
-Nodes (1): Return the ID of the entity occupying the specified tile.
+Nodes (1): Singular entry point for authoritative state transition refinement.         Logi
 
 ### Community 925 - "Community 925"
 Cohesion: 1.0
@@ -4351,3560 +4354,3562 @@ Nodes (1): Hardening Phase: Ensure DirtySet is always current.         Logic ID:
 
 ### Community 926 - "Community 926"
 Cohesion: 1.0
-Nodes (1): Singular entry point for authoritative state transition refinement.         Logi
+Nodes (1): Derive a DirtySet from a StateUpdate.         M3 Law: This must be deterministic
 
 ### Community 927 - "Community 927"
 Cohesion: 1.0
-Nodes (1): Hardening Phase: Ensure DirtySet is always current.         Logic ID: PERF-006-R
+Nodes (1): Derive a DirtySet from a StateUpdate.         M3 Law: This must be deterministic
 
 ### Community 928 - "Community 928"
 Cohesion: 1.0
-Nodes (1): Derive a DirtySet from a StateUpdate.         M3 Law: This must be deterministic
+Nodes (1): Calculate total weight of all items in inventory.
 
 ### Community 929 - "Community 929"
 Cohesion: 1.0
-Nodes (1): Derive a DirtySet from a StateUpdate.         M3 Law: This must be deterministic
+Nodes (1): Check if an item can be added without exceeding slots or weight.         Logic I
 
 ### Community 930 - "Community 930"
 Cohesion: 1.0
-Nodes (1): Calculate total weight of all items in inventory.
+Nodes (1): Check if a list of item stacks can be added without exceeding slots or weight.
 
 ### Community 931 - "Community 931"
 Cohesion: 1.0
-Nodes (1): Check if an item can be added without exceeding slots or weight.         Logic I
+Nodes (1): Check capacity after accounting for item removals (Phase 8).
 
 ### Community 932 - "Community 932"
 Cohesion: 1.0
-Nodes (1): Check if a list of item stacks can be added without exceeding slots or weight.
+Nodes (1): Check if an item can be equipped in the specified slot.
 
 ### Community 933 - "Community 933"
 Cohesion: 1.0
-Nodes (1): Check capacity after accounting for item removals (Phase 8).
+Nodes (1): Apply authoritative updates to inventory, merging stacks and enforcing limits.
 
 ### Community 934 - "Community 934"
 Cohesion: 1.0
-Nodes (1): Check if an item can be equipped in the specified slot.
+Nodes (1): Determines the next tactical intent for an entity.         Bounded to local visi
 
 ### Community 935 - "Community 935"
 Cohesion: 1.0
-Nodes (1): Apply authoritative updates to inventory, merging stacks and enforcing limits.
+Nodes (1): Public helper for deterministic target selection.         Matches legacy 'Tactic
 
 ### Community 936 - "Community 936"
 Cohesion: 1.0
-Nodes (1): Determines the next tactical intent for an entity.         Bounded to local visi
+Nodes (1): Infer blockers based on recent failures.         Logic ID: STRAT-191 (Blockers h
 
 ### Community 937 - "Community 937"
 Cohesion: 1.0
-Nodes (1): Public helper for deterministic target selection.         Matches legacy 'Tactic
+Nodes (1): Produce a StrategicUpdate containing blockers for missing requirements.
 
 ### Community 938 - "Community 938"
 Cohesion: 1.0
-Nodes (1): Infer blockers based on recent failures.         Logic ID: STRAT-191 (Blockers h
+Nodes (1): Fused pass for strategic intelligence (Blockers, Concerns, Intents).         Log
 
 ### Community 939 - "Community 939"
 Cohesion: 1.0
-Nodes (1): Produce a StrategicUpdate containing blockers for missing requirements.
+Nodes (1): Resolve strategic blockers that are satisfied by the current or pending
 
 ### Community 940 - "Community 940"
 Cohesion: 1.0
-Nodes (1): Fused pass for strategic intelligence (Blockers, Concerns, Intents).         Log
+Nodes (1): Phase 9: Routine, Biological Needs, and Salience Filtering.         VERIFIED v2:
 
 ### Community 941 - "Community 941"
 Cohesion: 1.0
-Nodes (1): Resolve strategic blockers that are satisfied by the current or pending
+Nodes (1): Phase 4.1: Strategic Intent Evaluation (Projects/Objectives).         Orchestrat
 
 ### Community 942 - "Community 942"
 Cohesion: 1.0
-Nodes (1): Phase 9: Routine, Biological Needs, and Salience Filtering.         VERIFIED v2:
+Nodes (1): Phase 9: Strategic interruption resistance and retention.         Logic ID: STRA
 
 ### Community 943 - "Community 943"
 Cohesion: 1.0
-Nodes (1): Phase 4.1: Strategic Intent Evaluation (Projects/Objectives).         Orchestrat
+Nodes (1): Record the final result of a project and apply learning effects.
 
 ### Community 944 - "Community 944"
 Cohesion: 1.0
-Nodes (1): Phase 9: Strategic interruption resistance and retention.         Logic ID: STRA
+Nodes (1): VERIFIED v2: StrategicIntelligenceSystem.process_outcome
 
 ### Community 945 - "Community 945"
 Cohesion: 1.0
-Nodes (1): Record the final result of a project and apply learning effects.
+Nodes (1): Produce a collection of strategic intent updates for the next tick.
 
 ### Community 946 - "Community 946"
 Cohesion: 1.0
-Nodes (1): VERIFIED v2: StrategicIntelligenceSystem.process_outcome
+Nodes (1): VERIFIED v2: StrategicIntelligenceSystem.derive_cognition_profile
 
 ### Community 947 - "Community 947"
 Cohesion: 1.0
-Nodes (1): Produce a collection of strategic intent updates for the next tick.
+Nodes (1): Compatibility wrapper for ActionRoutingPhase.
 
 ### Community 948 - "Community 948"
 Cohesion: 1.0
-Nodes (1): VERIFIED v2: StrategicIntelligenceSystem.derive_cognition_profile
+Nodes (1): Authoritative mapping from EntityUpdate to changes dict.         Merged v5 logic
 
 ### Community 949 - "Community 949"
 Cohesion: 1.0
-Nodes (1): Compatibility wrapper for ActionRoutingPhase.
+Nodes (1): Low-level reconstruction bypasses frozen dataclass __init__ overhead.
 
 ### Community 950 - "Community 950"
 Cohesion: 1.0
-Nodes (1): Authoritative mapping from EntityUpdate to changes dict.         Merged v5 logic
+Nodes (1): Law 300: Action Routing.          Responsibilities:             - route ENTITY_A
 
 ### Community 951 - "Community 951"
 Cohesion: 1.0
-Nodes (1): Low-level reconstruction bypasses frozen dataclass __init__ overhead.
+Nodes (1): Derive a DirtySet from a StateUpdate.         M3 Law: This must be deterministic
 
 ### Community 952 - "Community 952"
 Cohesion: 1.0
-Nodes (1): Law 300: Action Routing.          Responsibilities:             - route ENTITY_A
+Nodes (1): Calculates Manhattan distance between two points.         Logic ID: COMB-001 (Ma
 
 ### Community 953 - "Community 953"
 Cohesion: 1.0
-Nodes (1): Derive a DirtySet from a StateUpdate.         M3 Law: This must be deterministic
+Nodes (1): Returns the region containing the given position.
 
 ### Community 954 - "Community 954"
 Cohesion: 1.0
-Nodes (1): Calculates Manhattan distance between two points.         Logic ID: COMB-001 (Ma
+Nodes (1): V2 Authoritative Occupancy Rule:         Enforces Static Terrain (WALL), Buildin
 
 ### Community 955 - "Community 955"
 Cohesion: 1.0
-Nodes (1): Returns the region containing the given position.
+Nodes (1): Checks if the current region suppresses specific actions and enforces actor vali
 
 ### Community 956 - "Community 956"
 Cohesion: 1.0
-Nodes (1): V2 Authoritative Occupancy Rule:         Enforces Static Terrain (WALL), Buildin
+Nodes (1): Action Readiness Law: Every ENTITY_ACT requires 100.0 readiness.         Logic I
 
 ### Community 957 - "Community 957"
 Cohesion: 1.0
-Nodes (1): Checks if the current region suppresses specific actions and enforces actor vali
+Nodes (1): V2 Authoritative Movement Law:         Validates if entity has enough readiness
 
 ### Community 958 - "Community 958"
 Cohesion: 1.0
-Nodes (1): Action Readiness Law: Every ENTITY_ACT requires 100.0 readiness.         Logic I
+Nodes (1): Authoritative validation for a combat interaction.         Logic ID: COMB-004 (M
 
 ### Community 959 - "Community 959"
 Cohesion: 1.0
-Nodes (1): V2 Authoritative Movement Law:         Validates if entity has enough readiness
+Nodes (1): Simple Bresenham-like LoS check for WALL/Building obstructions.
 
 ### Community 960 - "Community 960"
 Cohesion: 1.0
-Nodes (1): Authoritative validation for a combat interaction.         Logic ID: COMB-004 (M
+Nodes (1): Verify if attacker has clear elevation advantage (Terrain-based).
 
 ### Community 961 - "Community 961"
 Cohesion: 1.0
-Nodes (1): Simple Bresenham-like LoS check for WALL/Building obstructions.
+Nodes (1): Returns the current engagement record for an entity.
 
 ### Community 962 - "Community 962"
 Cohesion: 1.0
-Nodes (1): Verify if attacker has clear elevation advantage (Terrain-based).
+Nodes (1): Authoritative geometric flanking check.         Returns: (is_flanked, is_surroun
 
 ### Community 963 - "Community 963"
 Cohesion: 1.0
-Nodes (1): Returns the current engagement record for an entity.
+Nodes (1): Verify if defender is behind wall cover relative to attacker.         Logic ID:
 
 ### Community 964 - "Community 964"
 Cohesion: 1.0
-Nodes (1): Authoritative geometric flanking check.         Returns: (is_flanked, is_surroun
+Nodes (1): Calculate movement/tie-breaking priority.
 
 ### Community 965 - "Community 965"
 Cohesion: 1.0
-Nodes (1): Verify if defender is behind wall cover relative to attacker.         Logic ID:
+Nodes (1): Find hostile entities currently in melee engagement with this entity.
 
 ### Community 966 - "Community 966"
 Cohesion: 1.0
-Nodes (1): Calculate movement/tie-breaking priority.
+Nodes (1): Return the ID of the entity occupying the specified tile.
 
 ### Community 967 - "Community 967"
 Cohesion: 1.0
-Nodes (1): Find hostile entities currently in melee engagement with this entity.
+Nodes (1): Hardening Phase: Ensure DirtySet is always current.         Logic ID: PERF-006-R
 
 ### Community 968 - "Community 968"
 Cohesion: 1.0
-Nodes (1): Return the ID of the entity occupying the specified tile.
+Nodes (1): The root entry point for advancing the world state.         Fuses passive advanc
 
 ### Community 969 - "Community 969"
 Cohesion: 1.0
-Nodes (1): Hardening Phase: Ensure DirtySet is always current.         Logic ID: PERF-006-R
+Nodes (1): Compatibility wrapper for apply_partial.
 
 ### Community 970 - "Community 970"
 Cohesion: 1.0
-Nodes (1): The root entry point for advancing the world state.         Fuses passive advanc
+Nodes (1): Compatibility wrapper for ActionRoutingPhase.
 
 ### Community 971 - "Community 971"
 Cohesion: 1.0
-Nodes (1): Compatibility wrapper for apply_partial.
+Nodes (1): Compatibility wrapper for ActionRoutingPhase.
 
 ### Community 972 - "Community 972"
 Cohesion: 1.0
-Nodes (1): Compatibility wrapper for ActionRoutingPhase.
+Nodes (1): Authoritative mapping from EntityUpdate to changes dict.         Merged v5 logic
 
 ### Community 973 - "Community 973"
 Cohesion: 1.0
-Nodes (1): Compatibility wrapper for ActionRoutingPhase.
+Nodes (1): Low-level reconstruction bypasses frozen dataclass __init__ overhead.
 
 ### Community 974 - "Community 974"
 Cohesion: 1.0
-Nodes (1): Authoritative mapping from EntityUpdate to changes dict.         Merged v5 logic
+Nodes (1): Max stamina = 50 + endurance * 5.
 
 ### Community 975 - "Community 975"
 Cohesion: 1.0
-Nodes (1): Low-level reconstruction bypasses frozen dataclass __init__ overhead.
+Nodes (1): Returns the stamina cost for an attack action.
 
 ### Community 976 - "Community 976"
 Cohesion: 1.0
-Nodes (1): Max stamina = 50 + endurance * 5.
+Nodes (1): Returns the stamina cost for a movement action.
 
 ### Community 977 - "Community 977"
 Cohesion: 1.0
-Nodes (1): Returns the stamina cost for an attack action.
+Nodes (1): Returns the stamina cost for a harvest tick.
 
 ### Community 978 - "Community 978"
 Cohesion: 1.0
-Nodes (1): Returns the stamina cost for a movement action.
+Nodes (1): Returns the stamina cost for using a skill.
 
 ### Community 979 - "Community 979"
 Cohesion: 1.0
-Nodes (1): Returns the stamina cost for a harvest tick.
+Nodes (1): Check if entity has enough stamina for a skill.
 
 ### Community 980 - "Community 980"
 Cohesion: 1.0
-Nodes (1): Returns the stamina cost for using a skill.
+Nodes (1): Check if entity is in exhaustion state.
 
 ### Community 981 - "Community 981"
 Cohesion: 1.0
-Nodes (1): Check if entity has enough stamina for a skill.
+Nodes (1): Combat damage multiplier when exhausted.
 
 ### Community 982 - "Community 982"
 Cohesion: 1.0
-Nodes (1): Check if entity is in exhaustion state.
+Nodes (1): Returns the stamina delta for passive/rest regeneration.
 
 ### Community 983 - "Community 983"
 Cohesion: 1.0
-Nodes (1): Combat damage multiplier when exhausted.
+Nodes (1): Returns the resource node at a specific position.
 
 ### Community 984 - "Community 984"
 Cohesion: 1.0
-Nodes (1): Returns the stamina delta for passive/rest regeneration.
+Nodes (1): Returns the corpse at a specific position.
 
 ### Community 985 - "Community 985"
 Cohesion: 1.0
-Nodes (1): Returns the resource node at a specific position.
+Nodes (1): Returns the ground item at a specific position.
 
 ### Community 986 - "Community 986"
 Cohesion: 1.0
-Nodes (1): Returns the corpse at a specific position.
+Nodes (1): Returns the region containing the given position.
 
 ### Community 987 - "Community 987"
 Cohesion: 1.0
-Nodes (1): Returns the ground item at a specific position.
+Nodes (1): Returns the region containing a building, using a cached map.
 
 ### Community 988 - "Community 988"
 Cohesion: 1.0
-Nodes (1): Returns the region containing the given position.
+Nodes (1): Retrieves or creates a SpatialGrid for the given state.         Uses a per-objec
 
 ### Community 989 - "Community 989"
 Cohesion: 1.0
-Nodes (1): Returns the region containing a building, using a cached map.
+Nodes (1): Fast lookup for the region containing a position.         Uses a per-object regi
 
 ### Community 990 - "Community 990"
 Cohesion: 1.0
-Nodes (1): Retrieves or creates a SpatialGrid for the given state.         Uses a per-objec
+Nodes (1): Finds the trauma score of the region containing the given position.
 
 ### Community 991 - "Community 991"
 Cohesion: 1.0
-Nodes (1): Fast lookup for the region containing a position.         Uses a per-object regi
+Nodes (1): Registers a scorer for a specific goal kind.         Logic ID: RPG-GOAL-001
 
 ### Community 992 - "Community 992"
 Cohesion: 1.0
-Nodes (1): Finds the trauma score of the region containing the given position.
+Nodes (1): Returns penalties based on active regional modifiers.
 
 ### Community 993 - "Community 993"
 Cohesion: 1.0
-Nodes (1): Registers a scorer for a specific goal kind.         Logic ID: RPG-GOAL-001
+Nodes (1): Propagates the leader's current objective to all active party members.         I
 
 ### Community 994 - "Community 994"
 Cohesion: 1.0
-Nodes (1): Returns penalties based on active regional modifiers.
+Nodes (1): Ensures the shared party target is still alive and valid.         Clears if targ
 
 ### Community 995 - "Community 995"
 Cohesion: 1.0
-Nodes (1): Propagates the leader's current objective to all active party members.         I
+Nodes (1): Creates a high-priority directive for all party members.
 
 ### Community 996 - "Community 996"
 Cohesion: 1.0
-Nodes (1): Ensures the shared party target is still alive and valid.         Clears if targ
+Nodes (1): Infer blockers based on recent failures.         Logic ID: STRAT-191 (Blockers h
 
 ### Community 997 - "Community 997"
 Cohesion: 1.0
-Nodes (1): Creates a high-priority directive for all party members.
+Nodes (1): Produce a StrategicUpdate containing blockers for missing requirements.
 
 ### Community 998 - "Community 998"
 Cohesion: 1.0
-Nodes (1): Infer blockers based on recent failures.         Logic ID: STRAT-191 (Blockers h
+Nodes (1): Fused pass for strategic intelligence (Blockers, Concerns, Intents).         Log
 
 ### Community 999 - "Community 999"
 Cohesion: 1.0
-Nodes (1): Produce a StrategicUpdate containing blockers for missing requirements.
+Nodes (1): Resolve strategic blockers that are satisfied by the current or pending
 
 ### Community 1000 - "Community 1000"
 Cohesion: 1.0
-Nodes (1): Fused pass for strategic intelligence (Blockers, Concerns, Intents).         Log
+Nodes (1): Phase 9: Routine, Biological Needs, and Salience Filtering.         VERIFIED v2:
 
 ### Community 1001 - "Community 1001"
 Cohesion: 1.0
-Nodes (1): Resolve strategic blockers that are satisfied by the current or pending
+Nodes (1): Phase 4.1: Strategic Intent Evaluation (Projects/Objectives).         Orchestrat
 
 ### Community 1002 - "Community 1002"
 Cohesion: 1.0
-Nodes (1): Phase 9: Routine, Biological Needs, and Salience Filtering.         VERIFIED v2:
+Nodes (1): Phase 9: Strategic interruption resistance and retention.         Logic ID: STRA
 
 ### Community 1003 - "Community 1003"
 Cohesion: 1.0
-Nodes (1): Phase 4.1: Strategic Intent Evaluation (Projects/Objectives).         Orchestrat
+Nodes (1): Record the final result of a project and apply learning effects.
 
 ### Community 1004 - "Community 1004"
 Cohesion: 1.0
-Nodes (1): Phase 9: Strategic interruption resistance and retention.         Logic ID: STRA
+Nodes (1): VERIFIED v2: StrategicIntelligenceSystem.process_outcome
 
 ### Community 1005 - "Community 1005"
 Cohesion: 1.0
-Nodes (1): Record the final result of a project and apply learning effects.
+Nodes (1): Produce a collection of strategic intent updates for the next tick.
 
 ### Community 1006 - "Community 1006"
 Cohesion: 1.0
-Nodes (1): VERIFIED v2: StrategicIntelligenceSystem.process_outcome
-
-### Community 1007 - "Community 1007"
-Cohesion: 1.0
-Nodes (1): Produce a collection of strategic intent updates for the next tick.
-
-### Community 1008 - "Community 1008"
-Cohesion: 1.0
 Nodes (1): VERIFIED v2: StrategicIntelligenceSystem.derive_cognition_profile
 
-### Community 1012 - "Community 1012"
+### Community 1010 - "Community 1010"
 Cohesion: 1.0
 Nodes (1): The root entry point for advancing the world state.         Fuses passive advanc
 
-### Community 1013 - "Community 1013"
+### Community 1011 - "Community 1011"
 Cohesion: 1.0
 Nodes (1): Compatibility wrapper for ActionRoutingPhase.
+
+### Community 1012 - "Community 1012"
+Cohesion: 1.0
+Nodes (1): Authoritative mapping from EntityUpdate to changes dict.         Merged v5 logic
+
+### Community 1013 - "Community 1013"
+Cohesion: 1.0
+Nodes (1): Low-level reconstruction bypasses frozen dataclass __init__ overhead.
 
 ### Community 1014 - "Community 1014"
 Cohesion: 1.0
-Nodes (1): Authoritative mapping from EntityUpdate to changes dict.         Merged v5 logic
+Nodes (1): Check if an item can be added without exceeding slots or weight.         Logic I
 
 ### Community 1015 - "Community 1015"
 Cohesion: 1.0
-Nodes (1): Low-level reconstruction bypasses frozen dataclass __init__ overhead.
+Nodes (1): Check if a list of item stacks can be added without exceeding slots or weight.
 
 ### Community 1016 - "Community 1016"
 Cohesion: 1.0
-Nodes (1): Check if an item can be added without exceeding slots or weight.         Logic I
+Nodes (1): Check capacity after accounting for item removals (Phase 8).
 
 ### Community 1017 - "Community 1017"
 Cohesion: 1.0
-Nodes (1): Check if a list of item stacks can be added without exceeding slots or weight.
+Nodes (1): Check if an item can be equipped in the specified slot.
 
 ### Community 1018 - "Community 1018"
 Cohesion: 1.0
-Nodes (1): Check capacity after accounting for item removals (Phase 8).
+Nodes (1): Apply authoritative updates to inventory, merging stacks and enforcing limits.
 
 ### Community 1019 - "Community 1019"
 Cohesion: 1.0
-Nodes (1): Check if an item can be equipped in the specified slot.
+Nodes (1): Milestone D Law: Property-based access to the canonical neighbor view.
 
 ### Community 1020 - "Community 1020"
 Cohesion: 1.0
-Nodes (1): Apply authoritative updates to inventory, merging stacks and enforcing limits.
+Nodes (1): Compatibility wrapper for ActionRoutingPhase.
 
 ### Community 1021 - "Community 1021"
 Cohesion: 1.0
-Nodes (1): Milestone D Law: Property-based access to the canonical neighbor view.
+Nodes (1): Compatibility wrapper for ActionRoutingPhase.
 
 ### Community 1022 - "Community 1022"
 Cohesion: 1.0
-Nodes (1): Compatibility wrapper for ActionRoutingPhase.
+Nodes (1): Authoritative mapping from EntityUpdate to changes dict.         Merged v5 logic
 
 ### Community 1023 - "Community 1023"
 Cohesion: 1.0
-Nodes (1): Compatibility wrapper for ActionRoutingPhase.
+Nodes (1): Low-level reconstruction bypasses frozen dataclass __init__ overhead.
 
 ### Community 1024 - "Community 1024"
 Cohesion: 1.0
-Nodes (1): Authoritative mapping from EntityUpdate to changes dict.         Merged v5 logic
+Nodes (1): Derive a DirtySet from a StateUpdate.         M3 Law: This must be deterministic
 
 ### Community 1025 - "Community 1025"
 Cohesion: 1.0
-Nodes (1): Low-level reconstruction bypasses frozen dataclass __init__ overhead.
+Nodes (1): Helper to merge all contingent updates from a transaction result into an entity
 
 ### Community 1026 - "Community 1026"
 Cohesion: 1.0
-Nodes (1): Derive a DirtySet from a StateUpdate.         M3 Law: This must be deterministic
+Nodes (1): Helper to apply world side effects from a successful resolution.
 
 ### Community 1027 - "Community 1027"
 Cohesion: 1.0
-Nodes (1): Helper to merge all contingent updates from a transaction result into an entity
+Nodes (1): Verify if attacker has clear elevation advantage (Terrain-based).
 
 ### Community 1028 - "Community 1028"
 Cohesion: 1.0
-Nodes (1): Helper to apply world side effects from a successful resolution.
+Nodes (1): Authoritative geometric flanking check.         Returns: (is_flanked, is_surroun
 
 ### Community 1029 - "Community 1029"
 Cohesion: 1.0
-Nodes (1): Verify if attacker has clear elevation advantage (Terrain-based).
+Nodes (1): Verify if defender is behind wall cover relative to attacker.         Logic ID:
 
 ### Community 1030 - "Community 1030"
 Cohesion: 1.0
-Nodes (1): Authoritative geometric flanking check.         Returns: (is_flanked, is_surroun
+Nodes (1): Calculate movement/tie-breaking priority.
 
 ### Community 1031 - "Community 1031"
 Cohesion: 1.0
-Nodes (1): Verify if defender is behind wall cover relative to attacker.         Logic ID:
+Nodes (1): Find hostile entities currently in melee engagement with this entity.
 
 ### Community 1032 - "Community 1032"
 Cohesion: 1.0
-Nodes (1): Calculate movement/tie-breaking priority.
+Nodes (1): Return the ID of the entity occupying the specified tile.
 
 ### Community 1033 - "Community 1033"
 Cohesion: 1.0
-Nodes (1): Find hostile entities currently in melee engagement with this entity.
+Nodes (1): Singular entry point for authoritative state transition refinement.         Logi
 
 ### Community 1034 - "Community 1034"
 Cohesion: 1.0
-Nodes (1): Return the ID of the entity occupying the specified tile.
+Nodes (1): Hardening Phase: Ensure DirtySet is always current.         Logic ID: PERF-006-R
 
 ### Community 1035 - "Community 1035"
 Cohesion: 1.0
-Nodes (1): Singular entry point for authoritative state transition refinement.         Logi
+Nodes (1): Apply only passive per-tick decay/advancement logic.         Optimized v2.5: Red
 
 ### Community 1036 - "Community 1036"
 Cohesion: 1.0
-Nodes (1): Hardening Phase: Ensure DirtySet is always current.         Logic ID: PERF-006-R
+Nodes (1): Apply only the specified updates to an already-passively-advanced state.
 
 ### Community 1037 - "Community 1037"
 Cohesion: 1.0
-Nodes (1): Apply only passive per-tick decay/advancement logic.         Optimized v2.5: Red
+Nodes (1): Produce a new state generation from the prior state and updates.         Logic I
 
 ### Community 1038 - "Community 1038"
 Cohesion: 1.0
-Nodes (1): Apply only the specified updates to an already-passively-advanced state.
+Nodes (1): Apply updates to a single entity, producing a new EntityState instance.
 
 ### Community 1039 - "Community 1039"
 Cohesion: 1.0
-Nodes (1): Produce a new state generation from the prior state and updates.         Logic I
+Nodes (1): Detect entities in town and apply general passive laws (Healing).         Optimi
 
 ### Community 1040 - "Community 1040"
 Cohesion: 1.0
-Nodes (1): Apply updates to a single entity, producing a new EntityState instance.
+Nodes (1): Retrieves or creates a SpatialGrid for the given state.         Uses a per-objec
 
 ### Community 1041 - "Community 1041"
 Cohesion: 1.0
-Nodes (1): Detect entities in town and apply general passive laws (Healing).         Optimi
+Nodes (1): Fast lookup for the region containing a position.         Uses a per-object regi
 
 ### Community 1042 - "Community 1042"
 Cohesion: 1.0
-Nodes (1): Retrieves or creates a SpatialGrid for the given state.         Uses a per-objec
+Nodes (1): Finds the trauma score of the region containing the given position.
 
 ### Community 1043 - "Community 1043"
 Cohesion: 1.0
-Nodes (1): Fast lookup for the region containing a position.         Uses a per-object regi
+Nodes (1): Route normal navigation intent via MovementSystem.         Optimized v2: reduced
 
 ### Community 1044 - "Community 1044"
 Cohesion: 1.0
-Nodes (1): Finds the trauma score of the region containing the given position.
+Nodes (1): Resolve strategic blockers that are satisfied by the current or pending
 
 ### Community 1045 - "Community 1045"
 Cohesion: 1.0
-Nodes (1): Route normal navigation intent via MovementSystem.         Optimized v2: reduced
+Nodes (1): Phase 9: Routine, Biological Needs, and Salience Filtering.         VERIFIED v2:
 
 ### Community 1046 - "Community 1046"
 Cohesion: 1.0
-Nodes (1): Resolve strategic blockers that are satisfied by the current or pending
+Nodes (1): Phase 4.1: Strategic Intent Evaluation (Projects/Objectives).         Orchestrat
 
 ### Community 1047 - "Community 1047"
 Cohesion: 1.0
-Nodes (1): Phase 9: Routine, Biological Needs, and Salience Filtering.         VERIFIED v2:
+Nodes (1): Phase 9: Strategic interruption resistance and retention.         Logic ID: STRA
 
 ### Community 1048 - "Community 1048"
 Cohesion: 1.0
-Nodes (1): Phase 4.1: Strategic Intent Evaluation (Projects/Objectives).         Orchestrat
+Nodes (1): Record the final result of a project and apply learning effects.
 
 ### Community 1049 - "Community 1049"
 Cohesion: 1.0
-Nodes (1): Phase 9: Strategic interruption resistance and retention.         Logic ID: STRA
+Nodes (1): VERIFIED v2: StrategicIntelligenceSystem.process_outcome
 
 ### Community 1050 - "Community 1050"
 Cohesion: 1.0
-Nodes (1): Record the final result of a project and apply learning effects.
+Nodes (1): Produce a collection of strategic intent updates for the next tick.
 
 ### Community 1051 - "Community 1051"
 Cohesion: 1.0
-Nodes (1): VERIFIED v2: StrategicIntelligenceSystem.process_outcome
+Nodes (1): VERIFIED v2: StrategicIntelligenceSystem.derive_cognition_profile
 
 ### Community 1052 - "Community 1052"
 Cohesion: 1.0
-Nodes (1): Produce a collection of strategic intent updates for the next tick.
+Nodes (1): Derive a DirtySet from a StateUpdate.         M3 Law: This must be deterministic
 
 ### Community 1053 - "Community 1053"
 Cohesion: 1.0
-Nodes (1): VERIFIED v2: StrategicIntelligenceSystem.derive_cognition_profile
+Nodes (1): Produce a new state generation from the prior state and updates.         Logic I
 
 ### Community 1054 - "Community 1054"
 Cohesion: 1.0
-Nodes (1): Derive a DirtySet from a StateUpdate.         M3 Law: This must be deterministic
+Nodes (1): Apply updates to a single entity, producing a new EntityState instance.
 
 ### Community 1055 - "Community 1055"
 Cohesion: 1.0
-Nodes (1): Produce a new state generation from the prior state and updates.         Logic I
+Nodes (1): Verify if attacker has clear elevation advantage (Terrain-based).
 
 ### Community 1056 - "Community 1056"
 Cohesion: 1.0
-Nodes (1): Apply updates to a single entity, producing a new EntityState instance.
+Nodes (1): Returns the current engagement record for an entity.
 
 ### Community 1057 - "Community 1057"
 Cohesion: 1.0
-Nodes (1): Verify if attacker has clear elevation advantage (Terrain-based).
+Nodes (1): Authoritative geometric flanking check.         Returns: (is_flanked, is_surroun
 
 ### Community 1058 - "Community 1058"
 Cohesion: 1.0
-Nodes (1): Returns the current engagement record for an entity.
+Nodes (1): Verify if defender is behind wall cover relative to attacker.         Logic ID:
 
 ### Community 1059 - "Community 1059"
 Cohesion: 1.0
-Nodes (1): Authoritative geometric flanking check.         Returns: (is_flanked, is_surroun
+Nodes (1): Calculate movement/tie-breaking priority.
 
 ### Community 1060 - "Community 1060"
 Cohesion: 1.0
-Nodes (1): Verify if defender is behind wall cover relative to attacker.         Logic ID:
+Nodes (1): Find hostile entities currently in melee engagement with this entity.
 
 ### Community 1061 - "Community 1061"
 Cohesion: 1.0
-Nodes (1): Calculate movement/tie-breaking priority.
+Nodes (1): Return the ID of the entity occupying the specified tile.
 
 ### Community 1062 - "Community 1062"
 Cohesion: 1.0
-Nodes (1): Find hostile entities currently in melee engagement with this entity.
+Nodes (1): Apply only the specified updates to an already-passively-advanced state.
 
 ### Community 1063 - "Community 1063"
 Cohesion: 1.0
-Nodes (1): Return the ID of the entity occupying the specified tile.
+Nodes (1): Produce a new state generation from the prior state and updates.         Logic I
 
 ### Community 1064 - "Community 1064"
 Cohesion: 1.0
-Nodes (1): Apply only the specified updates to an already-passively-advanced state.
+Nodes (1): Apply updates to a single entity, producing a new EntityState instance.
 
 ### Community 1065 - "Community 1065"
 Cohesion: 1.0
-Nodes (1): Produce a new state generation from the prior state and updates.         Logic I
+Nodes (1): Produce a SHA256 hash of the compact canonical JSON representation.
 
 ### Community 1066 - "Community 1066"
 Cohesion: 1.0
-Nodes (1): Apply updates to a single entity, producing a new EntityState instance.
+Nodes (1): Convert AuthoritativeState into a canonical JSON representation.
 
 ### Community 1067 - "Community 1067"
 Cohesion: 1.0
-Nodes (1): Produce a SHA256 hash of the compact canonical JSON representation.
+Nodes (1): Convert AuthoritativeState into a sortable dictionary structure.
 
 ### Community 1068 - "Community 1068"
 Cohesion: 1.0
-Nodes (1): Convert AuthoritativeState into a canonical JSON representation.
+Nodes (1): Resolve strategic blockers that are satisfied by the current or pending
 
 ### Community 1069 - "Community 1069"
 Cohesion: 1.0
-Nodes (1): Convert AuthoritativeState into a sortable dictionary structure.
+Nodes (1): Phase 9: Routine, Biological Needs, and Salience Filtering.         VERIFIED v2:
 
 ### Community 1070 - "Community 1070"
 Cohesion: 1.0
-Nodes (1): Resolve strategic blockers that are satisfied by the current or pending
+Nodes (1): Phase 4.1: Strategic Intent Evaluation (Projects/Objectives).         Orchestrat
 
 ### Community 1071 - "Community 1071"
 Cohesion: 1.0
-Nodes (1): Phase 9: Routine, Biological Needs, and Salience Filtering.         VERIFIED v2:
+Nodes (1): Phase 9: Strategic interruption resistance and retention.         Logic ID: STRA
 
 ### Community 1072 - "Community 1072"
 Cohesion: 1.0
-Nodes (1): Phase 4.1: Strategic Intent Evaluation (Projects/Objectives).         Orchestrat
+Nodes (1): Record the final result of a project and apply learning effects.
 
 ### Community 1073 - "Community 1073"
 Cohesion: 1.0
-Nodes (1): Phase 9: Strategic interruption resistance and retention.         Logic ID: STRA
+Nodes (1): VERIFIED v2: StrategicIntelligenceSystem.process_outcome
 
 ### Community 1074 - "Community 1074"
 Cohesion: 1.0
-Nodes (1): Record the final result of a project and apply learning effects.
+Nodes (1): Produce a collection of strategic intent updates for the next tick.
 
 ### Community 1075 - "Community 1075"
 Cohesion: 1.0
-Nodes (1): VERIFIED v2: StrategicIntelligenceSystem.process_outcome
+Nodes (1): VERIFIED v2: StrategicIntelligenceSystem.derive_cognition_profile
 
 ### Community 1076 - "Community 1076"
 Cohesion: 1.0
-Nodes (1): Produce a collection of strategic intent updates for the next tick.
+Nodes (1): Milestone D Law: Property-based access to the canonical neighbor view.
 
 ### Community 1077 - "Community 1077"
 Cohesion: 1.0
-Nodes (1): VERIFIED v2: StrategicIntelligenceSystem.derive_cognition_profile
+Nodes (1): Advance HUNT quests when an enemy is defeated.
 
 ### Community 1078 - "Community 1078"
 Cohesion: 1.0
-Nodes (1): Milestone D Law: Property-based access to the canonical neighbor view.
+Nodes (1): Enforces quest completion rules and emits authoritative reward intents.
 
 ### Community 1079 - "Community 1079"
 Cohesion: 1.0
-Nodes (1): Advance HUNT quests when an enemy is defeated.
+Nodes (1): Determines the next semantic stage for an entity kind.
 
 ### Community 1080 - "Community 1080"
 Cohesion: 1.0
-Nodes (1): Enforces quest completion rules and emits authoritative reward intents.
+Nodes (1): Helper to merge all contingent updates from a transaction result into an entity
 
 ### Community 1081 - "Community 1081"
 Cohesion: 1.0
-Nodes (1): Determines the next semantic stage for an entity kind.
+Nodes (1): Helper to apply world side effects from a successful resolution.
 
 ### Community 1082 - "Community 1082"
 Cohesion: 1.0
-Nodes (1): Helper to merge all contingent updates from a transaction result into an entity
+Nodes (1): Calculates Manhattan distance between two points.         Logic ID: COMB-001 (Ma
 
 ### Community 1083 - "Community 1083"
 Cohesion: 1.0
-Nodes (1): Helper to apply world side effects from a successful resolution.
+Nodes (1): Returns the region containing the given position.
 
 ### Community 1084 - "Community 1084"
 Cohesion: 1.0
-Nodes (1): Calculates Manhattan distance between two points.         Logic ID: COMB-001 (Ma
+Nodes (1): V2 Authoritative Occupancy Rule:         Enforces Static Terrain (WALL), Buildin
 
 ### Community 1085 - "Community 1085"
 Cohesion: 1.0
-Nodes (1): Returns the region containing the given position.
+Nodes (1): Checks if the current region suppresses specific actions and enforces actor vali
 
 ### Community 1086 - "Community 1086"
 Cohesion: 1.0
-Nodes (1): V2 Authoritative Occupancy Rule:         Enforces Static Terrain (WALL), Buildin
+Nodes (1): Action Readiness Law: Every ENTITY_ACT requires 100.0 readiness.         Logic I
 
 ### Community 1087 - "Community 1087"
 Cohesion: 1.0
-Nodes (1): Checks if the current region suppresses specific actions and enforces actor vali
+Nodes (1): V2 Authoritative Movement Law:         Validates if entity has enough readiness
 
 ### Community 1088 - "Community 1088"
 Cohesion: 1.0
-Nodes (1): Action Readiness Law: Every ENTITY_ACT requires 100.0 readiness.         Logic I
+Nodes (1): Authoritative validation for a combat interaction.         Logic ID: COMB-004 (M
 
 ### Community 1089 - "Community 1089"
 Cohesion: 1.0
-Nodes (1): V2 Authoritative Movement Law:         Validates if entity has enough readiness
+Nodes (1): Validation for Area-of-Effect positioning and execution.         Logic ID: COMB-
 
 ### Community 1090 - "Community 1090"
 Cohesion: 1.0
-Nodes (1): Authoritative validation for a combat interaction.         Logic ID: COMB-004 (M
+Nodes (1): Pillar 8: Skill Execution Law.         Skills require cost and cooldown verifica
 
 ### Community 1091 - "Community 1091"
 Cohesion: 1.0
-Nodes (1): Validation for Area-of-Effect positioning and execution.         Logic ID: COMB-
+Nodes (1): Simple Bresenham-like LoS check for WALL/Building obstructions.
 
 ### Community 1092 - "Community 1092"
 Cohesion: 1.0
-Nodes (1): Pillar 8: Skill Execution Law.         Skills require cost and cooldown verifica
+Nodes (1): Verify if attacker has clear elevation advantage (Terrain-based).
 
 ### Community 1093 - "Community 1093"
 Cohesion: 1.0
-Nodes (1): Simple Bresenham-like LoS check for WALL/Building obstructions.
+Nodes (1): Returns the current engagement record for an entity.
 
 ### Community 1094 - "Community 1094"
 Cohesion: 1.0
-Nodes (1): Verify if attacker has clear elevation advantage (Terrain-based).
+Nodes (1): Authoritative geometric flanking check.         Returns: (is_flanked, is_surroun
 
 ### Community 1095 - "Community 1095"
 Cohesion: 1.0
-Nodes (1): Returns the current engagement record for an entity.
+Nodes (1): Verify if defender is behind wall cover relative to attacker.         Logic ID:
 
 ### Community 1096 - "Community 1096"
 Cohesion: 1.0
-Nodes (1): Authoritative geometric flanking check.         Returns: (is_flanked, is_surroun
+Nodes (1): Calculate movement/tie-breaking priority.
 
 ### Community 1097 - "Community 1097"
 Cohesion: 1.0
-Nodes (1): Verify if defender is behind wall cover relative to attacker.         Logic ID:
+Nodes (1): Find hostile entities currently in melee engagement with this entity.
 
 ### Community 1098 - "Community 1098"
 Cohesion: 1.0
-Nodes (1): Calculate movement/tie-breaking priority.
+Nodes (1): Find hostile entities that would be in melee engagement with this entity at a hy
 
 ### Community 1099 - "Community 1099"
 Cohesion: 1.0
-Nodes (1): Find hostile entities currently in melee engagement with this entity.
+Nodes (1): Return the ID of the entity occupying the specified tile.
 
 ### Community 1100 - "Community 1100"
 Cohesion: 1.0
-Nodes (1): Find hostile entities that would be in melee engagement with this entity at a hy
+Nodes (1): Singular entry point for authoritative state transition refinement.         Logi
 
 ### Community 1101 - "Community 1101"
 Cohesion: 1.0
-Nodes (1): Return the ID of the entity occupying the specified tile.
+Nodes (1): Apply only passive per-tick decay/advancement logic.
 
 ### Community 1102 - "Community 1102"
 Cohesion: 1.0
-Nodes (1): Singular entry point for authoritative state transition refinement.         Logi
+Nodes (1): Apply only the specified updates to an already-passively-advanced state.
 
 ### Community 1103 - "Community 1103"
 Cohesion: 1.0
-Nodes (1): Apply only passive per-tick decay/advancement logic.
+Nodes (1): Produce a new state generation from the prior state and updates.         Logic I
 
 ### Community 1104 - "Community 1104"
 Cohesion: 1.0
-Nodes (1): Apply only the specified updates to an already-passively-advanced state.
+Nodes (1): Apply updates to a single entity, producing a new EntityState instance.
 
 ### Community 1105 - "Community 1105"
 Cohesion: 1.0
-Nodes (1): Produce a new state generation from the prior state and updates.         Logic I
+Nodes (1): Detect entities in town and apply general passive laws (Healing).         Optimi
 
 ### Community 1106 - "Community 1106"
 Cohesion: 1.0
-Nodes (1): Apply updates to a single entity, producing a new EntityState instance.
+Nodes (1): Determines the next tactical intent for an entity.         Bounded to local visi
 
 ### Community 1107 - "Community 1107"
 Cohesion: 1.0
-Nodes (1): Detect entities in town and apply general passive laws (Healing).         Optimi
+Nodes (1): Public helper for deterministic target selection.         Matches legacy 'Tactic
 
 ### Community 1108 - "Community 1108"
 Cohesion: 1.0
-Nodes (1): Determines the next tactical intent for an entity.         Bounded to local visi
+Nodes (1): Policy Waterfall according to Milestone 5/6 Degradation Matrix.
 
 ### Community 1109 - "Community 1109"
 Cohesion: 1.0
-Nodes (1): Public helper for deterministic target selection.         Matches legacy 'Tactic
+Nodes (1): Apply regional effects to entities and update world markers.
 
 ### Community 1110 - "Community 1110"
 Cohesion: 1.0
-Nodes (1): Policy Waterfall according to Milestone 5/6 Degradation Matrix.
+Nodes (1): Internal helper to cache grid per tick.
 
 ### Community 1111 - "Community 1111"
 Cohesion: 1.0
-Nodes (1): Apply regional effects to entities and update world markers.
+Nodes (1): Finds the trauma score of the region containing the given position.
 
 ### Community 1112 - "Community 1112"
 Cohesion: 1.0
-Nodes (1): Internal helper to cache grid per tick.
+Nodes (1): Route normal navigation intent via MovementSystem.
 
 ### Community 1113 - "Community 1113"
 Cohesion: 1.0
-Nodes (1): Finds the trauma score of the region containing the given position.
+Nodes (1): Create a battlefield scar from a death event.
 
 ### Community 1114 - "Community 1114"
 Cohesion: 1.0
-Nodes (1): Route normal navigation intent via MovementSystem.
+Nodes (1): Create a raid damage scar from a town raid.
 
 ### Community 1115 - "Community 1115"
 Cohesion: 1.0
-Nodes (1): Create a battlefield scar from a death event.
+Nodes (1): Increments attachment to the current region based on presence.         PH4 Law:
 
 ### Community 1116 - "Community 1116"
 Cohesion: 1.0
-Nodes (1): Create a raid damage scar from a town raid.
+Nodes (1): Promotes enemies from grudge_history to nemesis_ids if hostility threshold met.
 
 ### Community 1117 - "Community 1117"
 Cohesion: 1.0
-Nodes (1): Increments attachment to the current region based on presence.         PH4 Law:
+Nodes (1): Produce a StrategicUpdate containing blockers for missing requirements.
 
 ### Community 1118 - "Community 1118"
 Cohesion: 1.0
-Nodes (1): Promotes enemies from grudge_history to nemesis_ids if hostility threshold met.
+Nodes (1): Resolve strategic blockers that are satisfied by the current or pending
 
 ### Community 1119 - "Community 1119"
 Cohesion: 1.0
-Nodes (1): Produce a StrategicUpdate containing blockers for missing requirements.
+Nodes (1): Phase 9: Routine, Biological Needs, and Salience Filtering.         VERIFIED v2:
 
 ### Community 1120 - "Community 1120"
 Cohesion: 1.0
-Nodes (1): Resolve strategic blockers that are satisfied by the current or pending
+Nodes (1): Phase 9: Strategic interruption resistance and retention.         Logic ID: STRA
 
 ### Community 1121 - "Community 1121"
 Cohesion: 1.0
-Nodes (1): Phase 9: Routine, Biological Needs, and Salience Filtering.         VERIFIED v2:
+Nodes (1): Record the final result of a project and apply learning effects.
 
 ### Community 1122 - "Community 1122"
 Cohesion: 1.0
-Nodes (1): Phase 9: Strategic interruption resistance and retention.         Logic ID: STRA
+Nodes (1): VERIFIED v2: StrategicIntelligenceSystem.process_outcome
 
 ### Community 1123 - "Community 1123"
 Cohesion: 1.0
-Nodes (1): Record the final result of a project and apply learning effects.
+Nodes (1): Produce a collection of strategic intent updates for the next tick.
 
 ### Community 1124 - "Community 1124"
 Cohesion: 1.0
-Nodes (1): VERIFIED v2: StrategicIntelligenceSystem.process_outcome
+Nodes (1): Verify that state mutation is gated exclusively by ApplyPath.
 
 ### Community 1125 - "Community 1125"
 Cohesion: 1.0
-Nodes (1): Produce a collection of strategic intent updates for the next tick.
+Nodes (1): Processes all ResourceTransferIntents for all entities in the update.         VE
 
 ### Community 1126 - "Community 1126"
 Cohesion: 1.0
-Nodes (1): Verify that state mutation is gated exclusively by ApplyPath.
+Nodes (1): Helper to merge all contingent updates from a transaction result into an entity
 
 ### Community 1127 - "Community 1127"
 Cohesion: 1.0
-Nodes (1): Processes all ResourceTransferIntents for all entities in the update.         VE
+Nodes (1): Helper to apply world side effects from a successful resolution.
 
 ### Community 1128 - "Community 1128"
 Cohesion: 1.0
-Nodes (1): Helper to merge all contingent updates from a transaction result into an entity
+Nodes (1): Returns the region containing the given position.
 
 ### Community 1129 - "Community 1129"
 Cohesion: 1.0
-Nodes (1): Helper to apply world side effects from a successful resolution.
+Nodes (1): V2 Authoritative Occupancy Rule:         Enforces Static Terrain (WALL), Buildin
 
 ### Community 1130 - "Community 1130"
 Cohesion: 1.0
-Nodes (1): Returns the region containing the given position.
+Nodes (1): Checks if the current region suppresses specific actions and enforces actor vali
 
 ### Community 1131 - "Community 1131"
 Cohesion: 1.0
-Nodes (1): V2 Authoritative Occupancy Rule:         Enforces Static Terrain (WALL), Buildin
+Nodes (1): Action Readiness Law: Every ENTITY_ACT requires 100.0 readiness.         Logic I
 
 ### Community 1132 - "Community 1132"
 Cohesion: 1.0
-Nodes (1): Checks if the current region suppresses specific actions and enforces actor vali
+Nodes (1): V2 Authoritative Movement Law:         Validates if entity has enough readiness
 
 ### Community 1133 - "Community 1133"
 Cohesion: 1.0
-Nodes (1): Action Readiness Law: Every ENTITY_ACT requires 100.0 readiness.         Logic I
+Nodes (1): Authoritative validation for a combat interaction.         Logic ID: COMB-004 (M
 
 ### Community 1134 - "Community 1134"
 Cohesion: 1.0
-Nodes (1): V2 Authoritative Movement Law:         Validates if entity has enough readiness
+Nodes (1): Validation for Area-of-Effect positioning and execution.         Logic ID: COMB-
 
 ### Community 1135 - "Community 1135"
 Cohesion: 1.0
-Nodes (1): Authoritative validation for a combat interaction.         Logic ID: COMB-004 (M
+Nodes (1): Pillar 8: Skill Execution Law.         Skills require cost and cooldown verifica
 
 ### Community 1136 - "Community 1136"
 Cohesion: 1.0
-Nodes (1): Validation for Area-of-Effect positioning and execution.         Logic ID: COMB-
+Nodes (1): Simple Bresenham-like LoS check for WALL/Building obstructions.
 
 ### Community 1137 - "Community 1137"
 Cohesion: 1.0
-Nodes (1): Pillar 8: Skill Execution Law.         Skills require cost and cooldown verifica
+Nodes (1): Verify if attacker has clear elevation advantage (Terrain-based).
 
 ### Community 1138 - "Community 1138"
 Cohesion: 1.0
-Nodes (1): Simple Bresenham-like LoS check for WALL/Building obstructions.
+Nodes (1): Returns the current engagement record for an entity.
 
 ### Community 1139 - "Community 1139"
 Cohesion: 1.0
-Nodes (1): Verify if attacker has clear elevation advantage (Terrain-based).
+Nodes (1): Authoritative geometric flanking check.         Returns: (is_flanked, is_surroun
 
 ### Community 1140 - "Community 1140"
 Cohesion: 1.0
-Nodes (1): Returns the current engagement record for an entity.
+Nodes (1): Verify if defender is behind wall cover relative to attacker.         Logic ID:
 
 ### Community 1141 - "Community 1141"
 Cohesion: 1.0
-Nodes (1): Authoritative geometric flanking check.         Returns: (is_flanked, is_surroun
+Nodes (1): Calculate movement/tie-breaking priority.
 
 ### Community 1142 - "Community 1142"
 Cohesion: 1.0
-Nodes (1): Verify if defender is behind wall cover relative to attacker.         Logic ID:
+Nodes (1): Find hostile entities that would be in melee engagement with this entity at a hy
 
 ### Community 1143 - "Community 1143"
 Cohesion: 1.0
-Nodes (1): Calculate movement/tie-breaking priority.
+Nodes (1): Return the ID of the entity occupying the specified tile.
 
 ### Community 1144 - "Community 1144"
 Cohesion: 1.0
-Nodes (1): Find hostile entities that would be in melee engagement with this entity at a hy
+Nodes (1): Produce a new state generation from the prior state and updates.         Logic I
 
 ### Community 1145 - "Community 1145"
 Cohesion: 1.0
-Nodes (1): Return the ID of the entity occupying the specified tile.
+Nodes (1): Finds the trauma score of the region containing the given position.
 
 ### Community 1146 - "Community 1146"
 Cohesion: 1.0
-Nodes (1): Produce a new state generation from the prior state and updates.         Logic I
+Nodes (1): Route normal navigation intent via MovementSystem.
 
 ### Community 1147 - "Community 1147"
 Cohesion: 1.0
-Nodes (1): Finds the trauma score of the region containing the given position.
+Nodes (1): Scan entities for blockers and propose navigation targets to resolve them.
 
 ### Community 1148 - "Community 1148"
 Cohesion: 1.0
-Nodes (1): Route normal navigation intent via MovementSystem.
+Nodes (1): Calculate total weight of all items in inventory.
 
 ### Community 1149 - "Community 1149"
 Cohesion: 1.0
-Nodes (1): Scan entities for blockers and propose navigation targets to resolve them.
+Nodes (1): Check if an item can be added without exceeding slots or weight.         Logic I
 
 ### Community 1150 - "Community 1150"
 Cohesion: 1.0
-Nodes (1): Calculate total weight of all items in inventory.
+Nodes (1): Check if a list of item stacks can be added without exceeding slots or weight.
 
 ### Community 1151 - "Community 1151"
 Cohesion: 1.0
-Nodes (1): Check if an item can be added without exceeding slots or weight.         Logic I
+Nodes (1): Check capacity after accounting for item removals (Phase 8).
 
 ### Community 1152 - "Community 1152"
 Cohesion: 1.0
-Nodes (1): Check if a list of item stacks can be added without exceeding slots or weight.
+Nodes (1): Check if an item can be equipped in the specified slot.
 
 ### Community 1153 - "Community 1153"
 Cohesion: 1.0
-Nodes (1): Check capacity after accounting for item removals (Phase 8).
+Nodes (1): Apply authoritative updates to inventory, merging stacks and enforcing limits.
 
 ### Community 1154 - "Community 1154"
 Cohesion: 1.0
-Nodes (1): Check if an item can be equipped in the specified slot.
+Nodes (1): Validates an intent and produces the necessary updates.
 
 ### Community 1155 - "Community 1155"
 Cohesion: 1.0
-Nodes (1): Apply authoritative updates to inventory, merging stacks and enforcing limits.
+Nodes (1): Derive strategic limits from entity attributes, needs, and personality.
 
 ### Community 1156 - "Community 1156"
 Cohesion: 1.0
-Nodes (1): Validates an intent and produces the necessary updates.
+Nodes (1): Refine the proposed update according to authoritative interaction laws.
 
 ### Community 1157 - "Community 1157"
 Cohesion: 1.0
-Nodes (1): Derive strategic limits from entity attributes, needs, and personality.
+Nodes (1): Check for evolution triggers (level cap or XP thresholds) and apply transformati
 
 ### Community 1158 - "Community 1158"
 Cohesion: 1.0
-Nodes (1): Refine the proposed update according to authoritative interaction laws.
+Nodes (1): Refine the proposed update according to crafting and knowledge laws.         Log
 
 ### Community 1159 - "Community 1159"
 Cohesion: 1.0
-Nodes (1): Check for evolution triggers (level cap or XP thresholds) and apply transformati
+Nodes (1): Processes all ResourceTransferIntents for all entities in the update.         VE
 
 ### Community 1160 - "Community 1160"
 Cohesion: 1.0
-Nodes (1): Refine the proposed update according to crafting and knowledge laws.         Log
+Nodes (1): Helper to merge all contingent updates from a transaction result into an entity
 
 ### Community 1161 - "Community 1161"
 Cohesion: 1.0
-Nodes (1): Processes all ResourceTransferIntents for all entities in the update.         VE
+Nodes (1): Helper to apply world side effects from a successful resolution.
 
 ### Community 1162 - "Community 1162"
 Cohesion: 1.0
-Nodes (1): Helper to merge all contingent updates from a transaction result into an entity
+Nodes (1): Returns a spatial index of active/alive entities.          Important:
 
 ### Community 1163 - "Community 1163"
 Cohesion: 1.0
-Nodes (1): Helper to apply world side effects from a successful resolution.
+Nodes (1): Calculates Manhattan distance between two points.         Logic ID: COMB-001 (Ma
 
 ### Community 1164 - "Community 1164"
 Cohesion: 1.0
-Nodes (1): Returns a spatial index of active/alive entities.          Important:
+Nodes (1): Returns the region containing the given position.
 
 ### Community 1165 - "Community 1165"
 Cohesion: 1.0
-Nodes (1): Calculates Manhattan distance between two points.         Logic ID: COMB-001 (Ma
+Nodes (1): V2 Authoritative Occupancy Rule:         Enforces Static Terrain (WALL), Buildin
 
 ### Community 1166 - "Community 1166"
 Cohesion: 1.0
-Nodes (1): Returns the region containing the given position.
+Nodes (1): Validation for Area-of-Effect positioning and execution.         Logic ID: COMB-
 
 ### Community 1167 - "Community 1167"
 Cohesion: 1.0
-Nodes (1): V2 Authoritative Occupancy Rule:         Enforces Static Terrain (WALL), Buildin
+Nodes (1): Pillar 8: Skill Execution Law.         Skills require cost and cooldown verifica
 
 ### Community 1168 - "Community 1168"
 Cohesion: 1.0
-Nodes (1): Validation for Area-of-Effect positioning and execution.         Logic ID: COMB-
+Nodes (1): Simple Bresenham-like LoS check for WALL/Building obstructions.
 
 ### Community 1169 - "Community 1169"
 Cohesion: 1.0
-Nodes (1): Pillar 8: Skill Execution Law.         Skills require cost and cooldown verifica
+Nodes (1): Verify if attacker has clear elevation advantage (Terrain-based).
 
 ### Community 1170 - "Community 1170"
 Cohesion: 1.0
-Nodes (1): Simple Bresenham-like LoS check for WALL/Building obstructions.
+Nodes (1): Authoritative geometric flanking check.         Returns: (is_flanked, is_surroun
 
 ### Community 1171 - "Community 1171"
 Cohesion: 1.0
-Nodes (1): Verify if attacker has clear elevation advantage (Terrain-based).
+Nodes (1): Verify if defender is behind wall cover relative to attacker.         Logic ID:
 
 ### Community 1172 - "Community 1172"
 Cohesion: 1.0
-Nodes (1): Authoritative geometric flanking check.         Returns: (is_flanked, is_surroun
+Nodes (1): Calculate movement/tie-breaking priority.
 
 ### Community 1173 - "Community 1173"
 Cohesion: 1.0
-Nodes (1): Verify if defender is behind wall cover relative to attacker.         Logic ID:
+Nodes (1): Find hostile entities currently in melee engagement with this entity.
 
 ### Community 1174 - "Community 1174"
 Cohesion: 1.0
-Nodes (1): Calculate movement/tie-breaking priority.
+Nodes (1): Find hostile entities that would be in melee engagement with this entity at a hy
 
 ### Community 1175 - "Community 1175"
 Cohesion: 1.0
-Nodes (1): Find hostile entities currently in melee engagement with this entity.
+Nodes (1): Return the ID of the entity occupying the specified tile.
 
 ### Community 1176 - "Community 1176"
 Cohesion: 1.0
-Nodes (1): Find hostile entities that would be in melee engagement with this entity at a hy
+Nodes (1): Singular entry point for authoritative state transition refinement.         Logi
 
 ### Community 1177 - "Community 1177"
 Cohesion: 1.0
-Nodes (1): Return the ID of the entity occupying the specified tile.
+Nodes (1): Produce a new state generation from the prior state and updates.         Logic I
 
 ### Community 1178 - "Community 1178"
 Cohesion: 1.0
-Nodes (1): Singular entry point for authoritative state transition refinement.         Logi
+Nodes (1): Apply updates to a single entity, producing a new EntityState instance.
 
 ### Community 1179 - "Community 1179"
 Cohesion: 1.0
-Nodes (1): Produce a new state generation from the prior state and updates.         Logic I
+Nodes (1): Detect entities in town and apply general passive laws (Healing).
 
 ### Community 1180 - "Community 1180"
 Cohesion: 1.0
-Nodes (1): Apply updates to a single entity, producing a new EntityState instance.
+Nodes (1): Pillar 3: Fractional Armor Mitigation         Formula: damage = (atk * atk_mult)
 
 ### Community 1181 - "Community 1181"
 Cohesion: 1.0
-Nodes (1): Detect entities in town and apply general passive laws (Healing).
+Nodes (1): Calculates all tactical multipliers for an attack.         Consolidated from res
 
 ### Community 1182 - "Community 1182"
 Cohesion: 1.0
-Nodes (1): Pillar 3: Fractional Armor Mitigation         Formula: damage = (atk * atk_mult)
+Nodes (1): Phase 8: Calculate durability loss for attacker and defender.
 
 ### Community 1183 - "Community 1183"
 Cohesion: 1.0
-Nodes (1): Calculates all tactical multipliers for an attack.         Consolidated from res
+Nodes (1): Resolves multiple attackers hitting a single defender in the same tick.
 
 ### Community 1184 - "Community 1184"
 Cohesion: 1.0
-Nodes (1): Phase 8: Calculate durability loss for attacker and defender.
+Nodes (1): Calculates and returns a WoundUpdate if damage is sufficient.
 
 ### Community 1185 - "Community 1185"
 Cohesion: 1.0
-Nodes (1): Resolves multiple attackers hitting a single defender in the same tick.
+Nodes (1): Determines the next tactical intent for an entity.         Bounded to local visi
 
 ### Community 1186 - "Community 1186"
 Cohesion: 1.0
-Nodes (1): Calculates and returns a WoundUpdate if damage is sufficient.
+Nodes (1): Public helper for deterministic target selection.         Matches legacy 'Tactic
 
 ### Community 1187 - "Community 1187"
 Cohesion: 1.0
-Nodes (1): Determines the next tactical intent for an entity.         Bounded to local visi
+Nodes (1): Scores neighbors and returns the most salient ones.
 
 ### Community 1188 - "Community 1188"
 Cohesion: 1.0
-Nodes (1): Public helper for deterministic target selection.         Matches legacy 'Tactic
+Nodes (1): Calculates Panic and Aggression levels.
 
 ### Community 1189 - "Community 1189"
 Cohesion: 1.0
-Nodes (1): Scores neighbors and returns the most salient ones.
+Nodes (1): Returns the stamina cost for an attack action.
 
 ### Community 1190 - "Community 1190"
 Cohesion: 1.0
-Nodes (1): Calculates Panic and Aggression levels.
+Nodes (1): Returns the stamina cost for a movement action.
 
 ### Community 1191 - "Community 1191"
 Cohesion: 1.0
-Nodes (1): Returns the stamina cost for an attack action.
+Nodes (1): Returns the stamina cost for a harvest tick.
 
 ### Community 1192 - "Community 1192"
 Cohesion: 1.0
-Nodes (1): Returns the stamina cost for a movement action.
+Nodes (1): Returns the stamina cost for using a skill.
 
 ### Community 1193 - "Community 1193"
 Cohesion: 1.0
-Nodes (1): Returns the stamina cost for a harvest tick.
+Nodes (1): Check if entity has enough stamina for a skill.
 
 ### Community 1194 - "Community 1194"
 Cohesion: 1.0
-Nodes (1): Returns the stamina cost for using a skill.
+Nodes (1): Check if entity is in exhaustion state.
 
 ### Community 1195 - "Community 1195"
 Cohesion: 1.0
-Nodes (1): Check if entity has enough stamina for a skill.
+Nodes (1): Combat damage multiplier when exhausted.
 
 ### Community 1196 - "Community 1196"
 Cohesion: 1.0
-Nodes (1): Check if entity is in exhaustion state.
+Nodes (1): Returns the stamina delta for passive/rest regeneration.
 
 ### Community 1197 - "Community 1197"
 Cohesion: 1.0
-Nodes (1): Combat damage multiplier when exhausted.
+Nodes (1): Check if a single hit is massive enough to cause a wound.
 
 ### Community 1198 - "Community 1198"
 Cohesion: 1.0
-Nodes (1): Returns the stamina delta for passive/rest regeneration.
+Nodes (1): Create a wound record from a massive hit.
 
 ### Community 1199 - "Community 1199"
 Cohesion: 1.0
-Nodes (1): Check if a single hit is massive enough to cause a wound.
+Nodes (1): Sum all active (unhealed) wound penalties.
 
 ### Community 1200 - "Community 1200"
 Cohesion: 1.0
-Nodes (1): Create a wound record from a massive hit.
+Nodes (1): Sum all permanent scar penalties (lesser than wounds).
 
 ### Community 1201 - "Community 1201"
 Cohesion: 1.0
-Nodes (1): Sum all active (unhealed) wound penalties.
+Nodes (1): Heal a wound and create a scar. Returns (healed_wound, scar).
 
 ### Community 1202 - "Community 1202"
 Cohesion: 1.0
-Nodes (1): Sum all permanent scar penalties (lesser than wounds).
+Nodes (1): Check if entity is beyond its leash radius.         VERIFIED v2: mob_leash_radiu
 
 ### Community 1203 - "Community 1203"
 Cohesion: 1.0
-Nodes (1): Heal a wound and create a scar. Returns (healed_wound, scar).
+Nodes (1): Check if a chasing mob should abandon pursuit.         VERIFIED v2: mob_chase_gi
 
 ### Community 1204 - "Community 1204"
 Cohesion: 1.0
-Nodes (1): Check if entity is beyond its leash radius.         VERIFIED v2: mob_leash_radiu
+Nodes (1): Get the home position for return-to-camp behavior.
 
 ### Community 1205 - "Community 1205"
 Cohesion: 1.0
-Nodes (1): Check if a chasing mob should abandon pursuit.         VERIFIED v2: mob_chase_gi
+Nodes (1): Check if entity has reached home.
 
 ### Community 1206 - "Community 1206"
 Cohesion: 1.0
-Nodes (1): Get the home position for return-to-camp behavior.
+Nodes (1): Calculate perception-based discovery score.         VERIFIED v2: perception_disc
 
 ### Community 1207 - "Community 1207"
 Cohesion: 1.0
-Nodes (1): Check if entity has reached home.
+Nodes (1): Calculate diagnosis accuracy (0.0 to 1.0).         VERIFIED v2: wisdom_diagnosis
 
 ### Community 1208 - "Community 1208"
 Cohesion: 1.0
-Nodes (1): Calculate perception-based discovery score.         VERIFIED v2: perception_disc
+Nodes (1): Get movement cost for a tile based on terrain type.         VERIFIED v2: terrain
 
 ### Community 1209 - "Community 1209"
 Cohesion: 1.0
-Nodes (1): Calculate diagnosis accuracy (0.0 to 1.0).         VERIFIED v2: wisdom_diagnosis
+Nodes (1): Calculate total movement cost for a path.
 
 ### Community 1210 - "Community 1210"
 Cohesion: 1.0
-Nodes (1): Get movement cost for a tile based on terrain type.         VERIFIED v2: terrain
+Nodes (1): Only switch targets if the new one is significantly better.         Uses margin
 
 ### Community 1211 - "Community 1211"
 Cohesion: 1.0
-Nodes (1): Calculate total movement cost for a path.
+Nodes (1): Physical: base_atk + strength * 0.8 * power         Magical:  base_atk + intelli
 
 ### Community 1212 - "Community 1212"
 Cohesion: 1.0
-Nodes (1): Only switch targets if the new one is significantly better.         Uses margin
+Nodes (1): Full effective stat recomputation:         base stats + gear + traits + wound pe
 
 ### Community 1213 - "Community 1213"
 Cohesion: 1.0
-Nodes (1): Physical: base_atk + strength * 0.8 * power         Magical:  base_atk + intelli
+Nodes (1): Produce authoritative item-to-gold conversions for entities at a shop.         L
 
 ### Community 1214 - "Community 1214"
 Cohesion: 1.0
-Nodes (1): Full effective stat recomputation:         base stats + gear + traits + wound pe
+Nodes (1): Resolve adjacent position swaps before normal movement routing.          LAW:
 
 ### Community 1215 - "Community 1215"
 Cohesion: 1.0
-Nodes (1): Produce authoritative item-to-gold conversions for entities at a shop.         L
+Nodes (1): Route normal navigation intent via MovementSystem.
 
 ### Community 1216 - "Community 1216"
 Cohesion: 1.0
-Nodes (1): Resolve adjacent position swaps before normal movement routing.          LAW:
+Nodes (1): LAW:             Final movement results must not place two active entities on th
 
 ### Community 1217 - "Community 1217"
 Cohesion: 1.0
-Nodes (1): Route normal navigation intent via MovementSystem.
+Nodes (1): Strip unauthorized raw worker effects.          Allowed:             - task inte
 
 ### Community 1218 - "Community 1218"
 Cohesion: 1.0
-Nodes (1): LAW:             Final movement results must not place two active entities on th
+Nodes (1): Returns a map of GoalKind -> utility_modifier.         Modifier is a float added
 
 ### Community 1219 - "Community 1219"
 Cohesion: 1.0
-Nodes (1): Strip unauthorized raw worker effects.          Allowed:             - task inte
+Nodes (1): Applies personality, life stage, and boredom modifiers to goal scores.
 
 ### Community 1220 - "Community 1220"
 Cohesion: 1.0
-Nodes (1): Returns a map of GoalKind -> utility_modifier.         Modifier is a float added
+Nodes (1): Generates a stable, order-independent composite seed.
 
 ### Community 1221 - "Community 1221"
 Cohesion: 1.0
-Nodes (1): Applies personality, life stage, and boredom modifiers to goal scores.
+Nodes (1): Checks if a raid should spawn and returns the update.
 
 ### Community 1222 - "Community 1222"
 Cohesion: 1.0
-Nodes (1): Generates a stable, order-independent composite seed.
+Nodes (1): Deterministic, idempotent boss spawning.          LAW:             At most one a
 
 ### Community 1223 - "Community 1223"
 Cohesion: 1.0
-Nodes (1): Checks if a raid should spawn and returns the update.
+Nodes (1): Rule: Boss death provides high-tier loot via transaction law.
 
 ### Community 1224 - "Community 1224"
 Cohesion: 1.0
-Nodes (1): Deterministic, idempotent boss spawning.          LAW:             At most one a
+Nodes (1): Finds the region containing the given position.          Uses bounds if defined,
 
 ### Community 1225 - "Community 1225"
 Cohesion: 1.0
-Nodes (1): Rule: Boss death provides high-tier loot via transaction law.
+Nodes (1): Calculates difficulty tier based on distance from town center.
 
 ### Community 1226 - "Community 1226"
 Cohesion: 1.0
-Nodes (1): Finds the region containing the given position.          Uses bounds if defined,
+Nodes (1): Process time-based recovery for regional danger and local scars.         Logic I
 
 ### Community 1227 - "Community 1227"
 Cohesion: 1.0
-Nodes (1): Calculates difficulty tier based on distance from town center.
+Nodes (1): Create a battlefield scar from a death event.
 
 ### Community 1228 - "Community 1228"
 Cohesion: 1.0
-Nodes (1): Process time-based recovery for regional danger and local scars.         Logic I
+Nodes (1): Create a raid damage scar from a town raid.
 
 ### Community 1229 - "Community 1229"
 Cohesion: 1.0
-Nodes (1): Create a battlefield scar from a death event.
+Nodes (1): Evolve camps and spawn monsters or raids.
 
 ### Community 1230 - "Community 1230"
 Cohesion: 1.0
-Nodes (1): Create a raid damage scar from a town raid.
+Nodes (1): Rule: Clearing a camp provides rewards and reduces threat.
 
 ### Community 1231 - "Community 1231"
 Cohesion: 1.0
-Nodes (1): Evolve camps and spawn monsters or raids.
+Nodes (1): Processes maturity, calamity spawns, and regional intensity shifts.
 
 ### Community 1232 - "Community 1232"
 Cohesion: 1.0
-Nodes (1): Rule: Clearing a camp provides rewards and reduces threat.
+Nodes (1): Increases regional calamity intensity when significant entities die.
 
 ### Community 1233 - "Community 1233"
 Cohesion: 1.0
-Nodes (1): Processes maturity, calamity spawns, and regional intensity shifts.
+Nodes (1): Produce a deterministic fingerprint of the current state.         Includes ident
 
 ### Community 1234 - "Community 1234"
 Cohesion: 1.0
-Nodes (1): Increases regional calamity intensity when significant entities die.
+Nodes (1): Returns a normalized direction vector towards the target kind using         weig
 
 ### Community 1235 - "Community 1235"
 Cohesion: 1.0
-Nodes (1): Produce a deterministic fingerprint of the current state.         Includes ident
+Nodes (1): LEG-RPG-141: Quest generation from scar/trauma state.         Regions with high
 
 ### Community 1236 - "Community 1236"
 Cohesion: 1.0
-Nodes (1): Returns a normalized direction vector towards the target kind using         weig
+Nodes (1): LEG-RPG-141: Quest generation from strategic blockers.         Material blockers
 
 ### Community 1237 - "Community 1237"
 Cohesion: 1.0
-Nodes (1): LEG-RPG-141: Quest generation from scar/trauma state.         Regions with high
+Nodes (1): Convert a quest template to a strategic project.
 
 ### Community 1238 - "Community 1238"
 Cohesion: 1.0
-Nodes (1): LEG-RPG-141: Quest generation from strategic blockers.         Material blockers
+Nodes (1): Generate concerns based on hunger, sleep debt, and rest pressure.         VERIFI
 
 ### Community 1239 - "Community 1239"
 Cohesion: 1.0
-Nodes (1): Convert a quest template to a strategic project.
+Nodes (1): Generate concerns based on inventory status and pending goals.
 
 ### Community 1240 - "Community 1240"
 Cohesion: 1.0
-Nodes (1): Generate concerns based on hunger, sleep debt, and rest pressure.         VERIFI
+Nodes (1): Returns a utility boost for routine-related projects.         VERIFIED v2: routi
 
 ### Community 1241 - "Community 1241"
 Cohesion: 1.0
-Nodes (1): Generate concerns based on inventory status and pending goals.
+Nodes (1): Returns a utility boost based on the entity's role identity.
 
 ### Community 1242 - "Community 1242"
 Cohesion: 1.0
-Nodes (1): Returns a utility boost for routine-related projects.         VERIFIED v2: routi
+Nodes (1): Phase 9: Anchored-World Behavior.         If entity is idle and away from home,
 
 ### Community 1243 - "Community 1243"
 Cohesion: 1.0
-Nodes (1): Returns a utility boost based on the entity's role identity.
+Nodes (1): LEG-RPG-116: Strategic pivot on regional danger.          If hazard_level > 0.7,
 
 ### Community 1244 - "Community 1244"
 Cohesion: 1.0
-Nodes (1): Phase 9: Anchored-World Behavior.         If entity is idle and away from home,
+Nodes (1): LEG-RPG-117: Scar detection.          If a nearby region has trauma_score > 0.5,
 
 ### Community 1245 - "Community 1245"
 Cohesion: 1.0
-Nodes (1): LEG-RPG-116: Strategic pivot on regional danger.          If hazard_level > 0.7,
+Nodes (1): Near-death event: generates a survival concern and may suspend current project.
 
 ### Community 1246 - "Community 1246"
 Cohesion: 1.0
-Nodes (1): LEG-RPG-117: Scar detection.          If a nearby region has trauma_score > 0.5,
+Nodes (1): Part 1 §Strategic: Event interpretation can mutate directives.          Only hig
 
 ### Community 1247 - "Community 1247"
 Cohesion: 1.0
-Nodes (1): Near-death event: generates a survival concern and may suspend current project.
+Nodes (1): Authoritatively apply deltas to social histories.         Logic ID: SOC-217 (Soc
 
 ### Community 1248 - "Community 1248"
 Cohesion: 1.0
-Nodes (1): Part 1 §Strategic: Event interpretation can mutate directives.          Only hig
+Nodes (1): Prunes social records for entities with low salience to keep state lean.
 
 ### Community 1249 - "Community 1249"
 Cohesion: 1.0
-Nodes (1): Authoritatively apply deltas to social histories.         Logic ID: SOC-217 (Soc
+Nodes (1): Evaluate an OFFERED or COUNTERED contract.         Returns (new_status, reason,
 
 ### Community 1250 - "Community 1250"
 Cohesion: 1.0
-Nodes (1): Prunes social records for entities with low salience to keep state lean.
+Nodes (1): Recalculate trust based on a concrete interaction outcome.         VERIFIED v2:
 
 ### Community 1251 - "Community 1251"
 Cohesion: 1.0
-Nodes (1): Evaluate an OFFERED or COUNTERED contract.         Returns (new_status, reason,
+Nodes (1): Evaluate whether the target entity accepts an adjacent position swap.          L
 
 ### Community 1252 - "Community 1252"
 Cohesion: 1.0
-Nodes (1): Recalculate trust based on a concrete interaction outcome.         VERIFIED v2:
+Nodes (1): LEG-RPG-119: Betrayal (Avenge).         Part 1 §Social: Private betrayal history
 
 ### Community 1253 - "Community 1253"
 Cohesion: 1.0
-Nodes (1): Evaluate whether the target entity accepts an adjacent position swap.          L
+Nodes (1): LEG-RPG-123: Refutation drops trust.
 
 ### Community 1254 - "Community 1254"
 Cohesion: 1.0
-Nodes (1): LEG-RPG-119: Betrayal (Avenge).         Part 1 §Social: Private betrayal history
+Nodes (1): Part 1 §Social: Social learning updates familiarity/trust-like bonds.         VE
 
 ### Community 1255 - "Community 1255"
 Cohesion: 1.0
-Nodes (1): LEG-RPG-123: Refutation drops trust.
+Nodes (1): Part 1 §Social: Recruitment evaluates trust, level, and greed.         Scales co
 
 ### Community 1256 - "Community 1256"
 Cohesion: 1.0
-Nodes (1): Part 1 §Social: Social learning updates familiarity/trust-like bonds.         VE
+Nodes (1): Validates and applies a state transition for a contract.
 
 ### Community 1257 - "Community 1257"
 Cohesion: 1.0
-Nodes (1): Part 1 §Social: Recruitment evaluates trust, level, and greed.         Scales co
+Nodes (1): Strict state machine for contracts.
 
 ### Community 1258 - "Community 1258"
 Cohesion: 1.0
-Nodes (1): Validates and applies a state transition for a contract.
+Nodes (1): Auto-expire contracts that reached their tick limit.
 
 ### Community 1259 - "Community 1259"
 Cohesion: 1.0
-Nodes (1): Strict state machine for contracts.
+Nodes (1): Transition an OFFERED contract to ACTIVE.
 
 ### Community 1260 - "Community 1260"
 Cohesion: 1.0
-Nodes (1): Auto-expire contracts that reached their tick limit.
+Nodes (1): Resolve an ACTIVE contract and update social relationships.         First return
 
 ### Community 1261 - "Community 1261"
 Cohesion: 1.0
-Nodes (1): Transition an OFFERED contract to ACTIVE.
+Nodes (1): Processes ACTIVE contracts for expiration or completion.
 
 ### Community 1262 - "Community 1262"
 Cohesion: 1.0
-Nodes (1): Resolve an ACTIVE contract and update social relationships.         First return
+Nodes (1): Reap any OFFERED contracts that have passed their expiry_tick.
 
 ### Community 1263 - "Community 1263"
 Cohesion: 1.0
-Nodes (1): Processes ACTIVE contracts for expiration or completion.
+Nodes (1): Export the entity's strategic state as a typed graph.
 
 ### Community 1264 - "Community 1264"
 Cohesion: 1.0
-Nodes (1): Reap any OFFERED contracts that have passed their expiry_tick.
+Nodes (1): Verify that multiple exports from the same state are identical.
 
 ### Community 1265 - "Community 1265"
 Cohesion: 1.0
-Nodes (1): Export the entity's strategic state as a typed graph.
+Nodes (1): Generate detour suggestions from unresolved blockers paired with relevant leads.
 
 ### Community 1266 - "Community 1266"
 Cohesion: 1.0
-Nodes (1): Verify that multiple exports from the same state are identical.
+Nodes (1): Part 1 §Strategic: Rejected/tested leads are suppressed to avoid blind retries.
 
 ### Community 1267 - "Community 1267"
 Cohesion: 1.0
-Nodes (1): Generate detour suggestions from unresolved blockers paired with relevant leads.
+Nodes (1): Part 1 §Strategic: Leads and concerns are retained under profile-specific limits
 
 ### Community 1268 - "Community 1268"
 Cohesion: 1.0
-Nodes (1): Part 1 §Strategic: Rejected/tested leads are suppressed to avoid blind retries.
+Nodes (1): Check if a lead might resolve a blocker.
 
 ### Community 1269 - "Community 1269"
 Cohesion: 1.0
-Nodes (1): Part 1 §Strategic: Leads and concerns are retained under profile-specific limits
+Nodes (1): Score a detour suggestion.
 
 ### Community 1270 - "Community 1270"
 Cohesion: 1.0
-Nodes (1): Check if a lead might resolve a blocker.
+Nodes (1): Infer the right objective kind from a blocker+lead pair.
 
 ### Community 1271 - "Community 1271"
 Cohesion: 1.0
-Nodes (1): Score a detour suggestion.
+Nodes (1): Infer blockers based on recent failures.         VERIFIED v2: strategic_blocker_
 
 ### Community 1272 - "Community 1272"
 Cohesion: 1.0
-Nodes (1): Infer the right objective kind from a blocker+lead pair.
+Nodes (1): Produce a StrategicUpdate containing blockers for missing requirements.
 
 ### Community 1273 - "Community 1273"
 Cohesion: 1.0
-Nodes (1): Infer blockers based on recent failures.         VERIFIED v2: strategic_blocker_
+Nodes (1): Resolve strategic blockers that are satisfied by the current or pending
 
 ### Community 1274 - "Community 1274"
 Cohesion: 1.0
-Nodes (1): Produce a StrategicUpdate containing blockers for missing requirements.
+Nodes (1): Phase 9: Routine, Biological Needs, and Salience Filtering.         VERIFIED v2:
 
 ### Community 1275 - "Community 1275"
 Cohesion: 1.0
-Nodes (1): Resolve strategic blockers that are satisfied by the current or pending
+Nodes (1): Record the final result of a project and apply learning effects.
 
 ### Community 1276 - "Community 1276"
 Cohesion: 1.0
-Nodes (1): Phase 9: Routine, Biological Needs, and Salience Filtering.         VERIFIED v2:
+Nodes (1): VERIFIED v2: StrategicIntelligenceSystem.process_outcome
 
 ### Community 1277 - "Community 1277"
 Cohesion: 1.0
-Nodes (1): Record the final result of a project and apply learning effects.
+Nodes (1): Produce a collection of strategic intent updates for the next tick.
 
 ### Community 1278 - "Community 1278"
 Cohesion: 1.0
-Nodes (1): VERIFIED v2: StrategicIntelligenceSystem.process_outcome
+Nodes (1): VERIFIED v2: StrategicIntelligenceSystem.derive_cognition_profile
 
 ### Community 1279 - "Community 1279"
 Cohesion: 1.0
-Nodes (1): Produce a collection of strategic intent updates for the next tick.
+Nodes (1): Returns a map of GoalKind -> utility_delta.
 
 ### Community 1280 - "Community 1280"
 Cohesion: 1.0
-Nodes (1): VERIFIED v2: StrategicIntelligenceSystem.derive_cognition_profile
+Nodes (1): Checks if the current region suppresses specific actions and enforces actor vali
 
 ### Community 1281 - "Community 1281"
 Cohesion: 1.0
-Nodes (1): Returns a map of GoalKind -> utility_delta.
+Nodes (1): Action Readiness Law: Every ENTITY_ACT requires 100.0 readiness.         Logic I
 
 ### Community 1282 - "Community 1282"
 Cohesion: 1.0
-Nodes (1): Checks if the current region suppresses specific actions and enforces actor vali
+Nodes (1): V2 Authoritative Movement Law:         Validates if entity has enough readiness
 
 ### Community 1283 - "Community 1283"
 Cohesion: 1.0
-Nodes (1): Action Readiness Law: Every ENTITY_ACT requires 100.0 readiness.         Logic I
+Nodes (1): Simple Bresenham-like LoS check for WALL/Building obstructions.
 
 ### Community 1284 - "Community 1284"
 Cohesion: 1.0
-Nodes (1): V2 Authoritative Movement Law:         Validates if entity has enough readiness
+Nodes (1): Verify if attacker has clear elevation advantage (Terrain-based).
 
 ### Community 1285 - "Community 1285"
 Cohesion: 1.0
-Nodes (1): Simple Bresenham-like LoS check for WALL/Building obstructions.
+Nodes (1): Authoritative geometric flanking check.         Returns: (is_flanked, is_surroun
 
 ### Community 1286 - "Community 1286"
 Cohesion: 1.0
-Nodes (1): Verify if attacker has clear elevation advantage (Terrain-based).
+Nodes (1): Verify if defender is behind wall cover relative to attacker.         Logic ID:
 
 ### Community 1287 - "Community 1287"
 Cohesion: 1.0
-Nodes (1): Authoritative geometric flanking check.         Returns: (is_flanked, is_surroun
+Nodes (1): Calculate movement/tie-breaking priority.
 
 ### Community 1288 - "Community 1288"
 Cohesion: 1.0
-Nodes (1): Verify if defender is behind wall cover relative to attacker.         Logic ID:
+Nodes (1): Find hostile entities currently in melee engagement with this entity.
 
 ### Community 1289 - "Community 1289"
 Cohesion: 1.0
-Nodes (1): Calculate movement/tie-breaking priority.
+Nodes (1): Find hostile entities that would be in melee engagement with this entity at a hy
 
 ### Community 1290 - "Community 1290"
 Cohesion: 1.0
-Nodes (1): Find hostile entities currently in melee engagement with this entity.
+Nodes (1): Return the ID of the entity occupying the specified tile.
 
 ### Community 1291 - "Community 1291"
 Cohesion: 1.0
-Nodes (1): Find hostile entities that would be in melee engagement with this entity at a hy
+Nodes (1): Apply updates to a single entity, producing a new EntityState instance.
 
 ### Community 1292 - "Community 1292"
 Cohesion: 1.0
-Nodes (1): Return the ID of the entity occupying the specified tile.
-
-### Community 1293 - "Community 1293"
-Cohesion: 1.0
-Nodes (1): Apply updates to a single entity, producing a new EntityState instance.
-
-### Community 1294 - "Community 1294"
-Cohesion: 1.0
 Nodes (1): Determines the next tactical intent for an entity.         Bounded to local visi
 
-### Community 1295 - "Community 1295"
+### Community 1293 - "Community 1293"
 Cohesion: 1.0
 Nodes (1): Public helper for deterministic target selection.         Matches legacy 'Tactic
 
 ## Knowledge Gaps
-- **4813 isolated node(s):** `Service for equipment scoring, replacement decisions, auto-equip, and repair.`, `Calculate a gear score for an item based on entity class.          Only weapons`, `Compatibility scoring API.          Older code/tests may call:              Equi`, `Determine whether a candidate item should replace the currently equipped`, `Scan inventory for better equipment and return an EntityUpdate if any         sl` (+4808 more)
+- **4871 isolated node(s):** `Service for equipment scoring, replacement decisions, auto-equip, and repair.`, `Calculate a gear score for an item based on entity class.          Only weapons`, `Compatibility scoring API.          Older code/tests may call:              Equi`, `Determine whether a candidate item should replace the currently equipped`, `Scan inventory for better equipment and return an EntityUpdate if any         sl` (+4866 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **Thin community `Community 80`** (8 nodes): `mock_run_service()`, `test_get_entity_diffs_success()`, `test_get_entity_features_success()`, `test_get_entity_snapshots_missing_run()`, `test_get_entity_snapshots_path_traversal()`, `test_get_entity_snapshots_success()`, `test_get_run_patterns_success()`, `test_cognition_history_api.py`
+- **Thin community `Community 72`** (8 nodes): `background_sweep_interval()`, `candidate_budget()`, `compaction_level()`, `from_mode()`, `movement_budget()`, `scan_policy()`, `strategic_budget()`, `policy.py`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 87`** (7 nodes): `useSimulation.ts`, `useSimulation.test.tsx`, `decodeRLE()`, `fetchJSON()`, `useSimulation()`, `MockEventSource`, `.constructor()`
+- **Thin community `Community 81`** (7 nodes): `useSimulation.ts`, `useSimulation.test.tsx`, `decodeRLE()`, `fetchJSON()`, `useSimulation()`, `MockEventSource`, `.constructor()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 89`** (7 nodes): `from_state()`, `OccupancySnapshot`, `.get_priority()`, `.is_occupied()`, `.occupant_at()`, `Stable per-tick read model for entity tile occupancy and tie-breaking priority.`, `occupancy_snapshot.py`
+- **Thin community `Community 84`** (7 nodes): `from_state()`, `OccupancySnapshot`, `.get_priority()`, `.is_occupied()`, `.occupant_at()`, `Stable per-tick read model for entity tile occupancy and tie-breaking priority.`, `occupancy_snapshot.py`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 108`** (5 nodes): `deserialize()`, `Handles serialization of AuthoritativeState to/from JSON.     Ensures that gamep`, `serialize()`, `StateSerializer`, `serialization.py`
+- **Thin community `Community 105`** (5 nodes): `deserialize()`, `Handles serialization of AuthoritativeState to/from JSON.     Ensures that gamep`, `serialize()`, `StateSerializer`, `serialization.py`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 109`** (5 nodes): `check_evolution()`, `EvolutionService`, `get_evolution_gear()`, `Handles entity transformation (e.g. Goblin -> Goblin Elite).`, `evolution.py`
+- **Thin community `Community 106`** (5 nodes): `check_evolution()`, `EvolutionService`, `get_evolution_gear()`, `Handles entity transformation (e.g. Goblin -> Goblin Elite).`, `evolution.py`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 110`** (5 nodes): `apply_bonuses()`, `BreakthroughService`, `get_breakthrough()`, `Handles special passive perks (Breakthroughs) earned at milestones.`, `breakthroughs.py`
+- **Thin community `Community 107`** (5 nodes): `apply_bonuses()`, `BreakthroughService`, `get_breakthrough()`, `Handles special passive perks (Breakthroughs) earned at milestones.`, `breakthroughs.py`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 111`** (5 nodes): `capacity.py`, `CapacityService`, `Utility for enforcing collection limits based on priority or recency.     Logic`, `trim_dict()`, `trim_list()`
+- **Thin community `Community 108`** (5 nodes): `capacity.py`, `CapacityService`, `Utility for enforcing collection limits based on priority or recency.     Logic`, `trim_dict()`, `trim_list()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 115`** (5 nodes): `calculate_caution_modifier()`, `get_impact()`, `Handles public standing and witnessed behavior consequences.`, `ReputationService`, `reputation.py`
+- **Thin community `Community 112`** (5 nodes): `calculate_caution_modifier()`, `get_impact()`, `Handles public standing and witnessed behavior consequences.`, `ReputationService`, `reputation.py`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 116`** (5 nodes): `route_family_classifier.py`, `classify()`, `detect_forbidden()`, `RouteFamilyClassifier classifies low-level trace events and ActionIntent logs`, `RouteFamilyClassifier`
+- **Thin community `Community 113`** (5 nodes): `route_family_classifier.py`, `classify()`, `detect_forbidden()`, `RouteFamilyClassifier classifies low-level trace events and ActionIntent logs`, `RouteFamilyClassifier`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 120`** (5 nodes): `entity()`, `state()`, `test_boredom_accumulation_in_update()`, `test_switch_from_harvesting_to_combat_on_high_threat()`, `test_strategic_reprioritization.py`
+- **Thin community `Community 123`** (4 nodes): `get_points_to_next_rank()`, `get_stat_multiplier()`, `process_points()`, `veterancy.py`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 128`** (4 nodes): `get_points_to_next_rank()`, `get_stat_multiplier()`, `process_points()`, `veterancy.py`
+- **Thin community `Community 126`** (4 nodes): `EntityState`, `.__post_init__()`, `position()`, `test_dataclass_compat.py`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 131`** (4 nodes): `EntityState`, `.__post_init__()`, `position()`, `test_dataclass_compat.py`
+- **Thin community `Community 138`** (3 nodes): `determine_lod()`, `should_execute()`, `lod.py`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 145`** (3 nodes): `test_dataclass_conflict.py`, `TestConflict`, `x()`
+- **Thin community `Community 139`** (3 nodes): `test_dataclass_conflict.py`, `TestConflict`, `x()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 146`** (3 nodes): `main()`, `test_docker.py`, `run_command()`
+- **Thin community `Community 140`** (3 nodes): `main()`, `test_docker.py`, `run_command()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 147`** (3 nodes): `conftest.py`, `pytest_collection_modifyitems()`, `Enforces taxonomy markers for all tests in tests/parity/.     Also enforces 'id'`
+- **Thin community `Community 141`** (3 nodes): `conftest.py`, `pytest_collection_modifyitems()`, `Enforces taxonomy markers for all tests in tests/parity/.     Also enforces 'id'`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 148`** (3 nodes): `Exhaustively verify WebSocket live events API handshake, filtering, heartbeats,`, `test_observability_websocket_suite()`, `test_observability_websocket.py`
+- **Thin community `Community 142`** (3 nodes): `Exhaustively verify WebSocket live events API handshake, filtering, heartbeats,`, `test_observability_websocket_suite()`, `test_observability_websocket.py`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 149`** (3 nodes): `Verify live entity inspection endpoints under a running server.`, `test_live_entity_inspection()`, `test_live_entity_inspection.py`
+- **Thin community `Community 143`** (3 nodes): `Verify live entity inspection endpoints under a running server.`, `test_live_entity_inspection()`, `test_live_entity_inspection.py`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 150`** (3 nodes): `Exhaustively verify Live Health, Observatory UI, and redirection endpoints.`, `test_live_health_api_suite()`, `test_live_health_api.py`
+- **Thin community `Community 144`** (3 nodes): `Exhaustively verify Live Health, Observatory UI, and redirection endpoints.`, `test_live_health_api_suite()`, `test_live_health_api.py`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 151`** (3 nodes): `Verify that state.py does not import from export or diagnostic modules.`, `test_hotpath_purity()`, `test_runtime_state_contract.py`
+- **Thin community `Community 145`** (3 nodes): `create_mock_entity()`, `test_target_selection_priority()`, `test_target_selection_contract.py`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 152`** (3 nodes): `Verify that different roles bias toward different project kinds.`, `test_role_identity_biasing()`, `test_role_biasing.py`
+- **Thin community `Community 147`** (3 nodes): `Ensures that simulation phases, systems, and AI modules do not directly access`, `test_no_direct_dirtyset_candidate_selection_outside_selector()`, `test_no_direct_dirtyset_candidate_selection.py`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 154`** (3 nodes): `create_mock_entity()`, `test_target_selection_priority()`, `test_target_selection_contract.py`
+- **Thin community `Community 148`** (3 nodes): `Verify WebSocket connection, handshake, and receipt of initial timeline buffer.`, `test_ws_events_stream()`, `test_websocket_stream_events.py`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 156`** (3 nodes): `Ensures that simulation phases, systems, and AI modules do not directly access`, `test_no_direct_dirtyset_candidate_selection_outside_selector()`, `test_no_direct_dirtyset_candidate_selection.py`
+- **Thin community `Community 149`** (3 nodes): `Run identical multi-tick scenarios with dynamic phase skipping enabled versus di`, `test_phase_skip_parity()`, `test_phase_skip_parity.py`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 157`** (3 nodes): `Verify WebSocket connection, handshake, and receipt of initial timeline buffer.`, `test_ws_events_stream()`, `test_websocket_stream_events.py`
+- **Thin community `Community 150`** (3 nodes): `test_long_run_stability.py`, `Simulate 2,000 ticks and verify:     1. Determinism (Identical hash on repeat)`, `test_long_run_stability()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 158`** (3 nodes): `Run identical multi-tick scenarios with dynamic phase skipping enabled versus di`, `test_phase_skip_parity()`, `test_phase_skip_parity.py`
+- **Thin community `Community 152`** (3 nodes): `generate_report()`, `perf_report.py`, `Generate a summary performance report from the matrix JSON results.     M5 Law:`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 159`** (3 nodes): `test_long_run_stability.py`, `Simulate 2,000 ticks and verify:     1. Determinism (Identical hash on repeat)`, `test_long_run_stability()`
+- **Thin community `Community 153`** (3 nodes): `Foo`, `test_replace()`, `test_replace.py`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 161`** (3 nodes): `generate_report()`, `perf_report.py`, `Generate a summary performance report from the matrix JSON results.     M5 Law:`
+- **Thin community `Community 154`** (3 nodes): `GoalScore`, `test_speed()`, `test_goal_score.py`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 162`** (3 nodes): `Foo`, `test_replace()`, `test_replace.py`
+- **Thin community `Community 160`** (2 nodes): `ClassDefinition`, `classes.py`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 163`** (3 nodes): `GoalScore`, `test_speed()`, `test_goal_score.py`
+- **Thin community `Community 161`** (2 nodes): `strategic.py`, `Compatibility wrapper.  Public import path:     from src.systems.strategic impor`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 169`** (2 nodes): `ClassDefinition`, `classes.py`
+- **Thin community `Community 162`** (2 nodes): `__init__.py`, `Phase 8 — Advanced Simulation Understanding package.  Provides post-run simulati`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 170`** (2 nodes): `strategic.py`, `Compatibility wrapper.  Public import path:     from src.systems.strategic impor`
+- **Thin community `Community 163`** (2 nodes): `Cognition Graph Observability package.`, `__init__.py`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 171`** (2 nodes): `__init__.py`, `Phase 8 — Advanced Simulation Understanding package.  Provides post-run simulati`
+- **Thin community `Community 192`** (1 nodes): `Calculate a gear score for an item based on entity class.          Only weapons`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 172`** (2 nodes): `Cognition Graph Observability package.`, `__init__.py`
+- **Thin community `Community 193`** (1 nodes): `Compatibility scoring API.          Older code/tests may call:              Equi`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 201`** (1 nodes): `Calculate a gear score for an item based on entity class.          Only weapons`
+- **Thin community `Community 194`** (1 nodes): `Determine whether a candidate item should replace the currently equipped`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 202`** (1 nodes): `Compatibility scoring API.          Older code/tests may call:              Equi`
+- **Thin community `Community 195`** (1 nodes): `Scan inventory for better equipment and return an EntityUpdate if any         sl`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 203`** (1 nodes): `Determine whether a candidate item should replace the currently equipped`
+- **Thin community `Community 196`** (1 nodes): `Return an EquipmentUpdate that restores durability for one equipped slot.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 204`** (1 nodes): `Scan inventory for better equipment and return an EntityUpdate if any         sl`
+- **Thin community `Community 197`** (1 nodes): `Normalize registry slot metadata into EquipSlot.          Supports:`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 205`** (1 nodes): `Return an EquipmentUpdate that restores durability for one equipped slot.`
+- **Thin community `Community 198`** (1 nodes): `Derive a DirtySet from a StateUpdate.         M3 Law: This must be deterministic`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 206`** (1 nodes): `Normalize registry slot metadata into EquipSlot.          Supports:`
+- **Thin community `Community 199`** (1 nodes): `Law: Critical work is never deferrable.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 207`** (1 nodes): `Derive a DirtySet from a StateUpdate.         M3 Law: This must be deterministic`
+- **Thin community `Community 200`** (1 nodes): `Aggregates data into a JSON report.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 208`** (1 nodes): `Law: Critical work is never deferrable.`
+- **Thin community `Community 201`** (1 nodes): `Scans the checklist for [x] VERIFIED v2 markers.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 209`** (1 nodes): `Aggregates data into a JSON report.`
+- **Thin community `Community 203`** (1 nodes): `Calculate total weight of all items in inventory.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 210`** (1 nodes): `Scans the checklist for [x] VERIFIED v2 markers.`
+- **Thin community `Community 204`** (1 nodes): `Check if an item can be added without exceeding slots or weight.         Logic I`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 212`** (1 nodes): `Calculate total weight of all items in inventory.`
+- **Thin community `Community 205`** (1 nodes): `Check if a list of item stacks can be added without exceeding slots or weight.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 213`** (1 nodes): `Check if an item can be added without exceeding slots or weight.         Logic I`
+- **Thin community `Community 206`** (1 nodes): `Check capacity after accounting for item removals (Phase 8).`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 214`** (1 nodes): `Check if a list of item stacks can be added without exceeding slots or weight.`
+- **Thin community `Community 207`** (1 nodes): `Check if an item can be equipped in the specified slot.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 215`** (1 nodes): `Check capacity after accounting for item removals (Phase 8).`
+- **Thin community `Community 208`** (1 nodes): `Apply authoritative updates to inventory, merging stacks and enforcing limits.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 216`** (1 nodes): `Check if an item can be equipped in the specified slot.`
+- **Thin community `Community 209`** (1 nodes): `Return a fully default empty self-model bundle.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 217`** (1 nodes): `Apply authoritative updates to inventory, merging stacks and enforcing limits.`
+- **Thin community `Community 210`** (1 nodes): `Validates an intent and produces the necessary updates.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 218`** (1 nodes): `Return a fully default empty self-model bundle.`
+- **Thin community `Community 211`** (1 nodes): `Verify a batch of packets for identity uniqueness and canonical context.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 219`** (1 nodes): `Validates an intent and produces the necessary updates.`
+- **Thin community `Community 212`** (1 nodes): `Verify results against their source packets and enforce Option A.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 220`** (1 nodes): `Verify a batch of packets for identity uniqueness and canonical context.`
+- **Thin community `Community 213`** (1 nodes): `Milestone D Law: Property-based access to the canonical neighbor view.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 221`** (1 nodes): `Verify results against their source packets and enforce Option A.`
+- **Thin community `Community 214`** (1 nodes): `Get the authoritative priority for a work class.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 222`** (1 nodes): `Milestone D Law: Property-based access to the canonical neighbor view.`
+- **Thin community `Community 217`** (1 nodes): `Thread-safe access to the latest completed tick state.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 223`** (1 nodes): `Get the authoritative priority for a work class.`
+- **Thin community `Community 218`** (1 nodes): `Returns the set of entity IDs that were modified across any simulation domain.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 226`** (1 nodes): `Thread-safe access to the latest completed tick state.`
+- **Thin community `Community 220`** (1 nodes): `Summarized world view.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 227`** (1 nodes): `Returns the set of entity IDs that were modified across any simulation domain.`
+- **Thin community `Community 221`** (1 nodes): `Complete inspectable world view.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 229`** (1 nodes): `Summarized world view.`
+- **Thin community `Community 222`** (1 nodes): `Detailed entity model.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 230`** (1 nodes): `Complete inspectable world view.`
+- **Thin community `Community 223`** (1 nodes): `Detailed regional model.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 231`** (1 nodes): `Detailed entity model.`
+- **Thin community `Community 229`** (1 nodes): `Calculate the effective power of a skill based on entity attributes.         Fol`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 232`** (1 nodes): `Detailed regional model.`
+- **Thin community `Community 230`** (1 nodes): `Calculate passive bonus (e.g. evasion, crit) from passive skills.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 238`** (1 nodes): `Calculate the effective power of a skill based on entity attributes.         Fol`
+- **Thin community `Community 231`** (1 nodes): `Returns the new kind if evolution is possible.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 239`** (1 nodes): `Calculate passive bonus (e.g. evasion, crit) from passive skills.`
+- **Thin community `Community 232`** (1 nodes): `Returns equipment for the new form.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 240`** (1 nodes): `Returns the new kind if evolution is possible.`
+- **Thin community `Community 233`** (1 nodes): `Points required to reach the next veterancy rank.         Formula: 10 * (2 ** ra`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 241`** (1 nodes): `Returns equipment for the new form.`
+- **Thin community `Community 234`** (1 nodes): `Combat bonus multiplier based on rank.         Each rank provides +5% to physica`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 242`** (1 nodes): `Points required to reach the next veterancy rank.         Formula: 10 * (2 ** ra`
+- **Thin community `Community 235`** (1 nodes): `Authoritatively add points and handle rank-ups.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 243`** (1 nodes): `Combat bonus multiplier based on rank.         Each rank provides +5% to physica`
+- **Thin community `Community 236`** (1 nodes): `Calculate XP required to REACH the next level.         Formula: 100 * (level **`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 244`** (1 nodes): `Authoritatively add points and handle rank-ups.`
+- **Thin community `Community 237`** (1 nodes): `Authoritative entry point for progression updates.         Handles XP accumulati`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 245`** (1 nodes): `Calculate XP required to REACH the next level.         Formula: 100 * (level **`
+- **Thin community `Community 238`** (1 nodes): `Returns skills that unlock at a specific level.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 246`** (1 nodes): `Authoritative entry point for progression updates.         Handles XP accumulati`
+- **Thin community `Community 239`** (1 nodes): `Handles the actual level-up state change.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 247`** (1 nodes): `Returns skills that unlock at a specific level.`
+- **Thin community `Community 240`** (1 nodes): `Derive combat stats from attributes, equipment, and passive skills.         VERI`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 248`** (1 nodes): `Handles the actual level-up state change.`
+- **Thin community `Community 242`** (1 nodes): `In a real implementation, this might return a derived stat proxy.         For Ph`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 249`** (1 nodes): `Derive combat stats from attributes, equipment, and passive skills.         VERI`
+- **Thin community `Community 243`** (1 nodes): `Construct a PerfResult from the dictionary returned by BenchHarness.run_benchmar`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 251`** (1 nodes): `In a real implementation, this might return a derived stat proxy.         For Ph`
+- **Thin community `Community 244`** (1 nodes): `Comprehensive pass/fail proof evaluation.         M10 Law: Returns (conformance_`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 252`** (1 nodes): `Construct a PerfResult from the dictionary returned by BenchHarness.run_benchmar`
+- **Thin community `Community 245`** (1 nodes): `CLASS_A: >= 16 Cores AND >= 32GB RAM         CLASS_B: >= 4 Cores AND >= 8GB RAM`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 253`** (1 nodes): `Comprehensive pass/fail proof evaluation.         M10 Law: Returns (conformance_`
+- **Thin community `Community 246`** (1 nodes): `Capture host environment metadata.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 254`** (1 nodes): `CLASS_A: >= 16 Cores AND >= 32GB RAM         CLASS_B: >= 4 Cores AND >= 8GB RAM`
+- **Thin community `Community 247`** (1 nodes): `Inject a large number of entities to stress memory.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 255`** (1 nodes): `Capture host environment metadata.`
+- **Thin community `Community 248`** (1 nodes): `Inject work debt to stress the governor.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 256`** (1 nodes): `Inject a large number of entities to stress memory.`
+- **Thin community `Community 249`** (1 nodes): `Setup a balanced team battle on opposite sides of a 20x20 area.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 257`** (1 nodes): `Inject work debt to stress the governor.`
+- **Thin community `Community 250`** (1 nodes): `Setup a hero vs monster fight to verify XP, Gold, and Mortality.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 258`** (1 nodes): `Setup a balanced team battle on opposite sides of a 20x20 area.`
+- **Thin community `Community 251`** (1 nodes): `Setup a hero dying to verify rebirth/permadeath.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 259`** (1 nodes): `Setup a hero vs monster fight to verify XP, Gold, and Mortality.`
+- **Thin community `Community 252`** (1 nodes): `Setup a flanking scenario for tactical bonus verification.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 260`** (1 nodes): `Setup a hero dying to verify rebirth/permadeath.`
+- **Thin community `Community 253`** (1 nodes): `Setup a synergy scenario for social bond verification.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 261`** (1 nodes): `Setup a flanking scenario for tactical bonus verification.`
+- **Thin community `Community 254`** (1 nodes): `Setup a hero with a HUNT quest against a specific monster kind.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 262`** (1 nodes): `Setup a synergy scenario for social bond verification.`
+- **Thin community `Community 255`** (1 nodes): `Setup regional control test: Hero vs Monster in a named region.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 263`** (1 nodes): `Setup a hero with a HUNT quest against a specific monster kind.`
+- **Thin community `Community 256`** (1 nodes): `Register all authoritative test scenarios.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 264`** (1 nodes): `Setup regional control test: Hero vs Monster in a named region.`
+- **Thin community `Community 257`** (1 nodes): `Setup an entity moving in a straight line.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 265`** (1 nodes): `Register all authoritative test scenarios.`
+- **Thin community `Community 258`** (1 nodes): `Setup an entity harvesting a resource node.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 266`** (1 nodes): `Setup an entity moving in a straight line.`
+- **Thin community `Community 259`** (1 nodes): `Autonomous Progression Loop:          1. Entity at Town (0,0) wants to craft a s`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 267`** (1 nodes): `Setup an entity harvesting a resource node.`
+- **Thin community `Community 261`** (1 nodes): `Enforces mode-specific required fields directly during Pydantic instantiation.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 268`** (1 nodes): `Autonomous Progression Loop:          1. Entity at Town (0,0) wants to craft a s`
+- **Thin community `Community 262`** (1 nodes): `Performs a differential analysis comparing mutated_metrics against baseline_metr`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 270`** (1 nodes): `Enforces mode-specific required fields directly during Pydantic instantiation.`
+- **Thin community `Community 263`** (1 nodes): `Serializes and writes the balance comparison report to:         - balance_compar`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 271`** (1 nodes): `Performs a differential analysis comparing mutated_metrics against baseline_metr`
+- **Thin community `Community 264`** (1 nodes): `Evaluates a sequence of metamorphic rules against the loaded variant metrics col`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 272`** (1 nodes): `Serializes and writes the balance comparison report to:         - balance_compar`
+- **Thin community `Community 266`** (1 nodes): `Create a new lead if within capacity limits.         Certainty is derived from s`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 273`** (1 nodes): `Evaluates a sequence of metamorphic rules against the loaded variant metrics col`
+- **Thin community `Community 267`** (1 nodes): `Update lead state based on a test/investigation outcome.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 275`** (1 nodes): `Create a new lead if within capacity limits.         Certainty is derived from s`
+- **Thin community `Community 268`** (1 nodes): `Identify keys to remove to satisfy max_size.         Drops items with the lowest`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 276`** (1 nodes): `Update lead state based on a test/investigation outcome.`
+- **Thin community `Community 269`** (1 nodes): `Trim a list to max_size.          If score_func is provided, drops lowest scores`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 277`** (1 nodes): `Identify keys to remove to satisfy max_size.         Drops items with the lowest`
+- **Thin community `Community 270`** (1 nodes): `Derive strategic limits from entity attributes, needs, and personality.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 278`** (1 nodes): `Trim a list to max_size.          If score_func is provided, drops lowest scores`
+- **Thin community `Community 271`** (1 nodes): `Reset biological debt and apply 'well-rested' status.         Cost: 10 gold.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 279`** (1 nodes): `Derive strategic limits from entity attributes, needs, and personality.`
+- **Thin community `Community 272`** (1 nodes): `Entity crafts an item using materials.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 280`** (1 nodes): `Reset biological debt and apply 'well-rested' status.         Cost: 10 gold.`
+- **Thin community `Community 273`** (1 nodes): `Move item from entity inventory to their home storage.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 281`** (1 nodes): `Entity crafts an item using materials.`
+- **Thin community `Community 274`** (1 nodes): `Move item from home storage to entity inventory.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 282`** (1 nodes): `Move item from entity inventory to their home storage.`
+- **Thin community `Community 275`** (1 nodes): `Private rest (Free, but only reduces debt by 40%).`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 283`** (1 nodes): `Move item from home storage to entity inventory.`
+- **Thin community `Community 276`** (1 nodes): `Upgrade home to resolve maintenance blockers.         Cost: 100 gold.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 284`** (1 nodes): `Private rest (Free, but only reduces debt by 40%).`
+- **Thin community `Community 277`** (1 nodes): `Scan world state and provide 1-2 new strategic leads.         Deterministic: Use`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 285`** (1 nodes): `Upgrade home to resolve maintenance blockers.         Cost: 100 gold.`
+- **Thin community `Community 278`** (1 nodes): `Reduce building HP based on entity ATK.         Requires proximity (distance < 5`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 286`** (1 nodes): `Scan world state and provide 1-2 new strategic leads.         Deterministic: Use`
+- **Thin community `Community 279`** (1 nodes): `Find the closest functional building of the requested kind.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 287`** (1 nodes): `Reduce building HP based on entity ATK.         Requires proximity (distance < 5`
+- **Thin community `Community 280`** (1 nodes): `Simple check if entity is within town radius (landmark based).`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 288`** (1 nodes): `Find the closest functional building of the requested kind.`
+- **Thin community `Community 281`** (1 nodes): `Entity buys item from a nearby shop.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 289`** (1 nodes): `Simple check if entity is within town radius (landmark based).`
+- **Thin community `Community 282`** (1 nodes): `Entity sells item to a nearby shop.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 290`** (1 nodes): `Entity buys item from a nearby shop.`
+- **Thin community `Community 283`** (1 nodes): `Train a specific skill/recipe.         Cost: 50 gold.         Resolves 'capabili`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 291`** (1 nodes): `Entity sells item to a nearby shop.`
+- **Thin community `Community 284`** (1 nodes): `Deterministic expansion of WorldTemplateSpec into WorldSpec.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 292`** (1 nodes): `Train a specific skill/recipe.         Cost: 50 gold.         Resolves 'capabili`
+- **Thin community `Community 285`** (1 nodes): `Compile the given WorldSpec into a fully populated AuthoritativeState.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 293`** (1 nodes): `Deterministic expansion of WorldTemplateSpec into WorldSpec.`
+- **Thin community `Community 287`** (1 nodes): `Produce NeedInterpretationComponent.          Args:             entity:`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 294`** (1 nodes): `Compile the given WorldSpec into a fully populated AuthoritativeState.`
+- **Thin community `Community 288`** (1 nodes): `Orchestrates self-model update with dirty checking.                  Args:`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 296`** (1 nodes): `Produce NeedInterpretationComponent.          Args:             entity:`
+- **Thin community `Community 289`** (1 nodes): `Produce CapabilityEstimateComponent scoped to the provided context.          Arg`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 297`** (1 nodes): `Orchestrates self-model update with dirty checking.                  Args:`
+- **Thin community `Community 290`** (1 nodes): `Merge an InformationResponse into an updated KnowledgeModelComponent.          S`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 298`** (1 nodes): `Produce CapabilityEstimateComponent scoped to the provided context.          Arg`
+- **Thin community `Community 291`** (1 nodes): `Produce SelfAwarenessComponent from entity's raw state.          Args:`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 299`** (1 nodes): `Merge an InformationResponse into an updated KnowledgeModelComponent.          S`
+- **Thin community `Community 293`** (1 nodes): `Generate candidate RouteOption instances for the given entity.         Capped to`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 300`** (1 nodes): `Produce SelfAwarenessComponent from entity's raw state.          Args:`
+- **Thin community `Community 294`** (1 nodes): `Return the ProjectKind and ObjectiveKind for the given RouteFamily.         Rais`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 302`** (1 nodes): `Standard compaction entry point returning the optimized StateUpdate.`
+- **Thin community `Community 295`** (1 nodes): `Produce deterministic ProjectState and ObjectiveState instances based         on`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 303`** (1 nodes): `Compacts the StateUpdate and returns both the optimized update and detailed redu`
+- **Thin community `Community 296`** (1 nodes): `Evaluate candidates, score them using Personality biased heuristics,         and`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 304`** (1 nodes): `Evaluate a move intent and produce an authoritative update dictionary.         I`
+- **Thin community `Community 297`** (1 nodes): `Evaluate eligible heroes on the current tick, execute subjective routing,`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 305`** (1 nodes): `Analyze current state and produce metrics snapshot.`
+- **Thin community `Community 298`** (1 nodes): `Calculate subjective score for the route option and return updated option.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 306`** (1 nodes): `Detect significant shifts in global strategy or dynamics.`
+- **Thin community `Community 299`** (1 nodes): `Generate the adapted ActionIntent corresponding to the objective state.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 307`** (1 nodes): `Check EXPLORE quests for proximity to target.`
+- **Thin community `Community 300`** (1 nodes): `Standard compaction entry point returning the optimized StateUpdate.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 308`** (1 nodes): `Advance HUNT quests when an enemy is defeated.`
+- **Thin community `Community 301`** (1 nodes): `Compacts the StateUpdate and returns both the optimized update and detailed redu`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 309`** (1 nodes): `Enforces quest completion rules and emits authoritative reward intents.`
+- **Thin community `Community 302`** (1 nodes): `Evaluate a move intent and produce an authoritative update dictionary.         I`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 310`** (1 nodes): `Refine the proposed update according to authoritative interaction laws.`
+- **Thin community `Community 303`** (1 nodes): `Analyze current state and produce metrics snapshot.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 311`** (1 nodes): `Finds the nearest walkable tile that has NO line of sight to the threat.`
+- **Thin community `Community 304`** (1 nodes): `Detect significant shifts in global strategy or dynamics.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 312`** (1 nodes): `Identifies 'chokepoints' (1-tile gaps between walls) within a radius.`
+- **Thin community `Community 305`** (1 nodes): `Check EXPLORE quests for proximity to target.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 313`** (1 nodes): `Calculates a position to 'bracket' the target (opposite side from the ally).`
+- **Thin community `Community 306`** (1 nodes): `Advance HUNT quests when an enemy is defeated.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 314`** (1 nodes): `Calculates a position to intercept a moving target.         If target has a navi`
+- **Thin community `Community 307`** (1 nodes): `Enforces quest completion rules and emits authoritative reward intents.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 315`** (1 nodes): `Finds a position to guard the 'ward' entity.         Prefer a position between t`
+- **Thin community `Community 308`** (1 nodes): `Refine the proposed update according to authoritative interaction laws.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 316`** (1 nodes): `Check for evolution triggers (level cap or XP thresholds) and apply transformati`
+- **Thin community `Community 309`** (1 nodes): `Finds the nearest walkable tile that has NO line of sight to the threat.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 317`** (1 nodes): `Determines the next semantic stage for an entity kind.`
+- **Thin community `Community 310`** (1 nodes): `Identifies 'chokepoints' (1-tile gaps between walls) within a radius.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 318`** (1 nodes): `Builds the comprehensive execution plan.`
+- **Thin community `Community 311`** (1 nodes): `Calculates a position to 'bracket' the target (opposite side from the ally).`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 319`** (1 nodes): `Refine the proposed update according to crafting and knowledge laws.         Log`
+- **Thin community `Community 312`** (1 nodes): `Calculates a position to intercept a moving target.         If target has a navi`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 320`** (1 nodes): `Processes all ResourceTransferIntents for all entities in the update.         VE`
+- **Thin community `Community 313`** (1 nodes): `Finds a position to guard the 'ward' entity.         Prefer a position between t`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 321`** (1 nodes): `Helper to merge all contingent updates from a transaction result into an entity`
+- **Thin community `Community 314`** (1 nodes): `Check for evolution triggers (level cap or XP thresholds) and apply transformati`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 322`** (1 nodes): `Helper to apply world side effects from a successful resolution.`
+- **Thin community `Community 315`** (1 nodes): `Determines the next semantic stage for an entity kind.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 323`** (1 nodes): `Determines whether a specific phase should be executed for the current tick.`
+- **Thin community `Community 316`** (1 nodes): `Builds the comprehensive execution plan.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 324`** (1 nodes): `Returns a spatial index of active/alive entities.`
+- **Thin community `Community 317`** (1 nodes): `Refine the proposed update according to crafting and knowledge laws.         Log`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 325`** (1 nodes): `Calculates Manhattan distance between two points.         Logic ID: COMB-001 (Ma`
+- **Thin community `Community 318`** (1 nodes): `Processes all ResourceTransferIntents for all entities in the update.         VE`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 326`** (1 nodes): `Returns the region containing the given position.`
+- **Thin community `Community 319`** (1 nodes): `Helper to merge all contingent updates from a transaction result into an entity`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 327`** (1 nodes): `V2 Authoritative Occupancy Rule:         Enforces Static Terrain (WALL), Buildin`
+- **Thin community `Community 320`** (1 nodes): `Helper to apply world side effects from a successful resolution.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 328`** (1 nodes): `Checks if the current region suppresses specific actions and enforces actor vali`
+- **Thin community `Community 321`** (1 nodes): `Determines whether a specific phase should be executed for the current tick.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 329`** (1 nodes): `Action Readiness Law: Every ENTITY_ACT requires 100.0 readiness.         Logic I`
+- **Thin community `Community 322`** (1 nodes): `Returns a spatial index of active/alive entities.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 330`** (1 nodes): `V2 Authoritative Movement Law:         Validates if entity has enough readiness`
+- **Thin community `Community 323`** (1 nodes): `Calculates Manhattan distance between two points.         Logic ID: COMB-001 (Ma`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 331`** (1 nodes): `Authoritative validation for a combat interaction.         Logic ID: COMB-004 (M`
+- **Thin community `Community 324`** (1 nodes): `Returns the region containing the given position.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 332`** (1 nodes): `Validation for Area-of-Effect positioning and execution.         Logic ID: COMB-`
+- **Thin community `Community 325`** (1 nodes): `V2 Authoritative Occupancy Rule:         Enforces Static Terrain (WALL), Buildin`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 333`** (1 nodes): `Pillar 8: Skill Execution Law.         Skills require cost and cooldown verifica`
+- **Thin community `Community 326`** (1 nodes): `Checks if the current region suppresses specific actions and enforces actor vali`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 334`** (1 nodes): `Simple Bresenham-like LoS check for WALL/Building obstructions.`
+- **Thin community `Community 327`** (1 nodes): `Action Readiness Law: Every ENTITY_ACT requires 100.0 readiness.         Logic I`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 335`** (1 nodes): `Verify if attacker has clear elevation advantage (Terrain-based).`
+- **Thin community `Community 328`** (1 nodes): `V2 Authoritative Movement Law:         Validates if entity has enough readiness`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 336`** (1 nodes): `Returns the current engagement record for an entity.`
+- **Thin community `Community 329`** (1 nodes): `Authoritative validation for a combat interaction.         Logic ID: COMB-004 (M`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 337`** (1 nodes): `Authoritative geometric flanking check.         Returns: (is_flanked, is_surroun`
+- **Thin community `Community 330`** (1 nodes): `Validation for Area-of-Effect positioning and execution.         Logic ID: COMB-`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 338`** (1 nodes): `Verify if defender is behind wall cover relative to attacker.         Logic ID:`
+- **Thin community `Community 331`** (1 nodes): `Pillar 8: Skill Execution Law.         Skills require cost and cooldown verifica`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 339`** (1 nodes): `Calculate movement/tie-breaking priority.`
+- **Thin community `Community 332`** (1 nodes): `Simple Bresenham-like LoS check for WALL/Building obstructions.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 340`** (1 nodes): `Find hostile entities currently in melee engagement with this entity.`
+- **Thin community `Community 333`** (1 nodes): `Verify if attacker has clear elevation advantage (Terrain-based).`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 341`** (1 nodes): `Find hostile entities that would be in melee engagement with this entity at a hy`
+- **Thin community `Community 334`** (1 nodes): `Returns the current engagement record for an entity.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 342`** (1 nodes): `Return the ID of the entity occupying the specified tile.`
+- **Thin community `Community 335`** (1 nodes): `Authoritative geometric flanking check.         Returns: (is_flanked, is_surroun`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 343`** (1 nodes): `Singular entry point for authoritative state transition refinement.         Logi`
+- **Thin community `Community 336`** (1 nodes): `Verify if defender is behind wall cover relative to attacker.         Logic ID:`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 344`** (1 nodes): `Hardening Phase: Ensure DirtySet is always current.         Logic ID: PERF-006-R`
+- **Thin community `Community 337`** (1 nodes): `Calculate movement/tie-breaking priority.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 345`** (1 nodes): `Calculates the LOD level for an entity based on its distance to focus points.`
+- **Thin community `Community 338`** (1 nodes): `Find hostile entities currently in melee engagement with this entity.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 346`** (1 nodes): `Determines if the entity should execute its behavior this tick based on its LOD.`
+- **Thin community `Community 339`** (1 nodes): `Find hostile entities that would be in melee engagement with this entity at a hy`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 347`** (1 nodes): `The root entry point for advancing the world state.         Milestone 14: Precom`
+- **Thin community `Community 340`** (1 nodes): `Return the ID of the entity occupying the specified tile.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 348`** (1 nodes): `Compatibility wrapper for apply_partial.`
+- **Thin community `Community 341`** (1 nodes): `Singular entry point for authoritative state transition refinement.         Logi`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 349`** (1 nodes): `Compatibility wrapper for ActionRoutingPhase.`
+- **Thin community `Community 342`** (1 nodes): `Hardening Phase: Ensure DirtySet is always current.         Logic ID: PERF-006-R`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 350`** (1 nodes): `Compatibility wrapper for ActionRoutingPhase.`
+- **Thin community `Community 343`** (1 nodes): `Calculates the LOD level for an entity based on its distance to focus points.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 351`** (1 nodes): `Authoritative mapping from EntityUpdate to changes dict.         Merged v5 logic`
+- **Thin community `Community 344`** (1 nodes): `Determines if the entity should execute its behavior this tick based on its LOD.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 352`** (1 nodes): `Low-level reconstruction bypasses frozen dataclass __init__ overhead.`
+- **Thin community `Community 345`** (1 nodes): `The root entry point for advancing the world state.         Milestone 14: Precom`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 353`** (1 nodes): `Detect entities in town and apply general passive laws (Healing).         Also h`
+- **Thin community `Community 346`** (1 nodes): `Compatibility wrapper for apply_partial.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 354`** (1 nodes): `Pillar 3: Fractional Armor Mitigation         Formula: damage = (atk * atk_mult)`
+- **Thin community `Community 347`** (1 nodes): `Compatibility wrapper for ActionRoutingPhase.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 355`** (1 nodes): `Calculates all tactical multipliers for an attack.         Consolidated from res`
+- **Thin community `Community 348`** (1 nodes): `Compatibility wrapper for ActionRoutingPhase.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 356`** (1 nodes): `Phase 8: Calculate durability loss for attacker and defender.`
+- **Thin community `Community 349`** (1 nodes): `Authoritative mapping from EntityUpdate to changes dict.         Merged v5 logic`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 357`** (1 nodes): `Resolves multiple attackers hitting a single defender in the same tick.`
+- **Thin community `Community 350`** (1 nodes): `Low-level reconstruction bypasses frozen dataclass __init__ overhead.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 358`** (1 nodes): `Calculates and returns a WoundUpdate if damage is sufficient.`
+- **Thin community `Community 351`** (1 nodes): `Detect entities in town and apply general passive laws (Healing).         Also h`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 359`** (1 nodes): `Determines the next tactical intent for an entity.         Bounded to local visi`
+- **Thin community `Community 352`** (1 nodes): `Pillar 3: Fractional Armor Mitigation         Formula: damage = (atk * atk_mult)`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 360`** (1 nodes): `Public helper for deterministic target selection.         Matches legacy 'Tactic`
+- **Thin community `Community 353`** (1 nodes): `Calculates all tactical multipliers for an attack.         Consolidated from res`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 361`** (1 nodes): `Produce a SHA256 hash of the compact canonical JSON representation.`
+- **Thin community `Community 354`** (1 nodes): `Phase 8: Calculate durability loss for attacker and defender.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 362`** (1 nodes): `Convert AuthoritativeState into a canonical JSON representation.`
+- **Thin community `Community 355`** (1 nodes): `Resolves multiple attackers hitting a single defender in the same tick.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 363`** (1 nodes): `Convert AuthoritativeState into a sortable dictionary structure.`
+- **Thin community `Community 356`** (1 nodes): `Calculates and returns a WoundUpdate if damage is sufficient.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 364`** (1 nodes): `Scores neighbors and returns the most salient ones.`
+- **Thin community `Community 357`** (1 nodes): `Determines the next tactical intent for an entity.         Bounded to local visi`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 365`** (1 nodes): `Calculates Panic and Aggression levels.`
+- **Thin community `Community 358`** (1 nodes): `Public helper for deterministic target selection.         Matches legacy 'Tactic`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 366`** (1 nodes): `Policy Waterfall according to Milestone 5/6 Degradation Matrix.`
+- **Thin community `Community 359`** (1 nodes): `Produce a SHA256 hash of the compact canonical JSON representation.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 367`** (1 nodes): `Max stamina = 50 + endurance * 5.`
+- **Thin community `Community 360`** (1 nodes): `Convert AuthoritativeState into a canonical JSON representation.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 368`** (1 nodes): `Returns the stamina cost for an attack action.`
+- **Thin community `Community 361`** (1 nodes): `Convert AuthoritativeState into a sortable dictionary structure.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 369`** (1 nodes): `Returns the stamina cost for a movement action.`
+- **Thin community `Community 362`** (1 nodes): `Scores neighbors and returns the most salient ones.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 370`** (1 nodes): `Returns the stamina cost for a harvest tick.`
+- **Thin community `Community 363`** (1 nodes): `Calculates Panic and Aggression levels.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 371`** (1 nodes): `Returns the stamina cost for using a skill.`
+- **Thin community `Community 364`** (1 nodes): `Policy Waterfall according to Milestone 5/6 Degradation Matrix.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 372`** (1 nodes): `Check if entity has enough stamina for a skill.`
+- **Thin community `Community 365`** (1 nodes): `Max stamina = 50 + endurance * 5.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 373`** (1 nodes): `Check if entity is in exhaustion state.`
+- **Thin community `Community 366`** (1 nodes): `Returns the stamina cost for an attack action.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 374`** (1 nodes): `Combat damage multiplier when exhausted.`
+- **Thin community `Community 367`** (1 nodes): `Returns the stamina cost for a movement action.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 375`** (1 nodes): `Check if a single hit is massive enough to cause a wound.`
+- **Thin community `Community 368`** (1 nodes): `Returns the stamina cost for a harvest tick.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 376`** (1 nodes): `Create a wound record from a massive hit.`
+- **Thin community `Community 369`** (1 nodes): `Returns the stamina cost for using a skill.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 377`** (1 nodes): `Sum all active (unhealed) wound penalties.`
+- **Thin community `Community 370`** (1 nodes): `Check if entity has enough stamina for a skill.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 378`** (1 nodes): `Sum all permanent scar penalties (lesser than wounds).`
+- **Thin community `Community 371`** (1 nodes): `Check if entity is in exhaustion state.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 379`** (1 nodes): `Heal a wound and create a scar. Returns (healed_wound, scar).`
+- **Thin community `Community 372`** (1 nodes): `Combat damage multiplier when exhausted.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 380`** (1 nodes): `Check if entity is beyond its leash radius.         VERIFIED v2: mob_leash_radiu`
+- **Thin community `Community 373`** (1 nodes): `Check if a single hit is massive enough to cause a wound.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 381`** (1 nodes): `Check if a chasing mob should abandon pursuit.         VERIFIED v2: mob_chase_gi`
+- **Thin community `Community 374`** (1 nodes): `Create a wound record from a massive hit.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 382`** (1 nodes): `Get the home position for return-to-camp behavior.`
+- **Thin community `Community 375`** (1 nodes): `Sum all active (unhealed) wound penalties.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 383`** (1 nodes): `Check if entity has reached home.`
+- **Thin community `Community 376`** (1 nodes): `Sum all permanent scar penalties (lesser than wounds).`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 384`** (1 nodes): `Calculate perception-based discovery score.         VERIFIED v2: perception_disc`
+- **Thin community `Community 377`** (1 nodes): `Heal a wound and create a scar. Returns (healed_wound, scar).`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 385`** (1 nodes): `Calculate diagnosis accuracy (0.0 to 1.0).         VERIFIED v2: wisdom_diagnosis`
+- **Thin community `Community 378`** (1 nodes): `Check if entity is beyond its leash radius.         VERIFIED v2: mob_leash_radiu`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 386`** (1 nodes): `Get movement cost for a tile based on terrain type.         VERIFIED v2: terrain`
+- **Thin community `Community 379`** (1 nodes): `Check if a chasing mob should abandon pursuit.         VERIFIED v2: mob_chase_gi`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 387`** (1 nodes): `Calculate total movement cost for a path.`
+- **Thin community `Community 380`** (1 nodes): `Get the home position for return-to-camp behavior.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 388`** (1 nodes): `Only switch targets if the new one is significantly better.         Uses margin`
+- **Thin community `Community 381`** (1 nodes): `Check if entity has reached home.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 389`** (1 nodes): `Physical: base_atk + strength * 0.8 * power         Magical:  base_atk + intelli`
+- **Thin community `Community 382`** (1 nodes): `Calculate perception-based discovery score.         VERIFIED v2: perception_disc`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 390`** (1 nodes): `Full effective stat recomputation:         base stats + gear + traits + wound pe`
+- **Thin community `Community 383`** (1 nodes): `Calculate diagnosis accuracy (0.0 to 1.0).         VERIFIED v2: wisdom_diagnosis`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 391`** (1 nodes): `RPG TACTICAL COGNITION.`
+- **Thin community `Community 384`** (1 nodes): `Get movement cost for a tile based on terrain type.         VERIFIED v2: terrain`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 392`** (1 nodes): `Standard action cost and routine logic.         Delegates to ActionRouter for do`
+- **Thin community `Community 385`** (1 nodes): `Calculate total movement cost for a path.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 393`** (1 nodes): `Milestone C Law: Authoritative Drain Logic.         Determines how much work deb`
+- **Thin community `Community 386`** (1 nodes): `Only switch targets if the new one is significantly better.         Uses margin`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 395`** (1 nodes): `Determine dynamic phase budgets based on operational mode and real-time phase pr`
+- **Thin community `Community 387`** (1 nodes): `Physical: base_atk + strength * 0.8 * power         Magical:  base_atk + intelli`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 396`** (1 nodes): `Returns IDs of entities within radius of pos.`
+- **Thin community `Community 388`** (1 nodes): `Full effective stat recomputation:         base stats + gear + traits + wound pe`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 397`** (1 nodes): `Returns IDs of entities within the rectangular bounds.`
+- **Thin community `Community 389`** (1 nodes): `RPG TACTICAL COGNITION.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 398`** (1 nodes): `Returns IDs of resource nodes within radius of pos.`
+- **Thin community `Community 390`** (1 nodes): `Standard action cost and routine logic.         Delegates to ActionRouter for do`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 399`** (1 nodes): `Returns the building at a specific tile coordinate.`
+- **Thin community `Community 391`** (1 nodes): `Milestone C Law: Authoritative Drain Logic.         Determines how much work deb`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 400`** (1 nodes): `Returns a map of (x, y) to entity ID for all active/alive entities.`
+- **Thin community `Community 393`** (1 nodes): `Determine dynamic phase budgets based on operational mode and real-time phase pr`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 401`** (1 nodes): `Returns the resource node at a specific position.`
+- **Thin community `Community 394`** (1 nodes): `Returns IDs of entities within radius of pos.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 402`** (1 nodes): `Returns the corpse at a specific position.`
+- **Thin community `Community 395`** (1 nodes): `Returns IDs of entities within the rectangular bounds.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 403`** (1 nodes): `Returns the ground item at a specific position.`
+- **Thin community `Community 396`** (1 nodes): `Returns IDs of resource nodes within radius of pos.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 404`** (1 nodes): `Returns the region containing the given position.`
+- **Thin community `Community 397`** (1 nodes): `Returns the building at a specific tile coordinate.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 405`** (1 nodes): `Returns the region containing a building, using a cached map.`
+- **Thin community `Community 398`** (1 nodes): `Returns a map of (x, y) to entity ID for all active/alive entities.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 406`** (1 nodes): `Apply regional effects to entities and update world markers.`
+- **Thin community `Community 399`** (1 nodes): `Returns the resource node at a specific position.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 407`** (1 nodes): `Handle SABOTAGE intents directed at buildings.         Optimized: Iterate over e`
+- **Thin community `Community 400`** (1 nodes): `Returns the corpse at a specific position.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 408`** (1 nodes): `Produce authoritative item-to-gold conversions for entities at a shop.         L`
+- **Thin community `Community 401`** (1 nodes): `Returns the ground item at a specific position.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 409`** (1 nodes): `Handle the ATTACK action.`
+- **Thin community `Community 402`** (1 nodes): `Returns the region containing the given position.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 410`** (1 nodes): `Routes the action to the correct handler.`
+- **Thin community `Community 403`** (1 nodes): `Returns the region containing a building, using a cached map.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 411`** (1 nodes): `GRID-BASED AUTHORITATIVE MOVEMENT.`
+- **Thin community `Community 404`** (1 nodes): `Apply regional effects to entities and update world markers.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 412`** (1 nodes): `RPG TACTICAL COGNITION.         Determines tactical intent and emotional apprais`
+- **Thin community `Community 405`** (1 nodes): `Handle SABOTAGE intents directed at buildings.         Optimized: Iterate over e`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 414`** (1 nodes): `Handle the SKILL action.`
+- **Thin community `Community 406`** (1 nodes): `Produce authoritative item-to-gold conversions for entities at a shop.         L`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 415`** (1 nodes): `Produce a deterministic view of nearby entities.         Uses a spatial grid to`
+- **Thin community `Community 407`** (1 nodes): `Handle the ATTACK action.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 416`** (1 nodes): `Retrieves or creates a SpatialGrid for the given state.         Uses a per-objec`
+- **Thin community `Community 408`** (1 nodes): `Routes the action to the correct handler.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 417`** (1 nodes): `Fast lookup for the region containing a position.         Uses a per-object regi`
+- **Thin community `Community 409`** (1 nodes): `GRID-BASED AUTHORITATIVE MOVEMENT.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 418`** (1 nodes): `Finds the trauma score of the region containing the given position.`
+- **Thin community `Community 410`** (1 nodes): `RPG TACTICAL COGNITION.         Determines tactical intent and emotional apprais`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 419`** (1 nodes): `Handle the AOE_ATTACK action.`
+- **Thin community `Community 412`** (1 nodes): `Handle the SKILL action.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 420`** (1 nodes): `Resolve adjacent position swaps before normal movement routing.          LAW:`
+- **Thin community `Community 413`** (1 nodes): `Produce a deterministic view of nearby entities.         Uses a spatial grid to`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 421`** (1 nodes): `Route normal navigation intent via MovementSystem.         Optimized v3: reduced`
+- **Thin community `Community 414`** (1 nodes): `Retrieves or creates a SpatialGrid for the given state.         Uses a per-objec`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 422`** (1 nodes): `Law 300: Action Routing.          Responsibilities:             - route ENTITY_A`
+- **Thin community `Community 415`** (1 nodes): `Fast lookup for the region containing a position.         Uses a per-object regi`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 423`** (1 nodes): `Resolve all resource transactions.`
+- **Thin community `Community 416`** (1 nodes): `Finds the trauma score of the region containing the given position.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 424`** (1 nodes): `Law 300.1: Actor Validity.          Invalid actors may not submit any authoritat`
+- **Thin community `Community 417`** (1 nodes): `Handle the AOE_ATTACK action.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 425`** (1 nodes): `Enforce quest rewards.`
+- **Thin community `Community 418`** (1 nodes): `Resolve adjacent position swaps before normal movement routing.          LAW:`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 426`** (1 nodes): `Apply near-death hardening after authoritative combat resolution.          LAW:`
+- **Thin community `Community 419`** (1 nodes): `Route normal navigation intent via MovementSystem.         Optimized v3: reduced`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 427`** (1 nodes): `LAW:             Final movement results must not place two active entities on th`
+- **Thin community `Community 420`** (1 nodes): `Law 300: Action Routing.          Responsibilities:             - route ENTITY_A`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 428`** (1 nodes): `Strip unauthorized raw worker effects.          Allowed from raw workers:`
+- **Thin community `Community 421`** (1 nodes): `Resolve all resource transactions.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 430`** (1 nodes): `Resolve stale social contracts during authoritative refinement.          LAW:`
+- **Thin community `Community 422`** (1 nodes): `Law 300.1: Actor Validity.          Invalid actors may not submit any authoritat`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 431`** (1 nodes): `Generate a level-appropriate quest deterministically.`
+- **Thin community `Community 423`** (1 nodes): `Enforce quest rewards.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 432`** (1 nodes): `Generate multiple quests for a building.`
+- **Thin community `Community 424`** (1 nodes): `Apply near-death hardening after authoritative combat resolution.          LAW:`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 433`** (1 nodes): `Produce a new QuestState with updated progress.         Handles auto-completion`
+- **Thin community `Community 425`** (1 nodes): `LAW:             Final movement results must not place two active entities on th`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 434`** (1 nodes): `Transition a quest to REWARDED status.         Ensures rewards can only be grant`
+- **Thin community `Community 426`** (1 nodes): `Strip unauthorized raw worker effects.          Allowed from raw workers:`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 436`** (1 nodes): `Returns a map of GoalKind -> multiplier.         Base multiplier is 1.0.`
+- **Thin community `Community 428`** (1 nodes): `Resolve stale social contracts during authoritative refinement.          LAW:`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 437`** (1 nodes): `Returns a map of GoalKind -> utility_modifier.         Modifier is a float added`
+- **Thin community `Community 429`** (1 nodes): `Generate a level-appropriate quest deterministically.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 438`** (1 nodes): `Applies personality, life stage, and boredom modifiers to goal scores.`
+- **Thin community `Community 430`** (1 nodes): `Generate multiple quests for a building.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 439`** (1 nodes): `Registers a scorer for a specific goal kind.         Logic ID: RPG-GOAL-001`
+- **Thin community `Community 431`** (1 nodes): `Produce a new QuestState with updated progress.         Handles auto-completion`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 441`** (1 nodes): `Initialize a harvesting interaction if within proximity and node is active.`
+- **Thin community `Community 432`** (1 nodes): `Transition a quest to REWARDED status.         Ensures rewards can only be grant`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 442`** (1 nodes): `Initialize a looting interaction if within proximity.         target_kind: 'grou`
+- **Thin community `Community 434`** (1 nodes): `Returns a map of GoalKind -> multiplier.         Base multiplier is 1.0.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 443`** (1 nodes): `Generates a stable, order-independent composite seed.         Logic ID: INFRA-10`
+- **Thin community `Community 435`** (1 nodes): `Returns a map of GoalKind -> utility_modifier.         Modifier is a float added`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 445`** (1 nodes): `Checks if a raid should spawn and returns the update.`
+- **Thin community `Community 436`** (1 nodes): `Applies personality, life stage, and boredom modifiers to goal scores.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 446`** (1 nodes): `Deterministic, idempotent boss spawning.          LAW:             At most one a`
+- **Thin community `Community 437`** (1 nodes): `Registers a scorer for a specific goal kind.         Logic ID: RPG-GOAL-001`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 447`** (1 nodes): `Rule: Boss death provides high-tier loot via transaction law.`
+- **Thin community `Community 439`** (1 nodes): `Initialize a harvesting interaction if within proximity and node is active.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 448`** (1 nodes): `Check regional monster density and spawn new ones if needed.`
+- **Thin community `Community 440`** (1 nodes): `Initialize a looting interaction if within proximity.         target_kind: 'grou`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 449`** (1 nodes): `Periodically attempt to seed new resources in valid regions.`
+- **Thin community `Community 441`** (1 nodes): `Generates a stable, order-independent composite seed.         Logic ID: INFRA-10`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 450`** (1 nodes): `Calculates influence deltas based on entity deaths.`
+- **Thin community `Community 443`** (1 nodes): `Checks if a raid should spawn and returns the update.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 451`** (1 nodes): `Handles spawning/removing strongholds based on world updates.`
+- **Thin community `Community 444`** (1 nodes): `Deterministic, idempotent boss spawning.          LAW:             At most one a`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 452`** (1 nodes): `Finds the region containing the given position.          Uses bounds if defined,`
+- **Thin community `Community 445`** (1 nodes): `Rule: Boss death provides high-tier loot via transaction law.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 453`** (1 nodes): `Calculates difficulty tier based on distance from town center.`
+- **Thin community `Community 446`** (1 nodes): `Check regional monster density and spawn new ones if needed.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 454`** (1 nodes): `Calculates threat decay and retaliation cooling for a region.`
+- **Thin community `Community 447`** (1 nodes): `Periodically attempt to seed new resources in valid regions.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 455`** (1 nodes): `Increases retaliation pressure when a faction member is killed.`
+- **Thin community `Community 448`** (1 nodes): `Calculates influence deltas based on entity deaths.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 456`** (1 nodes): `Process time-based recovery for regional danger and local scars.         Optimiz`
+- **Thin community `Community 449`** (1 nodes): `Handles spawning/removing strongholds based on world updates.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 457`** (1 nodes): `Create a battlefield scar from a death event.`
+- **Thin community `Community 450`** (1 nodes): `Finds the region containing the given position.          Uses bounds if defined,`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 458`** (1 nodes): `Create a raid damage scar from a town raid.`
+- **Thin community `Community 451`** (1 nodes): `Calculates difficulty tier based on distance from town center.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 459`** (1 nodes): `Evolve camps and spawn monsters or raids.`
+- **Thin community `Community 452`** (1 nodes): `Calculates threat decay and retaliation cooling for a region.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 460`** (1 nodes): `Rule: Clearing a camp provides rewards and reduces threat.`
+- **Thin community `Community 453`** (1 nodes): `Increases retaliation pressure when a faction member is killed.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 461`** (1 nodes): `Processes maturity, calamity spawns, and regional intensity shifts.`
+- **Thin community `Community 454`** (1 nodes): `Process time-based recovery for regional danger and local scars.         Optimiz`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 462`** (1 nodes): `Increases regional calamity intensity when significant entities die.`
+- **Thin community `Community 455`** (1 nodes): `Create a battlefield scar from a death event.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 463`** (1 nodes): `Determines if the region should transform based on its current state.         Re`
+- **Thin community `Community 456`** (1 nodes): `Create a raid damage scar from a town raid.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 464`** (1 nodes): `Checks for and applies regional transformations.`
+- **Thin community `Community 457`** (1 nodes): `Evolve camps and spawn monsters or raids.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 465`** (1 nodes): `Calculates the HP/Readiness drain for an entity in a region.         Scales with`
+- **Thin community `Community 458`** (1 nodes): `Rule: Clearing a camp provides rewards and reduces threat.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 466`** (1 nodes): `Returns stat multipliers based on current weather.`
+- **Thin community `Community 459`** (1 nodes): `Processes maturity, calamity spawns, and regional intensity shifts.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 467`** (1 nodes): `Returns stat multipliers based on nearby strongholds (Aura of Despair).`
+- **Thin community `Community 460`** (1 nodes): `Increases regional calamity intensity when significant entities die.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 468`** (1 nodes): `Returns penalties based on active regional modifiers.`
+- **Thin community `Community 461`** (1 nodes): `Determines if the region should transform based on its current state.         Re`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 469`** (1 nodes): `Collects taxes from regions based on ownership.`
+- **Thin community `Community 462`** (1 nodes): `Checks for and applies regional transformations.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 470`** (1 nodes): `Applies CONQUERED_DEBUFF if the hero is in a monster-owned region.`
+- **Thin community `Community 463`** (1 nodes): `Calculates the HP/Readiness drain for an entity in a region.         Scales with`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 471`** (1 nodes): `Evaluate a single constraint against the entity and world state.         Returns`
+- **Thin community `Community 464`** (1 nodes): `Returns stat multipliers based on current weather.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 472`** (1 nodes): `Produce a deterministic fingerprint of the current state.          Included doma`
+- **Thin community `Community 465`** (1 nodes): `Returns stat multipliers based on nearby strongholds (Aura of Despair).`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 473`** (1 nodes): `Return deterministic inventory identity.          Count-only inventory fingerpri`
+- **Thin community `Community 466`** (1 nodes): `Returns penalties based on active regional modifiers.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 474`** (1 nodes): `Return deterministic strategic identity for replay-visible planning         stat`
+- **Thin community `Community 467`** (1 nodes): `Collects taxes from regions based on ownership.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 475`** (1 nodes): `Return deterministic group coordination identity.          Important:`
+- **Thin community `Community 468`** (1 nodes): `Applies CONQUERED_DEBUFF if the hero is in a monster-owned region.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 477`** (1 nodes): `Loads a RuntimeProfile with full precedence resolution.`
+- **Thin community `Community 469`** (1 nodes): `Evaluate a single constraint against the entity and world state.         Returns`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 479`** (1 nodes): `Verify that a profile is internally consistent and within          declared reso`
+- **Thin community `Community 470`** (1 nodes): `Produce a deterministic fingerprint of the current state.          Included doma`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 480`** (1 nodes): `Verify that operational flags are safe and do not bypass          authoritative`
+- **Thin community `Community 471`** (1 nodes): `Return deterministic inventory identity.          Count-only inventory fingerpri`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 505`** (1 nodes): `Calculate the dynamic buy price for an item.         Law: Same State + Same Pres`
+- **Thin community `Community 472`** (1 nodes): `Return deterministic strategic identity for replay-visible planning         stat`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 506`** (1 nodes): `Calculate the sell price for an item (currently static 50%).         PH5 E5.6 Ou`
+- **Thin community `Community 473`** (1 nodes): `Return deterministic group coordination identity.          Important:`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 507`** (1 nodes): `Processes a crafting attempt.         Returns (InventoryUpdate, reason).`
+- **Thin community `Community 475`** (1 nodes): `Loads a RuntimeProfile with full precedence resolution.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 509`** (1 nodes): `Returns the static base value for an item.`
+- **Thin community `Community 477`** (1 nodes): `Verify that a profile is internally consistent and within          declared reso`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 510`** (1 nodes): `Calculates the final gold price for an item at a specific shop.`
+- **Thin community `Community 478`** (1 nodes): `Verify that operational flags are safe and do not bypass          authoritative`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 511`** (1 nodes): `Maps item IDs to broader categories for modifiers.`
+- **Thin community `Community 503`** (1 nodes): `Calculate the dynamic buy price for an item.         Law: Same State + Same Pres`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 512`** (1 nodes): `LEG-RPG-151: Turning points persist in narrative memory.`
+- **Thin community `Community 504`** (1 nodes): `Calculate the sell price for an item (currently static 50%).         PH5 E5.6 Ou`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 513`** (1 nodes): `LEG-RPG-151: Narrative memory biases future utility scoring.          Returns a`
+- **Thin community `Community 505`** (1 nodes): `Processes a crafting attempt.         Returns (InventoryUpdate, reason).`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 514`** (1 nodes): `Check if entity has betrayal/negative turning point with a specific subject.`
+- **Thin community `Community 507`** (1 nodes): `Returns the static base value for an item.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 515`** (1 nodes): `Aggregate trauma from turning points in a specific region.`
+- **Thin community `Community 508`** (1 nodes): `Calculates the final gold price for an item at a specific shop.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 516`** (1 nodes): `Returns a normalized direction vector towards the target kind using         weig`
+- **Thin community `Community 509`** (1 nodes): `Maps item IDs to broader categories for modifiers.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 517`** (1 nodes): `Main authoritative group coordination logic.         Logic ID: SOC-182 (Party ta`
+- **Thin community `Community 510`** (1 nodes): `LEG-RPG-151: Turning points persist in narrative memory.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 518`** (1 nodes): `LEG-RPG-141: Quest generation from scar/trauma state.         Regions with high`
+- **Thin community `Community 511`** (1 nodes): `LEG-RPG-151: Narrative memory biases future utility scoring.          Returns a`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 519`** (1 nodes): `LEG-RPG-141: Quest generation from strategic blockers.         Material blockers`
+- **Thin community `Community 512`** (1 nodes): `Check if entity has betrayal/negative turning point with a specific subject.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 520`** (1 nodes): `Convert a quest template to a strategic project.`
+- **Thin community `Community 513`** (1 nodes): `Aggregate trauma from turning points in a specific region.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 521`** (1 nodes): `Generate concerns based on hunger, sleep debt, and rest pressure.         VERIFI`
+- **Thin community `Community 514`** (1 nodes): `Returns a normalized direction vector towards the target kind using         weig`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 522`** (1 nodes): `Generate concerns based on inventory status and pending goals.`
+- **Thin community `Community 515`** (1 nodes): `Main authoritative group coordination logic.         Logic ID: SOC-182 (Party ta`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 523`** (1 nodes): `Returns a utility boost for routine-related projects.         VERIFIED v2: routi`
+- **Thin community `Community 516`** (1 nodes): `LEG-RPG-141: Quest generation from scar/trauma state.         Regions with high`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 524`** (1 nodes): `Returns a utility boost based on the entity's role identity.`
+- **Thin community `Community 517`** (1 nodes): `LEG-RPG-141: Quest generation from strategic blockers.         Material blockers`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 525`** (1 nodes): `Phase 9: Anchored-World Behavior.         If entity is idle and away from home,`
+- **Thin community `Community 518`** (1 nodes): `Convert a quest template to a strategic project.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 526`** (1 nodes): `LEG-RPG-116: Strategic pivot on regional danger.          If hazard_level > 0.7,`
+- **Thin community `Community 519`** (1 nodes): `Generate concerns based on hunger, sleep debt, and rest pressure.         VERIFI`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 527`** (1 nodes): `LEG-RPG-117: Scar detection.          If a nearby region has trauma_score > 0.5,`
+- **Thin community `Community 520`** (1 nodes): `Generate concerns based on inventory status and pending goals.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 528`** (1 nodes): `Near-death event: generates a survival concern and may suspend current project.`
+- **Thin community `Community 521`** (1 nodes): `Returns a utility boost for routine-related projects.         VERIFIED v2: routi`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 529`** (1 nodes): `Part 1 §Strategic: Event interpretation can mutate directives.          Only hig`
+- **Thin community `Community 522`** (1 nodes): `Returns a utility boost based on the entity's role identity.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 531`** (1 nodes): `Scan neighbors for high-salience events (Combat, Death, Plunder).         VERIFI`
+- **Thin community `Community 523`** (1 nodes): `Phase 9: Anchored-World Behavior.         If entity is idle and away from home,`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 532`** (1 nodes): `Generate a pool of potential quests for an entity.`
+- **Thin community `Community 524`** (1 nodes): `LEG-RPG-116: Strategic pivot on regional danger.          If hazard_level > 0.7,`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 533`** (1 nodes): `Authoritatively apply deltas to social histories.         Logic ID: SOC-217 (Soc`
+- **Thin community `Community 525`** (1 nodes): `LEG-RPG-117: Scar detection.          If a nearby region has trauma_score > 0.5,`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 534`** (1 nodes): `Prunes social records for entities with low salience to keep state lean.`
+- **Thin community `Community 526`** (1 nodes): `Near-death event: generates a survival concern and may suspend current project.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 535`** (1 nodes): `Evaluate an OFFERED or COUNTERED contract.         Returns (new_status, reason,`
+- **Thin community `Community 527`** (1 nodes): `Part 1 §Strategic: Event interpretation can mutate directives.          Only hig`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 536`** (1 nodes): `Recalculate trust based on a concrete interaction outcome.         VERIFIED v2:`
+- **Thin community `Community 529`** (1 nodes): `Scan neighbors for high-salience events (Combat, Death, Plunder).         VERIFI`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 537`** (1 nodes): `Evaluate whether the target entity accepts an adjacent position swap.          L`
+- **Thin community `Community 530`** (1 nodes): `Generate a pool of potential quests for an entity.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 538`** (1 nodes): `LEG-RPG-119: Betrayal (Avenge).         Part 1 §Social: Private betrayal history`
+- **Thin community `Community 531`** (1 nodes): `Authoritatively apply deltas to social histories.         Logic ID: SOC-217 (Soc`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 539`** (1 nodes): `LEG-RPG-123: Refutation drops trust.`
+- **Thin community `Community 532`** (1 nodes): `Prunes social records for entities with low salience to keep state lean.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 540`** (1 nodes): `Part 1 §Social: Social learning updates familiarity/trust-like bonds.         VE`
+- **Thin community `Community 533`** (1 nodes): `Evaluate an OFFERED or COUNTERED contract.         Returns (new_status, reason,`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 541`** (1 nodes): `Part 1 §Social: Recruitment evaluates trust, level, and greed.         Scales co`
+- **Thin community `Community 534`** (1 nodes): `Recalculate trust based on a concrete interaction outcome.         VERIFIED v2:`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 542`** (1 nodes): `Returns a cohesion score (0.0 to 1.0) based on how many members are          wit`
+- **Thin community `Community 535`** (1 nodes): `Evaluate whether the target entity accepts an adjacent position swap.          L`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 543`** (1 nodes): `Helper to return a new GroupRecord with a role assigned.`
+- **Thin community `Community 536`** (1 nodes): `LEG-RPG-119: Betrayal (Avenge).         Part 1 §Social: Private betrayal history`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 544`** (1 nodes): `Injects the leader's active objective as a candidate goal for the member.`
+- **Thin community `Community 537`** (1 nodes): `LEG-RPG-123: Refutation drops trust.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 545`** (1 nodes): `Propagates the leader's current objective to all active party members.         I`
+- **Thin community `Community 538`** (1 nodes): `Part 1 §Social: Social learning updates familiarity/trust-like bonds.         VE`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 546`** (1 nodes): `Ensures the shared party target is still alive and valid.         Clears if targ`
+- **Thin community `Community 539`** (1 nodes): `Part 1 §Social: Recruitment evaluates trust, level, and greed.         Scales co`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 547`** (1 nodes): `Creates a high-priority directive for all party members.`
+- **Thin community `Community 540`** (1 nodes): `Returns a cohesion score (0.0 to 1.0) based on how many members are          wit`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 548`** (1 nodes): `Increments attachment to the current region based on presence.         PH4 Law:`
+- **Thin community `Community 541`** (1 nodes): `Helper to return a new GroupRecord with a role assigned.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 549`** (1 nodes): `Promotes enemies from grudge_history to nemesis_ids if hostility threshold met.`
+- **Thin community `Community 542`** (1 nodes): `Injects the leader's active objective as a candidate goal for the member.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 551`** (1 nodes): `Validates and applies a state transition for a contract.`
+- **Thin community `Community 543`** (1 nodes): `Propagates the leader's current objective to all active party members.         I`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 552`** (1 nodes): `Strict state machine for contracts.`
+- **Thin community `Community 544`** (1 nodes): `Ensures the shared party target is still alive and valid.         Clears if targ`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 553`** (1 nodes): `Auto-expire contracts that reached their tick limit.`
+- **Thin community `Community 545`** (1 nodes): `Creates a high-priority directive for all party members.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 554`** (1 nodes): `Transition an OFFERED contract to ACTIVE and spawn active strategic project/obje`
+- **Thin community `Community 546`** (1 nodes): `Increments attachment to the current region based on presence.         PH4 Law:`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 555`** (1 nodes): `Resolve an ACTIVE contract and update social relationships.         First return`
+- **Thin community `Community 547`** (1 nodes): `Promotes enemies from grudge_history to nemesis_ids if hostility threshold met.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 556`** (1 nodes): `Processes ACTIVE contracts for expiration or completion.`
+- **Thin community `Community 549`** (1 nodes): `Validates and applies a state transition for a contract.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 557`** (1 nodes): `Reap any OFFERED contracts that have passed their expiry_tick.`
+- **Thin community `Community 550`** (1 nodes): `Strict state machine for contracts.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 558`** (1 nodes): `Low reputation increases caution in others (defensive posture).         Formula:`
+- **Thin community `Community 551`** (1 nodes): `Auto-expire contracts that reached their tick limit.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 559`** (1 nodes): `LEG-RPG-144: Talent multipliers from genetic profile affect attribute scaling.`
+- **Thin community `Community 552`** (1 nodes): `Transition an OFFERED contract to ACTIVE and spawn active strategic project/obje`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 560`** (1 nodes): `Generate a deterministic genetic profile from a seed.         Each multiplier ra`
+- **Thin community `Community 553`** (1 nodes): `Resolve an ACTIVE contract and update social relationships.         First return`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 561`** (1 nodes): `LEG-RPG-145: Physical/Magical/Elemental skills scale differently.          Scali`
+- **Thin community `Community 554`** (1 nodes): `Processes ACTIVE contracts for expiration or completion.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 562`** (1 nodes): `Identify entities that have died and process succession/permadeath.`
+- **Thin community `Community 555`** (1 nodes): `Reap any OFFERED contracts that have passed their expiry_tick.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 564`** (1 nodes): `Export the entity's strategic state as a typed graph.`
+- **Thin community `Community 556`** (1 nodes): `Low reputation increases caution in others (defensive posture).         Formula:`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 565`** (1 nodes): `Verify that multiple exports from the same state are identical.`
+- **Thin community `Community 557`** (1 nodes): `LEG-RPG-144: Talent multipliers from genetic profile affect attribute scaling.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 566`** (1 nodes): `Scan entities for blockers and propose navigation targets to resolve them.`
+- **Thin community `Community 558`** (1 nodes): `Generate a deterministic genetic profile from a seed.         Each multiplier ra`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 567`** (1 nodes): `Generate detour suggestions from unresolved blockers paired with relevant leads.`
+- **Thin community `Community 559`** (1 nodes): `LEG-RPG-145: Physical/Magical/Elemental skills scale differently.          Scali`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 568`** (1 nodes): `Part 1 §Strategic: Rejected/tested leads are suppressed to avoid blind retries.`
+- **Thin community `Community 560`** (1 nodes): `Identify entities that have died and process succession/permadeath.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 569`** (1 nodes): `Part 1 §Strategic: Leads and concerns are retained under profile-specific limits`
+- **Thin community `Community 562`** (1 nodes): `Export the entity's strategic state as a typed graph.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 570`** (1 nodes): `Score a detour suggestion.`
+- **Thin community `Community 563`** (1 nodes): `Verify that multiple exports from the same state are identical.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 571`** (1 nodes): `Infer the right objective kind from a blocker+lead pair.`
+- **Thin community `Community 564`** (1 nodes): `Scan entities for blockers and propose navigation targets to resolve them.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 572`** (1 nodes): `Infer blockers based on recent failures.         Logic ID: STRAT-191 (Blockers h`
+- **Thin community `Community 565`** (1 nodes): `Generate detour suggestions from unresolved blockers paired with relevant leads.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 573`** (1 nodes): `Produce a StrategicUpdate containing blockers for missing requirements.`
+- **Thin community `Community 566`** (1 nodes): `Part 1 §Strategic: Rejected/tested leads are suppressed to avoid blind retries.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 574`** (1 nodes): `Fused pass for strategic intelligence (Blockers, Concerns, Intents).         Log`
+- **Thin community `Community 567`** (1 nodes): `Part 1 §Strategic: Leads and concerns are retained under profile-specific limits`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 575`** (1 nodes): `Resolve strategic blockers that are satisfied by the current or pending`
+- **Thin community `Community 568`** (1 nodes): `Score a detour suggestion.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 576`** (1 nodes): `Phase 9: Routine, Biological Needs, and Salience Filtering.         VERIFIED v2:`
+- **Thin community `Community 569`** (1 nodes): `Infer the right objective kind from a blocker+lead pair.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 577`** (1 nodes): `Phase 4.1: Strategic Intent Evaluation (Projects/Objectives).         Orchestrat`
+- **Thin community `Community 570`** (1 nodes): `Infer blockers based on recent failures.         Logic ID: STRAT-191 (Blockers h`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 578`** (1 nodes): `Phase 9: Strategic interruption resistance and retention.         Logic ID: STRA`
+- **Thin community `Community 571`** (1 nodes): `Produce a StrategicUpdate containing blockers for missing requirements.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 579`** (1 nodes): `Record the final result of a project and apply learning effects.`
+- **Thin community `Community 572`** (1 nodes): `Fused pass for strategic intelligence (Blockers, Concerns, Intents).         Log`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 580`** (1 nodes): `VERIFIED v2: StrategicIntelligenceSystem.process_outcome`
+- **Thin community `Community 573`** (1 nodes): `Resolve strategic blockers that are satisfied by the current or pending`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 581`** (1 nodes): `Produce a collection of strategic intent updates for the next tick.`
+- **Thin community `Community 574`** (1 nodes): `Phase 9: Routine, Biological Needs, and Salience Filtering.         VERIFIED v2:`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 582`** (1 nodes): `VERIFIED v2: StrategicIntelligenceSystem.derive_cognition_profile`
+- **Thin community `Community 575`** (1 nodes): `Phase 4.1: Strategic Intent Evaluation (Projects/Objectives).         Orchestrat`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 583`** (1 nodes): `Returns a map of GoalKind -> utility_delta.`
+- **Thin community `Community 576`** (1 nodes): `Phase 9: Strategic interruption resistance and retention.         Logic ID: STRA`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 584`** (1 nodes): `LEG-RPG-150: Beliefs decay over time.         Leads that haven't been refreshed`
+- **Thin community `Community 577`** (1 nodes): `Record the final result of a project and apply learning effects.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 585`** (1 nodes): `LEG-RPG-150: Rumors have lower certainty than direct observation.`
+- **Thin community `Community 578`** (1 nodes): `VERIFIED v2: StrategicIntelligenceSystem.process_outcome`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 586`** (1 nodes): `Direct observations create PRECISE leads.`
+- **Thin community `Community 579`** (1 nodes): `Produce a collection of strategic intent updates for the next tick.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 587`** (1 nodes): `LEG-RPG-125: Contradiction degrades certainty.`
+- **Thin community `Community 580`** (1 nodes): `VERIFIED v2: StrategicIntelligenceSystem.derive_cognition_profile`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 588`** (1 nodes): `LEG-RPG-150: Threat estimation from belief state.         Aggregates danger-rela`
+- **Thin community `Community 581`** (1 nodes): `Returns a map of GoalKind -> utility_delta.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 589`** (1 nodes): `Compares state transitions to produce semantic events matching volume policies.`
+- **Thin community `Community 582`** (1 nodes): `LEG-RPG-150: Beliefs decay over time.         Leads that haven't been refreshed`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 590`** (1 nodes): `Sets a programmatic override mode, e.g. for specific tests.`
+- **Thin community `Community 583`** (1 nodes): `LEG-RPG-150: Rumors have lower certainty than direct observation.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 591`** (1 nodes): `Resolves the current active observability mode with precedence.`
+- **Thin community `Community 584`** (1 nodes): `Direct observations create PRECISE leads.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 592`** (1 nodes): `Resolves the active deployment profile (local-dev, production, scale-test).`
+- **Thin community `Community 585`** (1 nodes): `LEG-RPG-125: Contradiction degrades certainty.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 593`** (1 nodes): `Resolves the event stream backend from env or active deployment profile default.`
+- **Thin community `Community 586`** (1 nodes): `LEG-RPG-150: Threat estimation from belief state.         Aggregates danger-rela`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 594`** (1 nodes): `Resolves the Redis connection string from env, defaulting to default local.`
+- **Thin community `Community 587`** (1 nodes): `Compares state transitions to produce semantic events matching volume policies.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 595`** (1 nodes): `Resolves the target stream key name from env, defaulting to 'simulation:events'.`
+- **Thin community `Community 588`** (1 nodes): `Sets a programmatic override mode, e.g. for specific tests.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 596`** (1 nodes): `Resolves maximum event cap size from env or active deployment profile default.`
+- **Thin community `Community 589`** (1 nodes): `Resolves the current active observability mode with precedence.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 597`** (1 nodes): `Resolves the event warehouse backend from env or active deployment profile defau`
+- **Thin community `Community 590`** (1 nodes): `Resolves the active deployment profile (local-dev, production, scale-test).`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 598`** (1 nodes): `Resolves ClickHouse server host address.`
+- **Thin community `Community 591`** (1 nodes): `Resolves the event stream backend from env or active deployment profile default.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 599`** (1 nodes): `Resolves ClickHouse server HTTP port.`
+- **Thin community `Community 592`** (1 nodes): `Resolves the Redis connection string from env, defaulting to default local.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 600`** (1 nodes): `Resolves ClickHouse target database name.`
+- **Thin community `Community 593`** (1 nodes): `Resolves the target stream key name from env, defaulting to 'simulation:events'.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 601`** (1 nodes): `Resolves ClickHouse database login username.`
+- **Thin community `Community 594`** (1 nodes): `Resolves maximum event cap size from env or active deployment profile default.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 602`** (1 nodes): `Resolves ClickHouse database login password.`
+- **Thin community `Community 595`** (1 nodes): `Resolves the event warehouse backend from env or active deployment profile defau`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 603`** (1 nodes): `Resolves whether to establish secure SSL connections to ClickHouse.`
+- **Thin community `Community 596`** (1 nodes): `Resolves ClickHouse server host address.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 604`** (1 nodes): `Resolves batch chunk sizing for telemetry insertions.`
+- **Thin community `Community 597`** (1 nodes): `Resolves ClickHouse server HTTP port.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 605`** (1 nodes): `Orchestrates entity state and occupancy collision checks.`
+- **Thin community `Community 598`** (1 nodes): `Resolves ClickHouse target database name.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 606`** (1 nodes): `Performs scoped attribute/property checks on dirty active and alive entities.`
+- **Thin community `Community 599`** (1 nodes): `Resolves ClickHouse database login username.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 607`** (1 nodes): `Performs scoped tile collision checks on dirty moving entities.`
+- **Thin community `Community 600`** (1 nodes): `Resolves ClickHouse database login password.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 608`** (1 nodes): `Compares event logs tick-by-tick across runs to pin the exact tick of logical di`
+- **Thin community `Community 601`** (1 nodes): `Resolves whether to establish secure SSL connections to ClickHouse.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 610`** (1 nodes): `Run domain analysis against the given context.`
+- **Thin community `Community 602`** (1 nodes): `Resolves batch chunk sizing for telemetry insertions.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 611`** (1 nodes): `Build a registry with all four standard Phase 8 domain analyzers.`
+- **Thin community `Community 603`** (1 nodes): `Orchestrates entity state and occupancy collision checks.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 615`** (1 nodes): `Fraction of reviews that are actionable (bug or balance issue).`
+- **Thin community `Community 604`** (1 nodes): `Performs scoped attribute/property checks on dirty active and alive entities.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 617`** (1 nodes): `Generate hypotheses from the analysis context. Return [] if not applicable.`
+- **Thin community `Community 605`** (1 nodes): `Performs scoped tile collision checks on dirty moving entities.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 621`** (1 nodes): `Return a minimal default pack with only hard law constraint.`
+- **Thin community `Community 606`** (1 nodes): `Compares event logs tick-by-tick across runs to pin the exact tick of logical di`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 623`** (1 nodes): `Extracts strategic cognition features for each active strategic entity in the ru`
+- **Thin community `Community 608`** (1 nodes): `Run domain analysis against the given context.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 624`** (1 nodes): `Compares prev_snapshot and curr_snapshot deterministically.         Returns a va`
+- **Thin community `Community 609`** (1 nodes): `Build a registry with all four standard Phase 8 domain analyzers.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 625`** (1 nodes): `Runs feature extraction over the run directory, applies pattern matching rules,`
+- **Thin community `Community 613`** (1 nodes): `Fraction of reviews that are actionable (bug or balance issue).`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 626`** (1 nodes): `Orchestrates post-run report generation, saving run_report.md and run_report.jso`
+- **Thin community `Community 615`** (1 nodes): `Generate hypotheses from the analysis context. Return [] if not applicable.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 627`** (1 nodes): `Writes a beautifully styled Markdown report for executive review and continuous`
+- **Thin community `Community 619`** (1 nodes): `Return a minimal default pack with only hard law constraint.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 628`** (1 nodes): `Orchestrates scenario-level sweep comparison, generates report files, and evalua`
+- **Thin community `Community 621`** (1 nodes): `Extracts strategic cognition features for each active strategic entity in the ru`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 629`** (1 nodes): `Return a dictionary of routing metrics.`
+- **Thin community `Community 622`** (1 nodes): `Compares prev_snapshot and curr_snapshot deterministically.         Returns a va`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 631`** (1 nodes): `Synchronously or asynchronously process and route the alert event.         Retur`
+- **Thin community `Community 623`** (1 nodes): `Runs feature extraction over the run directory, applies pattern matching rules,`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 632`** (1 nodes): `Factory to create a Hard Law violation alert event.`
+- **Thin community `Community 624`** (1 nodes): `Orchestrates post-run report generation, saving run_report.md and run_report.jso`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 633`** (1 nodes): `Factory to create a watchdog trip alert event.`
+- **Thin community `Community 625`** (1 nodes): `Writes a beautifully styled Markdown report for executive review and continuous`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 634`** (1 nodes): `Factory to create a critical anomaly alert event from the worker/rules engine.`
+- **Thin community `Community 626`** (1 nodes): `Orchestrates scenario-level sweep comparison, generates report files, and evalua`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 635`** (1 nodes): `Factory to create an event stream backpressure alert event.`
+- **Thin community `Community 627`** (1 nodes): `Return a dictionary of routing metrics.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 636`** (1 nodes): `Returns the current number of unique non-expired alerts tracked.`
+- **Thin community `Community 629`** (1 nodes): `Synchronously or asynchronously process and route the alert event.         Retur`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 637`** (1 nodes): `Resolves and returns the globally shared thread-safe AlertRouter instance.`
+- **Thin community `Community 630`** (1 nodes): `Factory to create a Hard Law violation alert event.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 638`** (1 nodes): `Reset the shared singleton (mainly useful for testing configurations).`
+- **Thin community `Community 631`** (1 nodes): `Factory to create a watchdog trip alert event.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 639`** (1 nodes): `Resolves a compact inspection snapshot for the given entity ID.`
+- **Thin community `Community 632`** (1 nodes): `Factory to create a critical anomaly alert event from the worker/rules engine.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 640`** (1 nodes): `Resolves the current LiveRunStatus of the engine manager.`
+- **Thin community `Community 633`** (1 nodes): `Factory to create an event stream backpressure alert event.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 641`** (1 nodes): `Resolves the complete LiveRunSnapshot of the engine manager.`
+- **Thin community `Community 634`** (1 nodes): `Returns the current number of unique non-expired alerts tracked.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 642`** (1 nodes): `Resets the singleton instance (useful for unit tests).`
+- **Thin community `Community 635`** (1 nodes): `Resolves and returns the globally shared thread-safe AlertRouter instance.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 644`** (1 nodes): `Builds and returns a compact, JSON-serializable evidence context payload.`
+- **Thin community `Community 636`** (1 nodes): `Reset the shared singleton (mainly useful for testing configurations).`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 645`** (1 nodes): `Clusters a flat list of anomalies by rule ID, severity, spatial/quest context, a`
+- **Thin community `Community 637`** (1 nodes): `Resolves a compact inspection snapshot for the given entity ID.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 646`** (1 nodes): `Validates that a run manifest dict has the correct, supported schema version.`
+- **Thin community `Community 638`** (1 nodes): `Resolves the current LiveRunStatus of the engine manager.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 647`** (1 nodes): `Validates a sweep manifest or sweep index record.`
+- **Thin community `Community 639`** (1 nodes): `Resolves the complete LiveRunSnapshot of the engine manager.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 648`** (1 nodes): `Resolves and caches the active warehouse adapter instance.`
+- **Thin community `Community 640`** (1 nodes): `Resets the singleton instance (useful for unit tests).`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 649`** (1 nodes): `Resets the cached instance, e.g. for dynamic testing overrides.`
+- **Thin community `Community 642`** (1 nodes): `Builds and returns a compact, JSON-serializable evidence context payload.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 650`** (1 nodes): `Parses and validates local run artifacts (manifest, events, anomalies, violation`
+- **Thin community `Community 643`** (1 nodes): `Clusters a flat list of anomalies by rule ID, severity, spatial/quest context, a`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 651`** (1 nodes): `Parses and validates a multi-run sweep (including sweep summaries and indexes)`
+- **Thin community `Community 644`** (1 nodes): `Validates that a run manifest dict has the correct, supported schema version.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 652`** (1 nodes): `Queries historical runs filtered by given parameters (limit, scenario_name, heal`
+- **Thin community `Community 645`** (1 nodes): `Validates a sweep manifest or sweep index record.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 653`** (1 nodes): `Queries historical simulation events (severity, event_type, tick range).`
+- **Thin community `Community 646`** (1 nodes): `Resolves and caches the active warehouse adapter instance.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 654`** (1 nodes): `Queries historical anomalies.`
+- **Thin community `Community 647`** (1 nodes): `Resets the cached instance, e.g. for dynamic testing overrides.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 655`** (1 nodes): `Queries historical metric windows.`
+- **Thin community `Community 648`** (1 nodes): `Parses and validates local run artifacts (manifest, events, anomalies, violation`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 656`** (1 nodes): `Queries historical hard law violations.`
+- **Thin community `Community 649`** (1 nodes): `Parses and validates a multi-run sweep (including sweep summaries and indexes)`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 657`** (1 nodes): `Checks database connection status and latencies.`
+- **Thin community `Community 650`** (1 nodes): `Queries historical runs filtered by given parameters (limit, scenario_name, heal`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 658`** (1 nodes): `Flushes background queues and safely terminates database connection pools.`
+- **Thin community `Community 651`** (1 nodes): `Queries historical simulation events (severity, event_type, tick range).`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 660`** (1 nodes): `Publishes a single event to the stream backend.`
+- **Thin community `Community 652`** (1 nodes): `Queries historical anomalies.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 661`** (1 nodes): `Publishes a batch of events to the stream backend.`
+- **Thin community `Community 653`** (1 nodes): `Queries historical metric windows.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 662`** (1 nodes): `Returns health diagnostics, connection status, and backpressure metrics.`
+- **Thin community `Community 654`** (1 nodes): `Queries historical hard law violations.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 663`** (1 nodes): `Flushes any buffered events to the stream backend.`
+- **Thin community `Community 655`** (1 nodes): `Checks database connection status and latencies.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 664`** (1 nodes): `Closes the stream adapter and cleans up active resources.`
+- **Thin community `Community 656`** (1 nodes): `Flushes background queues and safely terminates database connection pools.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 666`** (1 nodes): `Generate a markdown readiness report from aggregated results.         If output_`
+- **Thin community `Community 658`** (1 nodes): `Publishes a single event to the stream backend.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 689`** (1 nodes): `Verify that state mutation is gated exclusively by ApplyPath.`
+- **Thin community `Community 659`** (1 nodes): `Publishes a batch of events to the stream backend.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 690`** (1 nodes): `AST-based scan for bare random module usage.`
+- **Thin community `Community 660`** (1 nodes): `Returns health diagnostics, connection status, and backpressure metrics.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 694`** (1 nodes): `Evaluate a single constraint against the entity and world state.         Returns`
+- **Thin community `Community 661`** (1 nodes): `Flushes any buffered events to the stream backend.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 695`** (1 nodes): `Hardening Phase: Ensure DirtySet is always current.         Logic ID: PERF-006-R`
+- **Thin community `Community 662`** (1 nodes): `Closes the stream adapter and cleans up active resources.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 696`** (1 nodes): `Resolve an ACTIVE contract and update social relationships.         First return`
+- **Thin community `Community 664`** (1 nodes): `Generate a markdown readiness report from aggregated results.         If output_`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 697`** (1 nodes): `Processes ACTIVE contracts for expiration or completion.`
+- **Thin community `Community 687`** (1 nodes): `Verify that state mutation is gated exclusively by ApplyPath.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 698`** (1 nodes): `Determines the next tactical intent for an entity.         Bounded to local visi`
+- **Thin community `Community 688`** (1 nodes): `AST-based scan for bare random module usage.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 699`** (1 nodes): `Public helper for deterministic target selection.         Matches legacy 'Tactic`
+- **Thin community `Community 692`** (1 nodes): `Evaluate a single constraint against the entity and world state.         Returns`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 700`** (1 nodes): `RPG TACTICAL COGNITION.         Determines tactical intent and emotional apprais`
+- **Thin community `Community 693`** (1 nodes): `Hardening Phase: Ensure DirtySet is always current.         Logic ID: PERF-006-R`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 701`** (1 nodes): `Registers a scorer for a specific goal kind.         Logic ID: RPG-GOAL-001`
+- **Thin community `Community 694`** (1 nodes): `Resolve an ACTIVE contract and update social relationships.         First return`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 702`** (1 nodes): `Check if a lead might resolve a blocker.`
+- **Thin community `Community 695`** (1 nodes): `Processes ACTIVE contracts for expiration or completion.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 703`** (1 nodes): `Score a detour suggestion.`
+- **Thin community `Community 696`** (1 nodes): `Determines the next tactical intent for an entity.         Bounded to local visi`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 704`** (1 nodes): `Infer the right objective kind from a blocker+lead pair.`
+- **Thin community `Community 697`** (1 nodes): `Public helper for deterministic target selection.         Matches legacy 'Tactic`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 705`** (1 nodes): `Resolve strategic blockers that are satisfied by the current or pending`
+- **Thin community `Community 698`** (1 nodes): `RPG TACTICAL COGNITION.         Determines tactical intent and emotional apprais`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 706`** (1 nodes): `Phase 9: Routine, Biological Needs, and Salience Filtering.         VERIFIED v2:`
+- **Thin community `Community 699`** (1 nodes): `Registers a scorer for a specific goal kind.         Logic ID: RPG-GOAL-001`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 707`** (1 nodes): `Phase 4.1: Strategic Intent Evaluation (Projects/Objectives).         Orchestrat`
+- **Thin community `Community 700`** (1 nodes): `Check if a lead might resolve a blocker.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 708`** (1 nodes): `Phase 9: Strategic interruption resistance and retention.         Logic ID: STRA`
+- **Thin community `Community 701`** (1 nodes): `Score a detour suggestion.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 709`** (1 nodes): `Record the final result of a project and apply learning effects.`
+- **Thin community `Community 702`** (1 nodes): `Infer the right objective kind from a blocker+lead pair.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 710`** (1 nodes): `VERIFIED v2: StrategicIntelligenceSystem.process_outcome`
+- **Thin community `Community 703`** (1 nodes): `Resolve strategic blockers that are satisfied by the current or pending`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 711`** (1 nodes): `Produce a collection of strategic intent updates for the next tick.`
+- **Thin community `Community 704`** (1 nodes): `Phase 9: Routine, Biological Needs, and Salience Filtering.         VERIFIED v2:`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 712`** (1 nodes): `VERIFIED v2: StrategicIntelligenceSystem.derive_cognition_profile`
+- **Thin community `Community 705`** (1 nodes): `Phase 4.1: Strategic Intent Evaluation (Projects/Objectives).         Orchestrat`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 713`** (1 nodes): `Infer the right objective kind from a blocker+lead pair.`
+- **Thin community `Community 706`** (1 nodes): `Phase 9: Strategic interruption resistance and retention.         Logic ID: STRA`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 714`** (1 nodes): `Infer blockers based on recent failures.         Logic ID: STRAT-191 (Blockers h`
+- **Thin community `Community 707`** (1 nodes): `Record the final result of a project and apply learning effects.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 715`** (1 nodes): `Produce a StrategicUpdate containing blockers for missing requirements.`
+- **Thin community `Community 708`** (1 nodes): `VERIFIED v2: StrategicIntelligenceSystem.process_outcome`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 716`** (1 nodes): `Fused pass for strategic intelligence (Blockers, Concerns, Intents).         Log`
+- **Thin community `Community 709`** (1 nodes): `Produce a collection of strategic intent updates for the next tick.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 717`** (1 nodes): `Resolve strategic blockers that are satisfied by the current or pending`
+- **Thin community `Community 710`** (1 nodes): `VERIFIED v2: StrategicIntelligenceSystem.derive_cognition_profile`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 718`** (1 nodes): `Phase 9: Routine, Biological Needs, and Salience Filtering.         VERIFIED v2:`
+- **Thin community `Community 711`** (1 nodes): `Infer the right objective kind from a blocker+lead pair.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 719`** (1 nodes): `Phase 4.1: Strategic Intent Evaluation (Projects/Objectives).         Orchestrat`
+- **Thin community `Community 712`** (1 nodes): `Infer blockers based on recent failures.         Logic ID: STRAT-191 (Blockers h`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 720`** (1 nodes): `Phase 9: Strategic interruption resistance and retention.         Logic ID: STRA`
+- **Thin community `Community 713`** (1 nodes): `Produce a StrategicUpdate containing blockers for missing requirements.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 721`** (1 nodes): `Record the final result of a project and apply learning effects.`
+- **Thin community `Community 714`** (1 nodes): `Fused pass for strategic intelligence (Blockers, Concerns, Intents).         Log`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 722`** (1 nodes): `VERIFIED v2: StrategicIntelligenceSystem.process_outcome`
+- **Thin community `Community 715`** (1 nodes): `Resolve strategic blockers that are satisfied by the current or pending`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 723`** (1 nodes): `Produce a collection of strategic intent updates for the next tick.`
+- **Thin community `Community 716`** (1 nodes): `Phase 9: Routine, Biological Needs, and Salience Filtering.         VERIFIED v2:`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 724`** (1 nodes): `VERIFIED v2: StrategicIntelligenceSystem.derive_cognition_profile`
+- **Thin community `Community 717`** (1 nodes): `Phase 4.1: Strategic Intent Evaluation (Projects/Objectives).         Orchestrat`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 725`** (1 nodes): `Direct observations create PRECISE leads.`
+- **Thin community `Community 718`** (1 nodes): `Phase 9: Strategic interruption resistance and retention.         Logic ID: STRA`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 726`** (1 nodes): `LEG-RPG-125: Contradiction degrades certainty.`
+- **Thin community `Community 719`** (1 nodes): `Record the final result of a project and apply learning effects.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 727`** (1 nodes): `LEG-RPG-150: Threat estimation from belief state.         Aggregates danger-rela`
+- **Thin community `Community 720`** (1 nodes): `VERIFIED v2: StrategicIntelligenceSystem.process_outcome`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 728`** (1 nodes): `Resolve strategic blockers that are satisfied by the current or pending`
+- **Thin community `Community 721`** (1 nodes): `Produce a collection of strategic intent updates for the next tick.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 729`** (1 nodes): `Phase 9: Routine, Biological Needs, and Salience Filtering.         VERIFIED v2:`
+- **Thin community `Community 722`** (1 nodes): `VERIFIED v2: StrategicIntelligenceSystem.derive_cognition_profile`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 730`** (1 nodes): `Phase 4.1: Strategic Intent Evaluation (Projects/Objectives).         Orchestrat`
+- **Thin community `Community 723`** (1 nodes): `Direct observations create PRECISE leads.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 731`** (1 nodes): `Phase 9: Strategic interruption resistance and retention.         Logic ID: STRA`
+- **Thin community `Community 724`** (1 nodes): `LEG-RPG-125: Contradiction degrades certainty.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 732`** (1 nodes): `Record the final result of a project and apply learning effects.`
+- **Thin community `Community 725`** (1 nodes): `LEG-RPG-150: Threat estimation from belief state.         Aggregates danger-rela`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 733`** (1 nodes): `VERIFIED v2: StrategicIntelligenceSystem.process_outcome`
+- **Thin community `Community 726`** (1 nodes): `Resolve strategic blockers that are satisfied by the current or pending`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 734`** (1 nodes): `Produce a collection of strategic intent updates for the next tick.`
+- **Thin community `Community 727`** (1 nodes): `Phase 9: Routine, Biological Needs, and Salience Filtering.         VERIFIED v2:`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 735`** (1 nodes): `VERIFIED v2: StrategicIntelligenceSystem.derive_cognition_profile`
+- **Thin community `Community 728`** (1 nodes): `Phase 4.1: Strategic Intent Evaluation (Projects/Objectives).         Orchestrat`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 729`** (1 nodes): `Phase 9: Strategic interruption resistance and retention.         Logic ID: STRA`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 730`** (1 nodes): `Record the final result of a project and apply learning effects.`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 731`** (1 nodes): `VERIFIED v2: StrategicIntelligenceSystem.process_outcome`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 732`** (1 nodes): `Produce a collection of strategic intent updates for the next tick.`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 733`** (1 nodes): `VERIFIED v2: StrategicIntelligenceSystem.derive_cognition_profile`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 734`** (1 nodes): `Writes a beautifully styled Markdown report for executive review and continuous`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 735`** (1 nodes): `Compares event logs tick-by-tick across runs to pin the exact tick of logical di`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
 - **Thin community `Community 736`** (1 nodes): `Writes a beautifully styled Markdown report for executive review and continuous`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 737`** (1 nodes): `Compares event logs tick-by-tick across runs to pin the exact tick of logical di`
+- **Thin community `Community 737`** (1 nodes): `Parses and validates local run artifacts (manifest, events, anomalies, violation`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 738`** (1 nodes): `Writes a beautifully styled Markdown report for executive review and continuous`
+- **Thin community `Community 738`** (1 nodes): `Parses and validates a multi-run sweep (including sweep summaries and indexes)`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 739`** (1 nodes): `Parses and validates local run artifacts (manifest, events, anomalies, violation`
+- **Thin community `Community 739`** (1 nodes): `Queries historical runs filtered by given parameters (limit, scenario_name, heal`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 740`** (1 nodes): `Parses and validates a multi-run sweep (including sweep summaries and indexes)`
+- **Thin community `Community 740`** (1 nodes): `Queries historical simulation events (severity, event_type, tick range).`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 741`** (1 nodes): `Queries historical runs filtered by given parameters (limit, scenario_name, heal`
+- **Thin community `Community 741`** (1 nodes): `Queries historical anomalies.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 742`** (1 nodes): `Queries historical simulation events (severity, event_type, tick range).`
+- **Thin community `Community 742`** (1 nodes): `Checks database connection status and latencies.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 743`** (1 nodes): `Queries historical anomalies.`
+- **Thin community `Community 743`** (1 nodes): `Flushes background queues and safely terminates database connection pools.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 744`** (1 nodes): `Checks database connection status and latencies.`
+- **Thin community `Community 744`** (1 nodes): `Resolves and caches the active warehouse adapter instance.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 745`** (1 nodes): `Flushes background queues and safely terminates database connection pools.`
+- **Thin community `Community 745`** (1 nodes): `Resets the cached instance, e.g. for dynamic testing overrides.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 746`** (1 nodes): `Resolves and caches the active warehouse adapter instance.`
+- **Thin community `Community 746`** (1 nodes): `Orchestrates post-run report generation, saving run_report.md and run_report.jso`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 747`** (1 nodes): `Resets the cached instance, e.g. for dynamic testing overrides.`
+- **Thin community `Community 747`** (1 nodes): `Writes a beautifully styled Markdown report for executive review and continuous`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 748`** (1 nodes): `Orchestrates post-run report generation, saving run_report.md and run_report.jso`
+- **Thin community `Community 749`** (1 nodes): `Compatibility wrapper for apply_partial.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 749`** (1 nodes): `Writes a beautifully styled Markdown report for executive review and continuous`
+- **Thin community `Community 750`** (1 nodes): `Compatibility wrapper for ActionRoutingPhase.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 751`** (1 nodes): `Compatibility wrapper for apply_partial.`
+- **Thin community `Community 751`** (1 nodes): `Compatibility wrapper for ActionRoutingPhase.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 752`** (1 nodes): `Compatibility wrapper for ActionRoutingPhase.`
+- **Thin community `Community 752`** (1 nodes): `Authoritative mapping from EntityUpdate to changes dict.         Merged v5 logic`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 753`** (1 nodes): `Compatibility wrapper for ActionRoutingPhase.`
+- **Thin community `Community 753`** (1 nodes): `Low-level reconstruction bypasses frozen dataclass __init__ overhead.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 754`** (1 nodes): `Authoritative mapping from EntityUpdate to changes dict.         Merged v5 logic`
+- **Thin community `Community 754`** (1 nodes): `Determine dynamic phase budgets based on operational mode and real-time phase pr`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 755`** (1 nodes): `Low-level reconstruction bypasses frozen dataclass __init__ overhead.`
+- **Thin community `Community 755`** (1 nodes): `Returns the set of entity IDs that were modified across any simulation domain.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 756`** (1 nodes): `Determine dynamic phase budgets based on operational mode and real-time phase pr`
+- **Thin community `Community 756`** (1 nodes): `Standard compaction entry point returning the optimized StateUpdate.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 757`** (1 nodes): `Returns the set of entity IDs that were modified across any simulation domain.`
+- **Thin community `Community 757`** (1 nodes): `Compacts the StateUpdate and returns both the optimized update and detailed redu`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 758`** (1 nodes): `Standard compaction entry point returning the optimized StateUpdate.`
+- **Thin community `Community 758`** (1 nodes): `Policy Waterfall according to Milestone 5/6 Degradation Matrix.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 759`** (1 nodes): `Compacts the StateUpdate and returns both the optimized update and detailed redu`
+- **Thin community `Community 759`** (1 nodes): `Resolve adjacent position swaps before normal movement routing.          LAW:`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 760`** (1 nodes): `Policy Waterfall according to Milestone 5/6 Degradation Matrix.`
+- **Thin community `Community 760`** (1 nodes): `Route normal navigation intent via MovementSystem.         Optimized v3: reduced`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 761`** (1 nodes): `Resolve adjacent position swaps before normal movement routing.          LAW:`
+- **Thin community `Community 761`** (1 nodes): `Infer blockers based on recent failures.         Logic ID: STRAT-191 (Blockers h`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 762`** (1 nodes): `Route normal navigation intent via MovementSystem.         Optimized v3: reduced`
+- **Thin community `Community 762`** (1 nodes): `Produce a StrategicUpdate containing blockers for missing requirements.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 763`** (1 nodes): `Infer blockers based on recent failures.         Logic ID: STRAT-191 (Blockers h`
+- **Thin community `Community 763`** (1 nodes): `Fused pass for strategic intelligence (Blockers, Concerns, Intents).         Log`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 764`** (1 nodes): `Produce a StrategicUpdate containing blockers for missing requirements.`
+- **Thin community `Community 764`** (1 nodes): `Resolve strategic blockers that are satisfied by the current or pending`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 765`** (1 nodes): `Fused pass for strategic intelligence (Blockers, Concerns, Intents).         Log`
+- **Thin community `Community 765`** (1 nodes): `Phase 9: Routine, Biological Needs, and Salience Filtering.         VERIFIED v2:`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 766`** (1 nodes): `Resolve strategic blockers that are satisfied by the current or pending`
+- **Thin community `Community 766`** (1 nodes): `Phase 4.1: Strategic Intent Evaluation (Projects/Objectives).         Orchestrat`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 767`** (1 nodes): `Phase 9: Routine, Biological Needs, and Salience Filtering.         VERIFIED v2:`
+- **Thin community `Community 767`** (1 nodes): `Phase 9: Strategic interruption resistance and retention.         Logic ID: STRA`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 768`** (1 nodes): `Phase 4.1: Strategic Intent Evaluation (Projects/Objectives).         Orchestrat`
+- **Thin community `Community 768`** (1 nodes): `Record the final result of a project and apply learning effects.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 769`** (1 nodes): `Phase 9: Strategic interruption resistance and retention.         Logic ID: STRA`
+- **Thin community `Community 769`** (1 nodes): `VERIFIED v2: StrategicIntelligenceSystem.process_outcome`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 770`** (1 nodes): `Record the final result of a project and apply learning effects.`
+- **Thin community `Community 770`** (1 nodes): `Produce a collection of strategic intent updates for the next tick.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 771`** (1 nodes): `VERIFIED v2: StrategicIntelligenceSystem.process_outcome`
+- **Thin community `Community 771`** (1 nodes): `VERIFIED v2: StrategicIntelligenceSystem.derive_cognition_profile`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 772`** (1 nodes): `Produce a collection of strategic intent updates for the next tick.`
+- **Thin community `Community 772`** (1 nodes): `Derive a DirtySet from a StateUpdate.         M3 Law: This must be deterministic`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 773`** (1 nodes): `VERIFIED v2: StrategicIntelligenceSystem.derive_cognition_profile`
+- **Thin community `Community 773`** (1 nodes): `Singular entry point for authoritative state transition refinement.         Logi`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 774`** (1 nodes): `Derive a DirtySet from a StateUpdate.         M3 Law: This must be deterministic`
+- **Thin community `Community 774`** (1 nodes): `Hardening Phase: Ensure DirtySet is always current.         Logic ID: PERF-006-R`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 775`** (1 nodes): `Singular entry point for authoritative state transition refinement.         Logi`
+- **Thin community `Community 775`** (1 nodes): `Low-level reconstruction bypasses frozen dataclass __init__ overhead.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 776`** (1 nodes): `Hardening Phase: Ensure DirtySet is always current.         Logic ID: PERF-006-R`
+- **Thin community `Community 776`** (1 nodes): `The root entry point for advancing the world state.         Fuses passive advanc`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 777`** (1 nodes): `Low-level reconstruction bypasses frozen dataclass __init__ overhead.`
+- **Thin community `Community 777`** (1 nodes): `Compatibility wrapper for apply_partial.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 778`** (1 nodes): `The root entry point for advancing the world state.         Fuses passive advanc`
+- **Thin community `Community 778`** (1 nodes): `Compatibility wrapper for ActionRoutingPhase.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 779`** (1 nodes): `Compatibility wrapper for apply_partial.`
+- **Thin community `Community 779`** (1 nodes): `Authoritative mapping from EntityUpdate to changes dict.         Merged v5 logic`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 780`** (1 nodes): `Compatibility wrapper for ActionRoutingPhase.`
+- **Thin community `Community 780`** (1 nodes): `Low-level reconstruction bypasses frozen dataclass __init__ overhead.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 781`** (1 nodes): `Authoritative mapping from EntityUpdate to changes dict.         Merged v5 logic`
+- **Thin community `Community 781`** (1 nodes): `Hardening Phase: Ensure DirtySet is always current.         Logic ID: PERF-006-R`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 782`** (1 nodes): `Low-level reconstruction bypasses frozen dataclass __init__ overhead.`
+- **Thin community `Community 782`** (1 nodes): `Compatibility wrapper for apply_partial.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 783`** (1 nodes): `Hardening Phase: Ensure DirtySet is always current.         Logic ID: PERF-006-R`
+- **Thin community `Community 783`** (1 nodes): `Compatibility wrapper for ActionRoutingPhase.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 784`** (1 nodes): `Compatibility wrapper for apply_partial.`
+- **Thin community `Community 784`** (1 nodes): `Compatibility wrapper for ActionRoutingPhase.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 785`** (1 nodes): `Compatibility wrapper for ActionRoutingPhase.`
+- **Thin community `Community 785`** (1 nodes): `Authoritative mapping from EntityUpdate to changes dict.         Merged v5 logic`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 786`** (1 nodes): `Compatibility wrapper for ActionRoutingPhase.`
+- **Thin community `Community 786`** (1 nodes): `Low-level reconstruction bypasses frozen dataclass __init__ overhead.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 787`** (1 nodes): `Authoritative mapping from EntityUpdate to changes dict.         Merged v5 logic`
+- **Thin community `Community 787`** (1 nodes): `Phase 9: Routine, Biological Needs, and Salience Filtering.         VERIFIED v2:`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 788`** (1 nodes): `Low-level reconstruction bypasses frozen dataclass __init__ overhead.`
+- **Thin community `Community 788`** (1 nodes): `Phase 4.1: Strategic Intent Evaluation (Projects/Objectives).         Orchestrat`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 789`** (1 nodes): `Phase 9: Routine, Biological Needs, and Salience Filtering.         VERIFIED v2:`
+- **Thin community `Community 789`** (1 nodes): `Phase 9: Strategic interruption resistance and retention.         Logic ID: STRA`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 790`** (1 nodes): `Phase 4.1: Strategic Intent Evaluation (Projects/Objectives).         Orchestrat`
+- **Thin community `Community 790`** (1 nodes): `Record the final result of a project and apply learning effects.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 791`** (1 nodes): `Phase 9: Strategic interruption resistance and retention.         Logic ID: STRA`
+- **Thin community `Community 791`** (1 nodes): `VERIFIED v2: StrategicIntelligenceSystem.process_outcome`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 792`** (1 nodes): `Record the final result of a project and apply learning effects.`
+- **Thin community `Community 792`** (1 nodes): `Produce a collection of strategic intent updates for the next tick.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 793`** (1 nodes): `VERIFIED v2: StrategicIntelligenceSystem.process_outcome`
+- **Thin community `Community 793`** (1 nodes): `VERIFIED v2: StrategicIntelligenceSystem.derive_cognition_profile`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 794`** (1 nodes): `Produce a collection of strategic intent updates for the next tick.`
+- **Thin community `Community 794`** (1 nodes): `Derive a DirtySet from a StateUpdate.         M3 Law: This must be deterministic`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 795`** (1 nodes): `VERIFIED v2: StrategicIntelligenceSystem.derive_cognition_profile`
+- **Thin community `Community 795`** (1 nodes): `Validates an intent and produces the necessary updates.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 796`** (1 nodes): `Derive a DirtySet from a StateUpdate.         M3 Law: This must be deterministic`
+- **Thin community `Community 796`** (1 nodes): `Summarized world view.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 797`** (1 nodes): `Validates an intent and produces the necessary updates.`
+- **Thin community `Community 797`** (1 nodes): `Complete inspectable world view.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 798`** (1 nodes): `Summarized world view.`
+- **Thin community `Community 798`** (1 nodes): `Detailed entity model.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 799`** (1 nodes): `Complete inspectable world view.`
+- **Thin community `Community 799`** (1 nodes): `Detailed regional model.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 800`** (1 nodes): `Detailed entity model.`
+- **Thin community `Community 800`** (1 nodes): `Entity buys item from a nearby shop.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 801`** (1 nodes): `Detailed regional model.`
+- **Thin community `Community 801`** (1 nodes): `Entity sells item to a nearby shop.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 802`** (1 nodes): `Entity buys item from a nearby shop.`
+- **Thin community `Community 802`** (1 nodes): `Evaluate a move intent and produce an authoritative update dictionary.         I`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 803`** (1 nodes): `Entity sells item to a nearby shop.`
+- **Thin community `Community 803`** (1 nodes): `Check EXPLORE quests for proximity to target.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 804`** (1 nodes): `Evaluate a move intent and produce an authoritative update dictionary.         I`
+- **Thin community `Community 804`** (1 nodes): `Advance HUNT quests when an enemy is defeated.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 805`** (1 nodes): `Check EXPLORE quests for proximity to target.`
+- **Thin community `Community 805`** (1 nodes): `Enforces quest completion rules and emits authoritative reward intents.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 806`** (1 nodes): `Advance HUNT quests when an enemy is defeated.`
+- **Thin community `Community 806`** (1 nodes): `Returns a spatial index of active/alive entities.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 807`** (1 nodes): `Enforces quest completion rules and emits authoritative reward intents.`
+- **Thin community `Community 807`** (1 nodes): `Calculates Manhattan distance between two points.         Logic ID: COMB-001 (Ma`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 808`** (1 nodes): `Returns a spatial index of active/alive entities.`
+- **Thin community `Community 808`** (1 nodes): `Returns the region containing the given position.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 809`** (1 nodes): `Calculates Manhattan distance between two points.         Logic ID: COMB-001 (Ma`
+- **Thin community `Community 809`** (1 nodes): `V2 Authoritative Occupancy Rule:         Enforces Static Terrain (WALL), Buildin`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 810`** (1 nodes): `Returns the region containing the given position.`
+- **Thin community `Community 810`** (1 nodes): `Checks if the current region suppresses specific actions and enforces actor vali`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 811`** (1 nodes): `V2 Authoritative Occupancy Rule:         Enforces Static Terrain (WALL), Buildin`
+- **Thin community `Community 811`** (1 nodes): `Action Readiness Law: Every ENTITY_ACT requires 100.0 readiness.         Logic I`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 812`** (1 nodes): `Checks if the current region suppresses specific actions and enforces actor vali`
+- **Thin community `Community 812`** (1 nodes): `V2 Authoritative Movement Law:         Validates if entity has enough readiness`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 813`** (1 nodes): `Action Readiness Law: Every ENTITY_ACT requires 100.0 readiness.         Logic I`
+- **Thin community `Community 813`** (1 nodes): `Authoritative validation for a combat interaction.         Logic ID: COMB-004 (M`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 814`** (1 nodes): `V2 Authoritative Movement Law:         Validates if entity has enough readiness`
+- **Thin community `Community 814`** (1 nodes): `Validation for Area-of-Effect positioning and execution.         Logic ID: COMB-`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 815`** (1 nodes): `Authoritative validation for a combat interaction.         Logic ID: COMB-004 (M`
+- **Thin community `Community 815`** (1 nodes): `Pillar 8: Skill Execution Law.         Skills require cost and cooldown verifica`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 816`** (1 nodes): `Validation for Area-of-Effect positioning and execution.         Logic ID: COMB-`
+- **Thin community `Community 816`** (1 nodes): `Simple Bresenham-like LoS check for WALL/Building obstructions.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 817`** (1 nodes): `Pillar 8: Skill Execution Law.         Skills require cost and cooldown verifica`
+- **Thin community `Community 817`** (1 nodes): `Verify if attacker has clear elevation advantage (Terrain-based).`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 818`** (1 nodes): `Simple Bresenham-like LoS check for WALL/Building obstructions.`
+- **Thin community `Community 818`** (1 nodes): `Returns the current engagement record for an entity.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 819`** (1 nodes): `Verify if attacker has clear elevation advantage (Terrain-based).`
+- **Thin community `Community 819`** (1 nodes): `Authoritative geometric flanking check.         Returns: (is_flanked, is_surroun`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 820`** (1 nodes): `Returns the current engagement record for an entity.`
+- **Thin community `Community 820`** (1 nodes): `Verify if defender is behind wall cover relative to attacker.         Logic ID:`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 821`** (1 nodes): `Authoritative geometric flanking check.         Returns: (is_flanked, is_surroun`
+- **Thin community `Community 821`** (1 nodes): `Calculate movement/tie-breaking priority.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 822`** (1 nodes): `Verify if defender is behind wall cover relative to attacker.         Logic ID:`
+- **Thin community `Community 822`** (1 nodes): `Find hostile entities currently in melee engagement with this entity.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 823`** (1 nodes): `Calculate movement/tie-breaking priority.`
+- **Thin community `Community 823`** (1 nodes): `Find hostile entities that would be in melee engagement with this entity at a hy`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 824`** (1 nodes): `Find hostile entities currently in melee engagement with this entity.`
+- **Thin community `Community 824`** (1 nodes): `Return the ID of the entity occupying the specified tile.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 825`** (1 nodes): `Find hostile entities that would be in melee engagement with this entity at a hy`
+- **Thin community `Community 825`** (1 nodes): `Singular entry point for authoritative state transition refinement.         Logi`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 826`** (1 nodes): `Return the ID of the entity occupying the specified tile.`
+- **Thin community `Community 826`** (1 nodes): `Hardening Phase: Ensure DirtySet is always current.         Logic ID: PERF-006-R`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 827`** (1 nodes): `Singular entry point for authoritative state transition refinement.         Logi`
+- **Thin community `Community 827`** (1 nodes): `The root entry point for advancing the world state.         Fuses passive advanc`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 828`** (1 nodes): `Hardening Phase: Ensure DirtySet is always current.         Logic ID: PERF-006-R`
+- **Thin community `Community 828`** (1 nodes): `Compatibility wrapper for apply_partial.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 829`** (1 nodes): `The root entry point for advancing the world state.         Fuses passive advanc`
+- **Thin community `Community 829`** (1 nodes): `Compatibility wrapper for ActionRoutingPhase.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 830`** (1 nodes): `Compatibility wrapper for apply_partial.`
+- **Thin community `Community 830`** (1 nodes): `Compatibility wrapper for ActionRoutingPhase.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 831`** (1 nodes): `Compatibility wrapper for ActionRoutingPhase.`
+- **Thin community `Community 831`** (1 nodes): `Low-level reconstruction bypasses frozen dataclass __init__ overhead.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 832`** (1 nodes): `Compatibility wrapper for ActionRoutingPhase.`
+- **Thin community `Community 832`** (1 nodes): `Pillar 3: Fractional Armor Mitigation         Formula: damage = (atk * atk_mult)`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 833`** (1 nodes): `Low-level reconstruction bypasses frozen dataclass __init__ overhead.`
+- **Thin community `Community 833`** (1 nodes): `Calculates all tactical multipliers for an attack.         Consolidated from res`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 834`** (1 nodes): `Pillar 3: Fractional Armor Mitigation         Formula: damage = (atk * atk_mult)`
+- **Thin community `Community 834`** (1 nodes): `Phase 8: Calculate durability loss for attacker and defender.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 835`** (1 nodes): `Calculates all tactical multipliers for an attack.         Consolidated from res`
+- **Thin community `Community 835`** (1 nodes): `Resolves multiple attackers hitting a single defender in the same tick.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 836`** (1 nodes): `Phase 8: Calculate durability loss for attacker and defender.`
+- **Thin community `Community 836`** (1 nodes): `Calculates and returns a WoundUpdate if damage is sufficient.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 837`** (1 nodes): `Resolves multiple attackers hitting a single defender in the same tick.`
+- **Thin community `Community 837`** (1 nodes): `Determines the next tactical intent for an entity.         Bounded to local visi`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 838`** (1 nodes): `Calculates and returns a WoundUpdate if damage is sufficient.`
+- **Thin community `Community 838`** (1 nodes): `Public helper for deterministic target selection.         Matches legacy 'Tactic`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 839`** (1 nodes): `Determines the next tactical intent for an entity.         Bounded to local visi`
+- **Thin community `Community 839`** (1 nodes): `Max stamina = 50 + endurance * 5.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 840`** (1 nodes): `Public helper for deterministic target selection.         Matches legacy 'Tactic`
+- **Thin community `Community 840`** (1 nodes): `Returns the stamina cost for an attack action.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 841`** (1 nodes): `Max stamina = 50 + endurance * 5.`
+- **Thin community `Community 841`** (1 nodes): `Returns the stamina cost for a movement action.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 842`** (1 nodes): `Returns the stamina cost for an attack action.`
+- **Thin community `Community 842`** (1 nodes): `Returns the stamina cost for a harvest tick.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 843`** (1 nodes): `Returns the stamina cost for a movement action.`
+- **Thin community `Community 843`** (1 nodes): `Returns the stamina cost for using a skill.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 844`** (1 nodes): `Returns the stamina cost for a harvest tick.`
+- **Thin community `Community 844`** (1 nodes): `Check if entity has enough stamina for a skill.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 845`** (1 nodes): `Returns the stamina cost for using a skill.`
+- **Thin community `Community 845`** (1 nodes): `Check if entity is in exhaustion state.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 846`** (1 nodes): `Check if entity has enough stamina for a skill.`
+- **Thin community `Community 846`** (1 nodes): `Combat damage multiplier when exhausted.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 847`** (1 nodes): `Check if entity is in exhaustion state.`
+- **Thin community `Community 847`** (1 nodes): `Check if a single hit is massive enough to cause a wound.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 848`** (1 nodes): `Combat damage multiplier when exhausted.`
+- **Thin community `Community 848`** (1 nodes): `Create a wound record from a massive hit.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 849`** (1 nodes): `Check if a single hit is massive enough to cause a wound.`
+- **Thin community `Community 849`** (1 nodes): `Sum all active (unhealed) wound penalties.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 850`** (1 nodes): `Create a wound record from a massive hit.`
+- **Thin community `Community 850`** (1 nodes): `Sum all permanent scar penalties (lesser than wounds).`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 851`** (1 nodes): `Sum all active (unhealed) wound penalties.`
+- **Thin community `Community 851`** (1 nodes): `Heal a wound and create a scar. Returns (healed_wound, scar).`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 852`** (1 nodes): `Sum all permanent scar penalties (lesser than wounds).`
+- **Thin community `Community 852`** (1 nodes): `Check if entity is beyond its leash radius.         VERIFIED v2: mob_leash_radiu`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 853`** (1 nodes): `Heal a wound and create a scar. Returns (healed_wound, scar).`
+- **Thin community `Community 853`** (1 nodes): `Check if a chasing mob should abandon pursuit.         VERIFIED v2: mob_chase_gi`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 854`** (1 nodes): `Check if entity is beyond its leash radius.         VERIFIED v2: mob_leash_radiu`
+- **Thin community `Community 854`** (1 nodes): `Get the home position for return-to-camp behavior.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 855`** (1 nodes): `Check if a chasing mob should abandon pursuit.         VERIFIED v2: mob_chase_gi`
+- **Thin community `Community 855`** (1 nodes): `Check if entity has reached home.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 856`** (1 nodes): `Get the home position for return-to-camp behavior.`
+- **Thin community `Community 856`** (1 nodes): `Calculate perception-based discovery score.         VERIFIED v2: perception_disc`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 857`** (1 nodes): `Check if entity has reached home.`
+- **Thin community `Community 857`** (1 nodes): `Calculate diagnosis accuracy (0.0 to 1.0).         VERIFIED v2: wisdom_diagnosis`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 858`** (1 nodes): `Calculate perception-based discovery score.         VERIFIED v2: perception_disc`
+- **Thin community `Community 858`** (1 nodes): `Get movement cost for a tile based on terrain type.         VERIFIED v2: terrain`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 859`** (1 nodes): `Calculate diagnosis accuracy (0.0 to 1.0).         VERIFIED v2: wisdom_diagnosis`
+- **Thin community `Community 859`** (1 nodes): `Calculate total movement cost for a path.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 860`** (1 nodes): `Get movement cost for a tile based on terrain type.         VERIFIED v2: terrain`
+- **Thin community `Community 860`** (1 nodes): `Only switch targets if the new one is significantly better.         Uses margin`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 861`** (1 nodes): `Calculate total movement cost for a path.`
+- **Thin community `Community 861`** (1 nodes): `Physical: base_atk + strength * 0.8 * power         Magical:  base_atk + intelli`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 862`** (1 nodes): `Only switch targets if the new one is significantly better.         Uses margin`
+- **Thin community `Community 862`** (1 nodes): `Full effective stat recomputation:         base stats + gear + traits + wound pe`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 863`** (1 nodes): `Physical: base_atk + strength * 0.8 * power         Magical:  base_atk + intelli`
+- **Thin community `Community 863`** (1 nodes): `Apply regional effects to entities and update world markers.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 864`** (1 nodes): `Full effective stat recomputation:         base stats + gear + traits + wound pe`
+- **Thin community `Community 864`** (1 nodes): `Law 300.1: Actor Validity.          Invalid actors may not submit any authoritat`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 865`** (1 nodes): `Apply regional effects to entities and update world markers.`
+- **Thin community `Community 865`** (1 nodes): `Generates a stable, order-independent composite seed.         Logic ID: INFRA-10`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 866`** (1 nodes): `Law 300.1: Actor Validity.          Invalid actors may not submit any authoritat`
+- **Thin community `Community 866`** (1 nodes): `Infer blockers based on recent failures.         Logic ID: STRAT-191 (Blockers h`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 867`** (1 nodes): `Generates a stable, order-independent composite seed.         Logic ID: INFRA-10`
+- **Thin community `Community 867`** (1 nodes): `Produce a StrategicUpdate containing blockers for missing requirements.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 868`** (1 nodes): `Infer blockers based on recent failures.         Logic ID: STRAT-191 (Blockers h`
+- **Thin community `Community 868`** (1 nodes): `Fused pass for strategic intelligence (Blockers, Concerns, Intents).         Log`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 869`** (1 nodes): `Produce a StrategicUpdate containing blockers for missing requirements.`
+- **Thin community `Community 869`** (1 nodes): `Resolve strategic blockers that are satisfied by the current or pending`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 870`** (1 nodes): `Fused pass for strategic intelligence (Blockers, Concerns, Intents).         Log`
+- **Thin community `Community 870`** (1 nodes): `Phase 9: Routine, Biological Needs, and Salience Filtering.         VERIFIED v2:`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 871`** (1 nodes): `Resolve strategic blockers that are satisfied by the current or pending`
+- **Thin community `Community 871`** (1 nodes): `Phase 4.1: Strategic Intent Evaluation (Projects/Objectives).         Orchestrat`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 872`** (1 nodes): `Phase 9: Routine, Biological Needs, and Salience Filtering.         VERIFIED v2:`
+- **Thin community `Community 872`** (1 nodes): `Phase 9: Strategic interruption resistance and retention.         Logic ID: STRA`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 873`** (1 nodes): `Phase 4.1: Strategic Intent Evaluation (Projects/Objectives).         Orchestrat`
+- **Thin community `Community 873`** (1 nodes): `Record the final result of a project and apply learning effects.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 874`** (1 nodes): `Phase 9: Strategic interruption resistance and retention.         Logic ID: STRA`
+- **Thin community `Community 874`** (1 nodes): `Produce a collection of strategic intent updates for the next tick.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 875`** (1 nodes): `Record the final result of a project and apply learning effects.`
+- **Thin community `Community 875`** (1 nodes): `VERIFIED v2: StrategicIntelligenceSystem.derive_cognition_profile`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 876`** (1 nodes): `Produce a collection of strategic intent updates for the next tick.`
+- **Thin community `Community 876`** (1 nodes): `Infer blockers based on recent failures.         Logic ID: STRAT-191 (Blockers h`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 877`** (1 nodes): `VERIFIED v2: StrategicIntelligenceSystem.derive_cognition_profile`
+- **Thin community `Community 877`** (1 nodes): `Produce a StrategicUpdate containing blockers for missing requirements.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 878`** (1 nodes): `Infer blockers based on recent failures.         Logic ID: STRAT-191 (Blockers h`
+- **Thin community `Community 878`** (1 nodes): `Fused pass for strategic intelligence (Blockers, Concerns, Intents).         Log`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 879`** (1 nodes): `Produce a StrategicUpdate containing blockers for missing requirements.`
+- **Thin community `Community 879`** (1 nodes): `Resolve strategic blockers that are satisfied by the current or pending`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 880`** (1 nodes): `Fused pass for strategic intelligence (Blockers, Concerns, Intents).         Log`
+- **Thin community `Community 880`** (1 nodes): `Phase 9: Routine, Biological Needs, and Salience Filtering.         VERIFIED v2:`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 881`** (1 nodes): `Resolve strategic blockers that are satisfied by the current or pending`
+- **Thin community `Community 881`** (1 nodes): `Phase 4.1: Strategic Intent Evaluation (Projects/Objectives).         Orchestrat`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 882`** (1 nodes): `Phase 9: Routine, Biological Needs, and Salience Filtering.         VERIFIED v2:`
+- **Thin community `Community 882`** (1 nodes): `Phase 9: Strategic interruption resistance and retention.         Logic ID: STRA`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 883`** (1 nodes): `Phase 4.1: Strategic Intent Evaluation (Projects/Objectives).         Orchestrat`
+- **Thin community `Community 883`** (1 nodes): `Record the final result of a project and apply learning effects.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 884`** (1 nodes): `Phase 9: Strategic interruption resistance and retention.         Logic ID: STRA`
+- **Thin community `Community 884`** (1 nodes): `VERIFIED v2: StrategicIntelligenceSystem.process_outcome`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 885`** (1 nodes): `Record the final result of a project and apply learning effects.`
+- **Thin community `Community 885`** (1 nodes): `Produce a collection of strategic intent updates for the next tick.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 886`** (1 nodes): `VERIFIED v2: StrategicIntelligenceSystem.process_outcome`
+- **Thin community `Community 886`** (1 nodes): `VERIFIED v2: StrategicIntelligenceSystem.derive_cognition_profile`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 887`** (1 nodes): `Produce a collection of strategic intent updates for the next tick.`
+- **Thin community `Community 887`** (1 nodes): `Compatibility wrapper for apply_partial.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 888`** (1 nodes): `VERIFIED v2: StrategicIntelligenceSystem.derive_cognition_profile`
+- **Thin community `Community 888`** (1 nodes): `Compatibility wrapper for ActionRoutingPhase.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 889`** (1 nodes): `Compatibility wrapper for apply_partial.`
+- **Thin community `Community 889`** (1 nodes): `Authoritative mapping from EntityUpdate to changes dict.         Merged v5 logic`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 890`** (1 nodes): `Compatibility wrapper for ActionRoutingPhase.`
+- **Thin community `Community 890`** (1 nodes): `Low-level reconstruction bypasses frozen dataclass __init__ overhead.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 891`** (1 nodes): `Authoritative mapping from EntityUpdate to changes dict.         Merged v5 logic`
+- **Thin community `Community 891`** (1 nodes): `Returns IDs of entities within radius of pos.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 892`** (1 nodes): `Low-level reconstruction bypasses frozen dataclass __init__ overhead.`
+- **Thin community `Community 892`** (1 nodes): `Returns IDs of entities within the rectangular bounds.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 893`** (1 nodes): `Returns IDs of entities within radius of pos.`
+- **Thin community `Community 893`** (1 nodes): `Returns IDs of resource nodes within radius of pos.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 894`** (1 nodes): `Returns IDs of entities within the rectangular bounds.`
+- **Thin community `Community 894`** (1 nodes): `Returns the building at a specific tile coordinate.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 895`** (1 nodes): `Returns IDs of resource nodes within radius of pos.`
+- **Thin community `Community 895`** (1 nodes): `Returns a map of (x, y) to entity ID for all active/alive entities.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 896`** (1 nodes): `Returns the building at a specific tile coordinate.`
+- **Thin community `Community 896`** (1 nodes): `Returns the resource node at a specific position.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 897`** (1 nodes): `Returns a map of (x, y) to entity ID for all active/alive entities.`
+- **Thin community `Community 897`** (1 nodes): `Returns the ground item at a specific position.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 898`** (1 nodes): `Returns the resource node at a specific position.`
+- **Thin community `Community 898`** (1 nodes): `Returns the region containing the given position.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 899`** (1 nodes): `Returns the ground item at a specific position.`
+- **Thin community `Community 899`** (1 nodes): `Returns the region containing a building, using a cached map.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 900`** (1 nodes): `Returns the region containing the given position.`
+- **Thin community `Community 900`** (1 nodes): `Evaluate a move intent and produce an authoritative update dictionary.         I`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 901`** (1 nodes): `Returns the region containing a building, using a cached map.`
+- **Thin community `Community 901`** (1 nodes): `Hardening Phase: Ensure DirtySet is always current.         Logic ID: PERF-006-R`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 902`** (1 nodes): `Evaluate a move intent and produce an authoritative update dictionary.         I`
+- **Thin community `Community 902`** (1 nodes): `Compatibility wrapper for apply_partial.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 903`** (1 nodes): `Hardening Phase: Ensure DirtySet is always current.         Logic ID: PERF-006-R`
+- **Thin community `Community 903`** (1 nodes): `Compatibility wrapper for ActionRoutingPhase.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 904`** (1 nodes): `Compatibility wrapper for apply_partial.`
+- **Thin community `Community 904`** (1 nodes): `Authoritative mapping from EntityUpdate to changes dict.         Merged v5 logic`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 905`** (1 nodes): `Compatibility wrapper for ActionRoutingPhase.`
+- **Thin community `Community 905`** (1 nodes): `Low-level reconstruction bypasses frozen dataclass __init__ overhead.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 906`** (1 nodes): `Authoritative mapping from EntityUpdate to changes dict.         Merged v5 logic`
+- **Thin community `Community 906`** (1 nodes): `Calculates Manhattan distance between two points.         Logic ID: COMB-001 (Ma`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 907`** (1 nodes): `Low-level reconstruction bypasses frozen dataclass __init__ overhead.`
+- **Thin community `Community 907`** (1 nodes): `Returns the region containing the given position.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 908`** (1 nodes): `Calculates Manhattan distance between two points.         Logic ID: COMB-001 (Ma`
+- **Thin community `Community 908`** (1 nodes): `V2 Authoritative Occupancy Rule:         Enforces Static Terrain (WALL), Buildin`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 909`** (1 nodes): `Returns the region containing the given position.`
+- **Thin community `Community 909`** (1 nodes): `Checks if the current region suppresses specific actions and enforces actor vali`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 910`** (1 nodes): `V2 Authoritative Occupancy Rule:         Enforces Static Terrain (WALL), Buildin`
+- **Thin community `Community 910`** (1 nodes): `Action Readiness Law: Every ENTITY_ACT requires 100.0 readiness.         Logic I`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 911`** (1 nodes): `Checks if the current region suppresses specific actions and enforces actor vali`
+- **Thin community `Community 911`** (1 nodes): `V2 Authoritative Movement Law:         Validates if entity has enough readiness`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 912`** (1 nodes): `Action Readiness Law: Every ENTITY_ACT requires 100.0 readiness.         Logic I`
+- **Thin community `Community 912`** (1 nodes): `Authoritative validation for a combat interaction.         Logic ID: COMB-004 (M`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 913`** (1 nodes): `V2 Authoritative Movement Law:         Validates if entity has enough readiness`
+- **Thin community `Community 913`** (1 nodes): `Validation for Area-of-Effect positioning and execution.         Logic ID: COMB-`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 914`** (1 nodes): `Authoritative validation for a combat interaction.         Logic ID: COMB-004 (M`
+- **Thin community `Community 914`** (1 nodes): `Pillar 8: Skill Execution Law.         Skills require cost and cooldown verifica`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 915`** (1 nodes): `Validation for Area-of-Effect positioning and execution.         Logic ID: COMB-`
+- **Thin community `Community 915`** (1 nodes): `Simple Bresenham-like LoS check for WALL/Building obstructions.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 916`** (1 nodes): `Pillar 8: Skill Execution Law.         Skills require cost and cooldown verifica`
+- **Thin community `Community 916`** (1 nodes): `Verify if attacker has clear elevation advantage (Terrain-based).`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 917`** (1 nodes): `Simple Bresenham-like LoS check for WALL/Building obstructions.`
+- **Thin community `Community 917`** (1 nodes): `Returns the current engagement record for an entity.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 918`** (1 nodes): `Verify if attacker has clear elevation advantage (Terrain-based).`
+- **Thin community `Community 918`** (1 nodes): `Verify if defender is behind wall cover relative to attacker.         Logic ID:`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 919`** (1 nodes): `Returns the current engagement record for an entity.`
+- **Thin community `Community 919`** (1 nodes): `Calculate movement/tie-breaking priority.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 920`** (1 nodes): `Verify if defender is behind wall cover relative to attacker.         Logic ID:`
+- **Thin community `Community 920`** (1 nodes): `Find hostile entities currently in melee engagement with this entity.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 921`** (1 nodes): `Calculate movement/tie-breaking priority.`
+- **Thin community `Community 921`** (1 nodes): `Find hostile entities that would be in melee engagement with this entity at a hy`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 922`** (1 nodes): `Find hostile entities currently in melee engagement with this entity.`
+- **Thin community `Community 922`** (1 nodes): `Return the ID of the entity occupying the specified tile.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 923`** (1 nodes): `Find hostile entities that would be in melee engagement with this entity at a hy`
+- **Thin community `Community 923`** (1 nodes): `Hardening Phase: Ensure DirtySet is always current.         Logic ID: PERF-006-R`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 924`** (1 nodes): `Return the ID of the entity occupying the specified tile.`
+- **Thin community `Community 924`** (1 nodes): `Singular entry point for authoritative state transition refinement.         Logi`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
 - **Thin community `Community 925`** (1 nodes): `Hardening Phase: Ensure DirtySet is always current.         Logic ID: PERF-006-R`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 926`** (1 nodes): `Singular entry point for authoritative state transition refinement.         Logi`
+- **Thin community `Community 926`** (1 nodes): `Derive a DirtySet from a StateUpdate.         M3 Law: This must be deterministic`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 927`** (1 nodes): `Hardening Phase: Ensure DirtySet is always current.         Logic ID: PERF-006-R`
+- **Thin community `Community 927`** (1 nodes): `Derive a DirtySet from a StateUpdate.         M3 Law: This must be deterministic`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 928`** (1 nodes): `Derive a DirtySet from a StateUpdate.         M3 Law: This must be deterministic`
+- **Thin community `Community 928`** (1 nodes): `Calculate total weight of all items in inventory.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 929`** (1 nodes): `Derive a DirtySet from a StateUpdate.         M3 Law: This must be deterministic`
+- **Thin community `Community 929`** (1 nodes): `Check if an item can be added without exceeding slots or weight.         Logic I`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 930`** (1 nodes): `Calculate total weight of all items in inventory.`
+- **Thin community `Community 930`** (1 nodes): `Check if a list of item stacks can be added without exceeding slots or weight.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 931`** (1 nodes): `Check if an item can be added without exceeding slots or weight.         Logic I`
+- **Thin community `Community 931`** (1 nodes): `Check capacity after accounting for item removals (Phase 8).`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 932`** (1 nodes): `Check if a list of item stacks can be added without exceeding slots or weight.`
+- **Thin community `Community 932`** (1 nodes): `Check if an item can be equipped in the specified slot.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 933`** (1 nodes): `Check capacity after accounting for item removals (Phase 8).`
+- **Thin community `Community 933`** (1 nodes): `Apply authoritative updates to inventory, merging stacks and enforcing limits.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 934`** (1 nodes): `Check if an item can be equipped in the specified slot.`
+- **Thin community `Community 934`** (1 nodes): `Determines the next tactical intent for an entity.         Bounded to local visi`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 935`** (1 nodes): `Apply authoritative updates to inventory, merging stacks and enforcing limits.`
+- **Thin community `Community 935`** (1 nodes): `Public helper for deterministic target selection.         Matches legacy 'Tactic`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 936`** (1 nodes): `Determines the next tactical intent for an entity.         Bounded to local visi`
+- **Thin community `Community 936`** (1 nodes): `Infer blockers based on recent failures.         Logic ID: STRAT-191 (Blockers h`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 937`** (1 nodes): `Public helper for deterministic target selection.         Matches legacy 'Tactic`
+- **Thin community `Community 937`** (1 nodes): `Produce a StrategicUpdate containing blockers for missing requirements.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 938`** (1 nodes): `Infer blockers based on recent failures.         Logic ID: STRAT-191 (Blockers h`
+- **Thin community `Community 938`** (1 nodes): `Fused pass for strategic intelligence (Blockers, Concerns, Intents).         Log`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 939`** (1 nodes): `Produce a StrategicUpdate containing blockers for missing requirements.`
+- **Thin community `Community 939`** (1 nodes): `Resolve strategic blockers that are satisfied by the current or pending`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 940`** (1 nodes): `Fused pass for strategic intelligence (Blockers, Concerns, Intents).         Log`
+- **Thin community `Community 940`** (1 nodes): `Phase 9: Routine, Biological Needs, and Salience Filtering.         VERIFIED v2:`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 941`** (1 nodes): `Resolve strategic blockers that are satisfied by the current or pending`
+- **Thin community `Community 941`** (1 nodes): `Phase 4.1: Strategic Intent Evaluation (Projects/Objectives).         Orchestrat`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 942`** (1 nodes): `Phase 9: Routine, Biological Needs, and Salience Filtering.         VERIFIED v2:`
+- **Thin community `Community 942`** (1 nodes): `Phase 9: Strategic interruption resistance and retention.         Logic ID: STRA`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 943`** (1 nodes): `Phase 4.1: Strategic Intent Evaluation (Projects/Objectives).         Orchestrat`
+- **Thin community `Community 943`** (1 nodes): `Record the final result of a project and apply learning effects.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 944`** (1 nodes): `Phase 9: Strategic interruption resistance and retention.         Logic ID: STRA`
+- **Thin community `Community 944`** (1 nodes): `VERIFIED v2: StrategicIntelligenceSystem.process_outcome`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 945`** (1 nodes): `Record the final result of a project and apply learning effects.`
+- **Thin community `Community 945`** (1 nodes): `Produce a collection of strategic intent updates for the next tick.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 946`** (1 nodes): `VERIFIED v2: StrategicIntelligenceSystem.process_outcome`
+- **Thin community `Community 946`** (1 nodes): `VERIFIED v2: StrategicIntelligenceSystem.derive_cognition_profile`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 947`** (1 nodes): `Produce a collection of strategic intent updates for the next tick.`
+- **Thin community `Community 947`** (1 nodes): `Compatibility wrapper for ActionRoutingPhase.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 948`** (1 nodes): `VERIFIED v2: StrategicIntelligenceSystem.derive_cognition_profile`
+- **Thin community `Community 948`** (1 nodes): `Authoritative mapping from EntityUpdate to changes dict.         Merged v5 logic`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 949`** (1 nodes): `Compatibility wrapper for ActionRoutingPhase.`
+- **Thin community `Community 949`** (1 nodes): `Low-level reconstruction bypasses frozen dataclass __init__ overhead.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 950`** (1 nodes): `Authoritative mapping from EntityUpdate to changes dict.         Merged v5 logic`
+- **Thin community `Community 950`** (1 nodes): `Law 300: Action Routing.          Responsibilities:             - route ENTITY_A`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 951`** (1 nodes): `Low-level reconstruction bypasses frozen dataclass __init__ overhead.`
+- **Thin community `Community 951`** (1 nodes): `Derive a DirtySet from a StateUpdate.         M3 Law: This must be deterministic`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 952`** (1 nodes): `Law 300: Action Routing.          Responsibilities:             - route ENTITY_A`
+- **Thin community `Community 952`** (1 nodes): `Calculates Manhattan distance between two points.         Logic ID: COMB-001 (Ma`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 953`** (1 nodes): `Derive a DirtySet from a StateUpdate.         M3 Law: This must be deterministic`
+- **Thin community `Community 953`** (1 nodes): `Returns the region containing the given position.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 954`** (1 nodes): `Calculates Manhattan distance between two points.         Logic ID: COMB-001 (Ma`
+- **Thin community `Community 954`** (1 nodes): `V2 Authoritative Occupancy Rule:         Enforces Static Terrain (WALL), Buildin`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 955`** (1 nodes): `Returns the region containing the given position.`
+- **Thin community `Community 955`** (1 nodes): `Checks if the current region suppresses specific actions and enforces actor vali`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 956`** (1 nodes): `V2 Authoritative Occupancy Rule:         Enforces Static Terrain (WALL), Buildin`
+- **Thin community `Community 956`** (1 nodes): `Action Readiness Law: Every ENTITY_ACT requires 100.0 readiness.         Logic I`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 957`** (1 nodes): `Checks if the current region suppresses specific actions and enforces actor vali`
+- **Thin community `Community 957`** (1 nodes): `V2 Authoritative Movement Law:         Validates if entity has enough readiness`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 958`** (1 nodes): `Action Readiness Law: Every ENTITY_ACT requires 100.0 readiness.         Logic I`
+- **Thin community `Community 958`** (1 nodes): `Authoritative validation for a combat interaction.         Logic ID: COMB-004 (M`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 959`** (1 nodes): `V2 Authoritative Movement Law:         Validates if entity has enough readiness`
+- **Thin community `Community 959`** (1 nodes): `Simple Bresenham-like LoS check for WALL/Building obstructions.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 960`** (1 nodes): `Authoritative validation for a combat interaction.         Logic ID: COMB-004 (M`
+- **Thin community `Community 960`** (1 nodes): `Verify if attacker has clear elevation advantage (Terrain-based).`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 961`** (1 nodes): `Simple Bresenham-like LoS check for WALL/Building obstructions.`
+- **Thin community `Community 961`** (1 nodes): `Returns the current engagement record for an entity.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 962`** (1 nodes): `Verify if attacker has clear elevation advantage (Terrain-based).`
+- **Thin community `Community 962`** (1 nodes): `Authoritative geometric flanking check.         Returns: (is_flanked, is_surroun`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 963`** (1 nodes): `Returns the current engagement record for an entity.`
+- **Thin community `Community 963`** (1 nodes): `Verify if defender is behind wall cover relative to attacker.         Logic ID:`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 964`** (1 nodes): `Authoritative geometric flanking check.         Returns: (is_flanked, is_surroun`
+- **Thin community `Community 964`** (1 nodes): `Calculate movement/tie-breaking priority.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 965`** (1 nodes): `Verify if defender is behind wall cover relative to attacker.         Logic ID:`
+- **Thin community `Community 965`** (1 nodes): `Find hostile entities currently in melee engagement with this entity.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 966`** (1 nodes): `Calculate movement/tie-breaking priority.`
+- **Thin community `Community 966`** (1 nodes): `Return the ID of the entity occupying the specified tile.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 967`** (1 nodes): `Find hostile entities currently in melee engagement with this entity.`
+- **Thin community `Community 967`** (1 nodes): `Hardening Phase: Ensure DirtySet is always current.         Logic ID: PERF-006-R`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 968`** (1 nodes): `Return the ID of the entity occupying the specified tile.`
+- **Thin community `Community 968`** (1 nodes): `The root entry point for advancing the world state.         Fuses passive advanc`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 969`** (1 nodes): `Hardening Phase: Ensure DirtySet is always current.         Logic ID: PERF-006-R`
+- **Thin community `Community 969`** (1 nodes): `Compatibility wrapper for apply_partial.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 970`** (1 nodes): `The root entry point for advancing the world state.         Fuses passive advanc`
+- **Thin community `Community 970`** (1 nodes): `Compatibility wrapper for ActionRoutingPhase.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 971`** (1 nodes): `Compatibility wrapper for apply_partial.`
+- **Thin community `Community 971`** (1 nodes): `Compatibility wrapper for ActionRoutingPhase.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 972`** (1 nodes): `Compatibility wrapper for ActionRoutingPhase.`
+- **Thin community `Community 972`** (1 nodes): `Authoritative mapping from EntityUpdate to changes dict.         Merged v5 logic`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 973`** (1 nodes): `Compatibility wrapper for ActionRoutingPhase.`
+- **Thin community `Community 973`** (1 nodes): `Low-level reconstruction bypasses frozen dataclass __init__ overhead.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 974`** (1 nodes): `Authoritative mapping from EntityUpdate to changes dict.         Merged v5 logic`
+- **Thin community `Community 974`** (1 nodes): `Max stamina = 50 + endurance * 5.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 975`** (1 nodes): `Low-level reconstruction bypasses frozen dataclass __init__ overhead.`
+- **Thin community `Community 975`** (1 nodes): `Returns the stamina cost for an attack action.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 976`** (1 nodes): `Max stamina = 50 + endurance * 5.`
+- **Thin community `Community 976`** (1 nodes): `Returns the stamina cost for a movement action.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 977`** (1 nodes): `Returns the stamina cost for an attack action.`
+- **Thin community `Community 977`** (1 nodes): `Returns the stamina cost for a harvest tick.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 978`** (1 nodes): `Returns the stamina cost for a movement action.`
+- **Thin community `Community 978`** (1 nodes): `Returns the stamina cost for using a skill.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 979`** (1 nodes): `Returns the stamina cost for a harvest tick.`
+- **Thin community `Community 979`** (1 nodes): `Check if entity has enough stamina for a skill.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 980`** (1 nodes): `Returns the stamina cost for using a skill.`
+- **Thin community `Community 980`** (1 nodes): `Check if entity is in exhaustion state.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 981`** (1 nodes): `Check if entity has enough stamina for a skill.`
+- **Thin community `Community 981`** (1 nodes): `Combat damage multiplier when exhausted.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 982`** (1 nodes): `Check if entity is in exhaustion state.`
+- **Thin community `Community 982`** (1 nodes): `Returns the stamina delta for passive/rest regeneration.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 983`** (1 nodes): `Combat damage multiplier when exhausted.`
+- **Thin community `Community 983`** (1 nodes): `Returns the resource node at a specific position.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 984`** (1 nodes): `Returns the stamina delta for passive/rest regeneration.`
+- **Thin community `Community 984`** (1 nodes): `Returns the corpse at a specific position.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 985`** (1 nodes): `Returns the resource node at a specific position.`
+- **Thin community `Community 985`** (1 nodes): `Returns the ground item at a specific position.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 986`** (1 nodes): `Returns the corpse at a specific position.`
+- **Thin community `Community 986`** (1 nodes): `Returns the region containing the given position.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 987`** (1 nodes): `Returns the ground item at a specific position.`
+- **Thin community `Community 987`** (1 nodes): `Returns the region containing a building, using a cached map.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 988`** (1 nodes): `Returns the region containing the given position.`
+- **Thin community `Community 988`** (1 nodes): `Retrieves or creates a SpatialGrid for the given state.         Uses a per-objec`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 989`** (1 nodes): `Returns the region containing a building, using a cached map.`
+- **Thin community `Community 989`** (1 nodes): `Fast lookup for the region containing a position.         Uses a per-object regi`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 990`** (1 nodes): `Retrieves or creates a SpatialGrid for the given state.         Uses a per-objec`
+- **Thin community `Community 990`** (1 nodes): `Finds the trauma score of the region containing the given position.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 991`** (1 nodes): `Fast lookup for the region containing a position.         Uses a per-object regi`
+- **Thin community `Community 991`** (1 nodes): `Registers a scorer for a specific goal kind.         Logic ID: RPG-GOAL-001`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 992`** (1 nodes): `Finds the trauma score of the region containing the given position.`
+- **Thin community `Community 992`** (1 nodes): `Returns penalties based on active regional modifiers.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 993`** (1 nodes): `Registers a scorer for a specific goal kind.         Logic ID: RPG-GOAL-001`
+- **Thin community `Community 993`** (1 nodes): `Propagates the leader's current objective to all active party members.         I`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 994`** (1 nodes): `Returns penalties based on active regional modifiers.`
+- **Thin community `Community 994`** (1 nodes): `Ensures the shared party target is still alive and valid.         Clears if targ`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 995`** (1 nodes): `Propagates the leader's current objective to all active party members.         I`
+- **Thin community `Community 995`** (1 nodes): `Creates a high-priority directive for all party members.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 996`** (1 nodes): `Ensures the shared party target is still alive and valid.         Clears if targ`
+- **Thin community `Community 996`** (1 nodes): `Infer blockers based on recent failures.         Logic ID: STRAT-191 (Blockers h`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 997`** (1 nodes): `Creates a high-priority directive for all party members.`
+- **Thin community `Community 997`** (1 nodes): `Produce a StrategicUpdate containing blockers for missing requirements.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 998`** (1 nodes): `Infer blockers based on recent failures.         Logic ID: STRAT-191 (Blockers h`
+- **Thin community `Community 998`** (1 nodes): `Fused pass for strategic intelligence (Blockers, Concerns, Intents).         Log`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 999`** (1 nodes): `Produce a StrategicUpdate containing blockers for missing requirements.`
+- **Thin community `Community 999`** (1 nodes): `Resolve strategic blockers that are satisfied by the current or pending`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1000`** (1 nodes): `Fused pass for strategic intelligence (Blockers, Concerns, Intents).         Log`
+- **Thin community `Community 1000`** (1 nodes): `Phase 9: Routine, Biological Needs, and Salience Filtering.         VERIFIED v2:`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1001`** (1 nodes): `Resolve strategic blockers that are satisfied by the current or pending`
+- **Thin community `Community 1001`** (1 nodes): `Phase 4.1: Strategic Intent Evaluation (Projects/Objectives).         Orchestrat`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1002`** (1 nodes): `Phase 9: Routine, Biological Needs, and Salience Filtering.         VERIFIED v2:`
+- **Thin community `Community 1002`** (1 nodes): `Phase 9: Strategic interruption resistance and retention.         Logic ID: STRA`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1003`** (1 nodes): `Phase 4.1: Strategic Intent Evaluation (Projects/Objectives).         Orchestrat`
+- **Thin community `Community 1003`** (1 nodes): `Record the final result of a project and apply learning effects.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1004`** (1 nodes): `Phase 9: Strategic interruption resistance and retention.         Logic ID: STRA`
+- **Thin community `Community 1004`** (1 nodes): `VERIFIED v2: StrategicIntelligenceSystem.process_outcome`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1005`** (1 nodes): `Record the final result of a project and apply learning effects.`
+- **Thin community `Community 1005`** (1 nodes): `Produce a collection of strategic intent updates for the next tick.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1006`** (1 nodes): `VERIFIED v2: StrategicIntelligenceSystem.process_outcome`
+- **Thin community `Community 1006`** (1 nodes): `VERIFIED v2: StrategicIntelligenceSystem.derive_cognition_profile`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1007`** (1 nodes): `Produce a collection of strategic intent updates for the next tick.`
+- **Thin community `Community 1010`** (1 nodes): `The root entry point for advancing the world state.         Fuses passive advanc`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1008`** (1 nodes): `VERIFIED v2: StrategicIntelligenceSystem.derive_cognition_profile`
+- **Thin community `Community 1011`** (1 nodes): `Compatibility wrapper for ActionRoutingPhase.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1012`** (1 nodes): `The root entry point for advancing the world state.         Fuses passive advanc`
+- **Thin community `Community 1012`** (1 nodes): `Authoritative mapping from EntityUpdate to changes dict.         Merged v5 logic`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1013`** (1 nodes): `Compatibility wrapper for ActionRoutingPhase.`
+- **Thin community `Community 1013`** (1 nodes): `Low-level reconstruction bypasses frozen dataclass __init__ overhead.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1014`** (1 nodes): `Authoritative mapping from EntityUpdate to changes dict.         Merged v5 logic`
+- **Thin community `Community 1014`** (1 nodes): `Check if an item can be added without exceeding slots or weight.         Logic I`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1015`** (1 nodes): `Low-level reconstruction bypasses frozen dataclass __init__ overhead.`
+- **Thin community `Community 1015`** (1 nodes): `Check if a list of item stacks can be added without exceeding slots or weight.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1016`** (1 nodes): `Check if an item can be added without exceeding slots or weight.         Logic I`
+- **Thin community `Community 1016`** (1 nodes): `Check capacity after accounting for item removals (Phase 8).`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1017`** (1 nodes): `Check if a list of item stacks can be added without exceeding slots or weight.`
+- **Thin community `Community 1017`** (1 nodes): `Check if an item can be equipped in the specified slot.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1018`** (1 nodes): `Check capacity after accounting for item removals (Phase 8).`
+- **Thin community `Community 1018`** (1 nodes): `Apply authoritative updates to inventory, merging stacks and enforcing limits.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1019`** (1 nodes): `Check if an item can be equipped in the specified slot.`
+- **Thin community `Community 1019`** (1 nodes): `Milestone D Law: Property-based access to the canonical neighbor view.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1020`** (1 nodes): `Apply authoritative updates to inventory, merging stacks and enforcing limits.`
+- **Thin community `Community 1020`** (1 nodes): `Compatibility wrapper for ActionRoutingPhase.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1021`** (1 nodes): `Milestone D Law: Property-based access to the canonical neighbor view.`
+- **Thin community `Community 1021`** (1 nodes): `Compatibility wrapper for ActionRoutingPhase.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1022`** (1 nodes): `Compatibility wrapper for ActionRoutingPhase.`
+- **Thin community `Community 1022`** (1 nodes): `Authoritative mapping from EntityUpdate to changes dict.         Merged v5 logic`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1023`** (1 nodes): `Compatibility wrapper for ActionRoutingPhase.`
+- **Thin community `Community 1023`** (1 nodes): `Low-level reconstruction bypasses frozen dataclass __init__ overhead.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1024`** (1 nodes): `Authoritative mapping from EntityUpdate to changes dict.         Merged v5 logic`
+- **Thin community `Community 1024`** (1 nodes): `Derive a DirtySet from a StateUpdate.         M3 Law: This must be deterministic`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1025`** (1 nodes): `Low-level reconstruction bypasses frozen dataclass __init__ overhead.`
+- **Thin community `Community 1025`** (1 nodes): `Helper to merge all contingent updates from a transaction result into an entity`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1026`** (1 nodes): `Derive a DirtySet from a StateUpdate.         M3 Law: This must be deterministic`
+- **Thin community `Community 1026`** (1 nodes): `Helper to apply world side effects from a successful resolution.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1027`** (1 nodes): `Helper to merge all contingent updates from a transaction result into an entity`
+- **Thin community `Community 1027`** (1 nodes): `Verify if attacker has clear elevation advantage (Terrain-based).`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1028`** (1 nodes): `Helper to apply world side effects from a successful resolution.`
+- **Thin community `Community 1028`** (1 nodes): `Authoritative geometric flanking check.         Returns: (is_flanked, is_surroun`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1029`** (1 nodes): `Verify if attacker has clear elevation advantage (Terrain-based).`
+- **Thin community `Community 1029`** (1 nodes): `Verify if defender is behind wall cover relative to attacker.         Logic ID:`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1030`** (1 nodes): `Authoritative geometric flanking check.         Returns: (is_flanked, is_surroun`
+- **Thin community `Community 1030`** (1 nodes): `Calculate movement/tie-breaking priority.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1031`** (1 nodes): `Verify if defender is behind wall cover relative to attacker.         Logic ID:`
+- **Thin community `Community 1031`** (1 nodes): `Find hostile entities currently in melee engagement with this entity.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1032`** (1 nodes): `Calculate movement/tie-breaking priority.`
+- **Thin community `Community 1032`** (1 nodes): `Return the ID of the entity occupying the specified tile.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1033`** (1 nodes): `Find hostile entities currently in melee engagement with this entity.`
+- **Thin community `Community 1033`** (1 nodes): `Singular entry point for authoritative state transition refinement.         Logi`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1034`** (1 nodes): `Return the ID of the entity occupying the specified tile.`
+- **Thin community `Community 1034`** (1 nodes): `Hardening Phase: Ensure DirtySet is always current.         Logic ID: PERF-006-R`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1035`** (1 nodes): `Singular entry point for authoritative state transition refinement.         Logi`
+- **Thin community `Community 1035`** (1 nodes): `Apply only passive per-tick decay/advancement logic.         Optimized v2.5: Red`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1036`** (1 nodes): `Hardening Phase: Ensure DirtySet is always current.         Logic ID: PERF-006-R`
+- **Thin community `Community 1036`** (1 nodes): `Apply only the specified updates to an already-passively-advanced state.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1037`** (1 nodes): `Apply only passive per-tick decay/advancement logic.         Optimized v2.5: Red`
+- **Thin community `Community 1037`** (1 nodes): `Produce a new state generation from the prior state and updates.         Logic I`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1038`** (1 nodes): `Apply only the specified updates to an already-passively-advanced state.`
+- **Thin community `Community 1038`** (1 nodes): `Apply updates to a single entity, producing a new EntityState instance.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1039`** (1 nodes): `Produce a new state generation from the prior state and updates.         Logic I`
+- **Thin community `Community 1039`** (1 nodes): `Detect entities in town and apply general passive laws (Healing).         Optimi`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1040`** (1 nodes): `Apply updates to a single entity, producing a new EntityState instance.`
+- **Thin community `Community 1040`** (1 nodes): `Retrieves or creates a SpatialGrid for the given state.         Uses a per-objec`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1041`** (1 nodes): `Detect entities in town and apply general passive laws (Healing).         Optimi`
+- **Thin community `Community 1041`** (1 nodes): `Fast lookup for the region containing a position.         Uses a per-object regi`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1042`** (1 nodes): `Retrieves or creates a SpatialGrid for the given state.         Uses a per-objec`
+- **Thin community `Community 1042`** (1 nodes): `Finds the trauma score of the region containing the given position.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1043`** (1 nodes): `Fast lookup for the region containing a position.         Uses a per-object regi`
+- **Thin community `Community 1043`** (1 nodes): `Route normal navigation intent via MovementSystem.         Optimized v2: reduced`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1044`** (1 nodes): `Finds the trauma score of the region containing the given position.`
+- **Thin community `Community 1044`** (1 nodes): `Resolve strategic blockers that are satisfied by the current or pending`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1045`** (1 nodes): `Route normal navigation intent via MovementSystem.         Optimized v2: reduced`
+- **Thin community `Community 1045`** (1 nodes): `Phase 9: Routine, Biological Needs, and Salience Filtering.         VERIFIED v2:`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1046`** (1 nodes): `Resolve strategic blockers that are satisfied by the current or pending`
+- **Thin community `Community 1046`** (1 nodes): `Phase 4.1: Strategic Intent Evaluation (Projects/Objectives).         Orchestrat`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1047`** (1 nodes): `Phase 9: Routine, Biological Needs, and Salience Filtering.         VERIFIED v2:`
+- **Thin community `Community 1047`** (1 nodes): `Phase 9: Strategic interruption resistance and retention.         Logic ID: STRA`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1048`** (1 nodes): `Phase 4.1: Strategic Intent Evaluation (Projects/Objectives).         Orchestrat`
+- **Thin community `Community 1048`** (1 nodes): `Record the final result of a project and apply learning effects.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1049`** (1 nodes): `Phase 9: Strategic interruption resistance and retention.         Logic ID: STRA`
+- **Thin community `Community 1049`** (1 nodes): `VERIFIED v2: StrategicIntelligenceSystem.process_outcome`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1050`** (1 nodes): `Record the final result of a project and apply learning effects.`
+- **Thin community `Community 1050`** (1 nodes): `Produce a collection of strategic intent updates for the next tick.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1051`** (1 nodes): `VERIFIED v2: StrategicIntelligenceSystem.process_outcome`
+- **Thin community `Community 1051`** (1 nodes): `VERIFIED v2: StrategicIntelligenceSystem.derive_cognition_profile`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1052`** (1 nodes): `Produce a collection of strategic intent updates for the next tick.`
+- **Thin community `Community 1052`** (1 nodes): `Derive a DirtySet from a StateUpdate.         M3 Law: This must be deterministic`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1053`** (1 nodes): `VERIFIED v2: StrategicIntelligenceSystem.derive_cognition_profile`
+- **Thin community `Community 1053`** (1 nodes): `Produce a new state generation from the prior state and updates.         Logic I`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1054`** (1 nodes): `Derive a DirtySet from a StateUpdate.         M3 Law: This must be deterministic`
+- **Thin community `Community 1054`** (1 nodes): `Apply updates to a single entity, producing a new EntityState instance.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1055`** (1 nodes): `Produce a new state generation from the prior state and updates.         Logic I`
+- **Thin community `Community 1055`** (1 nodes): `Verify if attacker has clear elevation advantage (Terrain-based).`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1056`** (1 nodes): `Apply updates to a single entity, producing a new EntityState instance.`
+- **Thin community `Community 1056`** (1 nodes): `Returns the current engagement record for an entity.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1057`** (1 nodes): `Verify if attacker has clear elevation advantage (Terrain-based).`
+- **Thin community `Community 1057`** (1 nodes): `Authoritative geometric flanking check.         Returns: (is_flanked, is_surroun`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1058`** (1 nodes): `Returns the current engagement record for an entity.`
+- **Thin community `Community 1058`** (1 nodes): `Verify if defender is behind wall cover relative to attacker.         Logic ID:`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1059`** (1 nodes): `Authoritative geometric flanking check.         Returns: (is_flanked, is_surroun`
+- **Thin community `Community 1059`** (1 nodes): `Calculate movement/tie-breaking priority.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1060`** (1 nodes): `Verify if defender is behind wall cover relative to attacker.         Logic ID:`
+- **Thin community `Community 1060`** (1 nodes): `Find hostile entities currently in melee engagement with this entity.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1061`** (1 nodes): `Calculate movement/tie-breaking priority.`
+- **Thin community `Community 1061`** (1 nodes): `Return the ID of the entity occupying the specified tile.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1062`** (1 nodes): `Find hostile entities currently in melee engagement with this entity.`
+- **Thin community `Community 1062`** (1 nodes): `Apply only the specified updates to an already-passively-advanced state.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1063`** (1 nodes): `Return the ID of the entity occupying the specified tile.`
+- **Thin community `Community 1063`** (1 nodes): `Produce a new state generation from the prior state and updates.         Logic I`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1064`** (1 nodes): `Apply only the specified updates to an already-passively-advanced state.`
+- **Thin community `Community 1064`** (1 nodes): `Apply updates to a single entity, producing a new EntityState instance.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1065`** (1 nodes): `Produce a new state generation from the prior state and updates.         Logic I`
+- **Thin community `Community 1065`** (1 nodes): `Produce a SHA256 hash of the compact canonical JSON representation.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1066`** (1 nodes): `Apply updates to a single entity, producing a new EntityState instance.`
+- **Thin community `Community 1066`** (1 nodes): `Convert AuthoritativeState into a canonical JSON representation.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1067`** (1 nodes): `Produce a SHA256 hash of the compact canonical JSON representation.`
+- **Thin community `Community 1067`** (1 nodes): `Convert AuthoritativeState into a sortable dictionary structure.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1068`** (1 nodes): `Convert AuthoritativeState into a canonical JSON representation.`
+- **Thin community `Community 1068`** (1 nodes): `Resolve strategic blockers that are satisfied by the current or pending`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1069`** (1 nodes): `Convert AuthoritativeState into a sortable dictionary structure.`
+- **Thin community `Community 1069`** (1 nodes): `Phase 9: Routine, Biological Needs, and Salience Filtering.         VERIFIED v2:`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1070`** (1 nodes): `Resolve strategic blockers that are satisfied by the current or pending`
+- **Thin community `Community 1070`** (1 nodes): `Phase 4.1: Strategic Intent Evaluation (Projects/Objectives).         Orchestrat`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1071`** (1 nodes): `Phase 9: Routine, Biological Needs, and Salience Filtering.         VERIFIED v2:`
+- **Thin community `Community 1071`** (1 nodes): `Phase 9: Strategic interruption resistance and retention.         Logic ID: STRA`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1072`** (1 nodes): `Phase 4.1: Strategic Intent Evaluation (Projects/Objectives).         Orchestrat`
+- **Thin community `Community 1072`** (1 nodes): `Record the final result of a project and apply learning effects.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1073`** (1 nodes): `Phase 9: Strategic interruption resistance and retention.         Logic ID: STRA`
+- **Thin community `Community 1073`** (1 nodes): `VERIFIED v2: StrategicIntelligenceSystem.process_outcome`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1074`** (1 nodes): `Record the final result of a project and apply learning effects.`
+- **Thin community `Community 1074`** (1 nodes): `Produce a collection of strategic intent updates for the next tick.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1075`** (1 nodes): `VERIFIED v2: StrategicIntelligenceSystem.process_outcome`
+- **Thin community `Community 1075`** (1 nodes): `VERIFIED v2: StrategicIntelligenceSystem.derive_cognition_profile`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1076`** (1 nodes): `Produce a collection of strategic intent updates for the next tick.`
+- **Thin community `Community 1076`** (1 nodes): `Milestone D Law: Property-based access to the canonical neighbor view.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1077`** (1 nodes): `VERIFIED v2: StrategicIntelligenceSystem.derive_cognition_profile`
+- **Thin community `Community 1077`** (1 nodes): `Advance HUNT quests when an enemy is defeated.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1078`** (1 nodes): `Milestone D Law: Property-based access to the canonical neighbor view.`
+- **Thin community `Community 1078`** (1 nodes): `Enforces quest completion rules and emits authoritative reward intents.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1079`** (1 nodes): `Advance HUNT quests when an enemy is defeated.`
+- **Thin community `Community 1079`** (1 nodes): `Determines the next semantic stage for an entity kind.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1080`** (1 nodes): `Enforces quest completion rules and emits authoritative reward intents.`
+- **Thin community `Community 1080`** (1 nodes): `Helper to merge all contingent updates from a transaction result into an entity`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1081`** (1 nodes): `Determines the next semantic stage for an entity kind.`
+- **Thin community `Community 1081`** (1 nodes): `Helper to apply world side effects from a successful resolution.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1082`** (1 nodes): `Helper to merge all contingent updates from a transaction result into an entity`
+- **Thin community `Community 1082`** (1 nodes): `Calculates Manhattan distance between two points.         Logic ID: COMB-001 (Ma`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1083`** (1 nodes): `Helper to apply world side effects from a successful resolution.`
+- **Thin community `Community 1083`** (1 nodes): `Returns the region containing the given position.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1084`** (1 nodes): `Calculates Manhattan distance between two points.         Logic ID: COMB-001 (Ma`
+- **Thin community `Community 1084`** (1 nodes): `V2 Authoritative Occupancy Rule:         Enforces Static Terrain (WALL), Buildin`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1085`** (1 nodes): `Returns the region containing the given position.`
+- **Thin community `Community 1085`** (1 nodes): `Checks if the current region suppresses specific actions and enforces actor vali`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1086`** (1 nodes): `V2 Authoritative Occupancy Rule:         Enforces Static Terrain (WALL), Buildin`
+- **Thin community `Community 1086`** (1 nodes): `Action Readiness Law: Every ENTITY_ACT requires 100.0 readiness.         Logic I`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1087`** (1 nodes): `Checks if the current region suppresses specific actions and enforces actor vali`
+- **Thin community `Community 1087`** (1 nodes): `V2 Authoritative Movement Law:         Validates if entity has enough readiness`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1088`** (1 nodes): `Action Readiness Law: Every ENTITY_ACT requires 100.0 readiness.         Logic I`
+- **Thin community `Community 1088`** (1 nodes): `Authoritative validation for a combat interaction.         Logic ID: COMB-004 (M`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1089`** (1 nodes): `V2 Authoritative Movement Law:         Validates if entity has enough readiness`
+- **Thin community `Community 1089`** (1 nodes): `Validation for Area-of-Effect positioning and execution.         Logic ID: COMB-`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1090`** (1 nodes): `Authoritative validation for a combat interaction.         Logic ID: COMB-004 (M`
+- **Thin community `Community 1090`** (1 nodes): `Pillar 8: Skill Execution Law.         Skills require cost and cooldown verifica`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1091`** (1 nodes): `Validation for Area-of-Effect positioning and execution.         Logic ID: COMB-`
+- **Thin community `Community 1091`** (1 nodes): `Simple Bresenham-like LoS check for WALL/Building obstructions.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1092`** (1 nodes): `Pillar 8: Skill Execution Law.         Skills require cost and cooldown verifica`
+- **Thin community `Community 1092`** (1 nodes): `Verify if attacker has clear elevation advantage (Terrain-based).`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1093`** (1 nodes): `Simple Bresenham-like LoS check for WALL/Building obstructions.`
+- **Thin community `Community 1093`** (1 nodes): `Returns the current engagement record for an entity.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1094`** (1 nodes): `Verify if attacker has clear elevation advantage (Terrain-based).`
+- **Thin community `Community 1094`** (1 nodes): `Authoritative geometric flanking check.         Returns: (is_flanked, is_surroun`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1095`** (1 nodes): `Returns the current engagement record for an entity.`
+- **Thin community `Community 1095`** (1 nodes): `Verify if defender is behind wall cover relative to attacker.         Logic ID:`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1096`** (1 nodes): `Authoritative geometric flanking check.         Returns: (is_flanked, is_surroun`
+- **Thin community `Community 1096`** (1 nodes): `Calculate movement/tie-breaking priority.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1097`** (1 nodes): `Verify if defender is behind wall cover relative to attacker.         Logic ID:`
+- **Thin community `Community 1097`** (1 nodes): `Find hostile entities currently in melee engagement with this entity.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1098`** (1 nodes): `Calculate movement/tie-breaking priority.`
+- **Thin community `Community 1098`** (1 nodes): `Find hostile entities that would be in melee engagement with this entity at a hy`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1099`** (1 nodes): `Find hostile entities currently in melee engagement with this entity.`
+- **Thin community `Community 1099`** (1 nodes): `Return the ID of the entity occupying the specified tile.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1100`** (1 nodes): `Find hostile entities that would be in melee engagement with this entity at a hy`
+- **Thin community `Community 1100`** (1 nodes): `Singular entry point for authoritative state transition refinement.         Logi`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1101`** (1 nodes): `Return the ID of the entity occupying the specified tile.`
+- **Thin community `Community 1101`** (1 nodes): `Apply only passive per-tick decay/advancement logic.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1102`** (1 nodes): `Singular entry point for authoritative state transition refinement.         Logi`
+- **Thin community `Community 1102`** (1 nodes): `Apply only the specified updates to an already-passively-advanced state.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1103`** (1 nodes): `Apply only passive per-tick decay/advancement logic.`
+- **Thin community `Community 1103`** (1 nodes): `Produce a new state generation from the prior state and updates.         Logic I`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1104`** (1 nodes): `Apply only the specified updates to an already-passively-advanced state.`
+- **Thin community `Community 1104`** (1 nodes): `Apply updates to a single entity, producing a new EntityState instance.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1105`** (1 nodes): `Produce a new state generation from the prior state and updates.         Logic I`
+- **Thin community `Community 1105`** (1 nodes): `Detect entities in town and apply general passive laws (Healing).         Optimi`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1106`** (1 nodes): `Apply updates to a single entity, producing a new EntityState instance.`
+- **Thin community `Community 1106`** (1 nodes): `Determines the next tactical intent for an entity.         Bounded to local visi`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1107`** (1 nodes): `Detect entities in town and apply general passive laws (Healing).         Optimi`
+- **Thin community `Community 1107`** (1 nodes): `Public helper for deterministic target selection.         Matches legacy 'Tactic`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1108`** (1 nodes): `Determines the next tactical intent for an entity.         Bounded to local visi`
+- **Thin community `Community 1108`** (1 nodes): `Policy Waterfall according to Milestone 5/6 Degradation Matrix.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1109`** (1 nodes): `Public helper for deterministic target selection.         Matches legacy 'Tactic`
+- **Thin community `Community 1109`** (1 nodes): `Apply regional effects to entities and update world markers.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1110`** (1 nodes): `Policy Waterfall according to Milestone 5/6 Degradation Matrix.`
+- **Thin community `Community 1110`** (1 nodes): `Internal helper to cache grid per tick.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1111`** (1 nodes): `Apply regional effects to entities and update world markers.`
+- **Thin community `Community 1111`** (1 nodes): `Finds the trauma score of the region containing the given position.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1112`** (1 nodes): `Internal helper to cache grid per tick.`
+- **Thin community `Community 1112`** (1 nodes): `Route normal navigation intent via MovementSystem.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1113`** (1 nodes): `Finds the trauma score of the region containing the given position.`
+- **Thin community `Community 1113`** (1 nodes): `Create a battlefield scar from a death event.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1114`** (1 nodes): `Route normal navigation intent via MovementSystem.`
+- **Thin community `Community 1114`** (1 nodes): `Create a raid damage scar from a town raid.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1115`** (1 nodes): `Create a battlefield scar from a death event.`
+- **Thin community `Community 1115`** (1 nodes): `Increments attachment to the current region based on presence.         PH4 Law:`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1116`** (1 nodes): `Create a raid damage scar from a town raid.`
+- **Thin community `Community 1116`** (1 nodes): `Promotes enemies from grudge_history to nemesis_ids if hostility threshold met.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1117`** (1 nodes): `Increments attachment to the current region based on presence.         PH4 Law:`
+- **Thin community `Community 1117`** (1 nodes): `Produce a StrategicUpdate containing blockers for missing requirements.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1118`** (1 nodes): `Promotes enemies from grudge_history to nemesis_ids if hostility threshold met.`
+- **Thin community `Community 1118`** (1 nodes): `Resolve strategic blockers that are satisfied by the current or pending`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1119`** (1 nodes): `Produce a StrategicUpdate containing blockers for missing requirements.`
+- **Thin community `Community 1119`** (1 nodes): `Phase 9: Routine, Biological Needs, and Salience Filtering.         VERIFIED v2:`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1120`** (1 nodes): `Resolve strategic blockers that are satisfied by the current or pending`
+- **Thin community `Community 1120`** (1 nodes): `Phase 9: Strategic interruption resistance and retention.         Logic ID: STRA`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1121`** (1 nodes): `Phase 9: Routine, Biological Needs, and Salience Filtering.         VERIFIED v2:`
+- **Thin community `Community 1121`** (1 nodes): `Record the final result of a project and apply learning effects.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1122`** (1 nodes): `Phase 9: Strategic interruption resistance and retention.         Logic ID: STRA`
+- **Thin community `Community 1122`** (1 nodes): `VERIFIED v2: StrategicIntelligenceSystem.process_outcome`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1123`** (1 nodes): `Record the final result of a project and apply learning effects.`
+- **Thin community `Community 1123`** (1 nodes): `Produce a collection of strategic intent updates for the next tick.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1124`** (1 nodes): `VERIFIED v2: StrategicIntelligenceSystem.process_outcome`
+- **Thin community `Community 1124`** (1 nodes): `Verify that state mutation is gated exclusively by ApplyPath.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1125`** (1 nodes): `Produce a collection of strategic intent updates for the next tick.`
+- **Thin community `Community 1125`** (1 nodes): `Processes all ResourceTransferIntents for all entities in the update.         VE`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1126`** (1 nodes): `Verify that state mutation is gated exclusively by ApplyPath.`
+- **Thin community `Community 1126`** (1 nodes): `Helper to merge all contingent updates from a transaction result into an entity`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1127`** (1 nodes): `Processes all ResourceTransferIntents for all entities in the update.         VE`
+- **Thin community `Community 1127`** (1 nodes): `Helper to apply world side effects from a successful resolution.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1128`** (1 nodes): `Helper to merge all contingent updates from a transaction result into an entity`
+- **Thin community `Community 1128`** (1 nodes): `Returns the region containing the given position.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1129`** (1 nodes): `Helper to apply world side effects from a successful resolution.`
+- **Thin community `Community 1129`** (1 nodes): `V2 Authoritative Occupancy Rule:         Enforces Static Terrain (WALL), Buildin`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1130`** (1 nodes): `Returns the region containing the given position.`
+- **Thin community `Community 1130`** (1 nodes): `Checks if the current region suppresses specific actions and enforces actor vali`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1131`** (1 nodes): `V2 Authoritative Occupancy Rule:         Enforces Static Terrain (WALL), Buildin`
+- **Thin community `Community 1131`** (1 nodes): `Action Readiness Law: Every ENTITY_ACT requires 100.0 readiness.         Logic I`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1132`** (1 nodes): `Checks if the current region suppresses specific actions and enforces actor vali`
+- **Thin community `Community 1132`** (1 nodes): `V2 Authoritative Movement Law:         Validates if entity has enough readiness`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1133`** (1 nodes): `Action Readiness Law: Every ENTITY_ACT requires 100.0 readiness.         Logic I`
+- **Thin community `Community 1133`** (1 nodes): `Authoritative validation for a combat interaction.         Logic ID: COMB-004 (M`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1134`** (1 nodes): `V2 Authoritative Movement Law:         Validates if entity has enough readiness`
+- **Thin community `Community 1134`** (1 nodes): `Validation for Area-of-Effect positioning and execution.         Logic ID: COMB-`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1135`** (1 nodes): `Authoritative validation for a combat interaction.         Logic ID: COMB-004 (M`
+- **Thin community `Community 1135`** (1 nodes): `Pillar 8: Skill Execution Law.         Skills require cost and cooldown verifica`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1136`** (1 nodes): `Validation for Area-of-Effect positioning and execution.         Logic ID: COMB-`
+- **Thin community `Community 1136`** (1 nodes): `Simple Bresenham-like LoS check for WALL/Building obstructions.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1137`** (1 nodes): `Pillar 8: Skill Execution Law.         Skills require cost and cooldown verifica`
+- **Thin community `Community 1137`** (1 nodes): `Verify if attacker has clear elevation advantage (Terrain-based).`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1138`** (1 nodes): `Simple Bresenham-like LoS check for WALL/Building obstructions.`
+- **Thin community `Community 1138`** (1 nodes): `Returns the current engagement record for an entity.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1139`** (1 nodes): `Verify if attacker has clear elevation advantage (Terrain-based).`
+- **Thin community `Community 1139`** (1 nodes): `Authoritative geometric flanking check.         Returns: (is_flanked, is_surroun`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1140`** (1 nodes): `Returns the current engagement record for an entity.`
+- **Thin community `Community 1140`** (1 nodes): `Verify if defender is behind wall cover relative to attacker.         Logic ID:`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1141`** (1 nodes): `Authoritative geometric flanking check.         Returns: (is_flanked, is_surroun`
+- **Thin community `Community 1141`** (1 nodes): `Calculate movement/tie-breaking priority.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1142`** (1 nodes): `Verify if defender is behind wall cover relative to attacker.         Logic ID:`
+- **Thin community `Community 1142`** (1 nodes): `Find hostile entities that would be in melee engagement with this entity at a hy`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1143`** (1 nodes): `Calculate movement/tie-breaking priority.`
+- **Thin community `Community 1143`** (1 nodes): `Return the ID of the entity occupying the specified tile.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1144`** (1 nodes): `Find hostile entities that would be in melee engagement with this entity at a hy`
+- **Thin community `Community 1144`** (1 nodes): `Produce a new state generation from the prior state and updates.         Logic I`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1145`** (1 nodes): `Return the ID of the entity occupying the specified tile.`
+- **Thin community `Community 1145`** (1 nodes): `Finds the trauma score of the region containing the given position.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1146`** (1 nodes): `Produce a new state generation from the prior state and updates.         Logic I`
+- **Thin community `Community 1146`** (1 nodes): `Route normal navigation intent via MovementSystem.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1147`** (1 nodes): `Finds the trauma score of the region containing the given position.`
+- **Thin community `Community 1147`** (1 nodes): `Scan entities for blockers and propose navigation targets to resolve them.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1148`** (1 nodes): `Route normal navigation intent via MovementSystem.`
+- **Thin community `Community 1148`** (1 nodes): `Calculate total weight of all items in inventory.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1149`** (1 nodes): `Scan entities for blockers and propose navigation targets to resolve them.`
+- **Thin community `Community 1149`** (1 nodes): `Check if an item can be added without exceeding slots or weight.         Logic I`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1150`** (1 nodes): `Calculate total weight of all items in inventory.`
+- **Thin community `Community 1150`** (1 nodes): `Check if a list of item stacks can be added without exceeding slots or weight.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1151`** (1 nodes): `Check if an item can be added without exceeding slots or weight.         Logic I`
+- **Thin community `Community 1151`** (1 nodes): `Check capacity after accounting for item removals (Phase 8).`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1152`** (1 nodes): `Check if a list of item stacks can be added without exceeding slots or weight.`
+- **Thin community `Community 1152`** (1 nodes): `Check if an item can be equipped in the specified slot.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1153`** (1 nodes): `Check capacity after accounting for item removals (Phase 8).`
+- **Thin community `Community 1153`** (1 nodes): `Apply authoritative updates to inventory, merging stacks and enforcing limits.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1154`** (1 nodes): `Check if an item can be equipped in the specified slot.`
+- **Thin community `Community 1154`** (1 nodes): `Validates an intent and produces the necessary updates.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1155`** (1 nodes): `Apply authoritative updates to inventory, merging stacks and enforcing limits.`
+- **Thin community `Community 1155`** (1 nodes): `Derive strategic limits from entity attributes, needs, and personality.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1156`** (1 nodes): `Validates an intent and produces the necessary updates.`
+- **Thin community `Community 1156`** (1 nodes): `Refine the proposed update according to authoritative interaction laws.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1157`** (1 nodes): `Derive strategic limits from entity attributes, needs, and personality.`
+- **Thin community `Community 1157`** (1 nodes): `Check for evolution triggers (level cap or XP thresholds) and apply transformati`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1158`** (1 nodes): `Refine the proposed update according to authoritative interaction laws.`
+- **Thin community `Community 1158`** (1 nodes): `Refine the proposed update according to crafting and knowledge laws.         Log`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1159`** (1 nodes): `Check for evolution triggers (level cap or XP thresholds) and apply transformati`
+- **Thin community `Community 1159`** (1 nodes): `Processes all ResourceTransferIntents for all entities in the update.         VE`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1160`** (1 nodes): `Refine the proposed update according to crafting and knowledge laws.         Log`
+- **Thin community `Community 1160`** (1 nodes): `Helper to merge all contingent updates from a transaction result into an entity`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1161`** (1 nodes): `Processes all ResourceTransferIntents for all entities in the update.         VE`
+- **Thin community `Community 1161`** (1 nodes): `Helper to apply world side effects from a successful resolution.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1162`** (1 nodes): `Helper to merge all contingent updates from a transaction result into an entity`
+- **Thin community `Community 1162`** (1 nodes): `Returns a spatial index of active/alive entities.          Important:`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1163`** (1 nodes): `Helper to apply world side effects from a successful resolution.`
+- **Thin community `Community 1163`** (1 nodes): `Calculates Manhattan distance between two points.         Logic ID: COMB-001 (Ma`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1164`** (1 nodes): `Returns a spatial index of active/alive entities.          Important:`
+- **Thin community `Community 1164`** (1 nodes): `Returns the region containing the given position.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1165`** (1 nodes): `Calculates Manhattan distance between two points.         Logic ID: COMB-001 (Ma`
+- **Thin community `Community 1165`** (1 nodes): `V2 Authoritative Occupancy Rule:         Enforces Static Terrain (WALL), Buildin`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1166`** (1 nodes): `Returns the region containing the given position.`
+- **Thin community `Community 1166`** (1 nodes): `Validation for Area-of-Effect positioning and execution.         Logic ID: COMB-`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1167`** (1 nodes): `V2 Authoritative Occupancy Rule:         Enforces Static Terrain (WALL), Buildin`
+- **Thin community `Community 1167`** (1 nodes): `Pillar 8: Skill Execution Law.         Skills require cost and cooldown verifica`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1168`** (1 nodes): `Validation for Area-of-Effect positioning and execution.         Logic ID: COMB-`
+- **Thin community `Community 1168`** (1 nodes): `Simple Bresenham-like LoS check for WALL/Building obstructions.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1169`** (1 nodes): `Pillar 8: Skill Execution Law.         Skills require cost and cooldown verifica`
+- **Thin community `Community 1169`** (1 nodes): `Verify if attacker has clear elevation advantage (Terrain-based).`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1170`** (1 nodes): `Simple Bresenham-like LoS check for WALL/Building obstructions.`
+- **Thin community `Community 1170`** (1 nodes): `Authoritative geometric flanking check.         Returns: (is_flanked, is_surroun`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1171`** (1 nodes): `Verify if attacker has clear elevation advantage (Terrain-based).`
+- **Thin community `Community 1171`** (1 nodes): `Verify if defender is behind wall cover relative to attacker.         Logic ID:`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1172`** (1 nodes): `Authoritative geometric flanking check.         Returns: (is_flanked, is_surroun`
+- **Thin community `Community 1172`** (1 nodes): `Calculate movement/tie-breaking priority.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1173`** (1 nodes): `Verify if defender is behind wall cover relative to attacker.         Logic ID:`
+- **Thin community `Community 1173`** (1 nodes): `Find hostile entities currently in melee engagement with this entity.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1174`** (1 nodes): `Calculate movement/tie-breaking priority.`
+- **Thin community `Community 1174`** (1 nodes): `Find hostile entities that would be in melee engagement with this entity at a hy`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1175`** (1 nodes): `Find hostile entities currently in melee engagement with this entity.`
+- **Thin community `Community 1175`** (1 nodes): `Return the ID of the entity occupying the specified tile.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1176`** (1 nodes): `Find hostile entities that would be in melee engagement with this entity at a hy`
+- **Thin community `Community 1176`** (1 nodes): `Singular entry point for authoritative state transition refinement.         Logi`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1177`** (1 nodes): `Return the ID of the entity occupying the specified tile.`
+- **Thin community `Community 1177`** (1 nodes): `Produce a new state generation from the prior state and updates.         Logic I`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1178`** (1 nodes): `Singular entry point for authoritative state transition refinement.         Logi`
+- **Thin community `Community 1178`** (1 nodes): `Apply updates to a single entity, producing a new EntityState instance.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1179`** (1 nodes): `Produce a new state generation from the prior state and updates.         Logic I`
+- **Thin community `Community 1179`** (1 nodes): `Detect entities in town and apply general passive laws (Healing).`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1180`** (1 nodes): `Apply updates to a single entity, producing a new EntityState instance.`
+- **Thin community `Community 1180`** (1 nodes): `Pillar 3: Fractional Armor Mitigation         Formula: damage = (atk * atk_mult)`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1181`** (1 nodes): `Detect entities in town and apply general passive laws (Healing).`
+- **Thin community `Community 1181`** (1 nodes): `Calculates all tactical multipliers for an attack.         Consolidated from res`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1182`** (1 nodes): `Pillar 3: Fractional Armor Mitigation         Formula: damage = (atk * atk_mult)`
+- **Thin community `Community 1182`** (1 nodes): `Phase 8: Calculate durability loss for attacker and defender.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1183`** (1 nodes): `Calculates all tactical multipliers for an attack.         Consolidated from res`
+- **Thin community `Community 1183`** (1 nodes): `Resolves multiple attackers hitting a single defender in the same tick.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1184`** (1 nodes): `Phase 8: Calculate durability loss for attacker and defender.`
+- **Thin community `Community 1184`** (1 nodes): `Calculates and returns a WoundUpdate if damage is sufficient.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1185`** (1 nodes): `Resolves multiple attackers hitting a single defender in the same tick.`
+- **Thin community `Community 1185`** (1 nodes): `Determines the next tactical intent for an entity.         Bounded to local visi`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1186`** (1 nodes): `Calculates and returns a WoundUpdate if damage is sufficient.`
+- **Thin community `Community 1186`** (1 nodes): `Public helper for deterministic target selection.         Matches legacy 'Tactic`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1187`** (1 nodes): `Determines the next tactical intent for an entity.         Bounded to local visi`
+- **Thin community `Community 1187`** (1 nodes): `Scores neighbors and returns the most salient ones.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1188`** (1 nodes): `Public helper for deterministic target selection.         Matches legacy 'Tactic`
+- **Thin community `Community 1188`** (1 nodes): `Calculates Panic and Aggression levels.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1189`** (1 nodes): `Scores neighbors and returns the most salient ones.`
+- **Thin community `Community 1189`** (1 nodes): `Returns the stamina cost for an attack action.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1190`** (1 nodes): `Calculates Panic and Aggression levels.`
+- **Thin community `Community 1190`** (1 nodes): `Returns the stamina cost for a movement action.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1191`** (1 nodes): `Returns the stamina cost for an attack action.`
+- **Thin community `Community 1191`** (1 nodes): `Returns the stamina cost for a harvest tick.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1192`** (1 nodes): `Returns the stamina cost for a movement action.`
+- **Thin community `Community 1192`** (1 nodes): `Returns the stamina cost for using a skill.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1193`** (1 nodes): `Returns the stamina cost for a harvest tick.`
+- **Thin community `Community 1193`** (1 nodes): `Check if entity has enough stamina for a skill.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1194`** (1 nodes): `Returns the stamina cost for using a skill.`
+- **Thin community `Community 1194`** (1 nodes): `Check if entity is in exhaustion state.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1195`** (1 nodes): `Check if entity has enough stamina for a skill.`
+- **Thin community `Community 1195`** (1 nodes): `Combat damage multiplier when exhausted.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1196`** (1 nodes): `Check if entity is in exhaustion state.`
+- **Thin community `Community 1196`** (1 nodes): `Returns the stamina delta for passive/rest regeneration.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1197`** (1 nodes): `Combat damage multiplier when exhausted.`
+- **Thin community `Community 1197`** (1 nodes): `Check if a single hit is massive enough to cause a wound.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1198`** (1 nodes): `Returns the stamina delta for passive/rest regeneration.`
+- **Thin community `Community 1198`** (1 nodes): `Create a wound record from a massive hit.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1199`** (1 nodes): `Check if a single hit is massive enough to cause a wound.`
+- **Thin community `Community 1199`** (1 nodes): `Sum all active (unhealed) wound penalties.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1200`** (1 nodes): `Create a wound record from a massive hit.`
+- **Thin community `Community 1200`** (1 nodes): `Sum all permanent scar penalties (lesser than wounds).`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1201`** (1 nodes): `Sum all active (unhealed) wound penalties.`
+- **Thin community `Community 1201`** (1 nodes): `Heal a wound and create a scar. Returns (healed_wound, scar).`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1202`** (1 nodes): `Sum all permanent scar penalties (lesser than wounds).`
+- **Thin community `Community 1202`** (1 nodes): `Check if entity is beyond its leash radius.         VERIFIED v2: mob_leash_radiu`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1203`** (1 nodes): `Heal a wound and create a scar. Returns (healed_wound, scar).`
+- **Thin community `Community 1203`** (1 nodes): `Check if a chasing mob should abandon pursuit.         VERIFIED v2: mob_chase_gi`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1204`** (1 nodes): `Check if entity is beyond its leash radius.         VERIFIED v2: mob_leash_radiu`
+- **Thin community `Community 1204`** (1 nodes): `Get the home position for return-to-camp behavior.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1205`** (1 nodes): `Check if a chasing mob should abandon pursuit.         VERIFIED v2: mob_chase_gi`
+- **Thin community `Community 1205`** (1 nodes): `Check if entity has reached home.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1206`** (1 nodes): `Get the home position for return-to-camp behavior.`
+- **Thin community `Community 1206`** (1 nodes): `Calculate perception-based discovery score.         VERIFIED v2: perception_disc`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1207`** (1 nodes): `Check if entity has reached home.`
+- **Thin community `Community 1207`** (1 nodes): `Calculate diagnosis accuracy (0.0 to 1.0).         VERIFIED v2: wisdom_diagnosis`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1208`** (1 nodes): `Calculate perception-based discovery score.         VERIFIED v2: perception_disc`
+- **Thin community `Community 1208`** (1 nodes): `Get movement cost for a tile based on terrain type.         VERIFIED v2: terrain`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1209`** (1 nodes): `Calculate diagnosis accuracy (0.0 to 1.0).         VERIFIED v2: wisdom_diagnosis`
+- **Thin community `Community 1209`** (1 nodes): `Calculate total movement cost for a path.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1210`** (1 nodes): `Get movement cost for a tile based on terrain type.         VERIFIED v2: terrain`
+- **Thin community `Community 1210`** (1 nodes): `Only switch targets if the new one is significantly better.         Uses margin`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1211`** (1 nodes): `Calculate total movement cost for a path.`
+- **Thin community `Community 1211`** (1 nodes): `Physical: base_atk + strength * 0.8 * power         Magical:  base_atk + intelli`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1212`** (1 nodes): `Only switch targets if the new one is significantly better.         Uses margin`
+- **Thin community `Community 1212`** (1 nodes): `Full effective stat recomputation:         base stats + gear + traits + wound pe`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1213`** (1 nodes): `Physical: base_atk + strength * 0.8 * power         Magical:  base_atk + intelli`
+- **Thin community `Community 1213`** (1 nodes): `Produce authoritative item-to-gold conversions for entities at a shop.         L`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1214`** (1 nodes): `Full effective stat recomputation:         base stats + gear + traits + wound pe`
+- **Thin community `Community 1214`** (1 nodes): `Resolve adjacent position swaps before normal movement routing.          LAW:`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1215`** (1 nodes): `Produce authoritative item-to-gold conversions for entities at a shop.         L`
+- **Thin community `Community 1215`** (1 nodes): `Route normal navigation intent via MovementSystem.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1216`** (1 nodes): `Resolve adjacent position swaps before normal movement routing.          LAW:`
+- **Thin community `Community 1216`** (1 nodes): `LAW:             Final movement results must not place two active entities on th`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1217`** (1 nodes): `Route normal navigation intent via MovementSystem.`
+- **Thin community `Community 1217`** (1 nodes): `Strip unauthorized raw worker effects.          Allowed:             - task inte`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1218`** (1 nodes): `LAW:             Final movement results must not place two active entities on th`
+- **Thin community `Community 1218`** (1 nodes): `Returns a map of GoalKind -> utility_modifier.         Modifier is a float added`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1219`** (1 nodes): `Strip unauthorized raw worker effects.          Allowed:             - task inte`
+- **Thin community `Community 1219`** (1 nodes): `Applies personality, life stage, and boredom modifiers to goal scores.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1220`** (1 nodes): `Returns a map of GoalKind -> utility_modifier.         Modifier is a float added`
+- **Thin community `Community 1220`** (1 nodes): `Generates a stable, order-independent composite seed.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1221`** (1 nodes): `Applies personality, life stage, and boredom modifiers to goal scores.`
+- **Thin community `Community 1221`** (1 nodes): `Checks if a raid should spawn and returns the update.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1222`** (1 nodes): `Generates a stable, order-independent composite seed.`
+- **Thin community `Community 1222`** (1 nodes): `Deterministic, idempotent boss spawning.          LAW:             At most one a`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1223`** (1 nodes): `Checks if a raid should spawn and returns the update.`
+- **Thin community `Community 1223`** (1 nodes): `Rule: Boss death provides high-tier loot via transaction law.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1224`** (1 nodes): `Deterministic, idempotent boss spawning.          LAW:             At most one a`
+- **Thin community `Community 1224`** (1 nodes): `Finds the region containing the given position.          Uses bounds if defined,`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1225`** (1 nodes): `Rule: Boss death provides high-tier loot via transaction law.`
+- **Thin community `Community 1225`** (1 nodes): `Calculates difficulty tier based on distance from town center.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1226`** (1 nodes): `Finds the region containing the given position.          Uses bounds if defined,`
+- **Thin community `Community 1226`** (1 nodes): `Process time-based recovery for regional danger and local scars.         Logic I`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1227`** (1 nodes): `Calculates difficulty tier based on distance from town center.`
+- **Thin community `Community 1227`** (1 nodes): `Create a battlefield scar from a death event.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1228`** (1 nodes): `Process time-based recovery for regional danger and local scars.         Logic I`
+- **Thin community `Community 1228`** (1 nodes): `Create a raid damage scar from a town raid.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1229`** (1 nodes): `Create a battlefield scar from a death event.`
+- **Thin community `Community 1229`** (1 nodes): `Evolve camps and spawn monsters or raids.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1230`** (1 nodes): `Create a raid damage scar from a town raid.`
+- **Thin community `Community 1230`** (1 nodes): `Rule: Clearing a camp provides rewards and reduces threat.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1231`** (1 nodes): `Evolve camps and spawn monsters or raids.`
+- **Thin community `Community 1231`** (1 nodes): `Processes maturity, calamity spawns, and regional intensity shifts.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1232`** (1 nodes): `Rule: Clearing a camp provides rewards and reduces threat.`
+- **Thin community `Community 1232`** (1 nodes): `Increases regional calamity intensity when significant entities die.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1233`** (1 nodes): `Processes maturity, calamity spawns, and regional intensity shifts.`
+- **Thin community `Community 1233`** (1 nodes): `Produce a deterministic fingerprint of the current state.         Includes ident`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1234`** (1 nodes): `Increases regional calamity intensity when significant entities die.`
+- **Thin community `Community 1234`** (1 nodes): `Returns a normalized direction vector towards the target kind using         weig`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1235`** (1 nodes): `Produce a deterministic fingerprint of the current state.         Includes ident`
+- **Thin community `Community 1235`** (1 nodes): `LEG-RPG-141: Quest generation from scar/trauma state.         Regions with high`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1236`** (1 nodes): `Returns a normalized direction vector towards the target kind using         weig`
+- **Thin community `Community 1236`** (1 nodes): `LEG-RPG-141: Quest generation from strategic blockers.         Material blockers`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1237`** (1 nodes): `LEG-RPG-141: Quest generation from scar/trauma state.         Regions with high`
+- **Thin community `Community 1237`** (1 nodes): `Convert a quest template to a strategic project.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1238`** (1 nodes): `LEG-RPG-141: Quest generation from strategic blockers.         Material blockers`
+- **Thin community `Community 1238`** (1 nodes): `Generate concerns based on hunger, sleep debt, and rest pressure.         VERIFI`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1239`** (1 nodes): `Convert a quest template to a strategic project.`
+- **Thin community `Community 1239`** (1 nodes): `Generate concerns based on inventory status and pending goals.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1240`** (1 nodes): `Generate concerns based on hunger, sleep debt, and rest pressure.         VERIFI`
+- **Thin community `Community 1240`** (1 nodes): `Returns a utility boost for routine-related projects.         VERIFIED v2: routi`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1241`** (1 nodes): `Generate concerns based on inventory status and pending goals.`
+- **Thin community `Community 1241`** (1 nodes): `Returns a utility boost based on the entity's role identity.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1242`** (1 nodes): `Returns a utility boost for routine-related projects.         VERIFIED v2: routi`
+- **Thin community `Community 1242`** (1 nodes): `Phase 9: Anchored-World Behavior.         If entity is idle and away from home,`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1243`** (1 nodes): `Returns a utility boost based on the entity's role identity.`
+- **Thin community `Community 1243`** (1 nodes): `LEG-RPG-116: Strategic pivot on regional danger.          If hazard_level > 0.7,`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1244`** (1 nodes): `Phase 9: Anchored-World Behavior.         If entity is idle and away from home,`
+- **Thin community `Community 1244`** (1 nodes): `LEG-RPG-117: Scar detection.          If a nearby region has trauma_score > 0.5,`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1245`** (1 nodes): `LEG-RPG-116: Strategic pivot on regional danger.          If hazard_level > 0.7,`
+- **Thin community `Community 1245`** (1 nodes): `Near-death event: generates a survival concern and may suspend current project.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1246`** (1 nodes): `LEG-RPG-117: Scar detection.          If a nearby region has trauma_score > 0.5,`
+- **Thin community `Community 1246`** (1 nodes): `Part 1 §Strategic: Event interpretation can mutate directives.          Only hig`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1247`** (1 nodes): `Near-death event: generates a survival concern and may suspend current project.`
+- **Thin community `Community 1247`** (1 nodes): `Authoritatively apply deltas to social histories.         Logic ID: SOC-217 (Soc`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1248`** (1 nodes): `Part 1 §Strategic: Event interpretation can mutate directives.          Only hig`
+- **Thin community `Community 1248`** (1 nodes): `Prunes social records for entities with low salience to keep state lean.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1249`** (1 nodes): `Authoritatively apply deltas to social histories.         Logic ID: SOC-217 (Soc`
+- **Thin community `Community 1249`** (1 nodes): `Evaluate an OFFERED or COUNTERED contract.         Returns (new_status, reason,`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1250`** (1 nodes): `Prunes social records for entities with low salience to keep state lean.`
+- **Thin community `Community 1250`** (1 nodes): `Recalculate trust based on a concrete interaction outcome.         VERIFIED v2:`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1251`** (1 nodes): `Evaluate an OFFERED or COUNTERED contract.         Returns (new_status, reason,`
+- **Thin community `Community 1251`** (1 nodes): `Evaluate whether the target entity accepts an adjacent position swap.          L`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1252`** (1 nodes): `Recalculate trust based on a concrete interaction outcome.         VERIFIED v2:`
+- **Thin community `Community 1252`** (1 nodes): `LEG-RPG-119: Betrayal (Avenge).         Part 1 §Social: Private betrayal history`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1253`** (1 nodes): `Evaluate whether the target entity accepts an adjacent position swap.          L`
+- **Thin community `Community 1253`** (1 nodes): `LEG-RPG-123: Refutation drops trust.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1254`** (1 nodes): `LEG-RPG-119: Betrayal (Avenge).         Part 1 §Social: Private betrayal history`
+- **Thin community `Community 1254`** (1 nodes): `Part 1 §Social: Social learning updates familiarity/trust-like bonds.         VE`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1255`** (1 nodes): `LEG-RPG-123: Refutation drops trust.`
+- **Thin community `Community 1255`** (1 nodes): `Part 1 §Social: Recruitment evaluates trust, level, and greed.         Scales co`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1256`** (1 nodes): `Part 1 §Social: Social learning updates familiarity/trust-like bonds.         VE`
+- **Thin community `Community 1256`** (1 nodes): `Validates and applies a state transition for a contract.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1257`** (1 nodes): `Part 1 §Social: Recruitment evaluates trust, level, and greed.         Scales co`
+- **Thin community `Community 1257`** (1 nodes): `Strict state machine for contracts.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1258`** (1 nodes): `Validates and applies a state transition for a contract.`
+- **Thin community `Community 1258`** (1 nodes): `Auto-expire contracts that reached their tick limit.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1259`** (1 nodes): `Strict state machine for contracts.`
+- **Thin community `Community 1259`** (1 nodes): `Transition an OFFERED contract to ACTIVE.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1260`** (1 nodes): `Auto-expire contracts that reached their tick limit.`
+- **Thin community `Community 1260`** (1 nodes): `Resolve an ACTIVE contract and update social relationships.         First return`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1261`** (1 nodes): `Transition an OFFERED contract to ACTIVE.`
+- **Thin community `Community 1261`** (1 nodes): `Processes ACTIVE contracts for expiration or completion.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1262`** (1 nodes): `Resolve an ACTIVE contract and update social relationships.         First return`
+- **Thin community `Community 1262`** (1 nodes): `Reap any OFFERED contracts that have passed their expiry_tick.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1263`** (1 nodes): `Processes ACTIVE contracts for expiration or completion.`
+- **Thin community `Community 1263`** (1 nodes): `Export the entity's strategic state as a typed graph.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1264`** (1 nodes): `Reap any OFFERED contracts that have passed their expiry_tick.`
+- **Thin community `Community 1264`** (1 nodes): `Verify that multiple exports from the same state are identical.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1265`** (1 nodes): `Export the entity's strategic state as a typed graph.`
+- **Thin community `Community 1265`** (1 nodes): `Generate detour suggestions from unresolved blockers paired with relevant leads.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1266`** (1 nodes): `Verify that multiple exports from the same state are identical.`
+- **Thin community `Community 1266`** (1 nodes): `Part 1 §Strategic: Rejected/tested leads are suppressed to avoid blind retries.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1267`** (1 nodes): `Generate detour suggestions from unresolved blockers paired with relevant leads.`
+- **Thin community `Community 1267`** (1 nodes): `Part 1 §Strategic: Leads and concerns are retained under profile-specific limits`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1268`** (1 nodes): `Part 1 §Strategic: Rejected/tested leads are suppressed to avoid blind retries.`
+- **Thin community `Community 1268`** (1 nodes): `Check if a lead might resolve a blocker.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1269`** (1 nodes): `Part 1 §Strategic: Leads and concerns are retained under profile-specific limits`
+- **Thin community `Community 1269`** (1 nodes): `Score a detour suggestion.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1270`** (1 nodes): `Check if a lead might resolve a blocker.`
+- **Thin community `Community 1270`** (1 nodes): `Infer the right objective kind from a blocker+lead pair.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1271`** (1 nodes): `Score a detour suggestion.`
+- **Thin community `Community 1271`** (1 nodes): `Infer blockers based on recent failures.         VERIFIED v2: strategic_blocker_`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1272`** (1 nodes): `Infer the right objective kind from a blocker+lead pair.`
+- **Thin community `Community 1272`** (1 nodes): `Produce a StrategicUpdate containing blockers for missing requirements.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1273`** (1 nodes): `Infer blockers based on recent failures.         VERIFIED v2: strategic_blocker_`
+- **Thin community `Community 1273`** (1 nodes): `Resolve strategic blockers that are satisfied by the current or pending`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1274`** (1 nodes): `Produce a StrategicUpdate containing blockers for missing requirements.`
+- **Thin community `Community 1274`** (1 nodes): `Phase 9: Routine, Biological Needs, and Salience Filtering.         VERIFIED v2:`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1275`** (1 nodes): `Resolve strategic blockers that are satisfied by the current or pending`
+- **Thin community `Community 1275`** (1 nodes): `Record the final result of a project and apply learning effects.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1276`** (1 nodes): `Phase 9: Routine, Biological Needs, and Salience Filtering.         VERIFIED v2:`
+- **Thin community `Community 1276`** (1 nodes): `VERIFIED v2: StrategicIntelligenceSystem.process_outcome`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1277`** (1 nodes): `Record the final result of a project and apply learning effects.`
+- **Thin community `Community 1277`** (1 nodes): `Produce a collection of strategic intent updates for the next tick.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1278`** (1 nodes): `VERIFIED v2: StrategicIntelligenceSystem.process_outcome`
+- **Thin community `Community 1278`** (1 nodes): `VERIFIED v2: StrategicIntelligenceSystem.derive_cognition_profile`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1279`** (1 nodes): `Produce a collection of strategic intent updates for the next tick.`
+- **Thin community `Community 1279`** (1 nodes): `Returns a map of GoalKind -> utility_delta.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1280`** (1 nodes): `VERIFIED v2: StrategicIntelligenceSystem.derive_cognition_profile`
+- **Thin community `Community 1280`** (1 nodes): `Checks if the current region suppresses specific actions and enforces actor vali`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1281`** (1 nodes): `Returns a map of GoalKind -> utility_delta.`
+- **Thin community `Community 1281`** (1 nodes): `Action Readiness Law: Every ENTITY_ACT requires 100.0 readiness.         Logic I`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1282`** (1 nodes): `Checks if the current region suppresses specific actions and enforces actor vali`
+- **Thin community `Community 1282`** (1 nodes): `V2 Authoritative Movement Law:         Validates if entity has enough readiness`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1283`** (1 nodes): `Action Readiness Law: Every ENTITY_ACT requires 100.0 readiness.         Logic I`
+- **Thin community `Community 1283`** (1 nodes): `Simple Bresenham-like LoS check for WALL/Building obstructions.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1284`** (1 nodes): `V2 Authoritative Movement Law:         Validates if entity has enough readiness`
+- **Thin community `Community 1284`** (1 nodes): `Verify if attacker has clear elevation advantage (Terrain-based).`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1285`** (1 nodes): `Simple Bresenham-like LoS check for WALL/Building obstructions.`
+- **Thin community `Community 1285`** (1 nodes): `Authoritative geometric flanking check.         Returns: (is_flanked, is_surroun`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1286`** (1 nodes): `Verify if attacker has clear elevation advantage (Terrain-based).`
+- **Thin community `Community 1286`** (1 nodes): `Verify if defender is behind wall cover relative to attacker.         Logic ID:`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1287`** (1 nodes): `Authoritative geometric flanking check.         Returns: (is_flanked, is_surroun`
+- **Thin community `Community 1287`** (1 nodes): `Calculate movement/tie-breaking priority.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1288`** (1 nodes): `Verify if defender is behind wall cover relative to attacker.         Logic ID:`
+- **Thin community `Community 1288`** (1 nodes): `Find hostile entities currently in melee engagement with this entity.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1289`** (1 nodes): `Calculate movement/tie-breaking priority.`
+- **Thin community `Community 1289`** (1 nodes): `Find hostile entities that would be in melee engagement with this entity at a hy`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1290`** (1 nodes): `Find hostile entities currently in melee engagement with this entity.`
+- **Thin community `Community 1290`** (1 nodes): `Return the ID of the entity occupying the specified tile.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1291`** (1 nodes): `Find hostile entities that would be in melee engagement with this entity at a hy`
+- **Thin community `Community 1291`** (1 nodes): `Apply updates to a single entity, producing a new EntityState instance.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1292`** (1 nodes): `Return the ID of the entity occupying the specified tile.`
+- **Thin community `Community 1292`** (1 nodes): `Determines the next tactical intent for an entity.         Bounded to local visi`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1293`** (1 nodes): `Apply updates to a single entity, producing a new EntityState instance.`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1294`** (1 nodes): `Determines the next tactical intent for an entity.         Bounded to local visi`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 1295`** (1 nodes): `Public helper for deterministic target selection.         Matches legacy 'Tactic`
+- **Thin community `Community 1293`** (1 nodes): `Public helper for deterministic target selection.         Matches legacy 'Tactic`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `AuthoritativeState` connect `Community 0` to `Community 2`, `Community 3`, `Community 4`, `Community 5`, `Community 7`, `Community 8`, `Community 9`, `Community 10`, `Community 11`, `Community 13`, `Community 14`, `Community 16`, `Community 17`, `Community 19`, `Community 21`, `Community 31`, `Community 33`, `Community 41`, `Community 43`, `Community 44`, `Community 45`, `Community 46`, `Community 47`, `Community 52`, `Community 60`, `Community 61`, `Community 72`, `Community 82`, `Community 83`, `Community 84`, `Community 85`, `Community 89`, `Community 95`, `Community 100`, `Community 103`, `Community 108`, `Community 120`, `Community 122`?**
-  _High betweenness centrality (0.165) - this node is a cross-community bridge._
-- **Why does `V2EntityBuilder` connect `Community 0` to `Community 2`, `Community 3`, `Community 4`, `Community 5`, `Community 132`, `Community 8`, `Community 9`, `Community 10`, `Community 13`, `Community 14`, `Community 21`, `Community 152`, `Community 154`, `Community 33`, `Community 41`, `Community 45`, `Community 46`, `Community 47`, `Community 52`, `Community 53`, `Community 55`, `Community 60`, `Community 61`, `Community 71`, `Community 72`, `Community 82`, `Community 83`, `Community 84`, `Community 85`, `Community 94`, `Community 95`, `Community 101`, `Community 102`, `Community 103`, `Community 120`, `Community 122`?**
-  _High betweenness centrality (0.101) - this node is a cross-community bridge._
-- **Why does `Kernel` connect `Community 3` to `Community 0`, `Community 1`, `Community 2`, `Community 4`, `Community 5`, `Community 9`, `Community 11`, `Community 13`, `Community 14`, `Community 16`, `Community 89`, `Community 27`?**
-  _High betweenness centrality (0.085) - this node is a cross-community bridge._
-- **Are the 821 inferred relationships involving `AuthoritativeState` (e.g. with `DirtySetLeakError` and `DirtySetBuilder`) actually correct?**
-  _`AuthoritativeState` has 821 INFERRED edges - model-reasoned connections that need verification._
-- **Are the 655 inferred relationships involving `V2EntityBuilder` (e.g. with `EntityState` and `IdentityComponent`) actually correct?**
-  _`V2EntityBuilder` has 655 INFERRED edges - model-reasoned connections that need verification._
-- **Are the 467 inferred relationships involving `StateUpdate` (e.g. with `DirtySetLeakError` and `DirtySetBuilder`) actually correct?**
-  _`StateUpdate` has 467 INFERRED edges - model-reasoned connections that need verification._
-- **Are the 438 inferred relationships involving `EntityUpdate` (e.g. with `EquipmentService` and `ActionProposal`) actually correct?**
-  _`EntityUpdate` has 438 INFERRED edges - model-reasoned connections that need verification._
+- **Why does `AuthoritativeState` connect `Community 0` to `Community 1`, `Community 3`, `Community 4`, `Community 7`, `Community 8`, `Community 9`, `Community 10`, `Community 11`, `Community 13`, `Community 14`, `Community 17`, `Community 18`, `Community 20`, `Community 21`, `Community 22`, `Community 33`, `Community 34`, `Community 45`, `Community 50`, `Community 51`, `Community 59`, `Community 67`, `Community 77`, `Community 80`, `Community 84`, `Community 91`, `Community 94`, `Community 98`, `Community 105`?**
+  _High betweenness centrality (0.151) - this node is a cross-community bridge._
+- **Why does `V2EntityBuilder` connect `Community 0` to `Community 1`, `Community 3`, `Community 4`, `Community 7`, `Community 8`, `Community 10`, `Community 17`, `Community 145`, `Community 21`, `Community 22`, `Community 33`, `Community 34`, `Community 40`, `Community 45`, `Community 46`, `Community 51`, `Community 53`, `Community 59`, `Community 67`, `Community 71`, `Community 77`, `Community 91`, `Community 94`, `Community 99`, `Community 100`, `Community 127`?**
+  _High betweenness centrality (0.122) - this node is a cross-community bridge._
+- **Why does `SimulationEvent` connect `Community 5` to `Community 1`, `Community 2`, `Community 3`, `Community 4`, `Community 6`, `Community 8`, `Community 15`, `Community 19`, `Community 55`?**
+  _High betweenness centrality (0.097) - this node is a cross-community bridge._
+- **Are the 824 inferred relationships involving `AuthoritativeState` (e.g. with `DirtySetLeakError` and `DirtySetBuilder`) actually correct?**
+  _`AuthoritativeState` has 824 INFERRED edges - model-reasoned connections that need verification._
+- **Are the 664 inferred relationships involving `V2EntityBuilder` (e.g. with `EntityState` and `IdentityComponent`) actually correct?**
+  _`V2EntityBuilder` has 664 INFERRED edges - model-reasoned connections that need verification._
+- **Are the 469 inferred relationships involving `StateUpdate` (e.g. with `DirtySetLeakError` and `DirtySetBuilder`) actually correct?**
+  _`StateUpdate` has 469 INFERRED edges - model-reasoned connections that need verification._
+- **Are the 440 inferred relationships involving `EntityUpdate` (e.g. with `EquipmentService` and `ActionProposal`) actually correct?**
+  _`EntityUpdate` has 440 INFERRED edges - model-reasoned connections that need verification._

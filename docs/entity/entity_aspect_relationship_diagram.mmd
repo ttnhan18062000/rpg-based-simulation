@@ -204,3 +204,12 @@ EntityUpdate -. "after observation NI: verify/contradict facts" .-> KnowledgeMod
 EntityUpdate -. "after combat/travel NI: update risk belief" .-> RiskBelief
 ResourceTransfer -. "after buy/sell/craft/loot NI: update item meaning" .-> PossessionUnderstanding
 Strategic -. "after blockers/detours NI: update plan context" .-> PlanContext
+
+%% Phase 3 Subjective Routing Flow (Implemented)
+SelfModelBundle -. "supplies: needs & perceived condition" .-> AdventureRouteGenerator
+AdventureRouteGenerator -. "generates: candidate options" .-> AdventureDecisionService
+PersonalityComponent -. "biases: urgency & risk expected" .-> AdventureRouteScorer
+AdventureDecisionService -. "selects best route & maps" .-> RouteToProjectMapper
+RouteToProjectMapper -. "creates strategic bridge" .-> StrategicComponent
+ObjectiveIntentResolver -. "translates active objective" .-> ActionIntent
+

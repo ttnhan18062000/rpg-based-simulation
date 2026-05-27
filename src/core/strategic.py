@@ -90,6 +90,15 @@ class ObjectiveKind(str, Enum):
     ACQUIRE_ITEM = "acquire_item"
     DEFEAT_ENEMY = "defeat_enemy"
     INVESTIGATE = "investigate"
+    REACH_SERVICE = "reach_service"
+    ASK_INFORMATION = "ask_information"
+    BUY_ITEM = "buy_item"
+    REQUEST_CRAFT = "request_craft"
+    REACH_RESOURCE = "reach_resource"
+    HARVEST_RESOURCE = "harvest_resource"
+    ACCEPT_QUEST = "accept_quest"
+    REST = "rest"
+    RETURN_TOWN = "return_town"
 
 
 class GoalKind(str, Enum):
@@ -112,6 +121,12 @@ class ProjectKind(str, Enum):
     EXPLORATION = "exploration"
     COMBAT = "combat"
     SOCIAL = "social"
+    RECOVERY = "recovery"
+    PREPARATION = "preparation"
+    TRAINING = "training"
+    HARVESTING = "harvesting"
+    INFORMATION = "information"
+    TRAVEL = "travel"
 
 
 class ConcernKind(str, Enum):
