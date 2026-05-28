@@ -1040,6 +1040,57 @@ Generates conversion options and applies personality traits (`greed`, `industry`
 * **Industry**: Directs towards keeping materials and active crafting.
 
 ### 22.2.6 ConversionIntentResolver & ProgressionConversionPhase
-Bridges decisions to standard executable intents (e.g. `BLACKSMITH_REPAIR` task payload, main-hand equipment updates, or unspent AP delta decrease). The phase runs fully bounded behind a feature flag and executes in **1.9 ms for 100+ entities** (under the 5ms gate budget).
+Translates decisions to standard executable intents (e.g. `BLACKSMITH_REPAIR` task payload, main-hand equipment updates, or unspent AP delta decrease). The phase runs fully bounded behind a feature flag and executes in **1.9 ms for 100+ entities** (under the 5ms gate budget).
+
+
+## Section 23: Phase 7 — Party / Social Cooperation Architecture
+
+Phase 7 adds strategic, social cooperation and party dynamics to the simulation. It establishes a dedicated Cooperation Domain under the immutable boundary pattern. Entities evaluate their capability-derived help needs, query spatial or highly trusted partner candidates, score candidate fit with private trust, grudges, alignment, and capability indicators, select cooperation postures, and bridge those decisions into executable contract intents or tactical overrides.
+
+### 23.1 Core Components
+
+* **CooperationPosture**: Formally typed social orientations:
+  - `SOLO`: Process objective entirely independently.
+  - `REQUEST_HELP`: Seek assistance from a trusted peer.
+  - `HIRE_SUPPORT`: Pay a commercial hireling or guild worker.
+  - `DEFER_NO_PARTNER`: Delay strategic progress due to high risk and lack of suitable allies.
+  - `JOIN_COOP`: Accept and join an existing party or contract.
+  - `ABANDON_COOP`: Deliberately break alignment and leave the party.
+
+* **HelpNeedEvaluator**: Evaluates high combat risk, near-death history, critical HP levels, unexplored regions, or excessive carrying loads to establish typed `HelpNeed` records (`combat_support_needed`, `healer_needed`, `guide_needed`, `carry_support_needed`).
+
+* **PartnerCandidateProvider**: Restricts scan space to nearby entities (within a spatial radius) or highly trusted strategic allies (trust > 0.7) to guarantee low latency. It implements a cheap bounding box filter before evaluating full spatial distances.
+
+* **PartnerFitEvaluator**: Computes fit score by incorporating baseline trust (including bonds), applying grudge/nemesis penalties, assessing role compatibility (e.g. VANGUARD fits combat need), evaluating objective alignment (e.g. sharing identical current objective targets), and penalizing commercial costs against gold reserves.
+
+* **CooperationDecisionService**: Translates help needs and candidate fit reports into a definitive posture and choice of partner, returning a trace record and lists of rejected partners with reasons.
+
+* **CooperationIntentBridge**: Bridges strategic cooperation decisions into actionable, typed updates (such as `StrategicUpdate` with new contracts or `SocialUpdate` updating trust/fatigue).
+
+* **PartyObjectiveAlignmentService & PartyCohesionService**: Evaluates structural cohesion of active groups, identifying when objective changes or trust decay signals member abandonment or leader loss, updating social trust deltas accordingly.
+
+* **CooperationLearningService**: Adapts future posture decisions based on past cooperation outcomes (e.g. memory of betrayal decreases partner trust).
+
+* **CooperationPhase**: Orchestrator of the cooperation tick sequence, operating inside the `AuthoritativeApplyPipeline` with strict execution bounding (< 25.0ms for 100+ entities).
+
+### 23.2 Architecture Data Flow
+
+```mermaid
+graph TD
+    EntityState["EntityState Components (HP, Social, Strategic)"] --> NeedsEval["HelpNeedEvaluator"]
+    NeedsEval --> HelpNeeds["HelpNeeds (combat, healing, guide)"]
+    
+    HelpNeeds --> Providers["PartnerCandidateProvider (spatial & trust filter)"]
+    Providers --> Candidates["Candidate List"]
+    
+    Candidates --> FitEval["PartnerFitEvaluator (trust, grudge, role, alignment)"]
+    FitEval --> FitReports["PartnerFitReports"]
+    
+    FitReports --> DecisionService["CooperationDecisionService"]
+    DecisionService --> Decision["CooperationDecision (posture, partner, rejects)"]
+    
+    Decision --> IntentBridge["CooperationIntentBridge"]
+    IntentBridge --> StateUpdate["StateUpdate / Intents / Blockers"]
+```
 
 

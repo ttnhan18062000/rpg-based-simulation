@@ -216,3 +216,29 @@ AdventureDecisionService -. "selects best route & maps" .-> RouteToProjectMapper
 RouteToProjectMapper -. "creates strategic bridge" .-> StrategicComponent
 ObjectiveIntentResolver -. "translates active objective" .-> ActionIntent
 
+
+%% Phase 7 Social Cooperation & Party Flow (Implemented)
+subgraph Phase7Cooperation["Phase 7: Cooperation Domain & Social Pipeline [IMPL]"]
+  HelpNeed["HelpNeed<br/>key, severity, reason,<br/>support_tags, acceptable_postures"]
+  PartnerCandidate["PartnerCandidate<br/>entity_id, relationship_score, trust_score,<br/>role_fit_score, availability_score"]
+  PartnerFitReport["PartnerFitReport<br/>candidate_id, fit_score, trust_score,<br/>capability_match, objective_alignment, risk"]
+  CooperationDecision["CooperationDecision<br/>selected_posture, selected_partner_id, fit_score,<br/>rejected_partners, trace"]
+  CohesionReport["NI: PartyCohesionReport<br/>group_id, stability_score, status"]
+end
+
+class HelpNeed,PartnerCandidate,PartnerFitReport,CooperationDecision,CohesionReport impl
+
+Strategic -- "reads capability, near-death, HP" --> HelpNeedEvaluator
+HelpNeedEvaluator -- "creates" --> HelpNeed
+HelpNeed -- "requests support tags" --> PartnerCandidateProvider
+PartnerCandidateProvider -- "scans spatial/trust allies" --> PartnerCandidate
+PartnerCandidate -- "analyzes trust, grudge, role" --> PartnerFitEvaluator
+PartnerFitEvaluator -- "creates" --> PartnerFitReport
+PartnerFitReport -- "evaluates optimal candidate" --> CooperationDecisionService
+CooperationDecisionService -- "chooses posture/partner" --> CooperationDecision
+CooperationDecision -- "maps to contract/blocker intents" --> CooperationIntentBridge
+CooperationIntentBridge -- "mutates strategic / social" --> StateUpdate
+PartyCohesionService -- "evaluates group records" --> CohesionReport
+CohesionReport -- "collapses group trust on decay" --> StateUpdate
+CooperationLearningService -- "remembers betrayal outcomes" --> Strategic
+
