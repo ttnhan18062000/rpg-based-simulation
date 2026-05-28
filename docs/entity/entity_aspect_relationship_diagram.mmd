@@ -300,3 +300,27 @@ LifeArcClassifier & BehaviorChangeProofDetector & RouteDiversityAnalyzer & Forbi
 CampaignScorecardEvaluator --> CampaignReportGenerator
 
 
+%% Phase 10 Optimization, Scaling & Rollout Hardening (Implemented)
+subgraph Phase10Optimization["Phase 10: Optimization & Rollout Hardening [IMPL]"]
+  FeatureFlags["FeatureFlagManager<br/>OFF, SHADOW, ON, STRICT controls"]
+  RolloutProfiles["RolloutProfileManager<br/>Class A/B/C HW profile budgets"]
+  DirtyScheduler["DirtyWorkScheduler<br/>Skip ticks for static regions/entities"]
+  ProviderEnforcement["ProviderBudgetEnforcement<br/>Strict limits & deterministic query orders"]
+  CacheStrategy["CacheStrategy & Invalidation<br/>LRU local cache & event invalidation"]
+  TraceVolumeGovernor["TraceVolumeGovernor<br/>Cap low-severity traces & summarize repeated logs"]
+  MemoryLimits["MemoryCapacityLimits<br/>Deterministic salience-based fact/opp/coop eviction"]
+  GracefulDegradation["GracefulDegradationManager<br/>NORMAL, CONSTRAINED, DEGRADED, CRITICAL throttling"]
+  DeveloperDiagnostics["DeveloperDiagnostics<br/>DiagnosticIssue reports for budget skips / loops"]
+  RolloutGate["RolloutGate Script<br/>CI/CD verification check for safe production rollouts"]
+end
+
+class FeatureFlags,RolloutProfiles,DirtyScheduler,ProviderEnforcement,CacheStrategy,TraceVolumeGovernor,MemoryLimits,GracefulDegradation,DeveloperDiagnostics,RolloutGate impl
+
+AuthoritativeState -- "reads features & hardware" --> FeatureFlags & RolloutProfiles
+FeatureFlags & RolloutProfiles -- "orchestrates runtime throttles" --> DirtyScheduler & ProviderEnforcement & CacheStrategy & TraceVolumeGovernor & MemoryLimits & GracefulDegradation
+GracefulDegradation -- "records budget skip & loop telemetry" --> DeveloperDiagnostics
+DeveloperDiagnostics -- "produces diagnostic report" --> RolloutGate
+CampaignRunner -- "produces production candidate run report" --> RolloutGate
+
+
+
