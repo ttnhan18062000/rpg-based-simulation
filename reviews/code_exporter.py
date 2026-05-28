@@ -96,11 +96,18 @@ def main() -> None:
 
     # Explicit extra infrastructure and watchdog files for Loki, Prometheus, Grafana, and the Watchdog
     extra_infra_files = [
+        workspace_root / ".agents/workflows/compact-simulation-result.md",
+        workspace_root / ".agents/workflows/generate-simulation-setup.md",
+        workspace_root / ".agents/workflows/investigate-simulation-result.md",
+        workspace_root / ".agents/workflows/prepare-simulation-execution.md",
+        workspace_root / ".agents/workflows/propose-simulation-enhancements.md",
+        workspace_root / ".agents/workflows/register-simulation-result.md",
+        workspace_root / ".agents/workflows/update-knowledge-store.md",
         workspace_root / "docker-compose.yml",
         workspace_root / "prometheus.yml",
         workspace_root / "promtail-config.yml",
         workspace_root / "nginx.conf",
-        workspace_root / "src_legacy/utils/watchdog.py",
+        workspace_root / "src/observability/watchdog.py",
         workspace_root / "grafana/provisioning/datasources/datasource.yml",
         workspace_root / "grafana/provisioning/dashboards/dashboard.yml",
         workspace_root / "grafana/dashboards/simulation.json",
