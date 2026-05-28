@@ -1094,3 +1094,38 @@ graph TD
 ```
 
 
+## Section 24: Phase 8 — World Emergence / Population-Level Consequences
+
+Phase 8 introduces macro environmental feedback loops. Entity actions (such as deaths, resource gathering, and combat wins) are aggregated into dynamic regional, resource, and service pressures. These world pressures, in turn, are bridged back to subjective entity-level observations, dynamically driving future routing and progression choices.
+
+### 24.1 Core Components
+
+* **WorldEventAggregator**: Bounded window aggregator that compiles raw simulation event streams (deaths, harvest events, etc.) inside a 100-tick sliding window, preventing expensive $O(N)$ historical scans.
+* **RegionalPressureModel**: Evaluates regional danger (based on entity death events and quest failures) and wild camp escalation levels, mapping aggregate metrics to a standardized $[0.0, 1.0]$ range.
+* **ScarcityModel**: Evaluates resource exhaustion patterns per region (e.g. rapid node depletion events) to determine raw material scarcity coefficients.
+* **WorldOpportunityPressureService**: Translates regional danger and resource shortages into dynamic opportunity pressures (`clear_threat`, `gather_resource`, `camp_clear`).
+* **DynamicQuestSeedService & RumorSeedService**: Generates deterministic quest seeds (difficulty and gold reward hints mapped to pressure intensity) and low-certainty rumor seeds for travelers.
+* **ServiceStatePressureModel**: Computes town service strains (e.g. blacksmith material shortage derived from iron ore scarcity).
+* **WorldToEntitySignalBridge**: Projects macro world pressures onto local entity observations based on spatial proximity or hometown association, bridging danger levels into subjective route adjustments (e.g. `force_route_reevaluation`).
+* **WorldEmergencePhase**: Orchestrates the entire evaluation loop inside the authoritative simulation pipeline, safely avoiding raw mutable state changes and maintaining a strict performance budget ($< 5.0\text{ms}$ for $100+$ entities).
+
+### 24.2 Architecture Data Flow
+
+```mermaid
+graph TD
+    WorldEvents["Raw Simulation Events (deaths, harvests, etc.)"] --> EventAgg["WorldEventAggregator (sliding window)"]
+    EventAgg --> RegionalModel["RegionalPressureModel (danger, camp)"]
+    EventAgg --> ScarcityModel["ScarcityModel (resource depletion)"]
+    
+    RegionalModel & ScarcityModel --> OppService["WorldOpportunityPressureService"]
+    OppService --> QuestService["DynamicQuestSeedService (quest seeds)"]
+    
+    RegionalModel & ScarcityModel --> RumorService["RumorSeedService (rumor seeds)"]
+    RegionalModel & ScarcityModel --> ServiceModel["ServiceStatePressureModel (service pressures)"]
+    
+    QuestService & RumorService & ServiceModel --> SignalBridge["WorldToEntitySignalBridge (spatial exposure)"]
+    SignalBridge --> EntityState["Subjective Entity Updates (force route reevaluation, signals)"]
+```
+
+
+

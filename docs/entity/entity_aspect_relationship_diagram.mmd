@@ -238,7 +238,40 @@ PartnerFitReport -- "evaluates optimal candidate" --> CooperationDecisionService
 CooperationDecisionService -- "chooses posture/partner" --> CooperationDecision
 CooperationDecision -- "maps to contract/blocker intents" --> CooperationIntentBridge
 CooperationIntentBridge -- "mutates strategic / social" --> StateUpdate
-PartyCohesionService -- "evaluates group records" --> CohesionReport
+PartyObjectiveAlignmentService & PartyCohesionService -- "evaluates group records" --> CohesionReport
 CohesionReport -- "collapses group trust on decay" --> StateUpdate
 CooperationLearningService -- "remembers betrayal outcomes" --> Strategic
+
+
+%% Phase 8 World Emergence & Population-Level Consequences (Implemented)
+subgraph Phase8WorldEmergence["Phase 8: World Emergence & Population-Level Feedback [IMPL]"]
+  WorldEvent["WorldEvent<br/>category, tick, region_id, subject"]
+  EventAggregator["WorldEventAggregator<br/>compiles sliding window of events"]
+  RegionalPressure["RegionalPressure<br/>region_id, pressure_kind, intensity"]
+  ResourceScarcity["ResourceScarcitySignal<br/>region_id, resource_type, scarcity_level"]
+  ServicePressure["ServiceStatePressure<br/>service_id, pressure_kind, intensity"]
+  QuestSeed["QuestSeed<br/>id, kind, region_id, difficulty, reward"]
+  RumorSeed["RumorSeed<br/>id, subject, region_id, certainty"]
+  EntityExposure["Entity Signal Exposure<br/>exposed_world_signals, force_route_reevaluation"]
+end
+
+class WorldEvent,EventAggregator,RegionalPressure,ResourceScarcity,ServicePressure,QuestSeed,RumorSeed,EntityExposure impl
+
+AuthoritativeState -- "emits events on death/harvest" --> WorldEvent
+WorldEvent -- "filters by bounded tick window" --> EventAggregator
+EventAggregator -- "feeds danger/camp counts" --> RegionalPressureModel
+EventAggregator -- "feeds node depletion counts" --> ScarcityModel
+RegionalPressureModel -- "creates" --> RegionalPressure
+ScarcityModel -- "creates" --> ResourceScarcity
+RegionalPressure & ResourceScarcity -- "translates to" --> WorldOpportunityPressureService
+RegionalPressure & ResourceScarcity -- "evaluates service strain" --> ServiceStatePressureModel
+ServiceStatePressureModel -- "creates" --> ServicePressure
+WorldOpportunityPressureService -- "generates dynamic quests" --> DynamicQuestSeedService
+DynamicQuestSeedService -- "creates" --> QuestSeed
+RegionalPressure & ResourceScarcity -- "spreads chatters" --> RumorSeedService
+RumorSeedService -- "creates" --> RumorSeed
+RegionalPressure & ResourceScarcity & ServicePressure & QuestSeed & RumorSeed -- "bridges to entities" --> WorldToEntitySignalBridge
+WorldToEntitySignalBridge -- "projects subjective signals" --> EntityExposure
+EntityExposure -- "triggers Route Reevaluation" --> AdventureRouteScorer
+EntityExposure -- "updates property maps" --> StateUpdate
 

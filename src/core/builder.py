@@ -330,6 +330,7 @@ class V2EntityBuilder:
         chase_ticks: Optional[int] = None,
         max_chase_ticks: Optional[int] = None,
         returning_home: Optional[bool] = None,
+        region_id: Optional[str] = None,
     ) -> V2EntityBuilder:
         current = self._navigation_to_dict()
 
@@ -348,6 +349,7 @@ class V2EntityBuilder:
             "chase_ticks": chase_ticks,
             "max_chase_ticks": max_chase_ticks,
             "returning_home": returning_home,
+            "region_id": region_id,
         }
 
         for key, value in updates.items():
