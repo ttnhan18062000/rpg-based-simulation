@@ -275,3 +275,28 @@ WorldToEntitySignalBridge -- "projects subjective signals" --> EntityExposure
 EntityExposure -- "triggers Route Reevaluation" --> AdventureRouteScorer
 EntityExposure -- "updates property maps" --> StateUpdate
 
+
+%% Phase 9 Long-Run Life-Arc Campaigns (Implemented)
+subgraph Phase9Campaigns["Phase 9: Long-Run Life-Arc campaigns [IMPL]"]
+  CampaignSpec["CampaignSpec<br/>campaign_id, actors, expected_arcs, forbidden"]
+  CampaignRunner["CampaignRunner<br/>executes long runs deterministic"]
+  LifeArcClassifier["LifeArcClassifier<br/>classifies entity life traces"]
+  BehaviorChangeProofDetector["BehaviorChangeProofDetector<br/>detects learning and causal behavior changes"]
+  RouteDiversityAnalyzer["RouteDiversityAnalyzer<br/>analyzes route usage, stagnation entropy"]
+  ForbiddenBehaviorDetector["ForbiddenBehaviorDetector<br/>flags post-death, hidden knowledge loops"]
+  CampaignScorecardEvaluator["CampaignScorecardEvaluator<br/>issues pass/fail verdicts on lifecycle coherence"]
+  CampaignReportGenerator["CampaignReportGenerator<br/>produces HTML/Markdown/JSON artifact verification"]
+end
+
+class CampaignSpec,CampaignRunner,LifeArcClassifier,BehaviorChangeProofDetector,RouteDiversityAnalyzer,ForbiddenBehaviorDetector,CampaignScorecardEvaluator,CampaignReportGenerator impl
+
+CampaignSpec --> CampaignRunner
+CampaignRunner --> AuthoritativeState
+AuthoritativeState -- "emits event stream" --> LifeArcClassifier
+AuthoritativeState -- "emits event stream" --> BehaviorChangeProofDetector
+AuthoritativeState -- "emits event stream" --> RouteDiversityAnalyzer
+AuthoritativeState -- "emits event stream" --> ForbiddenBehaviorDetector
+LifeArcClassifier & BehaviorChangeProofDetector & RouteDiversityAnalyzer & ForbiddenBehaviorDetector --> CampaignScorecardEvaluator
+CampaignScorecardEvaluator --> CampaignReportGenerator
+
+

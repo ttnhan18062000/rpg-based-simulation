@@ -1127,5 +1127,47 @@ graph TD
     SignalBridge --> EntityState["Subjective Entity Updates (force route reevaluation, signals)"]
 ```
 
+## Section 25: Phase 9 — Long-Run Life-Arc Campaigns Architecture
+
+Phase 9 establishes the campaign verification system for long-run simulation runs. It provides structural validation of entity lives rather than raw tick transitions, ensuring the RPG simulation generates coherent individual lifespans, behavioral adaptability based on historical events, route diversity, and strict compliance with simulation boundaries (preventing post-death actions or hidden information leaks).
+
+### 25.1 Core Modules and Architecture
+
+* **CampaignSpec (`schema.py` & `spec.py`)**: Data-driven specification loaded from YAML/JSON files, allowing reproducible runs across seeds. It specifies expected actor behaviors, target life arc families, world pressures, semantic budget limits, and forbidden behaviors.
+* **CampaignRunner (`runner.py`)**: Orchestrator wrapping the simulation Kernel. It sets up actors, executes a long-run simulation loop, captures entity events, intercepts simulation state transitions, and feeds the resulting trace to semantic analyzers.
+* **LifeArcClassifier (`classifier.py`)**: Evaluates entity life traces against deterministic criteria to classify them into distinct archetypal life arcs:
+  - `cautious_growth`: Entity recovers at inns or accepts easy quests after experiencing combat losses.
+  - `craft_growth`: Entity learns recipes and crafts items to improve capability.
+  - `info_growth`: Entity gathers rumors, scouts unknown zones, and routes around obstacles.
+  - `party_growth`: Entity forms social contracts and tactical groups.
+  - `risky_growth`: Entity takes high combat risks and wins high-difficulty encounters.
+  - `failed_adventurer`: Entity suffers death after making traceable tactical choices.
+  - `stagnant`: Entity fails to achieve progression or remains trapped in loop patterns.
+* **BehaviorChangeProofDetector (`behavior_change.py`)**: Verifies temporal causal proofs, ensuring that actions in later phases are causally shifted based on cognitive events in earlier phases (e.g. combat loss leading to danger avoidance, upgrading after acquiring crafting ingredients).
+* **RouteDiversityAnalyzer (`diversity.py`)**: Computes entropy metrics, unique path ratios, and trait correlations to detect behavioral collapse or stagnation across the population.
+* **ForbiddenBehaviorDetector (`forbidden.py`)**: Scans event logs to enforce absolute rule verification, instantly identifying post-death actions, actions utilizing hidden/omniscient world knowledge, or infinite stuck looping.
+* **CampaignScorecardEvaluator (`scorecard.py`)**: Combines classification, behavior proofs, diversity metrics, and forbidden logs to issue a final verdict (`pass` or `fail`).
+* **CampaignReportGenerator (`reports.py`)**: Formulates comprehensive markdown and JSON analysis outputs for continuous validation and continuous integration verification.
+
+### 25.2 Architecture Data Flow
+
+```mermaid
+graph TD
+    SpecFile["Campaign Specification (YAML)"] --> SpecLoader["CampaignSpecLoader"]
+    SpecLoader --> Runner["CampaignRunner"]
+    
+    Runner --> KernelLoop["Kernel Tick Loop (17-Phase Authoritative Pipeline)"]
+    KernelLoop --> EventStream["Campaign Events Trace"]
+    
+    EventStream --> Classifier["LifeArcClassifier (cautious, craft, stagnant, death)"]
+    EventStream --> ChangeDetector["BehaviorChangeProofDetector (avoidance, route shifts)"]
+    EventStream --> Diversity["RouteDiversityAnalyzer (entropy, trait correlation)"]
+    EventStream --> Forbidden["ForbiddenBehaviorDetector (post-death, omniscient leak)"]
+    
+    Classifier & ChangeDetector & Diversity & Forbidden --> Scorecard["CampaignScorecardEvaluator"]
+    Scorecard --> Reports["CampaignReportGenerator (JSON & Markdown summaries)"]
+```
+
+
 
 

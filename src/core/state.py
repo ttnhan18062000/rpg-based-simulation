@@ -783,7 +783,8 @@ class EntityState:
             equipment=equip_comp,
             navigation=shallow_freeze(self.navigation),
             task=shallow_freeze(self.task),
-            stamina=self.stamina
+            stamina=self.stamina,
+            self_model=self.self_model
         )
         object.__setattr__(self, "_readonly_cache", res)
         object.__setattr__(res, "_readonly_cache", res)

@@ -522,6 +522,8 @@ class ApplyPath:
         object.__setattr__(res, "navigation", changes.get("navigation", entity.navigation))
         object.__setattr__(res, "task", changes.get("task", entity.task))
         object.__setattr__(res, "stamina", changes.get("stamina", entity.stamina))
+        object.__setattr__(res, "self_model", changes.get("self_model", getattr(entity, "self_model", None)))
+
         
         timeline = getattr(entity, "timeline", None)
         if timeline is None:
