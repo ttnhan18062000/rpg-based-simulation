@@ -991,3 +991,55 @@ Stores what the entity explicitly has learned (KnowledgeFacts) or knows it doesn
 
 Updates are orchestrated efficiently via the `SelfModelUpdatePhase.run` loop. A high-performance dirty-check ensures that Need Interpretation and Capability Estimation are skipped entirely if no raw stats changed and no information events were assimilated, executing in **under 5 microseconds** for clean ticks.
 
+
+# 22. Phase 6: Bounded Progression, Equipment, and Reward Conversion Architecture
+
+To bridge the gap between raw combat rewards and long-term capability growth, Phase 6 implements a subjective meaning interpretation, growth gap detection, and options-scoring decision loop. Decisions are successfully resolved and mapped into standard non-mutative authoritative proposed updates.
+
+## 22.1 Architecture and Workflow
+
+```mermaid
+graph TD
+    RawState["Raw EntityState Components (Gold, Inventory, Durability)"] --> PossessionService["PossessionUnderstandingService"]
+    PossessionService --> PossessionComponent["PossessionUnderstandingComponent"]
+    
+    PossessionComponent --> GapsEvaluator["GrowthGapEvaluator"]
+    GapsEvaluator --> GapsReport["GrowthGapReport"]
+    
+    EventLedger["Event-Driven RewardLedgerComponent"] --> RewardInterp["RewardInterpretationService"]
+    GapsReport --> RewardInterp
+    
+    RewardInterp --> OptionGen["ConversionOptionGenerator"]
+    OptionGen --> DecisionService["ConversionDecisionService (Scoring + Personality Bias)"]
+    
+    DecisionService --> Result["ProgressionDecisionResult"]
+    Result --> IntentResolver["ConversionIntentResolver"]
+    IntentResolver --> proposedUpdates["Executable proposed updates (TaskUpdate, EquipmentUpdate, IdentityUpdate)"]
+```
+
+## 22.2 Component Specifications
+
+### 22.2.1 PossessionUnderstandingComponent & Service
+Translates inventory items subjectively against active recipes and equipment power comparisons to assign keep, sell, craft, or equip priorities.
+* Keeps active recipe components (`iron_ore`, `wolf_fang`) instead of selling them.
+* Recognizes rare unknown clues (`ancient_fragment`) as items to store and ask guides about instead of discarding.
+
+### 22.2.2 GrowthGapEvaluator & Report
+Identifies active weaknesses and needs across weapon potency, critical gear repairs, recipe components, gold reserves, and level AP upgrades. Determines the dominant gap (e.g. prioritizes critical repairs over minor weapon upgrades).
+
+### 22.2.3 RewardLedgerComponent & Service
+Provides an event-driven, capacity-bounded list (capped at 20 entries) of recent XP, gold, or item gains, bypassing full-state reconstructs and ensuring high execution leanness.
+
+### 22.2.4 RewardInterpretationService
+Translates recent reward gains against active growth gaps to formulate subjectively useful meaning records (e.g. interprets a gold gain as a blacksmith repair opportunity under a critical durability gap).
+
+### 22.2.5 ConversionDecisionService & Personality Scoring
+Generates conversion options and applies personality traits (`greed`, `industry`, `caution`) to choose final choices:
+* **Caution**: Prefers blacksmith repair tasks and supplies.
+* **Greed**: Favors selling loot and saving gold.
+* **Industry**: Directs towards keeping materials and active crafting.
+
+### 22.2.6 ConversionIntentResolver & ProgressionConversionPhase
+Bridges decisions to standard executable intents (e.g. `BLACKSMITH_REPAIR` task payload, main-hand equipment updates, or unspent AP delta decrease). The phase runs fully bounded behind a feature flag and executes in **1.9 ms for 100+ entities** (under the 5ms gate budget).
+
+

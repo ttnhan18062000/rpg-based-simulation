@@ -41,14 +41,17 @@ subgraph ProposedSelfModel["Bottom-up self model [IMPL] - entity self model laye
   KnowledgeModel["KnowledgeModelComponent [IMPL]<br/>facts, unknowns, certainty,<br/>source_id, verified_tick,<br/>contradiction_count"]
   ExperienceMemory["NI: ExperienceMemoryComponent<br/>important lived events, outcome,<br/>emotional_weight, learned_tick, tags"]
   RiskBelief["NI: RiskBeliefComponent<br/>risk subject, severity,<br/>confidence, evidence_count,<br/>last_updated_tick"]
-  PossessionUnderstanding["NI: PossessionUnderstandingComponent<br/>item meaning, known_uses,<br/>estimated_value, keep/sell priority"]
+  PossessionUnderstanding["PossessionUnderstandingComponent [IMPL]<br/>item meaning, known_uses,<br/>estimated_value, keep/sell priority"]
+  RewardLedger["RewardLedgerComponent [IMPL]<br/>event-driven reward ledger,<br/>gold, item, and XP entries"]
+  GrowthGap["GrowthGapReport [IMPL]<br/>active weakness gaps,<br/>dominant gap prioritization"]
+  RewardInterpretation["RewardInterpretationReport [IMPL]<br/>subjective meaning interpretation,<br/>resolved dominant gaps"]
   IntentPressure["NI: IntentPressureComponent<br/>pressure key/category,<br/>strength, source, created_tick"]
   PlanContext["NI: PlanContextComponent<br/>active context, constraints,<br/>alternatives, selected/rejected reasons"]
   TemporalAwareness["NI: TemporalAwarenessComponent<br/>deadlines, recurring patterns,<br/>urgency bias, last_time_check"]
 end
 
-class SelfAwareness,NeedInterpretation,CapabilityEstimate,KnowledgeModel impl
-class ExperienceMemory,RiskBelief,PossessionUnderstanding,IntentPressure,PlanContext,TemporalAwareness ni
+class SelfAwareness,NeedInterpretation,CapabilityEstimate,KnowledgeModel,PossessionUnderstanding,RewardLedger,GrowthGap,RewardInterpretation impl
+class ExperienceMemory,RiskBelief,IntentPressure,PlanContext,TemporalAwareness ni
 
 subgraph DerivedViews["Derived views [NI] - services/evaluators, not stored entity components"]
   SurvivalReadiness["NI View: SurvivalReadiness<br/>needs + body + risk"]
