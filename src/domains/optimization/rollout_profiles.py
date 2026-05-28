@@ -41,11 +41,11 @@ class RolloutProfileManager:
             HardwareClass.CLASS_A: RolloutProfile(
                 name="CLASS_A",
                 hardware_class=HardwareClass.CLASS_A,
-                enabled_phases=["ENABLE_WORLD_CAPABILITY_LAYER", "ENABLE_SELF_MODEL"],
-                shadow_phases=["ENABLE_ADVENTURE_DECISION"],
+                enabled_phases=["ENABLE_WORLD_CAPABILITY_LAYER", "ENABLE_SELF_MODEL_COGNITION"],
+                shadow_phases=["ENABLE_ADVENTURE_ROUTING"],
                 disabled_phases=[
-                    "ENABLE_COMBAT_ENGAGEMENT", "ENABLE_INFORMATION_BELIEF",
-                    "ENABLE_PROGRESSION_CONVERSION", "ENABLE_COOPERATION",
+                    "ENABLE_COMBAT_ENGAGEMENT", "ENABLE_BELIEF_ASSIMILATION",
+                    "ENABLE_PROGRESSION_EVOLUTION", "ENABLE_SOCIAL_COOPERATION",
                     "ENABLE_WORLD_EMERGENCE", "ENABLE_LIFE_ARC_CAMPAIGNS",
                     "ENABLE_ENHANCED_TRACE_EVENTS"
                 ],
@@ -57,11 +57,11 @@ class RolloutProfileManager:
                 name="CLASS_B",
                 hardware_class=HardwareClass.CLASS_B,
                 enabled_phases=[
-                    "ENABLE_WORLD_CAPABILITY_LAYER", "ENABLE_SELF_MODEL",
-                    "ENABLE_ADVENTURE_DECISION", "ENABLE_COMBAT_ENGAGEMENT",
-                    "ENABLE_INFORMATION_BELIEF", "ENABLE_PROGRESSION_CONVERSION"
+                    "ENABLE_WORLD_CAPABILITY_LAYER", "ENABLE_SELF_MODEL_COGNITION",
+                    "ENABLE_ADVENTURE_ROUTING", "ENABLE_COMBAT_ENGAGEMENT",
+                    "ENABLE_BELIEF_ASSIMILATION", "ENABLE_PROGRESSION_EVOLUTION"
                 ],
-                shadow_phases=["ENABLE_COOPERATION", "ENABLE_WORLD_EMERGENCE"],
+                shadow_phases=["ENABLE_SOCIAL_COOPERATION", "ENABLE_WORLD_EMERGENCE"],
                 disabled_phases=["ENABLE_LIFE_ARC_CAMPAIGNS", "ENABLE_ENHANCED_TRACE_EVENTS"],
                 max_ram_mb=2048,
                 tick_budget_ms=25.0,
@@ -71,10 +71,10 @@ class RolloutProfileManager:
                 name="CLASS_C",
                 hardware_class=HardwareClass.CLASS_C,
                 enabled_phases=[
-                    "ENABLE_WORLD_CAPABILITY_LAYER", "ENABLE_SELF_MODEL",
-                    "ENABLE_ADVENTURE_DECISION", "ENABLE_COMBAT_ENGAGEMENT",
-                    "ENABLE_INFORMATION_BELIEF", "ENABLE_PROGRESSION_CONVERSION",
-                    "ENABLE_COOPERATION", "ENABLE_WORLD_EMERGENCE",
+                    "ENABLE_WORLD_CAPABILITY_LAYER", "ENABLE_SELF_MODEL_COGNITION",
+                    "ENABLE_ADVENTURE_ROUTING", "ENABLE_COMBAT_ENGAGEMENT",
+                    "ENABLE_BELIEF_ASSIMILATION", "ENABLE_PROGRESSION_EVOLUTION",
+                    "ENABLE_SOCIAL_COOPERATION", "ENABLE_WORLD_EMERGENCE",
                     "ENABLE_LIFE_ARC_CAMPAIGNS", "ENABLE_ENHANCED_TRACE_EVENTS"
                 ],
                 shadow_phases=[],

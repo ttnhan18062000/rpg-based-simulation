@@ -71,6 +71,15 @@ class ItemRegistry:
         ),
         "gold": ItemDefinition(
             id="gold", name="Gold", kind=ItemKind.CURRENCY, weight=0.001, stack_size=999999
+        ),
+        "ore": ItemDefinition(
+            id="ore", name="Ore", kind=ItemKind.MATERIAL, weight=5.0
+        ),
+        "ORE": ItemDefinition(
+            id="ORE", name="Ore", kind=ItemKind.MATERIAL, weight=5.0
+        ),
+        "stone": ItemDefinition(
+            id="stone", name="Stone", kind=ItemKind.MATERIAL, weight=1.0
         )
     }
 

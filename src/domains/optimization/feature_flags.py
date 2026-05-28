@@ -12,12 +12,12 @@ class FeatureFlagManager:
     def __init__(self, overrides: Dict[str, FeatureMode] = None) -> None:
         self._flags: Dict[str, FeatureMode] = {
             "ENABLE_WORLD_CAPABILITY_LAYER": FeatureMode.OFF,
-            "ENABLE_SELF_MODEL": FeatureMode.OFF,
-            "ENABLE_ADVENTURE_DECISION": FeatureMode.OFF,
+            "ENABLE_SELF_MODEL_COGNITION": FeatureMode.OFF,
+            "ENABLE_ADVENTURE_ROUTING": FeatureMode.OFF,
             "ENABLE_COMBAT_ENGAGEMENT": FeatureMode.OFF,
-            "ENABLE_INFORMATION_BELIEF": FeatureMode.OFF,
-            "ENABLE_PROGRESSION_CONVERSION": FeatureMode.OFF,
-            "ENABLE_COOPERATION": FeatureMode.OFF,
+            "ENABLE_BELIEF_ASSIMILATION": FeatureMode.OFF,
+            "ENABLE_PROGRESSION_EVOLUTION": FeatureMode.OFF,
+            "ENABLE_SOCIAL_COOPERATION": FeatureMode.OFF,
             "ENABLE_WORLD_EMERGENCE": FeatureMode.OFF,
             "ENABLE_LIFE_ARC_CAMPAIGNS": FeatureMode.OFF,
             "ENABLE_ENHANCED_TRACE_EVENTS": FeatureMode.OFF,

@@ -30,6 +30,7 @@ def harness(cert_profile: RuntimeProfile) -> LongRunStabilityHarness:
 
 
 @pytest.mark.certification
+@pytest.mark.extra_slow
 def test_long_run_pure_stability(harness: LongRunStabilityHarness, tmp_path: Path):
     """
     Execute 5,000 ticks in PURE mode on 1,000 entities in the metropolis scenario.
@@ -61,6 +62,7 @@ def test_long_run_pure_stability(harness: LongRunStabilityHarness, tmp_path: Pat
 
 
 @pytest.mark.certification
+@pytest.mark.extra_slow
 def test_long_run_runtime_stability(harness: LongRunStabilityHarness):
     """
     Execute 2,000 ticks in RUNTIME mode on 800 entities in the mixed scenario.
@@ -86,6 +88,7 @@ def test_long_run_runtime_stability(harness: LongRunStabilityHarness):
 
 
 @pytest.mark.certification
+@pytest.mark.extra_slow
 def test_long_run_determinism_parity(harness: LongRunStabilityHarness):
     """
     Verify 100% exact bit-identical state hash parity across two multi-thousand tick simulation runs.

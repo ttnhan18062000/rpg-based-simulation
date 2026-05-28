@@ -55,6 +55,7 @@ def setup_complex_world(rng):
     return state
 
 @pytest.mark.perf
+@pytest.mark.slow
 def test_dirty_set_vs_full_scan_parity(rng):
     """
     Milestone 3: O(Dirty) vs O(N) Reference Parity.

@@ -627,6 +627,7 @@ class EntityUpdate:
     stamina_update: Optional[StaminaUpdate] = None
     wound_update: Optional[WoundUpdate] = None
     group_id_set: Optional[int] = None
+    self_model_bundle_set: Optional[Any] = None
     intent_results: List[IntentResult] = field(default_factory=list)
     property_updates: Dict[str, Any] = field(default_factory=dict)
 
@@ -649,7 +650,7 @@ class EntityUpdate:
                 (self.task is None or self.task.is_noop()) and 
                 (self.stamina_update is None or self.stamina_update.is_noop()) and 
                 (self.wound_update is None or self.wound_update.is_noop()) and 
-                self.group_id_set is None and not self.intent_results and 
+                self.group_id_set is None and self.self_model_bundle_set is None and not self.intent_results and 
                 not self.property_updates)
 
     def merge(self, other: EntityUpdate) -> EntityUpdate:
@@ -683,6 +684,7 @@ class EntityUpdate:
         if other.stamina_update: changes["stamina_update"] = self.stamina_update.merge(other.stamina_update) if self.stamina_update else other.stamina_update
         if other.wound_update: changes["wound_update"] = self.wound_update.merge(other.wound_update) if self.wound_update else other.wound_update
         if other.group_id_set is not None: changes["group_id_set"] = other.group_id_set
+        if other.self_model_bundle_set is not None: changes["self_model_bundle_set"] = other.self_model_bundle_set
         if other.intent_results: changes["intent_results"] = self.intent_results + other.intent_results
         if other.property_updates: changes["property_updates"] = {**self.property_updates, **other.property_updates}
         return replace(self, **changes)
@@ -695,6 +697,14 @@ class ResourceNodeUpdate:
     charges_delta: int = 0
     cooldown_set: Optional[int] = None
 
+    def merge(self, other: ResourceNodeUpdate) -> ResourceNodeUpdate:
+        if self.node_id != other.node_id:
+            raise ValueError("Cannot merge ResourceNodeUpdates for different nodes")
+        return replace(self,
+            charges_delta=self.charges_delta + other.charges_delta,
+            cooldown_set=other.cooldown_set if other.cooldown_set is not None else self.cooldown_set
+        )
+
 
 @dataclass(frozen=True, slots=True)
 class BuildingUpdate:
@@ -704,6 +714,24 @@ class BuildingUpdate:
     functional_set: Optional[bool] = None
     inventory: Optional[InventoryUpdate] = None
     price_modifiers_set: Optional[Dict[str, float]] = None
+
+    def merge(self, other: BuildingUpdate) -> BuildingUpdate:
+        if self.building_id != other.building_id:
+            raise ValueError("Cannot merge BuildingUpdates for different buildings")
+        
+        merged_inventory = self.inventory
+        if self.inventory and other.inventory:
+            merged_inventory = self.inventory.merge(other.inventory)
+        elif other.inventory:
+            merged_inventory = other.inventory
+
+        return replace(self,
+            hp_delta=self.hp_delta + other.hp_delta,
+            functional_set=other.functional_set if other.functional_set is not None else self.functional_set,
+            inventory=merged_inventory,
+            price_modifiers_set=other.price_modifiers_set if other.price_modifiers_set is not None else self.price_modifiers_set
+        )
+
 
 
 @dataclass(frozen=True, slots=True)
@@ -755,6 +783,14 @@ class ChestUpdate:
     cooldown_set: Optional[int] = None
     items_set: Optional[List[ItemStack]] = None
 
+    def merge(self, other: ChestUpdate) -> ChestUpdate:
+        if self.chest_id != other.chest_id:
+            raise ValueError("Cannot merge ChestUpdates for different chests")
+        return replace(self,
+            cooldown_set=other.cooldown_set if other.cooldown_set is not None else self.cooldown_set,
+            items_set=other.items_set if other.items_set is not None else self.items_set
+        )
+
 @dataclass(frozen=True, slots=True)
 class CampUpdate:
     """Updates to a persistent encampment."""
@@ -762,6 +798,16 @@ class CampUpdate:
     maturity_delta: float = 0.0
     active_set: Optional[bool] = None
     last_raid_tick_set: Optional[int] = None
+
+    def merge(self, other: CampUpdate) -> CampUpdate:
+        if self.id != other.id:
+            raise ValueError("Cannot merge CampUpdates for different camps")
+        return replace(self,
+            maturity_delta=self.maturity_delta + other.maturity_delta,
+            active_set=other.active_set if other.active_set is not None else self.active_set,
+            last_raid_tick_set=other.last_raid_tick_set if other.last_raid_tick_set is not None else self.last_raid_tick_set
+        )
+
 
 
 @dataclass(frozen=True, slots=True)

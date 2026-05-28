@@ -1038,6 +1038,9 @@ class AuthoritativeState:
     pressure_signals: Dict[str, float] = field(default_factory=dict)
     _opt_profile: Any = field(default=None, repr=False, compare=False)
     _force_full_scan: bool = field(default=False, repr=False, compare=False)
+    pending_information_responses: List[Dict[str, Any]] = field(default_factory=list, repr=False, compare=False)
+    information_source_profiles: List[Any] = field(default_factory=list, repr=False, compare=False)
+    feature_flags: Dict[str, Any] = field(default_factory=dict, repr=False, compare=False)
 
     def __post_init__(self):
         # M10 Law: Ensure cache is cleared on every new object creation (including replace)

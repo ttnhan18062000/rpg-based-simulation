@@ -24,16 +24,44 @@ from src.cognition.trace_events import (
     KnowledgeFactLearnedEvent,
     KnowledgeUnknownRecordedEvent,
 )
-
 class SelfModelUpdatePhase:
     """
     Orchestrates the bottom-up self-model update pipeline.
-    
-    1. Assimilates event-driven provider responses into knowledge.
-    2. Performs dirty-check on entity condition.
-    3. Runs Self-Assessment and Need Interpretation.
-    4. Runs Capability Estimates if context is supplied.
     """
+
+    @staticmethod
+    def apply(
+        state: Any,  # AuthoritativeState
+        update: Any,  # StateUpdate
+    ) -> Any:  # StateUpdate
+        """
+        Integrated pipeline refined phase apply method mapping to ENABLE_SELF_MODEL_COGNITION aspect.
+        """
+        new_entity_updates = dict(update.entity_updates)
+
+        for entity_id, entity in state.entities.items():
+            if not entity.lifecycle.active or not entity.combat.alive:
+                continue
+
+            # Run bottom-up update
+            new_bundle = SelfModelUpdatePhase.run(
+                entity=entity,
+                state=state,
+                events=[],
+                tick=state.tick
+            )
+
+            # Map back to entity update set
+            from src.core.updates import EntityUpdate
+            entity_up = new_entity_updates.get(entity_id, EntityUpdate(entity_id=entity_id))
+            from dataclasses import replace as dataclass_replace
+            new_entity_updates[entity_id] = dataclass_replace(
+                entity_up,
+                self_model_bundle_set=new_bundle
+            )
+
+        from dataclasses import replace as dataclass_replace
+        return dataclass_replace(update, entity_updates=new_entity_updates)
 
     @staticmethod
     def run(

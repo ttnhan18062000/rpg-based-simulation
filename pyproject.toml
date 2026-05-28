@@ -42,8 +42,19 @@ include = ["src*"]
 
 [tool.pytest.ini_options]
 pythonpath = ["."]
+norecursedirs = [
+    "reviews",
+    "scratch",
+    "stored_artifacts",
+    "tests_legacy",
+    ".venv",
+    ".git",
+    "node_modules",
+    "__pycache__",
+]
 markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "extra_slow: marks tests as extremely slow (>60s, deselect with '-m \"not extra_slow\"')",
     "world_long_run: long-run living-world stability tests",
     "legacy_characterization: proves legacy behavior in src",
     "v2_contract: defines a new V2-specific contract",

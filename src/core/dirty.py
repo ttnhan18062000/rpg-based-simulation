@@ -159,7 +159,7 @@ class DirtySetBuilder:
                 self.inventory.add(e_id)
                 self.strategic.add(e_id)
             
-            if e_upd.strategic or e_upd.task:
+            if e_upd.strategic or e_upd.task or e_upd.interaction or e_upd.quest:
                 self.strategic.add(e_id)
             
             if e_upd.social:
@@ -172,7 +172,7 @@ class DirtySetBuilder:
                 self.biological.add(e_id)
                 self.strategic.add(e_id)
                 
-            if e_upd.attributes:
+            if e_upd.attributes or e_upd.reward:
                 self.attributes.add(e_id)
                 
             ent = state.entities.get(e_id)
@@ -326,7 +326,7 @@ class DirtySet:
                 inventory.add(e_id)
                 strategic.add(e_id)
             
-            if e_upd.strategic:
+            if e_upd.strategic or e_upd.interaction or e_upd.quest:
                 strategic.add(e_id)
             
             if e_upd.social:
@@ -339,7 +339,7 @@ class DirtySet:
                 biological.add(e_id)
                 strategic.add(e_id)
                 
-            if e_upd.attributes:
+            if e_upd.attributes or e_upd.reward:
                 attributes.add(e_id)
                 
             ent = state.entities.get(e_id)

@@ -2,6 +2,7 @@ import pytest
 from src.perf.scenarios import build_idle_state
 
 @pytest.mark.perf
+@pytest.mark.slow
 @pytest.mark.parametrize("count", [100, 1000, 5000])
 def test_perf_passive_scaling(perf_harness, request, count):
     """

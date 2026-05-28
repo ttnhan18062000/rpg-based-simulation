@@ -77,7 +77,7 @@ class TownResolutionSystem:
                 # Healing
                 if entity.combat.hp < entity.combat.max_hp:
                     cb_upd = ent_upd.combat or CombatUpdate()
-                    ent_upd = replace(ent_upd, combat=replace(cb_upd, hp_delta=cb_upd.hp_delta + PASSIVE_HEAL_AMT))
+                    ent_upd = replace(ent_upd, combat=cb_upd.merge(CombatUpdate(hp_delta=PASSIVE_HEAL_AMT)))
                     refined_entity_updates[e_id] = ent_upd
 
                 # Building Services (Rest, Eat)
@@ -92,7 +92,7 @@ class TownResolutionSystem:
                                 bio_upd = ent_upd.biological or BiologicalUpdate()
                                 intent = ResourceTransferIntent(source_id=building_type.upper(), source_kind="TOWN_SERVICE", gold_delta=-10, transfer_kind="REST", is_group_required=True)
                                 ent_upd = replace(ent_upd,
-                                    combat=replace(cb_upd, hp_delta=cb_upd.hp_delta + 5),
+                                    combat=cb_upd.merge(CombatUpdate(hp_delta=5)),
                                     readiness_delta=ent_upd.readiness_delta + 10.0,
                                     biological=replace(bio_upd, sleep_debt_delta=bio_upd.sleep_debt_delta - 5.0),
                                     resource_transfers=list(ent_upd.resource_transfers) + [intent]
@@ -127,11 +127,11 @@ class TownResolutionSystem:
                     if region.suppression_active and entity.identity.faction != region.owner_faction_id:
                         cb_upd = ent_upd.combat or CombatUpdate()
                         ent_upd = replace(ent_upd,
-                            combat=replace(cb_upd,
-                                atk_delta=cb_upd.atk_delta + (entity.combat.atk * -0.2),
-                                def_delta=cb_upd.def_delta + (entity.combat.def_stat * -0.2),
-                                speed_delta=cb_upd.speed_delta + (entity.combat.speed * -0.1)
-                            )
+                            combat=cb_upd.merge(CombatUpdate(
+                                atk_delta=int(entity.combat.atk * -0.2),
+                                def_delta=int(entity.combat.def_stat * -0.2),
+                                speed_delta=int(entity.combat.speed * -0.1)
+                            ))
                         )
                         refined_entity_updates[e_id] = ent_upd
 

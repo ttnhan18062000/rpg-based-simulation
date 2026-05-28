@@ -65,6 +65,9 @@ class InformationBeliefPhase:
                 
                 assim = InformationAssimilationService.assimilate(actor, norm, state.tick)
                 
+                from dataclasses import replace as dataclass_replace
+                new_self_model = dataclass_replace(actor.self_model, knowledge=assim.knowledge_update)
+                
                 # Setup updates
                 entity_updates[actor.id] = EntityUpdate(
                     entity_id=actor.id,
@@ -74,7 +77,7 @@ class InformationBeliefPhase:
                         "last_assimilated_tick": state.tick,
                     },
                     strategic=assim.strategic_update,
-                    self_model_bundle_set=actor.self_model, # Re-attach updated self-model components later in engine loop
+                    self_model_bundle_set=new_self_model,
                 )
 
             # 3. Else, if actor has unresolved unknowns, route new query

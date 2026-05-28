@@ -139,6 +139,7 @@ def test_world_init_determinism():
     assert f1["state_hash"] != f3["state_hash"]
 
 
+@pytest.mark.slow
 def test_autonomous_loop_determinism_drift_guard(integrity_profile):
     """
     STRICT LAW:

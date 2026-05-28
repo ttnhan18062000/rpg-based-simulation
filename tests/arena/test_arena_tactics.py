@@ -3,6 +3,7 @@ from src.certification.harness import CertificationHarness
 from src.certification.scenarios import build_scenario_state, get_scenario_expectations
 from src.config.profiles import RuntimeProfile, HardwareClass
 
+@pytest.mark.slow
 def test_arena_group_coordination():
     """Verify that entities form groups and propagate targets during a battle."""
     profile = RuntimeProfile(

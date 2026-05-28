@@ -37,18 +37,29 @@ class CombatEngagementPhase:
         if not actors:
             return update
 
-        # To avoid pairwise NxN comparison, let's only compare actors against nearby candidates
-        # Retrieve sensory visibility or nearby hostiles
+        # To avoid pairwise NxN comparison, we query the spatial grid or fallback to capped Euclidean range
         for actor in actors:
-            # Check if actor is stunned/frozen
-            # Retrieve nearby target options (e.g. within 10 units)
-            targets = [
-                e for e in state.entities.values()
-                if e.id != actor.id and e.combat.alive and e.lifecycle.active
-                # Simple distance proxy sensory check
-                and ((e.navigation.position[0] - actor.navigation.position[0]) ** 2 +
-                     (e.navigation.position[1] - actor.navigation.position[1]) ** 2) <= 100.0  # within range 10
-            ]
+            targets = []
+            
+            # Utilize the spatial query cache to resolve neighbors within range 10
+            # M7/M10 optimization: check if state contains spatial_index or grid
+            grid = getattr(state, "spatial_grid", None)
+            if grid is not None:
+                # Query index with absolute cap
+                nearby_ids = grid.query_radius(actor.navigation.position, 10.0)
+                for nid in nearby_ids:
+                    if nid != actor.id:
+                        e = state.entities.get(nid)
+                        if e and e.combat.alive and e.lifecycle.active:
+                            targets.append(e)
+            else:
+                # Fallback range check
+                for e in state.entities.values():
+                    if e.id != actor.id and e.combat.alive and e.lifecycle.active:
+                        dist_sq = ((e.navigation.position[0] - actor.navigation.position[0]) ** 2 +
+                                   (e.navigation.position[1] - actor.navigation.position[1]) ** 2)
+                        if dist_sq <= 100.0:
+                            targets.append(e)
             
             if not targets:
                 continue

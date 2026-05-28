@@ -4,6 +4,7 @@ from src.certification.scenarios import build_scenario_state, get_scenario_expec
 from src.config.profiles import RuntimeProfile, HardwareClass
 from src.core.quests import QuestStatus
 
+@pytest.mark.extra_slow
 def test_arena_quest_progression():
     """Verify that a hero in the arena can progress and complete quests."""
     profile = RuntimeProfile(

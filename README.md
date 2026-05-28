@@ -153,3 +153,29 @@ If Kafka fails with `InconsistentClusterIdException`, wipe conflicting persisten
 docker compose down -v
 docker compose up -d --build
 ```
+
+---
+
+## Testing & Resource Guards
+
+The test suite is built on **pytest** and includes automatic runtime resource limits to protect the execution environment (e.g. VirtualBox VM) against Out-Of-Memory (OOM) crashes and infinite loop hangs.
+
+### Resource Budgets (`--resource-budget`)
+
+Use the `--resource-budget` CLI argument to scale or disable resource limits per test case:
+
+```bash
+# Run tests with strict small budget (1GB RAM limit, 15s timeout)
+pytest tests/ --resource-budget=small
+
+# Run tests with default medium budget (4GB RAM limit, 60s timeout)
+pytest tests/ --resource-budget=medium
+
+# Run tests with large budget (8GB RAM limit, 600s/10m timeout)
+pytest tests/ --resource-budget=large
+
+# Disable all time/memory resource limits entirely
+pytest tests/ --resource-budget=off
+```
+
+For more details on runtime limits, see [tests/conftest.py](file:///home/vboxuser/Work/rpg-based-simulation/tests/conftest.py).

@@ -21,6 +21,10 @@ class PhaseMetadata:
     must_run_every_tick: bool = False
     can_skip_when_no_dirty: bool = True
     cadence_property: Optional[str] = None
+    must_run_when_cadence_fires: bool = False
+    """If True and cadence fires this tick, bypass dirty set short-circuit.
+    Use for world-level phases (e.g. town_resolution) that process ALL entities
+    on their scheduled tick regardless of entity-level dirty state."""
 
 
 class PhaseDependencyGraph:
@@ -40,19 +44,28 @@ class PhaseDependencyGraph:
         "movement_routing": PhaseMetadata("movement_routing", {"movement"}, {"movement", "navigation"}),
         "interaction_routing": PhaseMetadata("interaction_routing", {"movement", "strategic"}, {"interaction"}),
         "interaction_enforcement": PhaseMetadata("interaction_enforcement", {"inventory", "movement", "strategic"}, {"inventory", "resource_updates", "social"}),
-        "building_sabotage": PhaseMetadata("building_sabotage", {"combat", "town", "buildings"}, {"building_updates", "social"}, cadence_property="building_sabotage"),
-        "town_resolution": PhaseMetadata("town_resolution", {"town", "movement"}, {"world_updates", "social", "inventory"}, cadence_property="town_resolution"),
+        "building_sabotage": PhaseMetadata("building_sabotage", {"combat", "town", "buildings"}, {"building_updates", "social"}, cadence_property="building_sabotage", must_run_when_cadence_fires=True),
+        "town_resolution": PhaseMetadata("town_resolution", {"town", "movement"}, {"world_updates", "social", "inventory"}, cadence_property="town_resolution", must_run_when_cadence_fires=True),
         "world_dynamics": PhaseMetadata("world_dynamics", {"all"}, {"all"}, must_run_every_tick=True),
         "quest_rewards": PhaseMetadata("quest_rewards", {"strategic", "inventory"}, {"reward", "identity", "inventory"}),
         "shop": PhaseMetadata("shop", {"inventory", "town"}, {"inventory", "resource_updates", "social"}),
         "resource_transactions": PhaseMetadata("resource_transactions", {"inventory", "strategic"}, {"inventory", "resource_updates"}),
-        "evolution": PhaseMetadata("evolution", {"biological", "combat", "attributes"}, {"identity", "attributes"}),
-        "strategic_intelligence": PhaseMetadata("strategic_intelligence", {"strategic", "combat", "biological"}, {"strategic", "task", "navigation"}, cadence_property="strategic_intelligence"),
+        "evolution": PhaseMetadata("evolution", {"biological", "combat", "attributes", "inventory"}, {"identity", "attributes"}),
+        "strategic_intelligence": PhaseMetadata("strategic_intelligence", {"strategic", "combat", "biological"}, {"strategic", "task", "navigation"}),
         "near_death_hardening": PhaseMetadata("near_death_hardening", {"combat", "biological", "lifecycle"}, {"combat", "attributes"}),
         "occupancy_resolution": PhaseMetadata("occupancy_resolution", {"movement"}, {"movement", "navigation"}),
         "lifecycle": PhaseMetadata("lifecycle", {"all"}, {"all"}, must_run_every_tick=True),
         "groups": PhaseMetadata("groups", {"social", "movement", "combat", "groups"}, {"social", "group_id_set", "strategic"}),
-        "capacity_enforcement": PhaseMetadata("capacity_enforcement", {"all"}, {"all"}, must_run_every_tick=True)
+        "capacity_enforcement": PhaseMetadata("capacity_enforcement", {"all"}, {"all"}, must_run_every_tick=True),
+        
+        # Phase 2-8 Enhanced RPG cognitive & world emergence loop integration
+        "self_model": PhaseMetadata("self_model", {"strategic", "attributes"}, {"strategic"}),
+        "information_belief": PhaseMetadata("information_belief", {"strategic", "social"}, {"strategic"}),
+        "cooperation": PhaseMetadata("cooperation", {"social", "strategic"}, {"social", "strategic"}),
+        "adventure_decision": PhaseMetadata("adventure_decision", {"strategic", "movement"}, {"strategic"}),
+        "combat_engagement": PhaseMetadata("combat_engagement", {"combat", "movement"}, {"combat", "strategic"}),
+        "progression_conversion": PhaseMetadata("progression_conversion", {"attributes", "combat"}, {"attributes"}),
+        "world_emergence": PhaseMetadata("world_emergence", {"all"}, {"all"}, must_run_every_tick=True)
     }
 
     @staticmethod
@@ -87,11 +100,17 @@ class PhaseDependencyGraph:
 
 
         # 3. Cadence gating
+        cadence_fired = False
         if phase.cadence_property and cadence:
             cadence_val = getattr(cadence, phase.cadence_property, 1)
             from src.engine.cadence import should_run
             if not should_run(state.tick, None, cadence_val):
                 return False
+            cadence_fired = True
+
+        # 3b. If cadence fires and phase bypasses dirty check, run immediately
+        if cadence_fired and phase.must_run_when_cadence_fires:
+            return True
 
         # 4. Dirty set short-circuiting
         if update.dirty_set is None:

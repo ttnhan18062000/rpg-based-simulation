@@ -4,6 +4,7 @@ from src.certification.scenarios import build_scenario_state, get_scenario_expec
 from src.config.profiles import RuntimeProfile, HardwareClass
 from src.core.enums import Faction
 
+@pytest.mark.extra_slow
 def test_arena_regional_control():
     """Verify regional influence, conquest, and taxation."""
     profile = RuntimeProfile(
@@ -44,6 +45,7 @@ def test_arena_regional_control():
     # No taxation because region is still unowned (Influence -40.0)
     assert hero2.inventory.gold == 105 
 
+@pytest.mark.extra_slow
 def test_arena_conquest_and_debuff():
     """
     Verify that monster-owned conquered regions apply hero combat debuffs
