@@ -34,6 +34,7 @@ def _build_parser():
     cli.add_argument("--seed", type=int, default=None)
     cli.add_argument("--workers", type=int, default=None)
     cli.add_argument("--replay", type=str, default=None)
+    cli.add_argument("--world", type=str, default=None, help="Name of custom world specification folder to load and compile")
     cli.add_argument("--log-level", type=str, default="INFO")
 
     # Inspect mode
@@ -187,34 +188,38 @@ def _run_cli(args):
     logging.info(f"Loaded Profile: {profile}")
     
     ticks = args.ticks if args.ticks is not None else 100
-    entities_count = args.entities if args.entities is not None else 10
     seed = args.seed if args.seed is not None else 42
 
     rng = DeterministicRNG(seed)
-    gen = EntityGenerator(seed)
+
+    # Resolve world specification ID (fallback cleanly to 'sandbox_world' default spec)
+    world_id = args.world if args.world is not None else "sandbox_world"
+
+    # Load and compile the custom world spec using WorldRepository and WorldCompiler
+    from src.worldbuilding.repository import WorldRepository
+    from src.worldbuilding.compiler import WorldCompiler
+    from src.worldbuilding.recipe import WorldTemplateSpec, WorldTemplateExpander
+    import yaml
     
-    # Use DeterministicRNG for initial positions (Phase 2 Law: No bare random)
-    from src.core.enums import Domain
-    init_rng = DeterministicRNG(seed)
-    
-    entities = {}
-    # Spawn hero at center
-    hero = gen.spawn_hero((64.0, 64.0))
-    entities[hero.id] = hero
-    
-    # Spawn monsters
-    for i in range(entities_count - 1):
-        monster = gen.spawn_goblin((
-            64.0 + (init_rng.get_float(Domain.INIT, 0, i, sub_id=0) * 40 - 20), 
-            64.0 + (init_rng.get_float(Domain.INIT, 0, i, sub_id=1) * 40 - 20)
-        ))
-        entities[monster.id] = monster
+    logging.info(f"Loading and compiling world specification: {world_id}...")
+    repo = WorldRepository("data/worlds")
+    world_dir = repo.worlds_dir / world_id
+    yaml_path = world_dir / "world.yaml"
+    if not yaml_path.exists():
+        raise FileNotFoundError(f"World spec not found at: {yaml_path}")
         
-    state = AuthoritativeState(
-        tick=0,
-        seed=seed,
-        entities=entities
-    )
+    with open(yaml_path, "r", encoding="utf-8") as f:
+        raw_data = yaml.safe_load(f)
+        
+    schema_version = raw_data.get("schema_version", "")
+    if "worldtemplate" in schema_version:
+        template = WorldTemplateSpec.model_validate(raw_data)
+        spec = WorldTemplateExpander.expand(template, seed=seed)
+    else:
+        spec = repo.load_world(world_id)
+        
+    state, compile_report = WorldCompiler.compile(spec, seed=seed)
+    logging.info(f"World successfully compiled! Entities spawned: {compile_report['entity_count']}, Hash: {compile_report['state_hash']}")
     
     # Handle replay path override
     replay_manager = None
@@ -229,29 +234,30 @@ def _run_cli(args):
     
     kernel = Kernel(profile=profile, state=state, rng=rng, replay=replay_manager)
     
-    print(f"V2 Simulation Started: seed={seed}, entities={entities_count}, ticks={ticks}")
+    print(f"V2 Simulation Started: seed={seed}, entities={len(state.entities)}, ticks={ticks}")
     if args.replay:
         print(f"Replay Path: {args.replay}")
     
     start_time = time.time()
     
     try:
-        for _ in range(ticks):
-            kernel.tick_once()
-            if kernel.state.tick % 10 == 0:
-                print(f"Tick {kernel.state.tick} complete.")
-    except KeyboardInterrupt:
-        print("\nInterrupted by user.")
-    except Exception as e:
-        print(f"\nSimulation error: {e}")
-        raise
-            
-    end_time = time.time()
-    print(f"Simulation finished in {end_time - start_time:.2f}s")
-    
-    outcome = kernel.shutdown()
-    print(f"Final State Hash: {outcome.final_hash}")
-    print(f"Replay Artifacts: {outcome.replay_outcome}")
+        try:
+            for _ in range(ticks):
+                kernel.tick_once()
+                if kernel.state.tick % 10 == 0:
+                    print(f"Tick {kernel.state.tick} complete.")
+        except KeyboardInterrupt:
+            print("\nInterrupted by user.")
+        except Exception as e:
+            print(f"\nSimulation error: {e}")
+            raise
+    finally:
+        end_time = time.time()
+        print(f"Simulation finished in {end_time - start_time:.2f}s")
+        
+        outcome = kernel.shutdown()
+        print(f"Final State Hash: {outcome.final_hash}")
+        print(f"Replay Artifacts: {outcome.replay_outcome}")
 
 def _run_serve(args):
     """Start the FastAPI server."""

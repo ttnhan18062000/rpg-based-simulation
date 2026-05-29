@@ -323,4 +323,34 @@ DeveloperDiagnostics -- "produces diagnostic report" --> RolloutGate
 CampaignRunner -- "produces production candidate run report" --> RolloutGate
 
 
+%% Phase 19-28 Observability & Behavior Profiling Pipeline (Implemented)
+subgraph Phase19to28Observability["Phases 19-28: Observability & Behavior Profiling [IMPL]"]
+  EventSchema["BehaviorEventSchema<br/>Typed events (ticks, severity, tags, metadata)"]
+  BoundedQueue["BoundedBehaviorQueue<br/>Non-blocking worker queue, dynamic drops"]
+  Normalizer["BehaviorEventNormalizer<br/>Standardizes domain-specific state tuples"]
+  Aggregator["BehaviorMetricAggregator<br/>Computes sliding window frequency, entropy, diversity"]
+  EpisodeDetector["ChronologicalEpisodeDetector<br/>Reconstructs episodes: loops, failures, adaptation"]
+  ScorecardBuilder["BehaviorScorecardBuilder<br/>Generates Entity and Run scorecards, cohort metrics"]
+  Warehouse["LocalWarehouseAdapter<br/>Saves JSON/JSONL datasets, streams, indices"]
+  QueryAPI["FastAPI Query API<br/>Paginated query endpoints (/api/v1/behavior/*)"]
+  BudgetController["ObservabilityBudgetController<br/>Throttles/drops events, handles self-healing degradation"]
+  VerificationGate["ObservabilityRolloutGate<br/>Certifies RC releases based on budget & TPS thresholds"]
+end
+
+class EventSchema,BoundedQueue,Normalizer,Aggregator,EpisodeDetector,ScorecardBuilder,Warehouse,QueryAPI,BudgetController,VerificationGate impl
+
+AuthoritativeState -- "emits ticks & domain changes" --> EventSchema
+EventSchema -- "enqueues safely" --> BoundedQueue
+BoundedQueue -- "processes asynchronously" --> Normalizer
+Normalizer -- "feeds normalized streams" --> Aggregator
+Normalizer -- "rebuilds timeline histories" --> EpisodeDetector
+Aggregator & EpisodeDetector -- "compiles scorecard summaries" --> ScorecardBuilder
+ScorecardBuilder -- "persists datasets" --> Warehouse
+Warehouse -- "exposes paginated views" --> QueryAPI
+BoundedQueue -- "triggers backpressure degradation" --> BudgetController
+BudgetController -- "applies sampling/drop rules" --> BoundedQueue
+Warehouse & BudgetController -- "verifies candidate compliance" --> VerificationGate
+
+
+
 

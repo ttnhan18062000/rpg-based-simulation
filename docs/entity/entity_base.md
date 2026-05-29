@@ -1303,3 +1303,234 @@ Phase 18 establishes strict architectural boundaries, static linting safety chec
 
 
 
+
+## Section 34: Phase 22 — Async Behavior Normalization
+
+Phase 22 introduces the **Behavior Observability** semantic layer — converting
+raw simulation events into structured, queryable behavior events outside the
+hot path.
+
+### 34.1 Architecture
+
+Behavior normalization runs **async or post-run**, never inside the simulation
+tick loop. This follows the Phase 19 hot-path safety contract.
+
+```
+Simulation Tick  →  BoundedObservabilityQueue  →  BehaviorWorker
+                                                        ↓
+                                                BehaviorEventNormalizer
+                                                        ↓
+                                                BehaviorEvent[]
+                                                        ↓
+                                           behavior_events.jsonl (artifact)
+```
+
+### 34.2 Core Components
+
+* **`BehaviorEvent`** (`src/observability/behavior/behavior_event.py`): Frozen
+  dataclass representing what an entity did in semantic terms. Includes
+  `behavior_category` (e.g. `combat`, `quest`), `behavior_family` (e.g.
+  `engage`, `progress`), and `source_event_ids` for full raw-event traceability.
+
+* **`BehaviorEventNormalizer`** (`src/observability/behavior/normalizer.py`):
+  Stateless, deterministic mapper from raw `SimulationEvent` or
+  `ObservabilityEventEnvelope` to `BehaviorEvent`. Routing is category-based;
+  unknown categories are silently skipped.
+
+* **`BehaviorWorker`** (`src/observability/behavior/worker.py`): Supports two
+  modes — post-run JSONL processing (`process_jsonl()`) and in-process queue
+  drain (`start_queue_worker()`). Worker failures are isolated; the engine
+  continues unaffected.
+
+* **`BehaviorNormalizationContext`**: Minimal context providing optional entity
+  subject labels and route family hints. Does not carry world state.
+
+### 34.3 Behavior Category Taxonomy
+
+16 canonical categories:
+`movement`, `combat`, `recovery`, `preparation`, `progression`,
+`information_seeking`, `resource_gathering`, `trade`, `crafting`,
+`quest`, `cooperation`, `avoidance`, `failure_response`, `world_response`,
+`idle_or_defer`, `unknown_behavior`
+
+### 34.4 Phase 28 Initial Guard
+
+`src/observability/budget/budget_profile.py` defines:
+- `ObservabilityBudgetProfile`: bounds for hot-path overhead, event volume,
+  queue size, timeline bounds, and post-run analysis time.
+- `SamplingPolicy`: constants for what is never dropped vs what can be sampled.
+- `DegradationLevel`: `NORMAL → CONSTRAINED → DEGRADED → CRITICAL_OBS_ONLY`.
+- Three presets: `PRESET_PRODUCTION`, `PRESET_RESEARCH`, `PRESET_DEBUG`.
+
+
+## Section 35: Phase 24 — Semantic Behavior Metrics
+
+Phase 24 introduces **Semantic Behavior Metrics** — compiling behavioral frequencies, failure counts, and adaptation metrics outside the simulation hot path to prevent performance impact on the main tick loop.
+
+### 35.1 Architecture
+
+Behavior metric windows run **async or post-run**, separating performance metrics (`MetricWindowRecord`) from behavioral trends (`BehaviorMetricWindow`).
+
+```
+BehaviorEvents[]  →  BehaviorMetricsAggregator  →  BehaviorMetricWindow
+                                                          ↓
+                                            behavior_metric_windows.jsonl
+                                                          ↓
+                                            BehaviorMetricWindowRecord (Warehouse)
+```
+
+### 35.2 Core Components
+
+* **`BehaviorMetricWindow`** (`src/observability/behavior/behavior_metric_window.py`): Immutable frozen dataclass capturing behavioral aggregates within a specific tick window. Stores metrics for `behavior_counts`, `route_family_counts`, `episode_counts`, `episode_outcomes`, `failure_counts`, `adaptation_counts`, and `entity_activity_counts`. Uses a versioned schema.
+
+* **`BehaviorMetricsAggregator`** (`src/observability/behavior/metrics_aggregator.py`): State-free aggregator that filters and compiles normalized behavior events and episodes into standard `BehaviorMetricWindow` records.
+
+* **`BehaviorMetricWindowRecord`** (`src/observability/warehouse/models.py`): The historical warehouse model representing windowed behavioral trends, fully integrated into local dry-run ingestion adapters.
+
+
+## Section 36: Phase 23 — Behavior Timeline and Episode Reconstruction
+
+Phase 23 introduces **Behavior Timeline and Episode Reconstruction** — grouping normalized behavior events chronologically and parsing key semantic intervals (combat, quest, information, and failure-response episodes) post-run.
+
+### 36.1 Architecture
+
+Episode detection and timeline analysis run **post-run or async**, ensuring zero performance impact on core engine ticks.
+
+```
+BehaviorEvents[]  →  BehaviorTimelineStore  →  EntityBehaviorTimeline
+                                                      ↓
+                                               EpisodeDetector
+                                                      ↓
+                                               BehaviorEpisode[]
+                                                      ↓
+                                            behavior_episodes.jsonl
+```
+
+### 36.2 Core Components
+
+* **`BehaviorEpisode`** (`src/observability/behavior/behavior_episode.py`): Immutable frozen record representing a detected continuous episode of behavior (e.g. `combat_episode`, `quest_episode`, `information_episode`, `failure_response_episode`). Tracks trigger, chronological execution steps, outcome (`success`, `failure`, `escaped`, `resolved`, `stuck`, `ongoing`), source behavior event IDs, and diagnostic summaries.
+
+* **`EntityBehaviorTimeline`** (`src/observability/behavior/behavior_timeline_store.py`): Immutable representation of an entity's chronological behavior history.
+
+* **`BehaviorTimelineStore`** (`src/observability/behavior/behavior_timeline_store.py`): Thread-safe, bounded, memory-safe in-process log buffer that records behavior events per entity.
+
+* **`EpisodeDetector`** (`src/observability/behavior/episode_detector.py`): State-free post-run parser that scans chronological behavior histories to detect semantic episodes. Handles unfinished or stuck/abandoned sequences cleanly.
+
+
+## Section 37: Phase 25 — Pattern Detectors and Behavior Insights
+
+Phase 25 introduces **Pattern Detectors and Behavior Insights** — evaluating chronological events and episodes post-run to detect behavioral loops, adaptations, and structural omniscience leaks.
+
+### 37.1 Architecture
+
+Pattern detection and strategic insight generation run **post-run only**, adhering strictly to the hot-path safety contract.
+
+```
+BehaviorEvents[] + Episodes[]  →  Pattern Detectors  →  BehaviorFinding[]
+                                                               ↓
+                                                      Insight Generator
+                                                               ↓
+                                                      BehaviorInsight[]
+                                                               ↓
+                                                    behavior_findings.jsonl
+                                                    behavior_insights.json
+```
+
+### 37.2 Core Components
+
+* **`BehaviorFinding`** (`src/observability/behavior/behavior_finding.py`): Immutable structured record representing a detected pattern occurrence (such as loops, adaptations, or leaks), complete with severity levels, entity indexes, affected tick ranges, and evidence IDs.
+
+* **`RepeatedFailureLoopDetector`** (`src/observability/behavior/pattern_detectors.py`): Identifies stagnant loops where an entity experiences consecutive route or quest failures without strategic adaptations.
+
+* **`BehaviorChangeProofDetector`** (`src/observability/behavior/pattern_detectors.py`): Verifies adaptation proofs, tracing resolved blockage episodes.
+
+* **`HiddenKnowledgeSuspicionDetector`** (`src/observability/behavior/pattern_detectors.py`): Audits omniscience leaks where entities make suspicious strategic avoidances without queries or information seeking.
+
+* **`BehaviorInsight`** (`src/observability/behavior/behavior_insight.py`): High-level evidence-backed compiled recommendation summarizing population-level findings.
+
+* **`BehaviorInsightGenerator`** (`src/observability/behavior/behavior_insight.py`): Rule-based post-run aggregator compiling findings into strategic reports.
+
+
+## Section 38: Phase 26 — Behavior Scorecards, Cohort Analysis, and Run Comparison
+
+Phase 26 introduces **Behavior Scorecards, Cohort Analysis, and Run Comparison** — providing structured entity and population-level scorecards to compare feature performance and capability deltas post-run.
+
+### 38.1 Architecture
+
+Scorecard generations, cohort groupings, and comparative analysis run **post-run only**, ensuring zero performance impact on core ticks.
+
+```
+BehaviorEvents[] + Episodes[]  →  Scorecard Builder  →  Entity Scorecard[]
+                                                                ↓
+                                                         Cohort Analyzer
+                                                                ↓
+                                                         Cohort Reports[]
+                                                                ↓
+                                                          Run Scorecard
+                                                                ↓
+                                                        Run Comparison[]
+```
+
+### 38.2 Core Components
+
+* **`EntityBehaviorScorecard`** (`src/observability/behavior/behavior_scorecard.py`): Immutable frozen record capturing an individual entity's behavioral outcomes (episodes completed/failed, repeated failure loops, adaptation proofs, stagnation ratios, progression, and cooperation).
+
+* **`RunBehaviorScorecard`** (`src/observability/behavior/behavior_scorecard.py`): Immutable frozen record compiling population-level metrics (diversity, entropy, success rates, loop counts, and runtime/observability overheads).
+
+* **`CohortAnalyzer`** (`src/observability/behavior/cohort_analyzer.py`): Groups entity scorecards dynamically based on verdicts or traits.
+
+* **`RunBehaviorComparison`** (`src/observability/behavior/run_comparison.py`): Compares baseline and target run scorecards to evaluate feature value delta. Strictly guards against false positives by ensuring higher event volume alone does not trigger a verdict of behavioral improvement.
+
+
+## Section 39: Phase 27 — Storage, Query API, and Dashboard Integration
+
+Phase 27 introduces **Storage, Query API, and Dashboard Integration** — exposing behavior profiling and scorecard data through standard API query routes, local dataset adapter warehousing, and beautiful reactive dashboard visualization panels.
+
+### 39.1 Architecture
+
+All behavior metrics, scorecards, timeline episodes, findings, and cohort reports are stored as JSON/JSONL artifacts. The local warehouse adapter streams, caches, and indexes this data, exposing paginated retrieval query routes to downstream consumers without blockings or simulation tick overheads.
+
+```
+Artifact Storage (data/runs/*)
+       ↓
+Warehouse Adapter (Local/ClickHouse)
+       ↓
+FastAPI Query Routes (/api/v1/behavior/*)
+       ↓
+HTML UI Dashboard (Behavior Scorecard Tab)
+```
+
+### 39.2 Core Components
+
+* **`RunArtifactRepository`** (`src/observability/reporting/artifact_repository.py`): Extended to resolve paths for all 10 semantic behavior artifacts schema-versioned.
+* **`RetentionManager`** (`src/observability/reporting/retention.py`): Extended to clean up and prune behavior files safely under retention policies.
+* **`LocalWarehouseAdapter`** (`src/observability/warehouse/adapters.py`): Implemented paginated, version-compliant queries for behavior events, episodes, findings, insights, scorecards, cohorts, and comparisons.
+* **`ClickHouseWarehouseAdapter`** (`src/observability/warehouse/clickhouse.py`): Added robust, exception-safe behavior queries that gracefully degrade if behavior tables are optional/missing.
+* **APIRouter** (`src/api/routes/behavior.py`): Registered new APIRouter under `/api/v1/behavior` for all query routes.
+* **Dashboard Tab** (`src/api/server.py`): Introduced "Behavior Scorecard" subtab and interactive visual panels in the completed runs detail view showing events, episodes, failures, and insights.
+
+
+## Section 40: Phase 28 — Observability Budget, Sampling, Degradation, and Rollout Gate
+
+Phase 28 introduces the final safety boundary: **Observability Budget, Sampling, Degradation, and Rollout Gate** — guaranteeing that behavior observability never harms the performance or correctness of the core simulation engine.
+
+### 40.1 Architecture
+
+By defining rigid overhead budgets, deterministic sampling rules, and multiple operational degradation presets, Phase 28 ensures that under heavy load, the simulation preserves pure performance. The gate script acts as a final audit gate to certify release candidates.
+
+```
+Observability System (FULL)
+             ↓  (Overhead > Budget)
+   CONSTRAINED Presets
+             ↓  (Queue pressure)
+      DEGRADED Presets
+             ↓  (Critical overload)
+    CRITICAL_OBS_ONLY (Hard-Law & Fatal only)
+```
+
+### 40.2 Core Components
+
+* **`ObservabilityBudgetProfile`** (`src/observability/budget/budget_profile.py`): Defines structured upper bounds for hot-path overhead, queue capacity, event volume, timeline buffer caps, and post-run execution time.
+* **`SamplingPolicy`** (`src/observability/budget/budget_profile.py`): Formulates deterministic policies to drop or summarize low-priority repeated events while strictly preserving critical hard-law and fatal errors.
+* **`DegradationLevel`** (`src/observability/budget/budget_profile.py`): Operational states (NORMAL, CONSTRAINED, DEGRADED, CRITICAL_OBS_ONLY) resolving active feature flags dynamically under budget pressure.
+* **`RolloutGate`** (`scripts/behavior_observability_rollout_gate.py`): Automated gate checking release bundles against determinism parity, queue non-blocking, worker isolation, and budget thresholds.

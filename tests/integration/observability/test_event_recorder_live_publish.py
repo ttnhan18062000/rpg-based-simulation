@@ -56,6 +56,8 @@ def test_event_recorder_integration(clean_run_dir):
     assert len(recorder.events) == 2
     
     # Verify live event publication routing
+    import time
+    time.sleep(0.05)
     live_events = sub.get_events()
     assert len(live_events) == 1
     assert live_events[0].event_type == "swing_sword"

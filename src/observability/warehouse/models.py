@@ -115,3 +115,128 @@ class WarehouseHealthStatus(BaseModel):
     connected: bool
     latency_ms: float
     error: Optional[str] = None
+
+
+class BehaviorMetricWindowRecord(BaseModel):
+    """Database representation of a semantic behavior metric window."""
+    run_id: str
+    window_start_tick: int
+    window_end_tick: int
+    behavior_counts_json: str
+    route_family_counts_json: str
+    episode_counts_json: str
+    episode_outcomes_json: str
+    failure_counts_json: str
+    adaptation_counts_json: str
+    entity_activity_counts_json: str
+    schema_version: int = 1
+
+
+class BehaviorEventRecord(BaseModel):
+    """Database representation of a normalized behavior event."""
+    run_id: str
+    tick: int
+    event_id: str
+    entity_id: str
+    category: str
+    family: str
+    action: str
+    subject_type: str
+    subject_id: Optional[str] = None
+    success: bool = True
+    metadata_json: str
+    schema_version: int = 1
+
+
+class BehaviorEpisodeRecord(BaseModel):
+    """Database representation of a behavior episode."""
+    run_id: str
+    episode_id: str
+    entity_id: str
+    category: str
+    start_tick: int
+    end_tick: int
+    duration_ticks: int
+    outcome: str
+    event_count: int
+    events_json: str
+    schema_version: int = 1
+
+
+class EntityBehaviorScorecardRecord(BaseModel):
+    """Database representation of an entity behavior scorecard."""
+    run_id: str
+    entity_id: str
+    total_events: int
+    category_counts_json: str
+    family_counts_json: str
+    episode_counts_json: str
+    episode_outcomes_json: str
+    total_failures: int
+    total_adaptations: int
+    failure_loop_count: int
+    adaptation_proof_count: int
+    suspicion_score: float
+    verdict: str
+    schema_version: int = 1
+
+
+class RunBehaviorScorecardRecord(BaseModel):
+    """Database representation of a run behavior scorecard."""
+    run_id: str
+    total_events: int
+    total_episodes: int
+    total_failures: int
+    total_adaptations: int
+    entity_count: int
+    verdict_distribution_json: str
+    category_counts_json: str
+    family_counts_json: str
+    schema_version: int = 1
+
+
+class BehaviorFindingRecord(BaseModel):
+    """Database representation of a behavior finding."""
+    run_id: str
+    finding_id: str
+    entity_id: str
+    pattern_type: str
+    tick: int
+    severity: str
+    evidence_json: str
+    schema_version: int = 1
+
+
+class BehaviorInsightRecord(BaseModel):
+    """Database representation of a run-level behavior insight."""
+    run_id: str
+    insight_id: str
+    insight_type: str
+    title: str
+    evidence_json: str
+    recommendation: str
+    severity: str
+    schema_version: int = 1
+
+
+class CohortBehaviorReportRecord(BaseModel):
+    """Database representation of a cohort behavior report."""
+    run_id: str
+    cohort_name: str
+    entities_json: str
+    metrics_json: str
+    schema_version: int = 1
+
+
+class RunBehaviorComparisonRecord(BaseModel):
+    """Database representation of a run behavior comparison."""
+    run_id: str
+    baseline_run_id: str
+    episode_success_rate_delta: float
+    consecutive_failures_delta: float
+    event_volume_delta: float
+    verdict: str
+    reason: str
+    schema_version: int = 1
+
+
