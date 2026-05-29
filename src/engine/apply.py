@@ -523,6 +523,7 @@ class ApplyPath:
         object.__setattr__(res, "task", changes.get("task", entity.task))
         object.__setattr__(res, "stamina", changes.get("stamina", entity.stamina))
         object.__setattr__(res, "self_model", changes.get("self_model", getattr(entity, "self_model", None)))
+        object.__setattr__(res, "cognition", changes.get("cognition", getattr(entity, "cognition", None)))
 
         
         timeline = getattr(entity, "timeline", None)

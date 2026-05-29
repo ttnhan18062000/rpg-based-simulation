@@ -5,8 +5,8 @@ from src.domains.optimization.rollout_profiles import RolloutProfileManager, Har
 def test_profile_class_a_enables_only_low_cost_features():
     manager = RolloutProfileManager()
     profile = manager.get_profile(HardwareClass.CLASS_A)
-    assert profile.enabled_phases == ["ENABLE_WORLD_CAPABILITY_LAYER", "ENABLE_SELF_MODEL"]
-    assert profile.shadow_phases == ["ENABLE_ADVENTURE_DECISION"]
+    assert profile.enabled_phases == ["ENABLE_WORLD_CAPABILITY_LAYER", "ENABLE_SELF_MODEL_COGNITION"]
+    assert profile.shadow_phases == ["ENABLE_ADVENTURE_ROUTING"]
 
 def test_profile_class_b_enables_mid_stack_features():
     manager = RolloutProfileManager()
@@ -30,4 +30,4 @@ def test_rollout_profile_serialized_in_manifest():
     profile = manager.get_profile(HardwareClass.CLASS_A)
     serialized = profile.serialize()
     assert serialized["name"] == "CLASS_A"
-    assert "ENABLE_SELF_MODEL" in serialized["enabled_phases"]
+    assert "ENABLE_SELF_MODEL_COGNITION" in serialized["enabled_phases"]

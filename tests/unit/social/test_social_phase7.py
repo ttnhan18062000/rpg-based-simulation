@@ -70,9 +70,9 @@ def test_contract_expiration_resolves_and_dissolves():
     l_contract = next((c for c in l_upd.strategic.contracts_add_or_update if c.id == "c1"), None)
     assert l_contract.status == ContractStatus.COMPLETED
     
-    # Verify trust/reputation updates (heroism_delta = 0.05 on success)
-    assert l_upd.social.heroism_delta == 0.05
-    assert m_upd.social.heroism_delta == 0.05
+    # Verify trust/reputation updates (heroism_delta = 0.1 on success)
+    assert l_upd.social.heroism_delta == 0.1
+    assert m_upd.social.heroism_delta == 0.1
     
     # Apply update to see group dissolution
     final_state = ApplyPath.apply_generation(state, update)

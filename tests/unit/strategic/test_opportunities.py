@@ -6,6 +6,12 @@ from src.world.providers.resources import ResourceOpportunityProvider
 from src.world.providers.services import ServiceOpportunityProvider
 
 
+from dataclasses import dataclass
+
+@dataclass
+class MockState:
+    resource_nodes: dict
+
 def test_resource_opportunities_basic():
     """Verify ResourceOpportunityProvider returns sorted, capped resource opportunities."""
     # Build entity in region near_forest where wood and herb are available
@@ -14,7 +20,12 @@ def test_resource_opportunities_basic():
         .build())
     object.__setattr__(ent.navigation, "region_id", "near_forest")
 
-    opportunities = ResourceOpportunityProvider.get_opportunities(ent, None)
+    from src.core.state import ResourceNodeState
+    node1 = ResourceNodeState(id=1, kind="node_wood", position=(0.0, 0.0), yields_item="wood", remaining_charges=10, max_charges=10, required_ticks=5)
+    node2 = ResourceNodeState(id=2, kind="node_herb", position=(0.0, 0.0), yields_item="herb", remaining_charges=10, max_charges=10, required_ticks=5)
+    mock_state = MockState(resource_nodes={1: node1, 2: node2})
+
+    opportunities = ResourceOpportunityProvider.get_opportunities(ent, mock_state)
     
     # Verify we got some opportunities
     assert len(opportunities) > 0
@@ -46,7 +57,11 @@ def test_resource_opportunities_with_blocker():
     blocker = BlockerState(id="bl_iron", kind=BlockerKind.MATERIAL, subject="iron_ore")
     object.__setattr__(ent.strategic, "blockers", {"bl_iron": blocker})
 
-    opportunities = ResourceOpportunityProvider.get_opportunities(ent, None)
+    from src.core.state import ResourceNodeState
+    node1 = ResourceNodeState(id=1, kind="node_iron", position=(0.0, 0.0), yields_item="iron_ore", remaining_charges=10, max_charges=10, required_ticks=5)
+    mock_state = MockState(resource_nodes={1: node1})
+
+    opportunities = ResourceOpportunityProvider.get_opportunities(ent, mock_state)
 
     # Find the iron_ore opportunity
     iron_opp = next((o for o in opportunities if o.subject == "iron_ore"), None)

@@ -11,24 +11,24 @@ def test_all_enhancement_flags_default_to_off_or_shadow():
 
 def test_feature_flag_off_skips_phase():
     manager = FeatureFlagManager()
-    manager.set_flag_mode("ENABLE_SELF_MODEL", FeatureMode.OFF)
-    assert not manager.is_enabled("ENABLE_SELF_MODEL")
-    assert manager.get_flag_mode("ENABLE_SELF_MODEL") == FeatureMode.OFF
+    manager.set_flag_mode("ENABLE_SELF_MODEL_COGNITION", FeatureMode.OFF)
+    assert not manager.is_enabled("ENABLE_SELF_MODEL_COGNITION")
+    assert manager.get_flag_mode("ENABLE_SELF_MODEL_COGNITION") == FeatureMode.OFF
 
 def test_feature_flag_shadow_emits_trace_without_state_mutation():
     manager = FeatureFlagManager()
-    manager.set_flag_mode("ENABLE_SELF_MODEL", FeatureMode.SHADOW)
-    assert manager.is_shadow("ENABLE_SELF_MODEL")
-    assert not manager.is_enabled("ENABLE_SELF_MODEL") # Shadow is not ON for state mutation
+    manager.set_flag_mode("ENABLE_SELF_MODEL_COGNITION", FeatureMode.SHADOW)
+    assert manager.is_shadow("ENABLE_SELF_MODEL_COGNITION")
+    assert not manager.is_enabled("ENABLE_SELF_MODEL_COGNITION") # Shadow is not ON for state mutation
 
 def test_feature_flag_on_allows_state_update():
     manager = FeatureFlagManager()
-    manager.set_flag_mode("ENABLE_SELF_MODEL", FeatureMode.ON)
-    assert manager.is_enabled("ENABLE_SELF_MODEL")
-    assert not manager.is_shadow("ENABLE_SELF_MODEL")
+    manager.set_flag_mode("ENABLE_SELF_MODEL_COGNITION", FeatureMode.ON)
+    assert manager.is_enabled("ENABLE_SELF_MODEL_COGNITION")
+    assert not manager.is_shadow("ENABLE_SELF_MODEL_COGNITION")
 
 def test_feature_flag_matrix_is_serialized_in_run_manifest():
     manager = FeatureFlagManager()
-    manager.set_flag_mode("ENABLE_SELF_MODEL", FeatureMode.STRICT)
+    manager.set_flag_mode("ENABLE_SELF_MODEL_COGNITION", FeatureMode.STRICT)
     manifest = manager.serialize()
-    assert manifest["ENABLE_SELF_MODEL"] == "STRICT"
+    assert manifest["ENABLE_SELF_MODEL_COGNITION"] == "STRICT"

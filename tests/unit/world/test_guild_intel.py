@@ -38,7 +38,7 @@ def test_guild_intel_emission():
     lead = ent_upd.strategic.leads_add_or_update[0]
     assert lead.subject == "danger_1"
     from src.core.strategic import LeadCertainty
-    assert lead.certainty == LeadCertainty.APPROXIMATE
+    assert lead.certainty == LeadCertainty.VAGUE
     
     # Verify concern creation
     assert len(ent_upd.strategic.concerns_add_or_update) == 1

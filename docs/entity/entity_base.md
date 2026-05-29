@@ -15,6 +15,7 @@ There are three different action surfaces:
 | **Phase 4 Combat Cognition**| Subjective target estimate, self capability estimate, risk evaluations, combat postures selection (`PROBE`, `AVOID`, `RETREAT`, `ENGAGE`, etc.), mid-combat reassessment, and capacity-limited combat memory updates | Fully implemented in `src/domains/combat_engagement/` with 36 TDD/perf tests passing |
 | **Phase 5 Belief loop**| Subjective queries, candidate routers, response normalizers, personal knowledge/unknowns assimilation under memory limits, belief observations verification & contradiction disproofs, slow gradual clamping source-trust adjustments, and adventure route-scorer impact bridging | Fully implemented in `src/domains/information/` with 25 TDD/perf tests passing |
 | **Phase 10 Optimization & Rollout**| Feature flag controls, rollout profile budgets, dirty entity/region work scheduling, provider scoped query enforcement, cache & invalidation strategies, trace volume governor, memory/capacity limits, graceful degradation, developer diagnostics, and rollout gate script | Fully implemented in `src/domains/optimization/` and verified with comprehensive TDD & certification tests |
+| **Phase 11 Cognition Restructure** | Hierarchical restructure of cognitive state into Subjective, Memory, Motivation, Commitment, and Relationship sub-models | [INVESTIGATING] Documented hierarchy schemas and migration boundaries |
 
  The uncomfortable truth: **the engine has action capability, but not yet a clean adventure action model**. You have mechanics for fighting, moving, crafting, buying, selling, resting, looting, training, recruiting, and interacting. But there is no single canonical “adventurer action vocabulary” yet.
 
@@ -1166,6 +1167,138 @@ graph TD
     Classifier & ChangeDetector & Diversity & Forbidden --> Scorecard["CampaignScorecardEvaluator"]
     Scorecard --> Reports["CampaignReportGenerator (JSON & Markdown summaries)"]
 ```
+
+
+## Section 26: Phase 11 — Cognition Hierarchy Restructure
+
+Phase 11 introduces a structured, nested hierarchy for the entity's cognitive components, refactoring them from flat fields (such as `SelfModelBundle`) into a organized `CognitionModel` top-level attribute. This restructure supports deterministic serialization, strict modular boundaries, and backward-compatible accessors to avoid breaking active loops during transition.
+
+### 26.1 Core Sub-Models and Architecture
+
+* **CognitionModel**: The central top-level cognitive record containing:
+  - `subjective`: Holds perception, subjective self-awareness, knowledge model facts, risk beliefs, temporal models, and short-term emotional states.
+  - `memory`: Contains historical causal, spatial, combat, habit, and social memories.
+  - `motivation`: Encapsulates long-term biases, identity doctrines, values, and role preference profiles.
+  - `commitment`: Stores promises, quest obligations, and party commitments.
+  - `relationships`: Tracks private trust, public reputation, and betrayal records.
+
+* **Compatibility Accessors**: Lightweight functions mapping old paths (e.g. `entity.self_model`) directly to new sub-paths (e.g. `entity.cognition.subjective.self`) to prevent compiler failures and support gradual migration.
+
+* **Import Boundaries**: Architecture guardrails ensuring that cognitive schema dataclasses under `src/core/` are pure immutable data models and do not import any domain or tactical systems.
+
+
+## Section 27: Phase 12 — Perception / Attention Domain
+
+Phase 12 prevents entity omniscience by forcing entities to filter, prioritize, and rank candidate world signals through salience, attention focus, and capacity bounds before their strategic or tactical systems can execute.
+
+### 27.1 Core Components
+
+* **PerceptionModel**: The structured container under `cognition.subjective.perception` storing:
+  - `attention_focus`: Dynamic bias tags.
+  - `perceived_entities`, `perceived_resources`, `perceived_services`, `perceived_threats`, `perceived_opportunities`: Bounded dictionaries containing perceived records with rounded subjective salience scores.
+  - `ignored_signals`: High-salience elements dropped due to capacity limitations.
+
+* **AttentionFocusService**: Determines dynamic biases based on dominant need (e.g. mapping `"healing"` need to `"healing_resource"`, `"healer"`, `"safe_place"` tags) and active projects.
+
+* **SignalSalienceEvaluator**: Ranks raw candidates combining base relevance, focus tag match bonuses, fear-scaled threats, curiosity-scaled novelty, and a distance decay factor.
+
+* **PerceptionFilterService**: Enforces a strict perception budget (e.g., maximum of 10 perceived objects), mapping signals into structured typed records.
+
+* **PerceptionUpdatePhase**: The authoritative pipeline update loop orchestrator driving perception sweeps for active entities.
+
+
+
+
+## Section 28: Phase 13 — Temporal / Causal / Spatial Memory Domain
+
+Phase 13 establishes history continuity across time, place, and cause by enabling entities to analyze past failure causes, compute dynamic time-related pressure urgencies, and map regional danger familiarity logs.
+
+### 28.1 Core Components
+
+* **TemporalModel**: Nested under `cognition.subjective.time` storing `DeadlineEntry`, `CooldownEntry`, `StalenessEntry`, and `DelayRiskEntry` metrics to represent dynamic temporal limits.
+* **CausalMemory**: Bounded container under `cognition.memory.causal` storing `CausalMemoryEntry` records which represent subjective attribution analysis and future plans after failed events (such as combat losses or failed search actions).
+* **SpatialMemory**: Nested under `cognition.memory.spatial` keeping `RegionVisitMemory`, `RouteMemory`, `ResourceSiteMemory`, and `FailedSearchMemory` records detailing regional safety/danger logs and familiarity deltas.
+
+* **TemporalPressureService**: Processes active deadlines, cooldowns, and stale items to derive urgency factors (0.0 to 1.0) dynamically.
+* **CausalAttributionService**: Attributes specific causes (such as low health or damaged weapons) and lists of recommendations after simulation failure triggers.
+* **SpatialMemoryUpdateService**: Increments visit counts and maps hazard safety variables.
+* **MemoryUpdatePhase**: Integrates temporal calculations and attribution updates inside the authoritative tick sequence.
+
+
+## Section 29: Phase 14 — Motivation / Doctrine / Role-Fit Domain
+
+Phase 14 prevents entities from converging on identical strategic decisions by introducing long-term identity preference profiles, class-specific doctrines, weapon/armor role evaluations, and value-based cognitive biases.
+
+
+### 29.1 Core Components
+
+* **IdentityDoctrine**: Stored under `cognition.motivation.doctrine`, defining class preferred/avoided tags, combat biases, and cooperation preferences.
+* **ValuePreferenceProfile**: Nested under `cognition.motivation.values` storing survival, reward, knowledge, loyalty, pride, curiosity, and caution parameters.
+* **RoleFitPreference**: Nested under `cognition.motivation.role_fit` holding specific weapon, armor, skill, party role, and quest tags mapping.
+
+
+* **DoctrineResolver**: Yields class preference profiles based on actor types (`warrior` -> prefers melee/heavy armor; `ranger` -> prefers ranged/scouting; `mage` -> prefers spells/intel).
+* **RoleFitEvaluator**: Computes suitability scores for equipment, skills, party roles, and quests against structural doctrine preferences.
+* **MotivationBiasService**: Applies cognitive values and doctrine preferences as stable multiplier modifiers for strategic route evaluation.
+
+
+## Section 30: Phase 15 — Commitment / Obligation / Reputation Domain
+
+Phase 15 makes accepted commitments (escort quests, lone contracts, group duties) and public reputation affect entity behavior, preventing immediate greedy route switches and establishing clear social consequences for betrayal.
+
+### 30.1 Core Components
+
+* **CommitmentEntry**: Stored under `cognition.commitment.active_commitments` detailing quest/contract obligation parameters (id, strength, deadline_tick, created_tick).
+* **PublicReputationProfile**: Stored under `cognition.relationships.public_reputation` representing public labels (reliable, heroic, betrayer) and witnessed event logs.
+
+
+* **CommitmentPressureService**: Computes pressure (0.0 to 1.0) to hold or fulfill active commitments, scaled down under critical health scenarios.
+* **AbandonmentEvaluator**: Distinguishes valid survival choices from greedy betrayal during combat.
+* **ReputationUpdateService**: Processes witnessed events to incrementally evolve public labels.
+* **CommitmentReputationRouteImpact**: Applies commitment route boosts and reputation penalties (e.g. Fit score penalties for betrayers) as scoring modifiers.
+
+
+## Section 31: Phase 16 — Emotion / Recovery / Habit / Opportunity Cost Domain
+
+Phase 16 integrates short-term emotional biases, recovery states, learned habits, and explicit trade-off reasoning into entities to make them less robotic and more realistic.
+
+### 31.1 Core Components
+
+* **EmotionalModel**: Stored under `cognition.subjective.emotion` containing short-term emotional variables (fear, confidence, frustration, curiosity, satisfaction, panic, boredom).
+* **RecoveryState**: Stored under `cognition.subjective.self.recovery` detailing recovery metrics (recent_near_death, confidence_loss, retry_readiness, recovery_until_tick, trauma_tags).
+* **HabitMemory**: Stored under `cognition.memory.habit` keeping a map of action success and failure patterns.
+
+
+* **EmotionUpdateService**: Adjusts active emotional metrics based on combat, goals, and exploration outcomes.
+* **RecoveryReadinessService**: Evaluates whether an entity is ready to retry a challenge or must recover first.
+* **HabitBiasService**: Scales route scores based on past successful/failed habit patterns.
+* **OpportunityCostEvaluator**: Computes trade-off costs to prevent poor strategic decisions.
+
+
+## Section 32: Phase 17 — Derived Views / Decision Trace Contract
+
+Phase 17 standardizes complex strategic and tactical transparency by defining purely computed derived views (no core state storage) and a unified, validated decision-tracing pipeline to ensure every entity behavior is fully debuggable from perception to outcome.
+
+### 32.1 Core Components
+
+
+* **DerivedReadinessView**: Represents computed transient metrics (score, confidence, blocking/supporting factors, and source aspects) built on the fly for combat, adventure, and recovery.
+* **DecisionTrace**: A structured trace record capturing what was noticed, known, needed, believed, considered, selected, and expected for any major cognitive domain decision.
+* **DecisionTraceValidator**: Strictly validates structural completeness of emitted traces based on OFF, WARN, and STRICT modes.
+* **CausalityChainReporter**: Compiles sequential links connecting perceived signals, decisions, action intents, and authoritative outcomes.
+
+
+## Section 33: Phase 18 — Migration / Integration / Architecture Guardrails
+
+Phase 18 establishes strict architectural boundaries, static linting safety checks, and formal deprecation plans to guarantee long-term maintainability of the `CognitionModel` nested mind hierarchy.
+
+### 33.1 Core Components
+
+* **Import Boundary Guard**: Static analysis test ensuring that core dataclass models (`src/core/`) never import downstream business or domain services.
+* **Cognition Migration Linter**: Validates whitelisted flat aspects on `EntityState`, rejecting any unauthorized flat aspect pollution outside whitelisted caches or whitelisted standard components.
+* **Domain Ownership Map**: Formally documents the binding between dynamic cognition sub-models and authoritative package directories.
+* **Deprecation Guide**: Registers whitelisted backward-compatibility accessors and timelines for path removals in the upcoming releases.
+
 
 
 

@@ -15,6 +15,7 @@ from src.core.models.inventory import ItemKind, EquipSlot, ItemStack, InventoryC
 from src.core.models.social import SocialBond, BetrayalRecord, SocialComponent
 from src.core.immutability import shallow_freeze
 from src.core.self_model import SelfModelBundle
+from src.core.cognition import CognitionModel
 
 
 def _readonly_mapping(value):
@@ -588,6 +589,7 @@ class EntityState:
     task: TaskComponent = field(default_factory=TaskComponent)
     stamina: StaminaComponent = field(default_factory=StaminaComponent)
     self_model: SelfModelBundle = field(default_factory=SelfModelBundle)
+    cognition: CognitionModel = field(default_factory=CognitionModel)
     _canonical_cache: Any = field(default=None, init=False, repr=False, compare=False)
     timeline: Any = field(default=None, init=False, repr=False, compare=False)
 
@@ -612,7 +614,7 @@ class EntityState:
                 "current_objective_id": self.strategic.current_objective_id,
                 "projects": {k: {
                     "kind": v.kind, 
-                    "status": str(v.status),
+                     "status": str(v.status),
                     "active_objective_id": v.active_objective_id,
                     "objectives": [asdict(o) for o in v.objectives]
                 } for k, v in sorted(self.strategic.projects.items())},
@@ -649,6 +651,7 @@ class EntityState:
             "group_id": self.identity.group_id,
             "properties": dict(sorted(self.identity.properties.items())),
             "self_model": self.self_model.to_canonical_dict(),
+            "cognition": self.cognition.to_canonical_dict(),
         }
         object.__setattr__(self, "_canonical_cache", res)
         return res
@@ -784,7 +787,8 @@ class EntityState:
             navigation=shallow_freeze(self.navigation),
             task=shallow_freeze(self.task),
             stamina=self.stamina,
-            self_model=self.self_model
+            self_model=self.self_model,
+            cognition=self.cognition
         )
         object.__setattr__(self, "_readonly_cache", res)
         object.__setattr__(res, "_readonly_cache", res)

@@ -133,7 +133,7 @@ def test_anchored_world_persistence_pipeline_integration():
     assert hero.navigation.position == (11.0, 11.0)
     assert "home" in state.regions
 
-    update = StateUpdate()
+    update = StateUpdate(force_full_scan=True)
     refined = AuthoritativeApplyPipeline.refine(state, update)
 
     ent_upd = refined.entity_updates[1]
