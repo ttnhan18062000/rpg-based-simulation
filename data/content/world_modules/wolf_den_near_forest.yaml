@@ -1,0 +1,27 @@
+# STATE: REDESIGNED-CORE
+schema_version: "worldmodule.v1"
+module_id: "wolf_den_near_forest"
+module_type: "ecology"
+display_name: "Wolf Den Near Forest"
+description: "Animal ecology module proving contextual hostility instead of enemy-by-type."
+requires: ["frontier_village_core"]
+biomes: ["near_forest", "wolf_den"]
+ecologies: ["wolf_den_ecology"]
+regions:
+  - id: "near_forest"
+    type: "wilderness"
+    grid_bounds: [45, 10, 90, 55]
+    terrain: "forest"
+    hazard_level: 1.0
+  - id: "wolf_den"
+    type: "wilderness"
+    grid_bounds: [70, 30, 105, 70]
+    terrain: "forest"
+    hazard_level: 2.0
+factions: ["wild_beast_pack"]
+populations: ["wolf_pack_small"]
+relationships: ["town_to_wild_beasts", "wild_beasts_to_town"]
+resources:
+  wood_node: 8
+  herb_patch: 6
+  healing_flower_patch: 3

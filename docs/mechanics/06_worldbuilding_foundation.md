@@ -108,5 +108,42 @@ For complete traceability, every successfully compiled world state outputs a sid
 
 ---
 
+---
+
+## 9. Content Catalog Database Structure (data/content/)
+The Content Catalog represents the authoritative, layered static database defining all core entities, attributes, and physics laws of the simulation. It is partitioned logically into directories under `data/content/`:
+
+### Layer 1: Foundation (`foundation/`)
+Defines the absolute constants of the simulation environment:
+*   **Attributes**: Base attributes (strength, intelligence, physical limits) that scale entity progress.
+*   **Elements**: Damage and affinity elements (physical, fire, magic).
+*   **Materials**: Static physical properties of materials used in crafting and structures.
+*   **Traits & Themes**: Static entity perks/flaws and aesthetic regional themes.
+
+### Layer 2: Living (`living/`)
+Defines biological and physiological configurations:
+*   **Races**: Biological base templates.
+*   **Body Models**: Structural slot mapping for items and armor.
+*   **Profiles**: Need profiles (food, sleep), Sense profiles (sensory range), Drive profiles, and Cognition profiles governing bounded AI strategic intelligence.
+
+### Layer 3: Social & Factions (`social/`)
+Defines group mechanics and social alignments:
+*   **Factions**: Faction identifiers, starter vaults, and configurations.
+*   **Faction Relationships**: Initial diplomatic scores and modifiers.
+*   **Roles & Perspectives**: Regional jobs/roles and factional alignment bias.
+
+### Layer 4: Entity Archetypes (`entities/`)
+Defines the blueprints for all NPC populations and creatures:
+*   **Entity Archetypes**: Base NPC templates (warrior, wolf, merchant) linking to specific races and factions.
+*   **Profiles**: Stats scaling profiles, Combat capability profiles, starting Inventory profiles, and Skill profiles.
+
+### Layer 5: World & Economy (`world/`)
+Defines items, structures, and regional ecologies:
+*   **Items & Recipes**: The item database and crafting recipe requirements (gold cost, inputs, outputs, services).
+*   **Terrain, Biomes, & Ecologies**: Topographical tile properties, biome templates, and creature population densities.
+*   **Buildings & Services**: Structural blueprints and settlement affordances (craft, rest, trade).
+
+---
+
 ## 📜 Compliance Status
 All chapters are currently **Certified Level 2 (Authoritative V2)**. This means the documentation matches the current source code implementation as of Tick 0 of the V2 Engine deployment, including full declarative assembly, context-aware compilers, and post-run observability joins.

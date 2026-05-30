@@ -74,10 +74,12 @@ class ClickHouseSchemaManager:
             checksum String,
             manifest_json String,
             resolved_world_path Nullable(String),
+            compile_context_path Nullable(String),
             provenance_manifest_path Nullable(String),
             assembly_report_path Nullable(String),
             validation_report_path Nullable(String),
             compile_report_path Nullable(String),
+            runtime_content_source Nullable(String),
             catalog_fingerprint Nullable(String),
             module_fingerprints Nullable(String),
             state_hash Nullable(String)
@@ -360,10 +362,12 @@ class ClickHouseWarehouseAdapter(WarehouseAdapter):
                 ended_at=manifest_dict.get("ended_at"),
                 manifest_json=json.dumps(manifest_dict),
                 resolved_world_path=manifest_dict.get("resolved_world_path"),
+                compile_context_path=manifest_dict.get("compile_context_path"),
                 provenance_manifest_path=manifest_dict.get("provenance_manifest_path"),
                 assembly_report_path=manifest_dict.get("assembly_report_path"),
                 validation_report_path=manifest_dict.get("validation_report_path"),
                 compile_report_path=manifest_dict.get("compile_report_path"),
+                runtime_content_source=manifest_dict.get("runtime_content_source"),
                 catalog_fingerprint=manifest_dict.get("catalog_fingerprint"),
                 module_fingerprints=manifest_dict.get("module_fingerprints"),
                 state_hash=manifest_dict.get("state_hash")
@@ -389,10 +393,12 @@ class ClickHouseWarehouseAdapter(WarehouseAdapter):
                     checksum,
                     run_rec.manifest_json,
                     run_rec.resolved_world_path,
+                    run_rec.compile_context_path,
                     run_rec.provenance_manifest_path,
                     run_rec.assembly_report_path,
                     run_rec.validation_report_path,
                     run_rec.compile_report_path,
+                    run_rec.runtime_content_source,
                     run_rec.catalog_fingerprint,
                     module_fingerprints_str,
                     run_rec.state_hash
@@ -400,8 +406,8 @@ class ClickHouseWarehouseAdapter(WarehouseAdapter):
                     "run_id", "scenario_name", "scenario_type", "seed", "status",
                     "ticks_completed", "health_score", "started_at", "ended_at",
                     "schema_version", "checksum", "manifest_json",
-                    "resolved_world_path", "provenance_manifest_path", "assembly_report_path",
-                    "validation_report_path", "compile_report_path", "catalog_fingerprint",
+                    "resolved_world_path", "compile_context_path", "provenance_manifest_path", "assembly_report_path",
+                    "validation_report_path", "compile_report_path", "runtime_content_source", "catalog_fingerprint",
                     "module_fingerprints", "state_hash"
                 ])
             records_count["runs"] += 1

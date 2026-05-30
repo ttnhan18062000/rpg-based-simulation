@@ -66,6 +66,7 @@ class ProvenanceManifest(BaseModel):
     resolver_version: str = Field("1.0.0", description="Software version index of the world assembly resolver")
     generator_version: Optional[str] = Field(None, description="Procedural generator engine version (Phase 8 placeholder)")
     seed: Optional[int] = Field(None, description="Procedural generation seed (Phase 8 placeholder)")
+    content_fingerprint: Optional[str] = Field(None, description="Deterministic content fingerprint")
     created_at: str = Field(..., description="ISO 8601 creation timestamp")
     records: Dict[str, ProvenanceRecord] = Field(default_factory=dict, description="Detailed mappings from element ID to its resolved origin metadata")
 

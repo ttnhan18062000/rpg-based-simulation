@@ -19,10 +19,12 @@ class RunRecord(BaseModel):
     
     # Resolved world assembly sidecar artifacts (Phase 10)
     resolved_world_path: Optional[str] = None
+    compile_context_path: Optional[str] = None
     provenance_manifest_path: Optional[str] = None
     assembly_report_path: Optional[str] = None
     validation_report_path: Optional[str] = None
     compile_report_path: Optional[str] = None
+    runtime_content_source: Optional[str] = None
     catalog_fingerprint: Optional[str] = None
     module_fingerprints: Optional[Dict[str, str]] = None
     state_hash: Optional[str] = None

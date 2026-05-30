@@ -1,0 +1,22 @@
+# STATE: REDESIGNED-CORE
+schema_version: "worldmodule.v1"
+module_id: "frontier_village_core"
+module_type: "settlement"
+display_name: "Frontier Village Core"
+description: "Core settlement with council, workers, guards, trade, and crafting."
+biomes: ["frontier_village"]
+ecologies: ["frontier_village_ecology"]
+regions:
+  - id: "hometown"
+    type: "town"
+    grid_bounds: [10, 10, 40, 40]
+    terrain: "plain"
+    hazard_level: 0.0
+factions: ["town_council", "merchant_league"]
+populations: ["frontier_village_population"]
+buildings:
+  town_hall: 1
+  shop: 1
+  blacksmith: 1
+  inn: 1
+  healer_hut: 1

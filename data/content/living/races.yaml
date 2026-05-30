@@ -1,0 +1,246 @@
+# STATE: REDESIGNED-CORE
+- id: "human"
+  display_name: "Human"
+  body_model: "standard_humanoid"
+  need_profile: "humanoid_survival"
+  sense_profile: "normal_humanoid_senses"
+  cognition_profile: "practical_humanoid"
+  drive_profile: "cautious_commoner"
+  natural_traits: ["humanoid", "tool_user", "social_humanoid"]
+  attribute_tendencies:
+    strength: "medium"
+    agility: "medium"
+    endurance: "medium"
+    intelligence: "medium_high"
+    perception: "medium"
+    instinct: "medium"
+    willpower: "medium"
+    charisma: "medium"
+  compatible_roles: ["hero", "worker", "citizen", "guard", "merchant", "blacksmith", "healer", "hunter", "mage", "ranger", "priest", "leader"]
+
+# STATE: REDESIGNED-CORE
+- id: "wolf"
+  display_name: "Wolf"
+  body_model: "quadruped_predator"
+  need_profile: "carnivore_survival"
+  sense_profile: "predator_smell_senses"
+  cognition_profile: "instinctive_animal"
+  drive_profile: "territorial_predator"
+  natural_traits: ["quadruped", "pack_hunter", "territorial", "carnivore"]
+  attribute_tendencies:
+    strength: "medium"
+    agility: "high"
+    endurance: "medium"
+    intelligence: "low"
+    perception: "high"
+    instinct: "very_high"
+    willpower: "medium"
+    charisma: "none"
+  compatible_roles: ["predator_hunter", "alpha"]
+
+# STATE: LEGACY-EXPORT
+- id: "goblin"
+  display_name: "Goblin"
+  body_model: "small_humanoid"
+  need_profile: "goblin_survival"
+  sense_profile: "goblin_alert_senses"
+  cognition_profile: "opportunistic_humanoid"
+  drive_profile: "opportunistic_raider"
+  natural_traits: ["humanoid", "tool_user", "opportunistic", "social_humanoid", "small_body"]
+  attribute_tendencies:
+    strength: "low"
+    agility: "medium_high"
+    endurance: "low_medium"
+    intelligence: "medium_low"
+    perception: "medium"
+    instinct: "medium_high"
+    willpower: "low_medium"
+    charisma: "low"
+  compatible_roles: ["scout", "raider", "shaman", "leader"]
+
+# STATE: LEGACY-EXPORT
+- id: "spider"
+  display_name: "Cave Spider"
+  body_model: "arachnid_body"
+  need_profile: "carnivore_survival"
+  sense_profile: "spider_vibration_senses"
+  cognition_profile: "instinctive_animal"
+  drive_profile: "territorial_predator"
+  natural_traits: ["venomous", "territorial"]
+  attribute_tendencies:
+    strength: "medium"
+    agility: "high"
+    endurance: "medium"
+    intelligence: "very_low"
+    perception: "medium_high"
+    instinct: "very_high"
+    willpower: "low"
+    charisma: "none"
+  compatible_roles: ["predator_hunter"]
+
+# STATE: ADDITIONAL
+- id: "orc"
+  display_name: "Orc"
+  body_model: "large_humanoid"
+  need_profile: "humanoid_survival"
+  sense_profile: "normal_humanoid_senses"
+  cognition_profile: "opportunistic_humanoid"
+  drive_profile: "opportunistic_raider"
+  natural_traits: ["humanoid", "tool_user", "large_body"]
+  attribute_tendencies:
+    strength: "high"
+    agility: "medium_low"
+    endurance: "high"
+    intelligence: "medium_low"
+    perception: "medium"
+    instinct: "medium"
+    willpower: "medium_high"
+    charisma: "medium_low"
+  compatible_roles: ["raider", "guard", "leader", "shaman"]
+
+# STATE: ADDITIONAL
+- id: "elf"
+  display_name: "Elf"
+  body_model: "standard_humanoid"
+  need_profile: "humanoid_survival"
+  sense_profile: "arcane_senses"
+  cognition_profile: "arcane_scholar"
+  drive_profile: "disciplined_protector"
+  natural_traits: ["humanoid", "tool_user", "magic_sensitive", "social_humanoid"]
+  attribute_tendencies:
+    strength: "low_medium"
+    agility: "high"
+    endurance: "medium"
+    intelligence: "high"
+    perception: "high"
+    instinct: "medium"
+    willpower: "medium_high"
+    charisma: "medium"
+    magic_affinity: "high"
+  compatible_roles: ["ranger", "mage", "healer", "guard", "leader"]
+
+# STATE: ADDITIONAL
+- id: "dwarf"
+  display_name: "Dwarf"
+  body_model: "standard_humanoid"
+  need_profile: "humanoid_survival"
+  sense_profile: "normal_humanoid_senses"
+  cognition_profile: "practical_humanoid"
+  drive_profile: "disciplined_protector"
+  natural_traits: ["humanoid", "tool_user", "craftsman", "disciplined"]
+  attribute_tendencies:
+    strength: "medium_high"
+    agility: "low_medium"
+    endurance: "high"
+    intelligence: "medium"
+    perception: "medium"
+    willpower: "high"
+    craftsmanship: "high"
+  compatible_roles: ["miner", "blacksmith", "guard", "merchant", "leader"]
+
+# STATE: ADDITIONAL
+- id: "undead"
+  display_name: "Undead"
+  body_model: "spirit_body"
+  need_profile: "undead_purpose"
+  sense_profile: "undead_dread_senses"
+  cognition_profile: "undead_fixated"
+  drive_profile: "undead_purpose_bound"
+  natural_traits: ["undead"]
+  attribute_tendencies:
+    strength: "medium"
+    agility: "low"
+    endurance: "high"
+    intelligence: "low_medium"
+    perception: "medium"
+    willpower: "high"
+  compatible_roles: ["sentinel", "raider", "leader"]
+
+# STATE: ADDITIONAL
+- id: "troll"
+  display_name: "Troll"
+  body_model: "large_humanoid"
+  need_profile: "humanoid_survival"
+  sense_profile: "normal_humanoid_senses"
+  cognition_profile: "instinctive_animal"
+  drive_profile: "territorial_predator"
+  natural_traits: ["large_body", "regenerating"]
+  attribute_tendencies:
+    strength: "very_high"
+    agility: "low"
+    endurance: "very_high"
+    intelligence: "low"
+    perception: "low_medium"
+    instinct: "high"
+  compatible_roles: ["brute", "leader"]
+
+# STATE: ADDITIONAL
+- id: "lizardfolk"
+  display_name: "Lizardfolk"
+  body_model: "standard_humanoid"
+  need_profile: "humanoid_survival"
+  sense_profile: "normal_humanoid_senses"
+  cognition_profile: "practical_humanoid"
+  drive_profile: "disciplined_protector"
+  natural_traits: ["humanoid", "tool_user", "amphibious"]
+  attribute_tendencies:
+    strength: "medium"
+    agility: "medium"
+    endurance: "high"
+    intelligence: "medium"
+    perception: "medium"
+    instinct: "medium_high"
+  compatible_roles: ["hunter", "guard", "shaman", "leader"]
+
+# STATE: ADDITIONAL
+- id: "dragonkin"
+  display_name: "Dragonkin"
+  body_model: "winged_reptilian"
+  need_profile: "elemental_stability"
+  sense_profile: "arcane_senses"
+  cognition_profile: "arcane_scholar"
+  drive_profile: "disciplined_protector"
+  natural_traits: ["flying", "large_body", "fire_aligned", "magic_sensitive"]
+  attribute_tendencies:
+    strength: "high"
+    agility: "medium"
+    endurance: "high"
+    intelligence: "high"
+    perception: "high"
+    willpower: "high"
+    magic_affinity: "high"
+  compatible_roles: ["dragon_champion", "mage", "leader"]
+
+# STATE: ADDITIONAL
+- id: "slime"
+  display_name: "Slime"
+  body_model: "amorphous_body"
+  need_profile: "elemental_stability"
+  sense_profile: "normal_humanoid_senses"
+  cognition_profile: "instinctive_animal"
+  drive_profile: "territorial_predator"
+  natural_traits: ["regenerating"]
+  attribute_tendencies:
+    strength: "low"
+    agility: "low"
+    endurance: "medium_high"
+    intelligence: "very_low"
+    perception: "low"
+    instinct: "high"
+  compatible_roles: ["predator_hunter"]
+
+# STATE: ADDITIONAL
+- id: "spirit"
+  display_name: "Spirit"
+  body_model: "spirit_body"
+  need_profile: "spirit_anchor"
+  sense_profile: "arcane_senses"
+  cognition_profile: "arcane_scholar"
+  drive_profile: "ritual_fixated"
+  natural_traits: ["spiritual", "magic_sensitive"]
+  attribute_tendencies:
+    intelligence: "medium_high"
+    perception: "high"
+    willpower: "high"
+    magic_affinity: "high"
+  compatible_roles: ["guardian", "healer", "leader"]

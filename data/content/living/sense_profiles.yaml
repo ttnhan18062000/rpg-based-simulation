@@ -1,0 +1,53 @@
+# STATE: REDESIGNED-CORE
+- id: "normal_humanoid_senses"
+  display_name: "Normal Humanoid Senses"
+  vision: "medium"
+  hearing: "medium"
+  smell: "low"
+  magic_sense: "none"
+  social_reading: "medium"
+
+# STATE: REDESIGNED-CORE
+- id: "predator_smell_senses"
+  display_name: "Predator Smell Senses"
+  vision: "medium"
+  hearing: "high"
+  smell: "very_high"
+  magic_sense: "none"
+  social_reading: "low"
+
+# STATE: ADDITIONAL
+- id: "goblin_alert_senses"
+  display_name: "Goblin Alert Senses"
+  vision: "medium"
+  hearing: "medium_high"
+  smell: "low"
+  magic_sense: "none"
+  social_reading: "medium"
+
+# STATE: ADDITIONAL
+- id: "spider_vibration_senses"
+  display_name: "Spider Vibration Senses"
+  vision: "low"
+  hearing: "low"
+  smell: "medium"
+  vibration: "very_high"
+  magic_sense: "none"
+
+# STATE: ADDITIONAL
+- id: "arcane_senses"
+  display_name: "Arcane Senses"
+  vision: "medium"
+  hearing: "medium"
+  smell: "low"
+  magic_sense: "high"
+  social_reading: "medium"
+
+# STATE: ADDITIONAL
+- id: "undead_dread_senses"
+  display_name: "Undead Dread Senses"
+  vision: "medium"
+  hearing: "medium"
+  smell: "none"
+  life_sense: "medium"
+  magic_sense: "medium"

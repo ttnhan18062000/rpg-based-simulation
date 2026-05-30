@@ -1,9 +1,0 @@
-# data/content/services.yaml
-- id: "general_store_service"
-  display_name: "General Merchant Services"
-  schema_version: "serviceprofiledefinition.v1"
-  provided_items:
-    - "health_potion"
-    - "bread"
-  heal_amount: 0
-  gold_cost: 10.0

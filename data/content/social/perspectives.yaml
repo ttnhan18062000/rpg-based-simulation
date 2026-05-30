@@ -1,0 +1,49 @@
+# STATE: REDESIGNED-CORE
+# Perspective projects relationship/context into labels. Labels are not source entity types.
+- id: "hero_guild_perspective"
+  chosen_faction: "hero_guild"
+  default_focus: "settlement_survival"
+  projected_labels:
+    ally_groups: ["town_council", "forest_wardens", "dwarven_mine_clan"]
+    neutral_groups: ["merchant_league", "arcane_circle", "spirit_court"]
+    hostile_groups: ["goblin_warband", "bandit_company", "moon_cult", "undead_remnants", "dragon_cult"]
+    contextual_threat_groups: ["wild_beast_pack", "orc_clan", "swamp_tribe"]
+
+# STATE: REDESIGNED-CORE
+- id: "wild_beast_pack_perspective"
+  chosen_faction: "wild_beast_pack"
+  default_focus: "territory_and_survival"
+  projected_labels:
+    ally_groups: ["wild_beast_pack"]
+    neutral_groups: ["forest_wardens", "spirit_court"]
+    contextual_intruder_groups: ["town_council", "hero_guild", "goblin_warband", "bandit_company", "orc_clan"]
+    prey_or_threat_by_context: ["human", "goblin", "orc"]
+
+# STATE: ADDITIONAL
+- id: "goblin_warband_perspective"
+  chosen_faction: "goblin_warband"
+  default_focus: "loot_and_group_survival"
+  projected_labels:
+    ally_groups: ["goblin_warband"]
+    neutral_groups: ["wild_beast_pack", "bandit_company"]
+    hostile_groups: ["town_council", "hero_guild", "dwarven_mine_clan"]
+    opportunity_groups: ["merchant_league"]
+
+# STATE: ADDITIONAL
+- id: "merchant_league_perspective"
+  chosen_faction: "merchant_league"
+  default_focus: "profit_and_route_safety"
+  projected_labels:
+    ally_groups: ["merchant_league"]
+    trade_groups: ["town_council", "hero_guild", "dwarven_mine_clan", "arcane_circle"]
+    threat_groups: ["bandit_company", "goblin_warband", "undead_remnants"]
+    contextual_threat_groups: ["wild_beast_pack", "orc_clan"]
+
+# STATE: ADDITIONAL
+- id: "undead_remnants_perspective"
+  chosen_faction: "undead_remnants"
+  default_focus: "purpose_and_anchor"
+  projected_labels:
+    ally_groups: ["undead_remnants"]
+    hostile_groups: ["town_council", "hero_guild", "forest_wardens"]
+    ignored_groups: ["wild_beast_pack"]

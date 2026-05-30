@@ -1,0 +1,56 @@
+# STATE: LEGACY-EXPORT
+- id: "craft_iron_sword"
+  outputs: {iron_sword: 1}
+  ingredients: {iron_ore: 2, wood: 1}
+  required_service: "blacksmith_service"
+  gold_cost: 40
+
+# STATE: LEGACY-EXPORT
+- id: "craft_hunter_blade"
+  outputs: {hunter_blade: 1}
+  ingredients: {iron_ore: 2, beast_fang: 1, moon_resin: 1}
+  required_service: "blacksmith_service"
+  gold_cost: 50
+
+# STATE: LEGACY-EXPORT
+# Existing legacy behavior uses blacksmith for potion; mark for future review, do not silently change.
+- id: "craft_small_potion"
+  outputs: {small_potion: 1}
+  ingredients: {healing_flower: 1, crystal_shard: 1}
+  required_service: "blacksmith_service"
+  gold_cost: 10
+
+# STATE: ADDITIONAL
+- id: "craft_iron_shield"
+  outputs: {iron_shield: 1}
+  ingredients: {iron_ore: 2, wood: 2}
+  required_service: "blacksmith_service"
+  gold_cost: 35
+
+# STATE: ADDITIONAL
+- id: "craft_silvered_blade"
+  outputs: {silvered_blade: 1}
+  ingredients: {silver_ore: 2, iron_ore: 1, ancient_fragment: 1}
+  required_service: "blacksmith_service"
+  gold_cost: 80
+
+# STATE: ADDITIONAL
+- id: "craft_warding_charm"
+  outputs: {warding_charm: 1}
+  ingredients: {silver_ore: 1, moon_resin: 1, ancient_fragment: 1}
+  required_service: "healer_service"
+  gold_cost: 60
+
+# STATE: ADDITIONAL
+- id: "craft_venom_dagger"
+  outputs: {venom_dagger: 1}
+  ingredients: {venom_sac: 1, iron_ore: 1}
+  required_service: "blacksmith_service"
+  gold_cost: 45
+
+# STATE: ADDITIONAL
+- id: "craft_spirit_lantern"
+  outputs: {spirit_lantern: 1}
+  ingredients: {spirit_essence: 1, crystal_shard: 1, wood: 1}
+  required_service: "arcane_service"
+  gold_cost: 75

@@ -10,10 +10,11 @@ requires:
 population_recipes:
   - role: "hero"
     count: 2
-    faction: "villagers"
+    faction: "town_council"
     spawn_region: "town_center"
     stats_profile: "hero_base"
   - role: "worker"
     count: 3
-    faction: "villagers"
+    faction: "town_council"
     spawn_region: "town_center"
+

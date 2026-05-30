@@ -1,0 +1,207 @@
+# STATE: EXISTING-LOGIC
+- id: "hero"
+  display_name: "Hero"
+  role_family: "adventurer"
+  default_stats_profile: "hero_base"
+  default_cognition_profile: "practical_humanoid"
+  default_inventory_profile: "hero_pocket"
+  compatible_traits: ["humanoid", "tool_user"]
+  legacy_engine_role: "HERO"
+
+# STATE: EXISTING-LOGIC
+- id: "worker"
+  display_name: "Worker"
+  role_family: "labor"
+  default_stats_profile: "commoner_base"
+  default_cognition_profile: "practical_humanoid"
+  compatible_traits: ["humanoid", "tool_user"]
+  legacy_engine_role: "WORKER"
+
+# STATE: EXISTING-LOGIC
+- id: "citizen"
+  display_name: "Citizen"
+  role_family: "civilian"
+  default_stats_profile: "commoner_base"
+  default_cognition_profile: "practical_humanoid"
+  compatible_traits: ["humanoid"]
+  legacy_engine_role: "CITIZEN"
+
+# STATE: EXISTING-LOGIC
+- id: "guard"
+  display_name: "Guard"
+  role_family: "protector"
+  default_stats_profile: "frontier_guard_base"
+  default_cognition_profile: "disciplined_guard"
+  compatible_traits: ["humanoid", "tool_user"]
+  legacy_engine_role: "GUARD"
+
+# STATE: EXISTING-LOGIC
+- id: "shopkeeper"
+  display_name: "Shopkeeper"
+  role_family: "service"
+  default_stats_profile: "merchant_base"
+  default_cognition_profile: "trade_pragmatist"
+  compatible_traits: ["humanoid", "tool_user"]
+  legacy_engine_role: "SHOPKEEPER"
+
+# STATE: REDESIGNED-CORE
+- id: "predator_hunter"
+  display_name: "Predator Hunter"
+  role_family: "ecological_predator"
+  default_stats_profile: "wolf_predator_base"
+  default_cognition_profile: "instinctive_animal"
+  compatible_traits: ["carnivore"]
+  legacy_engine_role: "MONSTER"
+
+# STATE: ADDITIONAL
+- id: "alpha"
+  display_name: "Alpha"
+  role_family: "ecological_leader"
+  default_stats_profile: "alpha_predator_base"
+  default_cognition_profile: "instinctive_animal"
+  compatible_traits: ["pack_hunter", "leader"]
+  legacy_engine_role: "MONSTER"
+
+# STATE: ADDITIONAL
+- id: "scout"
+  display_name: "Scout"
+  role_family: "recon"
+  default_stats_profile: "goblin_scout_base"
+  default_cognition_profile: "opportunistic_humanoid"
+  compatible_traits: ["humanoid"]
+  legacy_engine_role: "GUARD"
+
+# STATE: ADDITIONAL
+- id: "raider"
+  display_name: "Raider"
+  role_family: "attacker"
+  default_stats_profile: "goblin_raider_base"
+  default_cognition_profile: "opportunistic_humanoid"
+  compatible_traits: ["humanoid", "tool_user"]
+  legacy_engine_role: "MONSTER"
+
+# STATE: ADDITIONAL
+- id: "leader"
+  display_name: "Leader"
+  role_family: "authority"
+  default_stats_profile: "warlord_base"
+  default_cognition_profile: "opportunistic_humanoid"
+  compatible_traits: ["leader"]
+  legacy_engine_role: "MONSTER"
+
+# STATE: ADDITIONAL
+- id: "merchant"
+  display_name: "Merchant"
+  role_family: "trade"
+  default_stats_profile: "merchant_base"
+  default_cognition_profile: "trade_pragmatist"
+  compatible_traits: ["humanoid", "tool_user", "merchant_minded"]
+  legacy_engine_role: "SHOPKEEPER"
+
+# STATE: ADDITIONAL
+- id: "blacksmith"
+  display_name: "Blacksmith"
+  role_family: "craft"
+  default_stats_profile: "artisan_base"
+  default_cognition_profile: "practical_humanoid"
+  compatible_traits: ["tool_user", "craftsman"]
+  legacy_engine_role: "WORKER"
+
+# STATE: ADDITIONAL
+- id: "healer"
+  display_name: "Healer"
+  role_family: "support"
+  default_stats_profile: "healer_base"
+  default_cognition_profile: "practical_humanoid"
+  compatible_traits: ["humanoid", "tool_user"]
+  legacy_engine_role: "CITIZEN"
+
+# STATE: ADDITIONAL
+- id: "mage"
+  display_name: "Mage"
+  role_family: "caster"
+  default_stats_profile: "apprentice_mage_base"
+  default_cognition_profile: "arcane_scholar"
+  compatible_traits: ["tool_user", "magic_sensitive"]
+  legacy_engine_role: "HERO"
+
+# STATE: ADDITIONAL
+- id: "ranger"
+  display_name: "Ranger"
+  role_family: "wilderness_combatant"
+  default_stats_profile: "ranger_base"
+  default_cognition_profile: "disciplined_guard"
+  compatible_traits: ["tool_user"]
+  legacy_engine_role: "GUARD"
+
+# STATE: ADDITIONAL
+- id: "miner"
+  display_name: "Miner"
+  role_family: "labor"
+  default_stats_profile: "miner_base"
+  default_cognition_profile: "practical_humanoid"
+  compatible_traits: ["tool_user", "craftsman"]
+  legacy_engine_role: "WORKER"
+
+# STATE: ADDITIONAL
+- id: "priest"
+  display_name: "Priest"
+  role_family: "support"
+  default_stats_profile: "healer_base"
+  default_cognition_profile: "arcane_scholar"
+  compatible_traits: ["humanoid", "tool_user"]
+  legacy_engine_role: "CITIZEN"
+
+# STATE: ADDITIONAL
+- id: "sentinel"
+  display_name: "Sentinel"
+  role_family: "guardian"
+  default_stats_profile: "undead_sentinel_base"
+  default_cognition_profile: "undead_fixated"
+  compatible_traits: ["undead"]
+  legacy_engine_role: "MONSTER"
+
+# STATE: ADDITIONAL
+- id: "guardian"
+  display_name: "Guardian"
+  role_family: "protector"
+  default_stats_profile: "spirit_guardian_base"
+  default_cognition_profile: "arcane_scholar"
+  compatible_traits: ["spiritual"]
+  legacy_engine_role: "GUARD"
+
+# STATE: ADDITIONAL
+- id: "hunter"
+  display_name: "Hunter"
+  role_family: "adventurer"
+  default_stats_profile: "ranger_base"
+  default_cognition_profile: "practical_humanoid"
+  compatible_traits: ["humanoid", "tool_user"]
+  legacy_engine_role: "HERO"
+
+# STATE: ADDITIONAL
+- id: "shaman"
+  display_name: "Shaman"
+  role_family: "caster"
+  default_stats_profile: "apprentice_mage_base"
+  default_cognition_profile: "arcane_scholar"
+  compatible_traits: ["humanoid", "tool_user"]
+  legacy_engine_role: "HERO"
+
+# STATE: ADDITIONAL
+- id: "brute"
+  display_name: "Brute"
+  role_family: "attacker"
+  default_stats_profile: "troll_brute_base"
+  default_cognition_profile: "opportunistic_humanoid"
+  compatible_traits: ["large_body"]
+  legacy_engine_role: "MONSTER"
+
+# STATE: ADDITIONAL
+- id: "dragon_champion"
+  display_name: "Dragon Champion"
+  role_family: "guardian"
+  default_stats_profile: "dragon_champion_base"
+  default_cognition_profile: "arcane_scholar"
+  compatible_traits: ["large_body"]
+  legacy_engine_role: "MONSTER"

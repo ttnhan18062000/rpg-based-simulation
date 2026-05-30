@@ -1,0 +1,17 @@
+# STATE: REDESIGNED-CORE
+schema_version: "worldcomposition.v1"
+world_id: "frontier_living_world"
+name: "Frontier Living World"
+description: "Balanced world composition covering village, wildlife, goblins, mine economy, trade road, and undead danger."
+modules:
+  - "frontier_village_core"
+  - "wolf_den_near_forest"
+  - "goblin_camp_conflict"
+  - "old_mine_resource_loop"
+  - "bandit_road_trade_pressure"
+  - "undead_battlefield"
+default_perspectives:
+  - "hero_guild_perspective"
+  - "wild_beast_pack_perspective"
+  - "goblin_warband_perspective"
+generation_seed: 42

@@ -1,0 +1,70 @@
+# STATE: EXISTING-LOGIC
+- id: "shop"
+  display_name: "General Store"
+  hp: 500
+  max_hp: 500
+  service_profile_id: "general_store_service"
+  themes: ["village", "trade"]
+
+# STATE: EXISTING-LOGIC
+- id: "town_hall"
+  display_name: "Town Hall"
+  hp: 1000
+  max_hp: 1000
+  themes: ["village"]
+
+# STATE: ADDITIONAL
+- id: "blacksmith"
+  display_name: "Blacksmith"
+  hp: 700
+  max_hp: 700
+  service_profile_id: "blacksmith_service"
+  themes: ["village", "mine"]
+
+# STATE: ADDITIONAL
+- id: "inn"
+  display_name: "Inn"
+  hp: 600
+  max_hp: 600
+  service_profile_id: "inn_service"
+  themes: ["village", "trade"]
+
+# STATE: ADDITIONAL
+- id: "watchtower"
+  display_name: "Watchtower"
+  hp: 800
+  max_hp: 800
+  service_profile_id: "guard_post_service"
+  themes: ["village", "frontier"]
+
+# STATE: ADDITIONAL
+- id: "healer_hut"
+  display_name: "Healer Hut"
+  hp: 450
+  max_hp: 450
+  service_profile_id: "healer_service"
+  themes: ["village", "sacred"]
+
+# STATE: ADDITIONAL
+- id: "mine_entrance"
+  display_name: "Mine Entrance"
+  hp: 900
+  max_hp: 900
+  service_profile_id: "mining_service"
+  themes: ["mine", "dwarven"]
+
+# STATE: ADDITIONAL
+- id: "shrine"
+  display_name: "Shrine"
+  hp: 650
+  max_hp: 650
+  service_profile_id: "shrine_service"
+  themes: ["sacred", "spirit"]
+
+# STATE: ADDITIONAL
+- id: "mage_tower"
+  display_name: "Mage Tower"
+  hp: 850
+  max_hp: 850
+  service_profile_id: "arcane_service"
+  themes: ["arcane", "moon"]

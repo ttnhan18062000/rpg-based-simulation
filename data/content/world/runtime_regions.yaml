@@ -1,0 +1,95 @@
+# STATE: LEGACY-EXPORT
+- id: "hometown"
+  display_name: "Hometown Center"
+  biome: "frontier_village"
+  tags: ["safe", "village", "frontier"]
+  danger_level: 0
+  controlling_faction: "town_council"
+
+# STATE: LEGACY-EXPORT
+- id: "near_forest"
+  display_name: "Near Forest Wilderness"
+  biome: "near_forest"
+  tags: ["wild", "forest"]
+  danger_level: 1
+  controlling_faction: "wild_beast_pack"
+
+# STATE: LEGACY-EXPORT
+- id: "old_mine"
+  display_name: "Abandoned Iron Mine"
+  biome: "old_mine"
+  tags: ["mine", "dark"]
+  danger_level: 2
+  controlling_faction: "dwarven_mine_clan"
+
+# STATE: LEGACY-EXPORT
+- id: "wolf_den"
+  display_name: "Deep Wolf Den"
+  biome: "wolf_den"
+  tags: ["dangerous", "forest", "wolf_den"]
+  danger_level: 2
+  controlling_faction: "wild_beast_pack"
+
+# STATE: LEGACY-EXPORT
+- id: "north_ruin"
+  display_name: "Forgotten Northern Ruins"
+  biome: "haunted_battlefield"
+  tags: ["ruins", "undead"]
+  danger_level: 3
+  controlling_faction: "undead_remnants"
+
+# STATE: LEGACY-EXPORT
+- id: "goblin_camp"
+  display_name: "Goblin Outpost"
+  biome: "goblin_camp"
+  tags: ["hostile", "goblin"]
+  danger_level: 3
+  controlling_faction: "goblin_warband"
+
+# STATE: LEGACY-EXPORT
+- id: "moon_cave"
+  display_name: "Shimmering Moonstone Cave"
+  biome: "moon_cave"
+  tags: ["magical", "cave", "moon"]
+  danger_level: 4
+  controlling_faction: "moon_cult"
+
+# STATE: ADDITIONAL
+- id: "bandit_road"
+  display_name: "Bandit Road"
+  biome: "bandit_road"
+  tags: ["road", "bandit", "trade_risk"]
+  danger_level: 2
+  controlling_faction: "bandit_company"
+
+# STATE: ADDITIONAL
+- id: "sacred_grove"
+  display_name: "Sacred Grove"
+  biome: "sacred_grove"
+  tags: ["forest", "sacred", "spirit"]
+  danger_level: 2
+  controlling_faction: "forest_wardens"
+
+# STATE: ADDITIONAL
+- id: "haunted_battlefield"
+  display_name: "Haunted Battlefield"
+  biome: "haunted_battlefield"
+  tags: ["undead", "ruin"]
+  danger_level: 4
+  controlling_faction: "undead_remnants"
+
+# STATE: ADDITIONAL
+- id: "volcanic_pass"
+  display_name: "Volcanic Pass"
+  biome: "volcanic_pass"
+  tags: ["volcanic", "dragon"]
+  danger_level: 5
+  controlling_faction: "dragon_cult"
+
+# STATE: ADDITIONAL
+- id: "sunken_swamp"
+  display_name: "Sunken Swamp"
+  biome: "sunken_swamp"
+  tags: ["swamp"]
+  danger_level: 3
+  controlling_faction: "swamp_tribe"

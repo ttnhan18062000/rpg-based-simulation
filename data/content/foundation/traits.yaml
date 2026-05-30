@@ -1,0 +1,113 @@
+# STATE: REDESIGNED-CORE
+# Traits are reusable qualitative facts. They are not behavior scripts.
+- id: "humanoid"
+  display_name: "Humanoid"
+  description: "Can use humanoid tools, roles, and social structures."
+
+# STATE: REDESIGNED-CORE
+- id: "quadruped"
+  display_name: "Quadruped"
+  description: "Moves on four limbs; strong chase affordance, limited tool use."
+
+# STATE: REDESIGNED-CORE
+- id: "tool_user"
+  display_name: "Tool User"
+  description: "Can use equipment, weapons, buildings, and services."
+
+# STATE: REDESIGNED-CORE
+- id: "pack_hunter"
+  display_name: "Pack Hunter"
+  description: "Can gain confidence/coordination from nearby pack members."
+
+# STATE: REDESIGNED-CORE
+- id: "territorial"
+  display_name: "Territorial"
+  description: "Reacts to intrusion into claimed space."
+
+# STATE: REDESIGNED-CORE
+- id: "carnivore"
+  display_name: "Carnivore"
+  description: "Food pressure tends toward prey/meat."
+
+# STATE: REDESIGNED-CORE
+- id: "social_humanoid"
+  display_name: "Social Humanoid"
+  description: "Strongly affected by group role, norms, and reputation."
+
+# STATE: ADDITIONAL
+- id: "opportunistic"
+  display_name: "Opportunistic"
+  description: "Tends to exploit high-reward openings when risk is acceptable."
+
+# STATE: ADDITIONAL
+- id: "disciplined"
+  display_name: "Disciplined"
+  description: "Better at maintaining duty/role under pressure."
+
+# STATE: ADDITIONAL
+- id: "leader"
+  display_name: "Leader"
+  description: "Can represent group authority and coordination."
+
+# STATE: ADDITIONAL
+- id: "venomous"
+  display_name: "Venomous"
+  description: "Has potential poison combat/material interaction."
+
+# STATE: ADDITIONAL
+- id: "undead"
+  display_name: "Undead"
+  description: "Altered needs, fear, pain, and holy/shadow interactions."
+
+# STATE: ADDITIONAL
+- id: "spiritual"
+  display_name: "Spiritual"
+  description: "Non-ordinary body or perception interaction."
+
+# STATE: ADDITIONAL
+- id: "fire_aligned"
+  display_name: "Fire Aligned"
+
+# STATE: ADDITIONAL
+- id: "ice_aligned"
+  display_name: "Ice Aligned"
+
+# STATE: ADDITIONAL
+- id: "magic_sensitive"
+  display_name: "Magic Sensitive"
+
+# STATE: ADDITIONAL
+- id: "merchant_minded"
+  display_name: "Merchant Minded"
+
+# STATE: ADDITIONAL
+- id: "craftsman"
+  display_name: "Craftsman"
+
+# STATE: ADDITIONAL
+- id: "ranged_attacker"
+  display_name: "Ranged Attacker"
+
+# STATE: ADDITIONAL
+- id: "burrower"
+  display_name: "Burrower"
+
+# STATE: ADDITIONAL
+- id: "flying"
+  display_name: "Flying"
+
+# STATE: ADDITIONAL
+- id: "amphibious"
+  display_name: "Amphibious"
+
+# STATE: ADDITIONAL
+- id: "regenerating"
+  display_name: "Regenerating"
+
+# STATE: ADDITIONAL
+- id: "large_body"
+  display_name: "Large Body"
+
+# STATE: ADDITIONAL
+- id: "small_body"
+  display_name: "Small Body"

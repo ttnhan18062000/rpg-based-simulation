@@ -1,0 +1,53 @@
+# STATE: EXISTING-LOGIC
+- id: "plain"
+  display_name: "Plain"
+  move_cost_multiplier: 1.0
+  hazard_multiplier: 1.0
+
+# STATE: EXISTING-LOGIC
+- id: "forest"
+  display_name: "Forest"
+  move_cost_multiplier: 1.2
+  hazard_multiplier: 1.0
+
+# STATE: EXISTING-LOGIC
+- id: "swamp"
+  display_name: "Swamp"
+  move_cost_multiplier: 1.5
+  hazard_multiplier: 1.5
+
+# STATE: ADDITIONAL
+- id: "cave"
+  display_name: "Cave"
+  move_cost_multiplier: 1.4
+  hazard_multiplier: 1.3
+
+# STATE: ADDITIONAL
+- id: "mountain"
+  display_name: "Mountain"
+  move_cost_multiplier: 1.7
+  hazard_multiplier: 1.2
+
+# STATE: ADDITIONAL
+- id: "ruin"
+  display_name: "Ruin"
+  move_cost_multiplier: 1.2
+  hazard_multiplier: 1.4
+
+# STATE: ADDITIONAL
+- id: "road"
+  display_name: "Road"
+  move_cost_multiplier: 0.8
+  hazard_multiplier: 0.8
+
+# STATE: ADDITIONAL
+- id: "snow"
+  display_name: "Snow"
+  move_cost_multiplier: 1.6
+  hazard_multiplier: 1.2
+
+# STATE: ADDITIONAL
+- id: "volcanic"
+  display_name: "Volcanic Ground"
+  move_cost_multiplier: 1.4
+  hazard_multiplier: 1.8

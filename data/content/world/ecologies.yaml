@@ -1,0 +1,58 @@
+# STATE: REDESIGNED-CORE
+- id: "wolf_den_ecology"
+  display_name: "Wolf Den Ecology"
+  biomes: ["wolf_den", "near_forest"]
+  dominant_factions: ["wild_beast_pack"]
+  populations: ["wolf_pack_small"]
+  resources: ["wood_node", "herb_patch", "healing_flower_patch"]
+  relationship_models: ["territorial_animal"]
+
+# STATE: REDESIGNED-CORE
+- id: "frontier_village_ecology"
+  display_name: "Frontier Village Ecology"
+  biomes: ["frontier_village"]
+  dominant_factions: ["town_council", "merchant_league"]
+  populations: ["frontier_village_population"]
+  resources: ["wood_node", "herb_patch"]
+  services: ["general_store_service", "blacksmith_service", "inn_service", "healer_service"]
+
+# STATE: LEGACY-EXPORT
+- id: "goblin_camp_ecology"
+  display_name: "Goblin Camp Ecology"
+  biomes: ["goblin_camp"]
+  dominant_factions: ["goblin_warband"]
+  populations: ["goblin_raiding_party"]
+  resources: ["wood_node"]
+  relationship_models: ["raider_opportunity"]
+
+# STATE: ADDITIONAL
+- id: "old_mine_resource_ecology"
+  display_name: "Old Mine Resource Ecology"
+  biomes: ["old_mine"]
+  dominant_factions: ["dwarven_mine_clan", "wild_beast_pack"]
+  populations: ["old_mine_spider_cluster"]
+  resources: ["iron_vein", "crystal_outcrop", "silver_vein"]
+
+# STATE: ADDITIONAL
+- id: "bandit_road_ecology"
+  display_name: "Bandit Road Ecology"
+  biomes: ["bandit_road"]
+  dominant_factions: ["bandit_company", "merchant_league"]
+  populations: ["bandit_ambush_group", "merchant_caravan"]
+  relationship_models: ["predatory_trade_ambush"]
+
+# STATE: ADDITIONAL
+- id: "haunted_battlefield_ecology"
+  display_name: "Haunted Battlefield Ecology"
+  biomes: ["haunted_battlefield"]
+  dominant_factions: ["undead_remnants", "spirit_court"]
+  populations: ["undead_battlefield_patrol"]
+  resources: ["spirit_wisp"]
+
+# STATE: ADDITIONAL
+- id: "dragon_cult_volcanic_ecology"
+  display_name: "Dragon Cult Volcanic Ecology"
+  biomes: ["volcanic_pass"]
+  dominant_factions: ["dragon_cult"]
+  populations: ["dragon_cult_elite_cell"]
+  resources: ["ember_core_cluster", "iron_vein"]

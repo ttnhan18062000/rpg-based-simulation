@@ -1,0 +1,107 @@
+# STATE: REDESIGNED-CORE
+- id: "frontier_village"
+  display_name: "Frontier Village"
+  themes: ["frontier", "village"]
+  terrain_mix: ["plain", "road"]
+  common_materials: ["wood", "herb"]
+  default_factions: ["town_council", "merchant_league"]
+  danger_level: 0
+
+# STATE: REDESIGNED-CORE
+- id: "near_forest"
+  display_name: "Near Forest"
+  themes: ["frontier", "forest"]
+  terrain_mix: ["forest", "plain"]
+  common_materials: ["wood", "herb", "healing_flower"]
+  default_factions: ["wild_beast_pack", "forest_wardens"]
+  danger_level: 1
+
+# STATE: REDESIGNED-CORE
+- id: "wolf_den"
+  display_name: "Wolf Den"
+  themes: ["forest", "wolf_den"]
+  terrain_mix: ["forest", "cave"]
+  common_materials: ["beast_fang", "wolf_pelt", "wood"]
+  default_factions: ["wild_beast_pack"]
+  danger_level: 2
+
+# STATE: LEGACY-EXPORT
+- id: "old_mine"
+  display_name: "Old Mine"
+  themes: ["mine"]
+  terrain_mix: ["cave", "mountain"]
+  common_materials: ["iron_ore", "crystal_shard"]
+  default_factions: ["dwarven_mine_clan", "wild_beast_pack"]
+  danger_level: 2
+
+# STATE: LEGACY-EXPORT
+- id: "goblin_camp"
+  display_name: "Goblin Camp"
+  themes: ["goblin", "frontier"]
+  terrain_mix: ["forest", "ruin"]
+  common_materials: ["goblin_token", "wood"]
+  default_factions: ["goblin_warband"]
+  danger_level: 3
+
+# STATE: LEGACY-EXPORT
+- id: "moon_cave"
+  display_name: "Moon Cave"
+  themes: ["moon", "arcane", "mine"]
+  terrain_mix: ["cave"]
+  common_materials: ["moon_resin", "crystal_shard"]
+  default_factions: ["moon_cult", "arcane_circle"]
+  danger_level: 4
+
+# STATE: ADDITIONAL
+- id: "bandit_road"
+  display_name: "Bandit Road"
+  themes: ["bandit", "trade", "frontier"]
+  terrain_mix: ["road", "plain", "forest"]
+  common_materials: ["wood", "goblin_token"]
+  default_factions: ["bandit_company", "merchant_league"]
+  danger_level: 2
+
+# STATE: ADDITIONAL
+- id: "haunted_battlefield"
+  display_name: "Haunted Battlefield"
+  themes: ["undead", "ruin"]
+  terrain_mix: ["ruin", "plain"]
+  common_materials: ["ancient_fragment", "shadow_ichor", "spirit_essence"]
+  default_factions: ["undead_remnants", "spirit_court"]
+  danger_level: 4
+
+# STATE: ADDITIONAL
+- id: "sacred_grove"
+  display_name: "Sacred Grove"
+  themes: ["forest", "sacred", "spirit"]
+  terrain_mix: ["forest"]
+  common_materials: ["healing_flower", "spirit_essence"]
+  default_factions: ["forest_wardens", "spirit_court"]
+  danger_level: 2
+
+# STATE: ADDITIONAL
+- id: "volcanic_pass"
+  display_name: "Volcanic Pass"
+  themes: ["volcanic", "dragon"]
+  terrain_mix: ["volcanic", "mountain"]
+  common_materials: ["ember_core", "iron_ore"]
+  default_factions: ["dragon_cult"]
+  danger_level: 5
+
+# STATE: ADDITIONAL
+- id: "frozen_peak"
+  display_name: "Frozen Peak"
+  themes: ["frozen", "mountain"]
+  terrain_mix: ["snow", "mountain"]
+  common_materials: ["frost_shard", "crystal_shard"]
+  default_factions: ["spirit_court"]
+  danger_level: 4
+
+# STATE: ADDITIONAL
+- id: "sunken_swamp"
+  display_name: "Sunken Swamp"
+  themes: ["swamp"]
+  terrain_mix: ["swamp"]
+  common_materials: ["herb", "venom_sac", "healing_flower"]
+  default_factions: ["swamp_tribe", "wild_beast_pack"]
+  danger_level: 3

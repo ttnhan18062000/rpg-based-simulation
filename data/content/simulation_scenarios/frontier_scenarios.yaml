@@ -1,0 +1,46 @@
+# STATE: REDESIGNED-CORE
+# These are simulation setups, not observability expectation packs.
+- id: "wolf_territory_pressure"
+  world_composition: "frontier_living_world"
+  focus_modules: ["wolf_den_near_forest"]
+  perspective: "hero_guild_perspective"
+  initial_conditions:
+    player_or_patrol_region: "near_forest"
+    wolf_hunger_pressure: "medium_high"
+    intrusion_distance_to_den: "near"
+
+# STATE: ADDITIONAL
+- id: "goblin_camp_pressure"
+  world_composition: "frontier_living_world"
+  focus_modules: ["goblin_camp_conflict"]
+  perspective: "hero_guild_perspective"
+  initial_conditions:
+    goblin_resource_pressure: "medium"
+    town_guard_strength: "medium"
+
+# STATE: ADDITIONAL
+- id: "merchant_trade_route_risk"
+  world_composition: "frontier_living_world"
+  focus_modules: ["bandit_road_trade_pressure"]
+  perspective: "merchant_league_perspective"
+  initial_conditions:
+    caravan_value: "high"
+    bandit_activity: "medium"
+
+# STATE: ADDITIONAL
+- id: "old_mine_recovery"
+  world_composition: "frontier_living_world"
+  focus_modules: ["old_mine_resource_loop"]
+  perspective: "dwarven_mine_clan_perspective"
+  initial_conditions:
+    mine_access: "contested"
+    spider_density: "medium"
+
+# STATE: ADDITIONAL
+- id: "undead_battlefield_containment"
+  world_composition: "frontier_living_world"
+  focus_modules: ["undead_battlefield"]
+  perspective: "hero_guild_perspective"
+  initial_conditions:
+    undead_activity: "high"
+    shrine_support: "low"

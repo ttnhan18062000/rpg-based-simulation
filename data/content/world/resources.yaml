@@ -1,0 +1,98 @@
+# STATE: EXISTING-LOGIC
+- id: "wood_node"
+  material: "wood"
+  display_name: "Wood Node"
+  resource_type: "wood"
+  required_ticks: 10
+  default_charges: 10
+  preferred_biomes: ["frontier_village", "near_forest"]
+
+# STATE: EXISTING-LOGIC
+- id: "iron_vein"
+  material: "iron_ore"
+  display_name: "Iron Vein"
+  resource_type: "iron_ore"
+  required_ticks: 15
+  default_charges: 5
+  preferred_biomes: ["old_mine"]
+
+# STATE: LEGACY-EXPORT
+- id: "herb_patch"
+  material: "herb"
+  display_name: "Herb Patch"
+  resource_type: "herb"
+  required_ticks: 8
+  default_charges: 8
+  preferred_biomes: ["near_forest", "sunken_swamp"]
+
+# STATE: LEGACY-EXPORT
+- id: "healing_flower_patch"
+  material: "healing_flower"
+  display_name: "Healing Flower Patch"
+  resource_type: "healing_flower"
+  required_ticks: 12
+  default_charges: 5
+  preferred_biomes: ["near_forest", "sacred_grove"]
+
+# STATE: LEGACY-EXPORT
+- id: "moon_resin_tree"
+  material: "moon_resin"
+  display_name: "Moon Resin Tree"
+  resource_type: "moon_resin"
+  required_ticks: 20
+  default_charges: 3
+  preferred_biomes: ["moon_cave"]
+
+# STATE: LEGACY-EXPORT
+- id: "crystal_outcrop"
+  material: "crystal_shard"
+  display_name: "Crystal Outcrop"
+  resource_type: "crystal_shard"
+  required_ticks: 18
+  default_charges: 4
+  preferred_biomes: ["old_mine", "moon_cave"]
+
+# STATE: ADDITIONAL
+- id: "silver_vein"
+  material: "silver_ore"
+  display_name: "Silver Vein"
+  resource_type: "silver_ore"
+  required_ticks: 18
+  default_charges: 4
+  preferred_biomes: ["old_mine", "frozen_peak"]
+
+# STATE: ADDITIONAL
+- id: "venom_nest"
+  material: "venom_sac"
+  display_name: "Venom Nest"
+  resource_type: "venom_sac"
+  required_ticks: 16
+  default_charges: 4
+  preferred_biomes: ["sunken_swamp", "old_mine"]
+
+# STATE: ADDITIONAL
+- id: "spirit_wisp"
+  material: "spirit_essence"
+  display_name: "Spirit Wisp"
+  resource_type: "spirit_essence"
+  required_ticks: 25
+  default_charges: 2
+  preferred_biomes: ["sacred_grove", "haunted_battlefield"]
+
+# STATE: ADDITIONAL
+- id: "ember_core_cluster"
+  material: "ember_core"
+  display_name: "Ember Core Cluster"
+  resource_type: "ember_core"
+  required_ticks: 24
+  default_charges: 2
+  preferred_biomes: ["volcanic_pass"]
+
+# STATE: ADDITIONAL
+- id: "frost_shard_cluster"
+  material: "frost_shard"
+  display_name: "Frost Shard Cluster"
+  resource_type: "frost_shard"
+  required_ticks: 24
+  default_charges: 2
+  preferred_biomes: ["frozen_peak"]

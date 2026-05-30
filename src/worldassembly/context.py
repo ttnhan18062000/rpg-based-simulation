@@ -1,7 +1,7 @@
 # Compliance IDs: WORLD-ASM-003
 from __future__ import annotations
 
-from typing import Dict
+from typing import Dict, Any, Optional
 from src.worldassembly.models import (
     ResolvedEntityProfile,
     ResolvedBuildingProfile,
@@ -53,3 +53,36 @@ class CompileContext:
 
     def set_provenance(self, provenance: Any) -> None:
         self.provenance = provenance
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "entities": {k: v.model_dump(by_alias=True) for k, v in self.entities.items()},
+            "buildings": {k: v.model_dump() for k, v in self.buildings.items()},
+            "resources": {k: v.model_dump() for k, v in self.resources.items()},
+            "factions": {k: v.model_dump() for k, v in self.factions.items()},
+            "region_ownership": {k: int(v) for k, v in self.region_ownership.items()},
+            "legacy_factions": {k: int(v) for k, v in self.legacy_factions.items()},
+            "legacy_roles": {k: int(v) for k, v in self.legacy_roles.items()},
+        }
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> CompileContext:
+        ctx = cls()
+        from src.core.enums import EntityRole, Faction
+        
+        for k, v in data.get("entities", {}).items():
+            ctx.register_entity(k, ResolvedEntityProfile.model_validate(v))
+        for k, v in data.get("buildings", {}).items():
+            ctx.register_building(k, ResolvedBuildingProfile.model_validate(v))
+        for k, v in data.get("resources", {}).items():
+            ctx.register_resource(k, ResolvedResourceProfile.model_validate(v))
+        for k, v in data.get("factions", {}).items():
+            ctx.register_faction(k, ResolvedFactionEconomyProfile.model_validate(v))
+        for k, v in data.get("region_ownership", {}).items():
+            ctx.region_ownership[k] = Faction(v)
+        for k, v in data.get("legacy_factions", {}).items():
+            ctx.legacy_factions[k] = Faction(v)
+        for k, v in data.get("legacy_roles", {}).items():
+            ctx.legacy_roles[k] = EntityRole(v)
+            
+        return ctx

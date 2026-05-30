@@ -133,3 +133,107 @@ def test_report_v2_generation(run_dir):
         assert "Ticks `10 - 20`" in content
         assert "Troubleshooting Hints" in content
         assert "pathfinding obstacle" in content.lower()
+
+
+def test_provenance_grouping_in_report(run_dir):
+    # 1. Create a dummy world.resolved.yaml
+    resolved_world_content = {
+        "schema_version": "worldspec.v1",
+        "world_id": "test_valley_report",
+        "name": "Test Valley Report",
+        "regions": [
+            {"id": "town_square", "bounds": [0, 0, 10, 10], "type": "town"}
+        ],
+        "factions": [],
+        "resources": [],
+        "buildings": [],
+        "entities": [
+            {"id": "citizen_group", "spawn_region": "town_square", "role": "citizen", "faction": "town_council", "count": 1}
+        ],
+        "topology": {"width": 100, "height": 100, "coordinate_system": "grid"}
+    }
+    import yaml
+    resolved_world_path = os.path.join(run_dir, "world.resolved.yaml")
+    with open(resolved_world_path, "w", encoding="utf-8") as f:
+        yaml.safe_dump(resolved_world_content, f)
+
+    # 2. Create a dummy run_manifest.json pointing to it
+    run_manifest = {
+        "run_id": os.path.basename(run_dir),
+        "scenario_name": "Test Report",
+        "scenario_type": "test",
+        "seed": 42,
+        "status": "COMPLETED",
+        "ticks_requested": 10,
+        "started_at": "2026-05-30T12:00:00Z",
+        "observability_mode": "full",
+        "resolved_world_path": resolved_world_path
+    }
+    with open(os.path.join(run_dir, "run_manifest.json"), "w", encoding="utf-8") as f:
+        json.dump(run_manifest, f)
+
+    # 3. Create provenance manifest sidecar
+    provenance_manifest = {
+        "manifest_id": "prov_manifest_report",
+        "world_id": "test_valley_report",
+        "catalog_fingerprint": "catalog_sha256",
+        "records": {
+            "citizen_group": {
+                "source_module": "core_town",
+                "recipe_type": "population"
+            }
+        }
+    }
+    with open(os.path.join(run_dir, "provenance_manifest.json"), "w", encoding="utf-8") as f:
+        json.dump(provenance_manifest, f)
+
+    # 4. Create an anomaly list
+    anomalies = [
+        {
+            "rule_name": "QuestStalledRule",
+            "severity": "WARNING",
+            "entity_id": 1,  # matches citizen_group
+            "tick_detected": 5,
+            "message": "Citizen quest stalled"
+        }
+    ]
+
+    # 5. Generate report
+    shutdown_res = ShutdownResult(
+        final_tick=10,
+        final_hash="SHA-256-PROV",
+        replay_outcome=LifecycleOutcome.SUCCESS,
+        overall_outcome=LifecycleOutcome.SUCCESS
+    )
+
+    report = RunReportGenerator.generate(
+        run_dir,
+        shutdown_result=shutdown_res,
+        timeline_store=None,
+        rule_results=[],
+        clusters=[],
+        anomalies=anomalies
+    )
+
+    # 6. Verify provenance groupings are populated
+    assert "provenance_grouping" in report
+    grouping = report["provenance_grouping"]
+    
+    assert "by_module" in grouping
+    assert "by_profile" in grouping
+    assert "by_faction" in grouping
+    
+    assert "core_town" in grouping["by_module"]
+    assert "citizen" in grouping["by_profile"]
+    assert "town_council" in grouping["by_faction"]
+
+    # Verify generated markdown report contains the sections and data
+    report_md_file = os.path.join(run_dir, "run_report.md")
+    assert os.path.exists(report_md_file)
+    with open(report_md_file, "r", encoding="utf-8") as f:
+        content = f.read()
+        assert "Provenance Source Grouping" in content
+        assert "By Source Module" in content
+        assert "core_town" in content
+        assert "citizen" in content
+        assert "town_council" in content

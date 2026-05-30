@@ -83,11 +83,17 @@ def test_provenance_determinism(repos):
     
     # Compile 1
     bundle1 = resolver.assemble(composition)
-    dump1 = json.dumps(bundle1.provenance_manifest.model_dump(), sort_keys=True)
+    prov1 = bundle1.provenance_manifest.model_dump()
 
     # Compile 2
     bundle2 = resolver.assemble(composition)
-    dump2 = json.dumps(bundle2.provenance_manifest.model_dump(), sort_keys=True)
+    prov2 = bundle2.provenance_manifest.model_dump()
 
-    # Byte-identical determinism assertion
-    assert dump1 == dump2
+    # Assert deterministic content fingerprint and manifest ID
+    assert bundle1.provenance_manifest.content_fingerprint == bundle2.provenance_manifest.content_fingerprint
+    assert bundle1.provenance_manifest.manifest_id == bundle2.provenance_manifest.manifest_id
+
+    # Strip operational timestamps before full comparison
+    prov1.pop("created_at")
+    prov2.pop("created_at")
+    assert prov1 == prov2

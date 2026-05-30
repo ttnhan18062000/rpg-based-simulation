@@ -1,0 +1,75 @@
+# STATE: REDESIGNED-CORE
+# Foundation attribute axes. These are not runtime stats by themselves; they explain profiles and archetypes.
+- id: "strength"
+  display_name: "Strength"
+  description: "Raw physical force, carrying power, and melee pressure."
+
+# STATE: REDESIGNED-CORE
+- id: "agility"
+  display_name: "Agility"
+  description: "Movement control, evasion, quickness, and action speed."
+
+# STATE: REDESIGNED-CORE
+- id: "endurance"
+  display_name: "Endurance"
+  description: "Fatigue resistance, durability tendency, and sustained action."
+
+# STATE: REDESIGNED-CORE
+- id: "intelligence"
+  display_name: "Intelligence"
+  description: "Reasoning, abstraction, learning, and planning capacity."
+
+# STATE: REDESIGNED-CORE
+- id: "perception"
+  display_name: "Perception"
+  description: "Ability to detect, notice, and classify world signals."
+
+# STATE: REDESIGNED-CORE
+- id: "instinct"
+  display_name: "Instinct"
+  description: "Fast low-abstraction response tendency."
+
+# STATE: REDESIGNED-CORE
+- id: "willpower"
+  display_name: "Willpower"
+  description: "Resistance to panic, pain, temptation, and mental disruption."
+
+# STATE: REDESIGNED-CORE
+- id: "charisma"
+  display_name: "Charisma"
+  description: "Social influence, negotiation, intimidation, and group leadership."
+
+# STATE: REDESIGNED-CORE
+- id: "discipline"
+  display_name: "Discipline"
+  description: "Ability to maintain duty, plan, or restraint under pressure."
+
+# STATE: REDESIGNED-CORE
+- id: "memory"
+  display_name: "Memory"
+  description: "Capacity to retain and reuse past information."
+
+# STATE: ADDITIONAL
+- id: "craftsmanship"
+  display_name: "Craftsmanship"
+  description: "Ability to create, repair, and improve material objects."
+
+# STATE: ADDITIONAL
+- id: "stealth"
+  display_name: "Stealth"
+  description: "Ability to avoid detection."
+
+# STATE: ADDITIONAL
+- id: "faith"
+  display_name: "Faith"
+  description: "Conviction toward sacred, oath, or ritual systems."
+
+# STATE: ADDITIONAL
+- id: "magic_affinity"
+  display_name: "Magic Affinity"
+  description: "Sensitivity to arcane energy and magical phenomena."
+
+# STATE: ADDITIONAL
+- id: "survival"
+  display_name: "Survival"
+  description: "Ability to operate in wilderness, scarcity, and danger."

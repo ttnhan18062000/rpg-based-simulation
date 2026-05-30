@@ -58,10 +58,22 @@ class RoleSemanticsService:
         return defn.default_cognition_profile if defn else None
 
     def is_combatant(self, role_id: str) -> bool:
-        return self.get_role_family(role_id) == "combatant"
+        family = self.get_role_family(role_id)
+        if family in ("combatant", "adventurer", "recon", "attacker", "ecological_predator", "ecological_leader"):
+            return True
+        legacy = self.get_legacy_entity_role(role_id)
+        return legacy in (EntityRole.HERO, EntityRole.MONSTER, EntityRole.GUARD)
 
     def is_civilian(self, role_id: str) -> bool:
-        return self.get_role_family(role_id) == "civilian"
+        family = self.get_role_family(role_id)
+        if family in ("civilian", "service", "trade"):
+            return True
+        legacy = self.get_legacy_entity_role(role_id)
+        return legacy in (EntityRole.CITIZEN, EntityRole.SHOPKEEPER)
 
     def is_worker(self, role_id: str) -> bool:
-        return self.get_role_family(role_id) == "worker"
+        family = self.get_role_family(role_id)
+        if family in ("worker", "labor"):
+            return True
+        legacy = self.get_legacy_entity_role(role_id)
+        return legacy == EntityRole.WORKER

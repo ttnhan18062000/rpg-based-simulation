@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import random
 import hashlib
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional, Any, Dict, List
 
 from src.content.repository import CatalogRepository
@@ -108,8 +108,44 @@ class WorldProceduralGenerator:
                     details={"description": cat_faction.description or ""}
                 )
 
+        # Find civilian/defender faction and monster/invader faction dynamically
+        civilian_faction = "town_council"
+        hostile_faction = "goblin_warband"
+
+        defenders = [f_id for f_id, f in self.catalog_repo.factions.items() if f.alignment_bucket == "defender"]
+        invaders = [f_id for f_id, f in self.catalog_repo.factions.items() if f.alignment_bucket == "invader"]
+        
+        if defenders:
+            civilian_faction = "town_council" if "town_council" in defenders else defenders[0]
+        if invaders:
+            hostile_faction = "goblin_warband" if "goblin_warband" in invaders else invaders[0]
+
+        # Find roles dynamically
+        citizen_role = "citizen"
+        hostile_role = "raider"
+
+        catalog_roles = list(self.catalog_repo.roles.keys())
+        if "citizen" not in catalog_roles and catalog_roles:
+            citizen_role = catalog_roles[0]
+        if "raider" not in catalog_roles:
+            monsters = [r_id for r_id, r in self.catalog_repo.roles.items() if r.legacy_engine_role == "MONSTER"]
+            if monsters:
+                hostile_role = monsters[0]
+            elif catalog_roles:
+                hostile_role = catalog_roles[0]
+
         # 4. Building Placement
-        building_types = ["shop", "blacksmith", "tavern"]
+        catalog_buildings = list(self.catalog_repo.buildings.keys())
+        building_types = []
+        if catalog_buildings:
+            for preferred in ["shop", "blacksmith", "inn"]:
+                if preferred in catalog_buildings:
+                    building_types.append(preferred)
+            if not building_types:
+                building_types = catalog_buildings[:3]
+        else:
+            building_types = ["shop", "blacksmith", "inn"]
+
         for idx, bld_type in enumerate(building_types):
             bld_id = f"bld_{bld_type}_{idx}"
             buildings.append(BuildingSpec(
@@ -128,7 +164,12 @@ class WorldProceduralGenerator:
             )
 
         # 5. Resource Spawning (Wilderness distribution based on resource_density scalar)
-        resource_types = ["wood", "ore"]
+        catalog_resources = list(self.catalog_repo.resources.values())
+        if catalog_resources:
+            resource_types = list(set(r.resource_type for r in catalog_resources))
+        else:
+            resource_types = ["wood", "iron_ore"]
+
         wild_regions = ["wilderness_forest", "wilderness_hills"]
         resource_count = max(5, int(20 * intent.resource_density))
         for idx in range(resource_count):
@@ -159,8 +200,8 @@ class WorldProceduralGenerator:
         entities.append(PopulationSpec(
             id="citizens",
             count=pop_count_citizen,
-            role="citizen",
-            faction="villagers",
+            role=citizen_role,
+            faction=civilian_faction,
             spawn_region="town_center"
         ))
         prov_records["citizens"] = ProvenanceRecord(
@@ -169,7 +210,7 @@ class WorldProceduralGenerator:
             source_module="procedural_generator",
             recipe_type="procedural_populating",
             parameters={"seed": intent.seed, "scale": intent.population_scale},
-            profiles={"role": "citizen", "faction": "villagers"},
+            profiles={"role": citizen_role, "faction": civilian_faction},
             details={"count": pop_count_citizen, "region": "town_center"}
         )
 
@@ -177,8 +218,8 @@ class WorldProceduralGenerator:
         entities.append(PopulationSpec(
             id="monsters",
             count=pop_count_monster,
-            role="monster",
-            faction="monsters",
+            role=hostile_role,
+            faction=hostile_faction,
             spawn_region="wilderness_forest"
         ))
         prov_records["monsters"] = ProvenanceRecord(
@@ -187,7 +228,7 @@ class WorldProceduralGenerator:
             source_module="procedural_generator",
             recipe_type="procedural_populating",
             parameters={"seed": intent.seed, "scale": intent.population_scale},
-            profiles={"role": "monster", "faction": "monsters"},
+            profiles={"role": hostile_role, "faction": hostile_faction},
             details={"count": pop_count_monster, "region": "wilderness_forest"}
         )
 
@@ -206,15 +247,28 @@ class WorldProceduralGenerator:
 
         # Gating Validation run
         validator = WorldValidator()
-        validator.validate(world_spec, context=ValidationContext.GENERATED_WORLD)
+        issues = validator.validate(world_spec, context=ValidationContext.GENERATED_WORLD)
+
+        validation_report = {
+            "world_validation": [
+                {
+                    "severity": issue.severity,
+                    "rule_id": issue.rule_id,
+                    "message": issue.message,
+                    "path": issue.path
+                }
+                for issue in issues
+            ]
+        }
 
         # Deterministic manifest metadata
         hasher = hashlib.sha256()
         hasher.update(intent.generation_id.encode())
         hasher.update(self.catalog_repo.fingerprint.encode())
         hasher.update(str(intent.seed).encode())
-        manifest_id = f"prov_gen_{hasher.hexdigest()[:16]}"
-        created_at = "2026-05-30T12:00:00Z" if intent.generation_id.endswith("_test") else datetime.utcnow().isoformat() + "Z"
+        content_fingerprint = hasher.hexdigest()
+        manifest_id = f"prov_gen_{content_fingerprint[:16]}"
+        created_at = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
 
         provenance = ProvenanceManifest(
             manifest_id=manifest_id,
@@ -225,6 +279,7 @@ class WorldProceduralGenerator:
             resolver_version="1.0.0",
             generator_version="1.0.0",
             seed=intent.seed,
+            content_fingerprint=content_fingerprint,
             created_at=created_at,
             records=prov_records
         )
@@ -241,8 +296,14 @@ class WorldProceduralGenerator:
             }
         }
 
+        from src.worldassembly.resolver import CompileProfileResolver
+        profile_resolver = CompileProfileResolver(self.catalog_repo)
+        compile_context = profile_resolver.resolve(world_spec)
+
         return ResolvedWorldBundle(
             world_spec=world_spec,
+            compile_context=compile_context,
             provenance_manifest=provenance,
-            assembly_report=assembly_report
+            assembly_report=assembly_report,
+            validation_report=validation_report
         )

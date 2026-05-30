@@ -1,0 +1,55 @@
+# STATE: REDESIGNED-CORE
+- id: "standard_humanoid"
+  display_name: "Standard Humanoid"
+  traits: ["humanoid", "tool_user"]
+  movement_modes: ["walk"]
+  equipment_slots: ["weapon", "armor", "tool", "trinket"]
+
+# STATE: REDESIGNED-CORE
+- id: "small_humanoid"
+  display_name: "Small Humanoid"
+  traits: ["humanoid", "tool_user", "small_body"]
+  movement_modes: ["walk", "scramble"]
+  equipment_slots: ["weapon", "armor", "tool", "trinket"]
+
+# STATE: REDESIGNED-CORE
+- id: "quadruped_predator"
+  display_name: "Quadruped Predator"
+  traits: ["quadruped"]
+  movement_modes: ["walk", "run", "pounce"]
+  equipment_slots: []
+
+# STATE: ADDITIONAL
+- id: "arachnid_body"
+  display_name: "Arachnid Body"
+  traits: ["venomous"]
+  movement_modes: ["crawl", "climb"]
+  equipment_slots: []
+
+# STATE: ADDITIONAL
+- id: "large_humanoid"
+  display_name: "Large Humanoid"
+  traits: ["humanoid", "large_body", "tool_user"]
+  movement_modes: ["walk"]
+  equipment_slots: ["weapon", "armor", "tool"]
+
+# STATE: ADDITIONAL
+- id: "spirit_body"
+  display_name: "Spirit Body"
+  traits: ["spiritual"]
+  movement_modes: ["float"]
+  equipment_slots: ["trinket"]
+
+# STATE: ADDITIONAL
+- id: "amorphous_body"
+  display_name: "Amorphous Body"
+  traits: []
+  movement_modes: ["slither"]
+  equipment_slots: []
+
+# STATE: ADDITIONAL
+- id: "winged_reptilian"
+  display_name: "Winged Reptilian"
+  traits: ["flying", "large_body"]
+  movement_modes: ["walk", "fly"]
+  equipment_slots: ["trinket"]

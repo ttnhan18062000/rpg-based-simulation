@@ -1,0 +1,19 @@
+# STATE: ADDITIONAL
+schema_version: "worldmodule.v1"
+module_id: "undead_battlefield"
+module_type: "danger_zone"
+display_name: "Undead Battlefield"
+requires: ["frontier_village_core"]
+biomes: ["haunted_battlefield"]
+ecologies: ["haunted_battlefield_ecology"]
+regions:
+  - id: "haunted_battlefield"
+    type: "wilderness"
+    grid_bounds: [120, 20, 160, 60]
+    terrain: "ruin"
+    hazard_level: 4.0
+factions: ["undead_remnants", "spirit_court"]
+populations: ["undead_battlefield_patrol"]
+resources:
+  spirit_wisp: 2
+relationships: ["undead_to_living"]

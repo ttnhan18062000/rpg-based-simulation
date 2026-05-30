@@ -79,16 +79,23 @@ def test_procedural_generator_determinism(repos):
     # Generate 1
     bundle1 = generator.generate(intent1)
     dump1_spec = json.dumps(bundle1.world_spec.model_dump(), sort_keys=True)
-    dump1_prov = json.dumps(bundle1.provenance_manifest.model_dump(), sort_keys=True)
+    
+    prov1_dict = bundle1.provenance_manifest.model_dump()
+    prov1_dict.pop("created_at")
+    dump1_prov = json.dumps(prov1_dict, sort_keys=True)
 
     # Generate 2
     bundle2 = generator.generate(intent2)
     dump2_spec = json.dumps(bundle2.world_spec.model_dump(), sort_keys=True)
-    dump2_prov = json.dumps(bundle2.provenance_manifest.model_dump(), sort_keys=True)
+    
+    prov2_dict = bundle2.provenance_manifest.model_dump()
+    prov2_dict.pop("created_at")
+    dump2_prov = json.dumps(prov2_dict, sort_keys=True)
 
     # Determinism assertion
     assert dump1_spec == dump2_spec
     assert dump1_prov == dump2_prov
+    assert bundle1.provenance_manifest.content_fingerprint == bundle2.provenance_manifest.content_fingerprint
 
     # Seed difference assertion
     bundle_diff = generator.generate(intent_diff)
@@ -109,11 +116,60 @@ def test_procedural_generator_compile_readiness(repos):
     generator = WorldProceduralGenerator(cat, mod)
     bundle = generator.generate(intent)
 
-    # Compile the spec
-    state, report = WorldCompiler.compile(bundle.world_spec, seed=intent.seed)
+    # Compile the spec with context
+    state, report = WorldCompiler.compile(bundle.world_spec, context=bundle.compile_context, seed=intent.seed)
 
     # Assert running state properties are correctly loaded
     assert state.seed == 777
     assert len(state.regions) == 3
     assert len(state.buildings) == 3
     assert report["state_hash"] != ""
+
+
+def test_generated_world_catalog_smoke_simulation(repos):
+    """Seed dynamic registries from catalog, generate, compile, and run a smoke simulation."""
+    cat, mod = repos
+    
+    from src.core.registries import seed_phase1_content
+    # Seed dynamic registries from content catalog
+    seed_phase1_content(cat, required=True)
+    
+    try:
+        intent = GenerationIntentSpec(
+            generation_id="gen_smoke_test",
+            seed=42,
+            target_world_size=(80, 80)
+        )
+        
+        generator = WorldProceduralGenerator(cat, mod)
+        bundle = generator.generate(intent)
+        
+        # Compile generated world using ResolvedWorldBundle's compile_context
+        state, report = WorldCompiler.compile(bundle.world_spec, context=bundle.compile_context, seed=intent.seed)
+        
+        # Execute 5 ticks in simulator kernel
+        from src.engine.kernel import Kernel
+        from src.config.profiles import RuntimeProfile, HardwareClass
+        from src.platform.rng import DeterministicRNG
+
+        profile = RuntimeProfile(
+            name="test",
+            hardware_class=HardwareClass.CLASS_C,
+            max_ram_mb=512,
+            max_cpu_percent=50,
+            max_worker_count=0,
+            max_queue_depth=100,
+            max_replay_buffer_kb=1024,
+            max_observability_budget_percent=5,
+            max_tick_budget_ms=100.0,
+            sampling_interval_ticks=1
+        )
+        rng = DeterministicRNG(state.seed)
+        kernel = Kernel(profile, state, rng, flags={"audit_mode": True})
+        for _ in range(5):
+            kernel.tick_once()
+            
+        assert kernel.state.tick == 5
+    finally:
+        # Restore registries to legacy fallback defaults
+        seed_phase1_content(None)

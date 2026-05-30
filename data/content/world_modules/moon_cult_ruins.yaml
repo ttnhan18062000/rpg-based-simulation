@@ -1,0 +1,20 @@
+# STATE: ADDITIONAL
+schema_version: "worldmodule.v1"
+module_id: "moon_cult_ruins"
+module_type: "conflict"
+display_name: "Moon Cult Ruins"
+requires: ["frontier_village_core"]
+biomes: ["moon_cave"]
+regions:
+  - id: "moon_cave"
+    type: "wilderness"
+    grid_bounds: [100, 70, 130, 110]
+    terrain: "cave"
+    hazard_level: 4.0
+factions: ["moon_cult", "arcane_circle"]
+populations:
+  - "apprentice_mage"
+resources:
+  moon_resin_tree: 3
+  crystal_outcrop: 4
+relationships: ["moon_cult_to_town"]

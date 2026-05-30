@@ -1,0 +1,254 @@
+# STATE: LEGACY-EXPORT
+- id: "rusted_sword"
+  display_name: "Rusted Sword"
+  categories: ["weapon", "melee"]
+  rarity: "COMMON"
+  base_value: 10
+  materials: ["iron_ore"]
+
+# STATE: LEGACY-EXPORT
+- id: "wooden_staff"
+  display_name: "Wooden Staff"
+  categories: ["weapon", "magic"]
+  rarity: "COMMON"
+  base_value: 10
+  materials: ["wood"]
+
+# STATE: LEGACY-EXPORT
+- id: "basic_bow"
+  display_name: "Basic Bow"
+  categories: ["weapon", "ranged"]
+  rarity: "COMMON"
+  base_value: 15
+  materials: ["wood"]
+
+# STATE: LEGACY-EXPORT
+- id: "leather_armor"
+  display_name: "Leather Armor"
+  categories: ["armor"]
+  rarity: "COMMON"
+  base_value: 25
+  materials: ["wolf_pelt"]
+
+# STATE: LEGACY-EXPORT
+- id: "iron_sword"
+  display_name: "Iron Sword"
+  categories: ["weapon", "melee"]
+  rarity: "UNCOMMON"
+  base_value: 80
+  materials: ["iron_ore", "wood"]
+
+# STATE: LEGACY-EXPORT
+- id: "hunter_blade"
+  display_name: "Hunter Blade"
+  categories: ["weapon", "melee"]
+  rarity: "RARE"
+  base_value: 120
+  materials: ["iron_ore", "beast_fang", "moon_resin"]
+
+# STATE: LEGACY-EXPORT
+- id: "apprentice_staff"
+  display_name: "Apprentice Staff"
+  categories: ["weapon", "magic"]
+  rarity: "UNCOMMON"
+  base_value: 75
+  materials: ["wood", "crystal_shard"]
+
+# STATE: LEGACY-EXPORT
+- id: "small_potion"
+  display_name: "Small Potion"
+  categories: ["consumable", "healing"]
+  rarity: "COMMON"
+  base_value: 15
+  materials: ["healing_flower", "crystal_shard"]
+
+# STATE: LEGACY-EXPORT
+- id: "travel_ration"
+  display_name: "Travel Ration"
+  categories: ["consumable", "food"]
+  rarity: "COMMON"
+  base_value: 5
+  materials: ["herb"]
+
+# STATE: LEGACY-EXPORT
+- id: "repair_kit"
+  display_name: "Repair Kit"
+  categories: ["tool"]
+  rarity: "COMMON"
+  base_value: 20
+  materials: ["wood", "iron_ore"]
+
+# STATE: LEGACY-EXPORT
+- id: "wood"
+  display_name: "Wood"
+  categories: ["material"]
+  rarity: "COMMON"
+  base_value: 2
+
+# STATE: LEGACY-EXPORT
+- id: "herb"
+  display_name: "Herb"
+  categories: ["material"]
+  rarity: "COMMON"
+  base_value: 3
+
+# STATE: LEGACY-EXPORT
+- id: "iron_ore"
+  display_name: "Iron Ore"
+  categories: ["material"]
+  rarity: "UNCOMMON"
+  base_value: 12
+
+# STATE: LEGACY-EXPORT
+- id: "beast_fang"
+  display_name: "Beast Fang"
+  categories: ["material"]
+  rarity: "UNCOMMON"
+  base_value: 15
+
+# STATE: LEGACY-EXPORT
+- id: "wolf_pelt"
+  display_name: "Wolf Pelt"
+  categories: ["material"]
+  rarity: "COMMON"
+  base_value: 8
+
+# STATE: LEGACY-EXPORT
+- id: "moon_resin"
+  display_name: "Moon Resin"
+  categories: ["material", "arcane"]
+  rarity: "RARE"
+  base_value: 40
+
+# STATE: LEGACY-EXPORT
+- id: "crystal_shard"
+  display_name: "Crystal Shard"
+  categories: ["material", "arcane"]
+  rarity: "UNCOMMON"
+  base_value: 25
+
+# STATE: LEGACY-EXPORT
+- id: "goblin_token"
+  display_name: "Goblin Token"
+  categories: ["material", "trophy"]
+  rarity: "COMMON"
+  base_value: 5
+
+# STATE: LEGACY-EXPORT
+- id: "ancient_fragment"
+  display_name: "Ancient Fragment"
+  categories: ["material", "artifact"]
+  rarity: "RARE"
+  base_value: 50
+
+# STATE: LEGACY-EXPORT
+- id: "healing_flower"
+  display_name: "Healing Flower"
+  categories: ["material", "healing"]
+  rarity: "COMMON"
+  base_value: 5
+
+# STATE: ADDITIONAL
+- id: "iron_shield"
+  display_name: "Iron Shield"
+  categories: ["armor", "shield"]
+  rarity: "UNCOMMON"
+  base_value: 70
+  materials: ["iron_ore", "wood"]
+
+# STATE: ADDITIONAL
+- id: "silvered_blade"
+  display_name: "Silvered Blade"
+  categories: ["weapon", "melee", "anti_undead"]
+  rarity: "RARE"
+  base_value: 140
+  materials: ["silver_ore", "iron_ore", "ancient_fragment"]
+
+# STATE: ADDITIONAL
+- id: "warding_charm"
+  display_name: "Warding Charm"
+  categories: ["trinket", "holy"]
+  rarity: "UNCOMMON"
+  base_value: 60
+  materials: ["silver_ore", "moon_resin", "ancient_fragment"]
+
+# STATE: ADDITIONAL
+- id: "ember_axe"
+  display_name: "Ember Axe"
+  categories: ["weapon", "fire"]
+  rarity: "RARE"
+  base_value: 180
+  materials: ["ember_core", "steel", "wood"]
+
+# STATE: ADDITIONAL
+- id: "frost_focus"
+  display_name: "Frost Focus"
+  categories: ["trinket", "ice", "magic"]
+  rarity: "RARE"
+  base_value: 160
+  materials: ["frost_shard", "crystal_shard"]
+
+# STATE: ADDITIONAL
+- id: "venom_dagger"
+  display_name: "Venom Dagger"
+  categories: ["weapon", "poison"]
+  rarity: "UNCOMMON"
+  base_value: 90
+  materials: ["venom_sac", "iron_ore"]
+
+# STATE: ADDITIONAL
+- id: "spirit_lantern"
+  display_name: "Spirit Lantern"
+  categories: ["tool", "spirit"]
+  rarity: "RARE"
+  base_value: 130
+  materials: ["spirit_essence", "crystal_shard", "wood"]
+
+# STATE: ADDITIONAL
+- id: "steel"
+  display_name: "Steel"
+  categories: ["material"]
+  rarity: "UNCOMMON"
+  base_value: 30
+
+# STATE: ADDITIONAL
+- id: "silver_ore"
+  display_name: "Silver Ore"
+  categories: ["material"]
+  rarity: "RARE"
+  base_value: 20
+
+# STATE: ADDITIONAL
+- id: "spirit_essence"
+  display_name: "Spirit Essence"
+  categories: ["material", "arcane"]
+  rarity: "RARE"
+  base_value: 50
+
+# STATE: ADDITIONAL
+- id: "venom_sac"
+  display_name: "Venom Sac"
+  categories: ["material"]
+  rarity: "UNCOMMON"
+  base_value: 15
+
+# STATE: ADDITIONAL
+- id: "ember_core"
+  display_name: "Ember Core"
+  categories: ["material", "arcane"]
+  rarity: "RARE"
+  base_value: 60
+
+# STATE: ADDITIONAL
+- id: "frost_shard"
+  display_name: "Frost Shard"
+  categories: ["material", "arcane"]
+  rarity: "UNCOMMON"
+  base_value: 25
+
+# STATE: ADDITIONAL
+- id: "shadow_ichor"
+  display_name: "Shadow Ichor"
+  categories: ["material", "arcane"]
+  rarity: "RARE"
+  base_value: 40

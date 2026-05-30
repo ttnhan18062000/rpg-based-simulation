@@ -1,8 +1,0 @@
-# data/content/profiles/inventory.yaml
-- id: "hero_pocket"
-  display_name: "Hero Starter Pocket"
-  description: "Standard starting items and coins for explorers"
-  schema_version: "inventoryprofiledefinition.v1"
-  starting_items:
-    "health_potion": 1
-  starting_gold: 100.0

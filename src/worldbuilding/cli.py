@@ -10,10 +10,15 @@ from pathlib import Path
 from typing import Optional
 
 from src.worldbuilding.repository import WorldRepository, WorldRepositoryError
-from src.worldbuilding.schema import WorldSpec, InvalidWorldSpecError
+from src.worldbuilding.schema import WorldSpec, InvalidWorldSpecError, load_world_spec_from_yaml
 from src.worldbuilding.validator import WorldValidator
 from src.worldbuilding.compiler import WorldCompiler
 from src.worldbuilding.recipe import WorldTemplateSpec, WorldTemplateExpander
+from src.content.repository import CatalogRepository
+from src.worldmodules.repository import WorldModuleRepository
+from src.worldassembly.schema import WorldCompositionSpec
+from src.worldassembly.resolver import WorldAssemblyResolver
+from src.worldassembly.context import CompileContext
 
 # Diagnostic output colors
 COLOR_RESET = "\033[0m"
@@ -133,12 +138,92 @@ def handle_validate(args) -> int:
 
 
 
+def handle_resolve(args) -> int:
+    """Resolves a compositional world into standard resolved assets and sidecars."""
+    world_id = args.world_id
+
+    try:
+        repo = WorldRepository("data/worlds")
+        world_dir = repo.worlds_dir / world_id
+        yaml_path = world_dir / "world.yaml"
+        if not yaml_path.exists():
+            print_colored(f"World composition file not found at: {yaml_path}", COLOR_RED)
+            return 1
+
+        with open(yaml_path, "r", encoding="utf-8") as f:
+            raw_data = yaml.safe_load(f)
+
+        schema_version = raw_data.get("schema_version", "")
+        if "worldcomposition" not in schema_version:
+            print_colored(f"Error: World '{world_id}' is not a worldcomposition.v1 composition (got schema: '{schema_version}').", COLOR_RED)
+            return 1
+
+        # Load composition
+        composition = WorldCompositionSpec.model_validate(raw_data)
+
+        # Load repositories
+        cat_repo = CatalogRepository("data/content")
+        cat_repo.load_all()
+        mod_repo = WorldModuleRepository("data/world_modules")
+        mod_repo.load_all()
+
+        print(f"Resolving composition world '{world_id}'...")
+        resolver = WorldAssemblyResolver(cat_repo, mod_repo)
+        bundle = resolver.assemble(composition)
+
+        # Build output directory
+        resolved_dir = world_dir / "resolved"
+        resolved_dir.mkdir(parents=True, exist_ok=True)
+
+        # Standard resolved files paths
+        resolved_world_path = resolved_dir / "world.resolved.yaml"
+        compile_context_path = resolved_dir / "compile_context.json"
+        provenance_path = resolved_dir / "provenance_manifest.json"
+        assembly_report_path = resolved_dir / "assembly_report.json"
+        validation_report_path = resolved_dir / "validation_report.json"
+
+        # Write world.resolved.yaml
+        with open(resolved_world_path, "w", encoding="utf-8") as f:
+            yaml.safe_dump(bundle.world_spec.model_dump(exclude_none=True), f, sort_keys=False, allow_unicode=True)
+
+        # Write compile_context.json
+        with open(compile_context_path, "w", encoding="utf-8") as f:
+            json.dump(bundle.compile_context.to_dict(), f, indent=2)
+
+        # Write provenance_manifest.json
+        with open(provenance_path, "w", encoding="utf-8") as f:
+            json.dump(bundle.provenance_manifest.model_dump(exclude_none=True), f, indent=2)
+
+        # Write assembly_report.json
+        with open(assembly_report_path, "w", encoding="utf-8") as f:
+            json.dump(bundle.assembly_report, f, indent=2)
+
+        # Write validation_report.json
+        with open(validation_report_path, "w", encoding="utf-8") as f:
+            json.dump(bundle.validation_report, f, indent=2)
+
+        print_colored(f"\nResolution successful for world '{world_id}'!", COLOR_GREEN)
+        print(f"  Resolved world spec:    {resolved_world_path.relative_to(repo.worlds_dir)}")
+        print(f"  Compile context:        {compile_context_path.relative_to(repo.worlds_dir)}")
+        print(f"  Provenance manifest:    {provenance_path.relative_to(repo.worlds_dir)}")
+        print(f"  Assembly report:        {assembly_report_path.relative_to(repo.worlds_dir)}")
+        print(f"  Validation report:      {validation_report_path.relative_to(repo.worlds_dir)}")
+
+        return 0
+
+    except Exception as e:
+        print_colored(f"Unexpected Error during resolution: {e}", COLOR_RED)
+        return 1
+
+
 def handle_compile(args) -> int:
     """Compiles the world specification into a state file and generates a compile report."""
     world_id = args.world_id
     seed = args.seed
     strict = args.strict
     output_report = args.output_report
+    from_resolved = getattr(args, "from_resolved", False)
+    legacy_fallback = getattr(args, "legacy_fallback", False)
 
     try:
         repo = WorldRepository("data/worlds")
@@ -153,12 +238,33 @@ def handle_compile(args) -> int:
 
         # Check if template needs expansion first
         schema_version = raw_data.get("schema_version", "")
+        is_composition = "worldcomposition" in schema_version
+
         if "worldtemplate" in schema_version:
             print(f"Expanding recipe template '{world_id}' with seed {seed}...")
             template = WorldTemplateSpec.model_validate(raw_data)
             spec = WorldTemplateExpander.expand(template, seed=seed)
+            context = None
+        elif is_composition or from_resolved:
+            resolved_world_path = world_dir / "resolved" / "world.resolved.yaml"
+            compile_context_path = world_dir / "resolved" / "compile_context.json"
+            
+            if not resolved_world_path.is_file() or not compile_context_path.is_file():
+                if legacy_fallback:
+                    print_colored("Warning: Resolved world spec or compile context missing. Falling back to legacy defaults.", COLOR_YELLOW)
+                    spec = repo.load_world(world_id)
+                    context = None
+                else:
+                    print_colored(f"Error: Composition world '{world_id}' has not been resolved. Run resolve first.", COLOR_RED)
+                    return 1
+            else:
+                spec = load_world_spec_from_yaml(resolved_world_path)
+                with open(compile_context_path, "r", encoding="utf-8") as f:
+                    context_data = json.load(f)
+                context = CompileContext.from_dict(context_data)
         else:
             spec = repo.load_world(world_id)
+            context = None
 
         # Validate before compiling
         validator = WorldValidator()
@@ -181,7 +287,7 @@ def handle_compile(args) -> int:
         report_path = output_report or str(world_dir / "world_compile_report.json")
 
         print(f"Compiling world '{world_id}' into simulation state with seed {seed}...")
-        state, report = WorldCompiler.compile(spec, seed=seed, output_report_path=report_path)
+        state, report = WorldCompiler.compile(spec, seed=seed, output_report_path=report_path, context=context)
 
         print_colored(f"\nCompilation successful!", COLOR_GREEN)
         print(f"  Final State Hash: {report['state_hash']}")
@@ -382,6 +488,12 @@ def main() -> int:
     cmp.add_argument("--seed", type=int, default=42, help="RNG seed for deterministic layout placement")
     cmp.add_argument("--strict", action="store_true", help="Abort compilation if warnings exist")
     cmp.add_argument("--output-report", type=str, default=None, help="Custom output filepath for compile report JSON")
+    cmp.add_argument("--from-resolved", action="store_true", help="Compile composition world from previously resolved assets")
+    cmp.add_argument("--legacy-fallback", action="store_true", help="Allow fallback to legacy defaults if resolved assets are missing")
+
+    # resolve
+    rsv = sub.add_parser("resolve", help="Resolve compositional world specs into compiled assets")
+    rsv.add_argument("world_id", type=str, help="ID of the world composition to resolve")
 
     # inspect
     ins = sub.add_parser("inspect", help="Inspect structural metrics of a world definition")
@@ -400,6 +512,8 @@ def main() -> int:
         return handle_validate(args)
     elif args.command == "compile":
         return handle_compile(args)
+    elif args.command == "resolve":
+        return handle_resolve(args)
     elif args.command == "inspect":
         return handle_inspect(args)
     elif args.command == "create-template":

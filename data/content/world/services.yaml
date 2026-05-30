@@ -1,0 +1,52 @@
+# STATE: EXISTING-LOGIC
+- id: "general_store_service"
+  display_name: "General Store Service"
+  service_type: "trade"
+  provided_items: ["small_potion", "travel_ration", "repair_kit"]
+  gold_cost: 10
+
+# STATE: ADDITIONAL
+- id: "blacksmith_service"
+  display_name: "Blacksmith Service"
+  service_type: "crafting"
+  provided_recipes: ["craft_iron_sword", "craft_hunter_blade", "craft_iron_shield", "craft_silvered_blade", "craft_venom_dagger"]
+  gold_cost: 40
+
+# STATE: ADDITIONAL
+- id: "inn_service"
+  display_name: "Inn Service"
+  service_type: "rest"
+  heal_amount: 20
+  gold_cost: 15
+
+# STATE: ADDITIONAL
+- id: "healer_service"
+  display_name: "Healer Service"
+  service_type: "healing"
+  provided_items: ["small_potion", "warding_charm"]
+  heal_amount: 50
+  gold_cost: 25
+
+# STATE: ADDITIONAL
+- id: "guard_post_service"
+  display_name: "Guard Post Service"
+  service_type: "security"
+  gold_cost: 0
+
+# STATE: ADDITIONAL
+- id: "mining_service"
+  display_name: "Mining Service"
+  service_type: "resource_access"
+  resource_bias: ["iron_ore", "silver_ore", "crystal_shard"]
+
+# STATE: ADDITIONAL
+- id: "shrine_service"
+  display_name: "Shrine Service"
+  service_type: "spiritual"
+  provided_items: ["warding_charm"]
+
+# STATE: ADDITIONAL
+- id: "arcane_service"
+  display_name: "Arcane Service"
+  service_type: "magic"
+  provided_recipes: ["craft_spirit_lantern"]

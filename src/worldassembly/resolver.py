@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from typing import List, Dict, Any, Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 from src.content.repository import CatalogRepository
 from src.worldmodules.repository import WorldModuleRepository
@@ -24,14 +24,154 @@ from src.worldbuilding.schema import (
 
 class ResolvedWorldBundle(BaseModel):
     """The resolved assembled output packages."""
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
     world_spec: WorldSpec
+    compile_context: CompileContext
     provenance_manifest: ProvenanceManifest
     assembly_report: Dict[str, Any]
+    validation_report: Optional[Dict[str, Any]] = None
+
+
+class WorldAssemblyValidator:
+    """Independent stage validator coordinating multiple validation layers during assembly."""
+    
+    def __init__(self, catalog_repo: CatalogRepository):
+        self.catalog_repo = catalog_repo
+
+    def validate(self, world_spec: WorldSpec, graph_map: Dict[str, Any], composition: WorldCompositionSpec, factions: Dict[str, Any], width: int, height: int) -> tuple[List[Dict[str, Any]], List[Dict[str, Any]], Dict[str, Any]]:
+        # 1. Catalog Validation
+        from src.content.validator import CatalogValidator
+        cat_validator = CatalogValidator(self.catalog_repo)
+        cat_issues = cat_validator.validate()
+        catalog_report = [
+            {"severity": issue.severity, "rule_id": issue.rule_id, "message": issue.message, "target": issue.target_id}
+            for issue in cat_issues
+        ]
+
+        # 2. Module Validation
+        from src.worldbuilding.validator import WorldValidator, ValidationContext
+        from src.worldbuilding.schema import TopologySpec, RegionSpec, PopulationSpec, ResourceNodeSpec, BuildingSpec
+        world_validator = WorldValidator()
+        module_reports = {}
+        for m_id, module in graph_map.items():
+            dummy_spec = WorldSpec(
+                schema_version="worldspec.v1",
+                world_id=module.module_id,
+                name=module.display_name,
+                topology=TopologySpec(width=width, height=height, coordinate_system="grid"),
+                regions=[
+                    RegionSpec(id=r.id, type=r.type, bounds=r.grid_bounds, terrain=r.terrain, hazard_level=r.hazard_level)
+                    for r in module.regions
+                ],
+                factions=list(factions.values()),
+                entities=[
+                    PopulationSpec(id=getattr(p, 'id', f"pop_{idx}"), count=p.count, role=p.role, faction=p.faction, spawn_region=p.spawn_region)
+                    for idx, p in enumerate(module.population_recipes)
+                ],
+                resources=[
+                    ResourceNodeSpec(id=getattr(r, 'id', f"res_{idx}"), resource_type=r.resource_type, count=r.count, region=r.region)
+                    for idx, r in enumerate(module.resource_recipes)
+                ],
+                buildings=[
+                    BuildingSpec(id=getattr(b, 'id', f"bld_{idx}"), type=b.building_type, region=b.region)
+                    for idx, b in enumerate(module.building_recipes)
+                ]
+            )
+            m_issues = world_validator.validate(dummy_spec, context=ValidationContext.MODULE)
+            module_reports[m_id] = [
+                {"severity": issue.severity, "rule_id": issue.rule_id, "message": issue.message, "path": issue.path}
+                for issue in m_issues
+            ]
+
+        # 3. Composition Validation
+        composition_issues = []
+        for ref in composition.module_refs:
+            if ref.module_id not in graph_map:
+                composition_issues.append({
+                    "severity": "ERROR",
+                    "rule_id": "ASM-COMP-001",
+                    "message": f"Referenced module '{ref.module_id}' not found in repository.",
+                    "path": f"module_refs.{ref.module_id}"
+                })
+
+        # 4. Assembly & World Validation
+        world_issues = world_validator.validate(world_spec, context=ValidationContext.WORLD)
+        world_report = [
+            {"severity": issue.severity, "rule_id": issue.rule_id, "message": issue.message, "path": issue.path}
+            for issue in world_issues
+        ]
+
+        # Aggregate blocking errors and warnings
+        blocking_errors = []
+        warnings = []
+
+        for issue in catalog_report:
+            if issue["severity"] == "ERROR":
+                blocking_errors.append(issue)
+            else:
+                warnings.append(issue)
+
+        for m_id, m_issues in module_reports.items():
+            for issue in m_issues:
+                if issue["severity"] == "ERROR":
+                    blocking_errors.append({"module_id": m_id, **issue})
+                else:
+                    warnings.append({"module_id": m_id, **issue})
+
+        for issue in composition_issues:
+            if issue["severity"] == "ERROR":
+                blocking_errors.append(issue)
+            else:
+                warnings.append(issue)
+
+        for issue in world_report:
+            if issue["severity"] == "ERROR":
+                blocking_errors.append(issue)
+            else:
+                warnings.append(issue)
+
+        validation_reports = {
+            "catalog_validation": catalog_report,
+            "module_validation": module_reports,
+            "composition_validation": composition_issues,
+            "world_validation": world_report,
+        }
+
+        return blocking_errors, warnings, validation_reports
+
+
+class WorldAssemblyReportBuilder:
+    """Consolidates structural results and validation profiles into clean, readable JSON summaries."""
+    
+    @staticmethod
+    def build(sorted_ids: List[str], factions: Dict[str, Any], regions_count: int, entities_count: int, blocking_errors: List[Dict[str, Any]], warnings: List[Dict[str, Any]], validation_reports: Dict[str, Any], catalog_fingerprint: str, module_fingerprints: Dict[str, str]) -> Dict[str, Any]:
+        return {
+            "sorted_module_ids": sorted_ids,
+            "factions_resolved": list(factions.keys()),
+            "regions_count": regions_count,
+            "entities_count": entities_count,
+            "catalog_validation": validation_reports["catalog_validation"],
+            "module_validation": validation_reports["module_validation"],
+            "composition_validation": validation_reports["composition_validation"],
+            "world_validation": validation_reports["world_validation"],
+            "summary": {
+                "status": "SUCCESS" if not blocking_errors else "FAILED",
+                "blocking_errors_count": len(blocking_errors),
+                "warnings_count": len(warnings)
+            },
+            "blocking_errors": blocking_errors,
+            "warnings": warnings,
+            "fingerprints": {
+                "catalog": catalog_fingerprint,
+                "modules": module_fingerprints
+            }
+        }
 
 
 class WorldAssemblyResolver:
     """
-    Authoritative pipeline executing Kahn's topological sort, validating parameter parameters,
+    Authoritative pipeline executing Kahn's topological sort, validating parameters,
     resolving static profile constraints, and merging modular contributions into a clean worldspec.
     """
 
@@ -40,6 +180,7 @@ class WorldAssemblyResolver:
         self.module_repo = module_repo
         from src.worldassembly.resolver import CompileProfileResolver
         self.profile_resolver = CompileProfileResolver(catalog_repo)
+        self.validator = WorldAssemblyValidator(catalog_repo)
 
     def assemble(self, composition: WorldCompositionSpec) -> ResolvedWorldBundle:
         """
@@ -66,7 +207,7 @@ class WorldAssemblyResolver:
         # 3. Merge components top-down while avoiding silent overwrite collision
         regions: Dict[str, RegionSpec] = {}
         factions: Dict[str, FactionSpec] = {}
-        entities: List[PopulationSpec] = {}
+        entities: Dict[str, PopulationSpec] = {}
         resources: Dict[str, ResourceNodeSpec] = {}
         buildings: Dict[str, BuildingSpec] = {}
         
@@ -92,6 +233,8 @@ class WorldAssemblyResolver:
                     profiles={"alignment_bucket": cat_faction.alignment_bucket},
                     details={"description": cat_faction.description or ""}
                 )
+
+        population_recipes_dict: Dict[str, Any] = {}
 
         for m_id in sorted_ids:
             spec = graph_map[m_id]
@@ -146,6 +289,7 @@ class WorldAssemblyResolver:
                     faction=pop.faction,
                     spawn_region=spawn_region
                 )
+                population_recipes_dict[pop_id] = pop
                 entity_origins[pop_id] = m_id
                 prov_records[pop_id] = ProvenanceRecord(
                     element_id=pop_id,
@@ -223,14 +367,15 @@ class WorldAssemblyResolver:
         )
 
         import hashlib
-        from datetime import datetime
+        from datetime import datetime, timezone
         hasher = hashlib.sha256()
         hasher.update(composition.world_id.encode())
         hasher.update(self.catalog_repo.fingerprint.encode())
         for m_id in sorted_ids:
             hasher.update(module_fingerprints[m_id].encode())
-        manifest_id = f"prov_{hasher.hexdigest()[:16]}"
-        created_at = "2026-05-30T12:00:00Z" if composition.world_id.endswith("_test") else datetime.utcnow().isoformat() + "Z"
+        content_fingerprint = hasher.hexdigest()
+        manifest_id = f"prov_{content_fingerprint[:16]}"
+        created_at = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
 
         provenance = ProvenanceManifest(
             manifest_id=manifest_id,
@@ -241,131 +386,48 @@ class WorldAssemblyResolver:
             resolver_version="1.0.0",
             generator_version=None,
             seed=None,
+            content_fingerprint=content_fingerprint,
             created_at=created_at,
             records=prov_records
         )
 
-        # 1. Catalog Validation
-        from src.content.validator import CatalogValidator
-        cat_validator = CatalogValidator(self.catalog_repo)
-        cat_issues = cat_validator.validate()
-        catalog_report = [
-            {"severity": issue.severity, "rule_id": issue.rule_id, "message": issue.message, "target": issue.target_id}
-            for issue in cat_issues
-        ]
-
-        # 2. Module Validation
-        from src.worldbuilding.validator import WorldValidator, ValidationContext
-        world_validator = WorldValidator()
-        module_reports = {}
-        for m_id, module in graph_map.items():
-            dummy_spec = WorldSpec(
-                schema_version="worldspec.v1",
-                world_id=module.module_id,
-                name=module.display_name,
-                topology=TopologySpec(width=width, height=height, coordinate_system="grid"),
-                regions=[
-                    RegionSpec(id=r.id, type=r.type, bounds=r.grid_bounds, terrain=r.terrain, hazard_level=r.hazard_level)
-                    for r in module.regions
-                ],
-                factions=list(factions.values()),
-                entities=[
-                    PopulationSpec(id=getattr(p, 'id', f"pop_{idx}"), count=p.count, role=p.role, faction=p.faction, spawn_region=p.spawn_region)
-                    for idx, p in enumerate(module.population_recipes)
-                ],
-                resources=[
-                    ResourceNodeSpec(id=getattr(r, 'id', f"res_{idx}"), resource_type=r.resource_type, count=r.count, region=r.region)
-                    for idx, r in enumerate(module.resource_recipes)
-                ],
-                buildings=[
-                    BuildingSpec(id=getattr(b, 'id', f"bld_{idx}"), type=b.building_type, region=b.region)
-                    for idx, b in enumerate(module.building_recipes)
-                ]
-            )
-            m_issues = world_validator.validate(dummy_spec, context=ValidationContext.MODULE)
-            module_reports[m_id] = [
-                {"severity": issue.severity, "rule_id": issue.rule_id, "message": issue.message, "path": issue.path}
-                for issue in m_issues
-            ]
-
-        # 3. Composition Validation
-        composition_issues = []
-        for ref in composition.module_refs:
-            if not self.module_repo.get_module(ref.module_id):
-                composition_issues.append({
-                    "severity": "ERROR",
-                    "rule_id": "ASM-COMP-001",
-                    "message": f"Referenced module '{ref.module_id}' not found in repository.",
-                    "path": f"module_refs.{ref.module_id}"
-                })
-
-        # 4. Assembly & World Validation
-        world_issues = world_validator.validate(world_spec, context=ValidationContext.WORLD)
-        world_report = [
-            {"severity": issue.severity, "rule_id": issue.rule_id, "message": issue.message, "path": issue.path}
-            for issue in world_issues
-        ]
-
-        # Aggregate blocking errors and warnings
-        blocking_errors = []
-        warnings = []
-
-        for issue in catalog_report:
-            if issue["severity"] == "ERROR":
-                blocking_errors.append(issue)
-            else:
-                warnings.append(issue)
-
-        for m_id, m_issues in module_reports.items():
-            for issue in m_issues:
-                if issue["severity"] == "ERROR":
-                    blocking_errors.append({"module_id": m_id, **issue})
-                else:
-                    warnings.append({"module_id": m_id, **issue})
-
-        for issue in composition_issues:
-            if issue["severity"] == "ERROR":
-                blocking_errors.append(issue)
-            else:
-                warnings.append(issue)
-
-        for issue in world_report:
-            if issue["severity"] == "ERROR":
-                blocking_errors.append(issue)
-            else:
-                warnings.append(issue)
+        # Validate stage
+        blocking_errors, warnings, validation_reports = self.validator.validate(
+            world_spec=world_spec,
+            graph_map=graph_map,
+            composition=composition,
+            factions=factions,
+            width=width,
+            height=height
+        )
 
         if blocking_errors:
             msgs = "; ".join(f"[{err.get('rule_id', 'ERROR')}] {err.get('message')}" for err in blocking_errors)
             from src.worldbuilding.schema import InvalidWorldSpecError
             raise InvalidWorldSpecError(f"Assembly validation failed with blocking errors: {msgs}")
 
-        assembly_report = {
-            "sorted_module_ids": sorted_ids,
-            "factions_resolved": list(factions.keys()),
-            "regions_count": len(regions),
-            "entities_count": len(entities),
-            "catalog_validation": catalog_report,
-            "module_validation": module_reports,
-            "composition_validation": composition_issues,
-            "world_validation": world_report,
-            "summary": {
-                "status": "SUCCESS",
-                "blocking_errors_count": len(blocking_errors),
-                "warnings_count": len(warnings)
-            },
-            "blocking_errors": blocking_errors,
-            "warnings": warnings,
-            "fingerprints": {
-                "catalog": self.catalog_repo.fingerprint,
-                "modules": module_fingerprints
-            }
-        }
+        # Build assembly report
+        assembly_report = WorldAssemblyReportBuilder.build(
+            sorted_ids=sorted_ids,
+            factions=factions,
+            regions_count=len(regions),
+            entities_count=len(entities),
+            blocking_errors=blocking_errors,
+            warnings=warnings,
+            validation_reports=validation_reports,
+            catalog_fingerprint=self.catalog_repo.fingerprint,
+            module_fingerprints=module_fingerprints
+        )
+
+        # Resolve CompileContext with the preserved raw population recipe overrides
+        compile_context = self.profile_resolver.resolve(world_spec, population_recipes_dict)
 
         return ResolvedWorldBundle(
             world_spec=world_spec,
+            compile_context=compile_context,
             provenance_manifest=provenance,
-            assembly_report=assembly_report
+            assembly_report=assembly_report,
+            validation_report=validation_reports
         )
 
 
@@ -385,7 +447,7 @@ class CompileProfileResolver:
         self.role_semantics = RoleSemanticsService(repo)
         self.default_semantics = DefaultSemanticsService(repo)
 
-    def resolve(self, spec: Any) -> CompileContext:
+    def resolve(self, spec: Any, population_recipes: Optional[Dict[str, Any]] = None) -> CompileContext:
         """
         Processes a WorldSpec (or template recipes) and populates resolved profiles.
         """
@@ -400,7 +462,7 @@ class CompileProfileResolver:
 
         # 0. Populate legacy enums and region ownership
         from src.core.enums import EntityRole, Faction
-        for pop_spec in getattr(spec, "entities", []):
+        for pop_idx, pop_spec in enumerate(getattr(spec, "entities", [])):
             try:
                 role_enum = self.role_semantics.get_legacy_entity_role(pop_spec.role)
                 ctx.register_legacy_role(pop_spec.role, role_enum)
@@ -426,7 +488,12 @@ class CompileProfileResolver:
             key = getattr(pop_spec, "id", f"pop_{pop_idx}")
             
             # Resolve combat properties
-            hp, max_hp, atk, def_stat, attack_range, readiness = self._resolve_entity_stats(pop_spec)
+            pop_recipe = population_recipes.get(key) if population_recipes else None
+            stats_profile_id = getattr(pop_recipe, "stats_profile", None) if pop_recipe else None
+            inventory_seed = getattr(pop_recipe, "inventory_profile", None) if pop_recipe else getattr(pop_spec, "inventory_profile", None)
+            cognition_seed = getattr(pop_recipe, "cognition_profile", None) if pop_recipe else getattr(pop_spec, "cognition_profile", None)
+
+            hp, max_hp, atk, def_stat, attack_range, readiness = self._resolve_entity_stats(pop_spec, stats_profile_id)
 
             resolved_entity = ResolvedEntityProfile(
                 legacy_role=self.role_semantics.get_legacy_entity_role(pop_spec.role),
@@ -437,8 +504,8 @@ class CompileProfileResolver:
                 def_stat=def_stat,
                 attack_range=attack_range,
                 readiness=readiness,
-                inventory_seed=getattr(pop_spec, "inventory_profile", None),
-                cognition_seed=getattr(pop_spec, "cognition_profile", None)
+                inventory_seed=inventory_seed,
+                cognition_seed=cognition_seed
             )
             ctx.register_entity(key, resolved_entity)
 
@@ -467,14 +534,17 @@ class CompileProfileResolver:
 
         return ctx
 
-    def _resolve_entity_stats(self, pop_spec: Any) -> tuple[int, int, int, int, int, float]:
-        """Resolves entity stats based on priority list: explicit override -> role defaults -> global defaults."""
+    def _resolve_entity_stats(self, pop_spec: Any, explicit_stats_profile_id: Optional[str] = None) -> tuple[int, int, int, int, int, float]:
+        """Resolves entity stats based on priority list: explicit override -> role defaults -> faction defaults -> global defaults."""
         defaults = self.default_semantics.get_entity_combat_defaults()
         
-        # Explicit Stats Profile
-        stats_profile_id = getattr(pop_spec, "stats_profile", None)
+        # 1. Explicit Stats Profile (from recipe/module)
+        stats_profile_id = explicit_stats_profile_id
         if not stats_profile_id:
-            # Fall back to role default profile
+            stats_profile_id = getattr(pop_spec, "stats_profile", None)
+            
+        # 2. Fall back to role default profile
+        if not stats_profile_id:
             stats_profile_id = self.role_semantics.get_default_stats_profile(pop_spec.role)
 
         if stats_profile_id:

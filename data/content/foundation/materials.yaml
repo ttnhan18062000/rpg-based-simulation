@@ -1,0 +1,102 @@
+# STATE: LEGACY-EXPORT
+# Materials already implied by legacy item/resource/recipe data.
+- id: "wood"
+  display_name: "Wood"
+  categories: ["organic", "crafting", "fuel"]
+  common_regions: ["forest", "village"]
+
+# STATE: LEGACY-EXPORT
+- id: "herb"
+  display_name: "Herb"
+  categories: ["organic", "healing", "alchemy"]
+  common_regions: ["forest", "swamp"]
+
+# STATE: LEGACY-EXPORT
+- id: "healing_flower"
+  display_name: "Healing Flower"
+  categories: ["organic", "healing", "alchemy"]
+  common_regions: ["forest", "sacred_grove"]
+
+# STATE: LEGACY-EXPORT
+- id: "iron_ore"
+  display_name: "Iron Ore"
+  categories: ["mineral", "metal", "crafting"]
+  common_regions: ["mine", "mountain"]
+
+# STATE: LEGACY-EXPORT
+- id: "beast_fang"
+  display_name: "Beast Fang"
+  categories: ["animal", "trophy", "crafting"]
+  common_regions: ["forest", "wolf_den"]
+
+# STATE: LEGACY-EXPORT
+- id: "wolf_pelt"
+  display_name: "Wolf Pelt"
+  categories: ["animal", "leather", "trophy"]
+  common_regions: ["wolf_den", "forest"]
+
+# STATE: LEGACY-EXPORT
+- id: "moon_resin"
+  display_name: "Moon Resin"
+  categories: ["rare", "arcane", "organic"]
+  common_regions: ["moon_cave", "moonlit_ruin"]
+
+# STATE: LEGACY-EXPORT
+- id: "crystal_shard"
+  display_name: "Crystal Shard"
+  categories: ["mineral", "arcane", "crafting"]
+  common_regions: ["cave", "moon_cave", "old_mine"]
+
+# STATE: LEGACY-EXPORT
+- id: "goblin_token"
+  display_name: "Goblin Token"
+  categories: ["trophy", "trade", "faction_marker"]
+  common_regions: ["goblin_camp"]
+
+# STATE: LEGACY-EXPORT
+- id: "ancient_fragment"
+  display_name: "Ancient Fragment"
+  categories: ["artifact", "ruin", "rare"]
+  common_regions: ["ruin", "battlefield", "barrow"]
+
+# STATE: ADDITIONAL
+- id: "steel"
+  display_name: "Steel"
+  categories: ["metal", "crafted", "weapon"]
+  source_materials: ["iron_ore"]
+
+# STATE: ADDITIONAL
+- id: "silver_ore"
+  display_name: "Silver Ore"
+  categories: ["mineral", "metal", "anti_undead"]
+  common_regions: ["mountain", "old_mine"]
+
+# STATE: ADDITIONAL
+- id: "spirit_essence"
+  display_name: "Spirit Essence"
+  categories: ["spiritual", "rare", "arcane"]
+  common_regions: ["spirit_grove", "haunted_battlefield"]
+
+# STATE: ADDITIONAL
+- id: "venom_sac"
+  display_name: "Venom Sac"
+  categories: ["animal", "poison", "alchemy"]
+  common_regions: ["swamp", "cave"]
+
+# STATE: ADDITIONAL
+- id: "ember_core"
+  display_name: "Ember Core"
+  categories: ["elemental", "fire", "rare"]
+  common_regions: ["volcanic_pass", "dragon_roost"]
+
+# STATE: ADDITIONAL
+- id: "frost_shard"
+  display_name: "Frost Shard"
+  categories: ["elemental", "ice", "rare"]
+  common_regions: ["frozen_peak"]
+
+# STATE: ADDITIONAL
+- id: "shadow_ichor"
+  display_name: "Shadow Ichor"
+  categories: ["dark", "undead", "rare"]
+  common_regions: ["haunted_battlefield", "barrow"]

@@ -1,0 +1,214 @@
+# STATE: EXISTING-LOGIC
+- id: "hero_base"
+  hp: 100
+  max_hp: 100
+  atk: 10
+  def: 0
+  attack_range: 1
+  readiness: 100.0
+  attribute_bias:
+    strength: "medium"
+    agility: "medium"
+    endurance: "medium"
+
+# STATE: EXISTING-LOGIC
+- id: "commoner_base"
+  hp: 100
+  max_hp: 100
+  atk: 10
+  def: 0
+  attack_range: 1
+  readiness: 100.0
+
+# STATE: EXISTING-LOGIC
+- id: "monster_base"
+  hp: 100
+  max_hp: 100
+  atk: 10
+  def: 0
+  attack_range: 1
+  readiness: 100.0
+
+# STATE: LEGACY-EXPORT
+- id: "wolf_predator_base"
+  hp: 45
+  max_hp: 45
+  atk: 12
+  def: 3
+  attack_range: 1
+  readiness: 100.0
+  attribute_bias:
+    agility: "high"
+    instinct: "very_high"
+    perception: "high"
+
+# STATE: LEGACY-EXPORT
+- id: "goblin_raider_base"
+  hp: 40
+  max_hp: 40
+  atk: 10
+  def: 2
+  attack_range: 1
+  readiness: 100.0
+
+# STATE: LEGACY-EXPORT
+- id: "goblin_scout_base"
+  hp: 35
+  max_hp: 35
+  atk: 8
+  def: 2
+  attack_range: 1
+  readiness: 100.0
+
+# STATE: LEGACY-EXPORT
+- id: "goblin_archer_base"
+  hp: 35
+  max_hp: 35
+  atk: 11
+  def: 1
+  attack_range: 3
+  readiness: 100.0
+
+# STATE: LEGACY-EXPORT
+- id: "cave_spider_base"
+  hp: 50
+  max_hp: 50
+  atk: 14
+  def: 4
+  attack_range: 1
+  readiness: 100.0
+
+# STATE: LEGACY-EXPORT
+- id: "bandit_scout_base"
+  hp: 70
+  max_hp: 70
+  atk: 18
+  def: 5
+  attack_range: 1
+  readiness: 100.0
+
+# STATE: LEGACY-EXPORT
+- id: "warlord_base"
+  hp: 120
+  max_hp: 120
+  atk: 24
+  def: 8
+  attack_range: 1
+  readiness: 100.0
+
+# STATE: ADDITIONAL
+- id: "frontier_guard_base"
+  hp: 120
+  max_hp: 120
+  atk: 12
+  def: 4
+  attack_range: 1
+  readiness: 100.0
+
+# STATE: ADDITIONAL
+- id: "merchant_base"
+  hp: 80
+  max_hp: 80
+  atk: 4
+  def: 1
+  attack_range: 1
+  readiness: 100.0
+
+# STATE: ADDITIONAL
+- id: "artisan_base"
+  hp: 90
+  max_hp: 90
+  atk: 5
+  def: 1
+  attack_range: 1
+  readiness: 100.0
+
+# STATE: ADDITIONAL
+- id: "healer_base"
+  hp: 85
+  max_hp: 85
+  atk: 4
+  def: 1
+  attack_range: 1
+  readiness: 100.0
+
+# STATE: ADDITIONAL
+- id: "apprentice_mage_base"
+  hp: 70
+  max_hp: 70
+  atk: 14
+  def: 1
+  attack_range: 3
+  readiness: 100.0
+
+# STATE: ADDITIONAL
+- id: "ranger_base"
+  hp: 95
+  max_hp: 95
+  atk: 13
+  def: 2
+  attack_range: 3
+  readiness: 100.0
+
+# STATE: ADDITIONAL
+- id: "miner_base"
+  hp: 110
+  max_hp: 110
+  atk: 8
+  def: 3
+  attack_range: 1
+  readiness: 100.0
+
+# STATE: ADDITIONAL
+- id: "orc_brute_base"
+  hp: 150
+  max_hp: 150
+  atk: 18
+  def: 5
+  attack_range: 1
+  readiness: 100.0
+
+# STATE: ADDITIONAL
+- id: "undead_sentinel_base"
+  hp: 130
+  max_hp: 130
+  atk: 14
+  def: 6
+  attack_range: 1
+  readiness: 100.0
+
+# STATE: ADDITIONAL
+- id: "spirit_guardian_base"
+  hp: 90
+  max_hp: 90
+  atk: 18
+  def: 3
+  attack_range: 2
+  readiness: 100.0
+
+# STATE: ADDITIONAL
+- id: "troll_brute_base"
+  hp: 260
+  max_hp: 260
+  atk: 28
+  def: 8
+  attack_range: 1
+  readiness: 100.0
+
+# STATE: ADDITIONAL
+- id: "dragon_champion_base"
+  hp: 320
+  max_hp: 320
+  atk: 36
+  def: 10
+  attack_range: 3
+  readiness: 100.0
+
+# STATE: ADDITIONAL
+- id: "alpha_predator_base"
+  hp: 75
+  max_hp: 75
+  atk: 16
+  def: 4
+  attack_range: 1
+  readiness: 100.0

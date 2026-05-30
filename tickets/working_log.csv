@@ -463,3 +463,12 @@ TCK-20260529-OBS-PHASE22-BEHAVIOR-NORMALIZATION,2026-05-29,Phase 22 Async Behavi
 2026-05-30,f037e9a1-43fa-4687-982f-38a78f927cb8,TCK-20260530-WORLD-PHASE8,DONE,Simple Procedural Generation Foundation completed successfully.,tickets/done/TCK-20260530-WORLD-PHASE8.md
 2026-05-30,f037e9a1-43fa-4687-982f-38a78f927cb8,TCK-20260530-WORLD-PHASE9,DONE,Compiler Integration Hardening completed successfully.,tickets/done/TCK-20260530-WORLD-PHASE9.md
 2026-05-30,f037e9a1-43fa-4687-982f-38a78f927cb8,TCK-20260530-WORLD-PHASE10,DONE,Observability Join and Migration Cleanup completed successfully.,tickets/done/TCK-20260530-WORLD-PHASE10.md
+2026-05-30,f037e9a1-43fa-4687-982f-38a78f927cb8,TCK-20260530-PHASE11-ASSEMBLY-HARDENING,DONE,Phase 11 Assembly Hardening and CompileContext Integrity completed successfully.,tickets/done/TCK-20260530-PHASE11-ASSEMBLY-HARDENING.md
+2026-05-30,f037e9a1-43fa-4687-982f-38a78f927cb8,TCK-20260530-PHASE12-RESOLVE-CLI-INTEGRATION,DONE,Phase 12 CLI and Lab Integration completed successfully.,tickets/done/TCK-20260530-PHASE12-RESOLVE-CLI-INTEGRATION.md
+2026-05-30,f037e9a1-43fa-4687-982f-38a78f927cb8,TCK-20260530-PHASE13-SCHEMA-EXPANSION,DONE,Phase 13 Runtime Content Catalog Schema Expansion completed successfully.,tickets/done/TCK-20260530-PHASE13-SCHEMA-EXPANSION.md
+2026-06-03,f037e9a1-43fa-4687-982f-38a78f927cb8,TCK-20260530-PHASE14-LEGACY-EXPORT,DONE,Adopting Layered Catalog and Populating Profiles completed successfully.,tickets/done/TCK-20260530-PHASE14-LEGACY-EXPORT.md
+2026-06-03,f037e9a1-43fa-4687-982f-38a78f927cb8,TCK-20260603-PHASE15-REGISTRY-BRIDGE,DONE,Phase 15 Runtime Registry Bridge with Legacy Projection completed successfully.,tickets/done/TCK-20260603-PHASE15-REGISTRY-BRIDGE.md
+2026-06-03,f037e9a1-43fa-4687-982f-38a78f927cb8,TCK-20260603-PHASE16-PARITY-TESTS,DONE,Phase 16 Parity Tests completed successfully.,tickets/done/TCK-20260603-PHASE16-PARITY-TESTS.md
+2026-06-03,f037e9a1-43fa-4687-982f-38a78f927cb8,TCK-20260603-PHASE17-GENERATOR-REGATING,DONE,Phase 17 Procedural Generation Re-gating completed successfully.,tickets/done/TCK-20260603-PHASE17-GENERATOR-REGATING.md
+2026-06-03,f037e9a1-43fa-4687-982f-38a78f927cb8,TCK-20260603-PHASE18-OBSERVABILITY-PROVENANCE-JOIN,DONE,Phase 18 Observability Provenance Join completed successfully.,tickets/done/TCK-20260603-PHASE18-OBSERVABILITY-PROVENANCE-JOIN.md
+2026-06-03,f037e9a1-43fa-4687-982f-38a78f927cb8,TCK-20260603-PHASE19-LEGACY-CLEANUP,DONE,Phase 19 Legacy Deprecation and Cleanup completed successfully.,tickets/done/TCK-20260603-PHASE19-LEGACY-CLEANUP.md

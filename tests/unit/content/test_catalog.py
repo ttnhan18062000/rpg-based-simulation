@@ -14,13 +14,13 @@ def test_base_catalog_loading():
     repo.load_all()
 
     # Assert that minimal mappings are correctly loaded
-    assert "villagers" in repo.factions
-    assert "monsters" in repo.factions
+    assert "hero_guild" in repo.factions
     assert "town_council" in repo.factions
+    assert "wild_beast_pack" in repo.factions
 
     assert "hero" in repo.roles
     assert "worker" in repo.roles
-    assert "monster" in repo.roles
+    assert "guard" in repo.roles
 
     # Verify attributes parsed correctly
     hero_role = repo.get_role("hero")
@@ -34,6 +34,9 @@ def test_base_catalog_loading():
 def test_catalog_relational_validator():
     """Verify that catalog validation successfully flags broken relational dependencies."""
     with tempfile.TemporaryDirectory() as tmp_dir:
+        # Create the subdirectory expected by repository layout
+        os.makedirs(os.path.join(tmp_dir, "social"), exist_ok=True)
+        
         # Create custom roles and defaults
         roles_data = [
             {
@@ -47,7 +50,7 @@ def test_catalog_relational_validator():
             }
         ]
         
-        with open(os.path.join(tmp_dir, "roles.yaml"), "w") as f:
+        with open(os.path.join(tmp_dir, "social", "roles.yaml"), "w") as f:
             yaml.dump(roles_data, f)
 
         repo = CatalogRepository(tmp_dir)

@@ -1,0 +1,68 @@
+# STATE: REDESIGNED-CORE
+# Drive profiles are motivation weights. They should feed general goal pressure, not scripts.
+- id: "cautious_commoner"
+  display_name: "Cautious Commoner"
+  drives:
+    safety: "high"
+    duty: "medium"
+    wealth: "medium"
+    curiosity: "low"
+    aggression: "low"
+
+# STATE: REDESIGNED-CORE
+- id: "territorial_predator"
+  display_name: "Territorial Predator"
+  drives:
+    hunger: "high"
+    territory: "high"
+    safety: "medium"
+    pack_bonding: "medium"
+    aggression: "medium"
+
+# STATE: ADDITIONAL
+- id: "opportunistic_raider"
+  display_name: "Opportunistic Raider"
+  drives:
+    wealth: "high"
+    safety: "medium"
+    dominance: "medium"
+    aggression: "medium"
+    group_belonging: "medium"
+
+# STATE: ADDITIONAL
+- id: "disciplined_protector"
+  display_name: "Disciplined Protector"
+  drives:
+    duty: "high"
+    safety: "medium"
+    aggression: "medium"
+    social_belonging: "medium"
+    fear: "low_medium"
+
+# STATE: ADDITIONAL
+- id: "profit_seeker"
+  display_name: "Profit Seeker"
+  drives:
+    wealth: "high"
+    safety: "high"
+    trade: "high"
+    aggression: "very_low"
+    curiosity: "medium"
+
+# STATE: ADDITIONAL
+- id: "ritual_fixated"
+  display_name: "Ritual Fixated"
+  drives:
+    faith: "high"
+    secrecy: "high"
+    dominance: "medium"
+    aggression: "medium"
+
+# STATE: ADDITIONAL
+- id: "undead_purpose_bound"
+  display_name: "Undead Purpose Bound"
+  drives:
+    purpose_fixation: "very_high"
+    fear: "none"
+    hunger: "none"
+    aggression: "medium"

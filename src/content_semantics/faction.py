@@ -38,7 +38,16 @@ class FactionSemanticsService:
     def get_alignment_bucket(self, faction_id: str) -> str:
         """Returns the alignment category bucket (e.g. defender, invader, neutral)."""
         defn = self.repo.get_faction(faction_id)
-        return defn.alignment_bucket if defn else "neutral"
+        if defn:
+            return defn.alignment_bucket
+        # Fallback to legacy bucket alignment
+        legacy = self.get_legacy_faction_bucket(faction_id)
+        from src.core.enums import Faction
+        if legacy in (Faction.HERO_GUILD, Faction.TOWN_COUNCIL):
+            return "defender"
+        elif legacy == Faction.MONSTER_HORDE:
+            return "invader"
+        return "neutral"
 
     def get_influence_role(self, faction_id: str) -> str:
         """Returns the influence role configuration."""
